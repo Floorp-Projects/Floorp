@@ -12,25 +12,24 @@ import android.os.Bundle;
 import com.keepsafe.switchboard.SwitchBoard;
 
 import org.mozilla.gecko.BrowserApp;
-import org.mozilla.gecko.BrowserAppDelegate;
+import org.mozilla.gecko.delegates.BrowserAppDelegate;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.delegates.BrowserAppDelegateWithReference;
 import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.util.Experiments;
 
 import java.lang.ref.WeakReference;
 
-public class ReaderViewBookmarkPromotion extends BrowserAppDelegate implements Tabs.OnTabsChangedListener {
-    private WeakReference<BrowserApp> mBrowserApp;
-
+public class ReaderViewBookmarkPromotion extends BrowserAppDelegateWithReference implements Tabs.OnTabsChangedListener {
     private int mTimesEnteredReaderMode;
     private boolean mExperimentEnabled;
 
     @Override
     public void onCreate(BrowserApp browserApp, Bundle savedInstanceState) {
-        mBrowserApp = new WeakReference<>(browserApp);
+        super.onCreate(browserApp, savedInstanceState);
 
         mExperimentEnabled = SwitchBoard.isInExperiment(browserApp, Experiments.TRIPLE_READERVIEW_BOOKMARK_PROMPT);
     }
@@ -82,7 +81,7 @@ public class ReaderViewBookmarkPromotion extends BrowserAppDelegate implements T
     }
 
     private void promoteBookmarking() {
-        final BrowserApp browserApp = mBrowserApp.get();
+        final BrowserApp browserApp = getBrowserApp();
         if (browserApp == null) {
             return;
         }

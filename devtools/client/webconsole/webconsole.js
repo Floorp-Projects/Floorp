@@ -30,7 +30,6 @@ loader.lazyRequireGetter(this, "Messages", "devtools/client/webconsole/console-o
 loader.lazyRequireGetter(this, "EnvironmentClient", "devtools/shared/client/main", true);
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/main", true);
 loader.lazyRequireGetter(this, "system", "devtools/shared/system");
-loader.lazyRequireGetter(this, "Timers", "sdk/timers");
 loader.lazyRequireGetter(this, "JSTerm", "devtools/client/webconsole/jsterm", true);
 loader.lazyRequireGetter(this, "gSequenceId", "devtools/client/webconsole/jsterm", true);
 loader.lazyImporter(this, "VariablesView", "resource://devtools/client/shared/widgets/VariablesView.jsm");
@@ -996,10 +995,10 @@ WebConsoleFrame.prototype = {
     Services.prefs.setBoolPref(this._filterPrefsPrefix + toggleType, state);
 
     if (this._updateListenersTimeout) {
-      Timers.clearTimeout(this._updateListenersTimeout);
+      clearTimeout(this._updateListenersTimeout);
     }
 
-    this._updateListenersTimeout = Timers.setTimeout(
+    this._updateListenersTimeout = setTimeout(
       this._onUpdateListeners, 200);
   },
 

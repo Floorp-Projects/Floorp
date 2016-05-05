@@ -7,7 +7,9 @@
 // Test that markup-containers in the markup-view do flash when their
 // corresponding DOM nodes mutate
 
-const {clearTimeout} = require("sdk/timers");
+// Have to use the same timer functions used by the inspector.
+const {clearTimeout} = Cu.import("resource://gre/modules/Timer.jsm", {});
+
 const TEST_URL = URL_ROOT + "doc_markup_flashing.html";
 
 // The test data contains a list of mutations to test.

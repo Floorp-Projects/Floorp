@@ -3,7 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { RetVal, generateActorSpec } = require("devtools/server/protocol.js");
+const {
+  Arg,
+  RetVal,
+  generateActorSpec
+} = require("devtools/server/protocol.js");
 
 const originalSourceSpec = generateActorSpec({
   typeName: "originalsource",
@@ -18,3 +22,16 @@ const originalSourceSpec = generateActorSpec({
 });
 
 exports.originalSourceSpec = originalSourceSpec;
+
+const mediaRuleSpec = generateActorSpec({
+  typeName: "mediarule",
+
+  events: {
+    "matches-change": {
+      type: "matchesChange",
+      matches: Arg(0, "boolean"),
+    }
+  }
+});
+
+exports.mediaRuleSpec = mediaRuleSpec;

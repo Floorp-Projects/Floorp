@@ -17,6 +17,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.SpannableStringBuilder;
 import android.text.TextPaint;
@@ -146,11 +147,23 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
         animator.setChangeDuration(100);
         animator.setMoveDuration(100);
         animator.setRemoveDuration(100);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         mRecyclerView.setItemAnimator(animator);
         mRecyclerView.addItemDecoration(new DividerItemDecoration(getContext()));
         mRecyclerView.setOnHistoryClickedListener(mUrlOpenListener);
         mRecyclerView.setOnPanelLevelChangeListener(new OnLevelChangeListener());
         mRecyclerView.setHiddenClientsDialogBuilder(new HiddenClientsHelper());
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                final LinearLayoutManager llm = (LinearLayoutManager) recyclerView.getLayoutManager();
+                if ((mPanelLevel == OnPanelLevelChangeListener.PanelLevel.PARENT) && (llm.findLastCompletelyVisibleItemPosition() == HistoryCursorLoader.HISTORY_LIMIT)) {
+                    Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.LIST, "history_scroll_max");
+                }
+
+            }
+        });
         registerForContextMenu(mRecyclerView);
     }
 
@@ -186,6 +199,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
         syncSetupButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, "history_syncsetup");
                 // This Activity will redirect to the correct Activity as needed.
                 final Intent intent = new Intent(FxAccountConstants.ACTION_FXA_GET_STARTED);
                 startActivity(intent);
@@ -221,7 +235,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
 
     private static class HistoryCursorLoader extends SimpleCursorLoader {
         // Max number of history results
-        private static final int HISTORY_LIMIT = 100;
+        public static final int HISTORY_LIMIT = 100;
         private final BrowserDB mDB;
 
         public HistoryCursorLoader(Context context) {
@@ -402,7 +416,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
         final ClickableSpan clickableSpan = new ClickableSpan() {
             @Override
             public void onClick(View widget) {
-                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.PANEL, "hint-private-browsing");
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, "hint_private_browsing");
                 try {
                     final JSONObject json = new JSONObject();
                     json.put("type", "Menu:Open");

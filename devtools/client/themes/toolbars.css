@@ -343,7 +343,7 @@
 .theme-dark .devtools-toolbarbutton:not([disabled])[label][open],
 .theme-dark .devtools-button:not(:empty)[checked=true],
 .theme-dark #toolbox-buttons .devtools-toolbarbutton[text-as-image][checked=true] {
-  background: rgba(29, 79, 115, .7); /* Select highlight blue */
+  background: var(--theme-selection-background-semitransparent);
   color: var(--theme-selection-color);
 }
 .theme-light .devtools-toolbarbutton:not([disabled])[label][checked=true],
@@ -860,7 +860,7 @@
 }
 
 .theme-dark .devtools-tabbar {
-  box-shadow: 0 -2px 0 rgba(0,0,0,.1) inset;
+  box-shadow: 0 -0.5px 0 var(--theme-splitter-color) inset;
 }
 
 #toolbox-tabs {
@@ -974,12 +974,6 @@
 .devtools-tabbar .devtools-tab[selected]:hover:active {
   color: var(--theme-selection-color);
   background-color: var(--theme-selection-background);
-}
-
-.theme-dark .devtools-tabbar .devtools-tab[selected] {
-  box-shadow: 0 2px 0 #d7f1ff inset,
-              0 8px 3px -5px #2b82bf inset,
-              0 -2px 0 rgba(0,0,0,.2) inset;
 }
 
 #toolbox-tabs .devtools-tab[selected],

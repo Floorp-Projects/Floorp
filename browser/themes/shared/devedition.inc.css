@@ -16,26 +16,24 @@
 
 :root[devtoolstheme="dark"] {
   /* Chrome */
-  --chrome-background-color: #1C2126;
+  --chrome-background-color: #272b35;
   --chrome-color: #F5F7FA;
-  --chrome-secondary-background-color: #39424D;
+  --chrome-secondary-background-color: #393F4C;
   --chrome-navigator-toolbox-separator-color: rgba(0,0,0,.2);
   --chrome-nav-bar-separator-color: rgba(0,0,0,.2);
   --chrome-nav-buttons-background: #252C33;
   --chrome-nav-buttons-hover-background: #1B2127;
   --chrome-nav-bar-controls-border-color: #1D2328;
   --chrome-selection-color: #fff;
-  --chrome-selection-background-color: #074D75;
+  --chrome-selection-background-color: #5675B9;
 
   /* Tabs */
   --tabs-toolbar-color: #F5F7FA;
   --tab-background-color: #1C2126;
   --tab-hover-background-color: #07090a;
   --tab-selection-color: #f5f7fa;
-  --tab-selection-background-color: #1a4666;
-  --tab-selection-box-shadow: 0 2px 0 #D7F1FF inset,
-                              0 -2px 0 rgba(0,0,0,.05) inset,
-                              0 -1px 0 rgba(0,0,0,.3) inset;
+  --tab-selection-background-color: #5675B9;
+  --tab-selection-box-shadow: none;
   --pinned-tab-glow: radial-gradient(22px at center calc(100% - 2px), rgba(76,158,217,0.9) 13%, rgba(0,0,0,0.4) 16%, transparent 70%);
 
   /* Toolbar buttons */
@@ -45,7 +43,7 @@
   --toolbarbutton-active-background: rgba(25,33,38,1) linear-gradient(rgba(25,33,38,1), rgba(25,33,38,1)) border-box;
   --toolbarbutton-active-boxshadow: none;
   --toolbarbutton-active-bordercolor: rgba(25,33,38,.8);
-  --toolbarbutton-checkedhover-backgroundcolor: #1D4F73;
+  --toolbarbutton-checkedhover-backgroundcolor: #3C5283;
 
   /* Url and search bars */
   --url-and-searchbar-background-color: #171B1F;
@@ -293,7 +291,6 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
 .tabbrowser-tab[visuallyselected] {
   color: var(--tab-selection-color) !important; /* Override color: inherit */
   background-color: var(--tab-selection-background-color);
-  box-shadow: var(--tab-selection-box-shadow);
 }
 
 /* Don't need space for the tab curves (66px - 30px) */

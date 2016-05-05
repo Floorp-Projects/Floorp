@@ -42,17 +42,29 @@
   background-color: transparent;
   border-radius: 3px;
   overflow-x: hidden;
-  max-height: 40rem;
+  max-height: 20rem;
 }
 
 :root[platform="linux"] .devtools-autocomplete-popup {
-  max-height: 32rem;
+  /* Root font size is bigger on Linux, adjust rem-based values. */
+  max-height: 16rem;
 }
 
 .devtools-autocomplete-listbox {
   -moz-appearance: none !important;
   background-color: transparent;
   border-width: 0px !important;
+  margin: 0;
+}
+
+.devtools-autocomplete-listbox > scrollbox {
+  padding: 2px;
+}
+
+.inplace-editor-autocomplete-popup .devtools-autocomplete-listbox {
+  /* Inplace editor closes the autocomplete popup on blur, the autocomplete
+  popup should not steal the focus here.*/
+  -moz-user-focus: ignore;
 }
 
 .devtools-autocomplete-listbox > richlistitem,

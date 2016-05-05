@@ -27,8 +27,6 @@ loader.lazyRequireGetter(this, "Authenticators",
   "devtools/shared/security/auth", true);
 loader.lazyRequireGetter(this, "AuthenticationResult",
   "devtools/shared/security/auth", true);
-loader.lazyRequireGetter(this, "setTimeout", "Timer", true);
-loader.lazyRequireGetter(this, "clearTimeout", "Timer", true);
 
 DevToolsUtils.defineLazyGetter(this, "nsFile", () => {
   return CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
