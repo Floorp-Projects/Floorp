@@ -39,8 +39,9 @@ struct ElementPropertyTransition : public dom::KeyframeEffectReadOnly
                             Maybe<OwningAnimationTarget>& aTarget,
                             const TimingParams &aTiming,
                             StyleAnimationValue aStartForReversingTest,
-                            double aReversePortion)
-    : dom::KeyframeEffectReadOnly(aDocument, aTarget, aTiming)
+                            double aReversePortion,
+                            const KeyframeEffectParams& aEffectOptions)
+    : dom::KeyframeEffectReadOnly(aDocument, aTarget, aTiming, aEffectOptions)
     , mStartForReversingTest(aStartForReversingTest)
     , mReversePortion(aReversePortion)
   { }
