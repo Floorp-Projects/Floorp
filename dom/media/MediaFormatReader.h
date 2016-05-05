@@ -137,12 +137,15 @@ private:
       : mTime(aTime)
       , mDropTarget(aDropTarget)
       , mWaiting(false)
+      , mHasSeeked(false)
     {}
 
     media::TimeUnit mTime;
     bool mDropTarget;
     bool mWaiting;
+    bool mHasSeeked;
   };
+
   // Perform an internal seek to aTime. If aDropTarget is true then
   // the first sample past the target will be dropped.
   void InternalSeek(TrackType aTrack, const InternalSeekTarget& aTarget);
@@ -291,6 +294,8 @@ private:
     MozPromiseRequestHolder<MediaDataDecoder::InitPromise> mInitPromise;
     // False when decoder is created. True when decoder Init() promise is resolved.
     bool mDecoderInitialized;
+    // Set when decoding can proceed. It is reset when a decoding promise is
+    // rejected or prior a seek operation.
     bool mDecodingRequested;
     bool mOutputRequested;
     bool mInputExhausted;
@@ -327,6 +332,7 @@ private:
     {
       // Clear demuxer related data.
       mDemuxRequest.DisconnectIfExists();
+      mSeekRequest.DisconnectIfExists();
       mTrackDemuxer->Reset();
     }
 
@@ -351,6 +357,11 @@ private:
       mNumSamplesOutput = 0;
       mSizeOfQueue = 0;
       mNextStreamSourceID.reset();
+    }
+
+    bool HasInternalSeekPending() const
+    {
+      return mTimeThreshold && !mTimeThreshold.ref().mHasSeeked;
     }
 
     // Used by the MDSM for logging purposes.
