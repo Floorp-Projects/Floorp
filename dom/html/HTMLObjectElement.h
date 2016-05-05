@@ -173,7 +173,7 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::archive, aValue, aRv);
   }
-  // XPCOM GetCode is ok; note that it's a URI attribute with a weird base URI
+  // XPCOM GetCode is ok
   void SetCode(const nsAString& aValue, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::code, aValue, aRv);
