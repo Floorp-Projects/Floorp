@@ -19,6 +19,7 @@ tasks:
     task:
       created: '{{now}}'
       deadline: '{{#from_now}}1 day{{/from_now}}'
+      expires: '{{#from_now}}14 day{{/from_now}}'
       metadata:
         owner: mozilla-taskcluster-maintenance@mozilla.com
         source: {{{source}}}
