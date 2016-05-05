@@ -184,6 +184,20 @@ public:
                        (CGFloat)aPt.y / aBackingScale);
   }
 
+  // Implements an NSPoint equivalent of -[NSWindow convertRectFromScreen:].
+  static NSPoint
+  ConvertPointFromScreen(NSWindow* aWindow, const NSPoint& aPt)
+  {
+    return [aWindow convertRectFromScreen:NSMakeRect(aPt.x, aPt.y, 0, 0)].origin;
+  }
+
+  // Implements an NSPoint equivalent of -[NSWindow convertRectToScreen:].
+  static NSPoint
+  ConvertPointToScreen(NSWindow* aWindow, const NSPoint& aPt)
+  {
+    return [aWindow convertRectToScreen:NSMakeRect(aPt.x, aPt.y, 0, 0)].origin;
+  }
+
   static NSRect
   DevPixelsToCocoaPoints(const LayoutDeviceIntRect& aRect,
                          CGFloat aBackingScale)

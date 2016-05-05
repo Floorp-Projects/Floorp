@@ -1171,7 +1171,8 @@ nsresult nsChildView::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
   // aPoint is given with the origin on the top left, but convertScreenToBase
   // expects a point in a coordinate system that has its origin on the bottom left.
   NSPoint screenPoint = NSMakePoint(pt.x, nsCocoaUtils::FlippedScreenY(pt.y));
-  NSPoint windowPoint = [[mView window] convertScreenToBase:screenPoint];
+  NSPoint windowPoint =
+    nsCocoaUtils::ConvertPointFromScreen([mView window], screenPoint);
 
   NSEvent* event = [NSEvent mouseEventWithType:(NSEventType)aNativeMessage
                                       location:windowPoint
@@ -1571,7 +1572,7 @@ LayoutDeviceIntPoint nsChildView::WidgetToScreenOffset()
   origin = [mView convertPoint:origin toView:nil];
 
   // 2. We turn the window-coord rect's origin into screen (still bottom-left) coords.
-  origin = [[mView window] convertBaseToScreen:origin];
+  origin = nsCocoaUtils::ConvertPointToScreen([mView window], origin);
 
   // 3. Since we're dealing in bottom-left coords, we need to make it top-left coords
   //    before we pass it back to Gecko.
@@ -5042,7 +5043,8 @@ PanGestureTypeForEvent(NSEvent* aEvent)
 
   CGPoint loc = CGEventGetLocation(cgEvent);
   loc.y = nsCocoaUtils::FlippedScreenY(loc.y);
-  NSPoint locationInWindow = [[self window] convertScreenToBase:NSPointFromCGPoint(loc)];
+  NSPoint locationInWindow =
+    nsCocoaUtils::ConvertPointFromScreen([self window], NSPointFromCGPoint(loc));
   ScreenIntPoint location = ViewAs<ScreenPixel>(
     [self convertWindowCoordinates:locationInWindow],
     PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
