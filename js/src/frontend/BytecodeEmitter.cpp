@@ -1938,7 +1938,8 @@ BytecodeEmitter::bindNameToSlotHelper(ParseNode* pn)
     // translated on dn.
     if (IsAliasedVarOp(op)) {
         MOZ_ASSERT(dn->isKnownAliased());
-        pn->pn_scopecoord.setSlot(parser->tokenStream, dn->pn_scopecoord.slot());
+        if (!pn->pn_scopecoord.setSlot(parser->tokenStream, dn->pn_scopecoord.slot()))
+            return false;
     }
 
     MOZ_ASSERT(!pn->isOp(op));

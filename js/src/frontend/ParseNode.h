@@ -59,21 +59,21 @@ class PackedScopeCoordinate
     uint32_t hops() const { MOZ_ASSERT(!isFree()); return hops_; }
     uint32_t slot() const { MOZ_ASSERT(!isFree()); return slot_; }
 
-    bool setSlot(TokenStream& ts, uint32_t newSlot) {
+    MOZ_MUST_USE bool setSlot(TokenStream& ts, uint32_t newSlot) {
         if (newSlot >= UNKNOWN_SLOT)
             return ts.reportError(JSMSG_TOO_MANY_LOCALS);
         slot_ = newSlot;
         return true;
     }
 
-    bool setHops(TokenStream& ts, uint32_t newHops) {
+    MOZ_MUST_USE bool setHops(TokenStream& ts, uint32_t newHops) {
         if (newHops >= UNKNOWN_HOPS)
             return ts.reportError(JSMSG_TOO_DEEP, js_function_str);
         hops_ = newHops;
         return true;
     }
 
-    bool set(TokenStream& ts, uint32_t newHops, uint32_t newSlot) {
+    MOZ_MUST_USE bool set(TokenStream& ts, uint32_t newHops, uint32_t newSlot) {
         return setHops(ts, newHops) && setSlot(ts, newSlot);
     }
 
@@ -919,9 +919,9 @@ class ParseNode
         ForCopyOnWriteArray
     };
 
-    bool getConstantValue(ExclusiveContext* cx, AllowConstantObjects allowObjects, MutableHandleValue vp,
-                          Value* compare = nullptr, size_t ncompare = 0,
-                          NewObjectKind newKind = TenuredObject);
+    MOZ_MUST_USE bool getConstantValue(ExclusiveContext* cx, AllowConstantObjects allowObjects,
+                                       MutableHandleValue vp, Value* compare = nullptr,
+                                       size_t ncompare = 0, NewObjectKind newKind = TenuredObject);
     inline bool isConstant();
 
     template <class NodeType>
@@ -1391,7 +1391,7 @@ struct CallSiteNode : public ListNode {
         return node.isKind(PNK_CALLSITEOBJ);
     }
 
-    bool getRawArrayValue(ExclusiveContext* cx, MutableHandleValue vp) {
+    MOZ_MUST_USE bool getRawArrayValue(ExclusiveContext* cx, MutableHandleValue vp) {
         return pn_head->getConstantValue(cx, AllowObjects, vp);
     }
 };
