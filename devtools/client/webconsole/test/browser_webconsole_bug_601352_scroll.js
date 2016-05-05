@@ -17,20 +17,22 @@ function test() {
     let hud = yield openConsole(tab);
     hud.jsterm.clearOutput();
 
-    let longMessage = "";
-    for (let i = 0; i < 50; i++) {
-      longMessage += "LongNonwrappingMessage";
-    }
+    yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+      let longMessage = "";
+      for (let i = 0; i < 50; i++) {
+        longMessage += "LongNonwrappingMessage";
+      }
 
-    for (let i = 0; i < 50; i++) {
-      content.console.log("test1 message " + i);
-    }
+      for (let i = 0; i < 50; i++) {
+        content.console.log("test1 message " + i);
+      }
 
-    content.console.log(longMessage);
+      content.console.log(longMessage);
 
-    for (let i = 0; i < 50; i++) {
-      content.console.log("test2 message " + i);
-    }
+      for (let i = 0; i < 50; i++) {
+        content.console.log("test2 message " + i);
+      }
+    });
 
     yield waitForMessages({
       webconsole: hud,
@@ -52,10 +54,19 @@ function test() {
     let scrollNode = hud.ui.outputWrapper;
     let rectNode = node.getBoundingClientRect();
     let rectOutput = scrollNode.getBoundingClientRect();
-    console.debug("rectNode", rectNode, "rectOutput", rectOutput);
-    console.log("scrollNode scrollHeight", scrollNode.scrollHeight,
-                "scrollTop", scrollNode.scrollTop, "clientHeight",
-                scrollNode.clientHeight);
+
+    yield ContentTask.spawn(gBrowser.selectedBrowser, {
+      rectNode,
+      rectOutput,
+      scrollHeight: scrollNode.scrollHeight,
+      scrollTop: scrollNode.scrollTop,
+      clientHeight: scrollNode.clientHeight,
+    }, function* (args) {
+      console.debug("rectNode", args.rectNode, "rectOutput", args.rectOutput);
+      console.log("scrollNode scrollHeight", args.scrollHeight,
+                  "scrollTop", args.scrollTop, "clientHeight",
+                  args.clientHeight);
+    });
 
     isnot(scrollNode.scrollTop, 0, "scroll location is not at the top");
 
