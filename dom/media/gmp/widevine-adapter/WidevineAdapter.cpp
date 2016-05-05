@@ -124,7 +124,13 @@ WidevineAdapter::GMPGetAPI(const char* aAPIName,
     *aPluginAPI = decryptor;
 
   } else if (!strcmp(aAPIName, GMP_API_VIDEO_DECODER)) {
-    *aPluginAPI = new WidevineVideoDecoder(static_cast<GMPVideoHost*>(aHostAPI), RefPtr<CDMWrapper>(sCDMWrapper));
+    if (!sCDMWrapper) {
+      Log("WidevineAdapter::GMPGetAPI(%s, 0x%p, 0x%p) this=0x%p No cdm for video decoder",
+          aAPIName, aHostAPI, aPluginAPI, this);
+      return GMPGenericErr;
+    }
+    *aPluginAPI = new WidevineVideoDecoder(static_cast<GMPVideoHost*>(aHostAPI),
+                                           RefPtr<CDMWrapper>(sCDMWrapper));
 
   }
   return *aPluginAPI ? GMPNoErr : GMPNotImplementedErr;
