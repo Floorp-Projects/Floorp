@@ -59,6 +59,7 @@ namespace mozilla {
 namespace widget {
 class NativeKey;
 struct MSGResult;
+class WinCompositorWidgetProxy;
 } // namespace widget
 } // namespacw mozilla;
 
@@ -211,8 +212,6 @@ public:
   NS_IMETHOD              GetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
   NS_IMETHOD              SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
   void                    SetDrawsInTitlebar(bool aState) override;
-  already_AddRefed<mozilla::gfx::DrawTarget> StartRemoteDrawing() override;
-  virtual void            EndRemoteDrawing() override;
   virtual void            UpdateWindowDraggingRegion(const LayoutDeviceIntRegion& aRegion) override;
 
   virtual void            UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) override;
@@ -314,6 +313,12 @@ public:
   virtual nsresult OnWindowedPluginKeyEvent(
                      const mozilla::NativeEventData& aKeyEventData,
                      nsIKeyEventInPluginCallback* aCallback) override;
+
+  mozilla::widget::CompositorWidgetProxy* NewCompositorWidgetProxy() override;
+  bool PreRender(LayerManagerComposite*);
+  void PostRender(LayerManagerComposite*);
+  already_AddRefed<mozilla::gfx::DrawTarget> StartRemoteDrawing();
+  void EndRemoteDrawing();
 
 protected:
   virtual ~nsWindow();
@@ -495,9 +500,6 @@ protected:
   void                    ClearCachedResources();
   nsIWidgetListener*      GetPaintListener();
 
-  virtual bool            PreRender(LayerManagerComposite*) override;
-  virtual void            PostRender(LayerManagerComposite*) override;
-
 protected:
   nsCOMPtr<nsIWidget>   mParent;
   nsIntSize             mLastSize;
@@ -640,6 +642,8 @@ protected:
   mozilla::gfx::CriticalSection mPresentLock;
 
   double mSizeConstraintsScale; // scale in effect when setting constraints
+
+  RefPtr<mozilla::widget::WinCompositorWidgetProxy> mCompositorWidgetProxy;
 };
 
 /**

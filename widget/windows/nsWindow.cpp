@@ -140,6 +140,7 @@
 #include "nsBidiKeyboard.h"
 #include "nsThemeConstants.h"
 #include "gfxConfig.h"
+#include "WinCompositorWidgetProxy.h"
 
 #include "nsIGfxInfo.h"
 #include "nsUXThemeConstants.h"
@@ -3637,6 +3638,10 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
   RECT windowRect;
   ::GetClientRect(mWnd, &windowRect);
 
+  if (!mCompositorWidgetProxy) {
+    mCompositorWidgetProxy = new WinCompositorWidgetProxy(this);
+  }
+
   // Try OMTC first.
   if (!mLayerManager && ShouldUseOffMainThreadCompositing()) {
     gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
@@ -3707,6 +3712,12 @@ nsWindow::OnDefaultButtonLoaded(const LayoutDeviceIntRect& aButtonRect)
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
+}
+
+mozilla::widget::CompositorWidgetProxy*
+nsWindow::NewCompositorWidgetProxy()
+{
+  return new WinCompositorWidgetProxy(this);
 }
 
 already_AddRefed<mozilla::gfx::DrawTarget>
