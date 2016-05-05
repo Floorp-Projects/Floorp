@@ -9,6 +9,7 @@
 const {Cu} = require("chrome");
 Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
+const EventEmitter = require("devtools/shared/event-emitter");
 const {DomNodePreview} = require("devtools/client/inspector/shared/dom-node-preview");
 
 // Map dom node fronts by animation fronts so we don't have to get them from the
