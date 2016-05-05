@@ -19,9 +19,9 @@
 #include "mozilla/ComputedTiming.h"
 #include "mozilla/ComputedTimingFunction.h"
 #include "mozilla/EffectCompositor.h"
+#include "mozilla/KeyframeEffectParams.h"
 #include "mozilla/LayerAnimationInfo.h" // LayerAnimations::kRecords
 #include "mozilla/Maybe.h"
-#include "mozilla/OwningNonNull.h"      // OwningNonNull<...>
 #include "mozilla/StickyTimeDuration.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/TimeStamp.h"
@@ -196,7 +196,8 @@ class KeyframeEffectReadOnly : public AnimationEffectReadOnly
 public:
   KeyframeEffectReadOnly(nsIDocument* aDocument,
                          const Maybe<OwningAnimationTarget>& aTarget,
-                         const TimingParams& aTiming);
+                         const TimingParams& aTiming,
+                         const KeyframeEffectParams& aOptions);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(KeyframeEffectReadOnly,
@@ -236,8 +237,9 @@ public:
 
   IterationCompositeOperation IterationComposite() const;
   CompositeOperation Composite() const;
-  void GetSpacing(nsString& aRetVal) const {
-    aRetVal.AssignLiteral("distribute");
+  void GetSpacing(nsString& aRetVal) const
+  {
+    mEffectOptions.GetSpacingAsString(aRetVal);
   }
 
   already_AddRefed<AnimationEffectTimingReadOnly> Timing() const override;
@@ -355,7 +357,8 @@ public:
 protected:
   KeyframeEffectReadOnly(nsIDocument* aDocument,
                          const Maybe<OwningAnimationTarget>& aTarget,
-                         AnimationEffectTimingReadOnly* aTiming);
+                         AnimationEffectTimingReadOnly* aTiming,
+                         const KeyframeEffectParams& aOptions);
 
   virtual ~KeyframeEffectReadOnly();
 
@@ -389,6 +392,7 @@ protected:
   RefPtr<Animation> mAnimation;
 
   RefPtr<AnimationEffectTimingReadOnly> mTiming;
+  KeyframeEffectParams mEffectOptions;
 
   // The specified keyframes.
   nsTArray<Keyframe>          mKeyframes;
@@ -429,7 +433,8 @@ class KeyframeEffect : public KeyframeEffectReadOnly
 public:
   KeyframeEffect(nsIDocument* aDocument,
                  const Maybe<OwningAnimationTarget>& aTarget,
-                 const TimingParams& aTiming);
+                 const TimingParams& aTiming,
+                 const KeyframeEffectParams& aOptions);
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;

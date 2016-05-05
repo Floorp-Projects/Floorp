@@ -28,6 +28,7 @@ EXPORTS.mozilla += [
     'ComputedTimingFunction.h',
     'EffectCompositor.h',
     'EffectSet.h',
+    'KeyframeEffectParams.h',
     'KeyframeUtils.h',
     'PendingAnimationTracker.h',
     'PseudoElementHashEntry.h',
