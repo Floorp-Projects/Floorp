@@ -16,6 +16,7 @@
 #include "nsWrapperCache.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/DOMTokenListSupportedTokens.h"
 
 namespace mozilla {
 class ErrorResult;
@@ -37,7 +38,8 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMTokenList)
 
-  nsDOMTokenList(Element* aElement, nsIAtom* aAttrAtom);
+  nsDOMTokenList(Element* aElement, nsIAtom* aAttrAtom,
+                 const mozilla::dom::DOMTokenListSupportedTokenArray = nullptr);
 
   virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
 
@@ -87,6 +89,7 @@ protected:
 
   nsCOMPtr<Element> mElement;
   nsCOMPtr<nsIAtom> mAttrAtom;
+  const mozilla::dom::DOMTokenListSupportedTokenArray mSupportedTokens;
 };
 
 #endif // nsDOMTokenList_h___
