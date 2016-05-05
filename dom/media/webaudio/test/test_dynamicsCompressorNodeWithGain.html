@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+  <title>Test DynamicsCompressor with Gain</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+  var samplerate = 44100;
+  var context = new OfflineAudioContext(1, samplerate/100, samplerate);
+
+  var osc = context.createOscillator();
+  osc.frequency.value = 2400;
+
+  var gain = context.createGain();
+  gain.gain.value = 1.5;
+
+  // These numbers are borrowed from the example code on MDN
+  // https://developer.mozilla.org/en-US/docs/Web/API/DynamicsCompressorNode
+  var compressor = context.createDynamicsCompressor();
+  compressor.threshold.value = -50;
+  compressor.knee.value = 40;
+  compressor.ratio.value = 12;
+  compressor.reduction.value = -20;
+  compressor.attack.value = 0;
+  compressor.release.value = 0.25;
+
+  osc.connect(gain);
+  gain.connect(compressor);
+  compressor.connect(context.destination);
+  osc.start();
+
+  context.startRendering().then(buffer => {
+    var peak = Math.max(...buffer.getChannelData(0));
+    console.log(peak);
+    // These values are experimentally determined. Without dynamics compression
+    // the peak should be just under 1.5. We also check for a minimum value
+    // to make sure we are not getting all zeros.
+    ok(peak >= 0.2 && peak < 1.0, "Peak value should be greater than 0.25 and less than 1.0");
+    SimpleTest.finish();
+  });
+});
+</script>
+<pre>
+</pre>
+</body>
