@@ -73,14 +73,13 @@ GMPParent::GMPParent()
   , mChildPid(0)
   , mHoldingSelfRef(false)
 {
-  LOGD("GMPParent ctor");
   mPluginId = GeckoChildProcessHost::GetUniqueID();
+  LOGD("GMPParent ctor id=%u", mPluginId);
 }
 
 GMPParent::~GMPParent()
 {
-  LOGD("GMPParent dtor");
-
+  LOGD("GMPParent dtor id=%u", mPluginId);
   MOZ_ASSERT(!mProcess);
 }
 
@@ -985,16 +984,13 @@ GMPParent::CanBeSharedCrossNodeIds() const
 bool
 GMPParent::CanBeUsedFrom(const nsACString& aNodeId) const
 {
-  return !mAsyncShutdownInProgress &&
-         ((mNodeId.IsEmpty() && State() == GMPStateNotLoaded) ||
-          mNodeId == aNodeId);
+  return !mAsyncShutdownInProgress && mNodeId == aNodeId;
 }
 
 void
 GMPParent::SetNodeId(const nsACString& aNodeId)
 {
   MOZ_ASSERT(!aNodeId.IsEmpty());
-  MOZ_ASSERT(CanBeUsedFrom(aNodeId));
   mNodeId = aNodeId;
 }
 
