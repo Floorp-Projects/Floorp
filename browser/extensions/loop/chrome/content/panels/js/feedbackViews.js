@@ -23,8 +23,11 @@ loop.feedbackViews = function (_, mozL10n) {
      * and close the conversation window.
      */
     onFeedbackButtonClick: function () {
-      loop.request("GetLoopPref", "feedback.formURL").then(function (url) {
-        loop.request("OpenURL", url).then(this.props.onAfterFeedbackReceived);
+      loop.requestMulti(["GetLoopPref", "feedback.formURL"], ["GetAddonVersion"]).then(function (results) {
+        if (results[0] && results[1]) {
+          var finalURL = results[0].replace("%APP_VERSION%", results[1]);
+          loop.request("OpenURL", finalURL).then(this.props.onAfterFeedbackReceived);
+        }
       }.bind(this));
     },
 
