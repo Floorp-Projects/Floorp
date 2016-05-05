@@ -1871,6 +1871,16 @@ this.UITour = {
         let props = ["defaultUpdateChannel", "version"];
         let appinfo = {};
         props.forEach(property => appinfo[property] = Services.appinfo[property]);
+
+        // Identifier of the partner repack, as stored in preference "distribution.id"
+        // and included in Firefox and other update pings. Note this is not the same as
+        // Services.appinfo.distributionID (value of MOZ_DISTRIBUTION_ID is set at build time).
+        let distribution = "default";
+        try {
+          distribution = Services.prefs.getDefaultBranch("distribution.").getCharPref("id");
+        } catch(e) {}
+        appinfo["distribution"] = distribution;
+
         let isDefaultBrowser = null;
         try {
           let shell = aWindow.getShellService();

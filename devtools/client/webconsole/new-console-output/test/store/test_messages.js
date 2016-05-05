@@ -8,6 +8,7 @@ const {
   getRepeatId,
   prepareMessage
 } = require("devtools/client/webconsole/new-console-output/utils/messages");
+const { getAllMessages } = require("devtools/client/webconsole/new-console-output/selectors/messages");
 
 function run_test() {
   run_next_test();
@@ -23,7 +24,7 @@ add_task(function*() {
 
   const expectedMessage = prepareMessage(packet);
 
-  deepEqual(getState().messages, [expectedMessage],
+  deepEqual(getAllMessages(getState()), [expectedMessage],
     "MESSAGE_ADD action adds a message");
 });
 
@@ -40,7 +41,7 @@ add_task(function*() {
   const expectedMessage = prepareMessage(packet);
   expectedMessage.repeat = 3;
 
-  deepEqual(getState().messages, [expectedMessage],
+  deepEqual(getAllMessages(getState()), [expectedMessage],
     "Adding same message to the store twice results in repeated message");
 });
 

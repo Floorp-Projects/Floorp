@@ -99,9 +99,16 @@ devtools/client/promisedebugger/**
 devtools/client/responsivedesign/**
 devtools/client/scratchpad/**
 devtools/client/shadereditor/**
-devtools/client/shared/**
+devtools/client/shared/*.js
+devtools/client/shared/*.jsm
 !devtools/client/shared/css-color.js
 !devtools/client/shared/css-color-db.js
+!devtools/client/shared/css-parsing-utils.js
+devtools/client/shared/components/**
+devtools/client/shared/redux/**
+devtools/client/shared/test/**
+devtools/client/shared/vendor/**
+devtools/client/shared/widgets/**
 devtools/client/sourceeditor/**
 devtools/client/webaudioeditor/**
 devtools/client/webconsole/**

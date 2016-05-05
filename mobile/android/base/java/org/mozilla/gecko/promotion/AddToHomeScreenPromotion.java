@@ -17,7 +17,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.BrowserApp;
-import org.mozilla.gecko.BrowserAppDelegate;
+import org.mozilla.gecko.delegates.BrowserAppDelegate;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;

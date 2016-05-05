@@ -29,6 +29,8 @@ function backgroundScript(token) {
     browser.test.assertEq(port.name, token, "token matches");
     port.postMessage(token + "-done");
   });
+
+  browser.test.sendMessage("background-ready");
 }
 
 function contentScript(token) {
@@ -80,7 +82,9 @@ add_task(function* test_contentscript() {
   let extension1 = ExtensionTestUtils.loadExtension(makeExtension());
   let extension2 = ExtensionTestUtils.loadExtension(makeExtension());
   yield Promise.all([extension1.startup(), extension2.startup()]);
-  info("extensions loaded");
+
+  yield extension1.awaitMessage("background-ready");
+  yield extension2.awaitMessage("background-ready");
 
   let win = window.open("file_sample.html");
 
@@ -92,7 +96,6 @@ add_task(function* test_contentscript() {
 
   yield extension1.unload();
   yield extension2.unload();
-  info("extensions unloaded");
 });
 </script>
 

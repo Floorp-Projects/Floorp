@@ -7,15 +7,14 @@ package org.mozilla.gecko.feeds;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.BrowserApp;
-import org.mozilla.gecko.BrowserAppDelegate;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.delegates.BrowserAppDelegate;
 
 import java.util.List;
 

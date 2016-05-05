@@ -15,10 +15,10 @@
 }
 
 :root[devtoolstheme="dark"] {
-  --gcli-background-color: #343c45; /* --theme-toolbar-background */
-  --gcli-input-focused-background: #252c33; /* --theme-tab-toolbar-background */
+  --gcli-background-color: #272b35; /* --theme-toolbar-background */
+  --gcli-input-focused-background: #272b35; /* --theme-tab-toolbar-background */
   --gcli-input-color: #b6babf; /* --theme-body-color-alt */
-  --gcli-border-color: black; /* --theme-splitter-color */
+  --gcli-border-color: #454d5d; /* --theme-splitter-color */
 }
 
 .gcli-body {
