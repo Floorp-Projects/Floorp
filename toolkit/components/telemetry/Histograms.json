@@ -6461,6 +6461,7 @@
     "description": "For each failed PeerConnection, bit 0 indicates the short-duration rate limit was reached, bit 1 indicates the long-duration rate limit was reached"
   },
   "WEBRTC_AVSYNC_WHEN_AUDIO_LAGS_VIDEO_MS": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 60000,
@@ -6468,6 +6469,7 @@
     "description": "The delay (in milliseconds) when audio is behind video. Zero delay is counted. Measured every second of a call."
   },
   "WEBRTC_AVSYNC_WHEN_VIDEO_LAGS_AUDIO_MS": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 60000,
@@ -6475,6 +6477,7 @@
     "description": "The delay (in milliseconds) when video is behind audio. Zero delay is not counted. Measured every second of a call."
   },
   "WEBRTC_VIDEO_QUALITY_INBOUND_BANDWIDTH_KBITS": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000000,
@@ -6482,6 +6485,7 @@
     "description": "Locally measured data rate of inbound video (kbit/s). Computed every second of a call."
   },
   "WEBRTC_AUDIO_QUALITY_INBOUND_BANDWIDTH_KBITS": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000000,
@@ -6489,6 +6493,7 @@
     "description": "Locally measured data rate on inbound audio (kbit/s). Computed every second of a call."
   },
   "WEBRTC_VIDEO_QUALITY_OUTBOUND_BANDWIDTH_KBITS": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000000,
@@ -6496,6 +6501,7 @@
     "description": "Data rate deduced from RTCP from remote recipient of outbound video (kbit/s). Computed every second of a call (for easy comparison)."
   },
   "WEBRTC_AUDIO_QUALITY_OUTBOUND_BANDWIDTH_KBITS": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000000,
@@ -6503,6 +6509,7 @@
     "description": "Data rate deduced from RTCP from remote recipient of outbound audio (kbit/s). Computed every second of a call (for easy comparison)."
   },
   "WEBRTC_VIDEO_QUALITY_INBOUND_PACKETLOSS_RATE": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000,
@@ -6510,6 +6517,7 @@
     "description": "Locally measured packet loss on inbound video (permille). Sampled every second of a call."
   },
   "WEBRTC_AUDIO_QUALITY_INBOUND_PACKETLOSS_RATE": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000,
@@ -6517,6 +6525,7 @@
     "description": "Locally measured packet loss on inbound audio (permille). Sampled every second of a call."
   },
   "WEBRTC_VIDEO_QUALITY_OUTBOUND_PACKETLOSS_RATE": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000,
@@ -6524,6 +6533,7 @@
     "description": "RTCP-reported packet loss by remote recipient of outbound video (permille). Sampled every second of a call (for easy comparison)."
   },
   "WEBRTC_AUDIO_QUALITY_OUTBOUND_PACKETLOSS_RATE": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000,
@@ -6531,6 +6541,7 @@
     "description": "RTCP-reported packet loss by remote recipient of outbound audio (permille). Sampled every second of a call (for easy comparison)."
   },
   "WEBRTC_VIDEO_QUALITY_INBOUND_JITTER": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000,
@@ -6538,6 +6549,7 @@
     "description": "Locally measured jitter on inbound video (ms). Sampled every second of a call."
   },
   "WEBRTC_AUDIO_QUALITY_INBOUND_JITTER": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000,
@@ -6545,6 +6557,7 @@
     "description": "Locally measured jitter on inbound audio (ms). Sampled every second of a call."
   },
   "WEBRTC_VIDEO_QUALITY_OUTBOUND_JITTER": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000,
@@ -6552,6 +6565,7 @@
     "description": "RTCP-reported jitter by remote recipient of outbound video (ms). Sampled every second of a call (for easy comparison)."
   },
   "WEBRTC_AUDIO_QUALITY_OUTBOUND_JITTER": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000,
@@ -6559,6 +6573,7 @@
     "description": "RTCP-reported jitter by remote recipient of outbound audio (ms). Sampled every second of a call (for easy comparison)."
   },
   "WEBRTC_VIDEO_ERROR_RECOVERY_MS": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000,
@@ -6566,6 +6581,7 @@
     "description": "Time to recover from a video error in ms"
   },
   "WEBRTC_VIDEO_RECOVERY_BEFORE_ERROR_PER_MIN": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000,
@@ -6573,6 +6589,7 @@
     "description": "Number of losses recovered before error per min"
   },
   "WEBRTC_VIDEO_RECOVERY_AFTER_ERROR_PER_MIN": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000,
@@ -6580,6 +6597,7 @@
     "description": "Number of losses recovered after error per min"
   },
   "WEBRTC_VIDEO_DECODE_ERROR_TIME_PERMILLE": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000,
@@ -6587,6 +6605,7 @@
     "description": "Percentage*10 (permille) of call decoding with errors or frozen due to errors"
   },
   "WEBRTC_VIDEO_QUALITY_OUTBOUND_RTT": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000,
@@ -6594,6 +6613,7 @@
     "description": "Roundtrip time of outbound video (ms). Sampled every second of a call."
   },
   "WEBRTC_AUDIO_QUALITY_OUTBOUND_RTT": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000,
@@ -6601,6 +6621,7 @@
     "description": "Roundtrip time of outbound audio (ms). Sampled every second of a call."
   },
   "WEBRTC_VIDEO_ENCODER_BITRATE_AVG_PER_CALL_KBPS": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000,
@@ -6608,6 +6629,7 @@
     "description": "Video encoder's average bitrate (in kbits/s) over an entire call"
   },
   "WEBRTC_VIDEO_ENCODER_BITRATE_STD_DEV_PER_CALL_KBPS": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 5000,
@@ -6615,6 +6637,7 @@
     "description": "Standard deviation from video encoder's average bitrate (in kbits/s) over an entire call"
   },
   "WEBRTC_VIDEO_ENCODER_FRAMERATE_AVG_PER_CALL": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 200,
@@ -6622,6 +6645,7 @@
     "description": "Video encoder's average framerate (in fps) over an entire call"
   },
   "WEBRTC_VIDEO_ENCODER_FRAMERATE_10X_STD_DEV_PER_CALL": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 200,
@@ -6629,6 +6653,7 @@
     "description": "Standard deviation from video encoder's average framerate (in 1/10 fps) over an entire call"
   },
   "WEBRTC_VIDEO_ENCODER_DROPPED_FRAMES_PER_CALL_FPM": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 50000,
@@ -6636,6 +6661,7 @@
     "description": "Video encoder's number of frames dropped (in frames/min) over an entire call"
   },
   "WEBRTC_VIDEO_DECODER_BITRATE_AVG_PER_CALL_KBPS": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000,
@@ -6643,6 +6669,7 @@
     "description": "Video decoder's average bitrate (in kbits/s) over an entire call"
   },
   "WEBRTC_VIDEO_DECODER_BITRATE_STD_DEV_PER_CALL_KBPS": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 5000,
@@ -6650,6 +6677,7 @@
     "description": "Standard deviation from video decoder's average bitrate (in kbits/s) over an entire call"
   },
   "WEBRTC_VIDEO_DECODER_FRAMERATE_AVG_PER_CALL": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 200,
@@ -6657,6 +6685,7 @@
     "description": "Video decoder's average framerate (in fps) over an entire call"
   },
   "WEBRTC_VIDEO_DECODER_FRAMERATE_10X_STD_DEV_PER_CALL": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 200,
@@ -6664,6 +6693,7 @@
     "description": "Standard deviation from video decoder's average framerate (in 1/10 fps) over an entire call"
   },
   "WEBRTC_VIDEO_DECODER_DISCARDED_PACKETS_PER_CALL_PPM": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 50000,
@@ -6671,6 +6701,7 @@
     "description": "Video decoder's number of discarded packets (in packets/min) over an entire call"
   },
   "WEBRTC_CALL_DURATION": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000,
@@ -6678,6 +6709,7 @@
     "description": "The length of time (in seconds) that a call lasted."
   },
   "WEBRTC_CALL_COUNT": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "48",
     "kind": "exponential",
     "high": 500,
@@ -6716,12 +6748,14 @@
     "releaseChannelCollection": "opt-out"
   },
   "WEBRTC_GET_USER_MEDIA_TYPE": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 8,
     "description": "Type for media in getUserMedia calls (0=Camera, 1=Screen, 2=Application, 3=Window, 4=Browser, 5=Microphone, 6=AudioCapture, 7=Other)"
   },
   "WEBRTC_LOAD_STATE_RELAXED": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": 100,
@@ -6729,6 +6763,7 @@
     "description": "Percentage of time spent in the Relaxed load state in calls over 30 seconds."
   },
   "WEBRTC_LOAD_STATE_RELAXED_SHORT": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": 100,
@@ -6736,6 +6771,7 @@
     "description": "Percentage of time spent in the Relaxed load state in calls 5-30 seconds."
   },
   "WEBRTC_LOAD_STATE_NORMAL": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": 100,
@@ -6743,6 +6779,7 @@
     "description": "Percentage of time spent in the Normal load state in calls over 30 seconds."
   },
   "WEBRTC_LOAD_STATE_NORMAL_SHORT": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": 100,
@@ -6750,6 +6787,7 @@
     "description": "Percentage of time spent in the Normal load state in calls over 5-30 seconds."
   },
   "WEBRTC_LOAD_STATE_STRESSED": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": 100,
@@ -6757,6 +6795,7 @@
     "description": "Percentage of time spent in the Stressed load state in calls over 30 seconds."
   },
   "WEBRTC_LOAD_STATE_STRESSED_SHORT": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": 100,
@@ -6764,6 +6803,7 @@
     "description": "Percentage of time spent in the Stressed load state in calls 5-30 seconds."
   },
   "WEBRTC_RENEGOTIATIONS": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": 21,
@@ -6771,6 +6811,7 @@
     "description": "Number of Renegotiations during each call"
   },
   "WEBRTC_MAX_VIDEO_SEND_TRACK": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": 10,
@@ -6778,6 +6819,7 @@
     "description": "Number of Video tracks sent simultaneously"
   },
   "WEBRTC_MAX_VIDEO_RECEIVE_TRACK": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": 20,
@@ -6785,6 +6827,7 @@
     "description": "Number of Video tracks received simultaneously"
   },
   "WEBRTC_MAX_AUDIO_SEND_TRACK": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": 20,
@@ -6792,6 +6835,7 @@
     "description": "Number of Audio tracks sent simultaneously"
   },
   "WEBRTC_MAX_AUDIO_RECEIVE_TRACK": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": 30,
@@ -6799,11 +6843,13 @@
     "description": "Number of Audio tracks received simultaneously"
   },
   "WEBRTC_DATACHANNEL_NEGOTIATED": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Was DataChannels negotiated"
   },
   "WEBRTC_CALL_TYPE": {
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 8,
