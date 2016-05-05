@@ -89,8 +89,7 @@ reflectString({
   extendedAttributes: { TreatNullAs: "EmptyString" },
 })
 
-// TODO: Bug 881000 - Consider reflecting lowsrc as a URL.
-reflectString({
+reflectURL({
   element: document.createElement("img"),
   attribute: "lowsrc",
 })
