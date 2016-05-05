@@ -26,6 +26,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsReadableUtils.h"
 #include "nsStyleConsts.h"
+#include "nsStyleLinkElement.h"
 #include "nsUnicharUtils.h"
 
 #define LINK_ELEMENT_FLAG_BIT(n_) \
@@ -458,11 +459,29 @@ HTMLLinkElement::GetLinkTarget(nsAString& aTarget)
   }
 }
 
+static const DOMTokenListSupportedToken sSupportedRelValues[] = {
+  // Keep this in sync with ToLinkMask in nsStyleLinkElement.cpp.
+  // "import" must come first because it's conditional.
+  "import"
+  "prefetch",
+  "dns-prefetch",
+  "stylesheet",
+  "next",
+  "alternate",
+  "preconnect",
+  "icon",
+  nullptr
+};
+
 nsDOMTokenList* 
 HTMLLinkElement::RelList()
 {
   if (!mRelList) {
-    mRelList = new nsDOMTokenList(this, nsGkAtoms::rel);
+    const DOMTokenListSupportedTokenArray relValues =
+      nsStyleLinkElement::IsImportEnabled() ?
+        sSupportedRelValues : &sSupportedRelValues[1];
+
+    mRelList = new nsDOMTokenList(this, nsGkAtoms::rel, relValues);
   }
   return mRelList;
 }
