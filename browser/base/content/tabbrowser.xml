@@ -618,12 +618,6 @@
 
               const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
               const nsIChannel = Components.interfaces.nsIChannel;
-              let location, originalLocation;
-              try {
-                aRequest.QueryInterface(nsIChannel)
-                location = aRequest.URI;
-                originalLocation = aRequest.originalURI;
-              } catch (ex) {}
 
               if (aStateFlags & nsIWebProgressListener.STATE_START) {
                 this.mRequestCount++;
@@ -642,21 +636,17 @@
 
               if (aStateFlags & nsIWebProgressListener.STATE_START &&
                   aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
+                // It's okay to clear what the user typed when we start
+                // loading a document. If the user types, this counter gets
+                // set to zero, if the document load ends without an
+                // onLocationChange, this counter gets decremented
+                // (so we keep it while switching tabs after failed loads)
+                // We need to add 2 because loadURIWithFlags may have
+                // cancelled a pending load which would have cleared
+                // its anchor scroll detection temporary increment.
                 if (aWebProgress.isTopLevel) {
-                  // Need to use originalLocation rather than location because things
-                  // like about:home and about:privatebrowsing arrive with nsIRequest
-                  // pointing to their resolved jar: or file: URIs.
-                  if (!(originalLocation && gInitialPages.includes(originalLocation.spec) &&
-                        originalLocation != "about:blank" &&
-                        this.mBrowser.currentURI && this.mBrowser.currentURI.spec == "about:blank")) {
-                    // This will trigger clearing the location bar. Don't do it if
-                    // we loaded off a blank browser and this is an initial page load
-                    // (e.g. about:privatebrowsing, about:newtab, etc.) so we avoid
-                    // clearing the location bar in case the user is typing in it.
-                    // loading about:blank shouldn't trigger this, either, because its
-                    // loads are "special".
-                    this.mBrowser.urlbarChangeTracker.startedLoad();
-                  }
+                  this.mBrowser.userTypedClear += 2;
+
                   // If the browser is loading it must not be crashed anymore
                   this.mTab.removeAttribute("crashed");
                 }
@@ -686,8 +676,8 @@
                 this.mTab.removeAttribute("progress");
 
                 if (aWebProgress.isTopLevel) {
-                  let isSuccessful = Components.isSuccessCode(aStatus);
-                  if (!isSuccessful && !isTabEmpty(this.mTab)) {
+                  if (!Components.isSuccessCode(aStatus) &&
+                      !isTabEmpty(this.mTab)) {
                     // Restore the current document's location in case the
                     // request was stopped (possibly from a content script)
                     // before the location changed.
@@ -698,8 +688,14 @@
                     if (this.mTab.selected && gURLBar && !inLoadURI) {
                       URLBarSetURI();
                     }
-                  } else if (isSuccessful) {
-                    this.mBrowser.urlbarChangeTracker.finishedLoad();
+                  } else {
+                    // The document is done loading, we no longer want the
+                    // value cleared.
+
+                    if (this.mBrowser.userTypedClear > 1)
+                      this.mBrowser.userTypedClear -= 2;
+                    else if (this.mBrowser.userTypedClear > 0)
+                      this.mBrowser.userTypedClear--;
                   }
 
                   if (!this.mBrowser.mIconURL)
@@ -708,6 +704,8 @@
 
                 if (this.mBlank)
                   this.mBlank = false;
+
+                var location = aRequest.QueryInterface(nsIChannel).URI;
 
                 // For keyword URIs clear the user typed value since they will be changed into real URIs
                 if (location.scheme == "keyword")
@@ -753,17 +751,18 @@
               if (topLevel) {
                 let isSameDocument =
                   !!(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT);
-                // We need to clear the typed value
+                // If userTypedClear > 0, the document loaded correctly and we should be
+                // clearing the user typed value. We also need to clear the typed value
                 // if the document failed to load, to make sure the urlbar reflects the
                 // failed URI (particularly for SSL errors). However, don't clear the value
                 // if the error page's URI is about:blank, because that causes complete
                 // loss of urlbar contents for invalid URI errors (see bug 867957).
                 // Another reason to clear the userTypedValue is if this was an anchor
                 // navigation initiated by the user.
-                if (this.mBrowser.didStartLoadSinceLastUserTyping() ||
+                if (this.mBrowser.userTypedClear > 0 ||
                     ((aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) &&
                      aLocation.spec != "about:blank") ||
-                    (isSameDocument && this.mBrowser.inLoadURI)) {
+                     (isSameDocument && this.mBrowser.inLoadURI)) {
                   this.mBrowser.userTypedValue = null;
                 }
 
@@ -1585,9 +1584,6 @@
             // We'll be creating a new listener, so destroy the old one.
             listener.destroy();
 
-            let oldUserTypedValue = aBrowser.userTypedValue;
-            let hadStartedLoad = aBrowser.didStartLoadSinceLastUserTyping();
-
             // Make sure the browser is destroyed so it unregisters from observer notifications
             aBrowser.destroy();
 
@@ -1599,11 +1595,6 @@
             parent.removeChild(aBrowser);
             aBrowser.setAttribute("remote", aShouldBeRemote ? "true" : "false");
             parent.appendChild(aBrowser);
-
-            aBrowser.userTypedValue = oldUserTypedValue;
-            if (hadStartedLoad) {
-              aBrowser.urlbarChangeTracker.startedLoad();
-            }
 
             aBrowser.droppedLinkHandler = droppedLinkHandler;
 
@@ -4165,6 +4156,10 @@
           }
         ]]></body>
       </method>
+
+      <property name="userTypedClear"
+                onget="return this.mCurrentBrowser.userTypedClear;"
+                onset="return this.mCurrentBrowser.userTypedClear = val;"/>
 
       <property name="userTypedValue"
                 onget="return this.mCurrentBrowser.userTypedValue;"
