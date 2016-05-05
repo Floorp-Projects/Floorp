@@ -990,8 +990,6 @@ GeckoMediaPluginServiceParent::SelectPluginForAPI(const nsACString& aNodeId,
           return gmp.forget();
         }
       } else if (gmp->CanBeUsedFrom(aNodeId)) {
-        MOZ_ASSERT(!aNodeId.IsEmpty());
-        gmp->SetNodeId(aNodeId);
         return gmp.forget();
       }
 
