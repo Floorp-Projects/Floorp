@@ -361,6 +361,60 @@
         ]]></body>
       </method>
 
+      <method name="scrollByPage">
+        <parameter name="pageDelta"/>
+        <parameter name="aSmoothScroll"/>
+        <body><![CDATA[
+          if (pageDelta == 0)
+            return;
+
+          // If a previous call is still in progress because of smooth
+          // scrolling, we need to complete it before starting a new one.
+          if (this._scrollTarget) {
+            let elements = this._getScrollableElements();
+            if (this._scrollTarget != elements[0] &&
+                this._scrollTarget != elements[elements.length - 1])
+              this.ensureElementIsVisible(this._scrollTarget, false);
+          }
+
+          var [start, end] = this._startEndProps;
+          var rect = this.scrollClientRect;
+          var containerEdge = pageDelta > 0 ? rect[end] + 1 : rect[start] - 1;
+          var pixelDelta = pageDelta * (rect[end] - rect[start]);
+          var destinationPosition = containerEdge + pixelDelta;
+          var nextElement = this._elementFromPoint(containerEdge, pageDelta);
+          if (!nextElement)
+            return;
+
+          // We need to iterate over our elements in the direction of pageDelta.
+          // pageDelta is the physical direction, so in a horizontal scroll box,
+          // positive values scroll to the right no matter if the scrollbox is
+          // LTR or RTL. But RTL changes how we need to advance the iteration
+          // (whether to get the next or the previous sibling of the current
+          // element).
+          var logicalAdvanceDir = pageDelta * (this._isRTLScrollbox ? -1 : 1);
+          var advance = logicalAdvanceDir > 0 ? (e => e.nextSibling) : (e => e.previousSibling);
+
+          var extendsPastTarget = (pageDelta > 0)
+            ? (e => e.getBoundingClientRect()[end] > destinationPosition)
+            : (e => e.getBoundingClientRect()[start] < destinationPosition);
+
+          // We want to scroll to the last element we encounter before we find
+          // an element which extends past destinationPosition.
+          var targetElement;
+          do {
+            if (this._canScrollToElement(nextElement))
+              targetElement = nextElement;
+            nextElement = advance(nextElement);
+          } while (nextElement && !extendsPastTarget(nextElement));
+
+          if (!targetElement)
+            return;
+
+          this.ensureElementIsVisible(targetElement, aSmoothScroll);
+        ]]></body>
+      </method>
+
       <method name="_getScrollableElements">
         <body><![CDATA[
           var nodes = this.childNodes;
@@ -501,6 +555,8 @@
         if (this.orient == "vertical") {
           if (event.deltaMode == event.DOM_DELTA_PIXEL)
             this.scrollByPixels(event.deltaY);
+          else if (event.deltaMode == event.DOM_DELTA_PAGE)
+            this.scrollByPage(event.deltaY);
           else
             this.scrollByIndex(event.deltaY);
         }
@@ -520,6 +576,8 @@
           if (this._prevMouseScrolls.every(prev => prev == isVertical)) {
             if (event.deltaMode == event.DOM_DELTA_PIXEL)
               this.scrollByPixels(scrollByDelta);
+            else if (event.deltaMode == event.DOM_DELTA_PAGE)
+              this.scrollByPage(scrollByDelta);
             else
               this.scrollByIndex(scrollByDelta);
           }
