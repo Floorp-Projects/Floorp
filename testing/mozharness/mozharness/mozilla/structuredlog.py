@@ -152,7 +152,7 @@ class StructuredOutputParser(OutputParser):
             fail_text = '0'
 
         text_summary = "%s/%s/%s" % (expected_count, fail_text, expected_failures)
-        self.info("TinderboxPrint: %s: %s\n" % (suite_name, text_summary))
+        self.info("TinderboxPrint: %s<br/>%s\n" % (suite_name, text_summary))
 
     def append_tinderboxprint_line(self, suite_name):
         summary = self.handler.summarize()

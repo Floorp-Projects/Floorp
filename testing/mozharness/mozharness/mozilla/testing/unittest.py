@@ -87,7 +87,7 @@ class TestSummaryOutputParserHelper(OutputParser):
                 failed = emphasize_fail_text % str(self.failed)
             self.tsummary = "%d/%s/%d" % (self.passed, failed, self.todo)
 
-        self.info("TinderboxPrint: %s: %s\n" % (suite_name, self.tsummary))
+        self.info("TinderboxPrint: %s<br/>%s\n" % (suite_name, self.tsummary))
 
     def append_tinderboxprint_line(self, suite_name):
         self.print_summary(suite_name)
