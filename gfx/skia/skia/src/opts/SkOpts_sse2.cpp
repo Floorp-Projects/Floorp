@@ -32,6 +32,7 @@ namespace SkOpts {
         blit_mask_d32_a8 = sk_sse2::blit_mask_d32_a8;
 
         blit_row_color32 = sk_sse2::blit_row_color32;
+        blit_row_s32a_opaque = sk_sse2::blit_row_s32a_opaque;
 
         matrix_translate = sk_sse2::matrix_translate;
         matrix_scale_translate = sk_sse2::matrix_scale_translate;
