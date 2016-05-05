@@ -25,7 +25,6 @@
 #include "nsITimer.h"
 #include "nsRegion.h"
 #include "mozilla/EventForwards.h"
-#include "mozilla/gfx/CriticalSection.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TimeStamp.h"
 #include "nsMargin.h"
@@ -315,8 +314,6 @@ public:
                      nsIKeyEventInPluginCallback* aCallback) override;
 
   mozilla::widget::CompositorWidgetProxy* NewCompositorWidgetProxy() override;
-  bool PreRender(LayerManagerComposite*);
-  void PostRender(LayerManagerComposite*);
   already_AddRefed<mozilla::gfx::DrawTarget> StartRemoteDrawing();
   void EndRemoteDrawing();
 
@@ -500,6 +497,8 @@ protected:
   void                    ClearCachedResources();
   nsIWidgetListener*      GetPaintListener();
 
+  mozilla::widget::WinCompositorWidgetProxy* GetCompositorWidgetProxy();
+
 protected:
   nsCOMPtr<nsIWidget>   mParent;
   nsIntSize             mLastSize;
@@ -639,11 +638,7 @@ protected:
   static bool sNeedsToInitMouseWheelSettings;
   static void InitMouseWheelScrollData();
 
-  mozilla::gfx::CriticalSection mPresentLock;
-
   double mSizeConstraintsScale; // scale in effect when setting constraints
-
-  RefPtr<mozilla::widget::WinCompositorWidgetProxy> mCompositorWidgetProxy;
 };
 
 /**

@@ -22,13 +22,18 @@ WinCompositorWidgetProxy::WinCompositorWidgetProxy(nsWindow* aWindow)
 bool
 WinCompositorWidgetProxy::PreRender(layers::LayerManagerComposite* aManager)
 {
-  return mWindow->PreRender(aManager);
+  // This can block waiting for WM_SETTEXT to finish
+  // Using PreRender is unnecessarily pessimistic because
+  // we technically only need to block during the present call
+  // not all of compositor rendering
+  mPresentLock.Enter();
+  return true;
 }
 
 void
 WinCompositorWidgetProxy::PostRender(layers::LayerManagerComposite* aManager)
 {
-  mWindow->PostRender(aManager);
+  mPresentLock.Leave();
 }
 
 void
@@ -68,6 +73,17 @@ WinCompositorWidgetProxy::GetCompositorVsyncDispatcher()
   return cvd.forget();
 }
 
+void
+WinCompositorWidgetProxy::EnterPresentLock()
+{
+  mPresentLock.Enter();
+}
+
+void
+WinCompositorWidgetProxy::LeavePresentLock()
+{
+  mPresentLock.Leave();
+}
 
 } // namespace widget
 } // namespace mozilla

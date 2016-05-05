@@ -27,6 +27,8 @@ class DrawTarget;
 } // namespace gfx
 namespace widget {
 
+class WinCompositorWidgetProxy;
+
 /**
  * Access to a widget from the compositor is restricted to these methods.
  */
@@ -175,6 +177,10 @@ public:
    * Return a compositor vsync dispatcher for this widget.
    */
   virtual already_AddRefed<CompositorVsyncDispatcher> GetCompositorVsyncDispatcher() = 0;
+
+  virtual WinCompositorWidgetProxy* AsWindowsProxy() {
+    return nullptr;
+  }
 
 protected:
   virtual ~CompositorWidgetProxy();
