@@ -7,6 +7,7 @@ var {WebChannel} = Cu.import("resource://gre/modules/WebChannel.jsm", {});
 const TEST_URL_TAIL = "example.com/browser/browser/base/content/test/general/test_remoteTroubleshoot.html"
 const TEST_URI_GOOD = Services.io.newURI("https://" + TEST_URL_TAIL, null, null);
 const TEST_URI_BAD = Services.io.newURI("http://" + TEST_URL_TAIL, null, null);
+const TEST_URI_GOOD_OBJECT = Services.io.newURI("https://" + TEST_URL_TAIL + "?object", null, null);
 
 // Creates a one-shot web-channel for the test data to be sent back from the test page.
 function promiseChannelResponse(channelID, originOrPermission) {
@@ -78,4 +79,15 @@ add_task(function*() {
   // Now a http:// URI - should get nothing even with the permission setup.
   got = yield promiseNewChannelResponse(TEST_URI_BAD);
   Assert.ok(got.message === undefined, "should have failed to get any data");
+
+  // Check that the page can send an object as well if it's in the whitelist
+  let webchannelWhitelistPref = "webchannel.allowObject.urlWhitelist";
+  let origWhitelist = Services.prefs.getCharPref(webchannelWhitelistPref);
+  let newWhitelist = origWhitelist + " https://example.com";
+  Services.prefs.setCharPref(webchannelWhitelistPref, newWhitelist);
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref(webchannelWhitelistPref);
+  });
+  got = yield promiseNewChannelResponse(TEST_URI_GOOD_OBJECT);
+  Assert.ok(got.message, "should have gotten some data back");
 });

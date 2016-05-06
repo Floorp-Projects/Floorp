@@ -15,6 +15,7 @@ const TEST_URI =
   "example.com/browser/browser/extensions/loop/chrome/test/mochitest/test_loopLinkClicker_channel.html";
 const TEST_URI_GOOD = Services.io.newURI("https://" + TEST_URI, null, null);
 const TEST_URI_BAD = Services.io.newURI("http://" + TEST_URI, null, null);
+const TEST_URI_GOOD_OBJECT = Services.io.newURI("https://" + TEST_URI + "?object", null, null);
 
 const ROOM_TOKEN = "fake1234";
 const LINKCLICKER_URL_PREFNAME = "loop.linkClicker.url";
@@ -165,4 +166,18 @@ add_task(function* test_loopRooms_webchannel_openRoom() {
 
   Assert.equal(got.message.response, true, "should have got a response of true");
   Assert.equal(got.message.alreadyOpen, true, "should indicate the room is already open");
+
+  // Ensure this still works properly when passing an object through the WebChannel
+  let webchannelWhitelistPref = "webchannel.allowObject.urlWhitelist";
+  let origWhitelist = Services.prefs.getCharPref(webchannelWhitelistPref);
+  let newWhitelist = origWhitelist + " https://example.com";
+  Services.prefs.setCharPref(webchannelWhitelistPref, newWhitelist);
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref(webchannelWhitelistPref);
+  });
+  got = yield promiseNewChannelResponse(TEST_URI_GOOD_OBJECT, gGoodBackChannel, "openRoom");
+
+  Assert.equal(got.message.response, true, "should have got a response of true with objects");
+  Assert.equal(got.message.alreadyOpen, true, "should indicate the room is already open with objects");
+
 });
