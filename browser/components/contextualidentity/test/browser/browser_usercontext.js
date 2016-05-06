@@ -27,15 +27,10 @@ function openTabInUserContext(uri, userContextId) {
 
 add_task(function* setup() {
   // make sure userContext is enabled.
-  SpecialPowers.pushPrefEnv({"set": [
-    ["privacy.userContext.enabled", true]
-  ]});
-});
-
-add_task(function* cleanup() {
-  // make sure we don't leave any prefs set for the next tests
-  registerCleanupFunction(function() {
-    SpecialPowers.popPrefEnv();
+  yield new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({"set": [
+      ["privacy.userContext.enabled", true]
+    ]}, resolve);
   });
 });
 
