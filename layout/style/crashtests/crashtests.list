@@ -147,3 +147,4 @@ load font-face-truncated-src.html
 load large_border_image_width.html
 load long-url-list-stack-overflow.html
 pref(layout.css.background-clip-text.enabled,true) load 1264949.html
+pref(layout.css.background-clip-text.enabled,true) load 1270795.html
