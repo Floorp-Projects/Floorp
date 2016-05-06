@@ -8,7 +8,9 @@
 <script>
   window.onload = function(){
     var event = new window.CustomEvent("WebChannelMessageToChrome", {
-      detail: {
+      // Note: This intentionally sends a string instead of an object, to ensure both work
+      // (see browser_fxa_oauth.html for the other test)
+      detail: JSON.stringify({
         id: "oauth_client_id",
         message: {
           command: "oauth_complete",
@@ -21,7 +23,7 @@
             keys: { kAr: { k: 'kAr' }, kBr: { k: 'kBr' }},
           },
         },
-      },
+      }),
     });
 
     window.dispatchEvent(event);

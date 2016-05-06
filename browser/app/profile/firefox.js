@@ -1412,3 +1412,7 @@ pref("browser.laterrun.enabled", false);
 pref("dom.mozBrowserFramesEnabled", true);
 
 pref("extensions.pocket.enabled", true);
+
+// Space separated list of URLS that are allowed to send objects (instead of
+// only strings) through webchannels.
+pref("webchannel.allowObject.urlWhitelist", "https://accounts.firefox.com https://content.cdn.mozilla.net https://hello.firefox.com https://input.mozilla.org https://support.mozilla.org https://install.mozilla.org");
