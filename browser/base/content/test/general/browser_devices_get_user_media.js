@@ -10,12 +10,6 @@ Cc["@mozilla.org/moz/jssubscript-loader;1"]
   .loadSubScript(getRootDirectory(gTestPath) + "get_user_media_helpers.js",
                  this);
 
-function enableDevice(aType, aEnabled) {
-  let menulist = document.getElementById("webRTC-select" + aType + "-menulist");
-  let menupopup = document.getElementById("webRTC-select" + aType + "-menupopup");
-  menulist.value = aEnabled ? menupopup.firstChild.getAttribute("value") : "-1";
-}
-
 registerCleanupFunction(function() {
   gBrowser.removeCurrentTab();
 });
@@ -67,8 +61,6 @@ var gTests = [
     is(PopupNotifications.panel.firstChild.getAttribute("popupid"),
        "webRTC-shareMicrophone", "panel using microphone icon");
 
-    enableDevice("Microphone", true);
-
     let indicator = promiseIndicatorWindow();
     yield promiseMessage("ok", () => {
       PopupNotifications.panel.firstChild.button.click();
@@ -109,97 +101,6 @@ var gTests = [
     yield indicator;
     yield checkSharingUI({video: true});
     yield closeStream();
-  }
-},
-
-{
-  desc: "getUserMedia audio+video, user disables video",
-  run: function checkDisableVideo() {
-    let promise = promisePopupNotificationShown("webRTC-shareDevices");
-    yield promiseRequestDevice(true, true);
-    yield promise;
-    yield expectObserverCalled("getUserMedia:request");
-    checkDeviceSelectors(true, true);
-
-    // disable the camera
-    enableDevice("Microphone", true);
-    enableDevice("Camera", false);
-
-    let indicator = promiseIndicatorWindow();
-    yield promiseMessage("ok", () => {
-      PopupNotifications.panel.firstChild.button.click();
-    });
-
-    // reset the menuitem to have no impact on the following tests.
-    enableDevice("Camera", true);
-
-    yield expectObserverCalled("getUserMedia:response:allow");
-    yield expectObserverCalled("recording-device-events");
-    is((yield getMediaCaptureState()), "Microphone",
-       "expected microphone to be shared");
-
-    yield indicator;
-    yield checkSharingUI({audio: true});
-    yield closeStream();
-  }
-},
-
-{
-  desc: "getUserMedia audio+video, user disables audio",
-  run: function checkDisableAudio() {
-    let promise = promisePopupNotificationShown("webRTC-shareDevices");
-    yield promiseRequestDevice(true, true);
-    yield promise;
-    yield expectObserverCalled("getUserMedia:request");
-    checkDeviceSelectors(true, true);
-
-    // disable the microphone
-    enableDevice("Microphone", false);
-    enableDevice("Camera", true);
-
-    let indicator = promiseIndicatorWindow();
-    yield promiseMessage("ok", () => {
-      PopupNotifications.panel.firstChild.button.click();
-    });
-
-    // reset the menuitem to have no impact on the following tests.
-    enableDevice("Microphone", true);
-
-    yield expectObserverCalled("getUserMedia:response:allow");
-    yield expectObserverCalled("recording-device-events");
-    is((yield getMediaCaptureState()), "Camera",
-       "expected microphone to be shared");
-
-    yield indicator;
-    yield checkSharingUI({video: true});
-    yield closeStream();
-  }
-},
-
-{
-  desc: "getUserMedia audio+video, user disables both audio and video",
-  run: function checkDisableAudioVideo() {
-    let promise = promisePopupNotificationShown("webRTC-shareDevices");
-    yield promiseRequestDevice(true, true);
-    yield promise;
-    yield expectObserverCalled("getUserMedia:request");
-    checkDeviceSelectors(true, true);
-
-    // disable the camera and microphone
-    enableDevice("Camera", false);
-    enableDevice("Microphone", false);
-
-    yield promiseMessage(permissionError, () => {
-      PopupNotifications.panel.firstChild.button.click();
-    });
-
-    // reset the menuitems to have no impact on the following tests.
-    enableDevice("Camera", true);
-    enableDevice("Microphone", true);
-
-    yield expectObserverCalled("getUserMedia:response:deny");
-    yield expectObserverCalled("recording-window-ended");
-    yield checkNotSharing();
   }
 },
 
@@ -308,27 +209,20 @@ var gTests = [
   run: function checkRememberCheckbox() {
     let elt = id => document.getElementById(id);
 
-    function checkPerm(aRequestAudio, aRequestVideo, aAllowAudio, aAllowVideo,
+    function checkPerm(aRequestAudio, aRequestVideo,
                        aExpectedAudioPerm, aExpectedVideoPerm, aNever) {
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
       yield promiseRequestDevice(aRequestAudio, aRequestVideo);
       yield promise;
       yield expectObserverCalled("getUserMedia:request");
 
-      let noAudio = aAllowAudio === undefined;
-      is(elt("webRTC-selectMicrophone").hidden, noAudio,
-         "microphone selector expected to be " + (noAudio ? "hidden" : "visible"));
-      if (!noAudio)
-        enableDevice("Microphone", aAllowAudio || aNever);
+      is(elt("webRTC-selectMicrophone").hidden, !aRequestAudio,
+         "microphone selector expected to be " + (aRequestAudio ? "visible" : "hidden"));
 
-      let noVideo = aAllowVideo === undefined;
-      is(elt("webRTC-selectCamera").hidden, noVideo,
-         "camera selector expected to be " + (noVideo ? "hidden" : "visible"));
-      if (!noVideo)
-        enableDevice("Camera", aAllowVideo || aNever);
+      is(elt("webRTC-selectCamera").hidden, !aRequestVideo,
+         "camera selector expected to be " + (aRequestVideo ? "visible" : "hidden"));
 
-      let expectedMessage =
-        (aAllowVideo || aAllowAudio) ? "ok" : permissionError;
+      let expectedMessage = aNever ? permissionError : "ok";
       yield promiseMessage(expectedMessage, () => {
         activateSecondaryAction(aNever ? kActionNever : kActionAlways);
       });
@@ -336,9 +230,9 @@ var gTests = [
       if (expectedMessage == "ok") {
         yield expectObserverCalled("getUserMedia:response:allow");
         yield expectObserverCalled("recording-device-events");
-        if (aAllowVideo)
+        if (aRequestVideo)
           expected.push("Camera");
-        if (aAllowAudio)
+        if (aRequestAudio)
           expected.push("Microphone");
         expected = expected.join("And");
       }
@@ -371,39 +265,19 @@ var gTests = [
 
     // 3 cases where the user accepts the device prompt.
     info("audio+video, user grants, expect both perms set to allow");
-    yield checkPerm(true, true, true, true, true, true);
+    yield checkPerm(true, true, true, true);
     info("audio only, user grants, check audio perm set to allow, video perm not set");
-    yield checkPerm(true, false, true, undefined, true, undefined);
+    yield checkPerm(true, false, true, undefined);
     info("video only, user grants, check video perm set to allow, audio perm not set");
-    yield checkPerm(false, true, undefined, true, undefined, true);
+    yield checkPerm(false, true, undefined, true);
 
-    // 3 cases where the user rejects the device request.
-    // First test these cases by setting the device to 'No Audio'/'No Video'
-    info("audio+video, user denies, expect both perms set to deny");
-    yield checkPerm(true, true, false, false, false, false);
+    // 3 cases where the user rejects the device request by using 'Never Share'.
     info("audio only, user denies, expect audio perm set to deny, video not set");
-    yield checkPerm(true, false, false, undefined, false, undefined);
+    yield checkPerm(true, false, false, undefined, true);
     info("video only, user denies, expect video perm set to deny, audio perm not set");
-    yield checkPerm(false, true, undefined, false, undefined, false);
-    // Now test these 3 cases again by using the 'Never Share' action.
+    yield checkPerm(false, true, undefined, false, true);
     info("audio+video, user denies, expect both perms set to deny");
-    yield checkPerm(true, true, false, false, false, false, true);
-    info("audio only, user denies, expect audio perm set to deny, video not set");
-    yield checkPerm(true, false, false, undefined, false, undefined, true);
-    info("video only, user denies, expect video perm set to deny, audio perm not set");
-    yield checkPerm(false, true, undefined, false, undefined, false, true);
-
-    // 2 cases where the user allows half of what's requested.
-    info("audio+video, user denies video, grants audio, " +
-         "expect video perm set to deny, audio perm set to allow.");
-    yield checkPerm(true, true, true, false, true, false);
-    info("audio+video, user denies audio, grants video, " +
-         "expect video perm set to allow, audio perm set to deny.");
-    yield checkPerm(true, true, false, true, false, true);
-
-    // reset the menuitems to have no impact on the following tests.
-    enableDevice("Microphone", true);
-    enableDevice("Camera", true);
+    yield checkPerm(true, true, false, false, true);
   }
 },
 
@@ -478,16 +352,16 @@ var gTests = [
     yield usePerm(false, false, true, true, false);
 
     // Allow audio, deny video.
-    info("allow audio, deny video, request audio+video, expect ok (audio)");
-    yield usePerm(true, false, true, true, true);
+    info("allow audio, deny video, request audio+video, expect denied");
+    yield usePerm(true, false, true, true, false);
     info("allow audio, deny video, request audio, expect ok (audio)");
     yield usePerm(true, false, true, false, true);
     info("allow audio, deny video, request video, expect denied");
     yield usePerm(true, false, false, true, false);
 
     // Deny audio, allow video.
-    info("deny audio, allow video, request audio+video, expect ok (video)");
-    yield usePerm(false, true, true, true, true);
+    info("deny audio, allow video, request audio+video, expect denied");
+    yield usePerm(false, true, true, true, false);
     info("deny audio, allow video, request audio, expect denied");
     yield usePerm(false, true, true, false, false);
     info("deny audio, allow video, request video, expect ok (video)");
@@ -502,14 +376,14 @@ var gTests = [
     yield usePerm(true, undefined, false, true, undefined);
 
     // Deny audio, video not set.
-    info("deny audio, request audio+video, expect prompt");
-    yield usePerm(false, undefined, true, true, undefined);
+    info("deny audio, request audio+video, expect denied");
+    yield usePerm(false, undefined, true, true, false);
     info("deny audio, request audio, expect denied");
     yield usePerm(false, undefined, true, false, false);
     info("deny audio, request video, expect prompt");
     yield usePerm(false, undefined, false, true, undefined);
 
-    // Allow video, video not set.
+    // Allow video, audio not set.
     info("allow video, request audio+video, expect prompt");
     yield usePerm(undefined, true, true, true, undefined);
     info("allow video, request audio, expect prompt");
@@ -517,9 +391,9 @@ var gTests = [
     info("allow video, request video, expect ok (video)");
     yield usePerm(undefined, true, false, true, true);
 
-    // Deny video, video not set.
-    info("deny video, request audio+video, expect prompt");
-    yield usePerm(undefined, false, true, true, undefined);
+    // Deny video, audio not set.
+    info("deny video, request audio+video, expect denied");
+    yield usePerm(undefined, false, true, true, false);
     info("deny video, request audio, expect prompt");
     yield usePerm(undefined, false, true, false, undefined);
     info("deny video, request video, expect denied");
