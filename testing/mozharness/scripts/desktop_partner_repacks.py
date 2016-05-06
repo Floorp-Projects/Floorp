@@ -107,10 +107,11 @@ class DesktopPartnerRepacks(ReleaseMixin, BuildbotMixin, PurgeMixin,
             if self.config.get('require_buildprops', False) is True:
                 if not self.buildbot_config:
                     self.fatal("Unable to load properties from file: %s" % self.config.get('buildbot_json_path'))
+            props = self.buildbot_config["properties"]
             for prop in ['version', 'build_number', 'revision', 'repo_file', 'repack_manifests_url', 'partner']:
-                if self.buildbot_config.get(prop):
-                    self.info("Overriding %s with %s" % (prop, self.buildbot_config[prop]))
-                    self.config[prop] = self.buildbot_config.get(prop)
+                if props.get(prop):
+                    self.info("Overriding %s with %s" % (prop, props[prop]))
+                    self.config[prop] = props.get(prop)
 
         if 'version' not in self.config:
             self.fatal("Version (-v) not supplied.")
