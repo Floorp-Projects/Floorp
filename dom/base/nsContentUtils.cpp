@@ -5029,28 +5029,27 @@ nsContentUtils::WarnScriptWasIgnored(nsIDocument* aDocument)
 }
 
 /* static */
-bool
+void
 nsContentUtils::AddScriptRunner(already_AddRefed<nsIRunnable> aRunnable)
 {
   nsCOMPtr<nsIRunnable> runnable = aRunnable;
   if (!runnable) {
-    return false;
+    return;
   }
 
   if (sScriptBlockerCount) {
-    return sBlockedScriptRunners->AppendElement(runnable.forget()) != nullptr;
+    sBlockedScriptRunners->AppendElement(runnable.forget());
+    return;
   }
-  
-  runnable->Run();
 
-  return true;
+  runnable->Run();
 }
 
 /* static */
-bool
+void
 nsContentUtils::AddScriptRunner(nsIRunnable* aRunnable) {
   nsCOMPtr<nsIRunnable> runnable = aRunnable;
-  return AddScriptRunner(runnable.forget());
+  AddScriptRunner(runnable.forget());
 }
 
 /* static */
