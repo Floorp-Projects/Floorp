@@ -1360,17 +1360,7 @@ nsContentUtils::ParseSandboxAttributeToFlags(const nsAttrValue* sandboxAttr)
   if (!sandboxAttr) { return 0; }
 
   //  Start off by setting all the restriction flags.
-  uint32_t out = SANDBOXED_NAVIGATION
-               | SANDBOXED_AUXILIARY_NAVIGATION
-               | SANDBOXED_TOPLEVEL_NAVIGATION
-               | SANDBOXED_PLUGINS
-               | SANDBOXED_ORIGIN
-               | SANDBOXED_FORMS
-               | SANDBOXED_SCRIPTS
-               | SANDBOXED_AUTOMATIC_FEATURES
-               | SANDBOXED_POINTER_LOCK
-               | SANDBOXED_ORIENTATION_LOCK
-               | SANDBOXED_DOMAIN;
+  uint32_t out = SANDBOX_ALL_FLAGS;
 
 // Macro for updating the flag according to the keywords
 #define SANDBOX_KEYWORD(string, atom, flags)                             \
