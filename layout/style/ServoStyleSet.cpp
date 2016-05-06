@@ -83,6 +83,12 @@ ServoStyleSet::GetContext(nsIContent* aContent,
                           nsIAtom* aPseudoTag,
                           CSSPseudoElementType aPseudoType)
 {
+  while (aContent->IsInAnonymousSubtree()) {
+    NS_ERROR("stylo: anonymous content isn't styled properly yet");
+    aContent = aContent->GetParentElement();
+    MOZ_ASSERT(aContent, "couldn't break out of anonymous content");
+  }
+
   RefPtr<ServoComputedValues> computedValues = dont_AddRef(Servo_GetComputedValues(aContent));
   MOZ_ASSERT(computedValues);
   return GetContext(computedValues.forget(), aParentContext, aPseudoTag, aPseudoType);
