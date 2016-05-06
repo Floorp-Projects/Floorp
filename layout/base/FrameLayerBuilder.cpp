@@ -5553,7 +5553,9 @@ FrameLayerBuilder::PaintItems(nsTArray<ClippedDisplayItem>& aItems,
       aDrawTarget.SetPermitSubpixelAA(saved);
     } else {
       nsIFrame* frame = cdi->mItem->Frame();
-      frame->AddStateBits(NS_FRAME_PAINTED_THEBES);
+      if (aBuilder->IsPaintingToWindow()) {
+        frame->AddStateBits(NS_FRAME_PAINTED_THEBES);
+      }
 #ifdef MOZ_DUMP_PAINTING
       if (gfxEnv::DumpPaintItems()) {
         DebugPaintItem(aDrawTarget, aPresContext, cdi->mItem, aBuilder);
