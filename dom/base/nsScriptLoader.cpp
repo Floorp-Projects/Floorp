@@ -236,29 +236,6 @@ nsScriptLoader::CheckContentPolicy(nsIDocument* aDocument,
 }
 
 nsresult
-nsScriptLoader::ShouldLoadScript(nsIDocument* aDocument,
-                                 nsISupports* aContext,
-                                 nsIURI* aURI,
-                                 const nsAString &aType,
-                                 bool aIsPreLoad)
-{
-  // Check that the containing page is allowed to load this URI.
-  nsresult rv = nsContentUtils::GetSecurityManager()->
-    CheckLoadURIWithPrincipal(aDocument->NodePrincipal(), aURI,
-                              nsIScriptSecurityManager::ALLOW_CHROME);
-
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // After the security manager, the content-policy stuff gets a veto
-  rv = CheckContentPolicy(aDocument, aContext, aURI, aType, aIsPreLoad);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
-nsresult
 nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType,
                           bool aScriptFromHead)
 {
