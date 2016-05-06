@@ -777,3 +777,33 @@ function synthesizeKeys(input, win) {
     EventUtils.synthesizeKey(key, {}, win);
   }
 }
+
+/**
+ * Given a tooltip object instance (see Tooltip.js), checks if it is set to
+ * toggle and hover and if so, checks if the given target is a valid hover
+ * target. This won't actually show the tooltip (the less we interact with XUL
+ * panels during test runs, the better).
+ *
+ * @return a promise that resolves when the answer is known
+ */
+function isHoverTooltipTarget(tooltip, target) {
+  if (!tooltip._toggle._baseNode || !tooltip.panel) {
+    return promise.reject(new Error(
+      "The tooltip passed isn't set to toggle on hover or is not a tooltip"));
+  }
+  return tooltip._toggle.isValidHoverTarget(target);
+}
+
+/**
+ * Same as isHoverTooltipTarget except that it will fail the test if there is no
+ * tooltip defined on hover of the given element
+ *
+ * @return a promise
+ */
+function assertHoverTooltipOn(tooltip, element) {
+  return isHoverTooltipTarget(tooltip, element).then(() => {
+    ok(true, "A tooltip is defined on hover of the given element");
+  }, () => {
+    ok(false, "No tooltip is defined on hover of the given element");
+  });
+}
