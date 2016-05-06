@@ -84,7 +84,7 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
     private String distributionLocale;
 
     public static interface SearchEngineCallback {
-        public void execute(SearchEngine engine);
+        public void execute(@Nullable SearchEngine engine);
     }
 
     public SearchEngineManager(Context context, Distribution distribution) {
