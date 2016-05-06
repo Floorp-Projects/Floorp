@@ -233,6 +233,7 @@ public:
     void OnDeviceManagerDestroy(mozilla::layers::DeviceManagerD3D9* aDeviceManager);
     mozilla::layers::DeviceManagerD3D9* GetD3D9DeviceManager();
     IDirect3DDevice9* GetD3D9Device();
+    void D3D9DeviceReset();
     ID3D11Device *GetD3D11Device();
     ID3D11Device *GetD3D11ContentDevice();
     ID3D11Device* GetD3D11DeviceForCurrentThread();
@@ -356,6 +357,7 @@ private:
     bool mHasDeviceReset;
     bool mHasFakeDeviceReset;
     bool mCompositorD3D11TextureSharingWorks;
+    mozilla::Atomic<bool> mHasD3D9DeviceReset;
     DeviceResetReason mDeviceResetReason;
 
     // These should not be accessed directly. Use the Get[Feature]Status
