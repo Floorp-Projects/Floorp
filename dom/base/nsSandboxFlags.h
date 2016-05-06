@@ -23,10 +23,17 @@
 const unsigned long SANDBOXED_NAVIGATION  = 0x1;
 
 /**
+ * This flag prevents content from creating new auxiliary browsing contexts,
+ * e.g. using the target attribute, the window.open() method, or the
+ * showModalDialog() method.
+ */
+const unsigned long SANDBOXED_AUXILIARY_NAVIGATION = 0x2;
+
+/**
  * This flag prevents content from navigating their top-level browsing
  * context.
  */
-const unsigned long SANDBOXED_TOPLEVEL_NAVIGATION = 0x2;
+const unsigned long SANDBOXED_TOPLEVEL_NAVIGATION = 0x4;
 
 /**
  * This flag prevents content from instantiating plugins, whether using the
@@ -34,7 +41,7 @@ const unsigned long SANDBOXED_TOPLEVEL_NAVIGATION = 0x2;
  * navigation of a nested browsing context, unless those plugins can be
  * secured.
  */
-const unsigned long SANDBOXED_PLUGINS = 0x4;
+const unsigned long SANDBOXED_PLUGINS = 0x8;
 
 /**
  * This flag forces content into a unique origin, thus preventing it from
@@ -42,43 +49,53 @@ const unsigned long SANDBOXED_PLUGINS = 0x4;
  * This flag also prevents script from reading from or writing to the
  * document.cookie IDL attribute, and blocks access to localStorage.
  */
-const unsigned long SANDBOXED_ORIGIN = 0x8;
+const unsigned long SANDBOXED_ORIGIN = 0x10;
 
 /**
  * This flag blocks form submission.
  */
-const unsigned long SANDBOXED_FORMS = 0x10;
+const unsigned long SANDBOXED_FORMS = 0x20;
+
+/**
+ * This flag blocks the document from acquiring pointerlock.
+ */
+const unsigned long SANDBOXED_POINTER_LOCK = 0x40;
 
 /**
  * This flag blocks script execution.
  */
-const unsigned long SANDBOXED_SCRIPTS = 0x20;
+const unsigned long SANDBOXED_SCRIPTS = 0x80;
 
 /**
  * This flag blocks features that trigger automatically, such as
  * automatically playing a video or automatically focusing a form control.
  */
-const unsigned long SANDBOXED_AUTOMATIC_FEATURES = 0x40;
+const unsigned long SANDBOXED_AUTOMATIC_FEATURES = 0x100;
 
 /**
- * This flag blocks the document from acquiring pointerlock.
+ * This flag prevents URL schemes that use storage areas from being able to
+ * access the origin's data.
  */
-const unsigned long SANDBOXED_POINTER_LOCK = 0x80;
+// We don't have an explicit representation of this one, apparently?
+// const unsigned long SANDBOXED_STORAGE_AREA_URLS = 0x200;
+
+/**
+ * This flag prevents content from using the requestFullscreen() method.
+ */
+// We don't implement this yet.  See represent this as a sandbox flag; instead it's an explicit check for
+// the "allowfullscreen" attribute on the <iframe> that includes us.
+// XXXbz This is wrong in two ways: It can change during the life of the
+// document, and it doesn't get correctly propagated to popups.  See
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1270648
+// const unsigned long SANDBOXED_FULLSCREEN = 0x400;
 
 /**
  * This flag blocks the document from changing document.domain.
  */
-const unsigned long SANDBOXED_DOMAIN = 0x100;
-
-/**
- * This flag prevents content from creating new auxiliary browsing contexts,
- * e.g. using the target attribute, the window.open() method, or the
- * showModalDialog() method.
- */
-const unsigned long SANDBOXED_AUXILIARY_NAVIGATION = 0x200;
+const unsigned long SANDBOXED_DOMAIN = 0x800;
 
 /**
  * This flag prevents locking screen orientation.
  */
-const unsigned long SANDBOXED_ORIENTATION_LOCK = 0x400;
+const unsigned long SANDBOXED_ORIENTATION_LOCK = 0x1000;
 #endif
