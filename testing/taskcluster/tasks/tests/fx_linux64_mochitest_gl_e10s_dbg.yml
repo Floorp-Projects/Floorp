@@ -1,0 +1,6 @@
+$inherits:
+  from: 'tasks/tests/fx_linux64_mochitest_gl_e10s.yml'
+task:
+  payload:
+    command:
+      - --download-symbols=true
