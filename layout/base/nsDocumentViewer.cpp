@@ -86,8 +86,6 @@
 #include "nsIPrompt.h"
 #include "imgIContainer.h" // image animation mode constants
 
-#include "nsSandboxFlags.h"
-
 #include "mozilla/DocLoadingTimelineMarker.h"
 
 //--------------------------
@@ -1152,8 +1150,7 @@ nsDocumentViewer::PermitUnloadInternal(bool *aShouldPrompt,
 
   // NB: we nullcheck mDocument because it might now be dead as a result of
   // the event being dispatched.
-  if (!sIsBeforeUnloadDisabled && *aShouldPrompt && dialogsAreEnabled &&
-      mDocument && !(mDocument->GetSandboxFlags() & SANDBOXED_MODALS) &&
+  if (!sIsBeforeUnloadDisabled && *aShouldPrompt && dialogsAreEnabled && mDocument &&
       (!sBeforeUnloadRequiresInteraction || mDocument->UserHasInteracted()) &&
       (event->WidgetEventPtr()->DefaultPrevented() || !text.IsEmpty())) {
     // Ask the user if it's ok to unload the current page
