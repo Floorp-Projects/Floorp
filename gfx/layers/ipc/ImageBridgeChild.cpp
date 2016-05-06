@@ -147,7 +147,9 @@ struct CompositableTransaction
         MOZ_ASSERT(ok);
         break;
       }
-      default: MOZ_CRASH();
+      default:
+        MOZ_CRASH("GFX: IBC Fallback destroy actors");
+        break;
       }
     }
     mDestroyedActors.Clear();

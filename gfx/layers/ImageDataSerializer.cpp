@@ -112,7 +112,7 @@ gfx::SurfaceFormat FormatFromBufferDescriptor(const BufferDescriptor& aDescripto
     case BufferDescriptor::TYCbCrDescriptor:
       return gfx::SurfaceFormat::YUV;
     default:
-      MOZ_CRASH();
+      MOZ_CRASH("GFX: FormatFromBufferDescriptor");
   }
 }
 
@@ -124,7 +124,7 @@ gfx::IntSize SizeFromBufferDescriptor(const BufferDescriptor& aDescriptor)
     case BufferDescriptor::TYCbCrDescriptor:
       return aDescriptor.get_YCbCrDescriptor().ySize();
     default:
-      MOZ_CRASH();
+      MOZ_CRASH("GFX: SizeFromBufferDescriptor");
   }
 }
 

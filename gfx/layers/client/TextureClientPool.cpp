@@ -72,12 +72,12 @@ static bool TestClientPool(const char* what,
                    << aPool << "-" << aPool->GetFormat() << ", "
                    << actual << "-" << actual->GetFormat() << ", "
                    << aClient->GetFormat();
-      MOZ_CRASH("Crashing with actual");
+      MOZ_CRASH("GFX: Crashing with actual");
     } else {
       gfxCriticalError() << "Pool error(" << what << "): "
                    << aPool << "-" << aPool->GetFormat() << ", nullptr, "
                    << aClient->GetFormat();
-      MOZ_CRASH("Crashing without actual");
+      MOZ_CRASH("GFX: Crashing without actual");
     }
   }
   return ok;
