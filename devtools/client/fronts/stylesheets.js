@@ -11,7 +11,8 @@ const {
 const {
   originalSourceSpec,
   mediaRuleSpec,
-  styleSheetSpec
+  styleSheetSpec,
+  styleSheetsSpec
 } = require("devtools/shared/specs/stylesheets.js");
 const promise = require("promise");
 const events = require("sdk/event/core.js");
@@ -167,3 +168,16 @@ const StyleSheetFront = FrontClassWithSpec(styleSheetSpec, {
 });
 
 exports.StyleSheetFront = StyleSheetFront;
+
+/**
+ * The corresponding Front object for the StyleSheetsActor.
+ */
+const StyleSheetsFront = FrontClassWithSpec(styleSheetsSpec, {
+  initialize: function (client, tabForm) {
+    Front.prototype.initialize.call(this, client);
+    this.actorID = tabForm.styleSheetsActor;
+    this.manage(this);
+  }
+});
+
+exports.StyleSheetsFront = StyleSheetsFront;

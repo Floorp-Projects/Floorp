@@ -101,3 +101,20 @@ const styleSheetSpec = generateActorSpec({
 });
 
 exports.styleSheetSpec = styleSheetSpec;
+
+const styleSheetsSpec = generateActorSpec({
+  typeName: "stylesheets",
+
+  methods: {
+    getStyleSheets: {
+      request: {},
+      response: { styleSheets: RetVal("array:stylesheet") }
+    },
+    addStyleSheet: {
+      request: { text: Arg(0, "string") },
+      response: { styleSheet: RetVal("stylesheet") }
+    }
+  }
+});
+
+exports.styleSheetsSpec = styleSheetsSpec;
