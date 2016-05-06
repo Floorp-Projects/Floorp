@@ -111,15 +111,22 @@ ChannelFromScriptURL(nsIPrincipal* principal,
                      WorkerScriptType aWorkerScriptType,
                      nsContentPolicyType aContentPolicyType,
                      nsLoadFlags aLoadFlags,
+                     bool aDefaultURIEncoding,
                      nsIChannel** aChannel)
 {
   AssertIsOnMainThread();
 
   nsresult rv;
   nsCOMPtr<nsIURI> uri;
-  rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri),
-                                                 aScriptURL, parentDoc,
-                                                 baseURI);
+
+  if (aDefaultURIEncoding) {
+    rv = NS_NewURI(getter_AddRefs(uri), aScriptURL, nullptr, baseURI);
+  } else {
+    rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri),
+                                                   aScriptURL, parentDoc,
+                                                   baseURI);
+  }
+
   if (NS_FAILED(rv)) {
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
@@ -919,10 +926,14 @@ private:
     }
 
     if (!channel) {
+      // Only top level workers' main script use the document charset for the
+      // script uri encoding. Otherwise, default encoding (UTF-8) is applied.
+      bool useDefaultEncoding = !(!parentWorker && IsMainWorkerScript());
       rv = ChannelFromScriptURL(principal, baseURI, parentDoc, loadGroup, ios,
                                 secMan, loadInfo.mURL, IsMainWorkerScript(),
                                 mWorkerScriptType,
                                 mWorkerPrivate->ContentPolicyType(), loadFlags,
+                                useDefaultEncoding,
                                 getter_AddRefs(channel));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -1697,6 +1708,8 @@ public:
                                                    mScriptURL,
                                                    // Nested workers are always dedicated.
                                                    nsIContentPolicy::TYPE_INTERNAL_WORKER,
+                                                   // Nested workers use default uri encoding.
+                                                   true,
                                                    getter_AddRefs(channel));
     if (NS_SUCCEEDED(mResult)) {
       channel.forget(mChannel);
@@ -2012,6 +2025,7 @@ ChannelFromScriptURLMainThread(nsIPrincipal* aPrincipal,
                                nsILoadGroup* aLoadGroup,
                                const nsAString& aScriptURL,
                                nsContentPolicyType aContentPolicyType,
+                               bool aDefaultURIEncoding,
                                nsIChannel** aChannel)
 {
   AssertIsOnMainThread();
@@ -2024,7 +2038,7 @@ ChannelFromScriptURLMainThread(nsIPrincipal* aPrincipal,
   return ChannelFromScriptURL(aPrincipal, aBaseURI, aParentDoc, aLoadGroup,
                               ios, secMan, aScriptURL, true, WorkerScript,
                               aContentPolicyType, nsIRequest::LOAD_NORMAL,
-                              aChannel);
+                              aDefaultURIEncoding, aChannel);
 }
 
 nsresult

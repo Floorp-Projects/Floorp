@@ -398,7 +398,11 @@ winmm_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
   XASSERT(context);
   XASSERT(stream);
 
-  XASSERT(!input_stream_params && "not supported.");
+  if (input_stream_params) {
+    /* Capture support not yet implemented. */
+    return CUBEB_ERROR_NOT_SUPPORTED;
+  }
+
   if (input_device || output_device) {
     /* Device selection not yet implemented. */
     return CUBEB_ERROR_DEVICE_UNAVAILABLE;

@@ -16,14 +16,18 @@
 
 'use strict';
 
-require('../test/suite');
-
 var examiner = require('../testharness/examiner');
 var stati = require('../testharness/status').stati;
 var helpers = require('../test/helpers');
+var suite = require('../test/suite');
 var cli = require('../cli');
 var Requisition = require('../cli').Requisition;
 var createRequisitionAutomator = require('../test/automators/requisition').createRequisitionAutomator;
+
+var isNode = (typeof(process) !== 'undefined' &&
+             process.title.indexOf('node') != -1);
+
+suite.init(isNode);
 
 exports.optionsContainer = [];
 
@@ -69,12 +73,15 @@ exports.items = [
         options = exports.optionsContainer[0];
       }
       else {
+        var env = {
+          document: document,
+          window: window
+        };
         options = {
-          isNode: (typeof(process) !== 'undefined' &&
-                   process.title.indexOf('node') != -1),
+          isNode: isNode,
           isFirefox: false,
           isPhantomjs: false,
-          requisition: new Requisition(context.system)
+          requisition: new Requisition(context.system, { environment: env })
         };
         options.automator = createRequisitionAutomator(options.requisition);
       }

@@ -1,0 +1,9 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+
+LINTER = {
+    'name': "BadExtensionLinter",
+    'description': "Has an invalid file extension.",
+    'type': 'string',
+    'payload': 'foobar',
+}

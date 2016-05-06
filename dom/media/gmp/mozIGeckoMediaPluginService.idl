@@ -62,6 +62,12 @@ interface mozIGeckoMediaPluginService : nsISupports
   readonly attribute nsIThread thread;
 
   /**
+   * Run through windows registered registered for pluginId, sending
+   * 'PluginCrashed' chrome-only event
+   */
+  void RunPluginCrashCallbacks(in unsigned long pluginId, in ACString pluginName);
+
+  /**
    * Get a plugin that supports the specified tags.
    * Callable on any thread
    */
@@ -105,8 +111,8 @@ interface mozIGeckoMediaPluginService : nsISupports
    */
   [noscript]
   void getGMPVideoEncoder(in TagArray tags,
-		                      [optional] in ACString nodeId,
-		                      in GetGMPVideoEncoderCallback callback);
+                          [optional] in ACString nodeId,
+                          in GetGMPVideoEncoderCallback callback);
 
   /**
    * Returns an audio decoder that supports the specified tags.

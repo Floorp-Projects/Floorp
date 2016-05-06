@@ -57,14 +57,6 @@ protected:
   RefPtr<MediaByteBuffer> mExtraData;
   AVCodecID mCodecID;
 
-  // For wait on mIsFlushing during Shutdown() process.
-  // Protects mReorderQueue.
-  Monitor mMonitor;
-  // Set on reader/decode thread calling Flush() to indicate that output is
-  // not required and so input samples on mTaskQueue need not be processed.
-  // Cleared on mTaskQueue in ProcessDrain().
-  Atomic<bool> mIsFlushing;
-
 private:
   static StaticMutex sMonitor;
 };

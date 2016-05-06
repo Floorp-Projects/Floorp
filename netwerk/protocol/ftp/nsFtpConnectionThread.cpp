@@ -43,6 +43,7 @@
 #include "nsILoadInfo.h"
 #include "nsNullPrincipal.h"
 #include "nsIAuthPrompt2.h"
+#include "nsIFTPChannelParentInternal.h"
 
 #ifdef MOZ_WIDGET_GONK
 #include "NetStatistics.h"
@@ -1848,6 +1849,11 @@ nsFtpState::StopProcessing()
                     NS_ConvertASCIItoUTF16(mResponseMsg));
             }
             NS_DispatchToMainThread(alertEvent);
+        }
+        nsCOMPtr<nsIFTPChannelParentInternal> ftpChanP;
+        mChannel->GetCallback(ftpChanP);
+        if (ftpChanP) {
+          ftpChanP->SetErrorMsg(mResponseMsg.get(), mUseUTF8);
         }
     }
 

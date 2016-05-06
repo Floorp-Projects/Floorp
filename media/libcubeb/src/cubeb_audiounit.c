@@ -151,6 +151,12 @@ audiotimestamp_to_latency(AudioTimeStamp const * tstamp, cubeb_stream * stream)
   return ((pres - now) * stream->output_desc.mSampleRate) / 1000000000LL;
 }
 
+static void
+audiounit_make_silent(AudioBuffer * ioData)
+{
+  memset(ioData->mData, 0, ioData->mDataByteSize);
+}
+
 static OSStatus
 audiounit_input_callback(void * user_ptr,
                          AudioUnitRenderActionFlags * flags,
@@ -193,7 +199,12 @@ audiounit_input_callback(void * user_ptr,
                                bus,
                                input_frames,
                                &input_buffer_list);
-  assert(r == noErr);
+  if (r != noErr) {
+    LOG("Input AudioUnitRender failed with error=%d", r);
+    audiounit_make_silent(input_buffer);
+    return r;
+  }
+
   LOG("- input:  buffers %d, size %d, channels %d, frames %d\n",
       input_buffer_list.mNumberBuffers,
       input_buffer_list.mBuffers[0].mDataByteSize,
@@ -229,12 +240,6 @@ audiounit_input_callback(void * user_ptr,
 
   pthread_mutex_unlock(&stm->mutex);
   return noErr;
-}
-
-static void
-audiounit_make_silent(AudioBuffer * ioData)
-{
-  memset(ioData->mData, 0, ioData->mDataByteSize);
 }
 
 static OSStatus

@@ -50,7 +50,7 @@ input[type=button] {
   z-index: 101;
 }
 
-#newtab-customize-button:-moz-dir(rtl) {
+#newtab-customize-button:dir(rtl) {
   left: 20px;
   right: auto;
 }
@@ -71,12 +71,12 @@ input[type=button] {
   z-index: 1;
 }
 
-#newtab-margin-undo-container:-moz-dir(rtl) {
+#newtab-margin-undo-container:dir(rtl) {
   left: auto;
   right: 6px;
 }
 
-#newtab-undo-close-button:-moz-dir(rtl) {
+#newtab-undo-close-button:dir(rtl) {
   float:left;
 }
 
@@ -244,7 +244,7 @@ input[type=button] {
   background-color: #000000;
 }
 
-.newtab-sponsored:-moz-dir(rtl) {
+.newtab-sponsored:dir(rtl) {
   right: 0;
   left: auto;
 }
@@ -307,13 +307,13 @@ input[type=button] {
   }
 }
 
-.newtab-control-pin:-moz-dir(ltr),
-.newtab-control-block:-moz-dir(rtl) {
+.newtab-control-pin:dir(ltr),
+.newtab-control-block:dir(rtl) {
   left: 4px;
 }
 
-.newtab-control-block:-moz-dir(ltr),
-.newtab-control-pin:-moz-dir(rtl) {
+.newtab-control-block:dir(ltr),
+.newtab-control-pin:dir(rtl) {
   right: 4px;
 }
 
@@ -379,7 +379,7 @@ input[type=button] {
   color: inherit;
 }
 
-#newtab-search-text:-moz-dir(rtl) {
+#newtab-search-text:dir(rtl) {
   border-radius: 0 2px 2px 0;
 }
 
@@ -387,7 +387,7 @@ input[type=button] {
   border-radius: 2px 0 0 0;
 }
 
-#newtab-search-text[aria-expanded="true"]:-moz-dir(rtl) {
+#newtab-search-text[aria-expanded="true"]:dir(rtl) {
   border-radius: 0 2px 0 0;
 }
 
@@ -414,7 +414,7 @@ input[type=button] {
   width: 50px;
 }
 
-#newtab-search-submit:-moz-dir(rtl) {
+#newtab-search-submit:dir(rtl) {
   border-radius: 2px 0 0 2px;
 }
 
@@ -466,7 +466,7 @@ input[type=button] {
   right: 0;
 }
 
-.newtab-customize-panel-container:-moz-dir(rtl) {
+.newtab-customize-panel-container:dir(rtl) {
   right: auto;
   left: 0;
 }
@@ -484,12 +484,12 @@ input[type=button] {
   transform: translate(-30px, -20px) scale(0) translate(30px, 20px);
 }
 
-#newtab-customize-panel:-moz-dir(rtl) {
+#newtab-customize-panel:dir(rtl) {
   transform-origin: 40px top 20px;
 }
 
-#newtab-customize-panel:-moz-dir(rtl),
-#newtab-customize-panel-anchor:-moz-dir(rtl) {
+#newtab-customize-panel:dir(rtl),
+#newtab-customize-panel-anchor:dir(rtl) {
   left: 15px;
   right: auto;
 }

@@ -137,7 +137,7 @@ public:
   }
   void SetHspace(uint32_t aValue, ErrorResult& aRv)
   {
-    SetUnsignedIntAttr(nsGkAtoms::hspace, aValue, aRv);
+    SetUnsignedIntAttr(nsGkAtoms::hspace, aValue, 0, aRv);
   }
   void GetName(DOMString& aValue)
   {
@@ -158,7 +158,7 @@ public:
   }
   void SetVspace(uint32_t aValue, ErrorResult& aRv)
   {
-    SetUnsignedIntAttr(nsGkAtoms::vspace, aValue, aRv);
+    SetUnsignedIntAttr(nsGkAtoms::vspace, aValue, 0, aRv);
   }
   void GetWidth(DOMString& aValue)
   {

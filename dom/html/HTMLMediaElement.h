@@ -448,8 +448,12 @@ public:
   // when the connection between Rtsp server and client gets lost.
   virtual void ResetConnectionState() final override;
 
-  // Called by media decoder when the audible state changed.
-  virtual void NotifyAudibleStateChanged(bool aAudible) final override;
+  // Called by media decoder when the audible state changed or when input is
+  // a media stream.
+  virtual void SetAudibleState(bool aAudible) final override;
+
+  // Notify agent when the MediaElement changes its audible state.
+  void NotifyAudioPlaybackChanged();
 
   // XPCOM GetPreload() is OK
   void SetPreload(const nsAString& aValue, ErrorResult& aRv)
@@ -1598,11 +1602,8 @@ public:
     uint32_t mCount;
   };
 private:
-  // Total time an MSE video has spent playing
+  // Total time a video has spent playing.
   TimeDurationAccumulator mPlayTime;
-
-  // Time spent between video load and video playback.
-  TimeDurationAccumulator mJoinLatency;
 
   // Indicates if user has interacted with the element.
   // Used to block autoplay when disabled.

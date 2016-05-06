@@ -567,6 +567,20 @@ IDBTransaction::DeleteObjectStore(int64_t aObjectStoreId)
 }
 
 void
+IDBTransaction::RenameObjectStore(int64_t aObjectStoreId,
+                                  const nsAString& aName)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aObjectStoreId);
+  MOZ_ASSERT(VERSION_CHANGE == mMode);
+  MOZ_ASSERT(mBackgroundActor.mVersionChangeBackgroundActor);
+  MOZ_ASSERT(IsOpen());
+
+  MOZ_ALWAYS_TRUE(mBackgroundActor.mVersionChangeBackgroundActor->
+                    SendRenameObjectStore(aObjectStoreId, nsString(aName)));
+}
+
+void
 IDBTransaction::CreateIndex(IDBObjectStore* aObjectStore,
                             const indexedDB::IndexMetadata& aMetadata)
 {
@@ -594,6 +608,24 @@ IDBTransaction::DeleteIndex(IDBObjectStore* aObjectStore,
 
   MOZ_ALWAYS_TRUE(mBackgroundActor.mVersionChangeBackgroundActor->
                     SendDeleteIndex(aObjectStore->Id(), aIndexId));
+}
+
+void
+IDBTransaction::RenameIndex(IDBObjectStore* aObjectStore,
+                            int64_t aIndexId,
+                            const nsAString& aName)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aObjectStore);
+  MOZ_ASSERT(aIndexId);
+  MOZ_ASSERT(VERSION_CHANGE == mMode);
+  MOZ_ASSERT(mBackgroundActor.mVersionChangeBackgroundActor);
+  MOZ_ASSERT(IsOpen());
+
+  MOZ_ALWAYS_TRUE(mBackgroundActor.mVersionChangeBackgroundActor->
+                    SendRenameIndex(aObjectStore->Id(),
+                                    aIndexId,
+                                    nsString(aName)));
 }
 
 void

@@ -108,49 +108,6 @@ static_assert(NS_STYLE_INHERIT_MASK == (1 << nsStyleStructID_Length) - 1,
 static_assert((NS_RULE_NODE_IS_ANIMATION_RULE & NS_STYLE_INHERIT_MASK) == 0,
   "NS_RULE_NODE_IS_ANIMATION_RULE must not overlap the style struct bits.");
 
-/**
- * These *_Simple types are used to map Gecko types to layout-equivalent but
- * simpler Rust types, to aid Rust binding generation.
- *
- * If something in this types or the assertions below needs to change, ask
- * bholley, heycam or emilio before!
- *
- * <div rustbindgen="true" replaces="nsPoint">
- */
-struct nsPoint_Simple {
-  nscoord x, y;
-};
-
-static_assert(sizeof(nsPoint_Simple) == sizeof(nsPoint), "Wrong nsPoint_Simple size");
-static_assert(offsetof(nsPoint_Simple, x) == offsetof(nsPoint, x), "Wrong nsPoint_Simple member alignment");
-static_assert(offsetof(nsPoint_Simple, y) == offsetof(nsPoint, y), "Wrong nsPoint_Simple member alignment");
-
-/**
- * <div rustbindgen="true" replaces="nsMargin">
- */
-struct nsMargin_Simple {
-  nscoord top, right, bottom, left;
-};
-
-static_assert(sizeof(nsMargin_Simple) == sizeof(nsMargin), "Wrong nsMargin_Simple size");
-static_assert(offsetof(nsMargin_Simple, top) == offsetof(nsMargin, top), "Wrong nsMargin_Simple member alignment");
-static_assert(offsetof(nsMargin_Simple, right) == offsetof(nsMargin, right), "Wrong nsMargin_Simple member alignment");
-static_assert(offsetof(nsMargin_Simple, bottom) == offsetof(nsMargin, bottom), "Wrong nsMargin_Simple member alignment");
-static_assert(offsetof(nsMargin_Simple, left) == offsetof(nsMargin, left), "Wrong nsMargin_Simple member alignment");
-
-/**
- * <div rustbindgen="true" replaces="nsRect">
- */
-struct nsRect_Simple {
-  nscoord x, y, width, height;
-};
-
-static_assert(sizeof(nsRect_Simple) == sizeof(nsRect), "Wrong nsRect_Simple size");
-static_assert(offsetof(nsRect_Simple, x) == offsetof(nsRect, x), "Wrong nsRect_Simple member alignment");
-static_assert(offsetof(nsRect_Simple, y) == offsetof(nsRect, y), "Wrong nsRect_Simple member alignment");
-static_assert(offsetof(nsRect_Simple, width) == offsetof(nsRect, width), "Wrong nsRect_Simple member alignment");
-static_assert(offsetof(nsRect_Simple, height) == offsetof(nsRect, height), "Wrong nsRect_Simple member alignment");
-
 // The lifetime of these objects is managed by the presshell's arena.
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont
 {
@@ -1484,22 +1441,22 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList
       mListStyleImage->LockImage();
   }
 
-  void GetListStyleType(nsSubstring& aType) const { aType = mListStyleType; }
+  void GetListStyleType(nsSubstring& aType) const { mCounterStyle->GetStyleName(aType); }
   mozilla::CounterStyle* GetCounterStyle() const
   {
     return mCounterStyle.get();
   }
-  void SetListStyleType(const nsSubstring& aType,
-                        mozilla::CounterStyle* aStyle)
+  void SetCounterStyle(mozilla::CounterStyle* aStyle)
   {
-    mListStyleType = aType;
+    // NB: This function is called off-main-thread during parallel restyle, but
+    // only with builtin styles that use dummy refcounting.
+    MOZ_ASSERT(NS_IsMainThread() || aStyle->IsDependentStyle());
     mCounterStyle = aStyle;
   }
   void SetListStyleType(const nsSubstring& aType,
                         nsPresContext* aPresContext)
   {
-    SetListStyleType(aType, aPresContext->
-                     CounterStyleManager()->BuildCounterStyle(aType));
+    SetCounterStyle(aPresContext->CounterStyleManager()->BuildCounterStyle(aType));
   }
 
   const nsStyleQuoteValues::QuotePairArray& GetQuotePairs() const;
@@ -1511,7 +1468,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList
 
   uint8_t   mListStylePosition;         // [inherited]
 private:
-  nsString  mListStyleType;             // [inherited]
   RefPtr<mozilla::CounterStyle> mCounterStyle; // [inherited]
   RefPtr<imgRequestProxy> mListStyleImage; // [inherited]
   RefPtr<nsStyleQuoteValues> mQuotes;   // [inherited]
@@ -2596,6 +2552,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   nsStyleCoord mVerticalAlign;  // [reset] coord, percent, calc, enum (see nsStyleConsts.h)
 
   nsStyleAutoArray<mozilla::StyleTransition> mTransitions; // [reset]
+
   // The number of elements in mTransitions that are not from repeating
   // a list due to another property being longer.
   uint32_t mTransitionTimingFunctionCount,
@@ -2604,6 +2561,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
            mTransitionPropertyCount;
 
   nsStyleAutoArray<mozilla::StyleAnimation> mAnimations; // [reset]
+
   // The number of elements in mAnimations that are not from repeating
   // a list due to another property being longer.
   uint32_t mAnimationTimingFunctionCount,
@@ -3681,5 +3639,77 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleEffects
   uint8_t mClipFlags;                  // [reset] see nsStyleConsts.h
   uint8_t mMixBlendMode;               // [reset] see nsStyleConsts.h
 };
+
+#define STATIC_ASSERT_TYPE_LAYOUTS_MATCH(T1, T2)                               \
+  static_assert(sizeof(T1) == sizeof(T2),                                      \
+      "Size mismatch between " #T1 " and " #T2);                               \
+  static_assert(alignof(T1) == alignof(T2),                                    \
+      "Align mismatch between " #T1 " and " #T2);                              \
+
+#define STATIC_ASSERT_FIELD_OFFSET_MATCHES(T1, T2, field)                      \
+  static_assert(offsetof(T1, field) == offsetof(T2, field),                    \
+      "Field offset mismatch of " #field " between " #T1 " and " #T2);         \
+
+/**
+ * These *_Simple types are used to map Gecko types to layout-equivalent but
+ * simpler Rust types, to aid Rust binding generation.
+ *
+ * If something in this types or the assertions below needs to change, ask
+ * bholley, heycam or emilio before!
+ *
+ * <div rustbindgen="true" replaces="nsPoint">
+ */
+struct nsPoint_Simple {
+  nscoord x, y;
+};
+
+STATIC_ASSERT_TYPE_LAYOUTS_MATCH(nsPoint, nsPoint_Simple);
+STATIC_ASSERT_FIELD_OFFSET_MATCHES(nsPoint, nsPoint_Simple, x);
+STATIC_ASSERT_FIELD_OFFSET_MATCHES(nsPoint, nsPoint_Simple, y);
+
+/**
+ * <div rustbindgen="true" replaces="nsMargin">
+ */
+struct nsMargin_Simple {
+  nscoord top, right, bottom, left;
+};
+
+STATIC_ASSERT_TYPE_LAYOUTS_MATCH(nsMargin, nsMargin_Simple);
+STATIC_ASSERT_FIELD_OFFSET_MATCHES(nsMargin, nsMargin_Simple, top);
+STATIC_ASSERT_FIELD_OFFSET_MATCHES(nsMargin, nsMargin_Simple, right);
+STATIC_ASSERT_FIELD_OFFSET_MATCHES(nsMargin, nsMargin_Simple, bottom);
+STATIC_ASSERT_FIELD_OFFSET_MATCHES(nsMargin, nsMargin_Simple, left);
+
+/**
+ * <div rustbindgen="true" replaces="nsRect">
+ */
+struct nsRect_Simple {
+  nscoord x, y, width, height;
+};
+
+STATIC_ASSERT_TYPE_LAYOUTS_MATCH(nsRect, nsRect_Simple);
+STATIC_ASSERT_FIELD_OFFSET_MATCHES(nsRect, nsRect_Simple, x);
+STATIC_ASSERT_FIELD_OFFSET_MATCHES(nsRect, nsRect_Simple, y);
+STATIC_ASSERT_FIELD_OFFSET_MATCHES(nsRect, nsRect_Simple, width);
+STATIC_ASSERT_FIELD_OFFSET_MATCHES(nsRect, nsRect_Simple, height);
+
+/**
+ * <div rustbindgen replaces="nsTArray"></div>
+ */
+template<typename T>
+class nsTArray_Simple {
+  T* mBuffer;
+public:
+  // The existence of a destructor here prevents bindgen from deriving the Clone
+  // trait via a simple memory copy.
+  ~nsTArray_Simple() {};
+};
+
+STATIC_ASSERT_TYPE_LAYOUTS_MATCH(nsTArray<nsStyleImageLayers::Layer>,
+                                 nsTArray_Simple<nsStyleImageLayers::Layer>);
+STATIC_ASSERT_TYPE_LAYOUTS_MATCH(nsTArray<mozilla::StyleTransition>,
+                                 nsTArray_Simple<mozilla::StyleTransition>);
+STATIC_ASSERT_TYPE_LAYOUTS_MATCH(nsTArray<mozilla::StyleAnimation>,
+                                 nsTArray_Simple<mozilla::StyleAnimation>);
 
 #endif /* nsStyleStruct_h___ */

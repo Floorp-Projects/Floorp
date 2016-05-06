@@ -72,6 +72,7 @@ public:
   // Returns true if this thread requires all dispatches originating from
   // aThread go through the tail dispatcher.
   bool RequiresTailDispatch(AbstractThread* aThread) const;
+  bool RequiresTailDispatchFromCurrentThread() const;
 
   virtual TaskQueue* AsTaskQueue() { MOZ_CRASH("Not a task queue!"); }
   virtual nsIThread* AsXPCOMThread() { MOZ_CRASH("Not an XPCOM thread!"); }

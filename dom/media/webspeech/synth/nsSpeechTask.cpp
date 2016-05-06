@@ -714,7 +714,8 @@ nsSpeechTask::CreateAudioChannelAgent()
                                            this);
 
   AudioPlaybackConfig config;
-  nsresult rv = mAudioChannelAgent->NotifyStartedPlaying(&config);
+  nsresult rv = mAudioChannelAgent->NotifyStartedPlaying(&config,
+                                                         AudioChannelService::AudibleState::eAudible);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }

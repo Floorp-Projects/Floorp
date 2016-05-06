@@ -89,10 +89,8 @@ interface nsIAudioChannelAgentCallback : nsISupports
  * in the audio channel service. Gecko components are responsible for
  *   1. Indicating what channel type they are using (via the init() member
  *      function).
- *   2. Before playing, checking the playable status of the channel.
- *   3. Notifying the agent when they start/stop using this channel.
- *   4. Notifying the agent of changes to the visibility of the component using
- *      this channel.
+ *   2. Notifying the agent when they start/stop using this channel.
+ *   3. Notifying the agent when they are audible.
  *
  * The agent will invoke a callback to notify Gecko components of
  *   1. Changes to the playable status of this channel.
@@ -165,7 +163,7 @@ interface nsIAudioChannelAgent : nsISupports
    * @param config
    *    It contains the playback related states (volume/mute/suspend)
    */
-  void notifyStartedPlaying(in AudioPlaybackConfig config);
+  void notifyStartedPlaying(in AudioPlaybackConfig config, in bool audible);
 
   /**
    * Notify the agent we no longer want to play.
@@ -176,4 +174,14 @@ interface nsIAudioChannelAgent : nsISupports
    * called to unregister the agent with the channel service.
    */
   void notifyStoppedPlaying();
+
+
+  /**
+   * Notify agent that we already start producing audible data.
+   *
+   * Note : sometime audio might become silent during playing, this method is used to
+   * notify the actually audible state to other services which want to know
+   * about that, ex. tab sound indicator.
+   */
+  void notifyStartedAudible(in bool audible);
 };
