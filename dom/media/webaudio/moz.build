@@ -16,6 +16,10 @@ MOCHITEST_MANIFESTS += [
     'test/mochitest.ini',
 ]
 
+BROWSER_CHROME_MANIFESTS += [
+    'test/browser.ini',
+]
+
 TEST_HARNESS_FILES.testing.mochitest.tests.dom.media.webaudio.test.blink += [
     'test/blink/audio-testing.js',
     'test/blink/convolution-testing.js',
