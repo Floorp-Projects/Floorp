@@ -394,12 +394,7 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
     }
     initializer = new EditorInitializer(this);
     Properties().Set(TextControlInitializer(),initializer);
-    if (!nsContentUtils::AddScriptRunner(initializer)) {
-      initializer->Revoke(); // paranoia
-      Properties().Delete(TextControlInitializer());
-      delete initializer;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    nsContentUtils::AddScriptRunner(initializer);
   }
 
   return NS_OK;

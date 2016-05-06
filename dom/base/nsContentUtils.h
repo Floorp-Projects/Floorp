@@ -1606,10 +1606,9 @@ public:
    *                   scripts. Passing null is allowed and results in nothing
    *                   happening. It is also allowed to pass an object that
    *                   has not yet been AddRefed.
-   * @return false on out of memory, true otherwise.
    */
-  static bool AddScriptRunner(already_AddRefed<nsIRunnable> aRunnable);
-  static bool AddScriptRunner(nsIRunnable* aRunnable);
+  static void AddScriptRunner(already_AddRefed<nsIRunnable> aRunnable);
+  static void AddScriptRunner(nsIRunnable* aRunnable);
 
   /**
    * Returns true if it's safe to execute content script and false otherwise.
