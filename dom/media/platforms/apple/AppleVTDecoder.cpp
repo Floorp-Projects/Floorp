@@ -248,7 +248,7 @@ AppleVTDecoder::SubmitFrame(MediaRawData* aSample)
   if (rv != noErr && !(infoFlags & kVTDecodeInfo_FrameDropped)) {
     LOG("AppleVTDecoder: Error %d VTDecompressionSessionDecodeFrame", rv);
     NS_WARNING("Couldn't pass frame to decoder");
-    mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
+    mCallback->Error();
     return NS_ERROR_FAILURE;
   }
 

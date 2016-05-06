@@ -173,19 +173,16 @@ DecoderCallbackFuzzingWrapper::Output(MediaData* aData)
 }
 
 void
-DecoderCallbackFuzzingWrapper::Error(MediaDataDecoderError aError)
+DecoderCallbackFuzzingWrapper::Error()
 {
   if (!mTaskQueue->IsCurrentThreadIn()) {
-    mTaskQueue->Dispatch(
-      NewRunnableMethod<MediaDataDecoderError>(this,
-                                               &DecoderCallbackFuzzingWrapper::Error,
-                                               aError));
+    mTaskQueue->Dispatch(NewRunnableMethod(this, &DecoderCallbackFuzzingWrapper::Error));
     return;
   }
   CFW_LOGV("");
   MOZ_ASSERT(mCallback);
   ClearDelayedOutput();
-  mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+  mCallback->Error();
 }
 
 void

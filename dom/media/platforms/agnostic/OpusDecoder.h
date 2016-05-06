@@ -36,16 +36,10 @@ public:
   static bool IsOpus(const nsACString& aMimeType);
 
 private:
-  enum DecodeError {
-    DECODE_SUCCESS,
-    DECODE_ERROR,
-    FATAL_ERROR
-  };
-
   nsresult DecodeHeader(const unsigned char* aData, size_t aLength);
 
   void Decode (MediaRawData* aSample);
-  DecodeError DoDecode (MediaRawData* aSample);
+  int DoDecode (MediaRawData* aSample);
   void DoDrain ();
 
   const AudioInfo& mInfo;

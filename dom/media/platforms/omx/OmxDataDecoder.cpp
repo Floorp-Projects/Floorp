@@ -439,10 +439,10 @@ OmxDataDecoder::EmptyBufferFailure(OmxBufferFailureHolder aFailureHolder)
 }
 
 void
-OmxDataDecoder::NotifyError(OMX_ERRORTYPE aOmxError, const char* aLine, MediaDataDecoderError aError)
+OmxDataDecoder::NotifyError(OMX_ERRORTYPE aError, const char* aLine)
 {
-  LOG("NotifyError %d (%d) at %s", aOmxError, aError, aLine);
-  mCallback->Error(aError);
+  LOG("NotifyError %d at %s", aError, aLine);
+  mCallback->Error();
 }
 
 void
@@ -697,11 +697,6 @@ OmxDataDecoder::Event(OMX_EVENTTYPE aEvent, OMX_U32 aData1, OMX_U32 aData2)
     }
     default:
     {
-      // Got error during decoding, send msg to MFR skipping to next key frame.
-      if (aEvent == OMX_EventError && mOmxState == OMX_StateExecuting) {
-        NotifyError((OMX_ERRORTYPE)aData1, __func__, MediaDataDecoderError::DECODE_ERROR);
-        return true;
-      }
       LOG("WARNING: got none handle event: %d, aData1: %d, aData2: %d",
           aEvent, aData1, aData2);
       return false;

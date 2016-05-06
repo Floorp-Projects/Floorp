@@ -87,7 +87,7 @@ public:
       Input(aDecrypted.mSample);
     } else if (GMP_FAILED(aDecrypted.mStatus)) {
       if (mCallback) {
-        mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+        mCallback->Error();
       }
     } else {
       MOZ_ASSERT(!mIsShutdown);

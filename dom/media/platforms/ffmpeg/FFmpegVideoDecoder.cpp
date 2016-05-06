@@ -181,7 +181,7 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample)
                                        aSample->mTime, aSample->mTimecode,
                                        aSample->mOffset);
       if (size_t(len) > inputSize) {
-        mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
+        mCallback->Error();
         return DecodeResult::DECODE_ERROR;
       }
       inputData += len;
@@ -229,7 +229,7 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
 
   if (!PrepareFrame()) {
     NS_WARNING("FFmpeg h264 decoder failed to allocate frame.");
-    mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
+    mCallback->Error();
     return DecodeResult::DECODE_ERROR;
   }
 
@@ -248,7 +248,7 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
 
   if (bytesConsumed < 0) {
     NS_WARNING("FFmpeg video decoder error.");
-    mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
+    mCallback->Error();
     return DecodeResult::DECODE_ERROR;
   }
 
@@ -307,7 +307,7 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
 
     if (!v) {
       NS_WARNING("image allocation error.");
-      mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+      mCallback->Error();
       return DecodeResult::DECODE_ERROR;
     }
     mCallback->Output(v);
