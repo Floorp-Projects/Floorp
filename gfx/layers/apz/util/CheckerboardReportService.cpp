@@ -132,8 +132,9 @@ CheckerboardReportService::IsEnabled(JSContext* aCtx, JSObject* aGlobal)
   if (!XRE_IsParentProcess()) {
     return false;
   }
-
-  return nsContentUtils::IsSpecificAboutPage(aGlobal, "about:checkerboard");
+  // Allow privileged code or about:checkerboard (unprivileged) to access this.
+  return nsContentUtils::IsCallerChrome()
+      || nsContentUtils::IsSpecificAboutPage(aGlobal, "about:checkerboard");
 }
 
 /*static*/ already_AddRefed<CheckerboardReportService>
