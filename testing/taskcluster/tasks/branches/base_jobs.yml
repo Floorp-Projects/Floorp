@@ -129,6 +129,16 @@ builds:
       file_patterns:
        - js/public/**
        - js/src/**
+  sm-arm64-sim:
+    platforms:
+      - Linux64
+    types:
+      debug:
+        task: tasks/builds/sm_arm64_sim.yml
+    when:
+      file_patterns:
+       - js/public/**
+       - js/src/**
   sm-arm-sim-osx:
     platforms:
       - Linux64
