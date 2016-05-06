@@ -352,6 +352,9 @@ FxAccountsInternal.prototype = {
   VERIFICATION_POLL_TIMEOUT_INITIAL: 15000, // 15 seconds
   // And how often we poll after the first 2 mins.
   VERIFICATION_POLL_TIMEOUT_SUBSEQUENT: 30000, // 30 seconds.
+  // The current version of the device registration, we use this to re-register
+  // devices after we update what we send on device registration.
+  DEVICE_REGISTRATION_VERSION: 1,
 
   _fxAccountsClient: null,
 
@@ -599,9 +602,10 @@ FxAccountsInternal.prototype = {
     return this.currentAccountState.getUserAccountData()
       .then(data => {
         if (data) {
-          if (data.isDeviceStale || !data.deviceId) {
-            // A previous device registration attempt failed or there is no
-            // device id. Either way, we should register the device with FxA
+          if (!data.deviceId || !data.deviceRegistrationVersion ||
+              data.deviceRegistrationVersion < this.DEVICE_REGISTRATION_VERSION) {
+            // There is no device id or the device registration is outdated.
+            // Either way, we should register the device with FxA
             // before returning the id to the caller.
             return this._registerOrUpdateDevice(data);
           }
@@ -1471,9 +1475,12 @@ FxAccountsInternal.prototype = {
       if (signedInUser) {
         return this._registerOrUpdateDevice(signedInUser);
       }
-    }).catch(error => this._logErrorAndSetStaleDeviceFlag(error));
+    }).catch(error => this._logErrorAndResetDeviceRegistrationVersion(error));
   },
 
+  // If you change what we send to the FxA servers during device registration,
+  // you'll have to bump the DEVICE_REGISTRATION_VERSION number to force older
+  // devices to re-register when Firefox updates
   _registerOrUpdateDevice(signedInUser) {
     try {
       // Allow tests to skip device registration because:
@@ -1511,7 +1518,7 @@ FxAccountsInternal.prototype = {
     }).then(device =>
       this.currentAccountState.updateUserAccountData({
         deviceId: device.id,
-        isDeviceStale: null
+        deviceRegistrationVersion: this.DEVICE_REGISTRATION_VERSION
       }).then(() => device.id)
     ).catch(error => this._handleDeviceError(error, signedInUser.sessionToken));
   },
@@ -1539,7 +1546,7 @@ FxAccountsInternal.prototype = {
       // `_handleTokenError` re-throws the error.
       return this._handleTokenError(error);
     }).catch(error =>
-      this._logErrorAndSetStaleDeviceFlag(error)
+      this._logErrorAndResetDeviceRegistrationVersion(error)
     ).catch(() => {});
   },
 
@@ -1549,7 +1556,7 @@ FxAccountsInternal.prototype = {
     // retried and should succeed.
     log.warn("unknown device id, clearing the local device data");
     return this.currentAccountState.updateUserAccountData({ deviceId: null })
-      .catch(error => this._logErrorAndSetStaleDeviceFlag(error));
+      .catch(error => this._logErrorAndResetDeviceRegistrationVersion(error));
   },
 
   _recoverFromDeviceSessionConflict(error, sessionToken) {
@@ -1557,8 +1564,8 @@ FxAccountsInternal.prototype = {
     // Perhaps we were beaten in a race to register. Handle the conflict:
     //   1. Fetch the list of devices for the current user from FxA.
     //   2. Look for ourselves in the list.
-    //   3. If we find a match, set the correct device id and the stale device
-    //      flag on the account data and return the correct device id. At next
+    //   3. If we find a match, set the correct device id and device registration
+    //      version on the account data and return the correct device id. At next
     //      sync or next sign-in, registration is retried and should succeed.
     //   4. If we don't find a match, log the original error.
     log.warn("device session conflict, attempting to ascertain the correct device id");
@@ -1570,30 +1577,30 @@ FxAccountsInternal.prototype = {
           const deviceId = matchingDevices[0].id;
           return this.currentAccountState.updateUserAccountData({
             deviceId,
-            isDeviceStale: true
+            deviceRegistrationVersion: null
           }).then(() => deviceId);
         }
         if (length > 1) {
           log.error("insane server state, " + length + " devices for this session");
         }
-        return this._logErrorAndSetStaleDeviceFlag(error);
+        return this._logErrorAndResetDeviceRegistrationVersion(error);
       }).catch(secondError => {
         log.error("failed to recover from device-session conflict", secondError);
-        this._logErrorAndSetStaleDeviceFlag(error)
+        this._logErrorAndResetDeviceRegistrationVersion(error)
       });
   },
 
-  _logErrorAndSetStaleDeviceFlag(error) {
+  _logErrorAndResetDeviceRegistrationVersion(error) {
     // Device registration should never cause other operations to fail.
-    // If we've reached this point, just log the error and set the stale
-    // device flag on the account data. At next sync or next sign-in,
+    // If we've reached this point, just log the error and reset the device
+    // registration version on the account data. At next sync or next sign-in,
     // registration will be retried.
     log.error("device registration failed", error);
     return this.currentAccountState.updateUserAccountData({
-      isDeviceStale: true
+      deviceRegistrationVersion: null
     }).catch(secondError => {
       log.error(
-        "failed to set stale device flag, device registration won't be retried",
+        "failed to reset the device registration version, device registration won't be retried",
         secondError);
     }).then(() => {});
   },

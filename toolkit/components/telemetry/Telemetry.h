@@ -12,6 +12,18 @@
 #include "nsTArray.h"
 #include "nsStringGlue.h"
 
+/******************************************************************************
+ * This implements the Telemetry system.
+ * It allows recording into histograms as well some more specialized data
+ * points and gives access to the data.
+ *
+ * For documentation on how to add and use new Telemetry probes, see:
+ * https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Adding_a_new_Telemetry_probe
+ *
+ * For more general information on Telemetry see:
+ * https://wiki.mozilla.org/Telemetry
+ *****************************************************************************/
+
 namespace mozilla {
 namespace HangMonitor {
   class HangAnnotations;

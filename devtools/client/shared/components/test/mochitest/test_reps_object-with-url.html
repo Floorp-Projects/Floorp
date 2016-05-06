@@ -1,0 +1,58 @@
+
+<!DOCTYPE HTML>
+<html>
+<!--
+Test ObjectWithURL rep
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Rep test - ObjectWithURL</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+window.onload = Task.async(function* () {
+  try {
+    let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    let React = browserRequire("devtools/client/shared/vendor/react");
+    let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
+    let { ObjectWithURL } = browserRequire("devtools/client/shared/components/reps/object-with-url");
+
+    let gripStub = {
+      "type": "object",
+      "class": "Location",
+      "actor": "server1.conn2.obj272",
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "ownPropertyLength": 15,
+      "preview": {
+        "kind": "ObjectWithURL",
+        "url": "https://www.mozilla.org/en-US/"
+      }
+    };
+
+    // Test that correct rep is chosen
+    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
+    is(renderedRep.type, ObjectWithURL.rep, `Rep correctly selects ${ObjectWithURL.rep.displayName}`);
+
+    // Test rendering
+    const renderedComponent = renderComponent(ObjectWithURL.rep, { object: gripStub });
+    ok(renderedComponent.className.includes("objectLink-Location"), "ObjectWithURL rep has expected class name");
+    const innerNode = renderedComponent.querySelector(".objectPropValue");
+    is(innerNode.textContent, "https://www.mozilla.org/en-US/", "ObjectWithURL rep has expected inner HTML structure and text content");
+
+    // @TODO test link once Bug 1245303 has been implemented.
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+});
+</script>
+</pre>
+</body>
+</html>

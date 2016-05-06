@@ -7,6 +7,7 @@
 const {Cc, Ci} = require("chrome");
 const Services = require("Services");
 
+const {getCSSLexer} = require("devtools/shared/css-lexer");
 const {cssColors} = require("devtools/client/shared/css-color-db");
 
 const COLOR_UNIT_PREF = "devtools.defaultColorUnit";
@@ -723,7 +724,7 @@ function colorToRGBA(name) {
     return {r: 0, g: 0, b: 0, a: 1};
   }
 
-  let lexer = DOMUtils.getCSSLexer(name);
+  let lexer = getCSSLexer(name);
 
   let func = getToken(lexer);
   if (!func) {
