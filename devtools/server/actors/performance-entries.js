@@ -11,7 +11,7 @@
 
 const {
   method, Arg, Option, RetVal, Front, FrontClass, Actor, ActorClass
-} = require("devtools/server/protocol");
+} = require("devtools/shared/protocol");
 const events = require("sdk/event/core");
 
 var PerformanceEntriesActor = exports.PerformanceEntriesActor = ActorClass({

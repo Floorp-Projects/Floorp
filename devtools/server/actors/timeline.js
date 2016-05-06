@@ -16,7 +16,7 @@
  * @see devtools/server/performance/timeline.js
  */
 
-const protocol = require("devtools/server/protocol");
+const protocol = require("devtools/shared/protocol");
 const { method, Arg, RetVal, Option } = protocol;
 const events = require("sdk/event/core");
 const { Timeline } = require("devtools/server/performance/timeline");

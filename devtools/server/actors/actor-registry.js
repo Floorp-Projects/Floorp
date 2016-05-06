@@ -4,7 +4,7 @@
 
 "use strict";
 
-const protocol = require("devtools/server/protocol");
+const protocol = require("devtools/shared/protocol");
 const { method, custom, Arg, Option, RetVal } = protocol;
 
 const { Cu, CC, components } = require("chrome");

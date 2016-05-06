@@ -4,7 +4,7 @@
 
 "use strict";
 
-const protocol = require("devtools/server/protocol");
+const protocol = require("devtools/shared/protocol");
 const { method, RetVal, Arg, types } = protocol;
 const { expectState, ActorPool } = require("devtools/server/actors/common");
 const { ObjectActor,
