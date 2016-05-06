@@ -548,6 +548,8 @@ size. -->
 <!ENTITY home_history_title "History">
 <!ENTITY home_synced_devices_smartfolder "Synced devices">
 <!ENTITY home_synced_devices_number "&formatD; devices">
+<!-- Localization note (home_synced_devices_one_device): This is the singular version of home_synced_devices_number, referring to the number of devices a user has synced. -->
+<!ENTITY home_synced_devices_one "1 device">
 <!ENTITY home_history_back_to2 "Back to full History">
 <!ENTITY home_clear_history_button "Clear browsing history">
 <!ENTITY home_clear_history_confirm "Are you sure you want to clear your history?">
