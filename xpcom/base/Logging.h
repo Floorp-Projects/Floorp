@@ -15,11 +15,27 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Likely.h"
+#include "mozilla/MacroForEach.h"
 
 // This file is a placeholder for a replacement to the NSPR logging framework
 // that is defined in prlog.h. Currently it is just a pass through, but as
 // work progresses more functionality will be swapped out in favor of
 // mozilla logging implementations.
+
+// We normally have logging enabled everywhere, but measurements showed that
+// having logging enabled on Android is quite expensive (hundreds of kilobytes
+// for both the format strings for logging and the code to perform all the
+// logging calls).  Because retrieving logs from a mobile device is
+// comparatively more difficult for Android than it is for desktop and because
+// desktop machines tend to be less space/bandwidth-constrained than Android
+// devices, we've chosen to leave logging enabled on desktop, but disabled on
+// Android.  Given that logging can still be useful for development purposes,
+// however, we leave logging enabled on Android developer builds.
+#if !defined(ANDROID) || !defined(RELEASE_BUILD)
+#define MOZ_LOGGING_ENABLED 1
+#else
+#define MOZ_LOGGING_ENABLED 0
+#endif
 
 namespace mozilla {
 
@@ -179,12 +195,25 @@ void log_print(const LogModule* aModule,
 } // namespace mozilla
 
 
-#define MOZ_LOG_TEST(_module,_level) mozilla::detail::log_test(_module, _level)
-
 // Helper macro used convert MOZ_LOG's third parameter, |_args|, from a
 // parenthesized form to a varargs form. For example:
 //   ("%s", "a message") => "%s", "a message"
 #define MOZ_LOG_EXPAND_ARGS(...) __VA_ARGS__
+
+#if MOZ_LOGGING_ENABLED
+#define MOZ_LOG_TEST(_module,_level) mozilla::detail::log_test(_module, _level)
+#else
+// Define away MOZ_LOG_TEST here so the compiler will fold away entire
+// logging blocks via dead code elimination, e.g.:
+//
+//   if (MOZ_LOG_TEST(...)) {
+//     ...compute things to log and log them...
+//   }
+//
+// This also has the nice property that no special definition of MOZ_LOG is
+// required when logging is disabled.
+#define MOZ_LOG_TEST(_module,_level) false
+#endif
 
 #define MOZ_LOG(_module,_level,_args)     \
   PR_BEGIN_MACRO             \
@@ -206,5 +235,9 @@ void log_print(const LogModule* aModule,
 #    define __func__ __FUNCTION__
 #  endif
 #endif
+
+// This #define is a Logging.h-only knob!  Don't encourage people to get fancy
+// with their log definitions by exporting it outside of Logging.h.
+#undef MOZ_LOGGING_ENABLED
 
 #endif // mozilla_logging_h

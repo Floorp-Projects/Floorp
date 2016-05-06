@@ -6,7 +6,6 @@
 
 #include <algorithm>
 
-#include "ScopedNSSTypes.h"
 #include "mozilla/Snprintf.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
@@ -2063,8 +2062,8 @@ getCertType(CERTCertificate *cert)
   return nsIX509Cert::UNKNOWN_CERT;
 }
 
-CERTCertNicknames *
-getNSSCertNicknamesFromCertList(CERTCertList *certList)
+CERTCertNicknames*
+getNSSCertNicknamesFromCertList(const UniqueCERTCertList& certList)
 {
   static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
@@ -2089,10 +2088,9 @@ getNSSCertNicknamesFromCertList(CERTCertList *certList)
   NS_ConvertUTF16toUTF8 aUtf8ExpiredString(expiredStringLeadingSpace);
   NS_ConvertUTF16toUTF8 aUtf8NotYetValidString(notYetValidStringLeadingSpace);
 
-  return CERT_NicknameStringsFromCertList(certList,
+  return CERT_NicknameStringsFromCertList(certList.get(),
                                           const_cast<char*>(aUtf8ExpiredString.get()),
                                           const_cast<char*>(aUtf8NotYetValidString.get()));
-  
 }
 
 nsresult

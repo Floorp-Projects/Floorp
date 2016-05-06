@@ -95,6 +95,7 @@ ServoComputedValues* Servo_GetComputedValuesForPseudoElement(ServoComputedValues
                                                              nsIAtom* pseudo_tag,
                                                              RawServoStyleSet* set,
                                                              bool is_probe);
+ServoComputedValues* Servo_InheritComputedValues(ServoComputedValues* parent_style);
 void Servo_AddRefComputedValues(ServoComputedValues*);
 void Servo_ReleaseComputedValues(ServoComputedValues*);
 

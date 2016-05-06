@@ -5,10 +5,6 @@
 
 package org.mozilla.gecko;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -17,8 +13,6 @@ import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UIAsyncTask;
 
-import android.app.ActivityManager;
-import android.app.ActivityManager.RunningServiceInfo;
 import android.content.Context;
 import android.graphics.Rect;
 import android.os.Bundle;
@@ -48,14 +42,6 @@ public class GeckoAccessibility {
     private static final int BRAILLE_CLICK_BASE_INDEX = -275000000;
     private static SelfBrailleClient sSelfBrailleClient;
 
-    private static final HashSet<String> sServiceWhitelist =
-        new HashSet<String>(Arrays.asList(new String[] {
-                    "com.google.android.marvin.talkback.TalkBackService", // Google Talkback screen reader
-                    "com.mot.readout.ScreenReader", // Motorola screen reader
-                    "info.spielproject.spiel.SpielService", // Spiel screen reader
-                    "es.codefactory.android.app.ma.MAAccessibilityService" // Codefactory Mobile Accessibility screen reader
-                }));
-
     public static void updateAccessibilitySettings (final Context context) {
         new UIAsyncTask.WithoutParams<Void>(ThreadUtils.getBackgroundHandler()) {
                 @Override
@@ -64,19 +50,9 @@ public class GeckoAccessibility {
                     sEnabled = false;
                     AccessibilityManager accessibilityManager =
                         (AccessibilityManager) context.getSystemService(Context.ACCESSIBILITY_SERVICE);
-                    if (accessibilityManager.isEnabled()) {
-                        ActivityManager activityManager =
-                            (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-                        List<RunningServiceInfo> runningServices = activityManager.getRunningServices(Integer.MAX_VALUE);
-
-                        for (RunningServiceInfo runningServiceInfo : runningServices) {
-                            sEnabled = sServiceWhitelist.contains(runningServiceInfo.service.getClassName());
-                            if (sEnabled)
-                                break;
-                        }
-                        if (Versions.feature16Plus && sEnabled && sSelfBrailleClient == null) {
-                            sSelfBrailleClient = new SelfBrailleClient(GeckoAppShell.getContext(), false);
-                        }
+                    sEnabled = accessibilityManager.isEnabled() && accessibilityManager.isTouchExplorationEnabled();
+                    if (Versions.feature16Plus && sEnabled && sSelfBrailleClient == null) {
+                        sSelfBrailleClient = new SelfBrailleClient(GeckoAppShell.getContext(), false);
                     }
 
                     try {
@@ -268,14 +244,21 @@ public class GeckoAccessibility {
         }
     }
 
-    public static void setAccessibilityStateChangeListener(final Context context) {
-        // The state change listener is only supported on API14+
-        if (Versions.feature14Plus) {
-            AccessibilityManager accessibilityManager =
-                (AccessibilityManager) context.getSystemService(Context.ACCESSIBILITY_SERVICE);
-            accessibilityManager.addAccessibilityStateChangeListener(new AccessibilityManager.AccessibilityStateChangeListener() {
+    public static void setAccessibilityManagerListeners(final Context context) {
+        AccessibilityManager accessibilityManager =
+            (AccessibilityManager) context.getSystemService(Context.ACCESSIBILITY_SERVICE);
+
+        accessibilityManager.addAccessibilityStateChangeListener(new AccessibilityManager.AccessibilityStateChangeListener() {
+            @Override
+            public void onAccessibilityStateChanged(boolean enabled) {
+                updateAccessibilitySettings(context);
+            }
+        });
+
+        if (Versions.feature19Plus) {
+            accessibilityManager.addTouchExplorationStateChangeListener(new AccessibilityManager.TouchExplorationStateChangeListener() {
                 @Override
-                public void onAccessibilityStateChanged(boolean enabled) {
+                public void onTouchExplorationStateChanged(boolean enabled) {
                     updateAccessibilitySettings(context);
                 }
             });
