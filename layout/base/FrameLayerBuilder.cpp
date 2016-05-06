@@ -1353,6 +1353,16 @@ protected:
                       const nsIntRegion& aLayerVisibleRegion,
                       uint32_t aRoundedRectClipCount = UINT32_MAX);
 
+  /**
+   * If |aClip| has rounded corners, create a mask layer for them, and
+   * add it to |aLayer|'s ancestor mask layers, returning an index into
+   * the array of ancestor mask layers. Returns an empty Maybe if
+   * |aClip| does not have rounded corners, or if no mask layer could
+   * be created.
+   */
+  Maybe<size_t> SetupMaskLayerForScrolledClip(Layer* aLayer,
+                                              const DisplayItemClip& aClip);
+
   already_AddRefed<Layer> CreateMaskLayer(
     Layer *aLayer, const DisplayItemClip& aClip,
     const Maybe<size_t>& aForAncestorMaskLayer,
@@ -3208,7 +3218,13 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
     if (data->mSingleItemFixedToViewport && data->mItemClip.HasClip()) {
       nsIntRect layerClipRect = ScaleToNearestPixels(data->mItemClip.GetClipRect());
       layerClipRect.MoveBy(mParameters.mOffset);
-      data->mLayer->SetClipRect(Some(ViewAs<ParentLayerPixel>(layerClipRect)));
+      // The clip from such an item becomes part of the layer's scrolled clip,
+      // and the associated mask layer one of the layer's "ancestor mask layers".
+      LayerClip scrolledClip;
+      scrolledClip.SetClipRect(ViewAs<ParentLayerPixel>(layerClipRect));
+      scrolledClip.SetMaskLayerIndex(
+          SetupMaskLayerForScrolledClip(data->mLayer, data->mItemClip));
+      data->mLayer->SetScrolledClip(Some(scrolledClip));
       // There is only one item, so all of the clips are in common to all items.
       // data->mCommonClipCount will be zero because we removed the clip from
       // the display item. (It could also be -1 if we're inside an inactive
@@ -3217,8 +3233,8 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
       commonClipCount = data->mItemClip.GetRoundedRectCount();
     } else {
       commonClipCount = std::max(0, data->mCommonClipCount);
+      SetupMaskLayer(layer, data->mItemClip, data->mVisibleRegion, commonClipCount);
     }
-    SetupMaskLayer(layer, data->mItemClip, data->mVisibleRegion, commonClipCount);
     // copy commonClipCount to the entry
     FrameLayerBuilder::PaintedLayerItemsEntry* entry = mLayerBuilder->
       GetPaintedLayerItemsEntry(static_cast<PaintedLayer*>(layer.get()));
@@ -3717,6 +3733,22 @@ InnermostScrollClipApplicableToAGR(const DisplayItemScrollClip* aItemScrollClip,
   return nullptr;
 }
 
+Maybe<size_t>
+ContainerState::SetupMaskLayerForScrolledClip(Layer* aLayer,
+                                              const DisplayItemClip& aClip)
+{
+  if (aClip.GetRoundedRectCount() > 0) {
+    Maybe<size_t> maskLayerIndex = Some(aLayer->GetAncestorMaskLayerCount());
+    if (RefPtr<Layer> maskLayer = CreateMaskLayer(aLayer, aClip, maskLayerIndex,
+                                                  aClip.GetRoundedRectCount())) {
+      aLayer->AddAncestorMaskLayer(maskLayer);
+      return maskLayerIndex;
+    }
+    // Fall through to |return Nothing()|.
+  }
+  return Nothing();
+}
+
 /*
  * Iterate through the non-clip items in aList and its descendants.
  * For each item we compute the effective clip rect. Each item is assigned
@@ -4078,17 +4110,31 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       NS_ASSERTION(layerClip.HasClip() ||
                    layerClip.GetRoundedRectCount() == 0,
                    "If we have rounded rects, we must have a clip rect");
-      // It has its own layer. Update that layer's clip and visible rects.
-      if (layerClip.HasClip()) {
-        ownLayer->SetClipRect(Some(layerClipRect));
-      } else {
-        ownLayer->SetClipRect(Nothing());
-      }
 
-      // rounded rectangle clipping using mask layers
-      // (must be done after visible rect is set on layer)
-      if (layerClip.IsRectClippedByRoundedCorner(itemContent)) {
-        SetupMaskLayer(ownLayer, layerClip, itemVisibleRect);
+      // It has its own layer. Update that layer's clip and visible rects.
+
+      ownLayer->SetClipRect(Nothing());
+      ownLayer->SetScrolledClip(Nothing());
+      if (layerClip.HasClip()) {
+        if (shouldFixToViewport) {
+          // For layers fixed to the viewport, the clip becomes part of the
+          // layer's scrolled clip.
+          LayerClip scrolledClip;
+          scrolledClip.SetClipRect(layerClipRect);
+          if (layerClip.IsRectClippedByRoundedCorner(itemContent)) {
+            scrolledClip.SetMaskLayerIndex(
+                SetupMaskLayerForScrolledClip(ownLayer.get(), layerClip));
+          }
+          ownLayer->SetScrolledClip(Some(scrolledClip));
+        } else {
+          ownLayer->SetClipRect(Some(layerClipRect));
+
+          // rounded rectangle clipping using mask layers
+          // (must be done after visible rect is set on layer)
+          if (layerClip.IsRectClippedByRoundedCorner(itemContent)) {
+            SetupMaskLayer(ownLayer, layerClip, itemVisibleRect);
+          }
+        }
       }
 
       ContainerLayer* oldContainer = ownLayer->GetParent();
