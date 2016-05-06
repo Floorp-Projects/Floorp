@@ -778,7 +778,13 @@ var SessionStoreInternal = {
         // is always visible in the address bar if no other value is present
         let activePageData = tabData.entries[tabData.index - 1] || null;
         let uri = activePageData ? activePageData.url || null : null;
-        if (!browser.userTypedValue) {
+        // NB: we won't set initial URIs (about:home, about:newtab, etc.) here
+        // because their load will not normally trigger a location bar clearing
+        // when they finish loading (to avoid race conditions where we then
+        // clear user input instead), so we shouldn't set them here either.
+        // They also don't fall under the issues in bug 439675 where user input
+        // needs to be preserved if the load doesn't succeed.
+        if (!browser.userTypedValue && uri && !win.gInitialPages.includes(uri)) {
           browser.userTypedValue = uri;
         }
 
