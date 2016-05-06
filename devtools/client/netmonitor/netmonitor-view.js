@@ -123,6 +123,13 @@ const GENERIC_VARIABLES_VIEW_SETTINGS = {
 const NETWORK_ANALYSIS_PIE_CHART_DIAMETER = 200;
 // ms
 const FREETEXT_FILTER_SEARCH_DELAY = 200;
+// Constants for formatting bytes.
+const BYTES_IN_KB = 1024;
+const BYTES_IN_MB = Math.pow(BYTES_IN_KB, 2);
+const BYTES_IN_GB = Math.pow(BYTES_IN_KB, 3);
+const MAX_BYTES_SIZE = 1000;
+const MAX_KB_SIZE = 1000 * BYTES_IN_KB;
+const MAX_MB_SIZE = 1000 * BYTES_IN_MB;
 
 const {DeferredTask} = Cu.import("resource://gre/modules/DeferredTask.jsm", {});
 
@@ -1767,6 +1774,29 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
+   * Get a human-readable string from a number of bytes, with the B, KB, MB, or
+   * GB value. Note that the transition between abbreviations is by 1000 rather
+   * than 1024 in order to keep the displayed digits smaller as "1016 KB" is
+   * more awkward than 0.99 MB"
+   */
+  getFormattedSize(bytes) {
+    if (bytes < MAX_BYTES_SIZE) {
+      return L10N.getFormatStr("networkMenu.sizeB", bytes);
+    } else if (bytes < MAX_KB_SIZE) {
+      let kb = bytes / BYTES_IN_KB;
+      let size = L10N.numberWithDecimals(kb, CONTENT_SIZE_DECIMALS);
+      return L10N.getFormatStr("networkMenu.sizeKB", size);
+    } else if (bytes < MAX_MB_SIZE) {
+      let mb = bytes / BYTES_IN_MB;
+      let size = L10N.numberWithDecimals(mb, CONTENT_SIZE_DECIMALS);
+      return L10N.getFormatStr("networkMenu.sizeMB", size);
+    }
+    let gb = bytes / BYTES_IN_GB;
+    let size = L10N.numberWithDecimals(gb, CONTENT_SIZE_DECIMALS);
+    return L10N.getFormatStr("networkMenu.sizeGB", size);
+  },
+
+  /**
    * Updates the information displayed in a network request item view.
    *
    * @param object item
@@ -1872,10 +1902,10 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
         break;
       }
       case "contentSize": {
-        let kb = value / 1024;
-        let size = L10N.numberWithDecimals(kb, CONTENT_SIZE_DECIMALS);
         let node = $(".requests-menu-size", target);
-        let text = L10N.getFormatStr("networkMenu.sizeKB", size);
+
+        let text = this.getFormattedSize(value);
+
         node.setAttribute("value", text);
         node.setAttribute("tooltiptext", text);
         break;
@@ -1893,9 +1923,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
           text = L10N.getStr("networkMenu.sizeServiceWorker");
           node.classList.add("theme-comment");
         } else {
-          let kb = value / 1024;
-          let size = L10N.numberWithDecimals(kb, CONTENT_SIZE_DECIMALS);
-          text = L10N.getFormatStr("networkMenu.sizeKB", size);
+          text = this.getFormattedSize(value);
         }
 
         node.setAttribute("value", text);
