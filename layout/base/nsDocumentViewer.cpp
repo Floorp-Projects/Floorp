@@ -977,12 +977,14 @@ nsDocumentViewer::LoadComplete(nsresult aStatus)
 
       // Dispatch observer notification to notify observers document load is complete.
       nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-      nsIPrincipal *principal = d->NodePrincipal();
-      os->NotifyObservers(d,
-                          nsContentUtils::IsSystemPrincipal(principal) ?
-                          "chrome-document-loaded" :
-                          "content-document-loaded",
-                          nullptr);
+      if (os) {
+        nsIPrincipal *principal = d->NodePrincipal();
+        os->NotifyObservers(d,
+                            nsContentUtils::IsSystemPrincipal(principal) ?
+                            "chrome-document-loaded" :
+                            "content-document-loaded",
+                            nullptr);
+      }
 
       // Notify any devtools about the load.
       RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();

@@ -1349,5 +1349,85 @@ Observer::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
+nsresult
+IDBDatabase::RenameObjectStore(int64_t aObjectStoreId, const nsAString& aName)
+{
+  MOZ_ASSERT(mSpec);
+
+  nsTArray<ObjectStoreSpec>& objectStores = mSpec->objectStores();
+
+  ObjectStoreSpec* foundObjectStoreSpec = nullptr;
+  // Find the matched object store spec and check if 'aName' is already used by
+  // another object store.
+  for (uint32_t objCount = objectStores.Length(), objIndex = 0;
+       objIndex < objCount;
+       objIndex++) {
+    const ObjectStoreSpec& objSpec = objectStores[objIndex];
+    if (objSpec.metadata().id() == aObjectStoreId) {
+      MOZ_ASSERT(!foundObjectStoreSpec);
+      foundObjectStoreSpec = &objectStores[objIndex];
+      continue;
+    }
+    if (aName == objSpec.metadata().name()) {
+      return NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
+    }
+  }
+
+  MOZ_ASSERT(foundObjectStoreSpec);
+
+  // Update the name of the matched object store.
+  foundObjectStoreSpec->metadata().name() = nsString(aName);
+
+  return NS_OK;
+}
+
+nsresult
+IDBDatabase::RenameIndex(int64_t aObjectStoreId,
+                         int64_t aIndexId,
+                         const nsAString& aName)
+{
+  MOZ_ASSERT(mSpec);
+
+  nsTArray<ObjectStoreSpec>& objectStores = mSpec->objectStores();
+
+  ObjectStoreSpec* foundObjectStoreSpec = nullptr;
+  // Find the matched index metadata and check if 'aName' is already used by
+  // another index.
+  for (uint32_t objCount = objectStores.Length(), objIndex = 0;
+       objIndex < objCount;
+       objIndex++) {
+    const ObjectStoreSpec& objSpec = objectStores[objIndex];
+    if (objSpec.metadata().id() == aObjectStoreId) {
+      foundObjectStoreSpec = &objectStores[objIndex];
+      break;
+    }
+  }
+
+  MOZ_ASSERT(foundObjectStoreSpec);
+
+  nsTArray<IndexMetadata>& indexes = foundObjectStoreSpec->indexes();
+  IndexMetadata* foundIndexMetadata = nullptr;
+  for (uint32_t idxCount = indexes.Length(), idxIndex = 0;
+       idxIndex < idxCount;
+       idxIndex++) {
+    const IndexMetadata& metadata = indexes[idxIndex];
+    if (metadata.id() == aIndexId) {
+      MOZ_ASSERT(!foundIndexMetadata);
+      foundIndexMetadata = &indexes[idxIndex];
+      continue;
+    }
+    if (aName == metadata.name()) {
+      return NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
+    }
+  }
+
+  MOZ_ASSERT(foundIndexMetadata);
+
+  // Update the name of the matched object store.
+  foundIndexMetadata->name() = nsString(aName);
+
+  return NS_OK;
+}
+
 } // namespace dom
 } // namespace mozilla

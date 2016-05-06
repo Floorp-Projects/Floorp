@@ -337,7 +337,8 @@ MediaSourceTrackDemuxer::Reset()
       {
         MonitorAutoLock mon(self->mMonitor);
         self->mNextRandomAccessPoint =
-          self->mManager->GetNextRandomAccessPoint(self->mType);
+          self->mManager->GetNextRandomAccessPoint(self->mType,
+                                                   MediaSourceDemuxer::EOS_FUZZ);
       }
     });
   mParent->GetTaskQueue()->Dispatch(task.forget());
@@ -410,7 +411,8 @@ MediaSourceTrackDemuxer::DoSeek(media::TimeUnit aTime)
   mReset = false;
   {
     MonitorAutoLock mon(mMonitor);
-    mNextRandomAccessPoint = mManager->GetNextRandomAccessPoint(mType);
+    mNextRandomAccessPoint =
+      mManager->GetNextRandomAccessPoint(mType, MediaSourceDemuxer::EOS_FUZZ);
   }
   return SeekPromise::CreateAndResolve(seekTime, __func__);
 }
@@ -451,7 +453,8 @@ MediaSourceTrackDemuxer::DoGetSamples(int32_t aNumSamples)
   samples->mSamples.AppendElement(sample);
   if (mNextRandomAccessPoint.ToMicroseconds() <= sample->mTime) {
     MonitorAutoLock mon(mMonitor);
-    mNextRandomAccessPoint = mManager->GetNextRandomAccessPoint(mType);
+    mNextRandomAccessPoint =
+      mManager->GetNextRandomAccessPoint(mType, MediaSourceDemuxer::EOS_FUZZ);
   }
   return SamplesPromise::CreateAndResolve(samples, __func__);
 }
@@ -459,11 +462,17 @@ MediaSourceTrackDemuxer::DoGetSamples(int32_t aNumSamples)
 RefPtr<MediaSourceTrackDemuxer::SkipAccessPointPromise>
 MediaSourceTrackDemuxer::DoSkipToNextRandomAccessPoint(media::TimeUnit aTimeThreadshold)
 {
-  bool found;
-  uint32_t parsed =
-    mManager->SkipToNextRandomAccessPoint(mType, aTimeThreadshold, found);
-  if (found) {
-    return SkipAccessPointPromise::CreateAndResolve(parsed, __func__);
+  uint32_t parsed = 0;
+  // Ensure that the data we are about to skip to is still available.
+  TimeIntervals buffered = mManager->Buffered(mType);
+  buffered.SetFuzz(MediaSourceDemuxer::EOS_FUZZ);
+  if (buffered.Contains(aTimeThreadshold)) {
+    bool found;
+    parsed =
+      mManager->SkipToNextRandomAccessPoint(mType, aTimeThreadshold, found);
+    if (found) {
+      return SkipAccessPointPromise::CreateAndResolve(parsed, __func__);
+    }
   }
   SkipFailureHolder holder(
     mManager->IsEnded() ? DemuxerFailureReason::END_OF_STREAM :

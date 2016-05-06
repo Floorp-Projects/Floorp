@@ -100,7 +100,7 @@ function assignToClassListStrict(e) {
     e.classList = "foo";
     ok(true, "assigning to classList didn't throw");
     e.removeAttribute("class");
-  } catch (e) { 
+  } catch (e) {
     ok(false, "assigning to classList threw");
   }
 }
@@ -216,24 +216,21 @@ function testClassList(e) {
   is(e.classList.contains("a"), false, "wrong classList.contains() result");
   try {
     e.classList.contains("");
-    ok(false, "classList.contains() didn't throw");
+    ok(true, "classList.contains(empty_string) didn't throw");
   } catch (e) {
-    is(e.name, "SyntaxError", "wrong exception thrown");
-    is(e.code, DOMException.SYNTAX_ERR, "wrong exception thrown");
+    ok(false, "classList.contains(empty_string) threw");
   }
   try {
     e.classList.contains("  ");
-    ok(false, "classList.contains() didn't throw");
+    ok(true, "classList.contains(string_with_spaces) didn't throw");
   } catch (e) {
-    is(e.name, "InvalidCharacterError", "wrong exception thrown");
-    is(e.code, DOMException.INVALID_CHARACTER_ERR, "wrong exception thrown");
+    ok(false, "classList.contains(string_with_spaces) threw");
   }
   try {
     e.classList.contains("aa ");
-    ok(false, "classList.contains() didn't throw");
+    ok(true, "classList.contains(string_with_spaces) didn't throw");
   } catch (e) {
-    is(e.name, "InvalidCharacterError", "wrong exception thrown");
-    is(e.code, DOMException.INVALID_CHARACTER_ERR, "wrong exception thrown");
+    ok(false, "classList.contains(string_with_spaces) threw");
   }
 
   e.setAttribute("class", "");
@@ -382,7 +379,7 @@ function testClassList(e) {
 
 
   // tests for the force argument handling
-  
+
   function checkForceToggle(before, argument, force, expectedRes, after, expectedException) {
     checkModification(e, "toggle", [argument, force], expectedRes, before, after, expectedException);
   }

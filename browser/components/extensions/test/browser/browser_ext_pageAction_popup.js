@@ -18,7 +18,11 @@ add_task(function* testPageActionPopup() {
     files: {
       "popup-a.html": scriptPage("popup-a.js"),
       "popup-a.js": function() {
-        browser.runtime.sendMessage("from-popup-a");
+        window.onload = () => {
+          let background = window.getComputedStyle(document.body).backgroundColor;
+          browser.test.assertEq("transparent", background);
+          browser.runtime.sendMessage("from-popup-a");
+        };
         browser.runtime.onMessage.addListener(msg => {
           if (msg == "close-popup") {
             window.close();

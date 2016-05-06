@@ -81,6 +81,7 @@ private:
     PtsCorrectionContext();
     int64_t GuessCorrectPts(int64_t aPts, int64_t aDts);
     void Reset();
+    int64_t LastDts() const { return mLastDts; }
 
   private:
     int64_t mNumFaultyPts; /// Number of incorrect PTS values so far
@@ -95,19 +96,19 @@ private:
   public:
     typedef Pair<int64_t, int64_t> DurationElement;
 
-    // Insert Dts and Duration pair at the end of our map.
-    void Insert(int64_t aDts, int64_t aDuration)
+    // Insert Key and Duration pair at the end of our map.
+    void Insert(int64_t aKey, int64_t aDuration)
     {
-      mMap.AppendElement(MakePair(aDts, aDuration));
+      mMap.AppendElement(MakePair(aKey, aDuration));
     }
-    // Sets aDuration matching aDts and remove it from the map if found.
+    // Sets aDuration matching aKey and remove it from the map if found.
     // The element returned is the first one found.
     // Returns true if found, false otherwise.
-    bool Find(int64_t aDts, int64_t& aDuration)
+    bool Find(int64_t aKey, int64_t& aDuration)
     {
       for (uint32_t i = 0; i < mMap.Length(); i++) {
         DurationElement& element = mMap[i];
-        if (element.first() == aDts) {
+        if (element.first() == aKey) {
           aDuration = element.second();
           mMap.RemoveElementAt(i);
           return true;

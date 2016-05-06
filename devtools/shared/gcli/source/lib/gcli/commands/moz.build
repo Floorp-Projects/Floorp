@@ -7,13 +7,8 @@
 DevToolsModules(
     'clear.js',
     'commands.js',
-    'connect.js',
     'context.js',
-    'exec.js',
-    'global.js',
     'help.js',
-    'intro.js',
-    'lang.js',
     'mocks.js',
     'pref.js',
     'preflist.js',

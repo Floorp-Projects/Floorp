@@ -48,17 +48,6 @@ Or, using the `test` command:
     Summary: Pass (951 checks)
 
 
-# Phantom
-
-The GCLI test suite can also be run under PhantomJS as follows:
-
-    $ phantomjs ./phantom-test.js
-    
-    Summary: Pass (4289 checks)
-    
-    Finished running unit tests. (total 3.843s, ave response time 3.36ms, ...)
-
-
 # Travis CI
 
 GCLI check-ins are automatically tested by [Travis CI](https://travis-ci.org/joewalker/gcli).

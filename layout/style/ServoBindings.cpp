@@ -151,6 +151,20 @@ Gecko_SetNodeData(RawGeckoNode* aNode, ServoNodeData* aData)
   aNode->SetServoNodeData(aData);
 }
 
+void
+Gecko_SetListStyleType(nsStyleList* style_struct, uint32_t type)
+{
+  // Builtin counter styles are static and use no-op refcounting, and thus are
+  // safe to use off-main-thread.
+  style_struct->SetCounterStyle(CounterStyleManager::GetBuiltinStyle(type));
+}
+
+void
+Gecko_CopyListStyleTypeFrom(nsStyleList* dst, const nsStyleList* src)
+{
+  dst->SetCounterStyle(src->GetCounterStyle());
+}
+
 #define STYLE_STRUCT(name, checkdata_cb)                                      \
                                                                               \
 void                                                                          \

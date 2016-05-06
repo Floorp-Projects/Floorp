@@ -14,6 +14,7 @@
 #include "mozilla/dom/PFMRadioChild.h"
 #include "mozilla/dom/FMRadioService.h"
 #include "mozilla/dom/TypedArray.h"
+#include "AudioChannelService.h"
 #include "DOMRequest.h"
 #include "nsDOMClassInfo.h"
 #include "nsIDocShell.h"
@@ -453,7 +454,8 @@ FMRadio::EnableAudioChannelAgent()
   NS_ENSURE_TRUE_VOID(mAudioChannelAgent);
 
   AudioPlaybackConfig config;
-  nsresult rv = mAudioChannelAgent->NotifyStartedPlaying(&config);
+  nsresult rv = mAudioChannelAgent->NotifyStartedPlaying(&config,
+                                                         AudioChannelService::AudibleState::eAudible);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
