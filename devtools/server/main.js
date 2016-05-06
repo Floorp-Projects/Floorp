@@ -192,7 +192,7 @@ var DebuggerServer = {
   },
 
   get protocol() {
-    return require("devtools/server/protocol");
+    return require("devtools/shared/protocol");
   },
 
   get initialized() {

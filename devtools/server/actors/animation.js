@@ -28,7 +28,7 @@
 const {Cu} = require("chrome");
 const promise = require("promise");
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
-const protocol = require("devtools/server/protocol");
+const protocol = require("devtools/shared/protocol");
 const {ActorClass, Actor, FrontClass, Front,
        Arg, method, RetVal, types} = protocol;
 // Make sure the nodeActor type is know here.

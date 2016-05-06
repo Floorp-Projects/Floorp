@@ -34,7 +34,6 @@ DevToolsModules(
     'content-server.jsm',
     'main.js',
     'primitive.js',
-    'protocol.js',
     'service-worker-child.js',
     'worker.js'
 )

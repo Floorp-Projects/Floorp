@@ -16,7 +16,7 @@ const promise = require("promise");
 const events = require("sdk/event/core");
 const {OriginalSourceFront, MediaRuleFront, StyleSheetFront,
        StyleSheetsFront} = require("devtools/client/fronts/stylesheets");
-const protocol = require("devtools/server/protocol");
+const protocol = require("devtools/shared/protocol");
 const {Arg, Option, method, RetVal, types} = protocol;
 const {LongStringActor, ShortLongString} = require("devtools/server/actors/string");
 const {fetch} = require("devtools/shared/DevToolsUtils");
