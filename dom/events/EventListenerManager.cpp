@@ -441,7 +441,7 @@ EventListenerManager::ProcessApzAwareEventListenerAdd()
   // Mark the node as having apz aware listeners
   nsCOMPtr<nsINode> node = do_QueryInterface(mTarget);
   if (node) {
-    node->SetMayHaveApzAwareListeners();
+    node->SetMayBeApzAware();
   }
 
   // Schedule a paint so event regions on the layer tree gets updated

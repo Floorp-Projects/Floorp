@@ -91,7 +91,7 @@ public:
    */
   virtual EventListenerManager* GetExistingListenerManager() const = 0;
 
-  virtual bool HasApzAwareListeners() const;
+  virtual bool IsApzAware() const;
 
 protected:
   EventHandlerNonNull* GetEventHandler(nsIAtom* aType,
