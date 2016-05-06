@@ -95,7 +95,16 @@ const unsigned long SANDBOXED_AUTOMATIC_FEATURES = 0x100;
 const unsigned long SANDBOXED_DOMAIN = 0x800;
 
 /**
+ * This flag prevents content from using window.alert(), window.confirm(),
+ * window.print(), window.prompt() and the beforeunload event from putting up
+ * dialogs.
+ */
+const unsigned long SANDBOXED_MODALS = 0x1000;
+
+/**
  * This flag prevents locking screen orientation.
  */
-const unsigned long SANDBOXED_ORIENTATION_LOCK = 0x1000;
+const unsigned long SANDBOXED_ORIENTATION_LOCK = 0x2000;
+
+const unsigned long SANDBOX_ALL_FLAGS = 0x3FFF;
 #endif
