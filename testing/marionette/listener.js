@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 var uuidGen = Cc["@mozilla.org/uuid-generator;1"]
@@ -12,26 +10,24 @@ var uuidGen = Cc["@mozilla.org/uuid-generator;1"]
 var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
     .getService(Ci.mozIJSSubScriptLoader);
 
+loader.loadSubScript("chrome://marionette/content/simpletest.js");
+loader.loadSubScript("chrome://marionette/content/common.js");
+
+Cu.import("resource://gre/modules/Task.jsm");
+
 Cu.import("chrome://marionette/content/accessibility.js");
 Cu.import("chrome://marionette/content/action.js");
 Cu.import("chrome://marionette/content/atom.js");
 Cu.import("chrome://marionette/content/capture.js");
 Cu.import("chrome://marionette/content/cookies.js");
 Cu.import("chrome://marionette/content/element.js");
-Cu.import("chrome://marionette/content/emulator.js");
 Cu.import("chrome://marionette/content/error.js");
 Cu.import("chrome://marionette/content/evaluate.js");
 Cu.import("chrome://marionette/content/event.js");
 Cu.import("chrome://marionette/content/interaction.js");
-Cu.import("chrome://marionette/content/logging.js");
 Cu.import("chrome://marionette/content/proxy.js");
-Cu.import("chrome://marionette/content/simpletest.js");
 
-Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-var contentLog = new logging.ContentLogger();
+var marionetteLogObj = new MarionetteLogObj();
 
 var isB2G = false;
 
@@ -43,6 +39,7 @@ var curContainer = { frame: content, shadowRoot: null };
 var isRemoteBrowser = () => curContainer.frame.contentWindow !== null;
 var previousContainer = null;
 var elementManager = new ElementManager();
+
 var capabilities = {};
 
 var actions = new action.Chain(checkForInterrupted);
@@ -50,6 +47,11 @@ var actions = new action.Chain(checkForInterrupted);
 // Contains the last file input element that was the target of
 // sendKeysToElement.
 var fileInputElement;
+
+// A dict of sandboxes used this session
+var sandboxes = {};
+// The name of the current sandbox
+var sandboxName = 'default';
 
 // the unload handler
 var onunload;
@@ -60,6 +62,7 @@ var asyncTestCommandId;
 var asyncTestTimeoutId;
 
 var inactivityTimeoutId = null;
+var heartbeatCallback = function () {}; // Called by the simpletest methods.
 
 var originalOnError;
 //timer for doc changes
@@ -73,32 +76,23 @@ var onDOMContentLoaded;
 var EVENT_INTERVAL = 30; // milliseconds
 // last touch for each fingerId
 var multiLast = {};
-var asyncChrome = proxy.toChromeAsync({
-  addMessageListener: addMessageListenerId.bind(this),
-  removeMessageListener: removeMessageListenerId.bind(this),
-  sendAsyncMessage: sendAsyncMessage.bind(this),
-});
-var syncChrome = proxy.toChrome(sendSyncMessage.bind(this));
-var cookies = new Cookies(() => curContainer.frame.document, syncChrome);
-var importedScripts = new evaluate.ScriptStorageServiceClient(syncChrome);
+
+var chrome = proxy.toChrome(sendSyncMessage.bind(this));
+var cookies = new Cookies(() => curContainer.frame.document, chrome);
+var importedScripts = new evaluate.ScriptStorageServiceClient(chrome);
 
 Cu.import("resource://gre/modules/Log.jsm");
 var logger = Log.repository.getLogger("Marionette");
 logger.debug("loaded listener.js");
-
 var modalHandler = function() {
   // This gets called on the system app only since it receives the mozbrowserprompt event
-  sendSyncMessage("Marionette:switchedToFrame", {frameValue: null, storePrevious: true});
+  sendSyncMessage("Marionette:switchedToFrame", { frameValue: null, storePrevious: true });
   let isLocal = sendSyncMessage("MarionetteFrame:handleModal", {})[0].value;
   if (isLocal) {
     previousContainer = curContainer;
   }
-  curContainer = {frame: content, shadowRoot: null};
+  curContainer = { frame: content, shadowRoot: null };
 };
-
-// sandbox storage and name of the current sandbox
-var sandboxes = new Sandboxes(() => curContainer.frame);
-var sandboxName = "default";
 
 /**
  * Called when listener is first started up.
@@ -234,9 +228,6 @@ var multiActionFn = dispatch(multiAction);
 var addCookieFn = dispatch(addCookie);
 var deleteCookieFn = dispatch(deleteCookie);
 var deleteAllCookiesFn = dispatch(deleteAllCookies);
-var executeFn = dispatch(execute);
-var executeInSandboxFn = dispatch(executeInSandbox);
-var executeSimpleTestFn = dispatch(executeSimpleTest);
 
 /**
  * Start all message listeners
@@ -244,9 +235,9 @@ var executeSimpleTestFn = dispatch(executeSimpleTest);
 function startListeners() {
   addMessageListenerId("Marionette:receiveFiles", receiveFiles);
   addMessageListenerId("Marionette:newSession", newSession);
-  addMessageListenerId("Marionette:execute", executeFn);
-  addMessageListenerId("Marionette:executeInSandbox", executeInSandboxFn);
-  addMessageListenerId("Marionette:executeSimpleTest", executeSimpleTestFn);
+  addMessageListenerId("Marionette:executeScript", executeScript);
+  addMessageListenerId("Marionette:executeAsyncScript", executeAsyncScript);
+  addMessageListenerId("Marionette:executeJSScript", executeJSScript);
   addMessageListenerId("Marionette:singleTap", singleTapFn);
   addMessageListenerId("Marionette:actionChain", actionChainFn);
   addMessageListenerId("Marionette:multiAction", multiActionFn);
@@ -349,9 +340,9 @@ function restart(msg) {
 function deleteSession(msg) {
   removeMessageListenerId("Marionette:receiveFiles", receiveFiles);
   removeMessageListenerId("Marionette:newSession", newSession);
-  removeMessageListenerId("Marionette:execute", executeFn);
-  removeMessageListenerId("Marionette:executeInSandbox", executeInSandboxFn);
-  removeMessageListenerId("Marionette:executeSimpleTest", executeSimpleTestFn);
+  removeMessageListenerId("Marionette:executeScript", executeScript);
+  removeMessageListenerId("Marionette:executeAsyncScript", executeAsyncScript);
+  removeMessageListenerId("Marionette:executeJSScript", executeJSScript);
   removeMessageListenerId("Marionette:singleTap", singleTapFn);
   removeMessageListenerId("Marionette:actionChain", actionChainFn);
   removeMessageListenerId("Marionette:multiAction", multiActionFn);
@@ -465,8 +456,8 @@ function sendLog(msg) {
  * Clear test values after completion of test
  */
 function resetValues() {
-  sandboxes.clear();
-  curContainer = {frame: content, shadowRoot: null};
+  sandboxes = {};
+  curContainer = { frame: content, shadowRoot: null };
   actions.mouseEventsOnly = false;
 }
 
@@ -508,58 +499,171 @@ function checkForInterrupted() {
     }
 }
 
-function* execute(script, args, timeout, opts) {
-  opts.timeout = timeout;
-  script = importedScripts.for("content").concat(script);
+/*
+ * Marionette Methods
+ */
 
-  let sb = sandbox.createMutable(curContainer.frame);
-  let wargs = elementManager.convertWrappedArguments(args, curContainer);
-  let res = yield evaluate.sandbox(sb, script, wargs, opts);
-
-  return elementManager.wrapValue(res);
-}
-
-function* executeInSandbox(script, args, timeout, opts) {
-  opts.timeout = timeout;
-  script = importedScripts.for("content").concat(script);
-
-  let sb = sandboxes.get(opts.sandboxName, opts.newSandbox);
-  if (opts.sandboxName) {
-    sb = sandbox.augment(sb, {global: sb});
-    sb = sandbox.augment(sb, new logging.Adapter(contentLog));
-    let emulatorClient = new emulator.EmulatorServiceClient(asyncChrome);
-    sb = sandbox.augment(sb, new emulator.Adapter(emulatorClient));
-  }
-
-  let wargs = elementManager.convertWrappedArguments(args, curContainer);
-  let evaluatePromise = evaluate.sandbox(sb, script, wargs, opts);
-
-  let res = yield evaluatePromise;
-  sendSyncMessage("Marionette:shareData", {log: elementManager.wrapValue(contentLog.get())});
-  return elementManager.wrapValue(res);
-}
-
-function* executeSimpleTest(script, args, timeout, opts) {
-  opts.timeout = timeout;
-  let win = curContainer.frame;
-  script = importedScripts.for("content").concat(script);
-
-  let harness = new simpletest.Harness(
+/**
+ * Returns a content sandbox that can be used by the execute_foo functions.
+ */
+function createExecuteContentSandbox(win, timeout) {
+  let mn = new Marionette(
       win,
       "content",
-      contentLog,
+      marionetteLogObj,
       timeout,
+      heartbeatCallback,
       marionetteTestName);
-  let sb = sandbox.createSimpleTest(curContainer.frame, harness);
-  // TODO(ato): Not sure this is needed:
-  sb = sandbox.augment(sb, new logging.Adapter(contentLog));
 
-  let wargs = elementManager.convertWrappedArguments(args, curContainer);
-  let evaluatePromise = evaluate.sandbox(sb, script, wargs, opts);
+  let principal = win;
+  if (sandboxName == "system") {
+    principal = Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal);
+  }
+  let sandbox = new Cu.Sandbox(principal, {sandboxPrototype: win});
+  sandbox.global = sandbox;
+  sandbox.window = win;
+  sandbox.document = sandbox.window.document;
+  sandbox.navigator = sandbox.window.navigator;
+  sandbox.asyncTestCommandId = asyncTestCommandId;
+  sandbox.marionette = mn;
 
-  let res = yield evaluatePromise;
-  sendSyncMessage("Marionette:shareData", {log: elementManager.wrapValue(contentLog.get())});
-  return elementManager.wrapValue(res);
+  mn.exports.forEach(fn => {
+    if (typeof mn[fn] == "function") {
+      sandbox[fn] = mn[fn].bind(mn);
+    } else {
+      sandbox[fn] = mn[fn];
+    }
+  });
+  sandbox.runEmulatorCmd = (cmd, cb) => this.runEmulatorCmd(cmd, cb);
+  sandbox.runEmulatorShell = (args, cb) => this.runEmulatorShell(args, cb);
+
+  sandbox.asyncComplete = (obj, id) => {
+    if (id == asyncTestCommandId) {
+      curContainer.frame.removeEventListener("unload", onunload, false);
+      curContainer.frame.clearTimeout(asyncTestTimeoutId);
+
+      if (inactivityTimeoutId != null) {
+        curContainer.frame.clearTimeout(inactivityTimeoutId);
+      }
+
+      sendSyncMessage("Marionette:shareData",
+          {log: elementManager.wrapValue(marionetteLogObj.getLogs())});
+      marionetteLogObj.clearLogs();
+
+      if (error.isError(obj)) {
+        sendError(obj, id);
+      } else {
+        if (Object.keys(_emu_cbs).length) {
+          _emu_cbs = {};
+          sendError(new WebDriverError("Emulator callback still pending when finish() called"), id);
+        } else {
+          sendResponse(elementManager.wrapValue(obj), id);
+        }
+      }
+
+      asyncTestRunning = false;
+      asyncTestTimeoutId = undefined;
+      asyncTestCommandId = undefined;
+      inactivityTimeoutId = null;
+    }
+  };
+
+  sandbox.finish = function() {
+    if (asyncTestRunning) {
+      sandbox.asyncComplete(mn.generate_results(), sandbox.asyncTestCommandId);
+    } else {
+      return mn.generate_results();
+    }
+  };
+  sandbox.marionetteScriptFinished = val =>
+      sandbox.asyncComplete(val, sandbox.asyncTestCommandId);
+
+  sandboxes[sandboxName] = sandbox;
+}
+
+/**
+ * Execute the given script either as a function body (executeScript)
+ * or directly (for mochitest like JS Marionette tests).
+ */
+function executeScript(msg, directInject) {
+  // Set up inactivity timeout.
+  if (msg.json.inactivityTimeout) {
+    let setTimer = function() {
+      inactivityTimeoutId = curContainer.frame.setTimeout(function() {
+        sendError(new ScriptTimeoutError("timed out due to inactivity"), asyncTestCommandId);
+      }, msg.json.inactivityTimeout);
+   };
+
+    setTimer();
+    heartbeatCallback = function() {
+      curContainer.frame.clearTimeout(inactivityTimeoutId);
+      setTimer();
+    };
+  }
+
+  asyncTestCommandId = msg.json.command_id;
+  let script = msg.json.script;
+  let filename = msg.json.filename;
+  sandboxName = msg.json.sandboxName;
+
+  if (msg.json.newSandbox ||
+      !(sandboxName in sandboxes) ||
+      (sandboxes[sandboxName].window != curContainer.frame)) {
+    createExecuteContentSandbox(curContainer.frame, msg.json.timeout);
+    if (!sandboxes[sandboxName]) {
+      sendError(new WebDriverError("Could not create sandbox!"), asyncTestCommandId);
+      return;
+    }
+  } else {
+    sandboxes[sandboxName].asyncTestCommandId = asyncTestCommandId;
+  }
+
+  let sandbox = sandboxes[sandboxName];
+
+  try {
+    if (directInject) {
+      script = importedScripts.for("content").concat(script);
+      let res = Cu.evalInSandbox(script, sandbox, "1.8", filename ? filename : "dummy file" ,0);
+
+      sendSyncMessage("Marionette:shareData",
+                      {log: elementManager.wrapValue(marionetteLogObj.getLogs())});
+      marionetteLogObj.clearLogs();
+
+      if (res == undefined || res.passed == undefined) {
+        sendError(new JavaScriptError("Marionette.finish() not called"), asyncTestCommandId);
+      }
+      else {
+        sendResponse(elementManager.wrapValue(res), asyncTestCommandId);
+      }
+    }
+    else {
+      try {
+        sandbox.__marionetteParams = Cu.cloneInto(elementManager.convertWrappedArguments(
+          msg.json.args, curContainer), sandbox, { wrapReflectors: true });
+      } catch (e) {
+        sendError(e, asyncTestCommandId);
+        return;
+      }
+
+      script = "var __marionetteFunc = function(){" + script + "};" +
+                   "__marionetteFunc.apply(null, __marionetteParams);";
+      script = importedScripts.for("content").concat(script);
+
+      let res = Cu.evalInSandbox(script, sandbox, "1.8", filename ? filename : "dummy file", 0);
+      sendSyncMessage("Marionette:shareData",
+                      {log: elementManager.wrapValue(marionetteLogObj.getLogs())});
+      marionetteLogObj.clearLogs();
+      sendResponse(elementManager.wrapValue(res), asyncTestCommandId);
+    }
+  } catch (e) {
+    let err = new JavaScriptError(
+        e,
+        "execute_script",
+        msg.json.filename,
+        msg.json.line,
+        script);
+    sendError(err, asyncTestCommandId);
+  }
 }
 
 /**
@@ -568,6 +672,13 @@ function* executeSimpleTest(script, args, timeout, opts) {
 function setTestName(msg) {
   marionetteTestName = msg.json.value;
   sendOk(msg.json.command_id);
+}
+
+/**
+ * Execute async script
+ */
+function executeAsyncScript(msg) {
+  executeWithCallback(msg);
 }
 
 /**
@@ -590,6 +701,113 @@ function receiveFiles(msg) {
   fileInputElement.mozSetFileArray(fs);
   fileInputElement = null;
   sendOk(msg.json.command_id);
+}
+
+/**
+ * Execute pure JS test. Handles both async and sync cases.
+ */
+function executeJSScript(msg) {
+  if (msg.json.async) {
+    executeWithCallback(msg, msg.json.async);
+  }
+  else {
+    executeScript(msg, true);
+  }
+}
+
+/**
+ * This function is used by executeAsync and executeJSScript to execute a script
+ * in a sandbox.
+ *
+ * For executeJSScript, it will return a message only when the finish() method is called.
+ * For executeAsync, it will return a response when marionetteScriptFinished/arguments[arguments.length-1]
+ * method is called, or if it times out.
+ */
+function executeWithCallback(msg, useFinish) {
+  // Set up inactivity timeout.
+  if (msg.json.inactivityTimeout) {
+    let setTimer = function() {
+      inactivityTimeoutId = curContainer.frame.setTimeout(function() {
+        sandbox.asyncComplete(new ScriptTimeoutError("timed out due to inactivity"), asyncTestCommandId);
+      }, msg.json.inactivityTimeout);
+    };
+
+    setTimer();
+    heartbeatCallback = function() {
+      curContainer.frame.clearTimeout(inactivityTimeoutId);
+      setTimer();
+    };
+  }
+
+  let script = msg.json.script;
+  let filename = msg.json.filename;
+  asyncTestCommandId = msg.json.command_id;
+  sandboxName = msg.json.sandboxName;
+
+  onunload = function() {
+    sendError(new JavaScriptError("unload was called"), asyncTestCommandId);
+  };
+  curContainer.frame.addEventListener("unload", onunload, false);
+
+  if (msg.json.newSandbox ||
+      !(sandboxName in sandboxes) ||
+      (sandboxes[sandboxName].window != curContainer.frame)) {
+    createExecuteContentSandbox(curContainer.frame, msg.json.timeout);
+    if (!sandboxes[sandboxName]) {
+      sendError(new JavaScriptError("Could not create sandbox!"), asyncTestCommandId);
+      return;
+    }
+  }
+  else {
+    sandboxes[sandboxName].asyncTestCommandId = asyncTestCommandId;
+  }
+  let sandbox = sandboxes[sandboxName];
+  sandbox.tag = script;
+
+  asyncTestTimeoutId = curContainer.frame.setTimeout(function() {
+    sandbox.asyncComplete(new ScriptTimeoutError("timed out"), asyncTestCommandId);
+  }, msg.json.timeout);
+
+  originalOnError = curContainer.frame.onerror;
+  curContainer.frame.onerror = function errHandler(msg, url, line) {
+    sandbox.asyncComplete(new JavaScriptError(msg + "@" + url + ", line " + line), asyncTestCommandId);
+    curContainer.frame.onerror = originalOnError;
+  };
+
+  let scriptSrc;
+  if (useFinish) {
+    if (msg.json.timeout == null || msg.json.timeout == 0) {
+      sendError(new TimeoutError("Please set a timeout"), asyncTestCommandId);
+    }
+    scriptSrc = script;
+  }
+  else {
+    try {
+      sandbox.__marionetteParams = Cu.cloneInto(elementManager.convertWrappedArguments(
+        msg.json.args, curContainer), sandbox, { wrapReflectors: true });
+    } catch (e) {
+      sendError(e, asyncTestCommandId);
+      return;
+    }
+
+    scriptSrc = "__marionetteParams.push(marionetteScriptFinished);" +
+                "var __marionetteFunc = function() { " + script + "};" +
+                "__marionetteFunc.apply(null, __marionetteParams); ";
+  }
+
+  try {
+    asyncTestRunning = true;
+    scriptSrc = importedScripts.for("content").concat(scriptSrc);
+    Cu.evalInSandbox(scriptSrc, sandbox, "1.8", filename ? filename : "dummy file", 0);
+  } catch (e) {
+    let err = new JavaScriptError(
+        e,
+        "execute_async_script",
+        msg.json.filename,
+        msg.json.line,
+        scriptSrc);
+    sandbox.asyncComplete(err, asyncTestCommandId);
+  }
 }
 
 /**
@@ -620,10 +838,10 @@ function emitTouchEvent(type, touch) {
     // we get here if we're not in asyncPacZoomEnabled land, or if we're the main process
     /*
     Disabled per bug 888303
-    contentLog.log(loggingInfo, "TRACE");
+    marionetteLogObj.log(loggingInfo, "TRACE");
     sendSyncMessage("Marionette:shareData",
-                    {log: elementManager.wrapValue(contentLog.get())});
-    contentLog.clear();
+                    {log: elementManager.wrapValue(marionetteLogObj.getLogs())});
+    marionetteLogObj.clearLogs();
     */
     let domWindowUtils = curContainer.frame.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils);
     domWindowUtils.sendTouchEvent(type, [touch.identifier], [touch.clientX], [touch.clientY], [touch.radiusX], [touch.radiusY], [touch.rotationAngle], [touch.force], 1, 0);
@@ -917,6 +1135,7 @@ function get(msg) {
         event.originalTarget.defaultView.frameElement == curContainer.frame.frameElement) {
       pollForReadyState(msg, start, () => {
         removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
+        onDOMContentLoaded = null;
       });
     }
   };
@@ -935,6 +1154,7 @@ function get(msg) {
     // We need to move to the top frame before navigating
     sendSyncMessage("Marionette:switchedToFrame", { frameValue: null });
     curContainer.frame = content;
+
     curContainer.frame.location = msg.json.url;
   }
 }
@@ -1001,7 +1221,7 @@ function refresh(msg) {
   let command_id = msg.json.command_id;
   curContainer.frame.location.reload(true);
   let listen = function() {
-    removeEventListener("DOMContentLoaded", listen, false);
+    removeEventListener("DOMContentLoaded", arguments.callee, false);
     sendOk(command_id);
   };
   addEventListener("DOMContentLoaded", listen, false);
@@ -1396,8 +1616,8 @@ function switchToFrame(msg) {
 
   // send a synchronous message to let the server update the currently active
   // frame element (for getActiveFrame)
-  let frameValue = elementManager.wrapValue(curContainer.frame.wrappedJSObject).ELEMENT;
-  sendSyncMessage("Marionette:switchedToFrame", {frameValue: frameValue});
+  let frameValue = elementManager.wrapValue(curContainer.frame.wrappedJSObject)['ELEMENT'];
+  sendSyncMessage("Marionette:switchedToFrame", { frameValue: frameValue });
 
   let rv = null;
   if (curContainer.frame.contentWindow === null) {
@@ -1407,9 +1627,8 @@ function switchToFrame(msg) {
     rv = {win: parWindow, frame: foundFrame};
   } else {
     curContainer.frame = curContainer.frame.contentWindow;
-    if (msg.json.focus) {
+    if (msg.json.focus)
       curContainer.frame.focus();
-    }
     checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
   }
 
