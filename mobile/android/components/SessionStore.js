@@ -715,6 +715,8 @@ SessionStore.prototype = {
     // Save zoom and scroll data.
     data.scrolldata = scrolldata;
     log("onTabScroll() ran for tab " + aWindow.BrowserApp.getTabForBrowser(aBrowser).id);
+    let evt = new Event("SSTabScrollCaptured", {"bubbles":true, "cancelable":false});
+    aBrowser.dispatchEvent(evt);
     this.saveStateDelayed();
   },
 
