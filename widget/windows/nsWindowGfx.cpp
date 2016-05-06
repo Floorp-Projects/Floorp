@@ -169,10 +169,8 @@ nsIWidgetListener* nsWindow::GetPaintListener()
 
 void nsWindow::ForcePresent()
 {
-  if (mResizeState != RESIZING) {
-    if (CompositorBridgeChild* remoteRenderer = GetRemoteRenderer()) {
-      remoteRenderer->SendForcePresent();
-    }
+  if (CompositorChild* remoteRenderer = GetRemoteRenderer()) {
+    remoteRenderer->SendForcePresent();
   }
 }
 
