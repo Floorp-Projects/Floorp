@@ -34,7 +34,7 @@ class TestSSLDisabledErrorPage(FirefoxTestCase):
             time.sleep(1)
 
             # Verify "Secure Connection Failed" error page title
-            title = self.marionette.find_element(By.ID, 'errorTitleText')
+            title = self.marionette.find_element(By.CLASS_NAME, 'title-text')
             nss_failure2title = self.browser.get_entity('nssFailure2.title')
             self.assertEquals(title.get_attribute('textContent'), nss_failure2title)
 

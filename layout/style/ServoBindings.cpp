@@ -296,6 +296,13 @@ Servo_GetComputedValuesForPseudoElement(ServoComputedValues* parent_style,
             "non-MOZ_STYLO build");
 }
 
+ServoComputedValues*
+Servo_InheritComputedValues(ServoComputedValues* parent_style)
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_InheritComputedValues in a "
+            "non-MOZ_STYLO build");
+}
+
 void
 Servo_AddRefComputedValues(ServoComputedValues*)
 {

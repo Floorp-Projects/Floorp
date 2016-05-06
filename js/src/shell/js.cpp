@@ -4841,9 +4841,8 @@ ReflectTrackedOptimizations(JSContext* cx, unsigned argc, Value* vp)
     gc::AutoSuppressGC suppress(cx);
 
     jit::JitcodeGlobalTable* table = rt->jitRuntime()->getJitcodeGlobalTable();
-    jit::JitcodeGlobalEntry entry;
     jit::IonScript* ion = fun->nonLazyScript()->ionScript();
-    table->lookupInfallible(ion->method()->raw(), &entry, rt);
+    jit::JitcodeGlobalEntry& entry = table->lookupInfallible(ion->method()->raw());
 
     if (!entry.hasTrackedOptimizations()) {
         JSObject* obj = JS_NewPlainObject(cx);

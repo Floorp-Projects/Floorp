@@ -1029,14 +1029,18 @@ class JitcodeGlobalTable
         return skiplistSize_ == 0;
     }
 
-    bool lookup(void* ptr, JitcodeGlobalEntry* result, JSRuntime* rt);
-    bool lookupForSampler(void* ptr, JitcodeGlobalEntry* result, JSRuntime* rt,
-                          uint32_t sampleBufferGen);
-
-    void lookupInfallible(void* ptr, JitcodeGlobalEntry* result, JSRuntime* rt) {
-        mozilla::DebugOnly<bool> success = lookup(ptr, result, rt);
-        MOZ_ASSERT(success);
+    const JitcodeGlobalEntry* lookup(void* ptr) {
+        return lookupInternal(ptr);
     }
+
+    JitcodeGlobalEntry& lookupInfallible(void* ptr) {
+        JitcodeGlobalEntry* entry = lookupInternal(ptr);
+        MOZ_ASSERT(entry);
+        return *entry;
+    }
+
+    const JitcodeGlobalEntry& lookupForSamplerInfallible(void* ptr, JSRuntime* rt,
+                                                         uint32_t sampleBufferGen);
 
     bool addEntry(const JitcodeGlobalEntry::IonEntry& entry, JSRuntime* rt) {
         return addEntry(JitcodeGlobalEntry(entry), rt);

@@ -267,7 +267,8 @@ class UpdateTestCase(FirefoxTestCase):
 
             # Wait for the download to start
             Wait(self.marionette).until(lambda _: (
-                window.deck.selected_panel != window.deck.download_and_install))
+                window.deck.selected_panel != window.deck.download_and_install),
+                message='Download of the update has been started.')
 
         # If there are incompatible addons, handle the update via the old software update dialog
         if window.deck.selected_panel == window.deck.apply_billboard:
@@ -277,7 +278,8 @@ class UpdateTestCase(FirefoxTestCase):
                 expected_window_class=UpdateWizardDialog
             )
             Wait(self.marionette).until(
-                lambda _: dialog.wizard.selected_panel == dialog.wizard.updates_found_basic)
+                lambda _: dialog.wizard.selected_panel == dialog.wizard.updates_found_basic,
+                message='An update has been found.')
 
             download_via_update_wizard(dialog)
             dialog.close()

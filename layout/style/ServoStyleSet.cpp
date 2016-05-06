@@ -128,7 +128,14 @@ ServoStyleSet::ResolveStyleForText(nsIContent* aTextNode,
 already_AddRefed<nsStyleContext>
 ServoStyleSet::ResolveStyleForOtherNonElement(nsStyleContext* aParentContext)
 {
-  MOZ_CRASH("stylo: not implemented");
+  RefPtr<ServoComputedValues> computedValues =
+    Servo_InheritComputedValues(
+      aParentContext->StyleSource().AsServoComputedValues());
+  MOZ_ASSERT(computedValues);
+
+  return GetContext(computedValues.forget(), aParentContext,
+                    nsCSSAnonBoxes::mozOtherNonElement,
+                    CSSPseudoElementType::AnonBox);
 }
 
 already_AddRefed<nsStyleContext>

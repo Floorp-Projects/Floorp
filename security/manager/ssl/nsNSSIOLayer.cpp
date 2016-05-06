@@ -373,7 +373,7 @@ nsNSSSocketInfo::IsAcceptableForHost(const nsACString& hostname, bool* _retval)
   }
   nsAutoCString hostnameFlat(PromiseFlatCString(hostname));
   CertVerifier::Flags flags = CertVerifier::FLAG_LOCAL_ONLY;
-  ScopedCERTCertList unusedBuiltChain;
+  UniqueCERTCertList unusedBuiltChain;
   SECStatus rv = certVerifier->VerifySSLServerCert(nssCert, nullptr,
                                                    mozilla::pkix::Now(),
                                                    nullptr, hostnameFlat.get(),
@@ -2089,7 +2089,7 @@ ClientAuthDataRunnable::RunOnTargetThread()
   char** caNameStrings;
   UniqueCERTCertificate cert;
   UniqueSECKEYPrivateKey privKey;
-  ScopedCERTCertList certList;
+  UniqueCERTCertList certList;
   CERTCertListNode* node;
   UniqueCERTCertNicknames nicknames;
   int keyError = 0; // used for private key retrieval error
@@ -2142,9 +2142,9 @@ ClientAuthDataRunnable::RunOnTargetThread()
     // automatically find the right cert
 
     // find all user certs that are valid and for SSL
-    certList = CERT_FindUserCertsByUsage(CERT_GetDefaultCertDB(),
-                                         certUsageSSLClient, false,
-                                         true, wincx);
+    certList.reset(CERT_FindUserCertsByUsage(CERT_GetDefaultCertDB(),
+                                             certUsageSSLClient, false, true,
+                                             wincx));
     if (!certList) {
       goto noCert;
     }
@@ -2256,9 +2256,9 @@ ClientAuthDataRunnable::RunOnTargetThread()
 
       // find all user certs that are for SSL
       // note that we are allowing expired certs in this list
-      certList = CERT_FindUserCertsByUsage(CERT_GetDefaultCertDB(),
-        certUsageSSLClient, false,
-        false, wincx);
+      certList.reset(CERT_FindUserCertsByUsage(CERT_GetDefaultCertDB(),
+                                               certUsageSSLClient, false,
+                                               false, wincx));
       if (!certList) {
         goto noCert;
       }
@@ -2289,7 +2289,7 @@ ClientAuthDataRunnable::RunOnTargetThread()
         goto noCert;
       }
 
-      nicknames.reset(getNSSCertNicknamesFromCertList(certList.get()));
+      nicknames.reset(getNSSCertNicknamesFromCertList(certList));
 
       if (!nicknames) {
         goto loser;

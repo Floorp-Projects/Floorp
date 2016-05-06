@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_psm__CertVerifier_h
-#define mozilla_psm__CertVerifier_h
+#ifndef CertVerifier_h
+#define CertVerifier_h
 
 #include "BRNameMatchingPolicy.h"
 #include "OCSPCache.h"
@@ -74,7 +74,7 @@ public:
                        mozilla::pkix::Time time,
                        void* pinArg,
                        const char* hostname,
-               /*out*/ ScopedCERTCertList& builtChain,
+               /*out*/ UniqueCERTCertList& builtChain,
                        Flags flags = 0,
        /*optional in*/ const SECItem* stapledOCSPResponse = nullptr,
       /*optional out*/ SECOidTag* evOidPolicy = nullptr,
@@ -89,7 +89,7 @@ public:
                     mozilla::pkix::Time time,
        /*optional*/ void* pinarg,
                     const char* hostname,
-            /*out*/ ScopedCERTCertList& builtChain,
+            /*out*/ UniqueCERTCertList& builtChain,
        /*optional*/ bool saveIntermediatesInPermanentDatabase = false,
        /*optional*/ Flags flags = 0,
    /*optional out*/ SECOidTag* evOidPolicy = nullptr,
@@ -154,4 +154,4 @@ mozilla::pkix::Result CertListContainsExpectedKeys(
 
 } } // namespace mozilla::psm
 
-#endif // mozilla_psm__CertVerifier_h
+#endif // CertVerifier_h

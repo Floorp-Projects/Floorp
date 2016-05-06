@@ -734,7 +734,7 @@ public:
                             const void* fdForLogging,
                             nsNSSSocketInfo* infoObject,
                             const UniqueCERTCertificate& serverCert,
-                            ScopedCERTCertList& peerCertChain,
+                            const UniqueCERTCertList& peerCertChain,
                             SECItem* stapledOCSPResponse,
                             uint32_t providerFlags,
                             Time time,
@@ -747,7 +747,7 @@ private:
                                const void* fdForLogging,
                                nsNSSSocketInfo* infoObject,
                                const UniqueCERTCertificate& cert,
-                               CERTCertList* peerCertChain,
+                               UniqueCERTCertList peerCertChain,
                                SECItem* stapledOCSPResponse,
                                uint32_t providerFlags,
                                Time time,
@@ -756,7 +756,7 @@ private:
   const void* const mFdForLogging;
   const RefPtr<nsNSSSocketInfo> mInfoObject;
   const UniqueCERTCertificate mCert;
-  ScopedCERTCertList mPeerCertChain;
+  UniqueCERTCertList mPeerCertChain;
   const uint32_t mProviderFlags;
   const Time mTime;
   const PRTime mPRTime;
@@ -767,13 +767,13 @@ private:
 SSLServerCertVerificationJob::SSLServerCertVerificationJob(
     const RefPtr<SharedCertVerifier>& certVerifier, const void* fdForLogging,
     nsNSSSocketInfo* infoObject, const UniqueCERTCertificate& cert,
-    CERTCertList* peerCertChain, SECItem* stapledOCSPResponse,
+    UniqueCERTCertList peerCertChain, SECItem* stapledOCSPResponse,
     uint32_t providerFlags, Time time, PRTime prtime)
   : mCertVerifier(certVerifier)
   , mFdForLogging(fdForLogging)
   , mInfoObject(infoObject)
   , mCert(CERT_DupCertificate(cert.get()))
-  , mPeerCertChain(peerCertChain)
+  , mPeerCertChain(Move(peerCertChain))
   , mProviderFlags(providerFlags)
   , mTime(time)
   , mPRTime(prtime)
@@ -893,7 +893,7 @@ TryMatchingWildcardSubjectAltName(const char* commonName,
 // certList consists of a validated certificate chain. The end-entity
 // certificate is first and the root (trust anchor) is last.
 void
-GatherBaselineRequirementsTelemetry(const ScopedCERTCertList& certList)
+GatherBaselineRequirementsTelemetry(const UniqueCERTCertList& certList)
 {
   CERTCertListNode* endEntityNode = CERT_LIST_HEAD(certList);
   CERTCertListNode* rootNode = CERT_LIST_TAIL(certList);
@@ -1057,7 +1057,7 @@ GatherBaselineRequirementsTelemetry(const ScopedCERTCertList& certList)
 // Gather telemetry on whether the end-entity cert for a server has the
 // required TLS Server Authentication EKU, or any others
 void
-GatherEKUTelemetry(const ScopedCERTCertList& certList)
+GatherEKUTelemetry(const UniqueCERTCertList& certList)
 {
   CERTCertListNode* endEntityNode = CERT_LIST_HEAD(certList);
   CERTCertListNode* rootNode = CERT_LIST_TAIL(certList);
@@ -1139,7 +1139,7 @@ GatherEKUTelemetry(const ScopedCERTCertList& certList)
 // If the root is a built-in root, then the telemetry makes a count
 // by root.  Roots that are not built-in are counted in one bin.
 void
-GatherRootCATelemetry(const ScopedCERTCertList& certList)
+GatherRootCATelemetry(const UniqueCERTCertList& certList)
 {
   CERTCertListNode* rootNode = CERT_LIST_TAIL(certList);
   PR_ASSERT(rootNode);
@@ -1165,7 +1165,7 @@ const uint64_t ONE_YEAR_IN_WEEKS   = 52;
 
 // Gathers telemetry on the certificate lifetimes we observe in the wild
 void
-GatherEndEntityTelemetry(const ScopedCERTCertList& certList)
+GatherEndEntityTelemetry(const UniqueCERTCertList& certList)
 {
   CERTCertListNode* endEntityNode = CERT_LIST_HEAD(certList);
   PR_ASSERT(endEntityNode);
@@ -1206,7 +1206,7 @@ GatherEndEntityTelemetry(const ScopedCERTCertList& certList)
 // There are various things that we want to measure about certificate
 // chains that we accept.  This is a single entry point for all of them.
 void
-GatherSuccessfulValidationTelemetry(const ScopedCERTCertList& certList)
+GatherSuccessfulValidationTelemetry(const UniqueCERTCertList& certList)
 {
   GatherBaselineRequirementsTelemetry(certList);
   GatherEKUTelemetry(certList);
@@ -1214,11 +1214,12 @@ GatherSuccessfulValidationTelemetry(const ScopedCERTCertList& certList)
   GatherEndEntityTelemetry(certList);
 }
 
+// Note: Takes ownership of |peerCertChain| if SECSuccess is not returned.
 SECStatus
 AuthCertificate(CertVerifier& certVerifier,
                 nsNSSSocketInfo* infoObject,
                 const UniqueCERTCertificate& cert,
-                ScopedCERTCertList& peerCertChain,
+                UniqueCERTCertList& peerCertChain,
                 SECItem* stapledOCSPResponse,
                 uint32_t providerFlags,
                 Time time)
@@ -1234,7 +1235,7 @@ AuthCertificate(CertVerifier& certVerifier,
     !(providerFlags & nsISocketProvider::NO_PERMANENT_STORAGE);
 
   SECOidTag evOidPolicy;
-  ScopedCERTCertList certList;
+  UniqueCERTCertList certList;
   CertVerifier::OCSPStaplingStatus ocspStaplingStatus =
     CertVerifier::OCSP_STAPLING_NEVER_CHECKED;
   KeySizeStatus keySizeStatus = KeySizeStatus::NeverChecked;
@@ -1341,9 +1342,8 @@ AuthCertificate(CertVerifier& certVerifier,
 
   if (rv != SECSuccess) {
     // Certificate validation failed; store the peer certificate chain on
-    // infoObject so it can be used for error reporting. Note: infoObject
-    // indirectly takes ownership of peerCertChain.
-    infoObject->SetFailedCertChain(peerCertChain);
+    // infoObject so it can be used for error reporting.
+    infoObject->SetFailedCertChain(Move(peerCertChain));
     PR_SetError(savedErrorCode, 0);
   }
 
@@ -1356,7 +1356,7 @@ SSLServerCertVerificationJob::Dispatch(
   const void* fdForLogging,
   nsNSSSocketInfo* infoObject,
   const UniqueCERTCertificate& serverCert,
-  ScopedCERTCertList& peerCertChain,
+  const UniqueCERTCertList& peerCertChain,
   SECItem* stapledOCSPResponse,
   uint32_t providerFlags,
   Time time,
@@ -1374,11 +1374,16 @@ SSLServerCertVerificationJob::Dispatch(
   // We can safely skip checking if NSS has already shut down here since we're
   // in the middle of verifying a certificate.
   nsNSSShutDownPreventionLock lock;
-  CERTCertList* peerCertChainCopy = nsNSSCertList::DupCertList(peerCertChain, lock);
+  UniqueCERTCertList peerCertChainCopy =
+    nsNSSCertList::DupCertList(peerCertChain, lock);
+  if (!peerCertChainCopy) {
+    PR_SetError(SEC_ERROR_NO_MEMORY, 0);
+    return SECFailure;
+  }
 
   RefPtr<SSLServerCertVerificationJob> job(
     new SSLServerCertVerificationJob(certVerifier, fdForLogging, infoObject,
-                                     serverCert, peerCertChainCopy,
+                                     serverCert, Move(peerCertChainCopy),
                                      stapledOCSPResponse, providerFlags,
                                      time, prtime));
 
@@ -1432,6 +1437,8 @@ SSLServerCertVerificationJob::Run()
     SECStatus rv = AuthCertificate(*mCertVerifier, mInfoObject, mCert,
                                    mPeerCertChain, mStapledOCSPResponse,
                                    mProviderFlags, mTime);
+    MOZ_ASSERT(mPeerCertChain || rv != SECSuccess,
+               "AuthCertificate() should take ownership of chain on failure");
     if (rv == SECSuccess) {
       uint32_t interval = (uint32_t) ((TimeStamp::Now() - mJobStartTime).ToMilliseconds());
       RefPtr<SSLServerCertVerificationResult> restart(
@@ -1532,7 +1539,11 @@ AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig, PRBool isServer)
   }
 
   // Get the peer certificate chain for error reporting
-  ScopedCERTCertList peerCertChain(SSL_PeerCertificateChain(fd));
+  UniqueCERTCertList peerCertChain(SSL_PeerCertificateChain(fd));
+  if (!peerCertChain) {
+    PR_SetError(PR_INVALID_STATE_ERROR, 0);
+    return SECFailure;
+  }
 
   socketInfo->SetFullHandshake();
 
@@ -1600,6 +1611,8 @@ AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig, PRBool isServer)
   SECStatus rv = AuthCertificate(*certVerifier, socketInfo, serverCert,
                                  peerCertChain, stapledOCSPResponse,
                                  providerFlags, now);
+  MOZ_ASSERT(peerCertChain || rv != SECSuccess,
+             "AuthCertificate() should take ownership of chain on failure");
   if (rv == SECSuccess) {
     Telemetry::Accumulate(Telemetry::SSL_CERT_ERROR_OVERRIDES, 1);
     return SECSuccess;

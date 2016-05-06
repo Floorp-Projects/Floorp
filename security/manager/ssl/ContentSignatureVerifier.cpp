@@ -146,8 +146,7 @@ ContentSignatureVerifier::CreateContext(const nsACString& aData,
     return NS_ERROR_ALREADY_INITIALIZED;
   }
 
-  ScopedCERTCertList certCertList(CERT_NewCertList());
-
+  UniqueCERTCertList certCertList(CERT_NewCertList());
   if (!certCertList) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
