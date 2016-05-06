@@ -18,6 +18,8 @@ Cu.import("resource://services-common/async.js");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Status",
                                   "resource://services-sync/status.js");
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
+                                  "resource://gre/modules/AddonManager.jsm");
 
 this.SyncScheduler = function SyncScheduler(service) {
   this.service = service;
@@ -686,6 +688,27 @@ ErrorHandler.prototype = {
     Utils.nextTick(this.service.sync, this.service);
   },
 
+  _dumpAddons: function _dumpAddons() {
+    // Just dump the items that sync may be concerned with. Specifically,
+    // active extensions that are not hidden.
+    let addonPromise = new Promise(resolve => {
+      try {
+        AddonManager.getAddonsByTypes(["extension"], resolve);
+      } catch (e) {
+        this._log.warn("Failed to dump addons", e)
+        resolve([])
+      }
+    });
+
+    return addonPromise.then(addons => {
+      let relevantAddons = addons.filter(x => x.isActive && !x.hidden);
+      this._log.debug("Addons installed", relevantAddons.length);
+      for (let addon of relevantAddons) {
+        this._log.debug(" - ${name}, version ${version}, id ${id}", addon);
+      }
+    });
+  },
+
   /**
    * Generate a log file for the sync that just completed
    * and refresh the input & output streams.
@@ -698,9 +721,19 @@ ErrorHandler.prototype = {
         Cu.reportError("Sync encountered an error - see about:sync-log for the log file.");
       }
     };
+
+    // If we're writing an error log, dump extensions that may be causing problems.
+    let beforeResetLog;
+    if (this._logManager.sawError) {
+      beforeResetLog = this._dumpAddons();
+    } else {
+      beforeResetLog = Promise.resolve();
+    }
     // Note we do not return the promise here - the caller doesn't need to wait
     // for this to complete.
-    this._logManager.resetFileLog().then(onComplete, onComplete);
+    beforeResetLog
+      .then(() => this._logManager.resetFileLog())
+      .then(onComplete, onComplete);
   },
 
   /**
