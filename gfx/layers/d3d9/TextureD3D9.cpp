@@ -907,7 +907,7 @@ TextureHostD3D9::UpdatedInternal(const nsIntRegion* aRegion)
   }
 
   if (!mTextureSource->UpdateFromTexture(mTexture, regionToUpdate)) {
-    gfxCriticalError() << "[D3D9] DataTextureSourceD3D9::UpdateFromTexture failed";
+    gfxWarning() << "[D3D9] DataTextureSourceD3D9::UpdateFromTexture failed";
   }
 }
 

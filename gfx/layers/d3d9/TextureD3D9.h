@@ -83,7 +83,7 @@ protected:
   TextureSourceD3D9* mPreviousHost;
   TextureSourceD3D9* mNextHost;
   // The device manager that created our textures.
-  DeviceManagerD3D9* mCreatingDeviceManager;
+  RefPtr<DeviceManagerD3D9> mCreatingDeviceManager;
 
   StereoMode mStereoMode;
   RefPtr<IDirect3DTexture9> mTexture;
