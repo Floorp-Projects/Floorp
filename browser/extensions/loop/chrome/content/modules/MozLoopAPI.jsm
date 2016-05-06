@@ -600,6 +600,22 @@ const kMessageHandlers = {
   GetLocale: function(message, reply) {
     reply(MozLoopService.locale);
   },
+
+  /**
+   * Returns the version number for the addon.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [ ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   * @returns {String} Addon Version string.
+   */
+  GetAddonVersion: function(message, reply) {
+    reply(MozLoopService.addonVersion);
+  },
+
   /**
    * Return any preference under "loop.".
    * Any errors thrown by the Mozilla pref API are logged to the console

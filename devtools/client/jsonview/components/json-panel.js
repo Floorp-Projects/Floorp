@@ -114,7 +114,7 @@ define(function (require, exports, module) {
       return TreeView({
         object: this.props.data,
         mode: "tiny",
-        onFilter: this.onFilter.bind(this),
+        onFilter: this.onFilter,
         columns: columns,
         renderValue: this.renderValue,
         expandedNodes: expandedNodes,

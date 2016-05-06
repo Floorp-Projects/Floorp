@@ -19,7 +19,7 @@ function test() {
     Services.prefs.clearUserPref(FILTER_PREF);
   });
 
-  Task.spawn(function*() {
+  Task.spawn(function* () {
     const {tab} = yield loadTab(TEST_URI);
 
     // Test for cached nsIConsoleMessages.
@@ -30,7 +30,10 @@ function test() {
 
     ok(hud, "web console opened");
     Services.console.logStringMessage("do-not-show-me");
-    content.console.log("foobarz");
+
+    ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
+      content.console.log("foobarz");
+    });
 
     yield waitForMessages({
       webconsole: hud,

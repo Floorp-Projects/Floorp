@@ -32,7 +32,7 @@ define(function(require, exports, module) {
     },
 
     getDescription: function(grip) {
-      return (grip.preview.kind == "ObjectWithURL") ? grip.preview.url : "";
+      return grip.preview.url;
     },
 
     render: function() {
