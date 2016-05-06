@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Cu } = require("chrome");
 const { defer, all } = require("promise");
 const { makeInfallible } = require("devtools/shared/DevToolsUtils");
 const Services = require("Services");
@@ -185,8 +184,8 @@ HarCollector.prototype = {
 
     let file = this.getFile(actor);
     if (file) {
-      Cu.reportError("HarCollector.onNetworkEvent; ERROR " +
-        "existing file conflict!");
+      console.error("HarCollector.onNetworkEvent; ERROR " +
+                    "existing file conflict!");
       return;
     }
 
@@ -278,8 +277,8 @@ HarCollector.prototype = {
     let deferred = defer();
 
     if (!this.webConsoleClient[method]) {
-      Cu.reportError("HarCollector.getData; ERROR " +
-        "Unknown method!");
+      console.error("HarCollector.getData; ERROR " +
+                    "Unknown method!");
       return deferred.resolve();
     }
 

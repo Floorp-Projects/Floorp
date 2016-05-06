@@ -606,8 +606,8 @@ var Scratchpad = {
     let deferred = promise.defer();
 
     if (this.executionContext !== SCRATCHPAD_CONTEXT_CONTENT) {
-      Cu.reportError(this.strings.
-          GetStringFromName("scratchpadContext.invalid"));
+      console.error(this.strings.
+                    GetStringFromName("scratchpadContext.invalid"));
       return;
     }
 
@@ -2387,8 +2387,8 @@ ScratchpadSidebar.prototype = {
  */
 function reportError(aAction, aResponse)
 {
-  Cu.reportError(aAction + " failed: " + aResponse.error + " " +
-                 aResponse.message);
+  console.error(aAction + " failed: " + aResponse.error + " " +
+                aResponse.message);
 }
 
 

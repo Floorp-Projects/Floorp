@@ -50,7 +50,7 @@ PerformancePanel.prototype = {
     // does not exist), and in that case, the tool shouldn't be available,
     // so let's ensure this assertion.
     if (!front) {
-      Cu.reportError("No PerformanceFront found in toolbox.");
+      console.error("No PerformanceFront found in toolbox.");
     }
 
     this.panelWin.gFront = front;

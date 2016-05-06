@@ -201,8 +201,8 @@ function _attachConsole(aListeners, aCallback, aAttachToTab, aAttachToWorker)
   function _onAttachConsole(aState, aResponse, aWebConsoleClient)
   {
     if (aResponse.error) {
-      Cu.reportError("attachConsole failed: " + aResponse.error + " " +
-                     aResponse.message);
+      console.error("attachConsole failed: " + aResponse.error + " " +
+                    aResponse.message);
     }
 
     aState.client = aWebConsoleClient;
@@ -212,8 +212,8 @@ function _attachConsole(aListeners, aCallback, aAttachToTab, aAttachToWorker)
 
   connectToDebugger(function _onConnect(aState, aResponse) {
     if (aResponse.error) {
-      Cu.reportError("client.connect() failed: " + aResponse.error + " " +
-                     aResponse.message);
+      console.error("client.connect() failed: " + aResponse.error + " " +
+                    aResponse.message);
       aCallback(aState, aResponse);
       return;
     }
@@ -221,7 +221,7 @@ function _attachConsole(aListeners, aCallback, aAttachToTab, aAttachToWorker)
     if (aAttachToTab) {
       aState.dbgClient.listTabs(function _onListTabs(aResponse) {
         if (aResponse.error) {
-          Cu.reportError("listTabs failed: " + aResponse.error + " " +
+          console.error("listTabs failed: " + aResponse.error + " " +
                          aResponse.message);
           aCallback(aState, aResponse);
           return;

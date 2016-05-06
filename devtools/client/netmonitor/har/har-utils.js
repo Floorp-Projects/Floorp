@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Cu, Ci, Cc, CC } = require("chrome");
+const { Ci, Cc, CC } = require("chrome");
 
 XPCOMUtils.defineLazyGetter(this, "dirService", function () {
   return Cc["@mozilla.org/file/directory_service;1"]
@@ -119,7 +119,7 @@ var HarUtils = {
       // this closes foStream
       convertor.close();
     } catch (err) {
-      Cu.reportError(err);
+      console.error(err);
       return false;
     }
 
@@ -157,7 +157,7 @@ var HarUtils = {
       file.remove(true);
       return true;
     } catch (err) {
-      Cu.reportError(err);
+      console.error(err);
 
       // Something went wrong (disk space?) rename the original file back.
       file.moveTo(null, originalFileName);

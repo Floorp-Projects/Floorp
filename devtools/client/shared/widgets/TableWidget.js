@@ -770,7 +770,7 @@ TableWidget.prototype = {
    */
   push: function(item, suppressFlash) {
     if (!this.sortedOn || !this.columns) {
-      Cu.reportError("Can't insert item without defining columns first");
+      console.error("Can't insert item without defining columns first");
       return;
     }
 
