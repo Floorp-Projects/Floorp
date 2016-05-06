@@ -49,7 +49,7 @@ StaticMutex AppTrustDomain::sMutex;
 UniquePtr<unsigned char[]> AppTrustDomain::sDevImportedDERData;
 unsigned int AppTrustDomain::sDevImportedDERLen = 0;
 
-AppTrustDomain::AppTrustDomain(ScopedCERTCertList& certChain, void* pinArg)
+AppTrustDomain::AppTrustDomain(UniqueCERTCertList& certChain, void* pinArg)
   : mCertChain(certChain)
   , mPinArg(pinArg)
   , mMinRSABits(DEFAULT_MIN_RSA_BITS)
@@ -194,7 +194,7 @@ AppTrustDomain::FindIssuer(Input encodedIssuerName, IssuerChecker& checker,
   //    message, passing each one to checker.Check.
   SECItem encodedIssuerNameSECItem =
     UnsafeMapInputToSECItem(encodedIssuerName);
-  ScopedCERTCertList
+  UniqueCERTCertList
     candidates(CERT_CreateSubjectCertList(nullptr, CERT_GetDefaultCertDB(),
                                           &encodedIssuerNameSECItem, 0,
                                           false));

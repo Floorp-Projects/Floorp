@@ -261,8 +261,7 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
   mCounterStylesDirty = true;
 
   // if text perf logging enabled, init stats struct
-  LogModule* log = gfxPlatform::GetLog(eGfxLog_textperf);
-  if (MOZ_LOG_TEST(log, LogLevel::Warning)) {
+  if (MOZ_LOG_TEST(gfxPlatform::GetLog(eGfxLog_textperf), LogLevel::Warning)) {
     mTextPerf = new gfxTextPerfMetrics();
   }
 

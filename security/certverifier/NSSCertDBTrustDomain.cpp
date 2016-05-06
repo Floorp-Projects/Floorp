@@ -52,7 +52,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
                                            unsigned int minRSABits,
                                            ValidityCheckingMode validityCheckingMode,
                                            CertVerifier::SHA1Mode sha1Mode,
-                                           ScopedCERTCertList& builtChain,
+                                           UniqueCERTCertList& builtChain,
                               /*optional*/ PinningTelemetryInfo* pinningTelemetryInfo,
                               /*optional*/ const char* hostname)
   : mCertDBTrustType(certDBTrustType)
@@ -76,7 +76,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
 // If useRoots is true, we only use root certificates in the candidate list.
 // If useRoots is false, we only use non-root certificates in the list.
 static Result
-FindIssuerInner(ScopedCERTCertList& candidates, bool useRoots,
+FindIssuerInner(const UniqueCERTCertList& candidates, bool useRoots,
                 Input encodedIssuerName, TrustDomain::IssuerChecker& checker,
                 /*out*/ bool& keepGoing)
 {
@@ -136,7 +136,7 @@ NSSCertDBTrustDomain::FindIssuer(Input encodedIssuerName,
   // TODO: NSS seems to be ambiguous between "no potential issuers found" and
   // "there was an error trying to retrieve the potential issuers."
   SECItem encodedIssuerNameItem = UnsafeMapInputToSECItem(encodedIssuerName);
-  ScopedCERTCertList
+  UniqueCERTCertList
     candidates(CERT_CreateSubjectCertList(nullptr, CERT_GetDefaultCertDB(),
                                           &encodedIssuerNameItem, 0,
                                           false));
@@ -735,7 +735,7 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time)
   MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
          ("NSSCertDBTrustDomain: IsChainValid"));
 
-  ScopedCERTCertList certList;
+  UniqueCERTCertList certList;
   SECStatus srv = ConstructCERTCertListFromReversedDERArray(certArray,
                                                             certList);
   if (srv != SECSuccess) {
@@ -813,7 +813,7 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time)
     }
   }
 
-  mBuiltChain = certList.forget();
+  mBuiltChain = Move(certList);
 
   return Success;
 }
@@ -1107,7 +1107,7 @@ DefaultServerNicknameForCert(CERTCertificate* cert)
 }
 
 void
-SaveIntermediateCerts(const ScopedCERTCertList& certList)
+SaveIntermediateCerts(const UniqueCERTCertList& certList)
 {
   if (!certList) {
     return;

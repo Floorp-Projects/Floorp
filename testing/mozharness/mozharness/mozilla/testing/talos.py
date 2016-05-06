@@ -177,14 +177,17 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
                 opts = None
 
             if opts:
+              # In the case of a multi-line commit message, only examine
+              # the first line for mozharness options
+              opts = opts.split('\n')[0]
               opts = re.sub(r'\w+:.*', '', opts).strip().split(' ')
               if "--spsProfile" in opts:
                   # overwrite whatever was set here.
                   self.sps_profile = True
               try:
-                    idx = opts.index('--spsProfileInterval')
-                    if len(opts) > idx + 1:
-                        self.sps_profile_interval = opts[idx + 1]
+                  idx = opts.index('--spsProfileInterval')
+                  if len(opts) > idx + 1:
+                      self.sps_profile_interval = opts[idx + 1]
               except ValueError:
                   pass
         # finally, if sps_profile is set, we add that to the talos options
@@ -242,8 +245,6 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
             kw_options['suite'] = self.config['suite']
         if self.config.get('title'):
             kw_options['title'] = self.config['title']
-            if kw_options['title'].startswith('tst-linux64-spot'):
-                kw_options['framework'] = 'talos-aws'
         if self.config.get('branch'):
             kw_options['branchName'] = self.config['branch']
         if self.symbols_path:

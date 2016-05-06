@@ -2176,10 +2176,10 @@ CacheIndex::ParseRecords()
 
   MOZ_ASSERT(fileOffset <= mIndexHandle->FileSize());
   if (fileOffset == mIndexHandle->FileSize()) {
-    if (mRWHash->GetHash() != NetworkEndian::readUint32(mRWBuf)) {
+    uint32_t expectedHash = NetworkEndian::readUint32(mRWBuf);
+    if (mRWHash->GetHash() != expectedHash) {
       LOG(("CacheIndex::ParseRecords() - Hash mismatch, [is %x, should be %x]",
-           mRWHash->GetHash(),
-           NetworkEndian::readUint32(mRWBuf)));
+           mRWHash->GetHash(), expectedHash));
       FinishRead(false);
       return;
     }
@@ -2297,10 +2297,10 @@ CacheIndex::ParseJournal()
 
   MOZ_ASSERT(fileOffset <= mJournalHandle->FileSize());
   if (fileOffset == mJournalHandle->FileSize()) {
-    if (mRWHash->GetHash() != NetworkEndian::readUint32(mRWBuf)) {
+    uint32_t expectedHash = NetworkEndian::readUint32(mRWBuf);
+    if (mRWHash->GetHash() != expectedHash) {
       LOG(("CacheIndex::ParseJournal() - Hash mismatch, [is %x, should be %x]",
-           mRWHash->GetHash(),
-           NetworkEndian::readUint32(mRWBuf)));
+           mRWHash->GetHash(), expectedHash));
       FinishRead(false);
       return;
     }

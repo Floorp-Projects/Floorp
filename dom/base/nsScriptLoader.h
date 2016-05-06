@@ -363,16 +363,6 @@ public:
   void ProcessPendingRequests();
 
   /**
-   * Check whether it's OK to load a script from aURI in
-   * aDocument.
-   */
-  static nsresult ShouldLoadScript(nsIDocument* aDocument,
-                                   nsISupports* aContext,
-                                   nsIURI* aURI,
-                                   const nsAString &aType,
-                                   bool aIsPreLoad);
-
-  /**
    * Starts deferring deferred scripts and puts them in the mDeferredRequests
    * queue instead.
    */
