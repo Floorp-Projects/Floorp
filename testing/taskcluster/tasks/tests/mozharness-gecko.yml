@@ -30,7 +30,7 @@ task:
           tc-vcs checkout ./gecko {{base_repository}} {{head_repository}} {{head_rev}} {{head_ref}} &&
           cd gecko/testing/mozharness &&
           pip install tox &&
-          tox -e py27-hg2.6 -e py27-hg3.2
+          tox -e py27-hg3.7
   extra:
     extra:
         build_product: '{{build_product}}'
