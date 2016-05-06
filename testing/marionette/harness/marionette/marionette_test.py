@@ -741,8 +741,7 @@ class MarionetteTestCase(CommonTestCase):
         CommonTestCase.setUp(self)
         self.marionette.test_name = self.test_name
         self.marionette.execute_script("log('TEST-START: %s:%s')" %
-                                       (self.filepath.replace('\\', '\\\\'), self.methodName),
-                                       sandbox="simpletest")
+                                       (self.filepath.replace('\\', '\\\\'), self.methodName))
 
     def tearDown(self):
         if not self.marionette.check_for_crash():
@@ -750,8 +749,7 @@ class MarionetteTestCase(CommonTestCase):
                 self.marionette.clear_imported_scripts()
                 self.marionette.execute_script("log('TEST-END: %s:%s')" %
                                                (self.filepath.replace('\\', '\\\\'),
-                                                self.methodName),
-                                               sandbox="simpletest")
+                                                self.methodName))
                 self.marionette.test_name = None
             except (MarionetteException, IOError):
                 # We have tried to log the test end when there is no listener
@@ -804,15 +802,11 @@ class MarionetteJSTestCase(CommonTestCase):
     def runTest(self):
         if self.marionette.session is None:
             self.marionette.start_session()
-        self.marionette.execute_script(
-            "log('TEST-START: %s');" % self.jsFile.replace('\\', '\\\\'),
-            sandbox="simpletest")
+        self.marionette.execute_script("log('TEST-START: %s');" % self.jsFile.replace('\\', '\\\\'))
 
         self.run_js_test(self.jsFile)
 
-        self.marionette.execute_script(
-            "log('TEST-END: %s');" % self.jsFile.replace('\\', '\\\\'),
-            sandbox="simpletest")
+        self.marionette.execute_script("log('TEST-END: %s');" % self.jsFile.replace('\\', '\\\\'))
         self.marionette.test_name = None
 
     def get_test_class_name(self):
