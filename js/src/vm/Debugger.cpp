@@ -8175,14 +8175,16 @@ DebuggerObject_getErrorMessageName(JSContext *cx, unsigned argc, Value* vp)
 
     if (report) {
         const JSErrorFormatString* efs = GetErrorMessage(nullptr, report->errorNumber);
-        RootedString str(cx, JS_NewStringCopyZ(cx, efs->name));
-        if (!cx->compartment()->wrap(cx, &str))
-            return false;
-        args.rval().setString(str);
-    } else {
-        args.rval().setUndefined();
+        if (efs) {
+            RootedString str(cx, JS_NewStringCopyZ(cx, efs->name));
+            if (!cx->compartment()->wrap(cx, &str))
+                return false;
+            args.rval().setString(str);
+            return true;
+        }
     }
 
+    args.rval().setUndefined();
     return true;
 }
 
