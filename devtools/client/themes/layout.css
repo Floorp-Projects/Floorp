@@ -26,7 +26,7 @@
   vertical-align: top;
 }
 
-#layout-header:-moz-dir(rtl) {
+#layout-header:dir(rtl) {
   -moz-box-direction: reverse;
 }
 
@@ -38,7 +38,7 @@
   -moz-box-flex: 1;
 }
 
-#layout-element-size:-moz-dir(rtl) {
+#layout-element-size:dir(rtl) {
   -moz-box-pack: end;
 }
 

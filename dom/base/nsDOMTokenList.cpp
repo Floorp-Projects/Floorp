@@ -119,13 +119,8 @@ nsDOMTokenList::CheckTokens(const nsTArray<nsString>& aTokens)
 }
 
 bool
-nsDOMTokenList::Contains(const nsAString& aToken, ErrorResult& aError)
+nsDOMTokenList::Contains(const nsAString& aToken)
 {
-  aError = CheckToken(aToken);
-  if (aError.Failed()) {
-    return false;
-  }
-
   const nsAttrValue* attr = GetParsedAttr();
   return attr && attr->Contains(aToken);
 }

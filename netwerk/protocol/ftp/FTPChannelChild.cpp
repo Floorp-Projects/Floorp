@@ -18,6 +18,7 @@
 #include "mozilla/ipc/URIUtils.h"
 #include "SerializedLoadContext.h"
 #include "mozilla/ipc/BackgroundUtils.h"
+#include "nsIPrompt.h"
 
 using namespace mozilla::ipc;
 
@@ -471,23 +472,31 @@ class FTPStopRequestEvent : public ChannelEvent
 {
 public:
   FTPStopRequestEvent(FTPChannelChild* aChild,
-                      const nsresult& aChannelStatus)
+                      const nsresult& aChannelStatus,
+                      const nsCString &aErrorMsg,
+                      bool aUseUTF8)
     : mChild(aChild)
     , mChannelStatus(aChannelStatus)
+    , mErrorMsg(aErrorMsg)
+    , mUseUTF8(aUseUTF8)
   {
   }
   void Run()
   {
-    mChild->DoOnStopRequest(mChannelStatus);
+    mChild->DoOnStopRequest(mChannelStatus, mErrorMsg, mUseUTF8);
   }
 
 private:
   FTPChannelChild* mChild;
   nsresult mChannelStatus;
+  nsCString mErrorMsg;
+  bool mUseUTF8;
 };
 
 bool
-FTPChannelChild::RecvOnStopRequest(const nsresult& aChannelStatus)
+FTPChannelChild::RecvOnStopRequest(const nsresult& aChannelStatus,
+                                   const nsCString &aErrorMsg,
+                                   const bool &aUseUTF8)
 {
   MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
     "Should not be receiving any more callbacks from parent!");
@@ -495,9 +504,37 @@ FTPChannelChild::RecvOnStopRequest(const nsresult& aChannelStatus)
   LOG(("FTPChannelChild::RecvOnStopRequest [this=%p status=%x]\n",
        this, aChannelStatus));
 
-  mEventQ->RunOrEnqueue(new FTPStopRequestEvent(this, aChannelStatus));
+  mEventQ->RunOrEnqueue(new FTPStopRequestEvent(this, aChannelStatus, aErrorMsg,
+                                                aUseUTF8));
   return true;
 }
+
+class nsFtpChildAsyncAlert : public Runnable
+{
+public:
+  nsFtpChildAsyncAlert(nsIPrompt *aPrompter, nsString aResponseMsg)
+    : mPrompter(aPrompter)
+    , mResponseMsg(aResponseMsg)
+  {
+    MOZ_COUNT_CTOR(nsFtpChildAsyncAlert);
+  }
+protected:
+  virtual ~nsFtpChildAsyncAlert()
+  {
+    MOZ_COUNT_DTOR(nsFtpChildAsyncAlert);
+  }
+public:
+  NS_IMETHOD Run()
+  {
+    if (mPrompter) {
+      mPrompter->Alert(nullptr, mResponseMsg.get());
+    }
+    return NS_OK;
+  }
+private:
+  nsCOMPtr<nsIPrompt> mPrompter;
+  nsString mResponseMsg;
+};
 
 class MaybeDivertOnStopFTPEvent : public ChannelEvent
 {
@@ -526,7 +563,9 @@ FTPChannelChild::MaybeDivertOnStop(const nsresult& aChannelStatus)
 }
 
 void
-FTPChannelChild::DoOnStopRequest(const nsresult& aChannelStatus)
+FTPChannelChild::DoOnStopRequest(const nsresult& aChannelStatus,
+                                 const nsCString &aErrorMsg,
+                                 bool aUseUTF8)
 {
   LOG(("FTPChannelChild::DoOnStopRequest [this=%p status=%x]\n",
        this, aChannelStatus));
@@ -552,6 +591,23 @@ FTPChannelChild::DoOnStopRequest(const nsresult& aChannelStatus)
     mIsPending = false;
     AutoEventEnqueuer ensureSerialDispatch(mEventQ);
     (void)mListener->OnStopRequest(this, mListenerContext, aChannelStatus);
+
+    if (NS_FAILED(aChannelStatus) && !aErrorMsg.IsEmpty()) {
+      nsCOMPtr<nsIPrompt> prompter;
+      GetCallback(prompter);
+      if (prompter) {
+        nsCOMPtr<nsIRunnable> alertEvent;
+        if (aUseUTF8) {
+          alertEvent = new nsFtpChildAsyncAlert(prompter,
+                             NS_ConvertUTF8toUTF16(aErrorMsg));
+        } else {
+          alertEvent = new nsFtpChildAsyncAlert(prompter,
+                             NS_ConvertASCIItoUTF16(aErrorMsg));
+        }
+        NS_DispatchToMainThread(alertEvent);
+      }
+    }
+
     mListener = nullptr;
     mListenerContext = nullptr;
 

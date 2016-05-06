@@ -195,7 +195,7 @@
   margin-top: 6px;
 }
 
-.newtab-site[pinned] .newtab-title:-moz-dir(rtl)::before {
+.newtab-site[pinned] .newtab-title:dir(rtl)::before {
   left: auto;
   right: 0;
 }

@@ -115,18 +115,18 @@ html {
   background-image: url("chrome://global/skin/tree/twisty.svg#clsd-hover");
 }
 
-.item.client .item-twisty-container:-moz-dir(rtl) {
+.item.client .item-twisty-container:dir(rtl) {
   background-image: url("chrome://global/skin/tree/twisty.svg#open-rtl");
 }
 
-.item.client.closed .item-twisty-container:-moz-dir(rtl) {
+.item.client.closed .item-twisty-container:dir(rtl) {
   background-image: url("chrome://global/skin/tree/twisty.svg#clsd-rtl");
 }
 
-.item.client .item-twisty-container:hover:-moz-dir(rtl) {
+.item.client .item-twisty-container:hover:dir(rtl) {
   background-image: url("chrome://global/skin/tree/twisty.svg#open-hover-rtl");
 }
 
-.item.client.closed .item-twisty-container:hover:-moz-dir(rtl) {
+.item.client.closed .item-twisty-container:hover:dir(rtl) {
   background-image: url("chrome://global/skin/tree/twisty.svg#clsd-hover-rtl");
 }

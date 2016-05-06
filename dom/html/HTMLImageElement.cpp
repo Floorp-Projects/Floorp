@@ -152,7 +152,7 @@ NS_IMPL_INT_ATTR(HTMLImageElement, Hspace, hspace)
 NS_IMPL_BOOL_ATTR(HTMLImageElement, IsMap, ismap)
 NS_IMPL_URI_ATTR(HTMLImageElement, LongDesc, longdesc)
 NS_IMPL_STRING_ATTR(HTMLImageElement, Sizes, sizes)
-NS_IMPL_STRING_ATTR(HTMLImageElement, Lowsrc, lowsrc)
+NS_IMPL_URI_ATTR(HTMLImageElement, Lowsrc, lowsrc)
 NS_IMPL_URI_ATTR(HTMLImageElement, Src, src)
 NS_IMPL_STRING_ATTR(HTMLImageElement, Srcset, srcset)
 NS_IMPL_STRING_ATTR(HTMLImageElement, UseMap, usemap)
@@ -418,9 +418,9 @@ HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       nsDependentAtomString(aValue->GetAtomValue()));
   }
 
-  // Handle src/srcset/crossorigin updates. If aNotify is false, we are coming
-  // from the parser or some such place; we'll get bound after all the
-  // attributes have been set, so we'll do the image load from BindToTree.
+  // Handle src/srcset updates. If aNotify is false, we are coming from the
+  // parser or some such place; we'll get bound after all the attributes have
+  // been set, so we'll do the image load from BindToTree.
 
   nsAttrValueOrString attrVal(aValue);
 
@@ -447,20 +447,6 @@ HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
              aNameSpaceID == kNameSpaceID_None &&
              HTMLPictureElement::IsPictureEnabled()) {
     PictureSourceSizesChanged(this, attrVal.String(), aNotify);
-  } else if (aName == nsGkAtoms::crossorigin &&
-             aNameSpaceID == kNameSpaceID_None &&
-             aNotify) {
-    // Force a new load of the image with the new cross origin policy.
-    if (InResponsiveMode()) {
-      // per spec, full selection runs when this changes, even though
-      // it doesn't directly affect the source selection
-      QueueImageLoadTask(true);
-    } else {
-      // Bug 1076583 - We still use the older synchronous algorithm in
-      // non-responsive mode.  Force a new load of the image with the
-      // new cross origin policy.
-      ForceReload(aNotify);
-    }
   }
 
   return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName,
@@ -526,6 +512,7 @@ HTMLImageElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                           nsIAtom* aPrefix, const nsAString& aValue,
                           bool aNotify)
 {
+  bool forceReloadWithNewCORSMode = false;
   // We need to force our image to reload.  This must be done here, not in
   // AfterSetAttr or BeforeSetAttr, because we want to do it even if the attr is
   // being set to its existing value, which is normally optimized away as a
@@ -564,10 +551,37 @@ HTMLImageElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 
       mNewRequestsWillNeedAnimationReset = false;
     }
+  } else if (aNameSpaceID == kNameSpaceID_None &&
+             aName == nsGkAtoms::crossorigin &&
+             aNotify) {
+    nsAttrValue attrValue;
+    ParseCORSValue(aValue, attrValue);
+    if (GetCORSMode() != AttrValueToCORSMode(&attrValue)) {
+      // Force a new load of the image with the new cross origin policy.
+      forceReloadWithNewCORSMode = true;
+    }
   }
 
-  return nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
-                                       aNotify);
+  nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix,
+                                              aValue, aNotify);
+
+  // Because we load image synchronously in non-responsive-mode, we need to do
+  // reload after the attribute has been set if the reload is triggerred by
+  // cross origin changing.
+  if (forceReloadWithNewCORSMode) {
+    if (InResponsiveMode()) {
+      // per spec, full selection runs when this changes, even though
+      // it doesn't directly affect the source selection
+      QueueImageLoadTask(true);
+    } else {
+      // Bug 1076583 - We still use the older synchronous algorithm in
+      // non-responsive mode. Force a new load of the image with the
+      // new cross origin policy
+      ForceReload(aNotify);
+    }
+  }
+
+  return rv;
 }
 
 nsresult

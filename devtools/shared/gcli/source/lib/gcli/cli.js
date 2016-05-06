@@ -1168,7 +1168,9 @@ Requisition.prototype.getInputStatusMarkup = function(cursor) {
     var argTrace = argTraces[i];
     var arg = argTrace.arg;
     var status = Status.VALID;
-    if (argTrace.part === 'text') {
+    // When things get very async we can get here while something else is
+    // doing an update, in which case arg.assignment == null, so we check first
+    if (argTrace.part === 'text' && arg.assignment != null) {
       status = arg.assignment.getStatus(arg);
       // Promote INCOMPLETE to ERROR  ...
       if (status === Status.INCOMPLETE) {

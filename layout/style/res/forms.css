@@ -526,7 +526,7 @@ input[type="color"]:-moz-system-metric(color-picker-available)::-moz-color-swatc
 /* Try to make RTL <input type='file'> look nicer. */
 /* TODO: find a better solution than forcing direction: ltr on all file
    input labels and remove this override -- bug 1161482 */
-input[type="file"]:-moz-dir(rtl) > xul|label {
+input[type="file"]:dir(rtl) > xul|label {
   -moz-padding-start: 0px;
   -moz-padding-end: 5px;
 }

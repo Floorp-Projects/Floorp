@@ -1915,8 +1915,7 @@ nsPresContext::MediaFeatureValuesChanged(nsRestyleHint aRestyleHint,
       for (uint32_t i = 0, i_end = notifyList.Length(); i != i_end; ++i) {
         nsAutoMicroTask mt;
         MediaQueryList::HandleChangeData &d = notifyList[i];
-        ErrorResult result;
-        d.callback->Call(*d.mql, result);
+        d.callback->Call(*d.mql);
       }
     }
 

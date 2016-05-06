@@ -20,7 +20,7 @@
 this.EXPORTED_SYMBOLS = ["loadKinto"];
 
 /*
- * Version 2.0.0 - 8b846f8
+ * Version 2.0.3 - 0faf45b
  */
 
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.loadKinto = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
@@ -54,6 +54,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 Components.utils.import("resource://gre/modules/Sqlite.jsm");
 Components.utils.import("resource://gre/modules/Task.jsm");
+
+const SQLITE_PATH = "kinto.sqlite";
 
 const statements = {
   "createCollectionData": `
@@ -158,7 +160,7 @@ class FirefoxAdapter extends _base2.default {
   open() {
     const self = this;
     return Task.spawn(function* () {
-      const opts = { path: "kinto.sqlite", sharedMemoryCache: false };
+      const opts = { path: SQLITE_PATH, sharedMemoryCache: false };
       if (!self._connection) {
         self._connection = yield Sqlite.openConnection(opts).then(self._init);
       }
@@ -346,7 +348,7 @@ function transactionProxy(collection, preloaded) {
   };
 }
 
-},{"../src/adapters/base":6,"../src/utils":8}],2:[function(require,module,exports){
+},{"../src/adapters/base":5,"../src/utils":7}],2:[function(require,module,exports){
 /*
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -444,135 +446,9 @@ if (typeof module === "object") {
   module.exports = loadKinto;
 }
 
-},{"../src/KintoBase":5,"../src/adapters/base":6,"../src/utils":8,"./FirefoxStorage":1}],3:[function(require,module,exports){
+},{"../src/KintoBase":4,"../src/adapters/base":5,"../src/utils":7,"./FirefoxStorage":1}],3:[function(require,module,exports){
 
 },{}],4:[function(require,module,exports){
-'use strict'
-
-function isArguments (object) {
-  return Object.prototype.toString.call(object) === '[object Arguments]'
-}
-
-function deeper (a, b) {
-  return deeper_(a, b, [], [])
-}
-
-module.exports = deeper
-
-try {
-  deeper.fastEqual = require('buffertools').equals
-} catch (e) {
-  // whoops, nobody told buffertools it wasn't installed
-}
-
-/**
- * This is a Node-specific version of a structural equality test, modeled on
- * bits and pieces of loads of other implementations of this algorithm, most
- * notably the one in the Node.js source and the Underscore library. It doesn't
- * throw and handles cycles.
- *
- * Everybody who writes one of these functions puts the documentation
- * inline, which makes it incredibly hard to follow. Here's what this version
- * of the algorithm does, in order:
- *
- * 1. `===` only tests objects and functions by reference. `null` is an object.
- *    Any pairs of identical entities failing this test are therefore objects
- *    (including `null`), which need to be recursed into and compared attribute by
- *    attribute.
- * 2. Since the only entities to get to this test must be objects, if `a` or `b`
- *    is not an object, they're clearly not the same. All unfiltered `a` and `b`
- *    getting past this are objects (including `null`).
- * 3. `null` is an object, but `null === null.` All unfiltered `a` and `b` are
- *    non-null `Objects`.
- * 4. Buffers need to be special-cased because they live partially on the wrong
- *    side of the C++ / JavaScript barrier. Still, calling this on structures
- *    that can contain Buffers is a bad idea, because they can contain
- *    multiple megabytes of data and comparing them byte-by-byte is hella
- *    expensive.
- * 5. It's much faster to compare dates by numeric value (`.getTime()`) than by
- *    lexical value.
- * 6. Compare `RegExps` by their components, not the objects themselves.
- * 7. Treat argumens objects like arrays. The parts of an arguments list most
- *    people care about are the arguments themselves, not `callee`, which you
- *    shouldn't be looking at anyway.
- * 8. Objects are more complex:
- *     1. Ensure that `a` and `b` are on the same constructor chain.
- *     2. Ensure that `a` and `b` have the same number of own properties (which is
- *        what `Object.keys()` returns).
- *     3. Ensure that cyclical references don't blow up the stack.
- *     4. Ensure that all the key names match (faster).
- *     5. Ensure that all of the associated values match, recursively (slower).
- *
- * (somewhat untested) assumptions:
- *
- * - Functions are only considered identical if they unify to the same
- *   reference. To anything else is to invite the wrath of the halting problem.
- * - V8 is smart enough to optimize treating an Array like any other kind of
- *   object.
- * - Users of this function are cool with mutually recursive data structures
- *   that are otherwise identical being treated as the same.
- */
-function deeper_ (a, b, ca, cb) {
-  if (a === b) {
-    return true
-  } else if (typeof a !== 'object' || typeof b !== 'object') {
-    return false
-  } else if (a === null || b === null) {
-    return false
-  } else if (Buffer.isBuffer(a) && Buffer.isBuffer(b)) {
-    if (a.equals) {
-      return a.equals(b)
-    } else if (deeper.fastEqual) {
-      return deeper.fastEqual.call(a, b)
-    } else {
-      if (a.length !== b.length) return false
-
-      for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) return false
-
-      return true
-    }
-  } else if (a instanceof Date && b instanceof Date) {
-    return a.getTime() === b.getTime()
-  } else if (a instanceof RegExp && b instanceof RegExp) {
-    return a.source === b.source &&
-    a.global === b.global &&
-    a.multiline === b.multiline &&
-    a.lastIndex === b.lastIndex &&
-    a.ignoreCase === b.ignoreCase
-  } else if (isArguments(a) || isArguments(b)) {
-    if (!(isArguments(a) && isArguments(b))) return false
-
-    var slice = Array.prototype.slice
-    return deeper_(slice.call(a), slice.call(b), ca, cb)
-  } else {
-    if (a.constructor !== b.constructor) return false
-
-    var ka = Object.keys(a)
-    var kb = Object.keys(b)
-    // don't bother with stack acrobatics if there's nothing there
-    if (ka.length === 0 && kb.length === 0) return true
-    if (ka.length !== kb.length) return false
-
-    var cal = ca.length
-    while (cal--) if (ca[cal] === a) return cb[cal] === b
-    ca.push(a); cb.push(b)
-
-    ka.sort(); kb.sort()
-    for (var j = ka.length - 1; j >= 0; j--) if (ka[j] !== kb[j]) return false
-
-    var key
-    for (var k = ka.length - 1; k >= 0; k--) {
-      key = ka[k]
-      if (!deeper_(a[key], b[key], ca, cb)) return false
-    }
-
-    ca.pop(); cb.pop()
-
-    return true
-  }
-}
-
-},{"buffertools":3}],5:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -683,7 +559,7 @@ class KintoBase {
 }
 exports.default = KintoBase;
 
-},{"./adapters/base":6,"./collection":7}],6:[function(require,module,exports){
+},{"./adapters/base":5,"./collection":6}],5:[function(require,module,exports){
 "use strict";
 
 /**
@@ -793,7 +669,7 @@ class BaseAdapter {
 }
 exports.default = BaseAdapter;
 
-},{}],7:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -809,10 +685,6 @@ var _base2 = _interopRequireDefault(_base);
 var _utils = require("./utils");
 
 var _uuid = require("uuid");
-
-var _deeper = require("deeper");
-
-var _deeper2 = _interopRequireDefault(_deeper);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -944,7 +816,7 @@ function importChange(transaction, remote) {
     transaction.create(synced);
     return { type: "created", data: synced };
   }
-  const identical = (0, _deeper2.default)(cleanRecord(local), cleanRecord(remote));
+  const identical = (0, _utils.deepEqual)(cleanRecord(local), cleanRecord(remote));
   if (local._status !== "synced") {
     // Locally deleted, unsynced: scheduled for remote deletion.
     if (local._status === "deleted") {
@@ -1401,10 +1273,13 @@ class Collection {
           });
         }, { preload: existingRecords });
       }).catch(err => {
-        // XXX todo
-        err.type = "incoming";
+        const data = {
+          type: "incoming",
+          message: err.message,
+          stack: err.stack
+        };
         // XXX one error of the whole transaction instead of per atomic op
-        return [{ type: "errors", data: err }];
+        return [{ type: "errors", data }];
       }).then(imports => {
         for (let imported of imports) {
           if (imported.type !== "void") {
@@ -1778,7 +1653,7 @@ class Collection {
 }
 exports.default = Collection;
 
-},{"./adapters/base":6,"./utils":8,"deeper":4,"uuid":3}],8:[function(require,module,exports){
+},{"./adapters/base":5,"./utils":7,"uuid":3}],7:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1790,6 +1665,7 @@ exports.reduceRecords = reduceRecords;
 exports.isUUID = isUUID;
 exports.waterfall = waterfall;
 exports.pFinally = pFinally;
+exports.deepEqual = deepEqual;
 const RE_UUID = exports.RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
@@ -1897,6 +1773,35 @@ function pFinally(promise, fn) {
   return promise.then(value => Promise.resolve(fn()).then(() => value), reason => Promise.resolve(fn()).then(() => {
     throw reason;
   }));
+}
+
+/**
+ * Simple deep object comparison function. This only supports comparison of
+ * serializable JavaScript objects.
+ *
+ * @param  {Object} a The source object.
+ * @param  {Object} b The compared object.
+ * @return {Boolean}
+ */
+function deepEqual(a, b) {
+  if (a === b) {
+    return true;
+  }
+  if (typeof a !== typeof b) {
+    return false;
+  }
+  if (!(a instanceof Object) || !(b instanceof Object)) {
+    return false;
+  }
+  if (Object.keys(a).length !== Object.keys(b).length) {
+    return false;
+  }
+  for (let k in a) {
+    if (!deepEqual(a[k], b[k])) {
+      return false;
+    }
+  }
+  return true;
 }
 
 },{}]},{},[2])(2)

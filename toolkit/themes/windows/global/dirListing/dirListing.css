@@ -45,7 +45,7 @@ p {
   float: left;
 }
 
-#UI_goUp:-moz-dir(rtl) {
+#UI_goUp:dir(rtl) {
   float: right;
 }
 
@@ -54,7 +54,7 @@ p {
   float: right;
 }
 
-#UI_showHidden:-moz-dir(rtl) {
+#UI_showHidden:dir(rtl) {
   float: left;
 }
 

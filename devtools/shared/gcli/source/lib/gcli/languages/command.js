@@ -486,6 +486,14 @@ var commandLanguage = exports.commandLanguage = {
       util.clearElement(data.rowoutEle);
 
       return ev.output.convert('dom', context).then(function(node) {
+        this.terminal.scrollToBottom();
+        data.throbEle.style.display = ev.output.completed ? 'none' : 'block';
+
+        if (node == null) {
+          data.promptEle.classList.add('gcli-row-error');
+          // TODO: show some error to the user
+        }
+
         this._linksToNewTab(node);
         data.rowoutEle.appendChild(node);
 
@@ -493,9 +501,6 @@ var commandLanguage = exports.commandLanguage = {
         event.initEvent('load', true, true);
         event.addedElement = node;
         node.dispatchEvent(event);
-
-        this.terminal.scrollToBottom();
-        data.throbEle.style.display = ev.output.completed ? 'none' : 'block';
       }.bind(this));
     }.bind(this)).catch(console.error);
 

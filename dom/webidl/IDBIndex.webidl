@@ -20,7 +20,9 @@ dictionary IDBIndexParameters {
 
 [Exposed=(Window,Worker,System)]
 interface IDBIndex {
-    readonly    attribute DOMString      name;
+    [SetterThrows]
+    attribute DOMString name;
+
     readonly    attribute IDBObjectStore objectStore;
 
     [Throws]
