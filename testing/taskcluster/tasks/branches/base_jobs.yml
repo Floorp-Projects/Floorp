@@ -51,9 +51,7 @@ builds:
       - sm-plain
       - sm-arm-sim
       - sm-compacting
-      - sm-generational
       - sm-rootanalysis
-      - sm-warnaserr
     types:
       opt:
         task: tasks/builds/opt_linux64.yml
@@ -116,7 +114,7 @@ builds:
       opt:
         task: tasks/builds/sm_plain.yml
       debug:
-       task: tasks/builds/sm_plaindebug.yml
+        task: tasks/builds/sm_plaindebug.yml
     when:
       file_patterns:
        - js/public/**
@@ -125,7 +123,7 @@ builds:
     platforms:
       - Linux64
     types:
-      opt:
+      debug:
         task: tasks/builds/sm_arm_sim.yml
     when:
       file_patterns:
@@ -135,7 +133,7 @@ builds:
     platforms:
       - Linux64
     types:
-      opt:
+      debug:
         task: tasks/builds/sm_arm_sim_osx.yml
     when:
       file_patterns:
@@ -145,18 +143,8 @@ builds:
     platforms:
       - Linux64
     types:
-      opt:
+      debug:
         task: tasks/builds/sm_compacting.yml
-    when:
-      file_patterns:
-       - js/public/**
-       - js/src/**
-  sm-generational:
-    platforms:
-      - Linux64
-    types:
-      opt:
-        task: tasks/builds/sm_generational.yml
     when:
       file_patterns:
        - js/public/**
@@ -165,20 +153,8 @@ builds:
     platforms:
       - Linux64
     types:
-      opt:
-        task: tasks/builds/sm_rootanalysis.yml
-    when:
-      file_patterns:
-       - js/public/**
-       - js/src/**
-  sm-warnaserr:
-    platforms:
-      - Linux64
-    types:
-      opt:
-        task: tasks/builds/sm_warnaserr.yml
       debug:
-        task: tasks/builds/sm_warnaserrdebug.yml
+        task: tasks/builds/sm_rootanalysis.yml
     when:
       file_patterns:
        - js/public/**
