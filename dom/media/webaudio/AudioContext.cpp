@@ -659,6 +659,12 @@ AudioContext::MaxChannelCount() const
   return mIsOffline ? mNumberOfChannels : CubebUtils::MaxNumberOfChannels();
 }
 
+uint32_t
+AudioContext::ActiveNodeCount() const
+{
+  return mActiveNodes.Count();
+}
+
 MediaStreamGraph*
 AudioContext::Graph() const
 {
