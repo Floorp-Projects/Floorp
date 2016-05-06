@@ -22,11 +22,25 @@ namespace {
 enum CPUIDRegister { eax = 0, ebx = 1, ecx = 2, edx = 3 };
 
 static bool
-has_cpuid_bit(unsigned int level, CPUIDRegister reg, unsigned int bit)
+has_cpuid_bits(unsigned int level, CPUIDRegister reg, unsigned int bits)
 {
   unsigned int regs[4];
-  return __get_cpuid(level, &regs[0], &regs[1], &regs[2], &regs[3]) &&
-         (regs[reg] & bit);
+  unsigned int eax, ebx, ecx, edx;
+  unsigned max = __get_cpuid_max(0, NULL);
+  if (level > max)
+    return false;
+  __cpuid_count(level, 0, eax, ebx, ecx, edx);
+  regs[0] = eax;
+  regs[1] = ebx;
+  regs[2] = ecx;
+  regs[3] = edx;
+  return regs[reg] & bits;
+}
+
+static uint64_t xgetbv(uint32_t xcr) {
+    uint32_t eax, edx;
+    __asm__ ( ".byte 0x0f, 0x01, 0xd0" : "=a"(eax), "=d"(edx) : "c"(xcr));
+    return (uint64_t)(edx) << 32 | eax;
 }
 
 #elif defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_AMD64))
@@ -37,7 +51,7 @@ has_cpuid_bit(unsigned int level, CPUIDRegister reg, unsigned int bit)
 enum CPUIDRegister { eax = 0, ebx = 1, ecx = 2, edx = 3 };
 
 static bool
-has_cpuid_bit(unsigned int level, CPUIDRegister reg, unsigned int bit)
+has_cpuid_bits(unsigned int level, CPUIDRegister reg, unsigned int bits)
 {
   // Check that the level in question is supported.
   int regs[4];
@@ -45,11 +59,14 @@ has_cpuid_bit(unsigned int level, CPUIDRegister reg, unsigned int bit)
   if (unsigned(regs[0]) < level)
     return false;
 
+  // "The __cpuid intrinsic clears the ECX register before calling the cpuid instruction."
   __cpuid(regs, level);
-  return !!(unsigned(regs[reg]) & bit);
+  return (unsigned(regs[reg]) & bits) == bits;
 }
 
-#elif defined(__SUNPRO_CC) && (defined(__i386) || defined(__x86_64__))
+static uint64_t xgetbv(uint32_t xcr) { return _xgetbv(xcr); }
+
+#elif (defined(__GNUC__) || defined(__SUNPRO_CC)) && (defined(__i386) || defined(__x86_64__))
 
 enum CPUIDRegister { eax = 0, ebx = 1, ecx = 2, edx = 3 };
 
@@ -59,6 +76,7 @@ moz_cpuid(int CPUInfo[4], int InfoType)
 {
   asm (
     "xchg %esi, %ebx\n"
+    "xor %ecx, %ecx\n" // ecx is the sub-leaf (we only ever need 0)
     "cpuid\n"
     "movl %eax, (%edi)\n"
     "movl %ebx, 4(%edi)\n"
@@ -77,6 +95,7 @@ moz_cpuid(int CPUInfo[4], int InfoType)
 {
   asm (
     "xchg %rsi, %rbx\n"
+    "xor %ecx, %ecx\n" // ecx is the sub-leaf (we only ever need 0)
     "cpuid\n"
     "movl %eax, (%rdi)\n"
     "movl %ebx, 4(%rdi)\n"
@@ -92,7 +111,7 @@ moz_cpuid(int CPUInfo[4], int InfoType)
 #endif
 
 static bool
-has_cpuid_bit(unsigned int level, CPUIDRegister reg, unsigned int bit)
+has_cpuid_bits(unsigned int level, CPUIDRegister reg, unsigned int bits)
 {
   // Check that the level in question is supported.
   volatile int regs[4];
@@ -101,7 +120,7 @@ has_cpuid_bit(unsigned int level, CPUIDRegister reg, unsigned int bit)
     return false;
 
   moz_cpuid((int *)regs, level);
-  return !!(unsigned(regs[reg]) & bit);
+  return (unsigned(regs[reg]) & bits) == bits;
 }
 
 #endif // end CPUID declarations
@@ -115,35 +134,58 @@ namespace sse_private {
 #if defined(MOZILLA_SSE_HAVE_CPUID_DETECTION)
 
 #if !defined(MOZILLA_PRESUME_MMX)
-  bool mmx_enabled = has_cpuid_bit(1u, edx, (1u<<23));
+  bool mmx_enabled = has_cpuid_bits(1u, edx, (1u<<23));
 #endif
 
 #if !defined(MOZILLA_PRESUME_SSE)
-  bool sse_enabled = has_cpuid_bit(1u, edx, (1u<<25));
+  bool sse_enabled = has_cpuid_bits(1u, edx, (1u<<25));
 #endif
 
 #if !defined(MOZILLA_PRESUME_SSE2)
-  bool sse2_enabled = has_cpuid_bit(1u, edx, (1u<<26));
+  bool sse2_enabled = has_cpuid_bits(1u, edx, (1u<<26));
 #endif
 
 #if !defined(MOZILLA_PRESUME_SSE3)
-  bool sse3_enabled = has_cpuid_bit(1u, ecx, (1u<<0));
+  bool sse3_enabled = has_cpuid_bits(1u, ecx, (1u<<0));
 #endif
 
 #if !defined(MOZILLA_PRESUME_SSSE3)
-  bool ssse3_enabled = has_cpuid_bit(1u, ecx, (1u<<9));
+  bool ssse3_enabled = has_cpuid_bits(1u, ecx, (1u<<9));
 #endif
 
 #if !defined(MOZILLA_PRESUME_SSE4A)
-  bool sse4a_enabled = has_cpuid_bit(0x80000001u, ecx, (1u<<6));
+  bool sse4a_enabled = has_cpuid_bits(0x80000001u, ecx, (1u<<6));
 #endif
 
 #if !defined(MOZILLA_PRESUME_SSE4_1)
-  bool sse4_1_enabled = has_cpuid_bit(1u, ecx, (1u<<19));
+  bool sse4_1_enabled = has_cpuid_bits(1u, ecx, (1u<<19));
 #endif
 
 #if !defined(MOZILLA_PRESUME_SSE4_2)
-  bool sse4_2_enabled = has_cpuid_bit(1u, ecx, (1u<<20));
+  bool sse4_2_enabled = has_cpuid_bits(1u, ecx, (1u<<20));
+#endif
+
+  static bool has_avx()
+  {
+      const unsigned AVX = 1u << 28;
+      const unsigned OSXSAVE = 1u << 27;
+      const unsigned XSAVE = 1u << 26;
+
+      const unsigned XMM_STATE = 1u << 1;
+      const unsigned YMM_STATE = 1u << 2;
+      const unsigned AVX_STATE = XMM_STATE | YMM_STATE;
+
+      return has_cpuid_bits(1u, ecx, AVX | OSXSAVE | XSAVE) &&
+          // ensure the OS supports XSAVE of YMM registers
+          (xgetbv(0) & AVX_STATE) == AVX_STATE;
+  }
+
+#if !defined(MOZILLA_PRESUME_AVX)
+  bool avx_enabled = has_avx();
+#endif
+
+#if !defined(MOZILLA_PRESUME_AVX2)
+  bool avx2_enabled = has_avx() && has_cpuid_bits(7u, ebx, (1u<<5));
 #endif
 
 #endif
