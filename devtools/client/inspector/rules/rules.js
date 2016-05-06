@@ -313,12 +313,12 @@ CssRuleView.prototype = {
         this.lastSelectorIcon = selectorIcon;
         this.highlightSelector(selector).then(() => {
           this.emit("ruleview-selectorhighlighter-toggled", true);
-        }, Cu.reportError);
+        }, e => console.error(e));
       } else {
         this.highlightedSelector = null;
         this.emit("ruleview-selectorhighlighter-toggled", false);
       }
-    }, Cu.reportError);
+    }, e => console.error(e));
   },
 
   highlightSelector: Task.async(function* (selector) {

@@ -274,7 +274,7 @@ ResponsiveUI.prototype = {
     let [response, tabClient] = yield this.client.attachTab(tab.actor);
     this.tabClient = tabClient;
     if (!tabClient) {
-      Cu.reportError("Responsive Mode: failed to attach tab");
+      console.error(new Error("Responsive Mode: failed to attach tab"));
     }
   }),
 
@@ -286,7 +286,7 @@ ResponsiveUI.prototype = {
         presets = JSON.parse(Services.prefs.getCharPref("devtools.responsiveUI.presets"));
       } catch(e) {
         // User pref is malformated.
-        Cu.reportError("Could not parse pref `devtools.responsiveUI.presets`: " + e);
+        console.error("Could not parse pref `devtools.responsiveUI.presets`: " + e);
       }
     }
 
@@ -295,7 +295,7 @@ ResponsiveUI.prototype = {
     if (Array.isArray(presets)) {
       this.presets = [this.customPreset].concat(presets);
     } else {
-      Cu.reportError("Presets value (devtools.responsiveUI.presets) is malformated.");
+      console.error("Presets value (devtools.responsiveUI.presets) is malformated.");
       this.presets = [this.customPreset];
     }
 

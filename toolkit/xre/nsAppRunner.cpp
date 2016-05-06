@@ -2210,28 +2210,6 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
   return LaunchChild(aNative);
 }
 
-static nsresult
-GetCurrentProfileIsDefault(nsIToolkitProfileService* aProfileSvc,
-                           nsIFile* aCurrentProfileRoot, bool *aResult)
-{
-  nsresult rv;
-  // Check that the profile to reset is the default since reset and the associated migration are
-  // only supported in that case.
-  nsCOMPtr<nsIToolkitProfile> selectedProfile;
-  nsCOMPtr<nsIFile> selectedProfileRoot;
-  rv = aProfileSvc->GetSelectedProfile(getter_AddRefs(selectedProfile));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = selectedProfile->GetRootDir(getter_AddRefs(selectedProfileRoot));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool currentIsSelected;
-  rv = aCurrentProfileRoot->Equals(selectedProfileRoot, &currentIsSelected);
-
-  *aResult = currentIsSelected;
-  return rv;
-}
-
 /**
  * Set the currently running profile as the default/selected one.
  *
@@ -2258,11 +2236,8 @@ SetCurrentProfileAsDefault(nsIToolkitProfileService* aProfileSvc,
     nsCOMPtr<nsIFile> profileRoot;
     profile->GetRootDir(getter_AddRefs(profileRoot));
     profileRoot->Equals(aCurrentProfileRoot, &foundMatchingProfile);
-    if (foundMatchingProfile && profile) {
-      rv = aProfileSvc->SetSelectedProfile(profile);
-      if (NS_SUCCEEDED(rv))
-        rv = aProfileSvc->Flush();
-      return rv;
+    if (foundMatchingProfile) {
+      return aProfileSvc->SetSelectedProfile(profile);
     }
     rv = profiles->GetNext(getter_AddRefs(supports));
   }
@@ -2271,6 +2246,7 @@ SetCurrentProfileAsDefault(nsIToolkitProfileService* aProfileSvc,
 
 static bool gDoMigration = false;
 static bool gDoProfileReset = false;
+static nsAutoCString gResetOldProfileName;
 
 // Pick a profile. We need to end up with a profile lock.
 //
@@ -2333,8 +2309,12 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
     }
 
     arg = PR_GetEnv("XRE_PROFILE_NAME");
-    if (arg && *arg && aProfileName)
+    if (arg && *arg && aProfileName) {
       aProfileName->Assign(nsDependentCString(arg));
+      if (gDoProfileReset) {
+        gResetOldProfileName.Assign(*aProfileName);
+      }
+    }
 
     // Clear out flags that we handled (or should have handled!) last startup.
     const char *dummy;
@@ -2343,17 +2323,6 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
     CheckArg("profilemanager");
 
     if (gDoProfileReset) {
-      // Check that the profile to reset is the default since reset and migration are only
-      // supported in that case.
-      bool currentIsSelected;
-      rv = GetCurrentProfileIsDefault(aProfileSvc, lf, &currentIsSelected);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (!currentIsSelected) {
-        NS_WARNING("Profile reset is only supported for the default profile.");
-        gDoProfileReset = gDoMigration = false;
-      }
-
       // If we're resetting a profile, create a new one and use it to startup.
       nsCOMPtr<nsIToolkitProfile> newProfile;
       rv = CreateResetProfile(aProfileSvc, getter_AddRefs(newProfile));
@@ -2386,7 +2355,7 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
   }
   if (ar) {
     if (gDoProfileReset) {
-      NS_WARNING("Profile reset is only supported for the default profile.");
+      NS_WARNING("Profile reset is not supported in conjunction with --profile.");
       gDoProfileReset = false;
     }
 
@@ -2491,8 +2460,30 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
                                       getter_AddRefs(profile));
     if (NS_SUCCEEDED(rv)) {
       if (gDoProfileReset) {
-        NS_WARNING("Profile reset is only supported for the default profile.");
-        gDoProfileReset = false;
+        {
+          // Check that the source profile is not in use by temporarily acquiring its lock.
+          nsIProfileLock* tempProfileLock;
+          nsCOMPtr<nsIProfileUnlocker> unlocker;
+          rv = profile->Lock(getter_AddRefs(unlocker), &tempProfileLock);
+          if (NS_FAILED(rv))
+            return ProfileLockedDialog(profile, unlocker, aNative, &tempProfileLock);
+        }
+
+        nsCOMPtr<nsIToolkitProfile> newProfile;
+        rv = CreateResetProfile(aProfileSvc, getter_AddRefs(newProfile));
+        if (NS_FAILED(rv)) {
+          NS_WARNING("Failed to create a profile to reset to.");
+          gDoProfileReset = false;
+        } else {
+          nsresult gotName = profile->GetName(gResetOldProfileName);
+          if (NS_SUCCEEDED(gotName)) {
+            profile = newProfile;
+          } else {
+            NS_WARNING("Failed to get the name of the profile we're resetting, so aborting reset.");
+            gResetOldProfileName.Truncate(0);
+            gDoProfileReset = false;
+          }
+        }
       }
 
       nsCOMPtr<nsIProfileUnlocker> unlocker;
@@ -2588,10 +2579,19 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
 
         nsCOMPtr<nsIToolkitProfile> newProfile;
         rv = CreateResetProfile(aProfileSvc, getter_AddRefs(newProfile));
-        if (NS_SUCCEEDED(rv))
-          profile = newProfile;
-        else
+        if (NS_FAILED(rv)) {
+          NS_WARNING("Failed to create a profile to reset to.");
           gDoProfileReset = false;
+        } else {
+          nsresult gotName = profile->GetName(gResetOldProfileName);
+          if (NS_SUCCEEDED(gotName)) {
+            profile = newProfile;
+          } else {
+            NS_WARNING("Failed to get the name of the profile we're resetting, so aborting reset.");
+            gResetOldProfileName.Truncate(0);
+            gDoProfileReset = false;
+          }
+        }
       }
 
       // If you close Firefox and very quickly reopen it, the old Firefox may
@@ -4177,13 +4177,27 @@ XREMain::XRE_mainRun()
   }
 
   {
-    nsCOMPtr<nsIToolkitProfile> selectedProfile;
+    nsCOMPtr<nsIToolkitProfile> profileBeingReset;
+    bool profileWasSelected = false;
     if (gDoProfileReset) {
-      // At this point we can be sure that profile reset is happening on the default profile.
-      rv = mProfileSvc->GetSelectedProfile(getter_AddRefs(selectedProfile));
-      if (NS_FAILED(rv)) {
+      if (gResetOldProfileName.IsEmpty()) {
+        NS_WARNING("Not resetting profile as the profile has no name.");
         gDoProfileReset = false;
-        return NS_ERROR_FAILURE;
+      } else {
+        rv = mProfileSvc->GetProfileByName(gResetOldProfileName,
+                                           getter_AddRefs(profileBeingReset));
+        if (NS_FAILED(rv)) {
+          gDoProfileReset = false;
+          return NS_ERROR_FAILURE;
+        }
+
+        nsCOMPtr<nsIToolkitProfile> defaultProfile;
+        // This can fail if there is no default profile.
+        // That shouldn't stop reset from proceeding.
+        nsresult gotSelected = mProfileSvc->GetSelectedProfile(getter_AddRefs(defaultProfile));
+        if (NS_SUCCEEDED(gotSelected)) {
+          profileWasSelected = defaultProfile == profileBeingReset;
+        }
       }
     }
 
@@ -4198,17 +4212,24 @@ XREMain::XRE_mainRun()
           // reset the profile.
           aKey = MOZ_APP_NAME;
         }
-        pm->Migrate(&mDirProvider, aKey);
+        pm->Migrate(&mDirProvider, aKey, gResetOldProfileName);
       }
     }
 
     if (gDoProfileReset) {
-      nsresult backupCreated = ProfileResetCleanup(selectedProfile);
+      nsresult backupCreated = ProfileResetCleanup(profileBeingReset);
       if (NS_FAILED(backupCreated)) NS_WARNING("Could not cleanup the profile that was reset");
 
-      // Set the new profile as the default after we're done cleaning up the old default.
-      rv = SetCurrentProfileAsDefault(mProfileSvc, mProfD);
-      if (NS_FAILED(rv)) NS_WARNING("Could not set current profile as the default");
+      // Set the new profile as the default after we're done cleaning up the old profile,
+      // iff that profile was already the default
+      if (profileWasSelected) {
+        // this is actually "broken" - see bug 1122124
+        rv = SetCurrentProfileAsDefault(mProfileSvc, mProfD);
+        if (NS_FAILED(rv)) NS_WARNING("Could not set current profile as the default");
+      }
+      // Need to write out the fact that the profile has been removed and potentially
+      // that the selected/default profile changed.
+      mProfileSvc->Flush();
     }
   }
 

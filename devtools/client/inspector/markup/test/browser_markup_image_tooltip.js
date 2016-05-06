@@ -43,7 +43,7 @@ function* getImageTooltipTarget({selector}, inspector) {
 
 function* assertTooltipShownOn(element, {markup}) {
   info("Is the element a valid hover target");
-  let isValid = yield markup.tooltip.isValidHoverTarget(element);
+  let isValid = yield isHoverTooltipTarget(markup.tooltip, element);
   ok(isValid, "The element is a valid hover target for the image tooltip");
 }
 

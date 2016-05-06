@@ -126,7 +126,7 @@ function StyleSheetEditor(styleSheet, win, file, isNew, walker, highlighter) {
   this.mediaRules = [];
   if (this.cssSheet.getMediaRules) {
     this.cssSheet.getMediaRules().then(this._onMediaRulesChanged,
-                                       Cu.reportError);
+                                       e => console.error(e));
   }
   this.cssSheet.on("media-rules-changed", this._onMediaRulesChanged);
   this.cssSheet.on("style-applied", this._onStyleApplied);
@@ -295,7 +295,7 @@ StyleSheetEditor.prototype = {
         console.warn("Could not fetch the source for " +
                      this.styleSheet.href +
                      ", the editor was destroyed");
-        Cu.reportError(e);
+        console.error(e);
       } else {
         this.emit("error", { key: LOAD_ERROR, append: this.styleSheet.href });
         throw e;
@@ -513,7 +513,7 @@ StyleSheetEditor.prototype = {
    * Toggled the disabled state of the underlying stylesheet.
    */
   toggleDisabled: function () {
-    this.styleSheet.toggleDisabled().then(null, Cu.reportError);
+    this.styleSheet.toggleDisabled().then(null, e => console.error(e));
   },
 
   /**
@@ -555,7 +555,7 @@ StyleSheetEditor.prototype = {
 
     this._isUpdating = true;
     this.styleSheet.update(this._state.text, this.transitionsEnabled)
-                   .then(null, Cu.reportError);
+      .then(null, e => console.error(e));
   },
 
   /**
@@ -725,7 +725,7 @@ StyleSheetEditor.prototype = {
 
     error += " querying " + this.linkedCSSFile +
              " original source location: " + this.savedFile.path;
-    Cu.reportError(error);
+    console.error(error);
   },
 
   /**

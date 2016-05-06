@@ -10,7 +10,7 @@
 loader.lazyImporter(this, "AddonManager",
   "resource://gre/modules/AddonManager.jsm");
 
-const { Cc, Ci, Cu } = require("chrome");
+const { Cc, Ci } = require("chrome");
 const { createFactory, createClass, DOM: dom } =
   require("devtools/client/shared/vendor/react");
 const Services = require("Services");
@@ -56,7 +56,7 @@ module.exports = createClass({
 
     AddonManager.installTemporaryAddon(file)
       .catch(e => {
-        Cu.reportError(e);
+        console.error(e);
         this.setState({ installError: e.message });
       });
   },

@@ -132,7 +132,7 @@ FirefoxProfileMigrator.prototype._getResourcesInternal = function(sourceProfileD
   let sessionFile = this._getFileObject(sourceProfileDir, "sessionstore.js");
   let session;
   if (sessionFile) {
-    session = aProfile ? getFileResource(types.SESSION, ["sessionstore.js"]) : {
+    session = {
       type: types.SESSION,
       migrate: function(aCallback) {
         sessionCheckpoints.copyTo(currentProfileDir, "sessionCheckpoints.json");
@@ -158,7 +158,7 @@ FirefoxProfileMigrator.prototype._getResourcesInternal = function(sourceProfileD
           aCallback(false);
         });
       }
-    }
+    };
   }
 
   // Telemetry related migrations.

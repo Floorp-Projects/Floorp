@@ -5,9 +5,16 @@
 
 const { Front, FrontClassWithSpec } = require("devtools/server/protocol.js");
 const {
+  getIndentationFromPrefs,
+  getIndentationFromString
+} = require("devtools/shared/indentation");
+const {
   originalSourceSpec,
-  mediaRuleSpec
+  mediaRuleSpec,
+  styleSheetSpec,
+  styleSheetsSpec
 } = require("devtools/shared/specs/stylesheets.js");
+const promise = require("promise");
 const events = require("sdk/event/core.js");
 
 /**
@@ -84,3 +91,93 @@ const MediaRuleFront = FrontClassWithSpec(mediaRuleSpec, {
 });
 
 exports.MediaRuleFront = MediaRuleFront;
+
+/**
+ * StyleSheetFront is the client-side counterpart to a StyleSheetActor.
+ */
+const StyleSheetFront = FrontClassWithSpec(styleSheetSpec, {
+  initialize: function (conn, form) {
+    Front.prototype.initialize.call(this, conn, form);
+
+    this._onPropertyChange = this._onPropertyChange.bind(this);
+    events.on(this, "property-change", this._onPropertyChange);
+  },
+
+  destroy: function () {
+    events.off(this, "property-change", this._onPropertyChange);
+    Front.prototype.destroy.call(this);
+  },
+
+  _onPropertyChange: function (property, value) {
+    this._form[property] = value;
+  },
+
+  form: function (form, detail) {
+    if (detail === "actorid") {
+      this.actorID = form;
+      return;
+    }
+    this.actorID = form.actor;
+    this._form = form;
+  },
+
+  get href() {
+    return this._form.href;
+  },
+  get nodeHref() {
+    return this._form.nodeHref;
+  },
+  get disabled() {
+    return !!this._form.disabled;
+  },
+  get title() {
+    return this._form.title;
+  },
+  get isSystem() {
+    return this._form.system;
+  },
+  get styleSheetIndex() {
+    return this._form.styleSheetIndex;
+  },
+  get ruleCount() {
+    return this._form.ruleCount;
+  },
+
+  /**
+   * Get the indentation to use for edits to this style sheet.
+   *
+   * @return {Promise} A promise that will resolve to a string that
+   * should be used to indent a block in this style sheet.
+   */
+  guessIndentation: function () {
+    let prefIndent = getIndentationFromPrefs();
+    if (prefIndent) {
+      let {indentUnit, indentWithTabs} = prefIndent;
+      return promise.resolve(indentWithTabs ? "\t" : " ".repeat(indentUnit));
+    }
+
+    return Task.spawn(function* () {
+      let longStr = yield this.getText();
+      let source = yield longStr.string();
+
+      let {indentUnit, indentWithTabs} = getIndentationFromString(source);
+
+      return indentWithTabs ? "\t" : " ".repeat(indentUnit);
+    }.bind(this));
+  }
+});
+
+exports.StyleSheetFront = StyleSheetFront;
+
+/**
+ * The corresponding Front object for the StyleSheetsActor.
+ */
+const StyleSheetsFront = FrontClassWithSpec(styleSheetsSpec, {
+  initialize: function (client, tabForm) {
+    Front.prototype.initialize.call(this, client);
+    this.actorID = tabForm.styleSheetsActor;
+    this.manage(this);
+  }
+});
+
+exports.StyleSheetsFront = StyleSheetsFront;

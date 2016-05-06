@@ -37,7 +37,7 @@ add_task(function* () {
   ok(target, "Found the src attribute in the markup view.");
 
   info("Showing tooltip on the src link.");
-  yield inspector.markup.tooltip.isValidHoverTarget(target);
+  yield isHoverTooltipTarget(inspector.markup.tooltip, target);
 
   checkImageTooltip(INITIAL_SRC_SIZE, inspector);
 
@@ -48,7 +48,7 @@ add_task(function* () {
   ok(target, "Found the src attribute in the markup view after mutation.");
 
   info("Showing tooltip on the src link.");
-  yield inspector.markup.tooltip.isValidHoverTarget(target);
+  yield isHoverTooltipTarget(inspector.markup.tooltip, target);
 
   info("Checking that the new image was shown.");
   checkImageTooltip(UPDATED_SRC_SIZE, inspector);
