@@ -344,7 +344,11 @@ GMPLoaderImpl::Load(const char* aUTF8LibPath,
   mAdapter.reset((!aAdapter) ? new PassThroughGMPAdapter() : aAdapter);
   mAdapter->SetAdaptee(lib);
 
-  mAdapter->GMPInit(aPlatformAPI);
+  if (mAdapter->GMPInit(aPlatformAPI) != GMPNoErr) {
+    return false;
+  }
+
+  mAdapter->GMPSetNodeId(nodeId.c_str(), nodeId.size());
 
   return true;
 }
