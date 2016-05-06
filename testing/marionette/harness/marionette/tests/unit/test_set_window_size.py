@@ -71,5 +71,7 @@ class TestSetWindowSize(MarionetteTestCase):
         self.wait_for_condition(lambda m: m.execute_script("return window.wrappedJSObject.rcvd_event;"))
 
         size = self.marionette.window_size
-        self.assertEqual(size['width'], self.max_width, "Window width does not use availWidth")
-        self.assertEqual(size['height'], self.max_height, "Window height does not use availHeight")
+        self.assertGreaterEqual(size['width'], self.max_width,
+                         "Window width does not use availWidth, current width: {0}, max width: {1}".format(size['width'], self.max_width))
+        self.assertGreaterEqual(size['height'], self.max_height,
+                         "Window height does not use availHeight. current width: {0}, max width: {1}".format(size['height'], self.max_height))
