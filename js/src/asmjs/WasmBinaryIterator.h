@@ -172,12 +172,12 @@ class TypeAndValue
 
 // Specialization for when there is no additional data needed.
 template <>
-struct TypeAndValue<Nothing>
+class TypeAndValue<Nothing>
 {
     ExprType type_;
 
   public:
-    TypeAndValue() {}
+    TypeAndValue() = default;
     explicit TypeAndValue(ExprType type) : type_(type) {}
 
     TypeAndValue(ExprType type, Nothing value)
