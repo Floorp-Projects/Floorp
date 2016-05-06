@@ -20,4 +20,5 @@ export MOZ_TELEMETRY_REPORTING=1
 
 MOZ_ANDROID_GECKOLIBS_AAR=1
 
+. "$topsrcdir/build/mozconfig.rust"
 . "$topsrcdir/mobile/android/config/mozconfigs/common.override"
