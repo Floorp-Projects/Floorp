@@ -1518,7 +1518,7 @@ var PDFOutlineViewer = (function PDFOutlineViewerClosure() {
      * Toggle the visibility of the subtree of an outline item.
      *
      * @param {Element} root - the root of the outline (sub)tree.
-     * @param {boolean} state - whether to show the outline (sub)tree. If false,
+     * @param {boolean} show - whether to show the outline (sub)tree. If false,
      *   the outline subtree rooted at |root| will be collapsed.
      *
      * @private
@@ -4082,7 +4082,6 @@ exports.PDFFindBar = PDFFindBar;
   PDFHistory.prototype = {
     /**
      * @param {string} fingerprint
-     * @param {IPDFLinkService} linkService
      */
     initialize: function pdfHistoryInitialize(fingerprint) {
       this.initialized = true;
@@ -5531,7 +5530,7 @@ var PDFThumbnailViewer = (function PDFThumbnailViewerClosure() {
     },
 
     /**
-     * @param {PDFPageView} pageView
+     * @param {PDFThumbnailView} thumbView
      * @returns {PDFPage}
      * @private
      */
