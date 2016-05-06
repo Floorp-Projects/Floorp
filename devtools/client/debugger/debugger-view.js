@@ -541,7 +541,7 @@ var DebuggerView = {
     else if (textInfo.error) {
       let msg = L10N.getFormatStr("errorLoadingText2", textInfo.error);
       this._setEditorText('error', msg);
-      Cu.reportError(msg);
+      console.error(new Error(msg));
       dumpn(msg);
 
       this.showEditor();

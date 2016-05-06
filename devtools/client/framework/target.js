@@ -322,8 +322,8 @@ TabTarget.prototype = {
     // in all contexts.  Consumers of .window need to be refactored to not
     // rely on this.
     if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
-      Cu.reportError("The .window getter on devtools' |target| object isn't " +
-                     "e10s friendly!\n" + Error().stack);
+      console.error("The .window getter on devtools' |target| object isn't " +
+                    "e10s friendly!\n" + Error().stack);
     }
     // Be extra careful here, since this may be called by HS_getHudByWindow
     // during shutdown.

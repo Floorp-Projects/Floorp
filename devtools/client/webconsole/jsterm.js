@@ -303,8 +303,8 @@ JSTerm.prototype = {
       return;
     }
     if (response.error) {
-      Cu.reportError("Evaluation error " + response.error + ": " +
-                     response.message);
+      console.error("Evaluation error " + response.error + ": " +
+                    response.message);
       return;
     }
     let errorMessage = response.exceptionMessage;
@@ -879,8 +879,8 @@ JSTerm.prototype = {
    */
   _silentEvalCallback: function(callback, response) {
     if (response.error) {
-      Cu.reportError("Web Console evaluation failed. " + response.error + ":" +
-                     response.message);
+      console.error("Web Console evaluation failed. " + response.error + ":" +
+                    response.message);
 
       callback && callback(response);
       return;

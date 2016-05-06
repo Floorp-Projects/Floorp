@@ -1341,7 +1341,7 @@ WebConsoleFrame.prototype = {
           return null;
         }
         if (timer.error) {
-          Cu.reportError(l10n.getStr(timer.error));
+          console.error(new Error(l10n.getStr(timer.error)));
           return null;
         }
         body = l10n.getFormatStr("timerStarted", [timer.name]);
@@ -1366,7 +1366,7 @@ WebConsoleFrame.prototype = {
           return null;
         }
         if (counter.error) {
-          Cu.reportError(l10n.getStr(counter.error));
+          console.error(l10n.getStr(counter.error));
           return null;
         }
         let msg = new Messages.ConsoleGeneric(message);
@@ -1380,7 +1380,7 @@ WebConsoleFrame.prototype = {
       }
 
       default:
-        Cu.reportError("Unknown Console API log level: " + level);
+        console.error(new Error("Unknown Console API log level: " + level));
         return null;
     }
 
@@ -2782,8 +2782,8 @@ WebConsoleFrame.prototype = {
     this.webConsoleClient.inspectObjectProperties(actor,
       function(response) {
         if (response.error) {
-          Cu.reportError("Failed to retrieve the object properties from the " +
-                         "server. Error: " + response.error);
+          console.error("Failed to retrieve the object properties from the " +
+                        "server. Error: " + response.error);
           return;
         }
         callback(response.properties);
@@ -3280,8 +3280,8 @@ WebConsoleConnectionProxy.prototype = {
    */
   _onAttachConsole: function(response, webConsoleClient) {
     if (response.error) {
-      Cu.reportError("attachConsole failed: " + response.error + " " +
-                     response.message);
+      console.error("attachConsole failed: " + response.error + " " +
+                    response.message);
       this._connectDefer.reject(response);
       return;
     }
@@ -3312,8 +3312,8 @@ WebConsoleConnectionProxy.prototype = {
    */
   _onCachedMessages: function(response) {
     if (response.error) {
-      Cu.reportError("Web Console getCachedMessages error: " + response.error +
-                     " " + response.message);
+      console.error("Web Console getCachedMessages error: " + response.error +
+                    " " + response.message);
       this._connectDefer.reject(response);
       return;
     }
@@ -3321,7 +3321,7 @@ WebConsoleConnectionProxy.prototype = {
     if (!this._connectTimer) {
       // This happens if the promise is rejected (eg. a timeout), but the
       // connection attempt is successful, nonetheless.
-      Cu.reportError("Web Console getCachedMessages error: invalid state.");
+      console.error("Web Console getCachedMessages error: invalid state.");
     }
 
     let messages =
