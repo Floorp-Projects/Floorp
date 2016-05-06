@@ -14,6 +14,8 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.mozilla.gecko.util.FileUtils.FilenameRegexFilter;
+import org.mozilla.gecko.util.FileUtils.FilenameWhitelistFilter;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,6 +25,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 import static junit.framework.Assert.*;
 import static org.mockito.Mockito.*;
@@ -283,5 +289,35 @@ public class TestFileUtils {
             writer.write(str);
         }
         assertTrue("Written file from helper method exists", file.exists());
+    }
+
+    @Test
+    public void testFilenameWhitelistFilter() {
+        final String[] expectedToAccept = new String[] { "one", "two", "three" };
+        final Set<String> whitelist = new HashSet<>(Arrays.asList(expectedToAccept));
+        final FilenameWhitelistFilter testFilter = new FilenameWhitelistFilter(whitelist);
+        for (final String str : expectedToAccept) {
+            assertTrue("Filename, " + str + ", in whitelist is accepted", testFilter.accept(testFile, str));
+        }
+
+        final String[] notExpectedToAccept = new String[] { "not-in-whitelist", "meh", "whatever" };
+        for (final String str : notExpectedToAccept) {
+            assertFalse("Filename, " + str + ", not in whitelist is not accepted", testFilter.accept(testFile, str));
+        }
+    }
+
+    @Test
+    public void testFilenameRegexFilter() {
+        final Pattern pattern = Pattern.compile("[a-z]{1,6}");
+        final FilenameRegexFilter testFilter = new FilenameRegexFilter(pattern);
+        final String[] expectedToAccept = new String[] { "duckie", "goes", "quack" };
+        for (final String str : expectedToAccept) {
+            assertTrue("Filename, " + str + ", matching regex expected to accept", testFilter.accept(testFile, str));
+        }
+
+        final String[] notExpectedToAccept = new String[] { "DUCKIE", "1337", "2fast" };
+        for (final String str : notExpectedToAccept) {
+            assertFalse("Filename, " + str + ", not matching regex not expected to accept", testFilter.accept(testFile, str));
+        }
     }
 }
