@@ -45,20 +45,22 @@ add_test(function test_noOutput() {
   // Clear log output from startup.
   Svc.Prefs.set("log.appender.file.logOnSuccess", false);
   Svc.Obs.notify("weave:service:sync:finish");
+  Svc.Obs.add("weave:service:reset-file-log", function onResetFileLogOuter() {
+    Svc.Obs.remove("weave:service:reset-file-log", onResetFileLogOuter);
+    // Clear again without having issued any output.
+    Svc.Prefs.set("log.appender.file.logOnSuccess", true);
 
-  // Clear again without having issued any output.
-  Svc.Prefs.set("log.appender.file.logOnSuccess", true);
+    Svc.Obs.add("weave:service:reset-file-log", function onResetFileLogInner() {
+      Svc.Obs.remove("weave:service:reset-file-log", onResetFileLogInner);
 
-  Svc.Obs.add("weave:service:reset-file-log", function onResetFileLog() {
-    Svc.Obs.remove("weave:service:reset-file-log", onResetFileLog);
+      errorHandler._logManager._fileAppender.level = Log.Level.Trace;
+      Svc.Prefs.resetBranch("");
+      run_next_test();
+    });
 
-    errorHandler._logManager._fileAppender.level = Log.Level.Trace;
-    Svc.Prefs.resetBranch("");
-    run_next_test();
+    // Fake a successful sync.
+    Svc.Obs.notify("weave:service:sync:finish");
   });
-
-  // Fake a successful sync.
-  Svc.Obs.notify("weave:service:sync:finish");
 });
 
 add_test(function test_logOnSuccess_false() {
@@ -263,6 +265,51 @@ add_test(function test_login_error_logOnError_true() {
   // Fake an unsuccessful login due to prolonged failure.
   setLastSync(PROLONGED_ERROR_DURATION);
   Svc.Obs.notify("weave:service:login:error");
+});
+
+
+add_test(function test_errorLog_dumpAddons() {
+  Svc.Prefs.set("log.appender.file.logOnError", true);
+
+  let log = Log.repository.getLogger("Sync.Test.FileLog");
+
+  // We need to wait until the log cleanup started by this test is complete
+  // or the next test will fail as it is ongoing.
+  Svc.Obs.add("services-tests:common:log-manager:cleanup-logs", function onCleanupLogs() {
+    Svc.Obs.remove("services-tests:common:log-manager:cleanup-logs", onCleanupLogs);
+    run_next_test();
+  });
+
+  Svc.Obs.add("weave:service:reset-file-log", function onResetFileLog() {
+    Svc.Obs.remove("weave:service:reset-file-log", onResetFileLog);
+
+    let entries = logsdir.directoryEntries;
+    do_check_true(entries.hasMoreElements());
+    let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
+    do_check_eq(logfile.leafName.slice(-4), ".txt");
+    do_check_true(logfile.leafName.startsWith("error-sync-"), logfile.leafName);
+    do_check_false(entries.hasMoreElements());
+
+    // Ensure we logged some addon list (which is probably empty)
+    readFile(logfile, function (error, data) {
+      do_check_true(Components.isSuccessCode(error));
+      do_check_neq(data.indexOf("Addons installed"), -1);
+
+      // Clean up.
+      try {
+        logfile.remove(false);
+      } catch(ex) {
+        dump("Couldn't delete file: " + ex + "\n");
+        // Stupid Windows box.
+      }
+
+      Svc.Prefs.resetBranch("");
+    });
+  });
+
+  // Fake an unsuccessful sync due to prolonged failure.
+  setLastSync(PROLONGED_ERROR_DURATION);
+  Svc.Obs.notify("weave:service:sync:error");
 });
 
 // Check that error log files are deleted above an age threshold.
