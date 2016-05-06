@@ -22,8 +22,6 @@ if (isGonk) {
   Cu.import('resource://gre/modules/ResourceStatsService.jsm');
 }
 
-Cu.import('resource://gre/modules/KillSwitchMain.jsm');
-
 // Identity
 Cu.import('resource://gre/modules/SignInToWebsite.jsm');
 SignInToWebsiteController.init();
