@@ -70,12 +70,6 @@ var Reader = {
 
   observe: function Reader_observe(aMessage, aTopic, aData) {
     switch (aTopic) {
-      case "Reader:FetchContent": {
-        let data = JSON.parse(aData);
-        this._fetchContent(data.url, data.id);
-        break;
-      }
-
       case "Reader:RemoveFromCache": {
         ReaderMode.removeArticleFromCache(aData).catch(e => Cu.reportError("Error removing article from cache: " + e));
         break;
@@ -218,46 +212,6 @@ var Reader = {
       this._buttonHistogram.add(this._buttonHistogramValues.HIDDEN);
     }
   },
-
-  /**
-   * Downloads and caches content for a reading list item with a given URL and id.
-   */
-  _fetchContent: function(url, id) {
-    this._downloadAndCacheArticle(url).then(article => {
-      if (article == null) {
-        Messaging.sendRequest({
-          type: "Reader:UpdateList",
-          id: id,
-          status: this.STATUS_FETCH_FAILED_UNSUPPORTED_FORMAT,
-        });
-      } else {
-        Messaging.sendRequest({
-          type: "Reader:UpdateList",
-          id: id,
-          url: truncate(article.url, MAX_URI_LENGTH),
-          title: truncate(article.title, MAX_TITLE_LENGTH),
-          length: article.length,
-          excerpt: article.excerpt,
-          status: this.STATUS_FETCHED_ARTICLE,
-        });
-      }
-    }).catch(e => {
-      Cu.reportError("Error fetching content: " + e);
-      Messaging.sendRequest({
-        type: "Reader:UpdateList",
-        id: id,
-        status: this.STATUS_FETCH_FAILED_TEMPORARY,
-      });
-    });
-  },
-
-  _downloadAndCacheArticle: Task.async(function* (url) {
-    let article = yield ReaderMode.downloadAndParseDocument(url);
-    if (article != null) {
-      yield ReaderMode.storeArticleInCache(article);
-    }
-    return article;
-  }),
 
   /**
    * Gets an article for a given URL. This method will download and parse a document
