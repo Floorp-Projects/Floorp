@@ -261,6 +261,14 @@ function getAPILevelForWindow(window, addonId) {
       return FULL_PRIVILEGES;
     }
 
+    // The addon iframes embedded in a addon page from with the same addonId
+    // should have the same privileges of the sameTypeParent.
+    // (see Bug 1258347 for rationale)
+    let parentSameAddonPrivileges = getAPILevelForWindow(parentWindow, addonId);
+    if (parentSameAddonPrivileges > NO_PRIVILEGES) {
+      return parentSameAddonPrivileges;
+    }
+
     // In all the other cases, WebExtension URLs loaded into sub-frame UI
     // will have "content script API level privileges".
     // (see Bug 1214658 for rationale)

@@ -359,18 +359,19 @@ TooltipsOverlay.prototype = {
    * Checks if the hovered target is a css value we support tooltips for.
    *
    * @param {DOMNode} target The currently hovered node
+   * @return {Promise}
    */
-  _onPreviewTooltipTargetHover: function (target) {
+  _onPreviewTooltipTargetHover: Task.async(function* (target) {
     let nodeInfo = this.view.getNodeInfo(target);
     if (!nodeInfo) {
       // The hovered node isn't something we care about
-      return promise.reject(false);
+      return false;
     }
 
     let type = this._getTooltipType(nodeInfo);
     if (!type) {
       // There is no tooltip type defined for the hovered node
-      return promise.reject(false);
+      return false;
     }
 
     if (this.isRuleView && this.colorPicker.tooltip.isShown()) {
@@ -398,17 +399,19 @@ TooltipsOverlay.prototype = {
       let dim = Services.prefs.getIntPref(PREF_IMAGE_TOOLTIP_SIZE);
       // nodeInfo contains an absolute uri
       let uri = nodeInfo.value.url;
-      return this.previewTooltip.setRelativeImageContent(uri,
+      yield this.previewTooltip.setRelativeImageContent(uri,
         inspector.inspector, dim);
+      return true;
     }
 
     if (type === TOOLTIP_FONTFAMILY_TYPE) {
-      return this.previewTooltip.setFontFamilyContent(nodeInfo.value.value,
+      yield this.previewTooltip.setFontFamilyContent(nodeInfo.value.value,
         inspector.selection.nodeFront);
+      return true;
     }
 
-    return undefined;
-  },
+    return false;
+  }),
 
   _onNewSelection: function () {
     if (this.previewTooltip) {

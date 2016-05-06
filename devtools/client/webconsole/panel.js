@@ -6,7 +6,6 @@
 
 "use strict";
 
-const {Cu} = require("chrome");
 const promise = require("promise");
 
 loader.lazyGetter(this, "HUDService", () => require("devtools/client/webconsole/hudservice"));
@@ -31,7 +30,7 @@ WebConsolePanel.prototype = {
    * If the WebConsole is opened, check if the JSTerm's input line has focus.
    * If not, focus it.
    */
-  focusInput: function() {
+  focusInput: function () {
     this.hud.jsterm.focus();
   },
 
@@ -41,7 +40,7 @@ WebConsolePanel.prototype = {
    * @return object
    *         A promise that is resolved when the Web Console completes opening.
    */
-  open: function() {
+  open: function () {
     let parentDoc = this._toolbox.doc;
     let iframe = parentDoc.getElementById("toolbox-panel-iframe-webconsole");
 
@@ -89,7 +88,7 @@ WebConsolePanel.prototype = {
         let msg = "WebConsolePanel open failed. " +
                   reason.error + ": " + reason.message;
         dump(msg + "\n");
-        Cu.reportError(msg);
+        console.error(msg);
       });
   },
 
@@ -102,7 +101,7 @@ WebConsolePanel.prototype = {
     return this._isReady;
   },
 
-  destroy: function() {
+  destroy: function () {
     if (this._destroyer) {
       return this._destroyer;
     }

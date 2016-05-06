@@ -18,6 +18,7 @@ DevToolsModules(
     'AppCacheUtils.jsm',
     'autocomplete-popup.js',
     'browser-loader.js',
+    'css-angle.js',
     'css-color-db.js',
     'css-color.js',
     'css-parsing-utils.js',

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Cu, Cc, Ci } = require("chrome");
+const { Cc, Ci } = require("chrome");
 const Services = require("Services");
 const { resolve } = require("promise");
 const { HarUtils } = require("./har-utils.js");
@@ -88,7 +88,7 @@ const HarExporter = {
     return this.fetchHarData(options).then(jsonString => {
       if (!HarUtils.saveToFile(file, jsonString, options.compress)) {
         let msg = "Failed to save HAR file at: " + options.defaultFileName;
-        Cu.reportError(msg);
+        console.error(msg);
       }
       return jsonString;
     });
@@ -147,7 +147,7 @@ const HarExporter = {
 
       return jsonString;
     }).then(null, function onError(err) {
-      Cu.reportError(err);
+      console.error(err);
     });
   },
 
@@ -174,7 +174,7 @@ const HarExporter = {
     try {
       return JSON.stringify(har, null, "  ");
     } catch (err) {
-      Cu.reportError(err);
+      console.error(err);
       return undefined;
     }
   },

@@ -6,7 +6,7 @@ WORKDIR /home/worker
 
 # install necessary npm packages
 RUN           npm install -g taskcluster-vcs@2.3.12
-RUN           npm install -g eslint@2.8.0
+RUN           npm install -g eslint@2.9.0
 RUN           npm install -g eslint-plugin-html@1.4.0
 RUN           npm install -g eslint-plugin-react@4.2.3
 

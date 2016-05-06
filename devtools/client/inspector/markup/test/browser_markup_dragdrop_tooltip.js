@@ -16,7 +16,7 @@ add_task(function* () {
   let target = img.editor.getAttributeElement("src").querySelector(".link");
 
   info("Check that the src attribute of the image is a valid tooltip target");
-  let isValid = yield markup.tooltip.isValidHoverTarget(target);
+  let isValid = yield isHoverTooltipTarget(markup.tooltip, target);
   ok(isValid, "The element is a valid tooltip target");
 
   info("Start dragging the test div");
@@ -24,7 +24,7 @@ add_task(function* () {
 
   info("Now check that the src attribute of the image isn't a valid target");
   try {
-    yield markup.tooltip.isValidHoverTarget(target);
+    yield isHoverTooltipTarget(markup.tooltip, target);
     isValid = true;
   } catch (e) {
     isValid = false;
@@ -35,6 +35,6 @@ add_task(function* () {
   yield simulateNodeDrop(inspector, "div");
 
   info("Check again the src attribute of the image");
-  isValid = yield markup.tooltip.isValidHoverTarget(target);
+  isValid = yield isHoverTooltipTarget(markup.tooltip, target);
   ok(isValid, "The element is a valid tooltip target");
 });
