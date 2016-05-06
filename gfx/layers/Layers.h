@@ -1088,7 +1088,7 @@ public:
 
   /**
    * CONSTRUCTION PHASE ONLY
-   * Add a FrameMetrics-associated mask layer.
+   * Add mask layers associated with LayerClips.
    */
   void SetAncestorMaskLayers(const nsTArray<RefPtr<Layer>>& aLayers) {
     if (aLayers != mAncestorMaskLayers) {
@@ -1096,6 +1096,15 @@ public:
       mAncestorMaskLayers = aLayers;
       Mutated();
     }
+  }
+
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Add a mask layer associated with a LayerClip.
+   */
+  void AddAncestorMaskLayer(const RefPtr<Layer>& aLayer) {
+    mAncestorMaskLayers.AppendElement(aLayer);
+    Mutated();
   }
 
   /**
@@ -1351,6 +1360,9 @@ public:
   }
   Layer* GetAncestorMaskLayerAt(size_t aIndex) const {
     return mAncestorMaskLayers.ElementAt(aIndex);
+  }
+  const nsTArray<RefPtr<Layer>>& GetAllAncestorMaskLayers() const {
+    return mAncestorMaskLayers;
   }
 
   bool HasMaskLayers() const {

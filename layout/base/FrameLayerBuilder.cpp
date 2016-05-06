@@ -2179,6 +2179,7 @@ ContainerState::RecyclePaintedLayer(PaintedLayer* aLayer,
   // Clear clip rect and mask layer so we don't accidentally stay clipped.
   // We will reapply any necessary clipping.
   aLayer->SetMaskLayer(nullptr);
+  aLayer->SetAncestorMaskLayers({});
   aLayer->ClearExtraDumpInfo();
 
   PaintedDisplayItemLayerUserData* data =
@@ -4626,8 +4627,11 @@ ContainerState::SetupScrollingMetadata(NewLayerEntry* aEntry)
     MOZ_ASSERT(!aEntry->mBaseScrollMetadata->HasMaskLayer());
   }
 
-  // Any extra mask layers we need to attach to FrameMetrics.
-  nsTArray<RefPtr<Layer>> maskLayers;
+  // Any extra mask layers we need to attach to ScrollMetadatas.
+  // The list may already contain an entry added for the layer's scrolled clip
+  // so add to it rather than overwriting it (we clear the list when recycling
+  // a layer).
+  nsTArray<RefPtr<Layer>> maskLayers(aEntry->mLayer->GetAllAncestorMaskLayers());
 
   for (const DisplayItemScrollClip* scrollClip = aEntry->mScrollClip;
        scrollClip && scrollClip != mContainerScrollClip;
@@ -5097,6 +5101,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
                      "Wrong layer type");
         containerLayer = static_cast<ContainerLayer*>(oldLayer);
         containerLayer->SetMaskLayer(nullptr);
+        containerLayer->SetAncestorMaskLayers({});
       }
     }
   }
