@@ -14,13 +14,15 @@ Cu.import("resource://gre/modules/Task.jsm");
 
 const promise = require("promise");
 const events = require("sdk/event/core");
-const {OriginalSourceFront, MediaRuleFront, StyleSheetFront} = require("devtools/client/fronts/stylesheets");
+const {OriginalSourceFront, MediaRuleFront, StyleSheetFront,
+       StyleSheetsFront} = require("devtools/client/fronts/stylesheets");
 const protocol = require("devtools/server/protocol");
 const {Arg, Option, method, RetVal, types} = protocol;
 const {LongStringActor, ShortLongString} = require("devtools/server/actors/string");
 const {fetch} = require("devtools/shared/DevToolsUtils");
 const {listenOnce} = require("devtools/shared/async-utils");
-const {originalSourceSpec, mediaRuleSpec, styleSheetSpec} = require("devtools/shared/specs/stylesheets");
+const {originalSourceSpec, mediaRuleSpec, styleSheetSpec,
+       styleSheetsSpec} = require("devtools/shared/specs/stylesheets");
 const {SourceMapConsumer} = require("source-map");
 
 loader.lazyGetter(this, "CssLogic", () => require("devtools/shared/inspector/css-logic").CssLogic);
@@ -764,9 +766,7 @@ exports.StyleSheetFront = StyleSheetFront;
  * Creates a StyleSheetsActor. StyleSheetsActor provides remote access to the
  * stylesheets of a document.
  */
-var StyleSheetsActor = protocol.ActorClass({
-  typeName: "stylesheets",
-
+var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
   /**
    * The window we work with, taken from the parent actor.
    */
@@ -796,7 +796,7 @@ var StyleSheetsActor = protocol.ActorClass({
    * Protocol method for getting a list of StyleSheetActors representing
    * all the style sheets in this document.
    */
-  getStyleSheets: method(Task.async(function* () {
+  getStyleSheets: Task.async(function* () {
     // Iframe document can change during load (bug 1171919). Track their windows
     // instead.
     let windows = [this.window];
@@ -816,9 +816,6 @@ var StyleSheetsActor = protocol.ActorClass({
       }
     }
     return actors;
-  }), {
-    request: {},
-    response: { styleSheets: RetVal("array:stylesheet") }
   }),
 
   /**
@@ -939,7 +936,7 @@ var StyleSheetsActor = protocol.ActorClass({
    * @return {object}
    *         Object with 'styelSheet' property for form on new actor.
    */
-  addStyleSheet: method(function(text) {
+  addStyleSheet: function(text) {
     let parent = this.document.documentElement;
     let style = this.document.createElementNS("http://www.w3.org/1999/xhtml", "style");
     style.setAttribute("type", "text/css");
@@ -951,24 +948,10 @@ var StyleSheetsActor = protocol.ActorClass({
 
     let actor = this.parentActor.createStyleSheetActor(style.sheet);
     return actor;
-  }, {
-    request: { text: Arg(0, "string") },
-    response: { styleSheet: RetVal("stylesheet") }
-  })
+  }
 });
 
 exports.StyleSheetsActor = StyleSheetsActor;
-
-/**
- * The corresponding Front object for the StyleSheetsActor.
- */
-var StyleSheetsFront = protocol.FrontClass(StyleSheetsActor, {
-  initialize: function(client, tabForm) {
-    protocol.Front.prototype.initialize.call(this, client);
-    this.actorID = tabForm.styleSheetsActor;
-    this.manage(this);
-  }
-});
 
 exports.StyleSheetsFront = StyleSheetsFront;
 
