@@ -120,3 +120,20 @@ Notes
   uplifted to 46, whereas ``profileDate`` landed on 47. The version numbers in
   code were updated to be increasing (bug 1264492) and the version history docs
   rearranged accordingly.
+
+Android implementation notes
+----------------------------
+On Android, the uploader has a high probability of delivering the complete data
+for a given client but not a 100% probability. This was a conscious decision to
+keep the code simple. The cases where we can lose data:
+
+* Resetting the field measurements (including incrementing the sequence number)
+  and storing a ping for upload are not atomic. Android can kill our process
+  for memory pressure in between these distinct operations so we can just lose
+  a ping's worth of data. That sequence number will be missing on the server.
+* If we exceed some number of pings on disk that have not yet been uploaded,
+  we remove old pings to save storage space. For those pings, we will lose
+  their data and their sequence numbers will be missing on the server.
+
+Note: we never expect to drop data without also dropping a sequence number so
+we are able to determine when data loss occurs.
