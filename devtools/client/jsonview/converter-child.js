@@ -131,7 +131,7 @@ let Converter = Class({
         try {
           return jsonViewStrings.GetStringFromName(key);
         } catch (err) {
-          Cu.reportError(err);
+          console.error(err);
           return undefined;
         }
       }
@@ -167,7 +167,7 @@ let Converter = Class({
       headers = JSON.stringify(headers);
       outputDoc = this.toHTML(this.data, headers, this.uri);
     } catch (e) {
-      Cu.reportError("JSON Viewer ERROR " + e);
+      console.error("JSON Viewer ERROR " + e);
       outputDoc = this.toErrorPage(e, this.data, this.uri);
     }
 

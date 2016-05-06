@@ -22,8 +22,9 @@ function test() {
     let addon = yield addAddon(ADDON_URL);
     let addonDebugger = yield initAddonDebugger(ADDON_URL);
 
-    is(addonDebugger.title, "Debugger - browser_dbg_addon3",
-                            "Saw the right toolbox title.");
+    is(addonDebugger.title,
+       `Developer Tools - browser_dbg_addon3 - ${ADDON_URL}`,
+       "Saw the right toolbox title.");
 
     info("Check that groups and sources are displayed.");
     let groups = yield addonDebugger.getSourceGroups();
@@ -36,4 +37,3 @@ function test() {
     finish();
   });
 }
-

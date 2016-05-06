@@ -56,10 +56,12 @@ interface nsIProfileMigrator : nsISupports
    *
    * @param  aStartup nsIProfileStartup object to use during migration.
    * @param  aKey     optional key of a migrator to use to skip source selection.
+   * @param  aProfileName optional name of the profile to use for migration.
    *
    * @note The startup code ignores COM exceptions thrown from this method.
    */
-  void migrate(in nsIProfileStartup aStartup, in ACString aKey);
+  void migrate(in nsIProfileStartup aStartup, in ACString aKey,
+               [optional] in ACString aProfileName);
 };
 
 %{C++

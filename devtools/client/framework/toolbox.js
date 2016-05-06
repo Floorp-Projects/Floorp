@@ -1609,17 +1609,13 @@ Toolbox.prototype = {
    * Refresh the host's title.
    */
   _refreshHostTitle: function() {
-    let toolName;
-    let toolDef = gDevTools.getToolDefinition(this.currentToolId);
-    if (toolDef) {
-      toolName = toolDef.label;
+    let title;
+    if (this.target.name && this.target.name != this.target.url) {
+      title = toolboxStrings("toolbox.titleTemplate2",
+                             this.target.name, this.target.url);
     } else {
-      // no tool is selected
-      toolName = toolboxStrings("toolbox.defaultTitle");
+      title = toolboxStrings("toolbox.titleTemplate1", this.target.url);
     }
-    let title = toolboxStrings("toolbox.titleTemplate",
-                               toolName, this.target.name ||
-                                         this.target.url);
     this._host.setTitle(title);
   },
 

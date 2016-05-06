@@ -23,8 +23,6 @@ const SEARCH_TOKEN_FLAG = "#";
 const SEARCH_LINE_FLAG = ":";
 const SEARCH_VARIABLE_FLAG = "*";
 const SEARCH_AUTOFILL = [SEARCH_GLOBAL_FLAG, SEARCH_FUNCTION_FLAG, SEARCH_TOKEN_FLAG];
-const EDITOR_VARIABLE_HOVER_DELAY = 750; // ms
-const EDITOR_VARIABLE_POPUP_POSITION = "topcenter bottomleft";
 const TOOLBAR_ORDER_POPUP_POSITION = "topcenter bottomleft";
 const RESIZE_REFRESH_RATE = 50; // ms
 const PROMISE_DEBUGGER_URL =
@@ -541,7 +539,7 @@ var DebuggerView = {
     else if (textInfo.error) {
       let msg = L10N.getFormatStr("errorLoadingText2", textInfo.error);
       this._setEditorText('error', msg);
-      Cu.reportError(msg);
+      console.error(new Error(msg));
       dumpn(msg);
 
       this.showEditor();
