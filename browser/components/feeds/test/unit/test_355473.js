@@ -1,5 +1,5 @@
 var Cu = Components.utils;
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 function run_test() {
   var feedFeedURI = ios.newURI("feed://example.com/feed.xml", null, null);
@@ -10,24 +10,20 @@ function run_test() {
     ios.newURI("feed:https://example.com/feed.xml", null, null);
   var httpsURI = ios.newURI("https://example.com/feed.xml", null, null);
 
-  var feedChannel = ios.newChannelFromURI2(feedFeedURI,
-                                           null,      // aLoadingNode
-                                           Services.scriptSecurityManager.getSystemPrincipal(),
-                                           null,      // aTriggeringPrincipal
-                                           Ci.nsILoadInfo.SEC_NORMAL,
-                                           Ci.nsIContentPolicy.TYPE_OTHER);
-  var httpChannel = ios.newChannelFromURI2(httpFeedURI,
-                                           null,      // aLoadingNode
-                                           Services.scriptSecurityManager.getSystemPrincipal(),
-                                           null,      // aTriggeringPrincipal
-                                           Ci.nsILoadInfo.SEC_NORMAL,
-                                           Ci.nsIContentPolicy.TYPE_OTHER);
-  var httpsChannel = ios.newChannelFromURI2(httpsFeedURI,
-                                            null,      // aLoadingNode
-                                            Services.scriptSecurityManager.getSystemPrincipal(),
-                                            null,      // aTriggeringPrincipal
-                                            Ci.nsILoadInfo.SEC_NORMAL,
-                                            Ci.nsIContentPolicy.TYPE_OTHER);
+  var feedChannel = NetUtil.newChannel({
+    uri: feedFeedURI,
+    loadUsingSystemPrincipal: true
+  });
+
+  var httpChannel = NetUtil.newChannel({
+    uri: httpFeedURI,
+    loadUsingSystemPrincipal: true
+  });
+
+  var httpsChannel = NetUtil.newChannel({
+    uri: httpsFeedURI,
+    loadUsingSystemPrincipal: true
+  });
 
   // not setting .originalURI to the original URI is naughty
   do_check_true(feedFeedURI.equals(feedChannel.originalURI));
