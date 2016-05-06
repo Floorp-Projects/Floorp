@@ -489,7 +489,10 @@ MediaFormatReader::ShouldSkip(bool aSkipToNextKeyframe, media::TimeUnit aTimeThr
   if (NS_FAILED(rv)) {
     return aSkipToNextKeyframe;
   }
-  return nextKeyframe < aTimeThreshold && nextKeyframe.ToMicroseconds() >= 0;
+  return (nextKeyframe < aTimeThreshold ||
+          (mVideo.mTimeThreshold &&
+           mVideo.mTimeThreshold.ref().mTime < aTimeThreshold)) &&
+         nextKeyframe.ToMicroseconds() >= 0;
 }
 
 RefPtr<MediaDecoderReader::MediaDataPromise>
