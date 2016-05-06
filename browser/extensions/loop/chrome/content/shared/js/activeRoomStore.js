@@ -506,11 +506,11 @@ loop.store.ActiveRoomStore = function (mozL10n) {
 
         // Now send a message to the chrome to see if it can handle this room.
         window.dispatchEvent(new window.CustomEvent("WebChannelMessageToChrome", { 
-          detail: { 
+          detail: JSON.stringify({ 
             id: "loop-link-clicker", 
             message: { 
               command: "checkWillOpenRoom", 
-              roomToken: this._storeState.roomToken } } }));}.
+              roomToken: this._storeState.roomToken } }) }));}.
 
 
 
@@ -656,11 +656,11 @@ loop.store.ActiveRoomStore = function (mozL10n) {
 
       // Now we're set up, dispatch an event.
       window.dispatchEvent(new window.CustomEvent("WebChannelMessageToChrome", { 
-        detail: { 
+        detail: JSON.stringify({ 
           id: "loop-link-clicker", 
           message: { 
             command: "openRoom", 
-            roomToken: this._storeState.roomToken } } }));}, 
+            roomToken: this._storeState.roomToken } }) }));}, 
 
 
 
