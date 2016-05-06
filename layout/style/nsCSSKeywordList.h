@@ -788,4 +788,5 @@ CSS_KEY(text-after-edge, text_after_edge)
 CSS_KEY(text-before-edge, text_before_edge)
 CSS_KEY(use-script, use_script)
 CSS_KEY(-moz-crisp-edges, _moz_crisp_edges)
+CSS_KEY(space, space)
 
