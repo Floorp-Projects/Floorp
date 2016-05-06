@@ -35,8 +35,8 @@ if CONFIG['MOZ_PLACES']:
     ]
 
     UNIFIED_SOURCES += [
-        'AsyncFaviconHelpers.cpp',
         'Database.cpp',
+        'FaviconHelpers.cpp',
         'Helpers.cpp',
         'History.cpp',
         'nsAnnoProtocolHandler.cpp',
