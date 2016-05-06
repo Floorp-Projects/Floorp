@@ -373,6 +373,10 @@
           this._remoteWebNavigationImpl = this._remoteWebNavigation.wrappedJSObject;
           this._remoteWebNavigationImpl.swapBrowser(this);
 
+          // Initialize to the null principal
+          let Services = Components.utils.import("resource://gre/modules/Services.jsm", {}).Services
+          this._contentPrincipal = Services.scriptSecurityManager.createNullPrincipal({});
+
           this.messageManager.addMessageListener("Browser:Init", this);
           this.messageManager.addMessageListener("DOMTitleChanged", this);
           this.messageManager.addMessageListener("ImageDocumentLoaded", this);
@@ -392,8 +396,7 @@
           }
 
           if (!this.hasAttribute("disablehistory")) {
-            Components.utils.import("resource://gre/modules/Services.jsm", {}).Services
-                      .obs.addObserver(this, "browser:purge-session-history", true);
+            Services.obs.addObserver(this, "browser:purge-session-history", true);
           }
 
           let jsm = "resource://gre/modules/RemoteController.jsm";
