@@ -58,7 +58,7 @@ public:
   void RemoveGMPContentParent(GMPContentParent* aGMPContentParent);
 
 protected:
-  void InitializePlugins() override
+  void InitializePlugins(AbstractThread*) override
   {
     // Nothing to do here.
   }
