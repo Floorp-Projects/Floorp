@@ -805,9 +805,8 @@ JitCode::finalize(FreeOp* fop)
 #ifdef DEBUG
     JSRuntime* rt = fop->runtime();
     if (hasBytecodeMap_) {
-        JitcodeGlobalEntry result;
         MOZ_ASSERT(rt->jitRuntime()->hasJitcodeGlobalTable());
-        MOZ_ASSERT(!rt->jitRuntime()->getJitcodeGlobalTable()->lookup(raw(), &result, rt));
+        MOZ_ASSERT(!rt->jitRuntime()->getJitcodeGlobalTable()->lookup(raw()));
     }
 #endif
 
@@ -2071,8 +2070,8 @@ TrackIonAbort(JSContext* cx, JSScript* script, jsbytecode* pc, const char* messa
         return;
 
     JitcodeGlobalTable* table = cx->runtime()->jitRuntime()->getJitcodeGlobalTable();
-    JitcodeGlobalEntry entry;
-    table->lookupInfallible(script->baselineScript()->method()->raw(), &entry, cx->runtime());
+    void* ptr = script->baselineScript()->method()->raw();
+    JitcodeGlobalEntry& entry = table->lookupInfallible(ptr);
     entry.baselineEntry().trackIonAbort(pc, message);
 }
 
