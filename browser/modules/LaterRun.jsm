@@ -133,9 +133,11 @@ let LaterRun = {
       if (pageData.url) {
         let uri = null;
         try {
-          uri = Services.io.newURI(pageData.url.trim(), null, null);
+          let urlString = Services.urlFormatter.formatURL(pageData.url.trim());
+          uri = Services.io.newURI(urlString, null, null);
         } catch (ex) {
           Cu.reportError("Invalid LaterRun page URL " + pageData.url + " ignored.");
+          continue;
         }
         if (!uri.schemeIs("https")) {
           Cu.reportError("Insecure LaterRun page URL " + uri.spec + " ignored.");
