@@ -70,6 +70,11 @@
 <!ENTITY screenshot_folder_label_in_bookmarks "Screenshots">
 <!ENTITY readinglist_smartfolder_label_in_bookmarks "Reading List">
 
+<!-- Localization note (bookmark_folder_items): The variable is replaced by the number of items
+     in the folder. -->
+<!ENTITY bookmark_folder_items "&formatD; items">
+<!ENTITY bookmark_folder_one_item "1 item">
+
 <!ENTITY reader_saved_offline "Saved offline">
 <!-- Localization note (reader_switch_to_bookmarks) : This
      string is used as an action in a snackbar - it lets you
