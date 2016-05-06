@@ -31,6 +31,11 @@ pref("browser.chromeURL", "chrome://browser/content/");
 // expiration (but low-memory conditions may still require the tab to be zombified).
 pref("browser.tabs.expireTime", 900);
 
+// Disables zombification of background tabs under memory pressure.
+// Intended for use in testing, where we don't want the tab running the
+// test harness code to be zombified.
+pref("browser.tabs.disableBackgroundZombification", false);
+
 // Control whether tab content should try to load from disk cache when network
 // is offline.
 // Controlled by Switchboard experiment "offline-cache".
