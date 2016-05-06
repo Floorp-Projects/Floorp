@@ -142,20 +142,14 @@ OpusDataDecoder::Input(MediaRawData* aSample)
 void
 OpusDataDecoder::Decode(MediaRawData* aSample)
 {
-  DecodeError err = DoDecode(aSample);
-  if (err == DecodeError::FATAL_ERROR) {
-    mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
-  } else {
-    if (err == DecodeError::DECODE_ERROR) { 
-      mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
-    }
-    if (mTaskQueue->IsEmpty()) {
-      mCallback->InputExhausted();
-    }
+  if (DoDecode(aSample) == -1) {
+    mCallback->Error();
+  } else if(mTaskQueue->IsEmpty()) {
+    mCallback->InputExhausted();
   }
 }
 
-OpusDataDecoder::DecodeError
+int
 OpusDataDecoder::DoDecode(MediaRawData* aSample)
 {
   int64_t aDiscardPadding = 0;
@@ -167,9 +161,8 @@ OpusDataDecoder::DoDecode(MediaRawData* aSample)
   if (mPaddingDiscarded) {
     // Discard padding should be used only on the final packet, so
     // decoding after a padding discard is invalid.
-    // Send fatal error to make sure reader rejects this file.
     OPUS_DEBUG("Opus error, discard padding on interstitial packet");
-    return FATAL_ERROR;
+    return -1;
   }
 
   if (!mLastFrameTime || mLastFrameTime.ref() != aSample->mTime) {
@@ -184,7 +177,7 @@ OpusDataDecoder::DoDecode(MediaRawData* aSample)
   if (frames_number <= 0) {
     OPUS_DEBUG("Invalid packet header: r=%ld length=%ld",
                frames_number, aSample->Size());
-    return DECODE_ERROR;
+    return -1;
   }
 
   int32_t samples = opus_packet_get_samples_per_frame(aSample->Data(),
@@ -195,12 +188,12 @@ OpusDataDecoder::DoDecode(MediaRawData* aSample)
   int32_t frames = frames_number*samples;
   if (frames < 120 || frames > 5760) {
     OPUS_DEBUG("Invalid packet frames: %ld", frames);
-    return DECODE_ERROR;
+    return -1;
   }
 
   AlignedAudioBuffer buffer(frames * channels);
   if (!buffer) {
-    return DECODE_ERROR;
+    return -1;
   }
 
   // Decode to the appropriate sample type.
@@ -214,7 +207,7 @@ OpusDataDecoder::DoDecode(MediaRawData* aSample)
                                     buffer.get(), frames, false);
 #endif
   if (ret < 0) {
-    return DECODE_ERROR;
+    return -1;
   }
   NS_ASSERTION(ret == frames, "Opus decoded too few audio samples");
   CheckedInt64 startTime = aSample->mTime;
@@ -234,9 +227,8 @@ OpusDataDecoder::DoDecode(MediaRawData* aSample)
 
   if (aDiscardPadding < 0) {
     // Negative discard padding is invalid.
-    // Send fatal error to make sure reader rejects this file.
     OPUS_DEBUG("Opus error, negative discard padding");
-    return FATAL_ERROR;
+    return -1;
   }
   if (aDiscardPadding > 0) {
     OPUS_DEBUG("OpusDecoder discardpadding %" PRId64 "", aDiscardPadding);
@@ -245,13 +237,12 @@ OpusDataDecoder::DoDecode(MediaRawData* aSample)
                        mOpusParser->mRate);
     if (!discardFrames.isValid()) {
       NS_WARNING("Int overflow in DiscardPadding");
-      return DECODE_ERROR;
+      return -1;
     }
     if (discardFrames.value() > frames) {
       // Discarding more than the entire packet is invalid.
-      // Send fatal error to make sure reader rejects this file.
       OPUS_DEBUG("Opus error, discard padding larger than packet");
-      return FATAL_ERROR;
+      return -1;
     }
     OPUS_DEBUG("Opus decoder discarding %d of %d frames",
         int32_t(discardFrames.value()), frames);
@@ -286,14 +277,14 @@ OpusDataDecoder::DoDecode(MediaRawData* aSample)
   CheckedInt64 duration = FramesToUsecs(frames, mOpusParser->mRate);
   if (!duration.isValid()) {
     NS_WARNING("OpusDataDecoder: Int overflow converting WebM audio duration");
-    return DECODE_ERROR;
+    return -1;
   }
   CheckedInt64 time =
     startTime - FramesToUsecs(mOpusParser->mPreSkip, mOpusParser->mRate) +
     FramesToUsecs(mFrames, mOpusParser->mRate);
   if (!time.isValid()) {
     NS_WARNING("OpusDataDecoder: Int overflow shifting tstamp by codec delay");
-    return DECODE_ERROR;
+    return -1;
   };
 
   mCallback->Output(new AudioData(aSample->mOffset,
@@ -304,7 +295,7 @@ OpusDataDecoder::DoDecode(MediaRawData* aSample)
                                   mOpusParser->mChannels,
                                   mOpusParser->mRate));
   mFrames += frames;
-  return DECODE_SUCCESS;
+  return frames;
 }
 
 void

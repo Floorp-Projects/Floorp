@@ -52,7 +52,7 @@ VideoCallbackAdapter::Decoded(GMPVideoi420Frame* aDecodedFrame)
   if (v) {
     mCallback->Output(v);
   } else {
-    mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+    mCallback->Error();
   }
 }
 
@@ -93,7 +93,7 @@ void
 VideoCallbackAdapter::Error(GMPErr aErr)
 {
   MOZ_ASSERT(IsOnGMPThread());
-  mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+  mCallback->Error();
 }
 
 void
@@ -101,7 +101,7 @@ VideoCallbackAdapter::Terminated()
 {
   // Note that this *may* be called from the proxy thread also.
   NS_WARNING("H.264 GMP decoder terminated.");
-  mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+  mCallback->Error();
 }
 
 void
@@ -127,14 +127,14 @@ GMPVideoDecoder::CreateFrame(MediaRawData* aSample)
   GMPVideoFrame* ftmp = nullptr;
   GMPErr err = mHost->CreateFrame(kGMPEncodedVideoFrame, &ftmp);
   if (GMP_FAILED(err)) {
-    mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+    mCallback->Error();
     return nullptr;
   }
 
   GMPUniquePtr<GMPVideoEncodedFrame> frame(static_cast<GMPVideoEncodedFrame*>(ftmp));
   err = frame->CreateEmptyFrame(aSample->Size());
   if (GMP_FAILED(err)) {
-    mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+    mCallback->Error();
     return nullptr;
   }
 
@@ -249,7 +249,7 @@ GMPVideoDecoder::Input(MediaRawData* aSample)
 
   RefPtr<MediaRawData> sample(aSample);
   if (!mGMP) {
-    mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+    mCallback->Error();
     return NS_ERROR_FAILURE;
   }
 
@@ -257,13 +257,13 @@ GMPVideoDecoder::Input(MediaRawData* aSample)
 
   GMPUniquePtr<GMPVideoEncodedFrame> frame = CreateFrame(sample);
   if (!frame) {
-    mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
+    mCallback->Error();
     return NS_ERROR_FAILURE;
   }
   nsTArray<uint8_t> info; // No codec specific per-frame info to pass.
   nsresult rv = mGMP->Decode(Move(frame), false, info, 0);
   if (NS_FAILED(rv)) {
-    mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
+    mCallback->Error();
     return rv;
   }
 

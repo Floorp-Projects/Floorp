@@ -155,7 +155,7 @@ private:
   void NotifyNewOutput(TrackType aTrack, MediaData* aSample);
   void NotifyInputExhausted(TrackType aTrack);
   void NotifyDrainComplete(TrackType aTrack);
-  void NotifyError(TrackType aTrack, MediaDataDecoderError aError = MediaDataDecoderError::FATAL_ERROR);
+  void NotifyError(TrackType aTrack);
   void NotifyWaitingForData(TrackType aTrack);
   void NotifyEndOfStream(TrackType aTrack);
   void NotifyDecodingRequested(TrackType aTrack);
@@ -169,7 +169,7 @@ private:
   // functions.
   void Output(TrackType aType, MediaData* aSample);
   void InputExhausted(TrackType aTrack);
-  void Error(TrackType aTrack, MediaDataDecoderError aError = MediaDataDecoderError::FATAL_ERROR);
+  void Error(TrackType aTrack);
   void Reset(TrackType aTrack);
   void DrainComplete(TrackType aTrack);
 
@@ -193,8 +193,8 @@ private:
     void InputExhausted() override {
       mReader->InputExhausted(mType);
     }
-    void Error(MediaDataDecoderError aError) override {
-      mReader->Error(mType, aError);
+    void Error() override {
+      mReader->Error(mType);
     }
     void DrainComplete() override {
       mReader->DrainComplete(mType);
@@ -214,8 +214,7 @@ private:
   struct DecoderData {
     DecoderData(MediaFormatReader* aOwner,
                 MediaData::Type aType,
-                uint32_t aDecodeAhead,
-                uint32_t aNumOfMaxError)
+                uint32_t aDecodeAhead)
       : mOwner(aOwner)
       , mType(aType)
       , mMonitor("DecoderData")
@@ -230,11 +229,10 @@ private:
       , mDecodingRequested(false)
       , mOutputRequested(false)
       , mInputExhausted(false)
+      , mError(false)
       , mNeedDraining(false)
       , mDraining(false)
       , mDrainComplete(false)
-      , mNumOfConsecutiveError(0)
-      , mMaxConsecutiveError(aNumOfMaxError)
       , mNumSamplesInput(0)
       , mNumSamplesOutput(0)
       , mNumSamplesOutputTotal(0)
@@ -302,22 +300,10 @@ private:
     bool mDecodingRequested;
     bool mOutputRequested;
     bool mInputExhausted;
+    bool mError;
     bool mNeedDraining;
     bool mDraining;
     bool mDrainComplete;
-
-    uint32_t mNumOfConsecutiveError;
-    uint32_t mMaxConsecutiveError;
-
-    Maybe<MediaDataDecoderError> mError;
-    bool HasFatalError()
-    {
-      if (mError.isSome() && mError.ref() == MediaDataDecoderError::FATAL_ERROR) {
-        return true;
-      }
-      return false;
-    }
-
     // If set, all decoded samples prior mTimeThreshold will be dropped.
     // Used for internal seeking when a change of stream is detected or when
     // encountering data discontinuity.
@@ -398,9 +384,6 @@ private:
       mNumSamplesOutput = 0;
       mSizeOfQueue = 0;
       mNextStreamSourceID.reset();
-      if (mError.isSome() && mError.ref() == MediaDataDecoderError::DECODE_ERROR) {
-        mError.reset();
-      }
     }
 
     bool HasInternalSeekPending() const
@@ -425,9 +408,8 @@ private:
   public:
     DecoderDataWithPromise(MediaFormatReader* aOwner,
                            MediaData::Type aType,
-                           uint32_t aDecodeAhead,
-                           uint32_t aNumOfMaxError)
-      : DecoderData(aOwner, aType, aDecodeAhead, aNumOfMaxError)
+                           uint32_t aDecodeAhead)
+      : DecoderData(aOwner, aType, aDecodeAhead)
       , mHasPromise(false)
 
     {}

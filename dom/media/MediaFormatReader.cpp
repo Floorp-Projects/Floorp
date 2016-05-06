@@ -60,10 +60,8 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
                                      VideoFrameContainer* aVideoFrameContainer,
                                      layers::LayersBackend aLayersBackend)
   : MediaDecoderReader(aDecoder)
-  , mAudio(this, MediaData::AUDIO_DATA, Preferences::GetUint("media.audio-decode-ahead", 2),
-           Preferences::GetUint("media.audio-max-decode-error", 3))
-  , mVideo(this, MediaData::VIDEO_DATA, Preferences::GetUint("media.video-decode-ahead", 2),
-           Preferences::GetUint("media.video-max-decode-error", 2))
+  , mAudio(this, MediaData::AUDIO_DATA, Preferences::GetUint("media.audio-decode-ahead", 2))
+  , mVideo(this, MediaData::VIDEO_DATA, Preferences::GetUint("media.video-decode-ahead", 2))
   , mDemuxer(aDemuxer)
   , mDemuxerInitDone(false)
   , mLastReportedNumDecodedFrames(0)
@@ -506,6 +504,7 @@ MediaFormatReader::RequestVideoData(bool aSkipToNextKeyframe,
   MOZ_DIAGNOSTIC_ASSERT(!mVideo.HasPromise(), "No duplicate sample requests");
   MOZ_DIAGNOSTIC_ASSERT(!mVideo.mSeekRequest.Exists() ||
                         mVideo.mTimeThreshold.isSome());
+  MOZ_DIAGNOSTIC_ASSERT(!mSkipRequest.Exists(), "called mid-skipping");
   MOZ_DIAGNOSTIC_ASSERT(!IsSeeking(), "called mid-seek");
   LOGV("RequestVideoData(%d, %lld)", aSkipToNextKeyframe, aTimeThreshold);
 
@@ -662,7 +661,6 @@ MediaFormatReader::NotifyNewOutput(TrackType aTrack, MediaData* aSample)
   decoder.mNumSamplesOutput++;
   decoder.mNumSamplesOutputTotal++;
   decoder.mNumSamplesOutputTotalSinceTelemetry++;
-  decoder.mNumOfConsecutiveError = 0;
   ScheduleUpdate(aTrack);
 }
 
@@ -691,12 +689,12 @@ MediaFormatReader::NotifyDrainComplete(TrackType aTrack)
 }
 
 void
-MediaFormatReader::NotifyError(TrackType aTrack, MediaDataDecoderError aError)
+MediaFormatReader::NotifyError(TrackType aTrack)
 {
   MOZ_ASSERT(OnTaskQueue());
   LOGV("%s Decoding error", TrackTypeToStr(aTrack));
   auto& decoder = GetDecoderData(aTrack);
-  decoder.mError = Some(aError);
+  decoder.mError = true;
   ScheduleUpdate(aTrack);
 }
 
@@ -741,6 +739,7 @@ MediaFormatReader::NeedInput(DecoderData& aDecoder)
   // which overrides our "few more samples" threshold.
   return
     !aDecoder.mDraining &&
+    !aDecoder.mError &&
     aDecoder.mDecodingRequested &&
     !aDecoder.mDemuxRequest.Exists() &&
     !aDecoder.HasInternalSeekPending() &&
@@ -818,7 +817,7 @@ MediaFormatReader::UpdateReceivedNewData(TrackType aTrack)
   }
   decoder.mWaitingForData = false;
 
-  if (decoder.HasFatalError()) {
+  if (decoder.mError) {
     return false;
   }
 
@@ -1137,7 +1136,7 @@ MediaFormatReader::Update(TrackType aTrack)
       decoder.mLastSampleTime =
         Some(media::TimeUnit::FromMicroseconds(output->mTime));
       ReturnOutput(output, aTrack);
-    } else if (decoder.HasFatalError()) {
+    } else if (decoder.mError) {
       LOG("Rejecting %s promise: DECODE_ERROR", TrackTypeToStr(aTrack));
       decoder.RejectPromise(DECODE_ERROR, __func__);
       return;
@@ -1175,21 +1174,6 @@ MediaFormatReader::Update(TrackType aTrack)
 
   if (decoder.mNeedDraining) {
     DrainDecoder(aTrack);
-    return;
-  }
-
-  if (decoder.mError.isSome() &&
-      decoder.mError.ref() == MediaDataDecoderError::DECODE_ERROR) {
-    if (++decoder.mNumOfConsecutiveError > decoder.mMaxConsecutiveError) {
-      NotifyError(aTrack);
-      return;
-    }
-    LOG("%s decoded error count %d", TrackTypeToStr(aTrack),
-                                     decoder.mNumOfConsecutiveError);
-    decoder.Flush();
-    if (aTrack == TrackType::kVideoTrack) {
-      SkipVideoDemuxToNextKeyFrame(decoder.mLastSampleTime.refOr(TimeUnit()));
-    }
     return;
   }
 
@@ -1382,11 +1366,11 @@ MediaFormatReader::InputExhausted(TrackType aTrack)
 }
 
 void
-MediaFormatReader::Error(TrackType aTrack, MediaDataDecoderError aError)
+MediaFormatReader::Error(TrackType aTrack)
 {
   RefPtr<nsIRunnable> task =
-    NewRunnableMethod<TrackType, MediaDataDecoderError>(
-      this, &MediaFormatReader::NotifyError, aTrack, aError);
+    NewRunnableMethod<TrackType>(
+      this, &MediaFormatReader::NotifyError, aTrack);
   OwnerThread()->Dispatch(task.forget());
 }
 
@@ -1443,8 +1427,8 @@ MediaFormatReader::OnVideoSkipCompleted(uint32_t aSkipped)
   }
   mVideo.mNumSamplesSkippedTotal += aSkipped;
   mVideo.mNumSamplesSkippedTotalSinceTelemetry += aSkipped;
-  MOZ_ASSERT(mVideo.mError.isNothing()); // We have flushed the decoder, no frame could
-                                         // have been decoded (and as such errored)
+  MOZ_ASSERT(!mVideo.mError); // We have flushed the decoder, no frame could
+                              // have been decoded (and as such errored)
   NotifyDecodingRequested(TrackInfo::kVideoTrack);
 }
 
