@@ -58,6 +58,10 @@ user_pref("experiments.supported", true);
 // data and installing experiments that may vary over time.
 user_pref("experiments.manifest.uri", "http://%(server)s/experiments-dummy/manifest");
 
+// Don't allow background tabs to be zombified, otherwise for tests that
+// open additional tabs, the test harness tab itself might get unloaded.
+user_pref("browser.tabs.disableBackgroundZombification", true);
+
 // Only load extensions from the application and user profile
 // AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_APPLICATION
 user_pref("extensions.enabledScopes", 5);
