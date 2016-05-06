@@ -118,4 +118,35 @@ this.TelemetryUtils = {
     return (aEndDate.getMonth() - aStartDate.getMonth())
            + 12 * (aEndDate.getFullYear() - aStartDate.getFullYear());
   },
+
+  /**
+   * Date.toISOString() gives us UTC times, this gives us local times in
+   * the ISO date format. See http://www.w3.org/TR/NOTE-datetime
+   * @param {Object} date The input date.
+   * @return {String} The local time ISO string.
+   */
+  toLocalTimeISOString: function(date) {
+    function padNumber(number, places) {
+      number = number.toString();
+      while (number.length < places) {
+        number = "0" + number;
+      }
+      return number;
+    }
+
+    let sign = (n) => n >= 0 ? "+" : "-";
+    // getTimezoneOffset counter-intuitively returns -60 for UTC+1.
+    let tzOffset = - date.getTimezoneOffset();
+
+    // YYYY-MM-DDThh:mm:ss.sTZD (eg 1997-07-16T19:20:30.45+01:00)
+    return    padNumber(date.getFullYear(), 4)
+      + "-" + padNumber(date.getMonth() + 1, 2)
+      + "-" + padNumber(date.getDate(), 2)
+      + "T" + padNumber(date.getHours(), 2)
+      + ":" + padNumber(date.getMinutes(), 2)
+      + ":" + padNumber(date.getSeconds(), 2)
+      + "." + date.getMilliseconds()
+      + sign(tzOffset) + padNumber(Math.floor(Math.abs(tzOffset / 60)), 2)
+      + ":" + padNumber(Math.abs(tzOffset % 60), 2);
+  },
 };
