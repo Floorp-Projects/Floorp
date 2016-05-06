@@ -18,8 +18,11 @@
 
 var cli = require('../cli');
 var mockCommands = require('../test/mockCommands');
+var mockFileCommands = require('../test/mockFileCommands');
 var mockSettings = require('../test/mockSettings');
-var mockDocument = require('../test/mockDocument');
+
+var isNode = (typeof(process) !== 'undefined' &&
+             process.title.indexOf('node') != -1);
 
 exports.items = [
   {
@@ -47,13 +50,19 @@ exports.items = [
     on: function(requisition) {
       mockCommands.setup(requisition);
       mockSettings.setup(requisition.system);
-      mockDocument.setup(requisition);
+
+      if (isNode) {
+        mockFileCommands.setup(requisition);
+      }
     },
 
     off: function(requisition) {
       mockCommands.shutdown(requisition);
       mockSettings.shutdown(requisition.system);
-      mockDocument.shutdown(requisition);
+
+      if (isNode) {
+        mockFileCommands.shutdown(requisition);
+      }
     }
   }
 ];

@@ -173,7 +173,7 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::archive, aValue, aRv);
   }
-  // XPCOM GetCode is ok; note that it's a URI attribute with a weird base URI
+  // XPCOM GetCode is ok
   void SetCode(const nsAString& aValue, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::code, aValue, aRv);
@@ -192,7 +192,7 @@ public:
   }
   void SetHspace(uint32_t aValue, ErrorResult& aRv)
   {
-    SetUnsignedIntAttr(nsGkAtoms::hspace, aValue, aRv);
+    SetUnsignedIntAttr(nsGkAtoms::hspace, aValue, 0, aRv);
   }
   void GetStandby(DOMString& aValue)
   {
@@ -208,7 +208,7 @@ public:
   }
   void SetVspace(uint32_t aValue, ErrorResult& aRv)
   {
-    SetUnsignedIntAttr(nsGkAtoms::vspace, aValue, aRv);
+    SetUnsignedIntAttr(nsGkAtoms::vspace, aValue, 0, aRv);
   }
   // XPCOM GetCodebase is ok; note that it's a URI attribute
   void SetCodeBase(const nsAString& aValue, ErrorResult& aRv)

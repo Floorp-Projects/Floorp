@@ -1297,9 +1297,6 @@ nsresult HTMLMediaElement::LoadResource()
     }
     RefPtr<MediaResource> resource =
       MediaSourceDecoder::CreateResource(mMediaSource->GetPrincipal());
-    if (IsAutoplayEnabled()) {
-      mJoinLatency.Start();
-    }
     return FinishDecoderSetup(decoder, resource, nullptr);
   }
 
@@ -2839,6 +2836,9 @@ HTMLMediaElement::ReportMSETelemetry()
     }
   }
 
+  Telemetry::Accumulate(Telemetry::VIDEO_UNLOAD_STATE, state);
+  LOG(LogLevel::Debug, ("%p VIDEO_UNLOAD_STATE = %d", this, state));
+
   if (HTMLVideoElement* vid = HTMLVideoElement::FromContentOrNull(this)) {
     RefPtr<VideoPlaybackQuality> quality = vid->GetVideoPlaybackQuality();
     uint64_t totalFrames = quality->TotalVideoFrames();
@@ -2852,16 +2852,8 @@ HTMLMediaElement::ReportMSETelemetry()
     }
   }
 
-  Telemetry::Accumulate(Telemetry::VIDEO_MSE_UNLOAD_STATE, state);
-  LOG(LogLevel::Debug, ("%p VIDEO_MSE_UNLOAD_STATE = %d", this, state));
-
-  Telemetry::Accumulate(Telemetry::VIDEO_MSE_PLAY_TIME_MS, SECONDS_TO_MS(mPlayTime.Total()));
-  LOG(LogLevel::Debug, ("%p VIDEO_MSE_PLAY_TIME_MS = %f", this, mPlayTime.Total()));
-
-  double latency = mJoinLatency.Count() ? mJoinLatency.Total() / mJoinLatency.Count() : 0.0;
-  Telemetry::Accumulate(Telemetry::VIDEO_MSE_JOIN_LATENCY_MS, SECONDS_TO_MS(latency));
-  LOG(LogLevel::Debug, ("%p VIDEO_MSE_JOIN_LATENCY = %f (%d ms) count=%d\n",
-                     this, latency, SECONDS_TO_MS(latency), mJoinLatency.Count()));
+  Telemetry::Accumulate(Telemetry::VIDEO_PLAY_TIME_MS, SECONDS_TO_MS(mPlayTime.Total()));
+  LOG(LogLevel::Debug, ("%p VIDEO_PLAY_TIME_MS = %f", this, mPlayTime.Total()));
 }
 
 void HTMLMediaElement::UnbindFromTree(bool aDeep,
@@ -3367,6 +3359,10 @@ void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags)
     mMediaStreamListener->Forget();
     mMediaStreamListener = nullptr;
   }
+
+  // If the input is a media stream, we don't check its data and always regard
+  // it as audible when it's playing.
+  SetAudibleState(shouldPlay);
 }
 
 void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
@@ -4328,17 +4324,10 @@ nsresult HTMLMediaElement::DispatchAsyncEvent(const nsAString& aName)
   nsCOMPtr<nsIRunnable> event = new nsAsyncEventRunner(aName, this);
   NS_DispatchToMainThread(event);
 
-  // Only collect rebuffer and stall rate stats for MSE video.
-  if (!mMediaSource) {
-    return NS_OK;
-  }
-
   if ((aName.EqualsLiteral("play") || aName.EqualsLiteral("playing"))) {
     mPlayTime.Start();
-    mJoinLatency.Pause();
   } else if (aName.EqualsLiteral("waiting")) {
     mPlayTime.Pause();
-    Telemetry::Accumulate(Telemetry::VIDEO_MSE_BUFFERING_COUNT, 1);
   } else if (aName.EqualsLiteral("pause")) {
     mPlayTime.Pause();
   }
@@ -5061,8 +5050,15 @@ HTMLMediaElement::NotifyAudioChannelAgent(bool aPlaying)
   AutoNoJSAPI nojsapi;
 
   if (aPlaying) {
+    // The reason we don't call NotifyStartedPlaying after the media element
+    // really becomes audible is because there is another case needs to block
+    // element as early as we can, we would hear sound leaking if we block it
+    // too late. In that case (block autoplay in non-visited-tab), we need to
+    // create a connection before decoding, because we don't want user hearing
+    // any sound.
     AudioPlaybackConfig config;
-    nsresult rv = mAudioChannelAgent->NotifyStartedPlaying(&config);
+    nsresult rv = mAudioChannelAgent->NotifyStartedPlaying(&config,
+                                                           mIsAudioTrackAudible);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return;
     }
@@ -5614,11 +5610,19 @@ HTMLMediaElement::IsCurrentlyPlaying() const
 }
 
 void
-HTMLMediaElement::NotifyAudibleStateChanged(bool aAudible)
+HTMLMediaElement::SetAudibleState(bool aAudible)
 {
   if (mIsAudioTrackAudible != aAudible) {
     mIsAudioTrackAudible = aAudible;
-    // To do ...
+    NotifyAudioPlaybackChanged();
+  }
+}
+
+void
+HTMLMediaElement::NotifyAudioPlaybackChanged()
+{
+  if (mAudioChannelAgent) {
+    mAudioChannelAgent->NotifyStartedAudible(mIsAudioTrackAudible);
   }
 }
 

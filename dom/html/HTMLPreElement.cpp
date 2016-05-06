@@ -37,7 +37,7 @@ HTMLPreElement::ParseAttribute(int32_t aNamespaceID,
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::width) {
-      return aResult.ParseIntWithBounds(aValue, 0);
+      return aResult.ParseIntValue(aValue);
     }
   }
 

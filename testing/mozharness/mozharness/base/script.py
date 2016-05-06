@@ -1722,6 +1722,9 @@ class BaseScript(ScriptMixin, LogMixin, object):
                     self.error("Exception during post-action for %s: %s" % (
                         action, traceback.format_exc()))
 
+            step_result = 'success' if success else 'failed'
+            self.action_message("Finished %s step (%s)" % (action, step_result))
+
             if not post_success:
                 self.fatal("Aborting due to failure in post-action listener.")
 

@@ -7,7 +7,7 @@ are run.
 The majority of GCLI tests are stored in
 [this repository](https://github.com/joewalker/gcli/) in files named like
 ```./lib/gclitest/test*.js```. These tests run in Firefox, Chrome, Opera,
-PhantomJS, and NodeJS/JsDom
+and NodeJS/JsDom
 
 See [Running Tests](running-tests.md) for further details.
 

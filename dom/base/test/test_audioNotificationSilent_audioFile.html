@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Audio-playback should be inactive when input file is silent</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script type="application/javascript;version=1.7">
+
+SimpleTest.waitForExplicitFinish();
+
+var generator = runTest();
+var expectedPlaybackActive = null;
+var expectedPlaying = null;
+
+var audio = new Audio();
+audio.src = "audioEndedDuringPlaying.webm";
+
+var observerService = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
+                                   .getService(SpecialPowers.Ci.nsIObserverService);
+
+var observer = {
+  observe: function(subject, topic, data) {
+    is(topic, "audio-playback", "audio-playback received");
+    is(data, expectedPlaybackActive, "Corrrect audible state");
+    is(!audio.ended, expectedPlaying, "Corrrect playing state");
+    continueTest();
+  }
+};
+
+function continueTest() {
+  try {
+    generator.next();
+  } catch (e if e instanceof StopIteration) {
+    error("Stop test because of exception!");
+  }
+}
+
+function audioPlayingStart() {
+  observerService.addObserver(observer, "audio-playback", false);
+  ok(true, "Observer set");
+
+  expectedPlaybackActive = 'active';
+  expectedPlaying = true;
+
+  info("Audio playing start");
+  audio.play();
+}
+
+function audioBecomeSilentDuringPlaying() {
+  info("Audio would become silent during playing");
+
+  expectedPlaybackActive = 'inactive';
+  expectedPlaying = true;
+}
+
+function audioPlayingEnd() {
+  audio.onended = function() {
+    info("Audio playback ended");
+    audio.onended = null;
+
+    observerService.removeObserver(observer, "audio-playback");
+    ok(true, "Observer removed");
+
+    SimpleTest.finish();
+  };
+}
+
+function runTest() {
+  yield audioPlayingStart();
+
+  yield audioBecomeSilentDuringPlaying();
+
+  yield audioPlayingEnd();
+}
+
+continueTest();
+
+</script>
+</body>
+</html>

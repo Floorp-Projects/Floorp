@@ -47,6 +47,7 @@ FTPChannelParent::FTPChannelParent(const PBrowserOrId& aIframeEmbedding,
   , mDivertingFromChild(false)
   , mDivertedOnStartRequest(false)
   , mSuspendedForDiversion(false)
+  , mUseUTF8(false)
 {
   nsIProtocolHandler* handler;
   CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "ftp", &handler);
@@ -86,7 +87,8 @@ NS_IMPL_ISUPPORTS(FTPChannelParent,
                   nsIParentChannel,
                   nsIInterfaceRequestor,
                   nsIRequestObserver,
-                  nsIChannelEventSink)
+                  nsIChannelEventSink,
+                  nsIFTPChannelParentInternal)
 
 //-----------------------------------------------------------------------------
 // FTPChannelParent::PFTPChannelParent
@@ -516,7 +518,7 @@ FTPChannelParent::OnStopRequest(nsIRequest* aRequest,
     return mDivertToListener->OnStopRequest(aRequest, aContext, aStatusCode);
   }
 
-  if (mIPCClosed || !SendOnStopRequest(aStatusCode)) {
+  if (mIPCClosed || !SendOnStopRequest(aStatusCode, mErrorMsg, mUseUTF8)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -908,6 +910,14 @@ FTPChannelParent::AsyncOnChannelRedirect(
   mChannel = newChannel;
   callback->OnRedirectVerifyCallback(NS_OK);
   return NS_OK; 
+}
+
+NS_IMETHODIMP
+FTPChannelParent::SetErrorMsg(const char *aMsg, bool aUseUTF8)
+{
+  mErrorMsg = aMsg;
+  mUseUTF8 = aUseUTF8;
+  return NS_OK;
 }
 
 //---------------------

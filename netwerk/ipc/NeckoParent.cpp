@@ -135,17 +135,9 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
       continue;
     }
     // We may get appID=NO_APP if child frame is neither a browser nor an app
-    if (appId == NECKO_NO_APP_ID) {
-      if (tabContext.HasOwnApp()) {
-        continue;
-      }
-      if (UsingNeckoIPCSecurity() && tabContext.IsIsolatedMozBrowserElement()) {
-        // <iframe mozbrowser> which doesn't have an <iframe mozapp> above it.
-        // This is not supported now, and we'll need to do a code audit to make
-        // sure we can handle it (i.e don't short-circuit using separate
-        // namespace if just appID==0)
-        continue;
-      }
+    if (appId == NECKO_NO_APP_ID && tabContext.HasOwnApp()) {
+      // NECKO_NO_APP_ID but also is an app?  Weird, skip.
+      continue;
     }
 
     if (!aSerialized.mOriginAttributes.mSignedPkg.IsEmpty() &&

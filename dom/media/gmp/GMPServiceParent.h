@@ -14,6 +14,7 @@
 #include "mozilla/Atomics.h"
 #include "nsThreadUtils.h"
 #include "mozilla/MozPromise.h"
+#include "GMPStorage.h"
 
 template <class> struct already_AddRefed;
 
@@ -62,6 +63,8 @@ public:
   // GMP thread access only
   bool IsShuttingDown();
 
+  already_AddRefed<GMPStorage> GetMemoryStorageFor(const nsACString& aNodeId);
+
 private:
   friend class GMPServiceParent;
 
@@ -69,13 +72,14 @@ private:
 
   void ClearStorage();
 
-  GMPParent* SelectPluginForAPI(const nsACString& aNodeId,
-                                const nsCString& aAPI,
-                                const nsTArray<nsCString>& aTags);
-  GMPParent* FindPluginForAPIFrom(size_t aSearchStartIndex,
-                                  const nsCString& aAPI,
-                                  const nsTArray<nsCString>& aTags,
-                                  size_t* aOutPluginIndex);
+  already_AddRefed<GMPParent> SelectPluginForAPI(const nsACString& aNodeId,
+                                                 const nsCString& aAPI,
+                                                 const nsTArray<nsCString>& aTags);
+
+  already_AddRefed<GMPParent> FindPluginForAPIFrom(size_t aSearchStartIndex,
+                                                   const nsCString& aAPI,
+                                                   const nsTArray<nsCString>& aTags,
+                                                   size_t* aOutPluginIndex);
 
   nsresult GetNodeId(const nsAString& aOrigin, const nsAString& aTopLevelOrigin,
                      const nsAString& aGMPName,
@@ -117,7 +121,9 @@ protected:
                             UniquePtr<GetGMPContentParentCallback>&& aCallback)
     override;
 private:
-  GMPParent* ClonePlugin(const GMPParent* aOriginal);
+  // Creates a copy of aOriginal. Note that the caller is responsible for
+  // adding this to GeckoMediaPluginServiceParent::mPlugins.
+  already_AddRefed<GMPParent> ClonePlugin(const GMPParent* aOriginal);
   nsresult EnsurePluginsOnDiskScanned();
   nsresult InitStorage();
 
@@ -204,6 +210,9 @@ private:
   Monitor mInitPromiseMonitor;
   MozPromiseHolder<GenericPromise> mInitPromise;
   bool mLoadPluginsFromDiskComplete;
+
+  // Hashes nodeId to the hashtable of storage for that nodeId.
+  nsRefPtrHashtable<nsCStringHashKey, GMPStorage> mTempGMPStorage;
 };
 
 nsresult ReadSalt(nsIFile* aPath, nsACString& aOutData);

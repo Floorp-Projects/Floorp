@@ -113,6 +113,65 @@ static const double SWIPE_MIN_DISTANCE_INCHES = 0.6;
 
 static Modifiers GetModifiers(int32_t metaState);
 
+template<typename Lambda, bool IsStatic, typename InstanceType, class Impl>
+class nsWindow::WindowEvent : public nsAppShell::LambdaEvent<Lambda>
+{
+    typedef nsAppShell::Event Event;
+    typedef nsAppShell::LambdaEvent<Lambda> Base;
+
+    bool IsStaleCall()
+    {
+        if (IsStatic) {
+            // Static calls are never stale.
+            return false;
+        }
+
+        JNIEnv* const env = mozilla::jni::GetEnvForThread();
+
+        const auto natives = reinterpret_cast<mozilla::WeakPtr<Impl>*>(
+                jni::GetNativeHandle(env, mInstance.Get()));
+        MOZ_CATCH_JNI_EXCEPTION(env);
+
+        // The call is stale if the nsWindow has been destroyed on the
+        // Gecko side, but the Java object is still attached to it through
+        // a weak pointer. Stale calls should be discarded. Note that it's
+        // an error if natives is nullptr here; we return false but the
+        // native call will throw an error.
+        return natives && !natives->get();
+    }
+
+    const InstanceType mInstance;
+    const Event::Type mEventType;
+
+public:
+    WindowEvent(Lambda&& aLambda,
+                InstanceType&& aInstance,
+                Event::Type aEventType = Event::Type::kGeneralActivity)
+        : Base(mozilla::Move(aLambda))
+        , mInstance(mozilla::Move(aInstance))
+        , mEventType(aEventType)
+    {}
+
+    WindowEvent(Lambda&& aLambda,
+                Event::Type aEventType = Event::Type::kGeneralActivity)
+        : Base(mozilla::Move(aLambda))
+        , mInstance(Base::lambda.GetThisArg())
+        , mEventType(aEventType)
+    {}
+
+    void Run() override
+    {
+        if (!IsStaleCall()) {
+            return Base::Run();
+        }
+    }
+
+    Event::Type ActivityType() const override
+    {
+        return mEventType;
+    }
+};
+
 class nsWindow::GeckoViewSupport final
     : public GeckoView::Window::Natives<GeckoViewSupport>
     , public GeckoEditable::Natives<GeckoViewSupport>
@@ -122,58 +181,6 @@ class nsWindow::GeckoViewSupport final
     nsWindow& window;
 
 public:
-    template<typename T>
-    class WindowEvent : public nsAppShell::LambdaEvent<T>
-    {
-        typedef nsAppShell::LambdaEvent<T> Base;
-
-        // Static calls are never stale since they don't need native instances.
-        template<bool Static>
-        typename mozilla::EnableIf<Static, bool>::Type IsStaleCall()
-        { return false; }
-
-        template<bool Static>
-        typename mozilla::EnableIf<!Static, bool>::Type IsStaleCall()
-        {
-            JNIEnv* const env = mozilla::jni::GetEnvForThread();
-            const auto& thisArg = Base::lambda.GetThisArg();
-
-            const auto natives = reinterpret_cast<
-                    mozilla::WeakPtr<typename T::TargetClass>*>(
-                    jni::GetNativeHandle(env, thisArg.Get()));
-            MOZ_CATCH_JNI_EXCEPTION(env);
-
-            // The call is stale if the nsWindow has been destroyed on the
-            // Gecko side, but the Java object is still attached to it through
-            // a weak pointer. Stale calls should be discarded. Note that it's
-            // an error if natives is nullptr here; we return false but the
-            // native call will throw an error.
-            return natives && !natives->get();
-        }
-
-    public:
-        WindowEvent(T&& l) : Base(mozilla::Move(l)) {}
-
-        void Run() override
-        {
-            if (!IsStaleCall<T::isStatic>()) {
-                return Base::Run();
-            }
-        }
-
-        nsAppShell::Event::Type ActivityType() const override
-        {
-            // Events that result in user-visible changes count as UI events.
-            if (Base::lambda.IsTarget(&GeckoViewSupport::OnKeyEvent) ||
-                Base::lambda.IsTarget(&GeckoViewSupport::OnImeReplaceText) ||
-                Base::lambda.IsTarget(&GeckoViewSupport::OnImeUpdateComposition))
-            {
-                return nsAppShell::Event::Type::kUIActivity;
-            }
-            return Base::ActivityType();
-        }
-    };
-
     typedef GeckoView::Window::Natives<GeckoViewSupport> Base;
     typedef GeckoEditable::Natives<GeckoViewSupport> EditableBase;
 
@@ -188,8 +195,16 @@ public:
             // can get a head start on opening our window.
             return aCall();
         }
-        return nsAppShell::PostEvent(mozilla::MakeUnique<
-                WindowEvent<Functor>>(mozilla::Move(aCall)));
+
+        const nsAppShell::Event::Type eventType =
+                aCall.IsTarget(&GeckoViewSupport::OnKeyEvent) ||
+                aCall.IsTarget(&GeckoViewSupport::OnImeReplaceText) ||
+                aCall.IsTarget(&GeckoViewSupport::OnImeUpdateComposition) ?
+                nsAppShell::Event::Type::kUIActivity :
+                nsAppShell::Event::Type::kGeneralActivity;
+
+        nsAppShell::PostEvent(mozilla::MakeUnique<WindowEvent<Functor>>(
+                mozilla::Move(aCall), eventType));
     }
 
     GeckoViewSupport(nsWindow* aWindow,
@@ -896,7 +911,7 @@ public:
             aCall.IsTarget(&GLControllerSupport::PauseCompositor)) {
 
             // These calls are blocking.
-            nsAppShell::SyncRunEvent(GeckoViewSupport::WindowEvent<Functor>(
+            nsAppShell::SyncRunEvent(WindowEvent<Functor>(
                     mozilla::Move(aCall)), &GLControllerEvent::MakeEvent);
             return;
 
@@ -911,7 +926,7 @@ public:
             aCall.SetTarget(&GLControllerSupport::OnResumedCompositor);
             nsAppShell::PostEvent(
                     mozilla::MakeUnique<GLControllerEvent>(
-                    mozilla::MakeUnique<GeckoViewSupport::WindowEvent<Functor>>(
+                    mozilla::MakeUnique<WindowEvent<Functor>>(
                     mozilla::Move(aCall))));
             return;
 
@@ -925,7 +940,7 @@ public:
         // CreateCompositor, PauseCompositor, and OnResumedCompositor. For all
         // other events, use regular WindowEvent.
         nsAppShell::PostEvent(
-                mozilla::MakeUnique<GeckoViewSupport::WindowEvent<Functor>>(
+                mozilla::MakeUnique<WindowEvent<Functor>>(
                 mozilla::Move(aCall)));
     }
 
