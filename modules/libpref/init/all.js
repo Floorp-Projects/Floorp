@@ -5429,8 +5429,6 @@ pref("media.useAudioChannelAPI", false);
 // Expose Request.context. Currently disabled since the spec is in flux.
 pref("dom.requestcontext.enabled", false);
 
-pref("dom.mozKillSwitch.enabled", false);
-
 pref("toolkit.pageThumbs.screenSizeDivisor", 7);
 pref("toolkit.pageThumbs.minWidth", 0);
 pref("toolkit.pageThumbs.minHeight", 0);
