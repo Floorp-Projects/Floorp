@@ -54,7 +54,9 @@ child:
                         nsCString data,
                         uint64_t offset,
                         uint32_t count);
-  async OnStopRequest(nsresult channelStatus);
+  async OnStopRequest(nsresult channelStatus,
+                      nsCString aErrorMsg,
+                      bool aUseUTF8);
   async FailedAsyncOpen(nsresult statusCode);
 
   // Parent has been suspended for diversion; no more events to be enqueued.

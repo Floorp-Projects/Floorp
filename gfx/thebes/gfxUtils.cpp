@@ -551,7 +551,8 @@ PrescaleAndTileDrawable(gfxDrawable* aDrawable,
                         Rect aImageRect,
                         const Filter& aFilter,
                         const SurfaceFormat aFormat,
-                        gfxFloat aOpacity)
+                        gfxFloat aOpacity,
+                        ExtendMode aExtendMode)
 {
   gfxSize scaleFactor = aContext->CurrentMatrix().ScaleFactors(true);
   gfxMatrix scaleMatrix = gfxMatrix::Scaling(scaleFactor.width, scaleFactor.height);
@@ -602,7 +603,7 @@ PrescaleAndTileDrawable(gfxDrawable* aDrawable,
 
   scaledDT->SetTransform(ToMatrix(scaleMatrix));
   gfxRect gfxImageRect(aImageRect.x, aImageRect.y, aImageRect.width, aImageRect.height);
-  aDrawable->Draw(tmpCtx, gfxImageRect, ExtendMode::REPEAT, aFilter, 1.0, gfxMatrix());
+  aDrawable->Draw(tmpCtx, gfxImageRect, aExtendMode, aFilter, 1.0, gfxMatrix());
 
   RefPtr<SourceSurface> scaledImage = scaledDT->Snapshot();
 
@@ -618,7 +619,7 @@ PrescaleAndTileDrawable(gfxDrawable* aDrawable,
     DrawOptions drawOptions(aOpacity, aContext->CurrentOp(),
                             aContext->CurrentAntialiasMode());
 
-    SurfacePattern scaledImagePattern(scaledImage, ExtendMode::REPEAT,
+    SurfacePattern scaledImagePattern(scaledImage, aExtendMode,
                                       Matrix(), aFilter);
     destDrawTarget->FillRect(scaledNeededRect, scaledImagePattern, drawOptions);
   }
@@ -669,7 +670,7 @@ gfxUtils::DrawPixelSnapped(gfxContext*         aContext,
 #ifdef MOZ_WIDGET_COCOA
             if (PrescaleAndTileDrawable(aDrawable, aContext, aRegion,
                                         ToRect(imageRect), aFilter,
-                                        aFormat, aOpacity)) {
+                                        aFormat, aOpacity, extendMode)) {
               return;
             }
 #endif

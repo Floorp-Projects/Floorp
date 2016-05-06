@@ -597,8 +597,7 @@ nsChangeHint nsStyleOutline::CalcDifference(const nsStyleOutline& aOther) const
 //
 nsStyleList::nsStyleList(StyleStructContext aContext) 
   : mListStylePosition(NS_STYLE_LIST_STYLE_POSITION_OUTSIDE),
-    mListStyleType(NS_LITERAL_STRING("disc")),
-    mCounterStyle(aContext.BuildCounterStyle(mListStyleType))
+    mCounterStyle(aContext.BuildCounterStyle(NS_LITERAL_STRING("disc")))
 {
   MOZ_COUNT_CTOR(nsStyleList);
   SetQuotesInitial();
@@ -611,7 +610,6 @@ nsStyleList::~nsStyleList()
 
 nsStyleList::nsStyleList(const nsStyleList& aSource)
   : mListStylePosition(aSource.mListStylePosition),
-    mListStyleType(aSource.mListStyleType),
     mCounterStyle(aSource.mCounterStyle),
     mQuotes(aSource.mQuotes),
     mImageRegion(aSource.mImageRegion)
@@ -686,8 +684,6 @@ nsStyleList::CalcDifference(const nsStyleList& aOther) const
   if (EqualImages(mListStyleImage, aOther.mListStyleImage) &&
       mCounterStyle == aOther.mCounterStyle) {
     if (mImageRegion.IsEqualInterior(aOther.mImageRegion)) {
-      if (mListStyleType != aOther.mListStyleType)
-        return nsChangeHint_NeutralChange;
       return NS_STYLE_HINT_NONE;
     }
     if (mImageRegion.width == aOther.mImageRegion.width &&

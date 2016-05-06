@@ -25,7 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=562169
 
 function checkSelector(element, expectedDir, expectedChild)
 {
-    ok(element.querySelector(":-moz-dir("+expectedDir+")") == expectedChild,
+    ok(element.querySelector(":dir("+expectedDir+")") == expectedChild,
        "direction should be " + expectedDir);
 }
 

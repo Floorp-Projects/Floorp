@@ -369,6 +369,12 @@ static const nsAttrValue::EnumTable kCellScopeTable[] = {
   { 0 }
 };
 
+void
+HTMLTableCellElement::GetScope(DOMString& aScope)
+{
+  GetEnumAttr(nsGkAtoms::scope, nullptr, aScope);
+}
+
 bool
 HTMLTableCellElement::ParseAttribute(int32_t aNamespaceID,
                                      nsIAtom* aAttribute,

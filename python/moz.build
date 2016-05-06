@@ -14,6 +14,7 @@ SPHINX_PYTHON_PACKAGE_DIRS += [
     'mach',
     'mozbuild/mozbuild',
     'mozbuild/mozpack',
+    'mozlint/mozlint',
     'mozversioncontrol/mozversioncontrol',
 ]
 
@@ -75,4 +76,8 @@ PYTHON_UNIT_TESTS += [
     'mozbuild/mozpack/test/test_packager_unpack.py',
     'mozbuild/mozpack/test/test_path.py',
     'mozbuild/mozpack/test/test_unify.py',
+    'mozlint/test/test_formatters.py',
+    'mozlint/test/test_parser.py',
+    'mozlint/test/test_roller.py',
+    'mozlint/test/test_types.py',
 ]

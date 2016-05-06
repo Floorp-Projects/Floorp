@@ -38,6 +38,12 @@ function BrowserAction(options, extension) {
     popup: options.default_popup || "",
   };
 
+  this.browserStyle = options.browser_style || false;
+  if (options.browser_style === null) {
+    this.extension.logger.warn("Please specify whether you want browser_style " +
+                               "or not in your browser_action options.");
+  }
+
   this.tabContext = new TabContext(tab => Object.create(this.defaults),
                                    extension);
 
@@ -91,7 +97,7 @@ BrowserAction.prototype = {
         // open a popup.
         if (popupURL) {
           try {
-            new ViewPopup(this.extension, event.target, popupURL);
+            new ViewPopup(this.extension, event.target, popupURL, this.browserStyle);
           } catch (e) {
             Cu.reportError(e);
             event.preventDefault();

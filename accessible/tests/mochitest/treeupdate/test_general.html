@@ -1,0 +1,117 @@
+<html>
+
+<head>
+  <title>Testing the tree updates</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Invokers
+    ////////////////////////////////////////////////////////////////////////////
+
+    function prependAppend(aContainer)
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, aContainer)
+      ];
+
+      this.invoke = function prependAppend_invoke()
+      {
+        var checkbox = document.createElement('input');
+        checkbox.setAttribute('type', 'checkbox');
+        getNode(aContainer).insertBefore(checkbox, getNode(aContainer).firstChild);
+
+        var button = document.createElement('input');
+        button.setAttribute('type', 'button');
+        getNode(aContainer).appendChild(button);
+      }
+
+      this.finalCheck = function prependAppend_finalCheck()
+      {
+        var accTree =
+          { SECTION: [ // container
+            { CHECKBUTTON: [ ] },
+            { ENTRY: [ ] },
+            { PUSHBUTTON: [ ] }
+          ] };
+        testAccessibleTree(aContainer, accTree);
+      }
+
+      this.getID = function prependAppend_getID()
+      {
+        return "prepends a child and appends a child";
+      }
+    }
+
+    function removeRemove(aContainer)
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, aContainer)
+      ];
+
+      this.invoke = function removeRemove_invoke()
+      {
+        getNode(aContainer).removeChild(getNode(aContainer).firstChild);
+      }
+
+      this.finalCheck = function removeRemove_finalCheck()
+      {
+        var accTree =
+          { SECTION: [ // container
+            { PUSHBUTTON: [ ] }
+          ] };
+        testAccessibleTree(aContainer, accTree);
+      }
+
+      this.getID = function removeRemove_getID()
+      {
+        return "remove first and second children";
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Do tests
+    ////////////////////////////////////////////////////////////////////////////
+
+    var gQueue = null;
+    //gA11yEventDumpID = "eventdump"; // debug stuff
+    //gA11yEventDumpToConsole = true;
+
+    function doTests()
+    {
+      gQueue = new eventQueue();
+
+      gQueue.push(new prependAppend("c1"));
+      gQueue.push(new removeRemove("c2"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="c1"><input></div>
+  <div id="c2"><span><input type="checkbox"><input></span><input type="button"></div>
+</body>
+</html>

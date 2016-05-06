@@ -332,6 +332,31 @@ function run() {
 
     is(JSON.stringify(gc_received), "[1,1]", "GC test: after notification 2");
 
+    bug1270626();
+  }
+
+  /* Bug 1270626: listeners that throw exceptions */
+  function bug1270626() {
+    var throwingListener = function(mql) {
+      throw "error";
+    }
+
+    iframe.style.width = "200px";
+    subroot.offsetWidth; // flush layout
+
+    var mql = subwin.matchMedia("(min-width: 150px)");
+    mql.addListener(throwingListener);
+
+    SimpleTest.expectUncaughtException(true);
+    is(SimpleTest.isExpectingUncaughtException(), true,
+       "should be waiting for an uncaught exception");
+
+    iframe.style.width = "100px";
+    subroot.offsetWidth; // flush layout
+
+    is(SimpleTest.isExpectingUncaughtException(), false,
+       "should have gotten an uncaught exception");
+
     SimpleTest.finish();
   }
 }

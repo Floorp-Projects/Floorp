@@ -14,6 +14,7 @@ var gTestserver = new HttpServer();
 gTestserver.start(-1);
 gPort = gTestserver.identity.primaryPort;
 mapFile("/data/test_gfxBlacklist.xml", gTestserver);
+mapFile("/data/test_gfxBlacklist2.xml", gTestserver);
 
 function get_platform() {
   var xulRuntime = Components.classes["@mozilla.org/xre/app-info;1"]

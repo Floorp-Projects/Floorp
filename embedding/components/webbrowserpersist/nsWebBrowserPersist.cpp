@@ -2360,6 +2360,9 @@ nsWebBrowserPersist::EndDownload(nsresult aResult)
         mPersistResult = aResult;
     }
 
+    // mCompleted needs to be set before issuing the stop notification.
+    // (Bug 1224437)
+    mCompleted = true;
     // State stop notification
     if (mProgressListener) {
         mProgressListener->OnStateChange(nullptr, nullptr,
@@ -2374,7 +2377,6 @@ nsWebBrowserPersist::EndDownload(nsresult aResult)
     }
 
     // Cleanup the channels
-    mCompleted = true;
     Cleanup();
 
     mProgressListener = nullptr;
