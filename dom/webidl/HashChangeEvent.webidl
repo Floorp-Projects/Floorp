@@ -7,14 +7,14 @@
 [Constructor(DOMString type, optional HashChangeEventInit eventInitDict), LegacyEventInit]
 interface HashChangeEvent : Event
 {
-  readonly attribute DOMString? oldURL;
-  readonly attribute DOMString? newURL;
+  readonly attribute DOMString oldURL;
+  readonly attribute DOMString newURL;
 
   void initHashChangeEvent(DOMString typeArg,
                            boolean canBubbleArg,
                            boolean cancelableArg,
-                           DOMString? oldURLArg,
-                           DOMString? newURLArg);
+                           DOMString oldURLArg,
+                           DOMString newURLArg);
 };
 
 dictionary HashChangeEventInit : EventInit
