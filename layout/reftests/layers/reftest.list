@@ -20,3 +20,4 @@ skip-if(!asyncPan) != pull-background-displayport-5.html about:blank
 skip-if(!asyncPan) != pull-background-displayport-6.html about:blank # fails with non-overlay scrollbars and event regions due to bug 1148515
 fuzzy(2,30150) == opacity-blending.html opacity-blending-ref.html
 fuzzy(16,5) == mask-layer-transform.html mask-layer-transform-ref.html
+fuzzy-if(gtkWidget,1,17) == forced-bg-color-outside-visible-region.html forced-bg-color-outside-visible-region-ref.html

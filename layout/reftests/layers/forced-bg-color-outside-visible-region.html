@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait" reftest-async-scroll>
+<meta charset="utf-8">
+<title>Bug 1266161 - Black boxes during scrolling</title>
+
+<style type="text/css">
+
+html, body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  outline: 2px solid white;
+}
+
+#scrollbox {
+  overflow: auto;
+  will-change: transform, scroll-position;
+  height: 500px;
+  width: 500px;
+}
+
+#scrolled {
+  padding-top: 1px;
+  height: 1200px;
+}
+
+p {
+  height: 20px;
+  background: white;
+  margin-top: 16px;
+}
+
+span, em {
+  display: block;
+  background: white;
+  width: 134px;
+  height: 14px;
+  margin-top: 32px;
+}
+
+em {
+  width: 10px;
+}
+
+</style>
+
+<div id="scrollbox"
+   reftest-displayport-x="0"
+   reftest-displayport-y="0"
+   reftest-displayport-w="500"
+   reftest-displayport-h="500">
+
+  <div id="scrolled">
+    <p></p>
+    <p></p>
+    <p></p>
+    <span style="margin-top: 48px"></span>
+    <span style="margin-top: 64px"></span>
+    <span style="margin-top: 96px"></span>
+    <span style="margin-top: 96px"></span>
+    <em></em>
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+
+</div>
+
+<script>
+
+var scrollbox = document.getElementById("scrollbox");
+
+var pos = [ 170, 100, 248, 182, 130, 80 ];
+
+var i = 0;
+function scrollToNextPos() {
+  scrollbox.scrollTop = pos[i++];
+}
+
+scrollToNextPos();
+
+window.addEventListener("MozReftestInvalidate", function () {
+  requestAnimationFrame(function scrollAndScheduleNext() {
+    scrollToNextPos();
+    if (i < pos.length) {
+      requestAnimationFrame(scrollAndScheduleNext);
+    } else {
+      document.documentElement.className = "";
+    }
+  });
+});
+
+</script>
