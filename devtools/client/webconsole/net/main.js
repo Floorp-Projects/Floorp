@@ -58,7 +58,7 @@ this.Locale = {
     try {
       return networkStrings.GetStringFromName(key);
     } catch (err) {
-      Cu.reportError(key + ": " + err);
+      console.error(key + ": " + err);
     }
   }
 };

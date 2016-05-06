@@ -1,0 +1,201 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(function* test_webext_tab_subframe_privileges() {
+  function backgroundScript() {
+    browser.runtime.onMessage.addListener(({msg, success, tabId, error}) => {
+      if (msg == "webext-tab-subframe-privileges") {
+        if (success) {
+          browser.tabs.remove(tabId)
+            .then(() => browser.test.notifyPass(msg));
+        } else {
+          browser.test.log(`Got an unexpected error: ${error}`);
+          browser.tabs.query({active: true})
+            .then(tabs => browser.tabs.remove(tabs[0].id))
+            .then(() => browser.test.notifyFail(msg));
+        }
+      }
+    });
+    browser.tabs.create({url: browser.runtime.getURL("/tab.html")});
+  }
+
+  function tabSubframeScript() {
+    browser.test.assertTrue(browser.tabs != undefined,
+                            "Subframe of a privileged page has access to privileged APIs");
+    if (browser.tabs) {
+      browser.tabs.getCurrent()
+        .then(tab => {
+          browser.runtime.sendMessage({
+            msg: "webext-tab-subframe-privileges",
+            success: true,
+            tabId: tab.id,
+          }, () => {
+            // NOTE: this empty callback prevents the promise returned from runtime.sendmessage
+            // to be reported as resolved after context unloaded.
+          });
+        })
+        .catch(e => browser.runtime.sendMessage({msg: "webext-tab-subframe-privileges", success: false, error: `${e}`}));
+    } else {
+      browser.runtime.sendMessage({
+        msg: "webext-tab-subframe-privileges",
+        success: false,
+        error: `Privileged APIs missing in WebExtension tab sub-frame`,
+      });
+    }
+  }
+
+  let extensionData = {
+    background: "new " + backgroundScript,
+    files: {
+      "tab.html": `<!DOCTYPE>
+          <head>
+            <meta charset="utf-8">
+          </head>
+          <body>
+            <iframe src="tab-subframe.html"></iframe>
+          </body>
+        </html>`,
+      "tab-subframe.html": `<!DOCTYPE>
+          <head>
+            <meta charset="utf-8">
+            <script src="tab-subframe.js"></${"script"}>
+          </head>
+        </html>`,
+      "tab-subframe.js": `(${tabSubframeScript})()`,
+    },
+  };
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+
+  yield extension.startup();
+
+  yield extension.awaitFinish("webext-tab-subframe-privileges");
+  yield extension.unload();
+});
+
+add_task(function* test_webext_background_subframe_privileges() {
+  function backgroundSubframeScript() {
+    browser.test.assertTrue(browser.tabs != undefined,
+                            "Subframe of a background page has access to privileged APIs");
+    browser.test.notifyPass("webext-background-subframe-privileges");
+  }
+
+  let extensionData = {
+    manifest: {
+      background: {
+        page: "background.html",
+      },
+    },
+    files: {
+      "background.html": `<!DOCTYPE>
+         <head>
+           <meta charset="utf-8">
+         </head>
+         <body>
+           <iframe src="background-subframe.html"></iframe>
+         </body>
+       </html>`,
+      "background-subframe.html": `<!DOCTYPE>
+         <head>
+           <meta charset="utf-8">
+           <script src="background-subframe.js"></${"script"}>
+         </head>
+       </html>`,
+      "background-subframe.js": `(${backgroundSubframeScript})()`,
+    },
+  };
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+
+  yield extension.startup();
+
+  yield extension.awaitFinish("webext-background-subframe-privileges");
+  yield extension.unload();
+});
+
+add_task(function* test_webext_contentscript_iframe_subframe_privileges() {
+  function backgroundScript() {
+    browser.runtime.onMessage.addListener(({name, hasTabsAPI, hasStorageAPI}) => {
+      if (name == "contentscript-iframe-loaded") {
+        browser.test.assertFalse(hasTabsAPI,
+                                 "Subframe of a content script privileged iframes has no access to privileged APIs");
+        browser.test.assertTrue(hasStorageAPI,
+                                 "Subframe of a content script privileged iframes has access to content script APIs");
+
+        browser.test.notifyPass("webext-contentscript-subframe-privileges");
+      }
+    });
+  }
+
+  function subframeScript() {
+    browser.runtime.sendMessage({
+      name: "contentscript-iframe-loaded",
+      hasTabsAPI: browser.tabs != undefined,
+      hasStorageAPI: browser.storage != undefined,
+    });
+  }
+
+  function contentScript() {
+    let iframe = document.createElement("iframe");
+    iframe.setAttribute("src", browser.runtime.getURL("/contentscript-iframe.html"));
+    document.body.appendChild(iframe);
+  }
+
+  let extensionData = {
+    background: "new " + backgroundScript,
+    manifest: {
+      "permissions": ["storage"],
+      "content_scripts": [{
+        "matches": ["http://example.com/*"],
+        "js": ["contentscript.js"],
+      }],
+      web_accessible_resources: [
+        "contentscript-iframe.html",
+      ],
+    },
+    files: {
+      "contentscript.js": `(${contentScript})()`,
+      "contentscript-iframe.html": `<!DOCTYPE>
+         <head>
+           <meta charset="utf-8">
+         </head>
+         <body>
+           <iframe src="contentscript-iframe-subframe.html"></iframe>
+         </body>
+       </html>`,
+      "contentscript-iframe-subframe.html": `<!DOCTYPE>
+         <head>
+           <meta charset="utf-8">
+           <script src="contentscript-iframe-subframe.js"></${"script"}>
+         </head>
+       </html>`,
+      "contentscript-iframe-subframe.js": `(${subframeScript})()`,
+    },
+  };
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+
+  yield extension.startup();
+
+  let win = window.open("http://example.com");
+
+  yield extension.awaitFinish("webext-contentscript-subframe-privileges");
+
+  win.close();
+
+  yield extension.unload();
+});
+
+</script>
+
+</body>
+</html>

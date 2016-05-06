@@ -28,8 +28,8 @@ factory((root.pdfjsDistBuildPdfWorker = {}));
   // Use strict in our context only - users might not want it
   'use strict';
 
-var pdfjsVersion = '1.5.222';
-var pdfjsBuild = 'd20002b';
+var pdfjsVersion = '1.5.232';
+var pdfjsBuild = 'a682cce';
 
   var pdfjsFilePath =
     typeof document !== 'undefined' && document.currentScript ?
@@ -3793,7 +3793,7 @@ var CFFParser = (function CFFParserClosure() {
       function parseOperand() {
         var value = dict[pos++];
         if (value === 30) {
-          return parseFloatOperand(pos);
+          return parseFloatOperand();
         } else if (value === 28) {
           value = dict[pos++];
           value = ((value << 24) | (dict[pos++] << 16)) >> 16;
@@ -4844,7 +4844,7 @@ var CFFCompiler = (function CFFCompilerClosure() {
       if (value >= -107 && value <= 107) {
         code = [value + 139];
       } else if (value >= 108 && value <= 1131) {
-        value = [value - 108];
+        value = value - 108;
         code = [(value >> 8) + 247, value & 0xFF];
       } else if (value >= -1131 && value <= -108) {
         value = -value - 108;
@@ -12421,7 +12421,7 @@ var JpxImage = (function JpxImageClosure() {
       for (j = 0; j < codingpasses; j++) {
         switch (currentCodingpassType) {
           case 0:
-            bitModel.runSignificancePropogationPass();
+            bitModel.runSignificancePropagationPass();
             break;
           case 1:
             bitModel.runMagnitudeRefinementPass();
@@ -12900,8 +12900,8 @@ var JpxImage = (function JpxImageClosure() {
         }
         neighborsSignificance[index] |= 0x80;
       },
-      runSignificancePropogationPass:
-        function BitModel_runSignificancePropogationPass() {
+      runSignificancePropagationPass:
+        function BitModel_runSignificancePropagationPass() {
         var decoder = this.decoder;
         var width = this.width, height = this.height;
         var coefficentsMagnitude = this.coefficentsMagnitude;
@@ -22996,17 +22996,15 @@ var CipherTransformFactory = (function CipherTransformFactoryClosure() {
       pdfAlgorithm = new PDF17();
     }
 
-    if (pdfAlgorithm) {
-      if (pdfAlgorithm.checkUserPassword(password, userValidationSalt,
-                                         userPassword)) {
-        return pdfAlgorithm.getUserKey(password, userKeySalt, userEncryption);
-      } else if (password.length && pdfAlgorithm.checkOwnerPassword(password,
-                                                   ownerValidationSalt,
-                                                   uBytes,
-                                                   ownerPassword)) {
-        return pdfAlgorithm.getOwnerKey(password, ownerKeySalt, uBytes,
-                                        ownerEncryption);
-      }
+    if (pdfAlgorithm.checkUserPassword(password, userValidationSalt,
+                                        userPassword)) {
+      return pdfAlgorithm.getUserKey(password, userKeySalt, userEncryption);
+    } else if (password.length && pdfAlgorithm.checkOwnerPassword(password,
+                                                  ownerValidationSalt,
+                                                  uBytes,
+                                                  ownerPassword)) {
+      return pdfAlgorithm.getOwnerKey(password, ownerKeySalt, uBytes,
+                                      ownerEncryption);
     }
 
     return null;
@@ -27068,19 +27066,18 @@ exports.Type1Parser = Type1Parser;
   {
     factory((root.pdfjsCoreFonts = {}), root.pdfjsSharedUtil,
       root.pdfjsCorePrimitives, root.pdfjsCoreStream, root.pdfjsCoreParser,
-      root.pdfjsCoreGlyphList, root.pdfjsCoreCharsets,
-      root.pdfjsCoreFontRenderer, root.pdfjsCoreEncodings,
-      root.pdfjsCoreStandardFonts, root.pdfjsCoreUnicode,
-      root.pdfjsCoreType1Parser, root.pdfjsCoreCFFParser);
+      root.pdfjsCoreGlyphList, root.pdfjsCoreFontRenderer,
+      root.pdfjsCoreEncodings, root.pdfjsCoreStandardFonts,
+      root.pdfjsCoreUnicode, root.pdfjsCoreType1Parser,
+      root.pdfjsCoreCFFParser);
   }
 }(this, function (exports, sharedUtil, corePrimitives, coreStream, coreParser,
-                  coreGlyphList, coreCharsets, coreFontRenderer,
-                  coreEncodings, coreStandardFonts, coreUnicode,
-                  coreType1Parser, coreCFFParser) {
+                  coreGlyphList, coreFontRenderer, coreEncodings,
+                  coreStandardFonts, coreUnicode, coreType1Parser,
+                  coreCFFParser) {
 
 var FONT_IDENTITY_MATRIX = sharedUtil.FONT_IDENTITY_MATRIX;
 var FontType = sharedUtil.FontType;
-var Util = sharedUtil.Util;
 var assert = sharedUtil.assert;
 var bytesToString = sharedUtil.bytesToString;
 var error = sharedUtil.error;
@@ -27090,7 +27087,6 @@ var isInt = sharedUtil.isInt;
 var isNum = sharedUtil.isNum;
 var readUint32 = sharedUtil.readUint32;
 var shadow = sharedUtil.shadow;
-var stringToBytes = sharedUtil.stringToBytes;
 var string32 = sharedUtil.string32;
 var warn = sharedUtil.warn;
 var MissingDataException = sharedUtil.MissingDataException;
@@ -27098,16 +27094,11 @@ var Stream = coreStream.Stream;
 var Lexer = coreParser.Lexer;
 var getGlyphsUnicode = coreGlyphList.getGlyphsUnicode;
 var getDingbatsGlyphsUnicode = coreGlyphList.getDingbatsGlyphsUnicode;
-var ISOAdobeCharset = coreCharsets.ISOAdobeCharset;
-var ExpertCharset = coreCharsets.ExpertCharset;
-var ExpertSubsetCharset = coreCharsets.ExpertSubsetCharset;
 var FontRendererFactory = coreFontRenderer.FontRendererFactory;
-var WinAnsiEncoding = coreEncodings.WinAnsiEncoding;
 var StandardEncoding = coreEncodings.StandardEncoding;
 var MacRomanEncoding = coreEncodings.MacRomanEncoding;
 var SymbolSetEncoding = coreEncodings.SymbolSetEncoding;
 var ZapfDingbatsEncoding = coreEncodings.ZapfDingbatsEncoding;
-var ExpertEncoding = coreEncodings.ExpertEncoding;
 var getEncoding = coreEncodings.getEncoding;
 var getStdFontMap = coreStandardFonts.getStdFontMap;
 var getNonStdFontMap = coreStandardFonts.getNonStdFontMap;
@@ -29105,7 +29096,7 @@ var Font = (function FontClosure() {
         }
       }
 
-      function sanitizeTTPrograms(fpgm, prep, cvt) {
+      function sanitizeTTPrograms(fpgm, prep, cvt, maxFunctionDefs) {
         var ttContext = {
           functionsDefined: [],
           functionsUsed: [],
@@ -29862,7 +29853,8 @@ var ErrorFont = (function ErrorFontClosure() {
  * @param {Object} properties Font properties object.
  * @param {Object} builtInEncoding The encoding contained within the actual font
  * data.
- * @param {Array} Array of glyph names where the index is the glyph ID.
+ * @param {Array} glyphNames Array of glyph names where the index is the
+ * glyph ID.
  * @returns {Object} A char code to glyph ID map.
  */
 function type1FontGlyphMapping(properties, builtInEncoding, glyphNames) {

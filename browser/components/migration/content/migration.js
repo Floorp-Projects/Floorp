@@ -40,6 +40,10 @@ var MigrationWizard = {
       this._migrator = args[2] instanceof kIMig ?  args[2] : null;
       this._autoMigrate = args[3].QueryInterface(kIPStartup);
       this._skipImportSourcePage = args[4];
+      if (this._migrator && args[5]) {
+        let sourceProfiles = this._migrator.sourceProfiles;
+        this._selectedProfile = sourceProfiles.find(profile => profile.id == args[5]);
+      }
 
       if (this._autoMigrate) {
         // Show the "nothing" option in the automigrate case to provide an

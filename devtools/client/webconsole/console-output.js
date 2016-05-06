@@ -3234,7 +3234,7 @@ Widgets.ObjectRenderers.add({
     // the message is destroyed.
     this.message.widgets.add(this);
 
-    this.linkToInspector().then(null, Cu.reportError);
+    this.linkToInspector().then(null, e => console.error(e));
   },
 
   /**
@@ -3324,7 +3324,7 @@ Widgets.ObjectRenderers.add({
   {
     return this.linkToInspector().then(() => {
       return this.toolbox.highlighterUtils.unhighlight();
-    }).then(null, Cu.reportError);
+    }).then(null, e => console.error(e));
   },
 
   /**
@@ -3565,7 +3565,7 @@ Widgets.LongString.prototype = Heritage.extend(Widgets.BaseWidget.prototype,
   _onSubstring: function(response)
   {
     if (response.error) {
-      Cu.reportError("LongString substring failure: " + response.error);
+      console.error("LongString substring failure: " + response.error);
       return;
     }
 
