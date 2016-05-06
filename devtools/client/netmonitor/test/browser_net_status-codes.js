@@ -28,7 +28,7 @@ var test = Task.async(function*() {
         statusText: "Switching Protocols",
         type: "plain",
         fullMimeType: "text/plain; charset=utf-8",
-        size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0),
+        size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 0),
         time: true
       }
     },
@@ -40,7 +40,7 @@ var test = Task.async(function*() {
         statusText: "Created",
         type: "plain",
         fullMimeType: "text/plain; charset=utf-8",
-        size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.02),
+        size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 22),
         time: true
       }
     },
@@ -52,7 +52,7 @@ var test = Task.async(function*() {
         statusText: "See Other",
         type: "plain",
         fullMimeType: "text/plain; charset=utf-8",
-        size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0),
+        size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 0),
         time: true
       }
     },
@@ -64,7 +64,7 @@ var test = Task.async(function*() {
         statusText: "Not Found",
         type: "plain",
         fullMimeType: "text/plain; charset=utf-8",
-        size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.02),
+        size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 22),
         time: true
       }
     },
@@ -76,7 +76,7 @@ var test = Task.async(function*() {
         statusText: "Not Implemented",
         type: "plain",
         fullMimeType: "text/plain; charset=utf-8",
-        size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.02),
+        size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 22),
         time: true
       }
     }
@@ -84,7 +84,6 @@ var test = Task.async(function*() {
 
   debuggee.performRequests();
   yield waitForNetworkEvents(monitor, 5);
-
   info("Performing tests");
   yield verifyRequests();
   yield testTab(0, testSummary);

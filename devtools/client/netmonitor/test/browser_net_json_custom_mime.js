@@ -21,7 +21,7 @@ function test() {
           statusText: "OK",
           type: "x-bigcorp-json",
           fullMimeType: "text/x-bigcorp-json; charset=utf-8",
-          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.04),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 41),
           time: true
         });
 
