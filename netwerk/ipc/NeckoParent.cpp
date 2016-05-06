@@ -135,7 +135,7 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
       continue;
     }
     // We may get appID=NO_APP if child frame is neither a browser nor an app
-    if (appId == NECKO_NO_APP_ID && tabContext.HasOwnApp() {
+    if (appId == NECKO_NO_APP_ID && tabContext.HasOwnApp()) {
       // NECKO_NO_APP_ID but also is an app?  Weird, skip.
       continue;
     }
