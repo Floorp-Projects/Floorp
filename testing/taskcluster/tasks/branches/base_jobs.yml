@@ -339,6 +339,8 @@ tests:
     allowed_build_tasks:
       tasks/builds/opt_linux64.yml:
         task: tasks/tests/fx_linux64_mochitest_gl_e10s_opt.yml
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_mochitest_gl_e10s_dbg.yml
   reftest:
     allowed_build_tasks:
       tasks/builds/mulet_linux.yml:
