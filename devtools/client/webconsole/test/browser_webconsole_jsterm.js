@@ -188,4 +188,8 @@ function* testJSTerm(hud) {
       return node.parentNode.getElementsByTagName("a")[0].title == url;
     }, `error links to ${url}`);
   }
+
+  // Ensure that dom errors, with error numbers outside of the range
+  // of valid js.msg errors, don't cause crashes (bug 1270721).
+  yield jsterm.execute("new Request('',{redirect:'foo'})");
 }
