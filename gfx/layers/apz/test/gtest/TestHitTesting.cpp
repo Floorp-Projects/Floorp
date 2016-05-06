@@ -234,7 +234,7 @@ TEST_F(APZHitTestingTester, HitTesting2) {
   // This first pan will move the APZC by 50 pixels, and dispatch a paint request.
   // Since this paint request is in the queue to Gecko, transformToGecko will
   // take it into account.
-  ApzcPanNoFling(apzcroot, mcc, 100, 50);
+  ApzcPanNoFling(apzcroot, 100, 50);
 
   // Hit where layers[3] used to be. It should now hit the root.
   hit = GetTargetAPZC(ScreenPoint(75, 75));
@@ -258,7 +258,7 @@ TEST_F(APZHitTestingTester, HitTesting2) {
 
   // This second pan will move the APZC by another 50 pixels.
   EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(1);
-  ApzcPanNoFling(apzcroot, mcc, 100, 50);
+  ApzcPanNoFling(apzcroot, 100, 50);
 
   // Hit where layers[3] used to be. It should now hit the root.
   hit = GetTargetAPZC(ScreenPoint(75, 75));
@@ -390,7 +390,7 @@ TEST_F(APZHitTestingTester, TestRepaintFlushOnNewInputBlock) {
   }
 
   // This first pan will move the APZC by 50 pixels, and dispatch a paint request.
-  ApzcPanNoFling(apzcroot, mcc, 100, 50);
+  ApzcPanNoFling(apzcroot, 100, 50);
 
   // Verify that a touch start doesn't get untransformed
   ScreenIntPoint touchPoint(50, 50);
@@ -413,9 +413,9 @@ TEST_F(APZHitTestingTester, TestRepaintFlushOnNewInputBlock) {
   // (Note that any outstanding repaint requests from the first half of this test
   // don't impact this half because we advance the time by 1 second, which will trigger
   // the max-wait-exceeded codepath in the paint throttler).
-  ApzcPanNoFling(apzcroot, mcc, 100, 50);
+  ApzcPanNoFling(apzcroot, 100, 50);
   check.Call("post-second-fling");
-  ApzcPanNoFling(apzcroot, mcc, 100, 50);
+  ApzcPanNoFling(apzcroot, 100, 50);
 
   // Ensure that a touch start again doesn't get untransformed by flushing
   // a repaint
@@ -515,7 +515,7 @@ TEST_F(APZHitTestingTester, Bug1148350) {
     EXPECT_CALL(check, Call("Tapped with interleaved transform"));
   }
 
-  Tap(manager, ScreenIntPoint(100, 100), mcc, TimeDuration::FromMilliseconds(100));
+  Tap(manager, ScreenIntPoint(100, 100), TimeDuration::FromMilliseconds(100));
   mcc->RunThroughDelayedTasks();
   check.Call("Tapped without transform");
 
@@ -571,7 +571,7 @@ TEST_F(APZHitTestingTester, HitTestingRespectsScrollClip_Bug1257288) {
 
   // Pan on a region that's inside layers[2]'s layer clip, but outside
   // its subframe metadata's scroll clip.
-  Pan(manager, mcc, 120, 110);
+  Pan(manager, 120, 110);
 
   // Test that the subframe hasn't scrolled.
   EXPECT_EQ(CSSPoint(0,0), ApzcOf(layers[2], 0)->GetFrameMetrics().GetScrollOffset());
