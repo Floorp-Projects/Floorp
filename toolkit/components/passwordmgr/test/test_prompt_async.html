@@ -12,6 +12,8 @@
         SimpleTest.waitForExplicitFinish();
         SimpleTest.requestFlakyTimeout("untriaged");
 
+        const { NetUtil } = SpecialPowers.Cu.import('resource://gre/modules/NetUtil.jsm');
+
         var prefs = Cc["@mozilla.org/preferences-service;1"].
                         getService(Ci.nsIPrefBranch);
         prefs.setIntPref("network.auth.subresource-http-auth-allow", 2);
@@ -144,23 +146,14 @@
 
 	function startup() {
             //need to allow for arbitrary network servers defined in PAC instead of a hardcoded moz-proxy.
-            var ios = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
-                                   .getService(SpecialPowers.Ci.nsIIOService);
+            var channel = NetUtil.newChannel({
+                uri: "http://example.com",
+                loadUsingSystemPrincipal: true
+            });
 
             var pps = SpecialPowers.Cc["@mozilla.org/network/protocol-proxy-service;1"]
                                    .getService();
 
-            var systemPrincipal =  SpecialPowers.Services.scriptSecurityManager
-                                                .getSystemPrincipal();
-
-            var channel = ios.newChannel2("http://example.com",
-                                          null,
-                                          null,
-                                          null,      // aLoadingNode
-                                          systemPrincipal,
-                                          null,      // aTriggeringPrincipal
-                                          Ci.nsILoadInfo.SEC_NORMAL,
-                                          Ci.nsIContentPolicy.TYPE_OTHER);
             pps.asyncResolve(channel, 0, resolveCallback);
 	}
 

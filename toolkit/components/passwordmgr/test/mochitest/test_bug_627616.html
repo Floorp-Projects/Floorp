@@ -81,19 +81,14 @@
       const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
       Cu.import("resource://gre/modules/Services.jsm");
+      Cu.import("resource://gre/modules/NetUtil.jsm");
       Cu.import("resource://gre/modules/Timer.jsm");
       Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-      let channel = Services.io.newChannel2(
-        "http://example.com",
-        null,
-        null,
-        null,      // aLoadingNode
-        Services.scriptSecurityManager.getSystemPrincipal(),
-        null,      // aTriggeringPrincipal
-        Ci.nsILoadInfo.SEC_NORMAL,
-        Ci.nsIContentPolicy.TYPE_OTHER
-      );
+      let channel = NetUtil.newChannel({
+        uri: "http://example.com",
+        loadUsingSystemPrincipal: true
+      });
 
       let pps = Cc["@mozilla.org/network/protocol-proxy-service;1"].
                 getService(Ci.nsIProtocolProxyService);
