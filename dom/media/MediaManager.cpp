@@ -1267,6 +1267,12 @@ public:
     return NS_OK;
   }
 
+  const MediaStreamConstraints&
+  GetConstraints()
+  {
+    return mConstraints;
+  }
+
   nsresult
   SetAudioDevice(AudioDevice* aAudioDevice)
   {
@@ -2039,8 +2045,9 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    if ((!IsOn(c.mAudio) || audioPerm == nsIPermissionManager::DENY_ACTION) &&
-        (!IsOn(c.mVideo) || videoPerm == nsIPermissionManager::DENY_ACTION)) {
+    if ((!IsOn(c.mAudio) && !IsOn(c.mVideo)) ||
+        (IsOn(c.mAudio) && audioPerm == nsIPermissionManager::DENY_ACTION) ||
+        (IsOn(c.mVideo) && videoPerm == nsIPermissionManager::DENY_ACTION)) {
       RefPtr<MediaStreamError> error =
           new MediaStreamError(aWindow, NS_LITERAL_STRING("SecurityError"));
       onFailure->OnError(error);
@@ -2724,11 +2731,6 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
       MOZ_ASSERT(array);
       uint32_t len = 0;
       array->Count(&len);
-      if (!len) {
-        // neither audio nor video were selected
-        task->Denied(NS_LITERAL_STRING("SecurityError"));
-        return NS_OK;
-      }
       bool videoFound = false, audioFound = false;
       for (uint32_t i = 0; i < len; i++) {
         nsCOMPtr<nsISupports> supports;
@@ -2752,6 +2754,14 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
             NS_WARNING("Unknown device type in getUserMedia");
           }
         }
+      }
+      bool needVideo = IsOn(task->GetConstraints().mVideo);
+      bool needAudio = IsOn(task->GetConstraints().mAudio);
+      MOZ_ASSERT(needVideo || needAudio);
+
+      if ((needVideo && !videoFound) || (needAudio && !audioFound)) {
+        task->Denied(NS_LITERAL_STRING("SecurityError"));
+        return NS_OK;
       }
     }
 
