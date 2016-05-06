@@ -14,21 +14,16 @@ Cu.import("resource://gre/modules/Task.jsm");
 
 const promise = require("promise");
 const events = require("sdk/event/core");
-const {OriginalSourceFront, MediaRuleFront} = require("devtools/client/fronts/stylesheets");
+const {OriginalSourceFront, MediaRuleFront, StyleSheetFront} = require("devtools/client/fronts/stylesheets");
 const protocol = require("devtools/server/protocol");
 const {Arg, Option, method, RetVal, types} = protocol;
 const {LongStringActor, ShortLongString} = require("devtools/server/actors/string");
 const {fetch} = require("devtools/shared/DevToolsUtils");
 const {listenOnce} = require("devtools/shared/async-utils");
-const {originalSourceSpec, mediaRuleSpec} = require("devtools/shared/specs/stylesheets");
+const {originalSourceSpec, mediaRuleSpec, styleSheetSpec} = require("devtools/shared/specs/stylesheets");
 const {SourceMapConsumer} = require("source-map");
 
 loader.lazyGetter(this, "CssLogic", () => require("devtools/shared/inspector/css-logic").CssLogic);
-
-const {
-  getIndentationFromPrefs,
-  getIndentationFromString
-} = require("devtools/shared/indentation");
 
 XPCOMUtils.defineLazyGetter(this, "DOMUtils", function () {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
@@ -188,31 +183,10 @@ var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
   }
 });
 
-types.addActorType("stylesheet");
-
 /**
  * A StyleSheetActor represents a stylesheet on the server.
  */
-var StyleSheetActor = protocol.ActorClass({
-  typeName: "stylesheet",
-
-  events: {
-    "property-change" : {
-      type: "propertyChange",
-      property: Arg(0, "string"),
-      value: Arg(1, "json")
-    },
-    "style-applied" : {
-      type: "styleApplied",
-      kind: Arg(0, "number"),
-      styleSheet: Arg(1, "stylesheet")
-    },
-    "media-rules-changed" : {
-      type: "mediaRulesChanged",
-      rules: Arg(0, "array:mediarule")
-    }
-  },
-
+var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
   /* List of original sources that generated this stylesheet */
   _originalSources: null,
 
@@ -412,14 +386,12 @@ var StyleSheetActor = protocol.ActorClass({
    * @return {object}
    *         'disabled' - the disabled state after toggling.
    */
-  toggleDisabled: method(function() {
+  toggleDisabled: function() {
     this.rawSheet.disabled = !this.rawSheet.disabled;
     this._notifyPropertyChanged("disabled");
 
     return this.rawSheet.disabled;
-  }, {
-    response: { disabled: RetVal("boolean")}
-  }),
+  },
 
   /**
    * Send an event notifying that a property of the stylesheet
@@ -435,15 +407,11 @@ var StyleSheetActor = protocol.ActorClass({
   /**
    * Protocol method to get the text of this stylesheet.
    */
-  getText: method(function() {
+  getText: function() {
     return this._getText().then((text) => {
       return new LongStringActor(this.conn, text || "");
     });
-  }, {
-    response: {
-      text: RetVal("longstring")
-    }
-  }),
+  },
 
   /**
    * Fetch the text for this stylesheet from the cache or network. Return
@@ -487,17 +455,12 @@ var StyleSheetActor = protocol.ActorClass({
    * Protocol method to get the original source (actors) for this
    * stylesheet if it has uses source maps.
    */
-  getOriginalSources: method(function() {
+  getOriginalSources: function() {
     if (this._originalSources) {
       return promise.resolve(this._originalSources);
     }
     return this._fetchOriginalSources();
-  }, {
-    request: {},
-    response: {
-      originalSources: RetVal("nullable:array:originalsource")
-    }
-  }),
+  },
 
   /**
    * Fetch the original sources (actors) for this style sheet using its
@@ -633,7 +596,7 @@ var StyleSheetActor = protocol.ActorClass({
    * line, column pair in this stylesheet, if its source mapped, otherwise
    * a promise of the same location.
    */
-  getOriginalLocation: method(function(line, column) {
+  getOriginalLocation: function(line, column) {
     return this.getSourceMap().then((sourceMap) => {
       if (sourceMap) {
         return sourceMap.originalPositionFor({ line: line, column: column });
@@ -645,29 +608,14 @@ var StyleSheetActor = protocol.ActorClass({
         column: column
       };
     });
-  }, {
-    request: {
-      line: Arg(0, "number"),
-      column: Arg(1, "number")
-    },
-    response: RetVal(types.addDictType("originallocationresponse", {
-      source: "string",
-      line: "number",
-      column: "number"
-    }))
-  }),
+  },
 
   /**
    * Protocol method to get the media rules for the stylesheet.
    */
-  getMediaRules: method(function() {
+  getMediaRules: function() {
     return this._getMediaRules();
-  }, {
-    request: {},
-    response: {
-      mediaRules: RetVal("nullable:array:mediarule")
-    }
-  }),
+  },
 
   /**
    * Get all the @media rules in this stylesheet.
@@ -752,7 +700,7 @@ var StyleSheetActor = protocol.ActorClass({
    *         'transition' - whether to do CSS transition for change.
    *         'kind' - either UPDATE_PRESERVING_RULES or UPDATE_GENERAL
    */
-  update: method(function(text, transition, kind = UPDATE_GENERAL) {
+  update: function(text, transition, kind = UPDATE_GENERAL) {
     DOMUtils.parseStyleSheet(this.rawSheet, text);
 
     modifiedStyleSheets.set(this.rawSheet, text);
@@ -771,12 +719,7 @@ var StyleSheetActor = protocol.ActorClass({
     this._getMediaRules().then((rules) => {
       events.emit(this, "media-rules-changed", rules);
     });
-  }, {
-    request: {
-      text: Arg(0, "string"),
-      transition: Arg(1, "boolean")
-    }
-  }),
+  },
 
   /**
    * Insert a catch-all transition rule into the document. Set a timeout
@@ -814,81 +757,6 @@ var StyleSheetActor = protocol.ActorClass({
 })
 
 exports.StyleSheetActor = StyleSheetActor;
-
-/**
- * StyleSheetFront is the client-side counterpart to a StyleSheetActor.
- */
-var StyleSheetFront = protocol.FrontClass(StyleSheetActor, {
-  initialize: function(conn, form) {
-    protocol.Front.prototype.initialize.call(this, conn, form);
-
-    this._onPropertyChange = this._onPropertyChange.bind(this);
-    events.on(this, "property-change", this._onPropertyChange);
-  },
-
-  destroy: function() {
-    events.off(this, "property-change", this._onPropertyChange);
-    protocol.Front.prototype.destroy.call(this);
-  },
-
-  _onPropertyChange: function(property, value) {
-    this._form[property] = value;
-  },
-
-  form: function(form, detail) {
-    if (detail === "actorid") {
-      this.actorID = form;
-      return;
-    }
-    this.actorID = form.actor;
-    this._form = form;
-  },
-
-  get href() {
-    return this._form.href;
-  },
-  get nodeHref() {
-    return this._form.nodeHref;
-  },
-  get disabled() {
-    return !!this._form.disabled;
-  },
-  get title() {
-    return this._form.title;
-  },
-  get isSystem() {
-    return this._form.system;
-  },
-  get styleSheetIndex() {
-    return this._form.styleSheetIndex;
-  },
-  get ruleCount() {
-    return this._form.ruleCount;
-  },
-
-  /**
-   * Get the indentation to use for edits to this style sheet.
-   *
-   * @return {Promise} A promise that will resolve to a string that
-   * should be used to indent a block in this style sheet.
-   */
-  guessIndentation: function() {
-    let prefIndent = getIndentationFromPrefs();
-    if (prefIndent) {
-      let {indentUnit, indentWithTabs} = prefIndent;
-      return promise.resolve(indentWithTabs ? "\t" : " ".repeat(indentUnit));
-    }
-
-    return Task.spawn(function*() {
-      let longStr = yield this.getText();
-      let source = yield longStr.string();
-
-      let {indentUnit, indentWithTabs} = getIndentationFromString(source);
-
-      return indentWithTabs ? "\t" : " ".repeat(indentUnit);
-    }.bind(this));
-  }
-});
 
 exports.StyleSheetFront = StyleSheetFront;
 
