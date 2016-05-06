@@ -33,15 +33,15 @@ TEST(rust, MP4MetadataEmpty)
   EXPECT_EQ(rv, MP4PARSE_ERROR_BADARG);
 
   std::vector<uint8_t> buf;
-  rv = mp4parse_read(nullptr, buf.data(), buf.size());
+  rv = mp4parse_read(nullptr, &buf.front(), buf.size());
   EXPECT_EQ(rv, MP4PARSE_ERROR_BADARG);
-  rv = mp4parse_read(context, buf.data(), buf.size());
+  rv = mp4parse_read(context, &buf.front(), buf.size());
   EXPECT_EQ(rv, MP4PARSE_ERROR_BADARG);
 
   buf.reserve(len);
-  rv = mp4parse_read(nullptr, buf.data(), buf.size());
+  rv = mp4parse_read(nullptr, &buf.front(), buf.size());
   EXPECT_EQ(rv, MP4PARSE_ERROR_BADARG);
-  rv = mp4parse_read(context, buf.data(), buf.size());
+  rv = mp4parse_read(context, &buf.front(), buf.size());
   EXPECT_EQ(rv, MP4PARSE_ERROR_BADARG);
 
   mp4parse_free(context);
@@ -54,14 +54,14 @@ TEST(rust, MP4Metadata)
 
   size_t len = 4096;
   std::vector<uint8_t> buf(len);
-  size_t read = fread(buf.data(), sizeof(decltype(buf)::value_type), buf.size(), f);
+  size_t read = fread(&buf.front(), sizeof(decltype(buf)::value_type), buf.size(), f);
   buf.resize(read);
   fclose(f);
 
   mp4parse_state* context = mp4parse_new();
   ASSERT_NE(context, nullptr);
 
-  int32_t rv = mp4parse_read(context, buf.data(), buf.size());
+  int32_t rv = mp4parse_read(context, &buf.front(), buf.size());
   EXPECT_EQ(rv, MP4PARSE_OK);
 
   uint32_t tracks = mp4parse_get_track_count(context);
