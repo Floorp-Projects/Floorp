@@ -12,6 +12,7 @@ function* testInArea(area) {
       },
       "browser_action": {
         "default_popup": "popup-a.html",
+        "browser_style": true,
       },
     },
 
@@ -19,11 +20,9 @@ function* testInArea(area) {
       "popup-a.html": scriptPage("popup-a.js"),
       "popup-a.js": function() {
         window.onload = () => {
-          if (window.getComputedStyle(document.body).backgroundColor == "rgb(252, 252, 252)") {
-            browser.runtime.sendMessage("from-popup-a");
-          } else {
-            browser.runtime.sendMessage("popup-a-failed-style-check");
-          }
+          let background = window.getComputedStyle(document.body).backgroundColor;
+          browser.test.assertEq("rgb(252, 252, 252)", background);
+          browser.runtime.sendMessage("from-popup-a");
         };
         browser.runtime.onMessage.addListener(msg => {
           if (msg == "close-popup") {
@@ -80,8 +79,6 @@ function* testInArea(area) {
         browser.runtime.onMessage.addListener(msg => {
           if (msg == "close-popup") {
             return;
-          } else if (msg == "popup-a-failed-style-check") {
-            browser.test.fail("popup failed style check");
           } else if (expect.popup) {
             browser.test.assertEq(msg, `from-popup-${expect.popup}`,
                                   "expected popup opened");

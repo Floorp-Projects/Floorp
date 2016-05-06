@@ -225,6 +225,25 @@ class SetObject : public NativeObject {
     static bool clear(JSContext* cx, unsigned argc, Value* vp);
 };
 
+class SetIteratorObject : public NativeObject
+{
+  public:
+    static const Class class_;
+
+    enum { TargetSlot, KindSlot, RangeSlot, SlotCount };
+    static const JSFunctionSpec methods[];
+    static SetIteratorObject* create(JSContext* cx, HandleObject setobj, ValueSet* data,
+                                     SetObject::IteratorKind kind);
+    static bool next(JSContext* cx, unsigned argc, Value* vp);
+    static void finalize(FreeOp* fop, JSObject* obj);
+
+  private:
+    static inline bool is(HandleValue v);
+    inline ValueSet::Range* range();
+    inline SetObject::IteratorKind kind() const;
+    static bool next_impl(JSContext* cx, const CallArgs& args);
+};
+
 extern bool
 InitSelfHostingCollectionIteratorFunctions(JSContext* cx, js::HandleObject obj);
 

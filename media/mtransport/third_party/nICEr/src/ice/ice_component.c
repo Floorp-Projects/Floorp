@@ -1000,8 +1000,6 @@ int nr_ice_component_can_candidate_tcptype_pair(nr_socket_tcp_type left, nr_sock
 /* filter out pairings which won't work. */
 int nr_ice_component_can_candidate_addr_pair(nr_transport_addr *local, nr_transport_addr *remote)
   {
-    int remote_range;
-
     if(local->ip_version != remote->ip_version)
       return(0);
     if(nr_transport_addr_is_link_local(local) !=
@@ -1245,7 +1243,7 @@ int nr_ice_component_refresh_consent(nr_stun_client_ctx *ctx, NR_async_cb finish
 
     nr_stun_client_reset(ctx);
 
-    if (r=nr_stun_client_start(ctx, NR_STUN_CLIENT_MODE_BINDING_REQUEST_SHORT_TERM_AUTH, finished_cb, cb_arg))
+    if (r=nr_stun_client_start(ctx, NR_ICE_CLIENT_MODE_BINDING_REQUEST, finished_cb, cb_arg))
       ABORT(r);
 
     _status=0;
@@ -1259,6 +1257,18 @@ static void nr_ice_component_consent_timer_cb(NR_SOCKET s, int how, void *cb_arg
     int r;
 
     comp->consent_timer = 0;
+
+    comp->consent_ctx->params.ice_binding_request.username =
+      comp->stream->l2r_user;
+    comp->consent_ctx->params.ice_binding_request.password =
+      comp->stream->l2r_pass;
+    comp->consent_ctx->params.ice_binding_request.control =
+      comp->stream->pctx->controlling?
+      NR_ICE_CONTROLLING:NR_ICE_CONTROLLED;
+    comp->consent_ctx->params.ice_binding_request.tiebreaker =
+      comp->stream->pctx->tiebreaker;
+    comp->consent_ctx->params.ice_binding_request.priority =
+      comp->active->local->priority;
 
     if (r=nr_ice_component_refresh_consent(comp->consent_ctx,
                                            nr_ice_component_refresh_consent_cb,
@@ -1331,10 +1341,6 @@ int nr_ice_component_setup_consent(nr_ice_component *comp)
      * next consent request.
      * TODO: set this every time we calculate the new random timeout. */
     comp->consent_ctx->maximum_transmits_timeout_ms = 6000;
-    comp->consent_ctx->params.stun_binding_request.username =
-      comp->active->remote->stream->l2r_user;
-    comp->consent_ctx->params.stun_binding_request.password =
-      &comp->active->remote->stream->l2r_pass;
 
     if (r=nr_ice_socket_register_stun_client(comp->active->local->isock,
             comp->consent_ctx, &comp->consent_handle))

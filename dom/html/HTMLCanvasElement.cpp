@@ -1358,12 +1358,14 @@ HTMLCanvasElement::SetAttrFromAsyncCanvasRenderer(AsyncCanvasRenderer *aRenderer
   gfx::IntSize asyncCanvasSize = aRenderer->GetSize();
 
   ErrorResult rv;
-  element->SetUnsignedIntAttr(nsGkAtoms::width, asyncCanvasSize.width, rv);
+  element->SetUnsignedIntAttr(nsGkAtoms::width, asyncCanvasSize.width,
+                              DEFAULT_CANVAS_WIDTH, rv);
   if (rv.Failed()) {
     NS_WARNING("Failed to set width attribute to a canvas element asynchronously.");
   }
 
-  element->SetUnsignedIntAttr(nsGkAtoms::height, asyncCanvasSize.height, rv);
+  element->SetUnsignedIntAttr(nsGkAtoms::height, asyncCanvasSize.height,
+                              DEFAULT_CANVAS_HEIGHT, rv);
   if (rv.Failed()) {
     NS_WARNING("Failed to set height attribute to a canvas element asynchronously.");
   }

@@ -562,7 +562,8 @@ Telephony::HandleAudioAgentState()
   } else if (!activeCall.IsNull() && !mIsAudioStartPlaying) {
     mIsAudioStartPlaying = true;
     AudioPlaybackConfig config;
-    rv = mAudioAgent->NotifyStartedPlaying(&config);
+    rv = mAudioAgent->NotifyStartedPlaying(&config,
+                                           AudioChannelService::AudibleState::eAudible);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

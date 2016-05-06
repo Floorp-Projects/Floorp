@@ -4507,14 +4507,6 @@ EventStateManager::FireDragEnterOrExit(nsPresContext* aPresContext,
   // Finally dispatch the event to the frame
   if (aTargetFrame)
     aTargetFrame->HandleEvent(aPresContext, &event, &status);
-
-  if (aMessage == eDragExit && IsRemoteTarget(aTargetContent)) {
-    nsEventStatus status = nsEventStatus_eIgnore;
-    WidgetDragEvent remoteEvent(aDragEvent->IsTrusted(), aMessage,
-                                aDragEvent->mWidget);
-    remoteEvent.AssignDragEventData(*aDragEvent, true);
-    HandleCrossProcessEvent(&remoteEvent, &status);
-  }
 }
 
 void

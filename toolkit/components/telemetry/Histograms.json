@@ -8994,30 +8994,22 @@
     "kind": "boolean",
     "description": "EME video playback success or failure"
   },
-  "VIDEO_MSE_JOIN_LATENCY_MS" : {
-    "expires_in_version": "45",
-    "description": "Time in MS between MSE video load and playback",
-    "kind": "exponential",
-    "high": 30000,
-    "n_buckets": 50
-  },
-  "VIDEO_MSE_PLAY_TIME_MS" : {
-    "expires_in_version": "45",
-    "description": "Total time spent playing MSE video",
+  "VIDEO_PLAY_TIME_MS" : {
+    "alert_emails": ["ajones@mozilla.com"],
+    "expires_in_version": "55",
+    "description": "Total time spent playing video in milliseconds. This reports the total play time for an HTML Media Element whenever it is suspended or resumed, such as when the page is unloaded, or when the mute status changes when the AudioChannelAPI pref is set.",
     "kind": "exponential",
     "high": 7200000,
-    "n_buckets": 100
+    "n_buckets": 100,
+    "bug_numbers": [1261955, 1127646]
   },
-  "VIDEO_MSE_BUFFERING_COUNT" : {
-    "expires_in_version": "45",
-    "description": "Count of times that MSE video was buffering",
-    "kind": "count"
-  },
-  "VIDEO_MSE_UNLOAD_STATE": {
-    "expires_in_version": "45",
+  "VIDEO_UNLOAD_STATE": {
+    "alert_emails": ["ajones@mozilla.com"],
+    "expires_in_version": "55",
     "kind": "enumerated",
     "n_values": 5,
-    "description": "MSE video state when unloading. ended = 0, paused = 1, stalled = 2, seeking = 3, other = 4"
+    "description": "HTML Media Element state when unloading. ended = 0, paused = 1, stalled = 2, seeking = 3, other = 4",
+    "bug_numbers": [1261955, 1261955]
   },
   "VIDEO_ADOBE_GMP_DISAPPEARED": {
     "alert_emails": ["cpearce@mozilla.com"],

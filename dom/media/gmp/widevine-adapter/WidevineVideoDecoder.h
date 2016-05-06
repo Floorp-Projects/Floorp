@@ -25,7 +25,7 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WidevineVideoDecoder)
 
   WidevineVideoDecoder(GMPVideoHost* aVideoHost,
-                       RefPtr<CDMWrapper> aCDM);
+                       RefPtr<CDMWrapper> aCDMWrapper);
   void InitDecode(const GMPVideoCodec& aCodecSettings,
                   const uint8_t* aCodecSpecific,
                   uint32_t aCodecSpecificLength,
@@ -44,12 +44,17 @@ private:
 
   ~WidevineVideoDecoder();
 
-  cdm::ContentDecryptionModule_8* CDM() { return mCDM->GetCDM(); }
+  cdm::ContentDecryptionModule_8* CDM() const {
+    // CDM should only be accessed before 'DecodingComplete'.
+    MOZ_ASSERT(mCDMWrapper);
+    // CDMWrapper ensure the CDM is non-null, no need to check again.
+    return mCDMWrapper->GetCDM();
+  }
 
   bool ReturnOutput(WidevineVideoFrame& aFrame);
 
   GMPVideoHost* mVideoHost;
-  RefPtr<CDMWrapper> mCDM;
+  RefPtr<CDMWrapper> mCDMWrapper;
   RefPtr<MediaByteBuffer> mExtraData;
   RefPtr<MediaByteBuffer> mAnnexB;
   GMPVideoDecoderCallback* mCallback;

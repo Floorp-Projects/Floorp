@@ -58,7 +58,7 @@ public:
     }
   }
   void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aResult);
-  bool Contains(const nsAString& aToken, mozilla::ErrorResult& aError);
+  bool Contains(const nsAString& aToken);
   void Add(const nsAString& aToken, mozilla::ErrorResult& aError);
   void Add(const nsTArray<nsString>& aTokens,
            mozilla::ErrorResult& aError);

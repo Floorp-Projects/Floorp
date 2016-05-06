@@ -176,7 +176,7 @@ exports.createEvent = function(name) {
 
       event.add(handler);
     });
-  },
+  };
 
   /**
    * Temporarily prevent this event from firing.

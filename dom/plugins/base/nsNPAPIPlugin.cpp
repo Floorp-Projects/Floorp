@@ -2292,7 +2292,8 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
       } else {
 
         dom::AudioPlaybackConfig config;
-        rv = agent->NotifyStartedPlaying(&config);
+        rv = agent->NotifyStartedPlaying(&config,
+                                         dom::AudioChannelService::AudibleState::eAudible);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return NPERR_NO_ERROR;
         }

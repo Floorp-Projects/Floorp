@@ -1,0 +1,103 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Audio-playback should be inactive when web-audio is silent</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script type="application/javascript;version=1.7">
+
+SimpleTest.waitForExplicitFinish();
+
+var generator = runTest();
+var expectedPlaybackActive = null;
+var expectedPlaying = null;
+
+var ac = new AudioContext();
+var audibleDuration = 3;
+
+var observerService = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
+                                   .getService(SpecialPowers.Ci.nsIObserverService);
+
+var observer = {
+  observe: function(subject, topic, data) {
+    is(topic, "audio-playback", "audio-playback received");
+    is(data, expectedPlaybackActive, "Corrrect audible state");
+    is(ac.state, expectedPlaying, "Corrrect playing state");
+    continueTest();
+  }
+};
+
+function continueTest() {
+  try {
+    generator.next();
+  } catch (e if e instanceof StopIteration) {
+    error("Stop test because of exception!");
+  }
+}
+
+function playOscillatorNode() {
+  var dest = ac.destination;
+  var osc = ac.createOscillator();
+  osc.connect(dest);
+  osc.start(0);
+  osc.stop(ac.currentTime + audibleDuration);
+}
+
+function audioPlayingStart() {
+  observerService.addObserver(observer, "audio-playback", false);
+  ok(true, "Observer set");
+
+  expectedPlaybackActive = 'active';
+  expectedPlaying = "running";
+
+  info("Audio playing start");
+  playOscillatorNode();
+}
+
+function audioBecomeSilentDuringPlaying() {
+  info("Audio would become silent during playing");
+
+  expectedPlaybackActive = 'inactive';
+  expectedPlaying = "running";
+}
+
+function finish() {
+  observerService.removeObserver(observer, "audio-playback");
+  ok(true, "Observer removed");
+
+  SimpleTest.finish();
+}
+
+function startAudioContext() {
+  if (ac.state != "running") {
+    ac.resume();
+    ac.onstatechange = function() {
+      if (ac.state == "running") {
+        ok(true, "AudioContext starts running!");
+        ac.onstatechange = null;
+        continueTest();
+      }
+    }
+  } else {
+    ok(true, "AudioContext is running!");
+    continueTest();
+  }
+}
+
+function runTest() {
+  yield startAudioContext();
+
+  yield audioPlayingStart();
+
+  yield audioBecomeSilentDuringPlaying();
+
+  yield finish();
+}
+
+continueTest();
+
+</script>
+</body>
+</html>
