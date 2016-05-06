@@ -2408,6 +2408,10 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
                                                      nsIFrame* aFrame,
                                                      nsDisplayList* aList)
 {
+  if (aBuilder->IsForGenerateGlyphPath()) {
+    return true;
+  }
+
   nsStyleContext* bgSC = nullptr;
   const nsStyleBackground* bg = nullptr;
   nsPresContext* presContext = aFrame->PresContext();
