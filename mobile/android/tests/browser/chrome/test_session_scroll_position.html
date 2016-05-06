@@ -1,0 +1,183 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=810981
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 810981</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="head.js"></script>
+  <script type="application/javascript;version=1.7">
+
+  /** Test for Bug 810981 **/
+
+  "use strict";
+
+  const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+
+  Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+  Cu.import("resource://gre/modules/Services.jsm");
+  Cu.import("resource://gre/modules/Messaging.jsm");
+  Cu.import("resource://gre/modules/Task.jsm");
+
+  // The chrome window.
+  let chromeWin;
+
+  // Track the tabs where the tests are happening.
+  let tabScroll;
+
+  // Use something with enough content to allow for scrolling.
+  const URL = "http://example.org/chrome/mobile/android/tests/browser/chrome/basic_article_mobile.html";
+
+  function dispatchUIEvent(browser, type) {
+    let event = browser.contentDocument.createEvent("UIEvents");
+    event.initUIEvent(type, true, false, browser.contentDocument.defaultView, 0);
+    browser.dispatchEvent(event);
+  }
+
+  function setScrollPosition(browser, x, y) {
+    browser.contentWindow.scrollTo(x, y);
+    dispatchUIEvent(browser, "scroll");
+  }
+
+  function setZoomLevel(browser, zoom) {
+    browser.contentWindow.QueryInterface(
+      Ci.nsIInterfaceRequestor).getInterface(
+        Ci.nsIDOMWindowUtils).setResolutionAndScaleTo(zoom);
+  }
+
+  let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+
+  add_task(function* test_sessionStoreScrollPosition() {
+    const SCROLL_X = 0;
+    const SCROLL_Y = 38;
+
+    chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+    let BrowserApp = chromeWin.BrowserApp;
+
+    // Creates a tab, sets a scroll position and closes the tab.
+    function createAndRemoveTab() {
+      return Task.spawn(function () {
+        // Create a new tab.
+        tabScroll = BrowserApp.addTab(URL);
+        let browser = tabScroll.browser;
+        yield promiseBrowserEvent(browser, "pageshow");
+
+        // Modify scroll position.
+        setScrollPosition(browser, SCROLL_X, SCROLL_Y);
+        yield promiseTabEvent(browser, "SSTabScrollCaptured");
+
+        // Check that we've actually scrolled.
+        let ifreq = browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor);
+        let utils = ifreq.getInterface(Ci.nsIDOMWindowUtils);
+        let scrollX = {}, scrollY = {};
+        utils.getScrollXY(false, scrollX, scrollY);
+        is(scrollX.value, SCROLL_X, "scrollX set correctly");
+        is(scrollY.value, SCROLL_Y, "scrollY set correctly");
+
+        // Remove the tab.
+        BrowserApp.closeTab(tabScroll);
+        yield promiseTabEvent(browser, "SSTabCloseProcessed");
+      });
+    }
+
+    yield createAndRemoveTab();
+    let state = ss.getClosedTabs(chromeWin);
+    let [{scrolldata}] = state;
+    is(scrolldata.scroll, SCROLL_X + "," + SCROLL_Y, "stored scroll position is correct");
+
+    // Restore the closed tab.
+    let closedTabData = ss.getClosedTabs(chromeWin)[0];
+    let browser = ss.undoCloseTab(chromeWin, closedTabData);
+    yield promiseBrowserEvent(browser, "pageshow");
+
+    // Check the scroll position.
+    let ifreq = browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor);
+    let utils = ifreq.getInterface(Ci.nsIDOMWindowUtils);
+    let scrollX = {}, scrollY = {};
+    utils.getScrollXY(false, scrollX, scrollY);
+    is(scrollX.value, SCROLL_X, "scrollX restored correctly");
+    is(scrollY.value, SCROLL_Y, "scrollY restored correctly");
+
+    // Remove the tab.
+    BrowserApp.closeTab(BrowserApp.getTabForBrowser(browser));
+  });
+
+  add_task(function* test_sessionStoreZoomLevel() {
+    const ZOOM = 4.2;
+    const SCROLL_X = 42;
+    const SCROLL_Y = 42;
+
+    chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+    let BrowserApp = chromeWin.BrowserApp;
+
+    // Creates a tab, sets a scroll position and zoom level and closes the tab.
+    function createAndRemoveTab() {
+      return Task.spawn(function () {
+        // Create a new tab.
+        tabScroll = BrowserApp.addTab(URL);
+        let browser = tabScroll.browser;
+        yield promiseBrowserEvent(browser, "pageshow");
+
+        // Modify scroll position and zoom level.
+        setZoomLevel(browser, ZOOM);
+        setScrollPosition(browser, SCROLL_X, SCROLL_Y);
+        yield promiseTabEvent(browser, "SSTabScrollCaptured");
+
+        // Check that we've actually scrolled and zoomed.
+        let ifreq = browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor);
+        let utils = ifreq.getInterface(Ci.nsIDOMWindowUtils);
+        let scrollX = {}, scrollY = {}, zoom = {};
+        utils.getResolution(zoom);
+        utils.getScrollXY(false, scrollX, scrollY);
+        ok(fuzzyEquals(zoom.value, ZOOM), "zoom set correctly");
+        is(scrollX.value, SCROLL_X, "scrollX set correctly");
+        is(scrollY.value, SCROLL_Y, "scrollY set correctly");
+
+        // Remove the tab.
+        BrowserApp.closeTab(tabScroll);
+        yield promiseTabEvent(browser, "SSTabCloseProcessed");
+      });
+    }
+
+    yield createAndRemoveTab();
+    let state = ss.getClosedTabs(chromeWin);
+    let [{scrolldata}] = state;
+    is(scrolldata.scroll, SCROLL_X + "," + SCROLL_Y, "stored scroll position is correct");
+    ok(fuzzyEquals(scrolldata.zoom.resolution, ZOOM), "stored zoom level is correct");
+
+    // Restore the closed tab.
+    let closedTabData = ss.getClosedTabs(chromeWin)[0];
+    let browser = ss.undoCloseTab(chromeWin, closedTabData);
+    yield promiseBrowserEvent(browser, "pageshow");
+
+    // Check the scroll position and zoom level.
+    let ifreq = browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor);
+    let utils = ifreq.getInterface(Ci.nsIDOMWindowUtils);
+    let scrollX = {}, scrollY = {}, zoom = {};
+    utils.getResolution(zoom);
+    utils.getScrollXY(false, scrollX, scrollY);
+    ok(fuzzyEquals(zoom.value, ZOOM), "zoom restored correctly");
+    is(scrollX.value, SCROLL_X, "scrollX restored correctly");
+    is(scrollY.value, SCROLL_Y, "scrollY restored correctly");
+
+    // Remove the tab.
+    BrowserApp.closeTab(BrowserApp.getTabForBrowser(browser));
+  });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=810981">Mozilla Bug 810981</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
