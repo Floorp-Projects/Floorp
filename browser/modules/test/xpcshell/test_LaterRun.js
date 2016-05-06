@@ -9,9 +9,11 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource:///modules/LaterRun.jsm");
 
 Services.prefs.setBoolPref(kEnabledPref, true);
+Components.utils.import("resource://testing-common/AppInfo.jsm");
+updateAppInfo();
 
 add_task(function* test_page_applies() {
-  Services.prefs.setCharPref(kPagePrefRoot + "test_LaterRun_unittest.url", "https://www.mozilla.org/");
+  Services.prefs.setCharPref(kPagePrefRoot + "test_LaterRun_unittest.url", "https://www.mozilla.org/%VENDOR%/%NAME%/%ID%/%VERSION%/");
   Services.prefs.setIntPref(kPagePrefRoot + "test_LaterRun_unittest.minimumHoursSinceInstall", 10);
   Services.prefs.setIntPref(kPagePrefRoot + "test_LaterRun_unittest.minimumSessionCount", 3);
 
@@ -25,7 +27,12 @@ add_task(function* test_page_applies() {
   Assert.equal(page.minimumHoursSinceInstall, 10, "Needs to have 10 hours since install");
   Assert.equal(page.minimumSessionCount, 3, "Needs to have 3 sessions");
   Assert.equal(page.requireBoth, false, "Either requirement is enough");
-  Assert.equal(page.url, "https://www.mozilla.org/", "URL is stored correctly");
+  let expectedURL = "https://www.mozilla.org/" +
+    Services.appinfo.vendor + "/" +
+    Services.appinfo.name + "/" +
+    Services.appinfo.ID + "/" +
+    Services.appinfo.version + "/";
+  Assert.equal(page.url, expectedURL, "URL is stored correctly");
 
   Assert.ok(page.applies({hoursSinceInstall: 1, sessionCount: 3}),
             "Applies when session count has been met.");
