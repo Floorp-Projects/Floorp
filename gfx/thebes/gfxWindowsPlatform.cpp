@@ -1740,7 +1740,7 @@ static bool TryCreateTexture2D(ID3D11Device *device,
     return !FAILED(device->CreateTexture2D(desc, data, getter_AddRefs(texture)));
   } MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
     // For now we want to aggregrate all the crash signature to a known crash.
-    MOZ_CRASH("Crash creating texture. See bug 1221348.");
+    gfxDevCrash(LogReason::TextureCreation) << "Crash creating texture. See bug 1221348.";
     return false;
   }
 }
