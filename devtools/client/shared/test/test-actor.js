@@ -24,7 +24,7 @@ EventUtils._EU_Ci = Components.interfaces;
 EventUtils._EU_Cc = Components.classes;
 loader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
 
-const protocol = require("devtools/server/protocol");
+const protocol = require("devtools/shared/protocol");
 const {Arg, Option, method, RetVal, types} = protocol;
 
 var dumpn = msg => {

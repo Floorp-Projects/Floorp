@@ -9,7 +9,7 @@
 
 const Events = require("sdk/event/core");
 const {ActorClass, Actor, FrontClass, Front, method} =
-  require("devtools/server/protocol");
+  require("devtools/shared/protocol");
 
 const {NodeActor} = require("devtools/server/actors/inspector");
 

@@ -6,7 +6,7 @@
 const {Cc, Ci, Cu, Cr} = require("chrome");
 const events = require("sdk/event/core");
 const promise = require("promise");
-const protocol = require("devtools/server/protocol");
+const protocol = require("devtools/shared/protocol");
 const {CallWatcherActor, CallWatcherFront} = require("devtools/server/actors/call-watcher");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const {WebGLPrimitiveCounter} = require("devtools/server/primitive");
