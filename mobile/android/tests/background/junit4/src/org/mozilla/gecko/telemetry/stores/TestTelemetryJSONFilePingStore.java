@@ -20,10 +20,10 @@ import org.mozilla.gecko.util.FileUtils;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.Assert.*;
 
@@ -32,8 +32,6 @@ import static org.junit.Assert.*;
  */
 @RunWith(TestRunner.class)
 public class TestTelemetryJSONFilePingStore {
-
-    private final Pattern ID_PATTERN = Pattern.compile("[^0-9]*([0-9]+)[^0-9]*");
 
     @Rule
     public TemporaryFolder tempDir = new TemporaryFolder();
@@ -75,13 +73,13 @@ public class TestTelemetryJSONFilePingStore {
     public void testStorePingStoresCorrectData() throws Exception {
         assertStoreFileCount(0);
 
-        final int expectedID = 48679;
+        final String expectedID = getDocID();
         final TelemetryPing expectedPing = new TelemetryPing("a/server/url", generateTelemetryPayload(), expectedID);
         testStore.storePing(expectedPing);
 
         assertStoreFileCount(1);
         final String filename = testDir.list()[0];
-        assertTrue("Filename contains expected ID", filename.contains(Integer.toString(expectedID)));
+        assertTrue("Filename contains expected ID", filename.equals(expectedID));
         final JSONObject actual = FileUtils.readJSONObjectFromFile(new File(testDir, filename));
         assertEquals("Ping url paths are equal", expectedPing.getURLPath(), actual.getString(TelemetryJSONFilePingStore.KEY_URL_PATH));
         assertIsGeneratedPayload(new ExtendedJSONObject(actual.getString(TelemetryJSONFilePingStore.KEY_PAYLOAD)));
@@ -91,7 +89,7 @@ public class TestTelemetryJSONFilePingStore {
     public void testStorePingMultiplePingsStoreSeparateFiles() throws Exception {
         assertStoreFileCount(0);
         for (int i = 1; i < 10; ++i) {
-            testStore.storePing(new TelemetryPing("server " + i, generateTelemetryPayload(), i));
+            testStore.storePing(new TelemetryPing("server", generateTelemetryPayload(), getDocID()));
             assertStoreFileCount(i);
         }
     }
@@ -99,7 +97,7 @@ public class TestTelemetryJSONFilePingStore {
     @Test
     public void testStorePingReleasesFileLock() throws Exception {
         assertStoreFileCount(0);
-        testStore.storePing(new TelemetryPing("server", generateTelemetryPayload(), 0));
+        testStore.storePing(new TelemetryPing("server", generateTelemetryPayload(), getDocID()));
         assertStoreFileCount(1);
         final File file = new File(testDir, testDir.list()[0]);
         final FileOutputStream stream = new FileOutputStream(file);
@@ -117,8 +115,7 @@ public class TestTelemetryJSONFilePingStore {
 
         final ArrayList<TelemetryPing> pings = testStore.getAllPings();
         for (final TelemetryPing ping : pings) {
-            final int id = ping.getUniqueID(); // we use ID as a key for specific pings and check against the url values.
-            assertEquals("Expected url path value received", urlPrefix + id, ping.getURLPath());
+            assertEquals("Expected url path value received", urlPrefix + ping.getDocID(), ping.getURLPath());
             assertIsGeneratedPayload(ping.getPayload());
         }
     }
@@ -140,63 +137,61 @@ public class TestTelemetryJSONFilePingStore {
         testStore.maybePrunePings();
         assertStoreFileCount(TelemetryJSONFilePingStore.MAX_PING_COUNT);
 
-        final HashSet<Integer> existingIDs = new HashSet<>(TelemetryJSONFilePingStore.MAX_PING_COUNT);
+        final HashSet<String> existingIDs = new HashSet<>(TelemetryJSONFilePingStore.MAX_PING_COUNT);
         for (final String filename : testDir.list()) {
-            existingIDs.add(getIDFromFilename(filename));
+            existingIDs.add(filename);
         }
         assertFalse("Smallest ID was removed", existingIDs.contains(1));
     }
 
     @Test
     public void testOnUploadAttemptCompleted() throws Exception {
-        writeTestPingsToStore(10, "url");
-        final HashSet<Integer> unuploadedPingIDs = new HashSet<>(Arrays.asList(1, 3, 5, 7, 9));
-        final HashSet<Integer> removedPingIDs = new HashSet<>(Arrays.asList(2, 4, 6, 8, 10));
+        final List<String> savedDocIDs = writeTestPingsToStore(10, "url");
+        final int halfSize = savedDocIDs.size() / 2;
+        final Set<String> unuploadedPingIDs = new HashSet<>(savedDocIDs.subList(0, halfSize));
+        final Set<String> removedPingIDs = new HashSet<>(savedDocIDs.subList(halfSize, savedDocIDs.size()));
         testStore.onUploadAttemptComplete(removedPingIDs);
 
-        for (final String unuploadedFilePath : testDir.list()) {
-            final int unuploadedID = getIDFromFilename(unuploadedFilePath);
-            assertFalse("Unuploaded ID is not in removed ping IDs", removedPingIDs.contains(unuploadedID));
-            assertTrue("Unuploaded ID is in unuploaded ping IDs", unuploadedPingIDs.contains(unuploadedID));
-            unuploadedPingIDs.remove(unuploadedID);
+        for (final String unuploadedDocID : testDir.list()) {
+            assertFalse("Unuploaded ID is not in removed ping IDs", removedPingIDs.contains(unuploadedDocID));
+            assertTrue("Unuploaded ID is in unuploaded ping IDs", unuploadedPingIDs.contains(unuploadedDocID));
+            unuploadedPingIDs.remove(unuploadedDocID);
         }
         assertTrue("All non-successful-upload ping IDs were matched", unuploadedPingIDs.isEmpty());
     }
 
     @Test
-    public void testGetPingFileContainsID() throws Exception {
-        final int expected = 1234567890;
-        final File file = testStore.getPingFile(expected);
-        assertTrue("Ping filename contains ID", file.getName().contains(Integer.toString(expected)));
-    }
-
-    @Test // assumes {@link TelemetryJSONFilePingStore.getPingFile(String)} is working.
-    public void testGetIDFromFilename() throws Exception {
-        final int expectedID = 465739201;
-        final File file = testStore.getPingFile(expectedID);
-        assertEquals("Retrieved ID from filename", expectedID, TelemetryJSONFilePingStore.getIDFromFilename(file.getName()));
-    }
-
-    private int getIDFromFilename(final String filename) {
-        final Matcher matcher = ID_PATTERN.matcher(filename);
-        assertTrue("Filename contains ID", matcher.matches());
-        return Integer.parseInt(matcher.group(1));
+    public void testGetPingFileIsDocID() throws Exception {
+        final String docID = getDocID();
+        final File file = testStore.getPingFile(docID);
+        assertTrue("Ping filename contains ID", file.getName().equals(docID));
     }
 
     /**
      * Writes pings to store without using store API with:
-     *   id = 1 to count (inclusive)
-     *   server = urlPrefix + id
+     *   server = urlPrefix + docID
      *   payload = generated payload
      *
-     * Note: assumes {@link TelemetryJSONFilePingStore#getPingFile(long)} works.
+     * The docID is stored as the filename.
+     *
+     * Note: assumes {@link TelemetryJSONFilePingStore#getPingFile(String)} works.
+     *
+     * @return a list of doc IDs saved to disk
      */
-    private void writeTestPingsToStore(final int count, final String urlPrefix) throws Exception {
+    private List<String> writeTestPingsToStore(final int count, final String urlPrefix) throws Exception {
+        final List<String> savedDocIDs = new ArrayList<>(count);
         for (int i = 1; i <= count; ++i) {
+            final String docID = getDocID();
             final JSONObject obj = new JSONObject()
-                    .put(TelemetryJSONFilePingStore.KEY_URL_PATH, urlPrefix + i)
+                    .put(TelemetryJSONFilePingStore.KEY_URL_PATH, urlPrefix + docID)
                     .put(TelemetryJSONFilePingStore.KEY_PAYLOAD, generateTelemetryPayload());
-            FileUtils.writeJSONObjectToFile(testStore.getPingFile(i), obj);
+            FileUtils.writeJSONObjectToFile(testStore.getPingFile(docID), obj);
+            savedDocIDs.add(docID);
         }
+        return savedDocIDs;
+    }
+
+    private String getDocID() {
+        return UUID.randomUUID().toString();
     }
 }
