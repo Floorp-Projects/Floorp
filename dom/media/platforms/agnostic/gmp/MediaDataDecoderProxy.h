@@ -74,7 +74,7 @@ public:
     mProxyCallback->Output(aData);
   }
 
-  void Error(MediaDataDecoderError aError) override;
+  void Error() override;
 
   void InputExhausted() override {
     mProxyCallback->InputExhausted();

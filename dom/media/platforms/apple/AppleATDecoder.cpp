@@ -177,7 +177,7 @@ AppleATDecoder::SubmitSample(MediaRawData* aSample)
   if (!mConverter) {
     rv = SetupDecoder(aSample);
     if (rv != NS_OK && rv != NS_ERROR_NOT_INITIALIZED) {
-      mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
+      mCallback->Error();
       return;
     }
   }
@@ -188,7 +188,7 @@ AppleATDecoder::SubmitSample(MediaRawData* aSample)
     for (size_t i = 0; i < mQueuedSamples.Length(); i++) {
       if (NS_FAILED(DecodeSample(mQueuedSamples[i]))) {
         mQueuedSamples.Clear();
-        mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
+        mCallback->Error();
         return;
       }
     }

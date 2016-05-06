@@ -177,7 +177,7 @@ void
 VPXDecoder::DecodeFrame(MediaRawData* aSample)
 {
   if (DoDecodeFrame(aSample) == -1) {
-    mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
+    mCallback->Error();
   } else if (mTaskQueue->IsEmpty()) {
     mCallback->InputExhausted();
   }
