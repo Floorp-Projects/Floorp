@@ -25,7 +25,7 @@ ping”, not total for the whole application lifetime.
 Structure::
 
     {
-      "v": 3, // ping format version
+      "v": 5, // ping format version
       "clientId": <string>, // client id, e.g.
                             // "c641eacf-c30c-4171-b403-f077724e848a"
       "seq": <positive integer>, // running ping counter, e.g. 3
@@ -41,6 +41,10 @@ Structure::
       "defaultSearch": <string>, // Identifier of the default search engine,
                                  // e.g. "yahoo".
       "distributionId": <string>, // Distribution identifier (optional)
+      "created": <string>, // date the ping was created
+                           // in local time, "yyyy-mm-dd"
+      "tz": <integer>, // timezone offset (in minutes) of the
+                       // device when the ping was created
       "experiments": [<string>, …], // Optional, array of identifiers
                                     // for the active experiments
     }
@@ -108,6 +112,7 @@ sending it: we only want to send consistent values.
 
 Version history
 ---------------
+* v5: added ``created`` & ``tz``
 * v4: ``profileDate`` will return package install time when times.json is not available
 * v3: added ``defaultSearch``
 * v2: added ``distributionId``
