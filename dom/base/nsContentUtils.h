@@ -393,7 +393,7 @@ public:
    */
   static bool IsFirstLetterPunctuation(uint32_t aChar);
   static bool IsFirstLetterPunctuationAt(const nsTextFragment* aFrag, uint32_t aOffset);
- 
+
   /**
    * Returns true if aChar is of class Lu, Ll, Lt, Lm, Lo, Nd, Nl or No
    */
@@ -933,7 +933,7 @@ private:
                                         const char16_t** aParams,
                                         uint32_t aParamsLength,
                                         nsXPIDLString& aResult);
-  
+
 public:
   template<uint32_t N>
   static nsresult FormatLocalizedString(PropertiesFile aFile,
@@ -1949,7 +1949,7 @@ public:
   {
     return sIsPerformanceTimingEnabled;
   }
-  
+
   /*
    * Returns true if user timing API should print to console.
    */
@@ -2255,11 +2255,11 @@ public:
 
   /**
    * Function checks if the user is idle.
-   * 
+   *
    * @param aRequestedIdleTimeInMS    The idle observer's requested idle time.
-   * @param aUserIsIdle               boolean indicating if the user 
+   * @param aUserIsIdle               boolean indicating if the user
    *                                  is currently idle or not.   *
-   * @return NS_OK                    NS_OK returned if the requested idle service and 
+   * @return NS_OK                    NS_OK returned if the requested idle service and
    *                                  the current idle time were successfully obtained.
    *                                  NS_ERROR_FAILURE returned if the the requested
    *                                  idle service or the current idle were not obtained.
