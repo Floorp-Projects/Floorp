@@ -48,7 +48,9 @@ public:
 
   CDMWrapper(cdm::ContentDecryptionModule_8* aCDM)
     : mCDM(aCDM)
-  {}
+  {
+    MOZ_ASSERT(mCDM);
+  }
   cdm::ContentDecryptionModule_8* GetCDM() const { return mCDM; }
 private:
   cdm::ContentDecryptionModule_8* mCDM;
