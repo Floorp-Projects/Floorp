@@ -275,6 +275,299 @@ private:
   MockContentControllerDelayed* mcc;
 };
 
+class APZCTesterBase : public ::testing::Test {
+public:
+  APZCTesterBase() {
+    mcc = new NiceMock<MockContentControllerDelayed>();
+  }
+
+  template<class InputReceiver>
+  void Tap(const RefPtr<InputReceiver>& aTarget, const ScreenIntPoint& aPoint,
+           TimeDuration aTapLength,
+           nsEventStatus (*aOutEventStatuses)[2] = nullptr,
+           uint64_t* aOutInputBlockId = nullptr);
+
+  template<class InputReceiver>
+  void TapAndCheckStatus(const RefPtr<InputReceiver>& aTarget,
+                         const ScreenIntPoint& aPoint, TimeDuration aTapLength);
+
+  template<class InputReceiver>
+  void Pan(const RefPtr<InputReceiver>& aTarget,
+           const ScreenIntPoint& aTouchStart,
+           const ScreenIntPoint& aTouchEnd,
+           bool aKeepFingerDown = false,
+           nsTArray<uint32_t>* aAllowedTouchBehaviors = nullptr,
+           nsEventStatus (*aOutEventStatuses)[4] = nullptr,
+           uint64_t* aOutInputBlockId = nullptr);
+
+  /*
+   * A version of Pan() that only takes y coordinates rather than (x, y) points
+   * for the touch start and end points, and uses 10 for the x coordinates.
+   * This is for convenience, as most tests only need to pan in one direction.
+  */
+  template<class InputReceiver>
+  void Pan(const RefPtr<InputReceiver>& aTarget, int aTouchStartY,
+           int aTouchEndY, bool aKeepFingerDown = false,
+           nsTArray<uint32_t>* aAllowedTouchBehaviors = nullptr,
+           nsEventStatus (*aOutEventStatuses)[4] = nullptr,
+           uint64_t* aOutInputBlockId = nullptr);
+
+  /*
+   * Dispatches mock touch events to the apzc and checks whether apzc properly
+   * consumed them and triggered scrolling behavior.
+  */
+  template<class InputReceiver>
+  void PanAndCheckStatus(const RefPtr<InputReceiver>& aTarget, int aTouchStartY,
+                         int aTouchEndY,
+                         bool aExpectConsumed,
+                         nsTArray<uint32_t>* aAllowedTouchBehaviors,
+                         uint64_t* aOutInputBlockId = nullptr);
+
+  void ApzcPanNoFling(const RefPtr<TestAsyncPanZoomController>& aApzc,
+                      int aTouchStartY,
+                      int aTouchEndY,
+                      uint64_t* aOutInputBlockId = nullptr);
+
+  template<class InputReceiver>
+  void DoubleTap(const RefPtr<InputReceiver>& aTarget,
+                 const ScreenIntPoint& aPoint,
+                 nsEventStatus (*aOutEventStatuses)[4] = nullptr,
+                 uint64_t (*aOutInputBlockIds)[2] = nullptr);
+
+  template<class InputReceiver>
+  void DoubleTapAndCheckStatus(const RefPtr<InputReceiver>& aTarget,
+                               const ScreenIntPoint& aPoint,
+                               uint64_t (*aOutInputBlockIds)[2] = nullptr);
+
+protected:
+  RefPtr<MockContentControllerDelayed> mcc;
+};
+
+template<class InputReceiver>
+void
+APZCTesterBase::Tap(const RefPtr<InputReceiver>& aTarget,
+                    const ScreenIntPoint& aPoint, TimeDuration aTapLength,
+                    nsEventStatus (*aOutEventStatuses)[2],
+                    uint64_t* aOutInputBlockId)
+{
+  // Even if the caller doesn't care about the block id, we need it to set the
+  // allowed touch behaviour below, so make sure aOutInputBlockId is non-null.
+  uint64_t blockId;
+  if (!aOutInputBlockId) {
+    aOutInputBlockId = &blockId;
+  }
+
+  nsEventStatus status = TouchDown(aTarget, aPoint, mcc->Time(), aOutInputBlockId);
+  if (aOutEventStatuses) {
+    (*aOutEventStatuses)[0] = status;
+  }
+  mcc->AdvanceBy(aTapLength);
+
+  // If touch-action is enabled then simulate the allowed touch behaviour
+  // notification that the main thread is supposed to deliver.
+  if (gfxPrefs::TouchActionEnabled() && status != nsEventStatus_eConsumeNoDefault) {
+    SetDefaultAllowedTouchBehavior(aTarget, *aOutInputBlockId);
+  }
+
+  status = TouchUp(aTarget, aPoint, mcc->Time());
+  if (aOutEventStatuses) {
+    (*aOutEventStatuses)[1] = status;
+  }
+}
+
+template<class InputReceiver>
+void
+APZCTesterBase::TapAndCheckStatus(const RefPtr<InputReceiver>& aTarget,
+                                  const ScreenIntPoint& aPoint,
+                                  TimeDuration aTapLength)
+{
+  nsEventStatus statuses[2];
+  Tap(aTarget, aPoint, aTapLength, &statuses);
+  EXPECT_EQ(nsEventStatus_eConsumeDoDefault, statuses[0]);
+  EXPECT_EQ(nsEventStatus_eConsumeDoDefault, statuses[1]);
+}
+
+template<class InputReceiver>
+void
+APZCTesterBase::Pan(const RefPtr<InputReceiver>& aTarget,
+                    const ScreenIntPoint& aTouchStart,
+                    const ScreenIntPoint& aTouchEnd,
+                    bool aKeepFingerDown,
+                    nsTArray<uint32_t>* aAllowedTouchBehaviors,
+                    nsEventStatus (*aOutEventStatuses)[4],
+                    uint64_t* aOutInputBlockId)
+{
+  // Reduce the touch start and move tolerance to a tiny value.
+  // We can't use a scoped pref because this value might be read at some later
+  // time when the events are actually processed, rather than when we deliver
+  // them.
+  gfxPrefs::SetAPZTouchStartTolerance(1.0f / 1000.0f);
+  gfxPrefs::SetAPZTouchMoveTolerance(0.0f);
+  const int OVERCOME_TOUCH_TOLERANCE = 1;
+
+  const TimeDuration TIME_BETWEEN_TOUCH_EVENT = TimeDuration::FromMilliseconds(50);
+
+  // Even if the caller doesn't care about the block id, we need it to set the
+  // allowed touch behaviour below, so make sure aOutInputBlockId is non-null.
+  uint64_t blockId;
+  if (!aOutInputBlockId) {
+    aOutInputBlockId = &blockId;
+  }
+
+  // Make sure the move is large enough to not be handled as a tap
+  nsEventStatus status = TouchDown(aTarget,
+      ScreenIntPoint(aTouchStart.x, aTouchStart.y + OVERCOME_TOUCH_TOLERANCE),
+      mcc->Time(), aOutInputBlockId);
+  if (aOutEventStatuses) {
+    (*aOutEventStatuses)[0] = status;
+  }
+
+  mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
+
+  // Allowed touch behaviours must be set after sending touch-start.
+  if (status != nsEventStatus_eConsumeNoDefault) {
+    if (aAllowedTouchBehaviors) {
+      EXPECT_EQ(1UL, aAllowedTouchBehaviors->Length());
+      aTarget->SetAllowedTouchBehavior(*aOutInputBlockId, *aAllowedTouchBehaviors);
+    } else if (gfxPrefs::TouchActionEnabled()) {
+      SetDefaultAllowedTouchBehavior(aTarget, *aOutInputBlockId);
+    }
+  }
+
+  status = TouchMove(aTarget, aTouchStart, mcc->Time());
+  if (aOutEventStatuses) {
+    (*aOutEventStatuses)[1] = status;
+  }
+
+  mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
+
+  status = TouchMove(aTarget, aTouchEnd, mcc->Time());
+  if (aOutEventStatuses) {
+    (*aOutEventStatuses)[2] = status;
+  }
+
+  mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
+
+  if (!aKeepFingerDown) {
+    status = TouchUp(aTarget, aTouchEnd, mcc->Time());
+  } else {
+    status = nsEventStatus_eIgnore;
+  }
+  if (aOutEventStatuses) {
+    (*aOutEventStatuses)[3] = status;
+  }
+
+  // Don't increment the time here. Animations started on touch-up, such as
+  // flings, are affected by elapsed time, and we want to be able to sample
+  // them immediately after they start, without time having elapsed.
+}
+
+template<class InputReceiver>
+void
+APZCTesterBase::Pan(const RefPtr<InputReceiver>& aTarget,
+                    int aTouchStartY, int aTouchEndY, bool aKeepFingerDown,
+                    nsTArray<uint32_t>* aAllowedTouchBehaviors,
+                    nsEventStatus (*aOutEventStatuses)[4],
+                    uint64_t* aOutInputBlockId)
+{
+  Pan(aTarget, ScreenIntPoint(10, aTouchStartY), ScreenIntPoint(10, aTouchEndY),
+      aKeepFingerDown, aAllowedTouchBehaviors, aOutEventStatuses, aOutInputBlockId);
+}
+
+template<class InputReceiver>
+void
+APZCTesterBase::PanAndCheckStatus(const RefPtr<InputReceiver>& aTarget,
+                                  int aTouchStartY,
+                                  int aTouchEndY,
+                                  bool aExpectConsumed,
+                                  nsTArray<uint32_t>* aAllowedTouchBehaviors,
+                                  uint64_t* aOutInputBlockId)
+{
+  nsEventStatus statuses[4]; // down, move, move, up
+  Pan(aTarget, aTouchStartY, aTouchEndY, false, aAllowedTouchBehaviors, &statuses, aOutInputBlockId);
+
+  EXPECT_EQ(nsEventStatus_eConsumeDoDefault, statuses[0]);
+
+  nsEventStatus touchMoveStatus;
+  if (aExpectConsumed) {
+    touchMoveStatus = nsEventStatus_eConsumeDoDefault;
+  } else {
+    touchMoveStatus = nsEventStatus_eIgnore;
+  }
+  EXPECT_EQ(touchMoveStatus, statuses[1]);
+  EXPECT_EQ(touchMoveStatus, statuses[2]);
+}
+
+void
+APZCTesterBase::ApzcPanNoFling(const RefPtr<TestAsyncPanZoomController>& aApzc,
+                               int aTouchStartY, int aTouchEndY,
+                               uint64_t* aOutInputBlockId)
+{
+  Pan(aApzc, aTouchStartY, aTouchEndY, false, nullptr, nullptr, aOutInputBlockId);
+  aApzc->CancelAnimation();
+}
+
+template<class InputReceiver>
+void
+APZCTesterBase::DoubleTap(const RefPtr<InputReceiver>& aTarget,
+                          const ScreenIntPoint& aPoint,
+                          nsEventStatus (*aOutEventStatuses)[4],
+                          uint64_t (*aOutInputBlockIds)[2])
+{
+  uint64_t blockId;
+  nsEventStatus status = TouchDown(aTarget, aPoint, mcc->Time(), &blockId);
+  if (aOutEventStatuses) {
+    (*aOutEventStatuses)[0] = status;
+  }
+  if (aOutInputBlockIds) {
+    (*aOutInputBlockIds)[0] = blockId;
+  }
+  mcc->AdvanceByMillis(10);
+
+  // If touch-action is enabled then simulate the allowed touch behaviour
+  // notification that the main thread is supposed to deliver.
+  if (gfxPrefs::TouchActionEnabled() && status != nsEventStatus_eConsumeNoDefault) {
+    SetDefaultAllowedTouchBehavior(aTarget, blockId);
+  }
+
+  status = TouchUp(aTarget, aPoint, mcc->Time());
+  if (aOutEventStatuses) {
+    (*aOutEventStatuses)[1] = status;
+  }
+  mcc->AdvanceByMillis(10);
+  status = TouchDown(aTarget, aPoint, mcc->Time(), &blockId);
+  if (aOutEventStatuses) {
+    (*aOutEventStatuses)[2] = status;
+  }
+  if (aOutInputBlockIds) {
+    (*aOutInputBlockIds)[1] = blockId;
+  }
+  mcc->AdvanceByMillis(10);
+
+  if (gfxPrefs::TouchActionEnabled() && status != nsEventStatus_eConsumeNoDefault) {
+    SetDefaultAllowedTouchBehavior(aTarget, blockId);
+  }
+
+  status = TouchUp(aTarget, aPoint, mcc->Time());
+  if (aOutEventStatuses) {
+    (*aOutEventStatuses)[3] = status;
+  }
+}
+
+template<class InputReceiver>
+void
+APZCTesterBase::DoubleTapAndCheckStatus(const RefPtr<InputReceiver>& aTarget,
+                                        const ScreenIntPoint& aPoint,
+                                        uint64_t (*aOutInputBlockIds)[2])
+{
+  nsEventStatus statuses[4];
+  DoubleTap(aTarget, aPoint, &statuses, aOutInputBlockIds);
+  EXPECT_EQ(nsEventStatus_eConsumeDoDefault, statuses[0]);
+  EXPECT_EQ(nsEventStatus_eConsumeDoDefault, statuses[1]);
+  EXPECT_EQ(nsEventStatus_eConsumeDoDefault, statuses[2]);
+  EXPECT_EQ(nsEventStatus_eConsumeDoDefault, statuses[3]);
+}
+
 AsyncPanZoomController*
 TestAPZCTreeManager::NewAPZCInstance(uint64_t aLayersId,
                                      GeckoContentController* aController)
