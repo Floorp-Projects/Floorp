@@ -1226,6 +1226,9 @@ MediaFormatReader::ReturnOutput(MediaData* aData, TrackType aTrack)
     aData->mDiscontinuity = true;
   }
 
+  LOG("Resolved data promise for %s [%lld, %lld]", TrackTypeToStr(aTrack),
+      aData->mTime, aData->GetEndTime());
+
   if (aTrack == TrackInfo::kAudioTrack) {
     if (aData->mType != MediaData::RAW_DATA) {
       AudioData* audioData = static_cast<AudioData*>(aData);
@@ -1253,7 +1256,6 @@ MediaFormatReader::ReturnOutput(MediaData* aData, TrackType aTrack)
     }
     mVideo.ResolvePromise(aData, __func__);
   }
-  LOG("Resolved data promise for %s", TrackTypeToStr(aTrack));
 }
 
 size_t
@@ -1717,6 +1719,8 @@ MediaFormatReader::NotifyDemuxer()
       (!mDemuxerInitDone && !mDemuxerInitRequest.Exists())) {
     return;
   }
+
+  LOGV("");
 
   mDemuxer->NotifyDataArrived();
 
