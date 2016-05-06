@@ -359,6 +359,16 @@ nsAndroidHistory::CanAddURI(nsIURI* aURI, bool* canAdd)
     *canAdd = true;
     return NS_OK;
   }
+  if (scheme.EqualsLiteral("about")) {
+    nsAutoCString path;
+    rv = aURI->GetPath(path);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (StringBeginsWith(path, NS_LITERAL_CSTRING("reader"))) {
+      *canAdd = true;
+      return NS_OK;
+    }
+  }
 
   // now check for all bad things
   if (scheme.EqualsLiteral("about") ||
