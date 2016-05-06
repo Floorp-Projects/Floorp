@@ -2,7 +2,7 @@ $inherits:
   from: 'tasks/builds/sm_base.yml'
   variables:
     build_name: 'sm-arm-sim'
-    build_type: 'opt'
+    build_type: 'debug'
 task:
   payload:
     env:
