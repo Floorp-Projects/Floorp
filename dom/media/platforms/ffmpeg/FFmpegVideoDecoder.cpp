@@ -255,8 +255,6 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
   // If we've decoded a frame then we need to output it
   if (decoded) {
     int64_t pts = mPtsContext.GuessCorrectPts(mFrame->pkt_pts, mFrame->pkt_dts);
-    FFMPEG_LOG("Got one frame output with pts=%lld opaque=%lld",
-               pts, mCodecContext->reordered_opaque);
     // Retrieve duration from dts.
     // We use the first entry found matching this dts (this is done to
     // handle damaged file with multiple frames with the same dts)
@@ -270,6 +268,8 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
       // against the map becoming extremely big.
       mDurationMap.Clear();
     }
+    FFMPEG_LOG("Got one frame output with pts=%lld dts=%lld duration=%lld opaque=%lld",
+               pts, mFrame->pkt_dts, duration, mCodecContext->reordered_opaque);
 
     VideoData::YCbCrBuffer b;
     b.mPlanes[0].mData = mFrame->data[0];
@@ -344,6 +344,7 @@ FFmpegVideoDecoder<LIBAV_VER>::ProcessDrain()
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   RefPtr<MediaRawData> empty(new MediaRawData());
+  empty->mTimecode = mPtsContext.LastDts();
   while (DoDecodeFrame(empty) == DecodeResult::DECODE_FRAME) {
   }
   mCallback->DrainComplete();
