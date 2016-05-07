@@ -33,8 +33,12 @@ CompileScript(ExclusiveContext* cx, LifoAlloc* alloc,
               ScriptSourceObject** sourceObjectOut = nullptr);
 
 ModuleObject*
-CompileModule(ExclusiveContext *cx, const ReadOnlyCompileOptions &options,
-              SourceBufferHolder &srcBuf, LifoAlloc* alloc = nullptr,
+CompileModule(JSContext* cx, const ReadOnlyCompileOptions& options,
+              SourceBufferHolder& srcBuf);
+
+ModuleObject*
+CompileModule(ExclusiveContext* cx, const ReadOnlyCompileOptions& options,
+              SourceBufferHolder& srcBuf, LifoAlloc* alloc,
               ScriptSourceObject** sourceObjectOut = nullptr);
 
 bool
