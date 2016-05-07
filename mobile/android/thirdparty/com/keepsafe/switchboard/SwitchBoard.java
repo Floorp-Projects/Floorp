@@ -168,8 +168,12 @@ public class SwitchBoard {
      * @return returns value for experiment or false if experiment does not exist.
      */
     public static boolean isInExperiment(Context c, String experimentName) {
-        final String config = Preferences.getDynamicConfigJson(c);
+        final Boolean override = Preferences.getOverrideValue(c, experimentName);
+        if (override != null) {
+            return override;
+        }
 
+        final String config = Preferences.getDynamicConfigJson(c);
         if (config == null) {
             return false;
         }
@@ -186,26 +190,29 @@ public class SwitchBoard {
     }
 
     /**
-     * @returns a list of all active experiments.
+     * @return a list of all active experiments.
      */
     public static List<String> getActiveExperiments(Context c) {
-        ArrayList<String> returnList = new ArrayList<String>();
+        final ArrayList<String> returnList = new ArrayList<>();
 
-        // lookup experiment in config
-        String config = Preferences.getDynamicConfigJson(c);
-
-        // if it does not exist
+        final String config = Preferences.getDynamicConfigJson(c);
         if (config == null) {
             return returnList;
         }
 
         try {
-            JSONObject experiments = new JSONObject(config);
+            final JSONObject experiments = new JSONObject(config);
             Iterator<?> iter = experiments.keys();
             while (iter.hasNext()) {
-                String key = (String)iter.next();
-                JSONObject experiment = experiments.getJSONObject(key);
-                if (experiment.getBoolean(IS_EXPERIMENT_ACTIVE)) {
+                final String key = (String) iter.next();
+
+                // Check override value before reading saved JSON.
+                Boolean isActive = Preferences.getOverrideValue(c, key);
+                if (isActive == null) {
+                    final JSONObject experiment = experiments.getJSONObject(key);
+                    isActive = experiment.getBoolean(IS_EXPERIMENT_ACTIVE);
+                }
+                if (isActive) {
                     returnList.add(key);
                 }
             }
