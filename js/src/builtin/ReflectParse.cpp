@@ -3747,6 +3747,9 @@ reflect_parse(JSContext* cx, uint32_t argc, Value* vp)
         if (!pn)
             return false;
     } else {
+        if (!GlobalObject::ensureModulePrototypesCreated(cx, cx->global()))
+            return false;
+
         Rooted<ModuleObject*> module(cx, ModuleObject::create(cx, nullptr));
         if (!module)
             return false;
