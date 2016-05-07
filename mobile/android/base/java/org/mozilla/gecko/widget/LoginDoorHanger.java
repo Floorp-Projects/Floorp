@@ -33,6 +33,8 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 
+import java.util.Locale;
+
 public class LoginDoorHanger extends DoorHanger {
     private static final String LOGTAG = "LoginDoorHanger";
     private enum ActionType { EDIT, SELECT }
@@ -83,7 +85,7 @@ public class LoginDoorHanger extends DoorHanger {
         return new Button.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final String expandedExtra = mType.toString().toLowerCase() + "-" + telemetryExtra;
+                final String expandedExtra = mType.toString().toLowerCase(Locale.US) + "-" + telemetryExtra;
                 Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.DOORHANGER, expandedExtra);
 
                 final JSONObject response = new JSONObject();
