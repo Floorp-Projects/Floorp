@@ -597,10 +597,11 @@ ModuleGenerator::allocateGlobal(ValType type, bool isConst, uint32_t* index)
 }
 
 void
-ModuleGenerator::initHeapUsage(HeapUsage heapUsage)
+ModuleGenerator::initHeapUsage(HeapUsage heapUsage, uint32_t minHeapLength)
 {
     MOZ_ASSERT(module_->heapUsage == HeapUsage::None);
     module_->heapUsage = heapUsage;
+    shared_->minHeapLength = minHeapLength;
 }
 
 bool
