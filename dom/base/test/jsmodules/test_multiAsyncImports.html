@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test a loading multiple modules with the async attribute from top level</title>
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+  var results = [];
+
+  SimpleTest.waitForExplicitFinish();
+
+  function arrayEquals(a, b) {
+    if (a.length != b.length) {
+      return false;
+    }
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) {
+        return false;
+      }
+      return true;
+    }
+  }
+
+  function testLoaded() {
+    ok(arrayEquals(results.sort(), [1, 2, 3]), 'Check modules imported');
+    SimpleTest.finish();
+  }
+</script>
+<script type="module" src="module_simple1.js" async></script>
+<script type="module" src="module_simple2.js" async></script>
+<script type="module" src="module_simple3.js" async></script>
+<body onload='testLoaded()'></body>
