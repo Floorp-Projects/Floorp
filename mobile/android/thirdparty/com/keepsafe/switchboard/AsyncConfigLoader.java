@@ -32,7 +32,6 @@ import android.os.AsyncTask;
 public class AsyncConfigLoader extends AsyncTask<Void, Void, Void> {
 
     private Context context;
-    private String uuid;
     private String defaultServerUrl;
 
     /**
@@ -40,18 +39,16 @@ public class AsyncConfigLoader extends AsyncTask<Void, Void, Void> {
      * or SwitchBoard.loadConfig.
      * Loads config with a custom UUID
      * @param c Application context
-     * @param uuid Custom UUID
      * @param defaultServerUrl Default URL endpoint for Switchboard config.
      */
-    public AsyncConfigLoader(Context c, String uuid, String defaultServerUrl) {
+    public AsyncConfigLoader(Context c, String defaultServerUrl) {
         this.context = c;
-        this.uuid = uuid;
         this.defaultServerUrl = defaultServerUrl;
     }
 
     @Override
     protected Void doInBackground(Void... params) {
-        SwitchBoard.loadConfig(context, uuid, defaultServerUrl);
+        SwitchBoard.loadConfig(context, defaultServerUrl);
         return null;
     }
 }
