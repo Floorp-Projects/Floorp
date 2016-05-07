@@ -199,7 +199,6 @@ public class BrowserApp extends GeckoApp
     public static final String GUEST_BROWSING_ARG = "--guest";
 
     // Intent String extras used to specify custom Switchboard configurations.
-    private static final String INTENT_KEY_SWITCHBOARD_UUID = "switchboard-uuid";
     private static final String INTENT_KEY_SWITCHBOARD_HOST = "switchboard-host";
 
     private static final String DEFAULT_SWITCHBOARD_HOST = "switchboard.services.mozilla.com";
@@ -791,14 +790,11 @@ public class BrowserApp extends GeckoApp
             return;
         }
 
-        final String switchboardUUID = ContextUtils.getStringExtra(intent, INTENT_KEY_SWITCHBOARD_UUID);
-        SwitchBoard.setUUIDFromExtra(switchboardUUID);
-
         // Loads the Switchboard config from the specified server URL. Eventually, we
         // should use the endpoint returned by the server URL, to support migrating
         // to a new endpoint. However, if we want to do that, we'll need to find a different
         // solution for dynamically changing the server URL from the intent.
-        new AsyncConfigLoader(this, switchboardUUID, serverUrl).execute();
+        new AsyncConfigLoader(this, serverUrl).execute();
     }
 
     private void showUpdaterPermissionSnackbar() {
