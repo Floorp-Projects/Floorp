@@ -486,9 +486,12 @@ this.DownloadUtils = {
       if (typeof Intl != "undefined") {
         aBytes = getLocaleNumberFormat(fractionDigits)
                    .format(aBytes);
-      } else if (gDecimalSymbol != ".") {
+      } else {
         // FIXME: Fall back to the old hack, will be fixed in bug 1200494.
-        aBytes = aBytes.toFixed(fractionDigits).replace(".", gDecimalSymbol);
+        aBytes = aBytes.toFixed(fractionDigits);
+        if (gDecimalSymbol != ".") {
+          aBytes = aBytes.replace(".", gDecimalSymbol);
+        }
       }
     }
 
