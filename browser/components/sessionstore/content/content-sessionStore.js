@@ -83,6 +83,18 @@ var EventListener = {
       return;
     }
 
+    if (content.document.documentURI.startsWith("about:reader")) {
+      if (event.type == "load" &&
+          !content.document.body.classList.contains("loaded")) {
+        // Don't restore the scroll position of an about:reader page at this
+        // point; listen for the custom event dispatched from AboutReader.jsm.
+        content.addEventListener("AboutReaderContentReady", this);
+        return;
+      }
+
+      content.removeEventListener("AboutReaderContentReady", this);
+    }
+
     // Restore the form data and scroll position. If we're not currently
     // restoring a tab state then this call will simply be a noop.
     gContentRestore.restoreDocument();
