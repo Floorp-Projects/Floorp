@@ -35,21 +35,24 @@ add_task(function* () {
   let variablesView = view._variablesView;
   let searchbox = variablesView._searchboxNode;
 
-  assertAttrs(view, "foo,__proto__", "To start with, we just see the top level foo attr");
+  assertAttrs(view, "foo,__proto__",
+              "To start with, we just see the top level foo attr");
 
   fetched = jsterm.once("variablesview-fetched");
   searchbox.value = "bar";
   searchbox.doCommand();
   view = yield fetched;
 
-  assertAttrs(view, "", "If we don't manually expand nested attr, we don't see them in search");
+  assertAttrs(view, "",
+              "If we don't manually expand nested attr, we don't see them");
 
   fetched = jsterm.once("variablesview-fetched");
   searchbox.value = "";
   searchbox.doCommand();
   view = yield fetched;
 
-  assertAttrs(view, "foo", "If we reset the search, we get back to original state");
+  assertAttrs(view, "foo",
+              "If we reset the search, we get back to original state");
 
   yield [...view][0][1].expand();
 
@@ -72,5 +75,6 @@ add_task(function* () {
   searchbox.doCommand();
   view = yield fetched;
 
-  assertAttrs(view, "foo", "If we reset again, we get back to original state again");
+  assertAttrs(view, "foo",
+              "If we reset again, we get back to original state again");
 });
