@@ -553,3 +553,10 @@ function popPrefs() {
   });
 }
 
+function* checkScroll(tab, expected, msg) {
+  let browser = tab.linkedBrowser;
+  yield TabStateFlusher.flush(browser);
+
+  let scroll = JSON.parse(ss.getTabState(tab)).scroll || null;
+  is(JSON.stringify(scroll), JSON.stringify(expected), msg);
+}

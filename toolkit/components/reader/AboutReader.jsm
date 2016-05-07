@@ -700,6 +700,9 @@ AboutReader.prototype = {
     this._doc.body.classList.add("loaded");
 
     Services.obs.notifyObservers(this._win, "AboutReader:Ready", "");
+
+    this._doc.dispatchEvent(
+      new this._win.CustomEvent("AboutReaderContentReady", { bubbles: true, cancelable: false }));
   },
 
   _hideContent: function() {
