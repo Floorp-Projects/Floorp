@@ -1409,6 +1409,12 @@ MediaFormatReader::SkipVideoDemuxToNextKeyFrame(media::TimeUnit aTimeThreshold)
   }
   Reset(TrackInfo::kVideoTrack);
 
+  if (mVideo.mError) {
+    // We have flushed the decoder, and we are in error state, we can
+    // immediately reject the promise.
+    mVideo.RejectPromise(DECODE_ERROR, __func__);
+  }
+
   mSkipRequest.Begin(mVideo.mTrackDemuxer->SkipToNextRandomAccessPoint(aTimeThreshold)
                           ->Then(OwnerThread(), __func__, this,
                                  &MediaFormatReader::OnVideoSkipCompleted,
