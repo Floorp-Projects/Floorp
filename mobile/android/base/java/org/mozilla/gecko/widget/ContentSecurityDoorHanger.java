@@ -21,6 +21,8 @@ import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.toolbar.SiteIdentityPopup;
 
+import java.util.Locale;
+
 public class ContentSecurityDoorHanger extends DoorHanger {
     private static final String LOGTAG = "GeckoSecurityDoorHanger";
 
@@ -101,7 +103,7 @@ public class ContentSecurityDoorHanger extends DoorHanger {
         return new Button.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final String expandedExtra = mType.toString().toLowerCase() + "-" + telemetryExtra;
+                final String expandedExtra = mType.toString().toLowerCase(Locale.US) + "-" + telemetryExtra;
                 Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.DOORHANGER, expandedExtra);
 
                 final JSONObject response = new JSONObject();

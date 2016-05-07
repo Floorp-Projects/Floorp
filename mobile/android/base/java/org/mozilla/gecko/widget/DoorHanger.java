@@ -23,6 +23,8 @@ import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 
+import java.util.Locale;
+
 public abstract class DoorHanger extends LinearLayout {
 
     public static DoorHanger Get(Context context, DoorhangerConfig config) {
@@ -100,7 +102,7 @@ public abstract class DoorHanger extends LinearLayout {
         contentStub.setLayoutResource(getContentResource());
         contentStub.inflate();
 
-        final String typeExtra = mType.toString().toLowerCase();
+        final String typeExtra = mType.toString().toLowerCase(Locale.US);
         Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.DOORHANGER, typeExtra);
     }
 
@@ -165,7 +167,7 @@ public abstract class DoorHanger extends LinearLayout {
         mLink.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                final String typeExtra = mType.toString().toLowerCase();
+                final String typeExtra = mType.toString().toLowerCase(Locale.US);
                 Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.DOORHANGER, typeExtra);
                 Tabs.getInstance().loadUrlInTab(url);
             }
