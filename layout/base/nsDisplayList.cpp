@@ -4362,8 +4362,11 @@ nsDisplayOpacity::GetLayerState(nsDisplayListBuilder* aBuilder,
     return LAYER_INACTIVE;
   }
 
-  if (NeedsActiveLayer(aBuilder))
-    return LAYER_ACTIVE;
+  if (NeedsActiveLayer(aBuilder)) {
+    // Returns LAYER_ACTIVE_FORCE to avoid flatterning the layer for async
+    // animations.
+    return LAYER_ACTIVE_FORCE;
+  }
 
   return RequiredLayerStateForChildren(aBuilder, aManager, aParameters, mList, GetAnimatedGeometryRoot());
 }
@@ -5955,8 +5958,11 @@ nsDisplayTransform::GetLayerState(nsDisplayListBuilder* aBuilder,
       mIsTransformSeparator) {
     return LAYER_ACTIVE_FORCE;
   }
+
   if (MayBeAnimated(aBuilder)) {
-    return LAYER_ACTIVE;
+    // Returns LAYER_ACTIVE_FORCE to avoid flatterning the layer for async
+    // animations.
+    return LAYER_ACTIVE_FORCE;
   }
 
   const nsStyleDisplay* disp = mFrame->StyleDisplay();
