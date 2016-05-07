@@ -166,7 +166,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     jit::MacroAssembler& masm() { return masm_; }
 
     // Heap usage:
-    void initHeapUsage(HeapUsage heapUsage);
+    void initHeapUsage(HeapUsage heapUsage, uint32_t minHeapLength = 0);
     bool usesHeap() const;
 
     // Signatures:
