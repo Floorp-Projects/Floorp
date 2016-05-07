@@ -219,19 +219,6 @@ var gAnimationsTests = [
   },
 ];
 
-gAnimationsTests.forEach(function(subtest) {
-  promise_test(function(t) {
-    var animation = addDivAndAnimate(t,
-                                     { class: 'compositable' },
-                                     subtest.frames, 100 * MS_PER_SEC);
-    return animation.ready.then(function() {
-      assert_animation_property_state_equals(
-        animation.effect.getProperties(),
-        subtest.expected);
-    });
-  }, subtest.desc);
-});
-
 var gPerformanceWarningTests = [
   {
     desc: 'preserve-3d transform',
