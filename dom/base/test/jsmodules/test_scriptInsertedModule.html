@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test a script-inserted module</title>
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+  var result;
+
+  let script = document.createElement("script");
+  script.type = "module";
+  script.src = "./module_simpleImport.js";
+  document.head.appendChild(script);
+
+  SimpleTest.waitForExplicitFinish();
+
+  function testLoaded() {
+    ok(result == 42);
+    SimpleTest.finish();
+  }
+</script>
+<body onload='testLoaded()'></body>
