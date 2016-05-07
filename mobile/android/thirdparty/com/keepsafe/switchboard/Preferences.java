@@ -32,6 +32,8 @@ public class Preferences {
     private static final String kDynamicConfigServerUrl = "dynamic-config-server-url";
     private static final String kDynamicConfig = "dynamic-config";
 
+    private static final String OVERRIDE_PREFIX = "experiment.override.";
+
     /**
      * Returns the stored config server URL.
      * @param c Context
@@ -73,6 +75,54 @@ public class Preferences {
         final SharedPreferences.Editor editor = c.getApplicationContext().
                 getSharedPreferences(switchBoardSettings, Context.MODE_PRIVATE).edit();
         editor.putString(kDynamicConfig, configJson);
+        editor.apply();
+    }
+
+    /**
+     * Gets the override value for an experiment.
+     *
+     * @param c Context
+     * @param experimentName Experiment name
+     * @return Whether or not the experiment should be enabled, or null if there is no override.
+     */
+    @Nullable public static Boolean getOverrideValue(Context c, String experimentName) {
+        final SharedPreferences prefs = c.getApplicationContext().
+                getSharedPreferences(switchBoardSettings, Context.MODE_PRIVATE);
+
+        final String key = OVERRIDE_PREFIX + experimentName;
+        if (prefs.contains(key)) {
+            // This will never fall back to the default value.
+            return prefs.getBoolean(key, false);
+        }
+
+        // Default to returning null if no override was found.
+        return null;
+    }
+
+    /**
+     * Saves an override value for an experiment.
+     *
+     * @param c Context
+     * @param experimentName Experiment name
+     * @param isEnabled Whether or not to enable the experiment
+     */
+    public static void setOverrideValue(Context c, String experimentName, boolean isEnabled) {
+        final SharedPreferences.Editor editor = c.getApplicationContext().
+                getSharedPreferences(switchBoardSettings, Context.MODE_PRIVATE).edit();
+        editor.putBoolean(OVERRIDE_PREFIX + experimentName, isEnabled);
+        editor.apply();
+    }
+
+    /**
+     * Clears the override value for an experiment.
+     *
+     * @param c Context
+     * @param experimentName Experiment name
+     */
+    public static void clearOverrideValue(Context c, String experimentName) {
+        final SharedPreferences.Editor editor = c.getApplicationContext().
+                getSharedPreferences(switchBoardSettings, Context.MODE_PRIVATE).edit();
+        editor.remove(OVERRIDE_PREFIX + experimentName);
         editor.apply();
     }
 }
