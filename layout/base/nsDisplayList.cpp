@@ -4264,6 +4264,27 @@ IsItemTooSmallForActiveLayer(nsDisplayItem* aItem)
     nsIntSize(MIN_ACTIVE_LAYER_SIZE_DEV_PIXELS, MIN_ACTIVE_LAYER_SIZE_DEV_PIXELS);
 }
 
+static void
+SetAnimationPerformanceWarningForTooSmallItem(nsDisplayItem* aItem,
+                                              nsCSSProperty aProperty)
+{
+  // We use ToNearestPixels() here since ToOutsidePixels causes some sort of
+  // errors. See https://bugzilla.mozilla.org/show_bug.cgi?id=1258904#c19
+  nsIntRect visibleDevPixels = aItem->GetVisibleRect().ToNearestPixels(
+          aItem->Frame()->PresContext()->AppUnitsPerDevPixel());
+
+  // Set performance warning only if the visible dev pixels is not empty
+  // because dev pixels is empty if the frame has 'preserve-3d' style.
+  if (visibleDevPixels.IsEmpty()) {
+    return;
+  }
+
+  EffectCompositor::SetPerformanceWarning(aItem->Frame(), aProperty,
+      AnimationPerformanceWarning(
+        AnimationPerformanceWarning::Type::ContentTooSmall,
+        { visibleDevPixels.Width(), visibleDevPixels.Height() }));
+}
+
 bool
 nsDisplayOpacity::NeedsActiveLayer(nsDisplayListBuilder* aBuilder)
 {
@@ -4274,7 +4295,7 @@ nsDisplayOpacity::NeedsActiveLayer(nsDisplayListBuilder* aBuilder)
     if (!IsItemTooSmallForActiveLayer(this)) {
       return true;
     }
-    // FIXME: Set animation performance warning here.
+    SetAnimationPerformanceWarningForTooSmallItem(this, eCSSProperty_opacity);
   }
   return false;
 }
@@ -5942,7 +5963,7 @@ nsDisplayTransform::MayBeAnimated(nsDisplayListBuilder* aBuilder)
     if (!IsItemTooSmallForActiveLayer(this)) {
       return true;
     }
-    // FIXME: Set animation performance warning here.
+    SetAnimationPerformanceWarningForTooSmallItem(this, eCSSProperty_transform);
   }
   return false;
 }
