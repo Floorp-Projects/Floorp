@@ -333,12 +333,6 @@
           'WEBRTC_THREAD_RR',
         ],
       }],
-      ['OS=="dragonfly" or OS=="netbsd"', {
-        'defines': [
-          # doesn't support pthread_condattr_setclock
-          'WEBRTC_CLOCK_TYPE_REALTIME',
-        ],
-      }],
       ['OS=="openbsd"', {
         'defines' : [
           'WEBRTC_AUDIO_SNDIO',
