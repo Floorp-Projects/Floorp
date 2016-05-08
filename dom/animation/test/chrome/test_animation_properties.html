@@ -12,6 +12,11 @@
   target="_blank">Mozilla Bug 1254419</a>
 <div id="log"></div>
 <style>
+
+:root {
+  --var-100px: 100px;
+  --var-100px-200px: 100px 200px;
+}
 div {
   font-size: 10px; /* For calculating em-based units */
 }
@@ -445,7 +450,7 @@ var gTests = [
                   values: [ value(0, '2px', 'replace', 'linear'),
                             value(1, '3px', 'replace') ] } ]
   },
-  { desc:     'a keyframe sequence where greater shorthand precedes' +
+  { desc:     'a keyframe sequence where greater shorthand precedes'
               + ' lesser shorthand',
     frames:   [ { offset: 0, border: '2px dotted rgb(4, 5, 6)',
                              borderLeft: '1px solid rgb(1, 2, 3)' },
@@ -487,7 +492,47 @@ var gTests = [
     expected: [ { property: 'left',
                   values: [ value(0, '100px', 'replace', 'linear'),
                             value(1, '200px', 'replace') ] } ]
-  }
+  },
+  { desc:     'calc() expressions are resolved to the equivalent units',
+    frames:   { left: ['calc(10em + 10px)', 'calc(10em + 10%)'] },
+    expected: [ { property: 'left',
+                  values: [ value(0, 'calc(110px)', 'replace', 'linear'),
+                            value(1, 'calc(100px + 10%)', 'replace') ] } ]
+  },
+
+  // ---------------------------------------------------------------------
+  //
+  // Tests for CSS variable handling conversion
+  //
+  // ---------------------------------------------------------------------
+  { desc:     'CSS variables are resolved to their corresponding values',
+    frames:   { left: ['10px', 'var(--var-100px)'] },
+    expected: [ { property: 'left',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '100px', 'replace') ] } ]
+  },
+  { desc:     'CSS variables in calc() expressions are resolved',
+    frames:   { left: ['10px', 'calc(var(--var-100px) / 2 - 10%)'] },
+    expected: [ { property: 'left',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, 'calc(50px + -10%)', 'replace') ] } ]
+  },
+  { desc:     'CSS variables in shorthands are resolved to their corresponding'
+              + ' values',
+    frames:   { margin: ['10px', 'var(--var-100px-200px)'] },
+    expected: [ { property: 'margin-top',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '100px', 'replace') ] },
+                { property: 'margin-right',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '200px', 'replace') ] },
+                { property: 'margin-bottom',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '100px', 'replace') ] },
+                { property: 'margin-left',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '200px', 'replace') ] } ]
+  },
 ];
 
 gTests.forEach(function(subtest) {
