@@ -1913,6 +1913,12 @@ public:
   static bool IsFullScreenApiEnabled();
 
   /**
+   * Returns true if the unprefixed fullscreen API is enabled.
+   */
+  static bool IsUnprefixedFullscreenApiEnabled()
+    { return sIsUnprefixedFullscreenApiEnabled; }
+
+  /**
    * Returns true if requests for full-screen are allowed in the current
    * context. Requests are only allowed if the user initiated them (like with
    * a mouse-click or key press), unless this check has been disabled by
@@ -2661,6 +2667,7 @@ private:
   static bool sIsHandlingKeyBoardEvent;
   static bool sAllowXULXBL_for_file;
   static bool sIsFullScreenApiEnabled;
+  static bool sIsUnprefixedFullscreenApiEnabled;
   static bool sTrustedFullScreenOnly;
   static bool sIsCutCopyAllowed;
   static uint32_t sHandlingInputTimeout;
