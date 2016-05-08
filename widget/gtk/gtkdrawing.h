@@ -102,12 +102,19 @@ typedef enum {
    * the arrow direction.
    */
   MOZ_GTK_SCROLLBAR_BUTTON,
-  /* Paints the trough (track) of a GtkScrollbar. */
+
+  /* Horizontal GtkScrollbar counterparts */
   MOZ_GTK_SCROLLBAR_HORIZONTAL,
-  MOZ_GTK_SCROLLBAR_VERTICAL,
+  /* Paints the trough (track) of a GtkScrollbar. */
+  MOZ_GTK_SCROLLBAR_TROUGH_HORIZONTAL,
   /* Paints the slider (thumb) of a GtkScrollbar. */
   MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL,
+
+  /* Vertical GtkScrollbar counterparts */
+  MOZ_GTK_SCROLLBAR_VERTICAL,
+  MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL,
   MOZ_GTK_SCROLLBAR_THUMB_VERTICAL,
+
   /* Paints a GtkScale. */
   MOZ_GTK_SCALE_HORIZONTAL,
   MOZ_GTK_SCALE_VERTICAL,
@@ -190,8 +197,12 @@ typedef enum {
   MOZ_GTK_SPLITTER_VERTICAL,
   /* Paints the background of a window, dialog or page. */
   MOZ_GTK_WINDOW,
+  /* Window container for all widgets */
+  MOZ_GTK_WINDOW_CONTAINER,
   /* Paints a GtkInfoBar, for notifications. */
-  MOZ_GTK_INFO_BAR
+  MOZ_GTK_INFO_BAR,
+
+  MOZ_GTK_WIDGET_NODE_COUNT
 } WidgetNodeType;
 
 /*** General library functions ***/

@@ -14,6 +14,7 @@
 #include "gtkdrawing.h"
 #include "mozilla/Assertions.h"
 #include "prinrval.h"
+#include "WidgetStyleCache.h"
 
 #include <math.h>
 
@@ -24,8 +25,6 @@ static GtkWidget* gToggleButtonWidget;
 static GtkWidget* gButtonArrowWidget;
 static GtkWidget* gCheckboxWidget;
 static GtkWidget* gRadiobuttonWidget;
-static GtkWidget* gHorizScrollbarWidget;
-static GtkWidget* gVertScrollbarWidget;
 static GtkWidget* gSpinWidget;
 static GtkWidget* gHScaleWidget;
 static GtkWidget* gVScaleWidget;
@@ -117,9 +116,7 @@ static gint
 ensure_window_widget()
 {
     if (!gProtoWindow) {
-        gProtoWindow = gtk_window_new(GTK_WINDOW_POPUP);
-        gtk_widget_realize(gProtoWindow);
-        moz_gtk_set_widget_name(gProtoWindow);
+        gProtoWindow = GetWidget(MOZ_GTK_WINDOW);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -127,14 +124,10 @@ ensure_window_widget()
 static gint
 setup_widget_prototype(GtkWidget* widget)
 {
-    ensure_window_widget();
     if (!gProtoLayout) {
-        gProtoLayout = gtk_fixed_new();
-        gtk_container_add(GTK_CONTAINER(gProtoWindow), gProtoLayout);
+        gProtoLayout = GetWidget(MOZ_GTK_WINDOW_CONTAINER);
     }
-
     gtk_container_add(GTK_CONTAINER(gProtoLayout), widget);
-    gtk_widget_realize(widget);
     return MOZ_GTK_SUCCESS;
 }
 
@@ -208,20 +201,6 @@ ensure_radiobutton_widget()
     if (!gRadiobuttonWidget) {
         gRadiobuttonWidget = gtk_radio_button_new_with_label(NULL, "M");
         setup_widget_prototype(gRadiobuttonWidget);
-    }
-    return MOZ_GTK_SUCCESS;
-}
-
-static gint
-ensure_scrollbar_widget()
-{
-    if (!gVertScrollbarWidget) {
-        gVertScrollbarWidget = gtk_scrollbar_new(GTK_ORIENTATION_VERTICAL, NULL);
-        setup_widget_prototype(gVertScrollbarWidget);
-    }
-    if (!gHorizScrollbarWidget) {
-        gHorizScrollbarWidget = gtk_scrollbar_new(GTK_ORIENTATION_HORIZONTAL, NULL);
-        setup_widget_prototype(gHorizScrollbarWidget);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -1096,15 +1075,11 @@ moz_gtk_scrollbar_button_paint(cairo_t *cr, GdkRectangle* rect,
     GdkRectangle arrow_rect;
     gdouble arrow_angle;
     GtkStyleContext* style;
-    GtkWidget *scrollbar;
     gint arrow_displacement_x, arrow_displacement_y;
 
-    ensure_scrollbar_widget();
-
-    if (flags & MOZ_GTK_STEPPER_VERTICAL)
-        scrollbar = gVertScrollbarWidget;
-    else
-        scrollbar = gHorizScrollbarWidget;
+    GtkWidget *scrollbar =
+        GetWidget(flags & MOZ_GTK_STEPPER_VERTICAL ?
+                  MOZ_GTK_SCROLLBAR_VERTICAL : MOZ_GTK_SCROLLBAR_HORIZONTAL);
 
     gtk_widget_set_direction(scrollbar, direction);
 
@@ -1183,26 +1158,19 @@ moz_gtk_scrollbar_trough_paint(WidgetNodeType widget,
                                GtkScrollbarTrackFlags flags,
                                GtkTextDirection direction)
 {
-    GtkStyleContext* style;
-    GtkScrollbar *scrollbar;
-
-    ensure_scrollbar_widget();
-
-    if (widget ==  MOZ_GTK_SCROLLBAR_HORIZONTAL)
-        scrollbar = GTK_SCROLLBAR(gHorizScrollbarWidget);
-    else
-        scrollbar = GTK_SCROLLBAR(gVertScrollbarWidget);
-
-    gtk_widget_set_direction(GTK_WIDGET(scrollbar), direction);
-    
     if (flags & MOZ_GTK_TRACK_OPAQUE) {
-        style = gtk_widget_get_style_context(GTK_WIDGET(gProtoWindow));
+        GtkStyleContext* style =
+            gtk_widget_get_style_context(GTK_WIDGET(gProtoWindow));
         gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
     }
 
-    style = gtk_widget_get_style_context(GTK_WIDGET(scrollbar));
-    gtk_style_context_save(style);
-    gtk_style_context_add_class(style, GTK_STYLE_CLASS_TROUGH);
+    GtkStyleContext* style =
+        ClaimStyleContext(widget == MOZ_GTK_SCROLLBAR_HORIZONTAL ?
+                          MOZ_GTK_SCROLLBAR_TROUGH_HORIZONTAL :
+                          MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL,
+                          direction);
+    // TODO - integate with ClaimStyleContext()?
+    gtk_style_context_set_direction(style, direction);
 
     gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
     gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
@@ -1211,7 +1179,8 @@ moz_gtk_scrollbar_trough_paint(WidgetNodeType widget,
         gtk_render_focus(style, cr,
                          rect->x, rect->y, rect->width, rect->height);
     }
-    gtk_style_context_restore(style);
+    ReleaseStyleContext(style);
+
     return MOZ_GTK_SUCCESS;
 }
 
@@ -1222,24 +1191,13 @@ moz_gtk_scrollbar_thumb_paint(WidgetNodeType widget,
                               GtkTextDirection direction)
 {
     GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
-    GtkStyleContext* style;
-    GtkScrollbar *scrollbar;
     GtkBorder margin;
 
-    ensure_scrollbar_widget();
+    GtkStyleContext* style = ClaimStyleContext(widget, direction);
 
-    if (widget == MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL)
-        scrollbar = GTK_SCROLLBAR(gHorizScrollbarWidget);
-    else
-        scrollbar = GTK_SCROLLBAR(gVertScrollbarWidget);
-
-    gtk_widget_set_direction(GTK_WIDGET(scrollbar), direction);
-
-    style = gtk_widget_get_style_context(GTK_WIDGET(scrollbar));
-    gtk_style_context_save(style);
-
-    gtk_style_context_add_class(style, GTK_STYLE_CLASS_SLIDER);
+    // TODO - integate those with ClaimStyleContext()?
     gtk_style_context_set_state(style, state_flags);
+    gtk_style_context_set_direction(style, direction);
 
     gtk_style_context_get_margin (style, state_flags, &margin);
 
@@ -1251,7 +1209,7 @@ moz_gtk_scrollbar_thumb_paint(WidgetNodeType widget,
                      (widget == MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL) ?
                      GTK_ORIENTATION_HORIZONTAL : GTK_ORIENTATION_VERTICAL);
 
-    gtk_style_context_restore(style);
+    ReleaseStyleContext(style);
 
     return MOZ_GTK_SUCCESS;
 }
@@ -3207,17 +3165,22 @@ moz_gtk_get_scalethumb_metrics(GtkOrientation orient, gint* thumb_length, gint* 
 gint
 moz_gtk_get_scrollbar_metrics(MozGtkScrollbarMetrics *metrics)
 {
-    ensure_scrollbar_widget();
-
-    gtk_style_context_get_style(gtk_widget_get_style_context(gHorizScrollbarWidget),
+    GtkStyleContext* style = ClaimStyleContext(MOZ_GTK_SCROLLBAR_VERTICAL);
+    gtk_style_context_get_style(style,
                                 "slider_width", &metrics->slider_width,
                                 "trough_border", &metrics->trough_border,
                                 "stepper_size", &metrics->stepper_size,
                                 "stepper_spacing", &metrics->stepper_spacing,
-                                NULL);
+                                "min-slider-length", &metrics->min_slider_size,
+                                nullptr);
+    ReleaseStyleContext(style);
 
-    metrics->min_slider_size = 
-        gtk_range_get_min_slider_size(GTK_RANGE(gHorizScrollbarWidget));
+    if(!gtk_check_version(3, 20, 0)) {
+        style = ClaimStyleContext(MOZ_GTK_SCROLLBAR_THUMB_VERTICAL);
+        gtk_style_context_get(style, gtk_style_context_get_state(style),
+                              "min-height", &metrics->min_slider_size, nullptr);
+        ReleaseStyleContext(style);
+    }
 
     return MOZ_GTK_SUCCESS;
 }
@@ -3463,22 +3426,22 @@ moz_gtk_widget_paint(WidgetNodeType widget, cairo_t *cr,
 
 GtkWidget* moz_gtk_get_scrollbar_widget(void)
 {
-    MOZ_ASSERT(is_initialized, "Forgot to call moz_gtk_init()");
-    ensure_scrollbar_widget();
-    return gHorizScrollbarWidget;
+    return GetWidget(MOZ_GTK_SCROLLBAR_HORIZONTAL);
 }
 
 gboolean moz_gtk_has_scrollbar_buttons(void)
 {
     gboolean backward, forward, secondary_backward, secondary_forward;
     MOZ_ASSERT(is_initialized, "Forgot to call moz_gtk_init()");
-    ensure_scrollbar_widget();
-    gtk_style_context_get_style(gtk_widget_get_style_context(gHorizScrollbarWidget),
+    GtkStyleContext* style = ClaimStyleContext(MOZ_GTK_SCROLLBAR_VERTICAL);
+    gtk_style_context_get_style(style,
                                 "has-backward-stepper", &backward,
                                 "has-forward-stepper", &forward,
                                 "has-secondary-backward-stepper", &secondary_backward,
                                 "has-secondary-forward-stepper", &secondary_forward,
                                 NULL);
+    ReleaseStyleContext(style);
+
     return backward | forward | secondary_forward | secondary_forward;
 }
 
@@ -3488,8 +3451,8 @@ moz_gtk_shutdown()
     if (gTooltipWidget)
         gtk_widget_destroy(gTooltipWidget);
     /* This will destroy all of our widgets */
-    if (gProtoWindow)
-        gtk_widget_destroy(gProtoWindow);
+
+    ResetWidgetCache();
 
     /* TODO - replace it with appropriate widget */
     if (gTreeHeaderSortArrowWidget)
@@ -3502,8 +3465,6 @@ moz_gtk_shutdown()
     gButtonArrowWidget = NULL;
     gCheckboxWidget = NULL;
     gRadiobuttonWidget = NULL;
-    gHorizScrollbarWidget = NULL;
-    gVertScrollbarWidget = NULL;
     gSpinWidget = NULL;
     gHScaleWidget = NULL;
     gVScaleWidget = NULL;
