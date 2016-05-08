@@ -24,6 +24,7 @@
 #include "mozilla/plugins/PluginWidgetParent.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/Hal.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/ipc/DocumentRendererParent.h"
@@ -85,7 +86,6 @@
 #include "nsNetCID.h"
 #include "nsIAuthInformation.h"
 #include "nsIAuthPromptCallback.h"
-#include "SourceSurfaceRawData.h"
 #include "nsAuthInformationHolder.h"
 #include "nsICancelable.h"
 #include "gfxPrefs.h"
@@ -1735,12 +1735,11 @@ TabParent::RecvSetCustomCursor(const nsCString& aCursorData,
     if (mTabSetsCursor) {
       const gfx::IntSize size(aWidth, aHeight);
 
-      RefPtr<gfx::DataSourceSurface> customCursor = new mozilla::gfx::SourceSurfaceRawData();
-      mozilla::gfx::SourceSurfaceRawData* raw = static_cast<mozilla::gfx::SourceSurfaceRawData*>(customCursor.get());
-      raw->InitWrappingData(
-        reinterpret_cast<uint8_t*>(const_cast<nsCString&>(aCursorData).BeginWriting()),
-        size, aStride, static_cast<mozilla::gfx::SurfaceFormat>(aFormat), false);
-      raw->GuaranteePersistance();
+      RefPtr<gfx::DataSourceSurface> customCursor =
+          gfx::CreateDataSourceSurfaceFromData(size,
+                                               static_cast<gfx::SurfaceFormat>(aFormat),
+                                               reinterpret_cast<const uint8_t*>(aCursorData.BeginReading()),
+                                               aStride);
 
       RefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(customCursor, size);
       nsCOMPtr<imgIContainer> cursorImage(image::ImageOps::CreateFromDrawable(drawable));
@@ -3226,14 +3225,10 @@ TabParent::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
     mDnDVisualization = nullptr;
   } else {
     mDnDVisualization =
-      new mozilla::gfx::SourceSurfaceRawData();
-    mozilla::gfx::SourceSurfaceRawData* raw =
-      static_cast<mozilla::gfx::SourceSurfaceRawData*>(mDnDVisualization.get());
-    raw->InitWrappingData(
-      reinterpret_cast<uint8_t*>(const_cast<nsCString&>(aVisualDnDData).BeginWriting()),
-      mozilla::gfx::IntSize(aWidth, aHeight), aStride,
-      static_cast<mozilla::gfx::SurfaceFormat>(aFormat), false);
-    raw->GuaranteePersistance();
+        gfx::CreateDataSourceSurfaceFromData(gfx::IntSize(aWidth, aHeight),
+                                             static_cast<gfx::SurfaceFormat>(aFormat),
+                                             reinterpret_cast<const uint8_t*>(aVisualDnDData.BeginReading()),
+                                             aStride);
   }
   mDragAreaX = aDragAreaX;
   mDragAreaY = aDragAreaY;
