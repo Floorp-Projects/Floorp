@@ -259,7 +259,7 @@ partial interface Element {
    * The options parameter is non-standard. In Gecko, it can be:
    *  a RequestFullscreenOptions object
    */
-  [Throws, UnsafeInPrerendering]
+  [Throws, UnsafeInPrerendering, Func="nsDocument::IsUnprefixedFullscreenEnabled"]
   void requestFullscreen(optional any options);
   [Throws, UnsafeInPrerendering, BinaryName="requestFullscreen", Deprecated="PrefixedFullscreenAPI"]
   void mozRequestFullScreen(optional any options);
