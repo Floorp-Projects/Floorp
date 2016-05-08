@@ -58,6 +58,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
+#include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/Likely.h"
@@ -202,7 +203,6 @@
 #include "nsICookieService.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/BloomFilter.h"
-#include "SourceSurfaceRawData.h"
 
 #include "nsIBidiKeyboard.h"
 
@@ -7281,14 +7281,11 @@ nsContentUtils::DataTransferItemToImage(const IPCDataTransferItem& aItem,
 
   const nsCString& text = aItem.data().get_nsCString();
 
-  // InitWrappingData takes a non-const pointer for reading.
-  nsCString& nonConstText = const_cast<nsCString&>(text);
-  RefPtr<SourceSurfaceRawData> image = new SourceSurfaceRawData();
-  image->InitWrappingData(reinterpret_cast<uint8_t*>(nonConstText.BeginWriting()),
-                          size, imageDetails.stride(),
-                          static_cast<SurfaceFormat>(imageDetails.format()),
-                          false);
-  image->GuaranteePersistance();
+  RefPtr<DataSourceSurface> image =
+      CreateDataSourceSurfaceFromData(size,
+                                      static_cast<SurfaceFormat>(imageDetails.format()),
+                                      reinterpret_cast<const uint8_t*>(text.BeginReading()),
+                                      imageDetails.stride());
 
   RefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(image, size);
   nsCOMPtr<imgIContainer> imageContainer =
