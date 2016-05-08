@@ -27,7 +27,10 @@ SimpleTest.requestFlakyTimeout(
   "Need to wait for potential fullscreen transition");
 addLoadEvent(function () {
   SpecialPowers.pushPrefEnv({
-    "set": [["full-screen-api.allow-trusted-requests-only", false]]
+    "set": [
+      ["full-screen-api.unprefix.enabled", true],
+      ["full-screen-api.allow-trusted-requests-only", false]
+    ]
   }, next);
 });
 
