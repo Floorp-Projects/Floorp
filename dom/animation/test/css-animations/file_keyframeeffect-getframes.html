@@ -128,6 +128,16 @@
 @keyframes anim-background-size {
   to { background-size: 50%, 6px, contain }
 }
+
+:root {
+  --var-100px: 100px;
+}
+@keyframes anim-variables {
+  to { transform: translate(var(--var-100px), 0) }
+}
+@keyframes anim-variables-shorthand {
+  to { margin: var(--var-100px) }
+}
 </style>
 <body>
 <script>
@@ -205,8 +215,10 @@ test(function(t) {
   assert_equals(frames.length, 2, "number of frames");
 
   var expected = [
-    { offset: 0, computedOffset: 0, easing: "ease", color: "black" },
-    { offset: 1, computedOffset: 1, easing: "ease", color: "white" },
+    { offset: 0, computedOffset: 0, easing: "ease",
+      color: "rgb(0, 0, 0)" },
+    { offset: 1, computedOffset: 1, easing: "ease",
+      color: "rgb(255, 255, 255)" },
   ];
 
   for (var i = 0; i < frames.length; i++) {
@@ -298,7 +310,8 @@ test(function(t) {
   assert_equals(frames.length, 2, "number of frames");
 
   var expected = [
-    { offset: 0, computedOffset: 0, easing: "ease", color: "blue" },
+    { offset: 0, computedOffset: 0, easing: "ease",
+      color: "rgb(0, 0, 255)" },
     { offset: 1, computedOffset: 1, easing: "ease",
       color: "rgb(255, 255, 255)" },
   ];
@@ -321,7 +334,8 @@ test(function(t) {
   var expected = [
     { offset: 0, computedOffset: 0, easing: "ease",
       color: "rgb(255, 255, 255)" },
-    { offset: 1, computedOffset: 1, easing: "ease", color: "blue" },
+    { offset: 1, computedOffset: 1, easing: "ease",
+      color: "rgb(0, 0, 255)" },
   ];
 
   for (var i = 0; i < frames.length; i++) {
@@ -342,7 +356,8 @@ test(function(t) {
   var expected = [
     { offset: 0,   computedOffset: 0,   easing: "ease",
       color: "rgb(255, 255, 255)" },
-    { offset: 0.5, computedOffset: 0.5, easing: "ease", color: "blue" },
+    { offset: 0.5, computedOffset: 0.5, easing: "ease",
+      color: "rgb(0, 0, 255)" },
     { offset: 1,   computedOffset: 1,   easing: "ease",
       color: "rgb(255, 255, 255)" },
   ];
@@ -386,13 +401,13 @@ test(function(t) {
 
   var expected = [
     { offset: 0, computedOffset: 0, easing: "ease",
-      color: "black", marginTop: "8px" },
+      color: "rgb(0, 0, 0)", marginTop: "8px" },
     { offset: 0.25, computedOffset: 0.25, easing: "ease",
-      color: "blue" },
+      color: "rgb(0, 0, 255)" },
     { offset: 0.75, computedOffset: 0.75, easing: "ease",
       marginTop: "12px" },
     { offset: 1, computedOffset: 1, easing: "ease",
-      color: "white", marginTop: "16px" },
+      color: "rgb(255, 255, 255)", marginTop: "16px" },
   ];
 
   for (var i = 0; i < frames.length; i++) {
@@ -412,13 +427,13 @@ test(function(t) {
 
   var expected = [
     { offset: 0, computedOffset: 0, easing: "linear",
-      color: "black", marginTop: "8px" },
+      color: "rgb(0, 0, 0)", marginTop: "8px" },
     { offset: 0.25, computedOffset: 0.25, easing: "step-end",
-      color: "blue" },
+      color: "rgb(0, 0, 255)" },
     { offset: 0.75, computedOffset: 0.75, easing: "ease-in",
       marginTop: "12px" },
     { offset: 1, computedOffset: 1, easing: "ease",
-      color: "white", marginTop: "16px" },
+      color: "rgb(255, 255, 255)", marginTop: "16px" },
   ];
 
   for (var i = 0; i < frames.length; i++) {
@@ -438,9 +453,9 @@ test(function(t) {
 
   var expected = [
     { offset: 0, computedOffset: 0, easing: "ease",
-      color: "black", marginTop: "8px" },
+      color: "rgb(0, 0, 0)", marginTop: "8px" },
     { offset: 1, computedOffset: 1, easing: "ease",
-      color: "white", marginTop: "16px" },
+      color: "rgb(255, 255, 255)", marginTop: "16px" },
   ];
 
   for (var i = 0; i < frames.length; i++) {
@@ -460,11 +475,11 @@ test(function(t) {
 
   var expected = [
     { offset: 0, computedOffset: 0, easing: "step-end",
-      color: "black", fontSize: "16px" },
+      color: "rgb(0, 0, 0)", fontSize: "16px" },
     { offset: 0, computedOffset: 0, easing: "linear",
       marginTop: "8px", paddingLeft: "2px" },
     { offset: 1, computedOffset: 1, easing: "ease",
-      color: "white", fontSize: "32px", marginTop: "16px",
+      color: "rgb(255, 255, 255)", fontSize: "32px", marginTop: "16px",
       paddingLeft: "4px" },
   ];
 
@@ -618,6 +633,48 @@ test(function(t) {
   }
 }, 'KeyframeEffectReadOnly.getFrames() returns expected values for ' +
    'animations with background-size properties and missing keyframes');
+
+test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = 'anim-variables 100s';
+
+  var frames = getFrames(div);
+
+  var expected = [
+    { offset: 0, computedOffset: 0, easing: "ease",
+      transform: "none" },
+    { offset: 1, computedOffset: 1, easing: "ease",
+      transform: "translate(100px, 0px)" },
+  ];
+  for (var i = 0; i < frames.length; i++) {
+    assert_frames_equal(frames[i], expected[i], "ComputedKeyframe #" + i);
+  }
+}, 'KeyframeEffectReadOnly.getFrames() returns expected values for ' +
+   'animations with CSS variables as keyframe values');
+
+test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = 'anim-variables-shorthand 100s';
+
+  var frames = getFrames(div);
+
+  var expected = [
+    { offset: 0, computedOffset: 0, easing: "ease",
+      marginBottom: "0px",
+      marginLeft: "0px",
+      marginRight: "0px",
+      marginTop: "0px" },
+    { offset: 1, computedOffset: 1, easing: "ease",
+      marginBottom: "100px",
+      marginLeft: "100px",
+      marginRight: "100px",
+      marginTop: "100px" },
+  ];
+  for (var i = 0; i < frames.length; i++) {
+    assert_frames_equal(frames[i], expected[i], "ComputedKeyframe #" + i);
+  }
+}, 'KeyframeEffectReadOnly.getFrames() returns expected values for ' +
+   'animations with CSS variables as keyframe values in a shorthand property');
 
 done();
 </script>
