@@ -303,6 +303,30 @@ public:
   }
 };
 
+// ------------------------------------------------------------------
+//
+// Inlined helper methods
+//
+// ------------------------------------------------------------------
+
+inline bool
+IsInvalidValuePair(const PropertyValuePair& aPair)
+{
+  // There are three types of values we store as token streams:
+  //
+  // * Shorthand values (where we manually extract the token stream's string
+  //   value) and pass that along to various parsing methods
+  // * Longhand values with variable references
+  // * Invalid values
+  //
+  // We can distinguish between the last two cases because for invalid values
+  // we leave the token stream's mPropertyID as eCSSProperty_UNKNOWN.
+  return !nsCSSProps::IsShorthand(aPair.mProperty) &&
+         aPair.mValue.GetUnit() == eCSSUnit_TokenStream &&
+         aPair.mValue.GetTokenStreamValue()->mPropertyID
+           == eCSSProperty_UNKNOWN;
+}
+
 
 // ------------------------------------------------------------------
 //
@@ -476,10 +500,7 @@ KeyframeUtils::GetAnimationPropertiesFromKeyframes(
     nsCSSPropertySet propertiesOnThisKeyframe;
     for (const PropertyValuePair& pair :
            PropertyPriorityIterator(frame.mPropertyValues)) {
-      // We currently store invalid longhand values on keyframes as a token
-      // stream so if we see one of them, just keep moving.
-      if (!nsCSSProps::IsShorthand(pair.mProperty) &&
-          pair.mValue.GetUnit() == eCSSUnit_TokenStream) {
+      if (IsInvalidValuePair(pair)) {
         continue;
       }
 
@@ -819,6 +840,15 @@ MakePropertyValuePair(nsCSSProperty aProperty, const nsAString& aStringValue,
     // In either case, store the string value as a token stream.
     nsCSSValueTokenStream* tokenStream = new nsCSSValueTokenStream;
     tokenStream->mTokenStream = aStringValue;
+
+    // We are about to convert a null value to a token stream value but
+    // by leaving the mPropertyID as unknown, we will be able to
+    // distinguish between invalid values and valid token stream values
+    // (e.g. values with variable references).
+    MOZ_ASSERT(tokenStream->mPropertyID == eCSSProperty_UNKNOWN,
+               "The property of a token stream should be initialized"
+               " to unknown");
+
     // By leaving mShorthandPropertyID as unknown, we ensure that when
     // we call nsCSSValue::AppendToString we get back the string stored
     // in mTokenStream.
@@ -1102,6 +1132,10 @@ RequiresAdditiveAnimation(const nsTArray<Keyframe>& aKeyframes,
                          : computedOffset;
 
     for (const PropertyValuePair& pair : frame.mPropertyValues) {
+      if (IsInvalidValuePair(pair)) {
+        continue;
+      }
+
       if (nsCSSProps::IsShorthand(pair.mProperty)) {
         nsCSSValueTokenStream* tokenStream = pair.mValue.GetTokenStreamValue();
         nsCSSParser parser(aDocument->CSSLoader());
@@ -1114,9 +1148,6 @@ RequiresAdditiveAnimation(const nsTArray<Keyframe>& aKeyframes,
           addToPropertySets(*prop, offsetToUse);
         }
       } else {
-        if (pair.mValue.GetUnit() == eCSSUnit_TokenStream) {
-          continue;
-        }
         addToPropertySets(pair.mProperty, offsetToUse);
       }
     }
