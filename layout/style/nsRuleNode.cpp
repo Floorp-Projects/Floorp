@@ -7747,7 +7747,7 @@ nsRuleNode::ComputeOutlineData(void* aStartStruct,
     outline->SetOutlineStyle(parentOutline->GetOutlineStyle());
   }
 
-  outline->RecalcData(mPresContext);
+  outline->RecalcData();
   COMPUTE_END_RESET(Outline, outline)
 }
 
