@@ -1237,7 +1237,7 @@ fuzzy-if(skiaContent,1,12000) == 461512-1.html 461512-1-ref.html
 skip-if((B2G&&browserIsRemote)||Mulet) == 463217-1.xul 463217-1-ref.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) == 463952-1.html 463952-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == 464811-1.html 464811-1-ref.html
-fails == 465574-1.html 465574-1-ref.html # bug 421436
+== 465574-1.html 465574-1-ref.html # bug 421436
 == 466258-1.html 466258-1-ref.html
 == 466395-1.html 466395-1-ref.html
 == 466395-2.html 466395-2-ref.html
@@ -1949,6 +1949,7 @@ random-if(OSX==1006) == 1238243-2.html 1238243-2-ref.html # fails on 10.6 with d
 fuzzy(100,2000) == 1239564.html 1239564-ref.html
 == 1242172-1.html 1242172-1-ref.html
 == 1242172-2.html 1242172-2-ref.html
+== 1242781.html 1242781-ref.html
 == 1263845.html 1263845-ref.html
 == 1260543-1.html 1260543-1-ref.html
 == 1272997-1.html 1272997-1-ref.html
