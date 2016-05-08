@@ -100,6 +100,10 @@ WindowNamedPropertiesHandler::getOwnPropDescriptor(JSContext* aCx,
     return false;
   }
 
+  if(str.IsEmpty()) {
+    return true;
+  }
+
   // Grab the DOM window.
   JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForObject(aCx, aProxy));
   nsGlobalWindow* win = xpc::WindowOrNull(global);
