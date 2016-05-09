@@ -25,7 +25,6 @@ config = {
         "repo": "https://hg.mozilla.org/try",
         "revision": "%(revision)s",
         "dest": "try",
-        "clone_upstream_url": "https://hg.mozilla.org/mozilla-central",
         "clone_by_revision": True,
         "clone_with_purge": True,
     }, {
