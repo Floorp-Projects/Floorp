@@ -43,7 +43,7 @@ NS_INTERFACE_MAP_END_INHERITING(MouseEvent)
 uint32_t
 SimpleGestureEvent::AllowedDirections()
 {
-  return mEvent->AsSimpleGestureEvent()->allowedDirections;
+  return mEvent->AsSimpleGestureEvent()->mAllowedDirections;
 }
 
 NS_IMETHODIMP
@@ -57,7 +57,7 @@ SimpleGestureEvent::GetAllowedDirections(uint32_t* aAllowedDirections)
 NS_IMETHODIMP
 SimpleGestureEvent::SetAllowedDirections(uint32_t aAllowedDirections)
 {
-  mEvent->AsSimpleGestureEvent()->allowedDirections = aAllowedDirections;
+  mEvent->AsSimpleGestureEvent()->mAllowedDirections = aAllowedDirections;
   return NS_OK;
 }
 
@@ -131,7 +131,7 @@ SimpleGestureEvent::InitSimpleGestureEvent(const nsAString& aTypeArg,
                              aMetaKeyArg, aButton, aRelatedTarget);
 
   WidgetSimpleGestureEvent* simpleGestureEvent = mEvent->AsSimpleGestureEvent();
-  simpleGestureEvent->allowedDirections = aAllowedDirectionsArg;
+  simpleGestureEvent->mAllowedDirections = aAllowedDirectionsArg;
   simpleGestureEvent->direction = aDirectionArg;
   simpleGestureEvent->delta = aDeltaArg;
   simpleGestureEvent->clickCount = aClickCountArg;
