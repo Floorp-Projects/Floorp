@@ -551,6 +551,40 @@ class FormatterTest(unittest.TestCase):
         self.output_file.seek(self.position)
         return [line.rstrip() for line in self.output_file.readlines()]
 
+
+class TestHTMLFormatter(FormatterTest):
+
+    def get_formatter(self):
+        return formatters.HTMLFormatter()
+
+    def test_base64_string(self):
+        self.logger.suite_start([])
+        self.logger.test_start("string_test")
+        self.logger.test_end("string_test", "FAIL",
+                             extra={"data": "foobar"})
+        self.logger.suite_end()
+        self.assertIn("data:text/html;charset=utf-8;base64,Zm9vYmFy",
+                      ''.join(self.loglines))
+
+    def test_base64_unicode(self):
+        self.logger.suite_start([])
+        self.logger.test_start("unicode_test")
+        self.logger.test_end("unicode_test", "FAIL",
+                             extra={"data": unichr(0x02A9)})
+        self.logger.suite_end()
+        self.assertIn("data:text/html;charset=utf-8;base64,yqk=",
+                      ''.join(self.loglines))
+
+    def test_base64_other(self):
+        self.logger.suite_start([])
+        self.logger.test_start("int_test")
+        self.logger.test_end("int_test", "FAIL",
+                             extra={"data": {"foo": "bar"}})
+        self.logger.suite_end()
+        self.assertIn("data:text/html;charset=utf-8;base64,eydmb28nOiAnYmFyJ30=",
+                      ''.join(self.loglines))
+
+
 class TestTBPLFormatter(FormatterTest):
 
     def get_formatter(self):
