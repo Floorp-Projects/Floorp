@@ -14,20 +14,6 @@
 #include <windows.h>
 #endif
 
-template<>
-struct RunnableMethodTraits<mozilla::_ipdltest::TestDemonParent>
-{
-    static void RetainCallee(mozilla::_ipdltest::TestDemonParent* obj) { }
-    static void ReleaseCallee(mozilla::_ipdltest::TestDemonParent* obj) { }
-};
-
-template<>
-struct RunnableMethodTraits<mozilla::_ipdltest::TestDemonChild>
-{
-    static void RetainCallee(mozilla::_ipdltest::TestDemonChild* obj) { }
-    static void ReleaseCallee(mozilla::_ipdltest::TestDemonChild* obj) { }
-};
-
 namespace mozilla {
 namespace _ipdltest {
 
@@ -190,7 +176,7 @@ TestDemonParent::RunUnlimitedSequence()
   gFlushStack = false;
   DoAction();
 
-  MessageLoop::current()->PostTask(NewRunnableMethod(this, &TestDemonParent::RunUnlimitedSequence));
+  MessageLoop::current()->PostTask(NewNonOwningRunnableMethod(this, &TestDemonParent::RunUnlimitedSequence));
 }
 
 void
@@ -334,7 +320,7 @@ TestDemonChild::RunUnlimitedSequence()
   gFlushStack = false;
   DoAction();
 
-  MessageLoop::current()->PostTask(NewRunnableMethod(this, &TestDemonChild::RunUnlimitedSequence));
+  MessageLoop::current()->PostTask(NewNonOwningRunnableMethod(this, &TestDemonChild::RunUnlimitedSequence));
 }
 
 void
