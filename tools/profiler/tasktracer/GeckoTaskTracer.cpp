@@ -438,10 +438,10 @@ StopLogging()
   SetLogStarted(false);
 }
 
-TraceInfoLogsType*
+UniquePtr<TraceInfoLogsType>
 GetLoggedData(TimeStamp aTimeStamp)
 {
-  TraceInfoLogsType* result = new TraceInfoLogsType();
+  auto result = MakeUnique<TraceInfoLogsType>();
 
   // TODO: This is called from a signal handler. Use semaphore instead.
   StaticMutexAutoLock lock(sMutex);

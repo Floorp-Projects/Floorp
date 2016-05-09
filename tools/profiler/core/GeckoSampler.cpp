@@ -310,7 +310,7 @@ void GeckoSampler::StreamTaskTracer(SpliceableJSONWriter& aWriter)
 {
 #ifdef MOZ_TASK_TRACER
   aWriter.StartArrayProperty("data");
-    nsAutoPtr<nsTArray<nsCString>> data(mozilla::tasktracer::GetLoggedData(sStartTime));
+    UniquePtr<nsTArray<nsCString>> data = mozilla::tasktracer::GetLoggedData(sStartTime);
     for (uint32_t i = 0; i < data->Length(); ++i) {
       aWriter.StringElement((data->ElementAt(i)).get());
     }
