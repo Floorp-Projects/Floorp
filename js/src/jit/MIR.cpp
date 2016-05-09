@@ -1191,7 +1191,7 @@ MSimdSwizzle::foldsTo(TempAllocator& alloc)
 MDefinition*
 MSimdGeneralShuffle::foldsTo(TempAllocator& alloc)
 {
-    FixedList<uint32_t> lanes;
+    FixedList<uint8_t> lanes;
     if (!lanes.init(alloc, numLanes()))
         return this;
 
@@ -1199,16 +1199,16 @@ MSimdGeneralShuffle::foldsTo(TempAllocator& alloc)
         if (!lane(i)->isConstant() || lane(i)->type() != MIRType::Int32)
             return this;
         int32_t temp = lane(i)->toConstant()->toInt32();
-        if (temp < 0 || uint32_t(temp) >= numLanes() * numVectors())
+        if (temp < 0 || unsigned(temp) >= numLanes() * numVectors())
             return this;
-        lanes[i] = uint32_t(temp);
+        lanes[i] = uint8_t(temp);
     }
 
     if (numVectors() == 1)
-        return MSimdSwizzle::New(alloc, vector(0), lanes[0], lanes[1], lanes[2], lanes[3]);
+        return MSimdSwizzle::New(alloc, vector(0), lanes.data());
 
     MOZ_ASSERT(numVectors() == 2);
-    return MSimdShuffle::New(alloc, vector(0), vector(1), lanes[0], lanes[1], lanes[2], lanes[3]);
+    return MSimdShuffle::New(alloc, vector(0), vector(1), lanes.data());
 }
 
 MInstruction*

@@ -4508,9 +4508,9 @@ LIRGenerator::visitSimdShuffle(MSimdShuffle* ins)
     MOZ_ASSERT(IsSimdType(ins->type()));
     MOZ_ASSERT(ins->type() == MIRType::Int32x4 || ins->type() == MIRType::Float32x4);
 
-    bool zFromLHS = ins->laneZ() < 4;
-    bool wFromLHS = ins->laneW() < 4;
-    uint32_t lanesFromLHS = (ins->laneX() < 4) + (ins->laneY() < 4) + zFromLHS + wFromLHS;
+    bool zFromLHS = ins->lane(2) < 4;
+    bool wFromLHS = ins->lane(3) < 4;
+    uint32_t lanesFromLHS = (ins->lane(0) < 4) + (ins->lane(1) < 4) + zFromLHS + wFromLHS;
 
     LSimdShuffle* lir = new (alloc()) LSimdShuffle();
     lowerForFPU(lir, ins, ins->lhs(), ins->rhs());

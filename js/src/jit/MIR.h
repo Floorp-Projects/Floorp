@@ -1963,51 +1963,49 @@ class MSimdAnyTrue
 class MSimdShuffleBase
 {
   protected:
-    // As of now, there are at most 4 lanes. For each lane, we need to know
-    // which input we choose and which of the 4 lanes we choose; that can be
-    // packed in 3 bits for each lane, so 12 bits in total.
-    uint32_t laneMask_;
+    // As of now, there are at most 16 lanes. For each lane, we need to know
+    // which input we choose and which of the lanes we choose.
+    mozilla::Array<uint8_t, 16> lane_;
     uint32_t arity_;
 
-    MSimdShuffleBase(uint32_t laneX, uint32_t laneY, uint32_t laneZ, uint32_t laneW, MIRType type)
+    MSimdShuffleBase(const uint8_t lanes[], MIRType type)
     {
-        MOZ_ASSERT(SimdTypeToLength(type) == 4);
-        MOZ_ASSERT(IsSimdType(type));
-        laneMask_ = (laneX << 0) | (laneY << 3) | (laneZ << 6) | (laneW << 9);
-        arity_ = 4;
+        arity_ = SimdTypeToLength(type);
+        for (unsigned i = 0; i < arity_; i++)
+            lane_[i] = lanes[i];
     }
 
     bool sameLanes(const MSimdShuffleBase* other) const {
-        return laneMask_ == other->laneMask_;
+        return arity_ == other->arity_ &&
+               memcmp(&lane_[0], &other->lane_[0], arity_) == 0;
     }
 
   public:
-    // For now, these formulas are fine for x4 types. They'll need to be
-    // generalized for other SIMD type lengths.
-    uint32_t laneX() const { MOZ_ASSERT(arity_ == 4); return laneMask_ & 7; }
-    uint32_t laneY() const { MOZ_ASSERT(arity_ == 4); return (laneMask_ >> 3) & 7; }
-    uint32_t laneZ() const { MOZ_ASSERT(arity_ == 4); return (laneMask_ >> 6) & 7; }
-    uint32_t laneW() const { MOZ_ASSERT(arity_ == 4); return (laneMask_ >> 9) & 7; }
+    unsigned lane(unsigned i) const {
+        MOZ_ASSERT(i < arity_);
+        return lane_[i];
+    }
 
     bool lanesMatch(uint32_t x, uint32_t y, uint32_t z, uint32_t w) const {
-        return ((x << 0) | (y << 3) | (z << 6) | (w << 9)) == laneMask_;
+        return arity_ == 4 && lane(0) == x && lane(1) == y && lane(2) == z &&
+               lane(3) == w;
     }
 };
 
-// Applies a shuffle operation to the input, putting the input lanes as
+// Applies a swizzle operation to the input, putting the input lanes as
 // indicated in the output register's lanes. This implements the SIMD.js
-// "shuffle" function, that takes one vector and one mask.
+// "swizzle" function, that takes one vector and an array of lane indexes.
 class MSimdSwizzle
   : public MUnaryInstruction,
     public MSimdShuffleBase,
     public NoTypePolicy::Data
 {
   protected:
-    MSimdSwizzle(MDefinition* obj,
-                 uint32_t laneX, uint32_t laneY, uint32_t laneZ, uint32_t laneW)
-      : MUnaryInstruction(obj), MSimdShuffleBase(laneX, laneY, laneZ, laneW, obj->type())
+    MSimdSwizzle(MDefinition* obj, const uint8_t lanes[])
+      : MUnaryInstruction(obj), MSimdShuffleBase(lanes, obj->type())
     {
-        MOZ_ASSERT(laneX < 4 && laneY < 4 && laneZ < 4 && laneW < 4);
+        for (unsigned i = 0; i < arity_; i++)
+            MOZ_ASSERT(lane(i) < arity_);
         setResultType(obj->type());
         setMovable();
     }
@@ -2015,10 +2013,9 @@ class MSimdSwizzle
   public:
     INSTRUCTION_HEADER(SimdSwizzle)
 
-    static MSimdSwizzle* New(TempAllocator& alloc, MDefinition* obj,
-                             uint32_t laneX, uint32_t laneY, uint32_t laneZ, uint32_t laneW)
+    static MSimdSwizzle* New(TempAllocator& alloc, MDefinition* obj, const uint8_t lanes[])
     {
-        return new(alloc) MSimdSwizzle(obj, laneX, laneY, laneZ, laneW);
+        return new(alloc) MSimdSwizzle(obj, lanes);
     }
 
     bool congruentTo(const MDefinition* ins) const override {
@@ -2037,7 +2034,7 @@ class MSimdSwizzle
     ALLOW_CLONE(MSimdSwizzle)
 };
 
-// A "general swizzle" is a swizzle or a shuffle with non-constant lane
+// A "general shuffle" is a swizzle or a shuffle with non-constant lane
 // indices.  This is the one that Ion inlines and it can be folded into a
 // MSimdSwizzle/MSimdShuffle if lane indices are constant.  Performance of
 // general swizzle/shuffle does not really matter, as we expect to get
@@ -2114,22 +2111,21 @@ class MSimdGeneralShuffle :
     }
 };
 
-// Applies a shuffle operation to the inputs, selecting the 2 first lanes of the
-// output from lanes of the first input, and the 2 last lanes of the output from
-// lanes of the second input.
+// Applies a shuffle operation to the inputs. The lane indexes select a source
+// lane from the concatenation of the two input vectors.
 class MSimdShuffle
   : public MBinaryInstruction,
     public MSimdShuffleBase,
     public NoTypePolicy::Data
 {
-    MSimdShuffle(MDefinition* lhs, MDefinition* rhs,
-                 uint32_t laneX, uint32_t laneY, uint32_t laneZ, uint32_t laneW)
-      : MBinaryInstruction(lhs, rhs), MSimdShuffleBase(laneX, laneY, laneZ, laneW, lhs->type())
+    MSimdShuffle(MDefinition* lhs, MDefinition* rhs, const uint8_t lanes[])
+      : MBinaryInstruction(lhs, rhs), MSimdShuffleBase(lanes, lhs->type())
     {
-        MOZ_ASSERT(laneX < 8 && laneY < 8 && laneZ < 8 && laneW < 8);
         MOZ_ASSERT(IsSimdType(lhs->type()));
         MOZ_ASSERT(IsSimdType(rhs->type()));
         MOZ_ASSERT(lhs->type() == rhs->type());
+        for (unsigned i = 0; i < arity_; i++)
+            MOZ_ASSERT(lane(i) < 2 * arity_);
         setResultType(lhs->type());
         setMovable();
     }
@@ -2138,25 +2134,32 @@ class MSimdShuffle
     INSTRUCTION_HEADER(SimdShuffle)
 
     static MInstruction* New(TempAllocator& alloc, MDefinition* lhs, MDefinition* rhs,
-                             uint32_t laneX, uint32_t laneY, uint32_t laneZ, uint32_t laneW)
+                             const uint8_t lanes[])
     {
+        unsigned arity = SimdTypeToLength(lhs->type());
+
         // Swap operands so that new lanes come from LHS in majority.
         // In the balanced case, swap operands if needs be, in order to be able
         // to do only one vshufps on x86.
-        unsigned lanesFromLHS = (laneX < 4) + (laneY < 4) + (laneZ < 4) + (laneW < 4);
-        if (lanesFromLHS < 2 || (lanesFromLHS == 2 && laneX >= 4 && laneY >=4)) {
-            laneX = (laneX + 4) % 8;
-            laneY = (laneY + 4) % 8;
-            laneZ = (laneZ + 4) % 8;
-            laneW = (laneW + 4) % 8;
-            mozilla::Swap(lhs, rhs);
+        unsigned lanesFromLHS = 0;
+        for (unsigned i = 0; i < arity; i++) {
+            if (lanes[i] < arity)
+                lanesFromLHS++;
+        }
+
+        if (lanesFromLHS < arity / 2 ||
+            (arity == 4 && lanesFromLHS == 2 && lanes[0] >= 4 && lanes[1] >= 4)) {
+            mozilla::Array<uint8_t, 16> newLanes;
+            for (unsigned i = 0; i < arity; i++)
+                newLanes[i] = (lanes[i] + arity) % (2 * arity);
+            return New(alloc, rhs, lhs, &newLanes[0]);
         }
 
         // If all lanes come from the same vector, just use swizzle instead.
-        if (laneX < 4 && laneY < 4 && laneZ < 4 && laneW < 4)
-            return MSimdSwizzle::New(alloc, lhs, laneX, laneY, laneZ, laneW);
+        if (lanesFromLHS == arity)
+            return MSimdSwizzle::New(alloc, lhs, lanes);
 
-        return new(alloc) MSimdShuffle(lhs, rhs, laneX, laneY, laneZ, laneW);
+        return new(alloc) MSimdShuffle(lhs, rhs, lanes);
     }
 
     bool congruentTo(const MDefinition* ins) const override {

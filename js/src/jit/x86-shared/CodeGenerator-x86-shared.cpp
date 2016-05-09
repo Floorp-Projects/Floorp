@@ -2901,10 +2901,10 @@ CodeGeneratorX86Shared::visitSimdSwizzleI(LSimdSwizzleI* ins)
     FloatRegister input = ToFloatRegister(ins->input());
     FloatRegister output = ToFloatRegister(ins->output());
 
-    uint32_t x = ins->laneX();
-    uint32_t y = ins->laneY();
-    uint32_t z = ins->laneZ();
-    uint32_t w = ins->laneW();
+    uint32_t x = ins->lane(0);
+    uint32_t y = ins->lane(1);
+    uint32_t z = ins->lane(2);
+    uint32_t w = ins->lane(3);
 
     uint32_t mask = MacroAssembler::ComputeShuffleMask(x, y, z, w);
     masm.shuffleInt32(mask, input, output);
@@ -2916,10 +2916,10 @@ CodeGeneratorX86Shared::visitSimdSwizzleF(LSimdSwizzleF* ins)
     FloatRegister input = ToFloatRegister(ins->input());
     FloatRegister output = ToFloatRegister(ins->output());
 
-    uint32_t x = ins->laneX();
-    uint32_t y = ins->laneY();
-    uint32_t z = ins->laneZ();
-    uint32_t w = ins->laneW();
+    uint32_t x = ins->lane(0);
+    uint32_t y = ins->lane(1);
+    uint32_t z = ins->lane(2);
+    uint32_t w = ins->lane(3);
 
     if (AssemblerX86Shared::HasSSE3()) {
         if (ins->lanesMatch(0, 0, 2, 2)) {
@@ -2973,10 +2973,10 @@ CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle* ins)
     Operand rhs = ToOperand(ins->rhs());
     FloatRegister out = ToFloatRegister(ins->output());
 
-    uint32_t x = ins->laneX();
-    uint32_t y = ins->laneY();
-    uint32_t z = ins->laneZ();
-    uint32_t w = ins->laneW();
+    uint32_t x = ins->lane(0);
+    uint32_t y = ins->lane(1);
+    uint32_t z = ins->lane(2);
+    uint32_t w = ins->lane(3);
 
     // Check that lanes come from LHS in majority:
     unsigned numLanesFromLHS = (x < 4) + (y < 4) + (z < 4) + (w < 4);
