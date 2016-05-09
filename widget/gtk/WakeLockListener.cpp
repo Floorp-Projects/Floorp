@@ -13,6 +13,7 @@
 #include <dbus/dbus-glib-lowlevel.h>
 
 #include "mozilla/ipc/DBusMessageRefPtr.h"
+#include "mozilla/ipc/DBusPendingCallRefPtr.h"
 
 #define FREEDESKTOP_SCREENSAVER_TARGET    "org.freedesktop.ScreenSaver"
 #define FREEDESKTOP_SCREENSAVER_OBJECT    "/ScreenSaver"
@@ -81,15 +82,15 @@ bool
 WakeLockTopic::SendMessage(DBusMessage* aMessage)
 {
   // send message and get a handle for a reply
-  DBusPendingCall* reply;
-  dbus_connection_send_with_reply(mConnection, aMessage, &reply,
+  RefPtr<DBusPendingCall> reply;
+  dbus_connection_send_with_reply(mConnection, aMessage,
+                                  reply.StartAssignment(),
                                   DBUS_TIMEOUT);
   if (!reply) {
     return false;
   }
 
   dbus_pending_call_set_notify(reply, &ReceiveInhibitReply, this, NULL);
-  dbus_pending_call_unref(reply);
 
   return true;
 }
