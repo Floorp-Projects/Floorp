@@ -5258,6 +5258,9 @@ pref("reader.font_size", 5);
 // The default relative content width in reader mode (1-9)
 pref("reader.content_width", 3);
 
+// The default relative line height in reader mode (1-9)
+pref("reader.line_height", 4);
+
 // The default color scheme in reader mode (light, dark, sepia, auto)
 // auto = color automatically adjusts according to ambient light level
 // (auto only works on platforms where the 'devicelight' event is enabled)
