@@ -14,7 +14,8 @@ registerCleanupFunction(function() {
   gBrowser.removeCurrentTab();
 });
 
-const permissionError = "error: SecurityError: The operation is insecure.";
+const permissionError = "error: NotAllowedError: The request is not allowed " +
+    "by the user agent or the platform in the current context.";
 
 var gTests = [
 
