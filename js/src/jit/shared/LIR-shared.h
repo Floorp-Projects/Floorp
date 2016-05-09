@@ -205,8 +205,8 @@ class LSimdSplatX4 : public LInstructionHelper<1, 1, 0>
         setOperand(0, v);
     }
 
-    MSimdSplatX4* mir() const {
-        return mir_->toSimdSplatX4();
+    MSimdSplat* mir() const {
+        return mir_->toSimdSplat();
     }
 };
 

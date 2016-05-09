@@ -106,7 +106,7 @@ class LIRGeneratorARM : public LIRGeneratorShared
     void visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic* ins);
     void visitSimdBinaryArith(MSimdBinaryArith* ins);
     void visitSimdSelect(MSimdSelect* ins);
-    void visitSimdSplatX4(MSimdSplatX4* ins);
+    void visitSimdSplat(MSimdSplat* ins);
     void visitSimdValueX4(MSimdValueX4* ins);
     void visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement* ins);
     void visitAtomicExchangeTypedArrayElement(MAtomicExchangeTypedArrayElement* ins);
