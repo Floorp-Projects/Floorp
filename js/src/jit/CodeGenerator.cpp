@@ -5510,10 +5510,10 @@ CodeGenerator::visitSimdBox(LSimdBox* lir)
     switch (type) {
       case MIRType::Bool32x4:
       case MIRType::Int32x4:
-        masm.storeUnalignedInt32x4(in, objectData);
+        masm.storeUnalignedSimd128Int(in, objectData);
         break;
       case MIRType::Float32x4:
-        masm.storeUnalignedFloat32x4(in, objectData);
+        masm.storeUnalignedSimd128Float(in, objectData);
         break;
       default:
         MOZ_CRASH("Unknown SIMD kind when generating code for SimdBox.");
@@ -5588,10 +5588,10 @@ CodeGenerator::visitSimdUnbox(LSimdUnbox* lir)
     switch (lir->mir()->type()) {
       case MIRType::Bool32x4:
       case MIRType::Int32x4:
-        masm.loadUnalignedInt32x4(objectData, simd);
+        masm.loadUnalignedSimd128Int(objectData, simd);
         break;
       case MIRType::Float32x4:
-        masm.loadUnalignedFloat32x4(objectData, simd);
+        masm.loadUnalignedSimd128Float(objectData, simd);
         break;
       default:
         MOZ_CRASH("The impossible happened!");
