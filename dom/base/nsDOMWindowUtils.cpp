@@ -3782,6 +3782,18 @@ nsDOMWindowUtils::AskPermission(nsIContentPermissionRequest* aRequest)
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::GetElementsRestyled(uint64_t* aResult)
+{
+  nsPresContext* presContext = GetPresContext();
+  if (!presContext) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  *aResult = presContext->ElementsRestyledCount();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::GetFramesConstructed(uint64_t* aResult)
 {
   nsPresContext* presContext = GetPresContext();
