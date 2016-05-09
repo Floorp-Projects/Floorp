@@ -466,6 +466,15 @@ class CallSiteAndTarget : public CallSite
     uint32_t targetIndex() const { MOZ_ASSERT(isInternal()); return targetIndex_; }
 };
 
+} // namespace wasm
+} // namespace js
+namespace mozilla {
+template <> struct IsPod<js::wasm::CallSite>          : TrueType {};
+template <> struct IsPod<js::wasm::CallSiteAndTarget> : TrueType {};
+}
+namespace js {
+namespace wasm {
+
 typedef Vector<CallSite, 0, SystemAllocPolicy> CallSiteVector;
 typedef Vector<CallSiteAndTarget, 0, SystemAllocPolicy> CallSiteAndTargetVector;
 
@@ -567,6 +576,14 @@ class HeapAccess {
     uint32_t insnOffset() const { MOZ_CRASH(); }
 };
 #endif
+
+} // namespace wasm
+} // namespace js
+namespace mozilla {
+template <> struct IsPod<js::wasm::HeapAccess> : TrueType {};
+}
+namespace js {
+namespace wasm {
 
 typedef Vector<HeapAccess, 0, SystemAllocPolicy> HeapAccessVector;
 

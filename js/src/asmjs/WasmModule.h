@@ -293,6 +293,14 @@ class CodeRange
     };
 };
 
+} // namespace wasm
+} // namespace js
+namespace mozilla {
+template <> struct IsPod<js::wasm::CodeRange> : TrueType {};
+}
+namespace js {
+namespace wasm {
+
 typedef Vector<CodeRange, 0, SystemAllocPolicy> CodeRangeVector;
 
 // A CallThunk describes the offset and target of thunks so that they may be
@@ -313,6 +321,14 @@ struct CallThunk
 };
 
 typedef Vector<CallThunk, 0, SystemAllocPolicy> CallThunkVector;
+
+} // namespace wasm
+} // namespace js
+namespace mozilla {
+template <> struct IsPod<js::wasm::CallThunk> : TrueType {};
+}
+namespace js {
+namespace wasm {
 
 // CacheableChars is used to cacheably store UniqueChars.
 
