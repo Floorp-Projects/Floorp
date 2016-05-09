@@ -756,23 +756,24 @@ class LFloat32 : public LInstructionHelper<1, 0, 0>
     }
 };
 
-// Constant SIMD int32x4. Also used for bool32x4.
-class LInt32x4 : public LInstructionHelper<1, 0, 0>
+// Constant 128-bit SIMD integer vector (8x16, 16x8, 32x4).
+// Also used for Bool32x4, Bool16x8, etc.
+class LSimd128Int : public LInstructionHelper<1, 0, 0>
 {
   public:
-    LIR_HEADER(Int32x4);
+    LIR_HEADER(Simd128Int);
 
-    explicit LInt32x4() {}
+    explicit LSimd128Int() {}
     const SimdConstant& getValue() const { return mir_->toSimdConstant()->value(); }
 };
 
-// Constant SIMD float32x4.
-class LFloat32x4 : public LInstructionHelper<1, 0, 0>
+// Constant 128-bit SIMD floating point vector (32x4, 64x2).
+class LSimd128Float : public LInstructionHelper<1, 0, 0>
 {
   public:
-    LIR_HEADER(Float32x4);
+    LIR_HEADER(Simd128Float);
 
-    explicit LFloat32x4() {}
+    explicit LSimd128Float() {}
     const SimdConstant& getValue() const { return mir_->toSimdConstant()->value(); }
 };
 

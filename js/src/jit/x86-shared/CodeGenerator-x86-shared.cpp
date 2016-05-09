@@ -2424,17 +2424,17 @@ CodeGeneratorX86Shared::visitNegF(LNegF* ins)
 }
 
 void
-CodeGeneratorX86Shared::visitInt32x4(LInt32x4* ins)
+CodeGeneratorX86Shared::visitSimd128Int(LSimd128Int* ins)
 {
     const LDefinition* out = ins->getDef(0);
-    masm.loadConstantInt32x4(ins->getValue(), ToFloatRegister(out));
+    masm.loadConstantSimd128Int(ins->getValue(), ToFloatRegister(out));
 }
 
 void
-CodeGeneratorX86Shared::visitFloat32x4(LFloat32x4* ins)
+CodeGeneratorX86Shared::visitSimd128Float(LSimd128Float* ins)
 {
     const LDefinition* out = ins->getDef(0);
-    masm.loadConstantFloat32x4(ins->getValue(), ToFloatRegister(out));
+    masm.loadConstantSimd128Float(ins->getValue(), ToFloatRegister(out));
 }
 
 void
@@ -2460,7 +2460,7 @@ CodeGeneratorX86Shared::visitFloat32x4ToInt32x4(LFloat32x4ToInt32x4* ins)
     static const SimdConstant InvalidResult = SimdConstant::SplatX4(int32_t(-2147483648));
 
     ScratchSimd128Scope scratch(masm);
-    masm.loadConstantInt32x4(InvalidResult, scratch);
+    masm.loadConstantSimd128Int(InvalidResult, scratch);
     masm.packedEqualInt32x4(Operand(out), scratch);
     // TODO (bug 1156228): If we have SSE4.1, we can use PTEST here instead of
     // the two following instructions.
@@ -2483,13 +2483,13 @@ CodeGeneratorX86Shared::visitOutOfLineSimdFloatToIntCheck(OutOfLineSimdFloatToIn
     Register temp = ool->temp();
 
     ScratchSimd128Scope scratch(masm);
-    masm.loadConstantFloat32x4(Int32MinX4, scratch);
+    masm.loadConstantSimd128Float(Int32MinX4, scratch);
     masm.vcmpleps(Operand(input), scratch, scratch);
     masm.vmovmskps(scratch, temp);
     masm.cmp32(temp, Imm32(15));
     masm.j(Assembler::NotEqual, &onConversionError);
 
-    masm.loadConstantFloat32x4(Int32MaxX4, scratch);
+    masm.loadConstantSimd128Float(Int32MaxX4, scratch);
     masm.vcmpleps(Operand(input), scratch, scratch);
     masm.vmovmskps(scratch, temp);
     masm.cmp32(temp, Imm32(0));
@@ -2550,7 +2550,7 @@ CodeGeneratorX86Shared::visitFloat32x4ToUint32x4(LFloat32x4ToUint32x4* ins)
     // Compute B in |scratch|.
     static const float Adjust = 0x80000000; // 0x1.0p31f for the benefit of MSVC.
     static const SimdConstant Bias = SimdConstant::SplatX4(-Adjust);
-    masm.loadConstantFloat32x4(Bias, scratch);
+    masm.loadConstantSimd128Float(Bias, scratch);
     masm.packedAddFloat32(Operand(in), scratch);
     masm.convertFloat32x4ToInt32x4(scratch, scratch);
 
@@ -3234,7 +3234,7 @@ CodeGeneratorX86Shared::visitSimdBinaryCompIx4(LSimdBinaryCompIx4* ins)
         // Ideally for notEqual, greaterThanOrEqual, and lessThanOrEqual, we
         // should invert the comparison by, e.g. swapping the arms of a select
         // if that's what it's used in.
-        masm.loadConstantInt32x4(allOnes, scratch);
+        masm.loadConstantSimd128Int(allOnes, scratch);
         masm.packedEqualInt32x4(rhs, lhs);
         masm.bitwiseXorX4(Operand(scratch), lhs);
         return;
@@ -3245,12 +3245,12 @@ CodeGeneratorX86Shared::visitSimdBinaryCompIx4(LSimdBinaryCompIx4* ins)
         else
             masm.loadAlignedInt32x4(rhs, scratch);
         masm.packedGreaterThanInt32x4(ToOperand(ins->lhs()), scratch);
-        masm.loadConstantInt32x4(allOnes, lhs);
+        masm.loadConstantSimd128Int(allOnes, lhs);
         masm.bitwiseXorX4(Operand(scratch), lhs);
         return;
       case MSimdBinaryComp::lessThanOrEqual:
         // lhs <= rhs is equivalent to !(rhs < lhs), which we compute here.
-        masm.loadConstantInt32x4(allOnes, scratch);
+        masm.loadConstantSimd128Int(allOnes, scratch);
         masm.packedGreaterThanInt32x4(rhs, lhs);
         masm.bitwiseXorX4(Operand(scratch), lhs);
         return;
@@ -3389,7 +3389,7 @@ CodeGeneratorX86Shared::visitSimdBinaryArithFx4(LSimdBinaryArithFx4* ins)
       }
       case MSimdBinaryArith::Op_minNum: {
         FloatRegister tmp = ToFloatRegister(ins->temp());
-        masm.loadConstantInt32x4(SimdConstant::SplatX4(int32_t(0x80000000)), tmp);
+        masm.loadConstantSimd128Int(SimdConstant::SplatX4(int32_t(0x80000000)), tmp);
 
         FloatRegister mask = scratch;
         FloatRegister tmpCopy = masm.reusedInputFloat32x4(tmp, scratch);
@@ -3419,11 +3419,11 @@ CodeGeneratorX86Shared::visitSimdBinaryArithFx4(LSimdBinaryArithFx4* ins)
       }
       case MSimdBinaryArith::Op_maxNum: {
         FloatRegister mask = scratch;
-        masm.loadConstantInt32x4(SimdConstant::SplatX4(0), mask);
+        masm.loadConstantSimd128Int(SimdConstant::SplatX4(0), mask);
         masm.vpcmpeqd(Operand(lhs), mask, mask);
 
         FloatRegister tmp = ToFloatRegister(ins->temp());
-        masm.loadConstantInt32x4(SimdConstant::SplatX4(int32_t(0x80000000)), tmp);
+        masm.loadConstantSimd128Int(SimdConstant::SplatX4(int32_t(0x80000000)), tmp);
         masm.vandps(tmp, mask, mask);
 
         FloatRegister lhsCopy = masm.reusedInputFloat32x4(lhs, tmp);
@@ -3469,7 +3469,7 @@ CodeGeneratorX86Shared::visitSimdUnaryArithIx4(LSimdUnaryArithIx4* ins)
         masm.packedSubInt32(in, out);
         return;
       case MSimdUnaryArith::not_:
-        masm.loadConstantInt32x4(allOnes, out);
+        masm.loadConstantSimd128Int(allOnes, out);
         masm.bitwiseXorX4(in, out);
         return;
       case MSimdUnaryArith::abs:
@@ -3500,15 +3500,15 @@ CodeGeneratorX86Shared::visitSimdUnaryArithFx4(LSimdUnaryArithFx4* ins)
 
     switch (ins->operation()) {
       case MSimdUnaryArith::abs:
-        masm.loadConstantFloat32x4(signMasks, out);
+        masm.loadConstantSimd128Float(signMasks, out);
         masm.bitwiseAndX4(in, out);
         return;
       case MSimdUnaryArith::neg:
-        masm.loadConstantFloat32x4(minusZero, out);
+        masm.loadConstantSimd128Float(minusZero, out);
         masm.bitwiseXorX4(in, out);
         return;
       case MSimdUnaryArith::not_:
-        masm.loadConstantFloat32x4(allOnes, out);
+        masm.loadConstantSimd128Float(allOnes, out);
         masm.bitwiseXorX4(in, out);
         return;
       case MSimdUnaryArith::reciprocalApproximation:

@@ -1245,7 +1245,7 @@ class MacroAssemblerX86Shared : public Assembler
         return false;
     }
 
-    bool maybeInlineInt32x4(const SimdConstant& v, const FloatRegister& dest) {
+    bool maybeInlineSimd128Int(const SimdConstant& v, const FloatRegister& dest) {
         static const SimdConstant zero = SimdConstant::SplatX4(0);
         static const SimdConstant minusOne = SimdConstant::SplatX4(-1);
         if (v == zero) {
@@ -1258,7 +1258,7 @@ class MacroAssemblerX86Shared : public Assembler
         }
         return false;
     }
-    bool maybeInlineFloat32x4(const SimdConstant& v, const FloatRegister& dest) {
+    bool maybeInlineSimd128Float(const SimdConstant& v, const FloatRegister& dest) {
         static const SimdConstant zero = SimdConstant::SplatX4(0.f);
         if (v == zero) {
             // This won't get inlined if the SimdConstant v contains -0 in any
