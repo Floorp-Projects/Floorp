@@ -302,13 +302,13 @@ AssertMarkedOrAllocated(const EdgeValue& edge)
     MOZ_CRASH();
 }
 
-bool
+void
 gc::GCRuntime::endVerifyPreBarriers()
 {
     VerifyPreTracer* trc = verifyPreData;
 
     if (!trc)
-        return false;
+        return;
 
     MOZ_ASSERT(!JS::IsGenerationalGCEnabled(rt));
 
@@ -357,7 +357,6 @@ gc::GCRuntime::endVerifyPreBarriers()
     marker.stop();
 
     js_delete(trc);
-    return true;
 }
 
 /*** Barrier Verifier Scheduling ***/
