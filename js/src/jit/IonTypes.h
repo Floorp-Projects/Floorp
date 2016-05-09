@@ -355,6 +355,11 @@ class SimdConstant {
         return type_;
     }
 
+    // Get the raw bytes of the constant.
+    const void* bytes() const {
+        return u.i8x16;
+    }
+
     const I8x16& asInt8x16() const {
         MOZ_ASSERT(defined() && type_ == Int8x16);
         return u.i8x16;
