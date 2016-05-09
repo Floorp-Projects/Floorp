@@ -111,6 +111,98 @@ function run() {
   SpecialPowers.setFullZoom(subwin, 1.0);
   is(subwin.innerHeight, 228, "full zoom is 1.0");
 
+
+  // Now test that certain things *don't* happen, i.e., that we're
+  // making the optimizations we expect.
+  subdoc.body.textContent = "";
+  subdoc.body.appendChild(subdoc.createElement("div"));
+  for (var ruleIdx = sheet.cssRules.length; ruleIdx-- != 0; ) {
+    sheet.deleteRule(ruleIdx);
+  }
+
+  var utils = SpecialPowers.getDOMWindowUtils(subwin);
+  var elementsRestyled, framesConstructed, framesReflowed;
+  function reset_change_counters()
+  {
+    elementsRestyled = utils.elementsRestyled;
+    framesConstructed = utils.framesConstructed;
+    framesReflowed = utils.framesReflowed;
+  }
+
+  function flush_and_assert_change_counters(desc, expected) {
+    subdoc.body.offsetHeight;
+
+    if (!("restyle" in expected) ||
+        !("construct" in expected) ||
+        !("reflow" in expected)) {
+      ok(false, "parameter missing expectation");
+      return;
+    }
+
+    var restyles = utils.elementsRestyled - elementsRestyled;
+    var constructs = utils.framesConstructed - framesConstructed;
+    var reflows = utils.framesReflowed - framesReflowed;
+
+    (expected.restyle ? isnot : is)(restyles, 0, "restyle count: " + desc);
+    (expected.construct ? isnot : is)(constructs, 0,
+                                      "frame construct count: " + desc);
+    (expected.reflow ? isnot : is)(reflows, 0, "reflow count: " + desc);
+
+    reset_change_counters();
+  }
+
+  subdoc.body.offsetHeight;
+  reset_change_counters();
+
+  iframe_style.width = "103px";
+  flush_and_assert_change_counters("change width with no media queries",
+    { restyle: false, construct: false, reflow: true });
+
+  flush_and_assert_change_counters("no change",
+    { restyle: false, construct: false, reflow: false });
+
+  iframe_style.height = "123px";
+  flush_and_assert_change_counters("change height with no media queries",
+    { restyle: false, construct: false, reflow: true });
+
+  sheet.insertRule("@media (min-width: 150px) { div { display:flex } }", 0);
+  flush_and_assert_change_counters("add non-matching media query",
+    // FIXME: We restyle here because
+    // nsIPresShell::RestyleForCSSRuleChanges posts a restyle, but it's
+    // probably avoidable if we wanted to avoid it.
+    { restyle: true, construct: false, reflow: false });
+
+  iframe_style.width = "177px";
+  flush_and_assert_change_counters("resize width across media query with 'display'",
+    { restyle: true, construct: true, reflow: true });
+
+  iframe_style.width = "162px";
+  flush_and_assert_change_counters("resize width without crossing media query",
+    { restyle: false, construct: false, reflow: true });
+
+  sheet.deleteRule(0);
+  flush_and_assert_change_counters("remove matching media query with 'display'",
+    { restyle: true, construct: true, reflow: true });
+
+  sheet.insertRule("@media (max-height: 150px) { div { display:flex } }", 0);
+  flush_and_assert_change_counters("add matching media query with 'display'",
+    { restyle: true, construct: true, reflow: true });
+
+  iframe_style.height = "111px";
+  flush_and_assert_change_counters("resize height without crossing media query",
+    { restyle: false, construct: false, reflow: true });
+
+  iframe_style.height = "184px";
+  flush_and_assert_change_counters("resize height across media query with 'display'",
+    { restyle: true, construct: true, reflow: true });
+
+  sheet.deleteRule(0);
+  flush_and_assert_change_counters("remove non-matching media query",
+    // FIXME: We restyle here because
+    // nsIPresShell::RestyleForCSSRuleChanges posts a restyle, but it's
+    // probably avoidable if we wanted to avoid it.
+    { restyle: true, construct: false, reflow: false });
+
   SimpleTest.finish();
 }
 
