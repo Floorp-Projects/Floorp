@@ -159,7 +159,7 @@ FFmpegVideoDecoder<LIBAV_VER>::InitCodecContext()
 }
 
 FFmpegVideoDecoder<LIBAV_VER>::DecodeResult
-FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample)
+FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample)
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
 
@@ -187,7 +187,7 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample)
       inputData += len;
       inputSize -= len;
       if (size) {
-        switch (DoDecodeFrame(aSample, data, size)) {
+        switch (DoDecode(aSample, data, size)) {
           case DecodeResult::DECODE_ERROR:
             return DecodeResult::DECODE_ERROR;
           case DecodeResult::DECODE_FRAME:
@@ -201,12 +201,12 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample)
     return gotFrame ? DecodeResult::DECODE_FRAME : DecodeResult::DECODE_NO_FRAME;
   }
 #endif
-  return DoDecodeFrame(aSample, inputData, inputSize);
+  return DoDecode(aSample, inputData, inputSize);
 }
 
 FFmpegVideoDecoder<LIBAV_VER>::DecodeResult
-FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
-                                            uint8_t* aData, int aSize)
+FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
+                                        uint8_t* aData, int aSize)
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
 
@@ -317,12 +317,10 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
 }
 
 void
-FFmpegVideoDecoder<LIBAV_VER>::DecodeFrame(MediaRawData* aSample)
+FFmpegVideoDecoder<LIBAV_VER>::ProcessDecode(MediaRawData* aSample)
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-
-  if (DoDecodeFrame(aSample) != DecodeResult::DECODE_ERROR &&
-      mTaskQueue->IsEmpty()) {
+  if (DoDecode(aSample) != DecodeResult::DECODE_ERROR && mTaskQueue->IsEmpty()) {
     mCallback->InputExhausted();
   }
 }
@@ -330,12 +328,8 @@ FFmpegVideoDecoder<LIBAV_VER>::DecodeFrame(MediaRawData* aSample)
 nsresult
 FFmpegVideoDecoder<LIBAV_VER>::Input(MediaRawData* aSample)
 {
-  nsCOMPtr<nsIRunnable> runnable(
-    NewRunnableMethod<RefPtr<MediaRawData>>(
-      this, &FFmpegVideoDecoder<LIBAV_VER>::DecodeFrame,
-      RefPtr<MediaRawData>(aSample)));
-  mTaskQueue->Dispatch(runnable.forget());
-
+  mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
+    this, &FFmpegVideoDecoder::ProcessDecode, aSample));
   return NS_OK;
 }
 
@@ -345,7 +339,7 @@ FFmpegVideoDecoder<LIBAV_VER>::ProcessDrain()
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   RefPtr<MediaRawData> empty(new MediaRawData());
   empty->mTimecode = mPtsContext.LastDts();
-  while (DoDecodeFrame(empty) == DecodeResult::DECODE_FRAME) {
+  while (DoDecode(empty) == DecodeResult::DECODE_FRAME) {
   }
   mCallback->DrainComplete();
 }

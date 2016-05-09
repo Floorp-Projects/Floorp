@@ -55,9 +55,9 @@ public:
   static AVCodecID GetCodecId(const nsACString& aMimeType);
 
 private:
-  void DecodeFrame(MediaRawData* aSample);
-  DecodeResult DoDecodeFrame(MediaRawData* aSample);
-  DecodeResult DoDecodeFrame(MediaRawData* aSample, uint8_t* aData, int aSize);
+  void ProcessDecode(MediaRawData* aSample);
+  DecodeResult DoDecode(MediaRawData* aSample);
+  DecodeResult DoDecode(MediaRawData* aSample, uint8_t* aData, int aSize);
   void DoDrain();
   void OutputDelayedFrames();
 
