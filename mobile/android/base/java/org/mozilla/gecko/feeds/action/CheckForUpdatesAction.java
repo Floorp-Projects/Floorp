@@ -28,6 +28,7 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.UrlAnnotations;
+import org.mozilla.gecko.feeds.ContentNotificationsDelegate;
 import org.mozilla.gecko.feeds.FeedFetcher;
 import org.mozilla.gecko.feeds.FeedService;
 import org.mozilla.gecko.feeds.parser.Feed;
@@ -47,8 +48,6 @@ public class CheckForUpdatesAction extends FeedAction {
      * This extra will be added to Intents fired by the notification.
      */
     public static final String EXTRA_CONTENT_NOTIFICATION = "content-notification";
-
-    private static final String LOGTAG = "FeedCheckAction";
 
     private Context context;
 
@@ -163,19 +162,14 @@ public class CheckForUpdatesAction extends FeedAction {
     private void showNotificationForSingleUpdate(Feed feed) {
         final String date = DateFormat.getMediumDateFormat(context).format(new Date(feed.getLastItem().getTimestamp()));
 
-        NotificationCompat.BigTextStyle style = new NotificationCompat.BigTextStyle()
+        final NotificationCompat.BigTextStyle style = new NotificationCompat.BigTextStyle()
                 .bigText(feed.getLastItem().getTitle())
                 .setBigContentTitle(feed.getTitle())
                 .setSummaryText(context.getString(R.string.content_notification_updated_on, date));
 
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setComponent(new ComponentName(context, BrowserApp.class));
-        intent.setData(Uri.parse(feed.getLastItem().getURL()));
-        intent.putExtra(EXTRA_CONTENT_NOTIFICATION, true);
+        final PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, createOpenIntent(feed), PendingIntent.FLAG_UPDATE_CURRENT);
 
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
-
-        Notification notification = new NotificationCompat.Builder(context)
+        final Notification notification = new NotificationCompat.Builder(context)
                 .setSmallIcon(R.drawable.ic_status_logo)
                 .setContentTitle(feed.getTitle())
                 .setContentText(feed.getLastItem().getTitle())
@@ -190,23 +184,13 @@ public class CheckForUpdatesAction extends FeedAction {
     }
 
     private void showNotificationForMultipleUpdates(List<Feed> feeds) {
-        final ArrayList<String> urls = new ArrayList<>();
-
         final NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
         for (Feed feed : feeds) {
-            final String url = feed.getLastItem().getURL();
-
-            inboxStyle.addLine(StringUtils.stripScheme(url, StringUtils.UrlFlags.STRIP_HTTPS));
-            urls.add(url);
+            inboxStyle.addLine(StringUtils.stripScheme(feed.getLastItem().getURL(), StringUtils.UrlFlags.STRIP_HTTPS));
         }
         inboxStyle.setSummaryText(context.getString(R.string.content_notification_summary));
 
-        Intent intent = new Intent(context, BrowserApp.class);
-        intent.setAction(BrowserApp.ACTION_VIEW_MULTIPLE);
-        intent.putStringArrayListExtra("urls", urls);
-        intent.putExtra(EXTRA_CONTENT_NOTIFICATION, true);
-
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+        final PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, createOpenIntent(feeds), PendingIntent.FLAG_UPDATE_CURRENT);
 
         Notification notification = new NotificationCompat.Builder(context)
                 .setSmallIcon(R.drawable.ic_status_logo)
@@ -222,6 +206,27 @@ public class CheckForUpdatesAction extends FeedAction {
 
         NotificationManagerCompat.from(context).notify(R.id.websiteContentNotification, notification);
     }
+
+    private Intent createOpenIntent(Feed feed) {
+        final List<Feed> feeds = new ArrayList<>();
+        feeds.add(feed);
+
+        return createOpenIntent(feeds);
+    }
+
+    private Intent createOpenIntent(List<Feed> feeds) {
+        final ArrayList<String> urls = new ArrayList<>();
+        for (Feed feed : feeds) {
+            urls.add(feed.getLastItem().getURL());
+        }
+
+        final Intent intent = new Intent(context, BrowserApp.class);
+        intent.setAction(ContentNotificationsDelegate.ACTION_CONTENT_NOTIFICATION);
+        intent.putStringArrayListExtra(ContentNotificationsDelegate.EXTRA_URLS, urls);
+
+        return intent;
+    }
+
 
     private NotificationCompat.Action createNotificationSettingsAction() {
         final Intent intent = new Intent(GeckoApp.ACTION_LAUNCH_SETTINGS);
