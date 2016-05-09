@@ -4343,7 +4343,7 @@ LIRGenerator::visitSimdConvert(MSimdConvert* ins)
           }
           case SimdSign::Unsigned: {
               LFloat32x4ToUint32x4* lir =
-                new (alloc()) LFloat32x4ToUint32x4(use, temp(), temp(LDefinition::INT32X4));
+                new (alloc()) LFloat32x4ToUint32x4(use, temp(), temp(LDefinition::SIMD128INT));
               if (!gen->compilingAsmJS())
                   assignSnapshot(lir, Bailout_BoundsCheck);
               define(lir, ins);
