@@ -315,13 +315,6 @@ class JSFunction : public js::NativeObject
 
     JSAtom* name() const { return hasGuessedAtom() ? nullptr : atom_.get(); }
 
-    // Because display names (see Debugger.Object.displayName) are already stored
-    // on functions and will always contain a valid es6 function name, as described
-    // in "ECMA-262 (2016-02-27) 9.2.11 SetFunctionName," we have opted to save
-    // memory by parsing the existing display name when a function's name property
-    // is accessed.
-    JSAtom* functionName(JSContext* cx) const;
-
     void initAtom(JSAtom* atom) { atom_.init(atom); }
 
     void setAtom(JSAtom* atom) { atom_ = atom; }
