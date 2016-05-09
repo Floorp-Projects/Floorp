@@ -77,6 +77,30 @@ public abstract class HomeFragment extends Fragment {
     // Helper for opening a tab in the background.
     private OnUrlOpenInBackgroundListener mUrlOpenInBackgroundListener;
 
+    protected PanelStateChangeListener mPanelStateChangeListener = null;
+
+    /**
+     * Listener to notify when a home panels' state has changed in a way that needs to be stored
+     * for history/restoration. E.g. when a folder is opened/closed in bookmarks.
+     */
+    public interface PanelStateChangeListener {
+
+        /**
+         * @param bundle Data that should be persisted, and passed to this panel if restored at a later
+         * stage.
+         */
+        void onStateChanged(Bundle bundle);
+    }
+
+    public void restoreData(Bundle data) {
+        // Do nothing
+    }
+
+    public void setPanelStateChangeListener(
+            PanelStateChangeListener mPanelStateChangeListener) {
+        this.mPanelStateChangeListener = mPanelStateChangeListener;
+    }
+
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
