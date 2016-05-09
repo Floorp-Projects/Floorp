@@ -53,7 +53,7 @@ def unlink_wrapper(unlink_orig, fn, ui):
     try:
         ui.debug('calling unlink_orig %s\n' % fn)
         return unlink_orig(fn)
-    except WindowsError as e:
+    except WindowsError, e:
         # windows error 3 corresponds to ERROR_PATH_NOT_FOUND
         # only handle this case; re-raise the exception for other kinds of
         # failures
