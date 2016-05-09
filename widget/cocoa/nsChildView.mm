@@ -2578,7 +2578,7 @@ nsChildView::SendMayStartSwipe(const mozilla::PanGestureInput& aSwipeStartEvent)
     SwipeTracker::CreateSwipeGestureEvent(eSwipeGestureMayStart, this,
                                           position);
   geckoEvent.mDirection = direction;
-  geckoEvent.delta = 0.0;
+  geckoEvent.mDelta = 0.0;
   geckoEvent.mAllowedDirections = 0;
   bool shouldStartSwipe = DispatchWindowEvent(geckoEvent); // event cancelled == swipe should start
 
@@ -4253,7 +4253,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   // Setup the event.
   WidgetSimpleGestureEvent geckoEvent(true, msg, mGeckoChild);
-  geckoEvent.delta = deltaZ;
+  geckoEvent.mDelta = deltaZ;
   [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
 
   // Send the event.
@@ -4320,7 +4320,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // Setup the event.
   WidgetSimpleGestureEvent geckoEvent(true, msg, mGeckoChild);
   [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
-  geckoEvent.delta = -rotation;
+  geckoEvent.mDelta = -rotation;
   if (rotation > 0.0) {
     geckoEvent.mDirection = nsIDOMSimpleGestureEvent::ROTATION_COUNTERCLOCKWISE;
   } else {
@@ -4355,7 +4355,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     {
       // Setup the "magnify" event.
       WidgetSimpleGestureEvent geckoEvent(true, eMagnifyGesture, mGeckoChild);
-      geckoEvent.delta = mCumulativeMagnification;
+      geckoEvent.mDelta = mCumulativeMagnification;
       [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
 
       // Send the event.
@@ -4368,7 +4368,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
       // Setup the "rotate" event.
       WidgetSimpleGestureEvent geckoEvent(true, eRotateGesture, mGeckoChild);
       [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
-      geckoEvent.delta = -mCumulativeRotation;
+      geckoEvent.mDelta = -mCumulativeRotation;
       if (mCumulativeRotation > 0.0) {
         geckoEvent.mDirection = nsIDOMSimpleGestureEvent::ROTATION_COUNTERCLOCKWISE;
       } else {

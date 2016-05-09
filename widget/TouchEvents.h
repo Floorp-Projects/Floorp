@@ -101,7 +101,7 @@ public:
     , mAllowedDirections(0)
     , mDirection(0)
     , mClickCount(0)
-    , delta(0.0)
+    , mDelta(0.0)
   {
   }
 
@@ -111,7 +111,7 @@ public:
     , mAllowedDirections(aOther.mAllowedDirections)
     , mDirection(aOther.mDirection)
     , mClickCount(0)
-    , delta(aOther.delta)
+    , mDelta(aOther.mDelta)
   {
   }
 
@@ -134,7 +134,7 @@ public:
   // The number of taps for tap events
   uint32_t mClickCount;
   // Delta for magnify and rotate events
-  double delta;
+  double mDelta;
 
   // XXX Not tested by test_assign_event_data.html
   void AssignSimpleGestureEventData(const WidgetSimpleGestureEvent& aEvent,
@@ -144,7 +144,7 @@ public:
 
     // mAllowedDirections isn't copied
     mDirection = aEvent.mDirection;
-    delta = aEvent.delta;
+    mDelta = aEvent.mDelta;
     mClickCount = aEvent.mClickCount;
   }
 };
