@@ -88,16 +88,6 @@ extern bool
 regexp_test_no_statics(JSContext* cx, unsigned argc, Value* vp);
 
 /*
- * Behaves like RegExp(string) or RegExp(string, string), for self-hosted JS.
- * pattern and flags should be string, and should be called without |new|.
- *
- * Usage: re = regexp_construct(pattern)
- *        re = regexp_construct(pattern, flags)
- */
-extern bool
-regexp_construct_self_hosting(JSContext* cx, unsigned argc, Value* vp);
-
-/*
  * Behaves like RegExp(pattern, string).
  * pattern should be a RegExp object, and flags should be a string,
  * and should be called without |new|.

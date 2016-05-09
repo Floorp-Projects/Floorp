@@ -1565,11 +1565,11 @@ intrinsic_RegExpCreate(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    MOZ_ASSERT(args.length() == 2);
-    MOZ_ASSERT(args[1].isString() || args[1].isUndefined());
+    MOZ_ASSERT(args.length() == 1 || args.length() == 2);
+    MOZ_ASSERT_IF(args.length() == 2, args[1].isString() || args[1].isUndefined());
     MOZ_ASSERT(!args.isConstructing());
 
-    return RegExpCreate(cx, args[0], args[1], args.rval());
+    return RegExpCreate(cx, args[0], args.get(1), args.rval());
 }
 
 static bool
@@ -2540,7 +2540,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     // See builtin/RegExp.h for descriptions of the regexp_* functions.
     JS_FN("regexp_exec_no_statics", regexp_exec_no_statics, 2,0),
     JS_FN("regexp_test_no_statics", regexp_test_no_statics, 2,0),
-    JS_FN("regexp_construct", regexp_construct_self_hosting, 2,0),
     JS_FN("regexp_construct_no_sticky", regexp_construct_no_sticky, 2,0),
 
     JS_FN("IsModule", intrinsic_IsInstanceOfBuiltin<ModuleObject>, 1, 0),
