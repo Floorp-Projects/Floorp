@@ -13,7 +13,6 @@ namespace mozilla {
 
 CDMCaps::CDMCaps()
   : mMonitor("CDMCaps")
-  , mCaps(0)
 {
 }
 
@@ -33,13 +32,6 @@ CDMCaps::Unlock()
   mMonitor.Unlock();
 }
 
-bool
-CDMCaps::HasCap(uint64_t aCap)
-{
-  mMonitor.AssertCurrentThreadOwns();
-  return (mCaps & aCap) == aCap;
-}
-
 CDMCaps::AutoLock::AutoLock(CDMCaps& aInstance)
   : mData(aInstance)
 {
@@ -49,56 +41,6 @@ CDMCaps::AutoLock::AutoLock(CDMCaps& aInstance)
 CDMCaps::AutoLock::~AutoLock()
 {
   mData.Unlock();
-}
-
-static void
-TestCap(uint64_t aFlag,
-        uint64_t aCaps,
-        const nsACString& aCapName,
-        nsACString& aCapStr)
-{
-  if (!(aFlag & aCaps)) {
-    return;
-  }
-  if (!aCapStr.IsEmpty()) {
-    aCapStr.AppendLiteral(",");
-  }
-  aCapStr.Append(aCapName);
-}
-
-nsCString
-CapsToString(uint64_t aCaps)
-{
-  nsCString capsStr;
-  TestCap(GMP_EME_CAP_DECRYPT_AUDIO, aCaps, NS_LITERAL_CSTRING("DecryptAudio"), capsStr);
-  TestCap(GMP_EME_CAP_DECRYPT_VIDEO, aCaps, NS_LITERAL_CSTRING("DecryptVideo"), capsStr);
-  TestCap(GMP_EME_CAP_DECRYPT_AND_DECODE_AUDIO, aCaps, NS_LITERAL_CSTRING("DecryptAndDecodeAudio"), capsStr);
-  TestCap(GMP_EME_CAP_DECRYPT_AND_DECODE_VIDEO, aCaps, NS_LITERAL_CSTRING("DecryptAndDecodeVideo"), capsStr);
-  return capsStr;
-}
-
-void
-CDMCaps::AutoLock::SetCaps(uint64_t aCaps)
-{
-  EME_LOG("SetCaps() %s", CapsToString(aCaps).get());
-  mData.mMonitor.AssertCurrentThreadOwns();
-  mData.mCaps = aCaps;
-  for (size_t i = 0; i < mData.mWaitForCaps.Length(); i++) {
-    NS_DispatchToMainThread(mData.mWaitForCaps[i], NS_DISPATCH_NORMAL);
-  }
-  mData.mWaitForCaps.Clear();
-}
-
-void
-CDMCaps::AutoLock::CallOnMainThreadWhenCapsAvailable(nsIRunnable* aContinuation)
-{
-  mData.mMonitor.AssertCurrentThreadOwns();
-  if (mData.mCaps) {
-    NS_DispatchToMainThread(aContinuation, NS_DISPATCH_NORMAL);
-    MOZ_ASSERT(mData.mWaitForCaps.IsEmpty());
-  } else {
-    mData.mWaitForCaps.AppendElement(aContinuation);
-  }
 }
 
 bool
@@ -175,49 +117,6 @@ CDMCaps::AutoLock::NotifyWhenKeyIdUsable(const CencKeyId& aKey,
   MOZ_ASSERT(!IsKeyUsable(aKey));
   MOZ_ASSERT(aListener);
   mData.mWaitForKeys.AppendElement(WaitForKeys(aKey, aListener));
-}
-
-bool
-CDMCaps::AutoLock::AreCapsKnown()
-{
-  mData.mMonitor.AssertCurrentThreadOwns();
-  return mData.mCaps != 0;
-}
-
-bool
-CDMCaps::AutoLock::CanRenderAudio()
-{
-  return mData.HasCap(GMP_EME_CAP_RENDER_AUDIO);
-}
-
-bool
-CDMCaps::AutoLock::CanRenderVideo()
-{
-  return mData.HasCap(GMP_EME_CAP_RENDER_VIDEO);
-}
-
-bool
-CDMCaps::AutoLock::CanDecryptAndDecodeAudio()
-{
-  return mData.HasCap(GMP_EME_CAP_DECRYPT_AND_DECODE_AUDIO);
-}
-
-bool
-CDMCaps::AutoLock::CanDecryptAndDecodeVideo()
-{
-  return mData.HasCap(GMP_EME_CAP_DECRYPT_AND_DECODE_VIDEO);
-}
-
-bool
-CDMCaps::AutoLock::CanDecryptAudio()
-{
-  return mData.HasCap(GMP_EME_CAP_DECRYPT_AUDIO);
-}
-
-bool
-CDMCaps::AutoLock::CanDecryptVideo()
-{
-  return mData.HasCap(GMP_EME_CAP_DECRYPT_VIDEO);
 }
 
 void

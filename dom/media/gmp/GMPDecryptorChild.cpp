@@ -193,7 +193,7 @@ GMPDecryptorChild::Decrypted(GMPBuffer* aBuffer, GMPErr aResult)
 void
 GMPDecryptorChild::SetCapabilities(uint64_t aCaps)
 {
-  CALL_ON_GMP_THREAD(SendSetCaps, aCaps);
+  // Deprecated.
 }
 
 void
