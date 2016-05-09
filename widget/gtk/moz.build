@@ -84,6 +84,7 @@ else:
     UNIFIED_SOURCES += [
         'gtk3drawing.cpp',
         'nsApplicationChooser.cpp',
+        'WidgetStyleCache.cpp',
     ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

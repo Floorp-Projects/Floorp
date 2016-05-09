@@ -1,0 +1,8 @@
+<!doctype html>
+<script>
+var c = document.createElement("canvas");
+c.getContext("experimental-webgl", {
+  get a() { throw 7; },
+  get b() { throw 8; }
+});
+</script>

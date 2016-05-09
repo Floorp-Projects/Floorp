@@ -10,10 +10,15 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
+ServoRestyleManager::ServoRestyleManager()
+  : mRestyleGeneration(1)
+{
+}
+
 void
 ServoRestyleManager::Disconnect()
 {
-  MOZ_CRASH("stylo: not implemented");
+  NS_ERROR("stylo: ServoRestyleManager::Disconnect not implemented");
 }
 
 void
@@ -21,47 +26,48 @@ ServoRestyleManager::PostRestyleEvent(Element* aElement,
                                       nsRestyleHint aRestyleHint,
                                       nsChangeHint aMinChangeHint)
 {
-  MOZ_CRASH("stylo: not implemented");
+  NS_ERROR("stylo: ServoRestyleManager::PostRestyleEvent not implemented");
 }
 
 void
 ServoRestyleManager::PostRestyleEventForLazyConstruction()
 {
-  MOZ_CRASH("stylo: not implemented");
+  NS_ERROR("stylo: ServoRestyleManager::PostRestyleEventForLazyConstruction not implemented");
 }
 
 void
 ServoRestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
                                          nsRestyleHint aRestyleHint)
 {
-  MOZ_CRASH("stylo: not implemented");
+  NS_ERROR("stylo: ServoRestyleManager::RebuildAllStyleData not implemented");
 }
 
 void
 ServoRestyleManager::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
                                                   nsRestyleHint aRestyleHint)
 {
-  MOZ_CRASH("stylo: not implemented");
+  MOZ_CRASH("stylo: ServoRestyleManager::PostRebuildAllStyleDataEvent not implemented");
 }
 
 void
 ServoRestyleManager::ProcessPendingRestyles()
 {
-  MOZ_CRASH("stylo: not implemented");
+  // XXXheycam Do nothing for now.
+  mRestyleGeneration++;
 }
 
 void
 ServoRestyleManager::RestyleForInsertOrChange(Element* aContainer,
                                               nsIContent* aChild)
 {
-  MOZ_CRASH("stylo: not implemented");
+  NS_ERROR("stylo: ServoRestyleManager::RestyleForInsertOrChange not implemented");
 }
 
 void
 ServoRestyleManager::RestyleForAppend(Element* aContainer,
                                       nsIContent* aFirstNewContent)
 {
-  MOZ_CRASH("stylo: not implemented");
+  NS_ERROR("stylo: ServoRestyleManager::RestyleForAppend not implemented");
 }
 
 void
@@ -69,14 +75,15 @@ ServoRestyleManager::RestyleForRemove(Element* aContainer,
                                       nsIContent* aOldChild,
                                       nsIContent* aFollowingSibling)
 {
-  MOZ_CRASH("stylo: not implemented");
+  NS_ERROR("stylo: ServoRestyleManager::RestyleForRemove not implemented");
 }
 
 nsresult
 ServoRestyleManager::ContentStateChanged(nsIContent* aContent,
                                          EventStates aStateMask)
 {
-  MOZ_CRASH("stylo: not implemented");
+  NS_ERROR("stylo: ServoRestyleManager::ContentStateChanged not implemented");
+  return NS_OK;
 }
 
 void
@@ -86,7 +93,7 @@ ServoRestyleManager::AttributeWillChange(Element* aElement,
                                          int32_t aModType,
                                          const nsAttrValue* aNewValue)
 {
-  MOZ_CRASH("stylo: not implemented");
+  NS_ERROR("stylo: ServoRestyleManager::AttributeWillChange not implemented");
 }
 
 void
@@ -96,25 +103,26 @@ ServoRestyleManager::AttributeChanged(Element* aElement,
                                       int32_t aModType,
                                       const nsAttrValue* aOldValue)
 {
-  MOZ_CRASH("stylo: not implemented");
+  NS_ERROR("stylo: ServoRestyleManager::AttributeChanged not implemented");
 }
 
 nsresult
 ServoRestyleManager::ReparentStyleContext(nsIFrame* aFrame)
 {
-  MOZ_CRASH("stylo: not implemented");
+  MOZ_CRASH("stylo: ServoRestyleManager::ReparentStyleContext not implemented");
 }
 
 bool
 ServoRestyleManager::HasPendingRestyles()
 {
-  MOZ_CRASH("stylo: not implemented");
+  NS_ERROR("stylo: ServoRestyleManager::HasPendingRestyles not implemented");
+  return false;
 }
 
 uint64_t
 ServoRestyleManager::GetRestyleGeneration() const
 {
-  MOZ_CRASH("stylo: not implemented");
+  return mRestyleGeneration;
 }
 
 } // namespace mozilla

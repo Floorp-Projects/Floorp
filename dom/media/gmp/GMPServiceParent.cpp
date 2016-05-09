@@ -146,7 +146,20 @@ GeckoMediaPluginServiceParent::Init()
 
   // Kick off scanning for plugins
   nsCOMPtr<nsIThread> thread;
-  return GetThread(getter_AddRefs(thread));
+  rv = GetThread(getter_AddRefs(thread));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // Detect if GMP storage has an incompatible version, and if so nuke it.
+  int32_t version = Preferences::GetInt("media.gmp.storage.version.observed", 0);
+  int32_t expected = Preferences::GetInt("media.gmp.storage.version.expected", 0);
+  if (version != expected) {
+    Preferences::SetInt("media.gmp.storage.version.observed", expected);
+    return GMPDispatch(NewRunnableMethod(
+      this, &GeckoMediaPluginServiceParent::ClearStorage));
+  }
+  return NS_OK;
 }
 
 already_AddRefed<nsIFile>
@@ -528,8 +541,12 @@ GeckoMediaPluginServiceParent::GetContentParentFrom(const nsACString& aNodeId,
                                                     const nsTArray<nsCString>& aTags,
                                                     UniquePtr<GetGMPContentParentCallback>&& aCallback)
 {
-  RefPtr<GeckoMediaPluginServiceParent> self(this);
   RefPtr<AbstractThread> thread(GetAbstractGMPThread());
+  if (!thread) {
+    return false;
+  }
+
+  RefPtr<GeckoMediaPluginServiceParent> self(this);
   nsCString nodeId(aNodeId);
   nsTArray<nsCString> tags(aTags);
   nsCString api(aAPI);
@@ -555,8 +572,10 @@ GeckoMediaPluginServiceParent::GetContentParentFrom(const nsACString& aNodeId,
 }
 
 void
-GeckoMediaPluginServiceParent::InitializePlugins()
+GeckoMediaPluginServiceParent::InitializePlugins(
+  AbstractThread* aAbstractGMPThread)
 {
+  MOZ_ASSERT(aAbstractGMPThread);
   MonitorAutoLock lock(mInitPromiseMonitor);
   if (mLoadPluginsFromDiskComplete) {
     return;
@@ -564,9 +583,9 @@ GeckoMediaPluginServiceParent::InitializePlugins()
 
   RefPtr<GeckoMediaPluginServiceParent> self(this);
   RefPtr<GenericPromise> p = mInitPromise.Ensure(__func__);
-  RefPtr<AbstractThread> thread(GetAbstractGMPThread());
-  InvokeAsync(thread, this, __func__, &GeckoMediaPluginServiceParent::LoadFromEnvironment)
-    ->Then(thread, __func__,
+  InvokeAsync(aAbstractGMPThread, this, __func__,
+              &GeckoMediaPluginServiceParent::LoadFromEnvironment)
+    ->Then(aAbstractGMPThread, __func__,
       [self]() -> void {
         MonitorAutoLock lock(self->mInitPromiseMonitor);
         self->mLoadPluginsFromDiskComplete = true;
@@ -758,6 +777,10 @@ RefPtr<GenericPromise::AllPromiseType>
 GeckoMediaPluginServiceParent::LoadFromEnvironment()
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
+  RefPtr<AbstractThread> thread(GetAbstractGMPThread());
+  if (!thread) {
+    return GenericPromise::AllPromiseType::CreateAndReject(NS_ERROR_FAILURE, __func__);
+  }
 
   const char* env = PR_GetEnv("MOZ_GMP_PATH");
   if (!env || !*env) {
@@ -785,7 +808,6 @@ GeckoMediaPluginServiceParent::LoadFromEnvironment()
   }
 
   mScannedPluginOnDisk = true;
-  RefPtr<AbstractThread> thread(GetAbstractGMPThread());
   return GenericPromise::All(thread, promises);
 }
 
@@ -833,6 +855,10 @@ RefPtr<GenericPromise>
 GeckoMediaPluginServiceParent::AsyncAddPluginDirectory(const nsAString& aDirectory)
 {
   RefPtr<AbstractThread> thread(GetAbstractGMPThread());
+  if (!thread) {
+    return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+  }
+
   nsString dir(aDirectory);
   return InvokeAsync(thread, this, __func__, &GeckoMediaPluginServiceParent::AddOnGMPThread, dir)
     ->Then(AbstractThread::MainThread(), __func__,
@@ -1061,7 +1087,13 @@ RefPtr<GenericPromise>
 GeckoMediaPluginServiceParent::AddOnGMPThread(nsString aDirectory)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
-  LOGD(("%s::%s: %s", __CLASS__, __FUNCTION__, NS_LossyConvertUTF16toASCII(aDirectory).get()));
+  nsCString dir = NS_ConvertUTF16toUTF8(aDirectory);
+  RefPtr<AbstractThread> thread(GetAbstractGMPThread());
+  if (!thread) {
+    LOGD(("%s::%s: %s No GMP Thread", __CLASS__, __FUNCTION__, dir.get()));
+    return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+  }
+  LOGD(("%s::%s: %s", __CLASS__, __FUNCTION__, dir.get()));
 
   nsCOMPtr<nsIFile> directory;
   nsresult rv = NS_NewLocalFile(aDirectory, false, getter_AddRefs(directory));
@@ -1076,8 +1108,6 @@ GeckoMediaPluginServiceParent::AddOnGMPThread(nsString aDirectory)
   }
 
   RefPtr<GeckoMediaPluginServiceParent> self(this);
-  RefPtr<AbstractThread> thread(GetAbstractGMPThread());
-  nsCString dir = NS_ConvertUTF16toUTF8(aDirectory);
   return gmp->Init(this, directory)->Then(thread, __func__,
     [gmp, self, dir]() -> void {
       LOGD(("%s::%s: %s Succeeded", __CLASS__, __FUNCTION__, dir.get()));

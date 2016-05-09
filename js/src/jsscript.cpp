@@ -47,12 +47,14 @@
 #include "vm/Opcodes.h"
 #include "vm/SelfHosting.h"
 #include "vm/Shape.h"
+#include "vm/SharedImmutableStringsCache.h"
 #include "vm/Xdr.h"
 
 #include "jsfuninlines.h"
 #include "jsobjinlines.h"
 
 #include "vm/ScopeObject-inl.h"
+#include "vm/SharedImmutableStringsCache-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;
@@ -1796,7 +1798,9 @@ JSScript::loadSource(JSContext* cx, ScriptSource* ss, bool* worked)
         return false;
     if (!src)
         return true;
-    ss->setSource(src, length);
+    if (!ss->setSource(cx, mozilla::UniquePtr<char16_t[], JS::FreePolicy>(src), length))
+        return false;
+
     *worked = true;
     return true;
 }
@@ -1937,7 +1941,7 @@ ScriptSource::chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holde
         { }
 
         ReturnType match(Uncompressed& u) {
-            return u.chars;
+            return u.string.chars();
         }
 
         ReturnType match(Compressed& c) {
@@ -1961,32 +1965,29 @@ ScriptSource::chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holde
             }
 
             decompressed[ss.length()] = 0;
-            ReturnType ret = decompressed.get();
 
             // Decompressing a huge script is expensive. With lazy parsing and
             // relazification, this can happen repeatedly, so conservatively go
             // back to storing the data uncompressed to avoid wasting too much
-            // time decompressing.
+            // time yo-yoing back and forth between compressed and uncompressed.
             const size_t HUGE_SCRIPT = 5 * 1024 * 1024;
             if (lengthWithNull > HUGE_SCRIPT) {
-                if (ss.inCompressedSourceSet) {
-                    TlsPerThreadData.get()->runtimeFromMainThread()->compressedSourceSet.remove(&ss);
-                    ss.inCompressedSourceSet = false;
-                }
-                js_free(ss.compressedData());
-                ss.data = SourceType(Uncompressed(decompressed.release(), true));
-            } else {
-                if (!cx->runtime()->uncompressedSourceCache.put(&ss, Move(decompressed), holder)) {
+                auto& strings = cx->runtime()->sharedImmutableStrings();
+                auto str = strings.getOrCreate(mozilla::Move(decompressed), ss.length());
+                if (!str) {
                     JS_ReportOutOfMemory(cx);
                     return nullptr;
                 }
+                ss.data = SourceType(Uncompressed(mozilla::Move(*str)));
+                return ss.uncompressedChars();
             }
 
+            ReturnType ret = decompressed.get();
+            if (!cx->runtime()->uncompressedSourceCache.put(&ss, Move(decompressed), holder)) {
+                JS_ReportOutOfMemory(cx);
+                return nullptr;
+            }
             return ret;
-        }
-
-        ReturnType match(Parent& p) {
-            return p.parent->chars(cx, holder);
         }
 
         ReturnType match(Missing&) {
@@ -2021,68 +2022,51 @@ ScriptSource::substringDontDeflate(JSContext* cx, uint32_t start, uint32_t stop)
     return NewStringCopyNDontDeflate<CanGC>(cx, chars + start, stop - start);
 }
 
-void
-ScriptSource::setSource(const char16_t* chars, size_t length, bool ownsChars /* = true */)
+MOZ_MUST_USE bool
+ScriptSource::setSource(ExclusiveContext* cx,
+                        mozilla::UniquePtr<char16_t[], JS::FreePolicy>&& source,
+                        size_t length)
 {
-    MOZ_ASSERT(data.is<Missing>());
-
-    data = SourceType(Uncompressed(chars, ownsChars));
-    length_ = length;
-}
-
-void
-ScriptSource::setCompressedSource(JSRuntime* maybert, void* raw, size_t nbytes, HashNumber hash)
-{
-    MOZ_ASSERT(data.is<Missing>() || data.is<Uncompressed>());
-
-    if (data.is<Uncompressed>() && data.as<Uncompressed>().ownsChars)
-        js_free(const_cast<char16_t*>(uncompressedChars()));
-
-    data = SourceType(Compressed(raw, nbytes, hash));
-
-    if (maybert)
-        updateCompressedSourceSet(maybert);
-}
-
-void
-ScriptSource::updateCompressedSourceSet(JSRuntime* rt)
-{
-    MOZ_ASSERT(data.is<Compressed>());
-    MOZ_ASSERT(!inCompressedSourceSet);
-
-    CompressedSourceSet::AddPtr p = rt->compressedSourceSet.lookupForAdd(this);
-    if (p) {
-        // There is another ScriptSource with the same compressed data.
-        // Mark that ScriptSource as the parent and use it for all attempts to
-        // get the source for this ScriptSource.
-        ScriptSource* parent = *p;
-        parent->incref();
-
-        js_free(compressedData());
-        data = SourceType(Parent(parent));
-    } else {
-        if (rt->compressedSourceSet.add(p, this))
-            inCompressedSourceSet = true;
-    }
-}
-
-bool
-ScriptSource::ensureOwnsSource(ExclusiveContext* cx)
-{
-    MOZ_ASSERT(data.is<Uncompressed>());
-    if (ownsUncompressedChars())
-        return true;
-
-    char16_t* uncompressed = cx->zone()->pod_malloc<char16_t>(Max<size_t>(length_, 1));
-    if (!uncompressed) {
+    auto& cache = cx->zone()->runtimeFromAnyThread()->sharedImmutableStrings();
+    auto deduped = cache.getOrCreate(mozilla::Move(source), length);
+    if (!deduped) {
         ReportOutOfMemory(cx);
         return false;
     }
-    PodCopy(uncompressed, uncompressedChars(), length_);
-
-    data.as<Uncompressed>().chars = uncompressed;
-    data.as<Uncompressed>().ownsChars = true;
+    setSource(mozilla::Move(*deduped));
     return true;
+}
+
+void
+ScriptSource::setSource(SharedImmutableTwoByteString&& string)
+{
+    MOZ_ASSERT(data.is<Missing>());
+    data = SourceType(Uncompressed(mozilla::Move(string)));
+}
+
+MOZ_MUST_USE bool
+ScriptSource::setCompressedSource(ExclusiveContext* cx,
+                                  mozilla::UniquePtr<char[], JS::FreePolicy>&& raw,
+                                  size_t rawLength,
+                                  size_t sourceLength)
+{
+    auto& cache = cx->zone()->runtimeFromAnyThread()->sharedImmutableStrings();
+    auto deduped = cache.getOrCreate(mozilla::Move(raw), rawLength);
+    if (!deduped) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+    setCompressedSource(mozilla::Move(*deduped), sourceLength);
+    return true;
+}
+
+void
+ScriptSource::setCompressedSource(SharedImmutableString&& raw, size_t length)
+{
+    MOZ_ASSERT(data.is<Missing>() || data.is<Uncompressed>());
+    MOZ_ASSERT_IF(data.is<Uncompressed>(), data.as<Uncompressed>().string.length() == length);
+
+    data = SourceType(Compressed(mozilla::Move(raw), length));
 }
 
 bool
@@ -2092,8 +2076,17 @@ ScriptSource::setSourceCopy(ExclusiveContext* cx, SourceBufferHolder& srcBuf,
     MOZ_ASSERT(!hasSourceData());
     argumentsNotIncluded_ = argumentsNotIncluded;
 
-    bool owns = srcBuf.ownsChars();
-    setSource(owns ? srcBuf.take() : srcBuf.get(), srcBuf.length(), owns);
+    auto& cache = cx->zone()->runtimeFromAnyThread()->sharedImmutableStrings();
+    auto deduped = cache.getOrCreate(srcBuf.get(), srcBuf.length(), [&]() {
+        return srcBuf.ownsChars()
+            ? mozilla::UniquePtr<char16_t[], JS::FreePolicy>(srcBuf.take())
+            : DuplicateString(srcBuf.get(), srcBuf.length());
+    });
+    if (!deduped) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+    setSource(mozilla::Move(*deduped));
 
     // There are several cases where source compression is not a good idea:
     //  - If the script is tiny, then compression will save little or no space.
@@ -2122,8 +2115,6 @@ ScriptSource::setSourceCopy(ExclusiveContext* cx, SourceBufferHolder& srcBuf,
         task->ss = this;
         if (!StartOffThreadCompression(cx, task))
             return false;
-    } else if (!ensureOwnsSource(cx)) {
-        return false;
     }
 
     return true;
@@ -2176,7 +2167,7 @@ SourceCompressionTask::work()
         }
     }
     compressedBytes = comp.outWritten();
-    compressedHash = CompressedSourceHasher::computeHash(compressed, compressedBytes);
+    compressedHash = mozilla::HashBytes(compressed, compressedBytes);
 
     // Shrink the buffer to the size of the compressed data.
     if (void* newCompressed = js_realloc(compressed, compressedBytes))
@@ -2185,53 +2176,10 @@ SourceCompressionTask::work()
     return Success;
 }
 
-ScriptSource::~ScriptSource()
-{
-    struct DestroyMatcher
-    {
-        using ReturnType = void;
-
-        ScriptSource& ss;
-
-        explicit DestroyMatcher(ScriptSource& ss)
-          : ss(ss)
-        { }
-
-        ReturnType match(Uncompressed& u) {
-            if (u.ownsChars)
-                js_free(const_cast<char16_t*>(u.chars));
-        }
-
-        ReturnType match(Compressed& c) {
-            if (ss.inCompressedSourceSet)
-                TlsPerThreadData.get()->runtimeFromMainThread()->compressedSourceSet.remove(&ss);
-            js_free(c.raw);
-        }
-
-        ReturnType match(Parent& p) {
-            p.parent->decref();
-        }
-
-        ReturnType match(Missing&) {
-            // Nothing to do here.
-        }
-    };
-
-    MOZ_ASSERT(refs == 0);
-    MOZ_ASSERT_IF(inCompressedSourceSet, data.is<Compressed>());
-
-    DestroyMatcher dm(*this);
-    data.match(dm);
-}
-
 void
 ScriptSource::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                      JS::ScriptSourceInfo* info) const
 {
-    if (data.is<Uncompressed>() && ownsUncompressedChars())
-        info->uncompressed += mallocSizeOf(uncompressedChars());
-    else if (data.is<Compressed>())
-        info->compressed += mallocSizeOf(compressedData());
     info->misc += mallocSizeOf(this) +
                   mallocSizeOf(filename_.get()) +
                   mallocSizeOf(introducerFilename_.get());
@@ -2251,11 +2199,7 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
         }
 
         ReturnType match(Compressed& c) {
-            return c.nbytes;
-        }
-
-        ReturnType match(Parent& p) {
-            return p.parent->data.match(*this);
+            return c.nbytes();
         }
 
         ReturnType match(Missing&) {
@@ -2269,15 +2213,11 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
         using ReturnType = void*;
 
         ReturnType match(Uncompressed& u) {
-            return (void*) u.chars;
+            return (void*) u.string.chars();
         }
 
         ReturnType match(Compressed& c) {
-            return c.raw;
-        }
-
-        ReturnType match(Parent& p) {
-            return p.parent->data.match(*this);
+            return (void*) c.raw.chars();
         }
 
         ReturnType match(Missing&) {
@@ -2296,7 +2236,10 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
     sourceRetrievable_ = retrievable;
 
     if (hasSource && !sourceRetrievable_) {
-        if (!xdr->codeUint32(&length_))
+        uint32_t len = 0;
+        if (mode == XDR_ENCODE)
+            len = length();
+        if (!xdr->codeUint32(&len))
             return false;
 
         uint32_t compressedLength;
@@ -2317,7 +2260,7 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
                 argumentsNotIncluded_ = argumentsNotIncluded;
         }
 
-        size_t byteLen = compressedLength ? compressedLength : (length_ * sizeof(char16_t));
+        size_t byteLen = compressedLength ? compressedLength : (len * sizeof(char16_t));
         if (mode == XDR_DECODE) {
             uint8_t* p = xdr->cx()->template pod_malloc<uint8_t>(Max<size_t>(byteLen, 1));
             if (!p || !xdr->codeBytes(p, byteLen)) {
@@ -2325,11 +2268,17 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
                 return false;
             }
 
-            if (compressedLength)
-                setCompressedSource(xdr->cx()->runtime(), p, compressedLength,
-                                    CompressedSourceHasher::computeHash(p, compressedLength));
-            else
-                setSource((const char16_t*) p, length_);
+            if (compressedLength) {
+                mozilla::UniquePtr<char[], JS::FreePolicy> compressedSource(
+                    reinterpret_cast<char*>(p));
+                if (!setCompressedSource(xdr->cx(), mozilla::Move(compressedSource), byteLen, len))
+                    return false;
+            } else {
+                mozilla::UniquePtr<char16_t[], JS::FreePolicy> source(
+                    reinterpret_cast<char16_t*>(p));
+                if (!setSource(xdr->cx(), mozilla::Move(source), len))
+                    return false;
+            }
         } else {
             RawDataMatcher rdm;
             void* p = data.match(rdm);
@@ -2508,16 +2457,6 @@ ScriptSource::setSourceMapURL(ExclusiveContext* cx, const char16_t* sourceMapURL
 
     sourceMapURL_ = DuplicateString(cx, sourceMapURL);
     return sourceMapURL_ != nullptr;
-}
-
-size_t
-ScriptSource::computedSizeOfData() const
-{
-    if (data.is<Uncompressed>() && ownsUncompressedChars())
-        return sizeof(char16_t) * length_;
-    if (data.is<Compressed>())
-        return compressedBytes();
-    return 0;
 }
 
 /*

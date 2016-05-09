@@ -32,7 +32,7 @@ PreferenceAccess::RegisterLivePref(const char* aName, int32_t* aVar,
                                    int32_t aDefault)
 {
   if (!Int32Prefs().append(Int32Pref{ aName, aVar })) {
-    MOZ_CRASH();
+    MOZ_CRASH("GFX: RegisterLivePref failure");
   }
   return aDefault;
 }

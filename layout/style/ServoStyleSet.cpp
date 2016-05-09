@@ -83,6 +83,12 @@ ServoStyleSet::GetContext(nsIContent* aContent,
                           nsIAtom* aPseudoTag,
                           CSSPseudoElementType aPseudoType)
 {
+  while (aContent->IsInAnonymousSubtree()) {
+    NS_ERROR("stylo: anonymous content isn't styled properly yet");
+    aContent = aContent->GetParentElement();
+    MOZ_ASSERT(aContent, "couldn't break out of anonymous content");
+  }
+
   RefPtr<ServoComputedValues> computedValues = dont_AddRef(Servo_GetComputedValues(aContent));
   MOZ_ASSERT(computedValues);
   return GetContext(computedValues.forget(), aParentContext, aPseudoTag, aPseudoType);
@@ -144,8 +150,9 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aParentElement,
                                          nsStyleContext* aParentContext,
                                          Element* aPseudoElement)
 {
-  MOZ_ASSERT(!aPseudoElement,
-             "stylo: We don't support CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE yet");
+  if (aPseudoElement) {
+    NS_ERROR("stylo: We don't support CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE yet");
+  }
   MOZ_ASSERT(aParentContext);
   MOZ_ASSERT(aType < CSSPseudoElementType::Count);
   nsIAtom* pseudoTag = nsCSSPseudoElements::GetPseudoAtom(aType);
@@ -355,8 +362,9 @@ ServoStyleSet::ProbePseudoElementStyle(Element* aParentElement,
                                        TreeMatchContext& aTreeMatchContext,
                                        Element* aPseudoElement)
 {
-  MOZ_ASSERT(!aPseudoElement,
-             "stylo: We don't support CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE yet");
+  if (aPseudoElement) {
+    NS_ERROR("stylo: We don't support CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE yet");
+  }
   return ProbePseudoElementStyle(aParentElement, aType, aParentContext);
 }
 

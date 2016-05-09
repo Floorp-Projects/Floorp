@@ -174,18 +174,32 @@ public:
            (IsCalcUnit() && CalcHasPercent());
   }
 
+  static bool ConvertsToLength(const nsStyleUnit aUnit,
+                               const nsStyleUnion aValue) {
+    return aUnit == eStyleUnit_Coord ||
+           (IsCalcUnit(aUnit) && !AsCalcValue(aValue)->mHasPercent);
+  }
+
   bool ConvertsToLength() const {
-    return mUnit == eStyleUnit_Coord ||
-           (IsCalcUnit() && !CalcHasPercent());
+    return ConvertsToLength(mUnit, mValue);
+  }
+
+  static nscoord ToLength(nsStyleUnit aUnit, nsStyleUnion aValue) {
+    MOZ_ASSERT(ConvertsToLength(aUnit, aValue));
+    if (aUnit == eStyleUnit_Coord) {
+      return aValue.mInt;
+    }
+    MOZ_ASSERT(IsCalcUnit(aUnit) && !AsCalcValue(aValue)->mHasPercent);
+    return AsCalcValue(aValue)->ToLength();
   }
 
   nscoord ToLength() const {
-    MOZ_ASSERT(ConvertsToLength());
-    if (GetUnit() == eStyleUnit_Coord) {
-      return GetCoordValue();
-    }
-    MOZ_ASSERT(IsCalcUnit() && !CalcHasPercent());
-    return GetCalcValue()->ToLength();
+    return ToLength(GetUnit(), mValue);
+  }
+
+  // Callers must verify IsCalcUnit before calling this function.
+  static Calc* AsCalcValue(nsStyleUnion aValue) {
+    return static_cast<Calc*>(aValue.mPointer);
   }
 
   nscoord     GetCoordValue() const;
@@ -228,6 +242,15 @@ public:
   // Sets a coord represented by a unit/value pair from an nsStyleCoord.
   static inline void SetValue(nsStyleUnit& aUnit, nsStyleUnion& aValue,
                               const nsStyleCoord& aOther);
+
+  // Like the above, but do not reset before setting.
+  static inline void InitWithValue(nsStyleUnit& aUnit,
+                                   nsStyleUnion& aValue,
+                                   nsStyleUnit aOtherUnit,
+                                   const nsStyleUnion& aOtherValue);
+
+  static inline void InitWithValue(nsStyleUnit& aUnit, nsStyleUnion& aValue,
+                                   const nsStyleCoord& aOther);
 
 private:
   nsStyleUnit   mUnit;
@@ -290,9 +313,13 @@ public:
   inline void SetRight(const nsStyleCoord& aCoord);
   inline void SetBottom(const nsStyleCoord& aCoord);
 
+  nscoord ToLength(mozilla::css::Side aSide) const {
+    return nsStyleCoord::ToLength(mUnits[aSide], mValues[aSide]);
+  }
+
   bool ConvertsToLength() const {
     NS_FOR_CSS_SIDES(side) {
-      if (!Get(side).ConvertsToLength()) {
+      if (!nsStyleCoord::ConvertsToLength(mUnits[side], mValues[side])) {
         return false;
       }
     }
@@ -350,13 +377,13 @@ inline nsStyleCoord::nsStyleCoord(nscoord aValue, CoordConstructorType)
 inline nsStyleCoord::nsStyleCoord(const nsStyleCoord& aCopy)
   : mUnit(eStyleUnit_Null)
 {
-  SetValue(mUnit, mValue, aCopy);
+  InitWithValue(mUnit, mValue, aCopy);
 }
 
 inline nsStyleCoord::nsStyleCoord(const nsStyleUnion& aValue, nsStyleUnit aUnit)
   : mUnit(eStyleUnit_Null)
 {
-  SetValue(mUnit, mValue, aUnit, aValue);
+  InitWithValue(mUnit, mValue, aUnit, aValue);
 }
 
 inline bool nsStyleCoord::operator!=(const nsStyleCoord& aOther) const
@@ -435,7 +462,7 @@ inline nsStyleCoord::Calc* nsStyleCoord::GetCalcValue() const
 {
   NS_ASSERTION(IsCalcUnit(), "not a pointer value");
   if (IsCalcUnit()) {
-    return static_cast<Calc*>(mValue.mPointer);
+    return AsCalcValue(mValue);
   }
   return nullptr;
 }
@@ -465,7 +492,15 @@ nsStyleCoord::SetValue(nsStyleUnit& aUnit,
                        const nsStyleUnion& aOtherValue)
 {
   Reset(aUnit, aValue);
+  InitWithValue(aUnit, aValue, aOtherUnit, aOtherValue);
+}
 
+/* static */ inline void
+nsStyleCoord::InitWithValue(nsStyleUnit& aUnit,
+                            nsStyleUnion& aValue,
+                            nsStyleUnit aOtherUnit,
+                            const nsStyleUnion& aOtherValue)
+{
   aUnit = aOtherUnit;
   aValue = aOtherValue;
 
@@ -483,6 +518,13 @@ nsStyleCoord::SetValue(nsStyleUnit& aUnit, nsStyleUnion& aValue,
                        const nsStyleCoord& aOther)
 {
   SetValue(aUnit, aValue, aOther.mUnit, aOther.mValue);
+}
+
+/* static */ inline void
+nsStyleCoord::InitWithValue(nsStyleUnit& aUnit, nsStyleUnion& aValue,
+                            const nsStyleCoord& aOther)
+{
+  InitWithValue(aUnit, aValue, aOther.mUnit, aOther.mValue);
 }
 
 

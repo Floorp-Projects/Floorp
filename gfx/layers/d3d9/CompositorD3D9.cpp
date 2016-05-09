@@ -42,8 +42,6 @@ CompositorD3D9::Initialize()
 {
   ScopedGfxFeatureReporter reporter("D3D9 Layers");
 
-  MOZ_ASSERT(gfxPlatform::CanUseDirect3D9());
-
   mDeviceManager = gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager();
   if (!mDeviceManager) {
     return false;

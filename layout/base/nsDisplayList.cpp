@@ -4264,15 +4264,38 @@ IsItemTooSmallForActiveLayer(nsDisplayItem* aItem)
     nsIntSize(MIN_ACTIVE_LAYER_SIZE_DEV_PIXELS, MIN_ACTIVE_LAYER_SIZE_DEV_PIXELS);
 }
 
+static void
+SetAnimationPerformanceWarningForTooSmallItem(nsDisplayItem* aItem,
+                                              nsCSSProperty aProperty)
+{
+  // We use ToNearestPixels() here since ToOutsidePixels causes some sort of
+  // errors. See https://bugzilla.mozilla.org/show_bug.cgi?id=1258904#c19
+  nsIntRect visibleDevPixels = aItem->GetVisibleRect().ToNearestPixels(
+          aItem->Frame()->PresContext()->AppUnitsPerDevPixel());
+
+  // Set performance warning only if the visible dev pixels is not empty
+  // because dev pixels is empty if the frame has 'preserve-3d' style.
+  if (visibleDevPixels.IsEmpty()) {
+    return;
+  }
+
+  EffectCompositor::SetPerformanceWarning(aItem->Frame(), aProperty,
+      AnimationPerformanceWarning(
+        AnimationPerformanceWarning::Type::ContentTooSmall,
+        { visibleDevPixels.Width(), visibleDevPixels.Height() }));
+}
+
 bool
 nsDisplayOpacity::NeedsActiveLayer(nsDisplayListBuilder* aBuilder)
 {
-  if (ActiveLayerTracker::IsStyleAnimated(aBuilder, mFrame, eCSSProperty_opacity) &&
-      !IsItemTooSmallForActiveLayer(this))
-    return true;
-  if (EffectCompositor::HasAnimationsForCompositor(mFrame,
+  if (ActiveLayerTracker::IsStyleAnimated(aBuilder, mFrame,
+                                          eCSSProperty_opacity) ||
+      EffectCompositor::HasAnimationsForCompositor(mFrame,
                                                    eCSSProperty_opacity)) {
-    return true;
+    if (!IsItemTooSmallForActiveLayer(this)) {
+      return true;
+    }
+    SetAnimationPerformanceWarningForTooSmallItem(this, eCSSProperty_opacity);
   }
   return false;
 }
@@ -4360,8 +4383,11 @@ nsDisplayOpacity::GetLayerState(nsDisplayListBuilder* aBuilder,
     return LAYER_INACTIVE;
   }
 
-  if (NeedsActiveLayer(aBuilder))
-    return LAYER_ACTIVE;
+  if (NeedsActiveLayer(aBuilder)) {
+    // Returns LAYER_ACTIVE_FORCE to avoid flatterning the layer for async
+    // animations.
+    return LAYER_ACTIVE_FORCE;
+  }
 
   return RequiredLayerStateForChildren(aBuilder, aManager, aParameters, mList, GetAnimatedGeometryRoot());
 }
@@ -5929,12 +5955,15 @@ nsDisplayTransform::MayBeAnimated(nsDisplayListBuilder* aBuilder)
 {
   // Here we check if the *post-transform* bounds of this item are big enough
   // to justify an active layer.
-  if (ActiveLayerTracker::IsStyleAnimated(aBuilder, mFrame, eCSSProperty_transform) &&
-      !IsItemTooSmallForActiveLayer(this))
-    return true;
-  if (EffectCompositor::HasAnimationsForCompositor(mFrame,
+  if (ActiveLayerTracker::IsStyleAnimated(aBuilder,
+                                          mFrame,
+                                          eCSSProperty_transform) ||
+      EffectCompositor::HasAnimationsForCompositor(mFrame,
                                                    eCSSProperty_transform)) {
-    return true;
+    if (!IsItemTooSmallForActiveLayer(this)) {
+      return true;
+    }
+    SetAnimationPerformanceWarningForTooSmallItem(this, eCSSProperty_transform);
   }
   return false;
 }
@@ -5950,8 +5979,11 @@ nsDisplayTransform::GetLayerState(nsDisplayListBuilder* aBuilder,
       mIsTransformSeparator) {
     return LAYER_ACTIVE_FORCE;
   }
+
   if (MayBeAnimated(aBuilder)) {
-    return LAYER_ACTIVE;
+    // Returns LAYER_ACTIVE_FORCE to avoid flatterning the layer for async
+    // animations.
+    return LAYER_ACTIVE_FORCE;
   }
 
   const nsStyleDisplay* disp = mFrame->StyleDisplay();

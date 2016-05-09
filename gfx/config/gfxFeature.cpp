@@ -6,6 +6,7 @@
 #include "mozilla/Preferences.h"
 #include "prprf.h"
 #include "gfxFeature.h"
+#include "nsString.h"
 
 namespace mozilla {
 namespace gfx {
@@ -60,9 +61,13 @@ FeatureState::SetDefaultFromPref(const char* aPrefName,
   if (Preferences::HasUserValue(aPrefName)) {
     bool userValue = Preferences::GetBool(aPrefName, aDefaultValue);
     if (userValue == aIsEnablePref) {
-      UserEnable("Enabled by user preference");
+      nsCString message("Enabled via ");
+      message.AppendASCII(aPrefName);
+      UserEnable(message.get());
     } else {
-      UserDisable("Disabled by user preference");
+      nsCString message("Disabled via ");
+      message.AppendASCII(aPrefName);
+      UserDisable(message.get());
     }
   }
 }

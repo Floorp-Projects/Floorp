@@ -1106,7 +1106,7 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode *aNode,
         nsAutoString subStr;
         htmlValueString.Right(subStr, htmlValueString.Length() - 1);
         if (NS_ColorNameToRGB(htmlValueString, &rgba) ||
-            NS_HexToRGB(subStr, &rgba)) {
+            NS_HexToRGBA(subStr, nsHexColorType::NoAlpha, &rgba)) {
           nsAutoString htmlColor, tmpStr;
 
           if (NS_GET_A(rgba) != 255) {
