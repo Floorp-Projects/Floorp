@@ -98,7 +98,7 @@ public:
                            nsIWidget* aWidget)
     : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget,
                            eSimpleGestureEventClass)
-    , allowedDirections(0)
+    , mAllowedDirections(0)
     , direction(0)
     , clickCount(0)
     , delta(0.0)
@@ -108,7 +108,7 @@ public:
   WidgetSimpleGestureEvent(const WidgetSimpleGestureEvent& aOther)
     : WidgetMouseEventBase(aOther.IsTrusted(), aOther.mMessage,
                            aOther.mWidget, eSimpleGestureEventClass)
-    , allowedDirections(aOther.allowedDirections)
+    , mAllowedDirections(aOther.mAllowedDirections)
     , direction(aOther.direction)
     , clickCount(0)
     , delta(aOther.delta)
@@ -128,7 +128,7 @@ public:
   }
 
   // See nsIDOMSimpleGestureEvent for values
-  uint32_t allowedDirections;
+  uint32_t mAllowedDirections;
   // See nsIDOMSimpleGestureEvent for values
   uint32_t direction;
   // The number of taps for tap events
@@ -142,7 +142,7 @@ public:
   {
     AssignMouseEventBaseData(aEvent, aCopyTargets);
 
-    // allowedDirections isn't copied
+    // mAllowedDirections isn't copied
     direction = aEvent.direction;
     delta = aEvent.delta;
     clickCount = aEvent.clickCount;
