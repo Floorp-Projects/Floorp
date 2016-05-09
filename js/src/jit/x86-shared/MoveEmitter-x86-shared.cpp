@@ -252,19 +252,19 @@ MoveEmitterX86::breakCycle(const MoveOperand& to, MoveOp::Type type)
       case MoveOp::SIMD128INT:
         if (to.isMemory()) {
             ScratchSimd128Scope scratch(masm);
-            masm.loadAlignedInt32x4(toAddress(to), scratch);
-            masm.storeAlignedInt32x4(scratch, cycleSlot());
+            masm.loadAlignedSimd128Int(toAddress(to), scratch);
+            masm.storeAlignedSimd128Int(scratch, cycleSlot());
         } else {
-            masm.storeAlignedInt32x4(to.floatReg(), cycleSlot());
+            masm.storeAlignedSimd128Int(to.floatReg(), cycleSlot());
         }
         break;
       case MoveOp::SIMD128FLOAT:
         if (to.isMemory()) {
             ScratchSimd128Scope scratch(masm);
-            masm.loadAlignedFloat32x4(toAddress(to), scratch);
-            masm.storeAlignedFloat32x4(scratch, cycleSlot());
+            masm.loadAlignedSimd128Float(toAddress(to), scratch);
+            masm.storeAlignedSimd128Float(scratch, cycleSlot());
         } else {
-            masm.storeAlignedFloat32x4(to.floatReg(), cycleSlot());
+            masm.storeAlignedSimd128Float(to.floatReg(), cycleSlot());
         }
         break;
       case MoveOp::FLOAT32:
@@ -319,10 +319,10 @@ MoveEmitterX86::completeCycle(const MoveOperand& to, MoveOp::Type type)
         MOZ_ASSERT(pushedAtCycle_ - pushedAtStart_ >= Simd128DataSize);
         if (to.isMemory()) {
             ScratchSimd128Scope scratch(masm);
-            masm.loadAlignedInt32x4(cycleSlot(), scratch);
-            masm.storeAlignedInt32x4(scratch, toAddress(to));
+            masm.loadAlignedSimd128Int(cycleSlot(), scratch);
+            masm.storeAlignedSimd128Int(scratch, toAddress(to));
         } else {
-            masm.loadAlignedInt32x4(cycleSlot(), to.floatReg());
+            masm.loadAlignedSimd128Int(cycleSlot(), to.floatReg());
         }
         break;
       case MoveOp::SIMD128FLOAT:
@@ -330,10 +330,10 @@ MoveEmitterX86::completeCycle(const MoveOperand& to, MoveOp::Type type)
         MOZ_ASSERT(pushedAtCycle_ - pushedAtStart_ >= Simd128DataSize);
         if (to.isMemory()) {
             ScratchSimd128Scope scratch(masm);
-            masm.loadAlignedFloat32x4(cycleSlot(), scratch);
-            masm.storeAlignedFloat32x4(scratch, toAddress(to));
+            masm.loadAlignedSimd128Float(cycleSlot(), scratch);
+            masm.storeAlignedSimd128Float(scratch, toAddress(to));
         } else {
-            masm.loadAlignedFloat32x4(cycleSlot(), to.floatReg());
+            masm.loadAlignedSimd128Float(cycleSlot(), to.floatReg());
         }
         break;
       case MoveOp::FLOAT32:
@@ -498,17 +498,17 @@ MoveEmitterX86::emitSimd128IntMove(const MoveOperand& from, const MoveOperand& t
 
     if (from.isFloatReg()) {
         if (to.isFloatReg())
-            masm.moveInt32x4(from.floatReg(), to.floatReg());
+            masm.moveSimd128Int(from.floatReg(), to.floatReg());
         else
-            masm.storeAlignedInt32x4(from.floatReg(), toAddress(to));
+            masm.storeAlignedSimd128Int(from.floatReg(), toAddress(to));
     } else if (to.isFloatReg()) {
-        masm.loadAlignedInt32x4(toAddress(from), to.floatReg());
+        masm.loadAlignedSimd128Int(toAddress(from), to.floatReg());
     } else {
         // Memory to memory move.
         MOZ_ASSERT(from.isMemory());
         ScratchSimd128Scope scratch(masm);
-        masm.loadAlignedInt32x4(toAddress(from), scratch);
-        masm.storeAlignedInt32x4(scratch, toAddress(to));
+        masm.loadAlignedSimd128Int(toAddress(from), scratch);
+        masm.storeAlignedSimd128Int(scratch, toAddress(to));
     }
 }
 
@@ -520,17 +520,17 @@ MoveEmitterX86::emitSimd128FloatMove(const MoveOperand& from, const MoveOperand&
 
     if (from.isFloatReg()) {
         if (to.isFloatReg())
-            masm.moveFloat32x4(from.floatReg(), to.floatReg());
+            masm.moveSimd128Float(from.floatReg(), to.floatReg());
         else
-            masm.storeAlignedFloat32x4(from.floatReg(), toAddress(to));
+            masm.storeAlignedSimd128Float(from.floatReg(), toAddress(to));
     } else if (to.isFloatReg()) {
-        masm.loadAlignedFloat32x4(toAddress(from), to.floatReg());
+        masm.loadAlignedSimd128Float(toAddress(from), to.floatReg());
     } else {
         // Memory to memory move.
         MOZ_ASSERT(from.isMemory());
         ScratchSimd128Scope scratch(masm);
-        masm.loadAlignedFloat32x4(toAddress(from), scratch);
-        masm.storeAlignedFloat32x4(scratch, toAddress(to));
+        masm.loadAlignedSimd128Float(toAddress(from), scratch);
+        masm.storeAlignedSimd128Float(scratch, toAddress(to));
     }
 }
 
