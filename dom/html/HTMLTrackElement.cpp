@@ -214,7 +214,9 @@ HTMLTrackElement::LoadResource()
                      static_cast<Element*>(this),
                      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS,
                      nsIContentPolicy::TYPE_INTERNAL_TRACK,
-                     loadGroup);
+                     loadGroup,
+                     nullptr,   // aCallbacks
+                     nsIRequest::LOAD_NORMAL | nsIChannel::LOAD_CLASSIFY_URI);
 
   NS_ENSURE_TRUE_VOID(NS_SUCCEEDED(rv));
 
