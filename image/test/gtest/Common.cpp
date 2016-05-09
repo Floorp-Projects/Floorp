@@ -65,7 +65,7 @@ LoadFile(const char* aRelativePath)
 
   // Construct the final path by appending the working path to the current
   // working directory.
-  file->AppendNative(nsAutoCString(aRelativePath));
+  file->AppendNative(nsDependentCString(aRelativePath));
 
   // Construct an input stream for the requested file.
   nsCOMPtr<nsIInputStream> inputStream;
