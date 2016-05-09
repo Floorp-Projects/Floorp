@@ -1595,13 +1595,13 @@ class MSimdValueX4
     ALLOW_CLONE(MSimdValueX4)
 };
 
-// Generic constructor of SIMD valuesX4.
-class MSimdSplatX4
+// Generic constructor of SIMD values with identical lanes.
+class MSimdSplat
   : public MUnaryInstruction,
     public SimdScalarPolicy<0>::Data
 {
   protected:
-    MSimdSplatX4(MIRType type, MDefinition* v)
+    MSimdSplat(MIRType type, MDefinition* v)
       : MUnaryInstruction(v)
     {
         MOZ_ASSERT(IsSimdType(type));
@@ -1610,11 +1610,11 @@ class MSimdSplatX4
     }
 
   public:
-    INSTRUCTION_HEADER(SimdSplatX4)
+    INSTRUCTION_HEADER(SimdSplat)
 
-    static MSimdSplatX4* New(TempAllocator& alloc, MDefinition* v, MIRType type)
+    static MSimdSplat* New(TempAllocator& alloc, MDefinition* v, MIRType type)
     {
-        return new(alloc) MSimdSplatX4(type, v);
+        return new(alloc) MSimdSplat(type, v);
     }
 
     bool canConsumeFloat32(MUse* use) const override {
@@ -1631,7 +1631,7 @@ class MSimdSplatX4
 
     MDefinition* foldsTo(TempAllocator& alloc) override;
 
-    ALLOW_CLONE(MSimdSplatX4)
+    ALLOW_CLONE(MSimdSplat)
 };
 
 // A constant SIMD value.

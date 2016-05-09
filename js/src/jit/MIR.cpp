@@ -1123,11 +1123,11 @@ MSimdValueX4::foldsTo(TempAllocator& alloc)
     }
 
     MOZ_ASSERT(allSame);
-    return MSimdSplatX4::New(alloc, getOperand(0), type());
+    return MSimdSplat::New(alloc, getOperand(0), type());
 }
 
 MDefinition*
-MSimdSplatX4::foldsTo(TempAllocator& alloc)
+MSimdSplat::foldsTo(TempAllocator& alloc)
 {
 #ifdef DEBUG
     MIRType laneType = SimdTypeToLaneArgumentType(type());
@@ -1154,7 +1154,7 @@ MSimdSplatX4::foldsTo(TempAllocator& alloc)
         cst = SimdConstant::SplatX4(v);
         break;
       }
-      default: MOZ_CRASH("unexpected type in MSimdSplatX4::foldsTo");
+      default: MOZ_CRASH("unexpected type in MSimdSplat::foldsTo");
     }
 
     return MSimdConstant::New(alloc, cst, type());

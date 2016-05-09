@@ -15,7 +15,7 @@ namespace jit {
     _(SimdBox)                                                              \
     _(SimdUnbox)                                                            \
     _(SimdValueX4)                                                          \
-    _(SimdSplatX4)                                                          \
+    _(SimdSplat)                                                            \
     _(SimdConstant)                                                         \
     _(SimdConvert)                                                          \
     _(SimdReinterpretCast)                                                  \

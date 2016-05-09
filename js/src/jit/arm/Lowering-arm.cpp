@@ -579,7 +579,7 @@ LIRGeneratorARM::visitSimdSelect(MSimdSelect* ins)
 }
 
 void
-LIRGeneratorARM::visitSimdSplatX4(MSimdSplatX4* ins)
+LIRGeneratorARM::visitSimdSplat(MSimdSplat* ins)
 {
     MOZ_CRASH("NYI");
 }

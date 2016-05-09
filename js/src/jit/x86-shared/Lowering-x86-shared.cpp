@@ -688,7 +688,7 @@ LIRGeneratorX86Shared::visitSimdSelect(MSimdSelect* ins)
 }
 
 void
-LIRGeneratorX86Shared::visitSimdSplatX4(MSimdSplatX4* ins)
+LIRGeneratorX86Shared::visitSimdSplat(MSimdSplat* ins)
 {
     LAllocation x = useRegisterAtStart(ins->getOperand(0));
     LSimdSplatX4* lir = new(alloc()) LSimdSplatX4(x);

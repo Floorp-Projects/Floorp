@@ -438,7 +438,7 @@ class FunctionCompiler
 
         MOZ_ASSERT(IsSimdType(type));
         MOZ_ASSERT(SimdTypeToLaneArgumentType(type) == v->type());
-        MSimdSplatX4* ins = MSimdSplatX4::New(alloc(), v, type);
+        MSimdSplat* ins = MSimdSplat::New(alloc(), v, type);
         curBlock_->add(ins);
         return ins;
     }
