@@ -6,7 +6,7 @@
 
 const {Cc, Ci} = require("chrome");
 const events = require("sdk/event/core");
-const protocol = require("devtools/server/protocol");
+const protocol = require("devtools/shared/protocol");
 const {LongStringActor} = require("devtools/server/actors/string");
 const {DebuggerServer} = require("devtools/server/main");
 const Services = require("Services");

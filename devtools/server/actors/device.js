@@ -4,7 +4,7 @@
 
 const {Cc, Ci, Cu, CC} = require("chrome");
 const Services = require("Services");
-const protocol = require("devtools/server/protocol");
+const protocol = require("devtools/shared/protocol");
 const {method, RetVal} = protocol;
 const promise = require("promise");
 const {LongStringActor} = require("devtools/server/actors/string");

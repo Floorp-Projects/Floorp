@@ -277,7 +277,7 @@
       </menulist>
 
       <textbox id="autocomplete" type="autocomplete"
-               autocompletesearch="history"
+               autocompletesearch="unifiedcomplete"
                value="http://mochi.test:8888/redirect-a11y.html"/>
 
       <textbox id="autocomplete2" type="autocomplete">

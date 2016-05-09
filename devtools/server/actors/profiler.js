@@ -5,7 +5,7 @@
 "use strict";
 
 const { Cu } = require("chrome");
-const protocol = require("devtools/server/protocol");
+const protocol = require("devtools/shared/protocol");
 const { custom, method, RetVal, Arg, Option, types } = protocol;
 const { Profiler } = require("devtools/server/performance/profiler");
 const { actorBridge } = require("devtools/server/actors/common");

@@ -1,4 +1,4 @@
-var protocol = require("devtools/server/protocol");
+var protocol = require("devtools/shared/protocol");
 var {method, Arg, Option, RetVal} = protocol;
 
 protocol.types.addActorType("child");

@@ -28,6 +28,7 @@ import android.widget.CheckBox;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class DefaultDoorHanger extends DoorHanger {
     private static final String LOGTAG = "GeckoDefaultDoorHanger";
@@ -133,7 +134,7 @@ public class DefaultDoorHanger extends DoorHanger {
         return new Button.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final String expandedExtra = mType.toString().toLowerCase() + "-" + telemetryExtra;
+                final String expandedExtra = mType.toString().toLowerCase(Locale.US) + "-" + telemetryExtra;
                 Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.DOORHANGER, expandedExtra);
 
                 final JSONObject response = new JSONObject();

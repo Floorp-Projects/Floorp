@@ -2177,9 +2177,8 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             }
           } catch (e) {
             // If this failed, we assume that params is not a JSON object, and
-            // is instead just a flat string. This will happen when
-            // UnifiedComplete is disabled - in which case, the param is always
-            // a URL.
+            // is instead just a flat string. This may happen for legacy
+            // search components.
             action.params = {
               url: params,
             }

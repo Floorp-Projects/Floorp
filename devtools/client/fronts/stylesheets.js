@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Front, FrontClassWithSpec } = require("devtools/server/protocol.js");
+const { Front, FrontClassWithSpec } = require("devtools/shared/protocol.js");
 const {
   getIndentationFromPrefs,
   getIndentationFromString
