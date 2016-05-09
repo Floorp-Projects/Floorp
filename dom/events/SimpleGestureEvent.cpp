@@ -78,7 +78,7 @@ SimpleGestureEvent::GetDirection(uint32_t* aDirection)
 double
 SimpleGestureEvent::Delta()
 {
-  return mEvent->AsSimpleGestureEvent()->delta;
+  return mEvent->AsSimpleGestureEvent()->mDelta;
 }
 
 NS_IMETHODIMP
@@ -133,7 +133,7 @@ SimpleGestureEvent::InitSimpleGestureEvent(const nsAString& aTypeArg,
   WidgetSimpleGestureEvent* simpleGestureEvent = mEvent->AsSimpleGestureEvent();
   simpleGestureEvent->mAllowedDirections = aAllowedDirectionsArg;
   simpleGestureEvent->mDirection = aDirectionArg;
-  simpleGestureEvent->delta = aDeltaArg;
+  simpleGestureEvent->mDelta = aDeltaArg;
   simpleGestureEvent->mClickCount = aClickCountArg;
 }
 

@@ -335,14 +335,14 @@ nsWinGesture::ProcessGestureMessage(HWND hWnd, WPARAM wParam, LPARAM lParam,
         mZoomIntermediate = (float)gi.ullArguments;
 
         evt.mMessage = eMagnifyGestureStart;
-        evt.delta = 0.0;
+        evt.mDelta = 0.0;
       }
       else if (gi.dwFlags & GF_END) {
         // Send a zoom end event, the delta is the change
         // in touch points.
         evt.mMessage = eMagnifyGesture;
         // (positive for a "zoom in")
-        evt.delta = -1.0 * (mZoomIntermediate - (float)gi.ullArguments);
+        evt.mDelta = -1.0 * (mZoomIntermediate - (float)gi.ullArguments);
         mZoomIntermediate = (float)gi.ullArguments;
       }
       else {
@@ -350,7 +350,7 @@ nsWinGesture::ProcessGestureMessage(HWND hWnd, WPARAM wParam, LPARAM lParam,
         // in touch points.
         evt.mMessage = eMagnifyGestureUpdate;
         // (positive for a "zoom in")
-        evt.delta = -1.0 * (mZoomIntermediate - (float)gi.ullArguments);
+        evt.mDelta = -1.0 * (mZoomIntermediate - (float)gi.ullArguments);
         mZoomIntermediate = (float)gi.ullArguments;
       }
     }
@@ -376,12 +376,12 @@ nsWinGesture::ProcessGestureMessage(HWND hWnd, WPARAM wParam, LPARAM lParam,
       }
 
       evt.mDirection = 0;
-      evt.delta = degrees - mRotateIntermediate;
+      evt.mDelta = degrees - mRotateIntermediate;
       mRotateIntermediate = degrees;
 
-      if (evt.delta > 0)
+      if (evt.mDelta > 0)
         evt.mDirection = nsIDOMSimpleGestureEvent::ROTATION_COUNTERCLOCKWISE;
-      else if (evt.delta < 0)
+      else if (evt.mDelta < 0)
         evt.mDirection = nsIDOMSimpleGestureEvent::ROTATION_CLOCKWISE;
 
       if (gi.dwFlags & GF_BEGIN) {
