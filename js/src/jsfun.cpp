@@ -513,7 +513,12 @@ fun_resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp)
                     return true;
             }
 
-            v.setString(fun->name() == nullptr ? cx->runtime()->emptyString : fun->name());
+            JSAtom* functionName = fun->functionName(cx);
+
+            if (!functionName)
+                ReportOutOfMemory(cx);
+
+            v.setString(functionName);
         }
 
         if (!NativeDefineProperty(cx, fun, id, v, nullptr, nullptr,
@@ -1474,6 +1479,177 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx, HandleFuncti
         return false;
     Rooted<PropertyName*> funName(cx, funAtom->asPropertyName());
     return cx->runtime()->cloneSelfHostedFunctionScript(cx, funName, fun);
+}
+
+// Copy a substring into a buffer while simultaneously unescaping any escaped
+// character sequences.
+template <typename TextChar>
+static bool
+UnescapeSubstr(TextChar* text, size_t start, size_t length, StringBuffer& buf)
+{
+    size_t end = start + length;
+    for (size_t i = start; i < end; i++) {
+
+        if (text[i] == '\\' && i + 1 <= end) {
+            bool status = false;
+            switch (text[++i]) {
+                case (TextChar)'b' : status = buf.append('\b'); break;
+                case (TextChar)'f' : status = buf.append('\f'); break;
+                case (TextChar)'n' : status = buf.append('\n'); break;
+                case (TextChar)'r' : status = buf.append('\r'); break;
+                case (TextChar)'t' : status = buf.append('\t'); break;
+                case (TextChar)'v' : status = buf.append('\v'); break;
+                case (TextChar)'"' : status = buf.append('"');  break;
+                case (TextChar)'\?': status = buf.append('\?'); break;
+                case (TextChar)'\'': status = buf.append('\''); break;
+                case (TextChar)'\\': status = buf.append('\\'); break;
+                case (TextChar)'x' : {
+                    if (i + 2 >= end ||
+                        !JS7_ISHEX(text[i + 1]) ||
+                        !JS7_ISHEX(text[i + 2]))
+                    {
+                        return false;
+                    }
+                    char c = JS7_UNHEX((char)text[i + 1]) << 4;
+                    c += JS7_UNHEX((char)text[i + 2]);
+                    i += 2;
+                    status = buf.append(c);
+                    break;
+                }
+                case (TextChar)'u' : {
+                    uint32_t code = 0;
+                    if (!(i + 4 < end &&
+                        JS7_ISHEX(text[i + 1]) &&
+                        JS7_ISHEX(text[i + 2]) &&
+                        JS7_ISHEX(text[i + 3]) &&
+                        JS7_ISHEX(text[i + 4])))
+                    {
+                            return false;
+                    }
+
+                    code = JS7_UNHEX(text[i + 1]);
+                    code = (code << 4) + JS7_UNHEX(text[i + 2]);
+                    code = (code << 4) + JS7_UNHEX(text[i + 3]);
+                    code = (code << 4) + JS7_UNHEX(text[i + 4]);
+                    i += 4;
+                    if (code < 0x10000) {
+                        status = buf.append((char16_t)code);
+                    } else {
+                        status = status && buf.append((char16_t)((code - 0x10000) / 1024 + 0xD800));
+                        status = status && buf.append((char16_t)(((code - 0x10000) % 1024) + 0xDC00));
+                    }
+                    break;
+                }
+            }
+            if (!status)
+                return false;
+        } else {
+            if (!buf.append(text[i]))
+                return false;
+        }
+    }
+    return true;
+}
+
+// Locate a function name matching the format described in ECMA-262 (2016-02-27) 9.2.11
+// SetFunctionName and copy it into a string buffer.
+template <typename TextChar>
+static bool
+FunctionNameFromDisplayName(JSContext* cx, TextChar* text, size_t textLen, StringBuffer& buf)
+{
+    size_t start = 0, end = textLen;
+
+    for (size_t i = 0; i < textLen; i++) {
+        // The string is parsed in reverse order.
+        size_t index = (textLen - i) - 1;
+
+        // Because we're only interested in the name of the property where
+        // some function is bound we can stop parsing as soon as we see
+        // one of these cases: foo.methodname, prefix/foo.methodname,
+        // and methodname<
+        if (text[index] == (TextChar)'.' ||
+            text[index] == (TextChar)'<' ||
+            text[index] == (TextChar)'/')
+        {
+            start = index + 1;
+            break;
+        }
+
+        // Property names which aren't valid identifiers are represented
+        // as a quoted string between square brackets: "[\"prop@name\"]"
+        if (text[index] == (TextChar)']' && index > 1
+            && text[index - 1] == (TextChar)'"') {
+
+            // search for '["' which signals the end of a quoted
+            // property name in square brackets.
+            for (size_t j = 0; j <= index - 2; j++) {
+                if (text[(index - j) - 1] == (TextChar)'"' &&
+                    text[(index - j) - 2] == (TextChar)'[') {
+                    start = (index - j);
+                    end = index - 1;
+
+                    // The value is represented as a quoted string within a
+                    // string (e.g. "\"foo\""), so we'll need to unquote it.
+                    return UnescapeSubstr(text, start, end - start, buf);
+                }
+            }
+
+            // We should never fail to find the beginning of a square bracket.
+            MOZ_ASSERT(0);
+            break;
+        } else if (text[index] == (TextChar)']') {
+            // Here we're dealing with an unquoted numeric value so we can
+            // just skip to the closing bracket to save some work.
+            for (size_t j = 0; j < index; j++) {
+                if (text[(index - j) - 1] == (TextChar)'[') {
+                    start = index - j;
+                    end = index;
+                    break;
+                }
+            }
+            break;
+        }
+    }
+
+    for (size_t i = start; i < end; i++) {
+        if (!buf.append(text[i]))
+            return false;
+    }
+    return true;
+}
+
+JSAtom*
+JSFunction::functionName(JSContext* cx) const
+{
+    if (!atom_)
+        return cx->runtime()->emptyString;
+
+    // Only guessed atoms are worth parsing.
+    if (!hasGuessedAtom())
+        return atom_;
+
+    size_t textLen = atom_->length();
+    if (textLen < 1)
+        return atom_;
+
+    StringBuffer buf(cx);
+
+    // At this point we know that we're dealing with a display name,
+    // which we may need to parse in order to produce an es6 compatible
+    // function name.
+    if (atom_->hasLatin1Chars()) {
+        JS::AutoCheckCannotGC nogc;
+        const Latin1Char* textChars = atom_->latin1Chars(nogc);
+        if (!FunctionNameFromDisplayName(cx, textChars, textLen, buf))
+            return cx->runtime()->emptyString;
+    } else {
+        JS::AutoCheckCannotGC nogc;
+        const char16_t* textChars = atom_->twoByteChars(nogc);
+        if (!FunctionNameFromDisplayName(cx, textChars, textLen, buf))
+            return cx->runtime()->emptyString;
+    }
+
+    return buf.finishAtom();
 }
 
 void
