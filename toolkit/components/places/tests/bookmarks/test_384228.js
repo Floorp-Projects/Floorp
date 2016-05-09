@@ -4,73 +4,95 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Get bookmark service
-try {
-  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Ci.nsINavBookmarksService);
-} catch(ex) {
-  do_throw("Could not get nav-bookmarks-service\n");
-}
+/**
+ * test querying for bookmarks in multiple folders.
+ */
+add_task(function* search_bookmark_in_folder() {
+  let testFolder1 = yield PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    title: "bug 384228 test folder 1"
+  });
+  Assert.equal(testFolder1.index, 0);
 
-// Get history service
-try {
-  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].getService(Ci.nsINavHistoryService);
-} catch(ex) {
-  do_throw("Could not get history service\n");
-}
+  let testFolder2 = yield PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    title: "bug 384228 test folder 2"
+  });
+  Assert.equal(testFolder2.index, 1);
 
-// get bookmarks root id
-var root = bmsvc.bookmarksMenuFolder;
+  let testFolder3 = yield PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    title: "bug 384228 test folder 3"
+  });
+  Assert.equal(testFolder3.index, 2);
 
-// main
-function run_test() {
-  // test querying for bookmarks in multiple folders
-  var testFolder1 = bmsvc.createFolder(root, "bug 384228 test folder 1",
-                                       bmsvc.DEFAULT_INDEX);
-  do_check_eq(bmsvc.getItemIndex(testFolder1), 0);
-  var testFolder2 = bmsvc.createFolder(root, "bug 384228 test folder 2",
-                                       bmsvc.DEFAULT_INDEX);
-  do_check_eq(bmsvc.getItemIndex(testFolder2), 1);
-  var testFolder3 = bmsvc.createFolder(root, "bug 384228 test folder 3",
-                                       bmsvc.DEFAULT_INDEX);
-  do_check_eq(bmsvc.getItemIndex(testFolder3), 2);
+  let b1 = yield PlacesUtils.bookmarks.insert({
+    parentGuid: testFolder1.guid,
+    url: "http://foo.tld/",
+    title: "title b1 (folder 1)"
+  });
+  Assert.equal(b1.index, 0);
 
-  var b1 = bmsvc.insertBookmark(testFolder1, uri("http://foo.tld/"),
-                                bmsvc.DEFAULT_INDEX, "title b1 (folder 1)");
-  do_check_eq(bmsvc.getItemIndex(b1), 0);
-  var b2 = bmsvc.insertBookmark(testFolder1, uri("http://foo.tld/"),
-                                bmsvc.DEFAULT_INDEX, "title b2 (folder 1)");
-  do_check_eq(bmsvc.getItemIndex(b2), 1);
-  var b3 = bmsvc.insertBookmark(testFolder2, uri("http://foo.tld/"),
-                                bmsvc.DEFAULT_INDEX, "title b3 (folder 2)");
-  do_check_eq(bmsvc.getItemIndex(b3), 0);
-  var b4 = bmsvc.insertBookmark(testFolder3, uri("http://foo.tld/"),
-                                bmsvc.DEFAULT_INDEX, "title b4 (folder 3)");
-  do_check_eq(bmsvc.getItemIndex(b4), 0);
+  let b2 = yield PlacesUtils.bookmarks.insert({
+    parentGuid: testFolder1.guid,
+    url: "http://foo.tld/",
+    title: "title b2 (folder 1)"
+  });
+  Assert.equal(b2.index, 1);
+
+  let b3 = yield PlacesUtils.bookmarks.insert({
+    parentGuid: testFolder2.guid,
+    url: "http://foo.tld/",
+    title: "title b3 (folder 2)"
+  });
+  Assert.equal(b3.index, 0);
+
+  let b4 = yield PlacesUtils.bookmarks.insert({
+    parentGuid: testFolder3.guid,
+    url: "http://foo.tld/",
+    title: "title b4 (folder 3)"
+  });
+  Assert.equal(b4.index, 0);
+
   // also test recursive search
-  var testFolder1_1 = bmsvc.createFolder(testFolder1, "bug 384228 test folder 1.1",
-                                         bmsvc.DEFAULT_INDEX);
-  do_check_eq(bmsvc.getItemIndex(testFolder1_1), 2);
-  var b5 = bmsvc.insertBookmark(testFolder1_1, uri("http://a1.com/"),
-                                bmsvc.DEFAULT_INDEX, "title b5 (folder 1.1)");
-  do_check_eq(bmsvc.getItemIndex(b5), 0);
+  let testFolder1_1 = yield PlacesUtils.bookmarks.insert({
+    parentGuid: testFolder1.guid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    title: "bug 384228 test folder 1.1"
+  });
+  Assert.equal(testFolder1_1.index, 2);
 
-  var options = histsvc.getNewQueryOptions();
-  var query = histsvc.getNewQuery();
+  let b5 = yield PlacesUtils.bookmarks.insert({
+    parentGuid: testFolder1_1.guid,
+    url: "http://foo.tld/",
+    title: "title b5 (folder 1.1)"
+  });
+  Assert.equal(b5.index, 0);
+
+
+  // query folder 1, folder 2 and get 4 bookmarks
+  let folderIds = [];
+  folderIds.push(yield PlacesUtils.promiseItemId(testFolder1.guid));
+  folderIds.push(yield PlacesUtils.promiseItemId(testFolder2.guid));
+
+  let hs = PlacesUtils.history;
+  let options = hs.getNewQueryOptions();
+  let query = hs.getNewQuery();
   query.searchTerms = "title";
-  options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
-  query.setFolders([testFolder1, testFolder2], 2);
-
-  var result = histsvc.executeQuery(query, options);
-  var rootNode = result.root;
+  options.queryType = options.QUERY_TYPE_BOOKMARKS;
+  query.setFolders(folderIds, folderIds.length);
+  let rootNode = hs.executeQuery(query, options).root;
   rootNode.containerOpen = true;
 
   // should not match item from folder 3
-  do_check_eq(rootNode.childCount, 4);
-
-  do_check_eq(rootNode.getChild(0).itemId, b1);
-  do_check_eq(rootNode.getChild(1).itemId, b2);
-  do_check_eq(rootNode.getChild(2).itemId, b3);
-  do_check_eq(rootNode.getChild(3).itemId, b5);
+  Assert.equal(rootNode.childCount, 4);
+  Assert.equal(rootNode.getChild(0).bookmarkGuid, b1.guid);
+  Assert.equal(rootNode.getChild(1).bookmarkGuid, b2.guid);
+  Assert.equal(rootNode.getChild(2).bookmarkGuid, b3.guid);
+  Assert.equal(rootNode.getChild(3).bookmarkGuid, b5.guid);
 
   rootNode.containerOpen = false;
-}
+});
