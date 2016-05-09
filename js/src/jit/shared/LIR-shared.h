@@ -344,10 +344,7 @@ class LSimdSwizzleBase : public LInstructionHelper<1, 1, 0>
         return getOperand(0);
     }
 
-    uint32_t laneX() const { return mir_->toSimdSwizzle()->laneX(); }
-    uint32_t laneY() const { return mir_->toSimdSwizzle()->laneY(); }
-    uint32_t laneZ() const { return mir_->toSimdSwizzle()->laneZ(); }
-    uint32_t laneW() const { return mir_->toSimdSwizzle()->laneW(); }
+    uint32_t lane(unsigned i) const { return mir_->toSimdSwizzle()->lane(i); }
 
     bool lanesMatch(uint32_t x, uint32_t y, uint32_t z, uint32_t w) const {
         return mir_->toSimdSwizzle()->lanesMatch(x, y, z, w);
@@ -429,10 +426,7 @@ class LSimdShuffle : public LInstructionHelper<1, 2, 1>
         return getTemp(0);
     }
 
-    uint32_t laneX() const { return mir_->toSimdShuffle()->laneX(); }
-    uint32_t laneY() const { return mir_->toSimdShuffle()->laneY(); }
-    uint32_t laneZ() const { return mir_->toSimdShuffle()->laneZ(); }
-    uint32_t laneW() const { return mir_->toSimdShuffle()->laneW(); }
+    uint32_t lane(unsigned i) const { return mir_->toSimdShuffle()->lane(i); }
 
     bool lanesMatch(uint32_t x, uint32_t y, uint32_t z, uint32_t w) const {
         return mir_->toSimdShuffle()->lanesMatch(x, y, z, w);

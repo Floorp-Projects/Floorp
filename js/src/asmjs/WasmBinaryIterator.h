@@ -493,8 +493,8 @@ class MOZ_STACK_CLASS ExprIter : private Policy
     MOZ_MUST_USE bool readReplaceLane(ValType simdType, uint8_t* lane,
                                       Value* vector, Value* scalar);
     MOZ_MUST_USE bool readSplat(ValType simdType, Value* scalar);
-    MOZ_MUST_USE bool readSwizzle(ValType simdType, uint8_t (* lanes)[4], Value* vector);
-    MOZ_MUST_USE bool readShuffle(ValType simdType, uint8_t (* lanes)[4],
+    MOZ_MUST_USE bool readSwizzle(ValType simdType, uint8_t (* lanes)[16], Value* vector);
+    MOZ_MUST_USE bool readShuffle(ValType simdType, uint8_t (* lanes)[16],
                                   Value* lhs, Value* rhs);
     MOZ_MUST_USE bool readSimdSelect(ValType simdType, Value* trueValue,
                                      Value* falseValue,
@@ -1652,7 +1652,7 @@ ExprIter<Policy>::readSplat(ValType simdType, Value* scalar)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readSwizzle(ValType simdType, uint8_t (* lanes)[4], Value* vector)
+ExprIter<Policy>::readSwizzle(ValType simdType, uint8_t (* lanes)[16], Value* vector)
 {
     MOZ_ASSERT(Classify(expr_) == ExprKind::Swizzle);
 
@@ -1676,7 +1676,7 @@ ExprIter<Policy>::readSwizzle(ValType simdType, uint8_t (* lanes)[4], Value* vec
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readShuffle(ValType simdType, uint8_t (* lanes)[4], Value* lhs, Value* rhs)
+ExprIter<Policy>::readShuffle(ValType simdType, uint8_t (* lanes)[16], Value* lhs, Value* rhs)
 {
     MOZ_ASSERT(Classify(expr_) == ExprKind::Shuffle);
 
