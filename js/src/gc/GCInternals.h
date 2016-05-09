@@ -85,7 +85,12 @@ class MOZ_RAII AutoStopVerifyingBarriers
     AutoStopVerifyingBarriers(JSRuntime* rt, bool isShutdown)
       : gc(&rt->gc)
     {
-        restartPreVerifier = gc->endVerifyPreBarriers() && !isShutdown;
+        if (gc->isVerifyPreBarriersEnabled()) {
+            gc->endVerifyPreBarriers();
+            restartPreVerifier = !isShutdown;
+        } else {
+            restartPreVerifier = false;
+        }
     }
 
     ~AutoStopVerifyingBarriers() {
