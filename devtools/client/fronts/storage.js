@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const protocol = require("devtools/server/protocol");
+const protocol = require("devtools/shared/protocol");
 const specs = require("devtools/shared/specs/storage");
 
 for (let childSpec of Object.values(specs.childSpecs)) {

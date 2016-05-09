@@ -6,7 +6,7 @@ A Simple Hello World
 
 Here's a simple Hello World actor.  It is a global actor (not associated with a given browser tab).
 
-    let protocol = require("devtools/server/protocol");
+    let protocol = require("devtools/shared/protocol");
     let {method, Arg, Option, RetVal} = protocol;
 
     // This will be called by the framework when you call DebuggerServer.
