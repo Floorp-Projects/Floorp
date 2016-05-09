@@ -3397,6 +3397,12 @@ IonBuilder::inlineConstructSimdObject(CallInfo& callInfo, SimdTypeDescr* descr)
         return InliningStatus_NotInlined;
     }
 
+    // NYI, this will be removed by a bug 1136226 patch.
+    if (SimdTypeToLength(simdType) != 4) {
+        trackOptimizationOutcome(TrackedOutcome::SimdTypeNotOptimized);
+        return InliningStatus_NotInlined;
+    }
+
     // Take the templateObject out of Baseline ICs, such that we can box
     // SIMD value type in the same kind of objects.
     MOZ_ASSERT(size_t(descr->size(descr->type())) < InlineTypedObject::MaximumSize);

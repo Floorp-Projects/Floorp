@@ -76,8 +76,14 @@ bool MaybeSimdTypeToMIRType(SimdType type, MIRType* mirType)
     switch (type) {
       case SimdType::Uint32x4:
       case SimdType::Int32x4:     *mirType = MIRType::Int32x4;   return true;
+      case SimdType::Uint16x8:
+      case SimdType::Int16x8:     *mirType = MIRType::Int16x8;   return true;
+      case SimdType::Uint8x16:
+      case SimdType::Int8x16:     *mirType = MIRType::Int8x16;   return true;
       case SimdType::Float32x4:   *mirType = MIRType::Float32x4; return true;
       case SimdType::Bool32x4:    *mirType = MIRType::Bool32x4;  return true;
+      case SimdType::Bool16x8:    *mirType = MIRType::Bool16x8;  return true;
+      case SimdType::Bool8x16:    *mirType = MIRType::Bool8x16;  return true;
       default:                    return false;
     }
 }
@@ -98,12 +104,23 @@ static inline
 SimdType MIRTypeToSimdType(MIRType type)
 {
     switch (type) {
-      case MIRType::Float32x4: return SimdType::Float32x4;
       case MIRType::Int32x4:   return SimdType::Int32x4;
+      case MIRType::Int16x8:   return SimdType::Int16x8;
+      case MIRType::Int8x16:   return SimdType::Int8x16;
+      case MIRType::Float32x4: return SimdType::Float32x4;
       case MIRType::Bool32x4:  return SimdType::Bool32x4;
+      case MIRType::Bool16x8:  return SimdType::Bool16x8;
+      case MIRType::Bool8x16:  return SimdType::Bool8x16;
       default:                break;
     }
     MOZ_CRASH("unhandled MIRType");
+}
+
+// Get the boolean MIRType with the same shape as type.
+static inline
+MIRType MIRTypeToBooleanSimdType(MIRType type)
+{
+    return SimdTypeToMIRType(GetBooleanSimdType(MIRTypeToSimdType(type)));
 }
 
 #define MIR_FLAG_LIST(_)                                                        \
@@ -2189,7 +2206,7 @@ class MSimdUnaryArith
     {
         MIRType type = def->type();
         MOZ_ASSERT(IsSimdType(type));
-        MOZ_ASSERT_IF(type == MIRType::Int32x4, op == neg || op == not_);
+        MOZ_ASSERT_IF(IsIntegerSimdType(type), op == neg || op == not_);
         setResultType(type);
         setMovable();
     }
@@ -2254,7 +2271,7 @@ class MSimdBinaryComp
         MOZ_ASSERT(IsSimdType(opType));
         MOZ_ASSERT((sign != SimdSign::NotApplicable) == IsIntegerSimdType(opType),
                    "Signedness must be specified for integer SIMD compares");
-        setResultType(MIRType::Bool32x4);
+        setResultType(MIRTypeToBooleanSimdType(opType));
         specialization_ = opType;
         setMovable();
         if (op == equal || op == notEqual)
@@ -2344,8 +2361,8 @@ class MSimdBinaryArith
     {
         MOZ_ASSERT(left->type() == right->type());
         MIRType type = left->type();
-        MOZ_ASSERT_IF(type == MIRType::Int32x4, op == Op_add || op == Op_sub || op == Op_mul);
         MOZ_ASSERT(IsSimdType(type));
+        MOZ_ASSERT_IF(IsIntegerSimdType(type), op == Op_add || op == Op_sub || op == Op_mul);
         setResultType(type);
         setMovable();
         if (op == Op_add || op == Op_mul || op == Op_min || op == Op_max)
@@ -14135,31 +14152,9 @@ class MAsmJSLoadHeap
         else
             setMovable();
 
-        switch (access.accessType()) {
-          case Scalar::Int8:
-          case Scalar::Uint8:
-          case Scalar::Int16:
-          case Scalar::Uint16:
-          case Scalar::Int32:
-          case Scalar::Uint32:
-            setResultType(MIRType::Int32);
-            break;
-          case Scalar::Float32:
-            setResultType(MIRType::Float32);
-            break;
-          case Scalar::Float64:
-            setResultType(MIRType::Double);
-            break;
-          case Scalar::Float32x4:
-            setResultType(MIRType::Float32x4);
-            break;
-          case Scalar::Int32x4:
-            setResultType(MIRType::Int32x4);
-            break;
-          case Scalar::Uint8Clamped:
-          case Scalar::MaxTypedArrayViewType:
-            MOZ_CRASH("unexpected load heap in asm.js");
-        }
+        MOZ_ASSERT(access.accessType() != Scalar::Uint8Clamped,
+                   "unexpected load heap in asm.js");
+        setResultType(ScalarTypeToMIRType(access.accessType()));
     }
 
   public:

@@ -259,7 +259,7 @@ BailoutKindString(BailoutKind kind)
 static const uint32_t ELEMENT_TYPE_BITS = 5;
 static const uint32_t ELEMENT_TYPE_SHIFT = 0;
 static const uint32_t ELEMENT_TYPE_MASK = (1 << ELEMENT_TYPE_BITS) - 1;
-static const uint32_t VECTOR_SCALE_BITS = 2;
+static const uint32_t VECTOR_SCALE_BITS = 3;
 static const uint32_t VECTOR_SCALE_SHIFT = ELEMENT_TYPE_BITS + ELEMENT_TYPE_SHIFT;
 static const uint32_t VECTOR_SCALE_MASK = (1 << VECTOR_SCALE_BITS) - 1;
 
@@ -430,12 +430,55 @@ enum class MIRType
     Shape,                     // A Shape pointer.
     ObjectGroup,               // An ObjectGroup pointer.
     Last = ObjectGroup,
-    Float32x4 = Float32 | (2 << VECTOR_SCALE_SHIFT),
-    // Representing both SIMD.Int32x4 and SIMD.Uint32x4.
+    // Representing both SIMD.IntBxN and SIMD.UintBxN.
+    Int8x16   = Int32   | (4 << VECTOR_SCALE_SHIFT),
+    Int16x8   = Int32   | (3 << VECTOR_SCALE_SHIFT),
     Int32x4   = Int32   | (2 << VECTOR_SCALE_SHIFT),
+    Float32x4 = Float32 | (2 << VECTOR_SCALE_SHIFT),
+    Bool8x16  = Boolean | (4 << VECTOR_SCALE_SHIFT),
+    Bool16x8  = Boolean | (3 << VECTOR_SCALE_SHIFT),
     Bool32x4  = Boolean | (2 << VECTOR_SCALE_SHIFT),
     Doublex2  = Double  | (1 << VECTOR_SCALE_SHIFT)
 };
+
+static inline bool
+IsSimdType(MIRType type)
+{
+    return ((unsigned(type) >> VECTOR_SCALE_SHIFT) & VECTOR_SCALE_MASK) != 0;
+}
+
+// Returns the number of vector elements (hereby called "length") for a given
+// SIMD kind. It is the Y part of the name "Foo x Y".
+static inline unsigned
+SimdTypeToLength(MIRType type)
+{
+    MOZ_ASSERT(IsSimdType(type));
+    return 1 << ((unsigned(type) >> VECTOR_SCALE_SHIFT) & VECTOR_SCALE_MASK);
+}
+
+// Get the type of the individual lanes in a SIMD type.
+// For example, Int32x4 -> Int32, Float32x4 -> Float32 etc.
+static inline MIRType
+SimdTypeToLaneType(MIRType type)
+{
+    MOZ_ASSERT(IsSimdType(type));
+    static_assert(unsigned(MIRType::Last) <= ELEMENT_TYPE_MASK,
+                  "ELEMENT_TYPE_MASK should be larger than the last MIRType");
+    return MIRType((unsigned(type) >> ELEMENT_TYPE_SHIFT) & ELEMENT_TYPE_MASK);
+}
+
+// Get the type expected when inserting a lane into a SIMD type.
+// This is the argument type expected by the MSimdValue constructors as well as
+// MSimdSplat and MSimdInsertElement.
+static inline MIRType
+SimdTypeToLaneArgumentType(MIRType type)
+{
+    MIRType laneType = SimdTypeToLaneType(type);
+
+    // Boolean lanes should be pre-converted to an Int32 with the values 0 or -1.
+    // All other lane types are inserted directly.
+    return laneType == MIRType::Boolean ? MIRType::Int32 : laneType;
+}
 
 static inline MIRType
 MIRTypeFromValueType(JSValueType type)
@@ -555,12 +598,20 @@ StringFromMIRType(MIRType type)
       return "Shape";
     case MIRType::ObjectGroup:
       return "ObjectGroup";
-    case MIRType::Float32x4:
-      return "Float32x4";
     case MIRType::Int32x4:
       return "Int32x4";
+    case MIRType::Int16x8:
+      return "Int16x8";
+    case MIRType::Int8x16:
+      return "Int8x16";
+    case MIRType::Float32x4:
+      return "Float32x4";
     case MIRType::Bool32x4:
       return "Bool32x4";
+    case MIRType::Bool16x8:
+      return "Bool16x8";
+    case MIRType::Bool8x16:
+      return "Bool8x16";
     case MIRType::Doublex2:
       return "Doublex2";
   }
@@ -603,12 +654,6 @@ IsNullOrUndefined(MIRType type)
 }
 
 static inline bool
-IsSimdType(MIRType type)
-{
-    return type == MIRType::Int32x4 || type == MIRType::Float32x4 || type == MIRType::Bool32x4;
-}
-
-static inline bool
 IsFloatingPointSimdType(MIRType type)
 {
     return type == MIRType::Float32x4;
@@ -617,13 +662,13 @@ IsFloatingPointSimdType(MIRType type)
 static inline bool
 IsIntegerSimdType(MIRType type)
 {
-    return type == MIRType::Int32x4;
+    return IsSimdType(type) && SimdTypeToLaneType(type) == MIRType::Int32;
 }
 
 static inline bool
 IsBooleanSimdType(MIRType type)
 {
-    return type == MIRType::Bool32x4;
+    return IsSimdType(type) && SimdTypeToLaneType(type) == MIRType::Boolean;
 }
 
 static inline bool
@@ -634,15 +679,6 @@ IsMagicType(MIRType type)
            type == MIRType::MagicIsConstructing ||
            type == MIRType::MagicOptimizedArguments ||
            type == MIRType::MagicUninitializedLexical;
-}
-
-// Returns the number of vector elements (hereby called "length") for a given
-// SIMD kind. It is the Y part of the name "Foo x Y".
-static inline unsigned
-SimdTypeToLength(MIRType type)
-{
-    MOZ_ASSERT(IsSimdType(type));
-    return 1 << ((unsigned(type) >> VECTOR_SCALE_SHIFT) & VECTOR_SCALE_MASK);
 }
 
 static inline MIRType
@@ -692,30 +728,6 @@ ScalarTypeToLength(Scalar::Type type)
         break;
     }
     MOZ_CRASH("unexpected SIMD kind");
-}
-
-// Get the type of the individual lanes in a SIMD type.
-// For example, Int32x4 -> Int32, Float32x4 -> Float32 etc.
-static inline MIRType
-SimdTypeToLaneType(MIRType type)
-{
-    MOZ_ASSERT(IsSimdType(type));
-    static_assert(unsigned(MIRType::Last) <= ELEMENT_TYPE_MASK,
-                  "ELEMENT_TYPE_MASK should be larger than the last MIRType");
-    return MIRType((unsigned(type) >> ELEMENT_TYPE_SHIFT) & ELEMENT_TYPE_MASK);
-}
-
-// Get the type expected when inserting a lane into a SIMD type.
-// This is the argument type expected by the MSimdValue constructors as well as
-// MSimdSplat and MSimdInsertElement.
-static inline MIRType
-SimdTypeToLaneArgumentType(MIRType type)
-{
-    MIRType laneType = SimdTypeToLaneType(type);
-
-    // Boolean lanes should be pre-converted to an Int32 with the values 0 or -1.
-    // All other lane types are inserted directly.
-    return laneType == MIRType::Boolean ? MIRType::Int32 : laneType;
 }
 
 #ifdef DEBUG
