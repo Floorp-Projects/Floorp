@@ -518,16 +518,16 @@ class WasmAstImport : public WasmAstNode
     WasmName name_;
     WasmName module_;
     WasmName func_;
-    uint32_t sigIndex_;
+    WasmRef  sig_;
 
   public:
-    WasmAstImport(WasmName name, WasmName module, WasmName func, uint32_t sigIndex)
-      : name_(name), module_(module), func_(func), sigIndex_(sigIndex)
+    WasmAstImport(WasmName name, WasmName module, WasmName func, WasmRef sig)
+      : name_(name), module_(module), func_(func), sig_(sig)
     {}
     WasmName name() const { return name_; }
     WasmName module() const { return module_; }
     WasmName func() const { return func_; }
-    uint32_t sigIndex() const { return sigIndex_; }
+    WasmRef& sig() { return sig_; }
 };
 
 enum class WasmAstExportKind { Func, Memory };
@@ -3082,15 +3082,31 @@ ParseImport(WasmParseContext& c, WasmAstModule* module)
     if (!c.ts.match(WasmToken::Text, &funcName, c.error))
         return nullptr;
 
-    WasmAstSig sig(c.lifo);
-    if (!ParseFuncType(c, &sig))
-        return nullptr;
+    WasmRef sigRef;
+    WasmToken openParen;
+    if (c.ts.getIf(WasmToken::OpenParen, &openParen)) {
+        if (c.ts.getIf(WasmToken::Type)) {
+            if (!c.ts.matchRef(&sigRef, c.error))
+                return nullptr;
+            if (!c.ts.match(WasmToken::CloseParen, c.error))
+                return nullptr;
+        } else {
+            c.ts.unget(openParen);
+        }
+    }
 
-    uint32_t sigIndex;
-    if (!module->declare(Move(sig), &sigIndex))
-        return nullptr;
+    if (sigRef.isInvalid()) {
+        WasmAstSig sig(c.lifo);
+        if (!ParseFuncType(c, &sig))
+            return nullptr;
 
-    return new(c.lifo) WasmAstImport(name, moduleName.text(), funcName.text(), sigIndex);
+        uint32_t sigIndex;
+        if (!module->declare(Move(sig), &sigIndex))
+            return nullptr;
+        sigRef.setIndex(sigIndex);
+    }
+
+    return new(c.lifo) WasmAstImport(name, moduleName.text(), funcName.text(), sigRef);
 }
 
 static WasmAstExport*
@@ -3635,6 +3651,8 @@ ResolveModule(LifoAlloc& lifo, WasmAstModule* module, UniqueChars* error)
     size_t numImports = module->imports().length();
     for (size_t i = 0; i < numImports; i++) {
         WasmAstImport* imp = module->imports()[i];
+        if (!r.resolveSignature(imp->sig()))
+            return false;
         if (!r.registerImportName(imp->name(), i))
             return r.fail("duplicate import");
     }
@@ -4048,7 +4066,7 @@ EncodeBytes(Encoder& e, WasmName wasmName)
 static bool
 EncodeImport(Encoder& e, WasmAstImport& imp)
 {
-    if (!e.writeVarU32(imp.sigIndex()))
+    if (!e.writeVarU32(imp.sig().index()))
         return false;
 
     if (!EncodeBytes(e, imp.module()))
