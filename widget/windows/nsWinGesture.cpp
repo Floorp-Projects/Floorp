@@ -375,14 +375,14 @@ nsWinGesture::ProcessGestureMessage(HWND hWnd, WPARAM wParam, LPARAM lParam,
           degrees = mRotateIntermediate = 0.0;
       }
 
-      evt.direction = 0;
+      evt.mDirection = 0;
       evt.delta = degrees - mRotateIntermediate;
       mRotateIntermediate = degrees;
 
       if (evt.delta > 0)
-        evt.direction = nsIDOMSimpleGestureEvent::ROTATION_COUNTERCLOCKWISE;
+        evt.mDirection = nsIDOMSimpleGestureEvent::ROTATION_COUNTERCLOCKWISE;
       else if (evt.delta < 0)
-        evt.direction = nsIDOMSimpleGestureEvent::ROTATION_CLOCKWISE;
+        evt.mDirection = nsIDOMSimpleGestureEvent::ROTATION_CLOCKWISE;
 
       if (gi.dwFlags & GF_BEGIN) {
         evt.mMessage = eRotateGestureStart;
