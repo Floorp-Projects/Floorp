@@ -488,9 +488,9 @@ class MOZ_STACK_CLASS ExprIter : private Policy
     MOZ_MUST_USE bool readSimdShiftByScalar(ValType simdType, Value* lhs,
                                             Value* rhs);
     MOZ_MUST_USE bool readSimdBooleanReduction(ValType simdType, Value* input);
-    MOZ_MUST_USE bool readExtractLane(ValType simdType, jit::SimdLane* lane,
+    MOZ_MUST_USE bool readExtractLane(ValType simdType, uint8_t* lane,
                                       Value* vector);
-    MOZ_MUST_USE bool readReplaceLane(ValType simdType, jit::SimdLane* lane,
+    MOZ_MUST_USE bool readReplaceLane(ValType simdType, uint8_t* lane,
                                       Value* vector, Value* scalar);
     MOZ_MUST_USE bool readSplat(ValType simdType, Value* scalar);
     MOZ_MUST_USE bool readSwizzle(ValType simdType, uint8_t (* lanes)[4], Value* vector);
@@ -1591,7 +1591,7 @@ ExprIter<Policy>::readSimdBooleanReduction(ValType simdType, Value* input)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readExtractLane(ValType simdType, jit::SimdLane* lane, Value* vector)
+ExprIter<Policy>::readExtractLane(ValType simdType, uint8_t* lane, Value* vector)
 {
     MOZ_ASSERT(Classify(expr_) == ExprKind::ExtractLane);
 
@@ -1601,7 +1601,7 @@ ExprIter<Policy>::readExtractLane(ValType simdType, jit::SimdLane* lane, Value* 
     if (Validate && laneBits >= NumSimdElements(simdType))
         return fail("simd lane out of bounds for simd type");
     if (Output)
-        *lane = jit::SimdLane(laneBits);
+        *lane = uint8_t(laneBits);
 
     if (!popWithType(ToExprType(simdType), vector))
         return false;
@@ -1613,8 +1613,7 @@ ExprIter<Policy>::readExtractLane(ValType simdType, jit::SimdLane* lane, Value* 
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readReplaceLane(ValType simdType, jit::SimdLane* lane, Value* vector,
-                                  Value* scalar)
+ExprIter<Policy>::readReplaceLane(ValType simdType, uint8_t* lane, Value* vector, Value* scalar)
 {
     MOZ_ASSERT(Classify(expr_) == ExprKind::ReplaceLane);
 
@@ -1624,7 +1623,7 @@ ExprIter<Policy>::readReplaceLane(ValType simdType, jit::SimdLane* lane, Value* 
     if (Validate && laneBits >= NumSimdElements(simdType))
         return fail("simd lane out of bounds for simd type");
     if (Output)
-        *lane = jit::SimdLane(laneBits);
+        *lane = uint8_t(laneBits);
 
     if (!popWithType(ToExprType(SimdElementType(simdType)), scalar))
         return false;

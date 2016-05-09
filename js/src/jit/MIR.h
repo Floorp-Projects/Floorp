@@ -1758,15 +1758,15 @@ class MSimdExtractElement
     public SimdPolicy<0>::Data
 {
   protected:
-    SimdLane lane_;
+    unsigned lane_;
     SimdSign sign_;
 
-    MSimdExtractElement(MDefinition* obj, MIRType laneType, SimdLane lane, SimdSign sign)
+    MSimdExtractElement(MDefinition* obj, MIRType laneType, unsigned lane, SimdSign sign)
       : MUnaryInstruction(obj), lane_(lane), sign_(sign)
     {
         MIRType vecType = obj->type();
         MOZ_ASSERT(IsSimdType(vecType));
-        MOZ_ASSERT(uint32_t(lane) < SimdTypeToLength(vecType));
+        MOZ_ASSERT(lane < SimdTypeToLength(vecType));
         MOZ_ASSERT(!IsSimdType(laneType));
         MOZ_ASSERT((sign != SimdSign::NotApplicable) == IsIntegerSimdType(vecType),
                    "Signedness must be specified for integer SIMD extractLanes");
@@ -1792,12 +1792,12 @@ class MSimdExtractElement
     INSTRUCTION_HEADER(SimdExtractElement)
 
     static MSimdExtractElement* New(TempAllocator& alloc, MDefinition* obj, MIRType scalarType,
-                                    SimdLane lane, SimdSign sign)
+                                    unsigned lane, SimdSign sign)
     {
         return new(alloc) MSimdExtractElement(obj, scalarType, lane, sign);
     }
 
-    SimdLane lane() const {
+    unsigned lane() const {
         return lane_;
     }
 
@@ -1825,13 +1825,14 @@ class MSimdInsertElement
     public MixPolicy< SimdSameAsReturnedTypePolicy<0>, SimdScalarPolicy<1> >::Data
 {
   private:
-    SimdLane lane_;
+    unsigned lane_;
 
-    MSimdInsertElement(MDefinition* vec, MDefinition* val, SimdLane lane)
+    MSimdInsertElement(MDefinition* vec, MDefinition* val, unsigned lane)
       : MBinaryInstruction(vec, val), lane_(lane)
     {
         MIRType type = vec->type();
         MOZ_ASSERT(IsSimdType(type));
+        MOZ_ASSERT(lane < SimdTypeToLength(type));
         setMovable();
         setResultType(type);
     }
@@ -1840,7 +1841,7 @@ class MSimdInsertElement
     INSTRUCTION_HEADER(SimdInsertElement)
 
     static MSimdInsertElement* New(TempAllocator& alloc, MDefinition* vec, MDefinition* val,
-                                   SimdLane lane)
+                                   unsigned lane)
     {
         return new(alloc) MSimdInsertElement(vec, val, lane);
     }
@@ -1851,18 +1852,8 @@ class MSimdInsertElement
     MDefinition* value() {
         return getOperand(1);
     }
-    SimdLane lane() const {
+    unsigned lane() const {
         return lane_;
-    }
-
-    static const char* LaneName(SimdLane lane) {
-        switch (lane) {
-          case LaneX: return "lane x";
-          case LaneY: return "lane y";
-          case LaneZ: return "lane z";
-          case LaneW: return "lane w";
-        }
-        MOZ_CRASH("unknown lane");
     }
 
     bool canConsumeFloat32(MUse* use) const override {

@@ -706,15 +706,6 @@ SimdTypeToLaneArgumentType(MIRType type)
     return laneType == MIRType::Boolean ? MIRType::Int32 : laneType;
 }
 
-// Indicates a lane in a SIMD register: X for the first lane, Y for the second,
-// Z for the third (if any), W for the fourth (if any).
-enum SimdLane {
-    LaneX = 0x0,
-    LaneY = 0x1,
-    LaneZ = 0x2,
-    LaneW = 0x3
-};
-
 #ifdef DEBUG
 
 // Track the pipeline of opcodes which has produced a snapshot.

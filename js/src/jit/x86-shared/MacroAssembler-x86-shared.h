@@ -1085,8 +1085,8 @@ class MacroAssemblerX86Shared : public Assembler
         vdivps(src, dest, dest);
     }
 
-    static uint32_t ComputeShuffleMask(uint32_t x = LaneX, uint32_t y = LaneY,
-                                       uint32_t z = LaneZ, uint32_t w = LaneW)
+    static uint32_t ComputeShuffleMask(uint32_t x = 0, uint32_t y = 1,
+                                       uint32_t z = 2, uint32_t w = 3)
     {
         MOZ_ASSERT(x < 4 && y < 4 && z < 4 && w < 4);
         uint32_t r = (w << 6) | (z << 4) | (y << 2) | (x << 0);

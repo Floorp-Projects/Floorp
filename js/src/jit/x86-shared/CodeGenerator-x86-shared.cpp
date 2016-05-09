@@ -2679,7 +2679,7 @@ CodeGeneratorX86Shared::visitSimdReinterpretCast(LSimdReinterpretCast* ins)
 void
 CodeGeneratorX86Shared::emitSimdExtractLane(FloatRegister input, Register output, unsigned lane)
 {
-    if (lane == LaneX) {
+    if (lane == 0) {
         // The value we want to extract is in the low double-word
         masm.moveLowInt32(input, output);
     } else if (AssemblerX86Shared::HasSSE41()) {
@@ -2729,12 +2729,12 @@ CodeGeneratorX86Shared::visitSimdExtractElementF(LSimdExtractElementF* ins)
     FloatRegister input = ToFloatRegister(ins->input());
     FloatRegister output = ToFloatRegister(ins->output());
 
-    SimdLane lane = ins->lane();
-    if (lane == LaneX) {
+    unsigned lane = ins->lane();
+    if (lane == 0) {
         // The value we want to extract is in the low double-word
         if (input != output)
             masm.moveFloat32(input, output);
-    } else if (lane == LaneZ) {
+    } else if (lane == 2) {
         masm.moveHighPairToLowPairFloat32(input, output);
     } else {
         uint32_t mask = MacroAssembler::ComputeShuffleMask(lane);
@@ -2782,7 +2782,7 @@ CodeGeneratorX86Shared::visitSimdInsertElementF(LSimdInsertElementF* ins)
     FloatRegister output = ToFloatRegister(ins->output());
     MOZ_ASSERT(vector == output); // defineReuseInput(0)
 
-    if (ins->lane() == SimdLane::LaneX) {
+    if (ins->lane() == 0) {
         // As both operands are registers, vmovss doesn't modify the upper bits
         // of the destination operand.
         if (value != output)
@@ -2792,7 +2792,7 @@ CodeGeneratorX86Shared::visitSimdInsertElementF(LSimdInsertElementF* ins)
 
     if (AssemblerX86Shared::HasSSE41()) {
         // The input value is in the low float32 of the 'value' FloatRegister.
-        masm.vinsertps(masm.vinsertpsMask(SimdLane::LaneX, ins->lane()), value, output, output);
+        masm.vinsertps(masm.vinsertpsMask(0, ins->lane()), value, output, output);
         return;
     }
 
@@ -3018,21 +3018,21 @@ CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle* ins)
         // SSE4.1 vinsertps can handle any single element.
         unsigned numLanesUnchanged = (x == 0) + (y == 1) + (z == 2) + (w == 3);
         if (AssemblerX86Shared::HasSSE41() && numLanesUnchanged == 3) {
-            SimdLane srcLane;
-            SimdLane dstLane;
+            unsigned srcLane;
+            unsigned dstLane;
             if (x >= 4) {
-                srcLane = SimdLane(x - 4);
-                dstLane = LaneX;
+                srcLane = x - 4;
+                dstLane = 0;
             } else if (y >= 4) {
-                srcLane = SimdLane(y - 4);
-                dstLane = LaneY;
+                srcLane = y - 4;
+                dstLane = 1;
             } else if (z >= 4) {
-                srcLane = SimdLane(z - 4);
-                dstLane = LaneZ;
+                srcLane = z - 4;
+                dstLane = 2;
             } else {
                 MOZ_ASSERT(w >= 4);
-                srcLane = SimdLane(w - 4);
-                dstLane = LaneW;
+                srcLane = w - 4;
+                dstLane = 3;
             }
             masm.vinsertps(masm.vinsertpsMask(srcLane, dstLane), rhs, lhs, out);
             return;
@@ -3046,14 +3046,14 @@ CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle* ins)
                 // T = (Rw Rw Lz Lz) = vshufps(firstMask, lhs, rhs, rhsCopy)
                 firstMask = MacroAssembler::ComputeShuffleMask(w, w, z, z);
                 // (Lx Ly Lz Rw) = (Lx Ly Tz Tx) = vshufps(secondMask, T, lhs, out)
-                secondMask = MacroAssembler::ComputeShuffleMask(x, y, LaneZ, LaneX);
+                secondMask = MacroAssembler::ComputeShuffleMask(x, y, 2, 0);
             } else {
                 MOZ_ASSERT(z >= 4);
                 z %= 4;
                 // T = (Rz Rz Lw Lw) = vshufps(firstMask, lhs, rhs, rhsCopy)
                 firstMask = MacroAssembler::ComputeShuffleMask(z, z, w, w);
                 // (Lx Ly Rz Lw) = (Lx Ly Tx Tz) = vshufps(secondMask, T, lhs, out)
-                secondMask = MacroAssembler::ComputeShuffleMask(x, y, LaneX, LaneZ);
+                secondMask = MacroAssembler::ComputeShuffleMask(x, y, 0, 2);
             }
 
             masm.vshufps(firstMask, lhs, rhsCopy, rhsCopy);
@@ -3068,14 +3068,14 @@ CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle* ins)
             // T = (Ry Ry Lx Lx) = vshufps(firstMask, lhs, rhs, rhsCopy)
             firstMask = MacroAssembler::ComputeShuffleMask(y, y, x, x);
             // (Lx Ry Lz Lw) = (Tz Tx Lz Lw) = vshufps(secondMask, lhs, T, out)
-            secondMask = MacroAssembler::ComputeShuffleMask(LaneZ, LaneX, z, w);
+            secondMask = MacroAssembler::ComputeShuffleMask(2, 0, z, w);
         } else {
             MOZ_ASSERT(x >= 4);
             x %= 4;
             // T = (Rx Rx Ly Ly) = vshufps(firstMask, lhs, rhs, rhsCopy)
             firstMask = MacroAssembler::ComputeShuffleMask(x, x, y, y);
             // (Rx Ly Lz Lw) = (Tx Tz Lz Lw) = vshufps(secondMask, lhs, T, out)
-            secondMask = MacroAssembler::ComputeShuffleMask(LaneX, LaneZ, z, w);
+            secondMask = MacroAssembler::ComputeShuffleMask(0, 2, z, w);
         }
 
         masm.vshufps(firstMask, lhs, rhsCopy, rhsCopy);
@@ -3316,14 +3316,14 @@ CodeGeneratorX86Shared::visitSimdBinaryArithIx4(LSimdBinaryArithIx4* ins)
         // scratch contains (Rx, _, Rz, _) where R is the resulting vector.
 
         FloatRegister temp = ToFloatRegister(ins->temp());
-        masm.vpshufd(MacroAssembler::ComputeShuffleMask(LaneY, LaneY, LaneW, LaneW), lhs, lhs);
-        masm.vpshufd(MacroAssembler::ComputeShuffleMask(LaneY, LaneY, LaneW, LaneW), rhs, temp);
+        masm.vpshufd(MacroAssembler::ComputeShuffleMask(1, 1, 3, 3), lhs, lhs);
+        masm.vpshufd(MacroAssembler::ComputeShuffleMask(1, 1, 3, 3), rhs, temp);
         masm.vpmuludq(temp, lhs, lhs);
         // lhs contains (Ry, _, Rw, _) where R is the resulting vector.
 
-        masm.vshufps(MacroAssembler::ComputeShuffleMask(LaneX, LaneZ, LaneX, LaneZ), scratch, lhs, lhs);
+        masm.vshufps(MacroAssembler::ComputeShuffleMask(0, 2, 0, 2), scratch, lhs, lhs);
         // lhs contains (Ry, Rw, Rx, Rz)
-        masm.vshufps(MacroAssembler::ComputeShuffleMask(LaneZ, LaneX, LaneW, LaneY), lhs, lhs, lhs);
+        masm.vshufps(MacroAssembler::ComputeShuffleMask(2, 0, 3, 1), lhs, lhs, lhs);
         return;
       }
       case MSimdBinaryArith::Op_div:
