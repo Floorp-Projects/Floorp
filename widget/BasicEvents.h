@@ -87,9 +87,9 @@ public:
   // If mIsSynthesizedForTests is true, the event has been synthesized for
   // automated tests or something hacky approach of an add-on.
   bool    mIsSynthesizedForTests : 1;
-  // If mExceptionHasBeenRisen is true, one of the event handlers has risen an
+  // If mExceptionWasRaised is true, one of the event handlers has raised an
   // exception.
-  bool    mExceptionHasBeenRisen : 1;
+  bool    mExceptionWasRaised : 1;
   // If mRetargetToNonNativeAnonymous is true and the target is in a non-native
   // native anonymous subtree, the event target is set to mOriginalTarget.
   bool    mRetargetToNonNativeAnonymous : 1;

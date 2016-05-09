@@ -790,6 +790,18 @@ ModuleObject::evaluated() const
     return getReservedSlot(EvaluatedSlot).toBoolean();
 }
 
+Value
+ModuleObject::hostDefinedField() const
+{
+    return getReservedSlot(HostDefinedSlot);
+}
+
+void
+ModuleObject::setHostDefinedField(JS::Value value)
+{
+    setReservedSlot(HostDefinedSlot, value);
+}
+
 ModuleEnvironmentObject&
 ModuleObject::initialEnvironment() const
 {
@@ -920,6 +932,29 @@ ModuleObject::createNamespace(JSContext* cx, HandleModuleObject self, HandleObje
     return ns;
 }
 
+static bool
+InvokeSelfHostedMethod(JSContext* cx, HandleModuleObject self, HandlePropertyName name)
+{
+    RootedValue fval(cx);
+    if (!GlobalObject::getSelfHostedFunction(cx, cx->global(), name, name, 0, &fval))
+        return false;
+
+    RootedValue ignored(cx);
+    return Call(cx, fval, self, &ignored);
+}
+
+/* static */ bool
+ModuleObject::DeclarationInstantiation(JSContext* cx, HandleModuleObject self)
+{
+    return InvokeSelfHostedMethod(cx, self, cx->names().ModuleDeclarationInstantiation);
+}
+
+/* static */ bool
+ModuleObject::Evaluation(JSContext* cx, HandleModuleObject self)
+{
+    return InvokeSelfHostedMethod(cx, self, cx->names().ModuleEvaluation);
+}
+
 DEFINE_GETTER_FUNCTIONS(ModuleObject, namespace_, NamespaceSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, evaluated, EvaluatedSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, requestedModules, RequestedModulesSlot)
@@ -959,15 +994,6 @@ GlobalObject::initModuleProto(JSContext* cx, Handle<GlobalObject*> global)
 
     global->setReservedSlot(MODULE_PROTO, ObjectValue(*proto));
     return true;
-}
-
-bool
-js::InitModuleClasses(JSContext* cx, HandleObject obj)
-{
-    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
-    return GlobalObject::initModuleProto(cx, global) &&
-           GlobalObject::initImportEntryProto(cx, global) &&
-           GlobalObject::initExportEntryProto(cx, global);
 }
 
 #undef DEFINE_GETTER_FUNCTIONS

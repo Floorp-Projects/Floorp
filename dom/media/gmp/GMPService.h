@@ -83,7 +83,7 @@ protected:
 
   void RemoveObsoletePluginCrashCallbacks(); // Called from add/run.
 
-  virtual void InitializePlugins() = 0;
+  virtual void InitializePlugins(AbstractThread* aAbstractGMPThread) = 0;
   virtual bool GetContentParentFrom(const nsACString& aNodeId,
                                     const nsCString& aAPI,
                                     const nsTArray<nsCString>& aTags,
@@ -93,8 +93,8 @@ protected:
   nsresult GMPDispatch(already_AddRefed<nsIRunnable> event, uint32_t flags = NS_DISPATCH_NORMAL);
   void ShutdownGMPThread();
 
-  Mutex mMutex; // Protects mGMPThread and mGMPThreadShutdown and some members
-                // in derived classes.
+  Mutex mMutex; // Protects mGMPThread, mAbstractGMPThread and
+                // mGMPThreadShutdown and some members in derived classes.
   nsCOMPtr<nsIThread> mGMPThread;
   RefPtr<AbstractThread> mAbstractGMPThread;
   bool mGMPThreadShutdown;

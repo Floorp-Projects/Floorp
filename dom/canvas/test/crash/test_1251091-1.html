@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1251091
+-->
+<head>
+  <title>Test for webgl crashing</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<body>
+  <script class="testbody" type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+  ok(true, "expecting an exception, not a crash");
+
+    var iframe = document.getElementById('iframe1');
+    try {
+        iframe.src = 'file_1251091-1.html';
+        ok(false, 'loaded the iframe and we did not see a crash, perfect!');
+    } catch (e) {
+        ok(true, "caught exception in loading the iframe");
+    }
+    SimpleTest.finish();
+
+  </script>
+  <iframe id="iframe1" src="" width="600" height="600"></iframe>
+</body>
+</html>

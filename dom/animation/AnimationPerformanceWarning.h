@@ -17,6 +17,7 @@ namespace mozilla {
 struct AnimationPerformanceWarning
 {
   enum class Type : uint8_t {
+    ContentTooSmall,
     ContentTooLarge,
     TransformBackfaceVisibilityHidden,
     TransformPreserve3D,
@@ -57,6 +58,9 @@ struct AnimationPerformanceWarning
   Maybe<nsTArray<int32_t>> mParams;
 
   bool ToLocalizedString(nsXPIDLString& aLocalizedString) const;
+  template<uint32_t N>
+  nsresult ToLocalizedStringWithIntParams(
+    const char* aKey, nsXPIDLString& aLocalizedString) const;
 
   bool operator==(const AnimationPerformanceWarning& aOther) const
   {

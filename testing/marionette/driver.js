@@ -2669,8 +2669,7 @@ GeckoDriver.prototype.maximizeWindow = function(cmd, resp) {
   }
 
   let win = this.getCurrentWindow();
-  win.moveTo(0,0);
-  win.resizeTo(win.screen.availWidth, win.screen.availHeight);
+  win.maximize()
 };
 
 /**
@@ -3083,13 +3082,6 @@ BrowserObj.prototype.setBrowser = function(win) {
 
     case "Fennec":
       this.browser = win.BrowserApp;
-      break;
-
-    case "B2G":
-      // eideticker (bug 965297) and mochitest (bug 965304)
-      // compatibility.  They only check for the presence of this
-      // property and should not be in caps if not on a B2G device.
-      this.driver.sessionCapabilities.b2g = true;
       break;
   }
 };

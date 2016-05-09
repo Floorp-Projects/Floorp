@@ -8175,14 +8175,16 @@ DebuggerObject_getErrorMessageName(JSContext *cx, unsigned argc, Value* vp)
 
     if (report) {
         const JSErrorFormatString* efs = GetErrorMessage(nullptr, report->errorNumber);
-        RootedString str(cx, JS_NewStringCopyZ(cx, efs->name));
-        if (!cx->compartment()->wrap(cx, &str))
-            return false;
-        args.rval().setString(str);
-    } else {
-        args.rval().setUndefined();
+        if (efs) {
+            RootedString str(cx, JS_NewStringCopyZ(cx, efs->name));
+            if (!cx->compartment()->wrap(cx, &str))
+                return false;
+            args.rval().setString(str);
+            return true;
+        }
     }
 
+    args.rval().setUndefined();
     return true;
 }
 
@@ -8916,11 +8918,12 @@ IsDeclarative(Env* env)
     return env->is<DebugScopeObject>() && env->as<DebugScopeObject>().isForDeclarative();
 }
 
+template <typename T>
 static bool
-IsWith(Env* env)
+IsDebugScopeWrapper(Env* env)
 {
     return env->is<DebugScopeObject>() &&
-           env->as<DebugScopeObject>().scope().is<DynamicWithObject>();
+           env->as<DebugScopeObject>().scope().is<T>();
 }
 
 static bool
@@ -8932,7 +8935,7 @@ DebuggerEnv_getType(JSContext* cx, unsigned argc, Value* vp)
     const char* s;
     if (IsDeclarative(env))
         s = "declarative";
-    else if (IsWith(env))
+    else if (IsDebugScopeWrapper<DynamicWithObject>(env))
         s = "with";
     else
         s = "object";
@@ -8969,8 +8972,10 @@ DebuggerEnv_getObject(JSContext* cx, unsigned argc, Value* vp)
     }
 
     JSObject* obj;
-    if (IsWith(env)) {
+    if (IsDebugScopeWrapper<DynamicWithObject>(env)) {
         obj = &env->as<DebugScopeObject>().scope().as<DynamicWithObject>().object();
+    } else if (IsDebugScopeWrapper<NonSyntacticVariablesObject>(env)) {
+        obj = &env->as<DebugScopeObject>().scope().as<NonSyntacticVariablesObject>();
     } else {
         obj = env;
         MOZ_ASSERT(!obj->is<DebugScopeObject>());

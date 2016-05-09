@@ -29,8 +29,8 @@ function testElement(elementName) {
     var doc = document.implementation.createHTMLDocument('Test');
     var element = doc.createElement(elementName);
     doc.body.appendChild(element);
-    var shadowRoot = element.createShadowRoot();
-    HTML5_ELEMENT_NAMES.forEach(function (name) {
+    var shadowRoot = element.attachShadow({mode: 'open'});
+    ATTACHSHADOW_SAFELISTED_ELEMENTS.forEach(function (name) {
         shadowRoot.appendChild(doc.createElement(name));
     });
 
@@ -41,7 +41,7 @@ function testElement(elementName) {
     }
 }
 
-var testParameters = HTML5_ELEMENT_NAMES.map(function (name) {
+var testParameters = ATTACHSHADOW_SAFELISTED_ELEMENTS.map(function (name) {
     return [
         'ownerDocument property of any elements in a shadow tree should ' +
         'match the document of the shadow host, when the host is a "' +

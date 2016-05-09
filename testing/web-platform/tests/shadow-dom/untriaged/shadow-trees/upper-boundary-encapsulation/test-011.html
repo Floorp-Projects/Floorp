@@ -22,25 +22,6 @@ policies and contribution forms [3].
 <body>
 <div id="log"></div>
 <script>
-// check that <style> element added to head is not exposed
-var A_04_01_11_T1 = async_test('A_04_01_11_T01');
-
-A_04_01_11_T1.step(function () {
-    var ctx = newContext();
-    var iframe = newIFrame(ctx, '../../resources/blank.html');
-    iframe.onload = A_04_01_11_T1.step_func(step_unit(function () {
-        var d = iframe.contentDocument;
-        var initialStyleSheetsCount = d.styleSheets.length;
-        var s = d.head.createShadowRoot();
-        var style = d.createElement('style');
-        s.appendChild(style);
-        assert_equals(d.styleSheets.length, initialStyleSheetsCount, 'style elements in shadow DOM must not be exposed via ' +
-            'the document.styleSheets collection ');
-
-    }, ctx, A_04_01_11_T1));
-});
-
-
 // check that <link> element added to head is not exposed
 test(unit(function (ctx) {
 
@@ -54,7 +35,7 @@ test(unit(function (ctx) {
     //create Shadow root
     var root = d.createElement('div');
     d.body.appendChild(root);
-    var s = root.createShadowRoot();
+    var s = root.attachShadow({mode: 'open'});
 
     s.appendChild(link);
 

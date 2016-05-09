@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test execution order of deferred scripts and modules </title>
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+  var results = [];
+
+  SimpleTest.waitForExplicitFinish();
+
+  function arrayEquals(a, b) {
+    if (a.length != b.length) {
+      return false;
+    }
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) {
+        return false;
+      }
+      return true;
+    }
+  }
+
+  function testLoaded() {
+    ok(arrayEquals(results, [1, 2, 3]), 'Check execution order');
+    SimpleTest.finish();
+  }
+</script>
+<script type="module" src="module_simple1.js"></script>
+<script defer src="script_simple2.js"></script>
+<script type="module" src="module_simple3.js"></script>
+<body onload='testLoaded()'></body>

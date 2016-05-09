@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test script element's type attribute comparision is case-insensitive</title>
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+  var inlineModuleRan = false;
+  var moduleRan = false;
+
+  SimpleTest.waitForExplicitFinish();
+
+  function testLoaded() {
+    ok(moduleRan, 'Check module script was run');
+    ok(inlineModuleRan, 'Check inline module script was run');
+    SimpleTest.finish();
+  }
+</script>
+<script type="MODULE" src="module_setRan.js"></script>
+<script type="mOdUlE">inlineModuleRan = true;</script>
+<body onload='testLoaded()'></body>
