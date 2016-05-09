@@ -2535,14 +2535,12 @@ moz_gtk_menu_item_paint(cairo_t *cr, GdkRectangle* rect,
             item_widget = gMenuItemWidget;
         }
         style = gtk_widget_get_style_context(item_widget);
-        gtk_style_context_save(style);
 
         if (flags & MOZ_TOPLEVEL_MENU_ITEM) {
             gtk_style_context_add_class(style, GTK_STYLE_CLASS_MENUBAR);
         }
 
         gtk_widget_set_direction(item_widget, direction);
-        gtk_style_context_add_class(style, GTK_STYLE_CLASS_MENUITEM);
         gtk_style_context_set_state(style, GetStateFlagsFromGtkWidgetState(state));
 
         border_width = gtk_container_get_border_width(GTK_CONTAINER(item_widget));
@@ -2554,7 +2552,11 @@ moz_gtk_menu_item_paint(cairo_t *cr, GdkRectangle* rect,
 
         gtk_render_background(style, cr, x, y, w, h);
         gtk_render_frame(style, cr, x, y, w, h);
-        gtk_style_context_restore(style);
+
+        if (flags & MOZ_TOPLEVEL_MENU_ITEM) {
+            gtk_style_context_remove_class(style, GTK_STYLE_CLASS_MENUBAR);
+        }
+        gtk_style_context_set_state(style, GTK_STATE_FLAG_NORMAL);
     }
 
     return MOZ_GTK_SUCCESS;
