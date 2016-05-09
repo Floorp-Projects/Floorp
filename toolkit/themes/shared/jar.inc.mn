@@ -54,6 +54,8 @@ toolkit.jar:
   skin/classic/global/reader/RM-Type-Controls-Arrow.svg    (../../shared/reader/RM-Type-Controls-Arrow.svg)
   skin/classic/global/reader/RM-Content-Width-Minus-42x16.svg            (../../shared/reader/RM-Content-Width-Minus-42x16.svg)
   skin/classic/global/reader/RM-Content-Width-Plus-44x16.svg             (../../shared/reader/RM-Content-Width-Plus-44x16.svg)
+  skin/classic/global/reader/RM-Line-Height-Minus-38x14.svg            (../../shared/reader/RM-Line-Height-Minus-38x14.svg)
+  skin/classic/global/reader/RM-Line-Height-Plus-38x24.svg             (../../shared/reader/RM-Line-Height-Plus-38x24.svg)
 #ifdef MOZ_PLACES
   skin/classic/mozapps/places/defaultFavicon.png           (../../shared/places/defaultFavicon.png)
   skin/classic/mozapps/places/defaultFavicon@2x.png        (../../shared/places/defaultFavicon@2x.png)

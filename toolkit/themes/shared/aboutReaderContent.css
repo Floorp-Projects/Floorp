@@ -8,6 +8,42 @@
   line-height: 1.6em;
 }
 
+#moz-reader-content.line-height1 {
+  line-height: 1em;
+}
+
+#moz-reader-content.line-height2 {
+  line-height: 1.2em;
+}
+
+#moz-reader-content.line-height3 {
+  line-height: 1.4em;
+}
+
+#moz-reader-content.line-height4 {
+  line-height: 1.6em;
+}
+
+#moz-reader-content.line-height5 {
+  line-height: 1.8em;
+}
+
+#moz-reader-content.line-height6 {
+  line-height: 2.0em;
+}
+
+#moz-reader-content.line-height7 {
+  line-height: 2.2em;
+}
+
+#moz-reader-content.line-height8 {
+  line-height: 2.4em;
+}
+
+#moz-reader-content.line-height9 {
+  line-height: 2.6em;
+}
+
 h1,
 h2,
 h3 {
