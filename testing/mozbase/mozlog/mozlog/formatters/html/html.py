@@ -141,10 +141,12 @@ class HTMLFormatter(base.BaseFormatter):
                     else:
                         href = content
                 else:
-                    # use base64 to avoid that some browser (such as Firefox, Opera)
-                    # treats '#' as the start of another link if the data URL contains.
-                    # use 'charset=utf-8' to show special characters like Chinese.
-                    href = 'data:text/plain;charset=utf-8;base64,%s' % base64.b64encode(str(content).encode('utf-8'))
+                    # Encode base64 to avoid that some browsers (such as Firefox, Opera)
+                    # treats '#' as the start of another link if it is contained in the data URL.
+                    # Use 'charset=utf-8' to show special characters like Chinese.
+                    utf_encoded = unicode(content).encode('utf-8', 'xmlcharrefreplace')
+                    href = 'data:text/html;charset=utf-8;base64,%s' % base64.b64encode(utf_encoded)
+
                 links_html.append(html.a(
                     name.title(),
                     class_=name,
