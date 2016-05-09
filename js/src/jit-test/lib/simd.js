@@ -33,22 +33,53 @@ function assertNear(a, b) {
 function GetType(v) {
     var pt = Object.getPrototypeOf(v);
     switch (pt) {
+        case SIMD.Int8x16.prototype: return SIMD.Int8x16;
+        case SIMD.Int16x8.prototype: return SIMD.Int16x8;
         case SIMD.Int32x4.prototype: return SIMD.Int32x4;
+        case SIMD.Uint8x16.prototype: return SIMD.Uint8x16;
+        case SIMD.Uint16x8.prototype: return SIMD.Uint16x8;
         case SIMD.Uint32x4.prototype: return SIMD.Uint32x4;
         case SIMD.Float32x4.prototype: return SIMD.Float32x4;
+        case SIMD.Bool8x16.prototype: return SIMD.Bool8x16;
+        case SIMD.Bool16x8.prototype: return SIMD.Bool16x8;
         case SIMD.Bool32x4.prototype: return SIMD.Bool32x4;
+    }
+    throw "unexpected SIMD type";
+}
+
+function GetLength(t) {
+    switch (t) {
+      case SIMD.Int8x16: return 16;
+      case SIMD.Int16x8: return 8;
+      case SIMD.Int32x4: return 4;
+      case SIMD.Uint8x16: return 16;
+      case SIMD.Uint16x8: return 8;
+      case SIMD.Uint32x4: return 4;
+      case SIMD.Float32x4: return 4;
+      case SIMD.Bool8x16: return 16;
+      case SIMD.Bool16x8: return 8;
+      case SIMD.Bool32x4: return 4;
     }
     throw "unexpected SIMD type";
 }
 
 function assertEqVec(v, w) {
     var typeV = GetType(v);
+    var lengthV = GetLength(typeV);
     var ext = typeV.extractLane;
     assertEq(GetType(w), typeV);
-    if (typeV === SIMD.Int32x4 || typeV === SIMD.Float32x4 || typeV === SIMD.Bool32x4) {
-        [0, 1, 2, 3].forEach((i) => assertEq(ext(v, i), ext(w, i)));
-        return;
-    }
+    for (var i = 0; i < lengthV; i++)
+        assertEq(ext(v, i), ext(w, i));
+}
+
+function assertEqVecArr(v, w) {
+    var typeV = GetType(v);
+    var lengthV = GetLength(typeV);
+    var ext = typeV.extractLane;
+    assertEq(w.length, lengthV);
+
+    for (var i = 0; i < lengthV; i++)
+        assertEq(ext(v, i), w[i]);
 }
 
 function assertEqX4(vec, arr, ...opts) {
@@ -62,79 +93,17 @@ function assertEqX4(vec, arr, ...opts) {
 
     var Type = GetType(vec);
 
-    if (Type === SIMD.Int32x4) {
-        assertFunc(SIMD.Int32x4.extractLane(vec, 0), arr[0]);
-        assertFunc(SIMD.Int32x4.extractLane(vec, 1), arr[1]);
-        assertFunc(SIMD.Int32x4.extractLane(vec, 2), arr[2]);
-        assertFunc(SIMD.Int32x4.extractLane(vec, 3), arr[3]);
-        return;
-    }
-
-    if (Type === SIMD.Uint32x4) {
-        assertFunc(SIMD.Uint32x4.extractLane(vec, 0), arr[0]);
-        assertFunc(SIMD.Uint32x4.extractLane(vec, 1), arr[1]);
-        assertFunc(SIMD.Uint32x4.extractLane(vec, 2), arr[2]);
-        assertFunc(SIMD.Uint32x4.extractLane(vec, 3), arr[3]);
-        return;
-    }
-
-    if (Type === SIMD.Float32x4) {
-        assertFunc(SIMD.Float32x4.extractLane(vec, 0), arr[0]);
-        assertFunc(SIMD.Float32x4.extractLane(vec, 1), arr[1]);
-        assertFunc(SIMD.Float32x4.extractLane(vec, 2), arr[2]);
-        assertFunc(SIMD.Float32x4.extractLane(vec, 3), arr[3]);
-        return;
-    }
-
-    if (Type === SIMD.Bool32x4) {
-        assertFunc(SIMD.Bool32x4.extractLane(vec, 0), arr[0]);
-        assertFunc(SIMD.Bool32x4.extractLane(vec, 1), arr[1]);
-        assertFunc(SIMD.Bool32x4.extractLane(vec, 2), arr[2]);
-        assertFunc(SIMD.Bool32x4.extractLane(vec, 3), arr[3]);
-        return;
-    }
-
-    throw "unexpected SIMD type";
+    assertFunc(Type.extractLane(vec, 0), arr[0]);
+    assertFunc(Type.extractLane(vec, 1), arr[1]);
+    assertFunc(Type.extractLane(vec, 2), arr[2]);
+    assertFunc(Type.extractLane(vec, 3), arr[3]);
 }
 
 function simdToArray(vec) {
     var Type = GetType(vec);
-
-    if (Type === SIMD.Int32x4) {
-        return [
-            SIMD.Int32x4.extractLane(vec, 0),
-            SIMD.Int32x4.extractLane(vec, 1),
-            SIMD.Int32x4.extractLane(vec, 2),
-            SIMD.Int32x4.extractLane(vec, 3),
-        ];
-    }
-
-    if (Type === SIMD.Uint32x4) {
-        return [
-            SIMD.Uint32x4.extractLane(vec, 0),
-            SIMD.Uint32x4.extractLane(vec, 1),
-            SIMD.Uint32x4.extractLane(vec, 2),
-            SIMD.Uint32x4.extractLane(vec, 3),
-        ];
-    }
-
-    if (Type === SIMD.Float32x4) {
-        return [
-            SIMD.Float32x4.extractLane(vec, 0),
-            SIMD.Float32x4.extractLane(vec, 1),
-            SIMD.Float32x4.extractLane(vec, 2),
-            SIMD.Float32x4.extractLane(vec, 3),
-        ];
-    }
-
-    if (Type === SIMD.Bool32x4) {
-        return [
-            SIMD.Bool32x4.extractLane(vec, 0),
-            SIMD.Bool32x4.extractLane(vec, 1),
-            SIMD.Bool32x4.extractLane(vec, 2),
-            SIMD.Bool32x4.extractLane(vec, 3),
-        ];
-    }
-
-    throw "unexpected SIMD type";
+    var Length = GetLength(Type);
+    var a = [];
+    for (var i = 0; i < Length; i++)
+        a.push(Type.extractLane(vec, i));
+    return a;
 }
