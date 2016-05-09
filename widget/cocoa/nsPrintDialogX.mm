@@ -103,7 +103,7 @@ nsPrintDialogServiceX::Show(nsPIDOMWindowOuter *aParent, nsIPrintSettings *aSett
   [NSPrintOperation setCurrentOperation:nil];
   [tmpView release];
 
-  if (button != NSOKButton)
+  if (button != NSFileHandlingPanelOKButton)
     return NS_ERROR_ABORT;
 
   // Export settings.
@@ -148,7 +148,7 @@ nsPrintDialogServiceX::ShowPageSetup(nsPIDOMWindowOuter *aParent,
   int button = [pageLayout runModalWithPrintInfo:printInfo];
   nsCocoaUtils::CleanUpAfterNativeAppModalDialog();
 
-  return button == NSOKButton ? NS_OK : NS_ERROR_ABORT;
+  return button == NSFileHandlingPanelOKButton ? NS_OK : NS_ERROR_ABORT;
 }
 
 // Accessory view
