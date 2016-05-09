@@ -66,15 +66,15 @@ void RunColorTests() {
     uint8_t g = NS_GET_G(rgb);
     uint8_t b = NS_GET_B(rgb);
     uint8_t a = NS_GET_A(rgb);
-    if (a != UINT8_MAX) {
-      // FIXME: NS_HexToRGBA() now handle a color with alpha channel!
-      rgb = NS_RGB(r, g, b);
-    }
     char cbuf[50];
-    snprintf_literal(cbuf, "%02x%02x%02x", r, g, b);
+    if (a != UINT8_MAX) {
+      snprintf_literal(cbuf, "%02x%02x%02x%02x", r, g, b, a);
+    } else {
+      snprintf_literal(cbuf, "%02x%02x%02x", r, g, b);
+    }
     nscolor hexrgb;
     ASSERT_TRUE(NS_HexToRGBA(NS_ConvertASCIItoUTF16(cbuf),
-                             nsHexColorType::NoAlpha, &hexrgb)) <<
+                             nsHexColorType::AllowAlpha, &hexrgb)) <<
       "hex conversion to color of '" << cbuf << "'";
     ASSERT_TRUE(hexrgb == rgb);
   }
