@@ -62,6 +62,10 @@ if CONFIG['ANDROID_APPCOMPAT_V7_AAR']:
     ANDROID_EXTRA_PACKAGES += ['android.support.v7.appcompat']
     ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_APPCOMPAT_V7_AAR_RES']]
     resjar.generated_sources += ['android/support/v7/appcompat/R.java']
+if CONFIG['ANDROID_CARDVIEW_V7_AAR']:
+    ANDROID_EXTRA_PACKAGES += ['android.support.v7.cardview']
+    ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_CARDVIEW_V7_AAR_RES']]
+    resjar.generated_sources += ['android/support/v7/cardview/R.java']
 if CONFIG['ANDROID_DESIGN_AAR']:
     ANDROID_EXTRA_PACKAGES += ['android.support.design']
     ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_DESIGN_AAR_RES']]
@@ -817,6 +821,7 @@ if CONFIG['MOZ_INSTALL_TRACKING']:
         resjar.generated_sources += ['com/google/android/gms/R.java']
 
 gbjar.extra_jars += [CONFIG['ANDROID_APPCOMPAT_V7_AAR_LIB']]
+gbjar.extra_jars += [CONFIG['ANDROID_CARDVIEW_V7_AAR_LIB']]
 gbjar.extra_jars += [CONFIG['ANDROID_DESIGN_AAR_LIB']]
 gbjar.extra_jars += [CONFIG['ANDROID_RECYCLERVIEW_V7_AAR_LIB']]
 
