@@ -3,10 +3,10 @@
 
 /* eslint-env browser */
 /* eslint-disable mozilla/no-cpows-in-tests */
-/* exported openAboutDebugging, closeAboutDebugging, installAddon,
-   uninstallAddon, waitForMutation, assertHasTarget, getServiceWorkerList,
-   getTabList, waitForInitialAddonList, waitForServiceWorkerRegistered,
-   unregisterServiceWorker */
+/* exported openAboutDebugging, changeAboutDebuggingHash, closeAboutDebugging,
+   installAddon, uninstallAddon, waitForMutation, assertHasTarget,
+   getServiceWorkerList, getTabList, openPanel, waitForInitialAddonList,
+   waitForServiceWorkerRegistered, unregisterServiceWorker */
 /* global sendAsyncMessage */
 
 "use strict";
@@ -41,6 +41,27 @@ function* openAboutDebugging(page) {
   }
 
   return { tab, document };
+}
+
+/**
+ * Change url hash for current about:debugging tab, return a promise after
+ * new content is loaded.
+ * @param  {DOMDocument}  document   container document from current tab
+ * @param  {String}       hash       hash for about:debugging
+ * @return {Promise}
+ */
+function changeAboutDebuggingHash(document, hash) {
+  info(`Opening about:debugging#${hash}`);
+  window.openUILinkIn(`about:debugging#${hash}`, "current");
+  return waitForMutation(
+    document.querySelector(".main-content"), {childList: true});
+}
+
+function openPanel(document, panelId) {
+  info(`Opening ${panelId} panel`);
+  document.querySelector(`[aria-controls="${panelId}"]`).click();
+  return waitForMutation(
+    document.querySelector(".main-content"), {childList: true});
 }
 
 function closeAboutDebugging(tab) {

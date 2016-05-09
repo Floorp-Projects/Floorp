@@ -14,7 +14,7 @@ module.exports = createClass({
     this.props.selectPanel(this.props.id);
   },
 
-  onKeyUp(event) {
+  onKeyDown(event) {
     if ([" ", "Enter"].includes(event.key)) {
       this.props.selectPanel(this.props.id);
     }
@@ -31,7 +31,7 @@ module.exports = createClass({
       "aria-controls": panelId,
       className,
       onClick: this.onClick,
-      onKeyUp: this.onKeyUp,
+      onKeyDown: this.onKeyDown,
       tabIndex: "0",
       role: "tab" },
     dom.img({ className: "category-icon", src: icon, role: "presentation" }),
