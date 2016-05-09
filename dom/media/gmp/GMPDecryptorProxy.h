@@ -48,8 +48,6 @@ public:
                                 const nsTArray<uint8_t>& aKeyId,
                                 GMPMediaKeyStatus aStatus) = 0;
 
-  virtual void SetCaps(uint64_t aCaps) = 0;
-
   virtual void Decrypted(uint32_t aId,
                          GMPErr aResult,
                          const nsTArray<uint8_t>& aDecryptedData) = 0;
