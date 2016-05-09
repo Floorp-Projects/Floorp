@@ -289,10 +289,10 @@ CodeGeneratorX86Shared::visitAsmJSPassStackArg(LAsmJSPassStackArg* ins)
               // stack offsets are SIMD-aligned.
               case MIRType::Int32x4:
               case MIRType::Bool32x4:
-                masm.storeAlignedInt32x4(ToFloatRegister(ins->arg()), dst);
+                masm.storeAlignedSimd128Int(ToFloatRegister(ins->arg()), dst);
                 return;
               case MIRType::Float32x4:
-                masm.storeAlignedFloat32x4(ToFloatRegister(ins->arg()), dst);
+                masm.storeAlignedSimd128Float(ToFloatRegister(ins->arg()), dst);
                 return;
               default: break;
             }
@@ -2602,7 +2602,7 @@ CodeGeneratorX86Shared::visitSimdValueInt32x4(LSimdValueInt32x4* ins)
         Register r = ToRegister(ins->getOperand(i));
         masm.store32(r, Address(StackPointer, i * sizeof(int32_t)));
     }
-    masm.loadAlignedInt32x4(Address(StackPointer, 0), output);
+    masm.loadAlignedSimd128Int(Address(StackPointer, 0), output);
     masm.freeStack(Simd128DataSize);
 }
 
@@ -2768,9 +2768,9 @@ CodeGeneratorX86Shared::visitSimdInsertElementI(LSimdInsertElementI* ins)
     }
 
     masm.reserveStack(Simd128DataSize);
-    masm.storeAlignedInt32x4(vector, Address(StackPointer, 0));
+    masm.storeAlignedSimd128Int(vector, Address(StackPointer, 0));
     masm.store32(value, Address(StackPointer, component * sizeof(int32_t)));
-    masm.loadAlignedInt32x4(Address(StackPointer, 0), output);
+    masm.loadAlignedSimd128Int(Address(StackPointer, 0), output);
     masm.freeStack(Simd128DataSize);
 }
 
@@ -2798,9 +2798,9 @@ CodeGeneratorX86Shared::visitSimdInsertElementF(LSimdInsertElementF* ins)
 
     unsigned component = unsigned(ins->lane());
     masm.reserveStack(Simd128DataSize);
-    masm.storeAlignedFloat32x4(vector, Address(StackPointer, 0));
+    masm.storeAlignedSimd128Float(vector, Address(StackPointer, 0));
     masm.storeFloat32(value, Address(StackPointer, component * sizeof(int32_t)));
-    masm.loadAlignedFloat32x4(Address(StackPointer, 0), output);
+    masm.loadAlignedSimd128Float(Address(StackPointer, 0), output);
     masm.freeStack(Simd128DataSize);
 }
 
@@ -3083,7 +3083,7 @@ CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle* ins)
             masm.vshufps(secondMask, lhs, rhsCopy, out);
         } else {
             masm.vshufps(secondMask, lhs, rhsCopy, rhsCopy);
-            masm.moveFloat32x4(rhsCopy, out);
+            masm.moveSimd128Float(rhsCopy, out);
         }
         return;
     }
@@ -3099,9 +3099,9 @@ CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle* ins)
             FloatRegister rhsCopy = masm.reusedInputAlignedFloat32x4(rhs, scratch);
             masm.vmovhlps(lhs, rhsCopy, out);
         } else {
-            masm.loadAlignedFloat32x4(rhs, scratch);
+            masm.loadAlignedSimd128Float(rhs, scratch);
             masm.vmovhlps(lhs, scratch, scratch);
-            masm.moveFloat32x4(scratch, out);
+            masm.moveSimd128Float(scratch, out);
         }
         return;
     }
@@ -3114,7 +3114,7 @@ CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle* ins)
             // in a register, and it won't be clobbered by the vmovlhps.
             rhsCopy = FloatRegister::FromCode(rhs.fpu());
         } else {
-            masm.loadAlignedFloat32x4(rhs, scratch);
+            masm.loadAlignedSimd128Float(rhs, scratch);
             rhsCopy = scratch;
         }
         masm.vmovlhps(rhsCopy, lhs, out);
@@ -3133,9 +3133,9 @@ CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle* ins)
             FloatRegister rhsCopy = masm.reusedInputAlignedFloat32x4(rhs, scratch);
             masm.vunpcklps(lhs, rhsCopy, out);
         } else {
-            masm.loadAlignedFloat32x4(rhs, scratch);
+            masm.loadAlignedSimd128Float(rhs, scratch);
             masm.vunpcklps(lhs, scratch, scratch);
-            masm.moveFloat32x4(scratch, out);
+            masm.moveSimd128Float(scratch, out);
         }
         return;
     }
@@ -3152,9 +3152,9 @@ CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle* ins)
             FloatRegister rhsCopy = masm.reusedInputAlignedFloat32x4(rhs, scratch);
             masm.vunpckhps(lhs, rhsCopy, out);
         } else {
-            masm.loadAlignedFloat32x4(rhs, scratch);
+            masm.loadAlignedSimd128Float(rhs, scratch);
             masm.vunpckhps(lhs, scratch, scratch);
-            masm.moveFloat32x4(scratch, out);
+            masm.moveSimd128Float(scratch, out);
         }
         return;
     }
@@ -3221,14 +3221,14 @@ CodeGeneratorX86Shared::visitSimdBinaryCompIx4(LSimdBinaryCompIx4* ins)
       case MSimdBinaryComp::lessThan:
         // src := rhs
         if (rhs.kind() == Operand::FPREG)
-            masm.moveInt32x4(ToFloatRegister(ins->rhs()), scratch);
+            masm.moveSimd128Int(ToFloatRegister(ins->rhs()), scratch);
         else
-            masm.loadAlignedInt32x4(rhs, scratch);
+            masm.loadAlignedSimd128Int(rhs, scratch);
 
         // src := src > lhs (i.e. lhs < rhs)
         // Improve by doing custom lowering (rhs is tied to the output register)
         masm.packedGreaterThanInt32x4(ToOperand(ins->lhs()), scratch);
-        masm.moveInt32x4(scratch, lhs);
+        masm.moveSimd128Int(scratch, lhs);
         return;
       case MSimdBinaryComp::notEqual:
         // Ideally for notEqual, greaterThanOrEqual, and lessThanOrEqual, we
@@ -3241,9 +3241,9 @@ CodeGeneratorX86Shared::visitSimdBinaryCompIx4(LSimdBinaryCompIx4* ins)
       case MSimdBinaryComp::greaterThanOrEqual:
         // src := rhs
         if (rhs.kind() == Operand::FPREG)
-            masm.moveInt32x4(ToFloatRegister(ins->rhs()), scratch);
+            masm.moveSimd128Int(ToFloatRegister(ins->rhs()), scratch);
         else
-            masm.loadAlignedInt32x4(rhs, scratch);
+            masm.loadAlignedSimd128Int(rhs, scratch);
         masm.packedGreaterThanInt32x4(ToOperand(ins->lhs()), scratch);
         masm.loadConstantSimd128Int(allOnes, lhs);
         masm.bitwiseXorX4(Operand(scratch), lhs);
@@ -3311,7 +3311,7 @@ CodeGeneratorX86Shared::visitSimdBinaryArithIx4(LSimdBinaryArithIx4* ins)
             return;
         }
 
-        masm.loadAlignedInt32x4(rhs, scratch);
+        masm.loadAlignedSimd128Int(rhs, scratch);
         masm.vpmuludq(lhs, scratch, scratch);
         // scratch contains (Rx, _, Rz, _) where R is the resulting vector.
 
@@ -3410,7 +3410,7 @@ CodeGeneratorX86Shared::visitSimdBinaryArithFx4(LSimdBinaryArithFx4* ins)
             // With SSE.4.1 we could use blendvps, however it's awkward since
             // it requires the mask to be in xmm0.
             if (lhs != output)
-                masm.moveFloat32x4(lhs, output);
+                masm.moveSimd128Float(lhs, output);
             masm.vandps(Operand(mask), output, output);
             masm.vandnps(Operand(tmp), mask, mask);
             masm.vorps(Operand(mask), output, output);
@@ -3444,7 +3444,7 @@ CodeGeneratorX86Shared::visitSimdBinaryArithFx4(LSimdBinaryArithFx4* ins)
             // With SSE.4.1 we could use blendvps, however it's awkward since
             // it requires the mask to be in xmm0.
             if (lhs != output)
-                masm.moveFloat32x4(lhs, output);
+                masm.moveSimd128Float(lhs, output);
             masm.vandps(Operand(mask), output, output);
             masm.vandnps(Operand(tmp), mask, mask);
             masm.vorps(Operand(mask), output, output);

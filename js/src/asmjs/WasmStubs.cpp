@@ -187,10 +187,10 @@ wasm::GenerateEntry(MacroAssembler& masm, unsigned target, const Sig& sig, bool 
             switch (type) {
               case MIRType::Int32x4:
               case MIRType::Bool32x4:
-                masm.loadUnalignedInt32x4(src, iter->fpu());
+                masm.loadUnalignedSimd128Int(src, iter->fpu());
                 break;
               case MIRType::Float32x4:
-                masm.loadUnalignedFloat32x4(src, iter->fpu());
+                masm.loadUnalignedSimd128Float(src, iter->fpu());
                 break;
               case MIRType::Double:
                 masm.loadDouble(src, iter->fpu());
@@ -216,22 +216,24 @@ wasm::GenerateEntry(MacroAssembler& masm, unsigned target, const Sig& sig, bool 
                 break;
               case MIRType::Double:
                 masm.loadDouble(src, ScratchDoubleReg);
-                masm.storeDouble(ScratchDoubleReg, Address(masm.getStackPointer(), iter->offsetFromArgBase()));
+                masm.storeDouble(ScratchDoubleReg,
+                                 Address(masm.getStackPointer(), iter->offsetFromArgBase()));
                 break;
               case MIRType::Float32:
                 masm.loadFloat32(src, ScratchFloat32Reg);
-                masm.storeFloat32(ScratchFloat32Reg, Address(masm.getStackPointer(), iter->offsetFromArgBase()));
+                masm.storeFloat32(ScratchFloat32Reg,
+                                  Address(masm.getStackPointer(), iter->offsetFromArgBase()));
                 break;
               case MIRType::Int32x4:
               case MIRType::Bool32x4:
-                masm.loadUnalignedInt32x4(src, ScratchSimd128Reg);
-                masm.storeAlignedInt32x4(ScratchSimd128Reg,
-                                         Address(masm.getStackPointer(), iter->offsetFromArgBase()));
+                masm.loadUnalignedSimd128Int(src, ScratchSimd128Reg);
+                masm.storeAlignedSimd128Int(
+                  ScratchSimd128Reg, Address(masm.getStackPointer(), iter->offsetFromArgBase()));
                 break;
               case MIRType::Float32x4:
-                masm.loadUnalignedFloat32x4(src, ScratchSimd128Reg);
-                masm.storeAlignedFloat32x4(ScratchSimd128Reg,
-                                           Address(masm.getStackPointer(), iter->offsetFromArgBase()));
+                masm.loadUnalignedSimd128Float(src, ScratchSimd128Reg);
+                masm.storeAlignedSimd128Float(
+                  ScratchSimd128Reg, Address(masm.getStackPointer(), iter->offsetFromArgBase()));
                 break;
               default:
                 MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unexpected stack arg type");
@@ -273,11 +275,11 @@ wasm::GenerateEntry(MacroAssembler& masm, unsigned target, const Sig& sig, bool 
       case ExprType::I32x4:
       case ExprType::B32x4:
         // We don't have control on argv alignment, do an unaligned access.
-        masm.storeUnalignedInt32x4(ReturnSimd128Reg, Address(argv, 0));
+        masm.storeUnalignedSimd128Int(ReturnSimd128Reg, Address(argv, 0));
         break;
       case ExprType::F32x4:
         // We don't have control on argv alignment, do an unaligned access.
-        masm.storeUnalignedFloat32x4(ReturnSimd128Reg, Address(argv, 0));
+        masm.storeUnalignedSimd128Float(ReturnSimd128Reg, Address(argv, 0));
         break;
       case ExprType::Limit:
         MOZ_CRASH("Limit");

@@ -260,10 +260,10 @@ class MacroAssemblerNone : public Assembler
     template <typename T> void load32(T, Register) { MOZ_CRASH(); }
     template <typename T> void loadFloat32(T, FloatRegister) { MOZ_CRASH(); }
     template <typename T> void loadDouble(T, FloatRegister) { MOZ_CRASH(); }
-    template <typename T> void loadAlignedInt32x4(T, FloatRegister) { MOZ_CRASH(); }
-    template <typename T> void loadUnalignedInt32x4(T, FloatRegister) { MOZ_CRASH(); }
-    template <typename T> void loadAlignedFloat32x4(T, FloatRegister) { MOZ_CRASH(); }
-    template <typename T> void loadUnalignedFloat32x4(T, FloatRegister) { MOZ_CRASH(); }
+    template <typename T> void loadAlignedSimd128Int(T, FloatRegister) { MOZ_CRASH(); }
+    template <typename T> void loadUnalignedSimd128Int(T, FloatRegister) { MOZ_CRASH(); }
+    template <typename T> void loadAlignedSimd128Float(T, FloatRegister) { MOZ_CRASH(); }
+    template <typename T> void loadUnalignedSimd128Float(T, FloatRegister) { MOZ_CRASH(); }
     template <typename T> void loadPrivate(T, Register) { MOZ_CRASH(); }
     template <typename T> void load8SignExtend(T, Register) { MOZ_CRASH(); }
     template <typename T> void load8ZeroExtend(T, Register) { MOZ_CRASH(); }
@@ -276,10 +276,10 @@ class MacroAssemblerNone : public Assembler
     template <typename T, typename S> void store32_NoSecondScratch(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void storeFloat32(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void storeDouble(T, S) { MOZ_CRASH(); }
-    template <typename T, typename S> void storeAlignedInt32x4(T, S) { MOZ_CRASH(); }
-    template <typename T, typename S> void storeUnalignedInt32x4(T, S) { MOZ_CRASH(); }
-    template <typename T, typename S> void storeAlignedFloat32x4(T, S) { MOZ_CRASH(); }
-    template <typename T, typename S> void storeUnalignedFloat32x4(T, S) { MOZ_CRASH(); }
+    template <typename T, typename S> void storeAlignedSimd128Int(T, S) { MOZ_CRASH(); }
+    template <typename T, typename S> void storeUnalignedSimd128Int(T, S) { MOZ_CRASH(); }
+    template <typename T, typename S> void storeAlignedSimd128Float(T, S) { MOZ_CRASH(); }
+    template <typename T, typename S> void storeUnalignedSimd128Float(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void store8(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void store16(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void storeInt32x1(T, S) { MOZ_CRASH(); }
