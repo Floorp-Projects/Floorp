@@ -135,3 +135,11 @@ button {
   display: inline-block;
   margin: 0 5px 5px 0;
 }
+
+.page-not-found {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
