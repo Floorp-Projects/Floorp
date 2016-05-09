@@ -23,24 +23,11 @@ namespace mozilla {
 namespace gfx {
 
 static const size_t NUM_CRASH_GUARD_TYPES = size_t(CrashGuardType::NUM_TYPES);
-static const char* sCrashGuardNames[] = {
+static const char* sCrashGuardNames[NUM_CRASH_GUARD_TYPES] = {
   "d3d11layers",
   "d3d9video",
   "glcontext",
-  "d3d11video",
 };
-static_assert(MOZ_ARRAY_LENGTH(sCrashGuardNames) == NUM_CRASH_GUARD_TYPES,
-              "CrashGuardType updated without a name string");
-
-static inline void
-BuildCrashGuardPrefName(CrashGuardType aType, nsCString& aOutPrefName)
-{
-  MOZ_ASSERT(mType < CrashGuardType::NUM_TYPES);
-  MOZ_ASSERT(sCrashGuardNames[size_t(mType)]);
-
-  aOutPrefName.Assign("gfx.crash-guard.status.");
-  aOutPrefName.Append(sCrashGuardNames[size_t(aType)]);
-}
 
 DriverCrashGuard::DriverCrashGuard(CrashGuardType aType, dom::ContentParent* aContentParent)
  : mType(aType)
@@ -49,7 +36,10 @@ DriverCrashGuard::DriverCrashGuard(CrashGuardType aType, dom::ContentParent* aCo
  , mGuardActivated(false)
  , mCrashDetected(false)
 {
-  BuildCrashGuardPrefName(aType, mStatusPref);
+  MOZ_ASSERT(mType < CrashGuardType::NUM_TYPES);
+
+  mStatusPref.Assign("gfx.crash-guard.status.");
+  mStatusPref.Append(sCrashGuardNames[size_t(mType)]);
 }
 
 void
@@ -63,35 +53,26 @@ DriverCrashGuard::InitializeIfNeeded()
   Initialize();
 }
 
-static inline bool
-AreCrashGuardsEnabled()
+void
+DriverCrashGuard::Initialize()
 {
 #ifdef NIGHTLY_BUILD
   // We only use the crash guard on non-nightly channels, since the nightly
   // channel is for development and having graphics features perma-disabled
   // is rather annoying.
-  return false;
-#else
-  // Check to see if all guards have been disabled through the environment.
-  if (gfxEnv::DisableCrashGuard()) {
-    return false;
-  }
-  return true;
+  return;
 #endif
-}
-
-void
-DriverCrashGuard::Initialize()
-{
-  if (!AreCrashGuardsEnabled()) {
-    return;
-  }
 
   // Using DriverCrashGuard off the main thread currently does not work. Under
   // e10s it could conceivably work by dispatching the IPC calls via the main
   // thread. In the parent process this would be harder. For now, we simply
   // exit early instead.
   if (!NS_IsMainThread()) {
+    return;
+  }
+
+  // Check to see if all guards have been disabled through the environment.
+  if (gfxEnv::DisableCrashGuard()) {
     return;
   }
 
@@ -382,31 +363,6 @@ DriverCrashGuard::FlushPreferences()
 
   if (nsIPrefService* prefService = Preferences::GetService()) {
     prefService->SavePrefFile(nullptr);
-  }
-}
-
-void
-DriverCrashGuard::ForEachActiveCrashGuard(const CrashGuardCallback& aCallback)
-{
-  if (!AreCrashGuardsEnabled()) {
-    // Even if guards look active (via prefs), they can be ignored if globally
-    // disabled.
-    return;
-  }
-
-  for (size_t i = 0; i < NUM_CRASH_GUARD_TYPES; i++) {
-    CrashGuardType type = static_cast<CrashGuardType>(i);
-
-    nsCString prefName;
-    BuildCrashGuardPrefName(type, prefName);
-
-    auto status =
-      static_cast<DriverInitStatus>(Preferences::GetInt(prefName.get(), 0));
-    if (status != DriverInitStatus::Crashed) {
-      continue;
-    }
-
-    aCallback(sCrashGuardNames[i], prefName.get());
   }
 }
 

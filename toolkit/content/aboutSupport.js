@@ -479,30 +479,6 @@ var snapshotFormatters = {
       $("graphics-workarounds-tbody").style.display = "none";
     }
 
-    let crashGuards = data.crashGuards;
-    delete data.crashGuards;
-
-    if (crashGuards.length) {
-      for (let guard of crashGuards) {
-        let resetButton = $.new("button");
-        let onClickReset = (function (guard) {
-          // Note - need this wrapper until bug 449811 fixes |guard| scoping.
-          return function () {
-            Services.prefs.setIntPref(guard.prefName, 0);
-            resetButton.removeEventListener("click", onClickReset);
-            resetButton.disabled = true;
-          };
-        })(guard);
-
-        resetButton.textContent = strings.GetStringFromName("resetOnNextRestart");
-        resetButton.addEventListener("click", onClickReset);
-
-        addRow("crashguards", guard.type + "CrashGuard", [resetButton]);
-      }
-    } else {
-      $("graphics-crashguards-tbody").style.display = "none";
-    }
-
     // Now that we're done, grab any remaining keys in data and drop them into
     // the diagnostics section.
     for (let key in data) {
