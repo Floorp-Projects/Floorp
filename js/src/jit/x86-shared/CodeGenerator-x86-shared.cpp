@@ -2631,7 +2631,7 @@ CodeGeneratorX86Shared::visitSimdSplatX4(LSimdSplatX4* ins)
 {
     FloatRegister output = ToFloatRegister(ins->output());
 
-    MSimdSplatX4* mir = ins->mir();
+    MSimdSplat* mir = ins->mir();
     MOZ_ASSERT(IsSimdType(mir->type()));
     JS_STATIC_ASSERT(sizeof(float) == sizeof(int32_t));
 

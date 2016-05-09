@@ -58,7 +58,7 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
     void lowerTruncateFToInt32(MTruncateToInt32* ins);
     void visitSimdBinaryArith(MSimdBinaryArith* ins);
     void visitSimdSelect(MSimdSelect* ins);
-    void visitSimdSplatX4(MSimdSplatX4* ins);
+    void visitSimdSplat(MSimdSplat* ins);
     void visitSimdValueX4(MSimdValueX4* ins);
     void lowerCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement* ins,
                                                bool useI386ByteRegisters);

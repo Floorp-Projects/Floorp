@@ -3614,7 +3614,7 @@ IonBuilder::inlineSimdSplat(CallInfo& callInfo, JSNative native, SimdType type)
     if (SimdTypeToLaneType(mirType) == MIRType::Boolean)
         arg = convertToBooleanSimdLane(arg);
 
-    MSimdSplatX4* ins = MSimdSplatX4::New(alloc(), arg, mirType);
+    MSimdSplat* ins = MSimdSplat::New(alloc(), arg, mirType);
     return boxSimd(callInfo, ins, templateObj);
 }
 
