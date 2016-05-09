@@ -604,42 +604,6 @@ nsDefaultURIFixup::MakeAlternateURI(nsIURI* aURI)
   return true;
 }
 
-/**
- * Check if the host name starts with ftp\d*\. and it's not directly followed
- * by the tld.
- */
-bool
-nsDefaultURIFixup::IsLikelyFTP(const nsCString& aHostSpec)
-{
-  bool likelyFTP = false;
-  if (aHostSpec.EqualsIgnoreCase("ftp", 3)) {
-    nsACString::const_iterator iter;
-    nsACString::const_iterator end;
-    aHostSpec.BeginReading(iter);
-    aHostSpec.EndReading(end);
-    iter.advance(3); // move past the "ftp" part
-
-    while (iter != end) {
-      if (*iter == '.') {
-        // now make sure the name has at least one more dot in it
-        ++iter;
-        while (iter != end) {
-          if (*iter == '.') {
-            likelyFTP = true;
-            break;
-          }
-          ++iter;
-        }
-        break;
-      } else if (!nsCRT::IsAsciiDigit(*iter)) {
-        break;
-      }
-      ++iter;
-    }
-  }
-  return likelyFTP;
-}
-
 nsresult
 nsDefaultURIFixup::FileURIFixup(const nsACString& aStringURI, nsIURI** aURI)
 {
@@ -764,11 +728,7 @@ nsDefaultURIFixup::FixupURIProtocol(const nsACString& aURIString,
     uriString.Left(hostSpec, hostPos);
 
     // insert url spec corresponding to host name
-    if (IsLikelyFTP(hostSpec)) {
-      uriString.InsertLiteral("ftp://", 0);
-    } else {
-      uriString.InsertLiteral("http://", 0);
-    }
+    uriString.InsertLiteral("http://", 0);
     aFixupInfo->mFixupChangedProtocol = true;
   } // end if checkprotocol
 

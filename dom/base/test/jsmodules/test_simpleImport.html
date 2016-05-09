@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test a simple module import</title>
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+  var result;
+
+  SimpleTest.waitForExplicitFinish();
+
+  function testLoaded() {
+    ok(result == 42, 'Check imported value');
+    SimpleTest.finish();
+  }
+</script>
+<script type="module" src="module_simpleImport.js"></script>
+<body onload='testLoaded()'></body>

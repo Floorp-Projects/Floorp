@@ -75,47 +75,61 @@ static int ComponentValue(const char16_t* aColorSpec, int aLen, int color, int d
   return component;
 }
 
-bool NS_HexToRGB(const nsAString& aColorSpec, nscolor* aResult)
+bool
+NS_HexToRGBA(const nsAString& aColorSpec, nsHexColorType aType,
+             nscolor* aResult)
 {
   const char16_t* buffer = aColorSpec.BeginReading();
 
   int nameLen = aColorSpec.Length();
-  if ((nameLen == 3) || (nameLen == 6)) {
-    // Make sure the digits are legal
-    for (int i = 0; i < nameLen; i++) {
-      char16_t ch = buffer[i];
-      if (((ch >= '0') && (ch <= '9')) ||
-          ((ch >= 'a') && (ch <= 'f')) ||
-          ((ch >= 'A') && (ch <= 'F'))) {
-        // Legal character
-        continue;
-      }
-      // Whoops. Illegal character.
+  bool hasAlpha = false;
+  if (nameLen != 3 && nameLen != 6) {
+    if ((nameLen != 4 && nameLen != 8) || aType == nsHexColorType::NoAlpha) {
+      // Improperly formatted color value
       return false;
     }
-
-    // Convert the ascii to binary
-    int dpc = ((3 == nameLen) ? 1 : 2);
-    // Translate components from hex to binary
-    int r = ComponentValue(buffer, nameLen, 0, dpc);
-    int g = ComponentValue(buffer, nameLen, 1, dpc);
-    int b = ComponentValue(buffer, nameLen, 2, dpc);
-    if (dpc == 1) {
-      // Scale single digit component to an 8 bit value. Replicate the
-      // single digit to compute the new value.
-      r = (r << 4) | r;
-      g = (g << 4) | g;
-      b = (b << 4) | b;
-    }
-    NS_ASSERTION((r >= 0) && (r <= 255), "bad r");
-    NS_ASSERTION((g >= 0) && (g <= 255), "bad g");
-    NS_ASSERTION((b >= 0) && (b <= 255), "bad b");
-    *aResult = NS_RGB(r, g, b);
-    return true;
+    hasAlpha = true;
   }
 
-  // Improperly formatted color value
-  return false;
+  // Make sure the digits are legal
+  for (int i = 0; i < nameLen; i++) {
+    char16_t ch = buffer[i];
+    if (((ch >= '0') && (ch <= '9')) ||
+        ((ch >= 'a') && (ch <= 'f')) ||
+        ((ch >= 'A') && (ch <= 'F'))) {
+      // Legal character
+      continue;
+    }
+    // Whoops. Illegal character.
+    return false;
+  }
+
+  // Convert the ascii to binary
+  int dpc = ((nameLen <= 4) ? 1 : 2);
+  // Translate components from hex to binary
+  int r = ComponentValue(buffer, nameLen, 0, dpc);
+  int g = ComponentValue(buffer, nameLen, 1, dpc);
+  int b = ComponentValue(buffer, nameLen, 2, dpc);
+  int a;
+  if (hasAlpha) {
+    a = ComponentValue(buffer, nameLen, 3, dpc);
+  } else {
+    a = (dpc == 1) ? 0xf : 0xff;
+  }
+  if (dpc == 1) {
+    // Scale single digit component to an 8 bit value. Replicate the
+    // single digit to compute the new value.
+    r = (r << 4) | r;
+    g = (g << 4) | g;
+    b = (b << 4) | b;
+    a = (a << 4) | a;
+  }
+  NS_ASSERTION((r >= 0) && (r <= 255), "bad r");
+  NS_ASSERTION((g >= 0) && (g <= 255), "bad g");
+  NS_ASSERTION((b >= 0) && (b <= 255), "bad b");
+  NS_ASSERTION((a >= 0) && (a <= 255), "bad a");
+  *aResult = NS_RGBA(r, g, b, a);
+  return true;
 }
 
 // This implements part of the algorithm for legacy behavior described in

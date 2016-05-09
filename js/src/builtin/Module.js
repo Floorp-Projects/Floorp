@@ -241,6 +241,7 @@ function ModuleDeclarationInstantiation()
     // Step 16.iv
     InstantiateModuleFunctionDeclarations(module);
 }
+_SetCanonicalName(ModuleDeclarationInstantiation, "ModuleDeclarationInstantiation");
 
 // 15.2.1.16.5 ModuleEvaluation()
 function ModuleEvaluation()
@@ -268,6 +269,7 @@ function ModuleEvaluation()
 
     return EvaluateModule(module);
 }
+_SetCanonicalName(ModuleEvaluation, "ModuleEvaluation");
 
 function ModuleNamespaceEnumerate()
 {

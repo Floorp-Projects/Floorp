@@ -1758,6 +1758,7 @@ WebSocketChannel::ProcessInput(uint8_t *buffer, uint32_t count)
           // We send the frame immediately becuase we want to have it dispatched
           // before the CallOnServerClose.
           mService->FrameReceived(mSerial, mInnerWindowID, frame.forget());
+          frame = nullptr;
         }
 
         if (mListenerMT) {

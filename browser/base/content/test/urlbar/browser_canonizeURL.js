@@ -11,7 +11,7 @@ var pairs = [
   ["example.foo/bar ", "http://example.foo/bar"],
   ["1.1.1.1", "http://1.1.1.1/"],
   ["ftp://example", "ftp://example/"],
-  ["ftp.example.bar", "ftp://ftp.example.bar/"],
+  ["ftp.example.bar", "http://ftp.example.bar/"],
   ["ex ample", Services.search.defaultEngine.getSubmission("ex ample", null, "keyword").uri.spec],
 ];
 

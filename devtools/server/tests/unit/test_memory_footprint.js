@@ -34,19 +34,19 @@ function init_server() {
 
 function add_browser_actors() {
   DebuggerServer.addBrowserActors();
-  check_footprint("DebuggerServer.addBrowserActors()", 2000);
+  check_footprint("DebuggerServer.addBrowserActors()", 2600);
 }
 
 function connect_client() {
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function onConnect() {
-    check_footprint("DebuggerClient.connect()", 2600);
+    check_footprint("DebuggerClient.connect()", 3200);
   });
 }
 
 function list_tabs() {
   gClient.listTabs(function onListTabs(aResponse) {
-    check_footprint("DebuggerClient.listTabs()", 3200);
+    check_footprint("DebuggerClient.listTabs()", 3800);
   });
 }
 

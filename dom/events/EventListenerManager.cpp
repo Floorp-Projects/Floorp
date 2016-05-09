@@ -1280,7 +1280,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
             }
 
             if (NS_FAILED(HandleEventSubType(listener, *aDOMEvent, aCurrentTarget))) {
-              aEvent->mFlags.mExceptionHasBeenRisen = true;
+              aEvent->mFlags.mExceptionWasRaised = true;
             }
 
             if (needsEndEventMarker) {

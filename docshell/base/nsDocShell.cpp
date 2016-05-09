@@ -14079,6 +14079,7 @@ nsDocShell::GetOriginAttributes(JSContext* aCx,
 void
 nsDocShell::SetOriginAttributes(const DocShellOriginAttributes& aAttrs)
 {
+  MOZ_ASSERT(mChildList.Length() == 0);
   mOriginAttributes = aAttrs;
 }
 

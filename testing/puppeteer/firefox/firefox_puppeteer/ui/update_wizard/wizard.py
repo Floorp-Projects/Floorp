@@ -32,15 +32,16 @@ class Wizard(UIBaseLib):
                    'errorextra': ErrorExtraPanel,
                    'finished': FinishedPanel,
                    'finishedBackground': FinishedBackgroundPanel,
-                   'incompatibleCheck': IncompatibleCheckPanel,
-                   'incompatibleList': IncompatibleListPanel,
                    'installed': InstalledPanel,
-                   'license': LicensePanel,
                    'manualUpdate': ManualUpdatePanel,
                    'noupdatesfound': NoUpdatesFoundPanel,
                    'pluginupdatesfound': PluginUpdatesFoundPanel,
                    'updatesfoundbasic': UpdatesFoundBasicPanel,
                    'updatesfoundbillboard': UpdatesFoundBillboardPanel,
+
+                   # TODO: Remove once we no longer support version Firefox 45.0ESR
+                   'incompatibleCheck': IncompatibleCheckPanel,
+                   'incompatibleList': IncompatibleListPanel,
                    }
 
         panel = self.element.find_element(By.ID, panel_id)
@@ -165,14 +166,6 @@ class Wizard(UIBaseLib):
         :returns: :class:`InstalledPanel` instance.
         """
         return self._create_panel_for_id('installed')
-
-    @property
-    def license(self):
-        """The license panel.
-
-        :returns: :class:`LicensePanel` instance.
-        """
-        return self._create_panel_for_id('license')
 
     @property
     def manual_update(self):
@@ -314,10 +307,6 @@ class IncompatibleListPanel(Panel):
 
 
 class InstalledPanel(Panel):
-    pass
-
-
-class LicensePanel(Panel):
     pass
 
 
