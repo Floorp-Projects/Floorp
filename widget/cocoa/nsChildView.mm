@@ -2577,7 +2577,7 @@ nsChildView::SendMayStartSwipe(const mozilla::PanGestureInput& aSwipeStartEvent)
   WidgetSimpleGestureEvent geckoEvent =
     SwipeTracker::CreateSwipeGestureEvent(eSwipeGestureMayStart, this,
                                           position);
-  geckoEvent.direction = direction;
+  geckoEvent.mDirection = direction;
   geckoEvent.delta = 0.0;
   geckoEvent.mAllowedDirections = 0;
   bool shouldStartSwipe = DispatchWindowEvent(geckoEvent); // event cancelled == swipe should start
@@ -4188,15 +4188,15 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   // Record the left/right direction.
   if (deltaX > 0.0)
-    geckoEvent.direction |= nsIDOMSimpleGestureEvent::DIRECTION_LEFT;
+    geckoEvent.mDirection |= nsIDOMSimpleGestureEvent::DIRECTION_LEFT;
   else if (deltaX < 0.0)
-    geckoEvent.direction |= nsIDOMSimpleGestureEvent::DIRECTION_RIGHT;
+    geckoEvent.mDirection |= nsIDOMSimpleGestureEvent::DIRECTION_RIGHT;
 
   // Record the up/down direction.
   if (deltaY > 0.0)
-    geckoEvent.direction |= nsIDOMSimpleGestureEvent::DIRECTION_UP;
+    geckoEvent.mDirection |= nsIDOMSimpleGestureEvent::DIRECTION_UP;
   else if (deltaY < 0.0)
-    geckoEvent.direction |= nsIDOMSimpleGestureEvent::DIRECTION_DOWN;
+    geckoEvent.mDirection |= nsIDOMSimpleGestureEvent::DIRECTION_DOWN;
 
   // Send the event.
   mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -4322,9 +4322,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
   [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
   geckoEvent.delta = -rotation;
   if (rotation > 0.0) {
-    geckoEvent.direction = nsIDOMSimpleGestureEvent::ROTATION_COUNTERCLOCKWISE;
+    geckoEvent.mDirection = nsIDOMSimpleGestureEvent::ROTATION_COUNTERCLOCKWISE;
   } else {
-    geckoEvent.direction = nsIDOMSimpleGestureEvent::ROTATION_CLOCKWISE;
+    geckoEvent.mDirection = nsIDOMSimpleGestureEvent::ROTATION_CLOCKWISE;
   }
 
   // Send the event.
@@ -4370,9 +4370,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
       [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
       geckoEvent.delta = -mCumulativeRotation;
       if (mCumulativeRotation > 0.0) {
-        geckoEvent.direction = nsIDOMSimpleGestureEvent::ROTATION_COUNTERCLOCKWISE;
+        geckoEvent.mDirection = nsIDOMSimpleGestureEvent::ROTATION_COUNTERCLOCKWISE;
       } else {
-        geckoEvent.direction = nsIDOMSimpleGestureEvent::ROTATION_CLOCKWISE;
+        geckoEvent.mDirection = nsIDOMSimpleGestureEvent::ROTATION_CLOCKWISE;
       }
 
       // Send the event.
