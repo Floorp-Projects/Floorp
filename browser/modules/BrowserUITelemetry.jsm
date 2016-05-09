@@ -670,7 +670,7 @@ this.BrowserUITelemetry = {
     "marklinkMenu", "copyemail", "copylink", "media-play", "media-pause",
     "media-mute", "media-unmute", "media-playbackrate",
     "media-playbackrate-050x", "media-playbackrate-100x",
-    "media-playbackrate-150x", "media-playbackrate-200x",
+    "media-playbackrate-125x", "media-playbackrate-150x", "media-playbackrate-200x",
     "media-showcontrols", "media-hidecontrols", "video-showstats",
     "video-hidestats", "video-fullscreen", "leave-dom-fullscreen",
     "reloadimage", "viewimage", "viewvideo", "copyimage-contents", "copyimage",

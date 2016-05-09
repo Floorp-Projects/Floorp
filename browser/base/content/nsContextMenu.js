@@ -483,6 +483,7 @@ nsContextMenu.prototype = {
     if (onMedia) {
       this.setItemAttr("context-media-playbackrate-050x", "checked", this.target.playbackRate == 0.5);
       this.setItemAttr("context-media-playbackrate-100x", "checked", this.target.playbackRate == 1.0);
+      this.setItemAttr("context-media-playbackrate-125x", "checked", this.target.playbackRate == 1.25);
       this.setItemAttr("context-media-playbackrate-150x", "checked", this.target.playbackRate == 1.5);
       this.setItemAttr("context-media-playbackrate-200x", "checked", this.target.playbackRate == 2.0);
       var hasError = this.target.error != null ||
@@ -494,6 +495,7 @@ nsContextMenu.prototype = {
       this.setItemAttr("context-media-playbackrate", "disabled", hasError);
       this.setItemAttr("context-media-playbackrate-050x", "disabled", hasError);
       this.setItemAttr("context-media-playbackrate-100x", "disabled", hasError);
+      this.setItemAttr("context-media-playbackrate-125x", "disabled", hasError);
       this.setItemAttr("context-media-playbackrate-150x", "disabled", hasError);
       this.setItemAttr("context-media-playbackrate-200x", "disabled", hasError);
       this.setItemAttr("context-media-showcontrols", "disabled", hasError);
