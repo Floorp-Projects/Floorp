@@ -16,9 +16,6 @@
 
 package org.mozilla.gecko.widget;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.ValueAnimator;
 import android.graphics.Rect;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
@@ -28,6 +25,13 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AbsListView.RecyclerListener;
 import android.widget.ListView;
+
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ValueAnimator;
+import android.view.ViewPropertyAnimator;
+
+import org.mozilla.gecko.R;
 
 /**
  * This code is based off of Jake Wharton's NOA port (https://github.com/JakeWharton/SwipeToDismissNOA)
@@ -70,8 +74,6 @@ import android.widget.ListView;
  * @see SwipeDismissTouchListener
  */
 public class SwipeDismissListViewTouchListener implements View.OnTouchListener {
-    private static final int TAG_ORIGINAL_HEIGHT = SwipeDismissListViewTouchListener.class.hashCode();
-
     // Cached ViewConfiguration and system-wide constant values
     private final int mSlop;
     private final int mMinFlingVelocity;
@@ -165,7 +167,7 @@ public class SwipeDismissListViewTouchListener implements View.OnTouchListener {
         return new AbsListView.RecyclerListener() {
             @Override
             public void onMovedToScrapHeap(View view) {
-                final Object tag = view.getTag(TAG_ORIGINAL_HEIGHT);
+                final Object tag = view.getTag(R.id.original_height);
 
                 // To reset the view to the correct height after its animation, the view's height
                 // is stored in its tag. Reset the view here.
@@ -175,7 +177,7 @@ public class SwipeDismissListViewTouchListener implements View.OnTouchListener {
                     final ViewGroup.LayoutParams lp = view.getLayoutParams();
                     lp.height = (int) tag;
                     view.setLayoutParams(lp);
-                    view.setTag(TAG_ORIGINAL_HEIGHT, null);
+                    view.setTag(R.id.original_height, null);
                 }
             }
         };
@@ -334,7 +336,7 @@ public class SwipeDismissListViewTouchListener implements View.OnTouchListener {
                 // height in the view's tag to flag it for the recycler. This is racy since the user
                 // could scroll the dismissed view off the screen, then back on the screen, before
                 // it's removed from the adapter, causing the dismissed view to briefly reappear.
-                dismissView.setTag(TAG_ORIGINAL_HEIGHT, originalHeight);
+                dismissView.setTag(R.id.original_height, originalHeight);
 
                 mCallback.onDismiss(mListView, dismissPosition);
                 mDismissing = false;
