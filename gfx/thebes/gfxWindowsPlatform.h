@@ -290,6 +290,7 @@ private:
     void DisableD2D(mozilla::gfx::FeatureStatus aStatus, const char* aMessage);
 
     void InitializeConfig();
+    void InitializeD3D9Config();
     void InitializeD3D11Config();
     void InitializeD2DConfig();
 

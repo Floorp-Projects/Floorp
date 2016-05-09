@@ -230,16 +230,10 @@ function runCommand(args) {
         activeTask.scriptArgs = parseArgs(args);
     rerun = true;
     for (var f = topFrame; f; f = f.older) {
-        print(f.script.url + ":" + f.script.getOffsetLine(f.offset) +" was " + f.onPop);
         if (f.older) {
-            f.onPop = function() {
-                print("Resumifying " + this.script.url + ":" + this.script.getOffsetLine(this.offset));
-                return null;
-            };
+            f.onPop = () => null;
         } else {
-            f.onPop = function() {
-                return { 'return': 0 };
-            };
+            f.onPop = () => ({ 'return': 0 });
         }
     }
     //return describedRv([{ 'return': 0 }], "runCommand");
@@ -849,11 +843,12 @@ while(args.length > 0) {
     } else {
         if (!scriptSeen) {
             print("  load general");
-            scriptSeen = true;
+            actualScriptArgs.push(...args);
             todo.push({
                 'action': 'load',
                 'script': arg,
             });
+            break;
         } else {
             print("  arg " + arg);
             actualScriptArgs.push(arg);

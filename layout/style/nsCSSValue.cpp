@@ -1447,18 +1447,26 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
         }
         aResult.Append(char16_t(')'));
       }
-    } else if (eCSSUnit_HexColor == unit) {
+    } else if (eCSSUnit_HexColor == unit ||
+               eCSSUnit_HexColorAlpha == unit) {
       nscolor color = GetColorValue();
       aResult.Append('#');
       aResult.AppendPrintf("%02x", NS_GET_R(color));
       aResult.AppendPrintf("%02x", NS_GET_G(color));
       aResult.AppendPrintf("%02x", NS_GET_B(color));
-    } else if (eCSSUnit_ShortHexColor == unit) {
+      if (eCSSUnit_HexColorAlpha == unit) {
+        aResult.AppendPrintf("%02x", NS_GET_A(color));
+      }
+    } else if (eCSSUnit_ShortHexColor == unit ||
+               eCSSUnit_ShortHexColorAlpha == unit) {
       nscolor color = GetColorValue();
       aResult.Append('#');
       aResult.AppendInt(NS_GET_R(color) / 0x11, 16);
       aResult.AppendInt(NS_GET_G(color) / 0x11, 16);
       aResult.AppendInt(NS_GET_B(color) / 0x11, 16);
+      if (eCSSUnit_ShortHexColorAlpha == unit) {
+        aResult.AppendInt(NS_GET_A(color) / 0x11, 16);
+      }
     } else {
       MOZ_ASSERT(IsFloatColorUnit());
       mValue.mFloatColor->AppendToString(unit, aResult);
@@ -1754,6 +1762,8 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
     case eCSSUnit_RGBAColor:             break;
     case eCSSUnit_HexColor:              break;
     case eCSSUnit_ShortHexColor:         break;
+    case eCSSUnit_HexColorAlpha:         break;
+    case eCSSUnit_ShortHexColorAlpha:    break;
     case eCSSUnit_PercentageRGBColor:    break;
     case eCSSUnit_PercentageRGBAColor:   break;
     case eCSSUnit_HSLColor:              break;
@@ -1932,6 +1942,8 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     case eCSSUnit_RGBAColor:
     case eCSSUnit_HexColor:
     case eCSSUnit_ShortHexColor:
+    case eCSSUnit_HexColorAlpha:
+    case eCSSUnit_ShortHexColorAlpha:
       break;
 
     // Float Color

@@ -413,8 +413,7 @@ private:
       nsresult
       Cancel() override
       {
-        mRunnable->ReleaseData();
-        mRunnable->mConsole = nullptr;
+        WorkerRun(nullptr, mWorkerPrivate);
         return NS_OK;
       }
 
@@ -424,7 +423,8 @@ private:
         MOZ_ASSERT(aWorkerPrivate);
         aWorkerPrivate->AssertIsOnWorkerThread();
 
-        Cancel();
+        mRunnable->ReleaseData();
+        mRunnable->mConsole = nullptr;
 
         aWorkerPrivate->RemoveFeature(mRunnable);
         return true;

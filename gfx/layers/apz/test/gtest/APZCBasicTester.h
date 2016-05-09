@@ -13,7 +13,7 @@
 
 #include "APZTestCommon.h"
 
-class APZCBasicTester : public ::testing::Test {
+class APZCBasicTester : public APZCTesterBase {
 public:
   explicit APZCBasicTester(AsyncPanZoomController::GestureBehavior aGestureBehavior = AsyncPanZoomController::DEFAULT_GESTURES)
     : mGestureBehavior(aGestureBehavior)
@@ -27,7 +27,6 @@ protected:
     APZThreadUtils::SetThreadAssertionsEnabled(false);
     APZThreadUtils::SetControllerThread(MessageLoop::current());
 
-    mcc = new NiceMock<MockContentControllerDelayed>();
     tm = new TestAPZCTreeManager(mcc);
     apzc = new TestAsyncPanZoomController(0, mcc, tm, mGestureBehavior);
     apzc->SetFrameMetrics(TestFrameMetrics());
@@ -111,7 +110,6 @@ protected:
   void TestOverscroll();
 
   AsyncPanZoomController::GestureBehavior mGestureBehavior;
-  RefPtr<MockContentControllerDelayed> mcc;
   RefPtr<TestAPZCTreeManager> tm;
   RefPtr<TestAsyncPanZoomController> apzc;
 };

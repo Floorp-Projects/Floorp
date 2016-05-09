@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Bug 1266161 - Reference</title>
+
+<style type="text/css">
+
+html, body {
+  margin: 0;
+}
+
+#scrollbox {
+  overflow: auto;
+  height: 500px;
+  width: 500px;
+}
+
+#scrolled {
+  height: 1201px;
+}
+
+</style>
+
+<div id="wrapper">
+
+  <div id="scrollbox">
+
+    <div id="scrolled">
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+var scrollbox = document.getElementById("scrollbox");
+scrollbox.scrollTop = 80;
+
+</script>

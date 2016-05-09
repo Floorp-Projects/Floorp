@@ -50,7 +50,7 @@ function test() {
   testVal("<https://mozilla.com:mozilla.com@>mozilla.com");
   testVal("<mozilla.com:mozilla.com@>mozilla.com");
 
-  testVal("<http://ftp.>mozilla.org");
+  testVal("<ftp.>mozilla.org");
   testVal("<ftp://ftp.>mozilla.org");
 
   testVal("<https://sub.>mozilla.org");

@@ -6611,13 +6611,25 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
   switch (tk->mType) {
     case eCSSToken_ID:
     case eCSSToken_Hash:
-      // #xxyyzz
-      if (NS_HexToRGB(tk->mIdent, &rgba)) {
-        MOZ_ASSERT(tk->mIdent.Length() == 3 || tk->mIdent.Length() == 6,
-                   "unexpected hex color length");
-        nsCSSUnit unit = tk->mIdent.Length() == 3 ?
-                           eCSSUnit_ShortHexColor :
-                           eCSSUnit_HexColor;
+      // #rgb, #rrggbb, #rgba, #rrggbbaa
+      if (NS_HexToRGBA(tk->mIdent, nsHexColorType::AllowAlpha, &rgba)) {
+        nsCSSUnit unit;
+        switch (tk->mIdent.Length()) {
+          case 3:
+            unit = eCSSUnit_ShortHexColor;
+            break;
+          case 4:
+            unit = eCSSUnit_ShortHexColorAlpha;
+            break;
+          case 6:
+            unit = eCSSUnit_HexColor;
+            break;
+          default:
+            MOZ_FALLTHROUGH_ASSERT("unexpected hex color length");
+          case 8:
+            unit = eCSSUnit_HexColorAlpha;
+            break;
+        }
         aValue.SetIntegerColorValue(rgba, unit);
         return CSSParseResult::Ok;
       }
@@ -6766,7 +6778,8 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
         // not handled by this switch.  Ignore them.
         break;
     }
-    if (NS_HexToRGB(str, &rgba)) {
+    // The hashless color quirk does not support 4 & 8 digit colors with alpha.
+    if (NS_HexToRGBA(str, nsHexColorType::NoAlpha, &rgba)) {
       aValue.SetIntegerColorValue(rgba, eCSSUnit_HexColor);
       return CSSParseResult::Ok;
     }

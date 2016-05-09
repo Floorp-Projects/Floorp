@@ -15,7 +15,7 @@ async_test(function(t) {
         sw.postMessage({port: messageChannel.port2}, [messageChannel.port2]);
       })
     .catch(unreached_rejection(t));
-    
+
     function onMessage() {
       var openRequest = indexedDB.open('db');
       openRequest.onsuccess = t.step_func(function() {

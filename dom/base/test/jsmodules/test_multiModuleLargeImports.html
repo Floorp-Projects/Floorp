@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test importing multiple large modules which may be compiled off main thread from a module</title>
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+  var results = [];
+
+  SimpleTest.waitForExplicitFinish();
+
+  function arrayEquals(a, b) {
+    if (a.length != b.length) {
+      return false;
+    }
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) {
+        return false;
+      }
+      return true;
+    }
+  }
+
+  function testLoaded() {
+    ok(arrayEquals(results, [1, 2, 3, 4]), 'Check modules imported');
+    SimpleTest.finish();
+  }
+</script>
+<script type="module" src="module_multiLargeImports.js"></script>
+<body onload='testLoaded()'></body>

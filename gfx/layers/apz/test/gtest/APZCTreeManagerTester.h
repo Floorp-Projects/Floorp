@@ -15,7 +15,7 @@
 #include "APZTestCommon.h"
 #include "gfxPlatform.h"
 
-class APZCTreeManagerTester : public ::testing::Test {
+class APZCTreeManagerTester : public APZCTesterBase {
 protected:
   virtual void SetUp() {
     gfxPrefs::GetSingleton();
@@ -23,7 +23,6 @@ protected:
     APZThreadUtils::SetThreadAssertionsEnabled(false);
     APZThreadUtils::SetControllerThread(MessageLoop::current());
 
-    mcc = new NiceMock<MockContentControllerDelayed>();
     manager = new TestAPZCTreeManager(mcc);
   }
 
@@ -47,8 +46,6 @@ protected:
       }
     }
   }
-
-  RefPtr<MockContentControllerDelayed> mcc;
 
   nsTArray<RefPtr<Layer> > layers;
   RefPtr<LayerManager> lm;

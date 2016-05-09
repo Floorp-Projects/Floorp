@@ -152,7 +152,7 @@ TEST_F(APZCBasicTester, Fling) {
   AsyncTransform viewTransformOut;
 
   // Fling down. Each step scroll further down
-  Pan(apzc, mcc, touchStart, touchEnd);
+  Pan(apzc, touchStart, touchEnd);
   ParentLayerPoint lastPoint;
   for (int i = 1; i < 50; i+=1) {
     apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut, TimeDuration::FromMilliseconds(1));
@@ -166,12 +166,12 @@ TEST_F(APZCBasicTester, FlingIntoOverscroll) {
   SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
 
   // Scroll down by 25 px. Don't fling for simplicity.
-  ApzcPanNoFling(apzc, mcc, 50, 25);
+  ApzcPanNoFling(apzc, 50, 25);
 
   // Now scroll back up by 20px, this time flinging after.
   // The fling should cover the remaining 5 px of room to scroll, then
   // go into overscroll, and finally snap-back to recover from overscroll.
-  Pan(apzc, mcc, 25, 45);
+  Pan(apzc, 25, 45);
   const TimeDuration increment = TimeDuration::FromMilliseconds(1);
   bool reachedOverscroll = false;
   bool recoveredFromOverscroll = false;
@@ -219,9 +219,9 @@ TEST_F(APZCBasicTester, PanningTransformNotifications) {
   }
 
   check.Call("Simple pan");
-  ApzcPanNoFling(apzc, mcc, 50, 25);
+  ApzcPanNoFling(apzc, 50, 25);
   check.Call("Complex pan");
-  Pan(apzc, mcc, 25, 45);
+  Pan(apzc, 25, 45);
   apzc->AdvanceAnimationsUntilEnd();
   check.Call("Done");
 }
@@ -230,7 +230,7 @@ void APZCBasicTester::PanIntoOverscroll()
 {
   int touchStart = 500;
   int touchEnd = 10;
-  Pan(apzc, mcc, touchStart, touchEnd);
+  Pan(apzc, touchStart, touchEnd);
   EXPECT_TRUE(apzc->IsOverscrolled());
 }
 
@@ -313,7 +313,7 @@ TEST_F(APZCBasicTester, OverScrollAbort) {
   // Pan sufficiently to hit overscroll behavior
   int touchStart = 500;
   int touchEnd = 10;
-  Pan(apzc, mcc, touchStart, touchEnd);
+  Pan(apzc, touchStart, touchEnd);
   EXPECT_TRUE(apzc->IsOverscrolled());
 
   ParentLayerPoint pointOut;
@@ -338,7 +338,7 @@ TEST_F(APZCBasicTester, OverScrollPanningAbort) {
   // the pan does not end.
   int touchStart = 500;
   int touchEnd = 10;
-  Pan(apzc, mcc, touchStart, touchEnd, true); // keep finger down
+  Pan(apzc, touchStart, touchEnd, true); // keep finger down
   EXPECT_TRUE(apzc->IsOverscrolled());
 
   // Check that calling CancelAnimation() while the user is still panning

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test cyclic module imports</title>
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+  var result;
+
+  SimpleTest.waitForExplicitFinish();
+
+  function testLoaded() {
+    SimpleTest.finish();
+  }
+</script>
+<script type="module">
+  import { func1 } from "./module_cyclic1.js";
+  ok(func1(5, "") == "12312");
+</script>
+<body onload='testLoaded()'></body>

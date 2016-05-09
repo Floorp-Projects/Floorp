@@ -5554,7 +5554,9 @@ FrameLayerBuilder::PaintItems(nsTArray<ClippedDisplayItem>& aItems,
       aDrawTarget.SetPermitSubpixelAA(saved);
     } else {
       nsIFrame* frame = cdi->mItem->Frame();
-      frame->AddStateBits(NS_FRAME_PAINTED_THEBES);
+      if (aBuilder->IsPaintingToWindow()) {
+        frame->AddStateBits(NS_FRAME_PAINTED_THEBES);
+      }
 #ifdef MOZ_DUMP_PAINTING
       if (gfxEnv::DumpPaintItems()) {
         DebugPaintItem(aDrawTarget, aPresContext, cdi->mItem, aBuilder);
@@ -5592,13 +5594,12 @@ ShouldDrawRectsSeparately(DrawTarget* aDrawTarget, DrawRegionClip aClip)
 }
 
 static void DrawForcedBackgroundColor(DrawTarget& aDrawTarget,
-                                      Layer* aLayer, nscolor
-                                      aBackgroundColor)
+                                      const IntRect& aBounds,
+                                      nscolor aBackgroundColor)
 {
   if (NS_GET_A(aBackgroundColor) > 0) {
-    LayerIntRect r = aLayer->GetVisibleRegion().GetBounds();
     ColorPattern color(ToDeviceColor(aBackgroundColor));
-    aDrawTarget.FillRect(Rect(r.x, r.y, r.width, r.height), color);
+    aDrawTarget.FillRect(Rect(aBounds), color);
   }
 }
 
@@ -5673,7 +5674,7 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
       gfxUtils::ClipToRegion(aContext, aRegionToDraw);
     }
 
-    DrawForcedBackgroundColor(aDrawTarget, aLayer,
+    DrawForcedBackgroundColor(aDrawTarget, aRegionToDraw.GetBounds(),
                               userData->mForcedBackgroundColor);
   }
 
@@ -5712,7 +5713,7 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
       aContext->Rectangle(ThebesRect(iterRect));
       aContext->Clip();
 
-      DrawForcedBackgroundColor(aDrawTarget, aLayer,
+      DrawForcedBackgroundColor(aDrawTarget, iterRect,
                                 userData->mForcedBackgroundColor);
 
       // Apply the residual transform if it has been enabled, to ensure that

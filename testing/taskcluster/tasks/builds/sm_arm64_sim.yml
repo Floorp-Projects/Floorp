@@ -1,0 +1,15 @@
+$inherits:
+  from: 'tasks/builds/sm_base.yml'
+  variables:
+    build_name: 'sm-arm64-sim'
+    build_type: 'debug'
+task:
+  payload:
+    env:
+        SPIDERMONKEY_VARIANT: 'arm64-sim'
+  metadata:
+    name: '[TC] Spidermonkey ARM64 simulator'
+    description: 'Spidermonkey ARM64 simulator'
+  extra:
+    treeherder:
+      symbol: arm64
