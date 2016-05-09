@@ -364,7 +364,7 @@ class FunctionCompiler
         return ins;
     }
 
-    MDefinition* insertElementSimd(MDefinition* vec, MDefinition* val, SimdLane lane, MIRType type)
+    MDefinition* insertElementSimd(MDefinition* vec, MDefinition* val, unsigned lane, MIRType type)
     {
         if (inDeadCode())
             return nullptr;
@@ -699,7 +699,7 @@ class FunctionCompiler
         curBlock_->add(MAsmJSInterruptCheck::New(alloc()));
     }
 
-    MDefinition* extractSimdElement(SimdLane lane, MDefinition* base, MIRType type, SimdSign sign)
+    MDefinition* extractSimdElement(unsigned lane, MDefinition* base, MIRType type, SimdSign sign)
     {
         if (inDeadCode())
             return nullptr;
@@ -2373,7 +2373,7 @@ SimdToLaneType(ValType type)
 static bool
 EmitExtractLane(FunctionCompiler& f, ValType operandType, SimdSign sign)
 {
-    jit::SimdLane lane;
+    uint8_t lane;
     MDefinition* vector;
     if (!f.iter().readExtractLane(operandType, &lane, &vector))
         return false;
@@ -2398,7 +2398,7 @@ EmitSimdReplaceLane(FunctionCompiler& f, ValType simdType)
     if (IsSimdBoolType(simdType))
         f.iter().setResult(EmitSimdBooleanLaneExpr(f, f.iter().getResult()));
 
-    jit::SimdLane lane;
+    uint8_t lane;
     MDefinition* vector;
     MDefinition* scalar;
     if (!f.iter().readReplaceLane(simdType, &lane, &vector, &scalar))

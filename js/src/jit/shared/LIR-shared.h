@@ -236,17 +236,8 @@ class LSimdExtractElementBase : public LInstructionHelper<1, 1, 0>
     const LAllocation* getBase() {
         return getOperand(0);
     }
-    SimdLane lane() const {
+    unsigned lane() const {
         return mir_->toSimdExtractElement()->lane();
-    }
-    const char* extraName() const {
-        switch (lane()) {
-          case LaneX: return "lane x";
-          case LaneY: return "lane y";
-          case LaneZ: return "lane z";
-          case LaneW: return "lane w";
-        }
-        return "unknown lane";
     }
 };
 
@@ -289,7 +280,7 @@ class LSimdExtractElementU2D : public LInstructionHelper<1, 1, 1>
         setOperand(0, base);
         setTemp(0, temp);
     }
-    SimdLane lane() const {
+    unsigned lane() const {
         return mir_->toSimdExtractElement()->lane();
     }
     const LDefinition* temp() {
@@ -314,11 +305,8 @@ class LSimdInsertElementBase : public LInstructionHelper<1, 2, 0>
     const LAllocation* value() {
         return getOperand(1);
     }
-    SimdLane lane() const {
+    unsigned lane() const {
         return mir_->toSimdInsertElement()->lane();
-    }
-    const char* extraName() const {
-        return MSimdInsertElement::LaneName(lane());
     }
 };
 
