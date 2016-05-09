@@ -100,8 +100,8 @@ public:
                            eSimpleGestureEventClass)
     , allowedDirections(0)
     , direction(0)
-    , delta(0.0)
     , clickCount(0)
+    , delta(0.0)
   {
   }
 
@@ -110,8 +110,8 @@ public:
                            aOther.mWidget, eSimpleGestureEventClass)
     , allowedDirections(aOther.allowedDirections)
     , direction(aOther.direction)
-    , delta(aOther.delta)
     , clickCount(0)
+    , delta(aOther.delta)
   {
   }
 
@@ -131,10 +131,10 @@ public:
   uint32_t allowedDirections;
   // See nsIDOMSimpleGestureEvent for values
   uint32_t direction;
-  // Delta for magnify and rotate events
-  double delta;
   // The number of taps for tap events
   uint32_t clickCount;
+  // Delta for magnify and rotate events
+  double delta;
 
   // XXX Not tested by test_assign_event_data.html
   void AssignSimpleGestureEventData(const WidgetSimpleGestureEvent& aEvent,
