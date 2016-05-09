@@ -500,6 +500,10 @@ gfxWindowsPlatform::UpdateBackendPrefs()
   uint32_t contentMask = BackendTypeBit(SOFTWARE_BACKEND);
   BackendType defaultBackend = SOFTWARE_BACKEND;
   if (gfxConfig::IsEnabled(Feature::DIRECT2D)) {
+    MOZ_RELEASE_ASSERT(Factory::GetDirect3D11Device());
+    MOZ_RELEASE_ASSERT(Factory::GetD2D1Device());
+    MOZ_RELEASE_ASSERT(Factory::SupportsD2D1());
+
     contentMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
     canvasMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
     defaultBackend = BackendType::DIRECT2D1_1;
