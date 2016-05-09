@@ -4309,12 +4309,16 @@ LIRGenerator::visitSimdConstant(MSimdConstant* ins)
     MOZ_ASSERT(IsSimdType(ins->type()));
 
     switch (ins->type()) {
-      case MIRType::Bool32x4:
+      case MIRType::Int8x16:
+      case MIRType::Int16x8:
       case MIRType::Int32x4:
-        define(new(alloc()) LInt32x4(), ins);
+      case MIRType::Bool8x16:
+      case MIRType::Bool16x8:
+      case MIRType::Bool32x4:
+        define(new(alloc()) LSimd128Int(), ins);
         break;
       case MIRType::Float32x4:
-        define(new(alloc()) LFloat32x4(), ins);
+        define(new(alloc()) LSimd128Float(), ins);
         break;
       default:
         MOZ_CRASH("Unknown SIMD kind when generating constant");
