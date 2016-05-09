@@ -156,7 +156,7 @@ GeckoMediaPluginServiceParent::Init()
   int32_t expected = Preferences::GetInt("media.gmp.storage.version.expected", 0);
   if (version != expected) {
     Preferences::SetInt("media.gmp.storage.version.observed", expected);
-    return GMPDispatch(NewRunnableMethod(
+    return GMPDispatch(NS_NewRunnableMethod(
       this, &GeckoMediaPluginServiceParent::ClearStorage));
   }
   return NS_OK;
