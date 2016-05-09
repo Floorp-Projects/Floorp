@@ -1,0 +1,141 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+<html>
+<head>
+<script language="javascript" type="text/javascript">
+const MEASUREMENT1_MS = 3000;
+const MEASUREMENT2_MS = 2000;
+const PLAYBACK_RATE = 5;
+var vdo;
+var start1 = 0;
+var paintedFramesStart1 = 0;
+var start2 = 0;
+var paintedFramesStart2 = 0;
+var testIndex = 0;
+var test = [
+  'testsrc.240p.120fps.mp4',
+  'testsrc.480p.60fps.webm',
+  'testsrc.1080p.60fps.mp4',
+];
+var viewModeIndex = 0;
+var viewMode = ['fullscreen', 1, 1.1, 2];
+var testResult = {names: [], values: []};
+
+function init() {
+  vdo = document.getElementById('vdo');
+  vdo.addEventListener('loadeddata', prepare, false);
+  document.addEventListener('fullscreenchange', fullscreen);
+  document.addEventListener('mozfullscreenchange', fullscreen);
+  runTest();
+}
+
+function fullscreen(event) {
+  if ((document.fullscreenElement && document.fullscreenElement !== null) ||
+      document.mozFullScreen) {
+    startTest();
+  } else {
+    nextTest();
+  }
+}
+
+function runTest() {
+  // Windows XP cannot play mp4 clip due to the lack of gmp-eme-plugin, so skip it.
+  if (window.navigator.oscpu == 'Windows NT 5.1' && test[testIndex].indexOf('mp4') >= 0) {
+    nextTest();
+  }
+  vdo.setAttribute('src', 'clips/' + test[testIndex]);
+  vdo.load();
+}
+
+function prepare() {
+  if (viewMode[viewModeIndex] == 'fullscreen') {
+    // Fullscreen mode
+    vdo.setAttribute('width', '100%');
+    vdo.setAttribute('height', '100%');
+    if (document.body.requestFullscreen) {
+      document.body.requestFullscreen();
+    } else if (document.body.mozRequestFullScreen) {
+      document.body.mozRequestFullScreen();
+    }
+  } else {
+    readyToStart = true;
+    vdo.setAttribute('width', vdo.videoWidth * viewMode[viewModeIndex]);
+    vdo.setAttribute('height', vdo.videoHeight * viewMode[viewModeIndex]);
+    startTest();
+  }
+}
+
+function startTest() {
+  vdo.playbackRate = PLAYBACK_RATE;
+  start1 = performance.now();
+  paintedFramesStart1 = vdo.mozPaintedFrames;
+  vdo.play();
+  setTimeout(function() {
+    start2 = performance.now();
+    paintedFramesStart2 = vdo.mozPaintedFrames;
+    setTimeout(measurementEnded, MEASUREMENT2_MS);
+  }, MEASUREMENT1_MS);
+}
+
+function measurementEnded() {
+  vdo.pause();
+  var end = performance.now();
+  var paintedFramesEnd = vdo.mozPaintedFrames;
+  var timePerFrame1 = (start2 - start1) / (paintedFramesStart2 - paintedFramesStart1);
+  var timePerFrame2 = (end - start2) / (paintedFramesEnd - paintedFramesStart2);
+  testResult.names.push(test[testIndex] + '_scale_' + viewMode[viewModeIndex] + '_startup');
+  testResult.values.push(timePerFrame1);
+  testResult.names.push(test[testIndex] + '_scale_' + viewMode[viewModeIndex] + '_inclip');
+  testResult.values.push(timePerFrame2);
+
+  if (viewMode[viewModeIndex] == 'fullscreen') {
+    // Exit fullscreen mode
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    } else if (document.mozCancelFullScreen) {
+      document.mozCancelFullScreen();
+    }
+  } else {
+    nextTest();
+  }
+}
+
+function nextTest() {
+  viewModeIndex++;
+  if (viewModeIndex >= viewMode.length) {
+    viewModeIndex = 0;
+    testIndex++;
+  }
+  if (testIndex >= test.length) {
+    // End the test
+    reportResult();
+  } else {
+    runTest();
+  }
+}
+
+function reportResult() {
+  var msg = '';
+  for (var i = 0; i < testResult.names.length; i++) {
+    msg += testResult.names[i] + ' = ' + testResult.values[i] + ' ms/frame\n\n';
+  }
+
+  dump(msg); // Put the readable report at talos run-log
+
+  if (window.tpRecordTime) {
+    // Within talos - report the results
+    return tpRecordTime(testResult.values.join(','), 0, testResult.names.join(','));
+  } else {
+    // Local run in a plain browser, display the formatted report
+    alert(msg);
+  }
+}
+</script>
+
+</head>
+<body id="body" onload="init();">
+<video id="vdo" width="100%" height="100%">
+</video>
+</body>
+</html>
