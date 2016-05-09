@@ -333,7 +333,8 @@ nsXPLookAndFeel::ColorPrefChanged (unsigned int index, const char *prefName)
   if (!colorStr.IsEmpty()) {
     nscolor thecolor;
     if (colorStr[0] == char16_t('#')) {
-      if (NS_HexToRGB(nsDependentString(colorStr, 1), &thecolor)) {
+      if (NS_HexToRGBA(nsDependentString(colorStr, 1),
+                       nsHexColorType::NoAlpha, &thecolor)) {
         int32_t id = NS_PTR_TO_INT32(index);
         CACHE_COLOR(id, thecolor);
       }
@@ -387,7 +388,7 @@ nsXPLookAndFeel::InitColorFromPref(int32_t i)
   if (colorStr[0] == char16_t('#')) {
     nsAutoString hexString;
     colorStr.Right(hexString, colorStr.Length() - 1);
-    if (NS_HexToRGB(hexString, &thecolor)) {
+    if (NS_HexToRGBA(hexString, nsHexColorType::NoAlpha, &thecolor)) {
       CACHE_COLOR(i, thecolor);
     }
   } else if (NS_ColorNameToRGB(colorStr, &thecolor)) {

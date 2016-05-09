@@ -1567,7 +1567,7 @@ nsAttrValue::ParseColor(const nsAString& aString)
   // numeric colors do.
   if (colorStr.First() == '#') {
     nsDependentString withoutHash(colorStr.get() + 1, colorStr.Length() - 1);
-    if (NS_HexToRGB(withoutHash, &color)) {
+    if (NS_HexToRGBA(withoutHash, nsHexColorType::NoAlpha, &color)) {
       SetColorValue(color, aString);
       return true;
     }
