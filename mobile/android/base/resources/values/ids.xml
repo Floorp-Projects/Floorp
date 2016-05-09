@@ -8,6 +8,7 @@
     <item type="id" name="tabQueueNotification"/>
     <item type="id" name="tabQueueSettingsNotification" />
     <item type="id" name="guestNotification"/>
+    <item type="id" name="original_height"/>
     <item type="id" name="menu_items"/>
     <item type="id" name="menu_margin"/>
     <item type="id" name="recycler_view_click_support" />
