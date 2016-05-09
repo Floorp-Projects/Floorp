@@ -746,7 +746,7 @@ DispatchErrorEvent(IDBRequest* aRequest,
     WidgetEvent* internalEvent = aEvent->WidgetEventPtr();
     MOZ_ASSERT(internalEvent);
 
-    if (internalEvent->mFlags.mExceptionHasBeenRisen) {
+    if (internalEvent->mFlags.mExceptionWasRaised) {
       transaction->Abort(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
     } else if (doDefault) {
       transaction->Abort(request);
@@ -821,7 +821,7 @@ DispatchSuccessEvent(ResultHelper* aResultHelper,
 
   if (transaction &&
       transaction->IsOpen() &&
-      internalEvent->mFlags.mExceptionHasBeenRisen) {
+      internalEvent->mFlags.mExceptionWasRaised) {
     transaction->Abort(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
   }
 }

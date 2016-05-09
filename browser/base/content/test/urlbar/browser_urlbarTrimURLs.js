@@ -31,9 +31,9 @@ function test() {
   testVal("http://mozilla.org/file.ext", "mozilla.org/file.ext");
   testVal("http://mozilla.org/sub/", "mozilla.org/sub/");
 
-  testVal("http://ftp.mozilla.org/", "http://ftp.mozilla.org");
-  testVal("http://ftp1.mozilla.org/", "http://ftp1.mozilla.org");
-  testVal("http://ftp42.mozilla.org/", "http://ftp42.mozilla.org");
+  testVal("http://ftp.mozilla.org/", "ftp.mozilla.org");
+  testVal("http://ftp1.mozilla.org/", "ftp1.mozilla.org");
+  testVal("http://ftp42.mozilla.org/", "ftp42.mozilla.org");
   testVal("http://ftpx.mozilla.org/", "ftpx.mozilla.org");
   testVal("ftp://ftp.mozilla.org/", "ftp://ftp.mozilla.org");
   testVal("ftp://ftp1.mozilla.org/", "ftp://ftp1.mozilla.org");

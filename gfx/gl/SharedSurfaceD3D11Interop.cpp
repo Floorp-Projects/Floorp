@@ -9,6 +9,7 @@
 #include "gfxPrefs.h"
 #include "GLContext.h"
 #include "WGLLibrary.h"
+#include "nsPrintfCString.h"
 
 namespace mozilla {
 namespace gl {
@@ -149,12 +150,12 @@ public:
 
     ~DXGLDevice() {
         if (!mWGL->fDXCloseDevice(mDXGLDeviceHandle)) {
-#ifdef DEBUG
             uint32_t error = GetLastError();
-            printf_stderr("wglDXCloseDevice(0x%x) failed: GetLastError(): 0x%x\n",
-                          mDXGLDeviceHandle, error);
-#endif
-            MOZ_CRASH();
+            const nsPrintfCString errorMessage("wglDXCloseDevice(0x%x) failed: "
+                                               "GetLastError(): 0x%x\n",
+                                               mDXGLDeviceHandle, error);
+            gfxCriticalError() << errorMessage.BeginReading();
+            MOZ_CRASH("GFX: Problem closing DXGL device");
         }
     }
 
@@ -162,13 +163,13 @@ public:
         HANDLE ret = mWGL->fDXRegisterObject(mDXGLDeviceHandle, dxObject, name, type,
                                              access);
         if (!ret) {
-#ifdef DEBUG
             uint32_t error = GetLastError();
-            printf_stderr("wglDXRegisterObject(0x%x, 0x%x, %u, 0x%x, 0x%x) failed:"
-                          " GetLastError(): 0x%x\n", mDXGLDeviceHandle, dxObject, name,
-                          type, access, error);
-#endif
-            MOZ_CRASH();
+            const nsPrintfCString errorMessage("wglDXRegisterObject(0x%x, 0x%x, %u, 0x%x, 0x%x) failed:"
+                                               " GetLastError(): 0x%x\n",
+                                               mDXGLDeviceHandle, dxObject, name,
+                                               type, access, error);
+            gfxCriticalError() << errorMessage.BeginReading();
+            MOZ_CRASH("GFX: Problem registering DXGL device");
         }
         return ret;
     }
@@ -176,12 +177,12 @@ public:
     bool UnregisterObject(HANDLE hObject) const {
         bool ret = mWGL->fDXUnregisterObject(mDXGLDeviceHandle, hObject);
         if (!ret) {
-#ifdef DEBUG
             uint32_t error = GetLastError();
-            printf_stderr("wglDXUnregisterObject(0x%x, 0x%x) failed: GetLastError():"
-                          " 0x%x\n", mDXGLDeviceHandle, hObject, error);
-#endif
-            MOZ_CRASH();
+            const nsPrintfCString errorMessage("wglDXUnregisterObject(0x%x, 0x%x) failed: "
+                                               "GetLastError(): 0x%x\n",
+                                               mDXGLDeviceHandle, hObject, error);
+            gfxCriticalError() << errorMessage.BeginReading();
+            MOZ_CRASH("GFX: Problem unregistering DXGL device");
         }
         return ret;
     }
@@ -189,12 +190,12 @@ public:
     bool LockObject(HANDLE hObject) const {
         bool ret = mWGL->fDXLockObjects(mDXGLDeviceHandle, 1, &hObject);
         if (!ret) {
-#ifdef DEBUG
             uint32_t error = GetLastError();
-            printf_stderr("wglDXLockObjects(0x%x, 1, {0x%x}) failed: GetLastError():"
-                          " 0x%x\n", mDXGLDeviceHandle, hObject, error);
-#endif
-            MOZ_CRASH();
+            const nsPrintfCString errorMessage("wglDXLockObjects(0x%x, 1, {0x%x}) "
+                                               "failed: GetLastError(): 0x%x\n",
+                                               mDXGLDeviceHandle, hObject, error);
+            gfxCriticalError() << errorMessage.BeginReading();
+            MOZ_CRASH("GFX: Problem locking DXGL device");
         }
         return ret;
     }
@@ -202,12 +203,12 @@ public:
     bool UnlockObject(HANDLE hObject) const {
         bool ret = mWGL->fDXUnlockObjects(mDXGLDeviceHandle, 1, &hObject);
         if (!ret) {
-#ifdef DEBUG
             uint32_t error = GetLastError();
-            printf_stderr("wglDXUnlockObjects(0x%x, 1, {0x%x}) failed: GetLastError():"
-                          " 0x%x\n", mDXGLDeviceHandle, hObject, error);
-#endif
-            MOZ_CRASH();
+            const nsPrintfCString errorMessage("wglDXUnlockObjects(0x%x, 1, {0x%x}) "
+                                               "failed: GetLastError(): 0x%x\n",
+                                               mDXGLDeviceHandle, hObject, error);
+            gfxCriticalError() << errorMessage.BeginReading();
+            MOZ_CRASH("GFX: Problem unlocking DXGL device");
         }
         return ret;
     }
@@ -331,7 +332,7 @@ SharedSurface_D3D11Interop::ProducerAcquireImpl()
         HRESULT hr = mKeyedMutex->AcquireSync(keyValue, timeoutMs);
         if (hr == WAIT_TIMEOUT) {
             // Doubt we should do this? Maybe Wait for ever?
-            MOZ_CRASH("d3d11Interop timeout");
+            MOZ_CRASH("GFX: d3d11Interop timeout");
         }
     }
 

@@ -12,6 +12,27 @@ policies and contribution forms [3].
 
 "use strict";
 
+// custom element is also allowed.
+var ATTACHSHADOW_SAFELISTED_ELEMENTS = [
+    'article',
+    'aside',
+    'blockquote',
+    'body',
+    'div',
+    'footer',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'header',
+    'nav',
+    'p',
+    'section',
+    'span'
+];
+
 var HTML5_ELEMENT_NAMES = [
     'a', 'abbr', 'address', 'area', 'article', 'aside', 'audio',
     'b', 'base', 'bdi', 'bdo', 'blockquote', 'body', 'br', 'button',
@@ -94,7 +115,7 @@ function createTestMediaPlayer(d) {
         '</div>' +
     '</div>';
 
-    var playerShadowRoot = d.querySelector('#player-shadow-host').createShadowRoot();
+    var playerShadowRoot = d.querySelector('#player-shadow-host').attachShadow({mode: 'open'});
     playerShadowRoot.innerHTML = '' +
         '<div id="controls">' +
             '<button class="play-button">PLAY</button>' +
@@ -110,10 +131,10 @@ function createTestMediaPlayer(d) {
             '</div>' +
         '</div>';
 
-    var timeLineShadowRoot = playerShadowRoot.querySelector('#timeline-shadow-host').createShadowRoot();
+    var timeLineShadowRoot = playerShadowRoot.querySelector('#timeline-shadow-host').attachShadow({mode: 'open'});
     timeLineShadowRoot.innerHTML =  '<div class="slider-thumb" id="timeline-slider-thumb"></div>';
 
-    var volumeShadowRoot = playerShadowRoot.querySelector('#volume-shadow-host').createShadowRoot();
+    var volumeShadowRoot = playerShadowRoot.querySelector('#volume-shadow-host').attachShadow({mode: 'open'});
     volumeShadowRoot.innerHTML = '<div class="slider-thumb" id="volume-slider-thumb"></div>';
 
     return {

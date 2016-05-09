@@ -280,6 +280,84 @@ nsJSUtils::EvaluateString(JSContext* aCx,
                         options, &unused, aOffThreadToken);
 }
 
+nsresult
+nsJSUtils::CompileModule(JSContext* aCx,
+                       JS::SourceBufferHolder& aSrcBuf,
+                       JS::Handle<JSObject*> aEvaluationGlobal,
+                       JS::CompileOptions &aCompileOptions,
+                       JS::MutableHandle<JSObject*> aModule)
+{
+  PROFILER_LABEL("nsJSUtils", "CompileModule",
+    js::ProfileEntry::Category::JS);
+
+  MOZ_ASSERT(JS::ContextOptionsRef(aCx).autoJSAPIOwnsErrorReporting(),
+             "Caller must own error reporting");
+  MOZ_ASSERT_IF(aCompileOptions.versionSet,
+                aCompileOptions.version != JSVERSION_UNKNOWN);
+  MOZ_ASSERT(aCx == nsContentUtils::GetCurrentJSContext());
+  MOZ_ASSERT(aSrcBuf.get());
+  MOZ_ASSERT(js::GetGlobalForObjectCrossCompartment(aEvaluationGlobal) ==
+             aEvaluationGlobal);
+  MOZ_ASSERT(JS::CurrentGlobalOrNull(aCx) == aEvaluationGlobal);
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(nsContentUtils::IsInMicroTask());
+
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  NS_ENSURE_TRUE(ssm->ScriptAllowed(aEvaluationGlobal), NS_OK);
+
+  if (!JS::CompileModule(aCx, aCompileOptions, aSrcBuf, aModule)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsJSUtils::ModuleDeclarationInstantiation(JSContext* aCx, JS::Handle<JSObject*> aModule)
+{
+  PROFILER_LABEL("nsJSUtils", "ModuleDeclarationInstantiation",
+    js::ProfileEntry::Category::JS);
+
+  MOZ_ASSERT(JS::ContextOptionsRef(aCx).autoJSAPIOwnsErrorReporting(),
+             "Caller must own error reporting");
+  MOZ_ASSERT(aCx == nsContentUtils::GetCurrentJSContext());
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(nsContentUtils::IsInMicroTask());
+
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  JSObject* global = JS_GetGlobalForObject(aCx, aModule);
+  NS_ENSURE_TRUE(ssm->ScriptAllowed(global), NS_OK);
+
+  if (!JS::ModuleDeclarationInstantiation(aCx, aModule)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsJSUtils::ModuleEvaluation(JSContext* aCx, JS::Handle<JSObject*> aModule)
+{
+  PROFILER_LABEL("nsJSUtils", "ModuleEvaluation",
+    js::ProfileEntry::Category::JS);
+
+  MOZ_ASSERT(JS::ContextOptionsRef(aCx).autoJSAPIOwnsErrorReporting(),
+             "Caller must own error reporting");
+  MOZ_ASSERT(aCx == nsContentUtils::GetCurrentJSContext());
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(nsContentUtils::IsInMicroTask());
+
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  JSObject* global = JS_GetGlobalForObject(aCx, aModule);
+  NS_ENSURE_TRUE(ssm->ScriptAllowed(global), NS_OK);
+
+  if (!JS::ModuleEvaluation(aCx, aModule)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
 /* static */
 bool
 nsJSUtils::GetScopeChainForElement(JSContext* aCx,

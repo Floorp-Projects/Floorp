@@ -21,4 +21,5 @@ ac_add_options --with-branding=mobile/android/branding/nightly
 
 ac_add_options --disable-stdcxx-compat
 
+. "$topsrcdir/build/mozconfig.rust"
 . "$topsrcdir/mobile/android/config/mozconfigs/common.override"

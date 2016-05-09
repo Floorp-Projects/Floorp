@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test what happens when a module import is not found</title>
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+  var wasRun = false;
+  var errorCount = 0;
+  var eventCount = 0;
+
+  SimpleTest.waitForExplicitFinish();
+
+  window.onerror = function(message, url, line, column, error) {
+    errorCount++;
+  }
+
+  function testError() {
+    ok(!wasRun, 'Check script was not run');
+    ok(eventCount == 1, 'Check that an error event was fired');
+    ok(errorCount == 0, 'Check that no error was reported');
+    SimpleTest.finish();
+  }
+</script>
+<script type="module" onerror="eventCount++">
+import "./nonExistentModule.js";
+wasRun = true;
+</script>
+<body onload='testError()'></body>

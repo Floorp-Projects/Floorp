@@ -175,7 +175,7 @@ NS_IMETHODIMP nsCollationMacUC::AllocateRawSortKey(int32_t strength, const nsASt
 
   uint32_t stringInLen = stringIn.Length();
 
-  const UChar* str = (const UChar*)PromiseFlatString(stringIn).get();
+  const UChar* str = (const UChar*)stringIn.BeginReading();
 
   int32_t keyLength = ucol_getSortKey(mCollatorICU, str, stringInLen, nullptr, 0);
   NS_ENSURE_TRUE((stringInLen == 0 || keyLength > 0), NS_ERROR_FAILURE);
@@ -207,8 +207,10 @@ NS_IMETHODIMP nsCollationMacUC::CompareString(int32_t strength, const nsAString&
 
   UCollationResult uresult;
   uresult = ucol_strcoll(mCollatorICU,
-                          (const UChar*)PromiseFlatString(string1).get(), string1.Length(),
-                          (const UChar*)PromiseFlatString(string2).get(), string2.Length());
+                         (const UChar*)string1.BeginReading(),
+                         string1.Length(),
+                         (const UChar*)string2.BeginReading(),
+                         string2.Length());
   int32_t res;
   switch (uresult) {
     case UCOL_LESS:

@@ -445,7 +445,7 @@ Decoder::PostFrameStop(Opacity aFrameOpacity
 
   // If we're not sending partial invalidations, then we send an invalidation
   // here when the first frame is complete.
-  if (!ShouldSendPartialInvalidations() && !HasAnimation()) {
+  if (!ShouldSendPartialInvalidations() && mFrameCount == 1) {
     mInvalidRect.UnionRect(mInvalidRect,
                            gfx::IntRect(gfx::IntPoint(0, 0), GetSize()));
   }
@@ -462,7 +462,7 @@ Decoder::PostInvalidation(const nsIntRect& aRect,
 
   // Record this invalidation, unless we're not sending partial invalidations
   // or we're past the first frame.
-  if (ShouldSendPartialInvalidations() && !HasAnimation()) {
+  if (ShouldSendPartialInvalidations() && mFrameCount == 1) {
     mInvalidRect.UnionRect(mInvalidRect, aRect);
     mCurrentFrame->ImageUpdated(aRectAtTargetSize.valueOr(aRect));
   }

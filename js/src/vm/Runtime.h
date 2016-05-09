@@ -43,6 +43,7 @@
 #include "vm/CommonPropertyNames.h"
 #include "vm/DateTime.h"
 #include "vm/MallocProvider.h"
+#include "vm/SharedImmutableStringsCache.h"
 #include "vm/SPSProfiler.h"
 #include "vm/Stack.h"
 #include "vm/Stopwatch.h"
@@ -1279,12 +1280,18 @@ struct JSRuntime : public JS::shadow::Runtime,
   private:
     js::MathCache* mathCache_;
     js::MathCache* createMathCache(JSContext* cx);
+    mozilla::Maybe<js::SharedImmutableStringsCache> sharedImmutableStrings_;
   public:
     js::MathCache* getMathCache(JSContext* cx) {
         return mathCache_ ? mathCache_ : createMathCache(cx);
     }
     js::MathCache* maybeGetMathCache() {
         return mathCache_;
+    }
+    js::SharedImmutableStringsCache& sharedImmutableStrings() {
+        MOZ_ASSERT_IF(parentRuntime, !sharedImmutableStrings_);
+        MOZ_ASSERT_IF(!parentRuntime, sharedImmutableStrings_);
+        return parentRuntime ? parentRuntime->sharedImmutableStrings() : *sharedImmutableStrings_;
     }
 
     js::GSNCache        gsnCache;
@@ -1294,8 +1301,6 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::UncompressedSourceCache uncompressedSourceCache;
     js::EvalCache       evalCache;
     js::LazyScriptCache lazyScriptCache;
-
-    js::CompressedSourceSet compressedSourceSet;
 
     // Pool of maps used during parse/emit. This may be modified by threads
     // with an ExclusiveContext and requires a lock. Active compilations

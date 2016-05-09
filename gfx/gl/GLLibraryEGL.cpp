@@ -127,8 +127,8 @@ GetAndInitWARPDisplay(GLLibraryEGL& egl, void* displayType)
     if (display == EGL_NO_DISPLAY) {
         const EGLint err = egl.fGetError();
         if (err != LOCAL_EGL_SUCCESS) {
-            printf_stderr("Unexpected error: 0x%04x", err);
-            MOZ_CRASH("Unexpected error.");
+	    gfxCriticalError() << "Unexpected GL error: " << gfx::hexa(err);
+            MOZ_CRASH("GFX: Unexpected GL error.");
         }
         return EGL_NO_DISPLAY;
     }

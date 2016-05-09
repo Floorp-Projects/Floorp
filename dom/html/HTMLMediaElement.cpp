@@ -2792,7 +2792,7 @@ HTMLMediaElement::ReportEMETelemetry()
 #endif
 
 void
-HTMLMediaElement::ReportMSETelemetry()
+HTMLMediaElement::ReportTelemetry()
 {
   // Report telemetry for videos when a page is unloaded. We
   // want to know data on what state the video is at when
@@ -4455,7 +4455,7 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aPauseElement, bool aSuspendE
     UpdateAudioChannelPlayingState();
     if (aPauseElement) {
       if (mMediaSource) {
-        ReportMSETelemetry();
+        ReportTelemetry();
 #ifdef MOZ_EME
         ReportEMETelemetry();
 #endif

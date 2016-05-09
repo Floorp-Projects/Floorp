@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test error thrown when an import cannot be resolved</title>
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+  var hadTypeError = false;
+
+  SimpleTest.waitForExplicitFinish();
+  window.onerror = handleError;
+
+  function handleError(message, url, line, column, error) {
+    hadTypeError = error instanceof TypeError;
+  }
+
+  function testError() {
+    ok(hadTypeError, 'Check that a TypeError was thrown');
+    SimpleTest.finish();
+  }
+</script>
+<script type="module" src="module_badImport.js"></script>
+<body onload='testError()'></body>

@@ -14,7 +14,7 @@
 promise_test(function(t) {
   var div = createDiv(t);
   var animation = div.animate({}, 100 * MS_PER_SEC);
- 
+
   assert_equals(animation.playState, 'pending');
   return animation.ready.then(function() {
     assert_equals(animation.playState, 'running');
