@@ -224,20 +224,5 @@ interface nsIGfxInfo : nsISupports
   //   }
   [implicit_jscontext]
   jsval getFeatures();
-
-  // Returns an array listing any active crash guards.
-  //
-  //   [
-  //     {
-  //       // Type is one of "d3d11layers", "d3d9video", "glcontext",
-  //       // or "d3d11video".
-  //       "type":        "<identifier>",
-  //
-  //       // Preference that must be deleted/reset to retrigger the guard.
-  //       "prefName":    "<preference>",
-  //     }
-  //   ]
-  [implicit_jscontext]
-  jsval getActiveCrashGuards();
 };
 
