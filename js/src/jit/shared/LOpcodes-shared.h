@@ -21,8 +21,8 @@
     _(SimdBox)                      \
     _(SimdUnbox)                    \
     _(SimdSplatX4)                  \
-    _(Int32x4)                      \
-    _(Float32x4)                    \
+    _(Simd128Int)                   \
+    _(Simd128Float)                 \
     _(SimdAllTrue)                  \
     _(SimdAnyTrue)                  \
     _(SimdReinterpretCast)          \

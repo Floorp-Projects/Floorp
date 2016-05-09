@@ -288,8 +288,8 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     void visitSimdValueInt32x4(LSimdValueInt32x4* lir);
     void visitSimdValueFloat32x4(LSimdValueFloat32x4* lir);
     void visitSimdSplatX4(LSimdSplatX4* lir);
-    void visitInt32x4(LInt32x4* ins);
-    void visitFloat32x4(LFloat32x4* ins);
+    void visitSimd128Int(LSimd128Int* ins);
+    void visitSimd128Float(LSimd128Float* ins);
     void visitInt32x4ToFloat32x4(LInt32x4ToFloat32x4* ins);
     void visitFloat32x4ToInt32x4(LFloat32x4ToInt32x4* ins);
     void visitFloat32x4ToUint32x4(LFloat32x4ToUint32x4* ins);
