@@ -100,7 +100,7 @@ public:
                            eSimpleGestureEventClass)
     , mAllowedDirections(0)
     , mDirection(0)
-    , clickCount(0)
+    , mClickCount(0)
     , delta(0.0)
   {
   }
@@ -110,7 +110,7 @@ public:
                            aOther.mWidget, eSimpleGestureEventClass)
     , mAllowedDirections(aOther.mAllowedDirections)
     , mDirection(aOther.mDirection)
-    , clickCount(0)
+    , mClickCount(0)
     , delta(aOther.delta)
   {
   }
@@ -132,7 +132,7 @@ public:
   // See nsIDOMSimpleGestureEvent for values
   uint32_t mDirection;
   // The number of taps for tap events
-  uint32_t clickCount;
+  uint32_t mClickCount;
   // Delta for magnify and rotate events
   double delta;
 
@@ -145,7 +145,7 @@ public:
     // mAllowedDirections isn't copied
     mDirection = aEvent.mDirection;
     delta = aEvent.delta;
-    clickCount = aEvent.clickCount;
+    mClickCount = aEvent.mClickCount;
   }
 };
 
