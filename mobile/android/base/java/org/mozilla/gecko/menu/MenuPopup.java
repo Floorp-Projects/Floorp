@@ -5,11 +5,13 @@
 
 package org.mozilla.gecko.menu;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
 
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.support.v7.widget.CardView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,7 +22,7 @@ import android.widget.PopupWindow;
  * A popup to show the inflated MenuPanel.
  */
 public class MenuPopup extends PopupWindow {
-    private final FrameLayout mPanel;
+    private final CardView mPanel;
 
     private final int mPopupWidth;
 
@@ -37,8 +39,20 @@ public class MenuPopup extends PopupWindow {
                             ViewGroup.LayoutParams.WRAP_CONTENT);
 
         LayoutInflater inflater = LayoutInflater.from(context);
-        mPanel = (FrameLayout) inflater.inflate(R.layout.menu_popup, null);
+        mPanel = (CardView) inflater.inflate(R.layout.menu_popup, null);
         setContentView(mPanel);
+
+        // Disable corners on < lollipop:
+        // CardView only supports clipping content on API >= 21 (for performance reasons). Without
+        // content clipping the "action bar" will look ugly because it has its own background:
+        // by default there's a 2px white edge along the top and sides (i.e. an inset corresponding
+        // to the corner radius), if we disable the inset then the corners overlap.
+        // It's possible to implement custom clipping, however given that the support library
+        // chose not to support this for performance reasons, we too have chosen to just disable
+        // corners on < 21, see Bug 1271428.
+        if (AppConstants.Versions.preLollipop) {
+            mPanel.setRadius(0);
+        }
 
         setAnimationStyle(R.style.PopupAnimation);
     }
