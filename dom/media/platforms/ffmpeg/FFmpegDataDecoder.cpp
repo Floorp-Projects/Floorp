@@ -26,12 +26,12 @@ StaticMutex FFmpegDataDecoder<LIBAV_VER>::sMonitor;
                                                   MediaDataDecoderCallback* aCallback,
                                                   AVCodecID aCodecID)
   : mLib(aLib)
-  , mTaskQueue(aTaskQueue)
   , mCallback(aCallback)
   , mCodecContext(nullptr)
   , mFrame(NULL)
   , mExtraData(nullptr)
   , mCodecID(aCodecID)
+  , mTaskQueue(aTaskQueue)
 {
   MOZ_ASSERT(aLib);
   MOZ_COUNT_CTOR(FFmpegDataDecoder);
@@ -108,6 +108,29 @@ FFmpegDataDecoder<LIBAV_VER>::Shutdown()
   } else {
     ProcessShutdown();
   }
+  return NS_OK;
+}
+
+void
+FFmpegDataDecoder<LIBAV_VER>::ProcessDecode(MediaRawData* aSample)
+{
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  switch (DoDecode(aSample)) {
+    case DecodeResult::DECODE_ERROR:
+      mCallback->Error();
+      break;
+    default:
+      if (mTaskQueue->IsEmpty()) {
+        mCallback->InputExhausted();
+      }
+  }
+}
+
+nsresult
+FFmpegDataDecoder<LIBAV_VER>::Input(MediaRawData* aSample)
+{
+  mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
+    this, &FFmpegDataDecoder::ProcessDecode, aSample));
   return NS_OK;
 }
 

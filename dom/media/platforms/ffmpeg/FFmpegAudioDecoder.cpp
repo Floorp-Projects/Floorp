@@ -99,7 +99,6 @@ CopyAndPackAudio(AVFrame* aFrame, uint32_t aNumChannels, uint32_t aNumAFrames)
 FFmpegAudioDecoder<LIBAV_VER>::DecodeResult
 FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample)
 {
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   AVPacket packet;
   mLib->av_init_packet(&packet);
 
@@ -108,7 +107,6 @@ FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample)
 
   if (!PrepareFrame()) {
     NS_WARNING("FFmpeg audio decoder failed to allocate frame.");
-    mCallback->Error();
     return DecodeResult::DECODE_ERROR;
   }
 
@@ -122,7 +120,6 @@ FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample)
 
     if (bytesConsumed < 0) {
       NS_WARNING("FFmpeg audio decoder error.");
-      mCallback->Error();
       return DecodeResult::DECODE_ERROR;
     }
 
@@ -130,7 +127,6 @@ FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample)
       uint32_t numChannels = mCodecContext->channels;
       AudioConfig::ChannelLayout layout(numChannels);
       if (!layout.IsValid()) {
-        mCallback->Error();
         return DecodeResult::DECODE_ERROR;
       }
 
@@ -143,7 +139,6 @@ FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample)
         FramesToTimeUnit(mFrame->nb_samples, samplingRate);
       if (!audio || !duration.IsValid()) {
         NS_WARNING("Invalid count of accumulated audio samples");
-        mCallback->Error();
         return DecodeResult::DECODE_ERROR;
       }
 
@@ -158,7 +153,6 @@ FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample)
       pts += duration;
       if (!pts.IsValid()) {
         NS_WARNING("Invalid count of accumulated audio samples");
-        mCallback->Error();
         return DecodeResult::DECODE_ERROR;
       }
     }
@@ -171,26 +165,8 @@ FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample)
 }
 
 void
-FFmpegAudioDecoder<LIBAV_VER>::ProcessDecode(MediaRawData* aSample)
-{
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-  if (DoDecode(aSample) != DecodeResult::DECODE_ERROR && mTaskQueue->IsEmpty()) {
-    mCallback->InputExhausted();
-  }
-}
-
-nsresult
-FFmpegAudioDecoder<LIBAV_VER>::Input(MediaRawData* aSample)
-{
-  mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
-    this, &FFmpegAudioDecoder::ProcessDecode, aSample));
-  return NS_OK;
-}
-
-void
 FFmpegAudioDecoder<LIBAV_VER>::ProcessDrain()
 {
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   ProcessFlush();
   mCallback->DrainComplete();
 }
