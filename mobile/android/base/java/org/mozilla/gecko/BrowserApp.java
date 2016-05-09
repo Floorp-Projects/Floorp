@@ -30,6 +30,7 @@ import org.mozilla.gecko.dlc.DownloadContentService;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.favicons.decoders.IconDirectoryEntry;
+import org.mozilla.gecko.feeds.ContentNotificationsDelegate;
 import org.mozilla.gecko.feeds.FeedService;
 import org.mozilla.gecko.feeds.action.CheckForUpdatesAction;
 import org.mozilla.gecko.firstrun.FirstrunAnimationContainer;
@@ -243,6 +244,8 @@ public class BrowserApp extends GeckoApp
     private static final int GECKO_TOOLS_MENU = -1;
     private static final int ADDON_MENU_OFFSET = 1000;
     public static final String TAB_HISTORY_FRAGMENT_TAG = "tabHistoryFragment";
+
+    private ContentNotificationsDelegate contentNotificationsDelegate = new ContentNotificationsDelegate();
 
     private static class MenuItemInfo {
         public int id;
@@ -853,6 +856,8 @@ public class BrowserApp extends GeckoApp
 
         mAddToHomeScreenPromotion = new AddToHomeScreenPromotion(this);
         AudioFocusAgent.getInstance().attachToContext(this);
+
+        contentNotificationsDelegate.onCreate(this, savedInstanceState);
     }
 
     /**
@@ -1067,16 +1072,6 @@ public class BrowserApp extends GeckoApp
         final List<String> urls = intent.getStringArrayListExtra("urls");
         if (urls != null) {
             openUrls(urls);
-        }
-
-        // Launched from a "content notification"
-        if (intent.hasExtra(CheckForUpdatesAction.EXTRA_CONTENT_NOTIFICATION)) {
-            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, FeedService.getEnabledExperiment(this));
-
-            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.NOTIFICATION, "content_update");
-            Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "content_update");
-
-            Telemetry.stopUISession(TelemetryContract.Session.EXPERIMENT, FeedService.getEnabledExperiment(this));
         }
     }
 
@@ -3834,6 +3829,8 @@ public class BrowserApp extends GeckoApp
             openMultipleTabsFromIntent(intent);
         }
 
+        contentNotificationsDelegate.onNewIntent(this, intent);
+
         if (!mInitialized || !Intent.ACTION_MAIN.equals(action)) {
             return;
         }
@@ -3861,7 +3858,7 @@ public class BrowserApp extends GeckoApp
         }
     }
 
-    private void openUrls(List<String> urls) {
+    public void openUrls(List<String> urls) {
         try {
             JSONArray array = new JSONArray();
             for (String url : urls) {
