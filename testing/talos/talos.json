@@ -67,6 +67,13 @@
         "g3-e10s": {
             "tests": ["dromaeo_dom"]
         },
+        "g4": {
+            "tests": ["basic_compositor_video"],
+            "talos_options": ["--disable-e10s"]
+        },
+        "g4-e10s": {
+            "tests": ["basic_compositor_video"]
+        },
         "svgr": {
             "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "cart"],
             "talos_options": ["--disable-e10s"]
