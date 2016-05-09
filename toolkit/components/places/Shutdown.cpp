@@ -34,18 +34,21 @@ PlacesShutdownBlocker::GetName(nsAString& aName)
 
 // nsIAsyncShutdownBlocker
 NS_IMETHODIMP
-PlacesShutdownBlocker::GetState(nsIPropertyBag** aState)
+PlacesShutdownBlocker::GetState(nsIPropertyBag** _state)
 {
-  nsresult rv;
+  NS_ENSURE_ARG_POINTER(_state);
+
   nsCOMPtr<nsIWritablePropertyBag2> bag =
-    do_CreateInstance("@mozilla.org/hash-property-bag;1", &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) return rv;
+    do_CreateInstance("@mozilla.org/hash-property-bag;1");
+  NS_ENSURE_TRUE(bag, NS_ERROR_OUT_OF_MEMORY);
+  bag.forget(_state);
 
   // Put `mState` in field `progress`
   RefPtr<nsVariant> progress = new nsVariant();
-  rv = progress->SetAsUint8(mState);
+  nsresult rv = progress->SetAsUint8(mState);
   if (NS_WARN_IF(NS_FAILED(rv))) return rv;
-  rv = bag->SetPropertyAsInterface(NS_LITERAL_STRING("progress"), progress);
+  rv = static_cast<nsIWritablePropertyBag2*>(*_state)->SetPropertyAsInterface(
+    NS_LITERAL_STRING("progress"), progress);
   if (NS_WARN_IF(NS_FAILED(rv))) return rv;
 
   // Put `mBarrier`'s state in field `barrier`, if possible
@@ -61,7 +64,8 @@ PlacesShutdownBlocker::GetState(nsIPropertyBag** aState)
   RefPtr<nsVariant> barrier = new nsVariant();
   rv = barrier->SetAsInterface(NS_GET_IID(nsIPropertyBag), barrierState);
   if (NS_WARN_IF(NS_FAILED(rv))) return rv;
-  rv = bag->SetPropertyAsInterface(NS_LITERAL_STRING("Barrier"), barrier);
+  rv = static_cast<nsIWritablePropertyBag2*>(*_state)->SetPropertyAsInterface(
+    NS_LITERAL_STRING("Barrier"), barrier);
   if (NS_WARN_IF(NS_FAILED(rv))) return rv;
 
   return NS_OK;
@@ -153,7 +157,7 @@ NS_IMPL_ISUPPORTS_INHERITED(
 ////////////////////////////////////////////////////////////////////////////////
 
 ConnectionShutdownBlocker::ConnectionShutdownBlocker(Database* aDatabase)
-  : PlacesShutdownBlocker(NS_LITERAL_STRING("Places Clients shutdown"))
+  : PlacesShutdownBlocker(NS_LITERAL_STRING("Places Connection shutdown"))
   , mDatabase(aDatabase)
 {
   // Do nothing.
