@@ -3461,7 +3461,7 @@ CodeGeneratorX86Shared::visitSimdUnaryArithIx4(LSimdUnaryArithIx4* ins)
     Operand in = ToOperand(ins->input());
     FloatRegister out = ToFloatRegister(ins->output());
 
-    static const SimdConstant allOnes = SimdConstant::CreateX4(-1, -1, -1, -1);
+    static const SimdConstant allOnes = SimdConstant::SplatX4(-1);
 
     switch (ins->operation()) {
       case MSimdUnaryArith::neg:

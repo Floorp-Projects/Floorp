@@ -9,6 +9,8 @@
 
 #include "mozilla/HashFunctions.h"
 
+#include <algorithm>
+
 #include "jsfriendapi.h"
 #include "jstypes.h"
 
@@ -264,17 +266,23 @@ static const uint32_t VECTOR_SCALE_MASK = (1 << VECTOR_SCALE_BITS) - 1;
 class SimdConstant {
   public:
     enum Type {
+        Int8x16,
+        Int16x8,
         Int32x4,
         Float32x4,
         Undefined = -1
     };
 
+    typedef int8_t I8x16[16];
+    typedef int16_t I16x8[8];
     typedef int32_t I32x4[4];
     typedef float F32x4[4];
 
   private:
     Type type_;
     union {
+        I8x16 i8x16;
+        I16x8 i16x8;
         I32x4 i32x4;
         F32x4 f32x4;
     } u;
@@ -283,74 +291,78 @@ class SimdConstant {
         return type_ != Undefined;
     }
 
-    void fillInt32x4(int32_t x, int32_t y, int32_t z, int32_t w)
-    {
-        type_ = Int32x4;
-        u.i32x4[0] = x;
-        u.i32x4[1] = y;
-        u.i32x4[2] = z;
-        u.i32x4[3] = w;
-    }
-
-    void fillFloat32x4(float x, float y, float z, float w)
-    {
-        type_ = Float32x4;
-        u.f32x4[0] = x;
-        u.f32x4[1] = y;
-        u.f32x4[2] = z;
-        u.f32x4[3] = w;
-    }
-
   public:
     // Doesn't have a default constructor, as it would prevent it from being
     // included in unions.
 
-    static SimdConstant CreateX4(int32_t x, int32_t y, int32_t z, int32_t w) {
+    static SimdConstant CreateX16(const int8_t* array) {
         SimdConstant cst;
-        cst.fillInt32x4(x, y, z, w);
+        cst.type_ = Int8x16;
+        memcpy(cst.u.i8x16, array, sizeof(cst.u));
+        return cst;
+    }
+    static SimdConstant SplatX16(int8_t v) {
+        SimdConstant cst;
+        cst.type_ = Int8x16;
+        std::fill_n(cst.u.i8x16, 16, v);
+        return cst;
+    }
+    static SimdConstant CreateX8(const int16_t* array) {
+        SimdConstant cst;
+        cst.type_ = Int16x8;
+        memcpy(cst.u.i16x8, array, sizeof(cst.u));
+        return cst;
+    }
+    static SimdConstant SplatX8(int16_t v) {
+        SimdConstant cst;
+        cst.type_ = Int16x8;
+        std::fill_n(cst.u.i16x8, 8, v);
         return cst;
     }
     static SimdConstant CreateX4(const int32_t* array) {
         SimdConstant cst;
-        cst.fillInt32x4(array[0], array[1], array[2], array[3]);
+        cst.type_ = Int32x4;
+        memcpy(cst.u.i32x4, array, sizeof(cst.u));
         return cst;
     }
     static SimdConstant SplatX4(int32_t v) {
         SimdConstant cst;
-        cst.fillInt32x4(v, v, v, v);
-        return cst;
-    }
-    static SimdConstant CreateX4(float x, float y, float z, float w) {
-        SimdConstant cst;
-        cst.fillFloat32x4(x, y, z, w);
+        cst.type_ = Int32x4;
+        std::fill_n(cst.u.i32x4, 4, v);
         return cst;
     }
     static SimdConstant CreateX4(const float* array) {
         SimdConstant cst;
-        cst.fillFloat32x4(array[0], array[1], array[2], array[3]);
+        cst.type_ = Float32x4;
+        memcpy(cst.u.f32x4, array, sizeof(cst.u));
         return cst;
     }
     static SimdConstant SplatX4(float v) {
         SimdConstant cst;
-        cst.fillFloat32x4(v, v, v, v);
+        cst.type_ = Float32x4;
+        std::fill_n(cst.u.f32x4, 4, v);
         return cst;
     }
 
-    uint32_t length() const {
-        MOZ_ASSERT(defined());
-        switch(type_) {
-          case Int32x4:
-          case Float32x4:
-            return 4;
-          case Undefined:
-            break;
-        }
-        MOZ_CRASH("Unexpected SIMD kind");
-    }
+    // Overloads for use by templates.
+    static SimdConstant CreateSimd128(const int8_t* array) { return CreateX16(array); }
+    static SimdConstant CreateSimd128(const int16_t* array) { return CreateX8(array); }
+    static SimdConstant CreateSimd128(const int32_t* array) { return CreateX4(array); }
+    static SimdConstant CreateSimd128(const float* array) { return CreateX4(array); }
 
     Type type() const {
         MOZ_ASSERT(defined());
         return type_;
+    }
+
+    const I8x16& asInt8x16() const {
+        MOZ_ASSERT(defined() && type_ == Int8x16);
+        return u.i8x16;
+    }
+
+    const I16x8& asInt16x8() const {
+        MOZ_ASSERT(defined() && type_ == Int16x8);
+        return u.i16x8;
     }
 
     const I32x4& asInt32x4() const {
