@@ -73,7 +73,7 @@ function ensure_tag_results(uris, searchTerm)
 
   // Make an AutoCompleteInput that uses our searches
   // and confirms results on search complete
-  var input = new AutoCompleteInput(["history"]);
+  var input = new AutoCompleteInput(["unifiedcomplete"]);
 
   controller.input = input;
 
@@ -95,7 +95,7 @@ function ensure_tag_results(uris, searchTerm)
     for (var i=0; i<controller.matchCount; i++) {
       // Keep the URL for later because order of tag results is undefined
       vals.push(controller.getValueAt(i));
-      do_check_eq(controller.getStyleAt(i), "tag");
+      do_check_eq(controller.getStyleAt(i), "bookmark-tag");
     }
     // Sort the results then check if we have the right items
     vals.sort().forEach((val, i) => do_check_eq(val, uris[i].spec))

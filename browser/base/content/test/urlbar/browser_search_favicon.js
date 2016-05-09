@@ -1,13 +1,8 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
-
 var gOriginalEngine;
 var gEngine;
-var gUnifiedCompletePref = "browser.urlbar.unifiedcomplete";
 var gRestyleSearchesPref = "browser.urlbar.restyleSearches";
 
 registerCleanupFunction(() => {
-  Services.prefs.clearUserPref(gUnifiedCompletePref);
   Services.prefs.clearUserPref(gRestyleSearchesPref);
   Services.search.currentEngine = gOriginalEngine;
   Services.search.removeEngine(gEngine);
@@ -15,7 +10,6 @@ registerCleanupFunction(() => {
 });
 
 add_task(function*() {
-  Services.prefs.setBoolPref(gUnifiedCompletePref, true);
   Services.prefs.setBoolPref(gRestyleSearchesPref, true);
 });
 

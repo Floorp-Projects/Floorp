@@ -4,7 +4,7 @@
 
 "use strict";
 
-const protocol = require("devtools/server/protocol");
+const protocol = require("devtools/shared/protocol");
 const { method, Arg } = protocol;
 const Services = require("Services");
 

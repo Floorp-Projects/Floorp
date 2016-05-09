@@ -7,6 +7,7 @@
 package org.mozilla.gecko.telemetry;
 
 import android.content.SharedPreferences;
+import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 import android.util.Log;
 import org.mozilla.gecko.BrowserApp;
@@ -36,7 +37,7 @@ public class UploadTelemetryCorePingCallback implements SearchEngineManager.Sear
 
     // May be called from any thread.
     @Override
-    public void execute(final org.mozilla.gecko.search.SearchEngine engine) {
+    public void execute(@Nullable final org.mozilla.gecko.search.SearchEngine engine) {
         // Don't waste resources queueing to the background thread if we don't have a reference.
         if (this.activityWeakReference.get() == null) {
             return;

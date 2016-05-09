@@ -4,7 +4,7 @@
 /**
  * Test simple requests using the protocol helpers.
  */
-var protocol = require("devtools/server/protocol");
+var protocol = require("devtools/shared/protocol");
 var {method, RetVal, Arg, Option} = protocol;
 var events = require("sdk/event/core");
 var {LongStringActor} = require("devtools/server/actors/string");
