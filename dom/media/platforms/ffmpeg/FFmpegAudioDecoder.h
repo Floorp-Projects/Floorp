@@ -20,6 +20,12 @@ template <int V> class FFmpegAudioDecoder
 template <>
 class FFmpegAudioDecoder<LIBAV_VER> : public FFmpegDataDecoder<LIBAV_VER>
 {
+  enum DecodeResult {
+    DECODE_FRAME,
+    DECODE_NO_FRAME,
+    DECODE_ERROR
+  };
+
 public:
   FFmpegAudioDecoder(FFmpegLibWrapper* aLib, FlushableTaskQueue* aTaskQueue,
                      MediaDataDecoderCallback* aCallback,
@@ -37,7 +43,8 @@ public:
   }
 
 private:
-  void DecodePacket(MediaRawData* aSample);
+  void ProcessDecode(MediaRawData* aSample);
+  DecodeResult DoDecode(MediaRawData* aSample);
 };
 
 } // namespace mozilla
