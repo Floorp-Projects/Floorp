@@ -30,7 +30,7 @@ prefBranch.setIntPref("urlclassifier.gethashnoise", 0);
 // Enable malware/phishing checking for tests
 prefBranch.setBoolPref("browser.safebrowsing.malware.enabled", true);
 prefBranch.setBoolPref("browser.safebrowsing.blockedURIs.enabled", true);
-prefBranch.setBoolPref("browser.safebrowsing.enabled", true);
+prefBranch.setBoolPref("browser.safebrowsing.phishing.enabled", true);
 
 // Enable all completions for tests
 prefBranch.setCharPref("urlclassifier.disallow_completions", "");
