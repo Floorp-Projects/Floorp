@@ -124,16 +124,30 @@ EvaluateConstantOperands(TempAllocator& alloc, MBinaryInstruction* ins, bool* pt
         ret.setNumber(lhs->numberToDouble() * rhs->numberToDouble());
         break;
       case MDefinition::Op_Div:
-        if (ins->toDiv()->isUnsigned())
-            ret.setInt32(rhs->isInt32(0) ? 0 : uint32_t(lhs->toInt32()) / uint32_t(rhs->toInt32()));
-        else
+        if (ins->toDiv()->isUnsigned()) {
+            if (rhs->isInt32(0)) {
+                if (ins->toDiv()->trapOnError())
+                    return nullptr;
+                ret.setInt32(0);
+            } else {
+                ret.setInt32(uint32_t(lhs->toInt32()) / uint32_t(rhs->toInt32()));
+            }
+        } else {
             ret.setNumber(NumberDiv(lhs->numberToDouble(), rhs->numberToDouble()));
+        }
         break;
       case MDefinition::Op_Mod:
-        if (ins->toMod()->isUnsigned())
-            ret.setInt32(rhs->isInt32(0) ? 0 : uint32_t(lhs->toInt32()) % uint32_t(rhs->toInt32()));
-        else
+        if (ins->toMod()->isUnsigned()) {
+            if (rhs->isInt32(0)) {
+                if (ins->toMod()->trapOnError())
+                    return nullptr;
+                ret.setInt32(0);
+            } else {
+                ret.setInt32(uint32_t(lhs->toInt32()) % uint32_t(rhs->toInt32()));
+            }
+        } else {
             ret.setNumber(NumberMod(lhs->numberToDouble(), rhs->numberToDouble()));
+        }
         break;
       default:
         MOZ_CRASH("NYI");
