@@ -12,100 +12,98 @@ function isPatternSyntaxError(pattern) {
     }
 }
 
-enableMatchFlagArgument();
-
 // Bug example.
-assertEq("1+2".replace("1+2", "$&+3", "g"), "1+2+3");
-assertEq("1112".replace("1+2", "", "g"), "1112");
+assertEq("1+2".replace("1+2", "$&+3"), "1+2+3");
+assertEq("1112".replace("1+2", ""), "1112");
 
 // ^
-assertEq("leading text^my hat".replace("^my hat", "", "g"), "leading text");
-assertEq("my hat".replace("^my hat", "", "g"), "my hat");
+assertEq("leading text^my hat".replace("^my hat", ""), "leading text");
+assertEq("my hat".replace("^my hat", ""), "my hat");
 
 // $
-assertEq("leading text$my money".replace("leading text$", "", "g"), "my money");
-assertEq("leading text".replace("leading text$", "", "g"), "leading text");
+assertEq("leading text$my money".replace("leading text$", ""), "my money");
+assertEq("leading text".replace("leading text$", ""), "leading text");
 
 // \
 var BSL = '\\';
-assertEq(("dir C:" + BSL + "Windoze").replace("C:" + BSL, "", "g"),
+assertEq(("dir C:" + BSL + "Windoze").replace("C:" + BSL, ""),
          "dir Windoze");
 assertEq(isPatternSyntaxError("C:" + BSL), true);
 
 // .
-assertEq("This is a sentence. It has words.".replace(".", "!", "g"),
-         "This is a sentence! It has words!");
-assertEq("This is an unterminated sentence".replace(".", "", "g"),
+assertEq("This is a sentence. It has words.".replace(".", "!"),
+         "This is a sentence! It has words.");
+assertEq("This is an unterminated sentence".replace(".", ""),
          "This is an unterminated sentence");
 
 // *
-assertEq("Video killed the radio *".replace(" *", "", "g"), "Video killed the radio");
-assertEq("aaa".replace("a*", "", "g"), "aaa");
+assertEq("Video killed the radio *".replace(" *", ""), "Video killed the radio");
+assertEq("aaa".replace("a*", ""), "aaa");
 
 // +
-assertEq("On the + side".replace(" +", "", "g"), "On the side");
-assertEq("1111111111111".replace("1+", "", "g"), "1111111111111");
+assertEq("On the + side".replace(" +", ""), "On the side");
+assertEq("1111111111111".replace("1+", ""), "1111111111111");
 
 // \+
-assertEq(("Inverse cone head: " + BSL + "++/").replace(BSL + "+", "", "g"),
+assertEq(("Inverse cone head: " + BSL + "++/").replace(BSL + "+", ""),
          "Inverse cone head: +/");
-assertEq((BSL + BSL + BSL).replace(BSL + "+", "", "g"),
+assertEq((BSL + BSL + BSL).replace(BSL + "+", ""),
          BSL + BSL + BSL);
 
 // \\+
-assertEq((BSL + BSL + "+").replace(BSL + BSL + "+", "", "g"), "");
-assertEq((BSL + BSL + BSL).replace(BSL + BSL + "+", "", "g"), (BSL + BSL + BSL));
+assertEq((BSL + BSL + "+").replace(BSL + BSL + "+", ""), "");
+assertEq((BSL + BSL + BSL).replace(BSL + BSL + "+", ""), (BSL + BSL + BSL));
 
 // \\\
-assertEq((BSL + BSL + BSL + BSL).replace(BSL + BSL + BSL, "", "g"), BSL);
+assertEq((BSL + BSL + BSL + BSL).replace(BSL + BSL + BSL, ""), BSL);
 assertEq(isPatternSyntaxError(BSL + BSL + BSL), true);
 
 // \\\\
 assertEq((BSL + BSL + BSL + BSL).replace(BSL + BSL + BSL + BSL, "", "i"), "");
-assertEq((BSL + BSL).replace(BSL + BSL + BSL + BSL, "", "g"), BSL + BSL);
+assertEq((BSL + BSL).replace(BSL + BSL + BSL + BSL, ""), BSL + BSL);
 
 
 // ?
-assertEq("Pressing question?".replace("?", ".", "g"), "Pressing question.");
-assertEq("a".replace("a?", "", "g"), "a");
+assertEq("Pressing question?".replace("?", "."), "Pressing question.");
+assertEq("a".replace("a?", ""), "a");
 
 // (
-assertEq("(a".replace("(", "", "g"), "a");
+assertEq("(a".replace("(", ""), "a");
 
 // )
-assertEq("a)".replace(")", "", "g"), "a");
+assertEq("a)".replace(")", ""), "a");
 
 // ( and )
-assertEq("(foo)".replace("(foo)", "", "g"), "");
-assertEq("a".replace("(a)", "", "g"), "a");
+assertEq("(foo)".replace("(foo)", ""), "");
+assertEq("a".replace("(a)", ""), "a");
 
 // [
-assertEq("[a".replace("[", "", "g"), "a");
+assertEq("[a".replace("[", ""), "a");
 
 // ]
-assertEq("a]".replace("]", "", "g"), "a");
+assertEq("a]".replace("]", ""), "a");
 
 // [ and ]
-assertEq("a".replace("[a-z]", "", "g"), "a");
-assertEq("You would write your regexp as [a-z]".replace("[a-z]", "", "g"),
+assertEq("a".replace("[a-z]", ""), "a");
+assertEq("You would write your regexp as [a-z]".replace("[a-z]", ""),
          "You would write your regexp as ");
 
 // {
-assertEq("Numbers may be specified in the interval {1,100}".replace("{1,", "", "g"),
+assertEq("Numbers may be specified in the interval {1,100}".replace("{1,", ""),
          "Numbers may be specified in the interval 100}");
 
 // }
-assertEq("Numbers may be specified in the interval {1,100}".replace(",100}", "", "g"),
+assertEq("Numbers may be specified in the interval {1,100}".replace(",100}", ""),
          "Numbers may be specified in the interval {1");
 
 // { and }
-assertEq("Numbers may be specified in the interval {1,100}".replace(" {1,100}", "", "g"),
+assertEq("Numbers may be specified in the interval {1,100}".replace(" {1,100}", ""),
          "Numbers may be specified in the interval");
-assertEq("aaa".replace("a{1,10}", "", "g"), "aaa");
+assertEq("aaa".replace("a{1,10}", ""), "aaa");
 
 // |
-assertEq("Mr. Gorbachev|Tear down this wall!".replace("|Tear down this wall!", "", "g"),
+assertEq("Mr. Gorbachev|Tear down this wall!".replace("|Tear down this wall!", ""),
          "Mr. Gorbachev");
-assertEq("foobar".replace("foo|bar", "", "g"), "foobar");
+assertEq("foobar".replace("foo|bar", ""), "foobar");
 
 print("PASS");
