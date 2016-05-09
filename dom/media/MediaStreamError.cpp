@@ -20,6 +20,9 @@ BaseMediaMgrError::BaseMediaMgrError(const nsAString& aName,
   if (mMessage.IsEmpty()) {
     if (mName.EqualsLiteral("NotFoundError")) {
       mMessage.AssignLiteral("The object can not be found here.");
+    } else if (mName.EqualsLiteral("NotAllowedError")) {
+      mMessage.AssignLiteral("The request is not allowed by the user agent "
+                             "or the platform in the current context.");
     } else if (mName.EqualsLiteral("SecurityError")) {
       mMessage.AssignLiteral("The operation is insecure.");
     } else if (mName.EqualsLiteral("SourceUnavailableError")) {
