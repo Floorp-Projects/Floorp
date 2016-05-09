@@ -170,11 +170,7 @@ MacroAssemblerX86::finish()
         CodeOffset cst(masm.currentOffset());
         for (CodeOffset use : v.uses)
             addCodeLabel(CodeLabel(use, cst));
-        switch (v.type()) {
-          case SimdConstant::Int32x4:   masm.int32x4Constant(v.value.asInt32x4());     break;
-          case SimdConstant::Float32x4: masm.float32x4Constant(v.value.asFloat32x4()); break;
-          default: MOZ_CRASH("unexpected SimdConstant type");
-        }
+        masm.simd128Constant(v.value.bytes());
         if (!enoughMemory_)
             return;
     }

@@ -3395,17 +3395,12 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
         m_formatter.floatConstant(f);
     }
 
-    void int32x4Constant(const int32_t s[4])
+    void simd128Constant(const void* data)
     {
-        spew(".int %d,%d,%d,%d", s[0], s[1], s[2], s[3]);
+        const uint32_t* dw = reinterpret_cast<const uint32_t*>(data);
+        spew(".int 0x%08x,0x%08x,0x%08x,0x%08x", dw[0], dw[1], dw[2], dw[3]);
         MOZ_ASSERT(m_formatter.isAligned(16));
-        m_formatter.int32x4Constant(s);
-    }
-    void float32x4Constant(const float f[4])
-    {
-        spew(".float %g,%g,%g,%g", f[0], f[1], f[2], f[3]);
-        MOZ_ASSERT(m_formatter.isAligned(16));
-        m_formatter.float32x4Constant(f);
+        m_formatter.simd128Constant(data);
     }
 
     void int64Constant(int64_t i)
@@ -4734,16 +4729,12 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
             m_buffer.putIntUnchecked(mozilla::BitwiseCast<uint32_t>(f));
         }
 
-        void int32x4Constant(const int32_t s[4])
+        void simd128Constant(const void* data)
         {
-            for (size_t i = 0; i < 4; ++i)
-                int32Constant(s[i]);
-        }
-
-        void float32x4Constant(const float s[4])
-        {
-            for (size_t i = 0; i < 4; ++i)
-                floatConstant(s[i]);
+            const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
+            m_buffer.ensureSpace(16);
+            for (size_t i = 0; i < 16; ++i)
+                m_buffer.putByteUnchecked(bytes[i]);
         }
 
         void int64Constant(int64_t i)

@@ -106,11 +106,7 @@ MacroAssemblerX64::finish()
         masm.haltingAlign(SimdMemoryAlignment);
     for (const SimdData& v : simds_) {
         bindOffsets(v.uses);
-        switch(v.type()) {
-          case SimdConstant::Int32x4:   masm.int32x4Constant(v.value.asInt32x4());     break;
-          case SimdConstant::Float32x4: masm.float32x4Constant(v.value.asFloat32x4()); break;
-          default: MOZ_CRASH("unexpected SimdConstant type");
-        }
+        masm.simd128Constant(v.value.bytes());
     }
 
     MacroAssemblerX86Shared::finish();
