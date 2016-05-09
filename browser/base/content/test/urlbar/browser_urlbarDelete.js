@@ -7,15 +7,6 @@ add_task(function*() {
     yield PlacesUtils.bookmarks.remove(bm);
   });
 
-  // We do this test with both unifiedcomplete disabled and enabled.
-  let ucpref = Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete");
-  registerCleanupFunction(() => {
-    Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", ucpref);
-  });
-
-  Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", false);
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, testDelete);
-
   Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", true);
   yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, testDelete);
 });

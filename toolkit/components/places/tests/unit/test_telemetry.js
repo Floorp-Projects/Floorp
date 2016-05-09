@@ -137,7 +137,7 @@ add_task(function* test_execute()
   };
   let controller = Cc["@mozilla.org/autocomplete/controller;1"].
                    getService(Ci.nsIAutoCompleteController);
-  controller.input = new AutoCompleteInput(["history"]);
+  controller.input = new AutoCompleteInput(["unifiedcomplete"]);
   controller.startSearch("moz");
   */
 
