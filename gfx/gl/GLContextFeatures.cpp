@@ -511,6 +511,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
         GLContext::Extension_None,
         {
             GLContext::ARB_texture_float,
+            GLContext::EXT_color_buffer_float,
             GLContext::EXT_color_buffer_half_float,
             GLContext::Extensions_End
         }
