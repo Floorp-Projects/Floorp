@@ -7,7 +7,6 @@
 #ifndef jit_RegisterSets_h
 #define jit_RegisterSets_h
 
-#include "mozilla/Alignment.h"
 #include "mozilla/MathAlgorithms.h"
 
 #include "jit/JitAllocPolicy.h"
@@ -26,8 +25,8 @@ struct AnyRegister {
     Code code_;
 
   public:
-    AnyRegister()
-    { }
+    AnyRegister() = default;
+
     explicit AnyRegister(Register gpr) {
         code_ = gpr.code();
     }
@@ -169,46 +168,25 @@ class TypedOrValueRegister
     // Type of value being stored.
     MIRType type_;
 
-    // Space to hold either an AnyRegister or a ValueOperand.
     union U {
-        mozilla::AlignedStorage2<AnyRegister> typed;
-        mozilla::AlignedStorage2<ValueOperand> value;
+        AnyRegister typed;
+        ValueOperand value;
     } data;
-
-    AnyRegister& dataTyped() {
-        MOZ_ASSERT(hasTyped());
-        return *data.typed.addr();
-    }
-    ValueOperand& dataValue() {
-        MOZ_ASSERT(hasValue());
-        return *data.value.addr();
-    }
-
-    AnyRegister dataTyped() const {
-        MOZ_ASSERT(hasTyped());
-        return *data.typed.addr();
-    }
-    const ValueOperand& dataValue() const {
-        MOZ_ASSERT(hasValue());
-        return *data.value.addr();
-    }
 
   public:
 
-    TypedOrValueRegister()
-      : type_(MIRType::None)
-    {}
+    TypedOrValueRegister() = default;
 
     TypedOrValueRegister(MIRType type, AnyRegister reg)
       : type_(type)
     {
-        dataTyped() = reg;
+        data.typed = reg;
     }
 
     MOZ_IMPLICIT TypedOrValueRegister(ValueOperand value)
       : type_(MIRType::Value)
     {
-        dataValue() = value;
+        data.value = value;
     }
 
     MIRType type() const {
@@ -224,11 +202,13 @@ class TypedOrValueRegister
     }
 
     AnyRegister typedReg() const {
-        return dataTyped();
+        MOZ_ASSERT(hasTyped());
+        return data.typed;
     }
 
     ValueOperand valueReg() const {
-        return dataValue();
+        MOZ_ASSERT(hasValue());
+        return data.value;
     }
 
     AnyRegister scratchReg() {
@@ -246,17 +226,17 @@ class ConstantOrRegister
 
     // Space to hold either a Value or a TypedOrValueRegister.
     union U {
-        mozilla::AlignedStorage2<Value> constant;
-        mozilla::AlignedStorage2<TypedOrValueRegister> reg;
+        Value constant;
+        TypedOrValueRegister reg;
     } data;
 
     Value& dataValue() {
         MOZ_ASSERT(constant());
-        return *data.constant.addr();
+        return data.constant;
     }
     TypedOrValueRegister& dataReg() {
         MOZ_ASSERT(!constant());
-        return *data.reg.addr();
+        return data.reg;
     }
 
   public:
