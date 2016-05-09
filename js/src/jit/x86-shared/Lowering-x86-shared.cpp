@@ -650,7 +650,7 @@ LIRGeneratorX86Shared::visitSimdBinaryArith(MSimdBinaryArith* ins)
     if (ins->type() == MIRType::Int32x4) {
         LSimdBinaryArithIx4* lir = new(alloc()) LSimdBinaryArithIx4();
         bool needsTemp = ins->operation() == MSimdBinaryArith::Op_mul && !MacroAssembler::HasSSE41();
-        lir->setTemp(0, needsTemp ? temp(LDefinition::INT32X4) : LDefinition::BogusTemp());
+        lir->setTemp(0, needsTemp ? temp(LDefinition::SIMD128INT) : LDefinition::BogusTemp());
         lowerForFPU(lir, ins, lhs, rhs);
         return;
     }
@@ -662,7 +662,7 @@ LIRGeneratorX86Shared::visitSimdBinaryArith(MSimdBinaryArith* ins)
     bool needsTemp = ins->operation() == MSimdBinaryArith::Op_max ||
                      ins->operation() == MSimdBinaryArith::Op_minNum ||
                      ins->operation() == MSimdBinaryArith::Op_maxNum;
-    lir->setTemp(0, needsTemp ? temp(LDefinition::FLOAT32X4) : LDefinition::BogusTemp());
+    lir->setTemp(0, needsTemp ? temp(LDefinition::SIMD128FLOAT) : LDefinition::BogusTemp());
 
     lowerForFPU(lir, ins, lhs, rhs);
 }
@@ -682,7 +682,7 @@ LIRGeneratorX86Shared::visitSimdSelect(MSimdSelect* ins)
     lins->setOperand(0, useRegister(r0));
     lins->setOperand(1, useRegister(r1));
     lins->setOperand(2, useRegister(r2));
-    lins->setTemp(0, temp(LDefinition::FLOAT32X4));
+    lins->setTemp(0, temp(LDefinition::SIMD128FLOAT));
 
     define(lins, ins);
 }
@@ -722,7 +722,7 @@ LIRGeneratorX86Shared::visitSimdValueX4(MSimdValueX4* ins)
         LAllocation y = useRegister(ins->getOperand(1));
         LAllocation z = useRegister(ins->getOperand(2));
         LAllocation w = useRegister(ins->getOperand(3));
-        LDefinition t = temp(LDefinition::FLOAT32X4);
+        LDefinition t = temp(LDefinition::SIMD128FLOAT);
         define(new (alloc()) LSimdValueFloat32x4(x, y, z, w, t), ins);
         break;
       }

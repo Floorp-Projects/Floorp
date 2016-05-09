@@ -159,11 +159,11 @@ MoveEmitterX86::emit(const MoveResolver& moves)
           case MoveOp::GENERAL:
             emitGeneralMove(from, to, moves, i);
             break;
-          case MoveOp::INT32X4:
-            emitInt32X4Move(from, to);
+          case MoveOp::SIMD128INT:
+            emitSimd128IntMove(from, to);
             break;
-          case MoveOp::FLOAT32X4:
-            emitFloat32X4Move(from, to);
+          case MoveOp::SIMD128FLOAT:
+            emitSimd128FloatMove(from, to);
             break;
           default:
             MOZ_CRASH("Unexpected move type");
@@ -249,7 +249,7 @@ MoveEmitterX86::breakCycle(const MoveOperand& to, MoveOp::Type type)
     // This case handles (A -> B), which we reach first. We save B, then allow
     // the original move to continue.
     switch (type) {
-      case MoveOp::INT32X4:
+      case MoveOp::SIMD128INT:
         if (to.isMemory()) {
             ScratchSimd128Scope scratch(masm);
             masm.loadAlignedInt32x4(toAddress(to), scratch);
@@ -258,7 +258,7 @@ MoveEmitterX86::breakCycle(const MoveOperand& to, MoveOp::Type type)
             masm.storeAlignedInt32x4(to.floatReg(), cycleSlot());
         }
         break;
-      case MoveOp::FLOAT32X4:
+      case MoveOp::SIMD128FLOAT:
         if (to.isMemory()) {
             ScratchSimd128Scope scratch(masm);
             masm.loadAlignedFloat32x4(toAddress(to), scratch);
@@ -314,7 +314,7 @@ MoveEmitterX86::completeCycle(const MoveOperand& to, MoveOp::Type type)
     // This case handles (B -> A), which we reach last. We emit a move from the
     // saved value of B, to A.
     switch (type) {
-      case MoveOp::INT32X4:
+      case MoveOp::SIMD128INT:
         MOZ_ASSERT(pushedAtCycle_ != -1);
         MOZ_ASSERT(pushedAtCycle_ - pushedAtStart_ >= Simd128DataSize);
         if (to.isMemory()) {
@@ -325,7 +325,7 @@ MoveEmitterX86::completeCycle(const MoveOperand& to, MoveOp::Type type)
             masm.loadAlignedInt32x4(cycleSlot(), to.floatReg());
         }
         break;
-      case MoveOp::FLOAT32X4:
+      case MoveOp::SIMD128FLOAT:
         MOZ_ASSERT(pushedAtCycle_ != -1);
         MOZ_ASSERT(pushedAtCycle_ - pushedAtStart_ >= Simd128DataSize);
         if (to.isMemory()) {
@@ -491,7 +491,7 @@ MoveEmitterX86::emitDoubleMove(const MoveOperand& from, const MoveOperand& to)
 }
 
 void
-MoveEmitterX86::emitInt32X4Move(const MoveOperand& from, const MoveOperand& to)
+MoveEmitterX86::emitSimd128IntMove(const MoveOperand& from, const MoveOperand& to)
 {
     MOZ_ASSERT_IF(from.isFloatReg(), from.floatReg().isSimd128());
     MOZ_ASSERT_IF(to.isFloatReg(), to.floatReg().isSimd128());
@@ -513,7 +513,7 @@ MoveEmitterX86::emitInt32X4Move(const MoveOperand& from, const MoveOperand& to)
 }
 
 void
-MoveEmitterX86::emitFloat32X4Move(const MoveOperand& from, const MoveOperand& to)
+MoveEmitterX86::emitSimd128FloatMove(const MoveOperand& from, const MoveOperand& to)
 {
     MOZ_ASSERT_IF(from.isFloatReg(), from.floatReg().isSimd128());
     MOZ_ASSERT_IF(to.isFloatReg(), to.floatReg().isSimd128());

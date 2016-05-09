@@ -460,14 +460,14 @@ class LDefinition
 
     // This should be kept in sync with LIR.cpp's TypeChars.
     enum Type {
-        GENERAL,    // Generic, integer or pointer-width data (GPR).
-        INT32,      // int32 data (GPR).
-        OBJECT,     // Pointer that may be collected as garbage (GPR).
-        SLOTS,      // Slots/elements pointer that may be moved by minor GCs (GPR).
-        FLOAT32,    // 32-bit floating-point value (FPU).
-        DOUBLE,     // 64-bit floating-point value (FPU).
-        INT32X4,    // SIMD data containing four 32-bit integers (FPU).
-        FLOAT32X4,  // SIMD data containing four 32-bit floats (FPU).
+        GENERAL,      // Generic, integer or pointer-width data (GPR).
+        INT32,        // int32 data (GPR).
+        OBJECT,       // Pointer that may be collected as garbage (GPR).
+        SLOTS,        // Slots/elements pointer that may be moved by minor GCs (GPR).
+        FLOAT32,      // 32-bit floating-point value (FPU).
+        DOUBLE,       // 64-bit floating-point value (FPU).
+        SIMD128INT,   // 128-bit SIMD integer vector (FPU).
+        SIMD128FLOAT, // 128-bit SIMD floating point vector (FPU).
         SINCOS,
 #ifdef JS_NUNBOX32
         // A type virtual register must be followed by a payload virtual
@@ -522,7 +522,7 @@ class LDefinition
         return (Type)((bits_ >> TYPE_SHIFT) & TYPE_MASK);
     }
     bool isSimdType() const {
-        return type() == INT32X4 || type() == FLOAT32X4;
+        return type() == SIMD128INT || type() == SIMD128FLOAT;
     }
     bool isCompatibleReg(const AnyRegister& r) const {
         if (isFloatReg() && r.isFloat()) {
@@ -617,11 +617,15 @@ class LDefinition
           case MIRType::Int64:
 #endif
             return LDefinition::GENERAL;
-          case MIRType::Bool32x4:
+          case MIRType::Int8x16:
+          case MIRType::Int16x8:
           case MIRType::Int32x4:
-            return LDefinition::INT32X4;
+          case MIRType::Bool8x16:
+          case MIRType::Bool16x8:
+          case MIRType::Bool32x4:
+            return LDefinition::SIMD128INT;
           case MIRType::Float32x4:
-            return LDefinition::FLOAT32X4;
+            return LDefinition::SIMD128FLOAT;
           default:
             MOZ_CRASH("unexpected type");
         }
