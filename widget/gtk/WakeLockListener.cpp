@@ -7,10 +7,12 @@
 
 #ifdef MOZ_ENABLE_DBUS
 
+#include "WakeLockListener.h"
+
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib-lowlevel.h>
 
-#include "WakeLockListener.h"
+#include "mozilla/ipc/DBusMessageRefPtr.h"
 
 #define FREEDESKTOP_SCREENSAVER_TARGET    "org.freedesktop.ScreenSaver"
 #define FREEDESKTOP_SCREENSAVER_OBJECT    "/ScreenSaver"
@@ -82,8 +84,6 @@ WakeLockTopic::SendMessage(DBusMessage* aMessage)
   DBusPendingCall* reply;
   dbus_connection_send_with_reply(mConnection, aMessage, &reply,
                                   DBUS_TIMEOUT);
-  dbus_message_unref(aMessage);
-
   if (!reply) {
     return false;
   }
@@ -97,11 +97,11 @@ WakeLockTopic::SendMessage(DBusMessage* aMessage)
 bool
 WakeLockTopic::SendFreeDesktopInhibitMessage()
 {
-  DBusMessage* message =
+  RefPtr<DBusMessage> message = already_AddRefed<DBusMessage>(
     dbus_message_new_method_call(FREEDESKTOP_SCREENSAVER_TARGET,
                                  FREEDESKTOP_SCREENSAVER_OBJECT,
                                  FREEDESKTOP_SCREENSAVER_INTERFACE,
-                                 "Inhibit");
+                                 "Inhibit"));
 
   if (!message) {
     return false;
@@ -120,11 +120,11 @@ WakeLockTopic::SendFreeDesktopInhibitMessage()
 bool
 WakeLockTopic::SendGNOMEInhibitMessage()
 {
-  DBusMessage* message =
+  RefPtr<DBusMessage> message = already_AddRefed<DBusMessage>(
     dbus_message_new_method_call(SESSION_MANAGER_TARGET,
                                  SESSION_MANAGER_OBJECT,
                                  SESSION_MANAGER_INTERFACE,
-                                 "Inhibit");
+                                 "Inhibit"));
 
   if (!message) {
     return false;
@@ -172,20 +172,20 @@ WakeLockTopic::SendInhibit()
 bool
 WakeLockTopic::SendUninhibit()
 {
-  DBusMessage* message = nullptr;
+  RefPtr<DBusMessage> message;
 
   if (mDesktopEnvironment == FreeDesktop) {
-    message =
+    message = already_AddRefed<DBusMessage>(
       dbus_message_new_method_call(FREEDESKTOP_SCREENSAVER_TARGET,
                                    FREEDESKTOP_SCREENSAVER_OBJECT,
                                    FREEDESKTOP_SCREENSAVER_INTERFACE,
-                                   "UnInhibit");
+                                   "UnInhibit"));
   } else if (mDesktopEnvironment == GNOME) {
-    message =
+    message = already_AddRefed<DBusMessage>(
       dbus_message_new_method_call(SESSION_MANAGER_TARGET,
                                    SESSION_MANAGER_OBJECT,
                                    SESSION_MANAGER_INTERFACE,
-                                   "Uninhibit");
+                                   "Uninhibit"));
   }
 
   if (!message) {
@@ -198,7 +198,6 @@ WakeLockTopic::SendUninhibit()
 
   dbus_connection_send(mConnection, message, nullptr);
   dbus_connection_flush(mConnection);
-  dbus_message_unref(message);
 
   mInhibitRequest = 0;
 
@@ -291,7 +290,8 @@ WakeLockTopic::ReceiveInhibitReply(DBusPendingCall* pending, void* user_data)
 
   WakeLockTopic* self = static_cast<WakeLockTopic*>(user_data);
 
-  DBusMessage* msg = dbus_pending_call_steal_reply(pending);
+  RefPtr<DBusMessage> msg = already_AddRefed<DBusMessage>(
+    dbus_pending_call_steal_reply(pending));
   if (!msg) {
     return;
   }
@@ -306,8 +306,6 @@ WakeLockTopic::ReceiveInhibitReply(DBusPendingCall* pending, void* user_data)
   } else {
     self->InhibitFailed();
   }
-
-  dbus_message_unref(msg);
 }
 
 
