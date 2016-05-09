@@ -110,6 +110,17 @@ The reason we don't just return the package install time even if the date could
 not be persisted to disk is to ensure the value doesn't change once we start
 sending it: we only want to send consistent values.
 
+Other parameters
+----------------
+
+HTTP "Date" header
+~~~~~~~~~~~~~~~~~~
+This header is used to track the submission date of the core ping in the format
+specified by
+`rfc 2616 sec 14.18 <https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.18>`_,
+et al (e.g. "Tue, 01 Feb 2011 14:00:00 GMT").
+
+
 Version history
 ---------------
 * v5: added ``created`` & ``tz``
