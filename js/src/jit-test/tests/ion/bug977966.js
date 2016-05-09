@@ -100,19 +100,13 @@ function split_join_pattern(i) {
 // Check that, as opposed to String.replace, we are doing a global replacement
 // as String.split does.
 function split_join_multiple(i) {
-    enableMatchFlagArgument();
-
     var s1 = i + "-\n-" + i + "-\n-" + i;
     assertEq(s1.split("-\n-").join("-")  , i + "-" + i + "-" + i);
     assertEq(s1.replace("-\n-", "-")     , i + "-" + i + "-\n-" + i);
-    // SpiderMonkey extension
-    assertEq(s1.replace("-\n-", "-", "g"), i + "-" + i + "-" + i);
 
     var s2 = "abc";
     assertEq(s2.split("").join("" + i)   , "a" + i + "b" + i + "c");
     assertEq(s2.replace("", "" + i)      , i + "abc");
-    // SpiderMonkey extension
-    assertEq(s2.replace("", "" + i, "g") , i + "a" + i + "b" + i + "c" + i);
 }
 
 for (var i = 0; i < 1000; ++i) {
