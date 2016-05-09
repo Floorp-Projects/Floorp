@@ -1246,8 +1246,8 @@ class MacroAssemblerX86Shared : public Assembler
     }
 
     bool maybeInlineInt32x4(const SimdConstant& v, const FloatRegister& dest) {
-        static const SimdConstant zero = SimdConstant::CreateX4(0, 0, 0, 0);
-        static const SimdConstant minusOne = SimdConstant::CreateX4(-1, -1, -1, -1);
+        static const SimdConstant zero = SimdConstant::SplatX4(0);
+        static const SimdConstant minusOne = SimdConstant::SplatX4(-1);
         if (v == zero) {
             zeroInt32x4(dest);
             return true;
@@ -1259,7 +1259,7 @@ class MacroAssemblerX86Shared : public Assembler
         return false;
     }
     bool maybeInlineFloat32x4(const SimdConstant& v, const FloatRegister& dest) {
-        static const SimdConstant zero = SimdConstant::CreateX4(0.f, 0.f, 0.f, 0.f);
+        static const SimdConstant zero = SimdConstant::SplatX4(0.f);
         if (v == zero) {
             // This won't get inlined if the SimdConstant v contains -0 in any
             // lane, as operator== here does a memcmp.
