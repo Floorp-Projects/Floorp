@@ -20,12 +20,6 @@ template <int V> class FFmpegAudioDecoder
 template <>
 class FFmpegAudioDecoder<LIBAV_VER> : public FFmpegDataDecoder<LIBAV_VER>
 {
-  enum DecodeResult {
-    DECODE_FRAME,
-    DECODE_NO_FRAME,
-    DECODE_ERROR
-  };
-
 public:
   FFmpegAudioDecoder(FFmpegLibWrapper* aLib, FlushableTaskQueue* aTaskQueue,
                      MediaDataDecoderCallback* aCallback,
@@ -33,8 +27,6 @@ public:
   virtual ~FFmpegAudioDecoder();
 
   RefPtr<InitPromise> Init() override;
-  nsresult Input(MediaRawData* aSample) override;
-  void ProcessDrain() override;
   void InitCodecContext() override;
   static AVCodecID GetCodecId(const nsACString& aMimeType);
   const char* GetDescriptionName() const override
@@ -43,8 +35,8 @@ public:
   }
 
 private:
-  void ProcessDecode(MediaRawData* aSample);
-  DecodeResult DoDecode(MediaRawData* aSample);
+  DecodeResult DoDecode(MediaRawData* aSample) override;
+  void ProcessDrain() override;
 };
 
 } // namespace mozilla
