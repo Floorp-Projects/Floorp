@@ -1,14 +1,4 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
-
 add_task(function* () {
-  // This test is only relevant if UnifiedComplete is enabled.
-  let ucpref = Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete");
-  Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", true);
-  registerCleanupFunction(() => {
-    Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", ucpref);
-  });
-
   Services.search.addEngineWithDetails("MozSearch", "", "", "", "GET",
                                        "http://example.com/?q={searchTerms}");
   let engine = Services.search.getEngineByName("MozSearch");

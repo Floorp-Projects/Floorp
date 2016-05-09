@@ -1,4 +1,4 @@
-/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+ /* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,6 +6,7 @@
 package org.mozilla.gecko.home;
 
 import java.util.EnumSet;
+import java.util.List;
 
 import android.util.Log;
 import org.mozilla.gecko.R;
@@ -64,13 +65,66 @@ public class BookmarksListView extends HomeListView
         });
     }
 
+    /**
+     * Get the appropriate telemetry extra for a given folder.
+     *
+     * baseFolderID is the ID of the first-level folder in the parent stack, i.e. the first folder
+     * that was selected from the root hierarchy (e.g. Desktop, Reading List, or any mobile first-level
+     * subfolder). If the current folder is a first-level folder, then the fixed root ID may be used
+     * instead.
+     *
+     * We use baseFolderID only to distinguish whether or not we're currently in a desktop subfolder.
+     * If it isn't equal to FAKE_DESKTOP_FOLDER_ID we know we're in a mobile subfolder, or one
+     * of the smartfolders.
+     */
+    private String getTelemetryExtraForFolder(int folderID, int baseFolderID) {
+        if (folderID == Bookmarks.FAKE_DESKTOP_FOLDER_ID) {
+            return "folder_desktop";
+        } else if (folderID == Bookmarks.FIXED_SCREENSHOT_FOLDER_ID) {
+            return "folder_screenshots";
+        } else if (folderID == Bookmarks.FAKE_READINGLIST_SMARTFOLDER_ID) {
+            return "folder_reading_list";
+        } else {
+            // The stack depth is 2 for either the fake desktop folder, or any subfolder of mobile
+            // bookmarks, we subtract these offsets so that any direct subfolder of mobile
+            // has a level equal to 1. (Desktop folders will be one level deeper due to the
+            // fake desktop folder, hence subtract 2.)
+            if (baseFolderID == Bookmarks.FAKE_DESKTOP_FOLDER_ID) {
+                return "folder_desktop_subfolder";
+            } else {
+                return "folder_mobile_subfolder";
+            }
+        }
+    }
+
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         final BookmarksListAdapter adapter = getBookmarksListAdapter();
         if (adapter.isShowingChildFolder()) {
             if (position == 0) {
                 // If we tap on an opened folder, move back to parent folder.
+
+                final List<BookmarksListAdapter.FolderInfo> parentStack = ((BookmarksListAdapter) getAdapter()).getParentStack();
+                if (parentStack.size() < 2) {
+                    throw new IllegalStateException("Cannot move to parent folder if we are already in the root folder");
+                }
+
+                // The first item (top of stack) is the current folder, we're returning to the next one
+                BookmarksListAdapter.FolderInfo folder = parentStack.get(1);
+                final int parentID = folder.id;
+                final int baseFolderID;
+                if (parentStack.size() > 2) {
+                    baseFolderID = parentStack.get(parentStack.size() - 2).id;
+                } else {
+                    baseFolderID = Bookmarks.FIXED_ROOT_ID;
+                }
+
+                final String extra = getTelemetryExtraForFolder(parentID, baseFolderID);
+
+                // Move to parent _after_ retrieving stack information
                 adapter.moveToParentFolder();
+
+                Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.LIST_ITEM, extra);
                 return;
             }
 
@@ -99,6 +153,18 @@ public class BookmarksListView extends HomeListView
             final int folderId = cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks._ID));
             final String folderTitle = adapter.getFolderTitle(parent.getContext(), cursor);
             adapter.moveToChildFolder(folderId, folderTitle);
+
+            final List<BookmarksListAdapter.FolderInfo> parentStack = ((BookmarksListAdapter) getAdapter()).getParentStack();
+
+            final int baseFolderID;
+            if (parentStack.size() > 2) {
+                baseFolderID = parentStack.get(parentStack.size() - 2).id;
+            } else {
+                baseFolderID = Bookmarks.FIXED_ROOT_ID;
+            }
+
+            final String extra = getTelemetryExtraForFolder(folderId, baseFolderID);
+            Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.LIST_ITEM, extra);
         } else {
             // Otherwise, just open the URL
             final String url = cursor.getString(cursor.getColumnIndexOrThrow(Bookmarks.URL));

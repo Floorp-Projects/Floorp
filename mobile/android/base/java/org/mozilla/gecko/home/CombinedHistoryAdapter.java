@@ -103,7 +103,7 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
 
         switch (itemType) {
             case SYNCED_DEVICES:
-                ((CombinedHistoryItem.SmartFolder) viewHolder).bind(R.drawable.cloud, R.string.home_synced_devices_smartfolder, R.string.home_synced_devices_number, deviceCount);
+                ((CombinedHistoryItem.SmartFolder) viewHolder).bind(R.drawable.cloud, R.string.home_synced_devices_smartfolder, R.string.home_synced_devices_one, R.string.home_synced_devices_number, deviceCount);
                 break;
 
             case SECTION_HEADER:

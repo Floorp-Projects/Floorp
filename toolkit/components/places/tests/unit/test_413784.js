@@ -90,7 +90,7 @@ function continue_test()
 
   // Make an AutoCompleteInput that uses our searches
   // and confirms results on search complete
-  var input = new AutoCompleteInput(["history"]);
+  var input = new AutoCompleteInput(["unifiedcomplete"]);
 
   controller.input = input;
 

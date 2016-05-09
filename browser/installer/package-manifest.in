@@ -436,9 +436,6 @@
 @RESPATH@/components/toolkitplaces.manifest
 @RESPATH@/components/nsLivemarkService.js
 @RESPATH@/components/nsTaggingService.js
-@RESPATH@/components/nsPlacesAutoComplete.manifest
-@RESPATH@/components/nsPlacesAutoComplete.js
-@RESPATH@/components/UnifiedComplete.manifest
 @RESPATH@/components/UnifiedComplete.js
 @RESPATH@/components/nsPlacesExpiration.js
 @RESPATH@/components/PlacesCategoriesStarter.js

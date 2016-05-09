@@ -52,7 +52,7 @@
 
 const {Cc, Ci, Cu} = require("chrome");
 const Services = require("Services");
-const protocol = require("devtools/server/protocol");
+const protocol = require("devtools/shared/protocol");
 const {Arg, Option, method, RetVal, types} = protocol;
 const {LongStringActor, ShortLongString} = require("devtools/server/actors/string");
 const promise = require("promise");

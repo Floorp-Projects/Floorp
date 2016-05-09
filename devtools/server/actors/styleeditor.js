@@ -13,7 +13,7 @@ Cu.import("resource://gre/modules/FileUtils.jsm");
 
 const promise = require("promise");
 const events = require("sdk/event/core");
-const protocol = require("devtools/server/protocol");
+const protocol = require("devtools/shared/protocol");
 const {Arg, Option, method, RetVal, types} = protocol;
 const {LongStringActor, ShortLongString} = require("devtools/server/actors/string");
 const {fetch} = require("devtools/shared/DevToolsUtils");

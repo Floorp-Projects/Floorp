@@ -1,9 +1,5 @@
 add_task(function*() {
-  // This test is only relevant if UnifiedComplete is enabled.
-  Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", true);
-
   registerCleanupFunction(function* () {
-    Services.prefs.clearUserPref("browser.urlbar.unifiedcomplete");
     yield PlacesUtils.bookmarks.remove(bm);
   });
 

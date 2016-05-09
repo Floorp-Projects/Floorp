@@ -5,7 +5,7 @@
 "use strict";
 
 const { Cc, Ci, Cu } = require("chrome");
-var protocol = require("devtools/server/protocol");
+var protocol = require("devtools/shared/protocol");
 var { method, RetVal, Arg, types } = protocol;
 const { reportException } = require("devtools/shared/DevToolsUtils");
 loader.lazyRequireGetter(this, "events", "sdk/event/core");

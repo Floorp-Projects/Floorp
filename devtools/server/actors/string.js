@@ -10,7 +10,7 @@ var {DebuggerServer} = require("devtools/server/main");
 var promise = require("promise");
 var {Class} = require("sdk/core/heritage");
 
-var protocol = require("devtools/server/protocol");
+var protocol = require("devtools/shared/protocol");
 var {method, Arg, Option, RetVal} = protocol;
 
 exports.LongStringActor = protocol.ActorClass({

@@ -77,13 +77,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         this.inputField.addEventListener("overflow", this, false);
         this.inputField.addEventListener("underflow", this, false);
 
-        try {
-          if (this._prefs.getBoolPref("unifiedcomplete")) {
-            this.setAttribute("autocompletesearch", "unifiedcomplete");
-            this.mSearchNames = null;
-          }
-        } catch (ex) {}
-
         const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
         var textBox = document.getAnonymousElementByAttribute(this,
                                                 "anonid", "textbox-input-box");
@@ -732,15 +725,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               case "trimURLs":
                 this._mayTrimURLs = this._prefs.getBoolPref(aData);
                 break;
-              case "unifiedcomplete":
-                let useUnifiedComplete = false;
-                try {
-                  useUnifiedComplete = this._prefs.getBoolPref(aData);
-                } catch (ex) {}
-                this.setAttribute("autocompletesearch",
-                                  useUnifiedComplete ? "unifiedcomplete"
-                                                     : "urlinline history");
-                this.mSearchNames = null;
             }
           }
         ]]></body>
@@ -867,19 +851,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             type: type,
           };
 
-          try {
-            action.params = JSON.parse(params);
-            for (let key in action.params) {
-              action.params[key] = decodeURIComponent(action.params[key]);
-            }
-          } catch (e) {
-            // If this failed, we assume that params is not a JSON object, and
-            // is instead just a flat string. This will happen when
-            // UnifiedComplete is disabled - in which case, the param is always
-            // a URL.
-            action.params = {
-              url: params,
-            };
+          action.params = JSON.parse(params);
+          for (let key in action.params) {
+            action.params[key] = decodeURIComponent(action.params[key]);
           }
 
           if ("url" in action.params) {
@@ -927,22 +901,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
       <method name="handleEnter">
         <body><![CDATA[
-          // When UnifiedComplete is enabled, we need to ensure we're using
-          // a selected autocomplete result. A result should automatically be
-          // selected by default (UnifiedComplete guarantees at least one
-          // result), however autocomplete is async and therefore we may not
+          // We need to ensure we're using a selected autocomplete result.
+          // A result should automatically be selected by default,
+          // however autocomplete is async and therefore we may not
           // have a result set relating to the current input yet. If that
           // happens, we need to mark that when the first result does get added,
           // it needs to be handled as if enter was pressed with that first
           // result selected.
-          // With UnifiedComplete disabled we don't have this problem, as the
-          // default is to use the value directly from the input field (without
-          // relying on autocomplete).
-
-          if (!Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete")) {
-            return this.mController.handleEnter(false);
-          }
-
           // If anything other than the default (first) result is selected, then
           // it must have been manually selected by the human. We let this
           // explicit choice be used, even if it may be related to a previous
@@ -993,8 +958,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                  // When _urlbarFocused is true, tabbrowser would close the
                  // popup if it's opened here, so don't show the notification.
                  !gBrowser.selectedBrowser._urlbarFocused &&
-                 Services.prefs.getBoolPref("browser.search.suggest.enabled") &&
-                 this._prefs.getBoolPref("unifiedcomplete");
+                 Services.prefs.getBoolPref("browser.search.suggest.enabled");
         ]]></getter>
       </property>
 
@@ -1254,11 +1218,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         ]]></body>
       </method>
 
-      <!-- Override this so that when UnifiedComplete is enabled, navigating
-           between items results in an item always being selected. This is
-           contrary to the old behaviour (UnifiedComplete disabled) where
-           if you navigate beyond either end of the list, no item will be
-           selected. -->
+      <!-- Override this so that navigating between items results in an item
+           always being selected. -->
       <method name="getNextIndex">
         <parameter name="reverse"/>
         <parameter name="amount"/>
@@ -1608,9 +1569,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <method name="onResultsAdded">
         <body>
           <![CDATA[
-            if (!Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete"))
-              return;
-
             // If nothing is selected yet, select the first result if it is a
             // pre-selected "heuristic" result.  (See UnifiedComplete.js.)
             if (this.selectedIndex == -1 && this._isFirstResultHeuristic) {

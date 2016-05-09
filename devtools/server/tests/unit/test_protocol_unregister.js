@@ -1,4 +1,4 @@
-const {types} = require("devtools/server/protocol");
+const {types} = require("devtools/shared/protocol");
 
 
 function run_test()

@@ -8,7 +8,7 @@ const {
   RetVal,
   generateActorSpec,
   types
-} = require("devtools/server/protocol.js");
+} = require("devtools/shared/protocol.js");
 
 const originalSourceSpec = generateActorSpec({
   typeName: "originalsource",
