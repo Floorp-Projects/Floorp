@@ -48,6 +48,14 @@ function testComparison64(opcode, lhs, rhs, expect) {
                               (export "" 0))`)(lobj, robj), expect);
 }
 
+function testTrap32(opcode, lhs, rhs, expect) {
+    assertErrorMessage(() => wasmEvalText(`(module (func (param i32) (param i32) (result i32) (i32.${opcode} (get_local 0) (get_local 1))) (export "" 0))`)(lhs, rhs), Error, expect);
+    // The same, but now the RHS is a constant.
+    assertErrorMessage(() => wasmEvalText(`(module (func (param i32) (result i32) (i32.${opcode} (get_local 0) (i32.const ${rhs}))) (export "" 0))`)(lhs), Error, expect);
+    // LHS and RHS are constants.
+    assertErrorMessage(wasmEvalText(`(module (func (result i32) (i32.${opcode} (i32.const ${lhs}) (i32.const ${rhs}))) (export "" 0))`), Error, expect);
+}
+
 function testTrap64(opcode, lhs, rhs, expect) {
     let lobj = createI64(lhs);
     let robj = createI64(rhs);
@@ -89,6 +97,12 @@ testBinary32('xor', 42, 2, 40);
 testBinary32('shl', 40, 2, 160);
 testBinary32('shr_s', -40, 2, -10);
 testBinary32('shr_u', -40, 2, 1073741814);
+
+testTrap32('div_s', 42, 0, /integer divide by zero/);
+testTrap32('div_s', 0x80000000 | 0, -1, /integer overflow/);
+testTrap32('div_u', 42, 0, /integer divide by zero/);
+testTrap32('rem_s', 42, 0, /integer divide by zero/);
+testTrap32('rem_u', 42, 0, /integer divide by zero/);
 
 testBinary32('rotl', 40, 2, 160);
 testBinary32('rotl', 40, 34, 160);
