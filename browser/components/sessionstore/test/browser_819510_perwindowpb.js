@@ -3,6 +3,9 @@
 
 // Test opening default mochitest-normal-private-normal-private windows
 // (saving the state with last window being private)
+
+requestLongerTimeout(2);
+
 add_task(function* test_1() {
   let win = yield promiseNewWindowLoaded();
   win.gBrowser.addTab("http://www.example.com/1");
