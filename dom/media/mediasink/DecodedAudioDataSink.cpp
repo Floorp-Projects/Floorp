@@ -12,7 +12,7 @@
 
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
-#include "gfxPrefs.h"
+#include "MediaPrefs.h"
 
 namespace mozilla {
 
@@ -53,10 +53,10 @@ DecodedAudioDataSink::DecodedAudioDataSink(AbstractThread* aThread,
   , mLastEndTime(0)
   , mIsAudioDataAudible(false)
 {
-  bool resampling = gfxPrefs::AudioSinkResampling();
+  bool resampling = MediaPrefs::AudioSinkResampling();
 
   if (resampling) {
-    mOutputRate = gfxPrefs::AudioSinkResampleRate();
+    mOutputRate = MediaPrefs::AudioSinkResampleRate();
   } else if (mInfo.mRate == 44100 || mInfo.mRate == 48000) {
     // The original rate is of good quality and we want to minimize unecessary
     // resampling. The common scenario being that the sampling rate is one or
@@ -69,10 +69,10 @@ DecodedAudioDataSink::DecodedAudioDataSink(AbstractThread* aThread,
   }
   MOZ_DIAGNOSTIC_ASSERT(mOutputRate, "output rate can't be 0.");
 
-  bool monoAudioEnabled = gfxPrefs::MonoAudio();
+  bool monoAudioEnabled = MediaPrefs::MonoAudio();
 
   mOutputChannels = monoAudioEnabled
-    ? 1 : (gfxPrefs::AudioSinkForceStereo() ? 2 : mInfo.mChannels);
+    ? 1 : (MediaPrefs::AudioSinkForceStereo() ? 2 : mInfo.mChannels);
 }
 
 DecodedAudioDataSink::~DecodedAudioDataSink()
