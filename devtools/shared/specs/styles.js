@@ -163,3 +163,40 @@ const pageStyleSpec = generateActorSpec({
 });
 
 exports.pageStyleSpec = pageStyleSpec;
+
+const styleRuleSpec = generateActorSpec({
+  typeName: "domstylerule",
+
+  events: {
+    "location-changed": {
+      type: "locationChanged",
+      line: Arg(0, "number"),
+      column: Arg(1, "number")
+    },
+  },
+
+  methods: {
+    setRuleText: {
+      request: { modification: Arg(0, "string") },
+      response: { rule: RetVal("domstylerule") }
+    },
+    modifyProperties: {
+      request: { modifications: Arg(0, "array:json") },
+      response: { rule: RetVal("domstylerule") }
+    },
+    modifySelector: {
+      request: { selector: Arg(0, "string") },
+      response: { isModified: RetVal("boolean") },
+    },
+    modifySelector2: {
+      request: {
+        node: Arg(0, "domnode"),
+        value: Arg(1, "string"),
+        editAuthored: Arg(2, "boolean")
+      },
+      response: RetVal("modifiedStylesReturn")
+    }
+  }
+});
+
+exports.styleRuleSpec = styleRuleSpec;
