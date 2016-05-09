@@ -542,6 +542,28 @@ class kraken(PageloaderTest):
 
 
 @register_test()
+class basic_compositor_video(PageloaderTest):
+    """
+    Video test
+    """
+    tpmanifest = '${talos}/tests/video/video.manifest'
+    tpcycles = 1
+    tppagecycles = 12
+    timeout = 10000
+    sps_profile_interval = 1
+    sps_profile_entries = 2000000
+    preferences = {'full-screen-api.allow-trusted-requests-only': False,
+                   'layers.acceleration.force-enabled': False,
+                   'layers.acceleration.disabled': True,
+                   'layout.frame_rate': 0,
+                   'docshell.event_starvation_delay_hint': 1,
+                   'full-screen-api.warning.timeout': 500}
+    filters = filter.ignore_first.prepare(1) + filter.median.prepare()
+    unit = 'ms/frame'
+    lower_is_better = True
+
+
+@register_test()
 class tcanvasmark(PageloaderTest):
     """
     CanvasMark benchmark v0.6
