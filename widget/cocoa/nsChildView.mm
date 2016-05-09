@@ -4278,7 +4278,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // Setup the "double tap" event.
   WidgetSimpleGestureEvent geckoEvent(true, eTapGesture, mGeckoChild);
   [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
-  geckoEvent.clickCount = 1;
+  geckoEvent.mClickCount = 1;
 
   // Send the event.
   mGeckoChild->DispatchWindowEvent(geckoEvent);
