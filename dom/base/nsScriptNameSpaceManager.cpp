@@ -25,7 +25,8 @@
 #include "nsCRT.h"
 #include "nsIObserverService.h"
 #include "nsISimpleEnumerator.h"
-
+#include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/WebIDLGlobalNameHash.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -34,6 +35,7 @@
 #define NS_DOM_INTERFACE_PREFIX "nsIDOM"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 static PLDHashNumber
 GlobalNameHashHashKey(const void *key)
@@ -95,7 +97,7 @@ static const PLDHashTableOps hash_table_ops =
   GlobalNameHashInitEntry
 };
 
-#define GLOBALNAME_HASHTABLE_INITIAL_LENGTH   512
+#define GLOBALNAME_HASHTABLE_INITIAL_LENGTH          32
 
 nsScriptNameSpaceManager::nsScriptNameSpaceManager()
   : mGlobalNames(&hash_table_ops, sizeof(GlobalNameMapEntry),
@@ -111,13 +113,16 @@ nsScriptNameSpaceManager::~nsScriptNameSpaceManager()
 }
 
 nsGlobalNameStruct *
-nsScriptNameSpaceManager::AddToHash(const nsAString *aKey,
+nsScriptNameSpaceManager::AddToHash(const char *aKey,
                                     const char16_t **aClassName)
 {
-  auto entry = static_cast<GlobalNameMapEntry*>(mGlobalNames.Add(aKey, fallible));
+  NS_ConvertASCIItoUTF16 key(aKey);
+  auto entry = static_cast<GlobalNameMapEntry*>(mGlobalNames.Add(&key, fallible));
   if (!entry) {
     return nullptr;
   }
+
+  WebIDLGlobalNameHash::Remove(aKey, key.Length());
 
   if (aClassName) {
     *aClassName = entry->mKey.get();
@@ -230,8 +235,7 @@ nsScriptNameSpaceManager::RegisterClassName(const char *aClassName,
     return NS_OK;
   }
 
-  NS_ASSERTION(s->mType == nsGlobalNameStruct::eTypeNotInitialized ||
-               s->mType == nsGlobalNameStruct::eTypeNewDOMBinding,
+  NS_ASSERTION(s->mType == nsGlobalNameStruct::eTypeNotInitialized,
                "Whaaa, JS environment name clash!");
 
   s->mType = nsGlobalNameStruct::eTypeClassConstructor;
@@ -254,8 +258,7 @@ nsScriptNameSpaceManager::RegisterClassProto(const char *aClassName,
   nsGlobalNameStruct *s = AddToHash(aClassName);
   NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
 
-  if (s->mType != nsGlobalNameStruct::eTypeNotInitialized &&
-      s->mType != nsGlobalNameStruct::eTypeNewDOMBinding) {
+  if (s->mType != nsGlobalNameStruct::eTypeNotInitialized) {
     *aFoundOld = true;
 
     return NS_OK;
@@ -349,8 +352,7 @@ nsScriptNameSpaceManager::OperateCategoryEntryHash(nsICategoryManager* aCategory
   nsGlobalNameStruct *s = AddToHash(categoryEntry.get());
   NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
 
-  if (s->mType == nsGlobalNameStruct::eTypeNotInitialized ||
-      s->mType == nsGlobalNameStruct::eTypeNewDOMBinding) {
+  if (s->mType == nsGlobalNameStruct::eTypeNotInitialized) {
     s->mType = type;
     s->mCID = cid;
     s->mChromeOnly =
@@ -412,21 +414,6 @@ nsScriptNameSpaceManager::Observe(nsISupports* aSubject, const char* aTopic,
   // but we are safe without it. See bug 600460.
 
   return NS_OK;
-}
-
-void
-nsScriptNameSpaceManager::RegisterDefineDOMInterface(const nsAFlatString& aName,
-    mozilla::dom::DefineInterface aDefineDOMInterface,
-    mozilla::dom::ConstructorEnabled* aConstructorEnabled)
-{
-  nsGlobalNameStruct *s = AddToHash(&aName);
-  if (s) {
-    if (s->mType == nsGlobalNameStruct::eTypeNotInitialized) {
-      s->mType = nsGlobalNameStruct::eTypeNewDOMBinding;
-    }
-    s->mDefineDOMInterface = aDefineDOMInterface;
-    s->mConstructorEnabled = aConstructorEnabled;
-  }
 }
 
 MOZ_DEFINE_MALLOC_SIZE_OF(ScriptNameSpaceManagerMallocSizeOf)
