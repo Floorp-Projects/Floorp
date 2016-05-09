@@ -63,7 +63,7 @@ LazyLogModule gUrlClassifierDbServiceLog("UrlClassifierDbService");
 #define CHECK_MALWARE_PREF      "browser.safebrowsing.malware.enabled"
 #define CHECK_MALWARE_DEFAULT   false
 
-#define CHECK_PHISHING_PREF     "browser.safebrowsing.enabled"
+#define CHECK_PHISHING_PREF     "browser.safebrowsing.phishing.enabled"
 #define CHECK_PHISHING_DEFAULT  false
 
 #define CHECK_TRACKING_PREF     "privacy.trackingprotection.enabled"
