@@ -92,7 +92,7 @@ SimpleGestureEvent::GetDelta(double* aDelta)
 uint32_t
 SimpleGestureEvent::ClickCount()
 {
-  return mEvent->AsSimpleGestureEvent()->clickCount;
+  return mEvent->AsSimpleGestureEvent()->mClickCount;
 }
 
 NS_IMETHODIMP
@@ -134,7 +134,7 @@ SimpleGestureEvent::InitSimpleGestureEvent(const nsAString& aTypeArg,
   simpleGestureEvent->mAllowedDirections = aAllowedDirectionsArg;
   simpleGestureEvent->mDirection = aDirectionArg;
   simpleGestureEvent->delta = aDeltaArg;
-  simpleGestureEvent->clickCount = aClickCountArg;
+  simpleGestureEvent->mClickCount = aClickCountArg;
 }
 
 } // namespace dom
