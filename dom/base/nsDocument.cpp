@@ -5450,6 +5450,40 @@ nsIDocument::RemoveAnonymousContent(AnonymousContent& aContent,
   }
 }
 
+Element*
+nsIDocument::GetAnonRootIfInAnonymousContentContainer(nsINode* aNode) const
+{
+  if (!aNode->IsInNativeAnonymousSubtree()) {
+    return nullptr;
+  }
+
+  nsIPresShell* shell = GetShell();
+  if (!shell || !shell->GetCanvasFrame()) {
+    return nullptr;
+  }
+
+  nsAutoScriptBlocker scriptBlocker;
+  nsCOMPtr<Element> customContainer = shell->GetCanvasFrame()
+                                           ->GetCustomContentContainer();
+  if (!customContainer) {
+    return nullptr;
+  }
+
+  // An arbitrary number of elements can be inserted as children of the custom
+  // container frame.  We want the one that was added that contains aNode, so
+  // we need to keep track of the last child separately using |child| here.
+  nsINode* child = aNode;
+  nsINode* parent = aNode->GetParentNode();
+  while (parent && parent->IsInNativeAnonymousSubtree()) {
+    if (parent == customContainer) {
+      return child->IsElement() ? child->AsElement() : nullptr;
+    }
+    child = parent;
+    parent = child->GetParentNode();
+  }
+  return nullptr;
+}
+
 //
 // nsIDOMDocument interface
 //
