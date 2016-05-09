@@ -31,6 +31,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Logging.h"
+#include "MediaPrefs.h"
 #include "gfxPrefs.h"
 #include "gfxPlatform.h"
 #include "gfxConfig.h"
@@ -565,6 +566,7 @@ GfxInfoBase::Init()
 {
   InitGfxDriverInfoShutdownObserver();
   gfxPrefs::GetSingleton();
+  MediaPrefs::GetSingleton();
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
