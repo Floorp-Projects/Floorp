@@ -1349,7 +1349,6 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
   void KeyStatusChanged(const nsCString& aSessionId,
                         const nsTArray<uint8_t>& aKeyId,
                         GMPMediaKeyStatus aStatus) override { }
-  void SetCaps(uint64_t aCaps) override {}
   void Decrypted(uint32_t aId,
                  GMPErr aResult,
                  const nsTArray<uint8_t>& aDecryptedData) override { }
