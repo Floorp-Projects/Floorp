@@ -35,8 +35,8 @@ if CONFIG['MOZ_PLACES']:
     ]
 
     UNIFIED_SOURCES += [
-        'AsyncFaviconHelpers.cpp',
         'Database.cpp',
+        'FaviconHelpers.cpp',
         'Helpers.cpp',
         'History.cpp',
         'nsAnnoProtocolHandler.cpp',
@@ -80,13 +80,13 @@ if CONFIG['MOZ_PLACES']:
         'nsTaggingService.js',
         'PlacesCategoriesStarter.js',
         'toolkitplaces.manifest',
+        'UnifiedComplete.js',
     ]
-    if CONFIG['MOZ_XUL']:
+
+    if CONFIG['MOZ_SUITE']:
         EXTRA_COMPONENTS += [
             'nsPlacesAutoComplete.js',
             'nsPlacesAutoComplete.manifest',
-            'UnifiedComplete.js',
-            'UnifiedComplete.manifest',
         ]
 
     FINAL_LIBRARY = 'xul'

@@ -11,18 +11,21 @@ TESTING_JS_MODULES += [
 ]
 
 XPCSHELL_TESTS_MANIFESTS += [
-    'autocomplete/xpcshell.ini',
     'bookmarks/xpcshell.ini',
     'expiration/xpcshell.ini',
     'favicons/xpcshell.ini',
     'history/xpcshell.ini',
-    'inline/xpcshell.ini',
     'migration/xpcshell.ini',
     'network/xpcshell.ini',
     'queries/xpcshell.ini',
     'unifiedcomplete/xpcshell.ini',
     'unit/xpcshell.ini',
 ]
+
+if CONFIG['MOZ_SUITE']:
+    XPCSHELL_TESTS_MANIFESTS += [
+        'autocomplete/xpcshell.ini',
+    ]
 
 BROWSER_CHROME_MANIFESTS += ['browser/browser.ini']
 MOCHITEST_CHROME_MANIFESTS += [

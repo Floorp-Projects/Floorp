@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const protocol = require("devtools/server/protocol");
+const protocol = require("devtools/shared/protocol");
 
 var HelloActor = protocol.ActorClass({
   typeName: "helloActor",

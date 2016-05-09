@@ -10,7 +10,7 @@ const Services = require("Services");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
 const events = require("sdk/event/core");
-const protocol = require("devtools/server/protocol");
+const protocol = require("devtools/shared/protocol");
 const { method, custom, RetVal, Arg } = protocol;
 
 loader.lazyGetter(this, "DOMUtils", () => {

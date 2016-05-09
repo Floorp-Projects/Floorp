@@ -70,6 +70,11 @@
 <!ENTITY screenshot_folder_label_in_bookmarks "Screenshots">
 <!ENTITY readinglist_smartfolder_label_in_bookmarks "Reading List">
 
+<!-- Localization note (bookmark_folder_items): The variable is replaced by the number of items
+     in the folder. -->
+<!ENTITY bookmark_folder_items "&formatD; items">
+<!ENTITY bookmark_folder_one_item "1 item">
+
 <!ENTITY reader_saved_offline "Saved offline">
 <!-- Localization note (reader_switch_to_bookmarks) : This
      string is used as an action in a snackbar - it lets you
@@ -543,6 +548,8 @@ size. -->
 <!ENTITY home_history_title "History">
 <!ENTITY home_synced_devices_smartfolder "Synced devices">
 <!ENTITY home_synced_devices_number "&formatD; devices">
+<!-- Localization note (home_synced_devices_one_device): This is the singular version of home_synced_devices_number, referring to the number of devices a user has synced. -->
+<!ENTITY home_synced_devices_one "1 device">
 <!ENTITY home_history_back_to2 "Back to full History">
 <!ENTITY home_clear_history_button "Clear browsing history">
 <!ENTITY home_clear_history_confirm "Are you sure you want to clear your history?">

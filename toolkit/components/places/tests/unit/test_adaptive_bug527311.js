@@ -81,7 +81,7 @@ AutoCompleteInput.prototype = {
 function check_results() {
   let controller = Cc["@mozilla.org/autocomplete/controller;1"].
                    getService(Ci.nsIAutoCompleteController);
-  let input = new AutoCompleteInput(["history"]);
+  let input = new AutoCompleteInput(["unifiedcomplete"]);
   controller.input = input;
 
   input.onSearchComplete = function() {

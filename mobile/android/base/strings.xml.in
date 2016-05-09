@@ -91,6 +91,8 @@
   <string name="screenshot_added_to_bookmarks">&screenshot_added_to_bookmarks;</string>
   <string name="screenshot_folder_label_in_bookmarks">&screenshot_folder_label_in_bookmarks;</string>
   <string name="readinglist_smartfolder_label_in_bookmarks">&readinglist_smartfolder_label_in_bookmarks;</string>
+  <string name="bookmark_folder_items">&bookmark_folder_items;</string>
+  <string name="bookmark_folder_one_item">&bookmark_folder_one_item;</string>
 
   <string name="reader_saved_offline">&reader_saved_offline;</string>
   <string name="reader_switch_to_bookmarks">&reader_switch_to_bookmarks;</string>
@@ -442,6 +444,7 @@
   <string name="home_history_title">&home_history_title;</string>
   <string name="home_synced_devices_smartfolder">&home_synced_devices_smartfolder;</string>
   <string name="home_synced_devices_number">&home_synced_devices_number;</string>
+  <string name="home_synced_devices_one">&home_synced_devices_one;</string>
   <string name="home_history_back_to">&home_history_back_to2;</string>
   <string name="home_clear_history_button">&home_clear_history_button;</string>
   <string name="home_clear_history_confirm">&home_clear_history_confirm;</string>

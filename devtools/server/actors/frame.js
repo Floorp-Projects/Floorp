@@ -8,7 +8,7 @@
 
 const { ActorPool } = require("devtools/server/actors/common");
 const { createValueGrip } = require("devtools/server/actors/object");
-const { ActorClass } = require("devtools/server/protocol");
+const { ActorClass } = require("devtools/shared/protocol");
 
 /**
  * An actor for a specified stack frame.

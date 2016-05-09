@@ -6,7 +6,7 @@
 
 const {Cc, Ci} = require("chrome");
 const promise = require("promise");
-const protocol = require("devtools/server/protocol");
+const protocol = require("devtools/shared/protocol");
 const {Arg, Option, method, RetVal, types} = protocol;
 const events = require("sdk/event/core");
 const {Class} = require("sdk/core/heritage");

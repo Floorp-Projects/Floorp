@@ -7,7 +7,7 @@
 "use strict";
 
 const events = require("sdk/event/core");
-const protocol = require("devtools/server/protocol");
+const protocol = require("devtools/shared/protocol");
 
 const { Cu, Ci } = require("chrome");
 

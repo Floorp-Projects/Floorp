@@ -33,7 +33,7 @@ function setSearch(aSearch) {
 }
 
 add_task(function* test_sync_enabled() {
-  // Initialize unified complete.
+  // Initialize autocomplete component.
   Cc["@mozilla.org/autocomplete/search;1?name=history"]
     .getService(Ci.mozIPlacesAutoComplete);
 

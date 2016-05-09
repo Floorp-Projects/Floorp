@@ -1,11 +1,4 @@
 add_task(function*() {
-  // This test is only relevant if UnifiedComplete is enabled.
-  let ucpref = Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete");
-  Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", true);
-  registerCleanupFunction(() => {
-    Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", ucpref);
-  });
-
   let tab = gBrowser.selectedTab = gBrowser.addTab("about:mozilla", {animate: false});
   yield promiseTabLoaded(tab);
   yield promiseAutocompleteResultPopup("www.mozilla.org");

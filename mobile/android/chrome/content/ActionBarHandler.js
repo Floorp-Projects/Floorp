@@ -63,8 +63,8 @@ var ActionBarHandler = {
 
     // Else, update an open ActionBar.
     if (this._selectionID) {
-      let [element, win] = this._getSelectionTargets();
-      if (this._targetElement === element && this._contentWindow === win) {
+      if (!this._selectionHasChanged()) {
+        // Still the same active selection.
         if (e.reason == 'visibilitychange' || e.reason == 'presscaret' ||
             e.reason == 'scroll' ) {
           this._updateVisibility();
@@ -73,7 +73,7 @@ var ActionBarHandler = {
           this._sendActionBarActions(forceUpdate, e.boundingClientRect);
         }
       } else {
-        // We have a new focused window/element pair.
+        // We've started a new selection entirely.
         this._uninit(false);
         this._init(e.boundingClientRect);
       }
@@ -176,6 +176,17 @@ var ActionBarHandler = {
 
     // Focused element can't contain text.
     return [null, win];
+  },
+
+  /**
+   * The active Selection has changed, if the current focused element / win,
+   * pair, or state of the win's designMode changes.
+   */
+  _selectionHasChanged: function() {
+    let [element, win] = this._getSelectionTargets();
+    return (this._targetElement !== element ||
+            this._contentWindow !== win ||
+            this._isInDesignMode(this._contentWindow) !== this._isInDesignMode(win));
   },
 
   /**
@@ -349,8 +360,8 @@ var ActionBarHandler = {
 
       selector: {
         matches: function(element, win) {
-          // Can't cut from non-editable.
-          if (!element) {
+          // Can cut from editable, or design-mode document.
+          if (!element && !ActionBarHandler._isInDesignMode(win)) {
             return false;
           }
           // Don't allow "cut" from password fields.
@@ -359,7 +370,7 @@ var ActionBarHandler = {
             return false;
           }
           // Don't allow "cut" from disabled/readonly fields.
-          if (element.disabled || element.readOnly) {
+          if (element && (element.disabled || element.readOnly)) {
             return false;
           }
           // Allow if selected text exists.
@@ -427,12 +438,12 @@ var ActionBarHandler = {
 
       selector: {
         matches: function(element, win) {
-          // Can't paste into non-editable.
-          if (!element) {
+          // Can paste to editable, or design-mode document.
+          if (!element && !ActionBarHandler._isInDesignMode(win)) {
             return false;
           }
           // Can't paste into disabled/readonly fields.
-          if (element.disabled || element.readOnly) {
+          if (element && (element.disabled || element.readOnly)) {
             return false;
           }
           // Can't paste if Clipboard empty.
@@ -600,6 +611,13 @@ var ActionBarHandler = {
 
   set _contentWindow(aContentWindow) {
     this._contentWindowRef = Cu.getWeakReference(aContentWindow);
+  },
+
+  /**
+   * If we have an active selection, is it part of a designMode document?
+   */
+  _isInDesignMode: function(win) {
+    return this._selectionID && (win.document.designMode === "on");
   },
 
   /**

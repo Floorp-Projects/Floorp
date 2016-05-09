@@ -4,7 +4,6 @@
 
 "use strict";
 
-const {Cc, Ci} = require("chrome");
 const Services = require("Services");
 
 const {getCSSLexer} = require("devtools/shared/css-lexer");
@@ -351,7 +350,7 @@ CssColor.prototype = {
    * appropriate.
    */
   _getRGBATuple: function () {
-    let tuple = DOMUtils.colorToRGBA(this.authored);
+    let tuple = colorToRGBA(this.authored);
 
     tuple.a = parseFloat(tuple.a.toFixed(1));
 
@@ -503,50 +502,41 @@ function rgbToColorName(r, g, b) {
   return value;
 }
 
-// Originally from dom/tests/mochitest/ajax/mochikit/MochiKit/Color.js.
-function _hslValue(n1, n2, hue) {
-  if (hue > 6.0) {
-    hue -= 6.0;
-  } else if (hue < 0.0) {
-    hue += 6.0;
+// Translated from nsColor.cpp.
+function _hslValue(m1, m2, h) {
+  if (h < 0.0) {
+    h += 1.0;
   }
-  let val;
-  if (hue < 1.0) {
-    val = n1 + (n2 - n1) * hue;
-  } else if (hue < 3.0) {
-    val = n2;
-  } else if (hue < 4.0) {
-    val = n1 + (n2 - n1) * (4.0 - hue);
-  } else {
-    val = n1;
+  if (h > 1.0) {
+    h -= 1.0;
   }
-  return val;
+  if (h < 1.0 / 6.0) {
+    return m1 + (m2 - m1) * h * 6.0;
+  }
+  if (h < 1.0 / 2.0) {
+    return m2;
+  }
+  if (h < 2.0 / 3.0) {
+    return m1 + (m2 - m1) * (2.0 / 3.0 - h) * 6.0;
+  }
+  return m1;
 }
 
-// Originally from dom/tests/mochitest/ajax/mochikit/MochiKit/Color.js.
-function hslToRGB([hue, saturation, lightness]) {
-  let red;
-  let green;
-  let blue;
-  if (saturation === 0) {
-    red = lightness;
-    green = lightness;
-    blue = lightness;
+// Translated from nsColor.cpp.  All three values are expected to be
+// in the range 0-1.
+function hslToRGB([h, s, l]) {
+  let r, g, b;
+  let m1, m2;
+  if (l <= 0.5) {
+    m2 = l * (s + 1);
   } else {
-    let m2;
-    if (lightness <= 0.5) {
-      m2 = lightness * (1.0 + saturation);
-    } else {
-      m2 = lightness + saturation - (lightness * saturation);
-    }
-    let m1 = (2.0 * lightness) - m2;
-    let f = _hslValue;
-    let h6 = hue * 6.0;
-    red = f(m1, m2, h6 + 2);
-    green = f(m1, m2, h6);
-    blue = f(m1, m2, h6 - 2);
+    m2 = l + s - l * s;
   }
-  return [red, green, blue];
+  m1 = l * 2 - m2;
+  r = Math.floor(255 * _hslValue(m1, m2, h + 1.0 / 3.0));
+  g = Math.floor(255 * _hslValue(m1, m2, h));
+  b = Math.floor(255 * _hslValue(m1, m2, h - 1.0 / 3.0));
+  return [r, g, b];
 }
 
 /**
@@ -647,21 +637,19 @@ function parseHsl(lexer) {
   if (!token || token.tokenType !== "number") {
     return null;
   }
-  let val = token.number % 60;
-  if (val < 0) {
-    val += 60;
-  }
-  vals.push(val / 60.0);
+
+  let val = token.number / 360.0;
+  vals.push(val - Math.floor(val));
 
   for (let i = 0; i < 2; ++i) {
     token = requireComma(lexer, getToken(lexer));
     if (!token || token.tokenType !== "percentage") {
       return null;
     }
-    vals.push(clamp(token.number, 0, 100));
+    vals.push(clamp(token.number, 0, 1));
   }
 
-  return hslToRGB(vals).map((elt) => Math.trunc(elt * 255));
+  return hslToRGB(vals);
 }
 
 /**
@@ -693,7 +681,7 @@ function parseRgb(lexer) {
       if (token.tokenType !== "percentage") {
         return null;
       }
-      vals.push(Math.round(255 * clamp(token.number, 0, 100)));
+      vals.push(Math.round(255 * clamp(token.number, 0, 1)));
     } else {
       if (token.tokenType !== "number" || !token.isInteger) {
         return null;
@@ -783,7 +771,3 @@ function colorToRGBA(name) {
 function isValidCSSColor(name) {
   return colorToRGBA(name) !== null;
 }
-
-loader.lazyGetter(this, "DOMUtils", function () {
-  return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
-});

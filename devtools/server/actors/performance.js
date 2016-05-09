@@ -5,7 +5,7 @@
 "use strict";
 
 const { Cu } = require("chrome");
-const protocol = require("devtools/server/protocol");
+const protocol = require("devtools/shared/protocol");
 const { Task } = require("resource://gre/modules/Task.jsm");
 const { Actor, custom, method, RetVal, Arg, Option, types, preEvent } = protocol;
 const { actorBridge } = require("devtools/server/actors/common");

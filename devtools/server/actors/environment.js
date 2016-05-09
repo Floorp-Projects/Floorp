@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { ActorClass, Arg, RetVal, method } = require("devtools/server/protocol");
+const { ActorClass, Arg, RetVal, method } = require("devtools/shared/protocol");
 const { createValueGrip } = require("devtools/server/actors/object");
 
 /**

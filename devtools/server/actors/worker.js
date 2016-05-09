@@ -3,7 +3,7 @@
 var { Ci, Cu } = require("chrome");
 var { DebuggerServer } = require("devtools/server/main");
 var Services = require("Services");
-const protocol = require("devtools/server/protocol");
+const protocol = require("devtools/shared/protocol");
 const { Arg, method, RetVal } = protocol;
 
 loader.lazyRequireGetter(this, "ChromeUtils");

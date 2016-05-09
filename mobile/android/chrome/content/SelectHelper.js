@@ -56,7 +56,7 @@ var SelectHelper = {
   show: function(element) {
     let list = this.getListForElement(element);
     let p = new Prompt({
-      window: element.contentDocument
+      window: element.ownerDocument.defaultView
     });
 
     if (element.multiple) {

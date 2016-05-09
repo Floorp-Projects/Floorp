@@ -193,6 +193,17 @@ add_task(function* test_formdata_navigation() {
   const OUTER_VALUE = "browser_formdata_" + Math.random();
   const INNER_VALUE = "browser_formdata_" + Math.random();
 
+  // Make sure the bfcache remains enabled during this test,
+  // otherwise the inner value will not be restored correctly.
+  Services.prefs.setBoolPref("browser.sessionhistory.bfcacheIgnoreMemoryPressure", true);
+  Services.prefs.setIntPref("browser.sessionhistory.max_total_viewers", 1);
+
+  SimpleTest.registerCleanupFunction(function() {
+    // Turn the bfcache memory pressure protection back off once we're finished.
+    Services.prefs.clearUserPref("browser.sessionhistory.bfcacheIgnoreMemoryPressure");
+    Services.prefs.clearUserPref("browser.sessionhistory.max_total_viewers");
+  });
+
   // Creates a tab, loads a page with some form fields, modifies their values,
   // navigates to a different page and back again and closes the tab.
   function createNavigateAndRemoveTab() {

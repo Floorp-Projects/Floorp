@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 var {method, RetVal, Actor, ActorClass, Front, FrontClass} =
-  require("devtools/server/protocol");
+  require("devtools/shared/protocol");
 var Services = require("Services");
 
 exports.LazyActor = ActorClass({

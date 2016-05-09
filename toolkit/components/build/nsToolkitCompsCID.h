@@ -39,9 +39,6 @@
 #define NS_GLOBALHISTORY_DATASOURCE_CONTRACTID \
   "@mozilla.org/rdf/datasource;1?name=history"
 
-#define NS_GLOBALHISTORY_AUTOCOMPLETE_CONTRACTID \
-    "@mozilla.org/autocomplete/search;1?name=history"
-
 #define NS_TYPEAHEADFIND_CONTRACTID \
     "@mozilla.org/typeaheadfind;1"
 

@@ -10,7 +10,8 @@ Cu.import("resource://gre/modules/Messaging.jsm");
 Cu.import('resource://gre/modules/Geometry.jsm');
 
 const ACCESSIBLECARET_PREF = "layout.accessiblecaret.enabled";
-const TEST_URL = "http://mochi.test:8888/tests/robocop/testAccessibleCarets.html";
+const BASE_TEST_URL = "http://mochi.test:8888/tests/robocop/testAccessibleCarets.html";
+const DESIGNMODE_TEST_URL = "http://mochi.test:8888/tests/robocop/testAccessibleCarets2.html";
 
 // Ensures Tabs are completely loaded, viewport and zoom constraints updated, etc.
 const TAB_CHANGE_EVENT = "testAccessibleCarets:TabChange";
@@ -104,9 +105,7 @@ function getCharPressPoint(doc, element, char, expected) {
  * position, and return the result.
  *
  * @param midPoint, The screen coord for the longpress.
- * @return {Promise}
- * @resolves The ActionBar status, including its target focused element, and
- *           the selected text that it sees.
+ * @return Selection state helper-result object.
  */
 function getLongPressResult(browser, midPoint) {
   let domWinUtils = browser.contentWindow.
@@ -128,6 +127,28 @@ function getLongPressResult(browser, midPoint) {
 }
 
 /**
+ * Checks the Selection UI (ActionBar or FloatingToolbar)
+ * for the availability of an expected action.
+ *
+ * @param expectedActionID, The Selection UI action we expect to be available.
+ * @return Result boolean.
+ */
+function UIhasActionByID(expectedActionID) {
+  let actions = gChromeWin.ActionBarHandler._actionBarActions;
+  return actions.some(action => {
+    return action.id === expectedActionID;
+  });
+}
+
+/**
+ * Messages the ActionBarHandler to close the Selection UI.
+ */
+function closeSelectionUI() {
+  Services.obs.notifyObservers(null, "TextSelection:End",
+    JSON.stringify({selectionID: gChromeWin.ActionBarHandler._selectionID}));
+}
+
+/**
  * Main test method.
  */
 add_task(function* testAccessibleCarets() {
@@ -141,7 +162,7 @@ add_task(function* testAccessibleCarets() {
   Services.prefs.setBoolPref(ACCESSIBLECARET_PREF, true);
 
   // Load test page, wait for load completion, register cleanup.
-  let browser = BrowserApp.addTab(TEST_URL).browser;
+  let browser = BrowserApp.addTab(BASE_TEST_URL).browser;
   let tab = BrowserApp.getTabForBrowser(browser);
   yield do_promiseTabChangeEvent(tab.id, TAB_STOP_EVENT);
 
@@ -234,7 +255,68 @@ add_task(function* testAccessibleCarets() {
   is(result.text, "+972 3 7347514 ",
     "Selected phone number should match expected text.");
 
-  ok(true, "Finished all tests.");
+  // Close Selection UI (ActionBar or FloatingToolbar) and complete test.
+  closeSelectionUI();
+  ok(true, "Finished testAccessibleCarets tests.");
 });
 
+/**
+ * DesignMode test method.
+ */
+add_task(function* testAccessibleCarets_designMode() {
+  let BrowserApp = gChromeWin.BrowserApp;
+
+  // Load test page, wait for load completion.
+  let browser = BrowserApp.addTab(DESIGNMODE_TEST_URL).browser;
+  let tab = BrowserApp.getTabForBrowser(browser, { selected: true });
+  yield do_promiseTabChangeEvent(tab.id, TAB_STOP_EVENT);
+
+  // References to test document elements, ActionBarHandler.
+  let doc = browser.contentDocument;
+  let tc_LTR_elem = doc.getElementById("LTRtextContent");
+  let tc_RTL_elem = doc.getElementById("RTLtextContent");
+
+  // Locate longpress midpoints for test elements, ensure expactations.
+  let tc_LTR_midPoint = getCharPressPoint(doc, tc_LTR_elem, 5, "x");
+  let tc_RTL_midPoint = getCharPressPoint(doc, tc_RTL_elem, 9, "ת");
+
+  // Pre-populate the clipboard to ensure PASTE action available.
+  Cc["@mozilla.org/widget/clipboardhelper;1"].
+    getService(Ci.nsIClipboardHelper).copyString("somethingMagical");
+  let flavors = ["text/unicode"];
+  let clipboardHasText = Services.clipboard.hasDataMatchingFlavors(
+    flavors, flavors.length, Ci.nsIClipboard.kGlobalClipboard);
+  is(clipboardHasText, true, "There should now be paste-able text in the clipboard.");
+
+  // Toggle designMode on/off/on, check UI expectations.
+  ["on", "off"].forEach(designMode => {
+    doc.designMode = designMode;
+
+    // Text content in a document, whether in designMode or not, never receives focus.
+    // Available ActionBar/FloatingToolbar UI actions should vary depending on mode.
+
+    let result = getLongPressResult(browser, tc_LTR_midPoint);
+    is(result.focusedElement, null, "No focused element is expected.");
+    is(result.text, "existence", "Selected text should match expected text.");
+    is(UIhasActionByID("cut_action"), (designMode === "on"),
+      "CUT action UI Visibility should match designMode state.");
+    is(UIhasActionByID("paste_action"), (designMode === "on"),
+      "PASTE action UI Visibility should match designMode state.");
+
+    result = getLongPressResult(browser, tc_RTL_midPoint);
+    is(result.focusedElement, null, "No focused element is expected.");
+    is(result.text, "אותו", "Selected text should match expected text.");
+    is(UIhasActionByID("cut_action"), (designMode === "on"),
+      "CUT action UI Visibility should match designMode state.");
+    is(UIhasActionByID("paste_action"), (designMode === "on"),
+      "PASTE action UI Visibility should match designMode state.");
+  });
+
+  // Close Selection UI (ActionBar or FloatingToolbar) and complete test.
+  closeSelectionUI();
+  ok(true, "Finished testAccessibleCarets_designMode tests.");
+});
+
+
+// Start all the test tasks.
 run_next_test();

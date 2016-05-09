@@ -22,3 +22,7 @@ category bookmark-observers PlacesCategoriesStarter @mozilla.org/places/categori
 # ColorAnalyzer.js
 component {d056186c-28a0-494e-aacc-9e433772b143} ColorAnalyzer.js
 contract @mozilla.org/places/colorAnalyzer;1 {d056186c-28a0-494e-aacc-9e433772b143}
+
+# UnifiedComplete.js
+component {f964a319-397a-4d21-8be6-5cdd1ee3e3ae} UnifiedComplete.js
+contract @mozilla.org/autocomplete/search;1?name=unifiedcomplete {f964a319-397a-4d21-8be6-5cdd1ee3e3ae}
