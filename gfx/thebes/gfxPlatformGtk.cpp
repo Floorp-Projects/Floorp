@@ -20,6 +20,13 @@
 #include "gfxUtils.h"
 #include "gfxFT2FontBase.h"
 #include "gfxPrefs.h"
+#include "VsyncSource.h"
+#include "mozilla/Atomics.h"
+#include "mozilla/Monitor.h"
+#include "base/task.h"
+#include "base/thread.h"
+#include "base/message_loop.h"
+#include "mozilla/gfx/Logging.h"
 
 #include "mozilla/gfx/2D.h"
 
@@ -33,6 +40,12 @@
 #include "cairo-xlib.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/X11Util.h"
+
+#ifdef GL_PROVIDER_GLX
+#include "GLContextProvider.h"
+#include "GLContextGLX.h"
+#include "GLXLibrary.h"
+#endif
 
 /* Undefine the Status from Xlib since it will conflict with system headers on OSX */
 #if defined(__APPLE__) && defined(Status)
@@ -583,3 +596,230 @@ gfxPlatformGtk::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
 {
     return GetScaledFontForFontWithCairoSkia(aTarget, aFont);
 }
+
+#ifdef GL_PROVIDER_GLX
+
+class GLXVsyncSource final : public VsyncSource
+{
+public:
+  GLXVsyncSource()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    mGlobalDisplay = new GLXDisplay();
+  }
+
+  virtual ~GLXVsyncSource()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
+
+  virtual Display& GetGlobalDisplay() override
+  {
+    return *mGlobalDisplay;
+  }
+
+  class GLXDisplay final : public VsyncSource::Display
+  {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GLXDisplay)
+
+  public:
+    GLXDisplay() : mGLContext(nullptr)
+                 , mSetupLock("GLXVsyncSetupLock")
+                 , mVsyncThread("GLXVsyncThread")
+                 , mVsyncTask(nullptr)
+                 , mVsyncEnabledLock("GLXVsyncEnabledLock")
+                 , mVsyncEnabled(false)
+    {
+    }
+
+    // Sets up the display's GL context on a worker thread.
+    // Required as GLContexts may only be used by the creating thread.
+    // Returns true if setup was a success.
+    bool Setup()
+    {
+      MonitorAutoLock lock(mSetupLock);
+      MOZ_ASSERT(NS_IsMainThread());
+      if (!mVsyncThread.Start())
+        return false;
+
+      RefPtr<Runnable> vsyncSetup = NewRunnableMethod(this, &GLXDisplay::SetupGLContext);
+      mVsyncThread.message_loop()->PostTask(vsyncSetup.forget());
+      // Wait until the setup has completed.
+      lock.Wait();
+      return mGLContext != nullptr;
+    }
+
+    // Called on the Vsync thread to setup the GL context.
+    void SetupGLContext()
+    {
+        MonitorAutoLock lock(mSetupLock);
+        MOZ_ASSERT(!NS_IsMainThread());
+        MOZ_ASSERT(!mGLContext, "GLContext already setup!");
+
+        // Create video sync timer on a separate Display to prevent locking the
+        // main thread X display.
+        mXDisplay = XOpenDisplay(nullptr);
+        if (!mXDisplay) {
+          lock.NotifyAll();
+          return;
+        }
+
+        // Most compositors wait for vsync events on the root window.
+        Window root = DefaultRootWindow(mXDisplay);
+        int screen = DefaultScreen(mXDisplay);
+
+        ScopedXFree<GLXFBConfig> cfgs;
+        GLXFBConfig config;
+        int visid;
+        if (!gl::GLContextGLX::FindFBConfigForWindow(mXDisplay, screen, root,
+                                                     &cfgs, &config, &visid)) {
+          lock.NotifyAll();
+          return;
+        }
+
+        mGLContext = gl::GLContextGLX::CreateGLContext(
+            gl::SurfaceCaps::Any(),
+            nullptr,
+            false,
+            mXDisplay,
+            root,
+            config,
+            false);
+
+        mGLContext->MakeCurrent();
+
+        // Test that SGI_video_sync lets us get the counter.
+        unsigned int syncCounter = 0;
+        if (gl::sGLXLibrary.xGetVideoSync(&syncCounter) != 0) {
+          mGLContext = nullptr;
+        }
+
+        lock.NotifyAll();
+    }
+
+    virtual void EnableVsync() override
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+      MOZ_ASSERT(mGLContext, "GLContext not setup!");
+
+      MonitorAutoLock lock(mVsyncEnabledLock);
+      if (mVsyncEnabled) {
+        return;
+      }
+      mVsyncEnabled = true;
+
+      // If the task has not nulled itself out, it hasn't yet realized
+      // that vsync was disabled earlier, so continue its execution.
+      if (!mVsyncTask) {
+        mVsyncTask = NewRunnableMethod(this, &GLXDisplay::RunVsync);
+        RefPtr<Runnable> addrefedTask = mVsyncTask;
+        mVsyncThread.message_loop()->PostTask(addrefedTask.forget());
+      }
+    }
+
+    virtual void DisableVsync() override
+    {
+      MonitorAutoLock lock(mVsyncEnabledLock);
+      mVsyncEnabled = false;
+    }
+
+    virtual bool IsVsyncEnabled() override
+    {
+      MonitorAutoLock lock(mVsyncEnabledLock);
+      return mVsyncEnabled;
+    }
+
+    virtual void Shutdown() override
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+      DisableVsync();
+
+      // Cleanup thread-specific resources before shutting down.
+      RefPtr<Runnable> shutdownTask = NewRunnableMethod(this, &GLXDisplay::Cleanup);
+      mVsyncThread.message_loop()->PostTask(shutdownTask.forget());
+
+      // Stop, waiting for the cleanup task to finish execution.
+      mVsyncThread.Stop();
+    }
+
+  private:
+    virtual ~GLXDisplay()
+    {
+    }
+
+    void RunVsync()
+    {
+      MOZ_ASSERT(!NS_IsMainThread());
+
+      mGLContext->MakeCurrent();
+
+      unsigned int syncCounter = 0;
+      gl::sGLXLibrary.xGetVideoSync(&syncCounter);
+      for (;;) {
+        {
+          MonitorAutoLock lock(mVsyncEnabledLock);
+          if (!mVsyncEnabled) {
+            mVsyncTask = nullptr;
+            return;
+          }
+        }
+
+        TimeStamp lastVsync = TimeStamp::Now();
+        // Wait until the video sync counter reaches the next value by waiting
+        // until the parity of the counter value changes.
+        unsigned int nextSync = syncCounter + 1;
+        if (gl::sGLXLibrary.xWaitVideoSync(2, nextSync % 2,
+                                           &syncCounter) == 0) {
+          if (syncCounter == (nextSync - 1)) {
+            gfxWarning() << "GLX sync counter failed to increment after glXWaitVideoSync!\n";
+            // If we failed to block until the next sync, fallback to software.
+            double remaining = (1000.f / 60.f) -
+                               (TimeStamp::Now() - lastVsync).ToMilliseconds();
+            if (remaining > 0) {
+              PlatformThread::Sleep(remaining);
+            }
+          }
+          lastVsync = TimeStamp::Now();
+          NotifyVsync(lastVsync);
+        }
+      }
+    }
+
+    void Cleanup() {
+      MOZ_ASSERT(!NS_IsMainThread());
+
+      mGLContext = nullptr;
+      XCloseDisplay(mXDisplay);
+    }
+
+    // Owned by the vsync thread.
+    RefPtr<gl::GLContextGLX> mGLContext;
+    _XDisplay* mXDisplay;
+    Monitor mSetupLock;
+    base::Thread mVsyncThread;
+    RefPtr<Runnable> mVsyncTask;
+    Monitor mVsyncEnabledLock;
+    bool mVsyncEnabled;
+  };
+private:
+  // We need a refcounted VsyncSource::Display to use chromium IPC runnables.
+  RefPtr<GLXDisplay> mGlobalDisplay;
+};
+
+already_AddRefed<gfx::VsyncSource>
+gfxPlatformGtk::CreateHardwareVsyncSource()
+{
+  if (gl::sGLXLibrary.SupportsVideoSync()) {
+    RefPtr<VsyncSource> vsyncSource = new GLXVsyncSource();
+    VsyncSource::Display& display = vsyncSource->GetGlobalDisplay();
+    if (!static_cast<GLXVsyncSource::GLXDisplay&>(display).Setup()) {
+      NS_WARNING("Failed to setup GLContext, falling back to software vsync.");
+      return gfxPlatform::CreateHardwareVsyncSource();
+    }
+    return vsyncSource.forget();
+  }
+  NS_WARNING("SGI_video_sync unsupported. Falling back to software vsync.");
+  return gfxPlatform::CreateHardwareVsyncSource();
+}
+
+#endif
