@@ -1821,6 +1821,7 @@ BundledFontLoader::CreateEnumeratorFromKey(
 {
     nsIFile *fontDir = *(nsIFile**)aCollectionKey;
     *aFontFileEnumerator = new BundledFontFileEnumerator(aFactory, fontDir);
+    NS_ADDREF(*aFontFileEnumerator);
     return S_OK;
 }
 
