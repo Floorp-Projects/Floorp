@@ -2643,7 +2643,7 @@ public class BrowserApp extends GeckoApp
             });
 
             // Set this listener to persist restore data (via the Tab) every time panel state changes.
-            mHomePager.setPanelStateChangelistener(new HomeFragment.PanelStateChangeListener() {
+            mHomePager.setPanelStateChangeListener(new HomeFragment.PanelStateChangeListener() {
                 @Override
                 public void onStateChanged(Bundle bundle) {
                     final Tab currentTab = Tabs.getInstance().getSelectedTab();
