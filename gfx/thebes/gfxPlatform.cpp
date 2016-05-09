@@ -765,6 +765,10 @@ gfxPlatform::Init()
 
     ScrollMetadata::sNullMetadata = new ScrollMetadata();
     ClearOnShutdown(&ScrollMetadata::sNullMetadata);
+
+    if (obs) {
+      obs->NotifyObservers(nullptr, "gfx-features-ready", nullptr);
+    }
 }
 
 static bool sLayersIPCIsUp = false;
