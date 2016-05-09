@@ -1295,7 +1295,7 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
 
   WidgetSimpleGestureEvent event(true, msg, widget);
   event.mModifiers = nsContentUtils::GetWidgetModifiers(aModifiers);
-  event.direction = aDirection;
+  event.mDirection = aDirection;
   event.delta = aDelta;
   event.clickCount = aClickCount;
   event.mTime = PR_IntervalNow();

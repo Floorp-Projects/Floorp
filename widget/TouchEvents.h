@@ -99,7 +99,7 @@ public:
     : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget,
                            eSimpleGestureEventClass)
     , mAllowedDirections(0)
-    , direction(0)
+    , mDirection(0)
     , clickCount(0)
     , delta(0.0)
   {
@@ -109,7 +109,7 @@ public:
     : WidgetMouseEventBase(aOther.IsTrusted(), aOther.mMessage,
                            aOther.mWidget, eSimpleGestureEventClass)
     , mAllowedDirections(aOther.mAllowedDirections)
-    , direction(aOther.direction)
+    , mDirection(aOther.mDirection)
     , clickCount(0)
     , delta(aOther.delta)
   {
@@ -130,7 +130,7 @@ public:
   // See nsIDOMSimpleGestureEvent for values
   uint32_t mAllowedDirections;
   // See nsIDOMSimpleGestureEvent for values
-  uint32_t direction;
+  uint32_t mDirection;
   // The number of taps for tap events
   uint32_t clickCount;
   // Delta for magnify and rotate events
@@ -143,7 +143,7 @@ public:
     AssignMouseEventBaseData(aEvent, aCopyTargets);
 
     // mAllowedDirections isn't copied
-    direction = aEvent.direction;
+    mDirection = aEvent.mDirection;
     delta = aEvent.delta;
     clickCount = aEvent.clickCount;
   }

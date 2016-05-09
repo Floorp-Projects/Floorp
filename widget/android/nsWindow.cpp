@@ -2140,7 +2140,7 @@ nsWindow::OnNativeGestureEvent(AndroidGeckoEvent *ae)
 
     WidgetSimpleGestureEvent event(true, msg, this);
 
-    event.direction = 0;
+    event.mDirection = 0;
     event.delta = delta;
     event.mModifiers = 0;
     event.mTime = ae->Time();
