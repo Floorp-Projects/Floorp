@@ -37,6 +37,7 @@ WidevineDecryptor::SetCDM(RefPtr<CDMWrapper> aCDM)
 void
 WidevineDecryptor::Init(GMPDecryptorCallback* aCallback)
 {
+  MOZ_ASSERT(aCallback);
   mCallback = aCallback;
   mCallback->SetCapabilities(GMP_EME_CAP_DECRYPT_AND_DECODE_VIDEO |
                              GMP_EME_CAP_DECRYPT_AUDIO);
@@ -162,6 +163,10 @@ void
 WidevineDecryptor::Decrypt(GMPBuffer* aBuffer,
                            GMPEncryptedBufferMetadata* aMetadata)
 {
+  if (!mCallback) {
+    Log("WidevineDecryptor::Decrypt() this=%p FAIL; !mCallback", this);
+    return;
+  }
   const GMPEncryptedBufferMetadata* crypto = aMetadata;
   InputBuffer sample;
   nsTArray<SubsampleEntry> subsamples;
@@ -261,6 +266,10 @@ WidevineDecryptor::OnResolveNewSessionPromise(uint32_t aPromiseId,
                                               const char* aSessionId,
                                               uint32_t aSessionIdSize)
 {
+  if (!mCallback) {
+    Log("Decryptor::OnResolveNewSessionPromise(aPromiseId=0x%d) FAIL; !mCallback", aPromiseId);
+    return;
+  }
   Log("Decryptor::OnResolveNewSessionPromise(aPromiseId=0x%d)", aPromiseId);
   auto iter = mPromiseIdToNewSessionTokens.find(aPromiseId);
   if (iter == mPromiseIdToNewSessionTokens.end()) {
@@ -275,6 +284,10 @@ WidevineDecryptor::OnResolveNewSessionPromise(uint32_t aPromiseId,
 void
 WidevineDecryptor::OnResolvePromise(uint32_t aPromiseId)
 {
+  if (!mCallback) {
+    Log("Decryptor::OnResolvePromise(aPromiseId=0x%d) FAIL; !mCallback", aPromiseId);
+    return;
+  }
   Log("Decryptor::OnResolvePromise(aPromiseId=%d)", aPromiseId);
   mCallback->ResolvePromise(aPromiseId);
 }
@@ -301,7 +314,12 @@ WidevineDecryptor::OnRejectPromise(uint32_t aPromiseId,
                                    const char* aErrorMessage,
                                    uint32_t aErrorMessageSize)
 {
-  Log("Decryptor::OnRejectPromise(aPromiseId=%d, err=%d, sysCode=%d, msg=%s)",
+  if (!mCallback) {
+    Log("Decryptor::OnRejectPromise(aPromiseId=%d, err=%d, sysCode=%u, msg=%s) FAIL; !mCallback",
+        aPromiseId, (int)aError, aSystemCode, aErrorMessage);
+    return;
+  }
+  Log("Decryptor::OnRejectPromise(aPromiseId=%d, err=%d, sysCode=%u, msg=%s)",
       aPromiseId, (int)aError, aSystemCode, aErrorMessage);
   mCallback->RejectPromise(aPromiseId,
                            ToGMPDOMException(aError),
@@ -329,6 +347,10 @@ WidevineDecryptor::OnSessionMessage(const char* aSessionId,
                                     const char* aLegacyDestinationUrl,
                                     uint32_t aLegacyDestinationUrlLength)
 {
+  if (!mCallback) {
+    Log("Decryptor::OnSessionMessage() FAIL; !mCallback");
+    return;
+  }
   Log("Decryptor::OnSessionMessage()");
   mCallback->SessionMessage(aSessionId,
                             aSessionIdSize,
@@ -359,6 +381,10 @@ WidevineDecryptor::OnSessionKeysChange(const char* aSessionId,
                                        const KeyInformation* aKeysInfo,
                                        uint32_t aKeysInfoCount)
 {
+  if (!mCallback) {
+    Log("Decryptor::OnSessionKeysChange() FAIL; !mCallback");
+    return;
+  }
   Log("Decryptor::OnSessionKeysChange()");
   for (uint32_t i = 0; i < aKeysInfoCount; i++) {
     mCallback->KeyStatusChanged(aSessionId,
@@ -380,6 +406,11 @@ WidevineDecryptor::OnExpirationChange(const char* aSessionId,
                                       uint32_t aSessionIdSize,
                                       Time aNewExpiryTime)
 {
+  if (!mCallback) {
+    Log("Decryptor::OnExpirationChange(sid=%s) t=%lf FAIL; !mCallback",
+        aSessionId, aNewExpiryTime);
+    return;
+  }
   Log("Decryptor::OnExpirationChange(sid=%s) t=%lf", aSessionId, aNewExpiryTime);
   GMPTimestamp expiry = ToGMPTime(aNewExpiryTime);
   if (aNewExpiryTime == 0) {
@@ -392,6 +423,10 @@ void
 WidevineDecryptor::OnSessionClosed(const char* aSessionId,
                                    uint32_t aSessionIdSize)
 {
+  if (!mCallback) {
+    Log("Decryptor::OnSessionClosed(sid=%s) FAIL; !mCallback", aSessionId);
+    return;
+  }
   Log("Decryptor::OnSessionClosed(sid=%s)", aSessionId);
   mCallback->SessionClosed(aSessionId, aSessionIdSize);
 }
@@ -404,7 +439,12 @@ WidevineDecryptor::OnLegacySessionError(const char* aSessionId,
                                         const char* aErrorMessage,
                                         uint32_t aErrorMessageLength)
 {
-  Log("Decryptor::OnSessionClosed(sid=%s, error=%d)", aSessionId, (int)aError);
+  if (!mCallback) {
+    Log("Decryptor::OnLegacySessionError(sid=%s, error=%d) FAIL; !mCallback",
+        aSessionId, (int)aError);
+    return;
+  }
+  Log("Decryptor::OnLegacySessionError(sid=%s, error=%d)", aSessionId, (int)aError);
   mCallback->SessionError(aSessionId,
                           aSessionIdLength,
                           ToGMPDOMException(aError),
