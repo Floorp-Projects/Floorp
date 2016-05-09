@@ -200,9 +200,6 @@ class ReftestRunner(MozbuildObject):
                                                             "test-stage", "jsreftest",
                                                             "tests", "user.js"))
 
-        if not kwargs["runTestsInParallel"]:
-            kwargs["logFile"] = "%s.log" % kwargs["suite"]
-
         self.log_manager.enable_unstructured()
         try:
             rv = runreftest.run(**kwargs)
