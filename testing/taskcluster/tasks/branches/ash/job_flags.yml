@@ -50,6 +50,8 @@ tests:
     allowed_build_tasks:
       tasks/builds/opt_linux64.yml:
         task: tasks/tests/fx_linux64_mochitest_dt_e10s_opt.yml
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_mochitest_dt_e10s_dbg.yml
   mochitest-media-e10s:
     allowed_build_tasks:
       tasks/builds/opt_linux64.yml:
@@ -68,6 +70,12 @@ tests:
         task: tasks/tests/fx_linux64_reftest_e10s_opt.yml
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_reftest_e10s_dbg.yml
+  reftest-no-accel-e10s:
+    allowed_build_tasks:
+      tasks/builds/opt_linux64.yml:
+        task: tasks/tests/fx_linux64_reftest_not_accelerated_e10s_opt.yml
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_reftest_not_accelerated_e10s_dbg.yml
   web-platform-tests-e10s:
     allowed_build_tasks:
       tasks/builds/opt_linux64.yml:
