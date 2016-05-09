@@ -1,34 +1,41 @@
-# Wires [![Build Status](https://travis-ci.org/jgraham/wires.svg?branch=master)](https://travis-ci.org/jgraham/wires)
+# geckodriver [![Build Status](https://travis-ci.org/mozilla/geckodriver.svg?branch=master)](https://travis-ci.org/mozilla/geckodriver)
 
-WebDriver <-> Marionette proxy
+Proxy for using W3C WebDriver-compatible clients
+to interact with Gecko-based browsers.
 
-## Build Project
+This program provides the HTTP API described by
+the [WebDriver protocol](http://w3c.github.io/webdriver/webdriver-spec.html#protocol)
+to communicate with Gecko browsers, such as Firefox.
+It translates calls into
+the [Marionette](https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette)
+automation protocol
+by acting as a proxy between the local- and remote ends.
 
-Download rust from [rust-lang.org](https://www.rust-lang.org/)
+## Building
 
-To build the project for release:
+geckodriver is written in [Rust](https://www.rust-lang.org/)
+and you need the Rust toolchain to compile it.
 
-```bash
-cargo build --no-default-features --release
-```
+To compile the project for release,
+ensure you do an optimised build:
 
-If you want to build a debug version just use:
+    % cargo build --no-default-features --release
 
-```bash
-cargo build --no-default-features
-```
-The `--no-default-features` argument is required to compile on Windows due to the
- way dependencies need to be compiled.
+If you want to build a debug binary:
+
+    % cargo build --no-default-features
+
+The `--no-default-features` argument
+is required to compile on Windows
+due to the way dependencies need to be compiled.
+ 
 ## Usage
 
-To use wires, follow the steps on [MDN](https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/WebDriver) or you can use the steps below and use a cURL client.
+Usage steps are [documented on MDN](https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/WebDriver),
+but the gist of it is this:
 
-```
-cargo run [options] [--] [<args>...]
-```
+    % geckodriver -b /usr/bin/firefox
 
-For example, you can specify a binary path to Firefox and run the proxy:
+Or if you’re on Mac:
 
-```
-cargo run -- -b /Applications/FirefoxNightly.app/Contents/MacOS/firefox-bin
-```
+    % geckodriver -b /Applications/FirefoxNightly.app/Contents/MacOS/firefox-bin
