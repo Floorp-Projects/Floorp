@@ -10,6 +10,22 @@
 
 namespace mozilla {
 
+template<uint32_t N> nsresult
+AnimationPerformanceWarning::ToLocalizedStringWithIntParams(
+  const char* aKey, nsXPIDLString& aLocalizedString) const
+{
+  nsAutoString strings[N];
+  const char16_t* charParams[N];
+
+  for (size_t i = 0, n = mParams->Length(); i < n; i++) {
+    strings[i].AppendInt((*mParams)[i]);
+    charParams[i] = strings[i].get();
+  }
+
+  return nsContentUtils::FormatLocalizedString(
+      nsContentUtils::eLAYOUT_PROPERTIES, aKey, charParams, aLocalizedString);
+}
+
 bool
 AnimationPerformanceWarning::ToLocalizedString(
   nsXPIDLString& aLocalizedString) const
@@ -17,32 +33,20 @@ AnimationPerformanceWarning::ToLocalizedString(
   const char* key = nullptr;
 
   switch (mType) {
+    case Type::ContentTooSmall:
+      MOZ_ASSERT(mParams && mParams->Length() == 2,
+                 "Parameter's length should be 2 for ContentTooSmall");
+
+      return NS_SUCCEEDED(
+        ToLocalizedStringWithIntParams<2>("AnimationWarningContentTooSmall",
+                                          aLocalizedString));
     case Type::ContentTooLarge:
-    {
       MOZ_ASSERT(mParams && mParams->Length() == 7,
                  "Parameter's length should be 7 for ContentTooLarge");
 
-      MOZ_ASSERT(mParams->Length() <= kMaxParamsForLocalization,
-                 "Parameter's length should be less than "
-                 "kMaxParamsForLocalization");
-      // We can pass an array of parameters whose length is greater than 7 to
-      // nsContentUtils::FormatLocalizedString because
-      // nsTextFormatter drops those extra parameters in the end.
-      nsAutoString strings[kMaxParamsForLocalization];
-      const char16_t* charParams[kMaxParamsForLocalization];
-
-      for (size_t i = 0, n = mParams->Length(); i < n; i++) {
-        strings[i].AppendInt((*mParams)[i]);
-        charParams[i] = strings[i].get();
-      }
-
-      nsresult rv = nsContentUtils::FormatLocalizedString(
-        nsContentUtils::eLAYOUT_PROPERTIES,
-        "AnimationWarningContentTooLarge",
-        charParams,
-        aLocalizedString);
-      return NS_SUCCEEDED(rv);
-    }
+      return NS_SUCCEEDED(
+        ToLocalizedStringWithIntParams<7>("AnimationWarningContentTooLarge",
+                                          aLocalizedString));
     case Type::TransformBackfaceVisibilityHidden:
       key = "AnimationWarningTransformBackfaceVisibilityHidden";
       break;

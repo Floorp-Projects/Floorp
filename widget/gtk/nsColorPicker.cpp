@@ -80,7 +80,7 @@ NS_IMETHODIMP nsColorPicker::Open(nsIColorPickerShownCallback *aColorPickerShown
 
   const nsAString& withoutHash  = StringTail(mInitialColor, 6);
   nscolor color;
-  if (!NS_HexToRGB(withoutHash, &color)) {
+  if (!NS_HexToRGBA(withoutHash, nsHexColorType::NoAlpha, &color)) {
     return NS_ERROR_FAILURE;
   }
 

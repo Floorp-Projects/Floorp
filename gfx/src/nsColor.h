@@ -45,10 +45,16 @@ typedef uint32_t nscolor;
     target = ((tmp_ << 8) + tmp_ + 255) >> 16;     \
   PR_END_MACRO
 
+enum class nsHexColorType : uint8_t {
+  NoAlpha, // 3 or 6 digit hex colors only
+  AllowAlpha, // 3, 4, 6, or 8 digit hex colors
+};
+
 // Translate a hex string to a color. Return true if it parses ok,
 // otherwise return false.
-// This accepts only 3 or 6 digits
-bool NS_HexToRGB(const nsAString& aBuf, nscolor* aResult);
+// This accepts the number of digits specified by aType.
+bool
+NS_HexToRGBA(const nsAString& aBuf, nsHexColorType aType, nscolor* aResult);
 
 // Compose one NS_RGB color onto another. The result is what
 // you get if you draw aFG on top of aBG with operator OVER.

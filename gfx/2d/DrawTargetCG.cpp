@@ -1956,7 +1956,7 @@ DrawTargetCG::Mask(const Pattern &aSource,
                    const Pattern &aMask,
                    const DrawOptions &aDrawOptions)
 {
-  MOZ_CRASH("not completely implemented");
+  MOZ_CRASH("GFX: not completely implemented");
   MarkChanged();
 
   CGContextSaveGState(mCg);

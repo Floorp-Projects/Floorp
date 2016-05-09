@@ -24,7 +24,7 @@ reflectLimitedEnumerated({
                 "metadata"],
   invalidValues: ["foo", "bar", "\u0000", "null", "", "subtitle", "caption",
                   "description", "chapter", "meta"],
-  defaultValue: "subtitles"
+  defaultValue: { missing: "subtitles", invalid: "metadata" },
 });
 
 // Default attribute

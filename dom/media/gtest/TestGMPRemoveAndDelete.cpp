@@ -235,6 +235,7 @@ GMPRemoveTest::Setup()
   // below may complete before we're finished adding GMPs from MOZ_GMP_PATH,
   // and we'll end up not removing the GMP, and the test will fail.
   RefPtr<AbstractThread> thread(GetServiceParent()->GetAbstractGMPThread());
+  EXPECT_TRUE(thread);
   GMPTestMonitor* mon = &mTestMonitor;
   GetServiceParent()->EnsureInitialized()->Then(thread, __func__,
     [mon]() { mon->SetFinished(); },

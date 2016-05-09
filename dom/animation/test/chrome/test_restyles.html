@@ -442,6 +442,36 @@ waitForAllPaints(function() {
     yield ensureElementRemoval(div);
   });
 
+  add_task(function* restyling_for_empty_keyframes() {
+    var div = addDiv(null);
+    var animation = div.animate({ }, 100 * MS_PER_SEC);
+
+    yield animation.ready;
+    var markers = yield observeStyling(5);
+
+    is(markers.length, 0,
+       'Animations with no keyframes should not cause restyles');
+
+    animation.effect.setFrames({ backgroundColor: ['red', 'blue'] });
+    markers = yield observeStyling(5);
+
+    // There are 5 eRestyle_CSSAnimations and 1 eRestyle_CSSTransitions.
+    // 1 eRestyle_CSSTransitions comes from
+    // EffectCompositor::UpdateCascadeResults.
+    ok(markers.length == 6,
+       'Setting valid keyframes should cause regular animation restyles to ' +
+       'occur');
+
+    animation.effect.setFrames({ });
+    markers = yield observeStyling(5);
+
+    is(markers.length, 1,
+       'Setting an empty set of keyframes should trigger a single restyle ' +
+       'to remove the previous animated style');
+
+    yield ensureElementRemoval(div);
+  });
+
 });
 
 </script>

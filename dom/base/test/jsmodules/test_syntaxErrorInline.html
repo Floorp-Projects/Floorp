@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test syntax errors parsing an inline module are reported</title>
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+  var wasRun = false;
+  var hadSyntaxError = false;
+
+  SimpleTest.waitForExplicitFinish();
+  window.onerror = handleError;
+
+  function handleError(message, url, line, column, error) {
+    hadSyntaxError = error instanceof SyntaxError;
+  }
+
+  function testError() {
+    ok(!wasRun, 'Check script was not run');
+    ok(hadSyntaxError, 'Check that a SyntaxError was thrown');
+    SimpleTest.finish();
+  }
+</script>
+<script type="module">
+// Module with a syntax error.
+some invalid js syntax;
+wasRun = true;
+</script>
+<body onload='testError()'></body>

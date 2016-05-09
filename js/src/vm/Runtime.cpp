@@ -11,6 +11,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ThreadLocal.h"
+#include "mozilla/unused.h"
 
 #if defined(XP_DARWIN)
 #include <mach/mach.h>
@@ -331,9 +332,6 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
     if (!evalCache.init())
         return false;
 
-    if (!compressedSourceSet.init())
-        return false;
-
     /* The garbage collector depends on everything before this point being initialized. */
     gcInitialized = true;
 
@@ -359,6 +357,12 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
 
     if (!fx.initInstance())
         return false;
+
+    if (!parentRuntime) {
+        sharedImmutableStrings_ = js::SharedImmutableStringsCache::Create();
+        if (!sharedImmutableStrings_)
+            return false;
+    }
 
     return true;
 }
@@ -539,9 +543,12 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
 
     rtSizes->mathCache += mathCache_ ? mathCache_->sizeOfIncludingThis(mallocSizeOf) : 0;
 
-    rtSizes->uncompressedSourceCache += uncompressedSourceCache.sizeOfExcludingThis(mallocSizeOf);
+    if (sharedImmutableStrings_) {
+        rtSizes->sharedImmutableStringsCache +=
+            sharedImmutableStrings_->sizeOfExcludingThis(mallocSizeOf);
+    }
 
-    rtSizes->compressedSourceSet += compressedSourceSet.sizeOfExcludingThis(mallocSizeOf);
+    rtSizes->uncompressedSourceCache += uncompressedSourceCache.sizeOfExcludingThis(mallocSizeOf);
 
     rtSizes->scriptData += scriptDataTable().sizeOfExcludingThis(mallocSizeOf);
     for (ScriptDataTable::Range r = scriptDataTable().all(); !r.empty(); r.popFront())

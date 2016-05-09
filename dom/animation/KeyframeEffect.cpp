@@ -168,18 +168,11 @@ KeyframeEffectReadOnly::NotifyAnimationTimingUpdated()
 
   // Request restyle if necessary.
   //
-  // Bug 1235002: We should skip requesting a restyle when mProperties is empty.
-  // However, currently we don't properly encapsulate mProperties so we can't
-  // detect when it changes. As a result, if we skip requesting restyles when
-  // mProperties is empty and we play an animation and *then* add properties to
-  // it (as we currently do when building CSS animations), we will fail to
-  // request a restyle at all. Since animations without properties are rare, we
-  // currently just request the restyle regardless of whether mProperties is
-  // empty or not.
-  //
   // Bug 1216843: When we implement iteration composite modes, we need to
   // also detect if the current iteration has changed.
-  if (mAnimation && GetComputedTiming().mProgress != mProgressOnLastCompose) {
+  if (mAnimation &&
+      !mProperties.IsEmpty() &&
+      GetComputedTiming().mProgress != mProgressOnLastCompose) {
     EffectCompositor::RestyleType restyleType =
       CanThrottle() ?
       EffectCompositor::RestyleType::Throttled :

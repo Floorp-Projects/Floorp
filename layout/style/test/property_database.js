@@ -1016,7 +1016,7 @@ var gCSSProperties = {
     get_computed: logical_box_prop_get_computed,
     initial_values: [ "currentColor" ],
     other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
-    invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000", "000000" ]
+    invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000", "000000" ]
   },
   "border-inline-end-style": {
     domProp: "borderInlineEndStyle",
@@ -1264,7 +1264,7 @@ var gCSSProperties = {
     get_computed: logical_box_prop_get_computed,
     initial_values: [ "currentColor" ],
     other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
-    invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000", "000000" ]
+    invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000", "000000" ]
   },
   "border-inline-start-style": {
     domProp: "borderInlineStartStyle",
@@ -2261,7 +2261,7 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "transparent", "rgba(255, 127, 15, 0)", "hsla(240, 97%, 50%, 0.0)", "rgba(0, 0, 0, 0)", "rgba(255,255,255,-3.7)" ],
     other_values: [ "green", "rgb(255, 0, 128)", "#fc2", "#96ed2a", "black", "rgba(255,255,0,3)", "hsl(240, 50%, 50%)", "rgb(50%, 50%, 50%)", "-moz-default-background-color" ],
-    invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000", "rgb(100, 100.0, 100)" ],
+    invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000", "rgb(100, 100.0, 100)" ],
     quirks_values: { "000000": "#000000", "96ed2a": "#96ed2a" },
   },
   "background-image": {
@@ -2456,7 +2456,7 @@ var gCSSProperties = {
     prerequisites: { "color": "black" },
     initial_values: [ "currentColor", "-moz-use-text-color" ],
     other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
-    invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ],
+    invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000" ],
     quirks_values: { "000000": "#000000", "96ed2a": "#96ed2a" },
   },
   "border-bottom-style": {
@@ -2502,7 +2502,7 @@ var gCSSProperties = {
     subproperties: [ "border-top-color", "border-right-color", "border-bottom-color", "border-left-color" ],
     initial_values: [ "currentColor", "currentColor currentColor", "currentColor currentColor currentColor", "currentColor currentColor currentcolor CURRENTcolor" ],
     other_values: [ "green", "currentColor green", "currentColor currentColor green", "currentColor currentColor currentColor green", "rgba(255,128,0,0.5)", "transparent" ],
-    invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000", "red rgb(nonsense)", "red 1px" ],
+    invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000", "red rgb(nonsense)", "red 1px" ],
     unbalanced_values: [ "red rgb(" ],
     quirks_values: { "000000": "#000000", "96ed2a": "#96ed2a" },
   },
@@ -2522,7 +2522,7 @@ var gCSSProperties = {
     prerequisites: { "color": "black" },
     initial_values: [ "currentColor", "-moz-use-text-color" ],
     other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
-    invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ],
+    invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000" ],
     quirks_values: { "000000": "#000000", "96ed2a": "#96ed2a" },
   },
   "border-left-style": {
@@ -2569,7 +2569,7 @@ var gCSSProperties = {
     prerequisites: { "color": "black" },
     initial_values: [ "currentColor", "-moz-use-text-color" ],
     other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
-    invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ],
+    invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000" ],
     quirks_values: { "000000": "#000000", "96ed2a": "#96ed2a" },
   },
   "border-right-style": {
@@ -2639,7 +2639,7 @@ var gCSSProperties = {
     prerequisites: { "color": "black" },
     initial_values: [ "currentColor", "-moz-use-text-color" ],
     other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
-    invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ],
+    invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000" ],
     quirks_values: { "000000": "#000000", "96ed2a": "#96ed2a" },
   },
   "border-top-style": {
@@ -2753,9 +2753,9 @@ var gCSSProperties = {
     inherited: true,
     type: CSS_TYPE_LONGHAND,
     /* XXX should test currentColor, but may or may not be initial */
-    initial_values: [ "black", "#000", "-moz-default-color" ],
-    other_values: [ "green", "#f3c", "#fed292", "rgba(45,300,12,2)", "transparent", "-moz-nativehyperlinktext", "rgba(255,128,0,0.5)" ],
-    invalid_values: [ "#f", "#ff", "#ffff", "#fffff", "#fffffff", "#ffffffff", "#fffffffff" ],
+    initial_values: [ "black", "#000", "#000f", "#000000ff", "rgb(0, 0, 0)", "rgba(0, 0, 0, 1.0)", "-moz-default-color" ],
+    other_values: [ "green", "#f3c", "#fed292", "rgba(45,300,12,2)", "transparent", "-moz-nativehyperlinktext", "rgba(255,128,0,0.5)", "#e0fc", "#10fcee72" ],
+    invalid_values: [ "#f", "#ff", "#fffff", "#fffffff", "#fffffffff" ],
     quirks_values: { "000000": "#000000", "96ed2a": "#96ed2a", "fff": "#ffffff", "ffffff": "#ffffff", },
   },
   "content": {
@@ -3439,7 +3439,7 @@ var gCSSProperties = {
     prerequisites: { "color": "black" },
     initial_values: [ "currentColor", "-moz-use-text-color" ], // XXX should be invert
     other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
-    invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000", "000000", "cc00ff" ]
+    invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000", "000000", "cc00ff" ]
   },
   "outline-offset": {
     domProp: "outlineOffset",
@@ -3707,7 +3707,7 @@ var gCSSProperties = {
     prerequisites: { "color": "black" },
     initial_values: [ "currentColor", "-moz-use-text-color" ],
     other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
-    invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000", "000000", "ff00ff" ]
+    invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000", "000000", "ff00ff" ]
   },
   "text-decoration-line": {
     domProp: "textDecorationLine",
@@ -5022,7 +5022,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.vertical-text.enabled")) {
       get_computed: logical_box_prop_get_computed,
       initial_values: [ "currentColor" ],
       other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
-      invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000", "000000" ]
+      invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000", "000000" ]
     },
     "border-block-end-style": {
       domProp: "borderBlockEndStyle",
@@ -5072,7 +5072,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.vertical-text.enabled")) {
       get_computed: logical_box_prop_get_computed,
       initial_values: [ "currentColor" ],
       other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
-      invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000", "000000" ]
+      invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000", "000000" ]
     },
     "border-block-start-style": {
       domProp: "borderBlockStartStyle",
@@ -7144,7 +7144,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
     prerequisites: { "color": "black" },
     initial_values: [ "currentColor", "black", "#000", "#000000", "rgb(0,0,0)" ],
     other_values: [ "red", "rgba(255,255,255,0.5)", "transparent" ],
-    invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000", "000000", "ff00ff", "rgb(255,xxx,255)" ]
+    invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000", "000000", "ff00ff", "rgb(255,xxx,255)" ]
   };
   gCSSProperties["-webkit-text-stroke"] = {
     domProp: "webkitTextStroke",
@@ -7163,7 +7163,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
     prerequisites: { "color": "black" },
     initial_values: [ "currentColor", "black", "#000", "#000000", "rgb(0,0,0)" ],
     other_values: [ "red", "rgba(255,255,255,0.5)", "transparent" ],
-    invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000", "000000", "ff00ff", "rgb(255,xxx,255)" ]
+    invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000", "000000", "ff00ff", "rgb(255,xxx,255)" ]
   };
   gCSSProperties["-webkit-text-stroke-width"] = {
     domProp: "webkitTextStrokeWidth",
@@ -7524,7 +7524,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.text-emphasis.enabled")) {
     prerequisites: { "color": "black" },
     initial_values: [ "currentColor", "black", "rgb(0,0,0)" ],
     other_values: [ "red", "rgba(255,255,255,0.5)", "transparent" ],
-    invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000", "000000", "ff00ff", "rgb(255,xxx,255)" ]
+    invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000", "000000", "ff00ff", "rgb(255,xxx,255)" ]
   };
   gCSSProperties["text-emphasis-position"] = {
     domProp: "textEmphasisPosition",
