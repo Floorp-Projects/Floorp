@@ -23,11 +23,22 @@ import static org.junit.Assert.assertEquals;
 @RunWith(TestRunner.class)
 public class TestDateUtil {
     @Test
-    public void testGetDateInHTTPFormat() {
+    public void testGetDateInHTTPFormatGMT() {
         final TimeZone gmt = TimeZone.getTimeZone("GMT");
         final GregorianCalendar calendar = new GregorianCalendar(gmt, Locale.US);
         calendar.set(2011, Calendar.FEBRUARY, 1, 14, 0, 0);
         final String expectedDate = "Tue, 01 Feb 2011 14:00:00 GMT";
+
+        final String actualDate = DateUtil.getDateInHTTPFormat(calendar.getTime());
+        assertEquals("Returned date is expected", expectedDate, actualDate);
+    }
+
+    @Test
+    public void testGetDateInHTTPFormatNonGMT() {
+        final TimeZone kst = TimeZone.getTimeZone("Asia/Seoul"); // no daylight savings time.
+        final GregorianCalendar calendar = new GregorianCalendar(kst, Locale.US);
+        calendar.set(2011, Calendar.FEBRUARY, 1, 14, 0, 0);
+        final String expectedDate = "Tue, 01 Feb 2011 05:00:00 GMT";
 
         final String actualDate = DateUtil.getDateInHTTPFormat(calendar.getTime());
         assertEquals("Returned date is expected", expectedDate, actualDate);
