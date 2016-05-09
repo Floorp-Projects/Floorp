@@ -526,60 +526,6 @@ js::StringHasRegExpMetaChars(JSLinearString* str)
     return HasRegExpMetaChars(str->twoByteChars(nogc), str->length());
 }
 
-// Note: leaves the string buffer empty if no escaping need be performed.
-template <typename CharT>
-static bool
-RegExpEscapeMetaChars(StringBuffer& sb, const CharT* oldChars, size_t oldLen)
-{
-    for (const CharT* it = oldChars; it < oldChars + oldLen; ++it) {
-        CharT ch = *it;
-        if (IsRegExpMetaChar(ch)) {
-            if (sb.empty()) {
-                // This is the first char we've seen that needs escaping,
-                // copy everything up to this point.
-                if (!SetupBuffer(sb, oldChars, oldLen, it))
-                    return false;
-            }
-            if (!sb.append('\\'))
-                return false;
-        }
-
-        if (!sb.empty()) {
-            if (!sb.append(ch))
-                return false;
-        }
-    }
-
-    return true;
-}
-
-JSString*
-js::RegExpEscapeMetaChars(JSContext* cx, HandleString src)
-{
-    if (src->length() == 0)
-        return src;
-
-    RootedLinearString linear(cx, src->ensureLinear(cx));
-
-    // We may never need to use |sb|. Start using it lazily.
-    StringBuffer sb(cx);
-
-    if (linear->hasLatin1Chars()) {
-        JS::AutoCheckCannotGC nogc;
-        if (!::RegExpEscapeMetaChars(sb, linear->latin1Chars(nogc), linear->length()))
-            return nullptr;
-    } else {
-        JS::AutoCheckCannotGC nogc;
-        if (!::RegExpEscapeMetaChars(sb, linear->twoByteChars(nogc), linear->length()))
-            return nullptr;
-    }
-
-    if (sb.empty())
-        return src;
-
-    return sb.finishString();
-}
-
 /* RegExpShared */
 
 RegExpShared::RegExpShared(JSAtom* source, RegExpFlag flags)
