@@ -64,7 +64,7 @@ private:
   void InhibitSucceeded(uint32_t aInhibitRequest);
 
   nsCString mTopic;
-  DBusConnection* mConnection;
+  RefPtr<DBusConnection> mConnection;
 
   DesktopEnvironment mDesktopEnvironment;
 
@@ -312,18 +312,12 @@ WakeLockTopic::ReceiveInhibitReply(DBusPendingCall* pending, void* user_data)
 
 
 WakeLockListener::WakeLockListener()
-  : mConnection(dbus_bus_get(DBUS_BUS_SESSION, nullptr))
+  : mConnection(already_AddRefed<DBusConnection>(
+    dbus_bus_get(DBUS_BUS_SESSION, nullptr)))
 {
   if (mConnection) {
     dbus_connection_set_exit_on_disconnect(mConnection, false);
     dbus_connection_setup_with_g_main(mConnection, nullptr);
-  }
-}
-
-WakeLockListener::~WakeLockListener()
-{
-  if (mConnection) {
-    dbus_connection_unref(mConnection);
   }
 }
 
