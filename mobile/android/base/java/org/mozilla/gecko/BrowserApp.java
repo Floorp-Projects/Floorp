@@ -309,6 +309,8 @@ public class BrowserApp extends GeckoApp
     @NonNull
     private SearchEngineManager searchEngineManager; // Contains reference to Context - DO NOT LEAK!
 
+    private boolean mHasResumed;
+
     @Override
     public View onCreateView(final String name, final Context context, final AttributeSet attrs) {
         final View view;
@@ -1085,19 +1087,11 @@ public class BrowserApp extends GeckoApp
         // Needed for Adjust to get accurate session measurements
         AdjustConstants.getAdjustHelper().onResume();
 
-        final String args = ContextUtils.getStringExtra(getIntent(), "args");
-        // If an external intent tries to start Fennec in guest mode, and it's not already
-        // in guest mode, this will change modes before opening the url.
-        // NOTE: OnResume is called twice sometimes when showing on the lock screen.
-        final boolean enableGuestSession = GuestSession.shouldUse(this, args);
-        final boolean inGuestSession = GeckoProfile.get(this).inGuestMode();
-        if (enableGuestSession != inGuestSession) {
-            doRestart(getIntent());
-            return;
+        if (!mHasResumed) {
+            EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener) this,
+                    "Prompt:ShowTop");
+            mHasResumed = true;
         }
-
-        EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener) this,
-            "Prompt:ShowTop");
 
         processTabQueue();
 
@@ -1116,9 +1110,12 @@ public class BrowserApp extends GeckoApp
         // Needed for Adjust to get accurate session measurements
         AdjustConstants.getAdjustHelper().onPause();
 
-        // Register for Prompt:ShowTop so we can foreground this activity even if it's hidden.
-        EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener) this,
+        if (mHasResumed) {
+            // Register for Prompt:ShowTop so we can foreground this activity even if it's hidden.
+            EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener) this,
                 "Prompt:ShowTop");
+            mHasResumed = false;
+        }
 
         mScreenshotObserver.stop();
 
