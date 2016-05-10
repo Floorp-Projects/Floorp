@@ -1123,11 +1123,11 @@ MSimdValueX4::foldsTo(TempAllocator& alloc)
     }
 
     MOZ_ASSERT(allSame);
-    return MSimdSplatX4::New(alloc, getOperand(0), type());
+    return MSimdSplat::New(alloc, getOperand(0), type());
 }
 
 MDefinition*
-MSimdSplatX4::foldsTo(TempAllocator& alloc)
+MSimdSplat::foldsTo(TempAllocator& alloc)
 {
 #ifdef DEBUG
     MIRType laneType = SimdTypeToLaneArgumentType(type());
@@ -1154,7 +1154,7 @@ MSimdSplatX4::foldsTo(TempAllocator& alloc)
         cst = SimdConstant::SplatX4(v);
         break;
       }
-      default: MOZ_CRASH("unexpected type in MSimdSplatX4::foldsTo");
+      default: MOZ_CRASH("unexpected type in MSimdSplat::foldsTo");
     }
 
     return MSimdConstant::New(alloc, cst, type());
@@ -1191,7 +1191,7 @@ MSimdSwizzle::foldsTo(TempAllocator& alloc)
 MDefinition*
 MSimdGeneralShuffle::foldsTo(TempAllocator& alloc)
 {
-    FixedList<uint32_t> lanes;
+    FixedList<uint8_t> lanes;
     if (!lanes.init(alloc, numLanes()))
         return this;
 
@@ -1199,16 +1199,16 @@ MSimdGeneralShuffle::foldsTo(TempAllocator& alloc)
         if (!lane(i)->isConstant() || lane(i)->type() != MIRType::Int32)
             return this;
         int32_t temp = lane(i)->toConstant()->toInt32();
-        if (temp < 0 || uint32_t(temp) >= numLanes() * numVectors())
+        if (temp < 0 || unsigned(temp) >= numLanes() * numVectors())
             return this;
-        lanes[i] = uint32_t(temp);
+        lanes[i] = uint8_t(temp);
     }
 
     if (numVectors() == 1)
-        return MSimdSwizzle::New(alloc, vector(0), lanes[0], lanes[1], lanes[2], lanes[3]);
+        return MSimdSwizzle::New(alloc, vector(0), lanes.data());
 
     MOZ_ASSERT(numVectors() == 2);
-    return MSimdShuffle::New(alloc, vector(0), vector(1), lanes[0], lanes[1], lanes[2], lanes[3]);
+    return MSimdShuffle::New(alloc, vector(0), vector(1), lanes.data());
 }
 
 MInstruction*
@@ -1388,7 +1388,7 @@ void
 MSimdInsertElement::printOpcode(GenericPrinter& out) const
 {
     MDefinition::printOpcode(out);
-    out.printf(" (%s)", MSimdInsertElement::LaneName(lane()));
+    out.printf(" (lane %u)", lane());
 }
 
 void

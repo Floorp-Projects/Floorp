@@ -39,8 +39,8 @@ class PromiseObject : public NativeObject
         return getFixedSlot(PROMISE_RESULT_SLOT);
     }
 
-    bool resolve(JSContext* cx, HandleValue resolutionValue);
-    bool reject(JSContext* cx, HandleValue rejectionValue);
+    MOZ_MUST_USE bool resolve(JSContext* cx, HandleValue resolutionValue);
+    MOZ_MUST_USE bool reject(JSContext* cx, HandleValue rejectionValue);
 
     double allocationTime() { return getFixedSlot(PROMISE_ALLOCATION_TIME_SLOT).toNumber(); }
     double resolutionTime() { return getFixedSlot(PROMISE_RESOLUTION_TIME_SLOT).toNumber(); }
@@ -54,7 +54,7 @@ class PromiseObject : public NativeObject
         MOZ_ASSERT(state() != JS::PromiseState::Pending);
         return resolutionTime() - allocationTime();
     }
-    bool dependentPromises(JSContext* cx, MutableHandle<GCVector<Value>> values);
+    MOZ_MUST_USE bool dependentPromises(JSContext* cx, MutableHandle<GCVector<Value>> values);
     double getID();
 };
 

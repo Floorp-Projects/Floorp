@@ -2,13 +2,6 @@
 
 #include "IPDLUnitTests.h"      // fail etc.
 
-template<>
-struct RunnableMethodTraits<mozilla::_ipdltest::TestCancelParent>
-{
-    static void RetainCallee(mozilla::_ipdltest::TestCancelParent* obj) { }
-    static void ReleaseCallee(mozilla::_ipdltest::TestCancelParent* obj) { }
-};
-
 namespace mozilla {
 namespace _ipdltest {
 
@@ -84,7 +77,7 @@ bool
 TestCancelParent::RecvDone()
 {
     MessageLoop::current()->PostTask(
-	NewRunnableMethod(this, &TestCancelParent::Close));
+	NewNonOwningRunnableMethod(this, &TestCancelParent::Close));
     return true;
 }
 

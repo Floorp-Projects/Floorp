@@ -1,0 +1,130 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>altgraph.GraphStat — Functions providing various graph statistics &mdash; altgraph 0.11 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.11',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="altgraph 0.11 documentation" href="index.html" />
+    <link rel="next" title="altgraph.GraphUtil — Utility functions" href="graphutil.html" />
+    <link rel="prev" title="altgraph.GraphAlgo — Graph algorithms" href="graphalgo.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="graphutil.html" title="altgraph.GraphUtil — Utility functions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="graphalgo.html" title="altgraph.GraphAlgo — Graph algorithms"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">altgraph 0.11 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-altgraph.GraphStat">
+<span id="altgraph-graphstat-functions-providing-various-graph-statistics"></span><h1><a class="reference internal" href="#module-altgraph.GraphStat" title="altgraph.GraphStat: Functions providing various graph statistics"><tt class="xref py py-mod docutils literal"><span class="pre">altgraph.GraphStat</span></tt></a> &#8212; Functions providing various graph statistics<a class="headerlink" href="#module-altgraph.GraphStat" title="Permalink to this headline">¶</a></h1>
+<p>The module <a class="reference internal" href="#module-altgraph.GraphStat" title="altgraph.GraphStat: Functions providing various graph statistics"><tt class="xref py py-mod docutils literal"><span class="pre">altgraph.GraphStat</span></tt></a> provides function that calculate
+graph statistics. Currently there is only one such function, more may
+be added later.</p>
+<dl class="function">
+<dt id="altgraph.GraphStat.degree_dist">
+<tt class="descclassname">altgraph.GraphStat.</tt><tt class="descname">degree_dist</tt><big>(</big><em>graph</em><span class="optional">[</span>, <em>limits</em><span class="optional">[</span>, <em>bin_num</em><span class="optional">[</span>, <em>mode</em><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#altgraph.GraphStat.degree_dist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Groups the number of edges per node into <em>bin_num</em> bins
+and returns the list of those bins. Every item in the result
+is a tuple with the center of the bin and the number of items
+in that bin.</p>
+<p>When the <em>limits</em> argument is present it must be a tuple with
+the mininum and maximum number of edges that get binned (that
+is, when <em>limits</em> is <tt class="docutils literal"><span class="pre">(4,</span> <span class="pre">10)</span></tt> only nodes with between 4
+and 10 edges get counted.</p>
+<p>The <em>mode</em> argument is used to count incoming (<tt class="docutils literal"><span class="pre">'inc'</span></tt>) or
+outgoing (<tt class="docutils literal"><span class="pre">'out'</span></tt>) edges. The default is to count the outgoing
+edges.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="graphalgo.html"
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">altgraph.GraphAlgo</span></tt> &#8212; Graph algorithms</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="graphutil.html"
+                        title="next chapter"><tt class="docutils literal"><span class="pre">altgraph.GraphUtil</span></tt> &#8212; Utility functions</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="graphutil.html" title="altgraph.GraphUtil — Utility functions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="graphalgo.html" title="altgraph.GraphAlgo — Graph algorithms"
+             >previous</a> |</li>
+        <li><a href="index.html">altgraph 0.11 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010-2011, Ronald Oussoren, Bob Ippolito, 2004 Istvan Albert.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.1.
+    </div>
+  </body>
+</html>

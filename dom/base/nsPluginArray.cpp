@@ -224,12 +224,6 @@ nsPluginArray::NamedGetter(const nsAString& aName, bool &aFound)
   return plugin;
 }
 
-bool
-nsPluginArray::NameIsEnumerable(const nsAString& aName)
-{
-  return true;
-}
-
 uint32_t
 nsPluginArray::Length()
 {
@@ -243,7 +237,7 @@ nsPluginArray::Length()
 }
 
 void
-nsPluginArray::GetSupportedNames(unsigned, nsTArray<nsString>& aRetval)
+nsPluginArray::GetSupportedNames(nsTArray<nsString>& aRetval)
 {
   aRetval.Clear();
 
@@ -419,12 +413,6 @@ nsPluginElement::NamedGetter(const nsAString& aName, bool &aFound)
   return nullptr;
 }
 
-bool
-nsPluginElement::NameIsEnumerable(const nsAString& aName)
-{
-  return true;
-}
-
 uint32_t
 nsPluginElement::Length()
 {
@@ -434,7 +422,7 @@ nsPluginElement::Length()
 }
 
 void
-nsPluginElement::GetSupportedNames(unsigned, nsTArray<nsString>& retval)
+nsPluginElement::GetSupportedNames(nsTArray<nsString>& retval)
 {
   EnsurePluginMimeTypes();
 

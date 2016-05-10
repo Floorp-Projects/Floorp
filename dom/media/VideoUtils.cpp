@@ -205,7 +205,7 @@ already_AddRefed<SharedThreadPool> GetMediaThreadPool(MediaThreadType aType)
   }
   return SharedThreadPool::
     Get(nsDependentCString(name),
-        Preferences::GetUint("media.num-decode-threads", 12));
+        Preferences::GetUint("media.num-decode-threads", 4));
 }
 
 bool

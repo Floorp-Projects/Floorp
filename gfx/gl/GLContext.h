@@ -95,6 +95,7 @@ enum class GLFeature {
     element_index_uint,
     ES2_compatibility,
     ES3_compatibility,
+    EXT_color_buffer_float,
     frag_color_float,
     frag_depth,
     framebuffer_blit,

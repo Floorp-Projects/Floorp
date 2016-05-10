@@ -102,8 +102,6 @@ private:
                      const GMPErr& aErr,
                      InfallibleTArray<uint8_t>&& aBuffer) override;
 
-  bool RecvSetCaps(const uint64_t& aCaps) override;
-
   bool RecvShutdown() override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;

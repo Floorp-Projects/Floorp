@@ -29,8 +29,6 @@ var actualvalues = [];
 var expect= '';
 var expectedvalues = [];
 
-enableMatchFlagArgument();
-
 str = 'ABC abc';
 var re = /z/ig;
 
@@ -119,17 +117,17 @@ addThis();
 
 status = inSection(14);
 actual = str.match('a', 'i').toString();
-expect = str.match(/a/i).toString();
+expect = str.match(/a/).toString();
 addThis();
 
 status = inSection(15);
 actual = str.match('a', 'ig').toString();
-expect = str.match(/a/ig).toString();
+expect = str.match(/a/).toString();
 addThis();
 
 status = inSection(16);
 actual = str.match('\\s', 'm').toString();
-expect = str.match(/\s/m).toString();
+expect = str.match(/\s/).toString();
 addThis();
 
 
@@ -138,36 +136,23 @@ addThis();
  */
 status = inSection(17);
 actual = str.match('a', 'i', 'g').toString();
-expect = str.match(/a/i).toString();
+expect = str.match(/a/).toString();
 addThis();
 
 status = inSection(18);
 actual = str.match('a', 'ig', new Object()).toString();
-expect = str.match(/a/ig).toString();
+expect = str.match(/a/).toString();
 addThis();
 
 status = inSection(19);
 actual = str.match('\\s', 'm', 999).toString();
-expect = str.match(/\s/m).toString();
+expect = str.match(/\s/).toString();
 addThis();
 
-
-/*
- * Try an invalid second parameter (i.e. an invalid regexp flag)
- */
 status = inSection(20);
-try
-{
-  actual = str.match('a', 'z').toString();
-  expect = 'SHOULD HAVE FALLEN INTO CATCH-BLOCK!';
-  addThis();
-}
-catch (e)
-{
-  actual = e instanceof SyntaxError;
-  expect = true;
-  addThis();
-}
+actual = str.match('a', 'z').toString();
+expect = str.match(/a/).toString();
+addThis();
 
 
 
@@ -184,17 +169,17 @@ addThis();
 
 status = inSection(22);
 actual = str.search('a', 'i');
-expect = str.search(/a/i);
+expect = str.search(/a/);
 addThis();
 
 status = inSection(23);
 actual = str.search('a', 'ig');
-expect = str.search(/a/ig);
+expect = str.search(/a/);
 addThis();
 
 status = inSection(24);
 actual = str.search('\\s', 'm');
-expect = str.search(/\s/m);
+expect = str.search(/\s/);
 addThis();
 
 
@@ -203,36 +188,23 @@ addThis();
  */
 status = inSection(25);
 actual = str.search('a', 'i', 'g');
-expect = str.search(/a/i);
+expect = str.search(/a/);
 addThis();
 
 status = inSection(26);
 actual = str.search('a', 'ig', new Object());
-expect = str.search(/a/ig);
+expect = str.search(/a/);
 addThis();
 
 status = inSection(27);
 actual = str.search('\\s', 'm', 999);
-expect = str.search(/\s/m);
+expect = str.search(/\s/);
 addThis();
 
-
-/*
- * Try an invalid second parameter (i.e. an invalid regexp flag)
- */
 status = inSection(28);
-try
-{
-  actual = str.search('a', 'z');
-  expect = 'SHOULD HAVE FALLEN INTO CATCH-BLOCK!';
-  addThis();
-}
-catch (e)
-{
-  actual = e instanceof SyntaxError;
-  expect = true;
-  addThis();
-}
+actual = str.search('a', 'z');
+expect = str.search(/a/);
+addThis();
 
 
 
@@ -251,18 +223,18 @@ addThis();
 
 status = inSection(30);
 actual = str.replace('a', 'Z', 'i');
-expect = str.replace(/a/i, 'Z');
+expect = str.replace(/a/, 'Z');
 addThis();
 
 status = inSection(31);
 actual = str.replace('a', 'Z', 'ig');
-expect = str.replace(/a/ig, 'Z');
+expect = str.replace(/a/, 'Z');
 addThis();
 
 status = inSection(32);
 actual = str.replace('\\s', 'Z', 'm'); //<--- NO!!! No meta-characters 1st arg!
 actual = str.replace(' ', 'Z', 'm');   //<--- Have to do this instead
-expect = str.replace(/\s/m, 'Z');
+expect = str.replace(/\s/, 'Z');
 addThis();
 
 
@@ -271,37 +243,24 @@ addThis();
  */
 status = inSection(33);
 actual = str.replace('a', 'Z', 'i', 'g');
-expect = str.replace(/a/i, 'Z');
+expect = str.replace(/a/, 'Z');
 addThis();
 
 status = inSection(34);
 actual = str.replace('a', 'Z', 'ig', new Object());
-expect = str.replace(/a/ig, 'Z');
+expect = str.replace(/a/, 'Z');
 addThis();
 
 status = inSection(35);
 actual = str.replace('\\s', 'Z', 'm', 999); //<--- NO meta-characters 1st arg!
 actual = str.replace(' ', 'Z', 'm', 999);   //<--- Have to do this instead
-expect = str.replace(/\s/m, 'Z');
+expect = str.replace(/\s/, 'Z');
 addThis();
 
-
-/*
- * Try an invalid third parameter (i.e. an invalid regexp flag)
- */
 status = inSection(36);
-try
-{
-  actual = str.replace('a', 'Z', 'z');
-  expect = 'SHOULD HAVE FALLEN INTO CATCH-BLOCK!';
-  addThis();
-}
-catch (e)
-{
-  actual = e instanceof SyntaxError;
-  expect = true;
-  addThis();
-}
+actual = str.replace('a', 'Z', 'z');
+expect = str.replace(/a/, 'Z');
+addThis();
 
 
 

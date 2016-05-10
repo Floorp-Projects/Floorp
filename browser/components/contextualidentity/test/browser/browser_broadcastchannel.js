@@ -36,7 +36,7 @@ add_task(function* test() {
   // reflect the received message on title
   let receiveMsg = ContentTask.spawn(receiver.browser, channelName,
       function (name) {
-        return new Promise(resolve => {
+        return new content.window.wrappedJSObject.Promise(resolve => {
           content.window.bc = new content.window.BroadcastChannel(name);
           content.window.bc.onmessage = function (e) {
             content.document.title += e.data;

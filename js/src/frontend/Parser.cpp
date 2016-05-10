@@ -400,7 +400,7 @@ ParseContext<ParseHandler>::prepareToAddDuplicateArg(HandlePropertyName name, De
 }
 
 template <typename ParseHandler>
-void
+bool
 ParseContext<ParseHandler>::updateDecl(TokenStream& ts, JSAtom* atom, Node pn)
 {
     Definition* oldDecl = decls_.lookupFirst(atom);
@@ -424,7 +424,7 @@ ParseContext<ParseHandler>::updateDecl(TokenStream& ts, JSAtom* atom, Node pn)
         newDecl->pn_scopecoord = oldDecl->pn_scopecoord;
         newDecl->pn_dflags |= PND_BOUND;
         newDecl->setOp(JSOP_INITLEXICAL);
-        return;
+        return true;
     }
 
     if (sc->isGlobalContext() || oldDecl->isDeoptimized()) {
@@ -444,14 +444,16 @@ ParseContext<ParseHandler>::updateDecl(TokenStream& ts, JSAtom* atom, Node pn)
                     !sc->isGlobalContext())
                 {
                     newDecl->pn_dflags |= PND_BOUND;
-                    newDecl->pn_scopecoord.setSlot(ts, i);
+                    if (!newDecl->pn_scopecoord.setSlot(ts, i)) {
+                        return false;
+                    }
                     newDecl->setOp(JSOP_GETLOCAL);
                 }
                 vars_[i] = newDecl;
                 break;
             }
         }
-        return;
+        return true;
     }
 
     MOZ_ASSERT(oldDecl->isBound());
@@ -468,6 +470,7 @@ ParseContext<ParseHandler>::updateDecl(TokenStream& ts, JSAtom* atom, Node pn)
         MOZ_ASSERT(vars_[oldDecl->pn_scopecoord.slot()] == oldDecl);
         vars_[oldDecl->pn_scopecoord.slot()] = newDecl;
     }
+    return true;
 }
 
 template <typename ParseHandler>
@@ -1439,7 +1442,8 @@ bool
 Parser<FullParseHandler>::makeDefIntoUse(Definition* dn, ParseNode* pn, HandleAtom atom)
 {
     /* Turn pn into a definition. */
-    pc->updateDecl(tokenStream, atom, pn);
+    if (!pc->updateDecl(tokenStream, atom, pn))
+        return false;
 
     /* Change all uses of dn to be uses of pn. */
     for (ParseNode* pnu = dn->dn_uses; pnu; pnu = pnu->pn_link) {
@@ -3076,7 +3080,8 @@ Parser<ParseHandler>::appendToCallSiteObj(Node callSiteObj)
     if (!rawNode)
         return false;
 
-    return handler.addToCallSiteObject(callSiteObj, rawNode, cookedNode);
+    handler.addToCallSiteObject(callSiteObj, rawNode, cookedNode);
+    return true;
 }
 
 template <>

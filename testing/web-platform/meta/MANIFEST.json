@@ -35309,6 +35309,12 @@
             "url": "/XMLHttpRequest/open-url-multi-window-6.htm"
           }
         ],
+        "html/browsers/browsing-the-web/navigating-across-documents/javascript-url-return-value-handling.html": [
+          {
+            "path": "html/browsers/browsing-the-web/navigating-across-documents/javascript-url-return-value-handling.html",
+            "url": "/html/browsers/browsing-the-web/navigating-across-documents/javascript-url-return-value-handling.html"
+          }
+        ],
         "html/browsers/history/the-location-interface/allow_prototype_cycle_through_location.sub.html": [
           {
             "path": "html/browsers/history/the-location-interface/allow_prototype_cycle_through_location.sub.html",

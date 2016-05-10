@@ -4309,12 +4309,16 @@ LIRGenerator::visitSimdConstant(MSimdConstant* ins)
     MOZ_ASSERT(IsSimdType(ins->type()));
 
     switch (ins->type()) {
-      case MIRType::Bool32x4:
+      case MIRType::Int8x16:
+      case MIRType::Int16x8:
       case MIRType::Int32x4:
-        define(new(alloc()) LInt32x4(), ins);
+      case MIRType::Bool8x16:
+      case MIRType::Bool16x8:
+      case MIRType::Bool32x4:
+        define(new(alloc()) LSimd128Int(), ins);
         break;
       case MIRType::Float32x4:
-        define(new(alloc()) LFloat32x4(), ins);
+        define(new(alloc()) LSimd128Float(), ins);
         break;
       default:
         MOZ_CRASH("Unknown SIMD kind when generating constant");
@@ -4339,7 +4343,7 @@ LIRGenerator::visitSimdConvert(MSimdConvert* ins)
           }
           case SimdSign::Unsigned: {
               LFloat32x4ToUint32x4* lir =
-                new (alloc()) LFloat32x4ToUint32x4(use, temp(), temp(LDefinition::INT32X4));
+                new (alloc()) LFloat32x4ToUint32x4(use, temp(), temp(LDefinition::SIMD128INT));
               if (!gen->compilingAsmJS())
                   assignSnapshot(lir, Bailout_BoundsCheck);
               define(lir, ins);
@@ -4504,9 +4508,9 @@ LIRGenerator::visitSimdShuffle(MSimdShuffle* ins)
     MOZ_ASSERT(IsSimdType(ins->type()));
     MOZ_ASSERT(ins->type() == MIRType::Int32x4 || ins->type() == MIRType::Float32x4);
 
-    bool zFromLHS = ins->laneZ() < 4;
-    bool wFromLHS = ins->laneW() < 4;
-    uint32_t lanesFromLHS = (ins->laneX() < 4) + (ins->laneY() < 4) + zFromLHS + wFromLHS;
+    bool zFromLHS = ins->lane(2) < 4;
+    bool wFromLHS = ins->lane(3) < 4;
+    uint32_t lanesFromLHS = (ins->lane(0) < 4) + (ins->lane(1) < 4) + zFromLHS + wFromLHS;
 
     LSimdShuffle* lir = new (alloc()) LSimdShuffle();
     lowerForFPU(lir, ins, ins->lhs(), ins->rhs());

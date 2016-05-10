@@ -29,8 +29,8 @@ const logger = Log.repository.getLogger("Marionette");
  *     Unique identifier of the connection this dispatcher should handle.
  * @param {DebuggerTransport} transport
  *     Debugger transport connection to the client.
- * @param {function(Emulator): GeckoDriver} driverFactory
- *     A factory function that takes an Emulator as argument and produces
+ * @param {function(EmulatorService): GeckoDriver} driverFactory
+ *     A factory function that takes an EmulatorService and produces
  *     a GeckoDriver.
  */
 this.Dispatcher = function(connId, transport, driverFactory) {
@@ -47,7 +47,7 @@ this.Dispatcher = function(connId, transport, driverFactory) {
   // last received/sent message ID
   this.lastId = 0;
 
-  this.emulator = new Emulator(this.sendEmulator.bind(this));
+  this.emulator = new emulator.EmulatorService(this.sendEmulator.bind(this));
   this.driver = driverFactory(this.emulator);
 
   // lookup of commands sent by server to client by message ID

@@ -9,24 +9,26 @@ from marionette_driver.by import By
 class TestClickChrome(MarionetteTestCase):
     def setUp(self):
         MarionetteTestCase.setUp(self)
+        self.root_window = self.marionette.current_window_handle
         self.marionette.set_context("chrome")
-        self.win = self.marionette.current_window_handle
-        self.marionette.execute_script("window.open('chrome://marionette/content/test.xul', 'foo', 'chrome,centerscreen');")
-        self.marionette.switch_to_window('foo')
-        self.assertNotEqual(self.win, self.marionette.current_window_handle)
+        self.marionette.execute_script(
+            "window.open('chrome://marionette/content/test.xul', 'foo', 'chrome,centerscreen')")
+        self.marionette.switch_to_window("foo")
+        self.assertNotEqual(self.root_window, self.marionette.current_window_handle)
 
     def tearDown(self):
-        self.assertNotEqual(self.win, self.marionette.current_window_handle)
-        self.marionette.execute_script("window.close();")
-        self.marionette.switch_to_window(self.win)
+        self.assertNotEqual(self.root_window, self.marionette.current_window_handle)
+        self.marionette.execute_script("window.close()")
+        self.marionette.switch_to_window(self.root_window)
         MarionetteTestCase.tearDown(self)
 
     def test_click(self):
-        wins = self.marionette.window_handles
-        wins.remove(self.win)
-        newWin = wins.pop()
-        self.marionette.switch_to_window(newWin)
+        def checked():
+            return self.marionette.execute_script(
+                "return arguments[0].checked",
+                script_args=[box])
+
         box = self.marionette.find_element(By.ID, "testBox")
-        self.assertFalse(self.marionette.execute_script("return arguments[0].checked;", [box]))
+        self.assertFalse(checked())
         box.click()
-        self.assertTrue(self.marionette.execute_script("return arguments[0].checked;", [box]))
+        self.assertTrue(checked())

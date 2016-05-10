@@ -62,11 +62,7 @@ public:
   void NamedGetter(const nsAString& aName,
                    bool& aFound,
                    Nullable<OwningNodeOrHTMLCollection>& aResult);
-  void GetSupportedNames(unsigned aFlags, nsTArray<nsString>& aNames);
-  bool NameIsEnumerable(const nsAString& aName)
-  {
-    return false;
-  }
+  void GetSupportedNames(nsTArray<nsString>& aNames);
   void LegacyCall(JS::Handle<JS::Value>, const nsAString& aName,
                   Nullable<OwningNodeOrHTMLCollection>& aResult)
   {

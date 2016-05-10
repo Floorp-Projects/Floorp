@@ -22,10 +22,6 @@ const PREF_UPDATES_URL = PREF_UPDATES + "url";
 const PREF_UPDATES_INTERVAL = PREF_UPDATES + "interval";
 const PREF_UPDATES_TIMEOUT = PREF_UPDATES + "timeout";
 
-const KEY_PREFDIR = "PrefD";
-const KEY_APPDIR = "XCurProcD";
-const FILE_UPDATES = "ua-update.json";
-
 const DEFAULT_UA = navigator.userAgent;
 const UA_OVERRIDE = "DummyUserAgent";
 const UA_ALT_OVERRIDE = "AltUserAgent";
@@ -189,122 +185,160 @@ function testBadUpdate(callback) {
   }, 5000); });
 }
 
-function testProfileLoad(callback) {
-  var file = FU.getFile(KEY_APPDIR, [FILE_UPDATES]).path;
-  var encoder = SpecialPowers.wrap(new TextEncoder());
-  var overrides = {};
-  overrides[location.hostname] = UA_ALT_OVERRIDE;
-  var bytes = encoder.encode(JSON.stringify(overrides));
-
-  var badfile = FU.getFile(KEY_PREFDIR, [FILE_UPDATES]).path;
-  var badbytes = encoder.encode("null");
-
-  OSF.writeAtomic(file, bytes, {tmpPath: file + ".tmp"}).then(
-    () => OSF.writeAtomic(badfile, badbytes, {tmpPath: badfile + ".tmp"})
-  ).then(
-    () => {
-      SpecialPowers.pushPrefEnv({
-        set: [[PREF_UPDATES_ENABLED, true]]
-      }, function () {
-        // initialize UserAgentOverrides.jsm and
-        // UserAgentUpdates.jsm and load saved file
-        UAO.init();
-        (function waitForLoad() {
-          var ifr = document.createElement('IFRAME');
-          ifr.src = "about:blank";
-
-          ifr.addEventListener('load', function() {
-            var nav = ifr.contentWindow.navigator;
-            if (nav.userAgent !== UA_ALT_OVERRIDE) {
-              setTimeout(waitForLoad, 100);
-              return;
-            }
-            testUAIFrameNoNav(location.origin, UA_ALT_OVERRIDE, true, 'Did not apply saved override', function () {
-              saveFilePreviousSize = file.fileSize;
-              callback();
-            });
-          }, true);
-
-          document.getElementById('content').appendChild(ifr);
-        })();
-      });
-    },
-    (reason) => {
-      throw reason
-    }
-  );
-}
-
-function testProfileSave(callback) {
-  info('Waiting for saving to profile');
-  var file = FU.getFile(KEY_PREFDIR, [FILE_UPDATES]).path;
-  (function waitForSave() {
-    OSF.exists(file).then(
-      (exists) => {
-        if (!exists) {
-          setTimeout(waitForSave, 100);
-          return;
-        }
-        return OSF.read(file).then(
-          (bytes) => {
-            info('Saved new overrides');
-            var decoder = SpecialPowers.wrap(new TextDecoder());
-            var overrides = JSON.parse(decoder.decode(bytes));
-            is(overrides[location.hostname], UA_OVERRIDE, 'Incorrect saved override');
-            OVERRIDES.forEach(function (val) {
-              val.expected && is(overrides[val.domain], val.expected,
-                'Incorrect saved override: ' + val.override);
-            });
-            callback();
-          }
-        );
-      }
-    ).then(null,
-      (reason) => {
-        throw reason
-      }
-    );
-  })();
-}
-
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
-
-SpecialPowers.Cu.import("resource://gre/modules/FileUtils.jsm", window);
-var FU = SpecialPowers.wrap(FileUtils);
-
-SpecialPowers.Cu.import("resource://gre/modules/osfile.jsm", window);
-var OSF = SpecialPowers.wrap(OS).File;
-
-// Load UserAgentOverrides.jsm after we load update timer manager
-var UAO = null;
-
-var saveFilePreviousSize = 0;
 
 SpecialPowers.pushPrefEnv({
   set: [
     [PREF_APP_UPDATE_TIMERMINIMUMDELAY, 0]
   ]
 }, function () {
-  // Enter update timer manager test mode
-  (SpecialPowers.Cc["@mozilla.org/updates/timer-manager;1"].getService(
-    SpecialPowers.Ci.nsIObserver)).observe(null, "utm-test-init", "");
-
-  SpecialPowers.Cu.import('resource://gre/modules/UserAgentOverrides.jsm', window);
-  UAO = SpecialPowers.wrap(UserAgentOverrides);
-  UAO.uninit();
+  chromeScript.sendSyncMessage("UAO-uninit");
 
   // testProfileLoad, testDownload, and testProfileSave must run in this order
   //  because testDownload depends on testProfileLoad to call UAO.init()
   //  and testProfileSave depends on testDownload to save overrides to the profile
-  testProfileLoad(function() {
-    testDownload(function() {
-      testBadUpdate(function() {
-        testProfileSave(SimpleTest.finish)
-      })
-    })
+  chromeScript.sendAsyncMessage("testProfileLoad", location.hostname);
+});
+
+
+const chromeScript = SpecialPowers.loadChromeScript(_ => {
+  // Enter update timer manager test mode
+  Components.classes["@mozilla.org/updates/timer-manager;1"].getService(
+    Components.interfaces.nsIObserver).observe(null, "utm-test-init", "");
+
+  Components.utils.import("resource://gre/modules/UserAgentOverrides.jsm");
+  var UAO = UserAgentOverrides;
+  UAO.uninit();
+
+  Components.utils.import("resource://gre/modules/FileUtils.jsm");
+  var FU = FileUtils;
+
+  const { TextDecoder, TextEncoder, OS } = Components.utils.import("resource://gre/modules/osfile.jsm");
+  var OSF = OS.File;
+
+  const KEY_PREFDIR = "PrefD";
+  const KEY_APPDIR = "XCurProcD";
+  const FILE_UPDATES = "ua-update.json";
+
+  const UA_OVERRIDE = "DummyUserAgent";
+  const UA_ALT_OVERRIDE = "AltUserAgent";
+
+  const PREF_UPDATES = "general.useragent.updates.";
+  const PREF_UPDATES_ENABLED = PREF_UPDATES + "enabled";
+
+  var OVERRIDES = null;
+
+  function is(value, expected, message) {
+    sendAsyncMessage("is-message", {value, expected, message});
+  }
+
+  function info(message) {
+    sendAsyncMessage("info-message", message);
+  }
+
+  function testProfileSave(hostname) {
+    info('Waiting for saving to profile');
+    var file = FU.getFile(KEY_PREFDIR, [FILE_UPDATES]).path;
+    (function waitForSave() {
+      OSF.exists(file).then(
+        (exists) => {
+          if (!exists) {
+            setTimeout(waitForSave, 100);
+            return;
+          }
+          return OSF.read(file).then(
+            (bytes) => {
+              info('Saved new overrides');
+              var decoder = new TextDecoder();
+              var overrides = JSON.parse(decoder.decode(bytes));
+              is(overrides[hostname], UA_OVERRIDE, 'Incorrect saved override');
+              OVERRIDES.forEach(function (val) {
+                val.expected && is(overrides[val.domain], val.expected,
+                  'Incorrect saved override: ' + val.override);
+              });
+              sendAsyncMessage("testProfileSaveDone");
+            }
+          );
+        }
+      ).then(null,
+        (reason) => {
+          throw reason
+        }
+      );
+    })();
+  }
+
+  function testProfileLoad(hostname) {
+    var file = FU.getFile(KEY_APPDIR, [FILE_UPDATES]).path;
+    var encoder = new TextEncoder();
+    var overrides = {};
+    overrides[hostname] = UA_ALT_OVERRIDE;
+    var bytes = encoder.encode(JSON.stringify(overrides));
+
+    var badfile = FU.getFile(KEY_PREFDIR, [FILE_UPDATES]).path;
+    var badbytes = encoder.encode("null");
+
+    OSF.writeAtomic(file, bytes, {tmpPath: file + ".tmp"}).then(
+      () => OSF.writeAtomic(badfile, badbytes, {tmpPath: badfile + ".tmp"})
+    ).then(
+      () => {
+        sendAsyncMessage("testProfileLoadDone");
+      },
+      (reason) => {
+        throw reason
+      }
+    );
+  }
+
+
+  addMessageListener("testProfileSave", testProfileSave);
+  addMessageListener("testProfileLoad", testProfileLoad);
+  addMessageListener("set-overrides", function(overrides) { OVERRIDES = overrides});
+  addMessageListener("UAO-init", function() { UAO.init(); });
+  addMessageListener("UAO-uninit", function() { UAO.uninit(); });
+});
+
+chromeScript.addMessageListener("testProfileSaveDone", SimpleTest.finish);
+chromeScript.addMessageListener("testProfileLoadDone", function() {
+  SpecialPowers.pushPrefEnv({
+    set: [[PREF_UPDATES_ENABLED, true]]
+  }, function () {
+    // initialize UserAgentOverrides.jsm and
+    // UserAgentUpdates.jsm and load saved file
+    chromeScript.sendSyncMessage("UAO-init");
+    (function waitForLoad() {
+      var ifr = document.createElement('IFRAME');
+      ifr.src = "about:blank";
+
+      ifr.addEventListener('load', function() {
+        var nav = ifr.contentWindow.navigator;
+        if (nav.userAgent !== UA_ALT_OVERRIDE) {
+          setTimeout(waitForLoad, 100);
+          return;
+        }
+        testUAIFrameNoNav(location.origin, UA_ALT_OVERRIDE, true, 'Did not apply saved override', function () {
+          testDownload(function() {
+            testBadUpdate(function() {
+              chromeScript.sendAsyncMessage("testProfileSave", location.hostname);
+            })
+          })
+        });
+      }, true);
+
+      document.getElementById('content').appendChild(ifr);
+    })();
   });
 });
+
+chromeScript.addMessageListener("is-message", function(params) {
+  let {value, expected, message} = params;
+  is(value, expected, message);
+});
+chromeScript.addMessageListener("info-message", function(message) {
+  info(message);
+});
+chromeScript.sendAsyncMessage("set-overrides", OVERRIDES);
 
 </script>
 </pre>

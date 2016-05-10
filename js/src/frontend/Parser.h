@@ -82,10 +82,6 @@ struct GenericParseContext
     {}
 };
 
-template <typename ParseHandler>
-bool
-GenerateBlockId(TokenStream& ts, ParseContext<ParseHandler>* pc, uint32_t& blockid);
-
 /*
  * The struct ParseContext stores information about the current parsing context,
  * which is part of the parser state (see the field Parser::pc). The current
@@ -201,7 +197,7 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
     void prepareToAddDuplicateArg(HandlePropertyName name, DefinitionNode prevDecl);
 
     /* See the sad story in MakeDefIntoUse. */
-    void updateDecl(TokenStream& ts, JSAtom* atom, Node newDecl);
+    MOZ_MUST_USE bool updateDecl(TokenStream& ts, JSAtom* atom, Node newDecl);
 
     // After a script has been parsed, the parser generates the code's
     // "bindings". Bindings are a data-structure, ultimately stored in the
@@ -288,7 +284,7 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
 
     ~ParseContext();
 
-    bool init(Parser<ParseHandler>& parser);
+    MOZ_MUST_USE bool init(Parser<ParseHandler>& parser);
 
     unsigned blockid() { return stmtStack.innermost() ? stmtStack.innermost()->blockid : bodyid; }
 

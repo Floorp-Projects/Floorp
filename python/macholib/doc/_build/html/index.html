@@ -1,0 +1,170 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Macholib - Analyze and edit Mach-O headers &mdash; macholib 1.7 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="macholib 1.7 documentation" href="#" />
+    <link rel="next" title="Release history" href="changelog.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="changelog.html" title="Release history"
+             accesskey="N">next</a> |</li>
+        <li><a href="#">macholib 1.7 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="macholib-analyze-and-edit-mach-o-headers">
+<h1>Macholib - Analyze and edit Mach-O headers<a class="headerlink" href="#macholib-analyze-and-edit-mach-o-headers" title="Permalink to this headline">¶</a></h1>
+<p>macholib can be used to analyze and edit Mach-O headers, the executable
+format used by Mac OS X.</p>
+<p>It&#8217;s typically used as a dependency analysis tool, and also to rewrite dylib
+references in Mach-O headers to be <tt class="docutils literal"><span class="pre">&#64;executable_path</span></tt> relative.</p>
+<p>Though this tool targets a platform specific file format, it is pure python
+code that is platform and endian independent.</p>
+<div class="section" id="general-documentation">
+<h2>General documentation<a class="headerlink" href="#general-documentation" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Release history</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts.html">Command-line tools</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="reference-guide">
+<h2>Reference Guide<a class="headerlink" href="#reference-guide" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="MachO.html"><tt class="docutils literal"><span class="pre">macholib.MachO</span></tt> &#8212; Utilities for reading and writing Mach-O headers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MachoOGraph.html"><tt class="docutils literal"><span class="pre">macholib.MachoGraph</span></tt> &#8212; Graph data structure of Mach-O dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MachoOStandalone.html"><tt class="docutils literal"><span class="pre">macholib.MachOStandalone</span></tt> &#8212; Create standalone application bundles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SymbolTable.html"><tt class="docutils literal"><span class="pre">macholib.SymbolTable</span></tt> &#8212; Class to read the symbol table from a Mach-O header</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dyld.html"><tt class="docutils literal"><span class="pre">macholib.dyld</span></tt> &#8212; Dyld emulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dylib.html"><tt class="docutils literal"><span class="pre">macholib.dylib</span></tt> &#8212; Generic dylib path manipulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="framework.html"><tt class="docutils literal"><span class="pre">macholib.framework</span></tt> &#8212; Generic framework path manipulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="macho_o.html"><tt class="docutils literal"><span class="pre">macholib.mach_o</span></tt> &#8212; Low-level definitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ptypes.html"><tt class="docutils literal"><span class="pre">macholib.ptypes</span></tt> &#8212; Packable types</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="online-resources">
+<h2>Online Resources<a class="headerlink" href="#online-resources" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference external" href="http://bitbucket.org/ronaldoussoren/macholib/">Sourcecode repository on bitbucket</a></li>
+<li><a class="reference external" href="http://bitbucket.org/ronaldoussoren/macholib/issues">The issue tracker</a></li>
+<li><a class="reference external" href="http://developer.apple.com/library/mac/#documentation/DeveloperTools/Conceptual/MachORuntime/Reference/reference.html">Mac OS X ABI Mach-O File Format Reference at Apple</a></li>
+</ul>
+</div>
+<div class="section" id="contributors">
+<h2>Contributors<a class="headerlink" href="#contributors" title="Permalink to this headline">¶</a></h2>
+<p>Macholib was written by Bob Ippolito and is currently maintained by Ronald Oussoren &lt;<a class="reference external" href="mailto:ronaldoussoren&#37;&#52;&#48;mac&#46;com">ronaldoussoren<span>&#64;</span>mac<span>&#46;</span>com</a>&gt;.</p>
+</div>
+<div class="section" id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
+<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
+<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Macholib - Analyze and edit Mach-O headers</a><ul>
+<li><a class="reference internal" href="#general-documentation">General documentation</a></li>
+<li><a class="reference internal" href="#reference-guide">Reference Guide</a></li>
+<li><a class="reference internal" href="#online-resources">Online Resources</a></li>
+<li><a class="reference internal" href="#contributors">Contributors</a></li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Next topic</h4>
+  <p class="topless"><a href="changelog.html"
+                        title="next chapter">Release history</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="changelog.html" title="Release history"
+             >next</a> |</li>
+        <li><a href="#">macholib 1.7 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010-2011, Ronald Oussoren.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.1.
+    </div>
+  </body>
+</html>

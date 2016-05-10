@@ -1088,10 +1088,10 @@ int SuggestMgr::movechar(char** wlst,
     std::copy(word, word + candidate.size(), candidate.begin());
   }
 
-  for (std::string::iterator p = candidate.begin() + candidate.size() - 1; p > candidate.begin(); --p) {
-    for (std::string::iterator q = p - 1; q >= candidate.begin() && std::distance(q, p) < 10; --q) {
-      std::swap(*q, *(q + 1));
-      if (std::distance(q, p) < 2)
+  for (std::string::reverse_iterator p = candidate.rbegin(), pEnd = candidate.rend() - 1; p != pEnd; ++p) {
+    for (std::string::reverse_iterator q = p + 1, qEnd = candidate.rend(); q != qEnd && std::distance(p, q) < 10; ++q) {
+      std::swap(*q, *(q - 1));
+      if (std::distance(p, q) < 2)
         continue;  // omit swap char
       ns = testsug(wlst, candidate.c_str(), candidate.size(), ns, cpdsuggest, NULL, NULL);
       if (ns == -1)

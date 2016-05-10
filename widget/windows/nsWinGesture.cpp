@@ -335,14 +335,14 @@ nsWinGesture::ProcessGestureMessage(HWND hWnd, WPARAM wParam, LPARAM lParam,
         mZoomIntermediate = (float)gi.ullArguments;
 
         evt.mMessage = eMagnifyGestureStart;
-        evt.delta = 0.0;
+        evt.mDelta = 0.0;
       }
       else if (gi.dwFlags & GF_END) {
         // Send a zoom end event, the delta is the change
         // in touch points.
         evt.mMessage = eMagnifyGesture;
         // (positive for a "zoom in")
-        evt.delta = -1.0 * (mZoomIntermediate - (float)gi.ullArguments);
+        evt.mDelta = -1.0 * (mZoomIntermediate - (float)gi.ullArguments);
         mZoomIntermediate = (float)gi.ullArguments;
       }
       else {
@@ -350,7 +350,7 @@ nsWinGesture::ProcessGestureMessage(HWND hWnd, WPARAM wParam, LPARAM lParam,
         // in touch points.
         evt.mMessage = eMagnifyGestureUpdate;
         // (positive for a "zoom in")
-        evt.delta = -1.0 * (mZoomIntermediate - (float)gi.ullArguments);
+        evt.mDelta = -1.0 * (mZoomIntermediate - (float)gi.ullArguments);
         mZoomIntermediate = (float)gi.ullArguments;
       }
     }
@@ -375,14 +375,14 @@ nsWinGesture::ProcessGestureMessage(HWND hWnd, WPARAM wParam, LPARAM lParam,
           degrees = mRotateIntermediate = 0.0;
       }
 
-      evt.direction = 0;
-      evt.delta = degrees - mRotateIntermediate;
+      evt.mDirection = 0;
+      evt.mDelta = degrees - mRotateIntermediate;
       mRotateIntermediate = degrees;
 
-      if (evt.delta > 0)
-        evt.direction = nsIDOMSimpleGestureEvent::ROTATION_COUNTERCLOCKWISE;
-      else if (evt.delta < 0)
-        evt.direction = nsIDOMSimpleGestureEvent::ROTATION_CLOCKWISE;
+      if (evt.mDelta > 0)
+        evt.mDirection = nsIDOMSimpleGestureEvent::ROTATION_COUNTERCLOCKWISE;
+      else if (evt.mDelta < 0)
+        evt.mDirection = nsIDOMSimpleGestureEvent::ROTATION_CLOCKWISE;
 
       if (gi.dwFlags & GF_BEGIN) {
         evt.mMessage = eRotateGestureStart;
@@ -398,13 +398,13 @@ nsWinGesture::ProcessGestureMessage(HWND hWnd, WPARAM wParam, LPARAM lParam,
       // Normally maps to "restore" from whatever you may have recently changed.
       // A simple double click.
       evt.mMessage = eTapGesture;
-      evt.clickCount = 1;
+      evt.mClickCount = 1;
       break;
 
     case GID_PRESSANDTAP:
       // Two finger right click. Defaults to right click if it falls through.
       evt.mMessage = ePressTapGesture;
-      evt.clickCount = 1;
+      evt.mClickCount = 1;
       break;
   }
 

@@ -385,16 +385,8 @@ PDMFactory::GetDecoder(const nsACString& aMimeType,
 void
 PDMFactory::SetCDMProxy(CDMProxy* aProxy)
 {
-  bool cdmDecodesAudio;
-  bool cdmDecodesVideo;
-  {
-    CDMCaps::AutoLock caps(aProxy->Capabilites());
-    cdmDecodesAudio = caps.CanDecryptAndDecodeAudio();
-    cdmDecodesVideo = caps.CanDecryptAndDecodeVideo();
-  }
-
   RefPtr<PDMFactory> m = new PDMFactory();
-  mEMEPDM = new EMEDecoderModule(aProxy, m, cdmDecodesAudio, cdmDecodesVideo);
+  mEMEPDM = new EMEDecoderModule(aProxy, m);
 }
 #endif
 

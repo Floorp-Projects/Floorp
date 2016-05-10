@@ -49,29 +49,25 @@ MacroAssemblerX64::loadConstantFloat32(float f, FloatRegister dest)
 }
 
 void
-MacroAssemblerX64::loadConstantInt32x4(const SimdConstant& v, FloatRegister dest)
+MacroAssemblerX64::loadConstantSimd128Int(const SimdConstant& v, FloatRegister dest)
 {
-    MOZ_ASSERT(v.type() == SimdConstant::Int32x4);
-    if (maybeInlineInt32x4(v, dest))
+    if (maybeInlineSimd128Int(v, dest))
         return;
     SimdData* val = getSimdData(v);
     if (!val)
         return;
-    MOZ_ASSERT(val->type() == SimdConstant::Int32x4);
     JmpSrc j = masm.vmovdqa_ripr(dest.encoding());
     propagateOOM(val->uses.append(CodeOffset(j.offset())));
 }
 
 void
-MacroAssemblerX64::loadConstantFloat32x4(const SimdConstant&v, FloatRegister dest)
+MacroAssemblerX64::loadConstantSimd128Float(const SimdConstant&v, FloatRegister dest)
 {
-    MOZ_ASSERT(v.type() == SimdConstant::Float32x4);
-    if (maybeInlineFloat32x4(v, dest))
+    if (maybeInlineSimd128Float(v, dest))
         return;
     SimdData* val = getSimdData(v);
     if (!val)
         return;
-    MOZ_ASSERT(val->type() == SimdConstant::Float32x4);
     JmpSrc j = masm.vmovaps_ripr(dest.encoding());
     propagateOOM(val->uses.append(CodeOffset(j.offset())));
 }
@@ -110,11 +106,7 @@ MacroAssemblerX64::finish()
         masm.haltingAlign(SimdMemoryAlignment);
     for (const SimdData& v : simds_) {
         bindOffsets(v.uses);
-        switch(v.type()) {
-          case SimdConstant::Int32x4:   masm.int32x4Constant(v.value.asInt32x4());     break;
-          case SimdConstant::Float32x4: masm.float32x4Constant(v.value.asFloat32x4()); break;
-          default: MOZ_CRASH("unexpected SimdConstant type");
-        }
+        masm.simd128Constant(v.value.bytes());
     }
 
     MacroAssemblerX86Shared::finish();

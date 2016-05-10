@@ -193,6 +193,7 @@ public:
 
   bool Vibrate(uint32_t aDuration);
   bool Vibrate(const nsTArray<uint32_t>& aDuration);
+  void SetVibrationPermission(bool aPermitted, bool aPersistent);
   uint32_t MaxTouchPoints();
   void GetAppCodeName(nsString& aAppCodeName, ErrorResult& aRv)
   {
@@ -396,6 +397,7 @@ private:
   RefPtr<Presentation> mPresentation;
 
   nsTArray<RefPtr<Promise> > mVRGetDevicesPromises;
+  nsTArray<uint32_t> mRequestedVibrationPattern;
 };
 
 } // namespace dom
