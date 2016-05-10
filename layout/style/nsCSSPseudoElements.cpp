@@ -68,20 +68,22 @@ nsCSSPseudoElements::IsCSS2PseudoElement(nsIAtom *aAtom)
                   aAtom == nsCSSPseudoElements::firstLetter ||
                   aAtom == nsCSSPseudoElements::firstLine;
   NS_ASSERTION(nsCSSAnonBoxes::IsAnonBox(aAtom) ||
-               result == PseudoElementHasFlags(GetPseudoType(aAtom),
-                                               CSS_PSEUDO_ELEMENT_IS_CSS2),
+               result == PseudoElementHasFlags(
+                   GetPseudoType(aAtom, EnabledState::eIgnoreEnabledState),
+                   CSS_PSEUDO_ELEMENT_IS_CSS2),
                "result doesn't match flags");
   return result;
 }
 
 /* static */ CSSPseudoElementType
-nsCSSPseudoElements::GetPseudoType(nsIAtom *aAtom)
+nsCSSPseudoElements::GetPseudoType(nsIAtom *aAtom, EnabledState aEnabledState)
 {
   for (CSSPseudoElementTypeBase i = 0;
        i < ArrayLength(CSSPseudoElements_info);
        ++i) {
     if (*CSSPseudoElements_info[i].mAtom == aAtom) {
-      return static_cast<Type>(i);
+      auto type = static_cast<Type>(i);
+      return IsEnabled(type, aEnabledState) ? type : Type::NotPseudo;
     }
   }
 
