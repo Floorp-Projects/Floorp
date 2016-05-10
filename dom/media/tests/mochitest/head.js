@@ -224,19 +224,24 @@ function realCreateHTML(meta) {
   document.body.appendChild(content);
 }
 
+function getMediaElement(label, direction, streamId) {
+  var id = label + '_' + direction + '_' + streamId;
+  return document.getElementById(id);
+}
 
 /**
  * Create the HTML element if it doesn't exist yet and attach
  * it to the content node.
  *
- * @param {string} type
- *        Type of media element to create ('audio' or 'video')
  * @param {string} label
- *        Description to use for the element
+ *        Prefix to use for the element
+ * @param {direction} "local" or "remote"
+ * @param {stream} A MediaStream id.
+ * @param {audioOnly} Use <audio> element instead of <video>
  * @return {HTMLMediaElement} The created HTML media element
  */
-function createMediaElement(type, label) {
-  var id = label + '_' + type;
+function createMediaElement(label, direction, streamId, audioOnly) {
+  var id = label + '_' + direction + '_' + streamId;
   var element = document.getElementById(id);
 
   // Sanity check that we haven't created the element already
@@ -244,7 +249,12 @@ function createMediaElement(type, label) {
     return element;
   }
 
-  element = document.createElement(type === 'audio' ? 'audio' : 'video');
+  if (!audioOnly) {
+    // Even if this is just audio now, we might add video later.
+    element = document.createElement('video');
+  } else {
+    element = document.createElement('audio');
+  }
   element.setAttribute('id', id);
   element.setAttribute('height', 100);
   element.setAttribute('width', 150);

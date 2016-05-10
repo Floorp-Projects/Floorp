@@ -61,10 +61,7 @@ function startTest(media, token) {
       test.setMediaConstraints([{ video: hasVideo, audio: hasAudio }], []);
       test.chain.replace("PC_LOCAL_GUM", [
         function PC_LOCAL_CAPTUREVIDEO(test) {
-          var type = "";
-          if (hasAudio) { type += "audio"; }
-          if (hasVideo) { type += "video"; }
-          test.pcLocal.attachMedia(stream, type, "local");
+          test.pcLocal.attachLocalStream(stream);
           video.play();
         }
       ]);

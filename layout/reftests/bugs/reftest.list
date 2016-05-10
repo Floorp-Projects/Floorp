@@ -1709,7 +1709,7 @@ needs-focus != 703186-1.html 703186-2.html
 == 714519-1-q.html 714519-1-ref.html
 == 714519-2-as.html 714519-2-ref.html
 == 714519-2-q.html 714519-2-ref.html
-skip-if(B2G||Mulet) fuzzy-if(true,1,21) fuzzy-if(cocoaWidget,1,170) == 718521.html 718521-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(true,1,21) fuzzy-if(d2d,68,173) fuzzy-if(cocoaWidget,1,170) == 718521.html 718521-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == 720987.html 720987-ref.html
 == 722888-1.html 722888-1-ref.html
 == 722923-1.html 722923-1-ref.html

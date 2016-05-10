@@ -11203,7 +11203,7 @@ void
 CodeGenerator::visitAsmThrowUnreachable(LAsmThrowUnreachable* lir)
 {
     MOZ_ASSERT(gen->compilingAsmJS());
-    masm.jump(wasm::JumpTarget::UnreachableTrap);
+    masm.jump(wasm::JumpTarget::Unreachable);
 }
 
 typedef bool (*RecompileFn)(JSContext*);

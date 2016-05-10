@@ -25,7 +25,6 @@ include moz-only/reftest.list
 # svg-integration tests (using svg effects in e.g. HTML)
 include svg-integration/reftest.list
 
-== altGlyph-01.svg altGlyph-01-ref.svg
 == baseline-middle-01.svg pass.svg
 == border-radius-01.html pass.svg
 == cssComment-in-attribute-01.svg cssComment-in-attribute-01-ref.svg

@@ -230,8 +230,7 @@ IsTextContentElement(nsIContent* aContent)
   }
 
   if (aContent->IsAnyOfSVGElements(nsGkAtoms::a,
-                                   nsGkAtoms::tspan,
-                                   nsGkAtoms::altGlyph)) {
+                                   nsGkAtoms::tspan)) {
     return true;
   }
 

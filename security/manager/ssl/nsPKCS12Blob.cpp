@@ -15,7 +15,6 @@
 #include "nsNSSCertificate.h"
 #include "nsNSSComponent.h"
 #include "nsNSSHelper.h"
-#include "nsNSSHelper.h"
 #include "nsNSSShutDown.h"
 #include "nsNetUtil.h"
 #include "nsPK11TokenDB.h"
@@ -146,10 +145,10 @@ nsPKCS12Blob::ImportFromFileHelper(nsIFile *file,
   SEC_PKCS12DecoderContext *dcx = nullptr;
   SECItem unicodePw;
 
-  PK11SlotInfo *slot=nullptr;
+  UniquePK11SlotInfo slot;
   nsXPIDLString tokenName;
   unicodePw.data = nullptr;
-  
+
   aWantRetry = rr_do_not_retry;
 
   if (aImportMode == im_try_zero_length_secitem)
@@ -166,11 +165,11 @@ nsPKCS12Blob::ImportFromFileHelper(nsIFile *file,
       return NS_OK;
     }
   }
-  
+
   mToken->GetTokenName(getter_Copies(tokenName));
   {
     NS_ConvertUTF16toUTF8 tokenNameCString(tokenName);
-    slot = PK11_FindSlotByName(tokenNameCString.get());
+    slot = UniquePK11SlotInfo(PK11_FindSlotByName(tokenNameCString.get()));
   }
   if (!slot) {
     srv = SECFailure;
@@ -178,7 +177,7 @@ nsPKCS12Blob::ImportFromFileHelper(nsIFile *file,
   }
 
   // initialize the decoder
-  dcx = SEC_PKCS12DecoderStart(&unicodePw, slot, nullptr,
+  dcx = SEC_PKCS12DecoderStart(&unicodePw, slot.get(), nullptr,
                                digest_open, digest_close,
                                digest_read, digest_write,
                                this);
@@ -228,11 +227,9 @@ finish:
     {
       handleError(PIP_PKCS12_NSS_ERROR);
     }
-  } else if (NS_FAILED(rv)) { 
+  } else if (NS_FAILED(rv)) {
     handleError(PIP_PKCS12_RESTORE_FAILED);
   }
-  if (slot)
-    PK11_FreeSlot(slot);
   // finish the decoder
   if (dcx)
     SEC_PKCS12DecoderFinish(dcx);

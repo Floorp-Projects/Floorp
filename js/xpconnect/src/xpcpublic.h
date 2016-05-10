@@ -578,25 +578,6 @@ void RemoveGCCallback(xpcGCCallback cb);
 namespace mozilla {
 namespace dom {
 
-typedef JSObject*
-(*DefineInterface)(JSContext* cx, JS::Handle<JSObject*> global,
-                   JS::Handle<jsid> id, bool defineOnGlobal);
-
-typedef JSObject*
-(*ConstructNavigatorProperty)(JSContext* cx, JS::Handle<JSObject*> naviObj);
-
-// Check whether a constructor should be enabled for the given object.
-// Note that the object should NOT be an Xray, since Xrays will end up
-// defining constructors on the underlying object.
-// This is a typedef for the function type itself, not the function
-// pointer, so it's more obvious that pointers to a ConstructorEnabled
-// can be null.
-typedef bool
-(ConstructorEnabled)(JSContext* cx, JS::Handle<JSObject*> obj);
-
-void
-Register(nsScriptNameSpaceManager* aNameSpaceManager);
-
 /**
  * A test for whether WebIDL methods that should only be visible to
  * chrome or XBL scopes should be exposed.

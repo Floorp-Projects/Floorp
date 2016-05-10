@@ -18,6 +18,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/DragEvent.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/UIEvent.h"
 
@@ -2010,34 +2011,34 @@ EventStateManager::GetContentViewer(nsIContentViewer** aCv)
 {
   *aCv = nullptr;
 
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-  if(!fm) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsPIDOMWindowOuter> rootWindow;
+  rootWindow = mDocument->GetWindow()->GetPrivateRoot();
+  if (!rootWindow) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<mozIDOMWindowProxy> focusedWindow;
-  fm->GetFocusedWindow(getter_AddRefs(focusedWindow));
-  if (!focusedWindow) return NS_ERROR_FAILURE;
+  TabChild* tabChild = TabChild::GetFrom(rootWindow);
+  if (!tabChild) {
+    nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+    if (!fm) return NS_ERROR_FAILURE;
 
-  auto* ourWindow = nsPIDOMWindowOuter::From(focusedWindow);
-
-  nsCOMPtr<nsPIDOMWindowOuter> rootWindow = ourWindow->GetPrivateRoot();
-  if(!rootWindow) return NS_ERROR_FAILURE;
+    nsCOMPtr<mozIDOMWindowProxy> activeWindow;
+    fm->GetActiveWindow(getter_AddRefs(activeWindow));
+    if (rootWindow != activeWindow) return NS_OK;
+  } else {
+    if (!tabChild->ParentIsActive()) return NS_OK;
+  }
 
   nsCOMPtr<nsPIDOMWindowOuter> contentWindow = nsGlobalWindow::Cast(rootWindow)->GetContent();
-  if(!contentWindow) return NS_ERROR_FAILURE;
+  if (!contentWindow) return NS_ERROR_FAILURE;
 
   nsIDocument *doc = contentWindow->GetDoc();
-  if(!doc) return NS_ERROR_FAILURE;
+  if (!doc) return NS_ERROR_FAILURE;
 
-  nsIPresShell *presShell = doc->GetShell();
-  if(!presShell) return NS_ERROR_FAILURE;
-  nsPresContext *presContext = presShell->GetPresContext();
-  if(!presContext) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsISupports> container = doc->GetContainer();
+  if (!container) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDocShell> docshell(presContext->GetDocShell());
-  if(!docshell) return NS_ERROR_FAILURE;
-
+  nsCOMPtr<nsIDocShell> docshell = do_QueryInterface(container);
   docshell->GetContentViewer(aCv);
-  if(!*aCv) return NS_ERROR_FAILURE;
+  if (!*aCv) return NS_ERROR_FAILURE;
 
   return NS_OK;
 }
@@ -2049,16 +2050,18 @@ EventStateManager::ChangeTextSize(int32_t change)
   nsresult rv = GetContentViewer(getter_AddRefs(cv));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  float textzoom;
-  float zoomMin = ((float)Preferences::GetInt("zoom.minPercent", 50)) / 100;
-  float zoomMax = ((float)Preferences::GetInt("zoom.maxPercent", 300)) / 100;
-  cv->GetTextZoom(&textzoom);
-  textzoom += ((float)change) / 10;
-  if (textzoom < zoomMin)
-    textzoom = zoomMin;
-  else if (textzoom > zoomMax)
-    textzoom = zoomMax;
-  cv->SetTextZoom(textzoom);
+  if (cv) {
+    float textzoom;
+    float zoomMin = ((float)Preferences::GetInt("zoom.minPercent", 50)) / 100;
+    float zoomMax = ((float)Preferences::GetInt("zoom.maxPercent", 300)) / 100;
+    cv->GetTextZoom(&textzoom);
+    textzoom += ((float)change) / 10;
+    if (textzoom < zoomMin)
+      textzoom = zoomMin;
+    else if (textzoom > zoomMax)
+      textzoom = zoomMax;
+    cv->SetTextZoom(textzoom);
+  }
 
   return NS_OK;
 }
@@ -2070,16 +2073,18 @@ EventStateManager::ChangeFullZoom(int32_t change)
   nsresult rv = GetContentViewer(getter_AddRefs(cv));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  float fullzoom;
-  float zoomMin = ((float)Preferences::GetInt("zoom.minPercent", 50)) / 100;
-  float zoomMax = ((float)Preferences::GetInt("zoom.maxPercent", 300)) / 100;
-  cv->GetFullZoom(&fullzoom);
-  fullzoom += ((float)change) / 10;
-  if (fullzoom < zoomMin)
-    fullzoom = zoomMin;
-  else if (fullzoom > zoomMax)
-    fullzoom = zoomMax;
-  cv->SetFullZoom(fullzoom);
+  if (cv) {
+    float fullzoom;
+    float zoomMin = ((float)Preferences::GetInt("zoom.minPercent", 50)) / 100;
+    float zoomMax = ((float)Preferences::GetInt("zoom.maxPercent", 300)) / 100;
+    cv->GetFullZoom(&fullzoom);
+    fullzoom += ((float)change) / 10;
+    if (fullzoom < zoomMin)
+      fullzoom = zoomMin;
+    else if (fullzoom > zoomMax)
+      fullzoom = zoomMax;
+    cv->SetFullZoom(fullzoom);
+  }
 
   return NS_OK;
 }
@@ -2113,12 +2118,12 @@ EventStateManager::DoScrollZoom(nsIFrame* aTargetFrame,
       // positive adjustment to decrease zoom, negative to increase
       int32_t change = (adjustment > 0) ? -1 : 1;
 
+      EnsureDocument(mPresContext);
       if (Preferences::GetBool("browser.zoom.full") || content->OwnerDoc()->IsSyntheticDocument()) {
         ChangeFullZoom(change);
       } else {
         ChangeTextSize(change);
       }
-      EnsureDocument(mPresContext);
       nsContentUtils::DispatchChromeEvent(mDocument, static_cast<nsIDocument*>(mDocument),
                                           NS_LITERAL_STRING("ZoomChangeUsingMouseWheel"),
                                           true, true);

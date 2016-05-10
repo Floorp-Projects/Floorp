@@ -9,6 +9,8 @@
 #include "nsString.h"
 #include "nsXPCOM.h"
 
+using namespace mozilla;
+
 static const char* const kJunkNames[] = {
   nullptr,
   "",
@@ -41,7 +43,7 @@ TestProps()
     index = nsCSSProperty(int32_t(index) + 1);
 
     id = nsCSSProps::LookupProperty(nsCString(tagName),
-                                    nsCSSProps::eIgnoreEnabledState);
+                                    CSSEnabledState::eIgnoreEnabledState);
     if (id == eCSSProperty_UNKNOWN) {
       printf("bug: can't find '%s'\n", tagName);
       success = false;
@@ -56,7 +58,7 @@ TestProps()
       tagName[0] = tagName[0] - 32;
     }
     id = nsCSSProps::LookupProperty(NS_ConvertASCIItoUTF16(tagName),
-                                    nsCSSProps::eIgnoreEnabledState);
+                                    CSSEnabledState::eIgnoreEnabledState);
     if (id < 0) {
       printf("bug: can't find '%s'\n", tagName);
       success = false;
@@ -72,7 +74,7 @@ TestProps()
   for (int i = 0; i < (int) (sizeof(kJunkNames) / sizeof(const char*)); i++) {
     const char* const tag = kJunkNames[i];
     id = nsCSSProps::LookupProperty(nsAutoCString(tag),
-                                    nsCSSProps::eIgnoreEnabledState);
+                                    CSSEnabledState::eIgnoreEnabledState);
     if (id >= 0) {
       printf("bug: found '%s'\n", tag ? tag : "(null)");
       success = false;

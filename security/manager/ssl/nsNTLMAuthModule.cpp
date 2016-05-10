@@ -7,25 +7,26 @@
 
 #include <time.h>
 
+#include "ScopedNSSTypes.h"
 #include "md4.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Endian.h"
 #include "mozilla/Likely.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Snprintf.h"
 #include "mozilla/Telemetry.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
-#include "nsICryptoHash.h"
 #include "nsICryptoHMAC.h"
+#include "nsICryptoHash.h"
 #include "nsIKeyModule.h"
 #include "nsKeyModule.h"
+#include "nsNSSShutDown.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsNetCID.h"
-#include "nsNSSShutDown.h"
 #include "nsUnicharUtils.h"
 #include "pk11pub.h"
-#include "mozilla/Logging.h"
 #include "prsystem.h"
 
 static bool sNTLMv1Forced = false;
@@ -1102,14 +1103,13 @@ static void
 des_encrypt(const uint8_t *key, const uint8_t *src, uint8_t *hash)
 {
   CK_MECHANISM_TYPE cipherMech = CKM_DES_ECB;
-  PK11SlotInfo *slot = nullptr;
   PK11SymKey *symkey = nullptr;
   PK11Context *ctxt = nullptr;
   SECItem keyItem, *param = nullptr;
   SECStatus rv;
   unsigned int n;
-  
-  slot = PK11_GetBestSlot(cipherMech, nullptr);
+
+  mozilla::UniquePK11SlotInfo slot(PK11_GetBestSlot(cipherMech, nullptr));
   if (!slot)
   {
     NS_ERROR("no slot");
@@ -1118,7 +1118,7 @@ des_encrypt(const uint8_t *key, const uint8_t *src, uint8_t *hash)
 
   keyItem.data = (uint8_t *) key;
   keyItem.len = 8;
-  symkey = PK11_ImportSymKey(slot, cipherMech,
+  symkey = PK11_ImportSymKey(slot.get(), cipherMech,
                              PK11_OriginUnwrap, CKA_ENCRYPT,
                              &keyItem, nullptr);
   if (!symkey)
@@ -1161,6 +1161,4 @@ done:
     PK11_FreeSymKey(symkey);
   if (param)
     SECITEM_FreeItem(param, true);
-  if (slot)
-    PK11_FreeSlot(slot);
 }

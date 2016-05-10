@@ -27,7 +27,7 @@ runNetworkTest(function() {
       oscillator.start();
       var dest = test.audioContext.createMediaStreamDestination();
       oscillator.connect(dest);
-      test.pcLocal.attachMedia(dest.stream, 'audio', 'local');
+      test.pcLocal.attachLocalStream(dest.stream);
     }
   ]);
   test.chain.append([

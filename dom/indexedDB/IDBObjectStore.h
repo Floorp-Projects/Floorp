@@ -30,6 +30,7 @@ class DOMStringList;
 class IDBCursor;
 class IDBRequest;
 class IDBTransaction;
+class StringOrStringSequence;
 template <typename> class Sequence;
 
 namespace indexedDB {
@@ -209,13 +210,7 @@ public:
 
   already_AddRefed<IDBIndex>
   CreateIndex(const nsAString& aName,
-              const nsAString& aKeyPath,
-              const IDBIndexParameters& aOptionalParameters,
-              ErrorResult& aRv);
-
-  already_AddRefed<IDBIndex>
-  CreateIndex(const nsAString& aName,
-              const Sequence<nsString>& aKeyPath,
+              const StringOrStringSequence& aKeyPath,
               const IDBIndexParameters& aOptionalParameters,
               ErrorResult& aRv);
 
@@ -344,12 +339,6 @@ private:
                  JS::Handle<JS::Value> aKey,
                  const Optional<uint32_t>& aLimit,
                  ErrorResult& aRv);
-
-  already_AddRefed<IDBIndex>
-  CreateIndexInternal(const nsAString& aName,
-                      const KeyPath& aKeyPath,
-                      const IDBIndexParameters& aOptionalParameters,
-                      ErrorResult& aRv);
 
   already_AddRefed<IDBRequest>
   OpenCursorInternal(bool aKeysOnly,

@@ -1,14 +1,16 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#include "nspr.h"
 
+#include "nsSmartCardMonitor.h"
+
+#include "ScopedNSSTypes.h"
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
-#include "nsSmartCardMonitor.h"
 #include "nsThreadUtils.h"
+#include "nspr.h"
 #include "pk11func.h"
 
 using namespace mozilla;
@@ -318,7 +320,6 @@ SmartCardMonitoringThread::SendEvent(const nsAString& eventType,
 //
 void SmartCardMonitoringThread::Execute()
 {
-  PK11SlotInfo* slot;
   const char* tokenName;
 
   //
@@ -339,17 +340,18 @@ void SmartCardMonitoringThread::Execute()
 
   // loop starts..
   do {
-    slot = SECMOD_WaitForAnyTokenEvent(mModule, 0, PR_SecondsToInterval(1));
+    UniquePK11SlotInfo slot(
+      SECMOD_WaitForAnyTokenEvent(mModule, 0, PR_SecondsToInterval(1)));
     if (!slot) {
       break;
     }
 
     // now we have a potential insertion or removal event, see if the slot
     // is present to determine which it is...
-    if (PK11_IsPresent(slot)) {
+    if (PK11_IsPresent(slot.get())) {
       // insertion
-      CK_SLOT_ID slotID = PK11_GetSlotID(slot);
-      uint32_t series = PK11_GetSlotSeries(slot);
+      CK_SLOT_ID slotID = PK11_GetSlotID(slot.get());
+      uint32_t series = PK11_GetSlotSeries(slot.get());
 
       // skip spurious insertion events...
       if (series != GetTokenSeries(slotID)) {
@@ -359,14 +361,14 @@ void SmartCardMonitoringThread::Execute()
         if (tokenName) {
           SendEvent(NS_LITERAL_STRING("smartcard-remove"), tokenName);
         }
-        tokenName = PK11_GetTokenName(slot);
+        tokenName = PK11_GetTokenName(slot.get());
         // save the token name and series
         SetTokenName(slotID, tokenName, series);
         SendEvent(NS_LITERAL_STRING("smartcard-insert"), tokenName);
       }
     } else {
       // retrieve token name
-      CK_SLOT_ID slotID = PK11_GetSlotID(slot);
+      CK_SLOT_ID slotID = PK11_GetSlotID(slot.get());
       tokenName = GetTokenName(slotID);
       // if there's not a token name, then the software isn't expecting
       // a (or another) remove event.
@@ -376,8 +378,6 @@ void SmartCardMonitoringThread::Execute()
         SetTokenName(slotID, nullptr, 0);
       }
     }
-    PK11_FreeSlot(slot);
-
   } while (1);
 }
 

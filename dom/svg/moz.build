@@ -19,7 +19,6 @@ EXPORTS += [
 EXPORTS.mozilla.dom += [
     'nsSVGAnimatedTransformList.h',
     'SVGAElement.h',
-    'SVGAltGlyphElement.h',
     'SVGAngle.h',
     'SVGAnimatedAngle.h',
     'SVGAnimatedBoolean.h',
@@ -137,7 +136,6 @@ UNIFIED_SOURCES += [
     'nsSVGTransform.cpp',
     'nsSVGViewBox.cpp',
     'SVGAElement.cpp',
-    'SVGAltGlyphElement.cpp',
     'SVGAngle.cpp',
     'SVGAnimatedAngle.cpp',
     'SVGAnimatedBoolean.cpp',

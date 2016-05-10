@@ -35,6 +35,9 @@ DEFAULT_JOB_PATH = os.path.join(
     ROOT, 'tasks', 'branches', 'base_jobs.yml'
 )
 
+# time after which a try build's results will expire
+TRY_EXPIRATION = "14 days"
+
 def merge_dicts(*dicts):
     merged_dict = {}
     for dictionary in dicts:
@@ -143,6 +146,20 @@ def remove_caches_from_task(task):
                 caches.pop(cache)
     except KeyError:
         pass
+
+def set_expiration(task, timestamp):
+    task_def = task['task']
+    task_def['expires'] = timestamp
+    if task_def.get('deadline', timestamp) > timestamp:
+        task_def['deadline'] = timestamp
+
+    try:
+        artifacts = task_def['payload']['artifacts']
+    except KeyError:
+        return
+
+    for artifact in artifacts.values():
+        artifact['expires'] = timestamp
 
 def query_vcs_info(repository, revision):
     """Query the pushdate and pushid of a repository/revision.
@@ -487,6 +504,7 @@ class Graph(object):
             # try builds don't use cache
             if project == "try":
                 remove_caches_from_task(build_task)
+                set_expiration(build_task, json_time_from_now(TRY_EXPIRATION))
 
             if params['revision_hash']:
                 treeherder_transform.add_treeherder_revision_info(build_task['task'],
@@ -567,6 +585,8 @@ class Graph(object):
                 treeherder_transform.add_treeherder_revision_info(post_task['task'],
                                                                   params['head_rev'],
                                                                   params['revision_hash'])
+                if project == "try":
+                    set_expiration(post_task, json_time_from_now(TRY_EXPIRATION))
                 graph['tasks'].append(post_task)
 
             for test in build['dependents']:
@@ -620,6 +640,9 @@ class Graph(object):
                             test_task['task'],
                             treeherder_route
                         )
+
+                    if project == "try":
+                        set_expiration(test_task, json_time_from_now(TRY_EXPIRATION))
 
                     # This will schedule test jobs N times
                     for i in range(0, trigger_tests):

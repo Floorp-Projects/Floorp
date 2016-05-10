@@ -245,7 +245,7 @@ add_task(function* test_notification_ack_data() {
 
   let sendAndReceive = testData => {
     let messageReceived = testData.receive ? promiseObserverNotification(PushServiceComponent.pushTopic, (subject, data) => {
-      let notification = subject.QueryInterface(Ci.nsIPushMessage);
+      let notification = subject.QueryInterface(Ci.nsIPushMessage).data;
       equal(notification.text(), testData.receive.data,
             'Check data for notification ' + testData.version);
       equal(data, testData.receive.scope,

@@ -80,7 +80,8 @@ class GraphStoreInfo : public TempObject
 
   public:
     explicit GraphStoreInfo(TempAllocator& alloc)
-      : stores_(alloc),
+      : current_(nullptr),
+        stores_(alloc),
         empty_(alloc)
     { }
 
