@@ -11,7 +11,7 @@
  * and create derivative works of this document.
  */
 
-[OverrideBuiltins]
+[OverrideBuiltins, LegacyUnenumerableNamedProperties]
 interface HTMLFormElement : HTMLElement {
            [Pure, SetterThrows]
            attribute DOMString acceptCharset;

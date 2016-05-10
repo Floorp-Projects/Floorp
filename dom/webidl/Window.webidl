@@ -24,7 +24,7 @@ interface nsIDOMCrypto;
 typedef any Transferable;
 
 // http://www.whatwg.org/specs/web-apps/current-work/
-[PrimaryGlobal, NeedResolve]
+[PrimaryGlobal, LegacyUnenumerableNamedProperties, NeedResolve]
 /*sealed*/ interface Window : EventTarget {
   // the current browsing context
   [Unforgeable, Constant, StoreInSlot,
