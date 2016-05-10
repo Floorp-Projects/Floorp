@@ -20,6 +20,9 @@ import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.util.Experiments;
 
 public class ReaderViewBookmarkPromotion extends BrowserAppDelegateWithReference implements Tabs.OnTabsChangedListener {
+    private static final String PREF_FIRST_RV_HINT_SHOWN = "first_reader_view_hint_shown";
+    private static final String FIRST_READERVIEW_OPEN_TELEMETRYEXTRA = "first_readerview_open_prompt";
+
     private boolean hasEnteredReaderMode = false;
 
     @Override
@@ -77,12 +80,12 @@ public class ReaderViewBookmarkPromotion extends BrowserAppDelegateWithReference
         // We reuse the same preference as for the first offline reader view bookmark
         // as we only want to show one of the two UIs (they both explain the same
         // functionality).
-        if (!isEnabled || prefs.getBoolean(SimpleHelperUI.PREF_FIRST_RVBP_SHOWN, false)) {
+        if (!isEnabled || prefs.getBoolean(PREF_FIRST_RV_HINT_SHOWN, false)) {
             return;
         }
 
         SimpleHelperUI.show(browserApp,
-                SimpleHelperUI.TRIPLE_READERVIEW_OPEN_TELEMETRYEXTRA,
+                FIRST_READERVIEW_OPEN_TELEMETRYEXTRA,
                 BrowserApp.ACTIVITY_REQUEST_TRIPLE_READERVIEW,
                 R.string.helper_triple_readerview_open_title,
                 R.string.helper_triple_readerview_open_message,
@@ -91,9 +94,9 @@ public class ReaderViewBookmarkPromotion extends BrowserAppDelegateWithReference
                 BrowserApp.ACTIVITY_RESULT_TRIPLE_READERVIEW_ADD_BOOKMARK,
                 BrowserApp.ACTIVITY_RESULT_TRIPLE_READERVIEW_IGNORE);
 
-        GeckoSharedPrefs.forProfile(browserApp)
+        prefs
                 .edit()
-                .putBoolean(SimpleHelperUI.PREF_FIRST_RVBP_SHOWN, true)
+                .putBoolean(PREF_FIRST_RV_HINT_SHOWN, true)
                 .apply();
     }
 
