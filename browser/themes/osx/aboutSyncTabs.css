@@ -73,10 +73,10 @@ richlistitem[type="client"] {
   -moz-user-focus: ignore !important;
 }
 richlistitem.mobile[type="client"] {
-  list-style-image: url("chrome://browser/skin/sync-mobileIcon.png");
+  list-style-image: url("chrome://browser/skin/sync-mobileIcon.svg#icon");
 }
 richlistitem.desktop[type="client"] {
-  list-style-image: url("chrome://browser/skin/sync-desktopIcon.png");
+  list-style-image: url("chrome://browser/skin/sync-desktopIcon.svg#icon");
 }
 
 .title,

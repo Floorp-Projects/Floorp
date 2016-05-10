@@ -89,6 +89,22 @@ body {
   padding-inline-start: 20px;
 }
 
+.item.client.device-image-desktop > .item-title-container > .item-icon-container {
+  background-image: url("chrome://browser/skin/sync-desktopIcon.svg#icon");
+}
+
+.item.client.device-image-desktop.selected > .item-title-container > .item-icon-container {
+  background-image: url("chrome://browser/skin/sync-desktopIcon.svg#icon-inverted");
+}
+
+.item.client.device-image-mobile > .item-title-container > .item-icon-container {
+  background-image: url("chrome://browser/skin/sync-mobileIcon.svg#icon");
+}
+
+.item.client.device-image-mobile.selected > .item-title-container > .item-icon-container {
+  background-image: url("chrome://browser/skin/sync-mobileIcon.svg#icon-inverted");
+}
+
 .item.tab > .item-title-container > .item-icon-container {
   background-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
