@@ -14,7 +14,7 @@ namespace jit {
 class MIRGenerator;
 class MIRGraph;
 
-bool
+MOZ_MUST_USE bool
 EagerSimdUnbox(MIRGenerator* mir, MIRGraph& graph);
 
 } // namespace jit

@@ -20,7 +20,7 @@ class EffectiveAddressAnalysis
     MIRGraph& graph_;
 
     template<typename MAsmJSHeapAccessType>
-    bool tryAddDisplacement(MAsmJSHeapAccessType* ins, int32_t o);
+    MOZ_MUST_USE bool tryAddDisplacement(MAsmJSHeapAccessType* ins, int32_t o);
 
     template<typename MAsmJSHeapAccessType>
     void analyzeAsmHeapAccess(MAsmJSHeapAccessType* ins);
@@ -30,7 +30,7 @@ class EffectiveAddressAnalysis
       : mir_(mir), graph_(graph)
     {}
 
-    bool analyze();
+    MOZ_MUST_USE bool analyze();
 };
 
 } /* namespace jit */
