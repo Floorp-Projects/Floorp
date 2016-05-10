@@ -1565,11 +1565,11 @@ intrinsic_RegExpCreate(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    MOZ_ASSERT(args.length() == 2);
-    MOZ_ASSERT(args[1].isString() || args[1].isUndefined());
+    MOZ_ASSERT(args.length() == 1 || args.length() == 2);
+    MOZ_ASSERT_IF(args.length() == 2, args[1].isString() || args[1].isUndefined());
     MOZ_ASSERT(!args.isConstructing());
 
-    return RegExpCreate(cx, args[0], args[1], args.rval());
+    return RegExpCreate(cx, args[0], args.get(1), args.rval());
 }
 
 static bool
@@ -1621,21 +1621,6 @@ intrinsic_StringReplaceString(JSContext* cx, unsigned argc, Value* vp)
     RootedString pattern(cx, args[1].toString());
     RootedString replacement(cx, args[2].toString());
     JSString* result = str_replace_string_raw(cx, string, pattern, replacement);
-    if (!result)
-        return false;
-
-    args.rval().setString(result);
-    return true;
-}
-
-static bool
-intrinsic_RegExpEscapeMetaChars(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 1);
-
-    RootedString string(cx, args[0].toString());
-    JSString* result = RegExpEscapeMetaChars(cx, string);
     if (!result)
         return false;
 
@@ -2202,32 +2187,6 @@ intrinsic_captureCurrentStack(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-IsMatchFlagsArgumentEnabled(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 0);
-
-    args.rval().setBoolean(cx->runtime()->options().matchFlagArgument());
-    return true;
-}
-
-static bool
-WarnOnceAboutFlagsArgument(JSContext* cx, unsigned argc, Value* vp)
-{
-    if (!cx->compartment()->warnedAboutFlagsArgument) {
-        if (!JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
-                                          cx->runtime()->options().matchFlagArgument()
-                                          ? JSMSG_DEPRECATED_FLAGS_ARG
-                                          : JSMSG_OBSOLETE_FLAGS_ARG))
-        {
-            return false;
-        }
-        cx->compartment()->warnedAboutFlagsArgument = true;
-    }
-    return true;
-}
-
 // The self-hosting global isn't initialized with the normal set of builtins.
 // Instead, individual C++-implemented functions that're required by
 // self-hosted code are defined as global functions. Accessing these
@@ -2565,7 +2524,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("RegExpInstanceOptimizable", RegExpInstanceOptimizable, 1,0,
                     RegExpInstanceOptimizable),
     JS_FN("RegExpGetSubstitution", intrinsic_RegExpGetSubstitution, 6,0),
-    JS_FN("RegExpEscapeMetaChars", intrinsic_RegExpEscapeMetaChars, 1,0),
     JS_FN("GetElemBaseForLambda", intrinsic_GetElemBaseForLambda, 1,0),
     JS_FN("GetStringDataProperty", intrinsic_GetStringDataProperty, 2,0),
     JS_INLINABLE_FN("GetFirstDollarIndex", GetFirstDollarIndex, 1,0,
@@ -2582,11 +2540,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     // See builtin/RegExp.h for descriptions of the regexp_* functions.
     JS_FN("regexp_exec_no_statics", regexp_exec_no_statics, 2,0),
     JS_FN("regexp_test_no_statics", regexp_test_no_statics, 2,0),
-    JS_FN("regexp_construct", regexp_construct_self_hosting, 2,0),
     JS_FN("regexp_construct_no_sticky", regexp_construct_no_sticky, 2,0),
-
-    JS_FN("IsMatchFlagsArgumentEnabled", IsMatchFlagsArgumentEnabled, 0,0),
-    JS_FN("WarnOnceAboutFlagsArgument", WarnOnceAboutFlagsArgument, 0,0),
 
     JS_FN("IsModule", intrinsic_IsInstanceOfBuiltin<ModuleObject>, 1, 0),
     JS_FN("CallModuleMethodIfWrapped",

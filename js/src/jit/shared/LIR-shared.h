@@ -205,8 +205,8 @@ class LSimdSplatX4 : public LInstructionHelper<1, 1, 0>
         setOperand(0, v);
     }
 
-    MSimdSplatX4* mir() const {
-        return mir_->toSimdSplatX4();
+    MSimdSplat* mir() const {
+        return mir_->toSimdSplat();
     }
 };
 
@@ -236,17 +236,8 @@ class LSimdExtractElementBase : public LInstructionHelper<1, 1, 0>
     const LAllocation* getBase() {
         return getOperand(0);
     }
-    SimdLane lane() const {
+    unsigned lane() const {
         return mir_->toSimdExtractElement()->lane();
-    }
-    const char* extraName() const {
-        switch (lane()) {
-          case LaneX: return "lane x";
-          case LaneY: return "lane y";
-          case LaneZ: return "lane z";
-          case LaneW: return "lane w";
-        }
-        return "unknown lane";
     }
 };
 
@@ -289,7 +280,7 @@ class LSimdExtractElementU2D : public LInstructionHelper<1, 1, 1>
         setOperand(0, base);
         setTemp(0, temp);
     }
-    SimdLane lane() const {
+    unsigned lane() const {
         return mir_->toSimdExtractElement()->lane();
     }
     const LDefinition* temp() {
@@ -314,11 +305,8 @@ class LSimdInsertElementBase : public LInstructionHelper<1, 2, 0>
     const LAllocation* value() {
         return getOperand(1);
     }
-    SimdLane lane() const {
+    unsigned lane() const {
         return mir_->toSimdInsertElement()->lane();
-    }
-    const char* extraName() const {
-        return MSimdInsertElement::LaneName(lane());
     }
 };
 
@@ -356,10 +344,7 @@ class LSimdSwizzleBase : public LInstructionHelper<1, 1, 0>
         return getOperand(0);
     }
 
-    uint32_t laneX() const { return mir_->toSimdSwizzle()->laneX(); }
-    uint32_t laneY() const { return mir_->toSimdSwizzle()->laneY(); }
-    uint32_t laneZ() const { return mir_->toSimdSwizzle()->laneZ(); }
-    uint32_t laneW() const { return mir_->toSimdSwizzle()->laneW(); }
+    uint32_t lane(unsigned i) const { return mir_->toSimdSwizzle()->lane(i); }
 
     bool lanesMatch(uint32_t x, uint32_t y, uint32_t z, uint32_t w) const {
         return mir_->toSimdSwizzle()->lanesMatch(x, y, z, w);
@@ -441,10 +426,7 @@ class LSimdShuffle : public LInstructionHelper<1, 2, 1>
         return getTemp(0);
     }
 
-    uint32_t laneX() const { return mir_->toSimdShuffle()->laneX(); }
-    uint32_t laneY() const { return mir_->toSimdShuffle()->laneY(); }
-    uint32_t laneZ() const { return mir_->toSimdShuffle()->laneZ(); }
-    uint32_t laneW() const { return mir_->toSimdShuffle()->laneW(); }
+    uint32_t lane(unsigned i) const { return mir_->toSimdShuffle()->lane(i); }
 
     bool lanesMatch(uint32_t x, uint32_t y, uint32_t z, uint32_t w) const {
         return mir_->toSimdShuffle()->lanesMatch(x, y, z, w);
@@ -768,23 +750,24 @@ class LFloat32 : public LInstructionHelper<1, 0, 0>
     }
 };
 
-// Constant SIMD int32x4. Also used for bool32x4.
-class LInt32x4 : public LInstructionHelper<1, 0, 0>
+// Constant 128-bit SIMD integer vector (8x16, 16x8, 32x4).
+// Also used for Bool32x4, Bool16x8, etc.
+class LSimd128Int : public LInstructionHelper<1, 0, 0>
 {
   public:
-    LIR_HEADER(Int32x4);
+    LIR_HEADER(Simd128Int);
 
-    explicit LInt32x4() {}
+    explicit LSimd128Int() {}
     const SimdConstant& getValue() const { return mir_->toSimdConstant()->value(); }
 };
 
-// Constant SIMD float32x4.
-class LFloat32x4 : public LInstructionHelper<1, 0, 0>
+// Constant 128-bit SIMD floating point vector (32x4, 64x2).
+class LSimd128Float : public LInstructionHelper<1, 0, 0>
 {
   public:
-    LIR_HEADER(Float32x4);
+    LIR_HEADER(Simd128Float);
 
-    explicit LFloat32x4() {}
+    explicit LSimd128Float() {}
     const SimdConstant& getValue() const { return mir_->toSimdConstant()->value(); }
 };
 

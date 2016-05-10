@@ -1657,19 +1657,7 @@ MediaDecoder::SetCDMProxy(CDMProxy* aProxy)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  RefPtr<CDMProxy> proxy = aProxy;
-  {
-    CDMCaps::AutoLock caps(aProxy->Capabilites());
-    if (!caps.AreCapsKnown()) {
-      RefPtr<MediaDecoder> self = this;
-      nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
-        self->mCDMProxyPromiseHolder.ResolveIfExists(proxy, __func__);
-      });
-      caps.CallOnMainThreadWhenCapsAvailable(r);
-      return;
-    }
-  }
-  mCDMProxyPromiseHolder.ResolveIfExists(proxy, __func__);
+  mCDMProxyPromiseHolder.ResolveIfExists(aProxy, __func__);
 }
 #endif
 

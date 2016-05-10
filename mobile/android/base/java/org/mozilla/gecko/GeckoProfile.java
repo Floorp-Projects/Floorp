@@ -114,12 +114,12 @@ public final class GeckoProfile {
      * Can return null.
      */
     public static GeckoProfile getFromArgs(final Context context, final String args) {
-        if (args == null) {
-            return null;
-        }
-
         if (GuestSession.shouldUse(context, args)) {
             return GeckoProfile.getOrCreateGuestProfile(context);
+        }
+
+        if (args == null) {
+            return null;
         }
 
         String profileName = null;

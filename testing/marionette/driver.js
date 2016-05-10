@@ -12,11 +12,7 @@ var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-var {devtools} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-this.DevToolsUtils = devtools.require("devtools/shared/DevToolsUtils");
 
 XPCOMUtils.defineLazyServiceGetter(
     this, "cookieManager", "@mozilla.org/cookiemanager;1", "nsICookieManager2");
@@ -24,16 +20,16 @@ XPCOMUtils.defineLazyServiceGetter(
 Cu.import("chrome://marionette/content/action.js");
 Cu.import("chrome://marionette/content/atom.js");
 Cu.import("chrome://marionette/content/element.js");
+Cu.import("chrome://marionette/content/emulator.js");
 Cu.import("chrome://marionette/content/error.js");
 Cu.import("chrome://marionette/content/evaluate.js");
 Cu.import("chrome://marionette/content/event.js");
 Cu.import("chrome://marionette/content/frame.js");
 Cu.import("chrome://marionette/content/interaction.js");
+Cu.import("chrome://marionette/content/logging.js");
 Cu.import("chrome://marionette/content/modal.js");
 Cu.import("chrome://marionette/content/proxy.js");
 Cu.import("chrome://marionette/content/simpletest.js");
-
-loader.loadSubScript("chrome://marionette/content/common.js");
 
 this.EXPORTED_SYMBOLS = ["GeckoDriver", "Context"];
 
@@ -91,8 +87,9 @@ this.Context.fromString = function(s) {
  *     Device this driver should assume.
  * @param {function()} stopSignal
  *     Signal to stop the Marionette server.
- * @param {Emulator=} emulator
- *     Reference to the emulator connection, if running on an emulator.
+ * @param {EmulatorService=} emulator
+ *     Interface that allows instructing the emulator connected to the
+ *     client to run commands and perform shell invocations.
  */
 this.GeckoDriver = function(appName, device, stopSignal, emulator) {
   this.appName = appName;
@@ -112,9 +109,7 @@ this.GeckoDriver = function(appName, device, stopSignal, emulator) {
   this.pageTimeout = null;
   this.timer = null;
   this.inactivityTimer = null;
-  // called by simpletest methods
-  this.heartbeatCallback = function() {};
-  this.marionetteLog = new MarionetteLogObj();
+  this.marionetteLog = new logging.ContentLogger();
   // topmost chrome frame
   this.mainFrame = null;
   // chrome iframe that currently has focus
@@ -124,7 +119,7 @@ this.GeckoDriver = function(appName, device, stopSignal, emulator) {
   this.currentFrameElement = null;
   this.testName = null;
   this.mozBrowserClose = null;
-  this.sandboxes = {};
+  this.sandboxes = new Sandboxes(() => this.getCurrentWindow());
   // frame ID of the current remote frame, used for mozbrowserclose events
   this.oopFrameId = null;
   this.observing = null;
@@ -222,10 +217,10 @@ GeckoDriver.prototype.sendAsync = function(name, msg, cmdId) {
   if (curRemoteFrame === null) {
     this.curBrowser.executeWhenReady(() => {
       if (this.curBrowser.curFrameId) {
-          this.mm.broadcastAsyncMessage(name + this.curBrowser.curFrameId, msg);
-      }
-      else {
-          throw new WebDriverError("Can not send call to listener as it doesnt exist");
+        this.mm.broadcastAsyncMessage(name + this.curBrowser.curFrameId, msg);
+      } else {
+        throw new NoSuchFrameError(
+            "No such content frame; perhaps the listener was not registered?");
       }
     });
   } else {
@@ -254,7 +249,7 @@ GeckoDriver.prototype.getCurrentWindow = function() {
   if (this.curFrame === null) {
     if (this.curBrowser === null) {
       if (this.context == Context.CONTENT) {
-        typ = 'navigator:browser';
+        typ = "navigator:browser";
       }
       return Services.wm.getMostRecentWindow(typ);
     } else {
@@ -690,12 +685,15 @@ GeckoDriver.prototype.setUpProxy = function(proxy) {
  *     Arbitrary log level.
  */
 GeckoDriver.prototype.log = function(cmd, resp) {
-  this.marionetteLog.log(cmd.parameters.value, cmd.parameters.level);
+  // if level is null, we want to use ContentLogger#send's default
+  this.marionetteLog.log(
+      cmd.parameters.value,
+      cmd.parameters.level || undefined);
 };
 
 /** Return all logged messages. */
 GeckoDriver.prototype.getLogs = function(cmd, resp) {
-  resp.body = this.marionetteLog.getLogs();
+  resp.body = this.marionetteLog.get();
 };
 
 /**
@@ -721,199 +719,211 @@ GeckoDriver.prototype.getContext = function(cmd, resp) {
 };
 
 /**
- * Returns a chrome sandbox that can be used by the execute and
- * executeWithCallback functions.
+ * Executes a JavaScript function in the context of the current browsing
+ * context, if in content space, or in chrome space otherwise, and returns
+ * the return value of the function.
  *
- * @param {nsIDOMWindow} win
- *     Window in which we will execute code.
- * @param {Marionette} mn
- *     Marionette test instance.
- * @param {string} sandboxName
- *     The name for the sandbox.  If 'system', create the sandbox
- *     with elevated privileges.
+ * It is important to note that if the {@code sandboxName} parameter
+ * is left undefined, the script will be evaluated in a mutable sandbox,
+ * causing any change it makes on the global state of the document to have
+ * lasting side-effects.
  *
- * @return {nsIXPCComponents_utils_Sandbox}
- *     Returns the sandbox.
- */
-GeckoDriver.prototype.createExecuteSandbox = function(win, mn, sandboxName) {
-  let principal = win;
-  if (sandboxName == 'system') {
-    principal = Cc["@mozilla.org/systemprincipal;1"].
-                createInstance(Ci.nsIPrincipal);
-  }
-  let sb = new Cu.Sandbox(principal,
-      {sandboxPrototype: win, wantXrays: false, sandboxName: ""});
-  sb.global = sb;
-  sb.proto = win;
-
-  mn.exports.forEach(function(fn) {
-    if (typeof mn[fn] === 'function') {
-      sb[fn] = mn[fn].bind(mn);
-    } else {
-      sb[fn] = mn[fn];
-    }
-  });
-
-  sb.isSystemMessageListenerReady = () => systemMessageListenerReady;
-
-  this.sandboxes[sandboxName] = sb;
-};
-
-/**
- * Apply arguments sent from the client to the current (possibly reused)
- * execution sandbox.
- */
-GeckoDriver.prototype.applyArgumentsToSandbox = function(win, sb, args) {
-  sb.__marionetteParams = this.curBrowser.elementManager.convertWrappedArguments(args,
-    { frame: win });
-  sb.__namedArgs = this.curBrowser.elementManager.applyNamedArgs(args);
-};
-
-/**
- * Executes a script in the given sandbox.
- *
- * @param {Response} resp
- *     Response object given to the command calling this routine.
- * @param {nsIXPCComponents_utils_Sandbox} sandbox
- *     Sandbox in which the script will run.
  * @param {string} script
- *     Script to run.
- * @param {boolean} directInject
- *     If true, then the script will be run as is, and not as a function
- *     body (as you would do using the WebDriver spec).
- * @param {boolean} async
- *     True if the script is asynchronous.
- * @param {number} timeout
- *     When to interrupt script in milliseconds.
- * @param {string} filename
- *     Optional. URI or name of the file we are executing.
- *     (Used to improve stack trace readability)
+ *     Script to evaluate as a function body.
+ * @param {Array.<(string|boolean|number|object|WebElement)>} args
+ *     Arguments exposed to the script in {@code arguments}.  The array
+ *     items must be serialisable to the WebDriver protocol.
+ * @param {number} scriptTimeout
+ *     Duration in milliseconds of when to interrupt and abort the
+ *     script evaluation.
+ * @param {string=} sandbox
+ *     Name of the sandbox to evaluate the script in.  The sandbox is
+ *     cached for later re-use on the same Window object if
+ *     {@code newSandbox} is false.  If he parameter is undefined,
+ *     the script is evaluated in a mutable sandbox.  If the parameter
+ *     is "system", it will be evaluted in a sandbox with elevated system
+ *     privileges, equivalent to chrome space.
+ * @param {boolean=} newSandbox
+ *     Forces the script to be evaluated in a fresh sandbox.  Note that if
+ *     it is undefined, the script will normally be evaluted in a fresh
+ *     sandbox.
+ * @param {string=} filename
+ *     Filename of the client's program where this script is evaluated.
+ * @param {number=} line
+ *     Line in the client's program where this script is evaluated.
+ * @param {boolean=} debug_script
+ *     Attach an {@code onerror} event handler on the Window object.
+ *     It does not differentiate content errors from chrome errors.
+ * @param {boolean=} directInject
+ *     Evaluate the script without wrapping it in a function.
+ *
+ * @return {(string|boolean|number|object|WebElement)}
+ *     Return value from the script, or null which signifies either the
+ *     JavaScript notion of null or undefined.
+ *
+ * @throws ScriptTimeoutError
+ *     If the script was interrupted due to reaching the {@code
+ *     scriptTimeout} or default timeout.
+ * @throws JavaScriptError
+ *     If an Error was thrown whilst evaluating the script.
  */
-GeckoDriver.prototype.executeScriptInSandbox = function(
-    resp,
-    sandbox,
-    script,
-    directInject,
-    async,
-    timeout,
-    filename) {
-  if (directInject && async && (timeout === null || timeout === 0)) {
-    throw new TimeoutError("Please set a timeout");
-  }
+GeckoDriver.prototype.executeScript = function*(cmd, resp) {
+  let {script, args, scriptTimeout} = cmd.parameters;
+  scriptTimeout = scriptTimeout || this.scriptTimeout;
 
-  script = this.importedScripts.for(Context.CHROME).concat(script);
-  let res = Cu.evalInSandbox(script, sandbox, "1.8", filename ? filename : "dummy file", 0);
+  let opts = {
+    sandboxName: cmd.parameters.sandbox,
+    newSandbox: !!(typeof cmd.parameters.newSandbox == "undefined") ||
+        cmd.parameters.newSandbox,
+    filename: cmd.parameters.filename,
+    line: cmd.parameters.line,
+    debug: cmd.parameters.debug_script,
+  };
 
-  if (directInject && !async &&
-      (typeof res == "undefined" || typeof res.passed == "undefined")) {
-    throw new WebDriverError("finish() not called");
-  }
+  resp.body.value = yield this.execute_(script, args, scriptTimeout, opts);
+};
 
-  if (!async) {
-    // It's fine to pass on and modify resp here because
-    // executeScriptInSandbox is the last function to be called
-    // in execute and executeWithCallback respectively.
-    resp.body.value = this.curBrowser.elementManager.wrapValue(res);
+/**
+ * Executes a JavaScript function in the context of the current browsing
+ * context, if in content space, or in chrome space otherwise, and returns
+ * the object passed to the callback.
+ *
+ * The callback is always the last argument to the {@code arguments}
+ * list passed to the function scope of the script.  It can be retrieved
+ * as such:
+ *
+ *     let callback = arguments[arguments.length - 1];
+ *     callback("foo");
+ *     // "foo" is returned
+ *
+ * It is important to note that if the {@code sandboxName} parameter
+ * is left undefined, the script will be evaluated in a mutable sandbox,
+ * causing any change it makes on the global state of the document to have
+ * lasting side-effects.
+ *
+ * @param {string} script
+ *     Script to evaluate as a function body.
+ * @param {Array.<(string|boolean|number|object|WebElement)>} args
+ *     Arguments exposed to the script in {@code arguments}.  The array
+ *     items must be serialisable to the WebDriver protocol.
+ * @param {number} scriptTimeout
+ *     Duration in milliseconds of when to interrupt and abort the
+ *     script evaluation.
+ * @param {string=} sandbox
+ *     Name of the sandbox to evaluate the script in.  The sandbox is
+ *     cached for later re-use on the same Window object if
+ *     {@code newSandbox} is false.  If he parameter is undefined,
+ *     the script is evaluated in a mutable sandbox.  If the parameter
+ *     is "system", it will be evaluted in a sandbox with elevated system
+ *     privileges, equivalent to chrome space.
+ * @param {boolean=} newSandbox
+ *     Forces the script to be evaluated in a fresh sandbox.  Note that if
+ *     it is undefined, the script will normally be evaluted in a fresh
+ *     sandbox.
+ * @param {string=} filename
+ *     Filename of the client's program where this script is evaluated.
+ * @param {number=} line
+ *     Line in the client's program where this script is evaluated.
+ * @param {boolean=} debug_script
+ *     Attach an {@code onerror} event handler on the Window object.
+ *     It does not differentiate content errors from chrome errors.
+ * @param {boolean=} directInject
+ *     Evaluate the script without wrapping it in a function.
+ *
+ * @return {(string|boolean|number|object|WebElement)}
+ *     Return value from the script, or null which signifies either the
+ *     JavaScript notion of null or undefined.
+ *
+ * @throws ScriptTimeoutError
+ *     If the script was interrupted due to reaching the {@code
+ *     scriptTimeout} or default timeout.
+ * @throws JavaScriptError
+ *     If an Error was thrown whilst evaluating the script.
+ */
+GeckoDriver.prototype.executeAsyncScript = function(cmd, resp) {
+  let {script, args, scriptTimeout} = cmd.parameters;
+  scriptTimeout = scriptTimeout || this.scriptTimeout;
+
+  let opts = {
+    sandboxName: cmd.parameters.sandbox,
+    newSandbox: !!(typeof cmd.parameters.newSandbox == "undefined") ||
+        cmd.parameters.newSandbox,
+    filename: cmd.parameters.filename,
+    line: cmd.parameters.line,
+    debug: cmd.parameters.debug_script,
+    async: true,
+  };
+
+  resp.body.value = yield this.execute_(script, args, scriptTimeout, opts);
+};
+
+GeckoDriver.prototype.execute_ = function(script, args, timeout, opts = {}) {
+  switch (this.context) {
+    case Context.CONTENT:
+      // evaluate in content with lasting side-effects
+      if (!opts.sandboxName) {
+        return this.listener.execute(script, args, timeout, opts);
+
+      // evaluate in content with sandbox
+      } else {
+        return this.listener.executeInSandbox(script, args, timeout, opts);
+      }
+
+    case Context.CHROME:
+      let sb = this.sandboxes.get(opts.sandboxName, opts.newSandbox);
+      if (opts.sandboxName) {
+        sb = sandbox.augment(sb, new logging.Adapter(this.marionetteLog));
+        sb = sandbox.augment(sb, {global: sb});
+        sb = sandbox.augment(sb, new emulator.Adapter(this.emulator));
+      }
+
+      opts.timeout = timeout;
+      script = this.importedScripts.for(Context.CHROME).concat(script);
+      let wargs = this.curBrowser.elementManager.convertWrappedArguments(args, {frame: sb.window});
+      let evaluatePromise = evaluate.sandbox(sb, script, wargs, opts);
+      return evaluatePromise.then(res => this.curBrowser.elementManager.wrapValue(res));
   }
 };
 
 /**
- * Execute the given script either as a function body or directly (for
- * mochitest-like JS Marionette tests).
+ * Execute pure JavaScript.  Used to execute simpletest harness tests,
+ * which are like mochitests only injected using Marionette.
  *
- * If directInject is ture, it will run directly and not as a function
- * body.
+ * Scripts are expected to call the {@code finish} global when done.
  */
-GeckoDriver.prototype.execute = function*(cmd, resp, directInject) {
-  let {inactivityTimeout,
-       scriptTimeout,
-       script,
-       newSandbox,
-       args,
-       filename,
-       line} = cmd.parameters;
-  let sandboxName = cmd.parameters.sandbox || 'default';
+GeckoDriver.prototype.executeJSScript = function(cmd, resp) {
+  let {script, args, scriptTimeout} = cmd.parameters;
+  scriptTimeout = scriptTimeout || this.scriptTimeout;
 
-  if (!scriptTimeout) {
-    scriptTimeout = this.scriptTimeout;
-  }
-  if (typeof newSandbox == "undefined") {
-    newSandbox = true;
-  }
+  let opts = {
+    filename: cmd.parameters.filename,
+    line: cmd.parameters.line,
+    async: cmd.parameters.async,
+  };
 
-  if (this.context == Context.CONTENT) {
-    resp.body.value = yield this.listener.executeScript({
-      script: script,
-      args: args,
-      newSandbox: newSandbox,
-      timeout: scriptTimeout,
-      filename: filename,
-      line: line,
-      sandboxName: sandboxName
-    });
-    return;
-  }
+  switch (this.context) {
+    case Context.CHROME:
+      let win = this.getCurrentWindow();
+      let wargs = this.curBrowser.elementManager.convertWrappedArguments(args, {frame: win});
+      let harness = new simpletest.Harness(
+          win,
+          Context.CHROME,
+          this.marionetteLog,
+          scriptTimeout,
+          function() {},
+          this.testName);
 
-  // handle the inactivity timeout
-  let that = this;
-  if (inactivityTimeout) {
-    let setTimer = function() {
-      that.inactivityTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      if (that.inactivityTimer !== null) {
-        that.inactivityTimer.initWithCallback(function() {
-          throw new ScriptTimeoutError("timed out due to inactivity");
-        }, inactivityTimeout, Ci.nsITimer.TYPE_ONE_SHOT);
-      }
-    };
-    setTimer();
-    this.heartbeatCallback = function() {
-      that.inactivityTimer.cancel();
-      setTimer();
-    };
-  }
+      let sb = sandbox.createSimpleTest(win, harness);
+      // TODO(ato): Not sure this is needed:
+      sb = sandbox.augment(sb, new logging.Adapter(this.marionetteLog));
 
-  let win = this.getCurrentWindow();
-  if (newSandbox ||
-      !(sandboxName in this.sandboxes) ||
-      (this.sandboxes[sandboxName].proto != win)) {
-    let marionette = new Marionette(
-        win,
-        "chrome",
-        this.marionetteLog,
-        scriptTimeout,
-        this.heartbeatCallback,
-        this.testName);
-    this.createExecuteSandbox(
-        win,
-        marionette,
-        sandboxName);
-    if (!this.sandboxes[sandboxName]) {
-      return;
-    }
-  }
-  this.applyArgumentsToSandbox(win, this.sandboxes[sandboxName], args);
+      let res = yield evaluate.sandbox(sb, script, wargs, opts);
+      resp.body.value = this.curBrowser.elementManager.wrapValue(res);
+      break;
 
-  try {
-    this.sandboxes[sandboxName].finish = () => {
-      if (this.inactivityTimer !== null) {
-        this.inactivityTimer.cancel();
-      }
-      return this.sandboxes[sandboxName].generate_results();
-    };
-
-    if (!directInject) {
-      script = "var func = function() { " + script + " }; func.apply(null, __marionetteParams);";
-    }
-    this.executeScriptInSandbox(
-        resp,
-        this.sandboxes[sandboxName],
-        script,
-        directInject,
-        false /* async */,
-        scriptTimeout,
-        filename);
-  } catch (e) {
-    throw new JavaScriptError(e, "execute_script", filename, line, script);
+    case Context.CONTENT:
+      resp.body.value = yield this.listener.executeSimpleTest(script, args, scriptTimeout, opts);
+      break;
   }
 };
 
@@ -929,217 +939,6 @@ GeckoDriver.prototype.setScriptTimeout = function(cmd, resp) {
     throw new WebDriverError("Not a Number");
   }
   this.scriptTimeout = ms;
-};
-
-/**
- * Execute pure JavaScript.  Used to execute mochitest-like Marionette
- * tests.
- */
-GeckoDriver.prototype.executeJSScript = function*(cmd, resp) {
-  // TODO(ato): cmd.newSandbox doesn't ever exist?
-  // All pure JS scripts will need to call
-  // Marionette.finish() to complete the test
-  if (typeof cmd.newSandbox == "undefined") {
-    // If client does not send a value in newSandbox,
-    // then they expect the same behaviour as WebDriver.
-    cmd.newSandbox = true;
-  }
-
-  switch (this.context) {
-    case Context.CHROME:
-      if (cmd.parameters.async) {
-        yield this.executeWithCallback(cmd, resp, cmd.parameters.async);
-      } else {
-        this.execute(cmd, resp, true /* async */);
-      }
-      break;
-
-    case Context.CONTENT:
-      resp.body.value = yield this.listener.executeJSScript({
-        script: cmd.parameters.script,
-        args: cmd.parameters.args,
-        newSandbox: cmd.parameters.newSandbox,
-        async: cmd.parameters.async,
-        timeout: cmd.parameters.scriptTimeout ?
-            cmd.parameters.scriptTimeout : this.scriptTimeout,
-        inactivityTimeout: cmd.parameters.inactivityTimeout,
-        filename: cmd.parameters.filename,
-        line: cmd.parameters.line,
-        sandboxName: cmd.parameters.sandbox || 'default',
-      });
-      break;
- }
-};
-
-/**
- * This function is used by executeAsync and executeJSScript to execute
- * a script in a sandbox.
- *
- * For executeJSScript, it will return a message only when the finish()
- * method is called.
- *
- * For executeAsync, it will return a response when
- * {@code marionetteScriptFinished} (equivalent to
- * {@code arguments[arguments.length-1]}) function is called,
- * or if it times out.
- *
- * If directInject is true, it will be run directly and not as a
- * function body.
- */
-GeckoDriver.prototype.executeWithCallback = function*(cmd, resp, directInject) {
-  let {script,
-      args,
-      newSandbox,
-      inactivityTimeout,
-      scriptTimeout,
-      filename,
-      line} = cmd.parameters;
-  let sandboxName = cmd.parameters.sandbox || "default";
-
-  if (!scriptTimeout) {
-    scriptTimeout = this.scriptTimeout;
-  }
-  if (typeof newSandbox == "undefined") {
-    newSandbox = true;
-  }
-
-  if (this.context == Context.CONTENT) {
-    resp.body.value = yield this.listener.executeAsyncScript({
-      script: script,
-      args: args,
-      id: cmd.id,
-      newSandbox: newSandbox,
-      timeout: scriptTimeout,
-      inactivityTimeout: inactivityTimeout,
-      filename: filename,
-      line: line,
-      sandboxName: sandboxName,
-    });
-    return;
-  }
-
-  // handle the inactivity timeout
-  let that = this;
-  if (inactivityTimeout) {
-    this.inactivityTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    if (this.inactivityTimer !== null) {
-      this.inactivityTimer.initWithCallback(function() {
-       chromeAsyncReturnFunc(new ScriptTimeoutError("timed out due to inactivity"));
-      }, inactivityTimeout, Ci.nsITimer.TYPE_ONE_SHOT);
-    }
-    this.heartbeatCallback = function resetInactivityTimer() {
-      that.inactivityTimer.cancel();
-      that.inactivityTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      if (that.inactivityTimer !== null) {
-        that.inactivityTimer.initWithCallback(function() {
-          chromeAsyncReturnFunc(new ScriptTimeoutError("timed out due to inactivity"));
-        }, inactivityTimeout, Ci.nsITimer.TYPE_ONE_SHOT);
-      }
-    };
-  }
-
-  let win = this.getCurrentWindow();
-  let origOnError = win.onerror;
-  that.timeout = scriptTimeout;
-
-  let res = yield new Promise(function(resolve, reject) {
-    let chromeAsyncReturnFunc = function(val) {
-      if (cmd.id == that.sandboxes[sandboxName].command_id) {
-        if (that.timer !== null) {
-          that.timer.cancel();
-          that.timer = null;
-        }
-
-        win.onerror = origOnError;
-
-        if (error.isError(val)) {
-          reject(val);
-        } else {
-          resolve(val);
-        }
-      }
-
-      if (that.inactivityTimer !== null) {
-        that.inactivityTimer.cancel();
-      }
-    };
-
-    let chromeAsyncFinish = function() {
-      let res = that.sandboxes[sandboxName].generate_results();
-      chromeAsyncReturnFunc(res);
-    };
-
-    let chromeAsyncError = function(e, func, file, line, script) {
-      let err = new JavaScriptError(e, func, file, line, script);
-      chromeAsyncReturnFunc(err);
-    };
-
-    if (newSandbox || !(sandboxName in this.sandboxes)) {
-      let marionette = new Marionette(
-          win,
-          "chrome",
-          this.marionetteLog,
-          scriptTimeout,
-          this.heartbeatCallback,
-          this.testName);
-      this.createExecuteSandbox(win, marionette, sandboxName);
-    }
-    if (!this.sandboxes[sandboxName]) {
-      return;
-    }
-
-    this.sandboxes[sandboxName].command_id = cmd.id;
-    this.sandboxes[sandboxName].runEmulatorCmd =
-        (cmd, cb) => this.emulator.command(cmd, cb, chromeAsyncError);
-    this.sandboxes[sandboxName].runEmulatorShell =
-        (args, cb) => this.emulator.shell(args, cb, chromeAsyncError);
-
-    this.applyArgumentsToSandbox(win, this.sandboxes[sandboxName], args);
-
-    // NB: win.onerror is not hooked by default due to the inability to
-    // differentiate content exceptions from chrome exceptions. See bug
-    // 1128760 for more details. A debug_script flag can be set to
-    // reenable onerror hooking to help debug test scripts.
-    if (cmd.parameters.debug_script) {
-      win.onerror = function(msg, url, line) {
-        let err = new JavaScriptError(`${msg} at: ${url} line: ${line}`);
-        chromeAsyncReturnFunc(err);
-        return true;
-      };
-    }
-
-    try {
-      this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      if (this.timer !== null) {
-        this.timer.initWithCallback(function() {
-          chromeAsyncReturnFunc(new ScriptTimeoutError("timed out"));
-        }, that.timeout, Ci.nsITimer.TYPE_ONE_SHOT);
-      }
-
-      this.sandboxes[sandboxName].returnFunc = chromeAsyncReturnFunc;
-      this.sandboxes[sandboxName].finish = chromeAsyncFinish;
-
-      if (!directInject) {
-        script =  "__marionetteParams.push(returnFunc);" +
-            "var marionetteScriptFinished = returnFunc;" +
-            "var __marionetteFunc = function() {" + script + "};" +
-            "__marionetteFunc.apply(null, __marionetteParams);";
-      }
-
-      this.executeScriptInSandbox(
-          resp,
-          this.sandboxes[sandboxName],
-          script,
-          directInject,
-          true /* async */,
-          scriptTimeout,
-          filename);
-    } catch (e) {
-      chromeAsyncError(e, "execute_async_script", filename, line, script);
-    }
-  }.bind(this));
-
-  resp.body.value = that.curBrowser.elementManager.wrapValue(res) || null;
 };
 
 /**
@@ -2447,7 +2246,7 @@ GeckoDriver.prototype.sessionTearDown = function(cmd, resp) {
     }
     this.observing = null;
   }
-  this.sandboxes = {};
+  this.sandboxes.clear();
 };
 
 /**
@@ -2794,7 +2593,7 @@ GeckoDriver.prototype.receiveMessage = function(message) {
     case "Marionette:shareData":
       // log messages from tests
       if (message.json.log) {
-        this.marionetteLog.addLogs(message.json.log);
+        this.marionetteLog.addAll(message.json.log);
       }
       break;
 
@@ -2902,13 +2701,13 @@ GeckoDriver.prototype.commands = {
   "getLogs": GeckoDriver.prototype.getLogs,
   "setContext": GeckoDriver.prototype.setContext,
   "getContext": GeckoDriver.prototype.getContext,
-  "executeScript": GeckoDriver.prototype.execute,
+  "executeScript": GeckoDriver.prototype.executeScript,
   "setScriptTimeout": GeckoDriver.prototype.setScriptTimeout,
   "timeouts": GeckoDriver.prototype.timeouts,
   "singleTap": GeckoDriver.prototype.singleTap,
   "actionChain": GeckoDriver.prototype.actionChain,
   "multiAction": GeckoDriver.prototype.multiAction,
-  "executeAsyncScript": GeckoDriver.prototype.executeWithCallback,
+  "executeAsyncScript": GeckoDriver.prototype.executeAsyncScript,
   "executeJSScript": GeckoDriver.prototype.executeJSScript,
   "setSearchTimeout": GeckoDriver.prototype.setSearchTimeout,
   "findElement": GeckoDriver.prototype.findElement,

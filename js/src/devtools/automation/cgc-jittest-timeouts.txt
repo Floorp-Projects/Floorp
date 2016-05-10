@@ -19,6 +19,7 @@ gc/bug-1014972.js
 gc/bug-1246593.js
 gc/bug-906236.js
 gc/bug-906241.js
+ion/bug1197769.js
 ion/bug787921.js
 ion/bug977966.js
 parallel/alloc-many-objs.js

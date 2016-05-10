@@ -1285,15 +1285,20 @@ GfxInfoBase::BuildFeatureStateLog(JSContext* aCx, const FeatureState& aFeature,
 }
 
 void
-GfxInfoBase::DescribeFeatures(JSContext* cx, JS::Handle<JSObject*> aOut)
+GfxInfoBase::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj)
 {
+  JS::Rooted<JSObject*> obj(aCx);
+
+  InitFeatureObject(aCx, aObj, "opengl", nsIGfxInfo::FEATURE_OPENGL_LAYERS, Nothing(), &obj);
+  InitFeatureObject(aCx, aObj, "webgl", nsIGfxInfo::FEATURE_WEBGL_OPENGL, Nothing(), &obj);
 }
 
 bool
 GfxInfoBase::InitFeatureObject(JSContext* aCx,
                                JS::Handle<JSObject*> aContainer,
                                const char* aName,
-                               mozilla::gfx::FeatureStatus aFeatureStatus,
+                               int32_t aFeature,
+                               Maybe<mozilla::gfx::FeatureStatus> aFeatureStatus,
                                JS::MutableHandle<JSObject*> aOutObj)
 {
   JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
@@ -1301,13 +1306,25 @@ GfxInfoBase::InitFeatureObject(JSContext* aCx,
     return false;
   }
 
-  const char* status = FeatureStatusToString(aFeatureStatus);
+  nsCString failureId = NS_LITERAL_CSTRING("OK");
+  int32_t unused;
+  if (!NS_SUCCEEDED(GetFeatureStatus(aFeature, failureId, &unused))) {
+    return false;
+  }
 
   // Set "status".
-  {
+  if (aFeatureStatus) {
+    const char* status = FeatureStatusToString(aFeatureStatus.value());
+
     JS::Rooted<JSString*> str(aCx, JS_NewStringCopyZ(aCx, status));
     JS::Rooted<JS::Value> val(aCx, JS::StringValue(str));
     JS_SetProperty(aCx, obj, "status", val);
+  }
+
+  if (!failureId.IsEmpty()) {
+    JS::Rooted<JSString*> str(aCx, JS_NewStringCopyZ(aCx, failureId.get()));
+    JS::Rooted<JS::Value> val(aCx, JS::StringValue(str));
+    JS_SetProperty(aCx, obj, "failureId", val);
   }
 
   // Add the feature object to the container.

@@ -6,13 +6,6 @@
 
 #include "IPDLUnitTests.h"      // fail etc.
 
-template<>
-struct RunnableMethodTraits<mozilla::_ipdltest::TestNestedLoopsParent>
-{
-    static void RetainCallee(mozilla::_ipdltest::TestNestedLoopsParent* obj) { }
-    static void ReleaseCallee(mozilla::_ipdltest::TestNestedLoopsParent* obj) { }
-};
-
 namespace mozilla {
 namespace _ipdltest {
 
@@ -53,7 +46,7 @@ TestNestedLoopsParent::RecvNonce()
     // to the inherent race condition in this test, then this event
     // must be ordered after it in the queue
     MessageLoop::current()->PostTask(
-        NewRunnableMethod(this, &TestNestedLoopsParent::BreakNestedLoop));
+        NewNonOwningRunnableMethod(this, &TestNestedLoopsParent::BreakNestedLoop));
 
     // sigh ... spin for a while to let the reply to R arrive
     puts(" (sleeping to wait for reply to R ... sorry)");

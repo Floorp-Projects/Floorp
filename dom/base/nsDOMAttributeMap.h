@@ -139,7 +139,6 @@ public:
   // WebIDL
   Attr* GetNamedItem(const nsAString& aAttrName);
   Attr* NamedGetter(const nsAString& aAttrName, bool& aFound);
-  bool NameIsEnumerable(const nsAString& aName);
   already_AddRefed<Attr>
   RemoveNamedItem(mozilla::dom::NodeInfo* aNodeInfo, ErrorResult& aError);
   already_AddRefed<Attr>
@@ -159,7 +158,7 @@ public:
                     ErrorResult& aError);
 
   void
-  GetSupportedNames(unsigned aFlags, nsTArray<nsString>& aNames);
+  GetSupportedNames(nsTArray<nsString>& aNames);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 

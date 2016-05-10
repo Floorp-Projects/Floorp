@@ -1,8 +1,9 @@
-/* globals Cu, XPCOMUtils, Preferences, is, registerCleanupFunction, NewTabWebChannel, PlacesTestUtils */
+/* globals Cu, XPCOMUtils, Preferences, is, registerCleanupFunction, NewTabWebChannel, PlacesTestUtils, Task */
 
 "use strict";
 
 Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NewTabWebChannel",
                                   "resource:///modules/NewTabWebChannel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NewTabMessages",
@@ -10,25 +11,27 @@ XPCOMUtils.defineLazyModuleGetter(this, "NewTabMessages",
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
                                   "resource://testing-common/PlacesTestUtils.jsm");
 
-function setup() {
+let setup = Task.async(function*() {
   Preferences.set("browser.newtabpage.enhanced", true);
   Preferences.set("browser.newtabpage.remote.mode", "test");
   Preferences.set("browser.newtabpage.remote", true);
   NewTabMessages.init();
-}
+  yield PlacesTestUtils.clearHistory();
+});
 
-function cleanup() {
+let cleanup = Task.async(function*() {
   NewTabMessages.uninit();
   Preferences.set("browser.newtabpage.remote", false);
   Preferences.set("browser.newtabpage.remote.mode", "production");
-}
+});
 registerCleanupFunction(cleanup);
 
 /*
  * Sanity tests for pref messages
  */
 add_task(function* prefMessages_request() {
-  setup();
+  yield setup();
+
   let testURL = "https://example.com/browser/browser/components/newtab/tests/browser/newtabmessages_prefs.html";
 
   let tabOptions = {
@@ -54,14 +57,14 @@ add_task(function* prefMessages_request() {
     Preferences.set("browser.newtabpage.enhanced", false);
     yield prefChangeAck;
   });
-  cleanup();
+  yield cleanup();
 });
 
 /*
  * Sanity tests for preview messages
  */
 add_task(function* previewMessages_request() {
-  setup();
+  yield setup();
   var oldEnabledPref = Services.prefs.getBoolPref("browser.pagethumbnails.capturing_disabled");
   Services.prefs.setBoolPref("browser.pagethumbnails.capturing_disabled", false);
 
@@ -82,7 +85,7 @@ add_task(function* previewMessages_request() {
   yield BrowserTestUtils.withNewTab(tabOptions, function*() {
     yield previewResponseAck;
   });
-  cleanup();
+  yield cleanup();
   Services.prefs.setBoolPref("browser.pagethumbnails.capturing_disabled", oldEnabledPref);
 });
 
@@ -90,7 +93,7 @@ add_task(function* previewMessages_request() {
  * Sanity tests for places messages
  */
 add_task(function* placesMessages_request() {
-  setup();
+  yield setup();
   let testURL = "https://example.com/browser/browser/components/newtab/tests/browser/newtabmessages_places.html";
 
   // url prefix for test history population
@@ -139,16 +142,16 @@ add_task(function* placesMessages_request() {
   let placesResponseAck = new Promise(resolve => {
     NewTabWebChannel.once("numItemsAck", (_, msg) => {
       ok(true, "a request response has been received");
-      is(msg.data, visits.length + 1, "received an expect number of history items");
+      is(msg.data, visits.length + 1, "received an expected number of history items");
       resolve();
     });
   });
 
   yield BrowserTestUtils.withNewTab(tabOptions, function*() {
     yield placesResponseAck;
+    ok(true, "a change response has been received");
     let placesChangeAck = new Promise(resolve => {
       NewTabWebChannel.once("clearHistoryAck", (_, msg) => {
-        ok(true, "a change response has been received");
         is(msg.data, "clearHistory", "a clear history message has been received");
         resolve();
       });
@@ -156,5 +159,5 @@ add_task(function* placesMessages_request() {
     yield PlacesTestUtils.clearHistory();
     yield placesChangeAck;
   });
-  cleanup();
+  yield cleanup();
 });

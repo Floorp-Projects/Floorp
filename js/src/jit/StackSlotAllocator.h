@@ -69,7 +69,7 @@ class StackSlotAllocator
           case LDefinition::SLOTS:
 #endif
           case LDefinition::INT32:
-          case LDefinition::FLOAT32:   return 4;
+          case LDefinition::FLOAT32:      return 4;
 #if JS_BITS_PER_WORD == 64
           case LDefinition::GENERAL:
           case LDefinition::OBJECT:
@@ -82,10 +82,10 @@ class StackSlotAllocator
           case LDefinition::TYPE:
           case LDefinition::PAYLOAD:
 #endif
-          case LDefinition::DOUBLE:    return 8;
+          case LDefinition::DOUBLE:       return 8;
           case LDefinition::SINCOS:
-          case LDefinition::FLOAT32X4:
-          case LDefinition::INT32X4:   return 16;
+          case LDefinition::SIMD128INT:
+          case LDefinition::SIMD128FLOAT: return 16;
         }
         MOZ_CRASH("Unknown slot type");
     }

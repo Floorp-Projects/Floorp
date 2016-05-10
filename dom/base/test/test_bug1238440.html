@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test - bug 1238440</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <input type="file" id="file" />
+  <script type="application/javascript">
+
+var script;
+
+function step_createScript() {
+  info("Creating script...");
+  var url = SimpleTest.getTestFileURL("script_bug1238440.js");
+  script = SpecialPowers.loadChromeScript(url);
+  next();
+}
+
+function step_destroyScript() {
+  info("Destroying script...");
+  script.destroy();
+  next();
+}
+
+
+function step_createFile() {
+  info("Creating file...");
+
+  function onOpened(message) {
+    var fileList = document.getElementById('file');
+    SpecialPowers.wrap(fileList).mozSetFileArray([message.file]);
+    ok(!!message.file, "File created and set");
+    next();
+  }
+
+  script.addMessageListener("file.opened", onOpened);
+  script.sendAsyncMessage("file.open");
+}
+
+function step_changeFile() {
+  info("Changing file...");
+  script.addMessageListener("file.changed", next);
+  script.sendAsyncMessage("file.change");
+}
+
+function step_fileReader(status) {
+  var fr = new FileReader();
+   fr.onload = function() {
+   is(status, true, "onload called!");
+   next();
+ }
+
+ fr.onerror = function(e) {
+   e.preventDefault();
+   is(status, false, "onerror called!");
+   next();
+ }
+
+ fr.readAsArrayBuffer(document.getElementById("file").files[0]);
+}
+
+var steps = [
+  step_createScript,
+  step_createFile,
+  function() { step_fileReader(true); },
+  step_changeFile,
+  function() { step_fileReader(false); },
+  step_destroyScript,
+];
+
+function next() {
+  if (!steps.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var step = steps.shift();
+  step();
+}
+
+SimpleTest.waitForExplicitFinish();
+next();
+  </script>
+</body>
+</html>

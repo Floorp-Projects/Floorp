@@ -417,7 +417,7 @@ LIRGeneratorMIPSShared::visitSimdSelect(MSimdSelect* ins)
 }
 
 void
-LIRGeneratorMIPSShared::visitSimdSplatX4(MSimdSplatX4* ins)
+LIRGeneratorMIPSShared::visitSimdSplat(MSimdSplat* ins)
 {
     MOZ_CRASH("NYI");
 }

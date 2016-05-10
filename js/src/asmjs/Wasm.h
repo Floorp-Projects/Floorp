@@ -48,7 +48,7 @@ static const uint64_t MappedSize = 2 * Uint32Range + PageSize;
 
 // Compiles the given binary wasm module given the ArrayBufferObject
 // and links the module's imports with the given import object.
-bool
+MOZ_MUST_USE bool
 Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj,
      MutableHandleObject exportObj);
 

@@ -340,31 +340,30 @@ class FunctionCompiler
         return ins;
     }
 
-    MDefinition* swizzleSimd(MDefinition* vector, int32_t X, int32_t Y, int32_t Z, int32_t W,
-                             MIRType type)
+    MDefinition* swizzleSimd(MDefinition* vector, const uint8_t lanes[], MIRType type)
     {
         if (inDeadCode())
             return nullptr;
 
         MOZ_ASSERT(vector->type() == type);
-        MSimdSwizzle* ins = MSimdSwizzle::New(alloc(), vector, X, Y, Z, W);
+        MSimdSwizzle* ins = MSimdSwizzle::New(alloc(), vector, lanes);
         curBlock_->add(ins);
         return ins;
     }
 
-    MDefinition* shuffleSimd(MDefinition* lhs, MDefinition* rhs, int32_t X, int32_t Y,
-                             int32_t Z, int32_t W, MIRType type)
+    MDefinition* shuffleSimd(MDefinition* lhs, MDefinition* rhs, const uint8_t lanes[],
+                             MIRType type)
     {
         if (inDeadCode())
             return nullptr;
 
         MOZ_ASSERT(lhs->type() == type);
-        MInstruction* ins = MSimdShuffle::New(alloc(), lhs, rhs, X, Y, Z, W);
+        MInstruction* ins = MSimdShuffle::New(alloc(), lhs, rhs, lanes);
         curBlock_->add(ins);
         return ins;
     }
 
-    MDefinition* insertElementSimd(MDefinition* vec, MDefinition* val, SimdLane lane, MIRType type)
+    MDefinition* insertElementSimd(MDefinition* vec, MDefinition* val, unsigned lane, MIRType type)
     {
         if (inDeadCode())
             return nullptr;
@@ -439,7 +438,7 @@ class FunctionCompiler
 
         MOZ_ASSERT(IsSimdType(type));
         MOZ_ASSERT(SimdTypeToLaneArgumentType(type) == v->type());
-        MSimdSplatX4* ins = MSimdSplatX4::New(alloc(), v, type);
+        MSimdSplat* ins = MSimdSplat::New(alloc(), v, type);
         curBlock_->add(ins);
         return ins;
     }
@@ -699,7 +698,7 @@ class FunctionCompiler
         curBlock_->add(MAsmJSInterruptCheck::New(alloc()));
     }
 
-    MDefinition* extractSimdElement(SimdLane lane, MDefinition* base, MIRType type, SimdSign sign)
+    MDefinition* extractSimdElement(unsigned lane, MDefinition* base, MIRType type, SimdSign sign)
     {
         if (inDeadCode())
             return nullptr;
@@ -2373,7 +2372,7 @@ SimdToLaneType(ValType type)
 static bool
 EmitExtractLane(FunctionCompiler& f, ValType operandType, SimdSign sign)
 {
-    jit::SimdLane lane;
+    uint8_t lane;
     MDefinition* vector;
     if (!f.iter().readExtractLane(operandType, &lane, &vector))
         return false;
@@ -2398,7 +2397,7 @@ EmitSimdReplaceLane(FunctionCompiler& f, ValType simdType)
     if (IsSimdBoolType(simdType))
         f.iter().setResult(EmitSimdBooleanLaneExpr(f, f.iter().getResult()));
 
-    jit::SimdLane lane;
+    uint8_t lane;
     MDefinition* vector;
     MDefinition* scalar;
     if (!f.iter().readReplaceLane(simdType, &lane, &vector, &scalar))
@@ -2433,27 +2432,25 @@ EmitSimdConvert(FunctionCompiler& f, ValType fromType, ValType toType, SimdSign 
 static bool
 EmitSimdSwizzle(FunctionCompiler& f, ValType simdType)
 {
-    uint8_t lanes[4];
+    uint8_t lanes[16];
     MDefinition* vector;
     if (!f.iter().readSwizzle(simdType, &lanes, &vector))
         return false;
 
-    f.iter().setResult(f.swizzleSimd(vector, lanes[0], lanes[1], lanes[2], lanes[3],
-                                     ToMIRType(simdType)));
+    f.iter().setResult(f.swizzleSimd(vector, lanes, ToMIRType(simdType)));
     return true;
 }
 
 static bool
 EmitSimdShuffle(FunctionCompiler& f, ValType simdType)
 {
-    uint8_t lanes[4];
+    uint8_t lanes[16];
     MDefinition* lhs;
     MDefinition* rhs;
     if (!f.iter().readShuffle(simdType, &lanes, &lhs, &rhs))
         return false;
 
-    f.iter().setResult(f.shuffleSimd(lhs, rhs, lanes[0], lanes[1], lanes[2], lanes[3],
-                                     ToMIRType(simdType)));
+    f.iter().setResult(f.shuffleSimd(lhs, rhs, lanes, ToMIRType(simdType)));
     return true;
 }
 

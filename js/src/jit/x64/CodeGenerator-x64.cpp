@@ -580,7 +580,7 @@ CodeGeneratorX64::loadSimd(Scalar::Type type, unsigned numElems, const Operand& 
           case 1: masm.loadFloat32(srcAddr, out); break;
           // See comment above, which also applies to movsd.
           case 2: masm.loadDouble(srcAddr, out); break;
-          case 4: masm.loadUnalignedFloat32x4(srcAddr, out); break;
+          case 4: masm.loadUnalignedSimd128Float(srcAddr, out); break;
           default: MOZ_CRASH("unexpected size for partial load");
         }
         break;
@@ -591,7 +591,7 @@ CodeGeneratorX64::loadSimd(Scalar::Type type, unsigned numElems, const Operand& 
           case 1: masm.vmovd(srcAddr, out); break;
           // See comment above, which also applies to movq.
           case 2: masm.vmovq(srcAddr, out); break;
-          case 4: masm.loadUnalignedInt32x4(srcAddr, out); break;
+          case 4: masm.loadUnalignedSimd128Int(srcAddr, out); break;
           default: MOZ_CRASH("unexpected size for partial load");
         }
         break;
@@ -726,7 +726,7 @@ CodeGeneratorX64::storeSimd(Scalar::Type type, unsigned numElems, FloatRegister 
           case 1: masm.storeFloat32(in, dstAddr); break;
           // See comment above, which also applies to movsd.
           case 2: masm.storeDouble(in, dstAddr); break;
-          case 4: masm.storeUnalignedFloat32x4(in, dstAddr); break;
+          case 4: masm.storeUnalignedSimd128Float(in, dstAddr); break;
           default: MOZ_CRASH("unexpected size for partial load");
         }
         break;
@@ -737,7 +737,7 @@ CodeGeneratorX64::storeSimd(Scalar::Type type, unsigned numElems, FloatRegister 
           case 1: masm.vmovd(in, dstAddr); break;
           // See comment above, which also applies to movq.
           case 2: masm.vmovq(in, dstAddr); break;
-          case 4: masm.storeUnalignedInt32x4(in, dstAddr); break;
+          case 4: masm.storeUnalignedSimd128Int(in, dstAddr); break;
           default: MOZ_CRASH("unexpected size for partial load");
         }
         break;

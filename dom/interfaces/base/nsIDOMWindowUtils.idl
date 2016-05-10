@@ -1782,6 +1782,17 @@ interface nsIDOMWindowUtils : nsISupports {
   void askPermission(in nsIContentPermissionRequest aRequest);
 
   /**
+   * Number of elements restyled for the curent document.
+   *
+   * Note that during a restyle operation we may restyle an element more
+   * than once (e.g., for an inline that contains blocks).  This also
+   * counts restyling of pseudo-elements and anonymous boxes.
+   *
+   * May throw NS_ERROR_NOT_AVAILABLE.
+   */
+  readonly attribute unsigned long long elementsRestyled;
+
+  /**
    * Number of frames constructed (excluding breaking) for the curent
    * document.
    *
