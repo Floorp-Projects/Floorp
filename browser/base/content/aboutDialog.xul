@@ -129,11 +129,11 @@
 #endif
             </description>
             <description class="text-blurb" id="communityExperimentalDesc">
-              &community.exp.start;<label class="text-link" href="http://www.mozilla.org/">&community.exp.mozillaLink;</label>&community.exp.middle;<label class="text-link" href="about:credits">&community.exp.creditsLink;</label>&community.exp.end;
+              &community.exp.start;<label class="text-link" href="http://www.mozilla.org/">&community.exp.mozillaLink;</label>&community.exp.middle;<label class="text-link" useoriginprincipal="true" href="about:credits">&community.exp.creditsLink;</label>&community.exp.end;
             </description>
           </vbox>
           <description class="text-blurb" id="communityDesc">
-            &community.start2;<label class="text-link" href="http://www.mozilla.org/">&community.mozillaLink;</label>&community.middle2;<label class="text-link" href="about:credits">&community.creditsLink;</label>&community.end3;
+            &community.start2;<label class="text-link" href="http://www.mozilla.org/">&community.mozillaLink;</label>&community.middle2;<label class="text-link" useoriginprincipal="true" href="about:credits">&community.creditsLink;</label>&community.end3;
           </description>
           <description class="text-blurb" id="contributeDesc">
               &helpus.start;<label class="text-link" href="https://sendto.mozilla.org/page/contribute/Give-Now?source=mozillaorg_default_footer&#38;ref=firefox_about&#38;utm_campaign=firefox_about&#38;tm_source=firefox&#38;tm_medium=referral&#38;utm_content=20140929_FireFoxAbout">&helpus.donateLink;</label>&helpus.middle;<label class="text-link" href="http://www.mozilla.org/contribute/">&helpus.getInvolvedLink;</label>&helpus.end;
@@ -143,8 +143,8 @@
     </hbox>
     <vbox id="bottomBox">
       <hbox pack="center">
-        <label class="text-link bottom-link" href="about:license">&bottomLinks.license;</label>
-        <label class="text-link bottom-link" href="about:rights">&bottomLinks.rights;</label>
+        <label class="text-link bottom-link" useoriginprincipal="true" href="about:license">&bottomLinks.license;</label>
+        <label class="text-link bottom-link" useoriginprincipal="true" href="about:rights">&bottomLinks.rights;</label>
         <label class="text-link bottom-link" href="https://www.mozilla.org/privacy/">&bottomLinks.privacy;</label>
       </hbox>
       <description id="trademark">&trademarkInfo.part1;</description>

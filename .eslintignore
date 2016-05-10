@@ -76,7 +76,6 @@ browser/locales/**
 browser/extensions/loop/**
 
 # devtools/ exclusions
-devtools/*.js
 devtools/client/canvasdebugger/**
 devtools/client/commandline/**
 devtools/client/debugger/**

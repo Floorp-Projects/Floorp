@@ -19,6 +19,7 @@ const SCREENSIZE_HISTOGRAM = "DEVTOOLS_SCREEN_RESOLUTION_ENUMERATED_PER_USER";
 var {Cc, Ci, Cu} = require("chrome");
 var promise = require("promise");
 var Services = require("Services");
+var {Task} = require("resource://gre/modules/Task.jsm");
 var {gDevTools} = require("devtools/client/framework/devtools");
 var EventEmitter = require("devtools/shared/event-emitter");
 var Telemetry = require("devtools/client/shared/telemetry");
@@ -28,7 +29,6 @@ var { attachThread, detachThread } = require("./attach-thread");
 
 Cu.import("resource://devtools/client/scratchpad/scratchpad-manager.jsm");
 Cu.import("resource://devtools/client/shared/DOMHelpers.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 
 loader.lazyGetter(this, "toolboxStrings", () => {
   const properties = "chrome://devtools/locale/toolbox.properties";

@@ -70,28 +70,21 @@ public class SwitchBoard {
     private static final String KEY_SERVER_URL = "mainServerUrl";
     private static final String KEY_CONFIG_RESULTS = "results";
 
-    private static String uuidExtra = null;
-
-    public static void setUUIDFromExtra(String uuid) {
-        uuidExtra = uuid;
-    }
-
     /**
      * Loads a new config for a user. This method allows you to pass your own unique user ID instead of using
      * the SwitchBoard internal user ID.
      * Don't call method direct for background threading reasons.
      * @param c ApplicationContext
-     * @param uuid Custom unique user ID
      * @param defaultServerUrl Default server URL endpoint.
      */
-    static void loadConfig(Context c, String uuid, @NonNull String defaultServerUrl) {
+    static void loadConfig(Context c, @NonNull String defaultServerUrl) {
 
         // Eventually, we want to check `Preferences.getDynamicConfigServerUrl(c);` before
         // falling back to the default server URL. However, this will require figuring
         // out a new solution for dynamically specifying a new server from the intent.
         String serverUrl = defaultServerUrl;
 
-        final URL requestUrl = buildConfigRequestUrl(c, uuid, serverUrl);
+        final URL requestUrl = buildConfigRequestUrl(c, serverUrl);
         if (DEBUG) Log.d(TAG, "Request URL: " + requestUrl);
         if (requestUrl == null) {
             return;
@@ -121,11 +114,9 @@ public class SwitchBoard {
         }
     }
 
-    @Nullable private static URL buildConfigRequestUrl(Context c, String uuid, String serverUrl) {
-        if (uuid == null) {
-            DeviceUuidFactory df = new DeviceUuidFactory(c);
-            uuid = df.getDeviceUuid().toString();
-        }
+    @Nullable private static URL buildConfigRequestUrl(Context c, String serverUrl) {
+        final DeviceUuidFactory df = new DeviceUuidFactory(c);
+        final String uuid = df.getDeviceUuid().toString();
 
         final String device = Build.DEVICE;
         final String manufacturer = Build.MANUFACTURER;
@@ -177,8 +168,12 @@ public class SwitchBoard {
      * @return returns value for experiment or false if experiment does not exist.
      */
     public static boolean isInExperiment(Context c, String experimentName) {
-        final String config = Preferences.getDynamicConfigJson(c);
+        final Boolean override = Preferences.getOverrideValue(c, experimentName);
+        if (override != null) {
+            return override;
+        }
 
+        final String config = Preferences.getDynamicConfigJson(c);
         if (config == null) {
             return false;
         }
@@ -195,26 +190,29 @@ public class SwitchBoard {
     }
 
     /**
-     * @returns a list of all active experiments.
+     * @return a list of all active experiments.
      */
     public static List<String> getActiveExperiments(Context c) {
-        ArrayList<String> returnList = new ArrayList<String>();
+        final ArrayList<String> returnList = new ArrayList<>();
 
-        // lookup experiment in config
-        String config = Preferences.getDynamicConfigJson(c);
-
-        // if it does not exist
+        final String config = Preferences.getDynamicConfigJson(c);
         if (config == null) {
             return returnList;
         }
 
         try {
-            JSONObject experiments = new JSONObject(config);
+            final JSONObject experiments = new JSONObject(config);
             Iterator<?> iter = experiments.keys();
             while (iter.hasNext()) {
-                String key = (String)iter.next();
-                JSONObject experiment = experiments.getJSONObject(key);
-                if (experiment.getBoolean(IS_EXPERIMENT_ACTIVE)) {
+                final String key = (String) iter.next();
+
+                // Check override value before reading saved JSON.
+                Boolean isActive = Preferences.getOverrideValue(c, key);
+                if (isActive == null) {
+                    final JSONObject experiment = experiments.getJSONObject(key);
+                    isActive = experiment.getBoolean(IS_EXPERIMENT_ACTIVE);
+                }
+                if (isActive) {
                     returnList.add(key);
                 }
             }
@@ -290,12 +288,8 @@ public class SwitchBoard {
      * Return the bucket number of the user. There are 100 possible buckets.
      */
     private static int getUserBucket(Context c) {
-        //get uuid
-        String uuid = uuidExtra;
-        if (uuid == null) {
-            DeviceUuidFactory df = new DeviceUuidFactory(c);
-            uuid = df.getDeviceUuid().toString();
-        }
+        final DeviceUuidFactory df = new DeviceUuidFactory(c);
+        final String uuid = df.getDeviceUuid().toString();
 
         CRC32 crc = new CRC32();
         crc.update(uuid.getBytes());

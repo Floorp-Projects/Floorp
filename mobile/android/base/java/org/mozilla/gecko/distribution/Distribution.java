@@ -127,10 +127,14 @@ public class Distribution {
      * {@link org.mozilla.gecko.distribution.Distribution#exists()} will return
      * false. In the other two callbacks, it will return true.
      */
-    @WorkerThread
     public interface ReadyCallback {
+        @WorkerThread
         void distributionNotFound();
+
+        @WorkerThread
         void distributionFound(Distribution distribution);
+
+        @WorkerThread
         void distributionArrivedLate(Distribution distribution);
     }
 
