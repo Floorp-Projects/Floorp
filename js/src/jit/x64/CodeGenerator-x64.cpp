@@ -19,6 +19,8 @@
 using namespace js;
 using namespace js::jit;
 
+using mozilla::DebugOnly;
+
 CodeGeneratorX64::CodeGeneratorX64(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm)
   : CodeGeneratorX86Shared(gen, graph, masm)
 {
@@ -463,12 +465,12 @@ CodeGeneratorX64::visitUDivOrMod64(LUDivOrMod64* lir)
 {
     Register lhs = ToRegister(lir->lhs());
     Register rhs = ToRegister(lir->rhs());
-    Register output = ToRegister(lir->output());
 
+    DebugOnly<Register> output = ToRegister(lir->output());
     MOZ_ASSERT_IF(lhs != rhs, rhs != rax);
     MOZ_ASSERT(rhs != rdx);
-    MOZ_ASSERT_IF(output == rax, ToRegister(lir->remainder()) == rdx);
-    MOZ_ASSERT_IF(output == rdx, ToRegister(lir->remainder()) == rax);
+    MOZ_ASSERT_IF(output.value == rax, ToRegister(lir->remainder()) == rdx);
+    MOZ_ASSERT_IF(output.value == rdx, ToRegister(lir->remainder()) == rax);
 
     // Put the lhs in rax.
     if (lhs != rax)
