@@ -275,6 +275,56 @@ public:
 };
 
 /**
+ * This listener observes the first video frame to arrive with a non-empty size,
+ * and calls HTMLMediaElement::ReceivedMediaStreamInitialSize() with that size.
+ */
+class HTMLMediaElement::StreamSizeListener : public DirectMediaStreamTrackListener {
+public:
+  explicit StreamSizeListener(HTMLMediaElement* aElement) :
+    mElement(aElement),
+    mInitialSizeFound(false)
+  {}
+  void Forget() { mElement = nullptr; }
+
+  void ReceivedSize(gfx::IntSize aSize)
+  {
+    if (!mElement) {
+      return;
+    }
+    RefPtr<HTMLMediaElement> deathGrip = mElement;
+    mElement->UpdateInitialMediaSize(aSize);
+  }
+
+  void NotifyRealtimeTrackData(MediaStreamGraph* aGraph,
+                               StreamTime aTrackOffset,
+                               const MediaSegment& aMedia) override
+  {
+    if (mInitialSizeFound || aMedia.GetType() != MediaSegment::VIDEO) {
+      return;
+    }
+    const VideoSegment& video = static_cast<const VideoSegment&>(aMedia);
+    for (VideoSegment::ConstChunkIterator c(video); !c.IsEnded(); c.Next()) {
+      if (c->mFrame.GetIntrinsicSize() != gfx::IntSize(0,0)) {
+        mInitialSizeFound = true;
+        nsCOMPtr<nsIRunnable> event =
+          NewRunnableMethod<gfx::IntSize>(
+              this, &StreamSizeListener::ReceivedSize,
+              c->mFrame.GetIntrinsicSize());
+        aGraph->DispatchToMainThreadAfterStreamStateUpdate(event.forget());
+        return;
+      }
+    }
+  }
+
+private:
+  // These fields may only be accessed on the main thread
+  HTMLMediaElement* mElement;
+
+  // These fields may only be accessed on the MSG thread
+  bool mInitialSizeFound;
+};
+
+/**
  * There is a reference cycle involving this class: MediaLoadListener
  * holds a reference to the HTMLMediaElement, which holds a reference
  * to an nsIChannel, which holds a reference to this listener.
@@ -657,6 +707,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLMediaElement, nsGenericHTM
 #ifdef MOZ_EME
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaKeys)
 #endif
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelectedVideoStreamTrack)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLMediaElement, nsGenericHTMLElement)
@@ -683,6 +734,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLMediaElement, nsGenericHTMLE
 #ifdef MOZ_EME
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMediaKeys)
 #endif
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelectedVideoStreamTrack)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(HTMLMediaElement)
@@ -880,6 +932,14 @@ void HTMLMediaElement::AbortExistingLoads()
   }
 
   bool fireTimeUpdate = false;
+
+  // We need to remove StreamSizeListener before VideoTracks get emptied.
+  if (mMediaStreamSizeListener) {
+    mSelectedVideoStreamTrack->RemoveDirectListener(mMediaStreamSizeListener);
+    mSelectedVideoStreamTrack = nullptr;
+    mMediaStreamSizeListener->Forget();
+    mMediaStreamSizeListener = nullptr;
+  }
 
   // When aborting the existing loads, empty the objects in audio track list and
   // video track list, no events (in particular, no removetrack events) are
@@ -3373,59 +3433,6 @@ private:
   bool mPendingNotifyOutput;
 };
 
-/**
- * This listener observes the first video frame to arrive with a non-empty size,
- * and calls HTMLMediaElement::ReceivedMediaStreamInitialSize() with that size.
- */
-class HTMLMediaElement::StreamSizeListener : public MediaStreamListener {
-public:
-  explicit StreamSizeListener(HTMLMediaElement* aElement) :
-    mElement(aElement),
-    mInitialSizeFound(false)
-  {}
-  void Forget() { mElement = nullptr; }
-
-  void ReceivedSize(gfx::IntSize aSize)
-  {
-    if (!mElement) {
-      return;
-    }
-    RefPtr<HTMLMediaElement> deathGrip = mElement;
-    mElement->UpdateInitialMediaSize(aSize);
-  }
-
-  void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
-                                StreamTime aTrackOffset,
-                                TrackEventCommand aTrackEvents,
-                                const MediaSegment& aQueuedMedia,
-                                MediaStream* aInputStream,
-                                TrackID aInputTrackID) override
-  {
-    if (mInitialSizeFound || aQueuedMedia.GetType() != MediaSegment::VIDEO) {
-      return;
-    }
-    const VideoSegment& video = static_cast<const VideoSegment&>(aQueuedMedia);
-    for (VideoSegment::ConstChunkIterator c(video); !c.IsEnded(); c.Next()) {
-      if (c->mFrame.GetIntrinsicSize() != gfx::IntSize(0,0)) {
-        mInitialSizeFound = true;
-        nsCOMPtr<nsIRunnable> event =
-          NewRunnableMethod<gfx::IntSize>(
-              this, &StreamSizeListener::ReceivedSize,
-              c->mFrame.GetIntrinsicSize());
-        aGraph->DispatchToMainThreadAfterStreamStateUpdate(event.forget());
-        return;
-      }
-    }
-  }
-
-private:
-  // These fields may only be accessed on the main thread
-  HTMLMediaElement* mElement;
-
-  // These fields may only be accessed on the MSG thread
-  bool mInitialSizeFound;
-};
-
 class HTMLMediaElement::MediaStreamTracksAvailableCallback:
   public OnTracksAvailableCallback
 {
@@ -3544,9 +3551,6 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
   RefPtr<MediaStream> stream = GetSrcMediaStream();
   if (stream) {
     stream->SetAudioChannelType(mAudioChannel);
-
-    mMediaStreamSizeListener = new StreamSizeListener(this);
-    stream->AddListener(mMediaStreamSizeListener);
   }
 
   UpdateSrcMediaStreamPlaying();
@@ -3577,10 +3581,8 @@ void HTMLMediaElement::EndSrcMediaStreamPlayback()
   UpdateSrcMediaStreamPlaying(REMOVING_SRC_STREAM);
 
   if (mMediaStreamSizeListener) {
-    RefPtr<MediaStream> stream = GetSrcMediaStream();
-    if (stream) {
-      stream->RemoveListener(mMediaStreamSizeListener);
-    }
+    mSelectedVideoStreamTrack->RemoveDirectListener(mMediaStreamSizeListener);
+    mSelectedVideoStreamTrack = nullptr;
     mMediaStreamSizeListener->Forget();
     mMediaStreamSizeListener = nullptr;
   }
@@ -3616,7 +3618,8 @@ CreateVideoTrack(VideoStreamTrack* aStreamTrack)
   aStreamTrack->GetLabel(label);
 
   return MediaTrackList::CreateVideoTrack(id, NS_LITERAL_STRING("main"),
-                                          label, EmptyString());
+                                          label, EmptyString(),
+                                          aStreamTrack);
 }
 
 void HTMLMediaElement::ConstructMediaTracks()
@@ -3648,6 +3651,11 @@ void HTMLMediaElement::ConstructMediaTracks()
     // must be selected.
     int index = firstEnabledVideo >= 0 ? firstEnabledVideo : 0;
     (*VideoTracks())[index]->SetEnabledInternal(true, MediaTrack::FIRE_NO_EVENTS);
+    VideoTrack* track = (*VideoTracks())[index];
+    VideoStreamTrack* streamTrack = track->GetVideoStreamTrack();
+    mMediaStreamSizeListener = new StreamSizeListener(this);
+    streamTrack->AddDirectListener(mMediaStreamSizeListener);
+    mSelectedVideoStreamTrack = streamTrack;
   }
 }
 
@@ -3668,8 +3676,20 @@ HTMLMediaElement::NotifyMediaStreamTrackAdded(const RefPtr<MediaStreamTrack>& aT
     RefPtr<AudioTrack> audioTrack = CreateAudioTrack(t);
     AudioTracks()->AddTrack(audioTrack);
   } else if (VideoStreamTrack* t = aTrack->AsVideoStreamTrack()) {
+    // TODO: Fix this per the spec on bug 1273443.
+    int32_t selectedIndex = VideoTracks()->SelectedIndex();
     RefPtr<VideoTrack> videoTrack = CreateVideoTrack(t);
     VideoTracks()->AddTrack(videoTrack);
+    // New MediaStreamTrack added, set the new added video track as selected
+    // video track when there is no selected track.
+    if (selectedIndex == -1) {
+      MOZ_ASSERT(!mSelectedVideoStreamTrack);
+      videoTrack->SetEnabledInternal(true, MediaTrack::FIRE_NO_EVENTS);
+      mMediaStreamSizeListener = new StreamSizeListener(this);
+      t->AddDirectListener(mMediaStreamSizeListener);
+      mSelectedVideoStreamTrack = t;
+    }
+
   }
 }
 
@@ -3688,6 +3708,48 @@ HTMLMediaElement::NotifyMediaStreamTrackRemoved(const RefPtr<MediaStreamTrack>& 
     AudioTracks()->RemoveTrack(t);
   } else if (MediaTrack* t = VideoTracks()->GetTrackById(id)) {
     VideoTracks()->RemoveTrack(t);
+    // TODO: Fix this per the spec on bug 1273443.
+    // If the removed media stream track is selected video track and there are
+    // still video tracks, change the selected video track to the first
+    // remaining track.
+    if (aTrack == mSelectedVideoStreamTrack) {
+      // The mMediaStreamSizeListener might already reset to nullptr.
+      if (mMediaStreamSizeListener) {
+        mSelectedVideoStreamTrack->RemoveDirectListener(mMediaStreamSizeListener);
+      }
+      mSelectedVideoStreamTrack = nullptr;
+      MOZ_ASSERT(mSrcStream);
+      nsTArray<RefPtr<VideoStreamTrack>> tracks;
+      mSrcStream->GetVideoTracks(tracks);
+
+      for (const RefPtr<VideoStreamTrack>& track : tracks) {
+        if (track->Ended()) {
+          continue;
+        }
+        if (!track->Enabled()) {
+          continue;
+        }
+
+        nsAutoString trackId;
+        track->GetId(trackId);
+        MediaTrack* videoTrack = VideoTracks()->GetTrackById(trackId);
+        MOZ_ASSERT(videoTrack);
+
+        videoTrack->SetEnabledInternal(true, MediaTrack::FIRE_NO_EVENTS);
+        if (mMediaStreamSizeListener) {
+          track->AddDirectListener(mMediaStreamSizeListener);
+        }
+        mSelectedVideoStreamTrack = track;
+        return;
+      }
+
+      // There is no enabled video track existing, clean the
+      // mMediaStreamSizeListener.
+      if (mMediaStreamSizeListener) {
+        mMediaStreamSizeListener->Forget();
+        mMediaStreamSizeListener = nullptr;
+      }
+    }
   } else {
     // XXX (bug 1208328) Uncomment this when DOMMediaStream doesn't call
     // NotifyTrackRemoved multiple times for the same track, i.e., when it
@@ -4606,10 +4668,7 @@ void HTMLMediaElement::UpdateInitialMediaSize(const nsIntSize& aSize)
   if (!mMediaStreamSizeListener) {
     return;
   }
-  RefPtr<MediaStream> stream = GetSrcMediaStream();
-  if (stream) {
-    stream->RemoveListener(mMediaStreamSizeListener);
-  }
+  mSelectedVideoStreamTrack->RemoveDirectListener(mMediaStreamSizeListener);
   mMediaStreamSizeListener->Forget();
   mMediaStreamSizeListener = nullptr;
 }

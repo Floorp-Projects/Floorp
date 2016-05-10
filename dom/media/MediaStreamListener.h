@@ -238,9 +238,6 @@ public:
    *    We found the source stream of media data for this track, but the track
    *    didn't exist. This should only happen if you try to install the listener
    *    directly to a SourceMediaStream that doesn't contain the given TrackID.
-   * TRACK_TYPE_NOT_SUPPORTED
-   *    This is the failure when you install the listener to a
-   *    non-(audio or video) track.
    * STREAM_NOT_SUPPORTED
    *    While looking for the data source of this track, we found a MediaStream
    *    that is not a SourceMediaStream or a TrackUnionStream.
