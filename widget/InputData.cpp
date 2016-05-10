@@ -161,7 +161,7 @@ MouseInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
   event.mRefPoint =
     RoundedToInt(ViewAs<LayoutDevicePixel>(mOrigin,
       PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent));
-  event.clickCount = clickCount;
+  event.mClickCount = clickCount;
   event.inputSource = mInputSource;
   event.mIgnoreRootScrollFrame = true;
 
@@ -294,7 +294,7 @@ MultiTouchInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
   event.mFlags.mHandledByAPZ = mHandledByAPZ;
 
   if (mouseEventMessage != eMouseMove) {
-    event.clickCount = 1;
+    event.mClickCount = 1;
   }
 
   return event;

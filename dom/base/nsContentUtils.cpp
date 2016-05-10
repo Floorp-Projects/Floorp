@@ -7787,7 +7787,7 @@ nsContentUtils::SendMouseEvent(nsCOMPtr<nsIPresShell> aPresShell,
   event.buttons = GetButtonsFlagForButton(aButton);
   event.pressure = aPressure;
   event.inputSource = aInputSourceArg;
-  event.clickCount = aClickCount;
+  event.mClickCount = aClickCount;
   event.mTime = PR_IntervalNow();
   event.mFlags.mIsSynthesizedForTests = aIsSynthesized;
 
