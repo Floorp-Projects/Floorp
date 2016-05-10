@@ -470,6 +470,7 @@ nsContextMenu.prototype = {
     this.showItem("context-media-mute",   onMedia && !this.target.muted);
     this.showItem("context-media-unmute", onMedia && this.target.muted);
     this.showItem("context-media-playbackrate", onMedia);
+    this.showItem("context-media-loop", onMedia);
     this.showItem("context-media-showcontrols", onMedia && !this.target.controls);
     this.showItem("context-media-hidecontrols", this.target.controls && (this.onVideo || (this.onAudio && !this.inSyntheticDoc)));
     this.showItem("context-video-fullscreen", this.onVideo && this.target.ownerDocument.fullscreenElement == null);
@@ -486,6 +487,7 @@ nsContextMenu.prototype = {
       this.setItemAttr("context-media-playbackrate-125x", "checked", this.target.playbackRate == 1.25);
       this.setItemAttr("context-media-playbackrate-150x", "checked", this.target.playbackRate == 1.5);
       this.setItemAttr("context-media-playbackrate-200x", "checked", this.target.playbackRate == 2.0);
+      this.setItemAttr("context-media-loop", "checked", this.target.loop);
       var hasError = this.target.error != null ||
                      this.target.networkState == this.target.NETWORK_NO_SOURCE;
       this.setItemAttr("context-media-play",  "disabled", hasError);
