@@ -9,15 +9,15 @@ const { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm");
 const { OS } = Cu.import("resource://gre/modules/osfile.jsm");
 
 const { loadKinto } = Cu.import("resource://services-common/kinto-offline-client.js");
-const BlocklistClients = Cu.import("resource://services-common/blocklist-clients.js");
+const KintoBlocklist = Cu.import("resource://services-common/KintoBlocklist.js");
 
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream", "setInputStream");
 
 const gBlocklistClients = [
-  {client: BlocklistClients.AddonBlocklistClient, filename: BlocklistClients.FILENAME_ADDONS_JSON, testData: ["i808","i720", "i539"]},
-  {client: BlocklistClients.PluginBlocklistClient, filename: BlocklistClients.FILENAME_PLUGINS_JSON, testData: ["p1044","p32","p28"]},
-  {client: BlocklistClients.GfxBlocklistClient, filename: BlocklistClients.FILENAME_GFX_JSON, testData: ["g204","g200","g36"]},
+  {client: KintoBlocklist.AddonBlocklistClient, filename: KintoBlocklist.FILENAME_ADDONS_JSON, testData: ["i808","i720", "i539"]},
+  {client: KintoBlocklist.PluginBlocklistClient, filename: KintoBlocklist.FILENAME_PLUGINS_JSON, testData: ["p1044","p32","p28"]},
+  {client: KintoBlocklist.GfxBlocklistClient, filename: KintoBlocklist.FILENAME_GFX_JSON, testData: ["g204","g200","g36"]},
 ];
 
 
@@ -77,7 +77,7 @@ function run_test() {
   server.start(-1);
 
   // Point the blocklist clients to use this local HTTP server.
-  Services.prefs.setCharPref("services.settings.server",
+  Services.prefs.setCharPref("services.kinto.base",
                              `http://localhost:${server.identity.primaryPort}/v1`);
 
   // Setup server fake responses.
