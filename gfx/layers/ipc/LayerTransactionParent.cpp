@@ -343,7 +343,6 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       layer->SetContentFlags(common.contentFlags());
       layer->SetOpacity(common.opacity());
       layer->SetClipRect(common.useClipRect() ? Some(common.clipRect()) : Nothing());
-      layer->SetScrolledClip(common.scrolledClip());
       layer->SetBaseTransform(common.transform().value());
       layer->SetTransformIsPerspective(common.transformIsPerspective());
       layer->SetPostScale(common.postXScale(), common.postYScale());
@@ -351,7 +350,8 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       if (common.isFixedPosition()) {
         layer->SetFixedPositionData(common.fixedPositionScrollContainerId(),
                                     common.fixedPositionAnchor(),
-                                    common.fixedPositionSides());
+                                    common.fixedPositionSides(),
+                                    common.isClipFixed());
       }
       if (common.isStickyPosition()) {
         layer->SetStickyPositionData(common.stickyScrollContainerId(),

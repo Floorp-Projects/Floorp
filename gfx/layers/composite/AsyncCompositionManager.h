@@ -119,20 +119,6 @@ public:
   // from the recorded data in RecordShadowTransform
   void GetFrameUniformity(FrameUniformityData* aFrameUniformityData);
 
-  // Stores the clip rect of a layer in two parts: a fixed part and a scrolled
-  // part. When a layer is fixed, the clip needs to be adjusted to account for
-  // async transforms. Only the fixed part needs to be adjusted, so we need
-  // to store the two parts separately.
-  struct ClipParts {
-    Maybe<ParentLayerIntRect> mFixedClip;
-    Maybe<ParentLayerIntRect> mScrolledClip;
-
-    Maybe<ParentLayerIntRect> Intersect() const {
-      return IntersectMaybeRects(mFixedClip, mScrolledClip);
-    }
-  };
-
-  typedef std::map<Layer*, ClipParts> ClipPartsCache;
 private:
   void TransformScrollableLayer(Layer* aLayer);
   // Return true if an AsyncPanZoomController content transform was
@@ -141,12 +127,9 @@ private:
   // and its state was synced to the Java front-end. |aOutFoundRoot| must be
   // non-null. As the function recurses over the layer tree, a layer may
   // populate |aClipDeferredToParent| a clip rect it wants to set on its parent.
-  // |aClipPartsCache| is used to cache components of clips on descendant
-  // layers that may be needed while processing ancestor layers.
   bool ApplyAsyncContentTransformToTree(Layer* aLayer,
                                         bool* aOutFoundRoot,
-                                        Maybe<ParentLayerIntRect>& aClipDeferredToParent,
-                                        ClipPartsCache& aClipPartsCache);
+                                        Maybe<ParentLayerIntRect>& aClipDeferredToParent);
   /**
    * Update the shadow transform for aLayer assuming that is a scrollbar,
    * so that it stays in sync with the content that is being scrolled by APZ.
@@ -191,15 +174,13 @@ private:
    * aTransformedSubtreeRoot affects aLayer's clip rects, so we know
    * whether we need to perform a corresponding unadjustment to keep
    * the clip rect fixed.
-   * aClipPartsCache optionally maps layers to separate fixed and scrolled
-   * clips, so we can only adjust the fixed portion.
    */
   void AlignFixedAndStickyLayers(Layer* aLayer, Layer* aTransformedSubtreeRoot,
                                  FrameMetrics::ViewID aTransformScrollId,
                                  const LayerToParentLayerMatrix4x4& aPreviousTransformForRoot,
                                  const LayerToParentLayerMatrix4x4& aCurrentTransformForRoot,
                                  const ScreenMargin& aFixedLayerMargins,
-                                 ClipPartsCache* aClipPartsCache = nullptr);
+                                 bool aTransformAffectsLayerClip);
 
   /**
    * DRAWING PHASE ONLY

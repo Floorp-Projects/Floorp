@@ -560,7 +560,7 @@ TEST_F(APZHitTestingTester, HitTestingRespectsScrollClip_Bug1257288) {
   ScrollMetadata subframeMetadata = BuildScrollMetadata(
       FrameMetrics::START_SCROLL_ID + 1, CSSRect(0,0,200,200),
       ParentLayerRect(0,0,200,100));
-  subframeMetadata.SetScrollClip(Some(LayerClip(ParentLayerIntRect(0,0,200,100))));
+  subframeMetadata.SetClipRect(Some(ParentLayerIntRect(0,0,200,100)));
   layers[2]->SetScrollMetadata({subframeMetadata, rootMetadata});
   layers[2]->SetClipRect(Some(ParentLayerIntRect(0,0,200,200)));
   SetEventRegionsBasedOnBottommostMetrics(layers[2]);
