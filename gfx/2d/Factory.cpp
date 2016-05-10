@@ -802,18 +802,25 @@ Factory::CreateCGGlyphRenderingOptions(const Color &aFontSmoothingBackgroundColo
 #endif
 
 already_AddRefed<DataSourceSurface>
-Factory::CreateWrappingDataSourceSurface(uint8_t *aData, int32_t aStride,
+Factory::CreateWrappingDataSourceSurface(uint8_t *aData,
+                                         int32_t aStride,
                                          const IntSize &aSize,
-                                         SurfaceFormat aFormat)
+                                         SurfaceFormat aFormat,
+                                         SourceSurfaceDeallocator aDeallocator /* = nullptr */,
+                                         void* aClosure /* = nullptr */)
 {
   if (aSize.width <= 0 || aSize.height <= 0) {
     return nullptr;
   }
+  if (!aDeallocator && aClosure) {
+    return nullptr;
+  }
+
   MOZ_ASSERT(aData);
 
   RefPtr<SourceSurfaceRawData> newSurf = new SourceSurfaceRawData();
+  newSurf->InitWrappingData(aData, aSize, aStride, aFormat, aDeallocator, aClosure);
 
-  newSurf->InitWrappingData(aData, aSize, aStride, aFormat, false);
   return newSurf.forget();
 }
 
