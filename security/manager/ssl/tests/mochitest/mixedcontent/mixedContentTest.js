@@ -145,29 +145,26 @@ function isSecurityState(expectedState, message, test)
     test = ok;
   }
 
-  // Quit nasty but working :)
-  var ui = SpecialPowers.wrap(window)
+  let ui = SpecialPowers.wrap(window)
     .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
     .getInterface(SpecialPowers.Ci.nsIWebNavigation)
     .QueryInterface(SpecialPowers.Ci.nsIDocShell)
     .securityUI;
 
-  var isInsecure = !ui ||
+  let isInsecure = !ui ||
     (ui.state & SpecialPowers.Ci.nsIWebProgressListener.STATE_IS_INSECURE);
-  var isBroken = ui &&
+  let isBroken = ui &&
     (ui.state & SpecialPowers.Ci.nsIWebProgressListener.STATE_IS_BROKEN);
-  var isEV = ui &&
+  let isEV = ui &&
     (ui.state & SpecialPowers.Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL);
 
-  var gotState;
+  let gotState = "secure";
   if (isInsecure) {
     gotState = "insecure";
   } else if (isBroken) {
     gotState = "broken";
   } else if (isEV) {
     gotState = "EV";
-  } else {
-    gotState = "secure";
   }
 
   test(gotState == expectedState, (message || "") + ", " + "expected " + expectedState + " got " + gotState);
@@ -192,9 +189,8 @@ function isSecurityState(expectedState, message, test)
 
 function waitForSecurityState(expectedState, callback)
 {
-  var roundsLeft = 200; // Wait for 20 seconds (=200*100ms)
-  var interval =
-  window.setInterval(function() {
+  let roundsLeft = 200; // Wait for 20 seconds (=200*100ms)
+  let interval = window.setInterval(() => {
     isSecurityState(expectedState, "", isok => {
       if (isok) {
         roundsLeft = 0;

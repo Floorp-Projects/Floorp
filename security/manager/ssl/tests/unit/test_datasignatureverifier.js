@@ -1,6 +1,6 @@
 "use strict";
 
-var keys = [
+const keys = [
 // RSA key
 "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDK426erD/H3XtsjvaB5+PJqbhj" +
 "Zc9EDI5OCJS8R3FIObJ9ZHJK1TXeaE7JWqt9WUmBWTEFvwS+FI9vWu8058N9CHhD" +
@@ -17,12 +17,12 @@ var keys = [
 "Zm9vYmFy"
 ];
 
-var data = [
+const data = [
 "Test data for data signature verifier",
 "The quick brown fox jumps over the lazy dog..."
 ];
 
-var signatures = [
+const signatures = [
 // Key 0, Data 0, MD2 hash algorithm
 "MIGTMA0GCSqGSIb3DQEBAgUAA4GBALe3hO76UCpI8b1/oJUCIPmC6AbnMAMlAqo7" +
 "pc3TaWmU9wISWmXSrwNmr/QQNjWDn4nzQn8/K/Ac+tszaXib6fVLKA1a6e+/E0qE" +
@@ -123,7 +123,7 @@ var signatures = [
 "Zm9vYmFy"
 ];
 
-var tests = [
+const tests = [
 // Data   Signature  Key   Expected   Throws
 // Pass cases
   [0,     0,         0,    true,      false], //0
@@ -172,22 +172,22 @@ var tests = [
 ];
 
 function run_test() {
-  var verifier = Cc["@mozilla.org/security/datasignatureverifier;1"].
-                 createInstance(Ci.nsIDataSignatureVerifier);
+  let verifier = Cc["@mozilla.org/security/datasignatureverifier;1"]
+                   .createInstance(Ci.nsIDataSignatureVerifier);
 
-  for (var t = 0; t < tests.length; t++) {
-    let testShouldThrow = tests[t][4];
-    try {
-      var result = verifier.verifyData(data[tests[t][0]],
-                                       signatures[tests[t][1]],
-                                       keys[tests[t][2]]);
-      ok(!testShouldThrow,
-         `Test ${t} should reach here only if not expected to throw`);
-      equal(result, tests[t][3],
-            `Actual and expected result should match for test ${t}`);
-    }
-    catch (e) {
-      ok(testShouldThrow, `Test ${t} should throw only if expected to: ${e}`);
+  for (let testCase of tests) {
+    let testShouldThrow = testCase[4];
+    if (testShouldThrow) {
+      throws(() => {
+        verifier.verifyData(data[testCase[0]], signatures[testCase[1]],
+                            keys[testCase[2]]);
+      }, /NS_ERROR_FAILURE/, `Test "${testCase}" should throw`);
+    } else {
+      let result = verifier.verifyData(data[testCase[0]],
+                                       signatures[testCase[1]],
+                                       keys[testCase[2]]);
+      equal(result, testCase[3],
+            `Actual and expected result should match for test "${testCase}"`);
     }
   }
 }
