@@ -88,4 +88,11 @@ extern "C" {
     g_platform_api = NULL;
   }
 
+#if defined(GMP_FAKE_SUPPORT_DECRYPT)
+  PUBLIC_FUNC void
+  GMPSetNodeId(const char* aNodeId, uint32_t aLength) {
+    FakeDecryptor::SetNodeId(aNodeId, aLength);
+  }
+#endif
+
 } // extern "C"
