@@ -4,7 +4,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[LegacyUnenumerableNamedProperties]
+// [LegacyUnenumerableNamedProperties]
+// Named properties enumerable for now; see
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1270364
 interface MimeTypeArray {
   readonly attribute unsigned long length;
 

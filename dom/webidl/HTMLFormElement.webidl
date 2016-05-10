@@ -11,7 +11,9 @@
  * and create derivative works of this document.
  */
 
-[OverrideBuiltins, LegacyUnenumerableNamedProperties]
+// Should be LegacyUnenumerableNamedProperties.  See
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1270369
+[OverrideBuiltins]
 interface HTMLFormElement : HTMLElement {
            [Pure, SetterThrows]
            attribute DOMString acceptCharset;

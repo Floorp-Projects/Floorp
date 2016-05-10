@@ -163,12 +163,6 @@ nsDOMAttributeMap::NamedGetter(const nsAString& aAttrName, bool& aFound)
   return GetAttribute(ni);
 }
 
-bool
-nsDOMAttributeMap::NameIsEnumerable(const nsAString& aName)
-{
-  return false;
-}
-
 void
 nsDOMAttributeMap::GetSupportedNames(unsigned aFlags,
                                      nsTArray<nsString>& aNames)
