@@ -489,7 +489,7 @@ APZCCallbackHelper::DispatchSynthesizedMouseEvent(EventMessage aMsg,
   event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
   event.mIgnoreRootScrollFrame = true;
   if (aMsg != eMouseMove) {
-    event.clickCount = 1;
+    event.mClickCount = 1;
   }
   event.mModifiers = aModifiers;
 

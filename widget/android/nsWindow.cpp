@@ -2006,7 +2006,7 @@ nsWindow::OnLongTapEvent(AndroidGeckoEvent *ae)
     event.button = WidgetMouseEvent::eLeftButton;
     event.mRefPoint =
         RoundedToInt(pt * GetDefaultScale()) - WidgetToScreenOffset();
-    event.clickCount = 1;
+    event.mClickCount = 1;
     event.mTime = ae->Time();
     event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
     event.mIgnoreRootScrollFrame = true;

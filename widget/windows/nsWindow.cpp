@@ -4106,11 +4106,11 @@ nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
     default:
       break;
   }
-  event.clickCount = sLastClickCount;
+  event.mClickCount = sLastClickCount;
 
 #ifdef NS_DEBUG_XX
   MOZ_LOG(gWindowsLog, LogLevel::Info,
-         ("Msg Time: %d Click Count: %d\n", curMsgTime, event.clickCount));
+         ("Msg Time: %d Click Count: %d\n", curMsgTime, event.mClickCount));
 #endif
 
   NPEvent pluginEvent;

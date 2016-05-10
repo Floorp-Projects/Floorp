@@ -3268,7 +3268,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
 #endif
 
   RefPtr<nsFrameSelection> fc = const_cast<nsFrameSelection*>(frameselection);
-  if (mouseEvent->clickCount > 1) {
+  if (mouseEvent->mClickCount > 1) {
     // These methods aren't const but can't actually delete anything,
     // so no need for nsWeakFrame.
     fc->SetDragState(true);
@@ -3467,16 +3467,16 @@ nsFrame::HandleMultiplePress(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  if (mouseEvent->clickCount == 4) {
+  if (mouseEvent->mClickCount == 4) {
     beginAmount = endAmount = eSelectParagraph;
-  } else if (mouseEvent->clickCount == 3) {
+  } else if (mouseEvent->mClickCount == 3) {
     if (Preferences::GetBool("browser.triple_click_selects_paragraph")) {
       beginAmount = endAmount = eSelectParagraph;
     } else {
       beginAmount = eSelectBeginLine;
       endAmount = eSelectEndLine;
     }
-  } else if (mouseEvent->clickCount == 2) {
+  } else if (mouseEvent->mClickCount == 2) {
     // We only want inline frames; PeekBackwardAndForward dislikes blocks
     beginAmount = endAmount = eSelectWord;
   } else {

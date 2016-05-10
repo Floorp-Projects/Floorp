@@ -2754,14 +2754,14 @@ nsWindow::InitButtonEvent(WidgetMouseEvent& aEvent,
 
     switch (aGdkEvent->type) {
     case GDK_2BUTTON_PRESS:
-        aEvent.clickCount = 2;
+        aEvent.mClickCount = 2;
         break;
     case GDK_3BUTTON_PRESS:
-        aEvent.clickCount = 3;
+        aEvent.mClickCount = 3;
         break;
         // default is one click
     default:
-        aEvent.clickCount = 1;
+        aEvent.mClickCount = 1;
     }
 }
 
@@ -3144,7 +3144,7 @@ nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
 
         contextMenuEvent.mRefPoint = LayoutDeviceIntPoint(0, 0);
         contextMenuEvent.AssignEventTime(GetWidgetEventTime(aEvent->time));
-        contextMenuEvent.clickCount = 1;
+        contextMenuEvent.mClickCount = 1;
         KeymapWrapper::InitInputEvent(contextMenuEvent, aEvent->state);
         DispatchInputEvent(&contextMenuEvent);
     } else {
