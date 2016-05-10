@@ -163,7 +163,7 @@ MouseInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
       PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent));
   event.clickCount = clickCount;
   event.inputSource = mInputSource;
-  event.ignoreRootScrollFrame = true;
+  event.mIgnoreRootScrollFrame = true;
 
   return event;
 }
