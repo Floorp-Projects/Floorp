@@ -16,6 +16,7 @@
 #include "GMPService.h"
 #include "GMPUtils.h"
 #include "mozilla/StaticPtr.h"
+#include "MediaPrefs.h"
 
 #define GMP_DIR_NAME NS_LITERAL_STRING("gmp-fakeopenh264")
 #define GMP_OLD_VERSION NS_LITERAL_STRING("1.0")
@@ -227,6 +228,8 @@ GMPRemoveTest::~GMPRemoveTest()
 void
 GMPRemoveTest::Setup()
 {
+  // Initialize media preferences.
+  MediaPrefs::GetSingleton();
   GeneratePlugin();
   GetService()->GetThread(getter_AddRefs(mGMPThread));
 

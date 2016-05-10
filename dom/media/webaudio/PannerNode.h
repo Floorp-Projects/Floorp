@@ -11,7 +11,6 @@
 #include "mozilla/dom/PannerNodeBinding.h"
 #include "ThreeDPoint.h"
 #include "mozilla/WeakPtr.h"
-#include "mozilla/Preferences.h"
 #include "WebAudioUtils.h"
 #include <set>
 

@@ -7,6 +7,7 @@
 #include "nsThreadUtils.h"
 
 #include "FakeSpeechRecognitionService.h"
+#include "MediaPrefs.h"
 
 #include "SpeechRecognition.h"
 #include "SpeechRecognitionAlternative.h"
@@ -66,7 +67,7 @@ FakeSpeechRecognitionService::Abort()
 NS_IMETHODIMP
 FakeSpeechRecognitionService::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData)
 {
-  MOZ_ASSERT(mRecognition->mTestConfig.mFakeRecognitionService,
+  MOZ_ASSERT(MediaPrefs::WebSpeechFakeRecognitionService(),
              "Got request to fake recognition service event, but "
              TEST_PREFERENCE_FAKE_RECOGNITION_SERVICE " is not set");
 
