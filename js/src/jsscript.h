@@ -10,6 +10,8 @@
 #define jsscript_h
 
 #include "mozilla/Atomics.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Variant.h"
@@ -576,45 +578,20 @@ class ScriptSource;
 
 class UncompressedSourceCache
 {
-    typedef HashMap<ScriptSource*,
-                    UniqueTwoByteChars,
-                    DefaultHasher<ScriptSource*>,
-                    SystemAllocPolicy> Map;
+    using Map = HashMap<ScriptSource*,
+                        SharedImmutableTwoByteString,
+                        DefaultHasher<ScriptSource*>,
+                        SystemAllocPolicy>;
 
-  public:
-    // Hold an entry in the source data cache and prevent it from being purged on GC.
-    class AutoHoldEntry
-    {
-        UncompressedSourceCache* cache_;
-        ScriptSource* source_;
-        UniqueTwoByteChars charsToFree_;
-      public:
-        explicit AutoHoldEntry();
-        ~AutoHoldEntry();
-      private:
-        void holdEntry(UncompressedSourceCache* cache, ScriptSource* source);
-        void deferDelete(UniqueTwoByteChars chars);
-        ScriptSource* source() const { return source_; }
-        friend class UncompressedSourceCache;
-    };
-
-  private:
     UniquePtr<Map> map_;
-    AutoHoldEntry* holder_;
 
   public:
-    UncompressedSourceCache() : holder_(nullptr) {}
+    UncompressedSourceCache() { }
 
-    const char16_t* lookup(ScriptSource* ss, AutoHoldEntry& asp);
-    bool put(ScriptSource* ss, UniqueTwoByteChars chars, AutoHoldEntry& asp);
-
+    MOZ_MUST_USE mozilla::Maybe<SharedImmutableTwoByteString> lookup(ScriptSource* ss);
+    bool put(ScriptSource* ss, SharedImmutableTwoByteString&& chars);
     void purge();
-
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
-
-  private:
-    void holdEntry(AutoHoldEntry& holder, ScriptSource* ss);
-    void releaseEntry(AutoHoldEntry& holder);
 };
 
 class ScriptSource
@@ -764,7 +741,11 @@ class ScriptSource
         MOZ_ASSERT(hasSourceData());
         return argumentsNotIncluded_;
     }
-    const char16_t* chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& asp);
+
+    // Get a handle on the underlying source text. Returns mozilla::Nothing on
+    // OOM failure.
+    MOZ_MUST_USE mozilla::Maybe<SharedImmutableTwoByteString> sourceText(JSContext* cx);
+
     JSFlatString* substring(JSContext* cx, uint32_t start, uint32_t stop);
     JSFlatString* substringDontDeflate(JSContext* cx, uint32_t start, uint32_t stop);
     void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,

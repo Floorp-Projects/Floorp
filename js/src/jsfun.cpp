@@ -1437,12 +1437,11 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx, HandleFuncti
         MOZ_ASSERT(lazy->scriptSource()->hasSourceData());
 
         // Parse and compile the script from source.
-        UncompressedSourceCache::AutoHoldEntry holder;
-        const char16_t* chars = lazy->scriptSource()->chars(cx, holder);
-        if (!chars)
+        auto text = lazy->scriptSource()->sourceText(cx);
+        if (!text)
             return false;
 
-        const char16_t* lazyStart = chars + lazy->begin();
+        const char16_t* lazyStart = text->chars() + lazy->begin();
         size_t lazyLength = lazy->end() - lazy->begin();
 
         if (!frontend::CompileLazyFunction(cx, lazy, lazyStart, lazyLength)) {
