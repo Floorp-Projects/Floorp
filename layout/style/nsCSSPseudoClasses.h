@@ -48,12 +48,12 @@ enum class CSSPseudoClassType : CSSPseudoClassTypeBase
 class nsCSSPseudoClasses
 {
   typedef mozilla::CSSPseudoClassType Type;
+  typedef mozilla::CSSEnabledState EnabledState;
 
 public:
   static void AddRefAtoms();
 
-  static Type GetPseudoType(nsIAtom* aAtom,
-                            bool aAgentEnabled, bool aChromeEnabled);
+  static Type GetPseudoType(nsIAtom* aAtom, EnabledState aEnabledState);
   static bool HasStringArg(Type aType);
   static bool HasNthPairArg(Type aType);
   static bool HasSelectorListArg(Type aType) {
@@ -64,9 +64,25 @@ public:
   // Should only be used on types other than Count and NotPseudoClass
   static void PseudoTypeToString(Type aType, nsAString& aString);
 
-private:
-  static uint32_t FlagsForPseudoClass(const Type aType);
+  static bool IsEnabled(Type aType, EnabledState aEnabledState)
+  {
+    auto index = static_cast<size_t>(aType);
+    MOZ_ASSERT(index < static_cast<size_t>(Type::Count));
+    if (sPseudoClassEnabled[index] ||
+        aEnabledState == EnabledState::eIgnoreEnabledState) {
+      return true;
+    }
+    auto flags = kPseudoClassFlags[index];
+    if (((aEnabledState & EnabledState::eInChrome) &&
+         (flags & CSS_PSEUDO_CLASS_ENABLED_IN_CHROME)) ||
+        ((aEnabledState & EnabledState::eInUASheets) &&
+         (flags & CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS))) {
+      return true;
+    }
+    return false;
+  }
 
+private:
   static const uint32_t kPseudoClassFlags[Type::Count];
   static bool sPseudoClassEnabled[Type::Count];
 };
