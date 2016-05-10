@@ -318,6 +318,8 @@ public class BrowserApp extends GeckoApp
 
     private TelemetryDispatcher mTelemetryDispatcher;
 
+    private boolean mHasResumed;
+
     @Override
     public View onCreateView(final String name, final Context context, final AttributeSet attrs) {
         final View view;
@@ -1007,8 +1009,11 @@ public class BrowserApp extends GeckoApp
             return;
         }
 
-        EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener) this,
-                "Prompt:ShowTop");
+        if (!mHasResumed) {
+            EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener) this,
+                    "Prompt:ShowTop");
+            mHasResumed = true;
+        }
 
         processTabQueue();
 
@@ -1024,9 +1029,12 @@ public class BrowserApp extends GeckoApp
         // Needed for Adjust to get accurate session measurements
         AdjustConstants.getAdjustHelper().onPause();
 
-        // Register for Prompt:ShowTop so we can foreground this activity even if it's hidden.
-        EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener) this,
-            "Prompt:ShowTop");
+        if (mHasResumed) {
+            // Register for Prompt:ShowTop so we can foreground this activity even if it's hidden.
+            EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener) this,
+                "Prompt:ShowTop");
+            mHasResumed = false;
+        }
 
         for (BrowserAppDelegate delegate : delegates) {
             delegate.onPause(this);
