@@ -1300,7 +1300,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleOutline
       FreeByObjectID(mozilla::eArenaObjectID_nsStyleOutline, this);
   }
 
-  void RecalcData(nsPresContext* aContext);
+  void RecalcData();
   nsChangeHint CalcDifference(const nsStyleOutline& aOther) const;
   static nsChangeHint MaxDifference() {
     return NS_CombineHint(NS_CombineHint(nsChangeHint_UpdateOverflow,

@@ -423,7 +423,6 @@ WEBIDL_FILES = [
     'StyleSheetList.webidl',
     'SubtleCrypto.webidl',
     'SVGAElement.webidl',
-    'SVGAltGlyphElement.webidl',
     'SVGAngle.webidl',
     'SVGAnimatedAngle.webidl',
     'SVGAnimatedBoolean.webidl',

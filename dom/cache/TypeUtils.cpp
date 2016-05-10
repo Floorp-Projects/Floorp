@@ -203,15 +203,15 @@ TypeUtils::ToCacheResponseWithoutBody(CacheResponse& aOut,
 {
   aOut.type() = aIn.Type();
 
-  aIn.GetUnfilteredUrl(aOut.url());
+  aIn.GetUnfilteredURLList(aOut.urlList());
+  AutoTArray<nsCString, 4> urlList;
+  aIn.GetURLList(urlList);
 
-  if (aOut.url() != EmptyCString()) {
+  for (uint32_t i = 0; i < aOut.urlList().Length(); i++) {
+    MOZ_ASSERT(!aOut.urlList()[i].IsEmpty());
     // Pass all Response URL schemes through... The spec only requires we take
     // action on invalid schemes for Request objects.
-    ProcessURL(aOut.url(), nullptr, nullptr, nullptr, aRv);
-    if (aRv.Failed()) {
-      return;
-    }
+    ProcessURL(aOut.urlList()[i], nullptr, nullptr, nullptr, aRv);
   }
 
   aOut.status() = aIn.GetUnfilteredStatus();
@@ -285,7 +285,7 @@ TypeUtils::ToResponse(const CacheResponse& aIn)
 
   RefPtr<InternalResponse> ir = new InternalResponse(aIn.status(),
                                                        aIn.statusText());
-  ir->SetUrl(aIn.url());
+  ir->SetURLList(aIn.urlList());
 
   RefPtr<InternalHeaders> internalHeaders =
     ToInternalHeaders(aIn.headers(), aIn.headersGuard());
@@ -332,13 +332,12 @@ TypeUtils::ToResponse(const CacheResponse& aIn)
 already_AddRefed<InternalRequest>
 TypeUtils::ToInternalRequest(const CacheRequest& aIn)
 {
-  RefPtr<InternalRequest> internalRequest = new InternalRequest();
-
-  internalRequest->SetMethod(aIn.method());
-
   nsAutoCString url(aIn.urlWithoutQuery());
   url.Append(aIn.urlQuery());
-  internalRequest->SetURL(url);
+
+  RefPtr<InternalRequest> internalRequest = new InternalRequest(url);
+
+  internalRequest->SetMethod(aIn.method());
 
   internalRequest->SetReferrer(aIn.referrer());
   internalRequest->SetReferrerPolicy(aIn.referrerPolicy());

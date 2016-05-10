@@ -56,8 +56,9 @@ add_task(function* test_notification_version_string() {
     }
   });
 
-  let {subject: notification, data: scope} = yield notifyPromise;
-  equal(notification, null, 'Unexpected data for Simple Push message');
+  let {subject: message, data: scope} = yield notifyPromise;
+  equal(message.QueryInterface(Ci.nsIPushMessage).data, null,
+    'Unexpected data for Simple Push message');
 
   yield ackPromise;
 

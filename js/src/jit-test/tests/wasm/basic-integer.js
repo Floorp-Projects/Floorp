@@ -48,6 +48,17 @@ function testComparison64(opcode, lhs, rhs, expect) {
                               (export "" 0))`)(lobj, robj), expect);
 }
 
+function testTrap64(opcode, lhs, rhs, expect) {
+    let lobj = createI64(lhs);
+    let robj = createI64(rhs);
+
+    assertErrorMessage(() => wasmEvalText(`(module (func (param i64) (param i64) (result i64) (i64.${opcode} (get_local 0) (get_local 1))) (export "" 0))`)(lobj, robj), Error, expect);
+    // The same, but now the RHS is a constant.
+    assertErrorMessage(() => wasmEvalText(`(module (func (param i64) (result i64) (i64.${opcode} (get_local 0) (i64.const ${rhs}))) (export "" 0))`)(lobj), Error, expect);
+    // LHS and RHS are constants.
+    assertErrorMessage(wasmEvalText(`(module (func (result i64) (i64.${opcode} (i64.const ${lhs}) (i64.const ${rhs}))) (export "" 0))`), Error, expect);
+}
+
 testUnary('i32', 'clz', 40, 26);
 testUnary('i32', 'ctz', 40, 3);
 testUnary('i32', 'ctz', 0, 32);
@@ -124,12 +135,11 @@ if (hasI64()) {
     testBinary64('rem_u', "0x8000000000000000", -1, "0x8000000000000000");
     testBinary64('rem_u', "0x8ff00ff00ff00ff0", "0x100000001", "0x80000001");
 
-    // These should trap, but for now we match the i32 version.
-    testBinary64('div_s', 10, 0, 0);
-    testBinary64('div_s', "0x8000000000000000", -1, "0x8000000000000000");
-    testBinary64('div_u', 0, 0, 0);
-    testBinary64('rem_s', 10, 0, 0);
-    testBinary64('rem_u', 10, 0, 0);
+    testTrap64('div_s', 10, 0, /integer divide by zero/);
+    testTrap64('div_s', "0x8000000000000000", -1, /integer overflow/);
+    testTrap64('div_u', 0, 0, /integer divide by zero/);
+    testTrap64('rem_s', 10, 0, /integer divide by zero/);
+    testTrap64('rem_u', 10, 0, /integer divide by zero/);
 
     testBinary64('and', 42, 6, 2);
     testBinary64('or', 42, 6, 46);

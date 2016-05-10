@@ -3254,7 +3254,8 @@ ContentChild::RecvPush(const nsCString& aScope,
       return true;
   }
 
-  nsresult rv = pushNotifier->NotifyPushObservers(aScope, Nothing());
+  nsresult rv = pushNotifier->NotifyPushObservers(aScope, aPrincipal,
+                                                  Nothing());
   Unused << NS_WARN_IF(NS_FAILED(rv));
 
   rv = pushNotifier->NotifyPushWorkers(aScope, aPrincipal,
@@ -3277,7 +3278,8 @@ ContentChild::RecvPushWithData(const nsCString& aScope,
       return true;
   }
 
-  nsresult rv = pushNotifier->NotifyPushObservers(aScope, Some(aData));
+  nsresult rv = pushNotifier->NotifyPushObservers(aScope, aPrincipal,
+                                                  Some(aData));
   Unused << NS_WARN_IF(NS_FAILED(rv));
 
   rv = pushNotifier->NotifyPushWorkers(aScope, aPrincipal,
@@ -3298,7 +3300,8 @@ ContentChild::RecvPushSubscriptionChange(const nsCString& aScope,
       return true;
   }
 
-  nsresult rv = pushNotifier->NotifySubscriptionChangeObservers(aScope);
+  nsresult rv = pushNotifier->NotifySubscriptionChangeObservers(aScope,
+                                                                aPrincipal);
   Unused << NS_WARN_IF(NS_FAILED(rv));
 
   rv = pushNotifier->NotifySubscriptionChangeWorkers(aScope, aPrincipal);

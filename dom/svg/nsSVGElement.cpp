@@ -1186,7 +1186,7 @@ MappedAttrParser::ParseMappedAttrValue(nsIAtom* aMappedAttrName,
   // Get the nsCSSProperty ID for our mapped attribute.
   nsCSSProperty propertyID =
     nsCSSProps::LookupProperty(nsDependentAtomString(aMappedAttrName),
-                               nsCSSProps::eEnabledForAllContent);
+                               CSSEnabledState::eForAllContent);
   if (propertyID != eCSSProperty_UNKNOWN) {
     bool changed = false; // outparam for ParseProperty.
     mParser.ParseProperty(propertyID, aMappedAttrValue, mDocURI, mBaseURI,
@@ -1196,7 +1196,7 @@ MappedAttrParser::ParseMappedAttrValue(nsIAtom* aMappedAttrName,
       // since it doesn't have a sheet.
       if (nsCSSProps::IsShorthand(propertyID)) {
         CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subprop, propertyID,
-                                             nsCSSProps::eEnabledForAllContent) {
+                                             CSSEnabledState::eForAllContent) {
           UseCounter useCounter = nsCSSProps::UseCounterFor(*subprop);
           if (useCounter != eUseCounter_UNKNOWN) {
             mElement->OwnerDoc()->SetDocumentAndPageUseCounter(useCounter);
@@ -2544,7 +2544,7 @@ nsSVGElement::GetAnimatedAttr(int32_t aNamespaceID, nsIAtom* aName)
     if (IsAttributeMapped(aName)) {
       nsCSSProperty prop =
         nsCSSProps::LookupProperty(nsDependentAtomString(aName),
-                                   nsCSSProps::eEnabledForAllContent);
+                                   CSSEnabledState::eForAllContent);
       // Check IsPropertyAnimatable to avoid attributes that...
       //  - map to explicitly unanimatable properties (e.g. 'direction')
       //  - map to unsupported attributes (e.g. 'glyph-orientation-horizontal')

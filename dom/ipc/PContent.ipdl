@@ -1177,23 +1177,26 @@ parent:
     /**
      * Notify `push-message` observers without data in the parent.
      */
-    async NotifyPushObservers(nsCString scope, nsString messageId);
+    async NotifyPushObservers(nsCString scope, Principal principal,
+                              nsString messageId);
 
     /**
      * Notify `push-message` observers with data in the parent.
      */
-    async NotifyPushObserversWithData(nsCString scope, nsString messageId,
-                                      uint8_t[] data);
+    async NotifyPushObserversWithData(nsCString scope, Principal principal,
+                                      nsString messageId, uint8_t[] data);
 
     /**
      * Notify `push-subscription-change` observers in the parent.
      */
-    async NotifyPushSubscriptionChangeObservers(nsCString scope);
+    async NotifyPushSubscriptionChangeObservers(nsCString scope,
+                                                Principal principal);
 
     /**
-     * Notify `push-subscription-lost` observers in the parent.
+     * Notify `push-subscription-modified` observers in the parent.
      */
-    async NotifyPushSubscriptionLostObservers(nsCString scope, uint16_t reason);
+    async NotifyPushSubscriptionModifiedObservers(nsCString scope,
+                                                  Principal principal);
 
 both:
      async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,

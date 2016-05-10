@@ -26,12 +26,6 @@ class FFmpegVideoDecoder<LIBAV_VER> : public FFmpegDataDecoder<LIBAV_VER>
   typedef mozilla::layers::Image Image;
   typedef mozilla::layers::ImageContainer ImageContainer;
 
-  enum DecodeResult {
-    DECODE_FRAME,
-    DECODE_NO_FRAME,
-    DECODE_ERROR
-  };
-
 public:
   FFmpegVideoDecoder(FFmpegLibWrapper* aLib, FlushableTaskQueue* aTaskQueue,
                      MediaDataDecoderCallback* aCallback,
@@ -40,9 +34,6 @@ public:
   virtual ~FFmpegVideoDecoder();
 
   RefPtr<InitPromise> Init() override;
-  nsresult Input(MediaRawData* aSample) override;
-  void ProcessDrain() override;
-  void ProcessFlush() override;
   void InitCodecContext() override;
   const char* GetDescriptionName() const override
   {
@@ -55,10 +46,10 @@ public:
   static AVCodecID GetCodecId(const nsACString& aMimeType);
 
 private:
-  void DecodeFrame(MediaRawData* aSample);
-  DecodeResult DoDecodeFrame(MediaRawData* aSample);
-  DecodeResult DoDecodeFrame(MediaRawData* aSample, uint8_t* aData, int aSize);
-  void DoDrain();
+  DecodeResult DoDecode(MediaRawData* aSample) override;
+  DecodeResult DoDecode(MediaRawData* aSample, uint8_t* aData, int aSize);
+  void ProcessDrain() override;
+  void ProcessFlush() override;
   void OutputDelayedFrames();
 
   /**

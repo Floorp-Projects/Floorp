@@ -143,6 +143,7 @@ flags:
     - reftest-e10s
     - reftest-ipc
     - reftest-no-accel
+    - reftest-no-accel-e10s
     - reftest-sanity-oop
     - web-platform-tests
     - web-platform-tests-e10s

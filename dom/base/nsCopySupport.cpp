@@ -171,8 +171,11 @@ SelectionCopyHelper(nsISelection *aSel, nsIDocument *aDoc,
   nsAutoString htmlInfoBuf;
   if (encodedTextHTML) {
     // Redo the encoding, but this time use the passed-in flags.
+    // Don't allow wrapping of CJK strings.
     mimeType.AssignLiteral(kHTMLMime);
-    rv = docEncoder->Init(domDoc, mimeType, aFlags);
+    rv = docEncoder->Init(domDoc, mimeType,
+                          aFlags |
+                          nsIDocumentEncoder::OutputDisallowLineBreaking);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = docEncoder->SetSelection(aSel);

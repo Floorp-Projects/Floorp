@@ -546,7 +546,7 @@ nsStyleOutline::nsStyleOutline(const nsStyleOutline& aSrc)
 }
 
 void 
-nsStyleOutline::RecalcData(nsPresContext* aContext)
+nsStyleOutline::RecalcData()
 {
   if (NS_STYLE_BORDER_STYLE_NONE == GetOutlineStyle()) {
     mCachedOutlineWidth = 0;
@@ -555,7 +555,8 @@ nsStyleOutline::RecalcData(nsPresContext* aContext)
                mOutlineWidth.GetUnit() == eStyleUnit_Enumerated);
     // Clamp negative calc() to 0.
     mCachedOutlineWidth =
-      std::max(CalcCoord(mOutlineWidth, aContext->GetBorderWidthTable(), 3), 0);
+      std::max(CalcCoord(mOutlineWidth,
+                         StaticPresData::Get()->GetBorderWidthTable(), 3), 0);
     mCachedOutlineWidth =
       NS_ROUND_BORDER_TO_PIXELS(mCachedOutlineWidth, mTwipsPerPixel);
   }
@@ -2740,7 +2741,7 @@ mozilla::StyleTransition::SetUnknownProperty(nsCSSProperty aProperty,
                                              const nsAString& aPropertyString)
 {
   MOZ_ASSERT(nsCSSProps::LookupProperty(aPropertyString,
-                                        nsCSSProps::eEnabledForAllContent) ==
+                                        CSSEnabledState::eForAllContent) ==
                aProperty,
              "property and property string should match");
   MOZ_ASSERT(aProperty == eCSSProperty_UNKNOWN ||

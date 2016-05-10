@@ -281,4 +281,7 @@ JS_WriteString(JSStructuredCloneWriter* w, JS::HandleString str);
 JS_PUBLIC_API(bool)
 JS_WriteTypedArray(JSStructuredCloneWriter* w, JS::HandleValue v);
 
+JS_PUBLIC_API(bool)
+JS_ObjectNotWritten(JSStructuredCloneWriter* w, JS::HandleObject obj);
+
 #endif  /* js_StructuredClone_h */

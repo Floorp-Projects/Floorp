@@ -50,13 +50,23 @@ function makePushPermission(url, capability) {
   };
 }
 
-function promiseSubscriptionChanges(count) {
+function promiseObserverNotifications(topic, count) {
   let notifiedScopes = [];
-  let subChangePromise = promiseObserverNotification(PushServiceComponent.subscriptionChangeTopic, (subject, data) => {
+  let subChangePromise = promiseObserverNotification(topic, (subject, data) => {
     notifiedScopes.push(data);
     return notifiedScopes.length == count;
   });
   return subChangePromise.then(_ => notifiedScopes.sort());
+}
+
+function promiseSubscriptionChanges(count) {
+  return promiseObserverNotifications(
+    PushServiceComponent.subscriptionChangeTopic, count);
+}
+
+function promiseSubscriptionModifications(count) {
+  return promiseObserverNotifications(
+    PushServiceComponent.subscriptionModifiedTopic, count);
 }
 
 function allExpired(...keyIDs) {
@@ -150,6 +160,8 @@ add_task(function* test_permissions_allow_added() {
 });
 
 add_task(function* test_permissions_allow_deleted() {
+  let subModifiedPromise = promiseSubscriptionModifications(1);
+
   let unregisterPromise = new Promise(resolve => unregisterDefers[
     'active-allow'] = resolve);
 
@@ -160,12 +172,19 @@ add_task(function* test_permissions_allow_deleted() {
 
   yield unregisterPromise;
 
+  let notifiedScopes = yield subModifiedPromise;
+  deepEqual(notifiedScopes, [
+    'https://example.info/page/1',
+  ], 'Wrong scopes modified after deleting allow');
+
   let record = yield db.getByKeyID('active-allow');
   ok(record.isExpired(),
     'Should expire active record after deleting allow');
 });
 
 add_task(function* test_permissions_deny_added() {
+  let subModifiedPromise = promiseSubscriptionModifications(2);
+
   let unregisterPromise = Promise.all([
     new Promise(resolve => unregisterDefers[
       'active-deny-added-1'] = resolve),
@@ -178,6 +197,12 @@ add_task(function* test_permissions_deny_added() {
     'added'
   );
   yield unregisterPromise;
+
+  let notifiedScopes = yield subModifiedPromise;
+  deepEqual(notifiedScopes, [
+    'https://example.net/green',
+    'https://example.net/ham',
+  ], 'Wrong scopes modified after adding deny');
 
   let isExpired = yield allExpired(
     'active-deny-added-1',
@@ -225,6 +250,8 @@ add_task(function* test_permissions_allow_changed() {
 });
 
 add_task(function* test_permissions_deny_changed() {
+  let subModifiedPromise = promiseSubscriptionModifications(1);
+
   let unregisterPromise = new Promise(resolve => unregisterDefers[
     'active-deny-changed'] = resolve);
 
@@ -235,12 +262,19 @@ add_task(function* test_permissions_deny_changed() {
 
   yield unregisterPromise;
 
+  let notifiedScopes = yield subModifiedPromise;
+  deepEqual(notifiedScopes, [
+    'https://example.xyz/page/1',
+  ], 'Wrong scopes modified after changing to deny');
+
   let record = yield db.getByKeyID('active-deny-changed');
   ok(record.isExpired(),
-    'Should expire active record after changing to allow');
+    'Should expire active record after changing to deny');
 });
 
 add_task(function* test_permissions_clear() {
+  let subModifiedPromise = promiseSubscriptionModifications(3);
+
   let records = yield db.getAllKeyIDs();
   deepEqual(records.map(record => record.keyID).sort(), [
     'active-allow',
@@ -255,6 +289,13 @@ add_task(function* test_permissions_clear() {
   yield PushService._onPermissionChange(null, 'cleared');
 
   yield unregisterPromise;
+
+  let notifiedScopes = yield subModifiedPromise;
+  deepEqual(notifiedScopes, [
+    'https://example.edu/lonely',
+    'https://example.info/page/1',
+    'https://example.xyz/page/1',
+  ], 'Wrong scopes modified after clearing registrations');
 
   records = yield db.getAllKeyIDs();
   deepEqual(records.map(record => record.keyID).sort(), [

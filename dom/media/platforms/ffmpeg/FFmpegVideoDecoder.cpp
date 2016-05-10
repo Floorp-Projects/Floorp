@@ -159,10 +159,8 @@ FFmpegVideoDecoder<LIBAV_VER>::InitCodecContext()
 }
 
 FFmpegVideoDecoder<LIBAV_VER>::DecodeResult
-FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample)
+FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample)
 {
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-
   uint8_t* inputData = const_cast<uint8_t*>(aSample->Data());
   size_t inputSize = aSample->Size();
 
@@ -181,13 +179,12 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample)
                                        aSample->mTime, aSample->mTimecode,
                                        aSample->mOffset);
       if (size_t(len) > inputSize) {
-        mCallback->Error();
         return DecodeResult::DECODE_ERROR;
       }
       inputData += len;
       inputSize -= len;
       if (size) {
-        switch (DoDecodeFrame(aSample, data, size)) {
+        switch (DoDecode(aSample, data, size)) {
           case DecodeResult::DECODE_ERROR:
             return DecodeResult::DECODE_ERROR;
           case DecodeResult::DECODE_FRAME:
@@ -201,15 +198,13 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample)
     return gotFrame ? DecodeResult::DECODE_FRAME : DecodeResult::DECODE_NO_FRAME;
   }
 #endif
-  return DoDecodeFrame(aSample, inputData, inputSize);
+  return DoDecode(aSample, inputData, inputSize);
 }
 
 FFmpegVideoDecoder<LIBAV_VER>::DecodeResult
-FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
-                                            uint8_t* aData, int aSize)
+FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
+                                        uint8_t* aData, int aSize)
 {
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-
   AVPacket packet;
   mLib->av_init_packet(&packet);
 
@@ -229,7 +224,6 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
 
   if (!PrepareFrame()) {
     NS_WARNING("FFmpeg h264 decoder failed to allocate frame.");
-    mCallback->Error();
     return DecodeResult::DECODE_ERROR;
   }
 
@@ -248,7 +242,6 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
 
   if (bytesConsumed < 0) {
     NS_WARNING("FFmpeg video decoder error.");
-    mCallback->Error();
     return DecodeResult::DECODE_ERROR;
   }
 
@@ -307,7 +300,6 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
 
     if (!v) {
       NS_WARNING("image allocation error.");
-      mCallback->Error();
       return DecodeResult::DECODE_ERROR;
     }
     mCallback->Output(v);
@@ -317,35 +309,11 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
 }
 
 void
-FFmpegVideoDecoder<LIBAV_VER>::DecodeFrame(MediaRawData* aSample)
-{
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-
-  if (DoDecodeFrame(aSample) != DecodeResult::DECODE_ERROR &&
-      mTaskQueue->IsEmpty()) {
-    mCallback->InputExhausted();
-  }
-}
-
-nsresult
-FFmpegVideoDecoder<LIBAV_VER>::Input(MediaRawData* aSample)
-{
-  nsCOMPtr<nsIRunnable> runnable(
-    NewRunnableMethod<RefPtr<MediaRawData>>(
-      this, &FFmpegVideoDecoder<LIBAV_VER>::DecodeFrame,
-      RefPtr<MediaRawData>(aSample)));
-  mTaskQueue->Dispatch(runnable.forget());
-
-  return NS_OK;
-}
-
-void
 FFmpegVideoDecoder<LIBAV_VER>::ProcessDrain()
 {
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   RefPtr<MediaRawData> empty(new MediaRawData());
   empty->mTimecode = mPtsContext.LastDts();
-  while (DoDecodeFrame(empty) == DecodeResult::DECODE_FRAME) {
+  while (DoDecode(empty) == DecodeResult::DECODE_FRAME) {
   }
   mCallback->DrainComplete();
 }

@@ -12056,13 +12056,13 @@ class CGDescriptor(CGThing):
         if descriptor.interface.hasInterfacePrototypeObject():
             cgThings.append(CGPrototypeJSClass(descriptor, properties))
 
-        if descriptor.interface.hasInterfaceObject():
-            cgThings.append(CGDefineDOMInterfaceMethod(descriptor))
-
         if ((descriptor.interface.hasInterfaceObject() or descriptor.interface.isNavigatorProperty()) and
             not descriptor.interface.isExternal() and
             descriptor.isExposedConditionally()):
             cgThings.append(CGConstructorEnabled(descriptor))
+
+        if descriptor.registersGlobalNamesOnWindow:
+            cgThings.append(CGDefineDOMInterfaceMethod(descriptor))
 
         if (descriptor.interface.hasMembersInSlots() and
             descriptor.interface.hasChildInterfaces()):
@@ -13056,48 +13056,53 @@ class CGResolveSystemBinding(CGAbstractMethod):
                       "\n").define()
 
 
-class CGRegisterProtos(CGAbstractMethod):
+def getGlobalNames(config):
+    names = []
+    for desc in config.getDescriptors(registersGlobalNamesOnWindow=True):
+        names.append((desc.name, desc))
+        names.extend((n.identifier.name, desc) for n in desc.interface.namedConstructors)
+    return names
+
+class CGGlobalNamesString(CGGeneric):
     def __init__(self, config):
-        CGAbstractMethod.__init__(self, None, 'Register', 'void',
-                                  [Argument('nsScriptNameSpaceManager*', 'aNameSpaceManager')])
+        globalNames = getGlobalNames(config)
+        currentOffset = 0
+        strings = []
+        for (name, _) in globalNames:
+            strings.append('/* %i */ "%s\\0"' % (currentOffset, name))
+            currentOffset += len(name) + 1 # Add trailing null.
+        define = fill("""
+            const uint32_t WebIDLGlobalNameHash::sCount = ${count};
+
+            const char WebIDLGlobalNameHash::sNames[] =
+              $*{strings}
+
+            """,
+            count=len(globalNames),
+            strings="\n".join(strings) + ";\n")
+
+        CGGeneric.__init__(self, define=define)
+
+
+class CGRegisterGlobalNames(CGAbstractMethod):
+    def __init__(self, config):
+        CGAbstractMethod.__init__(self, None, 'RegisterWebIDLGlobalNames',
+                                  'void', [])
         self.config = config
 
-    def _defineMacro(self):
-        return dedent("""
-            #define REGISTER_PROTO(_dom_class, _ctor_check) \\
-              aNameSpaceManager->RegisterDefineDOMInterface(MOZ_UTF16(#_dom_class), _dom_class##Binding::DefineDOMInterface, _ctor_check);
-            #define REGISTER_CONSTRUCTOR(_dom_constructor, _dom_class, _ctor_check) \\
-              aNameSpaceManager->RegisterDefineDOMInterface(MOZ_UTF16(#_dom_constructor), _dom_class##Binding::DefineDOMInterface, _ctor_check);
-            """)
-
-    def _undefineMacro(self):
-        return dedent("""
-            #undef REGISTER_CONSTRUCTOR
-            #undef REGISTER_PROTO
-            """)
-
-    def _registerProtos(self):
+    def definition_body(self):
         def getCheck(desc):
             if not desc.isExposedConditionally():
                 return "nullptr"
             return "%sBinding::ConstructorEnabled" % desc.name
-        lines = []
-        for desc in self.config.getDescriptors(hasInterfaceObject=True,
-                                               isExternal=False,
-                                               workers=False,
-                                               isExposedInWindow=True,
-                                               register=True):
-            lines.append("REGISTER_PROTO(%s, %s);\n" % (desc.name, getCheck(desc)))
-            lines.extend("REGISTER_CONSTRUCTOR(%s, %s, %s);\n" % (n.identifier.name, desc.name, getCheck(desc))
-                         for n in desc.interface.namedConstructors)
-        return ''.join(lines)
 
-    def indent_body(self, body):
-        # Don't indent the body of this method, as it's all preprocessor gunk.
-        return body
-
-    def definition_body(self):
-        return "\n" + self._defineMacro() + "\n" + self._registerProtos() + "\n" + self._undefineMacro()
+        define = ""
+        currentOffset = 0
+        for (name, desc) in getGlobalNames(self.config):
+            length = len(name)
+            define += "WebIDLGlobalNameHash::Register(%i, %i, %sBinding::DefineDOMInterface, %s);\n" % (currentOffset, length, desc.name, getCheck(desc))
+            currentOffset += length + 1 # Add trailing null.
+        return define
 
 
 def dependencySortObjects(objects, dependencyGetter, nameGetter):
@@ -16194,7 +16199,7 @@ class GlobalGenRoots():
     @staticmethod
     def RegisterBindings(config):
 
-        curr = CGRegisterProtos(config)
+        curr = CGList([CGGlobalNamesString(config), CGRegisterGlobalNames(config)])
 
         # Wrap all of that in our namespaces.
         curr = CGNamespace.build(['mozilla', 'dom'],
@@ -16207,7 +16212,7 @@ class GlobalGenRoots():
                                                             workers=False,
                                                             isExposedInWindow=True,
                                                             register=True)]
-        defineIncludes.append('nsScriptNameSpaceManager.h')
+        defineIncludes.append('mozilla/dom/WebIDLGlobalNameHash.h')
         defineIncludes.extend([CGHeaders.getDeclarationFilename(desc.interface)
                                for desc in config.getDescriptors(isNavigatorProperty=True,
                                                                  workers=False,

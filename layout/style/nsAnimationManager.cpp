@@ -1031,8 +1031,9 @@ CSSAnimationBuilder::GetComputedValue(nsPresContext* aPresContext,
                                    eRestyle_AllHintsWithAnimations);
   }
 
-  if (CommonAnimationManager<CSSAnimation>::ExtractComputedValueForTransition(
-        aProperty, mStyleWithoutAnimation, computedValue) &&
+  if (StyleAnimationValue::ExtractComputedValue(aProperty,
+                                                mStyleWithoutAnimation,
+                                                computedValue) &&
       StyleAnimationValue::UncomputeValue(
         aProperty, Move(computedValue), aResult)) {
     // If we hit this assertion or the MOZ_ASSERT_UNREACHABLE below, it

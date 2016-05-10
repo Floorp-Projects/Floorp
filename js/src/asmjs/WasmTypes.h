@@ -627,13 +627,8 @@ enum class SymbolicAddress
     RuntimeInterruptUint32,
     StackLimit,
     ReportOverRecursed,
-    OnOutOfBounds,
-    OnImpreciseConversion,
-    BadIndirectCall,
-    UnreachableTrap,
-    IntegerOverflowTrap,
-    InvalidConversionToIntegerTrap,
     HandleExecutionInterrupt,
+    HandleTrap,
     InvokeImport_Void,
     InvokeImport_I32,
     InvokeImport_I64,
@@ -650,6 +645,31 @@ AddressOf(SymbolicAddress imm, ExclusiveContext* cx);
 // testing purposes mainly.
 MOZ_MUST_USE bool ReadI64Object(JSContext* cx, HandleValue v, int64_t* val);
 
+// A wasm::Trap is a reason for why we reached a trap in executed code. Each
+// different trap is mapped to a different error message.
+
+enum class Trap
+{
+    // The Unreachable opcode has been executed.
+    Unreachable,
+    // An integer arithmetic operation led to an overflow.
+    IntegerOverflow,
+    // Trying to coerce NaN to an integer.
+    InvalidConversionToInteger,
+    // Integer division by zero.
+    IntegerDivideByZero,
+    // Out of bounds on wasm memory accesses and asm.js SIMD/atomic accesses.
+    OutOfBounds,
+    // Bad signature for an indirect call.
+    BadIndirectCall,
+
+    // (asm.js only) SIMD float to int conversion failed because the input
+    // wasn't in bounds.
+    ImpreciseSimdConversion,
+
+    Limit
+};
+
 // A wasm::JumpTarget represents one of a special set of stubs that can be
 // jumped to from any function. Because wasm modules can be larger than the
 // range of a plain jump, these potentially out-of-range jumps must be recorded
@@ -657,13 +677,16 @@ MOZ_MUST_USE bool ReadI64Object(JSContext* cx, HandleValue v, int64_t* val);
 
 enum class JumpTarget
 {
+    // Traps
+    Unreachable = unsigned(Trap::Unreachable),
+    IntegerOverflow = unsigned(Trap::IntegerOverflow),
+    InvalidConversionToInteger = unsigned(Trap::InvalidConversionToInteger),
+    IntegerDivideByZero = unsigned(Trap::IntegerDivideByZero),
+    OutOfBounds = unsigned(Trap::OutOfBounds),
+    BadIndirectCall = unsigned(Trap::BadIndirectCall),
+    ImpreciseSimdConversion = unsigned(Trap::ImpreciseSimdConversion),
+    // Non-traps
     StackOverflow,
-    OutOfBounds,
-    ConversionError,
-    BadIndirectCall,
-    UnreachableTrap,
-    IntegerOverflowTrap,
-    InvalidConversionToIntegerTrap,
     Throw,
     Limit
 };

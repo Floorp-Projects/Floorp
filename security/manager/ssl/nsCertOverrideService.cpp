@@ -376,13 +376,13 @@ nsCertOverrideService::RememberValidityOverride(const nsACString& aHostName,
   char* nickname = DefaultServerNicknameForCert(nsscert.get());
   if (!aTemporary && nickname && *nickname)
   {
-    ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
+    UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
     if (!slot) {
       PR_Free(nickname);
       return NS_ERROR_FAILURE;
     }
-  
-    SECStatus srv = PK11_ImportCert(slot, nsscert.get(), CK_INVALID_HANDLE,
+
+    SECStatus srv = PK11_ImportCert(slot.get(), nsscert.get(), CK_INVALID_HANDLE,
                                     nickname, false);
     if (srv != SECSuccess) {
       PR_Free(nickname);

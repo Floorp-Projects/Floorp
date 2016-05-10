@@ -39,7 +39,8 @@
           return test.setRemoteDescription(
               test.pcRemote,
               new RTCSessionDescription({ type: "rollback" }),
-              STABLE);
+              STABLE)
+            .then(() => test.pcRemote.rollbackRemoteTracksIfNotNegotiated());
         },
 
         function PC_LOCAL_ROLLBACK(test) {

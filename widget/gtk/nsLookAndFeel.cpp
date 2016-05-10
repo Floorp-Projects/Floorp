@@ -1178,6 +1178,7 @@ nsLookAndFeel::Init()
     GtkWidget *treeView = gtk_tree_view_new();
     GtkWidget *linkButton = gtk_link_button_new("http://example.com/");
     GtkWidget *menuBar = gtk_menu_bar_new();
+    GtkWidget *menuBarItem = gtk_menu_item_new();
     GtkWidget *entry = gtk_entry_new();
     GtkWidget *textView = gtk_text_view_new();
 
@@ -1187,6 +1188,7 @@ nsLookAndFeel::Init()
     gtk_container_add(GTK_CONTAINER(parent), linkButton);
     gtk_container_add(GTK_CONTAINER(parent), combobox);
     gtk_container_add(GTK_CONTAINER(parent), menuBar);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menuBar), menuBarItem);
     gtk_container_add(GTK_CONTAINER(window), parent);
     gtk_container_add(GTK_CONTAINER(parent), entry);
     gtk_container_add(GTK_CONTAINER(parent), textView);
@@ -1299,7 +1301,7 @@ nsLookAndFeel::Init()
     sComboBoxText = GDK_RGBA_TO_NS_RGBA(color);
 
     // Menubar text and hover text colors    
-    style = gtk_widget_get_style_context(menuBar);
+    style = gtk_widget_get_style_context(menuBarItem);
     gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
     sMenuBarText = GDK_RGBA_TO_NS_RGBA(color);
     gtk_style_context_get_color(style, GTK_STATE_FLAG_PRELIGHT, &color);

@@ -12,12 +12,10 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/StyleAnimationValue.h"
 #include "mozilla/dom/Animation.h"
 #include "mozilla/Attributes.h" // For MOZ_NON_OWNING_REF
 #include "mozilla/Assertions.h"
 #include "nsContentUtils.h"
-#include "nsCSSProperty.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCycleCollectionParticipant.h"
 
@@ -52,11 +50,6 @@ public:
     mPresContext = nullptr;
   }
 
-  static bool ExtractComputedValueForTransition(
-                  nsCSSProperty aProperty,
-                  nsStyleContext* aStyleContext,
-                  StyleAnimationValue& aComputedValue);
-
 protected:
   virtual ~CommonAnimationManager()
   {
@@ -78,19 +71,6 @@ protected:
   LinkedList<AnimationCollection<AnimationType>> mElementCollections;
   nsPresContext *mPresContext; // weak (non-null from ctor to Disconnect)
 };
-
-template <class AnimationType>
-/* static */ bool
-CommonAnimationManager<AnimationType>::ExtractComputedValueForTransition(
-  nsCSSProperty aProperty,
-  nsStyleContext* aStyleContext,
-  StyleAnimationValue& aComputedValue)
-{
-  bool result = StyleAnimationValue::ExtractComputedValue(aProperty,
-                                                          aStyleContext,
-                                                          aComputedValue);
-  return result;
-}
 
 /**
  * Utility class for referencing the element that created a CSS animation or
