@@ -47,7 +47,7 @@ var data = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
 stream.write(data, data.length);
 stream.close();
 
-const PREF_BLOCKLIST_UPDATE_ENABLED = "services.blocklist.update_enabled";
+const PREF_KINTO_UPDATE_ENABLED = "services.kinto.update_enabled";
 const PREF_ONECRL_VIA_AMO = "security.onecrl.via.amo";
 
 var revocations = profile.clone();
@@ -225,7 +225,7 @@ function run_test() {
                  " c2VyaWFsMi4=";
 
   // This test assumes OneCRL updates via AMO
-  Services.prefs.setBoolPref(PREF_BLOCKLIST_UPDATE_ENABLED, false);
+  Services.prefs.setBoolPref(PREF_KINTO_UPDATE_ENABLED, false);
   Services.prefs.setBoolPref(PREF_ONECRL_VIA_AMO, true);
 
   add_test(function () {

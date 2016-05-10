@@ -28,7 +28,7 @@
   "extensions.blocklist.url": "http://localhost/extensions-dummy/blocklistURL",
   "extensions.webservice.discoverURL": "http://localhost/extensions-dummy/discoveryURL",
   "extensions.getAddons.maxResults": 0,
-  "services.blocklist.base": "http://localhost/dummy-kinto/v1",
+  "services.kinto.base": "http://localhost/dummy-kinto/v1",
   "geo.wifi.uri": "http://localhost/location-dummy/locationURL",
   "browser.search.geoip.url": "http://localhost/location-dummy/locationURL",
   "browser.search.isUS": true,
