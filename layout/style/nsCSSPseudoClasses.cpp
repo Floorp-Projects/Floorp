@@ -44,14 +44,16 @@ static const nsStaticAtom CSSPseudoClasses_info[] = {
 // Flags data for each of the pseudo-classes, which must be separate
 // from the previous array since there's no place for it in
 // nsStaticAtom.
-static const uint32_t CSSPseudoClasses_flags[] = {
+/* static */ const uint32_t
+nsCSSPseudoClasses::kPseudoClassFlags[Type::Count] = {
 #define CSS_PSEUDO_CLASS(name_, value_, flags_, pref_) \
   flags_,
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
 };
 
-static bool sPseudoClassEnabled[] = {
+/* static */ bool
+nsCSSPseudoClasses::sPseudoClassEnabled[Type::Count] = {
 // If the pseudo class has any "ENABLED_IN" flag set, it is disabled by
 // default. Note that, if a pseudo class has pref, whatever its default
 // value is, it'll later be changed in nsCSSPseudoClasses::AddRefAtoms()
@@ -145,8 +147,8 @@ nsCSSPseudoClasses::IsUserActionPseudoClass(Type aType)
 nsCSSPseudoClasses::FlagsForPseudoClass(const Type aType)
 {
   size_t index = static_cast<size_t>(aType);
-  NS_ASSERTION(index < ArrayLength(CSSPseudoClasses_flags),
-               "argument must be a pseudo-class");
-  return CSSPseudoClasses_flags[index];
+  MOZ_ASSERT(index < ArrayLength(kPseudoClassFlags),
+             "argument must be a pseudo-class");
+  return kPseudoClassFlags[index];
 }
 
