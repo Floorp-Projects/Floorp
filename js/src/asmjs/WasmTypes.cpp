@@ -59,13 +59,6 @@ WasmHandleExecutionInterrupt()
 }
 
 static void
-BadIndirectCall()
-{
-    JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IND_CALL);
-}
-
-static void
 HandleTrap(int32_t trapIndex)
 {
     JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
@@ -86,6 +79,9 @@ HandleTrap(int32_t trapIndex)
         break;
       case Trap::IntegerDivideByZero:
         errorNumber = JSMSG_WASM_INT_DIVIDE_BY_ZERO;
+        break;
+      case Trap::BadIndirectCall:
+        errorNumber = JSMSG_WASM_BAD_IND_CALL;
         break;
       case Trap::ImpreciseSimdConversion:
         errorNumber = JSMSG_SIMD_FAILED_CONVERSION;
@@ -244,8 +240,6 @@ wasm::AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
         return cx->stackLimitAddressForJitCode(StackForUntrustedScript);
       case SymbolicAddress::ReportOverRecursed:
         return FuncCast(WasmReportOverRecursed, Args_General0);
-      case SymbolicAddress::BadIndirectCall:
-        return FuncCast(BadIndirectCall, Args_General0);
       case SymbolicAddress::HandleExecutionInterrupt:
         return FuncCast(WasmHandleExecutionInterrupt, Args_General0);
       case SymbolicAddress::HandleTrap:
