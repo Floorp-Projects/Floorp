@@ -522,7 +522,7 @@ nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsINode* aNode, nsIAtom* aProperty,
   }
   nsCSSProperty prop =
     nsCSSProps::LookupProperty(nsDependentAtomString(aProperty),
-                               CSSEnabledState::eForAllContent);
+                               nsCSSProps::eEnabledForAllContent);
   MOZ_ASSERT(prop != eCSSProperty_UNKNOWN);
   decl->GetValue(prop, aValue);
 

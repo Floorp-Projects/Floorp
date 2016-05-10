@@ -2740,7 +2740,7 @@ mozilla::StyleTransition::SetUnknownProperty(nsCSSProperty aProperty,
                                              const nsAString& aPropertyString)
 {
   MOZ_ASSERT(nsCSSProps::LookupProperty(aPropertyString,
-                                        CSSEnabledState::eForAllContent) ==
+                                        nsCSSProps::eEnabledForAllContent) ==
                aProperty,
              "property and property string should match");
   MOZ_ASSERT(aProperty == eCSSProperty_UNKNOWN ||
