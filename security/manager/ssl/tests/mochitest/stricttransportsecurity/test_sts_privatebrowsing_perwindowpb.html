@@ -13,6 +13,8 @@
   <script class="testbody" type="text/javascript">
   "use strict";
 
+  // We define |content| as a global as a hack to prevent use of |content|
+  // inside a ContentTask tripping ESLint no-undef checks.
   /* global content */
 
   SimpleTest.waitForExplicitFinish();
@@ -74,7 +76,7 @@
   }
 
   function testOnWindow(aIsPrivate, aCallback) {
-    var win = mainWindow.OpenBrowserWindow({private: aIsPrivate});
+    let win = mainWindow.OpenBrowserWindow({private: aIsPrivate});
 
     Task.spawn(function* () {
       yield new Promise(resolve => whenDelayedStartupFinished(win, resolve));
@@ -156,8 +158,7 @@
    *          or: "INSECURE otherdom"
    */
   function onMessageReceived(win, isPrivate, data) {
-    // otherwise, it's a test result
-    var result = data.split(/\s+/);
+    let result = data.split(/\s+/);
     if (result.length != 2) {
       SimpleTest.ok(false, data);
       return;
@@ -236,9 +237,8 @@
   }
 
   function dump_STSState(isPrivate) {
-    var sss =
-      Cc["@mozilla.org/ssservice;1"].
-        getService(Ci.nsISiteSecurityService);
+    let sss = Cc["@mozilla.org/ssservice;1"]
+                .getService(Ci.nsISiteSecurityService);
     let flags = isPrivate ? Ci.nsISocketProvider.NO_PERMANENT_STORAGE : 0;
     SimpleTest.info("State of example.com: " + sss.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS, "example.com", flags));
   }
