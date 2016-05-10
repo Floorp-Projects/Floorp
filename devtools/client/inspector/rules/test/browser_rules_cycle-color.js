@@ -13,6 +13,7 @@ const TEST_URI = `
     }
     span {
       color: blue;
+      border-color: #ff000080;
     }
   </style>
   <body><span>Test</span> cycling color types in the rule view!</body>
@@ -23,6 +24,7 @@ add_task(function* () {
   let {inspector, view} = yield openRuleView();
   let container = getRuleViewProperty(view, "body", "color").valueSpan;
   yield checkColorCycling(container, view);
+  yield checkAlphaColorCycling(inspector, view);
   yield checkColorCyclingPersist(inspector, view);
 });
 
@@ -48,6 +50,31 @@ function* checkColorCycling(container, view) {
   }, {
     value: "hsl(0, 100%, 50%)",
     comment: "Color displayed as an HSL value again."
+  }];
+
+  for (let test of tests) {
+    yield checkSwatchShiftClick(container, win, test.value, test.comment);
+  }
+}
+
+function* checkAlphaColorCycling(inspector, view) {
+  yield selectNode("span", inspector);
+  let container = getRuleViewProperty(view, "span", "border-color").valueSpan;
+  let valueNode = container.querySelector(".ruleview-color");
+  let win = view.styleWindow;
+
+  is(valueNode.textContent, "#ff000080",
+    "Color displayed as an alpha hex value.");
+
+  let tests = [{
+    value: "hsla(0, 100%, 50%, 0.5)",
+    comment: "Color displayed as an HSLa value."
+  }, {
+    value: "rgba(255, 0, 0, 0.5)",
+    comment: "Color displayed as an RGBa value."
+  }, {
+    value: "#ff000080",
+    comment: "Color displayed as an alpha hex value again."
   }];
 
   for (let test of tests) {

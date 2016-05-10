@@ -817,7 +817,17 @@ InplaceEditor.prototype = {
       offsetEnd *= 2;
     }
 
-    if (rawValue.length !== 6) {
+    // Normalize #ABCD -> #AABBCCDD.
+    if (rawValue.length === 4) {
+      rawValue = rawValue.charAt(0) + rawValue.charAt(0) +
+                 rawValue.charAt(1) + rawValue.charAt(1) +
+                 rawValue.charAt(2) + rawValue.charAt(2) +
+                 rawValue.charAt(3) + rawValue.charAt(3);
+      offset *= 2;
+      offsetEnd *= 2;
+    }
+
+    if (rawValue.length !== 6 && rawValue.length !== 8) {
       return null;
     }
 
