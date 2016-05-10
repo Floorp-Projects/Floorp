@@ -101,7 +101,7 @@ public:
     if (mSubpropertyCount[aProperty] == 0) {
       uint32_t count = 0;
       CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(
-          p, aProperty, nsCSSProps::eEnabledForAllContent) {
+          p, aProperty, CSSEnabledState::eForAllContent) {
         ++count;
       }
       mSubpropertyCount[aProperty] = count;
@@ -492,13 +492,13 @@ KeyframeUtils::GetAnimationPropertiesFromKeyframes(
       if (nsCSSProps::IsShorthand(pair.mProperty)) {
         nsCSSValueTokenStream* tokenStream = pair.mValue.GetTokenStreamValue();
         if (!StyleAnimationValue::ComputeValues(pair.mProperty,
-              nsCSSProps::eEnabledForAllContent, aElement, aStyleContext,
+              CSSEnabledState::eForAllContent, aElement, aStyleContext,
               tokenStream->mTokenStream, /* aUseSVGMode */ false, values)) {
           continue;
         }
       } else {
         if (!StyleAnimationValue::ComputeValues(pair.mProperty,
-              nsCSSProps::eEnabledForAllContent, aElement, aStyleContext,
+              CSSEnabledState::eForAllContent, aElement, aStyleContext,
               pair.mValue, /* aUseSVGMode */ false, values)) {
           continue;
         }
@@ -695,7 +695,7 @@ GetPropertyValuesPairs(JSContext* aCx,
     }
     nsCSSProperty property =
       nsCSSProps::LookupPropertyByIDLName(propName,
-                                          nsCSSProps::eEnabledForAllContent);
+                                          CSSEnabledState::eForAllContent);
     if (property != eCSSProperty_UNKNOWN &&
         (nsCSSProps::IsShorthand(property) ||
          nsCSSProps::kAnimTypeTable[property] != eStyleAnimType_None)) {
@@ -1110,7 +1110,7 @@ RequiresAdditiveAnimation(const nsTArray<Keyframe>& aKeyframes,
           continue;
         }
         CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(
-            prop, pair.mProperty, nsCSSProps::eEnabledForAllContent) {
+            prop, pair.mProperty, CSSEnabledState::eForAllContent) {
           addToPropertySets(*prop, offsetToUse);
         }
       } else {

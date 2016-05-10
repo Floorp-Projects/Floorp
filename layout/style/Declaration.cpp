@@ -146,7 +146,7 @@ Declaration::RemoveProperty(nsCSSProperty aProperty)
 
   if (nsCSSProps::IsShorthand(aProperty)) {
     CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty,
-                                         nsCSSProps::eEnabledForAllContent) {
+                                         CSSEnabledState::eForAllContent) {
       data.ClearLonghandProperty(*p);
       mOrder.RemoveElement(static_cast<uint32_t>(*p));
     }
@@ -512,7 +512,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
            initialCount = 0, inheritCount = 0, unsetCount = 0,
            matchingTokenStreamCount = 0, nonMatchingTokenStreamCount = 0;
   CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty,
-                                       nsCSSProps::eEnabledForAllContent) {
+                                       CSSEnabledState::eForAllContent) {
     if (*p == eCSSProperty__x_system_font) {
       // The system-font subproperty doesn't count.
       continue;
@@ -1432,8 +1432,8 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
 bool
 Declaration::GetValueIsImportant(const nsAString& aProperty) const
 {
-  nsCSSProperty propID =
-    nsCSSProps::LookupProperty(aProperty, nsCSSProps::eIgnoreEnabledState);
+  nsCSSProperty propID = nsCSSProps::
+    LookupProperty(aProperty, CSSEnabledState::eIgnoreEnabledState);
   if (propID == eCSSProperty_UNKNOWN) {
     return false;
   }
@@ -1458,7 +1458,7 @@ Declaration::GetValueIsImportant(nsCSSProperty aProperty) const
   }
 
   CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty,
-                                       nsCSSProps::eEnabledForAllContent) {
+                                       CSSEnabledState::eForAllContent) {
     if (*p == eCSSProperty__x_system_font) {
       // The system_font subproperty doesn't count.
       continue;
@@ -1572,7 +1572,7 @@ Declaration::ToString(nsAString& aString) const
       continue;
     }
 
-    if (!nsCSSProps::IsEnabled(property, nsCSSProps::eEnabledForAllContent)) {
+    if (!nsCSSProps::IsEnabled(property, CSSEnabledState::eForAllContent)) {
       continue;
     }
     bool doneProperty = false;
