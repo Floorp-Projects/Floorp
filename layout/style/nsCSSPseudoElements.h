@@ -101,13 +101,14 @@ public:
   }
 
 private:
-  static uint32_t FlagsForPseudoElement(const Type aType);
-
   // Does the given pseudo-element have all of the flags given?
   static bool PseudoElementHasFlags(const Type aType, uint32_t aFlags)
   {
-    return (FlagsForPseudoElement(aType) & aFlags) == aFlags;
+    MOZ_ASSERT(aType < Type::Count);
+    return (kPseudoElementFlags[size_t(aType)] & aFlags) == aFlags;
   }
+
+  static const uint32_t kPseudoElementFlags[size_t(Type::Count)];
 };
 
 #endif /* nsCSSPseudoElements_h___ */
