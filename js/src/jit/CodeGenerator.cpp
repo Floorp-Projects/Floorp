@@ -5508,8 +5508,12 @@ CodeGenerator::visitSimdBox(LSimdBox* lir)
 
     Address objectData(object, InlineTypedObject::offsetOfDataStart());
     switch (type) {
-      case MIRType::Bool32x4:
+      case MIRType::Int8x16:
+      case MIRType::Int16x8:
       case MIRType::Int32x4:
+      case MIRType::Bool8x16:
+      case MIRType::Bool16x8:
+      case MIRType::Bool32x4:
         masm.storeUnalignedSimd128Int(in, objectData);
         break;
       case MIRType::Float32x4:
@@ -5586,8 +5590,12 @@ CodeGenerator::visitSimdUnbox(LSimdUnbox* lir)
     // Load the value from the data of the InlineTypedObject.
     Address objectData(object, InlineTypedObject::offsetOfDataStart());
     switch (lir->mir()->type()) {
-      case MIRType::Bool32x4:
+      case MIRType::Int8x16:
+      case MIRType::Int16x8:
       case MIRType::Int32x4:
+      case MIRType::Bool8x16:
+      case MIRType::Bool16x8:
+      case MIRType::Bool32x4:
         masm.loadUnalignedSimd128Int(objectData, simd);
         break;
       case MIRType::Float32x4:
