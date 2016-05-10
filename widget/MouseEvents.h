@@ -174,11 +174,12 @@ public:
  * mozilla::WidgetMouseEvent
  ******************************************************************************/
 
-class WidgetMouseEvent : public WidgetMouseEventBase, public WidgetPointerHelper
+class WidgetMouseEvent : public WidgetMouseEventBase
+                       , public WidgetPointerHelper
 {
 private:
-  friend class mozilla::dom::PBrowserParent;
-  friend class mozilla::dom::PBrowserChild;
+  friend class dom::PBrowserParent;
+  friend class dom::PBrowserChild;
 
 public:
   typedef bool ReasonType;
@@ -212,8 +213,11 @@ protected:
   {
   }
 
-  WidgetMouseEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget,
-                   EventClassID aEventClassID, Reason aReason)
+  WidgetMouseEvent(bool aIsTrusted,
+                   EventMessage aMessage,
+                   nsIWidget* aWidget,
+                   EventClassID aEventClassID,
+                   Reason aReason)
     : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, aEventClassID)
     , mReason(aReason)
     , mContextMenuTrigger(eNormal)
@@ -267,16 +271,28 @@ public:
     return result;
   }
 
+  // mReason indicates the reason why the event is fired:
+  // - Representing mouse operation.
+  // - Synthesized for emulating mousemove event when the content under the
+  //   mouse cursor is scrolled.
   Reason mReason;
 
+  // mContextMenuTrigger is valid only when mMessage is eContextMenu.
+  // This indicates if the context menu event is caused by context menu key or
+  // other reasons (typically, a click of right mouse button).
   ContextMenuTrigger mContextMenuTrigger;
 
+  // mExitFrom is valid only when mMessage is eMouseExitFromWidget.
+  // This indicates if the mouse cursor exits from a top level widget or
+  // a child widget.
   ExitFrom mExitFrom;
 
   // Whether the event should ignore scroll frame bounds during dispatch.
   bool mIgnoreRootScrollFrame;
 
-  /// The number of mouse clicks.
+  // mClickCount may be non-zero value when mMessage is eMouseDown, eMouseUp,
+  // eMouseClick or eMouseDoubleClick. The number is count of mouse clicks.
+  // Otherwise, this must be 0.
   uint32_t mClickCount;
 
   void AssignMouseEventData(const WidgetMouseEvent& aEvent, bool aCopyTargets)
