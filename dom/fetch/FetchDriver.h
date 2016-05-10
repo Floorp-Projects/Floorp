@@ -96,8 +96,9 @@ private:
   nsresult ContinueFetch();
   nsresult HttpFetch();
   // Returns the filtered response sent to the observer.
+  // Callers who don't have access to a channel can pass null for aFinalURI.
   already_AddRefed<InternalResponse>
-  BeginAndGetFilteredResponse(InternalResponse* aResponse,
+  BeginAndGetFilteredResponse(InternalResponse* aResponse, nsIURI* aFinalURI,
                               bool aFoundOpaqueRedirect);
   // Utility since not all cases need to do any post processing of the filtered
   // response.
