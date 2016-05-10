@@ -1,8 +1,10 @@
-/* globals Cu, XPCOMUtils, Preferences, is, registerCleanupFunction, NewTabWebChannel, PlacesTestUtils, Task */
+/* globals Cu, XPCOMUtils, Preferences, is, registerCleanupFunction, NewTabWebChannel,
+PlacesTestUtils, NewTabMessages, ok, Services, PlacesUtils, NetUtil, Task */
 
 "use strict";
 
 Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NewTabWebChannel",
                                   "resource:///modules/NewTabWebChannel.jsm");
@@ -160,4 +162,61 @@ add_task(function* placesMessages_request() {
     yield placesChangeAck;
   });
   yield cleanup();
+});
+
+/*
+ * Sanity tests for search messages
+ */
+add_task(function* searchMessages_request() {
+  yield setup();
+  let testURL = "https://example.com/browser/browser/components/newtab/tests/browser/newtabmessages_search.html";
+
+  // create dummy test engines
+  Services.search.addEngineWithDetails("Engine1", "", "", "", "GET",
+    "http://example.com/?q={searchTerms}");
+  Services.search.addEngineWithDetails("Engine2", "", "", "", "GET",
+    "http://example.com/?q={searchTerms}");
+
+  let tabOptions = {
+    gBrowser,
+    url: testURL
+  };
+
+  let UIStringsResponseAck = new Promise(resolve => {
+    NewTabWebChannel.once("UIStringsAck", (_, msg) => {
+      ok(true, "a search request response for UI string has been received");
+      ok(msg.data, "received the UI Strings");
+      resolve();
+    });
+  });
+  let suggestionsResponseAck = new Promise(resolve => {
+    NewTabWebChannel.once("suggestionsAck", (_, msg) => {
+      ok(true, "a search request response for suggestions has been received");
+      ok(msg.data, "received the suggestions");
+      resolve();
+    });
+  });
+  let stateResponseAck = new Promise(resolve => {
+    NewTabWebChannel.once("stateAck", (_, msg) => {
+      ok(true, "a search request response for state has been received");
+      ok(msg.data, "received a state object");
+      resolve();
+    });
+  });
+  let currentEngineResponseAck = new Promise(resolve => {
+    NewTabWebChannel.once("currentEngineAck", (_, msg) => {
+      ok(true, "a search request response for current engine has been received");
+      ok(msg.data, "received a current engine");
+      resolve();
+    });
+  });
+
+  yield BrowserTestUtils.withNewTab(tabOptions, function*() {
+    yield UIStringsResponseAck;
+    yield suggestionsResponseAck;
+    yield stateResponseAck;
+    yield currentEngineResponseAck;
+  });
+
+  cleanup();
 });
