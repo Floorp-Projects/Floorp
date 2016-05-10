@@ -212,7 +212,9 @@ WindowNamedPropertiesHandler::ownPropNames(JSContext* aCx,
     return true;
   }
   nsHTMLDocument* document = static_cast<nsHTMLDocument*>(htmlDoc.get());
-  document->GetSupportedNames(flags, names);
+  // Document names are enumerable, so we want to get them no matter what flags
+  // is.
+  document->GetSupportedNames(names);
 
   JS::AutoIdVector docProps(aCx);
   if (!AppendNamedPropertyIds(aCx, aProxy, names, false, docProps)) {

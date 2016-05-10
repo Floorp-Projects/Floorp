@@ -36,7 +36,7 @@ public:
   nsMimeType* IndexedGetter(uint32_t index, bool &found);
   nsMimeType* NamedGetter(const nsAString& name, bool &found);
   uint32_t Length();
-  void GetSupportedNames(unsigned, nsTArray< nsString >& retval);
+  void GetSupportedNames(nsTArray<nsString>& retval);
 
 protected:
   virtual ~nsMimeTypeArray();

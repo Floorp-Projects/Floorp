@@ -1137,7 +1137,7 @@ public:
   virtual nsISupports* GetParentObject();
 
   void NamedGetter(const nsAString&, bool&, nsAString&);
-  void GetSupportedNames(unsigned, nsTArray<nsString>&);
+  void GetSupportedNames(nsTArray<nsString>&);
 };
 
 class TestIndexedGetterAndSetterAndNamedGetterInterface : public nsISupports,
@@ -1150,7 +1150,7 @@ public:
   virtual nsISupports* GetParentObject();
 
   void NamedGetter(const nsAString&, bool&, nsAString&);
-  void GetSupportedNames(unsigned, nsTArray<nsString>&);
+  void GetSupportedNames(nsTArray<nsString>&);
   int32_t IndexedGetter(uint32_t, bool&);
   void IndexedSetter(uint32_t, int32_t);
   uint32_t Length();
@@ -1169,7 +1169,7 @@ public:
   void NamedGetter(const nsAString&, bool&, nsAString&);
   void NamedItem(const nsAString&, nsAString&);
   uint32_t Length();
-  void GetSupportedNames(unsigned, nsTArray<nsString>&);
+  void GetSupportedNames(nsTArray<nsString>&);
 };
 
 class TestIndexedSetterInterface : public nsISupports,
@@ -1198,7 +1198,7 @@ public:
 
   void NamedSetter(const nsAString&, TestIndexedSetterInterface&);
   TestIndexedSetterInterface* NamedGetter(const nsAString&, bool&);
-  void GetSupportedNames(unsigned, nsTArray<nsString>&);
+  void GetSupportedNames(nsTArray<nsString>&);
 };
 
 class TestIndexedAndNamedSetterInterface : public nsISupports,
@@ -1216,7 +1216,7 @@ public:
   void NamedSetter(const nsAString&, TestIndexedSetterInterface&);
   TestIndexedSetterInterface* NamedGetter(const nsAString&, bool&);
   void SetNamedItem(const nsAString&, TestIndexedSetterInterface&);
-  void GetSupportedNames(unsigned, nsTArray<nsString>&);
+  void GetSupportedNames(nsTArray<nsString>&);
 };
 
 class TestIndexedAndNamedGetterAndSetterInterface : public TestIndexedSetterInterface
@@ -1231,7 +1231,7 @@ public:
   void NamedSetter(const nsAString&, const nsAString&);
   void Stringify(nsAString&);
   uint32_t Length();
-  void GetSupportedNames(unsigned, nsTArray<nsString>&);
+  void GetSupportedNames(nsTArray<nsString>&);
 };
 
 class TestCppKeywordNamedMethodsInterface : public nsISupports,
@@ -1293,7 +1293,7 @@ public:
 
   void NamedDeleter(const nsAString&, bool&);
   long NamedGetter(const nsAString&, bool&);
-  void GetSupportedNames(unsigned, nsTArray<nsString>&);
+  void GetSupportedNames(nsTArray<nsString>&);
 };
 
 class TestNamedDeleterWithRetvalInterface : public nsISupports,
@@ -1310,7 +1310,7 @@ public:
   long NamedGetter(const nsAString&, bool&);
   bool DelNamedItem(const nsAString&);
   bool DelNamedItem(const nsAString&, bool&) = delete;
-  void GetSupportedNames(unsigned, nsTArray<nsString>&);
+  void GetSupportedNames(nsTArray<nsString>&);
 };
 
 class TestIndexedAndNamedDeleterInterface : public nsISupports,
@@ -1331,7 +1331,7 @@ public:
   long NamedGetter(const nsAString&, bool&);
   void DelNamedItem(const nsAString&);
   void DelNamedItem(const nsAString&, bool&) = delete;
-  void GetSupportedNames(unsigned, nsTArray<nsString>&);
+  void GetSupportedNames(nsTArray<nsString>&);
 };
 
 class TestParentInterface : public nsISupports,
