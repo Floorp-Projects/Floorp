@@ -6,8 +6,8 @@
 #ifndef ThreadResponsiveness_h
 #define ThreadResponsiveness_h
 
-#include "nsAutoPtr.h"
 #include "nsISupports.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
 
 class ThreadProfile;

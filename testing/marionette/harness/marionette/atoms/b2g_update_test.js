@@ -239,8 +239,8 @@ function runUpdateTest(stage) {
 }
 
 var updateArgs;
-if (__marionetteParams) {
-  updateArgs = __marionetteParams[0];
+if (__webDriverArguments) {
+  updateArgs = __webDriverArguments[0];
 }
 
 function cleanUp() {

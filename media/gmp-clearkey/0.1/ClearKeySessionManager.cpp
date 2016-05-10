@@ -24,11 +24,6 @@
 #include "ClearKeyStorage.h"
 #include "ClearKeyPersistence.h"
 #include "gmp-task-utils.h"
-#if defined(ENABLE_WMF)
-#include "WMFUtils.h"
-#include <versionhelpers.h>
-#endif
-
 #include <assert.h>
 
 using namespace std;
@@ -50,28 +45,11 @@ ClearKeySessionManager::~ClearKeySessionManager()
   CK_LOGD("ClearKeySessionManager dtor %p", this);
 }
 
-static bool
-CanDecode()
-{
-  return
-#if defined(ENABLE_WMF)
-    wmf::EnsureLibs() ||
-#endif
-    false;
-}
-
 void
 ClearKeySessionManager::Init(GMPDecryptorCallback* aCallback)
 {
   CK_LOGD("ClearKeySessionManager::Init");
   mCallback = aCallback;
-  if (!CanDecode()) {
-    mCallback->SetCapabilities(GMP_EME_CAP_DECRYPT_AUDIO |
-                               GMP_EME_CAP_DECRYPT_VIDEO);
-  } else {
-    mCallback->SetCapabilities(GMP_EME_CAP_DECRYPT_AND_DECODE_AUDIO |
-                               GMP_EME_CAP_DECRYPT_AND_DECODE_VIDEO);
-  }
   ClearKeyPersistence::EnsureInitialized();
 }
 

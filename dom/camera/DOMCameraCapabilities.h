@@ -161,8 +161,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   CameraRecorderProfile* NamedGetter(const nsAString& aName, bool& aFound);
-  bool NameIsEnumerable(const nsAString& aName);
-  void GetSupportedNames(unsigned aFlags, nsTArray<nsString>& aNames);
+  void GetSupportedNames(nsTArray<nsString>& aNames);
 
   virtual void OnHardwareClosed();
 

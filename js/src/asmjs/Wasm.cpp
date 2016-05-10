@@ -824,7 +824,7 @@ DecodeMemorySection(JSContext* cx, Decoder& d, ModuleGenerator& mg, MutableHandl
     if (!heap)
         return false;
 
-    mg.initHeapUsage(HeapUsage::Unshared);
+    mg.initHeapUsage(HeapUsage::Unshared, initialSize.value());
     return true;
 }
 

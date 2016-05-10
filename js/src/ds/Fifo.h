@@ -95,7 +95,7 @@ class Fifo
     // Push an element to the back of the queue. This method can take either a
     // |const T&| or a |T&&|.
     template <typename U>
-    bool pushBack(U&& u) {
+    MOZ_MUST_USE bool pushBack(U&& u) {
         if (!rear_.append(mozilla::Forward<U>(u)))
             return false;
         if (!fixup()) {
@@ -107,7 +107,7 @@ class Fifo
 
     // Construct a T in-place at the back of the queue.
     template <typename... Args>
-    bool emplaceBack(Args&&... args) {
+    MOZ_MUST_USE bool emplaceBack(Args&&... args) {
         if (!rear_.emplaceBack(mozilla::Forward<Args>(args)...))
             return false;
         if (!fixup()) {
@@ -128,7 +128,7 @@ class Fifo
     }
 
     // Remove the front element from the queue.
-    bool popFront() {
+    MOZ_MUST_USE bool popFront() {
         MOZ_ASSERT(!empty());
         T t(mozilla::Move(front()));
         front_.popBack();

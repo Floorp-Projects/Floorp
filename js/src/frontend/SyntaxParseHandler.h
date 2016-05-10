@@ -213,9 +213,7 @@ class SyntaxParseHandler
         return NodeGeneric;
     }
 
-    bool addToCallSiteObject(Node callSiteObj, Node rawNode, Node cookedNode) {
-        return true;
-    }
+    void addToCallSiteObject(Node callSiteObj, Node rawNode, Node cookedNode) {}
 
     Node newThisLiteral(const TokenPos& pos, Node thisName) { return NodeGeneric; }
     Node newNullLiteral(const TokenPos& pos) { return NodeGeneric; }
@@ -261,8 +259,8 @@ class SyntaxParseHandler
 
     Node newArrayComprehension(Node body, const TokenPos& pos) { return NodeGeneric; }
     Node newArrayLiteral(uint32_t begin) { return NodeUnparenthesizedArray; }
-    bool addElision(Node literal, const TokenPos& pos) { return true; }
-    bool addSpreadElement(Node literal, uint32_t begin, Node inner) { return true; }
+    MOZ_MUST_USE bool addElision(Node literal, const TokenPos& pos) { return true; }
+    MOZ_MUST_USE bool addSpreadElement(Node literal, uint32_t begin, Node inner) { return true; }
     void addArrayElement(Node literal, Node element) { }
 
     Node newCall() { return NodeFunctionCall; }
@@ -275,11 +273,11 @@ class SyntaxParseHandler
     Node newPosHolder(const TokenPos& pos) { return NodeGeneric; }
     Node newSuperBase(Node thisName, const TokenPos& pos) { return NodeSuperBase; }
 
-    bool addPrototypeMutation(Node literal, uint32_t begin, Node expr) { return true; }
-    bool addPropertyDefinition(Node literal, Node name, Node expr) { return true; }
-    bool addShorthand(Node literal, Node name, Node expr) { return true; }
-    bool addObjectMethodDefinition(Node literal, Node name, Node fn, JSOp op) { return true; }
-    bool addClassMethodDefinition(Node literal, Node name, Node fn, JSOp op, bool isStatic) { return true; }
+    MOZ_MUST_USE bool addPrototypeMutation(Node literal, uint32_t begin, Node expr) { return true; }
+    MOZ_MUST_USE bool addPropertyDefinition(Node literal, Node name, Node expr) { return true; }
+    MOZ_MUST_USE bool addShorthand(Node literal, Node name, Node expr) { return true; }
+    MOZ_MUST_USE bool addObjectMethodDefinition(Node literal, Node name, Node fn, JSOp op) { return true; }
+    MOZ_MUST_USE bool addClassMethodDefinition(Node literal, Node name, Node fn, JSOp op, bool isStatic) { return true; }
     Node newYieldExpression(uint32_t begin, Node value, Node gen) { return NodeGeneric; }
     Node newYieldStarExpression(uint32_t begin, Node value, Node gen) { return NodeGeneric; }
 
@@ -288,7 +286,7 @@ class SyntaxParseHandler
     Node newStatementList(unsigned blockid, const TokenPos& pos) { return NodeGeneric; }
     void addStatementToList(Node list, Node stmt, ParseContext<SyntaxParseHandler>* pc) {}
     void addCaseStatementToList(Node list, Node stmt, ParseContext<SyntaxParseHandler>* pc) {}
-    bool prependInitialYield(Node stmtList, Node gen) { return true; }
+    MOZ_MUST_USE bool prependInitialYield(Node stmtList, Node gen) { return true; }
     Node newEmptyStatement(const TokenPos& pos) { return NodeEmptyStatement; }
 
     Node newSetThis(Node thisName, Node value) { return value; }
@@ -323,10 +321,10 @@ class SyntaxParseHandler
 
     Node newPropertyByValue(Node pn, Node kid, uint32_t end) { return NodeElement; }
 
-    bool addCatchBlock(Node catchList, Node letBlock,
-                       Node catchName, Node catchGuard, Node catchBody) { return true; }
+    MOZ_MUST_USE bool addCatchBlock(Node catchList, Node letBlock, Node catchName,
+                                    Node catchGuard, Node catchBody) { return true; }
 
-    bool setLastFunctionArgumentDefault(Node funcpn, Node pn) { return true; }
+    MOZ_MUST_USE bool setLastFunctionArgumentDefault(Node funcpn, Node pn) { return true; }
     void setLastFunctionArgumentDestructuring(Node funcpn, Node pn) {}
     Node newFunctionDefinition() { return NodeFunctionDefinition; }
     void setFunctionBody(Node pn, Node kid) {}
@@ -366,7 +364,7 @@ class SyntaxParseHandler
         return NodeGeneric;
     }
 
-    bool finishInitializerAssignment(Node pn, Node init) { return true; }
+    MOZ_MUST_USE bool finishInitializerAssignment(Node pn, Node init) { return true; }
     void setLexicalDeclarationOp(Node pn, JSOp op) {}
 
     void setBeginPosition(Node pn, Node oth) {}

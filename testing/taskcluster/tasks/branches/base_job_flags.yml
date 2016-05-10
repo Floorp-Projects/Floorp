@@ -65,6 +65,7 @@ flags:
     reftest-no-accel: /(plain-)?reftest-no-accel.*/
     reftests: /(plain-)?reftest.*/
     reftests-e10s: /(plain-)?reftest-e10s.*/
+    reftest-no-accel-e10s: /(plain-)?reftest-no-accel-e10s.*/
     robocop: /robocop.*/
     web-platform-test: /web-platform-tests.*/
     web-platform-tests: /web-platform-tests.*/

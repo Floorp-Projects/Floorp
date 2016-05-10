@@ -150,7 +150,7 @@ class IonCompileTask
     }
 };
 
-bool
+MOZ_MUST_USE bool
 IonCompileFunction(IonCompileTask* task);
 
 } // namespace wasm

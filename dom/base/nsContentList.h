@@ -291,8 +291,7 @@ public:
     aFound = !!item;
     return item;
   }
-  virtual void GetSupportedNames(unsigned aFlags,
-                                 nsTArray<nsString>& aNames) override;
+  virtual void GetSupportedNames(nsTArray<nsString>& aNames) override;
 
   // nsContentList public methods
   uint32_t Length(bool aDoFlush);

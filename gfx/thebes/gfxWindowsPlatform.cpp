@@ -429,12 +429,6 @@ gfxWindowsPlatform::CanUseHardwareVideoDecoding()
 }
 
 bool
-gfxWindowsPlatform::CanUseDirect3D11ANGLE()
-{
-  return gANGLESupportsD3D11 && gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING);
-}
-
-bool
 gfxWindowsPlatform::InitDWriteSupport()
 {
   MOZ_ASSERT(!mDWriteFactory && IsVistaOrLater());
@@ -506,6 +500,10 @@ gfxWindowsPlatform::UpdateBackendPrefs()
   uint32_t contentMask = BackendTypeBit(SOFTWARE_BACKEND);
   BackendType defaultBackend = SOFTWARE_BACKEND;
   if (gfxConfig::IsEnabled(Feature::DIRECT2D)) {
+    MOZ_RELEASE_ASSERT(Factory::GetDirect3D11Device());
+    MOZ_RELEASE_ASSERT(Factory::GetD2D1Device());
+    MOZ_RELEASE_ASSERT(Factory::SupportsD2D1());
+
     contentMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
     canvasMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
     defaultBackend = BackendType::DIRECT2D1_1;
@@ -1578,12 +1576,10 @@ bool DoesD3D11DeviceWork()
                                 &displayLinkModuleVersion)) {
           gfxCriticalError() << "DisplayLink: could not parse version "
                              << checkModules[i];
-          gANGLESupportsD3D11 = false;
           return false;
         }
         if (displayLinkModuleVersion <= V(8,6,1,36484)) {
           gfxCriticalError(CriticalLog::DefaultOptions(false)) << "DisplayLink: too old version " << displayLinkModuleVersionString.get();
-          gANGLESupportsD3D11 = false;
           return false;
         }
       }
@@ -2119,8 +2115,16 @@ gfxWindowsPlatform::AttemptD3D11DeviceCreation(FeatureState& d3d11)
   // GetDeviceRemovedReason to return weird values.
   mCompositorD3D11TextureSharingWorks = ::DoesD3D11TextureSharingWork(mD3D11Device);
 
-  if (!mCompositorD3D11TextureSharingWorks || DoesRenderTargetViewNeedsRecreating(mD3D11Device)) {
-    gANGLESupportsD3D11 = false;
+  if (!mCompositorD3D11TextureSharingWorks) {
+    gfxConfig::SetFailed(Feature::D3D11_ANGLE,
+                         FeatureStatus::Broken,
+                         "Texture sharing doesn't work");
+  }
+
+  if (DoesRenderTargetViewNeedsRecreating(mD3D11Device)) {
+    gfxConfig::SetFailed(Feature::D3D11_ANGLE,
+                         FeatureStatus::Broken,
+                         "RenderTargetViews need recreating");
   }
 
   mD3D11Device->SetExceptionMode(0);
@@ -2366,6 +2370,12 @@ gfxWindowsPlatform::InitializeDevices()
   // First, initialize D3D11. If this succeeds we attempt to use Direct2D.
   InitializeD3D11();
   InitializeD2D();
+
+  if (!gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
+    gfxConfig::DisableByDefault(Feature::D3D11_ANGLE, FeatureStatus::Disabled, "D3D11 compositing is disabled");
+  } else {
+    gfxConfig::EnableByDefault(Feature::D3D11_ANGLE);
+  }
 
   if (!gfxConfig::IsEnabled(Feature::DIRECT2D)) {
     if (XRE_IsContentProcess() && GetParentDevicePrefs().useD2D1()) {

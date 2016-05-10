@@ -2406,6 +2406,10 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
                                                      nsDisplayList* aList,
                                                      bool aAllowWillPaintBorderOptimization)
 {
+  if (aBuilder->IsForGenerateGlyphPath()) {
+    return true;
+  }
+
   nsStyleContext* bgSC = nullptr;
   const nsStyleBackground* bg = nullptr;
   nsRect bgRect = aBackgroundRect + aBuilder->ToReferenceFrame(aFrame);
@@ -2531,7 +2535,7 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
 
   if (needBlendContainer) {
     bgItemList.AppendNewToTop(
-      new (aBuilder) nsDisplayBlendContainer(aBuilder, aFrame, &bgItemList, scrollClip));
+      nsDisplayBlendContainer::CreateForBackgroundBlendMode(aBuilder, aFrame, &bgItemList, scrollClip));
   }
 
   aList->AppendToTop(&bgItemList);
@@ -4513,11 +4517,28 @@ bool nsDisplayBlendMode::TryMerge(nsDisplayItem* aItem) {
   return true;
 }
 
+/* static */ nsDisplayBlendContainer*
+nsDisplayBlendContainer::CreateForMixBlendMode(nsDisplayListBuilder* aBuilder,
+                                               nsIFrame* aFrame, nsDisplayList* aList,
+                                               const DisplayItemScrollClip* aScrollClip)
+{
+  return new (aBuilder) nsDisplayBlendContainer(aBuilder, aFrame, aList, aScrollClip, false);
+}
+
+/* static */ nsDisplayBlendContainer*
+nsDisplayBlendContainer::CreateForBackgroundBlendMode(nsDisplayListBuilder* aBuilder,
+                                                      nsIFrame* aFrame, nsDisplayList* aList,
+                                                      const DisplayItemScrollClip* aScrollClip)
+{
+  return new (aBuilder) nsDisplayBlendContainer(aBuilder, aFrame, aList, aScrollClip, true);
+}
+
 nsDisplayBlendContainer::nsDisplayBlendContainer(nsDisplayListBuilder* aBuilder,
                                                  nsIFrame* aFrame, nsDisplayList* aList,
-                                                 const DisplayItemScrollClip* aScrollClip)
+                                                 const DisplayItemScrollClip* aScrollClip,
+                                                 bool aIsForBackground)
     : nsDisplayWrapList(aBuilder, aFrame, aList, aScrollClip)
-    , mIndex(0)
+    , mIsForBackground(aIsForBackground)
 {
   MOZ_COUNT_CTOR(nsDisplayBlendContainer);
 }

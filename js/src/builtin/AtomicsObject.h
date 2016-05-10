@@ -17,21 +17,21 @@ class AtomicsObject : public JSObject
   public:
     static const Class class_;
     static JSObject* initClass(JSContext* cx, Handle<GlobalObject*> global);
-    static bool toString(JSContext* cx, unsigned int argc, Value* vp);
+    static MOZ_MUST_USE bool toString(JSContext* cx, unsigned int argc, Value* vp);
 };
 
-bool atomics_compareExchange(JSContext* cx, unsigned argc, Value* vp);
-bool atomics_exchange(JSContext* cx, unsigned argc, Value* vp);
-bool atomics_load(JSContext* cx, unsigned argc, Value* vp);
-bool atomics_store(JSContext* cx, unsigned argc, Value* vp);
-bool atomics_add(JSContext* cx, unsigned argc, Value* vp);
-bool atomics_sub(JSContext* cx, unsigned argc, Value* vp);
-bool atomics_and(JSContext* cx, unsigned argc, Value* vp);
-bool atomics_or(JSContext* cx, unsigned argc, Value* vp);
-bool atomics_xor(JSContext* cx, unsigned argc, Value* vp);
-bool atomics_isLockFree(JSContext* cx, unsigned argc, Value* vp);
-bool atomics_wait(JSContext* cx, unsigned argc, Value* vp);
-bool atomics_wake(JSContext* cx, unsigned argc, Value* vp);
+MOZ_MUST_USE bool atomics_compareExchange(JSContext* cx, unsigned argc, Value* vp);
+MOZ_MUST_USE bool atomics_exchange(JSContext* cx, unsigned argc, Value* vp);
+MOZ_MUST_USE bool atomics_load(JSContext* cx, unsigned argc, Value* vp);
+MOZ_MUST_USE bool atomics_store(JSContext* cx, unsigned argc, Value* vp);
+MOZ_MUST_USE bool atomics_add(JSContext* cx, unsigned argc, Value* vp);
+MOZ_MUST_USE bool atomics_sub(JSContext* cx, unsigned argc, Value* vp);
+MOZ_MUST_USE bool atomics_and(JSContext* cx, unsigned argc, Value* vp);
+MOZ_MUST_USE bool atomics_or(JSContext* cx, unsigned argc, Value* vp);
+MOZ_MUST_USE bool atomics_xor(JSContext* cx, unsigned argc, Value* vp);
+MOZ_MUST_USE bool atomics_isLockFree(JSContext* cx, unsigned argc, Value* vp);
+MOZ_MUST_USE bool atomics_wait(JSContext* cx, unsigned argc, Value* vp);
+MOZ_MUST_USE bool atomics_wake(JSContext* cx, unsigned argc, Value* vp);
 
 /* asm.js callouts */
 int32_t atomics_add_asm_callout(int32_t vt, int32_t offset, int32_t value);
@@ -45,14 +45,14 @@ int32_t atomics_xchg_asm_callout(int32_t vt, int32_t offset, int32_t value);
 class FutexRuntime
 {
 public:
-    static bool initialize();
+    static MOZ_MUST_USE bool initialize();
     static void destroy();
 
     static void lock();
     static void unlock();
 
     FutexRuntime();
-    bool initInstance();
+    MOZ_MUST_USE bool initInstance();
     void destroyInstance();
 
     // Parameters to wake().
@@ -77,7 +77,7 @@ public:
     // wait() will not wake up spuriously.  It will return true and
     // set *result to a return code appropriate for
     // Atomics.wait() on success, and return false on error.
-    bool wait(JSContext* cx, double timeout, WaitResult* result);
+    MOZ_MUST_USE bool wait(JSContext* cx, double timeout, WaitResult* result);
 
     // Wake the thread represented by this Runtime.
     //

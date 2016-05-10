@@ -245,15 +245,16 @@ static bool defaultgw(char *gateway) // at least 128 bytes buffer
             struct in_addr IpAddr;
             IpAddr.S_un.S_addr = static_cast<u_long>
                 (pIpForwardTable->table[i].dwForwardDest);
-            char szDestIp[128];
-            strcpy_s(szDestIp, sizeof (szDestIp), inet_ntoa(IpAddr));
-
-            if (!strcmp("0.0.0.0", szDestIp)) {
+            char *ipStr = inet_ntoa(IpAddr);
+            if (ipStr && !strcmp("0.0.0.0", ipStr)) {
                 // Default gateway!
                 IpAddr.S_un.S_addr = static_cast<u_long>
                     (pIpForwardTable->table[i].dwForwardNextHop);
-                strcpy_s(gateway, 128, inet_ntoa(IpAddr));
-                return true;
+                ipStr = inet_ntoa(IpAddr);
+                if (ipStr) {
+                    strcpy_s(gateway, 128, ipStr);
+                    return true;
+                }
             }
         } // for loop
     }

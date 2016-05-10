@@ -1,0 +1,491 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>altgraph.Graph — Basic directional graphs &mdash; altgraph 0.11 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.11',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="altgraph 0.11 documentation" href="index.html" />
+    <link rel="next" title="altgraph.ObjectGraph — Graphs of objecs with an identifier" href="objectgraph.html" />
+    <link rel="prev" title="altgraph — A Python Graph Library" href="core.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="objectgraph.html" title="altgraph.ObjectGraph — Graphs of objecs with an identifier"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="core.html" title="altgraph — A Python Graph Library"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">altgraph 0.11 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-altgraph.Graph">
+<span id="altgraph-graph-basic-directional-graphs"></span><h1><a class="reference internal" href="#module-altgraph.Graph" title="altgraph.Graph: Basic directional graphs."><tt class="xref py py-mod docutils literal"><span class="pre">altgraph.Graph</span></tt></a> &#8212; Basic directional graphs<a class="headerlink" href="#module-altgraph.Graph" title="Permalink to this headline">¶</a></h1>
+<p>The module <a class="reference internal" href="#module-altgraph.Graph" title="altgraph.Graph: Basic directional graphs."><tt class="xref py py-mod docutils literal"><span class="pre">altgraph.Graph</span></tt></a> provides a class <a class="reference internal" href="#altgraph.Graph.Graph" title="altgraph.Graph.Graph"><tt class="xref py py-class docutils literal"><span class="pre">Graph</span></tt></a> that
+represents a directed graph with <em>N</em> nodes and <em>E</em> edges.</p>
+<dl class="class">
+<dt id="altgraph.Graph.Graph">
+<em class="property">class </em><tt class="descclassname">altgraph.Graph.</tt><tt class="descname">Graph</tt><big>(</big><span class="optional">[</span><em>edges</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructs a new empty <a class="reference internal" href="#altgraph.Graph.Graph" title="altgraph.Graph.Graph"><tt class="xref py py-class docutils literal"><span class="pre">Graph</span></tt></a> object. If the optional
+<em>edges</em> parameter is supplied, updates the graph by adding the
+specified edges.</p>
+<p>All of the elements in <em>edges</em> should be tuples with two or three
+elements. The first two elements of the tuple are the source and
+destination node of the edge, the optional third element is the
+edge data.  The source and destination nodes are added to the graph
+when the aren&#8217;t already present.</p>
+</dd></dl>
+
+<div class="section" id="node-related-methods">
+<h2>Node related methods<a class="headerlink" href="#node-related-methods" title="Permalink to this headline">¶</a></h2>
+<dl class="method">
+<dt id="altgraph.Graph.Graph.add_node">
+<tt class="descclassname">Graph.</tt><tt class="descname">add_node</tt><big>(</big><em>node</em><span class="optional">[</span>, <em>node_data</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.add_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a new node to the graph if it is not already present. The new
+node must be a hashable object.</p>
+<p>Arbitrary data can be attached to the node via the optional <em>node_data</em>
+argument.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">the node also won&#8217;t be added to the graph when it is
+present but currently hidden.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.hide_node">
+<tt class="descclassname">Graph.</tt><tt class="descname">hide_node</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.hide_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hides a <em>node</em> from the graph. The incoming and outgoing edges of
+the node will also be hidden.</p>
+<p>Raises <a class="reference internal" href="core.html#altgraph.GraphError" title="altgraph.GraphError"><tt class="xref py py-class docutils literal"><span class="pre">altgraph.GraphError</span></tt></a> when the node is not (visible)
+node of the graph.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.restore_node">
+<tt class="descclassname">Graph.</tt><tt class="descname">restore_node</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.restore_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restores a previously hidden <em>node</em>. The incoming and outgoing
+edges of the node are also restored.</p>
+<p>Raises <a class="reference internal" href="core.html#altgraph.GraphError" title="altgraph.GraphError"><tt class="xref py py-class docutils literal"><span class="pre">altgraph.GraphError</span></tt></a> when the node is not a hidden
+node of the graph.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.restore_all_nodes">
+<tt class="descclassname">Graph.</tt><tt class="descname">restore_all_nodes</tt><big>(</big><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.restore_all_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restores all hidden nodes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.number_of_nodes">
+<tt class="descclassname">Graph.</tt><tt class="descname">number_of_nodes</tt><big>(</big><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.number_of_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of visible nodes in the graph.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.number_of_hidden_nodes">
+<tt class="descclassname">Graph.</tt><tt class="descname">number_of_hidden_nodes</tt><big>(</big><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.number_of_hidden_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of hidden nodes in the graph.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.node_list">
+<tt class="descclassname">Graph.</tt><tt class="descname">node_list</tt><big>(</big><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.node_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list with all visible nodes in the graph.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.hidden_node_list">
+<tt class="descclassname">Graph.</tt><tt class="descname">hidden_node_list</tt><big>(</big><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.hidden_node_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list with all hidden nodes in the graph.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.node_data">
+<tt class="descclassname">altgraph.Graph.</tt><tt class="descname">node_data</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#altgraph.Graph.node_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the data associated with the <em>node</em> when it was
+added.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.describe_node">
+<tt class="descclassname">Graph.</tt><tt class="descname">describe_node</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.describe_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns <em>node</em>, the node&#8217;s data and the lists of outgoing
+and incoming edges for the node.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">the edge lists should not be modified, doing so
+can result in unpredicatable behavior.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.__contains__">
+<tt class="descclassname">Graph.</tt><tt class="descname">__contains__</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.__contains__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True iff <em>node</em> is a node in the graph. This
+method is accessed through the <em>in</em> operator.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.__iter__">
+<tt class="descclassname">Graph.</tt><tt class="descname">__iter__</tt><big>(</big><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.__iter__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yield all nodes in the graph.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.out_edges">
+<tt class="descclassname">Graph.</tt><tt class="descname">out_edges</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.out_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the list of outgoing edges for <em>node</em></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.inc_edges">
+<tt class="descclassname">Graph.</tt><tt class="descname">inc_edges</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.inc_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the list of incoming edges for <em>node</em></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.all_edges">
+<tt class="descclassname">Graph.</tt><tt class="descname">all_edges</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.all_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the list of incoming and outgoing edges for <em>node</em></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.out_degree">
+<tt class="descclassname">Graph.</tt><tt class="descname">out_degree</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.out_degree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of outgoing edges for <em>node</em>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.inc_degree">
+<tt class="descclassname">Graph.</tt><tt class="descname">inc_degree</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.inc_degree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of incoming edges for <em>node</em>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.all_degree">
+<tt class="descclassname">Graph.</tt><tt class="descname">all_degree</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.all_degree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of edges (incoming or outgoing) for <em>node</em>.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="edge-related-methods">
+<h2>Edge related methods<a class="headerlink" href="#edge-related-methods" title="Permalink to this headline">¶</a></h2>
+<dl class="method">
+<dt id="altgraph.Graph.Graph.add_edge">
+<tt class="descclassname">Graph.</tt><tt class="descname">add_edge</tt><big>(</big><em>head_id</em>, <em>tail_id</em><span class="optional">[</span>, <em>edge data</em><span class="optional">[</span>, <em>create_nodes</em><span class="optional">]</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.add_edge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a directed edge from <em>head_id</em> to <em>tail_id</em>. Arbitrary data can
+be added via <em>edge_data</em>.  When <em>create_nodes</em> is <em>True</em> (the default),
+<em>head_id</em> and <em>tail_id</em> will be added to the graph when the aren&#8217;t
+already present.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.hide_edge">
+<tt class="descclassname">Graph.</tt><tt class="descname">hide_edge</tt><big>(</big><em>edge</em><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.hide_edge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hides an edge from the graph. The edge may be unhidden at some later
+time.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.restore_edge">
+<tt class="descclassname">Graph.</tt><tt class="descname">restore_edge</tt><big>(</big><em>edge</em><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.restore_edge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restores a previously hidden <em>edge</em>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.restore_all_edges">
+<tt class="descclassname">Graph.</tt><tt class="descname">restore_all_edges</tt><big>(</big><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.restore_all_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restore all edges that were hidden before, except for edges
+referring to hidden nodes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.edge_by_node">
+<tt class="descclassname">Graph.</tt><tt class="descname">edge_by_node</tt><big>(</big><em>head</em>, <em>tail</em><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.edge_by_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the edge ID for an edge from <em>head</em> to <em>tail</em>,
+or <a class="reference external" href="http://docs.python.org/library/constants.html#None" title="(in Python v2.7)"><tt class="xref py py-data docutils literal"><span class="pre">None</span></tt></a> when no such edge exists.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.edge_by_id">
+<tt class="descclassname">Graph.</tt><tt class="descname">edge_by_id</tt><big>(</big><em>edge</em><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.edge_by_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the head and tail of the <em>edge</em></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.edge_data">
+<tt class="descclassname">Graph.</tt><tt class="descname">edge_data</tt><big>(</big><em>edge</em><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.edge_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the data associated with the <em>edge</em>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.head">
+<tt class="descclassname">Graph.</tt><tt class="descname">head</tt><big>(</big><em>edge</em><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.head" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the head of an <em>edge</em></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.tail">
+<tt class="descclassname">Graph.</tt><tt class="descname">tail</tt><big>(</big><em>edge</em><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.tail" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the tail of an <em>edge</em></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.describe_edge">
+<tt class="descclassname">Graph.</tt><tt class="descname">describe_edge</tt><big>(</big><em>edge</em><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.describe_edge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the <em>edge</em>, the associated data, its head and tail.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.number_of_edges">
+<tt class="descclassname">Graph.</tt><tt class="descname">number_of_edges</tt><big>(</big><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.number_of_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of visible edges.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.number_of_hidden_edges">
+<tt class="descclassname">Graph.</tt><tt class="descname">number_of_hidden_edges</tt><big>(</big><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.number_of_hidden_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of hidden edges.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.edge_list">
+<tt class="descclassname">Graph.</tt><tt class="descname">edge_list</tt><big>(</big><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.edge_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list with all visible edges in the graph.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.hidden_edge_list">
+<tt class="descclassname">Graph.</tt><tt class="descname">hidden_edge_list</tt><big>(</big><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.hidden_edge_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list with all hidden edges in the graph.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="graph-traversal">
+<h2>Graph traversal<a class="headerlink" href="#graph-traversal" title="Permalink to this headline">¶</a></h2>
+<dl class="method">
+<dt id="altgraph.Graph.Graph.out_nbrs">
+<tt class="descclassname">Graph.</tt><tt class="descname">out_nbrs</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.out_nbrs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of all nodes connected by outgoing edges.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.inc_nbrs">
+<tt class="descclassname">Graph.</tt><tt class="descname">inc_nbrs</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.inc_nbrs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of all nodes connected by incoming edges.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.all_nbrs">
+<tt class="descclassname">Graph.</tt><tt class="descname">all_nbrs</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.all_nbrs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of nodes connected by an incoming or outgoing edge.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.forw_topo_sort">
+<tt class="descclassname">Graph.</tt><tt class="descname">forw_topo_sort</tt><big>(</big><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.forw_topo_sort" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of nodes where the successors (based on outgoing
+edges) of any given node apear in the sequence after that node.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.back_topo_sort">
+<tt class="descclassname">Graph.</tt><tt class="descname">back_topo_sort</tt><big>(</big><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.back_topo_sort" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of nodes where the successors (based on incoming
+edges) of any given node apear in the sequence after that node.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.forw_bfs_subgraph">
+<tt class="descclassname">Graph.</tt><tt class="descname">forw_bfs_subgraph</tt><big>(</big><em>start_id</em><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.forw_bfs_subgraph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a subgraph consisting of the breadth first
+reachable nodes from <em>start_id</em> based on their outgoing edges.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.back_bfs_subgraph">
+<tt class="descclassname">Graph.</tt><tt class="descname">back_bfs_subgraph</tt><big>(</big><em>start_id</em><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.back_bfs_subgraph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a subgraph consisting of the breadth first
+reachable nodes from <em>start_id</em> based on their incoming edges.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.iterdfs">
+<tt class="descclassname">Graph.</tt><tt class="descname">iterdfs</tt><big>(</big><em>start</em><span class="optional">[</span>, <em>end</em><span class="optional">[</span>, <em>forward</em><span class="optional">]</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.iterdfs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yield nodes in a depth first traversal starting at the <em>start</em>
+node.</p>
+<p>If <em>end</em> is specified traversal stops when reaching that node.</p>
+<p>If forward is True (the default) edges are traversed in forward
+direction, otherwise they are traversed in reverse direction.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.iterdata">
+<tt class="descclassname">Graph.</tt><tt class="descname">iterdata</tt><big>(</big><em>start</em><span class="optional">[</span>, <em>end</em><span class="optional">[</span>, <em>forward</em><span class="optional">[</span>, <em>condition</em><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.iterdata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yield the associated data for nodes in a depth first traversal
+starting at the <em>start</em> node. This method will not yield values for nodes
+without associated data.</p>
+<p>If <em>end</em> is specified traversal stops when reaching that node.</p>
+<p>If <em>condition</em> is specified and the condition callable returns
+False for the associated data this method will not yield the
+associated data and will not follow the edges for the node.</p>
+<p>If forward is True (the default) edges are traversed in forward
+direction, otherwise they are traversed in reverse direction.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.forw_bfs">
+<tt class="descclassname">Graph.</tt><tt class="descname">forw_bfs</tt><big>(</big><em>start</em><span class="optional">[</span>, <em>end</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.forw_bfs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of nodes starting at <em>start</em> in some bread first
+search order (following outgoing edges).</p>
+<p>When <em>end</em> is specified iteration stops at that node.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.back_bfs">
+<tt class="descclassname">Graph.</tt><tt class="descname">back_bfs</tt><big>(</big><em>start</em><span class="optional">[</span>, <em>end</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.back_bfs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of nodes starting at <em>start</em> in some bread first
+search order (following incoming edges).</p>
+<p>When <em>end</em> is specified iteration stops at that node.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.get_hops">
+<tt class="descclassname">Graph.</tt><tt class="descname">get_hops</tt><big>(</big><em>start</em><span class="optional">[</span>, <em>end</em><span class="optional">[</span>, <em>forward</em><span class="optional">]</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.get_hops" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the hop distance to all nodes centered around a specified node.</p>
+<p>First order neighbours are at hop 1, their neigbours are at hop 2 etc.
+Uses <a class="reference internal" href="#altgraph.Graph.Graph.forw_bfs" title="altgraph.Graph.Graph.forw_bfs"><tt class="xref py py-meth docutils literal"><span class="pre">forw_bfs()</span></tt></a> or <a class="reference internal" href="#altgraph.Graph.Graph.back_bfs" title="altgraph.Graph.Graph.back_bfs"><tt class="xref py py-meth docutils literal"><span class="pre">back_bfs()</span></tt></a> depending on the value of
+the forward parameter.</p>
+<p>If the distance between all neighbouring nodes is 1 the hop number
+corresponds to the shortest distance between the nodes.</p>
+<p>Typical usage:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">graph</span><span class="o">.</span><span class="n">get_hops</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">5</span><span class="p">)]</span>
+<span class="go"># node 1 is at 0 hops</span>
+<span class="go"># node 2 is at 1 hop</span>
+<span class="go"># ...</span>
+<span class="go"># node 8 is at 5 hops</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="graph-statistics">
+<h2>Graph statistics<a class="headerlink" href="#graph-statistics" title="Permalink to this headline">¶</a></h2>
+<dl class="method">
+<dt id="altgraph.Graph.Graph.connected">
+<tt class="descclassname">Graph.</tt><tt class="descname">connected</tt><big>(</big><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.connected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True iff every node in the graph can be reached from
+every other node.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Graph.Graph.clust_coef">
+<tt class="descclassname">Graph.</tt><tt class="descname">clust_coef</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#altgraph.Graph.Graph.clust_coef" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the local clustering coefficient of node.</p>
+<p>The local cluster coefficient is the proportion of the actual number
+of edges between neighbours of node and the maximum number of
+edges between those nodes.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#"><tt class="docutils literal"><span class="pre">altgraph.Graph</span></tt> &#8212; Basic directional graphs</a><ul>
+<li><a class="reference internal" href="#node-related-methods">Node related methods</a></li>
+<li><a class="reference internal" href="#edge-related-methods">Edge related methods</a></li>
+<li><a class="reference internal" href="#graph-traversal">Graph traversal</a></li>
+<li><a class="reference internal" href="#graph-statistics">Graph statistics</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="core.html"
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">altgraph</span></tt> &#8212; A Python Graph Library</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="objectgraph.html"
+                        title="next chapter"><tt class="docutils literal"><span class="pre">altgraph.ObjectGraph</span></tt> &#8212; Graphs of objecs with an identifier</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="objectgraph.html" title="altgraph.ObjectGraph — Graphs of objecs with an identifier"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="core.html" title="altgraph — A Python Graph Library"
+             >previous</a> |</li>
+        <li><a href="index.html">altgraph 0.11 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010-2011, Ronald Oussoren, Bob Ippolito, 2004 Istvan Albert.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.1.
+    </div>
+  </body>
+</html>

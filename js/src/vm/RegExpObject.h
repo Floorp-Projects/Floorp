@@ -537,10 +537,6 @@ HasRegExpMetaChars(const CharT* chars, size_t length);
 extern bool
 StringHasRegExpMetaChars(JSLinearString* str);
 
-/* Escape all meta chars in given string. */
-extern JSString*
-RegExpEscapeMetaChars(JSContext* cx, HandleString src);
-
 } /* namespace js */
 
 #endif /* vm_RegExpObject_h */

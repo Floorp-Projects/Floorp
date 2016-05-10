@@ -53,8 +53,7 @@ public:
     bool dummy;
     NamedGetter(aName, dummy, aResult);
   }
-  virtual void GetSupportedNames(unsigned aFlags,
-                                 nsTArray<nsString>& aNames) override;
+  virtual void GetSupportedNames(nsTArray<nsString>& aNames) override;
 
   nsresult AddElementToTable(nsGenericHTMLFormElement* aChild,
                              const nsAString& aName);

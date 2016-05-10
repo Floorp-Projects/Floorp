@@ -165,7 +165,7 @@ DeserializeVector(ExclusiveContext* cx, const uint8_t* cursor,
 }
 
 template <class T, size_t N>
-static inline bool
+static inline MOZ_MUST_USE bool
 CloneVector(JSContext* cx, const mozilla::Vector<T, N, SystemAllocPolicy>& in,
             mozilla::Vector<T, N, SystemAllocPolicy>* out)
 {
@@ -220,7 +220,7 @@ DeserializePodVector(ExclusiveContext* cx, const uint8_t* cursor,
 }
 
 template <class T, size_t N>
-static inline bool
+static inline MOZ_MUST_USE bool
 ClonePodVector(JSContext* cx, const mozilla::Vector<T, N, SystemAllocPolicy>& in,
                mozilla::Vector<T, N, SystemAllocPolicy>* out)
 {
@@ -230,7 +230,7 @@ ClonePodVector(JSContext* cx, const mozilla::Vector<T, N, SystemAllocPolicy>& in
     return true;
 }
 
-static inline bool
+static inline MOZ_MUST_USE bool
 GetCPUID(uint32_t* cpuId)
 {
     enum Arch {
@@ -273,7 +273,7 @@ class MachineId
     JS::BuildIdCharVector buildId_;
 
   public:
-    bool extractCurrentState(ExclusiveContext* cx) {
+    MOZ_MUST_USE bool extractCurrentState(ExclusiveContext* cx) {
         if (!cx->buildIdOp())
             return false;
         if (!cx->buildIdOp()(&buildId_))
