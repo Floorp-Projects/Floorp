@@ -1211,7 +1211,8 @@ GetStatesForPseudoClass(const nsAString& aStatePseudo)
                 "Length of PseudoClassStates array is incorrect");
 
   nsCOMPtr<nsIAtom> atom = NS_Atomize(aStatePseudo);
-  CSSPseudoClassType type = nsCSSPseudoClasses::GetPseudoType(atom, true, true);
+  CSSPseudoClassType type = nsCSSPseudoClasses::
+    GetPseudoType(atom, CSSEnabledState::eIgnoreEnabledState);
 
   // Ignore :moz-any-link so we don't give the element simultaneous
   // visited and unvisited style state
