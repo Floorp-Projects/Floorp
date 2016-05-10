@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>SimpleTest.waitForCondition test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<script>
+
+var captureFailure = false;
+var capturedFailures = [];
+window.ok = function (cond, name, diag) {
+  if (!captureFailure) {
+    SimpleTest.ok(cond, name, diag);
+  } else {
+    if (cond) {
+      SimpleTest.ok(false, `Expect a failure with "${name}"`);
+    } else {
+      capturedFailures.push(name);
+    }
+  }
+};
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("test behavior SimpleTest.waitForCondition");
+
+addLoadEvent(testNormal);
+
+function testNormal() {
+  var condition = false;
+  SimpleTest.waitForCondition(() => condition, () => {
+    ok(condition, "Should only be called when condition is true");
+    SimpleTest.executeSoon(testTimeout);
+  }, "Shouldn't timeout");
+  setTimeout(() => { condition = true; }, 1000);
+}
+
+function testTimeout() {
+  captureFailure = true;
+  SimpleTest.waitForCondition(() => false, () => {
+    captureFailure = false;
+    is(capturedFailures.length, 1, "Should captured one failure");
+    is(capturedFailures[0], "Should timeout",
+       "Should capture the failure passed in");
+    SimpleTest.executeSoon(() => SimpleTest.finish());
+  }, "Should timeout");
+}
+
+</script>
+</body>
+</html>
