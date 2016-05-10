@@ -196,7 +196,8 @@ nsDOMCSSDeclaration::GetPropertyValue(const nsAString& aPropertyName,
                                       nsAString& aReturn)
 {
   const nsCSSProperty propID =
-    nsCSSProps::LookupProperty(aPropertyName, CSSEnabledState::eForAllContent);
+    nsCSSProps::LookupProperty(aPropertyName,
+                               nsCSSProps::eEnabledForAllContent);
   if (propID == eCSSProperty_UNKNOWN) {
     aReturn.Truncate();
     return NS_OK;
@@ -215,7 +216,8 @@ nsDOMCSSDeclaration::GetAuthoredPropertyValue(const nsAString& aPropertyName,
                                               nsAString& aReturn)
 {
   const nsCSSProperty propID =
-    nsCSSProps::LookupProperty(aPropertyName, CSSEnabledState::eForAllContent);
+    nsCSSProps::LookupProperty(aPropertyName,
+                               nsCSSProps::eEnabledForAllContent);
   if (propID == eCSSProperty_UNKNOWN) {
     aReturn.Truncate();
     return NS_OK;
@@ -256,7 +258,8 @@ nsDOMCSSDeclaration::SetProperty(const nsAString& aPropertyName,
 {
   // In the common (and fast) cases we can use the property id
   nsCSSProperty propID =
-    nsCSSProps::LookupProperty(aPropertyName, CSSEnabledState::eForAllContent);
+    nsCSSProps::LookupProperty(aPropertyName,
+                               nsCSSProps::eEnabledForAllContent);
   if (propID == eCSSProperty_UNKNOWN) {
     return NS_OK;
   }
@@ -292,7 +295,8 @@ nsDOMCSSDeclaration::RemoveProperty(const nsAString& aPropertyName,
                                     nsAString& aReturn)
 {
   const nsCSSProperty propID =
-    nsCSSProps::LookupProperty(aPropertyName, CSSEnabledState::eForAllContent);
+    nsCSSProps::LookupProperty(aPropertyName,
+                               nsCSSProps::eEnabledForAllContent);
   if (propID == eCSSProperty_UNKNOWN) {
     aReturn.Truncate();
     return NS_OK;

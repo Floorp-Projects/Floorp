@@ -81,7 +81,6 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     'AnimationCollection.h',
-    'CSSEnabledState.h',
     'CSSStyleSheet.h',
     'CSSVariableDeclarations.h',
     'CSSVariableResolver.h',

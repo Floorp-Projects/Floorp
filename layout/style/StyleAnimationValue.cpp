@@ -2821,7 +2821,7 @@ BuildStyleRule(nsCSSProperty aProperty,
 
 static bool
 ComputeValuesFromStyleRule(nsCSSProperty aProperty,
-                           CSSEnabledState aEnabledState,
+                           nsCSSProps::EnabledState aEnabledState,
                            dom::Element* aTargetElement,
                            nsStyleContext* aStyleContext,
                            css::StyleRule* aStyleRule,
@@ -2942,7 +2942,7 @@ StyleAnimationValue::ComputeValue(nsCSSProperty aProperty,
 
   AutoTArray<PropertyStyleAnimationValuePair,1> values;
   bool ok = ComputeValuesFromStyleRule(aProperty,
-                                       CSSEnabledState::eIgnoreEnabledState,
+                                       nsCSSProps::eIgnoreEnabledState,
                                        aTargetElement, aStyleContext, styleRule,
                                        values, aIsContextSensitive);
   if (!ok) {
@@ -2960,7 +2960,7 @@ template <class T>
 bool
 ComputeValuesFromSpecifiedValue(
     nsCSSProperty aProperty,
-    CSSEnabledState aEnabledState,
+    nsCSSProps::EnabledState aEnabledState,
     dom::Element* aTargetElement,
     nsStyleContext* aStyleContext,
     T& aSpecifiedValue,
@@ -2988,7 +2988,7 @@ ComputeValuesFromSpecifiedValue(
 /* static */ bool
 StyleAnimationValue::ComputeValues(
     nsCSSProperty aProperty,
-    CSSEnabledState aEnabledState,
+    nsCSSProps::EnabledState aEnabledState,
     dom::Element* aTargetElement,
     nsStyleContext* aStyleContext,
     const nsAString& aSpecifiedValue,
@@ -3004,7 +3004,7 @@ StyleAnimationValue::ComputeValues(
 /* static */ bool
 StyleAnimationValue::ComputeValues(
     nsCSSProperty aProperty,
-    CSSEnabledState aEnabledState,
+    nsCSSProps::EnabledState aEnabledState,
     dom::Element* aTargetElement,
     nsStyleContext* aStyleContext,
     const nsCSSValue& aSpecifiedValue,
