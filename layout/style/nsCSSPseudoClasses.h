@@ -66,6 +66,9 @@ public:
 
 private:
   static uint32_t FlagsForPseudoClass(const Type aType);
+
+  static const uint32_t kPseudoClassFlags[Type::Count];
+  static bool sPseudoClassEnabled[Type::Count];
 };
 
 #endif /* nsCSSPseudoClasses_h___ */
