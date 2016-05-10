@@ -11,7 +11,6 @@
 #include "AudioParam.h"
 #include "PeriodicWave.h"
 #include "mozilla/dom/OscillatorNodeBinding.h"
-#include "mozilla/Preferences.h"
 
 namespace mozilla {
 namespace dom {

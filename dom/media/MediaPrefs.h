@@ -32,6 +32,10 @@ static const char* Get##Name##PrefName() { return Pref; }                     \
 static Type Get##Name##PrefDefault() { return Default; }                      \
 PrefTemplate<Type, Get##Name##PrefDefault, Get##Name##PrefName> mPref##Name
 
+// Custom Definitions.
+#define GMP_DEFAULT_ASYNC_SHUTDOWN_TIMEOUT 3000
+#define TEST_PREFERENCE_FAKE_RECOGNITION_SERVICE "media.webspeech.test.fake_recognition_service"
+
 namespace mozilla {
 
 template<class T> class StaticAutoPtr;
@@ -60,16 +64,52 @@ private:
   };
 
   // This is where DECL_MEDIA_PREF for each of the preferences should go.
-  // We will keep these in an alphabetical order to make it easier to see if
-  // a method accessing a pref already exists. Just add yours in the list.
-  DECL_MEDIA_PREF("accessibility.monoaudio.enable", MonoAudio, bool, false);
-  DECL_MEDIA_PREF("media.resampling.enabled",       AudioSinkResampling, bool, false);
-  DECL_MEDIA_PREF("media.resampling.rate",          AudioSinkResampleRate, uint32_t, 48000);
-  DECL_MEDIA_PREF("media.forcestereo.enabled",      AudioSinkForceStereo, bool, true);
 
-  // WARNING:
-  // Please make sure that you've added your new preference to the list above in alphabetical order.
-  // Please do not just append it to the end of the list.
+  // AudioSink
+  DECL_MEDIA_PREF("accessibility.monoaudio.enable",           MonoAudio, bool, false);
+  DECL_MEDIA_PREF("media.resampling.enabled",                 AudioSinkResampling, bool, false);
+  DECL_MEDIA_PREF("media.resampling.rate",                    AudioSinkResampleRate, uint32_t, 48000);
+  DECL_MEDIA_PREF("media.forcestereo.enabled",                AudioSinkForceStereo, bool, true);
+
+  // PlatformDecoderModule
+  DECL_MEDIA_PREF("media.apple.forcevda",                     AppleForceVDA, bool, false);
+  DECL_MEDIA_PREF("media.gmp.insecure.allow",                 GMPAllowInsecure, bool, false);
+  DECL_MEDIA_PREF("media.gmp.async-shutdown-timeout",         GMPAsyncShutdownTimeout, uint32_t, GMP_DEFAULT_ASYNC_SHUTDOWN_TIMEOUT);
+  DECL_MEDIA_PREF("media.eme.enabled",                        EMEEnabled, bool, false);
+  DECL_MEDIA_PREF("media.use-blank-decoder",                  PDMUseBlankDecoder, bool, false);
+#ifdef MOZ_GONK_MEDIACODEC
+  DECL_MEDIA_PREF("media.gonk.enabled",                       PDMGonkDecoderEnabled, bool, true);
+#endif
+#ifdef MOZ_WIDGET_ANDROID
+  DECL_MEDIA_PREF("media.android-media-codec.enabled",        PDMAndroidMediaCodecEnabled, bool, false);
+  DECL_MEDIA_PREF("media.android-media-codec.preferred",      PDMAndroidMediaCodecPreferred, bool, false);
+#endif
+#ifdef MOZ_FFMPEG
+  DECL_MEDIA_PREF("media.ffmpeg.enabled",                     PDMFFmpegEnabled, bool, true);
+#endif
+#ifdef MOZ_FFVPX
+  DECL_MEDIA_PREF("media.ffvpx.enabled",                      PDMFFVPXEnabled, bool, true);
+#endif
+#ifdef XP_WIN
+  DECL_MEDIA_PREF("media.wmf.enabled",                        PDMWMFEnabled, bool, true);
+  DECL_MEDIA_PREF("media.webm.intel_decoder.enabled",         PDMWMFIntelDecoderEnabled, bool, false);
+  DECL_MEDIA_PREF("media.wmf.low-latency.enabled",            PDMWMFLowLatencyEnabled, bool, false);
+  DECL_MEDIA_PREF("media.wmf.decoder.thread-count",           PDMWMFThreadCount, int32_t, -1);
+#endif
+  DECL_MEDIA_PREF("media.decoder.fuzzing.enabled",            PDMFuzzingEnabled, bool, false);
+  DECL_MEDIA_PREF("media.decoder.fuzzing.video-output-minimum-interval-ms", PDMFuzzingInterval, uint32_t, 0);
+  DECL_MEDIA_PREF("media.decoder.fuzzing.dont-delay-inputexhausted", PDMFuzzingDelayInputExhausted, bool, true);
+  DECL_MEDIA_PREF("media.gmp.decoder.enabled",                PDMGMPEnabled, bool, true);
+  DECL_MEDIA_PREF("media.gmp.decoder.aac",                    GMPAACPreferred, uint32_t, 0);
+  DECL_MEDIA_PREF("media.gmp.decoder.h264",                   GMPH264Preferred, uint32_t, 0);
+
+  // WebSpeech
+  DECL_MEDIA_PREF("media.webspeech.synth.force_global_queue", WebSpeechForceGlobal, bool, false);
+  DECL_MEDIA_PREF("media.webspeech.test.enable",              WebSpeechTestEnabled, bool, false);
+  DECL_MEDIA_PREF("media.webspeech.test.fake_fsm_events",     WebSpeechFakeFSMEvents, bool, false);
+  DECL_MEDIA_PREF(TEST_PREFERENCE_FAKE_RECOGNITION_SERVICE,   WebSpeechFakeRecognitionService, bool, false);
+  DECL_MEDIA_PREF("media.webspeech.recognition.enable",       WebSpeechRecognitionEnabled, bool, false);
+  DECL_MEDIA_PREF("media.webspeech.recognition.force_enable", WebSpeechRecognitionForceEnabled, bool, false);
 
 public:
   // Manage the singleton:

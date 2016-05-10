@@ -168,8 +168,6 @@ MediaFormatReader::InitLayersBackendType()
   mLayersBackendType = layerManager->GetCompositorBackendType();
 }
 
-static bool sIsEMEEnabled = false;
-
 nsresult
 MediaFormatReader::Init()
 {
@@ -182,12 +180,6 @@ MediaFormatReader::Init()
     new FlushableTaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER));
   mVideo.mTaskQueue =
     new FlushableTaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER));
-
-  static bool sSetupPrefCache = false;
-  if (!sSetupPrefCache) {
-    sSetupPrefCache = true;
-    Preferences::AddBoolVarCache(&sIsEMEEnabled, "media.eme.enabled", false);
-  }
 
   return NS_OK;
 }

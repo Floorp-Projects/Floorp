@@ -13,7 +13,6 @@
 #include "GMPVideoDecoderParent.h"
 #include "nsIObserverService.h"
 #include "GeckoChildProcessHost.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/SyncRunnable.h"
 #include "nsXPCOMPrivate.h"
@@ -24,7 +23,6 @@
 #include "GMPDecryptorParent.h"
 #include "GMPAudioDecoderParent.h"
 #include "nsComponentManagerUtils.h"
-#include "mozilla/Preferences.h"
 #include "runnable_utils.h"
 #include "VideoUtils.h"
 #if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)

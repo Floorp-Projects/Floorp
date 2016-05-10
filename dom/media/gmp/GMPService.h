@@ -31,8 +31,6 @@ namespace gmp {
 
 class GetGMPContentParentCallback;
 
-#define GMP_DEFAULT_ASYNC_SHUTDONW_TIMEOUT 3000
-
 class GeckoMediaPluginService : public mozIGeckoMediaPluginService
                               , public nsIObserver
 {

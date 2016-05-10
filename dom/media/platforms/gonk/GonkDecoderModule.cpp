@@ -6,7 +6,6 @@
 #include "GonkDecoderModule.h"
 #include "GonkVideoDecoderManager.h"
 #include "GonkAudioDecoderManager.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/DebugOnly.h"
 #include "GonkMediaDataDecoder.h"
 
