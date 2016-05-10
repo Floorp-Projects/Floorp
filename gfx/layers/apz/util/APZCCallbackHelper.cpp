@@ -487,7 +487,7 @@ APZCCallbackHelper::DispatchSynthesizedMouseEvent(EventMessage aMsg,
   event.mTime = aTime;
   event.button = WidgetMouseEvent::eLeftButton;
   event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
-  event.ignoreRootScrollFrame = true;
+  event.mIgnoreRootScrollFrame = true;
   if (aMsg != eMouseMove) {
     event.clickCount = 1;
   }

@@ -7834,7 +7834,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
         eventPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, frame);
       }
       if (mouseEvent && mouseEvent->mClass == eMouseEventClass &&
-          mouseEvent->ignoreRootScrollFrame) {
+          mouseEvent->mIgnoreRootScrollFrame) {
         flags |= INPUT_IGNORE_ROOT_SCROLL_FRAME;
       }
       nsIFrame* target =
