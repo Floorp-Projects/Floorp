@@ -22,6 +22,16 @@ add_task(function* () {
   info("Clicked on themes button");
   yield popupShownPromise;
 
+  // close current tab and re-open Customize menu to confirm correct number of Themes
+  yield endCustomizing();
+  info("Exited customize mode");
+  yield startCustomizing();
+  info("Started customizing a second time");
+  popupShownPromise = popupShown(popup);
+  EventUtils.synthesizeMouseAtCenter(themesButton, {});
+  info("Clicked on themes button a second time");
+  yield popupShownPromise;
+
   let header = document.getElementById("customization-lwtheme-menu-header");
   let recommendedHeader = document.getElementById("customization-lwtheme-menu-recommended");
 

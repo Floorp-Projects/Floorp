@@ -32,7 +32,6 @@
       <button id="customization-lwtheme-button" label="&customizeMode.lwthemes;" class="customizationmode-button" type="menu">
         <panel type="arrow" id="customization-lwtheme-menu"
                onpopupshowing="gCustomizeMode.onLWThemesMenuShowing(event);"
-               onpopuphidden="gCustomizeMode.onLWThemesMenuHidden(event);"
                position="topcenter bottomleft"
                flip="none"
                role="menu">
