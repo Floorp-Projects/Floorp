@@ -207,7 +207,7 @@ protected:
     : mReason(eReal)
     , mContextMenuTrigger(eNormal)
     , mExitFrom(eChild)
-    , ignoreRootScrollFrame(false)
+    , mIgnoreRootScrollFrame(false)
     , clickCount(0)
   {
   }
@@ -218,7 +218,7 @@ protected:
     , mReason(aReason)
     , mContextMenuTrigger(eNormal)
     , mExitFrom(eChild)
-    , ignoreRootScrollFrame(false)
+    , mIgnoreRootScrollFrame(false)
     , clickCount(0)
   {
   }
@@ -235,7 +235,7 @@ public:
     , mReason(aReason)
     , mContextMenuTrigger(aContextMenuTrigger)
     , mExitFrom(eChild)
-    , ignoreRootScrollFrame(false)
+    , mIgnoreRootScrollFrame(false)
     , clickCount(0)
   {
     if (aMessage == eContextMenu) {
@@ -274,7 +274,7 @@ public:
   ExitFrom mExitFrom;
 
   // Whether the event should ignore scroll frame bounds during dispatch.
-  bool ignoreRootScrollFrame;
+  bool mIgnoreRootScrollFrame;
 
   /// The number of mouse clicks.
   uint32_t clickCount;
@@ -284,7 +284,7 @@ public:
     AssignMouseEventBaseData(aEvent, aCopyTargets);
     AssignPointerHelperData(aEvent);
 
-    ignoreRootScrollFrame = aEvent.ignoreRootScrollFrame;
+    mIgnoreRootScrollFrame = aEvent.mIgnoreRootScrollFrame;
     clickCount = aEvent.clickCount;
   }
 

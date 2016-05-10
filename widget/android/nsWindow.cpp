@@ -1970,7 +1970,7 @@ nsWindow::OnContextmenuEvent(AndroidGeckoEvent *ae)
                                       WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
     contextMenuEvent.mRefPoint =
         RoundedToInt(pt * GetDefaultScale()) - WidgetToScreenOffset();
-    contextMenuEvent.ignoreRootScrollFrame = true;
+    contextMenuEvent.mIgnoreRootScrollFrame = true;
     contextMenuEvent.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
 
     nsEventStatus contextMenuStatus;
@@ -2009,7 +2009,7 @@ nsWindow::OnLongTapEvent(AndroidGeckoEvent *ae)
     event.clickCount = 1;
     event.mTime = ae->Time();
     event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
-    event.ignoreRootScrollFrame = true;
+    event.mIgnoreRootScrollFrame = true;
 
     DispatchEvent(&event);
 }
@@ -2025,7 +2025,7 @@ nsWindow::DispatchHitTest(const WidgetTouchEvent& aEvent)
         WidgetMouseEvent hittest(true, eMouseHitTest, this,
                                  WidgetMouseEvent::eReal);
         hittest.mRefPoint = aEvent.mTouches[0]->mRefPoint;
-        hittest.ignoreRootScrollFrame = true;
+        hittest.mIgnoreRootScrollFrame = true;
         hittest.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
         nsEventStatus status;
         DispatchEvent(&hittest, status);

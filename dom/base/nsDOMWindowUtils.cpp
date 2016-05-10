@@ -694,7 +694,7 @@ nsDOMWindowUtils::SendPointerEventCommon(const nsAString& aType,
 
   event.mRefPoint =
     nsContentUtils::ToWidgetPoint(CSSPoint(aX, aY), offset, presContext);
-  event.ignoreRootScrollFrame = aIgnoreRootScrollFrame;
+  event.mIgnoreRootScrollFrame = aIgnoreRootScrollFrame;
 
   nsEventStatus status;
   if (aToWindow) {
