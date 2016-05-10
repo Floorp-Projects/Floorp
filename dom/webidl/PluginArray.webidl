@@ -4,6 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+[LegacyUnenumerableNamedProperties]
 interface PluginArray {
   readonly attribute unsigned long length;
 
