@@ -865,8 +865,9 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
                    aPseudoType ==
                      CSSPseudoElementType::NotPseudo) ||
                   (aPseudoTag &&
-                   nsCSSPseudoElements::GetPseudoType(aPseudoTag) ==
-                     aPseudoType),
+                   nsCSSPseudoElements::GetPseudoType(
+                     aPseudoTag, CSSEnabledState::eIgnoreEnabledState) ==
+                   aPseudoType),
                   "Pseudo mismatch");
 
   if (aVisitedRuleNode == aRuleNode) {

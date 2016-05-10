@@ -488,7 +488,8 @@ nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
 
   RefPtr<nsStyleContext> sc;
   if (aPseudo) {
-    CSSPseudoElementType type = nsCSSPseudoElements::GetPseudoType(aPseudo);
+    CSSPseudoElementType type = nsCSSPseudoElements::
+      GetPseudoType(aPseudo, CSSEnabledState::eIgnoreEnabledState);
     if (type >= CSSPseudoElementType::Count) {
       return nullptr;
     }
