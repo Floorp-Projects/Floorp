@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://w3c.github.io/performance-timeline/#the-performance-observer-interface
+ * https://w3c.github.io/performance-timeline/#the-performanceobserver-interface
  */
 
 dictionary PerformanceObserverInit {
