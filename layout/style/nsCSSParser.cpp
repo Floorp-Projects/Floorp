@@ -5872,19 +5872,14 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
   CSSPseudoElementType pseudoElementType =
     nsCSSPseudoElements::GetPseudoType(pseudo);
   nsCSSPseudoClasses::Type pseudoClassType =
-    nsCSSPseudoClasses::GetPseudoType(pseudo);
+    nsCSSPseudoClasses::GetPseudoType(pseudo, AgentRulesEnabled(),
+                                      ChromeRulesEnabled());
   bool pseudoClassIsUserAction =
     nsCSSPseudoClasses::IsUserActionPseudoClass(pseudoClassType);
 
-  if (!AgentRulesEnabled() &&
-      ((pseudoElementType < CSSPseudoElementType::Count &&
-        nsCSSPseudoElements::PseudoElementIsUASheetOnly(pseudoElementType)) ||
-       (pseudoClassType != nsCSSPseudoClasses::ePseudoClass_NotPseudoClass &&
-        nsCSSPseudoClasses::PseudoClassIsUASheetOnly(pseudoClassType)) ||
-       (!ChromeRulesEnabled() &&
-        (pseudoClassType != nsCSSPseudoClasses::ePseudoClass_NotPseudoClass &&
-         nsCSSPseudoClasses::PseudoClassIsUASheetAndChromeOnly(pseudoClassType))))) {
-    // This pseudo-element or pseudo-class is not exposed to content.
+  if (pseudoElementType < CSSPseudoElementType::Count && !AgentRulesEnabled() &&
+      nsCSSPseudoElements::PseudoElementIsUASheetOnly(pseudoElementType)) {
+    // This pseudo-element is not exposed to content.
     REPORT_UNEXPECTED_TOKEN(PEPseudoSelUnknown);
     UngetToken();
     return eSelectorParsingStatus_Error;
