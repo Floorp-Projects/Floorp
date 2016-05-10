@@ -218,14 +218,16 @@ TabListView.prototype = {
     } else {
       itemNode.classList.remove("selected");
     }
+    if (item.isMobile) {
+      itemNode.classList.add("device-image-mobile");
+    } else {
+      itemNode.classList.add("device-image-desktop");
+    }
     if (item.focused) {
       itemNode.focus();
     }
     itemNode.dataset.id = item.id;
     itemNode.querySelector(".item-title").textContent = item.name;
-
-    let icon = itemNode.querySelector(".item-icon-container");
-    icon.style.backgroundImage = "url(" + item.icon + ")";
   },
 
   /**

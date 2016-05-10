@@ -8,7 +8,7 @@ const FIXTURE = [
     "id": "2xU5h-4bkWqA",
     "type": "client",
     "name": "laptop",
-    "icon": "chrome://browser/skin/sync-desktopIcon.png",
+    "isMobile": false,
     "tabs": [
       {
         "type": "tab",
@@ -32,7 +32,7 @@ const FIXTURE = [
     "id": "OL3EJCsdb2JD",
     "type": "client",
     "name": "desktop",
-    "icon": "chrome://browser/skin/sync-desktopIcon.png",
+    "isMobile": false,
     "tabs": []
   }
 ];
