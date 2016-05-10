@@ -20,16 +20,16 @@ const { OS } = Cu.import("resource://gre/modules/osfile.jsm");
 
 const { loadKinto } = Cu.import("resource://services-common/kinto-offline-client.js");
 
-const PREF_SETTINGS_SERVER                   = "services.settings.server";
-const PREF_BLOCKLIST_BUCKET                  = "services.blocklist.bucket";
-const PREF_BLOCKLIST_ONECRL_COLLECTION       = "services.blocklist.onecrl.collection";
-const PREF_BLOCKLIST_ONECRL_CHECKED_SECONDS  = "services.blocklist.onecrl.checked";
-const PREF_BLOCKLIST_ADDONS_COLLECTION       = "services.blocklist.addons.collection";
-const PREF_BLOCKLIST_ADDONS_CHECKED_SECONDS  = "services.blocklist.addons.checked";
-const PREF_BLOCKLIST_PLUGINS_COLLECTION      = "services.blocklist.plugins.collection";
-const PREF_BLOCKLIST_PLUGINS_CHECKED_SECONDS = "services.blocklist.plugins.checked";
-const PREF_BLOCKLIST_GFX_COLLECTION          = "services.blocklist.gfx.collection";
-const PREF_BLOCKLIST_GFX_CHECKED_SECONDS     = "services.blocklist.gfx.checked";
+const PREF_KINTO_BASE                    = "services.kinto.base";
+const PREF_KINTO_BUCKET                  = "services.kinto.bucket";
+const PREF_KINTO_ONECRL_COLLECTION       = "services.kinto.onecrl.collection";
+const PREF_KINTO_ONECRL_CHECKED_SECONDS  = "services.kinto.onecrl.checked";
+const PREF_KINTO_ADDONS_COLLECTION       = "services.kinto.addons.collection";
+const PREF_KINTO_ADDONS_CHECKED_SECONDS  = "services.kinto.addons.checked";
+const PREF_KINTO_PLUGINS_COLLECTION      = "services.kinto.plugins.collection";
+const PREF_KINTO_PLUGINS_CHECKED_SECONDS = "services.kinto.plugins.checked";
+const PREF_KINTO_GFX_COLLECTION          = "services.kinto.gfx.collection";
+const PREF_KINTO_GFX_CHECKED_SECONDS     = "services.kinto.gfx.checked";
 
 this.FILENAME_ADDONS_JSON  = "blocklist-addons.json";
 this.FILENAME_GFX_JSON     = "blocklist-gfx.json";
@@ -42,8 +42,8 @@ this.FILENAME_PLUGINS_JSON = "blocklist-plugins.json";
  * persist the local DB.
  */
 function kintoClient() {
-  let base = Services.prefs.getCharPref(PREF_SETTINGS_SERVER);
-  let bucket = Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET);
+  let base = Services.prefs.getCharPref(PREF_KINTO_BASE);
+  let bucket = Services.prefs.getCharPref(PREF_KINTO_BUCKET);
 
   let Kinto = loadKinto();
 
@@ -161,25 +161,25 @@ function* updateJSONBlocklist(filename, records) {
 
 
 this.OneCRLBlocklistClient = new BlocklistClient(
-  Services.prefs.getCharPref(PREF_BLOCKLIST_ONECRL_COLLECTION),
-  PREF_BLOCKLIST_ONECRL_CHECKED_SECONDS,
+  Services.prefs.getCharPref(PREF_KINTO_ONECRL_COLLECTION),
+  PREF_KINTO_ONECRL_CHECKED_SECONDS,
   updateCertBlocklist
 );
 
 this.AddonBlocklistClient = new BlocklistClient(
-  Services.prefs.getCharPref(PREF_BLOCKLIST_ADDONS_COLLECTION),
-  PREF_BLOCKLIST_ADDONS_CHECKED_SECONDS,
+  Services.prefs.getCharPref(PREF_KINTO_ADDONS_COLLECTION),
+  PREF_KINTO_ADDONS_CHECKED_SECONDS,
   updateJSONBlocklist.bind(undefined, FILENAME_ADDONS_JSON)
 );
 
 this.GfxBlocklistClient = new BlocklistClient(
-  Services.prefs.getCharPref(PREF_BLOCKLIST_GFX_COLLECTION),
-  PREF_BLOCKLIST_GFX_CHECKED_SECONDS,
+  Services.prefs.getCharPref(PREF_KINTO_GFX_COLLECTION),
+  PREF_KINTO_GFX_CHECKED_SECONDS,
   updateJSONBlocklist.bind(undefined, FILENAME_GFX_JSON)
 );
 
 this.PluginBlocklistClient = new BlocklistClient(
-  Services.prefs.getCharPref(PREF_BLOCKLIST_PLUGINS_COLLECTION),
-  PREF_BLOCKLIST_PLUGINS_CHECKED_SECONDS,
+  Services.prefs.getCharPref(PREF_KINTO_PLUGINS_COLLECTION),
+  PREF_KINTO_PLUGINS_CHECKED_SECONDS,
   updateJSONBlocklist.bind(undefined, FILENAME_PLUGINS_JSON)
 );
