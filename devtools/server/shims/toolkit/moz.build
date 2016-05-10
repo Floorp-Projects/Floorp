@@ -4,15 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    'toolkit',
-]
-
 # Unlike most DevTools build files, this file does not use DevToolsModules
 # because these files are here for add-on compatibility, and so they must be
 # installed to previously defined locations.
 
-# Extra compatibility layer for old path after relocation in bug 1270173
-FINAL_TARGET_FILES.chrome.devtools.modules.devtools.server += [
-    'protocol.js',
+# These shims for legacy paths expect to be installed as if they were part of
+# /toolkit modules.  Disable any DIST_SUBDIR from parent files here.
+DIST_SUBDIR = ''
+
+EXTRA_JS_MODULES.devtools += [
+    'dbg-server.jsm',
 ]
