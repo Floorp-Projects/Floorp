@@ -12,6 +12,7 @@ import java.util.Queue;
 import java.util.Set;
 
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.ContentResolver;
@@ -118,12 +119,15 @@ class GlobalHistory {
         ThreadUtils.assertOnBackgroundThread();
         final long start = SystemClock.uptimeMillis();
 
-        db.updateVisitedHistory(context.getContentResolver(), uri);
+        // stripAboutReaderUrl only removes about:reader if present, in all other cases the original string is returned
+        final String uriToStore = ReaderModeUtils.stripAboutReaderUrl(uri);
+
+        db.updateVisitedHistory(context.getContentResolver(), uriToStore);
 
         final long end = SystemClock.uptimeMillis();
         final long took = end - start;
         Telemetry.addToHistogram(TELEMETRY_HISTOGRAM_ADD, (int) Math.min(took, Integer.MAX_VALUE));
-        addToGeckoOnly(uri);
+        addToGeckoOnly(uriToStore);
     }
 
     @SuppressWarnings("static-method")
@@ -131,7 +135,9 @@ class GlobalHistory {
         ThreadUtils.assertOnBackgroundThread();
         final long start = SystemClock.uptimeMillis();
 
-        db.updateHistoryTitle(cr, uri, title);
+        final String uriToStore = ReaderModeUtils.stripAboutReaderUrl(uri);
+
+        db.updateHistoryTitle(cr, uriToStore, title);
 
         final long end = SystemClock.uptimeMillis();
         final long took = end - start;
@@ -139,13 +145,15 @@ class GlobalHistory {
     }
 
     public void checkUriVisited(final String uri) {
+        final String storedURI = ReaderModeUtils.stripAboutReaderUrl(uri);
+
         final NotifierRunnable runnable = new NotifierRunnable(GeckoAppShell.getContext());
         mHandler.post(new Runnable() {
             @Override
             public void run() {
                 // this runs on the same handler thread as the processing loop,
                 // so no synchronization needed
-                mPendingUris.add(uri);
+                mPendingUris.add(storedURI);
                 if (mProcessing) {
                     // there's already a runnable queued up or working away, so
                     // no need to post another
