@@ -331,6 +331,11 @@ ImageHost::Composite(LayerComposite* aLayer,
 
   TimedImage* img = &mImages[imageIndex];
   SetCurrentTextureHost(img->mTextureHost);
+  // If this TextureHost will be recycled, then make sure we hold a reference to
+  // it until we're sure that the compositor has finished reading from it.
+  if (img->mTextureHost->GetFlags() & TextureFlags::RECYCLE) {
+    aLayer->GetLayerManager()->HoldTextureUntilNextComposite(img->mTextureHost);
+  }
   // Make sure the front buffer has a compositor
   mCurrentTextureHost->SetCompositor(GetCompositor());
   if (mCurrentTextureSource) {
