@@ -208,7 +208,7 @@ protected:
     , mContextMenuTrigger(eNormal)
     , mExitFrom(eChild)
     , mIgnoreRootScrollFrame(false)
-    , clickCount(0)
+    , mClickCount(0)
   {
   }
 
@@ -219,7 +219,7 @@ protected:
     , mContextMenuTrigger(eNormal)
     , mExitFrom(eChild)
     , mIgnoreRootScrollFrame(false)
-    , clickCount(0)
+    , mClickCount(0)
   {
   }
 
@@ -236,7 +236,7 @@ public:
     , mContextMenuTrigger(aContextMenuTrigger)
     , mExitFrom(eChild)
     , mIgnoreRootScrollFrame(false)
-    , clickCount(0)
+    , mClickCount(0)
   {
     if (aMessage == eContextMenu) {
       button = (mContextMenuTrigger == eNormal) ? eRightButton : eLeftButton;
@@ -277,7 +277,7 @@ public:
   bool mIgnoreRootScrollFrame;
 
   /// The number of mouse clicks.
-  uint32_t clickCount;
+  uint32_t mClickCount;
 
   void AssignMouseEventData(const WidgetMouseEvent& aEvent, bool aCopyTargets)
   {
@@ -285,7 +285,7 @@ public:
     AssignPointerHelperData(aEvent);
 
     mIgnoreRootScrollFrame = aEvent.mIgnoreRootScrollFrame;
-    clickCount = aEvent.clickCount;
+    mClickCount = aEvent.mClickCount;
   }
 
   /**

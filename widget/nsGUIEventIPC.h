@@ -235,7 +235,7 @@ struct ParamTraits<mozilla::WidgetMouseEvent>
     WriteParam(aMsg, static_cast<paramType::ContextMenuTriggerType>(
                        aParam.mContextMenuTrigger));
     WriteParam(aMsg, static_cast<paramType::ExitFromType>(aParam.mExitFrom));
-    WriteParam(aMsg, aParam.clickCount);
+    WriteParam(aMsg, aParam.mClickCount);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
@@ -250,7 +250,7 @@ struct ParamTraits<mozilla::WidgetMouseEvent>
          ReadParam(aMsg, aIter, &reason) &&
          ReadParam(aMsg, aIter, &contextMenuTrigger) &&
          ReadParam(aMsg, aIter, &exitFrom) &&
-         ReadParam(aMsg, aIter, &aResult->clickCount);
+         ReadParam(aMsg, aIter, &aResult->mClickCount);
     aResult->mReason = static_cast<paramType::Reason>(reason);
     aResult->mContextMenuTrigger =
       static_cast<paramType::ContextMenuTrigger>(contextMenuTrigger);
