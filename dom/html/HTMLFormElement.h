@@ -393,8 +393,6 @@ public:
   already_AddRefed<nsISupports>
   NamedGetter(const nsAString& aName, bool &aFound);
 
-  bool NameIsEnumerable(const nsAString& aName);
-
   void GetSupportedNames(unsigned, nsTArray<nsString >& aRetval);
 
   static int32_t

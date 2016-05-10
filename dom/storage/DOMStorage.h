@@ -81,11 +81,6 @@ public:
 
   void GetItem(const nsAString& aKey, nsAString& aResult, ErrorResult& aRv);
 
-  bool NameIsEnumerable(const nsAString& aName) const
-  {
-    return true;
-  }
-
   void GetSupportedNames(unsigned, nsTArray<nsString>& aKeys);
 
   void NamedGetter(const nsAString& aKey, bool& aFound, nsAString& aResult,

@@ -35,7 +35,6 @@ public:
   nsMimeType* NamedItem(const nsAString& name);
   nsMimeType* IndexedGetter(uint32_t index, bool &found);
   nsMimeType* NamedGetter(const nsAString& name, bool &found);
-  bool NameIsEnumerable(const nsAString& name);
   uint32_t Length();
   void GetSupportedNames(unsigned, nsTArray< nsString >& retval);
 
