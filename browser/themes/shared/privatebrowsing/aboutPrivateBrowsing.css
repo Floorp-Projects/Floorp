@@ -72,7 +72,8 @@ p {
 .list-row > ul > li {
   float: left;
   width: 220px;
-  margin-left: 1em;
+  line-height: 1.5em;
+  -moz-margin-start: 1em;
   margin-bottom: 0;
 }
 
