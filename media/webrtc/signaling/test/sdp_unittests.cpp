@@ -87,6 +87,9 @@ class SdpTest : public ::testing::Test {
     }
 
     static void TearDownTestCase() {
+      if (gThread) {
+        gThread->Shutdown();
+      }
       gThread = nullptr;
     }
 
