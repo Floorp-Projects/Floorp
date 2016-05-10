@@ -5393,7 +5393,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
           propertyStr(property.list->mValue.GetStringBufferValue());
         nsCSSProperty prop =
           nsCSSProps::LookupProperty(propertyStr,
-                                     nsCSSProps::eEnabledForAllContent);
+                                     CSSEnabledState::eForAllContent);
         if (prop == eCSSProperty_UNKNOWN ||
             prop == eCSSPropertyExtra_variable) {
           transition->SetUnknownProperty(prop, propertyStr);
@@ -6197,8 +6197,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
         }
 
         nsCSSProperty prop =
-          nsCSSProps::LookupProperty(buffer,
-                                     nsCSSProps::eEnabledForAllContent);
+          nsCSSProps::LookupProperty(buffer, CSSEnabledState::eForAllContent);
         if (prop != eCSSProperty_UNKNOWN &&
             prop != eCSSPropertyExtra_variable) {
           // If the property given is a shorthand, it indicates the expectation
