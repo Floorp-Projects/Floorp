@@ -327,7 +327,7 @@ public:
     return true;
   }
 
-  nsresult
+  NS_IMETHOD
   Cancel() override
   {
     // Execute Run anyway to make sure we cleanup our promise proxy to avoid
