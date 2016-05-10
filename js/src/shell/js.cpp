@@ -3212,7 +3212,7 @@ ScheduleWatchdog(JSRuntime* rt, double t)
         MOZ_ASSERT(!sr->watchdogTimeout);
         sr->watchdogThread.emplace(WatchdogMain, rt);
     } else if (!sr->watchdogTimeout || timeout < sr->watchdogTimeout.value()) {
-         sr->watchdogWakeup.notify_one();
+        sr->watchdogWakeup.notify_one();
     }
     sr->watchdogTimeout = Some(timeout);
     return true;
