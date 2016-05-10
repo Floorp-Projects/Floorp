@@ -209,22 +209,23 @@ nsPrintSettingsWin::CopyFromNative(HDC aHdc, DEVMODEW* aDevMode)
   // page and don't set the unwriteable [sic] margins. Using the unwriteable
   // margins doesn't appear to work on Windows, but I am not sure if this is a
   // bug elsewhere in our code or a Windows quirk.
+  // Note: we only scale the printing using the LOGPIXELSY, so we use that
+  // when calculating the surface width as well as the height.
   int32_t printableWidthInDots = GetDeviceCaps(aHdc, HORZRES);
   int32_t printableHeightInDots = GetDeviceCaps(aHdc, VERTRES);
-  int32_t widthDPI = GetDeviceCaps(aHdc, LOGPIXELSX);
   int32_t heightDPI = GetDeviceCaps(aHdc, LOGPIXELSY);
 
   // Keep these values in portrait format, so we can reflect our own changes
   // to mOrientation.
   if (mOrientation == kPortraitOrientation) {
-    mPrintableWidthInInches = double(printableWidthInDots) / widthDPI;
+    mPrintableWidthInInches = double(printableWidthInDots) / heightDPI;
     mPrintableHeightInInches = double(printableHeightInDots) / heightDPI;
   } else {
-    mPrintableHeightInInches = double(printableWidthInDots) / widthDPI;
+    mPrintableHeightInInches = double(printableWidthInDots) / heightDPI;
     mPrintableWidthInInches = double(printableHeightInDots) / heightDPI;
   }
 
-  // Using Y to match existing code, X DPI should be the same for printing.
+  // Using Y to match existing code for print scaling calculations.
   mResolution = heightDPI;
 }
 
