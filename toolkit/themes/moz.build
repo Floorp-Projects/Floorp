@@ -23,7 +23,7 @@ if toolkit == 'cocoa':
     DIRS += ['osx']
 elif toolkit in ('gtk2', 'gtk3', 'qt'):
     DIRS += ['linux']
-elif app == 'mobile/android' and CONFIG['NIGHTLY_BUILD']:
+elif app == 'mobile/android':
     DIRS += ['mobile']
 else:
     DIRS += ['windows']
