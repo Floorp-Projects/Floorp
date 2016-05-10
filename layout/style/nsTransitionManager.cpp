@@ -483,9 +483,9 @@ nsTransitionManager::UpdateTransitions(
           // duration are both zero, or because the new value is not
           // interpolable); a new transition would have anim->ToValue()
           // matching currentValue
-          !ExtractComputedValueForTransition(anim->TransitionProperty(),
-                                             aNewStyleContext,
-                                             currentValue) ||
+          !StyleAnimationValue::ExtractComputedValue(anim->TransitionProperty(),
+                                                     aNewStyleContext,
+                                                     currentValue) ||
           currentValue != anim->ToValue()) {
         // stop the transition
         if (anim->HasCurrentEffect()) {
@@ -550,10 +550,12 @@ nsTransitionManager::ConsiderStartingTransition(
 
   StyleAnimationValue startValue, endValue, dummyValue;
   bool haveValues =
-    ExtractComputedValueForTransition(aProperty, aOldStyleContext,
-                                      startValue) &&
-    ExtractComputedValueForTransition(aProperty, aNewStyleContext,
-                                      endValue);
+    StyleAnimationValue::ExtractComputedValue(aProperty,
+                                              aOldStyleContext,
+                                              startValue) &&
+    StyleAnimationValue::ExtractComputedValue(aProperty,
+                                              aNewStyleContext,
+                                              endValue);
 
   bool haveChange = startValue != endValue;
 
@@ -833,9 +835,9 @@ nsTransitionManager::PruneCompletedTransitions(mozilla::dom::Element* aElement,
     // Since effect is a finished transition, we know it didn't
     // influence style.
     StyleAnimationValue currentValue;
-    if (!ExtractComputedValueForTransition(anim->TransitionProperty(),
-                                           aNewStyleContext,
-                                           currentValue) ||
+    if (!StyleAnimationValue::ExtractComputedValue(anim->TransitionProperty(),
+                                                   aNewStyleContext,
+                                                   currentValue) ||
         currentValue != anim->ToValue()) {
       anim->CancelFromStyle();
       animations.RemoveElementAt(i);
