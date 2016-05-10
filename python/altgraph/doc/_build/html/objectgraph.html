@@ -1,0 +1,283 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>altgraph.ObjectGraph — Graphs of objecs with an identifier &mdash; altgraph 0.11 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.11',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="altgraph 0.11 documentation" href="index.html" />
+    <link rel="next" title="altgraph.GraphAlgo — Graph algorithms" href="graphalgo.html" />
+    <link rel="prev" title="altgraph.Graph — Basic directional graphs" href="graph.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="graphalgo.html" title="altgraph.GraphAlgo — Graph algorithms"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="graph.html" title="altgraph.Graph — Basic directional graphs"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">altgraph 0.11 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-altgraph.ObjectGraph">
+<span id="altgraph-objectgraph-graphs-of-objecs-with-an-identifier"></span><h1><a class="reference internal" href="#module-altgraph.ObjectGraph" title="altgraph.ObjectGraph: A graph of objects that have a &quot;graphident&quot; attribute."><tt class="xref py py-mod docutils literal"><span class="pre">altgraph.ObjectGraph</span></tt></a> &#8212; Graphs of objecs with an identifier<a class="headerlink" href="#module-altgraph.ObjectGraph" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="altgraph.ObjectGraph.ObjectGraph">
+<em class="property">class </em><tt class="descclassname">altgraph.ObjectGraph.</tt><tt class="descname">ObjectGraph</tt><big>(</big><span class="optional">[</span><em>graph</em><span class="optional">[</span>, <em>debug</em><span class="optional">]</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#altgraph.ObjectGraph.ObjectGraph" title="Permalink to this definition">¶</a></dt>
+<dd><p>A graph of objects that have a &#8220;graphident&#8221; attribute. The
+value of this attribute is the key for the object in the
+graph.</p>
+<p>The optional <em>graph</em> is a previously constructed
+<a class="reference internal" href="graph.html#altgraph.Graph.Graph" title="altgraph.Graph.Graph"><tt class="xref py py-class docutils literal"><span class="pre">Graph</span></tt></a>.</p>
+<p>The optional <em>debug</em> level controls the amount of debug output
+(see <a class="reference internal" href="#altgraph.ObjectGraph.ObjectGraph.msg" title="altgraph.ObjectGraph.ObjectGraph.msg"><tt class="xref py py-meth docutils literal"><span class="pre">msg()</span></tt></a>, <a class="reference internal" href="#altgraph.ObjectGraph.ObjectGraph.msgin" title="altgraph.ObjectGraph.ObjectGraph.msgin"><tt class="xref py py-meth docutils literal"><span class="pre">msgin()</span></tt></a> and <a class="reference internal" href="#altgraph.ObjectGraph.ObjectGraph.msgout" title="altgraph.ObjectGraph.ObjectGraph.msgout"><tt class="xref py py-meth docutils literal"><span class="pre">msgout()</span></tt></a>).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">the altgraph library does not generate output, the
+debug attribute and message methods are present for use
+by subclasses.</p>
+</div>
+</dd></dl>
+
+<dl class="data">
+<dt id="altgraph.ObjectGraph.ObjectGraph.graph">
+<tt class="descclassname">ObjectGraph.</tt><tt class="descname">graph</tt><a class="headerlink" href="#altgraph.ObjectGraph.ObjectGraph.graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>An <a class="reference internal" href="graph.html#altgraph.Graph.Graph" title="altgraph.Graph.Graph"><tt class="xref py py-class docutils literal"><span class="pre">Graph</span></tt></a> object that contains
+the graph data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.ObjectGraph.ObjectGraph.addNode">
+<tt class="descclassname">ObjectGraph.</tt><tt class="descname">addNode</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#altgraph.ObjectGraph.ObjectGraph.addNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a <em>node</em> to the graph.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">re-adding a node that was previously removed
+using <a class="reference internal" href="#altgraph.ObjectGraph.ObjectGraph.removeNode" title="altgraph.ObjectGraph.ObjectGraph.removeNode"><tt class="xref py py-meth docutils literal"><span class="pre">removeNode()</span></tt></a> will reinstate the previously
+removed node.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.ObjectGraph.ObjectGraph.createNode">
+<tt class="descclassname">ObjectGraph.</tt><tt class="descname">createNode</tt><big>(</big><em>self</em>, <em>cls</em>, <em>name</em>, <em>*args</em>, <em>**kwds</em><big>)</big><a class="headerlink" href="#altgraph.ObjectGraph.ObjectGraph.createNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new node using <tt class="docutils literal"><span class="pre">cls(*args,</span> <span class="pre">**kwds)</span></tt> and adds that
+node using <a class="reference internal" href="#altgraph.ObjectGraph.ObjectGraph.addNode" title="altgraph.ObjectGraph.ObjectGraph.addNode"><tt class="xref py py-meth docutils literal"><span class="pre">addNode()</span></tt></a>.</p>
+<p>Returns the newly created node.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.ObjectGraph.ObjectGraph.removeNode">
+<tt class="descclassname">ObjectGraph.</tt><tt class="descname">removeNode</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#altgraph.ObjectGraph.ObjectGraph.removeNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes a <em>node</em> from the graph when it exists. The <em>node</em> argument
+is either a node object, or the graphident of a node.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.ObjectGraph.ObjectGraph.createReferences">
+<tt class="descclassname">ObjectGraph.</tt><tt class="descname">createReferences</tt><big>(</big><em>fromnode</em>, <em>tonode</em><span class="optional">[</span>, <em>edge_data</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#altgraph.ObjectGraph.ObjectGraph.createReferences" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a reference from <em>fromnode</em> to <em>tonode</em>. The optional
+<em>edge_data</em> is associated with the edge.</p>
+<p><em>Fromnode</em> and <em>tonode</em> can either be node objects or the graphident
+values for nodes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.ObjectGraph.removeReference">
+<tt class="descclassname">altgraph.ObjectGraph.</tt><tt class="descname">removeReference</tt><big>(</big><em>fromnode</em>, <em>tonode</em><big>)</big><a class="headerlink" href="#altgraph.ObjectGraph.removeReference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the reference from <em>fromnode</em> to <em>tonode</em> if it exists.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.ObjectGraph.ObjectGraph.getRawIdent">
+<tt class="descclassname">ObjectGraph.</tt><tt class="descname">getRawIdent</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#altgraph.ObjectGraph.ObjectGraph.getRawIdent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the <em>graphident</em> attribute of <em>node</em>, or the graph itself
+when <em>node</em> is <a class="reference external" href="http://docs.python.org/library/constants.html#None" title="(in Python v2.7)"><tt class="xref py py-data docutils literal"><span class="pre">None</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.ObjectGraph.getIdent">
+<tt class="descclassname">altgraph.ObjectGraph.</tt><tt class="descname">getIdent</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#altgraph.ObjectGraph.getIdent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Same as <tt class="xref py py-meth docutils literal"><span class="pre">getRawIdent()</span></tt>, but only if the node is part
+of the graph.</p>
+<p><em>Node</em> can either be an actual node object or the graphident of
+a node.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.ObjectGraph.ObjectGraph.findNode">
+<tt class="descclassname">ObjectGraph.</tt><tt class="descname">findNode</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#altgraph.ObjectGraph.ObjectGraph.findNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a given node in the graph, or <tt class="xref py py-data docutils literal"><span class="pre">Node</span></tt> when it cannot
+be found.</p>
+<p><em>Node</em> is either an object with a <em>graphident</em> attribute or
+the <em>graphident</em> attribute itself.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.ObjectGraph.ObjectGraph.__contains__">
+<tt class="descclassname">ObjectGraph.</tt><tt class="descname">__contains__</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#altgraph.ObjectGraph.ObjectGraph.__contains__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if <em>node</em> is a member of the graph. <em>Node</em> is either an
+object with a <em>graphident</em> attribute or the <em>graphident</em> attribute itself.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.ObjectGraph.ObjectGraph.flatten">
+<tt class="descclassname">ObjectGraph.</tt><tt class="descname">flatten</tt><big>(</big><span class="optional">[</span><em>condition</em><span class="optional">[</span>, <em>start</em><span class="optional">]</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#altgraph.ObjectGraph.ObjectGraph.flatten" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yield all nodes that are entirely reachable by <em>condition</em>
+starting fromt he given <em>start</em> node or the graph root.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">objects are only reachable from the graph root
+when there is a reference from the root to the node
+(either directly or through another node)</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.ObjectGraph.ObjectGraph.nodes">
+<tt class="descclassname">ObjectGraph.</tt><tt class="descname">nodes</tt><big>(</big><big>)</big><a class="headerlink" href="#altgraph.ObjectGraph.ObjectGraph.nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yield all nodes in the graph.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.ObjectGraph.ObjectGraph.get_edges">
+<tt class="descclassname">ObjectGraph.</tt><tt class="descname">get_edges</tt><big>(</big><em>node</em><big>)</big><a class="headerlink" href="#altgraph.ObjectGraph.ObjectGraph.get_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns two iterators that yield the nodes reaching by
+outgoing and incoming edges.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.ObjectGraph.ObjectGraph.filterStack">
+<tt class="descclassname">ObjectGraph.</tt><tt class="descname">filterStack</tt><big>(</big><em>filters</em><big>)</big><a class="headerlink" href="#altgraph.ObjectGraph.ObjectGraph.filterStack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filter the ObjectGraph in-place by removing all edges to nodes that
+do not match every filter in the given filter list</p>
+<p>Returns a tuple containing the number of:
+(<em>nodes_visited</em>, <em>nodes_removed</em>, <em>nodes_orphaned</em>)</p>
+</dd></dl>
+
+<div class="section" id="debug-output">
+<h2>Debug output<a class="headerlink" href="#debug-output" title="Permalink to this headline">¶</a></h2>
+<dl class="data">
+<dt id="altgraph.ObjectGraph.ObjectGraph.debug">
+<tt class="descclassname">ObjectGraph.</tt><tt class="descname">debug</tt><a class="headerlink" href="#altgraph.ObjectGraph.ObjectGraph.debug" title="Permalink to this definition">¶</a></dt>
+<dd><p>The current debug level.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.ObjectGraph.ObjectGraph.msg">
+<tt class="descclassname">ObjectGraph.</tt><tt class="descname">msg</tt><big>(</big><em>level</em>, <em>text</em>, <em>*args</em><big>)</big><a class="headerlink" href="#altgraph.ObjectGraph.ObjectGraph.msg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print a debug message at the current indentation level when the current
+debug level is <em>level</em> or less.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.ObjectGraph.ObjectGraph.msgin">
+<tt class="descclassname">ObjectGraph.</tt><tt class="descname">msgin</tt><big>(</big><em>level</em>, <em>text</em>, <em>*args</em><big>)</big><a class="headerlink" href="#altgraph.ObjectGraph.ObjectGraph.msgin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print a debug message when the current debug level is <em>level</em> or less,
+and increase the indentation level.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.ObjectGraph.ObjectGraph.msgout">
+<tt class="descclassname">ObjectGraph.</tt><tt class="descname">msgout</tt><big>(</big><em>level</em>, <em>text</em>, <em>*args</em><big>)</big><a class="headerlink" href="#altgraph.ObjectGraph.ObjectGraph.msgout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decrease the indentation level and print a debug message when the
+current debug level is <em>level</em> or less.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#"><tt class="docutils literal"><span class="pre">altgraph.ObjectGraph</span></tt> &#8212; Graphs of objecs with an identifier</a><ul>
+<li><a class="reference internal" href="#debug-output">Debug output</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="graph.html"
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">altgraph.Graph</span></tt> &#8212; Basic directional graphs</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="graphalgo.html"
+                        title="next chapter"><tt class="docutils literal"><span class="pre">altgraph.GraphAlgo</span></tt> &#8212; Graph algorithms</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="graphalgo.html" title="altgraph.GraphAlgo — Graph algorithms"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="graph.html" title="altgraph.Graph — Basic directional graphs"
+             >previous</a> |</li>
+        <li><a href="index.html">altgraph 0.11 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010-2011, Ronald Oussoren, Bob Ippolito, 2004 Istvan Albert.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.1.
+    </div>
+  </body>
+</html>

@@ -10,6 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[LegacyUnenumerableNamedProperties]
 interface HTMLCollection {
   readonly attribute unsigned long length;
   getter Element? item(unsigned long index);

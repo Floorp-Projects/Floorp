@@ -73,14 +73,19 @@ function tests(aEnabled) {
     SimpleTest.finish();
 }
 
-// Test with the vibrator pref enabled.
-SpecialPowers.pushPrefEnv({"set": [['dom.vibrator.enabled', true]]}, function() {
-  tests(true);
-  SpecialPowers.pushPrefEnv({"set": [['dom.vibrator.enabled', false]]}, tests(false));
-});
-// Everything should be the same when the vibrator is disabled -- in
-// particular, a disabled vibrator shouldn't eat failures we'd otherwise
-// observe.
+SpecialPowers.pushPermissions([
+    {type: 'vibration', allow: true, context: document}
+  ], function() {
+    // Test with the vibrator pref enabled.
+    SpecialPowers.pushPrefEnv({"set": [['dom.vibrator.enabled', true]]}, function() {
+      tests(true);
+      SpecialPowers.pushPrefEnv({"set": [['dom.vibrator.enabled', false]]}, tests(false));
+    });
+    // Everything should be the same when the vibrator is disabled -- in
+    // particular, a disabled vibrator shouldn't eat failures we'd otherwise
+    // observe.
+  }
+);
 
 </script>
 </body>

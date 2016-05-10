@@ -810,6 +810,20 @@ class Descriptor(DescriptorProvider):
         return (self.interface.getExtendedAttribute("Global") or
                 self.interface.getExtendedAttribute("PrimaryGlobal"))
 
+    @property
+    def namedPropertiesEnumerable(self):
+        """
+        Returns whether this interface should have enumerable named properties
+        """
+        assert self.proxy
+        assert self.supportsNamedProperties()
+        iface = self.interface
+        while iface:
+            if iface.getExtendedAttribute("LegacyUnenumerableNamedProperties"):
+                return False
+            iface = iface.parent
+        return True
+
 
 # Some utility methods
 def getTypesFromDescriptor(descriptor):

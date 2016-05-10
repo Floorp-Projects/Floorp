@@ -73,6 +73,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in {
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     DEFINES['UNICODE'] = True
     DEFINES['_UNICODE'] = True
+    UNIFIED_SOURCES += [
+        'skia/src/fonts/SkFontMgr_indirect.cpp',
+        'skia/src/fonts/SkRemotableFontMgr.cpp',
+    ]
 
 # We should autogenerate these SSE related flags.
 
@@ -172,23 +176,53 @@ def generate_separated_sources(platform_sources):
     'experimental',
     'SkXML',
     'GrGLCreateNativeInterface',
+    'GrGLCreateNullInterface',
+    'GrGLAssembleInterface',
+    'GrGLTestInterface',
     'fontconfig',
     'SkThreadUtils_pthread_',
     'SkFontConfig',
     'SkFontMgr_android',
     'SkFontMgr_custom',
     'SkFontHost_FreeType.cpp',
-    'SkForceLinking',
     'Movie',
     'ImageEncoder',
+    'skia/src/c/',
+    'skia/src/effects/Gr',
+    'skia/src/effects/Sk',
+    'skia/src/fonts/',
+    'skia/src/images/',
     'skia/src/ports/SkImageGenerator',
     'SkBitmapRegion',
+    'SkLightingShader',
     'codec',
     'SkWGL',
     'SkMemory_malloc',
     'SkOpts_',
     'opts_check_x86',
     'third_party',
+    # unused in skia/src/utils
+    'SkBitSet',
+    'SkBoundaryPatch',
+    'SkCamera',
+    'SkCanvasStack',
+    'SkCanvasStateUtils',
+    'SkDumpCanvas',
+    'SkFrontBufferedStream',
+    'SkInterpolator',
+    'SkLayer',
+    'SkMatrix44',
+    'SkMeshUtils',
+    'SkMD5',
+    'SkNinePatch',
+    'SkNullCanvas',
+    'SkNWayCanvas',
+    'SkPaintFilterCanvas',
+    'SkParseColor',
+    'SkPatchGrid',
+    'SkRTConf',
+    'SkTextBox',
+    'SkWhitelistTypefaces',
   ]
 
   def isblacklisted(value):
@@ -200,6 +234,11 @@ def generate_separated_sources(platform_sources):
 
   separated = defaultdict(set, {
     'common': {
+      'skia/src/effects/SkBlurImageFilter.cpp',
+      'skia/src/effects/SkDashPathEffect.cpp',
+      'skia/src/effects/SkGpuBlurUtils.cpp',
+      'skia/src/effects/SkImageSource.cpp',
+      'skia/src/effects/SkLayerRasterizer.cpp',
       'skia/src/gpu/gl/GrGLCreateNativeInterface_none.cpp',
       'skia/src/ports/SkDiscardableMemory_none.cpp',
       'skia/src/ports/SkMemory_mozalloc.cpp',
@@ -309,7 +348,6 @@ def write_sources(f, values, indent):
     'GrAA',
     'GrGL',
     'GrBatchAtlas.cpp',
-    'SkArithmeticMode_gpu.cpp',
     'SkImage_Gpu.cpp',
     'SkPathOpsDebug.cpp',
     'SkParsePath.cpp',

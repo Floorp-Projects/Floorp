@@ -1,0 +1,385 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Release history &mdash; macholib 1.7 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="macholib 1.7 documentation" href="index.html" />
+    <link rel="next" title="License" href="license.html" />
+    <link rel="prev" title="Macholib - Analyze and edit Mach-O headers" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="license.html" title="License"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Macholib - Analyze and edit Mach-O headers"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">macholib 1.7 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="release-history">
+<h1>Release history<a class="headerlink" href="#release-history" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="macholib-1-7">
+<h2>macholib 1.7<a class="headerlink" href="#macholib-1-7" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">Added support for ARM64, LC_ENCRYPTION_INFO_64 and LC_LINKER_OPTION</p>
+<p>Patch by Matthias Ringwald.</p>
+</li>
+<li><p class="first">Load commands now have a &#8220;describe&#8221; method that returns more information
+about the command.</p>
+<p>Patch by David Dorsey.</p>
+</li>
+<li><p class="first">The MAGIC value in the header was always represented in the native
+byte order, instead of as the value read from the binary.</p>
+<p>Patch by David Dorsey.</p>
+</li>
+<li><p class="first">Added various new constants to &#8220;macholib.mach_o&#8221;.</p>
+<p>Patch by David Dorsey.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="macholib-1-6-1">
+<h2>macholib 1.6.1<a class="headerlink" href="#macholib-1-6-1" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>?</li>
+</ul>
+</div>
+<div class="section" id="macholib-1-6">
+<h2>macholib 1.6<a class="headerlink" href="#macholib-1-6" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">Add support for <a class="reference external" href="mailto:'&#37;&#52;&#48;loader_path">'<span>&#64;</span>loader_path</a>&#8216; link command in
+macholib.dyld:</p>
+<ul class="simple">
+<li>Added function <tt class="docutils literal"><span class="pre">macholib.dyld.dyld_loader_search</span></tt></li>
+<li>This function is used by <tt class="docutils literal"><span class="pre">macholib.dyld.dyld_find</span></tt>,
+and that function now has an new (optional) argument
+with the path to the loader.</li>
+</ul>
+</li>
+<li><p class="first">Also add support for <a class="reference external" href="mailto:'&#37;&#52;&#48;loader_path">'<span>&#64;</span>loader_path</a>&#8216; to macholib.MachoGraph,
+using the newly added <a class="reference external" href="mailto:'&#37;&#52;&#48;loader_path">'<span>&#64;</span>loader_path</a>&#8216; support in the
+dyld module.</p>
+<p>Due to this suppport the <em>macho_standalone</em> tool can
+now rewrite binaries that contain an <a class="reference external" href="mailto:'&#37;&#52;&#48;loader_path">'<span>&#64;</span>loader_path</a>&#8216; load
+command.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="macholib-1-5-2">
+<h2>macholib 1.5.2<a class="headerlink" href="#macholib-1-5-2" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Issue #93: Show the name of the affected file in the exception message
+for Mach-O headers that are too large to relocate.</li>
+</ul>
+</div>
+<div class="section" id="macholib-1-5-1">
+<h2>macholib 1.5.1<a class="headerlink" href="#macholib-1-5-1" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>There were no &#8216;classifiers&#8217; in the package metadata due to
+a bug in setup.py.</li>
+</ul>
+</div>
+<div class="section" id="macholib-1-5">
+<h2>macholib 1.5<a class="headerlink" href="#macholib-1-5" title="Permalink to this headline">¶</a></h2>
+<p>macholib 1.5 is a minor feature release</p>
+<ul>
+<li><p class="first">No longer use 2to3 to provide Python 3 support</p>
+<p>As a side-effect of this macholib no longer supports
+Python 2.5 and earlier.</p>
+</li>
+<li><p class="first">Adds suppport for some new macho load commands</p>
+</li>
+<li><p class="first">Fix for py3k problem in macho_standalone.py</p>
+<p>Patch by Guanqun Lu.</p>
+</li>
+<li><p class="first">Fix for some issues in macho_dump.py</p>
+<p>Patch by Nam Nguyen</p>
+</li>
+<li><p class="first">Issue #10: Fix for LC_DATA_IN_CODE linker commands, without
+this fix py2app cannot build application bundles when
+the source binaries have been compiled with Xcode 4.5.</p>
+</li>
+<li><p class="first">Issue #6: Fix for LC_ENCRYPTION_INFO linker commands</p>
+</li>
+<li><p class="first">Use the mach header information to print the cpu type of a
+binary, instead of trying to deduce that from pointer width
+and endianness.</p>
+<p>Changed the code because of issue #6, in which a user tries to
+dump a iOS binary which results in bogus output in the previous
+releases.</p>
+</li>
+<li><p class="first">The mapping <tt class="docutils literal"><span class="pre">macholib.macho_dump.ARCH_MAP</span></tt> is undocumented
+and no longer used by macholib itself. It will be removed
+in the next release.</p>
+</li>
+<li><p class="first">The command-line tools <tt class="docutils literal"><span class="pre">macho_find</span></tt>, <tt class="docutils literal"><span class="pre">macho_dump</span></tt> and
+<tt class="docutils literal"><span class="pre">macho_standalone</span></tt> are deprecated. Use &#8220;python -mmacholib&#8221;
+instead. That is:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ python -mmacholib dump /usr/bin/grep
+
+$ python -mmacholib find ~
+
+$ python -mmacholib standalone myapp.app
+</pre></div>
+</div>
+<p>This makes it clearer which version of the tools are used.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="macholib-1-4-3">
+<h2>macholib 1.4.3<a class="headerlink" href="#macholib-1-4-3" title="Permalink to this headline">¶</a></h2>
+<p>macholib 1.4.3 is a minor feature release</p>
+<ul>
+<li><p class="first">Added strings for &#8216;x86_64&#8217; and &#8216;ppc64&#8217; to
+macholib.mach_o.CPU_TYPE_NAMES.</p>
+</li>
+<li><p class="first">macho_find and macho_dump were broken in the 1.4.2 release</p>
+</li>
+<li><p class="first">added &#8216;macholib.util.NOT_SYSTEM_FILES&#8217;, a list of
+files that aren&#8217;t system path&#8217;s even though they are
+located in system locations.</p>
+<p>Needed to work around a bug in PySide (see issue #32 in the
+py2app tracker)</p>
+</li>
+</ul>
+</div>
+<div class="section" id="macholib-1-4-2">
+<h2>macholib 1.4.2<a class="headerlink" href="#macholib-1-4-2" title="Permalink to this headline">¶</a></h2>
+<p>macholib 1.4.2 is a minor bugfix release</p>
+<ul class="simple">
+<li>The support for new load commands that was added in 1.4.1
+contained a typo that caused problems on OSX 10.7 (Lion).</li>
+</ul>
+</div>
+<div class="section" id="macholib-1-4-1">
+<h2>macholib 1.4.1<a class="headerlink" href="#macholib-1-4-1" title="Permalink to this headline">¶</a></h2>
+<p>macholib 1.4.1 is a minor feature release</p>
+<p>Features:</p>
+<ul class="simple">
+<li>Add support for a number of new MachO load commands that were added
+during the lifetime of OSX 10.6: <tt class="docutils literal"><span class="pre">LC_LOAD_UPWARD_DYLIB</span></tt>,
+<tt class="docutils literal"><span class="pre">LC_VERSION_MIN_MACOSX</span></tt>, <tt class="docutils literal"><span class="pre">LC_VERSION_MIN_IPHONEOS</span></tt> and
+<tt class="docutils literal"><span class="pre">LC_FUNCTION_STARTS</span></tt>.</li>
+</ul>
+</div>
+<div class="section" id="macholib-1-4">
+<h2>macholib 1.4<a class="headerlink" href="#macholib-1-4" title="Permalink to this headline">¶</a></h2>
+<p>macholib 1.4 is a feature release</p>
+<p>Features:</p>
+<ul>
+<li><p class="first">Documentation is now generated using <a class="reference external" href="http://pypi.python.org/pypi/sphinx">sphinx</a>
+and can be viewed at &lt;<a class="reference external" href="http://packages.python.org/macholib">http://packages.python.org/macholib</a>&gt;.</p>
+</li>
+<li><p class="first">The repository has moved to bitbucket</p>
+</li>
+<li><p class="first">There now is a testsuite</p>
+</li>
+<li><p class="first">Private functionality inside modules was renamed to
+a name starting with an underscore.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">if this change affects your code you are relying on undefined
+implementation features, please stop using private functions.</p>
+</div>
+</li>
+<li><p class="first">The basic packable types in <tt class="docutils literal"><span class="pre">macholib.ptypes</span></tt> were renamed to better
+represent the corresponding C type. The table below lists the old
+an new names (the old names are still available, but are deprecated and
+will be removed in a future release).</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head"><strong>Old name</strong></th>
+<th class="head"><strong>New name</strong></th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>p_byte</td>
+<td>p_int8</td>
+</tr>
+<tr class="row-odd"><td>p_ubyte</td>
+<td>p_uint8</td>
+</tr>
+<tr class="row-even"><td>p_short</td>
+<td>p_int16</td>
+</tr>
+<tr class="row-odd"><td>p_ushort</td>
+<td>p_uint16</td>
+</tr>
+<tr class="row-even"><td>p_int</td>
+<td>p_int32</td>
+</tr>
+<tr class="row-odd"><td>p_uint</td>
+<td>p_uint32</td>
+</tr>
+<tr class="row-even"><td>p_long</td>
+<td>p_int32</td>
+</tr>
+<tr class="row-odd"><td>p_ulong</td>
+<td>p_uint32</td>
+</tr>
+<tr class="row-even"><td>p_longlong</td>
+<td>p_int64</td>
+</tr>
+<tr class="row-odd"><td>p_ulonglong</td>
+<td>p_uint64</td>
+</tr>
+</tbody>
+</table>
+<p><tt class="docutils literal"><span class="pre">Macholib.ptypes.p_ptr</span></tt> is no longer present as it had an unclear
+definition and isn&#8217;t actually used in the codebase.</p>
+</li>
+</ul>
+<p>Bug fixes:</p>
+<ul>
+<li><p class="first">The semantics of <tt class="docutils literal"><span class="pre">dyld.dyld_default_search</span></tt> were changed a bit,
+it now first searches the framework path (if appropriate) and then
+the linker path, irrespective of the value of the <tt class="docutils literal"><span class="pre">DYLD_FALLBACK*</span></tt>
+environment variables.</p>
+<p>Previous versions would change the search order when those variables
+was set, which is odd and doesn&#8217;t correspond with the documented
+behaviour of the system dyld.</p>
+</li>
+<li><p class="first">It is once again possible to install using python2.5</p>
+</li>
+<li><p class="first">The source distribution includes all files, this was broken
+due to the switch to mercurial (which confused setuptools)</p>
+</li>
+</ul>
+</div>
+<div class="section" id="macholib-1-3">
+<h2>macholib 1.3<a class="headerlink" href="#macholib-1-3" title="Permalink to this headline">¶</a></h2>
+<p>macholib 1.3 is a feature release.</p>
+<p>Features:</p>
+<ul>
+<li><p class="first">Experimental Python 3.x support</p>
+<p>This version contains lightly tested support for Python 3.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="macholib-1-2-2">
+<h2>macholib 1.2.2<a class="headerlink" href="#macholib-1-2-2" title="Permalink to this headline">¶</a></h2>
+<p>macholib 1.2.2 is a bugfix release.</p>
+<p>Bug fixes:</p>
+<ul class="simple">
+<li>Macholib should work better with 64-bit code
+(patch by Marc-Antoine Parent)</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Release history</a><ul>
+<li><a class="reference internal" href="#macholib-1-7">macholib 1.7</a></li>
+<li><a class="reference internal" href="#macholib-1-6-1">macholib 1.6.1</a></li>
+<li><a class="reference internal" href="#macholib-1-6">macholib 1.6</a></li>
+<li><a class="reference internal" href="#macholib-1-5-2">macholib 1.5.2</a></li>
+<li><a class="reference internal" href="#macholib-1-5-1">macholib 1.5.1</a></li>
+<li><a class="reference internal" href="#macholib-1-5">macholib 1.5</a></li>
+<li><a class="reference internal" href="#macholib-1-4-3">macholib 1.4.3</a></li>
+<li><a class="reference internal" href="#macholib-1-4-2">macholib 1.4.2</a></li>
+<li><a class="reference internal" href="#macholib-1-4-1">macholib 1.4.1</a></li>
+<li><a class="reference internal" href="#macholib-1-4">macholib 1.4</a></li>
+<li><a class="reference internal" href="#macholib-1-3">macholib 1.3</a></li>
+<li><a class="reference internal" href="#macholib-1-2-2">macholib 1.2.2</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Macholib - Analyze and edit Mach-O headers</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="license.html"
+                        title="next chapter">License</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/changelog.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="license.html" title="License"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Macholib - Analyze and edit Mach-O headers"
+             >previous</a> |</li>
+        <li><a href="index.html">macholib 1.7 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010-2011, Ronald Oussoren.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.1.
+    </div>
+  </body>
+</html>

@@ -6,13 +6,6 @@
 
 using base::KillProcess;
 
-template<>
-struct RunnableMethodTraits<mozilla::_ipdltest::TestHangsParent>
-{
-    static void RetainCallee(mozilla::_ipdltest::TestHangsParent* obj) { }
-    static void ReleaseCallee(mozilla::_ipdltest::TestHangsParent* obj) { }
-};
-
 namespace mozilla {
 namespace _ipdltest {
 
@@ -82,7 +75,7 @@ TestHangsParent::ShouldContinueFromReplyTimeout()
     // reply should be here; we'll post a task to shut things down.
     // This must be after OnMaybeDequeueOne() in the event queue.
     MessageLoop::current()->PostTask(
-        NewRunnableMethod(this, &TestHangsParent::CleanUp));
+        NewNonOwningRunnableMethod(this, &TestHangsParent::CleanUp));
 
     GetIPCChannel()->CloseWithTimeout();
 

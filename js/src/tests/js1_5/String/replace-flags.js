@@ -1,24 +1,25 @@
-// |reftest| skip-if(!xulRuntime.shell)
-
-var BUGNUMBER = 1142351;
-var summary = 'Add console warnings for non-standard flag argument of String.prototype.{search,match,replace}.';
+var BUGNUMBER = 1108382;
+var summary = 'Remove non-standard flag argument from String.prototype.{search,match,replace}.';
 
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-function assertWarningForComponent(code, name) {
-  enableLastWarning();
-  var g = newGlobal();
-  g.eval(code);
-  var warning = getLastWarning();
-  assertEq(warning !== null, true);
-  assertEq(warning.name, name);
-  disableLastWarning();
-}
+var result = "bbbAa".match("a", "i");
+assertEq(result.index, 4);
+assertEq(result.length, 1);
+assertEq(result[0], "a");
 
-assertWarningForComponent(`'aaaA'.match('a', 'i');`, "None");
-assertWarningForComponent(`'aaaA'.search('a', 'i');`, "None");
-assertWarningForComponent(`'aaaA'.replace('a', 'b', 'g');`, "None");
+result = "bbbA".match("a", "i");
+assertEq(result, null);
+
+result = "bbbAa".search("a", "i");
+assertEq(result, 4);
+
+result = "bbbA".search("a", "i");
+assertEq(result, -1);
+
+result = "bbbAaa".replace("a", "b", "g");
+assertEq(result, "bbbAba");
 
 if (typeof reportCompare === "function")
   reportCompare(true, true);

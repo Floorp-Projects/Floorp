@@ -1,0 +1,271 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Release history &mdash; altgraph 0.11 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.11',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="altgraph 0.11 documentation" href="index.html" />
+    <link rel="next" title="License" href="license.html" />
+    <link rel="prev" title="Altgraph - A basic graph library" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="license.html" title="License"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Altgraph - A basic graph library"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">altgraph 0.11 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="release-history">
+<h1>Release history<a class="headerlink" href="#release-history" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id1">
+<h2>0.11<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Stabilize the order of elements in dot file exports,
+patch from bitbucket user &#8216;pombredanne&#8217;.</li>
+<li>Tweak setup.py file to remove dependency on distribute (but
+keep the dependency on setuptools)</li>
+</ul>
+</div>
+<div class="section" id="id2">
+<h2>0.10.2<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>There where no classifiers in the package metadata due to a bug
+in setup.py</li>
+</ul>
+</div>
+<div class="section" id="id3">
+<h2>0.10.1<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<p>This is a bugfix release</p>
+<p>Bug fixes:</p>
+<ul>
+<li><p class="first">Issue #3: The source archive contains a README.txt
+while the setup file refers to ReadMe.txt.</p>
+<p>This is caused by a misfeature in distutils, as a
+workaround I&#8217;ve renamed ReadMe.txt to README.txt
+in the source tree and setup file.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="id4">
+<h2>0.10<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<p>This is a minor feature release</p>
+<p>Features:</p>
+<ul>
+<li><p class="first">Do not use &#8220;2to3&#8221; to support Python 3.</p>
+<p>As a side effect of this altgraph now supports
+Python 2.6 and later, and no longer supports
+earlier releases of Python.</p>
+</li>
+<li><p class="first">The order of attributes in the Dot output
+is now always alphabetical.</p>
+<p>With this change the output will be consistent
+between runs and Python versions.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="id5">
+<h2>0.9<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
+<p>This is a minor bugfix release</p>
+<p>Features:</p>
+<ul class="simple">
+<li>Added <tt class="docutils literal"><span class="pre">altgraph.ObjectGraph.ObjectGraph.nodes</span></tt>, a method
+yielding all nodes in an object graph.</li>
+</ul>
+<p>Bugfixes:</p>
+<ul class="simple">
+<li>The 0.8 release didn&#8217;t work with py2app when using
+python 3.x.</li>
+</ul>
+</div>
+<div class="section" id="id6">
+<h2>0.8<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
+<p>This is a minor feature release. The major new feature
+is a extensive set of unittests, which explains almost
+all other changes in this release.</p>
+<p>Bugfixes:</p>
+<ul class="simple">
+<li>Installing failed with Python 2.5 due to using a distutils
+class that isn&#8217;t available in that version of Python
+(issue #1 on the issue tracker)</li>
+<li><tt class="docutils literal"><span class="pre">altgraph.GraphStat.degree_dist</span></tt> now actually works</li>
+<li><tt class="docutils literal"><span class="pre">altgraph.Graph.add_edge(a,</span> <span class="pre">b,</span> <span class="pre">create_nodes=False)</span></tt> will
+no longer create the edge when one of the nodes doesn&#8217;t
+exist.</li>
+<li><tt class="docutils literal"><span class="pre">altgraph.Graph.forw_topo_sort</span></tt> failed for some sparse graphs.</li>
+<li><tt class="docutils literal"><span class="pre">altgraph.Graph.back_topo_sort</span></tt> was completely broken in
+previous releases.</li>
+<li><tt class="docutils literal"><span class="pre">altgraph.Graph.forw_bfs_subgraph</span></tt> now actually works.</li>
+<li><tt class="docutils literal"><span class="pre">altgraph.Graph.back_bfs_subgraph</span></tt> now actually works.</li>
+<li><tt class="docutils literal"><span class="pre">altgraph.Graph.iterdfs</span></tt> now returns the correct result
+when the <tt class="docutils literal"><span class="pre">forward</span></tt> argument is <tt class="docutils literal"><span class="pre">False</span></tt>.</li>
+<li><tt class="docutils literal"><span class="pre">altgraph.Graph.iterdata</span></tt> now returns the correct result
+when the <tt class="docutils literal"><span class="pre">forward</span></tt> argument is <tt class="docutils literal"><span class="pre">False</span></tt>.</li>
+</ul>
+<p>Features:</p>
+<ul class="simple">
+<li>The <tt class="docutils literal"><span class="pre">altgraph.Graph</span></tt> constructor now accepts an argument
+that contains 2- and 3-tuples instead of requireing that
+all items have the same size. The (optional) argument can now
+also be any iterator.</li>
+<li><tt class="docutils literal"><span class="pre">altgraph.Graph.Graph.add_node</span></tt> has no effect when you
+add a hidden node.</li>
+<li>The private method <tt class="docutils literal"><span class="pre">altgraph.Graph._bfs</span></tt> is no longer
+present.</li>
+<li>The private method <tt class="docutils literal"><span class="pre">altgraph.Graph._dfs</span></tt> is no longer
+present.</li>
+<li><tt class="docutils literal"><span class="pre">altgraph.ObjectGraph</span></tt> now has a <tt class="docutils literal"><span class="pre">__contains__</span></tt> methods,
+which means you can use the <tt class="docutils literal"><span class="pre">in</span></tt> operator to check if a
+node is part of a graph.</li>
+<li><tt class="docutils literal"><span class="pre">altgraph.GraphUtil.generate_random_graph</span></tt> will raise
+<tt class="docutils literal"><span class="pre">GraphError</span></tt> instead of looping forever when it is
+impossible to create the requested graph.</li>
+<li><tt class="docutils literal"><span class="pre">altgraph.Dot.edge_style</span></tt> raises <tt class="docutils literal"><span class="pre">GraphError</span></tt> when
+one of the nodes is not present in the graph. The method
+silently added the tail in the past, but without ensuring
+a consistent graph state.</li>
+<li><tt class="docutils literal"><span class="pre">altgraph.Dot.save_img</span></tt> now works when the mode is
+<tt class="docutils literal"><span class="pre">&quot;neato&quot;</span></tt>.</li>
+</ul>
+</div>
+<div class="section" id="id7">
+<h2>0.7.2<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h2>
+<p>This is a minor bugfix release</p>
+<p>Bugfixes:</p>
+<ul class="simple">
+<li>distutils didn&#8217;t include the documentation subtree</li>
+</ul>
+</div>
+<div class="section" id="id8">
+<h2>0.7.1<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h2>
+<p>This is a minor feature release</p>
+<p>Features:</p>
+<ul class="simple">
+<li>Documentation is now generated using <a class="reference external" href="http://pypi.python.org/pypi/sphinx">sphinx</a>
+and can be viewed at &lt;<a class="reference external" href="http://packages.python.org/altgraph">http://packages.python.org/altgraph</a>&gt;.</li>
+<li>The repository has moved to bitbucket</li>
+<li><tt class="docutils literal"><span class="pre">altgraph.GraphStat.avg_hops</span></tt> is no longer present, the function had no
+implementation and no specified behaviour.</li>
+<li>the module <tt class="docutils literal"><span class="pre">altgraph.compat</span></tt> is gone, which means altgraph will no
+longer work with Python 2.3.</li>
+</ul>
+</div>
+<div class="section" id="id9">
+<h2>0.7.0<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h2>
+<p>This is a minor feature release.</p>
+<p>Features:</p>
+<ul>
+<li><p class="first">Support for Python 3</p>
+</li>
+<li><p class="first">It is now possible to run tests using &#8216;python setup.py test&#8217;</p>
+<p>(The actual testsuite is still very minimal though)</p>
+</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Release history</a><ul>
+<li><a class="reference internal" href="#id1">0.11</a></li>
+<li><a class="reference internal" href="#id2">0.10.2</a></li>
+<li><a class="reference internal" href="#id3">0.10.1</a></li>
+<li><a class="reference internal" href="#id4">0.10</a></li>
+<li><a class="reference internal" href="#id5">0.9</a></li>
+<li><a class="reference internal" href="#id6">0.8</a></li>
+<li><a class="reference internal" href="#id7">0.7.2</a></li>
+<li><a class="reference internal" href="#id8">0.7.1</a></li>
+<li><a class="reference internal" href="#id9">0.7.0</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Altgraph - A basic graph library</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="license.html"
+                        title="next chapter">License</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="license.html" title="License"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Altgraph - A basic graph library"
+             >previous</a> |</li>
+        <li><a href="index.html">altgraph 0.11 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010-2011, Ronald Oussoren, Bob Ippolito, 2004 Istvan Albert.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.1.
+    </div>
+  </body>
+</html>

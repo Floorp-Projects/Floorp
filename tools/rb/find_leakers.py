@@ -43,7 +43,7 @@ def process_log(log_lines):
          obj,
          ignore,
          operation,
-         count,) = log_line.strip('\r\n').split(' ')
+         count,) = log_line.strip('\r\n').split(' ')[:5]
 
         # for AddRef/Release `count' is the refcount,
         # for Ctor/Dtor it's the size.

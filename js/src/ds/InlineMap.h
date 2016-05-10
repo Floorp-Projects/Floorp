@@ -56,7 +56,7 @@ class InlineMap
         return inlNext > InlineElems;
     }
 
-    bool switchToMap() {
+    MOZ_MUST_USE bool switchToMap() {
         MOZ_ASSERT(inlNext == InlineElems);
 
         if (map.initialized()) {
@@ -80,7 +80,7 @@ class InlineMap
     }
 
     MOZ_NEVER_INLINE
-    bool switchAndAdd(const K& key, const V& value) {
+    MOZ_MUST_USE bool switchAndAdd(const K& key, const V& value) {
         if (!switchToMap())
             return false;
 
@@ -252,7 +252,7 @@ class InlineMap
     }
 
     MOZ_ALWAYS_INLINE
-    bool add(AddPtr& p, const K& key, const V& value) {
+    MOZ_MUST_USE bool add(AddPtr& p, const K& key, const V& value) {
         MOZ_ASSERT(!p);
         MOZ_ASSERT(keyNonZero(key));
 
@@ -277,7 +277,7 @@ class InlineMap
     }
 
     MOZ_ALWAYS_INLINE
-    bool put(const K& key, const V& value) {
+    MOZ_MUST_USE bool put(const K& key, const V& value) {
         AddPtr p = lookupForAdd(key);
         if (p) {
             p.value() = value;

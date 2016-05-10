@@ -134,7 +134,7 @@ struct AtomThingMapPtr
 
     void init() { clearMap(); }
 
-    bool ensureMap(ExclusiveContext* cx);
+    MOZ_MUST_USE bool ensureMap(ExclusiveContext* cx);
     void releaseMap(ExclusiveContext* cx);
 
     bool hasMap() const { return map_; }
@@ -332,7 +332,7 @@ class DefinitionList
      * return true. Otherwise there is exactly one Definition in the list; do
      * nothing and return false.
      */
-    bool popFront() {
+    MOZ_MUST_USE bool popFront() {
         if (!isMultiple())
             return false;
 
@@ -351,8 +351,8 @@ class DefinitionList
      * Return true on success. On OOM, report on cx and return false.
      */
     template <typename ParseHandler>
-    bool pushFront(ExclusiveContext* cx, LifoAlloc& alloc,
-                   typename ParseHandler::DefinitionNode defn) {
+    MOZ_MUST_USE bool pushFront(ExclusiveContext* cx, LifoAlloc& alloc,
+                                typename ParseHandler::DefinitionNode defn) {
         Node* tail;
         if (isMultiple()) {
             tail = firstNode();
@@ -370,8 +370,8 @@ class DefinitionList
     }
 
     template <typename ParseHandler>
-    bool appendBack(ExclusiveContext* cx, LifoAlloc& alloc,
-                    typename ParseHandler::DefinitionNode defn)
+    MOZ_MUST_USE bool appendBack(ExclusiveContext* cx, LifoAlloc& alloc,
+                                 typename ParseHandler::DefinitionNode defn)
     {
         Node* last = allocNode(cx, alloc, ParseHandler::definitionToBits(defn), nullptr);
         if (!last)
@@ -454,7 +454,7 @@ class AtomDecls
 
     ~AtomDecls();
 
-    bool init();
+    MOZ_MUST_USE bool init();
 
     void clear() {
         map->clear();
@@ -490,7 +490,7 @@ class AtomDecls
     }
 
     /* Add-or-update a known-unique definition for |atom|. */
-    bool addUnique(JSAtom* atom, DefinitionNode defn) {
+    MOZ_MUST_USE bool addUnique(JSAtom* atom, DefinitionNode defn) {
         MOZ_ASSERT(map);
         AtomDefnListAddPtr p = map->lookupForAdd(atom);
         if (!p)
@@ -500,8 +500,8 @@ class AtomDecls
         return true;
     }
 
-    bool addShadow(JSAtom* atom, DefinitionNode defn);
-    bool addShadowedForAnnexB(JSAtom* atom, DefinitionNode defn);
+    MOZ_MUST_USE bool addShadow(JSAtom* atom, DefinitionNode defn);
+    MOZ_MUST_USE bool addShadowedForAnnexB(JSAtom* atom, DefinitionNode defn);
 
     /* Updating the definition for an entry that is known to exist is infallible. */
     void updateFirst(JSAtom* atom, DefinitionNode defn) {

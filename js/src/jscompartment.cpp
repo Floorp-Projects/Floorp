@@ -50,7 +50,6 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     isSystem_(false),
     isSelfHosting(false),
     marked(true),
-    warnedAboutFlagsArgument(false),
     warnedAboutExprClosure(false),
 #ifdef DEBUG
     firedOnNewGlobalObject(false),

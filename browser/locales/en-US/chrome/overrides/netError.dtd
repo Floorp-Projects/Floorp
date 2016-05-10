@@ -196,7 +196,7 @@ was trying to connect. -->
 
 <!ENTITY certerror.pagetitle1  "Insecure Connection">
 <!ENTITY certerror.whatShouldIDo.badStsCertExplanation "This site uses HTTP
-Strict Transport Security (HSTS) to specify that &brandShortName; only connect
+Strict Transport Security (HSTS) to specify that &brandShortName; may only connect
 to it securely. As a result, it is not possible to add an exception for this
 certificate.">
 <!ENTITY certerror.copyToClipboard.label "Copy text to clipboard">

@@ -3397,6 +3397,12 @@ IonBuilder::inlineConstructSimdObject(CallInfo& callInfo, SimdTypeDescr* descr)
         return InliningStatus_NotInlined;
     }
 
+    // NYI, this will be removed by a bug 1136226 patch.
+    if (SimdTypeToLength(simdType) != 4) {
+        trackOptimizationOutcome(TrackedOutcome::SimdTypeNotOptimized);
+        return InliningStatus_NotInlined;
+    }
+
     // Take the templateObject out of Baseline ICs, such that we can box
     // SIMD value type in the same kind of objects.
     MOZ_ASSERT(size_t(descr->size(descr->type())) < InlineTypedObject::MaximumSize);
@@ -3608,7 +3614,7 @@ IonBuilder::inlineSimdSplat(CallInfo& callInfo, JSNative native, SimdType type)
     if (SimdTypeToLaneType(mirType) == MIRType::Boolean)
         arg = convertToBooleanSimdLane(arg);
 
-    MSimdSplatX4* ins = MSimdSplatX4::New(alloc(), arg, mirType);
+    MSimdSplat* ins = MSimdSplat::New(alloc(), arg, mirType);
     return boxSimd(callInfo, ins, templateObj);
 }
 
@@ -3626,8 +3632,8 @@ IonBuilder::inlineSimdExtractLane(CallInfo& callInfo, JSNative native, SimdType 
     MDefinition* arg = callInfo.getArg(1);
     if (!arg->isConstant() || arg->type() != MIRType::Int32)
         return InliningStatus_NotInlined;
-    int32_t lane = arg->toConstant()->toInt32();
-    if (lane < 0 || lane >= 4)
+    unsigned lane = arg->toConstant()->toInt32();
+    if (lane >= GetSimdLanes(type))
         return InliningStatus_NotInlined;
 
     // Original vector.
@@ -3641,7 +3647,7 @@ IonBuilder::inlineSimdExtractLane(CallInfo& callInfo, JSNative native, SimdType 
         laneType = MIRType::Double;
 
     MSimdExtractElement* ins =
-      MSimdExtractElement::New(alloc(), orig, laneType, SimdLane(lane), sign);
+      MSimdExtractElement::New(alloc(), orig, laneType, lane, sign);
     current->add(ins);
     current->push(ins);
     callInfo.setImplicitlyUsedUnchecked();
@@ -3660,8 +3666,8 @@ IonBuilder::inlineSimdReplaceLane(CallInfo& callInfo, JSNative native, SimdType 
     if (!arg->isConstant() || arg->type() != MIRType::Int32)
         return InliningStatus_NotInlined;
 
-    int32_t lane = arg->toConstant()->toInt32();
-    if (lane < 0 || lane >= 4)
+    unsigned lane = arg->toConstant()->toInt32();
+    if (lane >= GetSimdLanes(type))
         return InliningStatus_NotInlined;
 
     // Original vector.
@@ -3673,7 +3679,7 @@ IonBuilder::inlineSimdReplaceLane(CallInfo& callInfo, JSNative native, SimdType 
     if (SimdTypeToLaneType(vecType) == MIRType::Boolean)
         value = convertToBooleanSimdLane(value);
 
-    MSimdInsertElement* ins = MSimdInsertElement::New(alloc(), orig, value, SimdLane(lane));
+    MSimdInsertElement* ins = MSimdInsertElement::New(alloc(), orig, value, lane);
     return boxSimd(callInfo, ins, templateObj);
 }
 

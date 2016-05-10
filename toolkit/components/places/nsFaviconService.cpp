@@ -230,11 +230,21 @@ nsFaviconService::SetAndFetchFaviconForPage(nsIURI* aPageURI,
       return NS_OK;
   }
 
-  // Bug 1227289 : Let's default to the systemPrincipal if no loadingPrincipal is provided
-  // so addons not providing a loadingPrincipal do not break in release builds.
   nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadingPrincipal;
   MOZ_ASSERT(loadingPrincipal, "please provide aLoadingPrincipal for this favicon");
   if (!loadingPrincipal) {
+    // Bug 1227289 : Let's default to the systemPrincipal if no loadingPrincipal is provided
+    // so addons not providing a loadingPrincipal do not break in release builds.
+    const char16_t* params[] = {
+      MOZ_UTF16("nsFaviconService::setAndFetchFaviconForPage()"),
+      MOZ_UTF16("nsFaviconService::setAndFetchFaviconForPage(..., [optional aLoadingPrincipal])")
+    };
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                    NS_LITERAL_CSTRING("Security by Default"),
+                                    nullptr, // aDocument
+                                    nsContentUtils::eNECKO_PROPERTIES,
+                                    "APIDeprecationWarning",
+                                    params, ArrayLength(params));
     loadingPrincipal = nsContentUtils::GetSystemPrincipal();
   }
   NS_ENSURE_TRUE(loadingPrincipal, NS_ERROR_FAILURE);
@@ -382,11 +392,22 @@ nsFaviconService::ReplaceFaviconDataFromDataURL(nsIURI* aFaviconURI,
   rv = ioService->GetProtocolHandler("data", getter_AddRefs(protocolHandler));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Bug 1227289 : Let's default to the systemPrincipal if no loadingPrincipal is provided
-  // so addons not providing a loadingPrincipal do not break in release builds.
   nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadingPrincipal;
   MOZ_ASSERT(loadingPrincipal, "please provide aLoadingPrincipal for this favicon");
   if (!loadingPrincipal) {
+    // Bug 1227289 : Let's default to the systemPrincipal if no loadingPrincipal is provided
+    // so addons not providing a loadingPrincipal do not break in release builds.
+    const char16_t* params[] = {
+      MOZ_UTF16("nsFaviconService::ReplaceFaviconDataFromDataURL()"),
+      MOZ_UTF16("nsFaviconService::ReplaceFaviconDataFromDataURL(..., [optional aLoadingPrincipal])")
+    };
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                    NS_LITERAL_CSTRING("Security by Default"),
+                                    nullptr, // aDocument
+                                    nsContentUtils::eNECKO_PROPERTIES,
+                                    "APIDeprecationWarning",
+                                    params, ArrayLength(params));
+
     loadingPrincipal = nsContentUtils::GetSystemPrincipal();
   }
   NS_ENSURE_TRUE(loadingPrincipal, NS_ERROR_FAILURE);

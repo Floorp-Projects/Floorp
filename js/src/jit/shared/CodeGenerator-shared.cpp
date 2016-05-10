@@ -1160,7 +1160,7 @@ class StoreOp
             masm.storeFloat32(reg, dump);
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
         else if (reg.isSimd128())
-            masm.storeUnalignedFloat32x4(reg, dump);
+            masm.storeUnalignedSimd128Float(reg, dump);
 #endif
         else
             MOZ_CRASH("Unexpected register type.");

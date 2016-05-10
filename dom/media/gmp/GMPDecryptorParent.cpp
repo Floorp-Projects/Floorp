@@ -344,19 +344,6 @@ GMPDecryptorParent::RecvKeyStatusChanged(const nsCString& aSessionId,
 }
 
 bool
-GMPDecryptorParent::RecvSetCaps(const uint64_t& aCaps)
-{
-  LOGD(("GMPDecryptorParent[%p]::RecvSetCaps(caps=0x%llx)", this, aCaps));
-
-  if (!mIsOpen) {
-    NS_WARNING("Trying to use a dead GMP decrypter!");
-    return false;
-  }
-  mCallback->SetCaps(aCaps);
-  return true;
-}
-
-bool
 GMPDecryptorParent::RecvDecrypted(const uint32_t& aId,
                                   const GMPErr& aErr,
                                   InfallibleTArray<uint8_t>&& aBuffer)

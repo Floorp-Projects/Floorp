@@ -11,6 +11,7 @@
 #include "mozilla/StaticMutex.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/unused.h"
 
 #include "nsString.h"
@@ -65,7 +66,7 @@ static mozilla::StaticMutex sMutex;
 // The generation of TraceInfo. It will be > 0 if the Task Tracer is started and
 // <= 0 if stopped.
 static mozilla::Atomic<bool> sStarted;
-static nsTArray<nsAutoPtr<TraceInfo>>* sTraceInfos = nullptr;
+static nsTArray<UniquePtr<TraceInfo>>* sTraceInfos = nullptr;
 static PRTime sStartTime;
 
 static const char sJSLabelPrefix[] = "#tt#";
@@ -83,8 +84,7 @@ AllocTraceInfo(int aTid)
 {
   StaticMutexAutoLock lock(sMutex);
 
-  nsAutoPtr<TraceInfo>* info = sTraceInfos->AppendElement(
-                                 new TraceInfo(aTid));
+  auto* info = sTraceInfos->AppendElement(MakeUnique<TraceInfo>(aTid));
 
   return info->get();
 }
@@ -228,7 +228,7 @@ InitTaskTracer(uint32_t aFlags)
   }
 
   MOZ_ASSERT(!sTraceInfos);
-  sTraceInfos = new nsTArray<nsAutoPtr<TraceInfo>>();
+  sTraceInfos = new nsTArray<UniquePtr<TraceInfo>>();
 
   if (!sTraceInfoTLS.initialized()) {
     Unused << sTraceInfoTLS.init();
@@ -438,10 +438,10 @@ StopLogging()
   SetLogStarted(false);
 }
 
-TraceInfoLogsType*
+UniquePtr<TraceInfoLogsType>
 GetLoggedData(TimeStamp aTimeStamp)
 {
-  TraceInfoLogsType* result = new TraceInfoLogsType();
+  auto result = MakeUnique<TraceInfoLogsType>();
 
   // TODO: This is called from a signal handler. Use semaphore instead.
   StaticMutexAutoLock lock(sMutex);

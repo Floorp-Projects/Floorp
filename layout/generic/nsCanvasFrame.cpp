@@ -480,8 +480,9 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
     if (needBlendContainer) {
       aLists.BorderBackground()->AppendNewToTop(
-        new (aBuilder) nsDisplayBlendContainer(aBuilder, this, aLists.BorderBackground(),
-                                               scrollClip));
+        nsDisplayBlendContainer::CreateForBackgroundBlendMode(aBuilder, this,
+                                                              aLists.BorderBackground(),
+                                                              scrollClip));
     }
   }
 

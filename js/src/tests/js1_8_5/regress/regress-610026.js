@@ -8,7 +8,7 @@ var expect = "pass";
 var actual;
 
 /*
- * We hardcode here that GenerateBlockId limits a program to 2^20 blocks. Start
+ * We hardcode here that a program is limited to 2^20 blocks. Start
  * with 2^19 blocks, then test 2^20 - 1 blocks, finally test the limit.
  */
 var s = "{}";

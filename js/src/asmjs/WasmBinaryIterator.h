@@ -390,7 +390,7 @@ class MOZ_STACK_CLASS ExprIter : private Policy
     }
 
     // Read the value stack entry at depth |index|.
-    bool peek(uint32_t index, TypeAndValue<Value>* tv) {
+    MOZ_MUST_USE bool peek(uint32_t index, TypeAndValue<Value>* tv) {
         if (Validate && valueStack_.length() - controlStack_.back().valueStackStart() <= index)
             return fail("peeking at value from outside block");
         *tv = valueStack_[valueStack_.length() - index];
@@ -488,13 +488,13 @@ class MOZ_STACK_CLASS ExprIter : private Policy
     MOZ_MUST_USE bool readSimdShiftByScalar(ValType simdType, Value* lhs,
                                             Value* rhs);
     MOZ_MUST_USE bool readSimdBooleanReduction(ValType simdType, Value* input);
-    MOZ_MUST_USE bool readExtractLane(ValType simdType, jit::SimdLane* lane,
+    MOZ_MUST_USE bool readExtractLane(ValType simdType, uint8_t* lane,
                                       Value* vector);
-    MOZ_MUST_USE bool readReplaceLane(ValType simdType, jit::SimdLane* lane,
+    MOZ_MUST_USE bool readReplaceLane(ValType simdType, uint8_t* lane,
                                       Value* vector, Value* scalar);
     MOZ_MUST_USE bool readSplat(ValType simdType, Value* scalar);
-    MOZ_MUST_USE bool readSwizzle(ValType simdType, uint8_t (* lanes)[4], Value* vector);
-    MOZ_MUST_USE bool readShuffle(ValType simdType, uint8_t (* lanes)[4],
+    MOZ_MUST_USE bool readSwizzle(ValType simdType, uint8_t (* lanes)[16], Value* vector);
+    MOZ_MUST_USE bool readShuffle(ValType simdType, uint8_t (* lanes)[16],
                                   Value* lhs, Value* rhs);
     MOZ_MUST_USE bool readSimdSelect(ValType simdType, Value* trueValue,
                                      Value* falseValue,
@@ -536,7 +536,7 @@ ExprIter<Policy>::typeMismatch(ExprType actual, ExprType expected)
 }
 
 template <typename Policy>
-inline MOZ_MUST_USE bool
+inline bool
 ExprIter<Policy>::checkType(ExprType actual, ExprType expected)
 {
     if (!Validate) {
@@ -1230,7 +1230,7 @@ ExprIter<Policy>::readSetGlobal(const GlobalDescVector& globals, uint32_t* id, V
 }
 
 template <typename Policy>
-inline MOZ_MUST_USE bool
+inline bool
 ExprIter<Policy>::readI32Const(int32_t* i32)
 {
     MOZ_ASSERT(Classify(expr_) == ExprKind::I32);
@@ -1241,7 +1241,7 @@ ExprIter<Policy>::readI32Const(int32_t* i32)
 }
 
 template <typename Policy>
-inline MOZ_MUST_USE bool
+inline bool
 ExprIter<Policy>::readI64Const(int64_t* i64)
 {
     MOZ_ASSERT(Classify(expr_) == ExprKind::I64);
@@ -1252,7 +1252,7 @@ ExprIter<Policy>::readI64Const(int64_t* i64)
 }
 
 template <typename Policy>
-inline MOZ_MUST_USE bool
+inline bool
 ExprIter<Policy>::readF32Const(float* f32)
 {
     MOZ_ASSERT(Classify(expr_) == ExprKind::F32);
@@ -1271,7 +1271,7 @@ ExprIter<Policy>::readF32Const(float* f32)
 }
 
 template <typename Policy>
-inline MOZ_MUST_USE bool
+inline bool
 ExprIter<Policy>::readF64Const(double* f64)
 {
     MOZ_ASSERT(Classify(expr_) == ExprKind::F64);
@@ -1290,7 +1290,7 @@ ExprIter<Policy>::readF64Const(double* f64)
 }
 
 template <typename Policy>
-inline MOZ_MUST_USE bool
+inline bool
 ExprIter<Policy>::readI32x4Const(I32x4* i32x4)
 {
     MOZ_ASSERT(Classify(expr_) == ExprKind::I32x4);
@@ -1301,7 +1301,7 @@ ExprIter<Policy>::readI32x4Const(I32x4* i32x4)
 }
 
 template <typename Policy>
-inline MOZ_MUST_USE bool
+inline bool
 ExprIter<Policy>::readF32x4Const(F32x4* f32x4)
 {
     MOZ_ASSERT(Classify(expr_) == ExprKind::F32x4);
@@ -1312,7 +1312,7 @@ ExprIter<Policy>::readF32x4Const(F32x4* f32x4)
 }
 
 template <typename Policy>
-inline MOZ_MUST_USE bool
+inline bool
 ExprIter<Policy>::readB32x4Const(I32x4* i32x4)
 {
     MOZ_ASSERT(Classify(expr_) == ExprKind::B32x4);
@@ -1591,7 +1591,7 @@ ExprIter<Policy>::readSimdBooleanReduction(ValType simdType, Value* input)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readExtractLane(ValType simdType, jit::SimdLane* lane, Value* vector)
+ExprIter<Policy>::readExtractLane(ValType simdType, uint8_t* lane, Value* vector)
 {
     MOZ_ASSERT(Classify(expr_) == ExprKind::ExtractLane);
 
@@ -1601,7 +1601,7 @@ ExprIter<Policy>::readExtractLane(ValType simdType, jit::SimdLane* lane, Value* 
     if (Validate && laneBits >= NumSimdElements(simdType))
         return fail("simd lane out of bounds for simd type");
     if (Output)
-        *lane = jit::SimdLane(laneBits);
+        *lane = uint8_t(laneBits);
 
     if (!popWithType(ToExprType(simdType), vector))
         return false;
@@ -1613,8 +1613,7 @@ ExprIter<Policy>::readExtractLane(ValType simdType, jit::SimdLane* lane, Value* 
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readReplaceLane(ValType simdType, jit::SimdLane* lane, Value* vector,
-                                  Value* scalar)
+ExprIter<Policy>::readReplaceLane(ValType simdType, uint8_t* lane, Value* vector, Value* scalar)
 {
     MOZ_ASSERT(Classify(expr_) == ExprKind::ReplaceLane);
 
@@ -1624,7 +1623,7 @@ ExprIter<Policy>::readReplaceLane(ValType simdType, jit::SimdLane* lane, Value* 
     if (Validate && laneBits >= NumSimdElements(simdType))
         return fail("simd lane out of bounds for simd type");
     if (Output)
-        *lane = jit::SimdLane(laneBits);
+        *lane = uint8_t(laneBits);
 
     if (!popWithType(ToExprType(SimdElementType(simdType)), scalar))
         return false;
@@ -1653,7 +1652,7 @@ ExprIter<Policy>::readSplat(ValType simdType, Value* scalar)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readSwizzle(ValType simdType, uint8_t (* lanes)[4], Value* vector)
+ExprIter<Policy>::readSwizzle(ValType simdType, uint8_t (* lanes)[16], Value* vector)
 {
     MOZ_ASSERT(Classify(expr_) == ExprKind::Swizzle);
 
@@ -1677,7 +1676,7 @@ ExprIter<Policy>::readSwizzle(ValType simdType, uint8_t (* lanes)[4], Value* vec
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readShuffle(ValType simdType, uint8_t (* lanes)[4], Value* lhs, Value* rhs)
+ExprIter<Policy>::readShuffle(ValType simdType, uint8_t (* lanes)[16], Value* lhs, Value* rhs)
 {
     MOZ_ASSERT(Classify(expr_) == ExprKind::Shuffle);
 
