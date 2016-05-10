@@ -230,7 +230,7 @@ function openLinkIn(url, where, params) {
       return;
     }
     // TODO(1073187): propagate referrerPolicy.
-    saveURL(url, null, null, true, null, aNoReferrer ? null : aReferrerURI, aInitiatingDoc);
+    saveURL(url, null, null, true, true, aNoReferrer ? null : aReferrerURI, aInitiatingDoc);
     return;
   }
 
