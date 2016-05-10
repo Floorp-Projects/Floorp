@@ -28,6 +28,7 @@ const gPrefsMap = new Map([
   ["browser.newtabpage.blocked", "str"],
   ["intl.locale.matchOS", "bool"],
   ["general.useragent.locale", "localized"],
+  ["browser.search.hiddenOneOffs", "str"],
 ]);
 
 // prefs that are important for the newtab page
@@ -37,7 +38,8 @@ const gNewtabPagePrefs = new Set([
   "browser.newtabpage.pinned",
   "browser.newtabpage.blocked",
   "browser.newtabpage.introShown",
-  "browser.newtabpage.updateIntroShown"
+  "browser.newtabpage.updateIntroShown",
+  "browser.search.hiddenOneOffs",
 ]);
 
 let PrefsProvider = function PrefsProvider() {
