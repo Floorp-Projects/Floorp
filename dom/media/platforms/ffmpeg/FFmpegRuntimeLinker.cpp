@@ -48,7 +48,6 @@ FFmpegRuntimeLinker::Init()
   if (sLinkStatus) {
     return sLinkStatus == LinkStatus_SUCCEEDED;
   }
-  MOZ_ASSERT(NS_IsMainThread());
 
   for (size_t i = 0; i < ArrayLength(sLibs); i++) {
     const char* lib = sLibs[i];
