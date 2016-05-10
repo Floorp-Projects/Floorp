@@ -350,6 +350,22 @@ MediaStreamTrack::Clone()
   return newStream->CloneDOMTrack(*this, mTrackID);
 }
 
+void
+MediaStreamTrack::NotifyEnded()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mEnded) {
+    return;
+  }
+
+  LOG(LogLevel::Info, ("MediaStreamTrack %p ended", this));
+
+  mEnded = true;
+
+  DispatchTrustedEvent(NS_LITERAL_STRING("ended"));
+}
+
 DOMMediaStream*
 MediaStreamTrack::GetInputDOMStream()
 {
