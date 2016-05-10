@@ -1,0 +1,105 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test for Notification Box. The test is checking:
+* Basic rendering
+* Appending a notification
+* Notification priority
+* Closing notification
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Notification Box</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+window.onload = Task.async(function* () {
+  try {
+    let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    let React = browserRequire("devtools/client/shared/vendor/react");
+    let { NotificationBox, PriorityLevels } = browserRequire("devtools/client/shared/components/notification-box");
+
+    const renderedBox = shallowRenderComponent(NotificationBox, {});
+    is(renderedBox.type, "div", "NotificationBox is rendered as <div>");
+
+    // Test rendering
+    let boxElement = React.createElement(NotificationBox);
+    let notificationBox = TestUtils.renderIntoDocument(boxElement);
+    let notificationNode = ReactDOM.findDOMNode(notificationBox);
+
+    is(notificationNode.className, "notificationbox",
+      "NotificationBox has expected classname");
+    is(notificationNode.textContent, "",
+      "Empty NotificationBox has no text content");
+
+    checkNumberOfNotifications(notificationBox, 0);
+
+    // Append a notification
+    notificationBox.appendNotification(
+      "Info message",
+      "id1",
+      null,
+      PriorityLevels.PRIORITY_INFO_HIGH
+    );
+
+    is (notificationNode.textContent, "Info message",
+      "The box must display notification message");
+    checkNumberOfNotifications(notificationBox, 1);
+
+    // Append more important notification
+    notificationBox.appendNotification(
+      "Critical message",
+      "id2",
+      null,
+      PriorityLevels.PRIORITY_CRITICAL_BLOCK
+    );
+
+    checkNumberOfNotifications(notificationBox, 1);
+
+    is (notificationNode.textContent, "Critical message",
+      "The box must display more important notification message");
+
+    // Append less important notification
+    notificationBox.appendNotification(
+      "Warning message",
+      "id3",
+      null,
+      PriorityLevels.PRIORITY_WARNING_HIGH
+    );
+
+    checkNumberOfNotifications(notificationBox, 1);
+
+    is (notificationNode.textContent, "Critical message",
+      "The box must still display the more important notification");
+
+    ok(notificationBox.getCurrentNotification(),
+      "There must be current notification");
+
+    notificationBox.getNotificationWithValue("id1").close();
+    checkNumberOfNotifications(notificationBox, 1);
+
+    notificationBox.getNotificationWithValue("id2").close();
+    checkNumberOfNotifications(notificationBox, 1);
+
+    notificationBox.getNotificationWithValue("id3").close();
+    checkNumberOfNotifications(notificationBox, 0);
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+});
+
+function checkNumberOfNotifications(notificationBox, expected) {
+  is(TestUtils.scryRenderedDOMComponentsWithClass(
+    notificationBox, "notification").length, expected,
+    "The notification box must have expected number of notifications");
+}
+</script>
+</pre>
+</body>
+</html>

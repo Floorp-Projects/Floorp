@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test for Notification Box. The test is checking:
+* Using custom callback in a notification
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Notification Box</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+window.onload = Task.async(function* () {
+  try {
+    let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    let React = browserRequire("devtools/client/shared/vendor/react");
+    let { NotificationBox, PriorityLevels } = browserRequire("devtools/client/shared/components/notification-box");
+
+    // Test rendering
+    let boxElement = React.createElement(NotificationBox);
+    let notificationBox = TestUtils.renderIntoDocument(boxElement);
+    let notificationNode = ReactDOM.findDOMNode(notificationBox);
+
+    let callbackExecuted = false;
+
+    // Append a notification.
+    notificationBox.appendNotification(
+      "Info message",
+      "id1",
+      null,
+      PriorityLevels.PRIORITY_INFO_LOW,
+      undefined,
+      (reason) => {
+        callbackExecuted = true;
+        is(reason, "removed", "The reason must be expected string");
+      }
+    );
+
+    is(TestUtils.scryRenderedDOMComponentsWithClass(
+      notificationBox, "notification").length, 1,
+      "There must be one notification");
+
+    let closeButton = notificationNode.querySelector(
+      ".messageCloseButton");
+
+    // Click the close button to close the notification.
+    TestUtils.Simulate.click(closeButton);
+
+    is(TestUtils.scryRenderedDOMComponentsWithClass(
+      notificationBox, "notification").length, 0,
+      "The notification box must be empty now");
+
+    ok(callbackExecuted, "Event callback must be executed.");
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+});
+</script>
+</pre>
+</body>
+</html>
