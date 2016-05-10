@@ -11,6 +11,8 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/SizePrintfMacros.h"
 
+#include <algorithm>
+
 #include "jsprf.h"
 
 #include "gc/Marking.h"
@@ -654,7 +656,7 @@ JitcodeGlobalTable::generateTowerHeight()
             break;
         result++;
     }
-    return result + 1;
+    return (std::max)(1U, result);
 }
 
 JitcodeSkiplistTower*
