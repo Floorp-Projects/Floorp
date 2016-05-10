@@ -5,7 +5,12 @@
 
 package org.mozilla.gecko.home;
 
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.util.UIAsyncTask;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
@@ -16,7 +21,21 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.lang.ref.WeakReference;
+import java.util.Collections;
+import java.util.Set;
+import java.util.TreeSet;
+
 public class BookmarkFolderView extends LinearLayout {
+    private static final Set<Integer> FOLDERS_WITH_COUNT;
+
+    static {
+        final Set<Integer> folders = new TreeSet<>();
+        folders.add(BrowserContract.Bookmarks.FAKE_READINGLIST_SMARTFOLDER_ID);
+
+        FOLDERS_WITH_COUNT = Collections.unmodifiableSet(folders);
+    }
+
     public enum FolderState {
         /**
          * A standard folder, i.e. a folder in a list of bookmarks and folders.
@@ -61,15 +80,65 @@ public class BookmarkFolderView extends LinearLayout {
 
     public void update(String title, int folderID) {
         setTitle(title);
+        setID(folderID);
     }
 
     private void setTitle(String title) {
         mTitle.setText(title);
     }
 
+    private static class ItemCountUpdateTask extends UIAsyncTask.WithoutParams<Integer> {
+        private final WeakReference<TextView> mTextViewReference;
+        private final int mFolderID;
+
+        public ItemCountUpdateTask(final WeakReference<TextView> textViewReference,
+                                   final int folderID) {
+            super(ThreadUtils.getBackgroundHandler());
+
+            mTextViewReference = textViewReference;
+            mFolderID = folderID;
         }
 
-        mSubtitle.setVisibility(View.GONE);
+        @Override
+        protected Integer doInBackground() {
+            final TextView textView = mTextViewReference.get();
+
+            if (textView == null) {
+                return null;
+            }
+
+            final BrowserDB db = GeckoProfile.get(textView.getContext()).getDB();
+            return db.getBookmarkCountForFolder(textView.getContext().getContentResolver(), mFolderID);
+        }
+
+        @Override
+        protected void onPostExecute(Integer count) {
+            final TextView textView = mTextViewReference.get();
+
+            if (textView == null) {
+                return;
+            }
+
+            final String text;
+            if (count == 1) {
+                text = textView.getContext().getResources().getString(R.string.bookmark_folder_one_item);
+            } else {
+                text = textView.getContext().getResources().getString(R.string.bookmark_folder_items, count);
+            }
+
+            textView.setText(text);
+            textView.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void setID(final int folderID) {
+        if (FOLDERS_WITH_COUNT.contains(folderID)) {
+            final WeakReference<TextView> subTitleReference = new WeakReference<TextView>(mSubtitle);
+
+            new ItemCountUpdateTask(subTitleReference, folderID).execute();
+        } else {
+            mSubtitle.setVisibility(View.GONE);
+        }
     }
 
     public void setState(@NonNull FolderState state) {
