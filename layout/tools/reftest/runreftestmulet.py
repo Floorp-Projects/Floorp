@@ -162,6 +162,7 @@ class MuletReftest(RefTest):
     def _on_timeout(self):
         msg = "%s | application timed out after %s seconds with no output"
         self.log.testFail(msg % (self.last_test, self.timeout))
+        self.log.warning("Force-terminating active process(es).");
 
         # kill process to get a stack
         self.runner.stop(sig=signal.SIGABRT)
