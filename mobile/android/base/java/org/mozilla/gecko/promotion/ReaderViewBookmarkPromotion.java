@@ -20,7 +20,7 @@ import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.util.Experiments;
 
 public class ReaderViewBookmarkPromotion extends BrowserAppDelegateWithReference implements Tabs.OnTabsChangedListener {
-    private int mTimesEnteredReaderMode;
+    private boolean hasEnteredReaderMode = false;
 
     @Override
     public void onResume(BrowserApp browserApp) {
@@ -40,11 +40,8 @@ public class ReaderViewBookmarkPromotion extends BrowserAppDelegateWithReference
                 // new url: tab.getURL()
                 final boolean enteringReaderMode = ReaderModeUtils.isEnteringReaderMode(tab.getURL(), data);
 
-                if (mTimesEnteredReaderMode < 4 && enteringReaderMode) {
-                    mTimesEnteredReaderMode++;
-                }
-
-                if (mTimesEnteredReaderMode == 3) {
+                if (!hasEnteredReaderMode && enteringReaderMode) {
+                    hasEnteredReaderMode = true;
                     promoteBookmarking();
                 }
 
