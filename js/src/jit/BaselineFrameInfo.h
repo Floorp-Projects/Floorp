@@ -179,7 +179,7 @@ class FrameInfo
         spIndex(0)
     { }
 
-    bool init(TempAllocator& alloc);
+    MOZ_MUST_USE bool init(TempAllocator& alloc);
 
     size_t nlocals() const {
         return script->nfixed();
