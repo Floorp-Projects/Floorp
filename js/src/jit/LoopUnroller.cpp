@@ -21,7 +21,10 @@ struct LoopUnroller
                     PointerHasher<MDefinition*, 2>, SystemAllocPolicy> DefinitionMap;
 
     explicit LoopUnroller(MIRGraph& graph)
-      : graph(graph), alloc(graph.alloc())
+      : graph(graph), alloc(graph.alloc()),
+        header(nullptr), backedge(nullptr),
+        unrolledHeader(nullptr), unrolledBackedge(nullptr),
+        oldPreheader(nullptr), newPreheader(nullptr)
     {}
 
     MIRGraph& graph;
