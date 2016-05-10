@@ -469,19 +469,28 @@ nsStandardURL::CoalescePath(netCoalesceFlags coalesceFlag, char *path)
 }
 
 uint32_t
-nsStandardURL::AppendSegmentToBuf(char *buf, uint32_t i, const char *str, URLSegment &seg, const nsCString *escapedStr, bool useEscaped)
+nsStandardURL::AppendSegmentToBuf(char *buf, uint32_t i, const char *str,
+                                  const URLSegment &segInput, URLSegment &segOutput,
+                                  const nsCString *escapedStr,
+                                  bool useEscaped, int32_t *diff)
 {
-    if (seg.mLen > 0) {
+    MOZ_ASSERT(segInput.mLen == segOutput.mLen);
+
+    if (diff) *diff = 0;
+
+    if (segInput.mLen > 0) {
         if (useEscaped) {
-            seg.mLen = escapedStr->Length();
-            memcpy(buf + i, escapedStr->get(), seg.mLen);
+            MOZ_ASSERT(diff);
+            segOutput.mLen = escapedStr->Length();
+            *diff = segOutput.mLen - segInput.mLen;
+            memcpy(buf + i, escapedStr->get(), segOutput.mLen);
+        } else {
+            memcpy(buf + i, str + segInput.mPos, segInput.mLen);
         }
-        else
-            memcpy(buf + i, str + seg.mPos, seg.mLen);
-        seg.mPos = i;
-        i += seg.mLen;
+        segOutput.mPos = i;
+        i += segOutput.mLen;
     } else {
-        seg.mPos = i;
+        segOutput.mPos = i;
     }
     return i;
 }
@@ -595,6 +604,20 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
         }
     }
 
+    // We must take a copy of every single segment because they are pointing to
+    // the |spec| while we are changing their value, in case we must use
+    // encoded strings.
+    URLSegment username(mUsername);
+    URLSegment password(mPassword);
+    URLSegment host(mHost);
+    URLSegment path(mPath);
+    URLSegment filepath(mFilepath);
+    URLSegment directory(mDirectory);
+    URLSegment basename(mBasename);
+    URLSegment extension(mExtension);
+    URLSegment query(mQuery);
+    URLSegment ref(mRef);
+
     //
     // generate the normalized URL string
     //
@@ -604,9 +627,10 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
     char *buf;
     mSpec.BeginWriting(buf);
     uint32_t i = 0;
+    int32_t diff = 0;
 
     if (mScheme.mLen > 0) {
-        i = AppendSegmentToBuf(buf, i, spec, mScheme);
+        i = AppendSegmentToBuf(buf, i, spec, mScheme, mScheme);
         net_ToLowerCase(buf + mScheme.mPos, mScheme.mLen);
         i = AppendToBuf(buf, i, "://", 3);
     }
@@ -616,15 +640,22 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
 
     // append authority
     if (mUsername.mLen > 0) {
-        i = AppendSegmentToBuf(buf, i, spec, mUsername, &encUsername, useEncUsername);
-        if (mPassword.mLen >= 0) {
+        i = AppendSegmentToBuf(buf, i, spec, username, mUsername,
+                               &encUsername, useEncUsername, &diff);
+        ShiftFromPassword(diff);
+        if (password.mLen >= 0) {
             buf[i++] = ':';
-            i = AppendSegmentToBuf(buf, i, spec, mPassword, &encPassword, useEncPassword);
+            i = AppendSegmentToBuf(buf, i, spec, password, mPassword,
+                                   &encPassword, useEncPassword, &diff);
+            ShiftFromHost(diff);
         }
         buf[i++] = '@';
     }
-    if (mHost.mLen > 0) {
-        i = AppendSegmentToBuf(buf, i, spec, mHost, &encHost, useEncHost);
+    if (host.mLen > 0) {
+        i = AppendSegmentToBuf(buf, i, spec, host, mHost, &encHost, useEncHost,
+                               &diff);
+        ShiftFromPath(diff);
+
         net_ToLowerCase(buf + mHost.mPos, mHost.mLen);
         MOZ_ASSERT(mPort >= -1, "Invalid negative mPort");
         if (mPort != -1 && mPort != mDefaultPort) {
@@ -649,21 +680,23 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
     }
     else {
         uint32_t leadingSlash = 0;
-        if (spec[mPath.mPos] != '/') {
+        if (spec[path.mPos] != '/') {
             LOG(("adding leading slash to path\n"));
             leadingSlash = 1;
             buf[i++] = '/';
             // basename must exist, even if empty (bugs 113508, 429347)
             if (mBasename.mLen == -1) {
-                mBasename.mPos = i;
-                mBasename.mLen = 0;
+                mBasename.mPos = basename.mPos = i;
+                mBasename.mLen = basename.mLen = 0;
             }
         }
 
         // record corrected (file)path starting position
         mPath.mPos = mFilepath.mPos = i - leadingSlash;
 
-        i = AppendSegmentToBuf(buf, i, spec, mDirectory, &encDirectory, useEncDirectory);
+        i = AppendSegmentToBuf(buf, i, spec, directory, mDirectory,
+                               &encDirectory, useEncDirectory, &diff);
+        ShiftFromBasename(diff);
 
         // the directory must end with a '/'
         if (buf[i-1] != '/') {
@@ -671,7 +704,9 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
             mDirectory.mLen++;
         }
 
-        i = AppendSegmentToBuf(buf, i, spec, mBasename, &encBasename, useEncBasename);
+        i = AppendSegmentToBuf(buf, i, spec, basename, mBasename,
+                               &encBasename, useEncBasename, &diff);
+        ShiftFromExtension(diff);
 
         // make corrections to directory segment if leadingSlash
         if (leadingSlash) {
@@ -684,18 +719,24 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
 
         if (mExtension.mLen >= 0) {
             buf[i++] = '.';
-            i = AppendSegmentToBuf(buf, i, spec, mExtension, &encExtension, useEncExtension);
+            i = AppendSegmentToBuf(buf, i, spec, extension, mExtension,
+                                   &encExtension, useEncExtension, &diff);
+            ShiftFromQuery(diff);
         }
         // calculate corrected filepath length
         mFilepath.mLen = i - mFilepath.mPos;
 
         if (mQuery.mLen >= 0) {
             buf[i++] = '?';
-            i = AppendSegmentToBuf(buf, i, spec, mQuery, &encQuery, useEncQuery);
+            i = AppendSegmentToBuf(buf, i, spec, query, mQuery,
+                                   &encQuery, useEncQuery,
+                                   &diff);
+            ShiftFromRef(diff);
         }
         if (mRef.mLen >= 0) {
             buf[i++] = '#';
-            i = AppendSegmentToBuf(buf, i, spec, mRef, &encRef, useEncRef);
+            i = AppendSegmentToBuf(buf, i, spec, ref, mRef, &encRef, useEncRef,
+                                   &diff);
         }
         // calculate corrected path length
         mPath.mLen = i - mPath.mPos;
@@ -957,6 +998,39 @@ nsStandardURL::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 #undef PREF_CHANGED
 #undef GOT_PREF
 }
+
+#define SHIFT_FROM(name, what)                    \
+void                                              \
+nsStandardURL::name(int32_t diff)                 \
+{                                                 \
+    if (!diff) return;                            \
+    if (what.mLen >= 0) {                         \
+        CheckedInt<int32_t> pos = what.mPos;      \
+        pos += diff;                              \
+        MOZ_ASSERT(pos.isValid());                \
+        what.mPos = pos.value();                  \
+    }
+
+#define SHIFT_FROM_NEXT(name, what, next)         \
+    SHIFT_FROM(name, what)                        \
+    next(diff);                                   \
+}
+
+#define SHIFT_FROM_LAST(name, what)               \
+    SHIFT_FROM(name, what)                        \
+}
+
+SHIFT_FROM_NEXT(ShiftFromAuthority, mAuthority, ShiftFromUsername)
+SHIFT_FROM_NEXT(ShiftFromUsername, mUsername, ShiftFromPassword)
+SHIFT_FROM_NEXT(ShiftFromPassword, mPassword, ShiftFromHost)
+SHIFT_FROM_NEXT(ShiftFromHost, mHost, ShiftFromPath)
+SHIFT_FROM_NEXT(ShiftFromPath, mPath, ShiftFromFilepath)
+SHIFT_FROM_NEXT(ShiftFromFilepath, mFilepath, ShiftFromDirectory)
+SHIFT_FROM_NEXT(ShiftFromDirectory, mDirectory, ShiftFromBasename)
+SHIFT_FROM_NEXT(ShiftFromBasename, mBasename, ShiftFromExtension)
+SHIFT_FROM_NEXT(ShiftFromExtension, mExtension, ShiftFromQuery)
+SHIFT_FROM_NEXT(ShiftFromQuery, mQuery, ShiftFromRef)
+SHIFT_FROM_LAST(ShiftFromRef, mRef)
 
 //----------------------------------------------------------------------------
 // nsStandardURL::nsISupports
