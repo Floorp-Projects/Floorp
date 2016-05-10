@@ -1076,7 +1076,7 @@ void
 CountHistogram::Accumulate(Sample value, Count count, size_t index)
 {
   size_t zero_index = BucketIndex(0);
-  LinearHistogram::Accumulate(1, 1, zero_index);
+  LinearHistogram::Accumulate(value, 1, zero_index);
 }
 
 void
