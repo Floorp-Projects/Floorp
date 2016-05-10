@@ -25,14 +25,6 @@ using namespace mozilla;
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
 
-#define CSS_PSEUDO_CLASS(name_, value_, flags_, pref_) \
-  static_assert(!((flags_) & CSS_PSEUDO_CLASS_ENABLED_IN_CHROME) || \
-                ((flags_) & CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS), \
-                "Pseudo-class '" #name_ "' is enabled in chrome, so it " \
-                "should also be enabled in UA sheets");
-#include "nsCSSPseudoClassList.h"
-#undef CSS_PSEUDO_CLASS
-
 // Array of nsStaticAtom for each of the pseudo-classes.
 static const nsStaticAtom CSSPseudoClasses_info[] = {
 #define CSS_PSEUDO_CLASS(name_, value_, flags_, pref_) \
@@ -52,18 +44,10 @@ static const uint32_t CSSPseudoClasses_flags[] = {
 };
 
 static bool sPseudoClassEnabled[] = {
-// If the pseudo class has any "ENABLED_IN" flag set, it is disabled by
-// default. Note that, if a pseudo class has pref, whatever its default
-// value is, it'll later be changed in nsCSSPseudoClasses::AddRefAtoms()
-// If the pseudo class has "ENABLED_IN" flags but doesn't have a pref,
-// it is an internal pseudo class which is disabled elsewhere.
-#define IS_ENABLED_BY_DEFAULT(flags_) \
-  (!((flags_) & CSS_PSEUDO_CLASS_ENABLED_MASK))
 #define CSS_PSEUDO_CLASS(name_, value_, flags_, pref_) \
-  IS_ENABLED_BY_DEFAULT(flags_),
+  true,
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
-#undef IS_ENABLED_BY_DEFAULT
 };  
 
 void nsCSSPseudoClasses::AddRefAtoms()
@@ -106,25 +90,12 @@ nsCSSPseudoClasses::PseudoTypeToString(Type aType, nsAString& aString)
   (*CSSPseudoClasses_info[aType].mAtom)->ToString(aString);
 }
 
-/* static */ nsCSSPseudoClasses::Type
-nsCSSPseudoClasses::GetPseudoType(nsIAtom* aAtom,
-                                  bool aAgentEnabled, bool aChromeEnabled)
+nsCSSPseudoClasses::Type
+nsCSSPseudoClasses::GetPseudoType(nsIAtom* aAtom)
 {
   for (uint32_t i = 0; i < ArrayLength(CSSPseudoClasses_info); ++i) {
     if (*CSSPseudoClasses_info[i].mAtom == aAtom) {
-      Type type = Type(i);
-      if (sPseudoClassEnabled[i]) {
-        return type;
-      } else {
-        auto flags = FlagsForPseudoClass(type);
-        if ((aChromeEnabled &&
-             (flags & CSS_PSEUDO_CLASS_ENABLED_IN_CHROME)) ||
-            (aAgentEnabled &&
-             (flags & CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS))) {
-          return type;
-        }
-      }
-      return ePseudoClass_NotPseudoClass;
+      return sPseudoClassEnabled[i] ? Type(i) : ePseudoClass_NotPseudoClass;
     }
   }
 
