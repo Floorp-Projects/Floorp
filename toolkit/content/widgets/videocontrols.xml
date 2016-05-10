@@ -407,12 +407,8 @@
                     this.videocontrols.randomID = this.randomID;
 
                     this.setPlayButtonState(this.video.paused);
-                    this.updateMuteButtonState();
 
                     this.setFullscreenButtonState();
-
-                    var volume = this.video.muted ? 0 : Math.round(this.video.volume * 100);
-                    this.volumeControl.value = volume;
 
                     var duration = Math.round(this.video.duration * 1000); // in ms
                     var currentTime = Math.round(this.video.currentTime * 1000); // in ms
@@ -474,6 +470,11 @@
                     this.controlBar.hidden = true;
                     this.adjustControlSize();
 
+                    // Can only update the volume controls once we've computed
+                    // _volumeControlWidth, since the volume slider implementation
+                    // depends on it.
+                    this.updateVolumeControls();
+
                     // Preserve Statistics when toggling fullscreen mode due to bug 714071.
                     if (this.video.mozMediaStatisticsShowing)
                         this.showStatistics(true);
@@ -524,6 +525,14 @@
                     return enabled;
                 },
 
+                updateVolumeControls() {
+                    var volume = this.video.muted ? 0 : this.video.volume;
+                    var volumePercentage = Math.round(volume * 100);
+                    this.updateMuteButtonState();
+                    this.volumeControl.value = volumePercentage;
+                    this.volumeForeground.style.paddingRight = (1 - volume) * this._volumeControlWidth + "px";
+                },
+
                 handleEvent : function (aEvent) {
                     this.log("Got media event ----> " + aEvent.type);
 
@@ -561,11 +570,7 @@
                             this.setupStatusFader();
                             break;
                         case "volumechange":
-                            var volume = this.video.muted ? 0 : this.video.volume;
-                            var volumePercentage = Math.round(volume * 100);
-                            this.updateMuteButtonState();
-                            this.volumeControl.value = volumePercentage;
-                            this.volumeForeground.style.paddingRight = (1 - volume) * this._volumeControlWidth + "px";
+                            this.updateVolumeControls();
                             // Show the controls to highlight the changing volume,
                             // but only if the click-to-play overlay has already
                             // been hidden (we don't hide controls when the overlay is visible).
