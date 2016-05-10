@@ -37,8 +37,6 @@ AppleDecoderModule::~AppleDecoderModule()
 void
 AppleDecoderModule::Init()
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
-
   if (sInitialized) {
     return;
   }
