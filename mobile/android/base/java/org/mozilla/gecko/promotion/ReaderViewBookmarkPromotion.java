@@ -7,12 +7,10 @@ package org.mozilla.gecko.promotion;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Bundle;
 
 import com.keepsafe.switchboard.SwitchBoard;
 
 import org.mozilla.gecko.BrowserApp;
-import org.mozilla.gecko.delegates.BrowserAppDelegate;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
@@ -20,8 +18,6 @@ import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.delegates.BrowserAppDelegateWithReference;
 import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.util.Experiments;
-
-import java.lang.ref.WeakReference;
 
 public class ReaderViewBookmarkPromotion extends BrowserAppDelegateWithReference implements Tabs.OnTabsChangedListener {
     private int mTimesEnteredReaderMode;
