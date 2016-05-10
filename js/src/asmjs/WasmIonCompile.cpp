@@ -873,7 +873,7 @@ class FunctionCompiler
   public:
     bool internalCall(const Sig& sig, uint32_t funcIndex, const Call& call, MDefinition** def)
     {
-        return callPrivate(MAsmJSCall::Callee(AsmJSInternalCallee(funcIndex)), call, sig.ret(), def);
+        return callPrivate(MAsmJSCall::Callee(funcIndex), call, sig.ret(), def);
     }
 
     bool funcPtrCall(const Sig& sig, uint32_t length, uint32_t globalDataOffset, MDefinition* index,
