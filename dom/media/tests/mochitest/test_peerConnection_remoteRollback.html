@@ -23,7 +23,8 @@
         return test.setRemoteDescription(
           test.pcRemote,
           new RTCSessionDescription({ type: "rollback" }),
-          STABLE);
+          STABLE)
+          .then(() => test.pcRemote.rollbackRemoteTracksIfNotNegotiated());
       },
 
       function PC_REMOTE_CHECK_CAN_TRICKLE_REVERT_SYNC(test) {

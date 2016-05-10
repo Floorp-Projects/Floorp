@@ -27,8 +27,6 @@ public:
   virtual ~FFmpegAudioDecoder();
 
   RefPtr<InitPromise> Init() override;
-  nsresult Input(MediaRawData* aSample) override;
-  void ProcessDrain() override;
   void InitCodecContext() override;
   static AVCodecID GetCodecId(const nsACString& aMimeType);
   const char* GetDescriptionName() const override
@@ -37,7 +35,8 @@ public:
   }
 
 private:
-  void DecodePacket(MediaRawData* aSample);
+  DecodeResult DoDecode(MediaRawData* aSample) override;
+  void ProcessDrain() override;
 };
 
 } // namespace mozilla

@@ -8279,6 +8279,18 @@ js::IsAsmJSFunction(JSFunction* fun)
 }
 
 bool
+js::IsAsmJSStrictModeModuleOrFunction(JSFunction* fun)
+{
+    if (IsAsmJSModule(fun))
+        return AsmJSModuleToModuleObject(fun)->module().asAsmJS().strict();
+
+    if (IsAsmJSFunction(fun))
+        return ExportedFunctionToModuleObject(fun)->module().asAsmJS().strict();
+
+    return false;
+}
+
+bool
 js::IsAsmJSCompilationAvailable(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);

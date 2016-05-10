@@ -29,7 +29,7 @@ XPCOMUtils.defineLazyGetter(this, "PushService", function() {
 // on `nsIPushService` so that JS callers only need to import this service.
 const OBSERVER_TOPIC_PUSH = "push-message";
 const OBSERVER_TOPIC_SUBSCRIPTION_CHANGE = "push-subscription-change";
-const OBSERVER_TOPIC_SUBSCRIPTION_LOST = "push-subscription-lost";
+const OBSERVER_TOPIC_SUBSCRIPTION_MODIFIED = "push-subscription-modified";
 
 /**
  * `PushServiceBase`, `PushServiceParent`, and `PushServiceContent` collectively
@@ -61,7 +61,7 @@ PushServiceBase.prototype = {
 
   pushTopic: OBSERVER_TOPIC_PUSH,
   subscriptionChangeTopic: OBSERVER_TOPIC_SUBSCRIPTION_CHANGE,
-  subscriptionLostTopic: OBSERVER_TOPIC_SUBSCRIPTION_LOST,
+  subscriptionModifiedTopic: OBSERVER_TOPIC_SUBSCRIPTION_MODIFIED,
 
   _handleReady() {},
 

@@ -98,8 +98,7 @@ struct nsComputedStyleMap
 
     bool IsEnabled() const
     {
-      return nsCSSProps::IsEnabled(mProperty,
-                                   nsCSSProps::eEnabledForAllContent);
+      return nsCSSProps::IsEnabled(mProperty, CSSEnabledState::eForAllContent);
     }
   };
 
@@ -489,7 +488,8 @@ nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
 
   RefPtr<nsStyleContext> sc;
   if (aPseudo) {
-    CSSPseudoElementType type = nsCSSPseudoElements::GetPseudoType(aPseudo);
+    CSSPseudoElementType type = nsCSSPseudoElements::
+      GetPseudoType(aPseudo, CSSEnabledState::eIgnoreEnabledState);
     if (type >= CSSPseudoElementType::Count) {
       return nullptr;
     }
@@ -765,8 +765,8 @@ nsComputedDOMStyle::ClearCurrentStyleSources()
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName, ErrorResult& aRv)
 {
-  nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName,
-                                                  nsCSSProps::eEnabledForAllContent);
+  nsCSSProperty prop =
+    nsCSSProps::LookupProperty(aPropertyName, CSSEnabledState::eForAllContent);
 
   bool needsLayoutFlush;
   nsComputedStyleMap::Entry::ComputeMethod getter;

@@ -836,9 +836,9 @@ GenerateStackOverflow(MacroAssembler& masm)
     return offsets;
 }
 
-// Generate a stub that is jumped to from function bodies to throw an exception.
+// Generate a stub that calls into HandleTrap with the right trap reason.
 static Offsets
-GenerateErrorStub(MacroAssembler& masm, SymbolicAddress address)
+GenerateTrapStub(MacroAssembler& masm, Trap reason)
 {
     masm.haltingAlign(CodeAlignment);
 
@@ -849,9 +849,24 @@ GenerateErrorStub(MacroAssembler& masm, SymbolicAddress address)
     // into C++.  We unconditionally jump to throw so don't worry about
     // restoring sp.
     masm.andToStackPtr(Imm32(~(ABIStackAlignment - 1)));
+    if (ShadowStackSpace)
+        masm.subFromStackPtr(Imm32(ShadowStackSpace));
 
-    masm.assertStackAlignment(ABIStackAlignment);
-    masm.call(address);
+    MIRTypeVector args;
+    JS_ALWAYS_TRUE(args.append(MIRType::Int32));
+
+    ABIArgMIRTypeIter i(args);
+    if (i->kind() == ABIArg::GPR) {
+        masm.move32(Imm32(int32_t(reason)), i->gpr());
+    } else {
+        masm.store32(Imm32(int32_t(reason)),
+                     Address(masm.getStackPointer(), i->offsetFromArgBase()));
+    }
+
+    i++;
+    MOZ_ASSERT(i.done());
+
+    masm.call(SymbolicAddress::HandleTrap);
     masm.jump(JumpTarget::Throw);
 
     offsets.end = masm.currentOffset();
@@ -897,43 +912,20 @@ wasm::GenerateJumpTarget(MacroAssembler& masm, JumpTarget target)
     switch (target) {
       case JumpTarget::StackOverflow:
         return GenerateStackOverflow(masm);
-      case JumpTarget::ConversionError:
-        return GenerateErrorStub(masm, SymbolicAddress::OnImpreciseConversion);
-      case JumpTarget::OutOfBounds:
-        return GenerateErrorStub(masm, SymbolicAddress::OnOutOfBounds);
-      case JumpTarget::BadIndirectCall:
-        return GenerateErrorStub(masm, SymbolicAddress::BadIndirectCall);
-      case JumpTarget::UnreachableTrap:
-        return GenerateErrorStub(masm, SymbolicAddress::UnreachableTrap);
-      case JumpTarget::InvalidConversionToIntegerTrap:
-        return GenerateErrorStub(masm, SymbolicAddress::InvalidConversionToIntegerTrap);
-      case JumpTarget::IntegerOverflowTrap:
-        return GenerateErrorStub(masm, SymbolicAddress::IntegerOverflowTrap);
       case JumpTarget::Throw:
         return GenerateThrow(masm);
+      case JumpTarget::BadIndirectCall:
+      case JumpTarget::OutOfBounds:
+      case JumpTarget::Unreachable:
+      case JumpTarget::IntegerOverflow:
+      case JumpTarget::InvalidConversionToInteger:
+      case JumpTarget::IntegerDivideByZero:
+      case JumpTarget::ImpreciseSimdConversion:
+        return GenerateTrapStub(masm, Trap(target));
       case JumpTarget::Limit:
         break;
     }
     MOZ_CRASH("bad JumpTarget");
-}
-
-ProfilingOffsets
-wasm::GenerateBadIndirectCallExit(MacroAssembler& masm)
-{
-    MIRTypeVector args;
-    unsigned framePushed = StackDecrementForCall(masm, ABIStackAlignment, args);
-
-    ProfilingOffsets offsets;
-    GenerateExitPrologue(masm, framePushed, ExitReason::Error, &offsets);
-
-    AssertStackAlignment(masm, ABIStackAlignment);
-    masm.call(SymbolicAddress::BadIndirectCall);
-    masm.jump(JumpTarget::Throw);
-
-    GenerateExitEpilogue(masm, framePushed, ExitReason::Error, &offsets);
-
-    offsets.end = masm.currentOffset();
-    return offsets;
 }
 
 static const LiveRegisterSet AllRegsExceptSP(

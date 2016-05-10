@@ -623,8 +623,8 @@ void
 nsCSSExpandedDataBlock::ClearProperty(nsCSSProperty aPropID)
 {
   if (nsCSSProps::IsShorthand(aPropID)) {
-    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPropID,
-                                         nsCSSProps::eIgnoreEnabledState) {
+    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(
+        p, aPropID, CSSEnabledState::eIgnoreEnabledState) {
       ClearLonghandProperty(*p);
     }
   } else {
@@ -645,7 +645,7 @@ nsCSSExpandedDataBlock::ClearLonghandProperty(nsCSSProperty aPropID)
 bool
 nsCSSExpandedDataBlock::TransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
                                           nsCSSProperty aPropID,
-                                          nsCSSProps::EnabledState aEnabledState,
+                                          CSSEnabledState aEnabledState,
                                           bool aIsImportant,
                                           bool aOverrideImportant,
                                           bool aMustCallValueAppended,
@@ -659,11 +659,11 @@ nsCSSExpandedDataBlock::TransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
                                aSheetDocument);
   }
 
-  // We can pass eIgnoreEnabledState (here, and in ClearProperty above) rather
-  // than a value corresponding to whether we're parsing a UA style sheet or
-  // certified app because we assert in nsCSSProps::AddRefTable that shorthand
-  // properties available in these contexts also have all of their
-  // subproperties available in these contexts.
+  // We can pass CSSEnabledState::eIgnore (here, and in ClearProperty
+  // above) rather than a value corresponding to whether we're parsing
+  // a UA style sheet or certified app because we assert in nsCSSProps::
+  // AddRefTable that shorthand properties available in these contexts
+  // also have all of their subproperties available in these contexts.
   bool changed = false;
   CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPropID, aEnabledState) {
     changed |= DoTransferFromBlock(aFromBlock, *p,

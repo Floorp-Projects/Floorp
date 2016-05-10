@@ -80,6 +80,7 @@ public: /* internal -- HPUX compiler can't handle this being private */
 
         URLSegment() : mPos(0), mLen(-1) {}
         URLSegment(uint32_t pos, int32_t len) : mPos(pos), mLen(len) {}
+        URLSegment(const URLSegment& aCopy) : mPos(aCopy.mPos), mLen(aCopy.mLen) {}
         void Reset() { mPos = 0; mLen = -1; }
         // Merge another segment following this one to it if they're contiguous
         // Assumes we have something like "foo;bar" where this object is 'foo' and right
@@ -181,7 +182,10 @@ private:
     nsresult NormalizeIDN(const nsCSubstring &host, nsCString &result);
     void     CoalescePath(netCoalesceFlags coalesceFlag, char *path);
 
-    uint32_t AppendSegmentToBuf(char *, uint32_t, const char *, URLSegment &, const nsCString *esc=nullptr, bool useEsc = false);
+    uint32_t AppendSegmentToBuf(char *, uint32_t, const char *,
+                                const URLSegment &input, URLSegment &output,
+                                const nsCString *esc=nullptr,
+                                bool useEsc = false, int32_t* diff = nullptr);
     uint32_t AppendToBuf(char *, uint32_t, const char *, uint32_t);
 
     nsresult BuildNormalizedSpec(const char *spec);
@@ -220,17 +224,17 @@ private:
     const nsDependentCSubstring Ref()       { return Segment(mRef); }
 
     // shift the URLSegments to the right by diff
-    void ShiftFromAuthority(int32_t diff) { mAuthority.mPos += diff; ShiftFromUsername(diff); }
-    void ShiftFromUsername(int32_t diff)  { mUsername.mPos += diff; ShiftFromPassword(diff); }
-    void ShiftFromPassword(int32_t diff)  { mPassword.mPos += diff; ShiftFromHost(diff); }
-    void ShiftFromHost(int32_t diff)      { mHost.mPos += diff; ShiftFromPath(diff); }
-    void ShiftFromPath(int32_t diff)      { mPath.mPos += diff; ShiftFromFilepath(diff); }
-    void ShiftFromFilepath(int32_t diff)  { mFilepath.mPos += diff; ShiftFromDirectory(diff); }
-    void ShiftFromDirectory(int32_t diff) { mDirectory.mPos += diff; ShiftFromBasename(diff); }
-    void ShiftFromBasename(int32_t diff)  { mBasename.mPos += diff; ShiftFromExtension(diff); }
-    void ShiftFromExtension(int32_t diff) { mExtension.mPos += diff; ShiftFromQuery(diff); }
-    void ShiftFromQuery(int32_t diff)     { mQuery.mPos += diff; ShiftFromRef(diff); }
-    void ShiftFromRef(int32_t diff)       { mRef.mPos += diff; }
+    void ShiftFromAuthority(int32_t diff);
+    void ShiftFromUsername(int32_t diff);
+    void ShiftFromPassword(int32_t diff);
+    void ShiftFromHost(int32_t diff);
+    void ShiftFromPath(int32_t diff);
+    void ShiftFromFilepath(int32_t diff);
+    void ShiftFromDirectory(int32_t diff);
+    void ShiftFromBasename(int32_t diff);
+    void ShiftFromExtension(int32_t diff);
+    void ShiftFromQuery(int32_t diff);
+    void ShiftFromRef(int32_t diff);
 
     // fastload helper functions
     nsresult ReadSegment(nsIBinaryInputStream *, URLSegment &);

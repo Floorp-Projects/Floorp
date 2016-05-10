@@ -171,103 +171,6 @@ private:
 }
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
-class TracksAvailableCallback : public OnTracksAvailableCallback
-{
-public:
-  TracksAvailableCallback(size_t numNewAudioTracks,
-                          size_t numNewVideoTracks,
-                          const std::string& pcHandle,
-                          RefPtr<PeerConnectionObserver> aObserver)
-  : OnTracksAvailableCallback()
-  , mObserver(aObserver)
-  , mPcHandle(pcHandle)
-  {}
-
-  virtual void NotifyTracksAvailable(DOMMediaStream* aStream) override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(aStream);
-
-    PeerConnectionWrapper wrapper(mPcHandle);
-
-    if (!wrapper.impl() || wrapper.impl()->IsClosed()) {
-      return;
-    }
-
-    nsTArray<RefPtr<MediaStreamTrack>> tracks;
-    aStream->GetTracks(tracks);
-
-    std::string streamId = PeerConnectionImpl::GetStreamId(*aStream);
-    bool notifyStream = true;
-
-    Sequence<OwningNonNull<DOMMediaStream>> streams;
-    if (!streams.AppendElement(OwningNonNull<DOMMediaStream>(*aStream),
-                               fallible)) {
-      MOZ_ASSERT(false);
-      return;
-    }
-
-    for (size_t i = 0; i < tracks.Length(); i++) {
-      std::string trackId;
-      // This is the first chance we get to set the string track id on this
-      // track. It would be nice if we could specify this along with the numeric
-      // track id from the start, but we're stuck doing this fixup after the
-      // fact.
-      nsresult rv = wrapper.impl()->GetRemoteTrackId(streamId,
-                                                     *tracks[i],
-                                                     &trackId);
-
-      if (NS_FAILED(rv)) {
-        CSFLogError(logTag, "%s: Failed to get string track id for %p, rv = %u",
-                            __FUNCTION__, tracks[i].get(),
-                            static_cast<unsigned>(rv));
-        MOZ_ASSERT(false);
-        continue;
-      }
-
-      std::string origTrackId = PeerConnectionImpl::GetTrackId(*tracks[i]);
-
-      if (origTrackId == trackId) {
-        // Pre-existing track
-        notifyStream = false;
-        continue;
-      }
-
-      tracks[i]->AssignId(NS_ConvertUTF8toUTF16(trackId.c_str()));
-
-      JSErrorResult jrv;
-      CSFLogInfo(logTag, "Calling OnAddTrack(%s)", trackId.c_str());
-      mObserver->OnAddTrack(*tracks[i], streams, jrv);
-      if (jrv.Failed()) {
-        CSFLogError(logTag, ": OnAddTrack(%u) failed! Error: %u",
-                    static_cast<unsigned>(i),
-                    jrv.ErrorCodeAsInt());
-      }
-    }
-
-    if (notifyStream) {
-      // Start currentTime from the point where this stream was successfully
-      // returned.
-      aStream->SetLogicalStreamStartTime(
-          aStream->GetPlaybackStream()->GetCurrentTime());
-
-      JSErrorResult rv;
-      CSFLogInfo(logTag, "Calling OnAddStream(%s)", streamId.c_str());
-      mObserver->OnAddStream(*aStream, rv);
-      if (rv.Failed()) {
-        CSFLogError(logTag, ": OnAddStream() failed! Error: %u",
-                    rv.ErrorCodeAsInt());
-      }
-    }
-  }
-
-private:
-  RefPtr<PeerConnectionObserver> mObserver;
-  const std::string mPcHandle;
-};
-#endif
-
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
 static nsresult InitNSSInContent()
 {
   NS_ENSURE_TRUE(NS_IsMainThread(), NS_ERROR_NOT_SAME_THREAD);
@@ -1857,9 +1760,11 @@ PeerConnectionImpl::CreateNewRemoteTracks(RefPtr<PeerConnectionObserver>& aPco)
     std::string streamId = i->first;
     std::vector<RefPtr<JsepTrack>>& tracks = i->second;
 
+    bool newStream = false;
     RefPtr<RemoteSourceStreamInfo> info =
       mMedia->GetRemoteStreamById(streamId);
     if (!info) {
+      newStream = true;
       nsresult nrv = CreateRemoteSourceStreamInfo(&info, streamId);
       if (NS_FAILED(nrv)) {
         aPco->OnSetRemoteDescriptionError(
@@ -1882,42 +1787,40 @@ PeerConnectionImpl::CreateNewRemoteTracks(RefPtr<PeerConnectionObserver>& aPco)
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
       info->GetMediaStream()->AssignId(NS_ConvertUTF8toUTF16(streamId.c_str()));
+      info->GetMediaStream()->SetLogicalStreamStartTime(
+          info->GetMediaStream()->GetPlaybackStream()->GetCurrentTime());
 #else
       info->GetMediaStream()->AssignId((streamId));
 #endif
     }
 
-    size_t numNewAudioTracks = 0;
-    size_t numNewVideoTracks = 0;
-    size_t numPreexistingTrackIds = 0;
-
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
-      // Set the principal used for creating the tracks. This makes the stream
-      // data (audio/video samples) accessible to the receiving page. We're
-      // only certain that privacy hasn't been requested if we're connected.
-      nsCOMPtr<nsIPrincipal> principal;
-      nsIDocument* doc = GetWindow()->GetExtantDoc();
-      MOZ_ASSERT(doc);
-      if (mDtlsConnected && !PrivacyRequested()) {
-        principal = doc->NodePrincipal();
-      } else {
-        // we're either certain that we need isolation for the streams, OR
-        // we're not sure and we can fix the stream in SetDtlsConnected
-        principal =  nsNullPrincipal::CreateWithInheritedAttributes(doc->NodePrincipal());
-      }
+    Sequence<OwningNonNull<DOMMediaStream>> streams;
+    if (!streams.AppendElement(OwningNonNull<DOMMediaStream>(
+            *info->GetMediaStream()),
+            fallible)) {
+      MOZ_ASSERT(false);
+      return NS_ERROR_FAILURE;
+    }
+
+    // Set the principal used for creating the tracks. This makes the stream
+    // data (audio/video samples) accessible to the receiving page. We're
+    // only certain that privacy hasn't been requested if we're connected.
+    nsCOMPtr<nsIPrincipal> principal;
+    nsIDocument* doc = GetWindow()->GetExtantDoc();
+    MOZ_ASSERT(doc);
+    if (mDtlsConnected && !PrivacyRequested()) {
+      principal = doc->NodePrincipal();
+    } else {
+      // we're either certain that we need isolation for the streams, OR
+      // we're not sure and we can fix the stream in SetDtlsConnected
+      principal =  nsNullPrincipal::CreateWithInheritedAttributes(doc->NodePrincipal());
+    }
 #endif
 
-    for (auto j = tracks.begin(); j != tracks.end(); ++j) {
-      RefPtr<JsepTrack> track = *j;
-      if (!info->HasTrack(track->GetTrackId())) {
-        if (track->GetMediaType() == SdpMediaSection::kAudio) {
-          ++numNewAudioTracks;
-        } else if (track->GetMediaType() == SdpMediaSection::kVideo) {
-          ++numNewVideoTracks;
-        } else {
-          MOZ_ASSERT(false);
-          continue;
-        }
+    for (RefPtr<JsepTrack>& track : tracks) {
+      std::string webrtcTrackId(track->GetTrackId());
+      if (!info->HasTrack(webrtcTrackId)) {
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
         RefPtr<RemoteTrackSource> source =
           new RemoteTrackSource(principal, nsString());
@@ -1937,27 +1840,30 @@ PeerConnectionImpl::CreateNewRemoteTracks(RefPtr<PeerConnectionObserver>& aPco)
                                                    MediaSegment::VIDEO,
                                                    source);
         }
-        info->AddTrack(track->GetTrackId(), domTrack);
+
+        info->AddTrack(webrtcTrackId, domTrack);
         CSFLogDebug(logTag, "Added remote track %s/%s",
-                    info->GetId().c_str(), track->GetTrackId().c_str());
-      } else {
-        ++numPreexistingTrackIds;
+                    info->GetId().c_str(), webrtcTrackId.c_str());
+
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+        domTrack->AssignId(NS_ConvertUTF8toUTF16(webrtcTrackId.c_str()));
+        aPco->OnAddTrack(*domTrack, streams, jrv);
+        if (jrv.Failed()) {
+          CSFLogError(logTag, ": OnAddTrack(%s) failed! Error: %u",
+                      webrtcTrackId.c_str(),
+                      jrv.ErrorCodeAsInt());
+        }
+#endif
       }
     }
 
-    // Now that the streams are all set up, notify about track availability.
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-    TracksAvailableCallback* tracksAvailableCallback =
-      new TracksAvailableCallback(numNewAudioTracks,
-                                  numNewVideoTracks,
-                                  mHandle,
-                                  aPco);
-    info->GetMediaStream()->OnTracksAvailable(tracksAvailableCallback);
-#else
-    if (!numPreexistingTrackIds) {
+    if (newStream) {
       aPco->OnAddStream(*info->GetMediaStream(), jrv);
+      if (jrv.Failed()) {
+        CSFLogError(logTag, ": OnAddStream() failed! Error: %u",
+                    jrv.ErrorCodeAsInt());
+      }
     }
-#endif
   }
   return NS_OK;
 }

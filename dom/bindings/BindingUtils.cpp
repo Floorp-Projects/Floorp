@@ -45,6 +45,7 @@
 #include "mozilla/dom/HTMLAppletElementBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ResolveSystemBinding.h"
+#include "mozilla/dom/WebIDLGlobalNameHash.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
@@ -2936,19 +2937,14 @@ RegisterDOMNames()
     return NS_OK;
   }
 
+  // Register new DOM bindings
+  WebIDLGlobalNameHash::Init();
+
   nsresult rv = nsDOMClassInfo::Init();
   if (NS_FAILED(rv)) {
     NS_ERROR("Could not initialize nsDOMClassInfo");
     return rv;
   }
-
-  // Register new DOM bindings
-  nsScriptNameSpaceManager* nameSpaceManager = GetNameSpaceManager();
-  if (!nameSpaceManager) {
-    NS_ERROR("Could not initialize nsScriptNameSpaceManager");
-    return NS_ERROR_FAILURE;
-  }
-  mozilla::dom::Register(nameSpaceManager);
 
   sRegisteredDOMNames = true;
 

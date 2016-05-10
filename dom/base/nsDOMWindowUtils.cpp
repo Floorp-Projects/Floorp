@@ -2503,7 +2503,7 @@ nsDOMWindowUtils::ComputeAnimationDistance(nsIDOMElement* aElement,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCSSProperty property =
-    nsCSSProps::LookupProperty(aProperty, nsCSSProps::eIgnoreEnabledState);
+    nsCSSProps::LookupProperty(aProperty, CSSEnabledState::eIgnoreEnabledState);
   if (property != eCSSProperty_UNKNOWN && nsCSSProps::IsShorthand(property)) {
     property = eCSSProperty_UNKNOWN;
   }

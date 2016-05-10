@@ -38,18 +38,17 @@ runNetworkTest(() => {
     },
     function PC_LOCAL_CANVAS_CAPTURESTREAM(test) {
       stream1 = canvas1.captureStream(0); // fps = 0 to capture single frame
-      test.pcLocal.attachMedia(stream1, 'video', 'local');
+      test.pcLocal.attachLocalStream(stream1);
       stream2 = canvas2.captureStream(0); // fps = 0 to capture single frame
-      test.pcLocal.attachMedia(stream2, 'video', 'local');
+      test.pcLocal.attachLocalStream(stream2);
     }
   ]);
 
   test.chain.append([
     function CHECK_REMOTE_VIDEO() {
-      var testremote = document.getElementById('pcRemote_remote3_video');
-      ok(!testremote, "Should not have remote3 video element for pcRemote");
-      vremote1 = document.getElementById('pcRemote_remote1_video');
-      vremote2 = document.getElementById('pcRemote_remote2_video');
+      is(test.pcRemote.remoteMediaElements.length, 2, "pcRemote Should have 2 remote media elements");
+      vremote1 = test.pcRemote.remoteMediaElements[0];
+      vremote2 = test.pcRemote.remoteMediaElements[1];
 
       // since we don't know which remote video is created first, we don't know
       // which should be blue or green, but this will make sure that one is

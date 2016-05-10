@@ -824,6 +824,14 @@ class Descriptor(DescriptorProvider):
             iface = iface.parent
         return True
 
+    @property
+    def registersGlobalNamesOnWindow(self):
+        return (not self.interface.isExternal() and
+                self.interface.hasInterfaceObject() and
+                not self.workers and
+                self.interface.isExposedInWindow() and
+                self.register)
+
 
 # Some utility methods
 def getTypesFromDescriptor(descriptor):

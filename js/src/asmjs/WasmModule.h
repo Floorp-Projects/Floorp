@@ -214,7 +214,7 @@ class CodeRange
     void assertValid();
 
   public:
-    enum Kind { Function, Entry, ImportJitExit, ImportInterpExit, ErrorExit, Inline, CallThunk };
+    enum Kind { Function, Entry, ImportJitExit, ImportInterpExit, Inline, CallThunk };
 
     CodeRange() = default;
     CodeRange(Kind kind, Offsets offsets);
@@ -251,8 +251,8 @@ class CodeRange
     bool isImportExit() const {
         return kind() == ImportJitExit || kind() == ImportInterpExit;
     }
-    bool isErrorExit() const {
-        return kind() == ErrorExit;
+    bool isInline() const {
+        return kind() == Inline;
     }
     uint32_t funcProfilingEntry() const {
         MOZ_ASSERT(isFunction());

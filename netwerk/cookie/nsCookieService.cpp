@@ -2387,7 +2387,11 @@ nsCookieService::Remove(const nsACString &aHost,
   }
 
   NeckoOriginAttributes attrs;
-  MOZ_ASSERT(attrs.Init(aCx, aOriginAttributes));
+  if (aArgc == 1 &&
+      (!aOriginAttributes.isObject() ||
+       !attrs.Init(aCx, aOriginAttributes))) {
+    return NS_ERROR_INVALID_ARG;
+  }
   return RemoveNative(aHost, aName, aPath, aBlocked, &attrs);
 }
 

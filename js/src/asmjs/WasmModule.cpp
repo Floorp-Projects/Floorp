@@ -383,7 +383,7 @@ CodeRange::CodeRange(Kind kind, ProfilingOffsets offsets)
 
     MOZ_ASSERT(begin_ < profilingReturn_);
     MOZ_ASSERT(profilingReturn_ < end_);
-    MOZ_ASSERT(u.kind_ == ImportJitExit || u.kind_ == ImportInterpExit || u.kind_ == ErrorExit);
+    MOZ_ASSERT(u.kind_ == ImportJitExit || u.kind_ == ImportInterpExit);
 }
 
 CodeRange::CodeRange(uint32_t funcIndex, uint32_t funcLineOrBytecode, FuncOffsets offsets)
@@ -818,7 +818,7 @@ Module::setProfilingEnabled(JSContext* cx, bool enabled)
         for (size_t i = 0; i < table.numElems; i++) {
             const CodeRange* codeRange = lookupCodeRange(array[i]);
             // Don't update entries for the BadIndirectCall exit.
-            if (codeRange->isErrorExit())
+            if (codeRange->isInline())
                 continue;
             void* from = code() + codeRange->funcNonProfilingEntry();
             void* to = code() + codeRange->funcProfilingEntry();
@@ -1081,7 +1081,7 @@ Module::staticallyLink(ExclusiveContext* cx, const StaticLinkData& linkData)
         for (size_t i = 0; i < table.elemOffsets.length(); i++) {
             uint8_t* elem = code() + table.elemOffsets[i];
             const CodeRange* codeRange = lookupCodeRange(elem);
-            if (profilingEnabled_ && !codeRange->isErrorExit())
+            if (profilingEnabled_ && !codeRange->isInline())
                 elem = code() + codeRange->funcProfilingEntry();
             array[i] = elem;
         }

@@ -356,22 +356,22 @@ public:
            mParsingMode == css::eUserSheetFeatures;
   }
 
-  nsCSSProps::EnabledState PropertyEnabledState() const {
-    static_assert(nsCSSProps::eEnabledForAllContent == 0,
-                  "nsCSSProps::eEnabledForAllContent should be zero for "
+  CSSEnabledState EnabledState() const {
+    static_assert(int(CSSEnabledState::eForAllContent) == 0,
+                  "CSSEnabledState::eForAllContent should be zero for "
                   "this bitfield to work");
-    nsCSSProps::EnabledState enabledState = nsCSSProps::eEnabledForAllContent;
+    CSSEnabledState enabledState = CSSEnabledState::eForAllContent;
     if (AgentRulesEnabled()) {
-      enabledState |= nsCSSProps::eEnabledInUASheets;
+      enabledState |= CSSEnabledState::eInUASheets;
     }
     if (mIsChrome) {
-      enabledState |= nsCSSProps::eEnabledInChrome;
+      enabledState |= CSSEnabledState::eInChrome;
     }
     return enabledState;
   }
 
   nsCSSProperty LookupEnabledProperty(const nsAString& aProperty) {
-    return nsCSSProps::LookupProperty(aProperty, PropertyEnabledState());
+    return nsCSSProps::LookupProperty(aProperty, EnabledState());
   }
 
 protected:
@@ -1905,7 +1905,7 @@ CSSParserImpl::ParseTransformProperty(const nsAString& aPropValue,
   if (parsedOK) {
     declaration->ExpandTo(&mData);
     changed = mData.TransferFromBlock(mTempData, eCSSProperty_transform,
-                                      PropertyEnabledState(), false,
+                                      EnabledState(), false,
                                       true, false, declaration,
                                       GetDocument());
     declaration->CompressFrom(&mData);
@@ -1952,7 +1952,7 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
 
   // Check for unknown or preffed off properties
   if (eCSSProperty_UNKNOWN == aPropID ||
-      !nsCSSProps::IsEnabled(aPropID, PropertyEnabledState())) {
+      !nsCSSProps::IsEnabled(aPropID, EnabledState())) {
     NS_ConvertASCIItoUTF16 propName(nsCSSProps::GetStringValue(aPropID));
     REPORT_UNEXPECTED_P(PEUnknownProperty, propName);
     REPORT_UNEXPECTED(PEDeclDropped);
@@ -1987,7 +1987,7 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
       // Do it the slow way
       aDeclaration->ExpandTo(&mData);
       *aChanged = mData.TransferFromBlock(mTempData, aPropID,
-                                          PropertyEnabledState(), aIsImportant,
+                                          EnabledState(), aIsImportant,
                                           true, false, aDeclaration,
                                           GetDocument());
       aDeclaration->CompressFrom(&mData);
@@ -3262,7 +3262,7 @@ CSSParserImpl::ParseAtRule(RuleAppendFunc aAppendFunc,
     newSection = eCSSSection_General;
 
   } else if ((nsCSSProps::IsEnabled(eCSSPropertyAlias_MozAnimation,
-                                    PropertyEnabledState()) &&
+                                    EnabledState()) &&
               mToken.mIdent.LowerCaseEqualsLiteral("-moz-keyframes")) ||
              (nsCSSProps::IsEnabled(eCSSPropertyAlias_WebkitAnimation) &&
               mToken.mIdent.LowerCaseEqualsLiteral("-webkit-keyframes")) ||
@@ -5914,21 +5914,13 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
 
   // stash away some info about this pseudo so we only have to get it once.
   bool isTreePseudo = false;
+  CSSEnabledState enabledState = EnabledState();
   CSSPseudoElementType pseudoElementType =
-    nsCSSPseudoElements::GetPseudoType(pseudo);
+    nsCSSPseudoElements::GetPseudoType(pseudo, enabledState);
   CSSPseudoClassType pseudoClassType =
-    nsCSSPseudoClasses::GetPseudoType(pseudo, AgentRulesEnabled(),
-                                      ChromeRulesEnabled());
+    nsCSSPseudoClasses::GetPseudoType(pseudo, enabledState);
   bool pseudoClassIsUserAction =
     nsCSSPseudoClasses::IsUserActionPseudoClass(pseudoClassType);
-
-  if (pseudoElementType < CSSPseudoElementType::Count && !AgentRulesEnabled() &&
-      nsCSSPseudoElements::PseudoElementIsUASheetOnly(pseudoElementType)) {
-    // This pseudo-element is not exposed to content.
-    REPORT_UNEXPECTED_TOKEN(PEPseudoSelUnknown);
-    UngetToken();
-    return eSelectorParsingStatus_Error;
-  }
 
   if (nsCSSAnonBoxes::IsNonElement(pseudo)) {
     // Non-element anonymous boxes should not match any rule.
@@ -7378,8 +7370,7 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
     aDeclaration->AddVariableDeclaration(varName, variableType, variableValue,
                                          status == ePriority_Important, false);
   } else {
-    *aChanged |= mData.TransferFromBlock(mTempData, propID,
-                                         PropertyEnabledState(),
+    *aChanged |= mData.TransferFromBlock(mTempData, propID, EnabledState(),
                                          status == ePriority_Important,
                                          false, aMustCallValueAppended,
                                          aDeclaration, GetDocument());
@@ -11385,8 +11376,7 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
         if (nsCSSProps::IsShorthand(aPropID)) {
           // If this is a shorthand property, we store the token stream on each
           // of its corresponding longhand properties.
-          CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPropID,
-                                               PropertyEnabledState()) {
+          CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPropID, EnabledState()) {
             nsCSSValueTokenStream* tokenStream = new nsCSSValueTokenStream;
             tokenStream->mPropertyID = *p;
             tokenStream->mShorthandPropertyID = aPropID;
@@ -17017,7 +17007,7 @@ CSSParserImpl::ParseAll()
   // instead of computing the correct EnabledState value we just expand out
   // to all content-visible properties.
   CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, eCSSProperty_all,
-                                       nsCSSProps::eEnabledForAllContent) {
+                                       CSSEnabledState::eForAllContent) {
     AppendValue(*p, value);
   }
   return true;

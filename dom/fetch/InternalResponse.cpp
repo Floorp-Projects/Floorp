@@ -87,37 +87,6 @@ InternalResponse::SetPrincipalInfo(UniquePtr<mozilla::ipc::PrincipalInfo> aPrinc
   mPrincipalInfo = Move(aPrincipalInfo);
 }
 
-nsresult
-InternalResponse::StripFragmentAndSetUrl(const nsACString& aUrl)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsCOMPtr<nsIURI> iuri;
-  nsresult rv;
-
-  rv = NS_NewURI(getter_AddRefs(iuri), aUrl);
-  if(NS_WARN_IF(NS_FAILED(rv))){
-    return rv;
-  }
-
-  nsCOMPtr<nsIURI> iuriClone;
-  // We use CloneIgnoringRef to strip away the fragment even if the original URI
-  // is immutable.
-  rv = iuri->CloneIgnoringRef(getter_AddRefs(iuriClone));
-  if(NS_WARN_IF(NS_FAILED(rv))){
-    return rv;
-  }
-
-  nsCString spec;
-  rv = iuriClone->GetSpec(spec);
-  if(NS_WARN_IF(NS_FAILED(rv))){
-    return rv;
-  }
-
-  SetUrl(spec);
-  return NS_OK;
-}
-
 LoadTainting
 InternalResponse::GetTainting() const
 {
@@ -160,9 +129,10 @@ already_AddRefed<InternalResponse>
 InternalResponse::OpaqueRedirectResponse()
 {
   MOZ_ASSERT(!mWrappedResponse, "Can't OpaqueRedirectResponse a already wrapped response");
+  MOZ_ASSERT(!mURLList.IsEmpty(), "URLList should not be emtpy for internalResponse");
   RefPtr<InternalResponse> response = OpaqueResponse();
   response->mType = ResponseType::Opaqueredirect;
-  response->mURL = mURL;
+  response->mURLList = mURLList;
   return response.forget();
 }
 
@@ -172,7 +142,7 @@ InternalResponse::CreateIncompleteCopy()
   RefPtr<InternalResponse> copy = new InternalResponse(mStatus, mStatusText);
   copy->mType = mType;
   copy->mTerminationReason = mTerminationReason;
-  copy->mURL = mURL;
+  copy->mURLList = mURLList;
   copy->mChannelInfo = mChannelInfo;
   if (mPrincipalInfo) {
     copy->mPrincipalInfo = MakeUnique<mozilla::ipc::PrincipalInfo>(*mPrincipalInfo);
