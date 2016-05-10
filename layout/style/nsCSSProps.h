@@ -15,7 +15,6 @@
 #include "nsCSSProperty.h"
 #include "nsStyleStructFwd.h"
 #include "nsCSSKeywords.h"
-#include "mozilla/CSSEnabledState.h"
 #include "mozilla/UseCounter.h"
 
 // Length of the "--" prefix on custom names (such as custom property names,
@@ -331,8 +330,6 @@ enum nsStyleAnimType {
 
 class nsCSSProps {
 public:
-  typedef mozilla::CSSEnabledState EnabledState;
-
   struct KTableEntry {
     nsCSSKeyword mKeyword;
     int16_t mValue;
@@ -340,6 +337,21 @@ public:
 
   static void AddRefTable(void);
   static void ReleaseTable(void);
+
+  enum EnabledState {
+    // The default EnabledState: only enable what's enabled for all content,
+    // given the current values of preferences.
+    eEnabledForAllContent = 0,
+    // Enable a property in UA sheets.
+    eEnabledInUASheets    = 0x01,
+    // Enable a property in chrome code.
+    eEnabledInChrome      = 0x02,
+    // Special value to unconditionally enable a property. This implies all the
+    // bits above, but is strictly more than just their OR-ed union.
+    // This just skips any test so a property will be enabled even if it would
+    // have been disabled with all the bits above set.
+    eIgnoreEnabledState   = 0xff
+  };
 
   // Looks up the property with name aProperty and returns its corresponding
   // nsCSSProperty value.  If aProperty is the name of a custom property,
@@ -612,15 +624,15 @@ public:
     if (IsEnabled(aProperty)) {
       return true;
     }
-    if (aEnabled == EnabledState::eIgnoreEnabledState) {
+    if (aEnabled == eIgnoreEnabledState) {
       return true;
     }
-    if ((aEnabled & EnabledState::eInUASheets) &&
+    if ((aEnabled & eEnabledInUASheets) &&
         PropHasFlags(aProperty, CSS_PROPERTY_ENABLED_IN_UA_SHEETS))
     {
       return true;
     }
-    if ((aEnabled & EnabledState::eInChrome) &&
+    if ((aEnabled & eEnabledInChrome) &&
         PropHasFlags(aProperty, CSS_PROPERTY_ENABLED_IN_CHROME))
     {
       return true;
@@ -632,13 +644,13 @@ public:
 
 // Storing the enabledstate_ value in an nsCSSProperty variable is a small hack
 // to avoid needing a separate variable declaration for its real type
-// (CSSEnabledState), which would then require using a block and
+// (nsCSSProps::EnabledState), which would then require using a block and
 // therefore a pair of macros by consumers for the start and end of the loop.
 #define CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(it_, prop_, enabledstate_)       \
   for (const nsCSSProperty *it_ = nsCSSProps::SubpropertyEntryFor(prop_),     \
                             es_ = (nsCSSProperty) (enabledstate_);            \
        *it_ != eCSSProperty_UNKNOWN; ++it_)                                   \
-    if (nsCSSProps::IsEnabled(*it_, (mozilla::CSSEnabledState) es_))
+    if (nsCSSProps::IsEnabled(*it_, (nsCSSProps::EnabledState) es_))
 
   // Keyword/Enum value tables
   static const KTableEntry kAnimationDirectionKTable[];
@@ -827,5 +839,29 @@ public:
   static const KTableEntry kWordWrapKTable[];
   static const KTableEntry kWritingModeKTable[];
 };
+
+inline nsCSSProps::EnabledState operator|(nsCSSProps::EnabledState a,
+                                          nsCSSProps::EnabledState b)
+{
+  return nsCSSProps::EnabledState(int(a) | int(b));
+}
+
+inline nsCSSProps::EnabledState operator&(nsCSSProps::EnabledState a,
+                                          nsCSSProps::EnabledState b)
+{
+  return nsCSSProps::EnabledState(int(a) & int(b));
+}
+
+inline nsCSSProps::EnabledState& operator|=(nsCSSProps::EnabledState& a,
+                                            nsCSSProps::EnabledState b)
+{
+  return a = a | b;
+}
+
+inline nsCSSProps::EnabledState& operator&=(nsCSSProps::EnabledState& a,
+                                            nsCSSProps::EnabledState b)
+{
+  return a = a & b;
+}
 
 #endif /* nsCSSProps_h___ */

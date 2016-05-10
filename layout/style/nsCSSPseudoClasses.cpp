@@ -44,16 +44,14 @@ static const nsStaticAtom CSSPseudoClasses_info[] = {
 // Flags data for each of the pseudo-classes, which must be separate
 // from the previous array since there's no place for it in
 // nsStaticAtom.
-/* static */ const uint32_t
-nsCSSPseudoClasses::kPseudoClassFlags[Type::Count] = {
+static const uint32_t CSSPseudoClasses_flags[] = {
 #define CSS_PSEUDO_CLASS(name_, value_, flags_, pref_) \
   flags_,
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
 };
 
-/* static */ bool
-nsCSSPseudoClasses::sPseudoClassEnabled[Type::Count] = {
+static bool sPseudoClassEnabled[] = {
 // If the pseudo class has any "ENABLED_IN" flag set, it is disabled by
 // default. Note that, if a pseudo class has pref, whatever its default
 // value is, it'll later be changed in nsCSSPseudoClasses::AddRefAtoms()
@@ -110,14 +108,27 @@ nsCSSPseudoClasses::PseudoTypeToString(Type aType, nsAString& aString)
 }
 
 /* static */ CSSPseudoClassType
-nsCSSPseudoClasses::GetPseudoType(nsIAtom* aAtom, EnabledState aEnabledState)
+nsCSSPseudoClasses::GetPseudoType(nsIAtom* aAtom,
+                                  bool aAgentEnabled, bool aChromeEnabled)
 {
   for (uint32_t i = 0; i < ArrayLength(CSSPseudoClasses_info); ++i) {
     if (*CSSPseudoClasses_info[i].mAtom == aAtom) {
       Type type = Type(i);
-      return IsEnabled(type, aEnabledState) ? type : Type::NotPseudo;
+      if (sPseudoClassEnabled[i]) {
+        return type;
+      } else {
+        auto flags = FlagsForPseudoClass(type);
+        if ((aChromeEnabled &&
+             (flags & CSS_PSEUDO_CLASS_ENABLED_IN_CHROME)) ||
+            (aAgentEnabled &&
+             (flags & CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS))) {
+          return type;
+        }
+      }
+      return Type::NotPseudo;
     }
   }
+
   return Type::NotPseudo;
 }
 
@@ -129,3 +140,13 @@ nsCSSPseudoClasses::IsUserActionPseudoClass(Type aType)
          aType == Type::active ||
          aType == Type::focus;
 }
+
+/* static */ uint32_t
+nsCSSPseudoClasses::FlagsForPseudoClass(const Type aType)
+{
+  size_t index = static_cast<size_t>(aType);
+  NS_ASSERTION(index < ArrayLength(CSSPseudoClasses_flags),
+               "argument must be a pseudo-class");
+  return CSSPseudoClasses_flags[index];
+}
+

@@ -224,7 +224,7 @@ inCSSValueSearch::AddPropertyCriteria(const char16_t *aPropName)
 {
   nsCSSProperty prop =
     nsCSSProps::LookupProperty(nsDependentString(aPropName),
-                               CSSEnabledState::eIgnoreEnabledState);
+                               nsCSSProps::eIgnoreEnabledState);
   mProperties[mPropertyCount] = prop;
   mPropertyCount++;
   return NS_OK;

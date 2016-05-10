@@ -176,7 +176,7 @@ public:
    * in it.
    */
   static bool ComputeValues(nsCSSProperty aProperty,
-                            mozilla::CSSEnabledState aEnabledState,
+                            nsCSSProps::EnabledState aEnabledState,
                             mozilla::dom::Element* aTargetElement,
                             nsStyleContext* aStyleContext,
                             const nsAString& aSpecifiedValue,
@@ -188,7 +188,7 @@ public:
    * value. Only longhand properties are supported.
    */
   static bool ComputeValues(nsCSSProperty aProperty,
-                            mozilla::CSSEnabledState aEnabledState,
+                            nsCSSProps::EnabledState aEnabledState,
                             mozilla::dom::Element* aTargetElement,
                             nsStyleContext* aStyleContext,
                             const nsCSSValue& aSpecifiedValue,

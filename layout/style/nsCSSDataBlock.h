@@ -264,7 +264,7 @@ public:
    */
   bool TransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
                          nsCSSProperty aPropID,
-                         mozilla::CSSEnabledState aEnabledState,
+                         nsCSSProps::EnabledState aEnabledState,
                          bool aIsImportant,
                          bool aOverrideImportant,
                          bool aMustCallValueAppended,

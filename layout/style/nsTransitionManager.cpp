@@ -414,7 +414,7 @@ nsTransitionManager::UpdateTransitions(
         }
       } else if (nsCSSProps::IsShorthand(property)) {
         CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subprop, property,
-                                             CSSEnabledState::eForAllContent)
+                                             nsCSSProps::eEnabledForAllContent)
         {
           ConsiderStartingTransition(*subprop, t, aElement, aElementTransitions,
                                      aOldStyleContext, aNewStyleContext,
@@ -459,7 +459,7 @@ nsTransitionManager::UpdateTransitions(
           }
         } else if (nsCSSProps::IsShorthand(property)) {
           CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(
-              subprop, property, CSSEnabledState::eForAllContent) {
+              subprop, property, nsCSSProps::eEnabledForAllContent) {
             allTransitionProperties.AddProperty(*subprop);
           }
         } else {
@@ -530,7 +530,7 @@ nsTransitionManager::ConsiderStartingTransition(
   // Ignore disabled properties. We can arrive here if the transition-property
   // is 'all' and the disabled property has a default value which derives value
   // from another property, e.g. color.
-  if (!nsCSSProps::IsEnabled(aProperty, CSSEnabledState::eForAllContent)) {
+  if (!nsCSSProps::IsEnabled(aProperty, nsCSSProps::eEnabledForAllContent)) {
     return;
   }
 
