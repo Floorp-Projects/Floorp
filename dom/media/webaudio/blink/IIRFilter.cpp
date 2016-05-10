@@ -2,9 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "platform/audio/IIRFilter.h"
+#include "IIRFilter.h"
 
-#include "wtf/MathExtras.h"
 #include <complex>
 
 namespace blink {
@@ -15,14 +14,14 @@ const int kBufferLength = 32;
 static_assert(kBufferLength >= IIRFilter::kMaxOrder + 1,
     "Internal IIR buffer length must be greater than maximum IIR Filter order.");
 
-IIRFilter::IIRFilter(const AudioDoubleArray* feedforward, const AudioDoubleArray* feedback)
+IIRFilter::IIRFilter(const AudioDoubleArray* feedforwardCoef, const AudioDoubleArray* feedbackCoef)
     : m_bufferIndex(0)
-    , m_feedback(feedback)
-    , m_feedforward(feedforward)
+    , m_feedback(feedbackCoef)
+    , m_feedforward(feedforwardCoef)
 {
-    // These are guaranteed to be zero-initialized.
-    m_xBuffer.allocate(kBufferLength);
-    m_yBuffer.allocate(kBufferLength);
+    m_xBuffer.SetLength(kBufferLength);
+    m_yBuffer.SetLength(kBufferLength);
+    reset();
 }
 
 IIRFilter::~IIRFilter()
@@ -31,8 +30,8 @@ IIRFilter::~IIRFilter()
 
 void IIRFilter::reset()
 {
-    m_xBuffer.zero();
-    m_yBuffer.zero();
+    memset(m_xBuffer.Elements(), 0, m_xBuffer.Length() * sizeof(double));
+    memset(m_yBuffer.Elements(), 0, m_yBuffer.Length() * sizeof(double));
 }
 
 static std::complex<double> evaluatePolynomial(const double* coef, std::complex<double> z, int order)
@@ -57,22 +56,22 @@ void IIRFilter::process(const float* sourceP, float* destP, size_t framesToProce
 
     // This is a Direct Form I implementation of an IIR Filter.  Should we consider doing a
     // different implementation such as Transposed Direct Form II?
-    const double* feedback = m_feedback->data();
-    const double* feedforward = m_feedforward->data();
+    const double* feedback = m_feedback->Elements();
+    const double* feedforward = m_feedforward->Elements();
 
-    ASSERT(feedback);
-    ASSERT(feedforward);
+    MOZ_ASSERT(feedback);
+    MOZ_ASSERT(feedforward);
 
     // Sanity check to see if the feedback coefficients have been scaled appropriately. It must
     // be EXACTLY 1!
-    ASSERT(feedback[0] == 1);
+    MOZ_ASSERT(feedback[0] == 1);
 
-    int feedbackLength = m_feedback->size();
-    int feedforwardLength = m_feedforward->size();
+    int feedbackLength = m_feedback->Length();
+    int feedforwardLength = m_feedforward->Length();
     int minLength = std::min(feedbackLength, feedforwardLength);
 
-    double* xBuffer = m_xBuffer.data();
-    double* yBuffer = m_yBuffer.data();
+    double* xBuffer = m_xBuffer.Elements();
+    double* yBuffer = m_yBuffer.Elements();
 
     for (size_t n = 0; n < framesToProcess; ++n) {
         // To help minimize roundoff, we compute using double's, even though the filter coefficients
@@ -119,11 +118,11 @@ void IIRFilter::getFrequencyResponse(int nFrequencies, const float* frequency, f
 
     for (int k = 0; k < nFrequencies; ++k) {
         // zRecip = 1/z = exp(-j*frequency)
-        double omega = -piDouble * frequency[k];
+        double omega = -M_PI * frequency[k];
         std::complex<double> zRecip = std::complex<double>(cos(omega), sin(omega));
 
-        std::complex<double> numerator = evaluatePolynomial(m_feedforward->data(), zRecip, m_feedforward->size() - 1);
-        std::complex<double> denominator = evaluatePolynomial(m_feedback->data(), zRecip, m_feedback->size() - 1);
+        std::complex<double> numerator = evaluatePolynomial(m_feedforward->Elements(), zRecip, m_feedforward->Length() - 1);
+        std::complex<double> denominator = evaluatePolynomial(m_feedback->Elements(), zRecip, m_feedback->Length() - 1);
         std::complex<double> response = numerator / denominator;
         magResponse[k] = static_cast<float>(abs(response));
         phaseResponse[k] = static_cast<float>(atan2(imag(response), real(response)));
