@@ -851,12 +851,6 @@ Layer::CalculateScissorRect(const RenderTargetIntRect& aCurrentScissorRect)
   return currentClip.Intersect(scissor);
 }
 
-Maybe<ParentLayerIntRect>
-Layer::GetScrolledClipRect() const
-{
-  return mScrolledClip ? Some(mScrolledClip->GetClipRect()) : Nothing();
-}
-
 const ScrollMetadata&
 Layer::GetScrollMetadata(uint32_t aIndex) const
 {
@@ -1106,10 +1100,17 @@ Layer::GetCombinedClipRect() const
 {
   Maybe<ParentLayerIntRect> clip = GetClipRect();
 
-  clip = IntersectMaybeRects(clip, GetScrolledClipRect());
-
   for (size_t i = 0; i < mScrollMetadata.Length(); i++) {
-    clip = IntersectMaybeRects(clip, mScrollMetadata[i].GetClipRect());
+    if (!mScrollMetadata[i].HasClipRect()) {
+      continue;
+    }
+
+    const ParentLayerIntRect& other = mScrollMetadata[i].ClipRect();
+    if (clip) {
+      clip = Some(clip.value().Intersect(other));
+    } else {
+      clip = Some(other);
+    }
   }
 
   return clip;
@@ -1910,9 +1911,6 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   if (mClipRect) {
     AppendToString(aStream, *mClipRect, " [clip=", "]");
   }
-  if (mScrolledClip) {
-    AppendToString(aStream, mScrolledClip->GetClipRect(), " [scrolled-clip=", "]");
-  }
   if (1.0 != mPostXScale || 1.0 != mPostYScale) {
     aStream << nsPrintfCString(" [postScale=%g, %g]", mPostXScale, mPostYScale).get();
   }
@@ -1968,10 +1966,11 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   }
   if (GetIsFixedPosition()) {
     LayerPoint anchor = GetFixedPositionAnchor();
-    aStream << nsPrintfCString(" [isFixedPosition scrollId=%lld sides=0x%x anchor=%s]",
+    aStream << nsPrintfCString(" [isFixedPosition scrollId=%lld sides=0x%x anchor=%s%s]",
                      GetFixedPositionScrollContainerId(),
                      GetFixedPositionSides(),
-                     ToString(anchor).c_str()).get();
+                     ToString(anchor).c_str(),
+                     IsClipFixed() ? "" : " scrollingClip").get();
   }
   if (GetIsStickyPosition()) {
     aStream << nsPrintfCString(" [isStickyPosition scrollId=%d outer=%f,%f %fx%f "
