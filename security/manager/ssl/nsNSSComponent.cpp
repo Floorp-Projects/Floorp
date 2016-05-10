@@ -24,7 +24,6 @@
 #include "nsClientAuthRemember.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsIBufEntropyCollector.h"
 #include "nsICertOverrideService.h"
 #include "nsIFile.h"
 #include "nsIObserverService.h"
@@ -1693,42 +1692,13 @@ nsNSSComponent::Init()
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsCOMPtr<nsIEntropyCollector> ec(
-    do_GetService(NS_ENTROPYCOLLECTOR_CONTRACTID));
-  if (!ec) {
-    return NS_ERROR_FAILURE;
-  }
-  nsCOMPtr<nsIBufEntropyCollector> bec(do_QueryInterface(ec));
-  if (!bec) {
-    return NS_ERROR_FAILURE;
-  }
-  bec->ForwardTo(this);
-
   return RegisterObservers();
 }
 
 // nsISupports Implementation for the class
 NS_IMPL_ISUPPORTS(nsNSSComponent,
-                  nsIEntropyCollector,
                   nsINSSComponent,
                   nsIObserver)
-
-NS_IMETHODIMP
-nsNSSComponent::RandomUpdate(void* entropy, int32_t bufLen)
-{
-  nsNSSShutDownPreventionLock locker;
-
-  // Asynchronous event happening often,
-  // must not interfere with initialization or profile switch.
-
-  MutexAutoLock lock(mutex);
-
-  if (!mNSSInitialized)
-      return NS_ERROR_NOT_INITIALIZED;
-
-  PK11_RandomUpdate(entropy, bufLen);
-  return NS_OK;
-}
 
 static const char* const PROFILE_BEFORE_CHANGE_TOPIC = "profile-before-change";
 
@@ -1744,18 +1714,6 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("nsNSSComponent: XPCom shutdown observed\n"));
 
     // Cleanup code that requires services, it's too late in destructor.
-
-    nsCOMPtr<nsIEntropyCollector> ec
-        = do_GetService(NS_ENTROPYCOLLECTOR_CONTRACTID);
-
-    if (ec) {
-      nsCOMPtr<nsIBufEntropyCollector> bec
-        = do_QueryInterface(ec);
-      if (bec) {
-        bec->DontForward();
-      }
-    }
-
     deleteBackgroundThreads();
   }
   else if (nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) {
