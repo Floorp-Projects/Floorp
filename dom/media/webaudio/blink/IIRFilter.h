@@ -5,13 +5,11 @@
 #ifndef IIRFilter_h
 #define IIRFilter_h
 
-#include "platform/PlatformExport.h"
-#include "platform/audio/AudioArray.h"
-#include "wtf/Vector.h"
+typedef nsTArray<double> AudioDoubleArray;
 
 namespace blink {
 
-class PLATFORM_EXPORT IIRFilter final {
+class IIRFilter final {
 public:
     // The maximum IIR filter order.  This also limits the number of feedforward coefficients.  The
     // maximum number of coefficients is 20 according to the spec.
@@ -48,8 +46,7 @@ private:
     // yBuffer[bufferIndex] is where y[n], the current output value.
     int m_bufferIndex;
 
-    // Coefficients of the IIR filter.  To minimize storage, these point to the arrays given in the
-    // constructor.
+    // Coefficients of the IIR filter.
     const AudioDoubleArray* m_feedback;
     const AudioDoubleArray* m_feedforward;
 };
