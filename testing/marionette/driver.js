@@ -2409,7 +2409,7 @@ GeckoDriver.prototype.setScreenOrientation = function(cmd, resp) {
   let or = String(cmd.parameters.orientation);
   let mozOr = or.toLowerCase();
   if (ors.indexOf(mozOr) < 0) {
-    throw new WebDriverError(`Unknown screen orientation: ${or}`);
+    throw new InvalidArgumentError(`Unknown screen orientation: ${or}`);
   }
 
   let win = this.getCurrentWindow();
