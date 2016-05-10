@@ -303,15 +303,6 @@ CDMCallbackProxy::KeyStatusChanged(const nsCString& aSessionId,
 }
 
 void
-CDMCallbackProxy::SetCaps(uint64_t aCaps)
-{
-  MOZ_ASSERT(mProxy->IsOnGMPThread());
-
-  CDMCaps::AutoLock caps(mProxy->Capabilites());
-  caps.SetCaps(aCaps);
-}
-
-void
 CDMCallbackProxy::Decrypted(uint32_t aId,
                             GMPErr aResult,
                             const nsTArray<uint8_t>& aDecryptedData)

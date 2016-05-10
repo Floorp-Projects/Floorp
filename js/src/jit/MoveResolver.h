@@ -191,8 +191,8 @@ class MoveOp
         INT32,
         FLOAT32,
         DOUBLE,
-        INT32X4,
-        FLOAT32X4
+        SIMD128INT,
+        SIMD128FLOAT
     };
 
   protected:

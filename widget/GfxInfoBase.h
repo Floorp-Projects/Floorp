@@ -8,20 +8,21 @@
 #ifndef __mozilla_widget_GfxInfoBase_h__
 #define __mozilla_widget_GfxInfoBase_h__
 
-#include "nsIGfxInfo.h"
-#include "nsCOMPtr.h"
-#include "nsIObserver.h"
-#include "nsWeakReference.h"
 #include "GfxDriverInfo.h"
-#include "nsTArray.h"
-#include "nsString.h"
 #include "GfxInfoCollector.h"
-#include "gfxTelemetry.h"
 #include "gfxFeature.h"
-#include "nsIGfxInfoDebug.h"
-#include "mozilla/Mutex.h"
+#include "gfxTelemetry.h"
 #include "js/Value.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/Mutex.h"
+#include "nsCOMPtr.h"
+#include "nsIGfxInfo.h"
+#include "nsIGfxInfoDebug.h"
+#include "nsIObserver.h"
+#include "nsString.h"
+#include "nsTArray.h"
+#include "nsWeakReference.h"
 
 namespace mozilla {
 namespace widget {  
@@ -107,7 +108,8 @@ protected:
     JSContext* aCx,
     JS::Handle<JSObject*> aContainer,
     const char* aName,
-    mozilla::gfx::FeatureStatus aFeatureStatus,
+    int32_t aFeature,
+    Maybe<mozilla::gfx::FeatureStatus> aKnownStatus,
     JS::MutableHandle<JSObject*> aOutObj);
 
 private:

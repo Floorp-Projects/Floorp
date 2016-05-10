@@ -815,10 +815,10 @@ class Decoder
 
 typedef Vector<ValType, 8, SystemAllocPolicy> ValTypeVector;
 
-bool
+MOZ_MUST_USE bool
 EncodeLocalEntries(Encoder& d, const ValTypeVector& locals);
 
-bool
+MOZ_MUST_USE bool
 DecodeLocalEntries(Decoder& d, ValTypeVector* locals);
 
 } // namespace wasm

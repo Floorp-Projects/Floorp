@@ -32,6 +32,10 @@ def verbose_wrapper(formatter, verbose):
     formatter.verbose = verbose
     return formatter
 
+def compact_wrapper(formatter, compact):
+    formatter.compact = compact
+    return formatter
+
 def buffer_handler_wrapper(handler, buffer_limit):
     if buffer_limit == "UNLIMITED":
         buffer_limit = None
@@ -63,6 +67,9 @@ fmt_options = {
     'verbose': (verbose_wrapper,
                 "Enables verbose mode for the given formatter.",
                 ["mach"], "store_true"),
+    'compact': (compact_wrapper,
+                "Enables compact mode for the given formatter.",
+                ["tbpl"], "store_true"),
     'level': (level_filter_wrapper,
               "A least log level to subscribe to for the given formatter (debug, info, error, etc.)",
               ["mach", "raw", "tbpl"], "store"),

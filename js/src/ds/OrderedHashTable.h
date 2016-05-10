@@ -83,7 +83,7 @@ class OrderedHashTable
     explicit OrderedHashTable(AllocPolicy& ap)
         : hashTable(nullptr), data(nullptr), dataLength(0), ranges(nullptr), alloc(ap) {}
 
-    bool init() {
+    MOZ_MUST_USE bool init() {
         MOZ_ASSERT(!hashTable, "init must be called at most once");
 
         uint32_t buckets = initialBuckets();
@@ -150,7 +150,7 @@ class OrderedHashTable
      * means the element was not added to the table.
      */
     template <typename ElementInput>
-    bool put(ElementInput&& element) {
+    MOZ_MUST_USE bool put(ElementInput&& element) {
         HashNumber h = prepareHash(Ops::getKey(element));
         if (Data* e = lookup(Ops::getKey(element), h)) {
             e->element = Forward<ElementInput>(element);
@@ -221,7 +221,7 @@ class OrderedHashTable
      * particular, those Ranges are still live and will see any entries added
      * after a successful clear().
      */
-    bool clear() {
+    MOZ_MUST_USE bool clear() {
         if (dataLength != 0) {
             Data** oldHashTable = hashTable;
             Data* oldData = data;
@@ -627,7 +627,7 @@ class OrderedHashTable
      * empty elements in data[0:dataLength]. On allocation failure, this
      * leaves everything as it was and returns false.
      */
-    bool rehash(uint32_t newHashShift) {
+    MOZ_MUST_USE bool rehash(uint32_t newHashShift) {
         // If the size of the table is not changing, rehash in place to avoid
         // allocating memory.
         if (newHashShift == hashShift) {

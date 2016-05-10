@@ -1,0 +1,1 @@
+""" macholib_tests package """

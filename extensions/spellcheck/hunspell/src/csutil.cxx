@@ -2783,7 +2783,7 @@ class is_any_of {
   bool operator()(char c) { return chars.find(c) != std::string::npos; }
 
  private:
-  const std::string& chars;
+  std::string chars;
 };
 }
 

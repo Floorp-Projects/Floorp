@@ -40,25 +40,17 @@ function String_match(regexp) {
     // Step 3.
     var S = ToString(this);
 
-    // FIXME: Non-standard flags argument (bug 1108382).
-    var flags = undefined;
-    if (arguments.length > 1) {
-        if (IsMatchFlagsArgumentEnabled())
-            flags = ToString(arguments[1]);
-        WarnOnceAboutFlagsArgument();
-    } else {
-        if (isPatternString && IsStringMatchOptimizable()) {
-            var flatResult = FlatStringMatch(S, regexp);
-            if (flatResult !== undefined)
-                return flatResult;
-        }
+    if (isPatternString && IsStringMatchOptimizable()) {
+        var flatResult = FlatStringMatch(S, regexp);
+        if (flatResult !== undefined)
+            return flatResult;
     }
 
     // Step 4.
-    var rx = RegExpCreate(regexp, flags);
+    var rx = RegExpCreate(regexp);
 
     // Step 5 (optimized case).
-    if (IsStringMatchOptimizable() && !flags)
+    if (IsStringMatchOptimizable())
         return RegExpMatcher(rx, S, 0);
 
     // Step 5.
@@ -161,18 +153,6 @@ function String_replace(searchValue, replaceValue) {
     // Step 4.
     var searchString = ToString(searchValue);
 
-    // FIXME: Non-standard flags argument (bug 1108382).
-    var flags = undefined;
-    if (arguments.length > 2) {
-        WarnOnceAboutFlagsArgument();
-        if (IsMatchFlagsArgumentEnabled()) {
-            flags = ToString(arguments[2]);
-            var rx = RegExpCreate(RegExpEscapeMetaChars(searchString), flags);
-
-            return callContentFunction(GetMethod(rx, std_replace), rx, string, replaceValue);
-        }
-    }
-
     if (typeof replaceValue === "string") {
         // Steps 6-12: Optimized for string case.
         return StringReplaceString(string, searchString, replaceValue);
@@ -253,22 +233,14 @@ function String_search(regexp) {
     // Step 3.
     var string = ToString(this);
 
-    // FIXME: Non-standard flags argument (bug 1108382).
-    var flags = undefined;
-    if (arguments.length > 1) {
-        if (IsMatchFlagsArgumentEnabled())
-            flags = ToString(arguments[1]);
-        WarnOnceAboutFlagsArgument();
-    } else {
-        if (isPatternString && IsStringSearchOptimizable()) {
-            var flatResult = FlatStringSearch(string, regexp);
-            if (flatResult !== -2)
-                return flatResult;
-        }
+    if (isPatternString && IsStringSearchOptimizable()) {
+        var flatResult = FlatStringSearch(string, regexp);
+        if (flatResult !== -2)
+            return flatResult;
     }
 
     // Step 4.
-    var rx = RegExpCreate(regexp, flags);
+    var rx = RegExpCreate(regexp);
 
     // Step 5.
     return callContentFunction(GetMethod(rx, std_search), rx, string);

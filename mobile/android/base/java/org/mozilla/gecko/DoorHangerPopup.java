@@ -122,6 +122,8 @@ public class DoorHangerPopup extends AnchoredPopup
             doorhangerType = DoorHanger.Type.DESKTOPNOTIFICATION2;
         } else if (DoorHanger.Type.WEBRTC.toString().equals(typeString)) {
             doorhangerType = DoorHanger.Type.WEBRTC;
+        } else if (DoorHanger.Type.VIBRATION.toString().equals(typeString)) {
+            doorhangerType = DoorHanger.Type.VIBRATION;
         }
 
         final DoorhangerConfig config = new DoorhangerConfig(tabId, id, doorhangerType, this);
@@ -307,10 +309,6 @@ public class DoorHangerPopup extends AnchoredPopup
         }
 
         showDividers();
-        if (isShowing()) {
-            show();
-            return;
-        }
 
         final String baseDomain = tab.getBaseDomain();
 
@@ -318,6 +316,11 @@ public class DoorHangerPopup extends AnchoredPopup
             firstDoorhanger.hideTitle();
         } else {
             firstDoorhanger.showTitle(tab.getFavicon(), baseDomain);
+        }
+
+        if (isShowing()) {
+            show();
+            return;
         }
 
         // Make the popup focusable for accessibility. This gets done here

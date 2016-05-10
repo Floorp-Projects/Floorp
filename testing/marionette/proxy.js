@@ -224,6 +224,10 @@ proxy.AsyncMessageChannel = class {
   }
 
   removeListener_(path) {
+    if (!this.listeners_.has(path)) {
+      return true;
+    }
+
     let l = this.listeners_.get(path);
     this.mm.removeMessageListener(path, l[1]);
     return this.listeners_.delete(path);
@@ -241,6 +245,78 @@ proxy.AsyncMessageChannel.ReplyType = {
   Ok: 0,
   Value: 1,
   Error: 2,
+};
+
+/**
+ * A transparent content-to-chrome RPC interface where responses are
+ * presented as promises.
+ *
+ * @param {nsIFrameMessageManager} frameMessageManager
+ *     The content frame's message manager, which itself is usually an
+ *     implementor of.
+ */
+proxy.toChromeAsync = function(frameMessageManager) {
+  let sender = new AsyncChromeSender(frameMessageManager);
+  return new Proxy(sender, ownPriorityGetterTrap);
+};
+
+/**
+ * Sends asynchronous RPC messages to chrome space using a frame's
+ * sendAsyncMessage (nsIAsyncMessageSender) function.
+ *
+ * Example on how to use from a frame content script:
+ *
+ *     let sender = new AsyncChromeSender(messageManager);
+ *     let promise = sender.send("runEmulatorCmd", "my command");
+ *     let rv = yield promise;
+ */
+this.AsyncChromeSender = class {
+  constructor(frameMessageManager) {
+    this.mm = frameMessageManager;
+  }
+
+  /**
+   * Call registered function in chrome context.
+   *
+   * @param {string} name
+   *     Function to call in the chrome, e.g. for "Marionette:foo", use
+   *     "foo".
+   * @param {?} args
+   *     Argument list to pass the function.  Must be JSON serialisable.
+   *
+   * @return {Promise}
+   *     A promise that resolves to the value sent back.
+   */
+  send(name, args) {
+    let uuid = uuidgen.generateUUID().toString();
+
+    let proxy = new Promise((resolve, reject) => {
+      let responseListener = msg => {
+        if (msg.json.id != uuid) {
+          return;
+        }
+
+        this.mm.removeMessageListener(
+            "Marionette:listenerResponse", responseListener);
+
+        if ("value" in msg.json) {
+          resolve(msg.json.value);
+        } else if ("error" in msg.json) {
+          reject(msg.json.error);
+        } else {
+          throw new TypeError(
+              `Unexpected response: ${msg.name} ${JSON.stringify(msg.json)}`);
+        }
+      };
+
+      let msg = {arguments: marshal(args), id: uuid};
+      this.mm.addMessageListener(
+          "Marionette:listenerResponse", responseListener);
+      this.mm.sendAsyncMessage("Marionette:" + name, msg);
+    });
+
+    return proxy;
+  }
 };
 
 /**
@@ -265,7 +341,8 @@ proxy.toChrome = function(sendSyncMessageFn) {
 
 /**
  * The SyncChromeSender sends synchronous RPC messages to the chrome
- * context, using a frame's sendSyncMessage (nsISyncMessageSender) function.
+ * context, using a frame's sendSyncMessage (nsISyncMessageSender)
+ * function.
  *
  * Example on how to use from a frame content script:
  *
@@ -278,7 +355,7 @@ proxy.SyncChromeSender = class {
   }
 
   send(func, args) {
-    let name = "Marionette:" + func;
+    let name = "Marionette:" + func.toString();
     return this.sendSyncMessage_(name, marshal(args));
   }
 };

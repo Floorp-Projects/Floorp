@@ -2325,14 +2325,8 @@ nsHTMLDocument::NamedGetter(JSContext* cx, const nsAString& aName, bool& aFound,
   aRetval.set(&val.toObject());
 }
 
-bool
-nsHTMLDocument::NameIsEnumerable(const nsAString& aName)
-{
-  return true;
-}
-
 void
-nsHTMLDocument::GetSupportedNames(unsigned, nsTArray<nsString>& aNames)
+nsHTMLDocument::GetSupportedNames(nsTArray<nsString>& aNames)
 {
   for (auto iter = mIdentifierMap.Iter(); !iter.Done(); iter.Next()) {
     nsIdentifierMapEntry* entry = iter.Get();

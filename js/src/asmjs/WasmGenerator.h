@@ -145,28 +145,29 @@ class MOZ_STACK_CLASS ModuleGenerator
     DebugOnly<bool>                 startedFuncDefs_;
     DebugOnly<bool>                 finishedFuncDefs_;
 
-    bool finishOutstandingTask();
+    MOZ_MUST_USE bool finishOutstandingTask();
     bool funcIsDefined(uint32_t funcIndex) const;
     uint32_t funcEntry(uint32_t funcIndex) const;
-    bool convertOutOfRangeBranchesToThunks();
-    bool finishTask(IonCompileTask* task);
-    bool finishCodegen(StaticLinkData* link);
-    bool finishStaticLinkData(uint8_t* code, uint32_t codeBytes, StaticLinkData* link);
-    bool addImport(const Sig& sig, uint32_t globalDataOffset);
-    bool allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* globalDataOffset);
+    MOZ_MUST_USE bool convertOutOfRangeBranchesToThunks();
+    MOZ_MUST_USE bool finishTask(IonCompileTask* task);
+    MOZ_MUST_USE bool finishCodegen(StaticLinkData* link);
+    MOZ_MUST_USE bool finishStaticLinkData(uint8_t* code, uint32_t codeBytes, StaticLinkData* link);
+    MOZ_MUST_USE bool addImport(const Sig& sig, uint32_t globalDataOffset);
+    MOZ_MUST_USE bool allocateGlobalBytes(uint32_t bytes, uint32_t align,
+                                          uint32_t* globalDataOffset);
 
   public:
     explicit ModuleGenerator(ExclusiveContext* cx);
     ~ModuleGenerator();
 
-    bool init(UniqueModuleGeneratorData shared, UniqueChars filename);
+    MOZ_MUST_USE bool init(UniqueModuleGeneratorData shared, UniqueChars filename);
 
     bool isAsmJS() const { return module_->kind == ModuleKind::AsmJS; }
     CompileArgs args() const { return module_->compileArgs; }
     jit::MacroAssembler& masm() { return masm_; }
 
     // Heap usage:
-    void initHeapUsage(HeapUsage heapUsage);
+    void initHeapUsage(HeapUsage heapUsage, uint32_t minHeapLength = 0);
     bool usesHeap() const;
 
     // Signatures:
@@ -178,7 +179,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     const DeclaredSig& funcSig(uint32_t funcIndex) const;
 
     // Globals:
-    bool allocateGlobal(ValType type, bool isConst, uint32_t* index);
+    MOZ_MUST_USE bool allocateGlobal(ValType type, bool isConst, uint32_t* index);
     const GlobalDesc& global(unsigned index) const { return shared_->globals[index]; }
 
     // Imports:
@@ -186,35 +187,37 @@ class MOZ_STACK_CLASS ModuleGenerator
     const ImportModuleGeneratorData& import(uint32_t index) const;
 
     // Exports:
-    bool declareExport(UniqueChars fieldName, uint32_t funcIndex, uint32_t* exportIndex = nullptr);
+    MOZ_MUST_USE bool declareExport(UniqueChars fieldName, uint32_t funcIndex,
+                                    uint32_t* exportIndex = nullptr);
     uint32_t numExports() const;
-    bool addMemoryExport(UniqueChars fieldName);
+    MOZ_MUST_USE bool addMemoryExport(UniqueChars fieldName);
 
     // Function definitions:
-    bool startFuncDefs();
-    bool startFuncDef(uint32_t lineOrBytecode, FunctionGenerator* fg);
-    bool finishFuncDef(uint32_t funcIndex, unsigned generateTime, FunctionGenerator* fg);
-    bool finishFuncDefs();
+    MOZ_MUST_USE bool startFuncDefs();
+    MOZ_MUST_USE bool startFuncDef(uint32_t lineOrBytecode, FunctionGenerator* fg);
+    MOZ_MUST_USE bool finishFuncDef(uint32_t funcIndex, unsigned generateTime,
+                                    FunctionGenerator* fg);
+    MOZ_MUST_USE bool finishFuncDefs();
 
     // Function-pointer tables:
     static const uint32_t BadIndirectCall = UINT32_MAX;
 
     // asm.js lazy initialization:
     void initSig(uint32_t sigIndex, Sig&& sig);
-    bool initFuncSig(uint32_t funcIndex, uint32_t sigIndex);
-    bool initImport(uint32_t importIndex, uint32_t sigIndex);
-    bool initSigTableLength(uint32_t sigIndex, uint32_t numElems);
+    void initFuncSig(uint32_t funcIndex, uint32_t sigIndex);
+    MOZ_MUST_USE bool initImport(uint32_t importIndex, uint32_t sigIndex);
+    MOZ_MUST_USE bool initSigTableLength(uint32_t sigIndex, uint32_t numElems);
     void initSigTableElems(uint32_t sigIndex, Uint32Vector&& elemFuncIndices);
     void bumpMinHeapLength(uint32_t newMinHeapLength);
 
     // Return a ModuleData object which may be used to construct a Module, the
     // StaticLinkData required to call Module::staticallyLink, and the list of
     // functions that took a long time to compile.
-    bool finish(CacheableCharsVector&& prettyFuncNames,
-                UniqueModuleData* module,
-                UniqueStaticLinkData* staticLinkData,
-                UniqueExportMap* exportMap,
-                SlowFunctionVector* slowFuncs);
+    MOZ_MUST_USE bool finish(CacheableCharsVector&& prettyFuncNames,
+                             UniqueModuleData* module,
+                             UniqueStaticLinkData* staticLinkData,
+                             UniqueExportMap* exportMap,
+                             SlowFunctionVector* slowFuncs);
 };
 
 // A FunctionGenerator encapsulates the generation of a single function body.
@@ -245,7 +248,7 @@ class MOZ_STACK_CLASS FunctionGenerator
     Bytes& bytes() {
         return bytes_;
     }
-    bool addCallSiteLineNum(uint32_t lineno) {
+    MOZ_MUST_USE bool addCallSiteLineNum(uint32_t lineno) {
         return callSiteLineNums_.append(lineno);
     }
 };

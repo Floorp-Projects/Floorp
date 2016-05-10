@@ -187,6 +187,16 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
+        "EXT_color_buffer_float",
+        GLVersion::GL3,
+        GLESVersion::NONE,
+        GLContext::Extension_None,
+        {
+            GLContext::EXT_color_buffer_float,
+            GLContext::Extensions_End
+        }
+    },
+    {
         // Removes clamping for float color outputs from frag shaders.
         "frag_color_float",
         GLVersion::GL3,
@@ -501,6 +511,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
         GLContext::Extension_None,
         {
             GLContext::ARB_texture_float,
+            GLContext::EXT_color_buffer_float,
             GLContext::EXT_color_buffer_half_float,
             GLContext::Extensions_End
         }

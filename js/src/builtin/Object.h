@@ -19,13 +19,13 @@ class Value;
 namespace js {
 
 // Object constructor native. Exposed only so the JIT can know its address.
-bool
+MOZ_MUST_USE bool
 obj_construct(JSContext* cx, unsigned argc, JS::Value* vp);
 
-bool
+MOZ_MUST_USE bool
 obj_propertyIsEnumerable(JSContext* cx, unsigned argc, Value* vp);
 
-bool
+MOZ_MUST_USE bool
 obj_valueOf(JSContext* cx, unsigned argc, JS::Value* vp);
 
 PlainObject*
@@ -36,32 +36,32 @@ PlainObject*
 ObjectCreateWithTemplate(JSContext* cx, HandlePlainObject templateObj);
 
 // Object methods exposed so they can be installed in the self-hosting global.
-bool
+MOZ_MUST_USE bool
 obj_create(JSContext* cx, unsigned argc, JS::Value* vp);
 
-bool
+MOZ_MUST_USE bool
 obj_defineProperty(JSContext* cx, unsigned argc, JS::Value* vp);
 
-bool
+MOZ_MUST_USE bool
 obj_getOwnPropertyNames(JSContext* cx, unsigned argc, JS::Value* vp);
 
-bool
+MOZ_MUST_USE bool
 obj_getOwnPropertyDescriptor(JSContext* cx, unsigned argc, JS::Value* vp);
 
-bool
+MOZ_MUST_USE bool
 obj_getPrototypeOf(JSContext* cx, unsigned argc, JS::Value* vp);
 
-bool
+MOZ_MUST_USE bool
 obj_hasOwnProperty(JSContext* cx, unsigned argc, JS::Value* vp);
 
-bool
+MOZ_MUST_USE bool
 obj_isExtensible(JSContext* cx, unsigned argc, JS::Value* vp);
 
-bool
+MOZ_MUST_USE bool
 obj_toString(JSContext* cx, unsigned argc, JS::Value* vp);
 
 // Exposed so SelfHosting.cpp can use it in the OwnPropertyKeys intrinsic
-bool
+MOZ_MUST_USE bool
 GetOwnPropertyKeys(JSContext* cx, const JS::CallArgs& args, unsigned flags);
 
 /*
@@ -69,7 +69,7 @@ GetOwnPropertyKeys(JSContext* cx, const JS::CallArgs& args, unsigned flags);
  * exposing a jsid to script for Object.getOwnProperty{Names,Symbols}
  * or scriptable proxy traps.
  */
-bool
+MOZ_MUST_USE bool
 IdToStringOrSymbol(JSContext* cx, JS::HandleId id, JS::MutableHandleValue result);
 
 #if JS_HAS_TOSOURCE
@@ -78,7 +78,7 @@ JSString*
 ObjectToSource(JSContext* cx, JS::HandleObject obj);
 #endif // JS_HAS_TOSOURCE
 
-extern bool
+extern MOZ_MUST_USE bool
 WatchHandler(JSContext* cx, JSObject* obj, jsid id, JS::Value old,
              JS::Value* nvp, void* closure);
 

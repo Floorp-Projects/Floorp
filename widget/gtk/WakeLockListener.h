@@ -14,8 +14,8 @@
 #include "nsClassHashtable.h"
 
 #include "nsIDOMWakeLockListener.h"
+#include "mozilla/ipc/DBusConnectionRefPtr.h"
 
-struct DBusConnection;
 class WakeLockTopic;
 
 /**
@@ -35,11 +35,11 @@ public:
 
 private:
   WakeLockListener();
-  ~WakeLockListener();
+  ~WakeLockListener() = default;
 
   static WakeLockListener* sSingleton;
 
-  DBusConnection* mConnection;
+  RefPtr<DBusConnection> mConnection;
   // Map of topic names to |WakeLockTopic|s.
   // We assume a small, finite-sized set of topics.
   nsClassHashtable<nsStringHashKey, WakeLockTopic> mTopics;

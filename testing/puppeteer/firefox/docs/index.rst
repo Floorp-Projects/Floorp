@@ -3,7 +3,7 @@
 Firefox Puppeteer
 =================
 
-Firefox Puppeteer is a library built on top of the `Marionette python client`_.
+`Firefox Puppeteer`_ is a library built on top of the `Marionette Python client`_.
 It aims to make automation of Firefox's browser UI simpler. It does **not**
 make sense to use Firefox Puppeteer if:
 
@@ -14,16 +14,23 @@ Roughly speaking, Firefox Puppeteer provides a library to manipulate each
 visual section of Firefox's browser UI. For example, there are different
 libraries for the tab bar, the navigation bar, etc.
 
+.. _Firefox Puppeteer: http://firefox-puppeteer.readthedocs.io/
+.. _Marionette Python client: http://marionette-client.readthedocs.org/
 
 Installation
 ------------
 
-Currently Firefox Puppeteer lives in the `firefox-ui-tests`_ repository,
-along with instructions for installation and usage.
-There are plans to move it alongside the `Marionette python client`_.
+For end-users Firefox Puppeteer can be easily installed as a `Python package`_
+from PyPI. If you want to contribute to the project we propose that you clone
+the `mozilla-central`_ repository and run the following commands::
 
-.. _Marionette python client: http://marionette-client.readthedocs.org/en/latest/
-.. _firefox-ui-tests: https://github.com/mozilla/firefox-ui-tests/tree/mozilla-central/firefox_puppeteer
+$ cd testing/puppeteer/firefox
+$ python setup.py develop
+
+In both cases all necessary files including all dependencies will be installed.
+
+.. _Python package: https://pypi.python.org/pypi/firefox-puppeteer
+.. _mozilla-central: https://hg.mozilla.org/mozilla-central
 
 
 Libraries

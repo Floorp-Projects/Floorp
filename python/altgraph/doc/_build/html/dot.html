@@ -1,0 +1,332 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>altgraph.Dot — Interface to the dot language &mdash; altgraph 0.11 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.11',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="altgraph 0.11 documentation" href="index.html" />
+    <link rel="prev" title="altgraph.GraphUtil — Utility functions" href="graphutil.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="graphutil.html" title="altgraph.GraphUtil — Utility functions"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">altgraph 0.11 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-altgraph.Dot">
+<span id="altgraph-dot-interface-to-the-dot-language"></span><h1><a class="reference internal" href="#module-altgraph.Dot" title="altgraph.Dot: Interface to the dot language as used by Graphviz.."><tt class="xref py py-mod docutils literal"><span class="pre">altgraph.Dot</span></tt></a> &#8212; Interface to the dot language<a class="headerlink" href="#module-altgraph.Dot" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference internal" href="#module-altgraph.Dot" title="altgraph.Dot: Interface to the dot language as used by Graphviz.."><tt class="xref py py-mod docutils literal"><span class="pre">Dot</span></tt></a> module provides a simple interface to the
+file format used in the <a class="reference external" href="&lt;http://www.research.att.com/sw/tools/graphviz/&gt;`_">graphviz</a> program. The module is intended to
+offload the most tedious part of the process (the <strong>dot</strong> file generation)
+while transparently exposing most of its features.</p>
+<p>To display the graphs or to generate image files the <a class="reference external" href="&lt;http://www.research.att.com/sw/tools/graphviz/&gt;`_">graphviz</a>
+package needs to be installed on the system, moreover the <strong class="command">dot</strong> and <strong class="command">dotty</strong> programs must
+be accesible in the program path so that they can be ran from processes spawned
+within the module.</p>
+<div class="section" id="example-usage">
+<h2>Example usage<a class="headerlink" href="#example-usage" title="Permalink to this headline">¶</a></h2>
+<p>Here is a typical usage:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">altgraph</span> <span class="kn">import</span> <span class="n">Graph</span><span class="p">,</span> <span class="n">Dot</span>
+
+<span class="c"># create a graph</span>
+<span class="n">edges</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span> <span class="p">]</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">Graph</span><span class="o">.</span><span class="n">Graph</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+
+<span class="c"># create a dot representation of the graph</span>
+<span class="n">dot</span> <span class="o">=</span> <span class="n">Dot</span><span class="o">.</span><span class="n">Dot</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+
+<span class="c"># display the graph</span>
+<span class="n">dot</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
+
+<span class="c"># save the dot representation into the mydot.dot file</span>
+<span class="n">dot</span><span class="o">.</span><span class="n">save_dot</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="s">&#39;mydot.dot&#39;</span><span class="p">)</span>
+
+<span class="c"># save dot file as gif image into the graph.gif file</span>
+<span class="n">dot</span><span class="o">.</span><span class="n">save_img</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="s">&#39;graph&#39;</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s">&#39;gif&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="directed-graph-and-non-directed-graph">
+<h2>Directed graph and non-directed graph<a class="headerlink" href="#directed-graph-and-non-directed-graph" title="Permalink to this headline">¶</a></h2>
+<p>Dot class can use for both directed graph and non-directed graph
+by passing <em>graphtype</em> parameter.</p>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># create directed graph(default)</span>
+<span class="n">dot</span> <span class="o">=</span> <span class="n">Dot</span><span class="o">.</span><span class="n">Dot</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">graphtype</span><span class="o">=</span><span class="s">&quot;digraph&quot;</span><span class="p">)</span>
+
+<span class="c"># create non-directed graph</span>
+<span class="n">dot</span> <span class="o">=</span> <span class="n">Dot</span><span class="o">.</span><span class="n">Dot</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">graphtype</span><span class="o">=</span><span class="s">&quot;graph&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="customizing-the-output">
+<h2>Customizing the output<a class="headerlink" href="#customizing-the-output" title="Permalink to this headline">¶</a></h2>
+<p>The graph drawing process may be customized by passing
+valid <strong class="command">dot</strong> parameters for the nodes and edges. For a list of all
+parameters see the <a class="reference external" href="&lt;http://www.research.att.com/sw/tools/graphviz/&gt;`_">graphviz</a> documentation.</p>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre># customizing the way the overall graph is drawn
+dot.style(size=&#39;10,10&#39;, rankdir=&#39;RL&#39;, page=&#39;5, 5&#39; , ranksep=0.75)
+
+# customizing node drawing
+dot.node_style(1, label=&#39;BASE_NODE&#39;,shape=&#39;box&#39;, color=&#39;blue&#39; )
+dot.node_style(2, style=&#39;filled&#39;, fillcolor=&#39;red&#39;)
+
+# customizing edge drawing
+dot.edge_style(1, 2, style=&#39;dotted&#39;)
+dot.edge_style(3, 5, arrowhead=&#39;dot&#39;, label=&#39;binds&#39;, labelangle=&#39;90&#39;)
+dot.edge_style(4, 5, arrowsize=2, style=&#39;bold&#39;)
+
+
+.. note::
+
+   dotty (invoked via :py:func:`~altgraph.Dot.display`) may not be able to
+   display all graphics styles. To verify the output save it to an image
+   file and look at it that way.
+</pre></div>
+</div>
+</div>
+<div class="section" id="valid-attributes">
+<h2>Valid attributes<a class="headerlink" href="#valid-attributes" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">dot styles, passed via the <a class="reference internal" href="#altgraph.Dot.Dot.style" title="altgraph.Dot.Dot.style"><tt class="xref py py-meth docutils literal"><span class="pre">Dot.style()</span></tt></a> method:</p>
+<div class="highlight-python"><div class="highlight"><pre>rankdir = &#39;LR&#39;   (draws the graph horizontally, left to right)
+ranksep = number (rank separation in inches)
+</pre></div>
+</div>
+</li>
+<li><p class="first">node attributes, passed via the <a class="reference internal" href="#altgraph.Dot.Dot.node_style" title="altgraph.Dot.Dot.node_style"><tt class="xref py py-meth docutils literal"><span class="pre">Dot.node_style()</span></tt></a> method:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">style</span> <span class="o">=</span> <span class="s">&#39;filled&#39;</span> <span class="o">|</span> <span class="s">&#39;invisible&#39;</span> <span class="o">|</span> <span class="s">&#39;diagonals&#39;</span> <span class="o">|</span> <span class="s">&#39;rounded&#39;</span>
+<span class="n">shape</span> <span class="o">=</span> <span class="s">&#39;box&#39;</span> <span class="o">|</span> <span class="s">&#39;ellipse&#39;</span> <span class="o">|</span> <span class="s">&#39;circle&#39;</span> <span class="o">|</span> <span class="s">&#39;point&#39;</span> <span class="o">|</span> <span class="s">&#39;triangle&#39;</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">edge attributes, passed via the <tt class="xref py py-meth docutils literal"><span class="pre">Dot.edge_style()</span></tt> method:</p>
+<div class="highlight-python"><div class="highlight"><pre>style     = &#39;dashed&#39; | &#39;dotted&#39; | &#39;solid&#39; | &#39;invis&#39; | &#39;bold&#39;
+arrowhead = &#39;box&#39; | &#39;crow&#39; | &#39;diamond&#39; | &#39;dot&#39; | &#39;inv&#39; | &#39;none&#39; | &#39;tee&#39; | &#39;vee&#39;
+weight    = number (the larger the number the closer the nodes will be)
+</pre></div>
+</div>
+</li>
+<li><p class="first">valid <a class="reference external" href="http://www.research.att.com/~erg/graphviz/info/colors.html">graphviz colors</a></p>
+</li>
+<li><p class="first">for more details on how to control the graph drawing process see the
+<a class="reference external" href="http://www.research.att.com/sw/tools/graphviz/refs.html">graphviz reference</a>.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="class-interface">
+<h2>Class interface<a class="headerlink" href="#class-interface" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="altgraph.Dot.Dot">
+<em class="property">class </em><tt class="descclassname">altgraph.Dot.</tt><tt class="descname">Dot</tt><big>(</big><em>graph</em><span class="optional">[</span>, <em>nodes</em><span class="optional">[</span>, <em>edgefn</em><span class="optional">[</span>, <em>nodevisitor</em><span class="optional">[</span>, <em>edgevisitor</em><span class="optional">[</span>, <em>name</em><span class="optional">[</span>, <em>dot</em><span class="optional">[</span>, <em>dotty</em><span class="optional">[</span>, <em>neato</em><span class="optional">[</span>, <em>graphtype</em><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#altgraph.Dot.Dot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new Dot generator based on the specified
+<a class="reference internal" href="graph.html#altgraph.Graph.Graph" title="altgraph.Graph.Graph"><tt class="xref py py-class docutils literal"><span class="pre">Graph</span></tt></a>.  The Dot generator won&#8217;t reference
+the <em>graph</em> once it is constructed.</p>
+<p>If the <em>nodes</em> argument is present it is the list of nodes to include
+in the graph, otherwise all nodes in <em>graph</em> are included.</p>
+<p>If the <em>edgefn</em> argument is present it is a function that yields the
+nodes connected to another node, this defaults to
+<tt class="xref py py-meth docutils literal"><span class="pre">graph.out_nbr</span></tt>. The constructor won&#8217;t
+add edges to the dot file unless both the head and tail of the edge
+are in <em>nodes</em>.</p>
+<p>If the <em>name</em> is present it specifies the name of the graph in the resulting
+dot file. The default is <tt class="docutils literal"><span class="pre">&quot;G&quot;</span></tt>.</p>
+<p>The functions <em>nodevisitor</em> and <em>edgevisitor</em> return the default style
+for a given edge or node (both default to functions that return an empty
+style).</p>
+<p>The arguments <em>dot</em>, <em>dotty</em> and <em>neato</em> are used to pass the path to
+the corresponding <a class="reference external" href="&lt;http://www.research.att.com/sw/tools/graphviz/&gt;`_">graphviz</a> command.</p>
+</dd></dl>
+
+<div class="section" id="updating-graph-attributes">
+<h3>Updating graph attributes<a class="headerlink" href="#updating-graph-attributes" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="altgraph.Dot.Dot.style">
+<tt class="descclassname">Dot.</tt><tt class="descname">style</tt><big>(</big><em>**attr</em><big>)</big><a class="headerlink" href="#altgraph.Dot.Dot.style" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the overall style (graph attributes) to the given attributes.</p>
+<p>See <a class="reference internal" href="#valid-attributes">Valid Attributes</a> for more information about the attributes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Dot.Dot.node_style">
+<tt class="descclassname">Dot.</tt><tt class="descname">node_style</tt><big>(</big><em>node</em>, <em>**attr</em><big>)</big><a class="headerlink" href="#altgraph.Dot.Dot.node_style" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the style for <em>node</em> to the given attributes.</p>
+<p>This method will add <em>node</em> to the graph when it isn&#8217;t already
+present.</p>
+<p>See <a class="reference internal" href="#valid-attributes">Valid Attributes</a> for more information about the attributes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Dot.Dot.all_node_style">
+<tt class="descclassname">Dot.</tt><tt class="descname">all_node_style</tt><big>(</big><em>**attr</em><big>)</big><a class="headerlink" href="#altgraph.Dot.Dot.all_node_style" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replaces the current style for all nodes</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Dot.edge_style">
+<tt class="descclassname">altgraph.Dot.</tt><tt class="descname">edge_style</tt><big>(</big><em>head</em>, <em>tail</em>, <em>**attr</em><big>)</big><a class="headerlink" href="#altgraph.Dot.edge_style" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the style of an edge to the given attributes. The edge will
+be added to the graph when it isn&#8217;t already present, but <em>head</em>
+and <em>tail</em> must both be valid nodes.</p>
+<p>See <a class="reference internal" href="#valid-attributes">Valid Attributes</a> for more information about the attributes.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="emitting-output">
+<h3>Emitting output<a class="headerlink" href="#emitting-output" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="altgraph.Dot.Dot.display">
+<tt class="descclassname">Dot.</tt><tt class="descname">display</tt><big>(</big><span class="optional">[</span><em>mode</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#altgraph.Dot.Dot.display" title="Permalink to this definition">¶</a></dt>
+<dd><p>Displays the current graph via dotty.</p>
+<p>If the <em>mode</em> is <tt class="docutils literal"><span class="pre">&quot;neato&quot;</span></tt> the dot file is processed with
+the neato command before displaying.</p>
+<p>This method won&#8217;t return until the dotty command exits.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Dot.save_dot">
+<tt class="descclassname">altgraph.Dot.</tt><tt class="descname">save_dot</tt><big>(</big><em>filename</em><big>)</big><a class="headerlink" href="#altgraph.Dot.save_dot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the current graph representation into the given file.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>For backward compatibility reasons this method can also
+be called without an argument, it will then write the graph
+into a fixed filename (present in the attribute <tt class="xref py py-data docutils literal"><span class="pre">Graph.temp_dot</span></tt>).</p>
+<p class="last">This feature is deprecated and should not be used.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Dot.save_image">
+<tt class="descclassname">altgraph.Dot.</tt><tt class="descname">save_image</tt><big>(</big><em>file_name</em><span class="optional">[</span>, <em>file_type</em><span class="optional">[</span>, <em>mode</em><span class="optional">]</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#altgraph.Dot.save_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the current graph representation as an image file. The output
+is written into a file whose basename is <em>file_name</em> and whose suffix
+is <em>file_type</em>.</p>
+<p>The <em>file_type</em> specifies the type of file to write, the default
+is <tt class="docutils literal"><span class="pre">&quot;gif&quot;</span></tt>.</p>
+<p>If the <em>mode</em> is <tt class="docutils literal"><span class="pre">&quot;neato&quot;</span></tt> the dot file is processed with
+the neato command before displaying.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>For backward compatibility reasons this method can also
+be called without an argument, it will then write the graph
+with a fixed basename (<tt class="docutils literal"><span class="pre">&quot;out&quot;</span></tt>).</p>
+<p class="last">This feature is deprecated and should not be used.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Dot.iterdot">
+<tt class="descclassname">altgraph.Dot.</tt><tt class="descname">iterdot</tt><big>(</big><big>)</big><a class="headerlink" href="#altgraph.Dot.iterdot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yields all lines of a <a class="reference external" href="&lt;http://www.research.att.com/sw/tools/graphviz/&gt;`_">graphviz</a> input file (including line endings).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="altgraph.Dot.__iter__">
+<tt class="descclassname">altgraph.Dot.</tt><tt class="descname">__iter__</tt><big>(</big><big>)</big><a class="headerlink" href="#altgraph.Dot.__iter__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for the <a class="reference internal" href="#altgraph.Dot.iterdot" title="altgraph.Dot.iterdot"><tt class="xref py py-meth docutils literal"><span class="pre">iterdot()</span></tt></a> method.</p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#"><tt class="docutils literal"><span class="pre">altgraph.Dot</span></tt> &#8212; Interface to the dot language</a><ul>
+<li><a class="reference internal" href="#example-usage">Example usage</a></li>
+<li><a class="reference internal" href="#directed-graph-and-non-directed-graph">Directed graph and non-directed graph</a></li>
+<li><a class="reference internal" href="#customizing-the-output">Customizing the output</a></li>
+<li><a class="reference internal" href="#valid-attributes">Valid attributes</a></li>
+<li><a class="reference internal" href="#class-interface">Class interface</a><ul>
+<li><a class="reference internal" href="#updating-graph-attributes">Updating graph attributes</a></li>
+<li><a class="reference internal" href="#emitting-output">Emitting output</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="graphutil.html"
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">altgraph.GraphUtil</span></tt> &#8212; Utility functions</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="graphutil.html" title="altgraph.GraphUtil — Utility functions"
+             >previous</a> |</li>
+        <li><a href="index.html">altgraph 0.11 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010-2011, Ronald Oussoren, Bob Ippolito, 2004 Istvan Albert.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.1.
+    </div>
+  </body>
+</html>

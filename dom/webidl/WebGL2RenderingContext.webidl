@@ -488,3 +488,7 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     [WebGLHandlesContextLoss] GLboolean isVertexArray(WebGLVertexArrayObject? vertexArray);
     void bindVertexArray(WebGLVertexArrayObject? array);
 };
+
+[NoInterfaceObject]
+interface EXT_color_buffer_float {
+};

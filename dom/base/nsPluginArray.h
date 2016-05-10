@@ -49,9 +49,8 @@ public:
   void Refresh(bool aReloadDocuments);
   nsPluginElement* IndexedGetter(uint32_t aIndex, bool &aFound);
   nsPluginElement* NamedGetter(const nsAString& aName, bool &aFound);
-  bool NameIsEnumerable(const nsAString& aName);
   uint32_t Length();
-  void GetSupportedNames(unsigned, nsTArray<nsString>& aRetval);
+  void GetSupportedNames(nsTArray<nsString>& aRetval);
 
 private:
   virtual ~nsPluginArray();
@@ -91,9 +90,8 @@ public:
   nsMimeType* NamedItem(const nsAString& name);
   nsMimeType* IndexedGetter(uint32_t index, bool &found);
   nsMimeType* NamedGetter(const nsAString& name, bool &found);
-  bool NameIsEnumerable(const nsAString& aName);
   uint32_t Length();
-  void GetSupportedNames(unsigned, nsTArray<nsString>& retval);
+  void GetSupportedNames(nsTArray<nsString>& retval);
 
   nsTArray<RefPtr<nsMimeType> >& MimeTypes();
 
