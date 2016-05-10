@@ -20,6 +20,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/IndexSequence.h"
 #include "mozilla/Likely.h"
+#include "mozilla/Move.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/TypeTraits.h"
 
@@ -266,8 +267,9 @@ template<typename Function>
 class nsRunnableFunction : public mozilla::Runnable
 {
 public:
-  explicit nsRunnableFunction(const Function& aFunction)
-    : mFunction(aFunction)
+  template <typename F>
+  explicit nsRunnableFunction(F&& aFunction)
+    : mFunction(mozilla::Forward<F>(aFunction))
   { }
 
   NS_IMETHOD Run() {
@@ -281,9 +283,9 @@ private:
 };
 
 template<typename Function>
-nsRunnableFunction<Function>* NS_NewRunnableFunction(const Function& aFunction)
+nsRunnableFunction<Function>* NS_NewRunnableFunction(Function&& aFunction)
 {
-  return new nsRunnableFunction<Function>(aFunction);
+  return new nsRunnableFunction<Function>(mozilla::Forward<Function>(aFunction));
 }
 
 // An event that can be used to call a method on a class.  The class type must
