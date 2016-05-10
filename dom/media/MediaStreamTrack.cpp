@@ -9,6 +9,7 @@
 #include "MediaStreamGraph.h"
 #include "nsIUUIDGenerator.h"
 #include "nsServiceManagerUtils.h"
+#include "MediaStreamListener.h"
 
 #ifdef LOG
 #undef LOG
@@ -160,6 +161,12 @@ MediaStreamTrack::Destroy()
     }
     mPrincipalHandleListener->Forget();
     mPrincipalHandleListener = nullptr;
+  }
+  for (auto l : mTrackListeners) {
+    RemoveListener(l);
+  }
+  for (auto l : mDirectTrackListeners) {
+    RemoveDirectListener(l);
   }
 }
 
@@ -387,6 +394,11 @@ MediaStreamTrack::GetInputStream()
 ProcessedMediaStream*
 MediaStreamTrack::GetOwnedStream()
 {
+  if (!mOwningStream)
+  {
+    return nullptr;
+  }
+
   return mOwningStream->GetOwnedStream();
 }
 
@@ -395,8 +407,10 @@ MediaStreamTrack::AddListener(MediaStreamTrackListener* aListener)
 {
   LOG(LogLevel::Debug, ("MediaStreamTrack %p adding listener %p",
                         this, aListener));
+  MOZ_ASSERT(GetOwnedStream());
 
   GetOwnedStream()->AddTrackListener(aListener, mTrackID);
+  mTrackListeners.AppendElement(aListener);
 }
 
 void
@@ -405,7 +419,10 @@ MediaStreamTrack::RemoveListener(MediaStreamTrackListener* aListener)
   LOG(LogLevel::Debug, ("MediaStreamTrack %p removing listener %p",
                         this, aListener));
 
-  GetOwnedStream()->RemoveTrackListener(aListener, mTrackID);
+  if (GetOwnedStream()) {
+    GetOwnedStream()->RemoveTrackListener(aListener, mTrackID);
+    mTrackListeners.RemoveElement(aListener);
+  }
 }
 
 void
@@ -415,8 +432,10 @@ MediaStreamTrack::AddDirectListener(DirectMediaStreamTrackListener *aListener)
                         "stream %p, track %d",
                         this, AsAudioStreamTrack() ? "audio" : "video",
                         aListener, GetOwnedStream(), mTrackID));
+  MOZ_ASSERT(GetOwnedStream());
 
   GetOwnedStream()->AddDirectTrackListener(aListener, mTrackID);
+  mDirectTrackListeners.AppendElement(aListener);
 }
 
 void
@@ -425,7 +444,10 @@ MediaStreamTrack::RemoveDirectListener(DirectMediaStreamTrackListener *aListener
   LOG(LogLevel::Debug, ("MediaStreamTrack %p removing direct listener %p from stream %p",
                         this, aListener, GetOwnedStream()));
 
-  GetOwnedStream()->RemoveDirectTrackListener(aListener, mTrackID);
+  if (GetOwnedStream()) {
+    GetOwnedStream()->RemoveDirectTrackListener(aListener, mTrackID);
+    mDirectTrackListeners.RemoveElement(aListener);
+  }
 }
 
 already_AddRefed<MediaInputPort>
