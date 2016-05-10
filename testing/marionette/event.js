@@ -6,7 +6,7 @@
 
 "use strict";
 
-const {interfaces: Ci, utils: Cu} = Components;
+const {interfaces: Ci, utils: Cu, classes: Cc} = Components;
 
 Cu.import("resource://gre/modules/Log.jsm");
 const logger = Log.repository.getLogger("Marionette");
@@ -490,50 +490,371 @@ event.isKeypressFiredKey = function(key) {
  * @throws {TypeError}
  *     If unknown key.
  */
-event.synthesizeKey = function(key, ev, window = undefined) {
-  let domutils = getDOMWindowUtils(window);
-
-  let keyCode = 0;
-  let charCode = 0;
-  if (key.indexOf("VK_") === 0) {
-    keyCode = Ci.nsIDOMKeyEvent["DOM_" + key];
-    if (!keyCode) {
-      throw new TypeError("Unknown key: " + key);
-    }
-  } else {
-    charCode = key.charCodeAt(0);
-    keyCode = computeKeyCodeFromChar_(key.charAt(0));
+event.synthesizeKey = function(key, event, win = undefined)
+{
+  var TIP = getTIP_(win);
+  if (!TIP) {
+    return;
   }
+  var KeyboardEvent = getKeyboardEvent_(win);
+  var modifiers = emulateToActivateModifiers_(TIP, event, win);
+  var keyEventDict = createKeyboardEventDictionary_(key, event, win);
+  var keyEvent = new KeyboardEvent("", keyEventDict.dictionary);
+  var dispatchKeydown =
+    !("type" in event) || event.type === "keydown" || !event.type;
+  var dispatchKeyup =
+    !("type" in event) || event.type === "keyup"   || !event.type;
 
-  let modifiers = event.parseModifiers_(ev);
-
-  // send keydown + (optional) keypress + keyup events
-  if (!("type" in ev) || !ev.type) {
-    let keyDownDefaultHappened = domutils.sendKeyEvent(
-        "keydown", keyCode, 0, modifiers);
-    if (event.isKeypressFiredKey(keyCode)) {
-      domutils.sendKeyEvent(
-          "keypress",
-          charCode ? 0 : keyCode,
-          charCode,
-          modifiers,
-          !keyDownDefaultHappened);
+  try {
+    if (dispatchKeydown) {
+      TIP.keydown(keyEvent, keyEventDict.flags);
+      if ("repeat" in event && event.repeat > 1) {
+        keyEventDict.dictionary.repeat = true;
+        var repeatedKeyEvent = new KeyboardEvent("", keyEventDict.dictionary);
+        for (var i = 1; i < event.repeat; i++) {
+          TIP.keydown(repeatedKeyEvent, keyEventDict.flags);
+        }
+      }
     }
-    domutils.sendKeyEvent("keyup", keyCode, 0, modifiers);
-
-  // send standalone keypress event
-  } else if (ev.type == "keypress") {
-    domutils.sendKeyEvent(
-        ev.type,
-        charCode ? 0 : keyCode,
-        charCode,
-        modifiers);
-
-  // send other standalone event than keypress
-  } else {
-    domutils.sendKeyEvent(ev.type, keyCode, 0, modifiers);
+    if (dispatchKeyup) {
+      TIP.keyup(keyEvent, keyEventDict.flags);
+    }
+  } finally {
+    emulateToInactivateModifiers_(TIP, modifiers, win);
   }
 };
+
+var TIPMap = new WeakMap();
+
+function getTIP_(win, callback)
+{
+  if (!win) {
+    win = window;
+  }
+  var tip;
+  if (TIPMap.has(win)) {
+    tip = TIPMap.get(win);
+  } else {
+    tip =
+      Cc["@mozilla.org/text-input-processor;1"].
+        createInstance(Ci.nsITextInputProcessor);
+    TIPMap.set(win, tip);
+  }
+  if (!tip.beginInputTransactionForTests(win, callback)) {
+    tip = null;
+    TIPMap.delete(win);
+  }
+  return tip;
+}
+
+function getKeyboardEvent_(win = window)
+{
+  if (typeof KeyboardEvent != "undefined") {
+    try {
+      // See if the object can be instantiated; sometimes this yields
+      // 'TypeError: can't access dead object' or 'KeyboardEvent is not a constructor'.
+      new KeyboardEvent("", {});
+      return KeyboardEvent;
+    } catch (ex) {}
+  }
+  if (typeof content != "undefined" && ("KeyboardEvent" in content)) {
+    return content.KeyboardEvent;
+  }
+  return win.KeyboardEvent;
+}
+
+function createKeyboardEventDictionary_(key, keyEvent, win = window) {
+  var result = { dictionary: null, flags: 0 };
+  var keyCodeIsDefined = "keyCode" in keyEvent;
+  var keyCode =
+    (keyCodeIsDefined && keyEvent.keyCode >= 0 && keyEvent.keyCode <= 255) ?
+      keyEvent.keyCode : 0;
+  var keyName = "Unidentified";
+  if (key.indexOf("KEY_") == 0) {
+    keyName = key.substr("KEY_".length);
+    result.flags |= Ci.nsITextInputProcessor.KEY_NON_PRINTABLE_KEY;
+  } else if (key.indexOf("VK_") == 0) {
+    keyCode = Ci.nsIDOMKeyEvent["DOM_" + key];
+    if (!keyCode) {
+      throw "Unknown key: " + key;
+    }
+    keyName = guessKeyNameFromKeyCode_(keyCode, win);
+    result.flags |= Ci.nsITextInputProcessor.KEY_NON_PRINTABLE_KEY;
+  } else if (key != "") {
+    keyName = key;
+    if (!keyCodeIsDefined) {
+      keyCode = computeKeyCodeFromChar_(key.charAt(0));
+    }
+    if (!keyCode) {
+      result.flags |= Ci.nsITextInputProcessor.KEY_KEEP_KEYCODE_ZERO;
+    }
+    result.flags |= Ci.nsITextInputProcessor.KEY_FORCE_PRINTABLE_KEY;
+  }
+  var locationIsDefined = "location" in keyEvent;
+  if (locationIsDefined && keyEvent.location === 0) {
+    result.flags |= Ci.nsITextInputProcessor.KEY_KEEP_KEY_LOCATION_STANDARD;
+  }
+  result.dictionary = {
+    key: keyName,
+    code: "code" in keyEvent ? keyEvent.code : "",
+    location: locationIsDefined ? keyEvent.location : 0,
+    repeat: "repeat" in keyEvent ? keyEvent.repeat === true : false,
+    keyCode: keyCode,
+  };
+  return result;
+}
+
+function emulateToActivateModifiers_(TIP, keyEvent, win = window)
+{
+  if (!keyEvent) {
+    return null;
+  }
+  var KeyboardEvent = getKeyboardEvent_(win);
+  var navigator = getNavigator_(win);
+
+  var modifiers = {
+    normal: [
+      { key: "Alt",        attr: "altKey" },
+      { key: "AltGraph",   attr: "altGraphKey" },
+      { key: "Control",    attr: "ctrlKey" },
+      { key: "Fn",         attr: "fnKey" },
+      { key: "Meta",       attr: "metaKey" },
+      { key: "OS",         attr: "osKey" },
+      { key: "Shift",      attr: "shiftKey" },
+      { key: "Symbol",     attr: "symbolKey" },
+      { key: isMac_(win) ? "Meta" : "Control",
+                           attr: "accelKey" },
+    ],
+    lockable: [
+      { key: "CapsLock",   attr: "capsLockKey" },
+      { key: "FnLock",     attr: "fnLockKey" },
+      { key: "NumLock",    attr: "numLockKey" },
+      { key: "ScrollLock", attr: "scrollLockKey" },
+      { key: "SymbolLock", attr: "symbolLockKey" },
+    ]
+  }
+
+  for (var i = 0; i < modifiers.normal.length; i++) {
+    if (!keyEvent[modifiers.normal[i].attr]) {
+      continue;
+    }
+    if (TIP.getModifierState(modifiers.normal[i].key)) {
+      continue; // already activated.
+    }
+    var event = new KeyboardEvent("", { key: modifiers.normal[i].key });
+    TIP.keydown(event,
+      TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
+    modifiers.normal[i].activated = true;
+  }
+  for (var i = 0; i < modifiers.lockable.length; i++) {
+    if (!keyEvent[modifiers.lockable[i].attr]) {
+      continue;
+    }
+    if (TIP.getModifierState(modifiers.lockable[i].key)) {
+      continue; // already activated.
+    }
+    var event = new KeyboardEvent("", { key: modifiers.lockable[i].key });
+    TIP.keydown(event,
+      TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
+    TIP.keyup(event,
+      TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
+    modifiers.lockable[i].activated = true;
+  }
+  return modifiers;
+}
+
+function emulateToInactivateModifiers_(TIP, modifiers, win = window)
+{
+  if (!modifiers) {
+    return;
+  }
+  var KeyboardEvent = getKeyboardEvent_(win);
+  for (var i = 0; i < modifiers.normal.length; i++) {
+    if (!modifiers.normal[i].activated) {
+      continue;
+    }
+    var event = new KeyboardEvent("", { key: modifiers.normal[i].key });
+    TIP.keyup(event,
+      TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
+  }
+  for (var i = 0; i < modifiers.lockable.length; i++) {
+    if (!modifiers.lockable[i].activated) {
+      continue;
+    }
+    if (!TIP.getModifierState(modifiers.lockable[i].key)) {
+      continue; // who already inactivated this?
+    }
+    var event = new KeyboardEvent("", { key: modifiers.lockable[i].key });
+    TIP.keydown(event,
+      TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
+    TIP.keyup(event,
+      TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
+  }
+}
+
+function getNavigator_(win = window)
+{
+  if (typeof navigator != "undefined") {
+    return navigator;
+  }
+  return win.navigator;
+}
+
+function isMac_(win = window) {
+  if (win) {
+    try {
+      return win.navigator.platform.indexOf("Mac") > -1;
+    } catch (ex) {}
+  }
+  return navigator.platform.indexOf("Mac") > -1;
+}
+
+function guessKeyNameFromKeyCode_(aKeyCode, win = window)
+{
+  var KeyboardEvent = getKeyboardEvent_(win);
+  switch (aKeyCode) {
+    case KeyboardEvent.DOM_VK_CANCEL:
+      return "Cancel";
+    case KeyboardEvent.DOM_VK_HELP:
+      return "Help";
+    case KeyboardEvent.DOM_VK_BACK_SPACE:
+      return "Backspace";
+    case KeyboardEvent.DOM_VK_TAB:
+      return "Tab";
+    case KeyboardEvent.DOM_VK_CLEAR:
+      return "Clear";
+    case KeyboardEvent.DOM_VK_RETURN:
+      return "Enter";
+    case KeyboardEvent.DOM_VK_SHIFT:
+      return "Shift";
+    case KeyboardEvent.DOM_VK_CONTROL:
+      return "Control";
+    case KeyboardEvent.DOM_VK_ALT:
+      return "Alt";
+    case KeyboardEvent.DOM_VK_PAUSE:
+      return "Pause";
+    case KeyboardEvent.DOM_VK_EISU:
+      return "Eisu";
+    case KeyboardEvent.DOM_VK_ESCAPE:
+      return "Escape";
+    case KeyboardEvent.DOM_VK_CONVERT:
+      return "Convert";
+    case KeyboardEvent.DOM_VK_NONCONVERT:
+      return "NonConvert";
+    case KeyboardEvent.DOM_VK_ACCEPT:
+      return "Accept";
+    case KeyboardEvent.DOM_VK_MODECHANGE:
+      return "ModeChange";
+    case KeyboardEvent.DOM_VK_PAGE_UP:
+      return "PageUp";
+    case KeyboardEvent.DOM_VK_PAGE_DOWN:
+      return "PageDown";
+    case KeyboardEvent.DOM_VK_END:
+      return "End";
+    case KeyboardEvent.DOM_VK_HOME:
+      return "Home";
+    case KeyboardEvent.DOM_VK_LEFT:
+      return "ArrowLeft";
+    case KeyboardEvent.DOM_VK_UP:
+      return "ArrowUp";
+    case KeyboardEvent.DOM_VK_RIGHT:
+      return "ArrowRight";
+    case KeyboardEvent.DOM_VK_DOWN:
+      return "ArrowDown";
+    case KeyboardEvent.DOM_VK_SELECT:
+      return "Select";
+    case KeyboardEvent.DOM_VK_PRINT:
+      return "Print";
+    case KeyboardEvent.DOM_VK_EXECUTE:
+      return "Execute";
+    case KeyboardEvent.DOM_VK_PRINTSCREEN:
+      return "PrintScreen";
+    case KeyboardEvent.DOM_VK_INSERT:
+      return "Insert";
+    case KeyboardEvent.DOM_VK_DELETE:
+      return "Delete";
+    case KeyboardEvent.DOM_VK_WIN:
+      return "OS";
+    case KeyboardEvent.DOM_VK_CONTEXT_MENU:
+      return "ContextMenu";
+    case KeyboardEvent.DOM_VK_SLEEP:
+      return "Standby";
+    case KeyboardEvent.DOM_VK_F1:
+      return "F1";
+    case KeyboardEvent.DOM_VK_F2:
+      return "F2";
+    case KeyboardEvent.DOM_VK_F3:
+      return "F3";
+    case KeyboardEvent.DOM_VK_F4:
+      return "F4";
+    case KeyboardEvent.DOM_VK_F5:
+      return "F5";
+    case KeyboardEvent.DOM_VK_F6:
+      return "F6";
+    case KeyboardEvent.DOM_VK_F7:
+      return "F7";
+    case KeyboardEvent.DOM_VK_F8:
+      return "F8";
+    case KeyboardEvent.DOM_VK_F9:
+      return "F9";
+    case KeyboardEvent.DOM_VK_F10:
+      return "F10";
+    case KeyboardEvent.DOM_VK_F11:
+      return "F11";
+    case KeyboardEvent.DOM_VK_F12:
+      return "F12";
+    case KeyboardEvent.DOM_VK_F13:
+      return "F13";
+    case KeyboardEvent.DOM_VK_F14:
+      return "F14";
+    case KeyboardEvent.DOM_VK_F15:
+      return "F15";
+    case KeyboardEvent.DOM_VK_F16:
+      return "F16";
+    case KeyboardEvent.DOM_VK_F17:
+      return "F17";
+    case KeyboardEvent.DOM_VK_F18:
+      return "F18";
+    case KeyboardEvent.DOM_VK_F19:
+      return "F19";
+    case KeyboardEvent.DOM_VK_F20:
+      return "F20";
+    case KeyboardEvent.DOM_VK_F21:
+      return "F21";
+    case KeyboardEvent.DOM_VK_F22:
+      return "F22";
+    case KeyboardEvent.DOM_VK_F23:
+      return "F23";
+    case KeyboardEvent.DOM_VK_F24:
+      return "F24";
+    case KeyboardEvent.DOM_VK_NUM_LOCK:
+      return "NumLock";
+    case KeyboardEvent.DOM_VK_SCROLL_LOCK:
+      return "ScrollLock";
+    case KeyboardEvent.DOM_VK_VOLUME_MUTE:
+      return "VolumeMute";
+    case KeyboardEvent.DOM_VK_VOLUME_DOWN:
+      return "VolumeDown";
+    case KeyboardEvent.DOM_VK_VOLUME_UP:
+      return "VolumeUp";
+    case KeyboardEvent.DOM_VK_META:
+      return "Meta";
+    case KeyboardEvent.DOM_VK_ALTGR:
+      return "AltGraph";
+    case KeyboardEvent.DOM_VK_ATTN:
+      return "Attn";
+    case KeyboardEvent.DOM_VK_CRSEL:
+      return "CrSel";
+    case KeyboardEvent.DOM_VK_EXSEL:
+      return "ExSel";
+    case KeyboardEvent.DOM_VK_EREOF:
+      return "EraseEof";
+    case KeyboardEvent.DOM_VK_PLAY:
+      return "Play";
+    default:
+      return "Unidentified";
+  }
+}
 
 /**
  * Indicate that an event with an original target and type is expected
