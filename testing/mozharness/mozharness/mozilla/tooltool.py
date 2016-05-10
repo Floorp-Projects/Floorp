@@ -86,12 +86,15 @@ class TooltoolMixin(object):
         else:
             cmd_runner = self.run_command
 
+        timeout = self.config.get('tooltool_timeout', 10 * 60)
+
         self.retry(
             cmd_runner,
             args=(cmd, ),
             kwargs={'cwd': output_dir,
                     'error_list': TooltoolErrorList,
                     'privileged': privileged,
+                    'output_timeout': timeout,
                     },
             good_statuses=(0, ),
             error_message="Tooltool %s fetch failed!" % manifest,
