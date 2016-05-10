@@ -137,7 +137,7 @@ nsKeyObjectFactory::KeyFromString(int16_t aAlgorithm, const nsACString& aKey,
   keyItem.data = (unsigned char*)flatKey.get();
   keyItem.len = flatKey.Length();
 
-  ScopedPK11SlotInfo slot(PK11_GetBestSlot(cipherMech, nullptr));
+  UniquePK11SlotInfo slot(PK11_GetBestSlot(cipherMech, nullptr));
   if (!slot) {
     return NS_ERROR_FAILURE;
   }

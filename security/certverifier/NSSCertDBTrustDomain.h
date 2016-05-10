@@ -8,6 +8,7 @@
 #define NSSCertDBTrustDomain_h
 
 #include "CertVerifier.h"
+#include "ScopedNSSTypes.h"
 #include "nsICertBlocklist.h"
 #include "pkix/pkixtypes.h"
 #include "secmodt.h"

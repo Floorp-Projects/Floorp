@@ -109,7 +109,7 @@ private:
     nsresult rv;
 
     // Get the key slot for generation later
-    ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
+    UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
     if (!slot) {
       return mozilla::psm::GetXPCOMFromNSSError(PR_GetError());
     }
@@ -141,12 +141,12 @@ private:
     memcpy(keyParams.data + 2, curveOidData->oid.data, curveOidData->oid.len);
 
     // Generate cert key pair
-    ScopedSECKEYPrivateKey privateKey;
     ScopedSECKEYPublicKey publicKey;
     SECKEYPublicKey* tempPublicKey;
-    privateKey = PK11_GenerateKeyPair(slot, CKM_EC_KEY_PAIR_GEN, &keyParams,
-                                      &tempPublicKey, true /* token */,
-                                      true /* sensitive */, nullptr);
+    UniqueSECKEYPrivateKey privateKey(
+      PK11_GenerateKeyPair(slot.get(), CKM_EC_KEY_PAIR_GEN, &keyParams,
+                           &tempPublicKey, true /* token */,
+                           true /* sensitive */, nullptr));
     if (!privateKey) {
       return mozilla::psm::GetXPCOMFromNSSError(PR_GetError());
     }
@@ -182,7 +182,7 @@ private:
     unsigned long serial;
     // This serial in principle could collide, but it's unlikely
     rv = MapSECStatus(
-           PK11_GenerateRandomOnSlot(slot,
+           PK11_GenerateRandomOnSlot(slot.get(),
                                      reinterpret_cast<unsigned char *>(&serial),
                                      sizeof(serial)));
     if (NS_FAILED(rv)) {
@@ -224,7 +224,7 @@ private:
     }
     rv = MapSECStatus(
            SEC_DerSignData(arena, &cert->derCert, certDER->data, certDER->len,
-                           privateKey,
+                           privateKey.get(),
                            SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE));
     if (NS_FAILED(rv)) {
       return rv;
@@ -239,7 +239,7 @@ private:
     }
 
     // Save the cert in the DB
-    rv = MapSECStatus(PK11_ImportCert(slot, certFromDER, CK_INVALID_HANDLE,
+    rv = MapSECStatus(PK11_ImportCert(slot.get(), certFromDER, CK_INVALID_HANDLE,
                                       mNickname.get(), false /* unused */));
     if (NS_FAILED(rv)) {
       return rv;
@@ -368,21 +368,21 @@ LocalCertService::LoginToKeySlot()
   nsresult rv;
 
   // Get access to key slot
-  ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
+  UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
   if (!slot) {
     return mozilla::psm::GetXPCOMFromNSSError(PR_GetError());
   }
 
   // If no user password yet, set it an empty one
-  if (PK11_NeedUserInit(slot)) {
-    rv = MapSECStatus(PK11_InitPin(slot, "", ""));
+  if (PK11_NeedUserInit(slot.get())) {
+    rv = MapSECStatus(PK11_InitPin(slot.get(), "", ""));
     if (NS_FAILED(rv)) {
       return rv;
     }
   }
 
   // If user has a password set, prompt to login
-  if (PK11_NeedLogin(slot) && !PK11_IsLoggedIn(slot, nullptr)) {
+  if (PK11_NeedLogin(slot.get()) && !PK11_IsLoggedIn(slot.get(), nullptr)) {
     // Switching to XPCOM to get the UI prompt that PSM owns
     nsCOMPtr<nsIPK11TokenDB> tokenDB =
       do_GetService(NS_PK11TOKENDB_CONTRACTID);
@@ -452,20 +452,21 @@ LocalCertService::GetLoginPromptRequired(bool* aRequired)
   nsresult rv;
 
   // Get access to key slot
-  ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
+  UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
   if (!slot) {
     return mozilla::psm::GetXPCOMFromNSSError(PR_GetError());
   }
 
   // If no user password yet, set it an empty one
-  if (PK11_NeedUserInit(slot)) {
-    rv = MapSECStatus(PK11_InitPin(slot, "", ""));
+  if (PK11_NeedUserInit(slot.get())) {
+    rv = MapSECStatus(PK11_InitPin(slot.get(), "", ""));
     if (NS_FAILED(rv)) {
       return rv;
     }
   }
 
-  *aRequired = PK11_NeedLogin(slot) && !PK11_IsLoggedIn(slot, nullptr);
+  *aRequired = PK11_NeedLogin(slot.get()) &&
+               !PK11_IsLoggedIn(slot.get(), nullptr);
   return NS_OK;
 }
 
