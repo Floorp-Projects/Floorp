@@ -270,13 +270,12 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
     options.setFileAndLine(mURL.get(), 1)
            .setVersion(JSVERSION_DEFAULT);
     nsJSUtils::EvaluateOptions evalOptions(cx);
-    evalOptions.setCoerceToString(true);
     rv = nsJSUtils::EvaluateString(cx, NS_ConvertUTF8toUTF16(script),
                                    globalJSObject, options, evalOptions, &v);
 
-    if (NS_FAILED(rv) || !(v.isString() || v.isUndefined())) {
+    if (NS_FAILED(rv)) {
         return NS_ERROR_MALFORMED_URI;
-    } else if (v.isUndefined()) {
+    } else if (!v.isString()) {
         return NS_ERROR_DOM_RETVAL_UNDEFINED;
     } else {
         MOZ_ASSERT(rv != NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW,

@@ -3,7 +3,7 @@
 add_task(function* test_keyword_bookmarklet() {
   let bm = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                 title: "bookmarklet",
-                                                url: "javascript:1;" });
+                                                url: "javascript:'1';" });
   let tab = gBrowser.selectedTab = gBrowser.addTab();
   registerCleanupFunction (function* () {
     gBrowser.removeTab(tab);
@@ -20,7 +20,7 @@ add_task(function* test_keyword_bookmarklet() {
 
   let originalPrincipalURI = yield getPrincipalURI();
 
-  yield PlacesUtils.keywords.insert({ keyword: "bm", url: "javascript:1;" })
+  yield PlacesUtils.keywords.insert({ keyword: "bm", url: "javascript:'1';" })
 
   // Enter bookmarklet keyword in the URL bar
   gURLBar.value = "bm";
