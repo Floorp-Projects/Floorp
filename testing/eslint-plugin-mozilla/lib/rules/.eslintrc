@@ -32,7 +32,7 @@
     "semi": [2, "always"],
     "space-before-blocks": 2,
     "space-before-function-paren": [2, "never"],
-    "space-before-keywords": 2,
+    "keyword-spacing": 2,
     "strict": [2, "global"],
   },
 
