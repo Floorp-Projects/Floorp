@@ -471,7 +471,11 @@ KeyframeEffectReadOnly::SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
   }
 
   mKeyframes = Move(aKeyframes);
-  KeyframeUtils::ApplyDistributeSpacing(mKeyframes);
+  // Apply distribute spacing irrespective of the spacing mode. We will apply
+  // the specified spacing mode when we generate computed animation property
+  // values from the keyframes since both operations require a style context
+  // and need to be performed whenever the style context changes.
+  KeyframeUtils::ApplySpacing(mKeyframes, SpacingMode::distribute);
 
   if (mAnimation && mAnimation->IsRelevant()) {
     nsNodeUtils::AnimationChanged(mAnimation);
