@@ -50,7 +50,7 @@ public:
   nsPluginElement* IndexedGetter(uint32_t aIndex, bool &aFound);
   nsPluginElement* NamedGetter(const nsAString& aName, bool &aFound);
   uint32_t Length();
-  void GetSupportedNames(unsigned, nsTArray<nsString>& aRetval);
+  void GetSupportedNames(nsTArray<nsString>& aRetval);
 
 private:
   virtual ~nsPluginArray();
@@ -91,7 +91,7 @@ public:
   nsMimeType* IndexedGetter(uint32_t index, bool &found);
   nsMimeType* NamedGetter(const nsAString& name, bool &found);
   uint32_t Length();
-  void GetSupportedNames(unsigned, nsTArray<nsString>& retval);
+  void GetSupportedNames(nsTArray<nsString>& retval);
 
   nsTArray<RefPtr<nsMimeType> >& MimeTypes();
 

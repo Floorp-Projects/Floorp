@@ -187,7 +187,7 @@ public:
   nsTreeColumn* GetColumnAt(uint32_t aIndex);
   nsTreeColumn* NamedGetter(const nsAString& aId, bool& aFound);
   nsTreeColumn* GetNamedColumn(const nsAString& aId);
-  void GetSupportedNames(unsigned, nsTArray<nsString>& aNames);
+  void GetSupportedNames(nsTArray<nsString>& aNames);
 
   // Uses XPCOM InvalidateColumns().
   // Uses XPCOM RestoreNaturalOrder().

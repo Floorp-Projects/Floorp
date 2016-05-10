@@ -95,8 +95,7 @@ public:
     EnsureFresh();
     return mNames;
   }
-  virtual void GetSupportedNames(unsigned,
-                                 nsTArray<nsString>& aNames) override;
+  virtual void GetSupportedNames(nsTArray<nsString>& aNames) override;
 
   NS_DECL_NSIDOMHTMLCOLLECTION
 
