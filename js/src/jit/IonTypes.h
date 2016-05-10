@@ -104,9 +104,7 @@ enum BailoutKind
     Bailout_NonSymbolInput,
 
     // SIMD Unbox expects a given type, bails out if it doesn't match.
-    Bailout_NonSimdBool32x4Input,
-    Bailout_NonSimdInt32x4Input,
-    Bailout_NonSimdFloat32x4Input,
+    Bailout_UnexpectedSimdInput,
 
     // Atomic operations require shared memory, bail out if the typed array
     // maps unshared memory.
@@ -213,12 +211,8 @@ BailoutKindString(BailoutKind kind)
         return "Bailout_NonStringInput";
       case Bailout_NonSymbolInput:
         return "Bailout_NonSymbolInput";
-      case Bailout_NonSimdBool32x4Input:
-        return "Bailout_NonSimdBool32x4Input";
-      case Bailout_NonSimdInt32x4Input:
-        return "Bailout_NonSimdInt32x4Input";
-      case Bailout_NonSimdFloat32x4Input:
-        return "Bailout_NonSimdFloat32x4Input";
+      case Bailout_UnexpectedSimdInput:
+        return "Bailout_UnexpectedSimdInput";
       case Bailout_NonSharedTypedArrayInput:
         return "Bailout_NonSharedTypedArrayInput";
       case Bailout_Debugger:
