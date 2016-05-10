@@ -390,6 +390,8 @@ static bool
 RequiresAdditiveAnimation(const nsTArray<Keyframe>& aKeyframes,
                           nsIDocument* aDocument);
 
+static void
+DistributeRange(const Range<Keyframe>& aKeyframes);
 
 // ------------------------------------------------------------------
 //
@@ -456,38 +458,45 @@ KeyframeUtils::GetKeyframesFromObject(JSContext* aCx,
 }
 
 /* static */ void
-KeyframeUtils::ApplyDistributeSpacing(nsTArray<Keyframe>& aKeyframes)
+KeyframeUtils::ApplySpacing(nsTArray<Keyframe>& aKeyframes,
+                            SpacingMode aSpacingMode)
 {
   if (aKeyframes.IsEmpty()) {
     return;
   }
 
-  // If the first or last keyframes have an unspecified offset,
-  // fill them in with 0% and 100%.  If there is only a single keyframe,
-  // then it gets 100%.
-  Keyframe& lastElement = aKeyframes.LastElement();
-  lastElement.mComputedOffset = lastElement.mOffset.valueOr(1.0);
+  // If the first keyframe has an unspecified offset, fill it in with 0%.
+  // If there is only a single keyframe, then it gets 100%.
   if (aKeyframes.Length() > 1) {
     Keyframe& firstElement = aKeyframes[0];
     firstElement.mComputedOffset = firstElement.mOffset.valueOr(0.0);
+    // We will fill in the last keyframe's offset below
+  } else {
+    Keyframe& lastElement = aKeyframes.LastElement();
+    lastElement.mComputedOffset = lastElement.mOffset.valueOr(1.0);
   }
 
   // Fill in remaining missing offsets.
-  size_t i = 0;
-  while (i < aKeyframes.Length() - 1) {
-    double start = aKeyframes[i].mComputedOffset;
-    size_t j = i + 1;
-    while (aKeyframes[j].mOffset.isNothing() && j < aKeyframes.Length() - 1) {
-      ++j;
+  const Keyframe* const last = aKeyframes.cend() - 1;
+  RangedPtr<Keyframe> keyframeA(aKeyframes.begin(), aKeyframes.Length());
+  while (keyframeA != last) {
+    // Find keyframe A and keyframe B *between* which we will apply spacing.
+    RangedPtr<Keyframe> keyframeB = keyframeA + 1;
+    while (keyframeB.get()->mOffset.isNothing() && keyframeB != last) {
+      ++keyframeB;
     }
-    double end = aKeyframes[j].mOffset.valueOr(1.0);
-    size_t n = j - i;
-    for (size_t k = 1; k < n; ++k) {
-      double offset = start + double(k) / n * (end - start);
-      aKeyframes[i + k].mComputedOffset = offset;
+    keyframeB.get()->mComputedOffset = keyframeB.get()->mOffset.valueOr(1.0);
+
+    // Fill computed offsets in (keyframe A, keyframe B).
+    if (aSpacingMode == SpacingMode::distribute) {
+      DistributeRange(Range<Keyframe>(keyframeA.get(),
+                                      keyframeB - keyframeA + 1));
+    } else {
+      // TODO
+      MOZ_ASSERT(false, "not implement yet");
     }
-    i = j;
-    aKeyframes[j].mComputedOffset = end;
+
+    keyframeA = keyframeB;
   }
 }
 
@@ -1288,7 +1297,7 @@ RequiresAdditiveAnimation(const nsTArray<Keyframe>& aKeyframes,
   for (size_t i = 0, len = aKeyframes.Length(); i < len; i++) {
     const Keyframe& frame = aKeyframes[i];
 
-    // We won't have called ApplyDistributeSpacing when this is called so
+    // We won't have called ApplySpacing when this is called so
     // we can't use frame.mComputedOffset. Instead we do a rough version
     // of that algorithm that substitutes null offsets with 0.0 for the first
     // frame, 1.0 for the last frame, and 0.5 for everything else.
@@ -1323,6 +1332,25 @@ RequiresAdditiveAnimation(const nsTArray<Keyframe>& aKeyframes,
 
   return !propertiesWithFromValue.Equals(properties) ||
          !propertiesWithToValue.Equals(properties);
+}
+
+/**
+ * Evenly distribute the computed offsets in (A, B). We should pass the
+ * range keyframes in [A, B] and use A, B to calculate computed offsets in
+ * (A, B).
+ *
+ * @param aKeyframes The sequence of keyframes between whose endpoints we should
+ *   apply distribute spacing.
+ */
+static void
+DistributeRange(const Range<Keyframe>& aKeyframes)
+{
+  const size_t n = aKeyframes.length() - 1;
+  const double startOffset = aKeyframes[0].mComputedOffset;
+  const double diffOffset = aKeyframes[n].mComputedOffset - startOffset;
+  for (size_t i = 1; i < n; ++i) {
+    aKeyframes[i].mComputedOffset = startOffset + double(i) / n * diffOffset;
+  }
 }
 
 } // namespace mozilla
