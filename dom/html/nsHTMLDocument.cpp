@@ -2325,12 +2325,6 @@ nsHTMLDocument::NamedGetter(JSContext* cx, const nsAString& aName, bool& aFound,
   aRetval.set(&val.toObject());
 }
 
-bool
-nsHTMLDocument::NameIsEnumerable(const nsAString& aName)
-{
-  return true;
-}
-
 void
 nsHTMLDocument::GetSupportedNames(unsigned, nsTArray<nsString>& aNames)
 {

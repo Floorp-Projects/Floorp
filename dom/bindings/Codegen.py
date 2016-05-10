@@ -10975,15 +10975,11 @@ class CGDOMJSProxyHandler_getOwnPropDescriptor(ClassMethod):
         if self.descriptor.supportsNamedProperties():
             operations = self.descriptor.operations
             readonly = toStringBool(operations['NamedSetter'] is None)
-            enumerable = (
-                "self->NameIsEnumerable(Constify(%s))" %
-                # First [0] means first (and only) signature, [1] means
-                # "arguments" as opposed to return type, [0] means first (and
-                # only) argument.
-                operations['NamedGetter'].signatures()[0][1][0].identifier.name)
             fillDescriptor = (
                 "FillPropertyDescriptor(desc, proxy, %s, %s);\n"
-                "return true;\n" % (readonly, enumerable))
+                "return true;\n" %
+                (readonly,
+                 toStringBool(self.descriptor.namedPropertiesEnumerable)))
             templateValues = {'jsvalRef': 'desc.value()', 'jsvalHandle': 'desc.value()',
                               'obj': 'proxy', 'successCode': fillDescriptor}
 
@@ -14140,15 +14136,6 @@ class CGBindingImplClass(CGClass):
                      [FakeArgument(BuiltinTypes[IDLBuiltinType.Types.unsigned_long],
                                    FakeMember(),
                                    name="aFlags")]),
-                    {"infallible": True}))
-            self.methodDecls.append(
-                CGNativeMember(
-                    descriptor, FakeMember(),
-                    "NameIsEnumerable",
-                    (BuiltinTypes[IDLBuiltinType.Types.boolean],
-                     [FakeArgument(BuiltinTypes[IDLBuiltinType.Types.domstring],
-                                   FakeMember(),
-                                   name="aName")]),
                     {"infallible": True}))
 
         wrapArgs = [Argument('JSContext*', 'aCx'),

@@ -90,10 +90,6 @@ public:
     aFound = IsSupportedNamedProperty(aName);
     return aFound ? NamedItem(aName) : nullptr;
   }
-  bool NameIsEnumerable(const nsAString& aName)
-  {
-    return true;
-  }
   DOMStringList* Names()
   {
     EnsureFresh();

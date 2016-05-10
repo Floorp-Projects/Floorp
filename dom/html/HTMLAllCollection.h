@@ -63,10 +63,6 @@ public:
                    bool& aFound,
                    Nullable<OwningNodeOrHTMLCollection>& aResult);
   void GetSupportedNames(unsigned aFlags, nsTArray<nsString>& aNames);
-  bool NameIsEnumerable(const nsAString& aName)
-  {
-    return false;
-  }
   void LegacyCall(JS::Handle<JS::Value>, const nsAString& aName,
                   Nullable<OwningNodeOrHTMLCollection>& aResult)
   {

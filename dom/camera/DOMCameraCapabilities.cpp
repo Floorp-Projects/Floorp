@@ -275,15 +275,6 @@ CameraRecorderProfiles::NamedGetter(const nsAString& aName, bool& aFound)
   return profile;
 }
 
-bool
-CameraRecorderProfiles::NameIsEnumerable(const nsAString& aName)
-{
-  DOM_CAMERA_LOGT("%s:%d : this=%p, name='%s' (always returns true)\n",
-    __func__, __LINE__, this, NS_ConvertUTF16toUTF8(aName).get());
-
-  return true;
-}
-
 void
 CameraRecorderProfiles::OnHardwareClosed()
 {
