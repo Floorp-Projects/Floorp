@@ -21,14 +21,6 @@ import org.mozilla.gecko.util.Experiments;
 
 public class ReaderViewBookmarkPromotion extends BrowserAppDelegateWithReference implements Tabs.OnTabsChangedListener {
     private int mTimesEnteredReaderMode;
-    private boolean mExperimentEnabled;
-
-    @Override
-    public void onCreate(BrowserApp browserApp, Bundle savedInstanceState) {
-        super.onCreate(browserApp, savedInstanceState);
-
-        mExperimentEnabled = SwitchBoard.isInExperiment(browserApp, Experiments.TRIPLE_READERVIEW_BOOKMARK_PROMPT);
-    }
 
     @Override
     public void onResume(BrowserApp browserApp) {
@@ -83,11 +75,12 @@ public class ReaderViewBookmarkPromotion extends BrowserAppDelegateWithReference
         }
 
         final SharedPreferences prefs = GeckoSharedPrefs.forProfile(browserApp);
+        final boolean isEnabled = SwitchBoard.isInExperiment(browserApp, Experiments.TRIPLE_READERVIEW_BOOKMARK_PROMPT);
 
         // We reuse the same preference as for the first offline reader view bookmark
         // as we only want to show one of the two UIs (they both explain the same
         // functionality).
-        if (!mExperimentEnabled || prefs.getBoolean(SimpleHelperUI.PREF_FIRST_RVBP_SHOWN, false)) {
+        if (!isEnabled || prefs.getBoolean(SimpleHelperUI.PREF_FIRST_RVBP_SHOWN, false)) {
             return;
         }
 
