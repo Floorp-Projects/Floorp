@@ -41,8 +41,7 @@ public:
 
   virtual Element*
   GetFirstNamedElement(const nsAString& aName, bool& aFound) override;
-  virtual void GetSupportedNames(unsigned aFlags,
-                                 nsTArray<nsString>& aNames) override;
+  virtual void GetSupportedNames(nsTArray<nsString>& aNames) override;
 
   NS_IMETHOD    ParentDestroyed();
 
@@ -236,18 +235,13 @@ TableRowsCollection::GetFirstNamedElement(const nsAString& aName, bool& aFound)
 }
 
 void
-TableRowsCollection::GetSupportedNames(unsigned aFlags,
-                                       nsTArray<nsString>& aNames)
+TableRowsCollection::GetSupportedNames(nsTArray<nsString>& aNames)
 {
-  if (!(aFlags & JSITER_HIDDEN)) {
-    return;
-  }
-
   DO_FOR_EACH_ROWGROUP(
     nsTArray<nsString> names;
     nsCOMPtr<nsIHTMLCollection> coll = do_QueryInterface(rows);
     if (coll) {
-      coll->GetSupportedNames(aFlags, names);
+      coll->GetSupportedNames(names);
       for (uint32_t i = 0; i < names.Length(); ++i) {
         if (!aNames.Contains(names[i])) {
           aNames.AppendElement(names[i]);

@@ -393,7 +393,7 @@ public:
   already_AddRefed<nsISupports>
   NamedGetter(const nsAString& aName, bool &aFound);
 
-  void GetSupportedNames(unsigned, nsTArray<nsString >& aRetval);
+  void GetSupportedNames(nsTArray<nsString>& aRetval);
 
   static int32_t
   CompareFormControlPosition(Element* aElement1, Element* aElement2,

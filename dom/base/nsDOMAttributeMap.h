@@ -158,7 +158,7 @@ public:
                     ErrorResult& aError);
 
   void
-  GetSupportedNames(unsigned aFlags, nsTArray<nsString>& aNames);
+  GetSupportedNames(nsTArray<nsString>& aNames);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 

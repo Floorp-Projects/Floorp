@@ -537,12 +537,8 @@ nsContentList::NamedItem(const nsAString& aName, bool aDoFlush)
 }
 
 void
-nsContentList::GetSupportedNames(unsigned aFlags, nsTArray<nsString>& aNames)
+nsContentList::GetSupportedNames(nsTArray<nsString>& aNames)
 {
-  if (!(aFlags & JSITER_HIDDEN)) {
-    return;
-  }
-
   BringSelfUpToDate(true);
 
   AutoTArray<nsIAtom*, 8> atoms;

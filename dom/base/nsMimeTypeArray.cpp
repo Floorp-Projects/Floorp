@@ -131,7 +131,7 @@ nsMimeTypeArray::Length()
 }
 
 void
-nsMimeTypeArray::GetSupportedNames(unsigned, nsTArray< nsString >& aRetval)
+nsMimeTypeArray::GetSupportedNames(nsTArray< nsString >& aRetval)
 {
   EnsurePluginMimeTypes();
 

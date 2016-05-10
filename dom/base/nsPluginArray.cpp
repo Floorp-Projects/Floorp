@@ -237,7 +237,7 @@ nsPluginArray::Length()
 }
 
 void
-nsPluginArray::GetSupportedNames(unsigned, nsTArray<nsString>& aRetval)
+nsPluginArray::GetSupportedNames(nsTArray<nsString>& aRetval)
 {
   aRetval.Clear();
 
@@ -422,7 +422,7 @@ nsPluginElement::Length()
 }
 
 void
-nsPluginElement::GetSupportedNames(unsigned, nsTArray<nsString>& retval)
+nsPluginElement::GetSupportedNames(nsTArray<nsString>& retval)
 {
   EnsurePluginMimeTypes();
 
