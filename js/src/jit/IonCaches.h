@@ -303,9 +303,9 @@ class IonCache
 
     // Combine both linkStub and attachStub into one function. In addition, it
     // produces a spew augmented with the attachKind string.
-    bool linkAndAttachStub(JSContext* cx, MacroAssembler& masm, StubAttacher& attacher,
-                           IonScript* ion, const char* attachKind,
-                           JS::TrackedOutcome = JS::TrackedOutcome::ICOptStub_GenericSuccess);
+    MOZ_MUST_USE bool linkAndAttachStub(JSContext* cx, MacroAssembler& masm, StubAttacher& attacher,
+                                        IonScript* ion, const char* attachKind,
+                                        JS::TrackedOutcome = JS::TrackedOutcome::ICOptStub_GenericSuccess);
 
 #ifdef DEBUG
     bool isAllocated() {
@@ -505,64 +505,76 @@ class GetPropertyIC : public IonCache
     void maybeDisable(bool emitted);
 
     // Attach the proper stub, if possible
-    bool tryAttachStub(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                       HandleObject obj, HandleValue idval, bool* emitted);
+    MOZ_MUST_USE bool tryAttachStub(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                    HandleObject obj, HandleValue idval, bool* emitted);
 
-    bool tryAttachProxy(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                        HandleObject obj, HandleId id, void* returnAddr, bool* emitted);
-
-    bool tryAttachGenericProxy(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                               HandleObject obj, HandleId id, void* returnAddr, bool* emitted);
-
-    bool tryAttachDOMProxyShadowed(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                   HandleObject obj, HandleId id, void* returnAddr, bool* emitted);
-
-    bool tryAttachDOMProxyUnshadowed(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                     HandleObject obj, HandleId id, bool resetNeeded,
-                                     void* returnAddr, bool* emitted);
-
-    bool tryAttachNative(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                         HandleObject obj, HandleId id, void* returnAddr, bool* emitted);
-
-    bool tryAttachUnboxed(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                          HandleObject obj, HandleId id, void* returnAddr, bool* emitted);
-
-    bool tryAttachUnboxedExpando(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                 HandleObject obj, HandleId id, void* returnAddr, bool* emitted);
-
-    bool tryAttachUnboxedArrayLength(JSContext* cx, HandleScript outerScript, IonScript* ion,
+    MOZ_MUST_USE bool tryAttachProxy(JSContext* cx, HandleScript outerScript, IonScript* ion,
                                      HandleObject obj, HandleId id, void* returnAddr,
                                      bool* emitted);
 
-    bool tryAttachTypedArrayLength(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                   HandleObject obj, HandleId id, bool* emitted);
+    MOZ_MUST_USE bool tryAttachGenericProxy(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                            HandleObject obj, HandleId id, void* returnAddr,
+                                            bool* emitted);
 
-    bool tryAttachArgumentsLength(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                  HandleObject obj, HandleId id, bool* emitted);
+    MOZ_MUST_USE bool tryAttachDOMProxyShadowed(JSContext* cx, HandleScript outerScript,
+                                                IonScript* ion, HandleObject obj, HandleId id,
+                                                void* returnAddr, bool* emitted);
 
-    bool tryAttachArgumentsElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                   HandleObject obj, HandleValue idval, bool* emitted);
+    MOZ_MUST_USE bool tryAttachDOMProxyUnshadowed(JSContext* cx, HandleScript outerScript,
+                                                  IonScript* ion, HandleObject obj, HandleId id,
+                                                  bool resetNeeded, void* returnAddr,
+                                                  bool* emitted);
 
-    bool tryAttachDenseElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                               HandleObject obj, HandleValue idval, bool* emitted);
+    MOZ_MUST_USE bool tryAttachNative(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                      HandleObject obj, HandleId id, void* returnAddr,
+                                      bool* emitted);
+
+    MOZ_MUST_USE bool tryAttachUnboxed(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                       HandleObject obj, HandleId id, void* returnAddr,
+                                       bool* emitted);
+
+    MOZ_MUST_USE bool tryAttachUnboxedExpando(JSContext* cx, HandleScript outerScript,
+                                              IonScript* ion, HandleObject obj, HandleId id,
+                                              void* returnAddr, bool* emitted);
+
+    MOZ_MUST_USE bool tryAttachUnboxedArrayLength(JSContext* cx, HandleScript outerScript,
+                                                  IonScript* ion, HandleObject obj, HandleId id,
+                                                  void* returnAddr, bool* emitted);
+
+    MOZ_MUST_USE bool tryAttachTypedArrayLength(JSContext* cx, HandleScript outerScript,
+                                                IonScript* ion, HandleObject obj, HandleId id,
+                                                bool* emitted);
+
+    MOZ_MUST_USE bool tryAttachArgumentsLength(JSContext* cx, HandleScript outerScript,
+                                               IonScript* ion, HandleObject obj, HandleId id,
+                                               bool* emitted);
+
+    MOZ_MUST_USE bool tryAttachArgumentsElement(JSContext* cx, HandleScript outerScript,
+                                                IonScript* ion, HandleObject obj, HandleValue idval,
+                                                bool* emitted);
+
+    MOZ_MUST_USE bool tryAttachDenseElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                            HandleObject obj, HandleValue idval, bool* emitted);
 
     static bool canAttachDenseElementHole(JSObject* obj, HandleValue idval,
                                           TypedOrValueRegister output);
-    bool tryAttachDenseElementHole(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                   HandleObject obj, HandleValue idval, bool* emitted);
+    MOZ_MUST_USE bool tryAttachDenseElementHole(JSContext* cx, HandleScript outerScript,
+                                                IonScript* ion, HandleObject obj,
+                                                HandleValue idval, bool* emitted);
 
     static bool canAttachTypedOrUnboxedArrayElement(JSObject* obj, const Value& idval,
                                                     TypedOrValueRegister output);
 
-    bool tryAttachTypedOrUnboxedArrayElement(JSContext* cx, HandleScript outerScript,
-                                             IonScript* ion, HandleObject obj,
-                                             HandleValue idval, bool* emitted);
+    MOZ_MUST_USE bool tryAttachTypedOrUnboxedArrayElement(JSContext* cx, HandleScript outerScript,
+                                                          IonScript* ion, HandleObject obj,
+                                                          HandleValue idval, bool* emitted);
 
-    bool tryAttachModuleNamespace(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                  HandleObject obj, HandleId id, void* returnAddr, bool* emitted);
+    MOZ_MUST_USE bool tryAttachModuleNamespace(JSContext* cx, HandleScript outerScript,
+                                               IonScript* ion, HandleObject obj, HandleId id,
+                                               void* returnAddr, bool* emitted);
 
-    static bool update(JSContext* cx, HandleScript outerScript, size_t cacheIndex,
-                       HandleObject obj, HandleValue id, MutableHandleValue vp);
+    static MOZ_MUST_USE bool update(JSContext* cx, HandleScript outerScript, size_t cacheIndex,
+                                    HandleObject obj, HandleValue id, MutableHandleValue vp);
 };
 
 class SetPropertyIC : public IonCache
@@ -661,55 +673,59 @@ class SetPropertyIC : public IonCache
         CanAttachCallSetter
     };
 
-    bool attachSetSlot(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                       HandleObject obj, HandleShape shape, bool checkTypeset);
+    MOZ_MUST_USE bool attachSetSlot(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                    HandleObject obj, HandleShape shape, bool checkTypeset);
 
-    bool attachCallSetter(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                          HandleObject obj, HandleObject holder, HandleShape shape,
-                          void* returnAddr);
+    MOZ_MUST_USE bool attachCallSetter(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                       HandleObject obj, HandleObject holder, HandleShape shape,
+                                       void* returnAddr);
 
-    bool attachAddSlot(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                       HandleObject obj, HandleId id, HandleShape oldShape,
-                       HandleObjectGroup oldGroup, bool checkTypeset);
+    MOZ_MUST_USE bool attachAddSlot(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                    HandleObject obj, HandleId id, HandleShape oldShape,
+                                    HandleObjectGroup oldGroup, bool checkTypeset);
 
-    bool attachGenericProxy(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                            HandleId id, void* returnAddr);
+    MOZ_MUST_USE bool attachGenericProxy(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                         HandleId id, void* returnAddr);
 
-    bool attachDOMProxyShadowed(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                HandleObject obj, HandleId id, void* returnAddr);
+    MOZ_MUST_USE bool attachDOMProxyShadowed(JSContext* cx, HandleScript outerScript,
+                                             IonScript* ion, HandleObject obj, HandleId id,
+                                             void* returnAddr);
 
-    bool attachDOMProxyUnshadowed(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                  HandleObject obj, HandleId id, void* returnAddr);
+    MOZ_MUST_USE bool attachDOMProxyUnshadowed(JSContext* cx, HandleScript outerScript,
+                                               IonScript* ion, HandleObject obj, HandleId id,
+                                               void* returnAddr);
 
-    static bool update(JSContext* cx, HandleScript outerScript, size_t cacheIndex,
-                       HandleObject obj, HandleValue idval, HandleValue value);
+    static MOZ_MUST_USE bool update(JSContext* cx, HandleScript outerScript, size_t cacheIndex,
+                                    HandleObject obj, HandleValue idval, HandleValue value);
 
-    bool tryAttachNative(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                         HandleObject obj, HandleId id, bool* emitted, bool* tryNativeAddSlot);
+    MOZ_MUST_USE bool tryAttachNative(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                      HandleObject obj, HandleId id, bool* emitted,
+                                      bool* tryNativeAddSlot);
 
-    bool tryAttachUnboxed(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                          HandleObject obj, HandleId id, bool* emitted);
+    MOZ_MUST_USE bool tryAttachUnboxed(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                       HandleObject obj, HandleId id, bool* emitted);
 
-    bool tryAttachUnboxedExpando(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                 HandleObject obj, HandleId id, bool* emitted);
+    MOZ_MUST_USE bool tryAttachUnboxedExpando(JSContext* cx, HandleScript outerScript,
+                                              IonScript* ion, HandleObject obj, HandleId id,
+                                              bool* emitted);
 
-    bool tryAttachProxy(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                        HandleObject obj, HandleId id, bool* emitted);
+    MOZ_MUST_USE bool tryAttachProxy(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                     HandleObject obj, HandleId id, bool* emitted);
 
-    bool tryAttachStub(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                       HandleObject obj, HandleValue idval, HandleValue value,
-                       MutableHandleId id, bool* emitted, bool* tryNativeAddSlot);
+    MOZ_MUST_USE bool tryAttachStub(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                    HandleObject obj, HandleValue idval, HandleValue value,
+                                    MutableHandleId id, bool* emitted, bool* tryNativeAddSlot);
 
-    bool tryAttachAddSlot(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                          HandleObject obj, HandleId id, HandleObjectGroup oldGroup,
-                          HandleShape oldShape, bool tryNativeAddSlot, bool* emitted);
+    MOZ_MUST_USE bool tryAttachAddSlot(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                       HandleObject obj, HandleId id, HandleObjectGroup oldGroup,
+                                       HandleShape oldShape, bool tryNativeAddSlot, bool* emitted);
 
-    bool tryAttachDenseElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                               HandleObject obj, const Value& idval, bool* emitted);
+    MOZ_MUST_USE bool tryAttachDenseElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                            HandleObject obj, const Value& idval, bool* emitted);
 
-    bool tryAttachTypedArrayElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                    HandleObject obj, HandleValue idval, HandleValue val,
-                                    bool* emitted);
+    MOZ_MUST_USE bool tryAttachTypedArrayElement(JSContext* cx, HandleScript outerScript,
+                                                 IonScript* ion, HandleObject obj,
+                                                 HandleValue idval, HandleValue val, bool* emitted);
 };
 
 class BindNameIC : public IonCache
@@ -739,11 +755,11 @@ class BindNameIC : public IonCache
         return output_;
     }
 
-    bool attachGlobal(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                      HandleObject scopeChain);
+    MOZ_MUST_USE bool attachGlobal(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                   HandleObject scopeChain);
 
-    bool attachNonGlobal(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                         HandleObject scopeChain, HandleObject holder);
+    MOZ_MUST_USE bool attachNonGlobal(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                      HandleObject scopeChain, HandleObject holder);
 
     static JSObject*
     update(JSContext* cx, HandleScript outerScript, size_t cacheIndex, HandleObject scopeChain);
@@ -788,18 +804,19 @@ class NameIC : public IonCache
         return typeOf_;
     }
 
-    bool attachReadSlot(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                        HandleObject scopeChain, HandleObject holderBase,
-                        HandleNativeObject holder, HandleShape shape);
+    MOZ_MUST_USE bool attachReadSlot(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                     HandleObject scopeChain, HandleObject holderBase,
+                                     HandleNativeObject holder, HandleShape shape);
 
-    bool attachCallGetter(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                          HandleObject scopeChain, HandleObject obj, HandleObject holder,
-                          HandleShape shape, void* returnAddr);
+    MOZ_MUST_USE bool attachCallGetter(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                       HandleObject scopeChain, HandleObject obj,
+                                       HandleObject holder, HandleShape shape,
+                                       void* returnAddr);
 
-    bool attachTypeOfNoProperty(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                HandleObject scopeChain);
+    MOZ_MUST_USE bool attachTypeOfNoProperty(JSContext* cx, HandleScript outerScript,
+                                             IonScript* ion, HandleObject scopeChain);
 
-    static bool
+    static MOZ_MUST_USE bool
     update(JSContext* cx, HandleScript outerScript, size_t cacheIndex, HandleObject scopeChain,
            MutableHandleValue vp);
 };
