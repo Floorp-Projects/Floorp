@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=333064
+-->
+<head>
+  <title>Test for Bug 333064</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=333064">Mozilla Bug 333064</a>
+<p id="display"></p>
+
+<div id="display">
+</div>
+<div id="korean-text">안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안안</div>
+
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+/** Test for Bug 333064 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  var div = document.getElementById("korean-text");
+  var sel = window.getSelection();
+
+  // Select text node in div.
+  var r = document.createRange();
+  r.setStart(div, 0);
+  r.setEnd(div, 1);
+  sel.addRange(r);
+
+  SimpleTest.waitForClipboard(
+    function compare(value) {
+      // Make sure we got the HTML flavour we asked for and that our
+      // string is included without additional spaces.
+      return value.includes("korean-text") && value.includes("안".repeat(160));
+    },
+    function setup() {
+      synthesizeKey("C", {accelKey: true});
+    },
+    function onSuccess() {
+      SimpleTest.finish();
+    },
+    function onFailure() {
+      SimpleTest.finish();
+    },
+    "text/html"
+  );
+});
+
+</script>
+
+</body>
+</html>
