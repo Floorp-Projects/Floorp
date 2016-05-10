@@ -375,19 +375,19 @@ AboutReader.prototype = {
     const CONTENT_WIDTH_MIN = 1;
     const CONTENT_WIDTH_MAX = 9;
 
-    let currentLineHeight = Services.prefs.getIntPref("reader.content_width");
-    currentLineHeight = Math.max(CONTENT_WIDTH_MIN, Math.min(CONTENT_WIDTH_MAX, currentLineHeight));
+    let currentContentWidth = Services.prefs.getIntPref("reader.content_width");
+    currentContentWidth = Math.max(CONTENT_WIDTH_MIN, Math.min(CONTENT_WIDTH_MAX, currentContentWidth));
 
     let plusButton = this._doc.getElementById("content-width-plus");
     let minusButton = this._doc.getElementById("content-width-minus");
 
     function updateControls() {
-      if (currentLineHeight === CONTENT_WIDTH_MIN) {
+      if (currentContentWidth === CONTENT_WIDTH_MIN) {
         minusButton.setAttribute("disabled", true);
       } else {
         minusButton.removeAttribute("disabled");
       }
-      if (currentLineHeight === CONTENT_WIDTH_MAX) {
+      if (currentContentWidth === CONTENT_WIDTH_MAX) {
         plusButton.setAttribute("disabled", true);
       } else {
         plusButton.removeAttribute("disabled");
@@ -395,7 +395,7 @@ AboutReader.prototype = {
     }
 
     updateControls();
-    this._setContentWidth(currentLineHeight);
+    this._setContentWidth(currentContentWidth);
 
     plusButton.addEventListener("click", (event) => {
       if (!event.isTrusted) {
@@ -403,13 +403,13 @@ AboutReader.prototype = {
       }
       event.stopPropagation();
 
-      if (currentLineHeight >= CONTENT_WIDTH_MAX) {
+      if (currentContentWidth >= CONTENT_WIDTH_MAX) {
         return;
       }
 
-      currentLineHeight++;
+      currentContentWidth++;
       updateControls();
-      this._setContentWidth(currentLineHeight);
+      this._setContentWidth(currentContentWidth);
     }, true);
 
     minusButton.addEventListener("click", (event) => {
@@ -418,13 +418,13 @@ AboutReader.prototype = {
       }
       event.stopPropagation();
 
-      if (currentLineHeight <= CONTENT_WIDTH_MIN) {
+      if (currentContentWidth <= CONTENT_WIDTH_MIN) {
         return;
       }
 
-      currentLineHeight--;
+      currentContentWidth--;
       updateControls();
-      this._setContentWidth(currentLineHeight);
+      this._setContentWidth(currentContentWidth);
     }, true);
   },
 
