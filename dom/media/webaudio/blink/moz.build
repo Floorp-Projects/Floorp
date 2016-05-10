@@ -14,6 +14,7 @@ UNIFIED_SOURCES += [
     'HRTFElevation.cpp',
     'HRTFKernel.cpp',
     'HRTFPanner.cpp',
+    'IIRFilter.cpp',
     'PeriodicWave.cpp',
     'Reverb.cpp',
     'ReverbAccumulationBuffer.cpp',
