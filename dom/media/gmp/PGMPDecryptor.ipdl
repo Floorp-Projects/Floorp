@@ -81,8 +81,6 @@ parent:
   async KeyStatusChanged(nsCString aSessionId, uint8_t[] aKey,
                          GMPMediaKeyStatus aStatus);
 
-  async SetCaps(uint64_t aCaps);
-
   async Decrypted(uint32_t aId, GMPErr aResult, uint8_t[] aBuffer);
 
   async Shutdown();

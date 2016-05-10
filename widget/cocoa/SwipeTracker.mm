@@ -211,9 +211,9 @@ SwipeTracker::SendSwipeEvent(EventMessage aMsg, uint32_t aDirection, double aDel
 {
   WidgetSimpleGestureEvent geckoEvent =
     CreateSwipeGestureEvent(aMsg, &mWidget, mEventPosition);
-  geckoEvent.direction = aDirection;
-  geckoEvent.delta = aDelta;
-  geckoEvent.allowedDirections = mAllowedDirections;
+  geckoEvent.mDirection = aDirection;
+  geckoEvent.mDelta = aDelta;
+  geckoEvent.mAllowedDirections = mAllowedDirections;
   return mWidget.DispatchWindowEvent(geckoEvent);
 }
 

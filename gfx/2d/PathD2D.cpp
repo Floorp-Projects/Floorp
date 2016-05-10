@@ -404,13 +404,17 @@ PathD2D::TransformedCopyToBuilder(const Matrix &aTransform, FillRule aFillRule) 
 
   if (mEndedActive) {
     OpeningGeometrySink wrapSink(sink);
-    mGeometry->Simplify(D2D1_GEOMETRY_SIMPLIFICATION_OPTION_CUBICS_AND_LINES,
-                        D2DMatrix(aTransform),
-                        &wrapSink);
+    hr = mGeometry->Simplify(D2D1_GEOMETRY_SIMPLIFICATION_OPTION_CUBICS_AND_LINES,
+                             D2DMatrix(aTransform),
+                             &wrapSink);
   } else {
-    mGeometry->Simplify(D2D1_GEOMETRY_SIMPLIFICATION_OPTION_CUBICS_AND_LINES,
-                        D2DMatrix(aTransform),
-                        sink);
+    hr = mGeometry->Simplify(D2D1_GEOMETRY_SIMPLIFICATION_OPTION_CUBICS_AND_LINES,
+                             D2DMatrix(aTransform),
+                             sink);
+  }
+  if (FAILED(hr)) {
+    gfxWarning() << "Failed to simplify PathGeometry to tranformed copy. Code: " << hexa(hr) << " Active: " << mEndedActive;
+    return nullptr;
   }
 
   RefPtr<PathBuilderD2D> pathBuilder = new PathBuilderD2D(sink, path, aFillRule, mBackendType);

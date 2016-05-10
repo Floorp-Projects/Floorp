@@ -53,7 +53,7 @@ public:
   {
     mSurface =
       ImageOps::DecodeToSurface(mInputStream,
-                                nsAutoCString(mTestCase.mMimeType),
+                                nsDependentCString(mTestCase.mMimeType),
                                 imgIContainer::DECODE_FLAGS_DEFAULT);
     ASSERT_TRUE(mSurface != nullptr);
 
@@ -121,7 +121,7 @@ TEST(ImageDecodeToSurface, Corrupt)
 
   RefPtr<SourceSurface> surface =
     ImageOps::DecodeToSurface(inputStream,
-                              nsAutoCString(testCase.mMimeType),
+                              nsDependentCString(testCase.mMimeType),
                               imgIContainer::DECODE_FLAGS_DEFAULT);
   EXPECT_TRUE(surface == nullptr);
 }

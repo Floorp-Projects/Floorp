@@ -13,16 +13,11 @@ const BASE_URI = "http://mochi.test:8888/browser/browser/components/"
 
 add_task(function* setup() {
   // make sure userContext is enabled.
-  SpecialPowers.pushPrefEnv({"set": [
-    ["privacy.userContext.enabled", true],
-    ["browser.link.open_newwindow", 3],
-  ]});
-});
-
-add_task(function* cleanup() {
-  // make sure we don't leave any prefs set for the next tests
-  registerCleanupFunction(function() {
-    SpecialPowers.popPrefEnv();
+  yield new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({"set": [
+      ["privacy.userContext.enabled", true],
+      ["browser.link.open_newwindow", 3],
+    ]}, resolve);
   });
 });
 

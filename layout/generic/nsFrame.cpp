@@ -1890,10 +1890,6 @@ nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
     return;
   }
 
-  if (aBuilder->IsForGenerateGlyphPath()) {
-    return;
-  }
-
   nsCSSShadowArray* shadows = StyleEffects()->mBoxShadow;
   if (shadows && shadows->HasShadowWithInset(false)) {
     aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
@@ -2410,8 +2406,8 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     DisplayListClipState::AutoSaveRestore blendContainerClipState(aBuilder);
     blendContainerClipState.Clear();
     resultList.AppendNewToTop(
-      new (aBuilder) nsDisplayBlendContainer(aBuilder, this, &resultList,
-                                             containerItemScrollClip));
+      nsDisplayBlendContainer::CreateForMixBlendMode(aBuilder, this, &resultList,
+                                                     containerItemScrollClip));
   }
 
   if (!isTransformed && !useFixedPosition && !useStickyPosition) {

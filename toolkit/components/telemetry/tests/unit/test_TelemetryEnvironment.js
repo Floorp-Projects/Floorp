@@ -581,6 +581,8 @@ function checkSystemSection(data) {
 
     let features = gfxInfo.getFeatures();
     Assert.equal(features.compositor, gfxData.features.compositor);
+    Assert.equal(features.opengl, gfxData.features.opengl);
+    Assert.equal(features.webgl, gfxData.features.webgl);
   }
   catch (e) {}
 }

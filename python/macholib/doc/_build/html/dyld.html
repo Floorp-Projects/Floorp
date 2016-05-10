@@ -1,0 +1,267 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>macholib.dyld — Dyld emulation &mdash; macholib 1.7 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="macholib 1.7 documentation" href="index.html" />
+    <link rel="next" title="macholib.dylib — Generic dylib path manipulation" href="dylib.html" />
+    <link rel="prev" title="macholib.SymbolTable — Class to read the symbol table from a Mach-O header" href="SymbolTable.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="dylib.html" title="macholib.dylib — Generic dylib path manipulation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="SymbolTable.html" title="macholib.SymbolTable — Class to read the symbol table from a Mach-O header"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">macholib 1.7 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-macholib.dyld">
+<span id="macholib-dyld-dyld-emulation"></span><h1><a class="reference internal" href="#module-macholib.dyld" title="macholib.dyld: Emulation of functonality of the dynamic linker"><tt class="xref py py-mod docutils literal"><span class="pre">macholib.dyld</span></tt></a> &#8212; Dyld emulation<a class="headerlink" href="#module-macholib.dyld" title="Permalink to this headline">¶</a></h1>
+<p>This module defines a number of functions that can be used
+to emulate the functionality of the dynamic linker (<tt class="docutils literal"><span class="pre">dyld</span></tt>)
+w.r.t. looking for library files and framworks.</p>
+<dl class="function">
+<dt id="macholib.dyld.dyld_image_suffix">
+<tt class="descclassname">macholib.dyld.</tt><tt class="descname">dyld_image_suffix</tt><big>(</big><span class="optional">[</span><em>env</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#macholib.dyld.dyld_image_suffix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Looks up the suffix to append to shared library and
+framework names and returns this value when found.
+Returns <tt class="docutils literal"><span class="pre">None</span></tt> when no suffix should be appended.</p>
+<p>The <em>env</em> argument is a dictionary, which defaults
+to <a class="reference external" href="http://docs.python.org/library/os.html#os.environ" title="(in Python v2.7)"><tt class="xref py py-data docutils literal"><span class="pre">os.environ</span></tt></a>.</p>
+<p>See the description of <tt class="docutils literal"><span class="pre">DYLD_IMAGE_SUFFIX</span></tt> in the
+manual page for dyld(1) for more information.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="macholib.dyld.dydl_framework_path">
+<tt class="descclassname">macholib.dyld.</tt><tt class="descname">dydl_framework_path</tt><big>(</big><span class="optional">[</span><em>env</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#macholib.dyld.dydl_framework_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a user-specified framework search path,
+or an empty list when only the default search path
+should be used.</p>
+<p>The <em>env</em> argument is a dictionary, which defaults
+to <a class="reference external" href="http://docs.python.org/library/os.html#os.environ" title="(in Python v2.7)"><tt class="xref py py-data docutils literal"><span class="pre">os.environ</span></tt></a>.</p>
+<p>See the description of <tt class="docutils literal"><span class="pre">DYLD_FRAMEWORK_PATH</span></tt> in the
+manual page for dyld(1) for more information.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="macholib.dyld.dyld_library_path">
+<tt class="descclassname">macholib.dyld.</tt><tt class="descname">dyld_library_path</tt><big>(</big><span class="optional">[</span><em>env</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#macholib.dyld.dyld_library_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a user-specified library search path,
+or an empty list when only the default search path
+should be used.</p>
+<p>The <em>env</em> argument is a dictionary, which defaults
+to <a class="reference external" href="http://docs.python.org/library/os.html#os.environ" title="(in Python v2.7)"><tt class="xref py py-data docutils literal"><span class="pre">os.environ</span></tt></a>.</p>
+<p>See the description of <tt class="docutils literal"><span class="pre">DYLD_LIBRARY_PATH</span></tt> in the
+manual page for dyld(1) for more information.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="macholib.dyld.dyld_fallback_framework_path">
+<tt class="descclassname">macholib.dyld.</tt><tt class="descname">dyld_fallback_framework_path</tt><big>(</big><span class="optional">[</span><em>env</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#macholib.dyld.dyld_fallback_framework_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a user specified list of of directories where
+to look for frameworks that aren&#8217;t in their install path,
+or an empty list when the default fallback path should
+be  used.</p>
+<p>The <em>env</em> argument is a dictionary, which defaults
+to <a class="reference external" href="http://docs.python.org/library/os.html#os.environ" title="(in Python v2.7)"><tt class="xref py py-data docutils literal"><span class="pre">os.environ</span></tt></a>.</p>
+<p>See the description of <tt class="docutils literal"><span class="pre">DYLD_FALLBACK_FRAMEWORK_PATH</span></tt> in the
+manual page for dyld(1) for more information.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="macholib.dyld.dyld_fallback_library_path">
+<tt class="descclassname">macholib.dyld.</tt><tt class="descname">dyld_fallback_library_path</tt><big>(</big><span class="optional">[</span><em>env</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#macholib.dyld.dyld_fallback_library_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a user specified list of of directories where
+to look for libraries that aren&#8217;t in their install path,
+or an empty list when the default fallback path should
+be  used.</p>
+<p>The <em>env</em> argument is a dictionary, which defaults
+to <a class="reference external" href="http://docs.python.org/library/os.html#os.environ" title="(in Python v2.7)"><tt class="xref py py-data docutils literal"><span class="pre">os.environ</span></tt></a>.</p>
+<p>See the description of <tt class="docutils literal"><span class="pre">DYLD_FALLBACK_LIBRARY_PATH</span></tt> in the
+manual page for dyld(1) for more information.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="macholib.dyld.dyld_image_suffix_search">
+<tt class="descclassname">macholib.dyld.</tt><tt class="descname">dyld_image_suffix_search</tt><big>(</big><em>iterator</em><span class="optional">[</span>, <em>env</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#macholib.dyld.dyld_image_suffix_search" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yields all items in <em>iterator</em>, and prepents names
+with the image suffix to those items when the suffix
+is specified.</p>
+<p>The <em>env</em> argument is a dictionary, which defaults
+to <a class="reference external" href="http://docs.python.org/library/os.html#os.environ" title="(in Python v2.7)"><tt class="xref py py-data docutils literal"><span class="pre">os.environ</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="macholib.dyld.dyld_override_search">
+<tt class="descclassname">macholib.dyld.</tt><tt class="descname">dyld_override_search</tt><big>(</big><em>name</em><span class="optional">[</span>, <em>env</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#macholib.dyld.dyld_override_search" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <em>name</em> is a framework name yield filesystem
+paths relative to the entries in the framework
+search path.</p>
+<p>Always yield the filesystem paths relative to the
+entries in the library search path.</p>
+<p>The <em>env</em> argument is a dictionary, which defaults
+to <a class="reference external" href="http://docs.python.org/library/os.html#os.environ" title="(in Python v2.7)"><tt class="xref py py-data docutils literal"><span class="pre">os.environ</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="macholib.dyld.dyld_executable_path_search">
+<tt class="descclassname">macholib.dyld.</tt><tt class="descname">dyld_executable_path_search</tt><big>(</big><em>name</em>, <em>executable_path</em><big>)</big><a class="headerlink" href="#macholib.dyld.dyld_executable_path_search" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <em>name</em> is a path starting with <tt class="docutils literal"><span class="pre">&#64;executable_path/</span></tt> yield
+the path relative to the specified <em>executable_path</em>.</p>
+<p>If <em>executable_path</em> is None nothing is yielded.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="macholib.dyld.dyld_loader_search">
+<tt class="descclassname">macholib.dyld.</tt><tt class="descname">dyld_loader_search</tt><big>(</big><em>name</em>, <em>loader_path</em><big>)</big><a class="headerlink" href="#macholib.dyld.dyld_loader_search" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <em>name</em> is a path starting with <tt class="docutils literal"><span class="pre">&#64;loader_path/</span></tt> yield
+the path relative to the specified <em>loader_path</em>.</p>
+<p>If <em>loader_path</em> is None nothing is yielded.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="macholib.dyld.dyld_default_search">
+<tt class="descclassname">macholib.dyld.</tt><tt class="descname">dyld_default_search</tt><big>(</big><em>name</em><span class="optional">[</span>, <em>env</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#macholib.dyld.dyld_default_search" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yield the filesystem locations to look for a dynamic
+library or framework using the default locations
+used by the system dynamic linker.</p>
+<p>This function will look in <tt class="docutils literal"><span class="pre">~/Library/Frameworks</span></tt>
+for frameworks, even though the system dynamic linker
+doesn&#8217;t.</p>
+<p>The <em>env</em> argument is a dictionary, which defaults
+to <a class="reference external" href="http://docs.python.org/library/os.html#os.environ" title="(in Python v2.7)"><tt class="xref py py-data docutils literal"><span class="pre">os.environ</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="macholib.dyld.dyld_find">
+<tt class="descclassname">macholib.dyld.</tt><tt class="descname">dyld_find</tt><big>(</big><em>name</em><span class="optional">[</span>, <em>executable_path</em><span class="optional">[</span>, <em>env</em><span class="optional">[</span>, <em>loader</em><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#macholib.dyld.dyld_find" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the path of the requested dynamic library,
+raises <tt class="xref py py-exc docutils literal"><span class="pre">ValueError</span></tt> when the library cannot be found.</p>
+<p>This function searches for the library in the same
+locations and de system dynamic linker.</p>
+<p>The <em>executable_path</em> should be the filesystem path
+of the executable to which the library is linked (either
+directly or indirectly).</p>
+<p>The <em>env</em> argument is a dictionary, which defaults
+to <a class="reference external" href="http://docs.python.org/library/os.html#os.environ" title="(in Python v2.7)"><tt class="xref py py-data docutils literal"><span class="pre">os.environ</span></tt></a>.</p>
+<p>The <em>loader_path</em> argument is an optional filesystem path for
+the object file (binary of shared library) that references
+<em>name</em>.</p>
+<div class="versionchanged">
+<p><span class="versionmodified">Changed in version 1.6: </span>Added the <em>loader_path</em> argument.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="macholib.dyld.framework_find">
+<tt class="descclassname">macholib.dyld.</tt><tt class="descname">framework_find</tt><big>(</big><em>fn</em><span class="optional">[</span>, <em>executable_path</em><span class="optional">[</span>, <em>env</em><span class="optional">]</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#macholib.dyld.framework_find" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find a framework using the same semantics as the
+system dynamic linker, but will accept looser names
+than the system linker.</p>
+<p>This function will return a correct result for input
+values like:</p>
+<ul class="simple">
+<li>Python</li>
+<li>Python.framework</li>
+<li>Python.framework/Versions/Current</li>
+</ul>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="SymbolTable.html"
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">macholib.SymbolTable</span></tt> &#8212; Class to read the symbol table from a Mach-O header</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="dylib.html"
+                        title="next chapter"><tt class="docutils literal"><span class="pre">macholib.dylib</span></tt> &#8212; Generic dylib path manipulation</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/dyld.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="dylib.html" title="macholib.dylib — Generic dylib path manipulation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="SymbolTable.html" title="macholib.SymbolTable — Class to read the symbol table from a Mach-O header"
+             >previous</a> |</li>
+        <li><a href="index.html">macholib 1.7 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010-2011, Ronald Oussoren.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.1.
+    </div>
+  </body>
+</html>

@@ -85,6 +85,10 @@ class FixedList
         return list_[index];
     }
 
+    T* data() {
+        return list_;
+    }
+
     T* begin() {
         return list_;
     }

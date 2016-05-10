@@ -1,3 +1,4 @@
+altgraph.pth:python/altgraph
 marionette_driver.pth:testing/marionette/client
 browsermobproxy.pth:testing/marionette/harness/marionette/runner/mixins/browsermob-proxy-py
 wptserve.pth:testing/web-platform/tests/tools/wptserve
@@ -13,6 +14,7 @@ optional:setup.py:python/psutil:build_ext:--inplace
 optional:psutil.pth:python/psutil
 which.pth:python/which
 ply.pth:other-licenses/ply/
+macholib.pth:python/macholib
 mock.pth:python/mock-1.0.0
 mozilla.pth:build
 mozilla.pth:config

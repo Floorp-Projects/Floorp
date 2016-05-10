@@ -12,9 +12,10 @@
 
 from __future__ import print_function
 
-import argparse, bitstring, pprint, hashlib, os, subprocess, sys, tempfile
+import argparse, bitstring, pprint, hashlib, os, subprocess, sys, tempfile, macholib, macholib.MachO
 from pyasn1.codec.der import encoder as der_encoder
 from pyasn1.type import univ, namedtype, namedval, constraint
+
 
 # Defined in WinNT.h from the Windows SDK
 IMAGE_SCN_MEM_EXECUTE = 0x20000000
@@ -61,18 +62,22 @@ class SetOfCodeSegmentDigest(univ.SetOf):
 class CPUType(univ.Enumerated):
 	namedValues = namedval.NamedValues(
 		('IMAGE_FILE_MACHINE_I386', 0x14c),
-		('IMAGE_FILE_MACHINE_AMD64',0x8664 )
+		('IMAGE_FILE_MACHINE_AMD64',0x8664 ),
+		('MACHO_CPU_TYPE_I386',0x7 ),
+		('MACHO_CPU_TYPE_X86_64',0x1000007 ),
 	)
 	subtypeSpec = univ.Enumerated.subtypeSpec + \
-				  constraint.SingleValueConstraint(0x14c, 0x8664)
+				  constraint.SingleValueConstraint(0x14c, 0x8664, 0x7, 0x1000007)
 
 
 class CPUSubType(univ.Enumerated):
 	namedValues = namedval.NamedValues(
 		('IMAGE_UNUSED', 0x0),
+		('CPU_SUBTYPE_X86_ALL', 0x3),
+		('CPU_SUBTYPE_X86_64_ALL', 0x80000003)
 	)
 	subtypeSpec = univ.Enumerated.subtypeSpec + \
-				  constraint.SingleValueConstraint(0)
+				  constraint.SingleValueConstraint(0, 0x3, 0x80000003)
 
 
 class ArchitectureDigest(univ.Sequence):
@@ -150,6 +155,22 @@ def parse_items(stream, items_in, items_out):
 			raise Exception("unrecognized item" + pprint.pformat(item))
 
 	return bits_read, total_bits_read
+
+
+# macho stuff
+# Constant for the magic field of the mach_header (32-bit architectures)
+MH_MAGIC =0xfeedface	# the mach magic number
+MH_CIGAM =0xcefaedfe	# NXSwapInt(MH_MAGIC)
+
+MH_MAGIC_64 =0xfeedfacf	# the the 64-bit mach magic number
+MH_CIGAM_64 =0xcffaedfe	# NXSwapInt(MH_MAGIC_64)
+
+FAT_CIGAM = 0xbebafeca
+FAT_MAGIC =	0xcafebabe
+
+LC_SEGMENT = 0x1
+LC_SEGMENT_64	= 0x19	# 64-bit segment of this file to be
+
 
 
 # TODO: perhaps switch to pefile module when it officially supports python3
@@ -374,7 +395,7 @@ def get_password(service_name, user_name):
 
 		return password
 	except:
-	    # This allows for manual testing where you do not wish to cache the password on the system 
+	    # This allows for manual testing where you do not wish to cache the password on the system
 		print("Missing keyring module...getting password manually")
 
 	return None
@@ -392,24 +413,86 @@ def openssl_cmd(app_args, args, password_in, password_out):
 		if password_in: args += ["-passin", "env:COFF_PW"]
 		if password_out: args += ["-passout", "env:COFF_PW", "-password", "env:COFF_PW"]
 
-	p = subprocess.Popen(args, env=env)
-	assert p.wait() == 0
+	subprocess.check_call(args, env=env)
 
 
-def main():
-	parser = argparse.ArgumentParser(description='PE/COFF Signer')
-	parser.add_argument('-input', action=ExpandPath, required=True, help="File to parse.")
-	parser.add_argument('-output', action=ExpandPath, required=True, help="File to write to.")
-	parser.add_argument('-openssl_path', action=ExpandPath, help="Path to OpenSSL to create signed voucher")
-	parser.add_argument('-signer_pfx', action=ExpandPath, help="Path to certificate to use to sign voucher.  Must contain full certificate chain.")
-	parser.add_argument('-password_service', help="Name of Keyring/Wallet service/host")
-	parser.add_argument('-password_user', help="Name of Keyring/Wallet user name")
-	parser.add_argument('-verbose', action='store_true', help="Verbose output.")
-	app_args = parser.parse_args()
+def processMachoBinary(filename):
 
-	# to simplify relocation handling we use a mutable BitStream so we can remove
-	# the BaseAddress from each relocation
-	stream = bitstring.BitStream(filename=app_args.input)
+	outDict = dict()
+	outDict['result'] = False
+
+	setOfArchDigests = SetOfArchitectureDigest()
+	archDigestIdx = 0
+
+	parsedMacho = macholib.MachO.MachO(filename)
+
+	for header in parsedMacho.headers :
+		arch_digest = ArchitectureDigest()
+		lc_segment = LC_SEGMENT
+
+		arch_digest.setComponentByName('cpuType', CPUType(header.header.cputype))
+		arch_digest.setComponentByName('cpuSubType', CPUSubType(header.header.cpusubtype))
+
+		if header.header.cputype == 0x1000007:
+			lc_segment = LC_SEGMENT_64
+
+
+
+		segment_commands = list(filter(lambda x: x[0].cmd == lc_segment, header.commands))
+		text_segment_commands = list(filter(lambda x: x[1].segname.decode("utf-8").startswith("__TEXT"), segment_commands))
+
+
+		code_segment_digests = SetOfCodeSegmentDigest()
+		code_segment_idx = 0
+
+		for text_command in text_segment_commands:
+
+			codeSegmentDigest = CodeSegmentDigest()
+			codeSegmentDigest.setComponentByName('offset', text_command[1].fileoff)
+
+			sectionDigestIdx = 0
+			set_of_digest = SetOfCodeSectionDigest()
+			for section in text_command[2]:
+				digester = hashlib.sha256()
+				digester.update(section.section_data)
+				digest = digester.digest()
+
+				code_section_digest = CodeSectionDigest()
+				code_section_digest.setComponentByName('offset', section.offset)
+				code_section_digest.setComponentByName('digestAlgorithm', univ.ObjectIdentifier('2.16.840.1.101.3.4.2.1'))
+				code_section_digest.setComponentByName('digest', univ.OctetString(digest))
+
+				set_of_digest.setComponentByPosition(sectionDigestIdx, code_section_digest)
+				sectionDigestIdx += 1
+
+
+			codeSegmentDigest.setComponentByName('codeSectionDigests', set_of_digest)
+
+			code_segment_digests.setComponentByPosition(code_segment_idx, codeSegmentDigest)
+
+			code_segment_idx += 1
+
+		arch_digest.setComponentByName('CodeSegmentDigests', code_segment_digests)
+		setOfArchDigests.setComponentByPosition(archDigestIdx, arch_digest)
+		archDigestIdx += 1
+
+		outDict['result'] = True
+
+	if outDict['result']:
+		appDigest = ApplicationDigest()
+		appDigest.setComponentByName('version', 1)
+		appDigest.setComponentByName('digests', setOfArchDigests)
+		outDict['digest'] = appDigest
+
+
+	return outDict
+
+
+
+def processCOFFBinary(stream):
+
+	outDict = dict()
+	outDict['result'] = False
 
 	# find the COFF header.
 	# skip forward past the MSDOS stub header to 0x3c.
@@ -422,7 +505,7 @@ def main():
 	# read 4 bytes, make sure it's a PE signature.
 	signature = stream.read('uintle:32')
 	if signature != 0x00004550:
-		raise Exception("Invalid File")
+		return outDict
 
 	# after signature is the actual COFF file header.
 	coff_header = COFFFileHeader(stream)
@@ -475,7 +558,38 @@ def main():
 	appDigest.setComponentByName('version', 1)
 	appDigest.setComponentByName('digests', setOfArchDigests)
 
-	binaryDigest = der_encoder.encode(appDigest)
+	outDict['result'] = True
+	outDict['digest'] = appDigest
+
+	return outDict
+
+def main():
+	parser = argparse.ArgumentParser(description='PE/COFF Signer')
+	parser.add_argument('-input', action=ExpandPath, required=True, help="File to parse.")
+	parser.add_argument('-output', action=ExpandPath, required=True, help="File to write to.")
+	parser.add_argument('-openssl_path', action=ExpandPath, help="Path to OpenSSL to create signed voucher")
+	parser.add_argument('-signer_pfx', action=ExpandPath, help="Path to certificate to use to sign voucher.  Must contain full certificate chain.")
+	parser.add_argument('-password_service', help="Name of Keyring/Wallet service/host")
+	parser.add_argument('-password_user', help="Name of Keyring/Wallet user name")
+	parser.add_argument('-verbose', action='store_true', help="Verbose output.")
+	app_args = parser.parse_args()
+
+	# to simplify relocation handling we use a mutable BitStream so we can remove
+	# the BaseAddress from each relocation
+	stream = bitstring.BitStream(filename=app_args.input)
+
+
+	dict = processCOFFBinary(stream)
+
+	if dict['result'] == False:
+		dict = processMachoBinary(app_args.input)
+
+
+
+	if dict['result'] == False:
+		raise Exception("Invalid File")
+
+	binaryDigest = der_encoder.encode(dict['digest'])
 
 	with open(app_args.output, 'wb') as f:
 		f.write(binaryDigest)

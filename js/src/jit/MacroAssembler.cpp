@@ -256,7 +256,7 @@ StoreToTypedFloatArray(MacroAssembler& masm, int arrayType, const S& value, cons
             masm.storeFloat32x3(value, dest);
             break;
           case 4:
-            masm.storeUnalignedFloat32x4(value, dest);
+            masm.storeUnalignedSimd128Float(value, dest);
             break;
           default: MOZ_CRASH("unexpected number of elements in simd write");
         }
@@ -273,7 +273,7 @@ StoreToTypedFloatArray(MacroAssembler& masm, int arrayType, const S& value, cons
             masm.storeInt32x3(value, dest);
             break;
           case 4:
-            masm.storeUnalignedInt32x4(value, dest);
+            masm.storeUnalignedSimd128Int(value, dest);
             break;
           default: MOZ_CRASH("unexpected number of elements in simd write");
         }
@@ -352,7 +352,7 @@ MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T& src, AnyRegi
             loadInt32x3(src, dest.fpu());
             break;
           case 4:
-            loadUnalignedInt32x4(src, dest.fpu());
+            loadUnalignedSimd128Int(src, dest.fpu());
             break;
           default: MOZ_CRASH("unexpected number of elements in SIMD load");
         }
@@ -369,7 +369,7 @@ MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T& src, AnyRegi
             loadFloat32x3(src, dest.fpu());
             break;
           case 4:
-            loadUnalignedFloat32x4(src, dest.fpu());
+            loadUnalignedSimd128Float(src, dest.fpu());
             break;
           default: MOZ_CRASH("unexpected number of elements in SIMD load");
         }

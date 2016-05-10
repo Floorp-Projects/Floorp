@@ -5,10 +5,12 @@
 include $(MOZILLA_DIR)/toolkit/mozapps/installer/signing.mk
 
 ifdef MOZ_SIGN_CMD
-  ifeq ($(OS_ARCH),WINNT)
-    # The argument to this macro is the directory where plugin-container.exe
-    # exists, and where voucher.bin will be generated.
-    MAKE_SIGN_EME_VOUCHER = $(PYTHON) $(MOZILLA_DIR)/python/eme/gen-eme-voucher.py -input $(1)/plugin-container.exe -output $(1)/voucher.bin && \
-      $(MOZ_SIGN_CMD) -f emevoucher "$(1)/voucher.bin"
+  ifeq (,$(filter-out WINNT Darwin,$(OS_ARCH)))
+    # The first argument to this macro is the directory where the
+    # plugin-container binary exists, and the second is where voucher.bin will
+    # be generated. If the second argument is not specified, it defaults to the
+    # same as the first.
+    MAKE_SIGN_EME_VOUCHER = $(PYTHON) $(MOZILLA_DIR)/python/eme/gen-eme-voucher.py -input $(1)/$(MOZ_CHILD_PROCESS_NAME) -output $(or $(2),$(1))/voucher.bin && \
+      $(MOZ_SIGN_CMD) -f emevoucher "$(or $(2),$(1))/voucher.bin"
   endif
 endif

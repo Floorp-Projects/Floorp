@@ -1,0 +1,8 @@
+include *.txt MANIFEST.in *.py
+graft doc
+graft doc/_static
+graft doc/_templates
+graft macholib_tests
+global-exclude .DS_Store
+global-exclude *.pyc
+global-exclude *.so

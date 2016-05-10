@@ -69,15 +69,10 @@ public:
   {
     return GetFirstNamedElement(aName, aFound);
   }
-  bool NameIsEnumerable(const nsAString& aName)
-  {
-    return false;
-  }
   virtual mozilla::dom::Element*
   GetFirstNamedElement(const nsAString& aName, bool& aFound) = 0;
 
-  virtual void GetSupportedNames(unsigned aFlags,
-                                 nsTArray<nsString>& aNames) = 0;
+  virtual void GetSupportedNames(nsTArray<nsString>& aNames) = 0;
 
   JSObject* GetWrapperPreserveColor()
   {

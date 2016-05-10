@@ -2025,8 +2025,7 @@ class MOZ_STACK_CLASS ModuleValidator
         uint32_t funcIndex = numFunctions();
         if (funcIndex >= MaxFuncs)
             return failCurrentOffset("too many functions");
-        if (!mg_.initFuncSig(funcIndex, sigIndex))
-            return false;
+        mg_.initFuncSig(funcIndex, sigIndex);
         Global* global = validationLifo_.new_<Global>(Global::Function);
         if (!global)
             return false;

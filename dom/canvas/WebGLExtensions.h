@@ -153,6 +153,18 @@ public:
     DECL_WEBGL_EXTENSION_GOOP
 };
 
+class WebGLExtensionEXTColorBufferFloat
+    : public WebGLExtensionBase
+{
+public:
+    explicit WebGLExtensionEXTColorBufferFloat(WebGLContext*);
+    virtual ~WebGLExtensionEXTColorBufferFloat() { }
+
+    static bool IsSupported(const WebGLContext*);
+
+    DECL_WEBGL_EXTENSION_GOOP
+};
+
 class WebGLExtensionFragDepth
     : public WebGLExtensionBase
 {

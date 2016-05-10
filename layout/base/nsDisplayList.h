@@ -3442,9 +3442,14 @@ private:
 
 class nsDisplayBlendContainer : public nsDisplayWrapList {
 public:
-    nsDisplayBlendContainer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                            nsDisplayList* aList,
-                            const DisplayItemScrollClip* aScrollClip);
+    static nsDisplayBlendContainer*
+    CreateForMixBlendMode(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                          nsDisplayList* aList, const DisplayItemScrollClip* aScrollClip);
+
+    static nsDisplayBlendContainer*
+    CreateForBackgroundBlendMode(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                                 nsDisplayList* aList, const DisplayItemScrollClip* aScrollClip);
+
 #ifdef NS_BUILD_REFCNT_LOGGING
     virtual ~nsDisplayBlendContainer();
 #endif
@@ -3460,15 +3465,20 @@ public:
       return false;
     }
     virtual uint32_t GetPerFrameKey() override {
-      return (mIndex << nsDisplayItem::TYPE_BITS) |
+      return (mIsForBackground ? 1 << nsDisplayItem::TYPE_BITS : 0) |
         nsDisplayItem::GetPerFrameKey();
     }
     NS_DISPLAY_DECL_NAME("BlendContainer", TYPE_BLEND_CONTAINER)
 
 private:
+    nsDisplayBlendContainer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                            nsDisplayList* aList,
+                            const DisplayItemScrollClip* aScrollClip,
+                            bool aIsForBackground);
+
     // Used to distinguish containers created at building stacking
     // context or appending background.
-    uint32_t mIndex;
+    bool mIsForBackground;
 };
 
 /**

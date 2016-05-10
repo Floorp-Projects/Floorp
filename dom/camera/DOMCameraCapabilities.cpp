@@ -239,10 +239,10 @@ CameraRecorderProfiles::~CameraRecorderProfiles()
 }
 
 void
-CameraRecorderProfiles::GetSupportedNames(unsigned aFlags, nsTArray<nsString>& aNames)
+CameraRecorderProfiles::GetSupportedNames(nsTArray<nsString>& aNames)
 {
-  DOM_CAMERA_LOGT("%s:%d : this=%p, flags=0x%x\n",
-    __func__, __LINE__, this, aFlags);
+  DOM_CAMERA_LOGT("%s:%d : this=%p\n",
+    __func__, __LINE__, this);
   if (!mCameraControl) {
     aNames.Clear();
     return;
@@ -273,15 +273,6 @@ CameraRecorderProfiles::NamedGetter(const nsAString& aName, bool& aFound)
     }
   }
   return profile;
-}
-
-bool
-CameraRecorderProfiles::NameIsEnumerable(const nsAString& aName)
-{
-  DOM_CAMERA_LOGT("%s:%d : this=%p, name='%s' (always returns true)\n",
-    __func__, __LINE__, this, NS_ConvertUTF16toUTF8(aName).get());
-
-  return true;
 }
 
 void
