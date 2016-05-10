@@ -364,7 +364,6 @@ ModuleGenerator::finishCodegen(StaticLinkData* link)
     Vector<ProfilingOffsets> interpExits(cx_);
     Vector<ProfilingOffsets> jitExits(cx_);
     EnumeratedArray<JumpTarget, JumpTarget::Limit, Offsets> jumpTargets;
-    ProfilingOffsets badIndirectCallExit;
     Offsets interruptExit;
 
     {
@@ -391,7 +390,6 @@ ModuleGenerator::finishCodegen(StaticLinkData* link)
         for (JumpTarget target : MakeEnumeratedRange(JumpTarget::Limit))
             jumpTargets[target] = GenerateJumpTarget(masm, target);
 
-        badIndirectCallExit = GenerateBadIndirectCallExit(masm);
         interruptExit = GenerateInterruptStub(masm);
 
         if (masm.oom() || !masm_.asmMergeWith(masm))
@@ -426,10 +424,6 @@ ModuleGenerator::finishCodegen(StaticLinkData* link)
             return false;
     }
 
-    badIndirectCallExit.offsetBy(offsetInWhole);
-    if (!module_->codeRanges.emplaceBack(CodeRange::ErrorExit, badIndirectCallExit))
-        return false;
-
     interruptExit.offsetBy(offsetInWhole);
     if (!module_->codeRanges.emplaceBack(CodeRange::Inline, interruptExit))
         return false;
@@ -438,6 +432,8 @@ ModuleGenerator::finishCodegen(StaticLinkData* link)
 
     link->pod.outOfBoundsOffset = jumpTargets[JumpTarget::OutOfBounds].begin;
     link->pod.interruptOffset = interruptExit.begin;
+
+    Offsets badIndirectCallExit = jumpTargets[JumpTarget::BadIndirectCall];
 
     for (uint32_t sigIndex = 0; sigIndex < numSigs_; sigIndex++) {
         const TableModuleGeneratorData& table = shared_->sigToTable[sigIndex];
