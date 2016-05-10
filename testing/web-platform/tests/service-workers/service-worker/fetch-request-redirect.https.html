@@ -146,13 +146,12 @@ promise_test(function(t) {
             assert_resolves(
                 iframe_test(REDIRECT_TO_HTML_URL),
                 'Normal redirected iframe loading should succeed.'),
-            assert_rejects(
+            assert_resolves(
                 iframe_test(SCOPE + '?url=' +
                             encodeURIComponent(REDIRECT_TO_HTML_URL) +
-                            '&redirect-mode=follow',
-                            true /* timeout_enabled */),
+                            '&redirect-mode=follow'),
                 'Redirected iframe loading with Request.redirect=follow should'+
-                ' fail.'),
+                ' succeed.'),
             assert_rejects(
                 iframe_test(SCOPE + '?url=' +
                             encodeURIComponent(REDIRECT_TO_HTML_URL) +

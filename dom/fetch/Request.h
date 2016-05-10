@@ -46,9 +46,7 @@ public:
   void
   GetUrl(nsAString& aUrl) const
   {
-    nsAutoCString url;
-    mRequest->GetURL(url);
-    CopyUTF8toUTF16(url, aUrl);
+    CopyUTF8toUTF16(mRequest->mURL, aUrl);
   }
 
   void

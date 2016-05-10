@@ -75,56 +75,28 @@ public:
     return Type() == ResponseType::Error;
   }
 
-  // GetUrl should return last fetch URL in response's url list and null if
-  // response's url list is the empty list.
+  // FIXME(nsm): Return with exclude fragment.
   void
-  GetURL(nsCString& aURL) const
+  GetUrl(nsCString& aURL) const
   {
-    // Empty urlList when response is a synthetic response.
-    if (mURLList.IsEmpty()) {
-      aURL.Truncate();
-      return;
-    }
-
-    aURL.Assign(mURLList.LastElement());
+    aURL.Assign(mURL);
   }
 
   void
-  GetURLList(nsTArray<nsCString>& aURLList) const
-  {
-    aURLList.Assign(mURLList);
-  }
-
-  void
-  GetUnfilteredURL(nsCString& aURL) const
+  GetUnfilteredUrl(nsCString& aURL) const
   {
     if (mWrappedResponse) {
-      return mWrappedResponse->GetURL(aURL);
+      return mWrappedResponse->GetUrl(aURL);
     }
 
-    return GetURL(aURL);
+    return GetUrl(aURL);
   }
 
+  // SetUrl should only be called when the fragment has alredy been stripped
   void
-  GetUnfilteredURLList(nsTArray<nsCString>& aURLList) const
+  SetUrl(const nsACString& aURL)
   {
-    if (mWrappedResponse) {
-      return mWrappedResponse->GetURLList(aURLList);
-    }
-
-    return GetURLList(aURLList);
-  }
-
-  void
-  SetURLList(const nsTArray<nsCString>& aURLList)
-  {
-    mURLList.Assign(aURLList);
-
-#ifdef DEBUG
-    for(uint32_t i = 0; i < mURLList.Length(); ++i) {
-      MOZ_ASSERT(mURLList[i].Find(NS_LITERAL_CSTRING("#")) == kNotFound);
-    }
-#endif
+    mURL.Assign(aURL);
   }
 
   uint16_t
@@ -239,15 +211,12 @@ public:
     return mPrincipalInfo;
   }
 
-  bool
-  IsRedirected() const
-  {
-    return mURLList.Length() > 1;
-  }
-
   // Takes ownership of the principal info.
   void
   SetPrincipalInfo(UniquePtr<mozilla::ipc::PrincipalInfo> aPrincipalInfo);
+
+  nsresult
+  StripFragmentAndSetUrl(const nsACString& aUrl);
 
   LoadTainting
   GetTainting() const;
@@ -268,10 +237,7 @@ private:
 
   ResponseType mType;
   nsCString mTerminationReason;
-  // A response has an associated url list (a list of zero or more fetch URLs).
-  // Unless stated otherwise, it is the empty list. The current url is the last
-  // element in mURLlist
-  nsTArray<nsCString> mURLList;
+  nsCString mURL;
   const uint16_t mStatus;
   const nsCString mStatusText;
   RefPtr<InternalHeaders> mHeaders;

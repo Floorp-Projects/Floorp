@@ -285,8 +285,18 @@ Request::Constructor(const GlobalObject& aGlobal,
     request = inputReq->GetInternalRequest();
 
   } else {
-    // aInput is USVString.
-    // We need to get url before we create a InternalRequest.
+    request = new InternalRequest();
+  }
+
+  request = request->GetRequestConstructorCopy(global, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  RequestMode fallbackMode = RequestMode::EndGuard_;
+  RequestCredentials fallbackCredentials = RequestCredentials::EndGuard_;
+  RequestCache fallbackCache = RequestCache::EndGuard_;
+  if (aInput.IsUSVString()) {
     nsAutoString input;
     input.Assign(aInput.GetAsUSVString());
 
@@ -307,18 +317,7 @@ Request::Constructor(const GlobalObject& aGlobal,
       return nullptr;
     }
 
-    request = new InternalRequest(NS_ConvertUTF16toUTF8(requestURL));
-  }
-
-  request = request->GetRequestConstructorCopy(global, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  RequestMode fallbackMode = RequestMode::EndGuard_;
-  RequestCredentials fallbackCredentials = RequestCredentials::EndGuard_;
-  RequestCache fallbackCache = RequestCache::EndGuard_;
-  if (aInput.IsUSVString()) {
+    request->SetURL(NS_ConvertUTF16toUTF8(requestURL));
     fallbackMode = RequestMode::Cors;
     fallbackCredentials = RequestCredentials::Omit;
     fallbackCache = RequestCache::Default;

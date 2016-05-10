@@ -250,7 +250,7 @@ public:
     nsresult rv;
     nsCOMPtr<nsIURI> uri;
     nsAutoCString url;
-    mInternalResponse->GetUnfilteredURL(url);
+    mInternalResponse->GetUnfilteredUrl(url);
     if (url.IsEmpty()) {
       // Synthetic response. The buck stops at the worker script.
       url = mScriptSpec;
@@ -587,8 +587,6 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
   //    * request's mode is not "no-cors" and response's type is "opaque".
   //    * request's redirect mode is not "manual" and response's type is
   //      "opaqueredirect".
-  //    * request's redirect mode is not "follow" and response's url list
-  //      has more than one item.
 
   if (response->Type() == ResponseType::Error) {
     autoCancel.SetCancelMessage(
@@ -617,12 +615,6 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
     return;
   }
 
-  if (mRequestRedirectMode != RequestRedirect::Follow && response->Redirected()) {
-    autoCancel.SetCancelMessage(
-      NS_LITERAL_CSTRING("BadRedirectModeInterceptionWithURL"), mRequestURL);
-    return;
-  }
-
   if (NS_WARN_IF(response->BodyUsed())) {
     autoCancel.SetCancelMessage(
       NS_LITERAL_CSTRING("InterceptedUsedResponseWithURL"), mRequestURL);
@@ -639,7 +631,7 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
   // cross-origin responses, which are treated as same-origin by consumers.
   nsCString responseURL;
   if (response->Type() == ResponseType::Opaque) {
-    ir->GetUnfilteredURL(responseURL);
+    ir->GetUnfilteredUrl(responseURL);
     if (NS_WARN_IF(responseURL.IsEmpty())) {
       return;
     }
