@@ -1884,8 +1884,8 @@ ScriptSource::sourceText(JSContext* cx)
                 return mozilla::Nothing();
             }
 
-            if (!DecompressString((const unsigned char*) ss.compressedData(),
-                                  ss.compressedBytes(),
+            if (!DecompressString((const unsigned char*) c.raw.chars(),
+                                  c.raw.length(),
                                   reinterpret_cast<unsigned char*>(decompressed.get()),
                                   lengthWithNull * sizeof(char16_t)))
             {
@@ -2051,6 +2051,8 @@ ScriptSource::setSourceCopy(ExclusiveContext* cx, SourceBufferHolder& srcBuf,
 SourceCompressionTask::ResultType
 SourceCompressionTask::work()
 {
+    MOZ_ASSERT(ss->data.is<ScriptSource::Uncompressed>());
+
     // Try to keep the maximum memory usage down by only allocating half the
     // size of the string, first.
     size_t inputBytes = ss->length() * sizeof(char16_t);
@@ -2059,7 +2061,9 @@ SourceCompressionTask::work()
     if (!compressed)
         return OOM;
 
-    Compressor comp(reinterpret_cast<const unsigned char*>(ss->uncompressedChars()), inputBytes);
+    const char16_t* chars = ss->data.as<ScriptSource::Uncompressed>().string.chars();
+    Compressor comp(reinterpret_cast<const unsigned char*>(chars),
+                    inputBytes);
     if (!comp.init())
         return OOM;
 
@@ -2127,7 +2131,7 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
         }
 
         ReturnType match(Compressed& c) {
-            return c.nbytes();
+            return c.raw.length();
         }
 
         ReturnType match(Missing&) {
