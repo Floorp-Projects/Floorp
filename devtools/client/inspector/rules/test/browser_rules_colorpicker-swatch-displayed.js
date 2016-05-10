@@ -16,6 +16,24 @@ const TEST_URI = `
     }
     * {
       color: blue;
+      background: linear-gradient(
+        to right,
+        #f00,
+        #f008,
+        #00ff00,
+        #00ff0080,
+        rgb(31,170,217),
+        rgba(31,170,217,.5),
+        hsl(5, 5%, 5%),
+        hsla(5, 5%, 5%, 0.25),
+        #F00,
+        #F008,
+        #00FF00,
+        #00FF0080,
+        RGB(31,170,217),
+        RGBA(31,170,217,.5),
+        HSL(5, 5%, 5%),
+        HSLA(5, 5%, 5%, 0.25));
       box-shadow: inset 0 0 2px 20px red, inset 0 0 2px 40px blue;
     }
   </style>
@@ -34,6 +52,7 @@ const TESTS = [
   {selector: "body", propertyName: "background-color", nb: 1},
   {selector: "body", propertyName: "border", nb: 1},
   {selector: "*", propertyName: "color", nb: 1},
+  {selector: "*", propertyName: "background", nb: 16},
   {selector: "*", propertyName: "box-shadow", nb: 2},
 ];
 

@@ -25,8 +25,11 @@ const CLASSIFY_TESTS = [
   { input: "hsla(5, 5%, 5%, 0.25)", output: "hsl" },
   { input: "hSlA(5, 5%, 5%, 0.25)", output: "hsl" },
   { input: "#f0c", output: "hex" },
+  { input: "#f0c0", output: "hex" },
   { input: "#fe01cb", output: "hex" },
+  { input: "#fe01cb80", output: "hex" },
   { input: "#FE01CB", output: "hex" },
+  { input: "#FE01CB80", output: "hex" },
   { input: "blue", output: "name" },
   { input: "orange", output: "name" }
 ];

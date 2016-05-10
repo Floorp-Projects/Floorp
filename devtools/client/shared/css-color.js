@@ -31,12 +31,16 @@ const SPECIALVALUES = new Set([
  *   color.hasAlpha === false
  *   color.valid === true
  *   color.transparent === false // transparent has a special status.
- *   color.name === "red"        // returns hex or rgba when no name available.
+ *   color.name === "red"        // returns hex when no name available.
  *   color.hex === "#f00"        // returns shortHex when available else returns
  *                                  longHex. If alpha channel is present then we
- *                                  return this.rgba.
+ *                                  return this.alphaHex if available,
+ *                                  or this.longAlphaHex if not.
+ *   color.alphaHex === "#f00f"  // returns short alpha hex when available
+ *                                  else returns longAlphaHex.
  *   color.longHex === "#ff0000" // If alpha channel is present then we return
- *                                  this.rgba.
+ *                                  this.longAlphaHex.
+ *   color.longAlphaHex === "#ff0000ff"
  *   color.rgb === "rgb(255, 0, 0)" // If alpha channel is present
  *                                  // then we return this.rgba.
  *   color.rgba === "rgba(255, 0, 0, 1)"
@@ -152,7 +156,7 @@ CssColor.prototype = {
       let tuple = this._getRGBATuple();
 
       if (tuple.a !== 1) {
-        return this.rgb;
+        return this.hex;
       }
       let {r, g, b} = tuple;
       return rgbToColorName(r, g, b);
@@ -167,7 +171,7 @@ CssColor.prototype = {
       return invalidOrSpecialValue;
     }
     if (this.hasAlpha) {
-      return this.rgba;
+      return this.alphaHex;
     }
 
     let hex = this.longHex;
@@ -179,18 +183,47 @@ CssColor.prototype = {
     return hex;
   },
 
+  get alphaHex() {
+    let invalidOrSpecialValue = this._getInvalidOrSpecialValue();
+    if (invalidOrSpecialValue !== false) {
+      return invalidOrSpecialValue;
+    }
+
+    let alphaHex = this.longAlphaHex;
+    if (alphaHex.charAt(1) == alphaHex.charAt(2) &&
+        alphaHex.charAt(3) == alphaHex.charAt(4) &&
+        alphaHex.charAt(5) == alphaHex.charAt(6) &&
+        alphaHex.charAt(7) == alphaHex.charAt(8)) {
+      alphaHex = "#" + alphaHex.charAt(1) + alphaHex.charAt(3) +
+        alphaHex.charAt(5) + alphaHex.charAt(7);
+    }
+    return alphaHex;
+  },
+
   get longHex() {
     let invalidOrSpecialValue = this._getInvalidOrSpecialValue();
     if (invalidOrSpecialValue !== false) {
       return invalidOrSpecialValue;
     }
     if (this.hasAlpha) {
-      return this.rgba;
+      return this.longAlphaHex;
     }
 
     let tuple = this._getRGBATuple();
     return "#" + ((1 << 24) + (tuple.r << 16) + (tuple.g << 8) +
                   (tuple.b << 0)).toString(16).substr(-6);
+  },
+
+  get longAlphaHex() {
+    let invalidOrSpecialValue = this._getInvalidOrSpecialValue();
+    if (invalidOrSpecialValue !== false) {
+      return invalidOrSpecialValue;
+    }
+
+    let tuple = this._getRGBATuple();
+    return "#" + ((1 << 24) + (tuple.r << 16) + (tuple.g << 8) +
+                  (tuple.b << 0)).toString(16).substr(-6) +
+                  Math.round(tuple.a * 255).toString(16).padEnd(2, "0");
   },
 
   get rgb() {
@@ -540,34 +573,42 @@ function hslToRGB([h, s, l]) {
 }
 
 /**
- * A helper function to convert a hex string like "F0C" to a color.
+ * A helper function to convert a hex string like "F0C" or "F0C8" to a color.
  *
  * @param {String} name the color string
  * @return {Object} an object of the form {r, g, b, a}; or null if the
  *         name was not a valid color
  */
 function hexToRGBA(name) {
-  let r, g, b;
+  let r, g, b, a = 1;
 
   if (name.length === 3) {
-    let val = parseInt(name, 16);
-    b = ((val & 15) << 4) + (val & 15);
-    val >>= 4;
-    g = ((val & 15) << 4) + (val & 15);
-    val >>= 4;
-    r = ((val & 15) << 4) + (val & 15);
+    // short hex string (e.g. F0C)
+    r = parseInt(name.charAt(0) + name.charAt(0), 16);
+    g = parseInt(name.charAt(1) + name.charAt(1), 16);
+    b = parseInt(name.charAt(2) + name.charAt(2), 16);
+  } else if (name.length === 4) {
+    // short alpha hex string (e.g. F0CA)
+    r = parseInt(name.charAt(0) + name.charAt(0), 16);
+    g = parseInt(name.charAt(1) + name.charAt(1), 16);
+    b = parseInt(name.charAt(2) + name.charAt(2), 16);
+    a = parseInt(name.charAt(3) + name.charAt(3), 16) / 255;
   } else if (name.length === 6) {
-    let val = parseInt(name, 16);
-    b = val & 255;
-    val >>= 8;
-    g = val & 255;
-    val >>= 8;
-    r = val & 255;
+    // hex string (e.g. FD01CD)
+    r = parseInt(name.charAt(0) + name.charAt(1), 16);
+    g = parseInt(name.charAt(2) + name.charAt(3), 16);
+    b = parseInt(name.charAt(4) + name.charAt(5), 16);
+  } else if (name.length === 8) {
+    // alpha hex string (e.g. FD01CDAB)
+    r = parseInt(name.charAt(0) + name.charAt(1), 16);
+    g = parseInt(name.charAt(2) + name.charAt(3), 16);
+    b = parseInt(name.charAt(4) + name.charAt(5), 16);
+    a = parseInt(name.charAt(6) + name.charAt(7), 16) / 255;
   } else {
     return null;
   }
-
-  return {r, g, b, a: 1};
+  a = Math.round(a * 10) / 10;
+  return {r, g, b, a};
 }
 
 /**
