@@ -9,24 +9,23 @@
 #include <stdint.h>
 
 #include "ExtendedValidation.h"
+#include "NSSErrorsService.h"
 #include "OCSPRequestor.h"
 #include "OCSPVerificationTrustDomain.h"
-#include "certdb.h"
+#include "PublicKeyPinningService.h"
 #include "cert.h"
+#include "certdb.h"
 #include "mozilla/UniquePtr.h"
 #include "nsNSSCertificate.h"
-#include "nss.h"
-#include "NSSErrorsService.h"
 #include "nsServiceManagerUtils.h"
+#include "nss.h"
 #include "pk11pub.h"
+#include "pkix/Result.h"
 #include "pkix/pkix.h"
 #include "pkix/pkixnss.h"
-#include "pkix/Result.h"
 #include "prerror.h"
 #include "prmem.h"
 #include "prprf.h"
-#include "PublicKeyPinningService.h"
-#include "ScopedNSSTypes.h"
 #include "secerr.h"
 
 #include "CNNICHashWhitelist.inc"
@@ -1136,7 +1135,7 @@ SaveIntermediateCerts(const UniqueCERTCertList& certList)
     // We have found a signer cert that we want to remember.
     char* nickname = DefaultServerNicknameForCert(node->cert);
     if (nickname && *nickname) {
-      ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
+      UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
       if (slot) {
         PK11_ImportCert(slot.get(), node->cert, CK_INVALID_HANDLE,
                         nickname, false);
