@@ -43,6 +43,9 @@
 #include "mozilla/ReverseIterator.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Tools.h"
+#include "mozilla/layers/ShadowLayers.h"
+#include "mozilla/layers/TextureClient.h"
+#include "mozilla/layers/TextureWrapperImage.h"
 #include "mozilla/unused.h"
 #include "GeckoProfiler.h"
 #include "LayersLogging.h"
@@ -94,6 +97,18 @@ uint8_t gLayerManagerUserData;
  */
 uint8_t gMaskLayerUserData;
 
+// a global cache of image containers used for mask layers
+static MaskLayerImageCache* gMaskLayerImageCache = nullptr;
+
+static inline MaskLayerImageCache* GetMaskLayerImageCache()
+{
+  if (!gMaskLayerImageCache) {
+    gMaskLayerImageCache = new MaskLayerImageCache();
+  }
+
+  return gMaskLayerImageCache;
+}
+
 FrameLayerBuilder::FrameLayerBuilder()
   : mRetainingManager(nullptr)
   , mDetectedDOMModification(false)
@@ -107,6 +122,7 @@ FrameLayerBuilder::FrameLayerBuilder()
 
 FrameLayerBuilder::~FrameLayerBuilder()
 {
+  GetMaskLayerImageCache()->Sweep();
   MOZ_COUNT_DTOR(FrameLayerBuilder);
 }
 
@@ -369,18 +385,6 @@ FrameLayerBuilder::DestroyDisplayItemDataFor(nsIFrame* aFrame)
 {
   FrameProperties props = aFrame->Properties();
   props.Delete(LayerManagerDataProperty());
-}
-
-// a global cache of image containers used for mask layers
-static MaskLayerImageCache* gMaskLayerImageCache = nullptr;
-
-static inline MaskLayerImageCache* GetMaskLayerImageCache()
-{
-  if (!gMaskLayerImageCache) {
-    gMaskLayerImageCache = new MaskLayerImageCache();
-  }
-
-  return gMaskLayerImageCache;
 }
 
 struct AssignedDisplayItem
@@ -1529,6 +1533,91 @@ struct MaskLayerUserData : public LayerUserData
   // The ContainerLayerParameters offset which is applied to the mask's transform.
   nsIntPoint mOffset;
   int32_t mAppUnitsPerDevPixel;
+};
+
+class MaskImageData
+{
+public:
+  MaskImageData(const gfx::IntSize& aSize, LayerManager* aLayerManager)
+    : mTextureClientLocked(false)
+    , mSize(aSize)
+    , mLayerManager(aLayerManager)
+  {
+  }
+
+  ~MaskImageData()
+  {
+    if (mTextureClientLocked) {
+      MOZ_ASSERT(mTextureClient);
+      // Clear DrawTarget before Unlock.
+      mDrawTarget = nullptr;
+      mTextureClient->Unlock();
+    }
+  }
+
+  gfx::DrawTarget* CreateDrawTarget()
+  {
+    MOZ_ASSERT(mLayerManager);
+    if (mDrawTarget) {
+      return mDrawTarget;
+    }
+
+    if (mLayerManager->GetBackendType() == LayersBackend::LAYERS_BASIC) {
+      mDrawTarget = mLayerManager->CreateOptimalMaskDrawTarget(mSize);
+      return mDrawTarget;
+    }
+
+    MOZ_ASSERT(mLayerManager->GetBackendType() == LayersBackend::LAYERS_CLIENT);
+
+    ShadowLayerForwarder* fwd = mLayerManager->AsShadowForwarder();
+    if (!fwd) {
+      return nullptr;
+    }
+    mTextureClient =
+      TextureClient::CreateForDrawing(fwd,
+                                      SurfaceFormat::A8,
+                                      mSize,
+                                      BackendSelector::Content,
+                                      TextureFlags::DISALLOW_BIGIMAGE,
+                                      TextureAllocationFlags::ALLOC_CLEAR_BUFFER);
+    if (!mTextureClient) {
+      return nullptr;
+    }
+
+    mTextureClientLocked = mTextureClient->Lock(OpenMode::OPEN_READ_WRITE);
+    if (!mTextureClientLocked) {
+      return nullptr;
+    }
+
+    mDrawTarget = mTextureClient->BorrowDrawTarget();
+    return mDrawTarget;
+  }
+
+  already_AddRefed<Image> CreateImage()
+  {
+    if (mLayerManager->GetBackendType() == LayersBackend::LAYERS_BASIC &&
+        mDrawTarget) {
+      RefPtr<SourceSurface> surface = mDrawTarget->Snapshot();
+      RefPtr<SourceSurfaceImage> image = new SourceSurfaceImage(mSize, surface);
+      return image.forget();
+    }
+
+    if (mLayerManager->GetBackendType() == LayersBackend::LAYERS_CLIENT &&
+        mTextureClient &&
+        mDrawTarget) {
+      RefPtr<TextureWrapperImage> image =
+          new TextureWrapperImage(mTextureClient, gfx::IntRect(gfx::IntPoint(0, 0), mSize));
+      return image.forget();
+    }
+    return nullptr;
+  }
+
+private:
+  bool mTextureClientLocked;
+  gfx::IntSize mSize;
+  LayerManager* mLayerManager;
+  RefPtr<gfx::DrawTarget> mDrawTarget;
+  RefPtr<TextureClient> mTextureClient;
 };
 
 /**
@@ -5939,6 +6028,7 @@ ContainerState::CreateMaskLayer(Layer *aLayer,
                                             mContainerFrame->PresContext()));
     newKey->mRoundedClipRects[i].ScaleAndTranslate(imageTransform);
   }
+  newKey->mForwarder = mManager->AsShadowForwarder();
 
   const MaskLayerImageCache::MaskLayerImageKey* lookupKey = newKey;
 
@@ -5951,8 +6041,8 @@ ContainerState::CreateMaskLayer(Layer *aLayer,
     IntSize surfaceSizeInt(GetAlignedStride<4>(NSToIntCeil(surfaceSize.width)),
                            NSToIntCeil(surfaceSize.height));
     // no existing mask image, so build a new one
-    RefPtr<DrawTarget> dt =
-      aLayer->Manager()->CreateOptimalMaskDrawTarget(surfaceSizeInt);
+    MaskImageData imageData(surfaceSizeInt, mManager);
+    RefPtr<DrawTarget> dt = imageData.CreateDrawTarget();
 
     // fail if we can't get the right surface
     if (!dt || !dt->IsValid()) {
@@ -5971,13 +6061,14 @@ ContainerState::CreateMaskLayer(Layer *aLayer,
                                              0,
                                              aRoundedRectClipCount);
 
-    RefPtr<SourceSurface> surface = dt->Snapshot();
-
     // build the image and container
     container = aLayer->Manager()->CreateImageContainer();
     NS_ASSERTION(container, "Could not create image container for mask layer.");
 
-    RefPtr<SourceSurfaceImage> image = new SourceSurfaceImage(surfaceSizeInt, surface);
+    RefPtr<Image> image = imageData.CreateImage();
+    if (!image) {
+      return nullptr;
+    }
     container->SetCurrentImageInTransaction(image);
 
     GetMaskLayerImageCache()->PutImage(newKey.forget(), container);

@@ -43,22 +43,22 @@ fuzzy-if(skiaContent,1,13) == clipping-3.html clipping-3-ref.xhtml # edge of bor
 
 # Tests for clipping the contents of replaced elements and overflow!=visible
 != clipping-4-ref.html clipping-4-notref.html
-fuzzy-if(true,1,20) fuzzy-if(cocoaWidget,1,180) fuzzy-if(Android,140,237) == clipping-4-canvas.html clipping-4-ref.html # bug 732535
+fuzzy-if(true,1,20) fuzzy-if(d2d,64,196) fuzzy-if(cocoaWidget,1,180) fuzzy-if(Android,140,237) == clipping-4-canvas.html clipping-4-ref.html # bug 732535
 fuzzy-if(Android,5,54) fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,10) == clipping-4-image.html clipping-4-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,10) fuzzy-if(skiaContent,1,77) == clipping-4-overflow-hidden.html clipping-4-ref.html
 == clipping-5-canvas.html clipping-5-refc.html
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) == clipping-5-image.html clipping-5-refi.html
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) fuzzy-if(skiaContent,1,77) == clipping-5-overflow-hidden.html clipping-5-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) fuzzy-if(Android,5,21) fuzzy-if(skiaContent,1,77) == clipping-5-refi.html clipping-5-ref.html
-fuzzy-if(true,1,7) fuzzy-if(cocoaWidget,1,99) fuzzy-if(Android,99,115) fuzzy-if(skiaContent,1,77) == clipping-5-refc.html clipping-5-ref.html # bug 732535
+fuzzy-if(true,1,7) fuzzy-if(d2d,48,94) fuzzy-if(cocoaWidget,1,99) fuzzy-if(Android,99,115) fuzzy-if(skiaContent,1,77) == clipping-5-refc.html clipping-5-ref.html # bug 732535
 fuzzy-if(winWidget,105,71) fuzzy-if(Android,8,469) == clipping-6.html clipping-6-ref.html # PaintedLayer and MaskLayer with transforms that aren't identical
-fuzzy-if(true,2,29) fuzzy-if(Android,255,586) fuzzy-if(skiaContent,16,27) == clipping-7.html clipping-7-ref.html # ColorLayer and MaskLayer with transforms that aren't identical. Reference image rendered without using layers (which causes fuzzy failures).
+fuzzy-if(true,2,29) fuzzy-if(d2d,46,50) fuzzy-if(Android,255,586) fuzzy-if(skiaContent,16,27) == clipping-7.html clipping-7-ref.html # ColorLayer and MaskLayer with transforms that aren't identical. Reference image rendered without using layers (which causes fuzzy failures).
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) == clipping-and-zindex-1.html clipping-and-zindex-1-ref.html
 fuzzy-if(cocoaWidget,1,4) == intersecting-clipping-1-canvas.html intersecting-clipping-1-refc.html
 == intersecting-clipping-1-image.html intersecting-clipping-1-refi.html
 == intersecting-clipping-1-overflow-hidden.html intersecting-clipping-1-ref.html
 fuzzy-if(Android,5,105) fuzzy-if(d2d,1,20) fuzzy-if(skiaContent,1,135) == intersecting-clipping-1-refi.html intersecting-clipping-1-ref.html
-fuzzy-if(true,1,33) fuzzy-if(cocoaWidget,1,332) fuzzy-if(Android,124,440) fuzzy-if(skiaContent,1,135) == intersecting-clipping-1-refc.html intersecting-clipping-1-ref.html # bug 732535
+fuzzy-if(true,1,33) fuzzy-if(d2d,48,350) fuzzy-if(cocoaWidget,1,332) fuzzy-if(Android,124,440) fuzzy-if(skiaContent,1,135) == intersecting-clipping-1-refc.html intersecting-clipping-1-ref.html # bug 732535
 
 # Inheritance
 == inherit-1.html inherit-1-ref.html # border-radius shouldn't inherit
@@ -78,7 +78,7 @@ skip-if(B2G||Mulet) fails-if(Android) == scrollbar-clamping-2.html scrollbar-cla
 fuzzy-if(true,1,1) == corner-joins-1.xhtml corner-joins-1-ref.xhtml
 fuzzy(255,20) skip-if(B2G||Mulet) random-if(winWidget) fuzzy-if(skiaContent,255,610) HTTP(..) == corner-joins-2.xhtml corner-joins-2-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
 
-skip-if(B2G||Mulet) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu),1,20) fuzzy-if(Android,166,400) fuzzy-if(skiaContent,64,70) == scroll-1.html scroll-1-ref.html # see bug 732535 #Bug 959166 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu),1,20) fuzzy-if(d2d,64,157) fuzzy-if(Android,166,400) fuzzy-if(skiaContent,64,70) == scroll-1.html scroll-1-ref.html # see bug 732535 #Bug 959166 # Initial mulet triage: parity with B2G/B2G Desktop
 
 == transforms-1.html transforms-1-ref.html
 
