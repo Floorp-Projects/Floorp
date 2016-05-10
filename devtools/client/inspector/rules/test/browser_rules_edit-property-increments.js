@@ -31,6 +31,7 @@ add_task(function* () {
   yield testMarginIncrements(view);
   yield testVariousUnitIncrements(view);
   yield testHexIncrements(view);
+  yield testAlphaHexIncrements(view);
   yield testRgbIncrements(view);
   yield testShorthandIncrements(view);
   yield testOddCases(view);
@@ -92,6 +93,23 @@ function* testHexIncrements(view) {
     4: {shift: true, start: "#CCCCCC", end: "#DCCCCC", selection: [1, 3]},
     5: {start: "#FFFFFF", end: "#FFFFFF", selectAll: true},
     6: {down: true, shift: true, start: "#000000", end: "#000000",
+        selectAll: true}
+  });
+}
+
+function* testAlphaHexIncrements(view) {
+  info("Testing keyboard increments with alpha hex colors");
+
+  let idRuleEditor = getRuleViewRuleEditor(view, 1);
+  let hexColorPropEditor = idRuleEditor.rule.textProps[2].editor;
+
+  yield runIncrementTest(hexColorPropEditor, view, {
+    1: {start: "#CCCCCCAA", end: "#CDCDCDAB", selectAll: true},
+    2: {shift: true, start: "#CCCCCCAA", end: "#DCDCDCBA", selectAll: true},
+    3: {start: "#CCCCCCAA", end: "#CDCCCCAA", selection: [1, 3]},
+    4: {shift: true, start: "#CCCCCCAA", end: "#DCCCCCAA", selection: [1, 3]},
+    5: {start: "#FFFFFFFF", end: "#FFFFFFFF", selectAll: true},
+    6: {down: true, shift: true, start: "#00000000", end: "#00000000",
         selectAll: true}
   });
 }

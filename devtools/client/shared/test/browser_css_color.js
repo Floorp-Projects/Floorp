@@ -112,7 +112,9 @@ function testSetAlpha() {
     ["rgba", "rgba(120, 34, 23, 1)", 0.25, "rgba(120, 34, 23, 0.25)"],
     ["rgb", "rgb(120, 34, 23)", 0.25, "rgba(120, 34, 23, 0.25)"],
     ["hsl", "hsl(208, 100%, 97%)", 0.75, "rgba(239, 247, 255, 0.75)"],
-    ["hsla", "hsla(208, 100%, 97%, 1)", 0.75, "rgba(239, 247, 255, 0.75)"]
+    ["hsla", "hsla(208, 100%, 97%, 1)", 0.75, "rgba(239, 247, 255, 0.75)"],
+    ["alphahex", "#f08f", 0.6, "rgba(255, 0, 136, 0.6)"],
+    ["longalphahex", "#00ff80ff", 0.2, "rgba(0, 255, 128, 0.2)"]
   ];
   values.forEach(([type, value, alpha, expected]) => {
     is(colorUtils.setAlpha(value, alpha), expected, "correctly sets alpha value for " + type);
@@ -277,13 +279,15 @@ function getTestData() {
     {authored: "whitesmoke", name: "whitesmoke", hex: "#f5f5f5", hsl: "hsl(0, 0%, 96%)", rgb: "rgb(245, 245, 245)"},
     {authored: "yellow", name: "yellow", hex: "#ff0", hsl: "hsl(60, 100%, 50%)", rgb: "rgb(255, 255, 0)"},
     {authored: "yellowgreen", name: "yellowgreen", hex: "#9acd32", hsl: "hsl(80, 61%, 50%)", rgb: "rgb(154, 205, 50)"},
-    {authored: "rgba(0, 0, 0, 0)", name: "rgba(0, 0, 0, 0)", hex: "rgba(0, 0, 0, 0)", hsl: "hsla(0, 0%, 0%, 0)", rgb: "rgba(0, 0, 0, 0)"},
-    {authored: "hsla(0, 0%, 0%, 0)", name: "rgba(0, 0, 0, 0)", hex: "rgba(0, 0, 0, 0)", hsl: "hsla(0, 0%, 0%, 0)", rgb: "rgba(0, 0, 0, 0)"},
-    {authored: "rgba(50, 60, 70, 0.5)", name: "rgba(50, 60, 70, 0.5)", hex: "rgba(50, 60, 70, 0.5)", hsl: "hsla(210, 17%, 24%, 0.5)", rgb: "rgba(50, 60, 70, 0.5)"},
-    {authored: "rgba(0, 0, 0, 0.3)", name: "rgba(0, 0, 0, 0.3)", hex: "rgba(0, 0, 0, 0.3)", hsl: "hsla(0, 0%, 0%, 0.3)", rgb: "rgba(0, 0, 0, 0.3)"},
-    {authored: "rgba(255, 255, 255, 0.6)", name: "rgba(255, 255, 255, 0.6)", hex: "rgba(255, 255, 255, 0.6)", hsl: "hsla(0, 0%, 100%, 0.6)", rgb: "rgba(255, 255, 255, 0.6)"},
+    {authored: "rgba(0, 0, 0, 0)", name: "#0000", hex: "#0000", hsl: "hsla(0, 0%, 0%, 0)", rgb: "rgba(0, 0, 0, 0)"},
+    {authored: "hsla(0, 0%, 0%, 0)", name: "#0000", hex: "#0000", hsl: "hsla(0, 0%, 0%, 0)", rgb: "rgba(0, 0, 0, 0)"},
+    {authored: "rgba(50, 60, 70, 0.5)", name: "#323c4680", hex: "#323c4680", hsl: "hsla(210, 17%, 24%, 0.5)", rgb: "rgba(50, 60, 70, 0.5)"},
+    {authored: "rgba(0, 0, 0, 0.3)", name: "#0000004d", hex: "#0000004d", hsl: "hsla(0, 0%, 0%, 0.3)", rgb: "rgba(0, 0, 0, 0.3)"},
+    {authored: "rgba(255, 255, 255, 0.6)", name: "#fff9", hex: "#fff9", hsl: "hsla(0, 0%, 100%, 0.6)", rgb: "rgba(255, 255, 255, 0.6)"},
     {authored: "rgba(127, 89, 45, 1)", name: "#7f592d", hex: "#7f592d", hsl: "hsl(32, 48%, 34%)", rgb: "rgb(127, 89, 45)"},
     {authored: "hsla(19.304, 56%, 40%, 1)", name: "#9f512c", hex: "#9f512c", hsl: "hsl(19, 57%, 40%)", rgb: "rgb(159, 81, 44)"},
+    {authored: "#f089", name: "#f089", hex: "#f089", hsl: "hsla(328, 100%, 50%, 0.6)", rgb: "rgba(255, 0, 136, 0.6)"},
+    {authored: "#00ff8080", name: "#00ff8080", hex: "#00ff8080", hsl: "hsla(150, 100%, 50%, 0.5)", rgb: "rgba(0, 255, 128, 0.5)"},
     {authored: "currentcolor", name: "currentcolor", hex: "currentcolor", hsl: "currentcolor", rgb: "currentcolor"},
     {authored: "inherit", name: "inherit", hex: "inherit", hsl: "inherit", rgb: "inherit"},
     {authored: "initial", name: "initial", hex: "initial", hsl: "initial", rgb: "initial"},
