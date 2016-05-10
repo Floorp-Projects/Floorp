@@ -16,7 +16,6 @@
 #include "nsDOMMutationObserver.h" // For nsAutoAnimationMutationBatch
 #include "nsIDocument.h" // For nsIDocument
 #include "nsIPresShell.h" // For nsIPresShell
-#include "nsLayoutUtils.h" // For PostRestyleEvent (remove after bug 1073336)
 #include "nsThreadUtils.h" // For nsRunnableMethod and nsRevocableEventPtr
 #include "nsTransitionManager.h" // For CSSTransition
 #include "PendingAnimationTracker.h" // For PendingAnimationTracker
