@@ -5,11 +5,17 @@
 import sys
 import string
 import argparse
+import subprocess
+import buildconfig
+from mozbuild import shellutil
 
-def get_properties():
+def get_properties(preprocessorHeader):
+    cpp = shellutil.split(buildconfig.substs['CPP'])
+    cpp.append(preprocessorHeader)
+    preprocessed = subprocess.check_output(cpp)
     properties = [{"name":p[0], "prop":p[1], "id":p[2],
                    "flags":p[3], "pref":p[4], "proptype":p[5]}
-                  for (i, p) in enumerate(eval(sys.stdin.read()))]
+                  for (i, p) in enumerate(eval(preprocessed))]
 
     # Sort the list so that longhand and logical properties are intermingled
     # first, shorthand properties follow, then aliases appear last.  This matches
@@ -72,12 +78,12 @@ def generate_idl_name_positions(properties):
 
     return ",\n".join(map(lambda (p, position): "  %d" % position, ps))
 
-def generate(output, cppTemplate):
+def generate(output, cppTemplate, preprocessorHeader):
     cppFile = open(cppTemplate, "r")
     cppTemplate = cppFile.read()
     cppFile.close()
 
-    properties = get_properties()
+    properties = get_properties(preprocessorHeader)
     substitutions = {
         "idl_names": generate_idl_names(properties),
         "assertions": generate_assertions(properties),
@@ -89,8 +95,9 @@ def generate(output, cppTemplate):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('cppTemplate', help='CSS property file template')
+    parser.add_argument('preprocessorHeader', help='Header file to pass through the preprocessor')
     args = parser.parse_args()
-    generate(sys.stdout, args.cppTemplate)
+    generate(sys.stdout, args.cppTemplate, args.preprocessorHeader)
 
 if __name__ == '__main__':
     main()
