@@ -2100,7 +2100,7 @@ MediaDecoderStateMachine::SeekCompleted()
   // Change state to DECODING or COMPLETED now.
   bool isLiveStream = mResource->IsLiveStream();
   State nextState;
-  if (GetMediaTime() == Duration().ToMicroseconds() && !isLiveStream) {
+  if (newCurrentTime == Duration().ToMicroseconds() && !isLiveStream) {
     // Seeked to end of media, move to COMPLETED state. Note we don't do
     // this when playing a live stream, since the end of media will advance
     // once we download more data!
