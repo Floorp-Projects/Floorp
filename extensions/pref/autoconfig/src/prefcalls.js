@@ -114,6 +114,12 @@ function getPref(prefName) {
         switch (prefBranch.getPrefType(prefName)) {
             
         case prefBranch.PREF_STRING:
+            if (gIsUTF8) {
+                const nsISupportsString = Components.interfaces.nsISupportsString;
+                let string = Components.classes["@mozilla.org/supports-string;1"]
+                                       .createInstance(nsISupportsString);
+                return prefBranch.getComplexValue(prefName, nsISupportsString).data;
+            }
             return prefBranch.getCharPref(prefName);
             
         case prefBranch.PREF_INT:

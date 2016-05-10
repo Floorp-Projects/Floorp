@@ -31,6 +31,7 @@ function run_test() {
       prefs: {
         "_test.string.ASCII": "UTF-8",
         "_test.string.non-ASCII": "日本語",
+        "_test.string.getPref": "日本語",
         "_test.string.gIsUTF8": "true"
       }
     }, {
@@ -38,6 +39,7 @@ function run_test() {
       prefs: {
         "_test.string.ASCII": "ASCII",
         "_test.string.non-ASCII": "日本語",
+        "_test.string.getPref": "日本語",
         "_test.string.gIsUTF8": "false",
       }
     }];
