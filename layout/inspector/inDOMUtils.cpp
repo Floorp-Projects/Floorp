@@ -459,8 +459,8 @@ inDOMUtils::SelectorMatchesElement(nsIDOMElement* aElement,
     // We need to make sure that the requested pseudo element type
     // matches the selector pseudo element type before proceeding.
     nsCOMPtr<nsIAtom> pseudoElt = NS_Atomize(aPseudo);
-    if (sel->mSelectors->PseudoType() != nsCSSPseudoElements::
-          GetPseudoType(pseudoElt, CSSEnabledState::eIgnoreEnabledState)) {
+    if (sel->mSelectors->PseudoType() !=
+        nsCSSPseudoElements::GetPseudoType(pseudoElt)) {
       *aMatches = false;
       return NS_OK;
     }
@@ -1233,7 +1233,7 @@ inDOMUtils::GetCSSPseudoElementNames(uint32_t* aLength, char16_t*** aNames)
     static_cast<CSSPseudoElementTypeBase>(CSSPseudoElementType::Count);
   for (CSSPseudoElementTypeBase i = 0; i < pseudoCount; ++i) {
     CSSPseudoElementType type = static_cast<CSSPseudoElementType>(i);
-    if (nsCSSPseudoElements::IsEnabled(type, CSSEnabledState::eForAllContent)) {
+    if (!nsCSSPseudoElements::PseudoElementIsUASheetOnly(type)) {
       nsIAtom* atom = nsCSSPseudoElements::GetPseudoAtom(type);
       array.AppendElement(atom);
     }

@@ -9,7 +9,6 @@
 #define nsCSSPseudoElements_h___
 
 #include "nsIAtom.h"
-#include "mozilla/CSSEnabledState.h"
 
 // Is this pseudo-element a CSS2 pseudo-element that can be specified
 // with the single colon syntax (in addition to the double-colon syntax,
@@ -66,7 +65,6 @@ class nsICSSPseudoElement : public nsIAtom {};
 class nsCSSPseudoElements
 {
   typedef mozilla::CSSPseudoElementType Type;
-  typedef mozilla::CSSEnabledState EnabledState;
 
 public:
   static void AddRefAtoms();
@@ -80,7 +78,7 @@ public:
 #include "nsCSSPseudoElementList.h"
 #undef CSS_PSEUDO_ELEMENT
 
-  static Type GetPseudoType(nsIAtom* aAtom, EnabledState aEnabledState);
+  static Type GetPseudoType(nsIAtom* aAtom);
 
   // Get the atom for a given Type.  aType must be < CSSPseudoElementType::Count
   static nsIAtom* GetPseudoAtom(Type aType);
@@ -97,21 +95,19 @@ public:
 
   static bool PseudoElementSupportsUserActionState(const Type aType);
 
-  static bool IsEnabled(Type aType, EnabledState aEnabledState)
-  {
-    return !PseudoElementHasFlags(aType, CSS_PSEUDO_ELEMENT_UA_SHEET_ONLY) ||
-           (aEnabledState & EnabledState::eInUASheets);
+  static bool PseudoElementIsUASheetOnly(const Type aType) {
+    MOZ_ASSERT(aType < Type::Count);
+    return PseudoElementHasFlags(aType, CSS_PSEUDO_ELEMENT_UA_SHEET_ONLY);
   }
 
 private:
+  static uint32_t FlagsForPseudoElement(const Type aType);
+
   // Does the given pseudo-element have all of the flags given?
   static bool PseudoElementHasFlags(const Type aType, uint32_t aFlags)
   {
-    MOZ_ASSERT(aType < Type::Count);
-    return (kPseudoElementFlags[size_t(aType)] & aFlags) == aFlags;
+    return (FlagsForPseudoElement(aType) & aFlags) == aFlags;
   }
-
-  static const uint32_t kPseudoElementFlags[Type::Count];
 };
 
 #endif /* nsCSSPseudoElements_h___ */
