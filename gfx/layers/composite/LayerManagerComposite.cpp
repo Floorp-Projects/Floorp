@@ -393,6 +393,9 @@ LayerManagerComposite::EndTransaction(const TimeStamp& aTimeStamp,
   if (mRoot && !(aFlags & END_NO_IMMEDIATE_REDRAW)) {
     MOZ_ASSERT(!aTimeStamp.IsNull());
     UpdateAndRender();
+
+    mPreviousHeldTextureHosts.Clear();
+    mPreviousHeldTextureHosts.SwapElements(mCurrentHeldTextureHosts);
   } else {
     // Modified the layer tree.
     mGeometryChanged = true;
