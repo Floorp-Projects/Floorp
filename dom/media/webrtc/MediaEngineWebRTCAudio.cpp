@@ -495,11 +495,7 @@ MediaEngineWebRTCMicrophoneSource::NotifyInputData(MediaStreamGraph* aGraph,
     int16_t *packet = mInputBuffer.get();
     mPacketizer->Output(packet);
 
-    if (mEchoOn || mAgcOn || mNoiseOn) {
-      mVoERender->ExternalRecordingInsertData(packet, samplesPerPacket, aRate, 0);
-    } else {
-      AppendSamplesToTrack(packet, samplesPerPacket);
-    }
+    mVoERender->ExternalRecordingInsertData(packet, samplesPerPacket, aRate, 0);
   }
 }
 
@@ -708,16 +704,9 @@ MediaEngineWebRTCMicrophoneSource::Process(int channel,
   }
 
   MonitorAutoLock lock(mMonitor);
-  if (mState != kStarted) {
+  if (mState != kStarted)
     return;
-  }
 
-  AppendSamplesToTrack(audio10ms, length);
-}
-
-void
-MediaEngineWebRTCMicrophoneSource::AppendSamplesToTrack(sample *audio10ms, int length)
-{
   uint32_t len = mSources.Length();
   for (uint32_t i = 0; i < len; i++) {
     RefPtr<SharedBuffer> buffer = SharedBuffer::Create(length * sizeof(sample));
@@ -748,6 +737,8 @@ MediaEngineWebRTCMicrophoneSource::AppendSamplesToTrack(sample *audio10ms, int l
                     NS_DISPATCH_NORMAL);
     }
   }
+
+  return;
 }
 
 void
