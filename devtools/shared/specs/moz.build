@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
+    'highlighters.js',
     'storage.js',
     'styles.js',
     'stylesheets.js'
