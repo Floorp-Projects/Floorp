@@ -43,6 +43,7 @@ import org.mozilla.gecko.home.HomeBanner;
 import org.mozilla.gecko.home.HomeConfig;
 import org.mozilla.gecko.home.HomeConfig.PanelType;
 import org.mozilla.gecko.home.HomeConfigPrefsBackend;
+import org.mozilla.gecko.home.HomeFragment;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenInBackgroundListener;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
@@ -199,7 +200,6 @@ public class BrowserApp extends GeckoApp
     public static final String GUEST_BROWSING_ARG = "--guest";
 
     // Intent String extras used to specify custom Switchboard configurations.
-    private static final String INTENT_KEY_SWITCHBOARD_UUID = "switchboard-uuid";
     private static final String INTENT_KEY_SWITCHBOARD_HOST = "switchboard-host";
 
     private static final String DEFAULT_SWITCHBOARD_HOST = "switchboard.services.mozilla.com";
@@ -679,6 +679,8 @@ public class BrowserApp extends GeckoApp
             "CharEncoding:State",
             "Download:AndroidDownloadManager",
             "Experiments:GetActive",
+            "Experiments:SetOverride",
+            "Experiments:ClearOverride",
             "Favicon:CacheLoad",
             "Feedback:MaybeLater",
             "Menu:Add",
@@ -793,14 +795,11 @@ public class BrowserApp extends GeckoApp
             return;
         }
 
-        final String switchboardUUID = ContextUtils.getStringExtra(intent, INTENT_KEY_SWITCHBOARD_UUID);
-        SwitchBoard.setUUIDFromExtra(switchboardUUID);
-
         // Loads the Switchboard config from the specified server URL. Eventually, we
         // should use the endpoint returned by the server URL, to support migrating
         // to a new endpoint. However, if we want to do that, we'll need to find a different
         // solution for dynamically changing the server URL from the intent.
-        new AsyncConfigLoader(this, switchboardUUID, serverUrl).execute();
+        new AsyncConfigLoader(this, serverUrl).execute();
     }
 
     private void showUpdaterPermissionSnackbar() {
@@ -1386,6 +1385,8 @@ public class BrowserApp extends GeckoApp
             "CharEncoding:State",
             "Download:AndroidDownloadManager",
             "Experiments:GetActive",
+            "Experiments:SetOverride",
+            "Experiments:ClearOverride",
             "Favicon:CacheLoad",
             "Feedback:MaybeLater",
             "Menu:Add",
@@ -1661,6 +1662,10 @@ public class BrowserApp extends GeckoApp
             final List<String> experiments = SwitchBoard.getActiveExperiments(this);
             final JSONArray json = new JSONArray(experiments);
             callback.sendSuccess(json.toString());
+        } else if ("Experiments:SetOverride".equals(event)) {
+            Experiments.setOverride(getContext(), message.getString("name"), message.getBoolean("isEnabled"));
+        } else if ("Experiments:ClearOverride".equals(event)) {
+            Experiments.clearOverride(getContext(), message.getString("name"));
         } else if ("Favicon:CacheLoad".equals(event)) {
             final String url = message.getString("url");
             getFaviconFromCache(callback, url);
@@ -2305,7 +2310,7 @@ public class BrowserApp extends GeckoApp
         if (isUserSearchTerm && SwitchBoard.isInExperiment(getContext(), Experiments.SEARCH_TERM)) {
             showBrowserSearchAfterAnimation(animator);
         } else {
-            showHomePagerWithAnimator(panelId, animator);
+            showHomePagerWithAnimator(panelId, null, animator);
         }
 
         animator.start();
@@ -2496,14 +2501,28 @@ public class BrowserApp extends GeckoApp
             return;
         }
 
+        // History will only store that we were visiting about:home, however the specific panel
+        // isn't stored. (We are able to navigate directly to homepanels using an about:home?panel=...
+        // URL, but the reverse doesn't apply: manually switching panels doesn't update the URL.)
+        // Hence we need to restore the panel, in addition to panel state, here.
         if (isAboutHome(tab)) {
             String panelId = AboutPages.getPanelIdFromAboutHomeUrl(tab.getURL());
+            Bundle panelRestoreData = null;
             if (panelId == null) {
                 // No panel was specified in the URL. Try loading the most recent
                 // home panel for this tab.
+                // Note: this isn't necessarily correct. We don't update the URL when we switch tabs.
+                // If a user explicitly navigated to about:reader?panel=FOO, and then switches
+                // to panel BAR, the history URL still contains FOO, and we restore to FOO. In most
+                // cases however we aren't supplying a panel ID in the URL so this code still works
+                // for most cases.
+                // We can't fix this directly since we can't ignore the panelId if we're explicitly
+                // loading a specific panel, and we currently can't distinguish between loading
+                // history, and loading new pages, see Bug 1268887
                 panelId = tab.getMostRecentHomePanel();
+                panelRestoreData = tab.getMostRecentHomePanelData();
             }
-            showHomePager(panelId);
+            showHomePager(panelId, panelRestoreData);
 
             if (mDynamicToolbar.isEnabled()) {
                 mDynamicToolbar.setVisible(true, VisibilityTransition.ANIMATE);
@@ -2588,14 +2607,14 @@ public class BrowserApp extends GeckoApp
         mHomePagerContainer.setVisibility(View.VISIBLE);
     }
 
-    private void showHomePager(String panelId) {
-        showHomePagerWithAnimator(panelId, null);
+    private void showHomePager(String panelId, Bundle panelRestoreData) {
+        showHomePagerWithAnimator(panelId, panelRestoreData, null);
     }
 
-    private void showHomePagerWithAnimator(String panelId, PropertyAnimator animator) {
+    private void showHomePagerWithAnimator(String panelId, Bundle panelRestoreData, PropertyAnimator animator) {
         if (isHomePagerVisible()) {
             // Home pager already visible, make sure it shows the correct panel.
-            mHomePager.showPanel(panelId);
+            mHomePager.showPanel(panelId, panelRestoreData);
             return;
         }
 
@@ -2628,6 +2647,17 @@ public class BrowserApp extends GeckoApp
                 }
             });
 
+            // Set this listener to persist restore data (via the Tab) every time panel state changes.
+            mHomePager.setPanelStateChangeListener(new HomeFragment.PanelStateChangeListener() {
+                @Override
+                public void onStateChanged(Bundle bundle) {
+                    final Tab currentTab = Tabs.getInstance().getSelectedTab();
+                    if (currentTab != null) {
+                        currentTab.setMostRecentHomePanelData(bundle);
+                    }
+                }
+            });
+
             // Don't show the banner in guest mode.
             if (!Restrictions.isUserRestricted()) {
                 final ViewStub homeBannerStub = (ViewStub) findViewById(R.id.home_banner_stub);
@@ -2648,7 +2678,9 @@ public class BrowserApp extends GeckoApp
         mHomePagerContainer.setVisibility(View.VISIBLE);
         mHomePager.load(getSupportLoaderManager(),
                         getSupportFragmentManager(),
-                        panelId, animator);
+                        panelId,
+                        panelRestoreData,
+                        animator);
 
         // Hide the web content so it cannot be focused by screen readers.
         hideWebContentOnPropertyAnimationEnd(animator);
@@ -2804,7 +2836,8 @@ public class BrowserApp extends GeckoApp
 
         // To prevent overdraw, the HomePager is hidden when BrowserSearch is displayed:
         // reverse that.
-        showHomePager(Tabs.getInstance().getSelectedTab().getMostRecentHomePanel());
+        showHomePager(Tabs.getInstance().getSelectedTab().getMostRecentHomePanel(),
+                Tabs.getInstance().getSelectedTab().getMostRecentHomePanelData());
 
         mBrowserSearchContainer.setVisibility(View.INVISIBLE);
 

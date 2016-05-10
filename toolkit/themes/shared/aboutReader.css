@@ -93,6 +93,42 @@ body.serif .remove-button  {
   font-size: 28px;
 }
 
+#container.content-width1 {
+  max-width: 20em;
+}
+
+#container.content-width2 {
+  max-width: 25em;
+}
+
+#container.content-width3 {
+  max-width: 30em;
+}
+
+#container.content-width4  {
+  max-width: 35em;
+}
+
+#container.content-width5 {
+  max-width: 40em;
+}
+
+#container.content-width6 {
+  max-width: 45em;
+}
+
+#container.content-width7 {
+  max-width: 50em;
+}
+
+#container.content-width8 {
+  max-width: 55em;
+}
+
+#container.content-width9 {
+  max-width: 60em;
+}
+
 /* Override some controls and content styles based on color scheme */
 
 body.light > .container > .header > .domain {

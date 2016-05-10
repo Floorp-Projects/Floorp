@@ -25,7 +25,7 @@ ping”, not total for the whole application lifetime.
 Structure::
 
     {
-      "v": 3, // ping format version
+      "v": 5, // ping format version
       "clientId": <string>, // client id, e.g.
                             // "c641eacf-c30c-4171-b403-f077724e848a"
       "seq": <positive integer>, // running ping counter, e.g. 3
@@ -41,6 +41,10 @@ Structure::
       "defaultSearch": <string>, // Identifier of the default search engine,
                                  // e.g. "yahoo".
       "distributionId": <string>, // Distribution identifier (optional)
+      "created": <string>, // date the ping was created
+                           // in local time, "yyyy-mm-dd"
+      "tz": <integer>, // timezone offset (in minutes) of the
+                       // device when the ping was created
       "experiments": [<string>, …], // Optional, array of identifiers
                                     // for the active experiments
     }
@@ -108,6 +112,7 @@ sending it: we only want to send consistent values.
 
 Version history
 ---------------
+* v5: added ``created`` & ``tz``
 * v4: ``profileDate`` will return package install time when times.json is not available
 * v3: added ``defaultSearch``
 * v2: added ``distributionId``
@@ -120,3 +125,20 @@ Notes
   uplifted to 46, whereas ``profileDate`` landed on 47. The version numbers in
   code were updated to be increasing (bug 1264492) and the version history docs
   rearranged accordingly.
+
+Android implementation notes
+----------------------------
+On Android, the uploader has a high probability of delivering the complete data
+for a given client but not a 100% probability. This was a conscious decision to
+keep the code simple. The cases where we can lose data:
+
+* Resetting the field measurements (including incrementing the sequence number)
+  and storing a ping for upload are not atomic. Android can kill our process
+  for memory pressure in between these distinct operations so we can just lose
+  a ping's worth of data. That sequence number will be missing on the server.
+* If we exceed some number of pings on disk that have not yet been uploaded,
+  we remove old pings to save storage space. For those pings, we will lose
+  their data and their sequence numbers will be missing on the server.
+
+Note: we never expect to drop data without also dropping a sequence number so
+we are able to determine when data loss occurs.

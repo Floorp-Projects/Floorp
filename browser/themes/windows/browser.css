@@ -1101,7 +1101,7 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   --urlbar-border-color-hover: var(--urlbar-border-color);
 }
 
-#main-window:-moz-lwtheme {
+#navigator-toolbox:-moz-lwtheme {
   --urlbar-border-color: var(--toolbarbutton-hover-bordercolor);
 }
 

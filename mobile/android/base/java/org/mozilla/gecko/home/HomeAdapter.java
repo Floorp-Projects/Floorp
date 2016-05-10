@@ -18,19 +18,31 @@ import android.view.ViewGroup;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class HomeAdapter extends FragmentStatePagerAdapter {
 
     private final Context mContext;
     private final ArrayList<PanelInfo> mPanelInfos;
-    private final HashMap<String, Fragment> mPanels;
+    private final Map<String, HomeFragment> mPanels;
+    private final Map<String, Bundle> mRestoreBundles;
 
     private boolean mCanLoadHint;
 
     private OnAddPanelListener mAddPanelListener;
 
+    private HomeFragment.PanelStateChangeListener mPanelStateChangeListener = null;
+
     public interface OnAddPanelListener {
         void onAddPanel(String title);
+    }
+
+    public void setPanelStateChangeListener(HomeFragment.PanelStateChangeListener listener) {
+        mPanelStateChangeListener = listener;
+
+        for (Fragment fragment : mPanels.values()) {
+            ((HomeFragment) fragment).setPanelStateChangeListener(listener);
+        }
     }
 
     public HomeAdapter(Context context, FragmentManager fm) {
@@ -39,8 +51,9 @@ public class HomeAdapter extends FragmentStatePagerAdapter {
         mContext = context;
         mCanLoadHint = HomeFragment.DEFAULT_CAN_LOAD_HINT;
 
-        mPanelInfos = new ArrayList<PanelInfo>();
-        mPanels = new HashMap<String, Fragment>();
+        mPanelInfos = new ArrayList<>();
+        mPanels = new HashMap<>();
+        mRestoreBundles = new HashMap<>();
     }
 
     @Override
@@ -66,16 +79,40 @@ public class HomeAdapter extends FragmentStatePagerAdapter {
 
     @Override
     public Object instantiateItem(ViewGroup container, int position) {
-        Fragment fragment = (Fragment) super.instantiateItem(container, position);
-        mPanels.put(mPanelInfos.get(position).getId(), fragment);
+        final HomeFragment fragment = (HomeFragment) super.instantiateItem(container, position);
+        fragment.setPanelStateChangeListener(mPanelStateChangeListener);
+
+        final String id = mPanelInfos.get(position).getId();
+        mPanels.put(id, fragment);
+
+        if (mRestoreBundles.containsKey(id)) {
+            fragment.restoreData(mRestoreBundles.get(id));
+            mRestoreBundles.remove(id);
+        }
 
         return fragment;
     }
 
+    public void setRestoreData(int position, Bundle data) {
+        final String id = mPanelInfos.get(position).getId();
+        final HomeFragment fragment = mPanels.get(id);
+
+        // We have no guarantees as to whether our desired fragment is instantiated yet: therefore
+        // we might need to either pass data to the fragment, or store it for later.
+        if (fragment != null) {
+            fragment.restoreData(data);
+        } else {
+            mRestoreBundles.put(id, data);
+        }
+
+    }
+
     @Override
     public void destroyItem(ViewGroup container, int position, Object object) {
+        final String id = mPanelInfos.get(position).getId();
+
         super.destroyItem(container, position, object);
-        mPanels.remove(mPanelInfos.get(position).getId());
+        mPanels.remove(id);
     }
 
     public void setOnAddPanelListener(OnAddPanelListener listener) {

@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* global content */
+/* exported startup, shutdown, install, uninstall */
+
 "use strict";
 
 const Cu = Components.utils;
@@ -10,7 +13,7 @@ const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 
 function actionOccurred(id) {
   let {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-  let Telemetry = require("devtools/client/shared/telemetry");;
+  let Telemetry = require("devtools/client/shared/telemetry");
   let telemetry = new Telemetry();
   telemetry.actionOccurred(id);
 }
@@ -59,7 +62,7 @@ function MultiWindowKeyListener({ keyCode, ctrlKey, altKey, callback }) {
       }
     }
   };
-};
+}
 
 let getTopLevelWindow = function (window) {
   return window.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -73,7 +76,7 @@ let getTopLevelWindow = function (window) {
 function reload(event) {
   // We automatically reload the toolbox if we are on a browser tab
   // with a toolbox already opened
-  let top = getTopLevelWindow(event.view)
+  let top = getTopLevelWindow(event.view);
   let isBrowser = top.location.href.includes("/browser.xul");
   let reloadToolbox = false;
   if (isBrowser && top.gBrowser) {
@@ -95,12 +98,13 @@ function reload(event) {
     reopenBrowserConsole = true;
   }
 
-  dump("Reload DevTools.  (reload-toolbox:"+reloadToolbox+")\n");
+  dump("Reload DevTools.  (reload-toolbox:" + reloadToolbox + ")\n");
 
   // Invalidate xul cache in order to see changes made to chrome:// files
   Services.obs.notifyObservers(null, "startupcache-invalidate", null);
 
-  // This frame script is going to be executed in all processes: parent and childs
+  // This frame script is going to be executed in all processes:
+  // parent and child
   Services.ppmm.loadProcessScript("data:,new " + function () {
     /* Flush message manager cached frame scripts as well as chrome locales */
     let obs = Components.classes["@mozilla.org/observer-service;1"]
@@ -141,7 +145,8 @@ function reload(event) {
         }
         // We have to use a frame script to query "baseURI"
         mm.loadFrameScript("data:text/javascript,new " + function () {
-          let isJSONView = content.document.baseURI.startsWith("resource://devtools/");
+          let isJSONView =
+            content.document.baseURI.startsWith("resource://devtools/");
           if (isJSONView) {
             content.location.reload();
           }
@@ -153,8 +158,8 @@ function reload(event) {
   }
 
   if (reloadToolbox) {
-    // Reopen the toolbox automatically if we are reloading from toolbox shortcut
-    // and are on a browser window.
+    // Reopen the toolbox automatically if we are reloading from toolbox
+    // shortcut and are on a browser window.
     // Wait for a second before opening the toolbox to avoid races
     // between the old and the new one.
     let {setTimeout} = Cu.import("resource://gre/modules/Timer.jsm", {});

@@ -95,7 +95,7 @@ html {
   background-repeat: no-repeat;
   background-position: center;
   padding-top: 5px;
-  width: 9px; /* The image's width is 9 pixels */
+  min-width: 9px; /* The image's width is 9 pixels */
   height: 9px;
 }
 

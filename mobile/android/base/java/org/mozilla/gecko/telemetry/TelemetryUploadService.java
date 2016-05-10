@@ -9,8 +9,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Log;
+import ch.boye.httpclientandroidlib.HttpHeaders;
 import ch.boye.httpclientandroidlib.HttpResponse;
 import ch.boye.httpclientandroidlib.client.ClientProtocolException;
+import ch.boye.httpclientandroidlib.client.methods.HttpRequestBase;
+import ch.boye.httpclientandroidlib.impl.client.DefaultHttpClient;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.preferences.GeckoPreferences;
@@ -19,12 +22,14 @@ import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.BaseResourceDelegate;
 import org.mozilla.gecko.sync.net.Resource;
 import org.mozilla.gecko.telemetry.stores.TelemetryPingStore;
+import org.mozilla.gecko.util.DateUtil;
 import org.mozilla.gecko.util.NetworkUtils;
 import org.mozilla.gecko.util.StringUtils;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
+import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -299,6 +304,12 @@ public class TelemetryUploadService extends IntentService {
 
         private boolean hadConnectionError() {
             return hadConnectionError;
+        }
+
+        @Override
+        public void addHeaders(final HttpRequestBase request, final DefaultHttpClient client) {
+            super.addHeaders(request, client);
+            request.addHeader(HttpHeaders.DATE, DateUtil.getDateInHTTPFormat(Calendar.getInstance().getTime()));
         }
     }
 

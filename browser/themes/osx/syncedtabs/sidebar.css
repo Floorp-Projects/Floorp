@@ -39,7 +39,7 @@ html {
 }
 
 .item.client .item-twisty-container {
-  width: 16px;
+  min-width: 16px;
   height: 16px;
   background-image: url("chrome://global/skin/tree/arrow-disclosure.svg#arrow-disclosure-expanded");
 }

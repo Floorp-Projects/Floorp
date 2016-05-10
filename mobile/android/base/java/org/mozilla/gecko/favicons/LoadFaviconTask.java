@@ -445,11 +445,23 @@ public class LoadFaviconTask {
 
                 while (loadedBitmaps.getBitmaps().hasNext()) {
                     final Bitmap b = loadedBitmaps.getBitmaps().next();
-                    iconMap.put(b.getWidth(), b);
-                    sizes.add(b.getWidth());
+
+                    // It's possible to receive null, most likely due to OOM or a zero-sized image,
+                    // from BitmapUtils.decodeByteArray(byte[], int, int, BitmapFactory.Options)
+                    if (b != null) {
+                        iconMap.put(b.getWidth(), b);
+                        sizes.add(b.getWidth());
+                    }
                 }
 
                 int bestSize = Favicons.selectBestSizeFromList(sizes, targetWidthAndHeight);
+
+                if (bestSize == -1) {
+                    // No icons found: this could occur if we weren't able to process any of the
+                    // supplied icons.
+                    return null;
+                }
+
                 return iconMap.get(bestSize);
             }
         }

@@ -246,6 +246,12 @@
   background: transparent;
 }
 
+.devtools-htmltooltip-container {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+}
+
 /* links to source code, like displaying `myfile.js:45` */
 
 .devtools-source-link {
