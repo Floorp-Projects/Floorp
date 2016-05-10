@@ -278,7 +278,6 @@ function startListeners() {
   addMessageListenerId("Marionette:switchToShadowRoot", switchToShadowRootFn);
   addMessageListenerId("Marionette:deleteSession", deleteSession);
   addMessageListenerId("Marionette:sleepSession", sleepSession);
-  addMessageListenerId("Marionette:emulatorCmdResult", emulatorCmdResult);
   addMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
   addMessageListenerId("Marionette:setTestName", setTestName);
   addMessageListenerId("Marionette:takeScreenshot", takeScreenshotFn);
@@ -383,7 +382,6 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:switchToShadowRoot", switchToShadowRootFn);
   removeMessageListenerId("Marionette:deleteSession", deleteSession);
   removeMessageListenerId("Marionette:sleepSession", sleepSession);
-  removeMessageListenerId("Marionette:emulatorCmdResult", emulatorCmdResult);
   removeMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
   removeMessageListenerId("Marionette:setTestName", setTestName);
   removeMessageListenerId("Marionette:takeScreenshot", takeScreenshotFn);
@@ -1468,54 +1466,6 @@ function deleteAllCookies() {
 function getAppCacheStatus(msg) {
   sendResponse(
       curContainer.frame.applicationCache.status, msg.json.command_id);
-}
-
-// emulator callbacks
-var _emu_cb_id = 0;
-var _emu_cbs = {};
-
-function runEmulatorCmd(cmd, callback) {
-  if (callback) {
-    _emu_cbs[_emu_cb_id] = callback;
-  }
-  sendAsyncMessage("Marionette:runEmulatorCmd",
-      {command: cmd, id: _emu_cb_id});
-  _emu_cb_id += 1;
-}
-
-function runEmulatorShell(args, callback) {
-  if (callback) {
-    _emu_cbs[_emu_cb_id] = callback;
-  }
-  sendAsyncMessage("Marionette:runEmulatorShell",
-      {arguments: args, id: _emu_cb_id});
-  _emu_cb_id += 1;
-}
-
-function emulatorCmdResult(msg) {
-  let {error, result, id} = msg.json;
-
-  if (error) {
-    let err = new JavaScriptError(error);
-    sendError(err, id);
-    return;
-  }
-
-  if (!sandboxes[sandboxName]) {
-    return;
-  }
-  let cb = _emu_cbs[id];
-  delete _emu_cbs[id];
-  if (!cb) {
-    return;
-  }
-
-  try {
-    cb(result);
-  } catch (e) {
-    let err = new JavaScriptError(e);
-    sendError(err, id);
-  }
 }
 
 /**
