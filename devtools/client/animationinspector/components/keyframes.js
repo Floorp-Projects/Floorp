@@ -8,6 +8,7 @@
 
 const {Cu} = require("chrome");
 Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
+const EventEmitter = require("devtools/shared/event-emitter");
 const {createNode} = require("devtools/client/animationinspector/utils");
 
 /**

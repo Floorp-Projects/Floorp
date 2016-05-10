@@ -20,9 +20,13 @@ import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.search.SearchEngine;
 import org.mozilla.gecko.telemetry.TelemetryConstants;
 import org.mozilla.gecko.telemetry.TelemetryPing;
+import org.mozilla.gecko.util.DateUtil;
 import org.mozilla.gecko.util.Experiments;
 import org.mozilla.gecko.util.StringUtils;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
@@ -35,7 +39,7 @@ import java.util.concurrent.TimeUnit;
 public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
 
     private static final String NAME = "core";
-    private static final int VERSION_VALUE = 4; // For version history, see toolkit/components/telemetry/docs/core-ping.rst
+    private static final int VERSION_VALUE = 5; // For version history, see toolkit/components/telemetry/docs/core-ping.rst
     private static final String OS_VALUE = "Android";
 
     private static final String ARCHITECTURE = "arch";
@@ -47,8 +51,10 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
     private static final String LOCALE = "locale";
     private static final String OS_ATTR = "os";
     private static final String OS_VERSION = "osversion";
+    private static final String PING_CREATION_DATE = "created";
     private static final String PROFILE_CREATION_DATE = "profileDate";
     public static final String SEQ = "seq";
+    private static final String TIMEZONE_OFFSET = "tz";
     private static final String VERSION_ATTR = "v";
 
     public TelemetryCorePingBuilder(final Context context, final int sequenceNumber) {
@@ -67,10 +73,15 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
         final String deviceDescriptor =
                 StringUtils.safeSubstring(Build.MANUFACTURER, 0, 12) + '-' + StringUtils.safeSubstring(Build.MODEL, 0, 19);
 
+        final Calendar nowCalendar = Calendar.getInstance();
+        final DateFormat pingCreationDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+
         payload.put(ARCHITECTURE, AppConstants.ANDROID_CPU_ARCH);
         payload.put(DEVICE, deviceDescriptor);
         payload.put(LOCALE, Locales.getLanguageTag(Locale.getDefault()));
         payload.put(OS_VERSION, Integer.toString(Build.VERSION.SDK_INT)); // A String for cross-platform reasons.
+        payload.put(PING_CREATION_DATE, pingCreationDateFormat.format(nowCalendar.getTime()));
+        payload.put(TIMEZONE_OFFSET, DateUtil.getTimezoneOffsetInMinutesForGivenDate(nowCalendar));
         payload.putArray(EXPERIMENTS, Experiments.getActiveExperiments(context));
     }
 
@@ -89,8 +100,10 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
                 LOCALE,
                 OS_ATTR,
                 OS_VERSION,
+                PING_CREATION_DATE,
                 PROFILE_CREATION_DATE,
                 SEQ,
+                TIMEZONE_OFFSET,
                 VERSION_ATTR,
         };
     }

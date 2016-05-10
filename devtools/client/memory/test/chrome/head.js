@@ -5,7 +5,6 @@
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://testing-common/Assert.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 
 Cu.import("resource://devtools/client/shared/browser-loader.js");
 var { require } = BrowserLoader({
@@ -13,6 +12,7 @@ var { require } = BrowserLoader({
   window: this
 });
 var Services = require("Services");
+var { Task } = require("resource://gre/modules/Task.jsm");
 
 var EXPECTED_DTU_ASSERT_FAILURE_COUNT = 0;
 

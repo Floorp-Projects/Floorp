@@ -819,7 +819,7 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   --urlbar-border-color: ThreeDShadow;
 }
 
-#main-window:-moz-lwtheme {
+#navigator-toolbox:-moz-lwtheme {
   --urlbar-border-color: rgba(0,0,0,.3);
 }
 

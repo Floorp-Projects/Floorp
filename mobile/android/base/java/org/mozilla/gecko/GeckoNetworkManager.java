@@ -263,6 +263,10 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
      * Update current network state and connection types.
      */
     private void updateNetworkStateAndConnectionType() {
+        if (applicationContext == null) {
+            Log.i(LOGTAG, "applicationContext is null while trying to update network state");
+            return;
+        }
         final ConnectivityManager connectivityManager = (ConnectivityManager) applicationContext.getSystemService(
                 Context.CONNECTIVITY_SERVICE);
         // Type/status getters below all have a defined behaviour for when connectivityManager == null

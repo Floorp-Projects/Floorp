@@ -92,6 +92,14 @@ public class StringUtils {
         return url.substring(start, end);
     }
 
+    public static boolean isHttpOrHttps(String url) {
+        if (TextUtils.isEmpty(url)) {
+            return false;
+        }
+
+        return url.startsWith("http://") || url.startsWith("https://");
+    }
+
     public static String stripCommonSubdomains(String host) {
         if (host == null) {
             return host;

@@ -8,10 +8,10 @@
 
 const {Cu} = require("chrome");
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
 var Services = require("Services");
 var promise = require("promise");
+var {Task} = require("resource://gre/modules/Task.jsm");
+var {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 var EventEmitter = require("devtools/shared/event-emitter");
 
 Cu.import("resource://devtools/client/styleeditor/StyleEditorUI.jsm");

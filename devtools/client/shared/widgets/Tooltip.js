@@ -645,6 +645,7 @@ Tooltip.prototype = {
     iframe.setAttribute("width", width);
     iframe.setAttribute("height", height);
     iframe.setAttribute("flex", "1");
+    iframe.setAttribute("tooltip", "aHTMLTooltip");
     iframe.setAttribute("class", "devtools-tooltip-iframe");
 
     // Wait for the load to initialize the widget

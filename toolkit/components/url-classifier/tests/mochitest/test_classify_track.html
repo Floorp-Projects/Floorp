@@ -1,0 +1,159 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1262406 - Track element doesn't use the URL classifier.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="classifierHelper.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+
+<script class="testbody" type="text/javascript">
+  const PREF = "browser.safebrowsing.malware.enabled";
+  const track_path = "tests/toolkit/components/url-classifier/tests/mochitest/basic.vtt";
+  const malware_url = "http://malware.example.com/" + track_path;
+  const validtrack_url = "http://mochi.test:8888/" + track_path;
+
+  var video = document.createElement("video");
+  document.body.appendChild(video);
+
+  function testValidTrack() {
+    SpecialPowers.setBoolPref(PREF, true);
+
+    return new Promise(function(resolve, reject) {
+      var track = document.createElement("track");
+      track.src = validtrack_url;
+      video.appendChild(track);
+
+      function onload() {
+        ok(true, "Track should be loaded when url is not in blacklist");
+        finish();
+      }
+
+      function onerror() {
+        ok(false, "Error while loading track");
+        finish();
+      }
+
+      function finish() {
+        track.removeEventListener("load", onload);
+        track.removeEventListener("error", onerror)
+        resolve();
+      }
+
+      track.addEventListener("load", onload);
+      track.addEventListener("error", onerror)
+    });
+  }
+
+  function testBlacklistTrackSafebrowsingOff() {
+    SpecialPowers.setBoolPref(PREF, false);
+
+    return new Promise(function(resolve, reject) {
+      var track = document.createElement("track");
+      track.src = malware_url;
+      video.appendChild(track);
+
+      function onload() {
+        ok(true, "Track should be loaded when url is in blacklist and safebrowsing is off");
+        finish();
+      }
+
+      function onerror() {
+        ok(false, "Error while loading track");
+        finish();
+      }
+
+      function finish() {
+        track.removeEventListener("load", onload);
+        track.removeEventListener("error", onerror)
+        resolve();
+      }
+
+      track.addEventListener("load", onload);
+      track.addEventListener("error", onerror)
+    });
+  }
+
+  function testBlacklistTrackSafebrowsingOn() {
+    SpecialPowers.setBoolPref(PREF, true);
+
+    return new Promise(function(resolve, reject) {
+      var track = document.createElement("track");
+
+      // Add a query string parameter here to avoid url classifier bypass classify
+      // because of cache.
+      track.src = malware_url + "?testsbon";
+      video.appendChild(track);
+
+      function onload() {
+        ok(false, "Unexpected result while loading track in blacklist");
+        finish();
+      }
+
+      function onerror() {
+        ok(true, "Track should not be loaded when url is in blacklist and safebrowsing is on");
+        finish();
+      }
+
+      function finish() {
+        track.removeEventListener("load", onload);
+        track.removeEventListener("error", onerror)
+        resolve();
+      }
+
+      track.addEventListener("load", onload);
+      track.addEventListener("error", onerror)
+    });
+  }
+
+  function cleanup() {
+    SpecialPowers.clearUserPref(PREF);
+  }
+
+  function addMalewareUrlToDB() {
+    return new Promise(function(resolve, reject) {
+      var testData = [
+        { url: "malware.example.com/",
+          db: "test-malware-simple"
+        }
+      ];
+
+      classifierHelper.addUrlToDB(testData, resolve, function() {
+        ok(false, "Couldn't update classifier. Error code: " + errorCode);
+        // Abort test.
+        SimpleTest.finish();
+      });
+    });
+  }
+
+  function runTest() {
+    Promise.resolve()
+      .then(addMalewareUrlToDB)
+      .then(testValidTrack)
+      .then(testBlacklistTrackSafebrowsingOff)
+      .then(testBlacklistTrackSafebrowsingOn)
+      .then(function() {
+        SimpleTest.finish();
+      }).catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+        SimpleTest.finish();
+      });
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.registerCleanupFunction(cleanup);
+  SpecialPowers.pushPrefEnv({"set": [
+    ["media.webvtt.regions.enabled", true],
+    ["urlclassifier.malwareTable", "test-malware-simple"],
+  ]}, runTest);
+
+</script>
+</pre>
+</body>
+</html>

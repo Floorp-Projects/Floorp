@@ -57,7 +57,14 @@
                   android:windowSoftInputMode="stateUnspecified|adjustResize"
                   android:launchMode="singleTask"
                   android:exported="true"
-                  android:theme="@style/Gecko.App">
+                  android:theme="@style/Gecko.App" />
+
+        <!-- Bug 1256615 / Bug 1268455: We published an .App alias and we need to maintain it
+             forever.  If we don't, home screen shortcuts will disappear because the intent
+             filter details change. -->
+        <activity-alias android:name=".App"
+                        android:label="@MOZ_APP_DISPLAYNAME@"
+                        android:targetActivity="@MOZ_ANDROID_BROWSER_INTENT_CLASS@">
 
             <!-- android:priority ranges between -1000 and 1000.  We never want
                  another activity to usurp the MAIN action, so we ratchet our
@@ -137,18 +144,6 @@
             <!-- For debugging -->
             <intent-filter>
                 <action android:name="org.mozilla.gecko.DEBUG" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-
-        <!-- Bug 1256615: We published a .App alias and we need to maintain it
-             forever.  If we don't, dock icons (e.g., Samsung Touchwiz icons)
-             will disappear because the intent filter details change. -->
-        <activity-alias android:name=".App"
-                        android:label="@MOZ_APP_DISPLAYNAME@"
-                        android:targetActivity="@MOZ_ANDROID_BROWSER_INTENT_CLASS@">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity-alias>

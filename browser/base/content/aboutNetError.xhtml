@@ -217,15 +217,15 @@
 
         // if it's an unknown error or there's no title or description
         // defined, get the generic message
-        var errTitle = document.getElementById("et_" + err).innerHTML;
-        var errDesc  = document.getElementById("ed_" + err).innerHTML;
+        var errTitle = document.getElementById("et_" + err);
+        var errDesc  = document.getElementById("ed_" + err);
         if (!errTitle || !errDesc)
         {
-          errTitle = document.getElementById("et_generic").innerHTML;
-          errDesc  = document.getElementById("ed_generic").innerHTML;
+          errTitle = document.getElementById("et_generic");
+          errDesc  = document.getElementById("ed_generic");
         }
 
-        document.querySelector(".title-text").innerHTML = errTitle;
+        document.querySelector(".title-text").innerHTML = errTitle.innerHTML;
 
         var sd = document.getElementById("errorShortDescText");
         if (sd) {
@@ -244,7 +244,7 @@
         var ld = document.getElementById("errorLongDesc");
         if (ld)
         {
-          ld.innerHTML = errDesc;
+          ld.innerHTML = errDesc.innerHTML;
         }
 
         if (err == "sslv3Used") {
@@ -600,19 +600,21 @@
         </p>
       </div>
 
-      <div id="weakCryptoAdvancedPanel" class="advanced-panel">
-        <div id="weakCryptoAdvancedDescription">
-          <p>&weakCryptoAdvanced.longDesc;</p>
+      <div id="advancedPanelContainer">
+        <div id="weakCryptoAdvancedPanel" class="advanced-panel">
+          <div id="weakCryptoAdvancedDescription">
+            <p>&weakCryptoAdvanced.longDesc;</p>
+          </div>
+          <div id="advancedLongDesc" />
+          <div id="overrideWeakCryptoPanel">
+            <a id="overrideWeakCrypto" href="#">&weakCryptoAdvanced.override;</a>
+          </div>
         </div>
-        <div id="advancedLongDesc" />
-        <div id="overrideWeakCryptoPanel">
-          <a id="overrideWeakCrypto" href="#">&weakCryptoAdvanced.override;</a>
-        </div>
-      </div>
 
-      <div id="badCertAdvancedPanel" class="advanced-panel">
-        <p id="badCertTechnicalInfo"/>
-        <button id="exceptionDialogButton">&securityOverride.exceptionButtonLabel;</button>
+        <div id="badCertAdvancedPanel" class="advanced-panel">
+          <p id="badCertTechnicalInfo"/>
+          <button id="exceptionDialogButton">&securityOverride.exceptionButtonLabel;</button>
+        </div>
       </div>
 
     </div>

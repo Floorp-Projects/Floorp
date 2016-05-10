@@ -9,7 +9,6 @@
 // shared-head.js handles imports, constants, and utility functions
 Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js", this);
 
-var {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 var {Utils: WebConsoleUtils} = require("devtools/shared/webconsole/utils");
 var {Messages} = require("devtools/client/webconsole/console-output");
 const asyncStorage = require("devtools/shared/async-storage");

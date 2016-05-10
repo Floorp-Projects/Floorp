@@ -314,10 +314,15 @@
 
             uri = ioService.newURI(href, null, null);
 
-            var nullPrincipal = secMan.createNullPrincipal({});
+            let principal;
+            if (this.getAttribute("useoriginprincipal") == "true") {
+              principal = this.nodePrincipal;
+            } else {
+              principal = secMan.createNullPrincipal({});
+            }
             try {
-              secMan.checkLoadURIWithPrincipal(nullPrincipal, uri,
-                                               nsISSM.DISALLOW_INHERIT_PRINCIPAL)
+              secMan.checkLoadURIWithPrincipal(principal, uri,
+                                               nsISSM.DISALLOW_INHERIT_PRINCIPAL);
             }
             catch (ex) {
               var msg = "Error: Cannot open a " + uri.scheme + ": link using \

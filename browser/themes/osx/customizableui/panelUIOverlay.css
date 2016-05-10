@@ -74,3 +74,16 @@ menu.subviewbutton > .menu-right > image {
 toolbarpaletteitem[place="palette"] > .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   padding: 3px 1px;
 }
+
+#PanelUI-remotetabs-tabslist > label[itemtype="client"] {
+  -moz-padding-start: 6px;
+}
+
+.PanelUI-remotetabs-notabsforclient-label {
+  margin-left: 19px;
+  font-size: 13px;
+}
+
+#PanelUI-remotetabs-tabslist {
+  padding-bottom: 4px;
+}
