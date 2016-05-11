@@ -715,24 +715,6 @@ function handleRequest(req, res) {
     Serializer.prototype._transform = newTransform;
   }
 
-  // for use with test_immutable.js
-  else if (u.pathname === "/immutable-test-without-attribute") {
-     res.setHeader('Cache-Control', 'max-age=100000');
-     res.setHeader('Etag', '1');
-     if (req.headers["if-none-match"]) {
-       res.setHeader("x-conditional", "true");
-     }
-    // default response from here
-  }
-  else if (u.pathname === "/immutable-test-with-attribute") {
-    res.setHeader('Cache-Control', 'max-age=100000, immutable');
-    res.setHeader('Etag', '2');
-     if (req.headers["if-none-match"]) {
-       res.setHeader("x-conditional", "true");
-     }
-   // default response from here
-  }
-
   res.setHeader('Content-Type', 'text/html');
   if (req.httpVersionMajor != 2) {
     res.setHeader('Connection', 'close');
