@@ -316,6 +316,12 @@ private:
   void InitWithAppCommand();
 
   /**
+   * Returns true if aChar is a control character which shouldn't be inputted
+   * into focused text editor.
+   */
+  bool IsControlChar(char16_t aChar) const;
+
+  /**
    * Returns true if the key event is caused by auto repeat.
    */
   bool IsRepeat() const
