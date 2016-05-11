@@ -18,21 +18,21 @@
                   android:orientation="vertical">
 
 
-        <ImageView android:layout_width="wrap_content"
+        <ImageView android:id="@+id/firstrun_image"
+                   android:layout_width="wrap_content"
                    android:layout_height="@dimen/firstrun_background_height"
                    android:layout_marginTop="40dp"
                    android:layout_marginBottom="40dp"
                    android:scaleType="fitCenter"
                    android:layout_gravity="center"
-                   android:adjustViewBounds="true"
-                   android:src="@drawable/firstrun_signin"/>
+                   android:adjustViewBounds="true"/>
 
-        <TextView android:layout_width="@dimen/firstrun_content_width"
+        <TextView android:id="@+id/firstrun_text"
+                  android:layout_width="@dimen/firstrun_content_width"
                   android:layout_height="wrap_content"
                   android:gravity="center"
                   android:paddingBottom="40dp"
-                  android:textAppearance="@style/TextAppearance.FirstrunLight.Main"
-                  android:text="@string/firstrun_signin_message"/>
+                  android:textAppearance="@style/TextAppearance.FirstrunLight.Main"/>
 
         <Button android:id="@+id/welcome_account"
                 style="@style/Widget.Firstrun.Button"
@@ -49,7 +49,6 @@
                   android:layout_height="wrap_content"
                   android:padding="30dp"
                   android:gravity="center"
-                  android:textAppearance="@style/TextAppearance.FirstrunRegular.Link"
-                  android:text="@string/firstrun_welcome_button_browser"/>
+                  android:textAppearance="@style/TextAppearance.FirstrunRegular.Link"/>
     </LinearLayout>
 </ScrollView>
