@@ -565,7 +565,7 @@ class RRegExpMatcher final : public RInstruction
     RINSTRUCTION_HEADER_(RegExpMatcher)
 
     virtual uint32_t numOperands() const {
-        return 5;
+        return 3;
     }
 
     bool recover(JSContext* cx, SnapshotIterator& iter) const;
@@ -577,7 +577,7 @@ class RRegExpSearcher final : public RInstruction
     RINSTRUCTION_HEADER_(RegExpSearcher)
 
     virtual uint32_t numOperands() const {
-        return 5;
+        return 3;
     }
 
     bool recover(JSContext* cx, SnapshotIterator& iter) const;
@@ -589,7 +589,7 @@ class RRegExpTester final : public RInstruction
     RINSTRUCTION_HEADER_(RegExpTester)
 
     virtual uint32_t numOperands() const {
-        return 5;
+        return 3;
     }
 
     bool recover(JSContext* cx, SnapshotIterator& iter) const;
