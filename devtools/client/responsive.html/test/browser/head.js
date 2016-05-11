@@ -57,10 +57,10 @@ var openRDM = Task.async(function* (tab) {
 /**
  * Close responsive design mode for the given tab.
  */
-var closeRDM = Task.async(function* (tab) {
+var closeRDM = Task.async(function* (tab, options) {
   info("Closing responsive design mode");
   let manager = ResponsiveUIManager;
-  yield manager.closeIfNeeded(window, tab);
+  yield manager.closeIfNeeded(window, tab, options);
   info("Responsive design mode closed");
 });
 
