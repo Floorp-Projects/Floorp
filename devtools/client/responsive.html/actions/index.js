@@ -44,9 +44,6 @@ createEnum([
   // Update the device modal open state.
   "UPDATE_DEVICE_MODAL_OPEN",
 
-  // Update the touch simulation enabled state.
-  "UPDATE_TOUCH_SIMULATION_ENABLED",
-
 ], module.exports);
 
 /**

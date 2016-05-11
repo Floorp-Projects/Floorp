@@ -11,11 +11,9 @@ const Types = require("../types");
 
 module.exports = createClass({
   propTypes: {
-    screenshot: PropTypes.shape(Types.screenshot).isRequired,
-    touchSimulation: PropTypes.shape(Types.touchSimulation).isRequired,
     onExit: PropTypes.func.isRequired,
     onScreenshot: PropTypes.func.isRequired,
-    onUpdateTouchSimulationEnabled: PropTypes.func.isRequired,
+    screenshot: PropTypes.shape(Types.screenshot).isRequired,
   },
 
   displayName: "GlobalToolbar",
@@ -24,17 +22,10 @@ module.exports = createClass({
 
   render() {
     let {
-      screenshot,
-      touchSimulation,
       onExit,
       onScreenshot,
-      onUpdateTouchSimulationEnabled
+      screenshot,
     } = this.props;
-
-    let touchButtonClass = "toolbar-button devtools-button";
-    if (touchSimulation.enabled) {
-      touchButtonClass += " active";
-    }
 
     return dom.header(
       {
@@ -46,11 +37,6 @@ module.exports = createClass({
           className: "title",
         },
         getStr("responsive.title")),
-      dom.button({
-        id: "global-touch-simulation-button",
-        className: touchButtonClass,
-        onClick: onUpdateTouchSimulationEnabled,
-      }),
       dom.button({
         id: "global-screenshot-button",
         className: "toolbar-button devtools-button",
