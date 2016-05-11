@@ -237,9 +237,6 @@ function checkChangeIsEnabled(aWindow, aNext)
   function outerChangeTest() {
     isnot(aWindow.outerWidth, oWidth, "Window outerWidth should have changed");
     isnot(aWindow.outerHeight, oHeight, "Window outerHeight should have changed");
-
-    aWindow.outerWidth = oWidth;
-    aWindow.outerHeight = oHeight;
   }
 
   /**
@@ -247,31 +244,22 @@ function checkChangeIsEnabled(aWindow, aNext)
    */
   prevWidth = aWindow.innerWidth;
   prevHeight = aWindow.innerHeight;
-
   aWindow.innerWidth = getNewWidth(aWindow);
   aWindow.innerHeight = getNewHeight(aWindow);
 
   hitEventLoop(sizeChangeCondition, sizeChangeTest, hits)
   .then(function() {
     aWindow.resizeTo(getNewWidth(aWindow), getNewHeight(aWindow));
-  })
-  .then(function() {
     return hitEventLoop(sizeChangeCondition, sizeChangeTest, hits);
   })
   .then(function () {
     aWindow.resizeBy(getNewWidth(aWindow) - aWindow.innerWidth,
                      getNewHeight(aWindow) - aWindow.innerHeight);
-  })
-  .then(function() {
     return hitEventLoop(sizeChangeCondition, sizeChangeTest, hits);
   })
-  .then(function () {
-    prevWidth = aWindow.innerWidth = getNewWidth(aWindow);
-    prevHeight = aWindow.innerHeight = getNewHeight(aWindow);
-    aWindow.sizeToContent();
-  })
   .then(function() {
-    hitEventLoop(sizeChangeCondition, sizeChangeTest, hits);
+    aWindow.sizeToContent();
+    return hitEventLoop(sizeChangeCondition, sizeChangeTest, hits);
   })
   .then(function() {
     /**
@@ -282,8 +270,6 @@ function checkChangeIsEnabled(aWindow, aNext)
 
     aWindow.screenX = getNewX(aWindow);
     aWindow.screenY = getNewY(aWindow);
-  })
-  .then(function() {
     return hitEventLoop(posChangeCondition, posChangeTest, hits);
   })
   .then(function() {
@@ -291,8 +277,6 @@ function checkChangeIsEnabled(aWindow, aNext)
     prevY = aWindow.screenY;
 
     aWindow.moveTo(getNewX(aWindow), getNewY(aWindow));
-  })
-  .then(function() {
     return hitEventLoop(posChangeCondition, posChangeTest, hits);
   })
   .then(function() {
@@ -301,8 +285,6 @@ function checkChangeIsEnabled(aWindow, aNext)
 
     aWindow.moveBy(getNewX(aWindow) - aWindow.screenX,
                    getNewY(aWindow) - aWindow.screenY);
-  })
-  .then(function() {
     return hitEventLoop(posChangeCondition, posChangeTest, hits);
   })
   .then(function() {
@@ -314,8 +296,17 @@ function checkChangeIsEnabled(aWindow, aNext)
 
     aWindow.outerWidth = oWidth * 2;
     aWindow.outerHeight = oHeight * 2;
+    return hitEventLoop(outerChangeCondition, outerChangeTest, hits);
   })
   .then(function() {
+    let origWidth = oWidth;
+    let origHeight = oHeight;
+
+    oWidth = aWindow.outerWidth;
+    oHeight = aWindow.outerHeight;
+
+    aWindow.outerWidth = origWidth;
+    aWindow.outerHeight = origHeight;
     return hitEventLoop(outerChangeCondition, outerChangeTest, hits);
   })
   .then(aNext);

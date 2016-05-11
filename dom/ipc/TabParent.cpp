@@ -620,6 +620,37 @@ TabParent::RecvMoveFocus(const bool& aForward, const bool& aForDocumentNavigatio
 }
 
 bool
+TabParent::RecvSizeShellTo(const uint32_t& aFlags, const int32_t& aWidth, const int32_t& aHeight,
+                           const int32_t& aShellItemWidth, const int32_t& aShellItemHeight)
+{
+  NS_ENSURE_TRUE(mFrameElement, true);
+
+  nsCOMPtr<nsIDocShell> docShell = mFrameElement->OwnerDoc()->GetDocShell();
+  NS_ENSURE_TRUE(docShell, true);
+
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  nsresult rv = docShell->GetTreeOwner(getter_AddRefs(treeOwner));
+  NS_ENSURE_SUCCESS(rv, true);
+
+  int32_t width = aWidth;
+  int32_t height = aHeight;
+
+  if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_IGNORE_CX) {
+    width = mDimensions.width;
+  }
+
+  if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_IGNORE_CY) {
+    height = mDimensions.height;
+  }
+
+  nsCOMPtr<nsIXULWindow> xulWin(do_GetInterface(treeOwner));
+  NS_ENSURE_TRUE(xulWin, true);
+  xulWin->SizeShellToWithLimit(width, height, aShellItemWidth, aShellItemHeight);
+
+  return true;
+}
+
+bool
 TabParent::RecvEvent(const RemoteDOMEvent& aEvent)
 {
   nsCOMPtr<nsIDOMEvent> event = do_QueryInterface(aEvent.mEvent);
@@ -814,19 +845,44 @@ TabParent::RecvSetDimensions(const uint32_t& aFlags,
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin = do_QueryInterface(treeOwner);
   NS_ENSURE_TRUE(treeOwnerAsWin, true);
 
+  // We only care about the parameters that actually changed, see more
+  // details in TabChild::SetDimensions.
+  int32_t unused;
+  int32_t x = aX;
+  if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_IGNORE_X) {
+    treeOwnerAsWin->GetPosition(&x, &unused);
+  }
+
+  int32_t y = aY;
+  if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_IGNORE_Y) {
+    treeOwnerAsWin->GetPosition(&unused, &y);
+  }
+
+  int32_t cx = aCx;
+  if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_IGNORE_CX) {
+    treeOwnerAsWin->GetSize(&cx, &unused);
+  }
+
+  int32_t cy = aCy;
+  if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_IGNORE_CY) {
+    treeOwnerAsWin->GetSize(&unused, &cy);
+  }
+
   if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION &&
       aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER) {
-    treeOwnerAsWin->SetPositionAndSize(aX, aY, aCx, aCy, true);
+    treeOwnerAsWin->SetPositionAndSize(x, y, cx, cy, true);
     return true;
   }
 
   if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION) {
-    treeOwnerAsWin->SetPosition(aX, aY);
+    treeOwnerAsWin->SetPosition(x, y);
+    mUpdatedDimensions = false;
+    UpdatePosition();
     return true;
   }
 
   if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER) {
-    treeOwnerAsWin->SetSize(aCx, aCy, true);
+    treeOwnerAsWin->SetSize(cx, cy, true);
     return true;
   }
 
