@@ -96,18 +96,22 @@ SimpleGlobalObject::Create(GlobalType globalType, JS::Handle<JS::Value> proto)
   JS::CompartmentOptions options;
   options.creationOptions().setInvisibleToDebugger(true);
 
-  nsCOMPtr<nsIPrincipal> principal;
+  JS::Rooted<JSObject*> global(cx);
+
   if (NS_IsMainThread()) {
-    principal = nsNullPrincipal::Create();
+    nsCOMPtr<nsIPrincipal> principal = nsNullPrincipal::Create();
     if (!principal) {
       return nullptr;
     }
+    options.creationOptions().setTrace(xpc::TraceXPCGlobal);
+    global = xpc::CreateGlobalObject(cx, js::Jsvalify(&SimpleGlobalClass),
+                                     nsJSPrincipals::get(principal),
+                                     options);
+  } else {
+    global = JS_NewGlobalObject(cx, js::Jsvalify(&SimpleGlobalClass),
+                                nullptr,
+                                JS::DontFireOnNewGlobalHook, options);
   }
-
-  JS::Rooted<JSObject*> global(cx,
-    JS_NewGlobalObject(cx, js::Jsvalify(&SimpleGlobalClass),
-                       nsJSPrincipals::get(principal),
-                       JS::DontFireOnNewGlobalHook, options));
 
   if (!global) {
     JS_ClearPendingException(cx);
@@ -133,7 +137,7 @@ SimpleGlobalObject::Create(GlobalType globalType, JS::Handle<JS::Value> proto)
       return nullptr;
     }
 
-    if (!JS_SetPrototype(cx, global, protoObj)) {
+    if (!JS_SplicePrototype(cx, global, protoObj)) {
       JS_ClearPendingException(cx);
       return nullptr;
     }
