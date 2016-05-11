@@ -2763,17 +2763,18 @@ Http2Session::WriteSegmentsAgain(nsAHttpSegmentWriter *writer,
   if (mDownstreamState == DISCARDING_DATA_FRAME ||
       mDownstreamState == DISCARDING_DATA_FRAME_PADDING) {
     char trash[4096];
-    uint32_t count = std::min(4096U, mInputFrameDataSize - mInputFrameDataRead);
+    uint32_t discardCount = std::min(mInputFrameDataSize - mInputFrameDataRead,
+                                     4096U);
     LOG3(("Http2Session::WriteSegments %p trying to discard %d bytes of data",
-          this, count));
+          this, discardCount));
 
-    if (!count) {
+    if (!discardCount) {
       ResetDownstreamState();
       ResumeRecv();
       return NS_BASE_STREAM_WOULD_BLOCK;
     }
 
-    rv = NetworkRead(writer, trash, count, countWritten);
+    rv = NetworkRead(writer, trash, discardCount, countWritten);
 
     if (NS_FAILED(rv)) {
       LOG3(("Http2Session %p discard frame read failure %x\n", this, rv));
