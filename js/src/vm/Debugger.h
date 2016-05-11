@@ -1028,6 +1028,46 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     Debugger & operator=(const Debugger&) = delete;
 };
 
+class DebuggerObject : public NativeObject
+{
+  public:
+    static const Class class_;
+
+    static NativeObject* initClass(JSContext* cx, HandleObject obj, HandleObject debuggerCtor);
+
+    static DebuggerObject* create(JSContext* cx, HandleObject proto, HandleObject obj,
+                                  HandleNativeObject debugger);
+
+    bool isExtensible(JSContext* cx, bool* result) const;
+
+    bool isSealed(JSContext* cx, bool* result) const {
+        return isSealedHelper(cx, OpSeal, "isSealed", result);
+    }
+
+    bool isFrozen(JSContext* cx, bool* result) const {
+        return isSealedHelper(cx, OpFreeze, "isFrozen", result);
+    }
+
+  private:
+    static const unsigned RESERVED_SLOTS = 1;
+
+    static const JSPropertySpec properties_[];
+#ifdef SPIDERMONKEY_PROMISE
+    static const JSPropertySpec promiseProperties_[];
+#endif // SPIDERMONKEY_PROMISE
+    static const JSFunctionSpec methods_[];
+
+    JSObject* referent() const {
+        JSObject* obj = (JSObject*) getPrivate();
+        MOZ_ASSERT(obj);
+        return obj;
+    }
+
+    enum SealHelperOp { OpSeal, OpFreeze };
+
+    bool isSealedHelper(JSContext* cx, SealHelperOp op, const char* name, bool* result) const;
+};
+
 class BreakpointSite {
     friend class Breakpoint;
     friend struct ::JSCompartment;
