@@ -501,10 +501,6 @@ MainThreadStopSyncLoopRunnable::WorkerRun(JSContext* aCx,
   nsCOMPtr<nsIEventTarget> syncLoopTarget;
   mSyncLoopTarget.swap(syncLoopTarget);
 
-  if (!mResult) {
-    MaybeSetException();
-  }
-
   aWorkerPrivate->StopSyncLoop(syncLoopTarget, mResult);
   return true;
 }
