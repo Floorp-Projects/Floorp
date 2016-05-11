@@ -184,7 +184,7 @@ var commandsCheckLargeXfer = [
 
 function addInitialDataChannel(chain) {
   chain.insertBefore('PC_LOCAL_CREATE_OFFER', commandsCreateDataChannel);
-  chain.insertBefore('PC_LOCAL_CHECK_MEDIA_TRACKS', commandsWaitForDataChannel);
+  chain.insertBefore('PC_LOCAL_WAIT_FOR_MEDIA_FLOW', commandsWaitForDataChannel);
   chain.removeAfter('PC_REMOTE_CHECK_ICE_CONNECTIONS');
   chain.append(commandsCheckLargeXfer);
   chain.append(commandsCheckDataChannel);
