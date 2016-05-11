@@ -161,6 +161,12 @@ public:
   virtual bool RecvMoveFocus(const bool& aForward,
                              const bool& aForDocumentNavigation) override;
 
+  virtual bool RecvSizeShellTo(const uint32_t& aFlags,
+                               const int32_t& aWidth,
+                               const int32_t& aHeight,
+                               const int32_t& aShellItemWidth,
+                               const int32_t& aShellItemHeight) override;
+
   virtual bool RecvEvent(const RemoteDOMEvent& aEvent) override;
 
   virtual bool RecvReplyKeyEvent(const WidgetKeyboardEvent& aEvent) override;
