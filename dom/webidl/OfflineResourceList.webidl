@@ -42,13 +42,21 @@ interface OfflineResourceList : EventTarget {
   void swapCache();
 
   /* Events */
+  [UseCounter]
   attribute EventHandler onchecking;
+  [UseCounter]
   attribute EventHandler onerror;
+  [UseCounter]
   attribute EventHandler onnoupdate;
+  [UseCounter]
   attribute EventHandler ondownloading;
+  [UseCounter]
   attribute EventHandler onprogress;
+  [UseCounter]
   attribute EventHandler onupdateready;
+  [UseCounter]
   attribute EventHandler oncached;
+  [UseCounter]
   attribute EventHandler onobsolete;
 };
 
