@@ -550,7 +550,7 @@ nsSocketTransportService::Init()
         return NS_ERROR_UNEXPECTED;
 
     nsCOMPtr<nsIThread> thread;
-    nsresult rv = NS_NewThread(getter_AddRefs(thread), this);
+    nsresult rv = NS_NewNamedThread("Socket Thread", getter_AddRefs(thread), this);
     if (NS_FAILED(rv)) return rv;
     
     {
@@ -820,8 +820,6 @@ nsSocketTransportService::MarkTheLastElementOfPendingQueue()
 NS_IMETHODIMP
 nsSocketTransportService::Run()
 {
-    PR_SetCurrentThreadName("Socket Thread");
-
 #ifdef MOZ_NUWA_PROCESS
     if (IsNuwaProcess()) {
         NuwaMarkCurrentThread(nullptr, nullptr);
