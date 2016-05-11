@@ -55,6 +55,7 @@
       <popupnotificationcontent orient="vertical">
         <textbox id="password-notification-username"/>
         <textbox id="password-notification-password" type="password" show-content=""/>
+        <checkbox id="password-notification-visibilityToggle" hidden="true"/>
       </popupnotificationcontent>
     </popupnotification>
 

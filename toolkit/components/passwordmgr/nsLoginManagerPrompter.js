@@ -337,7 +337,7 @@ LoginManagerPrompter.prototype = {
 
       // Look for existing logins.
       var foundLogins = this._pwmgr.findLogins({}, hostname, null,
-                                               realm);
+                                  realm);
 
       // XXX Like the original code, we can't deal with multiple
       // account selection. (bug 227632)
@@ -438,7 +438,7 @@ LoginManagerPrompter.prototype = {
       if (!aPassword.value) {
         // Look for existing logins.
         var foundLogins = this._pwmgr.findLogins({}, hostname, null,
-                                                 realm);
+                                          realm);
 
         // XXX Like the original code, we can't deal with multiple
         // account selection (bug 227632). We can deal with finding the
@@ -525,7 +525,6 @@ LoginManagerPrompter.prototype = {
     var canAutologin = false;
 
     try {
-
       this.log("===== promptAuth called =====");
 
       // If the user submits a login but it fails, we need to remove the
@@ -534,7 +533,6 @@ LoginManagerPrompter.prototype = {
       this._removeLoginNotifications();
 
       var [hostname, httpRealm] = this._getAuthTarget(aChannel, aAuthInfo);
-
 
       // Looks for existing logins to prefill the prompt with.
       var foundLogins = this._pwmgr.findLogins({},
@@ -620,9 +618,7 @@ LoginManagerPrompter.prototype = {
           this._showSaveLoginNotification(notifyObj, newLogin);
         else
           this._pwmgr.addLogin(newLogin);
-
       } else if (password != selectedLogin.password) {
-
         this.log("Updating password for " + username +
                  " @ " + hostname + " (" + httpRealm + ")");
         let notifyObj = this._getPopupNote() || notifyBox;
@@ -855,15 +851,12 @@ LoginManagerPrompter.prototype = {
       chromeDoc.getElementById("password-notification-username")
                .setAttribute("value", login.username);
 
+      let toggleCheckbox = chromeDoc.getElementById("password-notification-visibilityToggle");
+      toggleCheckbox.removeAttribute("checked");
       let passwordField = chromeDoc.getElementById("password-notification-password");
       // Ensure the type is reset so the field is masked.
       passwordField.setAttribute("type", "password");
       passwordField.setAttribute("value", login.password);
-      if (Services.prefs.getBoolPref("signon.rememberSignons.visibilityToggle")) {
-        passwordField.setAttribute("show-content", showPasswordPlaceholder);
-      } else {
-        passwordField.setAttribute("show-content", "");
-      }
       updateButtonLabel();
     };
 
@@ -879,41 +872,17 @@ LoginManagerPrompter.prototype = {
       updateButtonLabel();
     };
 
-    let onPasswordFocus = (focusEvent) => {
+    let onVisibilityToggle = (commandEvent) => {
       let passwordField = chromeDoc.getElementById("password-notification-password");
       // Gets the caret position before changing the type of the textbox
       let selectionStart = passwordField.selectionStart;
       let selectionEnd = passwordField.selectionEnd;
-      if (focusEvent.rangeParent != null) {
-        // Check for a click over the SHOW placeholder
-        selectionStart = passwordField.value.length;
-        selectionEnd = passwordField.value.length;
+      passwordField.setAttribute("type", commandEvent.target.checked ? "" : "password");
+      if (!passwordField.hasAttribute("focused")) {
+        return;
       }
-      passwordField.setAttribute("type", "");
       passwordField.selectionStart = selectionStart;
       passwordField.selectionEnd = selectionEnd;
-    };
-
-    let onPasswordBlur = () => {
-      // Use setAttribute in case the <textbox> binding isn't applied.
-      chromeDoc.getElementById("password-notification-password").setAttribute("type", "password");
-    };
-
-    let onNotificationClick = (clickEvent) => {
-      // Removes focus from textboxes when we click elsewhere on the doorhanger.
-      let focusedElement = Services.focus.focusedElement;
-      if (!focusedElement || focusedElement.nodeName != "html:input") {
-        // No input is focused so we don't need to blur
-        return;
-      }
-
-      let focusedBindingParent = chromeDoc.getBindingParent(focusedElement);
-      if (!focusedBindingParent || focusedBindingParent.nodeName != "textbox" ||
-          clickEvent.explicitOriginalTarget == focusedBindingParent) {
-        // The focus wasn't in a textbox or the click was in the focused textbox.
-        return;
-      }
-      focusedBindingParent.blur();
     };
 
     let persistData = () => {
@@ -973,7 +942,8 @@ LoginManagerPrompter.prototype = {
     }] : null;
 
     let usernamePlaceholder = this._getLocalizedString("noUsernamePlaceholder");
-    let showPasswordPlaceholder = this._getLocalizedString("showPasswordPlaceholder");
+    let togglePasswordLabel = this._getLocalizedString("togglePasswordLabel");
+    let togglePasswordAccessKey = this._getLocalizedString("togglePasswordAccessKey");
     let displayHost = this._getShortDisplayHost(login.hostname);
 
     this._getPopupNote().show(
@@ -997,15 +967,17 @@ LoginManagerPrompter.prototype = {
               chromeDoc.getElementById("password-notification-password")
                        .addEventListener("input", onInput);
               if (Services.prefs.getBoolPref("signon.rememberSignons.visibilityToggle")) {
-                chromeDoc.getElementById("password-notification-password")
-                         .addEventListener("focus", onPasswordFocus);
+                chromeDoc.getElementById("password-notification-visibilityToggle")
+                         .addEventListener("command", onVisibilityToggle);
+                chromeDoc.getElementById("password-notification-visibilityToggle")
+                         .setAttribute("label", togglePasswordLabel);
+                chromeDoc.getElementById("password-notification-visibilityToggle")
+                         .setAttribute("accesskey", togglePasswordAccessKey);
+                chromeDoc.getElementById("password-notification-visibilityToggle")
+                         .removeAttribute("hidden");
               }
-              chromeDoc.getElementById("password-notification-password")
-                       .addEventListener("blur", onPasswordBlur);
               break;
             case "shown":
-              chromeDoc.getElementById("notification-popup")
-                         .addEventListener("click", onNotificationClick);
               writeDataToUI();
               break;
             case "dismissed":
@@ -1013,16 +985,12 @@ LoginManagerPrompter.prototype = {
               // Fall through.
             case "removed":
               currentNotification = null;
-              chromeDoc.getElementById("notification-popup")
-                       .removeEventListener("click", onNotificationClick);
               chromeDoc.getElementById("password-notification-username")
                        .removeEventListener("input", onInput);
               chromeDoc.getElementById("password-notification-password")
                        .removeEventListener("input", onInput);
-              chromeDoc.getElementById("password-notification-password")
-                       .removeEventListener("focus", onPasswordFocus);
-              chromeDoc.getElementById("password-notification-password")
-                       .removeEventListener("blur", onPasswordBlur);
+              chromeDoc.getElementById("password-notification-visibilityToggle")
+                       .removeEventListener("command", onVisibilityToggle);
               break;
           }
           return false;
