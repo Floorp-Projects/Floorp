@@ -130,7 +130,7 @@
                 label="&mediaUnmute.label;"
                 accesskey="&mediaUnmute.accesskey;"
                 oncommand="gContextMenu.mediaCommand('unmute');"/>
-      <menu id="context-media-playbackrate" label="&mediaPlaybackRate2.label;" accesskey="&mediaPlaybackRate2.accesskey;">
+      <menu id="context-media-playbackrate" label="&mediaPlaybackRate.label;" accesskey="&mediaPlaybackRate.accesskey;">
         <menupopup>
           <menuitem id="context-media-playbackrate-050x"
                     label="&mediaPlaybackRate050x2.label;"
@@ -165,11 +165,6 @@
                     oncommand="gContextMenu.mediaCommand('playbackRate', 2.0);"/>
         </menupopup>
       </menu>
-      <menuitem id="context-media-loop"
-                label="&mediaLoop.label;"
-                accesskey="&mediaLoop.accesskey;"
-                type="checkbox"
-                oncommand="gContextMenu.mediaCommand('loop');"/>
       <menuitem id="context-media-showcontrols"
                 label="&mediaShowControls.label;"
                 accesskey="&mediaShowControls.accesskey;"
