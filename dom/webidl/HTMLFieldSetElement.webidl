@@ -27,6 +27,7 @@ interface HTMLFieldSetElement : HTMLElement {
   readonly attribute DOMString validationMessage;
 
   boolean checkValidity();
+  boolean reportValidity();
 
   void setCustomValidity(DOMString error);
 };

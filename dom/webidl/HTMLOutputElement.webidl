@@ -30,6 +30,7 @@ interface HTMLOutputElement : HTMLElement {
   readonly attribute ValidityState validity;
   readonly attribute DOMString validationMessage;
   boolean checkValidity();
+  boolean reportValidity();
   void setCustomValidity(DOMString error);
 
 // Not yet implemented (bug 556743).
