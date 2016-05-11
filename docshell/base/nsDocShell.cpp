@@ -14092,6 +14092,21 @@ nsDocShell::GetOriginAttributes(JSContext* aCx,
 void
 nsDocShell::SetOriginAttributes(const DocShellOriginAttributes& aAttrs)
 {
+  // TODO: Bug 1273058 - mContentViewer should be null when setting origin
+  // attributes.
+  if (mContentViewer) {
+    nsIDocument* doc = mContentViewer->GetDocument();
+    if (doc) {
+      nsIURI* uri = doc->GetDocumentURI();
+      MOZ_ASSERT(uri);
+      if (uri) {
+        nsAutoCString uriSpec;
+        uri->GetSpec(uriSpec);
+        MOZ_ASSERT(uriSpec.EqualsLiteral("about:blank"));
+      }
+    }
+  }
+
   mOriginAttributes = aAttrs;
 }
 
