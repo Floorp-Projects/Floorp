@@ -252,8 +252,9 @@ nsPrintSettingsWin::CopyToNative(DEVMODEW* aDevMode)
     paperWidth = mPaperWidth * MM_PER_INCH_FLOAT;
   }
 
-  // Set a sensible limit on the minimum height and width.
-  if (paperHeight >= MM_PER_INCH_FLOAT) {
+  // Note: small page sizes can be required here for sticker, label and slide
+  // printers etc. see bug 1271900.
+  if (paperHeight > 0) {
     // In DEVMODEs, physical lengths are stored in tenths of millimeters.
     aDevMode->dmPaperLength = paperHeight * 10l;
     aDevMode->dmFields |= DM_PAPERLENGTH;
@@ -262,7 +263,7 @@ nsPrintSettingsWin::CopyToNative(DEVMODEW* aDevMode)
     aDevMode->dmFields &= ~DM_PAPERLENGTH;
   }
 
-  if (paperWidth >= MM_PER_INCH_FLOAT) {
+  if (paperWidth > 0) {
     aDevMode->dmPaperWidth = paperWidth * 10l;
     aDevMode->dmFields |= DM_PAPERWIDTH;
   } else {
