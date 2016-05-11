@@ -1839,7 +1839,7 @@ IsAlignedLeft(uint8_t aAlignment,
 {
   return aFrame->IsSVGText() ||
          NS_STYLE_TEXT_ALIGN_LEFT == aAlignment ||
-         (((NS_STYLE_TEXT_ALIGN_DEFAULT == aAlignment &&
+         (((NS_STYLE_TEXT_ALIGN_START == aAlignment &&
            NS_STYLE_DIRECTION_LTR == aDirection) ||
           (NS_STYLE_TEXT_ALIGN_END == aAlignment &&
            NS_STYLE_DIRECTION_RTL == aDirection)) &&

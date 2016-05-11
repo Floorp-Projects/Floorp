@@ -3139,7 +3139,7 @@ nsLineLayout::TextAlignLine(nsLineBox* aLine,
     textAlignTrue = mStyleText->mTextAlignLastTrue;
     if (mStyleText->mTextAlignLast == NS_STYLE_TEXT_ALIGN_AUTO) {
       if (textAlign == NS_STYLE_TEXT_ALIGN_JUSTIFY) {
-        textAlign = NS_STYLE_TEXT_ALIGN_DEFAULT;
+        textAlign = NS_STYLE_TEXT_ALIGN_START;
       }
     } else {
       textAlign = mStyleText->mTextAlignLast;
@@ -3201,7 +3201,7 @@ nsLineLayout::TextAlignLine(nsLineBox* aLine,
         MOZ_FALLTHROUGH;
       }
 
-      case NS_STYLE_TEXT_ALIGN_DEFAULT:
+      case NS_STYLE_TEXT_ALIGN_START:
         // default alignment is to start edge so do nothing
         break;
 

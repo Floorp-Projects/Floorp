@@ -4451,7 +4451,7 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
                textAlignValue->GetIntValue()) {
     conditions.SetUncacheable();
     uint8_t parentAlign = parentText->mTextAlign;
-    text->mTextAlign = (NS_STYLE_TEXT_ALIGN_DEFAULT == parentAlign) ?
+    text->mTextAlign = (NS_STYLE_TEXT_ALIGN_START == parentAlign) ?
       NS_STYLE_TEXT_ALIGN_CENTER : parentAlign;
   } else if (eCSSUnit_Enumerated == textAlignValue->GetUnit() &&
              NS_STYLE_TEXT_ALIGN_MATCH_PARENT ==
@@ -4462,7 +4462,7 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
       uint8_t parentAlign = parentText->mTextAlign;
       uint8_t parentDirection = parent->StyleVisibility()->mDirection;
       switch (parentAlign) {
-        case NS_STYLE_TEXT_ALIGN_DEFAULT:
+        case NS_STYLE_TEXT_ALIGN_START:
           text->mTextAlign = parentDirection == NS_STYLE_DIRECTION_RTL ?
             NS_STYLE_TEXT_ALIGN_RIGHT : NS_STYLE_TEXT_ALIGN_LEFT;
           break;
@@ -4496,7 +4496,7 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
     SetDiscrete(*textAlignValue, text->mTextAlign, conditions,
                 SETDSC_ENUMERATED | SETDSC_UNSET_INHERIT,
                 parentText->mTextAlign,
-                NS_STYLE_TEXT_ALIGN_DEFAULT, 0, 0, 0, 0);
+                NS_STYLE_TEXT_ALIGN_START, 0, 0, 0, 0);
   }
 
   // text-align-last: enum, pair(enum), inherit, initial
