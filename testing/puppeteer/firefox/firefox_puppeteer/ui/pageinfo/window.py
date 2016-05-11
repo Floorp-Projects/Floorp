@@ -51,7 +51,7 @@ class PageInfoWindow(BaseWindow):
             if callable(trigger):
                 trigger(win)
             elif trigger == 'menu':
-                self.menubar.select_by_id('file-menu', 'menu_closeWindow')
+                self.menubar.select_by_id('file-menu', 'menu_close')
             elif trigger == 'shortcut':
                 win.send_shortcut(win.get_entity('closeWindow.key'),
                                   accel=True)
