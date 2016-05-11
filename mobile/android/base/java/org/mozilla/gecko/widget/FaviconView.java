@@ -193,6 +193,7 @@ public class FaviconView extends ImageView {
 
             // At this point we do not have a page URL anymore.
             showDefaultFavicon(null);
+            return;
         }
 
         // Reassigning the same bitmap? Don't bother.
