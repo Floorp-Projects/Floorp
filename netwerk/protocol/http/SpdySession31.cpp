@@ -2174,15 +2174,16 @@ SpdySession31::WriteSegmentsAgain(nsAHttpSegmentWriter *writer,
 
   if (mDownstreamState == DISCARDING_DATA_FRAME) {
     char trash[4096];
-    uint32_t count = std::min(4096U, mInputFrameDataSize - mInputFrameDataRead);
+    uint32_t discardCount = std::min(mInputFrameDataSize - mInputFrameDataRead,
+                                     4096U);
 
-    if (!count) {
+    if (!discardCount) {
       ResetDownstreamState();
       ResumeRecv();
       return NS_BASE_STREAM_WOULD_BLOCK;
     }
 
-    rv = NetworkRead(writer, trash, count, countWritten);
+    rv = NetworkRead(writer, trash, discardCount, countWritten);
 
     if (NS_FAILED(rv)) {
       LOG3(("SpdySession31 %p discard frame read failure %x\n", this, rv));
