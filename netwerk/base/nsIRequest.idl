@@ -180,7 +180,7 @@ interface nsIRequest : nsISupports
      * cached content is automatically validated if necessary before reuse.
      * 
      * VALIDATE_ALWAYS forces validation of any cached content independent of
-     * its expiration time (unless it is https with Cache-Control: immutable)
+     * its expiration time.
      * 
      * VALIDATE_NEVER disables validation of cached content, unless it arrived
      * with the "Cache: no-store" header, or arrived via HTTPS with the
