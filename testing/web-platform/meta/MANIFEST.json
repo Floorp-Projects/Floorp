@@ -36389,6 +36389,18 @@
             "url": "/editing/run/multitest.html"
           }
         ],
+        "web-animations/animation-model/keyframe-effects/spacing-keyframes.html": [
+          {
+            "path": "web-animations/animation-model/keyframe-effects/spacing-keyframes.html",
+            "url": "/web-animations/animation-model/keyframe-effects/spacing-keyframes.html"
+          }
+        ],
+        "web-animations/interfaces/KeyframeEffectReadOnly/spacing.html": [
+          {
+            "path": "web-animations/interfaces/KeyframeEffectReadOnly/spacing.html",
+            "url": "/web-animations/interfaces/KeyframeEffectReadOnly/spacing.html"
+          }
+        ],
         "webaudio/the-audio-api/the-audioparam-interface/setTargetAtTime-after-event-within-block.html": [
           {
             "path": "webaudio/the-audio-api/the-audioparam-interface/setTargetAtTime-after-event-within-block.html",
