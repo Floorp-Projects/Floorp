@@ -704,7 +704,7 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
         text->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_RIGHT)
     {
       nsStyleText* uniqueText = GET_UNIQUE_STYLE_DATA(Text);
-      uniqueText->mTextAlign = NS_STYLE_TEXT_ALIGN_DEFAULT;
+      uniqueText->mTextAlign = NS_STYLE_TEXT_ALIGN_START;
     }
   }
 

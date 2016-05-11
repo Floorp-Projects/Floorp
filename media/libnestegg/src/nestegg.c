@@ -2333,9 +2333,6 @@ nestegg_read_packet(nestegg * ctx, nestegg_packet ** pkt)
 
   *pkt = NULL;
 
-  if (!ctx->ancestor)
-    return -1;
-
   for (;;) {
     r = ne_peek_element(ctx, &id, &size);
     if (r != 1)

@@ -1975,7 +1975,7 @@ KTableEntry nsCSSProps::kTextAlignKTable[] = {
   { eCSSKeyword__moz_center, NS_STYLE_TEXT_ALIGN_MOZ_CENTER },
   { eCSSKeyword__moz_right, NS_STYLE_TEXT_ALIGN_MOZ_RIGHT },
   { eCSSKeyword__moz_left, NS_STYLE_TEXT_ALIGN_MOZ_LEFT },
-  { eCSSKeyword_start, NS_STYLE_TEXT_ALIGN_DEFAULT },
+  { eCSSKeyword_start, NS_STYLE_TEXT_ALIGN_START },
   { eCSSKeyword_end, NS_STYLE_TEXT_ALIGN_END },
   { eCSSKeyword_unsafe, NS_STYLE_TEXT_ALIGN_UNSAFE },
   { eCSSKeyword_match_parent, NS_STYLE_TEXT_ALIGN_MATCH_PARENT },
@@ -1988,7 +1988,7 @@ KTableEntry nsCSSProps::kTextAlignLastKTable[] = {
   { eCSSKeyword_right, NS_STYLE_TEXT_ALIGN_RIGHT },
   { eCSSKeyword_center, NS_STYLE_TEXT_ALIGN_CENTER },
   { eCSSKeyword_justify, NS_STYLE_TEXT_ALIGN_JUSTIFY },
-  { eCSSKeyword_start, NS_STYLE_TEXT_ALIGN_DEFAULT },
+  { eCSSKeyword_start, NS_STYLE_TEXT_ALIGN_START },
   { eCSSKeyword_end, NS_STYLE_TEXT_ALIGN_END },
   { eCSSKeyword_unsafe, NS_STYLE_TEXT_ALIGN_UNSAFE },
   { eCSSKeyword_UNKNOWN, -1 }

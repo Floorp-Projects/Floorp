@@ -312,10 +312,13 @@ gfxWindowsSurface::GetSize() const
 {
     if (mForPrinting) {
         // On Windows we need to use the printable area of the page.
+        // Note: we only scale the printing using the LOGPIXELSY, so we use that
+        // when calculating the surface width as well as the height.
+        int32_t heightDPI = ::GetDeviceCaps(mDC, LOGPIXELSY);
         float width = (::GetDeviceCaps(mDC, HORZRES) * POINTS_PER_INCH_FLOAT)
-                      / ::GetDeviceCaps(mDC, LOGPIXELSX);
+                      / heightDPI;
         float height = (::GetDeviceCaps(mDC, VERTRES) * POINTS_PER_INCH_FLOAT)
-                       / ::GetDeviceCaps(mDC, LOGPIXELSY);
+                       / heightDPI;
         return mozilla::gfx::IntSize(width, height);
     }
 
