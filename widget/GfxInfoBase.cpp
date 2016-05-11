@@ -831,6 +831,7 @@ GfxInfoBase::GetFeatureStatusImpl(int32_t aFeature,
       NS_FAILED(GetAdapterDriverVersion(adapterDriverVersionString)))
   {
     aFailureId = "FEATURE_FAILURE_CANT_RESOLVE_ADAPTER";
+    *aStatus = FEATURE_BLOCKED_DEVICE;
     return NS_OK;
   }
 
