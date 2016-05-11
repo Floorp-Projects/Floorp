@@ -1382,14 +1382,25 @@ private:
   bool
   ScheduleKillCloseEventRunnable();
 
-  bool
+  enum class ProcessAllControlRunnablesResult
+  {
+    // We did not process anything.
+    Nothing,
+    // We did process something, states may have changed, but we can keep
+    // executing script.
+    MayContinue,
+    // We did process something, and should not continue executing script.
+    Abort
+  };
+
+  ProcessAllControlRunnablesResult
   ProcessAllControlRunnables()
   {
     MutexAutoLock lock(mMutex);
     return ProcessAllControlRunnablesLocked();
   }
 
-  bool
+  ProcessAllControlRunnablesResult
   ProcessAllControlRunnablesLocked();
 
   void
