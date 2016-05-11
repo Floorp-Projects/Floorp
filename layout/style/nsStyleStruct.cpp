@@ -564,29 +564,25 @@ nsStyleOutline::RecalcData()
 
 nsChangeHint nsStyleOutline::CalcDifference(const nsStyleOutline& aOther) const
 {
-  bool outlineWasVisible = mActualOutlineWidth > 0 &&
-                           mOutlineStyle != NS_STYLE_BORDER_STYLE_NONE;
-  bool outlineIsVisible  = aOther.mActualOutlineWidth > 0 &&
-                           aOther.mOutlineStyle != NS_STYLE_BORDER_STYLE_NONE;
-  if (outlineWasVisible != outlineIsVisible ||
-      (outlineIsVisible && (mOutlineOffset != aOther.mOutlineOffset ||
-                            mOutlineWidth != aOther.mOutlineWidth ||
-                            mTwipsPerPixel != aOther.mTwipsPerPixel))) {
+  if (mActualOutlineWidth != aOther.mActualOutlineWidth ||
+      (mActualOutlineWidth > 0 &&
+       mOutlineOffset != aOther.mOutlineOffset)) {
     return NS_CombineHint(nsChangeHint_UpdateOverflow,
                           nsChangeHint_SchedulePaint);
   }
 
-  if ((mOutlineStyle != aOther.mOutlineStyle) ||
-      (mOutlineColor != aOther.mOutlineColor) ||
-      (mOutlineRadius != aOther.mOutlineRadius)) {
-    return nsChangeHint_RepaintFrame;
+  if (mOutlineStyle != aOther.mOutlineStyle ||
+      mOutlineColor != aOther.mOutlineColor ||
+      mOutlineRadius != aOther.mOutlineRadius) {
+    if (mActualOutlineWidth > 0) {
+      return nsChangeHint_RepaintFrame;
+    }
+    return nsChangeHint_NeutralChange;
   }
 
-  // XXX Not exactly sure if we need to check the cached outline values.
   if (mOutlineWidth != aOther.mOutlineWidth ||
       mOutlineOffset != aOther.mOutlineOffset ||
-      mTwipsPerPixel != aOther.mTwipsPerPixel ||
-      mActualOutlineWidth != aOther.mActualOutlineWidth) {
+      mTwipsPerPixel != aOther.mTwipsPerPixel) {
     return nsChangeHint_NeutralChange;
   }
 
