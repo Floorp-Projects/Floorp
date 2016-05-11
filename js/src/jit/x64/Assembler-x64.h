@@ -644,6 +644,16 @@ class Assembler : public AssemblerX86Shared
         }
     }
 
+    void bsrq(const Register& src, const Register& dest) {
+        masm.bsrq_rr(src.encoding(), dest.encoding());
+    }
+    void bsfq(const Register& src, const Register& dest) {
+        masm.bsfq_rr(src.encoding(), dest.encoding());
+    }
+    void popcntq(const Register& src, const Register& dest) {
+        masm.popcntq_rr(src.encoding(), dest.encoding());
+    }
+
     void imulq(Register src, Register dest) {
         masm.imulq_rr(src.encoding(), dest.encoding());
     }
@@ -751,6 +761,9 @@ class Assembler : public AssemblerX86Shared
     }
     CodeOffset storeRipRelativeInt32(Register dest) {
         return CodeOffset(masm.movl_rrip(dest.encoding()).offset());
+    }
+    CodeOffset storeRipRelativeInt64(Register dest) {
+        return CodeOffset(masm.movq_rrip(dest.encoding()).offset());
     }
     CodeOffset storeRipRelativeDouble(FloatRegister dest) {
         return CodeOffset(masm.vmovsd_rrip(dest.encoding()).offset());

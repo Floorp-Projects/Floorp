@@ -788,8 +788,9 @@ CodeGeneratorX86Shared::visitClzI(LClzI* ins)
         masm.jump(&done);
     }
 
-    masm.bind(&nonzero);
-    masm.bsr(input, output);
+    if (nonzero.used())
+        masm.bind(&nonzero);
+    masm.bsrl(input, output);
     masm.xor32(Imm32(0x1F), output);
     masm.bind(&done);
 }
@@ -809,8 +810,9 @@ CodeGeneratorX86Shared::visitCtzI(LCtzI* ins)
         masm.jump(&done);
     }
 
-    masm.bind(&nonzero);
-    masm.bsf(input, output);
+    if (nonzero.used())
+        masm.bind(&nonzero);
+    masm.bsfl(input, output);
     masm.bind(&done);
 }
 
@@ -821,7 +823,7 @@ CodeGeneratorX86Shared::visitPopcntI(LPopcntI* ins)
     Register output = ToRegister(ins->output());
 
     if (AssemblerX86Shared::HasPOPCNT()) {
-        masm.popcnt(input, output);
+        masm.popcntl(input, output);
         return;
     }
 
