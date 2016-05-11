@@ -1,7 +1,7 @@
 #!/bin/sh
 # Run from topsrcdir, no args
 
-if [ "$1" == "--help" ]; then
+if [ "$1" = "--help" ]; then
   echo "Usage: ./run-all-loop-tests.sh [options]"
   echo "    --skip-e10s  Skips the e10s tests"
   exit 0;
