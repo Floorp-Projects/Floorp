@@ -4,7 +4,10 @@
 "use strict";
 
 const { FrontClassWithSpec } = require("devtools/shared/protocol");
-const { highlighterSpec } = require("devtools/shared/specs/highlighters");
+const {
+  customHighlighterSpec,
+  highlighterSpec
+} = require("devtools/shared/specs/highlighters");
 
 const HighlighterFront = FrontClassWithSpec(highlighterSpec, {
   // Update the object given a form representation off the wire.
@@ -16,3 +19,7 @@ const HighlighterFront = FrontClassWithSpec(highlighterSpec, {
 });
 
 exports.HighlighterFront = HighlighterFront;
+
+const CustomHighlighterFront = FrontClassWithSpec(customHighlighterSpec, {});
+
+exports.CustomHighlighterFront = CustomHighlighterFront;

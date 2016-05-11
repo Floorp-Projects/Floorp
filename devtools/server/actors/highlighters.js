@@ -8,11 +8,11 @@ const { Ci } = require("chrome");
 
 const EventEmitter = require("devtools/shared/event-emitter");
 const events = require("sdk/event/core");
-const { HighlighterFront } = require("devtools/client/fronts/highlighters");
+const { HighlighterFront, CustomHighlighterFront } = require("devtools/client/fronts/highlighters");
 const protocol = require("devtools/shared/protocol");
 const { Arg, Option, method, RetVal } = protocol;
 const { isWindowIncluded } = require("devtools/shared/layout/utils");
-const { highlighterSpec } = require("devtools/shared/specs/highlighters");
+const { highlighterSpec, customHighlighterSpec } = require("devtools/shared/specs/highlighters");
 const { isXUL, isNodeValid } = require("./highlighters/utils/markup");
 const { SimpleOutlineHighlighter } = require("./highlighters/simple-outline");
 
@@ -400,9 +400,7 @@ var HighlighterActor = exports.HighlighterActor = protocol.ActorClassWithSpec(hi
  * A generic highlighter actor class that instantiate a highlighter given its
  * type name and allows to show/hide it.
  */
-var CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClass({
-  typeName: "customhighlighter",
-
+var CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClassWithSpec(customHighlighterSpec, {
   /**
    * Create a highlighter instance given its typename
    * The typename must be one of HIGHLIGHTER_CLASSES and the class must
@@ -442,7 +440,7 @@ var CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClas
     this._inspector = null;
   },
 
-  release: method(function() {}, { release: true }),
+  release: function() {},
 
   /**
    * Show the highlighter.
@@ -462,38 +460,28 @@ var CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClas
    * @return {Boolean} True, if the highlighter has been successfully shown
    * (FF41+)
    */
-  show: method(function(node, options) {
+  show: function(node, options) {
     if (!node || !isNodeValid(node.rawNode) || !this._highlighter) {
       return false;
     }
 
     return this._highlighter.show(node.rawNode, options);
-  }, {
-    request: {
-      node: Arg(0, "domnode"),
-      options: Arg(1, "nullable:json")
-    },
-    response: {
-      value: RetVal("nullable:boolean")
-    }
-  }),
+  },
 
   /**
    * Hide the highlighter if it was shown before
    */
-  hide: method(function() {
+  hide: function() {
     if (this._highlighter) {
       this._highlighter.hide();
     }
-  }, {
-    request: {}
-  }),
+  },
 
   /**
    * Kill this actor. This method is called automatically just before the actor
    * is destroyed.
    */
-  finalize: method(function() {
+  finalize: function() {
     if (this._highlighter) {
       this._highlighter.destroy();
       this._highlighter = null;
@@ -503,12 +491,8 @@ var CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClas
       this._highlighterEnv.destroy();
       this._highlighterEnv = null;
     }
-  }, {
-    oneway: true
-  })
+  }
 });
-
-var CustomHighlighterFront = protocol.FrontClass(CustomHighlighterActor, {});
 
 /**
  * The HighlighterEnvironment is an object that holds all the required data for
