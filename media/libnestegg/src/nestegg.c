@@ -1431,6 +1431,9 @@ ne_read_block_duration(nestegg * ctx, nestegg_packet * pkt)
   struct ebml_element_desc * element;
   struct ebml_type * storage;
 
+  if (!ctx->ancestor)
+    return -1;
+
   r = ne_peek_element(ctx, &id, &size);
   if (r != 1)
     return r;
@@ -1459,6 +1462,9 @@ ne_read_discard_padding(nestegg * ctx, nestegg_packet * pkt)
   uint64_t id, size;
   struct ebml_element_desc * element;
   struct ebml_type * storage;
+
+  if (!ctx->ancestor)
+    return -1;
 
   r = ne_peek_element(ctx, &id, &size);
   if (r != 1)
@@ -1494,6 +1500,9 @@ ne_read_block_additions(nestegg * ctx, nestegg_packet * pkt)
 
   assert(pkt != NULL);
   assert(pkt->block_additional == NULL);
+
+  if (!ctx->ancestor)
+    return -1;
 
   r = ne_peek_element(ctx, &id, &size);
   if (r != 1)
@@ -2437,9 +2446,6 @@ nestegg_read_packet(nestegg * ctx, nestegg_packet ** pkt)
   uint64_t id, size;
 
   *pkt = NULL;
-
-  if (!ctx->ancestor)
-    return -1;
 
   for (;;) {
     r = ne_peek_element(ctx, &id, &size);

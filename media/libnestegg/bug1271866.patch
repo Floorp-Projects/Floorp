@@ -1,0 +1,83 @@
+diff --git a/media/libnestegg/src/nestegg.c b/media/libnestegg/src/nestegg.c
+--- a/media/libnestegg/src/nestegg.c
++++ b/media/libnestegg/src/nestegg.c
+@@ -1426,16 +1426,19 @@ ne_read_block(nestegg * ctx, uint64_t bl
+ static int
+ ne_read_block_duration(nestegg * ctx, nestegg_packet * pkt)
+ {
+   int r;
+   uint64_t id, size;
+   struct ebml_element_desc * element;
+   struct ebml_type * storage;
+ 
++  if (!ctx->ancestor)
++    return -1;
++
+   r = ne_peek_element(ctx, &id, &size);
+   if (r != 1)
+     return r;
+ 
+   if (id != ID_BLOCK_DURATION)
+     return 1;
+ 
+   element = ne_find_element(id, ctx->ancestor->node);
+@@ -1455,16 +1458,19 @@ ne_read_block_duration(nestegg * ctx, ne
+ static int
+ ne_read_discard_padding(nestegg * ctx, nestegg_packet * pkt)
+ {
+   int r;
+   uint64_t id, size;
+   struct ebml_element_desc * element;
+   struct ebml_type * storage;
+ 
++  if (!ctx->ancestor)
++    return -1;
++
+   r = ne_peek_element(ctx, &id, &size);
+   if (r != 1)
+     return r;
+ 
+   if (id != ID_DISCARD_PADDING)
+     return 1;
+ 
+   element = ne_find_element(id, ctx->ancestor->node);
+@@ -1490,16 +1496,19 @@ ne_read_block_additions(nestegg * ctx, n
+   void * data;
+   int has_data;
+   struct block_additional * block_additional;
+   uint64_t add_id;
+ 
+   assert(pkt != NULL);
+   assert(pkt->block_additional == NULL);
+ 
++  if (!ctx->ancestor)
++    return -1;
++
+   r = ne_peek_element(ctx, &id, &size);
+   if (r != 1)
+     return r;
+ 
+   if (id != ID_BLOCK_ADDITIONS)
+     return 1;
+ 
+   /* This makes ne_read_element read the next element instead of returning
+@@ -2433,19 +2442,16 @@ nestegg_track_default_duration(nestegg *
+ int
+ nestegg_read_packet(nestegg * ctx, nestegg_packet ** pkt)
+ {
+   int r, read_block = 0;
+   uint64_t id, size;
+ 
+   *pkt = NULL;
+ 
+-  if (!ctx->ancestor)
+-    return -1;
+-
+   for (;;) {
+     r = ne_peek_element(ctx, &id, &size);
+     if (r != 1)
+       return r;
+ 
+     /* Any DESC_FLAG_SUSPEND fields must be handled here. */
+     if (ne_is_suspend_element(id)) {
+       r = ne_read_element(ctx, &id, &size);
