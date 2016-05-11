@@ -30,6 +30,7 @@ const muteButtonWidth = 33;
 const muteButtonHeight = 28;
 const durationWidth = 34;
 const fullscreenButtonWidth = document.fullscreenEnabled ? 28 : 0;
+const fullscreenButtonHeight = document.fullscreenEnabled ? 28 : 0;
 const volumeSliderWidth = 32;
 const scrubberWidth = videoWidth - playButtonWidth - durationWidth - muteButtonWidth - volumeSliderWidth - fullscreenButtonWidth;
 const scrubberHeight = 28;
@@ -40,6 +41,9 @@ const playButtonCenterY = videoHeight - Math.round(playButtonHeight / 2);
 // Mute button is on the bottom-right before the full screen button and volume slider
 const muteButtonCenterX = videoWidth - Math.round(muteButtonWidth / 2) - volumeSliderWidth - fullscreenButtonWidth;
 const muteButtonCenterY = videoHeight - Math.round(muteButtonHeight / 2);
+// Fullscreen button is on the bottom-right at the far end
+const fullscreenButtonCenterX = videoWidth - Math.round(fullscreenButtonWidth / 2);
+const fullscreenButtonCenterY = videoHeight - Math.round(fullscreenButtonHeight / 2);
 // Scrubber bar is between the play and mute buttons. We don't need it's
 // X center, just the offset of its box.
 const scrubberOffsetX = 0 + playButtonWidth;
@@ -59,6 +63,13 @@ function getButtonByAttribute(aName, aValue) {
 function isMuteButtonMuted() {
   var muteButton = getButtonByAttribute('class', 'muteButton');
   return muteButton.getAttribute('muted') === 'true';
+}
+
+function isVolumeSliderShowingCorrectVolume(expectedVolume) {
+  var volumeButton = getButtonByAttribute('anonid', 'volumeForeground');
+  let expectedPaddingRight = (1 - expectedVolume) * volumeSliderWidth + "px";
+  is(volumeButton.style.paddingRight, expectedPaddingRight,
+     "volume slider should match expected volume");
 }
 
 function runTest(event) {
@@ -289,6 +300,22 @@ function runTest(event) {
 
       ok(!isMuteButtonMuted(), "Mute button says it's not muted");
 
+      synthesizeMouse(video, fullscreenButtonCenterX, fullscreenButtonCenterY, { });
+      break;
+
+    case 24:
+      is(event.type, "fullscreenchange", "checking event type");
+      is(video.volume, 0.6, "Volume should still be 0.6");
+      isVolumeSliderShowingCorrectVolume(video.volume);
+
+      synthesizeKey("VK_ESCAPE", {});
+      break;
+
+    case 25:
+      is(event.type, "fullscreenchange", "checking event type");
+      is(video.volume, 0.6, "Volume should still be 0.6");
+      isVolumeSliderShowingCorrectVolume(video.volume);
+
       SimpleTest.finish();
       break;
 
@@ -309,6 +336,7 @@ function canplaythroughevent(event) {
   video.addEventListener("volumechange", runTest, false);
   video.addEventListener("seeking", runTest, false);
   video.addEventListener("seeked", runTest, false);
+  document.addEventListener("fullscreenchange", runTest, false);
   // Begin the test.
   runTest(event);
 }

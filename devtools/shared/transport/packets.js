@@ -165,9 +165,7 @@ JSONPacket.prototype.read = function(stream, scriptableStream) {
   } catch(e) {
     let msg = "Error parsing incoming packet: " + json + " (" + e +
               " - " + e.stack + ")";
-    if (Cu.reportError) {
-      Cu.reportError(msg);
-    }
+    console.error(msg);
     dumpn(msg);
     return;
   }
