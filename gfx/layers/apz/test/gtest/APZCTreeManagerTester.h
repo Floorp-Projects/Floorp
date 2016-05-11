@@ -174,6 +174,7 @@ protected:
     root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
     SetScrollableFrameMetrics(layers[0], FrameMetrics::START_SCROLL_ID);
     SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1);
+    SetScrollHandoff(layers[1], layers[0]);
 
     // Make layers[1] the root content
     ScrollMetadata childMetadata = layers[1]->GetScrollMetadata(0);
