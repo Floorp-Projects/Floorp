@@ -1309,3 +1309,10 @@ CodeGeneratorX64::visitInt64ToFloatingPoint(LInt64ToFloatingPoint* lir)
     }
     masm.bind(&done);
 }
+
+void
+CodeGeneratorX64::visitNotI64(LNotI64* lir)
+{
+    masm.cmpq(Imm32(0), ToRegister(lir->input()));
+    masm.emitSet(Assembler::Equal, ToRegister(lir->output()));
+}

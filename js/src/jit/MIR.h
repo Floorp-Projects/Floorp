@@ -9185,13 +9185,15 @@ class MNot
     void cacheOperandMightEmulateUndefined(CompilerConstraintList* constraints);
 
   public:
-    static MNot* New(TempAllocator& alloc, MDefinition* elements,
+    static MNot* New(TempAllocator& alloc, MDefinition* input,
                      CompilerConstraintList* constraints = nullptr)
     {
-        return new(alloc) MNot(elements, constraints);
+        return new(alloc) MNot(input, constraints);
     }
-    static MNot* NewAsmJS(TempAllocator& alloc, MDefinition* elements) {
-        MNot* ins = new(alloc) MNot(elements);
+
+    static MNot* NewAsmJS(TempAllocator& alloc, MDefinition* input) {
+        MOZ_ASSERT(input->type() == MIRType::Int32 || input->type() == MIRType::Int64);
+        MNot* ins = new(alloc) MNot(input);
         ins->setResultType(MIRType::Int32);
         return ins;
     }

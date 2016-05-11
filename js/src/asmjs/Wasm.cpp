@@ -398,8 +398,6 @@ DecodeExpr(FunctionDecoder& f)
       case Expr::I32Eqz:
         return f.iter().readConversion(ValType::I32, ValType::I32, nullptr);
       case Expr::I64Eqz:
-        return f.checkI64Support() &&
-               f.iter().readConversion(ValType::I64, ValType::I32, nullptr);
       case Expr::I32WrapI64:
         return f.checkI64Support() &&
                f.iter().readConversion(ValType::I64, ValType::I32, nullptr);

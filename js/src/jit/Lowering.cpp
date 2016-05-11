@@ -2915,6 +2915,9 @@ LIRGenerator::visitNot(MNot* ins)
       case MIRType::Int32:
         define(new(alloc()) LNotI(useRegisterAtStart(op)), ins);
         break;
+      case MIRType::Int64:
+        define(new(alloc()) LNotI64(useInt64RegisterAtStart(op)), ins);
+        break;
       case MIRType::Double:
         define(new(alloc()) LNotD(useRegister(op)), ins);
         break;
