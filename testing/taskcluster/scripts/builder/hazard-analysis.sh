@@ -21,7 +21,7 @@ function check_commit_msg () {
     if [[ -n "$AUTOMATION" ]]; then
         hg --cwd "$GECKO_DIR" log -r. --template '{desc}\n' | grep -F -q -- "$1"
     else
-        echo -- "$SCRIPT_FLAGS" | grep -f -q -- "$1"
+        echo -- "$SCRIPT_FLAGS" | grep -F -q -- "$1"
     fi
 }
 
