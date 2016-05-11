@@ -1406,8 +1406,16 @@ LIRGenerator::visitClz(MClz* ins)
 {
     MDefinition* num = ins->num();
 
-    LClzI* lir = new(alloc()) LClzI(useRegisterAtStart(num));
-    define(lir, ins);
+    MOZ_ASSERT(IsIntType(ins->type()));
+
+    if (ins->type() == MIRType::Int32) {
+        LClzI* lir = new(alloc()) LClzI(useRegisterAtStart(num));
+        define(lir, ins);
+        return;
+    }
+
+    auto* lir = new(alloc()) LClzI64(useInt64RegisterAtStart(num));
+    defineInt64(lir, ins);
 }
 
 void
@@ -1415,8 +1423,16 @@ LIRGenerator::visitCtz(MCtz* ins)
 {
     MDefinition* num = ins->num();
 
-    LCtzI* lir = new(alloc()) LCtzI(useRegisterAtStart(num));
-    define(lir, ins);
+    MOZ_ASSERT(IsIntType(ins->type()));
+
+    if (ins->type() == MIRType::Int32) {
+        LCtzI* lir = new(alloc()) LCtzI(useRegisterAtStart(num));
+        define(lir, ins);
+        return;
+    }
+
+    auto* lir = new(alloc()) LCtzI64(useInt64RegisterAtStart(num));
+    defineInt64(lir, ins);
 }
 
 void
@@ -1424,8 +1440,16 @@ LIRGenerator::visitPopcnt(MPopcnt* ins)
 {
     MDefinition* num = ins->num();
 
-    LPopcntI* lir = new(alloc()) LPopcntI(useRegisterAtStart(num), temp());
-    define(lir, ins);
+    MOZ_ASSERT(IsIntType(ins->type()));
+
+    if (ins->type() == MIRType::Int32) {
+        LPopcntI* lir = new(alloc()) LPopcntI(useRegisterAtStart(num), temp());
+        define(lir, ins);
+        return;
+    }
+
+    auto* lir = new(alloc()) LPopcntI64(useInt64RegisterAtStart(num), tempInt64());
+    defineInt64(lir, ins);
 }
 
 void
