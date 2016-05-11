@@ -6,6 +6,7 @@
 #ifndef CANVASIMAGECACHE_H_
 #define CANVASIMAGECACHE_H_
 
+#include "mozilla/RefPtr.h"
 #include "nsSize.h"
 
 namespace mozilla {
@@ -17,7 +18,7 @@ namespace gfx {
 class SourceSurface;
 } // namespace gfx
 } // namespace mozilla
-class imgIRequest;
+class imgIContainer;
 
 namespace mozilla {
 
@@ -25,34 +26,30 @@ class CanvasImageCache {
   typedef mozilla::gfx::SourceSurface SourceSurface;
 public:
   /**
-   * Notify that image element aImage was (or is about to be) drawn to aCanvas
+   * Notify that image element aImage was drawn to aCanvas element
    * using the first frame of aRequest's image. The data for the surface is
    * in aSurface, and the image size is in aSize.
    */
   static void NotifyDrawImage(dom::Element* aImage,
                               dom::HTMLCanvasElement* aCanvas,
-                              imgIRequest* aRequest,
                               SourceSurface* aSource,
                               const gfx::IntSize& aSize,
                               bool aIsAccelerated);
 
   /**
-   * Check whether aImage has recently been drawn into aCanvas. If we return
-   * a non-null surface, then the image was recently drawn into the canvas
-   * (with the same image request) and the returned surface contains the image
-   * data, and the image size will be returned in aSize.
+   * Check whether aImage has recently been drawn any canvas. If we return
+   * a non-null surface, then the same image was recently drawn into a canvas.
    */
-  static SourceSurface* Lookup(dom::Element* aImage,
-                               dom::HTMLCanvasElement* aCanvas,
-                               gfx::IntSize* aSize,
-                               bool aIsAccelerated);
+  static SourceSurface* LookupAllCanvas(dom::Element* aImage,
+                                        bool aIsAccelerated);
 
   /**
-   * This is the same as Lookup, except it works on any image recently drawn
-   * into any canvas. Security checks need to be done again if using the
-   * results from this.
+   * Like the top above, but restricts the lookup to only aCanvas. This is
+   * required for CORS security.
    */
-  static SourceSurface* SimpleLookup(dom::Element* aImage,
+  static SourceSurface* LookupCanvas(dom::Element* aImage,
+                                     dom::HTMLCanvasElement* aCanvas,
+                                     gfx::IntSize* aSizeOut,
                                      bool aIsAccelerated);
 };
 

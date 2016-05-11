@@ -634,22 +634,27 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
       paint.mPaint.setAntiAlias(false);
     }
   } else {
-    // SkFontHost_cairo does not support subpixel text, so only enable it for other font hosts.
+    // SkFontHost_cairo does not support subpixel text positioning,
+    // so only enable it for other font hosts.
     paint.mPaint.setSubpixelText(true);
 
     if (aFont->GetType() == FontType::MAC &&
-       (shouldLCDRenderText || aOptions.mAntialiasMode == AntialiasMode::GRAY)) {
-      // SkFontHost_mac only enables CG Font Smoothing if hinting is disabled.
-      // CG Font Smoothing normally enables subpixel AA in CG, but Skia supports
-      // font smoothing with grayscale AA.
-      // SkFontHost_mac only supports subpixel antialiasing when hinting is turned off.
-      // We can get grayscale AA if we have -moz-osx-font-smoothing: grayscale
-      // explicitly enabled or for transparent surfaces.
-      // If we have AA grayscale explicit through the draw options,
-      // then we want to disable font smoothing.
-      // If we have a transparent surface, shouldLCDRenderText will be false. But unless
-      // grayscale font smoothing is explicitly requested, we still want Skia to use
-      // CG Font smoothing.
+       aOptions.mAntialiasMode == AntialiasMode::GRAY) {
+      // Normally, Skia enables LCD FontSmoothing which creates thicker fonts
+      // and also enables subpixel AA. CoreGraphics without font smoothing
+      // explicitly creates thinner fonts and grayscale AA.
+      // CoreGraphics doesn't support a configuration that produces thicker
+      // fonts with grayscale AA as LCD Font Smoothing enables or disables both.
+      // However, Skia supports it by enabling font smoothing (producing subpixel AA)
+      // and converts it to grayscale AA. Since Skia doesn't support subpixel AA on
+      // transparent backgrounds, we still want font smoothing for the thicker fonts,
+      // even if it is grayscale AA.
+      //
+      // With explicit Grayscale AA (from -moz-osx-font-smoothing:grayscale),
+      // we want to have grayscale AA with no smoothing at all. This means
+      // disabling the LCD font smoothing behaviour.
+      // To accomplish this we have to explicitly disable hinting,
+      // and disable LCDRenderText.
       paint.mPaint.setHinting(SkPaint::kNo_Hinting);
     } else {
       paint.mPaint.setHinting(SkPaint::kNormal_Hinting);
