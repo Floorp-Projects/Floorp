@@ -2874,14 +2874,6 @@ ParseExprInsideParens(WasmParseContext& c)
 }
 
 static bool
-ParseValueType(WasmParseContext& c, WasmAstValTypeVector* vec)
-{
-    WasmToken token;
-    return c.ts.match(WasmToken::ValueType, &token, c.error) &&
-           vec->append(token.valueType());
-}
-
-static bool
 ParseValueTypeList(WasmParseContext& c, WasmAstValTypeVector* vec)
 {
     WasmToken token;
@@ -2910,20 +2902,15 @@ ParseResult(WasmParseContext& c, ExprType* result)
 }
 
 static bool
-ParseLocal(WasmParseContext& c, WasmNameVector* locals, WasmAstValTypeVector* localTypes)
+ParseLocalOrParam(WasmParseContext& c, WasmNameVector* locals, WasmAstValTypeVector* localTypes)
 {
-    return locals->append(c.ts.getIfName()) &&
-           ParseValueType(c, localTypes);
-}
+    if (c.ts.peek().kind() != WasmToken::Name)
+        return locals->append(WasmName()) && ParseValueTypeList(c, localTypes);
 
-static bool
-ParseParam(WasmParseContext& c, WasmNameVector* locals, WasmAstValTypeVector* args)
-{
-    if (c.ts.peek().kind() == WasmToken::Name)
-        return ParseLocal(c, locals, args);
-
-    return locals->append(WasmName()) &&
-           ParseValueTypeList(c, args);
+    WasmToken token;
+    return locals->append(c.ts.get().name()) &&
+           c.ts.match(WasmToken::ValueType, &token, c.error) &&
+           localTypes->append(token.valueType());
 }
 
 static WasmAstFunc*
@@ -2956,7 +2943,7 @@ ParseFunc(WasmParseContext& c, WasmAstModule* module)
         WasmToken token = c.ts.get();
         switch (token.kind()) {
           case WasmToken::Local:
-            if (!ParseLocal(c, &locals, &vars))
+            if (!ParseLocalOrParam(c, &locals, &vars))
                 return nullptr;
             break;
           case WasmToken::Param:
@@ -2964,7 +2951,7 @@ ParseFunc(WasmParseContext& c, WasmAstModule* module)
                 c.ts.generateError(token, c.error);
                 return nullptr;
             }
-            if (!ParseParam(c, &locals, &args))
+            if (!ParseLocalOrParam(c, &locals, &args))
                 return nullptr;
             break;
           case WasmToken::Result:
