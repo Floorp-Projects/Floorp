@@ -140,11 +140,8 @@ private:
   // one of the metrics on one of the layers was determined to be the "root"
   // and its state was synced to the Java front-end. |aOutFoundRoot| must be
   // non-null.
-  // |aClipPartsCache| is used to cache components of clips on descendant
-  // layers that may be needed while processing ancestor layers.
   bool ApplyAsyncContentTransformToTree(Layer* aLayer,
-                                        bool* aOutFoundRoot,
-                                        ClipPartsCache& aClipPartsCache);
+                                        bool* aOutFoundRoot);
   /**
    * Update the shadow transform for aLayer assuming that is a scrollbar,
    * so that it stays in sync with the content that is being scrolled by APZ.
