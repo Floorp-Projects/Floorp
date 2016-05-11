@@ -266,3 +266,14 @@ class TestExecuteChrome(TestExecuteContent):
                 var cb = arguments[arguments.length - 1];
                 setTimeout(function() { cb() }, 250);
                 """, script_timeout=100)
+
+    def test_invalid_chrome_handle(self):
+        # Close second chrome window and don't switch back to the original one
+        self.marionette.close_chrome_window()
+        self.assertEqual(len(self.marionette.chrome_window_handles), 1)
+
+        # Call execute_script on an invalid chrome handle
+        with self.marionette.using_context('chrome'):
+            self.marionette.execute_script("""
+                return true;
+            """)
