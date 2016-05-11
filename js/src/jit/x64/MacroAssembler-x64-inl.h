@@ -300,6 +300,54 @@ MacroAssembler::ctz64(Register64 src, Register64 dest)
     bind(&nonzero);
 }
 
+void
+MacroAssembler::popcnt64(Register64 src64, Register64 dest64, Register64 tmp64)
+{
+    Register src = src64.reg;
+    Register dest = dest64.reg;
+    Register tmp = tmp64.reg;
+
+    if (AssemblerX86Shared::HasPOPCNT()) {
+        popcntq(src, dest);
+        return;
+    }
+
+    if (src != dest)
+        movq(src, dest);
+
+    MOZ_ASSERT(tmp != dest);
+
+    ScratchRegisterScope scratch(*this);
+
+    // Equivalent to mozilla::CountPopulation32, adapted for 64 bits.
+    // x -= (x >> 1) & m1;
+    movq(src, tmp);
+    movq(ImmWord(0x5555555555555555), scratch);
+    shrq(Imm32(1), tmp);
+    andq(scratch, tmp);
+    subq(tmp, dest);
+
+    // x = (x & m2) + ((x >> 2) & m2);
+    movq(dest, tmp);
+    movq(ImmWord(0x3333333333333333), scratch);
+    andq(scratch, dest);
+    shrq(Imm32(2), tmp);
+    andq(scratch, tmp);
+    addq(tmp, dest);
+
+    // x = (x + (x >> 4)) & m4;
+    movq(dest, tmp);
+    movq(ImmWord(0x0f0f0f0f0f0f0f0f), scratch);
+    shrq(Imm32(4), tmp);
+    addq(tmp, dest);
+    andq(scratch, dest);
+
+    // (x * h01) >> 56
+    movq(ImmWord(0x0101010101010101), scratch);
+    imulq(scratch, dest);
+    shrq(Imm32(56), dest);
+}
+
 // ===============================================================
 // Branch functions
 
