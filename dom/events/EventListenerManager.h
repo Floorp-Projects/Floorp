@@ -195,7 +195,6 @@ public:
     bool mListenerIsHandler : 1;
     bool mHandlerIsString : 1;
     bool mAllEvents : 1;
-    bool mIsChrome : 1;
 
     EventListenerFlags mFlags;
 
