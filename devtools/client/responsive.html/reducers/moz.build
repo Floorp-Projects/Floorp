@@ -8,5 +8,6 @@ DevToolsModules(
     'devices.js',
     'location.js',
     'screenshot.js',
+    'touch-simulation.js',
     'viewports.js',
 )
