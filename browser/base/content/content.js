@@ -710,9 +710,6 @@ addMessageListener("ContextMenu:MediaCommand", (message) => {
     case "pause":
       media.pause();
       break;
-    case "loop":
-      media.loop = !media.loop;
-      break;
     case "mute":
       media.muted = true;
       break;
