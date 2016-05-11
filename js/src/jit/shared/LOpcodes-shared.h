@@ -155,6 +155,7 @@
     _(MathFunctionD)                \
     _(MathFunctionF)                \
     _(NotI)                         \
+    _(NotI64)                       \
     _(NotD)                         \
     _(NotF)                         \
     _(NotO)                         \

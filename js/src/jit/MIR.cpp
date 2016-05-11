@@ -1060,6 +1060,9 @@ MConstant::valueToBoolean(bool* res) const
       case MIRType::Int32:
         *res = toInt32() != 0;
         return true;
+      case MIRType::Int64:
+        *res = toInt64() != 0;
+        return true;
       case MIRType::Double:
         *res = !mozilla::IsNaN(toDouble()) && toDouble() != 0.0;
         return true;
@@ -4344,6 +4347,8 @@ MNot::foldsTo(TempAllocator& alloc)
         if (inputConst->valueToBoolean(&b)) {
             if (type() == MIRType::Int32)
                 return MConstant::New(alloc, Int32Value(!b));
+            if (type() == MIRType::Int64)
+                return MConstant::NewInt64(alloc, int64_t(!b));
             return MConstant::New(alloc, BooleanValue(!b));
         }
     }

@@ -5,7 +5,21 @@ assertEq(wasmEvalText('(module (func (result i32) (i32.const -2147483648)) (expo
 assertEq(wasmEvalText('(module (func (result i32) (i32.const 4294967295)) (export "" 0))')(), -1);
 
 function testUnary(type, opcode, op, expect) {
-  assertEq(wasmEvalText(`(module (func (param ${type}) (result ${type}) (${type}.${opcode} (get_local 0))) (export "" 0))`)(op), expect);
+    var assertFunc = assertEq;
+    if (type === 'i64') {
+        expect = createI64(expect);
+        assertFunc = assertEqI64;
+    }
+
+    // Test with constant
+    assertFunc(wasmEvalText(`(module (func (result ${type}) (${type}.${opcode} (${type}.const ${op}))) (export "" 0))`)(), expect);
+
+    if (type === 'i64') {
+        op = createI64(op);
+    }
+
+    // Test with param
+    assertFunc(wasmEvalText(`(module (func (param ${type}) (result ${type}) (${type}.${opcode} (get_local 0))) (export "" 0))`)(op), expect);
 }
 
 function testBinary64(opcode, lhs, rhs, expect) {
@@ -46,6 +60,11 @@ function testComparison64(opcode, lhs, rhs, expect) {
                               (i32.const 1)
                               (i32.const 0)))
                               (export "" 0))`)(lobj, robj), expect);
+}
+function testI64Eqz(input, expect) {
+    assertEq(wasmEvalText(`(module (func (result i32) (i64.eqz (i64.const ${input}))) (export "" 0))`)(input), expect);
+    input = createI64(input);
+    assertEq(wasmEvalText(`(module (func (param i64) (result i32) (i64.eqz (get_local 0))) (export "" 0))`)(input), expect);
 }
 
 function testTrap32(opcode, lhs, rhs, expect) {
@@ -120,11 +139,6 @@ testComparison32('gt_u', 40, 40, 0);
 testComparison32('ge_s', 40, 40, 1);
 testComparison32('ge_u', 40, 40, 1);
 
-//testUnary('i64', 'clz', 40, 58); // TODO: NYI
-//testUnary('i64', 'ctz', 40, 0); // TODO: NYI
-//testUnary('i64', 'popcnt', 40, 0); // TODO: NYI
-//testUnary('i64', 'eqz', 40, 0); // TODO: NYI
-
 if (hasI64()) {
 
     setJitCompilerOption('wasm.test-mode', 1);
@@ -198,6 +212,13 @@ if (hasI64()) {
     testComparison64('gt_u', 1, "0x8000000000000000", 0);
     testComparison64('ge_s', 1, "0x8000000000000000", 1);
     testComparison64('ge_u', 1, "0x8000000000000000", 0);
+
+    //testUnary('i64', 'clz', 40, 58); // TODO: NYI
+    //testUnary('i64', 'ctz', 40, 0); // TODO: NYI
+    //testUnary('i64', 'popcnt', 40, 0); // TODO: NYI
+
+    testI64Eqz(40, 0);
+    testI64Eqz(0, 1);
 
     setJitCompilerOption('wasm.test-mode', 0);
 } else {
