@@ -24,10 +24,24 @@ from mach.decorators import (
     Command,
 )
 
+ESLINT_VERSION = "2.9.0"
+
 ESLINT_NOT_FOUND_MESSAGE = '''
 Could not find eslint!  We looked at the --binary option, at the ESLINT
 environment variable, and then at your path.  Install eslint and needed plugins
 with
+
+mach eslint --setup
+
+and try again.
+'''.strip()
+
+ESLINT_OUTDATED_MESSAGE = '''
+eslint in your path is outdated.
+  path: %(binary)s
+  version: %(version)s
+Expected version: %(min_version)s
+Update eslint with
 
 mach eslint --setup
 
@@ -226,7 +240,7 @@ class MachCommands(MachCommandBase):
                                 binary = os.path.join(base, "eslint")
                                 if not os.path.isfile(binary):
                                     binary = None
-                        except (subprocess.CalledProcessError, WindowsError):
+                        except (subprocess.CalledProcessError, OSError):
                             pass
 
         if not binary:
@@ -235,6 +249,13 @@ class MachCommands(MachCommandBase):
 
         self.log(logging.INFO, 'eslint', {'binary': binary, 'args': args},
             'Running {binary}')
+
+        version_str = subprocess.check_output([binary, "--version"],
+                                              stderr=subprocess.STDOUT)
+        version = LooseVersion(version_str.lstrip('v'))
+        if version < LooseVersion(ESLINT_VERSION):
+            print (ESLINT_OUTDATED_MESSAGE % {"binary": binary, "version": version_str, "min_version": ESLINT_VERSION})
+            return 1
 
         args = args or ['.']
 
@@ -274,7 +295,7 @@ class MachCommands(MachCommandBase):
         # Note that that's the version currently compatible with the mozilla
         # eslint plugin.
         success = self.callProcess("eslint",
-                                   [npmPath, "install", "eslint@2.9.0", "-g"])
+                                   [npmPath, "install", "eslint@%s" % ESLINT_VERSION, "-g"])
         if not success:
             return 1
 
@@ -376,5 +397,5 @@ class MachCommands(MachCommandBase):
                 version = LooseVersion(version_str.lstrip('v'))
                 return version >= minversion
             return True
-        except (subprocess.CalledProcessError, WindowsError):
+        except (subprocess.CalledProcessError, OSError):
             return False
