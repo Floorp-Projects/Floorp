@@ -434,6 +434,13 @@ public:
     return mLayer->IsScrollbarContainer();
   }
 
+  FrameMetrics::ViewID GetFixedPositionScrollContainerId() const
+  {
+    MOZ_ASSERT(IsValid());
+
+    return mLayer->GetFixedPositionScrollContainerId();
+  }
+
   // Expose an opaque pointer to the layer. Mostly used for printf
   // purposes. This is not intended to be a general-purpose accessor
   // for the underlying layer.
