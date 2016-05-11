@@ -21,6 +21,18 @@ using namespace js::jit;
 
 using mozilla::DebugOnly;
 
+static inline Register64
+ToRegister64(const LAllocation* a)
+{
+    return Register64(ToRegister(a));
+}
+
+static inline Register64
+ToRegister64(const LDefinition* a)
+{
+    return Register64(ToRegister(a));
+}
+
 CodeGeneratorX64::CodeGeneratorX64(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm)
   : CodeGeneratorX86Shared(gen, graph, masm)
 {
@@ -1320,79 +1332,27 @@ CodeGeneratorX64::visitNotI64(LNotI64* lir)
 void
 CodeGeneratorX64::visitClzI64(LClzI64* lir)
 {
-    Register input = ToRegister(lir->input());
-    Register output = ToRegister(lir->output());
-
-    Label nonzero;
-    masm.bsrq(input, output);
-
-    masm.j(Assembler::NonZero, &nonzero);
-    // 0x7f ^ 0x3f == 0x40 == 64
-    masm.movq(ImmWord(0x7f), output);
-
-    masm.bind(&nonzero);
-    masm.xorq(Imm32(0x3f), output);
+    Register64 input = ToRegister64(lir->input());
+    Register64 output = ToRegister64(lir->output());
+    masm.clz64(input, output);
 }
 
 void
 CodeGeneratorX64::visitCtzI64(LCtzI64* lir)
 {
-    Register input = ToRegister(lir->input());
-    Register output = ToRegister(lir->output());
-
-    Label nonzero;
-    masm.bsfq(input, output);
-
-    masm.j(Assembler::NonZero, &nonzero);
-    masm.movq(ImmWord(64), output);
-
-    masm.bind(&nonzero);
+    Register64 input = ToRegister64(lir->input());
+    Register64 output = ToRegister64(lir->output());
+    masm.ctz64(input, output);
 }
 
 void
 CodeGeneratorX64::visitPopcntI64(LPopcntI64* lir)
 {
-    Register input = ToRegister(lir->input());
-    Register output = ToRegister(lir->output());
+    Register64 input = ToRegister64(lir->input());
+    Register64 output = ToRegister64(lir->output());
+    Register64 temp = Register64(AssemblerX86Shared::HasPOPCNT()
+                                 ? InvalidReg :
+                                 ToRegister(lir->getTemp(0)));
 
-    if (AssemblerX86Shared::HasPOPCNT()) {
-        masm.popcntq(input, output);
-        return;
-    }
-
-    Register tmp = ToRegister(lir->getTemp(0));
-    if (input != output)
-        masm.movq(input, output);
-
-    MOZ_ASSERT(tmp != output);
-
-    ScratchRegisterScope scratch(masm);
-
-    // Equivalent to mozilla::CountPopulation32, adapted for 64 bits.
-    // x -= (x >> 1) & m1;
-    masm.movq(input, tmp);
-    masm.movq(ImmWord(0x5555555555555555), scratch);
-    masm.shrq(Imm32(1), tmp);
-    masm.andq(scratch, tmp);
-    masm.subq(tmp, output);
-
-    // x = (x & m2) + ((x >> 2) & m2);
-    masm.movq(output, tmp);
-    masm.movq(ImmWord(0x3333333333333333), scratch);
-    masm.andq(scratch, output);
-    masm.shrq(Imm32(2), tmp);
-    masm.andq(scratch, tmp);
-    masm.addq(tmp, output);
-
-    // x = (x + (x >> 4)) & m4;
-    masm.movq(output, tmp);
-    masm.movq(ImmWord(0x0f0f0f0f0f0f0f0f), scratch);
-    masm.shrq(Imm32(4), tmp);
-    masm.addq(tmp, output);
-    masm.andq(scratch, output);
-
-    // (x * h01) >> 56
-    masm.movq(ImmWord(0x0101010101010101), scratch);
-    masm.imulq(scratch, output);
-    masm.shrq(Imm32(56), output);
+    masm.popcnt64(input, output, temp);
 }
