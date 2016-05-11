@@ -11,6 +11,8 @@ Cu.importGlobalProperties(['File']);
 
 XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
                                   "resource://gre/modules/PromiseUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+                                  "resource://gre/modules/osfile.jsm");
 
 this.EXPORTED_SYMBOLS = [
   "CrashSubmit"
@@ -22,6 +24,8 @@ const STATE_STOP = Ci.nsIWebProgressListener.STATE_STOP;
 const SUCCESS = "success";
 const FAILED  = "failed";
 const SUBMITTING = "submitting";
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 var reportURL = null;
 var strings = null;
@@ -476,6 +480,29 @@ this.CrashSubmit = {
   },
 
   /**
+   * Add a .dmg.ignore file along side the .dmp file to indicate that the user
+   * shouldn't be prompted to submit this crash report again.
+   *
+   * @param id
+   *        Filename (minus .dmp extension) of the report to ignore
+   */
+
+  ignore: function CrashSubmit_ignore(id) {
+    let [dump, extra, mem] = getPendingMinidump(id);
+    return new Promise(
+      function (resolve, reject) {
+        let promise = OS.File.open(dump.path + ".ignore", {create: true}, {unixFlags:OS.Constants.libc.O_CREAT});
+        promise.then(
+          function createSuccess(file) {
+            file.close();
+            resolve();
+          }
+        );
+      }
+    )
+  },
+
+  /**
    * Get the list of pending crash IDs.
    *
    * @return an array of string, each being an ID as
@@ -483,6 +510,64 @@ this.CrashSubmit = {
    */
   pendingIDs: function CrashSubmit_pendingIDs() {
     return getAllPendingMinidumpsIDs();
+  },
+
+  /**
+   * Get the list of pending crash IDs, exluding those marked to be ignored
+   * @param maxFileDate
+   *     A Date object. Any files last modified before that date will be ignored
+   *
+   * @return a Promise that is fulfilled with an array of string, each
+   * being an ID as expected to be passed to submit() or ignore()
+   */
+  pendingIDsAsync: function CrashSubmit_pendingIDsAsync(maxFileDate) {
+    let promise = new Promise(function(resolve, reject) {
+      OS.File.stat(getDir("pending").path).then(
+        function onSuccess(info) {
+          if (info.isDir) {
+            let iterator = new OS.File.DirectoryIterator(getDir("pending").path);
+            let ids = [];
+            iterator.forEach(
+              function onEntry(file) {
+                if (file.name.endsWith(".dmp")) {
+                  return OS.File.exists(file.path + ".ignore").then(
+                    function onSuccess(ignoreExists) {
+                      if (!ignoreExists) {
+                        let id = file.name.slice(0, -4);
+                        if (UUID_REGEX.test(id)) {
+                          return OS.File.stat(file.path).then(
+                            function onSuccess(info) {
+                              if (info.lastAccessDate.valueOf() > maxFileDate.valueOf()) {
+                                ids.push(id);
+                              }
+                            }
+                          );
+                        }
+                      }
+                    }
+                  );
+                }
+              }
+            ).then(
+              function onSuccess() {
+                iterator.close();
+                resolve(ids);
+              },
+              function onError(err) {
+                iterator.close();
+                reject(err);
+              }
+            );
+          } else {
+            reject();
+          }
+        },
+        function onError(err) {
+          reject(err);
+        }
+      )
+    });
+    return promise;
   },
 
   /**
