@@ -1315,21 +1315,21 @@ public:
         m_formatter.oneByteOp(OP_GROUP2_EvCL, dst, GROUP2_OP_ROR);
     }
 
-    void bsr_rr(RegisterID src, RegisterID dst)
+    void bsrl_rr(RegisterID src, RegisterID dst)
     {
-        spew("bsr        %s, %s", GPReg32Name(src), GPReg32Name(dst));
+        spew("bsrl       %s, %s", GPReg32Name(src), GPReg32Name(dst));
         m_formatter.twoByteOp(OP2_BSR_GvEv, src, dst);
     }
 
-    void bsf_rr(RegisterID src, RegisterID dst)
+    void bsfl_rr(RegisterID src, RegisterID dst)
     {
-        spew("bsf        %s, %s", GPReg32Name(src), GPReg32Name(dst));
+        spew("bsfl       %s, %s", GPReg32Name(src), GPReg32Name(dst));
         m_formatter.twoByteOp(OP2_BSF_GvEv, src, dst);
     }
 
-    void popcnt_rr(RegisterID src, RegisterID dst)
+    void popcntl_rr(RegisterID src, RegisterID dst)
     {
-        spew("popcnt     %s, %s", GPReg32Name(src), GPReg32Name(dst));
+        spew("popcntl    %s, %s", GPReg32Name(src), GPReg32Name(dst));
         m_formatter.legacySSEPrefix(VEX_SS);
         m_formatter.twoByteOp(OP2_POPCNT_GvEv, src, dst);
     }
