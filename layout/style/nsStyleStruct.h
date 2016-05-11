@@ -1316,14 +1316,17 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleOutline
 
   nsStyleCorners  mOutlineRadius; // [reset] coord, percent, calc
 
-  // Note that this is a specified value.  You can get the actual values
-  // with GetOutlineWidth.  You cannot get the computed value directly.
+  // This is the specified value of outline-width, but with length values
+  // computed to absolute.  mActualOutlineWidth stores the outline-width
+  // value used by layout.  (We must store mOutlineWidth for the same
+  // style struct resolution reasons that we do nsStyleBorder::mBorder;
+  // see that field's comment.)
   nsStyleCoord  mOutlineWidth;    // [reset] coord, enum (see nsStyleConsts.h)
   nscoord       mOutlineOffset;   // [reset]
 
   nscoord GetOutlineWidth() const
   {
-    return mCachedOutlineWidth;
+    return mActualOutlineWidth;
   }
 
   uint8_t GetOutlineStyle() const
@@ -1364,9 +1367,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleOutline
   }
 
 protected:
-  // This value is the actual value, so it's rounded to the nearest device
-  // pixel.
-  nscoord       mCachedOutlineWidth;
+  // The actual value of outline-width is the computed value (an absolute
+  // length, forced to zero when outline-style is none) rounded to device
+  // pixels.  This is the value used by layout.
+  nscoord       mActualOutlineWidth;
 
   nscolor       mOutlineColor;    // [reset]
 
