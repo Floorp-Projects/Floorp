@@ -1450,6 +1450,9 @@ js::GetFirstDollarIndex(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args.length() == 1);
     RootedString str(cx, args[0].toString());
 
+    // Should be handled in different path.
+    MOZ_ASSERT(str->length() != 0);
+
     int32_t index = -1;
     if (!GetFirstDollarIndexRaw(cx, str, &index))
         return false;
@@ -1474,8 +1477,6 @@ int32_t
 js::GetFirstDollarIndexRawFlat(JSLinearString* text)
 {
     uint32_t len = text->length();
-    // Should be handled in different path.
-    MOZ_ASSERT(len != 0);
 
     JS::AutoCheckCannotGC nogc;
     if (text->hasLatin1Chars())
