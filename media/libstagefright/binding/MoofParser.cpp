@@ -346,6 +346,20 @@ MoofParser::ParseEncrypted(Box& aBox)
   }
 }
 
+class CtsComparator
+{
+public:
+  bool Equals(Sample* const aA, Sample* const aB) const
+  {
+    return aA->mCompositionRange.start == aB->mCompositionRange.start;
+  }
+  bool
+  LessThan(Sample* const aA, Sample* const aB) const
+  {
+    return aA->mCompositionRange.start < aB->mCompositionRange.start;
+  }
+};
+
 Moof::Moof(Box& aBox, Trex& aTrex, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, Sinf& aSinf, uint64_t* aDecodeTime, bool aIsAudio)
   : mRange(aBox.Range())
   , mMaxRoundingError(35000)
@@ -356,6 +370,42 @@ Moof::Moof(Box& aBox, Trex& aTrex, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, Sinf& 
     }
   }
   if (IsValid()) {
+    if (mIndex.Length()) {
+      // Ensure the samples are contiguous with no gaps.
+      nsTArray<Sample*> ctsOrder;
+      for (auto& sample : mIndex) {
+        ctsOrder.AppendElement(&sample);
+      }
+      ctsOrder.Sort(CtsComparator());
+
+      for (size_t i = 1; i < ctsOrder.Length(); i++) {
+        ctsOrder[i-1]->mCompositionRange.end = ctsOrder[i]->mCompositionRange.start;
+      }
+
+      // In MP4, the duration of a sample is defined as the delta between two decode
+      // timestamps. The operation above has updated the duration of each sample
+      // as a Sample's duration is mCompositionRange.end - mCompositionRange.start
+      // MSE's TrackBuffersManager expects dts that increased by the sample's
+      // duration, so we rewrite the dts accordingly.
+      int64_t presentationDuration =
+        ctsOrder.LastElement()->mCompositionRange.end
+        - ctsOrder[0]->mCompositionRange.start;
+      int64_t endDecodeTime =
+        aMdhd.ToMicroseconds((int64_t)*aDecodeTime - aEdts.mMediaStart)
+        + aMvhd.ToMicroseconds(aEdts.mEmptyOffset);
+      int64_t decodeDuration = endDecodeTime - mIndex[0].mDecodeTime;
+      float adjust = (float)decodeDuration / presentationDuration;
+      int64_t dtsOffset = mIndex[0].mDecodeTime;
+      int64_t compositionDuration = 0;
+      // Adjust the dts, ensuring that the new adjusted dts will never be greater
+      // than decodeTime (the next moof's decode start time).
+      for (auto& sample : mIndex) {
+        sample.mDecodeTime = dtsOffset + compositionDuration * adjust;
+        compositionDuration += sample.mCompositionRange.Length();
+      }
+      mTimeRange = Interval<Microseconds>(ctsOrder[0]->mCompositionRange.start,
+          ctsOrder.LastElement()->mCompositionRange.end);
+    }
     ProcessCenc();
   }
 }
@@ -470,20 +520,6 @@ Moof::FixRounding(const Moof& aMoof) {
   }
 }
 
-class CtsComparator
-{
-public:
-  bool Equals(Sample* const aA, Sample* const aB) const
-  {
-    return aA->mCompositionRange.start == aB->mCompositionRange.start;
-  }
-  bool
-  LessThan(Sample* const aA, Sample* const aB) const
-  {
-    return aA->mCompositionRange.start < aB->mCompositionRange.start;
-  }
-};
-
 bool
 Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, uint64_t* aDecodeTime, bool aIsAudio)
 {
@@ -554,6 +590,8 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, u
     sample.mByteRange = MediaByteRange(offset, offset + sampleSize);
     offset += sampleSize;
 
+    sample.mDecodeTime =
+      aMdhd.ToMicroseconds((int64_t)decodeTime - aEdts.mMediaStart) + aMvhd.ToMicroseconds(aEdts.mEmptyOffset);
     sample.mCompositionRange = Interval<Microseconds>(
       aMdhd.ToMicroseconds((int64_t)decodeTime + ctsOffset - aEdts.mMediaStart) + aMvhd.ToMicroseconds(aEdts.mEmptyOffset),
       aMdhd.ToMicroseconds((int64_t)decodeTime + ctsOffset + sampleDuration - aEdts.mMediaStart) + aMvhd.ToMicroseconds(aEdts.mEmptyOffset));
@@ -570,43 +608,8 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, u
   }
   mMaxRoundingError += aMdhd.ToMicroseconds(sampleCount);
 
-  nsTArray<Sample*> ctsOrder;
-  for (int i = 0; i < mIndex.Length(); i++) {
-    ctsOrder.AppendElement(&mIndex[i]);
-  }
-  ctsOrder.Sort(CtsComparator());
-
-  for (size_t i = 0; i < ctsOrder.Length(); i++) {
-    if (i + 1 < ctsOrder.Length()) {
-      ctsOrder[i]->mCompositionRange.end = ctsOrder[i + 1]->mCompositionRange.start;
-    }
-  }
-  // In MP4, the duration of a sample is defined as the delta between two decode
-  // timestamps. The operation above has updated the duration of each sample
-  // as a Sample's duration is mCompositionRange.end - mCompositionRange.start
-  // MSE's TrackBuffersManager expects dts that increased by the sample's
-  // duration, so we rewrite the dts accordingly.
-  int64_t presentationDuration = ctsOrder.LastElement()->mCompositionRange.end
-                                 - ctsOrder[0]->mCompositionRange.start;
-  int64_t decodeDuration = aMdhd.ToMicroseconds(decodeTime - *aDecodeTime);
-  float adjust = (float)decodeDuration / presentationDuration;
-  int64_t dtsOffset =
-    aMdhd.ToMicroseconds((int64_t)*aDecodeTime - aEdts.mMediaStart)
-    + aMvhd.ToMicroseconds(aEdts.mEmptyOffset);
-  int64_t compositionDuration = 0;
-  // Adjust the dts, ensuring that the new adjusted dts will never be greater
-  // than decodeTime (the next moof's decode start time).
-  for (auto& sample : mIndex) {
-    sample.mDecodeTime = dtsOffset + compositionDuration * adjust;
-    compositionDuration += sample.mCompositionRange.Length();
-  }
-  mTimeRange = Interval<Microseconds>(ctsOrder[0]->mCompositionRange.start,
-      ctsOrder.LastElement()->mCompositionRange.end);
   *aDecodeTime = decodeTime;
-  MOZ_ASSERT(aMdhd.ToMicroseconds((int64_t)decodeTime - aEdts.mMediaStart)
-             + aMvhd.ToMicroseconds(aEdts.mEmptyOffset)
-             >= mIndex[mIndex.Length() -1].mDecodeTime,
-             "Adjusted dts is too high");
+
   return true;
 }
 

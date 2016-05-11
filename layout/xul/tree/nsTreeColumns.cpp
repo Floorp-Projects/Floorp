@@ -288,13 +288,13 @@ nsTreeColumn::Invalidate()
   const nsStyleText* textStyle = frame->StyleText();
 
   mTextAlignment = textStyle->mTextAlign;
-  // DEFAULT or END alignment sometimes means RIGHT
-  if ((mTextAlignment == NS_STYLE_TEXT_ALIGN_DEFAULT &&
+  // START or END alignment sometimes means RIGHT
+  if ((mTextAlignment == NS_STYLE_TEXT_ALIGN_START &&
        vis->mDirection == NS_STYLE_DIRECTION_RTL) ||
       (mTextAlignment == NS_STYLE_TEXT_ALIGN_END &&
        vis->mDirection == NS_STYLE_DIRECTION_LTR)) {
     mTextAlignment = NS_STYLE_TEXT_ALIGN_RIGHT;
-  } else if (mTextAlignment == NS_STYLE_TEXT_ALIGN_DEFAULT ||
+  } else if (mTextAlignment == NS_STYLE_TEXT_ALIGN_START ||
              mTextAlignment == NS_STYLE_TEXT_ALIGN_END) {
     mTextAlignment = NS_STYLE_TEXT_ALIGN_LEFT;
   }

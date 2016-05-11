@@ -230,6 +230,7 @@ PollableEvent::Signal()
   if (status != 1) {
     NS_WARNING("PollableEvent::Signal Failed\n");
     SOCKET_LOG(("PollableEvent::Signal Failed\n"));
+    mSignaled = false;
   }
   return (status == 1);
 }

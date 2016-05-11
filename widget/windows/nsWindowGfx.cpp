@@ -276,6 +276,8 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
     clientLayerManager->SendInvalidRegion(region);
   }
 
+  RefPtr<nsWindow> strongThis(this);
+
   nsIWidgetListener* listener = GetPaintListener();
   if (listener) {
     listener->WillPaintWindow(this);

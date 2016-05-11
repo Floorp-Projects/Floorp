@@ -1030,6 +1030,8 @@ PuppetWidget::Paint()
   mDirtyRegion.SetEmpty();
   mPaintTask.Revoke();
 
+  RefPtr<PuppetWidget> strongThis(this);
+
   GetCurrentWidgetListener()->WillPaintWindow(this);
 
   if (GetCurrentWidgetListener()) {

@@ -307,6 +307,38 @@ TestArray.addTest(
       );
   }
 );
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "JWK unwrap attempt on bogus data should error out",
+  function () {
+    // Largely cribbed from the "JWK wrap/unwrap round-trip, with AES-GCM" test
+    var that = this;
+    var wrapAlg = { name: "AES-GCM", iv: tv.aes_gcm_enc.iv };
+    var wrapKey;
+
+    function doBogusWrap() {
+      var abv = new TextEncoder("utf-8").encode("I am so not JSON");
+      return crypto.subtle.encrypt(wrapAlg, wrapKey, abv);
+    }
+    function doUnwrap(wrappedKey) {
+      return crypto.subtle.unwrapKey("jwk", wrappedKey, wrapKey, wrapAlg,
+                                     {name: "HMAC", hash: "SHA-384"},
+                                     true, ['sign', 'verify']);
+    }
+
+    crypto.subtle.importKey("jwk", tv.aes_gcm_enc.key_jwk,
+                            "AES-GCM", false, ['encrypt','unwrapKey'])
+      .then(function(x) { wrapKey = x; })
+      .then(doBogusWrap, error(that))
+      .then(doUnwrap, error(that))
+      .then(
+        error(that),
+        complete(that)
+      );
+  }
+);
+
 /*]]>*/</script>
 </head>
 
