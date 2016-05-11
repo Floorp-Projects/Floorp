@@ -518,7 +518,7 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
 nsStyleOutline::nsStyleOutline(StyleStructContext aContext)
   : mOutlineWidth(NS_STYLE_BORDER_WIDTH_MEDIUM, eStyleUnit_Enumerated)
   , mOutlineOffset(0)
-  , mCachedOutlineWidth(0)
+  , mActualOutlineWidth(0)
   , mOutlineColor(NS_RGB(0, 0, 0))
   , mOutlineStyle(NS_STYLE_BORDER_STYLE_NONE)
   , mTwipsPerPixel(aContext.DevPixelsToAppUnits(1))
@@ -537,7 +537,7 @@ nsStyleOutline::nsStyleOutline(const nsStyleOutline& aSrc)
   : mOutlineRadius(aSrc.mOutlineRadius)
   , mOutlineWidth(aSrc.mOutlineWidth)
   , mOutlineOffset(aSrc.mOutlineOffset)
-  , mCachedOutlineWidth(aSrc.mCachedOutlineWidth)
+  , mActualOutlineWidth(aSrc.mActualOutlineWidth)
   , mOutlineColor(aSrc.mOutlineColor)
   , mOutlineStyle(aSrc.mOutlineStyle)
   , mTwipsPerPixel(aSrc.mTwipsPerPixel)
@@ -549,25 +549,25 @@ void
 nsStyleOutline::RecalcData()
 {
   if (NS_STYLE_BORDER_STYLE_NONE == GetOutlineStyle()) {
-    mCachedOutlineWidth = 0;
+    mActualOutlineWidth = 0;
   } else {
     MOZ_ASSERT(mOutlineWidth.ConvertsToLength() ||
                mOutlineWidth.GetUnit() == eStyleUnit_Enumerated);
     // Clamp negative calc() to 0.
-    mCachedOutlineWidth =
+    mActualOutlineWidth =
       std::max(CalcCoord(mOutlineWidth,
                          StaticPresData::Get()->GetBorderWidthTable(), 3), 0);
-    mCachedOutlineWidth =
-      NS_ROUND_BORDER_TO_PIXELS(mCachedOutlineWidth, mTwipsPerPixel);
+    mActualOutlineWidth =
+      NS_ROUND_BORDER_TO_PIXELS(mActualOutlineWidth, mTwipsPerPixel);
   }
 }
 
 nsChangeHint nsStyleOutline::CalcDifference(const nsStyleOutline& aOther) const
 {
-  bool outlineWasVisible =
-    mCachedOutlineWidth > 0 && mOutlineStyle != NS_STYLE_BORDER_STYLE_NONE;
-  bool outlineIsVisible = 
-    aOther.mCachedOutlineWidth > 0 && aOther.mOutlineStyle != NS_STYLE_BORDER_STYLE_NONE;
+  bool outlineWasVisible = mActualOutlineWidth > 0 &&
+                           mOutlineStyle != NS_STYLE_BORDER_STYLE_NONE;
+  bool outlineIsVisible  = aOther.mActualOutlineWidth > 0 &&
+                           aOther.mOutlineStyle != NS_STYLE_BORDER_STYLE_NONE;
   if (outlineWasVisible != outlineIsVisible ||
       (outlineIsVisible && (mOutlineOffset != aOther.mOutlineOffset ||
                             mOutlineWidth != aOther.mOutlineWidth ||
@@ -586,7 +586,7 @@ nsChangeHint nsStyleOutline::CalcDifference(const nsStyleOutline& aOther) const
   if (mOutlineWidth != aOther.mOutlineWidth ||
       mOutlineOffset != aOther.mOutlineOffset ||
       mTwipsPerPixel != aOther.mTwipsPerPixel ||
-      mCachedOutlineWidth != aOther.mCachedOutlineWidth) {
+      mActualOutlineWidth != aOther.mActualOutlineWidth) {
     return nsChangeHint_NeutralChange;
   }
 
