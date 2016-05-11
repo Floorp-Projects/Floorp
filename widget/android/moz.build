@@ -61,4 +61,6 @@ LOCAL_INCLUDES += [
     '/widget/android/android',
 ]
 
+CXXFLAGS += ['-Wno-error=shadow']
+
 #DEFINES['DEBUG_WIDGETS'] = True

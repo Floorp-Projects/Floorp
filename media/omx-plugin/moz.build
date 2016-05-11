@@ -30,7 +30,10 @@ else:
 
 if CONFIG['GNU_CXX']:
     # Stagefright header files define many multichar constants.
-    CXXFLAGS += ['-Wno-multichar']
+    CXXFLAGS += [
+        '-Wno-multichar',
+        '-Wno-shadow',
+    ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     if CONFIG['ANDROID_VERSION'] == '15':

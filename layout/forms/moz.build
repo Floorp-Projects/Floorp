@@ -59,6 +59,9 @@ if CONFIG['ENABLE_INTL_API']:
     CXXFLAGS += CONFIG['MOZ_ICU_CFLAGS']
     LOCAL_INCLUDES += CONFIG['MOZ_ICU_INCLUDES']
 
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']
+
 if CONFIG['_MSC_VER']:
     # This is intended as a temporary hack to support building with VS2015.
     # 'noexcept' used with no exception handling mode specified;

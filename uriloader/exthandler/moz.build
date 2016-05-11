@@ -77,6 +77,8 @@ else:
     SOURCES += [
         osdir + '/nsOSHelperAppService.cpp',
     ]
+    if CONFIG['GNU_CXX']:
+        CXXFLAGS += ['-Wno-error=shadow']
 
 if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     UNIFIED_SOURCES += [
