@@ -76,7 +76,7 @@ public:
   +---------------------------------------------------------------+
 */
 
-  enum frameType {
+  enum FrameType {
     FRAME_TYPE_DATA          = 0x0,
     FRAME_TYPE_HEADERS       = 0x1,
     FRAME_TYPE_PRIORITY      = 0x2,
