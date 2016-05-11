@@ -274,6 +274,37 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 }
 
 // ===============================================================
+// Bit counting functions
+
+void
+MacroAssembler::clz64(Register64 src, Register64 dest, bool knownNotZero)
+{
+    // On very recent chips (Haswell and newer) there is actually an
+    // LZCNT instruction that does all of this.
+
+    bsrq(src.reg, dest.reg);
+    if (!knownNotZero) {
+        Label nonzero;
+        j(Assembler::NonZero, &nonzero);
+        movq(ImmWord(0x7F), dest.reg);
+        bind(&nonzero);
+    }
+    xorq(Imm32(0x3F), dest.reg);
+}
+
+void
+MacroAssembler::ctz64(Register64 src, Register64 dest, bool knownNotZero)
+{
+    bsfq(src.reg, dest.reg);
+    if (!knownNotZero) {
+        Label nonzero;
+        j(Assembler::NonZero, &nonzero);
+        movq(ImmWord(64), dest.reg);
+        bind(&nonzero);
+    }
+}
+
+// ===============================================================
 // Branch functions
 
 void
