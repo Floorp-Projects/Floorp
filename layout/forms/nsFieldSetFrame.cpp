@@ -587,7 +587,7 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
           align = NS_STYLE_TEXT_ALIGN_END;
         } else if (align == NS_STYLE_TEXT_ALIGN_RIGHT ||
                    align == NS_STYLE_TEXT_ALIGN_MOZ_RIGHT) {
-          align = NS_STYLE_TEXT_ALIGN_DEFAULT;
+          align = NS_STYLE_TEXT_ALIGN_START;
         }
       }
       switch (align) {
