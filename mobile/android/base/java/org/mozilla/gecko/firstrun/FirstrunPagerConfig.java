@@ -26,6 +26,7 @@ public class FirstrunPagerConfig {
 
    public static List<FirstrunPanelConfig> getDefault(Context context) {
         final List<FirstrunPanelConfig> panels = new LinkedList<>();
+
         if (Experiments.isInExperimentLocal(context, Experiments.ONBOARDING3_A)) {
             Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, Experiments.ONBOARDING3_A);
             GeckoSharedPrefs.forProfile(context).edit().putString(Experiments.PREF_ONBOARDING_VERSION, Experiments.ONBOARDING3_A).apply();
@@ -38,6 +39,7 @@ public class FirstrunPagerConfig {
             Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, Experiments.ONBOARDING3_B);
             GeckoSharedPrefs.forProfile(context).edit().putString(Experiments.PREF_ONBOARDING_VERSION, Experiments.ONBOARDING3_B).apply();
         } else if (Experiments.isInExperimentLocal(context, Experiments.ONBOARDING3_C)) {
+            panels.add(SimplePanelConfigs.tabqueuePanelConfig);
             panels.add(SimplePanelConfigs.notificationsPanelConfig);
             panels.add(SimplePanelConfigs.readerviewPanelConfig);
             panels.add(SimplePanelConfigs.accountPanelConfig);
@@ -101,6 +103,7 @@ public class FirstrunPagerConfig {
         public static final FirstrunPanelConfig syncPanelConfig = new FirstrunPanelConfig(FirstrunPanel.class.getName(), R.string.firstrun_sync_title, R.drawable.firstrun_sync, R.string.firstrun_sync_message, R.string.firstrun_sync_subtext);
         public static final FirstrunPanelConfig signInPanelConfig = new FirstrunPanelConfig(SyncPanel.class.getName(), R.string.pref_sync, R.drawable.firstrun_signin, R.string.firstrun_signin_message, R.string.firstrun_welcome_button_browser);
 
+        public static final FirstrunPanelConfig tabqueuePanelConfig = new FirstrunPanelConfig(TabQueuePanel.class.getName(), R.string.firstrun_tabqueue_title, R.drawable.firstrun_tabqueue_off, R.string.firstrun_tabqueue_message_off, R.string.firstrun_tabqueue_subtext_off);
         public static final FirstrunPanelConfig notificationsPanelConfig = new FirstrunPanelConfig(FirstrunPanel.class.getName(), R.string.firstrun_notifications_title, R.drawable.firstrun_notifications, R.string.firstrun_notifications_message, R.string.firstrun_notifications_subtext);
         public static final FirstrunPanelConfig readerviewPanelConfig = new FirstrunPanelConfig(FirstrunPanel.class.getName(), R.string.firstrun_readerview_title, R.drawable.firstrun_readerview, R.string.firstrun_readerview_message, R.string.firstrun_readerview_subtext);
         public static final FirstrunPanelConfig accountPanelConfig = new FirstrunPanelConfig(SyncPanel.class.getName(), R.string.firstrun_account_title, R.drawable.firstrun_account, R.string.firstrun_account_message, R.string.firstrun_button_notnow);
