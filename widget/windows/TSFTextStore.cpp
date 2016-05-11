@@ -46,7 +46,7 @@ static const char* kPrefNameForceEnableTSF = "intl.tsf.force_enable";
  *   "TSF: TSFFoo::Bar("
  */
 
-PRLogModuleInfo* sTextStoreLog = nullptr;
+LazyLogModule sTextStoreLog("nsTextStoreWidgets");
 
 static const char*
 GetBoolName(bool aBool)
@@ -5373,10 +5373,6 @@ TSFTextStore::MarkContextAsEmpty(ITfContext* aContext)
 void
 TSFTextStore::Initialize()
 {
-  if (!sTextStoreLog) {
-    sTextStoreLog = PR_NewLogModule("nsTextStoreWidgets");
-  }
-
   MOZ_LOG(sTextStoreLog, LogLevel::Info,
     ("TSF: TSFTextStore::Initialize() is called..."));
 
