@@ -3356,8 +3356,16 @@ Widgets.ObjectRenderers.add({
       this.element.removeEventListener("mouseover", this.highlightDomNode, false);
       this.element.removeEventListener("mouseout", this.unhighlightDomNode, false);
       this._openInspectorNode.removeEventListener("mousedown", this.openNodeInInspector, true);
-      this.toolbox = null;
-      this._nodeFront = null;
+
+      if (this._linkedToInspector) {
+        this.unhighlightDomNode().then(() => {
+          this.toolbox = null;
+          this._nodeFront = null;
+        });
+      } else {
+        this.toolbox = null;
+        this._nodeFront = null;
+      }
     }
   },
 }); // Widgets.ObjectRenderers.byKind.DOMNode
