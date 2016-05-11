@@ -155,7 +155,7 @@ public:
     }
     frames = ProcessInternal(temp1.Data(), aBuffer.Data(), frames);
     if (mIn.Rate() == mOut.Rate()) {
-      temp1.SetLength(FramesOutToSamples(frames));
+      MOZ_ALWAYS_TRUE(temp1.SetLength(FramesOutToSamples(frames)));
       return AudioDataBuffer<Format, Value>(Move(temp1));
     }
 
@@ -166,7 +166,9 @@ public:
     if (!frames || mOut.Rate() > mIn.Rate()) {
       // We are upsampling or about to drain, we can't work in place.
       // Allocate another temporary buffer where the upsampling will occur.
-      temp2.SetLength(FramesOutToSamples(ResampleRecipientFrames(frames)));
+      if (!temp2.SetLength(FramesOutToSamples(ResampleRecipientFrames(frames)))) {
+        return AudioDataBuffer<Format, Value>(Move(temp2));
+      }
       outputBuffer = &temp2;
     }
     if (!frames) {
@@ -174,7 +176,7 @@ public:
     } else {
       frames = ResampleAudio(outputBuffer->Data(), temp1.Data(), frames);
     }
-    outputBuffer->SetLength(FramesOutToSamples(frames));
+    MOZ_ALWAYS_TRUE(outputBuffer->SetLength(FramesOutToSamples(frames)));
     return AudioDataBuffer<Format, Value>(Move(*outputBuffer));
   }
 
