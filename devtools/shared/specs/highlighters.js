@@ -6,6 +6,7 @@
 const {
   Arg,
   Option,
+  RetVal,
   generateActorSpec
 } = require("devtools/shared/protocol");
 
@@ -32,3 +33,30 @@ const highlighterSpec = generateActorSpec({
 });
 
 exports.highlighterSpec = highlighterSpec;
+
+const customHighlighterSpec = generateActorSpec({
+  typeName: "customhighlighter",
+
+  methods: {
+    release: {
+      release: true
+    },
+    show: {
+      request: {
+        node: Arg(0, "domnode"),
+        options: Arg(1, "nullable:json")
+      },
+      response: {
+        value: RetVal("nullable:boolean")
+      }
+    },
+    hide: {
+      request: {}
+    },
+    finalize: {
+      oneway: true
+    }
+  }
+});
+
+exports.customHighlighterSpec = customHighlighterSpec;
