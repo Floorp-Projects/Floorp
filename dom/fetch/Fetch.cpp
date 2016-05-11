@@ -335,7 +335,7 @@ public:
     return true;
   }
 
-  NS_IMETHOD
+  nsresult
   Cancel() override
   {
     // Execute Run anyway to make sure we cleanup our promise proxy to avoid
@@ -403,9 +403,8 @@ WorkerFetchResolver::OnResponseEnd()
     // This can fail if the worker thread is canceled or killed causing
     // the PromiseWorkerProxy to give up its WorkerFeature immediately,
     // allowing the worker thread to become Dead.
-    if (!cr->Dispatch()) {
-      NS_WARNING("Failed to dispatch WorkerFetchResponseEndControlRunnable");
-    }
+    NS_WARN_IF_FALSE(cr->Dispatch(),
+                     "Failed to dispatch WorkerFetchResponseEndControlRunnable");
   }
 }
 
