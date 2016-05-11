@@ -810,11 +810,15 @@ MoveScrollbarForLayerMargin(Layer* aRoot, FrameMetrics::ViewID aRootScrollId,
 
 bool
 AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
-                                                          bool* aOutFoundRoot,
-                                                          ClipPartsCache& aClipPartsCache)
+                                                          bool* aOutFoundRoot)
 {
   bool appliedTransform = false;
   std::stack<Maybe<ParentLayerIntRect>> stackDeferredClips;
+
+  // Maps layers to their ClipParts. The parts are not stored individually
+  // on the layer, but during AlignFixedAndStickyLayers we need access to
+  // the individual parts for descendant layers.
+  ClipPartsCache clipPartsCache;
 
   ForEachNode<ForwardIterator>(
       aLayer,
@@ -822,7 +826,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
       {
         stackDeferredClips.push(Maybe<ParentLayerIntRect>());
       },
-      [this, &aOutFoundRoot, &stackDeferredClips, &appliedTransform, &aClipPartsCache] (Layer* layer)
+      [this, &aOutFoundRoot, &stackDeferredClips, &appliedTransform, &clipPartsCache] (Layer* layer)
       {
         Maybe<ParentLayerIntRect> clipDeferredFromChildren = stackDeferredClips.top();
         stackDeferredClips.pop();
@@ -851,7 +855,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
         // composite.
         // The final shadow clip for the layer is the intersection of the (possibly
         // adjusted) fixed clip and the scrolled clip.
-        ClipParts& clipParts = aClipPartsCache[layer];
+        ClipParts& clipParts = clipPartsCache[layer];
         clipParts.mFixedClip = layer->GetClipRect();
         clipParts.mScrolledClip = layer->GetScrolledClipRect();
 
@@ -958,10 +962,10 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
           if (!scrollMetadata.UsesContainerScrolling()) {
             MOZ_ASSERT(asyncTransform.Is2D());
             if (clipParts.mFixedClip) {
-              clipParts.mFixedClip = Some(TransformBy(asyncTransform, *clipParts.mFixedClip));
+              *clipParts.mFixedClip = TransformBy(asyncTransform, *clipParts.mFixedClip);
             }
             if (clipParts.mScrolledClip) {
-              clipParts.mScrolledClip = Some(TransformBy(asyncTransform, *clipParts.mScrolledClip));
+              *clipParts.mScrolledClip = TransformBy(asyncTransform, *clipParts.mScrolledClip);
             }
           }
           // Note: we don't set the layer's shadow clip rect property yet;
@@ -982,11 +986,9 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
             * CompleteAsyncTransform(
                 AdjustForClip(asyncTransformWithoutOverscroll, layer));
 
-          // Since fixed/sticky layers are relative to their nearest scrolling ancestor,
-          // we use the ViewID from the bottommost scrollable metrics here.
           AlignFixedAndStickyLayers(layer, metrics.GetScrollId(), oldTransform,
                                     transformWithoutOverscrollOrOmta, fixedLayerMargins,
-                                    &aClipPartsCache);
+                                    &clipPartsCache);
 
           // Combine the local clip with the ancestor scrollframe clip. This is not
           // included in the async transform above, since the ancestor clip should not
@@ -1459,12 +1461,6 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
   bool wantNextFrame = SampleAnimations(root, aCurrentFrame);
 
   if (!(aSkip & TransformsToSkip::APZ)) {
-    // Maps layers to their ClipParts during ApplyAsyncContentTransformToTree.
-    // The parts are not stored individually on the layer, but during
-    // AlignFixedAndStickyLayers we need access to the individual parts for
-    // descendant layers.
-    ClipPartsCache clipPartsCache;
-
     // FIXME/bug 775437: unify this interface with the ~native-fennec
     // derived code
     //
@@ -1477,7 +1473,7 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
     // its own platform-specific async rendering that is done partially
     // in Gecko and partially in Java.
     bool foundRoot = false;
-    if (ApplyAsyncContentTransformToTree(root, &foundRoot, clipPartsCache)) {
+    if (ApplyAsyncContentTransformToTree(root, &foundRoot)) {
 #if defined(MOZ_ANDROID_APZ)
       MOZ_ASSERT(foundRoot);
       if (foundRoot && mFixedLayerMargins != ScreenMargin()) {
