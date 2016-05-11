@@ -144,7 +144,7 @@ public class MenuItemSwitcherLayout extends LinearLayout
         mMenuButton.setVisibility(View.VISIBLE);
 
         if (drawable != null) {
-            ImageButton button = new ImageButton(getContext(), null, R.attr.menuItemShareActionButtonStyle);
+            ImageButton button = new ImageButton(getContext(), null, R.attr.menuItemSecondaryActionBarStyle);
             button.setImageDrawable(drawable);
             button.setContentDescription(label);
             button.setOnClickListener(this);

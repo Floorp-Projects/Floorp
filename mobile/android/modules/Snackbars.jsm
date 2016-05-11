@@ -34,6 +34,10 @@ var Snackbars = {
       duration: aDuration,
     };
 
+    if (aOptions && aOptions.backgroundColor) {
+      msg.backgroundColor = aOptions.backgroundColor;
+    }
+
     if (aOptions && aOptions.action) {
       msg.action = {};
 

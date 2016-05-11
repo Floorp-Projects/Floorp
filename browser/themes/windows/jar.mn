@@ -200,12 +200,12 @@ browser.jar:
   skin/classic/browser/sync-32.png
   skin/classic/browser/sync-128.png
   skin/classic/browser/sync-bg.png
-  skin/classic/browser/sync-desktopIcon.png
+  skin/classic/browser/sync-desktopIcon.svg  (../shared/sync-desktopIcon.svg)
   skin/classic/browser/sync-horizontalbar.png
   skin/classic/browser/sync-horizontalbar@2x.png
   skin/classic/browser/sync-horizontalbar-XPVista7.png
   skin/classic/browser/sync-horizontalbar-XPVista7@2x.png
-  skin/classic/browser/sync-mobileIcon.png
+  skin/classic/browser/sync-mobileIcon.svg  (../shared/sync-mobileIcon.svg)
   skin/classic/browser/sync-notification-24.png
   skin/classic/browser/syncSetup.css
   skin/classic/browser/syncCommon.css

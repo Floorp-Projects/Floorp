@@ -206,7 +206,7 @@ var simulator = {
             self.fireMouseEvent("mousemove", evt);
             self.fireMouseEvent("mouseup", evt);
           } catch(e) {
-            Cu.reportError("Exception in touch event helper: " + e);
+            console.error("Exception in touch event helper: " + e);
           }
         }, 0, this);
         return;

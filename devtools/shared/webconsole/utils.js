@@ -313,8 +313,8 @@ var WebConsoleUtils = {
       case "function":
         return objectWrapper(value);
       default:
-        Cu.reportError("Failed to provide a grip for value of " + typeof value
-                       + ": " + value);
+        console.error("Failed to provide a grip for value of " + typeof value
+                      + ": " + value);
         return null;
     }
   },
@@ -585,7 +585,7 @@ WebConsoleUtils.L10n.prototype = {
     try {
       result = this.stringBundle.GetStringFromName(name);
     } catch (ex) {
-      Cu.reportError("Failed to get string: " + name);
+      console.error("Failed to get string: " + name);
       throw ex;
     }
     return result;
@@ -608,7 +608,7 @@ WebConsoleUtils.L10n.prototype = {
       result = this.stringBundle.formatStringFromName(name, array,
                                                       array.length);
     } catch (ex) {
-      Cu.reportError("Failed to format string: " + name);
+      console.error("Failed to format string: " + name);
       throw ex;
     }
     return result;
