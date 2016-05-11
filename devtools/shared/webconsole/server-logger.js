@@ -6,7 +6,7 @@
 
 "use strict";
 
-const {Cu, Ci} = require("chrome");
+const {Ci} = require("chrome");
 const {Class} = require("sdk/core/heritage");
 const Services = require("Services");
 
@@ -272,7 +272,7 @@ var ServerLoggingListener = Class({
       let result = decodeURIComponent(escape(atob(value)));
       data = JSON.parse(result);
     } catch (err) {
-      Cu.reportError("Failed to parse HTTP log data! " + err);
+      console.error("Failed to parse HTTP log data! " + err);
       return null;
     }
 

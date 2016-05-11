@@ -1311,13 +1311,13 @@ NetworkMonitorChild.prototype = {
     let weakActor = this._netEvents.get(id);
     let actor = weakActor ? weakActor.get() : null;
     if (!actor) {
-      Cu.reportError("Received debug:netmonitor:updateEvent for unknown " +
-                     "event ID: " + id);
+      console.error("Received debug:netmonitor:updateEvent for unknown " +
+                    "event ID: " + id);
       return;
     }
     if (!(method in actor)) {
-      Cu.reportError("Received debug:netmonitor:updateEvent unsupported " +
-                     "method: " + method);
+      console.error("Received debug:netmonitor:updateEvent unsupported " +
+                    "method: " + method);
       return;
     }
     actor[method].apply(actor, args);

@@ -665,7 +665,7 @@ LocalDebuggerTransport.prototype = {
       try {
         this.hooks.onClosed();
       } catch(ex) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
       this.hooks = null;
     }
