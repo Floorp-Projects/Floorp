@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1088761
+-->
+<head>
+  <title>Test for Bug 1088761</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    input, textarea, fieldset, button, select, keygen, output, object { background-color: rgb(0,0,0) !important; }
+    :valid   { background-color: rgb(0,255,0) !important; }
+    :invalid { background-color: rgb(255,0,0) !important; }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1088761">Mozilla Bug 1088761</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <fieldset id='f' oninvalid="invalidEventHandler(event, true);"></fieldset>
+  <input id='i' required oninvalid="invalidEventHandler(event, true);">
+  <button id='b' oninvalid="invalidEventHandler(event, true);"></button>
+  <select id='s' required oninvalid="invalidEventHandler(event, true);"></select>
+  <textarea id='t' required oninvalid="invalidEventHandler(event, true);"></textarea>
+  <output id='o' oninvalid="invalidEventHandler(event, true);"></output>
+  <keygen id='k' oninvalid="invalidEventHandler(event, true);"></keygen>
+  <object id='obj' oninvalid="invalidEventHandler(event, true);"></object>
+</div>
+<div id="content2" style="display: none">
+  <fieldset id='f2' oninvalid="invalidEventHandler(event, false);"></fieldset>
+  <input id='i2' required oninvalid="invalidEventHandler(event, false);">
+  <button id='b2' oninvalid="invalidEventHandler(event, false);"></button>
+  <select id='s2' required oninvalid="invalidEventHandler(event, false);"></select>
+  <textarea id='t2' required oninvalid="invalidEventHandler(event, false);"></textarea>
+  <output id='o2' oninvalid="invalidEventHandler(event, false);"></output>
+  <keygen id='k2' oninvalid="invalidEventHandler(event, false);"></keygen>
+  <object id='obj2' oninvalid="invalidEventHandler(event, false);"></object>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 1088761 **/
+
+var gInvalid = false;
+
+function invalidEventHandler(aEvent, isPreventDefault)
+{
+  if (isPreventDefault) {
+      aEvent.preventDefault();
+  }
+
+  is(aEvent.type, "invalid", "Invalid event type should be invalid");
+  ok(!aEvent.bubbles, "Invalid event should not bubble");
+  ok(aEvent.cancelable, "Invalid event should be cancelable");
+  gInvalid = true;
+}
+
+function checkReportValidityForInvalid(element)
+{
+  gInvalid = false;
+  ok(!element.reportValidity(), "reportValidity() should return false when the element is not valid");
+  ok(gInvalid, "Invalid event should have been handled");
+}
+
+function checkReportValidityForValid(element)
+{
+  gInvalid = false;
+  ok(element.reportValidity(), "reportValidity() should return true when the element is valid");
+  ok(!gInvalid, "Invalid event shouldn't have been handled");
+}
+
+checkReportValidityForInvalid(document.getElementById('i'));
+checkReportValidityForInvalid(document.getElementById('s'));
+checkReportValidityForInvalid(document.getElementById('t'));
+
+checkReportValidityForInvalid(document.getElementById('i2'));
+checkReportValidityForInvalid(document.getElementById('s2'));
+checkReportValidityForInvalid(document.getElementById('t2'));
+
+checkReportValidityForValid(document.getElementById('o'));
+checkReportValidityForValid(document.getElementById('k'));
+checkReportValidityForValid(document.getElementById('obj'));
+checkReportValidityForValid(document.getElementById('f'));
+
+checkReportValidityForValid(document.getElementById('o2'));
+checkReportValidityForValid(document.getElementById('k2'));
+checkReportValidityForValid(document.getElementById('obj2'));
+checkReportValidityForValid(document.getElementById('f2'));
+
+</script>
+</pre>
+</body>
+</html>
