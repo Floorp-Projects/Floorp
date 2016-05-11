@@ -66,3 +66,6 @@ if CONFIG['_MSC_VER']:
 USE_LIBS += [
     'mfbt',
 ]
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']

@@ -18,5 +18,5 @@ LOCAL_INCLUDES = [
 
 FINAL_LIBRARY = 'xul-gtest'
 
-if CONFIG['CLANG_CXX']:
-    CXXFLAGS += ['-Wshadow']
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']

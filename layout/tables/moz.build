@@ -41,3 +41,6 @@ LOCAL_INCLUDES += [
 ]
 
 DEFINES['DEBUG_TABLE_STRATEGY_off'] = True
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']

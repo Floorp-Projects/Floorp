@@ -148,6 +148,9 @@ else:
 
 CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
 
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']
+
 if CONFIG['_MSC_VER']:
     # This is intended as a temporary hack to support building with VS2015.
     # conversion from 'X' to 'Y' requires a narrowing conversion

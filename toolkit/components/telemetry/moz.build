@@ -83,3 +83,6 @@ LOCAL_INCLUDES += [
 
 SPHINX_TREES['telemetry'] = 'docs'
 SPHINX_TREES['healthreport'] = 'docs/fhr'
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']

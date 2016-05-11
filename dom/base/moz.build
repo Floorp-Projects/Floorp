@@ -495,3 +495,6 @@ countermap.inputs = ['UseCounters.conf']
 counterlist = GENERATED_FILES['UseCounterList.h']
 counterlist.script = 'gen-usecounters.py:use_counter_list'
 counterlist.inputs = ['UseCounters.conf']
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']

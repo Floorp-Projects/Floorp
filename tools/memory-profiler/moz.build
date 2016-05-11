@@ -25,3 +25,5 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
 
     FINAL_LIBRARY = 'xul'
 
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']
