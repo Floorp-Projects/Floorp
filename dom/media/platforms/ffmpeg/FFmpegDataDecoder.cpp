@@ -32,6 +32,7 @@ StaticMutex FFmpegDataDecoder<LIBAV_VER>::sMonitor;
   , mExtraData(nullptr)
   , mCodecID(aCodecID)
   , mTaskQueue(aTaskQueue)
+  , mIsFlushing(false)
 {
   MOZ_ASSERT(aLib);
   MOZ_COUNT_CTOR(FFmpegDataDecoder);
@@ -115,6 +116,9 @@ void
 FFmpegDataDecoder<LIBAV_VER>::ProcessDecode(MediaRawData* aSample)
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  if (mIsFlushing) {
+    return;
+  }
   switch (DoDecode(aSample)) {
     case DecodeResult::DECODE_ERROR:
       mCallback->Error();
@@ -138,10 +142,11 @@ nsresult
 FFmpegDataDecoder<LIBAV_VER>::Flush()
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
-  mTaskQueue->Flush();
+  mIsFlushing = true;
   nsCOMPtr<nsIRunnable> runnable =
     NewRunnableMethod(this, &FFmpegDataDecoder<LIBAV_VER>::ProcessFlush);
   SyncRunnable::DispatchToThread(mTaskQueue, runnable);
+  mIsFlushing = false;
   return NS_OK;
 }
 

@@ -68,6 +68,9 @@ private:
 
   static StaticMutex sMonitor;
   const RefPtr<FlushableTaskQueue> mTaskQueue;
+  // Set/cleared on reader thread calling Flush() to indicate that output is
+  // not required and so input samples on mTaskQueue need not be processed.
+  Atomic<bool> mIsFlushing;
 };
 
 } // namespace mozilla
