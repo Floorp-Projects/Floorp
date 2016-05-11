@@ -133,13 +133,13 @@ CacheFileMetadata::~CacheFileMetadata()
   MOZ_ASSERT(!mListener);
 
   if (mHashArray) {
-    free(mHashArray);
+    CacheFileUtils::FreeBuffer(mHashArray);
     mHashArray = nullptr;
     mHashArraySize = 0;
   }
 
   if (mBuf) {
-    free(mBuf);
+    CacheFileUtils::FreeBuffer(mBuf);
     mBuf = nullptr;
     mBufSize = 0;
   }
@@ -302,7 +302,7 @@ CacheFileMetadata::WriteMetadata(uint32_t aOffset,
 
     mListener = nullptr;
     if (mWriteBuf) {
-      free(mWriteBuf);
+      CacheFileUtils::FreeBuffer(mWriteBuf);
       mWriteBuf = nullptr;
     }
     NS_ENSURE_SUCCESS(rv, rv);
@@ -651,7 +651,7 @@ CacheFileMetadata::OnDataWritten(CacheFileHandle *aHandle, const char *aBuf,
   MOZ_ASSERT(mListener);
   MOZ_ASSERT(mWriteBuf);
 
-  free(mWriteBuf);
+  CacheFileUtils::FreeBuffer(mWriteBuf);
   mWriteBuf = nullptr;
 
   nsCOMPtr<CacheFileMetadataListener> listener;
@@ -828,7 +828,7 @@ void
 CacheFileMetadata::InitEmptyMetadata()
 {
   if (mBuf) {
-    free(mBuf);
+    CacheFileUtils::FreeBuffer(mBuf);
     mBuf = nullptr;
     mBufSize = 0;
   }

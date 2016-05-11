@@ -131,14 +131,14 @@ CacheFileChunk::~CacheFileChunk()
   MOZ_COUNT_DTOR(CacheFileChunk);
 
   if (mBuf) {
-    free(mBuf);
+    CacheFileUtils::FreeBuffer(mBuf);
     mBuf = nullptr;
     mBufSize = 0;
     ChunkAllocationChanged();
   }
 
   if (mRWBuf) {
-    free(mRWBuf);
+    CacheFileUtils::FreeBuffer(mRWBuf);
     mRWBuf = nullptr;
     mRWBufSize = 0;
     ChunkAllocationChanged();
@@ -447,7 +447,7 @@ CacheFileChunk::OnDataWritten(CacheFileHandle *aHandle, const char *aBuf,
       mRWBuf = nullptr;
       mRWBufSize = 0;
     } else {
-      free(mRWBuf);
+      CacheFileUtils::FreeBuffer(mRWBuf);
       mRWBuf = nullptr;
       mRWBufSize = 0;
       ChunkAllocationChanged();
@@ -513,7 +513,7 @@ CacheFileChunk::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
             }
             mValidityMap.Clear();
 
-            free(mBuf);
+            CacheFileUtils::FreeBuffer(mBuf);
             mBuf = mRWBuf;
             mBufSize = mRWBufSize;
             mRWBuf = nullptr;
@@ -545,7 +545,7 @@ CacheFileChunk::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
             }
             mValidityMap.Clear();
 
-            free(mRWBuf);
+            CacheFileUtils::FreeBuffer(mRWBuf);
             mRWBuf = nullptr;
             mRWBufSize = 0;
             ChunkAllocationChanged();
