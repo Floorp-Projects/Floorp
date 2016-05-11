@@ -24,6 +24,7 @@
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
+#include "prenv.h"
 #include "prsystem.h"
 #include "nsPrintfCString.h"
 #include "mozilla/Preferences.h"
@@ -46,6 +47,15 @@
 
 // Set to specify the size of the places database growth increments in kibibytes
 #define PREF_GROWTH_INCREMENT_KIB "places.database.growthIncrementKiB"
+
+// Set to disable the default robust storage and use volatile, in-memory
+// storage without robust transaction flushing guarantees. This makes
+// SQLite use much less I/O at the cost of losing data when things crash.
+// The pref is only honored if an environment variable is set. The env
+// variable is intentionally named something scary to help prevent someone
+// from thinking it is a useful performance optimization they should enable.
+#define PREF_DISABLE_DURABILITY "places.database.disableDurability"
+#define ENV_ALLOW_CORRUPTION "ALLOW_PLACES_DATABASE_TO_LOSE_DATA_AND_BECOME_CORRUPT"
 
 // The maximum url length we can store in history.
 // We do not add to history URLs longer than this value.
@@ -625,31 +635,41 @@ Database::InitSchema(bool* aDatabaseMigrated)
       MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA temp_store = MEMORY"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Be sure to set journal mode after page_size.  WAL would prevent the change
-  // otherwise.
-  if (JOURNAL_WAL == SetJournalMode(mMainConn, JOURNAL_WAL)) {
-    // Set the WAL journal size limit.  We want it to be small, since in
-    // synchronous = NORMAL mode a crash could cause loss of all the
-    // transactions in the journal.  For added safety we will also force
-    // checkpointing at strategic moments.
-    int32_t checkpointPages =
-      static_cast<int32_t>(DATABASE_MAX_WAL_SIZE_IN_KIBIBYTES * 1024 / mDBPageSize);
-    nsAutoCString checkpointPragma("PRAGMA wal_autocheckpoint = ");
-    checkpointPragma.AppendInt(checkpointPages);
-    rv = mMainConn->ExecuteSimpleSQL(checkpointPragma);
+  if (PR_GetEnv(ENV_ALLOW_CORRUPTION) && Preferences::GetBool(PREF_DISABLE_DURABILITY, false)) {
+    // Volatile storage was requested. Use the in-memory journal (no
+    // filesystem I/O) and don't sync the filesystem after writing.
+    SetJournalMode(mMainConn, JOURNAL_MEMORY);
+    rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "PRAGMA synchronous = OFF"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
   else {
-    // Ignore errors, if we fail here the database could be considered corrupt
-    // and we won't be able to go on, even if it's just matter of a bogus file
-    // system.  The default mode (DELETE) will be fine in such a case.
-    (void)SetJournalMode(mMainConn, JOURNAL_TRUNCATE);
+    // Be sure to set journal mode after page_size.  WAL would prevent the change
+    // otherwise.
+    if (JOURNAL_WAL == SetJournalMode(mMainConn, JOURNAL_WAL)) {
+      // Set the WAL journal size limit.  We want it to be small, since in
+      // synchronous = NORMAL mode a crash could cause loss of all the
+      // transactions in the journal.  For added safety we will also force
+      // checkpointing at strategic moments.
+      int32_t checkpointPages =
+        static_cast<int32_t>(DATABASE_MAX_WAL_SIZE_IN_KIBIBYTES * 1024 / mDBPageSize);
+      nsAutoCString checkpointPragma("PRAGMA wal_autocheckpoint = ");
+      checkpointPragma.AppendInt(checkpointPages);
+      rv = mMainConn->ExecuteSimpleSQL(checkpointPragma);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    else {
+      // Ignore errors, if we fail here the database could be considered corrupt
+      // and we won't be able to go on, even if it's just matter of a bogus file
+      // system.  The default mode (DELETE) will be fine in such a case.
+      (void)SetJournalMode(mMainConn, JOURNAL_TRUNCATE);
 
-    // Set synchronous to FULL to ensure maximum data integrity, even in
-    // case of crashes or unclean shutdowns.
-    rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "PRAGMA synchronous = FULL"));
-    NS_ENSURE_SUCCESS(rv, rv);
+      // Set synchronous to FULL to ensure maximum data integrity, even in
+      // case of crashes or unclean shutdowns.
+      rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+          "PRAGMA synchronous = FULL"));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   // The journal is usually free to grow for performance reasons, but it never
