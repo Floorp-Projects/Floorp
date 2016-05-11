@@ -1201,21 +1201,24 @@ public:
     virtual bool IsWebGL2() const = 0;
 
 protected:
-    bool InitWebGL2();
+    bool InitWebGL2(nsACString* const out_failReason);
 
-    bool CreateAndInitGL(bool forceEnabled);
+    bool CreateAndInitGL(bool forceEnabled, nsACString* const out_failReason);
     bool ResizeBackbuffer(uint32_t width, uint32_t height);
 
     typedef already_AddRefed<gl::GLContext> FnCreateGL_T(const gl::SurfaceCaps& caps,
                                                          gl::CreateContextFlags flags,
-                                                         WebGLContext* webgl);
+                                                         WebGLContext* webgl,
+                                                         nsACString* const out_failReason);
 
     bool CreateAndInitGLWith(FnCreateGL_T fnCreateGL, const gl::SurfaceCaps& baseCaps,
-                             gl::CreateContextFlags flags);
+                             gl::CreateContextFlags flags,
+                             nsACString* const out_failReason);
+    void ThrowEvent_WebGLContextCreationError(const nsACString& text);
 
     // -------------------------------------------------------------------------
     // Validation functions (implemented in WebGLContextValidate.cpp)
-    bool InitAndValidateGL();
+    bool InitAndValidateGL(nsACString* const out_failReason);
     bool ValidateBlendEquationEnum(GLenum cap, const char* info);
     bool ValidateBlendFuncDstEnum(GLenum mode, const char* info);
     bool ValidateBlendFuncSrcEnum(GLenum mode, const char* info);
