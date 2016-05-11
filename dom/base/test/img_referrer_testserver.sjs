@@ -1,10 +1,15 @@
 var BASE_URL = 'example.com/tests/dom/base/test/img_referrer_testserver.sjs';
+const IMG_BYTES = atob(
+  "iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12" +
+  "P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==");
 
-function createTestUrl(aPolicy, aAction, aName) {
+function createTestUrl(aPolicy, aAction, aName, aContent) {
+  var content = aContent || 'text';
   return 'http://' + BASE_URL + '?' +
          'action=' + aAction + '&' +
          'policy=' + aPolicy + '&' +
-         'name=' + aName;
+         'name=' + aName + '&' +
+         'content=' + content;
 }
 
 function createTestPage(aHead, aImgPolicy, aName) {
@@ -88,6 +93,42 @@ function createTestPage2(aHead, aPolicy, aName) {
          </html>';
 }
 
+function createTestPage3(aPolicy, aName) {
+  return '<!DOCTYPE HTML>\n\
+         <html>\n\
+           <body>\n\
+             <script>' +
+               'var image = new Image();\n\
+               image.src = "' + createTestUrl(aPolicy, "test", aName, "image") + '";\n\
+               image.referrerPolicy = "' + aPolicy + '";\n\
+               image.onload = function() {\n\
+                 window.parent.postMessage("childLoadComplete", "http://mochi.test:8888");\n\
+               }\n\
+               document.body.appendChild(image);' +
+
+             '</script>\n\
+           </body>\n\
+         </html>';
+}
+
+function createTestPage4(aPolicy, aName) {
+  return '<!DOCTYPE HTML>\n\
+         <html>\n\
+           <body>\n\
+             <script>' +
+               'var image = new Image();\n\
+               image.referrerPolicy = "' + aPolicy + '";\n\
+               image.src = "' + createTestUrl(aPolicy, "test", aName, "image") + '";\n\
+               image.onload = function() {\n\
+                 window.parent.postMessage("childLoadComplete", "http://mochi.test:8888");\n\
+               }\n\
+               document.body.appendChild(image);' +
+
+             '</script>\n\
+           </body>\n\
+         </html>';
+}
+
 function createTest4(aPolicy, aName) {
   var headString = '<head>';
   headString += '<meta name="referrer" content="' + aPolicy + '">';
@@ -119,9 +160,10 @@ function handleRequest(request, response) {
     return;
   }
   if (action === 'test') {
-    // ?action=test&policy=origin&name=name
+    // ?action=test&policy=origin&name=name&content=content
     var policy = params[1].split('=')[1];
     var name = params[2].split('=')[1];
+    var content = params[3].split('=')[1];
     var result = getSharedState(sharedKey);
 
     if (result === '') {
@@ -153,6 +195,11 @@ function handleRequest(request, response) {
     result["tests"][name] = test;
 
     setSharedState(sharedKey, JSON.stringify(result));
+
+    if (content === 'image') {
+      response.setHeader("Content-Type", "image/png");
+      response.write(IMG_BYTES);
+    }
     return;
   }
   if (action === 'get-test-results') {
@@ -204,6 +251,24 @@ function handleRequest(request, response) {
     var name = unescape(params[2].split('=')[1]);
 
     response.write(createTest5(policy, name));
+    return;
+  }
+
+  if (action === 'generate-setAttribute-test1') {
+    // ?action=generate-setAttribute-test1&policy=b64-encoded-string&name=name
+    var policy = unescape(params[1].split('=')[1]);
+    var name = unescape(params[2].split('=')[1]);
+
+    response.write(createTestPage3(policy, name));
+    return;
+  }
+
+  if (action === 'generate-setAttribute-test2') {
+    // ?action=generate-setAttribute-test2&policy=b64-encoded-string&name=name
+    var policy = unescape(params[1].split('=')[1]);
+    var name = unescape(params[2].split('=')[1]);
+
+    response.write(createTestPage4(policy, name));
     return;
   }
 
