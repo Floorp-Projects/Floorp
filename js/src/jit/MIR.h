@@ -1115,6 +1115,9 @@ class MAryInstruction : public MInstruction
     size_t numOperands() const final override {
         return Arity;
     }
+#ifdef DEBUG
+    static const size_t staticNumOperands = Arity;
+#endif
     size_t indexOf(const MUse* u) const final override {
         MOZ_ASSERT(u >= &operands_[0]);
         MOZ_ASSERT(u <= &operands_[numOperands() - 1]);

@@ -406,7 +406,6 @@ a {
 .jsterm-input-node,
 .jsterm-complete-node {
   border: none;
-  padding: 4px;
   padding-inline-start: 20px;
   margin: 0;
   -moz-appearance: none;
@@ -441,6 +440,10 @@ a {
 :-moz-any(.jsterm-input-node,
           .jsterm-complete-node) > .textbox-input-box > .textbox-textarea {
   overflow-x: hidden;
+  /* Set padding for console input on textbox to make sure it is inlcuded in
+     scrollHeight that is used when resizing JSTerminal's input. Note: textbox
+     default style has important already */
+  padding: 4px 0 !important;
 }
 
 .inlined-variables-view .message-body {

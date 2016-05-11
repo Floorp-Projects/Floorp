@@ -703,11 +703,7 @@ pref("gfx.font_rendering.wordcache.charlimit", 32);
 // cache shaped word results
 pref("gfx.font_rendering.wordcache.maxentries", 10000);
 
-#ifdef RELEASE_BUILD
-pref("gfx.font_rendering.graphite.enabled", false);
-#else
 pref("gfx.font_rendering.graphite.enabled", true);
-#endif
 
 #ifdef XP_WIN
 pref("gfx.font_rendering.directwrite.force-enabled", false);

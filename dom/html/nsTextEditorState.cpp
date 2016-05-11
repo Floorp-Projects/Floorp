@@ -1196,9 +1196,8 @@ nsTextEditorState::BindToFrame(nsTextControlFrame* aFrame)
       // otherwise, inherit the content node's direction
     }
 
-    if (!nsContentUtils::AddScriptRunner(
-          new PrepareEditorEvent(*this, content, currentValue)))
-      return NS_ERROR_OUT_OF_MEMORY;
+    nsContentUtils::AddScriptRunner(
+      new PrepareEditorEvent(*this, content, currentValue));
   }
 
   return NS_OK;
