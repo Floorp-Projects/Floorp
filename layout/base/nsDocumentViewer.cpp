@@ -1130,18 +1130,14 @@ nsDocumentViewer::PermitUnloadInternal(bool *aShouldPrompt,
     nsAutoPopupStatePusher popupStatePusher(openAbused, true);
 
     // Never permit dialogs from the beforeunload handler
-    nsGlobalWindow *globalWindow =
-      static_cast<nsGlobalWindow*>(reinterpret_cast<nsPIDOMWindow<nsISupports>*>(window));
+    nsGlobalWindow* globalWindow = nsGlobalWindow::Cast(window);
     dialogsAreEnabled = globalWindow->AreDialogsEnabled();
-    globalWindow->DisableDialogs();
+    nsGlobalWindow::TemporarilyDisableDialogs disableDialogs(globalWindow);
 
     mInPermitUnload = true;
     EventDispatcher::DispatchDOMEvent(window, nullptr, event, mPresContext,
                                       nullptr);
     mInPermitUnload = false;
-    if (dialogsAreEnabled) {
-      globalWindow->EnableDialogs();
-    }
   }
 
   nsCOMPtr<nsIDocShell> docShell(mContainer);
