@@ -448,17 +448,7 @@ KeyframeEffectReadOnly::SetKeyframes(JSContext* aContext,
     return;
   }
 
-  RefPtr<nsStyleContext> styleContext;
-  nsIPresShell* shell = doc->GetShell();
-  if (shell && mTarget) {
-    nsIAtom* pseudo =
-      mTarget->mPseudoType < CSSPseudoElementType::Count ?
-      nsCSSPseudoElements::GetPseudoAtom(mTarget->mPseudoType) : nullptr;
-    styleContext =
-      nsComputedDOMStyle::GetStyleContextForElement(mTarget->mElement,
-                                                    pseudo, shell);
-  }
-
+  RefPtr<nsStyleContext> styleContext = GetTargetStyleContext(doc);
   SetKeyframes(Move(keyframes), styleContext);
 }
 
@@ -889,6 +879,28 @@ KeyframeEffectReadOnly::RequestRestyle(
       RequestRestyle(mTarget->mElement, mTarget->mPseudoType,
                      aRestyleType, mAnimation->CascadeLevel());
   }
+}
+
+already_AddRefed<nsStyleContext>
+KeyframeEffectReadOnly::GetTargetStyleContext(nsIDocument* aDoc)
+{
+  if (!mTarget) {
+    return nullptr;
+  }
+
+  if (!aDoc) {
+    aDoc = mTarget->mElement->OwnerDoc();
+    if (!aDoc) {
+      return nullptr;
+    }
+  }
+
+  nsIAtom* pseudo = mTarget->mPseudoType < CSSPseudoElementType::Count
+                    ? nsCSSPseudoElements::GetPseudoAtom(mTarget->mPseudoType)
+                    : nullptr;
+  return nsComputedDOMStyle::GetStyleContextForElement(mTarget->mElement,
+                                                       pseudo,
+                                                       aDoc->GetShell());
 }
 
 #ifdef DEBUG
@@ -1524,7 +1536,10 @@ KeyframeEffect::SetTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget)
 
   if (mTarget) {
     UpdateTargetRegistration();
-    MaybeUpdateProperties();
+    RefPtr<nsStyleContext> styleContext = GetTargetStyleContext();
+    if (styleContext) {
+      UpdateProperties(styleContext);
+    }
 
     RequestRestyle(EffectCompositor::RestyleType::Layer);
 
@@ -1542,31 +1557,6 @@ KeyframeEffect::~KeyframeEffect()
   if (mTiming) {
     mTiming->Unlink();
   }
-}
-
-void
-KeyframeEffect::MaybeUpdateProperties()
-{
-  if (!mTarget) {
-    return;
-  }
-
-  nsIDocument* doc = mTarget->mElement->OwnerDoc();
-  if (!doc) {
-    return;
-  }
-
-  nsIAtom* pseudo = mTarget->mPseudoType < CSSPseudoElementType::Count ?
-                    nsCSSPseudoElements::GetPseudoAtom(mTarget->mPseudoType) :
-                    nullptr;
-  RefPtr<nsStyleContext> styleContext =
-    nsComputedDOMStyle::GetStyleContextForElement(mTarget->mElement, pseudo,
-                                                  doc->GetShell());
-  if (!styleContext) {
-    return;
-  }
-
-  UpdateProperties(styleContext);
 }
 
 } // namespace dom
