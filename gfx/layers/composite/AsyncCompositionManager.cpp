@@ -215,6 +215,20 @@ TransformClipRect(Layer* aLayer,
   }
 }
 
+// Similar to TransformFixedClip(), but only transforms the fixed part of the
+// clip.
+static void
+TransformFixedClip(Layer* aLayer,
+                   const ParentLayerToParentLayerMatrix4x4& aTransform,
+                   AsyncCompositionManager::ClipParts& aClipParts)
+{
+  MOZ_ASSERT(aTransform.Is2D());
+  if (aClipParts.mFixedClip) {
+    *aClipParts.mFixedClip = TransformBy(aTransform, *aClipParts.mFixedClip);
+    aLayer->AsLayerComposite()->SetShadowClipRect(aClipParts.Intersect());
+  }
+}
+
 /**
  * Set the given transform as the shadow transform on the layer, assuming
  * that the given transform already has the pre- and post-scales applied.
@@ -240,7 +254,8 @@ SetShadowTransform(Layer* aLayer, LayerToParentLayerMatrix4x4 aTransform)
 static void
 TranslateShadowLayer(Layer* aLayer,
                      const gfxPoint& aTranslation,
-                     bool aAdjustClipRect)
+                     bool aAdjustClipRect,
+                     AsyncCompositionManager::ClipPartsCache* aClipPartsCache)
 {
   // This layer might also be a scrollable layer and have an async transform.
   // To make sure we don't clobber that, we start with the shadow transform.
@@ -257,13 +272,21 @@ TranslateShadowLayer(Layer* aLayer,
   aLayer->AsLayerComposite()->SetShadowTransformSetByAnimation(false);
 
   if (aAdjustClipRect) {
-    TransformClipRect(aLayer,
-        ParentLayerToParentLayerMatrix4x4::Translation(aTranslation.x, aTranslation.y, 0));
+    auto transform = ParentLayerToParentLayerMatrix4x4::Translation(aTranslation.x, aTranslation.y, 0);
+    // If we're passed a clip parts cache, only transform the fixed part of
+    // the clip.
+    if (aClipPartsCache) {
+      auto iter = aClipPartsCache->find(aLayer);
+      MOZ_ASSERT(iter != aClipPartsCache->end());
+      TransformFixedClip(aLayer, transform, iter->second);
+    } else {
+      TransformClipRect(aLayer, transform);
+    }
 
     // If a fixed- or sticky-position layer has a mask layer, that mask should
     // move along with the layer, so apply the translation to the mask layer too.
     if (Layer* maskLayer = aLayer->GetMaskLayer()) {
-      TranslateShadowLayer(maskLayer, aTranslation, false);
+      TranslateShadowLayer(maskLayer, aTranslation, false, aClipPartsCache);
     }
   }
 }
@@ -405,7 +428,8 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
                                                    const LayerToParentLayerMatrix4x4& aPreviousTransformForRoot,
                                                    const LayerToParentLayerMatrix4x4& aCurrentTransformForRoot,
                                                    const ScreenMargin& aFixedLayerMargins,
-                                                   bool aTransformAffectsLayerClip)
+                                                   bool aTransformAffectsLayerClip,
+                                                   ClipPartsCache* aClipPartsCache)
 {
   bool needsAsyncTransformUnapplied = false;
   if (Maybe<FrameMetrics::ViewID> fixedTo = IsFixedOrSticky(aLayer)) {
@@ -422,7 +446,8 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
       AlignFixedAndStickyLayers(child, aTransformedSubtreeRoot, aTransformScrollId,
                                 aPreviousTransformForRoot,
                                 aCurrentTransformForRoot, aFixedLayerMargins,
-                                true /* descendants' clip rects are always affected */);
+                                true /* descendants' clip rects are always affected */,
+                                aClipPartsCache);
     }
     return;
   }
@@ -509,7 +534,8 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
   // (IsClipFixed() = false), so we don't make a compensating adjustment for
   // those.
   bool adjustClipRect = aTransformAffectsLayerClip && aLayer->IsClipFixed();
-  TranslateShadowLayer(aLayer, ThebesPoint(translation.ToUnknownPoint()), adjustClipRect);
+  TranslateShadowLayer(aLayer, ThebesPoint(translation.ToUnknownPoint()),
+      adjustClipRect, aClipPartsCache);
 }
 
 static void
@@ -774,7 +800,7 @@ MoveScrollbarForLayerMargin(Layer* aRoot, FrameMetrics::ViewID aRootScrollId,
     // scrollbar a bit to expand into the new space but it's not as noticeable
     // and it would add a lot more complexity, so we're going with the "it's not
     // worth it" justification.
-    TranslateShadowLayer(scrollbar, gfxPoint(0, -aFixedLayerMargins.bottom), true);
+    TranslateShadowLayer(scrollbar, gfxPoint(0, -aFixedLayerMargins.bottom), true, nullptr);
     if (scrollbar->GetParent()) {
       // The layer that has the HORIZONTAL direction sits inside another
       // ContainerLayer. This ContainerLayer also has a clip rect that causes
@@ -791,7 +817,8 @@ MoveScrollbarForLayerMargin(Layer* aRoot, FrameMetrics::ViewID aRootScrollId,
 bool
 AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
                                                           bool* aOutFoundRoot,
-                                                          Maybe<ParentLayerIntRect>& aClipDeferredToParent)
+                                                          Maybe<ParentLayerIntRect>& aClipDeferredToParent,
+                                                          ClipPartsCache& aClipPartsCache)
 {
   Maybe<ParentLayerIntRect> clipDeferredFromChildren;
   bool appliedTransform = false;
@@ -799,7 +826,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
       child; child = child->GetNextSibling()) {
     appliedTransform |=
       ApplyAsyncContentTransformToTree(child, aOutFoundRoot,
-          clipDeferredFromChildren);
+          clipDeferredFromChildren, aClipPartsCache);
   }
 
   LayerToParentLayerMatrix4x4 oldTransform = aLayer->GetTransformTyped() *
@@ -809,18 +836,32 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
   bool hasAsyncTransform = false;
   ScreenMargin fixedLayerMargins;
 
-  // Each layer has multiple clips. Its local clip, which must move with async
-  // transforms, and its scrollframe clips, which are the clips between each
-  // scrollframe and its ancestor scrollframe. Scrollframe clips include the
-  // composition bounds and any other clips induced by layout.
-  //
-  // The final clip for the layer is the intersection of these clips.
-  Maybe<ParentLayerIntRect> asyncClip = aLayer->GetClipRect();
+  // Each layer has multiple clips:
+  //  - Its local clip, which is fixed to the layer contents, i.e. it moves
+  //    with those async transforms which the layer contents move with.
+  //  - For each ScrollMetadata on the layer, a scroll clip. This includes
+  //    the composition bounds and any other clips induced by layout. This
+  //    moves with async transforms from ScrollMetadatas above it.
+  // In this function, these clips are combined into two shadow clip parts:
+  //  - The fixed clip, which consists of the local clip only, initially
+  //    transformed by all async transforms.
+  //  - The scrolled clip, which consists of the scroll clips, transformed by
+  //    the appropriate transforms.
+  // These two parts are kept separate for now, because for fixed layers, we
+  // need to adjust the fixed clip (to cancel out some async transforms).
+  // The parts are kept in a cache which is cleared at the beginning of every
+  // composite.
+  // The final shadow clip for the layer is the intersection of the (possibly
+  // adjusted) fixed clip and the scrolled clip.
+  ClipParts& clipParts = aClipPartsCache[aLayer];
+  clipParts.mFixedClip = aLayer->GetClipRect();
 
   // If we are a perspective transform ContainerLayer, apply the clip deferred
   // from our child (if there is any) before we iterate over our frame metrics,
   // because this clip is subject to all async transforms of this layer.
-  asyncClip = IntersectMaybeRects(asyncClip, clipDeferredFromChildren);
+  // Since this clip came from the a scroll clip on the child, it becomes part
+  // of our scrolled clip.
+  clipParts.mScrolledClip = clipDeferredFromChildren;
 
   // The transform of a mask layer is relative to the masked layer's parent
   // layer. So whenever we apply an async transform to a layer, we need to
@@ -902,14 +943,21 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
     mIsFirstPaint = false;
 #endif
 
-    // Transform the current local clip by this APZC's async transform. If we're
+    // Transform the current local clips by this APZC's async transform. If we're
     // using containerful scrolling, then the clip is not part of the scrolled
     // frame and should not be transformed.
-    if (asyncClip && !scrollMetadata.UsesContainerScrolling()) {
+    if (!scrollMetadata.UsesContainerScrolling()) {
       MOZ_ASSERT(asyncTransform.Is2D());
-      asyncClip = Some(TransformBy(asyncTransform, *asyncClip));
+      if (clipParts.mFixedClip) {
+        clipParts.mFixedClip = Some(TransformBy(asyncTransform, *clipParts.mFixedClip));
+      }
+      if (clipParts.mScrolledClip) {
+        clipParts.mScrolledClip = Some(TransformBy(asyncTransform, *clipParts.mScrolledClip));
+      }
     }
-    aLayer->AsLayerComposite()->SetShadowClipRect(asyncClip);
+    // Note: we don't set the layer's shadow clip rect property yet;
+    // AlignFixedAndStickyLayers will use the clip parts from the clip parts
+    // cache.
 
     combinedAsyncTransform *= asyncTransform;
 
@@ -929,15 +977,11 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
     // we use the ViewID from the bottommost scrollable metrics here.
     AlignFixedAndStickyLayers(aLayer, aLayer, metrics.GetScrollId(), oldTransform,
                               transformWithoutOverscrollOrOmta, fixedLayerMargins,
-                              asyncClip.isSome());
+                              clipParts.IsSome(), &aClipPartsCache);
 
-    // AlignFixedAndStickyLayers may have changed the clip rect, so we have to
-    // read it from the layer again.
-    asyncClip = aLayer->AsLayerComposite()->GetShadowClipRect();
-
-    // Combine the local clip with the ancestor scrollframe clip. This is not
-    // included in the async transform above, since the ancestor clip should not
-    // move with this APZC.
+    // Combine the scrolled portion of the local clip with the ancestor
+    // scroll clip. This is not included in the async transform above, since
+    // the ancestor clip should not move with this APZC.
     if (scrollMetadata.HasScrollClip()) {
       ParentLayerIntRect clip = scrollMetadata.ScrollClip().GetClipRect();
       if (aLayer->GetParent() && aLayer->GetParent()->GetTransformIsPerspective()) {
@@ -954,7 +998,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
         MOZ_ASSERT(!aClipDeferredToParent);
         aClipDeferredToParent = Some(clip);
       } else {
-        asyncClip = IntersectMaybeRects(Some(clip), asyncClip);
+        clipParts.mScrolledClip = IntersectMaybeRects(Some(clip), clipParts.mScrolledClip);
       }
     }
 
@@ -977,8 +1021,14 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
     }
   }
 
-  if (hasAsyncTransform || clipDeferredFromChildren) {
-    aLayer->AsLayerComposite()->SetShadowClipRect(asyncClip);
+  bool clipChanged = (hasAsyncTransform || clipDeferredFromChildren);
+  if (clipChanged) {
+    // Intersect the two clip parts and apply them to the layer.
+    // During ApplyAsyncContentTransformTree on an ancestor layer,
+    // AlignFixedAndStickyLayers may overwrite this with a new clip it
+    // computes from the clip parts, but if that doesn't happen, this
+    // is the layer's final clip rect.
+    aLayer->AsLayerComposite()->SetShadowClipRect(clipParts.Intersect());
   }
 
   if (hasAsyncTransform) {
@@ -1366,7 +1416,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
   // when we're asynchronously panning or zooming
   AlignFixedAndStickyLayers(aLayer, aLayer, metrics.GetScrollId(), oldTransform,
                             aLayer->GetLocalTransformTyped(),
-                            fixedLayerMargins, false);
+                            fixedLayerMargins, false, nullptr);
 
   ExpandRootClipRect(aLayer, fixedLayerMargins);
 }
@@ -1396,6 +1446,12 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
   bool wantNextFrame = SampleAnimations(root, aCurrentFrame);
 
   if (!(aSkip & TransformsToSkip::APZ)) {
+    // Maps layers to their ClipParts during ApplyAsyncContentTransformToTree.
+    // The parts are not stored individually on the layer, but during
+    // AlignFixedAndStickyLayers we need access to the individual parts for
+    // descendant layers.
+    ClipPartsCache clipPartsCache;
+
     // FIXME/bug 775437: unify this interface with the ~native-fennec
     // derived code
     //
@@ -1409,7 +1465,8 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
     // in Gecko and partially in Java.
     bool foundRoot = false;
     Maybe<ParentLayerIntRect> clipDeferredFromChildren;
-    if (ApplyAsyncContentTransformToTree(root, &foundRoot, clipDeferredFromChildren)) {
+    if (ApplyAsyncContentTransformToTree(root, &foundRoot, clipDeferredFromChildren,
+                                         clipPartsCache)) {
 #if defined(MOZ_ANDROID_APZ)
       MOZ_ASSERT(foundRoot);
       if (foundRoot && mFixedLayerMargins != ScreenMargin()) {
