@@ -59,5 +59,8 @@ was captured, then it would be acceptable to either:
 * A: Restore the tab content without any RDM tool displayed **OR**
 * B: Restore the RDM tool the tab content inside, just as before the restart
 
-Option A (no RDM after session restore) seems more in line with how the rest of
-DevTools currently functions after restore.
+We currently follow path A (no RDM after session restore), which seems more in
+line with how the rest of DevTools currently functions after restore.  To do so,
+we watch for `beforeunload` events on the tab at shutdown and quickly exit RDM
+so that session restore records only the original page content during its final
+write at shutdown.

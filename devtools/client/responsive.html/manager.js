@@ -83,13 +83,15 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
    *        The main browser chrome window.
    * @param tab
    *        The browser tab.
+   * @param object
+   *        Close options, which currently includes a `reason` string.
    * @return Promise
    *         Resolved (with no value) when closing is complete.
    */
-  closeIfNeeded: Task.async(function* (window, tab) {
+  closeIfNeeded: Task.async(function* (window, tab, options) {
     if (this.isActiveForTab(tab)) {
       let ui = this.activeTabs.get(tab);
-      let destroyed = yield ui.destroy();
+      let destroyed = yield ui.destroy(options);
       if (!destroyed) {
         // Already in the process of destroying, abort.
         return;
@@ -200,6 +202,11 @@ ResponsiveUI.prototype = {
   destroying: false,
 
   /**
+   * Flag set when destruction has ended.
+   */
+  destroyed: false,
+
+  /**
    * A window reference for the chrome:// document that displays the responsive
    * design tool.  It is safe to reference this window directly even with e10s,
    * as the tool UI is always loaded in the parent process.  The web content
@@ -224,6 +231,9 @@ ResponsiveUI.prototype = {
     let ui = this;
     let toolViewportContentBrowser;
 
+    // Watch for the tab's beforeunload to catch app shutdown early
+    this.tab.linkedBrowser.addEventListener("beforeunload", this, true);
+
     // Swap page content from the current tab into a viewport within RDM
     this.swap = swapToInnerBrowser({
       tab: this.tab,
@@ -246,32 +256,45 @@ ResponsiveUI.prototype = {
 
     this.touchEventSimulator =
       new TouchEventSimulator(toolViewportContentBrowser);
-
-    // TODO: Session restore continues to store the tool UI as the page's URL.
-    // Most likely related to browser UI's inability to show correct location.
   }),
 
   /**
    * Close RDM and restore page content back into a regular tab.
    *
+   * @param object
+   *        Destroy options, which currently includes a `reason` string.
    * @return boolean
    *         Whether this call is actually destroying.  False means destruction
    *         was already in progress.
    */
-  destroy: Task.async(function* () {
+  destroy: Task.async(function* (options) {
     if (this.destroying) {
       return false;
     }
     this.destroying = true;
 
+    // If our tab is about to be unloaded, there's not enough time to exit
+    // gracefully, but that shouldn't be a problem since the tab will go away.
+    // So, skip any yielding when we're about to unload.
+    let isBeforeUnload = options && options.reason == "beforeunload";
+
     // Ensure init has finished before starting destroy
-    yield this.inited;
+    if (!isBeforeUnload) {
+      yield this.inited;
+    }
+
+    this.tab.linkedBrowser.removeEventListener("beforeunload", this, true);
+    this.toolWindow.removeEventListener("message", this);
 
     // Stop the touch event simulator if it was running
-    yield this.touchEventSimulator.stop();
+    if (!isBeforeUnload) {
+      yield this.touchEventSimulator.stop();
+    }
 
     // Notify the inner browser to stop the frame script
-    yield message.request(this.toolWindow, "stop-frame-script");
+    if (!isBeforeUnload) {
+      yield message.request(this.toolWindow, "stop-frame-script");
+    }
 
     // Destroy local state
     let swap = this.swap;
@@ -285,11 +308,40 @@ ResponsiveUI.prototype = {
     // Undo the swap and return the content back to a normal tab
     swap.stop();
 
+    this.destroyed = true;
+
     return true;
   }),
 
   handleEvent(event) {
-    let { tab, window, toolWindow } = this;
+    let { browserWindow, tab } = this;
+
+    switch (event.type) {
+      case "message":
+        this.handleMessage(event);
+        break;
+      case "beforeunload":
+        // Ignore the event for locations like about:blank
+        if (event.target.location != TOOL_URL) {
+          return;
+        }
+        // We want to ensure we close RDM before browser window close when
+        // quitting.  Session restore starts its final session data flush when
+        // it gets the `quit-application-granted` notification.  If we were to
+        // wait for browser windows to close before destroying (which will undo
+        // the content swap), session restore gets wedged in a confused state
+        // since we're moving browsers at the same time that it is blocking
+        // shutdown on messages from each browser.  So instead, we destroy
+        // earlier based on the tab's `beforeunload` event.
+        ResponsiveUIManager.closeIfNeeded(browserWindow, tab, {
+          reason: event.type,
+        });
+        break;
+    }
+  },
+
+  handleMessage(event) {
+    let { browserWindow, tab } = this;
 
     if (event.origin !== "chrome://devtools") {
       return;
@@ -304,8 +356,7 @@ ResponsiveUI.prototype = {
         });
         break;
       case "exit":
-        toolWindow.removeEventListener(event.type, this);
-        ResponsiveUIManager.closeIfNeeded(window, tab);
+        ResponsiveUIManager.closeIfNeeded(browserWindow, tab);
         break;
       case "update-touch-simulation":
         let { enabled } = event.data;
