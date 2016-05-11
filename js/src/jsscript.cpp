@@ -1812,19 +1812,73 @@ JSScript::sourceData(JSContext* cx)
     return scriptSource()->substring(cx, sourceStart(), sourceEnd());
 }
 
-mozilla::Maybe<SharedImmutableTwoByteString>
-UncompressedSourceCache::lookup(ScriptSource* ss)
+UncompressedSourceCache::AutoHoldEntry::AutoHoldEntry()
+  : cache_(nullptr), source_(nullptr)
 {
+}
+
+void
+UncompressedSourceCache::AutoHoldEntry::holdEntry(UncompressedSourceCache* cache, ScriptSource* source)
+{
+    // Initialise the holder for a specific cache and script source. This will
+    // hold on to the cached source chars in the event that the cache is purged.
+    MOZ_ASSERT(!cache_ && !source_ && !charsToFree_);
+    cache_ = cache;
+    source_ = source;
+}
+
+void
+UncompressedSourceCache::AutoHoldEntry::deferDelete(UniqueTwoByteChars chars)
+{
+    // Take ownership of source chars now the cache is being purged. Remove our
+    // reference to the ScriptSource which might soon be destroyed.
+    MOZ_ASSERT(cache_ && source_ && !charsToFree_);
+    cache_ = nullptr;
+    source_ = nullptr;
+    charsToFree_ = Move(chars);
+}
+
+UncompressedSourceCache::AutoHoldEntry::~AutoHoldEntry()
+{
+    if (cache_) {
+        MOZ_ASSERT(source_);
+        cache_->releaseEntry(*this);
+    }
+}
+
+void
+UncompressedSourceCache::holdEntry(AutoHoldEntry& holder, ScriptSource* ss)
+{
+    MOZ_ASSERT(!holder_);
+    holder.holdEntry(this, ss);
+    holder_ = &holder;
+}
+
+void
+UncompressedSourceCache::releaseEntry(AutoHoldEntry& holder)
+{
+    MOZ_ASSERT(holder_ == &holder);
+    holder_ = nullptr;
+}
+
+const char16_t*
+UncompressedSourceCache::lookup(ScriptSource* ss, AutoHoldEntry& holder)
+{
+    MOZ_ASSERT(!holder_);
     if (!map_)
-        return mozilla::Nothing();
-    if (Map::Ptr p = map_->lookup(ss))
-        return mozilla::Some(p->value().clone());
-    return mozilla::Nothing();
+        return nullptr;
+    if (Map::Ptr p = map_->lookup(ss)) {
+        holdEntry(holder, ss);
+        return p->value().get();
+    }
+    return nullptr;
 }
 
 bool
-UncompressedSourceCache::put(ScriptSource* ss, SharedImmutableTwoByteString&& str)
+UncompressedSourceCache::put(ScriptSource* ss, UniqueTwoByteChars str, AutoHoldEntry& holder)
 {
+    MOZ_ASSERT(!holder_);
+
     if (!map_) {
         UniquePtr<Map> map = MakeUnique<Map>();
         if (!map || !map->init())
@@ -1833,7 +1887,11 @@ UncompressedSourceCache::put(ScriptSource* ss, SharedImmutableTwoByteString&& st
         map_ = Move(map);
     }
 
-    return map_->put(ss, Move(str));
+    if (!map_->put(ss, Move(str)))
+        return false;
+
+    holdEntry(holder, ss);
+    return true;
 }
 
 void
@@ -1842,6 +1900,13 @@ UncompressedSourceCache::purge()
     if (!map_)
         return;
 
+    for (Map::Range r = map_->all(); !r.empty(); r.popFront()) {
+        if (holder_ && r.front().key() == holder_->source()) {
+            holder_->deferDelete(Move(r.front().value()));
+            holder_ = nullptr;
+        }
+    }
+
     map_.reset();
 }
 
@@ -1849,39 +1914,45 @@ size_t
 UncompressedSourceCache::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
 {
     size_t n = 0;
-    if (map_ && !map_->empty())
+    if (map_ && !map_->empty()) {
         n += map_->sizeOfIncludingThis(mallocSizeOf);
+        for (Map::Range r = map_->all(); !r.empty(); r.popFront())
+            n += mallocSizeOf(r.front().value().get());
+    }
     return n;
 }
 
-mozilla::Maybe<SharedImmutableTwoByteString>
-ScriptSource::sourceText(JSContext* cx)
+const char16_t*
+ScriptSource::chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holder)
 {
-    struct SourceTextMatcher
+    struct CharsMatcher
     {
-        using ReturnType = mozilla::Maybe<SharedImmutableTwoByteString>;
+        using ReturnType = const char16_t*;
 
         JSContext* cx;
         ScriptSource& ss;
+        UncompressedSourceCache::AutoHoldEntry& holder;
 
-        explicit SourceTextMatcher(JSContext* cx, ScriptSource& ss)
+        explicit CharsMatcher(JSContext* cx, ScriptSource& ss,
+                              UncompressedSourceCache::AutoHoldEntry& holder)
           : cx(cx)
           , ss(ss)
+          , holder(holder)
         { }
 
         ReturnType match(Uncompressed& u) {
-            return mozilla::Some(u.string.clone());
+            return u.string.chars();
         }
 
         ReturnType match(Compressed& c) {
-            if (auto decompressed = cx->runtime()->uncompressedSourceCache.lookup(&ss))
-                return mozilla::Some(mozilla::Move(*decompressed));
+            if (const char16_t* decompressed = cx->runtime()->uncompressedSourceCache.lookup(&ss, holder))
+                return decompressed;
 
             const size_t lengthWithNull = ss.length() + 1;
             UniqueTwoByteChars decompressed(js_pod_malloc<char16_t>(lengthWithNull));
             if (!decompressed) {
-                ReportOutOfMemory(cx);
-                return mozilla::Nothing();
+                JS_ReportOutOfMemory(cx);
+                return nullptr;
             }
 
             if (!DecompressString((const unsigned char*) ss.compressedData(),
@@ -1889,18 +1960,11 @@ ScriptSource::sourceText(JSContext* cx)
                                   reinterpret_cast<unsigned char*>(decompressed.get()),
                                   lengthWithNull * sizeof(char16_t)))
             {
-                ReportOutOfMemory(cx);
-                return mozilla::Nothing();
+                JS_ReportOutOfMemory(cx);
+                return nullptr;
             }
 
             decompressed[ss.length()] = 0;
-
-            auto& strings = cx->runtime()->sharedImmutableStrings();
-            auto deduped = strings.getOrCreate(mozilla::Move(decompressed), ss.length());
-            if (!deduped) {
-                ReportOutOfMemory(cx);
-                return mozilla::Nothing();
-            }
 
             // Decompressing a huge script is expensive. With lazy parsing and
             // relazification, this can happen repeatedly, so conservatively go
@@ -1908,25 +1972,31 @@ ScriptSource::sourceText(JSContext* cx)
             // time yo-yoing back and forth between compressed and uncompressed.
             const size_t HUGE_SCRIPT = 5 * 1024 * 1024;
             if (lengthWithNull > HUGE_SCRIPT) {
-                ss.data = SourceType(Uncompressed(deduped->clone()));
-                return mozilla::Some(mozilla::Move(*deduped));
+                auto& strings = cx->runtime()->sharedImmutableStrings();
+                auto str = strings.getOrCreate(mozilla::Move(decompressed), ss.length());
+                if (!str) {
+                    JS_ReportOutOfMemory(cx);
+                    return nullptr;
+                }
+                ss.data = SourceType(Uncompressed(mozilla::Move(*str)));
+                return ss.uncompressedChars();
             }
 
-            if (!cx->runtime()->uncompressedSourceCache.put(&ss, deduped->clone())) {
-                ReportOutOfMemory(cx);
-                return mozilla::Nothing();
+            ReturnType ret = decompressed.get();
+            if (!cx->runtime()->uncompressedSourceCache.put(&ss, Move(decompressed), holder)) {
+                JS_ReportOutOfMemory(cx);
+                return nullptr;
             }
-
-            return mozilla::Some(mozilla::Move(*deduped));
+            return ret;
         }
 
         ReturnType match(Missing&) {
-            MOZ_CRASH("ScriptSource::sourceText() on ScriptSource with SourceType = Missing");
-            return mozilla::Nothing();
+            MOZ_CRASH("ScriptSource::chars() on ScriptSource with SourceType = Missing");
+            return nullptr;
         }
     };
 
-    SourceTextMatcher cm(cx, *this);
+    CharsMatcher cm(cx, *this, holder);
     return data.match(cm);
 }
 
@@ -1934,20 +2004,22 @@ JSFlatString*
 ScriptSource::substring(JSContext* cx, uint32_t start, uint32_t stop)
 {
     MOZ_ASSERT(start <= stop);
-    auto text = sourceText(cx);
-    if (!text)
+    UncompressedSourceCache::AutoHoldEntry holder;
+    const char16_t* chars = this->chars(cx, holder);
+    if (!chars)
         return nullptr;
-    return NewStringCopyN<CanGC>(cx, text->chars() + start, stop - start);
+    return NewStringCopyN<CanGC>(cx, chars + start, stop - start);
 }
 
 JSFlatString*
 ScriptSource::substringDontDeflate(JSContext* cx, uint32_t start, uint32_t stop)
 {
     MOZ_ASSERT(start <= stop);
-    auto text = sourceText(cx);
-    if (!text)
+    UncompressedSourceCache::AutoHoldEntry holder;
+    const char16_t* chars = this->chars(cx, holder);
+    if (!chars)
         return nullptr;
-    return NewStringCopyNDontDeflate<CanGC>(cx, text->chars() + start, stop - start);
+    return NewStringCopyNDontDeflate<CanGC>(cx, chars + start, stop - start);
 }
 
 MOZ_MUST_USE bool
@@ -4396,17 +4468,19 @@ LazyScriptHashPolicy::match(JSScript* script, const Lookup& lookup)
         return false;
     }
 
-    auto scriptText = script->scriptSource()->sourceText(cx);
-    if (!scriptText)
+    UncompressedSourceCache::AutoHoldEntry holder;
+
+    const char16_t* scriptChars = script->scriptSource()->chars(cx, holder);
+    if (!scriptChars)
         return false;
 
-    auto lazyText = lazy->scriptSource()->sourceText(cx);
-    if (!lazyText)
+    const char16_t* lazyChars = lazy->scriptSource()->chars(cx, holder);
+    if (!lazyChars)
         return false;
 
     size_t begin = script->sourceStart();
     size_t length = script->sourceEnd() - begin;
-    return !memcmp(scriptText->chars() + begin, lazyText->chars() + begin, length);
+    return !memcmp(scriptChars + begin, lazyChars + begin, length);
 }
 
 void
