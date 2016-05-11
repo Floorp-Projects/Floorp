@@ -3125,9 +3125,9 @@ Widgets.ObjectRenderers.add({
       fragment.appendChild(this.el("span.cm-attribute", nodeName));
     }
 
-    this._text("=", fragment);
-    fragment.appendChild(this.el("span.console-string",
-                                 '"' + escapeHTML(value) + '"'));
+    this._text("=\"", fragment);
+    fragment.appendChild(this.el("span.theme-fg-color6", escapeHTML(value)));
+    this._text("\"", fragment);
 
     return fragment;
   },
@@ -3203,8 +3203,8 @@ Widgets.ObjectRenderers.add({
 
     this.element = this.el("span." + "kind-" + this.objectActor.preview.kind + ".elementNode");
 
+    this._text("<");
     let openTag = this.el("span.cm-tag");
-    openTag.textContent = "<";
     this.element.appendChild(openTag);
 
     let tagName = this._anchor(nodeName, {
@@ -3226,9 +3226,7 @@ Widgets.ObjectRenderers.add({
       }
     }
 
-    let closeTag = this.el("span.cm-tag");
-    closeTag.textContent = ">";
-    this.element.appendChild(closeTag);
+    this._text(">");
 
     // Register this widget in the owner message so that it gets destroyed when
     // the message is destroyed.
