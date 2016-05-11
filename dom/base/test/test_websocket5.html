@@ -21,7 +21,6 @@ var tests = [
   test47, // Make sure onerror/onclose aren't called during close()
   test48, // see bug 1227136 - client calls close() from onopen() and waits
           // until WebSocketChannel::mSocketIn is nulled out on socket thread
-  test49, // Test that we fail if subprotocol returned from server doesn't match 
 ];
 
 function testWebSocket() {
