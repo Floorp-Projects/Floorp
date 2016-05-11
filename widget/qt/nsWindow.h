@@ -254,6 +254,7 @@ private:
         bool needDispatch;
     } MozCachedMoveEvent;
 
+    nsIWidgetListener* GetPaintListener();
     bool               CheckForRollup(double aMouseX, double aMouseY, bool aIsWheel);
     void*              SetupPluginPort(void);
     nsresult           SetWindowIconList(const nsTArray<nsCString> &aIconList);
