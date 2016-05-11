@@ -644,6 +644,9 @@ ContentChild::Init(MessageLoop* aIOLoop,
   abortOnError &= !IsNuwaProcess();
 #endif
   GetIPCChannel()->SetAbortOnError(abortOnError);
+#if defined(XP_WIN) && defined(ACCESSIBILITY)
+  GetIPCChannel()->SetChannelFlags(MessageChannel::REQUIRE_A11Y_REENTRY);
+#endif
 
 #ifdef MOZ_X11
   // Send the parent our X socket to act as a proxy reference for our X
