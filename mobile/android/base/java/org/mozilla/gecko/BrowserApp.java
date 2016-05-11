@@ -9,6 +9,7 @@ import android.Manifest;
 import android.app.DownloadManager;
 import android.os.Environment;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 import org.json.JSONArray;
 import org.mozilla.gecko.adjust.AdjustHelperInterface;
@@ -78,6 +79,7 @@ import org.mozilla.gecko.tabs.TabHistoryController.OnShowTabHistory;
 import org.mozilla.gecko.tabs.TabHistoryFragment;
 import org.mozilla.gecko.tabs.TabHistoryPage;
 import org.mozilla.gecko.tabs.TabsPanel;
+import org.mozilla.gecko.telemetry.measurements.SearchCountMeasurements;
 import org.mozilla.gecko.telemetry.TelemetryDispatcher;
 import org.mozilla.gecko.telemetry.UploadTelemetryCorePingCallback;
 import org.mozilla.gecko.toolbar.AutocompleteHandler;
@@ -1954,7 +1956,8 @@ public class BrowserApp extends GeckoApp
 
             } else if (event.equals("Search:Keyword")) {
                 storeSearchQuery(message.getString("query"));
-                recordSearch(message.getString("identifier"), TelemetryContract.Method.ACTIONBAR);
+                recordSearch(GeckoSharedPrefs.forProfile(this), message.getString("identifier"),
+                        TelemetryContract.Method.ACTIONBAR);
             } else if (event.equals("LightweightTheme:Update")) {
                 ThreadUtils.postToUiThread(new Runnable() {
                     @Override
@@ -2379,6 +2382,7 @@ public class BrowserApp extends GeckoApp
         }
 
         // Otherwise, check for a bookmark keyword.
+        final SharedPreferences sharedPrefs = GeckoSharedPrefs.forProfile(this);
         final BrowserDB db = getProfile().getDB();
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
@@ -2422,13 +2426,14 @@ public class BrowserApp extends GeckoApp
     /**
      * Records in telemetry that a search has occurred.
      *
-     * @param where where the search was started from.
+     * @param where where the search was started from
      */
-    private static void recordSearch(@NonNull final String engineIdentifier,
+    private static void recordSearch(@NonNull final SharedPreferences prefs, @NonNull final String engineIdentifier,
             @NonNull final TelemetryContract.Method where) {
         // We could include the engine identifier as an extra but we'll
         // just capture that with core ping telemetry (bug 1253319).
         Telemetry.sendUIEvent(TelemetryContract.Event.SEARCH, where);
+        SearchCountMeasurements.incrementSearch(prefs, engineIdentifier, where.name());
     }
 
     /**
@@ -3884,7 +3889,7 @@ public class BrowserApp extends GeckoApp
         if (!Tabs.getInstance().getSelectedTab().isPrivate()) {
             storeSearchQuery(text);
         }
-        recordSearch(engine.getEngineIdentifier(), method);
+        recordSearch(GeckoSharedPrefs.forProfile(this), engine.getEngineIdentifier(), method);
         openUrlAndStopEditing(text, engine.name);
     }
 
