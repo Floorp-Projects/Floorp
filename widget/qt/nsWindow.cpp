@@ -861,17 +861,27 @@ nsWindow::SetTitle(const nsAString& aTitle)
 
 // EVENTS
 
+nsIWidgetListener*
+nsWindow::GetPaintListener()
+{
+    return mAttachedWidgetListener ? mAttachedWidgetListener : mWidgetListener;
+}
+
 void
 nsWindow::OnPaint()
 {
     LOGDRAW(("nsWindow::%s [%p]\n", __FUNCTION__, (void *)this));
-    nsIWidgetListener* listener =
-        mAttachedWidgetListener ? mAttachedWidgetListener : mWidgetListener;
+    nsIWidgetListener* listener = GetPaintListener();
     if (!listener) {
         return;
     }
 
     listener->WillPaintWindow(this);
+
+    nsIWidgetListener* listener = GetPaintListener();
+    if (!listener) {
+        return;
+    }
 
     switch (GetLayerManager()->GetBackendType()) {
         case mozilla::layers::LayersBackend::LAYERS_CLIENT: {
@@ -882,6 +892,11 @@ nsWindow::OnPaint()
         }
         default:
             NS_ERROR("Invalid layer manager");
+    }
+
+    nsIWidgetListener* listener = GetPaintListener();
+    if (!listener) {
+        return;
     }
 
     listener->DidPaintWindow();
