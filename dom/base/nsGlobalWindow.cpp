@@ -3421,6 +3421,16 @@ nsGlobalWindow::AreDialogsEnabled()
     }
   }
 
+  // Dialogs are also blocked if the document is sandboxed with SANDBOXED_MODALS
+  // (or if we have no document, of course).  Which document?  Who knows; the
+  // spec is daft.  See <https://github.com/whatwg/html/issues/1206>.  For now
+  // just go ahead and check mDoc, since in everything except edge cases in
+  // which a frame is allow-same-origin but not allow-scripts and is being poked
+  // at by some other window this should be the right thing anyway.
+  if (!mDoc || (mDoc->GetSandboxFlags() & SANDBOXED_MODALS)) {
+    return false;
+  }
+
   return topWindow->mAreDialogsEnabled;
 }
 
@@ -14398,6 +14408,35 @@ nsGlobalWindow::CheckForDPIChange()
         presContext->UIResolutionChanged();
       }
     }
+  }
+}
+
+nsGlobalWindow::TemporarilyDisableDialogs::TemporarilyDisableDialogs(
+  nsGlobalWindow* aWindow MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+{
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+
+  MOZ_ASSERT(aWindow);
+  nsGlobalWindow* topWindow = aWindow->GetScriptableTopInternal();
+  if (!topWindow) {
+    NS_ERROR("nsGlobalWindow::TemporarilyDisableDialogs used without a top "
+             "window?");
+    return;
+  }
+
+  // TODO: Warn if no top window?
+  topWindow = topWindow->GetCurrentInnerWindowInternal();
+  if (topWindow) {
+    mTopWindow = topWindow;
+    mSavedDialogsEnabled = mTopWindow->mAreDialogsEnabled;
+    mTopWindow->mAreDialogsEnabled = false;
+  }
+}
+
+nsGlobalWindow::TemporarilyDisableDialogs::~TemporarilyDisableDialogs()
+{
+  if (mTopWindow) {
+    mTopWindow->mAreDialogsEnabled = mSavedDialogsEnabled;
   }
 }
 

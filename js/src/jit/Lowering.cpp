@@ -4282,24 +4282,8 @@ LIRGenerator::visitSimdUnbox(MSimdUnbox* ins)
     MOZ_ASSERT(ins->input()->type() == MIRType::Object);
     MOZ_ASSERT(IsSimdType(ins->type()));
     LUse in = useRegister(ins->input());
-
-    BailoutKind kind;
-    switch (ins->type()) {
-      case MIRType::Bool32x4:
-        kind = Bailout_NonSimdBool32x4Input;
-        break;
-      case MIRType::Int32x4:
-        kind = Bailout_NonSimdInt32x4Input;
-        break;
-      case MIRType::Float32x4:
-        kind = Bailout_NonSimdFloat32x4Input;
-        break;
-      default:
-        MOZ_CRASH("Unexpected SIMD Type.");
-    }
-
     LSimdUnbox* lir = new(alloc()) LSimdUnbox(in, temp());
-    assignSnapshot(lir, kind);
+    assignSnapshot(lir, Bailout_UnexpectedSimdInput);
     define(lir, ins);
 }
 

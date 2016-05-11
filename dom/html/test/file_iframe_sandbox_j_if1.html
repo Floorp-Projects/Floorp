@@ -12,14 +12,14 @@
     try {
       window.showModalDialog("file_iframe_sandbox_k_if5.html");
     } catch(e) {
-      window.parent.ok_wrapper(false, "iframes sandboxed with allow-popups should be able to open a modal dialog");
+      window.parent.ok_wrapper(false, "iframes sandboxed with allow-popups and allow-modals should be able to open a modal dialog");
     }
 
     // Open a new window via showModalDialog().
     try {
       window.showModalDialog("file_iframe_sandbox_k_if7.html");
     } catch(e) {
-      window.parent.ok_wrapper(false, "iframes sandboxed with allow-popups should be able to open a modal dialog");
+      window.parent.ok_wrapper(false, "iframes sandboxed with allow-popups and allow-modals should be able to open a modal dialog");
     }
   }
 </script>
