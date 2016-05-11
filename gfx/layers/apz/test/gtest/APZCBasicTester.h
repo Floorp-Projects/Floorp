@@ -30,6 +30,7 @@ protected:
     tm = new TestAPZCTreeManager(mcc);
     apzc = new TestAsyncPanZoomController(0, mcc, tm, mGestureBehavior);
     apzc->SetFrameMetrics(TestFrameMetrics());
+    apzc->GetScrollMetadata().SetIsLayersIdRoot(true);
   }
 
   /**
