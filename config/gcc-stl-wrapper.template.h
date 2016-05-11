@@ -43,14 +43,12 @@
 
 #endif
 
-#if defined(DEBUG) && !defined(_GLIBCXX_DEBUG)
+// Don't enable debug mode with the clang plugin; clang doesn't recognize
+// the debug/ versions of the stdlib headers as being system headers, leading
+// to complaints about code that's out of our control.
+#if defined(DEBUG) && !defined(_GLIBCXX_DEBUG) && !defined(MOZ_CLANG_PLUGIN)
 // Enable checked iterators and other goodies
-//
-// FIXME/bug 551254: gcc's debug STL implementation requires -frtti.
-// Figure out how to resolve this with -fno-rtti.  Maybe build with
-// -frtti in DEBUG builds?
-//
-//  # define _GLIBCXX_DEBUG 1
+  # define _GLIBCXX_DEBUG 1
 #endif
 
 #pragma GCC visibility push(default)
