@@ -156,6 +156,7 @@ struct GMPCodecs {
 static GMPCodecs sGMPCodecs[] = {
   { "org.w3.clearkey", false, false },
   { "com.adobe.primetime", false, false },
+  { "com.widevine.alpha", false, false },
 };
 
 void
