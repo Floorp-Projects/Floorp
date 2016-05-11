@@ -1539,6 +1539,8 @@ KeyframeEffect::SetTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget)
     RefPtr<nsStyleContext> styleContext = GetTargetStyleContext();
     if (styleContext) {
       UpdateProperties(styleContext);
+    } else if (mEffectOptions.mSpacingMode == SpacingMode::paced) {
+      KeyframeUtils::ApplyDistributeSpacing(mKeyframes);
     }
 
     RequestRestyle(EffectCompositor::RestyleType::Layer);
@@ -1547,6 +1549,9 @@ KeyframeEffect::SetTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget)
     if (mAnimation) {
       nsNodeUtils::AnimationAdded(mAnimation);
     }
+  } else if (mEffectOptions.mSpacingMode == SpacingMode::paced) {
+    // New target is null, so fall back to distribute spacing.
+    KeyframeUtils::ApplyDistributeSpacing(mKeyframes);
   }
 }
 
