@@ -80,7 +80,6 @@ public:
   }
 
   void Close(nsresult reason);
-  void SetResponseIsComplete();
 
   void SetRecvdFin(bool aStatus);
   bool RecvdFin() { return mRecvdFin; }
