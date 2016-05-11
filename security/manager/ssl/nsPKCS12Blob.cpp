@@ -645,10 +645,9 @@ nsPKCS12Blob::nickname_collision(SECItem *oldNick, PRBool *cancel, void *wincx)
     // without a corresponding cert.
     //  XXX If a user imports *many* certs without the 'friendly name'
     //      attribute, then this may take a long time.  :(
+    nickname = nickFromPropC;
     if (count > 1) {
-      nickname.Adopt(PR_smprintf("%s #%d", nickFromPropC.get(), count));
-    } else {
-      nickname = nickFromPropC;
+      nickname.AppendPrintf(" #%d", count);
     }
     CERTCertificate *cert = CERT_FindCertByNickname(CERT_GetDefaultCertDB(),
                                            const_cast<char*>(nickname.get()));
