@@ -36,42 +36,54 @@ add_task(function* testInsecurePasswordWarning() {
   });
 
   for (let [origin, testFile, expectWarnings] of [
-    // Form action at 127.0.0.1/localhost is considered as a secure case.
-    // There should be no INSECURE_FORM_ACTION warning at 127.0.0.1/localhost.
-    // This will be fixed at Bug 1261234.
-    ["http://127.0.0.1", "form_basic.html", ["INSECURE_FORM_ACTION"]],
+    ["http://127.0.0.1", "form_basic.html", []],
     ["http://127.0.0.1", "formless_basic.html", []],
-    ["http://example.com", "form_basic.html", ["INSECURE_FORM_ACTION", "INSECURE_PAGE"]],
+    ["http://example.com", "form_basic.html", ["INSECURE_PAGE"]],
     ["http://example.com", "formless_basic.html", ["INSECURE_PAGE"]],
     ["https://example.com", "form_basic.html", []],
     ["https://example.com", "formless_basic.html", []],
+
+    // For a form with customized action link in the same origin.
+    ["http://127.0.0.1", "form_same_origin_action.html", []],
+    ["http://example.com", "form_same_origin_action.html", ["INSECURE_PAGE"]],
+    ["https://example.com", "form_same_origin_action.html", []],
+
+    // For a form with an insecure (http) customized action link.
+    ["http://127.0.0.1", "form_cross_origin_insecure_action.html", ["INSECURE_FORM_ACTION"]],
+    ["http://example.com", "form_cross_origin_insecure_action.html", ["INSECURE_PAGE"]],
+    ["https://example.com", "form_cross_origin_insecure_action.html", ["INSECURE_FORM_ACTION"]],
+
+    // For a form with a secure (https) customized action link.
+    ["http://127.0.0.1", "form_cross_origin_secure_action.html", []],
+    ["http://example.com", "form_cross_origin_secure_action.html", ["INSECURE_PAGE"]],
+    ["https://example.com", "form_cross_origin_secure_action.html", []],
   ]) {
-    let testUrlPath = origin + TEST_URL_PATH + testFile;
-    var promiseConsoleMessages = new Promise(resolve => {
+    let testURL = origin + TEST_URL_PATH + testFile;
+    let promiseConsoleMessages = new Promise(resolve => {
       warningPatternHandler = function (warning, originMessage) {
         ok(warning, "Handling a warning pattern");
-        let fullMessage = `[${warning.msg} {file: "${testUrlPath}" line: 0 column: 0 source: "0"}]`;
+        let fullMessage = `[${warning.msg} {file: "${testURL}" line: 0 column: 0 source: "0"}]`;
         is(originMessage, fullMessage, "Message full matched:" + originMessage);
 
         let index = expectWarnings.indexOf(warning.key);
-        isnot(index, -1, "Found warning: " + warning.key + " for URL:" + testUrlPath);
+        isnot(index, -1, "Found warning: " + warning.key + " for URL:" + testURL);
         if (index !== -1) {
           // Remove the shown message.
           expectWarnings.splice(index, 1);
         }
         if (expectWarnings.length === 0) {
-          info("All warnings are shown. URL:" + testUrlPath);
+          info("All warnings are shown for URL:" + testURL);
           resolve();
         }
-      }
+      };
     });
 
     yield BrowserTestUtils.withNewTab({
       gBrowser,
-      url: testUrlPath
+      url: testURL
     }, function*() {
       if (expectWarnings.length === 0) {
-        info("All warnings are shown. URL:" + testUrlPath);
+        info("All warnings are shown for URL:" + testURL);
         return Promise.resolve();
       }
       return promiseConsoleMessages;
