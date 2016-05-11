@@ -7283,7 +7283,7 @@ var Tabs = {
           if (isTopLevel && !targetURI.startsWith("about:")) {
             UITelemetry.addEvent("neterror.1", "toast", null, "usecache");
             Snackbars.show(
-              Strings.browser.GetStringFromName("networkOffline.message"),
+              Strings.browser.GetStringFromName("networkOffline.message2"),
               Snackbars.LENGTH_INDEFINITE,
               {
                 // link_blue
