@@ -543,10 +543,12 @@ this.CrashSubmit = {
                             }
                           );
                         }
+                        return;
                       }
                     }
                   );
                 }
+                return;
               }
             ).then(
               function onSuccess() {
