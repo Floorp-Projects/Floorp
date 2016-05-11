@@ -288,16 +288,6 @@ protected:
   virtual ~MainThreadStopSyncLoopRunnable()
   { }
 
-  // Called on the worker thread, in WorkerRun, right before stopping the
-  // syncloop to set an exception (however subclasses want to handle that) if
-  // mResult is false.  Note that overrides of this method must NOT set an
-  // actual exception on the JSContext; they may only set some state that will
-  // get turned into an exception once the syncloop actually terminates and
-  // control is returned to whoever was spinning the syncloop.
-  virtual void
-  MaybeSetException()
-  { }
-
 private:
   virtual bool
   PreDispatch(WorkerPrivate* aWorkerPrivate) override final
