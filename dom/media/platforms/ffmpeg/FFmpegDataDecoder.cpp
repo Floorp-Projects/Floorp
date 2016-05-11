@@ -22,7 +22,7 @@ namespace mozilla
 StaticMutex FFmpegDataDecoder<LIBAV_VER>::sMonitor;
 
   FFmpegDataDecoder<LIBAV_VER>::FFmpegDataDecoder(FFmpegLibWrapper* aLib,
-                                                  FlushableTaskQueue* aTaskQueue,
+                                                  TaskQueue* aTaskQueue,
                                                   MediaDataDecoderCallback* aCallback,
                                                   AVCodecID aCodecID)
   : mLib(aLib)
