@@ -78,3 +78,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     OBJDIR_FILES.dist.plugins['%s.plugin' % cocoa_name].Contents += ['%s/Info.plist' % relative_path]
 else:
     FINAL_TARGET = 'dist/plugins'
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']

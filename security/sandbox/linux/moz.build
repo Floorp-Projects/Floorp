@@ -82,6 +82,9 @@ SOURCES['../chromium/base/strings/safe_sprintf.cc'].flags += ['-DNDEBUG']
 if CONFIG['CLANG_CXX']:
     SOURCES['../chromium/base/third_party/icu/icu_utf.cc'].flags += ['-Wno-implicit-fallthrough']
 
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-shadow']
+
 # gcc lto likes to put the top level asm in syscall.cc in a different partition
 # from the function using it which breaks the build.  Work around that by
 # forcing there to be only one partition.

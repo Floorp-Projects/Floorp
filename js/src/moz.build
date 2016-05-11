@@ -765,6 +765,9 @@ if CONFIG['JS_HAS_CTYPES']:
         # Windows needs this to be linked with a static library.
         DEFINES['FFI_BUILDING'] = True
 
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-shadow']
+
 # Suppress warnings in third-party code.
 if CONFIG['CLANG_CXX']:
     SOURCES['jsdtoa.cpp'].flags += ['-Wno-implicit-fallthrough']

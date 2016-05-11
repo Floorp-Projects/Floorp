@@ -22,3 +22,5 @@ XPCSHELL_TESTS_MANIFESTS += [
     'xpcshell.ini',
 ]
 
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']

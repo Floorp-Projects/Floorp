@@ -151,3 +151,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     LOCAL_INCLUDES += [
         '/dom/wifi',
     ]
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']

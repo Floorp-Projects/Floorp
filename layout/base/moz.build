@@ -209,3 +209,6 @@ if CONFIG['_MSC_VER']:
     # This is intended as a temporary hack to support building with VS2015.
     # 'type cast': conversion from 'unsigned int' to 'void *' of greater size
     CXXFLAGS += ['-wd4312']
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']
