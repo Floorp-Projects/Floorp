@@ -57,6 +57,7 @@
 #include "nsPIWindowWatcher.h"
 #include "nsIPrompt.h"
 #include "nsITabParent.h"
+#include "nsITabChild.h"
 #include "nsRect.h"
 #include "nsIWebBrowserChromeFocus.h"
 #include "nsIContent.h"
@@ -455,6 +456,19 @@ nsDocShellTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
   }
 
   if (aShellItem == mWebBrowser->mDocShell) {
+    nsCOMPtr<nsITabChild> tabChild = do_QueryInterface(webBrowserChrome);
+    if (tabChild) {
+      // The XUL window to resize is in the parent process, but there we
+      // won't be able to get aShellItem to do the hack in nsXULWindow::SizeShellTo,
+      // so let's send the width and height of aShellItem too.
+      nsCOMPtr<nsIBaseWindow> shellAsWin(do_QueryInterface(aShellItem));
+      NS_ENSURE_TRUE(shellAsWin, NS_ERROR_FAILURE);
+
+      int32_t width = 0;
+      int32_t height = 0;
+      shellAsWin->GetSize(&width, &height);
+      return tabChild->RemoteSizeShellTo(aCX, aCY, width, height);
+    }
     return webBrowserChrome->SizeBrowserTo(aCX, aCY);
   }
 
@@ -578,7 +592,8 @@ NS_IMETHODIMP
 nsDocShellTreeOwner::SetPositionDesktopPix(int32_t aX, int32_t aY)
 {
   if (mWebBrowser) {
-    return mWebBrowser->SetPositionDesktopPix(aX, aY);
+    nsresult rv = mWebBrowser->SetPositionDesktopPix(aX, aY);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   double scale = 1.0;

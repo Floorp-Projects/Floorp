@@ -47,6 +47,35 @@ interface nsIEmbeddingSiteWindow : nsISupports
     const unsigned long DIM_FLAGS_SIZE_OUTER = 4;
 
     /**
+     * Flag indicates that the x parameter should be ignored.
+     *
+     * @see setDimensions
+     */
+    const unsigned long DIM_FLAGS_IGNORE_X = 8;
+
+    /**
+     * Flag indicates that the y parameter should be ignored.
+     *
+     * @see setDimensions
+     */
+    const unsigned long DIM_FLAGS_IGNORE_Y = 16;
+
+    /**
+     * Flag indicates that the cx parameter should be ignored.
+     *
+     * @see setDimensions
+     */
+    const unsigned long DIM_FLAGS_IGNORE_CX = 32;
+
+    /**
+     * Flag indicates that the cy parameter should be ignored.
+     *
+     * @see setDimensions
+     */
+    const unsigned long DIM_FLAGS_IGNORE_CY = 64;
+
+
+    /**
      * Sets the dimensions for the window; the position & size. The
      * flags to indicate what the caller wants to set and whether the size
      * refers to the inner or outer area. The inner area refers to just
@@ -54,6 +83,9 @@ interface nsIEmbeddingSiteWindow : nsISupports
      * surrounding chrome, window frame, title bar, and so on.
      *
      * @param flags  Combination of position, inner and outer size flags.
+     *               The ignore flags are telling the parent to use the
+     *               current values for those dimensions and ignore the
+     *               corresponding parameters the child sends.
      * @param x      Left hand corner of the outer area.
      * @param y      Top corner of the outer area.
      * @param cx     Width of the inner or outer area.
