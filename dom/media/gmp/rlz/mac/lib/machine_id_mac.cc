@@ -8,6 +8,7 @@
 #include <IOKit/network/IOEthernetInterface.h>
 #include <IOKit/network/IONetworkInterface.h>
 #include <vector>
+#include <string>
 
 // Note: The original machine_id_mac.cc code is in namespace rlz_lib below.
 // It depends on some external files, which would bring in a log of Chromium
