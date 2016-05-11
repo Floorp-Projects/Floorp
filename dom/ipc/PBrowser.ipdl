@@ -506,6 +506,8 @@ parent:
      */
     sync GetTabCount() returns (uint32_t value);
 
+    async AccessKeyNotHandled(WidgetKeyboardEvent event);
+
 child:
     async NativeSynthesisResponse(uint64_t aObserverId, nsCString aResponse);
 
@@ -746,11 +748,12 @@ child:
      * A potential accesskey was just pressed. Look for accesskey targets
      * using the list of provided charCodes.
      *
-     * @param charCode array of potential character codes
+     * @param event keyboard event
      * @param isTrusted true if triggered by a trusted key event
      * @param modifierMask indicates which accesskey modifiers are pressed
      */
-    async HandleAccessKey(uint32_t[] charCodes, bool isTrusted, int32_t modifierMask);
+    async HandleAccessKey(WidgetKeyboardEvent event,
+                          uint32_t[] charCodes, int32_t modifierMask);
 
     /**
      * Propagate a refresh to the child process

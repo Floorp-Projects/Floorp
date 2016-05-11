@@ -174,6 +174,9 @@ public:
   virtual bool
   RecvDispatchAfterKeyboardEvent(const WidgetKeyboardEvent& aEvent) override;
 
+  virtual bool
+  RecvAccessKeyNotHandled(const WidgetKeyboardEvent& aEvent) override;
+
   virtual bool RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
                                           PRenderFrameParent* aRenderFrame,
                                           const nsString& aURL,
@@ -364,8 +367,8 @@ public:
 
   void ThemeChanged();
 
-  void HandleAccessKey(nsTArray<uint32_t>& aCharCodes,
-                       const bool& aIsTrusted,
+  void HandleAccessKey(const WidgetKeyboardEvent& aEvent,
+                       nsTArray<uint32_t>& aCharCodes,
                        const int32_t& aModifierMask);
 
   void Activate();

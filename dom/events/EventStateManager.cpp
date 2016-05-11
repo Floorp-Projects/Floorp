@@ -732,15 +732,18 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         modifierMask |= NS_MODIFIER_OS;
 
       // Prevent keyboard scrolling while an accesskey modifier is in use.
-      if (modifierMask &&
-          (modifierMask == Prefs::ChromeAccessModifierMask() ||
-           modifierMask == Prefs::ContentAccessModifierMask())) {
-        AutoTArray<uint32_t, 10> accessCharCodes;
-        keyEvent->GetAccessKeyCandidates(accessCharCodes);
+      if (modifierMask) {
+        bool matchesContentAccessKey = (modifierMask == Prefs::ContentAccessModifierMask());
+        
+        if (modifierMask == Prefs::ChromeAccessModifierMask() ||
+            matchesContentAccessKey) {
+          AutoTArray<uint32_t, 10> accessCharCodes;
+          keyEvent->GetAccessKeyCandidates(accessCharCodes);
 
-        if (HandleAccessKey(aPresContext, accessCharCodes,
-                            keyEvent->IsTrusted(), modifierMask)) {
-          *aStatus = nsEventStatus_eConsumeNoDefault;
+          if (HandleAccessKey(keyEvent, aPresContext, accessCharCodes,
+                              modifierMask, matchesContentAccessKey)) {
+            *aStatus = nsEventStatus_eConsumeNoDefault;
+          }
         }
       }
     }
@@ -1036,21 +1039,21 @@ EventStateManager::GetAccessKeyLabelPrefix(Element* aElement, nsAString& aPrefix
   }
 }
 
-struct AccessKeyInfo
+struct MOZ_STACK_CLASS AccessKeyInfo
 {
+  WidgetKeyboardEvent* event;
   nsTArray<uint32_t>& charCodes;
-  bool isTrusted;
   int32_t modifierMask;
 
-  AccessKeyInfo(nsTArray<uint32_t>& aCharCodes, bool aIsTrusted, int32_t aModifierMask)
-    : charCodes(aCharCodes)
-    , isTrusted(aIsTrusted)
+  AccessKeyInfo(WidgetKeyboardEvent* aEvent, nsTArray<uint32_t>& aCharCodes, int32_t aModifierMask)
+    : event(aEvent)
+    , charCodes(aCharCodes)
     , modifierMask(aModifierMask)
   {
   }
 };
 
-static void
+static bool
 HandleAccessKeyInRemoteChild(TabParent* aTabParent, void* aArg)
 {
   AccessKeyInfo* accessKeyInfo = static_cast<AccessKeyInfo*>(aArg);
@@ -1059,15 +1062,21 @@ HandleAccessKeyInRemoteChild(TabParent* aTabParent, void* aArg)
   bool active;
   aTabParent->GetDocShellIsActive(&active);
   if (active) {
-    aTabParent->HandleAccessKey(accessKeyInfo->charCodes, accessKeyInfo->isTrusted,
+    accessKeyInfo->event->mAccessKeyForwardedToChild = true;
+    aTabParent->HandleAccessKey(*accessKeyInfo->event,
+                                accessKeyInfo->charCodes,
                                 accessKeyInfo->modifierMask);
+    return true;
   }
+
+  return false;
 }
 
 bool
-EventStateManager::HandleAccessKey(nsPresContext* aPresContext,
+EventStateManager::HandleAccessKey(WidgetKeyboardEvent* aEvent,
+                                   nsPresContext* aPresContext,
                                    nsTArray<uint32_t>& aAccessCharCodes,
-                                   bool aIsTrusted,
+                                   bool aMatchesContentAccessKey,
                                    nsIDocShellTreeItem* aBubbledFrom,
                                    ProcessingAccessKeyState aAccessKeyState,
                                    int32_t aModifierMask)
@@ -1082,7 +1091,7 @@ EventStateManager::HandleAccessKey(nsPresContext* aPresContext,
   if (mAccessKeys.Count() > 0 &&
       aModifierMask == GetAccessModifierMaskFor(docShell)) {
     // Someone registered an accesskey.  Find and activate it.
-    if (ExecuteAccessKey(aAccessCharCodes, aIsTrusted)) {
+    if (ExecuteAccessKey(aAccessCharCodes, aEvent->IsTrusted())) {
       return true;
     }
   }
@@ -1115,7 +1124,8 @@ EventStateManager::HandleAccessKey(nsPresContext* aPresContext,
         static_cast<EventStateManager*>(subPC->EventStateManager());
 
       if (esm &&
-          esm->HandleAccessKey(subPC, aAccessCharCodes, aIsTrusted, nullptr,
+          esm->HandleAccessKey(aEvent, subPC, aAccessCharCodes,
+                               aMatchesContentAccessKey, nullptr,
                                eAccessKeyProcessingDown, aModifierMask)) {
         return true;
       }
@@ -1137,22 +1147,27 @@ EventStateManager::HandleAccessKey(nsPresContext* aPresContext,
       EventStateManager* esm =
         static_cast<EventStateManager*>(parentPC->EventStateManager());
       if (esm &&
-          esm->HandleAccessKey(parentPC, aAccessCharCodes, aIsTrusted, docShell,
-                               eAccessKeyProcessingUp, aModifierMask)) {
+          esm->HandleAccessKey(aEvent, parentPC, aAccessCharCodes,
+                               aMatchesContentAccessKey, docShell,
+                               eAccessKeyProcessingDown, aModifierMask)) {
         return true;
       }
     }
   }// if end. bubble up process
 
-  // Now try remote children
-  if (mDocument && mDocument->GetWindow()) {
+  // If the content access key modifier is pressed, try remote children
+  if (aMatchesContentAccessKey && mDocument && mDocument->GetWindow()) {
     // If the focus is currently on a node with a TabParent, the key event will
     // get forwarded to the child process and HandleAccessKey called from there.
     // If focus is somewhere else, then we need to check the remote children.
     nsFocusManager* fm = nsFocusManager::GetFocusManager();
     nsIContent* focusedContent = fm ? fm->GetFocusedContent() : nullptr;
-    if (!TabParent::GetFrom(focusedContent)) {
-      AccessKeyInfo accessKeyInfo(aAccessCharCodes, aIsTrusted, aModifierMask);
+    if (TabParent::GetFrom(focusedContent)) {
+      // A remote child process is focused. The key event should get sent to
+      // the child process.
+      aEvent->mAccessKeyForwardedToChild = true;
+    } else {
+      AccessKeyInfo accessKeyInfo(aEvent, aAccessCharCodes, aModifierMask);
       nsContentUtils::CallOnAllRemoteChildren(mDocument->GetWindow(),
                                               HandleAccessKeyInRemoteChild, &accessKeyInfo);
     }
