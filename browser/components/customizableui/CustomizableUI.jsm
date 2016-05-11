@@ -151,7 +151,6 @@ var gListeners = new Set();
 var gUIStateBeforeReset = {
   uiCustomizationState: null,
   drawInTitlebar: null,
-  gUIStateBeforeReset: null,
 };
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {

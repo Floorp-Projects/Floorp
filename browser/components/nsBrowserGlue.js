@@ -108,6 +108,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
 XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerParent",
                                   "resource://gre/modules/LoginManagerParent.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
+                                  "resource://gre/modules/LoginHelper.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "SimpleServiceDiscovery",
                                   "resource://gre/modules/SimpleServiceDiscovery.jsm");
 
@@ -1831,7 +1834,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 37;
+    const UI_VERSION = 38;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
 
     let currentUIVersion;
@@ -2197,6 +2200,9 @@ BrowserGlue.prototype = {
       Services.prefs.clearUserPref("browser.sessionstore.restore_on_demand");
     }
 
+    if (currentUIVersion < 38) {
+      LoginHelper.removeLegacySignonFiles();
+    }
     // Update the migration version.
     Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
   },

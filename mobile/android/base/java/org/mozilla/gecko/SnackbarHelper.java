@@ -9,11 +9,13 @@ import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.NativeJSObject;
 
 import android.app.Activity;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.InsetDrawable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.TextView;
@@ -30,6 +32,7 @@ public class SnackbarHelper {
      * interface or class.
      */
     public static abstract class SnackbarCallback extends Snackbar.Callback implements View.OnClickListener {}
+    public static final String LOGTAG = "GeckoSnackbarHelper";
 
     /**
      * SnackbarCallback implementation for delegating snackbar events to an EventCallback.
@@ -83,13 +86,28 @@ public class SnackbarHelper {
         final String message = object.getString("message");
         final int duration = object.getInt("duration");
 
+        Integer backgroundColor = null;
+
+        if (object.has("backgroundColor")) {
+            final String providedColor = object.getString("backgroundColor");
+            try {
+                backgroundColor = Color.parseColor(providedColor);
+            } catch (IllegalArgumentException e) {
+                Log.w(LOGTAG, "Failed to parse color string: " + providedColor);
+            }
+        }
+
         NativeJSObject action = object.optObject("action", null);
 
-        showSnackbarWithAction(activity,
+        showSnackbarWithActionAndColors(activity,
                 message,
                 duration,
                 action != null ? action.optString("label", null) : null,
-                new SnackbarHelper.SnackbarEventCallback(callback));
+                new SnackbarHelper.SnackbarEventCallback(callback),
+                null,
+                backgroundColor,
+                null
+        );
     }
 
     /**
