@@ -1242,29 +1242,3 @@ function test48() {
     SpecialPowers.clearUserPref(pref_close);
   });
 }
-
-function test49()
-{
-  return new Promise(function(resolve, reject) {
-    var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-49");
-    var gotError = 0;
-    ok(ws.readyState == 0, "create bad readyState in test-49!");
-
-    ws.onopen = function()
-    {
-      ok(false, "Connection must fail in test-49")
-    }
-
-    ws.onerror = function(e)
-    {
-      gotError = 1
-    }
-
-    ws.onclose = function(e)
-    {
-      ok(gotError, "Should get error in test-49!");
-      resolve();
-    }
-  });
-}
-
