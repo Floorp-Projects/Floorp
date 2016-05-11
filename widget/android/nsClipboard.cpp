@@ -97,7 +97,14 @@ nsClipboard::HasDataMatchingFlavors(const char **aFlavorList,
   *aHasText = false;
   if (aWhichClipboard != kGlobalClipboard)
     return NS_ERROR_NOT_IMPLEMENTED;
-  *aHasText = widget::Clipboard::HasText();
+
+  for (uint32_t k = 0; k < aLength; k++) {
+    if (strcmp(aFlavorList[k], kUnicodeMime) == 0) {
+      *aHasText = widget::Clipboard::HasText();
+      break;
+    }
+  }
+
   return NS_OK;
 }
 
