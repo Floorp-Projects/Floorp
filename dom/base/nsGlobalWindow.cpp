@@ -14401,6 +14401,35 @@ nsGlobalWindow::CheckForDPIChange()
   }
 }
 
+nsGlobalWindow::TemporarilyDisableDialogs::TemporarilyDisableDialogs(
+  nsGlobalWindow* aWindow MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+{
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+
+  MOZ_ASSERT(aWindow);
+  nsGlobalWindow* topWindow = aWindow->GetScriptableTopInternal();
+  if (!topWindow) {
+    NS_ERROR("nsGlobalWindow::TemporarilyDisableDialogs used without a top "
+             "window?");
+    return;
+  }
+
+  // TODO: Warn if no top window?
+  topWindow = topWindow->GetCurrentInnerWindowInternal();
+  if (topWindow) {
+    mTopWindow = topWindow;
+    mSavedDialogsEnabled = mTopWindow->mAreDialogsEnabled;
+    mTopWindow->mAreDialogsEnabled = false;
+  }
+}
+
+nsGlobalWindow::TemporarilyDisableDialogs::~TemporarilyDisableDialogs()
+{
+  if (mTopWindow) {
+    mTopWindow->mAreDialogsEnabled = mSavedDialogsEnabled;
+  }
+}
+
 template class nsPIDOMWindow<mozIDOMWindowProxy>;
 template class nsPIDOMWindow<mozIDOMWindow>;
 template class nsPIDOMWindow<nsISupports>;
