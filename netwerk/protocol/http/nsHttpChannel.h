@@ -539,11 +539,6 @@ private:
     // True if CORS preflight has been performed
     uint32_t                          mIsCorsPreflightDone : 1;
 
-    // if the http transaction was performed (i.e. not cached) and
-    // the result in OnStopRequest was known to be correctly delimited
-    // by chunking, content-length, or h2 end-stream framing
-    uint32_t                          mStronglyFramed : 1;
-
     nsCOMPtr<nsIChannel>              mPreflightChannel;
 
     nsTArray<nsContinueRedirectionFunc> mRedirectFuncStack;
