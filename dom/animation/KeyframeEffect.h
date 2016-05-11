@@ -389,6 +389,15 @@ protected:
 
   void RequestRestyle(EffectCompositor::RestyleType aRestyleType);
 
+  // Looks up the style context associated with the target element, if any.
+  // We need to be careful to *not* call this when we are updating the style
+  // context. That's because calling GetStyleContextForElement when we are in
+  // the process of building a style context may trigger various forms of
+  // infinite recursion.
+  // If aDoc is nullptr, we will use the owner doc of the target element.
+  already_AddRefed<nsStyleContext>
+  GetTargetStyleContext(nsIDocument* aDoc = nullptr);
+
   Maybe<OwningAnimationTarget> mTarget;
   RefPtr<Animation> mAnimation;
 
@@ -459,7 +468,7 @@ public:
 
   void NotifySpecifiedTimingUpdated();
 
-  // This method calls MaybeUpdateProperties which is not safe to use when
+  // This method calls GetTargetStyleContext which is not safe to use when
   // we are in the middle of updating style. If we need to use this when
   // updating style, we should pass the nsStyleContext into this method and use
   // that to update the properties rather than calling
@@ -468,12 +477,6 @@ public:
 
 protected:
   ~KeyframeEffect() override;
-
-  // We need to be careful to *not* call this when we are updating the style
-  // context. That's because calling GetStyleContextForElement when we are in
-  // the process of building a style context may trigger various forms of
-  // infinite recursion.
-  void MaybeUpdateProperties();
 };
 
 } // namespace dom
