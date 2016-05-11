@@ -2913,6 +2913,12 @@ EmitExpr(FunctionCompiler& f)
         return EmitRotate(f, ValType::I64, expr == Expr::I64Rotl);
       case Expr::I64Eqz:
         return EmitConversion<MNot>(f, ValType::I64, ValType::I32);
+      case Expr::I64Clz:
+        return EmitUnary<MClz>(f, ValType::I64);
+      case Expr::I64Ctz:
+        return EmitUnary<MCtz>(f, ValType::I64);
+      case Expr::I64Popcnt:
+        return EmitUnary<MPopcnt>(f, ValType::I64);
 
       // F32
       case Expr::F32Const: {
@@ -3194,9 +3200,6 @@ EmitExpr(FunctionCompiler& f)
       case Expr::I64Store16:
       case Expr::I64Store32:
       case Expr::I64Store:
-      case Expr::I64Clz:
-      case Expr::I64Ctz:
-      case Expr::I64Popcnt:
       case Expr::CurrentMemory:
       case Expr::GrowMemory:
         MOZ_CRASH("NYI");

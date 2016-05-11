@@ -213,9 +213,45 @@ if (hasI64()) {
     testComparison64('ge_s', 1, "0x8000000000000000", 1);
     testComparison64('ge_u', 1, "0x8000000000000000", 0);
 
-    //testUnary('i64', 'clz', 40, 58); // TODO: NYI
-    //testUnary('i64', 'ctz', 40, 0); // TODO: NYI
-    //testUnary('i64', 'popcnt', 40, 0); // TODO: NYI
+    testUnary('i64', 'clz', 40, 58);
+    testUnary('i64', 'clz', "0x8000000000000000", 0);
+    testUnary('i64', 'clz', "0x7fffffffffffffff", 1);
+    testUnary('i64', 'clz', "0x4000000000000000", 1);
+    testUnary('i64', 'clz', "0x3000000000000000", 2);
+    testUnary('i64', 'clz', "0x2000000000000000", 2);
+    testUnary('i64', 'clz', "0x1000000000000000", 3);
+    testUnary('i64', 'clz', "0x0030000000000000", 10);
+    testUnary('i64', 'clz', "0x0000800000000000", 16);
+    testUnary('i64', 'clz', "0x00000000ffffffff", 32);
+    testUnary('i64', 'clz', -1, 0);
+    testUnary('i64', 'clz', 0, 64);
+
+    testUnary('i64', 'ctz', 40, 3);
+    testUnary('i64', 'ctz', "0x8000000000000000", 63);
+    testUnary('i64', 'ctz', "0x7fffffffffffffff", 0);
+    testUnary('i64', 'ctz', "0x4000000000000000", 62);
+    testUnary('i64', 'ctz', "0x3000000000000000", 60);
+    testUnary('i64', 'ctz', "0x2000000000000000", 61);
+    testUnary('i64', 'ctz', "0x1000000000000000", 60);
+    testUnary('i64', 'ctz', "0x0030000000000000", 52);
+    testUnary('i64', 'ctz', "0x0000800000000000", 47);
+    testUnary('i64', 'ctz', "0x00000000ffffffff", 0);
+    testUnary('i64', 'ctz', -1, 0);
+    testUnary('i64', 'ctz', 0, 64);
+
+    testUnary('i64', 'popcnt', 40, 2);
+    testUnary('i64', 'popcnt', 0, 0);
+    testUnary('i64', 'popcnt', "0x8000000000000000", 1);
+    testUnary('i64', 'popcnt', "0x7fffffffffffffff", 63);
+    testUnary('i64', 'popcnt', "0x4000000000000000", 1);
+    testUnary('i64', 'popcnt', "0x3000000000000000", 2);
+    testUnary('i64', 'popcnt', "0x2000000000000000", 1);
+    testUnary('i64', 'popcnt', "0x1000000000000000", 1);
+    testUnary('i64', 'popcnt', "0x0030000000000000", 2);
+    testUnary('i64', 'popcnt', "0x0000800000000000", 1);
+    testUnary('i64', 'popcnt', "0x00000000ffffffff", 32);
+    testUnary('i64', 'popcnt', -1, 64);
+    testUnary('i64', 'popcnt', 0, 0);
 
     testI64Eqz(40, 0);
     testI64Eqz(0, 1);

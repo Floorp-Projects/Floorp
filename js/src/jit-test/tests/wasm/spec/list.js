@@ -6,7 +6,7 @@ specTests.push("block_comments.wast");
 specTests.push("block.wast");
 specTests.push("break-drop.wast");
 //specTests.push("conversions.wast");       // TODO custom NaN
-//specTests.push("endianness.wast");        // TODO i64 ops
+//specTests.push("endianness.wast");        // TODO i64 loads/stores
 //specTests.push("exports.wast");           // TODO real memory exports
 //specTests.push("f32_cmp.wast");           // TODO custom NaN
 //specTests.push("f32.wast");               // TODO f32.trunc
@@ -21,12 +21,12 @@ specTests.push("forward.wast");
 //specTests.push("func_ptrs.wast");         // TODO pass table index in bad indirect error message
 specTests.push("functions.wast");
 specTests.push("i32.wast");
-//specTests.push("i64.wast");               // TODO i64 ops
+specTests.push("i64.wast");
 specTests.push("imports.wast");
 specTests.push("int_exprs.wast");
 specTests.push("int_literals.wast");
 //specTests.push("labels.wast");            // TODO br_if value/cond
-//specTests.push("left-to-right.wast");     // TODO i64 ops
+//specTests.push("left-to-right.wast");     // TODO i64 loads/stores
 specTests.push("memory_redundancy.wast");
 //specTests.push("memory_trap.wast");       // TODO current_memory opcode
 //specTests.push("memory.wast");            // TODO alignment
@@ -36,7 +36,7 @@ specTests.push("names.wast");
 specTests.push("runaway-recursion.wast");
 //specTests.push("select.wast");            // TODO custom NaN
 //specTests.push("start.wast");             // TODO start opcode
-//specTests.push("store_retval.wast");      // TODO i64 ops
+//specTests.push("store_retval.wast");      // TODO i64 loads/stores
 //specTests.push("switch.wast");            // TODO value error!
 //specTests.push("traps.wast");             // TODO trap on OOB
 specTests.push("unreachable.wast");
