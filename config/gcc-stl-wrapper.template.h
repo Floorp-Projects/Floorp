@@ -45,7 +45,12 @@
 
 #if defined(DEBUG) && !defined(_GLIBCXX_DEBUG)
 // Enable checked iterators and other goodies
-  # define _GLIBCXX_DEBUG 1
+//
+// FIXME/bug 551254: gcc's debug STL implementation requires -frtti.
+// Figure out how to resolve this with -fno-rtti.  Maybe build with
+// -frtti in DEBUG builds?
+//
+//  # define _GLIBCXX_DEBUG 1
 #endif
 
 #pragma GCC visibility push(default)
