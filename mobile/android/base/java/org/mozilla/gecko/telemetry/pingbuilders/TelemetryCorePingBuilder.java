@@ -18,6 +18,7 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.search.SearchEngine;
+import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.telemetry.TelemetryConstants;
 import org.mozilla.gecko.telemetry.TelemetryPing;
 import org.mozilla.gecko.util.DateUtil;
@@ -53,6 +54,7 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
     private static final String OS_VERSION = "osversion";
     private static final String PING_CREATION_DATE = "created";
     private static final String PROFILE_CREATION_DATE = "profileDate";
+    private static final String SEARCH_COUNTS = "searches";
     private static final String SEQ = "seq";
     private static final String TIMEZONE_OFFSET = "tz";
     private static final String VERSION_ATTR = "v";
@@ -130,6 +132,20 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
             throw new IllegalArgumentException("Expected non-null distribution ID");
         }
         payload.put(DISTRIBUTION_ID, distributionID);
+        return this;
+    }
+
+    /**
+     * @param searchCounts non-empty JSON with {"engine.where": <int-count>}
+     */
+    public TelemetryCorePingBuilder setOptSearchCounts(@NonNull final ExtendedJSONObject searchCounts) {
+        if (searchCounts == null) {
+            throw new IllegalStateException("Expected non-null search counts");
+        } else if (searchCounts.size() == 0) {
+            throw new IllegalStateException("Expected non-empty search counts");
+        }
+
+        payload.put(SEARCH_COUNTS, searchCounts);
         return this;
     }
 
