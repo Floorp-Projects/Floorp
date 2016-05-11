@@ -2883,6 +2883,17 @@ class LNotI : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Not operation on an int64.
+class LNotI64 : public LInstructionHelper<1, INT64_PIECES, 0>
+{
+  public:
+    LIR_HEADER(NotI64)
+
+    explicit LNotI64(const LInt64Allocation& input) {
+        setInt64Operand(0, input);
+    }
+};
+
 // Not operation on a double.
 class LNotD : public LInstructionHelper<1, 1, 0>
 {
