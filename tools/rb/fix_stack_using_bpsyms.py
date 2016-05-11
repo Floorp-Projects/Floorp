@@ -43,7 +43,10 @@ class SymbolFile:
         # http://code.google.com/p/google-breakpad/wiki/SymbolFiles
         if line.startswith("FUNC "):
           # FUNC <address> <size> <stack_param_size> <name>
-          (junk, rva, size, ss, name) = line.split(None, 4)
+          bits = line.split(None, 4)
+          if len(bits) < 5:
+            bits.append('unnamed_function')
+          (junk, rva, size, ss, name) = bits
           rva = int(rva,16)
           funcs[rva] = name
           addrs.append(rva)

@@ -799,7 +799,7 @@ enum class FillMode : uint32_t;
 #define NS_STYLE_RESIZE_VERTICAL                3
 
 // See nsStyleText
-#define NS_STYLE_TEXT_ALIGN_DEFAULT               0
+#define NS_STYLE_TEXT_ALIGN_START                 0
 #define NS_STYLE_TEXT_ALIGN_LEFT                  1
 #define NS_STYLE_TEXT_ALIGN_RIGHT                 2
 #define NS_STYLE_TEXT_ALIGN_CENTER                3

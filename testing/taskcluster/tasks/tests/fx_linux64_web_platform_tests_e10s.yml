@@ -23,7 +23,7 @@ task:
     description: Web platform e10s tests run {{chunk}}
   extra:
     chunks:
-      total: 8
+      total: 12
     treeherder:
       groupName: Desktop web-platform-tests
       groupSymbol: tc-W-e10s
