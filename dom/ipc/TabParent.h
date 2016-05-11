@@ -17,7 +17,9 @@
 #include "mozilla/dom/TabContext.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Move.h"
 #include "nsCOMPtr.h"
 #include "nsIAuthPromptProvider.h"
 #include "nsIBrowserDOMWindow.h"
@@ -77,6 +79,39 @@ class DataTransfer;
 namespace ipc {
 class StructuredCloneData;
 } // ipc namespace
+
+// This observer runs on the compositor thread, so we dispatch a runnable to the
+// main thread to actually dispatch the event.
+class LayerTreeUpdateObserver : public layers::CompositorUpdateObserver
+{
+public:
+  LayerTreeUpdateObserver(TabParent* aTabParent)
+    : mTabParent(aTabParent)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
+
+  virtual void ObserveUpdate(uint64_t aLayersId, bool aActive) override;
+
+  virtual void SwapTabParent(LayerTreeUpdateObserver* aOther) {
+    MOZ_ASSERT(NS_IsMainThread());
+    Swap(mTabParent, aOther->mTabParent);
+  }
+
+  void TabParentDestroyed() {
+    MOZ_ASSERT(NS_IsMainThread());
+    mTabParent = nullptr;
+  }
+
+  TabParent* GetTabParent() {
+    MOZ_ASSERT(NS_IsMainThread());
+    return mTabParent;
+  }
+
+private:
+  // NB: Should never be touched off the main thread!
+  TabParent* mTabParent;
+};
 
 class TabParent final : public PBrowserParent
                       , public nsIDOMEventListener
@@ -752,6 +787,8 @@ private:
   static void AddTabParentToTable(uint64_t aLayersId, TabParent* aTabParent);
 
   static void RemoveTabParentFromTable(uint64_t aLayersId);
+
+  RefPtr<LayerTreeUpdateObserver> mLayerUpdateObserver;
 
 public:
   static TabParent* GetTabParentFromLayersId(uint64_t aLayersId);
