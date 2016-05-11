@@ -1292,27 +1292,3 @@ toolbarpaletteitem[place="palette"][hidden] {
 .popup-notification-invalid-input[focused] {
   box-shadow: 0 0 2px 2px rgba(255,0,0,0.4);
 }
-
-#password-notification-password::after {
-  color: hsl(0,0%,60%);
-  content: attr(show-content);
-  pointer-events: none;
-  position: absolute;
-  right: 0;
-  transition: color 250ms;
-}
-
-#password-notification-password:hover::after {
-  color: hsl(210,100%,50%);
-}
-
-#password-notification-password[focused]::after {
-  content: none;
-}
-
-/* Bug 1175941: Disable the transition on 10.10 due to flickering, possibly due to an OS X bug. */
-@media (-moz-mac-yosemite-theme) {
-  #password-notification-password::after {
-    transition: none;
-  }
-}
