@@ -8,6 +8,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Cu.import("chrome://marionette/content/error.js");
@@ -133,7 +134,7 @@ evaluate.sandbox = function(sb, script, args = [], opts = {}) {
     }
 
     // timeout and unload handlers
-    timeoutId = sb.window.setTimeout(
+    timeoutId = setTimeout(
         timeoutHandler, opts.timeout || DEFAULT_TIMEOUT);
     sb.window.addEventListener("unload", unloadHandler);
 
