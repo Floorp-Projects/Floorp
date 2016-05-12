@@ -824,6 +824,8 @@ protected:
   // update.
   UniquePtr<VisibleRegionsContainer> mVisibleRegions;
 
+  friend struct AutoUpdateVisibility;
+
 
   //////////////////////////////////////////////////////////////////////////////
   // Methods for dispatching KeyboardEvent and BeforeAfterKeyboardEvent.
