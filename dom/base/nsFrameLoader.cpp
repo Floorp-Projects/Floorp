@@ -225,6 +225,11 @@ nsFrameLoader::LoadFrame()
     return NS_OK;
   }
 
+  if (doc->IsLoadedAsInteractiveData()) {
+    // XBL bindings doc shouldn't load sub-documents.
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIURI> base_uri = mOwnerContent->GetBaseURI();
   const nsAFlatCString &doc_charset = doc->GetDocumentCharacterSet();
   const char *charset = doc_charset.IsEmpty() ? nullptr : doc_charset.get();
