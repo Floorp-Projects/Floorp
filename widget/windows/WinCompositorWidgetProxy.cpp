@@ -19,7 +19,8 @@ WinCompositorWidgetProxy::WinCompositorWidgetProxy(nsWindow* aWindow)
    mWnd(reinterpret_cast<HWND>(aWindow->GetNativeData(NS_NATIVE_WINDOW))),
    mTransparencyMode(aWindow->GetTransparencyMode()),
    mMemoryDC(nullptr),
-   mCompositeDC(nullptr)
+   mCompositeDC(nullptr),
+   mLockedBackBufferData(nullptr)
 {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(!aWindow->Destroyed());
@@ -107,6 +108,8 @@ WinCompositorWidgetProxy::StartRemoteDrawing()
 void
 WinCompositorWidgetProxy::EndRemoteDrawing()
 {
+  MOZ_ASSERT(!mLockedBackBufferData);
+
   if (mTransparencyMode == eTransparencyTransparent) {
     MOZ_ASSERT(mTransparentSurface);
     RedrawTransparentWindow();
@@ -115,6 +118,52 @@ WinCompositorWidgetProxy::EndRemoteDrawing()
     FreeWindowSurface(mCompositeDC);
   }
   mCompositeDC = nullptr;
+}
+
+already_AddRefed<gfx::DrawTarget>
+WinCompositorWidgetProxy::GetBackBufferDrawTarget(gfx::DrawTarget* aScreenTarget,
+                                                  const LayoutDeviceIntRect& aRect,
+                                                  const LayoutDeviceIntRect& aClearRect)
+{
+  MOZ_ASSERT(!mLockedBackBufferData);
+
+  RefPtr<gfx::DrawTarget> target =
+    CompositorWidgetProxy::GetBackBufferDrawTarget(aScreenTarget, aRect, aClearRect);
+  if (!target) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(target->GetBackendType() == BackendType::CAIRO);
+
+  uint8_t* destData;
+  IntSize destSize;
+  int32_t destStride;
+  SurfaceFormat destFormat;
+  if (!target->LockBits(&destData, &destSize, &destStride, &destFormat)) {
+    // LockBits is not supported. Use original DrawTarget.
+    return target.forget();
+  }
+
+  RefPtr<gfx::DrawTarget> dataTarget =
+    Factory::CreateDrawTargetForData(BackendType::CAIRO,
+                                     destData,
+                                     destSize,
+                                     destStride,
+                                     destFormat);
+  mLockedBackBufferData = destData;
+
+  return dataTarget.forget();
+}
+
+already_AddRefed<gfx::SourceSurface>
+WinCompositorWidgetProxy::EndBackBufferDrawing()
+{
+  if (mLockedBackBufferData) {
+    MOZ_ASSERT(mLastBackBuffer);
+    mLastBackBuffer->ReleaseBits(mLockedBackBufferData);
+    mLockedBackBufferData = nullptr;
+  }
+  return CompositorWidgetProxy::EndBackBufferDrawing();
 }
 
 already_AddRefed<CompositorVsyncDispatcher>

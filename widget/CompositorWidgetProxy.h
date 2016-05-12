@@ -24,6 +24,7 @@ class Composer2D;
 } // namespace layers
 namespace gfx {
 class DrawTarget;
+class SourceSurface;
 } // namespace gfx
 namespace widget {
 
@@ -182,9 +183,17 @@ public:
    * Create a backbuffer for the software compositor.
    */
   virtual already_AddRefed<gfx::DrawTarget>
-  CreateBackBufferDrawTarget(gfx::DrawTarget* aScreenTarget,
-                             const LayoutDeviceIntRect& aRect,
-                             const LayoutDeviceIntRect& aClearRect);
+  GetBackBufferDrawTarget(gfx::DrawTarget* aScreenTarget,
+                          const LayoutDeviceIntRect& aRect,
+                          const LayoutDeviceIntRect& aClearRect);
+
+  /**
+   * Ensure end of composition to back buffer.
+   *
+   * Called by BasicCompositor on the compositor thread for OMTC drawing
+   * after each composition to back buffer.
+   */
+  virtual already_AddRefed<gfx::SourceSurface> EndBackBufferDrawing();
 
   /**
    * Return a compositor vsync dispatcher for this widget.
@@ -198,7 +207,6 @@ public:
 protected:
   virtual ~CompositorWidgetProxy();
 
-private:
   // Back buffer of BasicCompositor
   RefPtr<gfx::DrawTarget> mLastBackBuffer;
 };
