@@ -17,9 +17,6 @@ import org.mozilla.gecko.background.testhelpers.TestRunner;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Map;
 
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -133,25 +130,6 @@ public class TestDownloadContentCatalog {
     }
 
     /**
-     * Scenario: Mark an item in the catalog as ignored.
-     *
-     * Verify that:
-     *  * Catalog has changed
-     */
-    @Test
-    public void testCatalogHasChangedIfContentIsIgnored() throws Exception {
-        DownloadContentCatalog catalog = spy(new DownloadContentCatalog(mock(AtomicFile.class)));
-        DownloadContent content = new DownloadContentBuilder().build();
-        catalog.onCatalogLoaded(createMapOfContent(content));
-
-        Assert.assertFalse("Catalog has not changed", catalog.hasCatalogChanged());
-
-        catalog.markAsIgnored(content);
-
-        Assert.assertTrue("Catalog has changed", catalog.hasCatalogChanged());
-    }
-
-    /**
      * Scenario: A changed catalog is written to disk.
      *
      * Verify that:
@@ -194,14 +172,12 @@ public class TestDownloadContentCatalog {
         DownloadContent content5 = new DownloadContentBuilder().setId("E").setState(DownloadContent.STATE_SCHEDULED).build();
         DownloadContent content6 = new DownloadContentBuilder().setId("F").setState(DownloadContent.STATE_DOWNLOADED).build();
         DownloadContent content7 = new DownloadContentBuilder().setId("G").setState(DownloadContent.STATE_FAILED).build();
-        DownloadContent content8 = new DownloadContentBuilder().setId("H").setState(DownloadContent.STATE_IGNORED).build();
-        DownloadContent content9 = new DownloadContentBuilder().setId("I").setState(DownloadContent.STATE_IGNORED).build();
-        DownloadContent content10 = new DownloadContentBuilder().setId("J").setState(DownloadContent.STATE_UPDATED).build();
-        DownloadContent content11 = new DownloadContentBuilder().setId("K").setState(DownloadContent.STATE_DELETED).build();
-        DownloadContent content12 = new DownloadContentBuilder().setId("L").setState(DownloadContent.STATE_DELETED).build();
+        DownloadContent content8 = new DownloadContentBuilder().setId("H").setState(DownloadContent.STATE_UPDATED).build();
+        DownloadContent content9 = new DownloadContentBuilder().setId("I").setState(DownloadContent.STATE_DELETED).build();
+        DownloadContent content10 = new DownloadContentBuilder().setId("J").setState(DownloadContent.STATE_DELETED).build();
 
         catalog.onCatalogLoaded(createMapOfContent(content1, content2, content3, content4, content5, content6,
-                content7, content8, content9, content10, content11, content12));
+                content7, content8, content9, content10));
 
         Assert.assertTrue(catalog.hasScheduledDownloads());
 
@@ -212,7 +188,7 @@ public class TestDownloadContentCatalog {
 
         Assert.assertTrue(catalog.getContentToStudy().contains(content1));
         Assert.assertTrue(catalog.getContentToStudy().contains(content2));
-        Assert.assertTrue(catalog.getContentToStudy().contains(content10));
+        Assert.assertTrue(catalog.getContentToStudy().contains(content8));
 
         Assert.assertTrue(catalog.getDownloadedContent().contains(content6));
 
@@ -220,8 +196,8 @@ public class TestDownloadContentCatalog {
         Assert.assertTrue(catalog.getScheduledDownloads().contains(content4));
         Assert.assertTrue(catalog.getScheduledDownloads().contains(content5));
 
-        Assert.assertTrue(catalog.getContentToDelete().contains(content11));
-        Assert.assertTrue(catalog.getContentToDelete().contains(content12));
+        Assert.assertTrue(catalog.getContentToDelete().contains(content9));
+        Assert.assertTrue(catalog.getContentToDelete().contains(content10));
     }
 
     /**

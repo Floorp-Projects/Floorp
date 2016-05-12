@@ -11,15 +11,14 @@ import android.support.annotation.Nullable;
 import android.support.annotation.StringDef;
 
 public class DownloadContent {
-    @IntDef({STATE_NONE, STATE_SCHEDULED, STATE_DOWNLOADED, STATE_FAILED, STATE_IGNORED, STATE_UPDATED, STATE_DELETED})
+    @IntDef({STATE_NONE, STATE_SCHEDULED, STATE_DOWNLOADED, STATE_FAILED, STATE_UPDATED, STATE_DELETED})
     public @interface State {}
     public static final int STATE_NONE = 0;
     public static final int STATE_SCHEDULED = 1;
     public static final int STATE_DOWNLOADED = 2;
     public static final int STATE_FAILED = 3; // Permanently failed for this version of the content
-    public static final int STATE_IGNORED = 4;
-    public static final int STATE_UPDATED = 5;
-    public static final int STATE_DELETED = 6;
+    public static final int STATE_UPDATED = 4;
+    public static final int STATE_DELETED = 5;
 
     @StringDef({TYPE_ASSET_ARCHIVE})
     public @interface Type {}

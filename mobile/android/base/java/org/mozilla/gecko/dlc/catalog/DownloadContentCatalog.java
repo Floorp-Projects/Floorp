@@ -157,11 +157,6 @@ public class DownloadContentCatalog {
         hasCatalogChanged = true;
     }
 
-    public synchronized void markAsIgnored(DownloadContent content) {
-        content.setState(DownloadContent.STATE_IGNORED);
-        hasCatalogChanged = true;
-    }
-
     public synchronized void markAsDeleted(DownloadContent content) {
         content.setState(DownloadContent.STATE_DELETED);
         hasCatalogChanged = true;
