@@ -56,7 +56,9 @@ private:
   nsTArray<RefPtr<MediaRawData>> mQueuedSamples;
   UniquePtr<AudioConfig::ChannelLayout> mChannelLayout;
   UniquePtr<AudioConverter> mAudioConverter;
+  Atomic<bool> mIsFlushing;
 
+  void ProcessFlush();
   void SubmitSample(MediaRawData* aSample);
   nsresult DecodeSample(MediaRawData* aSample);
   nsresult GetInputAudioDescription(AudioStreamBasicDescription& aDesc,
