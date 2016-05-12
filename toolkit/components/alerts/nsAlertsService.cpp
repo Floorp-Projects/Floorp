@@ -208,6 +208,13 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
 NS_IMETHODIMP nsAlertsService::ShowAlert(nsIAlertNotification * aAlert,
                                          nsIObserver * aAlertListener)
 {
+  return ShowPersistentNotification(EmptyString(), aAlert, aAlertListener);
+}
+
+NS_IMETHODIMP nsAlertsService::ShowPersistentNotification(const nsAString & aPersistentData,
+                                                          nsIAlertNotification * aAlert,
+                                                          nsIObserver * aAlertListener)
+{
   NS_ENSURE_ARG(aAlert);
 
   nsAutoString cookie;
