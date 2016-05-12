@@ -8818,11 +8818,6 @@
     "kind": "boolean",
     "description": "Whether a browser window is set as an e10s window"
   },
-  "E10S_STILL_ACCEPTED_FROM_PROMPT": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Whether a user who accepted e10s from the prompt is still using e10s"
-  },
   "E10S_BLOCKED_FROM_RUNNING": {
     "expires_in_version": "never",
     "kind": "boolean",

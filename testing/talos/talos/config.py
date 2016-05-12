@@ -170,12 +170,6 @@ DEFAULTS = dict(
         'experiments.manifest.uri':
             'https://127.0.0.1/experiments-dummy/manifest',
         'network.http.speculative-parallel-limit': 0,
-        'browser.displayedE10SPrompt': 9999,
-        'browser.displayedE10SPrompt.1': 9999,
-        'browser.displayedE10SPrompt.2': 9999,
-        'browser.displayedE10SPrompt.3': 9999,
-        'browser.displayedE10SPrompt.4': 9999,
-        'browser.displayedE10SPrompt.5': 9999,
         'app.update.badge': False,
         'lightweightThemes.selectedThemeID': "",
         'devtools.webide.widget.enabled': False,

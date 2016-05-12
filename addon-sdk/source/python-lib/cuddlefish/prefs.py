@@ -37,9 +37,6 @@ DEFAULT_COMMON_PREFS = {
     # shut up some warnings on `about:` page
     'app.releaseNotesURL': 'http://localhost/app-dummy/',
     'app.vendorURL': 'http://localhost/app-dummy/',
-
-    # Don't prompt about e10s
-    'browser.displayedE10SPrompt.1': 5
 }
 
 DEFAULT_NO_CONNECTIONS_PREFS = {
