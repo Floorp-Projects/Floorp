@@ -14,7 +14,7 @@ namespace gfx {
 bool
 FeatureState::IsEnabled() const
 {
-  return IsFeatureStatusSuccess(GetValue());
+  return IsInitialized() && IsFeatureStatusSuccess(GetValue());
 }
 
 FeatureStatus
