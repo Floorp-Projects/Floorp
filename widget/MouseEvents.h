@@ -188,7 +188,8 @@ public:
     eSynthesized
   };
 
-  enum contextType
+  typedef bool ContextMenuTriggerType;
+  enum ContextMenuTrigger : ContextMenuTriggerType
   {
     eNormal,
     eContextMenuKey
@@ -203,6 +204,7 @@ public:
 protected:
   WidgetMouseEvent()
     : reason(eReal)
+    , context(eNormal)
     , acceptActivation(false)
     , ignoreRootScrollFrame(false)
     , clickCount(0)
@@ -213,9 +215,9 @@ protected:
                    EventClassID aEventClassID, Reason aReason)
     : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, aEventClassID)
     , reason(aReason)
+    , context(eNormal)
     , acceptActivation(false)
     , ignoreRootScrollFrame(false)
-    , context(eNormal)
     , exit(eChild)
     , clickCount(0)
   {
@@ -225,12 +227,12 @@ public:
   virtual WidgetMouseEvent* AsMouseEvent() override { return this; }
 
   WidgetMouseEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget,
-                   Reason aReason, contextType aContext = eNormal)
+                   Reason aReason, ContextMenuTrigger aContext = eNormal)
     : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, eMouseEventClass)
     , reason(aReason)
+    , context(aContext)
     , acceptActivation(false)
     , ignoreRootScrollFrame(false)
-    , context(aContext)
     , exit(eChild)
     , clickCount(0)
   {
@@ -263,13 +265,14 @@ public:
 
   Reason reason;
 
+  ContextMenuTrigger context;
+
   // Special return code for MOUSE_ACTIVATE to signal.
   // If the target accepts activation (1), or denies it (0).
   bool acceptActivation;
   // Whether the event should ignore scroll frame bounds during dispatch.
   bool ignoreRootScrollFrame;
 
-  contextType context : 4;
   exitType exit;
 
   /// The number of mouse clicks.
