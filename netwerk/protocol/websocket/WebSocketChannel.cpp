@@ -3133,9 +3133,9 @@ WebSocketChannel::Notify(nsITimer *timer)
       LOG(("nsWebSocketChannel:: Generating Ping\n"));
       mPingOutstanding = 1;
       mPingForced = 0;
-      GeneratePing();
       mPingTimer->InitWithCallback(this, mPingResponseTimeout,
                                    nsITimer::TYPE_ONE_SHOT);
+      GeneratePing();
     } else {
       LOG(("nsWebSocketChannel:: Timed out Ping\n"));
       mPingTimer = nullptr;
