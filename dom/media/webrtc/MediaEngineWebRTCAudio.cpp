@@ -730,11 +730,7 @@ MediaEngineWebRTCMicrophoneSource::Process(int channel,
 
       // This is safe from any thread, and is safe if the track is Finished
       // or Destroyed.
-      // Note: due to evil magic, the nsAutoPtr<AudioSegment>'s ownership transfers to
-      // the Runnable (AutoPtr<> = AutoPtr<>)
-      RUN_ON_THREAD(mThread, WrapRunnable(mSources[i], &SourceMediaStream::AppendToTrack,
-                                          mTrackID, segment, (AudioSegment *) nullptr),
-                    NS_DISPATCH_NORMAL);
+      mSources[i]->AppendToTrack(mTrackID, segment);
     }
   }
 
