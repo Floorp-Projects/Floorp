@@ -503,10 +503,10 @@ WidgetKeyboardEvent::GetShortcutKeyCandidates(
     aCandidates.AppendElement(key);
   }
 
-  uint32_t len = alternativeCharCodes.Length();
+  uint32_t len = mAlternativeCharCodes.Length();
   if (!IsShift()) {
     for (uint32_t i = 0; i < len; ++i) {
-      uint32_t ch = alternativeCharCodes[i].mUnshiftedCharCode;
+      uint32_t ch = mAlternativeCharCodes[i].mUnshiftedCharCode;
       if (!ch || ch == pseudoCharCode) {
         continue;
       }
@@ -519,7 +519,7 @@ WidgetKeyboardEvent::GetShortcutKeyCandidates(
     // However, the priority should be lowest.
     if (!HasASCIIDigit(aCandidates)) {
       for (uint32_t i = 0; i < len; ++i) {
-        uint32_t ch = alternativeCharCodes[i].mShiftedCharCode;
+        uint32_t ch = mAlternativeCharCodes[i].mShiftedCharCode;
         if (ch >= '0' && ch <= '9') {
           ShortcutKeyCandidate key(ch, false);
           aCandidates.AppendElement(key);
@@ -529,7 +529,7 @@ WidgetKeyboardEvent::GetShortcutKeyCandidates(
     }
   } else {
     for (uint32_t i = 0; i < len; ++i) {
-      uint32_t ch = alternativeCharCodes[i].mShiftedCharCode;
+      uint32_t ch = mAlternativeCharCodes[i].mShiftedCharCode;
       if (!ch) {
         continue;
       }
@@ -544,7 +544,7 @@ WidgetKeyboardEvent::GetShortcutKeyCandidates(
 
       // And checking the charCode is same as unshiftedCharCode too.
       // E.g., for Ctrl+Shift+(Plus of Numpad) should not run Ctrl+Plus.
-      uint32_t unshiftCh = alternativeCharCodes[i].mUnshiftedCharCode;
+      uint32_t unshiftCh = mAlternativeCharCodes[i].mUnshiftedCharCode;
       if (CharsCaseInsensitiveEqual(ch, unshiftCh)) {
         continue;
       }
@@ -591,10 +591,10 @@ WidgetKeyboardEvent::GetAccessKeyCandidates(nsTArray<uint32_t>& aCandidates)
     }
     aCandidates.AppendElement(ch);
   }
-  for (uint32_t i = 0; i < alternativeCharCodes.Length(); ++i) {
+  for (uint32_t i = 0; i < mAlternativeCharCodes.Length(); ++i) {
     uint32_t ch[2] =
-      { alternativeCharCodes[i].mUnshiftedCharCode,
-        alternativeCharCodes[i].mShiftedCharCode };
+      { mAlternativeCharCodes[i].mUnshiftedCharCode,
+        mAlternativeCharCodes[i].mShiftedCharCode };
     for (uint32_t j = 0; j < 2; ++j) {
       if (!ch[j]) {
         continue;

@@ -895,7 +895,7 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
   if (IsKeyDownMessage()) {
     // Compute some strings which may be inputted by the key with various
     // modifier state if this key event won't cause text input actually.
-    // They will be used for setting alternativeCharCodes in the callback
+    // They will be used for setting mAlternativeCharCodes in the callback
     // method which will be called by TextEventDispatcher.
     if (NeedsToHandleWithoutFollowingCharMessages()) {
       ComputeInputtingStringWithKeyboardLayout();
@@ -2314,7 +2314,8 @@ NativeKey::WillDispatchKeyboardEvent(WidgetKeyboardEvent& aKeyboardEvent,
     return;
   }
 
-  nsTArray<AlternativeCharCode>& altArray = aKeyboardEvent.alternativeCharCodes;
+  nsTArray<AlternativeCharCode>& altArray =
+    aKeyboardEvent.mAlternativeCharCodes;
 
   uint16_t shiftedChar = 0, unshiftedChar = 0;
   if (skipUniChars <= aIndex) {

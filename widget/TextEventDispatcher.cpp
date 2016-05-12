@@ -498,7 +498,7 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
   // eKeyDown also needs alternative char codes because nsXBLWindowKeyHandler
   // needs to check if a following keypress event is reserved by chrome for
   // stopping propagation of its preceding keydown event.
-  keyEvent.alternativeCharCodes.Clear();
+  keyEvent.mAlternativeCharCodes.Clear();
   if ((WidgetKeyboardEvent::IsKeyDownOrKeyDownOnPlugin(aMessage) ||
        aMessage == eKeyPress) &&
       (keyEvent.IsControl() || keyEvent.IsAlt() ||

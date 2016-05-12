@@ -227,7 +227,7 @@ public:
                     const nsAString *aInsertString = nullptr);
 
   /**
-   * WillDispatchKeyboardEvent() computes aKeyEvent.alternativeCharCodes and
+   * WillDispatchKeyboardEvent() computes aKeyEvent.mAlternativeCharCodes and
    * recompute aKeyEvent.mCharCode if it's necessary.
    *
    * @param aNativeKeyEvent       A native key event for which you want to
