@@ -160,7 +160,7 @@ exports.appendSyntaxHighlightedCSS = appendSyntaxHighlightedCSS;
 function getMdnPage(pageUrl) {
   let deferred = Promise.defer();
 
-  let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
+  let xhr = new XMLHttpRequest();
 
   xhr.addEventListener("load", onLoaded, false);
   xhr.addEventListener("error", onError, false);
