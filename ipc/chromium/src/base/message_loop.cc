@@ -279,6 +279,17 @@ void MessageLoop::PostIdleTask(already_AddRefed<Runnable> task) {
 
 // Possibly called on a background thread!
 void MessageLoop::PostTask_Helper(already_AddRefed<Runnable> task, int delay_ms) {
+  if (nsIEventTarget* target = pump_->GetXPCOMThread()) {
+    nsresult rv;
+    if (delay_ms) {
+      rv = target->DelayedDispatch(Move(task), delay_ms);
+    } else {
+      rv = target->Dispatch(Move(task), 0);
+    }
+    MOZ_ALWAYS_SUCCEEDS(rv);
+    return;
+  }
+
   PendingTask pending_task(Move(task), true);
 
   if (delay_ms > 0) {
