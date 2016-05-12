@@ -373,27 +373,24 @@ nsCertOverrideService::RememberValidityOverride(const nsACString& aHostName,
     return NS_ERROR_FAILURE;
   }
 
-  char* nickname = DefaultServerNicknameForCert(nsscert.get());
-  if (!aTemporary && nickname && *nickname)
-  {
+  nsAutoCString nickname;
+  nsresult rv = DefaultServerNicknameForCert(nsscert.get(), nickname);
+  if (!aTemporary && NS_SUCCEEDED(rv)) {
     UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
     if (!slot) {
-      PR_Free(nickname);
       return NS_ERROR_FAILURE;
     }
 
     SECStatus srv = PK11_ImportCert(slot.get(), nsscert.get(), CK_INVALID_HANDLE,
-                                    nickname, false);
+                                    nickname.get(), false);
     if (srv != SECSuccess) {
-      PR_Free(nickname);
       return NS_ERROR_FAILURE;
     }
   }
-  PR_FREEIF(nickname);
 
   nsAutoCString fpStr;
-  nsresult rv = GetCertFingerprintByOidTag(nsscert.get(),
-                  mOidTagForStoringNewHashes, fpStr);
+  rv = GetCertFingerprintByOidTag(nsscert.get(), mOidTagForStoringNewHashes,
+                                  fpStr);
   if (NS_FAILED(rv))
     return rv;
 

@@ -197,6 +197,8 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     { name: "WebGLBuffer", disabled: true },
 // IMPORTANT: Do not change this list without review from a DOM peer!
+    { name: "WebGLContextEvent", disabled: true },
+// IMPORTANT: Do not change this list without review from a DOM peer!
     { name: "WebGLFramebuffer", disabled: true },
 // IMPORTANT: Do not change this list without review from a DOM peer!
     { name: "WebGLProgram", disabled: true },

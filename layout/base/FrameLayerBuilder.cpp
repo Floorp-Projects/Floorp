@@ -1353,6 +1353,16 @@ protected:
                       const nsIntRegion& aLayerVisibleRegion,
                       uint32_t aRoundedRectClipCount = UINT32_MAX);
 
+  /**
+   * If |aClip| has rounded corners, create a mask layer for them, and
+   * add it to |aLayer|'s ancestor mask layers, returning an index into
+   * the array of ancestor mask layers. Returns an empty Maybe if
+   * |aClip| does not have rounded corners, or if no mask layer could
+   * be created.
+   */
+  Maybe<size_t> SetupMaskLayerForScrolledClip(Layer* aLayer,
+                                              const DisplayItemClip& aClip);
+
   already_AddRefed<Layer> CreateMaskLayer(
     Layer *aLayer, const DisplayItemClip& aClip,
     const Maybe<size_t>& aForAncestorMaskLayer,
@@ -2268,6 +2278,7 @@ ContainerState::RecyclePaintedLayer(PaintedLayer* aLayer,
   // Clear clip rect and mask layer so we don't accidentally stay clipped.
   // We will reapply any necessary clipping.
   aLayer->SetMaskLayer(nullptr);
+  aLayer->SetAncestorMaskLayers({});
   aLayer->ClearExtraDumpInfo();
 
   PaintedDisplayItemLayerUserData* data =
@@ -3207,7 +3218,13 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
     if (data->mSingleItemFixedToViewport && data->mItemClip.HasClip()) {
       nsIntRect layerClipRect = ScaleToNearestPixels(data->mItemClip.GetClipRect());
       layerClipRect.MoveBy(mParameters.mOffset);
-      data->mLayer->SetClipRect(Some(ViewAs<ParentLayerPixel>(layerClipRect)));
+      // The clip from such an item becomes part of the layer's scrolled clip,
+      // and the associated mask layer one of the layer's "ancestor mask layers".
+      LayerClip scrolledClip;
+      scrolledClip.SetClipRect(ViewAs<ParentLayerPixel>(layerClipRect));
+      scrolledClip.SetMaskLayerIndex(
+          SetupMaskLayerForScrolledClip(data->mLayer, data->mItemClip));
+      data->mLayer->SetScrolledClip(Some(scrolledClip));
       // There is only one item, so all of the clips are in common to all items.
       // data->mCommonClipCount will be zero because we removed the clip from
       // the display item. (It could also be -1 if we're inside an inactive
@@ -3216,8 +3233,8 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
       commonClipCount = data->mItemClip.GetRoundedRectCount();
     } else {
       commonClipCount = std::max(0, data->mCommonClipCount);
+      SetupMaskLayer(layer, data->mItemClip, data->mVisibleRegion, commonClipCount);
     }
-    SetupMaskLayer(layer, data->mItemClip, data->mVisibleRegion, commonClipCount);
     // copy commonClipCount to the entry
     FrameLayerBuilder::PaintedLayerItemsEntry* entry = mLayerBuilder->
       GetPaintedLayerItemsEntry(static_cast<PaintedLayer*>(layer.get()));
@@ -3716,6 +3733,22 @@ InnermostScrollClipApplicableToAGR(const DisplayItemScrollClip* aItemScrollClip,
   return nullptr;
 }
 
+Maybe<size_t>
+ContainerState::SetupMaskLayerForScrolledClip(Layer* aLayer,
+                                              const DisplayItemClip& aClip)
+{
+  if (aClip.GetRoundedRectCount() > 0) {
+    Maybe<size_t> maskLayerIndex = Some(aLayer->GetAncestorMaskLayerCount());
+    if (RefPtr<Layer> maskLayer = CreateMaskLayer(aLayer, aClip, maskLayerIndex,
+                                                  aClip.GetRoundedRectCount())) {
+      aLayer->AddAncestorMaskLayer(maskLayer);
+      return maskLayerIndex;
+    }
+    // Fall through to |return Nothing()|.
+  }
+  return Nothing();
+}
+
 /*
  * Iterate through the non-clip items in aList and its descendants.
  * For each item we compute the effective clip rect. Each item is assigned
@@ -4077,17 +4110,31 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       NS_ASSERTION(layerClip.HasClip() ||
                    layerClip.GetRoundedRectCount() == 0,
                    "If we have rounded rects, we must have a clip rect");
-      // It has its own layer. Update that layer's clip and visible rects.
-      if (layerClip.HasClip()) {
-        ownLayer->SetClipRect(Some(layerClipRect));
-      } else {
-        ownLayer->SetClipRect(Nothing());
-      }
 
-      // rounded rectangle clipping using mask layers
-      // (must be done after visible rect is set on layer)
-      if (layerClip.IsRectClippedByRoundedCorner(itemContent)) {
-        SetupMaskLayer(ownLayer, layerClip, itemVisibleRect);
+      // It has its own layer. Update that layer's clip and visible rects.
+
+      ownLayer->SetClipRect(Nothing());
+      ownLayer->SetScrolledClip(Nothing());
+      if (layerClip.HasClip()) {
+        if (shouldFixToViewport) {
+          // For layers fixed to the viewport, the clip becomes part of the
+          // layer's scrolled clip.
+          LayerClip scrolledClip;
+          scrolledClip.SetClipRect(layerClipRect);
+          if (layerClip.IsRectClippedByRoundedCorner(itemContent)) {
+            scrolledClip.SetMaskLayerIndex(
+                SetupMaskLayerForScrolledClip(ownLayer.get(), layerClip));
+          }
+          ownLayer->SetScrolledClip(Some(scrolledClip));
+        } else {
+          ownLayer->SetClipRect(Some(layerClipRect));
+
+          // rounded rectangle clipping using mask layers
+          // (must be done after visible rect is set on layer)
+          if (layerClip.IsRectClippedByRoundedCorner(itemContent)) {
+            SetupMaskLayer(ownLayer, layerClip, itemVisibleRect);
+          }
+        }
       }
 
       ContainerLayer* oldContainer = ownLayer->GetParent();
@@ -4712,11 +4759,14 @@ ContainerState::SetupScrollingMetadata(NewLayerEntry* aEntry)
 
     // The base FrameMetrics was not computed by the nsIScrollableframe, so it
     // should not have a mask layer.
-    MOZ_ASSERT(!aEntry->mBaseScrollMetadata->GetMaskLayerIndex());
+    MOZ_ASSERT(!aEntry->mBaseScrollMetadata->HasMaskLayer());
   }
 
-  // Any extra mask layers we need to attach to FrameMetrics.
-  nsTArray<RefPtr<Layer>> maskLayers;
+  // Any extra mask layers we need to attach to ScrollMetadatas.
+  // The list may already contain an entry added for the layer's scrolled clip
+  // so add to it rather than overwriting it (we clear the list when recycling
+  // a layer).
+  nsTArray<RefPtr<Layer>> maskLayers(aEntry->mLayer->GetAllAncestorMaskLayers());
 
   for (const DisplayItemScrollClip* scrollClip = aEntry->mScrollClip;
        scrollClip && scrollClip != mContainerScrollClip;
@@ -4749,7 +4799,8 @@ ContainerState::SetupScrollingMetadata(NewLayerEntry* aEntry)
       RefPtr<Layer> maskLayer =
         CreateMaskLayer(aEntry->mLayer, *clip, nextIndex, clip->GetRoundedRectCount());
       if (maskLayer) {
-        metadata->SetMaskLayerIndex(nextIndex);
+        MOZ_ASSERT(metadata->HasScrollClip());
+        metadata->ScrollClip().SetMaskLayerIndex(nextIndex);
         maskLayers.AppendElement(maskLayer);
       }
     }
@@ -4762,7 +4813,7 @@ ContainerState::SetupScrollingMetadata(NewLayerEntry* aEntry)
   aEntry->mLayer->SetAncestorMaskLayers(maskLayers);
 }
 
-static inline const Maybe<ParentLayerIntRect>&
+static inline Maybe<ParentLayerIntRect>
 GetStationaryClipInContainer(Layer* aLayer)
 {
   if (size_t metricsCount = aLayer->GetScrollMetadataCount()) {
@@ -4796,7 +4847,7 @@ ContainerState::PostprocessRetainedLayers(nsIntRegion* aOpaqueRegionForContainer
     if (hideAll) {
       e->mVisibleRegion.SetEmpty();
     } else if (!e->mLayer->IsScrollbarContainer()) {
-      const Maybe<ParentLayerIntRect>& clipRect = GetStationaryClipInContainer(e->mLayer);
+      Maybe<ParentLayerIntRect> clipRect = GetStationaryClipInContainer(e->mLayer);
       if (clipRect && opaqueRegionForContainer >= 0 &&
           opaqueRegions[opaqueRegionForContainer].mOpaqueRegion.Contains(clipRect->ToUnknownRect())) {
         e->mVisibleRegion.SetEmpty();
@@ -4832,7 +4883,7 @@ ContainerState::PostprocessRetainedLayers(nsIntRegion* aOpaqueRegionForContainer
       if (clipRect) {
         clippedOpaque.AndWith(clipRect->ToUnknownRect());
       }
-      if (e->mLayer->GetIsFixedPosition() && !e->mLayer->IsClipFixed()) {
+      if (e->mLayer->GetIsFixedPosition() && e->mLayer->GetScrolledClip()) {
         // The clip can move asynchronously, so we can't rely on opaque parts
         // staying in the same place.
         clippedOpaque.SetEmpty();
@@ -5185,6 +5236,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
                      "Wrong layer type");
         containerLayer = static_cast<ContainerLayer*>(oldLayer);
         containerLayer->SetMaskLayer(nullptr);
+        containerLayer->SetAncestorMaskLayers({});
       }
     }
   }

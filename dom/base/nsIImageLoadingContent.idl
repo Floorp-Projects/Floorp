@@ -180,6 +180,7 @@ interface nsIImageLoadingContent : imgINotificationObserver
    * Called by layout to announce when the frame associated with this content
    * has changed its visibility state.
    *
+   * @param aOldVisibility    The previous visibility state.
    * @param aNewVisibility    The new visibility state.
    * @param aNonvisibleAction A requested action if the frame has become
    *                          nonvisible. If Nothing(), no action is
@@ -188,6 +189,7 @@ interface nsIImageLoadingContent : imgINotificationObserver
    *                          associated with to discard their surfaces if
    *                          possible.
    */
-  [noscript, notxpcom] void onVisibilityChange(in Visibility aNewVisibility,
+  [noscript, notxpcom] void onVisibilityChange(in Visibility aOldVisibility,
+                                               in Visibility aNewVisibility,
                                                in MaybeOnNonvisible aNonvisibleAction);
 };

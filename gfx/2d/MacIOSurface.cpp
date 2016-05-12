@@ -440,11 +440,17 @@ void MacIOSurface::Unlock() {
   MacIOSurfaceLib::IOSurfaceUnlock(mIOSurfacePtr, READ_ONLY, nullptr);
 }
 
-#include "SourceSurfaceRawData.h"
 using mozilla::gfx::SourceSurface;
-using mozilla::gfx::SourceSurfaceRawData;
 using mozilla::gfx::IntSize;
 using mozilla::gfx::SurfaceFormat;
+
+void
+MacIOSurfaceBufferDeallocator(void* aClosure)
+{
+  MOZ_ASSERT(aClosure);
+
+  delete [] static_cast<unsigned char*>(aClosure);
+}
 
 already_AddRefed<SourceSurface>
 MacIOSurface::GetAsSurface() {
@@ -454,7 +460,8 @@ MacIOSurface::GetAsSurface() {
   size_t ioHeight = GetDevicePixelHeight();
 
   unsigned char* ioData = (unsigned char*)GetBaseAddress();
-  unsigned char* dataCpy = (unsigned char*)malloc(bytesPerRow*ioHeight);
+  unsigned char* dataCpy =
+      new unsigned char[bytesPerRow * ioHeight / sizeof(unsigned char)];
   for (size_t i = 0; i < ioHeight; i++) {
     memcpy(dataCpy + i * bytesPerRow,
            ioData + i * bytesPerRow, ioWidth * 4);
@@ -465,8 +472,13 @@ MacIOSurface::GetAsSurface() {
   SurfaceFormat format = HasAlpha() ? mozilla::gfx::SurfaceFormat::B8G8R8A8 :
                                       mozilla::gfx::SurfaceFormat::B8G8R8X8;
 
-  RefPtr<SourceSurfaceRawData> surf = new SourceSurfaceRawData();
-  surf->InitWrappingData(dataCpy, IntSize(ioWidth, ioHeight), bytesPerRow, format, true);
+  RefPtr<mozilla::gfx::DataSourceSurface> surf =
+      mozilla::gfx::Factory::CreateWrappingDataSourceSurface(dataCpy,
+                                                             bytesPerRow,
+                                                             IntSize(ioWidth, ioHeight),
+                                                             format,
+                                                             &MacIOSurfaceBufferDeallocator,
+                                                             static_cast<void*>(dataCpy));
 
   return surf.forget();
 }

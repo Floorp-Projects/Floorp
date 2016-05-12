@@ -6,12 +6,13 @@
 #include "WebGLTexture.h"
 
 #include <algorithm>
+
 #include "CanvasUtils.h"
 #include "GLBlitHelper.h"
 #include "GLContext.h"
+#include "mozilla/gfx/2D.h"
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/ImageData.h"
-#include "mozilla/gfx/SourceSurfaceRawData.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Scoped.h"
 #include "mozilla/unused.h"
@@ -183,14 +184,16 @@ UnpackBlobFromImageData(WebGLContext* webgl, const char* funcName, GLenum unpack
     const gfx::IntSize size(imageData->Width(), imageData->Height());
     const size_t stride = size.width * 4;
     const gfx::SurfaceFormat surfFormat = gfx::SurfaceFormat::R8G8B8A8;
-    const bool ownsData = false;
 
     MOZ_ASSERT(dataSize == stride * size.height);
 
-    const RefPtr<gfx::SourceSurfaceRawData> surf = new gfx::SourceSurfaceRawData;
-
     uint8_t* wrappableData = (uint8_t*)data;
-    surf->InitWrappingData(wrappableData, size, stride, surfFormat, ownsData);
+
+    const RefPtr<gfx::SourceSurface> surf =
+        gfx::Factory::CreateWrappingDataSourceSurface(wrappableData,
+                                                      stride,
+                                                      size,
+                                                      surfFormat);
 
     // WhatWG "HTML Living Standard" (30 October 2015):
     // "The getImageData(sx, sy, sw, sh) method [...] Pixels must be returned as

@@ -1651,7 +1651,8 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_UNDEFINED:
         // If this ever changes, change what JSOP_GIMPLICITTHIS does too.
-        return pushConstant(UndefinedValue());
+        pushConstant(UndefinedValue());
+        return true;
 
       case JSOP_IFEQ:
         return jsop_ifeq(JSOP_IFEQ);
@@ -1717,38 +1718,48 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_compare(op);
 
       case JSOP_DOUBLE:
-        return pushConstant(info().getConst(pc));
+        pushConstant(info().getConst(pc));
+        return true;
 
       case JSOP_STRING:
-        return pushConstant(StringValue(info().getAtom(pc)));
+        pushConstant(StringValue(info().getAtom(pc)));
+        return true;
 
       case JSOP_SYMBOL: {
         unsigned which = GET_UINT8(pc);
         JS::Symbol* sym = compartment->runtime()->wellKnownSymbols().get(which);
-        return pushConstant(SymbolValue(sym));
+        pushConstant(SymbolValue(sym));
+        return true;
       }
 
       case JSOP_ZERO:
-        return pushConstant(Int32Value(0));
+        pushConstant(Int32Value(0));
+        return true;
 
       case JSOP_ONE:
-        return pushConstant(Int32Value(1));
+        pushConstant(Int32Value(1));
+        return true;
 
       case JSOP_NULL:
-        return pushConstant(NullValue());
+        pushConstant(NullValue());
+        return true;
 
       case JSOP_VOID:
         current->pop();
-        return pushConstant(UndefinedValue());
+        pushConstant(UndefinedValue());
+        return true;
 
       case JSOP_HOLE:
-        return pushConstant(MagicValue(JS_ELEMENTS_HOLE));
+        pushConstant(MagicValue(JS_ELEMENTS_HOLE));
+        return true;
 
       case JSOP_FALSE:
-        return pushConstant(BooleanValue(false));
+        pushConstant(BooleanValue(false));
+        return true;
 
       case JSOP_TRUE:
-        return pushConstant(BooleanValue(true));
+        pushConstant(BooleanValue(true));
+        return true;
 
       case JSOP_ARGUMENTS:
         return jsop_arguments();
@@ -1808,7 +1819,8 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_setaliasedvar(ScopeCoordinate(pc));
 
       case JSOP_UNINITIALIZED:
-        return pushConstant(MagicValue(JS_UNINITIALIZED_LEXICAL));
+        pushConstant(MagicValue(JS_UNINITIALIZED_LEXICAL));
+        return true;
 
       case JSOP_POP: {
         MDefinition* def = current->pop();
@@ -1898,10 +1910,12 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_eval(GET_ARGC(pc));
 
       case JSOP_INT8:
-        return pushConstant(Int32Value(GET_INT8(pc)));
+        pushConstant(Int32Value(GET_INT8(pc)));
+        return true;
 
       case JSOP_UINT16:
-        return pushConstant(Int32Value(GET_UINT16(pc)));
+        pushConstant(Int32Value(GET_UINT16(pc)));
+        return true;
 
       case JSOP_GETGNAME:
       {
@@ -1943,8 +1957,10 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_BINDGNAME:
         if (!script()->hasNonSyntacticScope()) {
-            if (JSObject* scope = testGlobalLexicalBinding(info().getName(pc)))
-                return pushConstant(ObjectValue(*scope));
+            if (JSObject* scope = testGlobalLexicalBinding(info().getName(pc))) {
+                pushConstant(ObjectValue(*scope));
+                return true;
+            }
         }
         // Fall through to JSOP_BINDNAME
         MOZ_FALLTHROUGH;
@@ -1976,10 +1992,12 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_setaliasedvar(ScopeCoordinate(pc));
 
       case JSOP_UINT24:
-        return pushConstant(Int32Value(GET_UINT24(pc)));
+        pushConstant(Int32Value(GET_UINT24(pc)));
+        return true;
 
       case JSOP_INT32:
-        return pushConstant(Int32Value(GET_INT32(pc)));
+        pushConstant(Int32Value(GET_INT32(pc)));
+        return true;
 
       case JSOP_LOOPHEAD:
         // JSOP_LOOPHEAD is handled when processing the loop header.
@@ -2050,7 +2068,8 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_regexp(info().getRegExp(pc));
 
       case JSOP_CALLSITEOBJ:
-        return pushConstant(ObjectValue(*(info().getObject(pc))));
+        pushConstant(ObjectValue(*(info().getObject(pc))));
+        return true;
 
       case JSOP_OBJECT:
         return jsop_object(info().getObject(pc));
@@ -2098,8 +2117,10 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_debugger();
 
       case JSOP_GIMPLICITTHIS:
-        if (!script()->hasNonSyntacticScope())
-            return pushConstant(UndefinedValue());
+        if (!script()->hasNonSyntacticScope()) {
+            pushConstant(UndefinedValue());
+            return true;
+        }
 
         // Just fall through to the unsupported bytecode case.
         break;
@@ -4616,11 +4637,10 @@ IonBuilder::processThrow()
     return processControlEnd();
 }
 
-bool
+void
 IonBuilder::pushConstant(const Value& v)
 {
     current->push(constant(v));
-    return true;
 }
 
 bool
@@ -8441,12 +8461,18 @@ IonBuilder::getStaticName(JSObject* staticObject, PropertyName* name, bool* psuc
             lexicalCheck->setNotGuardUnchecked();
 
         // Optimize undefined, NaN, and Infinity.
-        if (name == names().undefined)
-            return pushConstant(UndefinedValue());
-        if (name == names().NaN)
-            return pushConstant(compartment->runtime()->NaNValue());
-        if (name == names().Infinity)
-            return pushConstant(compartment->runtime()->positiveInfinityValue());
+        if (name == names().undefined) {
+            pushConstant(UndefinedValue());
+            return true;
+        }
+        if (name == names().NaN) {
+            pushConstant(compartment->runtime()->NaNValue());
+            return true;
+        }
+        if (name == names().Infinity) {
+            pushConstant(compartment->runtime()->positiveInfinityValue());
+            return true;
+        }
     }
 
     // When not loading a known value on the global with a lexical check,
@@ -8492,14 +8518,18 @@ IonBuilder::getStaticName(JSObject* staticObject, PropertyName* name, bool* psuc
         // Try to inline properties holding a known constant object.
         JSObject* singleton = types->maybeSingleton();
         if (singleton) {
-            if (testSingletonProperty(staticObject, id) == singleton)
-                return pushConstant(ObjectValue(*singleton));
+            if (testSingletonProperty(staticObject, id) == singleton) {
+                pushConstant(ObjectValue(*singleton));
+                return true;
+            }
         }
 
         // Try to inline properties that have never been overwritten.
         Value constantValue;
-        if (property.constant(constraints(), &constantValue))
-            return pushConstant(constantValue);
+        if (property.constant(constraints(), &constantValue)) {
+            pushConstant(constantValue);
+            return true;
+        }
     }
 
     if (!loadStaticSlot(staticObject, barrier, types, property.maybeTypes()->definiteSlot())) {
@@ -8517,10 +8547,14 @@ IonBuilder::loadStaticSlot(JSObject* staticObject, BarrierKind barrier, Temporar
     if (barrier == BarrierKind::NoBarrier) {
         // Try to inline properties that can only have one value.
         MIRType knownType = types->getKnownMIRType();
-        if (knownType == MIRType::Undefined)
-            return pushConstant(UndefinedValue());
-        if (knownType == MIRType::Null)
-            return pushConstant(NullValue());
+        if (knownType == MIRType::Undefined) {
+            pushConstant(UndefinedValue());
+            return true;
+        }
+        if (knownType == MIRType::Null) {
+            pushConstant(NullValue());
+            return true;
+        }
     }
 
     MInstruction* obj = constant(ObjectValue(*staticObject));
@@ -11505,8 +11539,7 @@ IonBuilder::getPropTryInferredConstant(bool* emitted, MDefinition* obj, Property
     if (property.constant(constraints(), &constantValue)) {
         spew("Optimized constant property");
         obj->setImplicitlyUsedUnchecked();
-        if (!pushConstant(constantValue))
-            return false;
+        pushConstant(constantValue);
         types->addType(TypeSet::GetValueType(constantValue), alloc_->lifoAlloc());
         trackOptimizationSuccess();
         *emitted = true;
@@ -11543,7 +11576,8 @@ IonBuilder::getPropTryArgumentsLength(bool* emitted, MDefinition* obj)
     }
 
     // We are inlining and know the number of arguments the callee pushed
-    return pushConstant(Int32Value(inlineCallInfo_->argv().length()));
+    pushConstant(Int32Value(inlineCallInfo_->argv().length()));
+    return true;
 }
 
 bool
@@ -12025,7 +12059,8 @@ IonBuilder::getPropTryCommonGetter(bool* emitted, MDefinition* obj, PropertyName
             if (singleton && jitinfo->aliasSet() == JSJitInfo::AliasNone) {
                 size_t slot = jitinfo->slotIndex;
                 *emitted = true;
-                return pushConstant(GetReservedSlot(singleton, slot));
+                pushConstant(GetReservedSlot(singleton, slot));
+                return true;
             }
 
             // We can't use MLoadFixedSlot here because it might not have the
@@ -13377,8 +13412,10 @@ IonBuilder::jsop_functionthis()
         return true;
     }
 
-    if (IsNullOrUndefined(def->type()))
-        return pushConstant(GetThisValue(&script()->global()));
+    if (IsNullOrUndefined(def->type())) {
+        pushConstant(GetThisValue(&script()->global()));
+        return true;
+    }
 
     MComputeThis* thisObj = MComputeThis::New(alloc(), def);
     current->add(thisObj);
@@ -13706,7 +13743,8 @@ IonBuilder::inTryDense(bool* emitted, MDefinition* obj, MDefinition* id)
     // If there are no holes, speculate the InArray check will not fail.
     if (!needsHoleCheck && !failedBoundsCheck_) {
         addBoundsCheck(idInt32, initLength);
-        return pushConstant(BooleanValue(true));
+        pushConstant(BooleanValue(true));
+        return true;
     }
 
     // Check if id < initLength and elem[id] not a hole.

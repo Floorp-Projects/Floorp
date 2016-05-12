@@ -29,6 +29,7 @@ HitTestingTreeNode::HitTestingTreeNode(AsyncPanZoomController* aApzc,
   , mScrollDir(Layer::NONE)
   , mScrollSize(0)
   , mIsScrollbarContainer(false)
+  , mFixedPosTarget(FrameMetrics::NULL_SCROLL_ID)
   , mOverride(EventRegionsOverride::NoOverride)
 {
 if (mIsPrimaryApzcHolder) {
@@ -124,6 +125,25 @@ bool
 HitTestingTreeNode::IsScrollbarNode() const
 {
   return mIsScrollbarContainer || (mScrollDir != Layer::NONE);
+}
+
+void
+HitTestingTreeNode::SetFixedPosData(FrameMetrics::ViewID aFixedPosTarget)
+{
+  mFixedPosTarget = aFixedPosTarget;
+}
+
+FrameMetrics::ViewID
+HitTestingTreeNode::GetNearestAncestorFixedPosTargetWithSameLayersId() const
+{
+  for (const HitTestingTreeNode* n = this;
+       n && n->mLayersId == mLayersId;
+       n = n->GetParent()) {
+    if (n->mFixedPosTarget != FrameMetrics::NULL_SCROLL_ID) {
+      return n->mFixedPosTarget;
+    }
+  }
+  return FrameMetrics::NULL_SCROLL_ID;
 }
 
 void
@@ -293,11 +313,12 @@ HitTestingTreeNode::Dump(const char* aPrefix) const
   if (mPrevSibling) {
     mPrevSibling->Dump(aPrefix);
   }
-  printf_stderr("%sHitTestingTreeNode (%p) APZC (%p) g=(%s) %s%sr=(%s) t=(%s) c=(%s)\n",
+  printf_stderr("%sHitTestingTreeNode (%p) APZC (%p) g=(%s) %s%s%sr=(%s) t=(%s) c=(%s)\n",
     aPrefix, this, mApzc.get(),
     mApzc ? Stringify(mApzc->GetGuid()).c_str() : nsPrintfCString("l=%" PRIu64, mLayersId).get(),
     (mOverride & EventRegionsOverride::ForceDispatchToContent) ? "fdtc " : "",
     (mOverride & EventRegionsOverride::ForceEmptyHitRegion) ? "fehr " : "",
+    (mFixedPosTarget != FrameMetrics::NULL_SCROLL_ID) ? nsPrintfCString("fixed=%" PRIu64 " ", mFixedPosTarget).get() : "",
     Stringify(mEventRegions).c_str(), Stringify(mTransform).c_str(),
     mClipRegion ? Stringify(mClipRegion.ref()).c_str() : "none");
   if (mLastChild) {

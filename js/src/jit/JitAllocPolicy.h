@@ -65,7 +65,7 @@ class TempAllocator
         return &lifoScope_.alloc();
     }
 
-    bool ensureBallast() {
+    MOZ_MUST_USE bool ensureBallast() {
         return lifoScope_.alloc().ensureUnusedApproximate(BallastSize);
     }
 };
@@ -117,7 +117,7 @@ class JitAllocPolicy
     }
     void reportAllocOverflow() const {
     }
-    bool checkSimulatedOOM() const {
+    MOZ_MUST_USE bool checkSimulatedOOM() const {
         return !js::oom::ShouldFailWithOOM();
     }
 };

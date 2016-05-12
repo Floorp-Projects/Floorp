@@ -254,8 +254,8 @@ nsPrincipal::MayLoadInternal(nsIURI* aURI)
   if (uriWithPrin) {
     uriWithPrin->GetPrincipal(getter_AddRefs(uriPrin));
   }
-  if (uriPrin && nsIPrincipal::Subsumes(uriPrin)) {
-    return true;
+  if (uriPrin) {
+    return nsIPrincipal::Subsumes(uriPrin);
   }
 
   // If this principal is associated with an addon, check whether that addon

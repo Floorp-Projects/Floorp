@@ -878,28 +878,50 @@ StringToLinearString(JSContext* cx, JSString* str)
     return reinterpret_cast<JSLinearString*>(str);
 }
 
+template<typename CharType>
 MOZ_ALWAYS_INLINE void
-CopyLinearStringChars(char16_t* dest, JSLinearString* s, size_t len)
+CopyLinearStringChars(CharType* dest, JSLinearString* s, size_t len, size_t start = 0);
+
+MOZ_ALWAYS_INLINE void
+CopyLinearStringChars(char16_t* dest, JSLinearString* s, size_t len, size_t start = 0)
 {
+    MOZ_ASSERT(start + len <= GetLinearStringLength(s));
     JS::AutoCheckCannotGC nogc;
     if (LinearStringHasLatin1Chars(s)) {
         const JS::Latin1Char* src = GetLatin1LinearStringChars(nogc, s);
         for (size_t i = 0; i < len; i++)
-            dest[i] = src[i];
+            dest[i] = src[start + i];
     } else {
         const char16_t* src = GetTwoByteLinearStringChars(nogc, s);
-        mozilla::PodCopy(dest, src, len);
+        mozilla::PodCopy(dest, src + start, len);
     }
 }
 
+MOZ_ALWAYS_INLINE void
+CopyLinearStringChars(char* dest, JSLinearString* s, size_t len, size_t start = 0)
+{
+    MOZ_ASSERT(start + len <= GetLinearStringLength(s));
+    JS::AutoCheckCannotGC nogc;
+    if (LinearStringHasLatin1Chars(s)) {
+        const JS::Latin1Char* src = GetLatin1LinearStringChars(nogc, s);
+        for (size_t i = 0; i < len; i++)
+           dest[i] = char(src[start + i]);
+    } else {
+      const char16_t* src = GetTwoByteLinearStringChars(nogc, s);
+      for (size_t i = 0; i < len; i++)
+          dest[i] = char(src[start + i]);
+    }
+}
+
+template<typename CharType>
 inline bool
-CopyStringChars(JSContext* cx, char16_t* dest, JSString* s, size_t len)
+CopyStringChars(JSContext* cx, CharType* dest, JSString* s, size_t len, size_t start = 0)
 {
     JSLinearString* linear = StringToLinearString(cx, s);
     if (!linear)
         return false;
 
-    CopyLinearStringChars(dest, linear, len);
+    CopyLinearStringChars(dest, linear, len, start);
     return true;
 }
 

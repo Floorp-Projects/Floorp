@@ -6,6 +6,7 @@
 
 #include "ScopedNSSTypes.h"
 #include "nsCRT.h"
+#include "nsCRTGlue.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsICertificateDialogs.h"
 #include "nsIDirectoryService.h"
@@ -410,22 +411,17 @@ finish:
 //
 // For the NSS PKCS#12 library, must convert PRUnichars (shorts) to
 // a buffer of octets.  Must handle byte order correctly.
-// TODO: Is there a mozilla way to do this?  In the string lib?
-void
+nsresult
 nsPKCS12Blob::unicodeToItem(const char16_t *uni, SECItem *item)
 {
-  int len = 0;
-  while (uni[len++] != 0);
-  SECITEM_AllocItem(nullptr, item, sizeof(char16_t) * len);
-#ifdef IS_LITTLE_ENDIAN
-  int i = 0;
-  for (i=0; i<len; i++) {
-    item->data[2*i  ] = (unsigned char )(uni[i] << 8);
-    item->data[2*i+1] = (unsigned char )(uni[i]);
+  uint32_t len = NS_strlen(uni) + 1;
+  if (!SECITEM_AllocItem(nullptr, item, sizeof(char16_t) * len)) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
-#else
-  memcpy(item->data, uni, item->len);
-#endif
+
+  mozilla::NativeEndian::copyAndSwapToBigEndian(item->data, uni, len);
+
+  return NS_OK;
 }
 
 // newPKCS12FilePassword
@@ -445,8 +441,7 @@ nsPKCS12Blob::newPKCS12FilePassword(SECItem *unicodePw)
   bool pressedOK;
   rv = certDialogs->SetPKCS12FilePassword(mUIContext, password, &pressedOK);
   if (NS_FAILED(rv) || !pressedOK) return rv;
-  unicodeToItem(password.get(), unicodePw);
-  return NS_OK;
+  return unicodeToItem(password.get(), unicodePw);
 }
 
 // getPKCS12FilePassword
@@ -466,8 +461,7 @@ nsPKCS12Blob::getPKCS12FilePassword(SECItem *unicodePw)
   bool pressedOK;
   rv = certDialogs->GetPKCS12FilePassword(mUIContext, password, &pressedOK);
   if (NS_FAILED(rv) || !pressedOK) return rv;
-  unicodeToItem(password.get(), unicodePw);
-  return NS_OK;
+  return unicodeToItem(password.get(), unicodePw);
 }
 
 // inputToDecoder
@@ -651,10 +645,9 @@ nsPKCS12Blob::nickname_collision(SECItem *oldNick, PRBool *cancel, void *wincx)
     // without a corresponding cert.
     //  XXX If a user imports *many* certs without the 'friendly name'
     //      attribute, then this may take a long time.  :(
+    nickname = nickFromPropC;
     if (count > 1) {
-      nickname.Adopt(PR_smprintf("%s #%d", nickFromPropC.get(), count));
-    } else {
-      nickname = nickFromPropC;
+      nickname.AppendPrintf(" #%d", count);
     }
     CERTCertificate *cert = CERT_FindCertByNickname(CERT_GetDefaultCertDB(),
                                            const_cast<char*>(nickname.get()));

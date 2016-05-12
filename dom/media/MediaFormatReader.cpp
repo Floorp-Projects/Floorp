@@ -1283,7 +1283,7 @@ MediaFormatReader::WaitForData(MediaData::Type aType)
 }
 
 nsresult
-MediaFormatReader::ResetDecode()
+MediaFormatReader::ResetDecode(TargetQueues aQueues)
 {
   MOZ_ASSERT(OnTaskQueue());
   LOGV("");
@@ -1306,13 +1306,14 @@ MediaFormatReader::ResetDecode()
       mVideo.RejectPromise(CANCELED, __func__);
     }
   }
-  if (HasAudio()) {
+
+  if (HasAudio() && aQueues == AUDIO_VIDEO) {
     Reset(TrackInfo::kAudioTrack);
     if (mAudio.HasPromise()) {
       mAudio.RejectPromise(CANCELED, __func__);
     }
   }
-  return MediaDecoderReader::ResetDecode();
+  return MediaDecoderReader::ResetDecode(aQueues);
 }
 
 void
@@ -1608,9 +1609,10 @@ MediaFormatReader::OnVideoSeekCompleted(media::TimeUnit aTime)
   LOGV("Video seeked to %lld", aTime.ToMicroseconds());
   mVideo.mSeekRequest.Complete();
 
-  if (HasAudio()) {
-    MOZ_ASSERT(mPendingSeekTime.isSome() && mOriginalSeekTarget.isSome());
-    if (mOriginalSeekTarget.ref().IsFast()) {
+  MOZ_ASSERT(mOriginalSeekTarget.isSome());
+  if (HasAudio() && !mOriginalSeekTarget->IsVideoOnly()) {
+    MOZ_ASSERT(mPendingSeekTime.isSome());
+    if (mOriginalSeekTarget->IsFast()) {
       // We are performing a fast seek. We need to seek audio to where the
       // video seeked to, to ensure proper A/V sync once playback resume.
       mPendingSeekTime = Some(aTime);

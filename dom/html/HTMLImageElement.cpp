@@ -46,10 +46,14 @@
 #include "nsIDOMHTMLMapElement.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/net/ReferrerPolicy.h"
 
 #include "nsLayoutUtils.h"
 
 #include "mozilla/Preferences.h"
+
+using namespace mozilla::net;
+
 static const char *kPrefSrcsetEnabled = "dom.image.srcset.enabled";
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Image)
@@ -512,7 +516,7 @@ HTMLImageElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                           nsIAtom* aPrefix, const nsAString& aValue,
                           bool aNotify)
 {
-  bool forceReloadWithNewCORSMode = false;
+  bool forceReload = false;
   // We need to force our image to reload.  This must be done here, not in
   // AfterSetAttr or BeforeSetAttr, because we want to do it even if the attr is
   // being set to its existing value, which is normally optimized away as a
@@ -558,7 +562,19 @@ HTMLImageElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
     ParseCORSValue(aValue, attrValue);
     if (GetCORSMode() != AttrValueToCORSMode(&attrValue)) {
       // Force a new load of the image with the new cross origin policy.
-      forceReloadWithNewCORSMode = true;
+      forceReload = true;
+    }
+  } else if (aName == nsGkAtoms::referrerpolicy &&
+      aNameSpaceID == kNameSpaceID_None &&
+      aNotify) {
+    ReferrerPolicy referrerPolicy = ReferrerPolicyFromString(aValue);
+    if (!InResponsiveMode() && referrerPolicy != GetImageReferrerPolicy()) {
+      // XXX: Bug 1076583 - We still use the older synchronous algorithm
+      // Because referrerPolicy is not treated as relevant mutations, setting
+      // the attribute will neither trigger a reload nor update the referrer
+      // policy of the loading channel (whether it has previously completed or
+      // not). Force a new load of the image with the new referrerpolicy.
+      forceReload = true;
     }
   }
 
@@ -568,7 +584,7 @@ HTMLImageElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   // Because we load image synchronously in non-responsive-mode, we need to do
   // reload after the attribute has been set if the reload is triggerred by
   // cross origin changing.
-  if (forceReloadWithNewCORSMode) {
+  if (forceReload) {
     if (InResponsiveMode()) {
       // per spec, full selection runs when this changes, even though
       // it doesn't directly affect the source selection

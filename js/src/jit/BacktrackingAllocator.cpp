@@ -1354,7 +1354,8 @@ BacktrackingAllocator::computeRequirement(LiveBundle* bundle,
                     return false;
             } else if (policy == LUse::ANY) {
                 // ANY differs from KEEPALIVE by actively preferring a register.
-                hint->merge(Requirement(Requirement::REGISTER));
+                if (!hint->merge(Requirement(Requirement::REGISTER)))
+                    return false;
             }
         }
     }

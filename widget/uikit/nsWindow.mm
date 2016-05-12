@@ -144,7 +144,7 @@ private:
                            WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
 
     event.mRefPoint = aPoint;
-    event.clickCount = 1;
+    event.mClickCount = 1;
     event.button = WidgetMouseEvent::eLeftButton;
     event.mTime = PR_IntervalNow();
     event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;

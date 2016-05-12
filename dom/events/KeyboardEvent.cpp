@@ -198,6 +198,7 @@ KeyboardEvent::CharCode()
   case eAfterKeyUp:
     return 0;
   case eKeyPress:
+  case eAccessKeyNotFound:
     return mEvent->AsKeyboardEvent()->charCode;
   default:
     break;

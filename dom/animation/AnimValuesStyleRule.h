@@ -38,30 +38,25 @@ public:
 
   void AddValue(nsCSSProperty aProperty, const StyleAnimationValue &aStartValue)
   {
-    PropertyValuePair v = { aProperty, aStartValue };
-    mPropertyValuePairs.AppendElement(v);
+    PropertyStyleAnimationValuePair pair = { aProperty, aStartValue };
+    mPropertyValuePairs.AppendElement(pair);
     mStyleBits |=
       nsCachedStyleData::GetBitForSID(nsCSSProps::kSIDTable[aProperty]);
   }
 
   void AddValue(nsCSSProperty aProperty, StyleAnimationValue&& aStartValue)
   {
-    PropertyValuePair *p = mPropertyValuePairs.AppendElement();
-    p->mProperty = aProperty;
-    p->mValue = Move(aStartValue);
+    PropertyStyleAnimationValuePair* pair = mPropertyValuePairs.AppendElement();
+    pair->mProperty = aProperty;
+    pair->mValue = Move(aStartValue);
     mStyleBits |=
       nsCachedStyleData::GetBitForSID(nsCSSProps::kSIDTable[aProperty]);
   }
 
-  struct PropertyValuePair {
-    nsCSSProperty mProperty;
-    StyleAnimationValue mValue;
-  };
-
 private:
   ~AnimValuesStyleRule() {}
 
-  InfallibleTArray<PropertyValuePair> mPropertyValuePairs;
+  InfallibleTArray<PropertyStyleAnimationValuePair> mPropertyValuePairs;
   uint32_t mStyleBits;
 };
 

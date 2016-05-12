@@ -73,6 +73,11 @@ public:
     CANCELED
   };
 
+  enum TargetQueues {
+    VIDEO_ONLY,
+    AUDIO_VIDEO
+  };
+
   using MetadataPromise =
     MozPromise<RefPtr<MetadataHolder>, ReadMetadataFailureReason, IsExclusive>;
   using MediaDataPromise =
@@ -125,7 +130,7 @@ public:
   // The first samples of every stream produced after a ResetDecode() call
   // *must* be marked as "discontinuities". If it's not, seeking work won't
   // properly!
-  virtual nsresult ResetDecode();
+  virtual nsresult ResetDecode(TargetQueues aQueues = AUDIO_VIDEO);
 
   // Requests one audio sample from the reader.
   //
@@ -394,6 +399,8 @@ private:
 
   // Recomputes mBuffered.
   virtual void UpdateBuffered();
+
+  virtual void VisibilityChanged();
 
   virtual void NotifyDataArrivedInternal() {}
 

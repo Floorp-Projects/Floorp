@@ -1943,7 +1943,8 @@ ICGetElemNativeCompiler<T>::generateStubCode(MacroAssembler& masm)
             if (popR1)
                 masm.addToStackPtr(ImmWord(sizeof(size_t)));
 
-            emitCallNative(masm, objReg);
+            if (!emitCallNative(masm, objReg))
+                return false;
 
         } else {
             MOZ_ASSERT(acctype_ == ICGetElemNativeStub::ScriptedGetter);
@@ -1959,7 +1960,8 @@ ICGetElemNativeCompiler<T>::generateStubCode(MacroAssembler& masm)
             if (popR1)
                 masm.addToStackPtr(Imm32(sizeof(size_t)));
 
-            emitCallScripted(masm, objReg);
+            if (!emitCallScripted(masm, objReg))
+                return false;
         }
     }
 

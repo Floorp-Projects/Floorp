@@ -816,6 +816,7 @@ JsepSessionImpl::CreateAnswer(const JsepAnswerOptions& options,
 
   *answer = sdp->ToString();
   mGeneratedLocalDescription = Move(sdp);
+  ++mSessionVersion;
 
   return NS_OK;
 }
