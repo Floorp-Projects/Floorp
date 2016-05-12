@@ -306,7 +306,7 @@ KeyEventDispatcher::DispatchKeyEventInternal(EventMessage aEventMessage)
     if (!event.mCharCode) {
         event.mKeyCode = mDOMKeyCode;
     }
-    event.isChar = !!event.mCharCode;
+    event.mIsChar = !!event.mCharCode;
     event.mIsRepeat = IsRepeat();
     event.mKeyNameIndex = mDOMKeyNameIndex;
     if (mDOMPrintableKeyValue) {

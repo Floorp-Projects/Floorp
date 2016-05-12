@@ -2461,9 +2461,9 @@ InitKeyEvent(WidgetKeyboardEvent& event,
 
     if (event.mMessage == eKeyPress) {
         // Android gives us \n, so filter out some control characters.
-        event.isChar = (charCode >= ' ');
-        event.mCharCode = event.isChar ? charCode : 0;
-        event.mKeyCode = event.isChar ? 0 : domKeyCode;
+        event.mIsChar = (charCode >= ' ');
+        event.mCharCode = event.mIsChar ? charCode : 0;
+        event.mKeyCode = event.mIsChar ? 0 : domKeyCode;
         event.mPluginEvent.Clear();
 
         // For keypress, if the unicode char already has modifiers applied, we
@@ -2478,7 +2478,7 @@ InitKeyEvent(WidgetKeyboardEvent& event,
         }
 
     } else {
-        event.isChar = false;
+        event.mIsChar = false;
         event.mCharCode = 0;
         event.mKeyCode = domKeyCode;
 
