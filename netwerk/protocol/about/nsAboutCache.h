@@ -64,8 +64,10 @@ protected:
         nsresult VisitStorage(nsACString const & storageName);
 
         // Writes content of mBuffer to mStream and truncates
-        // the buffer.
-        void FlushBuffer();
+        // the buffer.  It may fail when the input stream is closed by canceling
+        // the input stream channel.  It can be used to stop the cache iteration
+        // process.
+        nsresult FlushBuffer();
 
         // Whether we are showing overview status of all available
         // storages.
@@ -74,6 +76,9 @@ protected:
         // Flag initially false, that indicates the entries header has
         // been added to the output HTML.
         bool mEntriesHeaderAdded;
+
+        // Cancelation flag
+        bool mCancel;
 
         // The context we are working with.
         nsCOMPtr<nsILoadContextInfo> mLoadInfo;
