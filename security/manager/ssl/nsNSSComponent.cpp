@@ -997,8 +997,8 @@ nsNSSComponent::ConfigureInternalPKCS11Token()
   nsAutoString privateTokenDescription;
   nsAutoString slotDescription;
   nsAutoString privateSlotDescription;
-  nsAutoString fips140TokenDescription;
   nsAutoString fips140SlotDescription;
+  nsAutoString fips140TokenDescription;
 
   nsresult rv;
   rv = GetPIPNSSBundleString("ManufacturerID", manufacturerID);
@@ -1019,10 +1019,10 @@ nsNSSComponent::ConfigureInternalPKCS11Token()
   rv = GetPIPNSSBundleString("PrivateSlotDescription", privateSlotDescription);
   if (NS_FAILED(rv)) return rv;
 
-  rv = GetPIPNSSBundleString("Fips140TokenDescription", fips140TokenDescription);
+  rv = GetPIPNSSBundleString("Fips140SlotDescription", fips140SlotDescription);
   if (NS_FAILED(rv)) return rv;
 
-  rv = GetPIPNSSBundleString("Fips140SlotDescription", fips140SlotDescription);
+  rv = GetPIPNSSBundleString("Fips140TokenDescription", fips140TokenDescription);
   if (NS_FAILED(rv)) return rv;
 
   PK11_ConfigurePKCS11(NS_ConvertUTF16toUTF8(manufacturerID).get(),
@@ -1031,8 +1031,8 @@ nsNSSComponent::ConfigureInternalPKCS11Token()
                        NS_ConvertUTF16toUTF8(privateTokenDescription).get(),
                        NS_ConvertUTF16toUTF8(slotDescription).get(),
                        NS_ConvertUTF16toUTF8(privateSlotDescription).get(),
-                       NS_ConvertUTF16toUTF8(fips140TokenDescription).get(),
                        NS_ConvertUTF16toUTF8(fips140SlotDescription).get(),
+                       NS_ConvertUTF16toUTF8(fips140TokenDescription).get(),
                        0, 0);
   return NS_OK;
 }
