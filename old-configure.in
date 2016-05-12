@@ -6553,12 +6553,6 @@ if test "$BUILD_CTYPES"; then
     AC_DEFINE(BUILD_CTYPES)
 fi
 
-dnl Build Services/CloudSync if required
-AC_SUBST(MOZ_SERVICES_CLOUDSYNC)
-if test -n "$MOZ_SERVICES_CLOUDSYNC"; then
-  AC_DEFINE(MOZ_SERVICES_CLOUDSYNC)
-fi
-
 dnl ========================================================
 if test "$MOZ_DEBUG" -o "$MOZ_DMD"; then
     MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
