@@ -927,14 +927,14 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
     case kVK_Shift:
     case kVK_Option:
     case kVK_Control:
-      aKeyEvent.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_LEFT;
+      aKeyEvent.mLocation = nsIDOMKeyEvent::DOM_KEY_LOCATION_LEFT;
       break;
 
     case kVK_RightCommand:
     case kVK_RightShift:
     case kVK_RightOption:
     case kVK_RightControl:
-      aKeyEvent.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_RIGHT;
+      aKeyEvent.mLocation = nsIDOMKeyEvent::DOM_KEY_LOCATION_RIGHT;
       break;
 
     case kVK_ANSI_Keypad0:
@@ -956,11 +956,11 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
     case kVK_ANSI_KeypadEnter:
     case kVK_JIS_KeypadComma:
     case kVK_Powerbook_KeypadEnter:
-      aKeyEvent.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_NUMPAD;
+      aKeyEvent.mLocation = nsIDOMKeyEvent::DOM_KEY_LOCATION_NUMPAD;
       break;
 
     default:
-      aKeyEvent.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD;
+      aKeyEvent.mLocation = nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD;
       break;
   }
 

@@ -513,8 +513,8 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
                    static_cast<WidgetKeyboardEvent&>(original).mMessage);
       MOZ_ASSERT(keyEvent.mKeyCode ==
                    static_cast<WidgetKeyboardEvent&>(original).mKeyCode);
-      MOZ_ASSERT(keyEvent.location ==
-                   static_cast<WidgetKeyboardEvent&>(original).location);
+      MOZ_ASSERT(keyEvent.mLocation ==
+                   static_cast<WidgetKeyboardEvent&>(original).mLocation);
       MOZ_ASSERT(keyEvent.mIsRepeat ==
                    static_cast<WidgetKeyboardEvent&>(original).mIsRepeat);
       MOZ_ASSERT(keyEvent.mIsComposing ==

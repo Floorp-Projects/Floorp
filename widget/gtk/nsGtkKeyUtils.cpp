@@ -922,7 +922,7 @@ KeymapWrapper::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
         case GDK_Super_L:
         case GDK_Hyper_L:
         case GDK_Meta_L:
-            aKeyEvent.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_LEFT;
+            aKeyEvent.mLocation = nsIDOMKeyEvent::DOM_KEY_LOCATION_LEFT;
             break;
 
         case GDK_Shift_R:
@@ -931,7 +931,7 @@ KeymapWrapper::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
         case GDK_Super_R:
         case GDK_Hyper_R:
         case GDK_Meta_R:
-            aKeyEvent.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_RIGHT;
+            aKeyEvent.mLocation = nsIDOMKeyEvent::DOM_KEY_LOCATION_RIGHT;
             break;
 
         case GDK_KP_0:
@@ -969,11 +969,11 @@ KeymapWrapper::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
         case GDK_KP_Subtract:
         case GDK_KP_Decimal:
         case GDK_KP_Divide:
-            aKeyEvent.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_NUMPAD;
+            aKeyEvent.mLocation = nsIDOMKeyEvent::DOM_KEY_LOCATION_NUMPAD;
             break;
 
         default:
-            aKeyEvent.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD;
+            aKeyEvent.mLocation = nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD;
             break;
     }
 
