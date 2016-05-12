@@ -156,7 +156,6 @@ public:
   using nsObjectLoadingContent::GetContentDocument;
   nsPIDOMWindowOuter* GetContentWindow();
   using nsIConstraintValidation::CheckValidity;
-  using nsIConstraintValidation::ReportValidity;
   using nsIConstraintValidation::GetValidationMessage;
   void GetAlign(DOMString& aValue)
   {

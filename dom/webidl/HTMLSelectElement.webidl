@@ -50,7 +50,6 @@ interface HTMLSelectElement : HTMLElement {
   readonly attribute ValidityState validity;
   readonly attribute DOMString validationMessage;
   boolean checkValidity();
-  boolean reportValidity();
   void setCustomValidity(DOMString error);
 
 // NYI:  readonly attribute NodeList labels;

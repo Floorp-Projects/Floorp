@@ -52,7 +52,6 @@ interface HTMLTextAreaElement : HTMLElement {
   readonly attribute ValidityState validity;
   readonly attribute DOMString validationMessage;
   boolean checkValidity();
-  boolean reportValidity();
   void setCustomValidity(DOMString error);
 
   // readonly attribute NodeList labels;

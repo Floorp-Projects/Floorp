@@ -73,7 +73,6 @@ public:
   }
   mozilla::dom::ValidityState* Validity();
   bool CheckValidity();
-  bool ReportValidity();
 
 protected:
 
