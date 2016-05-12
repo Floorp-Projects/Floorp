@@ -583,6 +583,9 @@ protected:
   void AddAuthorSheet(nsISupports* aSheet);
   void RemoveSheet(mozilla::SheetType aType, nsISupports* aSheet);
 
+  /// @return the LayerManager at the root of the view tree.
+  LayerManager* GetRootLayerManager();
+
   // Hide a view if it is a popup
   void HideViewIfPopup(nsView* aView);
 
