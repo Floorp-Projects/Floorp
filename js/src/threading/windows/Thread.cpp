@@ -70,7 +70,9 @@ js::Thread::create(unsigned int (__stdcall* aMain)(void*), void* aArg)
   // Use _beginthreadex and not CreateThread, because threads that are
   // created with the latter leak a small amount of memory when they use
   // certain msvcrt functions and then exit.
-  uintptr_t handle = _beginthreadex(nullptr, 0, aMain, aArg, 0,
+  uintptr_t handle = _beginthreadex(nullptr, options_.stackSize(),
+                                    aMain, aArg,
+                                    STACK_SIZE_PARAM_IS_A_RESERVATION,
                                     &id_.platformData()->id);
   if (!handle) {
     // The documentation does not say what state the thread id has if the method
