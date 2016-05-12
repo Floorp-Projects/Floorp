@@ -352,7 +352,7 @@ bool
 UIEvent::IsChar() const
 {
   WidgetKeyboardEvent* keyEvent = mEvent->AsKeyboardEvent();
-  return keyEvent ? keyEvent->isChar : false;
+  return keyEvent ? keyEvent->mIsChar : false;
 }
 
 mozilla::dom::Event*

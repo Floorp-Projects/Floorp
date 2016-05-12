@@ -914,7 +914,7 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
   }
 
   aKeyEvent.mRefPoint = LayoutDeviceIntPoint(0, 0);
-  aKeyEvent.isChar = false; // XXX not used in XP level
+  aKeyEvent.mIsChar = false; // XXX not used in XP level
 
   UInt32 kbType = GetKbdType();
   UInt32 nativeKeyCode = [aNativeKeyEvent keyCode];
@@ -1096,7 +1096,7 @@ TISInputSourceWrapper::WillDispatchKeyboardEvent(
     insertStringForCharCode.IsEmpty() ? 0 : insertStringForCharCode[0];
   aKeyEvent.SetCharCode(charCode);
   // this is not a special key  XXX not used in XP
-  aKeyEvent.isChar = (aKeyEvent.mMessage == eKeyPress);
+  aKeyEvent.mIsChar = (aKeyEvent.mMessage == eKeyPress);
 
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p TISInputSourceWrapper::WillDispatchKeyboardEvent, "
@@ -2224,7 +2224,7 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
 
   // Dispatch keypress event with char instead of compositionchange event
   WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
-  keypressEvent.isChar = IsPrintableChar(str.CharAt(0));
+  keypressEvent.mIsChar = IsPrintableChar(str.CharAt(0));
 
   // Don't set other modifiers from the current event, because here in
   // -insertText: they've already been taken into account in creating
@@ -2235,7 +2235,7 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
     InitKeyEvent(keyEvent, keypressEvent, &str);
   } else {
     nsCocoaUtils::InitInputEvent(keypressEvent, static_cast<NSEvent*>(nullptr));
-    if (keypressEvent.isChar) {
+    if (keypressEvent.mIsChar) {
       keypressEvent.mCharCode = str.CharAt(0);
     }
     // Note that insertText is not called only at key pressing.
