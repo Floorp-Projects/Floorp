@@ -44,6 +44,7 @@ const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis",
 const {Task} = require("resource://gre/modules/Task.jsm");
 const {scrollIntoViewIfNeeded} = require("devtools/shared/layout/utils");
 const {PrefObserver} = require("devtools/client/styleeditor/utils");
+const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
 
 Cu.import("resource://devtools/shared/gcli/Templater.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -123,7 +124,6 @@ function MarkupView(inspector, frame, controllerWindow) {
   this._onMouseClick = this._onMouseClick.bind(this);
   this._onMouseUp = this._onMouseUp.bind(this);
   this._onNewSelection = this._onNewSelection.bind(this);
-  this._onKeyDown = this._onKeyDown.bind(this);
   this._onCopy = this._onCopy.bind(this);
   this._onFocus = this._onFocus.bind(this);
   this._onMouseMove = this._onMouseMove.bind(this);
@@ -137,7 +137,6 @@ function MarkupView(inspector, frame, controllerWindow) {
   this._elt.addEventListener("mousemove", this._onMouseMove, false);
   this._elt.addEventListener("mouseleave", this._onMouseLeave, false);
   this.win.addEventListener("mouseup", this._onMouseUp);
-  this.win.addEventListener("keydown", this._onKeyDown, false);
   this.win.addEventListener("copy", this._onCopy);
   this._frame.addEventListener("focus", this._onFocus, false);
   this.walker.on("mutations", this._mutationObserver);
@@ -153,6 +152,8 @@ function MarkupView(inspector, frame, controllerWindow) {
                         this._onCollapseAttributesPrefChange);
   this._prefObserver.on(ATTR_COLLAPSE_LENGTH_PREF,
                         this._onCollapseAttributesPrefChange);
+
+  this._initShortcuts();
 
   EventEmitter.decorate(this);
 }
@@ -613,25 +614,40 @@ MarkupView.prototype = {
   },
 
   /**
-   * Key handling.
+   * Register all key shortcuts.
    */
-  _onKeyDown: function (event) {
-    let handled = true;
-    let previousNode, nextNode;
+  _initShortcuts: function () {
+    let shortcuts = new KeyShortcuts({
+      window: this.win,
+    });
 
-    // Ignore keystrokes that originated in editors.
+    this._onShortcut = this._onShortcut.bind(this);
+
+    // Process localizable keys
+    ["markupView.hide.key",
+     "markupView.edit.key",
+     "markupView.scrollInto.key"].forEach(name => {
+       let key = this.strings.GetStringFromName(name);
+       shortcuts.on(key, (_, event) => this._onShortcut(name, event));
+     });
+
+    // Process generic keys:
+    ["Delete", "Backspace", "Home", "Left", "Right", "Up", "Down", "PageUp",
+     "PageDown", "Esc"].forEach(key => {
+       shortcuts.on(key, this._onShortcut);
+     });
+  },
+
+  /**
+   * Key shortcut listener.
+   */
+  _onShortcut(name, event) {
     if (this._isInputOrTextarea(event.target)) {
       return;
     }
-
-    // Ignore keystrokes with modifiers to allow native shortcuts (such as save:
-    // accel + S) to bubble up.
-    if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
-      return;
-    }
-
-    switch (event.keyCode) {
-      case Ci.nsIDOMKeyEvent.DOM_VK_H:
+    switch (name) {
+      // Localizable keys
+      case "markupView.hide.key": {
         let node = this._selectedContainer.node;
         if (node.hidden) {
           this.walker.unhideNode(node);
@@ -639,17 +655,31 @@ MarkupView.prototype = {
           this.walker.hideNode(node);
         }
         break;
-      case Ci.nsIDOMKeyEvent.DOM_VK_DELETE:
+      }
+      case "markupView.edit.key": {
+        this.beginEditingOuterHTML(this._selectedContainer.node);
+        break;
+      }
+      case "markupView.scrollInto.key": {
+        let selection = this._selectedContainer.node;
+        this._inspector.scrollNodeIntoView(selection);
+        break;
+      }
+      // Generic keys
+      case "Delete": {
         this.deleteNodeOrAttribute();
         break;
-      case Ci.nsIDOMKeyEvent.DOM_VK_BACK_SPACE:
+      }
+      case "Backspace": {
         this.deleteNodeOrAttribute(true);
         break;
-      case Ci.nsIDOMKeyEvent.DOM_VK_HOME:
+      }
+      case "Home": {
         let rootContainer = this.getContainer(this._rootNode);
         this.navigate(rootContainer.children.firstChild.container);
         break;
-      case Ci.nsIDOMKeyEvent.DOM_VK_LEFT:
+      }
+      case "Left": {
         if (this._selectedContainer.expanded) {
           this.collapseNode(this._selectedContainer.node);
         } else {
@@ -659,7 +689,8 @@ MarkupView.prototype = {
           }
         }
         break;
-      case Ci.nsIDOMKeyEvent.DOM_VK_RIGHT:
+      }
+      case "Right": {
         if (!this._selectedContainer.expanded &&
             this._selectedContainer.hasChildren) {
           this._expandContainer(this._selectedContainer);
@@ -670,23 +701,26 @@ MarkupView.prototype = {
           }
         }
         break;
-      case Ci.nsIDOMKeyEvent.DOM_VK_UP:
-        previousNode = this._selectionWalker().previousNode();
+      }
+      case "Up": {
+        let previousNode = this._selectionWalker().previousNode();
         if (previousNode) {
           this.navigate(previousNode.container);
         }
         break;
-      case Ci.nsIDOMKeyEvent.DOM_VK_DOWN:
-        nextNode = this._selectionWalker().nextNode();
+      }
+      case "Down": {
+        let nextNode = this._selectionWalker().nextNode();
         if (nextNode) {
           this.navigate(nextNode.container);
         }
         break;
-      case Ci.nsIDOMKeyEvent.DOM_VK_PAGE_UP: {
+      }
+      case "PageUp": {
         let walker = this._selectionWalker();
         let selection = this._selectedContainer;
         for (let i = 0; i < PAGE_SIZE; i++) {
-          previousNode = walker.previousNode();
+          let previousNode = walker.previousNode();
           if (!previousNode) {
             break;
           }
@@ -695,11 +729,11 @@ MarkupView.prototype = {
         this.navigate(selection);
         break;
       }
-      case Ci.nsIDOMKeyEvent.DOM_VK_PAGE_DOWN: {
+      case "PageDown": {
         let walker = this._selectionWalker();
         let selection = this._selectedContainer;
         for (let i = 0; i < PAGE_SIZE; i++) {
-          nextNode = walker.nextNode();
+          let nextNode = walker.nextNode();
           if (!nextNode) {
             break;
           }
@@ -708,30 +742,23 @@ MarkupView.prototype = {
         this.navigate(selection);
         break;
       }
-      case Ci.nsIDOMKeyEvent.DOM_VK_F2: {
-        this.beginEditingOuterHTML(this._selectedContainer.node);
-        break;
-      }
-      case Ci.nsIDOMKeyEvent.DOM_VK_S: {
-        let selection = this._selectedContainer.node;
-        this._inspector.scrollNodeIntoView(selection);
-        break;
-      }
-      case Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE: {
+      case "Esc": {
         if (this.isDragging) {
           this.cancelDragging();
-          break;
+        } else {
+          // Return early to prevent cancelling the event when not
+          // dragging, to allow the split console to be toggled.
+          return;
         }
-        handled = false;
         break;
       }
       default:
-        handled = false;
+        console.error("Unexpected markup-view key shortcut", name);
+        return;
     }
-    if (handled) {
-      event.stopPropagation();
-      event.preventDefault();
-    }
+    // Prevent default for this action
+    event.stopPropagation();
+    event.preventDefault();
   },
 
   /**
@@ -1630,7 +1657,6 @@ MarkupView.prototype = {
     this._elt.removeEventListener("mousemove", this._onMouseMove, false);
     this._elt.removeEventListener("mouseleave", this._onMouseLeave, false);
     this.win.removeEventListener("mouseup", this._onMouseUp);
-    this.win.removeEventListener("keydown", this._onKeyDown, false);
     this.win.removeEventListener("copy", this._onCopy);
     this._frame.removeEventListener("focus", this._onFocus, false);
     this.walker.off("mutations", this._mutationObserver);
