@@ -32,6 +32,7 @@ config = {
             ],
             "channel_names": ["beta-dev", "beta-dev-localtest", "beta-dev-cdntest"],
             "rules_to_update": ["firefox-beta-dev-cdntest", "firefox-beta-dev-localtest"],
+             "publish_rules": ["firefox-beta"],
         },
         "release-dev": {
             "version_regex": r"^\d+\.\d+(\.\d+)?$",
@@ -41,6 +42,7 @@ config = {
             "mar_channel_ids": [],
             "channel_names": ["release-dev", "release-dev-localtest", "release-dev-cdntest"],
             "rules_to_update": ["firefox-release-dev-cdntest", "firefox-release-dev-localtest"],
+            "publish_rules": ["firefox-release"],
         },
     },
     "balrog_use_dummy_suffix": False,
