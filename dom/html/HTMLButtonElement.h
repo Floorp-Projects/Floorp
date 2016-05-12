@@ -165,7 +165,6 @@ public:
   // nsIConstraintValidation::GetValidationMessage() is fine.
   // nsIConstraintValidation::CheckValidity() is fine.
   using nsIConstraintValidation::CheckValidity;
-  using nsIConstraintValidation::ReportValidity;
   // nsIConstraintValidation::SetCustomValidity() is fine.
 
 protected:
