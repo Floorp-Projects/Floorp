@@ -102,7 +102,7 @@ private:
 
 protected:
   WidgetKeyboardEvent()
-    : keyCode(0)
+    : mKeyCode(0)
     , charCode(0)
     , mPseudoCharCode(0)
     , location(nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD)
@@ -131,7 +131,7 @@ public:
                       nsIWidget* aWidget,
                       EventClassID aEventClassID = eKeyboardEventClass)
     : WidgetInputEvent(aIsTrusted, aMessage, aWidget, aEventClassID)
-    , keyCode(0)
+    , mKeyCode(0)
     , charCode(0)
     , mPseudoCharCode(0)
     , location(nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD)
@@ -195,7 +195,7 @@ public:
 
   // A DOM keyCode value or 0.  If a keypress event whose charCode is 0, this
   // should be 0.
-  uint32_t keyCode;
+  uint32_t mKeyCode;
   // If the instance is a keypress event of a printable key, this is a UTF-16
   // value of the key.  Otherwise, 0.  This value must not be a control
   // character when some modifiers are active.  Then, this value should be an
@@ -339,7 +339,7 @@ public:
   static uint32_t ComputeLocationFromCodeValue(CodeNameIndex aCodeNameIndex);
 
   /**
-   * ComputeKeyCodeFromKeyNameIndex() return a .keyCode value which can be
+   * ComputeKeyCodeFromKeyNameIndex() return a .mKeyCode value which can be
    * mapped from the specified key value.  Note that this returns 0 if the
    * key name index is KEY_NAME_INDEX_Unidentified or KEY_NAME_INDEX_USE_STRING.
    * This means that this method is useful only for non-printable keys.
@@ -372,7 +372,7 @@ public:
   {
     AssignInputEventData(aEvent, aCopyTargets);
 
-    keyCode = aEvent.keyCode;
+    mKeyCode = aEvent.mKeyCode;
     charCode = aEvent.charCode;
     mPseudoCharCode = aEvent.mPseudoCharCode;
     location = aEvent.location;

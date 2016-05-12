@@ -466,7 +466,7 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
     keyEvent.SetCharCode(static_cast<uint32_t>(ch));
     if (aMessage == eKeyPress) {
       // keyCode of eKeyPress events of printable keys should be always 0.
-      keyEvent.keyCode = 0;
+      keyEvent.mKeyCode = 0;
       // eKeyPress events are dispatched for every character.
       // So, each key value of eKeyPress events should be a character.
       if (ch) {
@@ -511,8 +511,8 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
                                           aData);
       MOZ_ASSERT(keyEvent.mMessage ==
                    static_cast<WidgetKeyboardEvent&>(original).mMessage);
-      MOZ_ASSERT(keyEvent.keyCode ==
-                   static_cast<WidgetKeyboardEvent&>(original).keyCode);
+      MOZ_ASSERT(keyEvent.mKeyCode ==
+                   static_cast<WidgetKeyboardEvent&>(original).mKeyCode);
       MOZ_ASSERT(keyEvent.location ==
                    static_cast<WidgetKeyboardEvent&>(original).location);
       MOZ_ASSERT(keyEvent.mIsRepeat ==

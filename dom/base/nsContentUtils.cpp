@@ -7673,10 +7673,10 @@ nsContentUtils::SendKeyEvent(nsIWidget* aWidget,
   event.mModifiers = GetWidgetModifiers(aModifiers);
 
   if (msg == eKeyPress) {
-    event.keyCode = aCharCode ? 0 : aKeyCode;
+    event.mKeyCode = aCharCode ? 0 : aKeyCode;
     event.charCode = aCharCode;
   } else {
-    event.keyCode = aKeyCode;
+    event.mKeyCode = aKeyCode;
     event.charCode = 0;
   }
 
