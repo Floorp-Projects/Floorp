@@ -4839,14 +4839,6 @@ if test -n "$MOZ_UPDATER"; then
     AC_DEFINE(MOZ_UPDATER)
 fi
 
-# tools/update-packaging is not checked out by default.
-MOZ_ARG_ENABLE_BOOL(update-packaging,
-[  --enable-update-packaging
-                          Enable tools/update-packaging],
-    MOZ_UPDATE_PACKAGING=1,
-    MOZ_UPDATE_PACKAGING= )
-AC_SUBST(MOZ_UPDATE_PACKAGING)
-
 dnl ========================================================
 dnl build the tests by default
 dnl ========================================================
