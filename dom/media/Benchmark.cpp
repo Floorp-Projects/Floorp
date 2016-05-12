@@ -7,6 +7,7 @@
 #include "Benchmark.h"
 #include "BufferMediaResource.h"
 #include "MediaData.h"
+#include "MediaPrefs.h"
 #include "PDMFactory.h"
 #include "WebMDemuxer.h"
 #include "mozilla/Preferences.h"
@@ -45,8 +46,6 @@ VP9Benchmark::IsVP9DecodeFast()
     RefPtr<WebMDemuxer> demuxer =
       new WebMDemuxer(new BufferMediaResource(sWebMSample, sizeof(sWebMSample), nullptr,
                                               NS_LITERAL_CSTRING("video/webm")));
-    PDMFactory::Init();
-
     RefPtr<Benchmark> estimiser =
       new Benchmark(demuxer,
                     {
@@ -135,7 +134,7 @@ Benchmark::Init()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  PDMFactory::Init();
+  MediaPrefs::GetSingleton();
 }
 
 BenchmarkPlayback::BenchmarkPlayback(Benchmark* aMainThreadState,

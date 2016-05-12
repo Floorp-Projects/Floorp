@@ -31,7 +31,6 @@ MP3Decoder::CreateStateMachine() {
 /* static */
 bool
 MP3Decoder::IsEnabled() {
-  PDMFactory::Init();
   RefPtr<PDMFactory> platform = new PDMFactory();
   return platform->SupportsMimeType(NS_LITERAL_CSTRING("audio/mpeg"),
                                     /* DecoderDoctorDiagnostics* */ nullptr);
