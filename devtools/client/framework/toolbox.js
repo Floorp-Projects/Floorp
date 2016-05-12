@@ -30,6 +30,9 @@ var { attachThread, detachThread } = require("./attach-thread");
 Cu.import("resource://devtools/client/scratchpad/scratchpad-manager.jsm");
 Cu.import("resource://devtools/client/shared/DOMHelpers.jsm");
 
+const { BrowserLoader } =
+  Cu.import("resource://devtools/client/shared/browser-loader.js", {});
+
 loader.lazyGetter(this, "toolboxStrings", () => {
   const properties = "chrome://devtools/locale/toolbox.properties";
   const bundle = Services.strings.createBundle(properties);
@@ -373,9 +376,25 @@ Toolbox.prototype = {
         // Update the URL so that onceDOMReady watch for the right url.
         this._URL = location;
       }
+
+      this.browserRequire = BrowserLoader({
+        window: this.doc.defaultView,
+        useOnlyShared: true
+      }).require;
+
+      this.React = this.browserRequire(
+        "devtools/client/shared/vendor/react");
+      this.ReactDOM = this.browserRequire(
+        "devtools/client/shared/vendor/react-dom");
+
       iframe.setAttribute("aria-label", toolboxStrings("toolbox.label"));
       let domHelper = new DOMHelpers(iframe.contentWindow);
-      domHelper.onceDOMReady(() => domReady.resolve(), this._URL);
+      domHelper.onceDOMReady(() => {
+        // Build the Notification box as soon as the DOM is ready.
+        this._buildNotificationBox();
+        domReady.resolve();
+      }, this._URL);
+
       // Optimization: fire up a few other things before waiting on
       // the iframe being ready (makes startup faster)
 
@@ -790,6 +809,22 @@ Toolbox.prototype = {
           (toolId == "webconsole" && this.splitConsole))) {
       toolDefinition.onkey(this.getCurrentPanel(), this);
     }
+  },
+
+  /**
+   * Build the notification box. Called every time the host changes.
+   */
+  _buildNotificationBox: function() {
+    let { NotificationBox, PriorityLevels } =
+      this.browserRequire("devtools/client/shared/components/notification-box");
+
+    NotificationBox = this.React.createFactory(NotificationBox);
+
+    // Render NotificationBox and assign priority levels to it.
+    let box = this.doc.getElementById("toolbox-notificationbox");
+    this.notificationBox = Object.assign(
+      this.ReactDOM.render(NotificationBox({}), box),
+      PriorityLevels);
   },
 
   /**
@@ -1993,12 +2028,12 @@ Toolbox.prototype = {
   },
 
   /**
-   * Get the toolbox's notification box
+   * Get the toolbox's notification component
    *
-   * @return The notification box element.
+   * @return The notification box component.
    */
   getNotificationBox: function() {
-    return this.doc.getElementById("toolbox-notificationbox");
+    return this.notificationBox;
   },
 
   /**
@@ -2062,6 +2097,8 @@ Toolbox.prototype = {
         console.error("Panel " + id + ":", e);
       }
     }
+
+    this.React = this.ReactDOM = this.browserRequire = null;
 
     // Now that we are closing the toolbox we can re-enable the cache settings
     // and disable the service workers testing settings for the current tab.
