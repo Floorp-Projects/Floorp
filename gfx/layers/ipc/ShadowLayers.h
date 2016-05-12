@@ -130,8 +130,6 @@ public:
   virtual LegacySurfaceDescriptorAllocator*
   AsLegacySurfaceDescriptorAllocator() override { return this; }
 
-  FixedSizeSmallShmemSectionAllocator* GetTileLockAllocator();
-
   /**
    * Setup the IPDL actor for aCompositable to be part of layers
    * transactions.
@@ -403,7 +401,6 @@ private:
   bool mWindowOverlayChanged;
   int32_t mPaintSyncId;
   InfallibleTArray<PluginWindowData> mPluginWindowData;
-  FixedSizeSmallShmemSectionAllocator* mSectionAllocator;
 };
 
 class CompositableClient;
@@ -438,54 +435,6 @@ protected:
   ShadowableLayer() : mShadow(nullptr) {}
 
   PLayerChild* mShadow;
-};
-
-/// A simple shmem section allocator that can only allocate small
-/// fixed size elements (only intended to be used to store tile
-/// copy-on-write locks for now).
-class FixedSizeSmallShmemSectionAllocator final : public ShmemSectionAllocator
-{
-public:
-  enum AllocationStatus
-  {
-    STATUS_ALLOCATED,
-    STATUS_FREED
-  };
-
-  struct ShmemSectionHeapHeader
-  {
-    Atomic<uint32_t> mTotalBlocks;
-    Atomic<uint32_t> mAllocatedBlocks;
-  };
-
-  struct ShmemSectionHeapAllocation
-  {
-    Atomic<uint32_t> mStatus;
-    uint32_t mSize;
-  };
-
-  explicit FixedSizeSmallShmemSectionAllocator(ClientIPCAllocator* aShmProvider);
-
-  ~FixedSizeSmallShmemSectionAllocator();
-
-  virtual bool AllocShmemSection(uint32_t aSize, ShmemSection* aShmemSection) override;
-
-  virtual void DeallocShmemSection(ShmemSection& aShmemSection) override;
-
-  virtual void MemoryPressure() override { ShrinkShmemSectionHeap(); }
-
-  // can be called on the compositor process.
-  static void FreeShmemSection(ShmemSection& aShmemSection);
-
-  void ShrinkShmemSectionHeap();
-
-  ShmemAllocator* GetShmAllocator() { return mShmProvider->AsShmemAllocator(); }
-
-  bool IPCOpen() const { return mShmProvider->IPCOpen(); }
-
-protected:
-  std::vector<mozilla::ipc::Shmem> mUsedShmems;
-  ClientIPCAllocator* mShmProvider;
 };
 
 } // namespace layers
