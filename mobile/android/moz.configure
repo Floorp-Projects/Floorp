@@ -53,6 +53,7 @@ set_config('MOZ_ANDROID_APZ', android_apz)
 set_define('MOZ_ANDROID_APZ', android_apz)
 
 imply_option('MOZ_SOCIAL', False)
+imply_option('MOZ_SERVICES_HEALTHREPORT', True)
 
 @depends(target)
 def check_target(target):

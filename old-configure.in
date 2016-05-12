@@ -6553,12 +6553,6 @@ if test "$BUILD_CTYPES"; then
     AC_DEFINE(BUILD_CTYPES)
 fi
 
-dnl Build Firefox Health Reporter Service
-AC_SUBST(MOZ_SERVICES_HEALTHREPORT)
-if test -n "$MOZ_SERVICES_HEALTHREPORT"; then
-  AC_DEFINE(MOZ_SERVICES_HEALTHREPORT)
-fi
-
 dnl Build Notifications if required
 AC_SUBST(MOZ_SERVICES_NOTIFICATIONS)
 if test -n "$MOZ_SERVICES_NOTIFICATIONS"; then
