@@ -134,13 +134,29 @@ PeerConnectionTest.prototype.closePC = function() {
       return Promise.resolve();
     }
 
-    return new Promise(resolve => {
-      pc.onsignalingstatechange = e => {
-        is(e.target.signalingState, "closed", "signalingState is closed");
-        resolve();
-      };
-      pc.close();
-    });
+    var promise = Promise.all([
+      new Promise(resolve => {
+        pc.onsignalingstatechange = e => {
+          is(e.target.signalingState, "closed", "signalingState is closed");
+          resolve();
+        };
+      }),
+      Promise.all(pc._pc.getReceivers()
+        .filter(receiver => receiver.track.readyState == "live")
+        .map(receiver => {
+          info("Waiting for track " + receiver.track.id + " (" +
+               receiver.track.kind + ") to end.");
+          return haveEvent(receiver.track, "ended", wait(50000))
+            .then(event => {
+              is(event.target, receiver.track, "Event target should be the correct track");
+              info("ended fired for track " + receiver.track.id);
+            }, e => e ? Promise.reject(e)
+                      : ok(false, "ended never fired for track " +
+                                    receiver.track.id));
+        }))
+    ]);
+    pc.close();
+    return promise;
   };
 
   return timerGuard(Promise.all([
@@ -450,19 +466,22 @@ PeerConnectionTest.prototype.run = function() {
   /* We have to modify the chain here to allow tests which modify the default
    * test chain instantiating a PeerConnectionTest() */
   this.updateChainSteps();
+  var finished = () => {
+    if (window.SimpleTest) {
+      networkTestFinished();
+    } else {
+      finish();
+    }
+  };
   return this.chain.execute()
     .then(() => this.close())
-    .then(() => {
-      if (window.SimpleTest) {
-        networkTestFinished();
-      } else {
-        finish();
-      }
-    })
     .catch(e =>
-           ok(false, 'Error in test execution: ' + e +
-              ((typeof e.stack === 'string') ?
-               (' ' + e.stack.split('\n').join(' ... ')) : '')));
+      ok(false, 'Error in test execution: ' + e +
+         ((typeof e.stack === 'string') ?
+          (' ' + e.stack.split('\n').join(' ... ')) : '')))
+    .then(() => finished())
+    .catch(e =>
+      ok(false, "Error in finished()"));
 };
 
 /**
