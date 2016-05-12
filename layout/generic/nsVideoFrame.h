@@ -52,7 +52,8 @@ public:
                                     nsIAtom* aAttribute,
                                     int32_t aModType) override;
 
-  void OnVisibilityChange(Visibility aNewVisibility,
+  void OnVisibilityChange(Visibility aOldVisibility,
+                          Visibility aNewVisibility,
                           Maybe<OnNonvisible> aNonvisibleAction = Nothing()) override;
 
   /* get the size of the video's display */
