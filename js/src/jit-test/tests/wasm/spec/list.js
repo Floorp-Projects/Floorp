@@ -37,6 +37,6 @@ specTests.push("runaway-recursion.wast");
 //specTests.push("select.wast");            // TODO custom NaN
 //specTests.push("start.wast");             // TODO start opcode
 //specTests.push("store_retval.wast");      // TODO i64 loads/stores
-//specTests.push("switch.wast");            // TODO value error!
+specTests.push("switch.wast");
 //specTests.push("traps.wast");             // TODO trap on OOB
 specTests.push("unreachable.wast");
