@@ -777,10 +777,6 @@ protected:
                                                const nsRect& aRect,
                                                bool aRemoveOnly = false);
 
-  void DecVisibleCount(const VisibleFrames& aFrames,
-                       VisibilityCounter aCounter,
-                       Maybe<OnNonvisible> aNonvisibleAction = Nothing());
-
   void InitVisibleRegionsIfVisualizationEnabled(VisibilityCounter aForCounter);
   void AddFrameToVisibleRegions(nsIFrame* aFrame, VisibilityCounter aForCounter);
   void NotifyCompositorOfVisibleRegionsChange();
