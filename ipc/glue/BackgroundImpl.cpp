@@ -8,6 +8,7 @@
 #include "BackgroundChildImpl.h"
 #include "BackgroundParentImpl.h"
 #include "base/process_util.h"
+#include "base/task.h"
 #include "FileDescriptor.h"
 #include "GeckoProfiler.h"
 #include "InputStreamUtils.h"

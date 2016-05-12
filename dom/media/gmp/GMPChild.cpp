@@ -22,6 +22,7 @@
 #include "mozilla/ipc/ProcessChild.h"
 #include "GMPUtils.h"
 #include "prio.h"
+#include "base/task.h"
 #ifdef MOZ_WIDEVINE_EME
 #include "widevine-adapter/WidevineAdapter.h"
 #endif
