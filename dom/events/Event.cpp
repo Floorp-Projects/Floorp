@@ -520,6 +520,9 @@ Event::PreventDefaultInternal(bool aCalledByDefaultHandler)
   if (!mEvent->mFlags.mCancelable) {
     return;
   }
+  if (mEvent->mFlags.mInPassiveListener) {
+    return;
+  }
 
   mEvent->PreventDefault(aCalledByDefaultHandler);
 
