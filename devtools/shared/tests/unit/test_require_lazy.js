@@ -18,6 +18,10 @@ function run_test() {
   // as it would via a direct |require|.
   const o2 = {};
   let loader = new DevToolsLoader();
+
+  // We have to init the loader by loading any module before lazyRequireGetter is available
+  loader.require("devtools/shared/DevToolsUtils");
+
   loader.lazyRequireGetter(o2, name, path);
   do_check_true(o2.asyncUtils !== asyncUtils);
 
