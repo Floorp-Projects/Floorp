@@ -104,17 +104,17 @@ nsChromeRegistryContent::RegisterSubstitution(const SubstitutionMapping& aSubsti
   nsresult rv = io->GetProtocolHandler(aSubstitution.scheme.get(), getter_AddRefs(ph));
   if (NS_FAILED(rv))
     return;
-  
+
   nsCOMPtr<nsISubstitutingProtocolHandler> sph (do_QueryInterface(ph));
   if (!sph)
     return;
 
   nsCOMPtr<nsIURI> resolvedURI;
   if (aSubstitution.resolvedURI.spec.Length()) {
-    nsresult rv = NS_NewURI(getter_AddRefs(resolvedURI),
-                            aSubstitution.resolvedURI.spec,
-                            aSubstitution.resolvedURI.charset.get(),
-                            nullptr, io);
+    rv = NS_NewURI(getter_AddRefs(resolvedURI),
+                   aSubstitution.resolvedURI.spec,
+                   aSubstitution.resolvedURI.charset.get(),
+                   nullptr, io);
     if (NS_FAILED(rv))
       return;
   }
