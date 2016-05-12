@@ -43,7 +43,11 @@ import java.util.TreeSet;
  * as the filename. The doc ID is sent with a ping to be uploaded and is expected to be returned with
  * {@link #onUploadAttemptComplete(Set)} so the associated file can be removed.
  *
- * During prune, the pings with the oldest modified time will be removed first.
+ * During prune, the pings with the oldest modified time will be removed first. Different filesystems will
+ * handle clock skew (e.g. manual time changes, daylight savings time, changing timezones) in different ways
+ * and we accept that these modified times may not be consistent - newer data is not more important than
+ * older data and the choice to delete the oldest data first is largely arbitrary so we don't care if
+ * the timestamps are occasionally inconsistent.
  *
  * Using separate files for this store allows for less restrictive concurrency:
  *   * requires locking: {@link #storePing(TelemetryPing)} writes a new file
