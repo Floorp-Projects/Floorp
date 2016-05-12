@@ -878,13 +878,13 @@ KeymapWrapper::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
             AppendUCS4ToUTF16(charCode, aKeyEvent.mKeyValue);
         }
     }
-    aKeyEvent.keyCode = ComputeDOMKeyCode(aGdkKeyEvent);
+    aKeyEvent.mKeyCode = ComputeDOMKeyCode(aGdkKeyEvent);
 
     if (aKeyEvent.mKeyNameIndex != KEY_NAME_INDEX_USE_STRING ||
         aKeyEvent.mMessage != eKeyPress) {
-        aKeyEvent.keyCode = ComputeDOMKeyCode(aGdkKeyEvent);
+        aKeyEvent.mKeyCode = ComputeDOMKeyCode(aGdkKeyEvent);
     } else {
-        aKeyEvent.keyCode = 0;
+        aKeyEvent.mKeyCode = 0;
     }
 
     // NOTE: The state of given key event indicates adjacent state of
@@ -1336,8 +1336,8 @@ KeymapWrapper::WillDispatchKeyboardEventInternal(WidgetKeyboardEvent& aKeyEvent,
     if (!charCode) {
         MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
             ("KeymapWrapper(%p): WillDispatchKeyboardEventInternal, "
-             "keyCode=0x%02X, charCode=0x%08X",
-             this, aKeyEvent.keyCode, aKeyEvent.charCode));
+             "mKeyCode=0x%02X, charCode=0x%08X",
+             this, aKeyEvent.mKeyCode, aKeyEvent.charCode));
         return;
     }
 
@@ -1351,8 +1351,8 @@ KeymapWrapper::WillDispatchKeyboardEventInternal(WidgetKeyboardEvent& aKeyEvent,
     if (level != 0 && level != 1) {
         MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
             ("KeymapWrapper(%p): WillDispatchKeyboardEventInternal, "
-             "keyCode=0x%02X, charCode=0x%08X, level=%d",
-             this, aKeyEvent.keyCode, aKeyEvent.charCode, level));
+             "mKeyCode=0x%02X, charCode=0x%08X, level=%d",
+             this, aKeyEvent.mKeyCode, aKeyEvent.charCode, level));
         return;
     }
 
@@ -1391,9 +1391,9 @@ KeymapWrapper::WillDispatchKeyboardEventInternal(WidgetKeyboardEvent& aKeyEvent,
     if (!needLatinKeyCodes) {
         MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
             ("KeymapWrapper(%p): WillDispatchKeyboardEventInternal, "
-             "keyCode=0x%02X, charCode=0x%08X, level=%d, altCharCodes={ "
+             "mKeyCode=0x%02X, charCode=0x%08X, level=%d, altCharCodes={ "
              "mUnshiftedCharCode=0x%08X, mShiftedCharCode=0x%08X }",
-             this, aKeyEvent.keyCode, aKeyEvent.charCode, level,
+             this, aKeyEvent.mKeyCode, aKeyEvent.charCode, level,
              altCharCodes.mUnshiftedCharCode, altCharCodes.mShiftedCharCode));
         return;
     }
@@ -1404,10 +1404,10 @@ KeymapWrapper::WillDispatchKeyboardEventInternal(WidgetKeyboardEvent& aKeyEvent,
         MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
             ("KeymapWrapper(%p): WillDispatchKeyboardEventInternal, "
              "Latin keyboard layout isn't found: "
-             "keyCode=0x%02X, charCode=0x%08X, level=%d, "
+             "mKeyCode=0x%02X, charCode=0x%08X, level=%d, "
              "altCharCodes={ mUnshiftedCharCode=0x%08X, "
              "mShiftedCharCode=0x%08X }",
-             this, aKeyEvent.keyCode, aKeyEvent.charCode, level,
+             this, aKeyEvent.mKeyCode, aKeyEvent.charCode, level,
              altCharCodes.mUnshiftedCharCode, altCharCodes.mShiftedCharCode));
         return;
     }
@@ -1444,12 +1444,12 @@ KeymapWrapper::WillDispatchKeyboardEventInternal(WidgetKeyboardEvent& aKeyEvent,
 
     MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
         ("KeymapWrapper(%p): WillDispatchKeyboardEventInternal, "
-         "keyCode=0x%02X, charCode=0x%08X, level=%d, minGroup=%d, "
+         "mKeyCode=0x%02X, charCode=0x%08X, level=%d, minGroup=%d, "
          "altCharCodes={ mUnshiftedCharCode=0x%08X, "
          "mShiftedCharCode=0x%08X } "
          "altLatinCharCodes={ mUnshiftedCharCode=0x%08X, "
          "mShiftedCharCode=0x%08X }",
-         this, aKeyEvent.keyCode, aKeyEvent.charCode, level, minGroup,
+         this, aKeyEvent.mKeyCode, aKeyEvent.charCode, level, minGroup,
          altCharCodes.mUnshiftedCharCode, altCharCodes.mShiftedCharCode,
          altLatinCharCodes.mUnshiftedCharCode,
          altLatinCharCodes.mShiftedCharCode));
