@@ -6553,12 +6553,6 @@ if test "$BUILD_CTYPES"; then
     AC_DEFINE(BUILD_CTYPES)
 fi
 
-dnl Build Notifications if required
-AC_SUBST(MOZ_SERVICES_NOTIFICATIONS)
-if test -n "$MOZ_SERVICES_NOTIFICATIONS"; then
-  AC_DEFINE(MOZ_SERVICES_NOTIFICATIONS)
-fi
-
 dnl Build Sync Services if required
 AC_SUBST(MOZ_SERVICES_SYNC)
 if test -n "$MOZ_SERVICES_SYNC"; then
