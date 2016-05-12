@@ -360,7 +360,7 @@ public:
 
   virtual nscolor ComputeBackstopColor(nsView* aDisplayRoot) override;
 
-  virtual nsresult SetIsActive(bool aIsActive, bool aIsHidden = true) override;
+  virtual void SetIsActive(bool aIsActive, bool aIsHidden = true) override;
 
   virtual bool GetIsViewportOverridden() override {
     return (mMobileViewportManager != nullptr);
@@ -677,7 +677,6 @@ protected:
   void ProcessSynthMouseMoveEvent(bool aFromScroll);
 
   void QueryIsActive();
-  nsresult UpdateImageLockingState();
 
   bool InZombieDocument(nsIContent *aContent);
   already_AddRefed<nsIPresShell> GetParentPresShellForEventHandling();
@@ -776,6 +775,7 @@ protected:
   void MarkFramesInSubtreeApproximatelyVisible(nsIFrame* aFrame,
                                                const nsRect& aRect,
                                                bool aRemoveOnly = false);
+  void UpdateFrameVisibilityOnActiveStateChange();
 
   void InitVisibleRegionsIfVisualizationEnabled(VisibilityCounter aForCounter);
   void AddFrameToVisibleRegions(nsIFrame* aFrame, VisibilityCounter aForCounter);
@@ -784,21 +784,38 @@ protected:
   nsRevocableEventPtr<nsRunnableMethod<PresShell>> mUpdateApproximateFrameVisibilityEvent;
   nsRevocableEventPtr<nsRunnableMethod<PresShell>> mNotifyCompositorOfVisibleRegionsChangeEvent;
 
-  VisibleFrames& VisibleFramesForCounter(VisibilityCounter aCounter)
+  struct VisibleFramesContainer
   {
-    switch (aCounter)
+    VisibleFramesContainer() : mSuppressingVisibility(false) { }
+
+    void AddFrame(nsIFrame* aFrame, VisibilityCounter aCounter);
+    void RemoveFrame(nsIFrame* aFrame, VisibilityCounter aCounter);
+
+    bool IsVisibilitySuppressed() const { return mSuppressingVisibility; }
+    void SuppressVisibility();
+    void UnsuppressVisibility();
+
+    VisibleFrames& ForCounter(VisibilityCounter aCounter)
     {
-      case VisibilityCounter::MAY_BECOME_VISIBLE: return mApproximatelyVisibleFrames;
-      case VisibilityCounter::IN_DISPLAYPORT:     return mInDisplayPortFrames;
+      switch (aCounter)
+      {
+        case VisibilityCounter::MAY_BECOME_VISIBLE: return mApproximate;
+        case VisibilityCounter::IN_DISPLAYPORT:     return mInDisplayPort;
+      }
+      MOZ_CRASH();
     }
-  }
 
-  // A set of frames that were visible or could be visible soon at the time
-  // that we last did an approximate frame visibility update.
-  VisibleFrames mApproximatelyVisibleFrames;
+    // A set of frames that were visible or could be visible soon at the time
+    // that we last did an approximate frame visibility update.
+    VisibleFrames mApproximate;
 
-  // A set of frames that were visible in the displayport the last time we painted.
-  VisibleFrames mInDisplayPortFrames;
+    // A set of frames that were visible in the displayport the last time we painted.
+    VisibleFrames mInDisplayPort;
+
+    bool mSuppressingVisibility;
+  };
+
+  VisibleFramesContainer mVisibleFrames;
 
   struct VisibleRegionsContainer
   {
@@ -809,6 +826,7 @@ protected:
         case VisibilityCounter::MAY_BECOME_VISIBLE: return mApproximate;
         case VisibilityCounter::IN_DISPLAYPORT:     return mInDisplayPort;
       }
+      MOZ_CRASH();
     }
 
     // The approximately visible regions calculated during the last update to
