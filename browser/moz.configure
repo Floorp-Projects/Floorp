@@ -6,5 +6,6 @@
 
 imply_option('MOZ_PLACES', True)
 imply_option('MOZ_SERVICES_HEALTHREPORT', True)
+imply_option('MOZ_SERVICES_SYNC', True)
 
 include('../toolkit/moz.configure')

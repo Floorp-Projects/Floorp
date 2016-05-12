@@ -409,6 +409,9 @@ project_flag('MOZ_SERVICES_HEALTHREPORT',
              set_for_old_configure=True,
              set_as_define=True)
 
+project_flag('MOZ_SERVICES_SYNC',
+             help='Build Sync Services if required')
+
 # Miscellaneous programs
 # ==============================================================
 
