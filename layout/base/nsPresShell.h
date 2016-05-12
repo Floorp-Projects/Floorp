@@ -38,7 +38,6 @@
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/UniquePtr.h"
 #include "MobileViewportManager.h"
-#include "Visibility.h"
 #include "ZoomConstraintsClient.h"
 
 class nsRange;
@@ -405,7 +404,7 @@ public:
   void RebuildApproximateFrameVisibility(nsRect* aRect = nullptr,
                                          bool aRemoveOnly = false) override;
 
-  void MarkFrameVisibleInDisplayPort(nsIFrame* aFrame) override;
+  void MarkFrameVisible(nsIFrame* aFrame, VisibilityCounter aCounter) override;
   void MarkFrameNonvisible(nsIFrame* aFrame) override;
 
   bool AssumeAllFramesVisible() override;
@@ -789,6 +788,15 @@ protected:
   nsRevocableEventPtr<nsRunnableMethod<PresShell>> mUpdateApproximateFrameVisibilityEvent;
   nsRevocableEventPtr<nsRunnableMethod<PresShell>> mNotifyCompositorOfVisibleRegionsChangeEvent;
 
+  VisibleFrames& VisibleFramesForCounter(VisibilityCounter aCounter)
+  {
+    switch (aCounter)
+    {
+      case VisibilityCounter::MAY_BECOME_VISIBLE: return mApproximatelyVisibleFrames;
+      case VisibilityCounter::IN_DISPLAYPORT:     return mInDisplayPortFrames;
+    }
+  }
+
   // A set of frames that were visible or could be visible soon at the time
   // that we last did an approximate frame visibility update.
   VisibleFrames mApproximatelyVisibleFrames;
@@ -798,6 +806,15 @@ protected:
 
   struct VisibleRegionsContainer
   {
+    VisibleRegions& ForCounter(VisibilityCounter aCounter)
+    {
+      switch (aCounter)
+      {
+        case VisibilityCounter::MAY_BECOME_VISIBLE: return mApproximate;
+        case VisibilityCounter::IN_DISPLAYPORT:     return mInDisplayPort;
+      }
+    }
+
     // The approximately visible regions calculated during the last update to
     // approximate frame visibility.
     VisibleRegions mApproximate;
