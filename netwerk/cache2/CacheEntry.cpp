@@ -195,7 +195,7 @@ NS_IMPL_ISUPPORTS(CacheEntry,
                   CacheFileListener)
 
 CacheEntry::CacheEntry(const nsACString& aStorageID,
-                       nsIURI* aURI,
+                       const nsACString& aURI,
                        const nsACString& aEnhanceID,
                        bool aUseDisk,
                        bool aSkipSizeCheck,
@@ -220,9 +220,8 @@ CacheEntry::CacheEntry(const nsACString& aStorageID,
 , mWriter(nullptr)
 , mPredictedDataSize(0)
 , mUseCount(0)
-, mReleaseThread(NS_GetCurrentThread())
 {
-  MOZ_COUNT_CTOR(CacheEntry);
+  LOG(("CacheEntry::CacheEntry [this=%p]", this));
 
   mService = CacheStorageService::Self();
 
@@ -232,10 +231,7 @@ CacheEntry::CacheEntry(const nsACString& aStorageID,
 
 CacheEntry::~CacheEntry()
 {
-  ProxyRelease(mURI, mReleaseThread);
-
   LOG(("CacheEntry::~CacheEntry [this=%p]", this));
-  MOZ_COUNT_DTOR(CacheEntry);
 }
 
 char const * CacheEntry::StateString(uint32_t aState)
@@ -1034,7 +1030,8 @@ NS_IMETHODIMP CacheEntry::GetPersistent(bool *aPersistToDisk)
 
 NS_IMETHODIMP CacheEntry::GetKey(nsACString & aKey)
 {
-  return mURI->GetAsciiSpec(aKey);
+  aKey.Assign(mURI);
+  return NS_OK;
 }
 
 NS_IMETHODIMP CacheEntry::GetFetchCount(int32_t *aFetchCount)
@@ -1809,11 +1806,7 @@ size_t CacheEntry::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
     n += mFile->SizeOfIncludingThis(mallocSizeOf);
   }
 
-  sizeOf = do_QueryInterface(mURI);
-  if (sizeOf) {
-    n += sizeOf->SizeOfIncludingThis(mallocSizeOf);
-  }
-
+  n += mURI.SizeOfExcludingThisIfUnshared(mallocSizeOf);
   n += mEnhanceID.SizeOfExcludingThisIfUnshared(mallocSizeOf);
   n += mStorageID.SizeOfExcludingThisIfUnshared(mallocSizeOf);
 
