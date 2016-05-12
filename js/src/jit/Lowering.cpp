@@ -1661,7 +1661,6 @@ LIRGenerator::visitSub(MSub* ins)
 
     if (ins->specialization() == MIRType::Int64) {
         MOZ_ASSERT(lhs->type() == MIRType::Int64);
-        ReorderCommutative(&lhs, &rhs, ins);
         LSubI64* lir = new(alloc()) LSubI64;
         lowerForALUInt64(lir, ins, lhs, rhs);
         return;
