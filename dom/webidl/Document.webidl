@@ -224,11 +224,11 @@ partial interface Document {
 partial interface Document {
   // Note: Per spec the 'S' in these two is lowercase, but the "Moz"
   // versions hve it uppercase.
-  [Func="nsDocument::IsUnprefixedFullscreenEnabled"]
+  [LenientSetter, Func="nsDocument::IsUnprefixedFullscreenEnabled"]
   readonly attribute boolean fullscreenEnabled;
   [BinaryName="fullscreenEnabled", Deprecated="PrefixedFullscreenAPI"]
   readonly attribute boolean mozFullScreenEnabled;
-  [Func="nsDocument::IsUnprefixedFullscreenEnabled"]
+  [LenientSetter, Func="nsDocument::IsUnprefixedFullscreenEnabled"]
   readonly attribute Element? fullscreenElement;
   [BinaryName="fullscreenElement", Deprecated="PrefixedFullscreenAPI"]
   readonly attribute Element? mozFullScreenElement;
