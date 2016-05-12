@@ -79,6 +79,7 @@ nsMenuBarFrame::Init(nsIContent*       aContent,
   mTarget->AddSystemEventListener(NS_LITERAL_STRING("keypress"), mMenuBarListener, false);
   mTarget->AddSystemEventListener(NS_LITERAL_STRING("keydown"), mMenuBarListener, false);
   mTarget->AddSystemEventListener(NS_LITERAL_STRING("keyup"), mMenuBarListener, false);
+  mTarget->AddSystemEventListener(NS_LITERAL_STRING("mozaccesskeynotfound"), mMenuBarListener, false);
 
   // mousedown event should be handled in all phase
   mTarget->AddEventListener(NS_LITERAL_STRING("mousedown"), mMenuBarListener, true);
@@ -416,6 +417,7 @@ nsMenuBarFrame::DestroyFrom(nsIFrame* aDestructRoot)
   mTarget->RemoveSystemEventListener(NS_LITERAL_STRING("keypress"), mMenuBarListener, false);
   mTarget->RemoveSystemEventListener(NS_LITERAL_STRING("keydown"), mMenuBarListener, false);
   mTarget->RemoveSystemEventListener(NS_LITERAL_STRING("keyup"), mMenuBarListener, false);
+  mTarget->RemoveSystemEventListener(NS_LITERAL_STRING("mozaccesskeynotfound"), mMenuBarListener, false);
 
   mTarget->RemoveEventListener(NS_LITERAL_STRING("mousedown"), mMenuBarListener, true);
   mTarget->RemoveEventListener(NS_LITERAL_STRING("mousedown"), mMenuBarListener, false);

@@ -1,0 +1,76 @@
+<head>
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Wheel-scrolling over position:fixed and position:sticky elements, in the top-level document as well as iframes</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+var is = window.opener.is;
+var ok = window.opener.ok;
+
+// Scroll the mouse wheel at (dx, dy) relative to |element|.
+function scrollWheelOver(element, dx, dy) {
+  // Move the mouse to the desired wheel location.
+  // Not doing so can result in the wheel events from two consecutive
+  // scrollWheelOver() calls on different elements being incorrectly considered
+  // as part of the same wheel transaction.
+  // We also wait for the mouse move event to be processed before sending the
+  // wheel event, otherwise there is a chance they might get reordered, and
+  // we have the transaction problem again.
+  return synthesizeNativeMouseMoveAndWaitForMoveEvent(element, dx, dy, function() {
+    synthesizeNativeWheelAndWaitForScrollEvent(element, dx, dy, 0, -10, driveTest);
+  });
+}
+
+function* runTest() {
+  var iframeWin = document.getElementById('iframe').contentWindow;
+
+  // scroll over the middle of the iframe's position:sticky element, check
+  // that it scrolls the iframe
+  var scrollPos = iframeWin.scrollY;
+  yield scrollWheelOver(iframeWin.document.body, 50, 150);
+  ok(iframeWin.scrollY > scrollPos, "iframe scrolled after wheeling over the position:sticky element");
+
+  // same, but using the iframe's position:fixed element
+  scrollPos = iframeWin.scrollY;
+  yield scrollWheelOver(iframeWin.document.body, 250, 150);
+  ok(iframeWin.scrollY > scrollPos, "iframe scrolled after wheeling over the position:fixed element");
+
+  // same, but using the top-level window's position:sticky element
+  scrollPos = window.scrollY;
+  yield scrollWheelOver(document.body, 50, 150);
+  ok(window.scrollY > scrollPos, "top-level document scrolled after wheeling over the position:sticky element");
+
+  // same, but using the top-level window's position:fixed element
+  scrollPos = window.scrollY;
+  yield scrollWheelOver(document.body, 250, 150);
+  ok(window.scrollY > scrollPos, "top-level document scrolled after wheeling over the position:fixed element");
+}
+
+var gTestContinuation = null;
+function driveTest() {
+  if (!gTestContinuation) {
+    gTestContinuation = runTest();
+  }
+  var ret = gTestContinuation.next();
+  if (ret.done) {
+    window.opener.testDone();
+  } else {
+    is(ret.value, true, "Test continuation chunk was successful");
+  }
+}
+
+window.onload = function() {
+  waitForAllPaints(function() {
+    flushApzRepaints(driveTest);
+  });
+}
+  </script>
+</head>
+<body style="height:5000px; margin:0">
+  <div style="position:sticky; width: 100px; height: 300px; top: 0; background-color:red">sticky</div>
+  <div style="position:fixed; width: 100px; height: 300px; top: 0; left: 200px; background-color: green">fixed</div>
+  <iframe id='iframe' width="300" height="400" src="data:text/html,<body style='height:5000px; margin:0'><div style='position:sticky; width:100px; height:300px; top: 0; background-color:red'>sticky</div><div style='position:fixed; right:0; top: 0; width:100px; height:300px; background-color:green'>fixed</div>"></iframe>
+</body>
+</head>

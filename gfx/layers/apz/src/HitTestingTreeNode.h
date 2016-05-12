@@ -100,6 +100,11 @@ public:
   int32_t GetScrollSize() const;
   bool IsScrollbarNode() const;
 
+  /* Fixed pos info */
+
+  void SetFixedPosData(FrameMetrics::ViewID aFixedPosTarget);
+  FrameMetrics::ViewID GetNearestAncestorFixedPosTargetWithSameLayersId() const;
+
   /* Convert aPoint into the LayerPixel space for the layer corresponding to
    * this node. */
   Maybe<LayerPoint> Untransform(const ParentLayerPoint& aPoint) const;
@@ -128,6 +133,8 @@ private:
   Layer::ScrollDirection mScrollDir;
   int32_t mScrollSize;
   bool mIsScrollbarContainer;
+
+  FrameMetrics::ViewID mFixedPosTarget;
 
   /* Let {L,M} be the {layer, scrollable metrics} pair that this node
    * corresponds to in the layer tree. mEventRegions contains the event regions

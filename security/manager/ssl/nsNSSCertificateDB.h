@@ -5,13 +5,14 @@
 #ifndef nsNSSCertificateDB_h
 #define nsNSSCertificateDB_h
 
+#include "ScopedNSSTypes.h"
 #include "certt.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIX509CertDB.h"
 #include "nsNSSShutDown.h"
-#include "ScopedNSSTypes.h"
+#include "nsString.h"
 
 class nsCString;
 class nsIArray;

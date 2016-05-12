@@ -1134,7 +1134,12 @@ MessageChannel::WaitForSyncNotify(bool aHandleWindowsMessages)
                                                QS_ALLINPUT);
       if (result == WAIT_OBJECT_0) {
         // Our NotifyWorkerThread event was signaled
-        ResetEvent(mEvent);
+        BOOL success = ResetEvent(mEvent);
+        if (!success) {
+          gfxDevCrash(mozilla::gfx::LogReason::MessageChannelInvalidHandle) <<
+                      "WindowsMessageChannel::WaitForSyncNotify failed to reset event. GetLastError: " <<
+                      GetLastError();
+        }
         break;
       } else
       if (result != (WAIT_OBJECT_0 + 1)) {
@@ -1238,7 +1243,12 @@ MessageChannel::WaitForInterruptNotify()
       }
       DeneuteredWindowRegion deneuteredRgn;
       SpinInternalEventLoop();
-      ResetEvent(mEvent);
+      BOOL success = ResetEvent(mEvent);
+      if (!success) {
+        gfxDevCrash(mozilla::gfx::LogReason::MessageChannelInvalidHandle) <<
+                    "WindowsMessageChannel::WaitForInterruptNotify::SpinNestedEvents failed to reset event. GetLastError: " <<
+                    GetLastError();
+      }
       return true;
     }
 
@@ -1264,7 +1274,12 @@ MessageChannel::WaitForInterruptNotify()
                                              QS_ALLINPUT);
     if (result == WAIT_OBJECT_0) {
       // Our NotifyWorkerThread event was signaled
-      ResetEvent(mEvent);
+      BOOL success = ResetEvent(mEvent);
+      if (!success) {
+        gfxDevCrash(mozilla::gfx::LogReason::MessageChannelInvalidHandle) <<
+                    "WindowsMessageChannel::WaitForInterruptNotify::WaitForMultipleObjects failed to reset event. GetLastError: " <<
+                    GetLastError();
+      }
       break;
     } else
     if (result != (WAIT_OBJECT_0 + 1)) {
@@ -1317,9 +1332,12 @@ MessageChannel::NotifyWorkerThread()
     return;
   }
 
-  NS_ASSERTION(mEvent, "No signal event to set, this is really bad!");
+  MOZ_RELEASE_ASSERT(mEvent, "No signal event to set, this is really bad!");
   if (!SetEvent(mEvent)) {
     NS_WARNING("Failed to set NotifyWorkerThread event!");
+    gfxDevCrash(mozilla::gfx::LogReason::MessageChannelInvalidHandle) <<
+                "WindowsMessageChannel failed to SetEvent. GetLastError: " <<
+                GetLastError();
   }
 }
 

@@ -99,6 +99,7 @@ TaskQueue::AwaitIdleLocked()
 void
 TaskQueue::AwaitShutdownAndIdle()
 {
+  MOZ_ASSERT(!IsCurrentThreadIn());
   // Make sure there are no tasks for this queue waiting in the caller's tail
   // dispatcher.
   MOZ_ASSERT_IF(AbstractThread::GetCurrent(),

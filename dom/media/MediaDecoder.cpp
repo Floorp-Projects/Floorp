@@ -287,13 +287,15 @@ MediaDecoder::ResourceCallback::NotifyBytesConsumed(int64_t aBytes,
 }
 
 void
-MediaDecoder::NotifyOwnerActivityChanged()
+MediaDecoder::NotifyOwnerActivityChanged(bool aIsVisible)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mShuttingDown) {
     return;
   }
+
+  SetElementVisibility(aIsVisible);
 
   UpdateDormantState(false /* aDormantTimeout */, false /* aActivity */);
   // Start dormant timer if necessary
@@ -330,10 +332,10 @@ MediaDecoder::UpdateDormantState(bool aDormantTimeout, bool aActivity)
   }
 
   DECODER_LOG("UpdateDormantState aTimeout=%d aActivity=%d mIsDormant=%d "
-              "ownerActive=%d ownerHidden=%d mIsHeuristicDormant=%d "
+              "ownerActive=%d mIsVisible=%d mIsHeuristicDormant=%d "
               "mPlayState=%s encrypted=%s",
               aDormantTimeout, aActivity, mIsDormant, mOwner->IsActive(),
-              mOwner->IsHidden(), mIsHeuristicDormant, PlayStateStr(),
+              mIsVisible.Ref(), mIsHeuristicDormant, PlayStateStr(),
               (!mInfo ? "Unknown" : (mInfo->IsEncrypted() ? "1" : "0")));
 
   bool prevDormant = mIsDormant;
@@ -350,7 +352,7 @@ MediaDecoder::UpdateDormantState(bool aDormantTimeout, bool aActivity)
   // Try to enable dormant by idle heuristic, when the owner is hidden.
   bool prevHeuristicDormant = mIsHeuristicDormant;
   mIsHeuristicDormant = false;
-  if (IsHeuristicDormantSupported() && mOwner->IsHidden()) {
+  if (IsHeuristicDormantSupported() && !mIsVisible) {
     if (aDormantTimeout && !aActivity &&
         (mPlayState == PLAY_STATE_PAUSED || IsEnded())) {
       // Enable heuristic dormant
@@ -406,7 +408,7 @@ MediaDecoder::StartDormantTimer()
 
   if (mIsHeuristicDormant ||
       mShuttingDown ||
-      !mOwner->IsHidden() ||
+      mIsVisible ||
       (mPlayState != PLAY_STATE_PAUSED &&
        !IsEnded()))
   {
@@ -572,6 +574,8 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
                    "MediaDecoder::mMediaSeekable (Canonical)")
   , mMediaSeekableOnlyInBufferedRanges(AbstractThread::MainThread(), false,
                    "MediaDecoder::mMediaSeekableOnlyInBufferedRanges (Canonical)")
+  , mIsVisible(AbstractThread::MainThread(), !mOwner->IsHidden(),
+               "MediaDecoder::mIsVisible (Canonical)")
   , mTelemetryReported(false)
 {
   MOZ_COUNT_CTOR(MediaDecoder);
@@ -1362,6 +1366,13 @@ MediaDecoder::DurationChanged()
   if (CurrentPosition() > TimeUnit::FromSeconds(mDuration).ToMicroseconds()) {
     Seek(mDuration, SeekTarget::Accurate);
   }
+}
+
+void
+MediaDecoder::SetElementVisibility(bool aIsVisible)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mIsVisible = aIsVisible;
 }
 
 void

@@ -29,6 +29,9 @@
 #include "nsRegion.h"
 #include "nsTArray.h"
 #include "PotentialCheckerboardDurationTracker.h"
+#if defined(MOZ_ANDROID_APZ)
+#include "OverScroller.h"
+#endif // defined(MOZ_ANDROID_APZ)
 
 #include "base/message_loop.h"
 
@@ -49,7 +52,11 @@ class GestureEventListener;
 class PCompositorBridgeParent;
 struct AsyncTransform;
 class AsyncPanZoomAnimation;
+#if defined(MOZ_ANDROID_APZ)
+class FlingOverScrollerAnimation;
+#else
 class FlingAnimation;
+#endif
 class InputBlockState;
 class TouchBlockState;
 class PanGestureBlockState;
@@ -865,7 +872,11 @@ public:
   bool AttemptFling(FlingHandoffState& aHandoffState);
 
 private:
+#if defined(MOZ_ANDROID_APZ)
+  friend class FlingOverScrollerAnimation;
+#else
   friend class FlingAnimation;
+#endif
   friend class OverscrollAnimation;
   friend class SmoothScrollAnimation;
   friend class WheelScrollAnimation;
@@ -1173,6 +1184,9 @@ private:
   // type of event that's triggering the scroll.
   Maybe<CSSPoint> FindSnapPointNear(const CSSPoint& aDestination,
                                     nsIScrollableFrame::ScrollUnit aUnit);
+#if defined(MOZ_ANDROID_APZ)
+  widget::sdk::OverScroller::GlobalRef mOverScroller;
+#endif // defined(MOZ_ANDROID_APZ)
 };
 
 } // namespace layers

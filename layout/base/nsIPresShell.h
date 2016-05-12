@@ -47,6 +47,7 @@
 #include "nsPresArena.h"
 #include "nsMargin.h"
 #include "nsFrameState.h"
+#include "Visibility.h"
 
 #ifdef MOZ_B2G
 #include "nsIHardwareKeyHandler.h"
@@ -185,6 +186,7 @@ public:
 protected:
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::gfx::SourceSurface SourceSurface;
+  using VisibilityCounter = mozilla::VisibilityCounter;
 
   enum eRenderFlag {
     STATE_IGNORING_VIEWPORT_SCROLLING = 0x1,
@@ -1241,7 +1243,7 @@ public:
     return mObservesMutationsForPrint;
   }
 
-  virtual nsresult SetIsActive(bool aIsActive, bool aIsHidden = true) = 0;
+  virtual void SetIsActive(bool aIsActive, bool aIsHidden = true) = 0;
 
   bool IsActive()
   {
@@ -1592,11 +1594,11 @@ public:
   virtual void RebuildApproximateFrameVisibility(nsRect* aRect = nullptr,
                                                  bool aRemoveOnly = false) = 0;
 
-  /// Adds @aFrame to the list of frames which were visible within the
-  /// displayport during the last paint.
-  virtual void MarkFrameVisibleInDisplayPort(nsIFrame* aFrame) = 0;
+  /// Adds @aFrame to the visible frames set specified by @aCounter.
+  /// VisibilityCounter::MAY_BECOME_VISIBLE is not a valid argument.
+  virtual void MarkFrameVisible(nsIFrame* aFrame, VisibilityCounter aCounter) = 0;
 
-  /// Marks @aFrame nonvisible and removes it from all lists of visible frames.
+  /// Marks @aFrame nonvisible and removes it from all sets of visible frames.
   virtual void MarkFrameNonvisible(nsIFrame* aFrame) = 0;
 
   /// Whether we should assume all frames are visible.

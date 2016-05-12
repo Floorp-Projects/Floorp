@@ -171,7 +171,7 @@ struct EventNameMapping
   mozilla::EventClassID mEventClassID;
 };
 
-typedef void (*CallOnRemoteChildFunction) (mozilla::dom::TabParent* aTabParent,
+typedef bool (*CallOnRemoteChildFunction) (mozilla::dom::TabParent* aTabParent,
                                            void* aArg);
 
 class nsContentUtils
@@ -2379,7 +2379,7 @@ public:
 
   /*
    * Call the given callback on all remote children of the given top-level
-   * window.
+   * window. Return true from the callback to stop calling further children.
    */
   static void CallOnAllRemoteChildren(nsPIDOMWindowOuter* aWindow,
                                       CallOnRemoteChildFunction aCallback,
@@ -2598,7 +2598,7 @@ private:
   static AutocompleteAttrState InternalSerializeAutocompleteAttribute(const nsAttrValue* aAttrVal,
                                                                       mozilla::dom::AutocompleteInfo& aInfo);
 
-  static void CallOnAllRemoteChildren(nsIMessageBroadcaster* aManager,
+  static bool CallOnAllRemoteChildren(nsIMessageBroadcaster* aManager,
                                       CallOnRemoteChildFunction aCallback,
                                       void* aArg);
 

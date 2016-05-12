@@ -6,8 +6,8 @@
 
 TEST_DIRS += ['compiledtest']
 
-# Number changes to this file to avoid bug 1081323 (clobber after changing a manifest):
-# 12
+# Change the following line to avoid bug 1081323 (clobber after changing a manifest):
+# Add test for webglcontextcreationerror.
 
 MOCHITEST_MANIFESTS += [
     'test/crash/mochitest.ini',

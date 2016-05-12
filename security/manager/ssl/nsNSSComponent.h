@@ -10,7 +10,6 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
-#include "nsIEntropyCollector.h"
 #include "nsIStringBundle.h"
 #include "nsIObserver.h"
 #include "nsNSSCallbacks.h"
@@ -98,8 +97,7 @@ class nsNSSShutDownList;
 class nsCertVerificationThread;
 
 // Implementation of the PSM component interface.
-class nsNSSComponent final : public nsIEntropyCollector
-                           , public nsINSSComponent
+class nsNSSComponent final : public nsINSSComponent
                            , public nsIObserver
 {
 public:
@@ -108,7 +106,6 @@ public:
   nsNSSComponent();
 
   NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIENTROPYCOLLECTOR
   NS_DECL_NSIOBSERVER
 
   nsresult Init();

@@ -21,9 +21,13 @@ class TalosResults(object):
 
     def __init__(self):
         self.results = []
+        self.extra_options = []
 
     def add(self, test_results):
         self.results.append(test_results)
+
+    def add_extra_option(self, extra_option):
+        self.extra_options.append(extra_option)
 
     def check_output_formats(self, output_formats):
         """check output formats"""

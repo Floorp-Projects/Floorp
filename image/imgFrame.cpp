@@ -33,8 +33,6 @@ using namespace gfx;
 
 namespace image {
 
-static UserDataKey kVolatileBuffer;
-
 static void
 VolatileBufferRelease(void* vbuf)
 {
@@ -58,14 +56,17 @@ CreateLockedSurface(VolatileBuffer* vbuf,
   MOZ_ASSERT(!vbufptr->WasBufferPurged(), "Expected image data!");
 
   int32_t stride = VolatileSurfaceStride(size, format);
+
+  // The VolatileBufferPtr is held by this DataSourceSurface.
   RefPtr<DataSourceSurface> surf =
-    Factory::CreateWrappingDataSourceSurface(*vbufptr, stride, size, format);
+    Factory::CreateWrappingDataSourceSurface(*vbufptr, stride, size, format,
+                                             &VolatileBufferRelease,
+                                             static_cast<void*>(vbufptr));
   if (!surf) {
     delete vbufptr;
     return nullptr;
   }
 
-  surf->AddUserData(&kVolatileBuffer, vbufptr, VolatileBufferRelease);
   return surf.forget();
 }
 

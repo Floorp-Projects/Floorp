@@ -521,7 +521,10 @@ class ResourceMonitoringMixin(object):
             cpu_times = rm.aggregate_cpu_times(phase=phase, per_cpu=False)
             io = rm.aggregate_io(phase=phase)
 
-            return cpu_percent, cpu_times, io
+            swap_in = sum(m.swap.sin for m in rm.measurements)
+            swap_out = sum(m.swap.sout for m in rm.measurements)
+
+            return cpu_percent, cpu_times, io, (swap_in, swap_out)
 
         def log_usage(prefix, duration, cpu_percent, cpu_times, io):
             message = '{prefix} - Wall time: {duration:.0f}s; ' \
@@ -543,19 +546,58 @@ class ResourceMonitoringMixin(object):
                         io_write_time=io.write_time
                     )
                 )
+
             except ValueError:
                 self.warning("Exception when formatting: %s" %
                              traceback.format_exc())
 
-        cpu_percent, cpu_times, io = resources(None)
+        cpu_percent, cpu_times, io, (swap_in, swap_out) = resources(None)
         duration = rm.end_time - rm.start_time
 
         log_usage('Total resource usage', duration, cpu_percent, cpu_times, io)
 
+        # Print special messages so usage shows up in Treeherder.
+        if cpu_percent:
+            self._tinderbox_print('CPU usage<br/>{:,.1f}%'.format(
+                                  cpu_percent))
+
+        self._tinderbox_print('I/O read bytes / time<br/>{:,} / {:,}'.format(
+                              io.read_bytes, io.read_time))
+        self._tinderbox_print('I/O write bytes / time<br/>{:,} / {:,}'.format(
+                              io.write_bytes, io.write_time))
+
+        # Print CPU components having >1%. "cpu_times" is a data structure
+        # whose attributes are measurements. Ideally we'd have an API that
+        # returned just the measurements as a dict or something.
+        cpu_attrs = []
+        for attr in sorted(dir(cpu_times)):
+            if attr.startswith('_'):
+                continue
+            if attr in ('count', 'index'):
+                continue
+            cpu_attrs.append(attr)
+
+        cpu_total = sum(getattr(cpu_times, attr) for attr in cpu_attrs)
+
+        for attr in cpu_attrs:
+            value = getattr(cpu_times, attr)
+            percent = value / cpu_total * 100.0
+            if percent > 1.00:
+                self._tinderbox_print('CPU {}<br/>{:,.1f} ({:,.1f}%)'.format(
+                                      attr, value, percent))
+
+        # Swap on Windows isn't reported by psutil.
+        if not self._is_windows():
+            self._tinderbox_print('Swap in / out<br/>{:,} / {:,}'.format(
+                                  swap_in, swap_out))
+
         for phase in rm.phases.keys():
             start_time, end_time = rm.phases[phase]
-            cpu_percent, cpu_times, io = resources(phase)
+            cpu_percent, cpu_times, io, swap = resources(phase)
             log_usage(phase, end_time - start_time, cpu_percent, cpu_times, io)
+
+    def _tinderbox_print(self, message):
+        self.info('TinderboxPrint: %s' % message)
 
 
 class InfluxRecordingMixin(object):

@@ -171,6 +171,7 @@ WidgetEvent::HasKeyEventMessage() const
     case eBeforeKeyUp:
     case eAfterKeyDown:
     case eAfterKeyUp:
+    case eAccessKeyNotFound:
       return true;
     default:
       return false;
@@ -273,7 +274,7 @@ WidgetEvent::IsAllowedToDispatchDOMEvent() const
       // DOM events.
       // Synthesized button up events also do not cause DOM events because they
       // do not have a reliable mRefPoint.
-      return AsMouseEvent()->reason == WidgetMouseEvent::eReal;
+      return AsMouseEvent()->mReason == WidgetMouseEvent::eReal;
 
     case eWheelEventClass: {
       // wheel event whose all delta values are zero by user pref applied, it

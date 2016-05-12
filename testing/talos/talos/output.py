@@ -175,6 +175,10 @@ class PerfherderOutput(Output):
                     'name': test.name(),
                     'subtests': subtests,
                 }
+
+                if self.results.extra_options:
+                    suite['extraOptions'] = self.results.extra_options
+
                 suites.append(suite)
                 vals = []
                 replicates = {}

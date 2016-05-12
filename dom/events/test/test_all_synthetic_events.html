@@ -605,6 +605,10 @@ const kEventConstructors = {
                                                          return new WheelEvent(aName, aProps);
                                                        },
                                              },
+  WebGLContextEvent:                         { create: function (aName, aProps) {
+                                                         return new WebGLContextEvent(aName, aProps);
+                                                       },
+                                             },
 };
 
 for (var name of Object.keys(kEventConstructors)) {

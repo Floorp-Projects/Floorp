@@ -76,8 +76,8 @@ modal.removeHandler = function(toRemove) {
 /**
  * Represents the current modal dialogue.
  *
- * @param {function(): BrowserObj} curBrowserFn
- *     Function that returns the current |BrowserObj|.
+ * @param {function(): browser.Context} curBrowserFn
+ *     Function that returns the current |browser.Context|.
  * @param {nsIWeakReference=} winRef
  *     A weak reference to the current |ChromeWindow|.
  */
