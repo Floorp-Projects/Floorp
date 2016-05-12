@@ -1134,14 +1134,22 @@ _dwrite_draw_glyphs_to_gdi_surface_gdi(cairo_win32_surface_t *surface,
     IDWriteGdiInterop *gdiInterop;
     DWriteFactory::Instance()->GetGdiInterop(&gdiInterop);
     IDWriteBitmapRenderTarget *rt;
+    HRESULT rv;
 
     IDWriteRenderingParams *params =
         DWriteFactory::RenderingParams(scaled_font->rendering_mode);
 
-    gdiInterop->CreateBitmapRenderTarget(surface->dc, 
-					 area.right - area.left, 
-					 area.bottom - area.top, 
-					 &rt);
+    rv = gdiInterop->CreateBitmapRenderTarget(surface->dc,
+					      area.right - area.left,
+					      area.bottom - area.top,
+					      &rt);
+    if (FAILED(rv)) {
+	if (rv == E_OUTOFMEMORY) {
+	    return (cairo_int_status_t)CAIRO_STATUS_NO_MEMORY;
+	} else {
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+    }
 
     /**
      * We set the number of pixels per DIP to 1.0. This is because we always want
