@@ -271,6 +271,7 @@ void MessageLoop::PostDelayedTask(already_AddRefed<Runnable> task, int delay_ms)
 
 void MessageLoop::PostIdleTask(already_AddRefed<Runnable> task) {
   DCHECK(current() == this);
+  MOZ_ASSERT(NS_IsMainThread());
 
   PendingTask pending_task(Move(task), false);
   deferred_non_nestable_work_queue_.push(Move(pending_task));
