@@ -30,6 +30,7 @@ class nsIPrincipal;
 namespace mozilla {
 class MediaPipelineFilter;
 class PeerIdentity;
+class AudioProxyThread;
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
 class VideoFrameConverter;
 #endif
@@ -344,6 +345,7 @@ public:
 
  private:
   RefPtr<PipelineListener> listener_;
+  RefPtr<AudioProxyThread> audio_processing_;
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   RefPtr<VideoFrameFeeder> feeder_;
   RefPtr<VideoFrameConverter> converter_;
