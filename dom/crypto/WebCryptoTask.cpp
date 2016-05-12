@@ -2784,6 +2784,18 @@ private:
 
     SECItem salt = { siBuffer, nullptr, 0 };
     ATTEMPT_BUFFER_TO_SECITEM(arena, &salt, mSalt);
+    // PK11_CreatePBEV2AlgorithmID will "helpfully" create PBKDF2 parameters
+    // with a random salt if given a SECItem* that is either null or has a null
+    // data pointer. This obviously isn't what we want, so we have to fake it
+    // out by passing in a SECItem* with a non-null data pointer but with zero
+    // length.
+    if (!salt.data) {
+      MOZ_ASSERT(salt.len == 0);
+      salt.data = reinterpret_cast<unsigned char*>(PORT_ArenaAlloc(arena, 1));
+      if (!salt.data) {
+        return NS_ERROR_DOM_UNKNOWN_ERR;
+      }
+    }
 
     // Always pass in cipherAlg=SEC_OID_HMAC_SHA1 (i.e. PBMAC1) as this
     // parameter is unused for key generation. It is currently only used
