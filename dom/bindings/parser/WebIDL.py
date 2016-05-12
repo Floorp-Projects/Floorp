@@ -5153,10 +5153,11 @@ class SqueakyCleanLogger(object):
     info = debug
 
     def warning(self, msg, *args, **kwargs):
-        if msg == "%s:%d: Rule '%s' defined, but not used":
+        if msg == "%s:%d: Rule %r defined, but not used" or \
+           msg == "%s:%d: Rule '%s' defined, but not used":
             # Munge things so we don't have to hardcode filenames and
             # line numbers in our whitelist.
-            whitelistmsg = "Rule '%s' defined, but not used"
+            whitelistmsg = "Rule %r defined, but not used"
             whitelistargs = args[2:]
         else:
             whitelistmsg = msg
