@@ -19,5 +19,5 @@ DIRS += [
 ]
 
 DevToolsModules(
-    'Templater.jsm'
+    'templater.js'
 )

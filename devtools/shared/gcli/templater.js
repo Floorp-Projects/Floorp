@@ -18,11 +18,6 @@
 
 /* globals document */
 
-this.EXPORTED_SYMBOLS = [ "template" ];
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "console",
-                                  "resource://gre/modules/Console.jsm");
-
 /**
  * For full documentation, see:
  * https://github.com/mozilla/domtemplate/blob/master/README.md
@@ -603,3 +598,5 @@ function handleError(state, message, ex) {
 function logError(message) {
   console.error(message);
 }
+
+exports.template = template;

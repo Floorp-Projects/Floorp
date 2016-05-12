@@ -16,6 +16,5 @@
 
 'use strict';
 
-var Cu = require('chrome').Cu;
-var template = Cu.import('resource://devtools/shared/gcli/Templater.jsm', {}).template;
+var {template} = require("devtools/shared/gcli/templater");
 exports.template = template;
