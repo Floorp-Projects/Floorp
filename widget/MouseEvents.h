@@ -205,7 +205,7 @@ public:
 protected:
   WidgetMouseEvent()
     : mReason(eReal)
-    , context(eNormal)
+    , mContextMenuTrigger(eNormal)
     , exit(eChild)
     , acceptActivation(false)
     , ignoreRootScrollFrame(false)
@@ -217,7 +217,7 @@ protected:
                    EventClassID aEventClassID, Reason aReason)
     : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, aEventClassID)
     , mReason(aReason)
-    , context(eNormal)
+    , mContextMenuTrigger(eNormal)
     , exit(eChild)
     , acceptActivation(false)
     , ignoreRootScrollFrame(false)
@@ -228,18 +228,21 @@ protected:
 public:
   virtual WidgetMouseEvent* AsMouseEvent() override { return this; }
 
-  WidgetMouseEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget,
-                   Reason aReason, ContextMenuTrigger aContext = eNormal)
+  WidgetMouseEvent(bool aIsTrusted,
+                   EventMessage aMessage,
+                   nsIWidget* aWidget,
+                   Reason aReason,
+                   ContextMenuTrigger aContextMenuTrigger = eNormal)
     : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, eMouseEventClass)
     , mReason(aReason)
-    , context(aContext)
+    , mContextMenuTrigger(aContextMenuTrigger)
     , exit(eChild)
     , acceptActivation(false)
     , ignoreRootScrollFrame(false)
     , clickCount(0)
   {
     if (aMessage == eContextMenu) {
-      button = (context == eNormal) ? eRightButton : eLeftButton;
+      button = (mContextMenuTrigger == eNormal) ? eRightButton : eLeftButton;
     }
   }
 
@@ -248,7 +251,8 @@ public:
   {
     NS_WARN_IF_FALSE(mMessage != eContextMenu ||
                      button ==
-                       ((context == eNormal) ? eRightButton : eLeftButton),
+                       ((mContextMenuTrigger == eNormal) ? eRightButton :
+                                                           eLeftButton),
                      "Wrong button set to eContextMenu event?");
   }
 #endif
@@ -259,7 +263,8 @@ public:
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetMouseEvent* result =
-      new WidgetMouseEvent(false, mMessage, nullptr, mReason, context);
+      new WidgetMouseEvent(false, mMessage, nullptr,
+                           mReason, mContextMenuTrigger);
     result->AssignMouseEventData(*this, true);
     result->mFlags = mFlags;
     return result;
@@ -267,7 +272,7 @@ public:
 
   Reason mReason;
 
-  ContextMenuTrigger context;
+  ContextMenuTrigger mContextMenuTrigger;
 
   ExitFrom exit;
 
@@ -295,7 +300,7 @@ public:
    */
   bool IsContextMenuKeyEvent() const
   {
-    return mMessage == eContextMenu && context == eContextMenuKey;
+    return mMessage == eContextMenu && mContextMenuTrigger == eContextMenuKey;
   }
 
   /**
