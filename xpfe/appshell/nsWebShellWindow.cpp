@@ -281,7 +281,7 @@ nsWebShellWindow::WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHei
 {
   nsCOMPtr<nsIBaseWindow> shellAsWin(do_QueryInterface(mDocShell));
   if (shellAsWin) {
-    shellAsWin->SetPositionAndSize(0, 0, aWidth, aHeight, false);
+    shellAsWin->SetPositionAndSize(0, 0, aWidth, aHeight, 0);
   }
   // Persist size, but not immediately, in case this OS is firing
   // repeated size events as the user drags the sizing handle
