@@ -27,6 +27,7 @@
 #include "jsprf.h"
 #include "jsstr.h"
 
+#include "asmjs/WasmAST.h"
 #include "asmjs/WasmBinary.h"
 #include "asmjs/WasmTypes.h"
 #include "ds/LifoAlloc.h"
@@ -44,743 +45,6 @@ using mozilla::FloatingPoint;
 using mozilla::Maybe;
 using mozilla::PositiveInfinity;
 using mozilla::SpecificNaN;
-
-static const unsigned AST_LIFO_DEFAULT_CHUNK_SIZE = 4096;
-static const uint32_t WasmNoIndex = UINT32_MAX;
-
-/*****************************************************************************/
-// wasm AST
-
-namespace {
-
-class WasmAstExpr;
-
-template <class T>
-using WasmAstVector = mozilla::Vector<T, 0, LifoAllocPolicy<Fallible>>;
-
-template <class K, class V, class HP>
-using WasmAstHashMap = HashMap<K, V, HP, LifoAllocPolicy<Fallible>>;
-
-class WasmName
-{
-    const char16_t* begin_;
-    const char16_t* end_;
-  public:
-    WasmName(const char16_t* begin, size_t length) : begin_(begin), end_(begin + length) {}
-    WasmName() : begin_(nullptr), end_(nullptr) {}
-    const char16_t* begin() const { return begin_; }
-    const char16_t* end() const { return end_; }
-    size_t length() const { return end_ - begin_; }
-    bool empty() const { return begin_ == nullptr; }
-
-    bool operator==(WasmName rhs) const {
-        if (length() != rhs.length())
-            return false;
-        if (begin() == rhs.begin())
-            return true;
-        return EqualChars(begin(), rhs.begin(), length());
-    }
-    bool operator!=(WasmName rhs) const {
-        return !(*this == rhs);
-    }
-};
-
-class WasmRef
-{
-    WasmName name_;
-    uint32_t index_;
-
-  public:
-    WasmRef()
-      : index_(WasmNoIndex)
-    {
-        MOZ_ASSERT(isInvalid());
-    }
-    WasmRef(WasmName name, uint32_t index)
-      : name_(name), index_(index)
-    {
-        MOZ_ASSERT(name.empty() ^ (index == WasmNoIndex));
-        MOZ_ASSERT(!isInvalid());
-    }
-    bool isInvalid() const {
-        return name_.empty() && index_ == WasmNoIndex;
-    }
-    WasmName name() const {
-        return name_;
-    }
-    size_t index() const {
-        MOZ_ASSERT(index_ != WasmNoIndex);
-        return index_;
-    }
-    void setIndex(uint32_t index) {
-        MOZ_ASSERT(index_ == WasmNoIndex);
-        index_ = index;
-    }
-};
-
-struct WasmNameHasher
-{
-    typedef const WasmName Lookup;
-    static js::HashNumber hash(Lookup l) {
-        return mozilla::HashString(l.begin(), l.length());
-    }
-    static bool match(const WasmName key, Lookup lookup) {
-        return key == lookup;
-    }
-};
-
-using WasmNameMap = WasmAstHashMap<WasmName, uint32_t, WasmNameHasher>;
-
-typedef WasmAstVector<ValType> WasmAstValTypeVector;
-typedef WasmAstVector<WasmAstExpr*> WasmAstExprVector;
-typedef WasmAstVector<WasmName> WasmNameVector;
-typedef WasmAstVector<WasmRef> WasmRefVector;
-
-struct WasmAstBase
-{
-    void* operator new(size_t numBytes, LifoAlloc& astLifo) throw() {
-        return astLifo.alloc(numBytes);
-    }
-};
-
-class WasmAstSig : public WasmAstBase
-{
-    WasmName name_;
-    WasmAstValTypeVector args_;
-    ExprType ret_;
-
-  public:
-    explicit WasmAstSig(LifoAlloc& lifo)
-      : args_(lifo),
-        ret_(ExprType::Void)
-    {}
-    WasmAstSig(WasmAstValTypeVector&& args, ExprType ret)
-      : args_(Move(args)),
-        ret_(ret)
-    {}
-    WasmAstSig(WasmName name, WasmAstSig&& rhs)
-      : name_(name),
-        args_(Move(rhs.args_)),
-        ret_(rhs.ret_)
-    {}
-    void operator=(WasmAstSig&& rhs) {
-        args_ = Move(rhs.args_);
-        ret_ = rhs.ret_;
-    }
-    const WasmAstValTypeVector& args() const {
-        return args_;
-    }
-    ExprType ret() const {
-        return ret_;
-    }
-    WasmName name() const {
-        return name_;
-    }
-    bool operator==(const WasmAstSig& rhs) const {
-        return ret() == rhs.ret() && EqualContainers(args(), rhs.args());
-    }
-
-    typedef const WasmAstSig& Lookup;
-    static HashNumber hash(Lookup sig) {
-        return AddContainerToHash(sig.args(), HashNumber(sig.ret()));
-    }
-    static bool match(const WasmAstSig* lhs, Lookup rhs) {
-        return *lhs == rhs;
-    }
-};
-
-class WasmAstNode : public WasmAstBase
-{};
-
-enum class WasmAstExprKind
-{
-    BinaryOperator,
-    Block,
-    Branch,
-    BranchTable,
-    Call,
-    CallIndirect,
-    ComparisonOperator,
-    Const,
-    ConversionOperator,
-    GetLocal,
-    If,
-    Load,
-    Nop,
-    Return,
-    SetLocal,
-    Store,
-    TernaryOperator,
-    UnaryOperator,
-    Unreachable
-};
-
-class WasmAstExpr : public WasmAstNode
-{
-    const WasmAstExprKind kind_;
-
-  protected:
-    explicit WasmAstExpr(WasmAstExprKind kind)
-      : kind_(kind)
-    {}
-
-  public:
-    WasmAstExprKind kind() const { return kind_; }
-
-    template <class T>
-    T& as() {
-        MOZ_ASSERT(kind() == T::Kind);
-        return static_cast<T&>(*this);
-    }
-};
-
-struct WasmAstNop : WasmAstExpr
-{
-    WasmAstNop()
-      : WasmAstExpr(WasmAstExprKind::Nop)
-    {}
-};
-
-struct WasmAstUnreachable : WasmAstExpr
-{
-    WasmAstUnreachable()
-      : WasmAstExpr(WasmAstExprKind::Unreachable)
-    {}
-};
-
-class WasmAstConst : public WasmAstExpr
-{
-    const Val val_;
-
-  public:
-    static const WasmAstExprKind Kind = WasmAstExprKind::Const;
-    explicit WasmAstConst(Val val)
-      : WasmAstExpr(Kind),
-        val_(val)
-    {}
-    Val val() const { return val_; }
-};
-
-class WasmAstGetLocal : public WasmAstExpr
-{
-    WasmRef local_;
-
-  public:
-    static const WasmAstExprKind Kind = WasmAstExprKind::GetLocal;
-    explicit WasmAstGetLocal(WasmRef local)
-      : WasmAstExpr(Kind),
-        local_(local)
-    {}
-    WasmRef& local() {
-        return local_;
-    }
-};
-
-class WasmAstSetLocal : public WasmAstExpr
-{
-    WasmRef local_;
-    WasmAstExpr& value_;
-
-  public:
-    static const WasmAstExprKind Kind = WasmAstExprKind::SetLocal;
-    WasmAstSetLocal(WasmRef local, WasmAstExpr& value)
-      : WasmAstExpr(Kind),
-        local_(local),
-        value_(value)
-    {}
-    WasmRef& local() {
-        return local_;
-    }
-    WasmAstExpr& value() const {
-        return value_;
-    }
-};
-
-class WasmAstBlock : public WasmAstExpr
-{
-    Expr expr_;
-    WasmName breakName_;
-    WasmName continueName_;
-    WasmAstExprVector exprs_;
-
-  public:
-    static const WasmAstExprKind Kind = WasmAstExprKind::Block;
-    explicit WasmAstBlock(Expr expr, WasmName breakName,
-                          WasmName continueName, WasmAstExprVector&& exprs)
-      : WasmAstExpr(Kind),
-        expr_(expr),
-        breakName_(breakName),
-        continueName_(continueName),
-        exprs_(Move(exprs))
-    {}
-
-    Expr expr() const { return expr_; }
-    WasmName breakName() const { return breakName_; }
-    WasmName continueName() const { return continueName_; }
-    const WasmAstExprVector& exprs() const { return exprs_; }
-};
-
-class WasmAstBranch : public WasmAstExpr
-{
-    Expr expr_;
-    WasmAstExpr* cond_;
-    WasmRef target_;
-    WasmAstExpr* value_;
-
-  public:
-    static const WasmAstExprKind Kind = WasmAstExprKind::Branch;
-    explicit WasmAstBranch(Expr expr, WasmAstExpr* cond, WasmRef target, WasmAstExpr* value)
-      : WasmAstExpr(Kind),
-        expr_(expr),
-        cond_(cond),
-        target_(target),
-        value_(value)
-    {}
-
-    Expr expr() const { return expr_; }
-    WasmRef& target() { return target_; }
-    WasmAstExpr& cond() const { MOZ_ASSERT(cond_); return *cond_; }
-    WasmAstExpr* maybeValue() const { return value_; }
-};
-
-class WasmAstCall : public WasmAstExpr
-{
-    Expr expr_;
-    WasmRef func_;
-    WasmAstExprVector args_;
-
-  public:
-    static const WasmAstExprKind Kind = WasmAstExprKind::Call;
-    WasmAstCall(Expr expr, WasmRef func, WasmAstExprVector&& args)
-      : WasmAstExpr(Kind), expr_(expr), func_(func), args_(Move(args))
-    {}
-
-    Expr expr() const { return expr_; }
-    WasmRef& func() { return func_; }
-    const WasmAstExprVector& args() const { return args_; }
-};
-
-class WasmAstCallIndirect : public WasmAstExpr
-{
-    WasmRef sig_;
-    WasmAstExpr* index_;
-    WasmAstExprVector args_;
-
-  public:
-    static const WasmAstExprKind Kind = WasmAstExprKind::CallIndirect;
-    WasmAstCallIndirect(WasmRef sig, WasmAstExpr* index, WasmAstExprVector&& args)
-      : WasmAstExpr(Kind), sig_(sig), index_(index), args_(Move(args))
-    {}
-    WasmRef& sig() { return sig_; }
-    WasmAstExpr* index() const { return index_; }
-    const WasmAstExprVector& args() const { return args_; }
-};
-
-class WasmAstReturn : public WasmAstExpr
-{
-    WasmAstExpr* maybeExpr_;
-
-  public:
-    static const WasmAstExprKind Kind = WasmAstExprKind::Return;
-    explicit WasmAstReturn(WasmAstExpr* maybeExpr)
-      : WasmAstExpr(Kind),
-        maybeExpr_(maybeExpr)
-    {}
-    WasmAstExpr* maybeExpr() const { return maybeExpr_; }
-};
-
-class WasmAstIf : public WasmAstExpr
-{
-    WasmAstExpr* cond_;
-    WasmName thenName_;
-    WasmAstExprVector thenExprs_;
-    WasmName elseName_;
-    WasmAstExprVector elseExprs_;
-
-  public:
-    static const WasmAstExprKind Kind = WasmAstExprKind::If;
-    WasmAstIf(WasmAstExpr* cond, WasmName thenName, WasmAstExprVector&& thenExprs,
-              WasmName elseName, WasmAstExprVector&& elseExprs)
-      : WasmAstExpr(Kind),
-        cond_(cond),
-        thenName_(thenName),
-        thenExprs_(Move(thenExprs)),
-        elseName_(elseName),
-        elseExprs_(Move(elseExprs))
-    {}
-
-    WasmAstExpr& cond() const { return *cond_; }
-    const WasmAstExprVector& thenExprs() const { return thenExprs_; }
-    bool hasElse() const { return elseExprs_.length(); }
-    const WasmAstExprVector& elseExprs() const { MOZ_ASSERT(hasElse()); return elseExprs_; }
-    WasmName thenName() const { return thenName_; }
-    WasmName elseName() const { return elseName_; }
-};
-
-class WasmAstLoadStoreAddress
-{
-    WasmAstExpr* base_;
-    int32_t flags_;
-    int32_t offset_;
-
-  public:
-    explicit WasmAstLoadStoreAddress(WasmAstExpr* base, int32_t flags, int32_t offset)
-      : base_(base),
-        flags_(flags),
-        offset_(offset)
-    {}
-
-    WasmAstExpr& base() const { return *base_; }
-    int32_t flags() const { return flags_; }
-    int32_t offset() const { return offset_; }
-};
-
-class WasmAstLoad : public WasmAstExpr
-{
-    Expr expr_;
-    WasmAstLoadStoreAddress address_;
-
-  public:
-    static const WasmAstExprKind Kind = WasmAstExprKind::Load;
-    explicit WasmAstLoad(Expr expr, const WasmAstLoadStoreAddress &address)
-      : WasmAstExpr(Kind),
-        expr_(expr),
-        address_(address)
-    {}
-
-    Expr expr() const { return expr_; }
-    const WasmAstLoadStoreAddress& address() const { return address_; }
-};
-
-class WasmAstStore : public WasmAstExpr
-{
-    Expr expr_;
-    WasmAstLoadStoreAddress address_;
-    WasmAstExpr* value_;
-
-  public:
-    static const WasmAstExprKind Kind = WasmAstExprKind::Store;
-    explicit WasmAstStore(Expr expr, const WasmAstLoadStoreAddress &address,
-                          WasmAstExpr* value)
-      : WasmAstExpr(Kind),
-        expr_(expr),
-        address_(address),
-        value_(value)
-    {}
-
-    Expr expr() const { return expr_; }
-    const WasmAstLoadStoreAddress& address() const { return address_; }
-    WasmAstExpr& value() const { return *value_; }
-};
-
-class WasmAstBranchTable : public WasmAstExpr
-{
-    WasmAstExpr& index_;
-    WasmRef default_;
-    WasmRefVector table_;
-    WasmAstExpr* value_;
-
-  public:
-    static const WasmAstExprKind Kind = WasmAstExprKind::BranchTable;
-    explicit WasmAstBranchTable(WasmAstExpr& index, WasmRef def, WasmRefVector&& table,
-                                WasmAstExpr* maybeValue)
-      : WasmAstExpr(Kind),
-        index_(index),
-        default_(def),
-        table_(Move(table)),
-        value_(maybeValue)
-    {}
-    WasmAstExpr& index() const { return index_; }
-    WasmRef& def() { return default_; }
-    WasmRefVector& table() { return table_; }
-    WasmAstExpr* maybeValue() { return value_; }
-};
-
-class WasmAstFunc : public WasmAstNode
-{
-    WasmName name_;
-    WasmRef sig_;
-    WasmAstValTypeVector vars_;
-    WasmNameVector localNames_;
-    WasmAstExprVector body_;
-
-  public:
-    WasmAstFunc(WasmName name, WasmRef sig, WasmAstValTypeVector&& vars,
-                WasmNameVector&& locals, WasmAstExprVector&& body)
-      : name_(name),
-        sig_(sig),
-        vars_(Move(vars)),
-        localNames_(Move(locals)),
-        body_(Move(body))
-    {}
-    WasmRef& sig() { return sig_; }
-    const WasmAstValTypeVector& vars() const { return vars_; }
-    const WasmNameVector& locals() const { return localNames_; }
-    const WasmAstExprVector& body() const { return body_; }
-    WasmName name() const { return name_; }
-};
-
-class WasmAstImport : public WasmAstNode
-{
-    WasmName name_;
-    WasmName module_;
-    WasmName func_;
-    WasmRef  sig_;
-
-  public:
-    WasmAstImport(WasmName name, WasmName module, WasmName func, WasmRef sig)
-      : name_(name), module_(module), func_(func), sig_(sig)
-    {}
-    WasmName name() const { return name_; }
-    WasmName module() const { return module_; }
-    WasmName func() const { return func_; }
-    WasmRef& sig() { return sig_; }
-};
-
-enum class WasmAstExportKind { Func, Memory };
-
-class WasmAstExport : public WasmAstNode
-{
-    WasmName name_;
-    WasmAstExportKind kind_;
-    WasmRef func_;
-
-  public:
-    WasmAstExport(WasmName name, WasmRef func)
-      : name_(name), kind_(WasmAstExportKind::Func), func_(func)
-    {}
-    explicit WasmAstExport(WasmName name)
-      : name_(name), kind_(WasmAstExportKind::Memory)
-    {}
-    WasmName name() const { return name_; }
-    WasmAstExportKind kind() const { return kind_; }
-    WasmRef& func() { return func_; }
-};
-
-typedef WasmAstVector<WasmRef> WasmAstTableElemVector;
-
-class WasmAstTable : public WasmAstNode
-{
-    WasmAstTableElemVector elems_;
-
-  public:
-    explicit WasmAstTable(WasmAstTableElemVector&& elems) : elems_(Move(elems)) {}
-    WasmAstTableElemVector& elems() { return elems_; }
-};
-
-class WasmAstSegment : public WasmAstNode
-{
-    uint32_t offset_;
-    WasmName text_;
-
-  public:
-    WasmAstSegment(uint32_t offset, WasmName text)
-      : offset_(offset), text_(text)
-    {}
-    uint32_t offset() const { return offset_; }
-    WasmName text() const { return text_; }
-};
-
-typedef WasmAstVector<WasmAstSegment*> WasmAstSegmentVector;
-
-class WasmAstMemory : public WasmAstNode
-{
-    uint32_t initialSize_;
-    Maybe<uint32_t> maxSize_;
-    WasmAstSegmentVector segments_;
-
-  public:
-    explicit WasmAstMemory(uint32_t initialSize, Maybe<uint32_t> maxSize,
-                           WasmAstSegmentVector&& segments)
-      : initialSize_(initialSize),
-        maxSize_(maxSize),
-        segments_(Move(segments))
-    {}
-    uint32_t initialSize() const { return initialSize_; }
-    const Maybe<uint32_t>& maxSize() const { return maxSize_; }
-    const WasmAstSegmentVector& segments() const { return segments_; }
-};
-
-class WasmAstModule : public WasmAstNode
-{
-    typedef WasmAstVector<WasmAstFunc*> FuncVector;
-    typedef WasmAstVector<WasmAstImport*> ImportVector;
-    typedef WasmAstVector<WasmAstExport*> ExportVector;
-    typedef WasmAstVector<WasmAstSig*> SigVector;
-    typedef WasmAstHashMap<WasmAstSig*, uint32_t, WasmAstSig> SigMap;
-
-    LifoAlloc& lifo_;
-    WasmAstMemory* memory_;
-    SigVector sigs_;
-    SigMap sigMap_;
-    ImportVector imports_;
-    ExportVector exports_;
-    WasmAstTable* table_;
-    FuncVector funcs_;
-
-  public:
-    explicit WasmAstModule(LifoAlloc& lifo)
-      : lifo_(lifo),
-        memory_(nullptr),
-        sigs_(lifo),
-        sigMap_(lifo),
-        imports_(lifo),
-        exports_(lifo),
-        table_(nullptr),
-        funcs_(lifo)
-    {}
-    bool init() {
-        return sigMap_.init();
-    }
-    bool setMemory(WasmAstMemory* memory) {
-        if (memory_)
-            return false;
-        memory_ = memory;
-        return true;
-    }
-    WasmAstMemory* maybeMemory() const {
-        return memory_;
-    }
-    bool declare(WasmAstSig&& sig, uint32_t* sigIndex) {
-        SigMap::AddPtr p = sigMap_.lookupForAdd(sig);
-        if (p) {
-            *sigIndex = p->value();
-            return true;
-        }
-        *sigIndex = sigs_.length();
-        auto* lifoSig = new (lifo_) WasmAstSig(WasmName(), Move(sig));
-        return lifoSig &&
-               sigs_.append(lifoSig) &&
-               sigMap_.add(p, sigs_.back(), *sigIndex);
-    }
-    bool append(WasmAstSig* sig) {
-        uint32_t sigIndex = sigs_.length();
-        if (!sigs_.append(sig))
-            return false;
-        SigMap::AddPtr p = sigMap_.lookupForAdd(*sig);
-        return p || sigMap_.add(p, sig, sigIndex);
-    }
-    const SigVector& sigs() const {
-        return sigs_;
-    }
-    bool append(WasmAstFunc* func) {
-        return funcs_.append(func);
-    }
-    const FuncVector& funcs() const {
-        return funcs_;
-    }
-    const ImportVector& imports() const {
-        return imports_;
-    }
-    bool append(WasmAstImport* imp) {
-        return imports_.append(imp);
-    }
-    bool append(WasmAstExport* exp) {
-        return exports_.append(exp);
-    }
-    const ExportVector& exports() const {
-        return exports_;
-    }
-    bool initTable(WasmAstTable* table) {
-        if (table_)
-            return false;
-        table_ = table;
-        return true;
-    }
-    WasmAstTable* maybeTable() const {
-        return table_;
-    }
-};
-
-class WasmAstUnaryOperator final : public WasmAstExpr
-{
-    Expr expr_;
-    WasmAstExpr* op_;
-
-  public:
-    static const WasmAstExprKind Kind = WasmAstExprKind::UnaryOperator;
-    explicit WasmAstUnaryOperator(Expr expr, WasmAstExpr* op)
-      : WasmAstExpr(Kind),
-        expr_(expr), op_(op)
-    {}
-
-    Expr expr() const { return expr_; }
-    WasmAstExpr* op() const { return op_; }
-};
-
-class WasmAstBinaryOperator final : public WasmAstExpr
-{
-    Expr expr_;
-    WasmAstExpr* lhs_;
-    WasmAstExpr* rhs_;
-
-  public:
-    static const WasmAstExprKind Kind = WasmAstExprKind::BinaryOperator;
-    explicit WasmAstBinaryOperator(Expr expr, WasmAstExpr* lhs, WasmAstExpr* rhs)
-      : WasmAstExpr(Kind),
-        expr_(expr), lhs_(lhs), rhs_(rhs)
-    {}
-
-    Expr expr() const { return expr_; }
-    WasmAstExpr* lhs() const { return lhs_; }
-    WasmAstExpr* rhs() const { return rhs_; }
-};
-
-class WasmAstTernaryOperator : public WasmAstExpr
-{
-    Expr expr_;
-    WasmAstExpr* op0_;
-    WasmAstExpr* op1_;
-    WasmAstExpr* op2_;
-
-  public:
-    static const WasmAstExprKind Kind = WasmAstExprKind::TernaryOperator;
-    WasmAstTernaryOperator(Expr expr, WasmAstExpr* op0, WasmAstExpr* op1, WasmAstExpr* op2)
-      : WasmAstExpr(Kind),
-        expr_(expr), op0_(op0), op1_(op1), op2_(op2)
-    {}
-
-    Expr expr() const { return expr_; }
-    WasmAstExpr* op0() const { return op0_; }
-    WasmAstExpr* op1() const { return op1_; }
-    WasmAstExpr* op2() const { return op2_; }
-};
-
-class WasmAstComparisonOperator final : public WasmAstExpr
-{
-    Expr expr_;
-    WasmAstExpr* lhs_;
-    WasmAstExpr* rhs_;
-
-  public:
-    static const WasmAstExprKind Kind = WasmAstExprKind::ComparisonOperator;
-    explicit WasmAstComparisonOperator(Expr expr, WasmAstExpr* lhs, WasmAstExpr* rhs)
-      : WasmAstExpr(Kind),
-        expr_(expr), lhs_(lhs), rhs_(rhs)
-    {}
-
-    Expr expr() const { return expr_; }
-    WasmAstExpr* lhs() const { return lhs_; }
-    WasmAstExpr* rhs() const { return rhs_; }
-};
-
-class WasmAstConversionOperator final : public WasmAstExpr
-{
-    Expr expr_;
-    WasmAstExpr* op_;
-
-  public:
-    static const WasmAstExprKind Kind = WasmAstExprKind::ConversionOperator;
-    explicit WasmAstConversionOperator(Expr expr, WasmAstExpr* op)
-      : WasmAstExpr(Kind),
-        expr_(expr), op_(op)
-    {}
-
-    Expr expr() const { return expr_; }
-    WasmAstExpr* op() const { return op_; }
-};
-
-} // end anonymous namespace
 
 /*****************************************************************************/
 // wasm text token stream
@@ -940,15 +204,15 @@ class WasmToken
     const char16_t* end() const {
         return end_;
     }
-    WasmName text() const {
+    AstName text() const {
         MOZ_ASSERT(kind_ == Text);
         MOZ_ASSERT(begin_[0] == '"');
         MOZ_ASSERT(end_[-1] == '"');
         MOZ_ASSERT(end_ - begin_ >= 2);
-        return WasmName(begin_ + 1, end_ - begin_ - 2);
+        return AstName(begin_ + 1, end_ - begin_ - 2);
     }
-    WasmName name() const {
-        return WasmName(begin_, end_ - begin_);
+    AstName name() const {
+        return AstName(begin_, end_ - begin_);
     }
     uint32_t index() const {
         MOZ_ASSERT(kind_ == Index);
@@ -1238,13 +502,13 @@ class WasmTokenStream
             return true;
         return false;
     }
-    WasmName getIfName() {
+    AstName getIfName() {
         WasmToken token;
         if (getIf(WasmToken::Name, &token))
             return token.name();
-        return WasmName();
+        return AstName();
     }
-    bool getIfRef(WasmRef* ref) {
+    bool getIfRef(AstRef* ref) {
         WasmToken token = peek();
         if (token.kind() == WasmToken::Name || token.kind() == WasmToken::Index)
             return matchRef(ref, nullptr);
@@ -1261,14 +525,14 @@ class WasmTokenStream
         WasmToken token;
         return match(expect, &token, error);
     }
-    bool matchRef(WasmRef* ref, UniqueChars* error) {
+    bool matchRef(AstRef* ref, UniqueChars* error) {
         WasmToken token = get();
         switch (token.kind()) {
           case WasmToken::Name:
-            *ref = WasmRef(token.name(), WasmNoIndex);
+            *ref = AstRef(token.name(), AstNoIndex);
             break;
           case WasmToken::Index:
-            *ref = WasmRef(WasmName(), token.index());
+            *ref = AstRef(AstName(), token.index());
             break;
           default:
             generateError(token, error);
@@ -2093,16 +1357,16 @@ struct WasmParseContext
 
 } // end anonymous namespace
 
-static WasmAstExpr*
+static AstExpr*
 ParseExprInsideParens(WasmParseContext& c);
 
-static WasmAstExpr*
+static AstExpr*
 ParseExpr(WasmParseContext& c)
 {
     if (!c.ts.match(WasmToken::OpenParen, c.error))
         return nullptr;
 
-    WasmAstExpr* expr = ParseExprInsideParens(c);
+    AstExpr* expr = ParseExprInsideParens(c);
     if (!expr)
         return nullptr;
 
@@ -2113,10 +1377,10 @@ ParseExpr(WasmParseContext& c)
 }
 
 static bool
-ParseExprList(WasmParseContext& c, WasmAstExprVector* exprs)
+ParseExprList(WasmParseContext& c, AstExprVector* exprs)
 {
     while (c.ts.getIf(WasmToken::OpenParen)) {
-        WasmAstExpr* expr = ParseExprInsideParens(c);
+        AstExpr* expr = ParseExprInsideParens(c);
         if (!expr || !exprs->append(expr))
             return false;
         if (!c.ts.match(WasmToken::CloseParen, c.error))
@@ -2125,33 +1389,33 @@ ParseExprList(WasmParseContext& c, WasmAstExprVector* exprs)
     return true;
 }
 
-static WasmAstBlock*
+static AstBlock*
 ParseBlock(WasmParseContext& c, Expr expr)
 {
-    WasmAstExprVector exprs(c.lifo);
+    AstExprVector exprs(c.lifo);
 
-    WasmName breakName = c.ts.getIfName();
+    AstName breakName = c.ts.getIfName();
 
-    WasmName continueName;
+    AstName continueName;
     if (expr == Expr::Loop)
         continueName = c.ts.getIfName();
 
     if (!ParseExprList(c, &exprs))
         return nullptr;
 
-    return new(c.lifo) WasmAstBlock(expr, breakName, continueName, Move(exprs));
+    return new(c.lifo) AstBlock(expr, breakName, continueName, Move(exprs));
 }
 
-static WasmAstBranch*
+static AstBranch*
 ParseBranch(WasmParseContext& c, Expr expr)
 {
     MOZ_ASSERT(expr == Expr::Br || expr == Expr::BrIf);
 
-    WasmRef target;
+    AstRef target;
     if (!c.ts.matchRef(&target, c.error))
         return nullptr;
 
-    WasmAstExpr* value = nullptr;
+    AstExpr* value = nullptr;
     if (c.ts.getIf(WasmToken::OpenParen)) {
         value = ParseExprInsideParens(c);
         if (!value)
@@ -2160,7 +1424,7 @@ ParseBranch(WasmParseContext& c, Expr expr)
             return nullptr;
     }
 
-    WasmAstExpr* cond = nullptr;
+    AstExpr* cond = nullptr;
     if (expr == Expr::BrIf) {
         if (c.ts.getIf(WasmToken::OpenParen)) {
             cond = ParseExprInsideParens(c);
@@ -2174,14 +1438,14 @@ ParseBranch(WasmParseContext& c, Expr expr)
         }
     }
 
-    return new(c.lifo) WasmAstBranch(expr, cond, target, value);
+    return new(c.lifo) AstBranch(expr, cond, target, value);
 }
 
 static bool
-ParseArgs(WasmParseContext& c, WasmAstExprVector* args)
+ParseArgs(WasmParseContext& c, AstExprVector* args)
 {
     while (c.ts.getIf(WasmToken::OpenParen)) {
-        WasmAstExpr* arg = ParseExprInsideParens(c);
+        AstExpr* arg = ParseExprInsideParens(c);
         if (!arg || !args->append(arg))
             return false;
         if (!c.ts.match(WasmToken::CloseParen, c.error))
@@ -2191,38 +1455,38 @@ ParseArgs(WasmParseContext& c, WasmAstExprVector* args)
     return true;
 }
 
-static WasmAstCall*
+static AstCall*
 ParseCall(WasmParseContext& c, Expr expr)
 {
     MOZ_ASSERT(expr == Expr::Call || expr == Expr::CallImport);
 
-    WasmRef func;
+    AstRef func;
     if (!c.ts.matchRef(&func, c.error))
         return nullptr;
 
-    WasmAstExprVector args(c.lifo);
+    AstExprVector args(c.lifo);
     if (!ParseArgs(c, &args))
         return nullptr;
 
-    return new(c.lifo) WasmAstCall(expr, func, Move(args));
+    return new(c.lifo) AstCall(expr, func, Move(args));
 }
 
-static WasmAstCallIndirect*
+static AstCallIndirect*
 ParseCallIndirect(WasmParseContext& c)
 {
-    WasmRef sig;
+    AstRef sig;
     if (!c.ts.matchRef(&sig, c.error))
         return nullptr;
 
-    WasmAstExpr* index = ParseExpr(c);
+    AstExpr* index = ParseExpr(c);
     if (!index)
         return nullptr;
 
-    WasmAstExprVector args(c.lifo);
+    AstExprVector args(c.lifo);
     if (!ParseArgs(c, &args))
         return nullptr;
 
-    return new(c.lifo) WasmAstCallIndirect(sig, index, Move(args));
+    return new(c.lifo) AstCallIndirect(sig, index, Move(args));
 }
 
 static uint_fast8_t
@@ -2491,7 +1755,7 @@ ParseFloatLiteral(WasmParseContext& c, WasmToken token, Float* result)
     return true;
 }
 
-static WasmAstConst*
+static AstConst*
 ParseConst(WasmParseContext& c, WasmToken constToken)
 {
     WasmToken val = c.ts.get();
@@ -2499,15 +1763,15 @@ ParseConst(WasmParseContext& c, WasmToken constToken)
       case ValType::I32: {
         switch (val.kind()) {
           case WasmToken::Index:
-            return new(c.lifo) WasmAstConst(Val(val.index()));
+            return new(c.lifo) AstConst(Val(val.index()));
           case WasmToken::SignedInteger: {
             CheckedInt<int32_t> sint = val.sint();
             if (!sint.isValid())
                 break;
-            return new(c.lifo) WasmAstConst(Val(uint32_t(sint.value())));
+            return new(c.lifo) AstConst(Val(uint32_t(sint.value())));
           }
           case WasmToken::NegativeZero:
-            return new(c.lifo) WasmAstConst(Val(uint32_t(0)));
+            return new(c.lifo) AstConst(Val(uint32_t(0)));
           default:
             break;
         }
@@ -2516,13 +1780,13 @@ ParseConst(WasmParseContext& c, WasmToken constToken)
       case ValType::I64: {
         switch (val.kind()) {
           case WasmToken::Index:
-            return new(c.lifo) WasmAstConst(Val(uint64_t(val.index())));
+            return new(c.lifo) AstConst(Val(uint64_t(val.index())));
           case WasmToken::UnsignedInteger:
-            return new(c.lifo) WasmAstConst(Val(val.uint()));
+            return new(c.lifo) AstConst(Val(val.uint()));
           case WasmToken::SignedInteger:
-            return new(c.lifo) WasmAstConst(Val(uint64_t(val.sint())));
+            return new(c.lifo) AstConst(Val(uint64_t(val.sint())));
           case WasmToken::NegativeZero:
-            return new(c.lifo) WasmAstConst(Val(uint64_t(0)));
+            return new(c.lifo) AstConst(Val(uint64_t(0)));
           default:
             break;
         }
@@ -2532,13 +1796,13 @@ ParseConst(WasmParseContext& c, WasmToken constToken)
         float result;
         if (!ParseFloatLiteral(c, val, &result))
             break;
-        return new(c.lifo) WasmAstConst(Val(result));
+        return new(c.lifo) AstConst(Val(result));
       }
       case ValType::F64: {
         double result;
         if (!ParseFloatLiteral(c, val, &result))
             break;
-        return new(c.lifo) WasmAstConst(Val(result));
+        return new(c.lifo) AstConst(Val(result));
       }
       default:
         break;
@@ -2547,34 +1811,34 @@ ParseConst(WasmParseContext& c, WasmToken constToken)
     return nullptr;
 }
 
-static WasmAstGetLocal*
+static AstGetLocal*
 ParseGetLocal(WasmParseContext& c)
 {
-    WasmRef local;
+    AstRef local;
     if (!c.ts.matchRef(&local, c.error))
         return nullptr;
 
-    return new(c.lifo) WasmAstGetLocal(local);
+    return new(c.lifo) AstGetLocal(local);
 }
 
-static WasmAstSetLocal*
+static AstSetLocal*
 ParseSetLocal(WasmParseContext& c)
 {
-    WasmRef local;
+    AstRef local;
     if (!c.ts.matchRef(&local, c.error))
         return nullptr;
 
-    WasmAstExpr* value = ParseExpr(c);
+    AstExpr* value = ParseExpr(c);
     if (!value)
         return nullptr;
 
-    return new(c.lifo) WasmAstSetLocal(local, *value);
+    return new(c.lifo) AstSetLocal(local, *value);
 }
 
-static WasmAstReturn*
+static AstReturn*
 ParseReturn(WasmParseContext& c)
 {
-    WasmAstExpr* maybeExpr = nullptr;
+    AstExpr* maybeExpr = nullptr;
 
     if (c.ts.peek().kind() != WasmToken::CloseParen) {
         maybeExpr = ParseExpr(c);
@@ -2582,108 +1846,108 @@ ParseReturn(WasmParseContext& c)
             return nullptr;
     }
 
-    return new(c.lifo) WasmAstReturn(maybeExpr);
+    return new(c.lifo) AstReturn(maybeExpr);
 }
 
-static WasmAstUnaryOperator*
+static AstUnaryOperator*
 ParseUnaryOperator(WasmParseContext& c, Expr expr)
 {
-    WasmAstExpr* op = ParseExpr(c);
+    AstExpr* op = ParseExpr(c);
     if (!op)
         return nullptr;
 
-    return new(c.lifo) WasmAstUnaryOperator(expr, op);
+    return new(c.lifo) AstUnaryOperator(expr, op);
 }
 
-static WasmAstBinaryOperator*
+static AstBinaryOperator*
 ParseBinaryOperator(WasmParseContext& c, Expr expr)
 {
-    WasmAstExpr* lhs = ParseExpr(c);
+    AstExpr* lhs = ParseExpr(c);
     if (!lhs)
         return nullptr;
 
-    WasmAstExpr* rhs = ParseExpr(c);
+    AstExpr* rhs = ParseExpr(c);
     if (!rhs)
         return nullptr;
 
-    return new(c.lifo) WasmAstBinaryOperator(expr, lhs, rhs);
+    return new(c.lifo) AstBinaryOperator(expr, lhs, rhs);
 }
 
-static WasmAstComparisonOperator*
+static AstComparisonOperator*
 ParseComparisonOperator(WasmParseContext& c, Expr expr)
 {
-    WasmAstExpr* lhs = ParseExpr(c);
+    AstExpr* lhs = ParseExpr(c);
     if (!lhs)
         return nullptr;
 
-    WasmAstExpr* rhs = ParseExpr(c);
+    AstExpr* rhs = ParseExpr(c);
     if (!rhs)
         return nullptr;
 
-    return new(c.lifo) WasmAstComparisonOperator(expr, lhs, rhs);
+    return new(c.lifo) AstComparisonOperator(expr, lhs, rhs);
 }
 
-static WasmAstTernaryOperator*
+static AstTernaryOperator*
 ParseTernaryOperator(WasmParseContext& c, Expr expr)
 {
-    WasmAstExpr* op0 = ParseExpr(c);
+    AstExpr* op0 = ParseExpr(c);
     if (!op0)
         return nullptr;
 
-    WasmAstExpr* op1 = ParseExpr(c);
+    AstExpr* op1 = ParseExpr(c);
     if (!op1)
         return nullptr;
 
-    WasmAstExpr* op2 = ParseExpr(c);
+    AstExpr* op2 = ParseExpr(c);
     if (!op2)
         return nullptr;
 
-    return new(c.lifo) WasmAstTernaryOperator(expr, op0, op1, op2);
+    return new(c.lifo) AstTernaryOperator(expr, op0, op1, op2);
 }
 
-static WasmAstConversionOperator*
+static AstConversionOperator*
 ParseConversionOperator(WasmParseContext& c, Expr expr)
 {
-    WasmAstExpr* op = ParseExpr(c);
+    AstExpr* op = ParseExpr(c);
     if (!op)
         return nullptr;
 
-    return new(c.lifo) WasmAstConversionOperator(expr, op);
+    return new(c.lifo) AstConversionOperator(expr, op);
 }
 
-static WasmAstIf*
+static AstIf*
 ParseIf(WasmParseContext& c)
 {
-    WasmAstExpr* cond = ParseExpr(c);
+    AstExpr* cond = ParseExpr(c);
     if (!cond)
         return nullptr;
 
     if (!c.ts.match(WasmToken::OpenParen, c.error))
         return nullptr;
 
-    WasmName thenName;
-    WasmAstExprVector thenExprs(c.lifo);
+    AstName thenName;
+    AstExprVector thenExprs(c.lifo);
     if (c.ts.getIf(WasmToken::Then)) {
         thenName = c.ts.getIfName();
         if (!ParseExprList(c, &thenExprs))
             return nullptr;
     } else {
-        WasmAstExpr* thenBranch = ParseExprInsideParens(c);
+        AstExpr* thenBranch = ParseExprInsideParens(c);
         if (!thenBranch || !thenExprs.append(thenBranch))
             return nullptr;
     }
     if (!c.ts.match(WasmToken::CloseParen, c.error))
         return nullptr;
 
-    WasmName elseName;
-    WasmAstExprVector elseExprs(c.lifo);
+    AstName elseName;
+    AstExprVector elseExprs(c.lifo);
     if (c.ts.getIf(WasmToken::OpenParen)) {
         if (c.ts.getIf(WasmToken::Else)) {
             elseName = c.ts.getIfName();
             if (!ParseExprList(c, &elseExprs))
                 return nullptr;
         } else {
-            WasmAstExpr* elseBranch = ParseExprInsideParens(c);
+            AstExpr* elseBranch = ParseExprInsideParens(c);
             if (!elseBranch || !elseExprs.append(elseBranch))
                 return nullptr;
         }
@@ -2691,11 +1955,11 @@ ParseIf(WasmParseContext& c)
             return nullptr;
     }
 
-    return new(c.lifo) WasmAstIf(cond, thenName, Move(thenExprs), elseName, Move(elseExprs));
+    return new(c.lifo) AstIf(cond, thenName, Move(thenExprs), elseName, Move(elseExprs));
 }
 
 static bool
-ParseLoadStoreAddress(WasmParseContext& c, int32_t* offset, uint32_t* alignLog2, WasmAstExpr** base)
+ParseLoadStoreAddress(WasmParseContext& c, int32_t* offset, uint32_t* alignLog2, AstExpr** base)
 {
     *offset = 0;
     if (c.ts.getIf(WasmToken::Offset)) {
@@ -2738,12 +2002,12 @@ ParseLoadStoreAddress(WasmParseContext& c, int32_t* offset, uint32_t* alignLog2,
     return true;
 }
 
-static WasmAstLoad*
+static AstLoad*
 ParseLoad(WasmParseContext& c, Expr expr)
 {
     int32_t offset;
     uint32_t alignLog2;
-    WasmAstExpr* base;
+    AstExpr* base;
     if (!ParseLoadStoreAddress(c, &offset, &alignLog2, &base))
         return nullptr;
 
@@ -2778,15 +2042,15 @@ ParseLoad(WasmParseContext& c, Expr expr)
 
     uint32_t flags = alignLog2;
 
-    return new(c.lifo) WasmAstLoad(expr, WasmAstLoadStoreAddress(base, flags, offset));
+    return new(c.lifo) AstLoad(expr, AstLoadStoreAddress(base, flags, offset));
 }
 
-static WasmAstStore*
+static AstStore*
 ParseStore(WasmParseContext& c, Expr expr)
 {
     int32_t offset;
     uint32_t alignLog2;
-    WasmAstExpr* base;
+    AstExpr* base;
     if (!ParseLoadStoreAddress(c, &offset, &alignLog2, &base))
         return nullptr;
 
@@ -2814,21 +2078,21 @@ ParseStore(WasmParseContext& c, Expr expr)
         }
     }
 
-    WasmAstExpr* value = ParseExpr(c);
+    AstExpr* value = ParseExpr(c);
     if (!value)
         return nullptr;
 
     uint32_t flags = alignLog2;
 
-    return new(c.lifo) WasmAstStore(expr, WasmAstLoadStoreAddress(base, flags, offset), value);
+    return new(c.lifo) AstStore(expr, AstLoadStoreAddress(base, flags, offset), value);
 }
 
-static WasmAstBranchTable*
+static AstBranchTable*
 ParseBranchTable(WasmParseContext& c, WasmToken brTable)
 {
-    WasmRefVector table(c.lifo);
+    AstRefVector table(c.lifo);
 
-    WasmRef target;
+    AstRef target;
     while (c.ts.getIfRef(&target)) {
         if (!table.append(target))
             return nullptr;
@@ -2839,13 +2103,13 @@ ParseBranchTable(WasmParseContext& c, WasmToken brTable)
         return nullptr;
     }
 
-    WasmRef def = table.popCopy();
+    AstRef def = table.popCopy();
 
-    WasmAstExpr* index = ParseExpr(c);
+    AstExpr* index = ParseExpr(c);
     if (!index)
         return nullptr;
 
-    WasmAstExpr* value = nullptr;
+    AstExpr* value = nullptr;
     if (c.ts.getIf(WasmToken::OpenParen)) {
         value = index;
         index = ParseExprInsideParens(c);
@@ -2855,19 +2119,19 @@ ParseBranchTable(WasmParseContext& c, WasmToken brTable)
             return nullptr;
     }
 
-    return new(c.lifo) WasmAstBranchTable(*index, def, Move(table), value);
+    return new(c.lifo) AstBranchTable(*index, def, Move(table), value);
 }
 
-static WasmAstExpr*
+static AstExpr*
 ParseExprInsideParens(WasmParseContext& c)
 {
     WasmToken token = c.ts.get();
 
     switch (token.kind()) {
       case WasmToken::Nop:
-        return new(c.lifo) WasmAstNop;
+        return new(c.lifo) AstNop;
       case WasmToken::Unreachable:
-        return new(c.lifo) WasmAstUnreachable;
+        return new(c.lifo) AstUnreachable;
       case WasmToken::BinaryOpcode:
         return ParseBinaryOperator(c, token.expr());
       case WasmToken::Block:
@@ -2915,7 +2179,7 @@ ParseExprInsideParens(WasmParseContext& c)
 }
 
 static bool
-ParseValueTypeList(WasmParseContext& c, WasmAstValTypeVector* vec)
+ParseValueTypeList(WasmParseContext& c, AstValTypeVector* vec)
 {
     WasmToken token;
     while (c.ts.getIf(WasmToken::ValueType, &token)) {
@@ -2943,10 +2207,10 @@ ParseResult(WasmParseContext& c, ExprType* result)
 }
 
 static bool
-ParseLocalOrParam(WasmParseContext& c, WasmNameVector* locals, WasmAstValTypeVector* localTypes)
+ParseLocalOrParam(WasmParseContext& c, AstNameVector* locals, AstValTypeVector* localTypes)
 {
     if (c.ts.peek().kind() != WasmToken::Name)
-        return locals->append(WasmName()) && ParseValueTypeList(c, localTypes);
+        return locals->append(AstName()) && ParseValueTypeList(c, localTypes);
 
     WasmToken token;
     return locals->append(c.ts.get().name()) &&
@@ -2954,16 +2218,16 @@ ParseLocalOrParam(WasmParseContext& c, WasmNameVector* locals, WasmAstValTypeVec
            localTypes->append(token.valueType());
 }
 
-static WasmAstFunc*
-ParseFunc(WasmParseContext& c, WasmAstModule* module)
+static AstFunc*
+ParseFunc(WasmParseContext& c, AstModule* module)
 {
-    WasmAstValTypeVector vars(c.lifo);
-    WasmAstValTypeVector args(c.lifo);
-    WasmNameVector locals(c.lifo);
+    AstValTypeVector vars(c.lifo);
+    AstValTypeVector args(c.lifo);
+    AstNameVector locals(c.lifo);
 
-    WasmName funcName = c.ts.getIfName();
+    AstName funcName = c.ts.getIfName();
 
-    WasmRef sig;
+    AstRef sig;
 
     WasmToken openParen;
     if (c.ts.getIf(WasmToken::OpenParen, &openParen)) {
@@ -2977,7 +2241,7 @@ ParseFunc(WasmParseContext& c, WasmAstModule* module)
         }
     }
 
-    WasmAstExprVector body(c.lifo);
+    AstExprVector body(c.lifo);
     ExprType result = ExprType::Void;
 
     while (c.ts.getIf(WasmToken::OpenParen)) {
@@ -3001,7 +2265,7 @@ ParseFunc(WasmParseContext& c, WasmAstModule* module)
             break;
           default:
             c.ts.unget(token);
-            WasmAstExpr* expr = ParseExprInsideParens(c);
+            AstExpr* expr = ParseExprInsideParens(c);
             if (!expr || !body.append(expr))
                 return nullptr;
             break;
@@ -3012,18 +2276,18 @@ ParseFunc(WasmParseContext& c, WasmAstModule* module)
 
     if (sig.isInvalid()) {
         uint32_t sigIndex;
-        if (!module->declare(WasmAstSig(Move(args), result), &sigIndex))
+        if (!module->declare(AstSig(Move(args), result), &sigIndex))
             return nullptr;
         sig.setIndex(sigIndex);
     }
 
-    return new(c.lifo) WasmAstFunc(funcName, sig, Move(vars), Move(locals), Move(body));
+    return new(c.lifo) AstFunc(funcName, sig, Move(vars), Move(locals), Move(body));
 }
 
 static bool
-ParseFuncType(WasmParseContext& c, WasmAstSig* sig)
+ParseFuncType(WasmParseContext& c, AstSig* sig)
 {
-    WasmAstValTypeVector args(c.lifo);
+    AstValTypeVector args(c.lifo);
     ExprType result = ExprType::Void;
 
     while (c.ts.getIf(WasmToken::OpenParen)) {
@@ -3045,31 +2309,31 @@ ParseFuncType(WasmParseContext& c, WasmAstSig* sig)
             return false;
     }
 
-    *sig = WasmAstSig(Move(args), result);
+    *sig = AstSig(Move(args), result);
     return true;
 }
 
-static WasmAstSig*
+static AstSig*
 ParseTypeDef(WasmParseContext& c)
 {
-    WasmName name = c.ts.getIfName();
+    AstName name = c.ts.getIfName();
 
     if (!c.ts.match(WasmToken::OpenParen, c.error))
         return nullptr;
     if (!c.ts.match(WasmToken::Func, c.error))
         return nullptr;
 
-    WasmAstSig sig(c.lifo);
+    AstSig sig(c.lifo);
     if (!ParseFuncType(c, &sig))
         return nullptr;
 
     if (!c.ts.match(WasmToken::CloseParen, c.error))
         return nullptr;
 
-    return new(c.lifo) WasmAstSig(name, Move(sig));
+    return new(c.lifo) AstSig(name, Move(sig));
 }
 
-static WasmAstSegment*
+static AstSegment*
 ParseSegment(WasmParseContext& c)
 {
     if (!c.ts.match(WasmToken::Segment, c.error))
@@ -3083,10 +2347,10 @@ ParseSegment(WasmParseContext& c)
     if (!c.ts.match(WasmToken::Text, &text, c.error))
         return nullptr;
 
-    return new(c.lifo) WasmAstSegment(dstOffset.index(), text.text());
+    return new(c.lifo) AstSegment(dstOffset.index(), text.text());
 }
 
-static WasmAstMemory*
+static AstMemory*
 ParseMemory(WasmParseContext& c)
 {
     WasmToken initialSize;
@@ -3098,22 +2362,22 @@ ParseMemory(WasmParseContext& c)
     if (c.ts.getIf(WasmToken::Index, &token))
         maxSize.emplace(token.index());
 
-    WasmAstSegmentVector segments(c.lifo);
+    AstSegmentVector segments(c.lifo);
     while (c.ts.getIf(WasmToken::OpenParen)) {
-        WasmAstSegment* segment = ParseSegment(c);
+        AstSegment* segment = ParseSegment(c);
         if (!segment || !segments.append(segment))
             return nullptr;
         if (!c.ts.match(WasmToken::CloseParen, c.error))
             return nullptr;
     }
 
-    return new(c.lifo) WasmAstMemory(initialSize.index(), maxSize, Move(segments));
+    return new(c.lifo) AstMemory(initialSize.index(), maxSize, Move(segments));
 }
 
-static WasmAstImport*
-ParseImport(WasmParseContext& c, WasmAstModule* module)
+static AstImport*
+ParseImport(WasmParseContext& c, AstModule* module)
 {
-    WasmName name = c.ts.getIfName();
+    AstName name = c.ts.getIfName();
 
     WasmToken moduleName;
     if (!c.ts.match(WasmToken::Text, &moduleName, c.error))
@@ -3123,7 +2387,7 @@ ParseImport(WasmParseContext& c, WasmAstModule* module)
     if (!c.ts.match(WasmToken::Text, &funcName, c.error))
         return nullptr;
 
-    WasmRef sigRef;
+    AstRef sigRef;
     WasmToken openParen;
     if (c.ts.getIf(WasmToken::OpenParen, &openParen)) {
         if (c.ts.getIf(WasmToken::Type)) {
@@ -3137,7 +2401,7 @@ ParseImport(WasmParseContext& c, WasmAstModule* module)
     }
 
     if (sigRef.isInvalid()) {
-        WasmAstSig sig(c.lifo);
+        AstSig sig(c.lifo);
         if (!ParseFuncType(c, &sig))
             return nullptr;
 
@@ -3147,10 +2411,10 @@ ParseImport(WasmParseContext& c, WasmAstModule* module)
         sigRef.setIndex(sigIndex);
     }
 
-    return new(c.lifo) WasmAstImport(name, moduleName.text(), funcName.text(), sigRef);
+    return new(c.lifo) AstImport(name, moduleName.text(), funcName.text(), sigRef);
 }
 
-static WasmAstExport*
+static AstExport*
 ParseExport(WasmParseContext& c)
 {
     WasmToken name;
@@ -3160,15 +2424,15 @@ ParseExport(WasmParseContext& c)
     WasmToken exportee = c.ts.get();
     switch (exportee.kind()) {
       case WasmToken::Index:
-        return new(c.lifo) WasmAstExport(name.text(), WasmRef(WasmName(), exportee.index()));
+        return new(c.lifo) AstExport(name.text(), AstRef(AstName(), exportee.index()));
       case WasmToken::Name:
-        return new(c.lifo) WasmAstExport(name.text(), WasmRef(exportee.name(), WasmNoIndex));
+        return new(c.lifo) AstExport(name.text(), AstRef(exportee.name(), AstNoIndex));
       case WasmToken::Memory:
-        if (name.text() != WasmName(MOZ_UTF16("memory"), 6)) {
+        if (name.text() != AstName(MOZ_UTF16("memory"), 6)) {
             c.ts.generateError(exportee, c.error);
             return nullptr;
         }
-        return new(c.lifo) WasmAstExport(name.text());
+        return new(c.lifo) AstExport(name.text());
       default:
         break;
     }
@@ -3178,21 +2442,21 @@ ParseExport(WasmParseContext& c)
 
 }
 
-static WasmAstTable*
+static AstTable*
 ParseTable(WasmParseContext& c)
 {
-    WasmAstTableElemVector elems(c.lifo);
+    AstTableElemVector elems(c.lifo);
 
-    WasmRef elem;
+    AstRef elem;
     while (c.ts.getIfRef(&elem)) {
         if (!elems.append(elem))
             return nullptr;
     }
 
-    return new(c.lifo) WasmAstTable(Move(elems));
+    return new(c.lifo) AstTable(Move(elems));
 }
 
-static WasmAstModule*
+static AstModule*
 ParseModule(const char16_t* text, LifoAlloc& lifo, UniqueChars* error)
 {
     WasmParseContext c(text, lifo, error);
@@ -3202,7 +2466,7 @@ ParseModule(const char16_t* text, LifoAlloc& lifo, UniqueChars* error)
     if (!c.ts.match(WasmToken::Module, c.error))
         return nullptr;
 
-    auto module = new(c.lifo) WasmAstModule(c.lifo);
+    auto module = new(c.lifo) AstModule(c.lifo);
     if (!module || !module->init())
         return nullptr;
 
@@ -3211,13 +2475,13 @@ ParseModule(const char16_t* text, LifoAlloc& lifo, UniqueChars* error)
 
         switch (section.kind()) {
           case WasmToken::Type: {
-            WasmAstSig* sig = ParseTypeDef(c);
+            AstSig* sig = ParseTypeDef(c);
             if (!sig || !module->append(sig))
                 return nullptr;
             break;
           }
           case WasmToken::Memory: {
-            WasmAstMemory* memory = ParseMemory(c);
+            AstMemory* memory = ParseMemory(c);
             if (!memory)
                 return nullptr;
             if (!module->setMemory(memory)) {
@@ -3227,19 +2491,19 @@ ParseModule(const char16_t* text, LifoAlloc& lifo, UniqueChars* error)
             break;
           }
           case WasmToken::Import: {
-            WasmAstImport* imp = ParseImport(c, module);
+            AstImport* imp = ParseImport(c, module);
             if (!imp || !module->append(imp))
                 return nullptr;
             break;
           }
           case WasmToken::Export: {
-            WasmAstExport* exp = ParseExport(c);
+            AstExport* exp = ParseExport(c);
             if (!exp || !module->append(exp))
                 return nullptr;
             break;
           }
           case WasmToken::Table: {
-            WasmAstTable* table = ParseTable(c);
+            AstTable* table = ParseTable(c);
             if (!table)
                 return nullptr;
             if (!module->initTable(table)) {
@@ -3249,7 +2513,7 @@ ParseModule(const char16_t* text, LifoAlloc& lifo, UniqueChars* error)
             break;
           }
           case WasmToken::Func: {
-            WasmAstFunc* func = ParseFunc(c, module);
+            AstFunc* func = ParseFunc(c, module);
             if (!func || !module->append(func))
                 return nullptr;
             break;
@@ -3279,14 +2543,14 @@ namespace {
 class Resolver
 {
     UniqueChars* error_;
-    WasmNameMap varMap_;
-    WasmNameMap sigMap_;
-    WasmNameMap funcMap_;
-    WasmNameMap importMap_;
-    WasmNameVector targetStack_;
+    AstNameMap varMap_;
+    AstNameMap sigMap_;
+    AstNameMap funcMap_;
+    AstNameMap importMap_;
+    AstNameVector targetStack_;
 
-    bool registerName(WasmNameMap& map, WasmName name, size_t index) {
-        WasmNameMap::AddPtr p = map.lookupForAdd(name);
+    bool registerName(AstNameMap& map, AstName name, size_t index) {
+        AstNameMap::AddPtr p = map.lookupForAdd(name);
         if (!p) {
             if (!map.add(p, name, index))
                 return false;
@@ -3295,23 +2559,23 @@ class Resolver
         }
         return true;
     }
-    bool resolveName(WasmNameMap& map, WasmName name, size_t* index) {
-        WasmNameMap::Ptr p = map.lookup(name);
+    bool resolveName(AstNameMap& map, AstName name, size_t* index) {
+        AstNameMap::Ptr p = map.lookup(name);
         if (p) {
             *index = p->value();
             return true;
         }
         return false;
     }
-    bool resolveRef(WasmNameMap& map, WasmRef& ref) {
-        WasmNameMap::Ptr p = map.lookup(ref.name());
+    bool resolveRef(AstNameMap& map, AstRef& ref) {
+        AstNameMap::Ptr p = map.lookup(ref.name());
         if (p) {
             ref.setIndex(p->value());
             return true;
         }
         return false;
     }
-    bool failResolveLabel(const char* kind, WasmName name) {
+    bool failResolveLabel(const char* kind, AstName name) {
         Vector<char16_t, 0, SystemAllocPolicy> nameWithNull;
         if (!nameWithNull.append(name.begin(), name.length()))
             return false;
@@ -3337,47 +2601,47 @@ class Resolver
         varMap_.clear();
         MOZ_ASSERT(targetStack_.empty());
     }
-    bool registerSigName(WasmName name, size_t index) {
+    bool registerSigName(AstName name, size_t index) {
         return name.empty() || registerName(sigMap_, name, index);
     }
-    bool registerFuncName(WasmName name, size_t index) {
+    bool registerFuncName(AstName name, size_t index) {
         return name.empty() || registerName(funcMap_, name, index);
     }
-    bool registerImportName(WasmName name, size_t index) {
+    bool registerImportName(AstName name, size_t index) {
         return name.empty() || registerName(importMap_, name, index);
     }
-    bool registerVarName(WasmName name, size_t index) {
+    bool registerVarName(AstName name, size_t index) {
         return name.empty() || registerName(varMap_, name, index);
     }
-    bool pushTarget(WasmName name) {
+    bool pushTarget(AstName name) {
         return targetStack_.append(name);
     }
-    void popTarget(WasmName name) {
+    void popTarget(AstName name) {
         MOZ_ASSERT(targetStack_.back() == name);
         targetStack_.popBack();
     }
 
-    bool resolveSignature(WasmRef& ref) {
+    bool resolveSignature(AstRef& ref) {
         if (!ref.name().empty() && !resolveRef(sigMap_, ref))
             return failResolveLabel("signature", ref.name());
         return true;
     }
-    bool resolveFunction(WasmRef& ref) {
+    bool resolveFunction(AstRef& ref) {
         if (!ref.name().empty() && !resolveRef(funcMap_, ref))
             return failResolveLabel("function", ref.name());
         return true;
     }
-    bool resolveImport(WasmRef& ref) {
+    bool resolveImport(AstRef& ref) {
         if (!ref.name().empty() && !resolveRef(importMap_, ref))
             return failResolveLabel("import", ref.name());
         return true;
     }
-    bool resolveLocal(WasmRef& ref) {
+    bool resolveLocal(AstRef& ref) {
         if (!ref.name().empty() && !resolveRef(varMap_, ref))
             return failResolveLabel("local", ref.name());
         return true;
     }
-    bool resolveBranchTarget(WasmRef& ref) {
+    bool resolveBranchTarget(AstRef& ref) {
         if (ref.name().empty())
             return true;
         for (size_t i = 0, e = targetStack_.length(); i < e; i++) {
@@ -3398,10 +2662,10 @@ class Resolver
 } // end anonymous namespace
 
 static bool
-ResolveExpr(Resolver& r, WasmAstExpr& expr);
+ResolveExpr(Resolver& r, AstExpr& expr);
 
 static bool
-ResolveExprList(Resolver& r, const WasmAstExprVector& v)
+ResolveExprList(Resolver& r, const AstExprVector& v)
 {
     for (size_t i = 0; i < v.length(); i++) {
         if (!ResolveExpr(r, *v[i]))
@@ -3411,7 +2675,7 @@ ResolveExprList(Resolver& r, const WasmAstExprVector& v)
 }
 
 static bool
-ResolveBlock(Resolver& r, WasmAstBlock& b)
+ResolveBlock(Resolver& r, AstBlock& b)
 {
     if (!r.pushTarget(b.breakName()))
         return false;
@@ -3431,7 +2695,7 @@ ResolveBlock(Resolver& r, WasmAstBlock& b)
 }
 
 static bool
-ResolveBranch(Resolver& r, WasmAstBranch& br)
+ResolveBranch(Resolver& r, AstBranch& br)
 {
     if (!r.resolveBranchTarget(br.target()))
         return false;
@@ -3448,9 +2712,9 @@ ResolveBranch(Resolver& r, WasmAstBranch& br)
 }
 
 static bool
-ResolveArgs(Resolver& r, const WasmAstExprVector& args)
+ResolveArgs(Resolver& r, const AstExprVector& args)
 {
-    for (WasmAstExpr* arg : args) {
+    for (AstExpr* arg : args) {
         if (!ResolveExpr(r, *arg))
             return false;
     }
@@ -3459,7 +2723,7 @@ ResolveArgs(Resolver& r, const WasmAstExprVector& args)
 }
 
 static bool
-ResolveCall(Resolver& r, WasmAstCall& c)
+ResolveCall(Resolver& r, AstCall& c)
 {
     if (!ResolveArgs(r, c.args()))
         return false;
@@ -3477,7 +2741,7 @@ ResolveCall(Resolver& r, WasmAstCall& c)
 }
 
 static bool
-ResolveCallIndirect(Resolver& r, WasmAstCallIndirect& c)
+ResolveCallIndirect(Resolver& r, AstCallIndirect& c)
 {
     if (!ResolveExpr(r, *c.index()))
         return false;
@@ -3492,13 +2756,13 @@ ResolveCallIndirect(Resolver& r, WasmAstCallIndirect& c)
 }
 
 static bool
-ResolveGetLocal(Resolver& r, WasmAstGetLocal& gl)
+ResolveGetLocal(Resolver& r, AstGetLocal& gl)
 {
     return r.resolveLocal(gl.local());
 }
 
 static bool
-ResolveSetLocal(Resolver& r, WasmAstSetLocal& sl)
+ResolveSetLocal(Resolver& r, AstSetLocal& sl)
 {
     if (!ResolveExpr(r, sl.value()))
         return false;
@@ -3510,20 +2774,20 @@ ResolveSetLocal(Resolver& r, WasmAstSetLocal& sl)
 }
 
 static bool
-ResolveUnaryOperator(Resolver& r, WasmAstUnaryOperator& b)
+ResolveUnaryOperator(Resolver& r, AstUnaryOperator& b)
 {
     return ResolveExpr(r, *b.op());
 }
 
 static bool
-ResolveBinaryOperator(Resolver& r, WasmAstBinaryOperator& b)
+ResolveBinaryOperator(Resolver& r, AstBinaryOperator& b)
 {
     return ResolveExpr(r, *b.lhs()) &&
            ResolveExpr(r, *b.rhs());
 }
 
 static bool
-ResolveTernaryOperator(Resolver& r, WasmAstTernaryOperator& b)
+ResolveTernaryOperator(Resolver& r, AstTernaryOperator& b)
 {
     return ResolveExpr(r, *b.op0()) &&
            ResolveExpr(r, *b.op1()) &&
@@ -3531,20 +2795,20 @@ ResolveTernaryOperator(Resolver& r, WasmAstTernaryOperator& b)
 }
 
 static bool
-ResolveComparisonOperator(Resolver& r, WasmAstComparisonOperator& b)
+ResolveComparisonOperator(Resolver& r, AstComparisonOperator& b)
 {
     return ResolveExpr(r, *b.lhs()) &&
            ResolveExpr(r, *b.rhs());
 }
 
 static bool
-ResolveConversionOperator(Resolver& r, WasmAstConversionOperator& b)
+ResolveConversionOperator(Resolver& r, AstConversionOperator& b)
 {
     return ResolveExpr(r, *b.op());
 }
 
 static bool
-ResolveIfElse(Resolver& r, WasmAstIf& i)
+ResolveIfElse(Resolver& r, AstIf& i)
 {
     if (!ResolveExpr(r, i.cond()))
         return false;
@@ -3564,37 +2828,37 @@ ResolveIfElse(Resolver& r, WasmAstIf& i)
 }
 
 static bool
-ResolveLoadStoreAddress(Resolver& r, const WasmAstLoadStoreAddress &address)
+ResolveLoadStoreAddress(Resolver& r, const AstLoadStoreAddress &address)
 {
     return ResolveExpr(r, address.base());
 }
 
 static bool
-ResolveLoad(Resolver& r, WasmAstLoad& l)
+ResolveLoad(Resolver& r, AstLoad& l)
 {
     return ResolveLoadStoreAddress(r, l.address());
 }
 
 static bool
-ResolveStore(Resolver& r, WasmAstStore& s)
+ResolveStore(Resolver& r, AstStore& s)
 {
     return ResolveLoadStoreAddress(r, s.address()) &&
            ResolveExpr(r, s.value());
 }
 
 static bool
-ResolveReturn(Resolver& r, WasmAstReturn& ret)
+ResolveReturn(Resolver& r, AstReturn& ret)
 {
     return !ret.maybeExpr() || ResolveExpr(r, *ret.maybeExpr());
 }
 
 static bool
-ResolveBranchTable(Resolver& r, WasmAstBranchTable& bt)
+ResolveBranchTable(Resolver& r, AstBranchTable& bt)
 {
     if (!r.resolveBranchTarget(bt.def()))
         return false;
 
-    for (WasmRef& elem : bt.table()) {
+    for (AstRef& elem : bt.table()) {
         if (!r.resolveBranchTarget(elem))
             return false;
     }
@@ -3606,52 +2870,52 @@ ResolveBranchTable(Resolver& r, WasmAstBranchTable& bt)
 }
 
 static bool
-ResolveExpr(Resolver& r, WasmAstExpr& expr)
+ResolveExpr(Resolver& r, AstExpr& expr)
 {
     switch (expr.kind()) {
-      case WasmAstExprKind::Nop:
-      case WasmAstExprKind::Unreachable:
+      case AstExprKind::Nop:
+      case AstExprKind::Unreachable:
         return true;
-      case WasmAstExprKind::BinaryOperator:
-        return ResolveBinaryOperator(r, expr.as<WasmAstBinaryOperator>());
-      case WasmAstExprKind::Block:
-        return ResolveBlock(r, expr.as<WasmAstBlock>());
-      case WasmAstExprKind::Branch:
-        return ResolveBranch(r, expr.as<WasmAstBranch>());
-      case WasmAstExprKind::Call:
-        return ResolveCall(r, expr.as<WasmAstCall>());
-      case WasmAstExprKind::CallIndirect:
-        return ResolveCallIndirect(r, expr.as<WasmAstCallIndirect>());
-      case WasmAstExprKind::ComparisonOperator:
-        return ResolveComparisonOperator(r, expr.as<WasmAstComparisonOperator>());
-      case WasmAstExprKind::Const:
+      case AstExprKind::BinaryOperator:
+        return ResolveBinaryOperator(r, expr.as<AstBinaryOperator>());
+      case AstExprKind::Block:
+        return ResolveBlock(r, expr.as<AstBlock>());
+      case AstExprKind::Branch:
+        return ResolveBranch(r, expr.as<AstBranch>());
+      case AstExprKind::Call:
+        return ResolveCall(r, expr.as<AstCall>());
+      case AstExprKind::CallIndirect:
+        return ResolveCallIndirect(r, expr.as<AstCallIndirect>());
+      case AstExprKind::ComparisonOperator:
+        return ResolveComparisonOperator(r, expr.as<AstComparisonOperator>());
+      case AstExprKind::Const:
         return true;
-      case WasmAstExprKind::ConversionOperator:
-        return ResolveConversionOperator(r, expr.as<WasmAstConversionOperator>());
-      case WasmAstExprKind::GetLocal:
-        return ResolveGetLocal(r, expr.as<WasmAstGetLocal>());
-      case WasmAstExprKind::If:
-        return ResolveIfElse(r, expr.as<WasmAstIf>());
-      case WasmAstExprKind::Load:
-        return ResolveLoad(r, expr.as<WasmAstLoad>());
-      case WasmAstExprKind::Return:
-        return ResolveReturn(r, expr.as<WasmAstReturn>());
-      case WasmAstExprKind::SetLocal:
-        return ResolveSetLocal(r, expr.as<WasmAstSetLocal>());
-      case WasmAstExprKind::Store:
-        return ResolveStore(r, expr.as<WasmAstStore>());
-      case WasmAstExprKind::BranchTable:
-        return ResolveBranchTable(r, expr.as<WasmAstBranchTable>());
-      case WasmAstExprKind::TernaryOperator:
-        return ResolveTernaryOperator(r, expr.as<WasmAstTernaryOperator>());
-      case WasmAstExprKind::UnaryOperator:
-        return ResolveUnaryOperator(r, expr.as<WasmAstUnaryOperator>());
+      case AstExprKind::ConversionOperator:
+        return ResolveConversionOperator(r, expr.as<AstConversionOperator>());
+      case AstExprKind::GetLocal:
+        return ResolveGetLocal(r, expr.as<AstGetLocal>());
+      case AstExprKind::If:
+        return ResolveIfElse(r, expr.as<AstIf>());
+      case AstExprKind::Load:
+        return ResolveLoad(r, expr.as<AstLoad>());
+      case AstExprKind::Return:
+        return ResolveReturn(r, expr.as<AstReturn>());
+      case AstExprKind::SetLocal:
+        return ResolveSetLocal(r, expr.as<AstSetLocal>());
+      case AstExprKind::Store:
+        return ResolveStore(r, expr.as<AstStore>());
+      case AstExprKind::BranchTable:
+        return ResolveBranchTable(r, expr.as<AstBranchTable>());
+      case AstExprKind::TernaryOperator:
+        return ResolveTernaryOperator(r, expr.as<AstTernaryOperator>());
+      case AstExprKind::UnaryOperator:
+        return ResolveUnaryOperator(r, expr.as<AstUnaryOperator>());
     }
     MOZ_CRASH("Bad expr kind");
 }
 
 static bool
-ResolveFunc(Resolver& r, WasmAstFunc& func)
+ResolveFunc(Resolver& r, AstFunc& func)
 {
     r.beginFunc();
 
@@ -3661,7 +2925,7 @@ ResolveFunc(Resolver& r, WasmAstFunc& func)
             return r.fail("duplicate var");
     }
 
-    for (WasmAstExpr* expr : func.body()) {
+    for (AstExpr* expr : func.body()) {
         if (!ResolveExpr(r, *expr))
             return false;
     }
@@ -3669,7 +2933,7 @@ ResolveFunc(Resolver& r, WasmAstFunc& func)
 }
 
 static bool
-ResolveModule(LifoAlloc& lifo, WasmAstModule* module, UniqueChars* error)
+ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
 {
     Resolver r(lifo, error);
 
@@ -3678,14 +2942,14 @@ ResolveModule(LifoAlloc& lifo, WasmAstModule* module, UniqueChars* error)
 
     size_t numSigs = module->sigs().length();
     for (size_t i = 0; i < numSigs; i++) {
-        WasmAstSig* sig = module->sigs()[i];
+        AstSig* sig = module->sigs()[i];
         if (!r.registerSigName(sig->name(), i))
             return r.fail("duplicate signature");
     }
 
     size_t numFuncs = module->funcs().length();
     for (size_t i = 0; i < numFuncs; i++) {
-        WasmAstFunc* func = module->funcs()[i];
+        AstFunc* func = module->funcs()[i];
         if (!r.resolveSignature(func->sig()))
             return false;
         if (!r.registerFuncName(func->name(), i))
@@ -3693,7 +2957,7 @@ ResolveModule(LifoAlloc& lifo, WasmAstModule* module, UniqueChars* error)
     }
 
     if (module->maybeTable()) {
-        for (WasmRef& ref : module->maybeTable()->elems()) {
+        for (AstRef& ref : module->maybeTable()->elems()) {
             if (!r.resolveFunction(ref))
                 return false;
         }
@@ -3701,21 +2965,21 @@ ResolveModule(LifoAlloc& lifo, WasmAstModule* module, UniqueChars* error)
 
     size_t numImports = module->imports().length();
     for (size_t i = 0; i < numImports; i++) {
-        WasmAstImport* imp = module->imports()[i];
+        AstImport* imp = module->imports()[i];
         if (!r.resolveSignature(imp->sig()))
             return false;
         if (!r.registerImportName(imp->name(), i))
             return r.fail("duplicate import");
     }
 
-    for (WasmAstExport* export_ : module->exports()) {
-        if (export_->kind() != WasmAstExportKind::Func)
+    for (AstExport* export_ : module->exports()) {
+        if (export_->kind() != AstExportKind::Func)
             continue;
         if (!r.resolveFunction(export_->func()))
             return false;
     }
 
-    for (WasmAstFunc* func : module->funcs()) {
+    for (AstFunc* func : module->funcs()) {
         if (!ResolveFunc(r, *func))
             return false;
     }
@@ -3727,10 +2991,10 @@ ResolveModule(LifoAlloc& lifo, WasmAstModule* module, UniqueChars* error)
 // wasm function body serialization
 
 static bool
-EncodeExpr(Encoder& e, WasmAstExpr& expr);
+EncodeExpr(Encoder& e, AstExpr& expr);
 
 static bool
-EncodeExprList(Encoder& e, const WasmAstExprVector& v)
+EncodeExprList(Encoder& e, const AstExprVector& v)
 {
     for (size_t i = 0; i < v.length(); i++) {
         if (!EncodeExpr(e, *v[i]))
@@ -3740,7 +3004,7 @@ EncodeExprList(Encoder& e, const WasmAstExprVector& v)
 }
 
 static bool
-EncodeBlock(Encoder& e, WasmAstBlock& b)
+EncodeBlock(Encoder& e, AstBlock& b)
 {
     if (!e.writeExpr(b.expr()))
         return false;
@@ -3755,7 +3019,7 @@ EncodeBlock(Encoder& e, WasmAstBlock& b)
 }
 
 static bool
-EncodeBranch(Encoder& e, WasmAstBranch& br)
+EncodeBranch(Encoder& e, AstBranch& br)
 {
     MOZ_ASSERT(br.expr() == Expr::Br || br.expr() == Expr::BrIf);
 
@@ -3784,9 +3048,9 @@ EncodeBranch(Encoder& e, WasmAstBranch& br)
 }
 
 static bool
-EncodeArgs(Encoder& e, const WasmAstExprVector& args)
+EncodeArgs(Encoder& e, const AstExprVector& args)
 {
-    for (WasmAstExpr* arg : args) {
+    for (AstExpr* arg : args) {
         if (!EncodeExpr(e, *arg))
             return false;
     }
@@ -3795,7 +3059,7 @@ EncodeArgs(Encoder& e, const WasmAstExprVector& args)
 }
 
 static bool
-EncodeCall(Encoder& e, WasmAstCall& c)
+EncodeCall(Encoder& e, AstCall& c)
 {
     if (!EncodeArgs(e, c.args()))
         return false;
@@ -3813,7 +3077,7 @@ EncodeCall(Encoder& e, WasmAstCall& c)
 }
 
 static bool
-EncodeCallIndirect(Encoder& e, WasmAstCallIndirect& c)
+EncodeCallIndirect(Encoder& e, AstCallIndirect& c)
 {
     if (!EncodeExpr(e, *c.index()))
         return false;
@@ -3834,7 +3098,7 @@ EncodeCallIndirect(Encoder& e, WasmAstCallIndirect& c)
 }
 
 static bool
-EncodeConst(Encoder& e, WasmAstConst& c)
+EncodeConst(Encoder& e, AstConst& c)
 {
     switch (c.val().type()) {
       case ValType::I32:
@@ -3856,14 +3120,14 @@ EncodeConst(Encoder& e, WasmAstConst& c)
 }
 
 static bool
-EncodeGetLocal(Encoder& e, WasmAstGetLocal& gl)
+EncodeGetLocal(Encoder& e, AstGetLocal& gl)
 {
     return e.writeExpr(Expr::GetLocal) &&
            e.writeVarU32(gl.local().index());
 }
 
 static bool
-EncodeSetLocal(Encoder& e, WasmAstSetLocal& sl)
+EncodeSetLocal(Encoder& e, AstSetLocal& sl)
 {
     return EncodeExpr(e, sl.value()) &&
            e.writeExpr(Expr::SetLocal) &&
@@ -3871,14 +3135,14 @@ EncodeSetLocal(Encoder& e, WasmAstSetLocal& sl)
 }
 
 static bool
-EncodeUnaryOperator(Encoder& e, WasmAstUnaryOperator& b)
+EncodeUnaryOperator(Encoder& e, AstUnaryOperator& b)
 {
     return EncodeExpr(e, *b.op()) &&
            e.writeExpr(b.expr());
 }
 
 static bool
-EncodeBinaryOperator(Encoder& e, WasmAstBinaryOperator& b)
+EncodeBinaryOperator(Encoder& e, AstBinaryOperator& b)
 {
     return EncodeExpr(e, *b.lhs()) &&
            EncodeExpr(e, *b.rhs()) &&
@@ -3886,7 +3150,7 @@ EncodeBinaryOperator(Encoder& e, WasmAstBinaryOperator& b)
 }
 
 static bool
-EncodeTernaryOperator(Encoder& e, WasmAstTernaryOperator& b)
+EncodeTernaryOperator(Encoder& e, AstTernaryOperator& b)
 {
     return EncodeExpr(e, *b.op0()) &&
            EncodeExpr(e, *b.op1()) &&
@@ -3895,7 +3159,7 @@ EncodeTernaryOperator(Encoder& e, WasmAstTernaryOperator& b)
 }
 
 static bool
-EncodeComparisonOperator(Encoder& e, WasmAstComparisonOperator& b)
+EncodeComparisonOperator(Encoder& e, AstComparisonOperator& b)
 {
     return EncodeExpr(e, *b.lhs()) &&
            EncodeExpr(e, *b.rhs()) &&
@@ -3903,14 +3167,14 @@ EncodeComparisonOperator(Encoder& e, WasmAstComparisonOperator& b)
 }
 
 static bool
-EncodeConversionOperator(Encoder& e, WasmAstConversionOperator& b)
+EncodeConversionOperator(Encoder& e, AstConversionOperator& b)
 {
     return EncodeExpr(e, *b.op()) &&
            e.writeExpr(b.expr());
 }
 
 static bool
-EncodeIf(Encoder& e, WasmAstIf& i)
+EncodeIf(Encoder& e, AstIf& i)
 {
     if (!EncodeExpr(e, i.cond()) || !e.writeExpr(Expr::If))
         return false;
@@ -3929,20 +3193,20 @@ EncodeIf(Encoder& e, WasmAstIf& i)
 }
 
 static bool
-EncodeLoadStoreAddress(Encoder &e, const WasmAstLoadStoreAddress &address)
+EncodeLoadStoreAddress(Encoder &e, const AstLoadStoreAddress &address)
 {
     return EncodeExpr(e, address.base());
 }
 
 static bool
-EncodeLoadStoreFlags(Encoder &e, const WasmAstLoadStoreAddress &address)
+EncodeLoadStoreFlags(Encoder &e, const AstLoadStoreAddress &address)
 {
     return e.writeVarU32(address.flags()) &&
            e.writeVarU32(address.offset());
 }
 
 static bool
-EncodeLoad(Encoder& e, WasmAstLoad& l)
+EncodeLoad(Encoder& e, AstLoad& l)
 {
     return EncodeLoadStoreAddress(e, l.address()) &&
            e.writeExpr(l.expr()) &&
@@ -3950,7 +3214,7 @@ EncodeLoad(Encoder& e, WasmAstLoad& l)
 }
 
 static bool
-EncodeStore(Encoder& e, WasmAstStore& s)
+EncodeStore(Encoder& e, AstStore& s)
 {
     return EncodeLoadStoreAddress(e, s.address()) &&
            EncodeExpr(e, s.value()) &&
@@ -3959,7 +3223,7 @@ EncodeStore(Encoder& e, WasmAstStore& s)
 }
 
 static bool
-EncodeReturn(Encoder& e, WasmAstReturn& r)
+EncodeReturn(Encoder& e, AstReturn& r)
 {
     uint32_t arity = 0;
     if (r.maybeExpr()) {
@@ -3978,7 +3242,7 @@ EncodeReturn(Encoder& e, WasmAstReturn& r)
 }
 
 static bool
-EncodeBranchTable(Encoder& e, WasmAstBranchTable& bt)
+EncodeBranchTable(Encoder& e, AstBranchTable& bt)
 {
     uint32_t arity = 0;
     if (bt.maybeValue()) {
@@ -3999,7 +3263,7 @@ EncodeBranchTable(Encoder& e, WasmAstBranchTable& bt)
     if (!e.writeVarU32(bt.table().length()))
         return false;
 
-    for (const WasmRef& elem : bt.table()) {
+    for (const AstRef& elem : bt.table()) {
         if (!e.writeFixedU32(elem.index()))
             return false;
     }
@@ -4011,47 +3275,47 @@ EncodeBranchTable(Encoder& e, WasmAstBranchTable& bt)
 }
 
 static bool
-EncodeExpr(Encoder& e, WasmAstExpr& expr)
+EncodeExpr(Encoder& e, AstExpr& expr)
 {
     switch (expr.kind()) {
-      case WasmAstExprKind::Nop:
+      case AstExprKind::Nop:
         return e.writeExpr(Expr::Nop);
-      case WasmAstExprKind::Unreachable:
+      case AstExprKind::Unreachable:
         return e.writeExpr(Expr::Unreachable);
-      case WasmAstExprKind::BinaryOperator:
-        return EncodeBinaryOperator(e, expr.as<WasmAstBinaryOperator>());
-      case WasmAstExprKind::Block:
-        return EncodeBlock(e, expr.as<WasmAstBlock>());
-      case WasmAstExprKind::Branch:
-        return EncodeBranch(e, expr.as<WasmAstBranch>());
-      case WasmAstExprKind::Call:
-        return EncodeCall(e, expr.as<WasmAstCall>());
-      case WasmAstExprKind::CallIndirect:
-        return EncodeCallIndirect(e, expr.as<WasmAstCallIndirect>());
-      case WasmAstExprKind::ComparisonOperator:
-        return EncodeComparisonOperator(e, expr.as<WasmAstComparisonOperator>());
-      case WasmAstExprKind::Const:
-        return EncodeConst(e, expr.as<WasmAstConst>());
-      case WasmAstExprKind::ConversionOperator:
-        return EncodeConversionOperator(e, expr.as<WasmAstConversionOperator>());
-      case WasmAstExprKind::GetLocal:
-        return EncodeGetLocal(e, expr.as<WasmAstGetLocal>());
-      case WasmAstExprKind::If:
-        return EncodeIf(e, expr.as<WasmAstIf>());
-      case WasmAstExprKind::Load:
-        return EncodeLoad(e, expr.as<WasmAstLoad>());
-      case WasmAstExprKind::Return:
-        return EncodeReturn(e, expr.as<WasmAstReturn>());
-      case WasmAstExprKind::SetLocal:
-        return EncodeSetLocal(e, expr.as<WasmAstSetLocal>());
-      case WasmAstExprKind::Store:
-        return EncodeStore(e, expr.as<WasmAstStore>());
-      case WasmAstExprKind::BranchTable:
-        return EncodeBranchTable(e, expr.as<WasmAstBranchTable>());
-      case WasmAstExprKind::TernaryOperator:
-        return EncodeTernaryOperator(e, expr.as<WasmAstTernaryOperator>());
-      case WasmAstExprKind::UnaryOperator:
-        return EncodeUnaryOperator(e, expr.as<WasmAstUnaryOperator>());
+      case AstExprKind::BinaryOperator:
+        return EncodeBinaryOperator(e, expr.as<AstBinaryOperator>());
+      case AstExprKind::Block:
+        return EncodeBlock(e, expr.as<AstBlock>());
+      case AstExprKind::Branch:
+        return EncodeBranch(e, expr.as<AstBranch>());
+      case AstExprKind::Call:
+        return EncodeCall(e, expr.as<AstCall>());
+      case AstExprKind::CallIndirect:
+        return EncodeCallIndirect(e, expr.as<AstCallIndirect>());
+      case AstExprKind::ComparisonOperator:
+        return EncodeComparisonOperator(e, expr.as<AstComparisonOperator>());
+      case AstExprKind::Const:
+        return EncodeConst(e, expr.as<AstConst>());
+      case AstExprKind::ConversionOperator:
+        return EncodeConversionOperator(e, expr.as<AstConversionOperator>());
+      case AstExprKind::GetLocal:
+        return EncodeGetLocal(e, expr.as<AstGetLocal>());
+      case AstExprKind::If:
+        return EncodeIf(e, expr.as<AstIf>());
+      case AstExprKind::Load:
+        return EncodeLoad(e, expr.as<AstLoad>());
+      case AstExprKind::Return:
+        return EncodeReturn(e, expr.as<AstReturn>());
+      case AstExprKind::SetLocal:
+        return EncodeSetLocal(e, expr.as<AstSetLocal>());
+      case AstExprKind::Store:
+        return EncodeStore(e, expr.as<AstStore>());
+      case AstExprKind::BranchTable:
+        return EncodeBranchTable(e, expr.as<AstBranchTable>());
+      case AstExprKind::TernaryOperator:
+        return EncodeTernaryOperator(e, expr.as<AstTernaryOperator>());
+      case AstExprKind::UnaryOperator:
+        return EncodeUnaryOperator(e, expr.as<AstUnaryOperator>());
     }
     MOZ_CRASH("Bad expr kind");
 }
@@ -4060,7 +3324,7 @@ EncodeExpr(Encoder& e, WasmAstExpr& expr)
 // wasm AST binary serialization
 
 static bool
-EncodeTypeSection(Encoder& e, WasmAstModule& module)
+EncodeTypeSection(Encoder& e, AstModule& module)
 {
     if (module.sigs().empty())
         return true;
@@ -4072,7 +3336,7 @@ EncodeTypeSection(Encoder& e, WasmAstModule& module)
     if (!e.writeVarU32(module.sigs().length()))
         return false;
 
-    for (WasmAstSig* sig : module.sigs()) {
+    for (AstSig* sig : module.sigs()) {
         if (!e.writeVarU32(uint32_t(TypeConstructor::Function)))
             return false;
 
@@ -4098,7 +3362,7 @@ EncodeTypeSection(Encoder& e, WasmAstModule& module)
 }
 
 static bool
-EncodeFunctionSection(Encoder& e, WasmAstModule& module)
+EncodeFunctionSection(Encoder& e, AstModule& module)
 {
     if (module.funcs().empty())
         return true;
@@ -4110,7 +3374,7 @@ EncodeFunctionSection(Encoder& e, WasmAstModule& module)
     if (!e.writeVarU32(module.funcs().length()))
         return false;
 
-    for (WasmAstFunc* func : module.funcs()) {
+    for (AstFunc* func : module.funcs()) {
         if (!e.writeVarU32(func->sig().index()))
             return false;
     }
@@ -4120,7 +3384,7 @@ EncodeFunctionSection(Encoder& e, WasmAstModule& module)
 }
 
 static bool
-EncodeBytes(Encoder& e, WasmName wasmName)
+EncodeBytes(Encoder& e, AstName wasmName)
 {
     TwoByteChars range(wasmName.begin(), wasmName.length());
     UniqueChars utf8(JS::CharsToNewUTF8CharsZ(nullptr, range).c_str());
@@ -4128,7 +3392,7 @@ EncodeBytes(Encoder& e, WasmName wasmName)
 }
 
 static bool
-EncodeImport(Encoder& e, WasmAstImport& imp)
+EncodeImport(Encoder& e, AstImport& imp)
 {
     if (!e.writeVarU32(imp.sig().index()))
         return false;
@@ -4143,7 +3407,7 @@ EncodeImport(Encoder& e, WasmAstImport& imp)
 }
 
 static bool
-EncodeImportSection(Encoder& e, WasmAstModule& module)
+EncodeImportSection(Encoder& e, AstModule& module)
 {
     if (module.imports().empty())
         return true;
@@ -4155,7 +3419,7 @@ EncodeImportSection(Encoder& e, WasmAstModule& module)
     if (!e.writeVarU32(module.imports().length()))
         return false;
 
-    for (WasmAstImport* imp : module.imports()) {
+    for (AstImport* imp : module.imports()) {
         if (!EncodeImport(e, *imp))
             return false;
     }
@@ -4165,7 +3429,7 @@ EncodeImportSection(Encoder& e, WasmAstModule& module)
 }
 
 static bool
-EncodeMemorySection(Encoder& e, WasmAstModule& module)
+EncodeMemorySection(Encoder& e, AstModule& module)
 {
     if (!module.maybeMemory())
         return true;
@@ -4174,7 +3438,7 @@ EncodeMemorySection(Encoder& e, WasmAstModule& module)
     if (!e.startSection(MemorySectionId, &offset))
         return false;
 
-    WasmAstMemory& memory = *module.maybeMemory();
+    AstMemory& memory = *module.maybeMemory();
 
     if (!e.writeVarU32(memory.initialSize()))
         return false;
@@ -4184,8 +3448,8 @@ EncodeMemorySection(Encoder& e, WasmAstModule& module)
         return false;
 
     uint8_t exported = 0;
-    for (WasmAstExport* exp : module.exports()) {
-        if (exp->kind() == WasmAstExportKind::Memory) {
+    for (AstExport* exp : module.exports()) {
+        if (exp->kind() == AstExportKind::Memory) {
             exported = 1;
             break;
         }
@@ -4199,7 +3463,7 @@ EncodeMemorySection(Encoder& e, WasmAstModule& module)
 }
 
 static bool
-EncodeFunctionExport(Encoder& e, WasmAstExport& exp)
+EncodeFunctionExport(Encoder& e, AstExport& exp)
 {
     if (!e.writeVarU32(exp.func().index()))
         return false;
@@ -4211,11 +3475,11 @@ EncodeFunctionExport(Encoder& e, WasmAstExport& exp)
 }
 
 static bool
-EncodeExportSection(Encoder& e, WasmAstModule& module)
+EncodeExportSection(Encoder& e, AstModule& module)
 {
     uint32_t numFuncExports = 0;
-    for (WasmAstExport* exp : module.exports()) {
-        if (exp->kind() == WasmAstExportKind::Func)
+    for (AstExport* exp : module.exports()) {
+        if (exp->kind() == AstExportKind::Func)
             numFuncExports++;
     }
 
@@ -4229,13 +3493,13 @@ EncodeExportSection(Encoder& e, WasmAstModule& module)
     if (!e.writeVarU32(numFuncExports))
         return false;
 
-    for (WasmAstExport* exp : module.exports()) {
+    for (AstExport* exp : module.exports()) {
         switch (exp->kind()) {
-          case WasmAstExportKind::Func:
+          case AstExportKind::Func:
             if (!EncodeFunctionExport(e, *exp))
                 return false;
             break;
-          case WasmAstExportKind::Memory:
+          case AstExportKind::Memory:
             continue;
         }
     }
@@ -4245,7 +3509,7 @@ EncodeExportSection(Encoder& e, WasmAstModule& module)
 }
 
 static bool
-EncodeTableSection(Encoder& e, WasmAstModule& module)
+EncodeTableSection(Encoder& e, AstModule& module)
 {
     if (!module.maybeTable())
         return true;
@@ -4257,7 +3521,7 @@ EncodeTableSection(Encoder& e, WasmAstModule& module)
     if (!e.writeVarU32(module.maybeTable()->elems().length()))
         return false;
 
-    for (WasmRef& ref : module.maybeTable()->elems()) {
+    for (AstRef& ref : module.maybeTable()->elems()) {
         if (!e.writeVarU32(ref.index()))
             return false;
     }
@@ -4267,7 +3531,7 @@ EncodeTableSection(Encoder& e, WasmAstModule& module)
 }
 
 static bool
-EncodeFunctionBody(Encoder& e, WasmAstFunc& func)
+EncodeFunctionBody(Encoder& e, AstFunc& func)
 {
     size_t bodySizeAt;
     if (!e.writePatchableVarU32(&bodySizeAt))
@@ -4281,7 +3545,7 @@ EncodeFunctionBody(Encoder& e, WasmAstFunc& func)
     if (!EncodeLocalEntries(e, varTypes))
         return false;
 
-    for (WasmAstExpr* expr : func.body()) {
+    for (AstExpr* expr : func.body()) {
         if (!EncodeExpr(e, *expr))
             return false;
     }
@@ -4291,7 +3555,7 @@ EncodeFunctionBody(Encoder& e, WasmAstFunc& func)
 }
 
 static bool
-EncodeCodeSection(Encoder& e, WasmAstModule& module)
+EncodeCodeSection(Encoder& e, AstModule& module)
 {
     if (module.funcs().empty())
         return true;
@@ -4303,7 +3567,7 @@ EncodeCodeSection(Encoder& e, WasmAstModule& module)
     if (!e.writeVarU32(module.funcs().length()))
         return false;
 
-    for (WasmAstFunc* func : module.funcs()) {
+    for (AstFunc* func : module.funcs()) {
         if (!EncodeFunctionBody(e, *func))
             return false;
     }
@@ -4313,12 +3577,12 @@ EncodeCodeSection(Encoder& e, WasmAstModule& module)
 }
 
 static bool
-EncodeDataSegment(Encoder& e, WasmAstSegment& segment)
+EncodeDataSegment(Encoder& e, AstSegment& segment)
 {
     if (!e.writeVarU32(segment.offset()))
         return false;
 
-    WasmName text = segment.text();
+    AstName text = segment.text();
 
     Vector<uint8_t, 0, SystemAllocPolicy> bytes;
     if (!bytes.reserve(text.length()))
@@ -4339,12 +3603,12 @@ EncodeDataSegment(Encoder& e, WasmAstSegment& segment)
 }
 
 static bool
-EncodeDataSection(Encoder& e, WasmAstModule& module)
+EncodeDataSection(Encoder& e, AstModule& module)
 {
     if (!module.maybeMemory() || module.maybeMemory()->segments().empty())
         return true;
 
-    const WasmAstSegmentVector& segments = module.maybeMemory()->segments();
+    const AstSegmentVector& segments = module.maybeMemory()->segments();
 
     size_t offset;
     if (!e.startSection(DataSectionId, &offset))
@@ -4353,7 +3617,7 @@ EncodeDataSection(Encoder& e, WasmAstModule& module)
     if (!e.writeVarU32(segments.length()))
         return false;
 
-    for (WasmAstSegment* segment : segments) {
+    for (AstSegment* segment : segments) {
         if (!EncodeDataSegment(e, *segment))
             return false;
     }
@@ -4363,7 +3627,7 @@ EncodeDataSection(Encoder& e, WasmAstModule& module)
 }
 
 static bool
-EncodeModule(WasmAstModule& module, Bytes* bytes)
+EncodeModule(AstModule& module, Bytes* bytes)
 {
     Encoder e(*bytes);
 
@@ -4406,7 +3670,7 @@ bool
 wasm::TextToBinary(const char16_t* text, Bytes* bytes, UniqueChars* error)
 {
     LifoAlloc lifo(AST_LIFO_DEFAULT_CHUNK_SIZE);
-    WasmAstModule* module = ParseModule(text, lifo, error);
+    AstModule* module = ParseModule(text, lifo, error);
     if (!module)
         return false;
 
