@@ -195,7 +195,8 @@ public:
     eContextMenuKey
   };
 
-  enum exitType
+  typedef bool ExitFromType;
+  enum ExitFrom : ExitFromType
   {
     eChild,
     eTopLevel
@@ -205,6 +206,7 @@ protected:
   WidgetMouseEvent()
     : reason(eReal)
     , context(eNormal)
+    , exit(eChild)
     , acceptActivation(false)
     , ignoreRootScrollFrame(false)
     , clickCount(0)
@@ -216,9 +218,9 @@ protected:
     : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, aEventClassID)
     , reason(aReason)
     , context(eNormal)
+    , exit(eChild)
     , acceptActivation(false)
     , ignoreRootScrollFrame(false)
-    , exit(eChild)
     , clickCount(0)
   {
   }
@@ -231,9 +233,9 @@ public:
     : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, eMouseEventClass)
     , reason(aReason)
     , context(aContext)
+    , exit(eChild)
     , acceptActivation(false)
     , ignoreRootScrollFrame(false)
-    , exit(eChild)
     , clickCount(0)
   {
     if (aMessage == eContextMenu) {
@@ -267,13 +269,13 @@ public:
 
   ContextMenuTrigger context;
 
+  ExitFrom exit;
+
   // Special return code for MOUSE_ACTIVATE to signal.
   // If the target accepts activation (1), or denies it (0).
   bool acceptActivation;
   // Whether the event should ignore scroll frame bounds during dispatch.
   bool ignoreRootScrollFrame;
-
-  exitType exit;
 
   /// The number of mouse clicks.
   uint32_t clickCount;
