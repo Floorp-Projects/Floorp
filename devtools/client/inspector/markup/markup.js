@@ -45,8 +45,8 @@ const {Task} = require("resource://gre/modules/Task.jsm");
 const {scrollIntoViewIfNeeded} = require("devtools/shared/layout/utils");
 const {PrefObserver} = require("devtools/client/styleeditor/utils");
 const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
+const {template} = require("devtools/shared/gcli/templater");
 
-Cu.import("resource://devtools/shared/gcli/Templater.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 loader.lazyRequireGetter(this, "CSS", "CSS");
@@ -2559,17 +2559,17 @@ GenericEditor.prototype = {
  *         The container owning this editor.
  * @param  {DOMNode} node
  *         The node being edited.
- * @param  {String} template
+ * @param  {String} templateId
  *         The template id to use to build the editor.
  */
-function TextEditor(container, node, template) {
+function TextEditor(container, node, templateId) {
   this.container = container;
   this.markup = this.container.markup;
   this.node = node;
-  this.template = this.markup.template.bind(template);
+  this.template = this.markup.template.bind(templateId);
   this._selected = false;
 
-  this.markup.template(template, this);
+  this.markup.template(templateId, this);
 
   editableField({
     element: this.value,
