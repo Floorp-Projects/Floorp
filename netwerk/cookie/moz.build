@@ -39,6 +39,10 @@ if CONFIG['NECKO_COOKIES']:
         'test/unit_ipc/xpcshell.ini',
     ]
 
+    BROWSER_CHROME_MANIFESTS += [
+        'test/browser/browser.ini',
+    ]
+
 IPDL_SOURCES = [
     'PCookieService.ipdl',
 ]
