@@ -33,12 +33,6 @@ OmxDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
   return decoder.forget();
 }
 
-void
-OmxDecoderModule::Init()
-{
-  MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
-}
-
 PlatformDecoderModule::ConversionRequired
 OmxDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
 {
