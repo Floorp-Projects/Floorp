@@ -1918,13 +1918,16 @@ nsFrameLoader::MaybeCreateDocShell()
   // XXXbz this is such a total hack.... We really need to have a
   // better setup for doing this.
   nsIDocument* doc = mOwnerContent->OwnerDoc();
+
+  MOZ_RELEASE_ASSERT(!doc->IsResourceDoc(), "We shouldn't even exist");
+
   if (!(doc->IsStaticDocument() || mOwnerContent->IsInComposedDoc())) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (doc->IsResourceDoc() || !doc->IsActive()) {
-    // Don't allow subframe loads in resource documents, nor
-    // in non-active documents.
+  if (!doc->IsActive()) {
+    // Don't allow subframe loads in non-active documents.
+    // (See bug 610571 comment 5.)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -2251,9 +2254,7 @@ nsFrameLoader::GetWindowDimensions(nsIntRect& aRect)
     return NS_ERROR_FAILURE;
   }
 
-  if (doc->IsResourceDoc()) {
-    return NS_ERROR_FAILURE;
-  }
+  MOZ_RELEASE_ASSERT(!doc->IsResourceDoc(), "We shouldn't even exist");
 
   nsCOMPtr<nsPIDOMWindowOuter> win = doc->GetWindow();
   if (!win) {
@@ -2409,8 +2410,11 @@ nsFrameLoader::TryRemoteBrowser()
     return false;
   }
 
-  if (doc->IsResourceDoc()) {
-    // Don't allow subframe loads in external reference documents
+  MOZ_RELEASE_ASSERT(!doc->IsResourceDoc(), "We shouldn't even exist");
+
+  if (!doc->IsActive()) {
+    // Don't allow subframe loads in non-active documents.
+    // (See bug 610571 comment 5.)
     return false;
   }
 
