@@ -136,6 +136,7 @@ function showList() {
   details.style.display = "none";
   let list = document.querySelector("#addons-list");
   list.style.display = "block";
+  document.documentElement.removeAttribute("details");
 }
 
 var Addons = {
@@ -385,6 +386,7 @@ var Addons = {
     list.style.display = "none";
     let details = document.querySelector("#addons-details");
     details.style.display = "block";
+    document.documentElement.setAttribute("details", "true");
   },
 
   setEnabled: function setEnabled(aValue, aAddon) {
