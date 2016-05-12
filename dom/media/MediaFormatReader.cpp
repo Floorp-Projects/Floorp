@@ -279,20 +279,14 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
       mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
       return;
     }
-    UniquePtr<TrackInfo> videoInfo = mVideo.mTrackDemuxer->GetInfo();
-    videoActive = videoInfo && videoInfo->IsValid();
-    if (videoActive) {
-      mInfo.mVideo = *videoInfo->GetAsVideoInfo();
-      for (const MetadataTag& tag : videoInfo->mTags) {
-        tags->Put(tag.mKey, tag.mValue);
-      }
-      mVideo.mCallback = new DecoderCallback(this, TrackInfo::kVideoTrack);
-      mVideo.mTimeRanges = mVideo.mTrackDemuxer->GetBuffered();
-      mTrackDemuxersMayBlock |= mVideo.mTrackDemuxer->GetSamplesMayBlock();
-    } else {
-      mVideo.mTrackDemuxer->BreakCycles();
-      mVideo.mTrackDemuxer = nullptr;
+    mInfo.mVideo = *mVideo.mTrackDemuxer->GetInfo()->GetAsVideoInfo();
+    UniquePtr<TrackInfo> info(mVideo.mTrackDemuxer->GetInfo());
+    for (const MetadataTag& tag : info->mTags) {
+      tags->Put(tag.mKey, tag.mValue);
     }
+    mVideo.mCallback = new DecoderCallback(this, TrackInfo::kVideoTrack);
+    mVideo.mTimeRanges = mVideo.mTrackDemuxer->GetBuffered();
+    mTrackDemuxersMayBlock |= mVideo.mTrackDemuxer->GetSamplesMayBlock();
   }
 
   bool audioActive = !!mDemuxer->GetNumberTracks(TrackInfo::kAudioTrack);
