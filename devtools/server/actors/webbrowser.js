@@ -2325,6 +2325,11 @@ Object.defineProperty(BrowserAddonList.prototype, "onListChanged", {
 });
 
 BrowserAddonList.prototype.onInstalled = function (addon) {
+  if (this._actorByAddonId.get(addon.id)) {
+    // When an add-on gets upgraded or reloaded, it will not be uninstalled
+    // so this step is necessary to clear the cache.
+    this._actorByAddonId.delete(addon.id);
+  }
   this._onListChanged();
 };
 
