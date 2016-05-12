@@ -126,6 +126,7 @@ devtools/shared/apps/**
 devtools/shared/client/**
 devtools/shared/discovery/**
 devtools/shared/gcli/**
+!devtools/shared/gcli/templater.js
 devtools/shared/heapsnapshot/**
 devtools/shared/inspector/**
 devtools/shared/layout/**
