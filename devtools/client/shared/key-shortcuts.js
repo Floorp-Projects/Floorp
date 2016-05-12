@@ -153,9 +153,9 @@ KeyShortcuts.prototype = {
       return false;
     }
     // Shift is a special modifier, it may implicitely be required if the
-    // expected key is a character and is only accessible via shift.
-    if (shortcut.shift != event.shiftKey &&
-        (shortcut.keyCode || (event.key.toLowerCase() !== shortcut.key))) {
+    // expected key is a special character accessible via shift.
+    if (shortcut.shift != event.shiftKey && event.key &&
+        event.key.match(/[a-zA-Z]/)) {
       return false;
     }
     if (shortcut.keyCode) {
