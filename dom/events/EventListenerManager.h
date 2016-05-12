@@ -446,7 +446,7 @@ public:
   dom::EventTarget* GetTarget() { return mTarget; }
 
   bool HasApzAwareListeners();
-
+  bool IsApzAwareListener(Listener* aListener);
   bool IsApzAwareEvent(nsIAtom* aEvent);
 
 protected:

@@ -420,7 +420,7 @@ EventListenerManager::AddEventListenerInternal(
     }
   }
 
-  if (IsApzAwareEvent(aTypeAtom)) {
+  if (IsApzAwareListener(listener)) {
     ProcessApzAwareEventListenerAdd();
   }
 
@@ -1694,11 +1694,17 @@ EventListenerManager::HasApzAwareListeners()
   uint32_t count = mListeners.Length();
   for (uint32_t i = 0; i < count; ++i) {
     Listener* listener = &mListeners.ElementAt(i);
-    if (IsApzAwareEvent(listener->mTypeAtom)) {
+    if (IsApzAwareListener(listener)) {
       return true;
     }
   }
   return false;
+}
+
+bool
+EventListenerManager::IsApzAwareListener(Listener* aListener)
+{
+  return !aListener->mFlags.mPassive && IsApzAwareEvent(aListener->mTypeAtom);
 }
 
 bool
