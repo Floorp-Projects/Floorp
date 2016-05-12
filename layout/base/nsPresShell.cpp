@@ -1800,7 +1800,7 @@ PresShell::AsyncResizeEventCallback(nsITimer* aTimer, void* aPresShell)
 }
 
 nsresult
-PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
+PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight, bool aHeightChanging)
 {
   if (mZoomConstraintsClient) {
     // If we have a ZoomConstraintsClient and the available screen area
@@ -1816,11 +1816,11 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     return NS_OK;
   }
 
-  return ResizeReflowIgnoreOverride(aWidth, aHeight);
+  return ResizeReflowIgnoreOverride(aWidth, aHeight, aHeightChanging);
 }
 
 nsresult
-PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight)
+PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight, bool aHeightChanging)
 {
   NS_PRECONDITION(!mIsReflowing, "Shouldn't be in reflow here!");
   NS_PRECONDITION(aWidth != NS_UNCONSTRAINEDSIZE,
@@ -1835,9 +1835,6 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight)
     // frame, and we want to return before setting the visible area.
     return NS_ERROR_NOT_AVAILABLE;
   }
-
-  const bool isHeightChanging =
-    (mPresContext->GetVisibleArea().height != aHeight);
 
   mPresContext->SetVisibleArea(nsRect(0, 0, aWidth, aHeight));
 
@@ -1866,7 +1863,7 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight)
       // XXX Do a full invalidate at the beginning so that invalidates along
       // the way don't have region accumulation issues?
 
-      if (isHeightChanging) {
+      if (aHeightChanging) {
         // For BSize changes driven by style, RestyleManager handles this.
         // For height:auto BSizes (i.e. layout-controlled), descendant
         // intrinsic sizes can't depend on them. So the only other case is
