@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette_driver import errors
-from marionette import MarionetteTestCase, skip_if_b2g, skip_if_desktop
+from marionette import MarionetteTestCase, skip_if_desktop
 from mozrunner.devices.emulator_screen import EmulatorScreen
 
 default_orientation = "portrait-primary"
@@ -101,7 +101,6 @@ class TestScreenOrientation(MarionetteTestCase):
         with self.assertRaisesRegexp(errors.MarionetteException, unknown_orientation % "null"):
             self.marionette.set_orientation(None)
 
-    @skip_if_b2g
     def test_unsupported_operation_on_desktop(self):
         with self.assertRaises(errors.UnsupportedOperationException):
             self.marionette.set_orientation("landscape-primary")
