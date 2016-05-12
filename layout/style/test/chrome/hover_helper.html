@@ -146,126 +146,111 @@ function step6() {
     step6called = true;
     is(getComputedStyle(divtwo, "").backgroundColor, "transparent",
        ":hover does not apply");
-    setResize("step7()");
     synthesizeMouse(divtwoparent, 2, 5, moveEvent, window);
+    setTimeout(step7, 500); // time to detect oscillations if they exist
 }
 
 var step7called = false;
 function step7() {
-    is(step7called, false, "step7 called only once");
+    is(step7called, false, "step7 called only once (more than two cycles of oscillation)");
+    if (step7called)
+        return;
     step7called = true;
-    if (getComputedStyle(iframe, "").width == "50px") {
-        // The two resize events may be coalesced into a single one.
-        step8();
-        return;
-    }
-    is(getComputedStyle(divtwo, "").backgroundColor, "rgb(0, 255, 0)",
-       ":hover applies");
-    setResize("step8()");
-    /* expect to get a second resize from the oscillation */
-}
-
-var step8called = false;
-function step8() {
-    is(step8called, false, "step8 called only once (more than two cycles of oscillation)");
-    if (step8called)
-        return;
-    step8called = true;
     is(getComputedStyle(divtwo, "").backgroundColor, "transparent",
        ":hover does not apply");
-    setTimeout(step9, 500); // time to detect oscillations if they exist
+    setTimeout(step8, 500); // time to detect oscillations if they exist
 }
 
 /* test the same case with scrolltop */
+
+var step8called = false;
+function step8() {
+    is(step8called, false, "step8 called only once");
+    step8called = true;
+    iframe.contentDocument.body.removeAttribute("onresize");
+    /* move the mouse out of the way */
+    synthesizeMouse(divtwoparent, 200, 5, moveEvent, window);
+    divtwoparent.scrollLeft = 5;
+    setResize("step9()");
+    synthesizeMouse(divtwoparent, 2, 5, moveEvent, window);
+    /* mouse now over 7, 5 */
+}
 
 var step9called = false;
 function step9() {
     is(step9called, false, "step9 called only once");
     step9called = true;
-    iframe.contentDocument.body.removeAttribute("onresize");
-    /* move the mouse out of the way */
-    synthesizeMouse(divtwoparent, 200, 5, moveEvent, window);
-    divtwoparent.scrollLeft = 5;
+    is(getComputedStyle(divtwo, "").backgroundColor, "rgb(0, 255, 0)",
+       ":hover applies");
     setResize("step10()");
-    synthesizeMouse(divtwoparent, 2, 5, moveEvent, window);
-    /* mouse now over 7, 5 */
+    divtwoparent.scrollLeft = 0; /* mouse now over 2,5 */
 }
 
 var step10called = false;
 function step10() {
     is(step10called, false, "step10 called only once");
     step10called = true;
-    is(getComputedStyle(divtwo, "").backgroundColor, "rgb(0, 255, 0)",
-       ":hover applies");
-    setResize("step11()");
-    divtwoparent.scrollLeft = 0; /* mouse now over 2,5 */
-}
-
-var step11called = false;
-function step11() {
-    is(step11called, false, "step11 called only once");
-    step11called = true;
     if (getComputedStyle(iframe, "").width == "100px") {
         // The two resize events may be coalesced into a single one.
-        step12();
+        step11();
         return;
     }
     is(getComputedStyle(divtwo, "").backgroundColor, "transparent",
        ":hover does not apply");
-    setResize("step12()");
+    setResize("step11()");
     /* expect to get a second resize from the oscillation */
+}
+
+var step11called = false;
+function step11() {
+    is(step11called, false, "step11 called only once (more than two cycles of oscillation)");
+    if (step11called)
+        return;
+    step11called = true;
+    is(getComputedStyle(divtwo, "").backgroundColor, "rgb(0, 255, 0)",
+       ":hover applies");
+    setTimeout(step12, 500); // time to detect oscillations if they exist
 }
 
 var step12called = false;
 function step12() {
-    is(step12called, false, "step12 called only once (more than two cycles of oscillation)");
-    if (step12called)
-        return;
+    is(step12called, false, "step12 called only once");
     step12called = true;
-    is(getComputedStyle(divtwo, "").backgroundColor, "rgb(0, 255, 0)",
-       ":hover applies");
-    setTimeout(step13, 500); // time to detect oscillations if they exist
+    setResize("step13()");
+    divtwoparent.scrollLeft = 25; /* mouse now over 27,5 */
 }
 
 var step13called = false;
 function step13() {
     is(step13called, false, "step13 called only once");
     step13called = true;
+    is(getComputedStyle(divtwo, "").backgroundColor, "transparent",
+       ":hover does not apply");
     setResize("step14()");
-    divtwoparent.scrollLeft = 25; /* mouse now over 27,5 */
+    divtwoparent.scrollLeft = 0; /* mouse now over 2,5 */
 }
 
 var step14called = false;
 function step14() {
     is(step14called, false, "step14 called only once");
     step14called = true;
-    is(getComputedStyle(divtwo, "").backgroundColor, "transparent",
-       ":hover does not apply");
-    setResize("step15()");
-    divtwoparent.scrollLeft = 0; /* mouse now over 2,5 */
-}
-
-var step15called = false;
-function step15() {
-    is(step15called, false, "step15 called only once");
-    step15called = true;
     if (getComputedStyle(iframe, "").width == "50px") {
         // The two resize events may be coalesced into a single one.
-        step16();
+        step15();
         return;
     }
     is(getComputedStyle(divtwo, "").backgroundColor, "rgb(0, 255, 0)",
        ":hover applies");
-    setResize("step16()");
+    setResize("step15()");
     /* expect to get a second resize from the oscillation */
 }
 
-var step16called = false;
-function step16() {
-    is(step16called, false, "step16 called only once (more than two cycles of oscillation)");
-    if (step16called)
+var step15called = false;
+function step15() {
+    is(step15called, false, "step15 called only once (more than two cycles of oscillation)");
+    if (step15called)
         return;
-    step16called = true;
+    step15called = true;
     is(getComputedStyle(divtwo, "").backgroundColor, "transparent",
        ":hover does not apply");
     setTimeout(finish, 500); // time to detect oscillations if they exist
