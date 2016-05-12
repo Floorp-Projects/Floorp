@@ -400,6 +400,10 @@ project_flag('MOZ_PLACES',
              set_for_old_configure=True,
              set_as_define=True)
 
+project_flag('MOZ_SOCIAL',
+             help='Build SocialAPI if required',
+             default=True)
+
 # Miscellaneous programs
 # ==============================================================
 
