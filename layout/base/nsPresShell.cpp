@@ -1803,7 +1803,7 @@ PresShell::AsyncResizeEventCallback(nsITimer* aTimer, void* aPresShell)
 }
 
 nsresult
-PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight, bool aHeightChanging)
+PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 {
   if (mZoomConstraintsClient) {
     // If we have a ZoomConstraintsClient and the available screen area
@@ -1819,11 +1819,11 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight, bool aHeightChanging)
     return NS_OK;
   }
 
-  return ResizeReflowIgnoreOverride(aWidth, aHeight, aHeightChanging);
+  return ResizeReflowIgnoreOverride(aWidth, aHeight);
 }
 
 nsresult
-PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight, bool aHeightChanging)
+PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight)
 {
   NS_PRECONDITION(!mIsReflowing, "Shouldn't be in reflow here!");
   NS_PRECONDITION(aWidth != NS_UNCONSTRAINEDSIZE,
@@ -1838,6 +1838,9 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight, bool aHei
     // frame, and we want to return before setting the visible area.
     return NS_ERROR_NOT_AVAILABLE;
   }
+
+  const bool isHeightChanging =
+    (mPresContext->GetVisibleArea().height != aHeight);
 
   mPresContext->SetVisibleArea(nsRect(0, 0, aWidth, aHeight));
 
@@ -1866,7 +1869,7 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight, bool aHei
       // XXX Do a full invalidate at the beginning so that invalidates along
       // the way don't have region accumulation issues?
 
-      if (aHeightChanging) {
+      if (isHeightChanging) {
         // For BSize changes driven by style, RestyleManager handles this.
         // For height:auto BSizes (i.e. layout-controlled), descendant
         // intrinsic sizes can't depend on them. So the only other case is
@@ -3633,16 +3636,6 @@ PresShell::ScheduleViewManagerFlush(PaintType aType)
   }
 }
 
-bool
-FlushLayoutRecursive(nsIDocument* aDocument,
-                     void* aData = nullptr)
-{
-  MOZ_ASSERT(!aData);
-  aDocument->EnumerateSubDocuments(FlushLayoutRecursive, nullptr);
-  aDocument->FlushPendingNotifications(Flush_Layout);
-  return true;
-}
-
 void
 PresShell::DispatchSynthMouseMove(WidgetGUIEvent* aEvent,
                                   bool aFlushOnHoverChange)
@@ -3667,10 +3660,7 @@ PresShell::DispatchSynthMouseMove(WidgetGUIEvent* aEvent,
       hoverGenerationBefore != restyleManager->AsGecko()->GetHoverGeneration()) {
     // Flush so that the resulting reflow happens now so that our caller
     // can suppress any synthesized mouse moves caused by that reflow.
-    // This code only ever runs for the root document, but :hover changes
-    // can happen in descendant documents too, so make sure we flush
-    // all of them.
-    FlushLayoutRecursive(mDocument);
+    FlushPendingNotifications(Flush_Layout);
   }
 }
 

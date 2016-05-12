@@ -104,12 +104,6 @@ interface nsIContentViewer : nsISupports
 
   [noscript] void getBounds(in nsIntRectRef aBounds);
   [noscript] void setBounds([const] in nsIntRectRef aBounds);
-  /**
-   * The 'aFlags' argument to setBoundsWithFlags is a set of these bits.
-   */
-  const unsigned long eDelayResize = 1;
-  [noscript] void setBoundsWithFlags([const] in nsIntRectRef aBounds,
-                                     in unsigned long aFlags);
 
   /**
    * The previous content viewer, which has been |close|d but not

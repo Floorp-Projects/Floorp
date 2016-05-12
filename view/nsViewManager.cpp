@@ -187,11 +187,9 @@ void nsViewManager::DoSetWindowDimensions(nscoord aWidth, nscoord aHeight)
   // We care about resizes even when one dimension is already zero.
   if (!oldDim.IsEqualEdges(newDim)) {
     // Don't resize the widget. It is already being set elsewhere.
-
-    const bool isHeightChanging = (oldDim.height != aHeight);
     mRootView->SetDimensions(newDim, true, false);
     if (mPresShell)
-      mPresShell->ResizeReflow(aWidth, aHeight, isHeightChanging);
+      mPresShell->ResizeReflow(aWidth, aHeight);
   }
 }
 
@@ -212,10 +210,10 @@ nsViewManager::ShouldDelayResize() const
 }
 
 void
-nsViewManager::SetWindowDimensions(nscoord aWidth, nscoord aHeight, bool aDelayResize)
+nsViewManager::SetWindowDimensions(nscoord aWidth, nscoord aHeight)
 {
   if (mRootView) {
-    if (!ShouldDelayResize() && !aDelayResize) {
+    if (!ShouldDelayResize()) {
       if (mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
           mDelayedResize != nsSize(aWidth, aHeight)) {
         // We have a delayed resize; that now obsolete size may already have

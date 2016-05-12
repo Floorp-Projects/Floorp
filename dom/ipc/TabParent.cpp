@@ -870,8 +870,7 @@ TabParent::RecvSetDimensions(const uint32_t& aFlags,
 
   if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION &&
       aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER) {
-    treeOwnerAsWin->SetPositionAndSize(x, y, cx, cy,
-                                       nsIBaseWindow::eRepaint);
+    treeOwnerAsWin->SetPositionAndSize(x, y, cx, cy, true);
     return true;
   }
 

@@ -599,7 +599,7 @@ NS_IMETHODIMP nsContentTreeOwner::InitWindow(nativeWindow aParentNativeWindow,
    nsIWidget* parentWidget, int32_t x, int32_t y, int32_t cx, int32_t cy)   
 {
    // Ignore wigdet parents for now.  Don't think those are a vaild thing to call.
-   NS_ENSURE_SUCCESS(SetPositionAndSize(x, y, cx, cy, 0), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(SetPositionAndSize(x, y, cx, cy, false), NS_ERROR_FAILURE);
 
    return NS_OK;
 }
@@ -659,10 +659,10 @@ NS_IMETHODIMP nsContentTreeOwner::GetSize(int32_t* aCX, int32_t* aCY)
 }
 
 NS_IMETHODIMP nsContentTreeOwner::SetPositionAndSize(int32_t aX, int32_t aY,
-   int32_t aCX, int32_t aCY, uint32_t aFlags)
+   int32_t aCX, int32_t aCY, bool aRepaint)
 {
    NS_ENSURE_STATE(mXULWindow);
-   return mXULWindow->SetPositionAndSize(aX, aY, aCX, aCY, aFlags);
+   return mXULWindow->SetPositionAndSize(aX, aY, aCX, aCY, aRepaint);
 }
 
 NS_IMETHODIMP nsContentTreeOwner::GetPositionAndSize(int32_t* aX, int32_t* aY,
@@ -1058,8 +1058,7 @@ nsSiteWindow::SetDimensions(uint32_t aFlags,
                     int32_t aX, int32_t aY, int32_t aCX, int32_t aCY)
 {
   // XXX we're ignoring aFlags
-  return mAggregator->SetPositionAndSize(aX, aY, aCX, aCY,
-                                         nsIBaseWindow::eRepaint);
+  return mAggregator->SetPositionAndSize(aX, aY, aCX, aCY, true);
 }
 
 NS_IMETHODIMP

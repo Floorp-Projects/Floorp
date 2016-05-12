@@ -89,8 +89,7 @@ public:
    * @param aWidth of window in twips
    * @param aHeight of window in twips
    */
-  void SetWindowDimensions(nscoord aWidth, nscoord aHeight,
-                           bool aDelayResize = false);
+  void SetWindowDimensions(nscoord aWidth, nscoord aHeight);
 
   /**
    * Do any resizes that are pending.
