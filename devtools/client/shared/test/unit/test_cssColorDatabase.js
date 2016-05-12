@@ -11,9 +11,7 @@ var Cc = Components.classes;
 
 var {require} = Cu.import("resource://devtools/shared/Loader.jsm");
 
-loader.lazyGetter(this, "DOMUtils", function () {
-  return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
-});
+const DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 
 const {colorUtils} = require("devtools/client/shared/css-color");
 const {cssColors} = require("devtools/client/shared/css-color-db");
