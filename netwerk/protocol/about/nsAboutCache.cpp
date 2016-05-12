@@ -51,6 +51,8 @@ nsAboutCache::Channel::Init(nsIURI* aURI, nsILoadInfo* aLoadInfo)
 {
     nsresult rv;
 
+    mCancel = false;
+
     nsCOMPtr<nsIInputStream> inputStream;
     rv = NS_NewPipe(getter_AddRefs(inputStream), getter_AddRefs(mStream),
                     16384, (uint32_t)-1,
@@ -361,7 +363,8 @@ nsAboutCache::Channel::OnCacheEntryInfo(nsIURI *aURI, const nsACString & aIdEnha
                                         bool aPinned)
 {
     // We need mStream for this
-    if (!mStream) {
+    if (!mStream || mCancel) {
+        // Returning a failure from this callback stops the iteration
         return NS_ERROR_FAILURE;
     }
 
@@ -472,8 +475,7 @@ nsAboutCache::Channel::OnCacheEntryInfo(nsIURI *aURI, const nsACString & aIdEnha
     // Entry is done...
     mBuffer.AppendLiteral("  </tr>\n");
 
-    FlushBuffer();
-    return NS_OK;
+    return FlushBuffer();
 }
 
 NS_IMETHODIMP
@@ -505,12 +507,20 @@ nsAboutCache::Channel::OnCacheEntryVisitCompleted()
     return NS_OK;
 }
 
-void
+nsresult
 nsAboutCache::Channel::FlushBuffer()
 {
+    nsresult rv;
+
     uint32_t bytesWritten;
-    mStream->Write(mBuffer.get(), mBuffer.Length(), &bytesWritten);
+    rv = mStream->Write(mBuffer.get(), mBuffer.Length(), &bytesWritten);
     mBuffer.Truncate();
+
+    if (NS_FAILED(rv)) {
+        mCancel = true;
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP
