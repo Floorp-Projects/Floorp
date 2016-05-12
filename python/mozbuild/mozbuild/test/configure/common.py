@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import copy
 import errno
 import os
 import subprocess
@@ -74,6 +75,7 @@ class ConfigureTestSandbox(ConfigureSandbox):
             environ['CONFIG_SHELL'] = mozpath.abspath('/bin/sh')
             self._subprocess_paths[environ['CONFIG_SHELL']] = self.shell
             paths.append(environ['CONFIG_SHELL'])
+        self._environ = copy.copy(environ)
 
         vfs = ConfigureTestVFS(paths)
 
@@ -106,6 +108,9 @@ class ConfigureTestSandbox(ConfigureSandbox):
                 PIPE=subprocess.PIPE,
                 Popen=self.Popen,
             )
+
+        if what == 'os.environ':
+            return self._environ
 
         return super(ConfigureTestSandbox, self)._get_one_import(what)
 
