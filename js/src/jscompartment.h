@@ -195,7 +195,7 @@ using WrapperMap = GCRekeyableHashMap<CrossCompartmentKey, ReadBarrieredValue,
 
 struct ImmediateMetadata { };
 struct DelayMetadata { };
-using PendingMetadata = ReadBarrieredObject;
+using PendingMetadata = JSObject*;
 
 using NewObjectMetadataState = mozilla::Variant<ImmediateMetadata,
                                                 DelayMetadata,
@@ -215,7 +215,7 @@ class MOZ_RAII AutoSetNewObjectMetadata : private JS::CustomAutoRooter
     virtual void trace(JSTracer* trc) override {
         if (prevState_.is<PendingMetadata>()) {
             TraceRoot(trc,
-                      prevState_.as<PendingMetadata>().unsafeUnbarrieredForTracing(),
+                      &prevState_.as<PendingMetadata>(),
                       "Object pending metadata");
         }
     }
@@ -579,7 +579,6 @@ struct JSCompartment
     void sweepCrossCompartmentWrappers();
     void sweepSavedStacks();
     void sweepGlobalObject(js::FreeOp* fop);
-    void sweepObjectPendingMetadata();
     void sweepSelfHostingScriptSource();
     void sweepJitCompartment(js::FreeOp* fop);
     void sweepRegExps();
