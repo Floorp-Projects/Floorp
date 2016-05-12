@@ -151,7 +151,6 @@ MP4Decoder::CanHandleMediaType(const nsACString& aMIMETypeExcludingCodecs,
   }
 
   // Verify that we have a PDM that supports the whitelisted types.
-  PDMFactory::Init();
   RefPtr<PDMFactory> platform = new PDMFactory();
   for (const nsCString& codecMime : codecMimes) {
     if (!platform->SupportsMimeType(codecMime, aDiagnostics)) {
@@ -229,8 +228,6 @@ CreateTestH264Decoder(layers::LayersBackend aBackend,
   aConfig.mExtraData = new MediaByteBuffer();
   aConfig.mExtraData->AppendElements(sTestH264ExtraData,
                                      MOZ_ARRAY_LENGTH(sTestH264ExtraData));
-
-  PDMFactory::Init();
 
   RefPtr<PDMFactory> platform = new PDMFactory();
   RefPtr<MediaDataDecoder> decoder(
