@@ -1214,21 +1214,26 @@ CheckValueAfterMovingGC(const JS::Value& value)
 
 #endif // JSGC_HASH_TABLE_CHECKS
 
+#define JS_FOR_EACH_ZEAL_MODE(D)               \
+            D(Poke, 1)                         \
+            D(Alloc, 2)                        \
+            D(FrameGC, 3)                      \
+            D(VerifierPre, 4)                  \
+            D(FrameVerifierPre, 5)             \
+            D(StackRooting, 6)                 \
+            D(GenerationalGC, 7)               \
+            D(IncrementalRootsThenFinish, 8)   \
+            D(IncrementalMarkAllThenFinish, 9) \
+            D(IncrementalMultipleSlices, 10)   \
+            D(IncrementalMarkingValidator, 11) \
+            D(ElementsBarrier, 12)             \
+            D(CheckHashTablesOnMinorGC, 13)    \
+            D(Compact, 14)
+
 enum class ZealMode {
-    Poke = 1,
-    Alloc = 2,
-    FrameGC = 3,
-    VerifierPre = 4,
-    FrameVerifierPre = 5,
-    StackRooting = 6,
-    GenerationalGC = 7,
-    IncrementalRootsThenFinish = 8,
-    IncrementalMarkAllThenFinish = 9,
-    IncrementalMultipleSlices = 10,
-    IncrementalMarkingValidator = 11,
-    ElementsBarrier = 12,
-    CheckHashTablesOnMinorGC = 13,
-    Compact = 14,
+#define ZEAL_MODE(name, value) name = value,
+    JS_FOR_EACH_ZEAL_MODE(ZEAL_MODE)
+#undef ZEAL_MODE
     Limit = 14
 };
 

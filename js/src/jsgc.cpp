@@ -274,6 +274,12 @@ static_assert(JS_ARRAY_LENGTH(slotsToThingKind) == SLOTS_TO_THING_KIND_LIMIT,
 #define CHECK_THING_SIZE(...) { __VA_ARGS__ }; /* Define the array. */         \
     MOZ_FOR_EACH(CHECK_THING_SIZE_INNER, (), (__VA_ARGS__ 0x20))
 
+#define CHECK_ZEAL(name, value)                                                \
+    static_assert(ZealMode::Limit >= ZealMode::name,                           \
+                  "ZealMode::Limit shouldn't be smaller than " #name);
+JS_FOR_EACH_ZEAL_MODE(CHECK_ZEAL)
+#undef CHECK_ZEAL
+
 const uint32_t Arena::ThingSizes[] = CHECK_THING_SIZE(
     sizeof(JSFunction),         /* AllocKind::FUNCTION            */
     sizeof(FunctionExtended),   /* AllocKind::FUNCTION_EXTENDED   */
@@ -1191,24 +1197,24 @@ GCRuntime::getZealBits(uint32_t* zealBits, uint32_t* frequency, uint32_t* schedu
 const char* gc::ZealModeHelpText =
     "  Specifies how zealous the garbage collector should be. Some of these modes can\n"
     "  be set simultaneously, by passing multiple level options, e.g. \"2;4\" will activate\n"
-    "  both modes 2 and 4.\n"
+    "  both modes 2 and 4. Modes can be specified by name or number.\n"
     "  \n"
     "  Values:\n"
-    "    0: Normal amount of collection (resets all modes)\n"
-    "    1: Collect when roots are added or removed\n"
-    "    2: Collect when every N allocations (default: 100)\n"
-    "    3: Collect when the window paints (browser only)\n"
-    "    4: Verify pre write barriers between instructions\n"
-    "    5: Verify pre write barriers between paints\n"
-    "    6: Verify stack rooting\n"
-    "    7: Collect the nursery every N nursery allocations\n"
-    "    8: Incremental GC in two slices: 1) mark roots 2) finish collection\n"
-    "    9: Incremental GC in two slices: 1) mark all 2) new marking and finish\n"
-    "   10: Incremental GC in multiple slices\n"
-    "   11: Verify incremental marking\n"
-    "   12: Always use the individual element post-write barrier, regardless of elements size\n"
-    "   13: Check internal hashtables on minor GC\n"
-    "   14: Perform a shrinking collection every N allocations\n";
+    "    0: (None) Normal amount of collection (resets all modes)\n"
+    "    1: (Poke) Collect when roots are added or removed\n"
+    "    2: (Alloc) Collect when every N allocations (default: 100)\n"
+    "    3: (FrameGC) Collect when the window paints (browser only)\n"
+    "    4: (VerifierPre) Verify pre write barriers between instructions\n"
+    "    5: (FrameVerifierPre) Verify pre write barriers between paints\n"
+    "    6: (StackRooting) Verify stack rooting\n"
+    "    7: (GenerationalGC) Collect the nursery every N nursery allocations\n"
+    "    8: (IncrementalRootsThenFinish) Incremental GC in two slices: 1) mark roots 2) finish collection\n"
+    "    9: (IncrementalMarkAllThenFinish) Incremental GC in two slices: 1) mark all 2) new marking and finish\n"
+    "   10: (IncrementalMultipleSlices) Incremental GC in multiple slices\n"
+    "   11: (IncrementalMarkingValidator) Verify incremental marking\n"
+    "   12: (ElementsBarrier) Always use the individual element post-write barrier, regardless of elements size\n"
+    "   13: (CheckHashTablesOnMinorGC) Check internal hashtables on minor GC\n"
+    "   14: (Compact) Perform a shrinking collection every N allocations\n";
 
 void
 GCRuntime::setZeal(uint8_t zeal, uint32_t frequency)
@@ -1259,14 +1265,36 @@ GCRuntime::parseAndSetZeal(const char* str)
     bool foundFrequency = false;
     mozilla::Vector<int> zeals;
 
+    static const struct {
+        const char* const zealMode;
+        size_t length;
+        uint32_t zeal;
+    } zealModes[] = {
+#define ZEAL_MODE(name, value) {#name, sizeof(#name) - 1, value},
+        JS_FOR_EACH_ZEAL_MODE(ZEAL_MODE)
+#undef ZEAL_MODE
+        {"None", 4, 0}
+    };
+
     do {
         int zeal = -1;
 
+        const char* p = nullptr;
         if (isdigit(str[0])) {
             zeal = atoi(str);
 
             size_t offset = strspn(str, "0123456789");
-            const char* p = str + offset;
+            p = str + offset;
+        } else {
+            for (auto z : zealModes) {
+                if (!strncmp(str, z.zealMode, z.length)) {
+                    zeal = z.zeal;
+                    p = str + z.length;
+                    break;
+                }
+            }
+        }
+        if (p) {
             if (!*p || *p == ';') {
                 frequency = JS_DEFAULT_ZEAL_FREQ;
             } else if (*p == ',') {
