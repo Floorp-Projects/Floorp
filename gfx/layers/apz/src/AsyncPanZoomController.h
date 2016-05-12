@@ -63,6 +63,9 @@ class PanGestureBlockState;
 class OverscrollHandoffChain;
 class StateChangeNotificationBlocker;
 class CheckerboardEvent;
+class OverscrollEffectBase;
+class WidgetOverscrollEffect;
+class GenericOverscrollEffect;
 
 /**
  * Controller for all panning and zooming logic. Any time a user input is
@@ -707,6 +710,8 @@ private:
 
   RefPtr<AsyncPanZoomAnimation> mAnimation;
 
+  UniquePtr<OverscrollEffectBase> mOverscrollEffect;
+
   friend class Axis;
 
 
@@ -880,6 +885,9 @@ private:
   friend class OverscrollAnimation;
   friend class SmoothScrollAnimation;
   friend class WheelScrollAnimation;
+
+  friend class GenericOverscrollEffect;
+  friend class WidgetOverscrollEffect;
 
   // The initial velocity of the most recent fling.
   ParentLayerPoint mLastFlingVelocity;

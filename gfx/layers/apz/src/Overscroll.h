@@ -16,6 +16,7 @@
 namespace mozilla {
 namespace layers {
 
+// Animation used by GenericOverscrollEffect.
 class OverscrollAnimation: public AsyncPanZoomAnimation {
 public:
   explicit OverscrollAnimation(AsyncPanZoomController& aApzc, const ParentLayerPoint& aVelocity)
@@ -56,6 +57,74 @@ public:
   virtual bool WantsRepaints() override
   {
     return false;
+  }
+
+private:
+  AsyncPanZoomController& mApzc;
+};
+
+// Base class for different overscroll effects;
+class OverscrollEffectBase {
+public:
+  virtual ~OverscrollEffectBase() {}
+  virtual void ConsumeOverscroll(ParentLayerPoint& aOverscroll,
+                                 bool aShouldOverscrollX,
+                                 bool aShouldOverscrollY) = 0;
+  virtual void HandleFlingOverscroll(const ParentLayerPoint& aVelocity) = 0;
+};
+
+// A generic overscroll effect, implemented by AsyncPanZoomController itself.
+class GenericOverscrollEffect : public OverscrollEffectBase {
+public:
+  explicit GenericOverscrollEffect(AsyncPanZoomController& aApzc) : mApzc(aApzc) {}
+
+  void ConsumeOverscroll(ParentLayerPoint& aOverscroll,
+                         bool aShouldOverscrollX,
+                         bool aShouldOverscrollY) override {
+    if (aShouldOverscrollX) {
+      mApzc.mX.OverscrollBy(aOverscroll.x);
+      aOverscroll.x = 0;
+    }
+
+    if (aShouldOverscrollY) {
+      mApzc.mY.OverscrollBy(aOverscroll.y);
+      aOverscroll.y = 0;
+    }
+
+    if (aShouldOverscrollX || aShouldOverscrollY) {
+      mApzc.ScheduleComposite();
+    }
+  }
+
+  void HandleFlingOverscroll(const ParentLayerPoint& aVelocity) override {
+    mApzc.StartOverscrollAnimation(aVelocity);
+  }
+
+private:
+  AsyncPanZoomController& mApzc;
+};
+
+// A widget-specific overscroll effect, implemented by the widget via
+// GeckoContentController.
+class WidgetOverscrollEffect : public OverscrollEffectBase {
+public:
+  explicit WidgetOverscrollEffect(AsyncPanZoomController& aApzc) : mApzc(aApzc) {}
+
+  void ConsumeOverscroll(ParentLayerPoint& aOverscroll,
+                         bool aShouldOverscrollX,
+                         bool aShouldOverscrollY) override {
+    RefPtr<GeckoContentController> controller = mApzc.GetGeckoContentController();
+    if (controller && (aShouldOverscrollX || aShouldOverscrollY)) {
+      controller->UpdateOverscrollOffset(aOverscroll.x, aOverscroll.y);
+      aOverscroll = ParentLayerPoint();
+    }
+  }
+
+  void HandleFlingOverscroll(const ParentLayerPoint& aVelocity) override {
+    RefPtr<GeckoContentController> controller = mApzc.GetGeckoContentController();
+    if (controller) {
+      controller->UpdateOverscrollVelocity(aVelocity.x, aVelocity.y);
+    }
   }
 
 private:
