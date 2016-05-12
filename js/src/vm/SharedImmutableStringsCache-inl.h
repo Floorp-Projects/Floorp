@@ -17,6 +17,7 @@ SharedImmutableStringsCache::getOrCreate(const char* chars, size_t length,
                                          IntoOwnedChars intoOwnedChars)
 {
     MOZ_ASSERT(inner_);
+    MOZ_ASSERT(chars);
     Hasher::Lookup lookup(chars, length);
 
     auto locked = inner_->lock();
@@ -48,6 +49,7 @@ MOZ_MUST_USE mozilla::Maybe<SharedImmutableTwoByteString>
 SharedImmutableStringsCache::getOrCreate(const char16_t* chars, size_t length,
                                          IntoOwnedTwoByteChars intoOwnedTwoByteChars) {
     MOZ_ASSERT(inner_);
+    MOZ_ASSERT(chars);
     Hasher::Lookup lookup(chars, length);
 
     auto locked = inner_->lock();

@@ -19,12 +19,12 @@ XPCOMUtils.defineLazyServiceGetter(
 
 Cu.import("chrome://marionette/content/action.js");
 Cu.import("chrome://marionette/content/atom.js");
+Cu.import("chrome://marionette/content/browser.js");
 Cu.import("chrome://marionette/content/element.js");
 Cu.import("chrome://marionette/content/emulator.js");
 Cu.import("chrome://marionette/content/error.js");
 Cu.import("chrome://marionette/content/evaluate.js");
 Cu.import("chrome://marionette/content/event.js");
-Cu.import("chrome://marionette/content/frame.js");
 Cu.import("chrome://marionette/content/interaction.js");
 Cu.import("chrome://marionette/content/logging.js");
 Cu.import("chrome://marionette/content/modal.js");
@@ -35,7 +35,6 @@ this.EXPORTED_SYMBOLS = ["GeckoDriver", "Context"];
 
 var FRAME_SCRIPT = "chrome://marionette/content/listener.js";
 const BROWSER_STARTUP_FINISHED = "browser-delayed-startup-finished";
-const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const CLICK_TO_START_PREF = "marionette.debugging.clicktostart";
 const CONTENT_LISTENER_PREF = "marionette.contentListener";
 
@@ -99,7 +98,7 @@ this.GeckoDriver = function(appName, device, stopSignal, emulator) {
   this.emulator.sendToListener = this.sendAsync.bind(this);
 
   this.sessionId = null;
-  // holds list of BrowserObjs
+  // holds list of browser.Context's
   this.browsers = {};
   // points to current browser
   this.curBrowser = null;
@@ -273,20 +272,22 @@ GeckoDriver.prototype.addFrameCloseListener = function(action) {
 };
 
 /**
- * Create a new BrowserObj for window and add to known browsers.
+ * Create a new browsing context for window and add to known browsers.
  *
  * @param {nsIDOMWindow} win
- *     Window for which we will create a BrowserObj.
+ *     Window for which we will create a browsing context.
  *
  * @return {string}
  *     Returns the unique server-assigned ID of the window.
  */
 GeckoDriver.prototype.addBrowser = function(win) {
-  let browser = new BrowserObj(win, this);
+  logger.info("addBrowser");
+  let bc = new browser.Context(win, this);
+  logger.info("bc=" + bc);
   let winId = win.QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
   winId = winId + ((this.appName == "B2G") ? "-b2g" : "");
-  this.browsers[winId] = browser;
+  this.browsers[winId] = bc;
   this.curBrowser = this.browsers[winId];
   if (typeof this.curBrowser.elementManager.seenItems[winId] == "undefined") {
     // add this to seenItems so we can guarantee
@@ -2408,7 +2409,7 @@ GeckoDriver.prototype.setScreenOrientation = function(cmd, resp) {
   let or = String(cmd.parameters.orientation);
   let mozOr = or.toLowerCase();
   if (ors.indexOf(mozOr) < 0) {
-    throw new WebDriverError(`Unknown screen orientation: ${or}`);
+    throw new InvalidArgumentError(`Unknown screen orientation: ${or}`);
   }
 
   let win = this.getCurrentWindow();
@@ -2777,242 +2778,4 @@ GeckoDriver.prototype.commands = {
   "getTextFromDialog": GeckoDriver.prototype.getTextFromDialog,
   "sendKeysToDialog": GeckoDriver.prototype.sendKeysToDialog,
   "quitApplication": GeckoDriver.prototype.quitApplication,
-};
-
-/**
- * Creates a BrowserObj.  BrowserObjs handle interactions with the
- * browser, according to the current environment (desktop, b2g, etc.).
- *
- * @param {nsIDOMWindow} win
- *     The window whose browser needs to be accessed.
- * @param {GeckoDriver} driver
- *     Reference to the driver the browser is attached to.
- */
-var BrowserObj = function(win, driver) {
-  this.browser = undefined;
-  this.window = win;
-  this.driver = driver;
-  this.knownFrames = [];
-  this.startPage = "about:blank";
-  // used in B2G to identify the homescreen content page
-  this.mainContentId = null;
-  // used to set curFrameId upon new session
-  this.newSession = true;
-  this.elementManager = new ElementManager([
-    element.Strategy.Name,
-    element.Strategy.LinkText,
-    element.Strategy.PartialLinkText,
-  ]);
-  this.setBrowser(win);
-
-  // A reference to the tab corresponding to the current window handle, if any.
-  this.tab = null;
-  this.pendingCommands = [];
-
-  // we should have one FM per BO so that we can handle modals in each Browser
-  this.frameManager = new frame.Manager(driver);
-  this.frameRegsPending = 0;
-
-  // register all message listeners
-  this.frameManager.addMessageManagerListeners(driver.mm);
-  this.getIdForBrowser = driver.getIdForBrowser.bind(driver);
-  this.updateIdForBrowser = driver.updateIdForBrowser.bind(driver);
-  this._curFrameId = null;
-  this._browserWasRemote = null;
-  this._hasRemotenessChange = false;
-};
-
-Object.defineProperty(BrowserObj.prototype, "browserForTab", {
-  get() {
-    return this.browser.getBrowserForTab(this.tab);
-  }
-});
-
-/**
- * The current frame ID is managed per browser element on desktop in
- * case the ID needs to be refreshed. The currently selected window is
- * identified within BrowserObject by a tab.
- */
-Object.defineProperty(BrowserObj.prototype, "curFrameId", {
-  get() {
-    let rv = null;
-    if (this.driver.appName != "Firefox") {
-      rv = this._curFrameId;
-    } else if (this.tab) {
-      rv = this.getIdForBrowser(this.browserForTab);
-    }
-    return rv;
-  },
-
-  set(id) {
-    if (this.driver.appName != "Firefox") {
-      this._curFrameId = id;
-    }
-  }
-});
-
-/**
- * Retrieves the current tabmodal UI object.  According to the browser
- * associated with the currently selected tab.
- */
-BrowserObj.prototype.getTabModalUI = function() {
-  let br = this.browserForTab;
-  if (!br.hasAttribute("tabmodalPromptShowing")) {
-    return null;
-  }
-
-  // The modal is a direct sibling of the browser element.
-  // See tabbrowser.xml's getTabModalPromptBox.
-  let modals = br.parentNode.getElementsByTagNameNS(
-      XUL_NS, "tabmodalprompt");
-  return modals[0].ui;
-};
-
-/**
- * Set the browser if the application is not B2G.
- *
- * @param {nsIDOMWindow} win
- *     Current window reference.
- */
-BrowserObj.prototype.setBrowser = function(win) {
-  switch (this.driver.appName) {
-    case "Firefox":
-      this.browser = win.gBrowser;
-      break;
-
-    case "Fennec":
-      this.browser = win.BrowserApp;
-      break;
-  }
-};
-
-/** Called when we start a session with this browser. */
-BrowserObj.prototype.startSession = function(newSession, win, callback) {
-  callback(win, newSession);
-};
-
-/** Closes current tab. */
-BrowserObj.prototype.closeTab = function() {
-  if (this.browser &&
-      this.browser.removeTab &&
-      this.tab !== null && (this.driver.appName != "B2G")) {
-    this.browser.removeTab(this.tab);
-  }
-};
-
-/**
- * Opens a tab with given URI.
- *
- * @param {string} uri
- *      URI to open.
- */
-BrowserObj.prototype.addTab = function(uri) {
-  return this.browser.addTab(uri, true);
-};
-
-/**
- * Re-sets this BrowserObject's current tab and updates remoteness tracking.
- * If a window is provided, this BrowserObj's internal reference is updated
- * before proceeding.
- */
-BrowserObj.prototype.switchToTab = function(ind, win) {
-  if (win) {
-    this.window = win;
-    this.setBrowser(win);
-  }
-
-  this.browser.selectTabAtIndex(ind);
-  this.tab = this.browser.selectedTab;
-  this._browserWasRemote = this.browserForTab.isRemoteBrowser;
-  this._hasRemotenessChange = false;
-};
-
-/**
- * Registers a new frame, and sets its current frame id to this frame
- * if it is not already assigned, and if a) we already have a session
- * or b) we're starting a new session and it is the right start frame.
- *
- * @param {string} uid
- *     Frame uid for use by Marionette.
- * @param the XUL <browser> that was the target of the originating message.
- */
-BrowserObj.prototype.register = function(uid, target) {
-  let remotenessChange = this.hasRemotenessChange();
-  if (this.curFrameId === null || remotenessChange) {
-    if (this.browser) {
-      // If we're setting up a new session on Firefox, we only process the
-      // registration for this frame if it belongs to the current tab.
-      if (!this.tab) {
-        this.switchToTab(this.browser.selectedIndex);
-      }
-
-      if (target == this.browserForTab) {
-        this.updateIdForBrowser(this.browserForTab, uid);
-        this.mainContentId = uid;
-      }
-    } else {
-      this._curFrameId = uid;
-      this.mainContentId = uid;
-    }
-  }
-
-  // used to delete sessions
-  this.knownFrames.push(uid);
-  return remotenessChange;
-};
-
-/**
- * When navigating between pages results in changing a browser's
- * process, we need to take measures not to lose contact with a listener
- * script. This function does the necessary bookkeeping.
- */
-BrowserObj.prototype.hasRemotenessChange = function() {
-  // None of these checks are relevant on b2g or if we don't have a tab yet,
-  // and may not apply on Fennec.
-  if (this.driver.appName != "Firefox" || this.tab === null) {
-    return false;
-  }
-
-  if (this._hasRemotenessChange) {
-    return true;
-  }
-
-  // this.tab can potentially get stale and cause problems, see bug 1227252
-  let currentTab = this.browser.selectedTab;
-  let currentIsRemote = this.browser.getBrowserForTab(currentTab).isRemoteBrowser;
-  this._hasRemotenessChange = this._browserWasRemote !== currentIsRemote;
-  this._browserWasRemote = currentIsRemote;
-  return this._hasRemotenessChange;
-};
-
-/**
- * Flushes any pending commands queued when a remoteness change is being
- * processed and mark this remotenessUpdate as complete.
- */
-BrowserObj.prototype.flushPendingCommands = function() {
-  if (!this._hasRemotenessChange) {
-    return;
-  }
-
-  this._hasRemotenessChange = false;
-  this.pendingCommands.forEach(cb => cb());
-  this.pendingCommands = [];
-};
-
-/**
-  * This function intercepts commands interacting with content and queues
-  * or executes them as needed.
-  *
-  * No commands interacting with content are safe to process until
-  * the new listener script is loaded and registers itself.
-  * This occurs when a command whose effect is asynchronous (such
-  * as goBack) results in a remoteness change and new commands
-  * are subsequently posted to the server.
-  */
-BrowserObj.prototype.executeWhenReady = function(cb) {
-  if (this.hasRemotenessChange()) {
-    this.pendingCommands.push(cb);
-  } else {
-    cb();
-  }
 };

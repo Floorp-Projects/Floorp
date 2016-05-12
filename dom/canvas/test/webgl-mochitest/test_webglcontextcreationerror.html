@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset='UTF-8'>
+  <script src='/tests/SimpleTest/SimpleTest.js'></script>
+  <link rel='stylesheet' href='/tests/SimpleTest/test.css'>
+</head>
+<body>
+<script>
+'use strict';
+
+function RunWithPrefs(prefPairList, func) {
+  var prefEnv = {'set': prefPairList};
+  try {
+    SpecialPowers.pushPrefEnv(prefEnv, func);
+  } catch (e) {
+    console.log('Warning: Failed to set prefs: ' + JSON.stringify(prefPairList));
+    func();
+  }
+}
+
+////////////////////////////////////////
+
+function Check(expr, text) {
+  ok(expr, text);
+  return expr;
+}
+
+function TestWhenDisabled() {
+  var c = document.createElement('canvas');
+
+  var generatedEvent = null;
+  var f = function(event) { generatedEvent = event; };
+  c.addEventListener('webglcontextcreationerror', f);
+
+  var gl = c.getContext('webgl'); // Should fail.
+
+  do {
+    if (!Check(!gl, 'When disabled, context creation should fail.'))
+      break;
+
+    if (!Check(generatedEvent, 'Context creation failure should generate an event.'))
+      break;
+
+    var reason = generatedEvent.statusMessage;
+    if (!Check(reason !== undefined, 'generatedEvent.statusMessage should be defined.'))
+      break;
+
+    ok(reason.length, 'statusMessage should be non-empty.');
+  } while (false);
+
+  SimpleTest.finish();
+}
+
+////////////////////////////////////////
+
+SimpleTest.waitForExplicitFinish();
+
+var prefPairList = [
+  ['webgl.disabled', true],
+];
+RunWithPrefs(prefPairList, TestWhenDisabled);
+
+</script>
+</body>
+</html>

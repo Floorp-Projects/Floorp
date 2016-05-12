@@ -3522,8 +3522,10 @@ jit::ConvertLinearInequality(TempAllocator& alloc, MBasicBlock* block, const Lin
     MDefinition* rhsDef = nullptr;
     for (size_t i = 0; i < lhs.numTerms(); i++) {
         if (lhs.term(i).scale == -1) {
+            AutoEnterOOMUnsafeRegion oomUnsafe;
             rhsDef = lhs.term(i).term;
-            lhs.add(rhsDef, 1);
+            if (!lhs.add(rhsDef, 1))
+               oomUnsafe.crash("ConvertLinearInequality");
             break;
         }
     }

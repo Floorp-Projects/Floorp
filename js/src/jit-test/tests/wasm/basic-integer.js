@@ -60,6 +60,10 @@ function testTrap64(opcode, lhs, rhs, expect) {
 }
 
 testUnary('i32', 'clz', 40, 26);
+testUnary('i32', 'clz', 0, 32);
+testUnary('i32', 'clz', 0xFFFFFFFF, 0);
+testUnary('i32', 'clz', -2147483648, 0);
+
 testUnary('i32', 'ctz', 40, 3);
 testUnary('i32', 'ctz', 0, 32);
 testUnary('i32', 'ctz', -2147483648, 31);

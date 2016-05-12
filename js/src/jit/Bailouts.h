@@ -151,7 +151,7 @@ class BailoutFrameInfo
     }
 };
 
-bool EnsureHasScopeObjects(JSContext* cx, AbstractFramePtr fp);
+MOZ_MUST_USE bool EnsureHasScopeObjects(JSContext* cx, AbstractFramePtr fp);
 
 struct BaselineBailoutInfo;
 

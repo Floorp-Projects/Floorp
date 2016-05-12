@@ -13,6 +13,28 @@
 namespace mozilla {
 namespace gfx {
 
+/**
+ * Create a DataSourceSurface and init the surface with the |aData|. The stride
+ * of this source surface might be different from the input data's |aDataStride|.
+ * System will try to use the optimal one.
+ */
+already_AddRefed<DataSourceSurface>
+CreateDataSourceSurfaceFromData(const IntSize& aSize,
+                                SurfaceFormat aFormat,
+                                const uint8_t* aData,
+                                int32_t aDataStride);
+
+/**
+ * Similar to CreateDataSourceSurfaceFromData(), but could setup the stride for
+ * this surface.
+ */
+already_AddRefed<DataSourceSurface>
+CreateDataSourceSurfaceWithStrideFromData(const IntSize &aSize,
+                                          SurfaceFormat aFormat,
+                                          int32_t aStride,
+                                          const uint8_t* aData,
+                                          int32_t aDataStride);
+
 void
 ConvertBGRXToBGRA(uint8_t* aData, const IntSize &aSize, const int32_t aStride);
 
@@ -72,8 +94,9 @@ BufferSizeFromStrideAndHeight(int32_t aStride,
 
 /**
  * Copy aSrcRect from aSrc to aDest starting at aDestPoint.
+ * @returns false if the copy is not successful or the aSrc's size is empty.
  */
-void
+bool
 CopyRect(DataSourceSurface* aSrc, DataSourceSurface* aDest,
          IntRect aSrcRect, IntPoint aDestPoint);
 

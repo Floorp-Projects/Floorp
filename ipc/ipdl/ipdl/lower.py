@@ -956,14 +956,17 @@ class MessageDecl(ipdl.ast.MessageDecl):
 
         return cxxparams
 
-    def makeCxxArgs(self, params=1, retsems='out', retcallsems='out',
+    def makeCxxArgs(self, paramsems='in', retsems='out', retcallsems='out',
                     implicit=1):
-        assert not implicit or params     # implicit => params
         assert not retcallsems or retsems # retcallsems => returnsems
         cxxargs = [ ]
 
-        if params:
+        if paramsems is 'move':
             cxxargs.extend([ ExprMove(p.var()) for p in self.params ])
+        elif paramsems is 'in':
+            cxxargs.extend([ p.var() for p in self.params ])
+        else:
+            assert False
 
         for ret in self.returns:
             if retsems is 'in':
@@ -5247,7 +5250,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
     def callAllocActor(self, md, retsems, side):
         return ExprCall(
             _allocMethod(md.decl.type.constructedType(), side),
-            args=md.makeCxxArgs(params=1, retsems=retsems, retcallsems='out',
+            args=md.makeCxxArgs(retsems=retsems, retcallsems='out',
                                 implicit=0))
 
     def callActorDestroy(self, actorexpr, why=_DestroyReason.Deletion):
@@ -5274,8 +5277,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
     def invokeRecvHandler(self, md, implicit=1):
         failif = StmtIf(ExprNot(
             ExprCall(md.recvMethod(),
-                     args=md.makeCxxArgs(params=1,
-                                         retsems='in', retcallsems='out',
+                     args=md.makeCxxArgs(paramsems='move', retsems='in',
+                                         retcallsems='out',
                                          implicit=implicit))))
         failif.addifstmts([
             _protocolErrorBreakpoint('Handler for '+ md.name +' returned error code'),

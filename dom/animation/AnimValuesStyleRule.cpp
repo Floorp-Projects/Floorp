@@ -33,16 +33,17 @@ AnimValuesStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
   }
 
   for (uint32_t i = 0, i_end = mPropertyValuePairs.Length(); i < i_end; ++i) {
-    PropertyValuePair &cv = mPropertyValuePairs[i];
+    PropertyStyleAnimationValuePair& pair = mPropertyValuePairs[i];
     if (aRuleData->mSIDs & nsCachedStyleData::GetBitForSID(
-                             nsCSSProps::kSIDTable[cv.mProperty]))
+                             nsCSSProps::kSIDTable[pair.mProperty]))
     {
-      nsCSSValue *prop = aRuleData->ValueFor(cv.mProperty);
+      nsCSSValue *prop = aRuleData->ValueFor(pair.mProperty);
       if (prop->GetUnit() == eCSSUnit_Null) {
 #ifdef DEBUG
         bool ok =
 #endif
-          StyleAnimationValue::UncomputeValue(cv.mProperty, cv.mValue, *prop);
+          StyleAnimationValue::UncomputeValue(pair.mProperty, pair.mValue,
+                                              *prop);
         MOZ_ASSERT(ok, "could not store computed value");
       }
     }
@@ -65,7 +66,7 @@ AnimValuesStyleRule::List(FILE* out, int32_t aIndent) const
   }
   str.AppendLiteral("[anim values] { ");
   for (uint32_t i = 0, i_end = mPropertyValuePairs.Length(); i < i_end; ++i) {
-    const PropertyValuePair &pair = mPropertyValuePairs[i];
+    const PropertyStyleAnimationValuePair& pair = mPropertyValuePairs[i];
     str.Append(nsCSSProps::GetStringValue(pair.mProperty));
     str.AppendLiteral(": ");
     nsAutoString value;

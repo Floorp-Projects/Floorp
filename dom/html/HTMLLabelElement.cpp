@@ -161,7 +161,7 @@ HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
           }
           // Only set focus on the first click of multiple clicks to prevent
           // to prevent immediate de-focus.
-          if (mouseEvent->clickCount <= 1) {
+          if (mouseEvent->mClickCount <= 1) {
             nsIFocusManager* fm = nsFocusManager::GetFocusManager();
             if (fm) {
               // Use FLAG_BYMOVEFOCUS here so that the label is scrolled to.

@@ -79,7 +79,8 @@ public:
                                      nsIAtom*        aAttribute,
                                      int32_t         aModType) override;
 
-  void OnVisibilityChange(Visibility aNewVisibility,
+  void OnVisibilityChange(Visibility aOldVisibility,
+                          Visibility aNewVisibility,
                           Maybe<OnNonvisible> aNonvisibleAction = Nothing()) override;
 
   virtual void Init(nsIContent*       aContent,
@@ -240,18 +241,22 @@ nsSVGImageFrame::AttributeChanged(int32_t         aNameSpaceID,
 }
 
 void
-nsSVGImageFrame::OnVisibilityChange(Visibility aNewVisibility,
+nsSVGImageFrame::OnVisibilityChange(Visibility aOldVisibility,
+                                    Visibility aNewVisibility,
                                     Maybe<OnNonvisible> aNonvisibleAction)
 {
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
   if (!imageLoader) {
-    nsSVGPathGeometryFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
+    nsSVGPathGeometryFrame::OnVisibilityChange(aOldVisibility, aNewVisibility,
+                                               aNonvisibleAction);
     return;
   }
 
-  imageLoader->OnVisibilityChange(aNewVisibility, aNonvisibleAction);
+  imageLoader->OnVisibilityChange(aOldVisibility, aNewVisibility,
+                                  aNonvisibleAction);
 
-  nsSVGPathGeometryFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
+  nsSVGPathGeometryFrame::OnVisibilityChange(aOldVisibility, aNewVisibility,
+                                             aNonvisibleAction);
 }
 
 gfx::Matrix

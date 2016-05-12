@@ -17,13 +17,19 @@ SourceSurfaceRawData::InitWrappingData(uint8_t *aData,
                                        const IntSize &aSize,
                                        int32_t aStride,
                                        SurfaceFormat aFormat,
-                                       bool aOwnData)
+                                       Factory::SourceSurfaceDeallocator aDeallocator,
+                                       void* aClosure)
 {
   mRawData = aData;
   mSize = aSize;
   mStride = aStride;
   mFormat = aFormat;
-  mOwnData = aOwnData;
+
+  if (aDeallocator) {
+    mOwnData = true;
+  }
+  mDeallocator = aDeallocator;
+  mClosure = aClosure;
 }
 
 void

@@ -89,13 +89,13 @@ class BaselineInspector
     }
 
     ICStub* monomorphicStub(jsbytecode* pc);
-    bool dimorphicStub(jsbytecode* pc, ICStub** pfirst, ICStub** psecond);
+    MOZ_MUST_USE bool dimorphicStub(jsbytecode* pc, ICStub** pfirst, ICStub** psecond);
 
   public:
     typedef Vector<ReceiverGuard, 4, JitAllocPolicy> ReceiverVector;
     typedef Vector<ObjectGroup*, 4, JitAllocPolicy> ObjectGroupVector;
-    bool maybeInfoForPropertyOp(jsbytecode* pc, ReceiverVector& receivers,
-                                ObjectGroupVector& convertUnboxedGroups);
+    MOZ_MUST_USE bool maybeInfoForPropertyOp(jsbytecode* pc, ReceiverVector& receivers,
+                                             ObjectGroupVector& convertUnboxedGroups);
 
     SetElemICInspector setElemICInspector(jsbytecode* pc) {
         return makeICInspector<SetElemICInspector>(pc, ICStub::SetElem_Fallback);
@@ -112,8 +112,8 @@ class BaselineInspector
     bool hasSeenDoubleResult(jsbytecode* pc);
     bool hasSeenNonStringIterMore(jsbytecode* pc);
 
-    bool isOptimizableCallStringSplit(jsbytecode* pc, JSString** strOut, JSString** sepOut,
-                                      JSObject** objOut);
+    MOZ_MUST_USE bool isOptimizableCallStringSplit(jsbytecode* pc, JSString** strOut,
+                                                   JSString** sepOut, JSObject** objOut);
     JSObject* getTemplateObject(jsbytecode* pc);
     JSObject* getTemplateObjectForNative(jsbytecode* pc, Native native);
     JSObject* getTemplateObjectForClassHook(jsbytecode* pc, const Class* clasp);
@@ -127,14 +127,17 @@ class BaselineInspector
     DeclEnvObject* templateDeclEnvObject();
     CallObject* templateCallObject();
 
-    bool commonGetPropFunction(jsbytecode* pc, JSObject** holder, Shape** holderShape,
-                               JSFunction** commonGetter, Shape** globalShape, bool* isOwnProperty,
-                               ReceiverVector& receivers, ObjectGroupVector& convertUnboxedGroups);
-    bool commonSetPropFunction(jsbytecode* pc, JSObject** holder, Shape** holderShape,
-                               JSFunction** commonSetter, bool* isOwnProperty,
-                               ReceiverVector& receivers, ObjectGroupVector& convertUnboxedGroups);
+    MOZ_MUST_USE bool commonGetPropFunction(jsbytecode* pc, JSObject** holder, Shape** holderShape,
+                                            JSFunction** commonGetter, Shape** globalShape,
+                                            bool* isOwnProperty, ReceiverVector& receivers,
+                                            ObjectGroupVector& convertUnboxedGroups);
+    MOZ_MUST_USE bool commonSetPropFunction(jsbytecode* pc, JSObject** holder, Shape** holderShape,
+                                            JSFunction** commonSetter, bool* isOwnProperty,
+                                            ReceiverVector& receivers,
+                                            ObjectGroupVector& convertUnboxedGroups);
 
-    bool instanceOfData(jsbytecode* pc, Shape** shape, uint32_t* slot, JSObject** prototypeObject);
+    MOZ_MUST_USE bool instanceOfData(jsbytecode* pc, Shape** shape, uint32_t* slot,
+                                     JSObject** prototypeObject);
 };
 
 } // namespace jit

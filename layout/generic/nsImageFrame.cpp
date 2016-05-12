@@ -2073,24 +2073,29 @@ nsImageFrame::AttributeChanged(int32_t aNameSpaceID,
 }
 
 void
-nsImageFrame::OnVisibilityChange(Visibility aNewVisibility,
+nsImageFrame::OnVisibilityChange(Visibility aOldVisibility,
+                                 Visibility aNewVisibility,
                                  Maybe<OnNonvisible> aNonvisibleAction)
 {
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
   if (!imageLoader) {
     MOZ_ASSERT_UNREACHABLE("Should have an nsIImageLoadingContent");
-    nsAtomicContainerFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
+    nsAtomicContainerFrame::OnVisibilityChange(aOldVisibility, aNewVisibility,
+                                               aNonvisibleAction);
     return;
   }
 
-  imageLoader->OnVisibilityChange(aNewVisibility, aNonvisibleAction);
+  imageLoader->OnVisibilityChange(aOldVisibility, aNewVisibility,
+                                  aNonvisibleAction);
 
-  if (aNewVisibility == Visibility::MAY_BECOME_VISIBLE ||
-      aNewVisibility == Visibility::IN_DISPLAYPORT) {
+  if (aOldVisibility == Visibility::NONVISIBLE &&
+        (aNewVisibility == Visibility::MAY_BECOME_VISIBLE ||
+         aNewVisibility == Visibility::IN_DISPLAYPORT)) {
     MaybeDecodeForPredictedSize();
   }
 
-  nsAtomicContainerFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
+  nsAtomicContainerFrame::OnVisibilityChange(aOldVisibility, aNewVisibility,
+                                             aNonvisibleAction);
 }
 
 nsIAtom*

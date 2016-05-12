@@ -21,7 +21,7 @@ struct SeekJob {
 
   SeekJob& operator=(SeekJob&& aOther);
 
-  bool Exists();
+  bool Exists() const;
 
   void Resolve(bool aAtEnd, const char* aCallSite);
 
