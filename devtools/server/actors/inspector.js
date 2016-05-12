@@ -182,6 +182,20 @@ exports.setInspectingNode = function (val) {
 };
 
 /**
+ * Returns the properly cased version of the node's tag name, which can be
+ * used when displaying said name in the UI.
+ *
+ * @param  {Node} rawNode
+ *         Node for which we want the display name
+ * @return {String}
+ *         Properly cased version of the node tag name
+ */
+const getNodeDisplayName = function (rawNode) {
+  return (rawNode.prefix ? rawNode.prefix + ":" : "") + rawNode.localName;
+};
+exports.getNodeDisplayName = getNodeDisplayName;
+
+/**
  * Server side of the node actor.
  */
 var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
@@ -243,6 +257,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       nodeType: this.rawNode.nodeType,
       namespaceURI: this.rawNode.namespaceURI,
       nodeName: this.rawNode.nodeName,
+      displayName: getNodeDisplayName(this.rawNode),
       numChildren: this.numChildren,
       singleTextChild: singleTextChild ? singleTextChild.form() : undefined,
 
@@ -1636,7 +1651,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
           nodes = this._multiFrameQuerySelectorAll(query);
         }
         for (let node of nodes) {
-          let tag = node.tagName.toLowerCase();
+          let tag = node.localName;
           sugs.tags.set(tag, (sugs.tags.get(tag)|0) + 1);
         }
         for (let [tag, count] of sugs.tags) {
@@ -1663,7 +1678,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
         nodes = this._multiFrameQuerySelectorAll(query);
         for (let node of nodes) {
           sugs.ids.set(node.id, (sugs.ids.get(node.id)|0) + 1);
-          let tag = node.tagName.toLowerCase();
+          let tag = node.localName;
           sugs.tags.set(tag, (sugs.tags.get(tag)|0) + 1);
           for (let className of node.classList) {
             sugs.classes.set(className, (sugs.classes.get(className)|0) + 1);

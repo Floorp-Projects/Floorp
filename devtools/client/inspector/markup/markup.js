@@ -2712,11 +2712,11 @@ function ElementEditor(container, node) {
     }
   });
 
-  let tagName = this.getTagName(this.node);
-  this.tag.textContent = tagName;
-  this.closeTag.textContent = tagName;
+  let displayName = this.node.displayName;
+  this.tag.textContent = displayName;
+  this.closeTag.textContent = displayName;
 
-  let isVoidElement = HTML_VOID_ELEMENTS.includes(tagName);
+  let isVoidElement = HTML_VOID_ELEMENTS.includes(displayName);
   if (node.isInHTMLDocument && isVoidElement) {
     this.elt.classList.add("void-element");
   }
@@ -2742,23 +2742,6 @@ ElementEditor.prototype = {
     this.animationTimers[attrName] = setTimeout(() => {
       flashElementOff(this.getAttributeElement(attrName));
     }, this.markup.CONTAINER_FLASHING_DURATION);
-  },
-
-  /**
-   * Returns the name of a node.
-   *
-   * @param  {DOMNode} node
-   *         The node to get the name of.
-   * @return {String} A tag name with correct case
-   */
-  getTagName: function (node) {
-    // Check the node is a SVG element
-    if (node.namespaceURI === "http://www.w3.org/2000/svg") {
-      // nodeName is already in the correct case
-      return node.nodeName;
-    }
-
-    return node.nodeName.toLowerCase();
   },
 
   /**

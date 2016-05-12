@@ -83,7 +83,7 @@ Rule.prototype = {
     }
     this._inheritedSource = "";
     if (this.inherited) {
-      let eltText = this.inherited.tagName.toLowerCase();
+      let eltText = this.inherited.displayName;
       if (this.inherited.id) {
         eltText += "#" + this.inherited.id;
       }
