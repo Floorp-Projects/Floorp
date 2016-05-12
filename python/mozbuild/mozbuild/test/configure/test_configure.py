@@ -580,6 +580,35 @@ class TestConfigure(unittest.TestCase):
             "Cannot infer what implies '--enable-bar'. Please add a `reason` "
             "to the `imply_option` call.")
 
+    def test_imply_option_immediate_value(self):
+        def get_config(*args):
+            return self.get_config(
+                *args, configure='imply_option/imm.configure')
+
+        config = get_config(['--help'])
+        self.assertEquals(config, {})
+
+        config = get_config([])
+        self.assertEquals(config, {})
+
+        config_path = mozpath.abspath(
+            mozpath.join(test_data_path, 'imply_option', 'imm.configure'))
+
+        with self.assertRaisesRegexp(InvalidOptionError,
+            "--enable-foo' implied by 'imply_option at %s:7' conflicts with "
+            "'--disable-foo' from the command-line" % config_path):
+            get_config(['--disable-foo'])
+
+        with self.assertRaisesRegexp(InvalidOptionError,
+            "--enable-bar=foo,bar' implied by 'imply_option at %s:16' conflicts"
+            " with '--enable-bar=a,b,c' from the command-line" % config_path):
+            get_config(['--enable-bar=a,b,c'])
+
+        with self.assertRaisesRegexp(InvalidOptionError,
+            "--enable-baz=BAZ' implied by 'imply_option at %s:25' conflicts"
+            " with '--enable-baz=QUUX' from the command-line" % config_path):
+            get_config(['--enable-baz=QUUX'])
+
     def test_imply_option_failures(self):
         with self.assertRaises(ConfigureError) as e:
             with self.moz_configure('''
