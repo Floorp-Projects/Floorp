@@ -1,0 +1,62 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+# Java detection
+# ========================================================
+option('--with-java-bin-path', nargs=1,
+       help='Location of Java binaries (java, javac, jar)')
+
+@depends('--with-java-bin-path')
+@imports(_from='os', _import='environ')
+def java_search_paths(path):
+    if path:
+        # Look for javac and jar in the specified path.
+        return path
+    # With no path specified, look for javac and jar in $JAVA_HOME (if set)
+    # and $PATH.
+    if 'JAVA_HOME' in environ:
+        return [os.path.join(environ['JAVA_HOME'], 'bin'),
+                environ.get('PATH', '')]
+    return [environ.get('PATH')]
+
+# Finds the given java tool, failing with a custom error message if we can't
+# find it.
+@template
+def check_java_tool(tool):
+    check = check_prog(tool.upper(), (tool,), paths=java_search_paths,
+                       allow_missing=True)
+
+    @depends(check)
+    def require_tool(result):
+        if result is None:
+            die("The program %s was not found.  Set $JAVA_HOME to your Java "
+                "SDK directory or use '--with-java-bin-path={java-bin-dir}'"
+                % tool)
+        return result
+
+    return require_tool
+
+check_java_tool('java')
+check_java_tool('javah')
+check_java_tool('jar')
+check_java_tool('jarsigner')
+check_java_tool('keytool')
+javac = check_java_tool('javac')
+
+@depends(javac)
+@checking('for javac version')
+@imports('subprocess')
+def javac_version(javac):
+    try:
+        output = subprocess.check_output([javac, '-version'],
+                                         stderr=subprocess.STDOUT).rstrip()
+        version = Version(output.split(' ')[-1])
+        if version < '1.7':
+            die('javac 1.7 or higher is required (found %s)' % version)
+        return version
+    except subprocess.CalledProcessError as e:
+        die('Failed to get javac version: %s', e.output)
