@@ -102,24 +102,24 @@ private:
 
 protected:
   WidgetKeyboardEvent()
-    : mKeyCode(0)
+    : mNativeKeyEvent(nullptr)
+    , mKeyCode(0)
     , mCharCode(0)
     , mPseudoCharCode(0)
     , mLocation(nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD)
+    , mAccessKeyForwardedToChild(false)
+    , mUniqueId(0)
+#ifdef XP_MACOSX
+    , mNativeModifierFlags(0)
+    , mNativeKeyCode(0)
+#endif // #ifdef XP_MACOSX
+    , mKeyNameIndex(mozilla::KEY_NAME_INDEX_Unidentified)
+    , mCodeNameIndex(CODE_NAME_INDEX_UNKNOWN)
+    , mInputMethodAppState(eNotHandled)
     , mIsChar(false)
     , mIsRepeat(false)
     , mIsComposing(false)
     , mIsReserved(false)
-    , mAccessKeyForwardedToChild(false)
-    , mKeyNameIndex(mozilla::KEY_NAME_INDEX_Unidentified)
-    , mCodeNameIndex(CODE_NAME_INDEX_UNKNOWN)
-    , mNativeKeyEvent(nullptr)
-    , mUniqueId(0)
-#ifdef XP_MACOSX
-    , mNativeKeyCode(0)
-    , mNativeModifierFlags(0)
-#endif
-    , mInputMethodAppState(eNotHandled)
     , mIsSynthesizedByTIP(false)
   {
   }
@@ -131,24 +131,24 @@ public:
                       nsIWidget* aWidget,
                       EventClassID aEventClassID = eKeyboardEventClass)
     : WidgetInputEvent(aIsTrusted, aMessage, aWidget, aEventClassID)
+    , mNativeKeyEvent(nullptr)
     , mKeyCode(0)
     , mCharCode(0)
     , mPseudoCharCode(0)
     , mLocation(nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD)
+    , mAccessKeyForwardedToChild(false)
+    , mUniqueId(0)
+#ifdef XP_MACOSX
+    , mNativeModifierFlags(0)
+    , mNativeKeyCode(0)
+#endif // #ifdef XP_MACOSX
+    , mKeyNameIndex(mozilla::KEY_NAME_INDEX_Unidentified)
+    , mCodeNameIndex(CODE_NAME_INDEX_UNKNOWN)
+    , mInputMethodAppState(eNotHandled)
     , mIsChar(false)
     , mIsRepeat(false)
     , mIsComposing(false)
     , mIsReserved(false)
-    , mAccessKeyForwardedToChild(false)
-    , mKeyNameIndex(mozilla::KEY_NAME_INDEX_Unidentified)
-    , mCodeNameIndex(CODE_NAME_INDEX_UNKNOWN)
-    , mNativeKeyEvent(nullptr)
-    , mUniqueId(0)
-#ifdef XP_MACOSX
-    , mNativeKeyCode(0)
-    , mNativeModifierFlags(0)
-#endif
-    , mInputMethodAppState(eNotHandled)
     , mIsSynthesizedByTIP(false)
   {
     // If this is a keyboard event on a plugin, it shouldn't fired on content.
@@ -193,6 +193,26 @@ public:
     return result;
   }
 
+  // OS translated Unicode chars which are used for accesskey and accelkey
+  // handling. The handlers will try from first character to last character.
+  nsTArray<AlternativeCharCode> mAlternativeCharCodes;
+  // DOM KeyboardEvent.key only when mKeyNameIndex is KEY_NAME_INDEX_USE_STRING.
+  nsString mKeyValue;
+  // DOM KeyboardEvent.code only when mCodeNameIndex is
+  // CODE_NAME_INDEX_USE_STRING.
+  nsString mCodeValue;
+
+#ifdef XP_MACOSX
+  // Values given by a native NSEvent, for use with Cocoa NPAPI plugins.
+  nsString mNativeCharacters;
+  nsString mNativeCharactersIgnoringModifiers;
+  // If this is non-empty, create a text event for plugins instead of a
+  // keyboard event.
+  nsString mPluginTextEventString;
+#endif // #ifdef XP_MACOSX
+
+  // OS-specific native event can optionally be preserved
+  void* mNativeKeyEvent;
   // A DOM keyCode value or 0.  If a keypress event whose mCharCode is 0, this
   // should be 0.
   uint32_t mKeyCode;
@@ -207,9 +227,37 @@ public:
   uint32_t mPseudoCharCode;
   // One of nsIDOMKeyEvent::DOM_KEY_LOCATION_*
   uint32_t mLocation;
-  // OS translated Unicode chars which are used for accesskey and accelkey
-  // handling. The handlers will try from first character to last character.
-  nsTArray<AlternativeCharCode> mAlternativeCharCodes;
+  // True if accesskey handling was forwarded to the child via
+  // TabParent::HandleAccessKey. In this case, parent process menu access key
+  // handling should be delayed until it is determined that there exists no
+  // overriding access key in the content process.
+  bool mAccessKeyForwardedToChild;
+  // Unique id associated with a keydown / keypress event. Used in identifing
+  // keypress events for removal from async event dispatch queue in metrofx
+  // after preventDefault is called on keydown events. It's ok if this wraps
+  // over long periods.
+  uint32_t mUniqueId;
+
+#ifdef XP_MACOSX
+  // Values given by a native NSEvent, for use with Cocoa NPAPI plugins.
+  uint32_t mNativeModifierFlags;
+  uint16_t mNativeKeyCode;
+#endif // #ifdef XP_MACOSX
+
+  // DOM KeyboardEvent.key
+  KeyNameIndex mKeyNameIndex;
+  // DOM KeyboardEvent.code
+  CodeNameIndex mCodeNameIndex;
+  // Indicates that the event is being handled by input method app
+  typedef uint8_t InputMethodAppStateType;
+  enum InputMethodAppState : InputMethodAppStateType
+  {
+    eNotHandled, // not yet handled by intput method app
+    eHandling,   // being handled by intput method app
+    eHandled     // handled by input method app
+  };
+  InputMethodAppState mInputMethodAppState;
+
   // Indicates whether the event signifies a printable character
   bool mIsChar;
   // Indicates whether the event is generated by auto repeat or not.
@@ -222,49 +270,6 @@ public:
   // Indicates if the key combination is reserved by chrome.  This is set by
   // nsXBLWindowKeyHandler at capturing phase of the default event group.
   bool mIsReserved;
-  // True if accesskey handling was forwarded to the child via
-  // TabParent::HandleAccessKey. In this case, parent process menu access key
-  // handling should be delayed until it is determined that there exists no
-  // overriding access key in the content process.
-  bool mAccessKeyForwardedToChild;
-  // DOM KeyboardEvent.key
-  KeyNameIndex mKeyNameIndex;
-  // DOM KeyboardEvent.code
-  CodeNameIndex mCodeNameIndex;
-  // DOM KeyboardEvent.key only when mKeyNameIndex is KEY_NAME_INDEX_USE_STRING.
-  nsString mKeyValue;
-  // DOM KeyboardEvent.code only when mCodeNameIndex is
-  // CODE_NAME_INDEX_USE_STRING.
-  nsString mCodeValue;
-  // OS-specific native event can optionally be preserved
-  void* mNativeKeyEvent;
-  // Unique id associated with a keydown / keypress event. Used in identifing
-  // keypress events for removal from async event dispatch queue in metrofx
-  // after preventDefault is called on keydown events. It's ok if this wraps
-  // over long periods.
-  uint32_t mUniqueId;
-
-#ifdef XP_MACOSX
-  // Values given by a native NSEvent, for use with Cocoa NPAPI plugins.
-  uint16_t mNativeKeyCode;
-  uint32_t mNativeModifierFlags;
-  nsString mNativeCharacters;
-  nsString mNativeCharactersIgnoringModifiers;
-  // If this is non-empty, create a text event for plugins instead of a
-  // keyboard event.
-  nsString mPluginTextEventString;
-#endif
-
-  // Indicates that the event is being handled by input method app
-  typedef uint8_t InputMethodAppStateType;
-  enum InputMethodAppState : InputMethodAppStateType
-  {
-    eNotHandled, // not yet handled by intput method app
-    eHandling,   // being handled by intput method app
-    eHandled     // handled by input method app
-  };
-  InputMethodAppState mInputMethodAppState;
-
   // Indicates whether the event is synthesized from Text Input Processor
   // or an actual event from nsAppShell.
   bool mIsSynthesizedByTIP;
