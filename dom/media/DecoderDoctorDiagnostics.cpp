@@ -373,7 +373,7 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
   DecoderDoctorDiagnostics::KeySystemIssue lastKeySystemIssue =
     DecoderDoctorDiagnostics::eUnset;
 
-  for (auto& diag : mDiagnosticsSequence) {
+  for (const auto& diag : mDiagnosticsSequence) {
     switch (diag.mDecoderDoctorDiagnostics.Type()) {
       case DecoderDoctorDiagnostics::eFormatSupportCheck:
         if (diag.mDecoderDoctorDiagnostics.CanPlay()) {
