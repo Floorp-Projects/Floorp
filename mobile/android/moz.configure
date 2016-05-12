@@ -52,6 +52,8 @@ android_apz = depends_if('--disable-android-apz')(lambda _: True)
 set_config('MOZ_ANDROID_APZ', android_apz)
 set_define('MOZ_ANDROID_APZ', android_apz)
 
+imply_option('MOZ_SOCIAL', False)
+
 @depends(target)
 def check_target(target):
     if target.os != 'Android':
