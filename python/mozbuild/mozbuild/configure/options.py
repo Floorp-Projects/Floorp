@@ -409,8 +409,7 @@ class CommandLineHelper(object):
                 arg = '%s=%s' % (option.env, env)
                 origin = 'environment'
 
-        if args is self._extra_args:
-            origin = self._origins.get(arg, origin)
+        origin = self._origins.get(arg, origin)
 
         for k in (option.name, option.env):
             try:
