@@ -5592,7 +5592,7 @@ nsDocShell::InitWindow(nativeWindow aParentNativeWindow,
                        int32_t aWidth, int32_t aHeight)
 {
   SetParentWidget(aParentWidget);
-  SetPositionAndSize(aX, aY, aWidth, aHeight, 0);
+  SetPositionAndSize(aX, aY, aWidth, aHeight, false);
 
   return NS_OK;
 }
@@ -5838,8 +5838,7 @@ nsDocShell::SetSize(int32_t aWidth, int32_t aHeight, bool aRepaint)
 {
   int32_t x = 0, y = 0;
   GetPosition(&x, &y);
-  return SetPositionAndSize(x, y, aWidth, aHeight,
-                            aRepaint ? nsIBaseWindow::eRepaint : 0);
+  return SetPositionAndSize(x, y, aWidth, aHeight, aRepaint);
 }
 
 NS_IMETHODIMP
@@ -5850,7 +5849,7 @@ nsDocShell::GetSize(int32_t* aWidth, int32_t* aHeight)
 
 NS_IMETHODIMP
 nsDocShell::SetPositionAndSize(int32_t aX, int32_t aY, int32_t aWidth,
-                               int32_t aHeight, uint32_t aFlags)
+                               int32_t aHeight, bool aFRepaint)
 {
   mBounds.x = aX;
   mBounds.y = aY;
@@ -5860,11 +5859,8 @@ nsDocShell::SetPositionAndSize(int32_t aX, int32_t aY, int32_t aWidth,
   // Hold strong ref, since SetBounds can make us null out mContentViewer
   nsCOMPtr<nsIContentViewer> viewer = mContentViewer;
   if (viewer) {
-    uint32_t cvflags = (aFlags & nsIBaseWindow::eDelayResize) ?
-                           nsIContentViewer::eDelayResize : 0;
     // XXX Border figured in here or is that handled elsewhere?
-    nsresult rv = viewer->SetBoundsWithFlags(mBounds, cvflags);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(viewer->SetBounds(mBounds), NS_ERROR_FAILURE);
   }
 
   return NS_OK;
@@ -5878,7 +5874,7 @@ nsDocShell::GetPositionAndSize(int32_t* aX, int32_t* aY, int32_t* aWidth,
     // ensure size is up-to-date if window has changed resolution
     LayoutDeviceIntRect r;
     mParentWidget->GetClientBounds(r);
-    SetPositionAndSize(mBounds.x, mBounds.y, r.width, r.height, 0);
+    SetPositionAndSize(mBounds.x, mBounds.y, r.width, r.height, false);
   }
 
   // We should really consider just getting this information from
