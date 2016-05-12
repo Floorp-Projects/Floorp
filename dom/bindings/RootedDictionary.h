@@ -15,7 +15,7 @@ namespace mozilla {
 namespace dom {
 
 template<typename T>
-class MOZ_RAII RootedDictionary : public T,
+class MOZ_RAII RootedDictionary final : public T,
                                          private JS::CustomAutoRooter
 {
 public:
@@ -32,7 +32,7 @@ public:
 };
 
 template<typename T>
-class MOZ_RAII NullableRootedDictionary : public Nullable<T>,
+class MOZ_RAII NullableRootedDictionary final : public Nullable<T>,
                                                  private JS::CustomAutoRooter
 {
 public:
