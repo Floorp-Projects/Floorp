@@ -98,6 +98,7 @@ public:
 
   TextureChild()
   : mForwarder(nullptr)
+  , mTextureForwarder(nullptr)
   , mTextureClient(nullptr)
   , mTextureData(nullptr)
   , mDestroyed(false)
@@ -136,8 +137,9 @@ public:
   }
 
   CompositableForwarder* GetForwarder() { return mForwarder; }
+  TextureForwarder* GetTextureForwarder() { return mTextureForwarder; }
 
-  ClientIPCAllocator* GetAllocator() { return mForwarder; }
+  ClientIPCAllocator* GetAllocator() { return mTextureForwarder; }
 
   void ActorDestroy(ActorDestroyReason why) override;
 
@@ -230,6 +232,7 @@ private:
   mutable gfx::CriticalSection mLock;
 
   RefPtr<CompositableForwarder> mForwarder;
+  RefPtr<TextureForwarder> mTextureForwarder;
   RefPtr<TextureClient> mWaitForRecycle;
 
   TextureClient* mTextureClient;
@@ -834,7 +837,10 @@ bool
 TextureClient::InitIPDLActor(CompositableForwarder* aForwarder)
 {
   MOZ_ASSERT(aForwarder && aForwarder->GetMessageLoop() == mAllocator->AsClientAllocator()->GetMessageLoop());
-  if (mActor && !mActor->mDestroyed && mActor->GetForwarder() == aForwarder) {
+  if (mActor && !mActor->mDestroyed) {
+    if (mActor->GetForwarder() != aForwarder) {
+      mActor->mForwarder = aForwarder;
+    }
     return true;
   }
   MOZ_ASSERT(!mActor || mActor->mDestroyed, "Cannot use a texture on several IPC channels.");
@@ -881,7 +887,7 @@ BackendTypeForBackendSelector(LayersBackend aLayersBackend, BackendSelector aSel
 
 // static
 already_AddRefed<TextureClient>
-TextureClient::CreateForDrawing(CompositableForwarder* aAllocator,
+TextureClient::CreateForDrawing(TextureForwarder* aAllocator,
                                 gfx::SurfaceFormat aFormat,
                                 gfx::IntSize aSize,
                                 BackendSelector aSelector,
