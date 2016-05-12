@@ -1367,32 +1367,32 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
     {
 	cairo_linear_pattern_t *linear = (cairo_linear_pattern_t *) pattern;
 	pixman_point_fixed_t p1, p2;
-	cairo_fixed_t xdim, ydim;
-
-	xdim = linear->p2.x - linear->p1.x;
-	ydim = linear->p2.y - linear->p1.y;
+        double x0, y0, x1, y1, maxabs;
 
 	/*
 	 * Transform the matrix to avoid overflow when converting between
 	 * cairo_fixed_t and pixman_fixed_t (without incurring performance
 	 * loss when the transformation is unnecessary).
 	 *
-	 * XXX: Consider converting out-of-range co-ordinates and transforms.
 	 * Having a function to compute the required transformation to
 	 * "normalize" a given bounding box would be generally useful -
 	 * cf linear patterns, gradient patterns, surface patterns...
 	 */
+	x0 = _cairo_fixed_to_double (linear->p1.x);
+	y0 = _cairo_fixed_to_double (linear->p1.y);
+	x1 = _cairo_fixed_to_double (linear->p2.x);
+	y1 = _cairo_fixed_to_double (linear->p2.y);
+	cairo_matrix_transform_point (&matrix, &x0, &y0);
+	cairo_matrix_transform_point (&matrix, &x1, &y1);
+	maxabs = MAX (MAX (fabs (x0), fabs (x1)), MAX (fabs (y0), fabs (y1)));
+
 #define PIXMAN_MAX_INT ((pixman_fixed_1 >> 1) - pixman_fixed_e) /* need to ensure deltas also fit */
-	if (_cairo_fixed_integer_ceil (xdim) > PIXMAN_MAX_INT ||
-	    _cairo_fixed_integer_ceil (ydim) > PIXMAN_MAX_INT)
+	if (maxabs > PIXMAN_MAX_INT)
 	{
 	    double sf;
 	    cairo_matrix_t scale;
 
-	    if (xdim > ydim)
-		sf = PIXMAN_MAX_INT / _cairo_fixed_to_double (xdim);
-	    else
-		sf = PIXMAN_MAX_INT / _cairo_fixed_to_double (ydim);
+            sf = PIXMAN_MAX_INT / maxabs;
 
 	    p1.x = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (linear->p1.x) * sf);
 	    p1.y = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (linear->p1.y) * sf);
