@@ -2598,6 +2598,13 @@ public class BrowserApp extends GeckoApp
     }
 
     private void showFirstrunPager() {
+        if (Experiments.isInExperimentLocal(getContext(), Experiments.ONBOARDING3_A)) {
+            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, Experiments.ONBOARDING3_A);
+            GeckoSharedPrefs.forProfile(getContext()).edit().putString(Experiments.PREF_ONBOARDING_VERSION, Experiments.ONBOARDING3_A).apply();
+            Telemetry.stopUISession(TelemetryContract.Session.EXPERIMENT, Experiments.ONBOARDING3_A);
+            return;
+        }
+
         if (mFirstrunAnimationContainer == null) {
             final ViewStub firstrunPagerStub = (ViewStub) findViewById(R.id.firstrun_pager_stub);
             mFirstrunAnimationContainer = (FirstrunAnimationContainer) firstrunPagerStub.inflate();

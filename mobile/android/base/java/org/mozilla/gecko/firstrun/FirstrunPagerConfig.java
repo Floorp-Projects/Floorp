@@ -27,10 +27,7 @@ public class FirstrunPagerConfig {
    public static List<FirstrunPanelConfig> getDefault(Context context) {
         final List<FirstrunPanelConfig> panels = new LinkedList<>();
 
-        if (Experiments.isInExperimentLocal(context, Experiments.ONBOARDING3_A)) {
-            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, Experiments.ONBOARDING3_A);
-            GeckoSharedPrefs.forProfile(context).edit().putString(Experiments.PREF_ONBOARDING_VERSION, Experiments.ONBOARDING3_A).apply();
-        } else if (Experiments.isInExperimentLocal(context, Experiments.ONBOARDING3_B)) {
+        if (Experiments.isInExperimentLocal(context, Experiments.ONBOARDING3_B)) {
             panels.add(SimplePanelConfigs.urlbarPanelConfig);
             panels.add(SimplePanelConfigs.bookmarksPanelConfig);
             panels.add(SimplePanelConfigs.dataPanelConfig);
@@ -46,7 +43,8 @@ public class FirstrunPagerConfig {
             Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, Experiments.ONBOARDING3_C);
             GeckoSharedPrefs.forProfile(context).edit().putString(Experiments.PREF_ONBOARDING_VERSION, Experiments.ONBOARDING3_C).apply();
         } else {
-            Log.d(LOGTAG, "Not in an experiment!");
+            Log.e(LOGTAG, "Not in an experiment!");
+            panels.add(SimplePanelConfigs.signInPanelConfig);
         }
         return panels;
     }
