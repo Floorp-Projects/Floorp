@@ -43,6 +43,7 @@ namespace layers {
 
 class CompositableForwarder;
 class ShadowLayerForwarder;
+class TextureForwarder;
 
 class ShmemAllocator;
 class ShmemSectionAllocator;
@@ -90,6 +91,8 @@ public:
   virtual ShmemSectionAllocator* AsShmemSectionAllocator() { return nullptr; }
 
   virtual CompositableForwarder* AsCompositableForwarder() { return nullptr; }
+
+  virtual TextureForwarder* AsTextureForwarder() { return nullptr; }
 
   virtual ShadowLayerForwarder* AsLayerForwarder() { return nullptr; }
 
@@ -277,6 +280,73 @@ private:
   // Therefore, we use a signed type so that any such negative values show up
   // as negative in about:memory, rather than as enormous positive numbers.
   static mozilla::Atomic<ptrdiff_t> sAmount;
+};
+
+/// A simple shmem section allocator that can only allocate small
+/// fixed size elements (only intended to be used to store tile
+/// copy-on-write locks for now).
+class FixedSizeSmallShmemSectionAllocator final : public ShmemSectionAllocator
+{
+public:
+  enum AllocationStatus
+  {
+    STATUS_ALLOCATED,
+    STATUS_FREED
+  };
+
+  struct ShmemSectionHeapHeader
+  {
+    Atomic<uint32_t> mTotalBlocks;
+    Atomic<uint32_t> mAllocatedBlocks;
+  };
+
+  struct ShmemSectionHeapAllocation
+  {
+    Atomic<uint32_t> mStatus;
+    uint32_t mSize;
+  };
+
+  explicit FixedSizeSmallShmemSectionAllocator(ClientIPCAllocator* aShmProvider);
+
+  ~FixedSizeSmallShmemSectionAllocator();
+
+  virtual bool AllocShmemSection(uint32_t aSize, ShmemSection* aShmemSection) override;
+
+  virtual void DeallocShmemSection(ShmemSection& aShmemSection) override;
+
+  virtual void MemoryPressure() override { ShrinkShmemSectionHeap(); }
+
+  // can be called on the compositor process.
+  static void FreeShmemSection(ShmemSection& aShmemSection);
+
+  void ShrinkShmemSectionHeap();
+
+  ShmemAllocator* GetShmAllocator() { return mShmProvider->AsShmemAllocator(); }
+
+  /**
+    * In order to avoid shutdown crashes, we need to test for mShmProvider->AsShmemAllocator()
+    * here. Basically, there's a case where we have the following class hierarchy:
+    *
+    * ClientIPCAllocator -> TextureForwarder -> CompositableForwarder -> ShadowLayerForwarder
+    *
+    * In ShadowLayerForwarder's dtor, we tear down the actor and close the IPC channel.
+    * In TextureForwarder's dtor, we destroy the FixedSizeSmallShmemAllocator and that in turn calls
+    * ClientIPCAllocator::IPCOpen() to determine whether we can dealloc some shmem regions.
+    *
+    * This does not work. In the above class diagram, as the ShadowLayerForwarder's dtor has run
+    * its course, the ClientIPCAllocator object we're holding on to is now just a plain
+    * ClientIPCAllocator and so we call ClientIPCAllocator's IPCOpen() which unconditionally
+    * returns true. We therefore have to rely on AsShmemAllocator() to determine whether we can
+    * do these deallocs as ClientIPCAllocator::AsShmemAllocator() returns nullptr.
+    *
+    * Ideally, we should move a lot of this destruction work into non-destructor Destroy() methods
+    * which do cleanup before we destroy the objects.
+    */
+  bool IPCOpen() const { return mShmProvider->AsShmemAllocator() && mShmProvider->IPCOpen(); }
+
+protected:
+  std::vector<mozilla::ipc::Shmem> mUsedShmems;
+  ClientIPCAllocator* mShmProvider;
 };
 
 } // namespace layers
