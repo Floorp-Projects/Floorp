@@ -755,7 +755,7 @@ namespace js {
 // It must be kept in sync with the enumeration of values in
 // TypedObjectConstants.h; in particular we need to ensure that Count is
 // appropriately set with respect to the number of actual types.
-enum class SimdType : uint8_t {
+enum class SimdType {
     Int8x16   = JS_SIMDTYPEREPR_INT8X16,
     Int16x8   = JS_SIMDTYPEREPR_INT16X8,
     Int32x4   = JS_SIMDTYPEREPR_INT32X4,
