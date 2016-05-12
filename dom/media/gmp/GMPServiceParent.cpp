@@ -704,6 +704,13 @@ GeckoMediaPluginServiceParent::NotifySyncShutdownComplete()
   mWaitingForPluginsSyncShutdown = false;
 }
 
+bool
+GeckoMediaPluginServiceParent::IsShuttingDown()
+{
+  MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
+  return mShuttingDownOnGMPThread;
+}
+
 void
 GeckoMediaPluginServiceParent::UnloadPlugins()
 {
@@ -1840,8 +1847,15 @@ GMPServiceParent::RecvLoadGMP(const nsCString& aNodeId,
                               nsTArray<ProcessId>&& aAlreadyBridgedTo,
                               ProcessId* aId,
                               nsCString* aDisplayName,
-                              uint32_t* aPluginId)
+                              uint32_t* aPluginId,
+                              nsresult* aRv)
 {
+  *aRv = NS_OK;
+  if (mService->IsShuttingDown()) {
+    *aRv = NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+    return true;
+  }
+
   RefPtr<GMPParent> gmp = mService->SelectPluginForAPI(aNodeId, aAPI, aTags);
 
   nsCString api = aTags[0];
