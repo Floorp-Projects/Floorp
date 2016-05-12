@@ -51,6 +51,7 @@ DecodedAudioDataSink::DecodedAudioDataSink(AbstractThread* aThread,
   , mProcessedQueueLength(0)
   , mFramesParsed(0)
   , mLastEndTime(0)
+  , mIsAudioDataAudible(false)
 {
   bool resampling = gfxPrefs::AudioSinkResampling();
 
@@ -318,6 +319,7 @@ DecodedAudioDataSink::PopFrames(uint32_t aFrames)
     // We can now safely pop the audio packet from the processed queue.
     // This will fire the popped event, triggering a call to NotifyAudioNeeded.
     RefPtr<AudioData> releaseMe = mProcessedQueue.PopFront();
+    CheckIsAudible(releaseMe);
   }
 
   return chunk;
@@ -336,6 +338,18 @@ DecodedAudioDataSink::Drained()
   SINK_LOG("Drained");
   mPlaybackComplete = true;
   mEndPromise.ResolveIfExists(true, __func__);
+}
+
+void
+DecodedAudioDataSink::CheckIsAudible(const AudioData* aData)
+{
+  MOZ_ASSERT(aData);
+
+  bool isAudible = aData->IsAudible();
+  if (isAudible != mIsAudioDataAudible) {
+    mIsAudioDataAudible = isAudible;
+    mAudibleEvent.Notify(mIsAudioDataAudible);
+  }
 }
 
 void
