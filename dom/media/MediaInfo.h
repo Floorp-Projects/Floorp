@@ -177,6 +177,12 @@ private:
 // Stores info relevant to presenting media frames.
 class VideoInfo : public TrackInfo {
 public:
+  enum Rotation {
+    kDegree_0 = 0,
+    kDegree_90 = 90,
+    kDegree_180 = 180,
+    kDegree_270 = 270,
+  };
   VideoInfo()
     : VideoInfo(-1, -1)
   {
@@ -190,6 +196,7 @@ public:
     , mImage(nsIntSize(aWidth, aHeight))
     , mCodecSpecificConfig(new MediaByteBuffer)
     , mExtraData(new MediaByteBuffer)
+    , mRotation(kDegree_0)
     , mImageRect(nsIntRect(0, 0, aWidth, aHeight))
   {
   }
@@ -201,6 +208,7 @@ public:
     , mImage(aOther.mImage)
     , mCodecSpecificConfig(aOther.mCodecSpecificConfig)
     , mExtraData(aOther.mExtraData)
+    , mRotation(aOther.mRotation)
     , mImageRect(aOther.mImageRect)
   {
   }
@@ -259,6 +267,21 @@ public:
     return imageRect;
   }
 
+  Rotation ToSupportedRotation(int32_t aDegree)
+  {
+    switch (aDegree) {
+      case 90:
+        return kDegree_90;
+      case 180:
+        return kDegree_180;
+      case 270:
+        return kDegree_270;
+      default:
+        NS_WARN_IF_FALSE(aDegree == 0, "Invalid rotation degree, ignored");
+        return kDegree_0;
+    }
+  }
+
   // Size in pixels at which the video is rendered. This is after it has
   // been scaled by its aspect ratio.
   nsIntSize mDisplay;
@@ -271,6 +294,10 @@ public:
 
   RefPtr<MediaByteBuffer> mCodecSpecificConfig;
   RefPtr<MediaByteBuffer> mExtraData;
+
+  // Describing how many degrees video frames should be rotated in clock-wise to
+  // get correct view.
+  Rotation mRotation;
 
 private:
   // mImage may be cropped; currently only used with the WebM container.
