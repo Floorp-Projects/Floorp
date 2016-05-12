@@ -186,7 +186,7 @@ public class BrowserSearch extends HomeFragment
     private View mSuggestionsOptInPrompt;
 
     public interface OnSearchListener {
-        public void onSearch(SearchEngine engine, String text);
+        void onSearch(SearchEngine engine, String text, TelemetryContract.Method method);
     }
 
     public interface OnEditSuggestionListener {
@@ -729,10 +729,9 @@ public class BrowserSearch extends HomeFragment
 
     @Override
     public void onSearchBarClickListener(final SearchEngine searchEngine) {
-        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.LIST_ITEM,
-                "searchenginebar");
-
-        mSearchListener.onSearch(searchEngine, mSearchTerm);
+        final TelemetryContract.Method method = TelemetryContract.Method.LIST_ITEM;
+        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, method, "searchenginebar");
+        mSearchListener.onSearch(searchEngine, mSearchTerm, method);
     }
 
     private void ensureSuggestClientIsSet(final String suggestTemplate) {
