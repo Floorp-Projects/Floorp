@@ -187,9 +187,11 @@ void nsViewManager::DoSetWindowDimensions(nscoord aWidth, nscoord aHeight)
   // We care about resizes even when one dimension is already zero.
   if (!oldDim.IsEqualEdges(newDim)) {
     // Don't resize the widget. It is already being set elsewhere.
+
+    const bool isHeightChanging = (oldDim.height != aHeight);
     mRootView->SetDimensions(newDim, true, false);
     if (mPresShell)
-      mPresShell->ResizeReflow(aWidth, aHeight);
+      mPresShell->ResizeReflow(aWidth, aHeight, isHeightChanging);
   }
 }
 
