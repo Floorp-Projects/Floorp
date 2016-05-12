@@ -24,6 +24,7 @@ EXPORTS.mozilla = [
     'Attributes.h',
     'BinarySearch.h',
     'BloomFilter.h',
+    'BufferList.h',
     'Casting.h',
     'ChaosMode.h',
     'Char16.h',
