@@ -21,7 +21,7 @@ add_task(function* () {
   ok(!rootEl.classList.contains("loading"), "The loading indicator is hidden");
 
   let notifBox = toolbox.getNotificationBox();
-  let notif = notifBox.currentNotification;
+  let notif = notifBox.getCurrentNotification();
   ok(notif, "The notification box contains a message");
   ok(notif.label.indexOf("Style sheet could not be loaded") !== -1,
     "The error message is the correct one");
