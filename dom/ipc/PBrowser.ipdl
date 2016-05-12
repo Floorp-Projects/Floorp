@@ -159,6 +159,21 @@ parent:
      */
     async MoveFocus(bool forward, bool forDocumentNavigation);
 
+    /**
+     * SizeShellTo request propagation to parent.
+     *
+     * aFlag            Can indicate if one of the dimensions should be ignored.
+     *                  If only one dimension has changed it has to be indicated
+     *                  by the nsIEmbeddingSiteWindow::DIM_FLAGS_IGNORE_* flags.
+     * aShellItemWidth,
+     * aShellItemHeight On parent side we won't be able to decide the dimensions
+     *                  of the shell item parameter in the original SizeShellTo
+     *                  call so we send over its dimensions that will be used
+     *                  for the actual resize.
+     **/
+    async SizeShellTo(uint32_t aFlag, int32_t aWidth, int32_t aHeight,
+                      int32_t aShellItemWidth, int32_t aShellItemHeight);
+
     async Event(RemoteDOMEvent aEvent);
 
     sync SyncMessage(nsString aMessage, ClonedMessageData aData,
@@ -491,6 +506,8 @@ parent:
      */
     sync GetTabCount() returns (uint32_t value);
 
+    async AccessKeyNotHandled(WidgetKeyboardEvent event);
+
 child:
     async NativeSynthesisResponse(uint64_t aObserverId, nsCString aResponse);
 
@@ -731,11 +748,12 @@ child:
      * A potential accesskey was just pressed. Look for accesskey targets
      * using the list of provided charCodes.
      *
-     * @param charCode array of potential character codes
+     * @param event keyboard event
      * @param isTrusted true if triggered by a trusted key event
      * @param modifierMask indicates which accesskey modifiers are pressed
      */
-    async HandleAccessKey(uint32_t[] charCodes, bool isTrusted, int32_t modifierMask);
+    async HandleAccessKey(WidgetKeyboardEvent event,
+                          uint32_t[] charCodes, int32_t modifierMask);
 
     /**
      * Propagate a refresh to the child process

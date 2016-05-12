@@ -822,6 +822,7 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'UDPMessageEvent.webidl',
     'UserProximityEvent.webidl',
     'USSDReceivedEvent.webidl',
+    'WebGLContextEvent.webidl',
 ]
 
 if CONFIG['MOZ_WEBRTC']:

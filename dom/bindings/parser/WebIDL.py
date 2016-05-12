@@ -4080,6 +4080,24 @@ class IDLAttribute(IDLInterfaceMember):
                 raise WebIDLError("[PutForwards] and [Replaceable] can't both "
                                   "appear on the same attribute",
                                   [attr.location, self.location])
+        elif identifier == "LenientSetter":
+            if not attr.noArguments():
+                raise WebIDLError("[LenientSetter] must take no arguments",
+                                  [attr.location])
+            if not self.readonly:
+                raise WebIDLError("[LenientSetter] is only allowed on readonly "
+                                  "attributes", [attr.location, self.location])
+            if self.isStatic():
+                raise WebIDLError("[LenientSetter] is only allowed on non-static "
+                                  "attributes", [attr.location, self.location])
+            if self.getExtendedAttribute("PutForwards") is not None:
+                raise WebIDLError("[LenientSetter] and [PutForwards] can't both "
+                                  "appear on the same attribute",
+                                  [attr.location, self.location])
+            if self.getExtendedAttribute("Replaceable") is not None:
+                raise WebIDLError("[LenientSetter] and [Replaceable] can't both "
+                                  "appear on the same attribute",
+                                  [attr.location, self.location])
         elif identifier == "LenientFloat":
             if self.readonly:
                 raise WebIDLError("[LenientFloat] used on a readonly attribute",
@@ -4818,6 +4836,9 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
         elif identifier == "PutForwards":
             raise WebIDLError("Only attributes support [PutForwards]",
                               [attr.location, self.location])
+        elif identifier == "LenientSetter":
+            raise WebIDLError("Only attributes support [LenientSetter]",
+                              [attr.location, self.location])
         elif identifier == "LenientFloat":
             # This is called before we've done overload resolution
             assert len(self.signatures()) == 1
@@ -5153,10 +5174,11 @@ class SqueakyCleanLogger(object):
     info = debug
 
     def warning(self, msg, *args, **kwargs):
-        if msg == "%s:%d: Rule '%s' defined, but not used":
+        if msg == "%s:%d: Rule %r defined, but not used" or \
+           msg == "%s:%d: Rule '%s' defined, but not used":
             # Munge things so we don't have to hardcode filenames and
             # line numbers in our whitelist.
-            whitelistmsg = "Rule '%s' defined, but not used"
+            whitelistmsg = "Rule %r defined, but not used"
             whitelistargs = args[2:]
         else:
             whitelistmsg = msg

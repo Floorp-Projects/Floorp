@@ -40,6 +40,7 @@ tasks:
         - "queue:route:tc-treeherder-stage.{{project}}.{{revision_hash}}"
         - "queue:route:tc-treeherder.{{project}}.{{revision_hash}}"
         - "scheduler:extend-task-graph:*"
+        - "secrets:get:project/taskcluster/gecko/hgfingerprint"
 
       routes:
         - "index.gecko.v2.{{project}}.latest.firefox.decision"
@@ -60,9 +61,12 @@ tasks:
           level-{{level}}-{{project}}-tc-vcs-public-sources: /home/worker/.tc-vcs/
           level-{{level}}-{{project}}-gecko-decision: /home/worker/workspace
 
+        features:
+          taskclusterProxy: true
+
         # Note: This task is built server side without the context or tooling that
         # exist in tree so we must hard code the version
-        image: 'taskcluster/builder:0.5.11'
+        image: 'taskcluster/decision:0.1.0'
 
         # Virtually no network or other potentially risky operations happen as part
         # of the task timeout aside from the initial clone. We intentionally have

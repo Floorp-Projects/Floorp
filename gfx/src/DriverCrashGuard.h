@@ -9,6 +9,7 @@
 #include "nsIGfxInfo.h"
 #include "nsIFile.h"
 #include "nsString.h"
+#include "mozilla/Function.h"
 #include <string>
 
 namespace mozilla {
@@ -40,6 +41,10 @@ enum class CrashGuardType : uint32_t
   D3D9Video,
   GLContext,
   D3D11Video,
+  // Add new entries above this line, update the name array in
+  // DriverCrashGuard.cpp, and make sure to add an entry in
+  // ContentParent.cpp.
+
   NUM_TYPES
 };
 
@@ -77,6 +82,10 @@ public:
     // Acting as a proxy between the parent and child process.
     Proxy
   };
+
+  typedef mozilla::function<void(const char* aName, const char* aPrefName)>
+    CrashGuardCallback;
+  static void ForEachActiveCrashGuard(const CrashGuardCallback& aCallback);
 
 protected:
   virtual void Initialize();

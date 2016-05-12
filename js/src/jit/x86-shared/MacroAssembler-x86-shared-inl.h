@@ -76,6 +76,64 @@ MacroAssembler::xor32(Imm32 imm, Register dest)
     xorl(imm, dest);
 }
 
+void
+MacroAssembler::clz32(Register src, Register dest, bool knownNotZero)
+{
+    // On very recent chips (Haswell and newer?) there is actually an
+    // LZCNT instruction that does all of this.
+
+    bsrl(src, dest);
+    if (!knownNotZero) {
+        // If the source is zero then bsrl leaves garbage in the destination.
+        Label nonzero;
+        j(Assembler::NonZero, &nonzero);
+        movl(Imm32(0x3F), dest);
+        bind(&nonzero);
+    }
+    xorl(Imm32(0x1F), dest);
+}
+
+void
+MacroAssembler::ctz32(Register src, Register dest, bool knownNotZero)
+{
+    bsfl(src, dest);
+    if (!knownNotZero) {
+        Label nonzero;
+        j(Assembler::NonZero, &nonzero);
+        movl(Imm32(32), dest);
+        bind(&nonzero);
+    }
+}
+
+void
+MacroAssembler::popcnt32(Register input, Register output, Register tmp)
+{
+    if (AssemblerX86Shared::HasPOPCNT()) {
+        popcntl(input, output);
+        return;
+    }
+
+    MOZ_ASSERT(tmp != InvalidReg);
+
+    // Equivalent to mozilla::CountPopulation32()
+
+    movl(input, output);
+    shrl(Imm32(1), output);
+    andl(Imm32(0x55555555), output);
+    subl(output, tmp);
+    movl(tmp, output);
+    andl(Imm32(0x33333333), output);
+    shrl(Imm32(2), tmp);
+    andl(Imm32(0x33333333), tmp);
+    addl(output, tmp);
+    movl(tmp, output);
+    shrl(Imm32(4), output);
+    addl(tmp, output);
+    andl(Imm32(0xF0F0F0F), output);
+    imull(Imm32(0x1010101), output, output);
+    shrl(Imm32(24), output);
+}
+
 // ===============================================================
 // Arithmetic instructions
 
@@ -212,6 +270,30 @@ MacroAssembler::rotateRight(Register count, Register input, Register dest)
     MOZ_ASSERT(input == dest, "defineReuseInput");
     MOZ_ASSERT(count == ecx, "defineFixed(ecx)");
     rorl_cl(input);
+}
+
+// ===============================================================
+// Shift instructions
+
+void
+MacroAssembler::lshift32(Register shift, Register srcDest)
+{
+    MOZ_ASSERT(shift == ecx);
+    shll_cl(srcDest);
+}
+
+void
+MacroAssembler::rshift32(Register shift, Register srcDest)
+{
+    MOZ_ASSERT(shift == ecx);
+    shrl_cl(srcDest);
+}
+
+void
+MacroAssembler::rshift32Arithmetic(Register shift, Register srcDest)
+{
+    MOZ_ASSERT(shift == ecx);
+    sarl_cl(srcDest);
 }
 
 // ===============================================================

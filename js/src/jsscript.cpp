@@ -2050,6 +2050,7 @@ ScriptSource::setCompressedSource(ExclusiveContext* cx,
                                   size_t rawLength,
                                   size_t sourceLength)
 {
+    MOZ_ASSERT(raw);
     auto& cache = cx->zone()->runtimeFromAnyThread()->sharedImmutableStrings();
     auto deduped = cache.getOrCreate(mozilla::Move(raw), rawLength);
     if (!deduped) {

@@ -680,6 +680,54 @@ struct ScrollSnapInfo {
 };
 
 /**
+ * A clip that applies to a layer, that may be scrolled by some of the
+ * scroll frames associated with the layer.
+ */
+struct LayerClip {
+  friend struct IPC::ParamTraits<mozilla::layers::LayerClip>;
+
+public:
+  LayerClip()
+    : mClipRect()
+    , mMaskLayerIndex()
+  {}
+
+  explicit LayerClip(const ParentLayerIntRect& aClipRect)
+    : mClipRect(aClipRect)
+    , mMaskLayerIndex()
+  {}
+
+  bool operator==(const LayerClip& aOther) const
+  {
+    return mClipRect == aOther.mClipRect &&
+           mMaskLayerIndex == aOther.mMaskLayerIndex;
+  }
+
+  void SetClipRect(const ParentLayerIntRect& aClipRect) {
+    mClipRect = aClipRect;
+  }
+  const ParentLayerIntRect& GetClipRect() const {
+    return mClipRect;
+  }
+
+  void SetMaskLayerIndex(const Maybe<size_t>& aIndex) {
+    mMaskLayerIndex = aIndex;
+  }
+  const Maybe<size_t>& GetMaskLayerIndex() const {
+    return mMaskLayerIndex;
+  }
+
+private:
+  ParentLayerIntRect mClipRect;
+
+  // Optionally, specifies a mask layer that's part of the clip.
+  // This is an index into the MetricsMaskLayers array on the Layer.
+  Maybe<size_t> mMaskLayerIndex;
+};
+
+typedef Maybe<LayerClip> MaybeLayerClip;  // for passing over IPDL
+
+/**
  * Metadata about a scroll frame that's stored in the layer tree for use by
  * the compositor (including APZ). This includes the scroll frame's FrameMetrics,
  * as well as other metadata. We don't put the other metadata into FrameMetrics
@@ -701,8 +749,7 @@ public:
     , mContentDescription()
     , mLineScrollAmount(0, 0)
     , mPageScrollAmount(0, 0)
-    , mMaskLayerIndex()
-    , mClipRect()
+    , mScrollClip()
     , mHasScrollgrab(false)
     , mAllowVerticalScrollWithWheel(false)
     , mIsLayersIdRoot(false)
@@ -719,8 +766,7 @@ public:
            // don't compare mContentDescription
            mLineScrollAmount == aOther.mLineScrollAmount &&
            mPageScrollAmount == aOther.mPageScrollAmount &&
-           mMaskLayerIndex == aOther.mMaskLayerIndex &&
-           mClipRect == aOther.mClipRect &&
+           mScrollClip == aOther.mScrollClip &&
            mHasScrollgrab == aOther.mHasScrollgrab &&
            mAllowVerticalScrollWithWheel == aOther.mAllowVerticalScrollWithWheel &&
            mIsLayersIdRoot == aOther.mIsLayersIdRoot &&
@@ -780,26 +826,28 @@ public:
   void SetPageScrollAmount(const LayoutDeviceIntSize& size) {
     mPageScrollAmount = size;
   }
-  void SetMaskLayerIndex(const Maybe<size_t>& aIndex) {
-    mMaskLayerIndex = aIndex;
+
+  void SetScrollClip(const Maybe<LayerClip>& aScrollClip) {
+    mScrollClip = aScrollClip;
   }
-  const Maybe<size_t>& GetMaskLayerIndex() const {
-    return mMaskLayerIndex;
+  const Maybe<LayerClip>& GetScrollClip() const {
+    return mScrollClip;
+  }
+  bool HasScrollClip() const {
+    return mScrollClip.isSome();
+  }
+  const LayerClip& ScrollClip() const {
+    return mScrollClip.ref();
+  }
+  LayerClip& ScrollClip() {
+    return mScrollClip.ref();
   }
 
-  void SetClipRect(const Maybe<ParentLayerIntRect>& aClipRect)
-  {
-    mClipRect = aClipRect;
+  bool HasMaskLayer() const {
+    return HasScrollClip() && ScrollClip().GetMaskLayerIndex();
   }
-  const Maybe<ParentLayerIntRect>& GetClipRect() const
-  {
-    return mClipRect;
-  }
-  bool HasClipRect() const {
-    return mClipRect.isSome();
-  }
-  const ParentLayerIntRect& ClipRect() const {
-    return mClipRect.ref();
+  Maybe<ParentLayerIntRect> GetClipRect() const {
+    return mScrollClip.isSome() ? Some(mScrollClip->GetClipRect()) : Nothing();
   }
 
   void SetHasScrollgrab(bool aHasScrollgrab) {
@@ -856,13 +904,13 @@ private:
   // The value of GetPageScrollAmount(), for scroll frames.
   LayoutDeviceIntSize mPageScrollAmount;
 
-  // An extra clip mask layer to use when compositing a layer with this
-  // FrameMetrics. This is an index into the MetricsMaskLayers array on
-  // the Layer.
-  Maybe<size_t> mMaskLayerIndex;
-
-  // The clip rect to use when compositing a layer with this FrameMetrics.
-  Maybe<ParentLayerIntRect> mClipRect;
+  // A clip to apply when compositing the layer bearing this ScrollMetadata,
+  // after applying any transform arising from scrolling this scroll frame.
+  // Note that, unlike most other fields of ScrollMetadata, this is allowed
+  // to differ between different layers scrolled by the same scroll frame.
+  // TODO: Group the fields of ScrollMetadata into sub-structures to separate
+  // fields with this property better.
+  Maybe<LayerClip> mScrollClip;
 
   // Whether or not this frame is for an element marked 'scrollgrab'.
   bool mHasScrollgrab:1;

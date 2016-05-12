@@ -17,12 +17,14 @@ enum class MediaDecoderEventVisibility : int8_t {
 };
 
 // Stores the seek target; the time to seek to, and whether an Accurate,
-// or "Fast" (nearest keyframe) seek was requested.
+// "Fast" (nearest keyframe), or "Video Only" (no audio seek) seek was
+// requested.
 struct SeekTarget {
   enum Type {
     Invalid,
     PrevSyncPoint,
-    Accurate
+    Accurate,
+    AccurateVideoOnly,
   };
   SeekTarget()
     : mEventVisibility(MediaDecoderEventVisibility::Observable)
@@ -78,6 +80,9 @@ struct SeekTarget {
   bool IsAccurate() const {
     return mType == SeekTarget::Type::Accurate;
   }
+  bool IsVideoOnly() const {
+    return mType == SeekTarget::Type::AccurateVideoOnly;
+  }
 
   MediaDecoderEventVisibility mEventVisibility;
 
@@ -85,7 +90,7 @@ private:
   // Seek target time.
   media::TimeUnit mTime;
   // Whether we should seek "Fast", or "Accurate".
-  // "Fast" seeks to the seek point preceeding mTime, whereas
+  // "Fast" seeks to the seek point preceding mTime, whereas
   // "Accurate" seeks as close as possible to mTime.
   Type mType;
 };

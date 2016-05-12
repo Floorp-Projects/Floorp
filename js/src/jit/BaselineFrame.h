@@ -101,7 +101,7 @@ class BaselineFrame
     // This is the old frame pointer saved in the prologue.
     static const uint32_t FramePointerOffset = sizeof(void*);
 
-    bool initForOsr(InterpreterFrame* fp, uint32_t numStackValues);
+    MOZ_MUST_USE bool initForOsr(InterpreterFrame* fp, uint32_t numStackValues);
 
     uint32_t frameSize() const {
         return frameSize_;
@@ -229,7 +229,7 @@ class BaselineFrame
         return UndefinedValue();
     }
 
-    bool copyRawFrameSlots(MutableHandle<GCVector<Value>> vec) const;
+    MOZ_MUST_USE bool copyRawFrameSlots(MutableHandle<GCVector<Value>> vec) const;
 
     bool hasReturnValue() const {
         return flags_ & HAS_RVAL;
@@ -260,12 +260,12 @@ class BaselineFrame
         return &flags_;
     }
 
-    inline bool pushBlock(JSContext* cx, Handle<StaticBlockScope*> block);
+    inline MOZ_MUST_USE bool pushBlock(JSContext* cx, Handle<StaticBlockScope*> block);
     inline void popBlock(JSContext* cx);
-    inline bool freshenBlock(JSContext* cx);
+    inline MOZ_MUST_USE bool freshenBlock(JSContext* cx);
 
-    bool initStrictEvalScopeObjects(JSContext* cx);
-    bool initFunctionScopeObjects(JSContext* cx);
+    MOZ_MUST_USE bool initStrictEvalScopeObjects(JSContext* cx);
+    MOZ_MUST_USE bool initFunctionScopeObjects(JSContext* cx);
 
     void initArgsObjUnchecked(ArgumentsObject& argsobj) {
         flags_ |= HAS_ARGS_OBJ;

@@ -309,6 +309,9 @@ const SNAPSHOT_SCHEMA = {
         featureLog: {
           type: "object",
         },
+        crashGuards: {
+          type: "array",
+        },
         direct2DEnabledMessage: {
           type: "array",
         },

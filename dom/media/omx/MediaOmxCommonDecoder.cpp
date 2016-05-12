@@ -252,6 +252,7 @@ void
 MediaOmxCommonDecoder::SetElementVisibility(bool aIsVisible)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MediaDecoder::SetElementVisibility(aIsVisible);
   if (mAudioOffloadPlayer) {
     mAudioOffloadPlayer->SetElementVisibility(aIsVisible);
   }

@@ -174,26 +174,30 @@ public:
  * mozilla::WidgetMouseEvent
  ******************************************************************************/
 
-class WidgetMouseEvent : public WidgetMouseEventBase, public WidgetPointerHelper
+class WidgetMouseEvent : public WidgetMouseEventBase
+                       , public WidgetPointerHelper
 {
 private:
-  friend class mozilla::dom::PBrowserParent;
-  friend class mozilla::dom::PBrowserChild;
+  friend class dom::PBrowserParent;
+  friend class dom::PBrowserChild;
 
 public:
-  enum reasonType
+  typedef bool ReasonType;
+  enum Reason : ReasonType
   {
     eReal,
     eSynthesized
   };
 
-  enum contextType
+  typedef bool ContextMenuTriggerType;
+  enum ContextMenuTrigger : ContextMenuTriggerType
   {
     eNormal,
     eContextMenuKey
   };
 
-  enum exitType
+  typedef bool ExitFromType;
+  enum ExitFrom : ExitFromType
   {
     eChild,
     eTopLevel
@@ -201,35 +205,45 @@ public:
 
 protected:
   WidgetMouseEvent()
-    : acceptActivation(false)
-    , ignoreRootScrollFrame(false)
-    , clickCount(0)
+    : mReason(eReal)
+    , mContextMenuTrigger(eNormal)
+    , mExitFrom(eChild)
+    , mIgnoreRootScrollFrame(false)
+    , mClickCount(0)
   {
   }
 
-  WidgetMouseEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget,
-                   EventClassID aEventClassID, reasonType aReason)
+  WidgetMouseEvent(bool aIsTrusted,
+                   EventMessage aMessage,
+                   nsIWidget* aWidget,
+                   EventClassID aEventClassID,
+                   Reason aReason)
     : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, aEventClassID)
-    , acceptActivation(false)
-    , ignoreRootScrollFrame(false)
-    , reason(aReason)
-    , context(eNormal)
-    , exit(eChild)
-    , clickCount(0)
+    , mReason(aReason)
+    , mContextMenuTrigger(eNormal)
+    , mExitFrom(eChild)
+    , mIgnoreRootScrollFrame(false)
+    , mClickCount(0)
   {
   }
 
 public:
   virtual WidgetMouseEvent* AsMouseEvent() override { return this; }
 
-  WidgetMouseEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget,
-                   reasonType aReason, contextType aContext = eNormal) :
-    WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, eMouseEventClass),
-    acceptActivation(false), ignoreRootScrollFrame(false),
-    reason(aReason), context(aContext), exit(eChild), clickCount(0)
+  WidgetMouseEvent(bool aIsTrusted,
+                   EventMessage aMessage,
+                   nsIWidget* aWidget,
+                   Reason aReason,
+                   ContextMenuTrigger aContextMenuTrigger = eNormal)
+    : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, eMouseEventClass)
+    , mReason(aReason)
+    , mContextMenuTrigger(aContextMenuTrigger)
+    , mExitFrom(eChild)
+    , mIgnoreRootScrollFrame(false)
+    , mClickCount(0)
   {
     if (aMessage == eContextMenu) {
-      button = (context == eNormal) ? eRightButton : eLeftButton;
+      button = (mContextMenuTrigger == eNormal) ? eRightButton : eLeftButton;
     }
   }
 
@@ -238,7 +252,8 @@ public:
   {
     NS_WARN_IF_FALSE(mMessage != eContextMenu ||
                      button ==
-                       ((context == eNormal) ? eRightButton : eLeftButton),
+                       ((mContextMenuTrigger == eNormal) ? eRightButton :
+                                                           eLeftButton),
                      "Wrong button set to eContextMenu event?");
   }
 #endif
@@ -249,33 +264,44 @@ public:
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetMouseEvent* result =
-      new WidgetMouseEvent(false, mMessage, nullptr, reason, context);
+      new WidgetMouseEvent(false, mMessage, nullptr,
+                           mReason, mContextMenuTrigger);
     result->AssignMouseEventData(*this, true);
     result->mFlags = mFlags;
     return result;
   }
 
-  // Special return code for MOUSE_ACTIVATE to signal.
-  // If the target accepts activation (1), or denies it (0).
-  bool acceptActivation;
+  // mReason indicates the reason why the event is fired:
+  // - Representing mouse operation.
+  // - Synthesized for emulating mousemove event when the content under the
+  //   mouse cursor is scrolled.
+  Reason mReason;
+
+  // mContextMenuTrigger is valid only when mMessage is eContextMenu.
+  // This indicates if the context menu event is caused by context menu key or
+  // other reasons (typically, a click of right mouse button).
+  ContextMenuTrigger mContextMenuTrigger;
+
+  // mExitFrom is valid only when mMessage is eMouseExitFromWidget.
+  // This indicates if the mouse cursor exits from a top level widget or
+  // a child widget.
+  ExitFrom mExitFrom;
+
   // Whether the event should ignore scroll frame bounds during dispatch.
-  bool ignoreRootScrollFrame;
+  bool mIgnoreRootScrollFrame;
 
-  reasonType reason : 4;
-  contextType context : 4;
-  exitType exit;
-
-  /// The number of mouse clicks.
-  uint32_t clickCount;
+  // mClickCount may be non-zero value when mMessage is eMouseDown, eMouseUp,
+  // eMouseClick or eMouseDoubleClick. The number is count of mouse clicks.
+  // Otherwise, this must be 0.
+  uint32_t mClickCount;
 
   void AssignMouseEventData(const WidgetMouseEvent& aEvent, bool aCopyTargets)
   {
     AssignMouseEventBaseData(aEvent, aCopyTargets);
     AssignPointerHelperData(aEvent);
 
-    acceptActivation = aEvent.acceptActivation;
-    ignoreRootScrollFrame = aEvent.ignoreRootScrollFrame;
-    clickCount = aEvent.clickCount;
+    mIgnoreRootScrollFrame = aEvent.mIgnoreRootScrollFrame;
+    mClickCount = aEvent.mClickCount;
   }
 
   /**
@@ -283,7 +309,7 @@ public:
    */
   bool IsContextMenuKeyEvent() const
   {
-    return mMessage == eContextMenu && context == eContextMenuKey;
+    return mMessage == eContextMenu && mContextMenuTrigger == eContextMenuKey;
   }
 
   /**
@@ -292,7 +318,7 @@ public:
    */
   bool IsReal() const
   {
-    return reason == eReal;
+    return mReason == eReal;
   }
 };
 

@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Various scrolling tests that spawn in a new window</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+// this page just serially loads each one of the following test helper pages in
+// a new window and waits for it to call testDone()
+var tests = [
+  {'file': 'helper_scroll_on_position_fixed.html', 'prefs': [
+        // turn off smooth scrolling so that we don't have to wait for
+        // APZ animations to finish before sampling the scroll offset
+        ['general.smoothScroll', false],
+        // ensure that any mouse movement will trigger a new wheel transaction,
+        // because in this test we move the mouse a bunch and want to recalculate
+        // the target APZC after each such movement.
+        ['mousewheel.transaction.ignoremovedelay', 0],
+        ['mousewheel.transaction.timeout', 0]]}
+];
+
+var testIndex = -1;
+var w = null;
+
+function testDone() {
+  var test = tests[testIndex];
+  if (w) {
+    if (!!test.prefs) {
+      // We pushed some prefs for this test, pop them, and re-invoke
+      // testDone() after that's been processed
+      SpecialPowers.popPrefEnv(function() {
+        w.close();
+        w = null;
+        testDone();
+      });
+      return;
+    }
+
+    w.close();
+  }
+
+  testIndex++;
+  if (testIndex >= tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  test = tests[testIndex];
+  if (!!test.prefs) {
+    // Got some prefs for this subtest, push them
+    SpecialPowers.pushPrefEnv({"set": test.prefs}, function() {
+      w = window.open(test.file, "_blank");
+    });
+  } else {
+    w = window.open(test.file, "_blank");
+  }
+}
+
+window.onload = function() {
+  if (!SpecialPowers.getDOMWindowUtils(window).asyncPanZoomEnabled) {
+    ok(true, "APZ is not enabled, this test is not relevant, sorry!\n");
+    SimpleTest.finish();
+    return;
+  }
+  testDone();
+};
+
+  </script>
+</head>
+<body>
+</body>
+</html>

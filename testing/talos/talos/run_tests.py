@@ -175,6 +175,10 @@ def run_tests(config, browser_config):
     httpd = setup_webserver(browser_config['webserver'])
     httpd.start()
 
+    # if e10s add as extra results option
+    if config['e10s']:
+        talos_results.add_extra_option('e10s')
+
     testname = None
     # run the tests
     timer = utils.Timer()

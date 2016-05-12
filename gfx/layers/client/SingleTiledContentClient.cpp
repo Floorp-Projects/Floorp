@@ -192,7 +192,7 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
   {
     RefPtr<gfxContext> ctx = gfxContext::ForDrawTarget(dt);
     if (!ctx) {
-      gfxDevCrash(LogReason::InvalidContext) << "SingleTiledContextClient context problem " << gfx::hexa(dt);
+      gfxDevCrash(gfx::LogReason::InvalidContext) << "SingleTiledContextClient context problem " << gfx::hexa(dt);
       return;
     }
     ctx->SetMatrix(ctx->CurrentMatrix().Translate(-mTilingOrigin.x, -mTilingOrigin.y));
