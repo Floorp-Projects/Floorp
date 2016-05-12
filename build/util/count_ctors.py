@@ -55,7 +55,8 @@ if __name__ == '__main__':
                 "name": "compiler_metrics",
                 "subtests": [{
                     "name": "num_constructors",
-                    "value": count_ctors(f)
+                    "value": count_ctors(f),
+                    "alertThreshold": 0.25
                 }]}
             ]
         }
