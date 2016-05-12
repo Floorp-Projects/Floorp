@@ -2032,27 +2032,27 @@ PluginModuleParent::OnInitFailure()
     }
 }
 
-class OfflineObserver final : public nsIObserver
+class PluginOfflineObserver final : public nsIObserver
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
 
-    explicit OfflineObserver(PluginModuleChromeParent* pmp)
+    explicit PluginOfflineObserver(PluginModuleChromeParent* pmp)
       : mPmp(pmp)
     {}
 
 private:
-    ~OfflineObserver() {}
+    ~PluginOfflineObserver() {}
     PluginModuleChromeParent* mPmp;
 };
 
-NS_IMPL_ISUPPORTS(OfflineObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(PluginOfflineObserver, nsIObserver)
 
 NS_IMETHODIMP
-OfflineObserver::Observe(nsISupports *aSubject,
-                         const char *aTopic,
-                         const char16_t *aData)
+PluginOfflineObserver::Observe(nsISupports *aSubject,
+                               const char *aTopic,
+                               const char16_t *aData)
 {
     MOZ_ASSERT(!strcmp(aTopic, "ipc:network:set-offline"));
     mPmp->CachedSettingChanged();
@@ -2072,8 +2072,8 @@ PluginModuleChromeParent::RegisterSettingsCallbacks()
 
     nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
     if (observerService) {
-        mOfflineObserver = new OfflineObserver(this);
-        observerService->AddObserver(mOfflineObserver, "ipc:network:set-offline", false);
+        mPluginOfflineObserver = new PluginOfflineObserver(this);
+        observerService->AddObserver(mPluginOfflineObserver, "ipc:network:set-offline", false);
     }
 }
 
@@ -2086,8 +2086,8 @@ PluginModuleChromeParent::UnregisterSettingsCallbacks()
 
     nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
     if (observerService) {
-        observerService->RemoveObserver(mOfflineObserver, "ipc:network:set-offline");
-        mOfflineObserver = nullptr;
+        observerService->RemoveObserver(mPluginOfflineObserver, "ipc:network:set-offline");
+        mPluginOfflineObserver = nullptr;
     }
 }
 
