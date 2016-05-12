@@ -1403,7 +1403,7 @@ CacheStorageService::MemoryPool::PurgeAll(uint32_t aWhat)
 
 nsresult
 CacheStorageService::AddStorageEntry(CacheStorage const* aStorage,
-                                     nsIURI* aURI,
+                                     const nsACString & aURI,
                                      const nsACString & aIdExtension,
                                      bool aReplace,
                                      CacheEntryHandle** aResult)
@@ -1425,7 +1425,7 @@ CacheStorageService::AddStorageEntry(CacheStorage const* aStorage,
 
 nsresult
 CacheStorageService::AddStorageEntry(nsCSubstring const& aContextKey,
-                                     nsIURI* aURI,
+                                     const nsACString & aURI,
                                      const nsACString & aIdExtension,
                                      bool aWriteToDisk,
                                      bool aSkipSizeCheck,
@@ -1433,8 +1433,6 @@ CacheStorageService::AddStorageEntry(nsCSubstring const& aContextKey,
                                      bool aReplace,
                                      CacheEntryHandle** aResult)
 {
-  NS_ENSURE_ARG(aURI);
-
   nsresult rv;
 
   nsAutoCString entryKey;
@@ -1515,7 +1513,7 @@ CacheStorageService::AddStorageEntry(nsCSubstring const& aContextKey,
 
 nsresult
 CacheStorageService::CheckStorageEntry(CacheStorage const* aStorage,
-                                       nsIURI* aURI,
+                                       const nsACString & aURI,
                                        const nsACString & aIdExtension,
                                        bool* aResult)
 {
@@ -1528,12 +1526,8 @@ CacheStorageService::CheckStorageEntry(CacheStorage const* aStorage,
     AppendMemoryStorageID(contextKey);
   }
 
-  if (LOG_ENABLED()) {
-    nsAutoCString uriSpec;
-    aURI->GetAsciiSpec(uriSpec);
-    LOG(("CacheStorageService::CheckStorageEntry [uri=%s, eid=%s, contextKey=%s]",
-      uriSpec.get(), aIdExtension.BeginReading(), contextKey.get()));
-  }
+  LOG(("CacheStorageService::CheckStorageEntry [uri=%s, eid=%s, contextKey=%s]",
+    aURI.BeginReading(), aIdExtension.BeginReading(), contextKey.get()));
 
   {
     mozilla::MutexAutoLock lock(mLock);
@@ -1634,14 +1628,13 @@ NS_IMPL_ISUPPORTS(CacheEntryDoomByKeyCallback, CacheFileIOListener, nsIRunnable)
 
 nsresult
 CacheStorageService::DoomStorageEntry(CacheStorage const* aStorage,
-                                      nsIURI *aURI,
+                                      const nsACString & aURI,
                                       const nsACString & aIdExtension,
                                       nsICacheEntryDoomCallback* aCallback)
 {
   LOG(("CacheStorageService::DoomStorageEntry"));
 
   NS_ENSURE_ARG(aStorage);
-  NS_ENSURE_ARG(aURI);
 
   nsAutoCString contextKey;
   CacheFileUtils::AppendKeyPrefix(aStorage->LoadInfo(), contextKey);
@@ -1945,13 +1938,9 @@ void
 CacheStorageService::GetCacheEntryInfo(CacheEntry* aEntry,
                                        EntryInfoCallback *aCallback)
 {
-  nsIURI* uri = aEntry->GetURI();
-  nsAutoCString uriSpec;
-  if (uri) {
-    uri->GetAsciiSpec(uriSpec);
-  }
-
+  nsCString const uriSpec = aEntry->GetURI();
   nsCString const enhanceId = aEntry->GetEnhanceID();
+
   uint32_t dataSize;
   if (NS_FAILED(aEntry->GetStorageDataSize(&dataSize))) {
     dataSize = 0;
