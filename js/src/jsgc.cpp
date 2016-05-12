@@ -1190,7 +1190,7 @@ GCRuntime::getZealBits(uint32_t* zealBits, uint32_t* frequency, uint32_t* schedu
 
 const char* gc::ZealModeHelpText =
     "  Specifies how zealous the garbage collector should be. Some of these modes can\n"
-    "  be set simultaneously, e.g. in the shell, gczeal(2); gczeal(4); will activate\n"
+    "  be set simultaneously, by passing multiple level options, e.g. \"2;4\" will activate\n"
     "  both modes 2 and 4.\n"
     "  \n"
     "  Values:\n"
@@ -1255,26 +1255,41 @@ GCRuntime::setNextScheduled(uint32_t count)
 bool
 GCRuntime::parseAndSetZeal(const char* str)
 {
-    int zeal = -1;
     int frequency = -1;
+    bool foundFrequency = false;
+    mozilla::Vector<int> zeals;
 
-    if (isdigit(str[0])) {
-        zeal = atoi(str);
+    do {
+        int zeal = -1;
 
-        const char* p = strchr(str, ',');
-        if (!p)
-            frequency = JS_DEFAULT_ZEAL_FREQ;
-        else
-            frequency = atoi(p + 1);
-    }
+        if (isdigit(str[0])) {
+            zeal = atoi(str);
 
-    if (zeal < 0 || zeal > int(ZealMode::Limit) || frequency <= 0) {
-        fprintf(stderr, "Format: JS_GC_ZEAL=level[,N]\n");
-        fputs(ZealModeHelpText, stderr);
-        return false;
-    }
+            size_t offset = strspn(str, "0123456789");
+            const char* p = str + offset;
+            if (!*p || *p == ';') {
+                frequency = JS_DEFAULT_ZEAL_FREQ;
+            } else if (*p == ',') {
+                frequency = atoi(p + 1);
+                foundFrequency = true;
+            }
+        }
 
-    setZeal(zeal, frequency);
+        if (zeal < 0 || zeal > int(ZealMode::Limit) || frequency <= 0) {
+            fprintf(stderr, "Format: JS_GC_ZEAL=level(;level)*[,N]\n");
+            fputs(ZealModeHelpText, stderr);
+            return false;
+        }
+
+        if (!zeals.emplaceBack(zeal)) {
+            return false;
+        }
+    } while (!foundFrequency &&
+             (str = strchr(str, ';')) != nullptr &&
+             str++);
+
+    for (auto z : zeals)
+        setZeal(z, frequency);
     return true;
 }
 
