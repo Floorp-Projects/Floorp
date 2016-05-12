@@ -206,7 +206,7 @@ protected:
   WidgetMouseEvent()
     : mReason(eReal)
     , mContextMenuTrigger(eNormal)
-    , exit(eChild)
+    , mExitFrom(eChild)
     , acceptActivation(false)
     , ignoreRootScrollFrame(false)
     , clickCount(0)
@@ -218,7 +218,7 @@ protected:
     : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, aEventClassID)
     , mReason(aReason)
     , mContextMenuTrigger(eNormal)
-    , exit(eChild)
+    , mExitFrom(eChild)
     , acceptActivation(false)
     , ignoreRootScrollFrame(false)
     , clickCount(0)
@@ -236,7 +236,7 @@ public:
     : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, eMouseEventClass)
     , mReason(aReason)
     , mContextMenuTrigger(aContextMenuTrigger)
-    , exit(eChild)
+    , mExitFrom(eChild)
     , acceptActivation(false)
     , ignoreRootScrollFrame(false)
     , clickCount(0)
@@ -274,7 +274,7 @@ public:
 
   ContextMenuTrigger mContextMenuTrigger;
 
-  ExitFrom exit;
+  ExitFrom mExitFrom;
 
   // Special return code for MOUSE_ACTIVATE to signal.
   // If the target accepts activation (1), or denies it (0).

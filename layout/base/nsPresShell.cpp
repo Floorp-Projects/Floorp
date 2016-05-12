@@ -7732,7 +7732,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
 
     WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
     bool isWindowLevelMouseExit = (aEvent->mMessage == eMouseExitFromWidget) &&
-      (mouseEvent && mouseEvent->exit == WidgetMouseEvent::eTopLevel);
+      (mouseEvent && mouseEvent->mExitFrom == WidgetMouseEvent::eTopLevel);
 
     // Get the frame at the event point. However, don't do this if we're
     // capturing and retargeting the event because the captured frame will
