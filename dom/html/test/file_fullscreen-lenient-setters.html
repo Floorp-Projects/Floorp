@@ -25,6 +25,15 @@ function info(msg) {
 let unattachedDiv = document.createElement("div");
 
 function begin() {
+  var originalValue = document.fullscreen;
+  try {
+    document.fullscreen = !document.fullscreen;
+    is(document.fullscreen, originalValue,
+       "fullscreen should not be changed");
+  } catch (e) {
+    ok(false, "Setting fullscreen should not throw");
+  }
+
   var originalElem = document.fullscreenElement;
   try {
     document.fullscreenElement = unattachedDiv;

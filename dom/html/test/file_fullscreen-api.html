@@ -56,6 +56,7 @@ function fullScreenElement() {
 
 function enter1(event) {
   is(event.target, document, "Event target should be full-screen document #1");
+  ok(document.fullscreen, "Document should be in fullscreen");
   is(document.fullscreenElement, fullScreenElement(),
      "Full-screen element should be div element.");
   ok(document.fullscreenElement.matches(":fullscreen"),
@@ -72,6 +73,7 @@ function enter1(event) {
 
 function exit1(event) {
   is(event.target, document, "Event target should be full-screen document #2");
+  ok(!document.fullscreen, "Document should not be in fullscreen");
   is(document.fullscreenElement, null, "Full-screen element should be null.");
   iframe = document.createElement("iframe");
   iframe.allowFullscreen = true;
