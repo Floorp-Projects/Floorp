@@ -359,7 +359,6 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  bool canPlay = false;
 #if defined(XP_WIN)
   bool WMFNeeded = false;
 #endif
@@ -377,7 +376,6 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
     switch (diag.mDecoderDoctorDiagnostics.Type()) {
       case DecoderDoctorDiagnostics::eFormatSupportCheck:
         if (diag.mDecoderDoctorDiagnostics.CanPlay()) {
-          canPlay = true;
           AppendToStringList(playableFormats,
                              diag.mDecoderDoctorDiagnostics.Format());
         } else {
@@ -418,7 +416,7 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
     }
   }
 
-  // Look at Key System issues first, as they may influence format checks.
+  // Look at Key System issues first, as they take precedence over format checks.
   if (!unsupportedKeySystems.IsEmpty() && supportedKeySystems.IsEmpty()) {
     // No supported key systems!
     switch (lastKeySystemIssue) {
@@ -436,32 +434,36 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
     }
   }
 
-  if (!canPlay && !unplayableFormats.IsEmpty()) {
+  // Next, check playability of requested formats.
+  if (!unplayableFormats.IsEmpty()) {
+    // Some requested formats cannot be played.
+    if (playableFormats.IsEmpty()) {
+      // No requested formats can be played. See if we can help the user...
 #if defined(XP_WIN)
-    if (WMFNeeded) {
-      DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - formats: %s -> Cannot play media because WMF was not found",
-               this, mDocument, NS_ConvertUTF16toUTF8(unplayableFormats).get());
-      ReportAnalysis(dom::DecoderDoctorNotificationType::Platform_decoder_not_found,
-                     "MediaWMFNeeded", unplayableFormats);
-      return;
-    }
+      if (WMFNeeded) {
+        DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - formats: %s -> Cannot play media because WMF was not found",
+                 this, mDocument, NS_ConvertUTF16toUTF8(unplayableFormats).get());
+        ReportAnalysis(dom::DecoderDoctorNotificationType::Platform_decoder_not_found,
+                       "MediaWMFNeeded", unplayableFormats);
+        return;
+      }
 #endif
 #if defined(MOZ_FFMPEG)
-    if (FFMpegNeeded) {
-      DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> Cannot play media because platform decoder was not found",
-               this, mDocument, NS_ConvertUTF16toUTF8(unplayableFormats).get());
-      ReportAnalysis(dom::DecoderDoctorNotificationType::Platform_decoder_not_found,
-                     "MediaPlatformDecoderNotFound", unplayableFormats);
+      if (FFMpegNeeded) {
+        DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> Cannot play media because platform decoder was not found",
+                 this, mDocument, NS_ConvertUTF16toUTF8(unplayableFormats).get());
+        ReportAnalysis(dom::DecoderDoctorNotificationType::Platform_decoder_not_found,
+                       "MediaPlatformDecoderNotFound", unplayableFormats);
+        return;
+      }
+#endif
+      DD_WARN("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - Cannot play media, unplayable formats: %s",
+              this, mDocument, NS_ConvertUTF16toUTF8(unplayableFormats).get());
+      ReportAnalysis(dom::DecoderDoctorNotificationType::Cannot_play,
+                     "MediaCannotPlayNoDecoders", unplayableFormats);
       return;
     }
-#endif
-    DD_WARN("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - Cannot play media, unplayable formats: %s",
-            this, mDocument, NS_ConvertUTF16toUTF8(unplayableFormats).get());
-    ReportAnalysis(dom::DecoderDoctorNotificationType::Cannot_play,
-                   "MediaCannotPlayNoDecoders", unplayableFormats);
-    return;
-  }
-  if (!unplayableFormats.IsEmpty()) {
+
     DD_INFO("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - Can play media, but no decoders for some requested formats: %s",
             this, mDocument, NS_ConvertUTF16toUTF8(unplayableFormats).get());
     if (Preferences::GetBool("media.decoder-doctor.verbose", false)) {
