@@ -8356,7 +8356,7 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
 
     if (aEvent->mMessage == eContextMenu) {
       WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
-      if (mouseEvent->context == WidgetMouseEvent::eContextMenuKey &&
+      if (mouseEvent->IsContextMenuKeyEvent() &&
           !AdjustContextMenuKeyEvent(mouseEvent)) {
         return NS_OK;
       }
@@ -10028,7 +10028,7 @@ PresShell::DelayedMouseEvent::DelayedMouseEvent(WidgetMouseEvent* aEvent) :
                          aEvent->mMessage,
                          aEvent->mWidget,
                          aEvent->mReason,
-                         aEvent->context);
+                         aEvent->mContextMenuTrigger);
   mouseEvent->AssignMouseEventData(*aEvent, false);
   mEvent = mouseEvent;
 }
