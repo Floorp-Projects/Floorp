@@ -8,6 +8,7 @@ add_task(function* () {
     window
   });
   yield testSimple(shortcuts);
+  yield testNonLetterCharacter(shortcuts);
   yield testMixup(shortcuts);
   yield testExactModifiers(shortcuts);
   yield testLooseShiftModifier(shortcuts);
@@ -38,7 +39,6 @@ function once(shortcuts, key, listener) {
 function testSimple(shortcuts) {
   info("Test simple key shortcuts");
 
-  let called = false;
   let onKey = once(shortcuts, "0", (key, event) => {
     is(event.key, "0");
 
@@ -47,6 +47,17 @@ function testSimple(shortcuts) {
   });
 
   EventUtils.synthesizeKey("0", {}, window);
+  yield onKey;
+}
+
+function testNonLetterCharacter(shortcuts) {
+  info("Test non-naive character key shortcuts");
+
+  let onKey = once(shortcuts, "[", (key, event) => {
+    is(event.key, "[");
+  });
+
+  EventUtils.synthesizeKey("[", {}, window);
   yield onKey;
 }
 
