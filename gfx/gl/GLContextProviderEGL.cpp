@@ -20,9 +20,12 @@
         #include "nsScreenManagerGonk.h"
     #endif
 
+    #ifdef MOZ_WIDGET_ANDROID
+        #include "AndroidBridge.h"
+    #endif
+
     #ifdef ANDROID
         #include <android/log.h>
-        #include "AndroidBridge.h"
         #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk" , ## args)
 
         #ifdef MOZ_WIDGET_GONK
