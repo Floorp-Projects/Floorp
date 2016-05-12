@@ -117,13 +117,16 @@ class Option(object):
       or '--without-', the implied default is a NegativeOptionValue.
     - `choices` restricts the set of values that can be given to the option.
     - `help` is the option description for use in the --help output.
+    - `possible_origins` is a tuple of strings that are origins accepted for
+      this option. Example origins are 'mozconfig', 'implied', and 'environment'.
     '''
     __slots__ = (
         'id', 'prefix', 'name', 'env', 'nargs', 'default', 'choices', 'help',
+        'possible_origins',
     )
 
     def __init__(self, name=None, env=None, nargs=None, default=None,
-                 choices=None, help=None):
+                 possible_origins=None, choices=None, help=None):
         if not name and not env:
             raise InvalidOptionError(
                 'At least an option name or an environment variable name must '
@@ -158,6 +161,10 @@ class Option(object):
                 'choices must be a tuple of strings')
         if not help:
             raise InvalidOptionError('A help string must be provided')
+        if possible_origins and not istupleofstrings(possible_origins):
+            raise InvalidOptionError(
+                'possible_origins must be a tuple of strings')
+        self.possible_origins = possible_origins
 
         if name:
             prefix, name, values = self.split_option(name)
@@ -299,6 +306,11 @@ class Option(object):
         '''
         if not option:
             return self.default
+
+        if self.possible_origins and origin not in self.possible_origins:
+            raise InvalidOptionError(
+                '%s can not be set by %s. Values are accepted from: %s' %
+                (option, origin, ', '.join(self.possible_origins)))
 
         prefix, name, values = self.split_option(option)
         option = self._join_option(prefix, name)
