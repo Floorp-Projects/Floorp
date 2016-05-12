@@ -113,18 +113,12 @@ interface nsIBaseWindow : nsISupports
 	*/
 	void getSize(out long cx, out long cy);
 
-	/**
-	 * The 'flags' argument to setPositionAndSize is a set of these bits.
-	 */
-	const unsigned long eRepaint = 1;
-	const unsigned long eDelayResize = 2;
-
 	/*
 	Convenience function combining the SetPosition and SetSize into one call.
 	Also is more efficient than calling both.
 	*/
 	void setPositionAndSize(in long x, in long y, in long cx, in long cy, 
-		in unsigned long flags);
+		in boolean fRepaint);
 		
 	/*
 	Convenience function combining the GetPosition and GetSize into one call.
