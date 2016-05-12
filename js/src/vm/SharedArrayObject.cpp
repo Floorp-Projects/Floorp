@@ -207,11 +207,6 @@ const JSFunctionSpec SharedArrayBufferObject::jsfuncs[] = {
     JS_FS_END
 };
 
-const JSFunctionSpec SharedArrayBufferObject::jsstaticfuncs[] = {
-    JS_FN("isView", SharedArrayBufferObject::fun_isView, 1, 0),
-    JS_FS_END
-};
-
 MOZ_ALWAYS_INLINE bool
 SharedArrayBufferObject::byteLengthGetterImpl(JSContext* cx, const CallArgs& args)
 {
@@ -225,15 +220,6 @@ SharedArrayBufferObject::byteLengthGetter(JSContext* cx, unsigned argc, Value* v
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     return CallNonGenericMethod<IsSharedArrayBuffer, byteLengthGetterImpl>(cx, args);
-}
-
-bool
-SharedArrayBufferObject::fun_isView(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setBoolean(args.get(0).isObject() &&
-                           JS_IsTypedArrayObject(&args.get(0).toObject()));
-    return true;
 }
 
 bool
@@ -397,9 +383,6 @@ js::InitSharedArrayBufferClass(JSContext* cx, HandleObject obj)
 
     if (!NativeDefineProperty(cx, proto, byteLengthId, UndefinedHandleValue,
                               JS_DATA_TO_FUNC_PTR(GetterOp, getter), nullptr, attrs))
-        return nullptr;
-
-    if (!JS_DefineFunctions(cx, ctor, SharedArrayBufferObject::jsstaticfuncs))
         return nullptr;
 
     if (!JS_DefineFunctions(cx, proto, SharedArrayBufferObject::jsfuncs))
