@@ -10,6 +10,7 @@
 #include "MediaInfo.h"
 #include "AppleATDecoder.h"
 #include "mozilla/Logging.h"
+#include "mozilla/SyncRunnable.h"
 #include "mozilla/UniquePtr.h"
 
 extern mozilla::LogModule* GetPDMLog();
@@ -27,6 +28,7 @@ AppleATDecoder::AppleATDecoder(const AudioInfo& aConfig,
   , mCallback(aCallback)
   , mConverter(nullptr)
   , mStream(nullptr)
+  , mIsFlushing(false)
 {
   MOZ_COUNT_CTOR(AppleATDecoder);
   LOG("Creating Apple AudioToolbox decoder");
@@ -84,18 +86,27 @@ AppleATDecoder::Input(MediaRawData* aSample)
   return NS_OK;
 }
 
+void
+AppleATDecoder::ProcessFlush()
+{
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  mQueuedSamples.Clear();
+  OSStatus rv = AudioConverterReset(mConverter);
+  if (rv) {
+    LOG("Error %d resetting AudioConverter", rv);
+  }
+}
+
 nsresult
 AppleATDecoder::Flush()
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   LOG("Flushing AudioToolbox AAC decoder");
-  mTaskQueue->Flush();
-  mQueuedSamples.Clear();
-  OSStatus rv = AudioConverterReset(mConverter);
-  if (rv) {
-    LOG("Error %d resetting AudioConverter", rv);
-    return NS_ERROR_FAILURE;
-  }
+  mIsFlushing = true;
+  nsCOMPtr<nsIRunnable> runnable =
+    NewRunnableMethod(this, &AppleATDecoder::ProcessFlush);
+  SyncRunnable::DispatchToThread(mTaskQueue, runnable);
+  mIsFlushing = false;
   return NS_OK;
 }
 
@@ -179,6 +190,10 @@ void
 AppleATDecoder::SubmitSample(MediaRawData* aSample)
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+
+  if (mIsFlushing) {
+    return;
+  }
 
   nsresult rv = NS_OK;
   if (!mConverter) {
