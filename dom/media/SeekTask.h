@@ -63,7 +63,7 @@ public:
 
   SeekJob& GetSeekJob();
 
-  bool Exists();
+  bool Exists() const;
 
 protected:
   SeekTask(const void* aDecoderID,

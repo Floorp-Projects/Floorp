@@ -778,20 +778,9 @@ CodeGeneratorX86Shared::visitClzI(LClzI* ins)
 {
     Register input = ToRegister(ins->input());
     Register output = ToRegister(ins->output());
+    bool knownNotZero = ins->mir()->operandIsNeverZero();
 
-    // bsr is undefined on 0
-    Label done, nonzero;
-    if (!ins->mir()->operandIsNeverZero()) {
-        masm.test32(input, input);
-        masm.j(Assembler::NonZero, &nonzero);
-        masm.move32(Imm32(32), output);
-        masm.jump(&done);
-    }
-
-    masm.bind(&nonzero);
-    masm.bsr(input, output);
-    masm.xor32(Imm32(0x1F), output);
-    masm.bind(&done);
+    masm.clz32(input, output, knownNotZero);
 }
 
 void
@@ -799,19 +788,9 @@ CodeGeneratorX86Shared::visitCtzI(LCtzI* ins)
 {
     Register input = ToRegister(ins->input());
     Register output = ToRegister(ins->output());
+    bool knownNotZero = ins->mir()->operandIsNeverZero();
 
-    // bsf is undefined on 0
-    Label done, nonzero;
-    if (!ins->mir()->operandIsNeverZero()) {
-        masm.test32(input, input);
-        masm.j(Assembler::NonZero, &nonzero);
-        masm.move32(Imm32(32), output);
-        masm.jump(&done);
-    }
-
-    masm.bind(&nonzero);
-    masm.bsf(input, output);
-    masm.bind(&done);
+    masm.ctz32(input, output, knownNotZero);
 }
 
 void
@@ -819,31 +798,9 @@ CodeGeneratorX86Shared::visitPopcntI(LPopcntI* ins)
 {
     Register input = ToRegister(ins->input());
     Register output = ToRegister(ins->output());
+    Register temp = ins->temp()->isBogusTemp() ? InvalidReg : ToRegister(ins->temp());
 
-    if (AssemblerX86Shared::HasPOPCNT()) {
-        masm.popcnt(input, output);
-        return;
-    }
-
-    // Equivalent to mozilla::CountPopulation32()
-    Register tmp = ToRegister(ins->temp());
-
-    masm.movl(input, output);
-    masm.movl(input, tmp);
-    masm.shrl(Imm32(1), output);
-    masm.andl(Imm32(0x55555555), output);
-    masm.subl(output, tmp);
-    masm.movl(tmp, output);
-    masm.andl(Imm32(0x33333333), output);
-    masm.shrl(Imm32(2), tmp);
-    masm.andl(Imm32(0x33333333), tmp);
-    masm.addl(output, tmp);
-    masm.movl(tmp, output);
-    masm.shrl(Imm32(4), output);
-    masm.addl(tmp, output);
-    masm.andl(Imm32(0xF0F0F0F), output);
-    masm.imull(Imm32(0x1010101), output, output);
-    masm.shrl(Imm32(24), output);
+    masm.popcnt32(input, output, temp);
 }
 
 void

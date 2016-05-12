@@ -1572,14 +1572,14 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_CRASH("unexpected operand kind");
         }
     }
-    void bsr(const Register& src, const Register& dest) {
-        masm.bsr_rr(src.encoding(), dest.encoding());
+    void bsrl(const Register& src, const Register& dest) {
+        masm.bsrl_rr(src.encoding(), dest.encoding());
     }
-    void bsf(const Register& src, const Register& dest) {
-        masm.bsf_rr(src.encoding(), dest.encoding());
+    void bsfl(const Register& src, const Register& dest) {
+        masm.bsfl_rr(src.encoding(), dest.encoding());
     }
-    void popcnt(const Register& src, const Register& dest) {
-        masm.popcnt_rr(src.encoding(), dest.encoding());
+    void popcntl(const Register& src, const Register& dest) {
+        masm.popcntl_rr(src.encoding(), dest.encoding());
     }
     void imull(Register multiplier) {
         masm.imull_r(multiplier.encoding());

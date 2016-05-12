@@ -2516,7 +2516,8 @@ IonBuilder::inlineUnsafeSetReservedSlot(CallInfo& callInfo)
 
     callInfo.setImplicitlyUsedUnchecked();
 
-    MStoreFixedSlot* store = MStoreFixedSlot::New(alloc(), callInfo.getArg(0), slot, callInfo.getArg(2));
+    MStoreFixedSlot* store =
+        MStoreFixedSlot::NewBarriered(alloc(), callInfo.getArg(0), slot, callInfo.getArg(2));
     current->add(store);
     current->push(store);
 

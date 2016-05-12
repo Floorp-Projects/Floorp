@@ -1037,6 +1037,26 @@ public:
 
   /**
    * CONSTRUCTION PHASE ONLY
+   * Set an optional scrolled clip on the layer.
+   * The scrolled clip, if present, consists of a clip rect and an optional mask.
+   * This scrolled clip is always scrolled by all scroll frames associated with
+   * this layer. (By contrast, the scroll clips stored in ScrollMetadata are
+   * only scrolled by scroll frames above that ScrollMetadata, and the layer's
+   * mClipRect is always fixed to the layer contents (which may or may not be
+   * scrolled by some of the scroll frames associated with the layer, depending
+   * on whether the layer is fixed).)
+   */
+  void SetScrolledClip(const Maybe<LayerClip>& aScrolledClip)
+  {
+    if (mScrolledClip != aScrolledClip) {
+      MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ScrolledClip", this));
+      mScrolledClip = aScrolledClip;
+      Mutated();
+    }
+  }
+
+  /**
+   * CONSTRUCTION PHASE ONLY
    * Set a layer to mask this layer.
    *
    * The mask layer should be applied using its effective transform (after it
@@ -1068,7 +1088,7 @@ public:
 
   /**
    * CONSTRUCTION PHASE ONLY
-   * Add a FrameMetrics-associated mask layer.
+   * Add mask layers associated with LayerClips.
    */
   void SetAncestorMaskLayers(const nsTArray<RefPtr<Layer>>& aLayers) {
     if (aLayers != mAncestorMaskLayers) {
@@ -1076,6 +1096,15 @@ public:
       mAncestorMaskLayers = aLayers;
       Mutated();
     }
+  }
+
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Add a mask layer associated with a LayerClip.
+   */
+  void AddAncestorMaskLayer(const RefPtr<Layer>& aLayer) {
+    mAncestorMaskLayers.AppendElement(aLayer);
+    Mutated();
   }
 
   /**
@@ -1189,22 +1218,15 @@ public:
    *     This is used if the viewport size is changed in the compositor and
    *     fixed position items need to shift accordingly. This value is made up
    *     combining appropriate values from mozilla::SideBits.
-   *
-   *   - |aIsClipFixed| is true if this layer's clip rect and mask layer
-   *     should also remain fixed during async scrolling/animations.
-   *     This is the case for fixed position layers, but not for
-   *     fixed background layers.
    */
   void SetFixedPositionData(FrameMetrics::ViewID aScrollId,
                             const LayerPoint& aAnchor,
-                            int32_t aSides,
-                            bool aIsClipFixed)
+                            int32_t aSides)
   {
     if (!mFixedPositionData ||
         mFixedPositionData->mScrollId != aScrollId ||
         mFixedPositionData->mAnchor != aAnchor ||
-        mFixedPositionData->mSides != aSides ||
-        mFixedPositionData->mIsClipFixed != aIsClipFixed) {
+        mFixedPositionData->mSides != aSides) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) FixedPositionData", this));
       if (!mFixedPositionData) {
         mFixedPositionData = MakeUnique<FixedPositionData>();
@@ -1212,7 +1234,6 @@ public:
       mFixedPositionData->mScrollId = aScrollId;
       mFixedPositionData->mAnchor = aAnchor;
       mFixedPositionData->mSides = aSides;
-      mFixedPositionData->mIsClipFixed = aIsClipFixed;
       Mutated();
     }
   }
@@ -1281,6 +1302,8 @@ public:
   float GetOpacity() { return mOpacity; }
   gfx::CompositionOp GetMixBlendMode() const { return mMixBlendMode; }
   const Maybe<ParentLayerIntRect>& GetClipRect() const { return mClipRect; }
+  const Maybe<LayerClip>& GetScrolledClip() const { return mScrolledClip; }
+  Maybe<ParentLayerIntRect> GetScrolledClipRect() const;
   uint32_t GetContentFlags() { return mContentFlags; }
   const gfx::IntRect& GetLayerBounds() const { return mLayerBounds; }
   const LayerIntRegion& GetVisibleRegion() const { return mVisibleRegion; }
@@ -1312,7 +1335,6 @@ public:
   FrameMetrics::ViewID GetFixedPositionScrollContainerId() { return mFixedPositionData ? mFixedPositionData->mScrollId : FrameMetrics::NULL_SCROLL_ID; }
   LayerPoint GetFixedPositionAnchor() { return mFixedPositionData ? mFixedPositionData->mAnchor : LayerPoint(); }
   int32_t GetFixedPositionSides() { return mFixedPositionData ? mFixedPositionData->mSides : eSideBitsNone; }
-  bool IsClipFixed() { return mFixedPositionData ? mFixedPositionData->mIsClipFixed : false; }
   FrameMetrics::ViewID GetStickyScrollContainerId() { return mStickyPositionData->mScrollId; }
   const LayerRect& GetStickyScrollRangeOuter() { return mStickyPositionData->mOuter; }
   const LayerRect& GetStickyScrollRangeInner() { return mStickyPositionData->mInner; }
@@ -1329,6 +1351,9 @@ public:
   }
   Layer* GetAncestorMaskLayerAt(size_t aIndex) const {
     return mAncestorMaskLayers.ElementAt(aIndex);
+  }
+  const nsTArray<RefPtr<Layer>>& GetAllAncestorMaskLayers() const {
+    return mAncestorMaskLayers;
   }
 
   bool HasMaskLayers() const {
@@ -1850,6 +1875,7 @@ protected:
   gfx::CompositionOp mMixBlendMode;
   bool mForceIsolatedGroup;
   Maybe<ParentLayerIntRect> mClipRect;
+  Maybe<LayerClip> mScrolledClip;
   gfx::IntRect mTileSourceRect;
   gfx::TiledIntRegion mInvalidRegion;
   nsTArray<RefPtr<AsyncPanZoomController> > mApzcs;
@@ -1861,7 +1887,6 @@ protected:
     FrameMetrics::ViewID mScrollId;
     LayerPoint mAnchor;
     int32_t mSides;
-    bool mIsClipFixed;
   };
   UniquePtr<FixedPositionData> mFixedPositionData;
   struct StickyPositionData {

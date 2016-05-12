@@ -33,7 +33,7 @@ SeekJob& SeekJob::operator=(SeekJob&& aOther)
   return *this;
 }
 
-bool SeekJob::Exists()
+bool SeekJob::Exists() const
 {
   MOZ_ASSERT(mTarget.IsValid() == !mPromise.IsEmpty());
   return mTarget.IsValid();

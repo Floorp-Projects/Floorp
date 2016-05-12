@@ -21,7 +21,7 @@ class EdgeCaseAnalysis
 
   public:
     EdgeCaseAnalysis(MIRGenerator* mir, MIRGraph& graph);
-    bool analyzeLate();
+    MOZ_MUST_USE bool analyzeLate();
 };
 
 

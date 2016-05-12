@@ -213,13 +213,16 @@ public:
     return mListeners.RemoveElement(aListener);
   }
 
+  void Shutdown()
+  {
+    mTaskQueue->BeginShutdown();
+    mTaskQueue->AwaitShutdownAndIdle();
+  }
+
 protected:
   virtual ~VideoFrameConverter()
   {
     MOZ_COUNT_DTOR(VideoFrameConverter);
-
-    mTaskQueue->BeginShutdown();
-    mTaskQueue->AwaitShutdownAndIdle();
   }
 
   void VideoFrameConverted(unsigned char* aVideoFrame,
@@ -1117,6 +1120,11 @@ public:
     } else {
       conduit_ = nullptr;
     }
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+    if (converter_) {
+      converter_->Shutdown();
+    }
+#endif
   }
 
   // Dispatches setting the internal TrackID to TRACK_INVALID to the media

@@ -261,43 +261,43 @@ class BaselineCompiler : public BaselineCompilerSpecific
 
   public:
     BaselineCompiler(JSContext* cx, TempAllocator& alloc, JSScript* script);
-    bool init();
+    MOZ_MUST_USE bool init();
 
     MethodStatus compile();
 
   private:
     MethodStatus emitBody();
 
-    bool emitCheckThis(ValueOperand val);
+    MOZ_MUST_USE bool emitCheckThis(ValueOperand val);
     void emitLoadReturnValue(ValueOperand val);
 
     void emitInitializeLocals(size_t n, const Value& v);
-    bool emitPrologue();
-    bool emitEpilogue();
-    bool emitOutOfLinePostBarrierSlot();
-    bool emitIC(ICStub* stub, ICEntry::Kind kind);
-    bool emitOpIC(ICStub* stub) {
+    MOZ_MUST_USE bool emitPrologue();
+    MOZ_MUST_USE bool emitEpilogue();
+    MOZ_MUST_USE bool emitOutOfLinePostBarrierSlot();
+    MOZ_MUST_USE bool emitIC(ICStub* stub, ICEntry::Kind kind);
+    MOZ_MUST_USE bool emitOpIC(ICStub* stub) {
         return emitIC(stub, ICEntry::Kind_Op);
     }
-    bool emitNonOpIC(ICStub* stub) {
+    MOZ_MUST_USE bool emitNonOpIC(ICStub* stub) {
         return emitIC(stub, ICEntry::Kind_NonOp);
     }
 
-    bool emitStackCheck(bool earlyCheck=false);
-    bool emitInterruptCheck();
-    bool emitWarmUpCounterIncrement(bool allowOsr=true);
-    bool emitArgumentTypeChecks();
+    MOZ_MUST_USE bool emitStackCheck(bool earlyCheck=false);
+    MOZ_MUST_USE bool emitInterruptCheck();
+    MOZ_MUST_USE bool emitWarmUpCounterIncrement(bool allowOsr=true);
+    MOZ_MUST_USE bool emitArgumentTypeChecks();
     void emitIsDebuggeeCheck();
-    bool emitDebugPrologue();
-    bool emitDebugTrap();
+    MOZ_MUST_USE bool emitDebugPrologue();
+    MOZ_MUST_USE bool emitDebugTrap();
     void emitCoverage(jsbytecode* pc);
-    bool emitTraceLoggerEnter();
-    bool emitTraceLoggerExit();
+    MOZ_MUST_USE bool emitTraceLoggerEnter();
+    MOZ_MUST_USE bool emitTraceLoggerExit();
 
     void emitProfilerEnterFrame();
     void emitProfilerExitFrame();
 
-    bool initScopeChain();
+    MOZ_MUST_USE bool initScopeChain();
 
     void storeValue(const StackValue* source, const Address& dest,
                     const ValueOperand& scratch);
@@ -307,33 +307,33 @@ class BaselineCompiler : public BaselineCompilerSpecific
 #undef EMIT_OP
 
     // JSOP_NEG, JSOP_BITNOT
-    bool emitUnaryArith();
+    MOZ_MUST_USE bool emitUnaryArith();
 
     // JSOP_BITXOR, JSOP_LSH, JSOP_ADD etc.
-    bool emitBinaryArith();
+    MOZ_MUST_USE bool emitBinaryArith();
 
     // Handles JSOP_LT, JSOP_GT, and friends
-    bool emitCompare();
+    MOZ_MUST_USE bool emitCompare();
 
-    bool emitReturn();
+    MOZ_MUST_USE bool emitReturn();
 
-    bool emitToBoolean();
-    bool emitTest(bool branchIfTrue);
-    bool emitAndOr(bool branchIfTrue);
-    bool emitCall();
-    bool emitSpreadCall();
+    MOZ_MUST_USE bool emitToBoolean();
+    MOZ_MUST_USE bool emitTest(bool branchIfTrue);
+    MOZ_MUST_USE bool emitAndOr(bool branchIfTrue);
+    MOZ_MUST_USE bool emitCall();
+    MOZ_MUST_USE bool emitSpreadCall();
 
-    bool emitInitPropGetterSetter();
-    bool emitInitElemGetterSetter();
+    MOZ_MUST_USE bool emitInitPropGetterSetter();
+    MOZ_MUST_USE bool emitInitElemGetterSetter();
 
-    bool emitFormalArgAccess(uint32_t arg, bool get);
+    MOZ_MUST_USE bool emitFormalArgAccess(uint32_t arg, bool get);
 
-    bool emitThrowConstAssignment();
-    bool emitUninitializedLexicalCheck(const ValueOperand& val);
+    MOZ_MUST_USE bool emitThrowConstAssignment();
+    MOZ_MUST_USE bool emitUninitializedLexicalCheck(const ValueOperand& val);
 
-    bool addPCMappingEntry(bool addIndexEntry);
+    MOZ_MUST_USE bool addPCMappingEntry(bool addIndexEntry);
 
-    bool addYieldOffset();
+    MOZ_MUST_USE bool addYieldOffset();
 
     void getScopeCoordinateObject(Register reg);
     Address getScopeCoordinateAddressFromObject(Register objReg, Register reg);

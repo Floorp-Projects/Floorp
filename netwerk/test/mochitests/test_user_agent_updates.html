@@ -157,7 +157,7 @@ function testDownload(callback) {
         }
       })();
     });
-  }, 1000); });
+  }, 1500); });  // Timeout should be slightly larger than the update interval.
 }
 
 function testBadUpdate(callback) {
@@ -186,7 +186,7 @@ function testBadUpdate(callback) {
 }
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.requestFlakyTimeout("untriaged");
+SimpleTest.requestFlakyTimeout("Test sets timeouts to wait for updates to happen.");
 
 SpecialPowers.pushPrefEnv({
   set: [

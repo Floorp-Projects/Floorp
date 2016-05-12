@@ -793,21 +793,11 @@ interface WebGLRenderingContext {
 // Reference: https://wiki.whatwg.org/wiki/OffscreenCanvas
 [Exposed=(Window,Worker)]
 partial interface WebGLRenderingContext {
-  [Func="mozilla::dom::OffscreenCanvas::PrefEnabled"]
-  void commit();
+    [Func="mozilla::dom::OffscreenCanvas::PrefEnabled"]
+    void commit();
 };
 
-/*[Constructor(DOMString type, optional WebGLContextEventInit eventInit)]
-interface WebGLContextEvent : Event {
-    readonly attribute DOMString statusMessage;
-    };*/
-
-// EventInit is defined in the DOM4 specification.
-/*dictionary WebGLContextEventInit : EventInit {
-    DOMString statusMessage;
-    };*/
-
-
+////////////////////////////////////////
 // specific extension interfaces
 
 [NoInterfaceObject]

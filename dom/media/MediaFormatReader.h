@@ -62,7 +62,7 @@ public:
   // For Media Resource Management
   void ReleaseMediaResources() override;
 
-  nsresult ResetDecode() override;
+  nsresult ResetDecode(TargetQueues aQueues) override;
 
   RefPtr<ShutdownPromise> Shutdown() override;
 
@@ -322,7 +322,7 @@ private:
     uint64_t mNumSamplesOutputTotalSinceTelemetry;
     uint64_t mNumSamplesSkippedTotalSinceTelemetry;
 
-    // These get overriden in the templated concrete class.
+    // These get overridden in the templated concrete class.
     // Indicate if we have a pending promise for decoded frame.
     // Rejecting the promise will stop the reader from decoding ahead.
     virtual bool HasPromise() const = 0;

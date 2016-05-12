@@ -108,48 +108,49 @@ this.BrowserUtils = {
    * the coordinates are relative to the user's screen.
    */
   getElementBoundingScreenRect: function(aElement) {
+    return this.getElementBoundingRect(aElement, true);
+  },
+
+  /**
+   * For a given DOM element, returns its position as an offset from the topmost
+   * window. In a content process, the coordinates returned will be relative to
+   * the left/top of the topmost content area. If aInScreenCoords is true,
+   * screen coordinates will be returned instead.
+   */
+  getElementBoundingRect: function(aElement, aInScreenCoords) {
     let rect = aElement.getBoundingClientRect();
-    let window = aElement.ownerDocument.defaultView;
+    let win = aElement.ownerDocument.defaultView;
+
+    let x = rect.left, y = rect.top;
 
     // We need to compensate for any iframes that might shift things
     // over. We also need to compensate for zooming.
-    let fullZoom = window.getInterface(Ci.nsIDOMWindowUtils).fullZoom;
+    let parentFrame = win.frameElement;
+    while (parentFrame) {
+      win = parentFrame.ownerDocument.defaultView;
+      let cstyle = win.getComputedStyle(parentFrame, "");
+
+      let framerect = parentFrame.getBoundingClientRect();
+      x += framerect.left + parseFloat(cstyle.borderLeftWidth) + parseFloat(cstyle.paddingLeft);
+      y += framerect.top + parseFloat(cstyle.borderTopWidth) + parseFloat(cstyle.paddingTop);
+
+      parentFrame = win.frameElement;
+    }
+
+    if (aInScreenCoords) {
+      x += win.mozInnerScreenX;
+      y += win.mozInnerScreenY;
+    }
+
+    let fullZoom = win.getInterface(Ci.nsIDOMWindowUtils).fullZoom;
     rect = {
-      left: (rect.left + window.mozInnerScreenX) * fullZoom,
-      top: (rect.top + window.mozInnerScreenY) * fullZoom,
+      left: x * fullZoom,
+      top: y * fullZoom,
       width: rect.width * fullZoom,
       height: rect.height * fullZoom
     };
 
     return rect;
-  },
-
-  /**
-   * Given an element potentially within a subframe, calculate the offsets
-   * up to the top level browser.
-   *
-   * @param aTopLevelWindow content window to calculate offsets to.
-   * @param aElement The element in question.
-   * @return [targetWindow, offsetX, offsetY]
-   */
-  offsetToTopLevelWindow: function (aTopLevelWindow, aElement) {
-    let offsetX = 0;
-    let offsetY = 0;
-    let element = aElement;
-    while (element &&
-           element.ownerDocument &&
-           element.ownerDocument.defaultView != aTopLevelWindow) {
-      element = element.ownerDocument.defaultView.frameElement;
-      let rect = element.getBoundingClientRect();
-      offsetX += rect.left;
-      offsetY += rect.top;
-    }
-    let win = null;
-    if (element == aElement)
-      win = aTopLevelWindow;
-    else
-      win = element.contentDocument.defaultView;
-    return { targetWindow: win, offsetX: offsetX, offsetY: offsetY };
   },
 
   onBeforeLinkTraversal: function(originalTarget, linkURI, linkNode, isAppTab) {

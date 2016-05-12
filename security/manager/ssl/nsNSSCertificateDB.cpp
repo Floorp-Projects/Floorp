@@ -1289,13 +1289,9 @@ nsNSSCertificateDB::get_default_nickname(CERTCertificate *cert,
   NS_ConvertUTF16toUTF8 nickFmt(tmpNickFmt);
 
   nsAutoCString baseName;
-  char *temp_nn = PR_smprintf(nickFmt.get(), username.get(), caname.get());
-  if (!temp_nn) {
+  baseName.AppendPrintf(nickFmt.get(), username.get(), caname.get());
+  if (baseName.IsEmpty()) {
     return;
-  } else {
-    baseName = temp_nn;
-    PR_smprintf_free(temp_nn);
-    temp_nn = nullptr;
   }
 
   nickname = baseName;
@@ -1310,28 +1306,26 @@ nsNSSCertificateDB::get_default_nickname(CERTCertificate *cert,
     return;
 
   if (!PK11_IsInternal(slot.get())) {
-    char* tmp = PR_smprintf("%s:%s", PK11_GetTokenName(slot.get()),
-                            baseName.get());
-    if (!tmp) {
+    nsAutoCString tmp;
+    tmp.AppendPrintf("%s:%s", PK11_GetTokenName(slot.get()), baseName.get());
+    if (tmp.IsEmpty()) {
       nickname.Truncate();
       return;
     }
     baseName = tmp;
-    PR_smprintf_free(tmp);
-
     nickname = baseName;
   }
 
   int count = 1;
   while (true) {
     if ( count > 1 ) {
-      char *tmp = PR_smprintf("%s #%d", baseName.get(), count);
-      if (!tmp) {
+      nsAutoCString tmp;
+      tmp.AppendPrintf("%s #%d", baseName.get(), count);
+      if (tmp.IsEmpty()) {
         nickname.Truncate();
         return;
       }
       nickname = tmp;
-      PR_smprintf_free(tmp);
     }
 
     UniqueCERTCertificate dummycert;
