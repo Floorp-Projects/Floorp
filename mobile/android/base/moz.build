@@ -313,7 +313,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'firstrun/FirstrunPanel.java',
     'firstrun/RestrictedWelcomePanel.java',
     'firstrun/SyncPanel.java',
-    'firstrun/WelcomePanel.java',
     'FormAssistPopup.java',
     'GeckoAccessibility.java',
     'GeckoActivity.java',
