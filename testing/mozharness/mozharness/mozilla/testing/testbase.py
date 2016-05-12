@@ -12,6 +12,7 @@ import pprint
 import re
 import urllib2
 import json
+import socket
 
 from mozharness.base.errors import BaseErrorList
 from mozharness.base.log import FATAL, WARNING
