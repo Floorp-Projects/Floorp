@@ -3158,7 +3158,7 @@ CacheIndex::ChangeState(EState aNewState)
 void
 CacheIndex::NotifyAsyncGetDiskConsumptionCallbacks()
 {
-  if (mState == READY && mDiskConsumptionObservers.Length()) {
+  if ((mState == READY || mState == WRITING) && !mAsyncGetDiskConsumptionBlocked && mDiskConsumptionObservers.Length()) {
     for (uint32_t i = 0; i < mDiskConsumptionObservers.Length(); ++i) {
       DiskConsumptionObserver* o = mDiskConsumptionObservers[i];
       // Safe to call under the lock.  We always post to the main thread.
