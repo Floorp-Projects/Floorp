@@ -891,7 +891,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     } else if (rawNode.className) {
       selector = "." + [...rawNode.classList].map(c => CSS.escape(c)).join(".");
     } else {
-      selector = rawNode.tagName.toLowerCase();
+      selector = rawNode.localName;
     }
 
     if (pseudoClasses && pseudoClasses.length > 0) {

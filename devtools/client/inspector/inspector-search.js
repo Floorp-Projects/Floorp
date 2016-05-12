@@ -451,11 +451,6 @@ SelectorAutocompleter.prototype = {
         label: value
       };
 
-      // In case of tagNames, change the case to small
-      if (value.match(/.*[\.#][^\.#]{0,}$/) == null) {
-        item.label = value.toLowerCase();
-      }
-
       // In case the query's state is tag and the item's state is id or class
       // adjust the preLabel
       if (aState === this.States.TAG && state === this.States.CLASS) {
