@@ -178,6 +178,9 @@ public abstract class GeckoApp
     protected Menu mMenu;
     protected boolean mIsRestoringActivity;
 
+    /** Tells if we're aborting app launch, e.g. if this is an unsupported device configuration. */
+    protected boolean mIsAbortingAppLaunch;
+
     private ContactService mContactService;
     private PromptService mPromptService;
     protected TextSelection mTextSelection;
@@ -1111,6 +1114,7 @@ public abstract class GeckoApp
 
         if (!HardwareUtils.isSupportedSystem()) {
             // This build does not support the Android version of the device: Show an error and finish the app.
+            mIsAbortingAppLaunch = true;
             super.onCreate(savedInstanceState);
             showSDKVersionError();
             finish();
@@ -1367,7 +1371,21 @@ public abstract class GeckoApp
     @Override
     public void onStart() {
         super.onStart();
+        if (mIsAbortingAppLaunch) {
+            return;
+        }
+
         mWasFirstTabShownAfterActivityUnhidden = false; // onStart indicates we were hidden.
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // Overriding here is not necessary, but we do this so we don't
+        // forget to add the abort if we override this method later.
+        if (mIsAbortingAppLaunch) {
+            return;
+        }
     }
 
     /**
@@ -1946,6 +1964,9 @@ public abstract class GeckoApp
         // After an onPause, the activity is back in the foreground.
         // Undo whatever we did in onPause.
         super.onResume();
+        if (mIsAbortingAppLaunch) {
+            return;
+        }
 
         int newOrientation = getResources().getConfiguration().orientation;
         if (GeckoScreenOrientation.getInstance().update(newOrientation)) {
@@ -2016,6 +2037,11 @@ public abstract class GeckoApp
     @Override
     public void onPause()
     {
+        if (mIsAbortingAppLaunch) {
+            super.onPause();
+            return;
+        }
+
         final HealthRecorder rec = mHealthRecorder;
         final Context context = this;
 
@@ -2060,6 +2086,11 @@ public abstract class GeckoApp
 
     @Override
     public void onRestart() {
+        if (mIsAbortingAppLaunch) {
+            super.onRestart();
+            return;
+        }
+
         // Faster on main thread with an async apply().
         final StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskReads();
         try {
@@ -2075,7 +2106,7 @@ public abstract class GeckoApp
 
     @Override
     public void onDestroy() {
-        if (!HardwareUtils.isSupportedSystem()) {
+        if (mIsAbortingAppLaunch) {
             // This build does not support the Android version of the device:
             // We did not initialize anything, so skip cleaning up.
             super.onDestroy();
