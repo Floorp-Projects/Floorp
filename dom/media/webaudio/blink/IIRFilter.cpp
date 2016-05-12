@@ -129,7 +129,15 @@ void IIRFilter::getFrequencyResponse(int nFrequencies, const float* frequency, f
 
         std::complex<double> numerator = evaluatePolynomial(m_feedforward->Elements(), zRecip, m_feedforward->Length() - 1);
         std::complex<double> denominator = evaluatePolynomial(m_feedback->Elements(), zRecip, m_feedback->Length() - 1);
-        std::complex<double> response = numerator / denominator;
+        // Strangely enough, using complex division:
+        // e.g. Complex response = numerator / denominator;
+        // fails on our test machines, yielding infinities and NaNs, so we do
+        // things the long way here.
+        double n = norm(denominator);
+        double r = (real(numerator)*real(denominator) + imag(numerator)*imag(denominator)) / n;
+        double i = (imag(numerator)*real(denominator) - real(numerator)*imag(denominator)) / n;
+        std::complex<double> response = std::complex<double>(r, i);
+
         magResponse[k] = static_cast<float>(abs(response));
         phaseResponse[k] = static_cast<float>(atan2(imag(response), real(response)));
     }

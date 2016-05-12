@@ -175,7 +175,7 @@ void Biquad::setHighpassParams(double cutoff, double resonance)
 void Biquad::setNormalizedCoefficients(double b0, double b1, double b2, double a0, double a1, double a2)
 {
     double a0Inverse = 1 / a0;
-    
+
     m_b0 = b0 * a0Inverse;
     m_b1 = b1 * a0Inverse;
     m_b2 = b2 * a0Inverse;
@@ -376,7 +376,7 @@ void Biquad::setBandpassParams(double frequency, double Q)
         if (Q > 0) {
             double alpha = sin(w0) / (2 * Q);
             double k = cos(w0);
-    
+
             double b0 = alpha;
             double b1 = 0;
             double b2 = -alpha;
@@ -451,13 +451,21 @@ void Biquad::getFrequencyResponse(int nFrequencies,
     double b2 = m_b2;
     double a1 = m_a1;
     double a2 = m_a2;
-    
+
     for (int k = 0; k < nFrequencies; ++k) {
         double omega = -M_PI * frequency[k];
         Complex z = Complex(cos(omega), sin(omega));
         Complex numerator = b0 + (b1 + b2 * z) * z;
         Complex denominator = Complex(1, 0) + (a1 + a2 * z) * z;
-        Complex response = numerator / denominator;
+        // Strangely enough, using complex division:
+        // e.g. Complex response = numerator / denominator;
+        // fails on our test machines, yielding infinities and NaNs, so we do
+        // things the long way here.
+        double n = norm(denominator);
+        double r = (real(numerator)*real(denominator) + imag(numerator)*imag(denominator)) / n;
+        double i = (imag(numerator)*real(denominator) - real(numerator)*imag(denominator)) / n;
+        std::complex<double> response = std::complex<double>(r, i);
+
         magResponse[k] = static_cast<float>(abs(response));
         phaseResponse[k] = static_cast<float>(atan2(imag(response), real(response)));
     }
