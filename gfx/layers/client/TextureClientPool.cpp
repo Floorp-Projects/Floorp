@@ -6,6 +6,7 @@
 #include "TextureClientPool.h"
 #include "CompositableClient.h"
 #include "mozilla/layers/CompositableForwarder.h"
+#include "mozilla/layers/TextureForwarder.h"
 #include "mozilla/layers/TiledContentClient.h"
 
 #include "gfxPrefs.h"
@@ -29,7 +30,7 @@ TextureClientPool::TextureClientPool(gfx::SurfaceFormat aFormat,
                                      gfx::IntSize aSize,
                                      uint32_t aMaxTextureClients,
                                      uint32_t aShrinkTimeoutMsec,
-                                     CompositableForwarder* aAllocator)
+                                     TextureForwarder* aAllocator)
   : mFormat(aFormat)
   , mFlags(aFlags)
   , mSize(aSize)
