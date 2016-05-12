@@ -25,18 +25,6 @@
   <script type="application/javascript;version=1.8"
           src="chrome://devtools/content/shared/theme-switching.js"/>
 
-  <commandset>
-    <command id="nodeSearchCommand"
-      oncommand="inspector.searchBox.focus()"/>
-  </commandset>
-
-  <keyset>
-    <key id="nodeSearchKey"
-      key="&inspectorSearchHTML.key;"
-      modifiers="accel"
-      command="nodeSearchCommand"/>
-  </keyset>
-
   <popupset id="inspectorPopupSet">
     <!-- Used by the Markup Panel and the Highlighter -->
     <menupopup id="inspector-node-popup">

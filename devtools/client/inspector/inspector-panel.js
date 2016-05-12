@@ -14,6 +14,7 @@ var EventEmitter = require("devtools/shared/event-emitter");
 var clipboard = require("sdk/clipboard");
 var {HostType} = require("devtools/client/framework/toolbox").Toolbox;
 const {executeSoon} = require("devtools/shared/DevToolsUtils");
+var {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
 
 loader.lazyRequireGetter(this, "CSS", "CSS");
 
@@ -317,6 +318,20 @@ InspectorPanel.prototype = {
     this.search = new InspectorSearch(this, this.searchBox);
     this.search.on("search-cleared", this._updateSearchResultsLabel);
     this.search.on("search-result", this._updateSearchResultsLabel);
+
+    let shortcuts = new KeyShortcuts({
+      window: this.panelDoc.defaultView,
+    });
+    let key = strings.GetStringFromName("inspector.searchHTML.key");
+    shortcuts.on(key, (name, event) => {
+      // Prevent overriding same shortcut from the computed/rule views
+      if (event.target.closest("#sidebar-panel-ruleview") ||
+          event.target.closest("#sidebar-panel-computedview")) {
+        return;
+      }
+      event.preventDefault();
+      this.searchBox.focus();
+    });
   },
 
   get searchSuggestions() {
