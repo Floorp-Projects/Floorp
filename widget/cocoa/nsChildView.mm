@@ -4602,7 +4602,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   WidgetMouseEvent event(true, msg, mGeckoChild, WidgetMouseEvent::eReal);
   event.mRefPoint = mGeckoChild->CocoaPointsToDevPixels(localEventLocation);
 
-  event.exit = aExitFrom;
+  event.mExitFrom = aExitFrom;
 
   nsEventStatus status; // ignored
   mGeckoChild->DispatchEvent(&event, status);
@@ -6333,7 +6333,7 @@ ChildViewMouseTracker::ReEvaluateMouseEnterState(NSEvent* aEvent, ChildView* aOl
                                  enter:NO
                               exitFrom:exitFrom];
     // After the cursor exits the window set it to a visible regular arrow cursor.
-    if (type == WidgetMouseEvent::eTopLevel) {
+    if (exitFrom == WidgetMouseEvent::eTopLevel) {
       [[nsCursorManager sharedInstance] setCursor:eCursor_standard];
     }
     [sLastMouseEventView sendMouseEnterOrExitEvent:aEvent
