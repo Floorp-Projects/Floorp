@@ -553,6 +553,8 @@ KeyframeUtils::GetAnimationPropertiesFromKeyframes(
         }
 
         KeyframeValueEntry* entry = entries.AppendElement();
+        MOZ_ASSERT(frame.mComputedOffset != Keyframe::kComputedOffsetNotSet,
+                   "Invalid computed offset");
         entry->mOffset = frame.mComputedOffset;
         entry->mProperty = value.mProperty;
         entry->mValue = value.mValue;
