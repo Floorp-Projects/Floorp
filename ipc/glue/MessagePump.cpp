@@ -356,7 +356,8 @@ MessagePumpForNonMainThreads::Run(base::MessagePump::Delegate* aDelegate)
       continue;
     }
 
-    didWork = aDelegate->DoIdleWork();
+    DebugOnly<bool> didIdleWork = aDelegate->DoIdleWork();
+    MOZ_ASSERT(!didIdleWork);
     if (!keep_running_) {
       break;
     }
@@ -418,7 +419,8 @@ MessagePumpForNonMainUIThreads::DoRunLoop()
       continue;
     }
 
-    didWork = state_->delegate->DoIdleWork();
+    DebugOnly<bool> didIdleWork = state_->delegate->DoIdleWork();
+    MOZ_ASSERT(!didIdleWork);
     CHECK_QUIT_STATE
 
     SetInWait();
