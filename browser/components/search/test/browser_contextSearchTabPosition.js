@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 add_task(function* test() {
+  yield SpecialPowers.pushPrefEnv({set: [["toolkit.telemetry.enabled", true]]});
   let engine = yield promiseNewEngine("testEngine.xml");
   let histogramKey = "other-" + engine.name + ".contextmenu";
   let numSearchesBefore = 0;
