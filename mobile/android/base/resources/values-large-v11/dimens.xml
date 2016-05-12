@@ -24,7 +24,6 @@
     <dimen name="browser_toolbar_site_security_padding_vertical">21dp</dimen>
     <dimen name="browser_toolbar_site_security_padding_horizontal">8dp</dimen>
 
-    <dimen name="firstrun_brand_size">72dp</dimen>
     <dimen name="firstrun_background_height">300dp</dimen>
 
     <dimen name="tabs_panel_indicator_width">72dp</dimen>
