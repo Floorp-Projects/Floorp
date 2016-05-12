@@ -6553,12 +6553,6 @@ if test "$BUILD_CTYPES"; then
     AC_DEFINE(BUILD_CTYPES)
 fi
 
-dnl Build Services crypto component (used by Sync)
-AC_SUBST(MOZ_SERVICES_CRYPTO)
-if test -n "$MOZ_SERVICES_CRYPTO"; then
-  AC_DEFINE(MOZ_SERVICES_CRYPTO)
-fi
-
 dnl Build Firefox Health Reporter Service
 AC_SUBST(MOZ_SERVICES_HEALTHREPORT)
 if test -n "$MOZ_SERVICES_HEALTHREPORT"; then
