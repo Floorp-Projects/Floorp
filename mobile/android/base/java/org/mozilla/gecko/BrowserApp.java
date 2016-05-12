@@ -993,6 +993,9 @@ public class BrowserApp extends GeckoApp
     @Override
     public void onResume() {
         super.onResume();
+        if (mIsAbortingAppLaunch) {
+            return;
+        }
 
         // Needed for Adjust to get accurate session measurements
         AdjustConstants.getAdjustHelper().onResume();
@@ -1013,6 +1016,9 @@ public class BrowserApp extends GeckoApp
     @Override
     public void onPause() {
         super.onPause();
+        if (mIsAbortingAppLaunch) {
+            return;
+        }
 
         // Needed for Adjust to get accurate session measurements
         AdjustConstants.getAdjustHelper().onPause();
@@ -1032,6 +1038,9 @@ public class BrowserApp extends GeckoApp
     @Override
     public void onRestart() {
         super.onRestart();
+        if (mIsAbortingAppLaunch) {
+            return;
+        }
 
         for (final BrowserAppDelegate delegate : delegates) {
             delegate.onRestart(this);
@@ -1041,6 +1050,9 @@ public class BrowserApp extends GeckoApp
     @Override
     public void onStart() {
         super.onStart();
+        if (mIsAbortingAppLaunch) {
+            return;
+        }
 
         // Queue this work so that the first launch of the activity doesn't
         // trigger profile init too early.
@@ -1081,6 +1093,9 @@ public class BrowserApp extends GeckoApp
     @Override
     public void onStop() {
         super.onStop();
+        if (mIsAbortingAppLaunch) {
+            return;
+        }
 
         // We only show the guest mode notification when our activity is in the foreground.
         GuestSession.hideNotification(this);
@@ -1325,8 +1340,7 @@ public class BrowserApp extends GeckoApp
 
     @Override
     public void onDestroy() {
-        if (!HardwareUtils.isSupportedSystem()) {
-            // This build does not support the Android version of the device; Exit early.
+        if (mIsAbortingAppLaunch) {
             super.onDestroy();
             return;
         }
