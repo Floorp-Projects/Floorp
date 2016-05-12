@@ -54,9 +54,22 @@ public:
     inline const PlatformData* platformData() const;
   };
 
+  // Provides optional parameters to a Thread.
+  class Options
+  {
+    size_t stackSize_;
+
+  public:
+    Options() : stackSize_(0) {}
+
+    Options& setStackSize(size_t sz) { stackSize_ = sz; return *this; }
+    size_t stackSize() const { return stackSize_; }
+  };
+
   // Create a Thread in an initially unjoinable state. A thread of execution can
-  // be created for this Thread by calling |init|.
-  Thread() : id_(Id()) {}
+  // be created for this Thread by calling |init|. Some of the thread's
+  // properties may be controlled by passing options to this constructor.
+  explicit Thread(const Options& options = Options()) : id_(Id()), options_(options) {}
 
   // Start a thread of execution at functor |f| with parameters |args|. Note
   // that the arguments must be either POD or rvalue references (mozilla::Move).
@@ -124,6 +137,9 @@ private:
 
   // Provide a process global ID to each thread.
   Id id_;
+
+  // Overridable thread creation options.
+  Options options_;
 
   // Dispatch to per-platform implementation of thread creation.
   MOZ_MUST_USE bool create(THREAD_RETURN_TYPE (THREAD_CALL_API *aMain)(void*), void* aArg);
