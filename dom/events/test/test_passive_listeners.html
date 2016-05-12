@@ -1,0 +1,118 @@
+<html>
+<head>
+  <title>Tests for passive event listeners</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+
+<body>
+<p id="display"></p>
+<div id="dummy">
+</div>
+
+<script>
+var listenerHitCount;
+var doPreventDefault;
+
+function listener(e)
+{
+  listenerHitCount++;
+  if (doPreventDefault) {
+    // When this function is registered as a passive listener, this
+    // call should be a no-op and might report a console warning.
+    e.preventDefault();
+  }
+}
+
+function listener2(e)
+{
+  if (doPreventDefault) {
+    e.preventDefault();
+  }
+}
+
+var elem = document.getElementById('dummy');
+
+function doTest(description, passiveArg)
+{
+  listenerHitCount = 0;
+
+  elem.addEventListener('test', listener, { passive: passiveArg });
+
+  // Test with a cancelable event
+  var e1 = new Event('test', { cancelable: true });
+  elem.dispatchEvent(e1);
+  is(listenerHitCount, 1, description + ' | hit count');
+  var expectedDefaultPrevented = (doPreventDefault && !passiveArg);
+  is(e1.defaultPrevented, expectedDefaultPrevented, description + ' | default prevented');
+
+  // Test with a non-cancelable event
+  var e2 = new Event('test', { cancelable: false });
+  elem.dispatchEvent(e2);
+  is(listenerHitCount, 2, description + ' | hit count after non-cancelable event');
+  is(e2.defaultPrevented, false, description + ' | default prevented on non-cancelable event');
+
+  // Test combining passive-enabled and "traditional" listeners
+  elem.addEventListener('test', listener2, false);
+  var e3 = new Event('test', { cancelable: true });
+  elem.dispatchEvent(e3);
+  is(listenerHitCount, 3, description + ' | hit count with second listener');
+  is(e3.defaultPrevented, doPreventDefault, description + ' | default prevented with second listener');
+  elem.removeEventListener('test', listener2, false);
+
+  elem.removeEventListener('test', listener, false);
+}
+
+function testAddListenerKey(passiveListenerFirst)
+{
+  listenerHitCount = 0;
+  doPreventDefault = true;
+
+  elem.addEventListener('test', listener, { capture: false, passive: passiveListenerFirst });
+  // This second listener should not be registered, because the "key" of
+  // { type, callback, capture } is the same, even though the 'passive' flag
+  // is different.
+  elem.addEventListener('test', listener, { capture: false, passive: !passiveListenerFirst });
+
+  var e1 = new Event('test', { cancelable: true });
+  elem.dispatchEvent(e1);
+
+  is(listenerHitCount, 1, 'Duplicate addEventListener was correctly ignored');
+  is(e1.defaultPrevented, !passiveListenerFirst, 'Prevent-default result based on first registered listener');
+
+  // Even though passive is the opposite of the first addEventListener call, it
+  // should remove the listener registered above.
+  elem.removeEventListener('test', listener, { capture: false, passive: !passiveListenerFirst });
+
+  var e2 = new Event('test', { cancelable: true });
+  elem.dispatchEvent(e2);
+
+  is(listenerHitCount, 1, 'non-passive listener was correctly unregistered');
+  is(e2.defaultPrevented, false, 'no listener was registered to preventDefault this event');
+}
+
+function test()
+{
+  doPreventDefault = false;
+
+  doTest('base case', undefined);
+  doTest('non-passive listener', false);
+  doTest('passive listener', true);
+
+  doPreventDefault = true;
+
+  doTest('base case', undefined);
+  doTest('non-passive listener', false);
+  doTest('passive listener', true);
+
+  testAddListenerKey(false);
+  testAddListenerKey(true);
+}
+
+test();
+
+</script>
+
+</body>
+</html>
+
+
