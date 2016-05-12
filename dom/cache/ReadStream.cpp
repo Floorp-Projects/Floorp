@@ -35,10 +35,10 @@ public:
         nsIInputStream* aStream);
 
   void
-  Serialize(CacheReadStreamOrVoid* aReadStreamOut);
+  Serialize(CacheReadStreamOrVoid* aReadStreamOut, ErrorResult& aRv);
 
   void
-  Serialize(CacheReadStream* aReadStreamOut);
+  Serialize(CacheReadStream* aReadStreamOut, ErrorResult& aRv);
 
   // ReadStream::Controllable methods
   virtual void
@@ -197,21 +197,27 @@ ReadStream::Inner::Inner(StreamControl* aControl, const nsID& aId,
 }
 
 void
-ReadStream::Inner::Serialize(CacheReadStreamOrVoid* aReadStreamOut)
+ReadStream::Inner::Serialize(CacheReadStreamOrVoid* aReadStreamOut,
+                             ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread);
   MOZ_ASSERT(aReadStreamOut);
   CacheReadStream stream;
-  Serialize(&stream);
+  Serialize(&stream, aRv);
   *aReadStreamOut = stream;
 }
 
 void
-ReadStream::Inner::Serialize(CacheReadStream* aReadStreamOut)
+ReadStream::Inner::Serialize(CacheReadStream* aReadStreamOut, ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread);
   MOZ_ASSERT(aReadStreamOut);
-  MOZ_ASSERT(mState == Open);
+
+  if (mState != Open) {
+    aRv.ThrowTypeError<MSG_CACHE_STREAM_CLOSED>();
+    return;
+  }
+
   MOZ_ASSERT(mControl);
 
   // If we are sending a ReadStream, then we never want to set the
@@ -482,15 +488,15 @@ ReadStream::Create(PCacheStreamControlParent* aControl, const nsID& aId,
 }
 
 void
-ReadStream::Serialize(CacheReadStreamOrVoid* aReadStreamOut)
+ReadStream::Serialize(CacheReadStreamOrVoid* aReadStreamOut, ErrorResult& aRv)
 {
-  mInner->Serialize(aReadStreamOut);
+  mInner->Serialize(aReadStreamOut, aRv);
 }
 
 void
-ReadStream::Serialize(CacheReadStream* aReadStreamOut)
+ReadStream::Serialize(CacheReadStream* aReadStreamOut, ErrorResult& aRv)
 {
-  mInner->Serialize(aReadStreamOut);
+  mInner->Serialize(aReadStreamOut, aRv);
 }
 
 ReadStream::ReadStream(ReadStream::Inner* aInner)
