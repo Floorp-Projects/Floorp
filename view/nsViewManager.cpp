@@ -189,7 +189,7 @@ void nsViewManager::DoSetWindowDimensions(nscoord aWidth, nscoord aHeight)
     // Don't resize the widget. It is already being set elsewhere.
     mRootView->SetDimensions(newDim, true, false);
     if (mPresShell)
-      mPresShell->ResizeReflow(aWidth, aHeight);
+      mPresShell->ResizeReflow(aWidth, aHeight, oldDim.width, oldDim.height);
   }
 }
 
