@@ -395,6 +395,11 @@ def omnijar_name(toolkit):
 
 set_config('OMNIJAR_NAME', omnijar_name)
 
+project_flag('MOZ_PLACES',
+             help='Build Places if required',
+             set_for_old_configure=True,
+             set_as_define=True)
+
 # Miscellaneous programs
 # ==============================================================
 
