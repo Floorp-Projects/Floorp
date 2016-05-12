@@ -314,10 +314,10 @@ NativeKeyBindings::Execute(const WidgetKeyboardEvent& aEvent,
     return true;
   }
 
-  for (uint32_t i = 0; i < aEvent.alternativeCharCodes.Length(); ++i) {
+  for (uint32_t i = 0; i < aEvent.mAlternativeCharCodes.Length(); ++i) {
     uint32_t ch = aEvent.IsShift() ?
-      aEvent.alternativeCharCodes[i].mShiftedCharCode :
-      aEvent.alternativeCharCodes[i].mUnshiftedCharCode;
+      aEvent.mAlternativeCharCodes[i].mShiftedCharCode :
+      aEvent.mAlternativeCharCodes[i].mUnshiftedCharCode;
     if (ch && ch != aEvent.mCharCode) {
       keyval = gdk_unicode_to_keyval(ch);
       if (ExecuteInternal(aEvent, aCallback, aCallbackData, keyval)) {

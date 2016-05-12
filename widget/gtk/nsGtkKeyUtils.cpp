@@ -1376,7 +1376,7 @@ KeymapWrapper::WillDispatchKeyboardEventInternal(WidgetKeyboardEvent& aKeyEvent,
                        aGdkKeyEvent->group);
     isLatin = isLatin && (altCharCodes.mShiftedCharCode <= 0xFF);
     if (altCharCodes.mUnshiftedCharCode || altCharCodes.mShiftedCharCode) {
-        aKeyEvent.alternativeCharCodes.AppendElement(altCharCodes);
+        aKeyEvent.mAlternativeCharCodes.AppendElement(altCharCodes);
     }
 
     bool needLatinKeyCodes = !isLatin;
@@ -1429,7 +1429,7 @@ KeymapWrapper::WillDispatchKeyboardEventInternal(WidgetKeyboardEvent& aKeyEvent,
         IsBasicLatinLetterOrNumeral(ch) ? ch : 0;
     if (altLatinCharCodes.mUnshiftedCharCode ||
         altLatinCharCodes.mShiftedCharCode) {
-        aKeyEvent.alternativeCharCodes.AppendElement(altLatinCharCodes);
+        aKeyEvent.mAlternativeCharCodes.AppendElement(altLatinCharCodes);
     }
     // If the mCharCode is not Latin, and the level is 0 or 1, we should
     // replace the mCharCode to Latin char if Alt and Meta keys are not

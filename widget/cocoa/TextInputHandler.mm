@@ -1157,7 +1157,7 @@ TISInputSourceWrapper::WillDispatchKeyboardEvent(
   if ((unshiftedChar || shiftedChar) &&
       (!aKeyEvent.IsMeta() || !isDvorakQWERTY)) {
     AlternativeCharCode altCharCodes(unshiftedChar, shiftedChar);
-    aKeyEvent.alternativeCharCodes.AppendElement(altCharCodes);
+    aKeyEvent.mAlternativeCharCodes.AppendElement(altCharCodes);
   }
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p TISInputSourceWrapper::WillDispatchKeyboardEvent, "
@@ -1219,7 +1219,7 @@ TISInputSourceWrapper::WillDispatchKeyboardEvent(
   if ((cmdedChar || cmdedShiftChar) && isCmdSwitchLayout &&
       (aKeyEvent.IsMeta() || !isDvorakQWERTY)) {
     AlternativeCharCode altCharCodes(cmdedChar, cmdedShiftChar);
-    aKeyEvent.alternativeCharCodes.AppendElement(altCharCodes);
+    aKeyEvent.mAlternativeCharCodes.AppendElement(altCharCodes);
   }
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p TISInputSourceWrapper::WillDispatchKeyboardEvent, "
@@ -1231,7 +1231,7 @@ TISInputSourceWrapper::WillDispatchKeyboardEvent(
   // hasCmdShiftOnlyChar definition for the detail.
   if (hasCmdShiftOnlyChar && originalCmdedShiftChar) {
     AlternativeCharCode altCharCodes(0, originalCmdedShiftChar);
-    aKeyEvent.alternativeCharCodes.AppendElement(altCharCodes);
+    aKeyEvent.mAlternativeCharCodes.AppendElement(altCharCodes);
   }
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p TISInputSourceWrapper::WillDispatchKeyboardEvent, "
