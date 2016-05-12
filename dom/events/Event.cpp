@@ -521,6 +521,16 @@ Event::PreventDefaultInternal(bool aCalledByDefaultHandler)
     return;
   }
   if (mEvent->mFlags.mInPassiveListener) {
+    nsCOMPtr<nsPIDOMWindowInner> win(do_QueryInterface(mOwner));
+    if (win) {
+      if (nsIDocument* doc = win->GetExtantDoc()) {
+        nsString type;
+        GetType(type);
+        const char16_t* params[] = { type.get() };
+        doc->WarnOnceAbout(nsIDocument::ePreventDefaultFromPassiveListener,
+          false, params, ArrayLength(params));
+      }
+    }
     return;
   }
 
