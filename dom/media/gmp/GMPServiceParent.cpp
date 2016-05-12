@@ -6,6 +6,7 @@
 #include "GMPServiceParent.h"
 #include "GMPService.h"
 #include "prio.h"
+#include "base/task.h"
 #include "mozilla/Logging.h"
 #include "GMPParent.h"
 #include "GMPVideoDecoderParent.h"
