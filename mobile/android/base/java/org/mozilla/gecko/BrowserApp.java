@@ -1013,6 +1013,9 @@ public class BrowserApp extends GeckoApp
     @Override
     public void onResume() {
         super.onResume();
+        if (mIsAbortingAppLaunch) {
+            return;
+        }
 
         // Needed for Adjust to get accurate session measurements
         AdjustConstants.getAdjustHelper().onResume();
@@ -1039,20 +1042,34 @@ public class BrowserApp extends GeckoApp
     @Override
     public void onPause() {
         super.onPause();
+        if (mIsAbortingAppLaunch) {
+            return;
+        }
 
         // Needed for Adjust to get accurate session measurements
         AdjustConstants.getAdjustHelper().onPause();
 
         // Register for Prompt:ShowTop so we can foreground this activity even if it's hidden.
         EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener) this,
-            "Prompt:ShowTop");
+                "Prompt:ShowTop");
 
         mScreenshotObserver.stop();
     }
 
     @Override
+    public void onRestart() {
+        super.onRestart();
+        if (mIsAbortingAppLaunch) {
+            return;
+        }
+    }
+
+    @Override
     public void onStart() {
         super.onStart();
+        if (mIsAbortingAppLaunch) {
+            return;
+        }
 
         // Queue this work so that the first launch of the activity doesn't
         // trigger profile init too early.
@@ -1084,6 +1101,9 @@ public class BrowserApp extends GeckoApp
     @Override
     public void onStop() {
         super.onStop();
+        if (mIsAbortingAppLaunch) {
+            return;
+        }
 
         // We only show the guest mode notification when our activity is in the foreground.
         GuestSession.hideNotification(this);
@@ -1395,8 +1415,7 @@ public class BrowserApp extends GeckoApp
 
     @Override
     public void onDestroy() {
-        if (!HardwareUtils.isSupportedSystem()) {
-            // This build does not support the Android version of the device; Exit early.
+        if (mIsAbortingAppLaunch) {
             super.onDestroy();
             return;
         }
