@@ -8,7 +8,6 @@
 #include "nsAutoPtr.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/SharedThreadPool.h"
 
 #include "MediaConduitInterface.h"
 #include "MediaEngineWrapper.h"
