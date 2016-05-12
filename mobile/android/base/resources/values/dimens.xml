@@ -61,7 +61,6 @@
 
     <dimen name="firstrun_content_width">300dp</dimen>
     <dimen name="firstrun_min_height">180dp</dimen>
-    <dimen name="firstrun_brand_size">48dp</dimen>
     <dimen name="firstrun_background_height">180dp</dimen>
 
     <dimen name="overlay_prompt_content_width">260dp</dimen>

@@ -3,8 +3,6 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!ENTITY firstrun_panel_title_welcome "Welcome">
-<!ENTITY  onboard_start_message3 "Browse with &brandShortName;">
-<!ENTITY  onboard_start_subtext3 "Make your mobile Web browsing experience truly your own.">
 
 <!ENTITY firstrun_urlbar_message "Welcome to &brandShortName;">
 <!ENTITY firstrun_urlbar_subtext "Find things faster with helpful search suggestion shortcuts.">

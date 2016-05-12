@@ -30,8 +30,6 @@
 #include ../services/strings.xml.in
 
   <string name="firstrun_panel_title_welcome">&firstrun_panel_title_welcome;</string>
-  <string name="firstrun_welcome_message">&onboard_start_message3;</string>
-  <string name="firstrun_welcome_subtext">&onboard_start_subtext3;</string>
 
   <string name="firstrun_urlbar_message">&firstrun_urlbar_message;</string>
   <string name="firstrun_urlbar_subtext">&firstrun_urlbar_subtext;</string>
