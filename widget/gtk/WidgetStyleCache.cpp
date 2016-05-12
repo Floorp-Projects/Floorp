@@ -57,6 +57,22 @@ CreateScrollbarWidget(WidgetNodeType aWidgetType, GtkOrientation aOrientation)
 }
 
 static GtkWidget*
+CreateCheckboxWidget()
+{
+  GtkWidget* widget = gtk_check_button_new_with_label("M");
+  AddToWindowContainer(widget);
+  return widget;
+}
+
+static GtkWidget*
+CreateRadiobuttonWidget()
+{
+  GtkWidget* widget = gtk_radio_button_new_with_label(NULL, "M");
+  AddToWindowContainer(widget);
+  return widget;
+}
+
+static GtkWidget*
 CreateWidget(WidgetNodeType aWidgetType)
 {
   switch (aWidgetType) {
@@ -70,6 +86,10 @@ CreateWidget(WidgetNodeType aWidgetType)
     case MOZ_GTK_SCROLLBAR_VERTICAL:
       return CreateScrollbarWidget(aWidgetType,
                                    GTK_ORIENTATION_VERTICAL);
+    case MOZ_GTK_CHECKBUTTON_CONTAINER:
+      return CreateCheckboxWidget();
+    case MOZ_GTK_RADIOBUTTON_CONTAINER:
+      return CreateRadiobuttonWidget();
     default:
       /* Not implemented */
       return nullptr;
@@ -141,15 +161,10 @@ GetChildNodeStyle(WidgetNodeType aStyleType,
 static GtkStyleContext*
 GetStyleInternal(WidgetNodeType aNodeType)
 {
-  GtkWidget* widget = GetWidget(aNodeType);
-  if (widget) {
-    return gtk_widget_get_style_context(widget);
-  }
-
   switch (aNodeType) {
-    default:
-      MOZ_FALLTHROUGH_ASSERT("missing style context for node type");
-
+    case MOZ_GTK_SCROLLBAR_HORIZONTAL:
+      /* Root CSS node / widget for scrollbars */
+      break;
     case MOZ_GTK_SCROLLBAR_TROUGH_HORIZONTAL:
       return GetChildNodeStyle(aNodeType,
                                MOZ_GTK_SCROLLBAR_HORIZONTAL,
@@ -162,6 +177,9 @@ GetStyleInternal(WidgetNodeType aNodeType)
                                GTK_STYLE_CLASS_SLIDER,
                                MOZ_GTK_SCROLLBAR_TROUGH_HORIZONTAL);
 
+    case MOZ_GTK_SCROLLBAR_VERTICAL:
+      /* Root CSS node / widget for scrollbars */
+      break;
     case MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL:
       return GetChildNodeStyle(aNodeType,
                                MOZ_GTK_SCROLLBAR_VERTICAL,
@@ -173,7 +191,34 @@ GetStyleInternal(WidgetNodeType aNodeType)
                                MOZ_GTK_SCROLLBAR_VERTICAL,
                                GTK_STYLE_CLASS_SLIDER,
                                MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL);
+
+    case MOZ_GTK_RADIOBUTTON_CONTAINER:
+      /* Root CSS node / widget for checkboxes */
+      break;
+    case MOZ_GTK_RADIOBUTTON:
+      return GetChildNodeStyle(aNodeType,
+                               MOZ_GTK_RADIOBUTTON_CONTAINER,
+                               GTK_STYLE_CLASS_RADIO,
+                               MOZ_GTK_RADIOBUTTON_CONTAINER);
+    case MOZ_GTK_CHECKBUTTON_CONTAINER:
+      /* Root CSS node / widget for radiobuttons */
+      break;
+    case MOZ_GTK_CHECKBUTTON:
+      return GetChildNodeStyle(aNodeType,
+                               MOZ_GTK_CHECKBUTTON_CONTAINER,
+                               GTK_STYLE_CLASS_CHECK,
+                               MOZ_GTK_CHECKBUTTON_CONTAINER);
+    default:
+      break;
   }
+
+  GtkWidget* widget = GetWidget(aNodeType);
+  if (widget) {
+    return gtk_widget_get_style_context(widget);
+  }
+
+  MOZ_ASSERT_UNREACHABLE("missing style context for node type");
+  return nullptr;
 }
 
 void
