@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+<iframe id="iframe" srcdoc="
+  <script type='application/javascript'>
+  document.gUM = (constraints, success, failure) =>
+    navigator.mediaDevices.getUserMedia(constraints).then(success, failure);
+  </script>">
+</iframe>
+<script type="application/javascript">
+  "use strict";
+
+  createHTML({
+    title: "getUserMedia MediaStreamTrack 'ended' event on navigating",
+    bug: "1208373",
+  });
+
+  runTest(() => {
+    let iframe = document.getElementById("iframe");
+    let stream;
+    // We're passing callbacks into a method in the iframe here, because
+    // a Promise created in the iframe is unusable after the iframe has
+    // navigated away (see bug 1269400 for details).
+    return new Promise((resolve, reject) =>
+        iframe.contentDocument.gUM({audio: true, video: true}, resolve, reject))
+      .then(s => stream = s)
+      .then(() => {
+        var allTracksEnded = Promise.all(stream.getTracks().map(t => {
+          info("Set up ended handler for track " + t.id);
+          return haveEvent(t, "ended", wait(5000))
+            .then(event => {
+              info("ended handler invoked for track " + t.id);
+              is(event.target, t, "Target should be correct");
+            }, e => e ? Promise.reject(e)
+                      : ok(false, "ended event never raised for track " + t.id));
+        }));
+        stream.getTracks().forEach(t =>
+          is(t.readyState, "live",
+             "Non-ended track should have readyState 'live'"));
+        iframe.srcdoc = "";
+        info("iframe has been reset. Waiting for tracks to end.");
+        return allTracksEnded;
+      })
+      .then(() => stream.getTracks().forEach(t =>
+        is(t.readyState, "ended",
+           "Ended track should have readyState 'ended'")));
+  });
+</script>
+</pre>
+</body>
+</html>
