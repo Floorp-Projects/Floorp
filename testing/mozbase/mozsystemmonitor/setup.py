@@ -6,7 +6,7 @@ import os
 
 from setuptools import setup
 
-PACKAGE_VERSION = '0.0'
+PACKAGE_VERSION = '0.1'
 
 try:
     pwd = os.path.dirname(os.path.abspath(__file__))
