@@ -398,7 +398,7 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent>
     WriteParam(aMsg, aParam.mCharCode);
     WriteParam(aMsg, aParam.mPseudoCharCode);
     WriteParam(aMsg, aParam.mAlternativeCharCodes);
-    WriteParam(aMsg, aParam.isChar);
+    WriteParam(aMsg, aParam.mIsChar);
     WriteParam(aMsg, aParam.mIsRepeat);
     WriteParam(aMsg, aParam.mIsReserved);
     WriteParam(aMsg, aParam.mAccessKeyForwardedToChild);
@@ -434,7 +434,7 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent>
         ReadParam(aMsg, aIter, &aResult->mCharCode) &&
         ReadParam(aMsg, aIter, &aResult->mPseudoCharCode) &&
         ReadParam(aMsg, aIter, &aResult->mAlternativeCharCodes) &&
-        ReadParam(aMsg, aIter, &aResult->isChar) &&
+        ReadParam(aMsg, aIter, &aResult->mIsChar) &&
         ReadParam(aMsg, aIter, &aResult->mIsRepeat) &&
         ReadParam(aMsg, aIter, &aResult->mIsReserved) &&
         ReadParam(aMsg, aIter, &aResult->mAccessKeyForwardedToChild) &&
