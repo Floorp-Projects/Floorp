@@ -102,6 +102,13 @@ typedef mozilla::gfx::Point Point;
 typedef mozilla::gfx::Matrix4x4 Matrix4x4;
 using mozilla::gfx::PointTyped;
 
+// Choose between platform-specific implementations.
+#ifdef MOZ_ANDROID_APZ
+typedef WidgetOverscrollEffect OverscrollEffect;
+#else
+typedef GenericOverscrollEffect OverscrollEffect;
+#endif
+
 /**
  * \page APZCPrefs APZ preferences
  *
@@ -859,6 +866,7 @@ AsyncPanZoomController::AsyncPanZoomController(uint64_t aLayersId,
      mZoomConstraints(false, false, MIN_ZOOM, MAX_ZOOM),
      mLastSampleTime(GetFrameTime()),
      mLastCheckerboardReport(GetFrameTime()),
+     mOverscrollEffect(MakeUnique<OverscrollEffect>(*this)),
      mState(NOTHING),
      mNotificationBlockers(0),
      mInputQueue(aInputQueue),
@@ -2516,29 +2524,10 @@ void AsyncPanZoomController::OverscrollBy(ParentLayerPoint& aOverscroll) {
   bool xConsumed = FuzzyEqualsAdditive(aOverscroll.x, 0.0f, COORDINATE_EPSILON);
   bool yConsumed = FuzzyEqualsAdditive(aOverscroll.y, 0.0f, COORDINATE_EPSILON);
 
-#if defined(MOZ_ANDROID_APZ)
-  RefPtr<GeckoContentController> controller = GetGeckoContentController();
-  if (controller && ((xCanScroll && !xConsumed) || (yCanScroll && !yConsumed))) {
-    controller->UpdateOverscrollOffset(aOverscroll.x, aOverscroll.y);
-    aOverscroll.x = aOverscroll.y = 0.0f;
-  }
-#else
-  if (xCanScroll && !xConsumed) {
-    mX.OverscrollBy(aOverscroll.x);
-    aOverscroll.x = 0;
-    xConsumed = true;
-  }
+  bool shouldOverscrollX = xCanScroll && !xConsumed;
+  bool shouldOverscrollY = yCanScroll && !yConsumed;
 
-  if (yCanScroll && !yConsumed) {
-    mY.OverscrollBy(aOverscroll.y);
-    aOverscroll.y = 0;
-    yConsumed = true;
-  }
-
-  if ((xCanScroll && xConsumed) || (yCanScroll && yConsumed)) {
-    ScheduleComposite();
-  }
-#endif
+  mOverscrollEffect->ConsumeOverscroll(aOverscroll, shouldOverscrollX, shouldOverscrollY);
 }
 
 RefPtr<const OverscrollHandoffChain> AsyncPanZoomController::BuildOverscrollHandoffChain() {
@@ -2619,14 +2608,7 @@ void AsyncPanZoomController::HandleFlingOverscroll(const ParentLayerPoint& aVelo
                                    aScrolledApzc};
     treeManagerLocal->DispatchFling(this, handoffState);
     if (!IsZero(handoffState.mVelocity) && IsPannable() && gfxPrefs::APZOverscrollEnabled()) {
-#if defined(MOZ_ANDROID_APZ)
-      RefPtr<GeckoContentController> controller = GetGeckoContentController();
-      if (controller) {
-        controller->UpdateOverscrollVelocity(handoffState.mVelocity.x, handoffState.mVelocity.y);
-      }
-#else
-      StartOverscrollAnimation(handoffState.mVelocity);
-#endif
+      mOverscrollEffect->HandleFlingOverscroll(handoffState.mVelocity);
     }
   }
 }
