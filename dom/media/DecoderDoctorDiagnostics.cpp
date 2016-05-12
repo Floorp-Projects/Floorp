@@ -359,14 +359,15 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-#if defined(XP_WIN)
-  bool WMFNeeded = false;
-#endif
-#if defined(MOZ_FFMPEG)
-  bool FFMpegNeeded = false;
-#endif
   nsAutoString playableFormats;
   nsAutoString unplayableFormats;
+  // Subsets of unplayableFormats that require a specific platform decoder:
+#if defined(XP_WIN)
+  nsAutoString formatsRequiringWMF;
+#endif
+#if defined(MOZ_FFMPEG)
+  nsAutoString formatsRequiringFFMpeg;
+#endif
   nsAutoString supportedKeySystems;
   nsAutoString unsupportedKeySystems;
   DecoderDoctorDiagnostics::KeySystemIssue lastKeySystemIssue =
@@ -379,18 +380,20 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
           AppendToStringList(playableFormats,
                              diag.mDecoderDoctorDiagnostics.Format());
         } else {
+          AppendToStringList(unplayableFormats,
+                             diag.mDecoderDoctorDiagnostics.Format());
 #if defined(XP_WIN)
           if (diag.mDecoderDoctorDiagnostics.DidWMFFailToLoad()) {
-            WMFNeeded = true;
+            AppendToStringList(formatsRequiringWMF,
+                               diag.mDecoderDoctorDiagnostics.Format());
           }
 #endif
 #if defined(MOZ_FFMPEG)
           if (diag.mDecoderDoctorDiagnostics.DidFFmpegFailToLoad()) {
-            FFMpegNeeded = true;
+            AppendToStringList(formatsRequiringFFMpeg,
+                               diag.mDecoderDoctorDiagnostics.Format());
           }
 #endif
-          AppendToStringList(unplayableFormats,
-                             diag.mDecoderDoctorDiagnostics.Format());
         }
         break;
       case DecoderDoctorDiagnostics::eMediaKeySystemAccessRequest:
@@ -438,22 +441,23 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
   if (!unplayableFormats.IsEmpty()) {
     // Some requested formats cannot be played.
     if (playableFormats.IsEmpty()) {
-      // No requested formats can be played. See if we can help the user...
+      // No requested formats can be played. See if we can help the user, by
+      // going through expected decoders from most to least desirable.
 #if defined(XP_WIN)
-      if (WMFNeeded) {
-        DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - formats: %s -> Cannot play media because WMF was not found",
-                 this, mDocument, NS_ConvertUTF16toUTF8(unplayableFormats).get());
+      if (!formatsRequiringWMF.IsEmpty()) {
+        DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> Cannot play media because WMF was not found",
+                 this, mDocument, NS_ConvertUTF16toUTF8(formatsRequiringWMF).get());
         ReportAnalysis(dom::DecoderDoctorNotificationType::Platform_decoder_not_found,
-                       "MediaWMFNeeded", unplayableFormats);
+                       "MediaWMFNeeded", formatsRequiringWMF);
         return;
       }
 #endif
 #if defined(MOZ_FFMPEG)
-      if (FFMpegNeeded) {
+      if (!formatsRequiringFFMpeg.IsEmpty()) {
         DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> Cannot play media because platform decoder was not found",
-                 this, mDocument, NS_ConvertUTF16toUTF8(unplayableFormats).get());
+                 this, mDocument, NS_ConvertUTF16toUTF8(formatsRequiringFFMpeg).get());
         ReportAnalysis(dom::DecoderDoctorNotificationType::Platform_decoder_not_found,
-                       "MediaPlatformDecoderNotFound", unplayableFormats);
+                       "MediaPlatformDecoderNotFound", formatsRequiringFFMpeg);
         return;
       }
 #endif
