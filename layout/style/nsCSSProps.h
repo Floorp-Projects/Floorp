@@ -634,10 +634,11 @@ public:
 // to avoid needing a separate variable declaration for its real type
 // (CSSEnabledState), which would then require using a block and
 // therefore a pair of macros by consumers for the start and end of the loop.
-#define CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(it_, prop_, enabledstate_)       \
-  for (const nsCSSProperty *it_ = nsCSSProps::SubpropertyEntryFor(prop_),     \
-                            es_ = (nsCSSProperty) (enabledstate_);            \
-       *it_ != eCSSProperty_UNKNOWN; ++it_)                                   \
+#define CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(it_, prop_, enabledstate_)   \
+  for (const nsCSSProperty *it_ = nsCSSProps::SubpropertyEntryFor(prop_), \
+                            es_ = (nsCSSProperty)((enabledstate_) |       \
+                                                  CSSEnabledState(0));    \
+       *it_ != eCSSProperty_UNKNOWN; ++it_)                               \
     if (nsCSSProps::IsEnabled(*it_, (mozilla::CSSEnabledState) es_))
 
   // Keyword/Enum value tables
