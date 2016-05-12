@@ -44,11 +44,13 @@ env_flag('MOZ_SWITCHBOARD',
          help='Include Switchboard A/B framework on Android',
          default=True)
 
-env_flag('MOZ_ANDROID_APZ',
-         help='Enable the C++ async pan/zoom code instead of the Java version',
-         default=True,
-         set_as_define=True,
-         name='--enable-android-apz')
+option('--disable-android-apz', env='MOZ_ANDROID_APZ',
+       help='Disable the C++ async pan/zoom code and use the Java version instead')
+
+android_apz = depends_if('--disable-android-apz')(lambda _: True)
+
+set_config('MOZ_ANDROID_APZ', android_apz)
+set_define('MOZ_ANDROID_APZ', android_apz)
 
 @depends(target)
 def check_target(target):
