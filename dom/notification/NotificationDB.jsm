@@ -82,12 +82,21 @@ var NotificationDB = {
   },
 
   filterNonAppNotifications: function(notifications) {
-    let origins = Object.keys(notifications);
-    for (let origin of origins) {
+    for (let origin in notifications) {
       let canPut = notificationStorage.canPut(origin);
       if (!canPut) {
-        if (DEBUG) debug("Origin " + origin + " is not linked to an app manifest, deleting.");
-	delete notifications[origin];
+        let persistentNotificationCount = 0;
+        for (let id in notifications[origin]) {
+          if (notifications[origin][id].serviceWorkerRegistrationScope) {
+            persistentNotificationCount++;
+          } else {
+            delete notifications[origin][id];
+          }
+        }
+        if (persistentNotificationCount == 0) {
+          if (DEBUG) debug("Origin " + origin + " is not linked to an app manifest, deleting.");
+          delete notifications[origin];
+        }
       }
     }
     return notifications;
@@ -99,9 +108,9 @@ var NotificationDB = {
     return promise.then(
       function onSuccess(data) {
         if (data.length > 0) {
-	  // Preprocessing phase intends to cleanly separate any migration-related
+          // Preprocessing phase intends to cleanly separate any migration-related
           // tasks.
-	  this.notifications = this.filterNonAppNotifications(JSON.parse(data));
+          this.notifications = this.filterNonAppNotifications(JSON.parse(data));
         }
 
         // populate the list of notifications by tag
