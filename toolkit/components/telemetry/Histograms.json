@@ -3672,6 +3672,16 @@
     "cpp_guard": "ANDROID",
     "description": "Number of reading list items stored in the browser DB *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
   },
+  "FENNEC_READER_VIEW_CACHE_SIZE": {
+    "expires_in_version": "60",
+    "alert_emails": ["mobile-frontend@mozilla.com"],
+    "kind": "exponential",
+    "low": 32,
+    "high": 51200,
+    "n_buckets": 20,
+    "description": "Total disk space used by items in the reader view cache (KB)",
+    "bug_numbers": [1246159]
+  },
   "PLACES_SORTED_BOOKMARKS_PERC": {
     "expires_in_version": "never",
     "kind": "linear",
