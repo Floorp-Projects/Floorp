@@ -231,7 +231,7 @@ struct ParamTraits<mozilla::WidgetMouseEvent>
   {
     WriteParam(aMsg, static_cast<mozilla::WidgetMouseEventBase>(aParam));
     WriteParam(aMsg, aParam.ignoreRootScrollFrame);
-    WriteParam(aMsg, (uint8_t) aParam.reason);
+    WriteParam(aMsg, static_cast<paramType::ReasonType>(aParam.reason));
     WriteParam(aMsg, (uint8_t) aParam.context);
     WriteParam(aMsg, (uint8_t) aParam.exit);
     WriteParam(aMsg, aParam.clickCount);
@@ -240,7 +240,8 @@ struct ParamTraits<mozilla::WidgetMouseEvent>
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     bool rv;
-    uint8_t reason = 0, context = 0, exit = 0;
+    paramType::ReasonType reason = 0;
+    uint8_t context = 0, exit = 0;
     rv = ReadParam(aMsg, aIter,
                    static_cast<mozilla::WidgetMouseEventBase*>(aResult)) &&
          ReadParam(aMsg, aIter, &aResult->ignoreRootScrollFrame) &&
@@ -248,8 +249,7 @@ struct ParamTraits<mozilla::WidgetMouseEvent>
          ReadParam(aMsg, aIter, &context) &&
          ReadParam(aMsg, aIter, &exit) &&
          ReadParam(aMsg, aIter, &aResult->clickCount);
-    aResult->reason =
-      static_cast<mozilla::WidgetMouseEvent::reasonType>(reason);
+    aResult->reason = static_cast<paramType::Reason>(reason);
     aResult->context =
       static_cast<mozilla::WidgetMouseEvent::contextType>(context);
     aResult->exit = static_cast<mozilla::WidgetMouseEvent::exitType>(exit);
