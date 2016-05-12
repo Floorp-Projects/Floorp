@@ -37,7 +37,7 @@ MouseEvent::MouseEvent(EventTarget* aOwner,
   }
 
   if (mouseEvent) {
-    MOZ_ASSERT(mouseEvent->reason != WidgetMouseEvent::eSynthesized,
+    MOZ_ASSERT(mouseEvent->mReason != WidgetMouseEvent::eSynthesized,
                "Don't dispatch DOM events from synthesized mouse events");
     mDetail = mouseEvent->clickCount;
   }

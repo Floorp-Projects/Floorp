@@ -231,7 +231,7 @@ struct ParamTraits<mozilla::WidgetMouseEvent>
   {
     WriteParam(aMsg, static_cast<mozilla::WidgetMouseEventBase>(aParam));
     WriteParam(aMsg, aParam.ignoreRootScrollFrame);
-    WriteParam(aMsg, static_cast<paramType::ReasonType>(aParam.reason));
+    WriteParam(aMsg, static_cast<paramType::ReasonType>(aParam.mReason));
     WriteParam(aMsg,
                static_cast<paramType::ContextMenuTriggerType>(aParam.context));
     WriteParam(aMsg, static_cast<paramType::ExitFromType>(aParam.exit));
@@ -251,7 +251,7 @@ struct ParamTraits<mozilla::WidgetMouseEvent>
          ReadParam(aMsg, aIter, &contextMenuTrigger) &&
          ReadParam(aMsg, aIter, &exitFrom) &&
          ReadParam(aMsg, aIter, &aResult->clickCount);
-    aResult->reason = static_cast<paramType::Reason>(reason);
+    aResult->mReason = static_cast<paramType::Reason>(reason);
     aResult->context =
       static_cast<paramType::ContextMenuTrigger>(contextMenuTrigger);
     aResult->exit = static_cast<paramType::ExitFrom>(exitFrom);

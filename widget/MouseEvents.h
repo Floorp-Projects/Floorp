@@ -204,7 +204,7 @@ public:
 
 protected:
   WidgetMouseEvent()
-    : reason(eReal)
+    : mReason(eReal)
     , context(eNormal)
     , exit(eChild)
     , acceptActivation(false)
@@ -216,7 +216,7 @@ protected:
   WidgetMouseEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget,
                    EventClassID aEventClassID, Reason aReason)
     : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, aEventClassID)
-    , reason(aReason)
+    , mReason(aReason)
     , context(eNormal)
     , exit(eChild)
     , acceptActivation(false)
@@ -231,7 +231,7 @@ public:
   WidgetMouseEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget,
                    Reason aReason, ContextMenuTrigger aContext = eNormal)
     : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, eMouseEventClass)
-    , reason(aReason)
+    , mReason(aReason)
     , context(aContext)
     , exit(eChild)
     , acceptActivation(false)
@@ -259,13 +259,13 @@ public:
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetMouseEvent* result =
-      new WidgetMouseEvent(false, mMessage, nullptr, reason, context);
+      new WidgetMouseEvent(false, mMessage, nullptr, mReason, context);
     result->AssignMouseEventData(*this, true);
     result->mFlags = mFlags;
     return result;
   }
 
-  Reason reason;
+  Reason mReason;
 
   ContextMenuTrigger context;
 
@@ -304,7 +304,7 @@ public:
    */
   bool IsReal() const
   {
-    return reason == eReal;
+    return mReason == eReal;
   }
 };
 
