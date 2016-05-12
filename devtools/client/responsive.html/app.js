@@ -20,6 +20,7 @@ const {
   rotateViewport
 } = require("./actions/viewports");
 const { takeScreenshot } = require("./actions/screenshot");
+const { updateTouchSimulationEnabled } = require("./actions/touch-simulation");
 const DeviceModal = createFactory(require("./components/device-modal"));
 const GlobalToolbar = createFactory(require("./components/global-toolbar"));
 const Viewports = createFactory(require("./components/viewports"));
@@ -30,8 +31,9 @@ let App = createClass({
   propTypes: {
     devices: PropTypes.shape(Types.devices).isRequired,
     location: Types.location.isRequired,
-    viewports: PropTypes.arrayOf(PropTypes.shape(Types.viewport)).isRequired,
     screenshot: PropTypes.shape(Types.screenshot).isRequired,
+    touchSimulation: PropTypes.shape(Types.touchSimulation).isRequired,
+    viewports: PropTypes.arrayOf(PropTypes.shape(Types.viewport)).isRequired,
   },
 
   displayName: "App",
@@ -80,11 +82,23 @@ let App = createClass({
     this.props.dispatch(updateDeviceModalOpen(isOpen));
   },
 
+  onUpdateTouchSimulationEnabled() {
+    let { enabled } = this.props.touchSimulation;
+
+    window.postMessage({
+      type: "update-touch-simulation",
+      enabled,
+    }, "*");
+
+    this.props.dispatch(updateTouchSimulationEnabled(!enabled));
+  },
+
   render() {
     let {
       devices,
       location,
       screenshot,
+      touchSimulation,
       viewports,
     } = this.props;
 
@@ -99,6 +113,7 @@ let App = createClass({
       onScreenshot,
       onUpdateDeviceDisplayed,
       onUpdateDeviceModalOpen,
+      onUpdateTouchSimulationEnabled,
     } = this;
 
     return dom.div(
@@ -107,8 +122,10 @@ let App = createClass({
       },
       GlobalToolbar({
         screenshot,
+        touchSimulation,
         onExit,
         onScreenshot,
+        onUpdateTouchSimulationEnabled,
       }),
       Viewports({
         devices,
