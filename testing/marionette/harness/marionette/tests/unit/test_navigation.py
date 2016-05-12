@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from marionette import MarionetteTestCase, skip_if_b2g
+from marionette import MarionetteTestCase
 from marionette_driver.errors import MarionetteException, TimeoutException
 from marionette_driver.by import By
 
@@ -25,7 +25,6 @@ class TestNavigate(MarionetteTestCase):
         self.assertNotEqual("about:blank", self.location_href)
         self.assertEqual("Marionette Test", self.marionette.title)
 
-    @skip_if_b2g # we currently allow this in b2g
     def test_navigate_chrome_error(self):
         with self.marionette.using_context("chrome"):
             self.assertRaisesRegexp(MarionetteException, "Cannot navigate in chrome context",
@@ -80,7 +79,6 @@ class TestNavigate(MarionetteTestCase):
             "return window.document.getElementById('someDiv') == undefined"))
 
     """ Disabled due to Bug 977899
-    @skip_if_b2g
     def test_navigate_frame(self):
         self.marionette.navigate(self.marionette.absolute_url("test_iframe.html"))
         self.marionette.switch_to_frame(0)
@@ -103,7 +101,6 @@ class TestNavigate(MarionetteTestCase):
             print traceback.format_exc()
             self.fail("Should have thrown a MarionetteException instead of %s" % type(e))
 
-    @skip_if_b2g # about:blocked isn't a well formed uri on b2g
     def test_should_navigate_to_requested_about_page(self):
         self.marionette.navigate("about:neterror")
         self.assertEqual(self.marionette.get_url(), "about:neterror")

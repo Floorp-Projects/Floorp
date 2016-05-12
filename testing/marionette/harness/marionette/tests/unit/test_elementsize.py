@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from marionette import MarionetteTestCase, skip_if_b2g
+from marionette import MarionetteTestCase
 from marionette_driver.by import By
 
 
@@ -16,7 +16,6 @@ class TestElementSize(MarionetteTestCase):
         self.assertTrue(size['height'] > 0)
 
 
-@skip_if_b2g
 class TestElementSizeChrome(MarionetteTestCase):
     def setUp(self):
         MarionetteTestCase.setUp(self)
