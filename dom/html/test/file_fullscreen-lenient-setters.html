@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Test for Bug 1268798</title>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<script>
+"use strict";
+
+function ok(condition, msg) {
+  opener.ok(condition, "[lenient-setters] " + msg);
+}
+
+function is(a, b, msg) {
+  opener.is(a, b, "[lenient-setters] " + msg);
+}
+
+function info(msg) {
+  opener.info("[lenient-setters] " + msg);
+}
+
+let unattachedDiv = document.createElement("div");
+
+function begin() {
+  var originalElem = document.fullscreenElement;
+  try {
+    document.fullscreenElement = unattachedDiv;
+    document.fullscreenElement = [];
+    is(document.fullscreenElement, originalElem,
+       "fullscreenElement should not be changed");
+  } catch (e) {
+    ok(false, "Setting fullscreenElement should not throw");
+  }
+
+  var originalEnabled = document.fullscreenEnabled;
+  try {
+    document.fullscreenEnabled = !originalEnabled;
+    is(document.fullscreenEnabled, originalEnabled,
+       "fullscreenEnabled should not be changed");
+  } catch (e) {
+    ok(false, "Setting fullscreenEnabled should not throw");
+  }
+
+  opener.nextTest();
+}
+
+</script>
+</body>
+</html>
