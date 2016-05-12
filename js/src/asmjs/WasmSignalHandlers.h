@@ -23,6 +23,7 @@
 # include <mach/mach.h>
 # include "jslock.h"
 #endif
+#include "threading/Thread.h"
 
 struct JSRuntime;
 
@@ -51,7 +52,7 @@ EnsureSignalHandlersInstalled(JSRuntime* rt);
 class MachExceptionHandler
 {
     bool installed_;
-    PRThread* thread_;
+    js::Thread thread_;
     mach_port_t port_;
 
     void uninstall();
