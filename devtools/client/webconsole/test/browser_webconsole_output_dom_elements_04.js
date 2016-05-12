@@ -20,6 +20,10 @@ const TEST_DATA = [
     output: '<p some-attribute="some-value">'
   },
   {
+    input: "testSvgNode()",
+    output: '<clipPath>'
+  },
+  {
     input: "testBodyNode()",
     output: '<body class="body-class" id="body-id">'
   },

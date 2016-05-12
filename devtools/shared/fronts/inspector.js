@@ -210,6 +210,12 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
   get nodeName() {
     return this._form.nodeName;
   },
+  get displayName() {
+    let {displayName, nodeName} = this._form;
+
+    // Keep `nodeName.toLowerCase()` for backward compatibility
+    return displayName || nodeName.toLowerCase();
+  },
   get doctypeString() {
     return "<!DOCTYPE " + this._form.name +
      (this._form.publicId ? " PUBLIC \"" + this._form.publicId + "\"" : "") +

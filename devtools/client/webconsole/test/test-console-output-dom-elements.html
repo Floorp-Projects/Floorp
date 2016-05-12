@@ -21,6 +21,11 @@
   -->
   <iframe src="data:text/html;charset=US-ASCII,<p>hello from iframe</p>"></iframe>
   <div class="some       classname      here      with       more classnames here"></div>
+  <svg>
+    <clipPath>
+      <rect x="0" y="0" width="10" height="5"></rect>
+    </clipPath>
+  </svg>
   <script type="text/javascript">
 function testBodyNode() {
   return document.body;
@@ -42,8 +47,12 @@ function testNode() {
   return document.querySelector("p");
 }
 
+function testSvgNode() {
+  return document.querySelector("clipPath");
+}
+
 function testNodeList() {
-  return document.querySelectorAll("*");
+  return document.querySelectorAll("body *");
 }
 
 function testNodeInIframe() {
