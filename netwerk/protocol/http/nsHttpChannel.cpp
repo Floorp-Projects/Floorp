@@ -1611,6 +1611,46 @@ nsHttpChannel::ProcessResponse()
         const char *alt_protocol = mResponseHead->PeekHeader(nsHttp::Alternate_Protocol);
         bool saw_quic = (alt_protocol && PL_strstr(alt_protocol, "quic")) ? 1 : 0;
         Telemetry::Accumulate(Telemetry::HTTP_SAW_QUIC_ALT_PROTOCOL, saw_quic);
+
+        // Gather data on how many URLS get redirected
+        switch (httpStatus) {
+            case 200:
+                Telemetry::Accumulate(Telemetry::HTTP_RESPONSE_STATUS_CODE, 0);
+                break;
+            case 301:
+                Telemetry::Accumulate(Telemetry::HTTP_RESPONSE_STATUS_CODE, 1);
+                break;
+            case 302:
+                Telemetry::Accumulate(Telemetry::HTTP_RESPONSE_STATUS_CODE, 2);
+                break;
+            case 304:
+                Telemetry::Accumulate(Telemetry::HTTP_RESPONSE_STATUS_CODE, 3);
+                break;
+            case 307:
+                Telemetry::Accumulate(Telemetry::HTTP_RESPONSE_STATUS_CODE, 4);
+                break;
+            case 308:
+                Telemetry::Accumulate(Telemetry::HTTP_RESPONSE_STATUS_CODE, 5);
+                break;
+            case 400:
+                Telemetry::Accumulate(Telemetry::HTTP_RESPONSE_STATUS_CODE, 6);
+                break;
+            case 401:
+                Telemetry::Accumulate(Telemetry::HTTP_RESPONSE_STATUS_CODE, 7);
+                break;
+            case 403:
+                Telemetry::Accumulate(Telemetry::HTTP_RESPONSE_STATUS_CODE, 8);
+                break;
+            case 404:
+                Telemetry::Accumulate(Telemetry::HTTP_RESPONSE_STATUS_CODE, 9);
+                break;
+            case 500:
+                Telemetry::Accumulate(Telemetry::HTTP_RESPONSE_STATUS_CODE, 10);
+                break;
+            default:
+                Telemetry::Accumulate(Telemetry::HTTP_RESPONSE_STATUS_CODE, 11);
+                break;
+        }
     }
 
     // Let the predictor know whether this was a cacheable response or not so
