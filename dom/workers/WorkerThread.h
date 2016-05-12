@@ -90,6 +90,9 @@ private:
 
   NS_IMETHOD
   DispatchFromScript(nsIRunnable* aRunnable, uint32_t aFlags) override;
+
+  NS_IMETHOD
+  DelayedDispatch(already_AddRefed<nsIRunnable>&&, uint32_t) override;
 };
 
 } // namespace workers
