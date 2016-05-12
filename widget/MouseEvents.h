@@ -181,7 +181,8 @@ private:
   friend class mozilla::dom::PBrowserChild;
 
 public:
-  enum reasonType
+  typedef bool ReasonType;
+  enum Reason : ReasonType
   {
     eReal,
     eSynthesized
@@ -201,18 +202,19 @@ public:
 
 protected:
   WidgetMouseEvent()
-    : acceptActivation(false)
+    : reason(eReal)
+    , acceptActivation(false)
     , ignoreRootScrollFrame(false)
     , clickCount(0)
   {
   }
 
   WidgetMouseEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget,
-                   EventClassID aEventClassID, reasonType aReason)
+                   EventClassID aEventClassID, Reason aReason)
     : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, aEventClassID)
+    , reason(aReason)
     , acceptActivation(false)
     , ignoreRootScrollFrame(false)
-    , reason(aReason)
     , context(eNormal)
     , exit(eChild)
     , clickCount(0)
@@ -223,10 +225,14 @@ public:
   virtual WidgetMouseEvent* AsMouseEvent() override { return this; }
 
   WidgetMouseEvent(bool aIsTrusted, EventMessage aMessage, nsIWidget* aWidget,
-                   reasonType aReason, contextType aContext = eNormal) :
-    WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, eMouseEventClass),
-    acceptActivation(false), ignoreRootScrollFrame(false),
-    reason(aReason), context(aContext), exit(eChild), clickCount(0)
+                   Reason aReason, contextType aContext = eNormal)
+    : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, eMouseEventClass)
+    , reason(aReason)
+    , acceptActivation(false)
+    , ignoreRootScrollFrame(false)
+    , context(aContext)
+    , exit(eChild)
+    , clickCount(0)
   {
     if (aMessage == eContextMenu) {
       button = (context == eNormal) ? eRightButton : eLeftButton;
@@ -255,13 +261,14 @@ public:
     return result;
   }
 
+  Reason reason;
+
   // Special return code for MOUSE_ACTIVATE to signal.
   // If the target accepts activation (1), or denies it (0).
   bool acceptActivation;
   // Whether the event should ignore scroll frame bounds during dispatch.
   bool ignoreRootScrollFrame;
 
-  reasonType reason : 4;
   contextType context : 4;
   exitType exit;
 
