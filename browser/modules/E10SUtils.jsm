@@ -52,11 +52,21 @@ this.E10SUtils = {
     }
 
     if (aURL.startsWith("chrome:")) {
-      let url = Services.io.newURI(aURL, null, null);
-      let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
-                      getService(Ci.nsIXULChromeRegistry);
-      canLoadRemote = chromeReg.canLoadURLRemotely(url);
-      mustLoadRemote = chromeReg.mustLoadURLRemotely(url);
+      let url;
+      try {
+        // This can fail for invalid Chrome URIs, in which case we will end up
+        // not loading anything anyway.
+        url = Services.io.newURI(aURL, null, null);
+      } catch (ex) {
+        canLoadRemote = true;
+        mustLoadRemote = false;
+      }
+      if (url) {
+        let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
+                        getService(Ci.nsIXULChromeRegistry);
+        canLoadRemote = chromeReg.canLoadURLRemotely(url);
+        mustLoadRemote = chromeReg.mustLoadURLRemotely(url);
+      }
     }
 
     if (aURL.startsWith("moz-extension:")) {

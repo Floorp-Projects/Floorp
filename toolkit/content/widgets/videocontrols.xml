@@ -574,7 +574,7 @@
                             // Show the controls to highlight the changing volume,
                             // but only if the click-to-play overlay has already
                             // been hidden (we don't hide controls when the overlay is visible).
-                            if (this.clickToPlay.hidden) {
+                            if (this.clickToPlay.hidden && !this.isAudioOnly) {
                                 this.startFadeIn(this.controlBar);
                                 clearTimeout(this._hideControlsTimeout);
                                 this._hideControlsTimeout = setTimeout(this._hideControlsFn, this.HIDE_CONTROLS_TIMEOUT_MS);

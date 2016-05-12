@@ -8,7 +8,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:background="@drawable/action_bar_button" >
+                android:background="@color/state_pressed_toolbar_grey_pressed" >
 
     <LinearLayout android:id="@+id/tab_history_timeline_combo"
                     android:layout_width="wrap_content"
@@ -40,12 +40,15 @@
 
     </LinearLayout>
 
+    <!-- HACK: Widget.TwoLinePageRow overrides the background attr but really shouldn't
+         (bug 1271797). So we override the override and set the background equal to null. -->
     <org.mozilla.gecko.widget.FadedSingleColorTextView
             android:id="@+id/tab_history_title"
             style="@style/Widget.TwoLinePageRow.Title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
+            android:background="@null"
             android:paddingRight="@dimen/tab_history_title_margin_right"
             android:text="@+id/tab_history_title"
             android:textSize="@dimen/tab_history_title_text_size"
