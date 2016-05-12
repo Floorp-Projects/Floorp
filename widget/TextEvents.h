@@ -110,6 +110,7 @@ protected:
     , mIsRepeat(false)
     , mIsComposing(false)
     , mIsReserved(false)
+    , mAccessKeyForwardedToChild(false)
     , mKeyNameIndex(mozilla::KEY_NAME_INDEX_Unidentified)
     , mCodeNameIndex(CODE_NAME_INDEX_UNKNOWN)
     , mNativeKeyEvent(nullptr)
@@ -138,6 +139,7 @@ public:
     , mIsRepeat(false)
     , mIsComposing(false)
     , mIsReserved(false)
+    , mAccessKeyForwardedToChild(false)
     , mKeyNameIndex(mozilla::KEY_NAME_INDEX_Unidentified)
     , mCodeNameIndex(CODE_NAME_INDEX_UNKNOWN)
     , mNativeKeyEvent(nullptr)
@@ -220,6 +222,11 @@ public:
   // Indicates if the key combination is reserved by chrome.  This is set by
   // nsXBLWindowKeyHandler at capturing phase of the default event group.
   bool mIsReserved;
+  // True if accesskey handling was forwarded to the child via
+  // TabParent::HandleAccessKey. In this case, parent process menu access key
+  // handling should be delayed until it is determined that there exists no
+  // overriding access key in the content process.
+  bool mAccessKeyForwardedToChild;
   // DOM KeyboardEvent.key
   KeyNameIndex mKeyNameIndex;
   // DOM KeyboardEvent.code
@@ -374,6 +381,7 @@ public:
     mIsRepeat = aEvent.mIsRepeat;
     mIsComposing = aEvent.mIsComposing;
     mIsReserved = aEvent.mIsReserved;
+    mAccessKeyForwardedToChild = aEvent.mAccessKeyForwardedToChild;
     mKeyNameIndex = aEvent.mKeyNameIndex;
     mCodeNameIndex = aEvent.mCodeNameIndex;
     mKeyValue = aEvent.mKeyValue;

@@ -32,6 +32,7 @@ class MediaDecoderReaderWrapper {
   typedef MediaDecoderReader::SeekPromise SeekPromise;
   typedef MediaDecoderReader::WaitForDataPromise WaitForDataPromise;
   typedef MediaDecoderReader::BufferedUpdatePromise BufferedUpdatePromise;
+  typedef MediaDecoderReader::TargetQueues TargetQueues;
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderReaderWrapper);
 
   /*
@@ -255,7 +256,7 @@ public:
 
   void ReleaseMediaResources();
   void SetIdle();
-  void ResetDecode();
+  void ResetDecode(TargetQueues aQueues);
 
   nsresult Init() { return mReader->Init(); }
   bool IsWaitForDataSupported() const { return mReader->IsWaitForDataSupported(); }

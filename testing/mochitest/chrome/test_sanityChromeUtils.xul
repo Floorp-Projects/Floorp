@@ -65,7 +65,9 @@
     var dragfile = [[
       { type    : "application/x-moz-file",
         data    : testFile,
-        eqTest  : function(actualData, expectedData) {return expectedData.equals(actualData);} }
+        eqTest  : function(actualData, expectedData) {return expectedData.equals(actualData);} },
+      { type    : "Files",
+        data    : null }
     ]];
     
     function doOnDrop(aEvent) {

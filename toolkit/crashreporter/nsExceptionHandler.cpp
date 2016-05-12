@@ -2111,21 +2111,48 @@ EnqueueDelayedNote(DelayedNote* aNote)
   gDelayedAnnotations->AppendElement(aNote);
 }
 
+class CrashReporterHelperRunnable : public Runnable {
+public:
+  explicit CrashReporterHelperRunnable(const nsACString& aKey,
+                                       const nsACString& aData)
+    : mKey(aKey)
+    , mData(aData)
+    , mAppendAppNotes(false)
+    {}
+  explicit CrashReporterHelperRunnable(const nsACString& aData)
+    : mKey()
+    , mData(aData)
+    , mAppendAppNotes(true)
+    {}
+
+  NS_METHOD Run() override;
+
+private:
+  nsCString mKey;
+  nsCString mData;
+  bool mAppendAppNotes;
+};
+
 nsresult AnnotateCrashReport(const nsACString& key, const nsACString& data)
 {
   if (!GetEnabled())
     return NS_ERROR_NOT_INITIALIZED;
+
+  bool isParentProcess = XRE_IsParentProcess();
+  if (!isParentProcess && !NS_IsMainThread()) {
+    // Child process needs to handle this in the main thread:
+    nsCOMPtr<nsIRunnable> r = new CrashReporterHelperRunnable(key, data);
+    NS_DispatchToMainThread(r);
+    return NS_OK;
+  }
 
   nsCString escapedData;
   nsresult rv = EscapeAnnotation(key, data, escapedData);
   if (NS_FAILED(rv))
     return rv;
 
-  if (!XRE_IsParentProcess()) {
-    if (!NS_IsMainThread()) {
-      NS_ERROR("Cannot call AnnotateCrashReport in child processes from non-main thread.");
-      return NS_ERROR_FAILURE;
-    }
+  if (!isParentProcess) {
+    MOZ_ASSERT(NS_IsMainThread());
     PCrashReporterChild* reporter = CrashReporterChild::GetCrashReporter();
     if (!reporter) {
       EnqueueDelayedNote(new DelayedNote(key, data));
@@ -2189,11 +2216,16 @@ nsresult AppendAppNotesToCrashReport(const nsACString& data)
   if (DoFindInReadable(data, NS_LITERAL_CSTRING("\0")))
     return NS_ERROR_INVALID_ARG;
 
+  bool isParentProcess = XRE_IsParentProcess();
+  if (!isParentProcess && !NS_IsMainThread()) {
+    // Child process needs to handle this in the main thread:
+    nsCOMPtr<nsIRunnable> r = new CrashReporterHelperRunnable(data);
+    NS_DispatchToMainThread(r);
+    return NS_OK;
+  }
+
   if (!XRE_IsParentProcess()) {
-    if (!NS_IsMainThread()) {
-      NS_ERROR("Cannot call AnnotateCrashReport in child processes from non-main thread.");
-      return NS_ERROR_FAILURE;
-    }
+    MOZ_ASSERT(NS_IsMainThread());
     PCrashReporterChild* reporter = CrashReporterChild::GetCrashReporter();
     if (!reporter) {
       EnqueueDelayedNote(new DelayedNote(data));
@@ -2217,6 +2249,24 @@ nsresult AppendAppNotesToCrashReport(const nsACString& data)
 
   notesField->Append(data);
   return AnnotateCrashReport(NS_LITERAL_CSTRING("Notes"), *notesField);
+}
+
+nsresult CrashReporterHelperRunnable::Run()
+{
+  // We expect this to be in the child process' main thread.  If it isn't,
+  // something is happening we didn't design for.
+  MOZ_ASSERT(!XRE_IsParentProcess());
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Don't just leave the assert, paranoid about infinite recursion
+  if (NS_IsMainThread()) {
+    if (mAppendAppNotes) {
+      return AppendAppNotesToCrashReport(mData);
+    } else {
+      return AnnotateCrashReport(mKey, mData);
+    }
+  }
+  return NS_ERROR_FAILURE;
 }
 
 // Returns true if found, false if not found.

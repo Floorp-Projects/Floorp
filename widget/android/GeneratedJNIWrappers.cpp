@@ -242,6 +242,14 @@ auto GeckoAppShell::GamepadAdded(int32_t a0, int32_t a1) -> void
     return mozilla::jni::Method<GamepadAdded_t>::Call(GeckoAppShell::Context(), nullptr, a0, a1);
 }
 
+constexpr char GeckoAppShell::GetApplicationContext_t::name[];
+constexpr char GeckoAppShell::GetApplicationContext_t::signature[];
+
+auto GeckoAppShell::GetApplicationContext() -> mozilla::jni::Object::LocalRef
+{
+    return mozilla::jni::Method<GetApplicationContext_t>::Call(GeckoAppShell::Context(), nullptr);
+}
+
 constexpr char GeckoAppShell::GetConnection_t::name[];
 constexpr char GeckoAppShell::GetConnection_t::signature[];
 

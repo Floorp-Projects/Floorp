@@ -161,12 +161,21 @@ public:
   virtual bool RecvMoveFocus(const bool& aForward,
                              const bool& aForDocumentNavigation) override;
 
+  virtual bool RecvSizeShellTo(const uint32_t& aFlags,
+                               const int32_t& aWidth,
+                               const int32_t& aHeight,
+                               const int32_t& aShellItemWidth,
+                               const int32_t& aShellItemHeight) override;
+
   virtual bool RecvEvent(const RemoteDOMEvent& aEvent) override;
 
   virtual bool RecvReplyKeyEvent(const WidgetKeyboardEvent& aEvent) override;
 
   virtual bool
   RecvDispatchAfterKeyboardEvent(const WidgetKeyboardEvent& aEvent) override;
+
+  virtual bool
+  RecvAccessKeyNotHandled(const WidgetKeyboardEvent& aEvent) override;
 
   virtual bool RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
                                           PRenderFrameParent* aRenderFrame,
@@ -358,8 +367,8 @@ public:
 
   void ThemeChanged();
 
-  void HandleAccessKey(nsTArray<uint32_t>& aCharCodes,
-                       const bool& aIsTrusted,
+  void HandleAccessKey(const WidgetKeyboardEvent& aEvent,
+                       nsTArray<uint32_t>& aCharCodes,
                        const int32_t& aModifierMask);
 
   void Activate();

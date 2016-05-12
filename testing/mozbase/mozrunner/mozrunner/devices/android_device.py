@@ -637,7 +637,8 @@ def _tooltool_fetch():
     def outputHandler(line):
         _log_debug(line)
     _download_file(TOOLTOOL_URL, 'tooltool.py', EMULATOR_HOME_DIR)
-    command = ['python', 'tooltool.py', 'fetch', '-o', '-m', 'releng.manifest']
+    command = [sys.executable, 'tooltool.py',
+               'fetch', '-o', '-m', 'releng.manifest']
     proc = ProcessHandler(
         command, processOutputLine=outputHandler, storeOutput=False,
         cwd=EMULATOR_HOME_DIR)

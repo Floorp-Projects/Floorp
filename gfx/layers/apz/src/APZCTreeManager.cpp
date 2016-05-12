@@ -369,6 +369,7 @@ APZCTreeManager::PrepareNodeForLayer(const LayerMetricsWrapper& aLayer,
                            aLayer.GetScrollbarDirection(),
                            aLayer.GetScrollbarSize(),
                            aLayer.IsScrollbarContainer());
+    node->SetFixedPosData(aLayer.GetFixedPositionScrollContainerId());
     return node;
   }
 
@@ -549,6 +550,7 @@ APZCTreeManager::PrepareNodeForLayer(const LayerMetricsWrapper& aLayer,
                          aLayer.GetScrollbarDirection(),
                          aLayer.GetScrollbarSize(),
                          aLayer.IsScrollbarContainer());
+  node->SetFixedPosData(aLayer.GetFixedPositionScrollContainerId());
   return node;
 }
 
@@ -1773,10 +1775,25 @@ APZCTreeManager::GetAPZCAtPoint(HitTestingTreeNode* aNode,
           }
         }
       }
-      AsyncPanZoomController* result = resultNode->GetNearestContainingApzcWithSameLayersId();
+
+      AsyncPanZoomController* result = nullptr;
+
+      FrameMetrics::ViewID fpTarget =
+          resultNode->GetNearestAncestorFixedPosTargetWithSameLayersId();
+      if (fpTarget != FrameMetrics::NULL_SCROLL_ID) {
+        ScrollableLayerGuid guid(resultNode->GetLayersId(), 0, fpTarget);
+        RefPtr<HitTestingTreeNode> hitNode = GetTargetNode(guid, &GuidComparatorIgnoringPresShell);
+        result = hitNode ? hitNode->GetApzc() : nullptr;
+        APZCTM_LOG("Found target %p using fixed-pos lookup on %" PRIu64 "\n", result, fpTarget);
+      }
+      if (!result) {
+        result = resultNode->GetNearestContainingApzcWithSameLayersId();
+        APZCTM_LOG("Found target %p using ancestor lookup\n", result);
+      }
       if (!result) {
         result = FindRootApzcForLayersId(resultNode->GetLayersId());
         MOZ_ASSERT(result);
+        APZCTM_LOG("Found target %p using root lookup\n", result);
       }
       APZCTM_LOG("Successfully matched APZC %p via node %p (hit result %d)\n",
           result, resultNode, *aOutHitResult);

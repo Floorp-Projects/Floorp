@@ -25,6 +25,9 @@ interface nsITabChild : nsISupports
                                                   in CommandsArrayRef enabledCommands,
                                                   in CommandsArrayRef disabledCommands);
 
+  [noscript] void remoteSizeShellTo(in int32_t width, in int32_t height,
+                                    in int32_t shellItemWidth, in int32_t shellItemHeight);
+
   readonly attribute uint64_t tabId;
 };
 

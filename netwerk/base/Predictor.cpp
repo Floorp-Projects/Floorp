@@ -508,13 +508,6 @@ Predictor::GetIgnoreIdle(bool *ignoreIdle)
 }
 
 NS_IMETHODIMP
-Predictor::GetIgnorePossibleSpdyConnections(bool *ignorePossibleSpdyConnections)
-{
-  *ignorePossibleSpdyConnections = true;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 Predictor::GetParallelSpeculativeConnectLimit(
     uint32_t *parallelSpeculativeConnectLimit)
 {

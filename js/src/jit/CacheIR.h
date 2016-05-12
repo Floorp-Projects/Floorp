@@ -410,12 +410,16 @@ class MOZ_RAII GetPropIRGenerator
     enum class PreliminaryObjectAction { None, Unlink, NotePreliminary };
     PreliminaryObjectAction preliminaryObjectAction_;
 
-    bool tryAttachNative(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
-    bool tryAttachUnboxed(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
-    bool tryAttachUnboxedExpando(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
-    bool tryAttachTypedObject(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
-    bool tryAttachObjectLength(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
-    bool tryAttachModuleNamespace(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
+    MOZ_MUST_USE bool tryAttachNative(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
+    MOZ_MUST_USE bool tryAttachUnboxed(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
+    MOZ_MUST_USE bool tryAttachUnboxedExpando(CacheIRWriter& writer, HandleObject obj,
+                                              ObjOperandId objId);
+    MOZ_MUST_USE bool tryAttachTypedObject(CacheIRWriter& writer, HandleObject obj,
+                                           ObjOperandId objId);
+    MOZ_MUST_USE bool tryAttachObjectLength(CacheIRWriter& writer, HandleObject obj,
+                                            ObjOperandId objId);
+    MOZ_MUST_USE bool tryAttachModuleNamespace(CacheIRWriter& writer, HandleObject obj,
+                                               ObjOperandId objId);
 
     GetPropIRGenerator(const GetPropIRGenerator&) = delete;
     GetPropIRGenerator& operator=(const GetPropIRGenerator&) = delete;
@@ -426,7 +430,7 @@ class MOZ_RAII GetPropIRGenerator
 
     bool emitted() const { return emitted_; }
 
-    bool tryAttachStub(mozilla::Maybe<CacheIRWriter>& writer);
+    MOZ_MUST_USE bool tryAttachStub(mozilla::Maybe<CacheIRWriter>& writer);
 
     bool shouldUnlinkPreliminaryObjectStubs() const {
         return preliminaryObjectAction_ == PreliminaryObjectAction::Unlink;

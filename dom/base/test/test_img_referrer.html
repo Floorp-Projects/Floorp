@@ -21,19 +21,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1166910
 SimpleTest.waitForExplicitFinish();
 var advance = function() { tests.next(); };
 
-var mTestResult;
-
 /**
  * Listen for notifications from the child.
  * These are sent in case of error, or when the loads we await have completed.
  */
 window.addEventListener("message", function(event) {
-  if (event.data == "childLoadComplete") {
-    // all loads happen, continue the test.
-    advance();
-  }
-  else if (event.data.contains("childLoadComplete")) {
-    mTestResult = event.data.split(",")[1];
+  if (event.data == "childLoadComplete" ||
+      event.data.contains("childLoadComplete")) {
     advance();
   }
 });
@@ -63,14 +57,11 @@ function checkIndividualResults(aTestname, aExpectedImg, aName) {
           var results = xhr.response;
           info(JSON.stringify(xhr.response));
 
-          if (aName === 'setAttribute') {
-            is(mTestResult, aExpectedImg, aTestname + ' --- ' + mTestResult);
-          } else {
-            for (i in aName) {
-              ok(aName[i] in results.tests, aName[i] + " tests have to be performed.");
-              is(results.tests[aName[i]].policy, aExpectedImg[i], aTestname + ' --- ' + results.tests[aName[i]].policy + ' (' + results.tests[aName[i]].referrer + ')');
-            }
+          for (i in aName) {
+            ok(aName[i] in results.tests, aName[i] + " tests have to be performed.");
+            is(results.tests[aName[i]].policy, aExpectedImg[i], aTestname + ' --- ' + results.tests[aName[i]].policy + ' (' + results.tests[aName[i]].referrer + ')');
           }
+
           advance();
         },
         function(xhr) {
@@ -155,6 +146,19 @@ var tests = (function() {
   name = 'regular-load-no-referrer-meta';
   yield iframe.src = sjs + "&policy=" + escape('no-referrer') + "&name=" + name;
   yield checkIndividualResults("no-referrer in meta (no img referrer policy), regular load", ["none"], [name]);
+
+  //test setAttribute
+  yield resetState();
+  sjs = "/tests/dom/base/test/img_referrer_testserver.sjs?action=generate-setAttribute-test1";
+  name = 'set-referrer-policy-attribute-before-src';
+  yield iframe.src = sjs + "&policy=" + escape('no-referrer') + "&name=" + name;
+  yield checkIndividualResults("no-referrer in img", ["none"], [name]);
+
+  yield resetState();
+  sjs = "/tests/dom/base/test/img_referrer_testserver.sjs?action=generate-setAttribute-test2";
+  name = 'set-referrer-policy-attribute-after-src';
+  yield iframe.src = sjs + "&policy=" + escape('no-referrer') + "&name=" + name;
+  yield checkIndividualResults("no-referrer in img", ["none"], [name]);
 
   // complete.  Be sure to yield so we don't call this twice.
   yield SimpleTest.finish();

@@ -264,58 +264,6 @@ private:
   PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override;
 };
 
-// This runnable is used to stop a sync loop and it's meant to be used on the
-// main-thread only. As sync loops keep the busy count incremented as long as
-// they run this runnable does not modify the busy count
-// in any way.
-class MainThreadStopSyncLoopRunnable : public WorkerSyncRunnable
-{
-  bool mResult;
-
-public:
-  // Passing null for aSyncLoopTarget is not allowed.
-  MainThreadStopSyncLoopRunnable(
-                               WorkerPrivate* aWorkerPrivate,
-                               already_AddRefed<nsIEventTarget>&& aSyncLoopTarget,
-                               bool aResult);
-
-  // By default StopSyncLoopRunnables cannot be canceled since they could leave
-  // a sync loop spinning forever.
-  nsresult
-  Cancel() override;
-
-protected:
-  virtual ~MainThreadStopSyncLoopRunnable()
-  { }
-
-  // Called on the worker thread, in WorkerRun, right before stopping the
-  // syncloop to set an exception (however subclasses want to handle that) if
-  // mResult is false.  Note that overrides of this method must NOT set an
-  // actual exception on the JSContext; they may only set some state that will
-  // get turned into an exception once the syncloop actually terminates and
-  // control is returned to whoever was spinning the syncloop.
-  virtual void
-  MaybeSetException()
-  { }
-
-private:
-  virtual bool
-  PreDispatch(WorkerPrivate* aWorkerPrivate) override final
-  {
-    AssertIsOnMainThread();
-    return true;
-  }
-
-  virtual void
-  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override;
-
-  virtual bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override;
-
-  virtual bool
-  DispatchInternal() override final;
-};
-
 // This runnable is processed as soon as it is received by the worker,
 // potentially running before previously queued runnables and perhaps even with
 // other JS code executing on the stack. These runnables must not alter the

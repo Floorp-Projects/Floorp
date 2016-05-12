@@ -2560,7 +2560,7 @@ public:
   // Not const because all the full-screen goop is not const
   virtual bool FullscreenEnabled() = 0;
   virtual Element* GetFullscreenElement() = 0;
-  bool MozFullScreen()
+  bool Fullscreen()
   {
     return !!GetFullscreenElement();
   }

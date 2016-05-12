@@ -134,4 +134,13 @@ interface nsIXULWindow : nsISupports
    * docshell could cause problems.
    */
   [noscript] void applyChromeFlags();
+
+
+  /**
+   * Sometimes the child's nsDocShellTreeOwner needs to propogate a SizeShellTo call to the parent. But the
+   * shellItem argument of the call will not be available on the parent side, so we pass its dimensions here.
+   * Note: this is an internal method, other consumers should never call this.
+   */
+  [noscript, notxpcom] void sizeShellToWithLimit(in int32_t aCx, in int32_t aCy,
+                                                 in int32_t shellItemCx, in int32_t shellItemCy);
 };

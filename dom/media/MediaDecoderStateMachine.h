@@ -368,7 +368,7 @@ private:
 
   // Resets all state related to decoding and playback, emptying all buffers
   // and aborting all pending operations on the decode task queue.
-  void Reset();
+  void Reset(MediaDecoderReader::TargetQueues aQueues = MediaDecoderReader::AUDIO_VIDEO);
 
 protected:
   virtual ~MediaDecoderStateMachine();
@@ -471,6 +471,9 @@ protected:
   // Notification method invoked when mPlayState changes.
   void PlayStateChanged();
 
+  // Notification method invoked when mIsVisible changes.
+  void VisibilityChanged();
+
   // Sets internal state which causes playback of media to pause.
   // The decoder monitor must be held.
   void StopPlayback();
@@ -506,9 +509,14 @@ protected:
 
   void EnqueueFirstFrameLoadedEvent();
 
-  // Clears any previous seeking state and initiates a new see on the decoder.
+  // Clears any previous seeking state and initiates a new seek on the decoder.
   // The decoder monitor must be held.
   void InitiateSeek(SeekJob aSeekJob);
+
+  // Clears any previous seeking state and initiates a video-only seek on the
+  // decoder to catch up the video to the current audio position, when recovering
+  // from video decoding being suspended in background.
+  void InitiateVideoDecodeRecoverySeek();
 
   nsresult DispatchAudioDecodeTaskIfNeeded();
 
@@ -591,6 +599,10 @@ protected:
   // decode buffers and is waiting. We can shut the decode thread down in this
   // case as it may not be needed again.
   bool IsPausedAndDecoderWaiting();
+
+  // Returns true if the video decoding is suspended because the element is not
+  // visible
+  bool IsVideoDecodeSuspended() const;
 
   // These return true if the respective stream's decode has not yet reached
   // the end of stream.
@@ -753,7 +765,7 @@ private:
   // At the start of decoding we want to "preroll" the decode until we've
   // got a few frames decoded before we consider whether decode is falling
   // behind. Otherwise our "we're falling behind" logic will trigger
-  // unneccessarily if we start playing as soon as the first sample is
+  // unnecessarily if we start playing as soon as the first sample is
   // decoded. These two fields store how many video frames and audio
   // samples we must consume before are considered to be finished prerolling.
   uint32_t AudioPrerollUsecs() const
@@ -778,7 +790,8 @@ private:
   bool DonePrerollingVideo()
   {
     MOZ_ASSERT(OnTaskQueue());
-    return !IsVideoDecoding() ||
+    return !mIsVisible ||
+        !IsVideoDecoding() ||
         static_cast<uint32_t>(VideoQueue().GetSize()) >=
             VideoPrerollFrames() * mPlaybackRate + 1;
   }
@@ -859,7 +872,7 @@ private:
 
   // True if we've dispatched an event to the decode task queue to call
   // DecodeThreadRun(). We use this flag to prevent us from dispatching
-  // unneccessary runnables, since the decode thread runs in a loop.
+  // unnecessary runnables, since the decode thread runs in a loop.
   bool mDispatchedEventToDecode;
 
   // If this is true while we're in buffering mode, we can exit early,
@@ -901,7 +914,7 @@ private:
   MozPromiseRequestHolder<MediaDecoderReader::BufferedUpdatePromise> mBufferedUpdateRequest;
 
   // True if we need to call FinishDecodeFirstFrame() upon frame decoding
-  // successeeding.
+  // succeeding.
   bool mDecodingFirstFrame;
 
   // True if we are back from DECODER_STATE_DORMANT state and
@@ -997,6 +1010,9 @@ private:
   // True if the media is seekable only in buffered ranges.
   Mirror<bool> mMediaSeekableOnlyInBufferedRanges;
 
+  // IsVisible, mirrored from the media decoder.
+  Mirror<bool> mIsVisible;
+
   // Duration of the media. This is guaranteed to be non-null after we finish
   // decoding the first frame.
   Canonical<media::NullableTimeUnit> mDuration;
@@ -1016,7 +1032,7 @@ private:
   // Current playback position in the stream in bytes.
   Canonical<int64_t> mPlaybackOffset;
 
-  // Used to distiguish whether the audio is producing sound.
+  // Used to distinguish whether the audio is producing sound.
   Canonical<bool> mIsAudioDataAudible;
 
 public:

@@ -2548,7 +2548,8 @@ class AttrDefiner(PropertyDefiner):
         def setter(attr):
             if (attr.readonly and
                 attr.getExtendedAttribute("PutForwards") is None and
-                attr.getExtendedAttribute("Replaceable") is None):
+                attr.getExtendedAttribute("Replaceable") is None and
+                attr.getExtendedAttribute("LenientSetter") is None):
                 return "JSNATIVE_WRAPPER(nullptr)"
             if self.static:
                 accessor = 'set_' + IDLToCIdentifier(attr.identifier.name)
@@ -8832,6 +8833,24 @@ class CGSpecializedReplaceableSetter(CGSpecializedSetter):
                 attrName)
 
 
+class CGSpecializedLenientSetter(CGSpecializedSetter):
+    """
+    A class for generating the code for a specialized attribute setter with
+    LenientSetter that the JIT can call with lower overhead.
+    """
+    def __init__(self, descriptor, attr):
+        CGSpecializedSetter.__init__(self, descriptor, attr)
+
+    def definition_body(self):
+        attrName = self.attr.identifier.name
+        # JS_DefineProperty can only deal with ASCII
+        assert all(ord(c) < 128 for c in attrName)
+        return dedent("""
+            DeprecationWarning(cx, obj, nsIDocument::eLenientSetter);
+            return true;
+            """)
+
+
 def memberReturnsNewObject(member):
     return member.getExtendedAttribute("NewObject") is not None
 
@@ -8969,7 +8988,8 @@ class CGMemberJITInfo(CGThing):
                                         [self.member.type], None)
             if (not self.member.readonly or
                 self.member.getExtendedAttribute("PutForwards") is not None or
-                self.member.getExtendedAttribute("Replaceable") is not None):
+                self.member.getExtendedAttribute("Replaceable") is not None or
+                self.member.getExtendedAttribute("LenientSetter") is not None):
                 setterinfo = ("%s_setterinfo" %
                               IDLToCIdentifier(self.member.identifier.name))
                 # Actually a JSJitSetterOp, but JSJitGetterOp is first in the
@@ -11838,7 +11858,8 @@ def memberProperties(m, descriptor):
                 props.isCrossOriginSetter = True
             elif descriptor.needsSpecialGenericOps():
                 props.isGenericSetter = True
-        elif m.getExtendedAttribute("Replaceable"):
+        elif (m.getExtendedAttribute("Replaceable") or
+              m.getExtendedAttribute("LenientSetter")):
             if descriptor.needsSpecialGenericOps():
                 props.isGenericSetter = True
 
@@ -11950,6 +11971,8 @@ class CGDescriptor(CGThing):
                         crossOriginSetters.add(m.identifier.name)
                 elif m.getExtendedAttribute("Replaceable"):
                     cgThings.append(CGSpecializedReplaceableSetter(descriptor, m))
+                elif m.getExtendedAttribute("LenientSetter"):
+                    cgThings.append(CGSpecializedLenientSetter(descriptor, m))
                 if (not m.isStatic() and
                     descriptor.interface.hasInterfacePrototypeObject()):
                     cgThings.append(CGMemberJITInfo(descriptor, m))
