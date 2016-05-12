@@ -12167,7 +12167,7 @@ nsDocument::GetFullscreenElement()
 NS_IMETHODIMP
 nsDocument::GetMozFullScreen(bool *aFullScreen)
 {
-  *aFullScreen = MozFullScreen();
+  *aFullScreen = Fullscreen();
   return NS_OK;
 }
 
