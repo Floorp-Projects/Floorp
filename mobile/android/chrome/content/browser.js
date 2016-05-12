@@ -5322,15 +5322,15 @@ var FormAssistant = {
     if (!aInvalidElements.length)
       return;
 
-    // Ignore this notificaiton if the current tab doesn't contain the invalid element
-    let currentElement = aInvalidElements.queryElementAt(0, Ci.nsISupports);
+    // Ignore this notificaiton if the current tab doesn't contain the invalid form
     if (BrowserApp.selectedBrowser.contentDocument !=
-        currentElement.ownerDocument.defaultView.top.document)
+        aFormElement.ownerDocument.defaultView.top.document)
       return;
 
     this._invalidSubmit = true;
 
     // Our focus listener will show the element's validation message
+    let currentElement = aInvalidElements.queryElementAt(0, Ci.nsISupports);
     currentElement.focus();
   },
 
