@@ -112,6 +112,12 @@ struct Register64
     explicit MOZ_CONSTEXPR Register64(Register r)
       : reg(r)
     {}
+    bool operator ==(Register64 other) const {
+        return reg == other.reg;
+    }
+    bool operator !=(Register64 other) const {
+        return reg != other.reg;
+    }
 #else
     explicit Register64(Register r)
       : high(Register::Invalid()), low(Register::Invalid())
@@ -120,6 +126,12 @@ struct Register64
     MOZ_CONSTEXPR Register64(Register h, Register l)
       : high(h), low(l)
     {}
+    bool operator ==(Register64 other) const {
+        return high == other.high && low == other.low;
+    }
+    bool operator !=(Register64 other) const {
+        return high != other.high || low != other.low;
+    }
 #endif
 };
 
