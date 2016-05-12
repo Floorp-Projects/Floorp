@@ -390,8 +390,10 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, static_cast<mozilla::WidgetInputEvent>(aParam));
-    WriteParam(aMsg, static_cast<uint32_t>(aParam.mKeyNameIndex));
-    WriteParam(aMsg, static_cast<uint32_t>(aParam.mCodeNameIndex));
+    WriteParam(aMsg,
+               static_cast<mozilla::KeyNameIndexType>(aParam.mKeyNameIndex));
+    WriteParam(aMsg,
+               static_cast<mozilla::CodeNameIndexType>(aParam.mCodeNameIndex));
     WriteParam(aMsg, aParam.mKeyValue);
     WriteParam(aMsg, aParam.mCodeValue);
     WriteParam(aMsg, aParam.mKeyCode);
@@ -406,7 +408,7 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent>
     WriteParam(aMsg, aParam.mUniqueId);
     WriteParam(aMsg, aParam.mIsSynthesizedByTIP);
     WriteParam(aMsg,
-               static_cast<mozilla::WidgetKeyboardEvent::InputMethodAppStateType>
+               static_cast<paramType::InputMethodAppStateType>
                  (aParam.mInputMethodAppState));
 #ifdef XP_MACOSX
     WriteParam(aMsg, aParam.mNativeKeyCode);
@@ -421,9 +423,9 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent>
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    uint32_t keyNameIndex = 0, codeNameIndex = 0;
-    mozilla::WidgetKeyboardEvent::InputMethodAppStateType
-      inputMethodAppState = 0;
+    mozilla::KeyNameIndexType keyNameIndex = 0;
+    mozilla::CodeNameIndexType codeNameIndex = 0;
+    paramType::InputMethodAppStateType inputMethodAppState = 0;
     if (ReadParam(aMsg, aIter,
                   static_cast<mozilla::WidgetInputEvent*>(aResult)) &&
         ReadParam(aMsg, aIter, &keyNameIndex) &&
@@ -456,8 +458,7 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent>
         static_cast<mozilla::CodeNameIndex>(codeNameIndex);
       aResult->mNativeKeyEvent = nullptr;
       aResult->mInputMethodAppState =
-        static_cast<mozilla::WidgetKeyboardEvent::InputMethodAppState>
-          (inputMethodAppState);
+        static_cast<paramType::InputMethodAppState>(inputMethodAppState);
       return true;
     }
     return false;

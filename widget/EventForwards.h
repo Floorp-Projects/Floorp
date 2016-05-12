@@ -83,7 +83,8 @@ typedef uint16_t Modifiers;
 #define NS_DEFINE_KEYNAME(aCPPName, aDOMKeyName) \
   KEY_NAME_INDEX_##aCPPName,
 
-enum KeyNameIndex
+typedef uint16_t KeyNameIndexType;
+enum KeyNameIndex : KeyNameIndexType
 {
 #include "mozilla/KeyNameList.h"
   // If a DOM keyboard event is synthesized by script, this is used.  Then,
@@ -96,7 +97,8 @@ enum KeyNameIndex
 #define NS_DEFINE_PHYSICAL_KEY_CODE_NAME(aCPPName, aDOMCodeName) \
   CODE_NAME_INDEX_##aCPPName,
 
-enum CodeNameIndex
+typedef uint8_t CodeNameIndexType;
+enum CodeNameIndex : CodeNameIndexType
 {
 #include "mozilla/PhysicalKeyCodeNameList.h"
   // If a DOM keyboard event is synthesized by script, this is used.  Then,
