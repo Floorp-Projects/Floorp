@@ -1050,6 +1050,8 @@ KeyframeEffectReadOnly::GetKeyframes(JSContext*& aCx,
     if (keyframe.mOffset) {
       keyframeDict.mOffset.SetValue(keyframe.mOffset.value());
     }
+    MOZ_ASSERT(keyframe.mComputedOffset != Keyframe::kComputedOffsetNotSet,
+               "Invalid computed offset");
     keyframeDict.mComputedOffset.Construct(keyframe.mComputedOffset);
     if (keyframe.mTimingFunction) {
       keyframeDict.mEasing.Truncate();
