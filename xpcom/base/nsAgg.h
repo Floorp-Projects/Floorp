@@ -78,9 +78,11 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                        \
  : public nsXPCOMCycleCollectionParticipant                                 \
 {                                                                           \
 public:                                                                     \
-  NS_IMETHOD_(void) Unlink(void *p);                                        \
-  NS_IMETHOD Traverse(void *p, nsCycleCollectionTraversalCallback &cb);     \
-  NS_IMETHOD_(void) DeleteCycleCollectable(void* p)                         \
+  NS_IMETHOD_(void) Unlink(void *p) override;                               \
+  NS_IMETHOD Traverse(void *p, nsCycleCollectionTraversalCallback &cb)      \
+    override;                                                               \
+  NS_DECL_CYCLE_COLLECTION_CLASS_NAME_METHOD(_class)                        \
+  NS_IMETHOD_(void) DeleteCycleCollectable(void* p) override                \
   {                                                                         \
     NS_CYCLE_COLLECTION_CLASSNAME(_class)::                                 \
       Downcast(static_cast<nsISupports*>(p))->DeleteCycleCollectable();     \
