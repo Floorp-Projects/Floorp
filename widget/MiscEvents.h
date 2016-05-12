@@ -110,7 +110,7 @@ public:
                      nsIAtom* aCommand, nsIWidget* aWidget)
     : WidgetGUIEvent(aIsTrusted, eUnidentifiedEvent, aWidget,
                      eCommandEventClass)
-    , mCommand(aCommand)
+    , command(aCommand)
   {
     mSpecifiedEventType = aEventType;
   }
@@ -121,13 +121,13 @@ public:
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetCommandEvent* result =
-      new WidgetCommandEvent(false, mSpecifiedEventType, mCommand, nullptr);
+      new WidgetCommandEvent(false, mSpecifiedEventType, command, nullptr);
     result->AssignCommandEventData(*this, true);
     result->mFlags = mFlags;
     return result;
   }
 
-  nsCOMPtr<nsIAtom> mCommand;
+  nsCOMPtr<nsIAtom> command;
 
   // XXX Not tested by test_assign_event_data.html
   void AssignCommandEventData(const WidgetCommandEvent& aEvent,
@@ -135,7 +135,7 @@ public:
   {
     AssignGUIEventData(aEvent, aCopyTargets);
 
-    // mCommand must have been initialized with the constructor.
+    // command must have been initialized with the constructor.
   }
 };
 
