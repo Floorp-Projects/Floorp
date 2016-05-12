@@ -126,6 +126,7 @@ class TestChecksConfigure(unittest.TestCase):
     KNOWN_A = mozpath.abspath('/usr/bin/known-a')
     KNOWN_B = mozpath.abspath('/usr/local/bin/known-b')
     KNOWN_C = mozpath.abspath('/home/user/bin/known c')
+    OTHER_A = mozpath.abspath('/lib/other/known-a')
 
     def get_result(self, command='', args=[], environ={},
                    prog='/bin/configure'):
@@ -138,6 +139,7 @@ class TestChecksConfigure(unittest.TestCase):
         }
         environ = dict(environ)
         environ['PATH'] = os.pathsep.join(os.path.dirname(p) for p in paths)
+        paths[self.OTHER_A] = None
         sandbox = ConfigureTestSandbox(paths, config, environ, [prog] + args,
                                        out, out)
         base_dir = os.path.join(topsrcdir, 'build', 'moz.configure')
@@ -396,6 +398,54 @@ class TestChecksConfigure(unittest.TestCase):
                          'input must resolve to a tuple or a list with a '
                          'single element, or a string')
 
+    def test_check_prog_with_path(self):
+        config, out, status = self.get_result('check_prog("A", ("known-a",), paths=["/some/path"])')
+        self.assertEqual(status, 1)
+        self.assertEqual(config, {})
+        self.assertEqual(out, textwrap.dedent('''\
+            checking for a... not found
+            DEBUG: a: Trying known-a
+            ERROR: Cannot find a
+        '''))
+
+        config, out, status = self.get_result('check_prog("A", ("known-a",), paths=["%s"])' %
+                                              os.path.dirname(self.OTHER_A))
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {'A': self.OTHER_A})
+        self.assertEqual(out, textwrap.dedent('''\
+            checking for a... %s
+        ''' % self.OTHER_A))
+
+        dirs = map(mozpath.dirname, (self.OTHER_A, self.KNOWN_A))
+        config, out, status = self.get_result(textwrap.dedent('''\
+            check_prog("A", ("known-a",), paths=["%s"])
+        ''' % os.pathsep.join(dirs)))
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {'A': self.OTHER_A})
+        self.assertEqual(out, textwrap.dedent('''\
+            checking for a... %s
+        ''' % self.OTHER_A))
+
+        dirs = map(mozpath.dirname, (self.KNOWN_A, self.KNOWN_B))
+        config, out, status = self.get_result(textwrap.dedent('''\
+            check_prog("A", ("known-a",), paths=["%s", "%s"])
+        ''' % (os.pathsep.join(dirs), self.OTHER_A)))
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {'A': self.KNOWN_A})
+        self.assertEqual(out, textwrap.dedent('''\
+            checking for a... %s
+        ''' % self.KNOWN_A))
+
+        config, out, status = self.get_result('check_prog("A", ("known-a",), paths="%s")' %
+                                              os.path.dirname(self.OTHER_A))
+
+        self.assertEqual(status, 1)
+        self.assertEqual(config, {})
+        self.assertEqual(out, textwrap.dedent('''\
+            checking for a... 
+            DEBUG: a: Trying known-a
+            ERROR: Paths provided to find_program must be a list of strings, not %r
+        ''' % mozpath.dirname(self.OTHER_A)))
 
 if __name__ == '__main__':
     main()

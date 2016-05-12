@@ -109,11 +109,11 @@ class ConfigureTestSandbox(ConfigureSandbox):
 
         return super(ConfigureTestSandbox, self)._get_one_import(what)
 
-    def which(self, command):
-        for parent in self._search_path:
-            path = mozpath.join(parent, command)
-            if self.OS.path.exists(path):
-                return path
+    def which(self, command, path=None):
+        for parent in (path or self._search_path):
+            candidate = mozpath.join(parent, command)
+            if self.OS.path.exists(candidate):
+                return candidate
         raise WhichError()
 
     def Popen(self, args, stdin=None, stdout=None, stderr=None, **kargs):
