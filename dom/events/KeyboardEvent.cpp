@@ -219,11 +219,11 @@ KeyboardEvent::KeyCode()
 {
   // If this event is initialized with ctor, we shouldn't check event type.
   if (mInitializedByCtor) {
-    return mEvent->AsKeyboardEvent()->keyCode;
+    return mEvent->AsKeyboardEvent()->mKeyCode;
   }
 
   if (mEvent->HasKeyEventMessage()) {
-    return mEvent->AsKeyboardEvent()->keyCode;
+    return mEvent->AsKeyboardEvent()->mKeyCode;
   }
   return 0;
 }
@@ -250,7 +250,7 @@ KeyboardEvent::Which()
       //Special case for 4xp bug 62878.  Try to make value of which
       //more closely mirror the values that 4.x gave for RETURN and BACKSPACE
       {
-        uint32_t keyCode = mEvent->AsKeyboardEvent()->keyCode;
+        uint32_t keyCode = mEvent->AsKeyboardEvent()->mKeyCode;
         if (keyCode == NS_VK_RETURN || keyCode == NS_VK_BACK) {
           return keyCode;
         }
@@ -341,7 +341,7 @@ KeyboardEvent::InitKeyEvent(const nsAString& aType,
 
   WidgetKeyboardEvent* keyEvent = mEvent->AsKeyboardEvent();
   keyEvent->InitBasicModifiers(aCtrlKey, aAltKey, aShiftKey, aMetaKey);
-  keyEvent->keyCode = aKeyCode;
+  keyEvent->mKeyCode = aKeyCode;
   keyEvent->charCode = aCharCode;
 
   return NS_OK;

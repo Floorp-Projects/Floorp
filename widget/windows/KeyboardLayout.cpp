@@ -1237,14 +1237,14 @@ NativeKey::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
   switch (aKeyEvent.mMessage) {
     case eKeyDown:
     case eKeyDownOnPlugin:
-      aKeyEvent.keyCode = mDOMKeyCode;
+      aKeyEvent.mKeyCode = mDOMKeyCode;
       // Unique id for this keydown event and its associated keypress.
       sUniqueKeyEventId++;
       aKeyEvent.mUniqueId = sUniqueKeyEventId;
       break;
     case eKeyUp:
     case eKeyUpOnPlugin:
-      aKeyEvent.keyCode = mDOMKeyCode;
+      aKeyEvent.mKeyCode = mDOMKeyCode;
       // Set defaultPrevented of the key event if the VK_MENU is not a system
       // key release, so that the menu bar does not trigger.  This helps avoid
       // triggering the menu bar for ALT key accelerators used in assistive
@@ -1691,7 +1691,7 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
     if (!IsControlChar(static_cast<char16_t>(aCharMsg.wParam))) {
       keypressEvent.charCode = static_cast<uint32_t>(aCharMsg.wParam);
     } else {
-      keypressEvent.keyCode = mDOMKeyCode;
+      keypressEvent.mKeyCode = mDOMKeyCode;
     }
     nsresult rv = mDispatcher->BeginNativeInputTransaction();
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1768,7 +1768,7 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
   WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
   keypressEvent.charCode = uniChar;
   if (!keypressEvent.charCode) {
-    keypressEvent.keyCode = mDOMKeyCode;
+    keypressEvent.mKeyCode = mDOMKeyCode;
   }
   nsEventStatus status = InitKeyEvent(keypressEvent, mModKeyState, &aCharMsg);
   bool dispatched =
@@ -2243,7 +2243,7 @@ NativeKey::ComputeInputtingStringWithKeyboardLayout()
       mShiftedLatinChar = mUnshiftedLatinChar = 0;
     }
   } else if (mUnshiftedLatinChar) {
-    // If the mShiftedLatinChar is 0, the keyCode doesn't produce
+    // If the mShiftedLatinChar is 0, the mKeyCode doesn't produce
     // alphabet character.  At that time, the character may be produced
     // with Shift key.  E.g., on French keyboard layout, NS_VK_PERCENT
     // key produces LATIN SMALL LETTER U WITH GRAVE (U+00F9) without
@@ -2292,7 +2292,7 @@ NativeKey::DispatchKeyPressEventsWithoutCharMessage() const
   WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
   if (mInputtingStringAndModifiers.IsEmpty() &&
       mShiftedString.IsEmpty() && mUnshiftedString.IsEmpty()) {
-    keypressEvent.keyCode = mDOMKeyCode;
+    keypressEvent.mKeyCode = mDOMKeyCode;
   }
   nsEventStatus status = InitKeyEvent(keypressEvent, mModKeyState);
   mDispatcher->MaybeDispatchKeypressEvents(keypressEvent, status,

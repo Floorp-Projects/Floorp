@@ -919,7 +919,7 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
   UInt32 kbType = GetKbdType();
   UInt32 nativeKeyCode = [aNativeKeyEvent keyCode];
 
-  aKeyEvent.keyCode =
+  aKeyEvent.mKeyCode =
     ComputeGeckoKeyCode(nativeKeyCode, kbType, aKeyEvent.IsMeta());
 
   switch (nativeKeyCode) {
@@ -1100,8 +1100,8 @@ TISInputSourceWrapper::WillDispatchKeyboardEvent(
 
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p TISInputSourceWrapper::WillDispatchKeyboardEvent, "
-     "aKeyEvent.keyCode=0x%X, aKeyEvent.charCode=0x%X",
-     this, aKeyEvent.keyCode, aKeyEvent.charCode));
+     "aKeyEvent.mKeyCode=0x%X, aKeyEvent.charCode=0x%X",
+     this, aKeyEvent.mKeyCode, aKeyEvent.charCode));
 
   TISInputSourceWrapper USLayout("com.apple.keylayout.US");
   bool isRomanKeyboardLayout = IsASCIICapable();
@@ -2240,7 +2240,7 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
     }
     // Note that insertText is not called only at key pressing.
     if (!keypressEvent.charCode) {
-      keypressEvent.keyCode =
+      keypressEvent.mKeyCode =
         WidgetUtils::ComputeKeyCodeFromChar(keypressEvent.charCode);
     }
   }
@@ -4167,7 +4167,7 @@ TextInputHandlerBase::AttachNativeKeyEvent(WidgetKeyboardEvent& aKeyEvent)
 
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p TextInputHandlerBase::AttachNativeKeyEvent, key=0x%X, char=0x%X, "
-     "mod=0x%X", this, aKeyEvent.keyCode, aKeyEvent.charCode,
+     "mod=0x%X", this, aKeyEvent.mKeyCode, aKeyEvent.charCode,
      aKeyEvent.mModifiers));
 
   NSEventType eventType;
@@ -4202,7 +4202,7 @@ TextInputHandlerBase::AttachNativeKeyEvent(WidgetKeyboardEvent& aKeyEvent)
       reinterpret_cast<const unichar*>(&(aKeyEvent.charCode)) length:1];
   } else {
     uint32_t cocoaCharCode =
-      nsCocoaUtils::ConvertGeckoKeyCodeToMacCharCode(aKeyEvent.keyCode);
+      nsCocoaUtils::ConvertGeckoKeyCodeToMacCharCode(aKeyEvent.mKeyCode);
     characters = [NSString stringWithCharacters:
       reinterpret_cast<const unichar*>(&cocoaCharCode) length:1];
   }

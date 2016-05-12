@@ -389,7 +389,7 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
 
   if (aEvent->mMessage == eKeyPress && !IsDisabled()) {
     WidgetKeyboardEvent* keyEvent = aEvent->AsKeyboardEvent();
-    uint32_t keyCode = keyEvent->keyCode;
+    uint32_t keyCode = keyEvent->mKeyCode;
 #ifdef XP_MACOSX
     // On mac, open menulist on either up/down arrow or space (w/o Cmd pressed)
     if (!IsOpen() && ((keyEvent->charCode == NS_VK_SPACE && !keyEvent->IsMeta()) ||

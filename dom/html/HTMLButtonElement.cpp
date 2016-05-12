@@ -288,9 +288,9 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
           // For backwards compat, trigger buttons with space or enter
           // (bug 25300)
           WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
-          if ((keyEvent->keyCode == NS_VK_RETURN &&
+          if ((keyEvent->mKeyCode == NS_VK_RETURN &&
                eKeyPress == aVisitor.mEvent->mMessage) ||
-              (keyEvent->keyCode == NS_VK_SPACE &&
+              (keyEvent->mKeyCode == NS_VK_SPACE &&
                eKeyUp == aVisitor.mEvent->mMessage)) {
             DispatchSimulatedClick(this, aVisitor.mEvent->IsTrusted(),
                                    aVisitor.mPresContext);

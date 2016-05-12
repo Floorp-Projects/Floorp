@@ -304,7 +304,7 @@ KeyEventDispatcher::DispatchKeyEventInternal(EventMessage aEventMessage)
         event.charCode = static_cast<uint32_t>(mChar);
     }
     if (!event.charCode) {
-        event.keyCode = mDOMKeyCode;
+        event.mKeyCode = mDOMKeyCode;
     }
     event.isChar = !!event.charCode;
     event.mIsRepeat = IsRepeat();

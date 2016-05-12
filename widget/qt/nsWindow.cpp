@@ -1128,11 +1128,11 @@ InitKeyEvent(WidgetKeyboardEvent& aEvent, QKeyEvent* aQEvent)
 
     if (aQEvent->text().length() && aQEvent->text()[0].isPrint()) {
         aEvent.charCode = (int32_t) aQEvent->text()[0].unicode();
-        aEvent.keyCode = 0;
+        aEvent.mKeyCode = 0;
         aEvent.mKeyNameIndex = KEY_NAME_INDEX_PrintableKey;
     } else {
         aEvent.charCode = 0;
-        aEvent.keyCode = QtKeyCodeToDOMKeyCode(aQEvent->key());
+        aEvent.mKeyCode = QtKeyCodeToDOMKeyCode(aQEvent->key());
         aEvent.mKeyNameIndex = QtKeyCodeToDOMKeyNameIndex(aQEvent->key());
     }
 

@@ -82,11 +82,11 @@ HTMLSummaryElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
           aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
         }
 
-        dispatchClick = keyboardEvent->keyCode == nsIDOMKeyEvent::DOM_VK_RETURN;
+        dispatchClick = keyboardEvent->mKeyCode == NS_VK_RETURN;
         break;
 
       case eKeyUp:
-        dispatchClick = keyboardEvent->keyCode == nsIDOMKeyEvent::DOM_VK_SPACE;
+        dispatchClick = keyboardEvent->mKeyCode == NS_VK_SPACE;
         break;
 
       default:
