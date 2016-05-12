@@ -6957,7 +6957,7 @@ PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent)
   }
 
   if ((aEvent->mMessage == eMouseMove &&
-       aEvent->AsMouseEvent()->reason == WidgetMouseEvent::eReal) ||
+       aEvent->AsMouseEvent()->mReason == WidgetMouseEvent::eReal) ||
       aEvent->mMessage == eMouseEnterIntoWidget ||
       aEvent->mMessage == eMouseDown ||
       aEvent->mMessage == eMouseUp) {
@@ -10027,7 +10027,7 @@ PresShell::DelayedMouseEvent::DelayedMouseEvent(WidgetMouseEvent* aEvent) :
     new WidgetMouseEvent(aEvent->IsTrusted(),
                          aEvent->mMessage,
                          aEvent->mWidget,
-                         aEvent->reason,
+                         aEvent->mReason,
                          aEvent->context);
   mouseEvent->AssignMouseEventData(*aEvent, false);
   mEvent = mouseEvent;

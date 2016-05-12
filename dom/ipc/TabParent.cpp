@@ -1247,7 +1247,7 @@ bool TabParent::SendRealMouseEvent(WidgetMouseEvent& event)
   ApzAwareEventRoutingToChild(&guid, &blockId, nullptr);
 
   if (eMouseMove == event.mMessage) {
-    if (event.reason == WidgetMouseEvent::eSynthesized) {
+    if (event.mReason == WidgetMouseEvent::eSynthesized) {
       return SendSynthMouseMoveEvent(event, guid, blockId);
     } else {
       return SendRealMouseMoveEvent(event, guid, blockId);
