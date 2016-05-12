@@ -345,7 +345,9 @@ var focusSearchBoxUsingShortcut = Task.async(function* (panelWin, callback) {
   let focused = once(searchBox, "focus");
 
   panelWin.focus();
-  synthesizeKeyFromKeyTag(panelWin.document.getElementById("nodeSearchKey"));
+  let strings = Services.strings.createBundle(
+    "chrome://devtools/locale/inspector.properties");
+  synthesizeKeyShortcut(strings.GetStringFromName("inspector.searchHTML.key"));
 
   yield focused;
 

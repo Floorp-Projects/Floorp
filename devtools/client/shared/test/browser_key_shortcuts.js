@@ -1,7 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
 var isOSX = Services.appinfo.OS === "Darwin";
 
 add_task(function* () {

@@ -77,62 +77,66 @@ function KeyShortcuts({ window }) {
   this.window.addEventListener("keydown", this);
 }
 
-KeyShortcuts.prototype = {
-  /*
-   * Parse an electron-like key string and return a normalized object which
-   * allow efficient match on DOM key event. The normalized object matches DOM
-   * API.
-   *
-   * https://github.com/electron/electron/blob/master/docs/api/accelerator.md
-   */
-  _electronKeyParser(str) {
-    let modifiers = str.split("+");
-    let key = modifiers.pop();
+/*
+ * Parse an electron-like key string and return a normalized object which
+ * allow efficient match on DOM key event. The normalized object matches DOM
+ * API.
+ *
+ * @param DOMWindow window
+ *        Any DOM Window object, just to fetch its `KeyboardEvent` object
+ * @param String str
+ *        The shortcut string to parse, following this document:
+ *        https://github.com/electron/electron/blob/master/docs/api/accelerator.md
+ */
+KeyShortcuts.parseElectronKey = function (window, str) {
+  let modifiers = str.split("+");
+  let key = modifiers.pop();
 
-    let shortcut = {
-      ctrl: false,
-      meta: false,
-      alt: false,
-      shift: false,
-      // Set for character keys
-      key: undefined,
-      // Set for non-character keys
-      keyCode: undefined,
-    };
-    for (let mod of modifiers) {
-      if (mod === "Alt") {
-        shortcut.alt = true;
-      } else if (["Command", "Cmd"].includes(mod)) {
+  let shortcut = {
+    ctrl: false,
+    meta: false,
+    alt: false,
+    shift: false,
+    // Set for character keys
+    key: undefined,
+    // Set for non-character keys
+    keyCode: undefined,
+  };
+  for (let mod of modifiers) {
+    if (mod === "Alt") {
+      shortcut.alt = true;
+    } else if (["Command", "Cmd"].includes(mod)) {
+      shortcut.meta = true;
+    } else if (["CommandOrControl", "CmdOrCtrl"].includes(mod)) {
+      if (isOSX) {
         shortcut.meta = true;
-      } else if (["CommandOrControl", "CmdOrCtrl"].includes(mod)) {
-        if (isOSX) {
-          shortcut.meta = true;
-        } else {
-          shortcut.ctrl = true;
-        }
-      } else if (["Control", "Ctrl"].includes(mod)) {
-        shortcut.ctrl = true;
-      } else if (mod === "Shift") {
-        shortcut.shift = true;
       } else {
-        throw new Error("Unsupported modifier: " + mod);
+        shortcut.ctrl = true;
       }
-    }
-
-    if (key.match(/^\w$/)) {
-      // Match any single character
-      shortcut.key = key.toLowerCase();
-    } else if (key in ElectronKeysMapping) {
-      // Maps the others manually to DOM API DOM_VK_*
-      key = ElectronKeysMapping[key];
-      shortcut.keyCode = this.window.KeyboardEvent[key];
+    } else if (["Control", "Ctrl"].includes(mod)) {
+      shortcut.ctrl = true;
+    } else if (mod === "Shift") {
+      shortcut.shift = true;
     } else {
-      throw new Error("Unsupported key: " + key);
+      throw new Error("Unsupported modifier: " + mod);
     }
+  }
 
-    return shortcut;
-  },
+  if (key.match(/^\w$/)) {
+    // Match any single character
+    shortcut.key = key.toLowerCase();
+  } else if (key in ElectronKeysMapping) {
+    // Maps the others manually to DOM API DOM_VK_*
+    key = ElectronKeysMapping[key];
+    shortcut.keyCode = window.KeyboardEvent[key];
+  } else {
+    throw new Error("Unsupported key: " + key);
+  }
 
+  return shortcut;
+}
+
+KeyShortcuts.prototype = {
   destroy() {
     this.window.removeEventListener("keydown", this);
     this.keys.clear();
@@ -173,7 +177,7 @@ KeyShortcuts.prototype = {
       throw new Error("KeyShortcuts.on() expects a function as second argument");
     }
     if (!this.keys.has(key)) {
-      let shortcut = this._electronKeyParser(key);
+      let shortcut = KeyShortcuts.parseElectronKey(this.window, key);
       this.keys.set(key, shortcut);
     }
     this.eventEmitter.on(key, listener);
