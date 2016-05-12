@@ -105,7 +105,7 @@ protected:
     : mKeyCode(0)
     , mCharCode(0)
     , mPseudoCharCode(0)
-    , location(nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD)
+    , mLocation(nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD)
     , isChar(false)
     , mIsRepeat(false)
     , mIsComposing(false)
@@ -134,7 +134,7 @@ public:
     , mKeyCode(0)
     , mCharCode(0)
     , mPseudoCharCode(0)
-    , location(nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD)
+    , mLocation(nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD)
     , isChar(false)
     , mIsRepeat(false)
     , mIsComposing(false)
@@ -206,7 +206,7 @@ public:
   // key value and same modifier state.
   uint32_t mPseudoCharCode;
   // One of nsIDOMKeyEvent::DOM_KEY_LOCATION_*
-  uint32_t location;
+  uint32_t mLocation;
   // OS translated Unicode chars which are used for accesskey and accelkey
   // handling. The handlers will try from first character to last character.
   nsTArray<AlternativeCharCode> mAlternativeCharCodes;
@@ -332,7 +332,7 @@ public:
   static void Shutdown();
 
   /**
-   * ComputeLocationFromCodeValue() returns one of .location value
+   * ComputeLocationFromCodeValue() returns one of .mLocation value
    * (nsIDOMKeyEvent::DOM_KEY_LOCATION_*) which is the most preferred value
    * for the specified specified code value.
    */
@@ -375,7 +375,7 @@ public:
     mKeyCode = aEvent.mKeyCode;
     mCharCode = aEvent.mCharCode;
     mPseudoCharCode = aEvent.mPseudoCharCode;
-    location = aEvent.location;
+    mLocation = aEvent.mLocation;
     mAlternativeCharCodes = aEvent.mAlternativeCharCodes;
     isChar = aEvent.isChar;
     mIsRepeat = aEvent.mIsRepeat;

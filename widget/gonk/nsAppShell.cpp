@@ -314,7 +314,7 @@ KeyEventDispatcher::DispatchKeyEventInternal(EventMessage aEventMessage)
     }
     event.mCodeNameIndex = mDOMCodeNameIndex;
     event.mModifiers = getDOMModifiers(mData.metaState);
-    event.location = mDOMKeyLocation;
+    event.mLocation = mDOMKeyLocation;
     event.mTime = mData.timeMs;
     return nsWindow::DispatchKeyInput(event);
 }

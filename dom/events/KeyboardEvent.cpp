@@ -275,7 +275,7 @@ KeyboardEvent::GetLocation(uint32_t* aLocation)
 uint32_t
 KeyboardEvent::Location()
 {
-  return mEvent->AsKeyboardEvent()->location;
+  return mEvent->AsKeyboardEvent()->mLocation;
 }
 
 // static
@@ -310,7 +310,7 @@ KeyboardEvent::InitWithKeyboardEventInit(EventTarget* aOwner,
   mInitializedWhichValue = aParam.mWhich;
 
   WidgetKeyboardEvent* internalEvent = mEvent->AsKeyboardEvent();
-  internalEvent->location = aParam.mLocation;
+  internalEvent->mLocation = aParam.mLocation;
   internalEvent->mIsRepeat = aParam.mRepeat;
   internalEvent->mIsComposing = aParam.mIsComposing;
   internalEvent->mKeyNameIndex =
