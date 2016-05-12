@@ -32,7 +32,6 @@ ADTSDecoder::CreateStateMachine()
 /* static */ bool
 ADTSDecoder::IsEnabled()
 {
-  PDMFactory::Init();
   RefPtr<PDMFactory> platform = new PDMFactory();
   return platform->SupportsMimeType(NS_LITERAL_CSTRING("audio/mp4a-latm"),
                                     /* DecoderDoctorDiagnostics* */ nullptr);
