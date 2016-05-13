@@ -54,28 +54,14 @@ public:
     inline const PlatformData* platformData() const;
   };
 
-  // Create a Thread in an initially unjoinable state. A thread of execution can
-  // be created for this Thread by calling |init|.
-  Thread() : id_(Id()) {}
-
   // Start a thread of execution at functor |f| with parameters |args|.
   template <typename F, typename... Args>
   explicit Thread(F&& f, Args&&... args) {
-    MOZ_RELEASE_ASSERT(init(mozilla::Forward<F>(f),
-                            mozilla::Forward<Args>(args)...));
-  }
-
-  // Start a thread of execution at functor |f| with parameters |args|. This
-  // method will return false if thread creation fails. This Thread must not
-  // already have been created.
-  template <typename F, typename... Args>
-  MOZ_MUST_USE bool init(F&& f, Args&&... args) {
-    MOZ_RELEASE_ASSERT(!joinable());
     using Trampoline = detail::ThreadTrampoline<F, Args...>;
     auto trampoline = new Trampoline(mozilla::Forward<F>(f),
                                      mozilla::Forward<Args>(args)...);
     MOZ_RELEASE_ASSERT(trampoline);
-    return create(Trampoline::Start, trampoline);
+    create(Trampoline::Start, trampoline);
   }
 
   // The thread must be joined or detached before destruction.
@@ -122,7 +108,7 @@ private:
   Id id_;
 
   // Dispatch to per-platform implementation of thread creation.
-  MOZ_MUST_USE bool create(THREAD_RETURN_TYPE (THREAD_CALL_API *aMain)(void*), void* aArg);
+  void create(THREAD_RETURN_TYPE (THREAD_CALL_API *aMain)(void*), void* aArg);
 };
 
 namespace ThisThread {

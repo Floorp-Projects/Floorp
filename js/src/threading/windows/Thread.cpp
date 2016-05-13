@@ -64,7 +64,7 @@ js::Thread::operator=(Thread&& aOther)
   return *this;
 }
 
-bool
+void
 js::Thread::create(unsigned int (__stdcall* aMain)(void*), void* aArg)
 {
   // Use _beginthreadex and not CreateThread, because threads that are
@@ -72,10 +72,8 @@ js::Thread::create(unsigned int (__stdcall* aMain)(void*), void* aArg)
   // certain msvcrt functions and then exit.
   uintptr_t handle = _beginthreadex(nullptr, 0, aMain, aArg, 0,
                                     &id_.platformData()->id);
-  if (!handle)
-    return false;
+  MOZ_RELEASE_ASSERT(handle != 0);
   id_.platformData()->handle = reinterpret_cast<HANDLE>(handle);
-  return true;
 }
 
 void

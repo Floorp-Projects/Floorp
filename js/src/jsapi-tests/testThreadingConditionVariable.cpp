@@ -8,29 +8,39 @@
 #include "jsapi-tests/tests.h"
 #include "threading/ConditionVariable.h"
 #include "threading/Mutex.h"
-#include "threading/Thread.h"
 
 struct TestState {
     js::Mutex mutex;
     js::ConditionVariable condition;
     bool flag;
-    js::Thread testThread;
+    PRThread* testThread;
 
     explicit TestState(bool createThread = true)
-      : flag(false)
+      : flag(false), testThread(nullptr)
     {
-        if (createThread)
-            MOZ_RELEASE_ASSERT(testThread.init(setFlag, *this));
+        if (createThread) {
+            testThread = PR_CreateThread(PR_USER_THREAD,
+                                         setFlag,
+                                         (void *)this,
+                                         PR_PRIORITY_NORMAL,
+                                         PR_GLOBAL_THREAD,
+                                         PR_JOINABLE_THREAD,
+                                         0);
+            MOZ_RELEASE_ASSERT(testThread);
+        }
     }
 
-    static void setFlag(TestState& state) {
+    static void setFlag(void* arg) {
+        auto& state = *static_cast<TestState*>(arg);
         js::UniqueLock<js::Mutex> lock(state.mutex);
         state.flag = true;
         state.condition.notify_one();
     }
 
     void join() {
-        testThread.join();
+        MOZ_RELEASE_ASSERT(testThread != nullptr);
+        PR_JoinThread(testThread);
+        testThread = nullptr;
     }
 };
 
