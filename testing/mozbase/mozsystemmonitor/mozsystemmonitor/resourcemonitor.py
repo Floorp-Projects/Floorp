@@ -290,13 +290,19 @@ class SystemResourceMonitor(object):
 
         done = False
 
-        while self._pipe.poll(0.1):
+        # The child process will send each data sample over the pipe
+        # as a separate data structure. When it has finished sending
+        # samples, it sends a special "done" message to indicate it
+        # is finished.
+        while self._pipe.poll(1.0):
             start_time, end_time, io_diff, cpu_diff, cpu_percent, virt_mem, \
                 swap_mem = self._pipe.recv()
 
+            # There should be nothing after the "done" message so
+            # terminate.
             if start_time == 'done':
                 done = True
-                continue
+                break
 
             io = self._io_type(*io_diff)
             virt = self._virt_type(*virt_mem)
