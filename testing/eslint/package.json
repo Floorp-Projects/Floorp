@@ -1,0 +1,12 @@
+{
+  "name": "",
+  "description": "None",
+  "repository": {},
+  "license": "MPL-2.0",
+  "dependencies": {
+    "eslint": "*",
+    "eslint-plugin-html": "*",
+    "eslint-plugin-mozilla": "*",
+    "eslint-plugin-react": "*"
+  }
+}
