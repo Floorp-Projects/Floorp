@@ -15,7 +15,7 @@ const TEST_URI = `
   <h1>Some header text</h1>
 `;
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openComputedView();
   yield selectNode("h1", inspector);
