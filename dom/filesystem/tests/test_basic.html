@@ -56,6 +56,27 @@ function test_simpleFilePicker(aPath) {
   script.sendAsyncMessage("file.open");
 }
 
+function test_duplicateGetFilesAndDirectories() {
+  var url = SimpleTest.getTestFileURL("script_fileList.js");
+  var script = SpecialPowers.loadChromeScript(url);
+
+  function onOpened(message) {
+    var fileList = document.getElementById('fileList');
+    SpecialPowers.wrap(fileList).mozSetDirectory(message.dir);
+
+    var p1 = fileList.getFilesAndDirectories();
+    var p2 = fileList.getFilesAndDirectories();
+
+    isnot(p1, p2, "We create 2 different promises");
+
+    script.destroy();
+    next();
+  }
+
+  script.addMessageListener("dir.opened", onOpened);
+  script.sendAsyncMessage("dir.open", { path: 'test' });
+}
+
 var tests = [
   function() { setup_tests(next); },
 
@@ -73,6 +94,7 @@ var tests = [
   function() { test_getFilesAndDirectories(directory, false, next); },
   function() { test_getFiles(directory, false, next); },
 
+  test_duplicateGetFilesAndDirectories,
   test_simpleFilePicker
 ];
 
