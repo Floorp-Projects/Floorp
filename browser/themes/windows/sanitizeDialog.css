@@ -3,12 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #sanitizeDurationChoice {
-  -moz-margin-end: 0;
+  margin-inline-end: 0;
 }
 
 /* Align the duration label with the warning box and item list */
 #sanitizeDurationLabel {
-  -moz-margin-start: 3px;
+  margin-inline-start: 3px;
 }
 
 
@@ -79,15 +79,15 @@
 
 /* Make the item list the same width as the warning box */
 #itemList {
-  -moz-margin-start: 0;
-  -moz-margin-end: 0;
+  margin-inline-start: 0;
+  margin-inline-end: 0;
 }
 
 
 /* Align the last dialog button with the end of the warning box */
 .prefWindow-dlgbuttons {
-  -moz-margin-end: 0;
+  margin-inline-end: 0;
 }
 .dialog-button[dlgtype="cancel"] {
-  -moz-margin-end: 0;
+  margin-inline-end: 0;
 }

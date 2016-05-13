@@ -24,8 +24,8 @@ filefield {
   height: 16px;
   margin-top: 1px;
   margin-bottom: 1px;
-  -moz-margin-start: 1px;
-  -moz-margin-end: 4px;
+  margin-inline-start: 1px;
+  margin-inline-end: 4px;
 }
 
 .fileFieldLabel {

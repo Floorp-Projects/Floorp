@@ -61,12 +61,12 @@
 }
 
 .tab-content {
-  -moz-padding-end: 9px;
-  -moz-padding-start: 9px;
+  padding-inline-end: 9px;
+  padding-inline-start: 9px;
 }
 
 .tab-content[pinned] {
-  -moz-padding-end: 3px;
+  padding-inline-end: 3px;
 }
 
 .tab-throbber,
@@ -80,7 +80,7 @@
 .tab-icon-image {
   height: 16px;
   width: 16px;
-  -moz-margin-end: 6px;
+  margin-inline-end: 6px;
 }
 
 .tab-icon-image {
@@ -135,18 +135,18 @@
 }
 
 .tab-label {
-  -moz-margin-end: 0;
-  -moz-margin-start: 0;
+  margin-inline-end: 0;
+  margin-inline-start: 0;
 }
 
 .tab-close-button {
-  -moz-margin-start: 4px;
-  -moz-margin-end: -2px;
+  margin-inline-start: 4px;
+  margin-inline-end: -2px;
   padding: 0;
 }
 
 .tab-icon-sound {
-  -moz-margin-start: 4px;
+  margin-inline-start: 4px;
   width: 16px;
   height: 16px;
   padding: 0;
@@ -227,13 +227,13 @@
 .tab-background,
 .tabs-newtab-button {
   /* overlap the tab curves */
-  -moz-margin-end: -@tabCurveHalfWidth@;
-  -moz-margin-start: -@tabCurveHalfWidth@;
+  margin-inline-end: -@tabCurveHalfWidth@;
+  margin-inline-start: -@tabCurveHalfWidth@;
 }
 
 .tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox {
-  -moz-padding-end: @tabCurveHalfWidth@;
-  -moz-padding-start: @tabCurveHalfWidth@;
+  padding-inline-end: @tabCurveHalfWidth@;
+  padding-inline-start: @tabCurveHalfWidth@;
 }
 
 /* Tab Overflow */
@@ -254,13 +254,13 @@
 }
 
 .tabbrowser-arrowscrollbox > .arrowscrollbox-overflow-start-indicator:not([collapsed]) {
-  -moz-margin-start: -2px;
-  -moz-margin-end: -12px;
+  margin-inline-start: -2px;
+  margin-inline-end: -12px;
 }
 
 .tabbrowser-arrowscrollbox > .arrowscrollbox-overflow-end-indicator:not([collapsed]) {
-  -moz-margin-start: -12px;
-  -moz-margin-end: -2px;
+  margin-inline-start: -12px;
+  margin-inline-end: -2px;
 }
 
 .tabbrowser-arrowscrollbox > .arrowscrollbox-overflow-start-indicator[collapsed],
@@ -302,7 +302,7 @@
 .tab-background-start[visuallyselected=true]::after,
 .tab-background-end[visuallyselected=true]::after {
   /* position ::after on top of its parent */
-  -moz-margin-start: -@tabCurveWidth@;
+  margin-inline-start: -@tabCurveWidth@;
   background-size: 100% 100%;
   content: "";
   display: -moz-box;
@@ -467,7 +467,7 @@
 .tabbrowser-tab::after,
 .tabbrowser-tab::before {
   width: 1px;
-  -moz-margin-start: -1px;
+  margin-inline-start: -1px;
   background-image: linear-gradient(transparent 5px,
                                     currentColor 5px,
                                     currentColor calc(100% - 4px),

@@ -118,7 +118,7 @@ tabpanels {
 }
 
 caption {
-  -moz-padding-start: 5px;
+  padding-inline-start: 5px;
   padding-top: 4px;
   padding-bottom: 2px;
 }
@@ -205,11 +205,11 @@ html|a.inline-link:-moz-focusring {
  * Update Preferences
  */
 #autoInstallOptions {
-  -moz-margin-start: 20px;
+  margin-inline-start: 20px;
 }
 
 .updateControls {
-  -moz-margin-start: 10px;
+  margin-inline-start: 10px;
 }
 
 /**

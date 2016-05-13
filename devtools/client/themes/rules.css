@@ -52,7 +52,7 @@
 }
 
 #ruleview-toolbar > .devtools-searchbox:first-child {
-  -moz-padding-start: 0px;
+  padding-inline-start: 0px;
 }
 
 #ruleview-command-toolbar {
@@ -280,7 +280,7 @@
 .ruleview-warning {
   background-image: url(images/alerticon-warning.png);
   background-size: 13px 12px;
-  -moz-margin-start: 5px;
+  margin-inline-start: 5px;
   display: inline-block;
   width: 13px;
   height: 12px;
@@ -295,14 +295,14 @@
 .ruleview-overridden-rule-filter {
   background-image: var(--rule-filter-icon);
   background-size: 11px 11px;
-  -moz-margin-start: 5px;
+  margin-inline-start: 5px;
   display: inline-block;
   width: 11px;
   height: 11px;
 }
 
 .ruleview-ruleopen {
-  -moz-padding-end: 5px;
+  padding-inline-end: 5px;
 }
 
 .ruleview-ruleclose {
@@ -327,7 +327,7 @@
 
 .ruleview-newproperty {
   /* (enable checkbox width: 12px) + (expander width: 15px) */
-  -moz-margin-start: 27px;
+  margin-inline-start: 27px;
 }
 
 .ruleview-namecontainer,
@@ -343,7 +343,7 @@
 }
 
 .ruleview-computed {
-  -moz-margin-start: 35px;
+  margin-inline-start: 35px;
 }
 
 .ruleview-swatch {
@@ -354,7 +354,7 @@
   vertical-align: middle;
   /* align the swatch with its value */
   margin-top: -1px;
-  -moz-margin-end: 5px;
+  margin-inline-end: 5px;
   display: inline-block;
   position: relative;
 }

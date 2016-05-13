@@ -81,7 +81,7 @@ notification[value="translation"] menulist > .menulist-dropmarker {
 }
 
 .translation-welcome-content {
-  -moz-margin-start: 16px;
+  margin-inline-start: 16px;
 }
 
 .translation-welcome-headline {

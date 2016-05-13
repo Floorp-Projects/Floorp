@@ -79,16 +79,16 @@ listheader[sortable="true"]:hover:active {
   -moz-border-left-colors: ThreeDShadow -moz-Dialog;
   padding-top: 0px;
   padding-bottom: 0px;
-  -moz-padding-start: 3px;
-  -moz-padding-end: 1px;
+  padding-inline-start: 3px;
+  padding-inline-end: 1px;
 }
 
 .listheader-icon {
-  -moz-margin-end: 2px;
+  margin-inline-end: 2px;
 }
 
 .listheader-icon[sortable="true"]:hover:active {
-  -moz-margin-end: 1px;
+  margin-inline-end: 1px;
 }
 
 .listheader-label {
@@ -107,13 +107,13 @@ listheader[sortable="true"]:hover:active {
   margin: 0px !important;
   padding-top: 0px;
   padding-bottom: 1px;
-  -moz-padding-start: 4px;
-  -moz-padding-end: 0px;
+  padding-inline-start: 4px;
+  padding-inline-end: 0px;
   white-space: nowrap;
 }
 
 .listcell-icon {
-  -moz-margin-end: 2px;
+  margin-inline-end: 2px;
 }
 
 .listcell-label[disabled="true"] {

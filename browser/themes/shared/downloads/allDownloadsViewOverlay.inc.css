@@ -32,7 +32,7 @@
 %endif
 
 .downloadTypeIcon {
-  -moz-margin-end: 8px;
+  margin-inline-end: 8px;
   width: 32px;
   height: 32px;
 }
@@ -40,7 +40,7 @@
 %ifdef XP_WIN
 @media not all and (-moz-os-version: windows-xp) {
   .downloadTypeIcon {
-    -moz-margin-start: 8px;
+    margin-inline-start: 8px;
   }
 }
 %endif

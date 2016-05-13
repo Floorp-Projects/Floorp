@@ -89,12 +89,12 @@ td:not(:first-child) {
 
 .up {
   padding: 0 .5em;
-  -moz-margin-start: 20px;
+  margin-inline-start: 20px;
 }
 
 .up::before {
-  -moz-margin-end: 4px;
-  -moz-margin-start: -20px;
+  margin-inline-end: 4px;
+  margin-inline-start: -20px;
   vertical-align: middle;
   content: url(chrome://global/skin/dirListing/up.png);
 }

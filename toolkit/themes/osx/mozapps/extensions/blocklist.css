@@ -5,8 +5,8 @@
 richlistitem {
   padding-top: 6px;
   padding-bottom: 6px;
-  -moz-padding-start: 7px;
-  -moz-padding-end: 7px;
+  padding-inline-start: 7px;
+  padding-inline-end: 7px;
   border-bottom: 1px solid #C0C0C0;
 }
 

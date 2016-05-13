@@ -47,7 +47,7 @@
 }
 
 #placesMenu > menu {
-  -moz-padding-start: 4px;
+  padding-inline-start: 4px;
   -moz-binding: url("chrome://browser/skin/places/organizer.xml#toolbarbutton-dropdown");
   -moz-appearance: toolbarbutton;
   color: -moz-DialogText;
@@ -74,7 +74,7 @@
 }
 
 #infoBoxExpanderLabel {
-  -moz-padding-start: 2px;
+  padding-inline-start: 2px;
 }
 
 /**** menuitem stock icons ****/

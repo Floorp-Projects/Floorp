@@ -20,15 +20,15 @@ datepicker, timepicker {
 .datetimepicker-input-box {
   -moz-appearance: textfield;
   cursor: text;
-  -moz-margin-end: 2px;
+  margin-inline-end: 2px;
   border: 2px solid;
   -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
   -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
   padding: 2px 0 3px 0;
-  -moz-padding-start: 4px;
-  -moz-padding-end: 2px;
+  padding-inline-start: 4px;
+  padding-inline-end: 2px;
   background-color: -moz-Field;
   color: -moz-FieldText;
 }

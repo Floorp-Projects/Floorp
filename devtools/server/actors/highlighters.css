@@ -172,9 +172,9 @@
 
 :-moz-native-anonymous .box-model-nodeinfobar-dimensions {
   color: hsl(210,30%,85%);
-  -moz-border-start: 1px solid #5a6169;
-  -moz-margin-start: 6px;
-  -moz-padding-start: 6px;
+  border-inline-start: 1px solid #5a6169;
+  margin-inline-start: 6px;
+  padding-inline-start: 6px;
 }
 
 /* Css transform highlighter */
