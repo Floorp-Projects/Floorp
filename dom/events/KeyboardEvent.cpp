@@ -184,7 +184,7 @@ KeyboardEvent::CharCode()
 {
   // If this event is initialized with ctor, we shouldn't check event type.
   if (mInitializedByCtor) {
-    return mEvent->AsKeyboardEvent()->charCode;
+    return mEvent->AsKeyboardEvent()->mCharCode;
   }
 
   switch (mEvent->mMessage) {
@@ -199,7 +199,7 @@ KeyboardEvent::CharCode()
     return 0;
   case eKeyPress:
   case eAccessKeyNotFound:
-    return mEvent->AsKeyboardEvent()->charCode;
+    return mEvent->AsKeyboardEvent()->mCharCode;
   default:
     break;
   }
@@ -342,7 +342,7 @@ KeyboardEvent::InitKeyEvent(const nsAString& aType,
   WidgetKeyboardEvent* keyEvent = mEvent->AsKeyboardEvent();
   keyEvent->InitBasicModifiers(aCtrlKey, aAltKey, aShiftKey, aMetaKey);
   keyEvent->mKeyCode = aKeyCode;
-  keyEvent->charCode = aCharCode;
+  keyEvent->mCharCode = aCharCode;
 
   return NS_OK;
 }

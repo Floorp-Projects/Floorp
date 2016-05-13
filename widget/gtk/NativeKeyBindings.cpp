@@ -303,8 +303,8 @@ NativeKeyBindings::Execute(const WidgetKeyboardEvent& aEvent,
 
   guint keyval;
 
-  if (aEvent.charCode) {
-    keyval = gdk_unicode_to_keyval(aEvent.charCode);
+  if (aEvent.mCharCode) {
+    keyval = gdk_unicode_to_keyval(aEvent.mCharCode);
   } else {
     keyval =
       static_cast<GdkEventKey*>(aEvent.mNativeKeyEvent)->keyval;
@@ -318,7 +318,7 @@ NativeKeyBindings::Execute(const WidgetKeyboardEvent& aEvent,
     uint32_t ch = aEvent.IsShift() ?
       aEvent.alternativeCharCodes[i].mShiftedCharCode :
       aEvent.alternativeCharCodes[i].mUnshiftedCharCode;
-    if (ch && ch != aEvent.charCode) {
+    if (ch && ch != aEvent.mCharCode) {
       keyval = gdk_unicode_to_keyval(ch);
       if (ExecuteInternal(aEvent, aCallback, aCallbackData, keyval)) {
         return true;
