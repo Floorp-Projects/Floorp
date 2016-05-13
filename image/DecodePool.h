@@ -79,6 +79,11 @@ public:
    */
   already_AddRefed<nsIEventTarget> GetIOEventTarget();
 
+  /**
+   * Notify about progress on aDecoder.
+   */
+  void NotifyProgress(Decoder* aDecoder);
+
 private:
   friend class DecodePoolWorker;
 
@@ -87,7 +92,6 @@ private:
 
   void Decode(Decoder* aDecoder);
   void NotifyDecodeComplete(Decoder* aDecoder);
-  void NotifyProgress(Decoder* aDecoder);
 
   static StaticRefPtr<DecodePool> sSingleton;
   static uint32_t sNumCores;
