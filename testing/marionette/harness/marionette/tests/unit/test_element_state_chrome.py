@@ -6,7 +6,7 @@ from marionette import MarionetteTestCase
 from marionette_driver.by import By
 
 
-class TestStateChrome(MarionetteTestCase):
+class TestIsElementEnabledChrome(MarionetteTestCase):
     def setUp(self):
         MarionetteTestCase.setUp(self)
         self.marionette.set_context("chrome")
@@ -21,7 +21,7 @@ class TestStateChrome(MarionetteTestCase):
         self.marionette.switch_to_window(self.win)
         MarionetteTestCase.tearDown(self)
 
-    def test_isEnabled(self):
+    def test_enabled(self):
         l = self.marionette.find_element(By.ID, "textInput")
         self.assertTrue(l.is_enabled())
         self.marionette.execute_script("arguments[0].disabled = true;", [l])
@@ -34,17 +34,21 @@ class TestStateChrome(MarionetteTestCase):
         self.assertTrue(rect['x'] > 0)
         self.assertTrue(rect['y'] > 0)
 
-    ''' Switched on in Bug 896043 to be turned on in Bug 896046
+
+# Switched off in bug 896043,
+# and to be turned on in bug 896046
+"""
+class TestIsElementDisplayed(MarionetteTestCase):
     def test_isDisplayed(self):
         l = self.marionette.find_element(By.ID, "textInput")
         self.assertTrue(l.is_displayed())
         self.marionette.execute_script("arguments[0].hidden = true;", [l])
         self.assertFalse(l.is_displayed())
         self.marionette.execute_script("arguments[0].hidden = false;", [l])
-    '''
+"""
 
 
-class TestGetAttributeChrome(MarionetteTestCase):
+class TestGetElementAttributeChrome(MarionetteTestCase):
     def setUp(self):
         MarionetteTestCase.setUp(self)
         self.marionette.set_context("chrome")
@@ -59,6 +63,6 @@ class TestGetAttributeChrome(MarionetteTestCase):
         self.marionette.switch_to_window(self.win)
         MarionetteTestCase.tearDown(self)
 
-    def test_getAttribute(self):
+    def test_get(self):
         el = self.marionette.execute_script("return window.document.getElementById('textInput');")
         self.assertEqual(el.get_attribute("id"), "textInput")
