@@ -365,6 +365,9 @@ pref("media.decoder-doctor.notifications-allowed", "MediaWidevineNoWMFNoSilverli
 // Whether we report partial failures.
 pref("media.decoder-doctor.verbose", false);
 
+// Whether to suspend decoding of videos in background tabs.
+pref("media.suspend-bkgnd-video.enabled", true);
+
 #ifdef MOZ_WEBRTC
 pref("media.navigator.enabled", true);
 pref("media.navigator.video.enabled", true);
@@ -2410,11 +2413,7 @@ pref("layout.css.prefixes.font-features", true);
 pref("layout.css.prefixes.gradients", true);
 
 // Are webkit-prefixed properties & property-values supported?
-#ifdef RELEASE_BUILD
-pref("layout.css.prefixes.webkit", false);
-#else
 pref("layout.css.prefixes.webkit", true);
-#endif
 
 // Are "-webkit-{min|max}-device-pixel-ratio" media queries supported?
 // (Note: this pref has no effect if the master 'layout.css.prefixes.webkit'
@@ -2437,12 +2436,8 @@ pref("layout.css.scope-pseudo.enabled", true);
 // Is support for background-blend-mode enabled?
 pref("layout.css.background-blend-mode.enabled", true);
 
-// Is support for background-clip:text enabled? (bug 1264905)
-#ifdef RELEASE_BUILD
-pref("layout.css.background-clip-text.enabled", false);
-#else
+// Is support for background-clip:text enabled?
 pref("layout.css.background-clip-text.enabled", true);
-#endif
 
 // Is support for CSS vertical text enabled?
 pref("layout.css.vertical-text.enabled", true);
@@ -3289,10 +3284,6 @@ pref("plugin.scan.plid.all", true);
 
 // Whether sending WM_MOUSEWHEEL and WM_MOUSEHWHEEL to plugins on Windows.
 pref("plugin.mousewheel.enabled", true);
-
-// Help Windows NT, 2000, and XP dialup a RAS connection
-// when a network address is unreachable.
-pref("network.autodial-helper.enabled", false);
 
 // Switch the keyboard layout per window
 pref("intl.keyboard.per_window_layout", false);

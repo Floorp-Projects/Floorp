@@ -465,9 +465,15 @@ File::GetName(nsAString& aFileName) const
 }
 
 void
-File::GetPath(nsAString& aPath, ErrorResult& aRv)
+File::GetPath(nsAString& aPath) const
 {
-  mImpl->GetPath(aPath, aRv);
+  mImpl->GetPath(aPath);
+}
+
+void
+File::SetPath(const nsAString& aPath)
+{
+  mImpl->SetPath(aPath);
 }
 
 Date
@@ -685,10 +691,17 @@ BlobImplBase::GetName(nsAString& aName) const
 }
 
 void
-BlobImplBase::GetPath(nsAString& aPath, ErrorResult& aRv)
+BlobImplBase::GetPath(nsAString& aPath) const
 {
   NS_ASSERTION(mIsFile, "Should only be called on files");
   aPath = mPath;
+}
+
+void
+BlobImplBase::SetPath(const nsAString& aPath)
+{
+  NS_ASSERTION(mIsFile, "Should only be called on files");
+  mPath = aPath;
 }
 
 void
@@ -983,15 +996,6 @@ BlobImplFile::GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv)
 
   aRv = NS_NewPartialLocalFileInputStream(aStream, mFile, mStart, mLength,
                                           -1, -1, sFileStreamFlags);
-}
-
-void
-BlobImplFile::SetPath(const nsAString& aPath)
-{
-  MOZ_ASSERT(aPath.IsEmpty() ||
-             aPath[aPath.Length() - 1] == char16_t('/'),
-             "Path must end with a path separator");
-  mPath = aPath;
 }
 
 ////////////////////////////////////////////////////////////////////////////

@@ -723,7 +723,7 @@ MOZ_WIN_MEM_TRY_BEGIN
   while (buf + int32_t(sizeof(uint32_t)) <= endp &&
          (sig = xtolong(buf)) == CENTRALSIG) {
     // Make sure there is enough data available.
-    if (endp - buf < ZIPCENTRAL_SIZE) {
+    if ((buf > endp) || (endp - buf < ZIPCENTRAL_SIZE)) {
       nsZipArchive::sFileCorruptedReason = "nsZipArchive: central directory too small";
       return NS_ERROR_FILE_CORRUPTED;
     }
@@ -774,7 +774,7 @@ MOZ_WIN_MEM_TRY_BEGIN
   }
 
   // Make the comment available for consumers.
-  if (endp - buf >= ZIPEND_SIZE) {
+  if ((endp >= buf) && (endp - buf >= ZIPEND_SIZE)) {
     ZipEnd *zipend = (ZipEnd *)buf;
 
     buf += ZIPEND_SIZE;

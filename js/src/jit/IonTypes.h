@@ -618,6 +618,13 @@ StringFromMIRType(MIRType type)
 }
 
 static inline bool
+IsIntType(MIRType type)
+{
+    return type == MIRType::Int32 ||
+           type == MIRType::Int64;
+}
+
+static inline bool
 IsNumberType(MIRType type)
 {
     return type == MIRType::Int32 ||

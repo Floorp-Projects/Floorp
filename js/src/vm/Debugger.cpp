@@ -8096,10 +8096,10 @@ DebuggerObject_getPromiseDependentPromises(JSContext* cx, unsigned argc, Value* 
 {
     THIS_DEBUGOBJECT_OWNER_PROMISE(cx, argc, vp, "get promiseDependentPromises", args, dbg, refobj);
 
-    Rooted<GCVector<Value>> values(cx, GCVector<Value>());
+    Rooted<GCVector<Value>> values(cx, GCVector<Value>(cx));
     {
         JSAutoCompartment ac(cx, promise);
-        if (!promise->dependentPromises(cx, values))
+        if (!promise->dependentPromises(cx, &values))
             return false;
     }
     for (size_t i = 0; i < values.length(); i++) {
@@ -8844,7 +8844,7 @@ DebuggerObject::initClass(JSContext* cx, HandleObject obj, HandleObject debugCto
 
 #ifdef SPIDERMONKEY_PROMISE
     if (!DefinePropertiesAndFunctions(cx, objectProto, promiseProperties_, nullptr))
-        return false;
+        return nullptr;
 #endif // SPIDERMONKEY_PROMISE
 
     return objectProto;
@@ -9429,11 +9429,6 @@ JS_DefineDebuggerObject(JSContext* cx, HandleObject obj)
     objectProto = DebuggerObject::initClass(cx, obj, debugCtor);
     if (!objectProto)
         return false;
-
-#ifdef SPIDERMONKEY_PROMISE
-    if (!DefinePropertiesAndFunctions(cx, objectProto, DebuggerObject::promiseProperties_, nullptr))
-        return false;
-#endif // SPIDERMONKEY_PROMISE
 
     envProto = InitClass(cx, debugCtor, objProto, &DebuggerEnv_class,
                          DebuggerEnv_construct, 0,
