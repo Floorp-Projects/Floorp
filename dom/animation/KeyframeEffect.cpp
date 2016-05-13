@@ -15,11 +15,13 @@
 #include "mozilla/StyleAnimationValue.h"
 #include "Layers.h" // For Layer
 #include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetStyleContextForElement
+#include "nsContentUtils.h"  // nsContentUtils::ReportToConsole
 #include "nsCSSPropertySet.h"
 #include "nsCSSProps.h" // For nsCSSProps::PropHasFlags
 #include "nsCSSPseudoElements.h" // For CSSPseudoElementType
 #include "nsDOMMutationObserver.h" // For nsAutoAnimationMutationBatch
 #include "nsIPresShell.h" // For nsIPresShell
+#include "nsIScriptError.h"
 
 namespace mozilla {
 
@@ -729,15 +731,18 @@ KeyframeEffectOptionsFromUnion(
 template <class OptionsType>
 static KeyframeEffectParams
 KeyframeEffectParamsFromUnion(const OptionsType& aOptions,
+                              nsAString& aInvalidPacedProperty,
                               ErrorResult& aRv)
 {
   KeyframeEffectParams result;
   if (!aOptions.IsUnrestrictedDouble()) {
     const KeyframeEffectOptions& options =
       KeyframeEffectOptionsFromUnion(aOptions);
-    // TODO: If the grammar of spacing is not correct, we should throw a
-    //       TypeError, aRv.Throw(NS_ERROR_TYPE_ERR). Parse spacing string and
-    //       handle TypeError in the next patch.
+    KeyframeEffectParams::ParseSpacing(options.mSpacing,
+                                       result.mSpacingMode,
+                                       result.mPacedProperty,
+                                       aInvalidPacedProperty,
+                                       aRv);
   }
   return result;
 }
@@ -786,8 +791,23 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(
     return nullptr;
   }
 
+  nsAutoString invalidPacedProperty;
   KeyframeEffectParams effectOptions =
-    KeyframeEffectParamsFromUnion(aOptions, aRv);
+    KeyframeEffectParamsFromUnion(aOptions, invalidPacedProperty, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  if (!invalidPacedProperty.IsEmpty()) {
+    const char16_t* params[] = { invalidPacedProperty.get() };
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                    NS_LITERAL_CSTRING("Animation"),
+                                    doc,
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    "UnanimatablePacedProperty",
+                                    params, ArrayLength(params));
+  }
+
   Maybe<OwningAnimationTarget> target = ConvertTarget(aTarget);
   RefPtr<KeyframeEffectType> effect =
     new KeyframeEffectType(doc, target, timingParams, effectOptions);

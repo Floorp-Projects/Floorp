@@ -78,6 +78,15 @@ public:
                                       dom::Element* aElement,
                                       CSSPseudoElementType aPseudoType,
                                       const nsTArray<Keyframe>& aFrames);
+
+  /**
+   * Check if the property or, for shorthands, one or more of
+   * its subproperties, is animatable.
+   *
+   * @param aProperty The property to check.
+   * @return true if |aProperty| is animatable.
+   */
+  static bool IsAnimatableProperty(nsCSSProperty aProperty);
 };
 
 } // namespace mozilla
