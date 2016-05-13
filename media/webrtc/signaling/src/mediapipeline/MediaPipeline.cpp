@@ -2080,8 +2080,6 @@ MediaPipelineReceiveAudio::MediaPipelineReceiveAudio(
 void MediaPipelineReceiveAudio::DetachMedia()
 {
   ASSERT_ON_THREAD(main_thread_);
-
-  listener_->EndTrack();
   if (stream_) {
     stream_->RemoveListener(listener_);
     stream_ = nullptr;
