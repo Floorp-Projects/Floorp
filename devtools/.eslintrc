@@ -18,6 +18,7 @@
     "setInterval": true,
     "setTimeout": true,
     "XMLHttpRequest": true,
+    "URL": true,
     "_Iterator": true,
   },
   "rules": {
