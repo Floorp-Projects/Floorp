@@ -188,8 +188,8 @@ class SharedImmutableStringsCache
         return SharedImmutableStringsCache(inner_);
     }
 
-    // If you want to copy, do it explicitly with `clone`.
-    SharedImmutableStringsCache(const SharedImmutableStringsCache&) = delete;
+    // If you want a copy, do it explicitly with `clone`.
+    SharedImmutableStringsCache& operator=(const SharedImmutableStringsCache&) = delete;
 
     ~SharedImmutableStringsCache() {
         if (!inner_)
@@ -366,6 +366,9 @@ class SharedImmutableString
      */
     SharedImmutableString clone() const;
 
+    // If you want a copy, take one explicitly with `clone`!
+    SharedImmutableString& operator=(const SharedImmutableString&) = delete;
+
     ~SharedImmutableString();
 
     /**
@@ -415,6 +418,9 @@ class SharedImmutableTwoByteString
      * Create another shared reference to the underlying string.
      */
     SharedImmutableTwoByteString clone() const;
+
+    // If you want a copy, take one explicitly with `clone`!
+    SharedImmutableTwoByteString& operator=(const SharedImmutableTwoByteString&) = delete;
 
     /**
      * Get a raw pointer to the underlying string. It is only safe to use the
