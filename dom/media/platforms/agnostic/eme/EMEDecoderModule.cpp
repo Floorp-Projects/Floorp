@@ -44,7 +44,10 @@ public:
 
   nsresult Input(MediaRawData* aSample) override {
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-    MOZ_ASSERT(!mIsShutdown);
+    if (mIsShutdown) {
+      NS_WARNING("EME encrypted sample arrived after shutdown");
+      return NS_OK;
+    }
     if (mSamplesWaitingForKey->WaitIfKeyNotUsable(aSample)) {
       return NS_OK;
     }
