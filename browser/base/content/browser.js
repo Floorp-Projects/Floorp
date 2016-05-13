@@ -1107,6 +1107,12 @@ var gBrowserInit = {
                               "without the remote tabs load context.");
             }
 
+            // We must set usercontextid before updateBrowserRemoteness()
+            // so that the newly created remote tab child has correct usercontextid
+            if (tabToOpen.hasAttribute("usercontextid")) {
+              let usercontextid = tabToOpen.getAttribute("usercontextid");
+              gBrowser.selectedBrowser.setAttribute("usercontextid", usercontextid);
+            }
             gBrowser.updateBrowserRemoteness(gBrowser.selectedBrowser, true);
           }
           gBrowser.swapBrowsersAndCloseOther(gBrowser.selectedTab, tabToOpen);
