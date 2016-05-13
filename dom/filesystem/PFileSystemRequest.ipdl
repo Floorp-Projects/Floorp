@@ -13,6 +13,7 @@ namespace dom {
 struct FileSystemFileResponse
 {
   nsString realPath;
+  nsString domPath;
 };
 
 struct FileSystemDirectoryResponse

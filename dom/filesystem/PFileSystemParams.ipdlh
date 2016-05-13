@@ -48,6 +48,7 @@ struct FileSystemGetFilesParams
 {
   nsString filesystem;
   nsString realPath;
+  nsString domPath;
   bool recursiveFlag;
 };
 
