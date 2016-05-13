@@ -1,0 +1,113 @@
+<html>
+  <head>
+    <meta charset="utf8">
+    <title>Newtab WebChannel test</title>
+  </head>
+  <body>
+    <script>
+      let suggestionsData = {
+        engineName: "Engine1",
+        searchString: "test",
+      };
+      let removeFormHistoryData = "test";
+      let performSearchData = {
+        engineName: "Engine1",
+        healthReportKey: "1",
+        searchPurpose: "d",
+        searchString: "test",
+      };
+      let cycleEngineData = "Engine2";
+
+      window.addEventListener("WebChannelMessageToContent", function(e) {
+        if (e.detail.message) {
+          let reply;
+          switch (e.detail.message.type) {
+            case "RECEIVE_UISTRINGS":
+              reply = new window.CustomEvent("WebChannelMessageToChrome", {
+                detail: {
+                  id: "newtab",
+                  message: JSON.stringify({type: "UIStringsAck", data: e.detail.message.data}),
+                }
+              });
+              window.dispatchEvent(reply);
+              break;
+            case "RECEIVE_SEARCH_SUGGESTIONS":
+              reply = new window.CustomEvent("WebChannelMessageToChrome", {
+                detail: {
+                  id: "newtab",
+                  message: JSON.stringify({type: "suggestionsAck", data: e.detail.message.data}),
+                }
+              });
+              window.dispatchEvent(reply);
+              break;
+            case "RECEIVE_SEARCH_STATE":
+              reply = new window.CustomEvent("WebChannelMessageToChrome", {
+                detail: {
+                  id: "newtab",
+                  message: JSON.stringify({type: "stateAck", data: e.detail.message.data}),
+                }
+              });
+              window.dispatchEvent(reply);
+              break;
+            case "RECEIVE_CURRENT_ENGINE":
+              reply = new window.CustomEvent("WebChannelMessageToChrome", {
+                detail: {
+                  id: "newtab",
+                  message: JSON.stringify({type: "currentEngineAck", data: e.detail.message.data}),
+                }
+              });
+              window.dispatchEvent(reply);
+              break;
+          }
+        }
+      }, true);
+
+      document.onreadystatechange = function () {
+        if (document.readyState === "complete") {
+          let msg = new window.CustomEvent("WebChannelMessageToChrome", {
+            detail: {
+              id: "newtab",
+              message: JSON.stringify({type: "REQUEST_UISTRINGS"}),
+            }
+          });
+          window.dispatchEvent(msg);
+          msg = new window.CustomEvent("WebChannelMessageToChrome", {
+            detail: {
+              id: "newtab",
+              message: JSON.stringify({type: "REQUEST_SEARCH_SUGGESTIONS", data: suggestionsData}),
+            }
+          });
+          window.dispatchEvent(msg);
+          msg = new window.CustomEvent("WebChannelMessageToChrome", {
+            detail: {
+              id: "newtab",
+              message: JSON.stringify({type: "REQUEST_SEARCH_STATE"}),
+            }
+          });
+          window.dispatchEvent(msg);
+          msg = new window.CustomEvent("WebChannelMessageToChrome", {
+            detail: {
+              id: "newtab",
+              message: JSON.stringify({type: "REQUEST_REMOVE_FORM_HISTORY", data: removeFormHistoryData}),
+            }
+          });
+          window.dispatchEvent(msg);
+          msg = new window.CustomEvent("WebChannelMessageToChrome", {
+            detail: {
+              id: "newtab",
+              message: JSON.stringify({type: "REQUEST_PERFORM_SEARCH", data: performSearchData}),
+            }
+          });
+          window.dispatchEvent(msg);
+          msg = new window.CustomEvent("WebChannelMessageToChrome", {
+            detail: {
+              id: "newtab",
+              message: JSON.stringify({type: "REQUEST_CYCLE_ENGINE", data: cycleEngineData}),
+            }
+          });
+          window.dispatchEvent(msg);
+        }
+      }
+    </script>
+  </body>
+</html>

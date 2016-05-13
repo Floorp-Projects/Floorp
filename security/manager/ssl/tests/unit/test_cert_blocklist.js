@@ -197,9 +197,9 @@ function check_revocations_txt_contents(expected) {
   let contents = "";
   let hasmore = false;
   do {
-    var line = {};
+    let line = {};
     hasmore = inputStream.readLine(line);
-    contents = contents + (contents.length == 0 ? "" : "\n") + line.value;
+    contents += (contents.length == 0 ? "" : "\n") + line.value;
   } while (hasmore);
   equal(contents, expected, "revocations.txt should be as expected");
 }

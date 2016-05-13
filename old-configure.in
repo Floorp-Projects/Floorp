@@ -2638,16 +2638,6 @@ dnl ========================================================
 MOZ_CONFIG_FFI()
 
 dnl ========================================================
-dnl Java SDK support
-dnl ========================================================
-
-JAVA_BIN_PATH=
-MOZ_ARG_WITH_STRING(java-bin-path,
-[  --with-java-bin-path=dir
-                          Location of Java binaries (java, javac, jar)],
-    JAVA_BIN_PATH=$withval)
-
-dnl ========================================================
 dnl =
 dnl = Application
 dnl =
@@ -2692,8 +2682,6 @@ VPX_ARM_ASM=
 LIBJPEG_TURBO_AS=
 LIBJPEG_TURBO_ASFLAGS=
 MOZ_PERMISSIONS=1
-MOZ_PLACES=1
-MOZ_SOCIAL=1
 MOZ_PREF_EXTENSIONS=1
 MOZ_REFLOW_PERF=
 MOZ_SAFE_BROWSING=
@@ -4152,61 +4140,6 @@ MOZ_ARG_DISABLE_BOOL(universalchardet,
                           Disable universal encoding detection],
   MOZ_UNIVERSALCHARDET=,
   MOZ_UNIVERSALCHARDET=1 )
-
-if test -n "${JAVA_BIN_PATH}"; then
-  dnl Look for javac and jar in the specified path.
-  JAVA_PATH="$JAVA_BIN_PATH"
-else
-  dnl No path specified, so look for javac and jar in $JAVA_HOME & $PATH.
-  JAVA_PATH="$JAVA_HOME/bin:$PATH"
-fi
-
-MOZ_PATH_PROG(JAVA, java, :, [$JAVA_PATH])
-MOZ_PATH_PROG(JAVAC, javac, :, [$JAVA_PATH])
-MOZ_PATH_PROG(JAVAH, javah, :, [$JAVA_PATH])
-MOZ_PATH_PROG(JAR, jar, :, [$JAVA_PATH])
-MOZ_PATH_PROG(JARSIGNER, jarsigner, :, [$JAVA_PATH])
-MOZ_PATH_PROG(KEYTOOL, keytool, :, [$JAVA_PATH])
-
-if test -n "${JAVA_BIN_PATH}" -o \
-  \( "$OS_TARGET" = Android -a x"$MOZ_WIDGET_TOOLKIT" != x"gonk" \); then
-  if test -z "$JAVA" -o "$JAVA" = ":"; then
-    AC_MSG_ERROR([The program java was not found.  Set \$JAVA_HOME to your Java SDK directory or use --with-java-bin-path={java-bin-dir}])
-  fi
-  if test -z "$JAVAC" -o "$JAVAC" = ":"; then
-    AC_MSG_ERROR([The program javac was not found.  Set \$JAVA_HOME to your Java SDK directory or use --with-java-bin-path={java-bin-dir}])
-  fi
-  if test -z "$JAVAH" -o "$JAVAH" = ":"; then
-    AC_MSG_ERROR([The program javah was not found.  Set \$JAVA_HOME to your Java SDK directory or use --with-java-bin-path={java-bin-dir}])
-  fi
-  if test -z "$JAR" -o "$JAR" = ":"; then
-    AC_MSG_ERROR([The program jar was not found.  Set \$JAVA_HOME to your Java SDK directory or use --with-java-bin-path={java-bin-dir}])
-  fi
-  if test -z "$JARSIGNER" -o "$JARSIGNER" = ":"; then
-    AC_MSG_ERROR([The program jarsigner was not found.  Set \$JAVA_HOME to your Java SDK directory or use --with-java-bin-path={java-bin-dir}])
-  fi
-  if test -z "$KEYTOOL" -o "$KEYTOOL" = ":"; then
-    AC_MSG_ERROR([The program keytool was not found.  Set \$JAVA_HOME to your Java SDK directory or use --with-java-bin-path={java-bin-dir}])
-  fi
-
-  AC_MSG_CHECKING([for minimum required javac version >= 1.7])
-
-  dnl Javac spits out something like `javac 1.7.0`. This line cuts off the 'javac'
-  _javac_version=$($JAVAC -version 2>&1 | cut -d ' ' -f 2)
-
-  dnl Here, we extract the major (1) and minor (7) version numbers from the
-  dnl acquired version string.
-  _javac_major_version=$(echo $_javac_version | cut -d '.' -f 1)
-  _javac_minor_version=$(echo $_javac_version | cut -d '.' -f 2)
-
-  AC_MSG_RESULT([$_javac_version])
-
-  dnl Fail if we have a version other than 1.7.X
-  if test "$_javac_major_version" -ne "1" -o \
-       \( "$_javac_minor_version" -lt "7" \); then
-      AC_MSG_ERROR([javac 1.7 or higher is required.])
-  fi
-fi
 
 dnl ========================================================
 dnl = ANGLE OpenGL->D3D translator for WebGL
@@ -6620,52 +6553,6 @@ if test "$BUILD_CTYPES"; then
     AC_DEFINE(BUILD_CTYPES)
 fi
 
-dnl Build Places if required
-if test "$MOZ_PLACES"; then
-  AC_DEFINE(MOZ_PLACES)
-fi
-
-dnl Build SocialAPI if required
-if test "$MOZ_SOCIAL"; then
-  AC_DEFINE(MOZ_SOCIAL)
-fi
-
-dnl Build Common JS modules provided by services.
-AC_SUBST(MOZ_SERVICES_COMMON)
-if test -n "$MOZ_SERVICES_COMMON"; then
-  AC_DEFINE(MOZ_SERVICES_COMMON)
-fi
-
-dnl Build Services crypto component (used by Sync)
-AC_SUBST(MOZ_SERVICES_CRYPTO)
-if test -n "$MOZ_SERVICES_CRYPTO"; then
-  AC_DEFINE(MOZ_SERVICES_CRYPTO)
-fi
-
-dnl Build Firefox Health Reporter Service
-AC_SUBST(MOZ_SERVICES_HEALTHREPORT)
-if test -n "$MOZ_SERVICES_HEALTHREPORT"; then
-  AC_DEFINE(MOZ_SERVICES_HEALTHREPORT)
-fi
-
-dnl Build Notifications if required
-AC_SUBST(MOZ_SERVICES_NOTIFICATIONS)
-if test -n "$MOZ_SERVICES_NOTIFICATIONS"; then
-  AC_DEFINE(MOZ_SERVICES_NOTIFICATIONS)
-fi
-
-dnl Build Sync Services if required
-AC_SUBST(MOZ_SERVICES_SYNC)
-if test -n "$MOZ_SERVICES_SYNC"; then
-  AC_DEFINE(MOZ_SERVICES_SYNC)
-fi
-
-dnl Build Services/CloudSync if required
-AC_SUBST(MOZ_SERVICES_CLOUDSYNC)
-if test -n "$MOZ_SERVICES_CLOUDSYNC"; then
-  AC_DEFINE(MOZ_SERVICES_CLOUDSYNC)
-fi
-
 dnl ========================================================
 if test "$MOZ_DEBUG" -o "$MOZ_DMD"; then
     MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
@@ -6699,19 +6586,10 @@ AC_SUBST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST(WARNINGS_AS_ERRORS)
 AC_SUBST_SET(MOZ_EXTENSIONS)
 AC_SUBST(LIBICONV)
-AC_SUBST(MOZ_PLACES)
-AC_SUBST(MOZ_SOCIAL)
 AC_SUBST(MOZ_TOOLKIT_SEARCH)
 AC_SUBST(MOZ_FEEDS)
 AC_SUBST(NS_PRINTING)
 AC_SUBST(MOZ_HELP_VIEWER)
-
-AC_SUBST(JAVA)
-AC_SUBST(JAVAC)
-AC_SUBST(JAVAH)
-AC_SUBST(JAR)
-AC_SUBST(JARSIGNER)
-AC_SUBST(KEYTOOL)
 
 AC_SUBST(ENABLE_TESTS)
 AC_SUBST(MOZ_UNIVERSALCHARDET)

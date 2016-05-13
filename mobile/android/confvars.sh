@@ -31,8 +31,6 @@ MOZ_XULRUNNER=
 
 MOZ_CAPTURE=1
 MOZ_RAW=1
-MOZ_PLACES=
-MOZ_SOCIAL=
 MOZ_ANDROID_HISTORY=1
 
 # use custom widget for html:select
@@ -47,9 +45,6 @@ MOZ_APP_STATIC_INI=1
 if test "$COMPILE_ENVIRONMENT"; then
 MOZ_ENABLE_SZIP=1
 fi
-
-# Enable UI for healthreporter
-MOZ_SERVICES_HEALTHREPORT=1
 
 # Enable second screen using native Android libraries, provided we're
 # not resource constrained.

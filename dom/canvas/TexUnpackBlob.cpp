@@ -311,7 +311,13 @@ TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
         return; // Blitting was successful, so we're done!
     } while (false);
 
-    TexUnpackSurface surfBlob(mImage->GetAsSourceSurface(), mIsAlphaPremult);
+    RefPtr<SourceSurface> surface = mImage->GetAsSourceSurface();
+    if (!surface) {
+        *out_glError = LOCAL_GL_OUT_OF_MEMORY;
+        return;
+    }
+
+    TexUnpackSurface surfBlob(surface, mIsAlphaPremult);
 
     surfBlob.TexOrSubImage(isSubImage, needsRespec, funcName, tex, target, level, dui,
                            xOffset, yOffset, zOffset, out_glError);

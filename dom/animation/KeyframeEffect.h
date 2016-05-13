@@ -74,7 +74,8 @@ struct PropertyValuePair
  * A single keyframe.
  *
  * This is the canonical form in which keyframe effects are stored and
- * corresponds closely to the type of objects returned via the getFrames() API.
+ * corresponds closely to the type of objects returned via the getKeyframes()
+ * API.
  *
  * Before computing an output animation value, however, we flatten these frames
  * down to a series of per-property value arrays where we also resolve any
@@ -211,7 +212,7 @@ public:
   static already_AddRefed<KeyframeEffectReadOnly>
   Constructor(const GlobalObject& aGlobal,
               const Nullable<ElementOrCSSPseudoElement>& aTarget,
-              JS::Handle<JSObject*> aFrames,
+              JS::Handle<JSObject*> aKeyframes,
               const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
               ErrorResult& aRv);
 
@@ -224,9 +225,9 @@ public:
     }
     return result;
   }
-  void GetFrames(JSContext*& aCx,
-                 nsTArray<JSObject*>& aResult,
-                 ErrorResult& aRv);
+  void GetKeyframes(JSContext*& aCx,
+                    nsTArray<JSObject*>& aResult,
+                    ErrorResult& aRv);
   void GetProperties(nsTArray<AnimationPropertyDetails>& aProperties,
                      ErrorResult& aRv) const;
 
@@ -280,9 +281,10 @@ public:
   void SetAnimation(Animation* aAnimation);
   Animation* GetAnimation() const { return mAnimation; }
 
-  void SetFrames(JSContext* aContext, JS::Handle<JSObject*> aFrames,
-                 ErrorResult& aRv);
-  void SetFrames(nsTArray<Keyframe>&& aFrames, nsStyleContext* aStyleContext);
+  void SetKeyframes(JSContext* aContext, JS::Handle<JSObject*> aKeyframes,
+                    ErrorResult& aRv);
+  void SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
+                    nsStyleContext* aStyleContext);
   const AnimationProperty*
   GetAnimationOfProperty(nsCSSProperty aProperty) const;
   bool HasAnimationOfProperty(nsCSSProperty aProperty) const {
@@ -297,8 +299,8 @@ public:
     return mProperties;
   }
 
-  // Update |mProperties| by recalculating from |mFrames| using |aStyleContext|
-  // to resolve specified values.
+  // Update |mProperties| by recalculating from |mKeyframes| using
+  // |aStyleContext| to resolve specified values.
   void UpdateProperties(nsStyleContext* aStyleContext);
 
   // Updates |aStyleRule| with the animation values produced by this
@@ -346,7 +348,7 @@ protected:
   static already_AddRefed<KeyframeEffectType>
   ConstructKeyframeEffect(const GlobalObject& aGlobal,
                           const Nullable<ElementOrCSSPseudoElement>& aTarget,
-                          JS::Handle<JSObject*> aFrames,
+                          JS::Handle<JSObject*> aKeyframes,
                           const OptionsType& aOptions,
                           ErrorResult& aRv);
 
@@ -375,9 +377,9 @@ protected:
   RefPtr<AnimationEffectTimingReadOnly> mTiming;
 
   // The specified keyframes.
-  nsTArray<Keyframe>          mFrames;
+  nsTArray<Keyframe>          mKeyframes;
 
-  // A set of per-property value arrays, derived from |mFrames|.
+  // A set of per-property value arrays, derived from |mKeyframes|.
   nsTArray<AnimationProperty> mProperties;
 
   // The computed progress last time we composed the style rule. This is
@@ -419,7 +421,7 @@ public:
   static already_AddRefed<KeyframeEffect>
   Constructor(const GlobalObject& aGlobal,
               const Nullable<ElementOrCSSPseudoElement>& aTarget,
-              JS::Handle<JSObject*> aFrames,
+              JS::Handle<JSObject*> aKeyframes,
               const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
               ErrorResult& aRv);
 
@@ -429,7 +431,7 @@ public:
   static already_AddRefed<KeyframeEffect>
   Constructor(const GlobalObject& aGlobal,
               const Nullable<ElementOrCSSPseudoElement>& aTarget,
-              JS::Handle<JSObject*> aFrames,
+              JS::Handle<JSObject*> aKeyframes,
               const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
               ErrorResult& aRv);
 

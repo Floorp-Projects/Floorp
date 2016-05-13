@@ -23,8 +23,6 @@ static GtkWidget* gProtoLayout;
 static GtkWidget* gButtonWidget;
 static GtkWidget* gToggleButtonWidget;
 static GtkWidget* gButtonArrowWidget;
-static GtkWidget* gCheckboxWidget;
-static GtkWidget* gRadiobuttonWidget;
 static GtkWidget* gSpinWidget;
 static GtkWidget* gHScaleWidget;
 static GtkWidget* gVScaleWidget;
@@ -181,26 +179,6 @@ ensure_button_arrow_widget()
         gtk_container_add(GTK_CONTAINER(gToggleButtonWidget), gButtonArrowWidget);
         gtk_widget_realize(gButtonArrowWidget);
         gtk_widget_show(gButtonArrowWidget);
-    }
-    return MOZ_GTK_SUCCESS;
-}
-
-static gint
-ensure_checkbox_widget()
-{
-    if (!gCheckboxWidget) {
-        gCheckboxWidget = gtk_check_button_new_with_label("M");
-        setup_widget_prototype(gCheckboxWidget);
-    }
-    return MOZ_GTK_SUCCESS;
-}
-
-static gint
-ensure_radiobutton_widget()
-{
-    if (!gRadiobuttonWidget) {
-        gRadiobuttonWidget = gtk_radio_button_new_with_label(NULL, "M");
-        setup_widget_prototype(gRadiobuttonWidget);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -729,26 +707,20 @@ moz_gtk_init()
 gint
 moz_gtk_checkbox_get_metrics(gint* indicator_size, gint* indicator_spacing)
 {
-    ensure_checkbox_widget();
-
-    gtk_style_context_get_style(gtk_widget_get_style_context(gCheckboxWidget),
-                                "indicator_size", indicator_size,
-                                "indicator_spacing", indicator_spacing,
-                                NULL);
-
+    gtk_widget_style_get(GetWidget(MOZ_GTK_CHECKBUTTON_CONTAINER),
+                         "indicator_size", indicator_size,
+                         "indicator_spacing", indicator_spacing,
+                         NULL);
     return MOZ_GTK_SUCCESS;
 }
 
 gint
 moz_gtk_radio_get_metrics(gint* indicator_size, gint* indicator_spacing)
 {
-    ensure_radiobutton_widget();
-
-    gtk_style_context_get_style(gtk_widget_get_style_context(gRadiobuttonWidget),
-                                "indicator_size", indicator_size,
-                                "indicator_spacing", indicator_spacing,
-                                NULL);
-
+    gtk_widget_style_get(GetWidget(MOZ_GTK_RADIOBUTTON_CONTAINER),
+                         "indicator_size", indicator_size,
+                         "indicator_spacing", indicator_spacing,
+                          NULL);
     return MOZ_GTK_SUCCESS;
 }
 
@@ -937,16 +909,14 @@ moz_gtk_toggle_paint(cairo_t *cr, GdkRectangle* rect,
     gint indicator_size, indicator_spacing;
     gint x, y, width, height;
     gint focus_x, focus_y, focus_width, focus_height;
-    GtkWidget *w;
     GtkStyleContext *style;
 
-    if (isradio) {
-        moz_gtk_radio_get_metrics(&indicator_size, &indicator_spacing);
-        w = gRadiobuttonWidget;
-    } else {
-        moz_gtk_checkbox_get_metrics(&indicator_size, &indicator_spacing);
-        w = gCheckboxWidget;
-    }
+    GtkWidget *widget = GetWidget(isradio ? MOZ_GTK_RADIOBUTTON_CONTAINER :
+                                            MOZ_GTK_CHECKBUTTON_CONTAINER);
+    gtk_widget_style_get(widget,
+                         "indicator_size", &indicator_size,
+                         "indicator_spacing", &indicator_spacing,
+                         nullptr);
 
     // XXX we should assert rect->height >= indicator_size too
     // after bug 369581 is fixed.
@@ -963,12 +933,9 @@ moz_gtk_toggle_paint(cairo_t *cr, GdkRectangle* rect,
     focus_y = y - indicator_spacing;
     focus_width = width + 2 * indicator_spacing;
     focus_height = height + 2 * indicator_spacing;
-  
-    style = gtk_widget_get_style_context(w);
 
-    gtk_widget_set_sensitive(w, !state->disabled);
-    gtk_widget_set_direction(w, direction);
-    gtk_style_context_save(style);
+    style = ClaimStyleContext(isradio ? MOZ_GTK_RADIOBUTTON :
+                                        MOZ_GTK_CHECKBUTTON);
 
     if (selected)
         state_flags = static_cast<GtkStateFlags>(state_flags|checkbox_check_state);
@@ -977,9 +944,14 @@ moz_gtk_toggle_paint(cairo_t *cr, GdkRectangle* rect,
         state_flags = static_cast<GtkStateFlags>(state_flags|GTK_STATE_FLAG_INCONSISTENT);
 
     gtk_style_context_set_state(style, state_flags);
+    gtk_style_context_set_direction(style, direction);
+
+    if (gtk_check_version(3, 20, 0) == nullptr) {
+        gtk_render_background(style, cr, x, y, width, height);
+        gtk_render_frame(style, cr, x, y, width, height);
+    }
 
     if (isradio) {
-        gtk_style_context_add_class(style, GTK_STYLE_CLASS_RADIO);
         gtk_render_option(style, cr, x, y, width, height);
         if (state->focused) {
             gtk_render_focus(style, cr, focus_x, focus_y,
@@ -987,19 +959,14 @@ moz_gtk_toggle_paint(cairo_t *cr, GdkRectangle* rect,
         }
     }
     else {
-       /*
-        * 'indeterminate' type on checkboxes. In GTK, the shadow type
-        * must also be changed for the state to be drawn.
-        */        
-        gtk_style_context_add_class(style, GTK_STYLE_CLASS_CHECK);
-        gtk_toggle_button_set_inconsistent(GTK_TOGGLE_BUTTON(gCheckboxWidget), inconsistent);
-        gtk_render_check(style, cr, x, y, width, height);        
+        gtk_render_check(style, cr, x, y, width, height);
         if (state->focused) {
-            gtk_render_focus(style, cr, 
+            gtk_render_focus(style, cr,
                              focus_x, focus_y, focus_width, focus_height);
         }
     }
-    gtk_style_context_restore(style);
+
+    ReleaseStyleContext(style);
 
     return MOZ_GTK_SUCCESS;
 }
@@ -1810,33 +1777,23 @@ moz_gtk_combo_box_entry_button_paint(cairo_t *cr, GdkRectangle* rect,
 static gint
 moz_gtk_container_paint(cairo_t *cr, GdkRectangle* rect,
                         GtkWidgetState* state, 
-                        gboolean isradio, GtkTextDirection direction)
+                        WidgetNodeType  widget_type,
+                        GtkTextDirection direction)
 {
+    GtkStyleContext* style = ClaimStyleContext(widget_type);
     GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
-    GtkStyleContext* style;
-    GtkWidget *widget;
 
-    if (isradio) {
-        ensure_radiobutton_widget();
-        widget = gRadiobuttonWidget;
-    } else {
-        ensure_checkbox_widget();
-        widget = gCheckboxWidget;
-    }
-    gtk_widget_set_direction(widget, direction);
-
-    style = gtk_widget_get_style_context(widget);
-    gtk_style_context_save(style);
     gtk_style_context_set_state(style, state_flags);
-  
+    gtk_style_context_set_direction(style, direction);
+
     /* this is for drawing a prelight box */
     if (state_flags & GTK_STATE_FLAG_PRELIGHT) {
         gtk_render_background(style, cr,
                               rect->x, rect->y, rect->width, rect->height);
     }
-  
-    gtk_style_context_restore(style);
-  
+
+    ReleaseStyleContext(style);
+
     return MOZ_GTK_SUCCESS;
 }
 
@@ -1845,32 +1802,20 @@ moz_gtk_toggle_label_paint(cairo_t *cr, GdkRectangle* rect,
                            GtkWidgetState* state, 
                            gboolean isradio, GtkTextDirection direction)
 {
-    GtkStyleContext *style;
-    GtkWidget *widget;
-
     if (!state->focused)
         return MOZ_GTK_SUCCESS;
 
-    if (isradio) {
-        ensure_radiobutton_widget();
-        widget = gRadiobuttonWidget;
-    } else {
-        ensure_checkbox_widget();
-        widget = gCheckboxWidget;
-    }
-    style = gtk_widget_get_style_context(widget);
-    gtk_style_context_save(style);
-    if (isradio) {
-      gtk_style_context_add_class(style, GTK_STYLE_CLASS_RADIO);
-    } else {
-      gtk_style_context_add_class(style, GTK_STYLE_CLASS_CHECK);
-    }
-    gtk_widget_set_direction(widget, direction);
+    GtkStyleContext *style = ClaimStyleContext(isradio ?
+                                               MOZ_GTK_RADIOBUTTON_CONTAINER :
+                                               MOZ_GTK_CHECKBUTTON_CONTAINER);
 
     gtk_style_context_set_state(style, GetStateFlagsFromGtkWidgetState(state));
+    gtk_style_context_set_direction(style, direction);
+
     gtk_render_focus(style, cr,
                     rect->x, rect->y, rect->width, rect->height);
-    gtk_style_context_restore(style);
+
+    ReleaseStyleContext(style);
 
     return MOZ_GTK_SUCCESS;
 }
@@ -2856,13 +2801,7 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
     case MOZ_GTK_CHECKBUTTON_CONTAINER:
     case MOZ_GTK_RADIOBUTTON_CONTAINER:
         {
-            if (widget == MOZ_GTK_CHECKBUTTON_CONTAINER) {
-                ensure_checkbox_widget();
-                w = gCheckboxWidget;
-            } else {
-                ensure_radiobutton_widget();
-                w = gRadiobuttonWidget;
-            }
+            w = GetWidget(widget);
             style = gtk_widget_get_style_context(w);
 
             *left = *top = *right = *bottom = gtk_container_get_border_width(GTK_CONTAINER(w));
@@ -3331,9 +3270,7 @@ moz_gtk_widget_paint(WidgetNodeType widget, cairo_t *cr,
         break;
     case MOZ_GTK_CHECKBUTTON_CONTAINER:
     case MOZ_GTK_RADIOBUTTON_CONTAINER:
-        return moz_gtk_container_paint(cr, rect, state,
-                                       (widget == MOZ_GTK_RADIOBUTTON_CONTAINER),
-                                       direction);
+        return moz_gtk_container_paint(cr, rect, state, widget, direction);
         break;
     case MOZ_GTK_CHECKBUTTON_LABEL:
     case MOZ_GTK_RADIOBUTTON_LABEL:
@@ -3465,8 +3402,6 @@ moz_gtk_shutdown()
     gButtonWidget = NULL;
     gToggleButtonWidget = NULL;
     gButtonArrowWidget = NULL;
-    gCheckboxWidget = NULL;
-    gRadiobuttonWidget = NULL;
     gSpinWidget = NULL;
     gHScaleWidget = NULL;
     gVScaleWidget = NULL;

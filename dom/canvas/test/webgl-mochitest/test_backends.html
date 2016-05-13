@@ -29,8 +29,7 @@ try {
   version = parseFloat(version);
 
   // Version 6.0 is Vista, 6.1 is 7.
-  // Our Win7 slaves prefer d3d9, though!
-  if (version <= 6.1)
+  if (version <= 6.0)
     expectD3DType = 'd3d9';
   else
     expectD3DType = 'd3d11';

@@ -510,7 +510,7 @@ TypeUtils::SerializeCacheStream(nsIInputStream* aStream,
   // Option 1: Send a cache-specific ReadStream if we can.
   RefPtr<ReadStream> controlled = do_QueryObject(aStream);
   if (controlled) {
-    controlled->Serialize(aStreamOut);
+    controlled->Serialize(aStreamOut, aRv);
     return;
   }
 

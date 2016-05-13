@@ -327,7 +327,7 @@ static void
 UpdateOldAnimationPropertiesWithNew(
     CSSAnimation& aOld,
     TimingParams& aNewTiming,
-    nsTArray<Keyframe>& aNewFrames,
+    nsTArray<Keyframe>& aNewKeyframes,
     bool aNewIsStylePaused,
     nsStyleContext* aStyleContext)
 {
@@ -340,7 +340,7 @@ UpdateOldAnimationPropertiesWithNew(
     animationChanged =
       oldEffect->SpecifiedTiming() != aNewTiming;
     oldEffect->SetSpecifiedTiming(aNewTiming);
-    oldEffect->SetFrames(Move(aNewFrames), aStyleContext);
+    oldEffect->SetKeyframes(Move(aNewKeyframes), aStyleContext);
   }
 
   // Handle changes in play state. If the animation is idle, however,
@@ -552,7 +552,6 @@ private:
   nsTArray<PropertyValuePair> GetKeyframePropertyValues(
     nsPresContext* aPresContext,
     nsCSSKeyframeRule* aKeyframeRule,
-    nsCSSCompressedDataBlock* aDataBlock,
     nsCSSPropertySet& aAnimatedProperties);
   void FillInMissingKeyframeValues(
     nsPresContext* aPresContext,
@@ -643,7 +642,7 @@ CSSAnimationBuilder::Build(nsPresContext* aPresContext,
   RefPtr<KeyframeEffectReadOnly> effect =
     new KeyframeEffectReadOnly(aPresContext->Document(), target, timing);
 
-  effect->SetFrames(Move(keyframes), mStyleContext);
+  effect->SetKeyframes(Move(keyframes), mStyleContext);
 
   RefPtr<CSSAnimation> animation =
     new CSSAnimation(aPresContext->Document()->GetScopeObject(),
@@ -669,26 +668,30 @@ CSSAnimationBuilder::BuildAnimationFrames(nsPresContext* aPresContext,
                                           const nsCSSKeyframesRule* aRule)
 {
   // Ideally we'd like to build up a set of Keyframe objects that more-or-less
-  // reflects the keyframes as-specified in the @keyframes rule(s). However,
-  // that proves to be difficult because the way CSS declarations are processed
-  // differs from how we are able to represent keyframes as JavaScript objects.
+  // reflect the keyframes as-specified in the @keyframes rule(s) so that
+  // authors get something intuitive when they call anim.effect.getKeyframes().
   //
-  // For example, in CSS the following rules differ in meaning:
+  // That, however, proves to be difficult because the way CSS declarations are
+  // processed differs from how we are able to represent keyframes as
+  // JavaScript objects in the Web Animations API.
+  //
+  // For example,
   //
   //   { margin: 10px; margin-left: 20px }
-  //   { margin-left: 20px; margin: 10px }
   //
-  // However, in JavaScript, since the order in which object properties are
-  // enumerated is not defined, Web Animations defines that shorthands are
-  // applied first and longhands are layered on top regardless of the order
-  // in which they are specified. As a result, we would need to represent the
-  // above as:
+  // could be represented as:
   //
   //   { margin: '10px', marginLeft: '20px' }
+  //
+  // BUT:
+  //
+  //   { margin-left: 20px; margin: 10px }
+  //
+  // would be represented as:
+  //
   //   { margin: '10px' }
   //
-  // Similarly, redundant declarations are permitted by CSS but not in
-  // JavaScript. As such,
+  // Likewise,
   //
   //   { margin-left: 20px; margin-left: 30px }
   //
@@ -696,16 +699,17 @@ CSSAnimationBuilder::BuildAnimationFrames(nsPresContext* aPresContext,
   //
   //   { marginLeft: '30px' }
   //
-  // In effect, we would need to manually apply the rules for CSS declaration
-  // processing in order to maintain the closest possibly mapping
-  // to the source and even then, the mapping would be unclear in some
-  // cases. Furthermore, @keyframes are defined to cascade so any
-  // correspondance to the source would be further obscured once we represent
-  // the result as a single array.
+  // As such, the mapping between source @keyframes and the Keyframe objects
+  // becomes obscured. The deviation is even more significant when we consider
+  // cascading between @keyframes rules and variable references in shorthand
+  // properties.
   //
-  // Until there is specified behavior for preserving shorthands we simply
-  // expand all shorthands, apply regular declaration processing, then go and
-  // pick up the last value specified for each property at each offset.
+  // We could, perhaps, produce a mapping that makes sense most of the time
+  // but it would be complex and need to be specified and implemented
+  // interoperably. Instead, for now, for CSS Animations (and CSS Transitions,
+  // for that matter) we resolve values on @keyframes down to computed values
+  // (thereby expanding shorthands and variable references) and then pick up the
+  // last value for each longhand property at each offset.
 
   // FIXME: There is a pending spec change to make multiple @keyframes
   // rules with the same name cascade but we don't support that yet.
@@ -724,8 +728,6 @@ CSSAnimationBuilder::BuildAnimationFrames(nsPresContext* aPresContext,
     MOZ_ASSERT(cssRule->GetType() == css::Rule::KEYFRAME_RULE,
                "must be keyframe rule");
     nsCSSKeyframeRule* keyframeRule = static_cast<nsCSSKeyframeRule*>(cssRule);
-    nsCSSCompressedDataBlock* dataBlock =
-      keyframeRule->Declaration()->GetNormalBlock();
 
     const nsTArray<float>& keys = keyframeRule->GetKeys();
     for (float key : keys) {
@@ -739,7 +741,7 @@ CSSAnimationBuilder::BuildAnimationFrames(nsPresContext* aPresContext,
         GetKeyframeTimingFunction(aPresContext, keyframeRule,
                                   inheritedTimingFunction);
       keyframe.mPropertyValues =
-        GetKeyframePropertyValues(aPresContext, keyframeRule, dataBlock,
+        GetKeyframePropertyValues(aPresContext, keyframeRule,
                                   animatedProperties);
 
       keyframes.AppendElement(Move(keyframe));
@@ -874,10 +876,12 @@ nsTArray<PropertyValuePair>
 CSSAnimationBuilder::GetKeyframePropertyValues(
     nsPresContext* aPresContext,
     nsCSSKeyframeRule* aKeyframeRule,
-    nsCSSCompressedDataBlock* aDataBlock,
     nsCSSPropertySet& aAnimatedProperties)
 {
   nsTArray<PropertyValuePair> result;
+  RefPtr<nsStyleContext> styleContext =
+    mResolvedStyles.Get(aPresContext, mStyleContext,
+                        aKeyframeRule->Declaration());
 
   for (nsCSSProperty prop = nsCSSProperty(0);
        prop < eCSSProperty_COUNT_no_shorthands;
@@ -889,8 +893,17 @@ CSSAnimationBuilder::GetKeyframePropertyValues(
 
     PropertyValuePair pair;
     pair.mProperty = prop;
-    pair.mValue = *aDataBlock->ValueFor(prop);
 
+    StyleAnimationValue computedValue;
+    if (!StyleAnimationValue::ExtractComputedValue(prop, styleContext,
+                                                   computedValue)) {
+      continue;
+    }
+    DebugOnly<bool> uncomputeResult =
+      StyleAnimationValue::UncomputeValue(prop, Move(computedValue),
+                                          pair.mValue);
+    MOZ_ASSERT(uncomputeResult,
+               "Unable to get specified value from computed value");
     MOZ_ASSERT(pair.mValue.GetUnit() != eCSSUnit_Null,
                "Not expecting to read invalid properties");
 

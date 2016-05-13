@@ -454,9 +454,9 @@ class ResourceMonitoringMixin(object):
     def __init__(self, *args, **kwargs):
         super(ResourceMonitoringMixin, self).__init__(*args, **kwargs)
 
-        self.register_virtualenv_module('psutil>=0.7.1', method='pip',
+        self.register_virtualenv_module('psutil>=3.1.1', method='pip',
                                         optional=True)
-        self.register_virtualenv_module('mozsystemmonitor==0.0.0',
+        self.register_virtualenv_module('mozsystemmonitor==0.1',
                                         method='pip', optional=True)
         self._resource_monitor = None
 
@@ -506,6 +506,17 @@ class ResourceMonitoringMixin(object):
         try:
             self._resource_monitor.stop()
             self._log_resource_usage()
+
+            # Upload a JSON file containing the raw resource data.
+            try:
+                upload_dir = self.query_abs_dirs()['abs_blob_upload_dir']
+                with open(os.path.join(upload_dir, 'resource-usage.json'), 'wb') as fh:
+                    json.dump(self._resource_monitor.as_dict(), fh,
+                              sort_keys=True, indent=4)
+            except (AttributeError, KeyError):
+                self.exception('could not upload resource usage JSON',
+                               level=WARNING)
+
         except Exception:
             self.warning("Exception when reporting resource usage: %s" %
                          traceback.format_exc())

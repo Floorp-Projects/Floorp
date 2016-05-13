@@ -45,6 +45,13 @@ js::jit::RD(Register r)
 }
 
 uint32_t
+js::jit::RZ(Register r)
+{
+    MOZ_ASSERT((r.code() & ~RegMask) == 0);
+    return r.code() << RZShift;
+}
+
+uint32_t
 js::jit::SA(uint32_t value)
 {
     MOZ_ASSERT(value < 32);
@@ -826,6 +833,76 @@ AssemblerMIPSShared::as_sdr(Register rd, Register rs, int16_t off)
     return writeInst(InstImm(op_sdr, rs, rd, Imm16(off)).encode());
 }
 
+BufferOffset
+AssemblerMIPSShared::as_gslbx(Register rd, Register rs, Register ri, int16_t off)
+{
+    MOZ_ASSERT(Imm8::IsInSignedRange(off));
+    return writeInst(InstGS(op_ldc2, rs, rd, ri, Imm8(off), ff_gsxbx).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_gssbx(Register rd, Register rs, Register ri, int16_t off)
+{
+    MOZ_ASSERT(Imm8::IsInSignedRange(off));
+    return writeInst(InstGS(op_sdc2, rs, rd, ri, Imm8(off), ff_gsxbx).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_gslhx(Register rd, Register rs, Register ri, int16_t off)
+{
+    MOZ_ASSERT(Imm8::IsInSignedRange(off));
+    return writeInst(InstGS(op_ldc2, rs, rd, ri, Imm8(off), ff_gsxhx).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_gsshx(Register rd, Register rs, Register ri, int16_t off)
+{
+    MOZ_ASSERT(Imm8::IsInSignedRange(off));
+    return writeInst(InstGS(op_sdc2, rs, rd, ri, Imm8(off), ff_gsxhx).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_gslwx(Register rd, Register rs, Register ri, int16_t off)
+{
+    MOZ_ASSERT(Imm8::IsInSignedRange(off));
+    return writeInst(InstGS(op_ldc2, rs, rd, ri, Imm8(off), ff_gsxwx).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_gsswx(Register rd, Register rs, Register ri, int16_t off)
+{
+    MOZ_ASSERT(Imm8::IsInSignedRange(off));
+    return writeInst(InstGS(op_sdc2, rs, rd, ri, Imm8(off), ff_gsxwx).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_gsldx(Register rd, Register rs, Register ri, int16_t off)
+{
+    MOZ_ASSERT(Imm8::IsInSignedRange(off));
+    return writeInst(InstGS(op_ldc2, rs, rd, ri, Imm8(off), ff_gsxdx).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_gssdx(Register rd, Register rs, Register ri, int16_t off)
+{
+    MOZ_ASSERT(Imm8::IsInSignedRange(off));
+    return writeInst(InstGS(op_sdc2, rs, rd, ri, Imm8(off), ff_gsxdx).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_gslq(Register rh, Register rl, Register rs, int16_t off)
+{
+    MOZ_ASSERT(GSImm13::IsInRange(off));
+    return writeInst(InstGS(op_lwc2, rs, rl, rh, GSImm13(off), ff_gsxq).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_gssq(Register rh, Register rl, Register rs, int16_t off)
+{
+    MOZ_ASSERT(GSImm13::IsInRange(off));
+    return writeInst(InstGS(op_swc2, rs, rl, rh, GSImm13(off), ff_gsxq).encode());
+}
+
 // Move from HI/LO register.
 BufferOffset
 AssemblerMIPSShared::as_mfhi(Register rd)
@@ -1020,6 +1097,104 @@ AssemblerMIPSShared::as_ss(FloatRegister fd, Register base, int32_t off)
 {
     MOZ_ASSERT(Imm16::IsInSignedRange(off));
     return writeInst(InstImm(op_swc1, base, fd, Imm16(off)).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_gsldl(FloatRegister fd, Register base, int32_t off)
+{
+    MOZ_ASSERT(Imm8::IsInSignedRange(off));
+    return writeInst(InstGS(op_lwc2, base, fd, Imm8(off), ff_gsxdlc1).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_gsldr(FloatRegister fd, Register base, int32_t off)
+{
+    MOZ_ASSERT(Imm8::IsInSignedRange(off));
+    return writeInst(InstGS(op_lwc2, base, fd, Imm8(off), ff_gsxdrc1).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_gssdl(FloatRegister fd, Register base, int32_t off)
+{
+    MOZ_ASSERT(Imm8::IsInSignedRange(off));
+    return writeInst(InstGS(op_swc2, base, fd, Imm8(off), ff_gsxdlc1).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_gssdr(FloatRegister fd, Register base, int32_t off)
+{
+    MOZ_ASSERT(Imm8::IsInSignedRange(off));
+    return writeInst(InstGS(op_swc2, base, fd, Imm8(off), ff_gsxdrc1).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_gslsl(FloatRegister fd, Register base, int32_t off)
+{
+    MOZ_ASSERT(Imm8::IsInSignedRange(off));
+    return writeInst(InstGS(op_lwc2, base, fd, Imm8(off), ff_gsxwlc1).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_gslsr(FloatRegister fd, Register base, int32_t off)
+{
+    MOZ_ASSERT(Imm8::IsInSignedRange(off));
+    return writeInst(InstGS(op_lwc2, base, fd, Imm8(off), ff_gsxwrc1).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_gsssl(FloatRegister fd, Register base, int32_t off)
+{
+    MOZ_ASSERT(Imm8::IsInSignedRange(off));
+    return writeInst(InstGS(op_swc2, base, fd, Imm8(off), ff_gsxwlc1).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_gsssr(FloatRegister fd, Register base, int32_t off)
+{
+    MOZ_ASSERT(Imm8::IsInSignedRange(off));
+    return writeInst(InstGS(op_swc2, base, fd, Imm8(off), ff_gsxwrc1).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_gslsx(FloatRegister fd, Register rs, Register ri, int16_t off)
+{
+    MOZ_ASSERT(Imm8::IsInSignedRange(off));
+    return writeInst(InstGS(op_ldc2, rs, fd, ri, Imm8(off), ff_gsxwxc1).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_gsssx(FloatRegister fd, Register rs, Register ri, int16_t off)
+{
+    MOZ_ASSERT(Imm8::IsInSignedRange(off));
+    return writeInst(InstGS(op_sdc2, rs, fd, ri, Imm8(off), ff_gsxwxc1).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_gsldx(FloatRegister fd, Register rs, Register ri, int16_t off)
+{
+    MOZ_ASSERT(Imm8::IsInSignedRange(off));
+    return writeInst(InstGS(op_ldc2, rs, fd, ri, Imm8(off), ff_gsxdxc1).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_gssdx(FloatRegister fd, Register rs, Register ri, int16_t off)
+{
+    MOZ_ASSERT(Imm8::IsInSignedRange(off));
+    return writeInst(InstGS(op_sdc2, rs, fd, ri, Imm8(off), ff_gsxdxc1).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_gslq(FloatRegister rh, FloatRegister rl, Register rs, int16_t off)
+{
+    MOZ_ASSERT(GSImm13::IsInRange(off));
+    return writeInst(InstGS(op_lwc2, rs, rl, rh, GSImm13(off), ff_gsxqc1).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_gssq(FloatRegister rh, FloatRegister rl, Register rs, int16_t off)
+{
+    MOZ_ASSERT(GSImm13::IsInRange(off));
+    return writeInst(InstGS(op_swc2, rs, rl, rh, GSImm13(off), ff_gsxqc1).encode());
 }
 
 BufferOffset

@@ -46,7 +46,7 @@ static const char* kPrefNameForceEnableTSF = "intl.tsf.force_enable";
  *   "TSF: TSFFoo::Bar("
  */
 
-PRLogModuleInfo* sTextStoreLog = nullptr;
+LazyLogModule sTextStoreLog("nsTextStoreWidgets");
 
 static const char*
 GetBoolName(bool aBool)
@@ -4757,11 +4757,18 @@ TSFTextStore::OnSelectionChangeInternal(const IMENotification& aIMENotification)
     return NS_OK;
   }
 
-  mSelection.SetSelection(
-    selectionChangeData.mOffset,
-    selectionChangeData.Length(),
-    selectionChangeData.mReversed,
-    selectionChangeData.GetWritingMode());
+  // If selection range isn't actually changed, we don't need to notify TSF
+  // of this selection change.
+  if (!mSelection.SetSelection(
+                    selectionChangeData.mOffset,
+                    selectionChangeData.Length(),
+                    selectionChangeData.mReversed,
+                    selectionChangeData.GetWritingMode())) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Debug,
+           ("TSF: 0x%p   TSFTextStore::OnSelectionChangeInternal(), selection "
+            "isn't actually changed.", this));
+    return NS_OK;
+  }
 
   if (!selectionChangeData.mCausedBySelectionEvent) {
     // Should be notified via MaybeFlushPendingNotifications() for keeping
@@ -5373,10 +5380,6 @@ TSFTextStore::MarkContextAsEmpty(ITfContext* aContext)
 void
 TSFTextStore::Initialize()
 {
-  if (!sTextStoreLog) {
-    sTextStoreLog = PR_NewLogModule("nsTextStoreWidgets");
-  }
-
   MOZ_LOG(sTextStoreLog, LogLevel::Info,
     ("TSF: TSFTextStore::Initialize() is called..."));
 

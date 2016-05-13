@@ -1,12 +1,17 @@
 <!doctype html>
 <meta charset=utf-8>
 <script src="../testcommon.js"></script>
+<style>
+:root {
+  --var-100px: 100px;
+}
+</style>
 <body>
 <script>
 'use strict';
 
-function getFrames(e) {
-  return e.getAnimations()[0].effect.getFrames();
+function getKeyframes(e) {
+  return e.getAnimations()[0].effect.getKeyframes();
 }
 
 function assert_frames_equal(a, b, name) {
@@ -26,8 +31,8 @@ test(function(t) {
   div.style.transition = 'left 100s';
   div.style.left = '100px';
 
-  var frames = getFrames(div);
-  
+  var frames = getKeyframes(div);
+
   assert_equals(frames.length, 2, "number of frames");
 
   var expected = [
@@ -38,8 +43,8 @@ test(function(t) {
   for (var i = 0; i < frames.length; i++) {
     assert_frames_equal(frames[i], expected[i], "ComputedKeyframe #" + i);
   }
-}, 'KeyframeEffectReadOnly.getFrames() returns expected frames for a simple ' +
-   'transition');
+}, 'KeyframeEffectReadOnly.getKeyframes() returns expected frames for a simple'
+   + ' transition');
 
 test(function(t) {
   var div = addDiv(t);
@@ -49,8 +54,8 @@ test(function(t) {
   div.style.transition = 'left 100s steps(2,end)';
   div.style.left = '100px';
 
-  var frames = getFrames(div);
-  
+  var frames = getKeyframes(div);
+
   assert_equals(frames.length, 2, "number of frames");
 
   var expected = [
@@ -61,8 +66,29 @@ test(function(t) {
   for (var i = 0; i < frames.length; i++) {
     assert_frames_equal(frames[i], expected[i], "ComputedKeyframe #" + i);
   }
-}, 'KeyframeEffectReadOnly.getFrames() returns expected frames for a simple ' +
-   'transition with a non-default easing function');
+}, 'KeyframeEffectReadOnly.getKeyframes() returns expected frames for a simple'
+   + ' transition with a non-default easing function');
+
+test(function(t) {
+  var div = addDiv(t);
+  div.style.left = '0px';
+  window.getComputedStyle(div).transitionProperty;
+  div.style.transition = 'left 100s';
+  div.style.left = 'var(--var-100px)';
+
+  var frames = getKeyframes(div);
+
+  // CSS transition endpoints are based on the computed value so we
+  // shouldn't see the variable reference
+  var expected = [
+    { offset: 0, computedOffset: 0, easing: 'ease', left: '0px' },
+    { offset: 1, computedOffset: 1, easing: 'linear', left: '100px' },
+  ];
+  for (var i = 0; i < frames.length; i++) {
+    assert_frames_equal(frames[i], expected[i], "ComputedKeyframe #" + i);
+  }
+}, 'KeyframeEffectReadOnly.getKeyframes() returns expected frames for a'
+   + ' transition with a CSS variable endpoint');
 
 done();
 </script>

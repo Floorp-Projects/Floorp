@@ -431,6 +431,12 @@ LazyIdleThread::Dispatch(already_AddRefed<nsIRunnable>&& aEvent,
 }
 
 NS_IMETHODIMP
+LazyIdleThread::DelayedDispatch(already_AddRefed<nsIRunnable>&&, uint32_t)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 LazyIdleThread::IsOnCurrentThread(bool* aIsOnCurrentThread)
 {
   if (mThread) {

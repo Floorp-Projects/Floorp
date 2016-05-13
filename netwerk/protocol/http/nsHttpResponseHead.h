@@ -32,6 +32,7 @@ public:
                          , mCacheControlPrivate(false)
                          , mCacheControlNoStore(false)
                          , mCacheControlNoCache(false)
+                         , mCacheControlImmutable(false)
                          , mPragmaNoCache(false) {}
 
     const nsHttpHeaderArray & Headers()   const { return mHeaders; }
@@ -47,6 +48,7 @@ public:
     bool                  Private() const { return mCacheControlPrivate; }
     bool                  NoStore() const { return mCacheControlNoStore; }
     bool                  NoCache() const { return (mCacheControlNoCache || mPragmaNoCache); }
+    bool                  Immutable() const { return mCacheControlImmutable; }
     /**
      * Full length of the entity. For byte-range requests, this may be larger
      * than ContentLength(), which will only represent the requested part of the
@@ -76,7 +78,9 @@ public:
     // write out the response status line and headers as a single text block,
     // optionally pruning out transient headers (ie. headers that only make
     // sense the first time the response is handled).
+    // Both functions append to the string supplied string.
     void     Flatten(nsACString &, bool pruneTransients);
+    void     FlattenOriginalHeader(nsACString &buf);
 
     // parse flattened response head. block must be null terminated. parsing is
     // destructive.
@@ -133,6 +137,7 @@ public:
                mCacheControlPrivate == aOther.mCacheControlPrivate &&
                mCacheControlNoCache == aOther.mCacheControlNoCache &&
                mCacheControlNoStore == aOther.mCacheControlNoStore &&
+               mCacheControlImmutable == aOther.mCacheControlImmutable &&
                mPragmaNoCache == aOther.mPragmaNoCache;
     }
 
@@ -154,6 +159,7 @@ private:
     bool              mCacheControlPrivate;
     bool              mCacheControlNoStore;
     bool              mCacheControlNoCache;
+    bool              mCacheControlImmutable;
     bool              mPragmaNoCache;
 
     friend struct IPC::ParamTraits<nsHttpResponseHead>;

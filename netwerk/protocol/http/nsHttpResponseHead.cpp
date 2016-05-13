@@ -26,7 +26,8 @@ nsHttpResponseHead::SetHeader(nsHttpAtom hdr,
                               const nsACString &val,
                               bool merge)
 {
-    nsresult rv = mHeaders.SetHeader(hdr, val, merge);
+    nsresult rv = mHeaders.SetHeader(hdr, val, merge,
+                                     nsHttpHeaderArray::eVarietyResponse);
     if (NS_FAILED(rv)) return rv;
 
     // respond to changes in these headers.  we need to reparse the entire
@@ -46,7 +47,10 @@ nsHttpResponseHead::SetContentLength(int64_t len)
     if (len < 0)
         mHeaders.ClearHeader(nsHttp::Content_Length);
     else
-        mHeaders.SetHeader(nsHttp::Content_Length, nsPrintfCString("%lld", len));
+        mHeaders.SetHeader(nsHttp::Content_Length,
+                           nsPrintfCString("%lld", len),
+                           false,
+                           nsHttpHeaderArray::eVarietyResponse);
 }
 
 void
@@ -68,37 +72,21 @@ nsHttpResponseHead::Flatten(nsACString &buf, bool pruneTransients)
                mStatusText +
                NS_LITERAL_CSTRING("\r\n"));
 
-    if (!pruneTransients) {
-        mHeaders.Flatten(buf, false);
+
+    mHeaders.Flatten(buf, false, pruneTransients);
+}
+
+void
+nsHttpResponseHead::FlattenOriginalHeader(nsACString &buf)
+{
+    if (mVersion == NS_HTTP_VERSION_0_9) {
         return;
     }
 
-    // otherwise, we need to iterate over the headers and only flatten
-    // those that are appropriate.
-    uint32_t i, count = mHeaders.Count();
-    for (i=0; i<count; ++i) {
-        nsHttpAtom header;
-        const char *value = mHeaders.PeekHeaderAt(i, header);
+    buf.AppendLiteral("  OriginalHeaders");
+    buf.AppendLiteral("\r\n");
 
-        if (!value || header == nsHttp::Connection
-                   || header == nsHttp::Proxy_Connection
-                   || header == nsHttp::Keep_Alive
-                   || header == nsHttp::WWW_Authenticate
-                   || header == nsHttp::Proxy_Authenticate
-                   || header == nsHttp::Trailer
-                   || header == nsHttp::Transfer_Encoding
-                   || header == nsHttp::Upgrade
-                   // XXX this will cause problems when we start honoring
-                   // Cache-Control: no-cache="set-cookie", what to do?
-                   || header == nsHttp::Set_Cookie)
-            continue;
-
-        // otherwise, write out the "header: value\r\n" line
-        buf.Append(nsDependentCString(header.get()) +
-                   NS_LITERAL_CSTRING(": ") +
-                   nsDependentCString(value) +
-                   NS_LITERAL_CSTRING("\r\n"));
-    }
+    mHeaders.FlattenOriginalHeader(buf);
 }
 
 nsresult
@@ -120,8 +108,8 @@ nsHttpResponseHead::Parse(char *block)
     do {
         block = p + 2;
 
-		if (*block == 0)
-			break;
+        if (*block == 0)
+            break;
 
         p = PL_strstr(block, "\r\n");
         if (!p)
@@ -328,11 +316,16 @@ nsHttpResponseHead::ParseHeaderLine(const char *line)
 {
     nsHttpAtom hdr = {0};
     char *val;
-    nsresult rv;
 
-    rv = mHeaders.ParseHeaderLine(line, &hdr, &val);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(nsHttpHeaderArray::ParseHeaderLine(line, &hdr, &val))) {
+        return NS_OK;
+    } 
+    nsresult rv = mHeaders.SetHeaderFromNet(hdr,
+                                            nsDependentCString(val),
+                                            true);
+    if (NS_FAILED(rv)) {
         return rv;
+    }
 
     // leading and trailing LWS has been removed from |val|
 
@@ -643,6 +636,7 @@ nsHttpResponseHead::Reset()
     mCacheControlPrivate = false;
     mCacheControlNoStore = false;
     mCacheControlNoCache = false;
+    mCacheControlImmutable = false;
     mPragmaNoCache = false;
     mStatusText.Truncate();
     mContentType.Truncate();
@@ -812,6 +806,7 @@ nsHttpResponseHead::ParseCacheControl(const char *val)
         mCacheControlPrivate = false;
         mCacheControlNoCache = false;
         mCacheControlNoStore = false;
+        mCacheControlImmutable = false;
         return;
     }
 
@@ -827,6 +822,11 @@ nsHttpResponseHead::ParseCacheControl(const char *val)
     // search header value for occurrence of "no-store"
     if (nsHttp::FindToken(val, "no-store", HTTP_HEADER_VALUE_SEPS))
         mCacheControlNoStore = true;
+
+    // search header value for occurrence of "immutable"
+    if (nsHttp::FindToken(val, "immutable", HTTP_HEADER_VALUE_SEPS)) {
+        mCacheControlImmutable = true;
+    }
 }
 
 void
