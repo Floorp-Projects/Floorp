@@ -96,3 +96,4 @@ MSG_DEF(MSG_SW_UPDATE_BAD_REGISTRATION, 2, JSEXN_TYPEERR, "Failed to update the 
 MSG_DEF(MSG_INVALID_DURATION_ERROR, 1, JSEXN_TYPEERR, "Invalid duration '{0}'.")
 MSG_DEF(MSG_INVALID_EASING_ERROR, 1, JSEXN_TYPEERR, "Invalid easing '{0}'.")
 MSG_DEF(MSG_USELESS_SETTIMEOUT, 1, JSEXN_TYPEERR, "Useless {0} call (missing quotes around argument?)")
+MSG_DEF(MSG_CACHE_STREAM_CLOSED, 0, JSEXN_TYPEERR, "Response body is a cache file stream that has already been closed.")
