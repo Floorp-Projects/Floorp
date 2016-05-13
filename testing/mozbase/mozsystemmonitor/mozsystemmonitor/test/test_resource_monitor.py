@@ -169,6 +169,11 @@ class TestResourceMonitor(unittest.TestCase):
 
         d = monitor.as_dict()
 
-        self.assertEqual(d['version'], 1)
+        self.assertEqual(d['version'], 2)
         self.assertEqual(len(d['events']), 2)
         self.assertEqual(len(d['phases']), 2)
+        self.assertIn('system', d)
+        self.assertIsInstance(d['system'], dict)
+        self.assertIsInstance(d['overall'], dict)
+        self.assertIn('duration', d['overall'])
+        self.assertIn('cpu_times', d['overall'])
