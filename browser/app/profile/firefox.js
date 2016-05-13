@@ -62,24 +62,24 @@ pref("extensions.blocklist.url", "https://blocklist.addons.mozilla.org/blocklist
 pref("extensions.blocklist.detailsURL", "https://www.mozilla.org/%LOCALE%/blocklist/");
 pref("extensions.blocklist.itemURL", "https://blocklist.addons.mozilla.org/%LOCALE%/%APP%/blocked/%blockID%");
 
-// Kinto blocklist preferences
-pref("services.kinto.base", "https://firefox.settings.services.mozilla.com/v1");
-pref("services.kinto.changes.path", "/buckets/monitor/collections/changes/records");
-pref("services.kinto.bucket", "blocklists");
-pref("services.kinto.onecrl.collection", "certificates");
-pref("services.kinto.onecrl.checked", 0);
-pref("services.kinto.addons.collection", "addons");
-pref("services.kinto.addons.checked", 0);
-pref("services.kinto.plugins.collection", "plugins");
-pref("services.kinto.plugins.checked", 0);
-pref("services.kinto.gfx.collection", "gfx");
-pref("services.kinto.gfx.checked", 0);
+// Blocklist preferences
+pref("services.settings.server", "https://firefox.settings.services.mozilla.com/v1");
+pref("services.blocklist.changes.path", "/buckets/monitor/collections/changes/records");
+pref("services.blocklist.bucket", "blocklists");
+pref("services.blocklist.onecrl.collection", "certificates");
+pref("services.blocklist.onecrl.checked", 0);
+pref("services.blocklist.addons.collection", "addons");
+pref("services.blocklist.addons.checked", 0);
+pref("services.blocklist.plugins.collection", "plugins");
+pref("services.blocklist.plugins.checked", 0);
+pref("services.blocklist.gfx.collection", "gfx");
+pref("services.blocklist.gfx.checked", 0);
 
 // for now, let's keep kinto update out of the release channel
 #ifdef RELEASE_BUILD
-pref("services.kinto.update_enabled", false);
+pref("services.blocklist.update_enabled", false);
 #else
-pref("services.kinto.update_enabled", true);
+pref("services.blocklist.update_enabled", true);
 #endif
 
 pref("extensions.update.autoUpdateDefault", true);
