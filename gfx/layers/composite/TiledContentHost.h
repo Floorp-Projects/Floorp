@@ -253,7 +253,7 @@ public:
                          float aOpacity,
                          const gfx::Matrix4x4& aTransform,
                          const gfx::Filter& aFilter,
-                         const gfx::Rect& aClipRect,
+                         const gfx::IntRect& aClipRect,
                          const nsIntRegion* aVisibleRegion = nullptr) override;
 
   virtual CompositableType GetType() override { return CompositableType::CONTENT_TILED; }
@@ -282,7 +282,7 @@ private:
                          EffectChain& aEffectChain,
                          float aOpacity,
                          const gfx::Filter& aFilter,
-                         const gfx::Rect& aClipRect,
+                         const gfx::IntRect& aClipRect,
                          nsIntRegion aMaskRegion,
                          gfx::Matrix4x4 aTransform);
 
@@ -292,7 +292,7 @@ private:
                   float aOpacity,
                   const gfx::Matrix4x4& aTransform,
                   const gfx::Filter& aFilter,
-                  const gfx::Rect& aClipRect,
+                  const gfx::IntRect& aClipRect,
                   const nsIntRegion& aScreenRegion,
                   const gfx::IntPoint& aTextureOffset,
                   const gfx::IntSize& aTextureBounds,

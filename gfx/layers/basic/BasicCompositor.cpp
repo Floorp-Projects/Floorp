@@ -277,7 +277,7 @@ SetupMask(const EffectChain& aEffectChain,
 
 void
 BasicCompositor::DrawQuad(const gfx::Rect& aRect,
-                          const gfx::Rect& aClipRect,
+                          const gfx::IntRect& aClipRect,
                           const EffectChain &aEffectChain,
                           gfx::Float aOpacity,
                           const gfx::Matrix4x4& aTransform,
@@ -323,7 +323,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
     new3DTransform.PreTranslate(aRect.x, aRect.y, 0);
   }
 
-  buffer->PushClipRect(aClipRect);
+  buffer->PushClipRect(Rect(aClipRect));
 
   newTransform.PostTranslate(-offset.x, -offset.y);
   buffer->SetTransform(newTransform);
@@ -475,14 +475,14 @@ BasicCompositor::ClearRect(const gfx::Rect& aRect)
 
 void
 BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
-                            const gfx::Rect *aClipRectIn,
-                            const gfx::Rect& aRenderBounds,
+                            const gfx::IntRect *aClipRectIn,
+                            const gfx::IntRect& aRenderBounds,
                             const nsIntRegion& aOpaqueRegion,
-                            gfx::Rect *aClipRectOut /* = nullptr */,
-                            gfx::Rect *aRenderBoundsOut /* = nullptr */)
+                            gfx::IntRect *aClipRectOut /* = nullptr */,
+                            gfx::IntRect *aRenderBoundsOut /* = nullptr */)
 {
   LayoutDeviceIntRect intRect(LayoutDeviceIntPoint(), mWidget->GetClientSize());
-  Rect rect = Rect(0, 0, intRect.width, intRect.height);
+  IntRect rect = IntRect(0, 0, intRect.width, intRect.height);
 
   LayoutDeviceIntRegion invalidRegionSafe;
   if (mDidExternalComposition) {
@@ -500,7 +500,7 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
   mInvalidRect = mInvalidRegion.GetBounds();
 
   if (aRenderBoundsOut) {
-    *aRenderBoundsOut = Rect();
+    *aRenderBoundsOut = IntRect();
   }
 
   BufferMode bufferMode = BufferMode::BUFFERED;
@@ -560,9 +560,9 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
   }
 
   if (aClipRectIn) {
-    mRenderTarget->mDrawTarget->PushClipRect(*aClipRectIn);
+    mRenderTarget->mDrawTarget->PushClipRect(Rect(*aClipRectIn));
   } else {
-    mRenderTarget->mDrawTarget->PushClipRect(rect);
+    mRenderTarget->mDrawTarget->PushClipRect(Rect(rect));
     if (aClipRectOut) {
       *aClipRectOut = rect;
     }

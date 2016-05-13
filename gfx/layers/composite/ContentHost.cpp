@@ -37,7 +37,7 @@ ContentHostTexture::Composite(LayerComposite* aLayer,
                               float aOpacity,
                               const gfx::Matrix4x4& aTransform,
                               const Filter& aFilter,
-                              const Rect& aClipRect,
+                              const IntRect& aClipRect,
                               const nsIntRegion* aVisibleRegion)
 {
   NS_ASSERTION(aVisibleRegion, "Requires a visible region");

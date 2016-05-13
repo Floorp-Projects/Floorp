@@ -319,7 +319,7 @@ public:
    * aVisibleRect is used to determine which edges should be antialiased,
    * without applying the effect to the inner edges of a tiled layer.
    */
-  virtual void DrawQuad(const gfx::Rect& aRect, const gfx::Rect& aClipRect,
+  virtual void DrawQuad(const gfx::Rect& aRect, const gfx::IntRect& aClipRect,
                         const EffectChain& aEffectChain,
                         gfx::Float aOpacity, const gfx::Matrix4x4& aTransform,
                         const gfx::Rect& aVisibleRect) = 0;
@@ -329,7 +329,7 @@ public:
    * Use this when you are drawing a single quad that is not part of a tiled
    * layer.
    */
-  void DrawQuad(const gfx::Rect& aRect, const gfx::Rect& aClipRect,
+  void DrawQuad(const gfx::Rect& aRect, const gfx::IntRect& aClipRect,
                         const EffectChain& aEffectChain,
                         gfx::Float aOpacity, const gfx::Matrix4x4& aTransform) {
       DrawQuad(aRect, aClipRect, aEffectChain, aOpacity, aTransform, aRect);
@@ -339,7 +339,7 @@ public:
    * Draw an unfilled solid color rect. Typically used for debugging overlays.
    */
   void SlowDrawRect(const gfx::Rect& aRect, const gfx::Color& color,
-                const gfx::Rect& aClipRect = gfx::Rect(),
+                const gfx::IntRect& aClipRect = gfx::IntRect(),
                 const gfx::Matrix4x4& aTransform = gfx::Matrix4x4(),
                 int aStrokeWidth = 1);
 
@@ -347,7 +347,7 @@ public:
    * Draw a solid color filled rect. This is a simple DrawQuad helper.
    */
   void FillRect(const gfx::Rect& aRect, const gfx::Color& color,
-                    const gfx::Rect& aClipRect = gfx::Rect(),
+                    const gfx::IntRect& aClipRect = gfx::IntRect(),
                     const gfx::Matrix4x4& aTransform = gfx::Matrix4x4());
 
   /*
@@ -378,11 +378,11 @@ public:
    * opaque content.
    */
   virtual void BeginFrame(const nsIntRegion& aInvalidRegion,
-                          const gfx::Rect* aClipRectIn,
-                          const gfx::Rect& aRenderBounds,
+                          const gfx::IntRect* aClipRectIn,
+                          const gfx::IntRect& aRenderBounds,
                           const nsIntRegion& aOpaqueRegion,
-                          gfx::Rect* aClipRectOut = nullptr,
-                          gfx::Rect* aRenderBoundsOut = nullptr) = 0;
+                          gfx::IntRect* aClipRectOut = nullptr,
+                          gfx::IntRect* aRenderBoundsOut = nullptr) = 0;
 
   /**
    * Flush the current frame to the screen and tidy up.
@@ -417,13 +417,13 @@ public:
 
   void DrawDiagnostics(DiagnosticFlags aFlags,
                        const gfx::Rect& visibleRect,
-                       const gfx::Rect& aClipRect,
+                       const gfx::IntRect& aClipRect,
                        const gfx::Matrix4x4& transform,
                        uint32_t aFlashCounter = DIAGNOSTIC_FLASH_COUNTER_MAX);
 
   void DrawDiagnostics(DiagnosticFlags aFlags,
                        const nsIntRegion& visibleRegion,
-                       const gfx::Rect& aClipRect,
+                       const gfx::IntRect& aClipRect,
                        const gfx::Matrix4x4& transform,
                        uint32_t aFlashCounter = DIAGNOSTIC_FLASH_COUNTER_MAX);
 
@@ -540,7 +540,7 @@ public:
 protected:
   void DrawDiagnosticsInternal(DiagnosticFlags aFlags,
                                const gfx::Rect& aVisibleRect,
-                               const gfx::Rect& aClipRect,
+                               const gfx::IntRect& aClipRect,
                                const gfx::Matrix4x4& transform,
                                uint32_t aFlashCounter);
 
@@ -556,7 +556,7 @@ protected:
    */
   gfx::IntRect ComputeBackdropCopyRect(
     const gfx::Rect& aRect,
-    const gfx::Rect& aClipRect,
+    const gfx::IntRect& aClipRect,
     const gfx::Matrix4x4& aTransform,
     gfx::Matrix4x4* aOutTransform,
     gfx::Rect* aOutLayerQuad = nullptr);
