@@ -286,13 +286,13 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
 #ifdef XP_WIN
     // Win Vista and later only.
     if (!IsVistaOrLater()) {
-      aOutMessage = NS_LITERAL_CSTRING("Minimum Windows version not met for Adobe EME");
+      aOutMessage = NS_LITERAL_CSTRING("Minimum Windows version (Vista) not met for Adobe EME");
       return MediaKeySystemStatus::Cdm_not_supported;
     }
 #endif
 #ifdef XP_MACOSX
     if (!nsCocoaFeatures::OnLionOrLater()) {
-      aOutMessage = NS_LITERAL_CSTRING("Minimum MacOSX version not met for Adobe EME");
+      aOutMessage = NS_LITERAL_CSTRING("Minimum MacOSX version (10.7) not met for Adobe EME");
       return MediaKeySystemStatus::Cdm_not_supported;
     }
 #endif
@@ -305,7 +305,13 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
 #ifdef XP_WIN
     // Win Vista and later only.
     if (!IsVistaOrLater()) {
-      aOutMessage = NS_LITERAL_CSTRING("Minimum Windows version not met for Widevine EME");
+      aOutMessage = NS_LITERAL_CSTRING("Minimum Windows version (Vista) not met for Widevine EME");
+      return MediaKeySystemStatus::Cdm_not_supported;
+    }
+#endif
+#ifdef XP_MACOSX
+    if (!nsCocoaFeatures::OnLionOrLater()) {
+      aOutMessage = NS_LITERAL_CSTRING("Minimum MacOSX version (10.7) not met for Widevine EME");
       return MediaKeySystemStatus::Cdm_not_supported;
     }
 #endif
