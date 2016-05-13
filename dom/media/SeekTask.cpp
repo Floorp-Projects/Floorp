@@ -237,7 +237,7 @@ SeekTask::EnsureVideoDecodeTaskQueued()
              IsVideoDecoding(), VideoRequestStatus());
 
   if (!IsVideoDecoding() ||
-      mReader->IsRequestingVidoeData() ||
+      mReader->IsRequestingVideoData() ||
       mVideoWaitRequest.Exists() ||
       mSeekRequest.Exists()) {
     return NS_OK;
@@ -264,7 +264,7 @@ const char*
 SeekTask::VideoRequestStatus()
 {
   AssertOwnerThread();
-  if (mReader->IsRequestingVidoeData()) {
+  if (mReader->IsRequestingVideoData()) {
     MOZ_DIAGNOSTIC_ASSERT(!mVideoWaitRequest.Exists());
     return "pending";
   } else if (mVideoWaitRequest.Exists()) {

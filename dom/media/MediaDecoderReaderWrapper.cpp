@@ -279,7 +279,7 @@ MediaDecoderReaderWrapper::IsRequestingAudioData() const
 }
 
 bool
-MediaDecoderReaderWrapper::IsRequestingVidoeData() const
+MediaDecoderReaderWrapper::IsRequestingVideoData() const
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   return mVideoDataRequest.Exists();
