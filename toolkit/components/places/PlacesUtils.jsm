@@ -261,6 +261,29 @@ this.PlacesUtils = {
   },
 
   /**
+   * Convert a Date object to a PRTime (microseconds).
+   *
+   * @param date
+   *        the Date object to convert.
+   * @return microseconds from the epoch.
+   */
+  toPRTime(date) {
+    return date * 1000;
+  },
+
+  /**
+   * Convert a PRTime to a time.
+   *
+   * @param time
+   *        microseconds from the epoch.
+   * @return time
+   *        milliseconds from the epoch.
+   */
+  toTime(time) {
+    return time / 1000;
+  },
+
+  /**
    * Wraps a string in a nsISupportsString wrapper.
    * @param   aString
    *          The string to wrap.
