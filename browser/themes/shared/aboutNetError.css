@@ -33,6 +33,12 @@ ul {
   max-width: 512px;
 }
 
+#advancedPanelContainer {
+  position: absolute;
+  padding-bottom: 24px;
+  width: 100%;
+}
+
 #errorTitle {
   background: url("chrome://global/skin/icons/info.svg") left 0 no-repeat;
   background-size: 3em;
