@@ -22,7 +22,7 @@ async_test(function(t) {
     var anim = target.animate({ opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
     // In the x-ray case, the frames object will be given an opaque wrapper
     // so it won't be possible to fetch any frames from it.
-    assert_equals(anim.effect.getFrames().length, 0);
+    assert_equals(anim.effect.getKeyframes().length, 0);
     t.done();
   }));
 }, 'Calling animate() across x-rays');

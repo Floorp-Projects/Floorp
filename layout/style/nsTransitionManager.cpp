@@ -63,9 +63,9 @@ ElementPropertyTransition::CurrentValuePortion() const
 
   MOZ_ASSERT(!computedTiming.mProgress.IsNull(),
              "Got a null progress for a fill mode of 'both'");
-  MOZ_ASSERT(mFrames.Length() == 2,
-             "Should have two animation frames for a transition");
-  return ComputedTimingFunction::GetPortion(mFrames[0].mTimingFunction,
+  MOZ_ASSERT(mKeyframes.Length() == 2,
+             "Should have two animation keyframes for a transition");
+  return ComputedTimingFunction::GetPortion(mKeyframes[0].mTimingFunction,
                                             computedTiming.mProgress.Value(),
                                             computedTiming.mBeforeFlag);
 }
@@ -697,9 +697,9 @@ nsTransitionManager::ConsiderStartingTransition(
     new ElementPropertyTransition(aElement->OwnerDoc(), target, timing,
                                   startForReversingTest, reversePortion);
 
-  pt->SetFrames(GetTransitionKeyframes(aNewStyleContext, aProperty,
-                                       Move(startValue), Move(endValue), tf),
-                aNewStyleContext);
+  pt->SetKeyframes(GetTransitionKeyframes(aNewStyleContext, aProperty,
+                                          Move(startValue), Move(endValue), tf),
+                   aNewStyleContext);
 
   MOZ_ASSERT(mPresContext->RestyleManager()->IsGecko(),
              "ServoRestyleManager should not use nsTransitionManager "

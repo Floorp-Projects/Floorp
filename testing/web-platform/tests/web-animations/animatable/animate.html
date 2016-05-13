@@ -30,7 +30,7 @@ gPropertyIndexedKeyframesTests.forEach(function(subtest) {
   test(function(t) {
     var div = createDiv(t);
     var anim = div.animate(subtest.input, 2000);
-    assert_frame_lists_equal(anim.effect.getFrames(), subtest.output);
+    assert_frame_lists_equal(anim.effect.getKeyframes(), subtest.output);
   }, 'Element.animate() accepts ' + subtest.desc);
 });
 
@@ -38,7 +38,7 @@ gKeyframeSequenceTests.forEach(function(subtest) {
   test(function(t) {
     var div = createDiv(t);
     var anim = div.animate(subtest.input, 2000);
-    assert_frame_lists_equal(anim.effect.getFrames(), subtest.output);
+    assert_frame_lists_equal(anim.effect.getKeyframes(), subtest.output);
   }, 'Element.animate() accepts ' + subtest.desc);
 });
 

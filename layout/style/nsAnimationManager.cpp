@@ -327,7 +327,7 @@ static void
 UpdateOldAnimationPropertiesWithNew(
     CSSAnimation& aOld,
     TimingParams& aNewTiming,
-    nsTArray<Keyframe>& aNewFrames,
+    nsTArray<Keyframe>& aNewKeyframes,
     bool aNewIsStylePaused,
     nsStyleContext* aStyleContext)
 {
@@ -340,7 +340,7 @@ UpdateOldAnimationPropertiesWithNew(
     animationChanged =
       oldEffect->SpecifiedTiming() != aNewTiming;
     oldEffect->SetSpecifiedTiming(aNewTiming);
-    oldEffect->SetFrames(Move(aNewFrames), aStyleContext);
+    oldEffect->SetKeyframes(Move(aNewKeyframes), aStyleContext);
   }
 
   // Handle changes in play state. If the animation is idle, however,
@@ -643,7 +643,7 @@ CSSAnimationBuilder::Build(nsPresContext* aPresContext,
   RefPtr<KeyframeEffectReadOnly> effect =
     new KeyframeEffectReadOnly(aPresContext->Document(), target, timing);
 
-  effect->SetFrames(Move(keyframes), mStyleContext);
+  effect->SetKeyframes(Move(keyframes), mStyleContext);
 
   RefPtr<CSSAnimation> animation =
     new CSSAnimation(aPresContext->Document()->GetScopeObject(),
