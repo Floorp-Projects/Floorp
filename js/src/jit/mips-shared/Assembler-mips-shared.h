@@ -168,6 +168,8 @@ static const uint32_t RTShift = 16;
 static const uint32_t RTBits = 5;
 static const uint32_t RDShift = 11;
 static const uint32_t RDBits = 5;
+static const uint32_t RZShift = 0;
+static const uint32_t RZBits = 5;
 static const uint32_t SAShift = 6;
 static const uint32_t SABits = 5;
 static const uint32_t FunctionShift = 0;
@@ -224,6 +226,8 @@ uint32_t RT(FloatRegister r);
 uint32_t RD(Register r);
 uint32_t RD(FloatRegister r);
 uint32_t RD(uint32_t regCode);
+uint32_t RZ(Register r);
+uint32_t RZ(FloatRegister r);
 uint32_t SA(uint32_t value);
 uint32_t SA(FloatRegister r);
 
@@ -288,12 +292,16 @@ enum Opcode {
 
     op_ll       = 48 << OpcodeShift,
     op_lwc1     = 49 << OpcodeShift,
+    op_lwc2     = 50 << OpcodeShift,
     op_ldc1     = 53 << OpcodeShift,
+    op_ldc2     = 54 << OpcodeShift,
     op_ld       = 55 << OpcodeShift,
 
     op_sc       = 56 << OpcodeShift,
     op_swc1     = 57 << OpcodeShift,
+    op_swc2     = 58 << OpcodeShift,
     op_sdc1     = 61 << OpcodeShift,
+    op_sdc2     = 62 << OpcodeShift,
     op_sd       = 63 << OpcodeShift,
 };
 
@@ -447,6 +455,20 @@ enum FunctionField {
     ff_madd_s      = 32,
     ff_madd_d      = 33,
 
+    // Loongson encoding of function field.
+    ff_gsxbx       = 0,
+    ff_gsxhx       = 1,
+    ff_gsxwx       = 2,
+    ff_gsxdx       = 3,
+    ff_gsxwlc1     = 4,
+    ff_gsxwrc1     = 5,
+    ff_gsxdlc1     = 6,
+    ff_gsxdrc1     = 7,
+    ff_gsxwxc1     = 6,
+    ff_gsxdxc1     = 7,
+    ff_gsxq        = 0x20,
+    ff_gsxqc1      = 0x8020,
+
     ff_null        = 0
 };
 
@@ -562,6 +584,61 @@ class Imm16
     }
     static Imm16 Upper (Imm32 imm) {
         return Imm16((imm.value >> 16) & 0xffff);
+    }
+};
+
+class Imm8
+{
+    uint8_t value;
+
+  public:
+    Imm8();
+    Imm8(uint32_t imm)
+      : value(imm)
+    { }
+    uint32_t encode(uint32_t shift) {
+        return value << shift;
+    }
+    int32_t decodeSigned() {
+        return value;
+    }
+    uint32_t decodeUnsigned() {
+        return value;
+    }
+    static bool IsInSignedRange(int32_t imm) {
+        return imm >= INT8_MIN  && imm <= INT8_MAX;
+    }
+    static bool IsInUnsignedRange(uint32_t imm) {
+        return imm <= UINT8_MAX ;
+    }
+    static Imm8 Lower (Imm16 imm) {
+        return Imm8(imm.decodeSigned() & 0xff);
+    }
+    static Imm8 Upper (Imm16 imm) {
+        return Imm8((imm.decodeSigned() >> 8) & 0xff);
+    }
+};
+
+class GSImm13
+{
+    uint16_t value;
+
+  public:
+    GSImm13();
+    GSImm13(uint32_t imm)
+      : value(imm & ~0xf)
+    { }
+    uint32_t encode(uint32_t shift) {
+        return ((value >> 4) & 0x1f) << shift;
+    }
+    int32_t decodeSigned() {
+        return value;
+    }
+    uint32_t decodeUnsigned() {
+        return value;
+    }
+    static bool IsInRange(int32_t imm) {
+        return imm >= (-256 << 4) && imm <= (255 << 4);
     }
 };
 
@@ -954,6 +1031,18 @@ class AssemblerMIPSShared : public AssemblerShared
     BufferOffset as_sdl(Register rd, Register rs, int16_t off);
     BufferOffset as_sdr(Register rd, Register rs, int16_t off);
 
+    // Loongson-specific load and store instructions
+    BufferOffset as_gslbx(Register rd, Register rs, Register ri, int16_t off);
+    BufferOffset as_gssbx(Register rd, Register rs, Register ri, int16_t off);
+    BufferOffset as_gslhx(Register rd, Register rs, Register ri, int16_t off);
+    BufferOffset as_gsshx(Register rd, Register rs, Register ri, int16_t off);
+    BufferOffset as_gslwx(Register rd, Register rs, Register ri, int16_t off);
+    BufferOffset as_gsswx(Register rd, Register rs, Register ri, int16_t off);
+    BufferOffset as_gsldx(Register rd, Register rs, Register ri, int16_t off);
+    BufferOffset as_gssdx(Register rd, Register rs, Register ri, int16_t off);
+    BufferOffset as_gslq(Register rh, Register rl, Register rs, int16_t off);
+    BufferOffset as_gssq(Register rh, Register rl, Register rs, int16_t off);
+
     // Move from HI/LO register.
     BufferOffset as_mfhi(Register rd);
     BufferOffset as_mflo(Register rd);
@@ -995,6 +1084,22 @@ class AssemblerMIPSShared : public AssemblerShared
 
     BufferOffset as_ls(FloatRegister fd, Register base, int32_t off);
     BufferOffset as_ss(FloatRegister fd, Register base, int32_t off);
+
+    // Loongson-specific FP load and store instructions
+    BufferOffset as_gsldl(FloatRegister fd, Register base, int32_t off);
+    BufferOffset as_gsldr(FloatRegister fd, Register base, int32_t off);
+    BufferOffset as_gssdl(FloatRegister fd, Register base, int32_t off);
+    BufferOffset as_gssdr(FloatRegister fd, Register base, int32_t off);
+    BufferOffset as_gslsl(FloatRegister fd, Register base, int32_t off);
+    BufferOffset as_gslsr(FloatRegister fd, Register base, int32_t off);
+    BufferOffset as_gsssl(FloatRegister fd, Register base, int32_t off);
+    BufferOffset as_gsssr(FloatRegister fd, Register base, int32_t off);
+    BufferOffset as_gslsx(FloatRegister fd, Register rs, Register ri, int16_t off);
+    BufferOffset as_gsssx(FloatRegister fd, Register rs, Register ri, int16_t off);
+    BufferOffset as_gsldx(FloatRegister fd, Register rs, Register ri, int16_t off);
+    BufferOffset as_gssdx(FloatRegister fd, Register rs, Register ri, int16_t off);
+    BufferOffset as_gslq(FloatRegister rh, FloatRegister rl, Register rs, int16_t off);
+    BufferOffset as_gssq(FloatRegister rh, FloatRegister rl, Register rs, int16_t off);
 
     BufferOffset as_movs(FloatRegister fd, FloatRegister fs);
     BufferOffset as_movd(FloatRegister fd, FloatRegister fs);
@@ -1359,6 +1464,33 @@ class InstJump : public Instruction
     uint32_t extractImm26Value() {
         return extractBitField(Imm26Shift + Imm26Bits - 1, Imm26Shift);
     }
+};
+
+// Class for Loongson-specific instructions
+class InstGS : public Instruction
+{
+  public:
+    // For indexed loads and stores.
+    InstGS(Opcode op, Register rs, Register rt, Register rd, Imm8 off, FunctionField ff)
+      : Instruction(op | RS(rs) | RT(rt) | RD(rd) | off.encode(3) | ff)
+    { }
+    InstGS(Opcode op, Register rs, FloatRegister rt, Register rd, Imm8 off, FunctionField ff)
+      : Instruction(op | RS(rs) | RT(rt) | RD(rd) | off.encode(3) | ff)
+    { }
+    // For quad-word loads and stores.
+    InstGS(Opcode op, Register rs, Register rt, Register rz, GSImm13 off, FunctionField ff)
+      : Instruction(op | RS(rs) | RT(rt) | RZ(rz) | off.encode(6) | ff)
+    { }
+    InstGS(Opcode op, Register rs, FloatRegister rt, FloatRegister rz, GSImm13 off, FunctionField ff)
+      : Instruction(op | RS(rs) | RT(rt) | RZ(rz) | off.encode(6) | ff)
+    { }
+    InstGS(uint32_t raw)
+      : Instruction(raw)
+    { }
+    // For floating-point unaligned loads and stores.
+    InstGS(Opcode op, Register rs, FloatRegister rt, Imm8 off, FunctionField ff)
+      : Instruction(op | RS(rs) | RT(rt) | off.encode(6) | ff)
+    { }
 };
 
 } // namespace jit
