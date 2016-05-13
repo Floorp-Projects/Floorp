@@ -815,8 +815,12 @@ MacroAssemblerMIPS64::ma_ls(FloatRegister ft, Address address)
     } else {
         MOZ_ASSERT(address.base != ScratchRegister);
         ma_li(ScratchRegister, Imm32(address.offset));
-        as_daddu(ScratchRegister, address.base, ScratchRegister);
-        as_ls(ft, ScratchRegister, 0);
+        if (isLoongson()) {
+            as_gslsx(ft, address.base, ScratchRegister, 0);
+        } else {
+            as_daddu(ScratchRegister, address.base, ScratchRegister);
+            as_ls(ft, ScratchRegister, 0);
+        }
     }
 }
 
@@ -826,9 +830,14 @@ MacroAssemblerMIPS64::ma_ld(FloatRegister ft, Address address)
     if (Imm16::IsInSignedRange(address.offset)) {
         as_ld(ft, address.base, address.offset);
     } else {
+        MOZ_ASSERT(address.base != ScratchRegister);
         ma_li(ScratchRegister, Imm32(address.offset));
-        as_daddu(ScratchRegister, address.base, ScratchRegister);
-        as_ld(ft, ScratchRegister, 0);
+        if (isLoongson()) {
+            as_gsldx(ft, address.base, ScratchRegister, 0);
+        } else {
+            as_daddu(ScratchRegister, address.base, ScratchRegister);
+            as_ld(ft, ScratchRegister, 0);
+        }
     }
 }
 
@@ -838,9 +847,14 @@ MacroAssemblerMIPS64::ma_sd(FloatRegister ft, Address address)
     if (Imm16::IsInSignedRange(address.offset)) {
         as_sd(ft, address.base, address.offset);
     } else {
+        MOZ_ASSERT(address.base != ScratchRegister);
         ma_li(ScratchRegister, Imm32(address.offset));
-        as_daddu(ScratchRegister, address.base, ScratchRegister);
-        as_sd(ft, ScratchRegister, 0);
+        if (isLoongson()) {
+            as_gssdx(ft, address.base, ScratchRegister, 0);
+        } else {
+            as_daddu(ScratchRegister, address.base, ScratchRegister);
+            as_sd(ft, ScratchRegister, 0);
+        }
     }
 }
 
@@ -850,9 +864,14 @@ MacroAssemblerMIPS64::ma_ss(FloatRegister ft, Address address)
     if (Imm16::IsInSignedRange(address.offset)) {
         as_ss(ft, address.base, address.offset);
     } else {
+        MOZ_ASSERT(address.base != ScratchRegister);
         ma_li(ScratchRegister, Imm32(address.offset));
-        as_daddu(ScratchRegister, address.base, ScratchRegister);
-        as_ss(ft, ScratchRegister, 0);
+        if (isLoongson()) {
+            as_gsssx(ft, address.base, ScratchRegister, 0);
+        } else {
+            as_daddu(ScratchRegister, address.base, ScratchRegister);
+            as_ss(ft, ScratchRegister, 0);
+        }
     }
 }
 

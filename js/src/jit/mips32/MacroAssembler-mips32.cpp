@@ -667,8 +667,12 @@ MacroAssemblerMIPS::ma_ls(FloatRegister ft, Address address)
     } else {
         MOZ_ASSERT(address.base != ScratchRegister);
         ma_li(ScratchRegister, Imm32(address.offset));
-        as_addu(ScratchRegister, address.base, ScratchRegister);
-        as_ls(ft, ScratchRegister, 0);
+        if (isLoongson()) {
+            as_gslsx(ft, address.base, ScratchRegister, 0);
+        } else {
+            as_addu(ScratchRegister, address.base, ScratchRegister);
+            as_ls(ft, ScratchRegister, 0);
+        }
     }
 }
 
@@ -683,6 +687,7 @@ MacroAssemblerMIPS::ma_ld(FloatRegister ft, Address address)
         as_ls(ft, address.base, address.offset);
         as_ls(getOddPair(ft), address.base, off2);
     } else {
+        MOZ_ASSERT(address.base != ScratchRegister);
         ma_li(ScratchRegister, Imm32(address.offset));
         as_addu(ScratchRegister, address.base, ScratchRegister);
         as_ls(ft, ScratchRegister, PAYLOAD_OFFSET);
@@ -698,6 +703,7 @@ MacroAssemblerMIPS::ma_sd(FloatRegister ft, Address address)
         as_ss(ft, address.base, address.offset);
         as_ss(getOddPair(ft), address.base, off2);
     } else {
+        MOZ_ASSERT(address.base != ScratchRegister);
         ma_li(ScratchRegister, Imm32(address.offset));
         as_addu(ScratchRegister, address.base, ScratchRegister);
         as_ss(ft, ScratchRegister, PAYLOAD_OFFSET);
@@ -711,9 +717,14 @@ MacroAssemblerMIPS::ma_ss(FloatRegister ft, Address address)
     if (Imm16::IsInSignedRange(address.offset)) {
         as_ss(ft, address.base, address.offset);
     } else {
+        MOZ_ASSERT(address.base != ScratchRegister);
         ma_li(ScratchRegister, Imm32(address.offset));
-        as_addu(ScratchRegister, address.base, ScratchRegister);
-        as_ss(ft, ScratchRegister, 0);
+        if (isLoongson()) {
+            as_gsssx(ft, address.base, ScratchRegister, 0);
+        } else {
+            as_addu(ScratchRegister, address.base, ScratchRegister);
+            as_ss(ft, ScratchRegister, 0);
+        }
     }
 }
 
