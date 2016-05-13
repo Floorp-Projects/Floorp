@@ -71,7 +71,7 @@ def print_array_entry(output, histogram, name_index, exp_index):
 def write_histogram_table(output, histograms):
     table = StringTable()
 
-    print("const HistogramInfo gHistograms[] = {", file=output)
+    print("const TelemetryHistogram gHistograms[] = {", file=output)
     for histogram in histograms:
         name_index = table.stringIndex(histogram.name())
         exp_index = table.stringIndex(histogram.expiration())
