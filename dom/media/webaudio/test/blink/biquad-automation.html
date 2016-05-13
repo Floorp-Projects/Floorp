@@ -1,0 +1,356 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Biquad Automation Test</title>
+    <script src="../resources/js-test.js"></script>
+    <script src="resources/compatibility.js"></script>
+    <script src="resources/audio-testing.js"></script>
+    <script src="resources/biquad-filters.js"></script>
+    <script src="resources/audioparam-testing.js"></script>
+  </head>
+  <body>
+    <script>
+      description("Test Automation of Biquad Filters");
+
+      window.jsTestIsAsync = true;
+
+      // Don't need to run these tests at high sampling rate, so just use a low one to reduce memory
+      // usage and complexity.
+      var sampleRate = 16000;
+
+      // How long to render for each test.
+      var renderDuration = 1;
+
+      var audit = Audit.createTaskRunner();
+
+      // The definition of the linear ramp automation function.
+      function linearRamp(t, v0, v1, t0, t1) {
+        return v0 + (v1 - v0) * (t - t0) / (t1 - t0);
+      }
+
+      // Generate the filter coefficients for the specified filter using the given parameters for
+      // the given duration.  |filterTypeFunction| is a function that returns the filter
+      // coefficients for one set of parameters.  |parameters| is a property bag that contains the
+      // start and end values (as an array) for each of the biquad attributes.  The properties are
+      // |freq|, |Q|, |gain|, and |detune|.  |duration| is the number of seconds for which the
+      // coefficients are generated.
+      //
+      // A property bag with properties |b0|, |b1|, |b2|, |a1|, |a2|.  Each propery is an array
+      // consisting of the coefficients for the time-varying biquad filter.
+      function generateFilterCoefficients(filterTypeFunction, parameters, duration) {
+         var endFrame = Math.ceil(duration * sampleRate);
+         var nCoef = endFrame;
+         var b0 = new Float64Array(nCoef);
+         var b1 = new Float64Array(nCoef);
+         var b2 = new Float64Array(nCoef);
+         var a1 = new Float64Array(nCoef);
+         var a2 = new Float64Array(nCoef);
+
+         var k = 0;
+         // If the property is not given, use the defaults.
+         var freqs = parameters.freq || [350, 350];
+         var qs = parameters.Q || [1, 1];
+         var gains = parameters.gain || [0, 0];
+         var detunes = parameters.detune || [0, 0];
+
+         for (var frame = 0; frame < endFrame; ++frame) {
+            // Apply linear ramp at frame |frame|.
+            var f = linearRamp(frame / sampleRate, freqs[0], freqs[1], 0, duration);
+            var q = linearRamp(frame / sampleRate, qs[0], qs[1], 0, duration);
+            var g = linearRamp(frame / sampleRate, gains[0], gains[1], 0, duration);
+            var d = linearRamp(frame / sampleRate, detunes[0], detunes[1], 0, duration);
+
+            // Compute actual frequency parameter
+            f = f * Math.pow(2, d / 1200);
+
+            // Compute filter coefficients
+            var coef = filterTypeFunction(f / (sampleRate / 2), q, g);
+            b0[k] = coef.b0;
+            b1[k] = coef.b1;
+            b2[k] = coef.b2;
+            a1[k] = coef.a1;
+            a2[k] = coef.a2;
+            ++k;
+         }
+
+         return {b0: b0, b1: b1, b2: b2, a1: a1, a2: a2};
+      }
+
+      // Apply the given time-varying biquad filter to the given signal, |signal|.  |coef| should be
+      // the time-varying coefficients of the filter, as returned by |generateFilterCoefficients|.
+      function timeVaryingFilter(signal, coef) {
+        var length = signal.length;
+        // Use double precision for the internal computations.
+        var y = new Float64Array(length);
+
+        // Prime the pump. (Assumes the signal has length >= 2!)
+        y[0] = coef.b0[0] * signal[0];
+        y[1] = coef.b0[1] * signal[1] + coef.b1[1] * signal[0] - coef.a1[1] * y[0];
+
+        for (var n = 2; n < length; ++n) {
+          y[n] = coef.b0[n] * signal[n] + coef.b1[n] * signal[n-1] + coef.b2[n] * signal[n-2];
+          y[n] -= coef.a1[n] * y[n-1] + coef.a2[n] * y[n-2];
+        }
+
+        // But convert the result to single precision for comparison.
+        return y.map(Math.fround);
+      }
+
+      // Configure the audio graph using |context|.  Returns the biquad filter node and the
+      // AudioBuffer used for the source.
+      function configureGraph(context, toneFrequency) {
+        // The source is just a simple sine wave.
+        var src = context.createBufferSource();
+        var b = context.createBuffer(1, renderDuration * sampleRate, sampleRate);
+        var data = b.getChannelData(0);
+        var omega = 2 * Math.PI * toneFrequency / sampleRate;
+        for (var k = 0; k < data.length; ++k) {
+          data[k] = Math.sin(omega * k);
+        }
+        src.buffer = b;
+        var f = context.createBiquadFilter();
+        src.connect(f);
+        f.connect(context.destination);
+
+        src.start();
+
+        return {filter: f, source: b};
+      }
+
+      function createFilterVerifier(filterCreator, threshold, parameters, input, message) {
+        return function (resultBuffer) {
+          var actual = resultBuffer.getChannelData(0);
+          var coefs = generateFilterCoefficients(filterCreator, parameters, renderDuration);
+
+          reference = timeVaryingFilter(input, coefs);
+
+          Should(message, actual).beCloseToArray(reference, threshold);
+        };
+      }
+
+      // Automate just the frequency parameter.  A bandpass filter is used where the center
+      // frequency is swept across the source (which is a simple tone).
+      audit.defineTask("automate-freq", function (done) {
+        var context = new OfflineAudioContext(1, renderDuration * sampleRate, sampleRate);
+
+        // Center frequency of bandpass filter and also the frequency of the test tone.
+        var centerFreq = 10*440;
+
+        // Sweep the frequency +/- 9*440 Hz from the center.  This should cause the output to low at
+        // the beginning and end of the test where the done is outside the pass band of the filter,
+        // but high in the center where the tone is near the center of the pass band.
+        var parameters = {
+          freq: [centerFreq - 9*440, centerFreq + 9*440]
+        }
+        var graph = configureGraph(context, centerFreq);
+        var f = graph.filter;
+        var b = graph.source;
+
+        f.type = "bandpass";
+        f.frequency.setValueAtTime(parameters.freq[0], 0);
+        f.frequency.linearRampToValueAtTime(parameters.freq[1], renderDuration);
+
+        context.startRendering()
+          .then(createFilterVerifier(createBandpassFilter, 5e-5, parameters, b.getChannelData(0),
+            "Output of bandpass filter with frequency automation"))
+          .then(done);
+      });
+
+      // Automate just the Q parameter.  A bandpass filter is used where the Q of the filter is
+      // swept.
+      audit.defineTask("automate-q", function (done) {
+        var context = new OfflineAudioContext(1, renderDuration * sampleRate, sampleRate);
+
+        // The frequency of the test tone.
+        var centerFreq = 440;
+
+        // Sweep the Q paramter between 1 and 200.  This will cause the output of the filter to pass
+        // most of the tone at the beginning to passing less of the tone at the end.  This is
+        // because we set center frequency of the bandpass filter to be slightly off from the actual
+        // tone.
+        var parameters = {
+          Q: [1, 200],
+          // Center frequency of the bandpass filter is just 25 Hz above the tone frequency.
+          freq: [centerFreq + 25, centerFreq + 25]
+        };
+        var graph = configureGraph(context, centerFreq);
+        var f = graph.filter;
+        var b = graph.source;
+
+        f.type = "bandpass";
+        f.frequency.value = parameters.freq[0];
+        f.Q.setValueAtTime(parameters.Q[0], 0);
+        f.Q.linearRampToValueAtTime(parameters.Q[1], renderDuration);
+
+        context.startRendering()
+          .then(createFilterVerifier(createBandpassFilter, 1.4e-6, parameters, b.getChannelData(0),
+            "Output of bandpass filter with Q automation"))
+          .then(done);
+      });
+
+      // Automate just the gain of the lowshelf filter.  A test tone will be in the lowshelf part of
+      // the filter.  The output will vary as the gain of the lowshelf is changed.
+      audit.defineTask("automate-gain", function (done) {
+        var context = new OfflineAudioContext(1, renderDuration * sampleRate, sampleRate);
+
+        // Frequency of the test tone.
+        var centerFreq = 440;
+
+        // Set the cutoff frequency of the lowshelf to be significantly higher than the test tone.
+        // Sweep the gain from 20 dB to -20 dB.  (We go from 20 to -20 to easily verify that the
+        // filter didn't go unstable.)
+        var parameters = {
+          freq: [3500, 3500],
+          gain: [20, -20]
+        }
+        var graph = configureGraph(context, centerFreq);
+        var f = graph.filter;
+        var b = graph.source;
+
+        f.type = "lowshelf";
+        f.frequency.value = parameters.freq[0];
+        f.gain.setValueAtTime(parameters.gain[0], 0);
+        f.gain.linearRampToValueAtTime(parameters.gain[1], renderDuration);
+
+        context.startRendering()
+          .then(createFilterVerifier(createLowShelfFilter, 8e-6, parameters, b.getChannelData(0),
+            "Output of lowshelf filter with gain automation"))
+          .then(done);
+      });
+
+      // Automate just the detune parameter.  Basically the same test as for the frequncy parameter
+      // but we just use the detune parameter to modulate the frequency parameter.
+      audit.defineTask("automate-detune", function (done) {
+        var context = new OfflineAudioContext(1, renderDuration * sampleRate, sampleRate);
+        var centerFreq = 10*440;
+        var parameters = {
+          freq: [centerFreq, centerFreq],
+          detune: [-10*1200, 10*1200]
+        };
+        var graph = configureGraph(context, centerFreq);
+        var f = graph.filter;
+        var b = graph.source;
+
+        f.type = "bandpass";
+        f.frequency.value = parameters.freq[0];
+        f.detune.setValueAtTime(parameters.detune[0], 0);
+        f.detune.linearRampToValueAtTime(parameters.detune[1], renderDuration);
+
+        context.startRendering()
+          .then(createFilterVerifier(createBandpassFilter, 5e-6, parameters, b.getChannelData(0),
+            "Output of bandpass filter with detune automation"))
+          .then(done);
+      });
+
+      // Automate all of the filter parameters at once.  This is a basic check that everything is
+      // working.  A peaking filter is used because it uses all of the parameters.
+      audit.defineTask("automate-all", function (done) {
+        var context = new OfflineAudioContext(1, renderDuration * sampleRate, sampleRate);
+        var graph = configureGraph(context, 10*440);
+        var f = graph.filter;
+        var b = graph.source;
+
+        // Sweep all of the filter parameters.  These are pretty much arbitrary.
+        var parameters = {
+          freq: [10000, 100],
+          Q: [f.Q.value, .0001],
+          gain: [f.gain.value, 20],
+          detune: [2400, -2400]
+        };
+
+        f.type = "peaking";
+        // Set starting points for all parameters of the filter.  Start at 10 kHz for the center
+        // frequency, and the defaults for Q and gain.
+        f.frequency.setValueAtTime(parameters.freq[0], 0);
+        f.Q.setValueAtTime(parameters.Q[0], 0);
+        f.gain.setValueAtTime(parameters.gain[0], 0);
+        f.detune.setValueAtTime(parameters.detune[0], 0);
+
+        // Linear ramp each parameter
+        f.frequency.linearRampToValueAtTime(parameters.freq[1], renderDuration);
+        f.Q.linearRampToValueAtTime(parameters.Q[1], renderDuration);
+        f.gain.linearRampToValueAtTime(parameters.gain[1], renderDuration);
+        f.detune.linearRampToValueAtTime(parameters.detune[1], renderDuration);
+
+        context.startRendering()
+          .then(createFilterVerifier(createPeakingFilter, 3.3e-4, parameters, b.getChannelData(0),
+            "Output of peaking filter with automation of all parameters"))
+          .then(done);
+      });
+
+      // Test that modulation of the frequency parameter of the filter works.  A sinusoid of 440 Hz
+      // is the test signal that is applied to a bandpass biquad filter.  The frequency parameter of
+      // the filter is modulated by a sinusoid at 103 Hz, and the frequency modulation varies from
+      // 116 to 412 Hz.  (This test was taken from the description in
+      // https://github.com/WebAudio/web-audio-api/issues/509#issuecomment-94731355)
+      audit.defineTask("modulation", function (done) {
+        var context = new OfflineAudioContext(1, renderDuration * sampleRate, sampleRate);
+
+        // Create a graph with the sinusoidal source at 440 Hz as the input to a biquad filter.
+        var graph = configureGraph(context, 440);
+        var f = graph.filter;
+        var b = graph.source;
+
+        f.type = "bandpass";
+        f.Q.value = 5;
+        f.frequency.value = 264;
+
+        // Create the modulation source, a sinusoid with frequency 103 Hz and amplitude 148.  (The
+        // amplitude of 148 is added to the filter's frequency value of 264 to produce a sinusoidal
+        // modulation of the frequency parameter from 116 to 412 Hz.)
+        var mod = context.createBufferSource();
+        var mbuffer = context.createBuffer(1, renderDuration * sampleRate, sampleRate);
+        var d = mbuffer.getChannelData(0);
+        var omega = 2 * Math.PI * 103 / sampleRate;
+        for (var k = 0; k < d.length; ++k) {
+          d[k] = 148 * Math.sin(omega * k);
+        }
+        mod.buffer = mbuffer;
+
+        mod.connect(f.frequency);
+      
+        mod.start();
+        context.startRendering()
+          .then(function (resultBuffer) {
+             var actual = resultBuffer.getChannelData(0);
+             // Compute the filter coefficients using the mod sine wave
+             
+             var endFrame = Math.ceil(renderDuration * sampleRate);
+             var nCoef = endFrame;
+             var b0 = new Float64Array(nCoef);
+             var b1 = new Float64Array(nCoef);
+             var b2 = new Float64Array(nCoef);
+             var a1 = new Float64Array(nCoef);
+             var a2 = new Float64Array(nCoef);
+
+             // Generate the filter coefficients when the frequency varies from 116 to 248 Hz using
+             // the 103 Hz sinusoid.
+             for (var k = 0; k < nCoef; ++k) {
+               var freq = f.frequency.value + d[k];
+               var c = createBandpassFilter(freq / (sampleRate / 2), f.Q.value, f.gain.value);
+               b0[k] = c.b0;
+               b1[k] = c.b1;
+               b2[k] = c.b2;
+               a1[k] = c.a1;
+               a2[k] = c.a2;
+             }
+             reference = timeVaryingFilter(b.getChannelData(0),
+               {b0: b0, b1: b1, b2: b2, a1: a1, a2: a2});
+
+             Should("Output of bandpass filter with sinusoidal modulation of bandpass center frequency",
+               actual)
+               .beCloseToArray(reference, 4e-6);
+           })
+          .then(done);
+      });
+
+      // All done!
+      audit.defineTask("finish", function (done) {
+        finishJSTest();
+        done();
+      });
+
+      audit.runTasks();
+    </script>
+  </body>
+</html>
