@@ -16,7 +16,11 @@ import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.telemetry.TelemetryPing;
 import org.mozilla.gecko.util.FileUtils;
+import org.mozilla.gecko.util.FileUtils.FileLastModifiedComparator;
+import org.mozilla.gecko.util.FileUtils.FilenameRegexFilter;
+import org.mozilla.gecko.util.FileUtils.FilenameWhitelistFilter;
 import org.mozilla.gecko.util.StringUtils;
+import org.mozilla.gecko.util.UUIDUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -26,22 +30,24 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.channels.FileLock;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
-import java.util.Locale;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * An implementation of TelemetryPingStore that is backed by JSON files.
  *
- * This implementation seeks simplicity. Each ping to upload is stored in its own file with a
- * name patterned after {@link #FILENAME}. The file name includes the ping's unique id - these are used to
- * both remove pings and prune pings. During prune, the pings with the smallest ids will be removed first
- * so these ping ids should be strictly increasing as new pings are stored; consider using data already contained
- * in the ping, such as a sequence number.
+ * This implementation seeks simplicity. Each ping to upload is stored in its own file with its doc ID
+ * as the filename. The doc ID is sent with a ping to be uploaded and is expected to be returned with
+ * {@link #onUploadAttemptComplete(Set)} so the associated file can be removed.
+ *
+ * During prune, the pings with the oldest modified time will be removed first. Different filesystems will
+ * handle clock skew (e.g. manual time changes, daylight savings time, changing timezones) in different ways
+ * and we accept that these modified times may not be consistent - newer data is not more important than
+ * older data and the choice to delete the oldest data first is largely arbitrary so we don't care if
+ * the timestamps are occasionally inconsistent.
  *
  * Using separate files for this store allows for less restrictive concurrency:
  *   * requires locking: {@link #storePing(TelemetryPing)} writes a new file
@@ -58,34 +64,21 @@ public class TelemetryJSONFilePingStore implements TelemetryPingStore {
 
     @VisibleForTesting static final int MAX_PING_COUNT = 40; // TODO: value.
 
-    private static final String FILENAME = "ping-%s.json";
-    private static final Pattern FILENAME_PATTERN = Pattern.compile("ping-([0-9]+)\\.json");
-
     // We keep the key names short to reduce storage size impact.
     @VisibleForTesting static final String KEY_PAYLOAD = "p";
     @VisibleForTesting static final String KEY_URL_PATH = "u";
 
     private final File storeDir;
+    private final FilenameFilter uuidFilenameFilter;
 
     public TelemetryJSONFilePingStore(final File storeDir) {
         this.storeDir = storeDir;
         this.storeDir.mkdirs();
+        uuidFilenameFilter = new FilenameRegexFilter(UUIDUtil.UUID_PATTERN);
     }
 
-    @VisibleForTesting File getPingFile(final long id) {
-        final String filename = String.format(Locale.US, FILENAME, id);
-        return new File(storeDir, filename);
-    }
-
-    /**
-     * @return the ID from the filename or -1 if the id does not exist.
-     */
-    @VisibleForTesting static int getIDFromFilename(final String filename) {
-        final Matcher matcher = FILENAME_PATTERN.matcher(filename);
-        if (!matcher.matches()) { // Matcher.matches has the side effect of starting the match - needed to call Matcher.group
-            return -1;
-        }
-        return Integer.parseInt(matcher.group(1));
+    @VisibleForTesting File getPingFile(final String docID) {
+        return new File(storeDir, docID);
     }
 
     @Override
@@ -101,82 +94,48 @@ public class TelemetryJSONFilePingStore implements TelemetryPingStore {
             throw new IOException("Unable to create JSON to store to disk");
         }
 
-        final FileOutputStream outputStream = new FileOutputStream(getPingFile(ping.getUniqueID()), false);
+        final FileOutputStream outputStream = new FileOutputStream(getPingFile(ping.getDocID()), false);
         blockForLockAndWriteFileAndCloseStream(outputStream, output);
     }
 
     @Override
     public void maybePrunePings() {
-        final File[] files = storeDir.listFiles(new PingFileFilter());
+        final File[] files = storeDir.listFiles(uuidFilenameFilter);
         if (files.length < MAX_PING_COUNT) {
             return;
         }
 
-        final SortedSet<Integer> ids = getIDsFromFileList(files);
-        removeFilesWithSmallestIDs(ids, files.length - MAX_PING_COUNT);
+        final SortedSet<File> sortedFiles = new TreeSet<>(new FileLastModifiedComparator());
+        sortedFiles.addAll(Arrays.asList(files));
+        deleteSmallestFiles(sortedFiles, files.length - MAX_PING_COUNT);
     }
 
-    private static SortedSet<Integer> getIDsFromFileList(final File[] files) {
-        // Since we get the ids from a file list which is probably sorted, I assume a TreeSet will get unbalanced
-        // and could be inefficient. However, it sounds less complex and more efficient than the alternative: the
-        // ConcurrentSkipListSet. In any case, our data is relatively small.
-        final SortedSet<Integer> out = new TreeSet<>();
-        for (final File file : files) {
-            final int id = getIDFromFilename(file.getName());
-            if (id >= 0) {
-                out.add(id);
-            }
-        }
-        return out;
-    }
-
-    private void removeFilesWithSmallestIDs(final SortedSet<Integer> ids, final int numFilesToRemove) {
-        final Iterator<Integer> it = ids.iterator();
+    private void deleteSmallestFiles(final SortedSet<File> files, final int numFilesToRemove) {
+        final Iterator<File> it = files.iterator();
         int i = 0;
-        while (i < numFilesToRemove) { // Sorted set so these are ascending values.
+        while (i < numFilesToRemove) {
             i += 1;
-            final Integer id = it.next(); // file count > files to remove so this should not throw.
-            getPingFile(id).delete();
+            // Sorted set so we're iterating over ascending files.
+            final File file = it.next(); // file count > files to remove so this should not throw.
+            file.delete();
         }
     }
 
     @Override
     public ArrayList<TelemetryPing> getAllPings() {
-        final File[] files = storeDir.listFiles(new PingFileFilter());
+        final File[] files = storeDir.listFiles(uuidFilenameFilter);
         final ArrayList<TelemetryPing> out = new ArrayList<>(files.length);
         for (final File file : files) {
-            final FileInputStream inputStream;
-            try {
-                inputStream = new FileInputStream(file);
-            } catch (final FileNotFoundException e) {
-                throw new IllegalStateException("Expected file to exist");
-            }
-
-            final JSONObject obj;
-            try {
-                // Potential optimization: re-use the same buffer for reading from files.
-                obj = lockAndReadFileAndCloseStream(inputStream, (int) file.length());
-            } catch (final IOException | JSONException e) {
-                // We couldn't read this file so let's just skip it. These potentially
-                // corrupted files should be removed when the data is pruned.
-                Log.w(LOGTAG, "Error when reading file: " + file.getName() + " Likely corrupted. Ignoring");
-                continue;
-            }
-
+            final JSONObject obj = lockAndReadJSONFromFile(file);
             if (obj == null) {
-                Log.d(LOGTAG, "Could not read given file: " + file.getName() + " File is locked. Ignoring");
+                // We log in the method to get the JSONObject if we return null.
                 continue;
             }
 
             try {
                 final String url = obj.getString(KEY_URL_PATH);
                 final ExtendedJSONObject payload = new ExtendedJSONObject(obj.getString(KEY_PAYLOAD));
-                final int id = getIDFromFilename(file.getName());
-                if (id < 0) {
-                    throw new IllegalStateException("These files are already filtered - did not expect to see " +
-                            "an invalid ID in these files");
-                }
-                out.add(new TelemetryPing(url, payload, id));
+                out.add(new TelemetryPing(url, payload, file.getName()));
             } catch (final IOException | JSONException | NonObjectJSONException e) {
                 Log.w(LOGTAG, "Bad json in ping. Ignoring.");
                 continue;
@@ -185,13 +144,43 @@ public class TelemetryJSONFilePingStore implements TelemetryPingStore {
         return out;
     }
 
+    /**
+     * Logs if there is an error.
+     *
+     * @return the JSON object from the given file or null if there is an error.
+     */
+    private JSONObject lockAndReadJSONFromFile(final File file) {
+        final FileInputStream inputStream;
+        try {
+            inputStream = new FileInputStream(file);
+        } catch (final FileNotFoundException e) {
+            throw new IllegalStateException("Expected file to exist");
+        }
+
+        final JSONObject obj;
+        try {
+            // Potential optimization: re-use the same buffer for reading from files.
+            obj = lockAndReadFileAndCloseStream(inputStream, (int) file.length());
+        } catch (final IOException | JSONException e) {
+            // We couldn't read this file so let's just skip it. These potentially
+            // corrupted files should be removed when the data is pruned.
+            Log.w(LOGTAG, "Error when reading file: " + file.getName() + " Likely corrupted. Ignoring");
+            return null;
+        }
+
+        if (obj == null) {
+            Log.d(LOGTAG, "Could not read given file: " + file.getName() + " File is locked. Ignoring");
+        }
+        return obj;
+    }
+
     @Override
-    public void onUploadAttemptComplete(final Set<Integer> successfulRemoveIDs) {
+    public void onUploadAttemptComplete(final Set<String> successfulRemoveIDs) {
         if (successfulRemoveIDs.isEmpty()) {
             return;
         }
 
-        final File[] files = storeDir.listFiles(new PingFileFilter(successfulRemoveIDs));
+        final File[] files = storeDir.listFiles(new FilenameWhitelistFilter(successfulRemoveIDs));
         for (final File file : files) {
             file.delete();
         }
@@ -235,27 +224,6 @@ public class TelemetryJSONFilePingStore implements TelemetryPingStore {
             return new JSONObject(FileUtils.readStringFromInputStreamAndCloseStream(inputStream, fileSize));
         } finally {
             inputStream.close(); // redundant: closed when the stream is closed, but let's be safe.
-        }
-    }
-
-    private static class PingFileFilter implements FilenameFilter {
-        private final Set<Integer> idsToFilter;
-
-        public PingFileFilter() {
-            this(null);
-        }
-
-        public PingFileFilter(final Set<Integer> idsToFilter) {
-            this.idsToFilter = idsToFilter;
-        }
-
-        @Override
-        public boolean accept(final File dir, final String filename) {
-            if (idsToFilter == null) {
-                return FILENAME_PATTERN.matcher(filename).matches();
-            }
-
-            return idsToFilter.contains(getIDFromFilename(filename));
         }
     }
 

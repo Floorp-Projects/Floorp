@@ -22,7 +22,7 @@ function test() {
           statusText: "OK",
           type: "json",
           fullMimeType: "text/json; charset=utf-8",
-          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.04),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 41),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(1),
@@ -31,7 +31,7 @@ function test() {
           statusText: "OK",
           type: "json",
           fullMimeType: "text/json; charset=utf-8",
-          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.05),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 54),
           time: true
         });
 

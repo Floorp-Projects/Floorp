@@ -60,7 +60,7 @@
 .event-tooltip-event-type,
 .event-tooltip-filename,
 .event-tooltip-attributes {
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
   flex-shrink: 0;
   cursor: pointer;
 }
@@ -71,7 +71,7 @@
 }
 
 .event-tooltip-filename {
-  -moz-margin-end: 0;
+  margin-inline-end: 0;
   font-size: 100%;
   flex-shrink: 1;
 }
@@ -79,7 +79,7 @@
 .event-tooltip-debugger-icon {
   width: 16px;
   height: 16px;
-  -moz-margin-end: 4px;
+  margin-inline-end: 4px;
   opacity: 0.6;
   flex-shrink: 0;
 }
@@ -92,7 +92,7 @@
   display: none;
   height: 100px;
   overflow: hidden;
-  -moz-margin-end: 0;
+  margin-inline-end: 0;
   border: 1px solid var(--theme-splitter-color);
   border-width: 1px 0 0 0;
 }
@@ -108,8 +108,8 @@
 .event-tooltip-source-container {
   margin-top: 5px;
   margin-bottom: 10px;
-  -moz-margin-start: 5px;
-  -moz-margin-end: 0;
+  margin-inline-start: 5px;
+  margin-inline-end: 0;
 }
 
 .event-tooltip-source {
@@ -129,7 +129,7 @@
   align-items: center;
   border-radius: 3px;
   padding: 2px;
-  -moz-margin-start: 5px;
+  margin-inline-start: 5px;
   background-color: var(--theme-body-color-alt);
   color: var(--theme-toolbar-background);
 }

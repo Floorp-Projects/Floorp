@@ -160,8 +160,8 @@ select[size="1"] {
 textarea {
   resize: none;
   border-width: 1px;
-  -moz-padding-start: 1px;
-  -moz-padding-end: 1px;
+  padding-inline-start: 1px;
+  padding-inline-end: 1px;
   padding-block-start: 2px;
   padding-block-end: 2px;
 }
@@ -171,8 +171,8 @@ input[type="submit"],
 input[type="reset"],
 button {
   border-width: 1px;
-  -moz-padding-start: 7px;
-  -moz-padding-end: 7px;
+  padding-inline-start: 7px;
+  padding-inline-end: 7px;
   padding-block-start: 0;
   padding-block-end: 0;
 }
@@ -180,8 +180,8 @@ button {
 input[type="radio"],
 input[type="checkbox"] {
   border: 1px solid var(--form_border) !important;
-  -moz-padding-start: 1px;
-  -moz-padding-end: 1px;
+  padding-inline-start: 1px;
+  padding-inline-end: 1px;
   padding-block-start: 2px;
   padding-block-end: 2px;
 }
@@ -273,8 +273,8 @@ input[type="reset"]:disabled,
 input[type="reset"]:disabled:active,
 button:disabled,
 button:disabled:active {
-  -moz-padding-start: 7px;
-  -moz-padding-end: 7px;
+  padding-inline-start: 7px;
+  padding-inline-end: 7px;
   padding-block-start: 0;
   padding-block-end: 0;
   background: var(--form_background_disabled);
@@ -293,8 +293,8 @@ input[type="checkbox"]:disabled:hover:active {
 
 select:disabled > button {
   opacity: 0.6;
-  -moz-padding-start: 7px;
-  -moz-padding-end: 7px;
+  padding-inline-start: 7px;
+  padding-inline-end: 7px;
   padding-block-start: 1px;
   padding-block-end: 1px;
 }
@@ -327,8 +327,8 @@ input[type="color"]:-moz-system-metric(color-picker-available):active:hover,
 input[type="reset"]:active:hover,
 input[type="button"]:active:hover,
 input[type="submit"]:active:hover {
-  -moz-padding-end: 7px;
-  -moz-padding-start: 7px;
+  padding-inline-end: 7px;
+  padding-inline-start: 7px;
 }
 
 input[type=number] > div > div, /* work around bug 946184 */

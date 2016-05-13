@@ -6,7 +6,7 @@
 
 #header-utils-btn {
   list-style-image: url("chrome://mozapps/skin/extensions/utilities.svg#utilities");
-  -moz-margin-end: 16px;
+  margin-inline-end: 16px;
 }
 
 @media not all and (-moz-windows-default-theme) {

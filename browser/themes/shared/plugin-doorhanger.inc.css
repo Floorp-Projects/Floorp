@@ -12,7 +12,7 @@
 }
 
 .center-item-label {
-  -moz-margin-start: 6px;
+  margin-inline-start: 6px;
   margin-bottom: 0;
   text-overflow: ellipsis;
 }
@@ -22,7 +22,7 @@
   background-repeat: no-repeat;
   width: 16px;
   height: 15px;
-  -moz-margin-start: 6px;
+  margin-inline-start: 6px;
 }
 
 .click-to-play-plugins-notification-button-container {

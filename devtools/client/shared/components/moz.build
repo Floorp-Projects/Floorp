@@ -12,7 +12,10 @@ DIRS += [
 DevToolsModules(
     'frame.js',
     'h-split-box.js',
+    'notification-box.css',
+    'notification-box.js',
     'tree.js',
 )
 
 MOCHITEST_CHROME_MANIFESTS += ['test/mochitest/chrome.ini']
+BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']

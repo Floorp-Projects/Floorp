@@ -15,18 +15,18 @@ checkbox {
   margin: 2px 4px;
   padding-top: 1px;
   padding-bottom: 1px;
-  -moz-padding-start: 4px;
-  -moz-padding-end: 2px;
+  padding-inline-start: 4px;
+  padding-inline-end: 2px;
 }
 
 .checkbox-label-box {
-  -moz-margin-start: 2px;
+  margin-inline-start: 2px;
   border: 1px solid transparent;
   padding: 0px 1px;
 }
 
 .checkbox-icon {
-  -moz-margin-end: 2px;
+  margin-inline-end: 2px;
 }
 
 .checkbox-label {

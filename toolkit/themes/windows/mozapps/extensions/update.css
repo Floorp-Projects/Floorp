@@ -12,8 +12,8 @@
   height: 16px;
   margin-top: 5px;
   margin-bottom: 5px;
-  -moz-margin-start: 5px;
-  -moz-margin-end: 2px;
+  margin-inline-start: 5px;
+  margin-inline-end: 2px;
 }
 
 @media (min-resolution: 1.1dppx) {

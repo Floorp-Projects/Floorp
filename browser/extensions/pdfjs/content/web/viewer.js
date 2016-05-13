@@ -220,7 +220,7 @@ var DEFAULT_URL = 'compressed.tracemonkey-pldi-09.pdf';
       // http://www.w3.org/TR/DOM-Level-3-Events/#events-MouseEvent-buttons
       // Firefox 15+
       // Internet Explorer 10+
-      return !(event.buttons | 1);
+      return !(event.buttons & 1);
     }
     if (isChrome15OrOpera15plus || isSafari6plus) {
       // Chrome 14+
@@ -936,23 +936,33 @@ exports.PDFRenderingQueue = PDFRenderingQueue;
   }
 }(this, function (exports) {
 
+  var defaultPreferences = Promise.resolve(
+{
+  "showPreviousViewOnLoad": true,
+  "defaultZoomValue": "",
+  "sidebarViewOnLoad": 0,
+  "enableHandToolOnLoad": false,
+  "enableWebGL": false,
+  "pdfBugEnabled": false,
+  "disableRange": false,
+  "disableStream": false,
+  "disableAutoFetch": false,
+  "disableFontFace": false,
+  "disableTextLayer": false,
+  "useOnlyCssZoom": false,
+  "externalLinkTarget": 0
+}
+  );
 
-var DEFAULT_PREFERENCES = {
-  showPreviousViewOnLoad: true,
-  defaultZoomValue: '',
-  sidebarViewOnLoad: 0,
-  enableHandToolOnLoad: false,
-  enableWebGL: false,
-  pdfBugEnabled: false,
-  disableRange: false,
-  disableStream: false,
-  disableAutoFetch: false,
-  disableFontFace: false,
-  disableTextLayer: false,
-  useOnlyCssZoom: false,
-  externalLinkTarget: 0,
-};
-
+function cloneObj(obj) {
+  var result = {};
+  for (var i in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, i)) {
+      result[i] = obj[i];
+    }
+  }
+  return result;
+}
 
 /**
  * Preferences - Utility for storing persistent settings.
@@ -960,7 +970,7 @@ var DEFAULT_PREFERENCES = {
  *   or every time the viewer is loaded.
  */
 var Preferences = {
-  prefs: Object.create(DEFAULT_PREFERENCES),
+  prefs: null,
   isInitializedPromiseResolved: false,
   initializedPromise: null,
 
@@ -970,8 +980,19 @@ var Preferences = {
    *                   have been initialized.
    */
   initialize: function preferencesInitialize() {
-    return this.initializedPromise =
-        this._readFromStorage(DEFAULT_PREFERENCES).then(function(prefObj) {
+    return this.initializedPromise = defaultPreferences.then(
+        function (defaults) {
+
+      Object.defineProperty(this, 'defaults', {
+        value: Object.freeze(defaults),
+        writable: false,
+        enumerable: true,
+        configurable: false
+      });
+
+      this.prefs = cloneObj(defaults);
+      return this._readFromStorage(defaults);
+    }.bind(this)).then(function(prefObj) {
       this.isInitializedPromiseResolved = true;
       if (prefObj) {
         this.prefs = prefObj;
@@ -1008,8 +1029,8 @@ var Preferences = {
    */
   reset: function preferencesReset() {
     return this.initializedPromise.then(function() {
-      this.prefs = Object.create(DEFAULT_PREFERENCES);
-      return this._writeToStorage(DEFAULT_PREFERENCES);
+      this.prefs = cloneObj(this.defaults);
+      return this._writeToStorage(this.defaults);
     }.bind(this));
   },
 
@@ -1020,7 +1041,7 @@ var Preferences = {
    */
   reload: function preferencesReload() {
     return this.initializedPromise.then(function () {
-      this._readFromStorage(DEFAULT_PREFERENCES).then(function(prefObj) {
+      this._readFromStorage(this.defaults).then(function(prefObj) {
         if (prefObj) {
           this.prefs = prefObj;
         }
@@ -1037,13 +1058,13 @@ var Preferences = {
    */
   set: function preferencesSet(name, value) {
     return this.initializedPromise.then(function () {
-      if (DEFAULT_PREFERENCES[name] === undefined) {
+      if (this.defaults[name] === undefined) {
         throw new Error('preferencesSet: \'' + name + '\' is undefined.');
       } else if (value === undefined) {
         throw new Error('preferencesSet: no value is specified.');
       }
       var valueType = typeof value;
-      var defaultType = typeof DEFAULT_PREFERENCES[name];
+      var defaultType = typeof this.defaults[name];
 
       if (valueType !== defaultType) {
         if (valueType === 'number' && defaultType === 'string') {
@@ -1071,7 +1092,7 @@ var Preferences = {
    */
   get: function preferencesGet(name) {
     return this.initializedPromise.then(function () {
-      var defaultValue = DEFAULT_PREFERENCES[name];
+      var defaultValue = this.defaults[name];
 
       if (defaultValue === undefined) {
         throw new Error('preferencesGet: \'' + name + '\' is undefined.');
@@ -2503,7 +2524,6 @@ exports.binarySearchFirstItem = binarySearchFirstItem;
     eventBus.on('pagechange', function (e) {
       var event = document.createEvent('UIEvents');
       event.initUIEvent('pagechange', true, true, window, 0);
-      event.updateInProgress = e.updateInProgress;
       event.pageNumber = e.pageNumber;
       event.previousPageNumber = e.previousPageNumber;
       e.source.container.dispatchEvent(event);
@@ -3704,173 +3724,170 @@ exports.PDFThumbnailView = PDFThumbnailView;
 var SCROLLBAR_PADDING = uiUtils.SCROLLBAR_PADDING;
 var mozL10n = uiUtils.mozL10n;
 
-var SecondaryToolbar = {
-  opened: false,
-  previousContainerHeight: null,
-  newContainerHeight: null,
+/**
+ * @typedef {Object} SecondaryToolbarOptions
+ * @property {HTMLDivElement} toolbar - Container for the secondary toolbar.
+ * @property {HTMLButtonElement} toggleButton - Button to toggle the visibility
+ *   of the secondary toolbar.
+ * @property {HTMLButtonElement} presentationModeButton - Button for entering
+ *   presentation mode.
+ * @property {HTMLButtonElement} openFileButton - Button to open a file.
+ * @property {HTMLButtonElement} printButton - Button to print the document.
+ * @property {HTMLButtonElement} downloadButton - Button to download the
+ *   document.
+ * @property {HTMLLinkElement} viewBookmarkButton - Button to obtain a bookmark
+ *   link to the current location in the document.
+ * @property {HTMLButtonElement} firstPageButton - Button to go to the first
+ *   page in the document.
+ * @property {HTMLButtonElement} lastPageButton - Button to go to the last page
+ *   in the document.
+ * @property {HTMLButtonElement} pageRotateCwButton - Button to rotate the pages
+ *   clockwise.
+ * @property {HTMLButtonElement} pageRotateCcwButton - Button to rotate the
+ *   pages counterclockwise.
+ * @property {HTMLButtonElement} toggleHandToolButton - Button to toggle the
+ *   hand tool.
+ * @property {HTMLButtonElement} documentPropertiesButton - Button for opening
+ *   the document properties dialog.
+ */
 
-  initialize: function secondaryToolbarInitialize(options, eventBus) {
-    this.eventBus = eventBus;
+/**
+ * @class
+ */
+var SecondaryToolbar = (function SecondaryToolbarClosure() {
+  /**
+   * @constructs SecondaryToolbar
+   * @param {SecondaryToolbarOptions} options
+   * @param {EventBus} eventBus
+   */
+  function SecondaryToolbar(options, eventBus) {
     this.toolbar = options.toolbar;
-    this.buttonContainer = this.toolbar.firstElementChild;
-
-    // Define the toolbar buttons.
     this.toggleButton = options.toggleButton;
-    this.presentationModeButton = options.presentationModeButton;
-    this.openFile = options.openFile;
-    this.print = options.print;
-    this.download = options.download;
-    this.viewBookmark = options.viewBookmark;
-    this.firstPage = options.firstPage;
-    this.lastPage = options.lastPage;
-    this.pageRotateCw = options.pageRotateCw;
-    this.pageRotateCcw = options.pageRotateCcw;
-    this.toggleHandTool = options.toggleHandTool;
-    this.documentPropertiesButton = options.documentPropertiesButton;
-
-    // Attach the event listeners.
-    var elements = [
-      // Button to toggle the visibility of the secondary toolbar:
-      { element: this.toggleButton, handler: this.toggle },
-      // All items within the secondary toolbar
-      { element: this.presentationModeButton,
-        handler: this.presentationModeClick },
-      { element: this.openFile, handler: this.openFileClick },
-      { element: this.print, handler: this.printClick },
-      { element: this.download, handler: this.downloadClick },
-      { element: this.viewBookmark, handler: this.viewBookmarkClick },
-      { element: this.firstPage, handler: this.firstPageClick },
-      { element: this.lastPage, handler: this.lastPageClick },
-      { element: this.pageRotateCw, handler: this.pageRotateCwClick },
-      { element: this.pageRotateCcw, handler: this.pageRotateCcwClick },
-      { element: this.toggleHandTool, handler: this.toggleHandToolClick },
-      { element: this.documentPropertiesButton,
-        handler: this.documentPropertiesClick }
+    this.buttons = [
+      { element: options.presentationModeButton, eventName: 'presentationmode',
+        close: true },
+      { element: options.openFileButton, eventName: 'openfile', close: true },
+      { element: options.printButton, eventName: 'print', close: true },
+      { element: options.downloadButton, eventName: 'download', close: true },
+      { element: options.viewBookmarkButton, eventName: null, close: true },
+      { element: options.firstPageButton, eventName: 'firstpage', close: true },
+      { element: options.lastPageButton, eventName: 'lastpage', close: true },
+      { element: options.pageRotateCwButton, eventName: 'rotatecw',
+        close: false },
+      { element: options.pageRotateCcwButton, eventName: 'rotateccw',
+        close: false },
+      { element: options.toggleHandToolButton, eventName: 'togglehandtool',
+        close: true },
+      { element: options.documentPropertiesButton,
+        eventName: 'documentproperties', close: true }
     ];
 
-    for (var item in elements) {
-      var element = elements[item].element;
-      if (element) {
-        element.addEventListener('click', elements[item].handler.bind(this));
-      }
-    }
+    this.eventBus = eventBus;
 
-    // Tracking hand tool menu item changes.
-    var isHandToolActive = false;
-    this.eventBus.on('handtoolchanged', function (e) {
-      if (isHandToolActive === e.isActive) {
+    this.opened = false;
+    this.previousContainerHeight = null;
+    this.newContainerHeight = null;
+    this.buttonContainer = this.toolbar.firstElementChild;
+
+    // Bind the event listeners for click and hand tool actions.
+    this._bindClickListeners();
+    this._bindHandToolListener(options.toggleHandToolButton);
+  }
+
+  SecondaryToolbar.prototype = {
+    /**
+     * @return {boolean}
+     */
+    get isOpen() {
+      return this.opened;
+    },
+
+    _bindClickListeners: function SecondaryToolbar_bindClickListeners() {
+      // Button to toggle the visibility of the secondary toolbar.
+      this.toggleButton.addEventListener('click', this.toggle.bind(this));
+
+      // All items within the secondary toolbar.
+      for (var button in this.buttons) {
+        var element = this.buttons[button].element;
+        var eventName = this.buttons[button].eventName;
+        var close = this.buttons[button].close;
+
+        element.addEventListener('click', function (eventName, close) {
+          if (eventName !== null) {
+            this.eventBus.dispatch(eventName);
+          }
+          if (close) {
+            this.close();
+          }
+        }.bind(this, eventName, close));
+      }
+    },
+
+    _bindHandToolListener:
+        function SecondaryToolbar_bindHandToolListener(toggleHandToolButton) {
+      var isHandToolActive = false;
+      this.eventBus.on('handtoolchanged', function (e) {
+        if (isHandToolActive === e.isActive) {
+          return;
+        }
+        isHandToolActive = e.isActive;
+        if (isHandToolActive) {
+          toggleHandToolButton.title =
+            mozL10n.get('hand_tool_disable.title', null, 'Disable hand tool');
+          toggleHandToolButton.firstElementChild.textContent =
+            mozL10n.get('hand_tool_disable_label', null, 'Disable hand tool');
+        } else {
+          toggleHandToolButton.title =
+            mozL10n.get('hand_tool_enable.title', null, 'Enable hand tool');
+          toggleHandToolButton.firstElementChild.textContent =
+            mozL10n.get('hand_tool_enable_label', null, 'Enable hand tool');
+        }
+      }.bind(this));
+    },
+
+    open: function SecondaryToolbar_open() {
+      if (this.opened) {
         return;
       }
-      isHandToolActive = e.isActive;
-      if (isHandToolActive) {
-        this.toggleHandTool.title =
-          mozL10n.get('hand_tool_disable.title', null, 'Disable hand tool');
-        this.toggleHandTool.firstElementChild.textContent =
-          mozL10n.get('hand_tool_disable_label', null, 'Disable hand tool');
-      } else {
-        this.toggleHandTool.title =
-          mozL10n.get('hand_tool_enable.title', null, 'Enable hand tool');
-        this.toggleHandTool.firstElementChild.textContent =
-          mozL10n.get('hand_tool_enable_label', null, 'Enable hand tool');
+      this.opened = true;
+      this.toggleButton.classList.add('toggled');
+      this.toolbar.classList.remove('hidden');
+    },
+
+    close: function SecondaryToolbar_close() {
+      if (!this.opened) {
+        return;
       }
-    }.bind(this));
-  },
+      this.opened = false;
+      this.toolbar.classList.add('hidden');
+      this.toggleButton.classList.remove('toggled');
+    },
 
-  // Event handling functions.
-  presentationModeClick: function secondaryToolbarPresentationModeClick(evt) {
-    this.eventBus.dispatch('presentationmode');
-    this.close();
-  },
+    toggle: function SecondaryToolbar_toggle() {
+      if (this.opened) {
+        this.close();
+      } else {
+        this.open();
+      }
+    },
 
-  openFileClick: function secondaryToolbarOpenFileClick(evt) {
-    this.eventBus.dispatch('openfile');
-    this.close();
-  },
-
-  printClick: function secondaryToolbarPrintClick(evt) {
-    this.eventBus.dispatch('print');
-    this.close();
-  },
-
-  downloadClick: function secondaryToolbarDownloadClick(evt) {
-    this.eventBus.dispatch('download');
-    this.close();
-  },
-
-  viewBookmarkClick: function secondaryToolbarViewBookmarkClick(evt) {
-    this.close();
-  },
-
-  firstPageClick: function secondaryToolbarFirstPageClick(evt) {
-    this.eventBus.dispatch('firstpage');
-    this.close();
-  },
-
-  lastPageClick: function secondaryToolbarLastPageClick(evt) {
-    this.eventBus.dispatch('lastpage');
-    this.close();
-  },
-
-  pageRotateCwClick: function secondaryToolbarPageRotateCwClick(evt) {
-    this.eventBus.dispatch('rotatecw');
-  },
-
-  pageRotateCcwClick: function secondaryToolbarPageRotateCcwClick(evt) {
-    this.eventBus.dispatch('rotateccw');
-  },
-
-  toggleHandToolClick: function secondaryToolbarToggleHandToolClick(evt) {
-    this.eventBus.dispatch('togglehandtool');
-    this.close();
-  },
-
-  documentPropertiesClick: function secondaryToolbarDocumentPropsClick(evt) {
-    this.eventBus.dispatch('documentproperties');
-    this.close();
-  },
-
-  // Misc. functions for interacting with the toolbar.
-  setMaxHeight: function secondaryToolbarSetMaxHeight(container) {
-    if (!container || !this.buttonContainer) {
-      return;
+    setMaxHeight: function SecondaryToolbar_setMaxHeight(container) {
+      if (!container || !this.buttonContainer) {
+        return;
+      }
+      this.newContainerHeight = container.clientHeight;
+      if (this.previousContainerHeight === this.newContainerHeight) {
+        return;
+      }
+      var maxHeight = this.newContainerHeight - SCROLLBAR_PADDING;
+      this.buttonContainer.setAttribute('style',
+        'max-height: ' + maxHeight + 'px;');
+      this.previousContainerHeight = this.newContainerHeight;
     }
-    this.newContainerHeight = container.clientHeight;
-    if (this.previousContainerHeight === this.newContainerHeight) {
-      return;
-    }
-    this.buttonContainer.setAttribute('style',
-      'max-height: ' + (this.newContainerHeight - SCROLLBAR_PADDING) + 'px;');
-    this.previousContainerHeight = this.newContainerHeight;
-  },
+  };
 
-  open: function secondaryToolbarOpen() {
-    if (this.opened) {
-      return;
-    }
-    this.opened = true;
-    this.toggleButton.classList.add('toggled');
-    this.toolbar.classList.remove('hidden');
-  },
-
-  close: function secondaryToolbarClose(target) {
-    if (!this.opened) {
-      return;
-    } else if (target && !this.toolbar.contains(target)) {
-      return;
-    }
-    this.opened = false;
-    this.toolbar.classList.add('hidden');
-    this.toggleButton.classList.remove('toggled');
-  },
-
-  toggle: function secondaryToolbarToggle() {
-    if (this.opened) {
-      this.close();
-    } else {
-      this.open();
-    }
-  }
-};
+  return SecondaryToolbar;
+})();
 
 exports.SecondaryToolbar = SecondaryToolbar;
 }));
@@ -5232,7 +5249,12 @@ var PDFPageView = (function PDFPageViewClosure() {
           zoomLayerCanvas.width = 0;
           zoomLayerCanvas.height = 0;
 
-          div.removeChild(self.zoomLayer);
+          if (div.contains(self.zoomLayer)) {
+            // Prevent "Node was not found" errors if the `zoomLayer` was
+            // already removed. This may occur intermittently if the scale
+            // changes many times in very quick succession.
+            div.removeChild(self.zoomLayer);
+          }
           self.zoomLayer = null;
         }
 
@@ -6130,7 +6152,6 @@ var PDFViewer = (function pdfViewer() {
     }
 
     this.scroll = watchScroll(this.container, this._scrollUpdate.bind(this));
-    this.updateInProgress = false;
     this.presentationModeState = PresentationModeState.UNKNOWN;
     this._resetView();
 
@@ -6157,12 +6178,19 @@ var PDFViewer = (function pdfViewer() {
         this._currentPageNumber = val;
         return;
       }
+      this._setCurrentPageNumber(val);
+      // The intent can be to just reset a scroll position and/or scale.
+      this._resetCurrentPageView();
+    },
 
+    _setCurrentPageNumber: function pdfViewer_setCurrentPageNumber(val) {
+      if (this._currentPageNumber === val) {
+        return;
+      }
       var arg;
       if (!(0 < val && val <= this.pagesCount)) {
         arg = {
           source: this,
-          updateInProgress: this.updateInProgress,
           pageNumber: this._currentPageNumber,
           previousPageNumber: val
         };
@@ -6173,19 +6201,12 @@ var PDFViewer = (function pdfViewer() {
 
       arg = {
         source: this,
-        updateInProgress: this.updateInProgress,
         pageNumber: val,
         previousPageNumber: this._currentPageNumber
       };
-      this.eventBus.dispatch('pagechanging', arg);
       this._currentPageNumber = val;
+      this.eventBus.dispatch('pagechanging', arg);
       this.eventBus.dispatch('pagechange', arg);
-
-      // Check if the caller is `PDFViewer_update`, to avoid breaking scrolling.
-      if (this.updateInProgress) {
-        return;
-      }
-      this.scrollPageIntoView(val);
     },
 
     /**
@@ -6492,6 +6513,19 @@ var PDFViewer = (function pdfViewer() {
     },
 
     /**
+     * Refreshes page view: scrolls to the current page and updates the scale.
+     */
+    _resetCurrentPageView: function () {
+      if (this.isInPresentationMode) {
+        // Fixes the case when PDF has different page sizes.
+        this._setScale(this._currentScaleValue, true);
+      }
+
+      var pageView = this._pages[this._currentPageNumber - 1];
+      scrollIntoView(pageView.div);
+    },
+
+    /**
      * Scrolls page into view.
      * @param {number} pageNumber
      * @param {Array} dest - (optional) original PDF destination array:
@@ -6503,23 +6537,13 @@ var PDFViewer = (function pdfViewer() {
         return;
       }
 
-      var pageView = this._pages[pageNumber - 1];
-
-      if (this.isInPresentationMode) {
-        if (this._currentPageNumber !== pageView.id) {
-          // Avoid breaking getVisiblePages in presentation mode.
-          this.currentPageNumber = pageView.id;
-          return;
-        }
-        dest = null;
-        // Fixes the case when PDF has different page sizes.
-        this._setScale(this._currentScaleValue, true);
-      }
-      if (!dest) {
-        scrollIntoView(pageView.div);
+      if (this.isInPresentationMode || !dest) {
+        this._setCurrentPageNumber(pageNumber);
+        this._resetCurrentPageView();
         return;
       }
 
+      var pageView = this._pages[pageNumber - 1];
       var x = 0, y = 0;
       var width = 0, height = 0, widthScale, heightScale;
       var changeOrientation = (pageView.rotation % 180 === 0 ? false : true);
@@ -6636,8 +6660,6 @@ var PDFViewer = (function pdfViewer() {
         return;
       }
 
-      this.updateInProgress = true;
-
       var suggestedCacheSize = Math.max(DEFAULT_CACHE_SIZE,
           2 * visiblePages.length + 1);
       this._buffer.resize(suggestedCacheSize);
@@ -6665,12 +6687,10 @@ var PDFViewer = (function pdfViewer() {
       }
 
       if (!this.isInPresentationMode) {
-        this.currentPageNumber = currentId;
+        this._setCurrentPageNumber(currentId);
       }
 
       this._updateLocation(firstPage);
-
-      this.updateInProgress = false;
 
       this.eventBus.dispatch('updateviewarea', {
         source: this,
@@ -7025,8 +7045,8 @@ var PDFViewerApplication = {
     this.pdfDocumentProperties =
       new PDFDocumentProperties(appConfig.documentProperties);
 
-    SecondaryToolbar.initialize(appConfig.secondaryToolbar, eventBus);
-    this.secondaryToolbar = SecondaryToolbar;
+    this.secondaryToolbar =
+      new SecondaryToolbar(appConfig.secondaryToolbar, eventBus);
 
     if (this.supportsFullscreen) {
       this.pdfPresentationMode = new PDFPresentationMode({
@@ -7934,12 +7954,31 @@ var PDFViewerApplication = {
 };
 
 
+function loadAndEnablePDFBug(enabledTabs) {
+  return new Promise(function (resolve, reject) {
+    var appConfig = PDFViewerApplication.appConfig;
+    var script = document.createElement('script');
+    script.src = appConfig.debuggerScriptPath;
+    script.onload = function () {
+      PDFBug.enable(enabledTabs);
+      PDFBug.init(pdfjsLib, appConfig.mainContainer);
+      resolve();
+    };
+    script.onerror = function () {
+      reject(new Error('Cannot load debugger at ' + script.src));
+    };
+    (document.getElementsByTagName('head')[0] || document.body).
+      appendChild(script);
+  });
+}
+
 function webViewerInitialized() {
   var file = window.location.href.split('#')[0];
 
+  var waitForBeforeOpening = [];
   var appConfig = PDFViewerApplication.appConfig;
   appConfig.toolbar.openFile.setAttribute('hidden', 'true');
-  appConfig.secondaryToolbar.openFile.setAttribute('hidden', 'true');
+  appConfig.secondaryToolbar.openFileButton.setAttribute('hidden', 'true');
 
   var PDFJS = pdfjsLib.PDFJS;
 
@@ -7996,8 +8035,7 @@ function webViewerInitialized() {
       PDFJS.pdfBug = true;
       var pdfBug = hashParams['pdfbug'];
       var enabled = pdfBug.split(',');
-      PDFBug.enable(enabled);
-      PDFBug.init(pdfjsLib, appConfig.mainContainer);
+      waitForBeforeOpening.push(loadAndEnablePDFBug(enabled));
     }
   }
 
@@ -8009,7 +8047,7 @@ function webViewerInitialized() {
 
   if (!PDFViewerApplication.supportsPrinting) {
     appConfig.toolbar.print.classList.add('hidden');
-    appConfig.secondaryToolbar.print.classList.add('hidden');
+    appConfig.secondaryToolbar.printButton.classList.add('hidden');
   }
 
   if (!PDFViewerApplication.supportsFullscreen) {
@@ -8094,11 +8132,18 @@ function webViewerInitialized() {
     PDFViewerApplication.eventBus.dispatch('download');
   });
 
-  PDFViewerApplication.setTitleUsingUrl(file);
-  PDFViewerApplication.initPassiveLoading();
-  return;
-
+  Promise.all(waitForBeforeOpening).then(function () {
+    webViewerOpenFileViaURL(file);
+  }).catch(function (reason) {
+    PDFViewerApplication.error(mozL10n.get('loading_error', null,
+      'An error occurred while opening.'), reason);
+  });
 }
+
+  function webViewerOpenFileViaURL(file) {
+    PDFViewerApplication.setTitleUsingUrl(file);
+    PDFViewerApplication.initPassiveLoading();
+  }
 
 function webViewerPageRendered(e) {
   var pageNumber = e.pageNumber;
@@ -8247,7 +8292,8 @@ function webViewerUpdateViewarea(e) {
   var href =
     PDFViewerApplication.pdfLinkService.getAnchorUrl(location.pdfOpenParams);
   PDFViewerApplication.appConfig.toolbar.viewBookmark.href = href;
-  PDFViewerApplication.appConfig.secondaryToolbar.viewBookmark.href = href;
+  PDFViewerApplication.appConfig.secondaryToolbar.viewBookmarkButton.href =
+    href;
 
   // Update the current bookmark in the browsing history.
   PDFViewerApplication.pdfHistory.updateCurrentBookmark(location.pdfOpenParams,
@@ -8287,7 +8333,8 @@ function webViewerResize() {
   }
 
   // Set the 'max-height' CSS property of the secondary toolbar.
-  SecondaryToolbar.setMaxHeight(PDFViewerApplication.appConfig.mainContainer);
+  var mainContainer = PDFViewerApplication.appConfig.mainContainer;
+  PDFViewerApplication.secondaryToolbar.setMaxHeight(mainContainer);
 }
 
 window.addEventListener('hashchange', function webViewerHashchange(evt) {
@@ -8351,7 +8398,8 @@ function webViewerLocalized() {
     }
 
     // Set the 'max-height' CSS property of the secondary toolbar.
-    SecondaryToolbar.setMaxHeight(PDFViewerApplication.appConfig.mainContainer);
+    var mainContainer = PDFViewerApplication.appConfig.mainContainer;
+    PDFViewerApplication.secondaryToolbar.setMaxHeight(mainContainer);
   });
 }
 
@@ -8498,14 +8546,14 @@ window.addEventListener('DOMMouseScroll', handleMouseWheel);
 window.addEventListener('mousewheel', handleMouseWheel);
 
 window.addEventListener('click', function click(evt) {
-  if (!SecondaryToolbar.opened) {
+  if (!PDFViewerApplication.secondaryToolbar.isOpen) {
     return;
   }
   var appConfig = PDFViewerApplication.appConfig;
   if (PDFViewerApplication.pdfViewer.containsElement(evt.target) ||
       (appConfig.toolbar.container.contains(evt.target) &&
        evt.target !== appConfig.secondaryToolbar.toggleButton)) {
-    SecondaryToolbar.close();
+    PDFViewerApplication.secondaryToolbar.close();
   }
 }, true);
 
@@ -8637,8 +8685,8 @@ window.addEventListener('keydown', function keydown(evt) {
         handled = true;
         break;
       case 27: // esc key
-        if (SecondaryToolbar.opened) {
-          SecondaryToolbar.close();
+        if (PDFViewerApplication.secondaryToolbar.isOpen) {
+          PDFViewerApplication.secondaryToolbar.close();
           handled = true;
         }
         if (!PDFViewerApplication.supportsIntegratedFind &&
@@ -9075,16 +9123,16 @@ function getViewerConfiguration() {
       toggleButton: document.getElementById('secondaryToolbarToggle'),
       presentationModeButton:
         document.getElementById('secondaryPresentationMode'),
-      openFile: document.getElementById('secondaryOpenFile'),
-      print: document.getElementById('secondaryPrint'),
-      download: document.getElementById('secondaryDownload'),
-      viewBookmark: document.getElementById('secondaryViewBookmark'),
-      firstPage: document.getElementById('firstPage'),
-      lastPage: document.getElementById('lastPage'),
-      pageRotateCw: document.getElementById('pageRotateCw'),
-      pageRotateCcw: document.getElementById('pageRotateCcw'),
+      openFileButton: document.getElementById('secondaryOpenFile'),
+      printButton: document.getElementById('secondaryPrint'),
+      downloadButton: document.getElementById('secondaryDownload'),
+      viewBookmarkButton: document.getElementById('secondaryViewBookmark'),
+      firstPageButton: document.getElementById('firstPage'),
+      lastPageButton: document.getElementById('lastPage'),
+      pageRotateCwButton: document.getElementById('pageRotateCw'),
+      pageRotateCcwButton: document.getElementById('pageRotateCcw'),
+      toggleHandToolButton: document.getElementById('toggleHandTool'),
       documentPropertiesButton: document.getElementById('documentProperties'),
-      toggleHandTool: document.getElementById('toggleHandTool'),
     },
     fullscreen: {
       contextFirstPage: document.getElementById('contextFirstPage'),
@@ -9155,6 +9203,7 @@ function getViewerConfiguration() {
     },
     printContainer: document.getElementById('printContainer'),
     openFileInputName: 'fileInput',
+    debuggerScriptPath: './debugger.js',
   };
 }
 

@@ -10,9 +10,8 @@ import org.mozilla.gecko.sync.ExtendedJSONObject;
 /**
  * Container for telemetry data and the data necessary to upload it.
  *
- * The unique ID is used by a Store to manipulate its internal pings. Some ping
- * payloads already contain a unique ID (e.g. sequence number in core ping) and
- * this field can mirror that value.
+ * The doc ID is used by a Store to manipulate its internal pings and should
+ * be the same value found in the urlPath.
  *
  * If you want to create one of these, consider extending
  * {@link org.mozilla.gecko.telemetry.pingbuilders.TelemetryPingBuilder}
@@ -21,15 +20,15 @@ import org.mozilla.gecko.sync.ExtendedJSONObject;
 public class TelemetryPing {
     private final String urlPath;
     private final ExtendedJSONObject payload;
-    private final int uniqueID;
+    private final String docID;
 
-    public TelemetryPing(final String urlPath, final ExtendedJSONObject payload, final int uniqueID) {
+    public TelemetryPing(final String urlPath, final ExtendedJSONObject payload, final String docID) {
         this.urlPath = urlPath;
         this.payload = payload;
-        this.uniqueID = uniqueID;
+        this.docID = docID;
     }
 
     public String getURLPath() { return urlPath; }
     public ExtendedJSONObject getPayload() { return payload; }
-    public int getUniqueID() { return uniqueID; }
+    public String getDocID() { return docID; }
 }

@@ -86,6 +86,16 @@ exports.screenshot = {
 };
 
 /**
+ * Touch simulation.
+ */
+exports.touchSimulation = {
+
+  // Whether or not the touch simulation is enabled
+  enabled: PropTypes.bool.isRequired,
+
+};
+
+/**
  * A single viewport displaying a document.
  */
 exports.viewport = {

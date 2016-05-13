@@ -27,12 +27,12 @@ abstract class TelemetryPingBuilder {
 
     private final String serverPath;
     protected final ExtendedJSONObject payload;
-    private final int uniqueID;
+    private final String docID;
 
-    public TelemetryPingBuilder(final int uniqueID) {
-        serverPath = getTelemetryServerPath(getDocType());
+    public TelemetryPingBuilder() {
+        docID = UUID.randomUUID().toString();
+        serverPath = getTelemetryServerPath(getDocType(), docID);
         payload = new ExtendedJSONObject();
-        this.uniqueID = uniqueID;
     }
 
     /**
@@ -48,7 +48,7 @@ abstract class TelemetryPingBuilder {
 
     public TelemetryPing build() {
         validatePayload();
-        return new TelemetryPing(serverPath, payload, uniqueID);
+        return new TelemetryPing(serverPath, payload, docID);
     }
 
     private void validatePayload() {
@@ -68,8 +68,7 @@ abstract class TelemetryPingBuilder {
      * @param docType The name of the ping (e.g. "main")
      * @return a url at which to POST the telemetry data to
      */
-    private static String getTelemetryServerPath(final String docType) {
-        final String docId = UUID.randomUUID().toString();
+    private static String getTelemetryServerPath(final String docType, final String docID) {
         final String appName = AppConstants.MOZ_APP_BASENAME;
         final String appVersion = AppConstants.MOZ_APP_VERSION;
         final String appUpdateChannel = AppConstants.MOZ_UPDATE_CHANNEL;
@@ -78,7 +77,7 @@ abstract class TelemetryPingBuilder {
         // The compiler will optimize a single String concatenation into a StringBuilder statement.
         // If you change this `return`, be sure to keep it as a single statement to keep it optimized!
         return SERVER_INITIAL_PATH + '/' +
-                docId + '/' +
+                docID + '/' +
                 docType + '/' +
                 appName + '/' +
                 appVersion + '/' +

@@ -84,9 +84,9 @@ xul|caption > xul|label {
 
 *|*.main-content {
   padding-top: 40px;
-  -moz-padding-end: 44px; /* compensate the 4px margin of child elements */
+  padding-inline-end: 44px; /* compensate the 4px margin of child elements */
   padding-bottom: 48px;
-  -moz-padding-start: 48px;
+  padding-inline-start: 48px;
   overflow: auto;
 }
 
@@ -100,16 +100,16 @@ xul|groupbox {
   -moz-appearance: none;
   border: none;
   margin: 15px 0 0;
-  -moz-padding-start: 0;
-  -moz-padding-end: 0;
+  padding-inline-start: 0;
+  padding-inline-end: 0;
   font-size: 1.25rem;
 }
 
 xul|groupbox xul|label:not(.menu-accel):not(.menu-text):not(.indent),
 xul|groupbox xul|description {
   /* !important needed to override toolkit !important rule */
-  -moz-margin-start: 0 !important;
-  -moz-margin-end: 0 !important;
+  margin-inline-start: 0 !important;
+  margin-inline-end: 0 !important;
 }
 
 /* tabpanels and tabs */
@@ -238,13 +238,13 @@ xul|menulist > xul|*.menulist-label-box {
 }
 
 xul|menulist > xul|*.menulist-label-box > xul|*.menulist-icon[src] {
-  -moz-margin-end: 5px;
+  margin-inline-end: 5px;
 }
 
 xul|button[type="menu"] > xul|*.button-box > xul|*.button-menu-dropmarker {
   -moz-appearance: none;
   margin: 1px 0;
-  -moz-margin-start: 10px;
+  margin-inline-start: 10px;
   padding: 0;
   width: 10px;
   height: 16px;
@@ -255,7 +255,7 @@ xul|button[type="menu"] > xul|*.button-box > xul|*.button-menu-dropmarker {
 
 xul|*.help-button {
   min-width: 16px;
-  -moz-margin-end: 0;
+  margin-inline-end: 0;
   border-width: 0;
   background-image: none;
   box-shadow: none;
@@ -295,8 +295,8 @@ xul|*.help-button > xul|*.button-box > xul|*.button-text {
 
 xul|*.spinbuttons-button {
   min-height: initial;
-  -moz-margin-start: 10px !important;
-  -moz-margin-end: 2px !important;
+  margin-inline-start: 10px !important;
+  margin-inline-end: 2px !important;
 }
 
 xul|*.spinbuttons-up {
@@ -331,7 +331,7 @@ xul|*.spinbuttons-down[disabled="true"] > xul|*.button-box > xul|*.button-icon {
 
 xul|menulist:not([editable="true"]) > xul|*.menulist-dropmarker {
   -moz-appearance: none;
-  -moz-margin-end: 4px;
+  margin-inline-end: 4px;
   padding: 0;
   border: none;
   background-color: transparent;
@@ -364,8 +364,8 @@ xul|button[type="menu"] > xul|menupopup xul|menuitem {
   color: var(--in-content-text-color);
   padding-top: 0.2em;
   padding-bottom: 0.2em;
-  -moz-padding-start: 10px;
-  -moz-padding-end: 30px;
+  padding-inline-start: 10px;
+  padding-inline-end: 30px;
 }
 
 xul|menulist > xul|menupopup > xul|menu:not([disabled="true"])[_moz-menuactive="true"],
@@ -493,7 +493,7 @@ html|input[type="checkbox"] + html|label {
 }
 
 xul|checkbox {
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
 }
 
 xul|*.checkbox-check,
@@ -503,7 +503,7 @@ html|input[type="checkbox"] + html|label:before {
   height: 23px;
   border-radius: 2px;
   border: 1px solid var(--in-content-box-border-color);
-  -moz-margin-end: 10px;
+  margin-inline-end: 10px;
   background-color: #f1f1f1;
   /* !important needed to override toolkit checked !important rule */
   background-image: linear-gradient(#fff, rgba(255,255,255,0.8)) !important;
@@ -531,8 +531,8 @@ html|input[type="checkbox"]:disabled + html|label {
 }
 
 xul|*.checkbox-label-box {
-  -moz-margin-start: -1px; /* negative margin for the transparent border */
-  -moz-padding-start: 0;
+  margin-inline-start: -1px; /* negative margin for the transparent border */
+  padding-inline-start: 0;
 }
 
 xul|richlistitem > xul|*.checkbox-check {
@@ -540,7 +540,7 @@ xul|richlistitem > xul|*.checkbox-check {
 }
 
 xul|radio {
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
 }
 
 xul|*.radio-check {
@@ -549,7 +549,7 @@ xul|*.radio-check {
   height: 23px;
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 50%;
-  -moz-margin-end: 10px;
+  margin-inline-end: 10px;
   background-color: #f1f1f1;
   background-image: linear-gradient(#fff, rgba(255,255,255,0.80));
   box-shadow: 0 1px 1px 0 #fff, inset 0 2px 0 0 rgba(0,0,0,0.03);
@@ -568,9 +568,9 @@ xul|radio[disabled="true"] > xul|*.radio-check {
 }
 
 xul|*.radio-label-box {
-  -moz-margin-start: -1px; /* negative margin for the transparent border */
-  -moz-margin-end: 10px;
-  -moz-padding-start: 0;
+  margin-inline-start: -1px; /* negative margin for the transparent border */
+  margin-inline-end: 10px;
+  padding-inline-start: 0;
 }
 
 /* Category List */
@@ -586,9 +586,9 @@ xul|*.radio-label-box {
 *|*.category {
   -moz-appearance: none;
   color: var(--in-content-category-text);
-  -moz-border-end-width: 0;
-  -moz-padding-start: 15px;
-  -moz-padding-end: 21px;
+  border-inline-end-width: 0;
+  padding-inline-start: 15px;
+  padding-inline-end: 21px;
   min-height: 40px;
   transition: background-color 150ms;
 }
@@ -601,8 +601,8 @@ xul|*.radio-label-box {
 *|*.category.selected {
   background-color: var(--in-content-category-background-active);
   color: var(--in-content-category-text-selected);
-  -moz-padding-start: 11px; /* compensate the 4px border */
-  -moz-border-start: solid 4px var(--in-content-border-highlight);
+  padding-inline-start: 11px; /* compensate the 4px border */
+  border-inline-start: solid 4px var(--in-content-border-highlight);
 }
 
 *|*#categories[keyboard-navigation="true"]:-moz-focusring > *|*.category[current] {
@@ -614,7 +614,7 @@ xul|*.radio-label-box {
   line-height: 22px;
   font-size: 1.25rem;
   padding-bottom: 2px;
-  -moz-padding-start: 9px;
+  padding-inline-start: 9px;
   margin: 0;
   -moz-user-select: none;
 }
@@ -628,7 +628,7 @@ xul|*.radio-label-box {
 
 *|*.header {
   border-bottom: 1px solid var(--in-content-header-border-color);
-  -moz-margin-end: 4px; /* add the 4px end-margin of other elements */
+  margin-inline-end: 4px; /* add the 4px end-margin of other elements */
   margin-bottom: 15px;
   padding-bottom: 15px;
   -moz-box-align: baseline;
@@ -656,13 +656,13 @@ xul|*.fileFieldContentBox {
 }
 
 xul|*.fileFieldIcon {
-  -moz-margin-start: 10px;
-  -moz-margin-end: 0;
+  margin-inline-start: 10px;
+  margin-inline-end: 0;
 }
 
 xul|*.fileFieldLabel {
-  -moz-margin-start: -26px;
-  -moz-padding-start: 36px;
+  margin-inline-start: -26px;
+  padding-inline-start: 36px;
 }
 
 xul|textbox:-moz-locale-dir(rtl),
@@ -683,7 +683,7 @@ xul|filefield + xul|button:-moz-locale-dir(rtl) {
 
 xul|textbox + xul|button,
 xul|filefield + xul|button {
-  -moz-border-start: none;
+  border-inline-start: none;
 }
 
 /* List boxes */
@@ -691,7 +691,7 @@ xul|filefield + xul|button {
 xul|richlistbox,
 xul|listbox {
   -moz-appearance: none;
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
   background-color: var(--in-content-box-background);
   border: 1px solid var(--in-content-box-border-color);
   color: var(--in-content-text-color);
@@ -761,8 +761,8 @@ xul|treecolpicker:hover {
 
 xul|treecol:not([hideheader="true"]):not(:first-child),
 xul|treecolpicker {
-  -moz-border-start-width: 1px;
-  -moz-border-start-style: solid;
+  border-inline-start-width: 1px;
+  border-inline-start-style: solid;
   border-image: linear-gradient(transparent 0%, transparent 20%, #c1c1c1 20%, #c1c1c1 80%, transparent 80%, transparent 100%) 1 1;
 }
 

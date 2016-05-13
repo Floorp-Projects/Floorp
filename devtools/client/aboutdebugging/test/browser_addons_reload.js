@@ -31,35 +31,35 @@ add_task(function* () {
   // Retrieve the Reload button.
   const names = [...document.querySelectorAll("#addons .target-name")];
   const name = names.filter(element => element.textContent === ADDON_NAME)[0];
-  ok(name, "Found " + ADDON_NAME + " add-on in the list");
+  ok(name, `Found ${ADDON_NAME} add-on in the list`);
   const targetElement = name.parentNode.parentNode;
   const reloadButton = targetElement.querySelector(".reload-button");
   ok(reloadButton, "Found its reload button");
 
-  const onDisabled = promiseAddonEvent("onDisabled");
-  const onEnabled = promiseAddonEvent("onEnabled");
+  const onInstalled = promiseAddonEvent("onInstalled");
 
   const onBootstrapInstallCalled = new Promise(done => {
     Services.obs.addObserver(function listener() {
       Services.obs.removeObserver(listener, ADDON_NAME, false);
-      ok(true, "Add-on was installed: " + ADDON_NAME);
+      info("Add-on was re-installed: " + ADDON_NAME);
       done();
     }, ADDON_NAME, false);
   });
 
   reloadButton.click();
 
-  const [disabledAddon] = yield onDisabled;
-  ok(disabledAddon.name === ADDON_NAME,
-     "Add-on was disabled: " + disabledAddon.name);
-
-  const [enabledAddon] = yield onEnabled;
-  ok(enabledAddon.name === ADDON_NAME,
-     "Add-on was re-enabled: " + enabledAddon.name);
+  const [reloadedAddon] = yield onInstalled;
+  is(reloadedAddon.name, ADDON_NAME,
+     "Add-on was reloaded: " + reloadedAddon.name);
 
   yield onBootstrapInstallCalled;
 
   info("Uninstall addon installed earlier.");
-  yield uninstallAddon(document, ADDON_ID, ADDON_NAME);
+  const onUninstalled = promiseAddonEvent("onUninstalled");
+  reloadedAddon.uninstall();
+  const [uninstalledAddon] = yield onUninstalled;
+  is(uninstalledAddon.id, ADDON_ID,
+     "Add-on was uninstalled: " + uninstalledAddon.id);
+
   yield closeAboutDebugging(tab);
 });

@@ -10,4 +10,5 @@ DevToolsModules(
     'rotate-viewport.svg',
     'screenshot.svg',
     'select-arrow.svg',
+    'touch-events.svg',
 )

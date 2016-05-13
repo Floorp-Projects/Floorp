@@ -172,5 +172,5 @@ treechildren::-moz-tree-cell-text(cutting) {
 #viewButton > .button-box > .button-menu-dropmarker {
   height: auto;
   width: auto;
-  -moz-margin-end: -3px;
+  margin-inline-end: -3px;
 }

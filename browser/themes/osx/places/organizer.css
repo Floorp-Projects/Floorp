@@ -15,7 +15,7 @@
 
 #placesList > treechildren::-moz-tree-cell-text {
   font-size: 12px;
-  -moz-margin-end: 6px;
+  margin-inline-end: 6px;
 }
 
 #placesList > treechildren::-moz-tree-row(selected) {  
@@ -139,11 +139,11 @@
 }
 
 #placesView > splitter {
-  -moz-border-start: none !important;
-  -moz-border-end: 1px solid #b4b4b4;
+  border-inline-start: none !important;
+  border-inline-end: 1px solid #b4b4b4;
   min-width: 1px;
   width: 3px;
-  -moz-margin-start: -3px;
+  margin-inline-start: -3px;
   position: relative;
   background-image: none !important;
 }
@@ -172,7 +172,7 @@
   list-style-image: url(chrome://browser/skin/toolbarbutton-dropmarker.png);
   padding: 0;
   margin-top: 1px;
-  -moz-margin-end: 2px;
+  margin-inline-end: 2px;
 }
 
 @media (min-resolution: 2dppx) {
@@ -217,13 +217,13 @@
 }
 
 #back-button > .toolbarbutton-icon {
-  -moz-margin-start: 3px !important;
-  -moz-margin-end: 2px !important;
+  margin-inline-start: 3px !important;
+  margin-inline-end: 2px !important;
 }
 
 #forward-button > .toolbarbutton-icon {
-  -moz-margin-start: 2px !important;
-  -moz-margin-end: 3px !important;
+  margin-inline-start: 2px !important;
+  margin-inline-end: 3px !important;
 }
 
 /* organize button */

@@ -15,9 +15,9 @@ var gNewGlobal = promise.defer()
 var gNewChromeSource = promise.defer()
 
 var { DevToolsLoader } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-var loader = new DevToolsLoader();
-loader.invisibleToDebugger = true;
-var { DebuggerServer } = loader.require("devtools/server/main");
+var customLoader = new DevToolsLoader();
+customLoader.invisibleToDebugger = true;
+var { DebuggerServer } = customLoader.require("devtools/server/main");
 
 function test() {
   if (!DebuggerServer.initialized) {
@@ -97,6 +97,6 @@ registerCleanupFunction(function() {
   gNewGlobal = null;
   gNewChromeSource = null;
 
-  loader = null;
+  customLoader = null;
   DebuggerServer = null;
 });

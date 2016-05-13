@@ -10,11 +10,9 @@
 
 var { Constructor: CC, classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-var { Loader } = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
-var promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
+var { Loader, descriptor, resolveURI } = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
 
 this.EXPORTED_SYMBOLS = ["DevToolsLoader", "devtools", "BuiltinProvider",
                          "require", "loader"];
@@ -22,82 +20,6 @@ this.EXPORTED_SYMBOLS = ["DevToolsLoader", "devtools", "BuiltinProvider",
 /**
  * Providers are different strategies for loading the devtools.
  */
-
-var loaderModules = {
-  "Services": Object.create(Services),
-  "toolkit/loader": Loader,
-  PromiseDebugging,
-  ChromeUtils,
-  ThreadSafeChromeUtils,
-  HeapSnapshot,
-};
-XPCOMUtils.defineLazyGetter(loaderModules, "Debugger", () => {
-  // addDebuggerToGlobal only allows adding the Debugger object to a global. The
-  // this object is not guaranteed to be a global (in particular on B2G, due to
-  // compartment sharing), so add the Debugger object to a sandbox instead.
-  let sandbox = Cu.Sandbox(CC('@mozilla.org/systemprincipal;1', 'nsIPrincipal')());
-  Cu.evalInSandbox(
-    "Components.utils.import('resource://gre/modules/jsdebugger.jsm');" +
-    "addDebuggerToGlobal(this);",
-    sandbox
-  );
-  return sandbox.Debugger;
-});
-XPCOMUtils.defineLazyGetter(loaderModules, "Timer", () => {
-  let {setTimeout, clearTimeout} = Cu.import("resource://gre/modules/Timer.jsm", {});
-  // Do not return Cu.import result, as SDK loader would freeze Timer.jsm globals...
-  return {
-    setTimeout,
-    clearTimeout
-  };
-});
-XPCOMUtils.defineLazyGetter(loaderModules, "xpcInspector", () => {
-  return Cc["@mozilla.org/jsinspector;1"].getService(Ci.nsIJSInspector);
-});
-XPCOMUtils.defineLazyGetter(loaderModules, "indexedDB", () => {
-  // On xpcshell, we can't instantiate indexedDB without crashing
-  try {
-    let sandbox
-      = Cu.Sandbox(CC('@mozilla.org/systemprincipal;1', 'nsIPrincipal')(),
-                   {wantGlobalProperties: ["indexedDB"]});
-    return sandbox.indexedDB;
-
-  } catch(e) {
-    return {};
-  }
-});
-
-XPCOMUtils.defineLazyGetter(loaderModules, "CSS", () => {
-  let sandbox
-    = Cu.Sandbox(CC('@mozilla.org/systemprincipal;1', 'nsIPrincipal')(),
-                 {wantGlobalProperties: ["CSS"]});
-  return sandbox.CSS;
-});
-
-XPCOMUtils.defineLazyGetter(loaderModules, "URL", () => {
-  let sandbox
-    = Cu.Sandbox(CC('@mozilla.org/systemprincipal;1', 'nsIPrincipal')(),
-                 {wantGlobalProperties: ["URL"]});
-  return sandbox.URL;
-});
-
-const loaderPaths = {
-  // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-  "": "resource://gre/modules/commonjs/",
-  // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-  "devtools": "resource://devtools",
-  // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-  "gcli": "resource://devtools/shared/gcli/source/lib/gcli",
-  // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-  "acorn": "resource://devtools/acorn",
-  // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-  "acorn/util/walk": "resource://devtools/acorn/walk.js",
-  // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-  "source-map": "resource://devtools/shared/sourcemap/source-map.js",
-  // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-  // Allow access to xpcshell test items from the loader.
-  "xpcshell-test": "resource://test",
-};
 
 var sharedGlobalBlocklist = ["sdk/indexed-db"];
 
@@ -108,17 +30,23 @@ var sharedGlobalBlocklist = ["sdk/indexed-db"];
 function BuiltinProvider() {}
 BuiltinProvider.prototype = {
   load: function() {
-    // Copy generic paths and modules for this loader instance
-    let paths = {};
-    for (let path in loaderPaths) {
-      paths[path] = loaderPaths[path];
-    }
-    let modules = {};
-    for (let name in loaderModules) {
-      XPCOMUtils.defineLazyGetter(modules, name, (function (name) {
-        return loaderModules[name];
-      }).bind(null, name));
-    }
+    const paths = {
+      // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
+      "": "resource://gre/modules/commonjs/",
+      // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
+      "devtools": "resource://devtools",
+      // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
+      "gcli": "resource://devtools/shared/gcli/source/lib/gcli",
+      // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
+      "acorn": "resource://devtools/acorn",
+      // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
+      "acorn/util/walk": "resource://devtools/acorn/walk.js",
+      // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
+      "source-map": "resource://devtools/shared/sourcemap/source-map.js",
+      // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
+      // Allow access to xpcshell test items from the loader.
+      "xpcshell-test": "resource://test",
+    };
     // When creating a Loader invisible to the Debugger, we have to ensure
     // using only modules and not depend on any JSM. As everything that is
     // not loaded with Loader isn't going to respect `invisibleToDebugger`.
@@ -126,20 +54,14 @@ BuiltinProvider.prototype = {
     // breaking unhandled promise rejection in tests.
     if (this.invisibleToDebugger) {
       paths["promise"] = "resource://gre/modules/Promise-backend.js";
-    } else {
-      modules["promise"] = promise;
     }
     this.loader = new Loader.Loader({
       id: "fx-devtools",
-      modules,
       paths,
-      globals: this.globals,
       invisibleToDebugger: this.invisibleToDebugger,
       sharedGlobal: true,
       sharedGlobalBlocklist,
     });
-
-    return promise.resolve(undefined);
   },
 
   unload: function(reason) {
@@ -157,10 +79,6 @@ var gNextLoaderID = 0;
  */
 this.DevToolsLoader = function DevToolsLoader() {
   this.require = this.require.bind(this);
-  this.lazyGetter = XPCOMUtils.defineLazyGetter.bind(XPCOMUtils);
-  this.lazyImporter = XPCOMUtils.defineLazyModuleGetter.bind(XPCOMUtils);
-  this.lazyServiceGetter = XPCOMUtils.defineLazyServiceGetter.bind(XPCOMUtils);
-  this.lazyRequireGetter = this.lazyRequireGetter.bind(this);
 
   Services.obs.addObserver(this, "devtools-unload", false);
 };
@@ -196,44 +114,6 @@ DevToolsLoader.prototype = {
   },
 
   /**
-   * Define a getter property on the given object that requires the given
-   * module. This enables delaying importing modules until the module is
-   * actually used.
-   *
-   * @param Object obj
-   *    The object to define the property on.
-   * @param String property
-   *    The property name.
-   * @param String module
-   *    The module path.
-   * @param Boolean destructure
-   *    Pass true if the property name is a member of the module's exports.
-   */
-  lazyRequireGetter: function (obj, property, module, destructure) {
-    Object.defineProperty(obj, property, {
-      get: () => {
-        // Redefine this accessor property as a data property.
-        // Delete it first, to rule out "too much recursion" in case obj is
-        // a proxy whose defineProperty handler might unwittingly trigger this
-        // getter again.
-        delete obj[property];
-        let value = destructure
-          ? this.require(module)[property]
-          : this.require(module || property);
-        Object.defineProperty(obj, property, {
-          value,
-          writable: true,
-          configurable: true,
-          enumerable: true
-        });
-        return value;
-      },
-      configurable: true,
-      enumerable: true
-    });
-  },
-
-  /**
    * Override the provider used to load the tools.
    */
   setProvider: function(provider) {
@@ -249,58 +129,37 @@ DevToolsLoader.prototype = {
 
     // Pass through internal loader settings specific to this loader instance
     this._provider.invisibleToDebugger = this.invisibleToDebugger;
-    // Changes here should be mirrored to devtools/.eslintrc.
-    this._provider.globals = {
-      isWorker: false,
-      reportError: Cu.reportError,
-      atob: atob,
-      btoa: btoa,
-      _Iterator: Iterator,
-      loader: {
-        lazyGetter: this.lazyGetter,
-        lazyImporter: this.lazyImporter,
-        lazyServiceGetter: this.lazyServiceGetter,
-        lazyRequireGetter: this.lazyRequireGetter,
-        id: this.id
-      },
-      // Make sure `define` function exists.  This allows defining some modules
-      // in AMD format while retaining CommonJS compatibility through this hook.
-      // JSON Viewer needs modules in AMD format, as it currently uses RequireJS
-      // from a content document and can't access our usual loaders.  So, any
-      // modules shared with the JSON Viewer should include a define wrapper:
-      //
-      //   // Make this available to both AMD and CJS environments
-      //   define(function(require, exports, module) {
-      //     ... code ...
-      //   });
-      //
-      // Bug 1248830 will work out a better plan here for our content module
-      // loading needs, especially as we head towards devtools.html.
-      define(factory) {
-        factory(this.require, this.exports, this.module);
-      },
-    };
-
-    // Lazily define a few things so that the corresponding jsms are
-    // only loaded when used.
-    XPCOMUtils.defineLazyGetter(this._provider.globals, "console", () => {
-      return Cu.import("resource://gre/modules/Console.jsm", {}).console;
-    });
-    XPCOMUtils.defineLazyGetter(this._provider.globals, "clearTimeout", () => {
-      return Cu.import("resource://gre/modules/Timer.jsm", {}).clearTimeout;
-    });
-    XPCOMUtils.defineLazyGetter(this._provider.globals, "setTimeout", () => {
-      return Cu.import("resource://gre/modules/Timer.jsm", {}).setTimeout;
-    });
-    XPCOMUtils.defineLazyGetter(this._provider.globals, "clearInterval", () => {
-      return Cu.import("resource://gre/modules/Timer.jsm", {}).clearInterval;
-    });
-    XPCOMUtils.defineLazyGetter(this._provider.globals, "setInterval", () => {
-      return Cu.import("resource://gre/modules/Timer.jsm", {}).setInterval;
-    });
 
     this._provider.load();
     this.require = Loader.Require(this._provider.loader, { id: "devtools" });
+
+    // Fetch custom pseudo modules and globals
+    let { modules, globals } = this.require("devtools/shared/builtin-modules");
+
+    // When creating a Loader for the browser toolbox, we have to use
+    // Promise-backend.js, as a Loader module. Instead of Promise.jsm which
+    // can't be flagged as invisible to debugger.
+    if (this.invisibleToDebugger) {
+      delete modules["promise"];
+    }
+
+    // Register custom pseudo modules to the current loader instance
+    let loader = this._provider.loader;
+    for (let id in modules) {
+      let exports = modules[id];
+      let uri = resolveURI(id, loader.mapping);
+      loader.modules[uri] = { exports };
+    }
+
+    // Register custom globals to the current loader instance
+    globals.loader.id = this.id;
+    Object.defineProperties(loader.globals, descriptor(globals));
+
+    // Expose lazy helpers on loader
+    this.lazyGetter = globals.loader.lazyGetter;
+    this.lazyImporter = globals.loader.lazyImporter;
+    this.lazyServiceGetter = globals.loader.lazyServiceGetter;
+    this.lazyRequireGetter = globals.loader.lazyRequireGetter;
   },
 
   /**

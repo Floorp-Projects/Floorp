@@ -230,7 +230,7 @@
 
   notification[value="loop-sharing-notification"] .notification-button .button-icon {
     display: block;
-    -moz-margin-end: 6px;
+    margin-inline-end: 6px;
   }
 
   notification[value="loop-sharing-notification"] .button-menubutton-button {
@@ -277,8 +277,8 @@
     height: 26px;
     margin-top: -6px;
     margin-bottom: -5px;
-    -moz-margin-start: 6px;
-    -moz-margin-end: -5px;
+    margin-inline-start: 6px;
+    margin-inline-end: -5px;
   }
 
   .chat-toolbarbutton.chat-loop-hangup:-moz-any(:hover,:hover:active) {
@@ -304,7 +304,7 @@
     margin-top: 10%;
 
     /* XXX derived from width, so should be 50% - (620px / 2)? */
-    -moz-margin-start: calc(50% - 310px);
+    margin-inline-start: calc(50% - 310px);
   }
 
   /****************************************************************/

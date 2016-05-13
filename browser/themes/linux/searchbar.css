@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #PopupSearchAutoComplete {
-  -moz-margin-start: -24px;
+  margin-inline-start: -24px;
   padding: 1px;
 }
 
@@ -20,7 +20,7 @@
   height: 16px;
   width: 16px;
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
-  -moz-margin-start: -1px;
+  margin-inline-start: -1px;
 }
 
 /* Search go button */
@@ -63,7 +63,7 @@ menuitem[cmd="cmd_clearhistory"][disabled] {
   -moz-image-region: rect(0, 20px, 20px, 0);
   margin-top: 1px;
   margin-bottom: 1px;
-  -moz-margin-start: 2px;
+  margin-inline-start: 2px;
 }
 
 .searchbar-search-button[addengines="true"] {
@@ -156,7 +156,7 @@ menuitem[cmd="cmd_clearhistory"][disabled] {
 
 .searchbar-engine-one-off-item > .button-box > .button-icon {
   display: -moz-box;
-  -moz-margin-end: 0;
+  margin-inline-end: 0;
   width: 16px;
   height: 16px;
 }
@@ -198,7 +198,7 @@ menuitem[cmd="cmd_clearhistory"][disabled] {
 .addengine-item > .button-box > .button-text {
   -moz-box-flex: 1;
   text-align: start;
-  -moz-padding-start: 10px;
+  padding-inline-start: 10px;
 }
 
 .addengine-item:not([image]) {
@@ -210,11 +210,11 @@ menuitem[cmd="cmd_clearhistory"][disabled] {
 }
 
 .search-panel-tree > .autocomplete-treebody::-moz-tree-cell-text {
-  -moz-padding-start: 4px;
+  padding-inline-start: 4px;
 }
 
 .search-panel-tree > .autocomplete-treebody::-moz-tree-image {
-  -moz-padding-start: 5px;
+  padding-inline-start: 5px;
   width: 14px;
   height: 14px;
 }

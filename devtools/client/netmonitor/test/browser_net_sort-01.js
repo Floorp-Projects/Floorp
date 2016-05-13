@@ -203,7 +203,7 @@ function test() {
           type: "plain",
           fullMimeType: "text/plain; charset=utf-8",
           transferred: L10N.getStr("networkMenu.sizeUnavailable"),
-          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 0),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(b),
@@ -212,8 +212,8 @@ function test() {
           statusText: "Created",
           type: "plain",
           fullMimeType: "text/plain; charset=utf-8",
-          transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.02),
-          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.02),
+          transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 22),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 22),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(c),
@@ -222,8 +222,8 @@ function test() {
           statusText: "See Other",
           type: "plain",
           fullMimeType: "text/plain; charset=utf-8",
-          transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.02),
-          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0),
+          transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 22),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 0),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(d),
@@ -232,8 +232,8 @@ function test() {
           statusText: "Not Found",
           type: "plain",
           fullMimeType: "text/plain; charset=utf-8",
-          transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.02),
-          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.02),
+          transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 22),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 22),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(e),
@@ -242,8 +242,8 @@ function test() {
           statusText: "Not Implemented",
           type: "plain",
           fullMimeType: "text/plain; charset=utf-8",
-          transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.02),
-          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.02),
+          transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 22),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 22),
           time: true
         });
 

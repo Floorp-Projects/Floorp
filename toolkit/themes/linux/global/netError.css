@@ -29,7 +29,7 @@ h1 {
 
 ul, ol {
   margin: 0;
-  -moz-margin-start: 1.5em;
+  margin-inline-start: 1.5em;
   padding: 0;
 }
 
@@ -49,7 +49,7 @@ ul {
   border: 1px solid ThreeDShadow;
   border-radius: 10px;
   padding: 3em;
-  -moz-padding-start: 30px;
+  padding-inline-start: 30px;
   background: url("moz-icon://stock/gtk-dialog-warning?size=dialog") left 0 no-repeat -moz-Field;
   background-origin: content-box;
 }
@@ -63,11 +63,11 @@ ul {
 }
 
 #errorTitle {
-  -moz-margin-start: 80px;
+  margin-inline-start: 80px;
 }
 
 #errorLongContent {
-  -moz-margin-start: 80px;
+  margin-inline-start: 80px;
 }
 
 #errorShortDesc > p {
@@ -79,7 +79,7 @@ ul {
 }
 
 #errorLongDesc {
-  -moz-padding-end: 3em;
+  padding-inline-end: 3em;
   font-size: 110%;
 }
 
@@ -88,14 +88,14 @@ ul {
 
 #errorTryAgain {
   margin-top: 2em;
-  -moz-margin-start: 80px;
+  margin-inline-start: 80px;
 }
 
 #brand {
   position: absolute;
   right: 0;
   bottom: -1.5em;
-  -moz-margin-end: 10px;
+  margin-inline-end: 10px;
   opacity: .4;
 }
 

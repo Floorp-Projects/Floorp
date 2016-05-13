@@ -20,8 +20,12 @@ add_task(function* () {
   assertHasResult(inspector, true);
 
   info("Removing node #d1");
+  // Expect an inspector-updated event here, because removing #d1 causes the
+  // breadcrumbs to update (since #d1 is displayed in it).
+  let onUpdated = inspector.once("inspector-updated");
   yield mutatePage(inspector, testActor,
                    "document.getElementById(\"d1\").remove()");
+  yield onUpdated;
 
   info("Pressing return button to search again for node #d1.");
   yield synthesizeKeys("VK_RETURN", inspector);
@@ -38,6 +42,8 @@ add_task(function* () {
   assertHasResult(inspector, false);
 
   info("Create the #d3 node in the page");
+  // No need to expect an inspector-updated event here, Creating #d3 isn't going
+  // to update the breadcrumbs in any ways.
   yield mutatePage(inspector, testActor,
                    `document.getElementById("d2").insertAdjacentHTML(
                     "afterend", "<div id=d3></div>")`);
@@ -75,7 +81,7 @@ function assertHasResult(inspector, expectResult) {
 }
 
 function* mutatePage(inspector, testActor, expression) {
-  let onUpdated = inspector.once("inspector-updated");
+  let onMutation = inspector.once("markupmutation");
   yield testActor.eval(expression);
-  yield onUpdated;
+  yield onMutation;
 }

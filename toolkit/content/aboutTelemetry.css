@@ -221,7 +221,7 @@ body[dir="rtl"] .copy-node {
 
 
 .filter-ui {
-  -moz-padding-start: 10em;
+  padding-inline-start: 10em;
   display: none;
 }
 

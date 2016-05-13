@@ -53,13 +53,11 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
     private static final String OS_VERSION = "osversion";
     private static final String PING_CREATION_DATE = "created";
     private static final String PROFILE_CREATION_DATE = "profileDate";
-    public static final String SEQ = "seq";
+    private static final String SEQ = "seq";
     private static final String TIMEZONE_OFFSET = "tz";
     private static final String VERSION_ATTR = "v";
 
-    public TelemetryCorePingBuilder(final Context context, final int sequenceNumber) {
-        super(sequenceNumber);
-        setSequenceNumber(sequenceNumber);
+    public TelemetryCorePingBuilder(final Context context) {
         initPayloadConstants(context);
     }
 
@@ -149,11 +147,12 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
     /**
      * @param seq a positive sequence number.
      */
-    private void setSequenceNumber(final int seq) {
+    public TelemetryCorePingBuilder setSequenceNumber(final int seq) {
         if (seq < 0) {
             throw new IllegalArgumentException("Expected positive sequence number. Recived: " + seq);
         }
         payload.put(SEQ, seq);
+        return this;
     }
 
     /**

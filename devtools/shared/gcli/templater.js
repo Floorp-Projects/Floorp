@@ -14,12 +14,9 @@
  * limitations under the License.
  */
 
-this.EXPORTED_SYMBOLS = [ "template" ];
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "console",
-                                  "resource://gre/modules/Console.jsm");
+"use strict";
 
-'use strict';
+/* globals document */
 
 /**
  * For full documentation, see:
@@ -43,8 +40,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "console",
  *   convert null/undefined to ''. By setting blankNullUndefined:true, this
  *   conversion is handled by DOMTemplate
  */
-var template = function(node, data, options) {
-  var state = {
+var template = function (node, data, options) {
+  let state = {
     options: options || {},
     // We keep a track of the nodes that we've passed through so we can keep
     // data.__element pointing to the correct node
@@ -54,10 +51,9 @@ var template = function(node, data, options) {
   state.stack = state.options.stack;
 
   if (!Array.isArray(state.stack)) {
-    if (typeof state.stack === 'string') {
+    if (typeof state.stack === "string") {
       state.stack = [ options.stack ];
-    }
-    else {
+    } else {
       state.stack = [];
     }
   }
@@ -65,7 +61,7 @@ var template = function(node, data, options) {
   processNode(state, node, data);
 };
 
-if (typeof exports !== 'undefined') {
+if (typeof exports !== "undefined") {
   exports.template = template;
 }
 this.template = template;
@@ -98,25 +94,25 @@ var TEMPLATE_REGION = /\$\{([^}]*)\}/g;
  * @param data the data to use for node processing.
  */
 function processNode(state, node, data) {
-  if (typeof node === 'string') {
+  if (typeof node === "string") {
     node = document.getElementById(node);
   }
   if (data == null) {
     data = {};
   }
-  state.stack.push(node.nodeName + (node.id ? '#' + node.id : ''));
-  var pushedNode = false;
+  state.stack.push(node.nodeName + (node.id ? "#" + node.id : ""));
+  let pushedNode = false;
   try {
     // Process attributes
     if (node.attributes && node.attributes.length) {
       // We need to handle 'foreach' and 'if' first because they might stop
       // some types of processing from happening, and foreach must come first
       // because it defines new data on which 'if' might depend.
-      if (node.hasAttribute('foreach')) {
+      if (node.hasAttribute("foreach")) {
         processForEach(state, node, data);
         return;
       }
-      if (node.hasAttribute('if')) {
+      if (node.hasAttribute("if")) {
         if (!processIf(state, node, data)) {
           return;
         }
@@ -127,76 +123,69 @@ function processNode(state, node, data) {
       pushedNode = true;
       // It's good to clean up the attributes when we've processed them,
       // but if we do it straight away, we mess up the array index
-      var attrs = Array.prototype.slice.call(node.attributes);
-      for (var i = 0; i < attrs.length; i++) {
-        var value = attrs[i].value;
-        var name = attrs[i].name;
+      let attrs = Array.prototype.slice.call(node.attributes);
+      for (let i = 0; i < attrs.length; i++) {
+        let value = attrs[i].value;
+        let name = attrs[i].name;
 
         state.stack.push(name);
         try {
-          if (name === 'save') {
+          if (name === "save") {
             // Save attributes are a setter using the node
             value = stripBraces(state, value);
             property(state, value, data, node);
-            node.removeAttribute('save');
-          }
-          else if (name.substring(0, 2) === 'on') {
+            node.removeAttribute("save");
+          } else if (name.substring(0, 2) === "on") {
             // If this attribute value contains only an expression
-            if (value.substring(0, 2) === '${' && value.slice(-1) === '}' &&
-                    value.indexOf('${', 2) === -1) {
+            if (value.substring(0, 2) === "${" && value.slice(-1) === "}" &&
+                    value.indexOf("${", 2) === -1) {
               value = stripBraces(state, value);
-              var func = property(state, value, data);
-              if (typeof func === 'function') {
+              let func = property(state, value, data);
+              if (typeof func === "function") {
                 node.removeAttribute(name);
-                var capture = node.hasAttribute('capture' + name.substring(2));
+                let capture = node.hasAttribute("capture" + name.substring(2));
                 node.addEventListener(name.substring(2), func, capture);
                 if (capture) {
-                  node.removeAttribute('capture' + name.substring(2));
+                  node.removeAttribute("capture" + name.substring(2));
                 }
-              }
-              else {
+              } else {
                 // Attribute value is not a function - use as a DOM-L0 string
                 node.setAttribute(name, func);
               }
-            }
-            else {
+            } else {
               // Attribute value is not a single expression use as DOM-L0
               node.setAttribute(name, processString(state, value, data));
             }
-          }
-          else {
+          } else {
             node.removeAttribute(name);
             // Remove '_' prefix of attribute names so the DOM won't try
             // to use them before we've processed the template
-            if (name.charAt(0) === '_') {
+            if (name.charAt(0) === "_") {
               name = name.substring(1);
             }
 
             // Async attributes can only work if the whole attribute is async
-            var replacement;
-            if (value.indexOf('${') === 0 &&
-                value.charAt(value.length - 1) === '}') {
+            let replacement;
+            if (value.indexOf("${") === 0 &&
+                value.charAt(value.length - 1) === "}") {
               replacement = envEval(state, value.slice(2, -1), data, value);
-              if (replacement && typeof replacement.then === 'function') {
-                node.setAttribute(name, '');
+              if (replacement && typeof replacement.then === "function") {
+                node.setAttribute(name, "");
                 /* jshint loopfunc:true */
-                replacement.then(function(newValue) {
+                replacement.then(function (newValue) {
                   node.setAttribute(name, newValue);
                 }).then(null, console.error);
-              }
-              else {
+              } else {
                 if (state.options.blankNullUndefined && replacement == null) {
-                  replacement = '';
+                  replacement = "";
                 }
                 node.setAttribute(name, replacement);
               }
-            }
-            else {
+            } else {
               node.setAttribute(name, processString(state, value, data));
             }
           }
-        }
-        finally {
+        } finally {
           state.stack.pop();
         }
       }
@@ -204,16 +193,16 @@ function processNode(state, node, data) {
 
     // Loop through our children calling processNode. First clone them, so the
     // set of nodes that we visit will be unaffected by additions or removals.
-    var childNodes = Array.prototype.slice.call(node.childNodes);
-    for (var j = 0; j < childNodes.length; j++) {
+    let childNodes = Array.prototype.slice.call(node.childNodes);
+    for (let j = 0; j < childNodes.length; j++) {
       processNode(state, childNodes[j], data);
     }
 
-    if (node.nodeType === 3 /*Node.TEXT_NODE*/) {
+    /* 3 === Node.TEXT_NODE */
+    if (node.nodeType === 3) {
       processTextNode(state, node, data);
     }
-  }
-  finally {
+  } finally {
     if (pushedNode) {
       data.__element = state.nodes.pop();
     }
@@ -225,9 +214,9 @@ function processNode(state, node, data) {
  * Handle attribute values where the output can only be a string
  */
 function processString(state, value, data) {
-  return value.replace(TEMPLATE_REGION, function(path) {
-    var insert = envEval(state, path.slice(2, -1), data, value);
-    return state.options.blankNullUndefined && insert == null ? '' : insert;
+  return value.replace(TEMPLATE_REGION, function (path) {
+    let insert = envEval(state, path.slice(2, -1), data, value);
+    return state.options.blankNullUndefined && insert == null ? "" : insert;
   });
 }
 
@@ -238,26 +227,24 @@ function processString(state, value, data) {
  * @returns true if processing should continue, false otherwise
  */
 function processIf(state, node, data) {
-  state.stack.push('if');
+  state.stack.push("if");
   try {
-    var originalValue = node.getAttribute('if');
-    var value = stripBraces(state, originalValue);
-    var recurse = true;
+    let originalValue = node.getAttribute("if");
+    let value = stripBraces(state, originalValue);
+    let recurse = true;
     try {
-      var reply = envEval(state, value, data, originalValue);
+      let reply = envEval(state, value, data, originalValue);
       recurse = !!reply;
-    }
-    catch (ex) {
-      handleError(state, 'Error with \'' + value + '\'', ex);
+    } catch (ex) {
+      handleError(state, "Error with '" + value + "'", ex);
       recurse = false;
     }
     if (!recurse) {
       node.parentNode.removeChild(node);
     }
-    node.removeAttribute('if');
+    node.removeAttribute("if");
     return recurse;
-  }
-  finally {
+  } finally {
     state.stack.pop();
   }
 }
@@ -273,36 +260,33 @@ function processIf(state, node, data) {
  * @param data The data to use with envEval()
  */
 function processForEach(state, node, data) {
-  state.stack.push('foreach');
+  state.stack.push("foreach");
   try {
-    var originalValue = node.getAttribute('foreach');
-    var value = originalValue;
+    let originalValue = node.getAttribute("foreach");
+    let value = originalValue;
 
-    var paramName = 'param';
-    if (value.charAt(0) === '$') {
+    let paramName = "param";
+    if (value.charAt(0) === "$") {
       // No custom loop variable name. Use the default: 'param'
       value = stripBraces(state, value);
-    }
-    else {
+    } else {
       // Extract the loop variable name from 'NAME in ${ARRAY}'
-      var nameArr = value.split(' in ');
+      let nameArr = value.split(" in ");
       paramName = nameArr[0].trim();
       value = stripBraces(state, nameArr[1].trim());
     }
-    node.removeAttribute('foreach');
+    node.removeAttribute("foreach");
     try {
-      var evaled = envEval(state, value, data, originalValue);
-      var cState = cloneState(state);
-      handleAsync(evaled, node, function(reply, siblingNode) {
+      let evaled = envEval(state, value, data, originalValue);
+      let cState = cloneState(state);
+      handleAsync(evaled, node, function (reply, siblingNode) {
         processForEachLoop(cState, reply, node, siblingNode, data, paramName);
       });
       node.parentNode.removeChild(node);
+    } catch (ex) {
+      handleError(state, "Error with " + value + "'", ex);
     }
-    catch (ex) {
-      handleError(state, 'Error with \'' + value + '\'', ex);
-    }
-  }
-  finally {
+  } finally {
     state.stack.pop();
   }
 }
@@ -320,13 +304,12 @@ function processForEach(state, node, data) {
  */
 function processForEachLoop(state, set, templNode, sibling, data, paramName) {
   if (Array.isArray(set)) {
-    set.forEach(function(member, i) {
+    set.forEach(function (member, i) {
       processForEachMember(state, member, templNode, sibling,
-                           data, paramName, '' + i);
+                           data, paramName, "" + i);
     });
-  }
-  else {
-    for (var member in set) {
+  } else {
+    for (let member in set) {
       if (set.hasOwnProperty(member)) {
         processForEachMember(state, member, templNode, sibling,
                              data, paramName, member);
@@ -347,36 +330,35 @@ function processForEachLoop(state, set, templNode, sibling, data, paramName) {
  * @param paramName The name given to 'member' by the foreach attribute
  * @param frame A name to push on the stack for debugging
  */
-function processForEachMember(state, member, templNode, siblingNode, data, paramName, frame) {
+function processForEachMember(state, member, templNode, siblingNode, data,
+                              paramName, frame) {
   state.stack.push(frame);
   try {
-    var cState = cloneState(state);
-    handleAsync(member, siblingNode, function(reply, node) {
+    let cState = cloneState(state);
+    handleAsync(member, siblingNode, function (reply, node) {
       // Clone data because we can't be sure that we can safely mutate it
-      var newData = Object.create(null);
-      Object.keys(data).forEach(function(key) {
+      let newData = Object.create(null);
+      Object.keys(data).forEach(function (key) {
         newData[key] = data[key];
       });
       newData[paramName] = reply;
       if (node.parentNode != null) {
-        var clone;
-        if (templNode.nodeName.toLowerCase() === 'loop') {
-          for (var i = 0; i < templNode.childNodes.length; i++) {
+        let clone;
+        if (templNode.nodeName.toLowerCase() === "loop") {
+          for (let i = 0; i < templNode.childNodes.length; i++) {
             clone = templNode.childNodes[i].cloneNode(true);
             node.parentNode.insertBefore(clone, node);
             processNode(cState, clone, newData);
           }
-        }
-        else {
+        } else {
           clone = templNode.cloneNode(true);
-          clone.removeAttribute('foreach');
+          clone.removeAttribute("foreach");
           node.parentNode.insertBefore(clone, node);
           processNode(cState, clone, newData);
         }
       }
     });
-  }
-  finally {
+  } finally {
     state.stack.pop();
   }
 }
@@ -390,7 +372,7 @@ function processForEachMember(state, member, templNode, siblingNode, data, param
  */
 function processTextNode(state, node, data) {
   // Replace references in other attributes
-  var value = node.data;
+  let value = node.data;
   // We can't use the string.replace() with function trick (see generic
   // attribute processing in processNode()) because we need to support
   // functions that return DOM nodes, so we can't have the conversion to a
@@ -400,39 +382,37 @@ function processTextNode(state, node, data) {
   // We can then split using \uF001 or \uF002 to get an array of strings
   // where scripts are prefixed with $.
   // \uF001 and \uF002 are just unicode chars reserved for private use.
-  value = value.replace(TEMPLATE_REGION, '\uF001$$$1\uF002');
+  value = value.replace(TEMPLATE_REGION, "\uF001$$$1\uF002");
   // Split a string using the unicode chars F001 and F002.
-  var parts = value.split(/\uF001|\uF002/);
+  let parts = value.split(/\uF001|\uF002/);
   if (parts.length > 1) {
-    parts.forEach(function(part) {
-      if (part === null || part === undefined || part === '') {
+    parts.forEach(function (part) {
+      if (part === null || part === undefined || part === "") {
         return;
       }
-      if (part.charAt(0) === '$') {
+      if (part.charAt(0) === "$") {
         part = envEval(state, part.slice(1), data, node.data);
       }
-      var cState = cloneState(state);
-      handleAsync(part, node, function(reply, siblingNode) {
-        var doc = siblingNode.ownerDocument;
+      let cState = cloneState(state);
+      handleAsync(part, node, function (reply, siblingNode) {
+        let doc = siblingNode.ownerDocument;
         if (reply == null) {
-          reply = cState.options.blankNullUndefined ? '' : '' + reply;
+          reply = cState.options.blankNullUndefined ? "" : "" + reply;
         }
-        if (typeof reply.cloneNode === 'function') {
+        if (typeof reply.cloneNode === "function") {
           // i.e. if (reply instanceof Element) { ...
           reply = maybeImportNode(cState, reply, doc);
           siblingNode.parentNode.insertBefore(reply, siblingNode);
-        }
-        else if (typeof reply.item === 'function' && reply.length) {
+        } else if (typeof reply.item === "function" && reply.length) {
           // NodeLists can be live, in which case maybeImportNode can
           // remove them from the document, and thus the NodeList, which in
           // turn breaks iteration. So first we clone the list
-          var list = Array.prototype.slice.call(reply, 0);
-          list.forEach(function(child) {
-            var imported = maybeImportNode(cState, child, doc);
+          let list = Array.prototype.slice.call(reply, 0);
+          list.forEach(function (child) {
+            let imported = maybeImportNode(cState, child, doc);
             siblingNode.parentNode.insertBefore(imported, siblingNode);
           });
-        }
-        else {
+        } else {
           // if thing isn't a DOM element then wrap its string value in one
           reply = doc.createTextNode(reply.toString());
           siblingNode.parentNode.insertBefore(reply, siblingNode);
@@ -464,20 +444,19 @@ function maybeImportNode(state, node, doc) {
  * then handleAsync() is just 'inserter(thing, siblingNode)'
  */
 function handleAsync(thing, siblingNode, inserter) {
-  if (thing != null && typeof thing.then === 'function') {
+  if (thing != null && typeof thing.then === "function") {
     // Placeholder element to be replaced once we have the real data
-    var tempNode = siblingNode.ownerDocument.createElement('span');
+    let tempNode = siblingNode.ownerDocument.createElement("span");
     siblingNode.parentNode.insertBefore(tempNode, siblingNode);
-    thing.then(function(delayed) {
+    thing.then(function (delayed) {
       inserter(delayed, tempNode);
       if (tempNode.parentNode != null) {
         tempNode.parentNode.removeChild(tempNode);
       }
-    }).then(null, function(error) {
+    }).then(null, function (error) {
       console.error(error.stack);
     });
-  }
-  else {
+  } else {
     inserter(thing, siblingNode);
   }
 }
@@ -489,7 +468,7 @@ function handleAsync(thing, siblingNode, inserter) {
  */
 function stripBraces(state, str) {
   if (!str.match(TEMPLATE_REGION)) {
-    handleError(state, 'Expected ' + str + ' to match ${...}');
+    handleError(state, "Expected " + str + " to match ${...}");
     return str;
   }
   return str.slice(2, -1);
@@ -514,28 +493,27 @@ function stripBraces(state, str) {
  */
 function property(state, path, data, newValue) {
   try {
-    if (typeof path === 'string') {
-      path = path.split('.');
+    if (typeof path === "string") {
+      path = path.split(".");
     }
-    var value = data[path[0]];
+    let value = data[path[0]];
     if (path.length === 1) {
       if (newValue !== undefined) {
         data[path[0]] = newValue;
       }
-      if (typeof value === 'function') {
+      if (typeof value === "function") {
         return value.bind(data);
       }
       return value;
     }
     if (!value) {
-      handleError(state, '"' + path[0] + '" is undefined');
+      handleError(state, "\"" + path[0] + "\" is undefined");
       return null;
     }
     return property(state, path.slice(1), value, newValue);
-  }
-  catch (ex) {
-    handleError(state, 'Path error with \'' + path + '\'', ex);
-    return '${' + path + '}';
+  } catch (ex) {
+    handleError(state, "Path error with '" + path + "'", ex);
+    return "${" + path + "}";
   }
 }
 
@@ -550,44 +528,40 @@ function property(state, path, data, newValue) {
  */
 function envEval(state, script, data, frame) {
   try {
-    state.stack.push(frame.replace(/\s+/g, ' '));
+    state.stack.push(frame.replace(/\s+/g, " "));
     // Detect if a script is capable of being interpreted using property()
     if (/^[_a-zA-Z0-9.]*$/.test(script)) {
       return property(state, script, data);
     }
-    else {
-      if (!state.options.allowEval) {
-        handleError(state, 'allowEval is not set, however \'' + script + '\'' +
-            ' can not be resolved using a simple property path.');
-        return '${' + script + '}';
-      }
-
-      // What we're looking to do is basically:
-      //   with(data) { return eval(script); }
-      // except in strict mode where 'with' is banned.
-      // So we create a function which has a parameter list the same as the
-      // keys in 'data' and with 'script' as its function body.
-      // We then call this function with the values in 'data'
-      var keys = allKeys(data);
-      var func = Function.apply(null, keys.concat("return " + script));
-
-      var values = keys.map(function(key) { return data[key]; });
-      return func.apply(null, values);
-
-      // TODO: The 'with' method is different from the code above in the value
-      // of 'this' when calling functions. For example:
-      //   envEval(state, 'foo()', { foo: function() { return this; } }, ...);
-      // The global for 'foo' when using 'with' is the data object. However the
-      // code above, the global is null. (Using 'func.apply(data, values)'
-      // changes 'this' in the 'foo()' frame, but not in the inside the body
-      // of 'foo', so that wouldn't help)
+    if (!state.options.allowEval) {
+      handleError(state, "allowEval is not set, however '" + script + "'" +
+                  " can not be resolved using a simple property path.");
+      return "${" + script + "}";
     }
-  }
-  catch (ex) {
-    handleError(state, 'Template error evaluating \'' + script + '\'', ex);
-    return '${' + script + '}';
-  }
-  finally {
+
+    // What we're looking to do is basically:
+    //   with(data) { return eval(script); }
+    // except in strict mode where 'with' is banned.
+    // So we create a function which has a parameter list the same as the
+    // keys in 'data' and with 'script' as its function body.
+    // We then call this function with the values in 'data'
+    let keys = allKeys(data);
+    let func = Function.apply(null, keys.concat("return " + script));
+
+    let values = keys.map((key) => data[key]);
+    return func.apply(null, values);
+
+    // TODO: The 'with' method is different from the code above in the value
+    // of 'this' when calling functions. For example:
+    //   envEval(state, 'foo()', { foo: function () { return this; } }, ...);
+    // The global for 'foo' when using 'with' is the data object. However the
+    // code above, the global is null. (Using 'func.apply(data, values)'
+    // changes 'this' in the 'foo()' frame, but not in the inside the body
+    // of 'foo', so that wouldn't help)
+  } catch (ex) {
+    handleError(state, "Template error evaluating '" + script + "'", ex);
+    return "${" + script + "}";
+  } finally {
     state.stack.pop();
   }
 }
@@ -596,8 +570,10 @@ function envEval(state, script, data, frame) {
  * Object.keys() that respects the prototype chain
  */
 function allKeys(data) {
-  var keys = [];
-  for (var key in data) { keys.push(key); }
+  let keys = [];
+  for (let key in data) {
+    keys.push(key);
+  }
   return keys;
 }
 
@@ -608,7 +584,7 @@ function allKeys(data) {
  * @param ex optional associated exception.
  */
 function handleError(state, message, ex) {
-  logError(message + ' (In: ' + state.stack.join(' > ') + ')');
+  logError(message + " (In: " + state.stack.join(" > ") + ")");
   if (ex) {
     logError(ex);
   }
@@ -622,3 +598,5 @@ function handleError(state, message, ex) {
 function logError(message) {
   console.error(message);
 }
+
+exports.template = template;

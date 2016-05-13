@@ -1,7 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
 var isOSX = Services.appinfo.OS === "Darwin";
 
 add_task(function* () {
@@ -9,9 +8,11 @@ add_task(function* () {
     window
   });
   yield testSimple(shortcuts);
+  yield testNonLetterCharacter(shortcuts);
   yield testMixup(shortcuts);
   yield testExactModifiers(shortcuts);
   yield testLooseShiftModifier(shortcuts);
+  yield testStrictLetterShiftModifier(shortcuts);
   yield testAltModifier(shortcuts);
   yield testCommandOrControlModifier(shortcuts);
   yield testCtrlModifier(shortcuts);
@@ -38,7 +39,6 @@ function once(shortcuts, key, listener) {
 function testSimple(shortcuts) {
   info("Test simple key shortcuts");
 
-  let called = false;
   let onKey = once(shortcuts, "0", (key, event) => {
     is(event.key, "0");
 
@@ -47,6 +47,17 @@ function testSimple(shortcuts) {
   });
 
   EventUtils.synthesizeKey("0", {}, window);
+  yield onKey;
+}
+
+function testNonLetterCharacter(shortcuts) {
+  info("Test non-naive character key shortcuts");
+
+  let onKey = once(shortcuts, "[", (key, event) => {
+    is(event.key, "[");
+  });
+
+  EventUtils.synthesizeKey("[", {}, window);
   yield onKey;
 }
 
@@ -130,19 +141,67 @@ function testExactModifiers(shortcuts) {
 }
 
 // Some keys are only accessible via shift and listener should also be called
-// even if the key didn't explicitely requested Shift modifier
+// even if the key didn't explicitely requested Shift modifier.
+// For example, `%` on french keyboards is only accessible via Shift.
+// Same thing for `@` on US keybords.
 function testLooseShiftModifier(shortcuts) {
   info("Test Loose shift modifier");
-  let onKey = once(shortcuts, "Alt+A", (key, event) => {
+  let onKey = once(shortcuts, "%", (key, event) => {
+    is(event.key, "%");
+    ok(!event.altKey);
+    ok(!event.ctrlKey);
+    ok(!event.metaKey);
+    ok(event.shiftKey);
+  });
+  EventUtils.synthesizeKey(
+    "%",
+    { accelKey: false, altKey: false, ctrlKey: false, shiftKey: true},
+    window);
+  yield onKey;
+
+  onKey = once(shortcuts, "@", (key, event) => {
+    is(event.key, "@");
+    ok(!event.altKey);
+    ok(!event.ctrlKey);
+    ok(!event.metaKey);
+    ok(event.shiftKey);
+  });
+  EventUtils.synthesizeKey(
+    "@",
+    { accelKey: false, altKey: false, ctrlKey: false, shiftKey: true},
+    window);
+  yield onKey;
+}
+
+// But Shift modifier is strict on all letter characters (a to Z)
+function testStrictLetterShiftModifier(shortcuts) {
+  info("Test strict shift modifier on letters");
+  let hitFirst = false;
+  let onKey = once(shortcuts, "a", (key, event) => {
     is(event.key, "a");
-    ok(event.altKey);
+    ok(!event.altKey);
+    ok(!event.ctrlKey);
+    ok(!event.metaKey);
+    ok(!event.shiftKey);
+    hitFirst = true;
+  });
+  let onShiftKey = once(shortcuts, "Shift+a", (key, event) => {
+    is(event.key, "a");
+    ok(!event.altKey);
     ok(!event.ctrlKey);
     ok(!event.metaKey);
     ok(event.shiftKey);
   });
   EventUtils.synthesizeKey(
     "a",
-    { accelKey: false, altKey: true, ctrlKey: false, shiftKey: true},
+    { shiftKey: true},
+    window);
+  yield onShiftKey;
+  ok(!hitFirst, "Didn't fire the explicit shift+a");
+
+  EventUtils.synthesizeKey(
+    "a",
+    { shiftKey: false},
     window);
   yield onKey;
 }

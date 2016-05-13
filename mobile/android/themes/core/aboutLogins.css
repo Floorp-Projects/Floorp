@@ -70,7 +70,7 @@ body {
 #filter-input {
   flex: 1;
   padding: 5px;
-  -moz-margin-start: 10px;
+  margin-inline-start: 10px;
   border-radius: 3px;
 }
 
