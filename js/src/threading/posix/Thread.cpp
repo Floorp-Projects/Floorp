@@ -83,14 +83,12 @@ js::Thread::operator=(Thread&& aOther)
   return *this;
 }
 
-bool
+void
 js::Thread::create(void* (*aMain)(void*), void* aArg)
 {
   int r = pthread_create(&id_.platformData()->ptThread, nullptr, aMain, aArg);
-  if (r)
-    return false;
+  MOZ_RELEASE_ASSERT(!r);
   id_.platformData()->hasThread = true;
-  return true;
 }
 
 void
