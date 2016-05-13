@@ -2,8 +2,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import urllib
+
 from marionette import MarionetteTestCase
 from marionette_driver.by import By
+
+
+def inline(doc):
+    return "data:text/html;charset=utf-8,%s" % urllib.quote(doc)
+
+
+attribute = inline("<input foo=bar>")
+input = inline("<input>")
+disabled = inline("<input disabled=baz>")
+check = inline("<input type=checkbox>")
 
 
 class TestIsElementEnabled(MarionetteTestCase):
@@ -38,3 +50,35 @@ class TestGetElementAttribute(MarionetteTestCase):
         self.marionette.navigate(test_html)
         disabled = self.marionette.find_element(By.ID, "disabled")
         self.assertEqual('true', disabled.get_attribute("disabled"))
+
+
+class TestGetElementProperty(MarionetteTestCase):
+    def test_get(self):
+        self.marionette.navigate(disabled)
+        el = self.marionette.find_element(By.TAG_NAME, "input")
+        prop = el.get_property("disabled")
+        self.assertIsInstance(prop, bool)
+        self.assertTrue(prop)
+
+    def test_missing_property_returns_false(self):
+        self.marionette.navigate(input)
+        el = self.marionette.find_element(By.TAG_NAME, "input")
+        prop = el.get_property("checked")
+        self.assertIsInstance(prop, bool)
+        self.assertFalse(prop)
+
+    def test_attribute_not_returned(self):
+        self.marionette.navigate(attribute)
+        el = self.marionette.find_element(By.TAG_NAME, "input")
+        self.assertEqual(el.get_property("foo"), None)
+
+    def test_manipulated_element(self):
+        self.marionette.navigate(check)
+        el = self.marionette.find_element(By.TAG_NAME, "input")
+        self.assertEqual(el.get_property("checked"), False)
+
+        el.click()
+        self.assertEqual(el.get_property("checked"), True)
+
+        el.click()
+        self.assertEqual(el.get_property("checked"), False)
