@@ -4,7 +4,7 @@
 
 import os, sys
 import glob
-import optparse
+import argparse
 import traceback
 import WebIDL
 
@@ -89,12 +89,18 @@ def run_tests(tests, verbose):
             for failure in failures:
                 print 'TEST-UNEXPECTED-FAIL | %s' % failure
 
-if __name__ == '__main__':
-    usage = """%prog [OPTIONS] [TESTS]
+def get_parser():
+    usage = """%(prog)s [OPTIONS] [TESTS]
                Where TESTS are relative to the tests directory."""
-    parser = optparse.OptionParser(usage=usage)
-    parser.add_option('-q', '--quiet', action='store_false', dest='verbose', default=True,
-                      help="Don't print passing tests.")
-    options, tests = parser.parse_args()
+    parser = argparse.ArgumentParser(usage=usage)
+    parser.add_argument('-q', '--quiet', action='store_false', dest='verbose', default=True,
+                        help="Don't print passing tests.")
+    parser.add_argument('-v', '--verbose', action='store_true', dest='verbose', default=True,
+                        help="Run tests in verbose mode.")
+    parser.add_argument('tests', nargs="*", help="Tests to run")
+    return parser
 
-    run_tests(tests, verbose=options.verbose)
+if __name__ == '__main__':
+    parser = get_parser()
+    args = parser.parse_args()
+    run_tests(args.tests, verbose=args.verbose)
