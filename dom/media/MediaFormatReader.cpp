@@ -1489,10 +1489,10 @@ MediaFormatReader::Seek(SeekTarget aTarget, int64_t aUnused)
 
   MOZ_DIAGNOSTIC_ASSERT(mSeekPromise.IsEmpty());
   MOZ_DIAGNOSTIC_ASSERT(!mVideo.HasPromise());
-  MOZ_DIAGNOSTIC_ASSERT(!mAudio.HasPromise());
+  MOZ_DIAGNOSTIC_ASSERT(aTarget.IsVideoOnly() || !mAudio.HasPromise());
   MOZ_DIAGNOSTIC_ASSERT(mPendingSeekTime.isNothing());
   MOZ_DIAGNOSTIC_ASSERT(mVideo.mTimeThreshold.isNothing());
-  MOZ_DIAGNOSTIC_ASSERT(mAudio.mTimeThreshold.isNothing());
+  MOZ_DIAGNOSTIC_ASSERT(aTarget.IsVideoOnly() || mAudio.mTimeThreshold.isNothing());
 
   if (!mInfo.mMediaSeekable && !mInfo.mMediaSeekableOnlyInBufferedRanges) {
     LOG("Seek() END (Unseekable)");
