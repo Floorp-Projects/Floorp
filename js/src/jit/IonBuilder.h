@@ -530,12 +530,12 @@ class IonBuilder
     MOZ_MUST_USE bool newArrayTrySharedStub(bool* emitted);
     MOZ_MUST_USE bool newArrayTryTemplateObject(bool* emitted, JSObject* templateObject,
                                                 uint32_t length);
-    MOZ_MUST_USE bool newArrayTryVM(bool* emitted, uint32_t length);
+    MOZ_MUST_USE bool newArrayTryVM(bool* emitted, JSObject* templateObject, uint32_t length);
 
     // jsop_newobject helpers.
     MOZ_MUST_USE bool newObjectTrySharedStub(bool* emitted);
     MOZ_MUST_USE bool newObjectTryTemplateObject(bool* emitted, JSObject* templateObject);
-    MOZ_MUST_USE bool newObjectTryVM(bool* emitted);
+    MOZ_MUST_USE bool newObjectTryVM(bool* emitted, JSObject* templateObject);
 
     // jsop_in helpers.
     MOZ_MUST_USE bool inTryDense(bool* emitted, MDefinition* obj, MDefinition* id);

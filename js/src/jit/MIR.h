@@ -3113,8 +3113,10 @@ class MNewArray
 
     jsbytecode* pc_;
 
+    bool vmCall_;
+
     MNewArray(CompilerConstraintList* constraints, uint32_t length, MConstant* templateConst,
-              gc::InitialHeap initialHeap, jsbytecode* pc);
+              gc::InitialHeap initialHeap, jsbytecode* pc, bool vmCall);
 
   public:
     INSTRUCTION_HEADER(NewArray)
@@ -3123,7 +3125,14 @@ class MNewArray
                           uint32_t length, MConstant* templateConst,
                           gc::InitialHeap initialHeap, jsbytecode* pc)
     {
-        return new(alloc) MNewArray(constraints, length, templateConst, initialHeap, pc);
+        return new(alloc) MNewArray(constraints, length, templateConst, initialHeap, pc, false);
+    }
+
+    static MNewArray* NewVM(TempAllocator& alloc, CompilerConstraintList* constraints,
+                            uint32_t length, MConstant* templateConst,
+                            gc::InitialHeap initialHeap, jsbytecode* pc)
+    {
+        return new(alloc) MNewArray(constraints, length, templateConst, initialHeap, pc, true);
     }
 
     uint32_t length() const {
@@ -3140,6 +3149,10 @@ class MNewArray
 
     jsbytecode* pc() const {
         return pc_;
+    }
+
+    bool isVMCall() const {
+        return vmCall_;
     }
 
     bool convertDoubleElements() const {
@@ -3257,12 +3270,14 @@ class MNewObject
   private:
     gc::InitialHeap initialHeap_;
     Mode mode_;
+    bool vmCall_;
 
     MNewObject(CompilerConstraintList* constraints, MConstant* templateConst,
-               gc::InitialHeap initialHeap, Mode mode)
+               gc::InitialHeap initialHeap, Mode mode, bool vmCall)
       : MUnaryInstruction(templateConst),
         initialHeap_(initialHeap),
-        mode_(mode)
+        mode_(mode),
+        vmCall_(vmCall)
     {
         MOZ_ASSERT_IF(mode != ObjectLiteral, templateObject());
         setResultType(MIRType::Object);
@@ -3286,7 +3301,14 @@ class MNewObject
                            MConstant* templateConst, gc::InitialHeap initialHeap,
                            Mode mode)
     {
-        return new(alloc) MNewObject(constraints, templateConst, initialHeap, mode);
+        return new(alloc) MNewObject(constraints, templateConst, initialHeap, mode, false);
+    }
+
+    static MNewObject* NewVM(TempAllocator& alloc, CompilerConstraintList* constraints,
+                             MConstant* templateConst, gc::InitialHeap initialHeap,
+                             Mode mode)
+    {
+        return new(alloc) MNewObject(constraints, templateConst, initialHeap, mode, true);
     }
 
     Mode mode() const {
@@ -3299,6 +3321,10 @@ class MNewObject
 
     gc::InitialHeap initialHeap() const {
         return initialHeap_;
+    }
+
+    bool isVMCall() const {
+        return vmCall_;
     }
 
     bool writeRecoverData(CompactBufferWriter& writer) const override;
