@@ -16,7 +16,7 @@
 
 filefield {
   margin: 4px;
-  -moz-margin-start: 27px;
+  margin-inline-start: 27px;
   -moz-appearance: textfield;
 }
 
@@ -26,8 +26,8 @@ filefield {
   color: -moz-DialogText;
   padding-top: 2px;
   padding-bottom: 2px;
-  -moz-padding-start: 5px;
-  -moz-padding-end: 3px;
+  padding-inline-start: 5px;
+  padding-inline-end: 3px;
 }
 
 .fileFieldLabel {

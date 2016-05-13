@@ -80,8 +80,8 @@ autorepeatbutton,
   -moz-box-pack: center;
   margin-top: 1px;
   margin-bottom: 2px;
-  -moz-margin-start: 1px;
-  -moz-margin-end: 2px;
+  margin-inline-start: 1px;
+  margin-inline-end: 2px;
 }
 
 autorepeatbutton {
@@ -95,6 +95,6 @@ autorepeatbutton:not([disabled="true"]):hover:active {
   border: 1px inset ThreeDFace;
   padding-top: 2px;
   padding-bottom: 1px;
-  -moz-padding-start: 2px;
-  -moz-padding-end: 1px;
+  padding-inline-start: 2px;
+  padding-inline-end: 1px;
 }

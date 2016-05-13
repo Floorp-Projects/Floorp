@@ -75,7 +75,7 @@ textbox {
 }
 
 textbox.header {
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
 }
 
 .iframe {
@@ -94,7 +94,7 @@ textbox[disabled] {
 
 /* General Tab */
 #generalPanel > #titletext {
-  -moz-margin-start: 5px;
+  margin-inline-start: 5px;
 }
 
 groupbox.collapsable caption .caption-icon {
@@ -102,8 +102,8 @@ groupbox.collapsable caption .caption-icon {
   height: 9px;
   background-repeat: no-repeat;
   background-position: center;
-  -moz-margin-start: 1px;
-  -moz-margin-end: 3px;
+  margin-inline-start: 1px;
+  margin-inline-end: 3px;
   background-image: url("chrome://global/skin/tree/twisty-open.png");
 }
 
@@ -121,13 +121,13 @@ groupbox tree {
 }
 
 groupbox.treebox .groupbox-body {
-  -moz-margin-start: 5px;
-  -moz-margin-end: 1px;
+  margin-inline-start: 5px;
+  margin-inline-end: 1px;
   padding-top: 0;
 }
 
 #securityBox description {
-  -moz-margin-start: 10px;
+  margin-inline-start: 10px;
 }
 
 #general-security-identity {
@@ -182,8 +182,8 @@ treechildren::-moz-tree-cell-text(broken) {
 #feedListbox richlistitem {
   padding-top: 6px;
   padding-bottom: 6px;
-  -moz-padding-start: 7px;
-  -moz-padding-end: 7px;
+  padding-inline-start: 7px;
+  padding-inline-end: 7px;
   min-height: 25px;
   border-bottom: 1px dotted #C0C0C0;
   color: -moz-FieldText;
@@ -229,8 +229,8 @@ treechildren::-moz-tree-cell-text(broken) {
 .permission {
   padding-top: 6px;
   padding-bottom: 6px;
-  -moz-padding-start: 7px;
-  -moz-padding-end: 7px;
+  padding-inline-start: 7px;
+  padding-inline-end: 7px;
   min-height: 25px;
   border-bottom: 1px dotted #C0C0C0;
 }

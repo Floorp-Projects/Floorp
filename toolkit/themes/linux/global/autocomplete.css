@@ -83,7 +83,7 @@ panel[type="autocomplete-richlistbox"],
 }
 
 .autocomplete-treebody::-moz-tree-cell-text {
-  -moz-padding-start: 8px;
+  padding-inline-start: 8px;
 }
 
 treechildren.autocomplete-treebody::-moz-tree-row(selected) {
@@ -120,8 +120,8 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
   height: 16px;
   max-width: 16px;
   max-height: 16px;
-  -moz-margin-start: 13px;
-  -moz-margin-end: 6px;
+  margin-inline-start: 13px;
+  margin-inline-end: 6px;
 }
 
 .ac-site-icon {
@@ -129,8 +129,8 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
   height: 16px;
   max-width: 16px;
   max-height: 16px;
-  -moz-margin-start: 0;
-  -moz-margin-end: 11px;
+  margin-inline-start: 0;
+  margin-inline-end: 11px;
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
@@ -148,23 +148,23 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
 }
 
 .ac-title {
-  -moz-margin-start: 0;
-  -moz-margin-end: 6px;
+  margin-inline-start: 0;
+  margin-inline-end: 6px;
 }
 
 html|span.ac-tag {
-  -moz-margin-start: 0;
-  -moz-margin-end: 2px;
+  margin-inline-start: 0;
+  margin-inline-end: 2px;
 }
 
 .ac-tags {
-  -moz-margin-start: 0;
-  -moz-margin-end: 4px;
+  margin-inline-start: 0;
+  margin-inline-end: 4px;
 }
 
 .ac-separator {
-  -moz-margin-start: 0;
-  -moz-margin-end: 6px;
+  margin-inline-start: 0;
+  margin-inline-end: 6px;
 }
 
 /* Better align the URL/action with the title. */

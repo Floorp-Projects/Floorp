@@ -105,12 +105,12 @@ richlistitem[type="download"] button {
 .downloadTypeIcon {
   height: 32px;
   width: 32px;
-  -moz-padding-end: 2px;
+  padding-inline-end: 2px;
 }
 
 #search {
   -moz-box-pack: end;
-  -moz-padding-end: 4px;
+  padding-inline-end: 4px;
   -moz-appearance: statusbar;
 }
 

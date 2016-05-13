@@ -1,0 +1,101 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Layout */
+
+.notificationbox .notificationInner {
+  display: flex;
+  flex-direction: row;
+}
+
+.notificationbox .details {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.notificationbox .notification-button {
+  text-align: right;
+}
+
+.notificationbox .messageText {
+  flex-grow: 1;
+}
+
+.notificationbox .details:-moz-dir(rtl)
+.notificationbox .notificationInner:-moz-dir(rtl) {
+  flex-direction: row-reverse;
+}
+
+/* Style */
+
+.notificationbox .notification {
+  color: InfoText;
+  background-color: InfoBackground;
+  text-shadow: none;
+  border-top: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDShadow;
+}
+
+.notificationbox .notification[data-type="info"] {
+  color: -moz-DialogText;
+  background-color: -moz-Dialog;
+}
+
+.notificationbox .notification[data-type="critical"] {
+  color: white;
+  background-image: linear-gradient(rgb(212,0,0), rgb(152,0,0));
+}
+
+.notificationbox .messageImage {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin: 6px;
+}
+
+/* Default icons for notifications */
+
+.notificationbox .messageImage[data-type="info"] {
+  background-image: url("chrome://global/skin/icons/information-16.png");
+}
+
+.notificationbox .messageImage[data-type="warning"] {
+  background-image: url("chrome://global/skin/icons/warning-16.png");
+}
+
+.notificationbox .messageImage[data-type="critical"] {
+  background-image: url("chrome://global/skin/icons/error-16.png");
+}
+
+/* Close button */
+
+.notificationbox .messageCloseButton {
+  /* Use odd value for the width so, the icon can be nicely h-centered.
+    This also means that the button is not perfect circle (its using
+    10x border radius), but it's less visible visual discrepency
+    than wrong centering of the icon */
+  width: 19px;
+  height: 20px;
+  margin: 4px;
+  margin-inline-end: 8px;
+  background-image: url("chrome://devtools/skin/images/close.svg");
+  background-position: 3px center;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  border-radius: 10px;
+  filter: invert(1);
+}
+
+.notificationbox .messageCloseButton:hover {
+  background-color: gray;
+  filter: invert(0);
+}
+
+.notificationbox .messageCloseButton:active {
+  background-color: rgb(102, 102, 102);
+  filter: invert(0);
+}

@@ -580,7 +580,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 }
 
 #identity-box.verifiedIdentity > #identity-icon-labels > #identity-icon-label {
-  -moz-margin-end: 0.25em !important;
+  margin-inline-end: 0.25em !important;
 }
 
 #main-window[customizing] :-moz-any(#urlbar, .searchbar-textbox) > .autocomplete-textbox-container > .textbox-input-box {
@@ -1036,7 +1036,7 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
 
 /* Indent options in optgroups */
 .contentSelectDropdown-ingroup .menu-iconic-text {
-  -moz-padding-start: 2em;
+  padding-inline-start: 2em;
 }
 
 /* Give this menupopup an arrow panel styling */

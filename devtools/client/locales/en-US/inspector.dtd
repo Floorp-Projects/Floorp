@@ -109,11 +109,6 @@
 
 <!ENTITY inspector.selectButton.tooltip     "Select element with mouse">
 
-<!-- LOCALIZATION NOTE (inspectorSearchHTML.label2): This is the label shown as
-     the placeholder in inspector search box -->
-<!ENTITY inspectorSearchHTML.label2          "Search with CSS Selectors">
-<!ENTITY inspectorSearchHTML.key            "F">
-
 <!-- LOCALIZATION NOTE (inspectorSearchHTML.label3): This is the label that is
      shown as the placeholder for the markup view search in the inspector. -->
 <!ENTITY inspectorSearchHTML.label3 "Search HTML">

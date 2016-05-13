@@ -24,7 +24,7 @@
 .expander-down {
   min-width: 0;
   margin: 0;
-  -moz-margin-end: 4px;
+  margin-inline-end: 4px;
 }
 
 .expander-up > .button-box,

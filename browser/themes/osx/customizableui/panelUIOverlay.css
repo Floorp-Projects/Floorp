@@ -27,7 +27,7 @@
 }
 
 .subviewbutton {
-  -moz-padding-start: 18px;
+  padding-inline-start: 18px;
 }
 
 .subviewbutton[checked="true"] {
@@ -50,7 +50,7 @@ menuitem.subviewbutton:not(.panel-subview-footer) {
 
 /* Override OSX-specific toolkit styles for the bookmarks panel */
 menu.subviewbutton > .menu-right {
-  -moz-margin-end: 0;
+  margin-inline-end: 0;
   -moz-appearance: none;
 }
 
@@ -63,7 +63,7 @@ menu.subviewbutton > .menu-right > image {
 }
 
 .widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
-  -moz-margin-start: 4px;
+  margin-inline-start: 4px;
 }
 
 .PanelUI-subView menuseparator,
@@ -76,7 +76,7 @@ toolbarpaletteitem[place="palette"] > .toolbarbutton-1 > .toolbarbutton-menubutt
 }
 
 #PanelUI-remotetabs-tabslist > label[itemtype="client"] {
-  -moz-padding-start: 6px;
+  padding-inline-start: 6px;
 }
 
 .PanelUI-remotetabs-notabsforclient-label {

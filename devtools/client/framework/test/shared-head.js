@@ -20,7 +20,7 @@ function scopedCuImport(path) {
 
 const {console} = scopedCuImport("resource://gre/modules/Console.jsm");
 const {ScratchpadManager} = scopedCuImport("resource://devtools/client/scratchpad/scratchpad-manager.jsm");
-const {require} = scopedCuImport("resource://devtools/shared/Loader.jsm");
+const {loader, require} = scopedCuImport("resource://devtools/shared/Loader.jsm");
 
 const {gDevTools} = require("devtools/client/framework/devtools");
 const {TargetFactory} = require("devtools/client/framework/target");
@@ -28,6 +28,7 @@ const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 let promise = require("promise");
 const Services = require("Services");
 const {Task} = require("resource://gre/modules/Task.jsm");
+const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
 
 const TEST_DIR = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 const CHROME_URL_ROOT = TEST_DIR + "/";
@@ -163,6 +164,27 @@ function synthesizeKeyFromKeyTag(key) {
 
   info("Synthesizing key " + name + " " + JSON.stringify(modifiers));
   EventUtils.synthesizeKey(name, modifiers);
+}
+
+/**
+ * Simulate a key event from an electron key shortcut string:
+ * https://github.com/electron/electron/blob/master/docs/api/accelerator.md
+ *
+ * @param {String} key
+ */
+function synthesizeKeyShortcut(key) {
+  // parseElectronKey requires any window, just to access `KeyboardEvent`
+  let window = Services.appShell.hiddenDOMWindow;
+  let shortcut = KeyShortcuts.parseElectronKey(window, key);
+
+  info("Synthesizing key shortcut: " + key);
+  EventUtils.synthesizeKey(shortcut.key || "", {
+    keyCode: shortcut.keyCode,
+    altKey: shortcut.alt,
+    ctrlKey: shortcut.ctrl,
+    metaKey: shortcut.meta,
+    shiftKey: shortcut.shift
+  });
 }
 
 /**

@@ -35,7 +35,7 @@ findbar:-moz-lwtheme {
 }
 
 .findbar-container {
-  -moz-padding-start: 2px;
+  padding-inline-start: 2px;
   padding-top: 4px;
   padding-bottom: 4px;
 }
@@ -43,7 +43,7 @@ findbar:-moz-lwtheme {
 label.findbar-find-fast {
   color: @scopeBarTitleColor@;
   margin: 0;
-  -moz-margin-start: 12px;
+  margin-inline-start: 12px;
   text-shadow: @loweredShadow@;
 }
 
@@ -54,9 +54,9 @@ label.findbar-find-fast:-moz-lwtheme,
 }
 
 .findbar-closebutton {
-  -moz-margin-start: 4px;
-  -moz-padding-start: 0;
-  -moz-padding-end: 8px;
+  margin-inline-start: 4px;
+  padding-inline-start: 0;
+  padding-inline-end: 8px;
   border: none;
   /* make sure the closebutton is displayed as the first element in the bar: */
   -moz-box-ordinal-group: 0;
@@ -91,12 +91,12 @@ label.findbar-find-fast:-moz-lwtheme,
 
 .findbar-highlight,
 .findbar-case-sensitive {
-  -moz-margin-end: 5px;
+  margin-inline-end: 5px;
   padding: 2px 9px;
 }
 
 .findbar-highlight {
-  -moz-margin-start: 8px;
+  margin-inline-start: 8px;
 }
 
 .findbar-container > toolbarbutton:-moz-focusring,
@@ -139,7 +139,7 @@ label.findbar-find-fast:-moz-lwtheme,
   background: url("chrome://global/skin/icons/search-textbox.svg") -moz-Field no-repeat 5px center;
   margin: 0;
   padding: 2px 8px;
-  -moz-padding-start: 19px;
+  padding-inline-start: 19px;
 }
 
 .findbar-textbox:-moz-locale-dir(rtl) {
@@ -177,14 +177,14 @@ label.findbar-find-fast:-moz-lwtheme,
 
 .findbar-textbox.minimal {
   border-radius: 10000px;
-  -moz-margin-start: 5px;
+  margin-inline-start: 5px;
 }
 
 /* Find previous/next buttons */
 
 .findbar-find-previous,
 .findbar-find-next {
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
   padding: 3px 6px 1px;
 }
 
@@ -196,14 +196,14 @@ label.findbar-find-fast:-moz-lwtheme,
 .findbar-find-previous {
   border-left: none;
   border-right: none;
-  -moz-margin-end: 0;
+  margin-inline-end: 0;
   list-style-image: url(chrome://global/skin/icons/find-arrows.svg#glyph-find-previous);
   border-radius: 0;
 }
 
 .findbar-find-next {
   list-style-image: url(chrome://global/skin/icons/find-arrows.svg#glyph-find-next);
-  -moz-padding-end: 7px;
+  padding-inline-end: 7px;
 }
 
 .findbar-find-next:-moz-locale-dir(ltr) {
@@ -238,6 +238,6 @@ label.findbar-find-fast:-moz-lwtheme,
 .found-matches {
   color: rgba(0,0,0,.5);
   margin: 0 !important;
-  -moz-margin-start: 12px !important;
+  margin-inline-start: 12px !important;
   text-shadow: 0 1px rgba(255,255,255,.4);
 }

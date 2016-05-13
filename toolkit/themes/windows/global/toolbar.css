@@ -82,8 +82,8 @@ toolbarpaletteitem[place="toolbar"] > toolbarspacer {
 .toolbarpaletteitem-box[type="spring"][place="toolbar"] {
   margin-top: 2px;
   margin-bottom: 2px;
-  -moz-margin-start: 0px;
-  -moz-margin-end: 2px;
+  margin-inline-start: 0px;
+  margin-inline-end: 2px;
 }
 
 .toolbarpaletteitem-box[type="separator"][place="palette"] {

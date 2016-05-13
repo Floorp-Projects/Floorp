@@ -44,8 +44,7 @@ public interface TelemetryPingStore extends Parcelable {
      * Removes the successfully uploaded pings from the database and performs another other actions necessary
      * for when upload is completed.
      *
-     * @param successfulRemoveIDs unique ids of pings passed to {@link #storePing(TelemetryPing)} that were
-     *                            successfully uploaded
+     * @param successfulRemoveIDs doc ids of pings that were successfully uploaded
      */
-    void onUploadAttemptComplete(Set<Integer> successfulRemoveIDs);
+    void onUploadAttemptComplete(Set<String> successfulRemoveIDs);
 }
