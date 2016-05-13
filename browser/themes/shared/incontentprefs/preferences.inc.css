@@ -256,7 +256,7 @@ description > html|a {
 #weavePrefsDeck > #needsUpdate > hbox > #loginError,
 #weavePrefsDeck > #hasFxaAccount > vbox > label,
 #weavePrefsDeck > #hasFxaAccount > hbox:not(#tosPP-normal) > label {
-  /* no margin-start for elements at the begin of a line */
+  /* no margin-inline-start for elements at the beginning of a line */
   margin-inline-start: 0;
 }
 
