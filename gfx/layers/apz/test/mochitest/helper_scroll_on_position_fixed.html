@@ -37,6 +37,22 @@ function* runTest() {
   yield scrollWheelOver(iframeWin.document.body, 250, 150);
   ok(iframeWin.scrollY > scrollPos, "iframe scrolled after wheeling over the position:fixed element");
 
+  // same, but scrolling the scrollable frame *inside* the position:fixed item
+  var fpos = document.getElementById('fpos_scrollable');
+  scrollPos = fpos.scrollTop;
+  yield scrollWheelOver(fpos, 50, 150);
+  ok(fpos.scrollTop > scrollPos, "scrollable item inside fixed-pos element scrolled");
+  // wait for it to layerize fully and then try again
+  yield waitForAllPaints(function() {
+    flushApzRepaints(driveTest);
+  });
+  scrollPos = fpos.scrollTop;
+  // The mouse is already at the right position. If we call scrollWheelOver it
+  // hangs on windows waiting for the mouse-move, so instead we just synthesize
+  // the wheel directly.
+  yield synthesizeNativeWheelAndWaitForScrollEvent(fpos, 50, 150, 0, -10, driveTest);
+  ok(fpos.scrollTop > scrollPos, "scrollable item inside fixed-pos element scrolled after layerization");
+
   // same, but using the top-level window's position:sticky element
   scrollPos = window.scrollY;
   yield scrollWheelOver(document.body, 50, 150);
@@ -56,8 +72,6 @@ function driveTest() {
   var ret = gTestContinuation.next();
   if (ret.done) {
     window.opener.testDone();
-  } else {
-    is(ret.value, true, "Test continuation chunk was successful");
   }
 }
 
@@ -72,5 +86,9 @@ window.onload = function() {
   <div style="position:sticky; width: 100px; height: 300px; top: 0; background-color:red">sticky</div>
   <div style="position:fixed; width: 100px; height: 300px; top: 0; left: 200px; background-color: green">fixed</div>
   <iframe id='iframe' width="300" height="400" src="data:text/html,<body style='height:5000px; margin:0'><div style='position:sticky; width:100px; height:300px; top: 0; background-color:red'>sticky</div><div style='position:fixed; right:0; top: 0; width:100px; height:300px; background-color:green'>fixed</div>"></iframe>
+
+  <div id="fpos_scrollable" style="position:fixed; width: 100px; height: 300px; top: 0; left: 400px; background-color: red; overflow:scroll">
+   <div style="background-color: blue; height: 1000px; margin: 3px">scrollable content inside a fixed-pos item</div>
+  </div>
 </body>
 </head>
