@@ -1,11 +1,12 @@
+Cu.import("resource://services-common/kinto-updater.js")
 Cu.import("resource://testing-common/httpd.js");
 
 var server;
 
-const PREF_SETTINGS_SERVER = "services.settings.server";
-const PREF_LAST_UPDATE = "services.blocklist.last_update_seconds";
-const PREF_LAST_ETAG = "services.blocklist.last_etag";
-const PREF_CLOCK_SKEW_SECONDS = "services.blocklist.clock_skew_seconds";
+const PREF_KINTO_BASE = "services.kinto.base";
+const PREF_LAST_UPDATE = "services.kinto.last_update_seconds";
+const PREF_LAST_ETAG = "services.kinto.last_etag";
+const PREF_CLOCK_SKEW_SECONDS = "services.kinto.clock_skew_seconds";
 
 // Check to ensure maybeSync is called with correct values when a changes
 // document contains information on when a collection was last modified
@@ -40,7 +41,7 @@ add_task(function* test_check_maybeSync(){
   server.registerPathHandler(changesPath, handleResponse.bind(null, 2000));
 
   // set up prefs so the kinto updater talks to the test server
-  Services.prefs.setCharPref(PREF_SETTINGS_SERVER,
+  Services.prefs.setCharPref(PREF_KINTO_BASE,
     `http://localhost:${server.identity.primaryPort}/v1`);
 
   // set some initial values so we can check these are updated appropriately
@@ -51,12 +52,12 @@ add_task(function* test_check_maybeSync(){
 
   let startTime = Date.now();
 
-  let updater = Cu.import("resource://services-common/blocklist-updater.js");
+  let updater = Cu.import("resource://services-common/kinto-updater.js");
 
   let syncPromise = new Promise(function(resolve, reject) {
     // add a test kinto client that will respond to lastModified information
     // for a collection called 'test-collection'
-    updater.addTestBlocklistClient("test-collection", {
+    updater.addTestKintoClient("test-collection", {
       maybeSync(lastModified, serverTime) {
         do_check_eq(lastModified, 1000);
         do_check_eq(serverTime, 2000);
@@ -85,7 +86,7 @@ add_task(function* test_check_maybeSync(){
   // Simulate a poll with up-to-date collection.
   Services.prefs.setIntPref(PREF_LAST_UPDATE, 0);
   // If server has no change, a 304 is received, maybeSync() is not called.
-  updater.addTestBlocklistClient("test-collection", {
+  updater.addTestKintoClient("test-collection", {
     maybeSync: () => {throw new Error("Should not be called");}
   });
   yield updater.checkVersions();
