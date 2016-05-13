@@ -56,6 +56,9 @@ public:
   static bool
   DeviceStorageEnabled(JSContext* aCx, JSObject* aObj);
 
+  static bool
+  WebkitBlinkDirectoryPickerEnabled(JSContext* aCx, JSObject* aObj);
+
   static already_AddRefed<Promise>
   GetRoot(FileSystemBase* aFileSystem, ErrorResult& aRv);
 

@@ -247,7 +247,7 @@ public:
   void RequestVideoData(bool aSkipToNextKeyframe, media::TimeUnit aTimeThreshold);
 
   bool IsRequestingAudioData() const;
-  bool IsRequestingVidoeData() const;
+  bool IsRequestingVideoData() const;
 
   RefPtr<SeekPromise> Seek(SeekTarget aTarget, media::TimeUnit aEndTime);
   RefPtr<WaitForDataPromise> WaitForData(MediaData::Type aType);

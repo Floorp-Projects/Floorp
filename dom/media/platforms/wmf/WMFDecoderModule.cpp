@@ -27,7 +27,7 @@
 
 namespace mozilla {
 
-static bool sDXVAEnabled = false;
+static Atomic<bool> sDXVAEnabled(false);
 
 WMFDecoderModule::WMFDecoderModule()
   : mWMFInitialized(false)
@@ -46,7 +46,6 @@ WMFDecoderModule::~WMFDecoderModule()
 void
 WMFDecoderModule::Init()
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
   sDXVAEnabled = gfxPlatform::GetPlatform()->CanUseHardwareVideoDecoding();
 }
 

@@ -285,7 +285,7 @@ DecodeExpr(FunctionDecoder& f)
       case Expr::I64Clz:
       case Expr::I64Ctz:
       case Expr::I64Popcnt:
-        return f.iter().notYetImplemented("i64") &&
+        return f.checkI64Support() &&
                f.iter().readUnary(ValType::I64, nullptr);
       case Expr::F32Abs:
       case Expr::F32Neg:
@@ -398,8 +398,6 @@ DecodeExpr(FunctionDecoder& f)
       case Expr::I32Eqz:
         return f.iter().readConversion(ValType::I32, ValType::I32, nullptr);
       case Expr::I64Eqz:
-        return f.checkI64Support() &&
-               f.iter().readConversion(ValType::I64, ValType::I32, nullptr);
       case Expr::I32WrapI64:
         return f.checkI64Support() &&
                f.iter().readConversion(ValType::I64, ValType::I32, nullptr);

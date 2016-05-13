@@ -49,7 +49,6 @@ FFVPXRuntimeLinker::Init()
     return sLinkStatus == LinkStatus_SUCCEEDED;
   }
 
-  MOZ_ASSERT(NS_IsMainThread());
   sLinkStatus = LinkStatus_FAILED;
 
   // We retrieve the path of the lgpllibs library as this is where mozavcodec

@@ -333,8 +333,8 @@ js::ReportOutOfMemory(ExclusiveContext* cxArg)
     MOZ_ASSERT(!cx->isExceptionPending());
 }
 
-JS_FRIEND_API(void)
-js::ReportOverRecursed(JSContext* maybecx)
+void
+js::ReportOverRecursed(JSContext* maybecx, unsigned errorNumber)
 {
 #ifdef JS_MORE_DETERMINISTIC
     /*
@@ -348,9 +348,15 @@ js::ReportOverRecursed(JSContext* maybecx)
     fprintf(stderr, "ReportOverRecursed called\n");
 #endif
     if (maybecx) {
-        JS_ReportErrorNumber(maybecx, GetErrorMessage, nullptr, JSMSG_OVER_RECURSED);
+        JS_ReportErrorNumber(maybecx, GetErrorMessage, nullptr, errorNumber);
         maybecx->overRecursed_ = true;
     }
+}
+
+JS_FRIEND_API(void)
+js::ReportOverRecursed(JSContext* maybecx)
+{
+    ReportOverRecursed(maybecx, JSMSG_OVER_RECURSED);
 }
 
 void
@@ -1233,4 +1239,18 @@ AutoEnterOOMUnsafeRegion::crash(const char* reason)
     JS_snprintf(msgbuf, sizeof(msgbuf), "[unhandlable oom] %s", reason);
     MOZ_ReportAssertionFailure(msgbuf, __FILE__, __LINE__);
     MOZ_CRASH();
+}
+
+AutoEnterOOMUnsafeRegion::AnnotateOOMAllocationSizeCallback
+AutoEnterOOMUnsafeRegion::annotateOOMSizeCallback = nullptr;
+
+void
+AutoEnterOOMUnsafeRegion::crash(size_t size, const char* reason)
+{
+    {
+        JS::AutoSuppressGCAnalysis suppress;
+        if (annotateOOMSizeCallback)
+            annotateOOMSizeCallback(size);
+    }
+    crash(reason);
 }

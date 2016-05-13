@@ -27,15 +27,18 @@ namespace dom {
 
 /* static */ already_AddRefed<GetDirectoryListingTaskChild>
 GetDirectoryListingTaskChild::Create(FileSystemBase* aFileSystem,
+                                     Directory* aDirectory,
                                      nsIFile* aTargetPath,
                                      const nsAString& aFilters,
                                      ErrorResult& aRv)
 {
   MOZ_ASSERT(aFileSystem);
+  MOZ_ASSERT(aDirectory);
   aFileSystem->AssertIsOnOwningThread();
 
   RefPtr<GetDirectoryListingTaskChild> task =
-    new GetDirectoryListingTaskChild(aFileSystem, aTargetPath, aFilters);
+    new GetDirectoryListingTaskChild(aFileSystem, aDirectory, aTargetPath,
+                                     aFilters);
 
   // aTargetPath can be null. In this case SetError will be called.
 
@@ -55,9 +58,11 @@ GetDirectoryListingTaskChild::Create(FileSystemBase* aFileSystem,
 }
 
 GetDirectoryListingTaskChild::GetDirectoryListingTaskChild(FileSystemBase* aFileSystem,
+                                                           Directory* aDirectory,
                                                            nsIFile* aTargetPath,
                                                            const nsAString& aFilters)
   : FileSystemTaskChildBase(aFileSystem)
+  , mDirectory(aDirectory)
   , mTargetPath(aTargetPath)
   , mFilters(aFilters)
 {
@@ -142,6 +147,15 @@ GetDirectoryListingTaskChild::HandlerCallback()
 
   size_t count = mTargetData.Length();
 
+  nsAutoString directoryPath;
+  ErrorResult error;
+  mDirectory->GetPath(directoryPath, error);
+  if (NS_WARN_IF(error.Failed())) {
+    mPromise->MaybeReject(error.StealNSResult());
+    mPromise = nullptr;
+    return;
+  }
+
   Sequence<OwningFileOrDirectory> listing;
 
   if (!listing.SetLength(count, mozilla::fallible_t())) {
@@ -187,6 +201,19 @@ GetDirectoryListingTaskChild::HandlerCallback()
       RefPtr<File> file =
         File::CreateFromFile(mFileSystem->GetParentObject(), path);
       MOZ_ASSERT(file);
+
+      nsAutoString filePath;
+      filePath.Assign(directoryPath);
+
+      // This is specific for unix root filesystem.
+      if (!directoryPath.EqualsLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL)) {
+        filePath.AppendLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL);
+      }
+
+      nsAutoString name;
+      file->GetName(name);
+      filePath.Append(name);
+      file->SetPath(filePath);
 
       listing[i].SetAsFile() = file;
     }

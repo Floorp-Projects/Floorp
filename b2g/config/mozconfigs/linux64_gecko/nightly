@@ -6,7 +6,6 @@ MOZ_AUTOMATION_SDK=0
 . "$topsrcdir/build/unix/mozconfig.linux"
 
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
-ac_add_options --enable-update-packaging
 ac_add_options --enable-signmar
 
 # This will overwrite the default of stripping everything and keep the symbol table.

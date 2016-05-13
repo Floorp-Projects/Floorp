@@ -178,7 +178,6 @@ private:
 
     nsTArray<int32_t>                    mRestrictedPortList;
 
-    bool                                 mAutoDialEnabled;
     bool                                 mNetworkNotifyChanged;
     int32_t                              mPreviousWifiState;
     // Hashtable of (appId, nsIAppOffineInfo::mode) pairs

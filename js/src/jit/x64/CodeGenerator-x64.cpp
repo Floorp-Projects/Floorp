@@ -21,6 +21,18 @@ using namespace js::jit;
 
 using mozilla::DebugOnly;
 
+static inline Register64
+ToRegister64(const LAllocation* a)
+{
+    return Register64(ToRegister(a));
+}
+
+static inline Register64
+ToRegister64(const LDefinition* a)
+{
+    return Register64(ToRegister(a));
+}
+
 CodeGeneratorX64::CodeGeneratorX64(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm)
   : CodeGeneratorX86Shared(gen, graph, masm)
 {
@@ -1308,4 +1320,39 @@ CodeGeneratorX64::visitInt64ToFloatingPoint(LInt64ToFloatingPoint* lir)
             masm.vcvtsq2ss(input, output, output);
     }
     masm.bind(&done);
+}
+
+void
+CodeGeneratorX64::visitNotI64(LNotI64* lir)
+{
+    masm.cmpq(Imm32(0), ToRegister(lir->input()));
+    masm.emitSet(Assembler::Equal, ToRegister(lir->output()));
+}
+
+void
+CodeGeneratorX64::visitClzI64(LClzI64* lir)
+{
+    Register64 input = ToRegister64(lir->input());
+    Register64 output = ToRegister64(lir->output());
+    masm.clz64(input, output);
+}
+
+void
+CodeGeneratorX64::visitCtzI64(LCtzI64* lir)
+{
+    Register64 input = ToRegister64(lir->input());
+    Register64 output = ToRegister64(lir->output());
+    masm.ctz64(input, output);
+}
+
+void
+CodeGeneratorX64::visitPopcntI64(LPopcntI64* lir)
+{
+    Register64 input = ToRegister64(lir->input());
+    Register64 output = ToRegister64(lir->output());
+    Register64 temp = Register64(AssemblerX86Shared::HasPOPCNT()
+                                 ? InvalidReg :
+                                 ToRegister(lir->getTemp(0)));
+
+    masm.popcnt64(input, output, temp);
 }

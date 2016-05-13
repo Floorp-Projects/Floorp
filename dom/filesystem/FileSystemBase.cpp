@@ -153,7 +153,9 @@ FileSystemBase::GetDOMPath(nsIFile* aFile,
       return;
     }
 
-    parts.AppendElement(leafName);
+    if (!leafName.IsEmpty()) {
+      parts.AppendElement(leafName);
+    }
 
     bool equal = false;
     aRv = fileSystemPath->Equals(path, &equal);
@@ -179,7 +181,10 @@ FileSystemBase::GetDOMPath(nsIFile* aFile,
     }
   }
 
-  MOZ_ASSERT(!parts.IsEmpty());
+  if (parts.IsEmpty()) {
+    aRetval.AppendLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL);
+    return;
+  }
 
   for (int32_t i = parts.Length() - 1; i >= 0; --i) {
     aRetval.AppendLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL);

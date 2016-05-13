@@ -25,8 +25,8 @@ private:
 };
 
 nsShutdownThread::nsShutdownThread(nsIThread *aThread)
-  : mLock("nsShutdownThread.mLock")
-  , mCondVar(mLock, "nsShutdownThread.mCondVar")
+  : mMonitor("nsShutdownThread.mMonitor")
+  , mShuttingDown(false)
   , mThread(aThread)
 {
 }
@@ -62,13 +62,16 @@ nsShutdownThread::BlockingShutdown(nsIThread *aThread)
   }
 
   {
-    MutexAutoLock lock(st->mLock);
+    MonitorAutoLock mon(st->mMonitor);
     rv = workerThread->Dispatch(st, NS_DISPATCH_NORMAL);
     if (NS_FAILED(rv)) {
       NS_WARNING(
         "Dispatching event in nsShutdownThread::BlockingShutdown failed!");
     } else {
-      st->mCondVar.Wait();
+      st->mShuttingDown = true;
+      while (st->mShuttingDown) {
+        mon.Wait();
+      }
     }
   }
 
@@ -78,8 +81,9 @@ nsShutdownThread::BlockingShutdown(nsIThread *aThread)
 NS_IMETHODIMP
 nsShutdownThread::Run()
 {
-  MutexAutoLock lock(mLock);
+  MonitorAutoLock mon(mMonitor);
   mThread->Shutdown();
-  mCondVar.Notify();
+  mShuttingDown = false;
+  mon.Notify();
   return NS_OK;
 }

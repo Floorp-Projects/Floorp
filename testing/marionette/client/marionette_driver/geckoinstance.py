@@ -15,11 +15,6 @@ from mozrunner import Runner
 
 class GeckoInstance(object):
     required_prefs = {
-        "browser.displayedE10SPrompt.1": 5,
-        "browser.displayedE10SPrompt.2": 5,
-        "browser.displayedE10SPrompt.3": 5,
-        "browser.displayedE10SPrompt.4": 5,
-        "browser.displayedE10SPrompt": 5,
         "browser.sessionstore.resume_from_crash": False,
         "browser.shell.checkDefaultBrowser": False,
         "browser.startup.page": 0,
