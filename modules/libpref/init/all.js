@@ -2413,11 +2413,7 @@ pref("layout.css.prefixes.font-features", true);
 pref("layout.css.prefixes.gradients", true);
 
 // Are webkit-prefixed properties & property-values supported?
-#ifdef RELEASE_BUILD
-pref("layout.css.prefixes.webkit", false);
-#else
 pref("layout.css.prefixes.webkit", true);
-#endif
 
 // Are "-webkit-{min|max}-device-pixel-ratio" media queries supported?
 // (Note: this pref has no effect if the master 'layout.css.prefixes.webkit'
