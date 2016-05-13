@@ -65,11 +65,6 @@ protected:
   virtual PCompositableChild* AllocPCompositableChild(const TextureInfo& aInfo) override;
   virtual bool DeallocPCompositableChild(PCompositableChild* actor) override;
 
-  virtual PTextureChild* AllocPTextureChild(const SurfaceDescriptor& aSharedData,
-                                            const LayersBackend& aLayersBackend,
-                                            const TextureFlags& aFlags) override;
-  virtual bool DeallocPTextureChild(PTextureChild* actor) override;
-
   virtual bool
   RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessageData>&& aMessages) override;
 

@@ -340,7 +340,7 @@ CountPopulation32(uint32_t aValue)
   return detail::CountPopulation32(aValue);
 }
 
-/** Analogous to CoutPopulation32, but for 64-bit numbers */
+/** Analogous to CountPopulation32, but for 64-bit numbers */
 inline uint_fast8_t
 CountPopulation64(uint64_t aValue)
 {

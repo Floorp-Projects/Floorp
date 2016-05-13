@@ -8,8 +8,11 @@
 include LayersSurfaces;
 include LayersMessages;
 include protocol PBrowser;
+include protocol PCompositable;
+include protocol PImageContainer;
 include protocol PLayer;
 include protocol PLayerTransaction;
+include protocol PTexture;
 include "mozilla/GfxMessageUtils.h";
 
 using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
@@ -28,6 +31,7 @@ using mozilla::LayoutDeviceIntRegion from "Units.h";
 using mozilla::VisibilityCounter from "VisibilityIPC.h";
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
 using class mozilla::layers::FrameUniformityData from "mozilla/layers/FrameUniformityData.h";
+using mozilla::layers::TextureFlags from "mozilla/layers/CompositorTypes.h";
 
 namespace mozilla {
 namespace layers {
@@ -42,6 +46,7 @@ sync protocol PCompositorBridge
 {
   // A Compositor manages a single Layer Manager (PLayerTransaction)
   manages PLayerTransaction;
+  manages PTexture;
 
 child:
   // The child should invalidate retained layers. This is used for local
@@ -186,6 +191,8 @@ parent:
   async UpdateVisibleRegion(VisibilityCounter counter,
                             ScrollableLayerGuid guid,
                             CSSIntRegion region);
+
+  async PTexture(SurfaceDescriptor aSharedData, LayersBackend aBackend, TextureFlags aTextureFlags, uint64_t id);
 
 child:
   // Send back Compositor Frame Metrics from APZCs so tiled layers can

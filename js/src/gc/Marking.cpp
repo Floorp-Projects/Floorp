@@ -2158,7 +2158,7 @@ js::TenuringTracer::moveToTenured(JSObject* src)
         AutoEnterOOMUnsafeRegion oomUnsafe;
         t = zone->arenas.allocateFromArena(zone, dstKind, maybeStartBackgroundAllocation);
         if (!t)
-            oomUnsafe.crash("Failed to allocate object while tenuring.");
+            oomUnsafe.crash(ChunkSize, "Failed to allocate object while tenuring.");
     }
     JSObject* dst = reinterpret_cast<JSObject*>(t);
     tenuredSize += moveObjectToTenured(dst, src, dstKind);
@@ -2315,7 +2315,7 @@ js::TenuringTracer::moveSlotsToTenured(NativeObject* dst, NativeObject* src, All
         AutoEnterOOMUnsafeRegion oomUnsafe;
         dst->slots_ = zone->pod_malloc<HeapSlot>(count);
         if (!dst->slots_)
-            oomUnsafe.crash("Failed to allocate slots while tenuring.");
+            oomUnsafe.crash(sizeof(HeapSlot) * count, "Failed to allocate slots while tenuring.");
     }
 
     PodCopy(dst->slots_, src->slots_, count);
@@ -2356,8 +2356,10 @@ js::TenuringTracer::moveElementsToTenured(NativeObject* dst, NativeObject* src, 
     {
         AutoEnterOOMUnsafeRegion oomUnsafe;
         dstHeader = reinterpret_cast<ObjectElements*>(zone->pod_malloc<HeapSlot>(nslots));
-        if (!dstHeader)
-            oomUnsafe.crash("Failed to allocate elements while tenuring.");
+        if (!dstHeader) {
+            oomUnsafe.crash(sizeof(HeapSlot) * nslots,
+                            "Failed to allocate elements while tenuring.");
+        }
     }
 
     js_memcpy(dstHeader, srcHeader, nslots * sizeof(HeapSlot));

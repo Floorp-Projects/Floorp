@@ -17,7 +17,6 @@ include "mozilla/GfxMessageUtils.h";
 
 using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
-using mozilla::layers::TextureFlags from "mozilla/layers/CompositorTypes.h";
 using class mozilla::layers::APZTestData from "mozilla/layers/APZTestData.h";
 using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
 using struct mozilla::layers::ScrollableLayerGuid from "FrameMetrics.h";
@@ -43,7 +42,6 @@ sync protocol PLayerTransaction {
   manager PCompositorBridge;
   manages PLayer;
   manages PCompositable;
-  manages PTexture;
 
 child:
   async ParentAsyncMessages(AsyncParentMessageData[] aMessages);
@@ -51,7 +49,6 @@ child:
 parent:
   async PLayer();
   async PCompositable(TextureInfo aTextureInfo);
-  async PTexture(SurfaceDescriptor aSharedData, LayersBackend aBackend, TextureFlags aTextureFlags);
 
   // The isFirstPaint flag can be used to indicate that this is the first update
   // for a particular document.

@@ -172,7 +172,6 @@ nsresult
 MediaFormatReader::Init()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
-  PDMFactory::Init();
 
   InitLayersBackendType();
 
@@ -1311,9 +1310,9 @@ MediaFormatReader::ResetDecode(TargetQueues aQueues)
   // Reset miscellaneous seeking state.
   mPendingSeekTime.reset();
 
-  ResetDemuxers();
-
   if (HasVideo()) {
+    mVideo.ResetDemuxer();
+    mVideo.ResetState();
     Reset(TrackInfo::kVideoTrack);
     if (mVideo.HasPromise()) {
       mVideo.RejectPromise(CANCELED, __func__);
@@ -1321,25 +1320,14 @@ MediaFormatReader::ResetDecode(TargetQueues aQueues)
   }
 
   if (HasAudio() && aQueues == AUDIO_VIDEO) {
+    mAudio.ResetDemuxer();
+    mAudio.ResetState();
     Reset(TrackInfo::kAudioTrack);
     if (mAudio.HasPromise()) {
       mAudio.RejectPromise(CANCELED, __func__);
     }
   }
   return MediaDecoderReader::ResetDecode(aQueues);
-}
-
-void
-MediaFormatReader::ResetDemuxers()
-{
-  if (HasVideo()) {
-    mVideo.ResetDemuxer();
-    mVideo.ResetState();
-  }
-  if (HasAudio()) {
-    mAudio.ResetDemuxer();
-    mAudio.ResetState();
-  }
 }
 
 void
@@ -1501,10 +1489,10 @@ MediaFormatReader::Seek(SeekTarget aTarget, int64_t aUnused)
 
   MOZ_DIAGNOSTIC_ASSERT(mSeekPromise.IsEmpty());
   MOZ_DIAGNOSTIC_ASSERT(!mVideo.HasPromise());
-  MOZ_DIAGNOSTIC_ASSERT(!mAudio.HasPromise());
+  MOZ_DIAGNOSTIC_ASSERT(aTarget.IsVideoOnly() || !mAudio.HasPromise());
   MOZ_DIAGNOSTIC_ASSERT(mPendingSeekTime.isNothing());
   MOZ_DIAGNOSTIC_ASSERT(mVideo.mTimeThreshold.isNothing());
-  MOZ_DIAGNOSTIC_ASSERT(mAudio.mTimeThreshold.isNothing());
+  MOZ_DIAGNOSTIC_ASSERT(aTarget.IsVideoOnly() || mAudio.mTimeThreshold.isNothing());
 
   if (!mInfo.mMediaSeekable && !mInfo.mMediaSeekableOnlyInBufferedRanges) {
     LOG("Seek() END (Unseekable)");
@@ -1545,7 +1533,20 @@ MediaFormatReader::AttemptSeek()
   if (mPendingSeekTime.isNothing()) {
     return;
   }
-  ResetDemuxers();
+
+  if (HasVideo()) {
+    mVideo.ResetDemuxer();
+    mVideo.ResetState();
+  }
+
+  // Don't reset the audio demuxer not state when seeking video only
+  // as it will cause the audio to seek back to the beginning
+  // resulting in out-of-sync audio from video.
+  if (HasAudio() && !mOriginalSeekTarget->IsVideoOnly()) {
+    mAudio.ResetDemuxer();
+    mAudio.ResetState();
+  }
+
   if (HasVideo()) {
     DoVideoSeek();
   } else if (HasAudio()) {

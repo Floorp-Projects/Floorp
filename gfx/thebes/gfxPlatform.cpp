@@ -128,6 +128,7 @@ class mozilla::gl::SkiaGLGlue : public GenericAtomicRefCounted {
 
 #include "mozilla/Preferences.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
 
@@ -2062,12 +2063,12 @@ gfxPlatform::OptimalFormatForContent(gfxContentType aContent)
  * not have any effect until we restart.
  */
 bool gANGLESupportsD3D11 = false;
-static bool sLayersSupportsHardwareVideoDecoding = false;
+static mozilla::Atomic<bool> sLayersSupportsHardwareVideoDecoding(false);
 static bool sLayersHardwareVideoDecodingFailed = false;
 static bool sBufferRotationCheckPref = true;
 static bool sPrefBrowserTabsRemoteAutostart = false;
 
-static bool sLayersAccelerationPrefsInitialized = false;
+static mozilla::Atomic<bool> sLayersAccelerationPrefsInitialized(false);
 
 void
 gfxPlatform::InitAcceleration()

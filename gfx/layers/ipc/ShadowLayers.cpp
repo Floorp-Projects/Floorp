@@ -21,6 +21,7 @@
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/layers/CompositableClient.h"  // for CompositableClient, etc
+#include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/LayersMessages.h"  // for Edit, etc
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
@@ -1076,10 +1077,11 @@ ShadowLayerForwarder::CreateTexture(const SurfaceDescriptor& aSharedData,
                                     TextureFlags aFlags)
 {
   if (!HasShadowManager() ||
-      !mShadowManager->IPCOpen()) {
+      !mShadowManager->IPCOpen() ||
+      !mShadowManager->Manager()) {
     return nullptr;
   }
-  return mShadowManager->SendPTextureConstructor(aSharedData, aLayersBackend, aFlags);
+  return mShadowManager->Manager()->SendPTextureConstructor(aSharedData, aLayersBackend, aFlags, mShadowManager->GetId());
 }
 
 

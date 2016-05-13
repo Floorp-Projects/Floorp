@@ -22,5 +22,17 @@ assertErrorMessage(() => wasmEvalText('(module (type $a (func)) (func (call_indi
 assertErrorMessage(() => wasmEvalText('(module (func (br $a)))'), SyntaxError, /branch target label '\$a' not found/);
 assertErrorMessage(() => wasmEvalText('(module (func (block $a) (br $a)))'), SyntaxError, /branch target label '\$a' not found/);
 
+wasmEvalText('(module (func (param $a i32)))');
+wasmEvalText('(module (func (param i32)))');
+wasmEvalText('(module (func (param i32 i32 f32 f64 i32)))');
+assertErrorMessage(() => wasmEvalText('(module (func (param $a)))'), SyntaxError, parsingError);
+assertErrorMessage(() => wasmEvalText('(module (func (param $a i32 i32)))'), SyntaxError, parsingError);
+
+wasmEvalText('(module (func (local $a i32)))');
+wasmEvalText('(module (func (local i32)))');
+wasmEvalText('(module (func (local i32 i32 f32 f64 i32)))');
+assertErrorMessage(() => wasmEvalText('(module (func (local $a)))'), SyntaxError, parsingError);
+assertErrorMessage(() => wasmEvalText('(module (func (local $a i32 i32)))'), SyntaxError, parsingError);
+
 // Note: the s-expression text format is temporary, this file is mostly just to
 // hold basic error smoke tests.

@@ -263,8 +263,6 @@ UNIFIED_SOURCES += [
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     SOURCES += [
-        'nsAutodialWin.cpp',
-        'nsNativeConnectionHelper.cpp',
         'nsURLHelperWin.cpp',
         'ShutdownLayer.cpp',
     ]
@@ -279,7 +277,6 @@ else:
 
 if CONFIG['MOZ_ENABLE_QTNETWORK']:
     SOURCES += [
-        'nsAutodialQt.cpp',
     ]
 
 EXTRA_COMPONENTS += [

@@ -240,7 +240,7 @@ CreateFileTaskParent::GetSuccessRequestResult(ErrorResult& aRv) const
     return FileSystemDirectoryResponse();
   }
 
-  return FileSystemFileResponse(path);
+  return FileSystemFileResponse(path, EmptyString());
 }
 
 nsresult

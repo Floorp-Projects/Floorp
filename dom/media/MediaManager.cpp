@@ -1091,17 +1091,23 @@ MediaManager::SelectSettings(
     }
     sources.Clear();
     const char* badConstraint = nullptr;
+    bool needVideo = IsOn(aConstraints.mVideo);
+    bool needAudio = IsOn(aConstraints.mAudio);
 
-    if (videos.Length() && IsOn(aConstraints.mVideo)) {
+    if (needVideo && videos.Length()) {
       badConstraint = MediaConstraintsHelper::SelectSettings(
           GetInvariant(aConstraints.mVideo), videos);
+    }
+    if (!badConstraint && needAudio && audios.Length()) {
+      badConstraint = MediaConstraintsHelper::SelectSettings(
+          GetInvariant(aConstraints.mAudio), audios);
+    }
+    if (!badConstraint &&
+        !needVideo == !videos.Length() &&
+        !needAudio == !audios.Length()) {
       for (auto& video : videos) {
         sources.AppendElement(video);
       }
-    }
-    if (audios.Length() && IsOn(aConstraints.mAudio)) {
-      badConstraint = MediaConstraintsHelper::SelectSettings(
-          GetInvariant(aConstraints.mAudio), audios);
       for (auto& audio : audios) {
         sources.AppendElement(audio);
       }
@@ -1259,6 +1265,12 @@ public:
   {
     mConstraints = aConstraints;
     return NS_OK;
+  }
+
+  const MediaStreamConstraints&
+  GetConstraints()
+  {
+    return mConstraints;
   }
 
   nsresult
@@ -1890,7 +1902,7 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
             !(loop || HostHasPermission(*docURI))) {
           RefPtr<MediaStreamError> error =
               new MediaStreamError(aWindow,
-                                   NS_LITERAL_STRING("SecurityError"));
+                                   NS_LITERAL_STRING("NotAllowedError"));
           onFailure->OnError(error);
           return NS_OK;
         }
@@ -1971,7 +1983,7 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
         if (!Preferences::GetBool("media.getusermedia.audiocapture.enabled")) {
           RefPtr<MediaStreamError> error =
             new MediaStreamError(aWindow,
-                                 NS_LITERAL_STRING("SecurityError"));
+                                 NS_LITERAL_STRING("NotAllowedError"));
           onFailure->OnError(error);
           return NS_OK;
         }
@@ -2033,10 +2045,11 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    if ((!IsOn(c.mAudio) || audioPerm == nsIPermissionManager::DENY_ACTION) &&
-        (!IsOn(c.mVideo) || videoPerm == nsIPermissionManager::DENY_ACTION)) {
+    if ((!IsOn(c.mAudio) && !IsOn(c.mVideo)) ||
+        (IsOn(c.mAudio) && audioPerm == nsIPermissionManager::DENY_ACTION) ||
+        (IsOn(c.mVideo) && videoPerm == nsIPermissionManager::DENY_ACTION)) {
       RefPtr<MediaStreamError> error =
-          new MediaStreamError(aWindow, NS_LITERAL_STRING("SecurityError"));
+          new MediaStreamError(aWindow, NS_LITERAL_STRING("NotAllowedError"));
       onFailure->OnError(error);
       RemoveFromWindowList(windowID, listener);
       return NS_OK;
@@ -2718,11 +2731,6 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
       MOZ_ASSERT(array);
       uint32_t len = 0;
       array->Count(&len);
-      if (!len) {
-        // neither audio nor video were selected
-        task->Denied(NS_LITERAL_STRING("SecurityError"));
-        return NS_OK;
-      }
       bool videoFound = false, audioFound = false;
       for (uint32_t i = 0; i < len; i++) {
         nsCOMPtr<nsISupports> supports;
@@ -2747,6 +2755,14 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
           }
         }
       }
+      bool needVideo = IsOn(task->GetConstraints().mVideo);
+      bool needAudio = IsOn(task->GetConstraints().mAudio);
+      MOZ_ASSERT(needVideo || needAudio);
+
+      if ((needVideo && !videoFound) || (needAudio && !audioFound)) {
+        task->Denied(NS_LITERAL_STRING("NotAllowedError"));
+        return NS_OK;
+      }
     }
 
     if (sInShutdown) {
@@ -2757,7 +2773,7 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
 
   } else if (!strcmp(aTopic, "getUserMedia:response:deny")) {
-    nsString errorMessage(NS_LITERAL_STRING("SecurityError"));
+    nsString errorMessage(NS_LITERAL_STRING("NotAllowedError"));
 
     if (aSubject) {
       nsCOMPtr<nsISupportsString> msg(do_QueryInterface(aSubject));

@@ -569,6 +569,18 @@ LIRGeneratorShared::temp(LDefinition::Type type, LDefinition::Policy policy)
     return LDefinition(getVirtualRegister(), type, policy);
 }
 
+LInt64Definition
+LIRGeneratorShared::tempInt64(LDefinition::Policy policy)
+{
+#if JS_BITS_PER_WORD == 32
+    LDefinition high = temp(LDefinition::GENERAL, policy);
+    LDefinition low = temp(LDefinition::GENERAL, policy);
+    return LInt64Definition(high, low);
+#else
+    return LInt64Definition(temp(LDefinition::GENERAL, policy));
+#endif
+}
+
 LDefinition
 LIRGeneratorShared::tempFixed(Register reg)
 {

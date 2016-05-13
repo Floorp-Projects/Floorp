@@ -32,8 +32,6 @@ public:
                      MediaDataDecoderCallback* aCallback,
                      DecoderDoctorDiagnostics* aDiagnostics) override;
 
-  static void Init();
-
   ConversionRequired
   DecoderNeedsConversion(const TrackInfo& aConfig) const override;
 
