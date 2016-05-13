@@ -82,24 +82,16 @@ public class GLController extends JNIObject {
         }
     }
 
-    synchronized void serverSurfaceChanged(int newWidth, int newHeight) {
+    void serverSurfaceChanged(int newWidth, int newHeight) {
         ThreadUtils.assertOnUiThread();
 
-        mWidth = newWidth;
-        mHeight = newHeight;
-        mServerSurfaceValid = true;
+        synchronized(this) {
+            mWidth = newWidth;
+            mHeight = newHeight;
+            mServerSurfaceValid = true;
+        }
 
-        // we defer to a runnable the task of updating the compositor, because this is going to
-        // call back into createEGLSurface, which will try to create an EGLSurface
-        // against mView, which we suspect might fail if called too early. By posting this to
-        // mView, we hope to ensure that it is deferred until mView is actually "ready" for some
-        // sense of "ready".
-        mView.post(new Runnable() {
-            @Override
-            public void run() {
-                updateCompositor();
-            }
-        });
+        updateCompositor();
     }
 
     void updateCompositor() {
@@ -123,6 +115,7 @@ public class GLController extends JNIObject {
         // Android doesn't have a chance to destroy our surface in between.
         if (mView.getLayerClient().isGeckoReady()) {
             createCompositor(mWidth, mHeight);
+            compositorCreated();
         }
     }
 
@@ -138,8 +131,7 @@ public class GLController extends JNIObject {
 
     @WrapForJNI(allowMultithread = true)
     private synchronized Object getSurface() {
-        compositorCreated();
-        if (mView != null) {
+        if (mView != null && isServerSurfaceValid()) {
             return mView.getSurface();
         } else {
             return null;
