@@ -176,11 +176,11 @@ var Bookmarks = Object.freeze({
       let observers = PlacesUtils.bookmarks.getObservers();
       // We need the itemId to notify, though once the switch to guids is
       // complete we may stop using it.
-      let uri = item.hasOwnProperty("url") ? toURI(item.url) : null;
+      let uri = item.hasOwnProperty("url") ? PlacesUtils.toURI(item.url) : null;
       let itemId = yield PlacesUtils.promiseItemId(item.guid);
       notify(observers, "onItemAdded", [ itemId, parent._id, item.index,
                                          item.type, uri, item.title || null,
-                                         toPRTime(item.dateAdded), item.guid,
+                                         PlacesUtils.toPRTime(item.dateAdded), item.guid,
                                          item.parentGuid ]);
 
       // If it's a tag, notify OnItemChanged to all bookmarks for this URL.
@@ -188,7 +188,7 @@ var Bookmarks = Object.freeze({
       if (isTagging) {
         for (let entry of (yield fetchBookmarksByURL(item))) {
           notify(observers, "onItemChanged", [ entry._id, "tags", false, "",
-                                               toPRTime(entry.lastModified),
+                                               PlacesUtils.toPRTime(entry.lastModified),
                                                entry.type, entry._parentId,
                                                entry.guid, entry.parentGuid,
                                                "" ]);
@@ -323,8 +323,8 @@ var Bookmarks = Object.freeze({
             item.lastModified != updatedItem.lastModified) {
           notify(observers, "onItemChanged", [ updatedItem._id, "lastModified",
                                                false,
-                                               `${toPRTime(updatedItem.lastModified)}`,
-                                               toPRTime(updatedItem.lastModified),
+                                               `${PlacesUtils.toPRTime(updatedItem.lastModified)}`,
+                                               PlacesUtils.toPRTime(updatedItem.lastModified),
                                                updatedItem.type,
                                                updatedItem._parentId,
                                                updatedItem.guid,
@@ -333,7 +333,7 @@ var Bookmarks = Object.freeze({
         if (updateInfo.hasOwnProperty("title")) {
           notify(observers, "onItemChanged", [ updatedItem._id, "title",
                                                false, updatedItem.title,
-                                               toPRTime(updatedItem.lastModified),
+                                               PlacesUtils.toPRTime(updatedItem.lastModified),
                                                updatedItem.type,
                                                updatedItem._parentId,
                                                updatedItem.guid,
@@ -342,7 +342,7 @@ var Bookmarks = Object.freeze({
         if (updateInfo.hasOwnProperty("url")) {
           notify(observers, "onItemChanged", [ updatedItem._id, "uri",
                                                false, updatedItem.url.href,
-                                               toPRTime(updatedItem.lastModified),
+                                               PlacesUtils.toPRTime(updatedItem.lastModified),
                                                updatedItem.type,
                                                updatedItem._parentId,
                                                updatedItem.guid,
@@ -408,7 +408,7 @@ var Bookmarks = Object.freeze({
 
       // Notify onItemRemoved to listeners.
       let observers = PlacesUtils.bookmarks.getObservers();
-      let uri = item.hasOwnProperty("url") ? toURI(item.url) : null;
+      let uri = item.hasOwnProperty("url") ? PlacesUtils.toURI(item.url) : null;
       notify(observers, "onItemRemoved", [ item._id, item._parentId, item.index,
                                            item.type, uri, item.guid,
                                            item.parentGuid ]);
@@ -417,7 +417,7 @@ var Bookmarks = Object.freeze({
       if (isUntagging) {
         for (let entry of (yield fetchBookmarksByURL(item))) {
           notify(observers, "onItemChanged", [ entry._id, "tags", false, "",
-                                               toPRTime(entry.lastModified),
+                                               PlacesUtils.toPRTime(entry.lastModified),
                                                entry.type, entry._parentId,
                                                entry.guid, entry.parentGuid,
                                                "" ]);
@@ -442,7 +442,7 @@ var Bookmarks = Object.freeze({
       db => db.executeTransaction(function* () {
         const folderGuids = [this.toolbarGuid, this.menuGuid, this.unfiledGuid];
         yield removeFoldersContents(db, folderGuids);
-        const time = toPRTime(new Date());
+        const time = PlacesUtils.toPRTime(new Date());
         for (let folderGuid of folderGuids) {
           yield db.executeCached(
             `UPDATE moz_bookmarks SET lastModified = :time
@@ -769,7 +769,7 @@ function updateBookmark(info, item, newParent) {
 
     let tuples = new Map();
     if (info.hasOwnProperty("lastModified"))
-      tuples.set("lastModified", { value: toPRTime(info.lastModified) });
+      tuples.set("lastModified", { value: PlacesUtils.toPRTime(info.lastModified) });
     if (info.hasOwnProperty("title"))
       tuples.set("title", { value: info.title });
 
@@ -886,8 +886,8 @@ function insertBookmark(item, parent) {
                  :index, :title, :date_added, :last_modified, :guid)
         `, { url: item.hasOwnProperty("url") ? item.url.href : "nonexistent",
              type: item.type, parent: parent._id, index: item.index,
-             title: item.title, date_added: toPRTime(item.dateAdded),
-             last_modified: toPRTime(item.lastModified), guid: item.guid });
+             title: item.title, date_added: PlacesUtils.toPRTime(item.dateAdded),
+             last_modified: PlacesUtils.toPRTime(item.lastModified), guid: item.guid });
 
       yield setAncestorsLastModified(db, item.parentGuid, item.dateAdded);
     });
@@ -1240,39 +1240,6 @@ function removeSameValueProperties(dest, src) {
 }
 
 /**
- * Converts an URL object to an nsIURI.
- *
- * @param url
- *        the URL object to convert.
- * @return nsIURI for the given URL.
- */
-function toURI(url) {
-  return NetUtil.newURI(url.href);
-}
-
-/**
- * Convert a Date object to a PRTime (microseconds).
- *
- * @param date
- *        the Date object to convert.
- * @return microseconds from the epoch.
- */
-function toPRTime(date) {
-  return date * 1000;
-}
-
-/**
- * Convert a PRTime to a Date object.
- *
- * @param time
- *        microseconds from the epoch.
- * @return a Date object.
- */
-function toDate(time) {
-  return new Date(parseInt(time / 1000));
-}
-
-/**
  * Convert an array of mozIStorageRow objects to an array of bookmark objects.
  *
  * @param rows
@@ -1286,7 +1253,7 @@ function rowsToItemsArray(rows) {
       item[prop] = row.getResultByName(prop);
     }
     for (let prop of ["dateAdded", "lastModified"]) {
-      item[prop] = toDate(row.getResultByName(prop));
+      item[prop] = PlacesUtils.toDate(row.getResultByName(prop));
     }
     for (let prop of ["title", "parentGuid", "url" ]) {
       let val = row.getResultByName(prop);
@@ -1332,7 +1299,7 @@ function simpleValidateFunc(boolValidateFn) {
  */
 const VALIDATORS = Object.freeze({
   guid: simpleValidateFunc(v => typeof(v) == "string" &&
-                                /^[a-zA-Z0-9\-_]{12}$/.test(v)),
+                                PlacesUtils.isValidGuid(v)),
   parentGuid: simpleValidateFunc(v => typeof(v) == "string" &&
                                       /^[a-zA-Z0-9\-_]{12}$/.test(v)),
   index: simpleValidateFunc(v => Number.isInteger(v) &&
@@ -1515,7 +1482,7 @@ var setAncestorsLastModified = Task.async(function* (db, folderGuid, time) {
      UPDATE moz_bookmarks SET lastModified = :time
      WHERE id IN ancestors
     `, { guid: folderGuid, type: Bookmarks.TYPE_FOLDER,
-         time: toPRTime(time) });
+         time: PlacesUtils.toPRTime(time) });
 });
 
 /**
@@ -1580,7 +1547,7 @@ Task.async(function* (db, folderGuids) {
   // Notify listeners in reverse order to serve children before parents.
   let observers = PlacesUtils.bookmarks.getObservers();
   for (let item of itemsRemoved.reverse()) {
-    let uri = item.hasOwnProperty("url") ? toURI(item.url) : null;
+    let uri = item.hasOwnProperty("url") ? PlacesUtils.toURI(item.url) : null;
     notify(observers, "onItemRemoved", [ item._id, item._parentId,
                                          item.index, item.type, uri,
                                          item.guid, item.parentGuid ]);
@@ -1589,7 +1556,7 @@ Task.async(function* (db, folderGuids) {
     if (isUntagging) {
       for (let entry of (yield fetchBookmarksByURL(item))) {
         notify(observers, "onItemChanged", [ entry._id, "tags", false, "",
-                                             toPRTime(entry.lastModified),
+                                             PlacesUtils.toPRTime(entry.lastModified),
                                              entry.type, entry._parentId,
                                              entry.guid, entry.parentGuid,
                                              "" ]);
