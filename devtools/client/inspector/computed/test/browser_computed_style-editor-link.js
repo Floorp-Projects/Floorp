@@ -52,13 +52,13 @@ const DOCUMENT_URL = "data:text/html;charset=utf-8," + encodeURIComponent(
 
 add_task(function*() {
   yield addTab(DOCUMENT_URL);
-  let {toolbox, inspector, view} = yield openComputedView();
+  let {toolbox, inspector, view, testActor} = yield openComputedView();
   yield selectNode("span", inspector);
 
   yield testInlineStyle(view);
-  yield testFirstInlineStyleSheet(view, toolbox);
-  yield testSecondInlineStyleSheet(view, toolbox);
-  yield testExternalStyleSheet(view, toolbox);
+  yield testFirstInlineStyleSheet(view, toolbox, testActor);
+  yield testSecondInlineStyleSheet(view, toolbox, testActor);
+  yield testExternalStyleSheet(view, toolbox, testActor);
 });
 
 function* testInlineStyle(view) {
@@ -78,7 +78,7 @@ function* testInlineStyle(view) {
   gBrowser.removeTab(tab);
 }
 
-function* testFirstInlineStyleSheet(view, toolbox) {
+function* testFirstInlineStyleSheet(view, toolbox, testActor) {
   info("Testing inline stylesheet");
 
   info("Listening for toolbox switch to the styleeditor");
@@ -90,10 +90,10 @@ function* testFirstInlineStyleSheet(view, toolbox) {
 
   ok(true, "Switched to the style-editor panel in the toolbox");
 
-  validateStyleEditorSheet(editor, 0);
+  yield validateStyleEditorSheet(editor, 0, testActor);
 }
 
-function* testSecondInlineStyleSheet(view, toolbox) {
+function* testSecondInlineStyleSheet(view, toolbox, testActor) {
   info("Testing second inline stylesheet");
 
   info("Waiting for the stylesheet editor to be selected");
@@ -109,10 +109,10 @@ function* testSecondInlineStyleSheet(view, toolbox) {
 
   is(toolbox.currentToolId, "styleeditor",
     "The style editor is selected again");
-  validateStyleEditorSheet(editor, 1);
+  yield validateStyleEditorSheet(editor, 1, testActor);
 }
 
-function* testExternalStyleSheet(view, toolbox) {
+function* testExternalStyleSheet(view, toolbox, testActor) {
   info("Testing external stylesheet");
 
   info("Waiting for the stylesheet editor to be selected");
@@ -128,13 +128,15 @@ function* testExternalStyleSheet(view, toolbox) {
 
   is(toolbox.currentToolId, "styleeditor",
     "The style editor is selected again");
-  validateStyleEditorSheet(editor, 2);
+  yield validateStyleEditorSheet(editor, 2, testActor);
 }
 
-function validateStyleEditorSheet(editor, expectedSheetIndex) {
+function* validateStyleEditorSheet(editor, expectedSheetIndex, testActor) {
   info("Validating style editor stylesheet");
-  let sheet = content.document.styleSheets[expectedSheetIndex];
-  is(editor.styleSheet.href, sheet.href,
+  let expectedHref = yield testActor.eval(`
+    document.styleSheets[${expectedSheetIndex}].href;
+  `);
+  is(editor.styleSheet.href, expectedHref,
     "loaded stylesheet matches document stylesheet");
 }
 
