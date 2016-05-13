@@ -135,12 +135,10 @@ PerformanceObserver::QueueEntry(PerformanceEntry* aEntry)
   mQueuedEntries.AppendElement(aEntry);
 }
 
-static const char16_t* sValidTypeNames[7] = {
-  MOZ_UTF16("composite"),
+static const char16_t* sValidTypeNames[5] = {
   MOZ_UTF16("mark"),
   MOZ_UTF16("measure"),
   MOZ_UTF16("navigation"),
-  MOZ_UTF16("render"),
   MOZ_UTF16("resource"),
   MOZ_UTF16("server")
 };
