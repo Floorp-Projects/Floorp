@@ -299,7 +299,7 @@ if (runningInParent) {
   do_register_cleanup(() => TelemetrySend.shutdown());
 }
 
-TelemetryController.initLogging();
+TelemetryController.testInitLogging();
 
 // Avoid timers interrupting test behavior.
 fakeSchedulerTimer(() => {}, () => {});
