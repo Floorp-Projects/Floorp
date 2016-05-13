@@ -17,7 +17,8 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
 
 public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistoryItem> implements CombinedHistoryRecyclerView.AdapterContextMenuBuilder {
-    private static final int SYNCED_DEVICES_SMARTFOLDER_INDEX = 0;
+    private static final int RECENT_TABS_SMARTFOLDER_INDEX = 0;
+    private static final int SYNCED_DEVICES_SMARTFOLDER_INDEX = 1;
 
     // Array for the time ranges in milliseconds covered by each section.
     static final HistorySectionsHelper.SectionDateRange[] sectionDateRangeArray = new HistorySectionsHelper.SectionDateRange[SectionHeader.values().length];
@@ -39,6 +40,7 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
     private Cursor historyCursor;
     private DevicesUpdateHandler devicesUpdateHandler;
     private int deviceCount = 0;
+    private int recentTabsCount = 0;
 
     // We use a sparse array to store each section header's position in the panel [more cheaply than a HashMap].
     private final SparseArray<SectionHeader> sectionHeaders;
@@ -65,7 +67,7 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
                 @Override
                 public void onDeviceCountUpdated(int count) {
                     deviceCount = count;
-                    notifyItemChanged(0);
+                    notifyItemChanged(SYNCED_DEVICES_SMARTFOLDER_INDEX);
                 }
             };
         }
@@ -80,6 +82,7 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
         final CombinedHistoryItem.ItemType itemType = CombinedHistoryItem.ItemType.viewTypeToItemType(viewType);
 
         switch (itemType) {
+            case RECENT_TABS:
             case SYNCED_DEVICES:
                 view = inflater.inflate(R.layout.home_smartfolder, viewGroup, false);
                 return new CombinedHistoryItem.SmartFolder(view);
@@ -102,6 +105,10 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
         final int localPosition = transformAdapterPositionForDataStructure(itemType, position);
 
         switch (itemType) {
+            case RECENT_TABS:
+                ((CombinedHistoryItem.SmartFolder) viewHolder).bind(R.drawable.icon_recent, R.string.home_closed_tabs_title2, R.string.home_closed_tabs_one, R.string.home_closed_tabs_number, recentTabsCount);
+                break;
+
             case SYNCED_DEVICES:
                 ((CombinedHistoryItem.SmartFolder) viewHolder).bind(R.drawable.cloud, R.string.home_synced_devices_smartfolder, R.string.home_synced_devices_one, R.string.home_synced_devices_number, deviceCount);
                 break;
@@ -140,6 +147,9 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
     }
 
     private CombinedHistoryItem.ItemType getItemTypeForPosition(int position) {
+        if (position == RECENT_TABS_SMARTFOLDER_INDEX) {
+            return CombinedHistoryItem.ItemType.RECENT_TABS;
+        }
         if (position == SYNCED_DEVICES_SMARTFOLDER_INDEX) {
             return CombinedHistoryItem.ItemType.SYNCED_DEVICES;
         }

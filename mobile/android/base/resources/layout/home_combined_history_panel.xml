@@ -36,6 +36,13 @@
               android:layout_weight="3"
               android:visibility="gone"/>
 
+    <include android:id="@+id/home_recent_tabs_empty_view"
+              layout="@layout/home_empty_panel"
+              android:layout_width="match_parent"
+              android:layout_height="0dp"
+              android:layout_weight="3"
+              android:visibility="gone"/>
+
     <Button android:id="@+id/clear_history_button"
             style="@style/Widget.Home.ActionButton"
             android:text="@string/home_clear_history_button"
