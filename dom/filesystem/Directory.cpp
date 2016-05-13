@@ -13,6 +13,7 @@
 #include "GetFileOrDirectoryTask.h"
 #include "GetFilesTask.h"
 #include "RemoveTask.h"
+#include "WorkerPrivate.h"
 
 #include "nsCharSeparatedTokenizer.h"
 #include "nsString.h"
@@ -120,6 +121,22 @@ Directory::DeviceStorageEnabled(JSContext* aCx, JSObject* aObj)
   }
 
   return Preferences::GetBool("device.storage.enabled", false);
+}
+
+/* static */ bool
+Directory::WebkitBlinkDirectoryPickerEnabled(JSContext* aCx, JSObject* aObj)
+{
+  if (NS_IsMainThread()) {
+    return Preferences::GetBool("dom.webkitBlink.dirPicker.enabled", false);
+  }
+
+  workers::WorkerPrivate* workerPrivate =
+    workers::GetWorkerPrivateFromContext(aCx);
+  if (!workerPrivate) {
+    return false;
+  }
+
+  return workerPrivate->WebkitBlinkDirectoryPickerEnabled();
 }
 
 /* static */ already_AddRefed<Promise>
@@ -420,7 +437,7 @@ Directory::GetFilesAndDirectories(ErrorResult& aRv)
   }
 
   RefPtr<GetDirectoryListingTaskChild> task =
-    GetDirectoryListingTaskChild::Create(fs, mFile, mFilters, aRv);
+    GetDirectoryListingTaskChild::Create(fs, this, mFile, mFilters, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -440,7 +457,7 @@ Directory::GetFiles(bool aRecursiveFlag, ErrorResult& aRv)
   }
 
   RefPtr<GetFilesTaskChild> task =
-    GetFilesTaskChild::Create(fs, mFile, aRecursiveFlag, rv);
+    GetFilesTaskChild::Create(fs, this, mFile, aRecursiveFlag, rv);
   if (NS_WARN_IF(rv.Failed())) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
