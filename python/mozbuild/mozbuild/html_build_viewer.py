@@ -10,6 +10,8 @@ import BaseHTTPServer
 import json
 import os
 
+import requests
+
 
 class HTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_GET(self):
@@ -36,9 +38,7 @@ class HTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.send_header('Content-Type', 'application/json; charset=utf-8')
             self.end_headers()
 
-            with open(s.json_files[key], 'rb') as fh:
-                self.wfile.write(fh.read())
-
+            self.wfile.write(s.json_files[key])
             return
 
         if p == '/':
@@ -105,7 +105,15 @@ class BuildViewerServer(object):
         """Register a resource JSON file with the server.
 
         The file will be made available under the name/key specified."""
-        self.json_files[key] = path
+        with open(path, 'rb') as fh:
+            self.json_files[key] = fh.read()
+
+    def add_resource_json_url(self, key, url):
+        """Register a resource JSON file at a URL."""
+        r = requests.get(url)
+        if r.status_code != 200:
+            raise Exception('Non-200 HTTP response code')
+        self.json_files[key] = r.text
 
     def run(self):
         while not self.do_shutdown:
