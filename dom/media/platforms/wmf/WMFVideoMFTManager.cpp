@@ -16,12 +16,12 @@
 #include "Layers.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "MediaInfo.h"
+#include "MediaPrefs.h"
 #include "mozilla/Logging.h"
 #include "gfx2DGlue.h"
 #include "gfxWindowsPlatform.h"
 #include "IMFYCbCrImage.h"
 #include "mozilla/WindowsVersion.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "nsPrintfCString.h"
 #include "MediaTelemetryConstants.h"
@@ -162,8 +162,7 @@ public:
     nsACString* failureReason = &mFailureReason;
     nsCString secondFailureReason;
     if (mBackend == LayersBackend::LAYERS_D3D11 &&
-        Preferences::GetBool("media.windows-media-foundation.allow-d3d11-dxva", true) &&
-        IsWin8OrLater()) {
+        MediaPrefs::PDMWMFAllowD3D11() && IsWin8OrLater()) {
       mDXVA2Manager = DXVA2Manager::CreateD3D11DXVA(*failureReason);
       if (mDXVA2Manager) {
         return NS_OK;

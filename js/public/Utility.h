@@ -180,6 +180,13 @@ namespace js {
 struct MOZ_RAII AutoEnterOOMUnsafeRegion
 {
     MOZ_NORETURN MOZ_COLD void crash(const char* reason);
+    MOZ_NORETURN MOZ_COLD void crash(size_t size, const char* reason);
+
+    using AnnotateOOMAllocationSizeCallback = void(*)(size_t);
+    static AnnotateOOMAllocationSizeCallback annotateOOMSizeCallback;
+    static void setAnnotateOOMAllocationSizeCallback(AnnotateOOMAllocationSizeCallback callback) {
+        annotateOOMSizeCallback = callback;
+    }
 
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
     AutoEnterOOMUnsafeRegion()

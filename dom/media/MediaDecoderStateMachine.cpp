@@ -1764,7 +1764,7 @@ MediaDecoderStateMachine::EnsureVideoDecodeTaskQueued()
     return NS_OK;
   }
 
-  if (!IsVideoDecoding() || mReader->IsRequestingVidoeData() ||
+  if (!IsVideoDecoding() || mReader->IsRequestingVideoData() ||
       mVideoWaitRequest.Exists()) {
     return NS_OK;
   }
@@ -2277,7 +2277,7 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
                    "Don't yet have a strategy for non-heuristic + non-WaitForData");
         DispatchDecodeTasksIfNeeded();
         MOZ_ASSERT_IF(!mMinimizePreroll && OutOfDecodedAudio(), mReader->IsRequestingAudioData() || mAudioWaitRequest.Exists());
-        MOZ_ASSERT_IF(!mMinimizePreroll && OutOfDecodedVideo(), mReader->IsRequestingVidoeData() || mVideoWaitRequest.Exists());
+        MOZ_ASSERT_IF(!mMinimizePreroll && OutOfDecodedVideo(), mReader->IsRequestingVideoData() || mVideoWaitRequest.Exists());
         DECODER_LOG("In buffering mode, waiting to be notified: outOfAudio: %d, "
                     "mAudioStatus: %s, outOfVideo: %d, mVideoStatus: %s",
                     OutOfDecodedAudio(), AudioRequestStatus(),
@@ -2860,7 +2860,7 @@ const char*
 MediaDecoderStateMachine::VideoRequestStatus() const
 {
   MOZ_ASSERT(OnTaskQueue());
-  if (mReader->IsRequestingVidoeData()) {
+  if (mReader->IsRequestingVideoData()) {
     MOZ_DIAGNOSTIC_ASSERT(!mVideoWaitRequest.Exists());
     return "pending";
   } else if (mVideoWaitRequest.Exists()) {

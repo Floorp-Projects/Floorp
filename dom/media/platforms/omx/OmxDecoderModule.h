@@ -27,8 +27,6 @@ public:
                      MediaDataDecoderCallback* aCallback,
                      DecoderDoctorDiagnostics* aDiagnostics) override;
 
-  static void Init();
-
   bool SupportsMimeType(const nsACString& aMimeType,
                         DecoderDoctorDiagnostics* aDiagnostics) const override;
 

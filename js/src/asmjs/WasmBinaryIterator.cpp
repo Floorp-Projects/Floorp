@@ -61,7 +61,6 @@ wasm::Classify(Expr expr)
       case Expr::I64Clz:
       case Expr::I64Ctz:
       case Expr::I64Popcnt:
-      case Expr::I64Eqz:
       case Expr::F32Abs:
       case Expr::F32Neg:
       case Expr::F32Ceil:
@@ -206,6 +205,7 @@ wasm::Classify(Expr expr)
       case Expr::I64TruncSF64:
       case Expr::I64TruncUF64:
       case Expr::I64ReinterpretF64:
+      case Expr::I64Eqz:
       case Expr::F32ConvertSI32:
       case Expr::F32ConvertUI32:
       case Expr::F32ReinterpretI32:

@@ -61,9 +61,15 @@ private:
   }
 
   virtual void
-  GetPath(nsAString& aPath, ErrorResult& aRv) override
+  GetPath(nsAString& aPath) const override
   {
-    mBlobImpl->GetPath(aPath, aRv);
+    mBlobImpl->GetPath(aPath);
+  }
+
+  virtual void
+  SetPath(const nsAString& aPath) override
+  {
+    mBlobImpl->SetPath(aPath);
   }
 
   virtual int64_t

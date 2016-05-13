@@ -526,14 +526,6 @@ function prompt(aBrowser, aRequest) {
       if (!sharingAudio)
         listDevices(micMenupopup, audioDevices);
 
-      if (requestTypes.length == 2) {
-        let stringBundle = chromeDoc.defaultView.gNavigatorBundle;
-        if (!sharingScreen)
-          addDeviceToList(camMenupopup, stringBundle.getString("getUserMedia.noVideo.label"), "-1");
-        if (!sharingAudio)
-          addDeviceToList(micMenupopup, stringBundle.getString("getUserMedia.noAudio.label"), "-1");
-      }
-
       this.mainAction.callback = function(aRemember) {
         let allowedDevices = [];
         let perms = Services.perms;

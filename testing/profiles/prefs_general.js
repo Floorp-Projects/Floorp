@@ -310,8 +310,6 @@ user_pref("media.autoplay.enabled", true);
 user_pref("media.decoder.heuristic.dormant.timeout", 0);
 #endif
 
-// Don't prompt about e10s
-user_pref("browser.displayedE10SPrompt.1", 5);
 // Don't use auto-enabled e10s
 user_pref("browser.tabs.remote.autostart.1", false);
 user_pref("browser.tabs.remote.autostart.2", false);

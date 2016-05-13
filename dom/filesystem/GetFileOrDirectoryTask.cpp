@@ -218,7 +218,7 @@ GetFileOrDirectoryTaskParent::GetSuccessRequestResult(ErrorResult& aRv) const
     return FileSystemDirectoryResponse(path);
   }
 
-  return FileSystemFileResponse(path);
+  return FileSystemFileResponse(path, EmptyString());
 }
 
 nsresult

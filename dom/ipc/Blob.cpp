@@ -1924,7 +1924,10 @@ public:
   GetName(nsAString& aName) const override;
 
   virtual void
-  GetPath(nsAString& aPath, ErrorResult& aRv) override;
+  GetPath(nsAString& aPath) const override;
+
+  virtual void
+  SetPath(const nsAString& aPath) override;
 
   virtual int64_t
   GetLastModified(ErrorResult& aRv) override;
@@ -2590,9 +2593,16 @@ RemoteBlobImpl::GetName(nsAString& aName) const
 
 void
 BlobParent::
-RemoteBlobImpl::GetPath(nsAString& aPath, ErrorResult& aRv)
+RemoteBlobImpl::GetPath(nsAString& aPath) const
 {
-  mBlobImpl->GetPath(aPath, aRv);
+  mBlobImpl->GetPath(aPath);
+}
+
+void
+BlobParent::
+RemoteBlobImpl::SetPath(const nsAString& aPath)
+{
+  mBlobImpl->SetPath(aPath);
 }
 
 int64_t

@@ -161,12 +161,6 @@ var gMainPane = {
           prefToChange.value = e10sCheckbox.checked;
         }
 
-        let tmp = {};
-        Components.utils.import("resource://gre/modules/UpdateUtils.jsm", tmp);
-        if (!e10sCheckbox.checked && tmp.UpdateUtils.UpdateChannel != "default") {
-          Services.prefs.setBoolPref("browser.requestE10sFeedback", true);
-          Services.prompt.alert(window, brandName, bundle.getString("e10sFeedbackAfterRestart"));
-        }
         Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit |  Ci.nsIAppStartup.eRestart);
       }
     }

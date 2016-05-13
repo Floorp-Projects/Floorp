@@ -1406,8 +1406,16 @@ LIRGenerator::visitClz(MClz* ins)
 {
     MDefinition* num = ins->num();
 
-    LClzI* lir = new(alloc()) LClzI(useRegisterAtStart(num));
-    define(lir, ins);
+    MOZ_ASSERT(IsIntType(ins->type()));
+
+    if (ins->type() == MIRType::Int32) {
+        LClzI* lir = new(alloc()) LClzI(useRegisterAtStart(num));
+        define(lir, ins);
+        return;
+    }
+
+    auto* lir = new(alloc()) LClzI64(useInt64RegisterAtStart(num));
+    defineInt64(lir, ins);
 }
 
 void
@@ -1415,8 +1423,16 @@ LIRGenerator::visitCtz(MCtz* ins)
 {
     MDefinition* num = ins->num();
 
-    LCtzI* lir = new(alloc()) LCtzI(useRegisterAtStart(num));
-    define(lir, ins);
+    MOZ_ASSERT(IsIntType(ins->type()));
+
+    if (ins->type() == MIRType::Int32) {
+        LCtzI* lir = new(alloc()) LCtzI(useRegisterAtStart(num));
+        define(lir, ins);
+        return;
+    }
+
+    auto* lir = new(alloc()) LCtzI64(useInt64RegisterAtStart(num));
+    defineInt64(lir, ins);
 }
 
 void
@@ -1424,8 +1440,16 @@ LIRGenerator::visitPopcnt(MPopcnt* ins)
 {
     MDefinition* num = ins->num();
 
-    LPopcntI* lir = new(alloc()) LPopcntI(useRegisterAtStart(num), temp());
-    define(lir, ins);
+    MOZ_ASSERT(IsIntType(ins->type()));
+
+    if (ins->type() == MIRType::Int32) {
+        LPopcntI* lir = new(alloc()) LPopcntI(useRegisterAtStart(num), temp());
+        define(lir, ins);
+        return;
+    }
+
+    auto* lir = new(alloc()) LPopcntI64(useInt64RegisterAtStart(num), tempInt64());
+    defineInt64(lir, ins);
 }
 
 void
@@ -1637,7 +1661,6 @@ LIRGenerator::visitSub(MSub* ins)
 
     if (ins->specialization() == MIRType::Int64) {
         MOZ_ASSERT(lhs->type() == MIRType::Int64);
-        ReorderCommutative(&lhs, &rhs, ins);
         LSubI64* lir = new(alloc()) LSubI64;
         lowerForALUInt64(lir, ins, lhs, rhs);
         return;
@@ -2914,6 +2937,9 @@ LIRGenerator::visitNot(MNot* ins)
       }
       case MIRType::Int32:
         define(new(alloc()) LNotI(useRegisterAtStart(op)), ins);
+        break;
+      case MIRType::Int64:
+        define(new(alloc()) LNotI64(useInt64RegisterAtStart(op)), ins);
         break;
       case MIRType::Double:
         define(new(alloc()) LNotD(useRegister(op)), ins);

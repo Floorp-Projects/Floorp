@@ -2,7 +2,6 @@
 . "$topsrcdir/build/unix/mozconfig.linux"
 
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
-ac_add_options --enable-update-packaging
 ac_add_options --enable-signmar
 
 # Nightlies only since this has a cost in performance

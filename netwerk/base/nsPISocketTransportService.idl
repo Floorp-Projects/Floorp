@@ -21,12 +21,6 @@ interface nsPISocketTransportService : nsIRoutedSocketTransportService
   void shutdown();
 
   /**
-   * controls whether or not the socket transport service should poke
-   * the autodialer on connection failure.
-   */
-  attribute boolean autodialEnabled;
-
-  /**
    * controls the TCP sender window clamp
    */
   readonly attribute long sendBufferSize;

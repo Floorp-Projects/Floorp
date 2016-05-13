@@ -89,7 +89,6 @@ DebugMutexAutoLock::~DebugMutexAutoLock()
 
 nsSocketTransportService::nsSocketTransportService()
     : mThread(nullptr)
-    , mAutodialEnabled(false)
     , mLock("nsSocketTransportService::mLock")
     , mInitialized(false)
     , mShuttingDown(false)
@@ -763,20 +762,6 @@ nsSocketTransportService::CreateUnixDomainTransport(nsIFile *aPath,
         return rv;
 
     trans.forget(result);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSocketTransportService::GetAutodialEnabled(bool *value)
-{
-    *value = mAutodialEnabled;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSocketTransportService::SetAutodialEnabled(bool value)
-{
-    mAutodialEnabled = value;
     return NS_OK;
 }
 
