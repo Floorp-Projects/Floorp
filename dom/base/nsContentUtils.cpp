@@ -7674,10 +7674,10 @@ nsContentUtils::SendKeyEvent(nsIWidget* aWidget,
 
   if (msg == eKeyPress) {
     event.mKeyCode = aCharCode ? 0 : aKeyCode;
-    event.charCode = aCharCode;
+    event.mCharCode = aCharCode;
   } else {
     event.mKeyCode = aKeyCode;
-    event.charCode = 0;
+    event.mCharCode = 0;
   }
 
   uint32_t locationFlag = (aAdditionalFlags &

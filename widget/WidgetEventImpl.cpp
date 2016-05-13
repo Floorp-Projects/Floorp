@@ -569,9 +569,8 @@ WidgetKeyboardEvent::GetShortcutKeyCandidates(
   // press.  However, if the space key is assigned to a function key, it
   // shouldn't work as a space key.
   if (mKeyNameIndex == KEY_NAME_INDEX_USE_STRING &&
-      mCodeNameIndex == CODE_NAME_INDEX_Space &&
-      pseudoCharCode != static_cast<uint32_t>(' ')) {
-    ShortcutKeyCandidate spaceKey(static_cast<uint32_t>(' '), false);
+      mCodeNameIndex == CODE_NAME_INDEX_Space && pseudoCharCode != ' ') {
+    ShortcutKeyCandidate spaceKey(' ', false);
     aCandidates.AppendElement(spaceKey);
   }
 }
@@ -585,8 +584,8 @@ WidgetKeyboardEvent::GetAccessKeyCandidates(nsTArray<uint32_t>& aCandidates)
   // the priority of the charCodes are:
   //   0: charCode, 1: unshiftedCharCodes[0], 2: shiftedCharCodes[0]
   //   3: unshiftedCharCodes[1], 4: shiftedCharCodes[1],...
-  if (charCode) {
-    uint32_t ch = charCode;
+  if (mCharCode) {
+    uint32_t ch = mCharCode;
     if (IS_IN_BMP(ch)) {
       ch = ToLowerCase(static_cast<char16_t>(ch));
     }
@@ -603,7 +602,7 @@ WidgetKeyboardEvent::GetAccessKeyCandidates(nsTArray<uint32_t>& aCandidates)
       if (IS_IN_BMP(ch[j])) {
         ch[j] = ToLowerCase(static_cast<char16_t>(ch[j]));
       }
-      // Don't append the charCode that was already appended.
+      // Don't append the mCharCode that was already appended.
       if (aCandidates.IndexOf(ch[j]) == aCandidates.NoIndex) {
         aCandidates.AppendElement(ch[j]);
       }
@@ -615,9 +614,8 @@ WidgetKeyboardEvent::GetAccessKeyCandidates(nsTArray<uint32_t>& aCandidates)
   // press.  However, if the space key is assigned to a function key, it
   // shouldn't work as a space key.
   if (mKeyNameIndex == KEY_NAME_INDEX_USE_STRING &&
-      mCodeNameIndex == CODE_NAME_INDEX_Space &&
-      charCode != static_cast<uint32_t>(' ')) {
-    aCandidates.AppendElement(static_cast<uint32_t>(' '));
+      mCodeNameIndex == CODE_NAME_INDEX_Space && mCharCode != ' ') {
+    aCandidates.AppendElement(' ');
   }
   return;
 }

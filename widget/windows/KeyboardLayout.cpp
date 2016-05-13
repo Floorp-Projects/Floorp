@@ -1689,7 +1689,7 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
        !KeyboardLayout::IsPrintableCharKey(mOriginalVirtualKeyCode))) {
     WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
     if (!IsControlChar(static_cast<char16_t>(aCharMsg.wParam))) {
-      keypressEvent.charCode = static_cast<uint32_t>(aCharMsg.wParam);
+      keypressEvent.mCharCode = static_cast<uint32_t>(aCharMsg.wParam);
     } else {
       keypressEvent.mKeyCode = mDOMKeyCode;
     }
@@ -1766,8 +1766,8 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
   }
 
   WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
-  keypressEvent.charCode = uniChar;
-  if (!keypressEvent.charCode) {
+  keypressEvent.mCharCode = uniChar;
+  if (!keypressEvent.mCharCode) {
     keypressEvent.mKeyCode = mDOMKeyCode;
   }
   nsEventStatus status = InitKeyEvent(keypressEvent, mModKeyState, &aCharMsg);
@@ -2260,9 +2260,9 @@ NativeKey::ComputeInputtingStringWithKeyboardLayout()
     return;
   }
 
-  // If the charCode is not ASCII character, we should replace the
-  // charCode with ASCII character only when Ctrl is pressed.
-  // But don't replace the charCode when the charCode is not same as
+  // If the mCharCode is not ASCII character, we should replace the
+  // mCharCode with ASCII character only when Ctrl is pressed.
+  // But don't replace the mCharCode when the mCharCode is not same as
   // unmodified characters. In such case, Ctrl is sometimes used for a
   // part of character inputting key combination like Shift.
   uint32_t ch =
@@ -2339,10 +2339,10 @@ NativeKey::WillDispatchKeyboardEvent(WidgetKeyboardEvent& aKeyboardEvent,
     uint16_t uniChar =
       mInputtingStringAndModifiers.mChars[aIndex - skipUniChars];
 
-    // The charCode was set from mKeyValue. However, for example, when Ctrl key
+    // The mCharCode was set from mKeyValue. However, for example, when Ctrl key
     // is pressed, its value should indicate an ASCII character for backward
     // compatibility rather than inputting character without the modifiers.
-    // Therefore, we need to modify charCode value here.
+    // Therefore, we need to modify mCharCode value here.
     aKeyboardEvent.SetCharCode(uniChar);
   }
 

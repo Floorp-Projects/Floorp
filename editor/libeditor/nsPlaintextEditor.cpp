@@ -403,14 +403,14 @@ nsPlaintextEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
 
   // NOTE: On some keyboard layout, some characters are inputted with Control
   // key or Alt key, but at that time, widget sets FALSE to these keys.
-  if (nativeKeyEvent->charCode == 0 || nativeKeyEvent->IsControl() ||
+  if (!nativeKeyEvent->mCharCode || nativeKeyEvent->IsControl() ||
       nativeKeyEvent->IsAlt() || nativeKeyEvent->IsMeta() ||
       nativeKeyEvent->IsOS()) {
     // we don't PreventDefault() here or keybindings like control-x won't work
     return NS_OK;
   }
   aKeyEvent->AsEvent()->PreventDefault();
-  nsAutoString str(nativeKeyEvent->charCode);
+  nsAutoString str(nativeKeyEvent->mCharCode);
   return TypedText(str, eTypedText);
 }
 
