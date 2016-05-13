@@ -14,7 +14,7 @@ test(function(t) {
   var div = createDiv(t);
   var anim = div.animate({ display: [ 'inline', 'inline-block' ] }, 1000);
 
-  assert_equals(anim.effect.getFrames().length, 0,
+  assert_equals(anim.effect.getKeyframes().length, 0,
                 'Animation specified using property-indexed notation but'
                 + ' consisting of only non-animatable properties should not'
                 + ' contain any keyframes');
@@ -25,13 +25,13 @@ test(function(t) {
   var anim = div.animate([ { display: 'inline' }, { display: 'inline-block' } ],
                          1000);
 
-  assert_equals(anim.effect.getFrames().length, 2,
+  assert_equals(anim.effect.getKeyframes().length, 2,
                 'Animation specified using a keyframe sequence where each'
                 + ' keyframe contains only non-animatable properties should'
                 + ' return an equal number of (empty) keyframes');
-  assert_false(anim.effect.getFrames()[0].hasOwnProperty('display'),
+  assert_false(anim.effect.getKeyframes()[0].hasOwnProperty('display'),
                'Initial keyframe should not have the \'display\' property');
-  assert_false(anim.effect.getFrames()[1].hasOwnProperty('display'),
+  assert_false(anim.effect.getKeyframes()[1].hasOwnProperty('display'),
                'Final keyframe should not have the \'display\' property');
 }, '\'display\' property cannot be animated using a keyframe sequence');
 
@@ -58,7 +58,7 @@ test(function(t) {
   var div = createDiv(t);
   var anim = div.animate(properties, 1000);
 
-  assert_equals(anim.effect.getFrames().length, 0,
+  assert_equals(anim.effect.getKeyframes().length, 0,
                 'Animation specified using property-indexed notation but'
                 + ' consisting of only non-animatable properties should not'
                 + ' contain any keyframes');
@@ -103,15 +103,15 @@ test(function(t) {
   var div = createDiv(t);
   var anim = div.animate(frames, 1000);
 
-  assert_equals(anim.effect.getFrames().length, 2,
+  assert_equals(anim.effect.getKeyframes().length, 2,
                 'Animation specified using a keyframe sequence where each'
                 + ' keyframe contains only non-animatable properties should'
                 + ' return an equal number of (empty) keyframes');
-  assert_array_equals(Object.keys(anim.effect.getFrames()[0]),
+  assert_array_equals(Object.keys(anim.effect.getKeyframes()[0]),
                       defaultKeyframeProperties,
                       'Initial keyframe should not contain any properties other'
                       + ' than the default keyframe properties');
-  assert_array_equals(Object.keys(anim.effect.getFrames()[1]),
+  assert_array_equals(Object.keys(anim.effect.getKeyframes()[1]),
                       defaultKeyframeProperties,
                       'Final keyframe should not contain any properties other'
                       + ' than the default keyframe properties');
