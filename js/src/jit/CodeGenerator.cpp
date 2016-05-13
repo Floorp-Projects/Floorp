@@ -5186,7 +5186,7 @@ CodeGenerator::visitNewArray(LNewArray* lir)
 
     MOZ_ASSERT(length <= NativeObject::MAX_DENSE_ELEMENTS_COUNT);
 
-    if (!templateObject) {
+    if (lir->mir()->isVMCall()) {
         visitNewArrayCallVM(lir);
         return;
     }
@@ -5443,7 +5443,7 @@ CodeGenerator::visitNewObject(LNewObject* lir)
     Register tempReg = ToRegister(lir->temp());
     JSObject* templateObject = lir->mir()->templateObject();
 
-    if (!templateObject) {
+    if (lir->mir()->isVMCall()) {
         visitNewObjectVMCall(lir);
         return;
     }

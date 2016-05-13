@@ -874,7 +874,7 @@ class LNewArray : public LInstructionHelper<1, 0, 1>
     }
 
     const char* extraName() const {
-        return mir()->templateObject() ? "VMCall" : nullptr;
+        return mir()->isVMCall() ? "VMCall" : nullptr;
     }
 
     const LDefinition* temp() {
@@ -936,7 +936,7 @@ class LNewObject : public LInstructionHelper<1, 0, 1>
     }
 
     const char* extraName() const {
-        return mir()->templateObject() ? "VMCall" : nullptr;
+        return mir()->isVMCall() ? "VMCall" : nullptr;
     }
 
     const LDefinition* temp() {
