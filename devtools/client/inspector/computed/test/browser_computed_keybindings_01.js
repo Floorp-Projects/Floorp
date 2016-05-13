@@ -15,7 +15,7 @@ const TEST_URI = `
   <span class="matches">Some styled text</span>
 `;
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openComputedView();
   yield selectNode(".matches", inspector);
@@ -72,7 +72,7 @@ function checkHelpLinkKeybinding(view) {
   let def = promise.defer();
 
   let propView = getFirstVisiblePropertyView(view);
-  propView.mdnLinkClick = function() {
+  propView.mdnLinkClick = function () {
     ok(true, "Pressing F1 opened the MDN link");
     def.resolve();
   };
