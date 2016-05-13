@@ -100,7 +100,7 @@ add_task(function* () {
 function* checkForMessage(curTest, hud) {
   hud.jsterm.clearOutput();
 
-  content.location = curTest.url;
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, curTest.url);
 
   let results = yield waitForMessages({
     webconsole: hud,
