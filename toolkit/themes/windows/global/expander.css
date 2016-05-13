@@ -9,6 +9,6 @@
 .settingsContainer {
   padding-top: 3px;
   padding-bottom: 5px;
-  -moz-padding-start: 20px;
-  -moz-padding-end: 5px;
+  padding-inline-start: 20px;
+  padding-inline-end: 5px;
 }

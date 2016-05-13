@@ -178,10 +178,12 @@ this.BootstrapMonitor = {
   },
 
   checkAddonInstalled(id, version = undefined) {
-    let installed = this.installed.get(id);
-    do_check_neq(installed, undefined);
-    if (version != undefined)
-      do_check_eq(installed.data.version, version);
+    const installed = this.installed.get(id);
+    notEqual(installed, undefined);
+    if (version !== undefined) {
+      equal(installed.data.version, version);
+    }
+    return installed;
   },
 
   checkAddonNotInstalled(id) {

@@ -14,7 +14,7 @@ listbox {
 .listcell-label {
   margin: 0px !important;
   padding-bottom: 1px;
-  -moz-padding-start: 4px;
+  padding-inline-start: 4px;
   white-space: nowrap;
 }
 
@@ -59,12 +59,12 @@ listheader[sortable="true"]:hover:active {
   -moz-border-bottom-colors: ThreeDShadow;
   -moz-border-left-colors: ThreeDShadow -moz-Dialog;
   padding-top: 1px;
-  -moz-padding-start: 5px;
-  -moz-padding-end: 4px;
+  padding-inline-start: 5px;
+  padding-inline-end: 4px;
 }
 
 .listheader-icon {
-  -moz-margin-end: 2px;
+  margin-inline-end: 2px;
 }
 
 .listheader-label {
@@ -76,12 +76,12 @@ listheader[sortable="true"]:hover:active {
 .listcell-label {
   margin: 0px !important;
   padding-bottom: 1px;
-  -moz-padding-start: 4px;
+  padding-inline-start: 4px;
   white-space: nowrap;
 }
 
 .listcell-icon {
-  -moz-margin-end: 2px;
+  margin-inline-end: 2px;
 }
 
 .listcell-label[disabled="true"] {

@@ -38,8 +38,8 @@ notification[type="critical"] {
 .messageImage {
   width: 16px;
   height: 16px;
-  -moz-margin-start: 6px;
-  -moz-margin-end: 1px;
+  margin-inline-start: 6px;
+  margin-inline-end: 1px;
 }
 
 /* Default icons for notifications */
@@ -63,7 +63,7 @@ notification[type="critical"] {
 }
 
 .messageCloseButton > .toolbarbutton-icon {
-  -moz-margin-end: 5px;
+  margin-inline-end: 5px;
 }
 
 /* Popup notification */
@@ -132,13 +132,13 @@ XXX: apply styles to all themes until bug 509642 is fixed
   .popup-notification-menubutton > .button-menubutton-button {
     background-color: transparent;
     padding: 1px;
-    -moz-border-end: none;
+    border-inline-end: none;
   }
 
   .popup-notification-menubutton:not([type="menu-button"]),
   .popup-notification-menubutton > .button-menubutton-button > .button-box {
-    -moz-padding-start: 8px;
-    -moz-padding-end: 5px;
+    padding-inline-start: 8px;
+    padding-inline-end: 5px;
   }
 
   .popup-notification-menubutton > .button-menubutton-dropmarker {
@@ -200,7 +200,7 @@ XXX: apply styles to all themes until bug 509642 is fixed
 %endif
 
 .popup-notification-closebutton {
-  -moz-margin-end: -14px;
+  margin-inline-end: -14px;
   margin-top: -10px;
 }
 

@@ -45,18 +45,18 @@ menucaption > .menu-iconic-text {
 .menu-description {
   font-style: italic;
   color: -moz-mac-menutextdisable;
-  -moz-margin-start: 1ex !important;
+  margin-inline-start: 1ex !important;
 }
 
 .menu-iconic-icon {
   height: 16px;
   margin-top: -2px;
   margin-bottom: -2px;
-  -moz-margin-end: 5px;
+  margin-inline-end: 5px;
   /* Empty icons shouldn't take up room, so we need to compensate
    * the 5px margin-end with a negative margin-start.
    */
-  -moz-margin-start: -5px;
+  margin-inline-start: -5px;
 }
 
 /* menuitems with icons */
@@ -73,7 +73,7 @@ menuitem[src] {
 .menu-iconic > .menu-iconic-left > .menu-iconic-icon,
 menuitem[image] > .menu-iconic-left > .menu-iconic-icon,
 menuitem[src] > .menu-iconic-left > .menu-iconic-icon {
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
   width: 16px;
 }
 
@@ -81,8 +81,8 @@ menuitem[src] > .menu-iconic-left > .menu-iconic-icon {
 
 .menu-right,
 .menu-accel-container {
-  -moz-margin-start: 21px;
-  -moz-margin-end: -9px;
+  margin-inline-start: 21px;
+  margin-inline-end: -9px;
   -moz-box-pack: end;
 }
 
@@ -91,7 +91,7 @@ menuitem[src] > .menu-iconic-left > .menu-iconic-icon {
  * order to align properly: */
 @media not all and (-moz-mac-lion-theme) {
   .menu-right {
-    -moz-margin-end: -10px;
+    margin-inline-end: -10px;
   }
 }
 
@@ -177,7 +177,7 @@ menulist:not([editable="true"]) > menupopup > menuitem[selected="true"]::before 
   content: '\2713'; /* a checkmark */
   display: block;
   width: 15px;
-  -moz-margin-start: -15px;
+  margin-inline-start: -15px;
 }
 
 /* ::::: menuseparator ::::: */

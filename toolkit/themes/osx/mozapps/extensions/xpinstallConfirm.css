@@ -12,8 +12,8 @@
   list-style-image: url("chrome://global/skin/icons/warning-large.png");
   margin-top: 0 !important;
   margin-bottom: 6px !important;
-  -moz-margin-start: 6px !important;
-  -moz-margin-end: 20px !important;
+  margin-inline-start: 6px !important;
+  margin-inline-end: 20px !important;
 }
 
 #itemList {
@@ -23,7 +23,7 @@
 }
 
 #itemWarningIntro {
-  -moz-margin-start: 8px;
+  margin-inline-start: 8px;
 }
 
 #dialogContentBox {
@@ -45,7 +45,7 @@ installitem {
 .xpinstallIconContainer {
   width: 32px;
   height: 32px;
-  -moz-margin-end: 5px;
+  margin-inline-end: 5px;
 }
 
 .xpinstallItemName {
@@ -63,8 +63,8 @@ installitem {
   background-color: Window;
   margin-top: 2px;
   margin-bottom: 1px;
-  -moz-margin-start: 6px;
-  -moz-margin-end: 5px;
+  margin-inline-start: 6px;
+  margin-inline-end: 5px;
 }
 
 .xpinstallItemIcon {

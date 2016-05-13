@@ -2,8 +2,8 @@
   border-bottom: 1px solid hsla(210, 4%, 10%, 0.14);
   background-color: hsla(210, 4%, 10%, 0.07);
   padding: 6px 0;
-  -moz-padding-start: 44px;
-  -moz-padding-end: 6px;
+  padding-inline-start: 44px;
+  padding-inline-end: 6px;
   background-image: url("chrome://browser/skin/info.svg");
   background-clip: padding-box;
   background-position: 20px center;
@@ -21,7 +21,7 @@
 }
 
 #PopupAutoCompleteRichResult > hbox[anonid="search-suggestions-notification"] > description > label.text-link {
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
 }
 
 #PopupAutoCompleteRichResult > hbox[anonid="search-suggestions-notification"] > button {
@@ -30,7 +30,7 @@
   border-radius: 3px;
   padding: 4px 16px;
   margin: 0;
-  -moz-margin-start: 10px;
+  margin-inline-start: 10px;
 }
 
 #PopupAutoCompleteRichResult > hbox[anonid="search-suggestions-notification"] > button[anonid="search-suggestions-notification-disable"] {

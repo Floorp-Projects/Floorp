@@ -9,6 +9,7 @@ const promise = require("promise");
 const { Task } = require("resource://gre/modules/Task.jsm");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const EventEmitter = require("devtools/shared/event-emitter");
+const { TouchEventSimulator } = require("devtools/shared/touch/simulator");
 const { getOwnerWindow } = require("sdk/tabs/utils");
 const { on, off } = require("sdk/event/core");
 const { startup } = require("sdk/window/helpers");
@@ -198,6 +199,11 @@ ResponsiveUI.prototype = {
   toolWindow: null,
 
   /**
+   * Touch event simulator.
+   */
+  touchEventSimulator: null,
+
+  /**
    * For the moment, we open the tool by:
    * 1. Recording the tab's URL
    * 2. Navigating the tab to the tool
@@ -220,18 +226,28 @@ ResponsiveUI.prototype = {
     yield waitForMessage(toolWindow, "init");
     toolWindow.addInitialViewport(contentURI);
     yield waitForMessage(toolWindow, "browser-mounted");
+
+    let browser = toolWindow.document.querySelector("iframe.browser");
+    this.touchEventSimulator = new TouchEventSimulator(browser);
   }),
 
   destroy: Task.async(function* () {
     let tabBrowser = this.tab.linkedBrowser;
     let browserWindow = this.browserWindow;
+
     this.browserWindow = null;
     this.tab = null;
     this.inited = null;
     this.toolWindow = null;
-    let loaded = waitForDocLoadComplete(browserWindow.gBrowser);
-    tabBrowser.goBack();
-    yield loaded;
+
+    yield this.touchEventSimulator.stop();
+    this.touchEventSimulator = null;
+
+    if (tabBrowser.goBack) {
+      let loaded = waitForDocLoadComplete(browserWindow.gBrowser);
+      tabBrowser.goBack();
+      yield loaded;
+    }
   }),
 
   handleEvent(event) {
@@ -254,8 +270,20 @@ ResponsiveUI.prototype = {
         toolWindow.removeEventListener(event.type, this);
         ResponsiveUIManager.closeIfNeeded(window, tab);
         break;
+      case "update-touch-simulation":
+        let { enabled } = event.data;
+        this.updateTouchSimulation(enabled);
+        break;
     }
   },
+
+  updateTouchSimulation: Task.async(function* (enabled) {
+    if (enabled) {
+      this.touchEventSimulator.start();
+    } else {
+      this.touchEventSimulator.stop();
+    }
+  }),
 
   getViewportSize() {
     return this.toolWindow.getViewportSize();
@@ -325,6 +353,7 @@ function waitForDocLoadComplete(gBrowser) {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
                                            Ci.nsISupportsWeakReference])
   };
+
   gBrowser.addProgressListener(progressListener);
   return deferred.promise;
 }
@@ -342,6 +371,8 @@ const setMenuCheckFor = Task.async(
     yield startup(window);
 
     let menu = window.document.getElementById("menu_responsiveUI");
-    menu.setAttribute("checked", ResponsiveUIManager.isActiveForTab(tab));
+    if (menu) {
+      menu.setAttribute("checked", ResponsiveUIManager.isActiveForTab(tab));
+    }
   }
 );

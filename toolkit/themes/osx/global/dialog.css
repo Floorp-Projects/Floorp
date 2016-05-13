@@ -5,11 +5,11 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 #commonDialog > image {
-  -moz-margin-end: 14px !important;
+  margin-inline-end: 14px !important;
 }
 
 #commonDialog > .dialog-button-box {
-  -moz-margin-start: 80px;
+  margin-inline-start: 80px;
 }
 
 dialog { 
@@ -43,8 +43,8 @@ dialogheader {
   -moz-box-orient: vertical;
   margin: -14px -14px 0;
   padding: 12px;
-  -moz-padding-end: 5px;
-  -moz-padding-start: 25px;
+  padding-inline-end: 5px;
+  padding-inline-start: 25px;
 }
 
 .header-large > .dialogheader-title {

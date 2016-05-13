@@ -108,7 +108,7 @@
 .gcli-out-shortcut:before,
 .gcli-help-synopsis:before {
   color: var(--gcli-input-color);
-  -moz-padding-end: 2px;
+  padding-inline-end: 2px;
 }
 
 .gcli-help-arrow {
@@ -130,11 +130,11 @@
 }
 
 .gcli-menu-name {
-  -moz-padding-start: 8px;
+  padding-inline-start: 8px;
 }
 
 .gcli-menu-desc {
-  -moz-padding-end: 8px;
+  padding-inline-end: 8px;
   color: var(--gcli-input-color);
 }
 
@@ -155,7 +155,7 @@
 .gcli-menu-more {
   font-size: 80%;
   text-align: end;
-  -moz-padding-end: 8px;
+  padding-inline-end: 8px;
 }
 
 .gcli-addon-disabled {

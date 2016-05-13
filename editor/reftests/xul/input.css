@@ -9,12 +9,12 @@
 #win html|input, #win html|textarea {
   margin: 2px 4px;
   padding: 2px 3px 3px;
-  -moz-padding-start: 5px;
+  padding-inline-start: 5px;
 }
 
 #win html|input:-moz-system-metric(windows-default-theme) {
   padding: 1px 2px 2px;
-  -moz-padding-start: 4px;
+  padding-inline-start: 4px;
 }
 
 #linux html|input, #linux html|textarea {
@@ -51,7 +51,7 @@ html|input.num {
 }
 
 #mac html|input.num {
-  -moz-margin-end: 8px;
+  margin-inline-end: 8px;
 }
 
 #win html|input.num {
@@ -59,7 +59,7 @@ html|input.num {
 }
 
 #linux html|input.num {
-  -moz-margin-end: 3px;
+  margin-inline-end: 3px;
   padding: 3px 4px;
 }
 

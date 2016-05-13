@@ -29,7 +29,7 @@ popup:not([type="autocomplete"])
 menupopup > menu > menupopup,
 popup > menu > menupopup {
  /* align submenus */
-  -moz-margin-start: -3px;
+  margin-inline-start: -3px;
   margin-top: -3px;
 }
 

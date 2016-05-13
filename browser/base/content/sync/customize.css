@@ -7,13 +7,13 @@
 }
 
 #sync-customize-pane {
-  -moz-padding-start: 74px;
+  padding-inline-start: 74px;
   background: top left url(chrome://browser/skin/sync-128.png) no-repeat;
   background-size: 64px;
 }
 
 #sync-customize-title {
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
   padding-bottom: 0.5em;
   font-weight: bold;
 }

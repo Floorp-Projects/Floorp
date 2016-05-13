@@ -8,7 +8,7 @@ body {
 #message-box {
   margin-top: 2em;
   background: url('chrome://global/skin/icons/information-24.png') no-repeat left 4px;
-  -moz-padding-start: 30px;
+  padding-inline-start: 30px;
 }
 
 #activation-frame {

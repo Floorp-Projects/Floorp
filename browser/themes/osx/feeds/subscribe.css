@@ -24,7 +24,7 @@ html {
 #feedBody {
   border: 1px solid THreeDShadow;
   padding: 3em;
-  -moz-padding-start: 30px;
+  padding-inline-start: 30px;
   margin: 2em auto;
   background: -moz-Field;
 }
@@ -42,8 +42,8 @@ html {
   border-radius: 10px;
   padding-top: 4em;
   padding-bottom: .3em;
-  -moz-padding-start: .3em;
-  -moz-padding-end: .3em;
+  padding-inline-start: .3em;
+  padding-inline-end: .3em;
   margin: -4em auto 0 auto;
   font-size: 110%;
   color: InfoText;
@@ -68,7 +68,7 @@ html {
 
 #feedIntroText {
   display: none;
-  -moz-margin-start: 2em;
+  margin-inline-start: 2em;
 }
 
 #feedSubscribeLine {
@@ -108,8 +108,8 @@ h2 {
 
 #feedTitleLink {
   float: right;
-  -moz-margin-start: .6em;
-  -moz-margin-end: 0;
+  margin-inline-start: .6em;
+  margin-inline-end: 0;
   margin-top: 0;
   margin-bottom: 0;
 }
@@ -119,15 +119,15 @@ a[href] img {
 }
 
 #feedTitleContainer {
-  -moz-margin-start: 0;
-  -moz-margin-end: .6em;
+  margin-inline-start: 0;
+  margin-inline-end: .6em;
   margin-top: 0;
   margin-bottom: 0;
 }
 
 #feedTitleImage {
-  -moz-margin-start: .6em;
-  -moz-margin-end: 0;
+  margin-inline-start: .6em;
+  margin-inline-end: 0;
   margin-top: 0;
   margin-bottom: 0;
   max-width: 300px;

@@ -28,8 +28,8 @@ button {
   border: 1px solid transparent;
   padding-top: 1px;
   padding-bottom: 2px;
-  -moz-padding-start: 3px;
-  -moz-padding-end: 4px;
+  padding-inline-start: 3px;
+  padding-inline-end: 4px;
 }
 
 .button-text {
@@ -75,8 +75,8 @@ button[open="true"] > .button-box:-moz-system-metric(windows-classic),
 button[checked="true"] > .button-box:-moz-system-metric(windows-classic) {
   padding-top: 2px;
   padding-bottom: 1px;
-  -moz-padding-start: 4px;
-  -moz-padding-end: 3px;
+  padding-inline-start: 4px;
+  padding-inline-end: 3px;
 }
 
 /* .......... disabled state .......... */
@@ -97,8 +97,8 @@ button[disabled="true"]:-moz-system-metric(windows-classic) {
 button[disabled="true"] > .button-box {
   padding-top: 1px !important;
   padding-bottom: 2px !important;
-  -moz-padding-start: 3px !important;
-  -moz-padding-end: 4px !important;
+  padding-inline-start: 3px !important;
+  padding-inline-end: 4px !important;
 }
 
 /* ::::: menu/menu-button buttons ::::: */
@@ -121,8 +121,8 @@ button[type="menu-button"] {
 .button-menubutton-dropmarker[open="true"] {
   margin-top: 2px;
   margin-bottom: 0px;
-  -moz-margin-start: 2px;
-  -moz-margin-end: 0px;
+  margin-inline-start: 2px;
+  margin-inline-end: 0px;
 }
 
 /* ::::: plain buttons ::::: */

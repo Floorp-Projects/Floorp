@@ -100,6 +100,15 @@ html, body {
   height: 12px;
 }
 
+#global-touch-simulation-button::before {
+  background-image: url("./images/touch-events.svg");
+  margin: -6px 0 0 -6px;
+}
+
+#global-touch-simulation-button.active::before {
+  filter: url("chrome://devtools/skin/images/filters.svg#checked-icon-state");
+}
+
 #global-screenshot-button::before {
   background-image: url("./images/screenshot.svg");
   margin: -6px 0 0 -6px;
@@ -166,7 +175,7 @@ html, body {
   border: none;
   color: var(--theme-body-color-inactive);
   height: 100%;
-  padding: 0 16px;
+  padding: 0 16px 0 0;
   text-align: center;
   text-overflow: ellipsis;
   width: 150px;
@@ -188,7 +197,7 @@ html, body {
   background-color: var(--theme-toolbar-background);
   color: var(--viewport-active-color);
   text-align: left;
-  padding: 5px;
+  padding: 5px 10px;
 }
 
 .viewport-rotate-button {

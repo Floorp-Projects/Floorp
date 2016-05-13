@@ -174,7 +174,7 @@ td > ol:-moz-only-whitespace:-moz-last-node, th > ol:-moz-only-whitespace:-moz-l
   font-size: 1px;
   line-height: 0;
   content: "\A  ";
-  -moz-margin-end: 40px;
+  margin-inline-end: 40px;
 }
 
 
@@ -182,17 +182,17 @@ td > ol:-moz-only-whitespace:-moz-last-node, th > ol:-moz-only-whitespace:-moz-l
 
 dl > dl {
   display: block;
-  -moz-margin-start: 40px;
+  margin-inline-start: 40px;
 }
 
 
 /* Quirk: Make floated images have a margin  (b=58899) */
 img[align=left]:dir(ltr), img[align=right]:dir(rtl) {
-  -moz-margin-end: 3px;
+  margin-inline-end: 3px;
 }
 
 img[align=right]:dir(ltr), img[align=left]:dir(rtl) {
-  -moz-margin-start: 3px;
+  margin-inline-start: 3px;
 }
 
 /*

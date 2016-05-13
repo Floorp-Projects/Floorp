@@ -69,7 +69,7 @@ th {
 
 th + th,
 td + td {
-  -moz-border-start: 1px dotted ThreeDShadow; 
+  border-inline-start: 1px dotted ThreeDShadow; 
 }
 
 td {

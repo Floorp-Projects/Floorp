@@ -38,7 +38,7 @@ input {
 .header > div {
   flex: 1;
   padding: 10px;
-  -moz-padding-start: 16px;
+  padding-inline-start: 16px;
 }
 
 #header-button {
@@ -76,7 +76,7 @@ input {
 }
 
 .inner {
-  -moz-margin-start: calc(var(--icon-size) + var(--icon-margin) * 2 - 1em);
+  margin-inline-start: calc(var(--icon-size) + var(--icon-margin) * 2 - 1em);
   padding: 1em;
 }
 
@@ -85,7 +85,7 @@ input {
   width: var(--icon-size);
   height: var(--icon-size);
   top: var(--icon-margin);
-  -moz-margin-start: var(--icon-margin);
+  margin-inline-start: var(--icon-margin);
   position: absolute;
   pointer-events: none;
 }

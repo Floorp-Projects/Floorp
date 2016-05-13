@@ -32,7 +32,7 @@ button {
   -moz-appearance: none;
   padding: 2px 0;
   margin: 0;
-  -moz-margin-start: 8px;
+  margin-inline-start: 8px;
   border-radius: 2px;
   color: black !important;
   background-color: hsl(0,0%,90%);

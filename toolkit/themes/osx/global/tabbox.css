@@ -43,11 +43,11 @@ tab:-moz-focusring {
 }
 
 tab:first-of-type {
-  -moz-padding-start: 2px;
+  padding-inline-start: 2px;
 }
 
 tab:last-of-type {
-  -moz-padding-end: 2px;
+  padding-inline-end: 2px;
 }
 
 @media (-moz-mac-lion-theme) {
@@ -96,7 +96,7 @@ tabs.tabs-bottom > tab {
   margin: -1px 0 0;
   padding: 0 0 2px 0;
   position: relative;
-  -moz-border-end: 1px solid rgba(0, 0, 0, 0.19);
+  border-inline-end: 1px solid rgba(0, 0, 0, 0.19);
 }
 
 tabbox.tabs-bottom > tabs > tab > .tab-middle,
@@ -107,7 +107,7 @@ tabs.tabs-bottom > tab > .tab-middle {
 tabbox.tabs-bottom > tabs > tab:not([visuallyselected=true]):hover,
 tabs.tabs-bottom > tab:not([visuallyselected=true]):hover {
   background-color: rgba(0, 0, 0, 0.1);
-  -moz-border-end-color: rgba(0, 0, 0, 0.1);
+  border-inline-end-color: rgba(0, 0, 0, 0.1);
 }
 
 tabbox.tabs-bottom > tabs > tab[visuallyselected=true],
@@ -120,7 +120,7 @@ tabs.tabs-bottom > tab[visuallyselected=true] {
   -moz-border-left-colors: rgba(0, 0, 0, 0.08) #888;
   -moz-border-right-colors: rgba(0, 0, 0, 0.08) #888;
   -moz-border-bottom-colors: rgba(0, 0, 0, 0.08) #888;
-  -moz-margin-end: -1px;
+  margin-inline-end: -1px;
   margin-top: -2px;
   margin-bottom: 1px;
   padding: 0;
@@ -128,18 +128,18 @@ tabs.tabs-bottom > tab[visuallyselected=true] {
 
 tabbox.tabs-bottom > tabs > tab[beforeselected=true],
 tabs.tabs-bottom > tab[beforeselected=true] {
-  -moz-border-end-color: transparent;
-  -moz-margin-end: -2px;
+  border-inline-end-color: transparent;
+  margin-inline-end: -2px;
 }
 
 tabbox.tabs-bottom > tabs > tab:first-of-type:not([visuallyselected=true]),
 tabs.tabs-bottom > tab:first-of-type:not([visuallyselected=true]) {
-  -moz-border-start: 4px solid transparent;
+  border-inline-start: 4px solid transparent;
 }
 
 tabbox.tabs-bottom > tabs > tab:first-of-type[visuallyselected=true],
 tabs.tabs-bottom > tab:first-of-type[visuallyselected=true] {
-  -moz-margin-start: 2px;
+  margin-inline-start: 2px;
 }
 
 tabbox.tabs-bottom,

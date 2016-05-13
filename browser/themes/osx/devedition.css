@@ -44,7 +44,7 @@
 }
 
 #forward-button {
-  -moz-border-start: none !important;
+  border-inline-start: none !important;
   /* browser.css and friends set up the width of the button to be 32px.
    * They then set margin-left to -2px to ensure the button is not too wide
    * compared to the back button, and set padding-left to center the icon
@@ -125,5 +125,5 @@
 .ac-type-icon {
   /* Left-align the type icon in awesomebar popup results with the icon in the
      urlbar. */
-  -moz-margin-start: 14px;
+  margin-inline-start: 14px;
 }

@@ -15,13 +15,13 @@ include "defines.css"
 }
 
 .details {
-  -moz-margin-start: calc(var(--icon-size) + var(--icon-margin) * 2 - 1em);
+  margin-inline-start: calc(var(--icon-size) + var(--icon-margin) * 2 - 1em);
   padding: 1em;
 }
 
 .date {
   color: gray;
-  -moz-margin-start: 0.5em;
+  margin-inline-start: 0.5em;
 }
 
 .domain,

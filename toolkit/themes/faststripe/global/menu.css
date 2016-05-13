@@ -46,28 +46,28 @@ menuitem.spell-suggestion {
 }
 
 .menu-text {
-  -moz-padding-start: 1.45em !important;
+  padding-inline-start: 1.45em !important;
   -moz-appearance: menuitemtext;
 }
 
 .menu-text,
 .menu-iconic-text {
   font-weight: inherit;
-  -moz-margin-start: 2px !important;
-  -moz-padding-end: 2px;
+  margin-inline-start: 2px !important;
+  padding-inline-end: 2px;
 }
 
 .menu-description {
   font-style: italic;
   color: GrayText;
-  -moz-margin-start: 1ex !important;
+  margin-inline-start: 1ex !important;
 }
 
 .menu-accel,
 .menu-iconic-accel {
   color: inherit;
-  -moz-margin-start: 0.74em !important;
-  -moz-margin-end: 1.35em !important;
+  margin-inline-start: 0.74em !important;
+  margin-inline-end: 1.35em !important;
 }
 
 .menu-iconic-left {
@@ -90,7 +90,7 @@ menuitem.menuitem-iconic > .menu-iconic-right {
 /* ..... menu arrow box ..... */
 
 .menu-right {
-  -moz-margin-end: -2px;
+  margin-inline-end: -2px;
   list-style-image: url("chrome://global/skin/arrow/arrow-rit-sharp.gif");
   -moz-box-pack: center;
   min-width: 1.28em;
@@ -236,7 +236,7 @@ menulist > menupopup > menuseparator {
 /* ::::: tree column picker ::::: */
 
 .treecell-popupcell-menu {
-  -moz-margin-start: -2px;
+  margin-inline-start: -2px;
   list-style-image: url("chrome://global/skin/columnselect.gif");
   -moz-image-region: auto;
 }

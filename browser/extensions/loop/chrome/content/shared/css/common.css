@@ -95,11 +95,11 @@ p {
 }
 
 .button-group > .button:first-child {
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
 }
 
 .button-group > .button:last-child {
-  -moz-margin-end: 0;
+  margin-inline-end: 0;
 }
 
 .button {
@@ -291,7 +291,7 @@ p {
 
 .notificationContainer > .details-error > .detailsButton {
   float: right;
-  -moz-margin-start: 1em; /* Match .detailsBar padding */
+  margin-inline-start: 1em; /* Match .detailsBar padding */
 }
 
 .alert .close {
@@ -484,7 +484,7 @@ html[dir="rtl"] .dropdown-menu {
   float: left;
   width: 2rem;
   height: 2rem;
-  -moz-margin-end: .5em;
+  margin-inline-end: .5em;
   margin-top: .1em;
   border: 1px solid #999;
   border-radius: 3px;

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #PopupSearchAutoComplete {
-  -moz-margin-start: -23px;
+  margin-inline-start: -23px;
 }
 
 .searchbar-textbox {
@@ -12,7 +12,7 @@
 
 .searchbar-popup {
   margin-top: 4px;
-  -moz-margin-start: 3px;
+  margin-inline-start: 3px;
 }
 
 .searchbar-textbox > .autocomplete-textbox-container > .textbox-input-box {
@@ -29,7 +29,7 @@
 
 .search-go-container {
   -moz-box-align: center;
-  -moz-padding-end: 6px;
+  padding-inline-end: 6px;
 }
 
 .searchbar-search-button-container {
@@ -52,8 +52,8 @@
 .searchbar-search-button {
   list-style-image: url("chrome://browser/skin/search-indicator.png");
   -moz-image-region: rect(0, 20px, 20px, 0);
-  -moz-margin-start: 3px;
-  -moz-margin-end: 1px;
+  margin-inline-start: 3px;
+  margin-inline-end: 1px;
 }
 
 .searchbar-search-button[addengines="true"] {
@@ -176,7 +176,7 @@
 }
 
 .searchbar-engine-one-off-item > .button-box > .button-icon {
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
   width: 16px;
   height: 16px;
 }
@@ -216,7 +216,7 @@
 .addengine-item > .button-box > .button-text {
   -moz-box-flex: 1;
   text-align: start;
-  -moz-padding-start: 10px;
+  padding-inline-start: 10px;
 }
 
 .addengine-item:not([image]) {
@@ -238,8 +238,8 @@
 }
 
 .search-panel-tree > .autocomplete-treebody::-moz-tree-image {
-  -moz-padding-start: 4px;
-  -moz-padding-end: 2px;
+  padding-inline-start: 4px;
+  padding-inline-end: 2px;
   width: 14px;
   height: 14px;
 }

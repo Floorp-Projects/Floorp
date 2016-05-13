@@ -59,7 +59,7 @@ tab[visuallyselected="true"] {
 }
 
 tab + tab {
-  -moz-margin-start: -2px;
+  margin-inline-start: -2px;
 }
 
 .tab-text {

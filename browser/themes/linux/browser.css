@@ -144,8 +144,8 @@ toolbarbutton.bookmark-item:not(.subviewbutton):hover:active,
 toolbarbutton.bookmark-item[open="true"] {
   padding-top: 3px;
   padding-bottom: 1px;
-  -moz-padding-start: 4px;
-  -moz-padding-end: 2px;
+  padding-inline-start: 4px;
+  padding-inline-end: 2px;
 }
 
 .bookmark-item > .toolbarbutton-icon,
@@ -252,7 +252,7 @@ menuitem.bookmark-item {
 }
 
 .bookmark-item > .menu-iconic-left > .menu-iconic-icon {
-  -moz-padding-start: 0px;
+  padding-inline-start: 0px;
 }
 
 /* Bookmark drag and drop styles */
@@ -272,7 +272,7 @@ menuitem.bookmark-item {
 .menupopup-drop-indicator {
   list-style-image: none;
   height: 2px;
-  -moz-margin-end: -4em;
+  margin-inline-end: -4em;
   background-color: Highlight;
 }
 
@@ -596,7 +596,7 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 :-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
 :-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1 > .toolbarbutton-badge-stack,
 :-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1 > .toolbarbutton-icon {
-  -moz-margin-end: 0;
+  margin-inline-end: 0;
   padding: 2px 6px;
   border: 1px solid transparent;
   border-radius: 2px;
@@ -618,8 +618,8 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 }
 
 #nav-bar #PanelUI-menu-button {
-  -moz-padding-start: 5px;
-  -moz-padding-end: 5px;
+  padding-inline-start: 5px;
+  padding-inline-end: 5px;
 }
 
 .findbar-button:not(:-moz-any([checked="true"],[disabled="true"])):hover > .toolbarbutton-text,
@@ -679,7 +679,7 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   display: -moz-box;
   width: 1px;
   height: 18px;
-  -moz-margin-end: -1px;
+  margin-inline-end: -1px;
   background-image: linear-gradient(currentColor 0, currentColor 100%);
   background-position: center;
   background-repeat: no-repeat;
@@ -693,7 +693,7 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 }
 
 :-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
-  -moz-margin-start: -4px;
+  margin-inline-start: -4px;
   margin-top: 3px;
   margin-bottom: 3px;
 }
@@ -711,8 +711,8 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 #back-button {
   padding-top: 2px;
   padding-bottom: 2px;
-  -moz-padding-start: 4px;
-  -moz-padding-end: 0;
+  padding-inline-start: 4px;
+  padding-inline-end: 0;
   position: relative;
   z-index: 1;
   border-radius: 0 10000px 10000px 0;
@@ -801,7 +801,7 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 /* Fullscreen window controls */
 #window-controls {
   -moz-box-align: start;
-  -moz-margin-start: 10px;
+  margin-inline-start: 10px;
 }
 
 #minimize-button {
@@ -859,7 +859,7 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 }
 
 .urlbar-input-box {
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
 }
 
 .urlbar-history-dropmarker {
@@ -880,7 +880,7 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 }
 
 @conditionalForwardWithUrlbar@ > #urlbar {
-  -moz-border-start: none;
+  border-inline-start: none;
   margin-left: 0;
 }
 
@@ -946,24 +946,24 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 #urlbar-search-splitter {
   -moz-appearance: none;
   width: 8px;
-  -moz-margin-start: -4px;
+  margin-inline-start: -4px;
 }
 
 #urlbar-search-splitter + #search-container > #searchbar > .searchbar-textbox {
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
 }
 
 #urlbar-display-box {
   margin-top: -1px;
   margin-bottom: -1px;
-  -moz-border-end: 1px solid #AAA;
-  -moz-margin-end: 3px;
+  border-inline-end: 1px solid #AAA;
+  margin-inline-end: 3px;
 }
 
 .urlbar-display {
   margin-top: 0;
   margin-bottom: 0;
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
   color: GrayText;
 }
 
@@ -1043,7 +1043,7 @@ notification[value="translation"] {
 
 notification[value="translation"] button,
 notification[value="translation"] menulist {
-  -moz-padding-end: 1ch;
+  padding-inline-end: 1ch;
 }
 
 notification[value="translation"] menulist {
@@ -1059,8 +1059,8 @@ notification[value="translation"] button {
 notification[value="translation"] button,
 notification[value="translation"] menulist,
 notification[value="translation"] menulist > .menulist-label-box {
-  -moz-margin-start: 1ch;
-  -moz-margin-end: 1ch;
+  margin-inline-start: 1ch;
+  margin-inline-end: 1ch;
 }
 
 notification[value="translation"] button:hover,
@@ -1085,11 +1085,11 @@ notification[value="translation"] button[anonid="translate"]:active {
 notification[value="translation"] button > .button-box,
 notification[value="translation"] button[type="menu"] > .button-box > .button-menu-dropmarker {
   padding: 0;
-  -moz-margin-start: 3ch;
+  margin-inline-start: 3ch;
 }
 
 notification[value="translation"] button:not([type="menu"]) > .button-box {
-  -moz-margin-end: 3ch;
+  margin-inline-end: 3ch;
 }
 
 notification[value="translation"] menulist > .menulist-dropmarker {
@@ -1471,7 +1471,7 @@ html|span.ac-tag {
 
 .panel-promo-icon {
   list-style-image: url("chrome://browser/skin/sync-notification-24.png");
-  -moz-margin-end: 10px;
+  margin-inline-end: 10px;
   vertical-align: middle;
 }
 
@@ -1680,7 +1680,7 @@ menuitem:hover > hbox > .alltabs-endimage[soundplaying] {
 /* Sidebar */
 #sidebar-throbber[loading="true"] {
   list-style-image: url("chrome://global/skin/icons/loading.png");
-  -moz-margin-end: 4px;
+  margin-inline-end: 4px;
 }
 
 toolbarbutton.chevron {
@@ -1824,7 +1824,7 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton:not(:h
   text-shadow: none;
   background-image: linear-gradient(#B4211B, #8A1915);
   border-radius: 1px;
-  -moz-margin-end: 2px;
+  margin-inline-end: 2px;
 }
 
 /* Social toolbar item */
@@ -1954,7 +1954,7 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton:not(:h
 }
 
 #UITourTooltipClose {
-  -moz-margin-end: -4px;
+  margin-inline-end: -4px;
   height: 16px;
   width: 16px;
 }
@@ -1973,8 +1973,8 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton:not(:h
 #context-navigation > .menuitem-iconic > .menu-iconic-left {
   visibility: visible;
   /* override toolkit/themes/linux/global/menu.css */
-  -moz-padding-end: 0 !important;
-  -moz-margin-end: 0 !important;
+  padding-inline-end: 0 !important;
+  margin-inline-end: 0 !important;
 }
 
 .browser-extension-panel > .panel-arrowcontainer > .panel-arrowcontent {

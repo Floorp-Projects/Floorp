@@ -32,13 +32,13 @@ button[default="true"]:not(:hover):active {
 
 .button-text {
   margin: 1px 0 !important;
-  -moz-margin-start: 3px !important;
-  -moz-margin-end: 2px !important;
+  margin-inline-start: 3px !important;
+  margin-inline-end: 2px !important;
   text-align: center;
 }
 
 .button-icon {
-  -moz-margin-start: 1px;
+  margin-inline-start: 1px;
 }
 
 button[type="default"] {

@@ -158,15 +158,15 @@ notification[type="info"]:not([value="translation"]) .close-icon:not(:hover) {
   margin: 0;
   padding-top: 2px;
   padding-bottom: 2px;
-  -moz-padding-start: 8px;
-  -moz-padding-end: 5px;
+  padding-inline-start: 8px;
+  padding-inline-end: 5px;
 }
 
 .popup-notification-menubutton > .button-menubutton-dropmarker {
   padding: 7px 8px;
   margin-top: 0;
   margin-bottom: 0;
-  -moz-margin-start: -1px;
+  margin-inline-start: -1px;
   list-style-image: url("chrome://global/skin/icons/panel-dropmarker.png");
 }
 
@@ -189,7 +189,7 @@ notification[type="info"]:not([value="translation"]) .close-icon:not(:hover) {
 }
 
 .popup-notification-closebutton {
-  -moz-margin-end: -12px;
+  margin-inline-end: -12px;
   margin-top: -13px;
 }
 

@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Video controls test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function runTest(event) {
+  info(true, "----- test #" + testnum + " -----");
+
+  switch (testnum) {
+    case 1:
+      is(event.type, "timeupdate", "checking event type");
+      is(video.paused, false, "checking video play state");
+      video.removeEventListener("timeupdate", runTest);
+
+      // Click to toggle play/pause (now pausing)
+      synthesizeMouseAtCenter(video, {}, win);
+      break;
+
+    case 2:
+      is(event.type, "pause", "checking event type");
+      is(video.paused, true, "checking video play state");
+      win.close();
+
+      SimpleTest.finish();
+      break;
+
+    default:
+      ok(false, "unexpected test #" + testnum + " w/ event " + event.type);
+      throw "unexpected test #" + testnum + " w/ event " + event.type;
+  }
+
+  testnum++;
+}
+
+SpecialPowers.pushPrefEnv({"set": [["javascript.enabled", false]]}, startTest);
+
+var testnum = 1;
+
+var video;
+function loadevent(event) {
+  is(win["testExpando"], undefined, "expando shouldn't exist because js is disabled");
+  video = win.document.querySelector("video");
+  // Other events expected by the test.
+  video.addEventListener("timeupdate", runTest, false);
+  video.addEventListener("pause", runTest, false);
+}
+
+var win;
+function startTest() {
+  var videoURL = new URL("seek_with_sound.ogg", document.documentURI).href;
+  var url = "data:text/html,<video src=" + videoURL + " controls autoplay=true></video><script>window.testExpando = true;</scr" + "ipt>";
+
+  win = window.open(url);
+  win.addEventListener("load", loadevent, false);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

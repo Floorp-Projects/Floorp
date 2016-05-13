@@ -28,7 +28,7 @@ findbar[noanim] {
 }
 
 .findbar-container {
-  -moz-padding-start: 8px;
+  padding-inline-start: 8px;
   padding-top: 4px;
   padding-bottom: 4px;
 }
@@ -83,7 +83,7 @@ findbar[noanim] {
 
 .findbar-find-previous,
 .findbar-find-next {
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
   -moz-appearance: none;
   background: linear-gradient(rgba(255,255,255,.9), rgba(255,255,255,.2));
   border: 1px solid ThreeDShadow;
@@ -108,7 +108,7 @@ findbar[noanim] {
 
 .findbar-find-previous {
   -moz-image-region: rect(0, 12px, 9px, 0);
-  -moz-border-end-width: 0;
+  border-inline-end-width: 0;
 }
 
 .findbar-find-next {
@@ -136,23 +136,23 @@ findbar[noanim] {
 }
 
 .findbar-find-previous:focus + .findbar-find-next {
-  -moz-border-start-width: 0;
+  border-inline-start-width: 0;
 }
 
 .findbar-find-previous:focus {
-  -moz-border-end-width: 1px;
+  border-inline-end-width: 1px;
 }
 
 .findbar-highlight,
 .findbar-case-sensitive {
-  -moz-margin-start: 5px;
+  margin-inline-start: 5px;
 }
 
 .findbar-find-status,
 .findbar-matches {
   color: GrayText;
   margin: 0 !important;
-  -moz-margin-start: 12px !important;
+  margin-inline-start: 12px !important;
 }
 
 .find-status-icon[status="pending"] {

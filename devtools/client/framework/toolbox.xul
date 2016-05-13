@@ -3,6 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="resource://devtools/client/shared/components/notification-box.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 
@@ -111,7 +112,8 @@
     </menupopup>
   </popupset>
 
-  <notificationbox id="toolbox-notificationbox" flex="1">
+  <vbox id="toolbox-container" flex="1">
+    <div xmlns="http://www.w3.org/1999/xhtml" id="toolbox-notificationbox"/>
     <toolbar class="devtools-tabbar">
       <hbox id="toolbox-picker-container" />
       <hbox id="toolbox-tabs" flex="1" role="tablist" />
@@ -147,5 +149,5 @@
       <box minheight="75" flex="1" id="toolbox-panel-webconsole" collapsed="true" />
     </vbox>
     <tooltip id="aHTMLTooltip" page="true" />
-  </notificationbox>
+  </vbox>
 </window>

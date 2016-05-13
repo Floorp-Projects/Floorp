@@ -68,7 +68,7 @@
 .customization-tipPanel-closeBox > .close-icon {
   -moz-appearance: none;
   border: 0;
-  -moz-margin-end: -25px;
+  margin-inline-end: -25px;
 }
 
 #customization-tipPanel > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="left"],

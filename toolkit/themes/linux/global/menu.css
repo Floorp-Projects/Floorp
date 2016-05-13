@@ -84,34 +84,34 @@ menulist > menupopup > menu {
 .menu-iconic-text {
   margin-top: 0px !important;
   margin-bottom: 0px !important;
-  -moz-margin-start: 0px !important;
-  -moz-margin-end: 2px !important;
+  margin-inline-start: 0px !important;
+  margin-inline-end: 2px !important;
   color: inherit;
 }
 
 .menu-text {
   /* This is (18 + the size of end-padding on .menu-iconic-left)px */
-  -moz-margin-start: 21px !important;
+  margin-inline-start: 21px !important;
   font-weight: inherit;
 }
 
 menucaption > .menu-text,
 menucaption > .menu-iconic-text {
-  -moz-margin-start: 0 !important;
+  margin-inline-start: 0 !important;
   font-weight: bold;
 }
 
 .menu-description {
   font-style: italic;
   color: GrayText;
-  -moz-margin-start: 1ex !important;
+  margin-inline-start: 1ex !important;
 }
 
 .menu-accel,
 .menu-iconic-accel {
   margin-top: 0px !important;
   margin-bottom: 0px !important;
-  -moz-margin-start: 7px !important;
+  margin-inline-start: 7px !important;
   color: inherit;
 }
 
@@ -123,7 +123,7 @@ menucaption > .menu-iconic-text {
 .menu-iconic-right {
   width: 16px;
   /* We can only hardcode this, to make the default GTK icon<->label spacing */
-  -moz-padding-end: 3px !important;
+  padding-inline-end: 3px !important;
 }
 
 .menu-iconic-icon {
@@ -134,8 +134,8 @@ menucaption > .menu-iconic-text {
 .menu-right {
   margin-top: 0px;
   margin-bottom: 0px;
-  -moz-margin-start: 6px;
-  -moz-margin-end: 0px;
+  margin-inline-start: 6px;
+  margin-inline-end: 0px;
   width: 1ex;
   height: 1ex;
   /* These next two rules are needed to prevent inheritance and thus ugliness */
@@ -147,8 +147,8 @@ menucaption > .menu-iconic-text {
 .menubar-left {
   margin-top: 0px;
   margin-bottom: 0px;
-  -moz-margin-start: 0px;
-  -moz-margin-end: 2px;
+  margin-inline-start: 0px;
+  margin-inline-end: 2px;
   color: inherit;
 }
 
@@ -204,7 +204,7 @@ menulist > menupopup > menuseparator {
 /* ::::: tree column picker ::::: */
 
 .treecell-popupcell-menu {
-  -moz-margin-start: -2px;
+  margin-inline-start: -2px;
   list-style-image: url("chrome://global/skin/columnselect.gif");
   -moz-image-region: auto;
 }

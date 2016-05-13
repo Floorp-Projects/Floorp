@@ -22,7 +22,7 @@ function test() {
           statusText: "Och Aye",
           type: "plain",
           fullMimeType: "text/plain; charset=utf-8",
-          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.01),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 12),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(1),
@@ -31,7 +31,7 @@ function test() {
           statusText: "Och Aye",
           type: "plain",
           fullMimeType: "text/plain; charset=utf-8",
-          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.01),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 12),
           time: true
         });
 

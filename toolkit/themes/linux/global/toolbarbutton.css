@@ -25,7 +25,7 @@ toolbarbutton:-moz-lwtheme {
 
 .toolbarbutton-icon[label]:not([label=""]),
 .toolbarbutton-icon[type="menu"] {
-  -moz-margin-end: 2px;
+  margin-inline-end: 2px;
 }
 
 .toolbarbutton-text {
@@ -45,8 +45,8 @@ toolbarbutton:hover:active,
 toolbarbutton[open="true"] {
   padding-top: 4px;
   padding-bottom: 2px;
-  -moz-padding-start: 4px;
-  -moz-padding-end: 2px;
+  padding-inline-start: 4px;
+  padding-inline-end: 2px;
   color: ButtonText;
 }
 
@@ -107,7 +107,7 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
 
 /* ::::: toolbarbutton badged ::::: */
 .toolbarbutton-badge-stack > .toolbarbutton-icon[label]:not([label=""]) {
-  -moz-margin-end: 0;
+  margin-inline-end: 0;
 }
 
 .toolbarbutton-badge {
@@ -120,7 +120,7 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
               0 -1px 0 hsla(0, 0%, 0%, .1) inset,
               0 1px 0 hsla(206, 50%, 10%, .2);
   margin: -6px 0 0 !important;
-  -moz-margin-end: -8px !important;
+  margin-inline-end: -8px !important;
   min-width: 14px;
   max-width: 28px;
   line-height: 10px;

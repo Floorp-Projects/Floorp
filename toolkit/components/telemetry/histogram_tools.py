@@ -293,6 +293,9 @@ associated with the histogram.  Returns None if no guarding is necessary."""
                     return v
             for key in [k for k in coerce_fields if k in definition]:
                 definition[key] = try_to_coerce_to_number(definition[key])
+            # This handles old "keyed":"true" definitions (bug 1271986).
+            if definition.get("keyed", None) == "true":
+                definition["keyed"] = True
 
         for key, key_type in type_checked_fields.iteritems():
             if not key in definition:

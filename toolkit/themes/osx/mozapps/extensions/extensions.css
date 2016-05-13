@@ -5,18 +5,18 @@
 %include ../../../shared/extensions/extensions.inc.css
 
 .no-auto-hide > .menulist-dropmarker {
-  -moz-padding-start: 0px !important;
+  padding-inline-start: 0px !important;
 }
 
 #header-utils-btn {
   list-style-image: url("chrome://mozapps/skin/extensions/utilities.svg#utilities");
-  -moz-margin-end: 18px;
+  margin-inline-end: 18px;
 }
 
 #header-utils-btn > .toolbarbutton-menu-dropmarker {
   list-style-image: url("chrome://mozapps/skin/extensions/toolbarbutton-dropmarker.png");
   padding: 0;
-  -moz-margin-start: 2px;
+  margin-inline-start: 2px;
 }
 
 .sorter[checkState="1"] {

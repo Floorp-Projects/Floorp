@@ -46,7 +46,7 @@ tree:not(#rejectsTree) {
 }
 
 caption {
-  -moz-padding-start: 0;
+  padding-inline-start: 0;
 }
 
 groupbox {

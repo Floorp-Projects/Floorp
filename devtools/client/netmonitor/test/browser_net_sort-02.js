@@ -238,7 +238,7 @@ function test() {
           type: "1",
           fullMimeType: "text/1",
           transferred: L10N.getStr("networkMenu.sizeUnavailable"),
-          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 0),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(b),
@@ -248,8 +248,8 @@ function test() {
           statusText: "Meh",
           type: "2",
           fullMimeType: "text/2",
-          transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.02),
-          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.02),
+          transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 19),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 19),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(c),
@@ -259,8 +259,8 @@ function test() {
           statusText: "Meh",
           type: "3",
           fullMimeType: "text/3",
-          transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.03),
-          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.03),
+          transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 29),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 29),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(d),
@@ -270,8 +270,8 @@ function test() {
           statusText: "Meh",
           type: "4",
           fullMimeType: "text/4",
-          transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.04),
-          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.04),
+          transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 39),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 39),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(e),
@@ -281,8 +281,8 @@ function test() {
           statusText: "Meh",
           type: "5",
           fullMimeType: "text/5",
-          transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.05),
-          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.05),
+          transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 49),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 49),
           time: true
         });
 

@@ -34,7 +34,7 @@
 /* Generic pane helpers */
 
 .generic-toggled-pane {
-  -moz-margin-start: 0 !important;
+  margin-inline-start: 0 !important;
   /* Unfortunately, transitions don't work properly with locale-aware properties,
      so both the left and right margins are set via js, while the start margin
      is always overridden here. */
@@ -64,7 +64,7 @@
   .devtools-responsive-container .generic-toggled-pane {
     /* To hide generic-toggled-pane, negative margins are applied dynamically.
      * In the default horizontal layout, the pane is on the side and should be
-     * hidden using negative -moz-margin-end only.
+     * hidden using negative margin-inline-end only.
      */
     margin-top: 0 !important;
     margin-bottom: 0 !important;
@@ -109,14 +109,14 @@
      * If a vertical layout, the pane is on the bottom and should be hidden
      * using negative bottom margin only.
      */
-    -moz-margin-end: 0 !important;
+    margin-inline-end: 0 !important;
   }
 }
 
 /* BreacrumbsWidget */
 
 .breadcrumbs-widget-container {
-  -moz-margin-end: 3px;
+  margin-inline-end: 3px;
   max-height: 24px; /* Set max-height for proper sizing on linux */
   height: 24px; /* Set height to prevent starting small waiting for content */
 }
@@ -526,7 +526,7 @@ widgets.css is overwritten. */
 }
 
 .side-menu-widget-item-arrow {
-  -moz-margin-start: -7px;
+  margin-inline-start: -7px;
   width: 7px; /* The image's width is 7 pixels */
 }
 
@@ -585,12 +585,12 @@ widgets.css is overwritten. */
 
 .side-menu-widget-group-checkbox {
   margin: 0;
-  -moz-margin-end: 4px;
+  margin-inline-end: 4px;
 }
 
 .side-menu-widget-item-checkbox {
   margin: 0;
-  -moz-margin-start: 4px;
+  margin-inline-start: 4px;
 }
 
 /* SideMenuWidget misc */
@@ -661,11 +661,11 @@ widgets.css is overwritten. */
 }
 
 .variable-or-property > .title > .theme-twisty {
-  -moz-margin-start: 5px;
+  margin-inline-start: 5px;
 }
 
 .variable-or-property:not([untitled]) > .variables-view-element-details {
-  -moz-margin-start: 7px;
+  margin-inline-start: 7px;
 }
 
 /* Traits applied when variables or properties are changed or overridden */
@@ -726,7 +726,7 @@ widgets.css is overwritten. */
 .variable-or-property-sealed-label,
 .variable-or-property-non-extensible-label {
   height: 16px;
-  -moz-padding-end: 4px;
+  padding-inline-end: 4px;
 }
 
 .variable-or-property:not(:focus) > .title > .variable-or-property-frozen-label,
@@ -797,13 +797,13 @@ widgets.css is overwritten. */
 }
 
 .variable-or-property[overridden] > tooltip > label.overridden {
-  -moz-padding-start: 4px;
-  -moz-border-start: 1px dotted #000;
+  padding-inline-start: 4px;
+  border-inline-start: 1px dotted #000;
 }
 
 .variable-or-property[safe-getter] > tooltip > label.WebIDL {
-  -moz-padding-start: 4px;
-  -moz-border-start: 1px dotted #000;
+  padding-inline-start: 4px;
+  border-inline-start: 1px dotted #000;
   color: #080;
 }
 
@@ -868,18 +868,18 @@ widgets.css is overwritten. */
 /* Variables and properties input boxes */
 
 .variable-or-property > .title > .separator + .element-value-input {
-  -moz-margin-start: -2px !important;
-  -moz-margin-end: 2px !important;
+  margin-inline-start: -2px !important;
+  margin-inline-end: 2px !important;
 }
 
 .variable-or-property > .title > .separator[hidden=true] + .element-value-input {
-  -moz-margin-start: 4px !important;
-  -moz-margin-end: 2px !important;
+  margin-inline-start: 4px !important;
+  margin-inline-end: 2px !important;
 }
 
 .element-name-input {
-  -moz-margin-start: -2px !important;
-  -moz-margin-end: 2px !important;
+  margin-inline-start: -2px !important;
+  margin-inline-end: 2px !important;
   font-weight: 600;
 }
 
@@ -943,17 +943,17 @@ widgets.css is overwritten. */
   top: 0;
   left: 0;
   pointer-events: none;
-  -moz-border-end: 1px solid;
+  border-inline-end: 1px solid;
 }
 
 .theme-light .line-graph-widget-gutter {
   background: rgba(255,255,255,0.75);
-  -moz-border-end-color: rgba(255,255,255,0.25);
+  border-inline-end-color: rgba(255,255,255,0.25);
 }
 
 .theme-dark .line-graph-widget-gutter {
   background: rgba(0,0,0,0.5);
-  -moz-border-end-color: rgba(0,0,0,0.25);
+  border-inline-end-color: rgba(0,0,0,0.25);
 }
 
 .line-graph-widget-gutter-line {
@@ -978,8 +978,8 @@ widgets.css is overwritten. */
   position: absolute;
   border-radius: 2px;
   line-height: 15px;
-  -moz-padding-start: 6px;
-  -moz-padding-end: 6px;
+  padding-inline-start: 6px;
+  padding-inline-end: 6px;
   transform: translateY(-50%);
   font-size: 0.8rem !important;
   z-index: 1;
@@ -1003,29 +1003,29 @@ widgets.css is overwritten. */
 }
 
 .line-graph-widget-tooltip[arrow=start][with-arrows=true]::before {
-  -moz-border-end: 3px solid;
+  border-inline-end: 3px solid;
   left: -3px;
 }
 
 .line-graph-widget-tooltip[arrow=end][with-arrows=true]::before {
-  -moz-border-start: 3px solid;
+  border-inline-start: 3px solid;
   right: -3px;
 }
 
 .theme-light .line-graph-widget-tooltip[arrow=start][with-arrows=true]::before {
-  -moz-border-end-color: rgba(255,255,255,0.75);
+  border-inline-end-color: rgba(255,255,255,0.75);
 }
 
 .theme-dark .line-graph-widget-tooltip[arrow=start][with-arrows=true]::before {
-  -moz-border-end-color: rgba(0,0,0,0.5);
+  border-inline-end-color: rgba(0,0,0,0.5);
 }
 
 .theme-light .line-graph-widget-tooltip[arrow=end][with-arrows=true]::before {
-  -moz-border-start-color: rgba(255,255,255,0.75);
+  border-inline-start-color: rgba(255,255,255,0.75);
 }
 
 .theme-dark .line-graph-widget-tooltip[arrow=end][with-arrows=true]::before {
-  -moz-border-start-color: rgba(0,0,0,0.5);
+  border-inline-start-color: rgba(0,0,0,0.5);
 }
 
 .line-graph-widget-tooltip[type=maximum] {
@@ -1045,11 +1045,11 @@ widgets.css is overwritten. */
 }
 
 .line-graph-widget-tooltip > [text=value] {
-  -moz-margin-start: 3px;
+  margin-inline-start: 3px;
 }
 
 .line-graph-widget-tooltip > [text=metric] {
-  -moz-margin-start: 1px;
+  margin-inline-start: 1px;
   color: var(--theme-content-color3);
 }
 
@@ -1094,7 +1094,7 @@ widgets.css is overwritten. */
 
 .bar-graph-widget-legend-item {
   float: left;
-  -moz-margin-end: 8px;
+  margin-inline-end: 8px;
 }
 
 .bar-graph-widget-legend-item > [view="color"],
@@ -1108,7 +1108,7 @@ widgets.css is overwritten. */
   height: 8px;
   border: 1px solid #fff;
   border-radius: 1px;
-  -moz-margin-end: 4px;
+  margin-inline-end: 4px;
   pointer-events: all;
   cursor: pointer;
 }
@@ -1221,12 +1221,12 @@ widgets.css is overwritten. */
 .table-chart-row-box {
   width: 8px;
   height: 1.5em;
-  -moz-margin-end: 10px;
+  margin-inline-end: 10px;
 }
 
 .table-chart-row-label {
   width: 8em;
-  -moz-padding-end: 6px;
+  padding-inline-end: 6px;
   cursor: inherit;
 }
 
@@ -1419,7 +1419,7 @@ widgets.css is overwritten. */
   height: 100%;
   list-style: none;
   overflow: hidden;
-  -moz-margin-end: 40px;
+  margin-inline-end: 40px;
 }
 
 .tree-widget-container:-moz-focusring,
@@ -1533,37 +1533,37 @@ widgets.css is overwritten. */
 
 /* For level > 6 */
 .tree-widget-item[level] + ul > li > .tree-widget-item {
-  -moz-padding-start: 98px;
+  padding-inline-start: 98px;
 }
 
 /* First level */
 .tree-widget-item[level="1"] + ul > li > .tree-widget-item {
-  -moz-padding-start: 14px;
+  padding-inline-start: 14px;
 }
 
 /* Second level */
 .tree-widget-item[level="2"] + ul > li > .tree-widget-item {
-  -moz-padding-start: 28px;
+  padding-inline-start: 28px;
 }
 
 /* Third level */
 .tree-widget-item[level="3"] + ul > li > .tree-widget-item {
-  -moz-padding-start: 42px;
+  padding-inline-start: 42px;
 }
 
 /* Fourth level */
 .tree-widget-item[level="4"] + ul > li > .tree-widget-item {
-  -moz-padding-start: 56px;
+  padding-inline-start: 56px;
 }
 
 /* Fifth level */
 .tree-widget-item[level="5"] + ul > li > .tree-widget-item {
-  -moz-padding-start: 70px;
+  padding-inline-start: 70px;
 }
 
 /* Sixth level */
 .tree-widget-item[level="6"] + ul > li > .tree-widget-item {
-  -moz-padding-start: 84px;
+  padding-inline-start: 84px;
 }
 
 /* Custom icons for certain tree items indicating the type of the item */
@@ -1573,7 +1573,7 @@ widgets.css is overwritten. */
   float: left;
   width: 16px;
   height: 17px;
-  -moz-margin-end: 4px;
+  margin-inline-end: 4px;
   background-repeat: no-repeat;
   background-size: 20px auto;
   background-position: 0 0;

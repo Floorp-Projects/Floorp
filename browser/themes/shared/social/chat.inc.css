@@ -210,11 +210,11 @@ chatbar > chatbox > .chat-titlebar > .chat-swap-button {
 }
 
 chatbar {
-  -moz-margin-end: 20px;
+  margin-inline-end: 20px;
 }
 
 chatbox {
-  -moz-margin-start: 4px;
+  margin-inline-start: 4px;
   background-color: transparent;
 }
 
@@ -226,11 +226,11 @@ chatbar > chatbox {
   box-shadow: 0 0 5px rgba(0,0,0,.3);
   /* Offset the chatbox the same amount as the box-shadows' spread, to make it
      visible. */
-  -moz-margin-end: 5px;
+  margin-inline-end: 5px;
 }
 
 window > chatbox {
-  -moz-margin-start: 0px;
+  margin-inline-start: 0px;
   margin: 0px;
   border: none;
   padding: 0px;

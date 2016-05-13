@@ -12,7 +12,7 @@
   white-space: nowrap;
   max-width: 22em;
   display: inline-flex;
-  -moz-padding-end: 20px;
+  padding-inline-end: 20px;
   -webkit-padding-end: 20px;
 }
 
@@ -33,14 +33,14 @@
 }
 
 .gcli-menu-name {
-  -moz-padding-start: 2px;
+  padding-inline-start: 2px;
   -webkit-padding-start: 2px;
-  -moz-padding-end: 8px;
+  padding-inline-end: 8px;
   -webkit-padding-end: 8px;
 }
 
 .gcli-menu-desc {
-  -moz-padding-end: 2px;
+  padding-inline-end: 2px;
   -webkit-padding-end: 2px;
   color: #777;
   text-overflow: ellipsis;

@@ -178,7 +178,7 @@ div[collapsed="true"] > .expander + * {
   border: none;
   text-decoration: underline;
   margin: 0;
-  -moz-margin-start: -20px;
+  margin-inline-start: -20px;
   font-size: smaller;
   border-radius: 0;
 }
