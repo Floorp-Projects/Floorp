@@ -365,6 +365,9 @@ pref("media.decoder-doctor.notifications-allowed", "MediaWidevineNoWMFNoSilverli
 // Whether we report partial failures.
 pref("media.decoder-doctor.verbose", false);
 
+// Whether to suspend decoding of videos in background tabs.
+pref("media.suspend-bkgnd-video.enabled", true);
+
 #ifdef MOZ_WEBRTC
 pref("media.navigator.enabled", true);
 pref("media.navigator.video.enabled", true);
