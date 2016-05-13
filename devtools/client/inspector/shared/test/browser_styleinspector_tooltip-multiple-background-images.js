@@ -6,26 +6,15 @@
 // Test for bug 1026921: Ensure the URL of hovered url() node is used instead
 // of the first found from the declaration  as there might be multiple urls.
 
-var YELLOW_DOT = "data:image/png;base64," +
-  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABmJLR0QA/wD/AP+gvaeTAAAACX" +
-  "BIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gYcDCwCr0o5ngAAABl0RVh0Q29tbWVudABDcmVh" +
-  "dGVkIHdpdGggR0lNUFeBDhcAAAANSURBVAjXY/j/n6EeAAd9An7Z55GEAAAAAElFTkSuQmCC";
-
-var BLUE_DOT = "data:image/png;base64," +
-  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABmJLR0QA/wD/AP+gvaeTAAAACX" +
-  "BIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gYcDCwlCkCM9QAAABl0RVh0Q29tbWVudABDcmVh" +
-  "dGVkIHdpdGggR0lNUFeBDhcAAAANSURBVAjXY2Bg+F8PAAKCAX/tPkrkAAAAAElFTkSuQmCC";
+const YELLOW_DOT = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gYcDCwCr0o5ngAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAANSURBVAjXY/j/n6EeAAd9An7Z55GEAAAAAElFTkSuQmCC";
+const BLUE_DOT = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gYcDCwlCkCM9QAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAANSURBVAjXY2Bg+F8PAAKCAX/tPkrkAAAAAElFTkSuQmCC";
+const TEST_STYLE = `h1 {background: url(${YELLOW_DOT}), url(${BLUE_DOT});}`;
+const TEST_URI = `<style>${TEST_STYLE}</style><h1>test element</h1>`;
 
 add_task(function* () {
-  let TEST_STYLE = "h1 {background: url(" + YELLOW_DOT + "), url(" + BLUE_DOT + ");}";
-
-  let PAGE_CONTENT = "<style>" + TEST_STYLE + "</style>" +
-    "<h1>browser_styleinspector_tooltip-multiple-background-images.js</h1>";
-
-  yield addTab("data:text/html;charset=utf-8,background image tooltip test");
-  content.document.body.innerHTML = PAGE_CONTENT;
-
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector} = yield openInspector();
+
   yield testRuleViewUrls(inspector);
   yield testComputedViewUrls(inspector);
 });
