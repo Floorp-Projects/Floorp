@@ -26,16 +26,16 @@ var tests = [
     error: null },
   { message: "full screensharing requires permission",
     constraints: { video: { mediaSource: 'screen' } },
-    error: "SecurityError" },
+    error: "NotAllowedError" },
   { message: "application screensharing requires permission",
     constraints: { video: { mediaSource: 'application' } },
-    error: "SecurityError" },
+    error: "NotAllowedError" },
   { message: "window screensharing requires permission",
     constraints: { video: { mediaSource: 'window' } },
-    error: "SecurityError" },
+    error: "NotAllowedError" },
   { message: "browser screensharing requires permission",
     constraints: { video: { mediaSource: 'browser' } },
-    error: "SecurityError" },
+    error: "NotAllowedError" },
   { message: "unknown mediaSource in video fails",
     constraints: { video: { mediaSource: 'uncle' } },
     error: "OverconstrainedError",
@@ -135,6 +135,13 @@ runTest(function() {
                              () => (new AudioContext())
                                  .createMediaStreamDestination().stream
                                  .getAudioTracks()[0].applyConstraints()))
+    .then(() => mustFailWith(
+        "getUserMedia with unsatisfied required constraint",
+        "OverconstrainedError", "deviceId",
+        () => navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: { deviceId: { exact: "unheardof" } },
+        })));
 });
 
 </script>

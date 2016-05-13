@@ -7,6 +7,7 @@
 
 include LayersSurfaces;
 include protocol PLayerTransaction;
+include protocol PCompositorBridge;
 include protocol PImageBridge;
 include "mozilla/GfxMessageUtils.h";
 
@@ -20,7 +21,7 @@ namespace layers {
  * PTexture is the IPDL glue between a TextureClient and a TextureHost.
  */
 sync protocol PTexture {
-    manager PImageBridge or PLayerTransaction;
+    manager PImageBridge or PCompositorBridge;
 
 child:
     async __delete__();

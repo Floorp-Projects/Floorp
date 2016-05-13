@@ -288,7 +288,8 @@ MediaEngineTabVideoSource::Draw() {
     presShell = presContext->PresShell();
   }
 
-  RefPtr<layers::ImageContainer> container = layers::LayerManager::CreateImageContainer();
+  RefPtr<layers::ImageContainer> container =
+    layers::LayerManager::CreateImageContainer(layers::ImageContainer::ASYNCHRONOUS);
   RefPtr<DrawTarget> dt =
     Factory::CreateDrawTargetForData(BackendType::CAIRO,
                                      mData.get(),

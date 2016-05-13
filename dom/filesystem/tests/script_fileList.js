@@ -68,3 +68,15 @@ addMessageListener("dir.open", function (e) {
     dir: testFile.path
   });
 });
+
+addMessageListener("file.open", function (e) {
+  var testFile = Cc["@mozilla.org/file/directory_service;1"]
+                   .getService(Ci.nsIDirectoryService)
+                   .QueryInterface(Ci.nsIProperties)
+                   .get("ProfD", Ci.nsIFile);
+  testFile.append("prefs.js");
+
+  sendAsyncMessage("file.opened", {
+    file: new File(testFile)
+  });
+});
