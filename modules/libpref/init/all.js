@@ -2440,12 +2440,8 @@ pref("layout.css.scope-pseudo.enabled", true);
 // Is support for background-blend-mode enabled?
 pref("layout.css.background-blend-mode.enabled", true);
 
-// Is support for background-clip:text enabled? (bug 1264905)
-#ifdef RELEASE_BUILD
-pref("layout.css.background-clip-text.enabled", false);
-#else
+// Is support for background-clip:text enabled?
 pref("layout.css.background-clip-text.enabled", true);
-#endif
 
 // Is support for CSS vertical text enabled?
 pref("layout.css.vertical-text.enabled", true);
