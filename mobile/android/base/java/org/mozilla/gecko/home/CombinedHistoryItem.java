@@ -24,7 +24,8 @@ public abstract class CombinedHistoryItem extends RecyclerView.ViewHolder {
     }
 
     public enum ItemType {
-        CLIENT, HIDDEN_DEVICES, SECTION_HEADER, HISTORY, NAVIGATION_BACK, CHILD, SYNCED_DEVICES;
+        CLIENT, HIDDEN_DEVICES, SECTION_HEADER, HISTORY, NAVIGATION_BACK, CHILD, SYNCED_DEVICES,
+        RECENT_TABS, CLOSED_TAB;
 
         public static ItemType viewTypeToItemType(int viewType) {
             if (viewType >= ItemType.values().length) {

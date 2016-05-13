@@ -431,6 +431,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'home/PanelViewAdapter.java',
     'home/PanelViewItemHandler.java',
     'home/PinSiteDialog.java',
+    'home/RecentTabsAdapter.java',
     'home/RecentTabsPanel.java',
     'home/RemoteTabsExpandableListState.java',
     'home/SearchEngine.java',
