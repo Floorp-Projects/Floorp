@@ -52,13 +52,13 @@ struct ElementPropertyTransition : public dom::KeyframeEffectReadOnly
   }
 
   nsCSSProperty TransitionProperty() const {
-    MOZ_ASSERT(mFrames.Length() == 2,
-               "Transitions should have exactly two animation frames. "
+    MOZ_ASSERT(mKeyframes.Length() == 2,
+               "Transitions should have exactly two animation keyframes. "
                "Perhaps we are using an un-initialized transition?");
-    MOZ_ASSERT(mFrames[0].mPropertyValues.Length() == 1,
+    MOZ_ASSERT(mKeyframes[0].mPropertyValues.Length() == 1,
                "Transitions should have exactly one property in their first "
                "frame");
-    return mFrames[0].mPropertyValues[0].mProperty;
+    return mKeyframes[0].mPropertyValues[0].mProperty;
   }
 
   StyleAnimationValue ToValue() const {
