@@ -1567,14 +1567,17 @@ function checkOutputForInputs(hud, inputTests) {
   function onTabOpen(entry, {resolve, reject}, event) {
     container.removeEventListener("TabOpen", entry._onTabOpen, true);
     entry._onTabOpen = null;
-
     let tab = event.target;
     let browser = gBrowser.getBrowserForTab(tab);
-    loadBrowser(browser).then(() => {
-      let uri = content.location.href;
+
+    Task.spawn(function* () {
+      yield loadBrowser(browser);
+      let uri = yield ContentTask.spawn(browser, {}, function* () {
+        return content.location.href;
+      });
       ok(entry.expectedTab && entry.expectedTab == uri,
          "opened tab '" + uri + "', expected tab '" + entry.expectedTab + "'");
-      return closeTab(tab);
+      yield closeTab(tab);
     }).then(resolve, reject);
   }
 
