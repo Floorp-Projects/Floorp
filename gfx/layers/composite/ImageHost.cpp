@@ -296,7 +296,7 @@ ImageHost::Composite(LayerComposite* aLayer,
                      float aOpacity,
                      const gfx::Matrix4x4& aTransform,
                      const gfx::Filter& aFilter,
-                     const gfx::IntRect& aClipRect,
+                     const gfx::Rect& aClipRect,
                      const nsIntRegion* aVisibleRegion)
 {
   if (!GetCompositor()) {
@@ -683,7 +683,7 @@ ImageHostOverlay::Composite(Compositor* aCompositor,
                             float aOpacity,
                             const gfx::Matrix4x4& aTransform,
                             const gfx::Filter& aFilter,
-                            const gfx::IntRect& aClipRect,
+                            const gfx::Rect& aClipRect,
                             const nsIntRegion* aVisibleRegion)
 {
   MOZ_ASSERT(mCompositor == aCompositor);

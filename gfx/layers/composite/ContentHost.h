@@ -122,7 +122,7 @@ public:
                          float aOpacity,
                          const gfx::Matrix4x4& aTransform,
                          const gfx::Filter& aFilter,
-                         const gfx::IntRect& aClipRect,
+                         const gfx::Rect& aClipRect,
                          const nsIntRegion* aVisibleRegion = nullptr) override;
 
   virtual void SetCompositor(Compositor* aCompositor) override;

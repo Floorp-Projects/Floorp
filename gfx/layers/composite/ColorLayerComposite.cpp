@@ -26,13 +26,13 @@ ColorLayerComposite::RenderLayer(const IntRect& aClipRect)
   const Matrix4x4& transform = GetEffectiveTransform();
 
   RenderWithAllMasks(this, mCompositor, aClipRect,
-                     [&](EffectChain& effectChain, const IntRect& clipRect) {
+                     [&](EffectChain& effectChain, const Rect& clipRect) {
     GenEffectChain(effectChain);
     mCompositor->DrawQuad(rect, clipRect, effectChain, GetEffectiveOpacity(),
                           transform);
   });
 
-  mCompositor->DrawDiagnostics(DiagnosticFlags::COLOR, rect, aClipRect,
+  mCompositor->DrawDiagnostics(DiagnosticFlags::COLOR, rect, Rect(aClipRect),
                                transform);
 }
 
