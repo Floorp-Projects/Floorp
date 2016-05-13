@@ -859,10 +859,6 @@
   border-bottom-color: var(--theme-splitter-color);
 }
 
-.theme-dark .devtools-tabbar {
-  box-shadow: 0 -0.5px 0 var(--theme-splitter-color) inset;
-}
-
 #toolbox-tabs {
   margin: 0;
 }
@@ -925,12 +921,8 @@
   background-color: var(--toolbar-tab-hover-active);
 }
 
-.devtools-tab:not([selected])[highlighted] {
-  box-shadow: 0 2px 0 var(--theme-highlight-green) inset;
-}
-
 .theme-dark .devtools-tab:not([selected])[highlighted] {
-  background-color: hsla(99,100%,14%,.2);
+  background-color: hsla(99, 100%, 14%, .3);
 }
 
 .theme-light .devtools-tab:not([selected])[highlighted] {
