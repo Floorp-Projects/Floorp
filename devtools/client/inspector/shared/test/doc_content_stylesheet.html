@@ -1,20 +1,19 @@
 <html>
 <head>
   <title>test</title>
-
   <link href="./doc_content_stylesheet_linked.css" rel="stylesheet" type="text/css">
-
   <script>
+    /* exported loadCSS */
+    "use strict";
     // Load script.css
     function loadCSS() {
-      var link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.type = 'text/css';
+      let link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.type = "text/css";
       link.href = "./doc_content_stylesheet_script.css";
-      document.getElementsByTagName('head')[0].appendChild(link);
+      document.getElementsByTagName("head")[0].appendChild(link);
     }
   </script>
-
   <style>
     table {
       border: 1px solid #000;

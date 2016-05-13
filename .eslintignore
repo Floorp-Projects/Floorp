@@ -87,7 +87,6 @@ devtools/client/framework/**
 # included in the ignore list.
 devtools/client/inspector/computed/**
 devtools/client/inspector/fonts/**
-devtools/client/inspector/shared/test/**
 devtools/client/inspector/test/**
 devtools/client/inspector/*.js
 devtools/client/jsonview/lib/**
