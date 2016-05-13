@@ -3624,6 +3624,12 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect, const uint32_t aFlags) {
   if (!aRect.IsFinite()) {
     NS_WARNING("ZoomToRect got called with a non-finite rect; ignoring...");
     return;
+  } else if (aRect.IsEmpty() && (aFlags & DISABLE_ZOOM_OUT)) {
+    // Double-tap-to-zooming uses an empty rect to mean "zoom out".
+    // If zooming out is disabled, an empty rect is nonsensical
+    // and will produce undesirable scrolling.
+    NS_WARNING("ZoomToRect got called with an empty rect and zoom out disabled; ignoring...");
+    return;
   }
 
   // Only the root APZC is zoomable, and the root APZC is not allowed to have
