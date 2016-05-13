@@ -109,7 +109,6 @@ nsHTMLEditor::HideInlineTableEditingUI()
 
   // get the root content node.
   nsCOMPtr<nsIContent> bodyContent = GetRoot();
-  NS_ENSURE_TRUE(bodyContent, NS_ERROR_FAILURE);
 
   DeleteRefToAnonymousNode(mAddColumnBeforeButton, bodyContent, ps);
   mAddColumnBeforeButton = nullptr;
