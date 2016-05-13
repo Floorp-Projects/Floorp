@@ -9,8 +9,7 @@
 
 #include "nsThreadUtils.h"
 #include "nsCOMPtr.h"
-#include "mozilla/Mutex.h"
-#include "mozilla/CondVar.h"
+#include "mozilla/Monitor.h"
 
 class nsIThread;
 
@@ -36,8 +35,8 @@ public:
   static nsresult BlockingShutdown(nsIThread *aThread);
 
 private:
-  mozilla::Mutex      mLock;
-  mozilla::CondVar    mCondVar;
+  mozilla::Monitor    mMonitor;
+  bool                mShuttingDown;
   nsCOMPtr<nsIThread> mThread;
 };
 
