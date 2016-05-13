@@ -270,6 +270,13 @@ ifdef MOZ_FOLD_LIBS_FLAGS
 XCFLAGS += $(MOZ_FOLD_LIBS_FLAGS)
 endif
 
+# Pass on the MSVC target arch from the main build system.
+# Note this is case- and switch-character sensitive, while
+# the MSVC option is not.
+ifeq (WINNT,$(OS_TARGET))
+XCFLAGS += $(filter -arch:%,$(CFLAGS))
+endif
+
 # Export accumulated XCFLAGS to modify nss defaults.
 DEFAULT_GMAKE_FLAGS += XCFLAGS='$(XCFLAGS)'
 
