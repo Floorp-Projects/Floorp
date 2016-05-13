@@ -69,11 +69,12 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
     private final static String FORMAT_S2 = "%2$s";
 
     // Number of smart folders for determining practical empty state.
-    public static final int NUM_SMART_FOLDERS = 1;
+    public static final int NUM_SMART_FOLDERS = 2;
 
     private CombinedHistoryRecyclerView mRecyclerView;
     private CombinedHistoryAdapter mHistoryAdapter;
     private ClientsAdapter mClientsAdapter;
+    private RecentTabsAdapter mRecentTabsAdapter;
     private CursorLoaderCallbacks mCursorLoaderCallbacks;
 
     private PanelLevel mPanelLevel;
@@ -88,10 +89,11 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
     // Reference to the View to display when there are no results.
     private View mHistoryEmptyView;
     private View mClientsEmptyView;
+    private View mRecentTabsEmptyView;
 
     public interface OnPanelLevelChangeListener {
         enum PanelLevel {
-        PARENT, CHILD
+        PARENT, CHILD_SYNC, CHILD_RECENT_TABS
     }
 
         /**
@@ -108,6 +110,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
 
         mHistoryAdapter = new CombinedHistoryAdapter(getResources());
         mClientsAdapter = new ClientsAdapter(getContext());
+        mRecentTabsAdapter = new RecentTabsAdapter();
 
         mSyncStatusListener = new RemoteTabsSyncListener();
         FirefoxAccounts.addSyncStatusListener(mSyncStatusListener);
@@ -130,6 +133,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
 
         mClientsEmptyView = view.findViewById(R.id.home_clients_empty_view);
         mHistoryEmptyView = view.findViewById(R.id.home_history_empty_view);
+        mRecentTabsEmptyView = view.findViewById(R.id.home_recent_tabs_empty_view);
         setUpEmptyViews();
 
         mPanelFooterButton = (Button) view.findViewById(R.id.clear_history_button);
@@ -141,7 +145,8 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
             mPanelLevel = PanelLevel.PARENT;
         }
 
-        mRecyclerView.setAdapter(mPanelLevel == PanelLevel.PARENT ? mHistoryAdapter : mClientsAdapter);
+        mRecyclerView.setAdapter(mPanelLevel == PanelLevel.PARENT ? mHistoryAdapter :
+                mPanelLevel == PanelLevel.CHILD_SYNC ? mClientsAdapter : mRecentTabsAdapter);
 
         final RecyclerView.ItemAnimator animator = new DefaultItemAnimator();
         animator.setAddDuration(100);
@@ -175,23 +180,23 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
 
     private void setUpEmptyViews() {
         // Set up history empty view.
-        final ImageView emptyIcon = (ImageView) mHistoryEmptyView.findViewById(R.id.home_empty_image);
-        emptyIcon.setVisibility(View.GONE);
+        final ImageView historyIcon = (ImageView) mHistoryEmptyView.findViewById(R.id.home_empty_image);
+        historyIcon.setVisibility(View.GONE);
 
-        final TextView emptyText = (TextView) mHistoryEmptyView.findViewById(R.id.home_empty_text);
-        emptyText.setText(R.string.home_most_recent_empty);
+        final TextView historyText = (TextView) mHistoryEmptyView.findViewById(R.id.home_empty_text);
+        historyText.setText(R.string.home_most_recent_empty);
 
-        final TextView emptyHint = (TextView) mHistoryEmptyView.findViewById(R.id.home_empty_hint);
+        final TextView historyHint = (TextView) mHistoryEmptyView.findViewById(R.id.home_empty_hint);
 
         if (!Restrictions.isAllowed(getActivity(), Restrictable.PRIVATE_BROWSING)) {
-            emptyHint.setVisibility(View.GONE);
+            historyHint.setVisibility(View.GONE);
         } else {
             final String hintText = getResources().getString(R.string.home_most_recent_emptyhint);
             final SpannableStringBuilder hintBuilder = formatHintText(hintText);
             if (hintBuilder != null) {
-                emptyHint.setText(hintBuilder);
-                emptyHint.setMovementMethod(LinkMovementMethod.getInstance());
-                emptyHint.setVisibility(View.VISIBLE);
+                historyHint.setText(hintBuilder);
+                historyHint.setMovementMethod(LinkMovementMethod.getInstance());
+                historyHint.setVisibility(View.VISIBLE);
             }
         }
 
@@ -206,6 +211,13 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
                 startActivity(intent);
             }
         });
+
+        // Set up Recent Tabs empty view.
+        final ImageView recentTabsIcon = (ImageView) mRecentTabsEmptyView.findViewById(R.id.home_empty_image);
+        recentTabsIcon.setImageResource(R.drawable.icon_remote_tabs_empty);
+
+        final TextView recentTabsText = (TextView) mRecentTabsEmptyView.findViewById(R.id.home_empty_text);
+        recentTabsText.setText(R.string.home_last_tabs_empty);
     }
 
     @Override
@@ -310,8 +322,11 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
                 case PARENT:
                     mRecyclerView.swapAdapter(mHistoryAdapter, true);
                     break;
-                case CHILD:
+                case CHILD_SYNC:
                     mRecyclerView.swapAdapter(mClientsAdapter, true);
+                    break;
+                case CHILD_RECENT_TABS:
+                    mRecyclerView.swapAdapter(mRecentTabsAdapter, true);
                     break;
             }
 
@@ -331,7 +346,8 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
                     mPanelFooterButton.setVisibility(View.VISIBLE);
                 }
                 break;
-            case CHILD:
+            case CHILD_SYNC:
+            case CHILD_RECENT_TABS:
                 mPanelFooterButton.setVisibility(View.GONE);
                 break;
         }
@@ -375,21 +391,27 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
     private void updateEmptyView() {
         boolean showEmptyHistoryView = false;
         boolean showEmptyClientsView = false;
+        boolean showEmptyRecentTabsView = false;
         switch (mPanelLevel) {
             case PARENT:
                 showEmptyHistoryView = mHistoryAdapter.getItemCount() == NUM_SMART_FOLDERS;
                 break;
 
-            case CHILD:
+            case CHILD_SYNC:
                 showEmptyClientsView = mClientsAdapter.getItemCount() == 1;
+                break;
+
+            case CHILD_RECENT_TABS:
+                showEmptyRecentTabsView = mRecentTabsAdapter.getItemCount() == 1;
                 break;
         }
 
-        final boolean showEmptyView = showEmptyClientsView || showEmptyHistoryView;
+        final boolean showEmptyView = showEmptyClientsView || showEmptyHistoryView || showEmptyRecentTabsView;
         mRecyclerView.setOverScrollMode(showEmptyView ? View.OVER_SCROLL_NEVER : View.OVER_SCROLL_IF_CONTENT_SCROLLS);
 
         mClientsEmptyView.setVisibility(showEmptyClientsView ? View.VISIBLE : View.GONE);
         mHistoryEmptyView.setVisibility(showEmptyHistoryView ? View.VISIBLE : View.GONE);
+        mRecentTabsEmptyView.setVisibility(showEmptyRecentTabsView ? View.VISIBLE : View.GONE);
     }
 
     /**
