@@ -12,6 +12,8 @@
 #include "nsTArray.h"
 #include "nsStringGlue.h"
 
+#include "mozilla/TelemetryHistogramEnums.h"
+
 /******************************************************************************
  * This implements the Telemetry system.
  * It allows recording into histograms as well some more specialized data
@@ -29,8 +31,6 @@ namespace HangMonitor {
   class HangAnnotations;
 } // namespace HangMonitor
 namespace Telemetry {
-
-#include "mozilla/TelemetryHistogramEnums.h"
 
 enum TimerResolution {
   Millisecond,
