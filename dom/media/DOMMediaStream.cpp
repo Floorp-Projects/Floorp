@@ -1035,15 +1035,6 @@ DOMMediaStream::CloneDOMTrack(MediaStreamTrack& aTrack,
   NotifyTrackAdded(newTrack);
 
   newTrack->SetEnabled(aTrack.Enabled());
-  newTrack->SetReadyState(aTrack.ReadyState());
-
-  if (aTrack.Ended()) {
-    // For extra suspenders, make sure that we don't forward data by mistake
-    // to the clone when the original has already ended.
-    RefPtr<Pledge<bool, nsresult>> blockingPledge =
-      inputPort->BlockSourceTrackId(inputTrackID);
-    Unused << blockingPledge;
-  }
 
   return newTrack.forget();
 }
