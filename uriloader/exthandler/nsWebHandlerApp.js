@@ -11,7 +11,7 @@ const Cc = Components.classes;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 ////////////////////////////////////////////////////////////////////////////////
 //// nsWebHandler class
@@ -95,12 +95,10 @@ nsWebHandlerApp.prototype = {
       }
 
       // create a channel from this URI
-      var channel = ioService.newChannelFromURI2(uriToSend,
-                                                 null,      // aLoadingNode
-                                                 Services.scriptSecurityManager.getSystemPrincipal(),
-                                                 null,      // aTriggeringPrincipal
-                                                 Ci.nsILoadInfo.SEC_NORMAL,
-                                                 Ci.nsIContentPolicy.TYPE_OTHER);
+      var channel = NetUtil.newChannel({
+        uri: uriToSend,
+        loadUsingSystemPrincipal: true
+      });
       channel.loadFlags = Ci.nsIChannel.LOAD_DOCUMENT_URI;
 
       // load the channel

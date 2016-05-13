@@ -16,6 +16,7 @@
 #include "nsIURI.h"
 #include "nsObjCExceptions.h"
 #include "mozilla/Attributes.h"
+#include "ProxyUtils.h"
 
 class nsOSXSystemProxySettings final : public nsISystemProxySettings {
 public:
@@ -232,43 +233,6 @@ nsOSXSystemProxySettings::GetAutoconfigURL(nsAutoCString& aResult) const
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-static bool
-IsHostProxyEntry(const nsACString& aHost, const nsACString& aOverride)
-{
-  nsAutoCString host(aHost);
-  nsAutoCString override(aOverride);
-
-  int32_t overrideLength = override.Length();
-  int32_t tokenStart = 0;
-  int32_t offset = 0;
-  bool star = false;
-
-  while (tokenStart < overrideLength) {
-    int32_t tokenEnd = override.FindChar('*', tokenStart);
-    if (tokenEnd == tokenStart) {
-      // Star is the first character in the token.
-      star = true;
-      tokenStart++;
-      // If the character following the '*' is a '.' character then skip
-      // it so that "*.foo.com" allows "foo.com".
-      if (override.FindChar('.', tokenStart) == tokenStart)
-        tokenStart++;
-    } else {
-      if (tokenEnd == -1)
-        tokenEnd = overrideLength; // no '*' char, match rest of string
-      nsAutoCString token(Substring(override, tokenStart, tokenEnd - tokenStart));
-      offset = host.Find(token, offset);
-      if (offset == -1 || (!star && offset))
-        return false;
-      star = false;
-      tokenStart = tokenEnd;
-      offset += token.Length();
-    }
-  }
-
-  return (star || (offset == static_cast<int32_t>(host.Length())));
-}
-
 bool
 nsOSXSystemProxySettings::IsInExceptionList(const nsACString& aHost) const
 {
@@ -284,7 +248,7 @@ nsOSXSystemProxySettings::IsInExceptionList(const nsACString& aHost) const
   while ((currentValue = [exceptionEnumerator nextObject])) {
     NS_ENSURE_TRUE([currentValue isKindOfClass:[NSString class]], false);
     nsAutoCString overrideStr([currentValue UTF8String]);
-    if (IsHostProxyEntry(aHost, overrideStr))
+    if (mozilla::toolkit::system::IsHostProxyEntry(aHost, overrideStr))
       return true;
   }
 

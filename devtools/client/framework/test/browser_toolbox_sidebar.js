@@ -118,7 +118,12 @@ function test() {
       ok(true, "received 'unselected' event");
       panel.sidebar.once("tab2-selected", function() {
         ok(true, "received 'selected' event");
+        tabs[1].focus();
+        is(panel.sidebar._panelDoc.activeElement, tabs[1],
+          "Focus is set to second tab");
         panel.sidebar.hide();
+        isnot(panel.sidebar._panelDoc.activeElement, tabs[1],
+          "Focus is reset for sidebar");
         is(panel.sidebar._tabbox.getAttribute("hidden"), "true", "Sidebar hidden");
         is(panel.sidebar.getWindowForTab("tab1").location.href, tab1URL, "Window is accessible");
         testRemoval(panel);

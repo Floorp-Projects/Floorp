@@ -1159,7 +1159,8 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
         NS_FAILED(GetAdapterDriverVersion(adapterDriverVersionString)))
     {
       aFailureId = "FEATURE_FAILURE_GET_ADAPTER";
-      return NS_ERROR_FAILURE;
+      *aStatus = FEATURE_BLOCKED_DEVICE;
+      return NS_OK;
     }
 
     if (!adapterVendorID.Equals(GfxDriverInfo::GetDeviceVendor(VendorIntel), nsCaseInsensitiveStringComparator()) &&
@@ -1175,15 +1176,16 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
         !adapterVendorID.LowerCaseEqualsLiteral("0xabab") &&
         !adapterVendorID.LowerCaseEqualsLiteral("0xdcdc"))
     {
-      *aStatus = FEATURE_BLOCKED_DEVICE;
       aFailureId = "FEATURE_FAILURE_TEST";
+      *aStatus = FEATURE_BLOCKED_DEVICE;
       return NS_OK;
     }
 
     uint64_t driverVersion;
     if (!ParseDriverVersion(adapterDriverVersionString, &driverVersion)) {
       aFailureId = "FEATURE_FAILURE_PARSE_DRIVER";
-      return NS_ERROR_FAILURE;
+      *aStatus = FEATURE_BLOCKED_DRIVER_VERSION;
+      return NS_OK;
     }
 
     // special-case the WinXP test slaves: they have out-of-date drivers, but we still want to

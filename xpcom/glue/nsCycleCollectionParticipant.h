@@ -121,6 +121,7 @@ public:
   NS_IMETHOD_(void) Root(void* aPtr) = 0;
   NS_IMETHOD_(void) Unlink(void* aPtr) = 0;
   NS_IMETHOD_(void) Unroot(void* aPtr) = 0;
+  NS_IMETHOD_(const char*) ClassName() = 0;
 
   NS_IMETHOD_(void) Trace(void* aPtr, const TraceCallbacks& aCb,
                           void* aClosure) {}
@@ -506,10 +507,15 @@ DowncastCCParticipant(void* aPtr)
 #define NS_CHECK_FOR_RIGHT_PARTICIPANT_IMPL_INHERITED(_class)
 #endif
 
+#define NS_DECL_CYCLE_COLLECTION_CLASS_NAME_METHOD(_class) \
+  NS_IMETHOD_(const char*) ClassName() override { return #_class; };
+
+
 #define NS_DECL_CYCLE_COLLECTION_CLASS_BODY_NO_UNLINK(_class, _base)           \
 public:                                                                        \
   NS_IMETHOD Traverse(void *p, nsCycleCollectionTraversalCallback &cb)         \
     override;                                                                  \
+  NS_DECL_CYCLE_COLLECTION_CLASS_NAME_METHOD(_class)                           \
   NS_IMETHOD_(void) DeleteCycleCollectable(void *p) override                   \
   {                                                                            \
     DowncastCCParticipant<_class>(p)->DeleteCycleCollectable();                \
@@ -644,6 +650,7 @@ static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
 public:                                                                        \
   NS_IMETHOD Traverse(void *p, nsCycleCollectionTraversalCallback &cb)         \
     override;                                                                  \
+  NS_DECL_CYCLE_COLLECTION_CLASS_NAME_METHOD(_class)                           \
   static _class* Downcast(nsISupports* s)                                      \
   {                                                                            \
     return static_cast<_class*>(static_cast<_base_class*>(                     \
@@ -698,7 +705,8 @@ static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
     NS_IMETHOD_(void) Unlink(void *n) override;                                \
     NS_IMETHOD_(void) Unroot(void *n) override;                                \
     NS_IMETHOD Traverse(void *n, nsCycleCollectionTraversalCallback &cb)       \
-  override;                                                                    \
+      override;                                                                \
+    NS_DECL_CYCLE_COLLECTION_CLASS_NAME_METHOD(_class)                         \
     NS_IMETHOD_(void) DeleteCycleCollectable(void *n) override                 \
     {                                                                          \
       DowncastCCParticipant<_class>(n)->DeleteCycleCollectable();              \

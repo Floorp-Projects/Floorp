@@ -3701,6 +3701,15 @@ Response.prototype =
     this._headers.setHeader(name, value, merge);
   },
 
+  setHeaderNoCheck: function(name, value)
+  {
+    if (!this._headers || this._finished || this._powerSeized)
+      throw Cr.NS_ERROR_NOT_AVAILABLE;
+    this._ensureAlive();
+
+    this._headers.setHeaderNoCheck(name, value);
+  },
+
   //
   // see nsIHttpResponse.processAsync
   //
@@ -4986,6 +4995,17 @@ nsHttpHeaders.prototype =
     else
     {
       this._headers[name] = [value];
+    }
+  },
+
+  setHeaderNoCheck: function(fieldName, fieldValue)
+  {
+    var name = headerUtils.normalizeFieldName(fieldName);
+    var value = headerUtils.normalizeFieldValue(fieldValue);
+    if (name in this._headers) {
+      this._headers[name].push(fieldValue);
+    } else {
+      this._headers[name] = [fieldValue];
     }
   },
 

@@ -116,6 +116,11 @@ function expectedErrorHandler(name)
   };
 }
 
+function expectUncaughtException(expecting)
+{
+  // This is dummy for xpcshell test.
+}
+
 function ExpectError(name)
 {
   this._name = name;

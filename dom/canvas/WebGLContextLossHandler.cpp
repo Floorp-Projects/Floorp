@@ -78,6 +78,13 @@ ContextLossWorkerEventTarget::Dispatch(already_AddRefed<nsIRunnable>&& aEvent,
 }
 
 NS_IMETHODIMP
+ContextLossWorkerEventTarget::DelayedDispatch(already_AddRefed<nsIRunnable>&&,
+                                              uint32_t)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 ContextLossWorkerEventTarget::IsOnCurrentThread(bool* aResult)
 {
     return mEventTarget->IsOnCurrentThread(aResult);

@@ -530,6 +530,12 @@ interface nsIHttpResponse : nsISupports
   void setHeader(in string name, in string value, in boolean merge);
 
   /**
+   * This is used for testing our header handling, so header will be sent out
+   * without transformation. There can be multiple headers.
+   */
+  void setHeaderNoCheck(in string name, in string value);
+
+  /**
    * A stream to which data appearing in the body of this response (or in the
    * totality of the response if seizePower() is called) should be written.
    * After this response has been designated as being processed asynchronously,

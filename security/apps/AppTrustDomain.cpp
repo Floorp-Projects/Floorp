@@ -368,4 +368,12 @@ AppTrustDomain::CheckValidityIsAcceptable(Time /*notBefore*/, Time /*notAfter*/,
   return Success;
 }
 
+Result
+AppTrustDomain::NetscapeStepUpMatchesServerAuth(Time /*notBefore*/,
+                                                /*out*/ bool& matches)
+{
+  matches = false;
+  return Success;
+}
+
 } } // namespace mozilla::psm

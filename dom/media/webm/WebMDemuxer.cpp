@@ -13,7 +13,6 @@
 #include "gfx2DGlue.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Endian.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/SharedThreadPool.h"
 #include "MediaDataDemuxer.h"
 #include "nsAutoRef.h"

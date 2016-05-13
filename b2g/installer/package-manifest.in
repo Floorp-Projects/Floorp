@@ -292,9 +292,6 @@
 @RESPATH@/components/satchel.xpt
 @RESPATH@/components/saxparser.xpt
 @RESPATH@/components/sessionstore.xpt
-#ifdef MOZ_SERVICES_SYNC
-@RESPATH@/components/services-crypto.xpt
-#endif
 @RESPATH@/components/services-crypto-component.xpt
 @RESPATH@/components/captivedetect.xpt
 @RESPATH@/components/shellservice.xpt
@@ -597,12 +594,6 @@
 @RESPATH@/components/nsINIProcessor.js
 @RESPATH@/components/nsPrompter.manifest
 @RESPATH@/components/nsPrompter.js
-#ifdef MOZ_SERVICES_SYNC
-@RESPATH@/components/SyncComponents.manifest
-@RESPATH@/components/Weave.js
-@RESPATH@/components/WeaveCrypto.manifest
-@RESPATH@/components/WeaveCrypto.js
-#endif
 @RESPATH@/components/servicesComponents.manifest
 @RESPATH@/components/cryptoComponents.manifest
 @RESPATH@/components/CaptivePortalDetectComponents.manifest
@@ -736,11 +727,6 @@
 @RESPATH@/@PREF_DIR@/channel-prefs.js
 @RESPATH@/greprefs.js
 @RESPATH@/defaults/autoconfig/prefcalls.js
-
-; Services (gre) prefs
-#ifdef MOZ_SERVICES_SYNC
-@RESPATH@/defaults/pref/services-sync.js
-#endif
 
 ; [Layout Engine Resources]
 ; Style Sheets, Graphics and other Resources used by the layout engine.

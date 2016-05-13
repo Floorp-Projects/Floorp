@@ -12,7 +12,7 @@
 #include "AppleVTDecoder.h"
 #include "AppleVTLinker.h"
 #include "MacIOSurfaceImage.h"
-#include "mozilla/Preferences.h"
+#include "MediaPrefs.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Logging.h"
 
@@ -23,7 +23,6 @@ bool AppleDecoderModule::sIsCoreMediaAvailable = false;
 bool AppleDecoderModule::sIsVTAvailable = false;
 bool AppleDecoderModule::sIsVTHWAvailable = false;
 bool AppleDecoderModule::sIsVDAAvailable = false;
-bool AppleDecoderModule::sForceVDA = false;
 bool AppleDecoderModule::sCanUseHardwareVideoDecoder = true;
 
 AppleDecoderModule::AppleDecoderModule()
@@ -43,8 +42,6 @@ AppleDecoderModule::Init()
   if (sInitialized) {
     return;
   }
-
-  Preferences::AddBoolVarCache(&sForceVDA, "media.apple.forcevda", false);
 
   // Ensure IOSurface framework is loaded.
   MacIOSurfaceLib::LoadLibrary();
@@ -88,7 +85,7 @@ AppleDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
 {
   RefPtr<MediaDataDecoder> decoder;
 
-  if (sIsVDAAvailable && (!sIsVTHWAvailable || sForceVDA)) {
+  if (sIsVDAAvailable && (!sIsVTHWAvailable || MediaPrefs::AppleForceVDA())) {
     decoder =
       AppleVDADecoder::CreateVDADecoder(aConfig,
                                         aVideoTaskQueue,

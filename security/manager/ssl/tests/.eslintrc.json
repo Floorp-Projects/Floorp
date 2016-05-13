@@ -1,0 +1,6 @@
+{
+  "rules": {
+    // Disallow non-top level |var| declarations.
+    "mozilla/var-only-at-top-level": 2
+  }
+}

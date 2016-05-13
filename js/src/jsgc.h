@@ -739,9 +739,18 @@ class ArenaLists
 #endif
     }
 
+    void checkEmptyArenaLists() {
+#ifdef DEBUG
+        for (auto i : AllAllocKinds())
+            checkEmptyArenaList(i);
+#endif
+    }
+
     void checkEmptyFreeList(AllocKind kind) {
         MOZ_ASSERT(freeLists[kind]->isEmpty());
     }
+
+    void checkEmptyArenaList(AllocKind kind);
 
     bool relocateArenas(Zone* zone, Arena*& relocatedListOut, JS::gcreason::Reason reason,
                         SliceBudget& sliceBudget, gcstats::Statistics& stats);

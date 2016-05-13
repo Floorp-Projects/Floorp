@@ -101,15 +101,15 @@ nsHttpTransaction::nsHttpTransaction()
     , mCaps(0)
     , mClassification(CLASS_GENERAL)
     , mPipelinePosition(0)
-    , mCapsToClear(0)
     , mHttpVersion(NS_HTTP_VERSION_UNKNOWN)
     , mHttpResponseCode(0)
+    , mCapsToClear(0)
+    , mResponseIsComplete(false)
     , mClosed(false)
     , mConnected(false)
     , mHaveStatusLine(false)
     , mHaveAllHeaders(false)
     , mTransactionDone(false)
-    , mResponseIsComplete(false)
     , mDidContentStart(false)
     , mNoContent(false)
     , mSentData(false)
@@ -1564,6 +1564,7 @@ nsHttpTransaction::HandleContentStart()
             LOG3(("http response [\n"));
             nsAutoCString headers;
             mResponseHead->Flatten(headers, false);
+            mResponseHead->FlattenOriginalHeader(headers);
             LogHeaders(headers.get());
             LOG3(("]\n"));
         }

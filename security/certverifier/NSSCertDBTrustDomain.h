@@ -21,6 +21,20 @@ enum class ValidityCheckingMode {
   CheckForEV = 1,
 };
 
+// Policy options for matching id-Netscape-stepUp with id-kp-serverAuth (for CA
+// certificates only):
+// * Always match: the step-up OID is considered equivalent to serverAuth
+// * Match before 23 August 2016: the OID is considered equivalent if the
+//   certificate's notBefore is before 23 August 2016
+// * Match before 23 August 2015: similarly, but for 23 August 2015
+// * Never match: the OID is never considered equivalent to serverAuth
+enum class NetscapeStepUpPolicy : uint32_t {
+  AlwaysMatch = 0,
+  MatchBefore23August2016 = 1,
+  MatchBefore23August2015 = 2,
+  NeverMatch = 3,
+};
+
 SECStatus InitializeNSS(const char* dir, bool readOnly, bool loadPKCS11Modules);
 
 void DisableMD5();
@@ -65,6 +79,7 @@ public:
                        unsigned int minRSABits,
                        ValidityCheckingMode validityCheckingMode,
                        CertVerifier::SHA1Mode sha1Mode,
+                       NetscapeStepUpPolicy netscapeStepUpPolicy,
                        UniqueCERTCertList& builtChain,
           /*optional*/ PinningTelemetryInfo* pinningTelemetryInfo = nullptr,
           /*optional*/ const char* hostname = nullptr);
@@ -110,6 +125,10 @@ public:
                    mozilla::pkix::EndEntityOrCA endEntityOrCA,
                    mozilla::pkix::KeyPurposeId keyPurpose) override;
 
+  virtual Result NetscapeStepUpMatchesServerAuth(
+                   mozilla::pkix::Time notBefore,
+                   /*out*/ bool& matches) override;
+
   virtual Result CheckRevocation(
                    mozilla::pkix::EndEntityOrCA endEntityOrCA,
                    const mozilla::pkix::CertID& certID,
@@ -151,6 +170,7 @@ private:
   const unsigned int mMinRSABits;
   ValidityCheckingMode mValidityCheckingMode;
   CertVerifier::SHA1Mode mSHA1Mode;
+  NetscapeStepUpPolicy mNetscapeStepUpPolicy;
   UniqueCERTCertList& mBuiltChain; // non-owning
   PinningTelemetryInfo* mPinningTelemetryInfo;
   const char* mHostname; // non-owning - only used for pinning checks

@@ -448,7 +448,7 @@ var AnimationPlayerActor = ActorClass({
    * animated properties as well as the frame's offset.
    */
   getFrames: method(function() {
-    return this.player.effect.getFrames();
+    return this.player.effect.getKeyframes();
   }, {
     request: {},
     response: {

@@ -79,8 +79,32 @@ void AudioBufferAddWithScale(const float* aInput,
 
 #ifdef USE_SSE2
   if (mozilla::supports_sse2()) {
-    AudioBufferAddWithScale_SSE(aInput, aScale, aOutput, aSize);
-    return;
+    if (aScale == 1.0f) {
+      while (aSize && (!IS_ALIGNED16(aInput) || !IS_ALIGNED16(aOutput))) {
+        *aOutput += *aInput;
+        ++aOutput;
+        ++aInput;
+        --aSize;
+      }
+    } else {
+      while (aSize && (!IS_ALIGNED16(aInput) || !IS_ALIGNED16(aOutput))) {
+        *aOutput += *aInput*aScale;
+        ++aOutput;
+        ++aInput;
+        --aSize;
+      }
+    }
+
+    // we need to round aSize down to the nearest multiple of 16
+    uint32_t alignedSize = aSize & ~0x0F;
+    if (alignedSize > 0) {
+      AudioBufferAddWithScale_SSE(aInput, aScale, aOutput, alignedSize);
+
+      // adjust parameters for use with scalar operations below
+      aInput += alignedSize;
+      aOutput += alignedSize;
+      aSize -= alignedSize;
+    }
   }
 #endif
 

@@ -452,7 +452,7 @@ waitForAllPaints(function() {
     is(markers.length, 0,
        'Animations with no keyframes should not cause restyles');
 
-    animation.effect.setFrames({ backgroundColor: ['red', 'blue'] });
+    animation.effect.setKeyframes({ backgroundColor: ['red', 'blue'] });
     markers = yield observeStyling(5);
 
     // There are 5 eRestyle_CSSAnimations and 1 eRestyle_CSSTransitions.
@@ -462,7 +462,7 @@ waitForAllPaints(function() {
        'Setting valid keyframes should cause regular animation restyles to ' +
        'occur');
 
-    animation.effect.setFrames({ });
+    animation.effect.setKeyframes({ });
     markers = yield observeStyling(5);
 
     is(markers.length, 1,

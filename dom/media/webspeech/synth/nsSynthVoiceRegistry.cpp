@@ -9,6 +9,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsCategoryManagerUtils.h"
 
+#include "MediaPrefs.h"
 #include "SpeechSynthesisUtterance.h"
 #include "SpeechSynthesisVoice.h"
 #include "nsSynthVoiceRegistry.h"
@@ -19,7 +20,6 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/unused.h"
 
 #include "SpeechSynthesisChild.h"
@@ -137,7 +137,6 @@ public:
 // nsSynthVoiceRegistry
 
 static StaticRefPtr<nsSynthVoiceRegistry> gSynthVoiceRegistry;
-static bool sForceGlobalQueue = false;
 
 NS_IMPL_ISUPPORTS(nsSynthVoiceRegistry, nsISynthVoiceRegistry)
 
@@ -189,8 +188,6 @@ nsSynthVoiceRegistry::GetInstance()
 
   if (!gSynthVoiceRegistry) {
     gSynthVoiceRegistry = new nsSynthVoiceRegistry();
-    Preferences::AddBoolVarCache(&sForceGlobalQueue,
-                                 "media.webspeech.synth.force_global_queue");
     if (XRE_IsParentProcess()) {
       // Start up all speech synth services.
       NS_CreateServicesFromCategory(NS_SPEECH_SYNTH_STARTED, nullptr,
@@ -342,7 +339,7 @@ nsSynthVoiceRegistry::RemoveVoice(nsISpeechService* aService,
   mDefaultVoices.RemoveElement(retval);
   mUriVoiceMap.Remove(aUri);
 
-  if (retval->mIsQueued && !sForceGlobalQueue) {
+  if (retval->mIsQueued && !MediaPrefs::WebSpeechForceGlobal()) {
     // Check if this is the last queued voice, and disable the global queue if
     // it is.
     bool queued = false;
@@ -713,7 +710,7 @@ nsSynthVoiceRegistry::Speak(const nsAString& aText,
 
   aTask->SetChosenVoiceURI(voice->mUri);
 
-  if (mUseGlobalQueue || sForceGlobalQueue) {
+  if (mUseGlobalQueue || MediaPrefs::WebSpeechForceGlobal()) {
     LOG(LogLevel::Debug,
         ("nsSynthVoiceRegistry::Speak queueing text='%s' lang='%s' uri='%s' rate=%f pitch=%f",
          NS_ConvertUTF16toUTF8(aText).get(), NS_ConvertUTF16toUTF8(aLang).get(),
@@ -791,7 +788,8 @@ nsSynthVoiceRegistry::SetIsSpeaking(bool aIsSpeaking)
   MOZ_ASSERT(XRE_IsParentProcess());
 
   // Only set to 'true' if global queue is enabled.
-  mIsSpeaking = aIsSpeaking && (mUseGlobalQueue || sForceGlobalQueue);
+  mIsSpeaking =
+    aIsSpeaking && (mUseGlobalQueue || MediaPrefs::WebSpeechForceGlobal());
 
   nsTArray<SpeechSynthesisParent*> ssplist;
   GetAllSpeechSynthActors(ssplist);

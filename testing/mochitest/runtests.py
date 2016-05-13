@@ -1329,6 +1329,7 @@ class SSLTunnel:
                              (loc.host, loc.port, self.sslPort, redirhost))
 
             if self.useSSLTunnelExts and option in (
+                    'tls1',
                     'ssl3',
                     'rc4',
                     'failHandshake'):

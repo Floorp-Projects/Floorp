@@ -28,6 +28,10 @@ public:
   already_AddRefed<gfx::DrawTarget> StartRemoteDrawing() override;
   void EndRemoteDrawing() override;
   LayoutDeviceIntSize GetClientSize() override;
+  already_AddRefed<gfx::DrawTarget> GetBackBufferDrawTarget(gfx::DrawTarget* aScreenTarget,
+                                                            const LayoutDeviceIntRect& aRect,
+                                                            const LayoutDeviceIntRect& aClearRect) override;
+  already_AddRefed<gfx::SourceSurface> EndBackBufferDrawing() override;
   already_AddRefed<CompositorVsyncDispatcher> GetCompositorVsyncDispatcher() override;
   uintptr_t GetWidgetKey() override;
   nsIWidget* RealWidget() override;
@@ -75,6 +79,9 @@ private:
   RefPtr<gfxASurface> mTransparentSurface;
   HDC mMemoryDC;
   HDC mCompositeDC;
+
+  // Locked back buffer of BasicCompositor
+  uint8_t* mLockedBackBufferData;
 };
 
 } // namespace widget

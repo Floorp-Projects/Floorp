@@ -906,6 +906,25 @@ nsViewSourceChannel::VisitResponseHeaders(nsIHttpHeaderVisitor *aVisitor)
 }
 
 NS_IMETHODIMP
+nsViewSourceChannel::GetOriginalResponseHeader(const nsACString & aHeader,
+                                               nsIHttpHeaderVisitor *aVisitor)
+{
+    nsAutoCString value;
+    nsresult rv = GetResponseHeader(aHeader, value);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+    aVisitor->VisitHeader(aHeader, value);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::VisitOriginalResponseHeaders(nsIHttpHeaderVisitor *aVisitor)
+{
+    return VisitResponseHeaders(aVisitor);
+}
+
+NS_IMETHODIMP
 nsViewSourceChannel::IsNoStoreResponse(bool *_retval)
 {
     return !mHttpChannel ? NS_ERROR_NULL_POINTER :

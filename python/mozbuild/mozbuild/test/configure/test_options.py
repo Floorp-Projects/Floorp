@@ -785,6 +785,30 @@ class TestCommandLineHelper(unittest.TestCase):
         self.assertEqual('--with-foo=a,b', cm.exception.old_arg)
         self.assertEqual('command-line', cm.exception.old_origin)
 
+    def test_possible_origins(self):
+        with self.assertRaises(InvalidOptionError):
+            Option('--foo', possible_origins='command-line')
+
+        helper = CommandLineHelper({'BAZ': '1'}, ['cmd', '--foo', '--bar'])
+        foo = Option('--foo',
+                     possible_origins=('command-line',))
+        value, option = helper.handle(foo)
+        self.assertEquals(PositiveOptionValue(), value)
+        self.assertEquals('command-line', value.origin)
+        self.assertEquals('--foo', option)
+
+        bar = Option('--bar',
+                     possible_origins=('mozconfig',))
+        with self.assertRaisesRegexp(InvalidOptionError,
+            "--bar can not be set by command-line. Values are accepted from: mozconfig"):
+            helper.handle(bar)
+
+        baz = Option(env='BAZ',
+                     possible_origins=('implied',))
+        with self.assertRaisesRegexp(InvalidOptionError,
+            "BAZ=1 can not be set by environment. Values are accepted from: implied"):
+            helper.handle(baz)
+
 
 if __name__ == '__main__':
     main()

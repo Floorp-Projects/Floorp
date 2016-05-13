@@ -67,7 +67,7 @@ Push.prototype = {
       let permissionDenied = () => {
         reject(new this._window.DOMException(
           "User denied permission to use the Push API.",
-          "PermissionDeniedError"
+          "NotAllowedError"
         ));
       };
 

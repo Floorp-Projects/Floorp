@@ -9,7 +9,6 @@
 #include "MediaDecoderStateMachine.h"
 #include "MediaFormatReader.h"
 #include "MP3Demuxer.h"
-#include "mozilla/Preferences.h"
 #include "PDMFactory.h"
 
 namespace mozilla {

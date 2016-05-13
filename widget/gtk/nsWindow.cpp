@@ -6870,12 +6870,12 @@ nsWindow::SynthesizeNativeMouseScrollEvent(mozilla::LayoutDeviceIntPoint aPoint,
   GdkDeviceManager *device_manager = gdk_display_get_device_manager(display);
   event.scroll.device = gdk_device_manager_get_client_pointer(device_manager);
 #endif
-  event.scroll.x_root = aPoint.x;
-  event.scroll.y_root = aPoint.y;
+  event.scroll.x_root = DevicePixelsToGdkCoordRoundDown(aPoint.x);
+  event.scroll.y_root = DevicePixelsToGdkCoordRoundDown(aPoint.y);
 
   LayoutDeviceIntPoint pointInWindow = aPoint - WidgetToScreenOffset();
-  event.scroll.x = pointInWindow.x;
-  event.scroll.y = pointInWindow.y;
+  event.scroll.x = DevicePixelsToGdkCoordRoundDown(pointInWindow.x);
+  event.scroll.y = DevicePixelsToGdkCoordRoundDown(pointInWindow.y);
 
   // The delta values are backwards on Linux compared to Windows and Cocoa,
   // hence the negation.

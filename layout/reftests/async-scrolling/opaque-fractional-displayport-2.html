@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" reftest-async-scroll>
+<meta charset="utf-8">
+<title>Make sure the scrolled layer is opaque even if the scrolled area is fractional</title>
+
+<style>
+
+body {
+  margin: 0;
+}
+
+.scrollbox {
+  margin: 50px;
+  width: 200px;
+  height: 200px;
+  overflow: auto;
+
+  /* Make the background "non-uniform" so that the scrolled layer does not
+   * pull up a background color. */
+  background: linear-gradient(to bottom, white, transparent);
+}
+
+.scrolled-contents {
+  height: 300.2px;
+  background-color: lime;
+  box-sizing: border-box;
+  border: 1px solid lime;
+}
+
+.transparent-overlap-of-fractional-edge {
+  margin: -10px 20px 0;
+  height: 40px;
+  background-color: rgba(0, 0, 255, 0.5);
+}
+
+</style>
+
+<body>
+
+<div class="scrollbox"
+     reftest-displayport-x="0" reftest-displayport-y="-100.2"
+     reftest-displayport-w="200" reftest-displayport-h="300.2"
+     reftest-async-scroll-x="0" reftest-async-scroll-y="0">
+  <div class="scrolled-contents">
+    <div class="transparent-overlap-of-fractional-edge reftest-opaque-layer">
+      <!-- This element has the magic "reftest-opaque-layer" class which
+           constitutes the actual test here. -->
+    </div>
+  </div>
+</div>
+
+<script>
+
+document.querySelector(".scrollbox").scrollTop = 100000; /* will end up at 100.2 */
+
+</script>

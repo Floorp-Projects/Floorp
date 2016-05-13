@@ -4,12 +4,12 @@
 
 #include "VideoUtils.h"
 
-#include "mozilla/Preferences.h"
 #include "mozilla/Base64.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Function.h"
 
+#include "MediaPrefs.h"
 #include "MediaResource.h"
 #include "TimeUnits.h"
 #include "nsMathUtils.h"
@@ -204,8 +204,7 @@ already_AddRefed<SharedThreadPool> GetMediaThreadPool(MediaThreadType aType)
       break;
   }
   return SharedThreadPool::
-    Get(nsDependentCString(name),
-        Preferences::GetUint("media.num-decode-threads", 4));
+    Get(nsDependentCString(name), MediaPrefs::MediaThreadPoolDefaultCount());
 }
 
 bool

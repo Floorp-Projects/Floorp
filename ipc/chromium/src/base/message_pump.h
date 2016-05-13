@@ -7,6 +7,8 @@
 
 #include "nsISupportsImpl.h"
 
+class nsIEventTarget;
+
 namespace base {
 
 class TimeTicks;
@@ -123,6 +125,12 @@ class MessagePump {
   // cancelling any pending DoDelayedWork callback.  This method may only be
   // used on the thread that called Run.
   virtual void ScheduleDelayedWork(const TimeTicks& delayed_work_time) = 0;
+
+  // If returned, just use the nsThread.
+  virtual nsIEventTarget* GetXPCOMThread()
+  {
+    return nullptr;
+  }
 
 protected:
   virtual ~MessagePump() {};

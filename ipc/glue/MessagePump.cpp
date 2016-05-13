@@ -200,6 +200,18 @@ MessagePump::ScheduleDelayedWork(const base::TimeTicks& aDelayedTime)
                                       nsITimer::TYPE_ONE_SHOT);
 }
 
+nsIEventTarget*
+MessagePump::GetXPCOMThread()
+{
+  if (mThread) {
+    return mThread;
+  }
+
+  // Main thread
+  nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+  return mainThread;
+}
+
 void
 MessagePump::DoDelayedWork(base::MessagePump::Delegate* aDelegate)
 {
@@ -356,7 +368,8 @@ MessagePumpForNonMainThreads::Run(base::MessagePump::Delegate* aDelegate)
       continue;
     }
 
-    didWork = aDelegate->DoIdleWork();
+    DebugOnly<bool> didIdleWork = aDelegate->DoIdleWork();
+    MOZ_ASSERT(!didIdleWork);
     if (!keep_running_) {
       break;
     }
@@ -418,7 +431,8 @@ MessagePumpForNonMainUIThreads::DoRunLoop()
       continue;
     }
 
-    didWork = state_->delegate->DoIdleWork();
+    DebugOnly<bool> didIdleWork = state_->delegate->DoIdleWork();
+    MOZ_ASSERT(!didIdleWork);
     CHECK_QUIT_STATE
 
     SetInWait();

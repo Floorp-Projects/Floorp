@@ -168,7 +168,7 @@ namespace widget {
 
 static IMMHandler* gIMMHandler = nullptr;
 
-PRLogModuleInfo* gIMMLog = nullptr;
+LazyLogModule gIMMLog("nsIMM32HandlerWidgets");
 
 /******************************************************************************
  * IMEContext
@@ -238,9 +238,6 @@ IMMHandler::EnsureHandlerInstance()
 void
 IMMHandler::Initialize()
 {
-  if (!gIMMLog) {
-    gIMMLog = PR_NewLogModule("nsIMM32HandlerWidgets");
-  }
   if (!sWM_MSIME_MOUSE) {
     sWM_MSIME_MOUSE = ::RegisterWindowMessage(RWM_MOUSE);
   }

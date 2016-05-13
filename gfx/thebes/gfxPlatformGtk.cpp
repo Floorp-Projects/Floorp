@@ -340,11 +340,19 @@ gfxPlatformGtk::GetDPI()
 double
 gfxPlatformGtk::GetDPIScale()
 {
-    // We want to set the default CSS to device pixel ratio as the
-    // closest _integer_ multiple, so round the ratio of actual dpi
-    // to CSS dpi (96)
+    // Integer scale factors work well with GTK window scaling, image scaling,
+    // and pixel alignment, but there is a range where 1 is too small and 2 is
+    // too big.  An additional step of 1.5 is added because this is common
+    // scale on WINNT and at this ratio the advantages of larger rendering
+    // outweigh the disadvantages from scaling and pixel mis-alignment.
     int32_t dpi = GetDPI();
-    return (dpi > 96) ? round(dpi/96.0) : 1.0;
+    if (dpi < 144) {
+        return 1.0;
+    } else if (dpi < 168) {
+        return 1.5;
+    } else {
+        return round(dpi/96.0);
+    }
 }
 
 bool

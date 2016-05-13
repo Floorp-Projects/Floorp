@@ -422,11 +422,11 @@ KeyframesEqualIgnoringComputedOffsets(const nsTArray<Keyframe>& aLhs,
   return true;
 }
 
-// https://w3c.github.io/web-animations/#dom-keyframeeffect-setframes
+// https://w3c.github.io/web-animations/#dom-keyframeeffect-setkeyframes
 void
-KeyframeEffectReadOnly::SetFrames(JSContext* aContext,
-                                  JS::Handle<JSObject*> aFrames,
-                                  ErrorResult& aRv)
+KeyframeEffectReadOnly::SetKeyframes(JSContext* aContext,
+                                     JS::Handle<JSObject*> aKeyframes,
+                                     ErrorResult& aRv)
 {
   nsIDocument* doc = AnimationUtils::GetCurrentRealmDocument(aContext);
   if (!doc) {
@@ -435,7 +435,7 @@ KeyframeEffectReadOnly::SetFrames(JSContext* aContext,
   }
 
   nsTArray<Keyframe> keyframes =
-    KeyframeUtils::GetKeyframesFromObject(aContext, aFrames, aRv);
+    KeyframeUtils::GetKeyframesFromObject(aContext, aKeyframes, aRv);
   if (aRv.Failed()) {
     return;
   }
@@ -451,19 +451,19 @@ KeyframeEffectReadOnly::SetFrames(JSContext* aContext,
                                                     pseudo, shell);
   }
 
-  SetFrames(Move(keyframes), styleContext);
+  SetKeyframes(Move(keyframes), styleContext);
 }
 
 void
-KeyframeEffectReadOnly::SetFrames(nsTArray<Keyframe>&& aFrames,
+KeyframeEffectReadOnly::SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
                                   nsStyleContext* aStyleContext)
 {
-  if (KeyframesEqualIgnoringComputedOffsets(aFrames, mFrames)) {
+  if (KeyframesEqualIgnoringComputedOffsets(aKeyframes, mKeyframes)) {
     return;
   }
 
-  mFrames = Move(aFrames);
-  KeyframeUtils::ApplyDistributeSpacing(mFrames);
+  mKeyframes = Move(aKeyframes);
+  KeyframeUtils::ApplyDistributeSpacing(mKeyframes);
 
   if (mAnimation && mAnimation->IsRelevant()) {
     nsNodeUtils::AnimationChanged(mAnimation);
@@ -514,7 +514,7 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
       KeyframeUtils::GetAnimationPropertiesFromKeyframes(aStyleContext,
                                                          mTarget->mElement,
                                                          mTarget->mPseudoType,
-                                                         mFrames);
+                                                         mKeyframes);
   }
 
   if (mProperties == properties) {
@@ -722,7 +722,7 @@ template <class KeyframeEffectType, class OptionsType>
 KeyframeEffectReadOnly::ConstructKeyframeEffect(
     const GlobalObject& aGlobal,
     const Nullable<ElementOrCSSPseudoElement>& aTarget,
-    JS::Handle<JSObject*> aFrames,
+    JS::Handle<JSObject*> aKeyframes,
     const OptionsType& aOptions,
     ErrorResult& aRv)
 {
@@ -742,7 +742,7 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(
   RefPtr<KeyframeEffectType> effect =
     new KeyframeEffectType(doc, target, timingParams);
 
-  effect->SetFrames(aGlobal.Context(), aFrames, aRv);
+  effect->SetKeyframes(aGlobal.Context(), aKeyframes, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -842,12 +842,12 @@ DumpAnimationProperties(nsTArray<AnimationProperty>& aAnimationProperties)
 KeyframeEffectReadOnly::Constructor(
     const GlobalObject& aGlobal,
     const Nullable<ElementOrCSSPseudoElement>& aTarget,
-    JS::Handle<JSObject*> aFrames,
+    JS::Handle<JSObject*> aKeyframes,
     const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
     ErrorResult& aRv)
 {
   return ConstructKeyframeEffect<KeyframeEffectReadOnly>(aGlobal, aTarget,
-                                                         aFrames, aOptions,
+                                                         aKeyframes, aOptions,
                                                          aRv);
 }
 
@@ -966,19 +966,19 @@ KeyframeEffectReadOnly::GetProperties(
 }
 
 void
-KeyframeEffectReadOnly::GetFrames(JSContext*& aCx,
-                                  nsTArray<JSObject*>& aResult,
-                                  ErrorResult& aRv)
+KeyframeEffectReadOnly::GetKeyframes(JSContext*& aCx,
+                                     nsTArray<JSObject*>& aResult,
+                                     ErrorResult& aRv)
 {
   MOZ_ASSERT(aResult.IsEmpty());
   MOZ_ASSERT(!aRv.Failed());
 
-  if (!aResult.SetCapacity(mFrames.Length(), mozilla::fallible)) {
+  if (!aResult.SetCapacity(mKeyframes.Length(), mozilla::fallible)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
 
-  for (const Keyframe& keyframe : mFrames) {
+  for (const Keyframe& keyframe : mKeyframes) {
     // Set up a dictionary object for the explicit members
     BaseComputedKeyframe keyframeDict;
     if (keyframe.mOffset) {
@@ -1339,11 +1339,11 @@ KeyframeEffect::WrapObject(JSContext* aCx,
 KeyframeEffect::Constructor(
     const GlobalObject& aGlobal,
     const Nullable<ElementOrCSSPseudoElement>& aTarget,
-    JS::Handle<JSObject*> aFrames,
+    JS::Handle<JSObject*> aKeyframes,
     const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
     ErrorResult& aRv)
 {
-  return ConstructKeyframeEffect<KeyframeEffect>(aGlobal, aTarget, aFrames,
+  return ConstructKeyframeEffect<KeyframeEffect>(aGlobal, aTarget, aKeyframes,
                                                  aOptions, aRv);
 }
 
@@ -1351,11 +1351,11 @@ KeyframeEffect::Constructor(
 KeyframeEffect::Constructor(
     const GlobalObject& aGlobal,
     const Nullable<ElementOrCSSPseudoElement>& aTarget,
-    JS::Handle<JSObject*> aFrames,
+    JS::Handle<JSObject*> aKeyframes,
     const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
     ErrorResult& aRv)
 {
-  return ConstructKeyframeEffect<KeyframeEffect>(aGlobal, aTarget, aFrames,
+  return ConstructKeyframeEffect<KeyframeEffect>(aGlobal, aTarget, aKeyframes,
                                                  aOptions, aRv);
 }
 

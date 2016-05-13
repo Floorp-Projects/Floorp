@@ -109,27 +109,16 @@ interface nsICookieManager2 : nsICookieManager
   void importCookies(in nsIFile aCookieFile);
 
   /**
-   * Returns an enumerator of all cookies that are related to a specific app.
+   * Returns an enumerator of all cookies whose origin attributes matches aPattern
    *
-   * If the onlyIsolatedMozBrowser parameter is set to true, only cookies part
-   * of an isolated mozbrowser element inside the app will be returned. If set
-   * to false, all cookies will be returned, regardless of their
-   * inIsolatedMozBrowser flag.
-   *
-   * This method assumes that appId is a valid app id. It should not be a
-   * special value like UNKNOWN_APP_ID or NO_APP_ID.
+   * @param aPattern origin attribute pattern in JSON format
    */
-  nsISimpleEnumerator getCookiesForApp(in unsigned long appId,
-                                       in boolean onlyIsolatedMozBrowser);
+  nsISimpleEnumerator getCookiesWithOriginAttributes(in DOMString aPattern);
 
   /**
-   * Remove all the cookies associated with the app with the id aAppId.
+   * Remove all the cookies whose origin attributes matches aPattern
    *
-   * If onlyIsolatedMozBrowser is set to true, the method will only remove the
-   * cookies marked as part of an isolated mozbrowser element inside the app.
-   *
-   * Special app id values are not allowed (NO_APP_ID or UNKNOWN_APP_ID for example).
+   * @param aPattern origin attribute pattern in JSON format
    */
-  void removeCookiesForApp(in unsigned long appId,
-                           in boolean onlyIsolatedMozBrowser);
+  void removeCookiesWithOriginAttributes(in DOMString aPattern);
 };

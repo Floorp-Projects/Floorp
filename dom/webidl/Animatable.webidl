@@ -21,7 +21,7 @@ dictionary AnimationFilter {
 [NoInterfaceObject]
 interface Animatable {
   [Func="nsDocument::IsElementAnimateEnabled", Throws]
-  Animation animate(object? frames,
+  Animation animate(object? keyframes,
                     optional (unrestricted double or KeyframeAnimationOptions)
                       options);
   [Func="nsDocument::IsWebAnimationsEnabled"]

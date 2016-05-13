@@ -67,6 +67,9 @@ public:
   NS_IMETHOD Dispatch(already_AddRefed<nsIRunnable>&& event, uint32_t flags) override
     { return !mEventTarget ? NS_ERROR_NULL_POINTER : mEventTarget->Dispatch(Move(event), flags); }
 
+  NS_IMETHOD DelayedDispatch(already_AddRefed<nsIRunnable>&&, uint32_t) override
+    { return NS_ERROR_NOT_IMPLEMENTED; }
+
   using nsIEventTarget::Dispatch;
 
   NS_IMETHOD IsOnCurrentThread(bool *_retval) override { return !mEventTarget ? NS_ERROR_NULL_POINTER : mEventTarget->IsOnCurrentThread(_retval); }

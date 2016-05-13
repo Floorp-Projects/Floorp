@@ -4,51 +4,56 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-env_flag('MOZ_ANDROID_EXCLUDE_FONTS',
-         help='Whether to exclude font files from the build',
-         default=True)
+project_flag('MOZ_ANDROID_EXCLUDE_FONTS',
+             help='Whether to exclude font files from the build',
+             default=True)
 
-env_flag('MOZ_LOCALE_SWITCHER',
-         help='Enable runtime locale switching',
-         default=True)
+project_flag('MOZ_LOCALE_SWITCHER',
+             help='Enable runtime locale switching',
+             default=True)
 
-env_flag('MOZ_ANDROID_GCM',
-         help='Enable GCM registration on Nightly builds only',
-         default=enabled_in_nightly,
-         set_for_old_configure=True)
+project_flag('MOZ_ANDROID_GCM',
+             help='Enable GCM registration on Nightly builds only',
+             default=enabled_in_nightly,
+             set_for_old_configure=True)
 
-env_flag('MOZ_ANDROID_DOWNLOADS_INTEGRATION',
-         help='Enable system download manager on Android',
-         default=True)
+project_flag('MOZ_ANDROID_DOWNLOADS_INTEGRATION',
+             help='Enable system download manager on Android',
+             default=True)
 
-env_flag('MOZ_ANDROID_BEAM',
-         help='Enable NFC permission on Android',
-         default=True)
+project_flag('MOZ_ANDROID_BEAM',
+             help='Enable NFC permission on Android',
+             default=True)
 
-env_flag('MOZ_ANDROID_SEARCH_ACTIVITY',
-         help='Include Search Activity on Android',
-         default=True)
+project_flag('MOZ_ANDROID_SEARCH_ACTIVITY',
+             help='Include Search Activity on Android',
+             default=True)
 
-env_flag('MOZ_ANDROID_MLS_STUMBLER',
-         help='Include Mozilla Location Service Stumbler on Android',
-         default=True)
+project_flag('MOZ_ANDROID_MLS_STUMBLER',
+             help='Include Mozilla Location Service Stumbler on Android',
+             default=True)
 
-env_flag('MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE',
-         help='Background service for downloading additional content at runtime',
-         default=True)
+project_flag('MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE',
+             help='Background service for downloading additional content at runtime',
+             default=True)
 
 # Enable the Switchboard A/B framework code.
 # Note: The framework is always included in the app. This flag controls
 # usage of the framework.
-env_flag('MOZ_SWITCHBOARD',
-         help='Include Switchboard A/B framework on Android',
-         default=True)
+project_flag('MOZ_SWITCHBOARD',
+             help='Include Switchboard A/B framework on Android',
+             default=True)
 
-env_flag('MOZ_ANDROID_APZ',
-         help='Enable the C++ async pan/zoom code instead of the Java version',
-         default=True,
-         set_as_define=True,
-         name='--enable-android-apz')
+option('--disable-android-apz', env='MOZ_ANDROID_APZ',
+       help='Disable the C++ async pan/zoom code and use the Java version instead')
+
+android_apz = depends_if('--disable-android-apz')(lambda _: True)
+
+set_config('MOZ_ANDROID_APZ', android_apz)
+set_define('MOZ_ANDROID_APZ', android_apz)
+
+imply_option('MOZ_SOCIAL', False)
+imply_option('MOZ_SERVICES_HEALTHREPORT', True)
 
 @depends(target)
 def check_target(target):
@@ -60,4 +65,5 @@ def check_target(target):
             'for more information about the necessary options.')
 
 include('../../toolkit/moz.configure')
+include('../../build/moz.configure/java.configure')
 include('gradle.configure')

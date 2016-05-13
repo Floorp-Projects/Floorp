@@ -385,7 +385,8 @@ protected:
   void OnAudioPopped(const RefPtr<MediaData>& aSample);
   void OnVideoPopped(const RefPtr<MediaData>& aSample);
 
-  void CheckIsAudible(const MediaData* aSample);
+  void AudioAudibleChanged(bool aAudible);
+
   void VolumeChanged();
   void LogicalPlaybackRateChanged();
   void PreservesPitchChanged();
@@ -941,6 +942,7 @@ private:
 
   MediaEventListener mAudioQueueListener;
   MediaEventListener mVideoQueueListener;
+  MediaEventListener mAudibleListener;
 
   MediaEventProducerExc<nsAutoPtr<MediaInfo>,
                         nsAutoPtr<MetadataTags>,

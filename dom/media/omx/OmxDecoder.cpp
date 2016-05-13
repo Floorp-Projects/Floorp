@@ -27,7 +27,6 @@
 
 #include "mozilla/layers/GrallocTextureClient.h"
 #include "mozilla/layers/TextureClient.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/Types.h"
 #include "mozilla/Monitor.h"
 #include "nsMimeTypes.h"

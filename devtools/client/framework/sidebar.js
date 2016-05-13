@@ -496,6 +496,7 @@ ToolSidebar.prototype = {
   hide: function() {
     Services.prefs.setIntPref("devtools.toolsidebar-width." + this._uid, this._tabbox.width);
     this._tabbox.setAttribute("hidden", "true");
+    this._panelDoc.activeElement.blur();
 
     this.emit("hide");
   },

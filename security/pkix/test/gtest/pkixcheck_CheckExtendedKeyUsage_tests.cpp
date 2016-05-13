@@ -33,11 +33,16 @@ namespace mozilla { namespace pkix {
 
 extern Result CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA,
                                     const Input* encodedExtendedKeyUsage,
-                                    KeyPurposeId requiredEKU);
+                                    KeyPurposeId requiredEKU,
+                                    TrustDomain& trustDomain, Time notBefore);
 
 } } // namespace mozilla::pkix
 
-class pkixcheck_CheckExtendedKeyUsage : public ::testing::Test { };
+class pkixcheck_CheckExtendedKeyUsage : public ::testing::Test
+{
+protected:
+  DefaultCryptoTrustDomain mTrustDomain;
+};
 
 #define ASSERT_BAD(x) ASSERT_EQ(Result::ERROR_INADEQUATE_CERT_TYPE, x)
 
@@ -82,33 +87,45 @@ TEST_F(pkixcheck_CheckExtendedKeyUsage, none)
 
   ASSERT_EQ(Success, CheckExtendedKeyUsage(EndEntityOrCA::MustBeEndEntity,
                                            nullptr,
-                                           KeyPurposeId::anyExtendedKeyUsage));
+                                           KeyPurposeId::anyExtendedKeyUsage,
+                                           mTrustDomain, Now()));
   ASSERT_EQ(Success, CheckExtendedKeyUsage(EndEntityOrCA::MustBeCA, nullptr,
-                                           KeyPurposeId::anyExtendedKeyUsage));
+                                           KeyPurposeId::anyExtendedKeyUsage,
+                                           mTrustDomain, Now()));
   ASSERT_EQ(Success, CheckExtendedKeyUsage(EndEntityOrCA::MustBeEndEntity,
                                            nullptr,
-                                           KeyPurposeId::id_kp_serverAuth));
+                                           KeyPurposeId::id_kp_serverAuth,
+                                           mTrustDomain, Now()));
   ASSERT_EQ(Success, CheckExtendedKeyUsage(EndEntityOrCA::MustBeCA, nullptr,
-                                           KeyPurposeId::id_kp_serverAuth));
+                                           KeyPurposeId::id_kp_serverAuth,
+                                           mTrustDomain, Now()));
   ASSERT_EQ(Success, CheckExtendedKeyUsage(EndEntityOrCA::MustBeEndEntity,
                                            nullptr,
-                                           KeyPurposeId::id_kp_clientAuth));
+                                           KeyPurposeId::id_kp_clientAuth,
+                                           mTrustDomain, Now()));
   ASSERT_EQ(Success, CheckExtendedKeyUsage(EndEntityOrCA::MustBeCA, nullptr,
-                                           KeyPurposeId::id_kp_clientAuth));
+                                           KeyPurposeId::id_kp_clientAuth,
+                                           mTrustDomain, Now()));
   ASSERT_EQ(Success, CheckExtendedKeyUsage(EndEntityOrCA::MustBeEndEntity,
                                            nullptr,
-                                           KeyPurposeId::id_kp_codeSigning));
+                                           KeyPurposeId::id_kp_codeSigning,
+                                           mTrustDomain, Now()));
   ASSERT_EQ(Success, CheckExtendedKeyUsage(EndEntityOrCA::MustBeCA, nullptr,
-                                           KeyPurposeId::id_kp_codeSigning));
+                                           KeyPurposeId::id_kp_codeSigning,
+                                           mTrustDomain, Now()));
   ASSERT_EQ(Success, CheckExtendedKeyUsage(EndEntityOrCA::MustBeEndEntity,
                                            nullptr,
-                                           KeyPurposeId::id_kp_emailProtection));
+                                           KeyPurposeId::id_kp_emailProtection,
+                                           mTrustDomain, Now()));
   ASSERT_EQ(Success, CheckExtendedKeyUsage(EndEntityOrCA::MustBeCA, nullptr,
-                                           KeyPurposeId::id_kp_emailProtection));
+                                           KeyPurposeId::id_kp_emailProtection,
+                                           mTrustDomain, Now()));
   ASSERT_BAD(CheckExtendedKeyUsage(EndEntityOrCA::MustBeEndEntity, nullptr,
-                                   KeyPurposeId::id_kp_OCSPSigning));
+                                   KeyPurposeId::id_kp_OCSPSigning,
+                                   mTrustDomain, Now()));
   ASSERT_EQ(Success, CheckExtendedKeyUsage(EndEntityOrCA::MustBeCA, nullptr,
-                                           KeyPurposeId::id_kp_OCSPSigning));
+                                           KeyPurposeId::id_kp_OCSPSigning,
+                                           mTrustDomain, Now()));
 }
 
 static const Input empty_null;
@@ -118,17 +135,21 @@ TEST_F(pkixcheck_CheckExtendedKeyUsage, empty)
   // The input Input is empty. The cert has an empty extended key usage
   // extension, which is syntactically invalid.
   ASSERT_BAD(CheckExtendedKeyUsage(EndEntityOrCA::MustBeEndEntity, &empty_null,
-                                   KeyPurposeId::id_kp_serverAuth));
+                                   KeyPurposeId::id_kp_serverAuth,
+                                   mTrustDomain, Now()));
   ASSERT_BAD(CheckExtendedKeyUsage(EndEntityOrCA::MustBeCA, &empty_null,
-                                   KeyPurposeId::id_kp_serverAuth));
+                                   KeyPurposeId::id_kp_serverAuth,
+                                   mTrustDomain, Now()));
 
   static const uint8_t dummy = 0x00;
   Input empty_nonnull;
   ASSERT_EQ(Success, empty_nonnull.Init(&dummy, 0));
   ASSERT_BAD(CheckExtendedKeyUsage(EndEntityOrCA::MustBeEndEntity, &empty_nonnull,
-                                   KeyPurposeId::id_kp_serverAuth));
+                                   KeyPurposeId::id_kp_serverAuth,
+                                   mTrustDomain, Now()));
   ASSERT_BAD(CheckExtendedKeyUsage(EndEntityOrCA::MustBeCA, &empty_nonnull,
-                                   KeyPurposeId::id_kp_serverAuth));
+                                   KeyPurposeId::id_kp_serverAuth,
+                                   mTrustDomain, Now()));
 }
 
 struct EKUTestcase
@@ -143,6 +164,8 @@ class CheckExtendedKeyUsageTest
   : public ::testing::Test
   , public ::testing::WithParamInterface<EKUTestcase>
 {
+protected:
+  DefaultCryptoTrustDomain mTrustDomain;
 };
 
 TEST_P(CheckExtendedKeyUsageTest, EKUTestcase)
@@ -153,10 +176,12 @@ TEST_P(CheckExtendedKeyUsageTest, EKUTestcase)
                                      param.ekuSEQUENCE.length()));
   ASSERT_EQ(param.expectedResultEndEntity,
             CheckExtendedKeyUsage(EndEntityOrCA::MustBeEndEntity, &encodedEKU,
-                                  param.keyPurposeId));
+                                  param.keyPurposeId,
+                                  mTrustDomain, Now()));
   ASSERT_EQ(param.expectedResultCA,
             CheckExtendedKeyUsage(EndEntityOrCA::MustBeCA, &encodedEKU,
-                                  param.keyPurposeId));
+                                  param.keyPurposeId,
+                                  mTrustDomain, Now()));
 }
 
 #define SINGLE_EKU_SUCCESS(oidBytes, keyPurposeId) \

@@ -113,6 +113,34 @@ enum class AllocKind {
     LAST = LIMIT - 1
 };
 
+#define FOR_EACH_ALLOCKIND(D) \
+ /* PrettyName             TypeName */ \
+    D(FUNCTION,            JSFunction) \
+    D(FUNCTION_EXTENDED,   JSFunction) \
+    D(OBJECT0,             JSObject) \
+    D(OBJECT0_BACKGROUND,  JSObject) \
+    D(OBJECT2,             JSObject) \
+    D(OBJECT2_BACKGROUND,  JSObject) \
+    D(OBJECT4,             JSObject) \
+    D(OBJECT4_BACKGROUND,  JSObject) \
+    D(OBJECT8,             JSObject) \
+    D(OBJECT8_BACKGROUND,  JSObject) \
+    D(OBJECT12,            JSObject) \
+    D(OBJECT12_BACKGROUND, JSObject) \
+    D(OBJECT16,            JSObject) \
+    D(OBJECT16_BACKGROUND, JSObject) \
+    D(SCRIPT,              JSScript) \
+    D(LAZY_SCRIPT,         js::LazyScript) \
+    D(SHAPE,               js::Shape) \
+    D(ACCESSOR_SHAPE,      js::AccessorShape) \
+    D(BASE_SHAPE,          js::BaseShape) \
+    D(OBJECT_GROUP,        js::ObjectGroup) \
+    D(FAT_INLINE_STRING,   JSFatInlineString) \
+    D(STRING,              JSString) \
+    D(EXTERNAL_STRING,     JSExternalString) \
+    D(SYMBOL,              JS::Symbol) \
+    D(JITCODE,             js::JitCode)
+
 static_assert(int(AllocKind::FIRST) == 0, "Various places depend on AllocKind starting at 0, "
                                           "please audit them carefully!");
 static_assert(int(AllocKind::OBJECT_FIRST) == 0, "Various places depend on AllocKind::OBJECT_FIRST "

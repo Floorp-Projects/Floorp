@@ -6,7 +6,7 @@ var Cr = Components.results;
 
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://testing-common/MockRegistrar.js");
 
 do_get_profile();
@@ -114,14 +114,9 @@ function runChildTestSet(set)
 {
   DownloadListener.onFinished = testFinisher(set[2]);
   sendCommand('\
-  let uri = ioservice.newURI("http://localhost:4444' + set[0] + '", null, null);                  \
-  let channel = ioservice.newChannelFromURI2(uri,                                                 \
-                                             null, /* aLoadingNode */                             \
-                                             Services.scriptSecurityManager.getSystemPrincipal(), \
-                                             null, /* aTriggeringPrincipal */                     \
-                                             Ci.nsILoadInfo.SEC_NORMAL,                           \
-                                             Ci.nsIContentPolicy.TYPE_OTHER);                     \
-  uriloader.openURI(channel, Ci.nsIURILoader.IS_CONTENT_PREFERRED, new WindowContext());          \
+  let uri = ioservice.newURI("http://localhost:4444' + set[0] + '", null, null);          \
+  let channel = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});           \
+  uriloader.openURI(channel, Ci.nsIURILoader.IS_CONTENT_PREFERRED, new WindowContext());  \
   ');
 }
 

@@ -3498,6 +3498,13 @@ extern JS_PUBLIC_API(JSObject*)
 JS_NewArrayBufferWithContents(JSContext* cx, size_t nbytes, void* contents);
 
 /**
+ * Create a new array buffer with the given contents.  The array buffer does not take ownership of
+ * contents, and JS_DetachArrayBuffer must be called before the contents are disposed of.
+ */
+extern JS_PUBLIC_API(JSObject*)
+JS_NewArrayBufferWithExternalContents(JSContext* cx, size_t nbytes, void* contents);
+
+/**
  * Steal the contents of the given array buffer. The array buffer has its
  * length set to 0 and its contents array cleared. The caller takes ownership
  * of the return value and must free it or transfer ownership via

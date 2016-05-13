@@ -8,12 +8,11 @@
 // If rendertrace is off let's no compile this code
 #ifdef MOZ_RENDERTRACE
 #include "Layers.h"
+#include "TreeTraversal.h"              // for ForEachNode
 
 
 namespace mozilla {
 namespace layers {
-
-static int colorId = 0;
 
 static gfx::Matrix4x4 GetRootTransform(Layer *aLayer) {
   gfx::Matrix4x4 layerTrans = aLayer->GetTransform();
@@ -24,32 +23,27 @@ static gfx::Matrix4x4 GetRootTransform(Layer *aLayer) {
   return layerTrans;
 }
 
-void RenderTraceLayers(Layer *aLayer, const char *aColor, const gfx::Matrix4x4 aRootTransform, bool aReset) {
-  if (!aLayer)
-    return;
+void RenderTraceLayers(Layer *aLayer, const char *aColor, const gfx::Matrix4x4 aRootTransform) {
+  int colorId = 0;
+  ForEachNode<ForwardIterator>(
+      aLayer,
+      [&colorId] (Layer *layer)
+      {
+        gfx::Matrix4x4 trans = aRootTransform * layer->GetTransform();
+        trans.ProjectTo2D();
+        gfx::IntRect clipRect = layer->GetLocalVisibleRegion().GetBounds();
+        Rect rect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
+        trans.TransformBounds(rect);
 
-  gfx::Matrix4x4 trans = aRootTransform * aLayer->GetTransform();
-  trans.ProjectTo2D();
-  gfx::IntRect clipRect = aLayer->GetLocalVisibleRegion().GetBounds();
-  Rect rect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
-  trans.TransformBounds(rect);
-
-  if (strcmp(aLayer->Name(), "ContainerLayer") != 0 &&
-      strcmp(aLayer->Name(), "ContainerLayerComposite") != 0) {
-    printf_stderr("%s RENDERTRACE %u rect #%02X%s %i %i %i %i\n",
-      aLayer->Name(), (int)PR_IntervalNow(),
-      colorId, aColor,
-      (int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height);
-  }
-
-  colorId++;
-
-  for (Layer* child = aLayer->GetFirstChild();
-        child; child = child->GetNextSibling()) {
-    RenderTraceLayers(child, aColor, aRootTransform, false);
-  }
-
-  if (aReset) colorId = 0;
+        if (strcmp(layer->Name(), "ContainerLayer") != 0 &&
+            strcmp(layer->Name(), "ContainerLayerComposite") != 0) {
+          printf_stderr("%s RENDERTRACE %u rect #%02X%s %i %i %i %i\n",
+            layer->Name(), (int)PR_IntervalNow(),
+            colorId, aColor,
+            (int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height);
+        }
+        colorId++;
+      });
 }
 
 void RenderTraceInvalidateStart(Layer *aLayer, const char *aColor, const gfx::IntRect aRect) {

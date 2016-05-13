@@ -17,7 +17,6 @@
 #include "mozilla/EMEUtils.h"
 #include "nsContentUtils.h"
 #include "nsIScriptObjectPrincipal.h"
-#include "mozilla/Preferences.h"
 #include "nsContentTypeParser.h"
 #ifdef MOZ_FMP4
 #include "MP4Decoder.h"

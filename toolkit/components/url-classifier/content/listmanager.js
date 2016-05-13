@@ -29,8 +29,9 @@ this.log = function log(...stuff) {
 
   var d = new Date();
   let msg = "listmanager: " + d.toTimeString() + ": " + stuff.join(" ");
+  msg = Services.urlFormatter.trimSensitiveURLs(msg);
   Services.console.logStringMessage(msg);
-  dump(Services.urlFormatter.trimSensitiveURLs(msg) + "\n");
+  dump(msg + "\n");
 }
 
 this.QueryAdapter = function QueryAdapter(callback) {

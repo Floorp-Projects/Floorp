@@ -15,8 +15,6 @@
 namespace mozilla {
 namespace gmp {
 
-#define GMP_DEFAULT_ASYNC_SHUTDONW_TIMEOUT 3000
-
 class GMPContentParent;
 class GMPServiceChild;
 

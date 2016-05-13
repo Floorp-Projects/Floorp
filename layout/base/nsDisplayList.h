@@ -158,7 +158,8 @@ enum class nsDisplayListBuilderMode : uint8_t {
   PLUGIN_GEOMETRY,
   FRAME_VISIBILITY,
   TRANSFORM_COMPUTATION,
-  GENERATE_GLYPH
+  GENERATE_GLYPH,
+  PAINTING_SELECTION_BACKGROUND
 };
 
 /**
@@ -288,13 +289,20 @@ public:
 
   /**
    * @return true if the display list is being built for creating the glyph
-   * path from text items. While painting the display list, all text display
-   * items should only create glyph paths in target context, instead of
-   * drawing text into it.
+   * mask from text items.
    */
-  bool IsForGenerateGlyphPath()
+  bool IsForGenerateGlyphMask()
   {
     return mMode == nsDisplayListBuilderMode::GENERATE_GLYPH;
+  }
+
+  /**
+   * @return true if the display list is being built for painting selection
+   * background.
+   */
+  bool IsForPaintingSelectionBG()
+  {
+    return mMode == nsDisplayListBuilderMode::PAINTING_SELECTION_BACKGROUND;
   }
 
   bool WillComputePluginGeometry() { return mWillComputePluginGeometry; }

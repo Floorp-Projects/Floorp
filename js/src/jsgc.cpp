@@ -2468,7 +2468,6 @@ GCRuntime::sweepZoneAfterCompacting(Zone* zone)
         c->sweepRegExps();
         c->sweepSavedStacks();
         c->sweepGlobalObject(fop);
-        c->sweepObjectPendingMetadata();
         c->sweepSelfHostingScriptSource();
         c->sweepDebugScopes();
         c->sweepJitCompartment(fop);
@@ -3889,7 +3888,14 @@ GCRuntime::sweepZones(FreeOp* fop, bool destroyingRuntime)
                                     !zone->hasMarkedCompartments();
             if (zoneIsDead || destroyingRuntime)
             {
+                // We have just finished sweeping, so we should have freed any
+                // empty arenas back to their Chunk for future allocation.
                 zone->arenas.checkEmptyFreeLists();
+
+                // We are about to delete the Zone; this will leave the Zone*
+                // in the arena header dangling if there are any arenas
+                // remaining at this point.
+                zone->arenas.checkEmptyArenaLists();
 
                 if (callback)
                     callback(zone);
@@ -3904,6 +3910,37 @@ GCRuntime::sweepZones(FreeOp* fop, bool destroyingRuntime)
         *write++ = zone;
     }
     zones.shrinkTo(write - zones.begin());
+}
+
+#ifdef DEBUG
+static const char*
+AllocKindToAscii(AllocKind kind)
+{
+    switch(kind) {
+#define MAKE_CASE(name, _) case AllocKind:: name: return #name;
+      FOR_EACH_ALLOCKIND(MAKE_CASE)
+#undef MAKE_CASE
+      case AllocKind::LIMIT: MOZ_FALLTHROUGH;
+      default: MOZ_CRASH("Unknown AllocKind in AllocKindToAscii");
+    }
+}
+#endif // DEBUG
+
+void
+ArenaLists::checkEmptyArenaList(AllocKind kind)
+{
+#ifdef DEBUG
+    if (!arenaLists[kind].isEmpty()) {
+        for (Arena* current = arenaLists[kind].head(); current; current = current->next) {
+            for (ArenaCellIterUnderFinalize i(current); !i.done(); i.next()) {
+                Cell* t = i.get<Cell>();
+                MOZ_ASSERT(t->asTenured().isMarked(), "unmarked cells should have been finalized");
+                fprintf(stderr, "ERROR: GC found live Cell %p of kind %s at shutdown\n",
+                        t, AllocKindToAscii(kind));
+            }
+        }
+    }
+#endif // DEBUG
 }
 
 void
@@ -5294,7 +5331,6 @@ GCRuntime::beginSweepingZoneGroup()
 
             for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
                 c->sweepGlobalObject(&fop);
-                c->sweepObjectPendingMetadata();
                 c->sweepDebugScopes();
                 c->sweepJitCompartment(&fop);
                 c->sweepTemplateObjects();

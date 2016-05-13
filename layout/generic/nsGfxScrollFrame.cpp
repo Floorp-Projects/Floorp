@@ -3343,6 +3343,27 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         MOZ_ASSERT(!inactiveScrollClip->mIsAsyncScrollable);
       }
 
+      DisplayListClipState::AutoSaveRestore displayPortClipState(aBuilder);
+      if (usingDisplayPort) {
+        // Clip the contents to the display port.
+        // The dirty rect already acts kind of like a clip, in that
+        // FrameLayerBuilder intersects item bounds and opaque regions with
+        // it, but it doesn't have the consistent snapping behavior of a
+        // true clip.
+        // For a case where this makes a difference, imagine the following
+        // scenario: The display port has an edge that falls on a fractional
+        // layer pixel, and there's an opaque display item that covers the
+        // whole display port up until that fractional edge, and there is a
+        // transparent display item that overlaps the edge. We want to prevent
+        // this transparent item from enlarging the scrolled layer's visible
+        // region beyond its opaque region. The dirty rect doesn't do that -
+        // it gets rounded out, whereas a true clip gets rounded to nearest
+        // pixels.
+        // If there is no display port, we don't need this because the clip
+        // from the scroll port is still applied.
+        displayPortClipState.ClipContainingBlockDescendants(dirtyRect + aBuilder->ToReferenceFrame(mOuter));
+      }
+
       mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, dirtyRect, scrolledContent);
     }
 

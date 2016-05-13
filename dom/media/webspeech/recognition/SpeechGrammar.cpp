@@ -6,7 +6,6 @@
 
 #include "SpeechGrammar.h"
 
-#include "mozilla/Preferences.h"
 #include "mozilla/dom/SpeechGrammarBinding.h"
 
 namespace mozilla {

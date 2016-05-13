@@ -81,6 +81,10 @@ def checking(what, callback=None):
 #   This argument allows to use a different kind of option (possibly using a
 #   configure flag), or doing some pre-processing with a @depends function.
 # - `allow_missing` indicates whether not finding the program is an error.
+# - `paths` is a list of paths or @depends function returning a list of paths
+#   that will cause the given path(s) to be searched rather than $PATH. Input
+#   paths may either be individual paths or delimited by os.pathsep, to allow
+#   passing $PATH (for example) as an element.
 #
 # The simplest form is:
 #   check_prog('PROG', ('a', 'b'))
@@ -90,7 +94,8 @@ def checking(what, callback=None):
 @template
 @imports(_from='mozbuild.shellutil', _import='quote')
 @imports(_from='mozbuild.configure', _import='DependsFunction')
-def check_prog(var, progs, what=None, input=None, allow_missing=False):
+def check_prog(var, progs, what=None, input=None, allow_missing=False,
+               paths=None):
     if input:
         # Wrap input with type checking and normalization.
         @depends(input)
@@ -109,13 +114,15 @@ def check_prog(var, progs, what=None, input=None, allow_missing=False):
         input = var
     what = what or var.lower()
 
+    # Trick to make a @depends function out of an immediate value.
     if not isinstance(progs, DependsFunction):
-        # Trick to make a @depends function out of an immediate value.
         progs = depends('--help')(lambda h: progs)
+    if not isinstance(paths, DependsFunction):
+        paths = depends('--help')(lambda h: paths)
 
-    @depends_if(input, progs)
+    @depends_if(input, progs, paths)
     @checking('for %s' % what, lambda x: quote(x) if x else 'not found')
-    def check(value, progs):
+    def check(value, progs, paths):
         if progs is None:
             progs = ()
 
@@ -124,7 +131,7 @@ def check_prog(var, progs, what=None, input=None, allow_missing=False):
 
         for prog in value or progs:
             log.debug('%s: Trying %s', var.lower(), quote(prog))
-            result = find_program(prog)
+            result = find_program(prog, paths)
             if result:
                 return result
 

@@ -1660,9 +1660,38 @@ HttpBaseChannel::SetResponseHeader(const nsACString& header,
 NS_IMETHODIMP
 HttpBaseChannel::VisitResponseHeaders(nsIHttpHeaderVisitor *visitor)
 {
-  if (!mResponseHead)
+  if (!mResponseHead) {
     return NS_ERROR_NOT_AVAILABLE;
-  return mResponseHead->Headers().VisitHeaders(visitor);
+  }
+  return mResponseHead->Headers().VisitHeaders(visitor,
+    nsHttpHeaderArray::eFilterResponse);
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetOriginalResponseHeader(const nsACString& aHeader,
+                                           nsIHttpHeaderVisitor *aVisitor)
+{
+  if (!mResponseHead) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsHttpAtom atom = nsHttp::ResolveAtom(aHeader);
+  if (!atom) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return mResponseHead->Headers().GetOriginalHeader(atom, aVisitor);
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::VisitOriginalResponseHeaders(nsIHttpHeaderVisitor *aVisitor)
+{
+  if (!mResponseHead) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return mResponseHead->Headers().VisitHeaders(aVisitor,
+      nsHttpHeaderArray::eFilterResponseOriginal);
 }
 
 NS_IMETHODIMP

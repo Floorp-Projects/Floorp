@@ -69,6 +69,7 @@
 #include "GeckoProfiler.h"
 #include "TextRenderer.h"               // for TextRenderer
 #include "mozilla/layers/CompositorBridgeParent.h"
+#include "TreeTraversal.h"              // for ForEachNode
 
 class gfxContext;
 
@@ -88,11 +89,12 @@ ToLayerComposite(Layer* aLayer)
 
 static void ClearSubtree(Layer* aLayer)
 {
-  ToLayerComposite(aLayer)->CleanupResources();
-  for (Layer* child = aLayer->GetFirstChild(); child;
-       child = child->GetNextSibling()) {
-    ClearSubtree(child);
-  }
+  ForEachNode<ForwardIterator>(
+      aLayer,
+      [] (Layer* layer)
+      {
+        ToLayerComposite(layer)->CleanupResources();
+      });
 }
 
 void
@@ -792,16 +794,14 @@ LayerManagerComposite::PopGroupForLayerEffects(RefPtr<CompositingRenderTarget> a
 // Used to clear the 'mLayerComposited' flag at the beginning of each Render().
 static void
 ClearLayerFlags(Layer* aLayer) {
-  if (!aLayer) {
-    return;
-  }
-  if (aLayer->AsLayerComposite()) {
-    aLayer->AsLayerComposite()->SetLayerComposited(false);
-  }
-  for (Layer* child = aLayer->GetFirstChild(); child;
-       child = child->GetNextSibling()) {
-    ClearLayerFlags(child);
-  }
+  ForEachNode<ForwardIterator>(
+      aLayer,
+      [] (Layer* layer)
+      {
+        if (layer->AsLayerComposite()) {
+          layer->AsLayerComposite()->SetLayerComposited(false);
+        }
+      });
 }
 
 void
@@ -1207,63 +1207,64 @@ LayerManagerComposite::ComputeRenderIntegrityInternal(Layer* aLayer,
                                                       nsIntRegion& aLowPrecisionScreenRegion,
                                                       const Matrix4x4& aTransform)
 {
-  if (aLayer->GetOpacity() <= 0.f ||
-      (aScreenRegion.IsEmpty() && aLowPrecisionScreenRegion.IsEmpty())) {
-    return;
-  }
-
-  // If the layer's a container, recurse into all of its children
-  ContainerLayer* container = aLayer->AsContainerLayer();
-  if (container) {
-    // Accumulate the transform of intermediate surfaces
-    Matrix4x4 transform = aTransform;
-    if (container->UseIntermediateSurface()) {
-      transform = aLayer->GetEffectiveTransform();
-      transform = aTransform * transform;
-    }
-    for (Layer* child = aLayer->GetFirstChild(); child;
-         child = child->GetNextSibling()) {
-      ComputeRenderIntegrityInternal(child, aScreenRegion, aLowPrecisionScreenRegion, transform);
-    }
-    return;
-  }
-
-  // Only painted layers can be incomplete
-  PaintedLayer* paintedLayer = aLayer->AsPaintedLayer();
-  if (!paintedLayer) {
-    return;
-  }
-
-  // See if there's any incomplete rendering
-  nsIntRegion incompleteRegion = aLayer->GetLocalVisibleRegion().ToUnknownRegion();
-  incompleteRegion.Sub(incompleteRegion, paintedLayer->GetValidRegion());
-
-  if (!incompleteRegion.IsEmpty()) {
-    // Calculate the transform to get between screen and layer space
-    Matrix4x4 transformToScreen = aLayer->GetEffectiveTransform();
-    transformToScreen = aTransform * transformToScreen;
-
-    SubtractTransformedRegion(aScreenRegion, incompleteRegion, transformToScreen);
-
-    // See if there's any incomplete low-precision rendering
-    TiledContentHost* composer = nullptr;
-    LayerComposite* shadow = aLayer->AsLayerComposite();
-    if (shadow) {
-      composer = shadow->GetCompositableHost()->AsTiledContentHost();
-      if (composer) {
-        incompleteRegion.Sub(incompleteRegion, composer->GetValidLowPrecisionRegion());
-        if (!incompleteRegion.IsEmpty()) {
-          SubtractTransformedRegion(aLowPrecisionScreenRegion, incompleteRegion, transformToScreen);
+  ForEachNode<ForwardIterator>(
+      aLayer,
+      [&aScreenRegion, &aLowPrecisionScreenRegion, &aTransform] (Layer* layer)
+      {
+        if (layer->GetOpacity() <= 0.f ||
+            (aScreenRegion.IsEmpty() && aLowPrecisionScreenRegion.IsEmpty())) {
+          return TraversalFlag::Skip;
         }
-      }
-    }
 
-    // If we can't get a valid low precision region, assume it's the same as
-    // the high precision region.
-    if (!composer) {
-      SubtractTransformedRegion(aLowPrecisionScreenRegion, incompleteRegion, transformToScreen);
-    }
-  }
+        // If the layer's a container, recurse into all of its children
+        ContainerLayer* container = layer->AsContainerLayer();
+        if (container) {
+          // Accumulate the transform of intermediate surfaces
+          Matrix4x4 transform = aTransform;
+          if (container->UseIntermediateSurface()) {
+            transform = layer->GetEffectiveTransform();
+            transform = aTransform * transform;
+          }
+          return TraversalFlag::Continue;
+        }
+
+        // Only painted layers can be incomplete
+        PaintedLayer* paintedLayer = layer->AsPaintedLayer();
+        if (!paintedLayer || !container) {
+          return TraversalFlag::Skip;
+        }
+        // See if there's any incomplete rendering
+        nsIntRegion incompleteRegion = layer->GetLocalVisibleRegion().ToUnknownRegion();
+        incompleteRegion.Sub(incompleteRegion, paintedLayer->GetValidRegion());
+
+        if (!incompleteRegion.IsEmpty()) {
+          // Calculate the transform to get between screen and layer space
+          Matrix4x4 transformToScreen = layer->GetEffectiveTransform();
+          transformToScreen = aTransform * transformToScreen;
+
+          SubtractTransformedRegion(aScreenRegion, incompleteRegion, transformToScreen);
+
+          // See if there's any incomplete low-precision rendering
+          TiledContentHost* composer = nullptr;
+          LayerComposite* shadow = layer->AsLayerComposite();
+          if (shadow) {
+            composer = shadow->GetCompositableHost()->AsTiledContentHost();
+            if (composer) {
+              incompleteRegion.Sub(incompleteRegion, composer->GetValidLowPrecisionRegion());
+              if (!incompleteRegion.IsEmpty()) {
+                SubtractTransformedRegion(aLowPrecisionScreenRegion, incompleteRegion, transformToScreen);
+              }
+            }
+          }
+
+          // If we can't get a valid low precision region, assume it's the same as
+          // the high precision region.
+          if (!composer) {
+            SubtractTransformedRegion(aLowPrecisionScreenRegion, incompleteRegion, transformToScreen);
+          }
+        }
+        return TraversalFlag::Skip;
+      });
 }
 
 #ifdef MOZ_WIDGET_ANDROID

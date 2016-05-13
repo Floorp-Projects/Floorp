@@ -18,11 +18,12 @@
   bypassNavigationTest = true;
 
   function runTest() {
-    var script = SpecialPowers.loadChromeScript(function() {
+    let script = SpecialPowers.loadChromeScript(function() {
       const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
       // Force download to be w/o user assistance for our testing mime type
       const mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
-      var handlerInfo = mimeSvc.getFromTypeAndExtension("application/x-auto-download", "auto");
+      let handlerInfo =
+        mimeSvc.getFromTypeAndExtension("application/x-auto-download", "auto");
       handlerInfo.preferredAction = Ci.nsIHandlerInfo.saveToDisk;
       handlerInfo.alwaysAskBeforeHandling = false;
       handlerInfo.preferredApplicationHandler = null;
@@ -31,22 +32,23 @@
                            .getService(Ci.nsIHandlerService);
       handlerSvc.store(handlerInfo);
 
-      var dirProvider = Cc["@mozilla.org/file/directory_service;1"]
+      let dirProvider = Cc["@mozilla.org/file/directory_service;1"]
                           .getService(Ci.nsIProperties);
-      var profileDir = dirProvider.get("ProfDS", Ci.nsIFile);
+      let profileDir = dirProvider.get("ProfDS", Ci.nsIFile);
       profileDir.append("downloads");
 
-      var prefs = Cc["@mozilla.org/preferences-service;1"]
+      let prefs = Cc["@mozilla.org/preferences-service;1"]
                     .getService(Ci.nsIPrefService);
-      prefs = prefs.getBranch("browser.download.");
+      let prefBranch = prefs.getBranch("browser.download.");
 
-      prefs.setCharPref("dir", profileDir.path);
-      prefs.setBoolPref("useDownloadDir", true);
-      prefs.setIntPref("folderList", 2);
-      prefs.setBoolPref("manager.closeWhenDone", true);
-      prefs.setBoolPref("manager.showWhenStarting", false);
+      prefBranch.setCharPref("dir", profileDir.path);
+      prefBranch.setBoolPref("useDownloadDir", true);
+      prefBranch.setIntPref("folderList", 2);
+      prefBranch.setBoolPref("manager.closeWhenDone", true);
+      prefBranch.setBoolPref("manager.showWhenStarting", false);
 
-      var Downloads = Cu.import("resource://gre/modules/Downloads.jsm").Downloads;
+      const { Downloads } =
+        Cu.import("resource://gre/modules/Downloads.jsm", {});
       Downloads.getList(Downloads.PUBLIC).then(list => {
         list.addView({
           onDownloadAdded: function (aDownload) {
@@ -71,21 +73,22 @@
     SpecialPowers.loadChromeScript(function() {
       const { classes: Cc, interfaces: Ci } = Components;
       const mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
-      var handlerInfo = mimeSvc.getFromTypeAndExtension("application/x-auto-download", "auto");
+      let handlerInfo =
+        mimeSvc.getFromTypeAndExtension("application/x-auto-download", "auto");
 
       const handlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"]
                            .getService(Ci.nsIHandlerService);
       handlerSvc.remove(handlerInfo);
 
-      var prefs = Cc["@mozilla.org/preferences-service;1"]
+      let prefs = Cc["@mozilla.org/preferences-service;1"]
                     .getService(Ci.nsIPrefService);
-      prefs = prefs.getBranch("browser.download.");
+      let prefBranch = prefs.getBranch("browser.download.");
 
-      var prefKeys = ["dir", "useDownloadDir", "folderList",
-                      "manager.closeWhenDone", "manager.showWhenStarting"];
+      const prefKeys = ["dir", "useDownloadDir", "folderList",
+                        "manager.closeWhenDone", "manager.showWhenStarting"];
       for (let prefKey of prefKeys) {
-        if (prefs.prefHasUserValue(prefKey)) {
-          prefs.clearUserPref(prefKey);
+        if (prefBranch.prefHasUserValue(prefKey)) {
+          prefBranch.clearUserPref(prefKey);
         }
       }
     });

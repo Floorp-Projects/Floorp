@@ -21,7 +21,6 @@
 #include "MediaStreamGraph.h"
 #include "AudioSegment.h"
 #include "mozilla/WeakPtr.h"
-#include "mozilla/Preferences.h"
 
 #include "SpeechGrammarList.h"
 #include "SpeechRecognitionResultList.h"
@@ -35,11 +34,6 @@ namespace mozilla {
 
 namespace dom {
 
-#define TEST_PREFERENCE_ENABLE "media.webspeech.test.enable"
-#define TEST_PREFERENCE_FAKE_FSM_EVENTS "media.webspeech.test.fake_fsm_events"
-#define TEST_PREFERENCE_FAKE_RECOGNITION_SERVICE "media.webspeech.test.fake_recognition_service"
-#define TEST_PREFERENCE_RECOGNITION_ENABLE "media.webspeech.recognition.enable"
-#define TEST_PREFERENCE_RECOGNITION_FORCE_ENABLE "media.webspeech.recognition.force_enable"
 #define SPEECH_RECOGNITION_TEST_EVENT_REQUEST_TOPIC "SpeechRecognitionTest:RequestEvent"
 #define SPEECH_RECOGNITION_TEST_END_TOPIC "SpeechRecognitionTest:End"
 
@@ -130,33 +124,6 @@ public:
   uint32_t SplitSamplesBuffer(const int16_t* aSamplesBuffer, uint32_t aSampleCount, nsTArray<RefPtr<SharedBuffer>>& aResult);
   AudioSegment* CreateAudioSegment(nsTArray<RefPtr<SharedBuffer>>& aChunks);
   void FeedAudioData(already_AddRefed<SharedBuffer> aSamples, uint32_t aDuration, MediaStreamListener* aProvider, TrackRate aTrackRate);
-
-  static struct TestConfig
-  {
-  public:
-    bool mEnableTests;
-    bool mFakeFSMEvents;
-    bool mFakeRecognitionService;
-
-    void Init()
-    {
-      if (mInitialized) {
-        return;
-      }
-
-      Preferences::AddBoolVarCache(&mEnableTests, TEST_PREFERENCE_ENABLE);
-
-      if (mEnableTests) {
-        Preferences::AddBoolVarCache(&mFakeFSMEvents, TEST_PREFERENCE_FAKE_FSM_EVENTS);
-        Preferences::AddBoolVarCache(&mFakeRecognitionService, TEST_PREFERENCE_FAKE_RECOGNITION_SERVICE);
-      }
-
-      mInitialized = true;
-    }
-  private:
-    bool mInitialized;
-  } mTestConfig;
-
 
   friend class SpeechEvent;
 private:

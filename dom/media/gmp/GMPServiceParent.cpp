@@ -6,6 +6,7 @@
 #include "GMPServiceParent.h"
 #include "GMPService.h"
 #include "prio.h"
+#include "base/task.h"
 #include "mozilla/Logging.h"
 #include "GMPParent.h"
 #include "GMPVideoDecoderParent.h"
@@ -22,7 +23,6 @@
 #include "GMPDecryptorParent.h"
 #include "GMPAudioDecoderParent.h"
 #include "nsComponentManagerUtils.h"
-#include "mozilla/Preferences.h"
 #include "runnable_utils.h"
 #include "VideoUtils.h"
 #if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
@@ -41,6 +41,7 @@
 #include "nsIXULRuntime.h"
 #include "GMPDecoderModule.h"
 #include <limits>
+#include "MediaPrefs.h"
 
 namespace mozilla {
 
@@ -80,10 +81,6 @@ NS_IMPL_ISUPPORTS_INHERITED(GeckoMediaPluginServiceParent,
                             GeckoMediaPluginService,
                             mozIGeckoMediaPluginChromeService)
 
-static int32_t sMaxAsyncShutdownWaitMs = 0;
-static bool sAllowInsecureGMP = false;
-static bool sHaveSetGMPServiceParentPrefCaches = false;
-
 GeckoMediaPluginServiceParent::GeckoMediaPluginServiceParent()
   : mShuttingDown(false)
 #ifdef MOZ_CRASHREPORTER
@@ -95,14 +92,6 @@ GeckoMediaPluginServiceParent::GeckoMediaPluginServiceParent()
   , mLoadPluginsFromDiskComplete(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!sHaveSetGMPServiceParentPrefCaches) {
-    sHaveSetGMPServiceParentPrefCaches = true;
-    Preferences::AddIntVarCache(&sMaxAsyncShutdownWaitMs,
-                                "media.gmp.async-shutdown-timeout",
-                                GMP_DEFAULT_ASYNC_SHUTDONW_TIMEOUT);
-    Preferences::AddBoolVarCache(&sAllowInsecureGMP,
-                                 "media.gmp.insecure.allow", false);
-  }
   mInitPromise.SetMonitor(&mInitPromiseMonitor);
 }
 
@@ -115,8 +104,7 @@ GeckoMediaPluginServiceParent::~GeckoMediaPluginServiceParent()
 int32_t
 GeckoMediaPluginServiceParent::AsyncShutdownTimeoutMs()
 {
-  MOZ_ASSERT(sHaveSetGMPServiceParentPrefCaches);
-  return sMaxAsyncShutdownWaitMs;
+  return MediaPrefs::GMPAsyncShutdownTimeout();
 }
 
 nsresult
@@ -1057,7 +1045,7 @@ CreateGMPParent()
 {
 #if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
   if (!SandboxInfo::Get().CanSandboxMedia()) {
-    if (!sAllowInsecureGMP) {
+    if (!MediaPrefs::GMPAllowInsecure()) {
       NS_WARNING("Denying media plugin load due to lack of sandboxing.");
       return nullptr;
     }

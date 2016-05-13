@@ -899,10 +899,10 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
     // method which will be called by TextEventDispatcher.
     if (NeedsToHandleWithoutFollowingCharMessages()) {
       ComputeInputtingStringWithKeyboardLayout();
-    } else if (mVirtualKeyCode == VK_PACKET) {
-      // If this is sent by SendInput() API to input a Unicode character,
-      // we can only know what char will be inputted with following WM_CHAR
-      // message.
+    } else {
+      // This message might be sent by SendInput() API to input a Unicode
+      // character, in such case, we can only know what char will be inputted
+      // with following WM_CHAR message.
       // TODO: We cannot initialize mCommittedCharsAndModifiers for VK_PACKET
       //       if the message is WM_KEYUP because we don't have preceding
       //       WM_CHAR message.  Therefore, we should dispatch eKeyUp event at
@@ -915,7 +915,8 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
       //       WM_KEYDOWN if following WM_CHAR is a part of a Unicode character.
       MSG followingCharMsg;
       if (GetFollowingCharMessage(followingCharMsg, false) &&
-          followingCharMsg.wParam) {
+          !IsControlChar(static_cast<char16_t>(followingCharMsg.wParam))) {
+        mCommittedCharsAndModifiers.Clear();
         mCommittedCharsAndModifiers.Append(
           static_cast<char16_t>(followingCharMsg.wParam),
           mModKeyState.GetModifiers());
@@ -1026,6 +1027,13 @@ NativeKey::InitWithAppCommand()
   mCodeNameIndex =
     KeyboardLayout::ConvertScanCodeToCodeNameIndex(
       GetScanCodeWithExtendedFlag());
+}
+
+bool
+NativeKey::IsControlChar(char16_t aChar) const
+{
+  static const char16_t U_SPACE = 0x20;
+  return aChar < U_SPACE;
 }
 
 bool
@@ -1672,7 +1680,6 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
   //           should cause composition events because they are not caused
   //           by actual keyboard operation.
 
-  static const char16_t U_SPACE = 0x20;
   static const char16_t U_EQUAL = 0x3D;
 
   // First, handle normal text input or non-printable key case here.
@@ -1681,7 +1688,7 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
       (mOriginalVirtualKeyCode &&
        !KeyboardLayout::IsPrintableCharKey(mOriginalVirtualKeyCode))) {
     WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
-    if (aCharMsg.wParam >= U_SPACE) {
+    if (!IsControlChar(static_cast<char16_t>(aCharMsg.wParam))) {
       keypressEvent.charCode = static_cast<uint32_t>(aCharMsg.wParam);
     } else {
       keypressEvent.keyCode = mDOMKeyCode;
@@ -1715,7 +1722,8 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
 
   char16_t uniChar;
   // Ctrl+A Ctrl+Z, see Programming Windows 3.1 page 110 for details
-  if (mModKeyState.IsControl() && aCharMsg.wParam <= 0x1A) {
+  if (mModKeyState.IsControl() &&
+      IsControlChar(static_cast<char16_t>(aCharMsg.wParam))) {
     // Bug 16486: Need to account for shift here.
     uniChar = aCharMsg.wParam - 1 + (mModKeyState.IsShift() ? 'A' : 'a');
   } else if (mModKeyState.IsControl() && aCharMsg.wParam <= 0x1F) {
@@ -1724,7 +1732,7 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
     // for some reason the keypress handler need to have the uniChar code set
     // with the addition of a upper case A not the lower case.
     uniChar = aCharMsg.wParam - 1 + 'A';
-  } else if (aCharMsg.wParam < U_SPACE ||
+  } else if (IsControlChar(static_cast<char16_t>(aCharMsg.wParam)) ||
              (aCharMsg.wParam == U_EQUAL && mModKeyState.IsControl())) {
     uniChar = 0;
   } else {

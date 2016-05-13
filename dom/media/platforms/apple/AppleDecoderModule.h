@@ -50,7 +50,6 @@ private:
   static bool sIsVTAvailable;
   static bool sIsVTHWAvailable;
   static bool sIsVDAAvailable;
-  static bool sForceVDA;
 };
 
 } // namespace mozilla

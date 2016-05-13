@@ -35217,8 +35217,8 @@
   },
   "local_changes": {
     "deleted": [
-      "web-animations/keyframe-effect/getComputedTiming-progress.html",
-      "web-animations/keyframe-effect/getComputedTiming-currentIteration.html"
+      "web-animations/keyframe-effect/getComputedTiming-currentIteration.html",
+      "web-animations/keyframe-effect/getComputedTiming-progress.html"
     ],
     "deleted_reftests": {},
     "items": {
@@ -35403,10 +35403,10 @@
             "url": "/web-animations/document/getAnimations.html"
           }
         ],
-        "web-animations/keyframe-effect/setFrames.html": [
+        "web-animations/keyframe-effect/setKeyframes.html": [
           {
-            "path": "web-animations/keyframe-effect/setFrames.html",
-            "url": "/web-animations/keyframe-effect/setFrames.html"
+            "path": "web-animations/keyframe-effect/setKeyframes.html",
+            "url": "/web-animations/keyframe-effect/setKeyframes.html"
           }
         ],
         "web-animations/keyframe-effect/setTarget.html": [

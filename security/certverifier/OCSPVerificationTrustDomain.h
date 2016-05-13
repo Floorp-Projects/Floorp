@@ -58,6 +58,9 @@ public:
                    mozilla::pkix::EndEntityOrCA endEntityOrCA,
                    mozilla::pkix::KeyPurposeId keyPurpose) override;
 
+  virtual Result NetscapeStepUpMatchesServerAuth(mozilla::pkix::Time notBefore,
+                                         /*out*/ bool& matches) override;
+
   virtual Result CheckRevocation(
                    mozilla::pkix::EndEntityOrCA endEntityOrCA,
                    const mozilla::pkix::CertID& certID,

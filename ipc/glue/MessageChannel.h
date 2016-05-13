@@ -485,14 +485,20 @@ class MessageChannel : HasResultCodes
 
     // Wrap an existing task which can be cancelled at any time
     // without the wrapper's knowledge.
-    class DequeueTask : public Runnable
+    class DequeueTask : public CancelableRunnable
     {
       public:
         explicit DequeueTask(RefCountedTask* aTask)
           : mTask(aTask)
         { }
         NS_IMETHOD Run() override {
-          mTask->Run();
+          if (mTask) {
+            mTask->Run();
+          }
+          return NS_OK;
+        }
+        nsresult Cancel() override {
+          mTask = nullptr;
           return NS_OK;
         }
 

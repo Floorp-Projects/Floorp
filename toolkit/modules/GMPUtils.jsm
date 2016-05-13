@@ -80,10 +80,9 @@ this.GMPUtils = {
       }
     } else if (aPlugin.id == WIDEVINE_ID) {
       // The Widevine plugin is available for Windows versions Vista and later
-      // and Mac
-      if ((Services.appinfo.OS == "WINNT" &&
-          Services.sysinfo.getPropertyAsInt32("version") >= 6) ||
-          Services.appinfo.OS == "Darwin") {
+      // and Mac OSX 10.7 and later.
+      if (AppConstants.isPlatformAndVersionAtLeast("win", "6") ||
+          AppConstants.isPlatformAndVersionAtLeast("macosx", "10.7")) {
         return true;
       }
       return false;

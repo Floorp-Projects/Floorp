@@ -279,6 +279,12 @@ nsThreadPool::Dispatch(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aFlags)
 }
 
 NS_IMETHODIMP
+nsThreadPool::DelayedDispatch(already_AddRefed<nsIRunnable>&&, uint32_t)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsThreadPool::IsOnCurrentThread(bool* aResult)
 {
   MutexAutoLock lock(mMutex);

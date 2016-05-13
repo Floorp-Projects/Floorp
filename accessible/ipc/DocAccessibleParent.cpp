@@ -256,7 +256,8 @@ DocAccessibleParent::RecvTextChangeEvent(const uint64_t& aID,
 
   xpcAccessibleGeneric* xpcAcc = GetXPCAccessible(target);
   xpcAccessibleDocument* doc = GetAccService()->GetXPCDocument(this);
-  uint32_t type = nsIAccessibleEvent::EVENT_TEXT_CHANGED;
+  uint32_t type = aIsInsert ? nsIAccessibleEvent::EVENT_TEXT_INSERTED :
+                              nsIAccessibleEvent::EVENT_TEXT_REMOVED;
   nsIDOMNode* node = nullptr;
   RefPtr<xpcAccTextChangeEvent> event =
     new xpcAccTextChangeEvent(type, xpcAcc, doc, node, aFromUser, aStart, aLen,

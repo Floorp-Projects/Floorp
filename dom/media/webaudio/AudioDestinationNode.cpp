@@ -9,7 +9,6 @@
 #include "AudioContext.h"
 #include "mozilla/dom/AudioDestinationNodeBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "AudioChannelAgent.h"
 #include "AudioChannelService.h"

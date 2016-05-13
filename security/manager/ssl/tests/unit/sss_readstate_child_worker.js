@@ -2,7 +2,7 @@
 "use strict";
 
 function run_test() {
-  var SSService = Cc["@mozilla.org/ssservice;1"]
+  let SSService = Cc["@mozilla.org/ssservice;1"]
                     .getService(Ci.nsISiteSecurityService);
 
   ok(!SSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,

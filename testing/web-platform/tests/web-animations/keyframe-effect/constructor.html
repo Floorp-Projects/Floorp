@@ -21,7 +21,8 @@ var target = document.getElementById("target");
 
 test(function(t) {
   gEmptyKeyframeListTests.forEach(function(frames) {
-    assert_equals(new KeyframeEffectReadOnly(target, frames).getFrames().length,
+    assert_equals(new KeyframeEffectReadOnly(target, frames)
+                        .getKeyframes().length,
                   0, "number of frames for " + JSON.stringify(frames));
   });
 }, "a KeyframeEffectReadOnly can be constructed with no frames");
@@ -34,7 +35,7 @@ test(function(t) {
       left: ["10px", "20px"],
       easing: easing
     });
-    assert_equals(effect.getFrames()[0].easing, expected,
+    assert_equals(effect.getKeyframes()[0].easing, expected,
                   "resulting easing for '" + easing + "'");
   });
 }, "easing values are parsed correctly when passed to the " +
@@ -48,7 +49,7 @@ test(function(t) {
       { offset: 0, left: "10px", easing: easing },
       { offset: 1, left: "20px" }
     ]);
-    assert_equals(effect.getFrames()[0].easing, expected,
+    assert_equals(effect.getKeyframes()[0].easing, expected,
                   "resulting easing for '" + easing + "'");
   });
 }, "easing values are parsed correctly when passed to the " +
@@ -68,37 +69,37 @@ test(function(t) {
    "KeyframeEffectReadOnly constructor in KeyframeTimingOptions");
 
 test(function(t) {
-  var getFrame = function(composite) {
+  var getKeyframe = function(composite) {
     return { left: [ "10px", "20px" ], composite: composite };
   };
   gGoodKeyframeCompositeValueTests.forEach(function(composite) {
-    var effect = new KeyframeEffectReadOnly(target, getFrame(composite));
-    assert_equals(effect.getFrames()[0].composite, composite,
+    var effect = new KeyframeEffectReadOnly(target, getKeyframe(composite));
+    assert_equals(effect.getKeyframes()[0].composite, composite,
                   "resulting composite for '" + composite + "'");
   });
   gBadCompositeValueTests.forEach(function(composite) {
     assert_throws(new TypeError, function() {
-      new KeyframeEffectReadOnly(target, getFrame(composite));
+      new KeyframeEffectReadOnly(target, getKeyframe(composite));
     });
   });
 }, "composite values are parsed correctly when passed to the " +
    "KeyframeEffectReadOnly constructor in property-indexed keyframes");
 
 test(function(t) {
-  var getFrames = function(composite) {
+  var getKeyframes = function(composite) {
     return [
       { offset: 0, left: "10px", composite: composite },
       { offset: 1, left: "20px" }
     ];
   };
   gGoodKeyframeCompositeValueTests.forEach(function(composite) {
-    var effect = new KeyframeEffectReadOnly(target, getFrames(composite));
-    assert_equals(effect.getFrames()[0].composite, composite,
+    var effect = new KeyframeEffectReadOnly(target, getKeyframes(composite));
+    assert_equals(effect.getKeyframes()[0].composite, composite,
                   "resulting composite for '" + composite + "'");
   });
   gBadCompositeValueTests.forEach(function(composite) {
     assert_throws(new TypeError, function() {
-      new KeyframeEffectReadOnly(target, getFrames(composite));
+      new KeyframeEffectReadOnly(target, getKeyframes(composite));
     });
   });
 }, "composite values are parsed correctly when passed to the " +
@@ -109,7 +110,7 @@ test(function(t) {
     var effect = new KeyframeEffectReadOnly(target, {
       left: ["10px", "20px"]
     }, { composite: composite });
-    assert_equals(effect.getFrames()[0].composite, composite,
+    assert_equals(effect.getKeyframes()[0].composite, composite,
                   "resulting composite for '" + composite + "'");
   });
   gBadCompositeValueTests.forEach(function(composite) {
@@ -125,13 +126,15 @@ test(function(t) {
 gPropertyIndexedKeyframesTests.forEach(function(subtest) {
   test(function(t) {
     var effect = new KeyframeEffectReadOnly(target, subtest.input);
-    assert_frame_lists_equal(effect.getFrames(), subtest.output);
+    assert_frame_lists_equal(effect.getKeyframes(), subtest.output);
   }, "a KeyframeEffectReadOnly can be constructed with " + subtest.desc);
 
   test(function(t) {
     var effect = new KeyframeEffectReadOnly(target, subtest.input);
-    var secondEffect = new KeyframeEffectReadOnly(target, effect.getFrames());
-    assert_frame_lists_equal(secondEffect.getFrames(), effect.getFrames());
+    var secondEffect =
+      new KeyframeEffectReadOnly(target, effect.getKeyframes());
+    assert_frame_lists_equal(secondEffect.getKeyframes(),
+                             effect.getKeyframes());
   }, "a KeyframeEffectReadOnly constructed with " + subtest.desc +
      " roundtrips");
 });
@@ -159,13 +162,15 @@ test(function(t) {
 gKeyframeSequenceTests.forEach(function(subtest) {
   test(function(t) {
     var effect = new KeyframeEffectReadOnly(target, subtest.input);
-    assert_frame_lists_equal(effect.getFrames(), subtest.output);
+    assert_frame_lists_equal(effect.getKeyframes(), subtest.output);
   }, "a KeyframeEffectReadOnly can be constructed with " + subtest.desc);
 
   test(function(t) {
     var effect = new KeyframeEffectReadOnly(target, subtest.input);
-    var secondEffect = new KeyframeEffectReadOnly(target, effect.getFrames());
-    assert_frame_lists_equal(secondEffect.getFrames(), effect.getFrames());
+    var secondEffect =
+      new KeyframeEffectReadOnly(target, effect.getKeyframes());
+    assert_frame_lists_equal(secondEffect.getKeyframes(),
+                             effect.getKeyframes());
   }, "a KeyframeEffectReadOnly constructed with " + subtest.desc +
      " roundtrips");
 });

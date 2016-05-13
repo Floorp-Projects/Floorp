@@ -7,7 +7,6 @@
 
 #include "mozilla/Logging.h"
 #include "mozilla/dom/HTMLMediaElement.h"
-#include "mozilla/Preferences.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaSource.h"
 #include "MediaSourceResource.h"

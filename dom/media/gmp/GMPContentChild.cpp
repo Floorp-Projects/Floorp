@@ -9,6 +9,7 @@
 #include "GMPDecryptorChild.h"
 #include "GMPVideoDecoderChild.h"
 #include "GMPVideoEncoderChild.h"
+#include "base/task.h"
 
 namespace mozilla {
 namespace gmp {

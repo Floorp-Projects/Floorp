@@ -205,6 +205,10 @@ testing/web-platform/tests for tests that may be shared
                 template += self.template_body_reftest_wait
         else:
             template += self.template_body_th
+        try:
+            os.makedirs(os.path.dirname(path))
+        except OSError:
+            pass
         with open(path, "w") as f:
             f.write(template)
 

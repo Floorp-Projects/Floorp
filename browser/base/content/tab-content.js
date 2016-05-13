@@ -507,24 +507,27 @@ var PageStyleHandler = {
 
       let URI;
       try {
-        URI = Services.io.newURI(currentStyleSheet.href, null, null);
+        if (!currentStyleSheet.ownerNode ||
+            // special-case style nodes, which have no href
+            currentStyleSheet.ownerNode.nodeName.toLowerCase() != "style") {
+          URI = Services.io.newURI(currentStyleSheet.href, null, null);
+        }
       } catch(e) {
         if (e.result != Cr.NS_ERROR_MALFORMED_URI) {
           throw e;
         }
+        continue;
       }
 
-      if (URI) {
-        // We won't send data URIs all of the way up to the parent, as these
-        // can be arbitrarily large.
-        let sentURI = URI.scheme == "data" ? null : URI.spec;
+      // We won't send data URIs all of the way up to the parent, as these
+      // can be arbitrarily large.
+      let sentURI = (!URI || URI.scheme == "data") ? null : URI.spec;
 
-        result.push({
-          title: currentStyleSheet.title,
-          disabled: currentStyleSheet.disabled,
-          href: sentURI,
-        });
-      }
+      result.push({
+        title: currentStyleSheet.title,
+        disabled: currentStyleSheet.disabled,
+        href: sentURI,
+      });
     }
 
     return result;

@@ -22,6 +22,7 @@
 #include "mozilla/SandboxInfo.h"
 #endif
 #include "GMPContentParent.h"
+#include "MediaPrefs.h"
 
 #include "mozilla/dom/CrashReporterParent.h"
 using mozilla::dom::CrashReporterParent;
@@ -252,7 +253,7 @@ GMPParent::EnsureAsyncShutdownTimeoutSet()
    return rv;
   }
 
-  int32_t timeout = GMP_DEFAULT_ASYNC_SHUTDONW_TIMEOUT;
+  int32_t timeout = MediaPrefs::GMPAsyncShutdownTimeout();
   RefPtr<GeckoMediaPluginServiceParent> service =
     GeckoMediaPluginServiceParent::GetSingleton();
   if (service) {

@@ -44,7 +44,6 @@ public:
 
   // Called from any thread, must call init first
   static int GetNumDecoderThreads();
-  static bool LowLatencyMFTEnabled();
 
   // Accessors that report whether we have the required MFTs available
   // on the system to play various codecs. Windows Vista doesn't have the

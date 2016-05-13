@@ -141,7 +141,7 @@ public:
   IMPL_EVENT_HANDLER(load)
   IMPL_EVENT_HANDLER(timeout)
   IMPL_EVENT_HANDLER(loadend)
-  
+
   virtual void DisconnectFromOwner() override;
 };
 

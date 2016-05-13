@@ -71,6 +71,10 @@ NS_IMETHODIMP CacheStorage::AsyncOpenURI(nsIURI *aURI,
   rv = aURI->CloneIgnoringRef(getter_AddRefs(noRefURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsAutoCString asciiSpec;
+  rv = noRefURI->GetAsciiSpec(asciiSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIApplicationCache> appCache;
   if (LookupAppCache()) {
     rv = ChooseApplicationCache(noRefURI, getter_AddRefs(appCache));
@@ -83,16 +87,12 @@ NS_IMETHODIMP CacheStorage::AsyncOpenURI(nsIURI *aURI,
   }
 
   if (appCache) {
-    nsAutoCString cacheKey;
-    rv = noRefURI->GetAsciiSpec(cacheKey);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsAutoCString scheme;
     rv = noRefURI->GetScheme(scheme);
     NS_ENSURE_SUCCESS(rv, rv);
 
     RefPtr<_OldCacheLoad> appCacheLoad =
-      new _OldCacheLoad(scheme, cacheKey, aCallback, appCache,
+      new _OldCacheLoad(scheme, asciiSpec, aCallback, appCache,
                         LoadInfo(), WriteToDisk(), aFlags);
     rv = appCacheLoad->Start();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -103,7 +103,7 @@ NS_IMETHODIMP CacheStorage::AsyncOpenURI(nsIURI *aURI,
 
   RefPtr<CacheEntryHandle> entry;
   rv = CacheStorageService::Self()->AddStorageEntry(
-    this, noRefURI, aIdExtension,
+    this, asciiSpec, aIdExtension,
     truncate, // replace any existing one?
     getter_AddRefs(entry));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -127,9 +127,13 @@ NS_IMETHODIMP CacheStorage::OpenTruncate(nsIURI *aURI, const nsACString & aIdExt
   rv = aURI->CloneIgnoringRef(getter_AddRefs(noRefURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsAutoCString asciiSpec;
+  rv = noRefURI->GetAsciiSpec(asciiSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   RefPtr<CacheEntryHandle> handle;
   rv = CacheStorageService::Self()->AddStorageEntry(
-    this, noRefURI, aIdExtension,
+    this, asciiSpec, aIdExtension,
     true, // replace any existing one
     getter_AddRefs(handle));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -159,8 +163,12 @@ NS_IMETHODIMP CacheStorage::Exists(nsIURI *aURI, const nsACString & aIdExtension
   rv = aURI->CloneIgnoringRef(getter_AddRefs(noRefURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsAutoCString asciiSpec;
+  rv = noRefURI->GetAsciiSpec(asciiSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return CacheStorageService::Self()->CheckStorageEntry(
-    this, noRefURI, aIdExtension, aResult);
+    this, asciiSpec, aIdExtension, aResult);
 }
 
 NS_IMETHODIMP CacheStorage::AsyncDoomURI(nsIURI *aURI, const nsACString & aIdExtension,
@@ -169,8 +177,18 @@ NS_IMETHODIMP CacheStorage::AsyncDoomURI(nsIURI *aURI, const nsACString & aIdExt
   if (!CacheStorageService::Self())
     return NS_ERROR_NOT_INITIALIZED;
 
-  nsresult rv = CacheStorageService::Self()->DoomStorageEntry(
-    this, aURI, aIdExtension, aCallback);
+  nsresult rv;
+
+  nsCOMPtr<nsIURI> noRefURI;
+  rv = aURI->CloneIgnoringRef(getter_AddRefs(noRefURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoCString asciiSpec;
+  rv = noRefURI->GetAsciiSpec(asciiSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = CacheStorageService::Self()->DoomStorageEntry(
+    this, asciiSpec, aIdExtension, aCallback);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

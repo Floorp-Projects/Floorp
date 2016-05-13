@@ -44,7 +44,7 @@ http://creativecommons.org/licenses/publicdomain/
       ok(false, "subscribe() should fail because no permission for push");
     } catch (error) {
       ok(error instanceof DOMException, "Wrong exception type");
-      is(error.name, "PermissionDeniedError", "Wrong exception name");
+      is(error.name, "NotAllowedError", "Wrong exception name");
     }
   });
 
@@ -56,7 +56,7 @@ http://creativecommons.org/licenses/publicdomain/
       type: "denySubscribe",
     });
     ok(errorInfo.isDOMException, "Wrong exception type");
-    is(errorInfo.name, "PermissionDeniedError", "Wrong exception name");
+    is(errorInfo.name, "NotAllowedError", "Wrong exception name");
   });
 
   add_task(function* getEndpoint() {

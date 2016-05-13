@@ -340,26 +340,7 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
   // because of the potential for device-pixel coordinate spaces for mixed
   // hidpi/lodpi screens to overlap each other and result in bad placement
   // (bug 814434).
-  DesktopToLayoutDeviceScale scale = widget->GetDesktopToDeviceScale();
-
-#ifdef XP_MACOSX
-  // On OS X, this can be called before Cocoa has updated the backing scale
-  // factor of our widget, in which case |scale| is wrong here. To work
-  // around this, we check the device context and override |scale| if it
-  // doesn't match. (This happens when a popup window that has previously
-  // been created and hidden is being moved between hi- and lo-dpi screens,
-  // but is not currently visible; Cocoa doesn't notify it of the scale
-  // factor change until it gets shown on the new screen, which is too late
-  // for us because we'll have already done the computations involving scale
-  // here to move/size it.)
-  // It might be better to avoid this by keeping calculations such as
-  // CalcWidgetBounds entirely in appUnits, rather than using device pixels,
-  // but that seems like a more extensive and potentially risky change.
-  int32_t appPerDev = dx->AppUnitsPerDevPixelAtUnitFullZoom();
-  if (NSToIntRound(60.0 / scale.scale) != appPerDev) {
-    scale = DesktopToLayoutDeviceScale(60.0 / appPerDev);
-  }
-#endif
+  DesktopToLayoutDeviceScale scale = dx->GetDesktopToDeviceScale();
 
   DesktopRect deskRect = newBounds / scale;
   if (changedPos) {

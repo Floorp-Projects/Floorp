@@ -68,6 +68,18 @@ pref("security.pki.name_matching_mode", 1);
 pref("security.pki.name_matching_mode", 2);
 #endif
 
+// security.pki.netscape_step_up_policy controls how the platform handles the
+// id-Netscape-stepUp OID in extended key usage extensions of CA certificates.
+// 0: id-Netscape-stepUp is always considered equivalent to id-kp-serverAuth
+// 1: it is considered equivalent when the notBefore is before 23 August 2016
+// 2: similarly, but for 23 August 2015
+// 3: it is never considered equivalent
+#ifdef RELEASE_BUILD
+pref("security.pki.netscape_step_up_policy", 1);
+#else
+pref("security.pki.netscape_step_up_policy", 2);
+#endif
+
 pref("security.webauth.u2f", false);
 pref("security.webauth.u2f_enable_softtoken", false);
 pref("security.webauth.u2f_enable_usbtoken", false);

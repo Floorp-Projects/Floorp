@@ -177,6 +177,12 @@ nsSocketTransportService::Dispatch(already_AddRefed<nsIRunnable>&& event, uint32
 }
 
 NS_IMETHODIMP
+nsSocketTransportService::DelayedDispatch(already_AddRefed<nsIRunnable>&&, uint32_t)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsSocketTransportService::IsOnCurrentThread(bool *result)
 {
     nsCOMPtr<nsIThread> thread = GetThreadSafely();

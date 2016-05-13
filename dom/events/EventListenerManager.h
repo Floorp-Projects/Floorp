@@ -58,31 +58,32 @@ public:
   // If mAllowUntrustedEvents is true, the listener is listening to the
   // untrusted events too.
   bool mAllowUntrustedEvents : 1;
+  // If mPassive is true, the listener will not be calling preventDefault on the
+  // event. (If it does call preventDefault, we should ignore it).
+  bool mPassive : 1;
 
   EventListenerFlags() :
     mListenerIsJSListener(false),
-    mCapture(false), mInSystemGroup(false), mAllowUntrustedEvents(false)
+    mCapture(false), mInSystemGroup(false), mAllowUntrustedEvents(false),
+    mPassive(false)
   {
   }
 
-  bool Equals(const EventListenerFlags& aOther) const
+  bool EqualsForAddition(const EventListenerFlags& aOther) const
   {
     return (mCapture == aOther.mCapture &&
             mInSystemGroup == aOther.mInSystemGroup &&
             mListenerIsJSListener == aOther.mListenerIsJSListener &&
             mAllowUntrustedEvents == aOther.mAllowUntrustedEvents);
+            // Don't compare mPassive
   }
 
-  bool EqualsIgnoringTrustness(const EventListenerFlags& aOther) const
+  bool EqualsForRemoval(const EventListenerFlags& aOther) const
   {
     return (mCapture == aOther.mCapture &&
             mInSystemGroup == aOther.mInSystemGroup &&
             mListenerIsJSListener == aOther.mListenerIsJSListener);
-  }
-
-  bool operator==(const EventListenerFlags& aOther) const
-  {
-    return Equals(aOther);
+            // Don't compare mAllowUntrustedEvents or mPassive
   }
 };
 
@@ -445,7 +446,7 @@ public:
   dom::EventTarget* GetTarget() { return mTarget; }
 
   bool HasApzAwareListeners();
-
+  bool IsApzAwareListener(Listener* aListener);
   bool IsApzAwareEvent(nsIAtom* aEvent);
 
 protected:

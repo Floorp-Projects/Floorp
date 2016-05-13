@@ -1372,6 +1372,12 @@
     "n_values": 10,
     "description": "Was the URL upgraded to HTTPS?  (0=already HTTPS, 1=no reason to upgrade, 2=STS upgrade blocked by pref, 3=upgraded with STS, 4=upgraded with CSP)"
   },
+  "HTTP_RESPONSE_STATUS_CODE": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 12,
+    "description": "Whether the URL gets redirected?  (0=200, 1=301, 2=302, 3=304, 4=307, 5=308, 6=400, 7=401, 8=403, 9=404, 10=500, 11=other)"
+  },
   "HTTP_AUTH_DIALOG_STATS": {
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -9380,6 +9386,15 @@
     "kind": "count",
     "bug_numbers": [1251667],
     "description": "The number of pages that trigger slow script notices"
+  },
+  "SLOW_SCRIPT_NOTIFY_DELAY": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 50,
+    "bug_numbers": [1271978],
+    "description": "The difference between the js slow script timeout for content set in prefs and the actual time we waited before displaying the notification (msec)."
   },
   "PLUGIN_HANG_NOTICE_COUNT": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
