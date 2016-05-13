@@ -19,6 +19,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
 
 const kStateHover = 0x00000004; // NS_EVENT_STATE_HOVER
 
+// A process global state for whether or not content thinks
+// that a <select> dropdown is open or not. This is managed
+// entirely within this module, and is read-only accessible
+// via SelectContentHelper.open.
+var gOpen = false;
+
 this.EXPORTED_SYMBOLS = [
   "SelectContentHelper"
 ];
@@ -31,6 +37,12 @@ this.SelectContentHelper = function (aElement, aGlobal) {
   this.showDropDown();
   this._updateTimer = new DeferredTask(this._update.bind(this), 0);
 }
+
+Object.defineProperty(SelectContentHelper, "open", {
+  get: function() {
+    return gOpen;
+  },
+});
 
 this.SelectContentHelper.prototype = {
   init: function() {
@@ -62,17 +74,18 @@ this.SelectContentHelper.prototype = {
     this.mut.disconnect();
     this._updateTimer.disarm();
     this._updateTimer = null;
+    gOpen = false;
   },
 
   showDropDown: function() {
     let rect = this._getBoundingContentRect();
-
     this.global.sendAsyncMessage("Forms:ShowDropDown", {
       rect: rect,
       options: this._buildOptionList(),
       selectedIndex: this.element.selectedIndex,
       direction: getComputedDirection(this.element)
     });
+    gOpen = true;
   },
 
   _getBoundingContentRect: function() {
@@ -100,9 +113,22 @@ this.SelectContentHelper.prototype = {
 
       case "Forms:DismissedDropDown":
         if (this.initialSelection != this.element.item(this.element.selectedIndex)) {
-          let event = this.element.ownerDocument.createEvent("Events");
-          event.initEvent("change", true, true);
-          this.element.dispatchEvent(event);
+          let win = this.element.ownerDocument.defaultView;
+          let inputEvent = new win.UIEvent("input", {
+            bubbles: true,
+          });
+          this.element.dispatchEvent(inputEvent);
+
+          let changeEvent = new win.Event("change", {
+            bubbles: true,
+          });
+          this.element.dispatchEvent(changeEvent);
+
+          let dwu = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIDOMWindowUtils);
+          let rect = this.element.getBoundingClientRect();
+          dwu.sendMouseEvent("mousedown", rect.left, rect.top, 0, 1, 0, true);
+          dwu.sendMouseEvent("mouseup", rect.left, rect.top, 0, 1, 0, true);
         }
 
         this.uninit();
