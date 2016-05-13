@@ -36,7 +36,7 @@ vbox, hbox {
 
   /* Copy from forms.css below this */
   min-width: 12em;
-  -moz-padding-start: 5px;
+  padding-inline-start: 5px;
 
   color: inherit;
   font-size: inherit;
@@ -47,7 +47,7 @@ vbox, hbox {
 
 .file[dir='rtl'] > label {
   /* Copy from forms.css below this */
-  -moz-padding-start: 0px;
+  padding-inline-start: 0px;
   padding-right: 5px;
   text-align: right;
 }

@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #migratedItems {
-  -moz-margin-start: 1.5em;
+  margin-inline-start: 1.5em;
 }
 
 #resetProfileFooter {

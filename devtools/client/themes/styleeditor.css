@@ -90,7 +90,7 @@
 }
 
 .media-rule-line {
-  -moz-padding-start: 4px;
+  padding-inline-start: 4px;
 }
 
 .media-condition-unmatched {
@@ -130,11 +130,11 @@
 }
 
 .stylesheet-linked-file:not(:empty){
-  -moz-margin-end: 0.4em;
+  margin-inline-end: 0.4em;
 }
 
 .stylesheet-linked-file:not(:empty):before {
-  -moz-margin-start: 0.4em;
+  margin-inline-start: 0.4em;
 }
 
 li.linked-file-error .stylesheet-linked-file:after {
@@ -143,7 +143,7 @@ li.linked-file-error .stylesheet-linked-file:after {
 
 .stylesheet-more > h3 {
   font-size: 11px;
-  -moz-margin-end: 2px;
+  margin-inline-end: 2px;
 }
 
 .devtools-searchinput {
@@ -261,7 +261,7 @@ h3 {
   border-radius: 0;
   border-top: none;
   border-bottom: none;
-  -moz-border-start: none;
+  border-inline-start: none;
 }
 
 .chart-colored-blob[name="Used Preload"] {

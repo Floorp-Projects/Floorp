@@ -9,7 +9,7 @@
 
 richlistitem[type] {
   min-height: 36px; /* Don't forget to update the richlistbox height! */
-  -moz-padding-start: 2px;
+  padding-inline-start: 2px;
  }
  
 richlistitem {

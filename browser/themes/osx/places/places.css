@@ -61,7 +61,7 @@
 }
 
 .sidebar-placesTreechildren::-moz-tree-cell-text {
-  -moz-margin-end: 6px;
+  margin-inline-end: 6px;
 }
 
 .sidebar-placesTreechildren::-moz-tree-cell-text(selected) {
@@ -145,10 +145,10 @@
 #viewButton {
   -moz-appearance: none;
   padding-bottom: 1px;
-  -moz-padding-start: 5px;
-  -moz-padding-end: 0px;
+  padding-inline-start: 5px;
+  padding-inline-end: 0px;
   margin: 0;
-  -moz-margin-end: 4px;
+  margin-inline-end: 4px;
   min-width: 0px;
   min-height: 0px;
   border: 1px solid #a2a9b1;
@@ -190,7 +190,7 @@
 
 treechildren::-moz-tree-image(title) {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
-  -moz-padding-end: 2px;
+  padding-inline-end: 2px;
   margin: 0px 2px;
   width: 16px;
   height: 16px;

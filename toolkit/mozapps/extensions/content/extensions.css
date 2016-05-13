@@ -132,8 +132,8 @@ setting[type="menulist"] {
 }
 
 #show-disabled-unsigned-extensions .button-text {
-  -moz-margin-start: 3px !important;
-  -moz-margin-end: 2px !important;
+  margin-inline-start: 3px !important;
+  margin-inline-end: 2px !important;
 }
 
 #header-searching:not([active]) {

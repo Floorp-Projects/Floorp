@@ -29,7 +29,7 @@ body {
   border: 1px solid ThreeDShadow;
   border-radius: 10px;
   padding: 3em;
-  -moz-padding-start: 30px;
+  padding-inline-start: 30px;
   background: -moz-Field;
   margin-left: auto;
   text-align: center;

@@ -22,7 +22,7 @@
 
 .console-row-icon {
   padding: 4px;
-  -moz-padding-start: 5px;
+  padding-inline-start: 5px;
   -moz-box-align: start !important;
 }
 
@@ -48,8 +48,8 @@
 .console-row-code {
   padding-top: 3px;
   padding-bottom: 3px;
-  -moz-padding-start: 3px;
-  -moz-padding-end: 0px;
+  padding-inline-start: 3px;
+  padding-inline-end: 0px;
   color: #0000BB;
   font-size: larger;
 }
@@ -114,8 +114,8 @@
 #ButtonEval {
   margin-top: 2px !important;
   margin-bottom: 2px !important;
-  -moz-margin-start: 0px !important;
-  -moz-margin-end: 2px !important;
+  margin-inline-start: 0px !important;
+  margin-inline-end: 2px !important;
 }
 
 toolbarseparator {
@@ -131,8 +131,8 @@ toolbarseparator {
 
 toolbar#ToolbarMode toolbarbutton:active,
 toolbar#ToolbarMode toolbarbutton[checked="true"] {
-  -moz-padding-start: 5px !important;
-  -moz-padding-end: 3px !important;
+  padding-inline-start: 5px !important;
+  padding-inline-end: 3px !important;
 }
 
 
@@ -196,15 +196,15 @@ toolbar#ToolbarMode .toolbarbutton-icon {
 }
 
 toolbar#ToolbarMode .toolbarbutton-text {
-  -moz-padding-end: 4px;
+  padding-inline-end: 4px;
 }
 
 
 /* ::::: Fix Error Console toolbar button text spacing ::::: */
 
 .toolbarbutton-text {
-  -moz-padding-start: 0px;
-  -moz-padding-end: 5px;
+  padding-inline-start: 0px;
+  padding-inline-end: 5px;
 }
 
 %ifdef XP_WIN

@@ -14,7 +14,7 @@ html {
 
 .copy-logo {
   height: 32px;
-  -moz-margin-end: 1.5rem;
+  margin-inline-end: 1.5rem;
 }
 
 .copy-message {
@@ -28,7 +28,7 @@ html {
 }
 
 .copy-toggle-label input {
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
 }
 
 .copy-button {

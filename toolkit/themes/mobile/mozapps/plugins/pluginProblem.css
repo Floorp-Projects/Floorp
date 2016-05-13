@@ -170,8 +170,8 @@ html|a {
   width: 16px;
   height: 16px;
   margin-top: 4px;
-  -moz-margin-start: -20px;
-  -moz-margin-end: 4px;
+  margin-inline-start: -20px;
+  margin-inline-end: 4px;
   border: none;
   background-color: transparent;
   background-image: url("chrome://mozapps/skin/plugins/contentPluginClose.png");

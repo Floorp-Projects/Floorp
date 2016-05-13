@@ -11,18 +11,18 @@
 .actionsMenu {
   margin-top: 0;
   margin-bottom: 0;
-  -moz-margin-start: -2px;
-  -moz-margin-end: 0;
+  margin-inline-start: -2px;
+  margin-inline-end: 0;
 }
 
 .typeIcon,
 .actionIcon {
-  -moz-margin-start: 3px;
-  -moz-margin-end: 3px;
+  margin-inline-start: 3px;
+  margin-inline-end: 3px;
 }
 
 #handlersView > richlistitem label {
-  -moz-margin-start: 1px;
+  margin-inline-start: 1px;
   margin-top: 2px;
 }
 
@@ -51,14 +51,14 @@ menuitem[appHandlerIcon="plugin"] {
 }
 
 .actionsMenu .menulist-icon {
-  -moz-margin-end: 3px;
+  margin-inline-end: 3px;
 }
 
 .actionsMenu > menupopup > menuitem > .menu-iconic-left {
-  -moz-padding-start: 0px;
-  -moz-padding-end: 2px;
+  padding-inline-start: 0px;
+  padding-inline-end: 2px;
 }
 
 .actionsMenu > menupopup > menuitem {
-  -moz-padding-start: 4px;
+  padding-inline-start: 4px;
 }

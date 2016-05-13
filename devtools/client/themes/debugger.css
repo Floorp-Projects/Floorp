@@ -10,17 +10,17 @@
 }
 
 #sources-pane > tabs {
-  -moz-border-end: 1px solid;
+  border-inline-end: 1px solid;
 }
 
 #sources-pane .devtools-toolbar {
   border: none; /* Remove the devtools-toolbar bottom border. */
-  -moz-border-end: 1px solid;
+  border-inline-end: 1px solid;
 }
 
 #sources-pane > tabs,
 #sources-pane .devtools-toolbar {
-  -moz-border-end-color: var(--theme-splitter-color);
+  border-inline-end-color: var(--theme-splitter-color);
 }
 
 /* Sources and breakpoints list */
@@ -48,7 +48,7 @@
 }
 
 .dbg-breakpoint-text {
-  -moz-padding-start: 6px;
+  padding-inline-start: 6px;
   font-style: italic;
   font-size: 90%;
 }
@@ -84,7 +84,7 @@
 
 .dbg-breakpoint.dbg-breakpoint-condition-thrown .dbg-breakpoint-condition-thrown-message {
   display: block;
-  -moz-padding-start: 0;
+  padding-inline-start: 0;
 }
 
 /* Sources toolbar */
@@ -176,7 +176,7 @@
   background-position: 0 0;
   background-size: 32px 16px;
   background-repeat: no-repeat;
-  -moz-margin-end: 5px;
+  margin-inline-end: 5px;
 }
 
 @media (min-resolution: 1.1dppx) {
@@ -213,7 +213,7 @@
 /* Breadcrumbs stack frames view */
 
 .dbg-stackframe-details {
-  -moz-padding-start: 4px;
+  padding-inline-start: 4px;
 }
 
 /* Classic stack frames view */
@@ -274,7 +274,7 @@
 }
 
 .trace-name {
-  -moz-padding-start: 4px;
+  padding-inline-start: 4px;
 }
 
 /* Tracer dark theme */
@@ -415,25 +415,25 @@
 
 #searchbox {
   min-width: 220px;
-  -moz-margin-start: 1px;
+  margin-inline-start: 1px;
 }
 
 #filter-label {
-  -moz-margin-start: 2px;
+  margin-inline-start: 2px;
 }
 
 #searchbox-panel-operators {
   margin-top: 5px;
   margin-bottom: 8px;
-  -moz-margin-start: 2px;
+  margin-inline-start: 2px;
 }
 
 .searchbox-panel-operator-button {
   min-width: 26px;
   margin-top: 0;
   margin-bottom: 0;
-  -moz-margin-start: 2px;
-  -moz-margin-end: 6px;
+  margin-inline-start: 2px;
+  margin-inline-end: 6px;
   text-align: center;
 }
 
@@ -461,7 +461,7 @@
 }
 
 .results-panel-item-label-before {
-  -moz-padding-end: 6px;
+  padding-inline-end: 6px;
 }
 
 .theme-dark .results-panel-item-label {
@@ -493,7 +493,7 @@
 }
 
 .dbg-results-header {
-  -moz-padding-start: 6px;
+  padding-inline-start: 6px;
 }
 
 .dbg-results-header-location {
@@ -501,18 +501,18 @@
 }
 
 .dbg-results-header-match-count {
-  -moz-padding-start: 6px;
+  padding-inline-start: 6px;
 }
 
 .dbg-results-line-number {
   min-width: 3em;
-  -moz-border-end: 1px solid rgba(128,128,128,0.2);
-  -moz-padding-end: 4px;
+  border-inline-end: 1px solid rgba(128,128,128,0.2);
+  padding-inline-end: 4px;
   text-align: end;
 }
 
 .dbg-results-line-contents {
-  -moz-padding-start: 4px;
+  padding-inline-start: 4px;
 }
 
 .dbg-results-line-contents-string[match=true] {
@@ -664,7 +664,7 @@
 }
 
 #body[layout=vertical] #sources-pane > tabs {
-  -moz-border-end: none;
+  border-inline-end: none;
 }
 
 #body[layout=vertical] #instruments-pane {
@@ -683,7 +683,7 @@
 
 #body[layout=vertical] .side-menu-widget-group,
 #body[layout=vertical] .side-menu-widget-item {
-  -moz-margin-end: 0;
+  margin-inline-end: 0;
 }
 
 /* Firebug theme customization of source group title */

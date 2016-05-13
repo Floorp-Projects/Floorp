@@ -7,7 +7,7 @@
 
 .main-content {
   padding-top: 0;
-  -moz-padding-end: 0;
+  padding-inline-end: 0;
   padding-bottom: 0;
 }
 
@@ -17,7 +17,7 @@
 }
 
 .view-pane > .list > scrollbox {
-  -moz-padding-end: 48px;
+  padding-inline-end: 48px;
 }
 
 
@@ -99,7 +99,7 @@
 
 .alert-container {
   -moz-box-align: center;
-  -moz-margin-end: 48px;
+  margin-inline-end: 48px;
 }
 
 .alert-spacer-before {
@@ -183,7 +183,7 @@ button.warning {
   background-color: #55D4FF;
   padding: 2px 8px;
   margin: 6px 0;
-  -moz-margin-start: 6px;
+  margin-inline-start: 6px;
   border-radius: 100%;
   color: #FFF;
   font-weight: bold;
@@ -234,7 +234,7 @@ button.warning {
 #header {
   margin-top: 20px;
   margin-bottom: 20px;
-  -moz-margin-end: 48px;
+  margin-inline-end: 48px;
 }
 
 @media (max-width: 600px) {
@@ -245,7 +245,7 @@ button.warning {
 
 .view-header {
   margin: 0;
-  -moz-margin-end: 48px;
+  margin-inline-end: 48px;
   border-bottom: 1px solid #c1c1c1;
 }
 
@@ -334,7 +334,7 @@ button.warning {
 }
 
 .sorter .button-icon {
-  -moz-margin-start: 6px;
+  margin-inline-start: 6px;
 }
 
 
@@ -352,7 +352,7 @@ button.warning {
 
 .discover-logo {
   list-style-image: url("chrome://mozapps/skin/extensions/discover-logo.png");
-  -moz-margin-end: 15px;
+  margin-inline-end: 15px;
 }
 
 .discover-title {
@@ -403,7 +403,7 @@ button.warning {
 .details {
   cursor: pointer;
   margin: 0;
-  -moz-margin-start: 10px;
+  margin-inline-start: 10px;
 }
 
 .icon-container {
@@ -421,7 +421,7 @@ button.warning {
 }
 
 .content-inner-container {
-  -moz-margin-end: 5px;
+  margin-inline-end: 5px;
 }
 
 .addon[active="false"] .icon {
@@ -460,7 +460,7 @@ button.warning {
 }
 
 .description-container {
-  -moz-margin-start: 6px;
+  margin-inline-start: 6px;
   -moz-box-align: center;
   font-size: 1.25rem;
 }
@@ -472,7 +472,7 @@ button.warning {
 .warning,
 .pending,
 .error {
-  -moz-margin-start: 48px;
+  margin-inline-start: 48px;
   font-weight: bold;
   -moz-box-align: center;
 }
@@ -532,7 +532,7 @@ button.warning {
 
 .addon .relnotes-container {
   -moz-box-align: start;
-  -moz-margin-start: 6px;
+  margin-inline-start: 6px;
   height: 0;
   overflow: hidden;
   opacity: 0;
@@ -560,7 +560,7 @@ button.warning {
 }
 
 .addon .relnotes-toggle > .button-box > .button-icon {
-  -moz-padding-start: 4px;
+  padding-inline-start: 4px;
 }
 
 .addon-view[notification],
@@ -592,8 +592,8 @@ button.warning {
 .addon[selected] {
   background-color: #fafafa;
   color: #333;
-  -moz-padding-start: 1px; /* compensate the 4px border */
-  -moz-border-start: solid 4px #ff9500;
+  padding-inline-start: 1px; /* compensate the 4px border */
+  border-inline-start: solid 4px #ff9500;
 }
 
 .addon[active="false"] > .content-container > .content-inner-container {
@@ -628,7 +628,7 @@ button.warning {
 
 #search-filter {
   padding: 5px 20px;
-  -moz-margin-end: 48px;
+  margin-inline-end: 48px;
   font-size: 120%;
   border-bottom: 1px solid #c1c1c1;
   overflow-x: hidden;
@@ -637,7 +637,7 @@ button.warning {
 #search-filter-label {
   font-weight: bold;
   color: grey;
-  -moz-margin-end: 10px;
+  margin-inline-end: 10px;
 }
 
 #search-allresults-link {
@@ -649,7 +649,7 @@ button.warning {
 /*** detail view ***/
 
 #detail-view {
-  -moz-margin-end: 48px;
+  margin-inline-end: 48px;
 }
 
 #detail-view .loading {
@@ -663,7 +663,7 @@ button.warning {
 }
 
 .detail-view-container {
-  -moz-padding-end: 2em;
+  padding-inline-end: 2em;
   padding-bottom: 2em;
   font-size: 1.25rem;
   color: #333;
@@ -677,12 +677,12 @@ button.warning {
 #detail-notifications .warning,
 #detail-notifications .pending,
 #detail-notifications .error {
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
 }
 
 #detail-icon-container {
   width: 64px;
-  -moz-margin-end: 10px;
+  margin-inline-end: 10px;
   margin-top: 6px;
 }
 
@@ -701,7 +701,7 @@ button.warning {
 }
 
 #detail-screenshot-box {
-  -moz-margin-end: 2em;
+  margin-inline-end: 2em;
   background-image: linear-gradient(rgba(255,255,255,.5), transparent);
   background-color: white;
   box-shadow: 0 1px 2px #666;
@@ -735,7 +735,7 @@ button.warning {
 }
 
 #detail-desc, #detail-fulldesc {
-  -moz-margin-start: 6px;
+  margin-inline-start: 6px;
   /* This is necessary to fix layout issues with multi-line descriptions, see
      bug 592712*/
   outline: solid transparent;
@@ -775,7 +775,7 @@ button.warning {
 }
 
 #detail-contrib-btn .button-icon {
-  -moz-margin-end: 5px;
+  margin-inline-end: 5px;
 }
 
 #detail-contrib-btn:not(:active):hover {
@@ -835,7 +835,7 @@ setting {
   font-size: 90.9%;
   color: graytext;
   margin-top: -2px;
-  -moz-margin-start: 2em;
+  margin-inline-start: 2em;
   white-space: pre-wrap;
 }
 
@@ -851,8 +851,8 @@ setting[type="radio"] > radiogroup {
 /*** creator ***/
 
 .creator > label {
-  -moz-margin-start: 0;
-  -moz-margin-end: 0;
+  margin-inline-start: 0;
+  margin-inline-end: 0;
 }
 
 .creator > .text-link {
@@ -864,7 +864,7 @@ setting[type="radio"] > radiogroup {
 /*** rating ***/
 
 .meta-rating {
-  -moz-margin-end: 0;
+  margin-inline-end: 0;
   padding-top: 2px;
 }
 
@@ -1060,7 +1060,7 @@ button.button-link:not([disabled="true"]):active:hover {
 
 #disabled-unsigned-addons-info {
   margin-bottom: 2em;
-  -moz-margin-end: 48px;
+  margin-inline-end: 48px;
 }
 
 #disabled-unsigned-addons-heading {

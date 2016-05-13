@@ -130,15 +130,15 @@ p, dl, multicol {
 
 dd {
   display: block;
-  -moz-margin-start: 40px;
+  margin-inline-start: 40px;
 }
 
 blockquote, figure {
   display: block;
   margin-block-start: 1em;
   margin-block-end: 1em;
-  -moz-margin-start: 40px;
-  -moz-margin-end: 40px;
+  margin-inline-start: 40px;
+  margin-inline-end: 40px;
 }
 
 address {
@@ -155,10 +155,10 @@ blockquote[type=cite] {
   display: block;
   margin-block-start: 1em;
   margin-block-end: 1em;
-  -moz-margin-start: 0;
-  -moz-margin-end: 0;
-  -moz-padding-start: 1em;
-  -moz-border-start: solid;
+  margin-inline-start: 0;
+  margin-inline-end: 0;
+  padding-inline-start: 1em;
+  border-inline-start: solid;
   border-color: blue;
   border-width: thin;
 }
@@ -386,17 +386,17 @@ table[rules][rules="cols"] > tr > td,
 table[rules][rules="cols"] > * > tr > td,
 table[rules][rules="cols"] > tr > th,
 table[rules][rules="cols"] > * > tr > th {
-  -moz-border-start-width: thin;
-  -moz-border-end-width: thin;
-  -moz-border-start-style: solid;
-  -moz-border-end-style: solid;
+  border-inline-start-width: thin;
+  border-inline-end-width: thin;
+  border-inline-start-style: solid;
+  border-inline-end-style: solid;
 }
 
 table[rules][rules="groups"] > colgroup {
-  -moz-border-start-width: thin;
-  -moz-border-end-width: thin;
-  -moz-border-start-style: solid;
-  -moz-border-end-style: solid;
+  border-inline-start-width: thin;
+  border-inline-end-width: thin;
+  border-inline-start-style: solid;
+  border-inline-end-style: solid;
 }
 table[rules][rules="groups"] > tfoot,
 table[rules][rules="groups"] > thead,
@@ -415,22 +415,22 @@ caption {
 }
 
 table[align="center"] > caption {
-  -moz-margin-start: auto;
-  -moz-margin-end: auto;
+  margin-inline-start: auto;
+  margin-inline-end: auto;
 }
 
 table[align="center"] > caption[align="left"]:dir(ltr) {
-  -moz-margin-end: 0;
+  margin-inline-end: 0;
 }
 table[align="center"] > caption[align="left"]:dir(rtl) {
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
 }
 
 table[align="center"] > caption[align="right"]:dir(ltr) {
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
 }
 table[align="center"] > caption[align="right"]:dir(rtl) {
-  -moz-margin-end: 0;
+  margin-inline-end: 0;
 }
 
 tr {
@@ -572,7 +572,7 @@ ul, menu, dir {
   list-style-type: disc;
   margin-block-start: 1em;
   margin-block-end: 1em;
-  -moz-padding-start: 40px;
+  padding-inline-start: 40px;
 }
 
 menu[type="context"] {
@@ -584,7 +584,7 @@ ol {
   list-style-type: decimal;
   margin-block-start: 1em;
   margin-block-end: 1em;
-  -moz-padding-start: 40px;
+  padding-inline-start: 40px;
 }
 
 li {
@@ -627,8 +627,8 @@ hr {
   border: 1px inset;
   margin-block-start: 0.5em;
   margin-block-end: 0.5em;
-  -moz-margin-start: auto;
-  -moz-margin-end: auto;
+  margin-inline-start: auto;
+  margin-inline-end: auto;
   color: gray;
   -moz-float-edge: margin-box;
   box-sizing: border-box;

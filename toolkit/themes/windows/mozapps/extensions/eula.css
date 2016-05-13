@@ -6,7 +6,7 @@
   list-style-image: url("chrome://mozapps/skin/extensions/extensionGeneric.svg");
   max-width: 48px;
   max-height: 48px;
-  -moz-margin-end: 6px;
+  margin-inline-end: 6px;
 }
 
 #eula-dialog[addontype="theme"] #icon {

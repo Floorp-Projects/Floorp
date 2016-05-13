@@ -24,7 +24,7 @@ html {
 #feedBody {
   border: 1px solid THreeDShadow;
   padding: 3em;
-  -moz-padding-start: 30px;
+  padding-inline-start: 30px;
   margin: 2em auto;
   background: -moz-Field;
 }
@@ -45,9 +45,9 @@ html {
 #feedHeader {
   margin-top: 4.9em;
   margin-bottom: 1em;
-  -moz-margin-start: 1.4em;
-  -moz-margin-end: 1em;
-  -moz-padding-start: 2.9em;
+  margin-inline-start: 1.4em;
+  margin-inline-end: 1em;
+  padding-inline-start: 2.9em;
   font-size: 110%;
   color: -moz-gtk-info-bar-text;
 }
@@ -74,12 +74,12 @@ html {
 
 #feedHeader[firstrun="true"] #feedIntroText {
   padding-top: 0.1em;
-  -moz-padding-start: 0.6em;
+  padding-inline-start: 0.6em;
   display: block;
 }
 
 #feedHeader[firstrun="true"] > #feedSubscribeLine {
-  -moz-padding-start: 1.8em;
+  padding-inline-start: 1.8em;
 }
 
 #feedSubscribeLine {
@@ -116,8 +116,8 @@ h2 {
 
 #feedTitleLink {
   float: right;
-  -moz-margin-start: .6em;
-  -moz-margin-end: 0;
+  margin-inline-start: .6em;
+  margin-inline-end: 0;
   margin-top: 0;
   margin-bottom: 0;
 }
@@ -127,15 +127,15 @@ a[href] img {
 }
 
 #feedTitleContainer {
-  -moz-margin-start: 0;
-  -moz-margin-end: .6em;
+  margin-inline-start: 0;
+  margin-inline-end: .6em;
   margin-top: 0;
   margin-bottom: 0;
 }
 
 #feedTitleImage {
-  -moz-margin-start: .6em;
-  -moz-margin-end: 0;
+  margin-inline-start: .6em;
+  margin-inline-end: 0;
   margin-top: 0;
   margin-bottom: 0;
   max-width: 300px;

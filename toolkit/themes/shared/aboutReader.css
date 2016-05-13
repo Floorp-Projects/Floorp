@@ -9,9 +9,9 @@ body {
 @media (max-width: 785px) {
   body {
     padding-top: 64px;
-    -moz-padding-end: 0;
+    padding-inline-end: 0;
     padding-bottom: 64px;
-    -moz-padding-start: 51px;
+    padding-inline-start: 51px;
   }
 }
 
@@ -148,13 +148,13 @@ body.sepia > .container > .footer {
 }
 
 body.light blockquote {
-  -moz-border-start: 2px solid #333333 !important;
+  border-inline-start: 2px solid #333333 !important;
 }
 
 body.sepia blockquote {
-  -moz-border-start: 2px solid #5b4636 !important;
+  border-inline-start: 2px solid #5b4636 !important;
 }
 
 body.dark blockquote {
-  -moz-border-start: 2px solid #eeeeee !important;
+  border-inline-start: 2px solid #eeeeee !important;
 }

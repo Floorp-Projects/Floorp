@@ -6,8 +6,8 @@
   font-size: 15px;
   padding-top: 0;
   padding-bottom: 0;
-  -moz-padding-start: calc(48px + 4.6em);
-  -moz-padding-end: 48px;
+  padding-inline-start: calc(48px + 4.6em);
+  padding-inline-end: 48px;
 }
 
 .title {
@@ -32,7 +32,7 @@
 
 #filterRow {
   margin-top: 4px;
-  -moz-margin-start: 4px;
+  margin-inline-start: 4px;
 }
 
 #configTree {

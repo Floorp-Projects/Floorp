@@ -194,7 +194,7 @@
 }
 
 .devtools-toolbarbutton[standalone], .devtools-toolbarbutton[data-standalone] {
-  -moz-margin-end: 5px;
+  margin-inline-end: 5px;
 }
 
 .devtools-toolbarbutton[label][standalone] {
@@ -214,8 +214,8 @@
 }
 
 #toolbox-buttons .devtools-toolbarbutton[text-as-image] {
-  -moz-padding-start: 5px;
-  -moz-padding-end: 5px;
+  padding-inline-start: 5px;
+  padding-inline-end: 5px;
   min-width: inherit;
 }
 
@@ -251,7 +251,7 @@
 }
 
 .devtools-toolbarbutton > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
-  -moz-margin-end: 4px;
+  margin-inline-end: 4px;
 }
 
 .devtools-menulist > .menulist-dropmarker {
@@ -370,15 +370,15 @@
 }
 
 .devtools-toolbarbutton-group > .devtools-toolbarbutton:last-child {
-  -moz-margin-end: 0;
+  margin-inline-end: 0;
 }
 
 .devtools-toolbarbutton-group + .devtools-toolbarbutton {
-  -moz-margin-start: 3px;
+  margin-inline-start: 3px;
 }
 
 .devtools-separator + .devtools-toolbarbutton {
-  -moz-margin-start: 1px;
+  margin-inline-start: 1px;
 }
 
 /* Text input */
@@ -400,8 +400,8 @@
 
 .devtools-searchinput {
   padding: 0;
-  -moz-padding-start: 22px;
-  -moz-padding-end: 4px;
+  padding-inline-start: 22px;
+  padding-inline-end: 4px;
   background-image: var(--magnifying-glass-image);
   background-position: 8px center;
   background-size: 11px 11px;
@@ -445,17 +445,17 @@
    of a toolbar (since the toolbar has it's own spacing). */
 .devtools-toolbar > .devtools-textinput:first-child,
 .devtools-toolbar > .devtools-searchinput:first-child {
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
 }
 .devtools-toolbar > .devtools-textinput:last-child,
 .devtools-toolbar > .devtools-searchinput:last-child {
-  -moz-margin-end: 0;
+  margin-inline-end: 0;
 }
 .devtools-toolbar > .devtools-searchbox:first-child {
-  -moz-padding-start: 0;
+  padding-inline-start: 0;
 }
 .devtools-toolbar > .devtools-searchbox:last-child {
-  -moz-padding-end: 0;
+  padding-inline-end: 0;
 }
 
 .devtools-rule-searchbox {
@@ -467,7 +467,7 @@
 .devtools-rule-searchbox[filled] {
   background-color: var(--searchbox-background-color);
   border-color: var(--searchbox-border-color);
-  -moz-padding-end: 23px;
+  padding-inline-end: 23px;
 }
 
 .devtools-style-searchbox-no-match {
@@ -604,7 +604,7 @@
   padding: 0 4px;
   margin: 0;
   border-width: 0 0 1px 0;
-  -moz-border-start-width: 1px;
+  border-inline-start-width: 1px;
   border-style: solid;
 }
 
@@ -631,7 +631,7 @@
   color: inherit;
   -moz-box-flex: 1;
   border-width: 0;
-  -moz-border-start-width: 1px;
+  border-inline-start-width: 1px;
   border-style: solid;
   border-radius: 0;
   position: static;
@@ -888,7 +888,7 @@
   padding: 0;
   border-style: solid;
   border-width: 0;
-  -moz-border-start-width: 1px;
+  border-inline-start-width: 1px;
   -moz-box-align: center;
   -moz-user-focus: normal;
   -moz-box-flex: 1;
@@ -979,26 +979,26 @@
 #toolbox-tabs .devtools-tab[selected],
 #toolbox-tabs .devtools-tab[highlighted] {
   border-width: 0;
-  -moz-padding-start: 1px;
+  padding-inline-start: 1px;
 }
 
 #toolbox-tabs .devtools-tab[selected]:last-child,
 #toolbox-tabs .devtools-tab[highlighted]:last-child {
-  -moz-padding-end: 1px;
+  padding-inline-end: 1px;
 }
 
 #toolbox-tabs .devtools-tab[selected] + .devtools-tab,
 #toolbox-tabs .devtools-tab[highlighted] + .devtools-tab {
-  -moz-border-start-width: 0;
-  -moz-padding-start: 1px;
+  border-inline-start-width: 0;
+  padding-inline-start: 1px;
 }
 
 #toolbox-tabs .devtools-tab:first-child[selected] {
-  -moz-border-start-width: 0;
+  border-inline-start-width: 0;
 }
 
 #toolbox-tabs .devtools-tab:last-child {
-  -moz-border-end-width: 1px;
+  border-inline-end-width: 1px;
 }
 
 .devtools-tab:not([highlighted]) > .highlighted-icon,
@@ -1015,7 +1015,7 @@
 #toolbox-option-container .devtools-tab {
   border-color: transparent;
   border-width: 0;
-  -moz-padding-start: 1px;
+  padding-inline-start: 1px;
 }
 #toolbox-tab-options > image {
   margin: 0 8px;
@@ -1078,7 +1078,7 @@
   content: "";
   display: inline-block;
   vertical-align: bottom;
-  -moz-margin-end: 0.5em;
+  margin-inline-end: 0.5em;
   width: 1em;
   height: 1em;
   border: 2px solid currentColor;

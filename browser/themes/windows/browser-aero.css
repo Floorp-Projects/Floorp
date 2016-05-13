@@ -30,19 +30,19 @@
 
   .sidebar-splitter {
     border: 0;
-    -moz-border-end: 1px solid ThreeDLightShadow;
+    border-inline-end: 1px solid ThreeDLightShadow;
     min-width: 0;
     width: 3px;
     background-color: transparent;
-    -moz-margin-start: -3px;
+    margin-inline-start: -3px;
     position: relative;
   }
 
   #appcontent ~ .sidebar-splitter {
-    -moz-border-start: 1px solid ThreeDLightShadow;
-    -moz-border-end: none;
-    -moz-margin-start: 0;
-    -moz-margin-end: -3px;
+    border-inline-start: 1px solid ThreeDLightShadow;
+    border-inline-end: none;
+    margin-inline-start: 0;
+    margin-inline-end: -3px;
   }
 
   .menu-accel,
@@ -269,7 +269,7 @@
          (-moz-os-version: windows-win7),
          (-moz-os-version: windows-win8) {
     #main-window[sizemode="maximized"] #titlebar-buttonbox {
-      -moz-margin-end: 3px;
+      margin-inline-end: 3px;
     }
 
     #main-window {

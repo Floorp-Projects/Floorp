@@ -15,7 +15,7 @@
   min-width: 210px;
   min-height: 210px;
   margin-top: 20px;
-  -moz-margin-start: 30px;
+  margin-inline-start: 30px;
 }
 
 

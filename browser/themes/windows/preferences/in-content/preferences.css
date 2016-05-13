@@ -39,12 +39,12 @@
 }
 
 .actionsMenu > .menulist-label-box > .menulist-icon {
-  -moz-margin-end: 9px;
+  margin-inline-end: 9px;
 }
 
 textbox + button,
 filefield + button {
-  -moz-margin-start: -4px;
+  margin-inline-start: -4px;
 }
 
 #advancedPrefs {

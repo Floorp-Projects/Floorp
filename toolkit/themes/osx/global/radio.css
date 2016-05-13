@@ -16,12 +16,12 @@ radio {
 }
 
 .radio-label-box {
-  -moz-margin-start: 0px;
+  margin-inline-start: 0px;
   padding: 0px;
 }
 
 .radio-icon {
-  -moz-margin-end: 2px;
+  margin-inline-end: 2px;
 }
 
 .radio-label {

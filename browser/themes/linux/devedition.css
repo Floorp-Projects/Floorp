@@ -54,7 +54,7 @@
 }
 
 #forward-button > .toolbarbutton-icon {
-  -moz-border-start: none;
+  border-inline-start: none;
 }
 
 /* Override a box shadow for disabled back button */
@@ -102,5 +102,5 @@
 .ac-type-icon {
   /* Left-align the type icon in awesomebar popup results with the icon in the
      urlbar. */
-  -moz-margin-start: 11px;
+  margin-inline-start: 11px;
 }

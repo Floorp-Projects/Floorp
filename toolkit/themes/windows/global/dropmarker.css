@@ -26,8 +26,8 @@ dropmarker:hover:active:not([disabled="true"]) {
   -moz-border-left-colors: ThreeDShadow ThreeDFace;
   padding-top: 2px;
   padding-bottom: 0px;
-  -moz-padding-start: 2px;
-  -moz-padding-end: 0px;
+  padding-inline-start: 2px;
+  padding-inline-end: 0px;
 }
 
 dropmarker[disabled="true"] {

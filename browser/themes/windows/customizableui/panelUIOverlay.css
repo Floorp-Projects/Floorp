@@ -75,12 +75,12 @@ menuitem[type="checkbox"].subviewbutton {
 .widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   -moz-appearance: none;
   border: 0;
-  -moz-margin-start: 3px;
+  margin-inline-start: 3px;
 }
 
 .widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   padding: 0 2px;
-  -moz-padding-start: 0;
+  padding-inline-start: 0;
   height: 18px;
 }
 
@@ -89,11 +89,11 @@ menuitem[type="checkbox"].subviewbutton {
 }
 
 .subviewbutton > .toolbarbutton-text {
-  -moz-padding-start: 16px;
+  padding-inline-start: 16px;
 }
 
 .subviewbutton:-moz-any([image],[targetURI],.cui-withicon, .restoreallitem, .bookmark-item) > .toolbarbutton-text {
-  -moz-padding-start: 0;
+  padding-inline-start: 0;
 }
 
 /* subviewbutton entries for social sidebars have images that come from external

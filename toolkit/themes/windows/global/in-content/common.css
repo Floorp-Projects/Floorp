@@ -21,7 +21,7 @@ xul|menulist:not([editable="true"]) > xul|*.menulist-dropmarker {
 }
 
 xul|checkbox {
-  -moz-padding-start: 0;
+  padding-inline-start: 0;
 }
 
 @media not all and (-moz-windows-default-theme) {
@@ -37,7 +37,7 @@ xul|checkbox {
 
 xul|radio {
   -moz-binding: url("chrome://global/content/bindings/radio.xml#radio");
-  -moz-padding-start: 0;
+  padding-inline-start: 0;
 }
 
 @media not all and (-moz-windows-default-theme) {
@@ -53,7 +53,7 @@ xul|radio {
 
 xul|*.radio-icon,
 xul|*.checkbox-icon {
-  -moz-margin-end: 0;
+  margin-inline-end: 0;
 }
 
 /* Never draw a border for the focusring, use outline instead */

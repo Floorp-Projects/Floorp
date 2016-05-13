@@ -68,7 +68,7 @@
 }
 
 .devtools-sidebar-tabs > tabs > tab:first-of-type {
-  -moz-margin-start: -3px;
+  margin-inline-start: -3px;
 }
 
 .devtools-sidebar-tabs > tabs > tab:not(:last-of-type) {
@@ -93,7 +93,7 @@
     margin: 0 auto;
     background-image: url('chrome://global/skin/icons/information-32.png');
     min-height: 36px;
-    -moz-padding-start: 38px;
+    padding-inline-start: 38px;
   }
 
   button {

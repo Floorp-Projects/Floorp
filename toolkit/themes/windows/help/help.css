@@ -26,7 +26,7 @@
 /* With no labels, we don't need the margin on the icon that separates it
    from the label */
 #HelpToolbar .toolbarbutton-icon {
-  -moz-margin-end: 0;
+  margin-inline-end: 0;
 }
 
 /* Set the minimum sidebar width so the help contents aren't squeezed together.*/

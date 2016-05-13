@@ -16,21 +16,21 @@ radio {
   margin: 2px 4px;
   padding-top: 1px;
   padding-bottom: 1px;
-  -moz-padding-start: 4px;
-  -moz-padding-end: 2px;
+  padding-inline-start: 4px;
+  padding-inline-end: 2px;
 }
 
 .radio-label-box {
-  -moz-margin-start: 2px;
+  margin-inline-start: 2px;
   border: 1px solid transparent;
   padding-top: 0px;
   padding-bottom: 1px;
-  -moz-padding-start: 1px;
-  -moz-padding-end: 0px;
+  padding-inline-start: 1px;
+  padding-inline-end: 0px;
 }
 
 .radio-icon {
-  -moz-margin-end: 2px;
+  margin-inline-end: 2px;
 }
 
 .radio-label {

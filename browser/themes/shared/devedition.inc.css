@@ -112,13 +112,13 @@
 
 .tab-background,
 .tabs-newtab-button {
-  -moz-margin-end: 0;
-  -moz-margin-start: 0;
+  margin-inline-end: 0;
+  margin-inline-start: 0;
 }
 
 .tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox {
-  -moz-padding-end: 0;
-  -moz-padding-start: 0;
+  padding-inline-end: 0;
+  padding-inline-start: 0;
 }
 
 .tab-background-start[visuallyselected=true]::after,
@@ -132,7 +132,7 @@
 
 .tab-background-start[visuallyselected=true]::after,
 .tab-background-end[visuallyselected=true]::after {
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
 }
 /* End override @tabCurveHalfWidth@ and @tabCurveWidth@ */
 
@@ -199,14 +199,14 @@ toolbar[brighttext] #downloads-indicator-counter {
 }
 
 #urlbar {
-  -moz-border-start: none !important;
+  border-inline-start: none !important;
   opacity: 1 !important;
 }
 
 window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
   overflow: -moz-hidden-unscrollable;
   clip-path: none;
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
 }
 
 /* Swap out the white arrow with a dark one for the dark theme */

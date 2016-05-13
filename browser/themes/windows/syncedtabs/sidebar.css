@@ -11,7 +11,7 @@ html {
 }
 
 .item {
-  -moz-padding-end: 0;
+  padding-inline-end: 0;
 }
 
 .item-title {
@@ -19,7 +19,7 @@ html {
 }
 
 .item-title {
-  -moz-margin-end: 6px;
+  margin-inline-end: 6px;
 }
 
 .search-box {
@@ -27,7 +27,7 @@ html {
   cursor: text;
   margin: 2px 4px;
   padding: 2px 2px 3px;
-  -moz-padding-start: 4px;
+  padding-inline-start: 4px;
   color: -moz-FieldText;
 }
 
