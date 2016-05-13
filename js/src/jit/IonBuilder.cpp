@@ -7272,7 +7272,7 @@ IonBuilder::newArrayTrySharedStub(bool* emitted)
 }
 
 bool
-IonBuilder::newArrayTryVM(bool* emitted, uint32_t length)
+IonBuilder::newArrayTryVM(bool* emitted, JSObject* templateObject, uint32_t length)
 {
     MOZ_ASSERT(*emitted == false);
 
@@ -7280,9 +7280,15 @@ IonBuilder::newArrayTryVM(bool* emitted, uint32_t length)
 
     gc::InitialHeap heap = gc::DefaultHeap;
     MConstant* templateConst = MConstant::New(alloc(), NullValue());
+
+    if (templateObject) {
+        heap = templateObject->group()->initialHeap(constraints());
+        templateConst = MConstant::NewConstraintlessObject(alloc(), templateObject);
+    }
+
     current->add(templateConst);
 
-    MNewArray* ins = MNewArray::New(alloc(), constraints(), length, templateConst, heap, pc);
+    MNewArray* ins = MNewArray::NewVM(alloc(), constraints(), length, templateConst, heap, pc);
     current->add(ins);
     current->push(ins);
 
@@ -7320,7 +7326,7 @@ IonBuilder::jsop_newarray(JSObject* templateObject, uint32_t length)
     if (!newArrayTrySharedStub(&emitted) || emitted)
         return emitted;
 
-    if (!newArrayTryVM(&emitted, length) || emitted)
+    if (!newArrayTryVM(&emitted, templateObject, length) || emitted)
         return emitted;
 
     MOZ_CRASH("newarray should have been emited");
@@ -7404,16 +7410,23 @@ IonBuilder::newObjectTrySharedStub(bool* emitted)
 }
 
 bool
-IonBuilder::newObjectTryVM(bool* emitted)
+IonBuilder::newObjectTryVM(bool* emitted, JSObject* templateObject)
 {
     // Emit a VM call.
+    MOZ_ASSERT(JSOp(*pc) == JSOP_NEWOBJECT || JSOp(*pc) == JSOP_NEWINIT);
 
     gc::InitialHeap heap = gc::DefaultHeap;
     MConstant* templateConst = MConstant::New(alloc(), NullValue());
+
+    if (templateObject) {
+        heap = templateObject->group()->initialHeap(constraints());
+        templateConst = MConstant::NewConstraintlessObject(alloc(), templateObject);
+    }
+
     current->add(templateConst);
 
-    MNewObject* ins = MNewObject::New(alloc(), constraints(), templateConst, heap,
-                                     MNewObject::ObjectLiteral);
+    MNewObject* ins = MNewObject::NewVM(alloc(), constraints(), templateConst, heap,
+                                        MNewObject::ObjectLiteral);
     current->add(ins);
     current->push(ins);
 
@@ -7429,15 +7442,16 @@ IonBuilder::jsop_newobject()
 {
     bool emitted = false;
 
+    JSObject* templateObject = inspector->getTemplateObject(pc);
+
     if (!forceInlineCaches()) {
-        JSObject* templateObject = inspector->getTemplateObject(pc);
         if (!newObjectTryTemplateObject(&emitted, templateObject) || emitted)
             return emitted;
     }
     if (!newObjectTrySharedStub(&emitted) || emitted)
         return emitted;
 
-    if (!newObjectTryVM(&emitted) || emitted)
+    if (!newObjectTryVM(&emitted, templateObject) || emitted)
         return emitted;
 
     MOZ_CRASH("newobject should have been emited");
