@@ -45,6 +45,7 @@ nsMediaSnifferEntry sFtypEntries[] = {
   PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "M4P ", AUDIO_MP4),
   PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "qt  ", VIDEO_QUICKTIME),
   PATTERN_ENTRY("\xFF\xFF\xFF", "iso", VIDEO_MP4), // Could be isom or iso2.
+  PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "mmp4", VIDEO_MP4),
 };
 
 static bool MatchesBrands(const uint8_t aData[4], nsACString& aSniffedType)
