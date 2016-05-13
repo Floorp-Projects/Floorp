@@ -2271,18 +2271,18 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
   // With some keyboard layout, space key causes non-ASCII space.
   // So, the check in keydown event handler isn't enough, we need to check it
   // again with keypress event.
-  if (keyEvent->charCode != ' ') {
+  if (keyEvent->mCharCode != ' ') {
     mControlSelectMode = false;
   }
 
   bool isControlOrMeta = (keyEvent->IsControl() || keyEvent->IsMeta());
-  if (isControlOrMeta && keyEvent->charCode != ' ') {
+  if (isControlOrMeta && keyEvent->mCharCode != ' ') {
     return NS_OK;
   }
 
-  // NOTE: If mKeyCode of keypress event is not 0, charCode is always 0.
+  // NOTE: If mKeyCode of keypress event is not 0, mCharCode is always 0.
   //       Therefore, all non-printable keys are not handled after this block.
-  if (!keyEvent->charCode) {
+  if (!keyEvent->mCharCode) {
     // Backspace key will delete the last char in the string.  Otherwise,
     // non-printable keypress should reset incremental search.
     if (keyEvent->mKeyCode == NS_VK_BACK) {
@@ -2315,10 +2315,10 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
   if (keyEvent->mTime - gLastKeyTime > INCREMENTAL_SEARCH_KEYPRESS_TIME) {
     // If this is ' ' and we are at the beginning of the string, treat it as
     // "select this option" (bug 191543)
-    if (keyEvent->charCode == ' ') {
+    if (keyEvent->mCharCode == ' ') {
       // Actually process the new index and let the selection code
       // do the scrolling for us
-      PostHandleKeyEvent(mEndSelectionIndex, keyEvent->charCode,
+      PostHandleKeyEvent(mEndSelectionIndex, keyEvent->mCharCode,
                          keyEvent->IsShift(), isControlOrMeta);
 
       return NS_OK;
@@ -2330,7 +2330,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
   gLastKeyTime = keyEvent->mTime;
 
   // Append this keystroke to the search string. 
-  char16_t uniChar = ToLowerCase(static_cast<char16_t>(keyEvent->charCode));
+  char16_t uniChar = ToLowerCase(static_cast<char16_t>(keyEvent->mCharCode));
   GetIncrementalString().Append(uniChar);
 
   // See bug 188199, if all letters in incremental string are same, just try to

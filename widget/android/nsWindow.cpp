@@ -2462,7 +2462,7 @@ InitKeyEvent(WidgetKeyboardEvent& event,
     if (event.mMessage == eKeyPress) {
         // Android gives us \n, so filter out some control characters.
         event.isChar = (charCode >= ' ');
-        event.charCode = event.isChar ? charCode : 0;
+        event.mCharCode = event.isChar ? charCode : 0;
         event.mKeyCode = event.isChar ? 0 : domKeyCode;
         event.mPluginEvent.Clear();
 
@@ -2479,7 +2479,7 @@ InitKeyEvent(WidgetKeyboardEvent& event,
 
     } else {
         event.isChar = false;
-        event.charCode = 0;
+        event.mCharCode = 0;
         event.mKeyCode = domKeyCode;
 
         ANPEvent pluginEvent;

@@ -1337,22 +1337,22 @@ KeymapWrapper::WillDispatchKeyboardEventInternal(WidgetKeyboardEvent& aKeyEvent,
         MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
             ("KeymapWrapper(%p): WillDispatchKeyboardEventInternal, "
              "mKeyCode=0x%02X, charCode=0x%08X",
-             this, aKeyEvent.mKeyCode, aKeyEvent.charCode));
+             this, aKeyEvent.mKeyCode, aKeyEvent.mCharCode));
         return;
     }
 
-    // The charCode was set from mKeyValue. However, for example, when Ctrl key
+    // The mCharCode was set from mKeyValue. However, for example, when Ctrl key
     // is pressed, its value should indicate an ASCII character for backward
     // compatibility rather than inputting character without the modifiers.
-    // Therefore, we need to modify charCode value here.
+    // Therefore, we need to modify mCharCode value here.
     aKeyEvent.SetCharCode(charCode);
 
     gint level = GetKeyLevel(aGdkKeyEvent);
     if (level != 0 && level != 1) {
         MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
             ("KeymapWrapper(%p): WillDispatchKeyboardEventInternal, "
-             "mKeyCode=0x%02X, charCode=0x%08X, level=%d",
-             this, aKeyEvent.mKeyCode, aKeyEvent.charCode, level));
+             "mKeyCode=0x%02X, mCharCode=0x%08X, level=%d",
+             this, aKeyEvent.mKeyCode, aKeyEvent.mCharCode, level));
         return;
     }
 
@@ -1362,7 +1362,7 @@ KeymapWrapper::WillDispatchKeyboardEventInternal(WidgetKeyboardEvent& aKeyEvent,
           GetModifierMask(SUPER) | GetModifierMask(HYPER));
 
     // We shold send both shifted char and unshifted char, all keyboard layout
-    // users can use all keys.  Don't change event.charCode. On some keyboard
+    // users can use all keys.  Don't change event.mCharCode. On some keyboard
     // layouts, Ctrl/Alt/Meta keys are used for inputting some characters.
     AlternativeCharCode altCharCodes(0, 0);
     // unshifted charcode of current keyboard layout.
@@ -1391,9 +1391,9 @@ KeymapWrapper::WillDispatchKeyboardEventInternal(WidgetKeyboardEvent& aKeyEvent,
     if (!needLatinKeyCodes) {
         MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
             ("KeymapWrapper(%p): WillDispatchKeyboardEventInternal, "
-             "mKeyCode=0x%02X, charCode=0x%08X, level=%d, altCharCodes={ "
+             "mKeyCode=0x%02X, mCharCode=0x%08X, level=%d, altCharCodes={ "
              "mUnshiftedCharCode=0x%08X, mShiftedCharCode=0x%08X }",
-             this, aKeyEvent.mKeyCode, aKeyEvent.charCode, level,
+             this, aKeyEvent.mKeyCode, aKeyEvent.mCharCode, level,
              altCharCodes.mUnshiftedCharCode, altCharCodes.mShiftedCharCode));
         return;
     }
@@ -1404,10 +1404,10 @@ KeymapWrapper::WillDispatchKeyboardEventInternal(WidgetKeyboardEvent& aKeyEvent,
         MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
             ("KeymapWrapper(%p): WillDispatchKeyboardEventInternal, "
              "Latin keyboard layout isn't found: "
-             "mKeyCode=0x%02X, charCode=0x%08X, level=%d, "
+             "mKeyCode=0x%02X, mCharCode=0x%08X, level=%d, "
              "altCharCodes={ mUnshiftedCharCode=0x%08X, "
              "mShiftedCharCode=0x%08X }",
-             this, aKeyEvent.mKeyCode, aKeyEvent.charCode, level,
+             this, aKeyEvent.mKeyCode, aKeyEvent.mCharCode, level,
              altCharCodes.mUnshiftedCharCode, altCharCodes.mShiftedCharCode));
         return;
     }
@@ -1431,8 +1431,8 @@ KeymapWrapper::WillDispatchKeyboardEventInternal(WidgetKeyboardEvent& aKeyEvent,
         altLatinCharCodes.mShiftedCharCode) {
         aKeyEvent.alternativeCharCodes.AppendElement(altLatinCharCodes);
     }
-    // If the charCode is not Latin, and the level is 0 or 1, we should
-    // replace the charCode to Latin char if Alt and Meta keys are not
+    // If the mCharCode is not Latin, and the level is 0 or 1, we should
+    // replace the mCharCode to Latin char if Alt and Meta keys are not
     // pressed. (Alt should be sent the localized char for accesskey
     // like handling of Web Applications.)
     ch = aKeyEvent.IsShift() ? altLatinCharCodes.mShiftedCharCode :
@@ -1444,12 +1444,12 @@ KeymapWrapper::WillDispatchKeyboardEventInternal(WidgetKeyboardEvent& aKeyEvent,
 
     MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
         ("KeymapWrapper(%p): WillDispatchKeyboardEventInternal, "
-         "mKeyCode=0x%02X, charCode=0x%08X, level=%d, minGroup=%d, "
+         "mKeyCode=0x%02X, mCharCode=0x%08X, level=%d, minGroup=%d, "
          "altCharCodes={ mUnshiftedCharCode=0x%08X, "
          "mShiftedCharCode=0x%08X } "
          "altLatinCharCodes={ mUnshiftedCharCode=0x%08X, "
          "mShiftedCharCode=0x%08X }",
-         this, aKeyEvent.mKeyCode, aKeyEvent.charCode, level, minGroup,
+         this, aKeyEvent.mKeyCode, aKeyEvent.mCharCode, level, minGroup,
          altCharCodes.mUnshiftedCharCode, altCharCodes.mShiftedCharCode,
          altLatinCharCodes.mUnshiftedCharCode,
          altLatinCharCodes.mShiftedCharCode));

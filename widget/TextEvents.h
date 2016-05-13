@@ -83,7 +83,7 @@ struct ShortcutKeyCandidate
     , mIgnoreShift(aIgnoreShift)
   {
   }
-  // The charCode value which must match keyboard shortcut definition.
+  // The mCharCode value which must match keyboard shortcut definition.
   uint32_t mCharCode;
   // true if Shift state can be ignored.  Otherwise, Shift key state must
   // match keyboard shortcut definition.
@@ -103,7 +103,7 @@ private:
 protected:
   WidgetKeyboardEvent()
     : mKeyCode(0)
-    , charCode(0)
+    , mCharCode(0)
     , mPseudoCharCode(0)
     , location(nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD)
     , isChar(false)
@@ -132,7 +132,7 @@ public:
                       EventClassID aEventClassID = eKeyboardEventClass)
     : WidgetInputEvent(aIsTrusted, aMessage, aWidget, aEventClassID)
     , mKeyCode(0)
-    , charCode(0)
+    , mCharCode(0)
     , mPseudoCharCode(0)
     , location(nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD)
     , isChar(false)
@@ -193,16 +193,16 @@ public:
     return result;
   }
 
-  // A DOM keyCode value or 0.  If a keypress event whose charCode is 0, this
+  // A DOM keyCode value or 0.  If a keypress event whose mCharCode is 0, this
   // should be 0.
   uint32_t mKeyCode;
   // If the instance is a keypress event of a printable key, this is a UTF-16
   // value of the key.  Otherwise, 0.  This value must not be a control
   // character when some modifiers are active.  Then, this value should be an
   // unmodified value except Shift and AltGr.
-  uint32_t charCode;
+  uint32_t mCharCode;
   // mPseudoCharCode is valid only when mMessage is an eKeyDown event.
-  // This stores charCode value of keypress event which is fired with same
+  // This stores mCharCode value of keypress event which is fired with same
   // key value and same modifier state.
   uint32_t mPseudoCharCode;
   // One of nsIDOMKeyEvent::DOM_KEY_LOCATION_*
@@ -273,19 +273,19 @@ public:
   // Otherwise, false.
   bool ShouldCauseKeypressEvents() const;
 
-  // charCode value of non-eKeyPress events is always 0.  However, if
+  // mCharCode value of non-eKeyPress events is always 0.  However, if
   // non-eKeyPress event has one or more alternative char code values,
-  // its first item should be the charCode value of following eKeyPress event.
-  // PseudoCharCode() returns charCode value for eKeyPress event,
+  // its first item should be the mCharCode value of following eKeyPress event.
+  // PseudoCharCode() returns mCharCode value for eKeyPress event,
   // the first alternative char code value of non-eKeyPress event or 0.
   uint32_t PseudoCharCode() const
   {
-    return mMessage == eKeyPress ? charCode : mPseudoCharCode;
+    return mMessage == eKeyPress ? mCharCode : mPseudoCharCode;
   }
   void SetCharCode(uint32_t aCharCode)
   {
     if (mMessage == eKeyPress) {
-      charCode = aCharCode;
+      mCharCode = aCharCode;
     } else {
       mPseudoCharCode = aCharCode;
     }
@@ -373,7 +373,7 @@ public:
     AssignInputEventData(aEvent, aCopyTargets);
 
     mKeyCode = aEvent.mKeyCode;
-    charCode = aEvent.charCode;
+    mCharCode = aEvent.mCharCode;
     mPseudoCharCode = aEvent.mPseudoCharCode;
     location = aEvent.location;
     alternativeCharCodes = aEvent.alternativeCharCodes;

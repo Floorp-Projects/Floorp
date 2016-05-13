@@ -140,7 +140,7 @@ GetActionForEvent(nsIDOMEvent* aEvent)
     return keyEvent->IsShift() ? eEventAction_ShiftTab : eEventAction_Tab;
   }
 
-  if (keyEvent->charCode == ' ' || keyEvent->mKeyCode == NS_VK_SPACE) {
+  if (keyEvent->mCharCode == ' ' || keyEvent->mKeyCode == NS_VK_SPACE) {
     return eEventAction_Propagate;
   }
 
