@@ -43,11 +43,15 @@ PageAction.prototype = {
     }
   },
 
-  shutdown() {
+  hide(tabId) {
     if (this.id) {
       PageActions.remove(this.id);
       this.id = null;
     }
+  },
+
+  shutdown() {
+    this.hide();
   },
 };
 
@@ -80,6 +84,9 @@ extensions.registerSchemaAPI("pageAction", null, (extension, context) => {
 
       show(tabId) {
         pageActionMap.get(extension).show(tabId);
+      },
+      hide(tabId) {
+        pageActionMap.get(extension).hide(tabId);
       },
     },
   };

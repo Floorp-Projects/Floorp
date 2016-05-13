@@ -19,14 +19,22 @@ function backgroundScript() {
 
   // TODO: Use the Tabs API to obtain the tab ids for showing pageActions.
   let tabId = 1;
-
-  browser.pageAction.show(tabId);
-  browser.test.sendMessage("page-action-shown");
+  browser.test.onMessage.addListener(msg => {
+    if (msg === "pageAction-show") {
+      browser.pageAction.show(tabId);
+      browser.test.sendMessage("page-action-shown");
+    } else if (msg === "pageAction-hide") {
+      browser.pageAction.hide(tabId);
+      browser.test.sendMessage("page-action-hidden");
+    }
+  });
 
   browser.pageAction.onClicked.addListener(tab => {
-    // TODO: Make sure we get the correct tab once the tabs API is supported.
-    browser.test.notifyPass("pageAction-clicked");
+    // TODO: Make sure we get the correct tab once basic tabs support is added.
+    browser.test.sendMessage("page-action-clicked");
   });
+
+  browser.test.sendMessage("ready");
 }
 
 add_task(function* test_contentscript() {
@@ -41,16 +49,26 @@ add_task(function* test_contentscript() {
   });
 
   yield extension.startup();
-  yield extension.awaitMessage("page-action-shown");
+  yield extension.awaitMessage("ready");
 
-  is(isPageActionShown(extension.id), true, "The PageAction should be shown");
+  extension.sendMessage("pageAction-show");
+  yield extension.awaitMessage("page-action-shown");
+  ok(isPageActionShown(extension.id), "The PageAction should be shown");
+
+  extension.sendMessage("pageAction-hide");
+  yield extension.awaitMessage("page-action-hidden");
+  ok(!isPageActionShown(extension.id), "The PageAction should be hidden");
+
+  extension.sendMessage("pageAction-show");
+  yield extension.awaitMessage("page-action-shown");
+  ok(isPageActionShown(extension.id), "The PageAction should be shown");
 
   clickPageAction(extension.id);
+  yield extension.awaitMessage("page-action-clicked");
+  ok(isPageActionShown(extension.id), "The PageAction should still be shown after being clicked");
 
-  yield extension.awaitFinish("pageAction-clicked");
   yield extension.unload();
-
-  is(isPageActionShown(extension.id), false, "The PageAction should be removed after unload");
+  ok(!isPageActionShown(extension.id), "The PageAction should be removed after unload");
 });
 </script>
 
