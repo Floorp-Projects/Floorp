@@ -19,17 +19,17 @@ wizard[description=""] .wizard-header-description {
 }
 
 .wizard-header-label {
-  -moz-margin-start: 23px;
+  margin-inline-start: 23px;
   font-weight: bold;
 }
 
 .wizard-header-description {
-  -moz-margin-start: 44px;
+  margin-inline-start: 44px;
 }
 
 wizard[branded="true"] .wizard-header-icon {
   list-style-image: url("chrome://branding/content/icon48.png");
-  -moz-margin-end: 5px;
+  margin-inline-end: 5px;
 }
 
 .wizard-page-box {
@@ -46,9 +46,9 @@ wizard[branded="true"] .wizard-header-icon {
 
 .wizard-button[dlgtype="finish"],
 .wizard-button[dlgtype="next"] {
-  -moz-margin-start: 0px !important;
+  margin-inline-start: 0px !important;
 }
 
 .wizard-button[dlgtype="back"] {
-  -moz-margin-end: 0px !important;
+  margin-inline-end: 0px !important;
 }

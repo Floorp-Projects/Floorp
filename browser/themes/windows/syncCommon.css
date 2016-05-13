@@ -8,7 +8,7 @@
 }
 
 .statusIcon {
-  -moz-margin-start: 4px;
+  margin-inline-start: 4px;
   max-height: 16px;
   max-width: 16px;
 }

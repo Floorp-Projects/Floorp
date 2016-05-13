@@ -454,7 +454,7 @@
 
 @media not all and (-moz-windows-classic) {
   #titlebar-min {
-    -moz-margin-end: 2px;
+    margin-inline-end: 2px;
   }
 }
 
@@ -470,8 +470,8 @@ toolbarbutton.bookmark-item:not([disabled="true"]):not(.subviewbutton):hover:act
 toolbarbutton.bookmark-item[open="true"] {
   padding-top: 3px;
   padding-bottom: 1px;
-  -moz-padding-start: 4px;
-  -moz-padding-end: 2px;
+  padding-inline-start: 4px;
+  padding-inline-end: 2px;
 }
 
 .bookmark-item > .toolbarbutton-icon,
@@ -574,7 +574,7 @@ menuitem.bookmark-item {
 }
 
 .bookmark-item > .menu-iconic-left > .menu-iconic-icon {
-  -moz-padding-start: 0px;
+  padding-inline-start: 0px;
 }
 
 /* ::::: bookmark items ::::: */
@@ -673,7 +673,7 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 
 .toolbarbutton-1 > .toolbarbutton-icon,
 .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
-  -moz-margin-end: 0;
+  margin-inline-end: 0;
 }
 
 :-moz-any(toolbar, .widget-overflow-list) .toolbarbutton-1 > .toolbarbutton-icon,
@@ -704,8 +704,8 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 }
 
 #nav-bar #PanelUI-menu-button {
-  -moz-padding-start: 5px;
-  -moz-padding-end: 5px;
+  padding-inline-start: 5px;
+  padding-inline-end: 5px;
 }
 
 #nav-bar .toolbarbutton-1[type=panel],
@@ -723,11 +723,11 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 }
 
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
-  -moz-padding-end: 0;
+  padding-inline-end: 0;
 }
 
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
-  -moz-padding-start: 0;
+  padding-inline-start: 0;
   -moz-box-align: center;
 }
 
@@ -804,7 +804,7 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 #nav-bar .toolbarbutton-1[type=menu]:not(#PanelUI-menu-button):not(#back-button):not(#forward-button) > .toolbarbutton-icon,
 #nav-bar .toolbarbutton-1[type=menu]:not(#PanelUI-menu-button) > .toolbarbutton-badge-stack,
 #nav-bar .toolbarbutton-1[type=menu] > .toolbarbutton-text /* hack for add-ons that forcefully display the label */ {
-  -moz-padding-end: 17px;
+  padding-inline-end: 17px;
 }
 
 #nav-bar .toolbarbutton-1[type=panel] > .toolbarbutton-icon,
@@ -814,7 +814,7 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 }
 
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menu-dropmarker {
-  -moz-margin-start: -15px;
+  margin-inline-start: -15px;
 }
 
 #nav-bar #bookmarks-menu-button[cui-areatype="toolbar"] > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
@@ -843,7 +843,7 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   display: -moz-box;
   width: 1px;
   height: 16px;
-  -moz-margin-end: -1px;
+  margin-inline-end: -1px;
   background-image: linear-gradient(currentColor 0, currentColor 100%);
   background-position: center;
   background-repeat: no-repeat;
@@ -962,8 +962,8 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 #back-button {
   padding-top: 3px !important;
   padding-bottom: 3px !important;
-  -moz-padding-start: 5px !important;
-  -moz-padding-end: 0 !important;
+  padding-inline-start: 5px !important;
+  padding-inline-end: 0 !important;
   position: relative !important;
   z-index: 1 !important;
   border-radius: 0 10000px 10000px 0 !important;
@@ -1024,7 +1024,7 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 /* ::::: fullscreen window controls ::::: */
 
 #window-controls {
-  -moz-margin-start: 4px;
+  margin-inline-start: 4px;
 }
 
 #minimize-button,
@@ -1207,8 +1207,8 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 }
 
 @conditionalForwardWithUrlbar@ > #urlbar {
-  -moz-border-start: none;
-  -moz-padding-start: 0;
+  border-inline-start: none;
+  padding-inline-start: 0;
   margin-left: 0;
 }
 
@@ -1262,7 +1262,7 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
 }
 
 .urlbar-input-box {
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
 }
 
 #urlbar-icons {
@@ -1305,24 +1305,24 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
 
 #urlbar-search-splitter {
   min-width: 6px;
-  -moz-margin-start: -3px;
+  margin-inline-start: -3px;
   border: none;
   background: transparent;
 }
 
 #urlbar-search-splitter + #search-container > #searchbar > .searchbar-textbox {
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
 }
 
 #urlbar-display-box {
-  -moz-border-end: 1px solid #AAA;
-  -moz-margin-end: 3px;
+  border-inline-end: 1px solid #AAA;
+  margin-inline-end: 3px;
 }
 
 .urlbar-display {
   margin-top: 0;
   margin-bottom: 0;
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
   color: GrayText;
 }
 
@@ -1890,14 +1890,14 @@ html|span.ac-emphasize-text-url {
 
 .panel-promo-icon {
   list-style-image: url("chrome://browser/skin/sync-notification-24.png");
-  -moz-margin-end: 10px;
+  margin-inline-end: 10px;
   vertical-align: middle;
 }
 
 .panel-promo-closebutton {
   -moz-appearance: none;
   border: none;
-  -moz-margin-end: -10px;
+  margin-inline-end: -10px;
   margin-top: -5px;
 }
 
@@ -1912,7 +1912,7 @@ html|span.ac-emphasize-text-url {
 }
 
 #sidebar-title {
-  -moz-padding-start: 0px;
+  padding-inline-start: 0px;
 }
 
 #sidebar-header > .close-icon {
@@ -2220,7 +2220,7 @@ toolbarbutton.chevron > .toolbarbutton-icon {
 
 #sidebar-throbber[loading="true"] {
   list-style-image: url("chrome://global/skin/icons/loading.png");
-  -moz-margin-end: 4px;
+  margin-inline-end: 4px;
 }
 
 @media (min-resolution: 1.1dppx) {
@@ -2252,7 +2252,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 .menupopup-drop-indicator {
   list-style-image: none;
   height: 2px;
-  -moz-margin-end: -4em;
+  margin-inline-end: -4em;
   background-color: Highlight;
 }
 
@@ -2299,7 +2299,7 @@ notification[value="translation"] {
 
   notification[value="translation"] button,
   notification[value="translation"] menulist {
-    -moz-padding-end: 1ch;
+    padding-inline-end: 1ch;
   }
 
   notification[value="translation"] menulist {
@@ -2315,8 +2315,8 @@ notification[value="translation"] {
   notification[value="translation"] button,
   notification[value="translation"] menulist,
   notification[value="translation"] menulist > .menulist-label-box {
-    -moz-margin-start: 1ch;
-    -moz-margin-end: 1ch;
+    margin-inline-start: 1ch;
+    margin-inline-end: 1ch;
   }
 
   notification[value="translation"] button:hover,
@@ -2346,11 +2346,11 @@ notification[value="translation"] {
   notification[value="translation"] button > .button-box,
   notification[value="translation"] button[type="menu"] > .button-box > .button-menu-dropmarker {
     padding: 0;
-    -moz-margin-start: 3ch;
+    margin-inline-start: 3ch;
   }
 
   notification[value="translation"] button:not([type="menu"]) > .button-box {
-    -moz-margin-end: 3ch;
+    margin-inline-end: 3ch;
   }
 }
 
@@ -2526,7 +2526,7 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton {
   text-shadow: none;
   background-image: linear-gradient(#B4211B, #8A1915);
   border-radius: 1px;
-  -moz-margin-end: 5px;
+  margin-inline-end: 5px;
 }
 
 /* Social toolbar item */
@@ -2683,7 +2683,7 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton {
 
 #TabsToolbar > .private-browsing-indicator {
   background: url("chrome://browser/skin/privatebrowsing-mask-tabstrip.png") no-repeat center -3px;
-  -moz-margin-start: 4px;
+  margin-inline-start: 4px;
   width: 48px;
 }
 
@@ -2694,7 +2694,7 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton {
 #private-browsing-indicator-titlebar > .private-browsing-indicator,
 #main-window[inFullscreen] #TabsToolbar > .private-browsing-indicator {
   background: url("chrome://browser/skin/privatebrowsing-mask-titlebar.png") no-repeat center 0px;
-  -moz-margin-end: 4px;
+  margin-inline-end: 4px;
   width: 40px;
   height: 20px;
   position: relative;
@@ -2774,7 +2774,7 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton {
 }
 
 #context-sep-navigation {
-  -moz-margin-start: -28px;
+  margin-inline-start: -28px;
   margin-top: -4px;
 }
 

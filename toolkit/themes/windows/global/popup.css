@@ -33,7 +33,7 @@ menupopup {
 
 menupopup > menu > menupopup {
  /* align submenus */
-  -moz-margin-start: -3px;
+  margin-inline-start: -3px;
   margin-top: -3px;
 }
 

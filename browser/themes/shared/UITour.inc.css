@@ -26,8 +26,8 @@
 }
 
 #UITourTooltipBody {
-  -moz-margin-end: 14px;
-  -moz-margin-start: 14px;
+  margin-inline-end: 14px;
+  margin-inline-start: 14px;
   margin-top: -16px;
   margin-bottom: 8px;
 }
@@ -35,8 +35,8 @@
 #UITourTooltipIcon {
   width: 48px;
   height: 48px;
-  -moz-margin-start: 14px;
-  -moz-margin-end: 14px;
+  margin-inline-start: 14px;
+  margin-inline-end: 14px;
 }
 
 #UITourTooltipTitle,
@@ -47,16 +47,16 @@
 #UITourTooltipTitle {
   font-size: 1.45rem;
   font-weight: bold;
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
   /* Avoid the title overlapping the close button */
-  -moz-margin-end: 14px;
+  margin-inline-end: 14px;
   margin-top: 0;
   margin-bottom: 9px;
 }
 
 #UITourTooltipDescription {
-  -moz-margin-start: 0;
-  -moz-margin-end: 0;
+  margin-inline-start: 0;
+  margin-inline-end: 0;
   font-size: 1.15rem;
   line-height: 1.8rem;
   margin-bottom: 0; /* Override global.css */
@@ -68,7 +68,7 @@
   border: none;
   background-color: transparent;
   min-width: 0;
-  -moz-margin-start: 4px;
+  margin-inline-start: 4px;
   margin-top: -2px;
 }
 
@@ -91,13 +91,13 @@
 
 #UITourTooltipButtons > label:first-child,
 #UITourTooltipButtons > button:first-child {
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
 }
 
 #UITourTooltipButtons > button[image] > .button-box > .button-icon {
   width: 16px;
   height: 16px;
-  -moz-margin-end: 5px;
+  margin-inline-end: 5px;
 }
 
 #UITourTooltipButtons > label,
@@ -211,16 +211,16 @@ notification.heartbeat[type="info"] .close-icon:not(:hover) {
 .messageText.heartbeat {
   color: #333333;
   text-shadow: none;
-  -moz-margin-start: 0px;
+  margin-inline-start: 0px;
   /* The !important is required to override OSX default style. */
-  -moz-margin-end: 12px !important;
+  margin-inline-end: 12px !important;
 }
 
 .messageImage.heartbeat {
   width: 24px;
   height: 24px;
-  -moz-margin-start: 8px;
-  -moz-margin-end: 8px;
+  margin-inline-start: 8px;
+  margin-inline-end: 8px;
 }
 
 .messageImage.heartbeat.pulse-onshow {
@@ -240,7 +240,7 @@ notification.heartbeat[type="info"] .close-icon:not(:hover) {
 /* Learn More link styles */
 .heartbeat > .text-link {
   color: #0095DD;
-  -moz-margin-start: 0px;
+  margin-inline-start: 0px;
 }
 
 .heartbeat > .text-link:hover {
@@ -277,8 +277,8 @@ notification.heartbeat[type="info"] .close-icon:not(:hover) {
 .heartbeat > #star-rating-container > .star-x  {
   background: url("chrome://browser/skin/heartbeat-star-off.svg");
   cursor: pointer;
-  /* Overrides the -moz-margin-end for all platforms defined in the .plain class */
-  -moz-margin-end: 4px !important;
+  /* Overrides the margin-inline-end for all platforms defined in the .plain class */
+  margin-inline-end: 4px !important;
   width: 16px;
   height: 16px;
 }

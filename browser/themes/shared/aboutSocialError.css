@@ -7,7 +7,7 @@
 #errorTitle {
   background: url("chrome://global/skin/icons/info.svg") left 0 no-repeat;
   background-size: 2em;
-  -moz-padding-start: 3em;
+  padding-inline-start: 3em;
 }
 
 #button-box {
@@ -30,7 +30,7 @@ button {
   }
   #errorTitle {
     background: none;
-    -moz-padding-start: 0 !important;
+    padding-inline-start: 0 !important;
   }
   button {
     width: auto !important;

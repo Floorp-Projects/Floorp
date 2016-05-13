@@ -6,7 +6,7 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 #HelpToolbar {
-  -moz-padding-start: 5px;
+  padding-inline-start: 5px;
 }
 
 #HelpToolbar toolbarbutton {

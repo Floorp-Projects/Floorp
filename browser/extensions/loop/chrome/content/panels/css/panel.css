@@ -172,12 +172,12 @@ html[dir="rtl"] .rename-container > .input-group {
 
 /* Need to remove when these rules when the Beta tag is removed */
 #share-link-header {
-  -moz-padding-start: 20px;
+  padding-inline-start: 20px;
 }
 
 .fte-get-started-container + .generate-url > #share-link-header {
   /* The header shouldn't be indented if the tabs are present. */
-  -moz-padding-start: 0;
+  padding-inline-start: 0;
 }
 
 .content-area label {
@@ -391,7 +391,7 @@ html[dir="rtl"] .rename-container > .input-group {
   height: 24px;
   border: none;
   margin: .1em; /* relative to _this_ line's font, not the document's */
-  -moz-margin-start: .5em;
+  margin-inline-start: .5em;
   background-color: transparent;  /* override browser default for button tags */
   top: -15px;
 }
@@ -466,7 +466,7 @@ html[dir="rtl"] .room-entry-context-actions > .dropdown-menu {
 /* Keep ".room-list > .room-entry > h2" in sync with these. */
 .room-entry-context-item {
   display: inline-block;
-  -moz-margin-end: 1rem;
+  margin-inline-end: 1rem;
   vertical-align: middle;
 }
 
@@ -690,7 +690,7 @@ html[dir="rtl"] .generate-url-spinner {
 }
 
 html[dir="rtl"] .settings-menu .dropdown-menu {
-  /* This is specified separately rather than using -moz-margin-start etc, as
+  /* This is specified separately rather than using margin-inline-start etc, as
      we need to override .dropdown-menu's values which can't use the gecko
      specific extensions. */
   left: 14px;

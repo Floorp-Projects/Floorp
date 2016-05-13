@@ -29,7 +29,7 @@ html|button {
 }
 
 xul|caption {
-  -moz-padding-start: 0;
+  padding-inline-start: 0;
 }
 
 xul|groupbox > xul|*.groupbox-body {
@@ -51,11 +51,11 @@ xul|menulist > xul|menupopup xul|menu,
 xul|menulist > xul|menupopup xul|menuitem,
 xul|button[type="menu"] > xul|menupopup xul|menu,
 xul|button[type="menu"] > xul|menupopup xul|menuitem {
-  -moz-padding-end: 34px;
+  padding-inline-end: 34px;
 }
 
 xul|*.help-button > xul|*.button-box > xul|*.button-icon {
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
 }
 
 xul|*.checkbox-icon {
@@ -63,7 +63,7 @@ xul|*.checkbox-icon {
 }
 
 xul|*.radio-icon {
-  -moz-margin-end: 0;
+  margin-inline-end: 0;
 }
 
 xul|*.numberbox-input-box {
@@ -113,8 +113,8 @@ xul|*.spinbuttons-down  {
 }
 
 xul|*.spinbuttons-button > xul|*.button-box {
-  -moz-padding-start: 2px !important;
-  -moz-padding-end: 3px !important;
+  padding-inline-start: 2px !important;
+  padding-inline-end: 3px !important;
 }
 
 xul|*.spinbuttons-button > xul|*.button-box > xul|*.button-text {

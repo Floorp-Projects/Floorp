@@ -163,7 +163,7 @@ html[dir="rtl"] .share-action-group > .invite-button:last-child {
 /* When the dropdown is showing a vertical scrollbar, compensate for its width. */
 body[platform="other"] .share-service-dropdown.overflow > .dropdown-menu-item,
 body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
-  -moz-padding-end: 20px;
+  padding-inline-end: 20px;
 }
 
 .share-service-dropdown > .dropdown-menu-item > .icon {

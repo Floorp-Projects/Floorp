@@ -52,7 +52,7 @@ menulist[disabled="true"]:hover:active {
 .menulist-description {
   font-style: italic;
   color: GrayText;
-  -moz-margin-start: 1ex !important;
+  margin-inline-start: 1ex !important;
 }
 
 /* ::::: editable menulists ::::: */
@@ -66,8 +66,8 @@ menulist[editable="true"] {
   -moz-appearance: menulist-textfield;
   padding-top: 3px;
   padding-bottom: 3px;
-  -moz-padding-start: 2px;
-  -moz-padding-end: 0px;
+  padding-inline-start: 2px;
+  padding-inline-end: 0px;
 }
 
 menulist[editable="true"] > .menulist-dropmarker {

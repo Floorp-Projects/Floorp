@@ -4,7 +4,7 @@
 
 /* Align the duration label with the warning box and item list */
 #sanitizeDurationLabel {
-  -moz-margin-start: 1px;
+  margin-inline-start: 1px;
 }
 
 
@@ -70,8 +70,8 @@
 
 /* Make the item list the same width as the warning box */
 #itemList {
-  -moz-margin-start: 0;
-  -moz-margin-end: 0;
+  margin-inline-start: 0;
+  margin-inline-end: 0;
 }
 
 /* Without this a useless scrollbar appears in the listbox when its rows
@@ -84,8 +84,8 @@
 
 /* Align the last dialog button with the end of the warning box */
 .prefWindow-dlgbuttons {
-  -moz-margin-end: 0;
+  margin-inline-end: 0;
 }
 .dialog-button[dlgtype="accept"] {
-  -moz-margin-end: 0;
+  margin-inline-end: 0;
 }

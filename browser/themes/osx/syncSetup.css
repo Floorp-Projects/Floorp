@@ -98,7 +98,7 @@ description > .text-link:focus {
 }
 
 .inputColumn {
-  -moz-margin-end: 2px
+  margin-inline-end: 2px
 }
 
 .pin {

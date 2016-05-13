@@ -80,7 +80,7 @@
   display: none;
 }
 
-/* NB: these would be -moz-margin-start/end if it wasn't for the fact that OS X
+/* NB: these would be margin-inline-start/end if it wasn't for the fact that OS X
  * doesn't reverse the order of the items in the titlebar in RTL mode. */
 .titlebar-placeholder[type="caption-buttons"],
 #titlebar-buttonbox {
@@ -304,8 +304,8 @@ toolbarbutton.bookmark-item:not(.subviewbutton),
   list-style-image: url("chrome://browser/skin/places/folderDropArrow.png");
   -moz-image-region: rect(0, 7px, 5px, 0);
   margin-top: 1px;
-  -moz-margin-start: 3px;
-  -moz-margin-end: -2px;
+  margin-inline-start: 3px;
+  margin-inline-end: -2px;
 }
 
 @media (min-resolution: 2dppx) {
@@ -353,7 +353,7 @@ toolbarbutton.bookmark-item:not(.subviewbutton)[open="true"] {
 }
 
 toolbarbutton.bookmark-item > menupopup {
-  -moz-margin-start: 3px;
+  margin-inline-start: 3px;
 }
 
 .bookmark-item > .toolbarbutton-icon,
@@ -365,7 +365,7 @@ toolbarbutton.bookmark-item > menupopup {
 
 .bookmark-item > .toolbarbutton-icon[label]:not([label=""]),
 .bookmark-item > .toolbarbutton-icon[type="menu"] {
-  -moz-margin-end: 5px;
+  margin-inline-end: 5px;
 }
 
 .bookmark-item[container] {
@@ -684,7 +684,7 @@ toolbar .toolbarbutton-1:not(:hover):not(:active):not([open]) > .toolbarbutton-m
   display: -moz-box;
   width: 1px;
   height: 18px;
-  -moz-margin-start: -1px;
+  margin-inline-start: -1px;
   background-image: linear-gradient(currentColor 0, currentColor 100%);
   background-position: center;
   background-repeat: no-repeat;
@@ -720,8 +720,8 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
   margin-bottom: 0;
   padding-top: 1px;
   padding-bottom: 1px;
-  -moz-margin-start: 7px;
-  -moz-margin-end: 7px;
+  margin-inline-start: 7px;
+  margin-inline-end: 7px;
 }
 
 %include ../shared/toolbarbuttons.inc.css
@@ -1098,11 +1098,11 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 }
 
 .toolbarbutton-1 > .toolbarbutton-menu-dropmarker {
-  -moz-margin-end: 1px;
+  margin-inline-end: 1px;
 }
 
 .toolbarbutton-1 > .toolbarbutton-menubutton-button {
-  -moz-border-end: none !important;
+  border-inline-end: none !important;
 }
 
 .toolbarbutton-1 > .toolbarbutton-menubutton-button:-moz-locale-dir(rtl),
@@ -1166,7 +1166,7 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   width: 32px;
   height: 32px;
   padding: 4px 5px 4px 3px;
-  -moz-margin-end: 0;
+  margin-inline-end: 0;
   border-radius: 10000px;
 }
 
@@ -1393,16 +1393,16 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 }
 
 #cut-button {
-  -moz-margin-end: 0;
+  margin-inline-end: 0;
 }
 
 #edit-controls[cui-areatype="toolbar"] > #cut-button {
-  -moz-border-end: 0;
+  border-inline-end: 0;
 }
 
 #paste-button {
-  -moz-border-start: none;
-  -moz-margin-start: 0;
+  border-inline-start: none;
+  margin-inline-start: 0;
 }
 
 #cut-button:-moz-locale-dir(ltr),
@@ -1426,20 +1426,20 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 /* zoom controls */
 
 #zoom-out-button {
-  -moz-margin-end: 0;
+  margin-inline-end: 0;
 }
 
 #zoom-in-button {
-  -moz-margin-start: 0;
-  -moz-border-start: 0;
+  margin-inline-start: 0;
+  border-inline-start: 0;
 }
 
 #zoom-controls[cui-areatype="toolbar"] > #zoom-out-button {
-  -moz-border-end: 0;
+  border-inline-end: 0;
 }
 
 #zoom-controls[cui-areatype="toolbar"] > #zoom-in-button {
-  -moz-border-start-width: 1px;
+  border-inline-start-width: 1px;
 }
 
 #zoom-controls[cui-areatype="toolbar"] > #zoom-reset-button {
@@ -1539,7 +1539,7 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 }
 
 @conditionalForwardWithUrlbar@ > #urlbar {
-  -moz-border-start: none;
+  border-inline-start: none;
   margin-left: 0;
 }
 
@@ -1608,12 +1608,12 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 #identity-box:-moz-focusring {
   box-shadow: 0 0 2px 1px -moz-mac-focusring inset,
               0 0 2px 2px -moz-mac-focusring;
-  -moz-border-end-style: none;
-  -moz-padding-end: 5px;
+  border-inline-end-style: none;
+  padding-inline-end: 5px;
 }
 
 .urlbar-input-box {
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
   padding: 3px 0 2px;
 }
 
@@ -1703,8 +1703,8 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 }
 
 #urlbar-display-box {
-  -moz-border-end: 1px solid #AAA;
-  -moz-margin-end: 3px;
+  border-inline-end: 1px solid #AAA;
+  margin-inline-end: 3px;
 }
 
 .urlbar-display {
@@ -2152,7 +2152,7 @@ html|span.ac-emphasize-text-url {
 }
 
 .editBookmarkPanelBottomButton:last-child {
-  -moz-margin-start: 8px;
+  margin-inline-start: 8px;
 }
 
 /* The following elements come from editBookmarkOverlay.xul. Styling that's
@@ -2177,7 +2177,7 @@ html|span.ac-emphasize-text-url {
 #editBMPanel_newFolderButton {
   -moz-appearance: none;
   border: 0 solid #a5a5a5;
-  -moz-border-end-width: 1px;
+  border-inline-end-width: 1px;
   padding: 0 9px;
   margin: 0;
   min-width: 21px;
@@ -2208,8 +2208,8 @@ html|span.ac-emphasize-text-url {
   min-height: 22px;
   padding-top: 2px;
   padding-bottom: 1px;
-  -moz-padding-start: 8px;
-  -moz-padding-end: 4px;
+  padding-inline-start: 8px;
+  padding-inline-end: 4px;
 }
 
 #editBMPanel_folderMenuList:-moz-focusring {
@@ -2228,7 +2228,7 @@ html|span.ac-emphasize-text-url {
   border: 0;
   margin: 0;
   padding: 0;
-  -moz-padding-end: 4px;
+  padding-inline-end: 4px;
   width: 7px;
 }
 
@@ -2272,7 +2272,7 @@ html|span.ac-emphasize-text-url {
 #editBookmarkPanel .expander-down {
   @hudButton@
   margin: 0;
-  -moz-margin-start: 4px;
+  margin-inline-start: 4px;
   min-width: 27px;
   min-height: 22px;
 }
@@ -2341,13 +2341,13 @@ html|span.ac-emphasize-text-url {
 
 .panel-promo-icon {
   list-style-image: url("chrome://browser/skin/sync-notification-24.png");
-  -moz-margin-end: 10px;
+  margin-inline-end: 10px;
   vertical-align: middle;
 }
 
 .panel-promo-closebutton {
   border: none;
-  -moz-margin-end: -14px;
+  margin-inline-end: -14px;
   margin-top: -8px;
 }
 
@@ -2391,21 +2391,21 @@ sidebarheader {
 }
 
 .sidebar-splitter {
-  -moz-border-start: none;
-  -moz-border-end: 1px solid #b4b4b4;
+  border-inline-start: none;
+  border-inline-end: 1px solid #b4b4b4;
   min-width: 1px;
   width: 3px;
   background-image: none !important;
   background-color: transparent;
-  -moz-margin-start: -3px;
+  margin-inline-start: -3px;
   position: relative;
 }
 
 #appcontent ~ .sidebar-splitter {
-  -moz-border-start: 1px solid #ccc;
-  -moz-border-end: none;
-  -moz-margin-start: 0;
-  -moz-margin-end: -3px;
+  border-inline-start: 1px solid #ccc;
+  border-inline-end: none;
+  margin-inline-start: 0;
+  margin-inline-end: -3px;
 }
 
 .sidebar-title,
@@ -2652,7 +2652,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
  */
 
 .tab-close-button > .toolbarbutton-icon {
-  -moz-margin-end: 0px !important;
+  margin-inline-end: 0px !important;
 }
 
 .tab-close-button {
@@ -2681,11 +2681,11 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up {
-  -moz-border-end: 2px solid transparent;
+  border-inline-end: 2px solid transparent;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
-  -moz-border-start: 2px solid transparent;
+  border-inline-start: 2px solid transparent;
   transition: 1s background-color ease-out;
 }
 
@@ -2931,7 +2931,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 #alltabs-button > .toolbarbutton-icon {
-  -moz-margin-end: 2px;
+  margin-inline-end: 2px;
 }
 
 /* All Tabs Menupopup */
@@ -2997,7 +2997,7 @@ menuitem:hover > hbox > .alltabs-endimage[soundplaying] {
 .menupopup-drop-indicator {
   list-style-image: none;
   height: 2px;
-  -moz-margin-end: -4em;
+  margin-inline-end: -4em;
   background-color: Highlight;
 }
 
@@ -3084,8 +3084,8 @@ button.translate-infobar-element[anonid="translate"]:hover {
 }
 
 button.translate-infobar-element.options-menu-button {
-  -moz-padding-start: 0.5em !important;
-  -moz-padding-end: 0em !important;
+  padding-inline-start: 0.5em !important;
+  padding-inline-end: 0em !important;
 }
 
 button.translate-infobar-element.options-menu-button > .button-box > .button-menu-dropmarker {
@@ -3119,7 +3119,7 @@ menulist.translate-infobar-element {
 
 menulist.translate-infobar-element > .menulist-label-box {
   padding-top: 1px;
-  -moz-padding-start: 0.3em;
+  padding-inline-start: 0.3em;
   margin-top: 0;
   margin-bottom: 0;
 }
@@ -3310,7 +3310,7 @@ menulist.translate-infobar-element > .menulist-dropmarker {
   the default closebutton margins from notification.css require adjustment */
 
 .click-to-play-plugins-notification-description-box > .popup-notification-closebutton {
-  -moz-margin-end: -6px;
+  margin-inline-end: -6px;
   margin-top: -7px;
 }
 
@@ -3370,7 +3370,7 @@ menulist.translate-infobar-element > .menulist-dropmarker {
   width: 32px;
   height: 32px;
   margin: 4px;
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
 }
 
 .social-panel > .panel-arrowcontainer > .panel-arrowcontent {
@@ -3578,7 +3578,7 @@ menulist.translate-infobar-element > .menulist-dropmarker {
 }
 
 #UITourTooltipClose {
-  -moz-margin-end: -10px;
+  margin-inline-end: -10px;
   margin-top: -14px;
 }
 

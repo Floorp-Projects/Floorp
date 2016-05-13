@@ -30,19 +30,19 @@
 .widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   -moz-appearance: none;
   border: 0;
-  -moz-margin-start: 3px;
+  margin-inline-start: 3px;
 }
 
 .widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
-  -moz-margin-start: 0;
+  margin-inline-start: 0;
 }
 
 .subviewbutton > .toolbarbutton-text {
-  -moz-padding-start: 16px;
+  padding-inline-start: 16px;
 }
 
 .subviewbutton:-moz-any([image],[targetURI],.cui-withicon, .restoreallitem, .bookmark-item) > .toolbarbutton-text {
-  -moz-padding-start: 0;
+  padding-inline-start: 0;
 }
 
 /* subviewbutton entries for social sidebars have images that come from external
@@ -78,7 +78,7 @@ menu.subviewbutton > .menu-right:-moz-locale-dir(rtl) {
 }
 
 .subviewbutton > .toolbarbutton-icon {
-  -moz-margin-end: 5px !important;
+  margin-inline-end: 5px !important;
 }
 
 .subviewbutton > .menu-right,

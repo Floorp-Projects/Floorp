@@ -206,7 +206,7 @@ toolbar[brighttext] #downloads-indicator-counter {
   background-image: linear-gradient(#505050, #575757);
   border: 1px solid;
   border-color: hsla(0,0%,0%,.6) hsla(0,0%,0%,.4) hsla(0,0%,0%,.4);
-  -moz-border-start: none;
+  border-inline-start: none;
   border-radius: 0 2px 2px 0;
 }
 

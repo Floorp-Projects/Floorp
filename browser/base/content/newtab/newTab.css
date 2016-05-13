@@ -398,13 +398,13 @@ input[type=button] {
 }
 
 #newtab-search-submit {
-  -moz-margin-start: -1px;
+  margin-inline-start: -1px;
   background: url("chrome://browser/skin/search-arrow-go.svg#search-arrow-go") center center no-repeat, linear-gradient(hsla(0,0%,100%,.8), hsla(0,0%,100%,.1)) padding-box;
   padding: 0;
   border: 1px solid;
   border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.17) hsla(210,54%,20%,.2);
   border-radius: 0 2px 2px 0;
-  -moz-border-start: 1px solid transparent;
+  border-inline-start: 1px solid transparent;
   box-shadow: 0 0 2px hsla(0,0%,100%,.5) inset,
               0 1px 0 hsla(0,0%,100%,.2);
   color: inherit;
@@ -540,7 +540,7 @@ input[type=button] {
 .newtab-customize-panel-item {
   line-height: 25px;
   padding: 15px;
-  -moz-padding-start: 40px;
+  padding-inline-start: 40px;
   font-size: 14px;
   cursor: pointer;
   max-width: 300px;
@@ -621,7 +621,7 @@ input[type=button] {
 .newtab-customize-panel-subitem {
   font-size: 12px;
   padding: 0px 15px 15px 15px;
-  -moz-padding-start: 40px;
+  padding-inline-start: 40px;
   display: block;
   max-width: 300px;
 }
@@ -637,7 +637,7 @@ input[type=button] {
   line-height: 20px;
   border-bottom: medium none !important;
   padding: 15px 15px 10px 15px;
-  -moz-padding-start: 40px;
+  padding-inline-start: 40px;
   border-top: 1px solid threedshadow;
 }
 
