@@ -595,6 +595,7 @@ class IDLPartialInterface(IDLObject):
         # propagatedExtendedAttrs are the ones that should get
         # propagated to our non-partial interface.
         self.propagatedExtendedAttrs = []
+        self._haveSecureContextExtendedAttribute = False
         self._nonPartialInterface = nonPartialInterface
         self._finished = False
         nonPartialInterface.addPartialInterface(self)
@@ -605,6 +606,16 @@ class IDLPartialInterface(IDLObject):
 
             if identifier in ["Constructor", "NamedConstructor"]:
                 self.propagatedExtendedAttrs.append(attr)
+            elif identifier == "SecureContext":
+                self._haveSecureContextExtendedAttribute = True
+                # This gets propagated to all our members.
+                for member in self.members:
+                    if member.getExtendedAttribute("SecureContext"):
+                        raise WebIDLError("[SecureContext] specified on both a "
+                                          "partial interface member and on the "
+                                          "partial interface itself",
+                                          [member.location, attr.location])
+                    member.addExtendedAttributes([attr])
             elif identifier == "Exposed":
                 # This just gets propagated to all our members.
                 for member in self.members:
@@ -623,6 +634,16 @@ class IDLPartialInterface(IDLObject):
         if self._finished:
             return
         self._finished = True
+        if (not self._haveSecureContextExtendedAttribute and
+            self._nonPartialInterface.getExtendedAttribute("SecureContext")):
+            # This gets propagated to all our members.
+            for member in self.members:
+                if member.getExtendedAttribute("SecureContext"):
+                    raise WebIDLError("[SecureContext] specified on both a "
+                                      "partial interface member and on the "
+                                      "non-partial interface",
+                                      [member.location, self._nonPartialInterface.location])
+                member.addExtendedAttributes([IDLExtendedAttribute(self._nonPartialInterface.location, ("SecureContext",))])
         # Need to make sure our non-partial interface gets finished so it can
         # report cases when we only have partial interfaces.
         self._nonPartialInterface.finish(scope)
@@ -838,6 +859,17 @@ class IDLInterface(IDLObjectWithScope, IDLExposureMixins):
                 not self.getExtendedAttribute("NoInterfaceObject")):
                 raise WebIDLError("Interface %s does not have "
                                   "[NoInterfaceObject] but inherits from "
+                                  "interface %s which does" %
+                                  (self.identifier.name,
+                                   self.parent.identifier.name),
+                                  [self.location, self.parent.location])
+
+            # Interfaces that are not [SecureContext] can't inherit
+            # from [SecureContext] interfaces.
+            if (self.parent.getExtendedAttribute("SecureContext") and
+                not self.getExtendedAttribute("SecureContext")):
+                raise WebIDLError("Interface %s does not have "
+                                  "[SecureContext] but inherits from "
                                   "interface %s which does" %
                                   (self.identifier.name,
                                    self.parent.identifier.name),
@@ -1211,6 +1243,7 @@ class IDLInterface(IDLObjectWithScope, IDLExposureMixins):
                         member.getExtendedAttribute("ChromeOnly") or
                         member.getExtendedAttribute("Pref") or
                         member.getExtendedAttribute("Func") or
+                        member.getExtendedAttribute("SecureContext") or
                         member.getExtendedAttribute("AvailableIn") or
                         member.getExtendedAttribute("CheckAnyPermissions") or
                         member.getExtendedAttribute("CheckAllPermissions")):
@@ -1475,6 +1508,18 @@ class IDLInterface(IDLObjectWithScope, IDLExposureMixins):
                 self.parentScope.globalNames.add(self.identifier.name)
                 self.parentScope.globalNameMapping[self.identifier.name].add(self.identifier.name)
                 self._isOnGlobalProtoChain = True
+            elif identifier == "SecureContext":
+                if not attr.noArguments():
+                    raise WebIDLError("[%s] must take no arguments" % identifier,
+                                      [attr.location])
+                # This gets propagated to all our members.
+                for member in self.members:
+                    if member.getExtendedAttribute("SecureContext"):
+                        raise WebIDLError("[SecureContext] specified on both "
+                                          "an interface member and on the "
+                                          "interface itself",
+                                          [member.location, attr.location])
+                    member.addExtendedAttributes([attr])
             elif (identifier == "NeedResolve" or
                   identifier == "OverrideBuiltins" or
                   identifier == "ChromeOnly" or
@@ -1655,6 +1700,7 @@ class IDLInterface(IDLObjectWithScope, IDLExposureMixins):
         return self._ownMembersInSlots != 0
 
     conditionExtendedAttributes = [ "Pref", "ChromeOnly", "Func", "AvailableIn",
+                                    "SecureContext",
                                     "CheckAnyPermissions",
                                     "CheckAllPermissions" ]
     def isExposedConditionally(self):
@@ -3888,6 +3934,7 @@ class IDLConst(IDLInterfaceMember):
         elif (identifier == "Pref" or
               identifier == "ChromeOnly" or
               identifier == "Func" or
+              identifier == "SecureContext" or
               identifier == "AvailableIn" or
               identifier == "CheckAnyPermissions" or
               identifier == "CheckAllPermissions"):
@@ -4188,6 +4235,7 @@ class IDLAttribute(IDLInterfaceMember):
               identifier == "GetterThrows" or
               identifier == "ChromeOnly" or
               identifier == "Func" or
+              identifier == "SecureContext" or
               identifier == "Frozen" or
               identifier == "AvailableIn" or
               identifier == "NewObject" or
@@ -4899,6 +4947,7 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
               identifier == "Pref" or
               identifier == "Deprecated" or
               identifier == "Func" or
+              identifier == "SecureContext" or
               identifier == "AvailableIn" or
               identifier == "CheckAnyPermissions" or
               identifier == "CheckAllPermissions" or
