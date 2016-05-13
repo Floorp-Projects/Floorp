@@ -10,6 +10,7 @@ add_task(function* () {
     yield promiseBrowserLoaded(browser);
 
     let tab2 = gBrowser.duplicateTab(tab);
+    Assert.equal(tab2.getAttribute("usercontextid"), i);
     let browser2 = tab2.linkedBrowser;
     yield promiseTabRestored(tab2)
 
@@ -22,5 +23,27 @@ add_task(function* () {
     yield promiseRemoveTab(tab);
     yield promiseRemoveTab(tab2);
   }
+});
+
+add_task(function* () {
+  let tab = gBrowser.addTab("http://example.com/", {userContextId: 1});
+  let browser = tab.linkedBrowser;
+
+  yield promiseBrowserLoaded(browser);
+
+  gBrowser.selectedTab = tab;
+
+  let tab2 = gBrowser.duplicateTab(tab);
+  let browser2 = tab2.linkedBrowser;
+  yield promiseTabRestored(tab2)
+
+  yield ContentTask.spawn(browser2, { expectedId: 1}, function* (args) {
+    Assert.equal(docShell.getOriginAttributes().userContextId,
+                 args.expectedId,
+                 "The docShell has the correct userContextId");
+  });
+
+  yield promiseRemoveTab(tab);
+  yield promiseRemoveTab(tab2);
 });
 
