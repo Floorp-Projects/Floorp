@@ -97,6 +97,26 @@ interface nsIEventTarget : nsISupports
    * events, so this event would never run and has not been dispatched.
    */
   [binaryname(DispatchFromScript)] void dispatch(in nsIRunnable event, in unsigned long flags);
+  /**
+   * Dispatch an event to this event target, but do not run it before delay
+   * milliseconds have passed.  This function may be called from any thread.
+   *
+   * @param event
+   *   The alreadyAddrefed<> event to dispatch.
+   * @param delay
+   *   The delay (in ms) before running the event.  If event does not rise to
+   *   the top of the event queue before the delay has passed, it will be set
+   *   aside to execute once the delay has passed.  Otherwise, it will be
+   *   executed immediately.
+   *
+   * @throws NS_ERROR_INVALID_ARG
+   *   Indicates that event is null.
+   * @throws NS_ERROR_UNEXPECTED
+   *   Indicates that the thread is shutting down and has finished processing
+   * events, so this event would never run and has not been dispatched, or
+   * that delay is zero.
+   */
+  [noscript] void delayedDispatch(in alreadyAddRefed_nsIRunnable event, in unsigned long delay);
 };
 
 %{C++

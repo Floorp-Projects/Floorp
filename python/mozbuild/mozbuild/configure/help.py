@@ -16,6 +16,11 @@ class HelpFormatter(object):
 
     def add(self, option):
         assert isinstance(option, Option)
+
+        if option.possible_origins == ('implied',):
+            # Don't display help if our option can only be implied.
+            return
+
         # TODO: improve formatting
         target = self.options if option.name else self.env
         opt = option.option

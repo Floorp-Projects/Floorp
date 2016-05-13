@@ -127,6 +127,7 @@ using namespace mozilla::system;
 #include "CameraPreferences.h"
 #include "TouchManager.h"
 #include "MediaDecoder.h"
+#include "MediaPrefs.h"
 #include "mozilla/layers/CompositorLRU.h"
 #include "mozilla/dom/devicestorage/DeviceStorageStatics.h"
 #include "mozilla/ServoBindings.h"
@@ -310,6 +311,7 @@ nsLayoutStatics::Initialize()
 #endif
 
   MediaDecoder::InitStatics();
+  MediaPrefs::GetSingleton();
 
   PromiseDebugging::Init();
 

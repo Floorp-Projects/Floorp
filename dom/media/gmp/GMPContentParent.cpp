@@ -13,6 +13,7 @@
 #include "mozIGeckoMediaPluginService.h"
 #include "mozilla/Logging.h"
 #include "mozilla/unused.h"
+#include "base/task.h"
 
 namespace mozilla {
 

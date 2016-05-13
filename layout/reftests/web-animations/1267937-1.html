@@ -32,7 +32,7 @@
 
     // Setting another frame does not cause any visual changes because
     // the animation is still in the before phase.
-    anim.effect.setFrames({ marginLeft: [ "0px", "400px" ] });
+    anim.effect.setKeyframes({ marginLeft: [ "0px", "400px" ] });
 
     var beforePhaseFrames = 0;
     window.requestAnimationFrame(function handleFrame() {

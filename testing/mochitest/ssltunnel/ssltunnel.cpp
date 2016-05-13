@@ -155,6 +155,7 @@ typedef struct {
   PLHashTable* host_clientauth_table;
   PLHashTable* host_redir_table;
   PLHashTable* host_ssl3_table;
+  PLHashTable* host_tls1_table;
   PLHashTable* host_rc4_table;
   PLHashTable* host_failhandshake_table;
 } server_info_t;
@@ -265,7 +266,8 @@ void SignalShutdown()
 enum {
   USE_SSL3 = 1 << 0,
   USE_RC4 = 1 << 1,
-  FAIL_HANDSHAKE = 1 << 2
+  FAIL_HANDSHAKE = 1 << 2,
+  USE_TLS1 = 1 << 4
 };
 
 bool ReadConnectRequest(server_info_t* server_info, 
@@ -326,6 +328,10 @@ bool ReadConnectRequest(server_info_t* server_info,
 
   if (PL_HashTableLookup(server_info->host_rc4_table, token)) {
     *flags |= USE_RC4;
+  }
+
+  if (PL_HashTableLookup(server_info->host_tls1_table, token)) {
+    *flags |= USE_TLS1;
   }
 
   if (PL_HashTableLookup(server_info->host_failhandshake_table, token)) {
@@ -392,6 +398,12 @@ bool ConfigureSSLServerSocket(PRFileDesc* socket, server_info_t* si, const strin
   if (flags & USE_SSL3) {
     SSLVersionRange range = { SSL_LIBRARY_VERSION_3_0,
                               SSL_LIBRARY_VERSION_3_0 };
+    SSL_VersionRangeSet(ssl_socket, &range);
+  }
+
+  if (flags & USE_TLS1) {
+    SSLVersionRange range = { SSL_LIBRARY_VERSION_TLS_1_0,
+                              SSL_LIBRARY_VERSION_TLS_1_0 };
     SSL_VersionRangeSet(ssl_socket, &range);
   }
 
@@ -756,6 +768,9 @@ void HandleConnection(void* data)
                 PL_HashTableEnumerateEntries(ci->server_info->host_ssl3_table, 
                                              match_hostname, 
                                              &match);
+                PL_HashTableEnumerateEntries(ci->server_info->host_tls1_table,
+                                             match_hostname,
+                                             &match);
                 PL_HashTableEnumerateEntries(ci->server_info->host_rc4_table, 
                                              match_hostname, 
                                              &match);
@@ -1027,6 +1042,11 @@ PLHashTable* get_ssl3_table(server_info_t* server)
   return server->host_ssl3_table;
 }
 
+PLHashTable* get_tls1_table(server_info_t* server)
+{
+  return server->host_tls1_table;
+}
+
 PLHashTable* get_rc4_table(server_info_t* server)
 {
   return server->host_rc4_table;
@@ -1204,6 +1224,14 @@ int processConfigLine(char* configLine)
         return 1;
       }
 
+      server.host_tls1_table = PL_NewHashTable(0, PL_HashString, PL_CompareStrings,
+                                               PL_CompareStrings, nullptr, nullptr);;
+      if (!server.host_tls1_table)
+      {
+        LOG_ERROR(("Internal, could not create hash table\n"));
+        return 1;
+      }
+
       server.host_rc4_table = PL_NewHashTable(0, PL_HashString, PL_CompareStrings,
                                               PL_CompareStrings, nullptr, nullptr);;
       if (!server.host_rc4_table)
@@ -1339,6 +1367,9 @@ int processConfigLine(char* configLine)
   if (!strcmp(keyword, "ssl3")) {
     return parseWeakCryptoConfig(keyword, _caret, get_ssl3_table);
   }
+  if (!strcmp(keyword, "tls1")) {
+    return parseWeakCryptoConfig(keyword, _caret, get_tls1_table);
+  }
 
   if (!strcmp(keyword, "rc4")) {
     return parseWeakCryptoConfig(keyword, _caret, get_rc4_table);
@@ -1433,6 +1464,12 @@ int freeClientAuthHashItems(PLHashEntry *he, int i, void *arg)
 }
 
 int freeSSL3HashItems(PLHashEntry *he, int i, void *arg)
+{
+  delete [] (char*)he->key;
+  return HT_ENUMERATE_REMOVE;
+}
+
+int freeTLS1HashItems(PLHashEntry *he, int i, void *arg)
 {
   delete [] (char*)he->key;
   return HT_ENUMERATE_REMOVE;
@@ -1577,12 +1614,14 @@ int main(int argc, char** argv)
     PL_HashTableEnumerateEntries(it->host_clientauth_table, freeClientAuthHashItems, nullptr);
     PL_HashTableEnumerateEntries(it->host_redir_table, freeHostRedirHashItems, nullptr);
     PL_HashTableEnumerateEntries(it->host_ssl3_table, freeSSL3HashItems, nullptr);
+    PL_HashTableEnumerateEntries(it->host_tls1_table, freeTLS1HashItems, nullptr);
     PL_HashTableEnumerateEntries(it->host_rc4_table, freeRC4HashItems, nullptr);
     PL_HashTableEnumerateEntries(it->host_failhandshake_table, freeRC4HashItems, nullptr);
     PL_HashTableDestroy(it->host_cert_table);
     PL_HashTableDestroy(it->host_clientauth_table);
     PL_HashTableDestroy(it->host_redir_table);
     PL_HashTableDestroy(it->host_ssl3_table);
+    PL_HashTableDestroy(it->host_tls1_table);
     PL_HashTableDestroy(it->host_rc4_table);
     PL_HashTableDestroy(it->host_failhandshake_table);
   }

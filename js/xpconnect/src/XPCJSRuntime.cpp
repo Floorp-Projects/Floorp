@@ -1365,6 +1365,8 @@ XPCJSRuntime::InterruptCallback(JSContext* cx)
     if (self->mSlowScriptCheckpoint.IsNull()) {
         self->mSlowScriptCheckpoint = TimeStamp::NowLoRes();
         self->mSlowScriptSecondHalf = false;
+        self->mSlowScriptActualWait = mozilla::TimeDuration();
+        self->mTimeoutAccumulated = false;
         return true;
     }
 
@@ -1385,6 +1387,8 @@ XPCJSRuntime::InterruptCallback(JSContext* cx)
     // If there's no limit, or we're within the limit, let it go.
     if (limit == 0 || duration.ToSeconds() < limit / 2.0)
         return true;
+
+    self->mSlowScriptActualWait += duration;
 
     // In order to guard against time changes or laptops going to sleep, we
     // don't trigger the slow script warning until (limit/2) seconds have
@@ -1429,6 +1433,13 @@ XPCJSRuntime::InterruptCallback(JSContext* cx)
         // just kill the page.
         mozilla::dom::HandlePrerenderingViolation(win->AsInner());
         return false;
+    }
+
+    // Accumulate slow script invokation delay.
+    if (!chrome && !self->mTimeoutAccumulated) {
+      uint32_t delay = uint32_t(self->mSlowScriptActualWait.ToMilliseconds() - (limit * 1000.0));
+      Telemetry::Accumulate(Telemetry::SLOW_SCRIPT_NOTIFY_DELAY, delay);
+      self->mTimeoutAccumulated = true;
     }
 
     // Show the prompt to the user, and kill if requested.
@@ -3354,7 +3365,8 @@ XPCJSRuntime::XPCJSRuntime()
    mObjectHolderRoots(nullptr),
    mWatchdogManager(new WatchdogManager(this)),
    mAsyncSnowWhiteFreer(new AsyncFreeSnowWhite()),
-   mSlowScriptSecondHalf(false)
+   mSlowScriptSecondHalf(false),
+   mTimeoutAccumulated(false)
 {
 }
 
@@ -3689,6 +3701,8 @@ XPCJSRuntime::BeforeProcessTask(bool aMightBlock)
     // Start the slow script timer.
     mSlowScriptCheckpoint = mozilla::TimeStamp::NowLoRes();
     mSlowScriptSecondHalf = false;
+    mSlowScriptActualWait = mozilla::TimeDuration();
+    mTimeoutAccumulated = false;
 
     // As we may be entering a nested event loop, we need to
     // cancel any ongoing performance measurement.

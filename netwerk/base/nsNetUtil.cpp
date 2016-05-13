@@ -749,20 +749,27 @@ NS_ImplementChannelOpen(nsIChannel      *channel,
     nsCOMPtr<nsIInputStream> stream;
     nsresult rv = NS_NewSyncStreamListener(getter_AddRefs(listener),
                                            getter_AddRefs(stream));
-    if (NS_SUCCEEDED(rv)) {
-        rv = channel->AsyncOpen(listener, nullptr);
-        if (NS_SUCCEEDED(rv)) {
-            uint64_t n;
-            // block until the initial response is received or an error occurs.
-            rv = stream->Available(&n);
-            if (NS_SUCCEEDED(rv)) {
-                *result = nullptr;
-                stream.swap(*result);
-            }
-        }
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
+    if (loadInfo && loadInfo->GetEnforceSecurity()) {
+      rv = channel->AsyncOpen2(listener);
     }
-    return rv;
-}
+    else {
+      rv = channel->AsyncOpen(listener, nullptr);
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    uint64_t n;
+    // block until the initial response is received or an error occurs.
+    rv = stream->Available(&n);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    *result = nullptr;
+    stream.swap(*result);
+
+    return NS_OK;
+ }
 
 nsresult
 NS_NewRequestObserverProxy(nsIRequestObserver **result,

@@ -55,16 +55,11 @@ function audioBecomeSilentDuringPlaying() {
   expectedPlaying = true;
 }
 
-function audioPlayingEnd() {
-  audio.onended = function() {
-    info("Audio playback ended");
-    audio.onended = null;
+function finish() {
+  observerService.removeObserver(observer, "audio-playback");
+  ok(true, "Observer removed");
 
-    observerService.removeObserver(observer, "audio-playback");
-    ok(true, "Observer removed");
-
-    SimpleTest.finish();
-  };
+  SimpleTest.finish();
 }
 
 function runTest() {
@@ -72,7 +67,7 @@ function runTest() {
 
   yield audioBecomeSilentDuringPlaying();
 
-  yield audioPlayingEnd();
+  yield finish();
 }
 
 continueTest();

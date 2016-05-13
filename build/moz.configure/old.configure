@@ -300,7 +300,6 @@ def old_configure_options(*options):
     '--with-google-oauth-api-keyfile',
     '--with-intl-api',
     '--with-ios-sdk',
-    '--with-java-bin-path',
     '--with-jitreport-granularity',
     '--with-linux-headers',
     '--with-macbundlename-prefix',

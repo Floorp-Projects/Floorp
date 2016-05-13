@@ -328,6 +328,15 @@ public:
                                            EndEntityOrCA endEntityOrCA,
                                            KeyPurposeId keyPurpose) = 0;
 
+  // For compatibility, a CA certificate with an extended key usage that
+  // contains the id-Netscape-stepUp OID but does not contain the
+  // id-kp-serverAuth OID may be considered valid for issuing server auth
+  // certificates. This function allows TrustDomain implementations to control
+  // this setting based on the start of the validity period of the certificate
+  // in question.
+  virtual Result NetscapeStepUpMatchesServerAuth(Time notBefore,
+                                                 /*out*/ bool& matches) = 0;
+
   // Compute a digest of the data in item using the given digest algorithm.
   //
   // item contains the data to hash.

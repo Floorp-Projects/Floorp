@@ -48,6 +48,9 @@ public:
   virtual void
   ScheduleDelayedWork(const base::TimeTicks& aDelayedWorkTime) override;
 
+  virtual nsIEventTarget*
+  GetXPCOMThread() override;
+
 protected:
   virtual ~MessagePump();
 
@@ -127,6 +130,12 @@ public:
 
   // The main run loop for this thread.
   virtual void DoRunLoop() override;
+
+  virtual nsIEventTarget*
+  GetXPCOMThread() override
+  {
+    return nullptr; // not sure what to do with this one
+  }
 
 protected:
   void SetInWait() {

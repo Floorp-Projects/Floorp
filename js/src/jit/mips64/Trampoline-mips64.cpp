@@ -63,26 +63,41 @@ GenerateReturn(MacroAssembler& masm, int returnCode)
 {
     MOZ_ASSERT(masm.framePushed() == sizeof(EnterJITRegs));
 
-    // Restore non-volatile registers
-    masm.as_ld(s0, StackPointer, offsetof(EnterJITRegs, s0));
-    masm.as_ld(s1, StackPointer, offsetof(EnterJITRegs, s1));
-    masm.as_ld(s2, StackPointer, offsetof(EnterJITRegs, s2));
-    masm.as_ld(s3, StackPointer, offsetof(EnterJITRegs, s3));
-    masm.as_ld(s4, StackPointer, offsetof(EnterJITRegs, s4));
-    masm.as_ld(s5, StackPointer, offsetof(EnterJITRegs, s5));
-    masm.as_ld(s6, StackPointer, offsetof(EnterJITRegs, s6));
-    masm.as_ld(s7, StackPointer, offsetof(EnterJITRegs, s7));
-    masm.as_ld(ra, StackPointer, offsetof(EnterJITRegs, ra));
+    if (isLoongson()) {
+        // Restore non-volatile registers
+        masm.as_ld(s0, StackPointer, offsetof(EnterJITRegs, s0));
+        masm.as_gslq(s1, s2, StackPointer, offsetof(EnterJITRegs, s2));
+        masm.as_gslq(s3, s4, StackPointer, offsetof(EnterJITRegs, s4));
+        masm.as_gslq(s5, s6, StackPointer, offsetof(EnterJITRegs, s6));
+        masm.as_gslq(s7, ra, StackPointer, offsetof(EnterJITRegs, ra));
 
-    // Restore non-volatile floating point registers
-    masm.as_ld(f24, StackPointer, offsetof(EnterJITRegs, f24));
-    masm.as_ld(f25, StackPointer, offsetof(EnterJITRegs, f25));
-    masm.as_ld(f26, StackPointer, offsetof(EnterJITRegs, f26));
-    masm.as_ld(f27, StackPointer, offsetof(EnterJITRegs, f27));
-    masm.as_ld(f28, StackPointer, offsetof(EnterJITRegs, f28));
-    masm.as_ld(f29, StackPointer, offsetof(EnterJITRegs, f29));
-    masm.as_ld(f30, StackPointer, offsetof(EnterJITRegs, f30));
-    masm.as_ld(f31, StackPointer, offsetof(EnterJITRegs, f31));
+        // Restore non-volatile floating point registers
+        masm.as_gslq(f24, f25, StackPointer, offsetof(EnterJITRegs, f25));
+        masm.as_gslq(f26, f27, StackPointer, offsetof(EnterJITRegs, f27));
+        masm.as_gslq(f28, f29, StackPointer, offsetof(EnterJITRegs, f29));
+        masm.as_gslq(f30, f31, StackPointer, offsetof(EnterJITRegs, f31));
+    } else {
+        // Restore non-volatile registers
+        masm.as_ld(s0, StackPointer, offsetof(EnterJITRegs, s0));
+        masm.as_ld(s1, StackPointer, offsetof(EnterJITRegs, s1));
+        masm.as_ld(s2, StackPointer, offsetof(EnterJITRegs, s2));
+        masm.as_ld(s3, StackPointer, offsetof(EnterJITRegs, s3));
+        masm.as_ld(s4, StackPointer, offsetof(EnterJITRegs, s4));
+        masm.as_ld(s5, StackPointer, offsetof(EnterJITRegs, s5));
+        masm.as_ld(s6, StackPointer, offsetof(EnterJITRegs, s6));
+        masm.as_ld(s7, StackPointer, offsetof(EnterJITRegs, s7));
+        masm.as_ld(ra, StackPointer, offsetof(EnterJITRegs, ra));
+
+        // Restore non-volatile floating point registers
+        masm.as_ld(f24, StackPointer, offsetof(EnterJITRegs, f24));
+        masm.as_ld(f25, StackPointer, offsetof(EnterJITRegs, f25));
+        masm.as_ld(f26, StackPointer, offsetof(EnterJITRegs, f26));
+        masm.as_ld(f27, StackPointer, offsetof(EnterJITRegs, f27));
+        masm.as_ld(f28, StackPointer, offsetof(EnterJITRegs, f28));
+        masm.as_ld(f29, StackPointer, offsetof(EnterJITRegs, f29));
+        masm.as_ld(f30, StackPointer, offsetof(EnterJITRegs, f30));
+        masm.as_ld(f31, StackPointer, offsetof(EnterJITRegs, f31));
+    }
 
     masm.freeStack(sizeof(EnterJITRegs));
 
@@ -93,6 +108,20 @@ static void
 GeneratePrologue(MacroAssembler& masm)
 {
     masm.reserveStack(sizeof(EnterJITRegs));
+
+    if (isLoongson()) {
+        masm.as_gssq(a7, s0, StackPointer, offsetof(EnterJITRegs, s0));
+        masm.as_gssq(s1, s2, StackPointer, offsetof(EnterJITRegs, s2));
+        masm.as_gssq(s3, s4, StackPointer, offsetof(EnterJITRegs, s4));
+        masm.as_gssq(s5, s6, StackPointer, offsetof(EnterJITRegs, s6));
+        masm.as_gssq(s7, ra, StackPointer, offsetof(EnterJITRegs, ra));
+
+        masm.as_gssq(f24, f25, StackPointer, offsetof(EnterJITRegs, f25));
+        masm.as_gssq(f26, f27, StackPointer, offsetof(EnterJITRegs, f27));
+        masm.as_gssq(f28, f29, StackPointer, offsetof(EnterJITRegs, f29));
+        masm.as_gssq(f30, f31, StackPointer, offsetof(EnterJITRegs, f31));
+        return;
+    }
 
     masm.as_sd(s0, StackPointer, offsetof(EnterJITRegs, s0));
     masm.as_sd(s1, StackPointer, offsetof(EnterJITRegs, s1));

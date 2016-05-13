@@ -260,6 +260,7 @@ https://sha256ee.example.com:443                                  privileged,cer
 https://ssl3.example.com:443        privileged,ssl3
 https://rc4.example.com:443         privileged,rc4
 https://ssl3rc4.example.com:443     privileged,ssl3,rc4
+https://tls1.example.com:443        privileged,tls1
 
 # Hosts for youtube rewrite tests
 https://mochitest.youtube.com:443

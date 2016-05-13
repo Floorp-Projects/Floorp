@@ -54,7 +54,7 @@ public:
   NS_DECL_NSICACHEENTRY
   NS_DECL_NSIRUNNABLE
 
-  CacheEntry(const nsACString& aStorageID, nsIURI* aURI, const nsACString& aEnhanceID,
+  CacheEntry(const nsACString& aStorageID, const nsACString& aURI, const nsACString& aEnhanceID,
              bool aUseDisk, bool aSkipSizeCheck, bool aPin);
 
   void AsyncOpen(nsICacheEntryOpenCallback* aCallback, uint32_t aFlags);
@@ -68,7 +68,7 @@ public:
   uint32_t GetMetadataMemoryConsumption();
   nsCString const &GetStorageID() const { return mStorageID; }
   nsCString const &GetEnhanceID() const { return mEnhanceID; }
-  nsIURI* GetURI() const { return mURI; }
+  nsCString const &GetURI() const { return mURI; }
   // Accessible at any time
   bool IsUsingDisk() const { return mUseDisk; }
   bool IsReferenced() const;
@@ -288,7 +288,7 @@ private:
   // When mFileStatus is read and found success it is ensured there is mFile and
   // that it is after a successful call to Init().
   ::mozilla::Atomic<nsresult, ::mozilla::ReleaseAcquire> mFileStatus;
-  nsCOMPtr<nsIURI> mURI;
+  nsCString mURI;
   nsCString mEnhanceID;
   nsCString mStorageID;
 
@@ -375,7 +375,6 @@ private:
   int64_t mPredictedDataSize;
   mozilla::TimeStamp mLoadStart;
   uint32_t mUseCount;
-  nsCOMPtr<nsIThread> mReleaseThread;
 };
 
 

@@ -418,17 +418,23 @@ protected:
       mACP.style.fInterimChar = FALSE;
     }
 
-    void SetSelection(uint32_t aStart,
+    bool SetSelection(uint32_t aStart,
                       uint32_t aLength,
                       bool aReversed,
                       WritingMode aWritingMode)
     {
+      bool changed = mDirty ||
+                     mACP.acpStart != static_cast<LONG>(aStart) ||
+                     mACP.acpEnd != static_cast<LONG>(aStart + aLength);
+
       mDirty = false;
       mACP.acpStart = static_cast<LONG>(aStart);
       mACP.acpEnd = static_cast<LONG>(aStart + aLength);
       mACP.style.ase = aReversed ? TS_AE_START : TS_AE_END;
       mACP.style.fInterimChar = FALSE;
       mWritingMode = aWritingMode;
+
+      return changed;
     }
 
     bool IsCollapsed() const

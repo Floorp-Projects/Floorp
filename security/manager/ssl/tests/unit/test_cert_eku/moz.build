@@ -17,14 +17,18 @@
 #    'ee-int-SA-OCSP.pem',
 #    'ee-int-SA-nsSGC.pem',
 #    'ee-int-SA.pem',
-#    'ee-int-nsSGC.pem',
+#    'ee-int-nsSGC-old.pem',
+#    'ee-int-nsSGC-older.pem',
+#    'ee-int-nsSGC-recent.pem',
 #    'ee-nsSGC.pem',
 #    'int-CA.pem',
 #    'int-SA-CA.pem',
 #    'int-SA-OCSP.pem',
 #    'int-SA-nsSGC.pem',
 #    'int-SA.pem',
-#    'int-nsSGC.pem',
+#    'int-nsSGC-old.pem',
+#    'int-nsSGC-older.pem',
+#    'int-nsSGC-recent.pem',
 #)
 #
 #for test_certificate in test_certificates:

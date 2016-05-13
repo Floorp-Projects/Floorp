@@ -298,6 +298,12 @@ WorkerThread::Dispatch(already_AddRefed<nsIRunnable>&& aRunnable, uint32_t aFlag
   return NS_OK;
 }
 
+NS_IMETHODIMP
+WorkerThread::DelayedDispatch(already_AddRefed<nsIRunnable>&&, uint32_t)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 uint32_t
 WorkerThread::RecursionDepth(const WorkerThreadFriendKey& /* aKey */) const
 {

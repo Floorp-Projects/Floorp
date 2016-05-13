@@ -684,21 +684,22 @@ set_define('RELEASE_BUILD', delayed_getattr(milestone, 'is_release'))
 add_old_configure_assignment('RELEASE_BUILD',
                              delayed_getattr(milestone, 'is_release'))
 
-# A template providing a shorthand for tying an environment-set option to
-# the corresponding variable in set_config, where the value of that variable
-# passed to set_config only depends on the provided value and default.
+# A template providing a shorthand for setting a variable. The created
+# option will only be settable with imply_option.
+# It is expected that a project-specific moz.configure will call imply_option
+# to set a value other than the default.
 # If required, the set_as_define and set_for_old_configure arguments
 # will additionally cause the variable to be set using set_define and
 # add_old_configure_assignment. util.configure would be an appropriate place for
 # this, but it uses add_old_configure_assignment, which is defined in this file.
 @template
-def env_flag(env=None, set_for_old_configure=False, set_as_define=False,
-             **kwargs):
+def project_flag(env=None, set_for_old_configure=False,
+                 set_as_define=False, **kwargs):
 
     if not env:
-        configure_error("An env_flag must be passed a variable name to set.")
+        configure_error("A project_flag must be passed a variable name to set.")
 
-    opt = option(env=env, **kwargs)
+    opt = option(env=env, possible_origins=('implied',), **kwargs)
 
     @depends(opt.option)
     def option_implementation(value):

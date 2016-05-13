@@ -13,6 +13,7 @@
 #include "nsXPCOMPrivate.h"
 #include "mozilla/SyncRunnable.h"
 #include "runnable_utils.h"
+#include "base/task.h"
 
 namespace mozilla {
 

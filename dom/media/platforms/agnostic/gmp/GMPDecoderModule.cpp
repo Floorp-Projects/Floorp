@@ -9,9 +9,9 @@
 #include "GMPAudioDecoder.h"
 #include "GMPVideoDecoder.h"
 #include "MediaDataDecoderProxy.h"
+#include "MediaPrefs.h"
 #include "mozIGeckoMediaPluginService.h"
 #include "nsServiceManagerUtils.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/StaticMutex.h"
 #include "gmp-audio-decode.h"
 #include "gmp-video-decode.h"
@@ -175,9 +175,6 @@ GMPDecoderModule::UpdateUsableCodecs()
   }
 }
 
-static uint32_t sPreferredAacGmp = 0;
-static uint32_t sPreferredH264Gmp = 0;
-
 /* static */
 void
 GMPDecoderModule::Init()
@@ -188,11 +185,6 @@ GMPDecoderModule::Init()
   // SupportsMimeType() we build a table of the codecs which each whitelisted
   // GMP has and update it when any GMPs are removed or added at runtime.
   UpdateUsableCodecs();
-
-  Preferences::AddUintVarCache(&sPreferredAacGmp,
-                               "media.gmp.decoder.aac", 0);
-  Preferences::AddUintVarCache(&sPreferredH264Gmp,
-                               "media.gmp.decoder.h264", 0);
 }
 
 /* static */
@@ -201,7 +193,7 @@ GMPDecoderModule::PreferredGMP(const nsACString& aMimeType)
 {
   Maybe<nsCString> rv;
   if (aMimeType.EqualsLiteral("audio/mp4a-latm")) {
-    switch (sPreferredAacGmp) {
+    switch (MediaPrefs::GMPAACPreferred()) {
       case 1: rv.emplace(NS_LITERAL_CSTRING("org.w3.clearkey")); break;
       case 2: rv.emplace(NS_LITERAL_CSTRING("com.adobe.primetime")); break;
       default: break;
@@ -210,7 +202,7 @@ GMPDecoderModule::PreferredGMP(const nsACString& aMimeType)
 
   if (aMimeType.EqualsLiteral("video/avc") ||
       aMimeType.EqualsLiteral("video/mp4")) {
-    switch (sPreferredH264Gmp) {
+    switch (MediaPrefs::GMPH264Preferred()) {
       case 1: rv.emplace(NS_LITERAL_CSTRING("org.w3.clearkey")); break;
       case 2: rv.emplace(NS_LITERAL_CSTRING("com.adobe.primetime")); break;
       default: break;

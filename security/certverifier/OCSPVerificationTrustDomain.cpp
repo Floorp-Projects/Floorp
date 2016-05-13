@@ -102,6 +102,13 @@ OCSPVerificationTrustDomain::CheckValidityIsAcceptable(
 }
 
 Result
+OCSPVerificationTrustDomain::NetscapeStepUpMatchesServerAuth(Time notBefore,
+                                                     /*out*/ bool& matches)
+{
+  return mCertDBTrustDomain.NetscapeStepUpMatchesServerAuth(notBefore, matches);
+}
+
+Result
 OCSPVerificationTrustDomain::DigestBuf(
   Input item, DigestAlgorithm digestAlg,
   /*out*/ uint8_t* digestBuf, size_t digestBufLen)

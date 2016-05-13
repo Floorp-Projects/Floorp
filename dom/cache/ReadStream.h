@@ -81,8 +81,8 @@ public:
   Create(PCacheStreamControlParent* aControl, const nsID& aId,
          nsIInputStream* aStream);
 
-  void Serialize(CacheReadStreamOrVoid* aReadStreamOut);
-  void Serialize(CacheReadStream* aReadStreamOut);
+  void Serialize(CacheReadStreamOrVoid* aReadStreamOut, ErrorResult& aRv);
+  void Serialize(CacheReadStream* aReadStreamOut, ErrorResult& aRv);
 
 private:
   class Inner;

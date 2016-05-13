@@ -665,6 +665,9 @@ private:
     // (whichever comes later). We use it to determine whether the interrupt
     // callback needs to do anything.
     mozilla::TimeStamp mSlowScriptCheckpoint;
+    // Accumulates total time we actually waited for telemetry
+    mozilla::TimeDuration mSlowScriptActualWait;
+    bool mTimeoutAccumulated;
 
     friend class Watchdog;
     friend class AutoLockWatchdog;

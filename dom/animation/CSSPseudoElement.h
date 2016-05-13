@@ -61,7 +61,7 @@ public:
                      nsTArray<RefPtr<Animation>>& aRetVal);
   already_AddRefed<Animation>
     Animate(JSContext* aContext,
-            JS::Handle<JSObject*> aFrames,
+            JS::Handle<JSObject*> aKeyframes,
             const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
             ErrorResult& aError);
 

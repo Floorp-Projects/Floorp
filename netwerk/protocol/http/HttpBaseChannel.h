@@ -155,6 +155,9 @@ public:
   NS_IMETHOD SetResponseHeader(const nsACString& header,
                                const nsACString& value, bool merge) override;
   NS_IMETHOD VisitResponseHeaders(nsIHttpHeaderVisitor *visitor) override;
+  NS_IMETHOD GetOriginalResponseHeader(const nsACString &aHeader,
+                                       nsIHttpHeaderVisitor *aVisitor) override;
+  NS_IMETHOD VisitOriginalResponseHeaders(nsIHttpHeaderVisitor *aVisitor) override;
   NS_IMETHOD GetAllowPipelining(bool *value) override;
   NS_IMETHOD SetAllowPipelining(bool value) override;
   NS_IMETHOD GetAllowSTS(bool *value) override;

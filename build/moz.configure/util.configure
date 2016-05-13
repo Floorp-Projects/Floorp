@@ -30,14 +30,25 @@ def is_absolute_or_relative(path):
 def normsep(path):
     return mozpath.normsep(path)
 
-
+# Locates the given program using which, or returns the given path if it
+# exists.
+# The `paths` parameter may be passed to search the given paths instead of
+# $PATH.
 @imports(_from='which', _import='which')
 @imports(_from='which', _import='WhichError')
-def find_program(file):
+@imports('itertools')
+@imports(_from='os', _import='pathsep')
+def find_program(file, paths=None):
     if is_absolute_or_relative(file):
         return os.path.abspath(file) if os.path.isfile(file) else None
     try:
-        return normsep(which(file))
+        if paths:
+            if not isinstance(paths, (list, tuple)):
+                die("Paths provided to find_program must be a list of strings, "
+                    "not %r", paths)
+            paths = list(itertools.chain(
+                *(p.split(pathsep) for p in paths if p)))
+        return normsep(which(file, path=paths))
     except WhichError:
         return None
 

@@ -19,8 +19,8 @@
   function runTest()
   {
     isSecurityState("secure");
-    var self = window;
-    var iframe = document.getElementById("iframe1");
+    let self = window;
+    let iframe = document.getElementById("iframe1");
     iframe.onload = function() {
       self.isSecurityState("broken", "src='redirect to unsecure' changed to broken");
       self.finish();

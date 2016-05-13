@@ -53,7 +53,8 @@ var counter = 0;
 
 function getCookiesCountForApp(aAppId) {
   var nbCookies = 0;
-  var enumerator = cookieMng.getCookiesForApp(aAppId, false);
+  var attrs = JSON.stringify({appId: aAppId});
+  var enumerator = cookieMng.getCookiesWithOriginAttributes(attrs);
 
   while (enumerator.hasMoreElements()) {
     enumerator.getNext();

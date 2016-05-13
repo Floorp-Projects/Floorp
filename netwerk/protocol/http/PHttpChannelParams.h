@@ -100,13 +100,57 @@ struct ParamTraits<mozilla::net::nsHttpHeaderArray::nsEntry>
   {
     WriteParam(aMsg, aParam.header);
     WriteParam(aMsg, aParam.value);
+    switch (aParam.variety) {
+      case mozilla::net::nsHttpHeaderArray::eVarietyUnknown:
+        WriteParam(aMsg, (uint8_t)0);
+        break;
+      case mozilla::net::nsHttpHeaderArray::eVarietyRequestOverride:
+        WriteParam(aMsg, (uint8_t)1);
+        break;
+      case mozilla::net::nsHttpHeaderArray::eVarietyRequestDefault:
+        WriteParam(aMsg, (uint8_t)2);
+        break;
+      case mozilla::net::nsHttpHeaderArray::eVarietyResponseNetOriginalAndResponse:
+        WriteParam(aMsg, (uint8_t)3);
+        break;
+      case mozilla::net::nsHttpHeaderArray::eVarietyResponseNetOriginal:
+        WriteParam(aMsg, (uint8_t)4);
+        break;
+      case mozilla::net::nsHttpHeaderArray::eVarietyResponse:
+        WriteParam(aMsg, (uint8_t)5);
+    }
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
+    uint8_t variety;
     if (!ReadParam(aMsg, aIter, &aResult->header) ||
-        !ReadParam(aMsg, aIter, &aResult->value))
+        !ReadParam(aMsg, aIter, &aResult->value)  ||
+        !ReadParam(aMsg, aIter, &variety))
       return false;
+
+    switch (variety) {
+      case 0:
+        aResult->variety = mozilla::net::nsHttpHeaderArray::eVarietyUnknown;
+        break;
+      case 1:
+        aResult->variety = mozilla::net::nsHttpHeaderArray::eVarietyRequestOverride;
+        break;
+      case 2:
+        aResult->variety = mozilla::net::nsHttpHeaderArray::eVarietyRequestDefault;
+        break;
+      case 3:
+        aResult->variety = mozilla::net::nsHttpHeaderArray::eVarietyResponseNetOriginalAndResponse;
+        break;
+      case 4:
+        aResult->variety = mozilla::net::nsHttpHeaderArray::eVarietyResponseNetOriginal;
+        break;
+      case 5:
+        aResult->variety = mozilla::net::nsHttpHeaderArray::eVarietyResponse;
+        break;
+      default:
+        return false;
+    }
 
     return true;
   }

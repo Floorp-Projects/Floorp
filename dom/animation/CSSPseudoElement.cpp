@@ -65,13 +65,13 @@ CSSPseudoElement::GetAnimations(const AnimationFilter& filter,
 already_AddRefed<Animation>
 CSSPseudoElement::Animate(
     JSContext* aContext,
-    JS::Handle<JSObject*> aFrames,
+    JS::Handle<JSObject*> aKeyframes,
     const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
     ErrorResult& aError)
 {
   Nullable<ElementOrCSSPseudoElement> target;
   target.SetValue().SetAsCSSPseudoElement() = this;
-  return Element::Animate(target, aContext, aFrames, aOptions, aError);
+  return Element::Animate(target, aContext, aKeyframes, aOptions, aError);
 }
 
 /* static */ already_AddRefed<CSSPseudoElement>

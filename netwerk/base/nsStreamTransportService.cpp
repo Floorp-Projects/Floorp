@@ -527,6 +527,12 @@ nsStreamTransportService::Dispatch(already_AddRefed<nsIRunnable>&& task, uint32_
 }
 
 NS_IMETHODIMP
+nsStreamTransportService::DelayedDispatch(already_AddRefed<nsIRunnable>&&, uint32_t)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsStreamTransportService::IsOnCurrentThread(bool *result)
 {
     nsCOMPtr<nsIThreadPool> pool;

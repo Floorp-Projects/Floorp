@@ -8,6 +8,8 @@
 
 #include "mozilla/plugins/PBrowserStreamChild.h"
 #include "mozilla/plugins/AStream.h"
+#include "base/task.h"
+#include "base/timer.h"
 
 namespace mozilla {
 namespace plugins {

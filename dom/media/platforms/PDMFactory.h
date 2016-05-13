@@ -69,29 +69,6 @@ private:
                        layers::LayersBackend aLayersBackend,
                        layers::ImageContainer* aImageContainer);
 
-  // PDM pref caches...
-  static bool sUseBlankDecoder;
-#ifdef MOZ_GONK_MEDIACODEC
-  static bool sGonkDecoderEnabled;
-#endif
-#ifdef MOZ_WIDGET_ANDROID
-  static bool sAndroidMCDecoderPreferred;
-  static bool sAndroidMCDecoderEnabled;
-#endif
-  static bool sGMPDecoderEnabled;
-#ifdef MOZ_FFVPX
-  static bool sFFVPXDecoderEnabled;
-#endif
-#ifdef MOZ_FFMPEG
-  static bool sFFmpegDecoderEnabled;
-#endif
-#ifdef XP_WIN
-  static bool sWMFDecoderEnabled;
-#endif
-  static bool sEnableFuzzingWrapper;
-  static uint32_t sVideoOutputMinimumInterval_ms;
-  static bool sDontDelayInputExhausted;
-
   nsTArray<RefPtr<PlatformDecoderModule>> mCurrentPDMs;
   RefPtr<PlatformDecoderModule> mEMEPDM;
 

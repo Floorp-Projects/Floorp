@@ -4,7 +4,7 @@
 
 #include "MediaKeySystemAccessManager.h"
 #include "DecoderDoctorDiagnostics.h"
-#include "mozilla/Preferences.h"
+#include "MediaPrefs.h"
 #include "mozilla/EMEUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
@@ -97,7 +97,7 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
     return;
   }
 
-  if (!Preferences::GetBool("media.eme.enabled", false)) {
+  if (!MediaPrefs::EMEEnabled()) {
     // EME disabled by user, send notification to chrome so UI can inform user.
     MediaKeySystemAccess::NotifyObservers(mWindow,
                                           aKeySystem,

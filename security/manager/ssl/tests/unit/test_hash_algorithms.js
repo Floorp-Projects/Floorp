@@ -1,18 +1,10 @@
 "use strict";
 
-var ScriptableUnicodeConverter =
-  Components.Constructor("@mozilla.org/intl/scriptableunicodeconverter",
-                         "nsIScriptableUnicodeConverter");
-var CryptoHash =
-  Components.Constructor("@mozilla.org/security/hash;1",
-                         "nsICryptoHash",
-                         "initWithString");
-
-var messages = [
+const messages = [
   "The quick brown fox jumps over the lazy dog",
   ""
 ];
-var hashes = {
+const hashes = {
   md2: [
     "03d85a0d629d2c442e987525319fc471",
     "8350e5a3e24c153df2275c9f80692773"
@@ -49,32 +41,33 @@ function hexdigest(data) {
 }
 
 function doHash(algo, value, cmp) {
-  var converter = new ScriptableUnicodeConverter();
-  var hash = new CryptoHash(algo);
+  let hash = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
+  hash.initWithString(algo);
 
+  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                    .createInstance(Ci.nsIScriptableUnicodeConverter);
   converter.charset = 'utf8';
   value = converter.convertToByteArray(value);
   hash.update(value, value.length);
-  var hash1 = hexdigest(hash.finish(false));
-  equal(hash1, cmp,
+  equal(hexdigest(hash.finish(false)), cmp,
         `Actual and expected hash for ${algo} should match`);
 
   hash.initWithString(algo);
   hash.update(value, value.length);
-  var hash2 = hexdigest(hash.finish(false));
-  equal(hash2, cmp,
+  equal(hexdigest(hash.finish(false)), cmp,
         `Actual and expected hash for ${algo} should match after re-init`);
 }
 
 function doHashStream(algo, value, cmp) {
-  var converter = new ScriptableUnicodeConverter();
-  var hash = new CryptoHash(algo);
+  let hash = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
+  hash.initWithString(algo);
 
+  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                    .createInstance(Ci.nsIScriptableUnicodeConverter);
   converter.charset = 'utf8';
-  var stream = converter.convertToInputStream(value);
+  let stream = converter.convertToInputStream(value);
   hash.updateFromStream(stream, stream.available());
-  hash = hexdigest(hash.finish(false));
-  equal(hash, cmp,
+  equal(hexdigest(hash.finish(false)), cmp,
         `Actual and expected hash for ${algo} should match updating from stream`);
 }
 

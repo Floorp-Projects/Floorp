@@ -116,10 +116,13 @@ ServiceWorkerPrivate::SendMessageEvent(JSContext* aCx,
     return rv.StealNSResult();
   }
 
-  // FIXME(catalinb): Bug 1143717
-  // Keep the worker alive when dispatching a message event.
+  MOZ_ASSERT(mKeepAliveToken);
+  nsMainThreadPtrHandle<nsISupports> token(
+    new nsMainThreadPtrHolder<nsISupports>(mKeepAliveToken));
+
   mWorkerPrivate->PostMessageToServiceWorker(aCx, aMessage, aTransferable,
-                                             Move(aClientInfo), rv);
+                                             Move(aClientInfo), token,
+                                             rv);
   return rv.StealNSResult();
 }
 

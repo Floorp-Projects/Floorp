@@ -178,6 +178,7 @@ static char const *const gHttpLiveStreamingTypes[] = {
   // https://tools.ietf.org/html/draft-pantos-http-live-streaming-19#section-10
   "application/vnd.apple.mpegurl",
   // Some sites serve these as the informal m3u type.
+  "application/x-mpegurl",
   "audio/x-mpegurl",
   nullptr
 };

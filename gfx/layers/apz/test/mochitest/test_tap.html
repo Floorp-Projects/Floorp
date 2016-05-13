@@ -21,7 +21,12 @@ var tests = [
   // event doesn't get processed (because of the event listener) until this expires.
   // Once we support passive event listeners, we can use that instead and stop mucking
   // with the timeout.
-  {'file': 'helper_long_tap.html'}
+  {'file': 'helper_long_tap.html'},
+  // For the following test, we want to make sure APZ doesn't wait for a content
+  // response that is never going to arrive. To detect this we set the content response
+  // timeout to a day, so that the entire test times out and fails if APZ does
+  // end up waiting.
+  {'file': 'helper_tap_passive.html', 'prefs': [["apz.content_response_timeout", 24 * 60 * 60 * 1000]]},
 ];
 
 var testIndex = -1;

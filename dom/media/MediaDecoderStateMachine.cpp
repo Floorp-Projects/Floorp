@@ -370,15 +370,25 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
   SetMediaDecoderReaderWrapperCallback();
 }
 
+void
+MediaDecoderStateMachine::AudioAudibleChanged(bool aAudible)
+{
+  mIsAudioDataAudible = aAudible;
+}
+
 media::MediaSink*
 MediaDecoderStateMachine::CreateAudioSink()
 {
   RefPtr<MediaDecoderStateMachine> self = this;
   auto audioSinkCreator = [self] () {
     MOZ_ASSERT(self->OnTaskQueue());
-    return new DecodedAudioDataSink(
+    DecodedAudioDataSink* audioSink = new DecodedAudioDataSink(
       self->mTaskQueue, self->mAudioQueue, self->GetMediaTime(),
       self->mInfo.mAudio, self->mAudioChannel);
+
+    self->mAudibleListener = audioSink->AudibleEvent().Connect(
+      self->mTaskQueue, self.get(), &MediaDecoderStateMachine::AudioAudibleChanged);
+    return audioSink;
   };
   return new AudioSinkWrapper(mTaskQueue, audioSinkCreator);
 }
@@ -641,21 +651,6 @@ MediaDecoderStateMachine::Push(MediaData* aSample, MediaData::Type aSampleType)
 }
 
 void
-MediaDecoderStateMachine::CheckIsAudible(const MediaData* aSample)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(aSample->mType == MediaData::AUDIO_DATA);
-
-  const AudioData* data = aSample->As<AudioData>();
-  bool isAudible = data->IsAudible();
-  if (isAudible && !mIsAudioDataAudible) {
-    mIsAudioDataAudible = true;
-  } else if (!isAudible && mIsAudioDataAudible) {
-    mIsAudioDataAudible = false;
-  }
-}
-
-void
 MediaDecoderStateMachine::OnAudioPopped(const RefPtr<MediaData>& aSample)
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -663,7 +658,6 @@ MediaDecoderStateMachine::OnAudioPopped(const RefPtr<MediaData>& aSample)
   mPlaybackOffset = std::max(mPlaybackOffset.Ref(), aSample->mOffset);
   UpdateNextFrameStatus();
   DispatchAudioDecodeTaskIfNeeded();
-  CheckIsAudible(aSample);
 }
 
 void
@@ -1497,6 +1491,8 @@ void MediaDecoderStateMachine::StopMediaSink()
   MOZ_ASSERT(OnTaskQueue());
   if (mMediaSink->IsStarted()) {
     DECODER_LOG("Stop MediaSink");
+    mAudibleListener.DisconnectIfExists();
+
     mMediaSink->Stop();
     mMediaSinkAudioPromise.DisconnectIfExists();
     mMediaSinkVideoPromise.DisconnectIfExists();

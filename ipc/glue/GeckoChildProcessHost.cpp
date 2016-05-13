@@ -8,6 +8,7 @@
 
 #include "base/command_line.h"
 #include "base/string_util.h"
+#include "base/task.h"
 #include "chrome/common/chrome_switches.h"
 #include "chrome/common/process_watcher.h"
 #ifdef MOZ_WIDGET_COCOA

@@ -1,0 +1,30 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Make sure that large gradient backgrounds are painted even at extreme scroll positions</title>
+<!-- See https://bugzilla.mozilla.org/show_bug.cgi?id=1271112 -->
+
+<style>
+
+html, body {
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+  height: 100000px;
+  /* a green gradient that is not opaque on top of a red background color */
+  background: repeating-linear-gradient(45deg, rgba(0, 255, 0, 1.0) 0%, rgba(0, 255, 0, 0.99) 10%, rgba(0, 255, 0, 1.0) 20%) red;
+}
+
+</style>
+
+<body>
+
+<script>
+document.documentElement.scrollTop = 35000;
+</script>

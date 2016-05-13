@@ -43,6 +43,7 @@
 #include "nsStyleStruct.h"              // for nsTimingFunction, etc
 #include "protobuf/LayerScopePacket.pb.h"
 #include "mozilla/Compression.h"
+#include "TreeTraversal.h"              // for ForEachNode
 
 uint8_t gLayerManagerLayerBuilder;
 
@@ -516,23 +517,23 @@ Layer::SetAnimations(const AnimationArray& aAnimations)
 void
 Layer::StartPendingAnimations(const TimeStamp& aReadyTime)
 {
-  bool updated = false;
-  for (size_t animIdx = 0, animEnd = mAnimations.Length();
-       animIdx < animEnd; animIdx++) {
-    Animation& anim = mAnimations[animIdx];
-    if (anim.startTime().IsNull()) {
-      anim.startTime() = aReadyTime - anim.initialCurrentTime();
-      updated = true;
-    }
-  }
-
-  if (updated) {
-    Mutated();
-  }
-
-  for (Layer* child = GetFirstChild(); child; child = child->GetNextSibling()) {
-    child->StartPendingAnimations(aReadyTime);
-  }
+  ForEachNode<ForwardIterator>(
+      this,
+      [&aReadyTime](Layer *layer)
+      {
+        bool updated = false;
+        for (size_t animIdx = 0, animEnd = layer->mAnimations.Length();
+             animIdx < animEnd; animIdx++) {
+          Animation& anim = layer->mAnimations[animIdx];
+          if (anim.startTime().IsNull()) {
+            anim.startTime() = aReadyTime - anim.initialCurrentTime();
+            updated = true;
+          }
+        }
+        if (updated) {
+          layer->Mutated();
+        }
+      });
 }
 
 void
@@ -563,15 +564,16 @@ Layer::ScrollMetadataChanged()
 void
 Layer::ApplyPendingUpdatesToSubtree()
 {
-  ApplyPendingUpdatesForThisTransaction();
-  for (Layer* child = GetFirstChild(); child; child = child->GetNextSibling()) {
-    child->ApplyPendingUpdatesToSubtree();
-  }
-  if (!GetParent()) {
-    // Once we're done recursing through the whole tree, clear the pending
-    // updates from the manager.
-    Manager()->ClearPendingScrollInfoUpdate();
-  }
+  ForEachNode<ForwardIterator>(
+      this,
+      [] (Layer *layer)
+      {
+        layer->ApplyPendingUpdatesForThisTransaction();
+      });
+
+  // Once we're done recursing through the whole tree, clear the pending
+  // updates from the manager.
+  Manager()->ClearPendingScrollInfoUpdate();
 }
 
 bool
@@ -1337,15 +1339,21 @@ ContainerLayer::HasMultipleChildren()
 void
 ContainerLayer::Collect3DContextLeaves(nsTArray<Layer*>& aToSort)
 {
-  for (Layer* l = GetFirstChild(); l; l = l->GetNextSibling()) {
-    ContainerLayer* container = l->AsContainerLayer();
-    if (container && container->Extend3DContext() &&
-        !container->UseIntermediateSurface()) {
-      container->Collect3DContextLeaves(aToSort);
-    } else {
-      aToSort.AppendElement(l);
-    }
-  }
+  ForEachNode<ForwardIterator>(
+      (Layer*) this,
+      [this, &aToSort](Layer* layer)
+      {
+        ContainerLayer* container = layer->AsContainerLayer();
+        if (layer == this || (container && container->Extend3DContext() &&
+            !container->UseIntermediateSurface())) {
+          return TraversalFlag::Continue;
+        }
+        else {
+          aToSort.AppendElement(layer);
+          return TraversalFlag::Skip;
+        }
+      }
+  );
 }
 
 void

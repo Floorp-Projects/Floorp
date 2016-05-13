@@ -150,4 +150,5 @@ fuzzy(1,800000) == large-gradient-1.html large-gradient-1-ref.html
 fuzzy-if(Android,4,1) == large-gradient-2.html large-gradient-2-ref.html # Bug 1182082
 fuzzy(1,800000) == large-gradient-3.html large-gradient-3-ref.html
 == large-gradient-4.html large-gradient-4-ref.html
+fuzzy(2,800000) == large-gradient-5.html large-gradient-5-ref.html
 == 1224761-1.html 1224761-1-ref.html

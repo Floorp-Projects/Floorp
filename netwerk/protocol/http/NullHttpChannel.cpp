@@ -210,6 +210,19 @@ NullHttpChannel::VisitResponseHeaders(nsIHttpHeaderVisitor *aVisitor)
 }
 
 NS_IMETHODIMP
+NullHttpChannel::GetOriginalResponseHeader(const nsACString & header,
+                                            nsIHttpHeaderVisitor *aVisitor)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+NullHttpChannel::VisitOriginalResponseHeaders(nsIHttpHeaderVisitor *aVisitor)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 NullHttpChannel::IsNoStoreResponse(bool *_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;

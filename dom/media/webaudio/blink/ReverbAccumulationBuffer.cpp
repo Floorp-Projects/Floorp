@@ -96,30 +96,10 @@ int ReverbAccumulationBuffer::accumulate(const float* source, size_t numberOfFra
     if (!isSafe)
         return 0;
 
-#ifdef USE_SSE2
-    // It is unlikely either the source is aligned or the number of values
-    // is a multiple of 16, so we just add them here rather than calling
-    // AudioBufferAddWithScale.
-    //
-    // TODO: Ideally we would use scalar calls when necessary and switch
-    //       to vector calls when we have aligned sources and destinations.
-    //       See Bug 1263910.
-    for (uint32_t i = 0; i < numberOfFrames1; ++i) {
-      destination[writeIndex + i] += source[i];
-    }
-
-    // Handle wrap-around if necessary.
-    if (numberOfFrames2 > 0) {
-        for (uint32_t i = 0; i < numberOfFrames2; ++i) {
-          destination[i] += source[numberOfFrames1 + i];
-        }
-    }
-#else
     AudioBufferAddWithScale(source, 1.0f, destination + writeIndex, numberOfFrames1);
     if (numberOfFrames2 > 0) {
         AudioBufferAddWithScale(source + numberOfFrames1, 1.0f, destination, numberOfFrames2);
     }
-#endif
 
     return writeIndex;
 }

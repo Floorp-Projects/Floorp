@@ -31,7 +31,7 @@ class StaticBlockScope;
 class ClonedBlockObject;
 
 class SimdTypeDescr;
-enum class SimdType : uint8_t;
+enum class SimdType;
 
 /*
  * Global object slots are reserved as follows:

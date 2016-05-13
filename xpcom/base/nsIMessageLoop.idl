@@ -13,8 +13,8 @@ interface nsIRunnable;
  * or may not make sense for you to use this interface.  If you're calling from
  * JS, you don't have a choice!
  *
- * Right now, you can only call PostIdleTask(), but nothing is stopping you
- * from adding other methods.
+ * Right now, you can only call PostIdleTask(), and the wrath of khuey is
+ * stopping you from adding other methods.
  *
  * nsIMessageLoop's contractid is "@mozilla.org/message-loop;1".
  */

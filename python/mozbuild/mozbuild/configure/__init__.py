@@ -345,8 +345,9 @@ class ConfigureSandbox(dict):
             value, option_string = self._helper.handle(option)
         except ConflictingOptionError as e:
             reason = implied[e.arg].reason
-            reason = self._raw_options.get(reason) or reason.option
-            reason = reason.split('=', 1)[0]
+            if isinstance(reason, Option):
+                reason = self._raw_options.get(reason) or reason.option
+                reason = reason.split('=', 1)[0]
             raise InvalidOptionError(
                 "'%s' implied by '%s' conflicts with '%s' from the %s"
                 % (e.arg, reason, e.old_arg, e.old_origin))
@@ -674,6 +675,12 @@ class ConfigureSandbox(dict):
             if len(possible_reasons) == 1:
                 if isinstance(possible_reasons[0], Option):
                     reason = possible_reasons[0]
+        if not reason and (isinstance(value, (bool, tuple)) or
+                           isinstance(value, types.StringTypes)):
+            # A reason can be provided automatically when imply_option
+            # is called with an immediate value.
+            _, filename, line, _, _, _ = inspect.stack()[1]
+            reason = "imply_option at %s:%s" % (filename, line)
 
         if not reason:
             raise ConfigureError(

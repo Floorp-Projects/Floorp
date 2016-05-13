@@ -264,7 +264,7 @@ EventListenerManager::AddEventListenerInternal(
     listener = &mListeners.ElementAt(i);
     // mListener == aListenerHolder is the last one, since it can be a bit slow.
     if (listener->mListenerIsHandler == aHandler &&
-        listener->mFlags == aFlags &&
+        listener->mFlags.EqualsForAddition(aFlags) &&
         EVENT_TYPE_EQUALS(listener, aEventMessage, aTypeAtom, aTypeString,
                           aAllEvents) &&
         listener->mListener == aListenerHolder) {
@@ -420,7 +420,7 @@ EventListenerManager::AddEventListenerInternal(
     }
   }
 
-  if (IsApzAwareEvent(aTypeAtom)) {
+  if (IsApzAwareListener(listener)) {
     ProcessApzAwareEventListenerAdd();
   }
 
@@ -617,7 +617,7 @@ EventListenerManager::RemoveEventListenerInternal(
                           aAllEvents)) {
       ++typeCount;
       if (listener->mListener == aListenerHolder &&
-          listener->mFlags.EqualsIgnoringTrustness(aFlags)) {
+          listener->mFlags.EqualsForRemoval(aFlags)) {
         RefPtr<EventListenerManager> kungFuDeathGrip(this);
         mListeners.RemoveElementAt(i);
         --count;
@@ -1279,9 +1279,11 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
               }
             }
 
+            aEvent->mFlags.mInPassiveListener = listener->mFlags.mPassive;
             if (NS_FAILED(HandleEventSubType(listener, *aDOMEvent, aCurrentTarget))) {
               aEvent->mFlags.mExceptionWasRaised = true;
             }
+            aEvent->mFlags.mInPassiveListener = false;
 
             if (needsEndEventMarker) {
               timelines->AddMarkerForDocShell(
@@ -1352,9 +1354,12 @@ EventListenerManager::AddEventListener(
                         bool aWantsUntrusted)
 {
   EventListenerFlags flags;
-  flags.mCapture =
-    aOptions.IsBoolean() ? aOptions.GetAsBoolean()
-                         : aOptions.GetAsAddEventListenerOptions().mCapture;
+  if (aOptions.IsBoolean()) {
+    flags.mCapture = aOptions.GetAsBoolean();
+  } else {
+    flags.mCapture = aOptions.GetAsAddEventListenerOptions().mCapture;
+    flags.mPassive = aOptions.GetAsAddEventListenerOptions().mPassive;
+  }
   flags.mAllowUntrustedEvents = aWantsUntrusted;
   return AddEventListenerByType(aListenerHolder, aType, flags);
 }
@@ -1689,11 +1694,17 @@ EventListenerManager::HasApzAwareListeners()
   uint32_t count = mListeners.Length();
   for (uint32_t i = 0; i < count; ++i) {
     Listener* listener = &mListeners.ElementAt(i);
-    if (IsApzAwareEvent(listener->mTypeAtom)) {
+    if (IsApzAwareListener(listener)) {
       return true;
     }
   }
   return false;
+}
+
+bool
+EventListenerManager::IsApzAwareListener(Listener* aListener)
+{
+  return !aListener->mFlags.mPassive && IsApzAwareEvent(aListener->mTypeAtom);
 }
 
 bool

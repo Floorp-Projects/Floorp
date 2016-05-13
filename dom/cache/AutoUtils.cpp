@@ -622,7 +622,9 @@ AutoParentOpResult::SerializeReadStream(const nsID& aId, StreamList* aStreamList
 
   RefPtr<ReadStream> readStream = ReadStream::Create(mStreamControl,
                                                        aId, stream);
-  readStream->Serialize(aReadStreamOut);
+  ErrorResult rv;
+  readStream->Serialize(aReadStreamOut, rv);
+  MOZ_ASSERT(!rv.Failed());
 }
 
 } // namespace cache

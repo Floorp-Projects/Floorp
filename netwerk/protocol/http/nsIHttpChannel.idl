@@ -344,6 +344,39 @@ interface nsIHttpChannel : nsIChannel
      */
     void visitResponseHeaders(in nsIHttpHeaderVisitor aVisitor);
 
+     /**
+     * Get the value(s) of a particular response header in the form and order
+     * it has been received from the remote peer. There can be multiple headers
+     * with the same name.
+     *
+     * @param aHeader
+     *        The case-insensitive name of the response header to query (e.g.,
+     *        "Set-Cookie").
+     *
+     * @param aVisitor
+     *        the header visitor instance.
+     *
+     * @throws NS_ERROR_NOT_AVAILABLE if called before the response
+     *         has been received (before onStartRequest) or if the header is
+     *         not set in the response.
+     */
+    void getOriginalResponseHeader(in ACString aHeader,
+                                   in nsIHttpHeaderVisitor aVisitor);
+
+    /**
+     * Call this method to visit all response headers in the form and order as
+     * they have been received from the remote peer.
+     * Calling setResponseHeader while visiting response headers has undefined
+     * behavior.  Don't do it!
+     *
+     * @param aVisitor
+     *        the header visitor instance.
+     *
+     * @throws NS_ERROR_NOT_AVAILABLE if called before the response
+     *         has been received (before onStartRequest).
+     */
+    void visitOriginalResponseHeaders(in nsIHttpHeaderVisitor aVisitor);
+
     /**
      * Returns true if the server sent a "Cache-Control: no-store" response
      * header.

@@ -19,6 +19,7 @@
 #include "nsHttp.h"
 #include "nsNetUtil.h"
 #include "nsIURI.h"
+#include "nsHttpHeaderArray.h"
 
 //
 // Helper function for determining the length of data bytes up to
@@ -420,7 +421,8 @@ nsPartChannel::VisitResponseHeaders(nsIHttpHeaderVisitor *visitor)
 {
     if (!mResponseHead)
         return NS_ERROR_NOT_AVAILABLE;
-    return mResponseHead->Headers().VisitHeaders(visitor);
+    return mResponseHead->Headers().VisitHeaders(visitor,
+        mozilla::net::nsHttpHeaderArray::eFilterResponse);
 }
 
 //

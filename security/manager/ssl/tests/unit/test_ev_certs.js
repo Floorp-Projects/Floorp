@@ -28,8 +28,7 @@ var certList = [
 ];
 
 function load_ca(ca_name) {
-  var ca_filename = ca_name + ".pem";
-  addCertFromFile(certdb, "test_ev_certs/" + ca_filename, 'CTu,CTu,CTu');
+  addCertFromFile(certdb, `test_ev_certs/${ca_name}.pem`, "CTu,CTu,CTu");
 }
 
 const SERVER_PORT = 8888;

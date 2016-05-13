@@ -52,6 +52,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
                                            unsigned int minRSABits,
                                            ValidityCheckingMode validityCheckingMode,
                                            CertVerifier::SHA1Mode sha1Mode,
+                                           NetscapeStepUpPolicy netscapeStepUpPolicy,
                                            UniqueCERTCertList& builtChain,
                               /*optional*/ PinningTelemetryInfo* pinningTelemetryInfo,
                               /*optional*/ const char* hostname)
@@ -65,6 +66,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
   , mMinRSABits(minRSABits)
   , mValidityCheckingMode(validityCheckingMode)
   , mSHA1Mode(sha1Mode)
+  , mNetscapeStepUpPolicy(netscapeStepUpPolicy)
   , mBuiltChain(builtChain)
   , mPinningTelemetryInfo(pinningTelemetryInfo)
   , mHostname(hostname)
@@ -926,6 +928,34 @@ NSSCertDBTrustDomain::CheckValidityIsAcceptable(Time notBefore, Time notAfter,
   }
 
   return Success;
+}
+
+Result
+NSSCertDBTrustDomain::NetscapeStepUpMatchesServerAuth(Time notBefore,
+                                                      /*out*/ bool& matches)
+{
+  // (new Date("2015-08-23T00:00:00Z")).getTime() / 1000
+  static const Time AUGUST_23_2015 = TimeFromEpochInSeconds(1440288000);
+  // (new Date("2016-08-23T00:00:00Z")).getTime() / 1000
+  static const Time AUGUST_23_2016 = TimeFromEpochInSeconds(1471910400);
+
+  switch (mNetscapeStepUpPolicy) {
+    case NetscapeStepUpPolicy::AlwaysMatch:
+      matches = true;
+      return Success;
+    case NetscapeStepUpPolicy::MatchBefore23August2016:
+      matches = notBefore < AUGUST_23_2016;
+      return Success;
+    case NetscapeStepUpPolicy::MatchBefore23August2015:
+      matches = notBefore < AUGUST_23_2015;
+      return Success;
+    case NetscapeStepUpPolicy::NeverMatch:
+      matches = false;
+      return Success;
+    default:
+      MOZ_ASSERT_UNREACHABLE("unhandled NetscapeStepUpPolicy type");
+  }
+  return Result::FATAL_ERROR_LIBRARY_FAILURE;
 }
 
 namespace {

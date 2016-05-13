@@ -19,9 +19,8 @@ Prompter tests: modal prompts
 <script class="testbody" type="text/javascript;version=1.8">
 
 function* runTests() {
+    const { NetUtil } = SpecialPowers.Cu.import('resource://gre/modules/NetUtil.jsm');
     let state, action;
-    let ioService = Cc["@mozilla.org/network/io-service;1"].
-                    getService(Ci.nsIIOService);
     ok(true, "Running tests (isTabModal=" + isTabModal + ", usePromptService=" + usePromptService + ")");
 
     let prompter, promptArgs;
@@ -963,16 +962,11 @@ function* runTests() {
     }
 
     // promptAuth already tested via password manager but do a few specific things here.
+    var channel = NetUtil.newChannel({
+        uri: "http://example.com",
+        loadUsingSystemPrincipal: true
+    });
 
-
-    var channel = ioService.newChannel2("http://example.com",
-                                        null,
-                                        null,
-                                        null,      // aLoadingNode
-                                        SpecialPowers.Services.scriptSecurityManager.getSystemPrincipal(),
-                                        null,      // aTriggeringPrincipal
-                                        Ci.nsILoadInfo.SEC_NORMAL,
-                                        Ci.nsIContentPolicy.TYPE_OTHER);
     var level = Ci.nsIAuthPrompt2.LEVEL_NONE;
     var authinfo = {
         username : "",

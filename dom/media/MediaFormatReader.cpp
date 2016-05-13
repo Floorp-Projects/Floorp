@@ -168,8 +168,6 @@ MediaFormatReader::InitLayersBackendType()
   mLayersBackendType = layerManager->GetCompositorBackendType();
 }
 
-static bool sIsEMEEnabled = false;
-
 nsresult
 MediaFormatReader::Init()
 {
@@ -182,12 +180,6 @@ MediaFormatReader::Init()
     new FlushableTaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER));
   mVideo.mTaskQueue =
     new FlushableTaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER));
-
-  static bool sSetupPrefCache = false;
-  if (!sSetupPrefCache) {
-    sSetupPrefCache = true;
-    Preferences::AddBoolVarCache(&sIsEMEEnabled, "media.eme.enabled", false);
-  }
 
   return NS_OK;
 }
@@ -276,6 +268,11 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
 
   UniquePtr<MetadataTags> tags(MakeUnique<MetadataTags>());
 
+  RefPtr<PDMFactory> platform;
+  if (!IsWaitingOnCDMResource()) {
+    platform = new PDMFactory();
+  }
+
   // To decode, we need valid video and a place to put it.
   bool videoActive = !!mDemuxer->GetNumberTracks(TrackInfo::kVideoTrack) &&
     GetImageContainer();
@@ -287,14 +284,26 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
       mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
       return;
     }
-    mInfo.mVideo = *mVideo.mTrackDemuxer->GetInfo()->GetAsVideoInfo();
-    UniquePtr<TrackInfo> info(mVideo.mTrackDemuxer->GetInfo());
-    for (const MetadataTag& tag : info->mTags) {
-      tags->Put(tag.mKey, tag.mValue);
+
+    UniquePtr<TrackInfo> videoInfo = mVideo.mTrackDemuxer->GetInfo();
+    videoActive = videoInfo && videoInfo->IsValid();
+    if (videoActive) {
+      if (platform && !platform->SupportsMimeType(videoInfo->mMimeType, nullptr)) {
+        // We have no decoder for this track. Error.
+        mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
+        return;
+      }
+      mInfo.mVideo = *videoInfo->GetAsVideoInfo();
+      for (const MetadataTag& tag : videoInfo->mTags) {
+        tags->Put(tag.mKey, tag.mValue);
+      }
+      mVideo.mCallback = new DecoderCallback(this, TrackInfo::kVideoTrack);
+      mVideo.mTimeRanges = mVideo.mTrackDemuxer->GetBuffered();
+      mTrackDemuxersMayBlock |= mVideo.mTrackDemuxer->GetSamplesMayBlock();
+    } else {
+      mVideo.mTrackDemuxer->BreakCycles();
+      mVideo.mTrackDemuxer = nullptr;
     }
-    mVideo.mCallback = new DecoderCallback(this, TrackInfo::kVideoTrack);
-    mVideo.mTimeRanges = mVideo.mTrackDemuxer->GetBuffered();
-    mTrackDemuxersMayBlock |= mVideo.mTrackDemuxer->GetSamplesMayBlock();
   }
 
   bool audioActive = !!mDemuxer->GetNumberTracks(TrackInfo::kAudioTrack);
@@ -304,9 +313,13 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
       mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
       return;
     }
+
     UniquePtr<TrackInfo> audioInfo = mAudio.mTrackDemuxer->GetInfo();
     // We actively ignore audio tracks that we know we can't play.
-    audioActive = audioInfo && audioInfo->IsValid();
+    audioActive = audioInfo && audioInfo->IsValid() &&
+                  (!platform ||
+                   platform->SupportsMimeType(audioInfo->mMimeType, nullptr));
+
     if (audioActive) {
       mInfo.mAudio = *audioInfo->GetAsAudioInfo();
       for (const MetadataTag& tag : audioInfo->mTags) {

@@ -35,7 +35,7 @@ function run_test() {
   outputStream.close();
   Services.obs.addObserver(start_test_in_child, "data-storage-ready", false);
   do_test_pending();
-  var SSService = Cc["@mozilla.org/ssservice;1"]
+  let SSService = Cc["@mozilla.org/ssservice;1"]
                     .getService(Ci.nsISiteSecurityService);
   notEqual(SSService, null);
 }

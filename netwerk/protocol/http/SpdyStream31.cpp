@@ -1477,6 +1477,15 @@ SpdyStream31::Close(nsresult reason)
 }
 
 void
+SpdyStream31::SetResponseIsComplete()
+{
+  nsHttpTransaction *trans = mTransaction->QueryHttpTransaction();
+  if (trans) {
+    trans->SetResponseIsComplete();
+  }
+}
+
+void
 SpdyStream31::UpdateRemoteWindow(int32_t delta)
 {
   mRemoteWindow += delta;

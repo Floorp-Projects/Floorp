@@ -684,7 +684,8 @@ CheckBasicConstraints(EndEntityOrCA endEntityOrCA,
 
 static Result
 MatchEKU(Reader& value, KeyPurposeId requiredEKU,
-         EndEntityOrCA endEntityOrCA, /*in/out*/ bool& found,
+         EndEntityOrCA endEntityOrCA, TrustDomain& trustDomain,
+         Time notBefore, /*in/out*/ bool& found,
          /*in/out*/ bool& foundOCSPSigning)
 {
   // See Section 5.9 of "A Layman's Guide to a Subset of ASN.1, BER, and DER"
@@ -715,15 +716,24 @@ MatchEKU(Reader& value, KeyPurposeId requiredEKU,
 
   if (!found) {
     switch (requiredEKU) {
-      case KeyPurposeId::id_kp_serverAuth:
-        // Treat CA certs with step-up OID as also having SSL server type.
-        // Comodo has issued certificates that require this behavior that don't
-        // expire until June 2020! TODO(bug 982932): Limit this exception to
-        // old certificates.
-        match = value.MatchRest(server) ||
-                (endEntityOrCA == EndEntityOrCA::MustBeCA &&
-                 value.MatchRest(serverStepUp));
+      case KeyPurposeId::id_kp_serverAuth: {
+        if (value.MatchRest(server)) {
+          match = true;
+          break;
+        }
+        // Potentially treat CA certs with step-up OID as also having SSL server
+        // type. Comodo has issued certificates that require this behavior that
+        // don't expire until June 2020!
+        if (endEntityOrCA == EndEntityOrCA::MustBeCA &&
+            value.MatchRest(serverStepUp)) {
+          Result rv = trustDomain.NetscapeStepUpMatchesServerAuth(notBefore,
+                                                                  match);
+          if (rv != Success) {
+            return rv;
+          }
+        }
         break;
+      }
 
       case KeyPurposeId::id_kp_clientAuth:
         match = value.MatchRest(client);
@@ -764,7 +774,8 @@ MatchEKU(Reader& value, KeyPurposeId requiredEKU,
 Result
 CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA,
                       const Input* encodedExtendedKeyUsage,
-                      KeyPurposeId requiredEKU)
+                      KeyPurposeId requiredEKU, TrustDomain& trustDomain,
+                      Time notBefore)
 {
   // XXX: We're using Result::ERROR_INADEQUATE_CERT_TYPE here so that callers
   // can distinguish EKU mismatch from KU mismatch from basic constraints
@@ -779,7 +790,8 @@ CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA,
     Reader input(*encodedExtendedKeyUsage);
     Result rv = der::NestedOf(input, der::SEQUENCE, der::OIDTag,
                               der::EmptyAllowed::No, [&](Reader& r) {
-      return MatchEKU(r, requiredEKU, endEntityOrCA, found, foundOCSPSigning);
+      return MatchEKU(r, requiredEKU, endEntityOrCA, trustDomain, notBefore,
+                      found, foundOCSPSigning);
     });
     if (rv != Success) {
       return Result::ERROR_INADEQUATE_CERT_TYPE;
@@ -1012,7 +1024,7 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
 
   // 4.2.1.12. Extended Key Usage
   rv = CheckExtendedKeyUsage(endEntityOrCA, cert.GetExtKeyUsage(),
-                             requiredEKUIfPresent);
+                             requiredEKUIfPresent, trustDomain, notBefore);
   if (rv != Success) {
     return rv;
   }

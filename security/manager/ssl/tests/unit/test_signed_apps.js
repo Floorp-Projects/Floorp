@@ -27,20 +27,21 @@ const certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(Ci.nsIX509Cer
 // modifications (including possibly deletions) applied to the existing entries,
 // and/or a set of new entries to be included.
 function tamper(inFilePath, outFilePath, modifications, newEntries) {
-  var writer = Cc["@mozilla.org/zipwriter;1"].createInstance(Ci.nsIZipWriter);
+  let writer = Cc["@mozilla.org/zipwriter;1"].createInstance(Ci.nsIZipWriter);
   writer.open(outFilePath, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
   try {
-    var reader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(Ci.nsIZipReader);
+    let reader = Cc["@mozilla.org/libjar/zip-reader;1"]
+                   .createInstance(Ci.nsIZipReader);
     reader.open(inFilePath);
     try {
-      var entries = reader.findEntries("");
+      let entries = reader.findEntries("");
       while (entries.hasMore()) {
-        var entryName = entries.getNext();
-        var inEntry = reader.getEntry(entryName);
-        var entryInput = reader.getInputStream(entryName);
+        let entryName = entries.getNext();
+        let inEntry = reader.getEntry(entryName);
+        let entryInput = reader.getInputStream(entryName);
         try {
-          var f = modifications[entryName];
-          var outEntry, outEntryInput;
+          let f = modifications[entryName];
+          let outEntry, outEntryInput;
           if (f) {
             [outEntry, outEntryInput] = f(inEntry, entryInput);
             delete modifications[entryName];
@@ -80,7 +81,7 @@ function tamper(inFilePath, outFilePath, modifications, newEntries) {
 
     // Now, append any new entries to the end
     newEntries.forEach(function(newEntry) {
-      var sis = Cc["@mozilla.org/io/string-input-stream;1"]
+      let sis = Cc["@mozilla.org/io/string-input-stream;1"]
                   .createInstance(Ci.nsIStringInputStream);
       try {
         sis.setData(newEntry.content, newEntry.content.length);
@@ -106,7 +107,7 @@ function truncateEntry(entry, entryInput) {
                     "identical entry.");
   }
 
-  var content = Cc["@mozilla.org/io/string-input-stream;1"]
+  let content = Cc["@mozilla.org/io/string-input-stream;1"]
                   .createInstance(Ci.nsIStringInputStream);
   content.data = "";
 
@@ -158,7 +159,7 @@ add_test(function () {
 
 // Sanity check to ensure a no-op tampering gives a valid result
 add_test(function () {
-  var tampered = tampered_app_path("identity_tampering");
+  let tampered = tampered_app_path("identity_tampering");
   tamper(original_app_path("valid_app_1"), tampered, { }, []);
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot, original_app_path("valid_app_1"),
@@ -166,7 +167,7 @@ add_test(function () {
 });
 
 add_test(function () {
-  var tampered = tampered_app_path("missing_rsa");
+  let tampered = tampered_app_path("missing_rsa");
   tamper(original_app_path("valid_app_1"), tampered, { "META-INF/A.RSA": removeEntry }, []);
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot, tampered,
@@ -174,7 +175,7 @@ add_test(function () {
 });
 
 add_test(function () {
-  var tampered = tampered_app_path("missing_sf");
+  let tampered = tampered_app_path("missing_sf");
   tamper(original_app_path("valid_app_1"), tampered, { "META-INF/A.SF": removeEntry }, []);
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot, tampered,
@@ -182,7 +183,7 @@ add_test(function () {
 });
 
 add_test(function () {
-  var tampered = tampered_app_path("missing_manifest_mf");
+  let tampered = tampered_app_path("missing_manifest_mf");
   tamper(original_app_path("valid_app_1"), tampered, { "META-INF/MANIFEST.MF": removeEntry }, []);
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot, tampered,
@@ -191,7 +192,7 @@ add_test(function () {
 });
 
 add_test(function () {
-  var tampered = tampered_app_path("missing_entry");
+  let tampered = tampered_app_path("missing_entry");
   tamper(original_app_path("valid_app_1"), tampered, { "manifest.webapp": removeEntry }, []);
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot, tampered,
@@ -199,7 +200,7 @@ add_test(function () {
 });
 
 add_test(function () {
-  var tampered = tampered_app_path("truncated_entry");
+  let tampered = tampered_app_path("truncated_entry");
   tamper(original_app_path("valid_app_1"), tampered, { "manifest.webapp": truncateEntry }, []);
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot, tampered,
@@ -207,7 +208,7 @@ add_test(function () {
 });
 
 add_test(function () {
-  var tampered = tampered_app_path("unsigned_entry");
+  let tampered = tampered_app_path("unsigned_entry");
   tamper(original_app_path("valid_app_1"), tampered, {},
     [ { "name": "unsigned.txt", "content": "unsigned content!" } ]);
   certdb.openSignedAppFileAsync(
@@ -216,7 +217,7 @@ add_test(function () {
 });
 
 add_test(function () {
-  var tampered = tampered_app_path("unsigned_metainf_entry");
+  let tampered = tampered_app_path("unsigned_metainf_entry");
   tamper(original_app_path("valid_app_1"), tampered, {},
     [ { name: "META-INF/unsigned.txt", content: "unsigned content!" } ]);
   certdb.openSignedAppFileAsync(

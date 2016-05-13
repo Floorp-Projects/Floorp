@@ -327,7 +327,7 @@ class ComplexTypeDescr : public TypeDescr
     }
 };
 
-enum class SimdType : uint8_t;
+enum class SimdType;
 
 /*
  * SIMD Type descriptors.

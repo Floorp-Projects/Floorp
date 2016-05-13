@@ -17,15 +17,12 @@ function load_cert(cert, trust) {
   addCertFromFile(certDB, file, trust);
 }
 
-function getDERString(cert)
-{
-  var length = {};
-  var cert_der = cert.getRawDER(length);
-  var cert_der_string = '';
-  for (var i = 0; i < cert_der.length; i++) {
-    cert_der_string += String.fromCharCode(cert_der[i]);
+function getDERString(cert) {
+  let derString = "";
+  for (let rawByte of cert.getRawDER({})) {
+    derString += String.fromCharCode(rawByte);
   }
-  return cert_der_string;
+  return derString;
 }
 
 function run_test() {

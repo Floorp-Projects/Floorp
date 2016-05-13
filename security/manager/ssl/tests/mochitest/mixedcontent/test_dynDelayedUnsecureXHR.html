@@ -21,7 +21,7 @@
     isSecurityState("secure");
     window.setTimeout(() => {
       try {
-        var req = new XMLHttpRequest();
+        let req = new XMLHttpRequest();
         req.open("GET", "http://example.com/tests/security/manager/ssl/tests/mochitest/mixedcontent/alloworigin.sjs", false);
         req.send(null);
 

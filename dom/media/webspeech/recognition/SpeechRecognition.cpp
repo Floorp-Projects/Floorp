@@ -15,6 +15,8 @@
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 #include "mozilla/dom/MediaStreamError.h"
 #include "mozilla/MediaManager.h"
+#include "mozilla/Preferences.h"
+#include "MediaPrefs.h"
 #include "mozilla/Services.h"
 
 #include "AudioSegment.h"
@@ -70,7 +72,7 @@ GetSpeechRecognitionService(const nsAString& aLang)
   nsAutoCString speechRecognitionServiceCID;
 
   nsAdoptingCString prefValue =
-  Preferences::GetCString(PREFERENCE_DEFAULT_RECOGNITION_SERVICE);
+    Preferences::GetCString(PREFERENCE_DEFAULT_RECOGNITION_SERVICE);
   nsAutoCString speechRecognitionService;
 
   if (!aLang.IsEmpty()) {
@@ -83,7 +85,7 @@ GetSpeechRecognitionService(const nsAString& aLang)
     speechRecognitionService = DEFAULT_RECOGNITION_SERVICE;
   }
 
-  if (SpeechRecognition::mTestConfig.mFakeRecognitionService) {
+  if (MediaPrefs::WebSpeechFakeRecognitionService()) {
     speechRecognitionServiceCID =
       NS_SPEECH_RECOGNITION_SERVICE_CONTRACTID_PREFIX "fake";
   } else {
@@ -107,8 +109,6 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(SpeechRecognition, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(SpeechRecognition, DOMEventTargetHelper)
 
-struct SpeechRecognition::TestConfig SpeechRecognition::mTestConfig;
-
 SpeechRecognition::SpeechRecognition(nsPIDOMWindowInner* aOwnerWindow)
   : DOMEventTargetHelper(aOwnerWindow)
   , mEndpointer(kSAMPLE_RATE)
@@ -120,8 +120,7 @@ SpeechRecognition::SpeechRecognition(nsPIDOMWindowInner* aOwnerWindow)
 {
   SR_LOG("created SpeechRecognition");
 
-  mTestConfig.Init();
-  if (mTestConfig.mEnableTests) {
+  if (MediaPrefs::WebSpeechTestEnabled()) {
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
     obs->AddObserver(this, SPEECH_RECOGNITION_TEST_EVENT_REQUEST_TOPIC, false);
     obs->AddObserver(this, SPEECH_RECOGNITION_TEST_END_TOPIC, false);
@@ -175,10 +174,9 @@ SpeechRecognition::IsAuthorized(JSContext* aCx, JSObject* aGlobal)
 
   bool hasPermission = (speechRecognition == nsIPermissionManager::ALLOW_ACTION);
 
-  bool enableTests = Preferences::GetBool(TEST_PREFERENCE_ENABLE);
-  bool enableRecognitionEnable = Preferences::GetBool(TEST_PREFERENCE_RECOGNITION_ENABLE);
-  bool enableRecognitionForceEnable = Preferences::GetBool(TEST_PREFERENCE_RECOGNITION_FORCE_ENABLE);
-  return (hasPermission || enableRecognitionForceEnable || enableTests) && enableRecognitionEnable;
+  return (hasPermission || MediaPrefs::WebSpeechRecognitionForceEnabled()
+          || MediaPrefs::WebSpeechTestEnabled())
+         && MediaPrefs::WebSpeechRecognitionEnabled();
 }
 
 already_AddRefed<SpeechRecognition>
@@ -617,7 +615,7 @@ SpeechRecognition::Observe(nsISupports* aSubject, const char* aTopic,
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
     obs->RemoveObserver(this, SPEECH_RECOGNITION_TEST_EVENT_REQUEST_TOPIC);
     obs->RemoveObserver(this, SPEECH_RECOGNITION_TEST_END_TOPIC);
-  } else if (mTestConfig.mFakeFSMEvents &&
+  } else if (MediaPrefs::WebSpeechFakeFSMEvents() &&
              !strcmp(aTopic, SPEECH_RECOGNITION_TEST_EVENT_REQUEST_TOPIC)) {
     ProcessTestEventRequest(aSubject, nsDependentString(aData));
   }
@@ -635,7 +633,7 @@ SpeechRecognition::ProcessTestEventRequest(nsISupports* aSubject, const nsAStrin
                   SpeechRecognitionErrorCode::Audio_capture, // TODO different codes?
                   NS_LITERAL_STRING("AUDIO_ERROR test event"));
   } else {
-    NS_ASSERTION(mTestConfig.mFakeRecognitionService,
+    NS_ASSERTION(MediaPrefs::WebSpeechFakeRecognitionService(),
                  "Got request for fake recognition service event, but "
                  TEST_PREFERENCE_FAKE_RECOGNITION_SERVICE " is unset");
 

@@ -32,17 +32,17 @@ var display = document.getElementById('display');
 display.style.animation = 'enabled-and-disabled 0.01s';
 
 var animation = display.getAnimations()[0];
-is(animation.effect.getFrames().length, 2,
+is(animation.effect.getKeyframes().length, 2,
    'Got two frames on the generated animation');
 
-ok(animation.effect.getFrames()[0].hasOwnProperty('left'),
+ok(animation.effect.getKeyframes()[0].hasOwnProperty('left'),
    'Enabled property is set on initial keyframe');
-ok(!animation.effect.getFrames()[0].hasOwnProperty('webkitTextFillColor'),
+ok(!animation.effect.getKeyframes()[0].hasOwnProperty('webkitTextFillColor'),
    'Disabled property is not set on initial keyframe');
 
-ok(animation.effect.getFrames()[1].hasOwnProperty('left'),
+ok(animation.effect.getKeyframes()[1].hasOwnProperty('left'),
    'Enabled property is set on final keyframe');
-ok(!animation.effect.getFrames()[1].hasOwnProperty('webkitTextFillColor'),
+ok(!animation.effect.getKeyframes()[1].hasOwnProperty('webkitTextFillColor'),
    'Disabled property is not set on final keyframe');
 
 finish();

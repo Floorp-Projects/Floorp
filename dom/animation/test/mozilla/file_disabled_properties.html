@@ -20,13 +20,13 @@ function waitForSetPref(pref, value) {
 promise_test(function(t) {
   return waitForSetPref('layout.css.prefixes.webkit', true).then(() => {
     var anim = addDiv(t).animate({ webkitTextFillColor: [ 'green', 'blue' ]});
-    assert_equals(anim.effect.getFrames().length, 2,
+    assert_equals(anim.effect.getKeyframes().length, 2,
                   'A property-indexed keyframe specifying only enabled'
                   + ' properties produces keyframes');
     return waitForSetPref('layout.css.prefixes.webkit', false);
   }).then(() => {
     var anim = addDiv(t).animate({ webkitTextFillColor: [ 'green', 'blue' ]});
-    assert_equals(anim.effect.getFrames().length, 0,
+    assert_equals(anim.effect.getKeyframes().length, 0,
                   'A property-indexed keyframe specifying only disabled'
                   + ' properties produces no keyframes');
   });
@@ -36,7 +36,7 @@ promise_test(function(t) {
   var createAnim = () => {
     var anim = addDiv(t).animate([ { webkitTextFillColor: 'green' },
                                    { webkitTextFillColor: 'blue' } ]);
-    assert_equals(anim.effect.getFrames().length, 2,
+    assert_equals(anim.effect.getKeyframes().length, 2,
                   'Animation specified using a keyframe sequence should'
                   + ' return the same number of keyframes regardless of'
                   + ' whether or not the specified properties are disabled');
@@ -45,12 +45,12 @@ promise_test(function(t) {
 
   var assert_has_property = (anim, index, descr, property) => {
     assert_true(
-      anim.effect.getFrames()[index].hasOwnProperty(property),
+      anim.effect.getKeyframes()[index].hasOwnProperty(property),
       `${descr} should have the '${property}' property`);
   };
   var assert_does_not_have_property = (anim, index, descr, property) => {
     assert_false(
-      anim.effect.getFrames()[index].hasOwnProperty(property),
+      anim.effect.getKeyframes()[index].hasOwnProperty(property),
       `${descr} should NOT have the '${property}' property`);
   };
 

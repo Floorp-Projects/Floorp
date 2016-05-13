@@ -909,7 +909,7 @@ StorageMatch(mozIStorageConnection* aConn,
     rv = StorageGetCacheId(aConn, aNamespace, aParams.cacheName(), &foundCache,
                            &cacheId);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-    if (!foundCache) { return NS_ERROR_DOM_NOT_FOUND_ERR; }
+    if (!foundCache) { return NS_OK; }
 
     rv = CacheMatch(aConn, cacheId, aRequest, aParams, aFoundResponseOut,
                     aSavedResponseOut);

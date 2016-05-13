@@ -12,7 +12,6 @@
 #include "PlayingRefChangeHandler.h"
 #include "WebAudioUtils.h"
 #include "blink/Biquad.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/UniquePtr.h"
 #include "AudioParamTimeline.h"
 
