@@ -282,7 +282,7 @@ class SystemResourceMonitor(object):
         assert self._running
         assert not self._stopped
 
-        self._pipe.send(('terminate'))
+        self._pipe.send(('terminate',))
         self._running = False
         self._stopped = True
 
