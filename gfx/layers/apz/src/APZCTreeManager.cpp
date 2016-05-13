@@ -1713,6 +1713,26 @@ APZCTreeManager::FindScrollNode(const AsyncDragMetrics& aDragMetrics)
 }
 
 AsyncPanZoomController*
+APZCTreeManager::GetTargetApzcForNode(HitTestingTreeNode* aNode)
+{
+  for (const HitTestingTreeNode* n = aNode;
+       n && n->GetLayersId() == aNode->GetLayersId();
+       n = n->GetParent()) {
+    if (n->GetApzc()) {
+      APZCTM_LOG("Found target %p using ancestor lookup\n", n->GetApzc());
+      return n->GetApzc();
+    }
+    if (n->GetFixedPosTarget() != FrameMetrics::NULL_SCROLL_ID) {
+      ScrollableLayerGuid guid(n->GetLayersId(), 0, n->GetFixedPosTarget());
+      RefPtr<HitTestingTreeNode> fpNode = GetTargetNode(guid, &GuidComparatorIgnoringPresShell);
+      APZCTM_LOG("Found target node %p using fixed-pos lookup on %" PRIu64 "\n", fpNode.get(), n->GetFixedPosTarget());
+      return fpNode ? fpNode->GetApzc() : nullptr;
+    }
+  }
+  return nullptr;
+}
+
+AsyncPanZoomController*
 APZCTreeManager::GetAPZCAtPoint(HitTestingTreeNode* aNode,
                                 const ParentLayerPoint& aHitTestPoint,
                                 HitTestResult* aOutHitResult,
@@ -1776,20 +1796,7 @@ APZCTreeManager::GetAPZCAtPoint(HitTestingTreeNode* aNode,
         }
       }
 
-      AsyncPanZoomController* result = nullptr;
-
-      FrameMetrics::ViewID fpTarget =
-          resultNode->GetNearestAncestorFixedPosTargetWithSameLayersId();
-      if (fpTarget != FrameMetrics::NULL_SCROLL_ID) {
-        ScrollableLayerGuid guid(resultNode->GetLayersId(), 0, fpTarget);
-        RefPtr<HitTestingTreeNode> hitNode = GetTargetNode(guid, &GuidComparatorIgnoringPresShell);
-        result = hitNode ? hitNode->GetApzc() : nullptr;
-        APZCTM_LOG("Found target %p using fixed-pos lookup on %" PRIu64 "\n", result, fpTarget);
-      }
-      if (!result) {
-        result = resultNode->GetNearestContainingApzcWithSameLayersId();
-        APZCTM_LOG("Found target %p using ancestor lookup\n", result);
-      }
+      AsyncPanZoomController* result = GetTargetApzcForNode(resultNode);
       if (!result) {
         result = FindRootApzcForLayersId(resultNode->GetLayersId());
         MOZ_ASSERT(result);
