@@ -1751,9 +1751,12 @@ GeckoDriver.prototype.clickElement = function*(cmd, resp) {
  * Get a given attribute of an element.
  *
  * @param {string} id
- *     Reference ID to the element that will be inspected.
+ *     Web element reference ID to the element that will be inspected.
  * @param {string} name
- *     Name of the attribute to retrieve.
+ *     Name of the attribute which value to retrieve.
+ *
+ * @return {string}
+ *     Value of the attribute.
  */
 GeckoDriver.prototype.getElementAttribute = function*(cmd, resp) {
   let {id, name} = cmd.parameters;
@@ -1768,6 +1771,29 @@ GeckoDriver.prototype.getElementAttribute = function*(cmd, resp) {
     case Context.CONTENT:
       resp.body.value = yield this.listener.getElementAttribute(id, name);
       break;
+  }
+};
+
+/**
+ * Returns the value of a property associated with given element.
+ *
+ * @param {string} id
+ *     Web element reference ID to the element that will be inspected.
+ * @param {string} name
+ *     Name of the property which value to retrieve.
+ *
+ * @return {string}
+ *     Value of the property.
+ */
+GeckoDriver.prototype.getElementProperty = function*(cmd, resp) {
+  let {id, name} = cmd.parameters;
+
+  switch (this.context) {
+    case Context.CHROME:
+      throw new UnsupportedOperationError();
+
+    case Context.CONTENT:
+      return this.listener.getElementProperty(id, name);
   }
 };
 
@@ -2708,6 +2734,7 @@ GeckoDriver.prototype.commands = {
   "findElements": GeckoDriver.prototype.findElements,
   "clickElement": GeckoDriver.prototype.clickElement,
   "getElementAttribute": GeckoDriver.prototype.getElementAttribute,
+  "getElementProperty": GeckoDriver.prototype.getElementProperty,
   "getElementText": GeckoDriver.prototype.getElementText,
   "getElementTagName": GeckoDriver.prototype.getElementTagName,
   "isElementDisplayed": GeckoDriver.prototype.isElementDisplayed,
