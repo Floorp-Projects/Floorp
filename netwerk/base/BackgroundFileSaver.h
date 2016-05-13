@@ -242,7 +242,7 @@ private:
    * Used to calculate the file hash. This keeps state across file renames and
    * is lazily initialized in ProcessStateChange.
    */
-  ScopedPK11Context mDigestContext;
+  UniquePK11Context mDigestContext;
 
   //////////////////////////////////////////////////////////////////////////////
   //// Private methods

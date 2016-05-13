@@ -7,8 +7,8 @@
 // This header provides smart pointers and various helpers for code that needs
 // to interact with NSS.
 
-#ifndef mozilla_ScopedNSSTypes_h
-#define mozilla_ScopedNSSTypes_h
+#ifndef ScopedNSSTypes_h
+#define ScopedNSSTypes_h
 
 #include <limits>
 
@@ -107,12 +107,21 @@ PK11_DestroyContext_true(PK11Context * ctx) {
 } // namespace mozilla::psm
 
 // Deprecated: use the equivalent UniquePtr templates instead.
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPK11Context,
-                                          PK11Context,
-                                          mozilla::psm::PK11_DestroyContext_true)
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSGNDigestInfo,
                                           SGNDigestInfo,
                                           SGN_DestroyDigestInfo)
+
+// Emulates MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE, but for UniquePtrs.
+#define MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(name, Type, Deleter) \
+struct name##DeletePolicy \
+{ \
+  void operator()(Type* aValue) { Deleter(aValue); } \
+}; \
+typedef UniquePtr<Type, name##DeletePolicy> name;
+
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniquePK11Context,
+                                      PK11Context,
+                                      mozilla::psm::PK11_DestroyContext_true)
 
 /** A more convenient way of dealing with digests calculated into
  *  stack-allocated buffers. NSS must be initialized on the main thread before
@@ -130,15 +139,15 @@ MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSGNDigestInfo,
  * Less typical usage, for digesting while doing streaming I/O and similar:
  *
  *   Digest digest;
- *   ScopedPK11Context digestContext(PK11_CreateDigestContext(SEC_OID_SHA1));
+ *   UniquePK11Context digestContext(PK11_CreateDigestContext(SEC_OID_SHA256));
  *   NS_ENSURE_TRUE(digestContext, NS_ERROR_OUT_OF_MEMORY);
- *   rv = MapSECStatus(PK11_DigestBegin(digestContext));
+ *   rv = MapSECStatus(PK11_DigestBegin(digestContext.get()));
  *   NS_ENSURE_SUCCESS(rv, rv);
  *   for (...) {
- *      rv = MapSECStatus(PK11_DigestOp(digestContext, ...));
+ *      rv = MapSECStatus(PK11_DigestOp(digestContext.get(), ...));
  *      NS_ENSURE_SUCCESS(rv, rv);
  *   }
- *   rv = digest.End(SEC_OID_SHA1, digestContext);
+ *   rv = digest.End(SEC_OID_SHA256, digestContext);
  *   NS_ENSURE_SUCCESS(rv, rv)
  */
 class Digest
@@ -162,12 +171,13 @@ public:
                                      static_cast<int32_t>(len)));
   }
 
-  nsresult End(SECOidTag hashAlg, ScopedPK11Context & context)
+  nsresult End(SECOidTag hashAlg, UniquePK11Context& context)
   {
     nsresult rv = SetLength(hashAlg);
     NS_ENSURE_SUCCESS(rv, rv);
     uint32_t len;
-    rv = MapSECStatus(PK11_DigestFinal(context, mItem.data, &len, mItem.len));
+    rv = MapSECStatus(PK11_DigestFinal(context.get(), mItem.data, &len,
+                                       mItem.len));
     NS_ENSURE_SUCCESS(rv, rv);
     context = nullptr;
     NS_ENSURE_TRUE(len == mItem.len, NS_ERROR_UNEXPECTED);
@@ -315,14 +325,6 @@ MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECAlgorithmID,
                                           SECAlgorithmID,
                                           internal::SECOID_DestroyAlgorithmID_true)
 
-// Emulates MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE, but for UniquePtrs.
-#define MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(name, Type, Deleter) \
-struct name##DeletePolicy \
-{ \
-  void operator()(Type* aValue) { Deleter(aValue); } \
-}; \
-typedef UniquePtr<Type, name##DeletePolicy> name;
-
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTCertificate,
                                       CERTCertificate,
                                       CERT_DestroyCertificate)
@@ -393,4 +395,4 @@ MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueVFYContext,
                                       internal::VFY_DestroyContext_true)
 } // namespace mozilla
 
-#endif // mozilla_ScopedNSSTypes_h
+#endif // ScopedNSSTypes_h

@@ -1003,7 +1003,7 @@ private:
 
     // Compute the MAC
     SECItem param = { siBuffer, nullptr, 0 };
-    ScopedPK11Context ctx(PK11_CreateContextBySymKey(mMechanism, CKA_SIGN,
+    UniquePK11Context ctx(PK11_CreateContextBySymKey(mMechanism, CKA_SIGN,
                                                      symKey.get(), &param));
     if (!ctx.get()) {
       return NS_ERROR_DOM_OPERATION_ERR;
