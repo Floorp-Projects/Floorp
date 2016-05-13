@@ -130,8 +130,10 @@ Directory::WebkitBlinkDirectoryPickerEnabled(JSContext* aCx, JSObject* aObj)
     return Preferences::GetBool("dom.webkitBlink.dirPicker.enabled", false);
   }
 
+  // aCx can be null when this function is called by something else than WebIDL
+  // binding code.
   workers::WorkerPrivate* workerPrivate =
-    workers::GetWorkerPrivateFromContext(aCx);
+    workers::GetCurrentThreadWorkerPrivate();
   if (!workerPrivate) {
     return false;
   }
