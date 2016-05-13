@@ -695,7 +695,7 @@ MOZ_ALWAYS_INLINE void
 pack(const SrcType* __restrict src,
      DstType* __restrict dst)
 {
-    MOZ_CRASH("Unimplemented texture format conversion");
+    MOZ_CRASH("GFX: Unimplemented texture format conversion");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

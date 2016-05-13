@@ -1032,7 +1032,7 @@ struct ParamTraits<mozilla::gfx::AttributeMap>
 #undef CASE_TYPE
 
         default:
-          MOZ_CRASH("unhandled attribute type");
+          MOZ_CRASH("GFX: unhandled attribute type");
       }
     }
   }
@@ -1089,7 +1089,7 @@ struct ParamTraits<mozilla::gfx::AttributeMap>
           break;
         }
         default:
-          MOZ_CRASH("unhandled attribute type");
+          MOZ_CRASH("GFX: unhandled attribute type");
       }
     }
     return true;
