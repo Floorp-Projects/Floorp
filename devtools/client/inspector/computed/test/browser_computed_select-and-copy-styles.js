@@ -6,7 +6,7 @@
 
 // Tests that properties can be selected and copied from the computed view.
 
-XPCOMUtils.defineLazyGetter(this, "osString", function() {
+XPCOMUtils.defineLazyGetter(this, "osString", function () {
   return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
 });
 
@@ -36,7 +36,7 @@ const TEST_URI = `
   </div>
 `;
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openComputedView();
   yield selectNode("span", inspector);

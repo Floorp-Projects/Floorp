@@ -10,9 +10,8 @@
 const TEST_URI = URL_ROOT + "doc_media_queries.html";
 
 var {PropertyView} = require("devtools/client/inspector/computed/computed");
-var {CssLogic} = require("devtools/shared/inspector/css-logic");
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(TEST_URI);
   let {inspector, view} = yield openComputedView();
   yield selectNode("div", inspector);
