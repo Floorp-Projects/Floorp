@@ -3073,7 +3073,12 @@
           // Swap the dropped tab with a new one we create and then close
           // it in the other window (making it seem to have moved between
           // windows).
-          let newTab = this.addTab("about:blank", { eventDetail: { adoptedTab: aTab } });
+          let params = { eventDetail: { adoptedTab: aTab } };
+          if (aTab.hasAttribute("usercontextid")) {
+            // new tab must have the same usercontextid as the old one
+            params.userContextId = aTab.getAttribute("usercontextid");
+          }
+          let newTab = this.addTab("about:blank", params);
           let newBrowser = this.getBrowserForTab(newTab);
           let newURL = aTab.linkedBrowser.currentURI.spec;
 
