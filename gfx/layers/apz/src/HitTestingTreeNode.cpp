@@ -134,16 +134,9 @@ HitTestingTreeNode::SetFixedPosData(FrameMetrics::ViewID aFixedPosTarget)
 }
 
 FrameMetrics::ViewID
-HitTestingTreeNode::GetNearestAncestorFixedPosTargetWithSameLayersId() const
+HitTestingTreeNode::GetFixedPosTarget() const
 {
-  for (const HitTestingTreeNode* n = this;
-       n && n->mLayersId == mLayersId;
-       n = n->GetParent()) {
-    if (n->mFixedPosTarget != FrameMetrics::NULL_SCROLL_ID) {
-      return n->mFixedPosTarget;
-    }
-  }
-  return FrameMetrics::NULL_SCROLL_ID;
+  return mFixedPosTarget;
 }
 
 void
@@ -208,19 +201,6 @@ AsyncPanZoomController*
 HitTestingTreeNode::GetNearestContainingApzc() const
 {
   for (const HitTestingTreeNode* n = this; n; n = n->GetParent()) {
-    if (n->GetApzc()) {
-      return n->GetApzc();
-    }
-  }
-  return nullptr;
-}
-
-AsyncPanZoomController*
-HitTestingTreeNode::GetNearestContainingApzcWithSameLayersId() const
-{
-  for (const HitTestingTreeNode* n = this;
-       n && n->mLayersId == mLayersId;
-       n = n->GetParent()) {
     if (n->GetApzc()) {
       return n->GetApzc();
     }
