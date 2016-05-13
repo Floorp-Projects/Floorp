@@ -352,9 +352,6 @@ GetPropertyValuesPairs(JSContext* aCx,
                        nsTArray<PropertyValuesPair>& aResult);
 
 static bool
-IsAnimatableProperty(nsCSSProperty aProperty);
-
-static bool
 AppendStringOrStringSequenceToArray(JSContext* aCx,
                                     JS::Handle<JS::Value> aValue,
                                     ListAllowance aAllowLists,
@@ -563,6 +560,26 @@ KeyframeUtils::GetAnimationPropertiesFromKeyframes(
   return result;
 }
 
+/* static */ bool
+KeyframeUtils::IsAnimatableProperty(nsCSSProperty aProperty)
+{
+  if (aProperty == eCSSProperty_UNKNOWN) {
+    return false;
+  }
+
+  if (!nsCSSProps::IsShorthand(aProperty)) {
+    return nsCSSProps::kAnimTypeTable[aProperty] != eStyleAnimType_None;
+  }
+
+  CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subprop, aProperty,
+                                       CSSEnabledState::eForAllContent) {
+    if (nsCSSProps::kAnimTypeTable[*subprop] != eStyleAnimType_None) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 // ------------------------------------------------------------------
 //
@@ -739,7 +756,7 @@ GetPropertyValuesPairs(JSContext* aCx,
     nsCSSProperty property =
       nsCSSProps::LookupPropertyByIDLName(propName,
                                           CSSEnabledState::eForAllContent);
-    if (IsAnimatableProperty(property)) {
+    if (KeyframeUtils::IsAnimatableProperty(property)) {
       AdditionalProperty* p = properties.AppendElement();
       p->mProperty = property;
       p->mJsidIndex = i;
@@ -766,31 +783,6 @@ GetPropertyValuesPairs(JSContext* aCx,
   }
 
   return true;
-}
-
-/**
- * Returns true if |aProperty| or, for shorthands, one or more of
- * |aProperty|'s subproperties, is animatable.
- */
-static bool
-IsAnimatableProperty(nsCSSProperty aProperty)
-{
-  if (aProperty == eCSSProperty_UNKNOWN) {
-    return false;
-  }
-
-  if (!nsCSSProps::IsShorthand(aProperty)) {
-    return nsCSSProps::kAnimTypeTable[aProperty] != eStyleAnimType_None;
-  }
-
-  CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subprop, aProperty,
-                                       CSSEnabledState::eForAllContent) {
-    if (nsCSSProps::kAnimTypeTable[*subprop] != eStyleAnimType_None) {
-      return true;
-    }
-  }
-
-  return false;
 }
 
 /**
