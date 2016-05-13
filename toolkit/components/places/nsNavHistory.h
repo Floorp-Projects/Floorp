@@ -236,6 +236,9 @@ public:
   static const int32_t kGetInfoIndex_Frecency;
   static const int32_t kGetInfoIndex_Hidden;
   static const int32_t kGetInfoIndex_Guid;
+  static const int32_t kGetInfoIndex_VisitId;
+  static const int32_t kGetInfoIndex_FromVisitId;
+  static const int32_t kGetInfoIndex_VisitType;
 
   int64_t GetTagsFolder();
 

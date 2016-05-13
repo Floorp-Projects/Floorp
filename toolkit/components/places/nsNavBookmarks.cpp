@@ -22,10 +22,10 @@
 using namespace mozilla;
 
 // These columns sit to the right of the kGetInfoIndex_* columns.
-const int32_t nsNavBookmarks::kGetChildrenIndex_Guid = 15;
-const int32_t nsNavBookmarks::kGetChildrenIndex_Position = 16;
-const int32_t nsNavBookmarks::kGetChildrenIndex_Type = 17;
-const int32_t nsNavBookmarks::kGetChildrenIndex_PlaceID = 18;
+const int32_t nsNavBookmarks::kGetChildrenIndex_Guid = 18;
+const int32_t nsNavBookmarks::kGetChildrenIndex_Position = 19;
+const int32_t nsNavBookmarks::kGetChildrenIndex_Type = 20;
+const int32_t nsNavBookmarks::kGetChildrenIndex_PlaceID = 21;
 
 using namespace mozilla::places;
 
@@ -962,8 +962,8 @@ nsNavBookmarks::GetDescendantChildren(int64_t aFolderId,
     nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
       "SELECT h.id, h.url, IFNULL(b.title, h.title), h.rev_host, h.visit_count, "
              "h.last_visit_date, f.url, b.id, b.dateAdded, b.lastModified, "
-             "b.parent, null, h.frecency, h.hidden, h.guid, b.guid, "
-             "b.position, b.type, b.fk "
+             "b.parent, null, h.frecency, h.hidden, h.guid, null, null, null, "
+             "b.guid, b.position, b.type, b.fk "
       "FROM moz_bookmarks b "
       "LEFT JOIN moz_places h ON b.fk = h.id "
       "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
@@ -1635,8 +1635,8 @@ nsNavBookmarks::QueryFolderChildren(
   nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
     "SELECT h.id, h.url, IFNULL(b.title, h.title), h.rev_host, h.visit_count, "
            "h.last_visit_date, f.url, b.id, b.dateAdded, b.lastModified, "
-           "b.parent, null, h.frecency, h.hidden, h.guid, b.guid, "
-           "b.position, b.type, b.fk "
+           "b.parent, null, h.frecency, h.hidden, h.guid, null, null, null, "
+           "b.guid, b.position, b.type, b.fk "
     "FROM moz_bookmarks b "
     "LEFT JOIN moz_places h ON b.fk = h.id "
     "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
@@ -1773,8 +1773,8 @@ nsNavBookmarks::QueryFolderChildrenAsync(
   nsCOMPtr<mozIStorageAsyncStatement> stmt = mDB->GetAsyncStatement(
     "SELECT h.id, h.url, IFNULL(b.title, h.title), h.rev_host, h.visit_count, "
            "h.last_visit_date, f.url, b.id, b.dateAdded, b.lastModified, "
-           "b.parent, null, h.frecency, h.hidden, h.guid, b.guid, "
-           "b.position, b.type, b.fk "
+           "b.parent, null, h.frecency, h.hidden, h.guid, null, null, null, "
+           "b.guid, b.position, b.type, b.fk "
     "FROM moz_bookmarks b "
     "LEFT JOIN moz_places h ON b.fk = h.id "
     "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
