@@ -570,7 +570,7 @@ LayerManagerComposite::InvalidateDebugOverlay(nsIntRegion& aInvalidRegion, const
 
 static uint16_t sFrameCount = 0;
 void
-LayerManagerComposite::RenderDebugOverlay(const Rect& aBounds)
+LayerManagerComposite::RenderDebugOverlay(const IntRect& aBounds)
 {
   bool drawFps = gfxPrefs::LayersDrawFPS();
   bool drawFrameCounter = gfxPrefs::DrawFrameCounter();
@@ -641,11 +641,11 @@ LayerManagerComposite::RenderDebugOverlay(const Rect& aBounds)
   }
 
   if (drawFrameColorBars) {
-    gfx::Rect sideRect(0, 0, 10, aBounds.height);
+    gfx::IntRect sideRect(0, 0, 10, aBounds.height);
 
     EffectChain effects;
     effects.mPrimaryEffect = new EffectSolidColor(gfxUtils::GetColorForFrameNumber(sFrameCount));
-    mCompositor->DrawQuad(sideRect,
+    mCompositor->DrawQuad(Rect(sideRect),
                           sideRect,
                           effects,
                           1.0,
@@ -662,7 +662,7 @@ LayerManagerComposite::RenderDebugOverlay(const Rect& aBounds)
     int padding = 2;
     float opacity = 1.0;
     const uint16_t bitWidth = 5;
-    gfx::Rect clip(0,0, bitWidth*640, bitWidth*640);
+    gfx::IntRect clip(0,0, bitWidth*640, bitWidth*640);
 
     // Draw the white squares at once
     gfx::Color bitColor(1.0, 1.0, 1.0, 1.0);
@@ -786,8 +786,7 @@ LayerManagerComposite::PopGroupForLayerEffects(RefPtr<CompositingRenderTarget> a
   effectChain.mPrimaryEffect = new EffectRenderTarget(mTwoPassTmpTarget);
   effectChain.mSecondaryEffects[EffectTypes::COLOR_MATRIX] = new EffectColorMatrix(effectMatrix);
 
-  gfx::Rect clipRectF(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
-  mCompositor->DrawQuad(Rect(Point(0, 0), Size(mTwoPassTmpTarget->GetSize())), clipRectF, effectChain, 1.,
+  mCompositor->DrawQuad(Rect(Point(0, 0), Size(mTwoPassTmpTarget->GetSize())), aClipRect, effectChain, 1.,
                         Matrix4x4());
 }
 
@@ -885,18 +884,18 @@ LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion, const nsIntRegi
   }
 
   ParentLayerIntRect clipRect;
-  Rect bounds(mRenderBounds.x, mRenderBounds.y, mRenderBounds.width, mRenderBounds.height);
-  Rect actualBounds;
+  IntRect bounds(mRenderBounds.x, mRenderBounds.y, mRenderBounds.width, mRenderBounds.height);
+  IntRect actualBounds;
 
   CompositorBench(mCompositor, bounds);
 
   MOZ_ASSERT(mRoot->GetOpacity() == 1);
   if (mRoot->GetClipRect()) {
     clipRect = *mRoot->GetClipRect();
-    Rect rect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
+    IntRect rect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
     mCompositor->BeginFrame(aInvalidRegion, &rect, bounds, aOpaqueRegion, nullptr, &actualBounds);
   } else {
-    gfx::Rect rect;
+    gfx::IntRect rect;
     mCompositor->BeginFrame(aInvalidRegion, nullptr, bounds, aOpaqueRegion, &rect, &actualBounds);
     clipRect = ParentLayerIntRect(rect.x, rect.y, rect.width, rect.height);
   }
@@ -908,7 +907,7 @@ LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion, const nsIntRegi
 
   // Allow widget to render a custom background.
   mCompositor->GetWidget()->DrawWindowUnderlay(
-    this, LayoutDeviceIntRect::FromUnknownRect(TruncatedToInt(actualBounds)));
+    this, LayoutDeviceIntRect::FromUnknownRect(actualBounds));
 
   RefPtr<CompositingRenderTarget> previousTarget;
   if (haveLayerEffects) {
@@ -936,7 +935,7 @@ LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion, const nsIntRegi
 
   // Allow widget to render a custom foreground.
   mCompositor->GetWidget()->DrawWindowOverlay(
-    this, LayoutDeviceIntRect::FromUnknownRect(TruncatedToInt(actualBounds)));
+    this, LayoutDeviceIntRect::FromUnknownRect(actualBounds));
 
   // Debugging
   RenderDebugOverlay(actualBounds);
@@ -1149,8 +1148,8 @@ LayerManagerComposite::RenderToPresentationSurface()
   PostProcessLayers(mRoot, opaque, visible, Nothing());
 
   nsIntRegion invalid;
-  Rect bounds(0.0f, 0.0f, scale * pageWidth, (float)actualHeight);
-  Rect rect, actualBounds;
+  IntRect bounds(0, 0, scale * pageWidth, actualHeight);
+  IntRect rect, actualBounds;
   MOZ_ASSERT(mRoot->GetOpacity() == 1);
   mCompositor->BeginFrame(invalid, nullptr, bounds, nsIntRegion(), &rect, &actualBounds);
 

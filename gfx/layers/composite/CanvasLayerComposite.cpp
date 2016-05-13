@@ -95,7 +95,7 @@ CanvasLayerComposite::RenderLayer(const IntRect& aClipRect)
 #endif
 
   RenderWithAllMasks(this, mCompositor, aClipRect,
-                     [&](EffectChain& effectChain, const Rect& clipRect) {
+                     [&](EffectChain& effectChain, const IntRect& clipRect) {
     mCompositableHost->Composite(this, effectChain,
                           GetEffectiveOpacity(),
                           GetEffectiveTransform(),

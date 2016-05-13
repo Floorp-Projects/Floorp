@@ -393,7 +393,7 @@ static void DrawDigits(unsigned int aValue,
     texturedEffect->mTextureCoords = Rect(float(digit * FontWidth) / textureWidth, 0, FontWidth / textureWidth, 1.0f);
 
     Rect drawRect = Rect(aOffsetX + n * FontWidth, aOffsetY, FontWidth, FontHeight);
-    Rect clipRect = Rect(0, 0, 300, 100);
+    IntRect clipRect = IntRect(0, 0, 300, 100);
     aCompositor->DrawQuad(drawRect, clipRect,
   aEffectChain, opacity, transform);
   }
