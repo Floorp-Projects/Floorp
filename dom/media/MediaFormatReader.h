@@ -174,7 +174,6 @@ private:
   void DrainComplete(TrackType aTrack);
 
   bool ShouldSkip(bool aSkipToNextKeyframe, media::TimeUnit aTimeThreshold);
-  void ResetDemuxers();
 
   size_t SizeOfQueue(TrackType aTrack);
 
