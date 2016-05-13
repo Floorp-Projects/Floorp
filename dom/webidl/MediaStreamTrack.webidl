@@ -75,7 +75,7 @@ interface MediaStreamTrack : EventTarget {
 //  readonly    attribute boolean               _readonly;
 //  readonly    attribute boolean               remote;
 //  readonly    attribute MediaStreamTrackState readyState;
-                attribute EventHandler          onended;
+//                attribute EventHandler          onended;
     MediaStreamTrack       clone ();
     void                   stop ();
 //  MediaTrackCapabilities getCapabilities ();
