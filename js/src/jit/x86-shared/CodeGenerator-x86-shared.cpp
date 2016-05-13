@@ -1075,8 +1075,7 @@ CodeGeneratorX86Shared::visitUDivOrMod(LUDivOrMod* ins)
             if (ins->trapOnError()) {
                 masm.j(Assembler::Zero, wasm::JumpTarget::IntegerDivideByZero);
             } else {
-                if (!ool)
-                    ool = new(alloc()) ReturnZero(output);
+                ool = new(alloc()) ReturnZero(output);
                 masm.j(Assembler::Zero, ool->entry());
             }
         } else {
@@ -1260,6 +1259,8 @@ CodeGeneratorX86Shared::visitDivPowTwoI(LDivPowTwoI* ins)
         masm.negl(lhs);
         if (!mir->isTruncated())
             bailoutIf(Assembler::Overflow, ins->snapshot());
+        else if (mir->trapOnError())
+            masm.j(Assembler::Overflow, wasm::JumpTarget::IntegerOverflow);
     } else if (mir->isUnsigned() && !mir->isTruncated()) {
         // Unsigned division by 1 can overflow if output is not
         // truncated.

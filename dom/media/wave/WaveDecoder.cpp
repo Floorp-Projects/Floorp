@@ -40,7 +40,6 @@ WaveDecoder::IsEnabled()
   if (!Preferences::GetBool("media.wave.decoder.enabled", false)) {
     return false;
   }
-  PDMFactory::Init();
   RefPtr<PDMFactory> platform = new PDMFactory();
   return platform->SupportsMimeType(NS_LITERAL_CSTRING("audio/x-wav"),
                                     /* DecoderDoctorDiagnostics* */ nullptr);

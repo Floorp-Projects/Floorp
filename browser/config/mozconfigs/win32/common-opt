@@ -3,7 +3,6 @@
 . "$topsrcdir/browser/config/mozconfigs/common"
 
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
-ac_add_options --enable-update-packaging
 ac_add_options --enable-jemalloc
 ac_add_options --enable-require-all-d3dc-versions
 

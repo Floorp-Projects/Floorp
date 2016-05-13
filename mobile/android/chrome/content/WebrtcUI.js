@@ -202,13 +202,11 @@ var WebrtcUI = {
       }, this);
   },
 
-  _addDevicesToOptions: function(aDevices, aType, aOptions, extraOptions) {
+  _addDevicesToOptions: function(aDevices, aType, aOptions) {
     if (aDevices.length) {
 
       // Filter out empty items from the list
       let list = this._getList(aDevices, aType);
-      if (extraOptions)
-        list = list.concat(extraOptions);
 
       if (list.length > 0) {
         aOptions.inputs.push({
@@ -281,23 +279,13 @@ var WebrtcUI = {
     let message = Strings.browser.formatStringFromName("getUserMedia.share" + requestType + ".message", [ requestor ], 1);
 
     let options = { inputs: [] };
-    // if the users only option would be to select "No Audio" or "No Video"
-    // i.e. we're only showing audio or only video and there is only one device for that type
-    // don't bother showing a menulist to select from
-    var extraItems = null;
     if (videoDevices.length > 1 || audioDevices.length > 0) {
-      // Only show the No Video option if there are also Audio devices to choose from
-      if (audioDevices.length > 0)
-        extraItems = [ Strings.browser.GetStringFromName("getUserMedia.videoSource.none") ];
       // videoSource is both the string used for l10n lookup and the object that will be returned
-      this._addDevicesToOptions(videoDevices, "videoSource", options, extraItems);
+      this._addDevicesToOptions(videoDevices, "videoSource", options);
     }
 
     if (audioDevices.length > 1 || videoDevices.length > 0) {
-      // Only show the No Audio option if there are also Video devices to choose from
-      if (videoDevices.length > 0)
-        extraItems = [ Strings.browser.GetStringFromName("getUserMedia.audioDevice.none") ];
-      this._addDevicesToOptions(audioDevices, "audioDevice", options, extraItems);
+      this._addDevicesToOptions(audioDevices, "audioDevice", options);
     }
 
     let buttons = this.getDeviceButtons(audioDevices, videoDevices, aCallID, uri);

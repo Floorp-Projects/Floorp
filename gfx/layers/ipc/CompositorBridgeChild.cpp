@@ -112,6 +112,16 @@ CompositorBridgeChild::Destroy()
   // From now on we can't send any message message.
   MessageLoop::current()->PostTask(
              NewRunnableFunction(DeferredDestroyCompositor, mCompositorBridgeParent, selfRef));
+
+  const ManagedContainer<PTextureChild>& textures = ManagedPTextureChild();
+  for (auto iter = textures.ConstIter(); !iter.Done(); iter.Next()) {
+    RefPtr<TextureClient> texture = TextureClient::AsTextureClient(iter.Get()->GetKey());
+
+    if (texture) {
+      texture->Destroy();
+    }
+  }
+
 }
 
 // static
@@ -748,6 +758,21 @@ CompositorBridgeChild::SendUpdateVisibleRegion(VisibilityCounter aCounter,
     return true;
   }
   return PCompositorBridgeChild::SendUpdateVisibleRegion(aCounter, aGuid, aRegion);
+}
+
+PTextureChild*
+CompositorBridgeChild::AllocPTextureChild(const SurfaceDescriptor&,
+                                          const LayersBackend&,
+                                          const TextureFlags&,
+                                          const uint64_t&)
+{
+  return TextureClient::CreateIPDLActor();
+}
+
+bool
+CompositorBridgeChild::DeallocPTextureChild(PTextureChild* actor)
+{
+  return TextureClient::DestroyIPDLActor(actor);
 }
 
 } // namespace layers

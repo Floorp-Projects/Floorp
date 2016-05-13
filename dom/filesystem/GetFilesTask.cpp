@@ -27,11 +27,13 @@ namespace dom {
 
 /* static */ already_AddRefed<GetFilesTaskChild>
 GetFilesTaskChild::Create(FileSystemBase* aFileSystem,
+                          Directory* aDirectory,
                           nsIFile* aTargetPath,
                           bool aRecursiveFlag,
                           ErrorResult& aRv)
 {
   MOZ_ASSERT(aFileSystem);
+  MOZ_ASSERT(aDirectory);
   aFileSystem->AssertIsOnOwningThread();
 
   nsCOMPtr<nsIGlobalObject> globalObject =
@@ -42,7 +44,8 @@ GetFilesTaskChild::Create(FileSystemBase* aFileSystem,
   }
 
   RefPtr<GetFilesTaskChild> task =
-    new GetFilesTaskChild(aFileSystem, aTargetPath, aRecursiveFlag);
+    new GetFilesTaskChild(aFileSystem, aDirectory, aTargetPath,
+                          aRecursiveFlag);
 
   // aTargetPath can be null. In this case SetError will be called.
 
@@ -55,13 +58,16 @@ GetFilesTaskChild::Create(FileSystemBase* aFileSystem,
 }
 
 GetFilesTaskChild::GetFilesTaskChild(FileSystemBase* aFileSystem,
+                                     Directory* aDirectory,
                                      nsIFile* aTargetPath,
                                      bool aRecursiveFlag)
   : FileSystemTaskChildBase(aFileSystem)
+  , mDirectory(aDirectory)
   , mTargetPath(aTargetPath)
   , mRecursiveFlag(aRecursiveFlag)
 {
   MOZ_ASSERT(aFileSystem);
+  MOZ_ASSERT(aDirectory);
   aFileSystem->AssertIsOnOwningThread();
 }
 
@@ -89,7 +95,14 @@ GetFilesTaskChild::GetRequestParams(const nsString& aSerializedDOMPath,
     return FileSystemGetFilesParams();
   }
 
-  return FileSystemGetFilesParams(aSerializedDOMPath, path, mRecursiveFlag);
+  nsAutoString domPath;
+  mDirectory->GetPath(domPath, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return FileSystemGetFilesParams();
+  }
+
+  return FileSystemGetFilesParams(aSerializedDOMPath, path, domPath,
+                                  mRecursiveFlag);
 }
 
 void
@@ -109,7 +122,8 @@ GetFilesTaskChild::SetSuccessRequestResult(const FileSystemResponseValue& aValue
 
   for (uint32_t i = 0; i < r.data().Length(); ++i) {
     const FileSystemFileResponse& data = r.data()[i];
-    mTargetData[i] = data.realPath();
+    mTargetData[i].mRealPath = data.realPath();
+    mTargetData[i].mDOMPath = data.domPath();
   }
 }
 
@@ -140,7 +154,7 @@ GetFilesTaskChild::HandlerCallback()
 
   for (unsigned i = 0; i < count; i++) {
     nsCOMPtr<nsIFile> path;
-    NS_ConvertUTF16toUTF8 fullPath(mTargetData[i]);
+    NS_ConvertUTF16toUTF8 fullPath(mTargetData[i].mRealPath);
     nsresult rv = NS_NewNativeLocalFile(fullPath, true, getter_AddRefs(path));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mPromise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -164,6 +178,7 @@ GetFilesTaskChild::HandlerCallback()
     RefPtr<File> file =
       File::CreateFromFile(mFileSystem->GetParentObject(), path);
     MOZ_ASSERT(file);
+    file->SetPath(mTargetData[i].mDOMPath);
 
     listing[i] = file;
   }
@@ -208,6 +223,7 @@ GetFilesTaskParent::GetFilesTaskParent(FileSystemBase* aFileSystem,
                                        const FileSystemGetFilesParams& aParam,
                                        FileSystemRequestParent* aParent)
   : FileSystemTaskParentBase(aFileSystem, aParam, aParent)
+  , mDirectoryDOMPath(aParam.domPath())
   , mRecursiveFlag(aParam.recursiveFlag())
 {
   MOZ_ASSERT(XRE_IsParentProcess(), "Only call from parent process!");
@@ -231,7 +247,8 @@ GetFilesTaskParent::GetSuccessRequestResult(ErrorResult& aRv) const
 
   for (unsigned i = 0; i < mTargetData.Length(); i++) {
     FileSystemFileResponse fileData;
-    fileData.realPath() = mTargetData[i];
+    fileData.realPath() = mTargetData[i].mRealPath;
+    fileData.domPath() = mTargetData[i].mDOMPath;
     inputs[i] = fileData;
   }
 
@@ -262,7 +279,7 @@ GetFilesTaskParent::IOWork()
   }
 
   // Get isDirectory.
-  rv = ExploreDirectory(mTargetPath);
+  rv = ExploreDirectory(mDirectoryDOMPath, mTargetPath);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -271,7 +288,7 @@ GetFilesTaskParent::IOWork()
 }
 
 nsresult
-GetFilesTaskParent::ExploreDirectory(nsIFile* aPath)
+GetFilesTaskParent::ExploreDirectory(const nsAString& aDOMPath, nsIFile* aPath)
 {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Only call from parent process!");
@@ -320,13 +337,29 @@ GetFilesTaskParent::ExploreDirectory(nsIFile* aPath)
       continue;
     }
 
+    nsAutoString domPath;
+    domPath.Assign(aDOMPath);
+
+    // This is specific for unix root filesystem.
+    if (!aDOMPath.EqualsLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL)) {
+      domPath.AppendLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL);
+    }
+
+    nsAutoString leafName;
+    if (NS_WARN_IF(NS_FAILED(currFile->GetLeafName(leafName)))) {
+      continue;
+    }
+    domPath.Append(leafName);
+
     if (isFile) {
-      nsAutoString path;
-      if (NS_WARN_IF(NS_FAILED(currFile->GetPath(path)))) {
+      FileData data;
+      data.mDOMPath.Append(domPath);
+
+      if (NS_WARN_IF(NS_FAILED(currFile->GetPath(data.mRealPath)))) {
         continue;
       }
 
-      if (!mTargetData.AppendElement(path, fallible)) {
+      if (!mTargetData.AppendElement(data, fallible)) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
 
@@ -340,7 +373,7 @@ GetFilesTaskParent::ExploreDirectory(nsIFile* aPath)
     }
 
     // Recursive.
-    rv = ExploreDirectory(currFile);
+    rv = ExploreDirectory(domPath, currFile);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

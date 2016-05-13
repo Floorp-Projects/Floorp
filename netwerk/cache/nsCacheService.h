@@ -327,6 +327,7 @@ private:
 
     mozilla::Mutex                  mLock;
     mozilla::CondVar                mCondVar;
+    bool                            mNotified;
 
     mozilla::Mutex                  mTimeStampLock;
     mozilla::TimeStamp              mLockAcquiredTimeStamp;
