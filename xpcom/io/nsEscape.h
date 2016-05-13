@@ -31,8 +31,21 @@ extern "C" {
 
 /**
  * Escape the given string according to mask
- * @param str The string to escape
- * @param mask How to escape the string
+ * @param aSstr The string to escape
+ * @param aLength The length of the string to escape
+ * @param aOutputLen A pointer that will be used to store the length of the
+ *        output string, if not null
+ * @param aMask How to escape the string
+ * @return A newly allocated escaped string that must be free'd with
+ *         nsCRT::free, or null on failure
+ */
+char* nsEscapeWithLength(const char* aStr, size_t aLength, size_t* aOutputLen,
+                         nsEscapeMask aMask);
+
+/**
+ * Escape the given string according to mask
+ * @param aStr The string to escape
+ * @param aMask How to escape the string
  * @return A newly allocated escaped string that must be free'd with
  *         nsCRT::free, or null on failure
  */
@@ -184,22 +197,24 @@ NS_EscapeURL(const nsAFlatString& aStr, const nsTArray<char16_t>& aForbidden,
  * on out of memory. To reverse this function, use NS_UnescapeURL.
  */
 inline bool
-NS_Escape(const nsCString& aOriginal, nsCString& aEscaped,
+NS_Escape(const nsACString& aOriginal, nsACString& aEscaped,
           nsEscapeMask aMask)
 {
-  char* esc = nsEscape(aOriginal.get(), aMask);
+  size_t escLen = 0;
+  char* esc = nsEscapeWithLength(aOriginal.BeginReading(), aOriginal.Length(),
+                                 &escLen, aMask);
   if (! esc) {
     return false;
   }
-  aEscaped.Adopt(esc);
+  aEscaped.Adopt(esc, escLen);
   return true;
 }
 
 /**
  * Inline unescape of mutable string object.
  */
-inline nsCString&
-NS_UnescapeURL(nsCString& aStr)
+inline nsACString&
+NS_UnescapeURL(nsACString& aStr)
 {
   aStr.SetLength(nsUnescapeCount(aStr.BeginWriting()));
   return aStr;
