@@ -231,7 +231,7 @@ const SEC_ERROR_OCSP_FUTURE_RESPONSE               = SEC_ERROR_BASE + 131;
 const SEC_ERROR_OCSP_OLD_RESPONSE                  = SEC_ERROR_BASE + 132;
 const MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE = MOZILLA_PKIX_ERROR_BASE + 5;
 
-const PREF_BLOCKLIST_CLOCK_SKEW_SECONDS = "services.blocklist.clock_skew_seconds";
+const PREF_KINTO_CLOCK_SKEW_SECONDS = "services.kinto.clock_skew_seconds";
 
 const PREF_SSL_IMPACT_ROOTS = ["security.tls.version.min", "security.tls.version.max", "security.ssl3."];
 
@@ -287,9 +287,9 @@ var AboutNetAndCertErrorListener = {
       case SEC_ERROR_OCSP_OLD_RESPONSE:
       case MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE:
 
-        // use blocklist stats if available
-        if (Services.prefs.getPrefType(PREF_BLOCKLIST_CLOCK_SKEW_SECONDS)) {
-          let difference = Services.prefs.getIntPref(PREF_BLOCKLIST_CLOCK_SKEW_SECONDS);
+        // use Kinto stats if available
+        if (Services.prefs.getPrefType(PREF_KINTO_CLOCK_SKEW_SECONDS)) {
+          let difference = Services.prefs.getIntPref(PREF_KINTO_CLOCK_SKEW_SECONDS);
 
           // if the difference is more than a day
           if (Math.abs(difference) > 60 * 60 * 24) {
