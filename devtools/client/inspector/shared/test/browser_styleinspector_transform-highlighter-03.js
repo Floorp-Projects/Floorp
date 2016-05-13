@@ -25,7 +25,7 @@ const TEST_URI = `
 
 const TYPE = "CssTransformHighlighter";
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
 
@@ -34,18 +34,18 @@ add_task(function*() {
     isShown: false,
     nodeFront: null,
     nbOfTimesShown: 0,
-    show: function(nodeFront) {
+    show: function (nodeFront) {
       this.nodeFront = nodeFront;
       this.isShown = true;
       this.nbOfTimesShown ++;
       return promise.resolve(true);
     },
-    hide: function() {
+    hide: function () {
       this.nodeFront = null;
       this.isShown = false;
       return promise.resolve();
     },
-    finalize: function() {}
+    finalize: function () {}
   };
 
   // Inject the mock highlighter in the rule-view

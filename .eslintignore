@@ -84,7 +84,6 @@ devtools/client/framework/**
 # devtools/client/inspector/shared/*.js files are eslint-clean, so they aren't
 # included in the ignore list.
 devtools/client/inspector/fonts/**
-devtools/client/inspector/shared/test/**
 devtools/client/inspector/test/**
 devtools/client/inspector/*.js
 !devtools/client/inspector/breadcrumbs.js
