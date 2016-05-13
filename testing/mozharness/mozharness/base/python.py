@@ -456,7 +456,7 @@ class ResourceMonitoringMixin(object):
 
         self.register_virtualenv_module('psutil>=3.1.1', method='pip',
                                         optional=True)
-        self.register_virtualenv_module('mozsystemmonitor==0.1',
+        self.register_virtualenv_module('mozsystemmonitor==0.3',
                                         method='pip', optional=True)
         self._resource_monitor = None
 
