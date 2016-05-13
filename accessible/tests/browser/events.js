@@ -42,13 +42,17 @@ function eventToString(event) {
 }
 
 /**
- * A helper function that waits for an accessible event of certain type that
- * belongs to a certain DOMNode (defined by its id).
- * @param  {String}  id         expected content element id for the event
- * @param  {Number}  eventType  expected accessible event type
- * @return {Promise}            promise that resolves to an event
+ * A helper function that returns a promise that resolves when an accessible
+ * event of the given type with the given target (defined by its id or
+ * accessible) is observed.
+ * @param  {String|nsIAccessible}  expectedIdOrAcc  expected content element id
+ *                                                  for the event
+ * @param  {Number}                eventType        expected accessible event
+ *                                                  type
+ * @return {Promise}                                promise that resolves to an
+ *                                                  event
  */
-function waitForEvent(eventType, id) {
+function waitForEvent(eventType, expectedIdOrAcc) {
   return new Promise(resolve => {
     let eventObserver = {
       observe(subject, topic, data) {
@@ -59,11 +63,23 @@ function waitForEvent(eventType, id) {
         let event = subject.QueryInterface(nsIAccessibleEvent);
         Logger.log(eventToString(event));
 
-        let domID = getAccessibleDOMNodeID(event.accessible);
-        // If event's accessible does not match expected event type or DOMNode
-        // id, skip thie event.
-        if (domID === id && event.eventType === eventType) {
-          Logger.log(`Correct event DOMNode id: ${id}`);
+        // If event type does not match expected type, skip the event.
+        if (event.eventType !== eventType) {
+          return;
+        }
+
+        let acc = event.accessible;
+        let id = getAccessibleDOMNodeID(acc);
+        let isID = typeof expectedIdOrAcc === 'string';
+        let actualIdOrAcc = isID ? id : acc;
+        // If event's accessible does not match expected DOMNode id or
+        // accessible, skip the event.
+        if (actualIdOrAcc === expectedIdOrAcc) {
+          if (isID) {
+            Logger.log(`Correct event DOMNode id: ${id}`);
+          } else {
+            Logger.log(`Correct event accessible: ${prettyName(acc)}`);
+          }
           Logger.log(`Correct event type: ${eventTypeToString(eventType)}`);
           ok(event.accessibleDocument instanceof nsIAccessibleDocument,
             'Accessible document present.');
