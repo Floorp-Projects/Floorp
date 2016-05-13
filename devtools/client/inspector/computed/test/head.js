@@ -1,6 +1,8 @@
 /* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
+/* eslint no-unused-vars: [2, {"vars": "local"}] */
+/* import-globals-from ../../test/head.js */
 "use strict";
 
 // Import the inspector's head.js first (which itself imports shared-head.js).
@@ -80,7 +82,7 @@ function getComputedViewPropertyView(view, name) {
  * @return {Promise} A promise that resolves to the property matched rules
  * container
  */
-var getComputedViewMatchedRules = Task.async(function*(view, name) {
+var getComputedViewMatchedRules = Task.async(function* (view, name) {
   let expander;
   let propertyContent;
   for (let property of view.styleDocument.querySelectorAll(".property-view")) {

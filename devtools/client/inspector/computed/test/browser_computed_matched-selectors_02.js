@@ -6,7 +6,7 @@
 
 // Tests for matched selector texts in the computed view.
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("data:text/html;charset=utf-8,<div style='color:blue;'></div>");
   let {inspector, view} = yield openComputedView();
   yield selectNode("div", inspector);
@@ -30,7 +30,7 @@ add_task(function*() {
 
 function getPropertyView(computedView, name) {
   let propertyView = null;
-  computedView.propertyViews.some(function(view) {
+  computedView.propertyViews.some(function (view) {
     if (view.name == name) {
       propertyView = view;
       return true;
