@@ -7353,6 +7353,19 @@ nsDocShell::OnRedirectStateChange(nsIChannel* aOldChannel,
 {
   NS_ASSERTION(aStateFlags & STATE_REDIRECTING,
                "Calling OnRedirectStateChange when there is no redirect");
+
+  // If mixed content is allowed for the old channel, we forward
+  // the permission to the new channel if it has the same origin
+  // as the old one.
+  if (mMixedContentChannel && mMixedContentChannel == aOldChannel) {
+    nsresult rv = nsContentUtils::CheckSameOrigin(mMixedContentChannel, aNewChannel);
+    if (NS_SUCCEEDED(rv)) {
+      SetMixedContentChannel(aNewChannel); // Same origin: forward permission.
+    } else {
+      SetMixedContentChannel(nullptr); // Different origin: clear mMixedContentChannel.
+    }
+  }
+
   if (!(aStateFlags & STATE_IS_DOCUMENT)) {
     return;  // not a toplevel document
   }
