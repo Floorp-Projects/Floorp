@@ -211,7 +211,7 @@
       },
       {
         "id": "DownloadTime",
-        "description": "A time specified as a Date object, a number of string representing milliseconds since the epoch, or an ISO 8601 string",
+        "description": "A time specified as a Date object, a number or string representing milliseconds since the epoch, or an ISO 8601 string",
         "choices": [
           {
             "type": "string",
