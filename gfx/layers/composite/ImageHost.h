@@ -48,7 +48,7 @@ public:
                          float aOpacity,
                          const gfx::Matrix4x4& aTransform,
                          const gfx::Filter& aFilter,
-                         const gfx::Rect& aClipRect,
+                         const gfx::IntRect& aClipRect,
                          const nsIntRegion* aVisibleRegion = nullptr) override;
 
   virtual void UseTextureHost(const nsTArray<TimedTexture>& aTextures) override;
@@ -182,7 +182,7 @@ public:
                          float aOpacity,
                          const gfx::Matrix4x4& aTransform,
                          const gfx::Filter& aFilter,
-                         const gfx::Rect& aClipRect,
+                         const gfx::IntRect& aClipRect,
                          const nsIntRegion* aVisibleRegion);
   virtual LayerRenderState GetRenderState();
   virtual void UseOverlaySource(OverlaySource aOverlay,

@@ -57,18 +57,18 @@ public:
   virtual void ClearRect(const gfx::Rect& aRect) override;
 
   virtual void DrawQuad(const gfx::Rect &aRect,
-                        const gfx::Rect &aClipRect,
+                        const gfx::IntRect &aClipRect,
                         const EffectChain &aEffectChain,
                         gfx::Float aOpacity,
                         const gfx::Matrix4x4& aTransform,
                         const gfx::Rect& aVisibleRect) override;
 
   virtual void BeginFrame(const nsIntRegion& aInvalidRegion,
-                          const gfx::Rect *aClipRectIn,
-                          const gfx::Rect& aRenderBounds,
+                          const gfx::IntRect *aClipRectIn,
+                          const gfx::IntRect& aRenderBounds,
                           const nsIntRegion& aOpaqueRegion,
-                          gfx::Rect *aClipRectOut = nullptr,
-                          gfx::Rect *aRenderBoundsOut = nullptr) override;
+                          gfx::IntRect *aClipRectOut = nullptr,
+                          gfx::IntRect *aRenderBoundsOut = nullptr) override;
 
   virtual void EndFrame() override;
 
