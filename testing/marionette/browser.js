@@ -33,7 +33,6 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 browser.Context = class {
 
   constructor(win, driver) {
-    logger.info("Context ctor");
     this.browser = undefined;
     this.window = win;
     this.driver = driver;
