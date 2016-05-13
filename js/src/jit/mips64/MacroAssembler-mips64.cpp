@@ -466,6 +466,32 @@ MacroAssemblerMIPS64::ma_load(Register dest, Address address,
 {
     int16_t encodedOffset;
     Register base;
+
+    if (isLoongson() && ZeroExtend != extension &&
+        !Imm16::IsInSignedRange(address.offset))
+    {
+        ma_li(ScratchRegister, Imm32(address.offset));
+        base = address.base;
+
+        switch (size) {
+          case SizeByte:
+            as_gslbx(dest, base, ScratchRegister, 0);
+            break;
+          case SizeHalfWord:
+            as_gslhx(dest, base, ScratchRegister, 0);
+            break;
+          case SizeWord:
+            as_gslwx(dest, base, ScratchRegister, 0);
+            break;
+          case SizeDouble:
+            as_gsldx(dest, base, ScratchRegister, 0);
+            break;
+          default:
+            MOZ_CRASH("Invalid argument for ma_load");
+        }
+        return;
+    }
+
     if (!Imm16::IsInSignedRange(address.offset)) {
         ma_li(ScratchRegister, Imm32(address.offset));
         as_daddu(ScratchRegister, address.base, ScratchRegister);
@@ -509,6 +535,30 @@ MacroAssemblerMIPS64::ma_store(Register data, Address address, LoadStoreSize siz
 {
     int16_t encodedOffset;
     Register base;
+
+    if (isLoongson() && !Imm16::IsInSignedRange(address.offset)) {
+        ma_li(ScratchRegister, Imm32(address.offset));
+        base = address.base;
+
+        switch (size) {
+          case SizeByte:
+            as_gssbx(data, base, ScratchRegister, 0);
+            break;
+          case SizeHalfWord:
+            as_gsshx(data, base, ScratchRegister, 0);
+            break;
+          case SizeWord:
+            as_gsswx(data, base, ScratchRegister, 0);
+            break;
+          case SizeDouble:
+            as_gssdx(data, base, ScratchRegister, 0);
+            break;
+          default:
+            MOZ_CRASH("Invalid argument for ma_store");
+        }
+        return;
+    }
+
     if (!Imm16::IsInSignedRange(address.offset)) {
         ma_li(ScratchRegister, Imm32(address.offset));
         as_daddu(ScratchRegister, address.base, ScratchRegister);
