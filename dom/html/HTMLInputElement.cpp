@@ -11,6 +11,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/Date.h"
 #include "mozilla/dom/Directory.h"
+#include "mozilla/dom/FileSystemUtils.h"
 #include "nsAttrValueInlines.h"
 #include "nsCRTGlue.h"
 
@@ -288,7 +289,18 @@ class HTMLInputElementState final : public nsISupports
         if (aArray[i].IsFile()) {
           BlobImplOrDirectoryPath* data = mBlobImplsOrDirectoryPaths.AppendElement();
 
-          data->mBlobImpl = aArray[i].GetAsFile()->Impl();
+          RefPtr<File> file = aArray[i].GetAsFile();
+
+          nsAutoString name;
+          file->GetName(name);
+
+          nsAutoString path;
+          path.AssignLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL);
+          path.Append(name);
+
+          file->SetPath(path);
+
+          data->mBlobImpl = file->Impl();
           data->mType = BlobImplOrDirectoryPath::eBlobImpl;
         } else {
           MOZ_ASSERT(aArray[i].IsDirectory());

@@ -35,6 +35,27 @@ function create_fileList(aPath) {
   script.sendAsyncMessage("dir.open", { path: aPath });
 }
 
+function test_simpleFilePicker(aPath) {
+  var url = SimpleTest.getTestFileURL("script_fileList.js");
+  var script = SpecialPowers.loadChromeScript(url);
+
+  function onOpened(message) {
+    var fileList = document.getElementById('fileList');
+    SpecialPowers.wrap(fileList).mozSetFileArray([message.file]);
+
+    is(fileList.files.length, 1, "we want 1 element");
+    ok(fileList.files[0] instanceof File, "we want 1 file");
+    ok("webkitRelativePath" in fileList.files[0], "we have webkitRelativePath attribute");
+    is(fileList.files[0].webkitRelativePath, "", "No webkit relative path for normal filePicker");
+
+    script.destroy();
+    next();
+  }
+
+  script.addMessageListener("file.opened", onOpened);
+  script.sendAsyncMessage("file.open");
+}
+
 var tests = [
   function() { setup_tests(next); },
 
@@ -51,6 +72,8 @@ var tests = [
   function() { test_basic(directory, next); },
   function() { test_getFilesAndDirectories(directory, false, next); },
   function() { test_getFiles(directory, false, next); },
+
+  test_simpleFilePicker
 ];
 
 function next() {

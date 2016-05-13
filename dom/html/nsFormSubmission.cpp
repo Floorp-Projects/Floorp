@@ -36,11 +36,13 @@
 #include "nsIFileStreams.h"
 #include "nsContentUtils.h"
 
+#include "mozilla/dom/Directory.h"
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/File.h"
 
 using namespace mozilla;
 using mozilla::dom::Blob;
+using mozilla::dom::Directory;
 using mozilla::dom::EncodingUtils;
 using mozilla::dom::File;
 
@@ -464,21 +466,19 @@ nsFSMultipartFormData::AddNameBlobOrNullPair(const nsAString& aName,
 
   if (aBlob) {
     nsAutoString filename16;
-    RetrieveFileName(aBlob, filename16);
 
-    ErrorResult error;
-    nsAutoString filepath16;
     RefPtr<File> file = aBlob->ToFile();
     if (file) {
-      file->GetPath(filepath16, error);
-      if (NS_WARN_IF(error.Failed())) {
-        return error.StealNSResult();
+      nsAutoString path;
+      file->GetPath(path);
+      if (Directory::WebkitBlinkDirectoryPickerEnabled(nullptr, nullptr) &&
+          !path.IsEmpty()) {
+        filename16 = path;
       }
-    }
 
-    if (!filepath16.IsEmpty()) {
-      // File.path includes trailing "/"
-      filename16 = filepath16 + filename16;
+      if (filename16.IsEmpty()) {
+        RetrieveFileName(aBlob, filename16);
+      }
     }
 
     rv = EncodeVal(filename16, filename, true);
@@ -497,6 +497,7 @@ nsFSMultipartFormData::AddNameBlobOrNullPair(const nsAString& aName,
                                         nsLinebreakConverter::eLinebreakSpace));
 
     // Get input stream
+    ErrorResult error;
     aBlob->GetInternalStream(getter_AddRefs(fileStream), error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
