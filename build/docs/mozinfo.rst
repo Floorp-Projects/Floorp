@@ -136,6 +136,14 @@ release_build
 
    Always defined.
 
+sm_promise
+   Whether spidermonkey promises have been enabled or not.  This is set
+   by adding --enable-sm-promise to the mozconfig file.
+
+   Values are ``true`` and ``false``.
+
+   Always defined.
+
 tests_enabled
    Whether tests are enabled for this build.
 
