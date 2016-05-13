@@ -111,7 +111,7 @@
     // rule is a better rule to check this.
     "max-depth": 0,
     // Maximum length of a line.
-    "max-len": [2, 80, 2, {"ignoreUrls": true, "ignorePattern": "\\s*require\\s*\\(|^\\s*loader\\.lazy|-\\*-"}],
+    "max-len": [2, 80, 2, {"ignoreUrls": true, "ignorePattern": "data:image\/|\\s*require\\s*\\(|^\\s*loader\\.lazy|-\\*-"}],
     // Maximum depth callbacks can be nested.
     "max-nested-callbacks": [2, 3],
     // Don't limit the number of parameters that can be used in a function.
