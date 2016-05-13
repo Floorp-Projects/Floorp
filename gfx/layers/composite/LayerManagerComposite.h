@@ -381,7 +381,7 @@ private:
   /**
    * Render debug overlays such as the FPS/FrameCounter above the frame.
    */
-  void RenderDebugOverlay(const gfx::Rect& aBounds);
+  void RenderDebugOverlay(const gfx::IntRect& aBounds);
 
 
   RefPtr<CompositingRenderTarget> PushGroupForLayerEffects();
@@ -621,7 +621,7 @@ RenderWithAllMasks(Layer* aLayer, Compositor* aCompositor,
     LayerManagerComposite::AutoAddMaskEffect
       autoMaskEffect(firstMask, effectChain);
     aLayer->AsLayerComposite()->AddBlendModeEffect(effectChain);
-    aRenderCallback(effectChain, gfx::Rect(aClipRect));
+    aRenderCallback(effectChain, aClipRect);
     return;
   }
 
@@ -659,13 +659,13 @@ RenderWithAllMasks(Layer* aLayer, Compositor* aCompositor,
     EffectChain firstEffectChain(aLayer);
     LayerManagerComposite::AutoAddMaskEffect
       firstMaskEffect(firstMask, firstEffectChain);
-    aRenderCallback(firstEffectChain, gfx::Rect(aClipRect - surfaceRect.TopLeft()));
+    aRenderCallback(firstEffectChain, aClipRect - surfaceRect.TopLeft());
     // firstTarget now contains the transformed source with the first mask and
     // opacity already applied.
   }
 
   // Apply the intermediate masks.
-  gfx::Rect intermediateClip(surfaceRect - surfaceRect.TopLeft());
+  gfx::IntRect intermediateClip(surfaceRect - surfaceRect.TopLeft());
   RefPtr<CompositingRenderTarget> previousTarget = firstTarget;
   for (size_t i = nextAncestorMaskLayer; i < ancestorMaskLayerCount - 1; i++) {
     Layer* intermediateMask = aLayer->GetAncestorMaskLayerAt(i);
@@ -699,7 +699,7 @@ RenderWithAllMasks(Layer* aLayer, Compositor* aCompositor,
   aLayer->AsLayerComposite()->AddBlendModeEffect(finalEffectChain);
   LayerManagerComposite::AutoAddMaskEffect autoMaskEffect(finalMask, finalEffectChain);
   if (!autoMaskEffect.Failed()) {
-    aCompositor->DrawQuad(gfx::Rect(surfaceRect), gfx::Rect(aClipRect),
+    aCompositor->DrawQuad(gfx::Rect(surfaceRect), aClipRect,
                           finalEffectChain, 1.0, gfx::Matrix4x4());
   }
 }
