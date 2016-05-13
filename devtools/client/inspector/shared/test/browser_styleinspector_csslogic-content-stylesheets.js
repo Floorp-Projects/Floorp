@@ -20,7 +20,7 @@ var ssm = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
                             .getService(Ci.nsIScriptSecurityManager);
 const XUL_PRINCIPAL = ssm.createCodebasePrincipal(XUL_URI, {});
 
-add_task(function*() {
+add_task(function* () {
   requestLongerTimeout(2);
 
   info("Checking stylesheets on HTML document");
