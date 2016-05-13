@@ -484,7 +484,8 @@ nsClipboardCommand::IsCommandEnabled(const char* aCommandName, nsISupports *aCon
 
   if (strcmp(aCommandName, "cmd_copy") &&
       strcmp(aCommandName, "cmd_copyAndCollapseToEnd") &&
-      strcmp(aCommandName, "cmd_cut"))
+      strcmp(aCommandName, "cmd_cut") &&
+      strcmp(aCommandName, "cmd_paste"))
     return NS_OK;
 
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryInterface(aContext);
@@ -492,11 +493,13 @@ nsClipboardCommand::IsCommandEnabled(const char* aCommandName, nsISupports *aCon
 
   nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
   if (doc->IsHTMLOrXHTML()) {
-    // In HTML and XHTML documents, we always want cut and copy commands to be enabled.
+    // In HTML and XHTML documents, we always want the cut, copy and paste
+    // commands to be enabled.
     *outCmdEnabled = true;
   } else {
     // Cut isn't enabled in xul documents which use nsClipboardCommand
-    if (strcmp(aCommandName, "cmd_cut")) {
+    if (strcmp(aCommandName, "cmd_copy") == 0 ||
+        strcmp(aCommandName, "cmd_copyAndCollapseToEnd") == 0) {
       *outCmdEnabled = nsCopySupport::CanCopy(doc);
     }
   }
@@ -508,7 +511,8 @@ nsClipboardCommand::DoCommand(const char *aCommandName, nsISupports *aContext)
 {
   if (strcmp(aCommandName, "cmd_cut") &&
       strcmp(aCommandName, "cmd_copy") &&
-      strcmp(aCommandName, "cmd_copyAndCollapseToEnd"))
+      strcmp(aCommandName, "cmd_copyAndCollapseToEnd") &&
+      strcmp(aCommandName, "cmd_paste"))
     return NS_OK;
 
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryInterface(aContext);
@@ -523,14 +527,17 @@ nsClipboardCommand::DoCommand(const char *aCommandName, nsISupports *aContext)
   EventMessage eventMessage = eCopy;
   if (strcmp(aCommandName, "cmd_cut") == 0) {
     eventMessage = eCut;
+  } else if (strcmp(aCommandName, "cmd_paste") == 0) {
+    eventMessage = ePaste;
   }
 
   bool actionTaken = false;
-  nsCopySupport::FireClipboardEvent(eventMessage,
-                                    nsIClipboard::kGlobalClipboard,
-                                    presShell, nullptr, &actionTaken);
+  bool notCancelled =
+    nsCopySupport::FireClipboardEvent(eventMessage,
+                                      nsIClipboard::kGlobalClipboard,
+                                      presShell, nullptr, &actionTaken);
 
-  if (!strcmp(aCommandName, "cmd_copyAndCollapseToEnd")) {
+  if (notCancelled && !strcmp(aCommandName, "cmd_copyAndCollapseToEnd")) {
     dom::Selection *sel =
       presShell->GetCurrentSelection(nsISelectionController::SELECTION_NORMAL);
     NS_ENSURE_TRUE(sel, NS_ERROR_FAILURE);

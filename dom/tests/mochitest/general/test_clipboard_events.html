@@ -157,7 +157,7 @@ function test_dom_onpaste() {
   content.onpaste = function() { onpaste_fired = true; };
   try {
     synthesizeKey("v", {accelKey: 1});
-    ok(!onpaste_fired, "paste event firing on DOM element");
+    ok(onpaste_fired, "paste event firing on DOM element");
   } finally {
     content.onpaste = null;
   }
