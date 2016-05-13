@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { URL } = require("sdk/url");
 const { LocalizationHelper } = require("devtools/client/shared/l10n");
 
 const l10n = new LocalizationHelper("chrome://devtools/locale/components.properties");
@@ -30,7 +29,7 @@ const CHAR_CODE_COLON = ":".charCodeAt(0);
 const CHAR_CODE_SLASH = "/".charCodeAt(0);
 const CHAR_CODE_CAP_S = "S".charCodeAt(0);
 
-// The cache used in the `nsIURL` function.
+// The cache used in the `parseURL` function.
 const gURLStore = new Map();
 // The cache used in the `getSourceNames` function.
 const gSourceNamesStore = new Map();
@@ -39,10 +38,6 @@ const gSourceNamesStore = new Map();
  * Takes a string and returns an object containing all the properties
  * available on an URL instance, with additional properties (fileName),
  * Leverages caching.
- *
- * @TODO If loaded through Browser Loader, we can use the web API URL
- * directly, giving us the same interface without needing the SDK --
- * we still need to add `fileName` though.
  *
  * @param {String} location
  * @return {Object?} An object containing most properties available
@@ -58,29 +53,40 @@ function parseURL(location) {
 
   try {
     url = new URL(location);
+    // The callers were generally written to expect a URL from
+    // sdk/url, which is subtly different.  So, work around some
+    // important differences here.
+    url = {
+      href: url.href,
+      protocol: url.protocol,
+      host: url.host,
+      hostname: url.hostname,
+      port: url.port || null,
+      pathname: url.pathname,
+      search: url.search,
+      hash: url.hash,
+      username: url.username,
+      password: url.password,
+      origin: url.origin,
+    };
+
     // Definitions:
     // Example: https://foo.com:8888/file.js
     // `hostname`: "foo.com"
     // `host`: "foo.com:8888"
-    //
-    // sdk/url does not match several definitions.: both `host` and `hostname`
-    // are actually the `hostname` (even though this is the `host` property on
-    // the original nsIURL, with `hostPort` representing the actual `host` name,
-    // AH!!!). So normalize all that garbage here.
     let isChrome = isChromeScheme(location);
-    let fileName = url.fileName || "/";
-    let hostname, host;
+
+    url.fileName = url.pathname ?
+      (url.pathname.slice(url.pathname.lastIndexOf("/") + 1) || "/") :
+      "/";
+
     if (isChrome) {
-      hostname = null;
-      host = null;
-    } else {
-      hostname = url.hostname;
-      host = url.port ? `${url.host}:${url.port}` : url.host;
+      url.hostname = null;
+      url.host = null;
     }
 
-    let parsed = Object.assign({}, url, { host, fileName, hostname });
-    gURLStore.set(location, parsed);
-    return parsed;
+    gURLStore.set(location, url);
+    return url;
   } catch (e) {
     gURLStore.set(location, null);
     return null;
