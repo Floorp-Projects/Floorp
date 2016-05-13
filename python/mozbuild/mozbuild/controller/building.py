@@ -261,7 +261,7 @@ class BuildMonitor(MozbuildObject):
 
             self.log_resource_usage(usage)
             with open(self._get_state_filename('build_resources.json'), 'w') as fh:
-                json.dump(usage, fh, indent=2)
+                json.dump(self.resources.as_dict(), fh, indent=2)
         except Exception as e:
             self.log(logging.WARNING, 'build_resources_error',
                 {'msg': str(e)},
