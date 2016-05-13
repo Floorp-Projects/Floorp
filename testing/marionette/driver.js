@@ -281,9 +281,7 @@ GeckoDriver.prototype.addFrameCloseListener = function(action) {
  *     Returns the unique server-assigned ID of the window.
  */
 GeckoDriver.prototype.addBrowser = function(win) {
-  logger.info("addBrowser");
   let bc = new browser.Context(win, this);
-  logger.info("bc=" + bc);
   let winId = win.QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
   winId = winId + ((this.appName == "B2G") ? "-b2g" : "");
