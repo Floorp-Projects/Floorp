@@ -117,7 +117,7 @@ protected:
    * @param aEncoded the encoded string [OUT]
    * @throws NS_ERROR_OUT_OF_MEMORY if we run out of memory
    */
-  nsresult URLEncode(const nsAString& aStr, nsCString& aEncoded);
+  nsresult URLEncode(const nsAString& aStr, nsACString& aEncoded);
 
 private:
   /**
@@ -363,23 +363,28 @@ nsFSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
 
 // i18n helper routines
 nsresult
-nsFSURLEncoded::URLEncode(const nsAString& aStr, nsCString& aEncoded)
+nsFSURLEncoded::URLEncode(const nsAString& aStr, nsACString& aEncoded)
 {
   // convert to CRLF breaks
+  int32_t convertedBufLength = 0;
   char16_t* convertedBuf =
-    nsLinebreakConverter::ConvertUnicharLineBreaks(PromiseFlatString(aStr).get(),
+    nsLinebreakConverter::ConvertUnicharLineBreaks(aStr.BeginReading(),
                                                    nsLinebreakConverter::eLinebreakAny,
-                                                   nsLinebreakConverter::eLinebreakNet);
+                                                   nsLinebreakConverter::eLinebreakNet,
+                                                   aStr.Length(),
+                                                   &convertedBufLength);
   NS_ENSURE_TRUE(convertedBuf, NS_ERROR_OUT_OF_MEMORY);
 
+  nsAutoString convertedString;
+  convertedString.Adopt(convertedBuf, convertedBufLength);
+
   nsAutoCString encodedBuf;
-  nsresult rv = EncodeVal(nsDependentString(convertedBuf), encodedBuf, false);
-  free(convertedBuf);
+  nsresult rv = EncodeVal(convertedString, encodedBuf, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  char* escapedBuf = nsEscape(encodedBuf.get(), url_XPAlphas);
-  NS_ENSURE_TRUE(escapedBuf, NS_ERROR_OUT_OF_MEMORY);
-  aEncoded.Adopt(escapedBuf);
+  if (NS_WARN_IF(!NS_Escape(encodedBuf, aEncoded, url_XPAlphas))) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   return NS_OK;
 }
