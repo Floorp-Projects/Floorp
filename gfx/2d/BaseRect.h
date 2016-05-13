@@ -322,7 +322,7 @@ struct BaseRect {
       case RectCorner::BottomRight: return BottomRight();
       case RectCorner::BottomLeft: return BottomLeft();
     }
-    MOZ_CRASH("Incomplete switch");
+    MOZ_CRASH("GFX: Incomplete switch");
   }
   Point CCWCorner(mozilla::Side side) const {
     switch (side) {
@@ -331,7 +331,7 @@ struct BaseRect {
       case NS_SIDE_BOTTOM: return BottomRight();
       case NS_SIDE_LEFT: return BottomLeft();
     }
-    MOZ_CRASH("Incomplete switch");
+    MOZ_CRASH("GFX: Incomplete switch");
   }
   Point CWCorner(mozilla::Side side) const {
     switch (side) {
@@ -340,7 +340,7 @@ struct BaseRect {
       case NS_SIDE_BOTTOM: return BottomLeft();
       case NS_SIDE_LEFT: return TopLeft();
     }
-    MOZ_CRASH("Incomplete switch");
+    MOZ_CRASH("GFX: Incomplete switch");
   }
   Point Center() const { return Point(x, y) + Point(width, height)/2; }
   SizeT Size() const { return SizeT(width, height); }
@@ -364,7 +364,7 @@ struct BaseRect {
       case NS_SIDE_BOTTOM: return YMost();
       case NS_SIDE_LEFT: return X();
     }
-    MOZ_CRASH("Incomplete switch");
+    MOZ_CRASH("GFX: Incomplete switch");
   }
 
   // Moves one edge of the rect without moving the opposite edge.

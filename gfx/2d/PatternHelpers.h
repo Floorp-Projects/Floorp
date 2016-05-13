@@ -115,7 +115,7 @@ public:
 
   operator Pattern&() {
     if (!mPattern) {
-      MOZ_CRASH("GeneralPattern not initialized");
+      MOZ_CRASH("GFX: GeneralPattern not initialized");
     }
     return *mPattern;
   }

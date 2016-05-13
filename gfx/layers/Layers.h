@@ -2556,13 +2556,13 @@ class RefLayer : public ContainerLayer {
 
 private:
   virtual bool InsertAfter(Layer* aChild, Layer* aAfter) override
-  { MOZ_CRASH(); return false; }
+  { MOZ_CRASH("GFX: RefLayer"); return false; }
 
   virtual bool RemoveChild(Layer* aChild) override
-  { MOZ_CRASH(); return false; }
+  { MOZ_CRASH("GFX: RefLayer"); return false; }
 
   virtual bool RepositionChild(Layer* aChild, Layer* aAfter) override
-  { MOZ_CRASH(); return false; }
+  { MOZ_CRASH("GFX: RefLayer"); return false; }
 
 public:
   /**
