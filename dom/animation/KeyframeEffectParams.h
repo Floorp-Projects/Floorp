@@ -31,6 +31,24 @@ struct KeyframeEffectParams
     }
   }
 
+  /**
+   * Parse spacing string.
+   *
+   * @param aSpacing The input spacing string.
+   * @param [out] aSpacingMode The parsed spacing mode.
+   * @param [out] aPacedProperty The parsed CSS property if using paced spacing.
+   * @param [out] aInvalidPacedProperty A string that, if we parsed a string of
+   *                                    the form 'paced(<ident>)' where <ident>
+   *                                    is not a recognized animatable property,
+   *                                    will be set to <ident>.
+   * @param [out] aRv The error result.
+   */
+  static void ParseSpacing(const nsAString& aSpacing,
+                           SpacingMode& aSpacingMode,
+                           nsCSSProperty& aPacedProperty,
+                           nsAString& aInvalidPacedProperty,
+                           ErrorResult& aRv);
+
   // FIXME: Bug 1216843: Add IterationCompositeOperations and
   //        Bug 1216844: Add CompositeOperation
   SpacingMode mSpacingMode = SpacingMode::distribute;

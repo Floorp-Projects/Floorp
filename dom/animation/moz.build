@@ -50,6 +50,7 @@ UNIFIED_SOURCES += [
     'EffectCompositor.cpp',
     'EffectSet.cpp',
     'KeyframeEffect.cpp',
+    'KeyframeEffectParams.cpp',
     'KeyframeUtils.cpp',
     'PendingAnimationTracker.cpp',
     'TimingParams.cpp',
