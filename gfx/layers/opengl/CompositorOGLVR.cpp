@@ -204,7 +204,7 @@ CompositorOGL::DestroyVR(GLContext *gl)
 
 void
 CompositorOGL::DrawVRDistortion(const gfx::Rect& aRect,
-                                const gfx::IntRect& aClipRect,
+                                const gfx::Rect& aClipRect,
                                 const EffectChain& aEffectChain,
                                 gfx::Float aOpacity,
                                 const gfx::Matrix4x4& aTransform)

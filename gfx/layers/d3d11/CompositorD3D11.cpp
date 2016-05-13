@@ -696,7 +696,7 @@ CompositorD3D11::ClearRect(const gfx::Rect& aRect)
 
 void
 CompositorD3D11::DrawVRDistortion(const gfx::Rect& aRect,
-                                  const gfx::IntRect& aClipRect,
+                                  const gfx::Rect& aClipRect,
                                   const EffectChain& aEffectChain,
                                   gfx::Float aOpacity,
                                   const gfx::Matrix4x4& aTransform)
@@ -872,7 +872,7 @@ EffectToBlendLayerType(Effect* aEffect)
 
 void
 CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
-                          const gfx::IntRect& aClipRect,
+                          const gfx::Rect& aClipRect,
                           const EffectChain& aEffectChain,
                           gfx::Float aOpacity,
                           const gfx::Matrix4x4& aTransform,
@@ -1116,18 +1116,18 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
 
 void
 CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
-                            const IntRect* aClipRectIn,
-                            const IntRect& aRenderBounds,
+                            const Rect* aClipRectIn,
+                            const Rect& aRenderBounds,
                             const nsIntRegion& aOpaqueRegion,
-                            IntRect* aClipRectOut,
-                            IntRect* aRenderBoundsOut)
+                            Rect* aClipRectOut,
+                            Rect* aRenderBoundsOut)
 {
   // Don't composite if we are minimised. Other than for the sake of efficency,
   // this is important because resizing our buffers when mimised will fail and
   // cause a crash when we're restored.
   NS_ASSERTION(mHwnd, "Couldn't find an HWND when initialising?");
   if (::IsIconic(mHwnd) || mDevice->GetDeviceRemovedReason() != S_OK) {
-    *aRenderBoundsOut = IntRect();
+    *aRenderBoundsOut = Rect();
     return;
   }
 
@@ -1136,7 +1136,7 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
   // Failed to create a render target or the view.
   if (!UpdateRenderTarget() || !mDefaultRT || !mDefaultRT->mRTView ||
       mSize.width <= 0 || mSize.height <= 0) {
-    *aRenderBoundsOut = IntRect();
+    *aRenderBoundsOut = Rect();
     return;
   }
 
@@ -1173,10 +1173,10 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
   mInvalidRegion = invalidRegionSafe;
 
   if (aClipRectOut) {
-    *aClipRectOut = IntRect(0, 0, mSize.width, mSize.height);
+    *aClipRectOut = Rect(0, 0, mSize.width, mSize.height);
   }
   if (aRenderBoundsOut) {
-    *aRenderBoundsOut = IntRect(0, 0, mSize.width, mSize.height);
+    *aRenderBoundsOut = Rect(0, 0, mSize.width, mSize.height);
   }
 
   mCurrentClip = IntRect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);

@@ -627,22 +627,22 @@ CompositorOGL::ClearRect(const gfx::Rect& aRect)
 
 void
 CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
-                          const IntRect *aClipRectIn,
-                          const IntRect& aRenderBounds,
+                          const Rect *aClipRectIn,
+                          const Rect& aRenderBounds,
                           const nsIntRegion& aOpaqueRegion,
-                          IntRect *aClipRectOut,
-                          IntRect *aRenderBoundsOut)
+                          Rect *aClipRectOut,
+                          Rect *aRenderBoundsOut)
 {
   PROFILER_LABEL("CompositorOGL", "BeginFrame",
     js::ProfileEntry::Category::GRAPHICS);
 
   MOZ_ASSERT(!mFrameInProgress, "frame still in progress (should have called EndFrame");
 
-  gfx::IntRect rect;
+  gfx::Rect rect;
   if (mUseExternalSurfaceSize) {
-    rect = gfx::IntRect(0, 0, mSurfaceSize.width, mSurfaceSize.height);
+    rect = gfx::Rect(0, 0, mSurfaceSize.width, mSurfaceSize.height);
   } else {
-    rect = gfx::IntRect(aRenderBounds.x, aRenderBounds.y, aRenderBounds.width, aRenderBounds.height);
+    rect = gfx::Rect(aRenderBounds.x, aRenderBounds.y, aRenderBounds.width, aRenderBounds.height);
   }
 
   if (aRenderBoundsOut) {
@@ -988,7 +988,7 @@ CompositorOGL::GetLineCoefficients(const gfx::Point& aPoint1,
 
 void
 CompositorOGL::DrawQuad(const Rect& aRect,
-                        const IntRect& aClipRect,
+                        const Rect& aClipRect,
                         const EffectChain &aEffectChain,
                         Float aOpacity,
                         const gfx::Matrix4x4& aTransform,
@@ -1009,7 +1009,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
   IntSize size = mCurrentRenderTarget->GetSize();
 
   Rect renderBound(0, 0, size.width, size.height);
-  renderBound.IntersectRect(renderBound, Rect(aClipRect));
+  renderBound.IntersectRect(renderBound, aClipRect);
   renderBound.MoveBy(offset);
 
   Rect destRect = aTransform.TransformAndClipBounds(aRect, renderBound);
@@ -1029,7 +1029,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
 
   LayerScope::DrawBegin();
 
-  IntRect clipRect = aClipRect;
+  Rect clipRect = aClipRect;
   // aClipRect is in destination coordinate space (after all
   // transforms and offsets have been applied) so if our
   // drawing is going to be shifted by mRenderOffset then we need
@@ -1037,9 +1037,11 @@ CompositorOGL::DrawQuad(const Rect& aRect,
   if (!mTarget && mCurrentRenderTarget->IsWindow()) {
     clipRect.MoveBy(mRenderOffset.x, mRenderOffset.y);
   }
+  IntRect intClipRect;
+  clipRect.ToIntRect(&intClipRect);
 
-  gl()->fScissor(clipRect.x, FlipY(clipRect.y + clipRect.height),
-                 clipRect.width, clipRect.height);
+  gl()->fScissor(intClipRect.x, FlipY(intClipRect.y + intClipRect.height),
+                 intClipRect.width, intClipRect.height);
 
   MaskType maskType;
   EffectMask* effectMask;

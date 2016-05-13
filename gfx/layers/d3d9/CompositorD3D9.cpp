@@ -242,7 +242,7 @@ CompositorD3D9::ClearRect(const gfx::Rect& aRect)
 
 void
 CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
-                         const gfx::IntRect &aClipRect,
+                         const gfx::Rect &aClipRect,
                          const EffectChain &aEffectChain,
                          gfx::Float aOpacity,
                          const gfx::Matrix4x4& aTransform,
@@ -671,11 +671,11 @@ CompositorD3D9::FailedToResetDevice() {
 
 void
 CompositorD3D9::BeginFrame(const nsIntRegion& aInvalidRegion,
-                           const IntRect *aClipRectIn,
-                           const IntRect& aRenderBounds,
+                           const Rect *aClipRectIn,
+                           const Rect& aRenderBounds,
                            const nsIntRegion& aOpaqueRegion,
-                           IntRect *aClipRectOut,
-                           IntRect *aRenderBoundsOut)
+                           Rect *aClipRectOut,
+                           Rect *aRenderBoundsOut)
 {
   MOZ_ASSERT(mDeviceManager && mSwapChain);
 
@@ -687,10 +687,10 @@ CompositorD3D9::BeginFrame(const nsIntRegion& aInvalidRegion,
   device()->BeginScene();
 
   if (aClipRectOut) {
-    *aClipRectOut = IntRect(0, 0, mSize.width, mSize.height);
+    *aClipRectOut = Rect(0, 0, mSize.width, mSize.height);
   }
   if (aRenderBoundsOut) {
-    *aRenderBoundsOut = IntRect(0, 0, mSize.width, mSize.height);
+    *aRenderBoundsOut = Rect(0, 0, mSize.width, mSize.height);
   }
 
   RECT r;
