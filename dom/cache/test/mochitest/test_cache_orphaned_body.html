@@ -163,6 +163,22 @@ SpecialPowers.pushPrefEnv({
          ", end:" + endUsage + "\n");
     ok(endUsage < fullUsage, 'disk usage should have shrank');
     is(endUsage, initialUsage, 'disk usage should return to original');
+  })
+
+  // Verify that the stale, orphaned response cannot be put back into
+  // the cache.
+  .then(function() {
+    ok(!response.bodyUsed, 'response body should not be considered used');
+    return cache.put(url, response).then(function() {
+        ok(false, 'Should not be able to store stale orphaned body.');
+      }).catch(function(e) {
+        is(e.name, 'TypeError', 'storing a stale orphaned body should throw TypeError');
+      });
+  }).then(function() {
+    ok(response.bodyUsed, 'attempting to store response should mark body used');
+  })
+
+  .then(function() {
     SimpleTest.finish();
   });
 });
