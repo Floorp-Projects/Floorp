@@ -312,8 +312,17 @@ class SystemResourceMonitor(object):
             self.measurements.append(SystemResourceUsage(start_time, end_time,
                 cpu_times, cpu_percent, io, virt, swap))
 
-        self._process.join()
-        assert done
+        # We establish a timeout so we don't hang forever if the child
+        # process has crashed.
+        self._process.join(10)
+        if self._process.is_alive():
+            self._process.terminate()
+            self._process.join(10)
+        else:
+            # We should have received a "done" message from the
+            # child indicating it shut down properly. This only
+            # happens if the child shuts down cleanly.
+            assert done
 
         if len(self.measurements):
             self.start_time = self.measurements[0].start
