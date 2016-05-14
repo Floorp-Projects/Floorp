@@ -25,6 +25,3 @@ if CONFIG['MOZ_XUL'] and \
         FINAL_LIBRARY = 'xul'
 
 JAR_MANIFESTS += ['jar.mn']
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']

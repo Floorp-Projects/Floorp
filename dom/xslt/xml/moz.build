@@ -9,9 +9,6 @@ UNIFIED_SOURCES += [
     'txXMLUtils.cpp',
 ]
 
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']
-
 LOCAL_INCLUDES += [
     '../base',
     '../xpath',

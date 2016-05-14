@@ -49,6 +49,3 @@ LOCAL_INCLUDES += [
 ]
 
 DIST_INSTALL = True
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']

@@ -10,6 +10,3 @@ UNIFIED_SOURCES += [
 ]
 
 FINAL_LIBRARY = 'xul'
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']
