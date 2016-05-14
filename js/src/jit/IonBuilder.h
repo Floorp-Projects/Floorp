@@ -1134,6 +1134,11 @@ class IonBuilder
         return actionableAbortScript_ != nullptr;
     }
 
+    TraceLoggerThread *traceLogger() {
+        // Currently ionbuilder only runs on the main thread.
+        return TraceLoggerForMainThread(compartment->runtime()->mainThread()->runtimeFromMainThread());
+    }
+
     void actionableAbortLocationAndMessage(JSScript** abortScript, jsbytecode** abortPc,
                                            const char** abortMessage)
     {
