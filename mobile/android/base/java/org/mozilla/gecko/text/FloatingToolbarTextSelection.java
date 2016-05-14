@@ -121,6 +121,11 @@ public class FloatingToolbarTextSelection implements TextSelection, GeckoEventLi
 
             selectionID = message.optString("selectionID");
         } else if ("TextSelection:ActionbarStatus".equals(event)) {
+            // Ensure async updates from SearchService for example are valid.
+            if (selectionID != message.optString("selectionID")) {
+                return;
+            }
+
             updateRect(message);
 
             if (!isRectVisible()) {
