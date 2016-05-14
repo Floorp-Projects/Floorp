@@ -85,7 +85,7 @@ public class GLController extends JNIObject {
     void serverSurfaceChanged(int newWidth, int newHeight) {
         ThreadUtils.assertOnUiThread();
 
-        synchronized(this) {
+        synchronized (this) {
             mWidth = newWidth;
             mHeight = newHeight;
             mServerSurfaceValid = true;
