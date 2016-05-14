@@ -53,15 +53,27 @@ function run_test() {
     return_timestamp(request, response, ts);
   }
 
-  let server = httpd_setup({
+  const GLOBAL_PATH = "/1.1/johndoe/storage/meta/global";
+  const INFO_PATH = "/1.1/johndoe/info/collections";
+
+  let handlers = {
     "/1.1/johndoe/storage": storageHandler,
     "/1.1/johndoe/storage/crypto/keys": upd("crypto", keysWBO.handler()),
     "/1.1/johndoe/storage/crypto": upd("crypto", cryptoColl.handler()),
     "/1.1/johndoe/storage/clients": upd("clients", clients.handler()),
-    "/1.1/johndoe/storage/meta/global": upd("meta", wasCalledHandler(meta_global)),
     "/1.1/johndoe/storage/meta": upd("meta", wasCalledHandler(metaColl)),
+    "/1.1/johndoe/storage/meta/global": upd("meta", wasCalledHandler(meta_global)),
     "/1.1/johndoe/info/collections": collectionsHelper.handler
-  });
+  };
+
+  function mockHandler(path, mock) {
+    server.registerPathHandler(path, mock(handlers[path]));
+    return {
+      restore() { server.registerPathHandler(path, handlers[path]); }
+    }
+  }
+
+  let server = httpd_setup(handlers);
 
   try {
     _("Log in.");
@@ -88,6 +100,63 @@ function run_test() {
     _("Checking that remoteSetup returns true when credentials have changed.");
     Service.recordManager.get(Service.metaURL).payload.syncID = "foobar";
     do_check_true(Service._remoteSetup());
+
+    let returnStatusCode = (method, code) => (oldMethod) => (req, res) => {
+      if (req.method === method) {
+        res.setStatusLine(req.httpVersion, code, "");
+      } else {
+        oldMethod(req, res);
+      }
+    };
+
+    let mock = mockHandler(GLOBAL_PATH, returnStatusCode("GET", 401));
+    Service.recordManager.del(Service.metaURL);
+    _("Checking that remoteSetup returns false on 401 on first get /meta/global.");
+    do_check_false(Service._remoteSetup());
+    mock.restore();
+
+    Service.login("johndoe", "ilovejane", syncKey);
+    mock = mockHandler(GLOBAL_PATH, returnStatusCode("GET", 503));
+    Service.recordManager.del(Service.metaURL);
+    _("Checking that remoteSetup returns false on 503 on first get /meta/global.");
+    do_check_false(Service._remoteSetup());
+    do_check_eq(Service.status.sync, METARECORD_DOWNLOAD_FAIL);
+    mock.restore();
+
+    mock = mockHandler(GLOBAL_PATH, returnStatusCode("GET", 404));
+    Service.recordManager.del(Service.metaURL);
+    _("Checking that remoteSetup recovers on 404 on first get /meta/global.");
+    do_check_true(Service._remoteSetup());
+    mock.restore();
+
+    let makeOutdatedMeta = () => {
+      Service.metaModified = 0;
+      let infoResponse = Service._fetchInfo();
+      return {
+        status: infoResponse.status,
+        obj: {
+          crypto: infoResponse.obj.crypto,
+          clients: infoResponse.obj.clients,
+          meta: 1
+        }
+      };
+    }
+
+    _("Checking that remoteSetup recovers on 404 on get /meta/global after clear cached one.");
+    mock = mockHandler(GLOBAL_PATH, returnStatusCode("GET", 404));
+    Service.recordManager.set(Service.metaURL, { isNew: false });
+    do_check_true(Service._remoteSetup(makeOutdatedMeta()));
+    mock.restore();
+
+    _("Checking that remoteSetup returns false on 503 on get /meta/global after clear cached one.");
+    mock = mockHandler(GLOBAL_PATH, returnStatusCode("GET", 503));
+    Service.status.sync = "";
+    Service.recordManager.set(Service.metaURL, { isNew: false });
+    do_check_false(Service._remoteSetup(makeOutdatedMeta()));
+    do_check_eq(Service.status.sync, "");
+    mock.restore();
+
+    metaColl.delete({});
 
     _("Do an initial sync.");
     let beforeSync = Date.now()/1000;
