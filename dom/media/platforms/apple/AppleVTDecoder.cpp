@@ -75,25 +75,6 @@ AppleVTDecoder::ProcessShutdown()
   }
 }
 
-nsresult
-AppleVTDecoder::Input(MediaRawData* aSample)
-{
-  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
-
-  LOG("mp4 input sample %p pts %lld duration %lld us%s %d bytes",
-      aSample,
-      aSample->mTime,
-      aSample->mDuration,
-      aSample->mKeyframe ? " keyframe" : "",
-      aSample->Size());
-
-  mInputIncoming++;
-
-  mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
-    this, &AppleVTDecoder::ProcessDecode, aSample));
-  return NS_OK;
-}
-
 void
 AppleVTDecoder::ProcessFlush()
 {

@@ -21,7 +21,6 @@ public:
                  layers::ImageContainer* aImageContainer);
   virtual ~AppleVTDecoder();
   RefPtr<InitPromise> Init() override;
-  nsresult Input(MediaRawData* aSample) override;
   bool IsHardwareAccelerated(nsACString& aFailureReason) const override
   {
     return mIsHardwareAccelerated;
@@ -44,7 +43,7 @@ private:
   VTDecompressionSessionRef mSession;
 
   // Method to pass a frame to VideoToolbox for decoding.
-  nsresult ProcessDecode(MediaRawData* aSample);
+  nsresult ProcessDecode(MediaRawData* aSample) override;
   // Method to set up the decompression session.
   nsresult InitializeSession();
   nsresult WaitForAsynchronousFrames();

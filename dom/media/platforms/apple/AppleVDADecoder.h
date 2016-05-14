@@ -140,7 +140,7 @@ private:
   nsresult InitializeSession();
 
   // Method to pass a frame to VideoToolbox for decoding.
-  nsresult ProcessDecode(MediaRawData* aSample);
+  virtual nsresult ProcessDecode(MediaRawData* aSample);
   CFDictionaryRef CreateDecoderSpecification();
 };
 
