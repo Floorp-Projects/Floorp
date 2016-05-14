@@ -18,6 +18,7 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.SessionParser;
+import org.mozilla.gecko.home.CombinedHistoryPanel.PanelStateUpdateHandler;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
@@ -53,9 +54,12 @@ public class RecentTabsAdapter extends RecyclerView.Adapter<CombinedHistoryItem>
     }
 
     private final Context context;
+    private final PanelStateUpdateHandler panelStateUpdateHandler;
 
-    public RecentTabsAdapter(Context context) {
+    public RecentTabsAdapter(Context context,
+                             PanelStateUpdateHandler panelStateUpdateHandler) {
         this.context = context;
+        this.panelStateUpdateHandler = panelStateUpdateHandler;
         recentlyClosedTabs = new ClosedTab[0];
         lastSessionTabs = new ClosedTab[0];
 
@@ -94,6 +98,7 @@ public class RecentTabsAdapter extends RecyclerView.Adapter<CombinedHistoryItem>
                 int prevSectionHeaderIndex = getSectionHeaderIndex();
 
                 recentlyClosedTabs = closedTabs;
+                panelStateUpdateHandler.onPanelStateUpdated();
 
                 // Handle the section header hiding/unhiding.
                 updateHeaderVisibility(prevSectionHeaderVisibility, prevSectionHeaderIndex);
@@ -146,6 +151,7 @@ public class RecentTabsAdapter extends RecyclerView.Adapter<CombinedHistoryItem>
                         int prevSectionHeaderIndex = getSectionHeaderIndex();
 
                         lastSessionTabs = closedTabs;
+                        panelStateUpdateHandler.onPanelStateUpdated();
 
                         // Handle the section header hiding/unhiding.
                         updateHeaderVisibility(prevSectionHeaderVisibility, prevSectionHeaderIndex);
