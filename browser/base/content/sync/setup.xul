@@ -359,7 +359,7 @@
     <grid>
       <columns>
         <column/>
-        <column flex="1" style="-moz-margin-end: 2px"/>
+        <column flex="1" style="margin-inline-end: 2px"/>
       </columns>
       <rows>
         <row align="center">

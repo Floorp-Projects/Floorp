@@ -243,7 +243,7 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
   _createFunctionCell: function(doc, arrowNode, frameName, frameInfo, frameLevel) {
     let cell = doc.createElement("hbox");
     cell.className = "call-tree-cell";
-    cell.style.MozMarginStart = (frameLevel * CALL_TREE_INDENTATION) + "px";
+    cell.style.marginInlineStart = (frameLevel * CALL_TREE_INDENTATION) + "px";
     cell.setAttribute("type", "function");
     cell.appendChild(arrowNode);
 

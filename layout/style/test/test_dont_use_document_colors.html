@@ -10,7 +10,7 @@
 
   #one, #three { background: blue; color: yellow; border: thin solid red; -moz-column-rule: 2px solid green; text-shadow: 2px 2px green; box-shadow: 3px 7px blue; }
   #two { background: transparent; border: thin solid; }
-  #five, #six {border: thick solid red; -moz-border-start-color:green; -moz-border-end-color:blue}
+  #five, #six {border: thick solid red; border-inline-start-color:green; border-inline-end-color:blue}
   #seven {
     border: 3px solid;
     -moz-border-top-colors: blue aqua fuchsia;
@@ -88,13 +88,13 @@ function part1()
     is(cs1.boxShadow, cs3.boxShadow,
        "box-shadow applies");
     isnot(cs5.borderRightColor, cs2.borderRightColor,
-          "-moz-border-end-color applies");
+          "border-inline-end-color applies");
     isnot(cs5.borderLeftColor, cs2.borderLeftColor,
-          "-moz-border-start-color applies");    
+          "border-inline-start-color applies");    
     isnot(cs6.borderRightColor, cs2.borderRightColor,
-          "-moz-border-start-color applies");
+          "border-inline-start-color applies");
     isnot(cs6.borderLeftColor, cs2.borderLeftColor,
-          "-moz-border-end-color applies");
+          "border-inline-end-color applies");
     isnot(cs7.MozBorderTopColors, cs2.MozBorderTopColors,
           "-moz-border-top-colors applies");
     isnot(cs7.MozBorderRightColors, cs2.MozBorderRightColors,
@@ -135,13 +135,13 @@ function part2()
     is(cs1.borderLeftColor, cs2.borderLeftColor,
        "border-left-color is blocked");
     is(cs5.borderRightColor, cs2.borderRightColor,
-       "-moz-border-end-color is blocked");
+       "border-inline-end-color is blocked");
     is(cs5.borderLeftColor, cs2.borderLeftColor,
-       "-moz-border-start-color is blocked");
+       "border-inline-start-color is blocked");
     is(cs6.borderRightColor, cs2.borderRightColor,
-       "-moz-border-start-color is blocked");
+       "border-inline-start-color is blocked");
     is(cs6.borderLeftColor, cs2.borderLeftColor,
-       "-moz-border-end-color is blocked");
+       "border-inline-end-color is blocked");
     is(cs7.MozBorderTopColors, cs2.MozBorderTopColors,
        "-moz-border-top-colors is blocked");
     is(cs7.MozBorderRightColors, cs2.MozBorderRightColors,

@@ -705,7 +705,7 @@ const TreeNode = createFactory(createClass({
       // XXX: Despite resetting all of the above properties (and margin), the
       // button still ends up with ~79px width, so we set a large negative
       // margin to completely hide it.
-      MozMarginStart: "-1000px !important",
+      marginInlineStart: "-1000px !important",
     }
   }
 }));
