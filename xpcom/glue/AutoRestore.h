@@ -44,6 +44,10 @@ public:
   {
     mLocation = mValue;
   }
+  T SavedValue() const
+  {
+    return mValue;
+  }
 };
 
 } // namespace mozilla

@@ -719,8 +719,6 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
   // placement are for the float only, not for any non-floating
   // content.
   AutoRestore<nscoord> restoreBCoord(mBCoord);
-  // FIXME: Should give AutoRestore a getter for the value to avoid this.
-  const nscoord saveBCoord = mBCoord;
 
   // Grab the float's display information
   const nsStyleDisplay* floatDisplay = aFloat->StyleDisplay();
@@ -904,7 +902,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
   // Reflow the float after computing its vertical position so it knows
   // where to break.
   if (!earlyFloatReflow) {
-    bool pushedDown = mBCoord != saveBCoord;
+    bool pushedDown = mBCoord != restoreBCoord.SavedValue();
     mBlock->ReflowFloat(*this, adjustedAvailableSpace, aFloat, floatMargin,
                         floatOffsets, pushedDown, reflowStatus);
   }
