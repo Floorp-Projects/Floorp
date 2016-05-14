@@ -185,6 +185,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
     private void setUpRefreshLayout() {
         mRefreshLayout.setColorSchemeResources(R.color.fennec_ui_orange, R.color.action_orange);
         mRefreshLayout.setOnRefreshListener(new RemoteTabsRefreshListener());
+        mRefreshLayout.setEnabled(false);
     }
 
     private void setUpEmptyViews() {
@@ -304,7 +305,6 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
                     final List<RemoteClient> clients = mDB.getTabsAccessor().getClientsFromCursor(c);
                     mHistoryAdapter.getDeviceUpdateHandler().onDeviceCountUpdated(clients.size());
                     mClientsAdapter.setClients(clients);
-                    mRefreshLayout.setEnabled(clients.size() > 0);
                     break;
             }
 
@@ -347,9 +347,11 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
             switch (level) {
                 case PARENT:
                     mRecyclerView.swapAdapter(mHistoryAdapter, true);
+                    mRefreshLayout.setEnabled(false);
                     break;
                 case CHILD_SYNC:
                     mRecyclerView.swapAdapter(mClientsAdapter, true);
+                    mRefreshLayout.setEnabled(mClientsAdapter.getClientsCount() > 0);
                     break;
                 case CHILD_RECENT_TABS:
                     mRecyclerView.swapAdapter(mRecentTabsAdapter, true);
