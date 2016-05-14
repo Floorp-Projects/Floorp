@@ -21,7 +21,7 @@ add_task(function* () {
       root: "unfiledBookmarksFolder",
       children: [
         {
-          guid: "guid1",
+          guid: "___guid1____",
           index: 0,
           id: 3,
           charset: "UTF-8",
@@ -32,7 +32,7 @@ add_task(function* () {
           uri: "http://test0.com/"
         },
         {
-          guid: "guid2",
+          guid: "___guid2____",
           index: 1,
           id: 4,
           charset: "UTF-8",
@@ -43,7 +43,7 @@ add_task(function* () {
           uri: "http://test1.com/"
         },
         {
-          guid: "guid3",
+          guid: "___guid3____",
           index: 2,
           id: 5,
           charset: "UTF-8",
