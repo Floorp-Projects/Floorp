@@ -80,6 +80,8 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
     private PanelLevel mPanelLevel;
     private Button mPanelFooterButton;
 
+    private PanelStateUpdateHandler mPanelStateUpdateHandler;
+
     // Child refresh layout view.
     protected SwipeRefreshLayout mRefreshLayout;
 
@@ -110,7 +112,10 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
 
         mHistoryAdapter = new CombinedHistoryAdapter(getResources());
         mClientsAdapter = new ClientsAdapter(getContext());
-        mRecentTabsAdapter = new RecentTabsAdapter(getContext());
+        // The RecentTabsAdapter doesn't use a cursor and therefore can't use the CursorLoader's
+        // onLoadFinished() callback for updating the panel state when the closed tab count changes.
+        // Instead, we provide it with independent callbacks as necessary.
+        mRecentTabsAdapter = new RecentTabsAdapter(getContext(), getPanelStateUpdateHandler());
 
         mSyncStatusListener = new RemoteTabsSyncListener();
         FirefoxAccounts.addSyncStatusListener(mSyncStatusListener);
@@ -312,6 +317,23 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
         }
     }
 
+    public interface PanelStateUpdateHandler {
+        void onPanelStateUpdated();
+    }
+
+    public PanelStateUpdateHandler getPanelStateUpdateHandler() {
+        if (mPanelStateUpdateHandler == null) {
+            mPanelStateUpdateHandler = new PanelStateUpdateHandler() {
+                @Override
+                public void onPanelStateUpdated() {
+                    updateEmptyView();
+                    updateButtonFromLevel();
+                }
+            };
+        }
+        return mPanelStateUpdateHandler;
+    }
+
     protected class OnLevelChangeListener implements OnPanelLevelChangeListener {
         @Override
         public boolean changeLevel(PanelLevel level) {
@@ -404,7 +426,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
                 break;
 
             case CHILD_RECENT_TABS:
-                showEmptyRecentTabsView = mRecentTabsAdapter.getItemCount() == 1;
+                showEmptyRecentTabsView = mRecentTabsAdapter.getClosedTabsCount() == 0;
                 break;
         }
 
