@@ -57,10 +57,12 @@ add_task(function* () {
 
 function pushPrefEnv() {
   let deferred = promise.defer();
-  let options = {"set": [
-                  ["security.mixed_content.block_active_content", true],
-                  ["security.mixed_content.block_display_content", true]
-  ]};
+  let options = {
+    "set": [
+      ["security.mixed_content.block_active_content", true],
+      ["security.mixed_content.block_display_content", true]
+    ]
+  };
   SpecialPowers.pushPrefEnv(options, deferred.resolve);
   return deferred.promise;
 }
