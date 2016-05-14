@@ -696,9 +696,15 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       }
 
       if (apzc) {
+        bool targetConfirmed = (hitResult == HitLayer);
+        if (gfxPrefs::APZDragEnabled() && hitScrollbar) {
+          // If scrollbar dragging is enabled and we hit a scrollbar, wait
+          // for the main-thread confirmation because it contains drag metrics
+          // that we need.
+          targetConfirmed = false;
+        }
         result = mInputQueue->ReceiveInputEvent(
-          apzc,
-          /* aTargetConfirmed = */ false,
+          apzc, targetConfirmed,
           mouseInput, aOutInputBlockId);
 
         if (result == nsEventStatus_eConsumeDoDefault) {
