@@ -78,7 +78,7 @@ AppleVTDecoder::ProcessShutdown()
 void
 AppleVTDecoder::ProcessFlush()
 {
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  AssertOnTaskQueueThread();
   nsresult rv = WaitForAsynchronousFrames();
   if (NS_FAILED(rv)) {
     LOG("AppleVTDecoder::Flush failed waiting for platform decoder "
@@ -90,7 +90,7 @@ AppleVTDecoder::ProcessFlush()
 void
 AppleVTDecoder::ProcessDrain()
 {
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  AssertOnTaskQueueThread();
   nsresult rv = WaitForAsynchronousFrames();
   if (NS_FAILED(rv)) {
     LOG("AppleVTDecoder::Drain failed waiting for platform decoder "
@@ -166,7 +166,8 @@ TimingInfoFromSample(MediaRawData* aSample)
 nsresult
 AppleVTDecoder::ProcessDecode(MediaRawData* aSample)
 {
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  AssertOnTaskQueueThread();
+
   mInputIncoming--;
   // For some reason this gives me a double-free error with stagefright.
   AutoCFRelease<CMBlockBufferRef> block = nullptr;
