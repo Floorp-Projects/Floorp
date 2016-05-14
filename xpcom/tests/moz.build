@@ -103,6 +103,3 @@ LOCAL_INCLUDES += [
 RESOURCE_FILES += [
     'test.properties',
 ]
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']

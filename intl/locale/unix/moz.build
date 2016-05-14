@@ -32,12 +32,8 @@ LOCAL_INCLUDES += [
     '..',
 ]
 
-
 # CODESET is not automatically defined on some older versions of Redhat.
 # Define _XOPEN_SOURCE so CODESET will get defined and thus allow
 # nl_langinfo(CODESET) to compile on these systems.
 if CONFIG['OS_ARCH'] == 'Linux':
     DEFINES['_XOPEN_SOURCE'] = 500
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']

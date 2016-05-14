@@ -29,6 +29,3 @@ if not CONFIG['MOZ_DISABLE_PARENTAL_CONTROLS']:
         ]
 
 FINAL_LIBRARY = 'xul'
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']

@@ -9,6 +9,3 @@ FINAL_LIBRARY = 'xul'
 SOURCES += [
     'XRemoteClient.cpp',
 ]
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']

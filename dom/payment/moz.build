@@ -37,6 +37,3 @@ LOCAL_INCLUDES += [
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
 MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']

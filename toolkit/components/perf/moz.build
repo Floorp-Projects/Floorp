@@ -19,6 +19,3 @@ LOCAL_INCLUDES += [
 ]
 
 MOCHITEST_CHROME_MANIFESTS += ['chrome.ini']
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']
