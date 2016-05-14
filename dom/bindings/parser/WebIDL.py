@@ -2117,7 +2117,30 @@ class IDLUnresolvedType(IDLType):
                         "distinguishable from other things")
 
 
-class IDLNullableType(IDLType):
+class IDLParameterizedType(IDLType):
+    def __init__(self, location, name, innerType):
+        IDLType.__init__(self, location, name)
+        self.builtin = False
+        self.inner = innerType
+
+    def includesRestrictedFloat(self):
+        return self.inner.includesRestrictedFloat()
+
+    def resolveType(self, parentScope):
+        assert isinstance(parentScope, IDLScope)
+        self.inner.resolveType(parentScope)
+
+    def isComplete(self):
+        return self.inner.isComplete()
+
+    def unroll(self):
+        return self.inner.unroll()
+
+    def _getDependentObjects(self):
+        return self.inner._getDependentObjects()
+
+
+class IDLNullableType(IDLParameterizedType):
     def __init__(self, location, innerType):
         assert not innerType.isVoid()
         assert not innerType == BuiltinTypes[IDLBuiltinType.Types.any]
@@ -2125,9 +2148,7 @@ class IDLNullableType(IDLType):
         name = innerType.name
         if innerType.isComplete():
             name += "OrNull"
-        IDLType.__init__(self, location, name)
-        self.inner = innerType
-        self.builtin = False
+        IDLParameterizedType.__init__(self, location, name, innerType)
 
     def __eq__(self, other):
         return isinstance(other, IDLNullableType) and self.inner == other.inner
@@ -2167,9 +2188,6 @@ class IDLNullableType(IDLType):
 
     def isUnrestricted(self):
         return self.inner.isUnrestricted()
-
-    def includesRestrictedFloat(self):
-        return self.inner.includesRestrictedFloat()
 
     def isInteger(self):
         return self.inner.isInteger()
@@ -2225,13 +2243,6 @@ class IDLNullableType(IDLType):
     def tag(self):
         return self.inner.tag()
 
-    def resolveType(self, parentScope):
-        assert isinstance(parentScope, IDLScope)
-        self.inner.resolveType(parentScope)
-
-    def isComplete(self):
-        return self.inner.isComplete()
-
     def complete(self, scope):
         self.inner = self.inner.complete(scope)
         if self.inner.nullable():
@@ -2247,9 +2258,6 @@ class IDLNullableType(IDLType):
         self.name = self.inner.name + "OrNull"
         return self
 
-    def unroll(self):
-        return self.inner.unroll()
-
     def isDistinguishableFrom(self, other):
         if (other.nullable() or (other.isUnion() and other.hasNullableType) or
             other.isDictionary()):
@@ -2257,17 +2265,12 @@ class IDLNullableType(IDLType):
             return False
         return self.inner.isDistinguishableFrom(other)
 
-    def _getDependentObjects(self):
-        return self.inner._getDependentObjects()
 
-
-class IDLSequenceType(IDLType):
+class IDLSequenceType(IDLParameterizedType):
     def __init__(self, location, parameterType):
         assert not parameterType.isVoid()
 
-        IDLType.__init__(self, location, parameterType.name)
-        self.inner = parameterType
-        self.builtin = False
+        IDLParameterizedType.__init__(self, location, parameterType.name, parameterType)
         # Need to set self.name up front if our inner type is already complete,
         # since in that case our .complete() won't be called.
         if self.inner.isComplete():
@@ -2318,26 +2321,13 @@ class IDLSequenceType(IDLType):
     def isSerializable(self):
         return self.inner.isSerializable()
 
-    def includesRestrictedFloat(self):
-        return self.inner.includesRestrictedFloat()
-
     def tag(self):
         return IDLType.Tags.sequence
-
-    def resolveType(self, parentScope):
-        assert isinstance(parentScope, IDLScope)
-        self.inner.resolveType(parentScope)
-
-    def isComplete(self):
-        return self.inner.isComplete()
 
     def complete(self, scope):
         self.inner = self.inner.complete(scope)
         self.name = self.inner.name + "Sequence"
         return self
-
-    def unroll(self):
-        return self.inner.unroll()
 
     def isDistinguishableFrom(self, other):
         if other.isPromise():
@@ -2350,20 +2340,12 @@ class IDLSequenceType(IDLType):
                 other.isDictionary() or
                 other.isCallback() or other.isMozMap())
 
-    def _getDependentObjects(self):
-        return self.inner._getDependentObjects()
 
-
-class IDLMozMapType(IDLType):
-    # XXXbz This is pretty similar to IDLSequenceType in various ways.
-    # And maybe to IDLNullableType.  Should we have a superclass for
-    # "type containing this other type"?  Bug 1015318.
+class IDLMozMapType(IDLParameterizedType):
     def __init__(self, location, parameterType):
         assert not parameterType.isVoid()
 
-        IDLType.__init__(self, location, parameterType.name)
-        self.inner = parameterType
-        self.builtin = False
+        IDLParameterizedType.__init__(self, location, parameterType.name, parameterType)
         # Need to set self.name up front if our inner type is already complete,
         # since in that case our .complete() won't be called.
         if self.inner.isComplete():
@@ -2378,18 +2360,8 @@ class IDLMozMapType(IDLType):
     def isMozMap(self):
         return True
 
-    def includesRestrictedFloat(self):
-        return self.inner.includesRestrictedFloat()
-
     def tag(self):
         return IDLType.Tags.mozmap
-
-    def resolveType(self, parentScope):
-        assert isinstance(parentScope, IDLScope)
-        self.inner.resolveType(parentScope)
-
-    def isComplete(self):
-        return self.inner.isComplete()
 
     def complete(self, scope):
         self.inner = self.inner.complete(scope)
@@ -2413,9 +2385,6 @@ class IDLMozMapType(IDLType):
 
     def isExposedInAllOf(self, exposureSet):
         return self.inner.unroll().isExposedInAllOf(exposureSet)
-
-    def _getDependentObjects(self):
-        return self.inner._getDependentObjects()
 
 
 class IDLUnionType(IDLType):
