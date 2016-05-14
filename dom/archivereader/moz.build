@@ -21,9 +21,6 @@ UNIFIED_SOURCES += [
     'ArchiveZipFile.cpp',
 ]
 
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']
-
 LOCAL_INCLUDES += [
     '../base',
 ]

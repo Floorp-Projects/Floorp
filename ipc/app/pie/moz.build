@@ -28,6 +28,3 @@ if CONFIG['MOZ_SANDBOX']:
 	LDFLAGS += ['--param lto-partitions=1']
 
 LDFLAGS += ['-pie']
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']

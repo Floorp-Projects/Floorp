@@ -33,6 +33,3 @@ if CONFIG['_MSC_VER']:
         LOCAL_INCLUDES += ['/memory/jemalloc/src/include/msvc_compat/C99']
 
 DISABLE_STL_WRAPPING = True
-
-if CONFIG['GNU_CC']:
-    CFLAGS += ['-Wshadow']

@@ -9,6 +9,3 @@ GeckoProgram('rdfpoll', linkage='dependent')
 SOURCES += [
     'rdfpoll.cpp',
 ]
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']

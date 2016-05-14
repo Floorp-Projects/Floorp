@@ -15,11 +15,7 @@ UNIFIED_SOURCES += [
     'nsViewSourceHandler.cpp',
 ]
 
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']
-
 FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '/netwerk/base',
 ]
-

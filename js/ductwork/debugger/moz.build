@@ -21,6 +21,3 @@ EXTRA_JS_MODULES += [
 ]
 
 FINAL_LIBRARY = 'xul'
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']

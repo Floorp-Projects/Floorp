@@ -47,9 +47,6 @@ LOCAL_INCLUDES += [
 
 FINAL_LIBRARY = 'xul'
 
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']
-
 # The Windows MIDL code generator creates things like:
 #
 #   #endif !_MIDL_USE_GUIDDEF_

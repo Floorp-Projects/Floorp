@@ -29,6 +29,3 @@ else:
 LOCAL_INCLUDES += [
     '../src',
 ]
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']
