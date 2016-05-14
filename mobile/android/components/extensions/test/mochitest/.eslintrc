@@ -3,5 +3,6 @@
 
   "globals": {
     "isPageActionShown": true,
+    "clickPageAction": true,
   },
 }
