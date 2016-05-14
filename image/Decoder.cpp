@@ -449,6 +449,12 @@ Decoder::PostFrameStop(Opacity aFrameOpacity
     mInvalidRect.UnionRect(mInvalidRect,
                            gfx::IntRect(gfx::IntPoint(0, 0), GetSize()));
   }
+
+  // If we are going to keep decoding we should notify now about the first frame being done.
+  if (mImage && mFrameCount == 1 && HasAnimation()) {
+    MOZ_ASSERT(HasProgress());
+    DecodePool::Singleton()->NotifyProgress(this);
+  }
 }
 
 void
