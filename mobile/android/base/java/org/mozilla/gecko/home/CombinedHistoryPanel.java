@@ -44,6 +44,7 @@ import org.mozilla.gecko.RemoteClientsDialogFragment;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.SyncStatusListener;
+import org.mozilla.gecko.home.CombinedHistoryPanel.OnPanelLevelChangeListener.PanelLevel;
 import org.mozilla.gecko.restrictions.Restrictions;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -75,7 +76,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
     private ClientsAdapter mClientsAdapter;
     private CursorLoaderCallbacks mCursorLoaderCallbacks;
 
-    private OnPanelLevelChangeListener.PanelLevel mPanelLevel;
+    private PanelLevel mPanelLevel;
     private Button mPanelFooterButton;
 
     // Child refresh layout view.
@@ -137,10 +138,10 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
 
     private void setUpRecyclerView() {
         if (mPanelLevel == null) {
-            mPanelLevel = OnPanelLevelChangeListener.PanelLevel.PARENT;
+            mPanelLevel = PanelLevel.PARENT;
         }
 
-        mRecyclerView.setAdapter(mPanelLevel == OnPanelLevelChangeListener.PanelLevel.PARENT ? mHistoryAdapter : mClientsAdapter);
+        mRecyclerView.setAdapter(mPanelLevel == PanelLevel.PARENT ? mHistoryAdapter : mClientsAdapter);
 
         final RecyclerView.ItemAnimator animator = new DefaultItemAnimator();
         animator.setAddDuration(100);
@@ -158,7 +159,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
                 final LinearLayoutManager llm = (LinearLayoutManager) recyclerView.getLayoutManager();
-                if ((mPanelLevel == OnPanelLevelChangeListener.PanelLevel.PARENT) && (llm.findLastCompletelyVisibleItemPosition() == HistoryCursorLoader.HISTORY_LIMIT)) {
+                if ((mPanelLevel == PanelLevel.PARENT) && (llm.findLastCompletelyVisibleItemPosition() == HistoryCursorLoader.HISTORY_LIMIT)) {
                     Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.LIST, "history_scroll_max");
                 }
 
