@@ -415,6 +415,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
                             }
 
                             GeckoAppShell.notifyObservers("Sanitize:ClearData", json.toString());
+                    mRecentTabsAdapter.clearLastSessionData();
                             Telemetry.sendUIEvent(TelemetryContract.Event.SANITIZE, TelemetryContract.Method.BUTTON, "history");
                         }
                     });
