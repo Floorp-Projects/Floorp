@@ -133,11 +133,6 @@
         <attr name="fadeBackgroundColor" format="dimension"/>
     </declare-styleable>
 
-    <declare-styleable name="BookmarkFolderView">
-        <attr name="parent" format="boolean"/>
-        <attr name="reading_list" format="boolean"/>
-    </declare-styleable>
-
     <declare-styleable name="IconTabWidget">
         <attr name="android:layout"/>
 

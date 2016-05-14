@@ -17,6 +17,7 @@
     "require": true,
     "setInterval": true,
     "setTimeout": true,
+    "XMLHttpRequest": true,
     "_Iterator": true,
   },
   "rules": {

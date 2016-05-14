@@ -882,6 +882,15 @@ public class LocalBrowserDB implements BrowserDB {
         }
     }
 
+    @Override
+    public int getBookmarkCountForFolder(ContentResolver cr, long folderID) {
+        if (folderID == Bookmarks.FAKE_READINGLIST_SMARTFOLDER_ID) {
+            return getUrlAnnotations().getAnnotationCount(cr, BrowserContract.UrlAnnotations.Key.READER_VIEW);
+        } else {
+            throw new IllegalArgumentException("Retrieving bookmark count for folder with ID=" + folderID + " not supported yet");
+        }
+    }
+
     @CheckResult
     private ArrayList<Cursor> getSpecialFoldersCursorList(final boolean addDesktopFolder,
             final boolean addScreenshotsFolder, final boolean addReadingListFolder) {
