@@ -449,7 +449,7 @@ FRAME_STATE_BIT(Text, 63, TEXT_IN_OFFSET_CACHE)
 
 FRAME_STATE_GROUP(Block, nsBlockFrame)
 
-// See the meanings at http://www.mozilla.org/newlayout/doc/block-and-line.html
+// See the meanings at http://www-archive.mozilla.org/newlayout/doc/block-and-line.html
 
 // Something in the block has changed that requires Bidi resolution to be
 // performed on the block. This flag must be either set on all blocks in a 
