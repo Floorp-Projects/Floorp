@@ -465,7 +465,7 @@ jit::FinishOffThreadBuilder(JSContext* cx, IonBuilder* builder)
 
     // If the builder is still in one of the helper thread list, then remove it.
     if (builder->isInList())
-        builder->removeFrom(HelperThreadState().ionLazyLinkList());
+        HelperThreadState().ionLazyLinkListRemove(builder);
 
     // Clear the recompiling flag of the old ionScript, since we continue to
     // use the old ionScript if recompiling fails.
@@ -548,7 +548,7 @@ jit::LazyLink(JSContext* cx, HandleScript calleeScript)
         calleeScript->baselineScript()->removePendingIonBuilder(calleeScript);
 
         // Remove from pending.
-        builder->removeFrom(HelperThreadState().ionLazyLinkList());
+        HelperThreadState().ionLazyLinkListRemove(builder);
     }
 
     {
@@ -2019,7 +2019,15 @@ AttachFinishedCompilations(JSContext* cx)
             JSScript* script = builder->script();
             MOZ_ASSERT(script->hasBaselineScript());
             script->baselineScript()->setPendingIonBuilder(cx, script, builder);
-            HelperThreadState().ionLazyLinkList().insertFront(builder);
+            HelperThreadState().ionLazyLinkListAdd(builder);
+
+            // Don't keep more than 100 lazy link builders.
+            // Throw away the oldest items.
+            while (HelperThreadState().ionLazyLinkListSize() > 100) {
+                jit::IonBuilder* builder = HelperThreadState().ionLazyLinkList().getLast();
+                jit::FinishOffThreadBuilder(nullptr, builder);
+            }
+
             continue;
         }
     }

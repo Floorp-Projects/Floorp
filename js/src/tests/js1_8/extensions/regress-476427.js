@@ -28,7 +28,7 @@ function foo(code)
   toString = c1;
 }
 let z;
-for (z = 1; z <= 1632; ++z) {
+for (z = 1; z <= 16322; ++z) {
   this.__defineGetter__('functional', function x(){ yield; } );
   foo("this.__defineSetter__('', function(){});");
   foo("for each (y in this);");
