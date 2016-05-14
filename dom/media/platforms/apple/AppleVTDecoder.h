@@ -44,7 +44,7 @@ private:
   VTDecompressionSessionRef mSession;
 
   // Method to pass a frame to VideoToolbox for decoding.
-  nsresult SubmitFrame(MediaRawData* aSample);
+  nsresult ProcessDecode(MediaRawData* aSample);
   // Method to set up the decompression session.
   nsresult InitializeSession();
   nsresult WaitForAsynchronousFrames();
