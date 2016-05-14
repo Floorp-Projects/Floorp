@@ -628,6 +628,7 @@ GlobalHelperThreadState::GlobalHelperThreadState()
  : cpuCount(0),
    threadCount(0),
    threads(nullptr),
+   ionLazyLinkListSize_(0),
    wasmCompilationInProgress(false),
    numWasmFailedJobs(0),
    helperLock(nullptr),
@@ -657,6 +658,7 @@ GlobalHelperThreadState::finish()
     PR_DestroyLock(helperLock);
 
     ionLazyLinkList_.clear();
+    ionLazyLinkListSize_ = 0;
 }
 
 void
@@ -729,6 +731,24 @@ GlobalHelperThreadState::notifyOne(CondVar which)
 {
     MOZ_ASSERT(isLocked());
     PR_NotifyCondVar(whichWakeup(which));
+}
+
+void
+GlobalHelperThreadState::ionLazyLinkListRemove(jit::IonBuilder* builder)
+{
+    MOZ_ASSERT(ionLazyLinkListSize_ > 0);
+
+    builder->removeFrom(HelperThreadState().ionLazyLinkList());
+    ionLazyLinkListSize_--;
+
+    MOZ_ASSERT(HelperThreadState().ionLazyLinkList().isEmpty() == (ionLazyLinkListSize_ == 0));
+}
+
+void
+GlobalHelperThreadState::ionLazyLinkListAdd(jit::IonBuilder* builder)
+{
+    HelperThreadState().ionLazyLinkList().insertFront(builder);
+    ionLazyLinkListSize_++;
 }
 
 bool
