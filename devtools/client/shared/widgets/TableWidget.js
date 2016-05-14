@@ -1781,8 +1781,8 @@ EditableFieldsEngine.prototype = {
       "marginRight",
       "marginBottom",
       "marginLeft",
-      "MozMarginStart",
-      "MozMarginEnd"
+      "marginInlineStart",
+      "marginInlineEnd"
     ];
 
     for (let prop of props) {

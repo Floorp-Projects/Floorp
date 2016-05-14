@@ -1659,7 +1659,7 @@ PlacesToolbar.prototype = {
       }
 
       ind.style.transform = "translate(" + Math.round(translateX) + "px)";
-      ind.style.MozMarginStart = (-ind.clientWidth) + "px";
+      ind.style.marginInlineStart = (-ind.clientWidth) + "px";
       ind.collapsed = false;
 
       // Clear out old folder information.

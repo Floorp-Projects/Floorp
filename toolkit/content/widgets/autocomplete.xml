@@ -2057,21 +2057,21 @@ extends="chrome://global/content/bindings/popup.xml#popup">
         <body>
           <![CDATA[
           if (typeof(newStart) != "number") {
-            this._typeIcon.style.removeProperty("-moz-margin-start");
+            this._typeIcon.style.removeProperty("margin-inline-start");
             return true;
           }
           let rect = this._siteIcon.getBoundingClientRect();
           let dir = this.getAttribute("dir");
           let delta = dir == "rtl" ? rect.right - newStart
                                    : newStart - rect.left;
-          let px = this._typeIcon.style.MozMarginStart;
+          let px = this._typeIcon.style.marginInlineStart;
           if (!px) {
-            // Allow -moz-margin-start not to be specified in CSS initially.
+            // Allow margin-inline-start not to be specified in CSS initially.
             let style = window.getComputedStyle(this._typeIcon);
             px = dir == "rtl" ? style.marginRight : style.marginLeft;
           }
           let typeIconStart = Number(px.substr(0, px.length - 2));
-          this._typeIcon.style.MozMarginStart = (typeIconStart + delta) + "px";
+          this._typeIcon.style.marginInlineStart = (typeIconStart + delta) + "px";
           return delta > 0;
           ]]>
         </body>

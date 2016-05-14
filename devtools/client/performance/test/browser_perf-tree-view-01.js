@@ -60,6 +60,6 @@ add_task(function() {
 
   is(container.childNodes[0].childNodes[5].getAttribute("type"), "function",
     "The root node in the tree has a function cell.");
-  is(container.childNodes[0].childNodes[5].style.MozMarginStart, "0px",
+  is(container.childNodes[0].childNodes[5].style.marginInlineStart, "0px",
     "The root node in the tree has the correct indentation.");
 });
