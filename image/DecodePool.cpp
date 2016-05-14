@@ -469,6 +469,7 @@ void
 DecodePool::NotifyProgress(Decoder* aDecoder)
 {
   MOZ_ASSERT(aDecoder);
+  MOZ_ASSERT(aDecoder->HasProgress() && !aDecoder->IsMetadataDecode());
 
   if (!NS_IsMainThread() ||
       (aDecoder->GetDecoderFlags() & DecoderFlags::ASYNC_NOTIFY)) {
