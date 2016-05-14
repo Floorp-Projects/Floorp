@@ -244,6 +244,13 @@ const globals = exports.globals = {
     lazyRequireGetter: lazyRequireGetter,
     id: null // Defined by Loader.jsm
   },
+
+  // Let new XMLHttpRequest do the right thing.
+  XMLHttpRequest: function () {
+    return Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
+           .createInstance(Ci.nsIXMLHttpRequest);
+  },
+
   // Make sure `define` function exists.  This allows defining some modules
   // in AMD format while retaining CommonJS compatibility through this hook.
   // JSON Viewer needs modules in AMD format, as it currently uses RequireJS

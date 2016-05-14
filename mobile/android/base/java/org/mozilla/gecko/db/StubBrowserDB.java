@@ -141,6 +141,11 @@ class StubUrlAnnotations implements UrlAnnotations {
 
     @Override
     public void insertHomeScreenShortcut(ContentResolver cr, String url, boolean hasCreatedShortCut) {}
+
+    @Override
+    public int getAnnotationCount(ContentResolver cr, BrowserContract.UrlAnnotations.Key key) {
+        return 0;
+    }
 }
 
 /*
@@ -241,6 +246,8 @@ public class StubBrowserDB implements BrowserDB {
     public Cursor getBookmarksInFolder(ContentResolver cr, long folderId) {
         return null;
     }
+
+    public int getBookmarkCountForFolder(ContentResolver cr, long folderId) { return 0; }
 
     @RobocopTarget
     public boolean isBookmark(ContentResolver cr, String uri) {
