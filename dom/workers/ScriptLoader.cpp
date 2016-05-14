@@ -1777,8 +1777,10 @@ ScriptExecutorRunnable::PreRun(WorkerPrivate* aWorkerPrivate)
     NS_WARNING("Failed to make global!");
     // There's no way to report the exception on jsapi right now, because there
     // is no way to even enter a compartment on this thread anymore.  Just clear
-    // the exception.  We'll report some sort of error to our caller thread in
-    // ShutdownScriptLoader.
+    // the exception.  We'll report some sort of error to our caller in
+    // ShutdownScriptLoader, but it will get squelched for the same reason we're
+    // squelching here: all the error reporting machinery relies on being able
+    // to enter a compartment to report the error.
     jsapi.ClearException();
     return false;
   }
