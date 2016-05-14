@@ -174,6 +174,34 @@ public class RecentTabsAdapter extends RecyclerView.Adapter<CombinedHistoryItem>
         });
     }
 
+    public void clearLastSessionData() {
+        final ClosedTab[] emptyLastSessionTabs = new ClosedTab[0];
+
+        // Only modify mLastSessionTabs on the UI thread.
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                // Save some data about the old panel state, so we can be
+                // smarter about notifying the recycler view which bits changed.
+                int prevClosedTabsCount = lastSessionTabs.length;
+                boolean prevSectionHeaderVisibility = isSectionHeaderVisible();
+                int prevSectionHeaderIndex = getSectionHeaderIndex();
+
+                lastSessionTabs = emptyLastSessionTabs;
+                recentTabsUpdateHandler.onRecentTabsCountUpdated(getClosedTabsCount());
+                panelStateUpdateHandler.onPanelStateUpdated();
+
+                // Handle the section header hiding.
+                updateHeaderVisibility(prevSectionHeaderVisibility, prevSectionHeaderIndex);
+
+                // Handle the "tabs from last time" being cleared.
+                if (prevClosedTabsCount > 0) {
+                    notifyItemRangeRemoved(getFirstLastSessionTabIndex(), prevClosedTabsCount);
+                }
+            }
+        });
+    }
+
     private void updateHeaderVisibility(boolean prevSectionHeaderVisibility, int prevSectionHeaderIndex) {
         if (prevSectionHeaderVisibility && !isSectionHeaderVisible()) {
             notifyItemRemoved(prevSectionHeaderIndex);
