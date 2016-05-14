@@ -22,11 +22,6 @@
 
 extern mozilla::LogModule* GetPDMLog();
 #define LOG(...) MOZ_LOG(GetPDMLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
-//#define LOG_MEDIA_SHA1
-
-#ifdef LOG_MEDIA_SHA1
-#include "mozilla/SHA1.h"
-#endif
 
 namespace mozilla {
 
@@ -92,24 +87,10 @@ AppleVTDecoder::Input(MediaRawData* aSample)
       aSample->mKeyframe ? " keyframe" : "",
       aSample->Size());
 
-#ifdef LOG_MEDIA_SHA1
-  SHA1Sum hash;
-  hash.update(aSample->data, aSample->size);
-  uint8_t digest_buf[SHA1Sum::kHashSize];
-  hash.finish(digest_buf);
-  nsAutoCString digest;
-  for (size_t i = 0; i < sizeof(digest_buf); i++) {
-    digest.AppendPrintf("%02x", digest_buf[i]);
-  }
-  LOG("    sha1 %s", digest.get());
-#endif // LOG_MEDIA_SHA1
-
   mInputIncoming++;
 
-  nsCOMPtr<nsIRunnable> runnable =
-      NewRunnableMethod<RefPtr<MediaRawData>>(
-          this, &AppleVTDecoder::SubmitFrame, aSample);
-  mTaskQueue->Dispatch(runnable.forget());
+  mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
+    this, &AppleVTDecoder::ProcessDecode, aSample));
   return NS_OK;
 }
 
@@ -202,7 +183,7 @@ TimingInfoFromSample(MediaRawData* aSample)
 }
 
 nsresult
-AppleVTDecoder::SubmitFrame(MediaRawData* aSample)
+AppleVTDecoder::ProcessDecode(MediaRawData* aSample)
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   mInputIncoming--;
@@ -265,19 +246,6 @@ nsresult
 AppleVTDecoder::InitializeSession()
 {
   OSStatus rv;
-
-#ifdef LOG_MEDIA_SHA1
-  SHA1Sum avc_hash;
-  avc_hash.update(mExtraData->Elements(),mExtraData->Length());
-  uint8_t digest_buf[SHA1Sum::kHashSize];
-  avc_hash.finish(digest_buf);
-  nsAutoCString avc_digest;
-  for (size_t i = 0; i < sizeof(digest_buf); i++) {
-    avc_digest.AppendPrintf("%02x", digest_buf[i]);
-  }
-  LOG("AVCDecoderConfig %ld bytes sha1 %s",
-      mExtraData->Length(), avc_digest.get());
-#endif // LOG_MEDIA_SHA1
 
   AutoCFRelease<CFDictionaryRef> extensions = CreateDecoderExtensions();
 

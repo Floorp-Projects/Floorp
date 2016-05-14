@@ -133,12 +133,8 @@ AppleVDADecoder::Input(MediaRawData* aSample)
 
   mInputIncoming++;
 
-  nsCOMPtr<nsIRunnable> runnable =
-      NewRunnableMethod<RefPtr<MediaRawData>>(
-          this,
-          &AppleVDADecoder::SubmitFrame,
-          RefPtr<MediaRawData>(aSample));
-  mTaskQueue->Dispatch(runnable.forget());
+  mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
+    this, &AppleVDADecoder::ProcessDecode, aSample));
   return NS_OK;
 }
 
@@ -429,7 +425,7 @@ AppleVDADecoder::OutputFrame(CVPixelBufferRef aImage,
 }
 
 nsresult
-AppleVDADecoder::SubmitFrame(MediaRawData* aSample)
+AppleVDADecoder::ProcessDecode(MediaRawData* aSample)
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
 
