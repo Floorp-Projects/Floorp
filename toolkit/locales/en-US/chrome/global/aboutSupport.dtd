@@ -56,6 +56,7 @@ Windows/Mac use the term "Folder" instead of "Directory" -->
 <!ENTITY aboutSupport.appBasicsUserAgent "User Agent">
 <!ENTITY aboutSupport.appBasicsOS "OS">
 <!ENTITY aboutSupport.appBasicsMemoryUse "Memory Use">
+<!ENTITY aboutSupport.appBasicsPerformance "Performance">
 
 <!-- LOCALIZATION NOTE the term "Service Workers" should not be translated. -->
 <!ENTITY aboutSupport.appBasicsServiceWorkers "Registered Service Workers">

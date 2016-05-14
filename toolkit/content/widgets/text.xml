@@ -356,9 +356,22 @@
           var linkHandled = Components.classes["@mozilla.org/supports-PRBool;1"]
                                       .createInstance(Components.interfaces.nsISupportsPRBool);
           linkHandled.data = false;
+          let {shiftKey, ctrlKey, metaKey, altKey, button} = aEvent;
+          if (!shiftKey && !altKey) {
+            // Preserve legacy behavior of non-modifier left-clicks
+            // opening in a new selected tab.
+            let {AppConstants} =
+              Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
+            if (AppConstants.platform == "macosx") {
+              metaKey = true;
+            } else {
+              ctrlKey = true;
+            }
+          }
+          let data = {shiftKey, ctrlKey, metaKey, altKey, button, href};
           Components.classes["@mozilla.org/observer-service;1"]
                     .getService(Components.interfaces.nsIObserverService)
-                    .notifyObservers(linkHandled, "handle-xul-text-link", href);
+                    .notifyObservers(linkHandled, "handle-xul-text-link", JSON.stringify(data));
           if (linkHandled.data)
             return;
 
@@ -376,6 +389,7 @@
 
     <handlers>
       <handler event="click" phase="capturing" button="0" action="this.open(event)"/>
+      <handler event="click" phase="capturing" button="1" action="this.open(event)"/>
       <handler event="keypress" preventdefault="true" keycode="VK_RETURN" action="this.click()" />
     </handlers>
   </binding>

@@ -122,6 +122,8 @@ public interface BrowserDB {
      */
     public abstract Cursor getBookmarksInFolder(ContentResolver cr, long folderId);
 
+    public abstract int getBookmarkCountForFolder(ContentResolver cr, long folderId);
+
     /**
      * Get the favicon from the database, if any, associated with the given favicon URL. (That is,
      * the URL of the actual favicon image, not the URL of the page with which the favicon is associated.)
