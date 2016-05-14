@@ -269,6 +269,23 @@ interface nsIBrowserSearchService : nsISupports
   void resetToOriginalDefaultEngine();
 
   /**
+   * Checks if an EngineURL of type URLTYPE_SEARCH_HTML exists for
+   * any engine, with a matching method, template URL, and query params.
+   *
+   * @param method
+   *        The HTTP request method used when submitting a search query.
+   *        Must be a case insensitive value of either "get" or "post".
+   *
+   * @param url
+   *        The URL to which search queries should be sent.
+   *        Must not be null.
+   *
+   * @param formData
+   *        The un-sorted form data used as query params.
+   */
+  boolean hasEngineWithURL(in AString method, in AString url, in jsval formData);
+
+  /**
    * Adds a new search engine from the file at the supplied URI, optionally
    * asking the user for confirmation first.  If a confirmation dialog is
    * shown, it will offer the option to begin using the newly added engine

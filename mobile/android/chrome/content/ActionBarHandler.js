@@ -22,6 +22,8 @@ var ActionBarHandler = {
 
   _nextSelectionID: 1, // Next available.
   _selectionID: null, // Unique Selection ID, assigned each time we _init().
+
+  _boundingClientRect: null, // Current selections boundingClientRect.
   _actionBarActions: null, // Most-recent set of actions sent to ActionBar.
 
   /**
@@ -67,10 +69,13 @@ var ActionBarHandler = {
         // Still the same active selection.
         if (e.reason == 'visibilitychange' || e.reason == 'presscaret' ||
             e.reason == 'scroll' ) {
+          // Visibility changes don't affect boundingClientRect.
           this._updateVisibility();
         } else {
+          // Selection changes update boundingClientRect.
+          this._boundingClientRect = e.boundingClientRect;
           let forceUpdate = e.reason == 'updateposition' || e.reason == 'releasecaret';
-          this._sendActionBarActions(forceUpdate, e.boundingClientRect);
+          this._sendActionBarActions(forceUpdate);
         }
       } else {
         // We've started a new selection entirely.
@@ -135,13 +140,14 @@ var ActionBarHandler = {
     // Hold the ActionBar ID provided by Gecko.
     this._selectionID = this._nextSelectionID++;
     [this._targetElement, this._contentWindow] = [element, win];
+    this._boundingClientRect = boundingClientRect;
 
     // Open the ActionBar, send it's actions list.
     Messaging.sendRequest({
       type: "TextSelection:ActionbarInit",
       selectionID: this._selectionID,
     });
-    this._sendActionBarActions(true, boundingClientRect);
+    this._sendActionBarActions(true);
 
     return this.START_TOUCH_ERROR.NONE;
   },
@@ -209,6 +215,7 @@ var ActionBarHandler = {
     // to selectionTargets (_targetElement, _contentWindow) in case we need
     // a final clearSelection().
     this._selectionID = null;
+    this._boundingClientRect = null;
 
     // Clear selection required if triggered by self, or TextSelection icon
     // actions. If called by Gecko CaretStateChangedEvent,
@@ -248,8 +255,9 @@ var ActionBarHandler = {
    *        set by init() for example, where we want to always send the
    *        current state.
    */
-  _sendActionBarActions: function(sendAlways, boundingClientRect) {
+  _sendActionBarActions: function(sendAlways) {
     let actions = this._getActionBarActions();
+
     let actionCountUnchanged = this._actionBarActions &&
       actions.length === this._actionBarActions.length;
     let actionsMatch = actionCountUnchanged &&
@@ -260,12 +268,13 @@ var ActionBarHandler = {
     if (sendAlways || !actionsMatch) {
       Messaging.sendRequest({
         type: "TextSelection:ActionbarStatus",
+        selectionID: this._selectionID,
         actions: actions,
-        x: boundingClientRect.x,
-        y: boundingClientRect.y,
-        width: boundingClientRect.width,
-        height: boundingClientRect.height
-      });;
+        x: this._boundingClientRect.x,
+        y: this._boundingClientRect.y,
+        width: this._boundingClientRect.width,
+        height: this._boundingClientRect.height
+      });
     }
 
     this._actionBarActions = actions;
@@ -535,15 +544,32 @@ var ActionBarHandler = {
           if (!form || element.type == "password") {
             return false;
           }
+
           let method = form.method.toUpperCase();
-          return (method == "GET" || method == "") ||
-                 (form.enctype != "text/plain") && (form.enctype != "multipart/form-data");
+          let canAddEngine = (method == "GET") ||
+            (method == "POST" && (form.enctype != "text/plain" && form.enctype != "multipart/form-data"));
+          if (!canAddEngine) {
+            return false;
+          }
+
+          // If SearchEngine query finds it, then we don't want action to add displayed.
+          if (SearchEngines.visibleEngineExists(element)) {
+            return false;
+          }
+
+          return true;
         },
       },
 
       action: function(element, win) {
         UITelemetry.addEvent("action.1", "actionbar", null, "add_search_engine");
-        SearchEngines.addEngine(element);
+
+        // Engines are added asynch. If required, update SelectionUI on callback.
+        SearchEngines.addEngine(element, (result) => {
+          if (result) {
+            ActionBarHandler._sendActionBarActions(true);
+          }
+        });
       },
     },
 
