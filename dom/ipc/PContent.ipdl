@@ -1199,15 +1199,15 @@ parent:
     async NotifyPushSubscriptionChangeObservers(nsCString scope,
                                                 Principal principal);
 
-    /**
-     * Notify `push-subscription-modified` observers in the parent.
-     */
-    async NotifyPushSubscriptionModifiedObservers(nsCString scope,
-                                                  Principal principal);
-
 both:
      async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
                         Principal aPrincipal, ClonedMessageData aData);
+
+    /**
+     * Notify `push-subscription-modified` observers in the parent and child.
+     */
+    async NotifyPushSubscriptionModifiedObservers(nsCString scope,
+                                                  Principal principal);
 };
 
 }
