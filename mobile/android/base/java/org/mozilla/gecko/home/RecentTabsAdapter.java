@@ -18,6 +18,7 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.SessionParser;
+import org.mozilla.gecko.home.CombinedHistoryAdapter.RecentTabsUpdateHandler;
 import org.mozilla.gecko.home.CombinedHistoryPanel.PanelStateUpdateHandler;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.NativeEventListener;
@@ -54,11 +55,14 @@ public class RecentTabsAdapter extends RecyclerView.Adapter<CombinedHistoryItem>
     }
 
     private final Context context;
+    private final RecentTabsUpdateHandler recentTabsUpdateHandler;
     private final PanelStateUpdateHandler panelStateUpdateHandler;
 
     public RecentTabsAdapter(Context context,
+                             RecentTabsUpdateHandler recentTabsUpdateHandler,
                              PanelStateUpdateHandler panelStateUpdateHandler) {
         this.context = context;
+        this.recentTabsUpdateHandler = recentTabsUpdateHandler;
         this.panelStateUpdateHandler = panelStateUpdateHandler;
         recentlyClosedTabs = new ClosedTab[0];
         lastSessionTabs = new ClosedTab[0];
@@ -98,6 +102,7 @@ public class RecentTabsAdapter extends RecyclerView.Adapter<CombinedHistoryItem>
                 int prevSectionHeaderIndex = getSectionHeaderIndex();
 
                 recentlyClosedTabs = closedTabs;
+                recentTabsUpdateHandler.onRecentTabsCountUpdated(getClosedTabsCount());
                 panelStateUpdateHandler.onPanelStateUpdated();
 
                 // Handle the section header hiding/unhiding.
@@ -151,6 +156,7 @@ public class RecentTabsAdapter extends RecyclerView.Adapter<CombinedHistoryItem>
                         int prevSectionHeaderIndex = getSectionHeaderIndex();
 
                         lastSessionTabs = closedTabs;
+                        recentTabsUpdateHandler.onRecentTabsCountUpdated(getClosedTabsCount());
                         panelStateUpdateHandler.onPanelStateUpdated();
 
                         // Handle the section header hiding/unhiding.

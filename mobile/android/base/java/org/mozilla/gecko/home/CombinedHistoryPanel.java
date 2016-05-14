@@ -115,7 +115,8 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
         // The RecentTabsAdapter doesn't use a cursor and therefore can't use the CursorLoader's
         // onLoadFinished() callback for updating the panel state when the closed tab count changes.
         // Instead, we provide it with independent callbacks as necessary.
-        mRecentTabsAdapter = new RecentTabsAdapter(getContext(), getPanelStateUpdateHandler());
+        mRecentTabsAdapter = new RecentTabsAdapter(getContext(),
+                mHistoryAdapter.getRecentTabsUpdateHandler(), getPanelStateUpdateHandler());
 
         mSyncStatusListener = new RemoteTabsSyncListener();
         FirefoxAccounts.addSyncStatusListener(mSyncStatusListener);
