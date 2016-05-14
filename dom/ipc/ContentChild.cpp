@@ -3326,5 +3326,16 @@ ContentChild::RecvPushError(const nsCString& aScope, const IPC::Principal& aPrin
   return true;
 }
 
+bool
+ContentChild::RecvNotifyPushSubscriptionModifiedObservers(const nsCString& aScope,
+                                                          const IPC::Principal& aPrincipal)
+{
+#ifndef MOZ_SIMPLEPUSH
+  PushSubscriptionModifiedDispatcher dispatcher(aScope, aPrincipal);
+  Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObservers()));
+#endif
+  return true;
+}
+
 } // namespace dom
 } // namespace mozilla
