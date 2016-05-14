@@ -38,7 +38,7 @@ add_task(function*() {
     "The root node has the correct parent.");
   is(treeRoot.level, 0,
     "The root node has the correct level.");
-  is(treeRoot.target.MozMarginStart, "0px",
+  is(treeRoot.target.marginInlineStart, "0px",
     "The root node's indentation is correct.");
   is(treeRoot.target.textContent, "root",
     "The root node's text contents are correct.");
@@ -77,7 +77,7 @@ add_task(function*() {
     "The 'foo' node has the correct parent.");
   is(fooItem.level, 1,
     "The 'foo' node has the correct level.");
-  is(fooItem.target.MozMarginStart, "10px",
+  is(fooItem.target.marginInlineStart, "10px",
     "The 'foo' node's indentation is correct.");
   is(fooItem.target.textContent, "foo",
     "The 'foo' node's text contents are correct.");
@@ -90,7 +90,7 @@ add_task(function*() {
     "The 'bar' node has the correct parent.");
   is(barItem.level, 1,
     "The 'bar' node has the correct level.");
-  is(barItem.target.MozMarginStart, "10px",
+  is(barItem.target.marginInlineStart, "10px",
     "The 'bar' node's indentation is correct.");
   is(barItem.target.textContent, "bar",
     "The 'bar' node's text contents are correct.");
@@ -143,7 +143,7 @@ add_task(function*() {
     "The 'baz' node has the correct parent.");
   is(bazItem.level, 2,
     "The 'baz' node has the correct level.");
-  is(bazItem.target.MozMarginStart, "20px",
+  is(bazItem.target.marginInlineStart, "20px",
     "The 'baz' node's indentation is correct.");
   is(bazItem.target.textContent, "baz",
     "The 'baz' node's text contents are correct.");

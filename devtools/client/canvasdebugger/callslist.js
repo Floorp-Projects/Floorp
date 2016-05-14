@@ -410,7 +410,7 @@ var CallsListView = Heritage.extend(WidgetMethods, {
 
         let contents = document.createElement("hbox");
         contents.className = "call-item-stack-fn";
-        contents.style.MozPaddingStart = (i * STACK_FUNC_INDENTATION) + "px";
+        contents.style.paddingInlineStart = (i * STACK_FUNC_INDENTATION) + "px";
 
         let name = document.createElement("label");
         name.className = "plain call-item-stack-fn-name";
