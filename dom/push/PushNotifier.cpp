@@ -452,9 +452,10 @@ PushSubscriptionModifiedDispatcher::SendToParent(ContentChild* aParentActor)
 }
 
 bool
-PushSubscriptionModifiedDispatcher::SendToChild(ContentParent*)
+PushSubscriptionModifiedDispatcher::SendToChild(ContentParent* aContentActor)
 {
-  return true;
+  return aContentActor->SendNotifyPushSubscriptionModifiedObservers(mScope,
+                                                                    IPC::Principal(mPrincipal));
 }
 
 PushErrorDispatcher::PushErrorDispatcher(const nsACString& aScope,
