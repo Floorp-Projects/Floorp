@@ -521,6 +521,16 @@ private:
       rv.SuppressException();
       return false;
     }
+
+    WorkerGlobalScope* globalScope = aWorkerPrivate->GlobalScope();
+    if (NS_WARN_IF(!globalScope)) {
+      // We never got as far as calling GetOrCreateGlobalScope, or it failed.
+      // We have no way to enter a compartment, hence no sane way to report this
+      // error.  :(
+      rv.SuppressException();
+      return false;
+    }
+
     // Make sure to propagate exceptions from rv onto aCx, so that they will get
     // reported after we return.  We do this for all failures on rv, because now
     // we're using rv to track all the state we care about.
@@ -529,10 +539,8 @@ private:
     // set it up that way in our Run(), since we had not created the global at
     // that point yet.  So we need to enter the compartment of our global,
     // because setting a pending exception on aCx involves wrapping into its
-    // current compartment.  Luckily we have a global now (else how would we
-    // have a JS exception?) so we can just enter its compartment.
-    JSAutoCompartment ac(aCx,
-                         aWorkerPrivate->GlobalScope()->GetGlobalJSObject());
+    // current compartment.  Luckily we have a global now.
+    JSAutoCompartment ac(aCx, globalScope->GetGlobalJSObject());
     if (rv.MaybeSetPendingException(aCx)) {
       return false;
     }
