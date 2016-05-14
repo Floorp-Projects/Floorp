@@ -362,6 +362,19 @@ public class RecentTabsAdapter extends RecyclerView.Adapter<CombinedHistoryItem>
         final CombinedHistoryItem.ItemType itemType = getItemTypeForPosition(position);
         final HomeContextMenuInfo info;
 
+        switch (itemType) {
+            case CLOSED_TAB:
+                info = new HomeContextMenuInfo(view, position, -1);
+                ClosedTab closedTab = getClosedTabForPosition(position);
+                return populateChildInfoFromTab(info, closedTab);
+        }
+
         return null;
+    }
+
+    protected static HomeContextMenuInfo populateChildInfoFromTab(HomeContextMenuInfo info, ClosedTab tab) {
+        info.url = tab.url;
+        info.title = tab.title;
+        return info;
     }
 }
