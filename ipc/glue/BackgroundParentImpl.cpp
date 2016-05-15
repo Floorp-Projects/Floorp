@@ -29,6 +29,8 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/ipc/PBackgroundTestParent.h"
+#include "mozilla/ipc/PSendStreamParent.h"
+#include "mozilla/ipc/SendStreamAlloc.h"
 #include "mozilla/layout/VsyncParent.h"
 #include "mozilla/dom/network/UDPSocketParent.h"
 #include "mozilla/Preferences.h"
@@ -303,6 +305,19 @@ bool
 BackgroundParentImpl::DeallocPNuwaParent(PNuwaParent *aActor)
 {
   return mozilla::dom::NuwaParent::Dealloc(aActor);
+}
+
+PSendStreamParent*
+BackgroundParentImpl::AllocPSendStreamParent()
+{
+  return mozilla::ipc::AllocPSendStreamParent();
+}
+
+bool
+BackgroundParentImpl::DeallocPSendStreamParent(PSendStreamParent* aActor)
+{
+  delete aActor;
+  return true;
 }
 
 BackgroundParentImpl::PVsyncParent*
