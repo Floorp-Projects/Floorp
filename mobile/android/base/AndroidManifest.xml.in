@@ -44,6 +44,10 @@
         <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
 #endif
 
+        <!-- This activity handles all incoming Intents and dispatches them to other activities. -->
+        <activity android:name="org.mozilla.gecko.LauncherActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
         <!-- Fennec is shipped as the Android package named
              org.mozilla.{fennec,firefox,firefox_beta}.  The internal Java
              package hierarchy inside the Android package used to have an
@@ -64,7 +68,7 @@
              filter details change. -->
         <activity-alias android:name=".App"
                         android:label="@MOZ_APP_DISPLAYNAME@"
-                        android:targetActivity="@MOZ_ANDROID_BROWSER_INTENT_CLASS@">
+                        android:targetActivity="org.mozilla.gecko.LauncherActivity">
 
             <!-- android:priority ranges between -1000 and 1000.  We never want
                  another activity to usurp the MAIN action, so we ratchet our
@@ -75,6 +79,27 @@
                 <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER"/>
                 <category android:name="android.intent.category.APP_BROWSER" />
                 <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:scheme="about" />
+                <data android:scheme="javascript" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="file" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:mimeType="text/html"/>
+                <data android:mimeType="text/plain"/>
+                <data android:mimeType="application/xhtml+xml"/>
             </intent-filter>
 
             <meta-data android:name="com.sec.minimode.icon.portrait.normal"
@@ -170,34 +195,6 @@
         <activity android:name="org.mozilla.gecko.tabqueue.TabQueuePrompt"
                   android:launchMode="singleTop"
                   android:theme="@style/OverlayActivity" />
-
-        <activity android:name="org.mozilla.gecko.tabqueue.TabQueueDispatcher"
-                  android:label="@MOZ_APP_DISPLAYNAME@"
-                  android:launchMode="singleTask"
-                  android:excludeFromRecents="true"
-                  android:taskAffinity="@ANDROID_PACKAGE_NAME@.TABQUEUE"
-                  android:theme="@style/TabQueueActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="http" />
-                <data android:scheme="https" />
-                <data android:scheme="about" />
-                <data android:scheme="javascript" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:scheme="file" />
-                <data android:scheme="http" />
-                <data android:scheme="https" />
-                <data android:mimeType="text/html"/>
-                <data android:mimeType="text/plain"/>
-                <data android:mimeType="application/xhtml+xml"/>
-            </intent-filter>
-        </activity>
 
         <receiver android:name="org.mozilla.gecko.restrictions.RestrictionProvider">
           <intent-filter>
