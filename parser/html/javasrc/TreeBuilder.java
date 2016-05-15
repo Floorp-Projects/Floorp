@@ -39,6 +39,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.Locator;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
+
 import nu.validator.htmlparser.annotation.Auto;
 import nu.validator.htmlparser.annotation.Const;
 import nu.validator.htmlparser.annotation.IdType;
@@ -53,11 +58,6 @@ import nu.validator.htmlparser.common.DocumentModeHandler;
 import nu.validator.htmlparser.common.Interner;
 import nu.validator.htmlparser.common.TokenHandler;
 import nu.validator.htmlparser.common.XmlViolationPolicy;
-
-import org.xml.sax.ErrorHandler;
-import org.xml.sax.Locator;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
 
 public abstract class TreeBuilder<T> implements TokenHandler,
         TreeBuilderState<T> {
@@ -1924,7 +1924,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                     break starttagloop;
                                 }
                                 generateImpliedEndTags();
-                                // XXX is the next if dead code?
                                 if (errorHandler != null && !isCurrent("table")) {
                                     errNoCheckUnclosedElementsOnStack();
                                 }
@@ -2183,11 +2182,11 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                             pop();
                                         }
                                         break;
-                                    } else if (node.isSpecial()
+                                    } else if (eltPos == 0 || (node.isSpecial()
                                             && (node.ns != "http://www.w3.org/1999/xhtml"
-                                                || (node.name != "p"
-                                                    && node.name != "address"
-                                                    && node.name != "div"))) {
+                                                    || (node.name != "p"
+                                                            && node.name != "address"
+                                                            && node.name != "div")))) {
                                         break;
                                     }
                                     eltPos--;
@@ -3884,7 +3883,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                         pop();
                                     }
                                     break endtagloop;
-                                } else if (node.isSpecial()) {
+                                } else if (eltPos == 0 || node.isSpecial()) {
                                     errStrayEndTag(name);
                                     break endtagloop;
                                 }
@@ -4751,6 +4750,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             int furthestBlockPos = formattingEltStackPos + 1;
             while (furthestBlockPos <= currentPtr) {
                 StackNode<T> node = stack[furthestBlockPos]; // weak ref
+                assert furthestBlockPos > 0: "How is formattingEltStackPos + 1 not > 0?";
                 if (node.isSpecial()) {
                     break;
                 }
