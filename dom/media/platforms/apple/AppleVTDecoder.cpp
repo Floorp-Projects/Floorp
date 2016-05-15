@@ -164,23 +164,6 @@ TimingInfoFromSample(MediaRawData* aSample)
 }
 
 nsresult
-AppleVTDecoder::ProcessDecode(MediaRawData* aSample)
-{
-  AssertOnTaskQueueThread();
-
-  mInputIncoming--;
-
-  auto rv = DoDecode(aSample);
-  // Ask for more data.
-  if (NS_SUCCEEDED(rv) && !mInputIncoming && mQueuedSamples <= mMaxRefFrames) {
-  LOG("%s task queue empty; requesting more data", GetDescriptionName());
-    mCallback->InputExhausted();
-  }
-
-  return rv;
-}
-
-nsresult
 AppleVTDecoder::DoDecode(MediaRawData* aSample)
 {
   AssertOnTaskQueueThread();
