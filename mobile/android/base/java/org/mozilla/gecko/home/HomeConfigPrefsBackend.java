@@ -75,8 +75,6 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
         panelConfigs.add(createBuiltinPanelConfig(mContext, PanelType.COMBINED_HISTORY));
 
 
-        panelConfigs.add(createBuiltinPanelConfig(mContext, PanelType.RECENT_TABS));
-
         return new State(panelConfigs, true);
     }
 
