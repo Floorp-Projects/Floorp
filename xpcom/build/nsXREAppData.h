@@ -12,6 +12,12 @@
 
 class nsIFile;
 
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+namespace sandbox {
+class BrokerServices;
+}
+#endif
+
 /**
  * Application-specific data needed to start the apprunner.
  *
@@ -128,6 +134,13 @@ struct nsXREAppData
    * The application name to use in the User Agent string.
    */
   const char* UAName;
+
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+  /**
+   * Chromium sandbox BrokerServices.
+   */
+  sandbox::BrokerServices* sandboxBrokerServices;
+#endif
 };
 
 /**
