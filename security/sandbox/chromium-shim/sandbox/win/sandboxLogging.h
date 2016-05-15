@@ -24,9 +24,6 @@ namespace sandboxing {
 // requires code to which we cannot link directly.
 void ProvideLogFunction(LogFunction aLogFunction);
 
-// Set up dummy interceptions via the broker, so we can log calls.
-void ApplyLoggingPolicy(sandbox::TargetPolicy& aPolicy);
-
 // Log a "BLOCKED" msg to the browser console and, if DEBUG build, stderr.
 // If the logging of a stack trace is enabled then the default aFramesToSkip
 // will start from our caller's caller, which should normally be the function
