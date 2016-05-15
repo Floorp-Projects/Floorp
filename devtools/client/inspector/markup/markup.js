@@ -22,6 +22,7 @@ const DRAG_DROP_MIN_INITIAL_DISTANCE = 10;
 const AUTOCOMPLETE_POPUP_PANEL_ID = "markupview_autoCompletePopup";
 const ATTR_COLLAPSE_ENABLED_PREF = "devtools.markup.collapseAttributes";
 const ATTR_COLLAPSE_LENGTH_PREF = "devtools.markup.collapseAttributeLength";
+const PREVIEW_MAX_DIM_PREF = "devtools.inspector.imagePreviewTooltipSize";
 
 // Contains only void (without end tag) HTML elements
 const HTML_VOID_ELEMENTS = [ "area", "base", "br", "col", "command", "embed",
@@ -35,6 +36,10 @@ const {HTMLEditor} = require("devtools/client/inspector/markup/html-editor");
 const promise = require("promise");
 const Services = require("Services");
 const {Tooltip} = require("devtools/client/shared/widgets/Tooltip");
+const {HTMLTooltip} = require("devtools/client/shared/widgets/HTMLTooltip");
+const {setImageTooltip, setBrokenImageTooltip} =
+      require("devtools/client/shared/widgets/tooltip/ImageTooltipHelper");
+
 const EventEmitter = require("devtools/shared/event-emitter");
 const Heritage = require("sdk/core/heritage");
 const {parseAttribute} =
@@ -131,7 +136,7 @@ function MarkupView(inspector, frame, controllerWindow) {
   this._onToolboxPickerHover = this._onToolboxPickerHover.bind(this);
   this._onCollapseAttributesPrefChange =
     this._onCollapseAttributesPrefChange.bind(this);
-  this._isImagePreviewTarget = this._isImagePreviewTarget.bind(this)
+  this._isImagePreviewTarget = this._isImagePreviewTarget.bind(this);
   this._onBlur = this._onBlur.bind(this);
 
   EventEmitter.decorate(this);
@@ -171,7 +176,8 @@ MarkupView.prototype = {
 
   _initTooltips: function () {
     this.eventDetailsTooltip = new Tooltip(this._inspector.panelDoc);
-    this.imagePreviewTooltip = new Tooltip(this._inspector.panelDoc);
+    this.imagePreviewTooltip = new HTMLTooltip(this._inspector.toolbox,
+      {type: "arrow"});
     this._enableImagePreviewTooltip();
   },
 
@@ -2638,18 +2644,15 @@ MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
       return this.tooltipDataPromise;
     }
 
-    let maxDim =
-      Services.prefs.getIntPref("devtools.inspector.imagePreviewTooltipSize");
-
     // Fetch the preview from the server.
     this.tooltipDataPromise = Task.spawn(function* () {
+      let maxDim = Services.prefs.getIntPref(PREVIEW_MAX_DIM_PREF);
       let preview = yield this.node.getImageData(maxDim);
       let data = yield preview.data.string();
 
       // Clear the pending preview request. We can't reuse the results later as
       // the preview contents might have changed.
       this.tooltipDataPromise = null;
-
       return { data, size: preview.size };
     }.bind(this));
 
@@ -2681,14 +2684,19 @@ MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
     }
 
     try {
-      let {data, size} = yield this._getPreview();
+      let { data, size } = yield this._getPreview();
       // The preview is ready.
-      tooltip.setImageContent(data, size);
+      let options = {
+        naturalWidth: size.naturalWidth,
+        naturalHeight: size.naturalHeight,
+        maxDim: Services.prefs.getIntPref(PREVIEW_MAX_DIM_PREF)
+      };
+
+      yield setImageTooltip(tooltip, this.markup.doc, data, options);
     } catch (e) {
       // Indicate the failure but show the tooltip anyway.
-      tooltip.setBrokenImageContent();
+      yield setBrokenImageTooltip(tooltip, this.markup.doc);
     }
-
     return true;
   }),
 
