@@ -431,6 +431,21 @@ AppleVDADecoder::ProcessDecode(MediaRawData* aSample)
 
   mInputIncoming--;
 
+  auto rv = DoDecode(aSample);
+  // Ask for more data.
+  if (NS_SUCCEEDED(rv) && !mInputIncoming && mQueuedSamples <= mMaxRefFrames) {
+    LOG("%s task queue empty; requesting more data", GetDescriptionName());
+    mCallback->InputExhausted();
+  }
+
+  return rv;
+}
+
+nsresult
+AppleVDADecoder::DoDecode(MediaRawData* aSample)
+{
+  AssertOnTaskQueueThread();
+
   AutoCFRelease<CFDataRef> block =
     CFDataCreate(kCFAllocatorDefault, aSample->Data(), aSample->Size());
   if (!block) {
@@ -503,12 +518,6 @@ AppleVDADecoder::ProcessDecode(MediaRawData* aSample)
     // The CFDictionaryRef will be retained by the framework.
     // In 10.6, it is released one too many. So retain it.
     CFRetain(frameInfo);
-  }
-
-  // Ask for more data.
-  if (!mInputIncoming && mQueuedSamples <= mMaxRefFrames) {
-    LOG("AppleVDADecoder task queue empty; requesting more data");
-    mCallback->InputExhausted();
   }
 
   return NS_OK;

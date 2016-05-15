@@ -44,6 +44,7 @@ private:
 
   // Method to pass a frame to VideoToolbox for decoding.
   nsresult ProcessDecode(MediaRawData* aSample) override;
+  nsresult DoDecode(MediaRawData* aSample);
   // Method to set up the decompression session.
   nsresult InitializeSession();
   nsresult WaitForAsynchronousFrames();
