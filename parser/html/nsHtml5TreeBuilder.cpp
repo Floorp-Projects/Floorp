@@ -1102,7 +1102,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                     pop();
                   }
                   break;
-                } else if (node->isSpecial() && (node->ns != kNameSpaceID_XHTML || (node->name != nsHtml5Atoms::p && node->name != nsHtml5Atoms::address && node->name != nsHtml5Atoms::div))) {
+                } else if (!eltPos || (node->isSpecial() && (node->ns != kNameSpaceID_XHTML || (node->name != nsHtml5Atoms::p && node->name != nsHtml5Atoms::address && node->name != nsHtml5Atoms::div)))) {
                   break;
                 }
                 eltPos--;
@@ -2749,7 +2749,7 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
                   pop();
                 }
                 NS_HTML5_BREAK(endtagloop);
-              } else if (node->isSpecial()) {
+              } else if (!eltPos || node->isSpecial()) {
                 errStrayEndTag(name);
                 NS_HTML5_BREAK(endtagloop);
               }
@@ -3593,6 +3593,7 @@ nsHtml5TreeBuilder::adoptionAgencyEndTag(nsIAtom* name)
     int32_t furthestBlockPos = formattingEltStackPos + 1;
     while (furthestBlockPos <= currentPtr) {
       nsHtml5StackNode* node = stack[furthestBlockPos];
+      MOZ_ASSERT(furthestBlockPos > 0, "How is formattingEltStackPos + 1 not > 0?");
       if (node->isSpecial()) {
         break;
       }
