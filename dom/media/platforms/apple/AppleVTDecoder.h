@@ -19,6 +19,8 @@ public:
                  FlushableTaskQueue* aVideoTaskQueue,
                  MediaDataDecoderCallback* aCallback,
                  layers::ImageContainer* aImageContainer);
+
+private:
   virtual ~AppleVTDecoder();
   RefPtr<InitPromise> Init() override;
   bool IsHardwareAccelerated(nsACString& aFailureReason) const override
@@ -33,12 +35,10 @@ public:
       : "apple software VT decoder";
   }
 
-protected:
   void ProcessFlush() override;
   void ProcessDrain() override;
   void ProcessShutdown() override;
 
-private:
   CMVideoFormatDescriptionRef mFormat;
   VTDecompressionSessionRef mSession;
 
