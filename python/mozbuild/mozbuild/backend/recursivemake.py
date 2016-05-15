@@ -15,8 +15,6 @@ from collections import (
 from StringIO import StringIO
 from itertools import chain
 
-from reftest import ReftestManifest
-
 from mozpack.manifests import (
     InstallManifest,
 )
@@ -1081,10 +1079,17 @@ class RecursiveMakeBackend(CommonBackend):
             (obj.install_prefix, set()))
         m[1].add(obj.manifest_obj_relpath)
 
-        if isinstance(obj.manifest, ReftestManifest):
-            # Mark included files as part of the build backend so changes
-            # result in re-config.
-            self.backend_input_files |= obj.manifest.manifests
+        try:
+            from reftest import ReftestManifest
+
+            if isinstance(obj.manifest, ReftestManifest):
+                # Mark included files as part of the build backend so changes
+                # result in re-config.
+                self.backend_input_files |= obj.manifest.manifests
+        except ImportError:
+            # Ignore errors caused by the reftest module not being present.
+            # This can happen when building SpiderMonkey standalone, for example.
+            pass
 
     def _process_local_include(self, local_include, backend_file):
         d, path = self._pretty_path_parts(local_include, backend_file)
