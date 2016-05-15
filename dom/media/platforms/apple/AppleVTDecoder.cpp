@@ -169,6 +169,22 @@ AppleVTDecoder::ProcessDecode(MediaRawData* aSample)
   AssertOnTaskQueueThread();
 
   mInputIncoming--;
+
+  auto rv = DoDecode(aSample);
+  // Ask for more data.
+  if (NS_SUCCEEDED(rv) && !mInputIncoming && mQueuedSamples <= mMaxRefFrames) {
+  LOG("%s task queue empty; requesting more data", GetDescriptionName());
+    mCallback->InputExhausted();
+  }
+
+  return rv;
+}
+
+nsresult
+AppleVTDecoder::DoDecode(MediaRawData* aSample)
+{
+  AssertOnTaskQueueThread();
+
   // For some reason this gives me a double-free error with stagefright.
   AutoCFRelease<CMBlockBufferRef> block = nullptr;
   AutoCFRelease<CMSampleBufferRef> sample = nullptr;
@@ -213,12 +229,6 @@ AppleVTDecoder::ProcessDecode(MediaRawData* aSample)
     NS_WARNING("Couldn't pass frame to decoder");
     mCallback->Error();
     return NS_ERROR_FAILURE;
-  }
-
-  // Ask for more data.
-  if (!mInputIncoming && mQueuedSamples <= mMaxRefFrames) {
-    LOG("AppleVTDecoder task queue empty; requesting more data");
-    mCallback->InputExhausted();
   }
 
   return NS_OK;
