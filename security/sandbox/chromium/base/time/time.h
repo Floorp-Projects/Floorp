@@ -388,6 +388,7 @@ class BASE_EXPORT Time {
     return Time(us);
   }
 
+#if !defined(MOZ_SANDBOX)
   // Converts a string representation of time to a Time object.
   // An example of a time string which is converted is as below:-
   // "Tue, 15 Nov 1994 12:45:26 GMT". If the timezone is not specified
@@ -402,6 +403,7 @@ class BASE_EXPORT Time {
   static bool FromUTCString(const char* time_string, Time* parsed_time) {
     return FromStringInternal(time_string, false, parsed_time);
   }
+#endif
 
   // For serializing, use FromInternalValue to reconstitute. Please don't use
   // this and do arithmetic on it, as it is more error prone than using the
@@ -485,6 +487,7 @@ class BASE_EXPORT Time {
   // |is_local = true| or UTC |is_local = false|.
   static Time FromExploded(bool is_local, const Exploded& exploded);
 
+#if !defined(MOZ_SANDBOX)
   // Converts a string representation of time to a Time object.
   // An example of a time string which is converted is as below:-
   // "Tue, 15 Nov 1994 12:45:26 GMT". If the timezone is not specified
@@ -495,6 +498,7 @@ class BASE_EXPORT Time {
   static bool FromStringInternal(const char* time_string,
                                  bool is_local,
                                  Time* parsed_time);
+#endif
 
   // Time in microseconds in UTC.
   int64 us_;
