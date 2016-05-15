@@ -1,0 +1,32 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+include protocol PContent;
+
+namespace mozilla {
+namespace ipc {
+
+protocol PSendStream
+{
+  manager PBackground or PContent;
+
+parent:
+  async Buffer(nsCString aBuffer);
+  async Close(nsresult aRv);
+
+child:
+  // The parent side has hit an error condition and has requested the child
+  // actor issue a Close() message.  The close must be initiated by the child
+  // to avoid racing with an in-flight Buffer() message.
+  async RequestClose(nsresult aRv);
+
+  // Stream is always destroyed from the parent side.  This occurs if the
+  // parent encounters an error while writing to its pipe or if the child
+  // signals the stream should close by SendClose().
+  async __delete__();
+};
+
+} // namespace ipc
+} // namespace mozilla

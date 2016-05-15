@@ -43,6 +43,7 @@
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/ipc/ProcessChild.h"
+#include "mozilla/ipc/PSendStreamChild.h"
 #include "mozilla/ipc/TestShellChild.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layers/APZChild.h"
@@ -1878,6 +1879,19 @@ ContentChild::AllocPPrintingChild()
 bool
 ContentChild::DeallocPPrintingChild(PPrintingChild* printing)
 {
+  return true;
+}
+
+PSendStreamChild*
+ContentChild::AllocPSendStreamChild()
+{
+  MOZ_CRASH("PSendStreamChild actors should be manually constructed!");
+}
+
+bool
+ContentChild::DeallocPSendStreamChild(PSendStreamChild* aActor)
+{
+  delete aActor;
   return true;
 }
 
