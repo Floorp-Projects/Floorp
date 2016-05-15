@@ -9,7 +9,6 @@ import json
 import os
 
 import mozpack.path as mozpath
-import mozwebidlcodegen
 
 from mozbuild.backend.base import BuildBackend
 
@@ -422,6 +421,8 @@ class CommonBackend(BuildBackend):
         file_lists = mozpath.join(bindings_dir, 'file-lists.json')
         with self._write_file(file_lists) as fh:
             json.dump(o, fh, sort_keys=True, indent=2)
+
+        import mozwebidlcodegen
 
         manager = mozwebidlcodegen.create_build_system_manager(
             self.environment.topsrcdir,
