@@ -8,6 +8,7 @@
 #define mozilla_sandboxing_SandboxInitialization_h
 
 namespace sandbox {
+class BrokerServices;
 class TargetServices;
 }
 
@@ -28,6 +29,13 @@ sandbox::TargetServices* GetInitializedTargetServices();
  * Provided because the GMP sandbox needs to be lowered from the executable.
  */
 void LowerSandbox();
+
+/**
+ * Initializes (if required) and returns the Chromium sandbox BrokerServices.
+ *
+ * @return the BrokerServices or null if the creation or initialization failed.
+ */
+sandbox::BrokerServices* GetInitializedBrokerServices();
 
 } // sandboxing
 } // mozilla

@@ -42,5 +42,40 @@ LowerSandbox()
   GetInitializedTargetServices()->LowerToken();
 }
 
+static sandbox::BrokerServices*
+InitializeBrokerServices()
+{
+  sandbox::BrokerServices* brokerServices =
+    sandbox::SandboxFactory::GetBrokerServices();
+  if (!brokerServices) {
+    return nullptr;
+  }
+
+  if (brokerServices->Init() != sandbox::SBOX_ALL_OK) {
+    return nullptr;
+  }
+
+  // Comment below copied from Chromium code.
+  // Precreate the desktop and window station used by the renderers.
+  // IMPORTANT: This piece of code needs to run as early as possible in the
+  // process because it will initialize the sandbox broker, which requires
+  // the process to swap its window station. During this time all the UI
+  // will be broken. This has to run before threads and windows are created.
+  sandbox::TargetPolicy* policy = brokerServices->CreatePolicy();
+  sandbox::ResultCode result = policy->CreateAlternateDesktop(true);
+  policy->Release();
+
+  return brokerServices;
+}
+
+sandbox::BrokerServices*
+GetInitializedBrokerServices()
+{
+  static sandbox::BrokerServices* sInitializedBrokerServices =
+    InitializeBrokerServices();
+
+  return sInitializedBrokerServices;
+}
+
 } // sandboxing
 } // mozilla
