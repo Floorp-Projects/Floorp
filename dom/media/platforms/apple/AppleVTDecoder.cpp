@@ -26,10 +26,10 @@ extern mozilla::LogModule* GetPDMLog();
 namespace mozilla {
 
 AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig,
-                               FlushableTaskQueue* aVideoTaskQueue,
+                               TaskQueue* aTaskQueue,
                                MediaDataDecoderCallback* aCallback,
                                layers::ImageContainer* aImageContainer)
-  : AppleVDADecoder(aConfig, aVideoTaskQueue, aCallback, aImageContainer)
+  : AppleVDADecoder(aConfig, aTaskQueue, aCallback, aImageContainer)
   , mFormat(nullptr)
   , mSession(nullptr)
   , mIsHardwareAccelerated(false)
