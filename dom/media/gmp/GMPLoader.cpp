@@ -7,11 +7,9 @@
 #include "GMPLoader.h"
 #include <stdio.h>
 #include "mozilla/Attributes.h"
-#include "mozilla/UniquePtr.h"
 #include "gmp-entrypoints.h"
 #include "prlink.h"
 #include "prenv.h"
-#include "nsAutoPtr.h"
 
 #include <string>
 
@@ -79,8 +77,8 @@ private:
   UniquePtr<GMPAdapter> mAdapter;
 };
 
-GMPLoader* CreateGMPLoader(SandboxStarter* aStarter) {
-  return static_cast<GMPLoader*>(new GMPLoaderImpl(aStarter));
+UniquePtr<GMPLoader> CreateGMPLoader(SandboxStarter* aStarter) {
+  return MakeUnique<GMPLoaderImpl>(aStarter);
 }
 
 class PassThroughGMPAdapter : public GMPAdapter {
