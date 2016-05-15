@@ -17,6 +17,8 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
+using mozilla::ipc::PBackgroundChild;
+
 namespace {
 
 void
@@ -194,10 +196,10 @@ CacheOpChild::AssertOwningThread() const
 }
 #endif
 
-CachePushStreamChild*
-CacheOpChild::CreatePushStream(nsIAsyncInputStream* aStream)
+PBackgroundChild*
+CacheOpChild::GetIPCManager()
 {
-  MOZ_CRASH("CacheOpChild should never create a push stream actor!");
+  MOZ_CRASH("CacheOpChild does not implement TypeUtils::GetIPCManager()");
 }
 
 void

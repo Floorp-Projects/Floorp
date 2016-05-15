@@ -8,11 +8,11 @@
 
 #include "mozilla/unused.h"
 #include "mozilla/dom/cache/AutoUtils.h"
-#include "mozilla/dom/cache/CachePushStreamParent.h"
 #include "mozilla/dom/cache/ReadStream.h"
 #include "mozilla/dom/cache/SavedTypes.h"
 #include "mozilla/ipc/FileDescriptorSetParent.h"
 #include "mozilla/ipc/InputStreamUtils.h"
+#include "mozilla/ipc/SendStream.h"
 
 namespace mozilla {
 namespace dom {
@@ -20,6 +20,7 @@ namespace cache {
 
 using mozilla::ipc::FileDescriptorSetParent;
 using mozilla::ipc::PBackgroundParent;
+using mozilla::ipc::SendStreamParent;
 
 CacheOpParent::CacheOpParent(PBackgroundParent* aIpcManager, CacheId aCacheId,
                              const CacheOpArgs& aOpArgs)
@@ -170,13 +171,17 @@ CacheOpParent::OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
     return;
   }
 
+  uint32_t entryCount = std::max(1lu, static_cast<unsigned long>(
+                                      std::max(aSavedResponseList.Length(),
+                                               aSavedRequestList.Length())));
+
   // The result must contain the appropriate type at this point.  It may
   // or may not contain the additional result data yet.  For types that
   // do not need special processing, it should already be set.  If the
   // result requires actor-specific operations, then we do that below.
   // If the type and data types don't match, then we will trigger an
   // assertion in AutoParentOpResult::Add().
-  AutoParentOpResult result(mIpcManager, aResult);
+  AutoParentOpResult result(mIpcManager, aResult, entryCount);
 
   if (aOpenedCacheId != INVALID_CACHE_ID) {
     result.Add(aOpenedCacheId, mManager);
@@ -203,42 +208,17 @@ CacheOpParent::DeserializeCacheStream(const CacheReadStreamOrVoid& aStreamOrVoid
   nsCOMPtr<nsIInputStream> stream;
   const CacheReadStream& readStream = aStreamOrVoid.get_CacheReadStream();
 
-  // Option 1: A push stream actor was sent for nsPipe data
-  if (readStream.pushStreamParent()) {
-    MOZ_ASSERT(!readStream.controlParent());
-    CachePushStreamParent* pushStream =
-      static_cast<CachePushStreamParent*>(readStream.pushStreamParent());
-    stream = pushStream->TakeReader();
-    MOZ_ASSERT(stream);
-    return stream.forget();
-  }
-
-  // Option 2: One of our own ReadStreams was passed back to us with a stream
+  // Option 1: One of our own ReadStreams was passed back to us with a stream
   //           control actor.
   stream = ReadStream::Create(readStream);
   if (stream) {
     return stream.forget();
   }
 
-  // Option 3: A stream was serialized using normal methods.
-  AutoTArray<FileDescriptor, 4> fds;
-  if (readStream.fds().type() ==
-      OptionalFileDescriptorSet::TPFileDescriptorSetChild) {
-
-    FileDescriptorSetParent* fdSetActor =
-      static_cast<FileDescriptorSetParent*>(readStream.fds().get_PFileDescriptorSetParent());
-    MOZ_ASSERT(fdSetActor);
-
-    fdSetActor->ForgetFileDescriptors(fds);
-    MOZ_ASSERT(!fds.IsEmpty());
-
-    if (!fdSetActor->Send__delete__(fdSetActor)) {
-      // child process is gone, warn and allow actor to clean up normally
-      NS_WARNING("Cache failed to delete fd set actor.");
-    }
-  }
-
-  return DeserializeInputStream(readStream.params(), fds);
+  // Option 2: A stream was serialized using normal methods or passed
+  //           as a PSendStream actor.  Use the standard method for
+  //           extracting the resulting stream.
+  return DeserializeIPCStream(readStream.stream());
 }
 
 } // namespace cache

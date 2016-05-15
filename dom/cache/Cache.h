@@ -82,8 +82,8 @@ public:
   virtual void AssertOwningThread() const override;
 #endif
 
-  virtual CachePushStreamChild*
-  CreatePushStream(nsIAsyncInputStream* aStream) override;
+  virtual mozilla::ipc::PBackgroundChild*
+  GetIPCManager() override;
 
 private:
   class FetchHandler;

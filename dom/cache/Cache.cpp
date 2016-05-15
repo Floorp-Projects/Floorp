@@ -15,7 +15,6 @@
 #include "mozilla/dom/CacheBinding.h"
 #include "mozilla/dom/cache/AutoUtils.h"
 #include "mozilla/dom/cache/CacheChild.h"
-#include "mozilla/dom/cache/CachePushStreamChild.h"
 #include "mozilla/dom/cache/Feature.h"
 #include "mozilla/dom/cache/ReadStream.h"
 #include "mozilla/ErrorResult.h"
@@ -29,6 +28,7 @@ namespace cache {
 
 using mozilla::dom::workers::GetCurrentThreadWorkerPrivate;
 using mozilla::dom::workers::WorkerPrivate;
+using mozilla::ipc::PBackgroundChild;
 
 namespace {
 
@@ -264,7 +264,7 @@ Cache::Match(const RequestOrUSVString& aRequest,
   CacheQueryParams params;
   ToCacheQueryParams(params, aOptions);
 
-  AutoChildOpArgs args(this, CacheMatchArgs(CacheRequest(), params));
+  AutoChildOpArgs args(this, CacheMatchArgs(CacheRequest(), params), 1);
 
   args.Add(ir, IgnoreBody, IgnoreInvalidScheme, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -288,7 +288,7 @@ Cache::MatchAll(const Optional<RequestOrUSVString>& aRequest,
   CacheQueryParams params;
   ToCacheQueryParams(params, aOptions);
 
-  AutoChildOpArgs args(this, CacheMatchAllArgs(void_t(), params));
+  AutoChildOpArgs args(this, CacheMatchAllArgs(void_t(), params), 1);
 
   if (aRequest.WasPassed()) {
     RefPtr<InternalRequest> ir = ToInternalRequest(aRequest.Value(),
@@ -410,7 +410,7 @@ Cache::Put(const RequestOrUSVString& aRequest, Response& aResponse,
     return nullptr;
   }
 
-  AutoChildOpArgs args(this, CachePutAllArgs());
+  AutoChildOpArgs args(this, CachePutAllArgs(), 1);
 
   args.Add(ir, ReadBody, TypeErrorOnInvalidScheme,
            aResponse, aRv);
@@ -440,7 +440,7 @@ Cache::Delete(const RequestOrUSVString& aRequest,
   CacheQueryParams params;
   ToCacheQueryParams(params, aOptions);
 
-  AutoChildOpArgs args(this, CacheDeleteArgs(CacheRequest(), params));
+  AutoChildOpArgs args(this, CacheDeleteArgs(CacheRequest(), params), 1);
 
   args.Add(ir, IgnoreBody, IgnoreInvalidScheme, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -464,7 +464,7 @@ Cache::Keys(const Optional<RequestOrUSVString>& aRequest,
   CacheQueryParams params;
   ToCacheQueryParams(params, aOptions);
 
-  AutoChildOpArgs args(this, CacheKeysArgs(void_t(), params));
+  AutoChildOpArgs args(this, CacheKeysArgs(void_t(), params), 1);
 
   if (aRequest.WasPassed()) {
     RefPtr<InternalRequest> ir = ToInternalRequest(aRequest.Value(),
@@ -540,13 +540,12 @@ Cache::AssertOwningThread() const
 }
 #endif
 
-CachePushStreamChild*
-Cache::CreatePushStream(nsIAsyncInputStream* aStream)
+PBackgroundChild*
+Cache::GetIPCManager()
 {
   NS_ASSERT_OWNINGTHREAD(Cache);
   MOZ_ASSERT(mActor);
-  MOZ_ASSERT(aStream);
-  return mActor->CreatePushStream(this, aStream);
+  return mActor->Manager();
 }
 
 Cache::~Cache()
@@ -641,7 +640,7 @@ Cache::PutAll(const nsTArray<RefPtr<Request>>& aRequestList,
 
   CacheChild::AutoLock actorLock(mActor);
 
-  AutoChildOpArgs args(this, CachePutAllArgs());
+  AutoChildOpArgs args(this, CachePutAllArgs(), aRequestList.Length());
 
   for (uint32_t i = 0; i < aRequestList.Length(); ++i) {
     RefPtr<InternalRequest> ir = aRequestList[i]->GetInternalRequest();
