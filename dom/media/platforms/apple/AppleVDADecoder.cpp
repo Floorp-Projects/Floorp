@@ -34,16 +34,37 @@ extern mozilla::LogModule* GetPDMLog();
 
 namespace mozilla {
 
+static uint32_t ComputeMaxRefFrames(const MediaByteBuffer* aExtraData)
+{
+  uint32_t maxRefFrames = 4;
+  // Retrieve video dimensions from H264 SPS NAL.
+  mp4_demuxer::SPSData spsdata;
+  if (mp4_demuxer::H264::DecodeSPSFromExtraData(aExtraData, spsdata)) {
+    // max_num_ref_frames determines the size of the sliding window
+    // we need to queue that many frames in order to guarantee proper
+    // pts frames ordering. Use a minimum of 4 to ensure proper playback of
+    // non compliant videos.
+    maxRefFrames =
+      std::min(std::max(maxRefFrames, spsdata.max_num_ref_frames + 1), 16u);
+  }
+  return maxRefFrames;
+}
+
 AppleVDADecoder::AppleVDADecoder(const VideoInfo& aConfig,
                                FlushableTaskQueue* aVideoTaskQueue,
                                MediaDataDecoderCallback* aCallback,
                                layers::ImageContainer* aImageContainer)
-  : mCallback(aCallback)
-  , mImageContainer(aImageContainer)
+  : mExtraData(aConfig.mExtraData)
+  , mCallback(aCallback)
   , mPictureWidth(aConfig.mImage.width)
   , mPictureHeight(aConfig.mImage.height)
   , mDisplayWidth(aConfig.mDisplay.width)
   , mDisplayHeight(aConfig.mDisplay.height)
+  , mQueuedSamples(0)
+  , mTaskQueue(aVideoTaskQueue)
+  , mDecoder(nullptr)
+  , mMaxRefFrames(ComputeMaxRefFrames(aConfig.mExtraData))
+  , mImageContainer(aImageContainer)
   , mInputIncoming(0)
   , mIsShutDown(false)
 #ifdef MOZ_WIDGET_UIKIT
@@ -52,28 +73,12 @@ AppleVDADecoder::AppleVDADecoder(const VideoInfo& aConfig,
 #else
   , mUseSoftwareImages(false)
   , mIs106(!nsCocoaFeatures::OnLionOrLater())
-  #endif
-  , mQueuedSamples(0)
+#endif
   , mMonitor("AppleVideoDecoder")
   , mIsFlushing(false)
-  , mTaskQueue(aVideoTaskQueue)
-  , mDecoder(nullptr)
 {
   MOZ_COUNT_CTOR(AppleVDADecoder);
   // TODO: Verify aConfig.mime_type.
-
-  mExtraData = aConfig.mExtraData;
-  mMaxRefFrames = 4;
-  // Retrieve video dimensions from H264 SPS NAL.
-  mp4_demuxer::SPSData spsdata;
-  if (mp4_demuxer::H264::DecodeSPSFromExtraData(mExtraData, spsdata)) {
-    // max_num_ref_frames determines the size of the sliding window
-    // we need to queue that many frames in order to guarantee proper
-    // pts frames ordering. Use a minimum of 4 to ensure proper playback of
-    // non compliant videos.
-    mMaxRefFrames =
-      std::min(std::max(mMaxRefFrames, spsdata.max_num_ref_frames + 1), 16u);
-  }
 
   LOG("Creating AppleVDADecoder for %dx%d (%dx%d) h.264 video",
       mPictureWidth,
