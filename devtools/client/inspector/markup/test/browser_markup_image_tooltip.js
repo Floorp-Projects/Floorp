@@ -49,7 +49,7 @@ function* assertTooltipShownOn(element, {markup}) {
 
 function checkImageTooltip({selector, size}, {markup}) {
   let panel = markup.imagePreviewTooltip.panel;
-  let images = panel.getElementsByTagName("image");
+  let images = panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip for [" + selector + "] contains an image");
 
   let label = panel.querySelector(".devtools-tooltip-caption");
