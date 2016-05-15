@@ -64,6 +64,8 @@ OSInfo::OSInfo()
         version_ = VERSION_WIN8_1;
         break;
     }
+  } else if (version_number_.major == 10) {
+    version_ = VERSION_WIN10;
   } else if (version_number_.major > 6) {
     NOTREACHED();
     version_ = VERSION_WIN_LAST;
@@ -84,7 +86,7 @@ OSInfo::OSInfo()
   GetProductInfoPtr get_product_info;
   DWORD os_type;
 
-  if (version_info.dwMajorVersion == 6) {
+  if (version_info.dwMajorVersion == 6 || version_info.dwMajorVersion == 10) {
     // Only present on Vista+.
     get_product_info = reinterpret_cast<GetProductInfoPtr>(
         ::GetProcAddress(::GetModuleHandle(L"kernel32.dll"), "GetProductInfo"));
