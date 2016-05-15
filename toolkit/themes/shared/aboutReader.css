@@ -158,3 +158,17 @@ body.sepia blockquote {
 body.dark blockquote {
   border-inline-start: 2px solid #eeeeee !important;
 }
+
+/* Add toolbar transition base on loaded class  */
+
+body.loaded .toolbar {
+  transition: transform 0.3s ease-out;
+}
+
+body:not(.loaded) .toolbar:-moz-locale-dir(ltr) {
+  transform: translateX(-100%);
+}
+
+body:not(.loaded) .toolbar:-moz-locale-dir(rtl) {
+  transform: translateX(100%);
+}
