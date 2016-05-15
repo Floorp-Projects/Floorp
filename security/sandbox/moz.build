@@ -28,6 +28,7 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
         'chromium-shim/sandbox/win/loggingCallbacks.h',
         'chromium-shim/sandbox/win/loggingTypes.h',
         'chromium-shim/sandbox/win/sandboxLogging.h',
+        'win/SandboxInitialization.h',
     ]
 
     SOURCES += [
@@ -128,6 +129,7 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
         'chromium/sandbox/win/src/win2k_threadpool.cc',
         'chromium/sandbox/win/src/win_utils.cc',
         'chromium/sandbox/win/src/window.cc',
+        'win/SandboxInitialization.cpp',
     ]
 
     if CONFIG['CPU_ARCH'] == 'x86_64':

@@ -35,6 +35,7 @@
 
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
+#include "XREChildData.h"
 
 /* Android headers don't define RUSAGE_THREAD */
 #ifndef RUSAGE_THREAD
@@ -421,6 +422,7 @@ ChildProcessInit(int argc, char* argv[])
 
   fXRE_SetProcessType(argv[--argc]);
 
-  return fXRE_InitChildProcess(argc, argv, nullptr);
+  XREChildData childData;
+  return fXRE_InitChildProcess(argc, argv, &childData);
 }
 
