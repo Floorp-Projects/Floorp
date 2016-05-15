@@ -3529,6 +3529,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVGReset
     return nsChangeHint_UpdateEffects |
            nsChangeHint_UpdateOverflow |
            nsChangeHint_NeutralChange |
+           nsChangeHint_UpdateBackgroundPosition |
            NS_STYLE_HINT_REFLOW;
   }
   static nsChangeHint DifferenceAlwaysHandledForDescendants() {
