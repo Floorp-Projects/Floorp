@@ -51,9 +51,9 @@ static uint32_t ComputeMaxRefFrames(const MediaByteBuffer* aExtraData)
 }
 
 AppleVDADecoder::AppleVDADecoder(const VideoInfo& aConfig,
-                               FlushableTaskQueue* aVideoTaskQueue,
-                               MediaDataDecoderCallback* aCallback,
-                               layers::ImageContainer* aImageContainer)
+                                 TaskQueue* aTaskQueue,
+                                 MediaDataDecoderCallback* aCallback,
+                                 layers::ImageContainer* aImageContainer)
   : mExtraData(aConfig.mExtraData)
   , mCallback(aCallback)
   , mPictureWidth(aConfig.mImage.width)
@@ -61,7 +61,7 @@ AppleVDADecoder::AppleVDADecoder(const VideoInfo& aConfig,
   , mDisplayWidth(aConfig.mDisplay.width)
   , mDisplayHeight(aConfig.mDisplay.height)
   , mQueuedSamples(0)
-  , mTaskQueue(aVideoTaskQueue)
+  , mTaskQueue(aTaskQueue)
   , mDecoder(nullptr)
   , mMaxRefFrames(ComputeMaxRefFrames(aConfig.mExtraData))
   , mImageContainer(aImageContainer)
@@ -671,7 +671,7 @@ AppleVDADecoder::CreateOutputConfiguration()
 already_AddRefed<AppleVDADecoder>
 AppleVDADecoder::CreateVDADecoder(
   const VideoInfo& aConfig,
-  FlushableTaskQueue* aVideoTaskQueue,
+  TaskQueue* aTaskQueue,
   MediaDataDecoderCallback* aCallback,
   layers::ImageContainer* aImageContainer)
 {
@@ -681,7 +681,7 @@ AppleVDADecoder::CreateVDADecoder(
   }
 
   RefPtr<AppleVDADecoder> decoder =
-    new AppleVDADecoder(aConfig, aVideoTaskQueue, aCallback, aImageContainer);
+    new AppleVDADecoder(aConfig, aTaskQueue, aCallback, aImageContainer);
 
   if (NS_FAILED(decoder->InitializeSession())) {
     return nullptr;

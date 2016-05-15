@@ -19,7 +19,7 @@
 
 namespace mozilla {
 
-class FlushableTaskQueue;
+class TaskQueue;
 class MediaDataDecoderCallback;
 namespace layers {
   class ImageContainer;
@@ -62,7 +62,7 @@ public:
   // not supported by current configuration.
   static already_AddRefed<AppleVDADecoder> CreateVDADecoder(
     const VideoInfo& aConfig,
-    FlushableTaskQueue* aVideoTaskQueue,
+    TaskQueue* aTaskQueue,
     MediaDataDecoderCallback* aCallback,
     layers::ImageContainer* aImageContainer);
 
@@ -89,7 +89,7 @@ private:
 
 protected:
   AppleVDADecoder(const VideoInfo& aConfig,
-                  FlushableTaskQueue* aVideoTaskQueue,
+                  TaskQueue* aTaskQueue,
                   MediaDataDecoderCallback* aCallback,
                   layers::ImageContainer* aImageContainer);
   virtual ~AppleVDADecoder();
@@ -122,7 +122,7 @@ private:
   virtual void ProcessDrain();
   virtual void ProcessShutdown();
 
-  const RefPtr<FlushableTaskQueue> mTaskQueue;
+  const RefPtr<TaskQueue> mTaskQueue;
   VDADecoder mDecoder;
   const uint32_t mMaxRefFrames;
   const RefPtr<layers::ImageContainer> mImageContainer;
