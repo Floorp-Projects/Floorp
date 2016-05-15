@@ -14,23 +14,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
 
     DIRS += ['pie']
 else:
-    kwargs = {
-        'linkage': None,
-    }
-    if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT' and not CONFIG['MOZ_ASAN']:
-        kwargs['msvcrt'] = 'static'
-        if not CONFIG['GNU_CC']:
-            USE_LIBS += [
-                'mozalloc_staticruntime',
-            ]
-    GeckoProgram(CONFIG['MOZ_CHILD_PROCESS_NAME'], **kwargs)
+    GeckoProgram(CONFIG['MOZ_CHILD_PROCESS_NAME'], linkage='dependent')
 
     SOURCES += [
         'MozillaRuntimeMain.cpp',
-    ]
-    USE_LIBS += [
-        'nspr',
-        'xul',
     ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
@@ -57,18 +44,8 @@ if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
         'rlz',
     ]
 
-    if CONFIG['MOZ_ASAN']:
-        USE_LIBS += [
-            'sandbox_s',
-        ]
-    else:
-        USE_LIBS += [
-            'sandbox_staticruntime_s',
-        ]
-
-    DELAYLOAD_DLLS += [
-        'nss3.dll',
-        'xul.dll'
+    USE_LIBS += [
+        'sandbox_s',
     ]
 
     DEFINES['HASH_NODE_ID_WITH_DEVICE_ID'] = 1;
