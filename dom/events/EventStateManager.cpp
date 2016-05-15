@@ -2804,8 +2804,7 @@ EventStateManager::DecideGestureEvent(WidgetGestureNotifyEvent* aEvent,
       }
     } //scrollableFrame
   } //ancestor chain
-
-  aEvent->displayPanFeedback = displayPanFeedback;
+  aEvent->mDisplayPanFeedback = displayPanFeedback;
   aEvent->mPanDirection = panDirection;
 }
 
