@@ -148,12 +148,12 @@ AppleVDADecoder::Flush()
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   mIsFlushing = true;
-  mTaskQueue->Flush();
   nsCOMPtr<nsIRunnable> runnable =
     NewRunnableMethod(this, &AppleVDADecoder::ProcessFlush);
   SyncRunnable::DispatchToThread(mTaskQueue, runnable);
   mIsFlushing = false;
-  mInputIncoming = 0;
+  // All ProcessDecode() tasks should be done.
+  MOZ_ASSERT(mInputIncoming == 0);
   return NS_OK;
 }
 
@@ -435,6 +435,10 @@ AppleVDADecoder::ProcessDecode(MediaRawData* aSample)
   AssertOnTaskQueueThread();
 
   mInputIncoming--;
+
+  if (mIsFlushing) {
+    return NS_OK;
+  }
 
   auto rv = DoDecode(aSample);
   // Ask for more data.
