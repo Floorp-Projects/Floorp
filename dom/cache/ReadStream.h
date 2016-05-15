@@ -16,6 +16,9 @@
 #include "nsTArrayForwardDeclare.h"
 
 namespace mozilla {
+namespace ipc {
+class AutoIPCStream;
+} // namespace ipc
 namespace dom {
 namespace cache {
 
@@ -81,8 +84,12 @@ public:
   Create(PCacheStreamControlParent* aControl, const nsID& aId,
          nsIInputStream* aStream);
 
-  void Serialize(CacheReadStreamOrVoid* aReadStreamOut, ErrorResult& aRv);
-  void Serialize(CacheReadStream* aReadStreamOut, ErrorResult& aRv);
+  void Serialize(CacheReadStreamOrVoid* aReadStreamOut,
+                 nsTArray<UniquePtr<mozilla::ipc::AutoIPCStream>>& aStreamCleanupList,
+                 ErrorResult& aRv);
+  void Serialize(CacheReadStream* aReadStreamOut,
+                 nsTArray<UniquePtr<mozilla::ipc::AutoIPCStream>>& aStreamCleanupList,
+                 ErrorResult& aRv);
 
 private:
   class Inner;

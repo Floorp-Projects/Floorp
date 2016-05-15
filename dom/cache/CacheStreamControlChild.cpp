@@ -20,6 +20,7 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
+using mozilla::ipc::AutoIPCStream;
 using mozilla::ipc::FileDescriptor;
 using mozilla::ipc::FileDescriptorSetChild;
 using mozilla::ipc::OptionalFileDescriptorSet;
@@ -93,42 +94,16 @@ CacheStreamControlChild::SerializeControl(CacheReadStream* aReadStreamOut)
 }
 
 void
-CacheStreamControlChild::SerializeFds(CacheReadStream* aReadStreamOut,
-                                      const nsTArray<FileDescriptor>& aFds)
+CacheStreamControlChild::SerializeStream(CacheReadStream* aReadStreamOut,
+                                         nsIInputStream* aStream,
+                                         nsTArray<UniquePtr<AutoIPCStream>>& aStreamCleanupList)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);
-  PFileDescriptorSetChild* fdSet = nullptr;
-  if (!aFds.IsEmpty()) {
-    fdSet = Manager()->SendPFileDescriptorSetConstructor(aFds[0]);
-    for (uint32_t i = 1; i < aFds.Length(); ++i) {
-      Unused << fdSet->SendAddFileDescriptor(aFds[i]);
-    }
-  }
-
-  if (fdSet) {
-    aReadStreamOut->fds() = fdSet;
-  } else {
-    aReadStreamOut->fds() = void_t();
-  }
-}
-
-void
-CacheStreamControlChild::DeserializeFds(const CacheReadStream& aReadStream,
-                                        nsTArray<FileDescriptor>& aFdsOut)
-{
-  if (aReadStream.fds().type() !=
-      OptionalFileDescriptorSet::TPFileDescriptorSetChild) {
-    return;
-  }
-
-  auto fdSetActor = static_cast<FileDescriptorSetChild*>(
-    aReadStream.fds().get_PFileDescriptorSetChild());
-  MOZ_ASSERT(fdSetActor);
-
-  fdSetActor->ForgetFileDescriptors(aFdsOut);
-  MOZ_ASSERT(!aFdsOut.IsEmpty());
-
-  Unused << fdSetActor->Send__delete__(fdSetActor);
+  MOZ_ASSERT(aReadStreamOut);
+  MOZ_ASSERT(aStream);
+  UniquePtr<AutoIPCStream> autoStream(new AutoIPCStream(aReadStreamOut->stream()));
+  autoStream->Serialize(aStream, Manager());
+  aStreamCleanupList.AppendElement(Move(autoStream));
 }
 
 void
