@@ -6,10 +6,7 @@
 
 DIRS += ['profile/extensions']
 
-if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['MOZ_ASAN']:
-    GeckoProgram(CONFIG['MOZ_APP_NAME'])
-else:
-    GeckoProgram(CONFIG['MOZ_APP_NAME'], msvcrt='static')
+GeckoProgram(CONFIG['MOZ_APP_NAME'])
 
 JS_PREFERENCE_PP_FILES += [
     'profile/firefox.js',
@@ -30,10 +27,6 @@ LOCAL_INCLUDES += [
     '/toolkit/xre',
     '/xpcom/base',
     '/xpcom/build',
-]
-
-DELAYLOAD_DLLS += [
-    'mozglue.dll',
 ]
 
 USE_LIBS += [
