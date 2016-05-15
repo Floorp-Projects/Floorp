@@ -1969,6 +1969,32 @@ TrackBuffersManager::SkipToNextRandomAccessPoint(TrackInfo::TrackType aTrack,
   return parsed;
 }
 
+const MediaRawData*
+TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
+                               size_t aIndex,
+                               const TimeUnit& aExpectedDts,
+                               const TimeUnit& aExpectedPts,
+                               const TimeUnit& aFuzz)
+{
+  const TrackBuffer& track = GetTrackBuffer(aTrack);
+
+  if (aIndex >= track.Length()) {
+    // reached the end.
+    return nullptr;
+  }
+
+  const RefPtr<MediaRawData>& sample = track[aIndex];
+  if (!aIndex || sample->mTimecode <= (aExpectedDts + aFuzz).ToMicroseconds() ||
+      sample->mTime <= (aExpectedPts + aFuzz).ToMicroseconds()) {
+    return sample;
+  }
+
+  // Gap is too big. End of Stream or Waiting for Data.
+  // TODO, check that we have continuous data based on the sanitized buffered
+  // range instead.
+  return nullptr;
+}
+
 already_AddRefed<MediaRawData>
 TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
                                const TimeUnit& aFuzz,
@@ -1980,9 +2006,7 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
 
   aError = false;
 
-  if (!track.Length() ||
-      (trackData.mNextGetSampleIndex.isSome() &&
-       trackData.mNextGetSampleIndex.ref() >= track.Length())) {
+  if (!track.Length()) {
     return nullptr;
   }
   if (trackData.mNextGetSampleIndex.isNothing() &&
@@ -1992,11 +2016,13 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
   }
 
   if (trackData.mNextGetSampleIndex.isSome()) {
-    const RefPtr<MediaRawData>& sample =
-      track[trackData.mNextGetSampleIndex.ref()];
-    if (trackData.mNextGetSampleIndex.ref() &&
-        sample->mTimecode > (trackData.mNextSampleTimecode + aFuzz).ToMicroseconds()) {
-      // Gap is too big. End of Stream or Waiting for Data.
+    const MediaRawData* sample =
+      GetSample(aTrack,
+                trackData.mNextGetSampleIndex.ref(),
+                trackData.mNextSampleTimecode,
+                trackData.mNextSampleTime,
+                aFuzz);
+    if (!sample) {
       return nullptr;
     }
 
@@ -2078,11 +2104,12 @@ TrackBuffersManager::GetNextRandomAccessPoint(TrackInfo::TrackType aTrack,
 
   uint32_t i = trackData.mNextGetSampleIndex.ref();
   TimeUnit nextSampleTimecode = trackData.mNextSampleTimecode;
+  TimeUnit nextSampleTime = trackData.mNextSampleTime;
 
   for (; i < track.Length(); i++) {
-    const RefPtr<MediaRawData>& sample = track[i];
-    if (sample->mTimecode > (nextSampleTimecode + aFuzz).ToMicroseconds()) {
-      // Gap is too big. End of Stream or Waiting for Data.
+    const MediaRawData* sample =
+      GetSample(aTrack, i, nextSampleTimecode, nextSampleTime, aFuzz);
+    if (!sample) {
       break;
     }
     if (sample->mKeyframe) {
@@ -2090,6 +2117,7 @@ TrackBuffersManager::GetNextRandomAccessPoint(TrackInfo::TrackType aTrack,
     }
     nextSampleTimecode =
       TimeUnit::FromMicroseconds(sample->mTimecode + sample->mDuration);
+    nextSampleTime = TimeUnit::FromMicroseconds(sample->GetEndTime());
   }
   return TimeUnit::FromInfinity();
 }
