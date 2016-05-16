@@ -4,8 +4,7 @@
 "use strict";
 
 const { Task } = require("resource://gre/modules/Task.jsm");
-const { ViewHelpers } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
-const { setNamedTimeout, clearNamedTimeout } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
+const { ViewHelpers, setNamedTimeout, clearNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
 const { LocalizationHelper } = require("devtools/client/shared/l10n");
 
 loader.lazyRequireGetter(this, "promise");

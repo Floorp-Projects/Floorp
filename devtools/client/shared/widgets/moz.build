@@ -32,5 +32,5 @@ DevToolsModules(
     'TreeWidget.js',
     'VariablesView.jsm',
     'VariablesViewController.jsm',
-    'ViewHelpers.jsm',
+    'view-helpers.js',
 )

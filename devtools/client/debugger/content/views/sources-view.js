@@ -18,6 +18,11 @@ const actions = Object.assign(
   require('../actions/breakpoints')
 );
 const { bindActionCreators } = require('devtools/client/shared/vendor/redux');
+const {
+  Heritage,
+  WidgetMethods,
+  setNamedTimeout
+} = require("devtools/client/shared/widgets/view-helpers");
 
 const NEW_SOURCE_DISPLAY_DELAY = 200; // ms
 const FUNCTION_SEARCH_POPUP_POSITION = "topcenter bottomleft";

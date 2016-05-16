@@ -8,7 +8,8 @@
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
+const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const { ViewHelpers } = require("devtools/client/shared/widgets/view-helpers");
 
 XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
   "resource://devtools/shared/event-emitter.js");

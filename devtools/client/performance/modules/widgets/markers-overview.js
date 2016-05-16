@@ -10,7 +10,7 @@
  */
 
 const { Cc, Ci, Cu, Cr } = require("chrome");
-const { Heritage } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
+const { Heritage } = require("devtools/client/shared/widgets/view-helpers");
 const { AbstractCanvasGraph } = require("devtools/client/shared/widgets/Graphs");
 
 const { colorUtils } = require("devtools/client/shared/css-color");
