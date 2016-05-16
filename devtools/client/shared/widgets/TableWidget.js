@@ -5,10 +5,10 @@
 
 const {Ci, Cu} = require("chrome");
 const EventEmitter = require("devtools/shared/event-emitter");
-loader.lazyImporter(this, "setNamedTimeout",
-  "resource://devtools/client/shared/widgets/ViewHelpers.jsm");
-loader.lazyImporter(this, "clearNamedTimeout",
-  "resource://devtools/client/shared/widgets/ViewHelpers.jsm");
+loader.lazyRequireGetter(this, "setNamedTimeout",
+  "devtools/client/shared/widgets/view-helpers", true);
+loader.lazyRequireGetter(this, "clearNamedTimeout",
+  "devtools/client/shared/widgets/view-helpers", true);
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const HTML_NS = "http://www.w3.org/1999/xhtml";

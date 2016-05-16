@@ -6,7 +6,6 @@
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 
 const { loader, require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
@@ -19,6 +18,7 @@ const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const Services = require("Services");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const { LocalizationHelper } = require("devtools/client/shared/l10n");
+const { ViewHelpers } = require("devtools/client/shared/widgets/view-helpers");
 
 const STRINGS_URI = "chrome://devtools/locale/webaudioeditor.properties"
 const L10N = new LocalizationHelper(STRINGS_URI);

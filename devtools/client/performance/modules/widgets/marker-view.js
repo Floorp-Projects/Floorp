@@ -9,7 +9,7 @@
  */
 
 const { Cc, Ci, Cu, Cr } = require("chrome");
-const { Heritage } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
+const { Heritage } = require("devtools/client/shared/widgets/view-helpers");
 const { AbstractTreeItem } = require("resource://devtools/client/shared/widgets/AbstractTreeItem.jsm");
 const { MarkerBlueprintUtils } = require("devtools/client/performance/modules/marker-blueprint-utils");
 

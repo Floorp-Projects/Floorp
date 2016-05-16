@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { DOM: dom, createClass, createFactory, PropTypes } = require("devtools/client/shared/vendor/react");
-const { ViewHelpers } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
+const { ViewHelpers } = require("devtools/client/shared/widgets/view-helpers");
 
 const AUTO_EXPAND_DEPTH = 0; // depth
 const NUMBER_OF_OFFSCREEN_ITEMS = 1;

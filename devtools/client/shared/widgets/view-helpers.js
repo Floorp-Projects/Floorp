@@ -5,29 +5,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const { Ci } = require("chrome");
 
 const PANE_APPEARANCE_DELAY = 50;
 const PAGE_SIZE_ITEM_COUNT_RATIO = 5;
 const WIDGET_FOCUSABLE_NODES = new Set(["vbox", "hbox"]);
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Timer.jsm");
-const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-
-this.EXPORTED_SYMBOLS = [
-  "Heritage", "ViewHelpers", "WidgetMethods",
-  "setNamedTimeout", "clearNamedTimeout",
-  "setConditionalTimeout", "clearConditionalTimeout",
-];
-
 /**
  * Inheritance helpers from the addon SDK's core/heritage.
  * Remove these when all devtools are loadered.
  */
-this.Heritage = {
+exports.Heritage = {
   /**
    * @see extend in sdk/core/heritage.
    */
@@ -57,12 +46,13 @@ this.Heritage = {
  * @param function aCallback
  *        Invoked when no more events are fired after the specified time.
  */
-this.setNamedTimeout = function setNamedTimeout(aId, aWait, aCallback) {
+const setNamedTimeout = function setNamedTimeout(aId, aWait, aCallback) {
   clearNamedTimeout(aId);
 
   namedTimeoutsStore.set(aId, setTimeout(() =>
     namedTimeoutsStore.delete(aId) && aCallback(), aWait));
-};
+}
+exports.setNamedTimeout = setNamedTimeout;
 
 /**
  * Clears a named timeout.
@@ -71,13 +61,14 @@ this.setNamedTimeout = function setNamedTimeout(aId, aWait, aCallback) {
  * @param string aId
  *        A string identifier for the named timeout.
  */
-this.clearNamedTimeout = function clearNamedTimeout(aId) {
+const clearNamedTimeout = function clearNamedTimeout(aId) {
   if (!namedTimeoutsStore) {
     return;
   }
   clearTimeout(namedTimeoutsStore.get(aId));
   namedTimeoutsStore.delete(aId);
 };
+exports.clearNamedTimeout = clearNamedTimeout;
 
 /**
  * Same as `setNamedTimeout`, but invokes the callback only if the provided
@@ -93,7 +84,7 @@ this.clearNamedTimeout = function clearNamedTimeout(aId) {
  *        Invoked when no more events are fired after the specified time, and
  *        the provided predicate function returns true.
  */
-this.setConditionalTimeout = function setConditionalTimeout(aId, aWait, aPredicate, aCallback) {
+const setConditionalTimeout = function setConditionalTimeout(aId, aWait, aPredicate, aCallback) {
   setNamedTimeout(aId, aWait, function maybeCallback() {
     if (aPredicate()) {
       aCallback();
@@ -102,6 +93,7 @@ this.setConditionalTimeout = function setConditionalTimeout(aId, aWait, aPredica
     setConditionalTimeout(aId, aWait, aPredicate, aCallback);
   });
 };
+exports.setConditionalTimeout = setConditionalTimeout;
 
 /**
  * Clears a conditional timeout.
@@ -110,16 +102,17 @@ this.setConditionalTimeout = function setConditionalTimeout(aId, aWait, aPredica
  * @param string aId
  *        A string identifier for the conditional timeout.
  */
-this.clearConditionalTimeout = function clearConditionalTimeout(aId) {
+const clearConditionalTimeout = function clearConditionalTimeout(aId) {
   clearNamedTimeout(aId);
 };
+exports.clearConditionalTimeout = clearConditionalTimeout;
 
-XPCOMUtils.defineLazyGetter(this, "namedTimeoutsStore", () => new Map());
+loader.lazyGetter(this, "namedTimeoutsStore", () => new Map());
 
 /**
  * Helpers for creating and messaging between UI components.
  */
-this.ViewHelpers = {
+const ViewHelpers = exports.ViewHelpers = {
   /**
    * Convenience method, dispatching a custom event.
    *
@@ -495,7 +488,7 @@ DevToolsUtils.defineLazyPrototypeGetter(Item.prototype, "_itemsByElement", () =>
  *   - "keyPress" -> (aName:string, aEvent:KeyboardEvent)
  *   - "mousePress" -> (aName:string, aEvent:MouseEvent)
  */
-this.WidgetMethods = {
+const WidgetMethods = exports.WidgetMethods = {
   /**
    * Sets the element node or widget associated with this container.
    * @param nsIDOMNode | object aWidget

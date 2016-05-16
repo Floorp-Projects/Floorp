@@ -13,8 +13,8 @@ loader.lazyRequireGetter(this, "TreeWidget",
                          "devtools/client/shared/widgets/TreeWidget", true);
 loader.lazyRequireGetter(this, "TableWidget",
                          "devtools/client/shared/widgets/TableWidget", true);
-loader.lazyImporter(this, "ViewHelpers",
-  "resource://devtools/client/shared/widgets/ViewHelpers.jsm");
+loader.lazyRequireGetter(this, "ViewHelpers",
+                         "devtools/client/shared/widgets/view-helpers");
 loader.lazyImporter(this, "VariablesView",
   "resource://devtools/client/shared/widgets/VariablesView.jsm");
 

@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* import-globals-from ./netmonitor-controller.js */
-/* import-globals-from ../shared/widgets/ViewHelpers.jsm */
 /* globals gNetwork, setInterval, setTimeout, clearInterval,
    clearTimeout btoa */
 "use strict";
@@ -24,8 +23,8 @@ const {Tooltip} = require("devtools/client/shared/widgets/Tooltip");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const {LocalizationHelper} = require("devtools/client/shared/l10n");
 const {PrefsHelper} = require("devtools/client/shared/prefs");
-
-Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
+const {ViewHelpers, Heritage, WidgetMethods, setNamedTimeout} =
+  require("devtools/client/shared/widgets/view-helpers");
 
 /**
  * Localization convenience methods.

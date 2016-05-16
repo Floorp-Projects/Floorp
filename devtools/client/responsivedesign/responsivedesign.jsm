@@ -16,7 +16,7 @@ var promise = require("promise");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var Services = require("Services");
 var EventEmitter = require("devtools/shared/event-emitter");
-var {ViewHelpers} = require("devtools/client/shared/widgets/ViewHelpers.jsm");
+var {ViewHelpers} = require("devtools/client/shared/widgets/view-helpers");
 var { LocalizationHelper } = require("devtools/client/shared/l10n");
 
 loader.lazyImporter(this, "SystemAppProxy",

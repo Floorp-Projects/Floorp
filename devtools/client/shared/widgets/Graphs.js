@@ -6,7 +6,7 @@
 const { Cc, Ci, Cu, Cr } = require("chrome");
 
 const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
-const { Heritage, setNamedTimeout, clearNamedTimeout } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
+const { Heritage, setNamedTimeout, clearNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
 const { getCurrentZoom } = require("devtools/shared/layout/utils");
 
 loader.lazyRequireGetter(this, "promise");
