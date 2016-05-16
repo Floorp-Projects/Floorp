@@ -35,6 +35,9 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/UniquePtr.h"
 
+// Work around possible OS limitations.
+static const size_t kMaxIOVecSize = 256;
+
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracerImpl.h"
 using namespace mozilla::tasktracer;
@@ -185,7 +188,8 @@ void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
 
   mode_ = mode;
   is_blocked_on_write_ = false;
-  message_send_bytes_written_ = 0;
+  partial_write_iter_.reset();
+  input_buf_offset_ = 0;
   server_listen_pipe_ = -1;
   pipe_ = -1;
   client_pipe_ = -1;
@@ -263,11 +267,6 @@ bool Channel::ChannelImpl::EnqueueHelloMessage() {
   return true;
 }
 
-void Channel::ChannelImpl::ClearAndShrinkInputOverflowBuf()
-{
-  input_overflow_buf_.clear();
-}
-
 bool Channel::ChannelImpl::Connect() {
   if (pipe_ == -1) {
     return false;
@@ -287,10 +286,8 @@ bool Channel::ChannelImpl::Connect() {
 }
 
 bool Channel::ChannelImpl::ProcessIncomingMessages() {
-  ssize_t bytes_read = 0;
-
   struct msghdr msg = {0};
-  struct iovec iov = {input_buf_, Channel::kReadBufferSize};
+  struct iovec iov;
 
   msg.msg_iov = &iov;
   msg.msg_iovlen = 1;
@@ -299,27 +296,30 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
   for (;;) {
     msg.msg_controllen = sizeof(input_cmsg_buf_);
 
-    if (bytes_read == 0) {
-      if (pipe_ == -1)
-        return false;
+    if (pipe_ == -1)
+      return false;
 
-      // Read from pipe.
-      // recvmsg() returns 0 if the connection has closed or EAGAIN if no data
-      // is waiting on the pipe.
-      bytes_read = HANDLE_EINTR(recvmsg(pipe_, &msg, MSG_DONTWAIT));
+    // In some cases the beginning of a message will be stored in input_buf_. We
+    // don't want to overwrite that, so we store the new data after it.
+    iov.iov_base = input_buf_ + input_buf_offset_;
+    iov.iov_len = Channel::kReadBufferSize - input_buf_offset_;
 
-      if (bytes_read < 0) {
-        if (errno == EAGAIN) {
-          return true;
-        } else {
-          CHROMIUM_LOG(ERROR) << "pipe error (" << pipe_ << "): " << strerror(errno);
-          return false;
-        }
-      } else if (bytes_read == 0) {
-        // The pipe has closed...
-        Close();
+    // Read from pipe.
+    // recvmsg() returns 0 if the connection has closed or EAGAIN if no data
+    // is waiting on the pipe.
+    ssize_t bytes_read = HANDLE_EINTR(recvmsg(pipe_, &msg, MSG_DONTWAIT));
+
+    if (bytes_read < 0) {
+      if (errno == EAGAIN) {
+        return true;
+      } else {
+        CHROMIUM_LOG(ERROR) << "pipe error (" << pipe_ << "): " << strerror(errno);
         return false;
       }
+    } else if (bytes_read == 0) {
+      // The pipe has closed...
+      Close();
+      return false;
     }
     DCHECK(bytes_read);
 
@@ -373,44 +373,8 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
     }
 
     // Process messages from input buffer.
-    const char *p;
-    const char *overflowp;
-    const char *end;
-    if (input_overflow_buf_.empty()) {
-      overflowp = NULL;
-      p = input_buf_;
-      end = p + bytes_read;
-    } else {
-      if (input_overflow_buf_.size() >
-         static_cast<size_t>(kMaximumMessageSize - bytes_read)) {
-        ClearAndShrinkInputOverflowBuf();
-        CHROMIUM_LOG(ERROR) << "IPC message is too big";
-        return false;
-      }
-
-      input_overflow_buf_.append(input_buf_, bytes_read);
-      overflowp = p = input_overflow_buf_.data();
-      end = p + input_overflow_buf_.size();
-
-      // If we've received the entire header, then we know the message
-      // length. In that case, reserve enough space to hold the entire
-      // message. This is more efficient than repeatedly enlarging the buffer as
-      // more data comes in.
-      uint32_t length = Message::GetLength(p, end);
-      if (length) {
-        if (length > kMaximumMessageSize) {
-          ClearAndShrinkInputOverflowBuf();
-          CHROMIUM_LOG(ERROR) << "IPC message is too big";
-          return false;
-        }
-
-        input_overflow_buf_.reserve(length + kReadBufferSize);
-
-        // Recompute these pointers in case the buffer moved.
-        overflowp = p = input_overflow_buf_.data();
-        end = p + input_overflow_buf_.size();
-      }
-    }
+    const char *p = input_buf_;
+    const char *end = input_buf_ + input_buf_offset_ + bytes_read;
 
     // A pointer to an array of |num_fds| file descriptors which includes any
     // fds that have spilled over from a previous read.
@@ -430,131 +394,154 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
       num_fds = input_overflow_fds_.size();
     }
 
+    // The data for the message we're currently reading consists of any data
+    // stored in incoming_message_ followed by data in input_buf_ (followed by
+    // other messages).
+
     while (p < end) {
-      const char* message_tail = Message::FindNext(p, end);
-      if (message_tail) {
-        int len = static_cast<int>(message_tail - p);
-        char* buf;
+      // Try to figure out how big the message is. Size is 0 if we haven't read
+      // enough of the header to know the size.
+      uint32_t message_length = 0;
+      if (incoming_message_.isSome()) {
+        message_length = incoming_message_.ref().size();
+      } else {
+        message_length = Message::MessageSize(p, end);
+      }
 
-        // The Message |m| allocated below needs to own its data. We can either
-        // copy the data out of the buffer or else steal the buffer and move the
-        // remaining data elsewhere. If len is large enough, we steal. Otherwise
-        // we copy.
-        if (len > kMaxCopySize) {
-          // Since len > kMaxCopySize > kReadBufferSize, we know that we must be
-          // using the overflow buffer. And since we always shift everything to
-          // the left at the end of a read, we must be at the start of the
-          // overflow buffer.
-          MOZ_RELEASE_ASSERT(p == overflowp);
-          buf = input_overflow_buf_.trade_bytes(len);
+      if (!message_length) {
+        // We haven't seen the full message header.
+        MOZ_ASSERT(incoming_message_.isNothing());
 
-          // At this point the remaining data is at the front of
-          // input_overflow_buf_. p will get fixed up at the end of the
-          // loop. Set it to null here to make sure no one uses it.
-          p = nullptr;
-          overflowp = message_tail = input_overflow_buf_.data();
-          end = overflowp + input_overflow_buf_.size();
-        } else {
-          buf = (char*)moz_xmalloc(len);
-          memcpy(buf, p, len);
+        // Move everything we have to the start of the buffer. We'll finish
+        // reading this message when we get more data. For now we leave it in
+        // input_buf_.
+        memmove(input_buf_, p, end - p);
+        input_buf_offset_ = end - p;
+
+        break;
+      }
+
+      input_buf_offset_ = 0;
+
+      bool partial;
+      if (incoming_message_.isSome()) {
+        // We already have some data for this message stored in
+        // incoming_message_. We want to append the new data there.
+        Message& m = incoming_message_.ref();
+
+        // How much data from this message remains to be added to
+        // incoming_message_?
+        MOZ_ASSERT(message_length > m.CurrentSize());
+        uint32_t remaining = message_length - m.CurrentSize();
+
+        // How much data from this message is stored in input_buf_?
+        uint32_t in_buf = std::min(remaining, uint32_t(end - p));
+
+        m.InputBytes(p, in_buf);
+        p += in_buf;
+
+        // Are we done reading this message?
+        partial = in_buf != remaining;
+      } else {
+        // How much data from this message is stored in input_buf_?
+        uint32_t in_buf = std::min(message_length, uint32_t(end - p));
+
+        incoming_message_.emplace(p, in_buf);
+        p += in_buf;
+
+        // Are we done reading this message?
+        partial = in_buf != message_length;
+      }
+
+      if (partial) {
+        break;
+      }
+
+      Message& m = incoming_message_.ref();
+
+      if (m.header()->num_fds) {
+        // the message has file descriptors
+        const char* error = NULL;
+        if (m.header()->num_fds > num_fds - fds_i) {
+          // the message has been completely received, but we didn't get
+          // enough file descriptors.
+          error = "Message needs unreceived descriptors";
         }
-        Message m(buf, len, Message::OWNS);
-        if (m.header()->num_fds) {
-          // the message has file descriptors
-          const char* error = NULL;
-          if (m.header()->num_fds > num_fds - fds_i) {
-            // the message has been completely received, but we didn't get
-            // enough file descriptors.
-            error = "Message needs unreceived descriptors";
-          }
 
-          if (m.header()->num_fds >
-              FileDescriptorSet::MAX_DESCRIPTORS_PER_MESSAGE) {
-            // There are too many descriptors in this message
-            error = "Message requires an excessive number of descriptors";
-          }
+        if (m.header()->num_fds >
+            FileDescriptorSet::MAX_DESCRIPTORS_PER_MESSAGE) {
+          // There are too many descriptors in this message
+          error = "Message requires an excessive number of descriptors";
+        }
 
-          if (error) {
-            CHROMIUM_LOG(WARNING) << error
-                                  << " channel:" << this
-                                  << " message-type:" << m.type()
-                                  << " header()->num_fds:" << m.header()->num_fds
-                                  << " num_fds:" << num_fds
-                                  << " fds_i:" << fds_i;
-            // close the existing file descriptors so that we don't leak them
-            for (unsigned i = fds_i; i < num_fds; ++i)
-              HANDLE_EINTR(close(fds[i]));
-            input_overflow_fds_.clear();
-            // abort the connection
-            return false;
-          }
+        if (error) {
+          CHROMIUM_LOG(WARNING) << error
+                                << " channel:" << this
+                                << " message-type:" << m.type()
+                                << " header()->num_fds:" << m.header()->num_fds
+                                << " num_fds:" << num_fds
+                                << " fds_i:" << fds_i;
+          // close the existing file descriptors so that we don't leak them
+          for (unsigned i = fds_i; i < num_fds; ++i)
+            HANDLE_EINTR(close(fds[i]));
+          input_overflow_fds_.clear();
+          // abort the connection
+          return false;
+        }
 
 #if defined(OS_MACOSX)
-          // Send a message to the other side, indicating that we are now
-          // responsible for closing the descriptor.
-          Message *fdAck = new Message(MSG_ROUTING_NONE,
-                                       RECEIVED_FDS_MESSAGE_TYPE,
-                                       IPC::Message::PRIORITY_NORMAL);
-          DCHECK(m.fd_cookie() != 0);
-          fdAck->set_fd_cookie(m.fd_cookie());
-          OutputQueuePush(fdAck);
+        // Send a message to the other side, indicating that we are now
+        // responsible for closing the descriptor.
+        Message *fdAck = new Message(MSG_ROUTING_NONE,
+                                     RECEIVED_FDS_MESSAGE_TYPE,
+                                     IPC::Message::PRIORITY_NORMAL);
+        DCHECK(m.fd_cookie() != 0);
+        fdAck->set_fd_cookie(m.fd_cookie());
+        OutputQueuePush(fdAck);
 #endif
 
-          m.file_descriptor_set()->SetDescriptors(
-              &fds[fds_i], m.header()->num_fds);
-          fds_i += m.header()->num_fds;
-        }
+        m.file_descriptor_set()->SetDescriptors(
+                                                &fds[fds_i], m.header()->num_fds);
+        fds_i += m.header()->num_fds;
+      }
 #ifdef IPC_MESSAGE_DEBUG_EXTRA
-        DLOG(INFO) << "received message on channel @" << this <<
-                      " with type " << m.type();
+      DLOG(INFO) << "received message on channel @" << this <<
+        " with type " << m.type();
 #endif
 
 #ifdef MOZ_TASK_TRACER
-        AutoSaveCurTraceInfo saveCurTraceInfo;
-        SetCurTraceInfo(m.header()->source_event_id,
-                        m.header()->parent_task_id,
-                        m.header()->source_event_type);
+      AutoSaveCurTraceInfo saveCurTraceInfo;
+      SetCurTraceInfo(m.header()->source_event_id,
+                      m.header()->parent_task_id,
+                      m.header()->source_event_type);
 #endif
 
-        if (m.routing_id() == MSG_ROUTING_NONE &&
-            m.type() == HELLO_MESSAGE_TYPE) {
-          // The Hello message contains only the process id.
-          listener_->OnChannelConnected(MessageIterator(m).NextInt());
+      if (m.routing_id() == MSG_ROUTING_NONE &&
+          m.type() == HELLO_MESSAGE_TYPE) {
+        // The Hello message contains only the process id.
+        listener_->OnChannelConnected(MessageIterator(m).NextInt());
 #if defined(OS_MACOSX)
-        } else if (m.routing_id() == MSG_ROUTING_NONE &&
-                   m.type() == RECEIVED_FDS_MESSAGE_TYPE) {
-          DCHECK(m.fd_cookie() != 0);
-          CloseDescriptors(m.fd_cookie());
+      } else if (m.routing_id() == MSG_ROUTING_NONE &&
+                 m.type() == RECEIVED_FDS_MESSAGE_TYPE) {
+        DCHECK(m.fd_cookie() != 0);
+        CloseDescriptors(m.fd_cookie());
 #endif
-        } else {
-          listener_->OnMessageReceived(mozilla::Move(m));
-        }
-        p = message_tail;
       } else {
-        // Last message is partial.
-        break;
+        listener_->OnMessageReceived(mozilla::Move(m));
       }
+
+      incoming_message_.reset();
     }
-    if (end == p) {
-      ClearAndShrinkInputOverflowBuf();
-    } else if (!overflowp) {
-      // p is from input_buf_
-      input_overflow_buf_.assign(p, end - p);
-    } else if (p > overflowp) {
-      // p is from input_overflow_buf_
-      input_overflow_buf_.erase(0, p - overflowp);
-    }
+
     input_overflow_fds_ = std::vector<int>(&fds[fds_i], &fds[num_fds]);
 
     // When the input data buffer is empty, the overflow fds should be too. If
     // this is not the case, we probably have a rogue renderer which is trying
     // to fill our descriptor table.
-    if (input_overflow_buf_.empty() && !input_overflow_fds_.empty()) {
+    if (incoming_message_.isNothing() && input_buf_offset_ == 0 && !input_overflow_fds_.empty()) {
       // We close these descriptors in Close()
       return false;
     }
-
-    bytes_read = 0;  // Get more data.
   }
 
   return true;
@@ -582,7 +569,7 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
         int[FileDescriptorSet::MAX_DESCRIPTORS_PER_MESSAGE]));
     char buf[tmp];
 
-    if (message_send_bytes_written_ == 0 &&
+    if (partial_write_iter_.isNothing() &&
         !msg->file_descriptor_set()->empty()) {
       // This is the first chunk of a message which has descriptors to send
       struct cmsghdr *cmsg;
@@ -610,16 +597,46 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
 #endif
     }
 
-    size_t amt_to_write = msg->size() - message_send_bytes_written_;
-    DCHECK(amt_to_write != 0);
-    const char *out_bytes = reinterpret_cast<const char*>(msg->data()) +
-        message_send_bytes_written_;
+    struct iovec iov[kMaxIOVecSize];
+    size_t iov_count = 0;
+    size_t amt_to_write = 0;
 
-    struct iovec iov = {const_cast<char*>(out_bytes), amt_to_write};
-    msgh.msg_iov = &iov;
-    msgh.msg_iovlen = 1;
+    if (partial_write_iter_.isNothing()) {
+      Pickle::BufferList::IterImpl iter(msg->Buffers());
+      partial_write_iter_.emplace(iter);
+    }
+
+    // How much of this message have we written so far?
+    Pickle::BufferList::IterImpl iter = partial_write_iter_.value();
+
+    // Store the unwritten part of the first segment to write into the iovec.
+    iov[0].iov_base = const_cast<char*>(iter.Data());
+    iov[0].iov_len = iter.RemainingInSegment();
+    amt_to_write += iov[0].iov_len;
+    iter.Advance(msg->Buffers(), iov[0].iov_len);
+    iov_count++;
+
+    // Store remaining segments to write into iovec.
+    while (!iter.Done()) {
+      char* data = iter.Data();
+      size_t size = iter.RemainingInSegment();
+
+      // Don't add more than kMaxIOVecSize to the iovec so that we avoid
+      // OS-dependent limits.
+      if (iov_count < kMaxIOVecSize) {
+        iov[iov_count].iov_base = data;
+        iov[iov_count].iov_len = size;
+        iov_count++;
+      }
+      amt_to_write += size;
+      iter.Advance(msg->Buffers(), size);
+    }
+
+    msgh.msg_iov = iov;
+    msgh.msg_iovlen = iov_count;
 
     ssize_t bytes_written = HANDLE_EINTR(sendmsg(pipe_, &msgh, MSG_DONTWAIT));
+
 #if !defined(OS_MACOSX)
     // On OSX CommitAll gets called later, once we get the RECEIVED_FDS_MESSAGE_TYPE
     // message.
@@ -663,9 +680,9 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
     }
 
     if (static_cast<size_t>(bytes_written) != amt_to_write) {
+      // If write() fails with EAGAIN then bytes_written will be -1.
       if (bytes_written > 0) {
-        // If write() fails with EAGAIN then bytes_written will be -1.
-        message_send_bytes_written_ += bytes_written;
+        partial_write_iter_.ref().AdvanceAcrossSegments(msg->Buffers(), bytes_written);
       }
 
       // Tell libevent to call us back once things are unblocked.
@@ -678,7 +695,7 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
           this);
       return true;
     } else {
-      message_send_bytes_written_ = 0;
+      partial_write_iter_.reset();
 
 #if defined(OS_MACOSX)
       if (!msg->file_descriptor_set()->empty())

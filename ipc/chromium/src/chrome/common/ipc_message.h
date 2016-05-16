@@ -72,12 +72,7 @@ class Message : public Pickle {
           MessageCompression compression = COMPRESSION_NONE,
           const char* const name="???");
 
-  // Initializes a message from a const block of data. If ownership == BORROWS,
-  // the data is not copied; instead the data is merely referenced by this
-  // message. Only const methods should be used on the message when initialized
-  // this way. If ownership == OWNS, then again no copying takes place. However,
-  // the buffer is writable and will be freed when the message is destroyed.
-  Message(const char* data, int data_len, Ownership ownership = BORROWS);
+  Message(const char* data, int data_len);
 
   Message(const Message& other) = delete;
   Message(Message&& other);
@@ -240,16 +235,11 @@ class Message : public Pickle {
   static void Log(const Message* msg, std::wstring* l) {
   }
 
-  // Find the end of the message data that starts at range_start.  Returns NULL
-  // if the entire message is not found in the given data range.
-  static const char* FindNext(const char* range_start, const char* range_end) {
-    return Pickle::FindNext(sizeof(Header), range_start, range_end);
-  }
-
-  // If the given range contains at least header_size bytes, return the length
-  // of the message including the header.
-  static uint32_t GetLength(const char* range_start, const char* range_end) {
-    return Pickle::GetLength(sizeof(Header), range_start, range_end);
+  // Figure out how big the message starting at range_start is. Returns 0 if
+  // there's no enough data to determine (i.e., if [range_start, range_end) does
+  // not contain enough of the message header to know the size).
+  static uint32_t MessageSize(const char* range_start, const char* range_end) {
+    return Pickle::MessageSize(sizeof(Header), range_start, range_end);
   }
 
 #if defined(OS_POSIX)

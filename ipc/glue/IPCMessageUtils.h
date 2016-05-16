@@ -731,8 +731,8 @@ struct ParamTraits<mozilla::SerializedStructuredCloneBuffer>
     const char** buffer =
       const_cast<const char**>(reinterpret_cast<char**>(&aResult->data));
     // Structured clone data must be 64-bit aligned.
-    if (!aMsg->FlattenBytes(aIter, buffer, aResult->dataLength,
-                            sizeof(uint64_t))) {
+    if (!const_cast<Message*>(aMsg)->FlattenBytes(aIter, buffer, aResult->dataLength,
+                                                  sizeof(uint64_t))) {
       return false;
     }
 
