@@ -7,7 +7,6 @@ var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://devtools/client/shared/widgets/SideMenuWidget.jsm");
-Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const promise = require("promise");
@@ -17,6 +16,8 @@ const { CallWatcherFront } = require("devtools/server/actors/call-watcher");
 const { CanvasFront } = require("devtools/server/actors/canvas");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { LocalizationHelper } = require("devtools/client/shared/l10n");
+const { Heritage, WidgetMethods, setNamedTimeout, clearNamedTimeout,
+        setConditionalTimeout } = require("devtools/client/shared/widgets/view-helpers");
 
 const CANVAS_ACTOR_RECORDING_ATTEMPT = DevToolsUtils.testing ? 500 : 5000;
 

@@ -10,7 +10,8 @@ const Cu = Components.utils;
 
 const ENSURE_SELECTION_VISIBLE_DELAY = 50; // ms
 
-Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
+const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const { ViewHelpers, setNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
 Cu.import("resource://devtools/shared/event-emitter.js");
 
 this.EXPORTED_SYMBOLS = ["BreadcrumbsWidget"];
@@ -19,7 +20,7 @@ this.EXPORTED_SYMBOLS = ["BreadcrumbsWidget"];
  * A breadcrumb-like list of items.
  *
  * Note: this widget should be used in tandem with the WidgetMethods in
- * ViewHelpers.jsm.
+ * view-helpers.js.
  *
  * @param nsIDOMNode aNode
  *        The element associated with the widget.

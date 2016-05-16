@@ -19,7 +19,6 @@ const HOVERED_SLICE_TRANSLATE_DISTANCE_RATIO = 20;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 Cu.import("resource://devtools/shared/event-emitter.js");
 
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
