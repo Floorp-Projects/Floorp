@@ -142,5 +142,12 @@ CompositorThreadHolder::Shutdown()
   CompositorBridgeParent::FinishShutdown();
 }
 
+/* static */ bool
+CompositorThreadHolder::IsInCompositorThread()
+{
+  return CompositorThread() &&
+         CompositorThread()->thread_id() == PlatformThread::CurrentId();
+}
+
 } // namespace mozilla
 } // namespace layers
