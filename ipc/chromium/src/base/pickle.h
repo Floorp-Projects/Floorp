@@ -57,13 +57,12 @@ class Pickle {
   // is writable and will be freed when this Pickle is destroyed.
   Pickle(const char* data, int data_len, Ownership ownership = BORROWS);
 
-  // Initializes a Pickle as a deep copy of another Pickle.
-  Pickle(const Pickle& other);
+  Pickle(const Pickle& other) = delete;
 
   Pickle(Pickle&& other);
 
   // Performs a deep copy.
-  Pickle& operator=(const Pickle& other);
+  Pickle& operator=(const Pickle& other) = delete;
 
   Pickle& operator=(Pickle&& other);
 
