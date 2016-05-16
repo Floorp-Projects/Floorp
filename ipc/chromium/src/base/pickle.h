@@ -114,15 +114,15 @@ class Pickle {
   MOZ_MUST_USE bool ReadUnsignedChar(PickleIterator* iter, unsigned char* result) const;
   MOZ_MUST_USE bool ReadString(PickleIterator* iter, std::string* result) const;
   MOZ_MUST_USE bool ReadWString(PickleIterator* iter, std::wstring* result) const;
-  MOZ_MUST_USE bool ReadData(PickleIterator* iter, const char** data, int* length) const;
-  MOZ_MUST_USE bool ReadBytes(PickleIterator* iter, const char** data, int length,
-                              uint32_t alignment = sizeof(memberAlignmentType)) const;
+  MOZ_MUST_USE bool ReadBytesInto(PickleIterator* iter, void* data, int length) const;
+  MOZ_MUST_USE bool FlattenBytes(PickleIterator* iter, const char** data, int length,
+                                 uint32_t alignment = sizeof(memberAlignmentType)) const;
 
   // Safer version of ReadInt() checks for the result not being negative.
   // Use it for reading the object sizes.
   MOZ_MUST_USE bool ReadLength(PickleIterator* iter, int* result) const;
 
-  MOZ_WARN_UNUSED_RESULT bool ReadSentinel(PickleIterator* iter, uint32_t sentinel) const;
+  MOZ_MUST_USE bool ReadSentinel(PickleIterator* iter, uint32_t sentinel) const;
 
   void EndRead(PickleIterator& iter) const {
     DCHECK(iter.iter_ == end_of_payload());
@@ -233,6 +233,9 @@ class Pickle {
   typedef uint32_t memberAlignmentType;
 
  protected:
+  MOZ_MUST_USE bool ReadBytes(PickleIterator* iter, const char** data, int length,
+                              uint32_t alignment = sizeof(memberAlignmentType)) const;
+
   uint32_t payload_size() const { return header_->payload_size; }
 
   char* payload() {

@@ -39,14 +39,7 @@ struct ParamTraits<mozilla::plugins::NPRemoteEvent>
 
     static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
     {
-        const char* bytes = 0;
-
-        if (!aMsg->ReadBytes(aIter, &bytes, sizeof(paramType))) {
-            return false;
-        }
-
-        memcpy(aResult, bytes, sizeof(paramType));
-        return true;
+        return aMsg->ReadBytesInto(aIter, aResult, sizeof(paramType));
     }
 
     static void Log(const paramType& aParam, std::wstring* aLog)

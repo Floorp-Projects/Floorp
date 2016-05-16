@@ -435,15 +435,18 @@ bool Pickle::ReadBytes(PickleIterator* iter, const char** data, int length,
   return true;
 }
 
-bool Pickle::ReadData(PickleIterator* iter, const char** data, int* length) const {
-  DCHECK(iter);
-  DCHECK(data);
-  DCHECK(length);
+bool Pickle::FlattenBytes(PickleIterator* iter, const char** data, int length,
+                           uint32_t alignment) const {
+  return ReadBytes(iter, data, length, alignment);
+}
 
-  if (!ReadLength(iter, length))
+bool Pickle::ReadBytesInto(PickleIterator* iter, void* data, int length) const {
+  const char* outp;
+  if (!ReadBytes(iter, &outp, length)) {
     return false;
-
-  return ReadBytes(iter, data, *length);
+  }
+  memcpy(data, outp, length);
+  return true;
 }
 
 bool Pickle::ReadSentinel(PickleIterator* iter, uint32_t sentinel) const {
