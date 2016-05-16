@@ -49,7 +49,8 @@ interface nsIPrintSettingsService : nsISupports
    * If each browse window was to use the same PrintSettings object
    * then it should use "globalPrintSettings"
    *
-   * Initializes the newPrintSettings from the default printer
+   * Initializes the newPrintSettings from the unprefixed printer
+   * (Note: this may not happen if there is an OS specific implementation.)
    *
    */
   readonly attribute nsIPrintSettings newPrintSettings;

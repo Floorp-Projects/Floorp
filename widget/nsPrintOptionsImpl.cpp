@@ -12,9 +12,9 @@
 #include "nsReadableUtils.h"
 #include "nsPrintSettingsImpl.h"
 #include "nsIPrintSession.h"
+#include "nsServiceManagerUtils.h"
 
 #include "nsIDOMWindow.h"
-#include "nsIServiceManager.h"
 #include "nsIDialogParamBlock.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
@@ -1011,17 +1011,12 @@ nsresult nsPrintOptions::_CreatePrintSettings(nsIPrintSettings **_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPrintOptions::CreatePrintSettings(nsIPrintSettings **_retval)
-{
-  return _CreatePrintSettings(_retval);
-}
-
 NS_IMETHODIMP
 nsPrintOptions::GetGlobalPrintSettings(nsIPrintSettings **aGlobalPrintSettings)
 {
   nsresult rv;
 
-  rv = CreatePrintSettings(getter_AddRefs(mGlobalPrintSettings));
+  rv = _CreatePrintSettings(getter_AddRefs(mGlobalPrintSettings));
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ADDREF(*aGlobalPrintSettings = mGlobalPrintSettings.get());
@@ -1032,7 +1027,7 @@ nsPrintOptions::GetGlobalPrintSettings(nsIPrintSettings **aGlobalPrintSettings)
 NS_IMETHODIMP
 nsPrintOptions::GetNewPrintSettings(nsIPrintSettings * *aNewPrintSettings)
 {
-  return CreatePrintSettings(aNewPrintSettings);
+  return _CreatePrintSettings(aNewPrintSettings);
 }
 
 NS_IMETHODIMP
