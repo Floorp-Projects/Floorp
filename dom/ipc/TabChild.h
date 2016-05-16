@@ -194,11 +194,11 @@ public:
   // Get the Document for the top-level window in this tab.
   already_AddRefed<nsIDocument> GetDocument() const;
 
-protected:
-  virtual ~TabChildBase();
-
   // Get the pres-shell of the document for the top-level window in this tab.
   already_AddRefed<nsIPresShell> GetPresShell() const;
+
+protected:
+  virtual ~TabChildBase();
 
   // Wraps up a JSON object as a structured clone and sends it to the browser
   // chrome script.
@@ -264,8 +264,6 @@ public:
   static already_AddRefed<TabChild>
   Create(nsIContentChild* aManager, const TabId& aTabId,
          const TabContext& aContext, uint32_t aChromeFlags);
-
-  bool IsRootContentDocument() const;
 
   // Let managees query if it is safe to send messages.
   bool IsDestroyed() const{ return mDestroyed; }
@@ -476,6 +474,8 @@ public:
 
   void GetDefaultScale(double *aScale);
 
+  bool IsTransparent() const { return mIsTransparent; }
+
   void GetMaxTouchPoints(uint32_t* aTouchPoints);
 
   ScreenOrientationInternal GetOrientation() const { return mOrientation; }
@@ -579,6 +579,8 @@ public:
   virtual bool RecvHandledWindowedPluginKeyEvent(
                  const mozilla::NativeEventData& aKeyEventData,
                  const bool& aIsConsumed) override;
+
+  virtual bool RecvPrint(const PrintData& aPrintData) override;
 
   /**
    * Native widget remoting protocol for use with windowed plugins with e10s.
@@ -750,6 +752,8 @@ private:
   friend class ContentChild;
   float mDPI;
   double mDefaultScale;
+
+  bool mIsTransparent;
 
   bool mIPCOpen;
   bool mParentIsActive;

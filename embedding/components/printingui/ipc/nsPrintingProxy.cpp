@@ -14,10 +14,13 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIPrintingPromptService.h"
+#include "nsIPrintSession.h"
 #include "nsPIDOMWindow.h"
 #include "nsPrintOptionsImpl.h"
+#include "nsServiceManagerUtils.h"
 #include "PrintDataUtils.h"
 #include "PrintProgressDialogChild.h"
+#include "PrintSettingsDialogChild.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -87,12 +90,13 @@ nsPrintingProxy::ShowPrintDialog(mozIDOMWindowProxy *parent,
 
   // Next, serialize the nsIWebBrowserPrint and nsIPrintSettings we were given.
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIPrintOptions> po =
+  nsCOMPtr<nsIPrintSettingsService> printSettingsSvc =
     do_GetService("@mozilla.org/gfx/printsettings-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PrintData inSettings;
-  rv = po->SerializeToPrintData(printSettings, webBrowserPrint, &inSettings);
+  rv = printSettingsSvc->SerializeToPrintData(printSettings, webBrowserPrint,
+                                              &inSettings);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Now, the waiting game. The parent process should be showing
@@ -112,7 +116,8 @@ nsPrintingProxy::ShowPrintDialog(mozIDOMWindowProxy *parent,
   rv = dialog->result();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = po->DeserializeToPrintSettings(dialog->data(), printSettings);
+  rv = printSettingsSvc->DeserializeToPrintSettings(dialog->data(),
+                                                    printSettings);
   return NS_OK;
 }
 
@@ -145,14 +150,29 @@ nsPrintingProxy::ShowProgress(mozIDOMWindowProxy*      parent,
 
   SendPPrintProgressDialogConstructor(dialogChild);
 
+  // Get the RemotePrintJob if we have one available.
+  RefPtr<mozilla::layout::RemotePrintJobChild> remotePrintJob;
+  if (printSettings) {
+    nsCOMPtr<nsIPrintSession> printSession;
+    nsresult rv = printSettings->GetPrintSession(getter_AddRefs(printSession));
+    if (NS_SUCCEEDED(rv) && printSession) {
+      printSession->GetRemotePrintJob(getter_AddRefs(remotePrintJob));
+    }
+  }
+
   nsresult rv = NS_OK;
-  mozilla::Unused << SendShowProgress(pBrowser, dialogChild,
+  mozilla::Unused << SendShowProgress(pBrowser, dialogChild, remotePrintJob,
                                       isForPrinting, notifyOnOpen, &rv);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  NS_ADDREF(*webProgressListener = dialogChild);
+  // If we have a RemotePrintJob that will be being used as a more general
+  // forwarder for print progress listeners. Once we always have one we can
+  // remove the interface from PrintProgressDialogChild.
+  if (!remotePrintJob) {
+    NS_ADDREF(*webProgressListener = dialogChild);
+  }
   NS_ADDREF(*printProgressParams = dialogChild);
 
   return NS_OK;
@@ -180,12 +200,12 @@ nsPrintingProxy::SavePrintSettings(nsIPrintSettings* aPS,
                                    uint32_t aFlags)
 {
   nsresult rv;
-  nsCOMPtr<nsIPrintOptions> po =
+  nsCOMPtr<nsIPrintSettingsService> printSettingsSvc =
     do_GetService("@mozilla.org/gfx/printsettings-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PrintData settings;
-  rv = po->SerializeToPrintData(aPS, nullptr, &settings);
+  rv = printSettingsSvc->SerializeToPrintData(aPS, nullptr, &settings);
   NS_ENSURE_SUCCESS(rv, rv);
 
   Unused << SendSavePrintSettings(settings, aUsePrinterNamePrefix, aFlags,

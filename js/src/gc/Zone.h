@@ -672,7 +672,7 @@ class ZoneAllocPolicy
     void free_(void* p) { js_free(p); }
     void reportAllocOverflow() const {}
 
-    bool checkSimulatedOOM() const {
+    MOZ_MUST_USE bool checkSimulatedOOM() const {
         return !js::oom::ShouldFailWithOOM();
     }
 };

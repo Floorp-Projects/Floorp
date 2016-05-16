@@ -1247,23 +1247,12 @@ CompositorOGL::DrawQuad(const Rect& aRect,
       didSetBlendMode = SetBlendMode(gl(), blendMode, texturedEffect->mPremultiplied);
 
       gfx::Filter filter = texturedEffect->mFilter;
-      Matrix4x4 textureTransform = source->AsSourceOGL()->GetTextureTransform();
 
-#ifdef MOZ_WIDGET_ANDROID
-      gfx::Matrix textureTransform2D;
-      if (filter != gfx::Filter::POINT &&
-          aTransform.Is2DIntegerTranslation() &&
-          textureTransform.Is2D(&textureTransform2D) &&
-          textureTransform2D.HasOnlyIntegerTranslation()) {
-        // On Android we encounter small resampling errors in what should be
-        // pixel-aligned compositing operations. This works around them. This
-        // code should not be needed!
-        filter = gfx::Filter::POINT;
-      }
-#endif
       source->AsSourceOGL()->BindTexture(LOCAL_GL_TEXTURE0, filter);
 
       program->SetTextureUnit(0);
+
+      Matrix4x4 textureTransform = source->AsSourceOGL()->GetTextureTransform();
       program->SetTextureTransform(textureTransform);
 
       if (maskType != MaskType::MaskNone) {

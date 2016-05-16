@@ -87,13 +87,13 @@ class MarkStack
         end_ = stack + capacity;
     }
 
-    bool init(JSGCMode gcMode);
+    MOZ_MUST_USE bool init(JSGCMode gcMode);
 
     void setBaseCapacity(JSGCMode mode);
     size_t maxCapacity() const { return maxCapacity_; }
     void setMaxCapacity(size_t maxCapacity);
 
-    bool push(uintptr_t item) {
+    MOZ_MUST_USE bool push(uintptr_t item) {
         if (tos_ == end_) {
             if (!enlarge(1))
                 return false;
@@ -103,7 +103,7 @@ class MarkStack
         return true;
     }
 
-    bool push(uintptr_t item1, uintptr_t item2, uintptr_t item3) {
+    MOZ_MUST_USE bool push(uintptr_t item1, uintptr_t item2, uintptr_t item3) {
         uintptr_t* nextTos = tos_ + 3;
         if (nextTos > end_) {
             if (!enlarge(3))
@@ -130,7 +130,7 @@ class MarkStack
     void reset();
 
     /* Grow the stack, ensuring there is space for at least count elements. */
-    bool enlarge(unsigned count);
+    MOZ_MUST_USE bool enlarge(unsigned count);
 
     void setGCMode(JSGCMode gcMode);
 
@@ -168,7 +168,7 @@ class GCMarker : public JSTracer
 {
   public:
     explicit GCMarker(JSRuntime* rt);
-    bool init(JSGCMode gcMode);
+    MOZ_MUST_USE bool init(JSGCMode gcMode);
 
     void setMaxCapacity(size_t maxCap) { stack.setMaxCapacity(maxCap); }
     size_t maxCapacity() const { return stack.maxCapacity(); }
@@ -216,7 +216,7 @@ class GCMarker : public JSTracer
     void delayMarkingArena(gc::Arena* arena);
     void delayMarkingChildren(const void* thing);
     void markDelayedChildren(gc::Arena* arena);
-    bool markDelayedChildren(SliceBudget& budget);
+    MOZ_MUST_USE bool markDelayedChildren(SliceBudget& budget);
     bool hasDelayedChildren() const {
         return !!unmarkedArenaStackTop;
     }
@@ -225,7 +225,7 @@ class GCMarker : public JSTracer
         return isMarkStackEmpty() && !unmarkedArenaStackTop;
     }
 
-    bool drainMarkStack(SliceBudget& budget);
+    MOZ_MUST_USE bool drainMarkStack(SliceBudget& budget);
 
     void setGCMode(JSGCMode mode) { stack.setGCMode(mode); }
 
@@ -289,7 +289,7 @@ class GCMarker : public JSTracer
     // Mark the given GC thing, but do not trace its children. Return true
     // if the thing became marked.
     template <typename T>
-    bool mark(T* thing);
+    MOZ_MUST_USE bool mark(T* thing);
 
     void pushTaggedPtr(StackTag tag, void* ptr) {
         checkZone(ptr);
@@ -319,7 +319,7 @@ class GCMarker : public JSTracer
         return stack.isEmpty();
     }
 
-    bool restoreValueArray(JSObject* obj, void** vpp, void** endp);
+    MOZ_MUST_USE bool restoreValueArray(JSObject* obj, void** vpp, void** endp);
     void saveValueRanges();
     inline void processMarkStackTop(SliceBudget& budget);
 
@@ -451,6 +451,7 @@ struct RewrapTaggedPointer<Value, T>
 
 } /* namespace gc */
 
+// The return value indicates if anything was unmarked.
 bool
 UnmarkGrayShapeRecursively(Shape* shape);
 

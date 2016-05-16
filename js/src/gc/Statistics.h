@@ -160,7 +160,7 @@ struct Statistics
     /* Create a convenient type for referring to tables of phase times. */
     using PhaseTimeTable = int64_t[NumTimingArrays][PHASE_LIMIT];
 
-    static bool initialize();
+    static MOZ_MUST_USE bool initialize();
 
     explicit Statistics(JSRuntime* rt);
     ~Statistics();
@@ -174,8 +174,8 @@ struct Statistics
     void endSlice();
     void setSliceCycleCount(unsigned cycleCount);
 
-    bool startTimingMutator();
-    bool stopTimingMutator(double& mutator_ms, double& gc_ms);
+    MOZ_MUST_USE bool startTimingMutator();
+    MOZ_MUST_USE bool stopTimingMutator(double& mutator_ms, double& gc_ms);
 
     void reset(const char* reason) {
         if (!aborted)

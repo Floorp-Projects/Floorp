@@ -5373,8 +5373,21 @@ static bool IsTransparentContainerElement(nsPresContext* aPresContext)
   if (!pwin)
     return false;
   nsCOMPtr<Element> containerElement = pwin->GetFrameElementInternal();
-  return containerElement &&
-         containerElement->HasAttr(kNameSpaceID_None, nsGkAtoms::transparent);
+
+  TabChild* tab = TabChild::GetFrom(docShell);
+  if (tab) {
+    // Check if presShell is the top PresShell. Only the top can
+    // influence the canvas background color.
+    nsCOMPtr<nsIPresShell> presShell = aPresContext->GetPresShell();
+    nsCOMPtr<nsIPresShell> topPresShell = tab->GetPresShell();
+    if (presShell != topPresShell) {
+      tab = nullptr;
+    }
+  }
+
+  return (containerElement &&
+          containerElement->HasAttr(kNameSpaceID_None, nsGkAtoms::transparent))
+    || (tab && tab->IsTransparent());
 }
 
 nscolor PresShell::GetDefaultBackgroundColorToDraw()
@@ -5406,7 +5419,7 @@ void PresShell::UpdateCanvasBackground()
                                                drawBackgroundImage,
                                                drawBackgroundColor);
     mHasCSSBackgroundColor = drawBackgroundColor;
-    if (GetPresContext()->IsCrossProcessRootContentDocument() &&
+    if (mPresContext->IsRootContentDocument() &&
         !IsTransparentContainerElement(mPresContext)) {
       mCanvasBackgroundColor =
         NS_ComposeColors(GetDefaultBackgroundColorToDraw(), mCanvasBackgroundColor);
