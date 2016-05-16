@@ -1214,7 +1214,8 @@ const char* gc::ZealModeHelpText =
     "   11: (IncrementalMarkingValidator) Verify incremental marking\n"
     "   12: (ElementsBarrier) Always use the individual element post-write barrier, regardless of elements size\n"
     "   13: (CheckHashTablesOnMinorGC) Check internal hashtables on minor GC\n"
-    "   14: (Compact) Perform a shrinking collection every N allocations\n";
+    "   14: (Compact) Perform a shrinking collection every N allocations\n"
+    "   15: (CheckHeapOnMovingGC) Walk the heap to check all pointers have been updated\n";
 
 void
 GCRuntime::setZeal(uint8_t zeal, uint32_t frequency)
@@ -5892,6 +5893,10 @@ GCRuntime::compactPhase(JS::gcreason::Reason reason, SliceBudget& sliceBudget)
 
 #ifdef DEBUG
     CheckHashTablesAfterMovingGC(rt);
+#endif
+#ifdef JS_GC_ZEAL
+    if (rt->hasZealMode(ZealMode::CheckHeapOnMovingGC))
+        CheckHeapAfterMovingGC(rt);
 #endif
 
     return zonesToMaybeCompact.isEmpty() ? Finished : NotFinished;
