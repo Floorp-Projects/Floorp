@@ -80,6 +80,9 @@ else:
         'nameprep.c',
     ]
 
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']
+
 if CONFIG['_MSC_VER']:
     # This is intended as a temporary hack to support building with VS2015.
     # icu\source\common\unicode/ucasemap.h(93): warning C4577:

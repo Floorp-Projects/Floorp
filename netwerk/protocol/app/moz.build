@@ -8,13 +8,9 @@ SOURCES += [
     'AppProtocolHandler.cpp',
 ]
 
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']
-
 FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '/caps',
     '/modules/libjar',
     '/netwerk/base',
 ]
-

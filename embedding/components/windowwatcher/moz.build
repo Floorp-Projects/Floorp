@@ -40,3 +40,6 @@ LOCAL_INCLUDES += [
     '/docshell/base',
     '/dom/base',
 ]
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']

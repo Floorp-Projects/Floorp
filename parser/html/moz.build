@@ -98,5 +98,7 @@ LOCAL_INCLUDES += [
     '/dom/base',
 ]
 
-if CONFIG['CLANG_CXX']:
-    CXXFLAGS += ['-Wno-implicit-fallthrough']
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']
+    if CONFIG['CLANG_CXX']:
+        CXXFLAGS += ['-Wno-implicit-fallthrough']

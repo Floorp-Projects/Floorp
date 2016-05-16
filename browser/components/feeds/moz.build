@@ -39,6 +39,3 @@ LOCAL_INCLUDES += [
 
 with Files('**'):
     BUG_COMPONENT = ('Firefox', 'RSS Discovery and Preview')
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']

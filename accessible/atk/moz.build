@@ -55,4 +55,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 if CONFIG['CLANG_CXX'] or CONFIG['GNU_CXX']:
     # Used in G_DEFINE_TYPE_EXTENDED macro, probably fixed in newer glib /
     # gobject headers. See bug 1243331 comment 3.
-    CXXFLAGS += ['-Wno-unused-local-typedefs']
+    CXXFLAGS += [
+        '-Wno-error=shadow',
+        '-Wno-unused-local-typedefs',
+    ]

@@ -9,3 +9,6 @@ SOURCES += [
 ]
 
 FINAL_LIBRARY = 'xul'
+
+if CONFIG['CLANG_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']

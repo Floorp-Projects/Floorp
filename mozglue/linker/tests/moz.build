@@ -17,3 +17,6 @@ OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']
 DISABLE_STL_WRAPPING = True
 
 PYTHON_UNIT_TESTS += ['run_test_zip.py']
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']

@@ -173,5 +173,5 @@ CFLAGS += CONFIG['TK_CFLAGS']
 
 LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
 
-if CONFIG['CLANG_CXX']:
-    CXXFLAGS += ['-Wshadow']
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']

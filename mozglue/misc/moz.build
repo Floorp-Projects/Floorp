@@ -43,6 +43,3 @@ if CONFIG['MOZ_STACKWALKING']:
     SOURCES += [
         'StackWalk.cpp',
     ]
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']

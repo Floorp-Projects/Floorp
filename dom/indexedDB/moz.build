@@ -98,6 +98,7 @@ if CONFIG['GNU_CC']:
     # Suppress gcc warning about a comparison being always false due to the
     # range of the data type
     SOURCES['Key.cpp'].flags += ['-Wno-error=type-limits']
+    CXXFLAGS += ['-Wno-error=shadow']
 
 if CONFIG['_MSC_VER']:
     # This is intended as a temporary hack to support building with VS2015.

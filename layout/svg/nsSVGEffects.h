@@ -199,8 +199,8 @@ protected:
  *
  * The nsSVGFilterChainObserver class manages a list of nsSVGFilterReferences.
  */
-class nsSVGFilterReference final :
-  public nsSVGIDRenderingObserver, public nsISVGFilterReference {
+class nsSVGFilterReference final : public nsSVGIDRenderingObserver
+                                 , public nsISVGFilterReference {
 public:
   nsSVGFilterReference(nsIURI* aURI,
                        nsIContent* aObservingContent,
@@ -284,7 +284,7 @@ protected:
   nsSVGFrameReferenceFromProperty mFrameReference;
 };
 
-class nsSVGMarkerProperty : public nsSVGRenderingObserverProperty {
+class nsSVGMarkerProperty final : public nsSVGRenderingObserverProperty {
 public:
   nsSVGMarkerProperty(nsIURI *aURI, nsIFrame *aFrame, bool aReferenceImage)
     : nsSVGRenderingObserverProperty(aURI, aFrame, aReferenceImage) {}
@@ -293,7 +293,7 @@ protected:
   virtual void DoUpdate() override;
 };
 
-class nsSVGTextPathProperty : public nsSVGRenderingObserverProperty {
+class nsSVGTextPathProperty final : public nsSVGRenderingObserverProperty {
 public:
   nsSVGTextPathProperty(nsIURI *aURI, nsIFrame *aFrame, bool aReferenceImage)
     : nsSVGRenderingObserverProperty(aURI, aFrame, aReferenceImage)
@@ -313,7 +313,7 @@ private:
   bool mValid;
 };
 
-class nsSVGPaintingProperty : public nsSVGRenderingObserverProperty {
+class nsSVGPaintingProperty final : public nsSVGRenderingObserverProperty {
 public:
   nsSVGPaintingProperty(nsIURI *aURI, nsIFrame *aFrame, bool aReferenceImage)
     : nsSVGRenderingObserverProperty(aURI, aFrame, aReferenceImage) {}

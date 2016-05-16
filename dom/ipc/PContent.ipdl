@@ -40,6 +40,7 @@ include protocol PGMPService;
 include protocol PPluginModule;
 include protocol PGMP;
 include protocol PPrinting;
+include protocol PSendStream;
 include protocol POfflineCacheUpdate;
 include protocol PRenderFrame;
 include protocol PScreenManager;
@@ -418,6 +419,7 @@ prio(normal upto urgent) sync protocol PContent
     manages PNecko;
     manages POfflineCacheUpdate;
     manages PPrinting;
+    manages PSendStream;
     manages PScreenManager;
     manages PSms;
     manages PSpeechSynthesis;
@@ -818,6 +820,8 @@ parent:
     async PNecko();
 
     async PPrinting();
+
+    async PSendStream();
 
     prio(high) sync PScreenManager()
         returns (uint32_t numberOfScreens,

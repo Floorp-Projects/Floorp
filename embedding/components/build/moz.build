@@ -36,6 +36,3 @@ if CONFIG['MOZ_PDF_PRINTING']:
     ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']

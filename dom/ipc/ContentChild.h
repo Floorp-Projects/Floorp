@@ -287,6 +287,9 @@ public:
 
   virtual bool DeallocPPrintingChild(PPrintingChild*) override;
 
+  virtual PSendStreamChild* AllocPSendStreamChild() override;
+  virtual bool DeallocPSendStreamChild(PSendStreamChild*) override;
+
   virtual PScreenManagerChild*
   AllocPScreenManagerChild(uint32_t* aNumberOfScreens,
                            float* aSystemDefaultScale,

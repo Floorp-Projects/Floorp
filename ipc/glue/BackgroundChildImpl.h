@@ -145,6 +145,12 @@ protected:
   virtual bool
   DeallocPNuwaChild(PNuwaChild* aActor) override;
 
+  virtual PSendStreamChild*
+  AllocPSendStreamChild() override;
+
+  virtual bool
+  DeallocPSendStreamChild(PSendStreamChild* aActor) override;
+
   virtual PAsmJSCacheEntryChild*
   AllocPAsmJSCacheEntryChild(const dom::asmjscache::OpenMode& aOpenMode,
                              const dom::asmjscache::WriteParams& aWriteParams,
