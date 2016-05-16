@@ -56,11 +56,9 @@ bool
 ParamTraits<DxgiAdapterDesc>::Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
 {
 #if defined(XP_WIN)
-  const char* description = nullptr;
-  if (!aMsg->ReadBytes(aIter, &description, sizeof(aResult->Description))) {
+  if (!aMsg->ReadBytesInto(aIter, aResult->Description, sizeof(aResult->Description))) {
     return false;
   }
-  memcpy(aResult->Description, description, sizeof(aResult->Description));
 
   if (ReadParam(aMsg, aIter, &aResult->VendorId) &&
       ReadParam(aMsg, aIter, &aResult->DeviceId) &&

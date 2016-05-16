@@ -73,8 +73,8 @@ Message::Message(int32_t routing_id, msgid_t type, PriorityValue priority,
   InitLoggingVariables(aName);
 }
 
-Message::Message(const char* data, int data_len, Ownership ownership)
-  : Pickle(data, data_len, ownership)
+Message::Message(const char* data, int data_len)
+  : Pickle(sizeof(Header), data, data_len)
 {
   MOZ_COUNT_CTOR(IPC::Message);
   InitLoggingVariables();
