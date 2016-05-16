@@ -527,8 +527,10 @@ private:
 
   void ReportDroppedFramesTelemetry();
 
+  // The SeekTarget that was last given to Seek()
+  SeekTarget mOriginalSeekTarget;
   // Temporary seek information while we wait for the data
-  Maybe<SeekTarget> mOriginalSeekTarget;
+  Maybe<media::TimeUnit> mFallbackSeekTime;
   Maybe<media::TimeUnit> mPendingSeekTime;
   MozPromiseHolder<SeekPromise> mSeekPromise;
 
