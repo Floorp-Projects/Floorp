@@ -11,9 +11,7 @@
 
 const EventEmitter = require("devtools/shared/event-emitter");
 const { Cu, Cc, Ci } = require("chrome");
-const { ViewHelpers } =
-      Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm",
-                {});
+const { ViewHelpers } = require("devtools/client/shared/widgets/view-helpers");
 
 const { LocalizationHelper } = require("devtools/client/shared/l10n");
 const STRINGS_URI = "chrome://devtools/locale/filterwidget.properties";

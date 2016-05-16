@@ -3,7 +3,7 @@
 const { Cc, Ci, Cu, Cr } = require("chrome");
 
 const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
-const { ViewHelpers, Heritage } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
+const { ViewHelpers, Heritage } = require("devtools/client/shared/widgets/view-helpers");
 const { AbstractCanvasGraph, CanvasGraphUtils } = require("devtools/client/shared/widgets/Graphs");
 const { LocalizationHelper } = require("devtools/client/shared/l10n");
 

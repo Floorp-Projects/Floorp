@@ -103,7 +103,6 @@ Cu.import("resource://devtools/client/shared/widgets/BreadcrumbsWidget.jsm");
 Cu.import("resource://devtools/client/shared/widgets/SideMenuWidget.jsm");
 Cu.import("resource://devtools/client/shared/widgets/VariablesView.jsm");
 Cu.import("resource://devtools/client/shared/widgets/VariablesViewController.jsm");
-Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 
 Cu.import("resource://devtools/client/shared/browser-loader.js");
 const { require } = BrowserLoader({
@@ -112,6 +111,8 @@ const { require } = BrowserLoader({
 });
 XPCOMUtils.defineConstant(this, "require", require);
 const { gDevTools } = require("devtools/client/framework/devtools");
+const { ViewHelpers, Heritage, WidgetMethods, setNamedTimeout,
+        clearNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
 
 // React
 const React = require("devtools/client/shared/vendor/react");
