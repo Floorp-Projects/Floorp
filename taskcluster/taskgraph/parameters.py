@@ -33,8 +33,7 @@ def load_parameters_file(options):
         elif filename.endswith('.json'):
             return Parameters(**json.load(f))
         else:
-            print("Parameters file `{}` is not JSON or YAML".format(filename))
-            sys.exit(1)
+            raise TypeError("Parameters file `{}` is not JSON or YAML".format(filename))
 
 def get_decision_parameters(options):
     """
