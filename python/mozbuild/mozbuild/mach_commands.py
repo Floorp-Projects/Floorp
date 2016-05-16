@@ -579,25 +579,19 @@ class Build(MachCommandBase):
         help='Port number the HTTP server should listen on.')
     @CommandArgument('--browser', default='firefox',
         help='Web browser to automatically open. See webbrowser Python module.')
-    @CommandArgument('--url',
-        help='URL of JSON document to display')
-    def resource_usage(self, address=None, port=None, browser=None, url=None):
+    def resource_usage(self, address=None, port=None, browser=None):
         import webbrowser
         from mozbuild.html_build_viewer import BuildViewerServer
 
+        last = self._get_state_filename('build_resources.json')
+        if not os.path.exists(last):
+            print('Build resources not available. If you have performed a '
+                'build and receive this message, the psutil Python package '
+                'likely failed to initialize properly.')
+            return 1
+
         server = BuildViewerServer(address, port)
-
-        if url:
-            server.add_resource_json_url('url', url)
-        else:
-            last = self._get_state_filename('build_resources.json')
-            if not os.path.exists(last):
-                print('Build resources not available. If you have performed a '
-                    'build and receive this message, the psutil Python package '
-                    'likely failed to initialize properly.')
-                return 1
-
-            server.add_resource_json_file('last', last)
+        server.add_resource_json_file('last', last)
         try:
             webbrowser.get(browser).open_new_tab(server.url)
         except Exception:
