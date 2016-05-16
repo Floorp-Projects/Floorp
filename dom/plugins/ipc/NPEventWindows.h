@@ -132,12 +132,9 @@ struct ParamTraits<mozilla::plugins::NPRemoteEvent>
 
     static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
     {
-        const char* bytes = 0;
-
-        if (!aMsg->ReadBytes(aIter, &bytes, sizeof(paramType))) {
+        if (!aMsg->ReadBytesInto(aIter, aResult, sizeof(paramType))) {
             return false;
         }
-        memcpy(aResult, bytes, sizeof(paramType));
 
         if (aResult->event.event == WM_PAINT) {
             // restore the lParam to point at the RECT

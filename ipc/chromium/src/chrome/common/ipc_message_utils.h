@@ -55,11 +55,6 @@ class MessageIterator {
       NOTREACHED();
     return val;
   }
-  void NextData(const char** data, int* length) const {
-    if (!msg_.ReadData(&iter_, data, length)) {
-      NOTREACHED();
-    }
-  }
  private:
   const Message& msg_;
   mutable PickleIterator iter_;
@@ -192,19 +187,10 @@ template <>
 struct ParamTraitsFundamental<long long> {
   typedef long long param_type;
   static void Write(Message* m, const param_type& p) {
-    m->WriteData(reinterpret_cast<const char*>(&p), sizeof(param_type));
- }
+    m->WriteBytes(&p, sizeof(param_type));
+  }
   static bool Read(const Message* m, PickleIterator* iter, param_type* r) {
-    const char *data;
-    int data_size = 0;
-    bool result = m->ReadData(iter, &data, &data_size);
-    if (result && data_size == sizeof(param_type)) {
-      memcpy(r, data, sizeof(param_type));
-    } else {
-      result = false;
-      NOTREACHED();
-    }
-    return result;
+    return m->ReadBytesInto(iter, r, sizeof(*r));
   }
   static void Log(const param_type& p, std::wstring* l) {
     l->append(StringPrintf(L"%ll", p));
@@ -215,19 +201,10 @@ template <>
 struct ParamTraitsFundamental<unsigned long long> {
   typedef unsigned long long param_type;
   static void Write(Message* m, const param_type& p) {
-    m->WriteData(reinterpret_cast<const char*>(&p), sizeof(param_type));
- }
+    m->WriteBytes(&p, sizeof(param_type));
+  }
   static bool Read(const Message* m, PickleIterator* iter, param_type* r) {
-    const char *data;
-    int data_size = 0;
-    bool result = m->ReadData(iter, &data, &data_size);
-    if (result && data_size == sizeof(param_type)) {
-      memcpy(r, data, sizeof(param_type));
-    } else {
-      result = false;
-      NOTREACHED();
-    }
-    return result;
+    return m->ReadBytesInto(iter, r, sizeof(*r));
   }
   static void Log(const param_type& p, std::wstring* l) {
     l->append(StringPrintf(L"%ull", p));
@@ -238,20 +215,10 @@ template <>
 struct ParamTraitsFundamental<double> {
   typedef double param_type;
   static void Write(Message* m, const param_type& p) {
-    m->WriteData(reinterpret_cast<const char*>(&p), sizeof(param_type));
+    m->WriteDouble(p);
   }
   static bool Read(const Message* m, PickleIterator* iter, param_type* r) {
-    const char *data;
-    int data_size = 0;
-    bool result = m->ReadData(iter, &data, &data_size);
-    if (result && data_size == sizeof(param_type)) {
-      memcpy(r, data, sizeof(param_type));
-    } else {
-      result = false;
-      NOTREACHED();
-    }
-
-    return result;
+    return m->ReadDouble(iter, r);
   }
   static void Log(const param_type& p, std::wstring* l) {
     l->append(StringPrintf(L"e", p));
