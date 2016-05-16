@@ -421,9 +421,9 @@ waitForAllPaints(function() {
        'Opacity script animations keep running even when the target element ' +
        'has "display: none" style');
 
-    todo(!animation.isRunningOnCompositor,
-         'Opacity script animations on "display:none" element should not ' +
-         'run on the compositor');
+    ok(!animation.isRunningOnCompositor,
+       'Opacity script animations on "display:none" element should not ' +
+       'run on the compositor');
 
     var markers = yield observeStyling(5);
     is(markers.length, 0,
