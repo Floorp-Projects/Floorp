@@ -266,7 +266,8 @@ public:
                                    bool aScheduleComposite,
                                    uint32_t aPaintSequenceNumber,
                                    bool aIsRepeatTransaction,
-                                   int32_t aPaintSyncId) override;
+                                   int32_t aPaintSyncId,
+                                   bool aHitTestUpdate) override;
   virtual void ForceComposite(LayerTransactionParent* aLayerTree) override;
   virtual bool SetTestSampleTime(LayerTransactionParent* aLayerTree,
                                  const TimeStamp& aTime) override;
@@ -348,7 +349,7 @@ public:
   virtual void ScheduleComposition();
   void NotifyShadowTreeTransaction(uint64_t aId, bool aIsFirstPaint,
       bool aScheduleComposite, uint32_t aPaintSequenceNumber,
-      bool aIsRepeatTransaction);
+      bool aIsRepeatTransaction, bool aHitTestUpdate);
 
   /**
    * Check rotation info and schedule a rendering task if needed.
