@@ -13,8 +13,8 @@ var touchdownTime;
 
 function longPressLink() {
   if (!window.TouchEvent) {
-    window.opener.ok(true, "Touch events are not supported on this platform, sorry!\n");
-    window.opener.testDone();
+    ok(true, "Touch events are not supported on this platform, sorry!\n");
+    subtestDone();
     return;
   }
 
@@ -27,7 +27,7 @@ var touchstartReceived = false;
 function recordEvent(e) {
   if (!touchstartReceived) {
     touchstartReceived = true;
-    window.opener.is(e.type, 'touchstart', 'Got a touchstart');
+    is(e.type, 'touchstart', 'Got a touchstart');
     e.preventDefault(); // should be a no-op because it's a passive listener
     return;
   }
@@ -39,12 +39,12 @@ function recordEvent(e) {
   // contextmenu event at all means that APZ decided not to wait for the content
   // response, which is the desired behaviour, since the touchstart listener was
   // registered as a passive listener.
-  window.opener.is(e.type, 'contextmenu', 'Got a contextmenu');
+  is(e.type, 'contextmenu', 'Got a contextmenu');
   e.preventDefault();
 
   synthesizeNativeTouch(document.getElementById('b'), 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, function() {
     dump("Finished synthesizing touch-end to clear state; finishing test...\n");
-    window.opener.testDone();
+    subtestDone();
   });
 }
 

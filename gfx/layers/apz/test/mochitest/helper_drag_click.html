@@ -24,10 +24,10 @@ function* runTest() {
 function clicked(e) {
   // The mouse down at (5, 5) should not have generated a click, but the up
   // at (8, 8) should have.
-  window.opener.is(e.target, document.getElementById('b'), "Clicked on button, yay! (at " + e.clientX + "," + e.clientY + ")");
-  window.opener.is(e.clientX, 8 + Math.floor(document.getElementById('b').getBoundingClientRect().left), 'x-coord of click event looks sane');
-  window.opener.is(e.clientY, 8 + Math.floor(document.getElementById('b').getBoundingClientRect().top), 'y-coord of click event looks sane');
-  window.opener.testDone();
+  is(e.target, document.getElementById('b'), "Clicked on button, yay! (at " + e.clientX + "," + e.clientY + ")");
+  is(e.clientX, 8 + Math.floor(document.getElementById('b').getBoundingClientRect().left), 'x-coord of click event looks sane');
+  is(e.clientY, 8 + Math.floor(document.getElementById('b').getBoundingClientRect().top), 'y-coord of click event looks sane');
+  subtestDone();
 }
 
 var gTestContinuation = null;
