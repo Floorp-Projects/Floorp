@@ -78,7 +78,7 @@ class Channel : public Message::Sender {
   // Connect to a pre-created channel as |mode|.  Clients connect to
   // the pre-existing server pipe, and servers take over |server_pipe|.
   Channel(const std::wstring& channel_id, void* server_pipe,
-	  Mode mode, Listener* listener);
+          Mode mode, Listener* listener);
 # endif
 
   ~Channel();

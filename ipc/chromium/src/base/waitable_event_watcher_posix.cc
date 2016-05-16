@@ -60,7 +60,7 @@ class Flag final {
 class AsyncWaiter final : public WaitableEvent::Waiter {
  public:
   AsyncWaiter(MessageLoop* message_loop,
-	      already_AddRefed<mozilla::Runnable> task, Flag* flag)
+              already_AddRefed<mozilla::Runnable> task, Flag* flag)
       : message_loop_(message_loop),
         cb_task_(task),
         flag_(flag) { }
