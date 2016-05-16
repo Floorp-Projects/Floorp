@@ -23,11 +23,11 @@ addRDMTask(TEST_URL, function* ({ ui }) {
     .filter(cb => cb.checked);
   let deviceList = loadDeviceList();
 
-  is(deviceList.length, checkedCbs.length,
+  is(deviceList.size, checkedCbs.length,
     "Got expected number of displayed devices.");
 
   for (let cb of checkedCbs) {
-    ok(deviceList.includes(cb.value), cb.value + " is correctly checked.");
+    ok(deviceList.has(cb.value), cb.value + " is correctly checked.");
   }
 
   info("Check the first unchecked device and submit new device list.");
@@ -42,11 +42,11 @@ addRDMTask(TEST_URL, function* ({ ui }) {
 
   info("Checking new device is added to the displayed device list.");
   deviceList = loadDeviceList();
-  ok(deviceList.includes(value), value + " added to displayed device list.");
+  ok(deviceList.has(value), value + " added to displayed device list.");
 
   info("Checking new device is added to the device selector.");
   let options = [...select.options];
-  is(options.length - 2, deviceList.length,
+  is(options.length - 2, deviceList.size,
     "Got expected number of devices in device selector.");
   ok(options.filter(o => o.value === value)[0],
     value + " added to the device selector.");
