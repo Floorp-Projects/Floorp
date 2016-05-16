@@ -54,7 +54,7 @@ const {Cc, Ci, Cu} = require("chrome");
 const Services = require("Services");
 const protocol = require("devtools/shared/protocol");
 const {Arg, Option, method, RetVal, types} = protocol;
-const {LongStringActor, ShortLongString} = require("devtools/server/actors/string");
+const {LongStringActor} = require("devtools/server/actors/string");
 const promise = require("promise");
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 const object = require("sdk/util/object");
@@ -67,6 +67,7 @@ const {
   CustomHighlighterActor,
   isTypeRegistered,
 } = require("devtools/server/actors/highlighters");
+const {NodeFront} = require("devtools/client/fronts/inspector");
 const {
   isAnonymous,
   isNativeAnonymous,
@@ -80,8 +81,7 @@ const {getLayoutChangesObserver, releaseLayoutChangesObserver} =
 loader.lazyRequireGetter(this, "CSS", "CSS");
 
 const {EventParsers} = require("devtools/shared/event-parsers");
-const { makeInfallible } = require("devtools/shared/DevToolsUtils");
-
+const {nodeSpec} = require("devtools/shared/specs/inspector");
 const FONT_FAMILY_PREVIEW_TEXT = "The quick brown fox jumps over the lazy dog";
 const FONT_FAMILY_PREVIEW_TEXT_SIZE = 20;
 const PSEUDO_CLASSES = [":hover", ":active", ":focus"];
@@ -152,22 +152,6 @@ loader.lazyGetter(this, "eventListenerService", function () {
 
 loader.lazyGetter(this, "CssLogic", () => require("devtools/shared/inspector/css-logic").CssLogic);
 
-// A resolve that hits the main loop first.
-function delayedResolve(value) {
-  let deferred = promise.defer();
-  Services.tm.mainThread.dispatch(makeInfallible(() => {
-    deferred.resolve(value);
-  }), 0);
-  return deferred.promise;
-}
-
-types.addDictType("imageData", {
-  // The image data
-  data: "nullable:longstring",
-  // The original image dimensions
-  size: "json"
-});
-
 /**
  * We only send nodeValue up to a certain size by default.  This stuff
  * controls that size.
@@ -200,9 +184,7 @@ exports.setInspectingNode = function (val) {
 /**
  * Server side of the node actor.
  */
-var NodeActor = exports.NodeActor = protocol.ActorClass({
-  typeName: "domnode",
-
+var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   initialize: function (walker, node) {
     protocol.Actor.prototype.initialize.call(this, null);
     this.walker = walker;
@@ -611,46 +593,30 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
   /**
    * Returns a LongStringActor with the node's value.
    */
-  getNodeValue: method(function () {
+  getNodeValue: function () {
     return new LongStringActor(this.conn, this.rawNode.nodeValue || "");
-  }, {
-    request: {},
-    response: {
-      value: RetVal("longstring")
-    }
-  }),
+  },
 
   /**
    * Set the node's value to a given string.
    */
-  setNodeValue: method(function (value) {
+  setNodeValue: function (value) {
     this.rawNode.nodeValue = value;
-  }, {
-    request: { value: Arg(0) },
-    response: {}
-  }),
+  },
 
   /**
    * Get a unique selector string for this node.
    */
-  getUniqueSelector: method(function () {
+  getUniqueSelector: function () {
     return CssLogic.findCssSelector(this.rawNode);
-  }, {
-    request: {},
-    response: {
-      value: RetVal("string")
-    }
-  }),
+  },
 
   /**
    * Scroll the selected node into view.
    */
-  scrollIntoView: method(function () {
+  scrollIntoView: function () {
     this.rawNode.scrollIntoView(true);
-  }, {
-    request: {},
-    response: {}
-  }),
+  },
 
   /**
    * Get the node's image data if any (for canvas and img nodes).
@@ -663,32 +629,24 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
    * is important as the resizing occurs server-side so that image-data being
    * transfered in the longstring back to the client will be that much smaller
    */
-  getImageData: method(function (maxDim) {
+  getImageData: function (maxDim) {
     return imageToImageData(this.rawNode, maxDim).then(imageData => {
       return {
         data: LongStringActor(this.conn, imageData.data),
         size: imageData.size
       };
     });
-  }, {
-    request: {maxDim: Arg(0, "nullable:number")},
-    response: RetVal("imageData")
-  }),
+  },
 
   /**
    * Get all event listeners that are listening on this node.
    */
-  getEventListenerInfo: method(function () {
+  getEventListenerInfo: function () {
     if (this.rawNode.nodeName.toLowerCase() === "html") {
       return this.getEventListeners(this.rawNode.ownerGlobal);
     }
     return this.getEventListeners(this.rawNode);
-  }, {
-    request: {},
-    response: {
-      events: RetVal("json")
-    }
-  }),
+  },
 
   /**
    * Modify a node's attributes.  Passed an array of modifications
@@ -703,7 +661,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
    * Returns when the modifications have been made.  Mutations will
    * be queued for any changes made.
    */
-  modifyAttributes: method(function (modifications) {
+  modifyAttributes: function (modifications) {
     let rawNode = this.rawNode;
     for (let change of modifications) {
       if (change.newValue == null) {
@@ -720,12 +678,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
         rawNode.setAttribute(change.attributeName, change.newValue);
       }
     }
-  }, {
-    request: {
-      modifications: Arg(0, "array:json")
-    },
-    response: {}
-  }),
+  },
 
   /**
    * Given the font and fill style, get the image data of a canvas with the
@@ -734,7 +687,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
    * and the width of the text as a string.
    * The image data is transmitted as a base64 encoded png data-uri.
    */
-  getFontFamilyDataURL: method(function (font, fillStyle = "black") {
+  getFontFamilyDataURL: function (font, fillStyle = "black") {
     let doc = this.rawNode.ownerDocument;
     let options = {
       previewText: FONT_FAMILY_PREVIEW_TEXT,
@@ -744,367 +697,6 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
     let { dataURL, size } = getFontPreviewData(font, doc, options);
 
     return { data: LongStringActor(this.conn, dataURL), size: size };
-  }, {
-    request: {font: Arg(0, "string"), fillStyle: Arg(1, "nullable:string")},
-    response: RetVal("imageData")
-  })
-});
-
-/**
- * Client side of the node actor.
- *
- * Node fronts are strored in a tree that mirrors the DOM tree on the
- * server, but with a few key differences:
- *  - Not all children will be necessary loaded for each node.
- *  - The order of children isn't guaranteed to be the same as the DOM.
- * Children are stored in a doubly-linked list, to make addition/removal
- * and traversal quick.
- *
- * Due to the order/incompleteness of the child list, it is safe to use
- * the parent node from clients, but the `children` request should be used
- * to traverse children.
- */
-var NodeFront = protocol.FrontClass(NodeActor, {
-  initialize: function (conn, form, detail, ctx) {
-    // The parent node
-    this._parent = null;
-    // The first child of this node.
-    this._child = null;
-    // The next sibling of this node.
-    this._next = null;
-    // The previous sibling of this node.
-    this._prev = null;
-    protocol.Front.prototype.initialize.call(this, conn, form, detail, ctx);
-  },
-
-  /**
-   * Destroy a node front.  The node must have been removed from the
-   * ownership tree before this is called, unless the whole walker front
-   * is being destroyed.
-   */
-  destroy: function () {
-    protocol.Front.prototype.destroy.call(this);
-  },
-
-  // Update the object given a form representation off the wire.
-  form: function (form, detail, ctx) {
-    if (detail === "actorid") {
-      this.actorID = form;
-      return;
-    }
-    // Shallow copy of the form.  We could just store a reference, but
-    // eventually we'll want to update some of the data.
-    this._form = object.merge(form);
-    this._form.attrs = this._form.attrs ? this._form.attrs.slice() : [];
-
-    if (form.parent) {
-      // Get the owner actor for this actor (the walker), and find the
-      // parent node of this actor from it, creating a standin node if
-      // necessary.
-      let parentNodeFront = ctx.marshallPool().ensureParentFront(form.parent);
-      this.reparent(parentNodeFront);
-    }
-
-    if (form.singleTextChild) {
-      this.singleTextChild =
-        types.getType("domnode").read(form.singleTextChild, ctx);
-    } else {
-      this.singleTextChild = undefined;
-    }
-  },
-
-  /**
-   * Returns the parent NodeFront for this NodeFront.
-   */
-  parentNode: function () {
-    return this._parent;
-  },
-
-  /**
-   * Process a mutation entry as returned from the walker's `getMutations`
-   * request.  Only tries to handle changes of the node's contents
-   * themselves (character data and attribute changes), the walker itself
-   * will keep the ownership tree up to date.
-   */
-  updateMutation: function (change) {
-    if (change.type === "attributes") {
-      // We'll need to lazily reparse the attributes after this change.
-      this._attrMap = undefined;
-
-      // Update any already-existing attributes.
-      let found = false;
-      for (let i = 0; i < this.attributes.length; i++) {
-        let attr = this.attributes[i];
-        if (attr.name == change.attributeName &&
-            attr.namespace == change.attributeNamespace) {
-          if (change.newValue !== null) {
-            attr.value = change.newValue;
-          } else {
-            this.attributes.splice(i, 1);
-          }
-          found = true;
-          break;
-        }
-      }
-      // This is a new attribute. The null check is because of Bug 1192270,
-      // in the case of a newly added then removed attribute
-      if (!found && change.newValue !== null) {
-        this.attributes.push({
-          name: change.attributeName,
-          namespace: change.attributeNamespace,
-          value: change.newValue
-        });
-      }
-    } else if (change.type === "characterData") {
-      this._form.shortValue = change.newValue;
-      this._form.incompleteValue = change.incompleteValue;
-    } else if (change.type === "pseudoClassLock") {
-      this._form.pseudoClassLocks = change.pseudoClassLocks;
-    } else if (change.type === "events") {
-      this._form.hasEventListeners = change.hasEventListeners;
-    }
-  },
-
-  // Some accessors to make NodeFront feel more like an nsIDOMNode
-
-  get id() {
-    return this.getAttribute("id");
-  },
-
-  get nodeType() {
-    return this._form.nodeType;
-  },
-  get namespaceURI() {
-    return this._form.namespaceURI;
-  },
-  get nodeName() {
-    return this._form.nodeName;
-  },
-  get doctypeString() {
-    return "<!DOCTYPE " + this._form.name +
-     (this._form.publicId ? " PUBLIC \"" + this._form.publicId + "\"" : "") +
-     (this._form.systemId ? " \"" + this._form.systemId + "\"" : "") +
-     ">";
-  },
-
-  get baseURI() {
-    return this._form.baseURI;
-  },
-
-  get className() {
-    return this.getAttribute("class") || "";
-  },
-
-  get hasChildren() {
-    return this._form.numChildren > 0;
-  },
-  get numChildren() {
-    return this._form.numChildren;
-  },
-  get hasEventListeners() {
-    return this._form.hasEventListeners;
-  },
-
-  get isBeforePseudoElement() {
-    return this._form.isBeforePseudoElement;
-  },
-  get isAfterPseudoElement() {
-    return this._form.isAfterPseudoElement;
-  },
-  get isPseudoElement() {
-    return this.isBeforePseudoElement || this.isAfterPseudoElement;
-  },
-  get isAnonymous() {
-    return this._form.isAnonymous;
-  },
-  get isInHTMLDocument() {
-    return this._form.isInHTMLDocument;
-  },
-  get tagName() {
-    return this.nodeType === Ci.nsIDOMNode.ELEMENT_NODE ? this.nodeName : null;
-  },
-  get shortValue() {
-    return this._form.shortValue;
-  },
-  get incompleteValue() {
-    return !!this._form.incompleteValue;
-  },
-
-  get isDocumentElement() {
-    return !!this._form.isDocumentElement;
-  },
-
-  // doctype properties
-  get name() {
-    return this._form.name;
-  },
-  get publicId() {
-    return this._form.publicId;
-  },
-  get systemId() {
-    return this._form.systemId;
-  },
-
-  getAttribute: function (name) {
-    let attr = this._getAttribute(name);
-    return attr ? attr.value : null;
-  },
-  hasAttribute: function (name) {
-    this._cacheAttributes();
-    return (name in this._attrMap);
-  },
-
-  get hidden() {
-    let cls = this.getAttribute("class");
-    return cls && cls.indexOf(HIDDEN_CLASS) > -1;
-  },
-
-  get attributes() {
-    return this._form.attrs;
-  },
-
-  get pseudoClassLocks() {
-    return this._form.pseudoClassLocks || [];
-  },
-  hasPseudoClassLock: function (pseudo) {
-    return this.pseudoClassLocks.some(locked => locked === pseudo);
-  },
-
-  get isDisplayed() {
-    // The NodeActor's form contains the isDisplayed information as a boolean
-    // starting from FF32. Before that, the property is missing
-    return "isDisplayed" in this._form ? this._form.isDisplayed : true;
-  },
-
-  get isTreeDisplayed() {
-    let parent = this;
-    while (parent) {
-      if (!parent.isDisplayed) {
-        return false;
-      }
-      parent = parent.parentNode();
-    }
-    return true;
-  },
-
-  getNodeValue: protocol.custom(function () {
-    if (!this.incompleteValue) {
-      return delayedResolve(new ShortLongString(this.shortValue));
-    }
-
-    return this._getNodeValue();
-  }, {
-    impl: "_getNodeValue"
-  }),
-
-  // Accessors for custom form properties.
-
-  getFormProperty: function (name) {
-    return this._form.props ? this._form.props[name] : null;
-  },
-
-  hasFormProperty: function (name) {
-    return this._form.props ? (name in this._form.props) : null;
-  },
-
-  get formProperties() {
-    return this._form.props;
-  },
-
-  /**
-   * Return a new AttributeModificationList for this node.
-   */
-  startModifyingAttributes: function () {
-    return AttributeModificationList(this);
-  },
-
-  _cacheAttributes: function () {
-    if (typeof this._attrMap != "undefined") {
-      return;
-    }
-    this._attrMap = {};
-    for (let attr of this.attributes) {
-      this._attrMap[attr.name] = attr;
-    }
-  },
-
-  _getAttribute: function (name) {
-    this._cacheAttributes();
-    return this._attrMap[name] || undefined;
-  },
-
-  /**
-   * Set this node's parent.  Note that the children saved in
-   * this tree are unordered and incomplete, so shouldn't be used
-   * instead of a `children` request.
-   */
-  reparent: function (parent) {
-    if (this._parent === parent) {
-      return;
-    }
-
-    if (this._parent && this._parent._child === this) {
-      this._parent._child = this._next;
-    }
-    if (this._prev) {
-      this._prev._next = this._next;
-    }
-    if (this._next) {
-      this._next._prev = this._prev;
-    }
-    this._next = null;
-    this._prev = null;
-    this._parent = parent;
-    if (!parent) {
-      // Subtree is disconnected, we're done
-      return;
-    }
-    this._next = parent._child;
-    if (this._next) {
-      this._next._prev = this;
-    }
-    parent._child = this;
-  },
-
-  /**
-   * Return all the known children of this node.
-   */
-  treeChildren: function () {
-    let ret = [];
-    for (let child = this._child; child != null; child = child._next) {
-      ret.push(child);
-    }
-    return ret;
-  },
-
-  /**
-   * Do we use a local target?
-   * Useful to know if a rawNode is available or not.
-   *
-   * This will, one day, be removed. External code should
-   * not need to know if the target is remote or not.
-   */
-  isLocal_toBeDeprecated: function () {
-    return !!this.conn._transport._serverConnection;
-  },
-
-  /**
-   * Get an nsIDOMNode for the given node front.  This only works locally,
-   * and is only intended as a stopgap during the transition to the remote
-   * protocol.  If you depend on this you're likely to break soon.
-   */
-  rawNode: function (rawNode) {
-    if (!this.conn._transport._serverConnection) {
-      console.warn("Tried to use rawNode on a remote connection.");
-      return null;
-    }
-    let actor = this.conn._transport._serverConnection.getActor(this.actorID);
-    if (!actor) {
-      // Can happen if we try to get the raw node for an already-expired
-      // actor.
-      return null;
-    }
-    return actor.rawNode;
   }
 });
 
@@ -3729,47 +3321,6 @@ var WalkerFront = protocol.FrontClass(WalkerActor, {
 });
 
 exports.WalkerFront = WalkerFront;
-
-/**
- * Convenience API for building a list of attribute modifications
- * for the `modifyAttributes` request.
- */
-var AttributeModificationList = Class({
-  initialize: function (node) {
-    this.node = node;
-    this.modifications = [];
-  },
-
-  apply: function () {
-    let ret = this.node.modifyAttributes(this.modifications);
-    return ret;
-  },
-
-  destroy: function () {
-    this.node = null;
-    this.modification = null;
-  },
-
-  setAttributeNS: function (ns, name, value) {
-    this.modifications.push({
-      attributeNamespace: ns,
-      attributeName: name,
-      newValue: value
-    });
-  },
-
-  setAttribute: function (name, value) {
-    this.setAttributeNS(undefined, name, value);
-  },
-
-  removeAttributeNS: function (ns, name) {
-    this.setAttributeNS(ns, name, undefined);
-  },
-
-  removeAttribute: function (name) {
-    this.setAttributeNS(undefined, name, undefined);
-  }
-});
 
 /**
  * Server side of the inspector actor, which is used to create

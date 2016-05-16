@@ -106,7 +106,7 @@ Selection.prototype = {
     }
     if (detached) {
       let rawNode = null;
-      if (parentNode && parentNode.isLocal_toBeDeprecated()) {
+      if (parentNode && parentNode.isLocalToBeDeprecated()) {
         rawNode = parentNode.rawNode();
       }
 
@@ -172,7 +172,7 @@ Selection.prototype = {
     // set the node even if it is already set otherwise it is not possible to
     // e.g. highlight the same node twice.
     let rawValue = null;
-    if (value && value.isLocal_toBeDeprecated()) {
+    if (value && value.isLocalToBeDeprecated()) {
       rawValue = value.rawNode();
     }
     this.emit("before-new-node", rawValue, reason);
@@ -226,7 +226,7 @@ Selection.prototype = {
     // As long as there are still tools going around
     // accessing node.rawNode, this needs to stay.
     let rawNode = null;
-    if (node.isLocal_toBeDeprecated()) {
+    if (node.isLocalToBeDeprecated()) {
       rawNode = node.rawNode();
     }
     if (rawNode) {
