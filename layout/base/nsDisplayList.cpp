@@ -2393,6 +2393,13 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(nsDisplayListBuilder* aBuilde
   mBounds = GetBoundsInternal(aBuilder);
   if (ShouldFixToViewport(aBuilder)) {
     mAnimatedGeometryRoot = aBuilder->FindAnimatedGeometryRootFor(this);
+
+    // Expand the item's visible rect to cover the entire bounds, limited to the
+    // viewport rect. This is necessary because the background's clip can move
+    // asynchronously.
+    if (Maybe<nsRect> viewportRect = GetViewportRectRelativeToReferenceFrame(aBuilder, mFrame)) {
+      mVisibleRect = mBounds.Intersect(*viewportRect);
+    }
   }
 
   mFillRect = state.mFillArea;
