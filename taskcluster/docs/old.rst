@@ -1,8 +1,10 @@
-.. taskcluster_index:
+==================================
+Legacy TaskCluster Task Definition
+==================================
 
-======================
-TaskCluster Automation
-======================
+The "legacy" task definitions are in ``testing/taskcluster``.
+
+These are being replaced by a more flexible system in ``taskcluster``.
 
 Directory structure
 ===================
@@ -22,10 +24,10 @@ scripts/
 Task Conventions
 ================
 
-In order to properly enable task reuse there are a small number of
+In order to properly enable task reuse there are a few
 conventions and parameters that are specialized for build tasks vs test
-tasks. The goal here should be to provide as much of the power as
-taskcluster but not at the cost of making it easy to support the current
+tasks. The goal here should be to provide as much of the power of
+taskcluster while still making it easy to support the current
 model of build/test.
 
 All tasks are in the YAML format and are also processed via mustache to
@@ -34,8 +36,8 @@ templates variables:
 
 ``docker_image``
 ----------------
-Helper for always using the latest version of a docker image that exist
-in tree::
+Helper for always using the latest version of a docker image that exists
+in the tree::
 
    {{#docker_image}}base{{/docker_image}}
 
@@ -75,7 +77,7 @@ Task format
 
 To facilitate better reuse of tasks there are some expectations of the
 build tasks. These are required for the test tasks to interact with the
-builds correctly but may not effect the builds or indexing services.
+builds correctly but may not affect the builds or indexing services.
 
 .. code-block:: yaml
 
@@ -84,8 +86,8 @@ builds correctly but may not effect the builds or indexing services.
     task:
 
       payload:
-        # Builders usually create at least two important artifacts the build
-        # and the tests these can be anywhere in the task and also may have
+        # Builders usually create at least two important artifacts: the build
+        # and the tests. These can be anywhere in the task and may have
         # different path names to include things like arch and extension
         artifacts:
           # The build this can be anything as long as its referenced in
@@ -94,7 +96,7 @@ builds correctly but may not effect the builds or indexing services.
           'public/some_tests.zip': '/path/to/tests'
 
       extra:
-        # Build tasks may put their artifacts anywhere but there are common
+        # Build tasks may name their artifacts anything, but there are common
         # resources that test tasks need to do their job correctly so we
         # need to provide an easy way to lookup the correct aritfact path.
         locations:
