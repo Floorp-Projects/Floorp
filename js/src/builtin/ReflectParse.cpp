@@ -1829,6 +1829,7 @@ class ASTSerializer
   public:
     ASTSerializer(JSContext* c, bool l, char const* src, uint32_t ln)
         : cx(c)
+        , parser(nullptr)
         , builder(c, l, src)
 #ifdef DEBUG
         , lineno(ln)
