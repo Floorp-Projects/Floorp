@@ -2627,12 +2627,9 @@ nsStyleImageLayers::Layer::CalcDifference(const nsStyleImageLayers::Layer& aOthe
              mSize != aOther.mSize ||
              mImage != aOther.mImage ||
              mMaskMode != aOther.mMaskMode ||
-             mComposite != aOther.mComposite) {
+             mComposite != aOther.mComposite ||
+             mPosition != aOther.mPosition) {
     hint |= nsChangeHint_RepaintFrame;
-  }
-
-  if (mPosition != aOther.mPosition) {
-    hint |= nsChangeHint_SchedulePaint;
   }
 
   return hint;
