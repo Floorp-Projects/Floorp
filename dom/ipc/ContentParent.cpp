@@ -3846,6 +3846,17 @@ ContentParent::DeallocPPrintingParent(PPrintingParent* printing)
   return true;
 }
 
+#ifdef NS_PRINTING
+already_AddRefed<embedding::PrintingParent>
+ContentParent::GetPrintingParent()
+{
+  MOZ_ASSERT(mPrintingParent);
+
+  RefPtr<embedding::PrintingParent> printingParent = mPrintingParent;
+  return printingParent.forget();
+}
+#endif
+
 PSendStreamParent*
 ContentParent::AllocPSendStreamParent()
 {

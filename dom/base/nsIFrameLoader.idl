@@ -16,6 +16,8 @@ interface nsIVariant;
 interface nsIDOMElement;
 interface nsITabParent;
 interface nsILoadContext;
+interface nsIPrintSettings;
+interface nsIWebProgressListener;
 
 [scriptable, builtinclass, uuid(1645af04-1bc7-4363-8f2c-eb9679220ab1)]
 interface nsIFrameLoader : nsISupports
@@ -138,6 +140,16 @@ interface nsIFrameLoader : nsISupports
    */
   void requestNotifyLayerTreeReady();
   void requestNotifyLayerTreeCleared();
+
+  /**
+   * Print the current document.
+   *
+   * @param aPrintSettings optional print settings to use; printSilent can be
+   *                       set to prevent prompting.
+   * @param aProgressListener optional print progress listener.
+   */
+  void print(in nsIPrintSettings aPrintSettings,
+             in nsIWebProgressListener aProgressListener);
 
   /**
    * The default event mode automatically forwards the events
