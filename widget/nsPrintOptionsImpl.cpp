@@ -965,11 +965,6 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPrintOptions::GetNativeData(int16_t aDataType, void * *_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 nsresult nsPrintOptions::_CreatePrintSettings(nsIPrintSettings **_retval)
 {
   // does not initially ref count
