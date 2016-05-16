@@ -18,6 +18,7 @@
 
 #include "base/buffer.h"
 #include "base/message_loop.h"
+#include "base/task.h"
 #include "chrome/common/file_descriptor_set_posix.h"
 
 #include "nsAutoPtr.h"
