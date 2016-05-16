@@ -25,12 +25,6 @@ interface nsIPrintOptions : nsISupports
   void ShowPrintSetupDialog(in nsIPrintSettings aThePrintSettings);
 
   /**
-   * Get a prefixed integer pref 
-   */
-  int32_t getPrinterPrefInt(in nsIPrintSettings aPrintSettings, in wstring
-                            aPrefName);
-
-  /**
    * display Printer Job Properties dialog
    */
   void displayJobProperties (in wstring aPrinter, in nsIPrintSettings
