@@ -35,6 +35,10 @@ public:
   SourceBufferTaskQueue()
   : mMonitor("SourceBufferTaskQueue")
   {}
+  ~SourceBufferTaskQueue()
+  {
+    MOZ_ASSERT(mQueue.IsEmpty(), "All tasks must have been processed");
+  }
 
   void Push(SourceBufferTask* aTask)
   {
@@ -379,7 +383,6 @@ private:
   // SourceBuffer Queues and running context.
   SourceBufferTaskQueue mQueue;
   void ProcessTasks();
-  void CancelAllTasks();
   // Set if the TrackBuffersManager is currently processing a task.
   // At this stage, this task is always a AppendBufferTask.
   RefPtr<SourceBufferTask> mCurrentTask;
