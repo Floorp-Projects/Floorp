@@ -79,9 +79,9 @@ class Message : public Pickle {
   // the buffer is writable and will be freed when the message is destroyed.
   Message(const char* data, int data_len, Ownership ownership = BORROWS);
 
-  Message(const Message& other);
+  Message(const Message& other) = delete;
   Message(Message&& other);
-  Message& operator=(const Message& other);
+  Message& operator=(const Message& other) = delete;
   Message& operator=(Message&& other);
 
   PriorityValue priority() const {

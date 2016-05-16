@@ -145,16 +145,6 @@ Pickle::Pickle(const char* data, int data_len, Ownership ownership)
     header_ = nullptr;
 }
 
-Pickle::Pickle(const Pickle& other)
-    : header_(NULL),
-      header_size_(other.header_size_),
-      capacity_(0),
-      variable_buffer_offset_(other.variable_buffer_offset_) {
-  uint32_t payload_size = header_size_ + other.header_->payload_size;
-  Resize(payload_size);
-  memcpy(header_, other.header_, payload_size);
-}
-
 Pickle::Pickle(Pickle&& other)
   : header_(other.header_),
     header_size_(other.header_size_),
@@ -168,18 +158,6 @@ Pickle::Pickle(Pickle&& other)
 Pickle::~Pickle() {
   if (capacity_ != kCapacityReadOnly)
     free(header_);
-}
-
-Pickle& Pickle::operator=(const Pickle& other) {
-  if (header_size_ != other.header_size_ && capacity_ != kCapacityReadOnly) {
-    free(header_);
-    header_ = NULL;
-    header_size_ = other.header_size_;
-  }
-  Resize(other.header_size_ + other.header_->payload_size);
-  memcpy(header_, other.header_, header_size_ + other.header_->payload_size);
-  variable_buffer_offset_ = other.variable_buffer_offset_;
-  return *this;
 }
 
 Pickle& Pickle::operator=(Pickle&& other) {
