@@ -386,6 +386,13 @@ public:
 
   virtual bool DeallocPPrintingParent(PPrintingParent* aActor) override;
 
+#if defined(NS_PRINTING)
+  /**
+   * @return the PrintingParent for this ContentParent.
+   */
+  already_AddRefed<embedding::PrintingParent> GetPrintingParent();
+#endif
+
   virtual PSendStreamParent* AllocPSendStreamParent() override;
   virtual bool DeallocPSendStreamParent(PSendStreamParent* aActor) override;
 

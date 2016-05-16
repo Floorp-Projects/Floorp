@@ -105,6 +105,16 @@ nsPrintOptions::SerializeToPrintData(nsIPrintSettings* aSettings,
                                      nsIWebBrowserPrint* aWBP,
                                      PrintData* data)
 {
+  nsCOMPtr<nsIPrintSession> session;
+  nsresult rv = aSettings->GetPrintSession(getter_AddRefs(session));
+  if (NS_SUCCEEDED(rv) && session) {
+    RefPtr<RemotePrintJobChild> remotePrintJob;
+    rv = session->GetRemotePrintJob(getter_AddRefs(remotePrintJob));
+    if (NS_SUCCEEDED(rv)) {
+      data->remotePrintJobChild() = remotePrintJob;
+    }
+  }
+
   aSettings->GetStartPageRange(&data->startPageRange());
   aSettings->GetEndPageRange(&data->endPageRange());
 

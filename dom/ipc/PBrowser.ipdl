@@ -15,10 +15,12 @@ include protocol PFilePicker;
 include protocol PIndexedDBPermissionRequest;
 include protocol PRenderFrame;
 include protocol PPluginWidget;
+include protocol PRemotePrintJob;
 include DOMTypes;
 include JavaScriptTypes;
 include URIParams;
 include BrowserConfiguration;
+include PPrintingTypes;
 include PTabContext;
 
 
@@ -781,6 +783,13 @@ child:
      */
     async HandledWindowedPluginKeyEvent(NativeEventData aKeyEventData,
                                         bool aIsConsumed);
+
+    /**
+     * Tell the child to print the current page with the given settings.
+     *
+     * @param aPrintData the serialized settings to print with
+     */
+    async Print(PrintData aPrintData);
 
 /*
  * FIXME: write protocol!

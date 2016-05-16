@@ -580,6 +580,8 @@ public:
                  const mozilla::NativeEventData& aKeyEventData,
                  const bool& aIsConsumed) override;
 
+  virtual bool RecvPrint(const PrintData& aPrintData) override;
+
   /**
    * Native widget remoting protocol for use with windowed plugins with e10s.
    */
