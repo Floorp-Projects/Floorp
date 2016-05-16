@@ -947,6 +947,13 @@ static DeviceResetReason HResultToResetReason(HRESULT hr)
   return DeviceResetReason::UNKNOWN;
 }
 
+void
+gfxWindowsPlatform::CompositorUpdated()
+{
+  ForceDeviceReset(ForcedDeviceResetReason::COMPOSITOR_UPDATED);
+  UpdateRenderMode();
+}
+
 bool
 gfxWindowsPlatform::IsDeviceReset(HRESULT hr, DeviceResetReason* aResetReason)
 {
