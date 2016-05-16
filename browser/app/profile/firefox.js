@@ -1386,6 +1386,7 @@ pref("browser.tabs.crashReporting.email", "");
 #ifndef MOZ_MULET
 pref("layers.async-pan-zoom.enabled", true);
 #endif
+pref("apz.velocity_bias", "0.0");
 
 // Enable e10s add-on interposition by default.
 pref("extensions.interposition.enabled", true);
