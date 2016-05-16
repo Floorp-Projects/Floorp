@@ -232,12 +232,7 @@ struct ParamTraits<int8_t>
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
-    const char* outp;
-    if (!aMsg->ReadBytes(aIter, &outp, sizeof(*aResult)))
-      return false;
-
-    *aResult = *reinterpret_cast<const paramType*>(outp);
-    return true;
+    return aMsg->ReadBytesInto(aIter, aResult, sizeof(*aResult));
   }
 };
 
@@ -253,12 +248,7 @@ struct ParamTraits<uint8_t>
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
-    const char* outp;
-    if (!aMsg->ReadBytes(aIter, &outp, sizeof(*aResult)))
-      return false;
-
-    *aResult = *reinterpret_cast<const paramType*>(outp);
-    return true;
+    return aMsg->ReadBytesInto(aIter, aResult, sizeof(*aResult));
   }
 };
 
@@ -309,14 +299,12 @@ struct ParamTraits<nsACString>
     }
 
     uint32_t length;
-    if (ReadParam(aMsg, aIter, &length)) {
-      const char* buf;
-      if (aMsg->ReadBytes(aIter, &buf, length)) {
-        aResult->Assign(buf, length);
-        return true;
-      }
+    if (!ReadParam(aMsg, aIter, &length)) {
+      return false;
     }
-    return false;
+    aResult->SetLength(length);
+
+    return aMsg->ReadBytesInto(aIter, aResult->BeginWriting(), length);
   }
 
   static void Log(const paramType& aParam, std::wstring* aLog)
@@ -359,15 +347,12 @@ struct ParamTraits<nsAString>
     }
 
     uint32_t length;
-    if (ReadParam(aMsg, aIter, &length)) {
-      const char16_t* buf;
-      if (aMsg->ReadBytes(aIter, reinterpret_cast<const char**>(&buf),
-                       length * sizeof(char16_t))) {
-        aResult->Assign(buf, length);
-        return true;
-      }
+    if (!ReadParam(aMsg, aIter, &length)) {
+      return false;
     }
-    return false;
+    aResult->SetLength(length);
+
+    return aMsg->ReadBytesInto(aIter, aResult->BeginWriting(), length * sizeof(char16_t));
   }
 
   static void Log(const paramType& aParam, std::wstring* aLog)
@@ -474,14 +459,8 @@ struct ParamTraits<nsTArray<E>>
         return false;
       }
 
-      const char* outdata;
-      if (!aMsg->ReadBytes(aIter, &outdata, pickledLength)) {
-        return false;
-      }
-
       E* elements = aResult->AppendElements(length);
-
-      memcpy(elements, outdata, pickledLength);
+      return aMsg->ReadBytesInto(aIter, elements, pickledLength);
     } else {
       aResult->SetCapacity(length);
 
@@ -491,9 +470,8 @@ struct ParamTraits<nsTArray<E>>
           return false;
         }
       }
+      return true;
     }
-
-    return true;
   }
 
   static void Log(const paramType& aParam, std::wstring* aLog)
@@ -552,11 +530,7 @@ struct ParamTraits<float>
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
-    const char* outFloat;
-    if (!aMsg->ReadBytes(aIter, &outFloat, sizeof(float)))
-      return false;
-    *aResult = *reinterpret_cast<const float*>(outFloat);
-    return true;
+    return aMsg->ReadBytesInto(aIter, aResult, sizeof(*aResult));
   }
 
   static void Log(const paramType& aParam, std::wstring* aLog)
@@ -749,16 +723,17 @@ struct ParamTraits<mozilla::SerializedStructuredCloneBuffer>
       return false;
     }
 
-    if (aResult->dataLength) {
-      const char** buffer =
-        const_cast<const char**>(reinterpret_cast<char**>(&aResult->data));
-      // Structured clone data must be 64-bit aligned.
-      if (!aMsg->ReadBytes(aIter, buffer, aResult->dataLength,
-                           sizeof(uint64_t))) {
-        return false;
-      }
-    } else {
+    if (!aResult->dataLength) {
       aResult->data = nullptr;
+      return true;
+    }
+
+    const char** buffer =
+      const_cast<const char**>(reinterpret_cast<char**>(&aResult->data));
+    // Structured clone data must be 64-bit aligned.
+    if (!aMsg->FlattenBytes(aIter, buffer, aResult->dataLength,
+                            sizeof(uint64_t))) {
+      return false;
     }
 
     return true;

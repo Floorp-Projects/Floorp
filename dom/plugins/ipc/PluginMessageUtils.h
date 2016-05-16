@@ -459,15 +459,19 @@ struct ParamTraits<NPNSString*>
       return false;
     }
 
-    UniChar* buffer = nullptr;
+    // Avoid integer multiplication overflow.
+    if (length > INT_MAX / static_cast<long>(sizeof(UniChar))) {
+      return false;
+    }
+
+    auto chars = mozilla::MakeUnique<UniChar[]>(length);
     if (length != 0) {
-      if (!aMsg->ReadBytes(aIter, (const char**)&buffer, length * sizeof(UniChar)) ||
-          !buffer) {
+      if (!aMsg->ReadBytesInto(aIter, chars.get(), length * sizeof(UniChar))) {
         return false;
       }
     }
 
-    *aResult = (NPNSString*)::CFStringCreateWithBytes(kCFAllocatorDefault, (UInt8*)buffer,
+    *aResult = (NPNSString*)::CFStringCreateWithBytes(kCFAllocatorDefault, (UInt8*)chars.get(),
                                                       length * sizeof(UniChar),
                                                       kCFStringEncodingUTF16, false);
     if (!*aResult) {
@@ -525,16 +529,16 @@ struct ParamTraits<NSCursorInfo>
       return false;
     }
 
-    uint8_t* data = nullptr;
+    auto data = mozilla::MakeUnique<uint8_t[]>(dataLength);
     if (dataLength != 0) {
-      if (!aMsg->ReadBytes(aIter, (const char**)&data, dataLength) || !data) {
+      if (!aMsg->ReadBytesInto(aIter, data.get(), dataLength)) {
         return false;
       }
     }
 
     aResult->SetType(type);
     aResult->SetHotSpot(nsPoint(hotSpotX, hotSpotY));
-    aResult->SetCustomImageData(data, dataLength);
+    aResult->SetCustomImageData(data.get(), dataLength);
 
     return true;
   }
