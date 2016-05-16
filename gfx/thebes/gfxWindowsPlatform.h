@@ -178,6 +178,8 @@ public:
      */
     virtual bool IsFontFormatSupported(nsIURI *aFontURI, uint32_t aFormatFlags) override;
 
+    virtual void CompositorUpdated() override;
+
     bool DidRenderingDeviceReset(DeviceResetReason* aResetReason = nullptr) override;
     void SchedulePaintIfDeviceReset() override;
     void UpdateRenderModeIfDeviceReset() override;
