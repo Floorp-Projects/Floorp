@@ -144,7 +144,6 @@ MOZ_TOOL_VARIABLES
 
 AC_PROG_CPP
 AC_PROG_CXXCPP
-MOZ_RUST_SUPPORT
 
 dnl Special win32 checks
 dnl ========================================================

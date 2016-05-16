@@ -640,3 +640,5 @@ def debug_flags(env_debug_flags, enable_debug_flags, default_debug_flags):
 
 set_config('MOZ_DEBUG_FLAGS', debug_flags)
 add_old_configure_assignment('MOZ_DEBUG_FLAGS', debug_flags)
+
+include('rust.configure')
