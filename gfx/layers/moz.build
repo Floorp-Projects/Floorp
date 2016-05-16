@@ -256,7 +256,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     UNIFIED_SOURCES += [
-        'apz/src/FlingOverScrollerAnimation.cpp',
+        'apz/src/AndroidAPZ.cpp',
     ]
 
 UNIFIED_SOURCES += [
