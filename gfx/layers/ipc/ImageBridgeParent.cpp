@@ -20,6 +20,7 @@
 #include "mozilla/media/MediaSystemResourceManagerParent.h" // for MediaSystemResourceManagerParent
 #include "mozilla/layers/CompositableTransactionParent.h"
 #include "mozilla/layers/CompositorBridgeParent.h"  // for CompositorBridgeParent
+#include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/LayersMessages.h"  // for EditReply
 #include "mozilla/layers/LayersSurfaces.h"  // for PGrallocBufferParent

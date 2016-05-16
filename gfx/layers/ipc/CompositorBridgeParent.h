@@ -17,9 +17,6 @@
 
 #include <stdint.h>                     // for uint64_t
 #include "Layers.h"                     // for Layer
-#include "base/basictypes.h"            // for DISALLOW_EVIL_CONSTRUCTORS
-#include "base/platform_thread.h"       // for PlatformThreadId
-#include "base/thread.h"                // for Thread
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
 #include "mozilla/Attributes.h"         // for override
 #include "mozilla/Maybe.h"
@@ -68,6 +65,7 @@ class LayerManagerComposite;
 class LayerTransactionParent;
 class PAPZParent;
 class CrossProcessCompositorBridgeParent;
+class CompositorThreadHolder;
 
 struct ScopedLayerTreeRegistration
 {
@@ -79,28 +77,6 @@ struct ScopedLayerTreeRegistration
 
 private:
   uint64_t mLayersId;
-};
-
-class CompositorThreadHolder final
-{
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(CompositorThreadHolder)
-
-public:
-  CompositorThreadHolder();
-
-  base::Thread* GetCompositorThread() const {
-    return mCompositorThread;
-  }
-
-private:
-  ~CompositorThreadHolder();
-
-  base::Thread* const mCompositorThread;
-
-  static base::Thread* CreateCompositorThread();
-  static void DestroyCompositorThread(base::Thread* aCompositorThread);
-
-  friend class CompositorBridgeParent;
 };
 
 /**
@@ -231,6 +207,7 @@ class CompositorBridgeParent final : public PCompositorBridgeParent,
                                      public ShmemAllocator
 {
   friend class CompositorVsyncScheduler;
+  friend class CompositorThreadHolder;
 
 public:
   explicit CompositorBridgeParent(widget::CompositorWidgetProxy* aWidget,
@@ -404,19 +381,6 @@ public:
   static MessageLoop* CompositorLoop();
 
   /**
-   * Creates the compositor thread and the global compositor map.
-   */
-  static void StartUp();
-
-  /**
-   * Waits for all [CrossProcess]CompositorBridgeParent's to be gone,
-   * and destroys the compositor thread and global compositor map.
-   *
-   * Does not return until all of that has completed.
-   */
-  static void ShutDown();
-
-  /**
    * Allocate an ID that can be used to refer to a layer tree and
    * associated resources that live only on the compositor thread.
    *
@@ -584,7 +548,22 @@ protected:
    */
   static CompositorBridgeParent* RemoveCompositor(uint64_t id);
 
-   /**
+  /**
+   * Creates the global compositor map.
+   */
+  static void Initialize();
+
+  /**
+   * Destroys the compositor thread and global compositor map.
+   */
+  static void Shutdown();
+
+  /**
+   * Finish the shutdown operation on the compositor thread.
+   */
+  static void FinishShutdown();
+
+  /**
    * Return true if current state allows compositing, that is
    * finishing a layers transaction.
    */
