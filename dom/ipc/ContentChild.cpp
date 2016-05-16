@@ -107,6 +107,7 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsContentPermissionHelper.h"
+#include "nsPrintingProxy.h"
 
 #include "IHistory.h"
 #include "nsNetUtil.h"
@@ -710,6 +711,11 @@ ContentChild::Init(MessageLoop* aIOLoop,
   if (IsNuwaProcess()) {
     NuwaAddConstructor(ResetTransports, nullptr);
   }
+#endif
+#ifdef NS_PRINTING
+  // Force the creation of the nsPrintingProxy so that it's IPC counterpart,
+  // PrintingParent, is always available for printing initiated from the parent.
+  RefPtr<nsPrintingProxy> printingProxy = nsPrintingProxy::GetInstance();
 #endif
 
   return true;
