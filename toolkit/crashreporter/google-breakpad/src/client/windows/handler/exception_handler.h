@@ -238,7 +238,8 @@ class ExceptionHandler {
   // Convenience form of WriteMinidump which does not require an
   // ExceptionHandler instance.
   static bool WriteMinidump(const wstring &dump_path,
-                            MinidumpCallback callback, void* callback_context);
+                            MinidumpCallback callback, void* callback_context,
+                            MINIDUMP_TYPE dump_type = MiniDumpNormal);
 
   // Write a minidump of |child| immediately.  This can be used to
   // capture the execution state of |child| independently of a crash.
@@ -249,7 +250,8 @@ class ExceptionHandler {
                                     DWORD child_blamed_thread,
                                     const wstring& dump_path,
                                     MinidumpCallback callback,
-                                    void* callback_context);
+                                    void* callback_context,
+                                    MINIDUMP_TYPE dump_type = MiniDumpNormal);
 
   // Get the thread ID of the thread requesting the dump (either the exception
   // thread or any other thread that called WriteMinidump directly).  This
