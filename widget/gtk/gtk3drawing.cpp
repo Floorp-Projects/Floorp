@@ -545,7 +545,7 @@ ensure_menu_item_widget()
 {
     if (!gMenuItemWidget) {
         ensure_menu_popup_widget();
-        gMenuItemWidget = gtk_menu_item_new_with_label("M");
+        gMenuItemWidget = gtk_menu_item_new();
         gtk_menu_shell_append(GTK_MENU_SHELL(gMenuPopupWidget),
                               gMenuItemWidget);
         gtk_widget_realize(gMenuItemWidget);
@@ -584,7 +584,7 @@ ensure_check_menu_item_widget()
 {
     if (!gCheckMenuItemWidget) {
         ensure_menu_popup_widget();
-        gCheckMenuItemWidget = gtk_check_menu_item_new_with_label("M");
+        gCheckMenuItemWidget = gtk_check_menu_item_new();
         gtk_menu_shell_append(GTK_MENU_SHELL(gMenuPopupWidget),
                               gCheckMenuItemWidget);
         gtk_widget_realize(gCheckMenuItemWidget);
