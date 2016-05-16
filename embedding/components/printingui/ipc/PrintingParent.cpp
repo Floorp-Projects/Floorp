@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TabParent.h"
+#include "mozilla/unused.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"
@@ -14,6 +15,7 @@
 #include "nsIPrintProgressParams.h"
 #include "nsIPrintSettingsService.h"
 #include "nsIServiceManager.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIWebProgressListener.h"
 #include "PrintingParent.h"
 #include "PrintDataUtils.h"
@@ -89,21 +91,22 @@ PrintingParent::ShowPrintDialog(PBrowserParent* aParent,
   nsCOMPtr<nsIWebBrowserPrint> wbp = new MockWebBrowserPrint(aData);
 
   nsresult rv;
-  nsCOMPtr<nsIPrintOptions> po = do_GetService("@mozilla.org/gfx/printsettings-service;1", &rv);
+  nsCOMPtr<nsIPrintSettingsService> printSettingsSvc =
+    do_GetService("@mozilla.org/gfx/printsettings-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIPrintSettings> settings;
-  rv = po->CreatePrintSettings(getter_AddRefs(settings));
+  rv = printSettingsSvc->GetNewPrintSettings(getter_AddRefs(settings));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = po->DeserializeToPrintSettings(aData, settings);
+  rv = printSettingsSvc->DeserializeToPrintSettings(aData, settings);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = pps->ShowPrintDialog(parentWin, wbp, settings);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // And send it back.
-  rv = po->SerializeToPrintData(settings, nullptr, aResult);
+  rv = printSettingsSvc->SerializeToPrintData(settings, nullptr, aResult);
 
   PRemotePrintJobParent* remotePrintJob = new RemotePrintJobParent(settings);
   aResult->remotePrintJobParent() = SendPRemotePrintJobConstructor(remotePrintJob);
@@ -137,21 +140,20 @@ PrintingParent::RecvSavePrintSettings(const PrintData& aData,
                                       const uint32_t& aFlags,
                                       nsresult* aResult)
 {
-  nsCOMPtr<nsIPrintSettingsService> pss =
+  nsCOMPtr<nsIPrintSettingsService> printSettingsSvc =
     do_GetService("@mozilla.org/gfx/printsettings-service;1", aResult);
   NS_ENSURE_SUCCESS(*aResult, true);
 
-  nsCOMPtr<nsIPrintOptions> po = do_QueryInterface(pss, aResult);
-  NS_ENSURE_SUCCESS(*aResult, true);
-
   nsCOMPtr<nsIPrintSettings> settings;
-  *aResult = po->CreatePrintSettings(getter_AddRefs(settings));
+  *aResult = printSettingsSvc->GetNewPrintSettings(getter_AddRefs(settings));
   NS_ENSURE_SUCCESS(*aResult, true);
 
-  *aResult = po->DeserializeToPrintSettings(aData, settings);
+  *aResult = printSettingsSvc->DeserializeToPrintSettings(aData, settings);
   NS_ENSURE_SUCCESS(*aResult, true);
 
-  *aResult = pss->SavePrintSettingsToPrefs(settings, aUsePrinterNamePrefix, aFlags);
+  *aResult = printSettingsSvc->SavePrintSettingsToPrefs(settings,
+                                                        aUsePrinterNamePrefix,
+                                                        aFlags);
 
   return true;
 }
