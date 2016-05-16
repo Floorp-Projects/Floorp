@@ -92,6 +92,7 @@ struct ShowInfo
   bool fullscreenAllowed;
   bool isPrivate;
   bool fakeShowInfo;
+  bool isTransparent;
   float dpi;
   double defaultScale;
 };

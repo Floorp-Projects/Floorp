@@ -3325,12 +3325,15 @@ TabParent::GetShowInfo()
       mFrameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::allowfullscreen) ||
       mFrameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::mozallowfullscreen);
     bool isPrivate = mFrameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::mozprivatebrowsing);
+    bool isTransparent =
+      nsContentUtils::IsChromeDoc(mFrameElement->OwnerDoc()) &&
+      mFrameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::transparent);
     return ShowInfo(name, allowFullscreen, isPrivate, false,
-                    mDPI, mDefaultScale.scale);
+                    isTransparent, mDPI, mDefaultScale.scale);
   }
 
   return ShowInfo(EmptyString(), false, false, false,
-                  mDPI, mDefaultScale.scale);
+                  false, mDPI, mDefaultScale.scale);
 }
 
 void
