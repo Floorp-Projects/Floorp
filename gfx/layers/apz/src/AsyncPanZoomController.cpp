@@ -74,8 +74,7 @@
 #include "ScrollSnap.h"                 // for ScrollSnapUtils
 #include "WheelScrollAnimation.h"
 #if defined(MOZ_ANDROID_APZ)
-#include "GeneratedJNIWrappers.h"
-#include "FlingOverScrollerAnimation.h"
+#include "AndroidAPZ.h"
 #endif // defined(MOZ_ANDROID_APZ)
 
 #define ENABLE_APZC_LOGGING 0
@@ -106,8 +105,12 @@ using mozilla::gfx::PointTyped;
 // Choose between platform-specific implementations.
 #ifdef MOZ_ANDROID_APZ
 typedef WidgetOverscrollEffect OverscrollEffect;
+typedef AndroidSpecificState PlatformSpecificState;
+typedef AndroidFlingAnimation FlingAnimation;
 #else
 typedef GenericOverscrollEffect OverscrollEffect;
+typedef PlatformSpecificStateBase PlatformSpecificState;  // no extra state, just use the base class
+typedef GenericFlingAnimation FlingAnimation;
 #endif
 
 /**
@@ -728,6 +731,15 @@ AsyncPanZoomController::GetSharedFrameMetricsCompositor()
     return nullptr;
   }
   return mCompositorBridgeParent.get();
+}
+
+PlatformSpecificStateBase*
+AsyncPanZoomController::GetPlatformSpecificState()
+{
+  if (!mPlatformSpecificState) {
+    mPlatformSpecificState = MakeUnique<PlatformSpecificState>();
+  }
+  return mPlatformSpecificState.get();
 }
 
 already_AddRefed<GeckoContentController>
@@ -2394,25 +2406,11 @@ void AsyncPanZoomController::AcceptFling(FlingHandoffState& aHandoffState) {
   ScrollSnapToDestination();
   if (mState != SMOOTH_SCROLL) {
     SetState(FLING);
-#if defined(MOZ_ANDROID_APZ)
-    if (!mOverScroller) {
-      widget::sdk::OverScroller::LocalRef scroller;
-      if (widget::sdk::OverScroller::New(widget::GeckoAppShell::GetApplicationContext(), &scroller) != NS_OK) {
-        APZC_LOG("%p Failed to create Android OverScroller\n", this);
-        return;
-      }
-      mOverScroller = scroller;
-    }
-    FlingOverScrollerAnimation *fling = new FlingOverScrollerAnimation(*this,
-        mOverScroller,
-        aHandoffState.mChain,
-        aHandoffState.mScrolledApzc);
-#else
-    GenericFlingAnimation *fling = new GenericFlingAnimation(*this,
+    FlingAnimation *fling = new FlingAnimation(*this,
+        GetPlatformSpecificState(),
         aHandoffState.mChain,
         aHandoffState.mIsHandoff,
         aHandoffState.mScrolledApzc);
-#endif
     StartAnimation(fling);
   }
 }
