@@ -9,6 +9,7 @@
 #include "base/basictypes.h"            // for DISALLOW_EVIL_CONSTRUCTORS
 #include "base/platform_thread.h"       // for PlatformThreadId
 #include "base/thread.h"                // for Thread
+#include "base/message_loop.h"
 #include "nsISupportsImpl.h"
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
 
@@ -42,6 +43,8 @@ public:
    * releases compositor-thread owned resources.
    */
   static void Shutdown();
+
+  static MessageLoop* Loop();
 
 private:
   ~CompositorThreadHolder();

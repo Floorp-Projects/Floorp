@@ -552,18 +552,13 @@ CompositorVsyncScheduler::DispatchVREvents(TimeStamp aVsyncTimestamp)
   vm->NotifyVsync(aVsyncTimestamp);
 }
 
-MessageLoop* CompositorBridgeParent::CompositorLoop()
-{
-  return CompositorThread() ? CompositorThread()->message_loop() : nullptr;
-}
-
 void
 CompositorVsyncScheduler::ScheduleTask(already_AddRefed<CancelableRunnable> aTask,
                                        int aTime)
 {
-  MOZ_ASSERT(CompositorBridgeParent::CompositorLoop());
+  MOZ_ASSERT(CompositorThreadHolder::Loop());
   MOZ_ASSERT(aTime >= 0);
-  CompositorBridgeParent::CompositorLoop()->PostDelayedTask(Move(aTask), aTime);
+  CompositorThreadHolder::Loop()->PostDelayedTask(Move(aTask), aTime);
 }
 
 void
@@ -580,6 +575,12 @@ CompositorVsyncScheduler::ComposeToTarget(gfx::DrawTarget* aTarget, const IntRec
   MOZ_ASSERT(CompositorBridgeParent::IsInCompositorThread());
   MOZ_ASSERT(mCompositorBridgeParent);
   mCompositorBridgeParent->CompositeToTarget(aTarget, aRect);
+}
+
+static inline MessageLoop*
+CompositorLoop()
+{
+  return CompositorThreadHolder::Loop();
 }
 
 CompositorBridgeParent::CompositorBridgeParent(widget::CompositorWidgetProxy* aWidget,

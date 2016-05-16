@@ -24,7 +24,7 @@
 #include "mozilla/media/MediaSystemResourceManager.h" // for MediaSystemResourceManager
 #include "mozilla/media/MediaSystemResourceManagerChild.h" // for MediaSystemResourceManagerChild
 #include "mozilla/layers/CompositableClient.h"  // for CompositableChild, etc
-#include "mozilla/layers/CompositorBridgeParent.h" // for CompositorBridgeParent
+#include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator
 #include "mozilla/layers/ImageClient.h"  // for ImageClient
 #include "mozilla/layers/LayersMessages.h"  // for CompositableOperation
@@ -844,7 +844,7 @@ bool ImageBridgeChild::StartUpOnThread(Thread* aThread)
     }
     sImageBridgeChildSingleton = new ImageBridgeChild();
     sImageBridgeParentSingleton = new ImageBridgeParent(
-      CompositorBridgeParent::CompositorLoop(), nullptr, base::GetCurrentProcId());
+      CompositorThreadHolder::Loop(), nullptr, base::GetCurrentProcId());
     sImageBridgeChildSingleton->ConnectAsync(sImageBridgeParentSingleton);
     sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
       NewRunnableFunction(CallSendImageBridgeThreadId,

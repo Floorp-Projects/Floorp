@@ -37,6 +37,12 @@ CompositorThread()
          : nullptr;
 }
 
+/* static */ MessageLoop*
+CompositorThreadHolder::Loop()
+{
+  return CompositorThread() ? CompositorThread()->message_loop() : nullptr;
+}
+
 CompositorThreadHolder*
 CompositorThreadHolder::GetSingleton()
 {
