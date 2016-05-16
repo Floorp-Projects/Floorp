@@ -421,7 +421,7 @@ js::gc::GCRuntime::finishVerifier()
 class CheckHeapTracer : public JS::CallbackTracer
 {
   public:
-    CheckHeapTracer(JSRuntime* rt);
+    explicit CheckHeapTracer(JSRuntime* rt);
     bool init();
     bool check();
 
