@@ -40,6 +40,8 @@ module.exports = createClass({
 
   render() {
     let { target, debugDisabled } = this.props;
+    // Only temporarily installed add-ons can be reloaded.
+    const canBeReloaded = target.temporarilyInstalled;
 
     return dom.li({ className: "target-container" },
       dom.img({
@@ -57,7 +59,10 @@ module.exports = createClass({
       }, Strings.GetStringFromName("debug")),
       dom.button({
         className: "reload-button",
-        onClick: this.reload
+        onClick: this.reload,
+        disabled: !canBeReloaded,
+        title: !canBeReloaded ?
+          Strings.GetStringFromName("reloadDisabledTooltip") : ""
       }, Strings.GetStringFromName("reload"))
     );
   }

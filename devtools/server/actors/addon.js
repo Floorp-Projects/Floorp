@@ -85,6 +85,7 @@ BrowserAddonActor.prototype = {
       url: this.url,
       iconURL: this._addon.iconURL,
       debuggable: this._addon.isDebuggable,
+      temporarilyInstalled: this._addon.temporarilyInstalled,
       consoleActor: this._consoleActor.actorID,
 
       traits: {
