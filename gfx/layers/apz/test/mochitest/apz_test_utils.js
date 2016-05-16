@@ -120,3 +120,91 @@ function waitForApzFlushedRepaints(aCallback) {
     });
   });
 }
+
+// This function takes a set of subtests to run one at a time in new top-level
+// windows, and returns a Promise that is resolved once all the subtests are
+// done running.
+//
+// The aSubtests array is an array of objects with the following keys:
+//   file: required, the filename of the subtest.
+//   prefs: optional, an array of arrays containing key-value prefs to set.
+//   dp_suppression: optional, a boolean on whether or not to respect displayport
+//                   suppression during the test.
+// An example of an array is:
+//   aSubtests = [
+//     { 'file': 'test_file_name.html' },
+//     { 'file': 'test_file_2.html', 'prefs': [['pref.name', true], ['other.pref', 1000]], 'dp_suppression': false }
+//   ];
+//
+// Each subtest should call the subtestDone() function when it is done, to
+// indicate that the window should be torn down and the next text should run.
+// The subtestDone() function is injected into the subtest's window by this
+// function prior to loading the subtest. For convenience, the |is| and |ok|
+// functions provided by SimpleTest are also mapped into the subtest's window.
+// For other things from the parent, the subtest can use window.opener.<whatever>
+// to access objects.
+function runSubtestsSeriallyInFreshWindows(aSubtests) {
+  return new Promise(function(resolve, reject) {
+    var testIndex = -1;
+    var w = null;
+
+    function advanceSubtestExecution() {
+      var test = aSubtests[testIndex];
+      if (w) {
+        if (typeof test.dp_suppression != 'undefined') {
+          // We modified the suppression when starting the test, so now undo that.
+          SpecialPowers.getDOMWindowUtils(window).respectDisplayPortSuppression(!test.dp_suppression);
+        }
+        if (test.prefs) {
+          // We pushed some prefs for this test, pop them, and re-invoke
+          // advanceSubtestExecution() after that's been processed
+          SpecialPowers.popPrefEnv(function() {
+            w.close();
+            w = null;
+            advanceSubtestExecution();
+          });
+          return;
+        }
+
+        w.close();
+      }
+
+      testIndex++;
+      if (testIndex >= aSubtests.length) {
+        resolve();
+        return;
+      }
+
+      test = aSubtests[testIndex];
+      if (typeof test.dp_suppression != 'undefined') {
+        // Normally during a test, the displayport will get suppressed during page
+        // load, and unsuppressed at a non-deterministic time during the test. The
+        // unsuppression can trigger a repaint which interferes with the test, so
+        // to avoid that we can force the displayport to be unsuppressed for the
+        // entire test which is more deterministic.
+        SpecialPowers.getDOMWindowUtils(window).respectDisplayPortSuppression(test.dp_suppression);
+      }
+
+      function spawnTest(aFile) {
+        w = window.open('', "_blank");
+        w.subtestDone = advanceSubtestExecution;
+        w.SimpleTest = SimpleTest;
+        w.is = is;
+        w.ok = ok;
+        w.location = test.file;
+        return w;
+      }
+
+      if (test.prefs) {
+        // Got some prefs for this subtest, push them
+        SpecialPowers.pushPrefEnv({"set": test.prefs}, function() {
+          w = spawnTest(test.file);
+        });
+      } else {
+        w = spawnTest(test.file);
+      }
+    }
+
+    advanceSubtestExecution();
+  });
+}

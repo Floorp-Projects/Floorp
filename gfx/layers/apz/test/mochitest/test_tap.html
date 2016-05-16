@@ -2,16 +2,13 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Sanity tapping test</title>
+  <title>Various touch tests that spawn in new windows</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
-SimpleTest.waitForExplicitFinish();
-
-// this page just serially loads each one of the following test helper pages in
-// a new window and waits for it to call testDone()
-var tests = [
+var subtests = [
   {'file': 'helper_tap.html'},
   // For the following two tests, disable displayport suppression to make sure it
   // doesn't interfere with the test by scheduling paints non-deterministically.
@@ -29,62 +26,15 @@ var tests = [
   {'file': 'helper_tap_passive.html', 'prefs': [["apz.content_response_timeout", 24 * 60 * 60 * 1000]]},
 ];
 
-var testIndex = -1;
-var w = null;
-
-function testDone() {
-  var test = tests[testIndex];
-  if (w) {
-    if (typeof test.dp_suppression != 'undefined') {
-      // We modified the suppression when starting the test, so now undo that.
-      SpecialPowers.getDOMWindowUtils(window).respectDisplayPortSuppression(!test.dp_suppression);
-    }
-    if (!!test.prefs) {
-      // We pushed some prefs for this test, pop them, and re-invoke
-      // testDone() after that's been processed
-      SpecialPowers.popPrefEnv(function() {
-        w.close();
-        w = null;
-        testDone();
-      });
-      return;
-    }
-
-    w.close();
-  }
-
-  testIndex++;
-  if (testIndex >= tests.length) {
-    SimpleTest.finish();
-    return;
-  }
-
-  test = tests[testIndex];
-  if (typeof test.dp_suppression != 'undefined') {
-    // Normally during a test, the displayport will get suppressed during page
-    // load, and unsuppressed at a non-deterministic time during the test. The
-    // unsuppression can trigger a repaint which interferes with the test, so
-    // to avoid that we can force the displayport to be unsuppressed for the
-    // entire test which is more deterministic.
-    SpecialPowers.getDOMWindowUtils(window).respectDisplayPortSuppression(test.dp_suppression);
-  }
-  if (!!test.prefs) {
-    // Got some prefs for this subtest, push them
-    SpecialPowers.pushPrefEnv({"set": test.prefs}, function() {
-      w = window.open(test.file, "_blank");
-    });
-  } else {
-    w = window.open(test.file, "_blank");
-  }
-}
-
+SimpleTest.waitForExplicitFinish();
 window.onload = function() {
   if (!SpecialPowers.getDOMWindowUtils(window).asyncPanZoomEnabled) {
     ok(true, "APZ is not enabled, this test is not relevant, sorry!\n");
     SimpleTest.finish();
     return;
   }
-  testDone();
+  runSubtestsSeriallyInFreshWindows(subtests)
+    .then(function() { SimpleTest.finish() });
 };
 
   </script>
