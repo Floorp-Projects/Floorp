@@ -6,6 +6,7 @@
 
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layers/CompositorThread.h"
 #include <stddef.h>                     // for size_t
 #include "ClientLayerManager.h"         // for ClientLayerManager
 #include "base/message_loop.h"          // for MessageLoop
@@ -180,7 +181,7 @@ CompositorBridgeChild::OpenSameProcess(CompositorBridgeParent* aParent)
 
   mCompositorBridgeParent = aParent;
   mCanSend = Open(mCompositorBridgeParent->GetIPCChannel(),
-                  CompositorBridgeParent::CompositorLoop(),
+                  CompositorThreadHolder::Loop(),
                   ipc::ChildSide);
   return mCanSend;
 }

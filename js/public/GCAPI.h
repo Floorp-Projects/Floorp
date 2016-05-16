@@ -586,7 +586,8 @@ class JS_PUBLIC_API(AutoCheckCannotGC) : public AutoAssertOnGC
 
 /**
  * Unsets the gray bit for anything reachable from |thing|. |kind| should not be
- * JS::TraceKind::Shape. |thing| should be non-null.
+ * JS::TraceKind::Shape. |thing| should be non-null. The return value indicates
+ * if anything was unmarked.
  */
 extern JS_FRIEND_API(bool)
 UnmarkGrayGCThingRecursively(GCCellPtr thing);
