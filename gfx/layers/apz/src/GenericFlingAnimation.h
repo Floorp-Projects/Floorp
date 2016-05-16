@@ -31,7 +31,7 @@ class GenericFlingAnimation: public AsyncPanZoomAnimation {
 public:
   GenericFlingAnimation(AsyncPanZoomController& aApzc,
                         const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
-                        bool aApplyAcceleration,
+                        bool aFlingIsHandedOff,
                         const RefPtr<const AsyncPanZoomController>& aScrolledApzc)
     : mApzc(aApzc)
     , mOverscrollHandoffChain(aOverscrollHandoffChain)
@@ -62,7 +62,10 @@ public:
     // Note that the acceleration code is only applied on the APZC that initiates
     // the fling; the accelerated velocities are then handed off using the
     // normal DispatchFling codepath.
-    if (aApplyAcceleration && !mApzc.mLastFlingTime.IsNull()
+    // Acceleration is only applied in the APZC that originated the fling,
+    // not in APZCs further down the handoff chain during handoff.
+    bool applyAcceleration = !aFlingIsHandedOff;
+    if (applyAcceleration && !mApzc.mLastFlingTime.IsNull()
         && (now - mApzc.mLastFlingTime).ToMilliseconds() < gfxPrefs::APZFlingAccelInterval()) {
       if (SameDirection(velocity.x, mApzc.mLastFlingVelocity.x)) {
         velocity.x = Accelerate(velocity.x, mApzc.mLastFlingVelocity.x);
