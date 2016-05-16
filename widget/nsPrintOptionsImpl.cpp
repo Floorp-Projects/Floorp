@@ -1099,6 +1099,7 @@ nsPrintOptions::InitPrintSettingsFromPrinter(const char16_t *aPrinterName,
   return rv;
 }
 
+#ifndef MOZ_X11
 /** ---------------------------------------------------
  *  Helper function - Returns either the name or sets the length to zero
  */
@@ -1138,31 +1139,7 @@ GetAdjustedPrinterName(nsIPrintSettings* aPS, bool aUsePNP,
   }
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsPrintOptions::GetPrinterPrefInt(nsIPrintSettings *aPrintSettings,
-                                  const char16_t *aPrefName, int32_t *_retval)
-{
-  NS_ENSURE_ARG_POINTER(aPrintSettings);
-  NS_ENSURE_ARG_POINTER(aPrefName);
-
-  nsAutoString prtName;
-  // Get the Printer Name from the PrintSettings
-  // to use as a prefix for Pref Names
-  GetAdjustedPrinterName(aPrintSettings, true, prtName);
-
-  const char* prefName =
-    GetPrefName(NS_LossyConvertUTF16toASCII(aPrefName).get(), prtName);
-
-  NS_ENSURE_TRUE(prefName, NS_ERROR_FAILURE);
-
-  int32_t iVal;
-  nsresult rv = Preferences::GetInt(prefName, &iVal);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *_retval = iVal;
-  return rv;
-}
+#endif
 
 NS_IMETHODIMP 
 nsPrintOptions::InitPrintSettingsFromPrefs(nsIPrintSettings* aPS,
