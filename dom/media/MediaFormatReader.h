@@ -507,6 +507,10 @@ private:
 
   // Seeking objects.
   bool IsSeeking() const { return mPendingSeekTime.isSome(); }
+  bool IsVideoSeeking() const
+  {
+    return IsSeeking() && mOriginalSeekTarget.IsVideoOnly();
+  }
   void ScheduleSeek();
   void AttemptSeek();
   void OnSeekFailed(TrackType aTrack, DemuxerFailureReason aFailure);
