@@ -13,7 +13,10 @@ const {
   types
 } = require("devtools/shared/protocol.js");
 const { makeInfallible } = require("devtools/shared/DevToolsUtils");
-const { nodeSpec } = require("devtools/shared/specs/inspector");
+const {
+  nodeSpec,
+  nodeListSpec
+} = require("devtools/shared/specs/inspector");
 const promise = require("promise");
 const { Class } = require("sdk/core/heritage");
 const object = require("sdk/util/object");
@@ -429,3 +432,43 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
 });
 
 exports.NodeFront = NodeFront;
+
+/**
+ * Client side of a node list as returned by querySelectorAll()
+ */
+const NodeListFront = FrontClassWithSpec(nodeListSpec, {
+  initialize: function (client, form) {
+    Front.prototype.initialize.call(this, client, form);
+  },
+
+  destroy: function () {
+    Front.prototype.destroy.call(this);
+  },
+
+  marshallPool: function () {
+    return this.parent();
+  },
+
+  // Update the object given a form representation off the wire.
+  form: function (json) {
+    this.length = json.length;
+  },
+
+  item: custom(function (index) {
+    return this._item(index).then(response => {
+      return response.node;
+    });
+  }, {
+    impl: "_item"
+  }),
+
+  items: custom(function (start, end) {
+    return this._items(start, end).then(response => {
+      return response.nodes;
+    });
+  }, {
+    impl: "_items"
+  })
+});
+
+exports.NodeListFront = NodeListFront;

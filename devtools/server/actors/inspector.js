@@ -67,7 +67,7 @@ const {
   CustomHighlighterActor,
   isTypeRegistered,
 } = require("devtools/server/actors/highlighters");
-const {NodeFront} = require("devtools/client/fronts/inspector");
+const {NodeFront, NodeListFront} = require("devtools/client/fronts/inspector");
 const {
   isAnonymous,
   isNativeAnonymous,
@@ -81,7 +81,7 @@ const {getLayoutChangesObserver, releaseLayoutChangesObserver} =
 loader.lazyRequireGetter(this, "CSS", "CSS");
 
 const {EventParsers} = require("devtools/shared/event-parsers");
-const {nodeSpec} = require("devtools/shared/specs/inspector");
+const {nodeSpec, nodeListSpec} = require("devtools/shared/specs/inspector");
 const FONT_FAMILY_PREVIEW_TEXT = "The quick brown fox jumps over the lazy dog";
 const FONT_FAMILY_PREVIEW_TEXT_SIZE = 20;
 const PSEUDO_CLASSES = [":hover", ":active", ":focus"];
@@ -701,39 +701,9 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
 });
 
 /**
- * Returned from any call that might return a node that isn't connected to root
- * by nodes the child has seen, such as querySelector.
- */
-types.addDictType("disconnectedNode", {
-  // The actual node to return
-  node: "domnode",
-
-  // Nodes that are needed to connect the node to a node the client has already
-  // seen
-  newParents: "array:domnode"
-});
-
-types.addDictType("disconnectedNodeArray", {
-  // The actual node list to return
-  nodes: "array:domnode",
-
-  // Nodes that are needed to connect those nodes to the root.
-  newParents: "array:domnode"
-});
-
-types.addDictType("dommutation", {});
-
-types.addDictType("searchresult", {
-  list: "domnodelist",
-  // Right now there is isn't anything required for metadata,
-  // but it's json so it can be extended with extra data.
-  metadata: "array:json"
-});
-
-/**
  * Server side of a node list as returned by querySelectorAll()
  */
-var NodeListActor = exports.NodeListActor = protocol.ActorClass({
+var NodeListActor = exports.NodeListActor = protocol.ActorClassWithSpec(nodeListSpec, {
   typeName: "domnodelist",
 
   initialize: function (walker, nodeList) {
@@ -772,67 +742,20 @@ var NodeListActor = exports.NodeListActor = protocol.ActorClass({
   /**
    * Get a single node from the node list.
    */
-  item: method(function (index) {
+  item: function (index) {
     return this.walker.attachElement(this.nodeList[index]);
-  }, {
-    request: { item: Arg(0) },
-    response: RetVal("disconnectedNode")
-  }),
+  },
 
   /**
    * Get a range of the items from the node list.
    */
-  items: method(function (start = 0, end = this.nodeList.length) {
+  items: function (start = 0, end = this.nodeList.length) {
     let items = Array.prototype.slice.call(this.nodeList, start, end)
       .map(item => this.walker._ref(item));
     return this.walker.attachElements(items);
-  }, {
-    request: {
-      start: Arg(0, "nullable:number"),
-      end: Arg(1, "nullable:number")
-    },
-    response: RetVal("disconnectedNodeArray")
-  }),
-
-  release: method(function () {}, { release: true })
-});
-
-/**
- * Client side of a node list as returned by querySelectorAll()
- */
-var NodeListFront = protocol.FrontClass(NodeListActor, {
-  initialize: function (client, form) {
-    protocol.Front.prototype.initialize.call(this, client, form);
   },
 
-  destroy: function () {
-    protocol.Front.prototype.destroy.call(this);
-  },
-
-  marshallPool: function () {
-    return this.parent();
-  },
-
-  // Update the object given a form representation off the wire.
-  form: function (json) {
-    this.length = json.length;
-  },
-
-  item: protocol.custom(function (index) {
-    return this._item(index).then(response => {
-      return response.node;
-    });
-  }, {
-    impl: "_item"
-  }),
-
-  items: protocol.custom(function (start, end) {
-    return this._items(start, end).then(response => {
-      return response.nodes;
-    });
-  }, {
-    impl: "_items"
-  })
+  release: function () {}
 });
 
 exports.NodeListFront = NodeListFront;
