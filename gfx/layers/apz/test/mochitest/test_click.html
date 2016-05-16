@@ -13,7 +13,9 @@ SimpleTest.waitForExplicitFinish();
 // a new window and waits for it to call testDone()
 var tests = [
   // Sanity test to synthesize a mouse click
-  {'file': 'helper_click.html'}
+  {'file': 'helper_click.html'},
+  // Sanity test for click but with some mouse movement between the down and up
+  {'file': 'helper_drag_click.html'}
 ];
 
 var testIndex = -1;

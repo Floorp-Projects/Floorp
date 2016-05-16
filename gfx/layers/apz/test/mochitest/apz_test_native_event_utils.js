@@ -203,6 +203,13 @@ function synthesizeNativeTap(aElement, aX, aY, aObserver = null) {
   return true;
 }
 
+function synthesizeNativeMouseEvent(aElement, aX, aY, aType, aObserver = null) {
+  var pt = coordinatesRelativeToWindow(aX, aY, aElement);
+  var utils = SpecialPowers.getDOMWindowUtils(aElement.ownerDocument.defaultView);
+  utils.sendNativeMouseEvent(pt.x, pt.y, aType, 0, aElement, aObserver);
+  return true;
+}
+
 function synthesizeNativeClick(aElement, aX, aY, aObserver = null) {
   var pt = coordinatesRelativeToWindow(aX, aY, aElement);
   var utils = SpecialPowers.getDOMWindowUtils(aElement.ownerDocument.defaultView);
