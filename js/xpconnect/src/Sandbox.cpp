@@ -1042,6 +1042,10 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
 
     auto& creationOptions = compartmentOptions.creationOptions();
 
+    // XXXjwatt: Consider whether/when sandboxes should be able to see
+    // [SecureContext] API (bug 1273687).  In that case we'd call
+    // creationOptions.setSecureContext(true).
+
     if (xpc::SharedMemoryEnabled())
         creationOptions.setSharedMemoryAndAtomicsEnabled(true);
 
