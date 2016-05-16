@@ -39,7 +39,7 @@ public class DownloadAction extends BaseAction {
 
     private static final String CACHE_DIRECTORY = "downloadContent";
 
-    private static final String CDN_BASE_URL = "https://mobile.cdn.mozilla.net/";
+    private static final String CDN_BASE_URL = "https://fennec-catalog.cdn.mozilla.net/";
 
     public interface Callback {
         void onContentDownloaded(DownloadContent content);
