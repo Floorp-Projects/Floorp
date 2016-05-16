@@ -475,14 +475,29 @@ nsPrintEngine::DoCommonPrint(bool                    aIsPrintPreview,
   }
 
   // Create a print session and let the print settings know about it.
+  // Don't overwrite an existing print session.
   // The print settings hold an nsWeakPtr to the session so it does not
   // need to be cleared from the settings at the end of the job.
   // XXX What lifetime does the printSession need to have?
   nsCOMPtr<nsIPrintSession> printSession;
+  bool remotePrintJobListening = false;
   if (!aIsPrintPreview) {
-    printSession = do_CreateInstance("@mozilla.org/gfx/printsession;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    mPrt->mPrintSettings->SetPrintSession(printSession);
+    rv = mPrt->mPrintSettings->GetPrintSession(getter_AddRefs(printSession));
+    if (NS_FAILED(rv) || !printSession) {
+      printSession = do_CreateInstance("@mozilla.org/gfx/printsession;1", &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      mPrt->mPrintSettings->SetPrintSession(printSession);
+    } else {
+      RefPtr<mozilla::layout::RemotePrintJobChild> remotePrintJob;
+      printSession->GetRemotePrintJob(getter_AddRefs(remotePrintJob));
+      if (NS_SUCCEEDED(rv) && remotePrintJob) {
+        // If we have a RemotePrintJob add it to the print progress listeners,
+        // so it can forward to the parent.
+        mPrt->mPrintProgressListeners.AppendElement(remotePrintJob);
+        remotePrintJobListening = true;
+      }
+    }
+
   }
 
   if (aWebProgressListener != nullptr) {
@@ -613,11 +628,15 @@ nsPrintEngine::DoCommonPrint(bool                    aIsPrintPreview,
             // The user might have changed shrink-to-fit in the print dialog, so update our copy of its state
             mPrt->mPrintSettings->GetShrinkToFit(&mPrt->mShrinkToFit);
 
-            // Add thee RemotePrintJob as a listener if there is one.
-            RefPtr<mozilla::layout::RemotePrintJobChild> remotePrintJob;
-            printSession->GetRemotePrintJob(getter_AddRefs(remotePrintJob));
-            if (NS_SUCCEEDED(rv) && remotePrintJob) {
-              mPrt->mPrintProgressListeners.AppendElement(remotePrintJob);
+            // If we haven't already added the RemotePrintJob as a listener,
+            // add it now if there is one.
+            if (!remotePrintJobListening) {
+              RefPtr<mozilla::layout::RemotePrintJobChild> remotePrintJob;
+              printSession->GetRemotePrintJob(getter_AddRefs(remotePrintJob));
+              if (NS_SUCCEEDED(rv) && remotePrintJob) {
+                mPrt->mPrintProgressListeners.AppendElement(remotePrintJob);
+                remotePrintJobListening = true;
+              }
             }
           }
         } else if (rv == NS_ERROR_NOT_IMPLEMENTED) {

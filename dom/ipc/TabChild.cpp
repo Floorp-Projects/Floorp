@@ -112,6 +112,13 @@
 #include "nsDeviceContext.h"
 #include "FrameLayerBuilder.h"
 
+#ifdef NS_PRINTING
+#include "nsIPrintSession.h"
+#include "nsIPrintSettings.h"
+#include "nsIPrintSettingsService.h"
+#include "nsIWebBrowserPrint.h"
+#endif
+
 #define BROWSER_ELEMENT_CHILD_SCRIPT \
     NS_LITERAL_STRING("chrome://global/content/BrowserElementChild.js")
 
@@ -2432,6 +2439,45 @@ TabChild::RecvSetUseGlobalHistory(const bool& aUse)
     NS_WARNING("Failed to set UseGlobalHistory on TabChild docShell");
   }
 
+  return true;
+}
+
+bool
+TabChild::RecvPrint(const PrintData& aPrintData)
+{
+#ifdef NS_PRINTING
+  nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint = do_GetInterface(mWebNav);
+  if (NS_WARN_IF(!webBrowserPrint)) {
+    return true;
+  }
+
+  nsCOMPtr<nsIPrintSettingsService> printSettingsSvc =
+    do_GetService("@mozilla.org/gfx/printsettings-service;1");
+  if (NS_WARN_IF(!printSettingsSvc)) {
+    return true;
+  }
+
+  nsCOMPtr<nsIPrintSettings> printSettings;
+  nsresult rv =
+    printSettingsSvc->GetNewPrintSettings(getter_AddRefs(printSettings));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return true;
+  }
+
+  nsCOMPtr<nsIPrintSession>  printSession =
+    do_CreateInstance("@mozilla.org/gfx/printsession;1", &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return true;
+  }
+
+  printSettings->SetPrintSession(printSession);
+  printSettingsSvc->DeserializeToPrintSettings(aPrintData, printSettings);
+  rv = webBrowserPrint->Print(printSettings, nullptr);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return true;
+  }
+
+#endif
   return true;
 }
 
