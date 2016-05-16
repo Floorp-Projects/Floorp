@@ -49,6 +49,12 @@ public class Experiments {
 
     public static final String PREF_ONBOARDING_VERSION = "onboarding_version";
 
+    // Only show origin in URL bar instead of full URL (Bug 1236431)
+    public static final String URLBAR_SHOW_ORIGIN_ONLY = "urlbar-show-origin-only";
+
+    // Show name of organization (EV cert) instead of full URL in URL bar (Bug 1249594).
+    public static final String URLBAR_SHOW_EV_CERT_OWNER = "urlbar-show-ev-cert-owner";
+
     private static volatile Boolean disabled = null;
 
     /**
