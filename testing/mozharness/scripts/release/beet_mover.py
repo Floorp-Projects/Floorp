@@ -24,6 +24,7 @@ from mozharness.base.python import VirtualenvMixin
 from mozharness.base.script import BaseScript
 from mozharness.mozilla.aws import pop_aws_auth_from_env
 import mozharness
+import mimetypes
 
 
 def get_hash(content, hash_type="md5"):
@@ -107,6 +108,18 @@ DEFAULT_EXCLUDES = [
 ]
 CACHE_DIR = 'cache'
 
+MIME_MAP = {
+    '': 'text/plain',
+    '.asc': 'text/plain',
+    '.beet': 'text/plain',
+    '.bundle': 'application/octet-stream',
+    '.bz2': 'application/octet-stream',
+    '.checksums': 'text/plain',
+    '.dmg': 'application/x-iso9660-image',
+    '.mar': 'application/octet-stream',
+    '.xpi': 'application/zip'
+}
+
 
 class BeetMover(BaseScript, VirtualenvMixin, object):
     def __init__(self, aws_creds):
@@ -154,6 +167,7 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
         self.excludes = self.config.get('excludes', DEFAULT_EXCLUDES)
         dirs = self.query_abs_dirs()
         self.dest_dir = os.path.join(dirs['abs_work_dir'], CACHE_DIR)
+        self.mime_fix()
 
     def activate_virtualenv(self):
         """
@@ -301,7 +315,9 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
             self.info("Uploading to `{}`".format(s3_key))
             key = bucket.new_key(s3_key)
             # set key value
-            self.retry(key.set_contents_from_filename, args=[source], error_level=FATAL),
+            mime_type, _ = mimetypes.guess_type(source)
+            self.retry(lambda: key.set_contents_from_filename(source, headers={'Content-Type': mime_type}),
+                       error_level=FATAL),
         else:
             if not get_hash(key.get_contents_as_string()) == get_hash(open(source).read()):
                 # for now, let's halt. If necessary, we can revisit this and allow for overwrites
@@ -336,6 +352,11 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
 
     def _matches_exclude(self, keyname):
          return any(re.search(exclude, keyname) for exclude in self.excludes)
+
+    def mime_fix(self):
+        """ Add mimetypes for custom extensions """
+        mimetypes.init()
+        map(lambda (ext, mime_type,): mimetypes.add_type(mime_type, ext), MIME_MAP.items())
 
 if __name__ == '__main__':
     beet_mover = BeetMover(pop_aws_auth_from_env())
