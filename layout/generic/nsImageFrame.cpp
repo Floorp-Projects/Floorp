@@ -1985,7 +1985,7 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
 
-  if ((aEvent->mMessage == eMouseUp && 
+  if ((aEvent->mMessage == eMouseClick &&
        aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton) ||
       aEvent->mMessage == eMouseMove) {
     nsImageMap* map = GetImageMap();
@@ -2025,8 +2025,8 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
           uri->SetSpec(spec);                
           
           bool clicked = false;
-          if (aEvent->mMessage == eMouseUp) {
-            *aEventStatus = nsEventStatus_eConsumeDoDefault; 
+          if (aEvent->mMessage == eMouseClick && !aEvent->DefaultPrevented()) {
+            *aEventStatus = nsEventStatus_eConsumeDoDefault;
             clicked = true;
           }
           nsContentUtils::TriggerLink(anchorNode, aPresContext, uri, target,
