@@ -211,7 +211,7 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
     // the mozaccesskeynotfound event before handling accesskeys.
     WidgetKeyboardEvent* nativeKeyEvent =
       aKeyEvent->WidgetEventPtr()->AsKeyboardEvent();
-    if (nativeKeyEvent->mAccessKeyForwardedToChild) {
+    if (nativeKeyEvent && nativeKeyEvent->mAccessKeyForwardedToChild) {
       return NS_OK;
     }
 
