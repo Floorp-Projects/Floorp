@@ -194,11 +194,11 @@ public:
   // Get the Document for the top-level window in this tab.
   already_AddRefed<nsIDocument> GetDocument() const;
 
-protected:
-  virtual ~TabChildBase();
-
   // Get the pres-shell of the document for the top-level window in this tab.
   already_AddRefed<nsIPresShell> GetPresShell() const;
+
+protected:
+  virtual ~TabChildBase();
 
   // Wraps up a JSON object as a structured clone and sends it to the browser
   // chrome script.
@@ -474,6 +474,8 @@ public:
 
   void GetDefaultScale(double *aScale);
 
+  bool IsTransparent() const { return mIsTransparent; }
+
   void GetMaxTouchPoints(uint32_t* aTouchPoints);
 
   ScreenOrientationInternal GetOrientation() const { return mOrientation; }
@@ -748,6 +750,8 @@ private:
   friend class ContentChild;
   float mDPI;
   double mDefaultScale;
+
+  bool mIsTransparent;
 
   bool mIPCOpen;
   bool mParentIsActive;
