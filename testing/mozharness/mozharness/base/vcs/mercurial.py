@@ -364,6 +364,10 @@ class MercurialVCS(ScriptMixin, LogMixin, TransferMixin):
         if not self.robustcheckout_path:
             raise VCSException('could not find the robustcheckout Mercurial extension')
 
+        # Log HG version and install info to aid debugging.
+        self.run_command(self.hg + ['--version'])
+        self.run_command(self.hg + ['debuginstall'])
+
         args = self.hg + [
             '--config', 'extensions.robustcheckout=%s' % self.robustcheckout_path,
             'robustcheckout', repo_url, dest, '--sharebase', share_base,
