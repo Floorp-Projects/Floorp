@@ -49,6 +49,10 @@ class SandboxBroker;
 class SandboxBrokerPolicyFactory;
 #endif
 
+namespace embedding {
+class PrintingParent;
+}
+
 namespace ipc {
 class OptionalURIParams;
 class PFileDescriptorSetParent;
@@ -379,8 +383,6 @@ public:
   }
 
   virtual PPrintingParent* AllocPPrintingParent() override;
-
-  virtual bool RecvPPrintingConstructor(PPrintingParent* aActor) override;
 
   virtual bool DeallocPPrintingParent(PPrintingParent* aActor) override;
 
@@ -1199,6 +1201,10 @@ private:
   mozilla::UniquePtr<SandboxBroker> mSandboxBroker;
   static mozilla::UniquePtr<SandboxBrokerPolicyFactory>
       sSandboxBrokerPolicyFactory;
+#endif
+
+#ifdef NS_PRINTING
+  RefPtr<embedding::PrintingParent> mPrintingParent;
 #endif
 };
 
