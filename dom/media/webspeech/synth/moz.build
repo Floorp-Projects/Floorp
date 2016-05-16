@@ -65,3 +65,6 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     'ipc',
 ]
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']

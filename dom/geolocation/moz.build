@@ -51,6 +51,3 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     LOCAL_INCLUDES += [
         '/dom/system/windows',
     ]
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']

@@ -123,6 +123,7 @@ DISABLE_STL_WRAPPING = True
 
 if CONFIG['GNU_CXX']:
     SOURCES['/mfbt/Compression.cpp'].flags += ['-Wno-unused-function']
+    CXXFLAGS += ['-Wno-error=shadow']
 
 if CONFIG['CLANG_CXX']:
     # Suppress warnings from third-party V8 Decimal code.

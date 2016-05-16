@@ -37,6 +37,3 @@ DevToolsModules(
     'service-worker-child.js',
     'worker.js'
 )
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']

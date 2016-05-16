@@ -41,6 +41,9 @@ if CONFIG['ENABLE_INTL_API'] and CONFIG['MOZ_ICU_DATA_ARCHIVE']:
 
 OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']
 
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-shadow']
+
 # This is intended as a temporary workaround to enable VS2015.
 if CONFIG['_MSC_VER']:
     CXXFLAGS += ['-wd4312']

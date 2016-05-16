@@ -17,6 +17,7 @@ include protocol PMessagePort;
 include protocol PCameras;
 include protocol PNuwa;
 include protocol PQuota;
+include protocol PSendStream;
 include protocol PServiceWorkerManager;
 include protocol PUDPSocket;
 include protocol PVsync;
@@ -57,6 +58,7 @@ sync protocol PBackground
   manages PCameras;
   manages PNuwa;
   manages PQuota;
+  manages PSendStream;
   manages PServiceWorkerManager;
   manages PUDPSocket;
   manages PVsync;
@@ -89,6 +91,8 @@ parent:
   async PMessagePort(nsID uuid, nsID destinationUuid, uint32_t sequenceId);
 
   async PNuwa();
+
+  async PSendStream();
 
   async MessagePortForceClose(nsID uuid, nsID destinationUuid, uint32_t sequenceId);
 

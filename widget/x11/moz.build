@@ -11,6 +11,3 @@ SOURCES += [
 FINAL_LIBRARY = 'xul'
 
 CXXFLAGS += CONFIG['TK_CFLAGS']
-
-if CONFIG['GNU_CC']:
-    CFLAGS += ['-Wshadow']

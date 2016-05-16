@@ -52,3 +52,6 @@ LOCAL_INCLUDES += [
     '/dom/svg',
     '/layout/style',
 ]
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']

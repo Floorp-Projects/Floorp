@@ -32,6 +32,3 @@ LOCAL_INCLUDES += [
 
 if CONFIG['ENABLE_TESTS']:
     DEFINES['DOM_STORAGE_TESTS'] = True
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']

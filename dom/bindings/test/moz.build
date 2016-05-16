@@ -52,3 +52,6 @@ LOCAL_INCLUDES += [
     '/js/xpconnect/src',
     '/js/xpconnect/wrappers',
 ]
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']

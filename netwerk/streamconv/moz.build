@@ -23,6 +23,3 @@ SOURCES += [
 XPIDL_MODULE = 'necko_strconv'
 
 FINAL_LIBRARY = 'xul'
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']

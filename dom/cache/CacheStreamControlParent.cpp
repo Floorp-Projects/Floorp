@@ -53,45 +53,15 @@ CacheStreamControlParent::SerializeControl(CacheReadStream* aReadStreamOut)
 }
 
 void
-CacheStreamControlParent::SerializeFds(CacheReadStream* aReadStreamOut,
-                                       const nsTArray<FileDescriptor>& aFds)
+CacheStreamControlParent::SerializeStream(CacheReadStream* aReadStreamOut,
+                                          nsIInputStream* aStream,
+                                          nsTArray<UniquePtr<AutoIPCStream>>& aStreamCleanupList)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlParent);
-  PFileDescriptorSetParent* fdSet = nullptr;
-  if (!aFds.IsEmpty()) {
-    fdSet = Manager()->SendPFileDescriptorSetConstructor(aFds[0]);
-    for (uint32_t i = 1; i < aFds.Length(); ++i) {
-      Unused << fdSet->SendAddFileDescriptor(aFds[i]);
-    }
-  }
-
-  if (fdSet) {
-    aReadStreamOut->fds() = fdSet;
-  } else {
-    aReadStreamOut->fds() = void_t();
-  }
-}
-
-void
-CacheStreamControlParent::DeserializeFds(const CacheReadStream& aReadStream,
-                                         nsTArray<FileDescriptor>& aFdsOut)
-{
-  if (aReadStream.fds().type() !=
-      OptionalFileDescriptorSet::TPFileDescriptorSetParent) {
-    return;
-  }
-
-  FileDescriptorSetParent* fdSetActor =
-    static_cast<FileDescriptorSetParent*>(aReadStream.fds().get_PFileDescriptorSetParent());
-  MOZ_ASSERT(fdSetActor);
-
-  fdSetActor->ForgetFileDescriptors(aFdsOut);
-  MOZ_ASSERT(!aFdsOut.IsEmpty());
-
-  if (!fdSetActor->Send__delete__(fdSetActor)) {
-    // child process is gone, warn and allow actor to clean up normally
-    NS_WARNING("Cache failed to delete fd set actor.");
-  }
+  MOZ_ASSERT(aStream);
+  UniquePtr<AutoIPCStream> autoStream(new AutoIPCStream(aReadStreamOut->stream()));
+  autoStream->Serialize(aStream, Manager());
+  aStreamCleanupList.AppendElement(Move(autoStream));
 }
 
 void

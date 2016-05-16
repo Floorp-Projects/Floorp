@@ -84,7 +84,8 @@ include('/ipc/chromium/chromium-config.mozbuild')
 #    android API types
 if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
     CXXFLAGS += [
-        '-Wno-error=attributes'
+        '-Wno-error=attributes',
+        '-Wno-error=shadow',
     ]
 
 FINAL_LIBRARY = 'xul'

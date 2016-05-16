@@ -7,7 +7,11 @@
 #include "mozilla/dom/cache/DBSchema.h"
 
 #include "ipc/IPCMessageUtils.h"
+#include "mozilla/BasePrincipal.h"
+#include "mozilla/dom/HeadersBinding.h"
 #include "mozilla/dom/InternalHeaders.h"
+#include "mozilla/dom/RequestBinding.h"
+#include "mozilla/dom/ResponseBinding.h"
 #include "mozilla/dom/cache/CacheTypes.h"
 #include "mozilla/dom/cache/SavedTypes.h"
 #include "mozilla/dom/cache/Types.h"
@@ -16,16 +20,13 @@
 #include "mozIStorageStatement.h"
 #include "mozStorageHelper.h"
 #include "nsCOMPtr.h"
-#include "nsTArray.h"
 #include "nsCRT.h"
 #include "nsHttp.h"
+#include "nsIContentPolicy.h"
 #include "nsICryptoHash.h"
 #include "nsNetCID.h"
-#include "mozilla/BasePrincipal.h"
-#include "mozilla/dom/HeadersBinding.h"
-#include "mozilla/dom/RequestBinding.h"
-#include "mozilla/dom/ResponseBinding.h"
-#include "nsIContentPolicy.h"
+#include "nsPrintfCString.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace dom {

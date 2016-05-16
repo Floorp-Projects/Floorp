@@ -14,7 +14,4 @@ SOURCES += [
     'nsWindowDataSource.cpp',
 ]
 
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']
-
 FINAL_LIBRARY = 'xul'

@@ -57,6 +57,7 @@ if CONFIG['NECKO_WIFI_DBUS']:
     UNIFIED_SOURCES += [
         'nsWifiScannerDBus.cpp',
     ]
+    CXXFLAGS += ['-Wno-error=shadow']
 
 if CONFIG['NECKO_WIFI_DBUS']:
     CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']

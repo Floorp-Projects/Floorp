@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/cache/ManagerId.h"
+#include "mozilla/dom/quota/QuotaManager.h"
 #include "nsIPrincipal.h"
 #include "nsProxyRelease.h"
 #include "mozilla/RefPtr.h"
@@ -13,6 +14,8 @@
 namespace mozilla {
 namespace dom {
 namespace cache {
+
+using mozilla::dom::quota::QuotaManager;
 
 // static
 nsresult

@@ -20,6 +20,9 @@ UNIFIED_SOURCES = [
     'SerializesTypeNames.cpp',
 ]
 
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']
+
 # THE MOCK_METHOD2 macro from gtest triggers this clang warning and it's hard
 # to work around, so we just ignore it.
 if CONFIG['CLANG_CXX']:

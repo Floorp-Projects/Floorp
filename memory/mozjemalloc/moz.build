@@ -43,10 +43,7 @@ LOCAL_INCLUDES += [
 ]
 
 if CONFIG['GNU_CC']:
-    CFLAGS += [
-        '-Wshadow',
-        '-Wno-unused',  # too many annoying fatal warnings from mfbt/ headers
-    ]
+    CFLAGS += ['-Wno-unused'] # too many annoying warnings from mfbt/ headers
 
 if CONFIG['_MSC_VER']:
     CFLAGS += ['-wd4273'] # inconsistent dll linkage (bug 558163)
