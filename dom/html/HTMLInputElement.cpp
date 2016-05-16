@@ -985,7 +985,7 @@ HTMLInputElement::HTMLInputElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
 HTMLInputElement::~HTMLInputElement()
 {
   if (mNumberControlSpinnerIsSpinning) {
-    StopNumberControlSpinnerSpin();
+    StopNumberControlSpinnerSpin(eDisallowDispatchingEvents);
   }
   DestroyImageLoadingContent();
   FreeData();
@@ -3579,7 +3579,7 @@ HTMLInputElement::StartNumberControlSpinnerSpin()
 }
 
 void
-HTMLInputElement::StopNumberControlSpinnerSpin()
+HTMLInputElement::StopNumberControlSpinnerSpin(SpinnerStopState aState)
 {
   if (mNumberControlSpinnerIsSpinning) {
     if (nsIPresShell::GetCapturingContent() == this) {
@@ -3590,11 +3590,16 @@ HTMLInputElement::StopNumberControlSpinnerSpin()
 
     mNumberControlSpinnerIsSpinning = false;
 
-    FireChangeEventIfNeeded();
+    if (aState == eAllowDispatchingEvents) {
+      FireChangeEventIfNeeded();
+    }
 
     nsNumberControlFrame* numberControlFrame =
       do_QueryFrame(GetPrimaryFrame());
     if (numberControlFrame) {
+      MOZ_ASSERT(aState == eAllowDispatchingEvents,
+                 "Shouldn't have primary frame for the element when we're not "
+                 "allowed to dispatch events to it anymore.");
       numberControlFrame->SpinnerStateChanged();
     }
   }
