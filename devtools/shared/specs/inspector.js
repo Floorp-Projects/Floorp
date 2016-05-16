@@ -65,3 +65,56 @@ const nodeSpec = generateActorSpec({
 });
 
 exports.nodeSpec = nodeSpec;
+
+/**
+ * Returned from any call that might return a node that isn't connected to root
+ * by nodes the child has seen, such as querySelector.
+ */
+types.addDictType("disconnectedNode", {
+  // The actual node to return
+  node: "domnode",
+
+  // Nodes that are needed to connect the node to a node the client has already
+  // seen
+  newParents: "array:domnode"
+});
+
+types.addDictType("disconnectedNodeArray", {
+  // The actual node list to return
+  nodes: "array:domnode",
+
+  // Nodes that are needed to connect those nodes to the root.
+  newParents: "array:domnode"
+});
+
+types.addDictType("dommutation", {});
+
+types.addDictType("searchresult", {
+  list: "domnodelist",
+  // Right now there is isn't anything required for metadata,
+  // but it's json so it can be extended with extra data.
+  metadata: "array:json"
+});
+
+const nodeListSpec = generateActorSpec({
+  typeName: "domnodelist",
+
+  methods: {
+    item: {
+      request: { item: Arg(0) },
+      response: RetVal("disconnectedNode")
+    },
+    items: {
+      request: {
+        start: Arg(0, "nullable:number"),
+        end: Arg(1, "nullable:number")
+      },
+      response: RetVal("disconnectedNodeArray")
+    },
+    release: {
+      release: true
+    }
+  }
+});
+
+exports.nodeListSpec = nodeListSpec;
