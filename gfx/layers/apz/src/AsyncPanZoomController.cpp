@@ -2410,7 +2410,7 @@ void AsyncPanZoomController::AcceptFling(FlingHandoffState& aHandoffState) {
 #else
     GenericFlingAnimation *fling = new GenericFlingAnimation(*this,
         aHandoffState.mChain,
-        !aHandoffState.mIsHandoff,  // only apply acceleration if this is an initial fling
+        aHandoffState.mIsHandoff,
         aHandoffState.mScrolledApzc);
 #endif
     StartAnimation(fling);
