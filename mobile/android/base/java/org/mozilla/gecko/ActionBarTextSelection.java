@@ -223,6 +223,11 @@ class ActionBarTextSelection extends Layer implements TextSelection, GeckoEventL
                         }
 
                     } else if (event.equals("TextSelection:ActionbarStatus")) {
+                        // Ensure async updates from SearchService for example are valid.
+                        if (selectionID != message.optString("selectionID")) {
+                            return;
+                        }
+
                         // Update the actionBar actions as provided by Gecko.
                         showActionMode(message.getJSONArray("actions"));
 
