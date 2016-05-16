@@ -455,6 +455,8 @@ struct CompositableOperation {
 };
 
 // A unit of a changeset; a set of these comprise a changeset
+// If adding a new edit type that requires the hit testing tree to be updated,
+// set the updateHitTestingTree flag to true in RecvUpdate()
 union Edit {
   OpCreatePaintedLayer;
   OpCreateContainerLayer;
