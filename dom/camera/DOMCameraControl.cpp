@@ -1186,9 +1186,8 @@ nsDOMCameraControl::NotifyRecordingStatusChange(const nsString& aMsg)
     // Camera app will stop recording when it falls to the background, so no callback is necessary.
     mAudioChannelAgent->Init(mWindow, (int32_t)AudioChannel::Content, nullptr);
     // Video recording doesn't output any sound, so it's not necessary to check canPlay.
-    float volume = 0.0;
-    bool muted = true;
-    rv = mAudioChannelAgent->NotifyStartedPlaying(&volume, &muted);
+    AudioPlaybackConfig config;
+    rv = mAudioChannelAgent->NotifyStartedPlaying(&config, AudioChannelService::AudibleState::eAudible);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

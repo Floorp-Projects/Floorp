@@ -514,14 +514,6 @@ nsPrinterEnumeratorWin::GetPrinterNameList(nsIStringEnumerator **aPrinterNameLis
 }
 
 //----------------------------------------------------------------------------------
-// Display the AdvancedDocumentProperties for the selected Printer
-NS_IMETHODIMP nsPrinterEnumeratorWin::DisplayPropertiesDlg(const char16_t *aPrinterName, nsIPrintSettings* aPrintSettings)
-{
-  // Implementation removed because it is unused
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------------------
 //-- Global Printers
 //----------------------------------------------------------------------------------
 
