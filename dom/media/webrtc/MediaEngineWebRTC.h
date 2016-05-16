@@ -416,7 +416,8 @@ class MediaEngineWebRTCMicrophoneSource : public MediaEngineAudioSource,
                                           private MediaConstraintsHelper
 {
 public:
-  MediaEngineWebRTCMicrophoneSource(webrtc::VoiceEngine* aVoiceEnginePtr,
+  MediaEngineWebRTCMicrophoneSource(nsIThread* aThread,
+                                    webrtc::VoiceEngine* aVoiceEnginePtr,
                                     mozilla::AudioInput* aAudioInput,
                                     int aIndex,
                                     const char* name,
@@ -425,6 +426,7 @@ public:
     , mVoiceEngine(aVoiceEnginePtr)
     , mAudioInput(aAudioInput)
     , mMonitor("WebRTCMic.Monitor")
+    , mThread(aThread)
     , mCapIndex(aIndex)
     , mChannel(-1)
     , mNrAllocations(0)
@@ -533,6 +535,7 @@ private:
   Monitor mMonitor;
   nsTArray<RefPtr<SourceMediaStream>> mSources;
   nsTArray<PrincipalHandle> mPrincipalHandles; // Maps to mSources.
+  nsCOMPtr<nsIThread> mThread;
   int mCapIndex;
   int mChannel;
   int mNrAllocations; // When this becomes 0, we shut down HW
