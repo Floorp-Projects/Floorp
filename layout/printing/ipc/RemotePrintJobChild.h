@@ -10,6 +10,7 @@
 #include "mozilla/layout/PRemotePrintJobChild.h"
 
 #include "mozilla/RefPtr.h"
+#include "nsIWebProgressListener.h"
 
 class nsPagePrintTimer;
 class nsPrintEngine;
@@ -18,9 +19,11 @@ namespace mozilla {
 namespace layout {
 
 class RemotePrintJobChild final : public PRemotePrintJobChild
+                                , public nsIWebProgressListener
 {
 public:
-  NS_INLINE_DECL_REFCOUNTING(RemotePrintJobChild)
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIWEBPROGRESSLISTENER
 
   RemotePrintJobChild();
 

@@ -51,6 +51,8 @@ public:
                           bool         aDoStartStop,
                           int32_t      aFlag);
 
+  void DoOnStatusChange(nsresult aStatus);
+
 
   ePrintDataType               mType;            // the type of data this is (Printing or Print Preview)
   RefPtr<nsDeviceContext>   mPrintDC;

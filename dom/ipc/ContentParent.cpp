@@ -86,6 +86,7 @@
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layers/PAPZParent.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/SharedBufferManagerParent.h"
 #include "mozilla/layout/RenderFrameParent.h"
@@ -2558,7 +2559,7 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
     // PBrowsers are created, because they rely on the Compositor
     // already being around.  (Creation is async, so can't happen
     // on demand.)
-    bool useOffMainThreadCompositing = !!CompositorBridgeParent::CompositorLoop();
+    bool useOffMainThreadCompositing = !!CompositorThreadHolder::Loop();
     if (useOffMainThreadCompositing) {
       DebugOnly<bool> opened = PCompositorBridge::Open(this);
       MOZ_ASSERT(opened);
@@ -3819,24 +3820,42 @@ PPrintingParent*
 ContentParent::AllocPPrintingParent()
 {
 #ifdef NS_PRINTING
-  return new PrintingParent();
+  MOZ_ASSERT(!mPrintingParent,
+             "Only one PrintingParent should be created per process.");
+
+  // Create the printing singleton for this process.
+  mPrintingParent = new PrintingParent();
+  return mPrintingParent.get();
 #else
+  MOZ_ASSERT_UNREACHABLE("Should never be created if no printing.");
   return nullptr;
 #endif
 }
 
 bool
-ContentParent::RecvPPrintingConstructor(PPrintingParent* aActor)
+ContentParent::DeallocPPrintingParent(PPrintingParent* printing)
 {
+#ifdef NS_PRINTING
+  MOZ_ASSERT(mPrintingParent == printing,
+             "Only one PrintingParent should have been created per process.");
+
+  mPrintingParent = nullptr;
+#else
+  MOZ_ASSERT_UNREACHABLE("Should never have been created if no printing.");
+#endif
   return true;
 }
 
-bool
-ContentParent::DeallocPPrintingParent(PPrintingParent* printing)
+#ifdef NS_PRINTING
+already_AddRefed<embedding::PrintingParent>
+ContentParent::GetPrintingParent()
 {
-  delete printing;
-  return true;
+  MOZ_ASSERT(mPrintingParent);
+
+  RefPtr<embedding::PrintingParent> printingParent = mPrintingParent;
+  return printingParent.forget();
 }
+#endif
 
 PSendStreamParent*
 ContentParent::AllocPSendStreamParent()

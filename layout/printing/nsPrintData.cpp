@@ -120,3 +120,15 @@ nsPrintData::DoOnProgressChange(int32_t      aProgress,
   }
 }
 
+void
+nsPrintData::DoOnStatusChange(nsresult aStatus)
+{
+  uint32_t numberOfListeners = mPrintProgressListeners.Length();
+  for (uint32_t i = 0; i < numberOfListeners; ++i) {
+    nsIWebProgressListener* listener = mPrintProgressListeners.SafeElementAt(i);
+    if (listener) {
+      listener->OnStatusChange(nullptr, nullptr, aStatus, nullptr);
+    }
+  }
+}
+

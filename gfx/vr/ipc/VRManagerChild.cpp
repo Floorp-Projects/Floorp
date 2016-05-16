@@ -10,7 +10,7 @@
 #include "VRDeviceProxy.h"
 #include "VRDeviceProxyOrientationFallBack.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/layers/CompositorBridgeParent.h" // for CompositorBridgeParent
+#include "mozilla/layers/CompositorThread.h" // for CompositorThread
 #include "mozilla/dom/Navigator.h"
 
 namespace mozilla {
@@ -77,7 +77,7 @@ VRManagerChild::StartUpSameProcess()
     sVRManagerChildSingleton = new VRManagerChild();
     sVRManagerParentSingleton = VRManagerParent::CreateSameProcess();
     sVRManagerChildSingleton->Open(sVRManagerParentSingleton->GetIPCChannel(),
-                                   mozilla::layers::CompositorBridgeParent::CompositorLoop(),
+                                   mozilla::layers::CompositorThreadHolder::Loop(),
                                    mozilla::ipc::ChildSide);
   }
 }
