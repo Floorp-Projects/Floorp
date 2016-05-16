@@ -5,6 +5,9 @@
 import sys
 import string
 import argparse
+import subprocess
+import buildconfig
+from mozbuild import shellutil
 
 # Generates a line of WebIDL with the given spelling of the property name
 # (whether camelCase, _underscorePrefixed, etc.) and the given array of
@@ -12,8 +15,12 @@ import argparse
 def generateLine(propName, extendedAttrs):
     return "  [%s] attribute DOMString %s;\n" % (", ".join(extendedAttrs),
                                                  propName)
-def generate(output, idlFilename):
-    propList = eval(sys.stdin.read())
+def generate(output, idlFilename, preprocessorHeader):
+    cpp = shellutil.split(buildconfig.substs['CPP'])
+    cpp.append(preprocessorHeader)
+    preprocessed = subprocess.check_output(cpp)
+
+    propList = eval(preprocessed)
     props = ""
     for [name, prop, id, flags, pref, proptype] in propList:
         if "CSS_PROPERTY_INTERNAL" in flags:
@@ -68,8 +75,9 @@ def generate(output, idlFilename):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('idlFilename', help='IDL property file template')
+    parser.add_argument('preprocessorHeader', help='Header file to pass through the preprocessor')
     args = parser.parse_args()
-    generate(sys.stdout, args.idlFilename)
+    generate(sys.stdout, args.idlFilename, args.preprocessorHeader)
 
 if __name__ == '__main__':
     main()
