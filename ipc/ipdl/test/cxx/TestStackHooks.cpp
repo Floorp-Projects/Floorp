@@ -1,5 +1,6 @@
 #include "TestStackHooks.h"
 
+#include "base/task.h"
 #include "IPDLUnitTests.h"      // fail etc.
 
 

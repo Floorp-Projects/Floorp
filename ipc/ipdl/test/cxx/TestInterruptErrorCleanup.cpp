@@ -1,5 +1,6 @@
 #include "TestInterruptErrorCleanup.h"
 
+#include "base/task.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/Mutex.h"
 
