@@ -1061,7 +1061,15 @@ function clickElement(id) {
 
 function getElementAttribute(id, name) {
   let el = elementManager.getKnownElement(id, curContainer);
-  return atom.getElementAttribute(el, name, curContainer.frame);
+  if (element.isBooleanAttribute(el, name)) {
+    if (el.hasAttribute(name)) {
+      return "true";
+    } else {
+      return null;
+    }
+  } else {
+    return el.getAttribute(name);
+  }
 }
 
 function getElementProperty(id, name) {
