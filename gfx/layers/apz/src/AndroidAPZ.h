@@ -4,23 +4,35 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_layers_FlingOverScrollerAnimation_h_
-#define mozilla_layers_FlingOverScrollerAnimation_h_
+#ifndef mozilla_layers_AndroidAPZ_h_
+#define mozilla_layers_AndroidAPZ_h_
 
 #include "AsyncPanZoomAnimation.h"
+#include "AsyncPanZoomController.h"
+#include "GeneratedJNIWrappers.h"
 #include "OverScroller.h"
 
 namespace mozilla {
 namespace layers {
 
-class AsyncPanZoomController;
-
-class FlingOverScrollerAnimation: public AsyncPanZoomAnimation {
+class AndroidSpecificState : public PlatformSpecificStateBase {
 public:
-  FlingOverScrollerAnimation(AsyncPanZoomController& aApzc,
-                 widget::sdk::OverScroller::GlobalRef aOverScroller,
-                 const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
-                 const RefPtr<const AsyncPanZoomController>& aScrolledApzc);
+  AndroidSpecificState();
+
+  virtual AndroidSpecificState* AsAndroidSpecificState() override {
+    return this;
+  }
+
+  widget::sdk::OverScroller::GlobalRef mOverScroller;
+};
+
+class AndroidFlingAnimation: public AsyncPanZoomAnimation {
+public:
+  AndroidFlingAnimation(AsyncPanZoomController& aApzc,
+                        PlatformSpecificStateBase* aPlatformSpecificState,
+                        const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
+                        bool aFlingIsHandoff /* ignored */,
+                        const RefPtr<const AsyncPanZoomController>& aScrolledApzc);
   virtual bool DoSample(FrameMetrics& aFrameMetrics,
                         const TimeDuration& aDelta) override;
 private:
@@ -40,7 +52,8 @@ private:
   int32_t mOverScrollCount;
 };
 
+
 } // namespace layers
 } // namespace mozilla
 
-#endif // mozilla_layers_FlingOverScrollerAnimation_h_
+#endif // mozilla_layers_AndroidAPZ_h_
