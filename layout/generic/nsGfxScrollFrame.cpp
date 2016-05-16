@@ -2111,6 +2111,13 @@ ScrollFrameHelper::HasPluginFrames()
   return false;
 }
 
+bool
+ScrollFrameHelper::HasPerspective() const
+{
+  const nsStyleDisplay* disp = mOuter->StyleDisplay();
+  return disp->mChildPerspective.GetUnit() != eStyleUnit_None;
+}
+
 void
 ScrollFrameHelper::ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
                                      nsIScrollableFrame::ScrollMode aMode)
@@ -2738,16 +2745,21 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOri
     // and then if the displayport is unchanged, we check if APZ triggered,
     // or can handle, this scroll. If so, we set schedulePaint to false and
     // skip the paint.
+    // Because of bug 1264297, we also don't do paint-skipping for elements with
+    // perspective, because the displayport may not have captured everything
+    // that needs to be painted. So even if the final tile-aligned displayport
+    // is the same, we force a repaint for these elements. Bug 1254260 tracks
+    // fixing this properly.
     nsRect displayPort;
     bool usingDisplayPort =
       nsLayoutUtils::GetHighResolutionDisplayPort(content, &displayPort);
     displayPort.MoveBy(-mScrolledFrame->GetPosition());
 
-    PAINT_SKIP_LOG("New scrollpos %s usingDP %d dpEqual %d scrollableByApz %d plugins %d\n",
+    PAINT_SKIP_LOG("New scrollpos %s usingDP %d dpEqual %d scrollableByApz %d plugins %d perspective %d\n",
         Stringify(CSSPoint::FromAppUnits(GetScrollPosition())).c_str(),
         usingDisplayPort, displayPort.IsEqualEdges(oldDisplayPort),
-        mScrollableByAPZ, HasPluginFrames());
-    if (usingDisplayPort && displayPort.IsEqualEdges(oldDisplayPort)) {
+        mScrollableByAPZ, HasPluginFrames(), HasPerspective());
+    if (usingDisplayPort && displayPort.IsEqualEdges(oldDisplayPort) && !HasPerspective()) {
       bool haveScrollLinkedEffects = content->GetComposedDoc()->HasScrollLinkedEffect();
       bool apzDisabled = haveScrollLinkedEffects && gfxPrefs::APZDisableForScrollLinkedEffects();
       if (!apzDisabled) {
