@@ -612,6 +612,13 @@ nsPrintEngine::DoCommonPrint(bool                    aIsPrintPreview,
           if (mPrt->mPrintSettings) {
             // The user might have changed shrink-to-fit in the print dialog, so update our copy of its state
             mPrt->mPrintSettings->GetShrinkToFit(&mPrt->mShrinkToFit);
+
+            // Add thee RemotePrintJob as a listener if there is one.
+            RefPtr<mozilla::layout::RemotePrintJobChild> remotePrintJob;
+            printSession->GetRemotePrintJob(getter_AddRefs(remotePrintJob));
+            if (NS_SUCCEEDED(rv) && remotePrintJob) {
+              mPrt->mPrintProgressListeners.AppendElement(remotePrintJob);
+            }
           }
         } else if (rv == NS_ERROR_NOT_IMPLEMENTED) {
           // This means the Dialog service was there,
@@ -1531,6 +1538,9 @@ nsPrintEngine::FirePrintingErrorEvent(nsresult aPrintError)
     new AsyncEventDispatcher(doc, event);
   asyncDispatcher->mOnlyChromeDispatch = true;
   asyncDispatcher->RunDOMEventWhenSafe();
+
+  // Inform any progress listeners of the Error.
+  mPrt->DoOnStatusChange(aPrintError);
 }
 
 //-----------------------------------------------------------------
