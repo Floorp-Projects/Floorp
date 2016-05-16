@@ -8,7 +8,8 @@
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
+const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const { ViewHelpers } = require("devtools/client/shared/widgets/view-helpers");
 
 this.EXPORTED_SYMBOLS = ["SimpleListWidget"];
 
@@ -16,7 +17,7 @@ this.EXPORTED_SYMBOLS = ["SimpleListWidget"];
  * A very simple vertical list view.
  *
  * Note: this widget should be used in tandem with the WidgetMethods in
- * ViewHelpers.jsm.
+ * view-helpers.js.
  *
  * @param nsIDOMNode aNode
  *        The element associated with the widget.

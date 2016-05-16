@@ -11,7 +11,7 @@ var { loader, require } = BrowserLoaderModule.BrowserLoader({
   window: this
 });
 var { Task } = require("resource://gre/modules/Task.jsm");
-var { Heritage, ViewHelpers, WidgetMethods } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
+var { Heritage, ViewHelpers, WidgetMethods, setNamedTimeout, clearNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
 var { gDevTools } = require("devtools/client/framework/devtools");
 
 // Events emitted by various objects in the panel.
@@ -55,7 +55,6 @@ var { FlameGraph, FlameGraphUtils } = require("devtools/client/shared/widgets/Fl
 var { TreeWidget } = require("devtools/client/shared/widgets/TreeWidget");
 
 var { SideMenuWidget } = require("resource://devtools/client/shared/widgets/SideMenuWidget.jsm");
-var { setNamedTimeout, clearNamedTimeout } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 
 var BRANCH_NAME = "devtools.performance.ui.";
 

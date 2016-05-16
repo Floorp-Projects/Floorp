@@ -7,7 +7,6 @@
 "use strict";
 
 const {Cu} = require("chrome");
-Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 var {loader} = Cu.import("resource://devtools/shared/Loader.jsm");
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 

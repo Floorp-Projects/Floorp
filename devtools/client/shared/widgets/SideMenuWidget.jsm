@@ -10,11 +10,11 @@ const Cu = Components.utils;
 
 const SHARED_STRINGS_URI = "chrome://devtools/locale/shared.properties";
 
-Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 Cu.import("resource://devtools/shared/event-emitter.js");
 
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const { LocalizationHelper } = require("devtools/client/shared/l10n");
+const { ViewHelpers } = require("devtools/client/shared/widgets/view-helpers");
 
 this.EXPORTED_SYMBOLS = ["SideMenuWidget"];
 
@@ -27,7 +27,7 @@ var L10N = new LocalizationHelper(SHARED_STRINGS_URI);
  * A simple side menu, with the ability of grouping menu items.
  *
  * Note: this widget should be used in tandem with the WidgetMethods in
- * ViewHelpers.jsm.
+ * view-helpers.js.
  *
  * @param nsIDOMNode aNode
  *        The element associated with the widget.

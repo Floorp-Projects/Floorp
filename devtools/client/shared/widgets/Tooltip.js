@@ -20,13 +20,12 @@ const Editor = require("devtools/client/sourceeditor/editor");
 const Services = require("Services");
 
 loader.lazyRequireGetter(this, "beautify", "devtools/shared/jsbeautify/beautify");
+loader.lazyRequireGetter(this, "setNamedTimeout", "devtools/client/shared/widgets/view-helpers", true);
+loader.lazyRequireGetter(this, "clearNamedTimeout", "devtools/client/shared/widgets/view-helpers", true);
+loader.lazyRequireGetter(this, "setNamedTimeout", "devtools/client/shared/widgets/view-helpers", true);
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "setNamedTimeout",
-  "resource://devtools/client/shared/widgets/ViewHelpers.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "clearNamedTimeout",
-  "resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "VariablesView",
   "resource://devtools/client/shared/widgets/VariablesView.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "VariablesViewController",

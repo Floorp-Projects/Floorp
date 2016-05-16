@@ -116,7 +116,7 @@ public class SimpleHelperUI extends Locales.LocaleAwareActivity {
             public void onClick(View v) {
                 slideOut();
 
-                Telemetry.sendUIEvent(TelemetryContract.Event.CANCEL, TelemetryContract.Method.BUTTON, mTelemetryExtra);
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, mTelemetryExtra);
 
                 setResult(i.getIntExtra(EXTRA_RESULTCODE_POSITIVE, -1));
             }

@@ -7,13 +7,13 @@
 
 const EventEmitter = require("devtools/shared/event-emitter");
 const { Cu, Ci } = require("chrome");
-const { ViewHelpers } = Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm", {});
+const { ViewHelpers } = require("devtools/client/shared/widgets/view-helpers");
 
 /**
  * A list menu widget that attempts to be very fast.
  *
  * Note: this widget should be used in tandem with the WidgetMethods in
- * ViewHelpers.jsm.
+ * view-helpers.js.
  *
  * @param nsIDOMNode aNode
  *        The element associated with the widget.

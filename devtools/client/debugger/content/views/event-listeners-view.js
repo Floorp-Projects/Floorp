@@ -5,6 +5,7 @@
 
 const actions = require('../actions/event-listeners');
 const { bindActionCreators } = require('devtools/client/shared/vendor/redux');
+const { Heritage, WidgetMethods } = require("devtools/client/shared/widgets/view-helpers");
 
 /**
  * Functions handling the event listeners UI.

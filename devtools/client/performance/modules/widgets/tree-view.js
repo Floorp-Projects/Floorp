@@ -10,7 +10,7 @@
 
 const { Cc, Ci, Cu, Cr } = require("chrome");
 const { L10N } = require("devtools/client/performance/modules/global");
-const { Heritage } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
+const { Heritage } = require("devtools/client/shared/widgets/view-helpers");
 const { AbstractTreeItem } = require("resource://devtools/client/shared/widgets/AbstractTreeItem.jsm");
 
 const URL_LABEL_TOOLTIP = L10N.getStr("table.url.tooltiptext");
