@@ -436,9 +436,12 @@ InitGlobalObjectOptions(JS::CompartmentOptions& aOptions,
     bool shouldDiscardSystemSource = ShouldDiscardSystemSource();
     bool extraWarningsForSystemJS = ExtraWarningsForSystemJS();
 
-    bool isSystem = false;
-    if (shouldDiscardSystemSource || extraWarningsForSystemJS)
-        isSystem = nsContentUtils::IsSystemPrincipal(aPrincipal);
+    bool isSystem = nsContentUtils::IsSystemPrincipal(aPrincipal);
+
+    if (isSystem) {
+        // Make sure [SecureContext] APIs are visible:
+        aOptions.creationOptions().setSecureContext(true);
+    }
 
     short status = aPrincipal->GetAppStatus();
 
