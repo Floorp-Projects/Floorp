@@ -139,13 +139,13 @@ class GCHashMapOperations
 {
     using Map = JS::GCHashMap<Args...>;
     using Lookup = typename Map::Lookup;
-    using Ptr = typename Map::Ptr;
-    using Range = typename Map::Range;
 
     const Map& map() const { return static_cast<const Outer*>(this)->get(); }
 
   public:
     using AddPtr = typename Map::AddPtr;
+    using Ptr = typename Map::Ptr;
+    using Range = typename Map::Range;
 
     bool initialized() const                   { return map().initialized(); }
     Ptr lookup(const Lookup& l) const          { return map().lookup(l); }
@@ -169,14 +169,14 @@ class MutableGCHashMapOperations
 {
     using Map = JS::GCHashMap<Args...>;
     using Lookup = typename Map::Lookup;
-    using Ptr = typename Map::Ptr;
-    using Range = typename Map::Range;
 
     Map& map() { return static_cast<Outer*>(this)->get(); }
 
   public:
     using AddPtr = typename Map::AddPtr;
     struct Enum : public Map::Enum { explicit Enum(Outer& o) : Map::Enum(o.map()) {} };
+    using Ptr = typename Map::Ptr;
+    using Range = typename Map::Range;
 
     bool init(uint32_t len = 16) { return map().init(len); }
     void clear()                 { map().clear(); }
@@ -297,14 +297,14 @@ class GCHashSetOperations
 {
     using Set = JS::GCHashSet<Args...>;
     using Lookup = typename Set::Lookup;
-    using Ptr = typename Set::Ptr;
-    using Range = typename Set::Range;
 
     const Set& set() const { return static_cast<const Outer*>(this)->get(); }
 
   public:
     using AddPtr = typename Set::AddPtr;
     using Entry = typename Set::Entry;
+    using Ptr = typename Set::Ptr;
+    using Range = typename Set::Range;
 
     bool initialized() const                   { return set().initialized(); }
     Ptr lookup(const Lookup& l) const          { return set().lookup(l); }
@@ -328,8 +328,6 @@ class MutableGCHashSetOperations
 {
     using Set = JS::GCHashSet<Args...>;
     using Lookup = typename Set::Lookup;
-    using Ptr = typename Set::Ptr;
-    using Range = typename Set::Range;
 
     Set& set() { return static_cast<Outer*>(this)->get(); }
 
@@ -337,6 +335,8 @@ class MutableGCHashSetOperations
     using AddPtr = typename Set::AddPtr;
     using Entry = typename Set::Entry;
     struct Enum : public Set::Enum { explicit Enum(Outer& o) : Set::Enum(o.set()) {} };
+    using Ptr = typename Set::Ptr;
+    using Range = typename Set::Range;
 
     bool init(uint32_t len = 16) { return set().init(len); }
     void clear()                 { set().clear(); }

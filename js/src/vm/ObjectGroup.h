@@ -579,10 +579,7 @@ class ObjectGroupCompartment
     PlainObjectTable* plainObjectTable;
 
     struct AllocationSiteKey;
-    using AllocationSiteTable = JS::GCHashMap<AllocationSiteKey,
-                                              ReadBarrieredObjectGroup,
-                                              AllocationSiteKey,
-                                              SystemAllocPolicy>;
+    class AllocationSiteTable;
 
     // Table for referencing types of objects keyed to an allocation site.
     AllocationSiteTable* allocationSiteTable;
