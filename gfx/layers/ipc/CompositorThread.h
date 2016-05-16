@@ -46,6 +46,9 @@ public:
 
   static MessageLoop* Loop();
 
+  // Returns true if the calling thread is the compositor thread.
+  static bool IsInCompositorThread();
+
 private:
   ~CompositorThreadHolder();
 
