@@ -29,6 +29,7 @@ public:
     virtual bool
     RecvShowProgress(PBrowserParent* parent,
                      PPrintProgressDialogParent* printProgressDialog,
+                     PRemotePrintJobParent* remotePrintJob,
                      const bool& isForPrinting,
                      bool* notifyOnOpen,
                      nsresult* result);
