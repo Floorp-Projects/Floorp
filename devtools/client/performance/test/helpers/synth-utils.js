@@ -55,7 +55,7 @@ exports.synthesizeProfile = () => {
 exports.synthesizeCustomTreeClass = () => {
   const { Cu } = require("chrome");
   const { AbstractTreeItem } = Cu.import("resource://devtools/client/shared/widgets/AbstractTreeItem.jsm", {});
-  const { Heritage } = Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm", {});
+  const { Heritage } = require("devtools/client/shared/widgets/view-helpers");
 
   function MyCustomTreeItem(dataSrc, properties) {
     AbstractTreeItem.call(this, properties);
