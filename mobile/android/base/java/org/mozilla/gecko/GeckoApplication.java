@@ -133,7 +133,7 @@ public class GeckoApplication extends Application
 
         final Context applicationContext = getApplicationContext();
         GeckoBatteryManager.getInstance().start(applicationContext);
-        GeckoNetworkManager.getInstance().start(applicationContext);
+        GeckoNetworkManager.getInstance().start();
 
         mInBackground = false;
     }
