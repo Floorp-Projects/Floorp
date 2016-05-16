@@ -275,3 +275,70 @@ add_task(function*() {
 
   yield BrowserTestUtils.removeTab(tab);
 });
+
+// Test that we get the right events when a select popup is changed.
+add_task(function* test_event_order() {
+  const URL = "data:text/html," + escape(PAGECONTENT_SMALL);
+  yield BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: URL,
+  }, function*(browser) {
+    let menulist = document.getElementById("ContentSelectDropdown");
+    let selectPopup = menulist.menupopup;
+
+    yield openSelectPopup(selectPopup, true, "#one");
+
+    let eventsPromise = ContentTask.spawn(browser, null, function*() {
+      // According to https://html.spec.whatwg.org/#the-select-element,
+      // we want to fire input, change, and then click events on the
+      // <select> (in that order) when it has changed.
+      let expected = [
+        {
+          type: "input",
+          cancelable: false,
+        },
+        {
+          type: "change",
+          cancelable: false,
+        },
+        {
+          type: "mousedown",
+          cancelable: true,
+        },
+        {
+          type: "mouseup",
+          cancelable: true,
+        },
+        {
+          type: "click",
+          cancelable: true,
+        },
+      ];
+
+      return new Promise((resolve) => {
+        function onEvent(event) {
+          select.removeEventListener(event.type, onEvent);
+          let expectation = expected.shift();
+          Assert.equal(event.type, expectation.type,
+                       "Expected the right event order");
+          Assert.ok(event.bubbles, "All of these events should bubble");
+          Assert.equal(event.cancelable, expectation.cancelable,
+                       "Cancellation property should match");
+          if (!expected.length) {
+            resolve();
+          }
+        }
+
+        let select = content.document.getElementById("one");
+        for (let expectation of expected) {
+          select.addEventListener(expectation.type, onEvent);
+        }
+      });
+    });
+
+    EventUtils.synthesizeKey("KEY_ArrowDown", { code: "ArrowDown" });
+    yield hideSelectPopup(selectPopup, false);
+    yield eventsPromise;
+  });
+});
+
