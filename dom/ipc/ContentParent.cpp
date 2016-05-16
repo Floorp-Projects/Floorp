@@ -3820,22 +3820,29 @@ PPrintingParent*
 ContentParent::AllocPPrintingParent()
 {
 #ifdef NS_PRINTING
-  return new PrintingParent();
+  MOZ_ASSERT(!mPrintingParent,
+             "Only one PrintingParent should be created per process.");
+
+  // Create the printing singleton for this process.
+  mPrintingParent = new PrintingParent();
+  return mPrintingParent.get();
 #else
+  MOZ_ASSERT_UNREACHABLE("Should never be created if no printing.");
   return nullptr;
 #endif
 }
 
 bool
-ContentParent::RecvPPrintingConstructor(PPrintingParent* aActor)
-{
-  return true;
-}
-
-bool
 ContentParent::DeallocPPrintingParent(PPrintingParent* printing)
 {
-  delete printing;
+#ifdef NS_PRINTING
+  MOZ_ASSERT(mPrintingParent == printing,
+             "Only one PrintingParent should have been created per process.");
+
+  mPrintingParent = nullptr;
+#else
+  MOZ_ASSERT_UNREACHABLE("Should never have been created if no printing.");
+#endif
   return true;
 }
 

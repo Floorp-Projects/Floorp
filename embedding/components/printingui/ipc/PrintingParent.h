@@ -24,6 +24,8 @@ namespace embedding {
 class PrintingParent final : public PPrintingParent
 {
 public:
+    NS_INLINE_DECL_REFCOUNTING(PrintingParent)
+
     virtual bool
     RecvShowProgress(PBrowserParent* parent,
                      PPrintProgressDialogParent* printProgressDialog,
@@ -63,9 +65,10 @@ public:
     ActorDestroy(ActorDestroyReason aWhy);
 
     MOZ_IMPLICIT PrintingParent();
-    virtual ~PrintingParent();
 
 private:
+    virtual ~PrintingParent();
+
     nsPIDOMWindowOuter*
     DOMWindowFromBrowserParent(PBrowserParent* parent);
 
