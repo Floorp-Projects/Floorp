@@ -3880,8 +3880,11 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       item->SetClip(mBuilder, clip);
     }
 
-    bool shouldFixToViewport = !(*animatedGeometryRoot)->GetParent() &&
-      item->ShouldFixToViewport(mBuilder);
+    bool clipMovesWithLayer = (animatedGeometryRoot == animatedGeometryRootForClip);
+
+    bool shouldFixToViewport = !clipMovesWithLayer &&
+        !(*animatedGeometryRoot)->GetParent() &&
+        item->ShouldFixToViewport(mBuilder);
 
     // For items that are fixed to the viewport, remove their clip at the
     // display item level because additional areas could be brought into
@@ -4120,7 +4123,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
         // scrolled clips, and doesn't care about the distinction anyways
         // (it only matters for async scrolling), so only set a scrolled clip
         // if we have a widget layer manager.
-        if (shouldFixToViewport && mManager->IsWidgetLayerManager()) {
+        if (shouldFixToViewport) {
           LayerClip scrolledClip;
           scrolledClip.SetClipRect(layerClipRect);
           if (layerClip.IsRectClippedByRoundedCorner(itemContent)) {
