@@ -83,11 +83,13 @@ here = os.path.abspath(os.path.dirname(__file__))
 # Option for MOZ (former NSPR) logging #
 ########################################
 
-# Set the desired log modules you want a log be produced by a try run for, or leave blank to disable the feature.
-# This will be passed to MOZ_LOG_MODULES environment variable. Try run will then put a download link for all log files
+# Set the desired log modules you want a log be produced
+# by a try run for, or leave blank to disable the feature.
+# This will be passed to MOZ_LOG environment variable.
+# Try run will then put a download link for all log files
 # on tbpl.mozilla.org.
 
-MOZ_LOG_MODULES = ""
+MOZ_LOG = ""
 
 #####################
 # Test log handling #
@@ -1234,11 +1236,11 @@ toolbar#nav-bar {
         if options.fatalAssertions:
             browserEnv["XPCOM_DEBUG_BREAK"] = "stack-and-abort"
 
-        # Produce a mozlog, if setup (see MOZ_LOG_MODULES global at the top of
+        # Produce a mozlog, if setup (see MOZ_LOG global at the top of
         # this script).
-        self.mozLogs = MOZ_LOG_MODULES and "MOZ_UPLOAD_DIR" in os.environ
+        self.mozLogs = MOZ_LOG and "MOZ_UPLOAD_DIR" in os.environ
         if self.mozLogs:
-            browserEnv["MOZ_LOG_MODULES"] = MOZ_LOG_MODULES
+            browserEnv["MOZ_LOG"] = MOZ_LOG
 
         if debugger and not options.slowscript:
             browserEnv["JS_DISABLE_SLOW_SCRIPT_SIGNALS"] = "1"
