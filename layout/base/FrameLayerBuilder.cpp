@@ -4116,9 +4116,12 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       ownLayer->SetClipRect(Nothing());
       ownLayer->SetScrolledClip(Nothing());
       if (layerClip.HasClip()) {
-        if (shouldFixToViewport) {
-          // For layers fixed to the viewport, the clip becomes part of the
-          // layer's scrolled clip.
+        // For layers fixed to the viewport, the clip becomes part of the
+        // layer's scrolled clip. However, BasicLayerManager doesn't support
+        // scrolled clips, and doesn't care about the distinction anyways
+        // (it only matters for async scrolling), so only set a scrolled clip
+        // if we have a widget layer manager.
+        if (shouldFixToViewport && mManager->IsWidgetLayerManager()) {
           LayerClip scrolledClip;
           scrolledClip.SetClipRect(layerClipRect);
           if (layerClip.IsRectClippedByRoundedCorner(itemContent)) {
