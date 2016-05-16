@@ -285,7 +285,7 @@ CompositorVsyncScheduler::SetDisplay(bool aDisplayEnable)
 {
   // SetDisplay() is usually called from nsScreenManager at main thread. Post
   // to compositor thread if needs.
-  if (!CompositorBridgeParent::IsInCompositorThread()) {
+  if (!CompositorThreadHolder::IsInCompositorThread()) {
     MOZ_ASSERT(NS_IsMainThread());
     MonitorAutoLock lock(mSetDisplayMonitor);
     RefPtr<CancelableRunnable> task =
@@ -312,7 +312,7 @@ CompositorVsyncScheduler::SetDisplay(bool aDisplayEnable)
 void
 CompositorVsyncScheduler::CancelSetDisplayTask()
 {
-  MOZ_ASSERT(CompositorBridgeParent::IsInCompositorThread());
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   MonitorAutoLock lock(mSetDisplayMonitor);
   if (mSetDisplayTask) {
     mSetDisplayTask->Cancel();
@@ -333,7 +333,7 @@ CompositorVsyncScheduler::Destroy()
     // Destroy was already called on this object.
     return;
   }
-  MOZ_ASSERT(CompositorBridgeParent::IsInCompositorThread());
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   UnobserveVsync();
   mVsyncObserver->Destroy();
   mVsyncObserver = nullptr;
@@ -364,7 +364,7 @@ CompositorVsyncScheduler::PostCompositeTask(TimeStamp aCompositeTimestamp)
 void
 CompositorVsyncScheduler::ScheduleComposition()
 {
-  MOZ_ASSERT(CompositorBridgeParent::IsInCompositorThread());
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   if (mAsapScheduling) {
     // Used only for performance testing purposes
     PostCompositeTask(TimeStamp::Now());
@@ -386,7 +386,7 @@ CompositorVsyncScheduler::ScheduleComposition()
 void
 CompositorVsyncScheduler::CancelCurrentSetNeedsCompositeTask()
 {
-  MOZ_ASSERT(CompositorBridgeParent::IsInCompositorThread());
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   MonitorAutoLock lock(mSetNeedsCompositeMonitor);
   if (mSetNeedsCompositeTask) {
     mSetNeedsCompositeTask->Cancel();
@@ -405,7 +405,7 @@ CompositorVsyncScheduler::CancelCurrentSetNeedsCompositeTask()
 void
 CompositorVsyncScheduler::SetNeedsComposite()
 {
-  if (!CompositorBridgeParent::IsInCompositorThread()) {
+  if (!CompositorThreadHolder::IsInCompositorThread()) {
     MonitorAutoLock lock(mSetNeedsCompositeMonitor);
     RefPtr<CancelableRunnable> task =
       NewCancelableRunnableMethod(this, &CompositorVsyncScheduler::SetNeedsComposite);
@@ -436,7 +436,7 @@ bool
 CompositorVsyncScheduler::NotifyVsync(TimeStamp aVsyncTimestamp)
 {
   // Called from the vsync dispatch thread
-  MOZ_ASSERT(!CompositorBridgeParent::IsInCompositorThread());
+  MOZ_ASSERT(!CompositorThreadHolder::IsInCompositorThread());
   MOZ_ASSERT(!NS_IsMainThread());
   PostCompositeTask(aVsyncTimestamp);
   return true;
@@ -445,7 +445,7 @@ CompositorVsyncScheduler::NotifyVsync(TimeStamp aVsyncTimestamp)
 void
 CompositorVsyncScheduler::CancelCurrentCompositeTask()
 {
-  MOZ_ASSERT(CompositorBridgeParent::IsInCompositorThread() || NS_IsMainThread());
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread() || NS_IsMainThread());
   MonitorAutoLock lock(mCurrentCompositeTaskMonitor);
   if (mCurrentCompositeTask) {
     mCurrentCompositeTask->Cancel();
@@ -456,7 +456,7 @@ CompositorVsyncScheduler::CancelCurrentCompositeTask()
 void
 CompositorVsyncScheduler::Composite(TimeStamp aVsyncTimestamp)
 {
-  MOZ_ASSERT(CompositorBridgeParent::IsInCompositorThread());
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   {
     MonitorAutoLock lock(mCurrentCompositeTaskMonitor);
     mCurrentCompositeTask = nullptr;
@@ -499,14 +499,14 @@ CompositorVsyncScheduler::OnForceComposeToTarget()
    * free and this oscillating behavior causes a performance hit. In order to avoid this problem,
    * we reset the mVsyncNotificationsSkipped counter to keep vsync enabled.
    */
-  MOZ_ASSERT(CompositorBridgeParent::IsInCompositorThread());
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   mVsyncNotificationsSkipped = 0;
 }
 
 void
 CompositorVsyncScheduler::ForceComposeToTarget(gfx::DrawTarget* aTarget, const IntRect* aRect)
 {
-  MOZ_ASSERT(CompositorBridgeParent::IsInCompositorThread());
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   OnForceComposeToTarget();
   mLastCompose = TimeStamp::Now();
   ComposeToTarget(aTarget, aRect);
@@ -515,14 +515,14 @@ CompositorVsyncScheduler::ForceComposeToTarget(gfx::DrawTarget* aTarget, const I
 bool
 CompositorVsyncScheduler::NeedsComposite()
 {
-  MOZ_ASSERT(CompositorBridgeParent::IsInCompositorThread());
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   return mNeedsComposite;
 }
 
 void
 CompositorVsyncScheduler::ObserveVsync()
 {
-  MOZ_ASSERT(CompositorBridgeParent::IsInCompositorThread());
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   mCompositorVsyncDispatcher->SetCompositorVsyncObserver(mVsyncObserver);
   mIsObservingVsync = true;
 }
@@ -530,7 +530,7 @@ CompositorVsyncScheduler::ObserveVsync()
 void
 CompositorVsyncScheduler::UnobserveVsync()
 {
-  MOZ_ASSERT(CompositorBridgeParent::IsInCompositorThread());
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   mCompositorVsyncDispatcher->SetCompositorVsyncObserver(nullptr);
   mIsObservingVsync = false;
 }
@@ -546,7 +546,7 @@ CompositorVsyncScheduler::DispatchTouchEvents(TimeStamp aVsyncTimestamp)
 void
 CompositorVsyncScheduler::DispatchVREvents(TimeStamp aVsyncTimestamp)
 {
-  MOZ_ASSERT(CompositorBridgeParent::IsInCompositorThread());
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
 
   VRManager* vm = VRManager::Get();
   vm->NotifyVsync(aVsyncTimestamp);
@@ -564,7 +564,7 @@ CompositorVsyncScheduler::ScheduleTask(already_AddRefed<CancelableRunnable> aTas
 void
 CompositorVsyncScheduler::ResumeComposition()
 {
-  MOZ_ASSERT(CompositorBridgeParent::IsInCompositorThread());
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   mLastCompose = TimeStamp::Now();
   ComposeToTarget(nullptr);
 }
@@ -572,7 +572,7 @@ CompositorVsyncScheduler::ResumeComposition()
 void
 CompositorVsyncScheduler::ComposeToTarget(gfx::DrawTarget* aTarget, const IntRect* aRect)
 {
-  MOZ_ASSERT(CompositorBridgeParent::IsInCompositorThread());
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   MOZ_ASSERT(mCompositorBridgeParent);
   mCompositorBridgeParent->CompositeToTarget(aTarget, aRect);
 }
@@ -641,12 +641,6 @@ CompositorBridgeParent::CompositorBridgeParent(widget::CompositorWidgetProxy* aW
 
   // mSelfRef is cleared in DeferredDestroy.
   mSelfRef = this;
-}
-
-bool
-CompositorBridgeParent::IsInCompositorThread()
-{
-  return CompositorThread() && CompositorThread()->thread_id() == PlatformThread::CurrentId();
 }
 
 uint64_t
@@ -914,7 +908,7 @@ CompositorBridgeParent::InvalidateOnCompositorThread()
 void
 CompositorBridgeParent::PauseComposition()
 {
-  MOZ_ASSERT(IsInCompositorThread(),
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread(),
              "PauseComposition() can only be called on the compositor thread");
 
   MonitorAutoLock lock(mPauseCompositionMonitor);
@@ -935,7 +929,7 @@ CompositorBridgeParent::PauseComposition()
 void
 CompositorBridgeParent::ResumeComposition()
 {
-  MOZ_ASSERT(IsInCompositorThread(),
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread(),
              "ResumeComposition() can only be called on the compositor thread");
 
   MonitorAutoLock lock(mResumeCompositionMonitor);
@@ -1069,7 +1063,7 @@ CompositorBridgeParent::NotifyShadowTreeTransaction(uint64_t aId, bool aIsFirstP
 void
 CompositorBridgeParent::ScheduleComposition()
 {
-  MOZ_ASSERT(IsInCompositorThread());
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   if (mPaused) {
     return;
   }
@@ -1112,7 +1106,7 @@ CompositorBridgeParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRec
   PROFILER_LABEL("CompositorBridgeParent", "Composite",
     js::ProfileEntry::Category::GRAPHICS);
 
-  MOZ_ASSERT(IsInCompositorThread(),
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread(),
              "Composite can only be called on the compositor thread");
   TimeStamp start = TimeStamp::Now();
 
@@ -1272,7 +1266,7 @@ void
 CompositorBridgeParent::ScheduleRotationOnCompositorThread(const TargetConfig& aTargetConfig,
                                                      bool aIsFirstPaint)
 {
-  MOZ_ASSERT(IsInCompositorThread());
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
 
   if (!aIsFirstPaint &&
       !mCompositionManager->IsFirstPaint() &&
@@ -1771,7 +1765,7 @@ static void
 InsertVsyncProfilerMarker(TimeStamp aVsyncTimestamp)
 {
 #ifdef MOZ_ENABLE_PROFILER_SPS
-  MOZ_ASSERT(CompositorBridgeParent::IsInCompositorThread());
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   VsyncPayload* payload = new VsyncPayload(aVsyncTimestamp);
   PROFILER_MARKER_PAYLOAD("VsyncTimestamp", payload);
 #endif
