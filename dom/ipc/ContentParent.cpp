@@ -86,6 +86,7 @@
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layers/PAPZParent.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/SharedBufferManagerParent.h"
 #include "mozilla/layout/RenderFrameParent.h"
@@ -2558,7 +2559,7 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
     // PBrowsers are created, because they rely on the Compositor
     // already being around.  (Creation is async, so can't happen
     // on demand.)
-    bool useOffMainThreadCompositing = !!CompositorBridgeParent::CompositorLoop();
+    bool useOffMainThreadCompositing = !!CompositorThreadHolder::Loop();
     if (useOffMainThreadCompositing) {
       DebugOnly<bool> opened = PCompositorBridge::Open(this);
       MOZ_ASSERT(opened);

@@ -201,7 +201,7 @@ ConnectImageBridgeInParentProcess(ImageBridgeParent* aBridge,
 /*static*/ PImageBridgeParent*
 ImageBridgeParent::Create(Transport* aTransport, ProcessId aChildProcessId, GeckoChildProcessHost* aProcessHost)
 {
-  MessageLoop* loop = CompositorBridgeParent::CompositorLoop();
+  MessageLoop* loop = CompositorThreadHolder::Loop();
   RefPtr<ImageBridgeParent> bridge = new ImageBridgeParent(loop, aTransport, aChildProcessId);
 
   if (aProcessHost) {

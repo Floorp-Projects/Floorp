@@ -373,14 +373,6 @@ public:
   static CompositorBridgeParent* GetCompositor(uint64_t id);
 
   /**
-   * Returns the compositor thread's message loop.
-   *
-   * This message loop is used by CompositorBridgeParent, ImageBridgeParent,
-   * and VRManagerParent
-   */
-  static MessageLoop* CompositorLoop();
-
-  /**
    * Allocate an ID that can be used to refer to a layer tree and
    * associated resources that live only on the compositor thread.
    *
