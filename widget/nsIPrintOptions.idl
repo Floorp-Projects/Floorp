@@ -25,12 +25,6 @@ interface nsIPrintOptions : nsISupports
   void ShowPrintSetupDialog(in nsIPrintSettings aThePrintSettings);
 
   /**
-   * Creates a new PrintSettnigs Object
-   * and initializes it from prefs
-   */
-  nsIPrintSettings CreatePrintSettings();
-
-  /**
    * Get a prefixed integer pref 
    */
   int32_t getPrinterPrefInt(in nsIPrintSettings aPrintSettings, in wstring
