@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import, print_function, unicode_literals
+from taskgraph import try_option_syntax
 
 _target_task_methods = {}
 def _target_task(name):
@@ -28,8 +29,7 @@ def target_tasks_from_parameters(full_task_graph, parameters):
 def target_tasks_try_option_syntax(full_task_graph, parameters):
     """Generate a list of target tasks based on try syntax in
     parameters['message'] and, for context, the full task graph."""
-    from taskgraph.try_option_syntax import TryOptionSyntax
-    options = TryOptionSyntax(parameters['message'], full_task_graph)
+    options = try_option_syntax.TryOptionSyntax(parameters['message'], full_task_graph)
     return [t.label for t in full_task_graph.tasks.itervalues()
             if options.task_matches(t.attributes)]
 
