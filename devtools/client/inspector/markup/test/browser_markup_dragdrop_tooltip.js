@@ -23,12 +23,7 @@ add_task(function* () {
   yield simulateNodeDrag(inspector, "div");
 
   info("Now check that the src attribute of the image isn't a valid target");
-  try {
-    yield isHoverTooltipTarget(markup.tooltip, target);
-    isValid = true;
-  } catch (e) {
-    isValid = false;
-  }
+  isValid = yield isHoverTooltipTarget(markup.tooltip, target);
   ok(!isValid, "The element is not a valid tooltip target");
 
   info("Stop dragging the test div");
