@@ -5,7 +5,6 @@
 
 import argparse
 import copy
-import functools
 import re
 import shlex
 from try_test_parser import parse_test_opts
@@ -153,7 +152,7 @@ def parse_test_chunks(aliases, all_tests, tests):
             if name in seen_chunks:
                 seen_chunks[name].add(chunk)
             else:
-                seen_chunks[name] = set([chunk])
+                seen_chunks[name] = {chunk}
                 test['test'] = name
                 test['only_chunks'] = seen_chunks[name]
                 results.append(test)
@@ -207,8 +206,11 @@ def extract_tests_from_platform(test_jobs, build_platform, build_task, tests):
 
         # Update the task configuration for all tests in the matrix...
         for build_name in specific_test_job:
+            # NOTE: build_name is always "allowed_build_tasks"
             for test_task_name in specific_test_job[build_name]:
+                # NOTE: test_task_name is always "task"
                 test_task = specific_test_job[build_name][test_task_name]
+                test_task['unittest_try_name'] = test_entry['test']
                 # Copy over the chunk restrictions if given...
                 if 'only_chunks' in test_entry:
                     test_task['only_chunks'] = \
@@ -307,7 +309,9 @@ def parse_commit(message, jobs):
                 if ('allowed_build_tasks' in job and
                         build_task not in job['allowed_build_tasks']):
                     continue
-                post_build_jobs.append(copy.deepcopy(job))
+                job = copy.deepcopy(job)
+                job['job_flag'] = job_flag
+                post_build_jobs.append(job)
 
             # Node for this particular build type
             result.append({
@@ -355,6 +359,7 @@ def parse_commit(message, jobs):
             'build_name': name,
             # TODO support declaring a different build type
             'build_type': name,
+            'is_job': True,
             'interactive': args.interactive,
             'when': task.get('when', {})
         })
