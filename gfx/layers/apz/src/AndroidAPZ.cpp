@@ -4,12 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "AndroidAPZ.h"
+
 #include "AsyncPanZoomController.h"
-#include "FlingOverScrollerAnimation.h"
 #include "GeneratedJNIWrappers.h"
 #include "gfxPrefs.h"
 #include "OverscrollHandoffState.h"
 #include "OverScroller.h"
+
+#define ANDROID_APZ_LOG(...)
+// #define ANDROID_APZ_LOG(...) printf_stderr("ANDROID_APZ: " __VA_ARGS__)
 
 namespace mozilla {
 namespace layers {
@@ -26,12 +30,21 @@ static const float BOUNDS_EPSILON = 5.0f;
 // OverScroller has overflowed.
 static const int32_t MAX_OVERSCROLL_COUNT = 30;
 
-FlingOverScrollerAnimation::FlingOverScrollerAnimation(AsyncPanZoomController& aApzc,
-                                                       widget::sdk::OverScroller::GlobalRef aOverScroller,
-                                                       const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
-                                                       const RefPtr<const AsyncPanZoomController>& aScrolledApzc)
+AndroidSpecificState::AndroidSpecificState() {
+  widget::sdk::OverScroller::LocalRef scroller;
+  if (widget::sdk::OverScroller::New(widget::GeckoAppShell::GetApplicationContext(), &scroller) != NS_OK) {
+    ANDROID_APZ_LOG("%p Failed to create Android OverScroller\n", this);
+    return;
+  }
+  mOverScroller = scroller;
+}
+
+AndroidFlingAnimation::AndroidFlingAnimation(AsyncPanZoomController& aApzc,
+                                             PlatformSpecificStateBase* aPlatformSpecificState,
+                                             const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
+                                             bool aFlingIsHandoff,
+                                             const RefPtr<const AsyncPanZoomController>& aScrolledApzc)
   : mApzc(aApzc)
-  , mOverScroller(aOverScroller)
   , mOverscrollHandoffChain(aOverscrollHandoffChain)
   , mScrolledApzc(aScrolledApzc)
   , mSentBounceX(false)
@@ -39,6 +52,8 @@ FlingOverScrollerAnimation::FlingOverScrollerAnimation(AsyncPanZoomController& a
   , mOverScrollCount(0)
 {
   MOZ_ASSERT(mOverscrollHandoffChain);
+  MOZ_ASSERT(aPlatformSpecificState->AsAndroidSpecificState());
+  mOverScroller = aPlatformSpecificState->AsAndroidSpecificState()->mOverScroller;
   MOZ_ASSERT(mOverScroller);
 
   // Drop any velocity on axes where we don't have room to scroll anyways
@@ -77,8 +92,8 @@ FlingOverScrollerAnimation::FlingOverScrollerAnimation(AsyncPanZoomController& a
  * or false if there is no fling or the fling has ended.
  */
 bool
-FlingOverScrollerAnimation::DoSample(FrameMetrics& aFrameMetrics,
-                                     const TimeDuration& aDelta)
+AndroidFlingAnimation::DoSample(FrameMetrics& aFrameMetrics,
+                                const TimeDuration& aDelta)
 {
   bool shouldContinueFling = true;
   mOverScroller->ComputeScrollOffset(&shouldContinueFling);
@@ -157,7 +172,7 @@ FlingOverScrollerAnimation::DoSample(FrameMetrics& aFrameMetrics,
 }
 
 bool
-FlingOverScrollerAnimation::CheckBounds(Axis& aAxis, float aValue, float* aClamped)
+AndroidFlingAnimation::CheckBounds(Axis& aAxis, float aValue, float* aClamped)
 {
   bool result = false;
   if ((aValue - BOUNDS_EPSILON) <= aAxis.GetPageStart().value) {
