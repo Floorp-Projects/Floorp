@@ -12,10 +12,13 @@
 #include "nsCRT.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
+#include "nsIBufferedStreams.h"
+#include "nsIClassInfo.h"
 #include "nsICloneableInputStream.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsIPipe.h"
+#include "nsISeekableStream.h"
 #include "nsIThread.h"
 #include "nsIRunnable.h"
 #include "nsStreamUtils.h"
@@ -944,4 +947,32 @@ TEST(Pipes, Close_During_Read_Partial_Segment)
 TEST(Pipes, Close_During_Read_Full_Segment)
 {
   TestCloseDuringRead(1024, 1024);
+}
+
+TEST(Pipes, Interfaces)
+{
+  nsCOMPtr<nsIInputStream> reader;
+  nsCOMPtr<nsIOutputStream> writer;
+
+  nsresult rv = NS_NewPipe(getter_AddRefs(reader), getter_AddRefs(writer));
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  nsCOMPtr<nsIAsyncInputStream> readerType1 = do_QueryInterface(reader);
+  ASSERT_TRUE(readerType1);
+
+  nsCOMPtr<nsISeekableStream> readerType2 = do_QueryInterface(reader);
+  ASSERT_TRUE(readerType2);
+
+  nsCOMPtr<nsISearchableInputStream> readerType3 = do_QueryInterface(reader);
+  ASSERT_TRUE(readerType3);
+
+  nsCOMPtr<nsICloneableInputStream> readerType4 = do_QueryInterface(reader);
+  ASSERT_TRUE(readerType4);
+
+  nsCOMPtr<nsIClassInfo> readerType5 = do_QueryInterface(reader);
+  ASSERT_TRUE(readerType5);
+
+  nsCOMPtr<nsIBufferedInputStream> readerType6 = do_QueryInterface(reader);
+  ASSERT_TRUE(readerType6);
+
 }
