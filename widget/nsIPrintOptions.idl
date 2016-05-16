@@ -23,13 +23,6 @@ interface nsIPrintOptions : nsISupports
    * Show Native Print Options dialog, this may not be supported on all platforms
    */
   void ShowPrintSetupDialog(in nsIPrintSettings aThePrintSettings);
-
-  /**
-   * Native data constants
-   */
-  const short kNativeDataPrintRecord        = 0;
-
-  [noscript] voidPtr GetNativeData(in short aDataType);
 };
 
 [scriptable, uuid(5e738fff-404c-4c94-9189-e8f2cce93e94)]
