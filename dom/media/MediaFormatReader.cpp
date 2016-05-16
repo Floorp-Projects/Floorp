@@ -609,11 +609,13 @@ RefPtr<MediaDecoderReader::MediaDataPromise>
 MediaFormatReader::RequestAudioData()
 {
   MOZ_ASSERT(OnTaskQueue());
-  MOZ_DIAGNOSTIC_ASSERT(mSeekPromise.IsEmpty(), "No sample requests allowed while seeking");
-  MOZ_DIAGNOSTIC_ASSERT(!mAudio.mSeekRequest.Exists() ||
-                        mAudio.mTimeThreshold.isSome());
   MOZ_DIAGNOSTIC_ASSERT(!mAudio.HasPromise(), "No duplicate sample requests");
-  MOZ_DIAGNOSTIC_ASSERT(!IsSeeking(), "called mid-seek");
+  MOZ_DIAGNOSTIC_ASSERT(IsVideoSeeking() || mSeekPromise.IsEmpty(),
+                        "No sample requests allowed while seeking");
+  MOZ_DIAGNOSTIC_ASSERT(IsVideoSeeking() ||
+                        !mAudio.mSeekRequest.Exists() ||
+                        mAudio.mTimeThreshold.isSome());
+  MOZ_DIAGNOSTIC_ASSERT(IsVideoSeeking() || !IsSeeking(), "called mid-seek");
   LOGV("");
 
   if (!HasAudio()) {
@@ -833,13 +835,17 @@ MediaFormatReader::UpdateReceivedNewData(TrackType aTrack)
     return false;
   }
 
-  if (!mSeekPromise.IsEmpty()) {
+  if (!mSeekPromise.IsEmpty() &&
+      (!IsVideoSeeking() || aTrack == TrackInfo::kVideoTrack)) {
     MOZ_ASSERT(!decoder.HasPromise());
-    MOZ_DIAGNOSTIC_ASSERT(!mAudio.mTimeThreshold && !mVideo.mTimeThreshold,
+    MOZ_DIAGNOSTIC_ASSERT((IsVideoSeeking() || !mAudio.mTimeThreshold) &&
+                          !mVideo.mTimeThreshold,
                           "InternalSeek must have been aborted when Seek was first called");
-    MOZ_DIAGNOSTIC_ASSERT(!mAudio.HasWaitingPromise() && !mVideo.HasWaitingPromise(),
+    MOZ_DIAGNOSTIC_ASSERT((IsVideoSeeking() || !mAudio.HasWaitingPromise()) &&
+                          !mVideo.HasWaitingPromise(),
                           "Waiting promises must have been rejected when Seek was first called");
-    if (mVideo.mSeekRequest.Exists() || mAudio.mSeekRequest.Exists()) {
+    if (mVideo.mSeekRequest.Exists() ||
+        (!IsVideoSeeking() && mAudio.mSeekRequest.Exists())) {
       // Already waiting for a seek to complete. Nothing more to do.
       return true;
     }
