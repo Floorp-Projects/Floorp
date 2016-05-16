@@ -9,8 +9,8 @@
  */
 
 /**
- * Display an existing HTMLTooltip on an anchor. Returns a promise that will
- * resolve when the tooltip "shown" event has been fired.
+ * Display an existing HTMLTooltip on an anchor. After the tooltip "shown"
+ * event has been fired a reflow will be triggered.
  *
  * @param {HTMLTooltip} tooltip
  *        The tooltip instance to display
@@ -18,26 +18,45 @@
  *        The anchor that should be used to display the tooltip
  * @param {String} position
  *        The preferred display position ("top", "bottom")
- * @return {Promise} promise that resolves when the "shown" event is fired
+ * @return {Promise} promise that resolves when "shown" has been fired, reflow
+ *         and repaint done.
  */
-function showTooltip(tooltip, anchor, position) {
+function* showTooltip(tooltip, anchor, position) {
   let onShown = tooltip.once("shown");
   tooltip.show(anchor, {position});
-  return onShown;
+  yield onShown;
+  return waitForReflow(tooltip);
 }
 
 /**
- * Hide an existing HTMLTooltip. Returns a promise that will resolve when the
- * tooltip "hidden" event has been fired.
+ * Hide an existing HTMLTooltip. After the tooltip "hidden" event has been fired
+ * a reflow will be triggered.
  *
  * @param {HTMLTooltip} tooltip
  *        The tooltip instance to hide
- * @return {Promise} promise that resolves when the "hidden" event is fired
+ * @return {Promise} promise that resolves when "hidden" has been fired, reflow
+ *         and repaint done.
  */
-function hideTooltip(tooltip) {
+function* hideTooltip(tooltip) {
   let onPopupHidden = tooltip.once("hidden");
   tooltip.hide();
-  return onPopupHidden;
+  yield onPopupHidden;
+  return waitForReflow(tooltip);
+}
+
+/**
+ * Forces the reflow of an HTMLTooltip document and waits for the next repaint.
+ *
+ * @param {HTMLTooltip} the tooltip to reflow
+ * @return {Promise} a promise that will resolve after the reflow and repaint
+ *         have been executed.
+ */
+function waitForReflow(tooltip) {
+  let {document} = tooltip;
+  return new Promise(resolve => {
+    document.documentElement.offsetWidth;
+    document.defaultView.requestAnimationFrame(resolve);
+  });
 }
 
 /**
