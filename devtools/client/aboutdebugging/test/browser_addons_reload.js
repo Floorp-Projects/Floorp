@@ -22,6 +22,14 @@ function promiseAddonEvent(event) {
   });
 }
 
+function* tearDownAddon(addon) {
+  const onUninstalled = promiseAddonEvent("onUninstalled");
+  addon.uninstall();
+  const [uninstalledAddon] = yield onUninstalled;
+  is(uninstalledAddon.id, addon.id,
+     `Add-on was uninstalled: ${uninstalledAddon.id}`);
+}
+
 function getReloadButton(document, addonName) {
   const names = [...document.querySelectorAll("#addons .target-name")];
   const name = names.filter(element => element.textContent === addonName)[0];
@@ -30,6 +38,30 @@ function getReloadButton(document, addonName) {
   const reloadButton = targetElement.querySelector(".reload-button");
   info(`Found reload button for ${addonName}`);
   return reloadButton;
+}
+
+function installAddonWithManager(filePath) {
+  return new Promise((resolve, reject) => {
+    AddonManager.getInstallForFile(filePath, install => {
+      if (!install) {
+        throw new Error(`An install was not created for ${filePath}`);
+      }
+      install.addListener({
+        onDownloadFailed: reject,
+        onDownloadCancelled: reject,
+        onInstallFailed: reject,
+        onInstallCancelled: reject,
+        onInstallEnded: resolve
+      });
+      install.install();
+    });
+  });
+}
+
+function getAddonByID(addonId) {
+  return new Promise(resolve => {
+    AddonManager.getAddonByID(addonId, addon => resolve(addon));
+  });
 }
 
 /**
@@ -81,6 +113,8 @@ add_task(function* reloadButtonReloadsAddon() {
                      ADDON_NAME, ADDON_NAME);
 
   const reloadButton = getReloadButton(document, ADDON_NAME);
+  is(reloadButton.disabled, false, "Reload button should not be disabled");
+  is(reloadButton.title, "", "Reload button should not have a tooltip");
   const onInstalled = promiseAddonEvent("onInstalled");
 
   const onBootstrapInstallCalled = new Promise(done => {
@@ -98,14 +132,7 @@ add_task(function* reloadButtonReloadsAddon() {
      "Add-on was reloaded: " + reloadedAddon.name);
 
   yield onBootstrapInstallCalled;
-
-  info("Uninstall addon installed earlier.");
-  const onUninstalled = promiseAddonEvent("onUninstalled");
-  reloadedAddon.uninstall();
-  const [uninstalledAddon] = yield onUninstalled;
-  is(uninstalledAddon.id, ADDON_ID,
-     "Add-on was uninstalled: " + uninstalledAddon.id);
-
+  yield tearDownAddon(reloadedAddon);
   yield closeAboutDebugging(tab);
 });
 
@@ -153,10 +180,25 @@ add_task(function* reloadButtonRefreshesMetadata() {
   const nameWasUpdated = allAddons.some(name => name === newName);
   ok(nameWasUpdated, `New name appeared in reloaded add-ons: ${allAddons}`);
 
-  const onUninstalled = promiseAddonEvent("onUninstalled");
-  reloadedAddon.uninstall();
-  yield onUninstalled;
-
+  yield tearDownAddon(reloadedAddon);
   tempExt.remove();
+  yield closeAboutDebugging(tab);
+});
+
+add_task(function* onlyTempInstalledAddonsCanBeReloaded() {
+  const { tab, document } = yield openAboutDebugging("addons");
+  yield waitForInitialAddonList(document);
+  const onAddonListUpdated = waitForMutation(getAddonList(document),
+                                             { childList: true });
+  yield installAddonWithManager(getSupportsFile("addons/bug1273184.xpi").file);
+  yield onAddonListUpdated;
+  const addon = yield getAddonByID("bug1273184@tests");
+
+  const reloadButton = getReloadButton(document, addon.name);
+  ok(reloadButton, "Reload button exists");
+  is(reloadButton.disabled, true, "Reload button should be disabled");
+  ok(reloadButton.title, "Disabled reload button should have a tooltip");
+
+  yield tearDownAddon(addon);
   yield closeAboutDebugging(tab);
 });
