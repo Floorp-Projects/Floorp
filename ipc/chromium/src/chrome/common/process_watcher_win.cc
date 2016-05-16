@@ -71,7 +71,7 @@ class TimerExpiredTask : public mozilla::Runnable,
 
 // static
 void ProcessWatcher::EnsureProcessTerminated(base::ProcessHandle process
-					     , bool force
+                                             , bool force
 ) {
   DCHECK(process != GetCurrentProcess());
 
