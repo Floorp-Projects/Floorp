@@ -425,7 +425,7 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
       case DecoderDoctorDiagnostics::eWidevineWithNoWMF:
         if (CheckSilverlight() != eSilverlightEnabled) {
           DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unsupported key systems: %s, widevine without WMF nor Silverlight",
-                   this, mDocument, NS_ConvertUTF16toUTF8(unplayableFormats).get());
+                   this, mDocument, NS_ConvertUTF16toUTF8(unsupportedKeySystems).get());
           ReportAnalysis(dom::DecoderDoctorNotificationType::Platform_decoder_not_found,
                          "MediaWidevineNoWMFNoSilverlight", NS_LITERAL_STRING(""));
           return;
