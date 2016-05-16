@@ -5,9 +5,6 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 # ***** END LICENSE BLOCK *****
 """Mercurial VCS support.
-
-Largely copied/ported from
-https://hg.mozilla.org/build/tools/file/cf265ea8fb5e/lib/python/util/hg.py .
 """
 
 import os
@@ -19,10 +16,17 @@ from urlparse import urlsplit
 import sys
 sys.path.insert(1, os.path.dirname(os.path.dirname(os.path.dirname(sys.path[0]))))
 
+import mozharness
 from mozharness.base.errors import HgErrorList, VCSException
-from mozharness.base.log import LogMixin
+from mozharness.base.log import LogMixin, OutputParser
 from mozharness.base.script import ScriptMixin
 from mozharness.base.transfer import TransferMixin
+
+external_tools_path = os.path.join(
+    os.path.abspath(os.path.dirname(os.path.dirname(mozharness.__file__))),
+    'external_tools',
+)
+
 
 HG_OPTIONS = ['--config', 'ui.merge=internal:merge']
 
@@ -31,6 +35,19 @@ HG_OPTIONS = ['--config', 'ui.merge=internal:merge']
 # TODO Add the various tag functionality that are currently in
 # build/tools/scripts to MercurialVCS -- generic tagging logic belongs here.
 REVISION, BRANCH = 0, 1
+
+
+class RepositoryUpdateRevisionParser(OutputParser):
+    """Parse `hg pull` output for "repository unrelated" errors."""
+    revision = None
+    RE_UPDATED = re.compile('^updated to ([a-f0-9]{40})$')
+
+    def parse_single_line(self, line):
+        m = self.RE_UPDATED.match(line)
+        if m:
+            self.revision = m.group(1)
+
+        return super(RepositoryUpdateRevisionParser, self).parse_single_line(line)
 
 
 def make_hg_url(hg_host, repo_path, protocol='http', revision=None,
@@ -305,130 +322,12 @@ class MercurialVCS(ScriptMixin, LogMixin, TransferMixin):
             raise VCSException("Can't push %s to %s!" % (src, remote))
         return status
 
-    # hg share methods {{{2
-    def query_can_share(self):
-        if self.can_share is not None:
-            return self.can_share
-        # Check that 'hg share' works
-        self.can_share = True
-        try:
-            self.info("Checking if share extension works.")
-            output = self.get_output_from_command(self.hg + ['help', 'share'],
-                                                  silent=True,
-                                                  throw_exception=True)
-            if 'no commands defined' in output:
-                # Share extension is enabled, but not functional
-                self.warning("Disabling sharing since share extension doesn't seem to work (1)")
-                self.can_share = False
-            elif 'unknown command' in output or 'hg help extensions' in output:
-                # Share extension is disabled
-                self.warning("Disabling sharing since share extension doesn't seem to work (2)")
-                self.can_share = False
-        except subprocess.CalledProcessError:
-            # The command failed, so disable sharing
-            self.warning("Disabling sharing since share extension doesn't seem to work (3)")
-            self.can_share = False
-        if self.can_share:
-            self.info("hg share works.")
-        return self.can_share
-
-    def _ensure_shared_repo_and_revision(self, share_base):
-        """The shared dir logic is complex enough to warrant its own
-        helper method.
-
-        If allow_unshared_local_clones is True and we're trying to use the
-        share extension but fail, then we will be able to clone from the
-        shared repo to our destination.  If this is False, the default, the
-        if we don't have the share extension we will just clone from the
-        remote repository.
-        """
-        c = self.vcs_config
-        dest = os.path.abspath(c['dest'])
-        repo = c['repo']
-        revision = c.get('revision')
-        branch = c.get('branch')
-        if not self.query_can_share():
-            raise VCSException("%s called when sharing is not allowed!" % __name__)
-
-        # If the working directory already exists and isn't using share
-        # when we want to use share, clobber.
-        #
-        # The original util.hg.mercurial() tried to pull repo into dest
-        # instead. That can help if the share extension fails.
-        # But it can also result in pulling a different repo B into an
-        # existing clone of repo A, which may have unexpected results.
-        if os.path.exists(dest):
-            sppath = os.path.join(dest, ".hg", "sharedpath")
-            if not os.path.exists(sppath):
-                self.info("No file %s; removing %s." % (sppath, dest))
-                self.rmtree(dest)
-        if not os.path.exists(os.path.dirname(dest)):
-            self.mkdir_p(os.path.dirname(dest))
-        shared_repo = os.path.join(share_base, self.get_repo_path(repo))
-        dest_shared_path = os.path.join(dest, '.hg', 'sharedpath')
-        if os.path.exists(dest_shared_path):
-            # Make sure that the sharedpath points to shared_repo
-            dest_shared_path_data = os.path.realpath(open(dest_shared_path).read())
-            norm_shared_repo = os.path.realpath(os.path.join(shared_repo, '.hg'))
-            if dest_shared_path_data != norm_shared_repo:
-                # Clobber!
-                self.info("We're currently shared from %s, but are being requested to pull from %s (%s); clobbering" % (dest_shared_path_data, repo, norm_shared_repo))
-                self.rmtree(dest)
-
-        self.info("Updating shared repo")
-        if os.path.exists(shared_repo):
-            try:
-                self.pull(repo, shared_repo)
-            except VCSException:
-                self.warning("Error pulling changes into %s from %s; clobbering" % (shared_repo, repo))
-                self.exception(level='debug')
-                self.clone(repo, shared_repo)
-        else:
-            self.clone(repo, shared_repo)
-
-        if os.path.exists(dest):
-            try:
-                self.pull(shared_repo, dest)
-                status = self.update(dest, branch=branch, revision=revision)
-                return status
-            except VCSException:
-                self.rmtree(dest)
-        try:
-            self.info("Trying to share %s to %s" % (shared_repo, dest))
-            return self.share(shared_repo, dest, branch=branch, revision=revision)
-        except VCSException:
-            if not c.get('allow_unshared_local_clones'):
-                # Re-raise the exception so it gets caught below.
-                # We'll then clobber dest, and clone from original
-                # repo
-                raise
-
-        self.warning("Error calling hg share from %s to %s; falling back to normal clone from shared repo" % (shared_repo, dest))
-        # Do a full local clone first, and then update to the
-        # revision we want
-        # This lets us use hardlinks for the local clone if the
-        # OS supports it
-        try:
-            self.clone(shared_repo, dest, update_dest=False)
-            return self.update(dest, branch=branch, revision=revision)
-        except VCSException:
-            # Need better fallback
-            self.error("Error updating %s from shared_repo (%s): " % (dest, shared_repo))
-            self.exception(level='error')
-            self.rmtree(dest)
-
-    def share(self, source, dest, branch=None, revision=None):
-        """Creates a new working directory in "dest" that shares history
-        with "source" using Mercurial's share extension
-        """
-        self.info("Sharing %s to %s." % (source, dest))
-        self.mkdir_p(dest)
-        if self.run_command(self.hg + ['share', '-U', source, dest],
-                            error_list=HgErrorList):
-            raise VCSException("Unable to share %s to %s!" % (source, dest))
-        return self.update(dest, branch=branch, revision=revision)
-
-    # End hg share methods 2}}}
+    @property
+    def robustcheckout_path(self):
+        """Path to the robustcheckout extension."""
+        ext = os.path.join(external_tools_path, 'robustcheckout.py')
+        if os.path.exists(ext):
+            return ext
 
     def ensure_repo_and_revision(self):
         """Makes sure that `dest` is has `revision` or `branch` checked out
@@ -438,41 +337,56 @@ class MercurialVCS(ScriptMixin, LogMixin, TransferMixin):
         dest.
         """
         c = self.vcs_config
-        for conf_item in ('dest', 'repo'):
-            assert self.vcs_config[conf_item]
-        dest = os.path.abspath(c['dest'])
-        repo = c['repo']
-        revision = c.get('revision')
+        dest = c['dest']
+        repo_url = c['repo']
+        rev = c.get('revision')
         branch = c.get('branch')
-        share_base = c.get('vcs_share_base',
-                           os.environ.get("HG_SHARE_BASE_DIR", None))
-        msg = "Setting %s to %s" % (dest, repo)
+        purge = c.get('clone_with_purge', False)
+        upstream = c.get('clone_upstream_url')
+
+        # The API here is kind of bad because we're relying on state in
+        # self.vcs_config instead of passing arguments. This confuses
+        # scripts that have multiple repos. This includes the clone_tools()
+        # step :(
+
+        if not rev and not branch:
+            self.warning('did not specify revision or branch; assuming "default"')
+            branch = 'default'
+
+        share_base = c.get('vcs_share_base', os.environ.get('HG_SHARE_BASE_DIR', None))
+
+        # We require shared storage is configured because it guarantees we
+        # only have 1 local copy of logical repo stores.
+        if not share_base:
+            raise VCSException('vcs share base not defined; '
+                               'refusing to operate sub-optimally')
+
+        if not self.robustcheckout_path:
+            raise VCSException('could not find the robustcheckout Mercurial extension')
+
+        args = self.hg + [
+            '--config', 'extensions.robustcheckout=%s' % self.robustcheckout_path,
+            'robustcheckout', repo_url, dest, '--sharebase', share_base,
+        ]
+        if purge:
+            args.append('--purge')
+        if upstream:
+            args.extend(['--upstream', upstream])
+
+        if rev:
+            args.extend(['--revision', rev])
         if branch:
-            msg += " on branch %s" % branch
-        if revision:
-            msg += " revision %s" % revision
-        if share_base:
-            msg += " using shared directory %s" % share_base
-        self.info("%s." % msg)
-        if share_base and not self.query_can_share():
-            share_base = None
+            args.extend(['--branch', branch])
 
-        if share_base:
-            return self._ensure_shared_repo_and_revision(share_base)
+        parser = RepositoryUpdateRevisionParser(config=self.config,
+                                                log_obj=self.log_obj)
+        if self.run_command(args, output_parser=parser):
+            raise VCSException('repo checkout failed!')
 
-        # Non-shared
-        if os.path.exists(dest):
-            try:
-                self.pull(repo, dest)
-                return self.update(dest, branch=branch, revision=revision)
-            except VCSException:
-                self.warning("Error pulling changes into %s from %s; clobbering" % (dest, repo))
-                self.exception(level='debug')
-                self.rmtree(dest)
-        elif not os.path.exists(os.path.dirname(dest)):
-            self.mkdir_p(os.path.dirname(dest))
-        self.clone(repo, dest)
-        return self.update(dest, branch=branch, revision=revision)
+        if not parser.revision:
+            raise VCSException('could not identify revision updated to')
+
+        return parser.revision
 
     def apply_and_push(self, localrepo, remote, changer, max_attempts=10,
                        ssh_username=None, ssh_key=None):
