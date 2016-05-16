@@ -475,11 +475,11 @@ MarkupView.prototype = {
    * @return {Promise} the promise returned by
    *         MarkupElementContainer._isImagePreviewTarget
    */
-  _isImagePreviewTarget: function (target) {
+  _isImagePreviewTarget: Task.async(function* (target) {
     // From the target passed here, let's find the parent MarkupContainer
     // and ask it if the tooltip should be shown
     if (this.isDragging) {
-      return promise.reject(false);
+      return false;
     }
 
     let parent = target, container;
@@ -497,8 +497,8 @@ MarkupView.prototype = {
       return container.isImagePreviewTarget(target, this.tooltip);
     }
 
-    return undefined;
-  },
+    return false;
+  }),
 
   /**
    * Given the known reason, should the current selection be briefly highlighted
@@ -2654,9 +2654,8 @@ MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
    * Checks if the target is indeed something we want to have an image tooltip
    * preview over and, if so, inserts content into the tooltip.
    *
-   * @return {Promise} that resolves when the content has been inserted or
-   *         rejects if no preview is required. This promise is then used by
-   *         Tooltip.js to decide if/when to show the tooltip
+   * @return {Promise} that resolves when the tooltip content is ready. Resolves
+   * true if the tooltip should be displayed, false otherwise.
    */
   isImagePreviewTarget: Task.async(function* (target, tooltip) {
     // Is this Element previewable.
