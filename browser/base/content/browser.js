@@ -816,10 +816,6 @@ function _loadURIWithFlags(browser, uri, params) {
   let charset = params.charset;
   let postData = params.postData;
 
-  if (!(flags & browser.webNavigation.LOAD_FLAGS_FROM_EXTERNAL)) {
-    browser.userTypedClear++;
-  }
-
   let wasRemote = browser.isRemoteBrowser;
 
   let process = browser.isRemoteBrowser ? Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT
@@ -866,9 +862,6 @@ function _loadURIWithFlags(browser, uri, params) {
     if ((!wasRemote && !mustChangeProcess) ||
         (wasRemote && mustChangeProcess)) {
       browser.inLoadURI = false;
-    }
-    if (browser.userTypedClear) {
-      browser.userTypedClear--;
     }
   }
 }
