@@ -965,28 +965,6 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsPrintOptions::DisplayJobProperties(const char16_t *aPrinter,
-                                     nsIPrintSettings* aPrintSettings,
-                                     bool *aDisplayed)
-{
-  NS_ENSURE_ARG_POINTER(aPrinter);
-  *aDisplayed = false;
-
-  nsresult rv;
-  nsCOMPtr<nsIPrinterEnumerator> propDlg =
-           do_CreateInstance(NS_PRINTER_ENUMERATOR_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_ENSURE_ARG_POINTER(aPrintSettings);
-  rv = propDlg->DisplayPropertiesDlg(aPrinter, aPrintSettings);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aDisplayed = true;
-
-  return rv;
-}
-
 NS_IMETHODIMP nsPrintOptions::GetNativeData(int16_t aDataType, void * *_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;

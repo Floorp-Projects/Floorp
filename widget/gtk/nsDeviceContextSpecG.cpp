@@ -431,11 +431,6 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const char16_
   return NS_OK;    
 }
 
-NS_IMETHODIMP nsPrinterEnumeratorGTK::DisplayPropertiesDlg(const char16_t *aPrinter, nsIPrintSettings *aPrintSettings)
-{
-  return NS_OK;
-}
-
 //----------------------------------------------------------------------
 nsresult GlobalPrinters::InitializeGlobalPrinters ()
 {

@@ -25,12 +25,6 @@ interface nsIPrintOptions : nsISupports
   void ShowPrintSetupDialog(in nsIPrintSettings aThePrintSettings);
 
   /**
-   * display Printer Job Properties dialog
-   */
-  void displayJobProperties (in wstring aPrinter, in nsIPrintSettings
-                             aPrintSettings, out boolean aDisplayed);
-
-  /**
    * Native data constants
    */
   const short kNativeDataPrintRecord        = 0;
@@ -63,11 +57,5 @@ interface nsIPrinterEnumerator : nsISupports
    * The list of printer names
    */
   readonly attribute nsIStringEnumerator printerNameList;
-
-  /*  takes printer selected and will display job properties dlg for that printer
-   *  returns true if dialog displays
-   */
-  void displayPropertiesDlg(in wstring aPrinter, in nsIPrintSettings aPrintSettings);
-
 };
 
