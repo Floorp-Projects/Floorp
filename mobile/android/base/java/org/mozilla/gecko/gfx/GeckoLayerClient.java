@@ -713,7 +713,14 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     }
 
     class PointerInfo {
+        // We reserve one pointer ID for the mouse, so that tests don't have
+        // to worry about tracking pointer IDs if they just want to test mouse
+        // event synthesization. If somebody tries to use this ID for a
+        // synthesized touch event we'll throw an exception.
+        public static final int RESERVED_MOUSE_POINTER_ID = 100000;
+
         public int pointerId;
+        public int source;
         public int screenX;
         public int screenY;
         public double pressure;
@@ -746,34 +753,63 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             return -1;
         }
 
-        int addPointer(int pointerId) {
+        int addPointer(int pointerId, int source) {
             PointerInfo info = new PointerInfo();
             info.pointerId = pointerId;
+            info.source = source;
             pointers.add(info);
             return pointers.size() - 1;
         }
 
-        int[] getPointerIds() {
-            int[] ids = new int[pointers.size()];
-            for (int i = 0; i < ids.length; i++) {
-                ids[i] = pointers.get(i).pointerId;
+        int getPointerCount(int source) {
+            int count = 0;
+            for (int i = 0; i < pointers.size(); i++) {
+                if (pointers.get(i).source == source) {
+                    count++;
+                }
             }
-            return ids;
+            return count;
         }
 
-        MotionEvent.PointerCoords[] getPointerCoords() {
-            MotionEvent.PointerCoords[] coords = new MotionEvent.PointerCoords[pointers.size()];
-            for (int i = 0; i < coords.length; i++) {
-                coords[i] = pointers.get(i).getCoords();
+        MotionEvent.PointerProperties[] getPointerProperties(int source) {
+            MotionEvent.PointerProperties[] props = new MotionEvent.PointerProperties[getPointerCount(source)];
+            int index = 0;
+            for (int i = 0; i < pointers.size(); i++) {
+                if (pointers.get(i).source == source) {
+                    MotionEvent.PointerProperties p = new MotionEvent.PointerProperties();
+                    p.id = pointers.get(i).pointerId;
+                    switch (source) {
+                        case InputDevice.SOURCE_TOUCHSCREEN:
+                            p.toolType = MotionEvent.TOOL_TYPE_FINGER;
+                            break;
+                        case InputDevice.SOURCE_MOUSE:
+                            p.toolType = MotionEvent.TOOL_TYPE_MOUSE;
+                            break;
+                    }
+                    props[index++] = p;
+                }
+            }
+            return props;
+        }
+
+        MotionEvent.PointerCoords[] getPointerCoords(int source) {
+            MotionEvent.PointerCoords[] coords = new MotionEvent.PointerCoords[getPointerCount(source)];
+            int index = 0;
+            for (int i = 0; i < pointers.size(); i++) {
+                if (pointers.get(i).source == source) {
+                    coords[index++] = pointers.get(i).getCoords();
+                }
             }
             return coords;
         }
     }
 
-    @WrapForJNI
-    public void synthesizeNativeTouchPoint(int pointerId, int eventType, int screenX,
-            int screenY, double pressure, int orientation)
+    private void synthesizeNativePointer(int source, int pointerId,
+            int eventType, int screenX, int screenY, double pressure,
+            int orientation)
     {
+        Log.d(LOGTAG, "Synthesizing pointer from " + source + " id " + pointerId + " at " + screenX + ", " + screenY);
+
         if (mPointerState == null) {
             mPointerState = new SynthesizedEventState();
         }
@@ -802,7 +838,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             case MotionEvent.ACTION_POINTER_DOWN:
                 if (pointerIndex < 0) {
                     // Adding a new pointer
-                    pointerIndex = mPointerState.addPointer(pointerId);
+                    pointerIndex = mPointerState.addPointer(pointerId, source);
                     if (pointerIndex == 0) {
                         // first pointer
                         eventType = MotionEvent.ACTION_DOWN;
@@ -810,6 +846,18 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
                     }
                 } else {
                     // We're moving an existing pointer
+                    eventType = MotionEvent.ACTION_MOVE;
+                }
+                break;
+            case MotionEvent.ACTION_HOVER_MOVE:
+                if (pointerIndex < 0) {
+                    // Mouse-move a pointer without it going "down". However
+                    // in order to send the right MotionEvent without a lot of
+                    // duplicated code, we add the pointer to mPointerState,
+                    // and then remove it at the bottom of this function.
+                    pointerIndex = mPointerState.addPointer(pointerId, source);
+                } else {
+                    // We're moving an existing mouse pointer that went down.
                     eventType = MotionEvent.ACTION_MOVE;
                 }
                 break;
@@ -826,10 +874,23 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         int action = (pointerIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT);
         action &= MotionEvent.ACTION_POINTER_INDEX_MASK;
         action |= (eventType & MotionEvent.ACTION_MASK);
-        final MotionEvent event = MotionEvent.obtain(mPointerState.downTime,
-            SystemClock.uptimeMillis(), action, mPointerState.pointers.size(),
-            mPointerState.getPointerIds(), mPointerState.getPointerCoords(),
-            0, 0, 0, 0, 0, InputDevice.SOURCE_TOUCHSCREEN, 0);
+        boolean isButtonDown = (source == InputDevice.SOURCE_MOUSE) &&
+                               (eventType == MotionEvent.ACTION_DOWN || eventType == MotionEvent.ACTION_MOVE);
+        final MotionEvent event = MotionEvent.obtain(
+            /*downTime*/ mPointerState.downTime,
+            /*eventTime*/ SystemClock.uptimeMillis(),
+            /*action*/ action,
+            /*pointerCount*/ mPointerState.getPointerCount(source),
+            /*pointerProperties*/ mPointerState.getPointerProperties(source),
+            /*pointerCoords*/ mPointerState.getPointerCoords(source),
+            /*metaState*/ 0,
+            /*buttonState*/ (isButtonDown ? MotionEvent.BUTTON_PRIMARY : 0),
+            /*xPrecision*/ 0,
+            /*yPrecision*/ 0,
+            /*deviceId*/ 0,
+            /*edgeFlags*/ 0,
+            /*source*/ source,
+            /*flags*/ 0);
         mView.post(new Runnable() {
             @Override
             public void run() {
@@ -841,10 +902,28 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         // Forget about removed pointers
         if (eventType == MotionEvent.ACTION_POINTER_UP ||
             eventType == MotionEvent.ACTION_UP ||
-            eventType == MotionEvent.ACTION_CANCEL)
+            eventType == MotionEvent.ACTION_CANCEL ||
+            eventType == MotionEvent.ACTION_HOVER_MOVE)
         {
             mPointerState.pointers.remove(pointerIndex);
         }
+    }
+
+    @WrapForJNI
+    public void synthesizeNativeTouchPoint(int pointerId, int eventType, int screenX,
+            int screenY, double pressure, int orientation)
+    {
+        if (pointerId == PointerInfo.RESERVED_MOUSE_POINTER_ID) {
+            throw new IllegalArgumentException("Use a different pointer ID in your test, this one is reserved for mouse");
+        }
+        synthesizeNativePointer(InputDevice.SOURCE_TOUCHSCREEN, pointerId,
+            eventType, screenX, screenY, pressure, orientation);
+    }
+
+    @WrapForJNI
+    public void synthesizeNativeMouseEvent(int eventType, int screenX, int screenY) {
+        synthesizeNativePointer(InputDevice.SOURCE_MOUSE, PointerInfo.RESERVED_MOUSE_POINTER_ID,
+            eventType, screenX, screenY, 0, 0);
     }
 
     @WrapForJNI(allowMultithread = true)
