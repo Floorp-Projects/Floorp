@@ -13,6 +13,9 @@
 namespace mozilla {
 namespace layout {
 
+NS_IMPL_ISUPPORTS(RemotePrintJobChild,
+                  nsIWebProgressListener)
+
 RemotePrintJobChild::RemotePrintJobChild()
 {
   MOZ_COUNT_CTOR(RemotePrintJobChild);
@@ -85,6 +88,56 @@ RemotePrintJobChild::SetPrintEngine(nsPrintEngine* aPrintEngine)
 
   mPrintEngine = aPrintEngine;
 }
+
+// nsIWebProgressListener
+
+NS_IMETHODIMP
+RemotePrintJobChild::OnStateChange(nsIWebProgress* aProgress,
+                                   nsIRequest* aRequest, uint32_t aStateFlags,
+                                   nsresult aStatus)
+{
+  Unused << SendStateChange(aStateFlags, aStatus);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+RemotePrintJobChild::OnProgressChange(nsIWebProgress * aProgress,
+                                      nsIRequest * aRequest,
+                                      int32_t aCurSelfProgress,
+                                      int32_t aMaxSelfProgress,
+                                      int32_t aCurTotalProgress,
+                                      int32_t aMaxTotalProgress)
+{
+  Unused << SendProgressChange(aCurSelfProgress, aMaxSelfProgress,
+                               aCurTotalProgress, aMaxTotalProgress);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+RemotePrintJobChild::OnLocationChange(nsIWebProgress* aProgress,
+                                      nsIRequest* aRequest, nsIURI* aURI,
+                                      uint32_t aFlags)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+RemotePrintJobChild::OnStatusChange(nsIWebProgress* aProgress,
+                                    nsIRequest* aRequest, nsresult aStatus,
+                                    const char16_t* aMessage)
+{
+  Unused << SendStatusChange(aStatus);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+RemotePrintJobChild::OnSecurityChange(nsIWebProgress* aProgress,
+                                      nsIRequest* aRequest, uint32_t aState)
+{
+  return NS_OK;
+}
+
+// End of nsIWebProgressListener
 
 RemotePrintJobChild::~RemotePrintJobChild()
 {

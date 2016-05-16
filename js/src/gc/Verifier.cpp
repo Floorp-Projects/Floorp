@@ -8,6 +8,8 @@
 # include <valgrind/memcheck.h>
 #endif
 
+#include "mozilla/IntegerPrintfMacros.h"
+
 #include "jscntxt.h"
 #include "jsgc.h"
 #include "jsprf.h"
@@ -302,13 +304,13 @@ AssertMarkedOrAllocated(const EdgeValue& edge)
     MOZ_CRASH();
 }
 
-bool
+void
 gc::GCRuntime::endVerifyPreBarriers()
 {
     VerifyPreTracer* trc = verifyPreData;
 
     if (!trc)
-        return false;
+        return;
 
     MOZ_ASSERT(!JS::IsGenerationalGCEnabled(rt));
 
@@ -357,7 +359,6 @@ gc::GCRuntime::endVerifyPreBarriers()
     marker.stop();
 
     js_delete(trc);
-    return true;
 }
 
 /*** Barrier Verifier Scheduling ***/
@@ -414,3 +415,123 @@ js::gc::GCRuntime::finishVerifier()
 }
 
 #endif /* JS_GC_ZEAL */
+
+#ifdef JSGC_HASH_TABLE_CHECKS
+
+class CheckHeapTracer : public JS::CallbackTracer
+{
+  public:
+    explicit CheckHeapTracer(JSRuntime* rt);
+    bool init();
+    bool check();
+
+  private:
+    void onChild(const JS::GCCellPtr& thing) override;
+
+    struct WorkItem {
+        WorkItem(JS::GCCellPtr thing, const char* name, int parentIndex)
+          : thing(thing), name(name), parentIndex(parentIndex), processed(false)
+        {}
+
+        JS::GCCellPtr thing;
+        const char* name;
+        int parentIndex;
+        bool processed;
+    };
+
+    JSRuntime* rt;
+    bool oom;
+    size_t failures;
+    HashSet<Cell*, DefaultHasher<Cell*>, SystemAllocPolicy> visited;
+    Vector<WorkItem, 0, SystemAllocPolicy> stack;
+    int parentIndex;
+};
+
+CheckHeapTracer::CheckHeapTracer(JSRuntime* rt)
+  : CallbackTracer(rt, TraceWeakMapKeysValues),
+    rt(rt),
+    oom(false),
+    failures(0),
+    parentIndex(-1)
+{
+    setCheckEdges(false);
+}
+
+bool
+CheckHeapTracer::init()
+{
+    return visited.init();
+}
+
+void
+CheckHeapTracer::onChild(const JS::GCCellPtr& thing)
+{
+    Cell* cell = thing.asCell();
+    if (visited.lookup(cell))
+        return;
+
+    if (!visited.put(cell)) {
+        oom = true;
+        return;
+    }
+
+    if (!IsGCThingValidAfterMovingGC(cell)) {
+        failures++;
+        fprintf(stderr, "Stale pointer %p\n", cell);
+        const char* name = contextName();
+        for (int index = parentIndex; index != -1; index = stack[index].parentIndex) {
+            const WorkItem& parent = stack[index];
+            cell = parent.thing.asCell();
+            fprintf(stderr, "  from %s %p %s edge\n",
+                    GCTraceKindToAscii(cell->getTraceKind()), cell, name);
+            name = parent.name;
+        }
+        fprintf(stderr, "  from root %s\n", name);
+        return;
+    }
+
+    WorkItem item(thing, contextName(), parentIndex);
+    if (!stack.append(item))
+        oom = true;
+}
+
+bool
+CheckHeapTracer::check()
+{
+    // The analysis thinks that markRuntime might GC by calling a GC callback.
+    JS::AutoSuppressGCAnalysis nogc(rt);
+    rt->gc.markRuntime(this, GCRuntime::TraceRuntime);
+
+    while (!stack.empty()) {
+        WorkItem item = stack.back();
+        if (item.processed) {
+            stack.popBack();
+        } else {
+            parentIndex = stack.length() - 1;
+            TraceChildren(this, item.thing);
+            stack.back().processed = true;
+        }
+    }
+
+    if (oom)
+        return false;
+
+    if (failures) {
+        fprintf(stderr, "Heap check: %zu failure(s) out of %" PRIu32 " pointers checked\n",
+                failures, visited.count());
+    }
+    MOZ_RELEASE_ASSERT(failures == 0);
+
+    return true;
+}
+
+void
+js::gc::CheckHeapAfterMovingGC(JSRuntime* rt)
+{
+    MOZ_ASSERT(rt->isHeapCollecting());
+    CheckHeapTracer tracer(rt);
+    if (!tracer.init() || !tracer.check())
+        fprintf(stderr, "OOM checking heap\n");
+}
+
+#endif /* JSGC_HASH_TABLE_CHECKS */

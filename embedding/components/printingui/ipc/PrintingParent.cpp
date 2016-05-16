@@ -6,14 +6,15 @@
 
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TabParent.h"
+#include "mozilla/unused.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsIPrintingPromptService.h"
-#include "nsIPrintOptions.h"
 #include "nsIPrintProgressParams.h"
 #include "nsIPrintSettingsService.h"
 #include "nsIServiceManager.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIWebProgressListener.h"
 #include "PrintingParent.h"
 #include "PrintDataUtils.h"
@@ -30,6 +31,7 @@ namespace embedding {
 bool
 PrintingParent::RecvShowProgress(PBrowserParent* parent,
                                  PPrintProgressDialogParent* printProgressDialog,
+                                 PRemotePrintJobParent* remotePrintJob,
                                  const bool& isForPrinting,
                                  bool* notifyOnOpen,
                                  nsresult* result)
@@ -62,7 +64,15 @@ PrintingParent::RecvShowProgress(PBrowserParent* parent,
                               notifyOnOpen);
   NS_ENSURE_SUCCESS(*result, true);
 
-  dialogParent->SetWebProgressListener(printProgressListener);
+  if (remotePrintJob) {
+    // If we have a RemotePrintJob use that as a more general forwarder for
+    // print progress listeners.
+    static_cast<RemotePrintJobParent*>(remotePrintJob)
+      ->RegisterListener(printProgressListener);
+  } else {
+    dialogParent->SetWebProgressListener(printProgressListener);
+  }
+
   dialogParent->SetPrintProgressParams(printProgressParams);
 
   return true;
@@ -88,25 +98,22 @@ PrintingParent::ShowPrintDialog(PBrowserParent* aParent,
   // nsIWebBrowserPrint to keep the dialogs happy.
   nsCOMPtr<nsIWebBrowserPrint> wbp = new MockWebBrowserPrint(aData);
 
-  nsresult rv;
-  nsCOMPtr<nsIPrintOptions> po = do_GetService("@mozilla.org/gfx/printsettings-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIPrintSettings> settings;
-  rv = po->CreatePrintSettings(getter_AddRefs(settings));
+  nsresult rv = mPrintSettingsSvc->GetNewPrintSettings(getter_AddRefs(settings));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = po->DeserializeToPrintSettings(aData, settings);
+  rv = mPrintSettingsSvc->DeserializeToPrintSettings(aData, settings);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = pps->ShowPrintDialog(parentWin, wbp, settings);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // And send it back.
-  rv = po->SerializeToPrintData(settings, nullptr, aResult);
-
-  PRemotePrintJobParent* remotePrintJob = new RemotePrintJobParent(settings);
-  aResult->remotePrintJobParent() = SendPRemotePrintJobConstructor(remotePrintJob);
+  // Serialize back to aResult. Use the existing RemotePrintJob if we have one
+  // otherwise SerializeAndEnsureRemotePrintJob() will create a new one.
+  RemotePrintJobParent* remotePrintJob =
+    static_cast<RemotePrintJobParent*>(aData.remotePrintJobParent());
+  rv = SerializeAndEnsureRemotePrintJob(settings, nullptr, remotePrintJob,
+                                        aResult);
 
   return rv;
 }
@@ -137,21 +144,16 @@ PrintingParent::RecvSavePrintSettings(const PrintData& aData,
                                       const uint32_t& aFlags,
                                       nsresult* aResult)
 {
-  nsCOMPtr<nsIPrintSettingsService> pss =
-    do_GetService("@mozilla.org/gfx/printsettings-service;1", aResult);
-  NS_ENSURE_SUCCESS(*aResult, true);
-
-  nsCOMPtr<nsIPrintOptions> po = do_QueryInterface(pss, aResult);
-  NS_ENSURE_SUCCESS(*aResult, true);
-
   nsCOMPtr<nsIPrintSettings> settings;
-  *aResult = po->CreatePrintSettings(getter_AddRefs(settings));
+  *aResult = mPrintSettingsSvc->GetNewPrintSettings(getter_AddRefs(settings));
   NS_ENSURE_SUCCESS(*aResult, true);
 
-  *aResult = po->DeserializeToPrintSettings(aData, settings);
+  *aResult = mPrintSettingsSvc->DeserializeToPrintSettings(aData, settings);
   NS_ENSURE_SUCCESS(*aResult, true);
 
-  *aResult = pss->SavePrintSettingsToPrefs(settings, aUsePrinterNamePrefix, aFlags);
+  *aResult = mPrintSettingsSvc->SavePrintSettingsToPrefs(settings,
+                                                        aUsePrinterNamePrefix,
+                                                        aFlags);
 
   return true;
 }
@@ -238,14 +240,58 @@ PrintingParent::DOMWindowFromBrowserParent(PBrowserParent* parent)
   return parentWin;
 }
 
+nsresult
+PrintingParent::SerializeAndEnsureRemotePrintJob(
+  nsIPrintSettings* aPrintSettings, nsIWebProgressListener* aListener,
+  layout::RemotePrintJobParent* aRemotePrintJob, PrintData* aPrintData)
+{
+  MOZ_ASSERT(aPrintData);
+
+  nsresult rv;
+  nsCOMPtr<nsIPrintSettings> printSettings;
+  if (aPrintSettings) {
+    printSettings = aPrintSettings;
+  } else {
+    rv = mPrintSettingsSvc->GetNewPrintSettings(getter_AddRefs(printSettings));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  rv = mPrintSettingsSvc->SerializeToPrintData(aPrintSettings, nullptr,
+                                               aPrintData);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  RemotePrintJobParent* remotePrintJob;
+  if (aRemotePrintJob) {
+    remotePrintJob = aRemotePrintJob;
+    aPrintData->remotePrintJobParent() = remotePrintJob;
+  } else {
+    remotePrintJob = new RemotePrintJobParent(aPrintSettings);
+    aPrintData->remotePrintJobParent() =
+      SendPRemotePrintJobConstructor(remotePrintJob);
+  }
+  if (aListener) {
+    remotePrintJob->RegisterListener(aListener);
+  }
+
+  return NS_OK;
+}
+
 PrintingParent::PrintingParent()
 {
-    MOZ_COUNT_CTOR(PrintingParent);
+  MOZ_COUNT_CTOR(PrintingParent);
+
+  mPrintSettingsSvc =
+    do_GetService("@mozilla.org/gfx/printsettings-service;1");
+  MOZ_ASSERT(mPrintSettingsSvc);
 }
 
 PrintingParent::~PrintingParent()
 {
-    MOZ_COUNT_DTOR(PrintingParent);
+  MOZ_COUNT_DTOR(PrintingParent);
 }
 
 } // namespace embedding

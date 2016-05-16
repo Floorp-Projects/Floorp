@@ -312,6 +312,7 @@ public:
   // Returns true if at least one property is being animated on compositor.
   bool IsRunningOnCompositor() const;
   void SetIsRunningOnCompositor(nsCSSProperty aProperty, bool aIsRunning);
+  void ResetIsRunningOnCompositor();
 
   // Returns true if this effect, applied to |aFrame|, contains properties
   // that mean we shouldn't run transform compositor animations on this element.
@@ -352,7 +353,6 @@ protected:
                           const OptionsType& aOptions,
                           ErrorResult& aRv);
 
-  void ResetIsRunningOnCompositor();
   void ResetWinsInCascade();
 
   // This effect is registered with its target element so long as:

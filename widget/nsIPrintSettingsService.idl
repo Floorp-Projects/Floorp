@@ -10,6 +10,21 @@
 #include "nsISupports.idl"
 
 interface nsIPrintSettings;
+interface nsIWebBrowserPrint;
+
+%{ C++
+namespace mozilla {
+namespace embedding {
+  class PrintData;
+}
+}
+%}
+
+/**
+ * Native types
+ */
+[ref] native PrintDataRef(const mozilla::embedding::PrintData);
+[ptr] native PrintDataPtr(mozilla::embedding::PrintData);
 
 [scriptable, uuid(841387C8-72E6-484b-9296-BF6EEA80D58A)]
 interface nsIPrintSettingsService : nsISupports
@@ -34,7 +49,8 @@ interface nsIPrintSettingsService : nsISupports
    * If each browse window was to use the same PrintSettings object
    * then it should use "globalPrintSettings"
    *
-   * Initializes the newPrintSettings from the default printer
+   * Initializes the newPrintSettings from the unprefixed printer
+   * (Note: this may not happen if there is an OS specific implementation.)
    *
    */
   readonly attribute nsIPrintSettings newPrintSettings;
@@ -96,6 +112,41 @@ interface nsIPrintSettingsService : nsISupports
    *
    */
   void savePrintSettingsToPrefs(in nsIPrintSettings aPrintSettings, in boolean aUsePrinterNamePrefix, in unsigned long aFlags);
+
+  /**
+   * Given some nsIPrintSettings and (optionally) an nsIWebBrowserPrint,
+   * populates a PrintData representing them which can be sent over IPC. Values
+   * are only ever read from aSettings and aWBP.
+   *
+   * @param aSettings
+   *        An nsIPrintSettings for a print job.
+   * @param aWBP (optional)
+   *        The nsIWebBrowserPrint for the print job.
+   * @param data
+   *        Pointer to a pre-existing PrintData to populate.
+   *
+   * @return nsresult
+   */
+  [noscript]
+  void SerializeToPrintData(in nsIPrintSettings aPrintSettings,
+                            in nsIWebBrowserPrint aWebBrowserPrint,
+                            in PrintDataPtr data);
+
+  /**
+   * This function is the opposite of SerializeToPrintData, in that it takes
+   * a PrintData, and populates a pre-existing nsIPrintSettings with the data
+   * from PrintData.
+   *
+   * @param PrintData
+   *        Printing information sent through IPC.
+   * @param settings
+   *        A pre-existing nsIPrintSettings to populate with the PrintData.
+   *
+   * @return nsresult
+   */
+  [noscript]
+  void DeserializeToPrintSettings(in PrintDataRef data,
+                                  in nsIPrintSettings aPrintSettings);
 
 };
 

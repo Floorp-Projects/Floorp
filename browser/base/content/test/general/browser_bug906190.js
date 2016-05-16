@@ -192,8 +192,6 @@ add_task(function* test_same_origin_metarefresh_different_origin() {
  *    - Doorhanger to disable protection appears - we disable it
  *    - Load a new page from the same origin in a new tab simulating a click
  *    - Redirect to another page from the same origin using 302 redirect
- *    - Doorhanger >> APPEARS << , but should >> NOT << appear again!
- *    - FOLLOW UP BUG 914860!
  */
 add_task(function* test_same_origin_302redirect_same_origin() {
   // the sjs files returns a 302 redirect- note, same origins
@@ -201,11 +199,11 @@ add_task(function* test_same_origin_302redirect_same_origin() {
                gHttpTestRoot1 + "file_bug906190.sjs", function* () {
     // The doorhanger should appear but activeBlocked should be >> NOT << true.
     // Currently it is >> TRUE << - see follow up bug 914860
-    todo(!gIdentityHandler._identityBox.classList.contains("mixedActiveBlocked"),
-         "OK: Mixed Content is NOT being blocked");
+    ok(!gIdentityHandler._identityBox.classList.contains("mixedActiveBlocked"),
+       "OK: Mixed Content is NOT being blocked");
 
-    todo_is(content.document.getElementById('mctestdiv').innerHTML,
-            "Mixed Content Blocker disabled", "OK: Executed mixed script");
+    is(content.document.getElementById('mctestdiv').innerHTML,
+       "Mixed Content Blocker disabled", "OK: Executed mixed script");
   });
 });
 
@@ -214,7 +212,6 @@ add_task(function* test_same_origin_302redirect_same_origin() {
  *    - Doorhanger to disable protection appears - we disable it
  *    - Load a new page from the same origin in a new tab simulating a click
  *    - Redirect to another page from a different origin using 302 redirect
- *    - Doorhanger >> SHOULD << appear again!
  */
 add_task(function* test_same_origin_302redirect_different_origin() {
   // the sjs files returns a 302 redirect - note, different origins
@@ -227,5 +224,17 @@ add_task(function* test_same_origin_302redirect_different_origin() {
 
     is(content.document.getElementById('mctestdiv').innerHTML,
        "Mixed Content Blocker enabled", "OK: Blocked mixed script");
+  });
+});
+
+/**
+ * 7. - Test memory leak issue on redirection error. See Bug 1269426.
+ */
+add_task(function* test_bad_redirection() {
+  // the sjs files returns a 302 redirect - note, different origins
+  yield doTest(gHttpTestRoot2 + "file_bug906190_1.html",
+               gHttpTestRoot2 + "file_bug906190.sjs?bad-redirection=1", function* () {
+    // Nothing to do. Just see if memory leak is reported in the end.
+    ok(true, "Nothing to do");
   });
 });

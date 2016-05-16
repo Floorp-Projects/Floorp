@@ -194,7 +194,7 @@ class GCSchedulingTunables
     unsigned minEmptyChunkCount(const AutoLockGC&) const { return minEmptyChunkCount_; }
     unsigned maxEmptyChunkCount() const { return maxEmptyChunkCount_; }
 
-    bool setParameter(JSGCParamKey key, uint32_t value, const AutoLockGC& lock);
+    MOZ_MUST_USE bool setParameter(JSGCParamKey key, uint32_t value, const AutoLockGC& lock);
 };
 
 /*
@@ -584,7 +584,7 @@ class GCRuntime
 {
   public:
     explicit GCRuntime(JSRuntime* rt);
-    bool init(uint32_t maxbytes, uint32_t maxNurseryBytes);
+    MOZ_MUST_USE bool init(uint32_t maxbytes, uint32_t maxNurseryBytes);
     void finishRoots();
     void finish();
 
@@ -593,17 +593,18 @@ class GCRuntime
     inline bool upcomingZealousGC();
     inline bool needZealousGC();
 
-    bool addRoot(Value* vp, const char* name);
+    MOZ_MUST_USE bool addRoot(Value* vp, const char* name);
     void removeRoot(Value* vp);
     void setMarkStackLimit(size_t limit, AutoLockGC& lock);
 
-    bool setParameter(JSGCParamKey key, uint32_t value, AutoLockGC& lock);
+    MOZ_MUST_USE bool setParameter(JSGCParamKey key, uint32_t value, AutoLockGC& lock);
     uint32_t getParameter(JSGCParamKey key, const AutoLockGC& lock);
 
-    bool triggerGC(JS::gcreason::Reason reason);
+    MOZ_MUST_USE bool triggerGC(JS::gcreason::Reason reason);
     void maybeAllocTriggerZoneGC(Zone* zone, const AutoLockGC& lock);
+    // The return value indicates if we were able to do the GC.
     bool triggerZoneGC(Zone* zone, JS::gcreason::Reason reason);
-    bool maybeGC(Zone* zone);
+    MOZ_MUST_USE bool maybeGC(Zone* zone);
     void maybePeriodicFullGC();
     void minorGC(JS::gcreason::Reason reason) {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_MINOR_GC);
@@ -614,6 +615,7 @@ class GCRuntime
         gcstats::AutoPhase ap(stats, gcstats::PHASE_EVICT_NURSERY);
         minorGCImpl(reason, nullptr);
     }
+    // The return value indicates whether a major GC was performed.
     bool gcIfRequested(JSContext* cx = nullptr);
     void gc(JSGCInvocationKind gckind, JS::gcreason::Reason reason);
     void startGC(JSGCInvocationKind gckind, JS::gcreason::Reason reason, int64_t millis = 0);
@@ -626,7 +628,7 @@ class GCRuntime
     void triggerFullGCForAtoms() {
         MOZ_ASSERT(fullGCForAtomsRequested_);
         fullGCForAtomsRequested_ = false;
-        triggerGC(JS::gcreason::ALLOC_TRIGGER);
+        MOZ_RELEASE_ASSERT(triggerGC(JS::gcreason::ALLOC_TRIGGER));
     }
 
     void runDebugGC();
@@ -755,7 +757,7 @@ class GCRuntime
     bool isCompactingGCEnabled() const;
 
     void setGrayRootsTracer(JSTraceDataOp traceOp, void* data);
-    bool addBlackRootsTracer(JSTraceDataOp traceOp, void* data);
+    MOZ_MUST_USE bool addBlackRootsTracer(JSTraceDataOp traceOp, void* data);
     void removeBlackRootsTracer(JSTraceDataOp traceOp, void* data);
 
     void setMaxMallocBytes(size_t value);
@@ -770,11 +772,13 @@ class GCRuntime
     void setObjectsTenuredCallback(JSObjectsTenuredCallback callback,
                                    void* data);
     void callObjectsTenuredCallback();
-    bool addFinalizeCallback(JSFinalizeCallback callback, void* data);
+    MOZ_MUST_USE bool addFinalizeCallback(JSFinalizeCallback callback, void* data);
     void removeFinalizeCallback(JSFinalizeCallback func);
-    bool addWeakPointerZoneGroupCallback(JSWeakPointerZoneGroupCallback callback, void* data);
+    MOZ_MUST_USE bool addWeakPointerZoneGroupCallback(JSWeakPointerZoneGroupCallback callback,
+                                                      void* data);
     void removeWeakPointerZoneGroupCallback(JSWeakPointerZoneGroupCallback callback);
-    bool addWeakPointerCompartmentCallback(JSWeakPointerCompartmentCallback callback, void* data);
+    MOZ_MUST_USE bool addWeakPointerCompartmentCallback(JSWeakPointerCompartmentCallback callback,
+                                                        void* data);
     void removeWeakPointerCompartmentCallback(JSWeakPointerCompartmentCallback callback);
     JS::GCSliceCallback setSliceCallback(JS::GCSliceCallback callback);
     JS::GCNurseryCollectionCallback setNurseryCollectionCallback(
@@ -841,7 +845,7 @@ class GCRuntime
 
 #ifdef JS_GC_ZEAL
     void startVerifyPreBarriers();
-    bool endVerifyPreBarriers();
+    void endVerifyPreBarriers();
     void finishVerifier();
     bool isVerifyPreBarriersEnabled() const { return !!verifyPreData; }
 #else
@@ -860,7 +864,7 @@ class GCRuntime
 
     // Allocator
     template <AllowGC allowGC>
-    bool checkAllocatorState(JSContext* cx, AllocKind kind);
+    MOZ_MUST_USE bool checkAllocatorState(JSContext* cx, AllocKind kind);
     template <AllowGC allowGC>
     JSObject* tryNewNurseryObject(JSContext* cx, size_t thingSize, size_t nDynamicSlots,
                                   const Class* clasp);
@@ -888,7 +892,7 @@ class GCRuntime
     void arenaAllocatedDuringGC(JS::Zone* zone, Arena* arena);
 
     // Allocator internals
-    bool gcIfNeededPerAllocation(JSContext* cx);
+    MOZ_MUST_USE bool gcIfNeededPerAllocation(JSContext* cx);
     template <typename T>
     static void checkIncrementalZoneState(ExclusiveContext* cx, T* t);
     static void* refillFreeListFromAnyThread(ExclusiveContext* cx, AllocKind thingKind,
@@ -921,16 +925,17 @@ class GCRuntime
 
     // Check if the system state is such that GC has been supressed
     // or otherwise delayed.
-    bool checkIfGCAllowedInCurrentState(JS::gcreason::Reason reason);
+    MOZ_MUST_USE bool checkIfGCAllowedInCurrentState(JS::gcreason::Reason reason);
 
     gcstats::ZoneGCStats scanZonesBeforeGC();
     void collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::Reason reason) JS_HAZ_GC_CALL;
-    bool gcCycle(bool nonincrementalByAPI, SliceBudget& budget, JS::gcreason::Reason reason);
+    MOZ_MUST_USE bool gcCycle(bool nonincrementalByAPI, SliceBudget& budget,
+                              JS::gcreason::Reason reason);
     void incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason reason);
 
     void pushZealSelectedObjects();
     void purgeRuntime();
-    bool beginMarkPhase(JS::gcreason::Reason reason);
+    MOZ_MUST_USE bool beginMarkPhase(JS::gcreason::Reason reason);
     bool shouldPreserveJITCode(JSCompartment* comp, int64_t currentTime,
                                JS::gcreason::Reason reason);
     void bufferGrayRoots();
@@ -946,7 +951,7 @@ class GCRuntime
 
     void beginSweepPhase(bool lastGC);
     void findZoneGroups();
-    bool findZoneEdgesForWeakMaps();
+    MOZ_MUST_USE bool findZoneEdgesForWeakMaps();
     void getNextZoneGroup();
     void endMarkingZoneGroup();
     void beginSweepingZoneGroup();
@@ -967,8 +972,8 @@ class GCRuntime
     void endCompactPhase(JS::gcreason::Reason reason);
     void sweepTypesAfterCompacting(Zone* zone);
     void sweepZoneAfterCompacting(Zone* zone);
-    bool relocateArenas(Zone* zone, JS::gcreason::Reason reason, Arena*& relocatedListOut,
-                        SliceBudget& sliceBudget);
+    MOZ_MUST_USE bool relocateArenas(Zone* zone, JS::gcreason::Reason reason,
+                                     Arena*& relocatedListOut, SliceBudget& sliceBudget);
     void updateTypeDescrObjects(MovingTracer* trc, Zone* zone);
     void updateCellPointers(MovingTracer* trc, Zone* zone, AllocKinds kinds, size_t bgTaskCount);
     void updateAllCellPointers(MovingTracer* trc, Zone* zone);
@@ -1047,6 +1052,8 @@ class GCRuntime
      */
     mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> numArenasFreeCommitted;
     VerifyPreTracer* verifyPreData;
+
+  private:
     bool chunkAllocationSinceLastGC;
     int64_t nextFullGCTime;
     int64_t lastGCTime;

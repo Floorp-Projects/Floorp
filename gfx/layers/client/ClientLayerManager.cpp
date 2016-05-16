@@ -205,6 +205,7 @@ ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
 
   if (DependsOnStaleDevice()) {
     FrameLayerBuilder::InvalidateAllLayers(this);
+    mDeviceCounter = gfxPlatform::GetPlatform()->GetDeviceCounter();
   }
 
   MOZ_ASSERT(mKeepAlive.IsEmpty(), "uncommitted txn?");

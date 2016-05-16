@@ -23,6 +23,7 @@
 #include "mozilla/layers/APZUtils.h"    // for CompleteAsyncTransform
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/CompositorBridgeParent.h" // for CompositorBridgeParent, etc
+#include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/LayerAnimationUtils.h" // for TimingFunctionToComputedTimingFunction
 #include "mozilla/layers/LayerMetricsWrapper.h" // for LayerMetricsWrapper
 #include "nsCoord.h"                    // for NSAppUnitsToFloatPixels, etc
@@ -706,7 +707,7 @@ void
 AsyncCompositionManager::RecordShadowTransforms(Layer* aLayer)
 {
   MOZ_ASSERT(gfxPrefs::CollectScrollTransforms());
-  MOZ_ASSERT(CompositorBridgeParent::IsInCompositorThread());
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
 
   ForEachNodePostOrder<ForwardIterator>(
       aLayer,
@@ -1439,7 +1440,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
 void
 AsyncCompositionManager::GetFrameUniformity(FrameUniformityData* aOutData)
 {
-  MOZ_ASSERT(CompositorBridgeParent::IsInCompositorThread());
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   mLayerTransformRecorder.EndTest(aOutData);
 }
 

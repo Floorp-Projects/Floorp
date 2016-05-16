@@ -824,11 +824,10 @@ class Artifacts(object):
         return candidate_pushheads
 
     def _get_hg_revisions_from_git(self):
-
-        # First commit is HEAD, next is HEAD~1, etc.
         rev_list = subprocess.check_output([
             self._git, 'rev-list', '--topo-order',
-            'HEAD~{num}..HEAD'.format(num=NUM_REVISIONS_TO_QUERY),
+            '--max-count={num}'.format(num=NUM_REVISIONS_TO_QUERY),
+            'HEAD',
         ])
 
         hg_hash_list = subprocess.check_output([

@@ -256,11 +256,3 @@ NS_IMETHODIMP nsPrinterEnumeratorQt::InitPrintSettingsFromPrinter(
     // Probably should use NS_ERROR_NOT_IMPLEMENTED
     return NS_OK;
 }
-
-NS_IMETHODIMP nsPrinterEnumeratorQt::DisplayPropertiesDlg(
-        const char16_t* aPrinter,
-        nsIPrintSettings* aPrintSettings)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-

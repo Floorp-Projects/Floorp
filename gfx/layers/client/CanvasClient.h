@@ -160,9 +160,7 @@ public:
 
   virtual void Updated() override;
 
-  virtual void OnDetach() override {
-    ClearSurfaces();
-  }
+  virtual void OnDetach() override;
 };
 
 /**

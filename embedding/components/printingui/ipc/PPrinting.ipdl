@@ -23,6 +23,7 @@ sync protocol PPrinting
 parent:
   sync ShowProgress(PBrowser browser,
                     PPrintProgressDialog printProgressDialog,
+                    PRemotePrintJob remotePrintJob,
                     bool isForPrinting)
     returns(bool notifyOnOpen,
             nsresult rv);

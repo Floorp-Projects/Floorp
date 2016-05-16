@@ -1186,13 +1186,18 @@ MaybeForwarded(T t)
 #ifdef JSGC_HASH_TABLE_CHECKS
 
 template <typename T>
+inline bool
+IsGCThingValidAfterMovingGC(T* t)
+{
+    return !IsInsideNursery(t) && !RelocationOverlay::isCellForwarded(t);
+}
+
+template <typename T>
 inline void
 CheckGCThingAfterMovingGC(T* t)
 {
-    if (t) {
-        MOZ_RELEASE_ASSERT(!IsInsideNursery(t));
-        MOZ_RELEASE_ASSERT(!RelocationOverlay::isCellForwarded(t));
-    }
+    if (t)
+        MOZ_RELEASE_ASSERT(IsGCThingValidAfterMovingGC(t));
 }
 
 template <typename T>
@@ -1228,13 +1233,14 @@ CheckValueAfterMovingGC(const JS::Value& value)
             D(IncrementalMarkingValidator, 11) \
             D(ElementsBarrier, 12)             \
             D(CheckHashTablesOnMinorGC, 13)    \
-            D(Compact, 14)
+            D(Compact, 14)                     \
+            D(CheckHeapOnMovingGC, 15)
 
 enum class ZealMode {
 #define ZEAL_MODE(name, value) name = value,
     JS_FOR_EACH_ZEAL_MODE(ZEAL_MODE)
 #undef ZEAL_MODE
-    Limit = 14
+    Limit = 15
 };
 
 enum VerifierType {

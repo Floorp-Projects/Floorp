@@ -17,7 +17,7 @@ namespace gc {
 
 #ifdef JS_GC_TRACE
 
-extern bool InitTrace(GCRuntime& gc);
+extern MOZ_MUST_USE bool InitTrace(GCRuntime& gc);
 extern void FinishTrace();
 extern bool TraceEnabled();
 extern void TraceNurseryAlloc(Cell* thing, size_t size);
@@ -33,7 +33,7 @@ extern void TraceTypeNewScript(js::ObjectGroup* group);
 
 #else
 
-inline bool InitTrace(GCRuntime& gc) { return true; }
+inline MOZ_MUST_USE bool InitTrace(GCRuntime& gc) { return true; }
 inline void FinishTrace() {}
 inline bool TraceEnabled() { return false; }
 inline void TraceNurseryAlloc(Cell* thing, size_t size) {}

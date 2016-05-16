@@ -12,9 +12,9 @@
 #include "nsReadableUtils.h"
 #include "nsPrintSettingsImpl.h"
 #include "nsIPrintSession.h"
+#include "nsServiceManagerUtils.h"
 
 #include "nsIDOMWindow.h"
-#include "nsIServiceManager.h"
 #include "nsIDialogParamBlock.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
@@ -105,6 +105,16 @@ nsPrintOptions::SerializeToPrintData(nsIPrintSettings* aSettings,
                                      nsIWebBrowserPrint* aWBP,
                                      PrintData* data)
 {
+  nsCOMPtr<nsIPrintSession> session;
+  nsresult rv = aSettings->GetPrintSession(getter_AddRefs(session));
+  if (NS_SUCCEEDED(rv) && session) {
+    RefPtr<RemotePrintJobChild> remotePrintJob;
+    rv = session->GetRemotePrintJob(getter_AddRefs(remotePrintJob));
+    if (NS_SUCCEEDED(rv)) {
+      data->remotePrintJobChild() = remotePrintJob;
+    }
+  }
+
   aSettings->GetStartPageRange(&data->startPageRange());
   aSettings->GetEndPageRange(&data->endPageRange());
 
@@ -965,33 +975,6 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsPrintOptions::DisplayJobProperties(const char16_t *aPrinter,
-                                     nsIPrintSettings* aPrintSettings,
-                                     bool *aDisplayed)
-{
-  NS_ENSURE_ARG_POINTER(aPrinter);
-  *aDisplayed = false;
-
-  nsresult rv;
-  nsCOMPtr<nsIPrinterEnumerator> propDlg =
-           do_CreateInstance(NS_PRINTER_ENUMERATOR_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_ENSURE_ARG_POINTER(aPrintSettings);
-  rv = propDlg->DisplayPropertiesDlg(aPrinter, aPrintSettings);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aDisplayed = true;
-
-  return rv;
-}
-
-NS_IMETHODIMP nsPrintOptions::GetNativeData(int16_t aDataType, void * *_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 nsresult nsPrintOptions::_CreatePrintSettings(nsIPrintSettings **_retval)
 {
   // does not initially ref count
@@ -1011,17 +994,12 @@ nsresult nsPrintOptions::_CreatePrintSettings(nsIPrintSettings **_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPrintOptions::CreatePrintSettings(nsIPrintSettings **_retval)
-{
-  return _CreatePrintSettings(_retval);
-}
-
 NS_IMETHODIMP
 nsPrintOptions::GetGlobalPrintSettings(nsIPrintSettings **aGlobalPrintSettings)
 {
   nsresult rv;
 
-  rv = CreatePrintSettings(getter_AddRefs(mGlobalPrintSettings));
+  rv = _CreatePrintSettings(getter_AddRefs(mGlobalPrintSettings));
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ADDREF(*aGlobalPrintSettings = mGlobalPrintSettings.get());
@@ -1032,7 +1010,7 @@ nsPrintOptions::GetGlobalPrintSettings(nsIPrintSettings **aGlobalPrintSettings)
 NS_IMETHODIMP
 nsPrintOptions::GetNewPrintSettings(nsIPrintSettings * *aNewPrintSettings)
 {
-  return CreatePrintSettings(aNewPrintSettings);
+  return _CreatePrintSettings(aNewPrintSettings);
 }
 
 NS_IMETHODIMP
@@ -1104,6 +1082,7 @@ nsPrintOptions::InitPrintSettingsFromPrinter(const char16_t *aPrinterName,
   return rv;
 }
 
+#ifndef MOZ_X11
 /** ---------------------------------------------------
  *  Helper function - Returns either the name or sets the length to zero
  */
@@ -1143,31 +1122,7 @@ GetAdjustedPrinterName(nsIPrintSettings* aPS, bool aUsePNP,
   }
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsPrintOptions::GetPrinterPrefInt(nsIPrintSettings *aPrintSettings,
-                                  const char16_t *aPrefName, int32_t *_retval)
-{
-  NS_ENSURE_ARG_POINTER(aPrintSettings);
-  NS_ENSURE_ARG_POINTER(aPrefName);
-
-  nsAutoString prtName;
-  // Get the Printer Name from the PrintSettings
-  // to use as a prefix for Pref Names
-  GetAdjustedPrinterName(aPrintSettings, true, prtName);
-
-  const char* prefName =
-    GetPrefName(NS_LossyConvertUTF16toASCII(aPrefName).get(), prtName);
-
-  NS_ENSURE_TRUE(prefName, NS_ERROR_FAILURE);
-
-  int32_t iVal;
-  nsresult rv = Preferences::GetInt(prefName, &iVal);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *_retval = iVal;
-  return rv;
-}
+#endif
 
 NS_IMETHODIMP 
 nsPrintOptions::InitPrintSettingsFromPrefs(nsIPrintSettings* aPS,

@@ -103,6 +103,11 @@
 #include "nsXULPopupManager.h"
 #endif
 
+#ifdef NS_PRINTING
+#include "mozilla/embedding/printingui/PrintingParent.h"
+#include "nsIWebBrowserPrint.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::hal;
 using namespace mozilla::dom;
@@ -3099,6 +3104,46 @@ nsFrameLoader::RequestNotifyLayerTreeCleared()
                              true, false);
   event->PostDOMEvent();
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::Print(nsIPrintSettings* aPrintSettings,
+                     nsIWebProgressListener* aProgressListener)
+{
+#if defined(NS_PRINTING)
+  if (mRemoteBrowser) {
+    RefPtr<embedding::PrintingParent> printingParent =
+      mRemoteBrowser->Manager()->AsContentParent()->GetPrintingParent();
+
+    embedding::PrintData printData;
+    nsresult rv = printingParent->SerializeAndEnsureRemotePrintJob(
+      aPrintSettings, aProgressListener, nullptr, &printData);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    bool success = mRemoteBrowser->SendPrint(printData);
+    return success ? NS_OK : NS_ERROR_FAILURE;
+  }
+
+  if (mDocShell) {
+    nsCOMPtr<nsIContentViewer> viewer;
+    mDocShell->GetContentViewer(getter_AddRefs(viewer));
+    if (!viewer) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint = do_QueryInterface(viewer);
+    if (!webBrowserPrint) {
+      return NS_ERROR_FAILURE;
+    }
+
+    return webBrowserPrint->Print(aPrintSettings, aProgressListener);
+  }
+
+  return NS_ERROR_FAILURE;
+#endif
   return NS_OK;
 }
 

@@ -1326,6 +1326,22 @@
         </body>
       </method>
 
+      <method name="print">
+        <parameter name="aPrintSettings"/>
+        <parameter name="aPrintProgressListener"/>
+        <body>
+          <![CDATA[
+            var owner = this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner);
+            if (!owner.frameLoader) {
+              throw Components.Exception("No frame loader.",
+                                         Components.results.NS_ERROR_FAILURE);
+            }
+
+            owner.frameLoader.print(aPrintSettings, aPrintProgressListener);
+          ]]>
+        </body>
+      </method>
+
       <!-- This will go away if the binding has been removed for some reason. -->
       <field name="_alive">true</field>
     </implementation>

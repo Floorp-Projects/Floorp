@@ -15,6 +15,7 @@
 #include "nsDeviceContext.h"
 #include "nsIDeviceContextSpec.h"
 #include "nsIPrintSettings.h"
+#include "nsIWebProgressListener.h"
 #include "PrintTranslator.h"
 
 namespace mozilla {
@@ -147,6 +148,56 @@ RemotePrintJobParent::RecvAbortPrint(const nsresult& aRv)
 
   Unused << Send__delete__(this);
   return true;
+}
+
+bool
+RemotePrintJobParent::RecvStateChange(const long& aStateFlags,
+                                      const nsresult& aStatus)
+{
+  uint32_t numberOfListeners = mPrintProgressListeners.Length();
+  for (uint32_t i = 0; i < numberOfListeners; ++i) {
+    nsIWebProgressListener* listener = mPrintProgressListeners.SafeElementAt(i);
+    listener->OnStateChange(nullptr, nullptr, aStateFlags, aStatus);
+  }
+
+  return true;
+}
+
+bool
+RemotePrintJobParent::RecvProgressChange(const long& aCurSelfProgress,
+                                         const long& aMaxSelfProgress,
+                                         const long& aCurTotalProgress,
+                                         const long& aMaxTotalProgress)
+{
+  uint32_t numberOfListeners = mPrintProgressListeners.Length();
+  for (uint32_t i = 0; i < numberOfListeners; ++i) {
+    nsIWebProgressListener* listener = mPrintProgressListeners.SafeElementAt(i);
+    listener->OnProgressChange(nullptr, nullptr,
+                               aCurSelfProgress, aMaxSelfProgress,
+                               aCurTotalProgress, aMaxTotalProgress);
+  }
+
+  return true;
+}
+
+bool
+RemotePrintJobParent::RecvStatusChange(const nsresult& aStatus)
+{
+  uint32_t numberOfListeners = mPrintProgressListeners.Length();
+  for (uint32_t i = 0; i < numberOfListeners; ++i) {
+    nsIWebProgressListener* listener = mPrintProgressListeners.SafeElementAt(i);
+    listener->OnStatusChange(nullptr, nullptr, aStatus, nullptr);
+  }
+
+  return true;
+}
+
+void
+RemotePrintJobParent::RegisterListener(nsIWebProgressListener* aListener)
+{
+  MOZ_ASSERT(aListener);
+
+  mPrintProgressListeners.AppendElement(aListener);
 }
 
 RemotePrintJobParent::~RemotePrintJobParent()

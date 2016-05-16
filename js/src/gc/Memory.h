@@ -29,7 +29,7 @@ bool MarkPagesUnused(void* p, size_t size);
 // Undo |MarkPagesUnused|: tell the OS that the given pages are of interest
 // and should be paged in and out normally. This may be a no-op on some
 // platforms.
-bool MarkPagesInUse(void* p, size_t size);
+void MarkPagesInUse(void* p, size_t size);
 
 // Returns #(hard faults) + #(soft faults)
 size_t GetPageFaultCount();

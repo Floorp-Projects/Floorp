@@ -195,6 +195,8 @@ public:
     : mCompositorID(0)
     , mDiagnosticTypes(DiagnosticTypes::NO_DIAGNOSTIC)
     , mParent(aParent)
+    , mPixelsPerFrame(0)
+    , mPixelsFilled(0)
     , mScreenRotation(ROTATION_0)
     , mWidget(aWidget)
   {
