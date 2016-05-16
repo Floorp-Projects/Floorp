@@ -42,7 +42,6 @@
 #include "transportlayerice.h"
 #include "runnable_utils.h"
 #include "libyuv/convert.h"
-#include "mozilla/SharedThreadPool.h"
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
 #include "mozilla/PeerIdentity.h"
 #include "mozilla/TaskQueue.h"
@@ -457,129 +456,6 @@ protected:
   nsTArray<RefPtr<VideoConverterListener>> mListeners;
 };
 #endif
-
-// An async inserter for audio data, to avoid running audio codec encoders
-// on the MSG/input audio thread.  Basically just bounces all the audio
-// data to a single audio processing/input queue.  We could if we wanted to
-// use multiple threads and a TaskQueue.
-class AudioProxyThread
-{
-public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioProxyThread)
-
-  AudioProxyThread()
-  {
-    MOZ_COUNT_CTOR(AudioProxyThread);
-
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-    // Use only 1 thread; also forces FIFO operation
-    // We could use multiple threads, but that may be dicier with the webrtc.org
-    // code.  If so we'd need to use TaskQueues like the videoframe converter
-    RefPtr<SharedThreadPool> pool =
-      SharedThreadPool::Get(NS_LITERAL_CSTRING("AudioProxy"), 1);
-
-    mThread = pool.get();
-#else
-    nsCOMPtr<nsIThread> thread;
-    if (!NS_WARN_IF(NS_FAILED(NS_NewNamedThread("AudioProxy", getter_AddRefs(thread))))) {
-      mThread = thread;
-    }
-#endif
-  }
-
-  // called on mThread
-  void InternalProcessAudioChunk(
-    AudioSessionConduit *conduit,
-    TrackRate rate,
-    AudioChunk& chunk,
-    bool enabled) {
-
-    // Convert to interleaved, 16-bits integer audio, with a maximum of two
-    // channels (since the WebRTC.org code below makes the assumption that the
-    // input audio is either mono or stereo).
-    uint32_t outputChannels = chunk.ChannelCount() == 1 ? 1 : 2;
-    const int16_t* samples = nullptr;
-    UniquePtr<int16_t[]> convertedSamples;
-
-    // We take advantage of the fact that the common case (microphone directly to
-    // PeerConnection, that is, a normal call), the samples are already 16-bits
-    // mono, so the representation in interleaved and planar is the same, and we
-    // can just use that.
-    if (enabled && outputChannels == 1 && chunk.mBufferFormat == AUDIO_FORMAT_S16) {
-      samples = chunk.ChannelData<int16_t>().Elements()[0];
-    } else {
-      convertedSamples = MakeUnique<int16_t[]>(chunk.mDuration * outputChannels);
-
-      if (!enabled || chunk.mBufferFormat == AUDIO_FORMAT_SILENCE) {
-        PodZero(convertedSamples.get(), chunk.mDuration * outputChannels);
-      } else if (chunk.mBufferFormat == AUDIO_FORMAT_FLOAT32) {
-        DownmixAndInterleave(chunk.ChannelData<float>(),
-                             chunk.mDuration, chunk.mVolume, outputChannels,
-                             convertedSamples.get());
-      } else if (chunk.mBufferFormat == AUDIO_FORMAT_S16) {
-        DownmixAndInterleave(chunk.ChannelData<int16_t>(),
-                             chunk.mDuration, chunk.mVolume, outputChannels,
-                             convertedSamples.get());
-      }
-      samples = convertedSamples.get();
-    }
-
-    MOZ_ASSERT(!(rate%100)); // rate should be a multiple of 100
-
-    // Check if the rate or the number of channels has changed since the last time
-    // we came through. I realize it may be overkill to check if the rate has
-    // changed, but I believe it is possible (e.g. if we change sources) and it
-    // costs us very little to handle this case.
-
-    uint32_t audio_10ms = rate / 100;
-
-    if (!packetizer_ ||
-        packetizer_->PacketSize() != audio_10ms ||
-        packetizer_->Channels() != outputChannels) {
-      // It's ok to drop the audio still in the packetizer here.
-      packetizer_ = new AudioPacketizer<int16_t, int16_t>(audio_10ms, outputChannels);
-    }
-
-    packetizer_->Input(samples, chunk.mDuration);
-
-    while (packetizer_->PacketsAvailable()) {
-      uint32_t samplesPerPacket = packetizer_->PacketSize() *
-                                  packetizer_->Channels();
-
-      // We know that webrtc.org's code going to copy the samples down the line,
-      // so we can just use a stack buffer here instead of malloc-ing.
-      // Max size given stereo is 480*2*2 = 1920 (10ms of 16-bits stereo audio at
-      // 48KHz)
-      const size_t AUDIO_SAMPLE_BUFFER_MAX = 1920;
-      int16_t packet[AUDIO_SAMPLE_BUFFER_MAX];
-
-      packetizer_->Output(packet);
-      conduit->SendAudioFrame(packet,
-                              samplesPerPacket,
-                              rate, 0);
-    }
-  }
-
-  void QueueAudioChunk(AudioSessionConduit *conduit,
-                       TrackRate rate, AudioChunk& chunk, bool enabled)
-  {
-    RUN_ON_THREAD(mThread,
-                  WrapRunnable(RefPtr<AudioProxyThread>(this),
-                               &AudioProxyThread::InternalProcessAudioChunk,
-                               conduit, rate, chunk, enabled),
-                  NS_DISPATCH_NORMAL);
-  }
-
-protected:
-  virtual ~AudioProxyThread()
-  {
-    MOZ_COUNT_DTOR(AudioProxyThread);
-  }
-
-  nsCOMPtr<nsIEventTarget> mThread;
-  // Only accessed on mThread
-  nsAutoPtr<AudioPacketizer<int16_t, int16_t>> packetizer_;
-};
 
 static char kDTLSExporterLabel[] = "EXTRACTOR-dtls_srtp";
 
@@ -1205,7 +1081,8 @@ public:
       track_id_external_(TRACK_INVALID),
       active_(false),
       enabled_(false),
-      direct_connect_(false)
+      direct_connect_(false),
+      packetizer_(nullptr)
   {
   }
 
@@ -1237,13 +1114,6 @@ public:
 
   void SetActive(bool active) { active_ = active; }
   void SetEnabled(bool enabled) { enabled_ = enabled; }
-
-  // These are needed since nested classes don't have access to any particular
-  // instance of the parent
-  void SetAudioProxy(const RefPtr<AudioProxyThread>& proxy)
-  {
-    audio_processing_ = proxy;
-  }
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   void SetVideoFrameConverter(const RefPtr<VideoFrameConverter>& converter)
@@ -1292,8 +1162,10 @@ private:
                StreamTime offset,
                const MediaSegment& media);
 
+  virtual void ProcessAudioChunk(AudioSessionConduit *conduit,
+                                 TrackRate rate, AudioChunk& chunk);
+
   RefPtr<MediaSessionConduit> conduit_;
-  RefPtr<AudioProxyThread> audio_processing_;
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   RefPtr<VideoFrameConverter> converter_;
 #endif
@@ -1313,6 +1185,8 @@ private:
 
   // Written and read on the MediaStreamGraph thread
   bool direct_connect_;
+
+  nsAutoPtr<AudioPacketizer<int16_t, int16_t>> packetizer_;
 };
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
@@ -1395,12 +1269,8 @@ MediaPipelineTransmit::MediaPipelineTransmit(
   listener_(new PipelineListener(conduit)),
   domtrack_(domtrack)
 {
-  if (!IsVideo()) {
-    audio_processing_ = MakeAndAddRef<AudioProxyThread>();
-    listener_->SetAudioProxy(audio_processing_);
-  }
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  else { // Video
+  if (IsVideo()) {
     // For video we send frames to an async VideoFrameConverter that calls
     // back to a VideoFrameFeeder that feeds I420 frames to VideoConduit.
 
@@ -1764,8 +1634,8 @@ NewData(MediaStreamGraph* graph,
 #else
       rate = graph->GraphRate();
 #endif
-      audio_processing_->QueueAudioChunk(static_cast<AudioSessionConduit*>(conduit_.get()),
-                                         rate, *iter, enabled_);
+      ProcessAudioChunk(static_cast<AudioSessionConduit*>(conduit_.get()),
+                        rate, *iter);
       iter.Next();
     }
   } else if (media.GetType() == MediaSegment::VIDEO) {
@@ -1781,6 +1651,77 @@ NewData(MediaStreamGraph* graph,
 #endif
   } else {
     // Ignore
+  }
+}
+
+void MediaPipelineTransmit::PipelineListener::ProcessAudioChunk(
+    AudioSessionConduit *conduit,
+    TrackRate rate,
+    AudioChunk& chunk) {
+
+  // Convert to interleaved, 16-bits integer audio, with a maximum of two
+  // channels (since the WebRTC.org code below makes the assumption that the
+  // input audio is either mono or stereo).
+  uint32_t outputChannels = chunk.ChannelCount() == 1 ? 1 : 2;
+  const int16_t* samples = nullptr;
+  UniquePtr<int16_t[]> convertedSamples;
+
+  // We take advantage of the fact that the common case (microphone directly to
+  // PeerConnection, that is, a normal call), the samples are already 16-bits
+  // mono, so the representation in interleaved and planar is the same, and we
+  // can just use that.
+  if (enabled_ && outputChannels == 1 && chunk.mBufferFormat == AUDIO_FORMAT_S16) {
+    samples = chunk.ChannelData<int16_t>().Elements()[0];
+  } else {
+    convertedSamples = MakeUnique<int16_t[]>(chunk.mDuration * outputChannels);
+
+    if (!enabled_ || chunk.mBufferFormat == AUDIO_FORMAT_SILENCE) {
+      PodZero(convertedSamples.get(), chunk.mDuration * outputChannels);
+    } else if (chunk.mBufferFormat == AUDIO_FORMAT_FLOAT32) {
+      DownmixAndInterleave(chunk.ChannelData<float>(),
+                           chunk.mDuration, chunk.mVolume, outputChannels,
+                           convertedSamples.get());
+    } else if (chunk.mBufferFormat == AUDIO_FORMAT_S16) {
+      DownmixAndInterleave(chunk.ChannelData<int16_t>(),
+                           chunk.mDuration, chunk.mVolume, outputChannels,
+                           convertedSamples.get());
+    }
+    samples = convertedSamples.get();
+  }
+
+  MOZ_ASSERT(!(rate%100)); // rate should be a multiple of 100
+
+  // Check if the rate or the number of channels has changed since the last time
+  // we came through. I realize it may be overkill to check if the rate has
+  // changed, but I believe it is possible (e.g. if we change sources) and it
+  // costs us very little to handle this case.
+
+  uint32_t audio_10ms = rate / 100;
+
+  if (!packetizer_ ||
+      packetizer_->PacketSize() != audio_10ms ||
+      packetizer_->Channels() != outputChannels) {
+    // It's ok to drop the audio still in the packetizer here.
+    packetizer_ = new AudioPacketizer<int16_t, int16_t>(audio_10ms, outputChannels);
+   }
+
+  packetizer_->Input(samples, chunk.mDuration);
+
+  while (packetizer_->PacketsAvailable()) {
+    uint32_t samplesPerPacket = packetizer_->PacketSize() *
+                                packetizer_->Channels();
+
+    // We know that webrtc.org's code going to copy the samples down the line,
+    // so we can just use a stack buffer here instead of malloc-ing.
+    // Max size given stereo is 480*2*2 = 1920 (10ms of 16-bits stereo audio at
+    // 48KHz)
+    const size_t AUDIO_SAMPLE_BUFFER_MAX = 1920;
+    int16_t packet[AUDIO_SAMPLE_BUFFER_MAX];
+
+    packetizer_->Output(packet);
+    conduit->SendAudioFrame(packet,
+                            samplesPerPacket,
+                            rate, 0);
   }
 }
 
