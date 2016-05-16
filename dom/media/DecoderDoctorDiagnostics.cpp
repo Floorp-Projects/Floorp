@@ -24,8 +24,7 @@ static mozilla::LazyLogModule sDecoderDoctorLog("DecoderDoctor");
 #define DD_INFO(arg, ...) DD_LOG(mozilla::LogLevel::Info, arg, ##__VA_ARGS__)
 #define DD_WARN(arg, ...) DD_LOG(mozilla::LogLevel::Warning, arg, ##__VA_ARGS__)
 
-namespace mozilla
-{
+namespace mozilla {
 
 // Class that collects a sequence of diagnostics from the same document over a
 // small period of time, in order to provide a synthesized analysis.
@@ -376,46 +375,46 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
 
   for (auto& diag : mDiagnosticsSequence) {
     switch (diag.mDecoderDoctorDiagnostics.Type()) {
-    case DecoderDoctorDiagnostics::eFormatSupportCheck:
-      if (diag.mDecoderDoctorDiagnostics.CanPlay()) {
-        canPlay = true;
-        AppendToStringList(playableFormats,
-                           diag.mDecoderDoctorDiagnostics.Format());
-      } else {
+      case DecoderDoctorDiagnostics::eFormatSupportCheck:
+        if (diag.mDecoderDoctorDiagnostics.CanPlay()) {
+          canPlay = true;
+          AppendToStringList(playableFormats,
+                             diag.mDecoderDoctorDiagnostics.Format());
+        } else {
 #if defined(XP_WIN)
-        if (diag.mDecoderDoctorDiagnostics.DidWMFFailToLoad()) {
-          WMFNeeded = true;
-        }
+          if (diag.mDecoderDoctorDiagnostics.DidWMFFailToLoad()) {
+            WMFNeeded = true;
+          }
 #endif
 #if defined(MOZ_FFMPEG)
-        if (diag.mDecoderDoctorDiagnostics.DidFFmpegFailToLoad()) {
-          FFMpegNeeded = true;
-        }
+          if (diag.mDecoderDoctorDiagnostics.DidFFmpegFailToLoad()) {
+            FFMpegNeeded = true;
+          }
 #endif
-        AppendToStringList(unplayableFormats,
-                           diag.mDecoderDoctorDiagnostics.Format());
-      }
-      break;
-    case DecoderDoctorDiagnostics::eMediaKeySystemAccessRequest:
-      if (diag.mDecoderDoctorDiagnostics.IsKeySystemSupported()) {
-        AppendToStringList(supportedKeySystems,
-                           diag.mDecoderDoctorDiagnostics.KeySystem());
-      } else {
-        AppendToStringList(unsupportedKeySystems,
-                           diag.mDecoderDoctorDiagnostics.KeySystem());
-        DecoderDoctorDiagnostics::KeySystemIssue issue =
-          diag.mDecoderDoctorDiagnostics.GetKeySystemIssue();
-        if (issue != DecoderDoctorDiagnostics::eUnset) {
-          lastKeySystemIssue = issue;
+          AppendToStringList(unplayableFormats,
+                             diag.mDecoderDoctorDiagnostics.Format());
         }
-      }
-      break;
-    default:
-      MOZ_ASSERT(diag.mDecoderDoctorDiagnostics.Type()
-                   == DecoderDoctorDiagnostics::eFormatSupportCheck
-                 || diag.mDecoderDoctorDiagnostics.Type()
-                      == DecoderDoctorDiagnostics::eMediaKeySystemAccessRequest);
-      break;
+        break;
+      case DecoderDoctorDiagnostics::eMediaKeySystemAccessRequest:
+        if (diag.mDecoderDoctorDiagnostics.IsKeySystemSupported()) {
+          AppendToStringList(supportedKeySystems,
+                             diag.mDecoderDoctorDiagnostics.KeySystem());
+        } else {
+          AppendToStringList(unsupportedKeySystems,
+                             diag.mDecoderDoctorDiagnostics.KeySystem());
+          DecoderDoctorDiagnostics::KeySystemIssue issue =
+            diag.mDecoderDoctorDiagnostics.GetKeySystemIssue();
+          if (issue != DecoderDoctorDiagnostics::eUnset) {
+            lastKeySystemIssue = issue;
+          }
+        }
+        break;
+      default:
+        MOZ_ASSERT(diag.mDecoderDoctorDiagnostics.Type()
+                     == DecoderDoctorDiagnostics::eFormatSupportCheck
+                   || diag.mDecoderDoctorDiagnostics.Type()
+                        == DecoderDoctorDiagnostics::eMediaKeySystemAccessRequest);
+        break;
     }
   }
 
@@ -423,17 +422,17 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
   if (!unsupportedKeySystems.IsEmpty() && supportedKeySystems.IsEmpty()) {
     // No supported key systems!
     switch (lastKeySystemIssue) {
-    case DecoderDoctorDiagnostics::eWidevineWithNoWMF:
-      if (CheckSilverlight() != eSilverlightEnabled) {
-        DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unsupported key systems: %s, widevine without WMF nor Silverlight",
-                 this, mDocument, NS_ConvertUTF16toUTF8(unplayableFormats).get());
-        ReportAnalysis(dom::DecoderDoctorNotificationType::Platform_decoder_not_found,
-                       "MediaWidevineNoWMFNoSilverlight", NS_LITERAL_STRING(""));
-        return;
-      }
-      break;
-    default:
-      break;
+      case DecoderDoctorDiagnostics::eWidevineWithNoWMF:
+        if (CheckSilverlight() != eSilverlightEnabled) {
+          DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unsupported key systems: %s, widevine without WMF nor Silverlight",
+                   this, mDocument, NS_ConvertUTF16toUTF8(unplayableFormats).get());
+          ReportAnalysis(dom::DecoderDoctorNotificationType::Platform_decoder_not_found,
+                         "MediaWidevineNoWMFNoSilverlight", NS_LITERAL_STRING(""));
+          return;
+        }
+        break;
+      default:
+        break;
     }
   }
 
@@ -619,39 +618,39 @@ DecoderDoctorDiagnostics::GetDescription() const
              || mDiagnosticsType == eMediaKeySystemAccessRequest);
   nsCString s;
   switch (mDiagnosticsType) {
-  case eUnsaved:
-    s = "Unsaved diagnostics, cannot get accurate description";
-    break;
-  case eFormatSupportCheck:
-    s = "format='";
-    s += NS_ConvertUTF16toUTF8(mFormat).get();
-    s += mCanPlay ? "', can play" : "', cannot play";
-    if (mWMFFailedToLoad) {
-      s += ", Windows platform decoder failed to load";
-    }
-    if (mFFmpegFailedToLoad) {
-      s += ", Linux platform decoder failed to load";
-    }
-    if (mGMPPDMFailedToStartup) {
-      s += ", GMP PDM failed to startup";
-    } else if (!mGMP.IsEmpty()) {
-      s += ", Using GMP '";
-      s += mGMP;
-      s += "'";
-    }
-    break;
-  case eMediaKeySystemAccessRequest:
-    s = "key system='";
-    s += NS_ConvertUTF16toUTF8(mKeySystem).get();
-    s += mIsKeySystemSupported ? "', supported" : "', not supported";
-    switch (mKeySystemIssue) {
-    case eUnset:
+    case eUnsaved:
+      s = "Unsaved diagnostics, cannot get accurate description";
       break;
-    case eWidevineWithNoWMF:
-      s += ", Widevine with no WMF";
+    case eFormatSupportCheck:
+      s = "format='";
+      s += NS_ConvertUTF16toUTF8(mFormat).get();
+      s += mCanPlay ? "', can play" : "', cannot play";
+      if (mWMFFailedToLoad) {
+        s += ", Windows platform decoder failed to load";
+      }
+      if (mFFmpegFailedToLoad) {
+        s += ", Linux platform decoder failed to load";
+      }
+      if (mGMPPDMFailedToStartup) {
+        s += ", GMP PDM failed to startup";
+      } else if (!mGMP.IsEmpty()) {
+        s += ", Using GMP '";
+        s += mGMP;
+        s += "'";
+      }
       break;
-    }
-    break;
+    case eMediaKeySystemAccessRequest:
+      s = "key system='";
+      s += NS_ConvertUTF16toUTF8(mKeySystem).get();
+      s += mIsKeySystemSupported ? "', supported" : "', not supported";
+      switch (mKeySystemIssue) {
+        case eUnset:
+          break;
+        case eWidevineWithNoWMF:
+          s += ", Widevine with no WMF";
+          break;
+      }
+      break;
     default:
       s = "?";
       break;
