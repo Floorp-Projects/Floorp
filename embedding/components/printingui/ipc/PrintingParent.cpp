@@ -32,6 +32,7 @@ namespace embedding {
 bool
 PrintingParent::RecvShowProgress(PBrowserParent* parent,
                                  PPrintProgressDialogParent* printProgressDialog,
+                                 PRemotePrintJobParent* remotePrintJob,
                                  const bool& isForPrinting,
                                  bool* notifyOnOpen,
                                  nsresult* result)
@@ -64,7 +65,15 @@ PrintingParent::RecvShowProgress(PBrowserParent* parent,
                               notifyOnOpen);
   NS_ENSURE_SUCCESS(*result, true);
 
-  dialogParent->SetWebProgressListener(printProgressListener);
+  if (remotePrintJob) {
+    // If we have a RemotePrintJob use that as a more general forwarder for
+    // print progress listeners.
+    static_cast<RemotePrintJobParent*>(remotePrintJob)
+      ->RegisterListener(printProgressListener);
+  } else {
+    dialogParent->SetWebProgressListener(printProgressListener);
+  }
+
   dialogParent->SetPrintProgressParams(printProgressParams);
 
   return true;
