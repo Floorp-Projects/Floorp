@@ -17,6 +17,3 @@ UNIFIED_SOURCES += [
 ]
 
 XPCOMBinaryComponent('xpctest')
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']

@@ -77,9 +77,6 @@ if not CONFIG['RELEASE_BUILD'] or CONFIG['MOZ_DEBUG']:
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']
-
 # XXX: We should fix these warnings.
 ALLOW_COMPILER_WARNINGS = True
 

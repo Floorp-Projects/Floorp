@@ -118,6 +118,7 @@ if CONFIG['GNU_CXX'] or CONFIG['CLANG_CL']:
     CXXFLAGS += [
         '-Wno-deprecated-declarations',
         '-Wno-overloaded-virtual',
+        '-Wno-shadow',
         '-Wno-sign-compare',
         '-Wno-unused-function',
     ]

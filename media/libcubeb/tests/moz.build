@@ -75,3 +75,6 @@ elif CONFIG['OS_TARGET'] == 'OpenBSD':
 else:
     OS_LIBS += CONFIG['MOZ_ALSA_LIBS']
     OS_LIBS += CONFIG['MOZ_PULSEAUDIO_LIBS']
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']

@@ -39,13 +39,17 @@ include('../../warnings.mozbuild')
 # These warnings are disabled in order to minimize the amount of boilerplate
 # required to implement tests, and/or because they originate in the GTest
 # framework in a way we cannot otherwise work around.
-if CONFIG['CLANG_CXX']:
+if CONFIG['GNU_CXX']:
   CXXFLAGS += [
-    '-Wno-exit-time-destructors',
-    '-Wno-global-constructors',
+    '-Wno-error=shadow',
     '-Wno-old-style-cast',
-    '-Wno-used-but-marked-unused',
   ]
+  if CONFIG['CLANG_CXX']:
+    CXXFLAGS += [
+      '-Wno-exit-time-destructors',
+      '-Wno-global-constructors',
+      '-Wno-used-but-marked-unused',
+    ]
 elif CONFIG['_MSC_VER']:
   CXXFLAGS += [
     '-wd4350', # behavior change: 'std::_Wrap_alloc<std::allocator<_Ty>>::...

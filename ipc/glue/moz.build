@@ -23,12 +23,15 @@ EXPORTS.mozilla.ipc += [
     'GeckoChildProcessHost.h',
     'InputStreamUtils.h',
     'IOThreadChild.h',
+    'IPCStreamUtils.h',
     'MessageChannel.h',
     'MessageLink.h',
     'Neutering.h',
     'ProcessChild.h',
     'ProtocolUtils.h',
     'ScopedXREEmbed.h',
+    'SendStream.h',
+    'SendStreamAlloc.h',
     'SharedMemory.h',
     'SharedMemoryBasic.h',
     'Shmem.h',
@@ -115,12 +118,15 @@ UNIFIED_SOURCES += [
     'FileDescriptorUtils.cpp',
     'InputStreamUtils.cpp',
     'IPCMessageUtils.cpp',
+    'IPCStreamUtils.cpp',
     'MessageChannel.cpp',
     'MessageLink.cpp',
     'MessagePump.cpp',
     'ProcessChild.cpp',
     'ProtocolUtils.cpp',
     'ScopedXREEmbed.cpp',
+    'SendStreamChild.cpp',
+    'SendStreamParent.cpp',
     'SharedMemory.cpp',
     'Shmem.cpp',
     'StringUtil.cpp',
@@ -154,12 +160,14 @@ LOCAL_INCLUDES += [
 
 IPDL_SOURCES = [
     'InputStreamParams.ipdlh',
+    'IPCStream.ipdlh',
     'PBackground.ipdl',
     'PBackgroundSharedTypes.ipdlh',
     'PBackgroundTest.ipdl',
     'PFileDescriptorSet.ipdl',
     'PProcLoader.ipdl',
     'ProtocolTypes.ipdlh',
+    'PSendStream.ipdl',
     'URIParams.ipdlh',
 ]
 
@@ -187,3 +195,6 @@ if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
         '/security/sandbox/chromium-shim',
         '/security/sandbox/win/src/sandboxbroker',
     ]
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-shadow']

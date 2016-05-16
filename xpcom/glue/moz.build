@@ -120,6 +120,3 @@ USE_LIBS += [
 NO_EXPAND_LIBS = True
 
 DIST_INSTALL = True
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']

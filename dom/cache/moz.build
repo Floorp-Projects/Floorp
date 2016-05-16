@@ -14,8 +14,6 @@ EXPORTS.mozilla.dom.cache += [
     'CacheOpChild.h',
     'CacheOpParent.h',
     'CacheParent.h',
-    'CachePushStreamChild.h',
-    'CachePushStreamParent.h',
     'CacheStorage.h',
     'CacheStorageChild.h',
     'CacheStorageParent.h',
@@ -49,8 +47,6 @@ UNIFIED_SOURCES += [
     'CacheOpChild.cpp',
     'CacheOpParent.cpp',
     'CacheParent.cpp',
-    'CachePushStreamChild.cpp',
-    'CachePushStreamParent.cpp',
     'CacheStorage.cpp',
     'CacheStorageChild.cpp',
     'CacheStorageParent.cpp',
@@ -76,7 +72,6 @@ IPDL_SOURCES += [
     'CacheTypes.ipdlh',
     'PCache.ipdl',
     'PCacheOp.ipdl',
-    'PCachePushStream.ipdl',
     'PCacheStorage.ipdl',
     'PCacheStreamControl.ipdl',
 ]
@@ -100,3 +95,6 @@ BROWSER_CHROME_MANIFESTS += [
 XPCSHELL_TESTS_MANIFESTS += [
     'test/xpcshell/xpcshell.ini',
 ]
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']

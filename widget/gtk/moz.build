@@ -65,9 +65,6 @@ if CONFIG['MOZ_X11']:
         'nsDragService.cpp',
     ]
 
-if CONFIG['GNU_CC']:
-    CFLAGS += ['-Wshadow']
-
 if CONFIG['ACCESSIBILITY']:
     UNIFIED_SOURCES += [
         'maiRedundantObjectFactory.c',
@@ -126,3 +123,5 @@ CXXFLAGS += CONFIG['TK_CFLAGS']
 
 if CONFIG['MOZ_ENABLE_DBUS']:
     CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']
+
+CXXFLAGS += ['-Wno-error=shadow']

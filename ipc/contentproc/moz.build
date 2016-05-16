@@ -20,12 +20,8 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         '/xpcom/base',
     ]
 
-
 if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
     LOCAL_INCLUDES += [
         '/security/sandbox/chromium',
         '/security/sandbox/chromium-shim',
     ]
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']

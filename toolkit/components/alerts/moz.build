@@ -36,6 +36,3 @@ JAR_MANIFESTS += ['jar.mn']
 
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'Notifications and Alerts')
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']

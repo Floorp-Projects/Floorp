@@ -80,4 +80,7 @@ if CONFIG['_MSC_VER']:
     '-wd4946', # reinterpret_cast used between related types
   ]
 
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']
+
 FINAL_LIBRARY = 'xul'

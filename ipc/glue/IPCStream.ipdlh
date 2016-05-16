@@ -1,0 +1,34 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PSendStream;
+include InputStreamParams;
+
+namespace mozilla {
+namespace ipc {
+
+// Do not use this directly.  See IPCStream below.
+struct InputStreamParamsWithFds
+{
+  InputStreamParams stream;
+  OptionalFileDescriptorSet optionalFds;
+};
+
+// Use IPCStream or OptionalIPCStream in your ipdl to represent serialized
+// nsIInputStreams.  Then use AutoIPCStream from IPCStreamUtils.h to perform
+// the serialization.
+union IPCStream
+{
+  InputStreamParamsWithFds;
+  PSendStream;
+};
+
+union OptionalIPCStream
+{
+  IPCStream;
+  void_t;
+};
+
+} // namespace ipc
+} // namespace mozilla

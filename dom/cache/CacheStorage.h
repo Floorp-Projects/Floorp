@@ -92,8 +92,8 @@ public:
   virtual void AssertOwningThread() const override;
 #endif
 
-  virtual CachePushStreamChild*
-  CreatePushStream(nsIAsyncInputStream* aStream) override;
+  virtual mozilla::ipc::PBackgroundChild*
+  GetIPCManager() override;
 
 private:
   CacheStorage(Namespace aNamespace, nsIGlobalObject* aGlobal,

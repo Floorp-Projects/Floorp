@@ -325,6 +325,3 @@ LOCAL_INCLUDES += [
 ]
 
 NO_PGO = True
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']

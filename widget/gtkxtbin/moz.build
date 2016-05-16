@@ -17,6 +17,3 @@ FINAL_LIBRARY = 'xul'
 DEFINES['_IMPL_GTKXTBIN_API'] = True
 
 CFLAGS += CONFIG['MOZ_GTK2_CFLAGS']
-
-if CONFIG['GNU_CC']:
-    CFLAGS += ['-Wshadow']

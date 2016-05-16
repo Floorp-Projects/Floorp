@@ -19,3 +19,6 @@ GYP_DIRS['.'].input = 'libyuv.gyp'
 GYP_DIRS['.'].variables = gyp_vars
 GYP_DIRS['.'].sandbox_vars['FINAL_LIBRARY'] = 'xul'
 GYP_DIRS['.'].non_unified_sources += libyuv_non_unified_sources
+
+# We allow warnings for third-party code that can be updated from upstream.
+GYP_DIRS['.'].sandbox_vars['ALLOW_COMPILER_WARNINGS'] = True

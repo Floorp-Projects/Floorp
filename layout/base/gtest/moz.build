@@ -22,9 +22,6 @@ LOCAL_INCLUDES += [
     '/layout/style',
 ]
 
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']
-
 # Workaround bug 1142396. Suppress the warning from gmock library for clang.
 if CONFIG['CLANG_CXX']:
     CXXFLAGS += ['-Wno-null-dereference']

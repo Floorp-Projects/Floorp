@@ -135,3 +135,6 @@ XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
 TEST_DIRS += ['test/gtest']
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']

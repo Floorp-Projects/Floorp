@@ -11,6 +11,3 @@ SOURCES += [
 FINAL_LIBRARY = 'xul'
 
 CXXFLAGS += CONFIG['MOZ_GIO_CFLAGS']
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']
