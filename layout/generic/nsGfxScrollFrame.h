@@ -628,6 +628,7 @@ protected:
   void NotifyPluginFrames(AsyncScrollEventType aEvent);
   AsyncScrollEventType mAsyncScrollEvent;
   bool HasPluginFrames();
+  bool HasPerspective() const;
 
   static void EnsureFrameVisPrefsCached();
   static bool sFrameVisPrefsCached;
