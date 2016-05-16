@@ -5,7 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaSystemResourceManagerParent.h"
-#include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layers/CompositorThread.h"
 #include "mozilla/unused.h"
 
 #include "MediaSystemResourceService.h"
@@ -46,7 +46,7 @@ MediaSystemResourceService::Shutdown()
 MediaSystemResourceService::MediaSystemResourceService()
   : mDestroyed(false)
 {
-  MOZ_ASSERT(CompositorBridgeParent::IsInCompositorThread());
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
 #ifdef MOZ_WIDGET_GONK
   // The maximum number of hardware resoureces available.
   // XXX need to hange to a dynamic way.
@@ -82,7 +82,7 @@ MediaSystemResourceService::Acquire(media::MediaSystemResourceManagerParent* aPa
                                     MediaSystemResourceType aResourceType,
                                     bool aWillWait)
 {
-  MOZ_ASSERT(CompositorBridgeParent::IsInCompositorThread());
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   MOZ_ASSERT(aParent);
 
   if (mDestroyed) {
@@ -123,7 +123,7 @@ MediaSystemResourceService::ReleaseResource(media::MediaSystemResourceManagerPar
                                             uint32_t aId,
                                             MediaSystemResourceType aResourceType)
 {
-  MOZ_ASSERT(CompositorBridgeParent::IsInCompositorThread());
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   MOZ_ASSERT(aParent);
 
   if (mDestroyed) {

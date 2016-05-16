@@ -66,11 +66,11 @@ StoreBuffer::disable()
     enabled_ = false;
 }
 
-bool
+void
 StoreBuffer::clear()
 {
     if (!enabled_)
-        return true;
+        return;
 
     aboutToOverflow_ = false;
     cancelIonCompilations_ = false;
@@ -80,8 +80,6 @@ StoreBuffer::clear()
     bufferSlot.clear();
     bufferWholeCell.clear();
     bufferGeneric.clear();
-
-    return true;
 }
 
 void

@@ -17,7 +17,7 @@ public:
   nsPrintOptionsAndroid();
   virtual ~nsPrintOptionsAndroid();
 
-  NS_IMETHOD CreatePrintSettings(nsIPrintSettings **_retval);
+  nsresult _CreatePrintSettings(nsIPrintSettings** _retval) override;
 };
 
 #endif /* nsPrintOptionsAndroid_h__ */

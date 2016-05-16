@@ -1039,7 +1039,6 @@ public:
   }
 
   bool IsRootContentDocument() const;
-  bool IsCrossProcessRootContentDocument();
 
   bool IsGlyph() const {
     return mIsGlyph;
