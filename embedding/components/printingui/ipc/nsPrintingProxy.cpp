@@ -16,8 +16,10 @@
 #include "nsIPrintingPromptService.h"
 #include "nsPIDOMWindow.h"
 #include "nsPrintOptionsImpl.h"
+#include "nsServiceManagerUtils.h"
 #include "PrintDataUtils.h"
 #include "PrintProgressDialogChild.h"
+#include "PrintSettingsDialogChild.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -87,12 +89,13 @@ nsPrintingProxy::ShowPrintDialog(mozIDOMWindowProxy *parent,
 
   // Next, serialize the nsIWebBrowserPrint and nsIPrintSettings we were given.
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIPrintOptions> po =
+  nsCOMPtr<nsIPrintSettingsService> printSettingsSvc =
     do_GetService("@mozilla.org/gfx/printsettings-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PrintData inSettings;
-  rv = po->SerializeToPrintData(printSettings, webBrowserPrint, &inSettings);
+  rv = printSettingsSvc->SerializeToPrintData(printSettings, webBrowserPrint,
+                                              &inSettings);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Now, the waiting game. The parent process should be showing
@@ -112,7 +115,8 @@ nsPrintingProxy::ShowPrintDialog(mozIDOMWindowProxy *parent,
   rv = dialog->result();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = po->DeserializeToPrintSettings(dialog->data(), printSettings);
+  rv = printSettingsSvc->DeserializeToPrintSettings(dialog->data(),
+                                                    printSettings);
   return NS_OK;
 }
 
@@ -180,12 +184,12 @@ nsPrintingProxy::SavePrintSettings(nsIPrintSettings* aPS,
                                    uint32_t aFlags)
 {
   nsresult rv;
-  nsCOMPtr<nsIPrintOptions> po =
+  nsCOMPtr<nsIPrintSettingsService> printSettingsSvc =
     do_GetService("@mozilla.org/gfx/printsettings-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PrintData settings;
-  rv = po->SerializeToPrintData(aPS, nullptr, &settings);
+  rv = printSettingsSvc->SerializeToPrintData(aPS, nullptr, &settings);
   NS_ENSURE_SUCCESS(rv, rv);
 
   Unused << SendSavePrintSettings(settings, aUsePrinterNamePrefix, aFlags,
