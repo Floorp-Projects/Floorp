@@ -864,6 +864,24 @@ interface TestInterface {
   [Pref="abc.def", Func="TestFuncControlledMember", AvailableIn=PrivilegedApps]
   void prefable24();
 
+  // Conditionally exposed methods/attributes involving [SecureContext]
+  [SecureContext]
+  readonly attribute boolean conditionalOnSecureContext1;
+  [SecureContext, Pref="abc.def"]
+  readonly attribute boolean conditionalOnSecureContext2;
+  [SecureContext, Pref="abc.def", Func="nsGenericHTMLElement::TouchEventsEnabled"]
+  readonly attribute boolean conditionalOnSecureContext3;
+  [SecureContext, Pref="abc.def", Func="TestFuncControlledMember"]
+  readonly attribute boolean conditionalOnSecureContext4;
+  [SecureContext]
+  void conditionalOnSecureContext5();
+  [SecureContext, Pref="abc.def"]
+  void conditionalOnSecureContext6();
+  [SecureContext, Pref="abc.def", Func="nsGenericHTMLElement::TouchEventsEnabled"]
+  void conditionalOnSecureContext7();
+  [SecureContext, Pref="abc.def", Func="TestFuncControlledMember"]
+  void conditionalOnSecureContext8();
+
   // Miscellania
   [LenientThis] attribute long attrWithLenientThis;
   [Unforgeable] readonly attribute long unforgeableAttr;
@@ -1168,4 +1186,9 @@ interface TestDeprecatedInterface {
 
 [Constructor(Promise<void> promise)]
 interface TestInterfaceWithPromiseConstructorArg {
+};
+
+[SecureContext]
+interface TestSecureContextInterface {
+  static void alsoSecureContext();
 };
