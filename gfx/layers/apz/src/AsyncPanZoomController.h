@@ -55,7 +55,7 @@ class AsyncPanZoomAnimation;
 #if defined(MOZ_ANDROID_APZ)
 class FlingOverScrollerAnimation;
 #else
-class FlingAnimation;
+class GenericFlingAnimation;
 #endif
 class InputBlockState;
 class TouchBlockState;
@@ -880,7 +880,7 @@ private:
 #if defined(MOZ_ANDROID_APZ)
   friend class FlingOverScrollerAnimation;
 #else
-  friend class FlingAnimation;
+  friend class GenericFlingAnimation;
 #endif
   friend class OverscrollAnimation;
   friend class SmoothScrollAnimation;
