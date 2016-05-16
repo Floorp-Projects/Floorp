@@ -111,7 +111,6 @@ TrackBuffersManager::TrackBuffersManager(MediaSourceDecoder* aParentDecoder,
 
 TrackBuffersManager::~TrackBuffersManager()
 {
-  CancelAllTasks();
   ShutdownDemuxers();
 }
 
@@ -210,43 +209,6 @@ TrackBuffersManager::ProcessTasks()
       break;
     default:
       NS_WARNING("Invalid Task");
-  }
-}
-
-// A PromiseHolder will assert upon destruction if it has a pending promise
-// that hasn't been completed. It is possible that a task didn't get processed
-// due to the owning SourceBuffer having shutdown.
-// We resolve/reject all pending promises and remove all pending tasks from the
-// queue.
-void
-TrackBuffersManager::CancelAllTasks()
-{
-  typedef SourceBufferTask::Type Type;
-
-  if (mCurrentTask) {
-    mQueue.Push(mCurrentTask);
-    mCurrentTask = nullptr;
-  }
-
-  RefPtr<SourceBufferTask> task;
-  while ((task = mQueue.Pop())) {
-    switch (task->GetType()) {
-      case Type::AppendBuffer:
-        task->As<AppendBufferTask>()->mPromise.RejectIfExists(NS_ERROR_ABORT, __func__);
-        break;
-      case Type::RangeRemoval:
-        task->As<RangeRemovalTask>()->mPromise.ResolveIfExists(false, __func__);
-        break;
-      case Type::EvictData:
-        break;
-      case Type::Abort:
-        // not handled yet, and probably never.
-        break;
-      case Type::Reset:
-        break;
-      default:
-        NS_WARNING("Invalid Task");
-    }
   }
 }
 
