@@ -99,7 +99,6 @@ TrackBuffersManager::TrackBuffersManager(MediaSourceDecoder* aParentDecoder,
   , mTaskQueue(aParentDecoder->GetDemuxer()->GetTaskQueue())
   , mParentDecoder(new nsMainThreadPtrHolder<MediaSourceDecoder>(aParentDecoder, false /* strict */))
   , mEnded(false)
-  , mDetached(false)
   , mVideoEvictionThreshold(Preferences::GetUint("media.mediasource.eviction_threshold.video",
                                                  100 * 1024 * 1024))
   , mAudioEvictionThreshold(Preferences::GetUint("media.mediasource.eviction_threshold.audio",
@@ -164,10 +163,6 @@ TrackBuffersManager::ProcessTasks()
   MOZ_ASSERT(OnTaskQueue());
   typedef SourceBufferTask::Type Type;
 
-  if (mDetached) {
-    return;
-  }
-
   if (mCurrentTask) {
     // Already have a task pending. ProcessTask will be scheduled once the
     // current task complete.
@@ -210,6 +205,11 @@ TrackBuffersManager::ProcessTasks()
     case Type::Reset:
       CompleteResetParserState();
       break;
+    case Type::Detach:
+      mTaskQueue = nullptr;
+      MOZ_DIAGNOSTIC_ASSERT(mQueue.Length() == 0,
+                            "Detach task must be the last");
+      return;
     default:
       NS_WARNING("Invalid Task");
   }
@@ -227,7 +227,6 @@ void
 TrackBuffersManager::CancelAllTasks()
 {
   typedef SourceBufferTask::Type Type;
-  MOZ_DIAGNOSTIC_ASSERT(mDetached);
 
   if (mCurrentTask) {
     mQueue.Push(mCurrentTask);
@@ -392,7 +391,7 @@ TrackBuffersManager::Detach()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MSE_DEBUG("");
-  mDetached = true;
+  QueueTask(new DetachTask());
 }
 
 void
@@ -761,10 +760,6 @@ void
 TrackBuffersManager::NeedMoreData()
 {
   MSE_DEBUG("");
-  if (mDetached) {
-    // We've been detached.
-    return;
-  }
   MOZ_DIAGNOSTIC_ASSERT(mCurrentTask && mCurrentTask->GetType() == SourceBufferTask::Type::AppendBuffer);
   MOZ_DIAGNOSTIC_ASSERT(mSourceBufferAttributes);
 
@@ -781,10 +776,6 @@ void
 TrackBuffersManager::RejectAppend(nsresult aRejectValue, const char* aName)
 {
   MSE_DEBUG("rv=%d", aRejectValue);
-  if (mDetached) {
-    // We've been detached.
-    return;
-  }
   MOZ_DIAGNOSTIC_ASSERT(mCurrentTask && mCurrentTask->GetType() == SourceBufferTask::Type::AppendBuffer);
 
   mCurrentTask->As<AppendBufferTask>()->mPromise.Reject(aRejectValue, __func__);
@@ -796,9 +787,6 @@ TrackBuffersManager::RejectAppend(nsresult aRejectValue, const char* aName)
 void
 TrackBuffersManager::ScheduleSegmentParserLoop()
 {
-  if (mDetached) {
-    return;
-  }
   nsCOMPtr<nsIRunnable> task =
     NS_NewRunnableMethod(this, &TrackBuffersManager::SegmentParserLoop);
   GetTaskQueue()->Dispatch(task.forget());
