@@ -39,6 +39,7 @@ import android.util.Log;
  * Specific mobile subtypes are mapped to general 2G, 3G and 4G buckets.
  *
  * Logic is implemented as a state machine, so see the transition matrix to figure out what happens when.
+ * This class depends on access to the context, so only use after GeckoAppShell has been initialized.
  */
 public class GeckoNetworkManager extends BroadcastReceiver implements NativeEventListener {
     private static final String LOGTAG = "GeckoNetworkManager";
@@ -92,9 +93,6 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
                 "Wifi:GetIPAddress");
     }
 
-    // The application context used for registering/unregistering receivers and obtaining system services
-    private volatile Context applicationContext;
-
     public static GeckoNetworkManager getInstance() {
         if (instance == null) {
             instance = new GeckoNetworkManager();
@@ -104,6 +102,7 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
     }
 
     public double[] getCurrentInformation() {
+        final Context applicationContext = GeckoAppShell.getApplicationContext();
         final ConnectionType connectionType = currentConnectionType;
         return new double[] {
                 connectionType.value,
@@ -117,8 +116,7 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
         handleManagerEvent(ManagerEvent.receivedUpdate);
     }
 
-    public void start(final Context context) {
-        applicationContext = context.getApplicationContext();
+    public void start() {
         handleManagerEvent(ManagerEvent.start);
     }
 
@@ -263,10 +261,7 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
      * Update current network state and connection types.
      */
     private void updateNetworkStateAndConnectionType() {
-        if (applicationContext == null) {
-            Log.i(LOGTAG, "applicationContext is null while trying to update network state");
-            return;
-        }
+        final Context applicationContext = GeckoAppShell.getApplicationContext();
         final ConnectivityManager connectivityManager = (ConnectivityManager) applicationContext.getSystemService(
                 Context.CONNECTIVITY_SERVICE);
         // Type/status getters below all have a defined behaviour for when connectivityManager == null
@@ -284,6 +279,7 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
      */
     private void sendNetworkStateToListeners() {
         if (GeckoThread.isRunning()) {
+            final Context applicationContext = GeckoAppShell.getApplicationContext();
             GeckoAppShell.sendEventToGecko(
                     GeckoEvent.createNetworkEvent(
                             currentConnectionType.value,
@@ -302,7 +298,7 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
      * Stop listening for network state updates.
      */
     private void unregisterBroadcastReceiver() {
-        applicationContext.unregisterReceiver(this);
+        GeckoAppShell.getApplicationContext().unregisterReceiver(this);
     }
 
     /**
@@ -310,7 +306,7 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
      */
     private void registerBroadcastReceiver() {
         final IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
-        if (applicationContext.registerReceiver(this, filter) == null) {
+        if (GeckoAppShell.getApplicationContext().registerReceiver(this, filter) == null) {
             Log.e(LOGTAG, "Registering receiver failed");
         }
     }
@@ -343,6 +339,7 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
      */
     public void handleMessage(final String event, final NativeJSObject message,
                               final EventCallback callback) {
+        final Context applicationContext = GeckoAppShell.getApplicationContext();
         switch (event) {
             case "Wifi:Enable":
                 final WifiManager mgr = (WifiManager) applicationContext.getSystemService(Context.WIFI_SERVICE);
@@ -364,7 +361,7 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
 
     // This function only works for IPv4
     private void getWifiIPAddress(final EventCallback callback) {
-        final WifiManager mgr = (WifiManager) applicationContext.getSystemService(Context.WIFI_SERVICE);
+        final WifiManager mgr = (WifiManager) GeckoAppShell.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
         if (mgr == null) {
             callback.sendError("Cannot get WifiManager");
@@ -420,11 +417,11 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
      */
     @JNITarget
     public static int getMCC() {
-        return getNetworkOperator(InfoType.MCC, GeckoAppShell.getContext().getApplicationContext());
+        return getNetworkOperator(InfoType.MCC, GeckoAppShell.getApplicationContext());
     }
 
     @JNITarget
     public static int getMNC() {
-        return getNetworkOperator(InfoType.MNC, GeckoAppShell.getContext().getApplicationContext());
+        return getNetworkOperator(InfoType.MNC, GeckoAppShell.getApplicationContext());
     }
 }
