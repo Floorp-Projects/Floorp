@@ -397,9 +397,6 @@ private:
 
   // Set to true if mediasource state changed to ended.
   Atomic<bool> mEnded;
-  // Set to true if the parent SourceBuffer has shutdown.
-  // We will not reschedule or process new task once mDetached is set.
-  Atomic<bool> mDetached;
 
   // Global size of this source buffer content.
   Atomic<int64_t> mSizeSourceBuffer;
