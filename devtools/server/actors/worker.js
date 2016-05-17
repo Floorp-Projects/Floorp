@@ -190,7 +190,7 @@ let WorkerActor = protocol.ActorClass({
     let type;
     try {
       type = this._dbg.type;
-    } catch(e) {}
+    } catch (e) {}
 
     if (type == Ci.nsIWorkerDebugger.TYPE_SERVICE) {
       let worker = this._getServiceWorkerInfo();
@@ -281,12 +281,12 @@ WorkerActorList.prototype = {
   },
 
   _notifyListChanged: function () {
-     this._onListChanged();
+    this._onListChanged();
 
-     if (this._onListChanged !== null) {
-       wdm.removeListener(this);
-     }
-     this._mustNotify = false;
+    if (this._onListChanged !== null) {
+      wdm.removeListener(this);
+    }
+    this._mustNotify = false;
   },
 
   onRegister: function (dbg) {
@@ -310,13 +310,13 @@ let _serviceWorkerProcessScriptLoaded = false;
 let ServiceWorkerRegistrationActor = protocol.ActorClass({
   typeName: "serviceWorkerRegistration",
 
-  initialize: function(conn, registration) {
+  initialize: function (conn, registration) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this._registration = registration;
     this.manage(this);
   },
 
-  form: function(detail) {
+  form: function (detail) {
     if (detail === "actorid") {
       return this.actorID;
     }
@@ -327,7 +327,7 @@ let ServiceWorkerRegistrationActor = protocol.ActorClass({
     };
   },
 
-  start: method(function() {
+  start: method(function () {
     if (!_serviceWorkerProcessScriptLoaded) {
       Services.ppmm.loadProcessScript(
         "resource://devtools/server/service-worker-child.js", true);
@@ -342,11 +342,11 @@ let ServiceWorkerRegistrationActor = protocol.ActorClass({
     response: RetVal("json")
   }),
 
-  unregister: method(function() {
+  unregister: method(function () {
     let { principal, scope } = this._registration;
     let unregisterCallback = {
-      unregisterSucceeded: function() {},
-      unregisterFailed: function() {
+      unregisterSucceeded: function () {},
+      unregisterFailed: function () {
         console.error("Failed to unregister the service worker for " + scope);
       },
       QueryInterface: XPCOMUtils.generateQI(
@@ -368,7 +368,7 @@ function ServiceWorkerRegistrationActorList(conn) {
   this._mustNotify = false;
   this.onRegister = this.onRegister.bind(this);
   this.onUnregister = this.onUnregister.bind(this);
-};
+}
 
 ServiceWorkerRegistrationActorList.prototype = {
   getList: function () {

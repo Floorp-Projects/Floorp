@@ -37,7 +37,7 @@ function test_executable_lines() {
     gThreadClient.getSources(function ({error, sources}) {
       do_check_true(!error);
       let source = gThreadClient.source(sources[0]);
-      source.getExecutableLines(function(lines){
+      source.getExecutableLines(function (lines) {
         do_check_true(arrays_equal([2, 5, 7, 8, 10, 12, 14, 16], lines));
         finishClient(gClient);
       });
@@ -50,6 +50,6 @@ function test_executable_lines() {
     SOURCE_MAPPED_FILE, 1);
 }
 
-function arrays_equal(a,b) {
-  return !(a<b || b<a);
+function arrays_equal(a, b) {
+  return !(a < b || b < a);
 }

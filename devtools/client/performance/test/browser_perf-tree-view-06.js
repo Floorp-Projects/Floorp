@@ -12,7 +12,7 @@ const { CallView } = require("devtools/client/performance/modules/widgets/tree-v
 const { synthesizeProfile } = require("devtools/client/performance/test/helpers/synth-utils");
 const { idleWait, waitUntil } = require("devtools/client/performance/test/helpers/wait-utils");
 
-add_task(function*() {
+add_task(function* () {
   let profile = synthesizeProfile();
   let threadNode = new ThreadNode(profile.threads[0], { startTime: 0, endTime: 20 });
 

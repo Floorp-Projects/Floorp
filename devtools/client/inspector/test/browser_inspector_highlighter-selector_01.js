@@ -37,7 +37,7 @@ const TEST_DATA = [{
   containerCount: 7
 }];
 
-add_task(function*() {
+add_task(function* () {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
   let front = inspector.inspector;
   let highlighter = yield front.getHighlighterByType("SelectorHighlighter");

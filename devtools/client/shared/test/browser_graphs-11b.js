@@ -11,7 +11,7 @@ const CATEGORIES = [
   { color: "#70bf53", label: "Baz" }
 ];
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("about:blank");
   yield performTest();
   gBrowser.removeCurrentTab();

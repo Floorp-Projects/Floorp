@@ -20,7 +20,7 @@ transform highlighter applies those values correctly to the SVG elements
 
 const TEST_URL = URL_ROOT + "doc_inspector_highlighter_csstransform.html";
 
-add_task(function*() {
+add_task(function* () {
   let {inspector, toolbox, testActor} = yield openInspectorForURL(TEST_URL);
   let front = inspector.inspector;
 
@@ -38,11 +38,11 @@ add_task(function*() {
   let polygonPoints = points.split(" ").map(p => {
     return {
       x: +p.substring(0, p.indexOf(",")),
-      y: +p.substring(p.indexOf(",")+1)
+      y: +p.substring(p.indexOf(",") + 1)
     };
   });
 
-  for (let i = 1; i < 5; i ++) {
+  for (let i = 1; i < 5; i++) {
     is(polygonPoints[i - 1].x, expected["p" + i].x,
       "p" + i + " x coordinate is correct");
     is(polygonPoints[i - 1].y, expected["p" + i].y,

@@ -9,7 +9,7 @@ const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const { GetDevices, GetDeviceString } = require("devtools/client/shared/devices");
 const { Simulators, Simulator } = require("devtools/client/webide/modules/simulators");
 const Services = require("Services");
-const EventEmitter = require('devtools/shared/event-emitter');
+const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
 const utils = require("devtools/client/webide/modules/utils");
 
@@ -42,7 +42,7 @@ var SimulatorEditor = {
       // This is the first time we run `init()`, bootstrap some things.
       form = this._form = document.querySelector("#simulator-editor");
       form.addEventListener("change", this.update.bind(this));
-      Simulators.on("configure", (e, simulator) => { this.edit(simulator) });
+      Simulators.on("configure", (e, simulator) => { this.edit(simulator); });
       // Extract the list of device simulation options we'll support.
       let deviceFields = form.querySelectorAll("*[data-device]");
       this._deviceOptions = Array.map(deviceFields, field => field.name);
@@ -121,7 +121,7 @@ var SimulatorEditor = {
 
       // Change visibility of 'TV Simulator Menu'.
       let tvSimMenu = document.querySelector("#tv_simulator_menu");
-      tvSimMenu.style.visibility = (this._simulator.type === "television")?
+      tvSimMenu.style.visibility = (this._simulator.type === "television") ?
                                    "visible" : "hidden";
     });
   },

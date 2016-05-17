@@ -81,7 +81,7 @@ function tempFileSaved(aStatus)
   {
     ok((gFirstFileSaved && success), "Both files loaded");
     // Import the file A into Scratchpad.
-    gScratchpad.importFromFile(gFileA.QueryInterface(Ci.nsILocalFile),  true,
+    gScratchpad.importFromFile(gFileA.QueryInterface(Ci.nsILocalFile), true,
                               fileAImported);
   }
   gFirstFileSaved = success;
@@ -106,7 +106,7 @@ function fileAImported(aStatus, aFileContent)
   is(gScratchpad.getText(), gFileAContent + "new text", "redo works");
 
   // Import the file B into Scratchpad.
-  gScratchpad.importFromFile(gFileB.QueryInterface(Ci.nsILocalFile),  true,
+  gScratchpad.importFromFile(gFileB.QueryInterface(Ci.nsILocalFile), true,
                             fileBImported);
 }
 
@@ -140,7 +140,7 @@ function fileBImported(aStatus, aFileContent)
   finish();
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   if (gFileA && gFileA.exists())
   {
     gFileA.remove(false);

@@ -11,7 +11,7 @@
 const { PromisesFront } = require("devtools/server/actors/promises");
 const SECRET = "MyLittleSecret";
 
-add_task(function*() {
+add_task(function* () {
   let client = yield startTestDebuggerServer("promises-actor-test");
   let chromeActors = yield getChromeActors(client);
 

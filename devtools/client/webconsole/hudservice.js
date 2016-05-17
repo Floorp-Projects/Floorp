@@ -34,8 +34,8 @@ const BROWSER_CONSOLE_FILTER_PREFS_PREFIX = "devtools.browserconsole.filter.";
 
 var gHudId = 0;
 
-///////////////////////////////////////////////////////////////////////////
-//// The HUD service
+// /////////////////////////////////////////////////////////////////////////
+// // The HUD service
 
 function HUD_SERVICE()
 {
@@ -234,7 +234,7 @@ HUD_SERVICE.prototype =
         .then((aBrowserConsole) => {
           this._browserConsoleDefer.resolve(aBrowserConsole);
           this._browserConsoleDefer = null;
-        })
+        });
     }, console.error.bind(console));
 
     return this._browserConsoleDefer.promise;
@@ -490,7 +490,7 @@ WebConsole.prototype = {
     }
     toolbox.viewSourceInDebugger(aSourceURL, aSourceLine).then(() => {
       this.ui.emit("source-in-debugger-opened");
-    })
+    });
   },
 
   /**
@@ -588,7 +588,7 @@ WebConsole.prototype = {
       }
     }
 
-    let onDestroy = Task.async(function*() {
+    let onDestroy = Task.async(function* () {
       if (!this._browserConsole) {
         try {
           yield this.target.activeTab.focus();
@@ -639,12 +639,12 @@ function BrowserConsole()
 }
 
 BrowserConsole.prototype = Heritage.extend(WebConsole.prototype,
-{
-  _browserConsole: true,
-  _bc_init: null,
-  _bc_destroyer: null,
+  {
+    _browserConsole: true,
+    _bc_init: null,
+    _bc_destroyer: null,
 
-  $init: WebConsole.prototype.init,
+    $init: WebConsole.prototype.init,
 
   /**
    * Initialize the Browser Console instance.
@@ -652,41 +652,41 @@ BrowserConsole.prototype = Heritage.extend(WebConsole.prototype,
    * @return object
    *         A promise for the initialization.
    */
-  init: function BC_init()
+    init: function BC_init()
   {
-    if (this._bc_init) {
-      return this._bc_init;
-    }
+      if (this._bc_init) {
+        return this._bc_init;
+      }
 
-    this.ui._filterPrefsPrefix = BROWSER_CONSOLE_FILTER_PREFS_PREFIX;
+      this.ui._filterPrefsPrefix = BROWSER_CONSOLE_FILTER_PREFS_PREFIX;
 
-    let window = this.iframeWindow;
+      let window = this.iframeWindow;
 
     // Make sure that the closing of the Browser Console window destroys this
     // instance.
-    let onClose = () => {
-      window.removeEventListener("unload", onClose);
-      window.removeEventListener("focus", onFocus);
-      this.destroy();
-    };
-    window.addEventListener("unload", onClose);
+      let onClose = () => {
+        window.removeEventListener("unload", onClose);
+        window.removeEventListener("focus", onFocus);
+        this.destroy();
+      };
+      window.addEventListener("unload", onClose);
 
     // Make sure Ctrl-W closes the Browser Console window.
-    window.document.getElementById("cmd_close").removeAttribute("disabled");
+      window.document.getElementById("cmd_close").removeAttribute("disabled");
 
-    this._telemetry.toolOpened("browserconsole");
+      this._telemetry.toolOpened("browserconsole");
 
     // Create an onFocus handler just to display the dev edition promo.
     // This is to prevent race conditions in some environments.
     // Hook to display promotional Developer Edition doorhanger. Only displayed once.
-    let onFocus = () => showDoorhanger({ window, type: "deveditionpromo" });
-    window.addEventListener("focus", onFocus);
+      let onFocus = () => showDoorhanger({ window, type: "deveditionpromo" });
+      window.addEventListener("focus", onFocus);
 
-    this._bc_init = this.$init();
-    return this._bc_init;
-  },
+      this._bc_init = this.$init();
+      return this._bc_init;
+    },
 
-  $destroy: WebConsole.prototype.destroy,
+    $destroy: WebConsole.prototype.destroy,
 
   /**
    * Destroy the object.
@@ -694,27 +694,27 @@ BrowserConsole.prototype = Heritage.extend(WebConsole.prototype,
    * @return object
    *         A promise object that is resolved once the Browser Console is closed.
    */
-  destroy: function BC_destroy()
+    destroy: function BC_destroy()
   {
-    if (this._bc_destroyer) {
-      return this._bc_destroyer.promise;
-    }
+      if (this._bc_destroyer) {
+        return this._bc_destroyer.promise;
+      }
 
-    this._telemetry.toolClosed("browserconsole");
+      this._telemetry.toolClosed("browserconsole");
 
-    this._bc_destroyer = promise.defer();
+      this._bc_destroyer = promise.defer();
 
-    let chromeWindow = this.chromeWindow;
-    this.$destroy().then(() =>
+      let chromeWindow = this.chromeWindow;
+      this.$destroy().then(() =>
       this.target.client.close(() => {
         HUDService._browserConsoleID = null;
         chromeWindow.close();
         this._bc_destroyer.resolve(null);
       }));
 
-    return this._bc_destroyer.promise;
-  },
-});
+      return this._bc_destroyer.promise;
+    },
+  });
 
 const HUDService = new HUD_SERVICE();
 

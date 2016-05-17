@@ -54,7 +54,7 @@ function tab2Loaded(aEvent) {
   function closeConsoles() {
     try {
       let target1 = TargetFactory.forTab(tab1);
-      gDevTools.closeToolbox(target1).then(function() {
+      gDevTools.closeToolbox(target1).then(function () {
         try {
           let target2 = TargetFactory.forTab(tab2);
           gDevTools.closeToolbox(target2).then(testEnd);
@@ -74,11 +74,11 @@ function tab2Loaded(aEvent) {
 
     win1.gBrowser.removeTab(tab1);
 
-    Array.forEach(win2.gBrowser.tabs, function(aTab) {
+    Array.forEach(win2.gBrowser.tabs, function (aTab) {
       win2.gBrowser.removeTab(aTab);
     });
 
-    executeSoon(function() {
+    executeSoon(function () {
       win2.close();
       tab1 = tab2 = win1 = win2 = null;
       finishTest();

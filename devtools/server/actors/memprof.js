@@ -13,39 +13,39 @@ loader.lazyRequireGetter(this, "events", "sdk/event/core");
 var MemprofActor = protocol.ActorClass({
   typeName: "memprof",
 
-  initialize: function(conn) {
+  initialize: function (conn) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this._profiler = Cc["@mozilla.org/tools/memory-profiler;1"]
       .getService(Ci.nsIMemoryProfiler);
   },
 
-  destroy: function() {
+  destroy: function () {
     this._profiler = null;
     protocol.Actor.prototype.destroy.call(this);
   },
 
-  startProfiler: method(function() {
+  startProfiler: method(function () {
     this._profiler.startProfiler();
   }, {
     request: {},
     response: {}
   }),
 
-  stopProfiler: method(function() {
+  stopProfiler: method(function () {
     this._profiler.stopProfiler();
   }, {
     request: {},
     response: {}
   }),
 
-  resetProfiler: method(function() {
+  resetProfiler: method(function () {
     this._profiler.resetProfiler();
   }, {
     request: {},
     response: {}
   }),
 
-  getResults: method(function() {
+  getResults: method(function () {
     return this._profiler.getResults();
   }, {
     request: {},
@@ -58,7 +58,7 @@ var MemprofActor = protocol.ActorClass({
 exports.MemprofActor = MemprofActor;
 
 exports.MemprofFront = protocol.FrontClass(MemprofActor, {
-  initialize: function(client, form) {
+  initialize: function (client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
     this.actorID = form.memprofActor;
     this.manage(this);

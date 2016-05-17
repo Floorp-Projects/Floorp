@@ -27,7 +27,7 @@ function test() {
     addTab(TAB_URL)
       .then((aTab) => {
         gTab = aTab;
-        return attachThreadActorForUrl(gClient, TAB_URL)
+        return attachThreadActorForUrl(gClient, TAB_URL);
       })
       .then(pauseDebuggee)
       .then(testEventListeners)
@@ -87,7 +87,7 @@ function testEventListeners(aThreadClient) {
       let types = [];
 
       for (let l of listeners) {
-        info("Listener for the "+l.type+" event.");
+        info("Listener for the " + l.type + " event.");
         let node = l.node;
         ok(node, "There is a node property.");
         ok(node.object, "There is a node object property.");
@@ -102,7 +102,7 @@ function testEventListeners(aThreadClient) {
 
         // The onchange handler is an inline string that doesn't have
         // a URL because it's basically eval'ed
-        if (l.type !== 'change') {
+        if (l.type !== "change") {
           is(func.url, TAB_URL, "The function url is correct.");
         }
 
@@ -148,6 +148,6 @@ function closeConnection() {
   return deferred.promise;
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gClient = null;
 });

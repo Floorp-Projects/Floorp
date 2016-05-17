@@ -57,5 +57,5 @@ function inspectPage() {
       EventUtils.synthesizeMouse(target, x + 10, y + 10, {}, win);
       return dropper.once("destroy");
     });
-  })
+  });
 }

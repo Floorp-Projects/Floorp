@@ -12,7 +12,7 @@ const { PROFILER_BUFFER_SIZE_PREF, PROFILER_SAMPLE_RATE_PREF } = require("devtoo
 const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 
-add_task(function*() {
+add_task(function* () {
   let { panel, toolbox } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window

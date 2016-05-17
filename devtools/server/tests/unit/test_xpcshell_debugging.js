@@ -19,7 +19,7 @@ function run_test() {
       client.attachTab(actor, (response, tabClient) => {
         tabClient.attachThread(null, (response, threadClient) => {
           threadClient.addOneTimeListener("paused", (event, packet) => {
-          equal(packet.why.type, "breakpoint",
+            equal(packet.why.type, "breakpoint",
                 "yay - hit the breakpoint at the first line in our script");
             // Resume again - next stop should be our "debugger" statement.
             threadClient.addOneTimeListener("paused", (event, packet) => {

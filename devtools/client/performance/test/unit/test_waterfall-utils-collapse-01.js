@@ -19,7 +19,7 @@ add_task(function test() {
     markersList: gTestMarkers
   });
 
-  function compare (marker, expected) {
+  function compare(marker, expected) {
     for (let prop in expected) {
       if (prop === "submarkers") {
         for (let i = 0; i < expected.submarkers.length; i++) {
@@ -67,4 +67,4 @@ const gExpectedOutput = {
     { start: 25, end: 30, name: "Javascript", submarkers: [
       { start: 26, end: 27, name: "Paint" },
     ]}
-]};
+  ]};

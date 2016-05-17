@@ -17,7 +17,7 @@ function* ifWebGLSupported() {
     once(gFront, "program-linked")
   ]);
 
-  yield once(panel.panelWin, EVENTS.SOURCES_SHOWN)
+  yield once(panel.panelWin, EVENTS.SOURCES_SHOWN);
 
   let vsEditor = yield ShadersEditorsView._getEditor("vs");
   let fsEditor = yield ShadersEditorsView._getEditor("fs");

@@ -109,7 +109,7 @@ function verifySourceAndCaret(aUrl, aLine, aColumn) {
     "The current caret position appears to be correct.");
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

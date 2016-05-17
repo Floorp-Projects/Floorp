@@ -22,10 +22,10 @@ function test() {
       "http://example.com/api/search/?q=search%E2%98%A2"
     ];
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForNetworkEvents(aMonitor, 5);
 
-      REQUEST_URIS.forEach(function(uri, index) {
+      REQUEST_URIS.forEach(function (uri, index) {
         verifyRequestItemTarget(RequestsMenu.getItemAtIndex(index), "GET", uri);
       });
 

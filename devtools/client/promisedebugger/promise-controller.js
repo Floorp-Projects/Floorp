@@ -28,7 +28,7 @@ var gToolbox;
 /**
  * Initialize the promise debugger controller and view upon loading the iframe.
  */
-var startup = Task.async(function*(toolbox) {
+var startup = Task.async(function* (toolbox) {
   gToolbox = toolbox;
 
   yield PromisesController.initialize(toolbox);
@@ -38,7 +38,7 @@ var startup = Task.async(function*(toolbox) {
 /**
  * Destroy the promise debugger controller and view when unloading the iframe.
  */
-var shutdown = Task.async(function*() {
+var shutdown = Task.async(function* () {
   yield PromisesController.destroy();
   yield PromisesPanel.destroy();
 
@@ -59,7 +59,7 @@ function destroy() {
  * server.
  */
 var PromisesController = {
-  initialize: Task.async(function*() {
+  initialize: Task.async(function* () {
     if (this.initialized) {
       return this.initialized.promise;
     }
@@ -78,7 +78,7 @@ var PromisesController = {
     this.initialized.resolve();
   }),
 
-  destroy: Task.async(function*() {
+  destroy: Task.async(function* () {
     if (!this.initialized) {
       return null;
     }

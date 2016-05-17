@@ -21,7 +21,7 @@ exports.items = [{
   buttonClass: "command-button command-button-invertable",
   tooltipText: l10n.lookup("eyedropperTooltip"),
   state: {
-    isChecked: function(target) {
+    isChecked: function (target) {
       if (!target.tab) {
         return false;
       }
@@ -32,14 +32,14 @@ exports.items = [{
       }
       return false;
     },
-    onChange: function(target, changeHandler) {
+    onChange: function (target, changeHandler) {
       eventEmitter.on("changed", changeHandler);
     },
-    offChange: function(target, changeHandler) {
+    offChange: function (target, changeHandler) {
       eventEmitter.off("changed", changeHandler);
     },
   },
-  exec: function(args, context) {
+  exec: function (args, context) {
     let chromeWindow = context.environment.chromeWindow;
     let target = context.environment.target;
 

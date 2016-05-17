@@ -51,11 +51,11 @@ function getHeaders() {
   ok("404" in lastFinishedRequests, "request 2: 404 Not found");
 
   webConsoleClient.getResponseHeaders(lastFinishedRequests["301"].actor,
-    function(response) {
+    function (response) {
       lastFinishedRequests["301"].response.headers = response.headers;
 
       webConsoleClient.getResponseHeaders(lastFinishedRequests["404"].actor,
-        function(resp) {
+        function (resp) {
           lastFinishedRequests["404"].response.headers = resp.headers;
           executeSoon(deferred.resolve);
         });
@@ -67,12 +67,12 @@ function getContent() {
   let deferred = promise.defer();
 
   webConsoleClient.getResponseContent(lastFinishedRequests["301"].actor,
-    function(response) {
+    function (response) {
       lastFinishedRequests["301"].response.content = response.content;
       lastFinishedRequests["301"].discardResponseBody = response.contentDiscarded;
 
       webConsoleClient.getResponseContent(lastFinishedRequests["404"].actor,
-        function(resp) {
+        function (resp) {
           lastFinishedRequests["404"].response.content = resp.content;
           lastFinishedRequests["404"].discardResponseBody =
             resp.contentDiscarded;

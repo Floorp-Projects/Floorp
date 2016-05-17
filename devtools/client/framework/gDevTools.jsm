@@ -96,7 +96,7 @@ this.gDevTools = {
   get _tools() {
     return devtools._tools;
   },
-  *[Symbol.iterator]() {
+  *[Symbol.iterator ]() {
     for (let toolbox of this._toolboxes) {
       yield toolbox;
     }

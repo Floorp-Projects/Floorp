@@ -72,12 +72,12 @@ UndoStack.prototype = {
     let batch = this._batch;
     delete this._batch;
     let entry = {
-      do: function() {
+      do: function () {
         for (let item of batch) {
           item.do();
         }
       },
-      undo: function() {
+      undo: function () {
         for (let i = batch.length - 1; i >= 0; i--) {
           batch[i].undo();
         }
@@ -187,20 +187,20 @@ UndoStack.prototype = {
 
   isCommandEnabled: function Undo_isCommandEnabled(aCommand)
   {
-    switch(aCommand) {
+    switch (aCommand) {
       case "cmd_undo": return this.canUndo();
       case "cmd_redo": return this.canRedo();
-    };
+    }
     return false;
   },
 
   doCommand: function Undo_doCommand(aCommand)
   {
-    switch(aCommand) {
+    switch (aCommand) {
       case "cmd_undo": return this.undo();
       case "cmd_redo": return this.redo();
     }
   },
 
   onEvent: function Undo_onEvent(aEvent) {},
-}
+};

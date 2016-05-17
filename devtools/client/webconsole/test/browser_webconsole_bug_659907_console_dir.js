@@ -10,7 +10,7 @@
 const TEST_URI = "data:text/html;charset=utf-8,Web Console test for " +
                  "bug 659907: Expand console object with a dir method";
 
-add_task(function*() {
+add_task(function* () {
   yield loadTab(TEST_URI);
   let hud = yield openConsole();
   hud.jsterm.clearOutput();

@@ -14,13 +14,13 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-sourcemaps");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
+  gClient.connect().then(function () {
     attachTestThread(gClient, "test-sourcemaps", testSourcemap);
   });
   do_test_pending();
 }
 
-const testSourcemap = Task.async(function*(threadResponse, tabClient, threadClient, tabResponse) {
+const testSourcemap = Task.async(function* (threadResponse, tabClient, threadClient, tabResponse) {
   evalTestCode();
 
   const { sources } = yield getSources(threadClient);

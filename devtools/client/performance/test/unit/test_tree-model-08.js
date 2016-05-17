@@ -65,7 +65,7 @@ add_task(function test() {
     }), false),
   ];
 
-  let fields = ["nodeType", "functionName", "fileName", "host", "url", "line", "column", "categoryData.abbrev", "isContent", "port"]
+  let fields = ["nodeType", "functionName", "fileName", "host", "url", "line", "column", "categoryData.abbrev", "isContent", "port"];
   let expected = [
     // nodeType, functionName, fileName, host, url, line, column, categoryData.abbrev, isContent, port
     ["Frame", "hello/<.world", "bar.js", "foo", "http://foo/bar.js", 123, 987, void 0, true],

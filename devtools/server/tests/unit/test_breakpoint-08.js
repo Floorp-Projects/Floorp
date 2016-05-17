@@ -17,7 +17,7 @@ function run_test()
     run_test_with_server(WorkerDebuggerServer, do_test_finished);
   });
   do_test_pending();
-};
+}
 
 function run_test_with_server(aServer, aCallback)
 {
@@ -36,8 +36,8 @@ function run_test_with_server(aServer, aCallback)
 function test_child_skip_breakpoint()
 {
   gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-    gThreadClient.eval(aPacket.frame.actor, "foo", function(aResponse) {
-      gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
+    gThreadClient.eval(aPacket.frame.actor, "foo", function (aResponse) {
+      gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
         let obj = gThreadClient.pauseGrip(aPacket.why.frameFinished.return);
         obj.getDefinitionSite(runWithBreakpoint);
       });

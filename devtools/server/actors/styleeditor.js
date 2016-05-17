@@ -62,7 +62,7 @@ var StyleEditorActor = exports.StyleEditorActor = protocol.ActorClass({
     }
   },
 
-  form: function()
+  form: function ()
   {
     return { actor: this.actorID };
   },
@@ -79,7 +79,7 @@ var StyleEditorActor = exports.StyleEditorActor = protocol.ActorClass({
   /**
    * Destroy the current StyleEditorActor instance.
    */
-  destroy: function()
+  destroy: function ()
   {
     this._sheets.clear();
   },
@@ -88,7 +88,7 @@ var StyleEditorActor = exports.StyleEditorActor = protocol.ActorClass({
    * Called by client when target navigates to a new document.
    * Adds load listeners to document.
    */
-  newDocument: method(function() {
+  newDocument: method(function () {
     // delete previous document's actors
     this._clearStyleSheetActors();
 
@@ -107,7 +107,7 @@ var StyleEditorActor = exports.StyleEditorActor = protocol.ActorClass({
    * Event handler for document loaded event. Add actor for each stylesheet
    * and send an event notifying of the load
    */
-  _onDocumentLoaded: function(event) {
+  _onDocumentLoaded: function (event) {
     if (event) {
       this.window.removeEventListener("load", this._onDocumentLoaded, false);
     }
@@ -135,7 +135,7 @@ var StyleEditorActor = exports.StyleEditorActor = protocol.ActorClass({
    * @return {[object]}
    *         Array of actors for each StyleSheetActor created
    */
-  _addStyleSheets: function(styleSheets)
+  _addStyleSheets: function (styleSheets)
   {
     let sheets = [];
     for (let i = 0; i < styleSheets.length; i++) {
@@ -159,7 +159,7 @@ var StyleEditorActor = exports.StyleEditorActor = protocol.ActorClass({
    * @return {StyleSheetActor}
    *         The actor for this style sheet
    */
-  _createStyleSheetActor: function(styleSheet)
+  _createStyleSheetActor: function (styleSheet)
   {
     if (this._sheets.has(styleSheet)) {
       return this._sheets.get(styleSheet);
@@ -180,10 +180,10 @@ var StyleEditorActor = exports.StyleEditorActor = protocol.ActorClass({
    * @return {array}
    *         All the imported stylesheets
    */
-  _getImported: function(styleSheet) {
-   let imported = [];
+  _getImported: function (styleSheet) {
+    let imported = [];
 
-   for (let i = 0; i < styleSheet.cssRules.length; i++) {
+    for (let i = 0; i < styleSheet.cssRules.length; i++) {
       let rule = styleSheet.cssRules[i];
       if (rule.type == Ci.nsIDOMCSSRule.IMPORT_RULE) {
         // Associated styleSheet may be null if it has already been seen due to
@@ -207,7 +207,7 @@ var StyleEditorActor = exports.StyleEditorActor = protocol.ActorClass({
   /**
    * Clear all the current stylesheet actors in map.
    */
-  _clearStyleSheetActors: function() {
+  _clearStyleSheetActors: function () {
     for (let actor in this._sheets) {
       this.unmanage(this._sheets[actor]);
     }
@@ -223,7 +223,7 @@ var StyleEditorActor = exports.StyleEditorActor = protocol.ActorClass({
    * @return {object}
    *         Object with 'styelSheet' property for form on new actor.
    */
-  newStyleSheet: method(function(text) {
+  newStyleSheet: method(function (text) {
     let parent = this.document.documentElement;
     let style = this.document.createElementNS("http://www.w3.org/1999/xhtml", "style");
     style.setAttribute("type", "text/css");
@@ -245,13 +245,13 @@ var StyleEditorActor = exports.StyleEditorActor = protocol.ActorClass({
  * The corresponding Front object for the StyleEditorActor.
  */
 var StyleEditorFront = protocol.FrontClass(StyleEditorActor, {
-  initialize: function(client, tabForm) {
+  initialize: function (client, tabForm) {
     protocol.Front.prototype.initialize.call(this, client);
     this.actorID = tabForm.styleEditorActor;
     this.manage(this);
   },
 
-  getStyleSheets: function() {
+  getStyleSheets: function () {
     let deferred = promise.defer();
 
     events.once(this, "document-load", (styleSheets) => {
@@ -262,7 +262,7 @@ var StyleEditorFront = protocol.FrontClass(StyleEditorActor, {
     return deferred.promise;
   },
 
-  addStyleSheet: function(text) {
+  addStyleSheet: function (text) {
     return this.newStyleSheet(text);
   }
 });
@@ -288,7 +288,7 @@ var OldStyleSheetActor = protocol.ActorClass({
     }
   },
 
-  toString: function() {
+  toString: function () {
     return "[OldStyleSheetActor " + this.actorID + "]";
   },
 
@@ -331,7 +331,7 @@ var OldStyleSheetActor = protocol.ActorClass({
     return this._styleSheetIndex;
   },
 
-  initialize: function(aStyleSheet, aParentActor, aWindow) {
+  initialize: function (aStyleSheet, aParentActor, aWindow) {
     protocol.Actor.prototype.initialize.call(this, null);
 
     this.rawSheet = aStyleSheet;
@@ -365,7 +365,7 @@ var OldStyleSheetActor = protocol.ActorClass({
    *         With properties of the underlying stylesheet, plus 'text',
    *        'styleSheetIndex' and 'parentActor' if it's @imported
    */
-  form: function(detail) {
+  form: function (detail) {
     if (detail === "actorid") {
       return this.actorID;
     }
@@ -388,12 +388,12 @@ var OldStyleSheetActor = protocol.ActorClass({
       title: this.rawSheet.title,
       system: !CssLogic.isContentStylesheet(this.rawSheet),
       styleSheetIndex: this.styleSheetIndex
-    }
+    };
 
     try {
       form.ruleCount = this.rawSheet.cssRules.length;
     }
-    catch(e) {
+    catch (e) {
       // stylesheet had an @import rule that wasn't loaded yet
     }
     return form;
@@ -405,7 +405,7 @@ var OldStyleSheetActor = protocol.ActorClass({
    * @return {object}
    *         'disabled' - the disabled state after toggling.
    */
-  toggleDisabled: method(function() {
+  toggleDisabled: method(function () {
     this.rawSheet.disabled = !this.rawSheet.disabled;
     this._notifyPropertyChanged("disabled");
 
@@ -421,7 +421,7 @@ var OldStyleSheetActor = protocol.ActorClass({
    * @param  {string} property
    *         Name of the changed property
    */
-  _notifyPropertyChanged: function(property) {
+  _notifyPropertyChanged: function (property) {
     events.emit(this, "property-change", property, this.form()[property]);
   },
 
@@ -429,7 +429,7 @@ var OldStyleSheetActor = protocol.ActorClass({
     * Fetch the source of the style sheet from its URL. Send a "sourceLoad"
     * event when it's been fetched.
     */
-  fetchSource: method(function() {
+  fetchSource: method(function () {
     this._getText().then((content) => {
       events.emit(this, "source-load", this.text);
     });
@@ -442,7 +442,7 @@ var OldStyleSheetActor = protocol.ActorClass({
    * @return {Promise}
    *         Promise that resolves with a string text of the stylesheet.
    */
-  _getText: function() {
+  _getText: function () {
     if (this.text) {
       return promise.resolve(this.text);
     }
@@ -473,7 +473,7 @@ var OldStyleSheetActor = protocol.ActorClass({
    * @param string channelCharset
    *        Charset of the source string if set by the HTTP channel.
    */
-  _getCSSCharset: function(channelCharset)
+  _getCSSCharset: function (channelCharset)
   {
     // StyleSheet's charset can be specified from multiple sources
     if (channelCharset && channelCharset.length > 0) {
@@ -525,7 +525,7 @@ var OldStyleSheetActor = protocol.ActorClass({
    *         'text' - new text
    *         'transition' - whether to do CSS transition for change.
    */
-  update: method(function(text, transition) {
+  update: method(function (text, transition) {
     DOMUtils.parseStyleSheet(this.rawSheet, text);
 
     this.text = text;
@@ -549,7 +549,7 @@ var OldStyleSheetActor = protocol.ActorClass({
    * Insert a catch-all transition rule into the document. Set a timeout
    * to remove the rule after a certain time.
    */
-  _insertTransistionRule: function() {
+  _insertTransistionRule: function () {
     // Insert the global transition rule
     // Use a ref count to make sure we do not add it multiple times.. and remove
     // it only when all pending StyleEditor-generated transitions ended.
@@ -570,7 +570,7 @@ var OldStyleSheetActor = protocol.ActorClass({
     * This cleans up class and rule added for transition effect and then
     * notifies that the style has been applied.
     */
-  _onTransitionEnd: function()
+  _onTransitionEnd: function ()
   {
     if (--this._transitionRefCount == 0) {
       this.document.documentElement.classList.remove(TRANSITION_CLASS);
@@ -579,30 +579,30 @@ var OldStyleSheetActor = protocol.ActorClass({
 
     events.emit(this, "style-applied");
   }
-})
+});
 
 /**
  * StyleSheetFront is the client-side counterpart to a StyleSheetActor.
  */
 var OldStyleSheetFront = protocol.FrontClass(OldStyleSheetActor, {
-  initialize: function(conn, form, ctx, detail) {
+  initialize: function (conn, form, ctx, detail) {
     protocol.Front.prototype.initialize.call(this, conn, form, ctx, detail);
 
     this._onPropertyChange = this._onPropertyChange.bind(this);
     events.on(this, "property-change", this._onPropertyChange);
   },
 
-  destroy: function() {
+  destroy: function () {
     events.off(this, "property-change", this._onPropertyChange);
 
     protocol.Front.prototype.destroy.call(this);
   },
 
-  _onPropertyChange: function(property, value) {
+  _onPropertyChange: function (property, value) {
     this._form[property] = value;
   },
 
-  form: function(form, detail) {
+  form: function (form, detail) {
     if (detail === "actorid") {
       this.actorID = form;
       return;
@@ -611,7 +611,7 @@ var OldStyleSheetFront = protocol.FrontClass(OldStyleSheetActor, {
     this._form = form;
   },
 
-  getText: function() {
+  getText: function () {
     let deferred = promise.defer();
 
     events.once(this, "source-load", (source) => {
@@ -623,7 +623,7 @@ var OldStyleSheetFront = protocol.FrontClass(OldStyleSheetActor, {
     return deferred.promise;
   },
 
-  getOriginalSources: function() {
+  getOriginalSources: function () {
     return promise.resolve([]);
   },
 

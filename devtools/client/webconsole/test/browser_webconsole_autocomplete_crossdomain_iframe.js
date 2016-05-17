@@ -14,7 +14,7 @@ function test() {
   const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                    "test/test-bug-989025-iframe-parent.html";
 
-  Task.spawn(function*() {
+  Task.spawn(function* () {
     const {tab} = yield loadTab(TEST_URI);
     hud = yield openConsole(tab);
 

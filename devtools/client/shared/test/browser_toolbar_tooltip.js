@@ -3,7 +3,7 @@
 
 // Tests that the developer toolbar works properly
 
-///////////////////
+// /////////////////
 //
 // Whitelisting this test.
 // As part of bug 1077403, the leaking uncaught rejection should be fixed.
@@ -34,27 +34,27 @@ add_task(function* testDimensions() {
   let tooltipPanel = DeveloperToolbar.tooltipPanel;
 
   DeveloperToolbar.focusManager.helpRequest();
-  yield DeveloperToolbar.inputter.setInput('help help');
+  yield DeveloperToolbar.inputter.setInput("help help");
 
-  DeveloperToolbar.inputter.setCursor({ start: 'help help'.length });
-  is(tooltipPanel._dimensions.start, 'help '.length,
-          'search param start, when cursor at end');
-  ok(getLeftMargin() > 30, 'tooltip offset, when cursor at end')
+  DeveloperToolbar.inputter.setCursor({ start: "help help".length });
+  is(tooltipPanel._dimensions.start, "help ".length,
+          "search param start, when cursor at end");
+  ok(getLeftMargin() > 30, "tooltip offset, when cursor at end");
 
-  DeveloperToolbar.inputter.setCursor({ start: 'help'.length });
+  DeveloperToolbar.inputter.setCursor({ start: "help".length });
   is(tooltipPanel._dimensions.start, 0,
-          'search param start, when cursor at end of command');
-  ok(getLeftMargin() > 9, 'tooltip offset, when cursor at end of command')
+          "search param start, when cursor at end of command");
+  ok(getLeftMargin() > 9, "tooltip offset, when cursor at end of command");
 
-  DeveloperToolbar.inputter.setCursor({ start: 'help help'.length - 1 });
-  is(tooltipPanel._dimensions.start, 'help '.length,
-          'search param start, when cursor at penultimate position');
-  ok(getLeftMargin() > 30, 'tooltip offset, when cursor at penultimate position')
+  DeveloperToolbar.inputter.setCursor({ start: "help help".length - 1 });
+  is(tooltipPanel._dimensions.start, "help ".length,
+          "search param start, when cursor at penultimate position");
+  ok(getLeftMargin() > 30, "tooltip offset, when cursor at penultimate position");
 
   DeveloperToolbar.inputter.setCursor({ start: 0 });
   is(tooltipPanel._dimensions.start, 0,
-          'search param start, when cursor at start');
-  ok(getLeftMargin() > 9, 'tooltip offset, when cursor at start')
+          "search param start, when cursor at start");
+  ok(getLeftMargin() > 9, "tooltip offset, when cursor at start");
 });
 
 add_task(function* testThemes() {
@@ -79,7 +79,7 @@ add_task(function* testThemes() {
 
 add_task(function* hideToolbar() {
   info("Ending browser_toolbar_tooltip.js");
-  yield DeveloperToolbar.inputter.setInput('');
+  yield DeveloperToolbar.inputter.setInput("");
 
   ok(DeveloperToolbar.visible, "DeveloperToolbar is visible in hideToolbar");
 
@@ -98,9 +98,9 @@ function getLeftMargin() {
   return parseInt(style.slice(0, -2), 10);
 }
 
-function observeOnce(topic, ownsWeak=false) {
-  return new Promise(function(resolve, reject) {
-    let resolver = function(subject) {
+function observeOnce(topic, ownsWeak = false) {
+  return new Promise(function (resolve, reject) {
+    let resolver = function (subject) {
       Services.obs.removeObserver(resolver, topic);
       resolve(subject);
     };

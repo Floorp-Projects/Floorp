@@ -115,7 +115,7 @@ function* spawnTest() {
   finish();
 }
 
-function injectGCMarkers (controller, waterfall) {
+function injectGCMarkers(controller, waterfall) {
   // Push some fake GC markers into the recording
   let realMarkers = controller.getCurrentRecording().getMarkers();
   // Invalidate marker cache

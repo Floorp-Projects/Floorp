@@ -24,7 +24,7 @@ const TEST_LEVELS = [{
   expected: "position:absolute;transform-origin:top left;transform:scale(2);width:50%;height:50%;"
 }];
 
-add_task(function*() {
+add_task(function* () {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   info("Highlighting the test node");

@@ -12,7 +12,7 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-console-output-dom-elements.html";
 
 function test() {
-  Task.spawn(function*() {
+  Task.spawn(function* () {
     let {tab} = yield loadTab(TEST_URI);
     let hud = yield openConsole(tab);
     let toolbox = gDevTools.getToolbox(hud.target);

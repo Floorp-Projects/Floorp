@@ -34,7 +34,7 @@ const COPY_ITEMS_TEST_DATA = [
   },
 ];
 
-add_task(function*() {
+add_task(function* () {
   let { inspector } = yield openInspectorForURL(TEST_URL);
   for (let {desc, id, selector, text} of COPY_ITEMS_TEST_DATA) {
     info("Testing " + desc);

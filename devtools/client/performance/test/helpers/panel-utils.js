@@ -12,7 +12,7 @@ const { once } = require("devtools/client/performance/test/helpers/event-utils")
 /**
  * Initializes a toolbox panel in a new tab.
  */
-exports.initPanelInNewTab = function*({ tool, url, win }, options = {}) {
+exports.initPanelInNewTab = function* ({ tool, url, win }, options = {}) {
   let tab = yield addTab({ url, win }, options);
   return (yield exports.initPanelInTab({ tool, tab }));
 };
@@ -20,7 +20,7 @@ exports.initPanelInNewTab = function*({ tool, url, win }, options = {}) {
 /**
  * Initializes a toolbox panel in the specified tab.
  */
-exports.initPanelInTab = function*({ tool, tab }) {
+exports.initPanelInTab = function* ({ tool, tab }) {
   dump(`Initializing a ${tool} panel.\n`);
 
   let target = TargetFactory.forTab(tab);
@@ -39,7 +39,7 @@ exports.initPanelInTab = function*({ tool, tab }) {
 /**
  * Initializes a performance panel in a new tab.
  */
-exports.initPerformanceInNewTab = function*({ url, win }, options = {}) {
+exports.initPerformanceInNewTab = function* ({ url, win }, options = {}) {
   let tab = yield addTab({ url, win }, options);
   return (yield exports.initPerformanceInTab({ tab }));
 };
@@ -47,7 +47,7 @@ exports.initPerformanceInNewTab = function*({ url, win }, options = {}) {
 /**
  * Initializes a performance panel in the specified tab.
  */
-exports.initPerformanceInTab = function*({ tab }) {
+exports.initPerformanceInTab = function* ({ tab }) {
   return (yield exports.initPanelInTab({
     tool: "performance",
     tab: tab
@@ -58,7 +58,7 @@ exports.initPerformanceInTab = function*({ tab }) {
  * Initializes a webconsole panel in a new tab.
  * Returns a console property that allows calls to `profile` and `profileEnd`.
  */
-exports.initConsoleInNewTab = function*({ url, win }, options = {}) {
+exports.initConsoleInNewTab = function* ({ url, win }, options = {}) {
   let tab = yield addTab({ url, win }, options);
   return (yield exports.initConsoleInTab({ tab }));
 };
@@ -67,13 +67,13 @@ exports.initConsoleInNewTab = function*({ url, win }, options = {}) {
  * Initializes a webconsole panel in the specified tab.
  * Returns a console property that allows calls to `profile` and `profileEnd`.
  */
-exports.initConsoleInTab = function*({ tab }) {
+exports.initConsoleInTab = function* ({ tab }) {
   let { target, toolbox, panel } = yield exports.initPanelInTab({
     tool: "webconsole",
     tab: tab
   });
 
-  let consoleMethod = function*(method, label, event) {
+  let consoleMethod = function* (method, label, event) {
     let recordingEventReceived = once(toolbox.performance, event);
     if (label === undefined) {
       yield panel.hud.jsterm.execute(`console.${method}()`);
@@ -83,11 +83,11 @@ exports.initConsoleInTab = function*({ tab }) {
     yield recordingEventReceived;
   };
 
-  let profile = function*(label) {
+  let profile = function* (label) {
     return yield consoleMethod("profile", label, "recording-started");
   };
 
-  let profileEnd = function*(label) {
+  let profileEnd = function* (label) {
     return yield consoleMethod("profileEnd", label, "recording-stopped");
   };
 
@@ -97,7 +97,7 @@ exports.initConsoleInTab = function*({ tab }) {
 /**
  * Tears down a toolbox panel and removes an associated tab.
  */
-exports.teardownToolboxAndRemoveTab = function*(panel, options) {
+exports.teardownToolboxAndRemoveTab = function* (panel, options) {
   dump("Destroying panel.\n");
 
   let tab = panel.target.tab;

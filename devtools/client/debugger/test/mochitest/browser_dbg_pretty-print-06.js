@@ -18,8 +18,8 @@ function test() {
     const gClient = gDebugger.gClient;
     const gEditor = gDebugger.DebuggerView.editor;
     const gSources = gDebugger.DebuggerView.Sources;
-    const queries = gDebugger.require('./content/queries');
-    const constants = gDebugger.require('./content/constants');
+    const queries = gDebugger.require("./content/queries");
+    const constants = gDebugger.require("./content/constants");
     const actions = bindActionCreators(gPanel);
     const getState = gDebugger.DebuggerController.getState;
     let gPrettyPrinted = false;
@@ -38,7 +38,7 @@ function test() {
       };
     }(gClient.request));
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceShown(gPanel, JS_URL);
 
       // From this point onward, the source editor's text should never change.
@@ -55,7 +55,7 @@ function test() {
       try {
         yield actions.togglePrettyPrint(source);
         ok(false, "The promise for a prettified source should be rejected!");
-      } catch(error) {
+      } catch (error) {
         ok(error.error, "Error came from a RDP request");
         ok(error.error.includes("prettyPrintError"),
           "The promise was correctly rejected with a meaningful message.");

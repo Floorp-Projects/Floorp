@@ -21,7 +21,7 @@ var FramerateActor = exports.FramerateActor = protocol.ActorClass({
     protocol.Actor.prototype.initialize.call(this, conn);
     this.bridge = new Framerate(tabActor);
   },
-  destroy: function(conn) {
+  destroy: function (conn) {
     protocol.Actor.prototype.destroy.call(this, conn);
     this.bridge.destroy();
   },
@@ -55,7 +55,7 @@ var FramerateActor = exports.FramerateActor = protocol.ActorClass({
  * The corresponding Front object for the FramerateActor.
  */
 var FramerateFront = exports.FramerateFront = protocol.FrontClass(FramerateActor, {
-  initialize: function(client, { framerateActor }) {
+  initialize: function (client, { framerateActor }) {
     protocol.Front.prototype.initialize.call(this, client, { actor: framerateActor });
     this.manage(this);
   }

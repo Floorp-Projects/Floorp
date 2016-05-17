@@ -23,7 +23,7 @@ const GcliActor = ActorClass({
     }
   },
 
-  initialize: function(conn, tabActor) {
+  initialize: function (conn, tabActor) {
     Actor.prototype.initialize.call(this, conn);
 
     this._commandsChanged = this._commandsChanged.bind(this);
@@ -32,11 +32,11 @@ const GcliActor = ActorClass({
     this._requisitionPromise = undefined; // see _getRequisition()
   },
 
-  disconnect: function() {
+  disconnect: function () {
     return this.destroy();
   },
 
-  destroy: function() {
+  destroy: function () {
     Actor.prototype.destroy.call(this);
 
     // If _getRequisition has not been called, just bail quickly
@@ -63,7 +63,7 @@ const GcliActor = ActorClass({
   /**
    * Load a module into the requisition
    */
-  _testOnly_addItemsByModule: method(function(names) {
+  _testOnly_addItemsByModule: method(function (names) {
     return this._getRequisition().then(requisition => {
       return requisition.system.addItemsByModule(names);
     });
@@ -76,7 +76,7 @@ const GcliActor = ActorClass({
   /**
    * Unload a module from the requisition
    */
-  _testOnly_removeItemsByModule: method(function(names) {
+  _testOnly_removeItemsByModule: method(function (names) {
     return this._getRequisition().then(requisition => {
       return requisition.system.removeItemsByModule(names);
     });
@@ -92,7 +92,7 @@ const GcliActor = ActorClass({
    * if specified in the command spec, will be included in the JSON. Normally we
    * transfer only the properties required for GCLI to function.
    */
-  specs: method(function(customProps) {
+  specs: method(function (customProps) {
     return this._getRequisition().then(requisition => {
       return requisition.system.commands.getCommandSpecs(customProps);
     });
@@ -112,7 +112,7 @@ const GcliActor = ActorClass({
    * - type: The type of the data to allow selection of a converter
    * - error: True if the output was considered an error
    */
-  execute: method(function(typed) {
+  execute: method(function (typed) {
     return this._getRequisition().then(requisition => {
       return requisition.updateExec(typed).then(output => output.toJson());
     });
@@ -126,7 +126,7 @@ const GcliActor = ActorClass({
   /**
    * Get the state of an input string. i.e. requisition.getStateData()
    */
-  state: method(function(typed, start, rank) {
+  state: method(function (typed, start, rank) {
     return this._getRequisition().then(requisition => {
       return requisition.update(typed).then(() => {
         return requisition.getStateData(start, rank);
@@ -148,7 +148,7 @@ const GcliActor = ActorClass({
    * - message: The message to display to the user
    * - predictions: An array of suggested values for the given parameter
    */
-  parseType: method(function(typed, paramName) {
+  parseType: method(function (typed, paramName) {
     return this._getRequisition().then(requisition => {
       return requisition.update(typed).then(() => {
         let assignment = requisition.getAssignment(paramName);
@@ -173,7 +173,7 @@ const GcliActor = ActorClass({
    * Get the incremented/decremented value of some type
    * @return a promise of a string containing the new argument text
    */
-  nudgeType: method(function(typed, by, paramName) {
+  nudgeType: method(function (typed, by, paramName) {
     return this.requisition.update(typed).then(() => {
       const assignment = this.requisition.getAssignment(paramName);
       return this.requisition.nudge(assignment, by).then(() => {
@@ -192,7 +192,7 @@ const GcliActor = ActorClass({
   /**
    * Perform a lookup on a selection type to get the allowed values
    */
-  getSelectionLookup: method(function(commandName, paramName) {
+  getSelectionLookup: method(function (commandName, paramName) {
     return this._getRequisition().then(requisition => {
       const command = requisition.system.commands.get(commandName);
       if (command == null) {
@@ -229,9 +229,9 @@ const GcliActor = ActorClass({
   /**
    * Lazy init for a Requisition
    */
-  _getRequisition: function() {
+  _getRequisition: function () {
     if (this._tabActor == null) {
-      throw new Error('GcliActor used post-destroy');
+      throw new Error("GcliActor used post-destroy");
     }
 
     if (this._requisitionPromise != null) {
@@ -278,7 +278,7 @@ const GcliActor = ActorClass({
   /**
    * Pass events from requisition.system.commands.onCommandsChange upwards
    */
-  _commandsChanged: function() {
+  _commandsChanged: function () {
     events.emit(this, "commands-changed");
   },
 });
@@ -289,7 +289,7 @@ exports.GcliActor = GcliActor;
  *
  */
 const GcliFront = exports.GcliFront = FrontClass(GcliActor, {
-  initialize: function(client, tabForm) {
+  initialize: function (client, tabForm) {
     Front.prototype.initialize.call(this, client);
     this.actorID = tabForm.gcliActor;
 
@@ -307,7 +307,7 @@ const knownFronts = new WeakMap();
  * For notes on target.makeRemote(), see
  * https://bugzilla.mozilla.org/show_bug.cgi?id=1016330#c7
  */
-exports.GcliFront.create = function(target) {
+exports.GcliFront.create = function (target) {
   return target.makeRemote().then(() => {
     let front = knownFronts.get(target.client);
     if (front == null && target.form.gcliActor != null) {

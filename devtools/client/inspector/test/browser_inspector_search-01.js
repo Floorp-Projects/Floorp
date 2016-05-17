@@ -74,7 +74,7 @@ add_task(function* () {
     info("Got processing-done event");
 
     if (key === "VK_RETURN") {
-      info ("Waiting for " + (isValid ? "NO " : "") + "results");
+      info("Waiting for " + (isValid ? "NO " : "") + "results");
       yield inspector.search.once("search-result");
     }
 

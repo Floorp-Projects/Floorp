@@ -30,9 +30,9 @@ function handleThreadState(toolbox, event, packet) {
   if (event === "paused") {
     toolbox.highlightTool("jsdebugger");
 
-    if (packet.why.type === 'debuggerStatement' ||
-       packet.why.type === 'breakpoint' ||
-       packet.why.type === 'exception') {
+    if (packet.why.type === "debuggerStatement" ||
+       packet.why.type === "breakpoint" ||
+       packet.why.type === "exception") {
       toolbox.raise();
       toolbox.selectTool("jsdebugger");
     }
@@ -85,9 +85,9 @@ function attachThread(toolbox) {
         );
       }
 
-      deferred.resolve(threadClient)
+      deferred.resolve(threadClient);
     });
-  }
+  };
 
   if (target.isAddon) {
     // Attaching an addon

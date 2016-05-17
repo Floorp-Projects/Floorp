@@ -258,7 +258,7 @@ function testExpandVariables() {
     "The cVar should be immediately marked as expanded.");
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

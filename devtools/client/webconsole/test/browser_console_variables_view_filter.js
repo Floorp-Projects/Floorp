@@ -11,9 +11,9 @@ function props(view, prefix = "") {
   // Then flatten the list into a list of strings
   // being the jsonpath of each attribute being visible in the view
   return visible.reduce((list, [id, prop]) => {
-                   list.push(prefix + id);
-                   return list.concat(props(prop, prefix + id + "."));
-                 }, []);
+    list.push(prefix + id);
+    return list.concat(props(prop, prefix + id + "."));
+  }, []);
 }
 
 function assertAttrs(view, expected, message) {

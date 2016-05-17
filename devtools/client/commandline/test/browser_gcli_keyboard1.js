@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
 // PLEASE TALK TO SOMEONE IN DEVELOPER TOOLS BEFORE EDITING IT
@@ -25,48 +25,48 @@ function test() {
   helpers.runTestModule(exports, "browser_gcli_keyboard1.js");
 }
 
-var javascript = require('gcli/types/javascript');
+var javascript = require("gcli/types/javascript");
 // var helpers = require('./helpers');
 
-exports.testSimple = function(options) {
+exports.testSimple = function (options) {
   return helpers.audit(options, [
     {
-      setup: 'tsela<TAB>',
-      check: { input: 'tselarr ', cursor: 8 }
+      setup: "tsela<TAB>",
+      check: { input: "tselarr ", cursor: 8 }
     },
     {
-      setup: 'tsn di<TAB>',
-      check: { input: 'tsn dif ', cursor: 8 }
+      setup: "tsn di<TAB>",
+      check: { input: "tsn dif ", cursor: 8 }
     },
     {
-      setup: 'tsg a<TAB>',
-      check: { input: 'tsg aaa ', cursor: 8 }
+      setup: "tsg a<TAB>",
+      check: { input: "tsg aaa ", cursor: 8 }
     }
   ]);
 };
 
-exports.testScript = function(options) {
+exports.testScript = function (options) {
   return helpers.audit(options, [
     {
       skipRemainingIf: options.isRemote ||
-              options.requisition.system.commands.get('{') == null,
-      setup: '{ wind<TAB>',
-      check: { input: '{ window' }
+              options.requisition.system.commands.get("{") == null,
+      setup: "{ wind<TAB>",
+      check: { input: "{ window" }
     },
     {
-      setup: '{ window.docum<TAB>',
-      check: { input: '{ window.document' }
+      setup: "{ window.docum<TAB>",
+      check: { input: "{ window.document" }
     }
   ]);
 };
 
-exports.testJsdom = function(options) {
+exports.testJsdom = function (options) {
   return helpers.audit(options, [
     {
       skipIf: options.isRemote ||
-              options.requisition.system.commands.get('{') == null,
-      setup: '{ window.document.titl<TAB>',
-      check: { input: '{ window.document.title ' }
+              options.requisition.system.commands.get("{") == null,
+      setup: "{ window.document.titl<TAB>",
+      check: { input: "{ window.document.title " }
     }
   ]);
 };

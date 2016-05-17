@@ -315,7 +315,7 @@ const MemoryApp = createClass({
  * Passed into react-redux's `connect` method that is called on store change
  * and passed to components.
  */
-function mapStateToProps (state) {
+function mapStateToProps(state) {
   return state;
 }
 

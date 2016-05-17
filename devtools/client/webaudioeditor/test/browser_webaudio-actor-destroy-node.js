@@ -5,7 +5,7 @@
  * Test `destroy-node` event on WebAudioActor.
  */
 
-add_task(function*() {
+add_task(function* () {
   let { target, front } = yield initBackend(DESTROY_NODES_URL);
 
   let waitUntilDestroyed = getN(front, "destroy-node", 10);
@@ -30,7 +30,7 @@ add_task(function*() {
   yield removeTab(target.tab);
 });
 
-function actorIsInList (list, actor) {
+function actorIsInList(list, actor) {
   for (let i = 0; i < list.length; i++) {
     if (list[i].actorID === actor.actorID)
       return list[i];

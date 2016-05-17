@@ -11,7 +11,7 @@ const { getLocalizedString } = require("devtools/client/projecteditor/lib/helper
 var RenamePlugin = Class({
   extends: Plugin,
 
-  init: function(host) {
+  init: function (host) {
     this.host.addCommand(this, {
       id: "cmd-rename"
     });
@@ -22,7 +22,7 @@ var RenamePlugin = Class({
     });
   },
 
-  onContextMenuOpen: function(resource) {
+  onContextMenuOpen: function (resource) {
     if (resource.isRoot) {
       this.contextMenuItem.setAttribute("hidden", "true");
     } else {
@@ -30,7 +30,7 @@ var RenamePlugin = Class({
     }
   },
 
-  onCommand: function(cmd) {
+  onCommand: function (cmd) {
     if (cmd === "cmd-rename") {
       let tree = this.host.projectTree;
       let resource = tree.getSelectedResource();
@@ -46,7 +46,7 @@ var RenamePlugin = Class({
           let template = matches[1] + "{1}" + matches[3] + matches[4];
           name = this.suggestName(resource, template, parseInt(matches[2]) || 2);
         }
-        return parent.rename(oldName,name);
+        return parent.rename(oldName, name);
       }).then(resource => {
         this.host.project.refresh();
         tree.selectResource(resource);
@@ -57,7 +57,7 @@ var RenamePlugin = Class({
     }
   },
 
-  suggestName: function(resource, template, start=1) {
+  suggestName: function (resource, template, start = 1) {
     let i = start;
     let name;
     let parent = resource.parent;

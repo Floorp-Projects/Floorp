@@ -9,12 +9,12 @@
 // tool is not supported.
 
 const testToolDefinition = {
-    id: "test-tool",
-    isTargetSupported: () => true,
-    visibilityswitch: "devtools.test-tool.enabled",
-    url: "about:blank",
-    label: "someLabel",
-    build: (iframeWindow, toolbox) => {
+  id: "test-tool",
+  isTargetSupported: () => true,
+  visibilityswitch: "devtools.test-tool.enabled",
+  url: "about:blank",
+  label: "someLabel",
+  build: (iframeWindow, toolbox) => {
       return {
         target: toolbox.target,
         toolbox: toolbox,
@@ -23,9 +23,9 @@ const testToolDefinition = {
         panelDoc: iframeWindow.document
       };
     }
-  };
+};
 
-add_task(function*() {
+add_task(function* () {
   gDevTools.registerTool(testToolDefinition);
   let tab = yield addTab("about:blank");
   let target = TargetFactory.forTab(tab);

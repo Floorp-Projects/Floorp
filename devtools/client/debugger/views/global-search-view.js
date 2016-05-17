@@ -27,7 +27,7 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Initialization function, called when the debugger is started.
    */
-  initialize: function() {
+  initialize: function () {
     dumpn("Initializing the GlobalSearchView");
 
     this.widget = new SimpleListWidget(document.getElementById("globalsearch"));
@@ -39,7 +39,7 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Destruction function, called when the debugger is closed.
    */
-  destroy: function() {
+  destroy: function () {
     dumpn("Destroying the GlobalSearchView");
   },
 
@@ -64,7 +64,7 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Hides and removes all items from this search container.
    */
-  clearView: function() {
+  clearView: function () {
     this.hidden = true;
     this.empty();
   },
@@ -73,7 +73,7 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
    * Selects the next found item in this container.
    * Does not change the currently focused node.
    */
-  selectNext: function() {
+  selectNext: function () {
     let totalLineResults = LineResults.size();
     if (!totalLineResults) {
       return;
@@ -90,7 +90,7 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
    * Selects the previously found item in this container.
    * Does not change the currently focused node.
    */
-  selectPrev: function() {
+  selectPrev: function () {
     let totalLineResults = LineResults.size();
     if (!totalLineResults) {
       return;
@@ -111,7 +111,7 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
    * @param number aWait
    *        The amount of milliseconds to wait until draining.
    */
-  scheduleSearch: function(aToken, aWait) {
+  scheduleSearch: function (aToken, aWait) {
     // The amount of time to wait for the requests to settle.
     let maxDelay = GLOBAL_SEARCH_ACTION_MAX_DELAY;
     let delay = aWait === undefined ? maxDelay / aToken.length : aWait;
@@ -134,7 +134,7 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
    * @param array aSources
    *        An array of [url, text] tuples for each source.
    */
-  _doSearch: function(aToken, aSources) {
+  _doSearch: function (aToken, aSources) {
     // Don't continue filtering if the searched token is an empty string.
     if (!aToken) {
       this.clearView();
@@ -225,7 +225,7 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
    * @param GlobalResults aGlobalResults
    *        An object containing all source results, grouped by source location.
    */
-  _createGlobalResultsUI: function(aGlobalResults) {
+  _createGlobalResultsUI: function (aGlobalResults) {
     let i = 0;
 
     for (let sourceResults of aGlobalResults) {
@@ -248,7 +248,7 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
    * @param SourceResults aSourceResults
    *        An object containing all the matched lines for a specific source.
    */
-  _createSourceResultsUI: function(aSourceResults) {
+  _createSourceResultsUI: function (aSourceResults) {
     // Create the element node for the source results item.
     let container = document.createElement("hbox");
     aSourceResults.createView(container, {
@@ -269,7 +269,7 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * The click listener for a results header.
    */
-  _onHeaderClick: function(e) {
+  _onHeaderClick: function (e) {
     let sourceResultsItem = SourceResults.getItemForElement(e.target);
     sourceResultsItem.instance.toggle(e);
   },
@@ -277,7 +277,7 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * The click listener for a results line.
    */
-  _onLineClick: function(e) {
+  _onLineClick: function (e) {
     let lineResultsItem = LineResults.getItemForElement(e.target);
     this._onMatchClick({ target: lineResultsItem.firstMatch });
   },
@@ -285,7 +285,7 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * The click listener for a result match.
    */
-  _onMatchClick: function(e) {
+  _onMatchClick: function (e) {
     if (e instanceof Event) {
       e.preventDefault();
       e.stopPropagation();
@@ -321,7 +321,7 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
    * @param nsIDOMNode aMatch
    *        The match to scroll into view.
    */
-  _scrollMatchIntoViewIfNeeded: function(aMatch) {
+  _scrollMatchIntoViewIfNeeded: function (aMatch) {
     this.widget.ensureElementIsVisible(aMatch);
   },
 
@@ -331,7 +331,7 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
    * @param nsIDOMNode aMatch
    *        The match to start a bounce animation for.
    */
-  _bounceMatch: function(aMatch) {
+  _bounceMatch: function (aMatch) {
     Services.tm.currentThread.dispatch({ run: () => {
       aMatch.addEventListener("transitionend", function onEvent() {
         aMatch.removeEventListener("transitionend", onEvent);
@@ -366,7 +366,7 @@ GlobalResults.prototype = {
    * @param SourceResults aSourceResults
    *        An object containing search results for a specific source.
    */
-  add: function(aSourceResults) {
+  add: function (aSourceResults) {
     this._store.push(aSourceResults);
   },
 
@@ -402,7 +402,7 @@ SourceResults.prototype = {
    * @param LineResults aLineResults
    *        An object containing search results for a specific line.
    */
-  add: function(aLineResults) {
+  add: function (aLineResults) {
     this._store.push(aLineResults);
   },
 
@@ -416,7 +416,7 @@ SourceResults.prototype = {
   /**
    * Expands the element, showing all the added details.
    */
-  expand: function() {
+  expand: function () {
     this._resultsContainer.removeAttribute("hidden");
     this._arrow.setAttribute("open", "");
   },
@@ -424,7 +424,7 @@ SourceResults.prototype = {
   /**
    * Collapses the element, hiding all the added details.
    */
-  collapse: function() {
+  collapse: function () {
     this._resultsContainer.setAttribute("hidden", "true");
     this._arrow.removeAttribute("open");
   },
@@ -432,7 +432,7 @@ SourceResults.prototype = {
   /**
    * Toggles between the element collapse/expand state.
    */
-  toggle: function(e) {
+  toggle: function (e) {
     this.expanded ^= 1;
   },
 
@@ -471,7 +471,7 @@ SourceResults.prototype = {
    *          - onHeaderClick
    *          - onMatchClick
    */
-  createView: function(aElementNode, aCallbacks) {
+  createView: function (aElementNode, aCallbacks) {
     this._target = aElementNode;
 
     let arrow = this._arrow = document.createElement("box");
@@ -487,7 +487,7 @@ SourceResults.prototype = {
 
     let resultsHeader = this._resultsHeader = document.createElement("hbox");
     resultsHeader.className = "dbg-results-header";
-    resultsHeader.setAttribute("align", "center")
+    resultsHeader.setAttribute("align", "center");
     resultsHeader.appendChild(arrow);
     resultsHeader.appendChild(locationNode);
     resultsHeader.appendChild(matchCountNode);
@@ -555,7 +555,7 @@ LineResults.prototype = {
    * @param boolean aMatchFlag
    *        True if the chunk is a matched string, false if just text content.
    */
-  add: function(aString, aRange, aMatchFlag) {
+  add: function (aString, aRange, aMatchFlag) {
     this._store.push({ string: aString, range: aRange, match: !!aMatchFlag });
     this._matchCount += aMatchFlag ? 1 : 0;
   },
@@ -585,7 +585,7 @@ LineResults.prototype = {
    *          - onMatchClick
    *          - onLineClick
    */
-  createView: function(aElementNode, aCallbacks) {
+  createView: function (aElementNode, aCallbacks) {
     this._target = aElementNode;
 
     let lineNumberNode = document.createElement("label");
@@ -640,7 +640,7 @@ LineResults.prototype = {
    * @param nsIDOMNode aNode
    * @param object aMatchChunk
    */
-  _entangleMatch: function(aNode, aMatchChunk) {
+  _entangleMatch: function (aNode, aMatchChunk) {
     LineResults._itemsByElement.set(aNode, {
       instance: this,
       lineData: aMatchChunk
@@ -652,7 +652,7 @@ LineResults.prototype = {
    * @param nsIDOMNode aNode
    * @param nsIDOMNode aFirstMatch
    */
-  _entangleLine: function(aNode, aFirstMatch) {
+  _entangleLine: function (aNode, aFirstMatch) {
     LineResults._itemsByElement.set(aNode, {
       instance: this,
       firstMatch: aFirstMatch,
@@ -663,7 +663,7 @@ LineResults.prototype = {
   /**
    * An nsIDOMNode label with an ellipsis value.
    */
-  _ellipsis: (function() {
+  _ellipsis: (function () {
     let label = document.createElement("label");
     label.className = "plain dbg-results-line-contents-string";
     label.setAttribute("value", L10N.ellipsis);
@@ -681,7 +681,7 @@ LineResults.prototype = {
  */
 GlobalResults.prototype[Symbol.iterator] =
 SourceResults.prototype[Symbol.iterator] =
-LineResults.prototype[Symbol.iterator] = function*() {
+LineResults.prototype[Symbol.iterator] = function* () {
   yield* this._store;
 };
 
@@ -694,7 +694,7 @@ LineResults.prototype[Symbol.iterator] = function*() {
  *         The matched item, or null if nothing is found.
  */
 SourceResults.getItemForElement =
-LineResults.getItemForElement = function(aElement) {
+LineResults.getItemForElement = function (aElement) {
   return WidgetMethods.getItemForElement.call(this, aElement, { noSiblings: true });
 };
 
@@ -707,7 +707,7 @@ LineResults.getItemForElement = function(aElement) {
  *         The matched element, or null if nothing is found.
  */
 SourceResults.getElementAtIndex =
-LineResults.getElementAtIndex = function(aIndex) {
+LineResults.getElementAtIndex = function (aIndex) {
   for (let [element, item] of this._itemsByElement) {
     if (!item.ignored && !aIndex--) {
       return element;
@@ -725,7 +725,7 @@ LineResults.getElementAtIndex = function(aIndex) {
  *         The index of the matched element, or -1 if nothing is found.
  */
 SourceResults.indexOfElement =
-LineResults.indexOfElement = function(aElement) {
+LineResults.indexOfElement = function (aElement) {
   let count = 0;
   for (let [element, item] of this._itemsByElement) {
     if (element == aElement) {
@@ -745,7 +745,7 @@ LineResults.indexOfElement = function(aElement) {
  *         The number of key/value pairs in the corresponding map.
  */
 SourceResults.size =
-LineResults.size = function() {
+LineResults.size = function () {
   let count = 0;
   for (let [, item] of this._itemsByElement) {
     if (!item.ignored) {

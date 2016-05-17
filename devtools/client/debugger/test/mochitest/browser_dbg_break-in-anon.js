@@ -17,7 +17,7 @@ function test() {
     const gDebugger = gPanel.panelWin;
     const gSources = gDebugger.DebuggerView.Sources;
 
-    return Task.spawn(function*() {
+    return Task.spawn(function* () {
       yield waitForSourceShown(gPanel, "-eval.js");
       is(gSources.values.length, 1, "Should have 1 source");
 
@@ -28,8 +28,8 @@ function test() {
 
       let item = gSources.getItemForAttachment(e => e.label.indexOf("SCRIPT") === 0);
       ok(item, "Source label is incorrect.");
-      is(item.attachment.group, gDebugger.L10N.getStr('anonymousSourcesLabel'),
-         'Source group is incorrect');
+      is(item.attachment.group, gDebugger.L10N.getStr("anonymousSourcesLabel"),
+         "Source group is incorrect");
 
       yield resumeDebuggerThenCloseAndFinish(gPanel);
     });

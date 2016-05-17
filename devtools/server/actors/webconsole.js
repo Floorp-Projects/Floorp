@@ -27,7 +27,7 @@ for (let name of ["WebConsoleUtils", "ConsoleServiceListener",
     "ConsoleAPIListener", "addWebConsoleCommands",
     "ConsoleReflowListener", "CONSOLE_WORKER_IDS"]) {
   Object.defineProperty(this, name, {
-    get: function(prop) {
+    get: function (prop) {
       if (prop == "WebConsoleUtils") {
         prop = "Utils";
       }
@@ -548,9 +548,9 @@ WebConsoleActor.prototype =
     return this._lastConsoleInputEvaluation;
   },
 
-  //////////////////
+  // ////////////////
   // Request handlers for known packet types.
-  //////////////////
+  // ////////////////
 
   /**
    * Handler for the "startListeners" request.
@@ -564,7 +564,7 @@ WebConsoleActor.prototype =
   {
     // XXXworkers: Not handling the Console API yet for workers (Bug 1209353).
     if (isWorker) {
-       aRequest.listeners = [];
+      aRequest.listeners = [];
     }
 
     let startedListeners = [];
@@ -893,9 +893,9 @@ WebConsoleActor.prototype =
 
           // It is possible that we won't have permission to unwrap an
           // object and retrieve its errorMessageName.
-          try {
-            errorDocURL = ErrorDocs.GetURL(error && error.errorMessageName);
-          } catch (ex) {}
+        try {
+          errorDocURL = ErrorDocs.GetURL(error && error.errorMessageName);
+        } catch (ex) {}
       }
     }
 
@@ -945,7 +945,7 @@ WebConsoleActor.prototype =
         // can throw "Debugger.Frame is not live"
         let frame = frameActor.frame;
         environment = frame.environment;
-      } catch(e) {
+      } catch (e) {
         DevToolsUtils.reportException("onAutocomplete",
           Error("The frame actor was not found: " + frameActorId));
       }
@@ -1051,9 +1051,9 @@ WebConsoleActor.prototype =
     return { updated: Object.keys(aRequest.preferences) };
   },
 
-  //////////////////
+  // ////////////////
   // End of request handlers.
-  //////////////////
+  // ////////////////
 
   /**
    * Create an object with the API we expose to the Web Console during
@@ -1069,7 +1069,7 @@ WebConsoleActor.prototype =
    *         The sandbox holds methods and properties that can be used as
    *         bindings during JS evaluation.
    */
-  _getWebConsoleCommands: function(aDebuggerGlobal)
+  _getWebConsoleCommands: function (aDebuggerGlobal)
   {
     let helpers = {
       window: this.evalWindow,
@@ -1102,9 +1102,9 @@ WebConsoleActor.prototype =
 
       // Workers don't have access to Cu so won't be able to exportFunction.
       if (!isWorker) {
-        maybeExport(desc, 'get');
-        maybeExport(desc, 'set');
-        maybeExport(desc, 'value');
+        maybeExport(desc, "get");
+        maybeExport(desc, "set");
+        maybeExport(desc, "value");
       }
       if (desc.value) {
         // Make sure the helpers can be used during eval.
@@ -1305,7 +1305,7 @@ WebConsoleActor.prototype =
           // Only let and const declarations put bindings into an
           // "initializing" state.
           if (!(line.kind == "let" || line.kind == "const"))
-                continue;
+            continue;
 
           let identifiers = [];
           for (let decl of line.declarations) {
@@ -1318,11 +1318,11 @@ WebConsoleActor.prototype =
                 // let [foo, bar]    = [1, 2];
                 // let [foo=99, bar] = [1, 2];
                 for (let e of decl.id.elements) {
-                    if (e.type == "Identifier") {
-                      identifiers.push(e.name);
-                    } else if (e.type == "AssignmentExpression") {
-                      identifiers.push(e.left.name);
-                    }
+                  if (e.type == "Identifier") {
+                    identifiers.push(e.name);
+                  } else if (e.type == "AssignmentExpression") {
+                    identifiers.push(e.left.name);
+                  }
                 }
                 break;
               case "ObjectPattern":
@@ -1375,9 +1375,9 @@ WebConsoleActor.prototype =
     };
   },
 
-  //////////////////
+  // ////////////////
   // Event handlers for various listeners.
-  //////////////////
+  // ////////////////
 
   /**
    * Handler for messages received from the ConsoleServiceListener. This method
@@ -1633,9 +1633,9 @@ WebConsoleActor.prototype =
     this.conn.send(packet);
   },
 
-  //////////////////
+  // ////////////////
   // End of event handlers for various listeners.
-  //////////////////
+  // ////////////////
 
   /**
    * Prepare a message from the console API to be sent to the remote Web Console
@@ -1750,7 +1750,7 @@ WebConsoleActor.prototype =
     this.onStartListeners({listeners: listeners});
 
     // Also reset the cached top level chrome window being targeted
-    this._lastChromeWindow  = null;
+    this._lastChromeWindow = null;
   },
 };
 
@@ -1876,7 +1876,7 @@ NetworkEventActor.prototype =
     this._fromCache = aNetworkEvent.fromCache;
     this._fromServiceWorker = aNetworkEvent.fromServiceWorker;
 
-    for (let prop of ['method', 'url', 'httpVersion', 'headersSize']) {
+    for (let prop of ["method", "url", "httpVersion", "headersSize"]) {
       this._request[prop] = aNetworkEvent[prop];
     }
 
@@ -2004,7 +2004,7 @@ NetworkEventActor.prototype =
     };
   },
 
-  /******************************************************************
+  /** ****************************************************************
    * Listeners for new network event data coming from NetworkMonitor.
    ******************************************************************/
 

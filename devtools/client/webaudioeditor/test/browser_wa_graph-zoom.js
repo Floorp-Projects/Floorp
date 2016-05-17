@@ -5,7 +5,7 @@
  * Tests that the graph's scale and position is reset on a page reload.
  */
 
-add_task(function*() {
+add_task(function* () {
   let { target, panel } = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, ContextView } = panelWin;

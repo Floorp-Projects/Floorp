@@ -7,7 +7,7 @@
 const {DirectorManagerFront} = require("devtools/server/actors/director-manager");
 const {DirectorRegistry} = require("devtools/server/actors/director-registry");
 
-add_task(function*() {
+add_task(function* () {
   let browser = yield addTab(MAIN_DOMAIN + "director-script-target.html");
   let doc = browser.contentDocument;
 
@@ -31,8 +31,8 @@ add_task(function*() {
 function* testDirectorScriptAttachEventAttributes(directorManager) {
   let attachEvent = yield installAndEnableDirectorScript(directorManager, {
     scriptId: "testDirectorScript_attachEventAttributes",
-    scriptCode: "(" + (function() {
-      exports.attach = function() {};
+    scriptCode: "(" + (function () {
+      exports.attach = function () {};
     }).toString() + ")();",
     scriptOptions: {
       attachMethod: "attach"
@@ -49,9 +49,9 @@ function* testDirectorScriptAttachEventAttributes(directorManager) {
 function* testDirectorScriptMessagePort(directorManager) {
   let { port } = yield installAndEnableDirectorScript(directorManager, {
     scriptId: "testDirectorScript_MessagePort",
-    scriptCode: "(" + (function() {
-      exports.attach = function({port}) {
-        port.onmessage = function(evt) {
+    scriptCode: "(" + (function () {
+      exports.attach = function ({port}) {
+        port.onmessage = function (evt) {
           // echo messages
           evt.source.postMessage(evt.data);
         };
@@ -80,9 +80,9 @@ function* testDirectorScriptMessagePort(directorManager) {
 function* testDirectorScriptWindowEval(directorManager) {
   let { port } = yield installAndEnableDirectorScript(directorManager, {
     scriptId: "testDirectorScript_WindowEval",
-    scriptCode: "(" + (function() {
-      exports.attach = function({window, port}) {
-        var onpageloaded = function() {
+    scriptCode: "(" + (function () {
+      exports.attach = function ({window, port}) {
+        var onpageloaded = function () {
           var globalVarValue = window.eval("globalAccessibleVar;");
           port.postMessage(globalVarValue);
         };
@@ -115,9 +115,9 @@ function* testDirectorScriptWindowEval(directorManager) {
 function* testDirectorScriptUnloadOnDetach(directorManager) {
   let { port } = yield installAndEnableDirectorScript(directorManager, {
     scriptId: "testDirectorScript_unloadOnDetach",
-    scriptCode: "(" + (function() {
-      exports.attach = function({port, onUnload}) {
-        onUnload(function() {
+    scriptCode: "(" + (function () {
+      exports.attach = function ({port, onUnload}) {
+        onUnload(function () {
           port.postMessage("ONUNLOAD");
         });
       };

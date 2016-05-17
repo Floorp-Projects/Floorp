@@ -153,8 +153,8 @@ function test_close_client_while_sending_requests() {
     type: "hello"
   });
 
-  let expectReply = promise.defer()
-  gClient.expectReply("root", function(response) {
+  let expectReply = promise.defer();
+  gClient.expectReply("root", function (response) {
     do_check_eq(response.error, "connectionClosed");
     do_check_eq(response.message, "server side packet from 'root' can't be received as the connection just closed.");
     expectReply.resolve();
@@ -175,7 +175,7 @@ function test_close_client_while_sending_requests() {
       do_check_eq(response.message, "'hello' pending request packet to '" + gActorId + "' can't be sent as the connection just closed.");
     })
     .then(() => expectReply.promise)
-    .then(run_next_test)
+    .then(run_next_test);
   });
 }
 

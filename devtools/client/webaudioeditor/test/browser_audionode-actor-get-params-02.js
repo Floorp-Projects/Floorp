@@ -6,7 +6,7 @@
  * from the AudioNode actors.
  */
 
-add_task(function*() {
+add_task(function* () {
   let { target, front } = yield initBackend(SIMPLE_NODES_URL);
   let [_, nodes] = yield Promise.all([
     front.setup({ reload: true }),
@@ -34,7 +34,7 @@ add_task(function*() {
   yield removeTab(target.tab);
 });
 
-function compare (actual, expected, type) {
+function compare(actual, expected, type) {
   actual.forEach(({ value, param }) => {
     value = getGripValue(value);
     if (typeof expected[param] === "function") {
@@ -45,7 +45,7 @@ function compare (actual, expected, type) {
     }
   });
 
-  info(Object.keys(expected).join(',') + " - " + JSON.stringify(expected));
+  info(Object.keys(expected).join(",") + " - " + JSON.stringify(expected));
 
   is(actual.length, Object.keys(expected).length,
     type + " has correct amount of properties.");

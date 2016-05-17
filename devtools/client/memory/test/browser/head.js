@@ -100,15 +100,15 @@ function waitUntilDominatorTreeState(store, expected) {
   return waitUntilState(store, predicate);
 }
 
-function takeSnapshot (window) {
+function takeSnapshot(window) {
   let { gStore, document } = window;
   let snapshotCount = gStore.getState().snapshots.length;
-  info(`Taking snapshot...`);
+  info("Taking snapshot...");
   document.querySelector(".devtools-toolbar .take-snapshot").click();
   return waitUntilState(gStore, () => gStore.getState().snapshots.length === snapshotCount + 1);
 }
 
-function clearSnapshots (window) {
+function clearSnapshots(window) {
   let { gStore, document } = window;
   document.querySelector(".devtools-toolbar .clear-snapshots").click();
   return waitUntilState(gStore, () => gStore.getState().snapshots.every(
@@ -178,12 +178,12 @@ function waitUntilSnapshotSelected(store, snapshotIndex) {
  *
  * @return {Promise}
  */
-function waitUntilCensusState (store, getCensus, expected) {
+function waitUntilCensusState(store, getCensus, expected) {
   let predicate = () => {
     let snapshots = store.getState().snapshots;
 
-    info('Current census state:' +
-             snapshots.map(x => getCensus(x) ? getCensus(x).state : null ));
+    info("Current census state:" +
+             snapshots.map(x => getCensus(x) ? getCensus(x).state : null));
 
     return snapshots.length === expected.length &&
            expected.every((state, i) => {
@@ -212,15 +212,15 @@ function createRAFMock() {
   let queuedFns = [];
   let mock = { timesCalled: 0 };
 
-  mock.nextFrame = function() {
+  mock.nextFrame = function () {
     let thisQueue = queuedFns;
     queuedFns = [];
-    for(var i = 0; i < thisQueue.length; i++) {
+    for (var i = 0; i < thisQueue.length; i++) {
       thisQueue[i]();
     }
   };
 
-  mock.raf = function(fn) {
+  mock.raf = function (fn) {
     mock.timesCalled++;
     queuedFns.push(fn);
   };

@@ -74,14 +74,14 @@ function readDir(path, ignore, maxDepth = Infinity) {
   }
 
   return ret;
-};
+}
 
 onmessage = function (event) {
   try {
     let {path, ignore, depth} = event.data;
     let message = readDir(path, ignore, depth);
     postMessage(message);
-  } catch(ex) {
+  } catch (ex) {
     console.log(ex);
   }
 };

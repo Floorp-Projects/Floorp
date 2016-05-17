@@ -17,12 +17,12 @@ function test() {
     const gEvents = gDebugger.EVENTS;
     const gEditor = gDebugger.DebuggerView.editor;
     const gSources = gDebugger.DebuggerView.Sources;
-    const queries = gDebugger.require('./content/queries');
+    const queries = gDebugger.require("./content/queries");
     const actions = bindActionCreators(gPanel);
     const getState = gDebugger.DebuggerController.getState;
     let gBreakpointLocation;
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceShown(gPanel, "-01.js");
       gBreakpointLocation = { actor: getSourceActor(gSources, EXAMPLE_URL + "code_script-switching-01.js"),
                               line: 5 };
@@ -49,7 +49,7 @@ function test() {
     });
 
     function verifyView({ disabled }) {
-      return Task.spawn(function*() {
+      return Task.spawn(function* () {
         // It takes a tick for the checkbox in the SideMenuWidget and the
         // gutter in the editor to get updated.
         yield waitForTick();
@@ -68,7 +68,7 @@ function test() {
     // before causing the debuggee to pause, to allow functions to yield first.
 
     function testWhenBreakpointEnabledAndFirstSourceShown() {
-      return Task.spawn(function*() {
+      return Task.spawn(function* () {
         yield ensureSourceIs(gPanel, "-01.js");
         yield verifyView({ disabled: false });
 
@@ -85,7 +85,7 @@ function test() {
     }
 
     function testWhenBreakpointEnabledAndSecondSourceShown() {
-      return Task.spawn(function*() {
+      return Task.spawn(function* () {
         yield ensureSourceIs(gPanel, "-02.js", true);
         yield verifyView({ disabled: false });
 
@@ -100,7 +100,7 @@ function test() {
     }
 
     function testWhenBreakpointDisabledAndSecondSourceShown() {
-      return Task.spawn(function*() {
+      return Task.spawn(function* () {
         yield ensureSourceIs(gPanel, "-02.js", true);
         yield verifyView({ disabled: true });
 

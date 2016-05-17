@@ -6,7 +6,7 @@
 
 // Test file rename functionality with non ascii characters
 
-add_task(function*() {
+add_task(function* () {
   let projecteditor = yield addProjectEditorTabForTempDirectory();
   ok(true, "ProjectEditor has loaded");
 

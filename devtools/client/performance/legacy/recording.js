@@ -16,7 +16,7 @@ const { merge } = require("sdk/util/object");
  * frames data, timeline (marker, tick, memory) data, and methods to mark
  * a recording as 'in progress' or 'finished'.
  */
-const LegacyPerformanceRecording = function (options={}) {
+const LegacyPerformanceRecording = function (options = {}) {
   this._label = options.label || "";
   this._console = options.console || false;
 
@@ -43,7 +43,7 @@ LegacyPerformanceRecording.prototype = merge({
    * @param nsILocalFile file
    *        The file to stream the data into.
    */
-  exportRecording: Task.async(function *(file) {
+  exportRecording: Task.async(function* (file) {
     let recordingData = this.getAllData();
     yield PerformanceIO.saveRecordingToFile(recordingData, file);
   }),
@@ -94,7 +94,7 @@ LegacyPerformanceRecording.prototype = merge({
    * Sets results available from stopping a recording from PerformanceFront.
    * Should only be called by PerformanceFront.
    */
-  _onStopRecording: Task.async(function *({ profilerEndTime, profile, systemClient, systemHost }) {
+  _onStopRecording: Task.async(function* ({ profilerEndTime, profile, systemClient, systemHost }) {
     // Update the duration with the accurate profilerEndTime, so we don't have
     // samples outside of the approximate duration set in `_onStoppingRecording`.
     this._duration = profilerEndTime - this._profilerStartTime;

@@ -90,6 +90,6 @@ function testHitBreakpoint() {
   gThreadClient.resume();
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = gPanel = gClient = gThreadClient = gSource = null;
 });

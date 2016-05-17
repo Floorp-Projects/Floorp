@@ -133,11 +133,11 @@ function createPieTableChart(document, { title, diameter, data, strings, totals,
   let proxy = new PieTableChart(container, pie, table);
 
   pie.on("click", (event, item) => {
-    proxy.emit(event, item)
+    proxy.emit(event, item);
   });
 
   table.on("click", (event, item) => {
-    proxy.emit(event, item)
+    proxy.emit(event, item);
   });
 
   pie.on("mouseover", (event, item) => {

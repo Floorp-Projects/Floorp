@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
 // PLEASE TALK TO SOMEONE IN DEVELOPER TOOLS BEFORE EDITING IT
@@ -27,40 +27,40 @@ function test() {
 
 // var assert = require('../testharness/assert');
 // var helpers = require('./helpers');
-var filesystem = require('gcli/util/filesystem');
+var filesystem = require("gcli/util/filesystem");
 
-exports.testSplit = function(options) {
+exports.testSplit = function (options) {
   if (!options.isNode) {
     return;
   }
 
-  helpers.arrayIs(filesystem.split('', '/'),
-                  [ '.' ],
-                  'split <blank>');
+  helpers.arrayIs(filesystem.split("", "/"),
+                  [ "." ],
+                  "split <blank>");
 
-  helpers.arrayIs(filesystem.split('a', '/'),
-                  [ 'a' ],
-                  'split a');
+  helpers.arrayIs(filesystem.split("a", "/"),
+                  [ "a" ],
+                  "split a");
 
-  helpers.arrayIs(filesystem.split('a/b/c', '/'),
-                  [ 'a', 'b', 'c' ],
-                  'split a/b/c');
+  helpers.arrayIs(filesystem.split("a/b/c", "/"),
+                  [ "a", "b", "c" ],
+                  "split a/b/c");
 
-  helpers.arrayIs(filesystem.split('/a/b/c/', '/'),
-                  [ 'a', 'b', 'c' ],
-                  'split a/b/c');
+  helpers.arrayIs(filesystem.split("/a/b/c/", "/"),
+                  [ "a", "b", "c" ],
+                  "split a/b/c");
 
-  helpers.arrayIs(filesystem.split('/a/b///c/', '/'),
-                  [ 'a', 'b', 'c' ],
-                  'split a/b/c');
+  helpers.arrayIs(filesystem.split("/a/b///c/", "/"),
+                  [ "a", "b", "c" ],
+                  "split a/b/c");
 };
 
-exports.testJoin = function(options) {
+exports.testJoin = function (options) {
   if (!options.isNode) {
     return;
   }
 
-  assert.is(filesystem.join('usr', 'local', 'bin'),
-            'usr/local/bin',
-            'join to usr/local/bin');
+  assert.is(filesystem.join("usr", "local", "bin"),
+            "usr/local/bin",
+            "join to usr/local/bin");
 };

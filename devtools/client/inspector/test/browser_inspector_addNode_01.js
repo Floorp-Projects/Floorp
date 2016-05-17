@@ -8,7 +8,7 @@
 
 const TEST_URL = "data:text/html;charset=utf-8,<h1>Add node</h1>";
 
-add_task(function*() {
+add_task(function* () {
   let {inspector} = yield openInspectorForURL(TEST_URL);
   let {panelDoc} = inspector;
 

@@ -20,11 +20,11 @@ var Ci = Components.interfaces;
 
 const SCRATCHPAD_CONTEXT_CONTENT = 1;
 const SCRATCHPAD_CONTEXT_BROWSER = 2;
-const BUTTON_POSITION_SAVE       = 0;
-const BUTTON_POSITION_CANCEL     = 1;
-const BUTTON_POSITION_DONT_SAVE  = 2;
-const BUTTON_POSITION_REVERT     = 0;
-const EVAL_FUNCTION_TIMEOUT      = 1000; // milliseconds
+const BUTTON_POSITION_SAVE = 0;
+const BUTTON_POSITION_CANCEL = 1;
+const BUTTON_POSITION_DONT_SAVE = 2;
+const BUTTON_POSITION_REVERT = 0;
+const EVAL_FUNCTION_TIMEOUT = 1000; // milliseconds
 
 const MAXIMUM_FONT_SIZE = 96;
 const MINIMUM_FONT_SIZE = 6;
@@ -45,7 +45,7 @@ const VARIABLES_VIEW_URL = "chrome://devtools/content/shared/widgets/VariablesVi
 
 const {require, loader} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
-const Editor    = require("devtools/client/sourceeditor/editor");
+const Editor = require("devtools/client/sourceeditor/editor");
 const TargetFactory = require("devtools/client/framework/target").TargetFactory;
 const EventEmitter = require("devtools/shared/event-emitter");
 const {DevToolsWorker} = require("devtools/shared/worker/worker");
@@ -108,7 +108,7 @@ var Scratchpad = {
    * @param string aLine
    * @return string
    */
-  _scanModeLine: function SP__scanModeLine(aLine="")
+  _scanModeLine: function SP__scanModeLine(aLine = "")
   {
     aLine = aLine.trim();
 
@@ -140,14 +140,14 @@ var Scratchpad = {
    * Add the event listeners for popupshowing events.
    */
   _setupPopupShowingListeners: function SP_setupPopupShowing() {
-    let elementIDs = ['sp-menu_editpopup', 'scratchpad-text-popup'];
+    let elementIDs = ["sp-menu_editpopup", "scratchpad-text-popup"];
 
     for (let elementID of elementIDs) {
       let elem = document.getElementById(elementID);
       if (elem) {
         elem.addEventListener("popupshowing", function () {
           goUpdateGlobalEditMenuItems();
-          let commands = ['cmd_undo', 'cmd_redo', 'cmd_delete', 'cmd_findAgain'];
+          let commands = ["cmd_undo", "cmd_redo", "cmd_delete", "cmd_findAgain"];
           commands.forEach(goUpdateCommand);
         });
       }
@@ -160,13 +160,13 @@ var Scratchpad = {
   _setupCommandListeners: function SP_setupCommands() {
     let commands = {
       "cmd_find": () => {
-        goDoCommand('cmd_find');
+        goDoCommand("cmd_find");
       },
       "cmd_findAgain": () => {
-        goDoCommand('cmd_findAgain');
+        goDoCommand("cmd_findAgain");
       },
       "cmd_gotoLine": () => {
-        goDoCommand('cmd_gotoLine');
+        goDoCommand("cmd_gotoLine");
       },
       "sp-cmd-newWindow": () => {
         Scratchpad.openScratchpad();
@@ -226,13 +226,13 @@ var Scratchpad = {
         Scratchpad.sidebar.hide();
       },
       "sp-cmd-line-numbers": () => {
-        Scratchpad.toggleEditorOption('lineNumbers', SHOW_LINE_NUMBERS);
+        Scratchpad.toggleEditorOption("lineNumbers", SHOW_LINE_NUMBERS);
       },
       "sp-cmd-wrap-text": () => {
-        Scratchpad.toggleEditorOption('lineWrapping', WRAP_TEXT);
+        Scratchpad.toggleEditorOption("lineWrapping", WRAP_TEXT);
       },
       "sp-cmd-highlight-trailing-space": () => {
-        Scratchpad.toggleEditorOption('showTrailingSpace', SHOW_TRAILING_SPACE);
+        Scratchpad.toggleEditorOption("showTrailingSpace", SHOW_TRAILING_SPACE);
       },
       "sp-cmd-larger-font": () => {
         Scratchpad.increaseFontSize();
@@ -243,7 +243,7 @@ var Scratchpad = {
       "sp-cmd-normal-font": () => {
         Scratchpad.normalFontSize();
       },
-    }
+    };
 
     for (let command in commands) {
       let elem = document.getElementById(command);
@@ -270,9 +270,9 @@ var Scratchpad = {
   _updateViewMenuItem: function SP_updateViewMenuItem(preferenceName, menuId) {
     let checked = Services.prefs.getBoolPref(preferenceName);
     if (checked) {
-        document.getElementById(menuId).setAttribute('checked', true);
+      document.getElementById(menuId).setAttribute("checked", true);
     } else {
-        document.getElementById(menuId).removeAttribute('checked');
+      document.getElementById(menuId).removeAttribute("checked");
     }
   },
 
@@ -282,7 +282,7 @@ var Scratchpad = {
   _updateViewFontMenuItem: function SP_updateViewFontMenuItem(fontSize, commandId) {
     let prefFontSize = Services.prefs.getIntPref(EDITOR_FONT_SIZE);
     if (prefFontSize === fontSize) {
-      document.getElementById(commandId).setAttribute('disabled', true);
+      document.getElementById(commandId).setAttribute("disabled", true);
     }
   },
 
@@ -523,7 +523,7 @@ var Scratchpad = {
 
       return deferred.promise;
     });
-   },
+  },
 
   /**
    * Execute the selected text (if any) or the entire editor content in the
@@ -670,7 +670,7 @@ var Scratchpad = {
     if (!this._prettyPrintWorker) {
       this._prettyPrintWorker = new DevToolsWorker(
         "resource://devtools/server/actors/pretty-print-worker.js",
-        { name: 'pretty-print',
+        { name: "pretty-print",
           verbose: DevToolsUtils.dumpn.wantLogging }
       );
     }
@@ -752,24 +752,24 @@ var Scratchpad = {
   _findTopLevelFunction: function SP__findTopLevelFunction(aAst, aCursorPos) {
     for (let statement of aAst.body) {
       switch (statement.type) {
-      case "FunctionDeclaration":
-        if (this._containsCursor(statement.loc, aCursorPos)) {
-          return statement;
-        }
-        break;
-
-      case "VariableDeclaration":
-        for (let decl of statement.declarations) {
-          if (!decl.init) {
-            continue;
+        case "FunctionDeclaration":
+          if (this._containsCursor(statement.loc, aCursorPos)) {
+            return statement;
           }
-          if ((decl.init.type == "FunctionExpression"
+          break;
+
+        case "VariableDeclaration":
+          for (let decl of statement.declarations) {
+            if (!decl.init) {
+              continue;
+            }
+            if ((decl.init.type == "FunctionExpression"
                || decl.init.type == "ArrowFunctionExpression")
               && this._containsCursor(decl.loc, aCursorPos)) {
-            return decl;
+              return decl;
+            }
           }
-        }
-        break;
+          break;
       }
     }
 
@@ -1077,7 +1077,7 @@ var Scratchpad = {
 
     let encoder = new TextEncoder();
     let buffer = encoder.encode(this.getText());
-    let writePromise = OS.File.writeAtomic(aFile.path, buffer,{tmpPath: aFile.path + ".tmp"});
+    let writePromise = OS.File.writeAtomic(aFile.path, buffer, {tmpPath: aFile.path + ".tmp"});
     writePromise.then(value => {
       if (aCallback) {
         aCallback.call(this, Components.results.NS_OK);
@@ -1100,11 +1100,11 @@ var Scratchpad = {
    * @param string aBestCharset
    * @return array of strings
    */
-  _getApplicableCharsets: function SP__getApplicableCharsets(aBestCharset="UTF-8") {
+  _getApplicableCharsets: function SP__getApplicableCharsets(aBestCharset = "UTF-8") {
     let charsets = Services.prefs.getCharPref(
       FALLBACK_CHARSET_LIST).split(",").filter(function (value) {
-      return value.length;
-    });
+        return value.length;
+      });
     charsets.unshift(aBestCharset);
     return charsets;
   },
@@ -1118,22 +1118,22 @@ var Scratchpad = {
    */
   _getUnicodeContent: function SP__getUnicodeContent(aContent, aCharsetArray) {
     let content = null,
-        converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter),
-        success = aCharsetArray.some(charset => {
-          try {
-            converter.charset = charset;
-            content = converter.ConvertToUnicode(aContent);
-            return true;
-          } catch (e) {
-            this.notificationBox.appendNotification(
+      converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter),
+      success = aCharsetArray.some(charset => {
+        try {
+          converter.charset = charset;
+          content = converter.ConvertToUnicode(aContent);
+          return true;
+        } catch (e) {
+          this.notificationBox.appendNotification(
               this.strings.formatStringFromName("importFromFile.convert.failed",
                                                 [ charset ], 1),
               "file-import-convert-failed",
               null,
               this.notificationBox.PRIORITY_WARNING_HIGH,
               null);
-          }
-        });
+        }
+      });
     return content;
   },
 
@@ -1733,7 +1733,7 @@ var Scratchpad = {
       let okstring = this.strings.GetStringFromName("selfxss.okstring");
       let msg = this.strings.formatStringFromName("selfxss.msg", [okstring], 1);
       this._onPaste = WebConsoleUtils.pasteHandlerGen(this.editor.container.contentDocument.body,
-                                                      document.querySelector('#scratchpad-notificationbox'),
+                                                      document.querySelector("#scratchpad-notificationbox"),
                                                       msg, okstring);
       editorElement.addEventListener("paste", this._onPaste, true);
       editorElement.addEventListener("drop", this._onPaste);
@@ -1912,7 +1912,7 @@ var Scratchpad = {
     let shouldClose;
 
     this.promptSave((aShouldClose, aSaved, aStatus) => {
-       shouldClose = aShouldClose;
+      shouldClose = aShouldClose;
       if (aSaved && !Components.isSuccessCode(aStatus)) {
         shouldClose = false;
       }
@@ -1952,10 +1952,10 @@ var Scratchpad = {
       Services.prefs.setIntPref(EDITOR_FONT_SIZE, newFontSize);
 
       if (newFontSize === MAXIMUM_FONT_SIZE) {
-        document.getElementById("sp-cmd-larger-font").setAttribute('disabled', true);
+        document.getElementById("sp-cmd-larger-font").setAttribute("disabled", true);
       }
 
-      document.getElementById("sp-cmd-smaller-font").removeAttribute('disabled');
+      document.getElementById("sp-cmd-smaller-font").removeAttribute("disabled");
     }
   },
 
@@ -1972,11 +1972,11 @@ var Scratchpad = {
       Services.prefs.setIntPref(EDITOR_FONT_SIZE, newFontSize);
 
       if (newFontSize === MINIMUM_FONT_SIZE) {
-        document.getElementById("sp-cmd-smaller-font").setAttribute('disabled', true);
+        document.getElementById("sp-cmd-smaller-font").setAttribute("disabled", true);
       }
     }
 
-    document.getElementById("sp-cmd-larger-font").removeAttribute('disabled');
+    document.getElementById("sp-cmd-larger-font").removeAttribute("disabled");
   },
 
   /**
@@ -1987,8 +1987,8 @@ var Scratchpad = {
     this.editor.setFontSize(NORMAL_FONT_SIZE);
     Services.prefs.setIntPref(EDITOR_FONT_SIZE, NORMAL_FONT_SIZE);
 
-    document.getElementById("sp-cmd-larger-font").removeAttribute('disabled');
-    document.getElementById("sp-cmd-smaller-font").removeAttribute('disabled');
+    document.getElementById("sp-cmd-larger-font").removeAttribute("disabled");
+    document.getElementById("sp-cmd-smaller-font").removeAttribute("disabled");
   },
 
   _observers: [],
@@ -2424,7 +2424,7 @@ var PreferenceObserver = {
     }
   },
 
-  uninit: function PO_uninit () {
+  uninit: function PO_uninit() {
     if (!this.branch) {
       return;
     }

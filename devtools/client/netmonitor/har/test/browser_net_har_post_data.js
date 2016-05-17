@@ -6,7 +6,7 @@
 /**
  * Tests for exporting POST data into HAR format.
  */
-add_task(function*() {
+add_task(function* () {
   // The first 'tab' isn't necessary so, don't create a var for it
   // to avoid eslint warning.
   let [ , debuggee, monitor ] = yield initNetMonitor(

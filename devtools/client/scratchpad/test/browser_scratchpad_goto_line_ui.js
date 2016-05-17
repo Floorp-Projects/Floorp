@@ -35,7 +35,7 @@ function runTests(aWindow, aScratchpad)
   is(editor.getCursor().line, 2, "line is correct");
 
   desiredValue = 2;
-  aWindow.goDoCommand("cmd_gotoLine")
+  aWindow.goDoCommand("cmd_gotoLine");
   is(editor.getCursor().line, 1, "line is correct (again)");
 
   editor.openDialog = oldPrompt;

@@ -70,7 +70,7 @@ function testBreakOnClick() {
       is(aPacket.why.type, "pauseOnDOMEvents",
         "A hidden breakpoint was hit.");
 
-      switch(handlers.length) {
+      switch (handlers.length) {
         case 1:
           is(aPacket.frame.where.line, 26, "Found the clicker handler.");
           handlers.push("handleEventClick");
@@ -95,7 +95,7 @@ function testBreakOnClick() {
 }
 
 function triggerButtonClick(aNodeId) {
-  let button  = content.document.getElementById(aNodeId);
+  let button = content.document.getElementById(aNodeId);
   EventUtils.sendMouseEvent({ type: "click" }, button);
 }
 
@@ -105,7 +105,7 @@ function closeConnection() {
   return deferred.promise;
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gClient = null;
   gThreadClient = null;
 });

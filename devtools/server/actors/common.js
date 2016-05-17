@@ -35,7 +35,7 @@ const { method } = require("devtools/shared/protocol");
 function RegisteredActorFactory(options, prefix) {
   // By default the actor name will also be used for the actorID prefix.
   this._prefix = prefix;
-  if (typeof(options) != "function") {
+  if (typeof (options) != "function") {
     // actors definition registered by actorRegistryActor
     if (options.constructorFun) {
       this._getConstructor = () => options.constructorFun;
@@ -47,7 +47,7 @@ function RegisteredActorFactory(options, prefix) {
         let mod;
         try {
           mod = require(options.id);
-        } catch(e) {
+        } catch (e) {
           throw new Error("Unable to load actor module '" + options.id + "'.\n" +
                           e.message + "\n" + e.stack + "\n");
         }
@@ -80,7 +80,7 @@ function RegisteredActorFactory(options, prefix) {
 }
 RegisteredActorFactory.prototype.createObservedActorFactory = function (conn, parentActor) {
   return new ObservedActorFactory(this._getConstructor, this._prefix, conn, parentActor);
-}
+};
 exports.RegisteredActorFactory = RegisteredActorFactory;
 
 /**
@@ -121,7 +121,7 @@ ObservedActorFactory.prototype.createActor = function () {
   instance.actorID = this.actorID;
   this.registeredPool.addActor(instance);
   return instance;
-}
+};
 exports.ObservedActorFactory = ObservedActorFactory;
 
 
@@ -181,7 +181,7 @@ exports.createExtraActors = function createExtraActors(aFactories, aPool) {
       aPool.addActor(actor);
     }
   }
-}
+};
 
 /**
  * Append the extra actors in |this._extraActors|, constructed by a prior call
@@ -201,7 +201,7 @@ exports.appendExtraActors = function appendExtraActors(aObject) {
     let actor = this._extraActors[name];
     aObject[name] = actor.actorID;
   }
-}
+};
 
 /**
  * Construct an ActorPool.
@@ -282,16 +282,16 @@ ActorPool.prototype = {
   /**
    * Match the api expected by the protocol library.
    */
-  unmanage: function(aActor) {
+  unmanage: function (aActor) {
     return this.removeActor(aActor);
   },
 
-  forEach: function(callback) {
+  forEach: function (callback) {
     for (let name in this._actors) {
       callback(this._actors[name]);
     }
   },
-}
+};
 
 exports.ActorPool = ActorPool;
 
@@ -479,7 +479,7 @@ exports.GeneratedLocation = GeneratedLocation;
  *          The decorated method.
  */
 function expectState(expectedState, method, activity) {
-  return function(...args) {
+  return function (...args) {
     if (this.state !== expectedState) {
       const msg = `Wrong state while ${activity}:` +
                   `Expected '${expectedState}', ` +
@@ -502,7 +502,7 @@ exports.expectState = expectState;
  * @see Framerate implementation: devtools/server/performance/framerate.js
  * @see Framerate actor definition: devtools/server/actors/framerate.js
  */
-function actorBridge (methodName, definition={}) {
+function actorBridge(methodName, definition = {}) {
   return method(function () {
     return this.bridge[methodName].apply(this.bridge, arguments);
   }, definition);

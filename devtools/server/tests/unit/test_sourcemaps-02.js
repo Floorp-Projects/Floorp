@@ -16,8 +16,8 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-source-map");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-source-map", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-source-map", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_simple_source_map();
     });
@@ -39,7 +39,7 @@ function test_simple_source_map()
 
       for (let s of aResponse.sources) {
         do_check_neq(s.url, "http://example.com/www/js/abc.js",
-                     "Shouldn't get the generated source's url.")
+                     "Shouldn't get the generated source's url.");
         expectedSources.delete(s.url);
       }
 

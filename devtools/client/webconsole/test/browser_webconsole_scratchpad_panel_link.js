@@ -20,7 +20,7 @@ function pushPrefEnv() {
   return deferred.promise;
 }
 
-add_task(function*() {
+add_task(function* () {
   waitForExplicitFinish();
 
   yield pushPrefEnv();

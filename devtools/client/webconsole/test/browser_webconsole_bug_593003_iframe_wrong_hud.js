@@ -15,10 +15,10 @@ const TEST_IFRAME_URI = "http://example.com/browser/devtools/client/" +
 const TEST_DUMMY_URI = "http://example.com/browser/devtools/client/" +
                        "webconsole/test/test-console.html";
 
-add_task(function*() {
+add_task(function* () {
 
   let tab1 = (yield loadTab(TEST_URI)).tab;
-  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function*() {
+  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
     content.console.log("FOO");
   });
   yield openConsole();

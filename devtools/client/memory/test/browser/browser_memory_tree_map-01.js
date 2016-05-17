@@ -46,7 +46,7 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   info("Test resizing");
 
   let timesResizeCalled = 0;
-  canvases.on('resize', function() {
+  canvases.on("resize", function () {
     timesResizeCalled++;
   });
 

@@ -10,7 +10,7 @@ const ADDON_URL = EXAMPLE_URL + "addon3.xpi";
 var gClient;
 
 function test() {
-  Task.spawn(function*() {
+  Task.spawn(function* () {
     let addon = yield addAddon(ADDON_URL);
     let addonDebugger = yield initAddonDebugger(ADDON_URL);
 
@@ -25,10 +25,10 @@ function test() {
 
     let sources = groups[0].sources;
     is(sources.length, 2, "Should be two sources");
-    ok(sources[0].url.endsWith("/jid1-ami3akps3baaeg@jetpack.xpi!/bootstrap.js"), "correct url for bootstrap code")
-    is(sources[0].label, "bootstrap.js", "correct label for bootstrap code")
-    is(sources[1].url, "resource://jid1-ami3akps3baaeg-at-jetpack/browser_dbg_addon3/lib/main.js", "correct url for add-on code")
-    is(sources[1].label, "resources/browser_dbg_addon3/lib/main.js", "correct label for add-on code")
+    ok(sources[0].url.endsWith("/jid1-ami3akps3baaeg@jetpack.xpi!/bootstrap.js"), "correct url for bootstrap code");
+    is(sources[0].label, "bootstrap.js", "correct label for bootstrap code");
+    is(sources[1].url, "resource://jid1-ami3akps3baaeg-at-jetpack/browser_dbg_addon3/lib/main.js", "correct url for add-on code");
+    is(sources[1].label, "resources/browser_dbg_addon3/lib/main.js", "correct label for add-on code");
 
     ok(groups[1].sources.length > 10, "SDK modules are listed");
 

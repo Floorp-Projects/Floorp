@@ -6,7 +6,7 @@
  * with correct arguments from the content.
  */
 
-add_task(function*() {
+add_task(function* () {
   let { target, front } = yield initBackend(AUTOMATION_URL);
   let events = [];
 
@@ -14,7 +14,7 @@ add_task(function*() {
     ["setValueAtTime", 0.2, 0],
     ["linearRampToValueAtTime", 1, 0.3],
     ["exponentialRampToValueAtTime", 0.75, 0.6],
-    ["setValueCurveAtTime", [-1, 0 ,1], 0.7, 0.3],
+    ["setValueCurveAtTime", [-1, 0, 1], 0.7, 0.3],
   ];
 
   front.on("automation-event", onAutomationEvent);
@@ -28,7 +28,7 @@ add_task(function*() {
 
   is(events.length, 4, "correct number of events fired");
 
-  function onAutomationEvent (e) {
+  function onAutomationEvent(e) {
     let { eventName, paramName, args } = e;
     let exp = expected[events.length];
 
@@ -41,7 +41,7 @@ add_task(function*() {
       if (typeof a === "object") {
         a.forEach((f, j) => is(f, exp[i + 1][j], `correct argument in Float32Array: ${f}`));
       } else {
-        is(a, exp[i + 1], `correct ${i+1}th argument in args: ${a}`);
+        is(a, exp[i + 1], `correct ${i + 1}th argument in args: ${a}`);
       }
     });
     events.push([eventName].concat(args));

@@ -14,8 +14,8 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-source-map");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-source-map", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-source-map", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_minified();
     });
@@ -53,7 +53,7 @@ function test_minified()
         do_check_true(!aResponse.error);
         testHitBreakpoint();
       });
-    })
+    });
   });
 
   // This is the original foo.js, which was then minified with uglifyjs version
@@ -77,7 +77,7 @@ function test_minified()
                                  "http://example.com/foo.min.js", 1);
 }
 
-function testHitBreakpoint(timesHit=0) {
+function testHitBreakpoint(timesHit = 0) {
   gClient.addOneTimeListener("paused", function (aEvent, aPacket) {
     ++timesHit;
 

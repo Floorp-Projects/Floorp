@@ -1,10 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-///////////////////
+// /////////////////
 //
 // Whitelisting this test.
-// As part of bug 1077403, the leaking uncaught rejection should be fixed. 
+// As part of bug 1077403, the leaking uncaught rejection should be fixed.
 //
 thisTestLeaksUncaughtRejectionsAndShouldBeFixed("Error: Connection closed");
 
@@ -12,7 +12,7 @@ thisTestLeaksUncaughtRejectionsAndShouldBeFixed("Error: Connection closed");
  * Tests that switching to an iframe works fine.
  */
 
-add_task(function*() {
+add_task(function* () {
   Services.prefs.setBoolPref("devtools.command-button-frames.enabled", true);
 
   let { target, panel, toolbox } = yield initWebAudioEditor(IFRAME_CONTEXT_URL);

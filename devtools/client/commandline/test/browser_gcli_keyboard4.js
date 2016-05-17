@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
 // PLEASE TALK TO SOMEONE IN DEVELOPER TOOLS BEFORE EDITING IT
@@ -27,7 +27,7 @@ function test() {
 
 // var helpers = require('./helpers');
 
-exports.testIncrFloat = function(options) {
+exports.testIncrFloat = function (options) {
   return helpers.audit(options, [
     /*
     // See notes at top of testIncr
@@ -37,48 +37,48 @@ exports.testIncrFloat = function(options) {
     },
     */
     {
-      setup: 'tsf -6.5<UP>',
-      check: { input: 'tsf -6' }
+      setup: "tsf -6.5<UP>",
+      check: { input: "tsf -6" }
     },
     {
-      setup: 'tsf -6<UP>',
-      check: { input: 'tsf -4.5' }
+      setup: "tsf -6<UP>",
+      check: { input: "tsf -4.5" }
     },
     {
-      setup: 'tsf -4.5<UP>',
-      check: { input: 'tsf -3' }
+      setup: "tsf -4.5<UP>",
+      check: { input: "tsf -3" }
     },
     {
-      setup: 'tsf -4<UP>',
-      check: { input: 'tsf -3' }
+      setup: "tsf -4<UP>",
+      check: { input: "tsf -3" }
     },
     {
-      setup: 'tsf -3<UP>',
-      check: { input: 'tsf -1.5' }
+      setup: "tsf -3<UP>",
+      check: { input: "tsf -1.5" }
     },
     {
-      setup: 'tsf -1.5<UP>',
-      check: { input: 'tsf 0' }
+      setup: "tsf -1.5<UP>",
+      check: { input: "tsf 0" }
     },
     {
-      setup: 'tsf 0<UP>',
-      check: { input: 'tsf 1.5' }
+      setup: "tsf 0<UP>",
+      check: { input: "tsf 1.5" }
     },
     {
-      setup: 'tsf 1.5<UP>',
-      check: { input: 'tsf 3' }
+      setup: "tsf 1.5<UP>",
+      check: { input: "tsf 3" }
     },
     {
-      setup: 'tsf 2<UP>',
-      check: { input: 'tsf 3' }
+      setup: "tsf 2<UP>",
+      check: { input: "tsf 3" }
     },
     {
-      setup: 'tsf 3<UP>',
-      check: { input: 'tsf 4.5' }
+      setup: "tsf 3<UP>",
+      check: { input: "tsf 4.5" }
     },
     {
-      setup: 'tsf 5<UP>',
-      check: { input: 'tsf 6' }
+      setup: "tsf 5<UP>",
+      check: { input: "tsf 6" }
     }
     /*
     // See notes at top of testIncr
@@ -90,7 +90,7 @@ exports.testIncrFloat = function(options) {
   ]);
 };
 
-exports.testDecrFloat = function(options) {
+exports.testDecrFloat = function (options) {
   return helpers.audit(options, [
     /*
     // See notes at top of testIncr
@@ -100,48 +100,48 @@ exports.testDecrFloat = function(options) {
     },
     */
     {
-      setup: 'tsf -6.5<DOWN>',
-      check: { input: 'tsf -6.5' }
+      setup: "tsf -6.5<DOWN>",
+      check: { input: "tsf -6.5" }
     },
     {
-      setup: 'tsf -6<DOWN>',
-      check: { input: 'tsf -6.5' }
+      setup: "tsf -6<DOWN>",
+      check: { input: "tsf -6.5" }
     },
     {
-      setup: 'tsf -4.5<DOWN>',
-      check: { input: 'tsf -6' }
+      setup: "tsf -4.5<DOWN>",
+      check: { input: "tsf -6" }
     },
     {
-      setup: 'tsf -4<DOWN>',
-      check: { input: 'tsf -4.5' }
+      setup: "tsf -4<DOWN>",
+      check: { input: "tsf -4.5" }
     },
     {
-      setup: 'tsf -3<DOWN>',
-      check: { input: 'tsf -4.5' }
+      setup: "tsf -3<DOWN>",
+      check: { input: "tsf -4.5" }
     },
     {
-      setup: 'tsf -1.5<DOWN>',
-      check: { input: 'tsf -3' }
+      setup: "tsf -1.5<DOWN>",
+      check: { input: "tsf -3" }
     },
     {
-      setup: 'tsf 0<DOWN>',
-      check: { input: 'tsf -1.5' }
+      setup: "tsf 0<DOWN>",
+      check: { input: "tsf -1.5" }
     },
     {
-      setup: 'tsf 1.5<DOWN>',
-      check: { input: 'tsf 0' }
+      setup: "tsf 1.5<DOWN>",
+      check: { input: "tsf 0" }
     },
     {
-      setup: 'tsf 2<DOWN>',
-      check: { input: 'tsf 1.5' }
+      setup: "tsf 2<DOWN>",
+      check: { input: "tsf 1.5" }
     },
     {
-      setup: 'tsf 3<DOWN>',
-      check: { input: 'tsf 1.5' }
+      setup: "tsf 3<DOWN>",
+      check: { input: "tsf 1.5" }
     },
     {
-      setup: 'tsf 5<DOWN>',
-      check: { input: 'tsf 4.5' }
+      setup: "tsf 5<DOWN>",
+      check: { input: "tsf 4.5" }
     }
     /*
     // See notes at top of testIncr
@@ -153,7 +153,7 @@ exports.testDecrFloat = function(options) {
   ]);
 };
 
-exports.testIncrSelection = function(options) {
+exports.testIncrSelection = function (options) {
   /*
   // Bug 829516:  GCLI up/down navigation over selection is sometimes bizarre
   return helpers.audit(options, [
@@ -176,7 +176,7 @@ exports.testIncrSelection = function(options) {
   */
 };
 
-exports.testDecrSelection = function(options) {
+exports.testDecrSelection = function (options) {
   /*
   // Bug 829516:  GCLI up/down navigation over selection is sometimes bizarre
   return helpers.audit(options, [

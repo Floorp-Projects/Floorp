@@ -194,17 +194,17 @@ function uploadPackageBulk(client, webappsActor, packageFile, progressCallback) 
       NetUtil.asyncFetch({
         uri: NetUtil.newURI(packageFile),
         loadUsingSystemPrincipal: true
-      }, function(inputStream) {
-          let copying = copyFrom(inputStream);
-          copying.on("progress", (e, progress) => {
-            progressCallback(progress);
-          });
-          copying.then(() => {
-            console.log("Bulk upload done");
-            inputStream.close();
-            deferred.resolve(actor);
-          });
+      }, function (inputStream) {
+        let copying = copyFrom(inputStream);
+        copying.on("progress", (e, progress) => {
+          progressCallback(progress);
         });
+        copying.then(() => {
+          console.log("Bulk upload done");
+          inputStream.close();
+          deferred.resolve(actor);
+        });
+      });
     });
   }
 
@@ -234,7 +234,7 @@ function installPackaged(client, webappsActor, packagePath, appId, progressCallb
     let tmpZipFile = FileUtils.getDir("TmpD", [], true);
     tmpZipFile.append("application.zip");
     tmpZipFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("666", 8));
-    packagePromise = zipDirectory(tmpZipFile, file)
+    packagePromise = zipDirectory(tmpZipFile, file);
   } else {
     packagePromise = promise.resolve(file);
   }
@@ -309,7 +309,7 @@ function getTargetForApp(client, webappsActor, manifestURL) {
     to: webappsActor,
     type: "getAppActor",
     manifestURL: manifestURL,
-  }
+  };
   client.request(request, (res) => {
     if (res.error) {
       deferred.reject(res.error);
@@ -326,7 +326,7 @@ function getTargetForApp(client, webappsActor, manifestURL) {
         target.on("close", () => {
           appTargets.delete(manifestURL);
         });
-        deferred.resolve(target)
+        deferred.resolve(target);
       }, (error) => {
         deferred.reject(error);
       });
@@ -352,7 +352,7 @@ function reloadApp(client, webappsActor, manifestURL) {
       };
       return client.request(request);
     }, () => {
-     throw new Error("Not running");
+      throw new Error("Not running");
     });
 }
 exports.reloadApp = reloadApp;
@@ -385,7 +385,7 @@ function getTarget(client, form) {
 
   TargetFactory.forRemoteTab(options).then((target) => {
     target.isApp = true;
-    deferred.resolve(target)
+    deferred.resolve(target);
   }, (error) => {
     deferred.reject(error);
   });
@@ -450,7 +450,7 @@ App.prototype = {
 
   close: function () {
     return closeApp(this.client, this.webappsActor,
-                    this.manifest.manifestURL)
+                    this.manifest.manifestURL);
   },
 
   getIcon: function () {
@@ -684,7 +684,7 @@ AppActorFront.prototype = {
     }
 
     this._getApp(manifestURL).then((app) => {
-      switch(type) {
+      switch (type) {
         case "appOpen":
           app.running = true;
           this._notifyListeners("appOpen", app);
@@ -829,6 +829,6 @@ AppActorFront.prototype = {
     };
     return this._install(request);
   }
-}
+};
 
 exports.AppActorFront = AppActorFront;

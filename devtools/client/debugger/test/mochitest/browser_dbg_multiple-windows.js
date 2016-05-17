@@ -136,7 +136,7 @@ function testRemoveTab() {
   gNewWindow.close();
 
   // give it time to close
-  executeSoon(function() { continue_remove_tab(deferred) });
+  executeSoon(function () { continue_remove_tab(deferred); });
   return deferred.promise;
 }
 
@@ -164,7 +164,7 @@ function closeConnection() {
   return deferred.promise;
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gNewTab = null;
   gNewWindow = null;
   gClient = null;

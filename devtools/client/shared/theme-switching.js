@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-(function() {
+(function () {
   const SCROLLBARS_URL = "chrome://devtools/skin/floating-scrollbars-dark-theme.css";
   let documentElement = document.documentElement;
 
@@ -100,7 +100,7 @@
 
     let loadEvents = [];
     for (let url of newThemeDef.stylesheets) {
-      let {styleSheet,loadPromise} = appendStyleSheet(url);
+      let {styleSheet, loadPromise} = appendStyleSheet(url);
       devtoolsStyleSheets.get(newThemeDef).push(styleSheet);
       loadEvents.push(loadPromise);
     }
@@ -170,7 +170,7 @@
     switchTheme(Services.prefs.getCharPref("devtools.theme"));
 
     gDevTools.on("pref-changed", handlePrefChange);
-    window.addEventListener("unload", function() {
+    window.addEventListener("unload", function () {
       gDevTools.off("pref-changed", handlePrefChange);
     });
   }

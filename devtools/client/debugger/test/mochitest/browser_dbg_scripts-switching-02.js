@@ -145,13 +145,13 @@ function test() {
       return deferred.promise;
     }
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceAndCaretAndScopes(gPanel, "-02.js", 1);
       yield testSourcesDisplay();
       yield testSwitchPaused1();
       yield testSwitchPaused2();
       yield testSwitchRunning();
-      resumeDebuggerThenCloseAndFinish(gPanel)
+      resumeDebuggerThenCloseAndFinish(gPanel);
     });
 
     callInTab(gTab, "firstCall");

@@ -9,7 +9,7 @@
  */
 
 function test() {
-  Task.spawn(function*() {
+  Task.spawn(function* () {
     let TAB_URL = EXAMPLE_URL + "doc_empty-tab-01.html";
     let [,, panel] = yield initDebugger(TAB_URL);
     let dbgWin = panel.panelWin;
@@ -26,14 +26,14 @@ function test() {
     toolbox.once("webconsole-ready", () => {
       ok(toolbox.splitConsole, "Split console is shown.");
       let jsterm = toolbox.getPanel("webconsole").hud.jsterm;
-      jsterm.execute('debugger');
+      jsterm.execute("debugger");
     });
     EventUtils.synthesizeKey("VK_ESCAPE", {}, dbgWin);
 
     yield paused;
-    is(sources.selectedItem.attachment.label, 'SCRIPT0',
-       'Anonymous source is selected in sources');
-    ok(editor.getText() === 'debugger', 'Editor has correct text');
+    is(sources.selectedItem.attachment.label, "SCRIPT0",
+       "Anonymous source is selected in sources");
+    ok(editor.getText() === "debugger", "Editor has correct text");
 
     yield toolbox.closeSplitConsole();
     yield resumeDebuggerThenCloseAndFinish(panel);

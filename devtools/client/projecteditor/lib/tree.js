@@ -25,7 +25,7 @@ var ResourceContainer = Class({
    * @param ProjectTreeView tree
    * @param Resource resource
    */
-  initialize: function(tree, resource) {
+  initialize: function (tree, resource) {
     this.tree = tree;
     this.resource = resource;
     this.elt = null;
@@ -85,7 +85,7 @@ var ResourceContainer = Class({
     this.update();
   },
 
-  toggleExpansion: function() {
+  toggleExpansion: function () {
     if (!this.resource.isRoot) {
       this.expanded = !this.expanded;
     } else {
@@ -93,7 +93,7 @@ var ResourceContainer = Class({
     }
   },
 
-  destroy: function() {
+  destroy: function () {
     this.elt.remove();
     this.expander.remove();
     this.highlighter.remove();
@@ -109,7 +109,7 @@ var ResourceContainer = Class({
    *
    * @param Event e
    */
-  openContextMenu: function(ev) {
+  openContextMenu: function (ev) {
     ev.preventDefault();
     let popup = this.tree.options.contextMenuPopup;
     popup.openPopupAtScreen(ev.screenX, ev.screenY, true);
@@ -118,7 +118,7 @@ var ResourceContainer = Class({
   /**
    * Update the view based on the current state of the Resource.
    */
-  update: function() {
+  update: function () {
     let visible = this.tree.options.resourceVisible ?
       this.tree.options.resourceVisible(this.resource) :
       true;
@@ -134,7 +134,7 @@ var ResourceContainer = Class({
   /**
    * Select this view in the ProjectTreeView.
    */
-  select: function() {
+  select: function () {
     this.tree.selectContainer(this);
   },
 
@@ -196,10 +196,10 @@ var TreeView = Class({
    *               - resourceVisible: a function(Resource) -> Boolean
    *                 that determines if the resource should show up.
    */
-  initialize: function(doc, options) {
+  initialize: function (doc, options) {
     this.doc = doc;
     this.options = merge({
-      resourceFormatter: function(resource, elt) {
+      resourceFormatter: function (resource, elt) {
         elt.textContent = resource.toString();
       }
     }, options);
@@ -221,7 +221,7 @@ var TreeView = Class({
     this.updateResource = this.updateResource.bind(this);
   },
 
-  destroy: function() {
+  destroy: function () {
     this._destroyed = true;
     this.elt.remove();
   },
@@ -229,7 +229,7 @@ var TreeView = Class({
   /**
    * Helper function to create DOM elements for promptNew and promptEdit
    */
-  createInputContainer: function() {
+  createInputContainer: function () {
     let inputholder = this.doc.createElementNS(HTML_NS, "div");
     inputholder.className = "child entry";
 
@@ -259,14 +259,14 @@ var TreeView = Class({
    *          Resolves once the prompt has been successful,
    *          Rejected if it is cancelled
    */
-  promptNew: function(initial, parent, sibling=null) {
+  promptNew: function (initial, parent, sibling = null) {
     let deferred = promise.defer();
 
     let parentContainer = this._containers.get(parent);
     let item = this.doc.createElement("li");
     item.className = "child";
 
-    let {inputholder,placeholder} = this.createInputContainer();
+    let {inputholder, placeholder} = this.createInputContainer();
     item.appendChild(inputholder);
 
     let children = parentContainer.children;
@@ -280,7 +280,7 @@ var TreeView = Class({
       start: editor => {
         editor.input.select();
       },
-      done: function(val, commit) {
+      done: function (val, commit) {
         if (commit) {
           deferred.resolve(val);
         } else {
@@ -307,12 +307,12 @@ var TreeView = Class({
    *          Resolves once the prompt has been successful,
    *          Rejected if it is cancelled
    */
-  promptEdit: function(initial, resource) {
+  promptEdit: function (initial, resource) {
     let deferred = promise.defer();
     let item = this._containers.get(resource).elt;
     let originalText = item.childNodes[0];
 
-    let {inputholder,placeholder} = this.createInputContainer();
+    let {inputholder, placeholder} = this.createInputContainer();
     item.insertBefore(inputholder, originalText);
 
     item.removeChild(originalText);
@@ -324,7 +324,7 @@ var TreeView = Class({
       start: editor => {
         editor.input.select();
       },
-      done: function(val, commit) {
+      done: function (val, commit) {
         if (val === initial) {
           item.insertBefore(originalText, inputholder);
         }
@@ -347,7 +347,7 @@ var TreeView = Class({
    *
    * @param Store model
    */
-  addModel: function(model) {
+  addModel: function (model) {
     if (this.models.has(model)) {
       // Requesting to add a model that already exists
       return;
@@ -378,7 +378,7 @@ var TreeView = Class({
    *
    * @param Store model
    */
-  removeModel: function(model) {
+  removeModel: function (model) {
     this.models.delete(model);
     this.removeResource(model.root);
   },
@@ -390,7 +390,7 @@ var TreeView = Class({
    * @param Resource resource
    * @returns ResourceContainer
    */
-  getViewContainer: function(resource) {
+  getViewContainer: function (resource) {
     return this._containers.get(resource);
   },
 
@@ -399,7 +399,7 @@ var TreeView = Class({
    *
    * @param ResourceContainer container
    */
-  selectContainer: function(container) {
+  selectContainer: function (container) {
     if (this.selectedContainer === container) {
       return;
     }
@@ -416,7 +416,7 @@ var TreeView = Class({
    *
    * @param Resource resource
    */
-  selectResource: function(resource) {
+  selectResource: function (resource) {
     this.selectContainer(this._containers.get(resource));
   },
 
@@ -425,7 +425,7 @@ var TreeView = Class({
    *
    * @param Resource resource
    */
-  getSelectedResource: function() {
+  getSelectedResource: function () {
     return this.selectedContainer.resource;
   },
 
@@ -435,7 +435,7 @@ var TreeView = Class({
    *
    * @param Resource resource
    */
-  importResource: function(resource) {
+  importResource: function (resource) {
     if (!resource) {
       return null;
     }
@@ -459,7 +459,7 @@ var TreeView = Class({
    *
    * @param Resource resource
    */
-  removeResource: function(resource) {
+  removeResource: function (resource) {
     let toRemove = resource.allDescendants();
     toRemove.add(resource);
     for (let remove of toRemove) {
@@ -472,7 +472,7 @@ var TreeView = Class({
    *
    * @param Resource resource
    */
-  _removeResource: function(resource) {
+  _removeResource: function (resource) {
     forget(this, resource);
     if (this._containers.get(resource)) {
       this._containers.get(resource).destroy();
@@ -487,7 +487,7 @@ var TreeView = Class({
    *
    * @param Resource resource
    */
-  resourceChildrenChanged: function(resource) {
+  resourceChildrenChanged: function (resource) {
     this.updateResource(resource);
     this._updateChildren(this._containers.get(resource));
   },
@@ -499,7 +499,7 @@ var TreeView = Class({
    *
    * @param Resource resource
    */
-  updateResource: function(resource) {
+  updateResource: function (resource) {
     let container = this._containers.get(resource);
     container.update();
   },
@@ -510,7 +510,7 @@ var TreeView = Class({
    *
    * @param ResourceContainer container
    */
-  _updateChildren: function(container) {
+  _updateChildren: function (container) {
     let resource = container.resource;
     let fragment = this.doc.createDocumentFragment();
     if (resource.children) {
@@ -542,11 +542,11 @@ var ProjectTreeView = Class({
    * @param Document document
    * @param Object options
    */
-  initialize: function(document, options) {
+  initialize: function (document, options) {
     TreeView.prototype.initialize.apply(this, arguments);
   },
 
-  destroy: function() {
+  destroy: function () {
     this.forgetProject();
     TreeView.prototype.destroy.apply(this, arguments);
   },
@@ -554,7 +554,7 @@ var ProjectTreeView = Class({
   /**
    * Remove current project and empty the tree
    */
-  forgetProject: function() {
+  forgetProject: function () {
     if (this.project) {
       forget(this, this.project);
       for (let store of this.project.allStores()) {
@@ -569,7 +569,7 @@ var ProjectTreeView = Class({
    * @param Project project
    *        The project to render into a tree
    */
-  setProject: function(project) {
+  setProject: function (project) {
     this.forgetProject();
     this.project = project;
     if (this.project) {
@@ -583,7 +583,7 @@ var ProjectTreeView = Class({
   /**
    * Refresh the tree with all of the current project stores
    */
-  refresh: function() {
+  refresh: function () {
     for (let store of this.project.allStores()) {
       this.addModel(store);
     }

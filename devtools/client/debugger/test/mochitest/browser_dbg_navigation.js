@@ -70,6 +70,6 @@ function testDetach(aActor) {
   return deferred.promise;
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gClient = null;
 });

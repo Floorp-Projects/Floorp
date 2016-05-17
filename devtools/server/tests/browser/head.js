@@ -105,7 +105,7 @@ function closeDebuggerClient(client) {
  * @param {Boolean} useCapture Optional, for addEventListener/removeEventListener
  * @return A promise that resolves when the event has been handled
  */
-function once(target, eventName, useCapture=false) {
+function once(target, eventName, useCapture = false) {
   info("Waiting for event: '" + eventName + "' on " + target + ".");
 
   return new Promise(resolve => {
@@ -180,7 +180,7 @@ function waitUntil(predicate, interval = 10) {
     return Promise.resolve(true);
   }
   return new Promise(resolve => {
-    setTimeout(function() {
+    setTimeout(function () {
       waitUntil(predicate).then(() => resolve(true));
     }, interval);
   });
@@ -191,13 +191,13 @@ function waitForMarkerType(front, types, predicate,
   eventName = "timeline-data")
 {
   types = [].concat(types);
-  predicate = predicate || function(){ return true; };
+  predicate = predicate || function () { return true; };
   let filteredMarkers = [];
   let { promise, resolve } = defer();
 
   info("Waiting for markers of type: " + types);
 
-  function handler (name, data) {
+  function handler(name, data) {
     if (typeof name === "string" && name !== "markers") {
       return;
     }

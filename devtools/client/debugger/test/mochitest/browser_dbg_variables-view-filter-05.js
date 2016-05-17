@@ -50,11 +50,11 @@ function testVariablesAndPropertiesFiltering() {
   let step = 0;
 
   let tests = [
-    function() {
+    function () {
       assertScopeExpansion([true, false, false, false, false]);
       typeText(gSearchBox, "*arguments");
     },
-    function() {
+    function () {
       assertScopeExpansion([true, true, true, true, true]);
       assertVariablesCountAtLeast([0, 0, 1, 0, 0]);
 
@@ -65,7 +65,7 @@ function testVariablesAndPropertiesFiltering() {
 
       backspaceText(gSearchBox, 6);
     },
-    function() {
+    function () {
       assertScopeExpansion([true, true, true, true, true]);
       assertVariablesCountAtLeast([0, 0, 1, 0, 1]);
 
@@ -81,7 +81,7 @@ function testVariablesAndPropertiesFiltering() {
 
       backspaceText(gSearchBox, 2);
     },
-    function() {
+    function () {
       assertScopeExpansion([true, true, true, true, true]);
       assertVariablesCountAtLeast([0, 1, 3, 0, 1]);
 
@@ -102,7 +102,7 @@ function testVariablesAndPropertiesFiltering() {
 
       backspaceText(gSearchBox, 1);
     },
-    function() {
+    function () {
       assertScopeExpansion([true, true, true, true, true]);
       assertVariablesCountAtLeast([4, 1, 3, 0, 1]);
 
@@ -242,7 +242,7 @@ function prepareVariablesAndProperties() {
   return deferred.promise;
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

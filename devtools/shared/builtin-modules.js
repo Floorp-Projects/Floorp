@@ -107,7 +107,7 @@ function defineLazyModuleGetter(aObject, aName, aResource, aSymbol,
 {
   let proxy = aProxy || {};
 
-  if (typeof(aPreLambda) === "function") {
+  if (typeof (aPreLambda) === "function") {
     aPreLambda.apply(proxy);
   }
 
@@ -116,7 +116,7 @@ function defineLazyModuleGetter(aObject, aName, aResource, aSymbol,
     try {
       Cu.import(aResource, temp);
 
-      if (typeof(aPostLambda) === "function") {
+      if (typeof (aPostLambda) === "function") {
         aPostLambda.apply(proxy);
       }
     } catch (ex) {
@@ -180,7 +180,7 @@ defineLazyGetter(exports.modules, "Debugger", () => {
   // addDebuggerToGlobal only allows adding the Debugger object to a global. The
   // this object is not guaranteed to be a global (in particular on B2G, due to
   // compartment sharing), so add the Debugger object to a sandbox instead.
-  let sandbox = Cu.Sandbox(CC('@mozilla.org/systemprincipal;1', 'nsIPrincipal')());
+  let sandbox = Cu.Sandbox(CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")());
   Cu.evalInSandbox(
     "Components.utils.import('resource://gre/modules/jsdebugger.jsm');" +
     "addDebuggerToGlobal(this);",
@@ -206,25 +206,25 @@ defineLazyGetter(exports.modules, "indexedDB", () => {
   // On xpcshell, we can't instantiate indexedDB without crashing
   try {
     let sandbox
-      = Cu.Sandbox(CC('@mozilla.org/systemprincipal;1', 'nsIPrincipal')(),
+      = Cu.Sandbox(CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")(),
                    {wantGlobalProperties: ["indexedDB"]});
     return sandbox.indexedDB;
 
-  } catch(e) {
+  } catch (e) {
     return {};
   }
 });
 
 defineLazyGetter(exports.modules, "CSS", () => {
   let sandbox
-    = Cu.Sandbox(CC('@mozilla.org/systemprincipal;1', 'nsIPrincipal')(),
+    = Cu.Sandbox(CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")(),
                  {wantGlobalProperties: ["CSS"]});
   return sandbox.CSS;
 });
 
 defineLazyGetter(exports.modules, "URL", () => {
   let sandbox
-    = Cu.Sandbox(CC('@mozilla.org/systemprincipal;1', 'nsIPrincipal')(),
+    = Cu.Sandbox(CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")(),
                  {wantGlobalProperties: ["URL"]});
   return sandbox.URL;
 });

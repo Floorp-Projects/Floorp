@@ -14,7 +14,7 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { waitForRecordingStartedEvents, waitForRecordingStoppedEvents } = require("devtools/client/performance/test/helpers/actions");
 const { once, times } = require("devtools/client/performance/test/helpers/event-utils");
 
-add_task(function*() {
+add_task(function* () {
   // This test seems to take a very long time to finish on Linux VMs.
   requestLongerTimeout(4);
 
@@ -33,11 +33,11 @@ add_task(function*() {
   });
   yield console.profile("rust");
   yield started;
-  testRecordings(PerformanceController, [C+S+R]);
+  testRecordings(PerformanceController, [C + S + R]);
 
   info("Starting manual recording...");
   yield startRecording(panel);
-  testRecordings(PerformanceController, [C+R, R+S]);
+  testRecordings(PerformanceController, [C + R, R + S]);
 
   info("Starting console.profile(\"3\")...");
   started = waitForRecordingStartedEvents(panel, {
@@ -51,7 +51,7 @@ add_task(function*() {
   });
   yield console.profile("3");
   yield started;
-  testRecordings(PerformanceController, [C+R, R+S, C+R]);
+  testRecordings(PerformanceController, [C + R, R + S, C + R]);
 
   info("Starting console.profile(\"4\")...");
   started = waitForRecordingStartedEvents(panel, {
@@ -65,7 +65,7 @@ add_task(function*() {
   });
   yield console.profile("4");
   yield started;
-  testRecordings(PerformanceController, [C+R, R+S, C+R, C+R]);
+  testRecordings(PerformanceController, [C + R, R + S, C + R, C + R]);
 
   info("Ending console.profileEnd()...");
   let stopped = waitForRecordingStoppedEvents(panel, {
@@ -80,25 +80,25 @@ add_task(function*() {
   });
   yield console.profileEnd();
   yield stopped;
-  testRecordings(PerformanceController, [C+R, R+S, C+R, C]);
+  testRecordings(PerformanceController, [C + R, R + S, C + R, C]);
 
   info("Select last recording...");
   let recordingSelected = once(PerformanceController, EVENTS.RECORDING_SELECTED);
   RecordingsView.selectedIndex = 3;
   yield recordingSelected;
-  testRecordings(PerformanceController, [C+R, R, C+R, C+S]);
+  testRecordings(PerformanceController, [C + R, R, C + R, C + S]);
   ok(!OverviewView.isRendering(), "Stop rendering overview when a completed recording is selected.");
 
   info("Stop manual recording...");
   yield stopRecording(panel);
-  testRecordings(PerformanceController, [C+R, S, C+R, C]);
+  testRecordings(PerformanceController, [C + R, S, C + R, C]);
   ok(!OverviewView.isRendering(), "Stop rendering overview when a completed recording is selected.");
 
   info("Select first recording...");
   recordingSelected = once(PerformanceController, EVENTS.RECORDING_SELECTED);
   RecordingsView.selectedIndex = 0;
   yield recordingSelected;
-  testRecordings(PerformanceController, [C+R+S, 0, C+R, C]);
+  testRecordings(PerformanceController, [C + R + S, 0, C + R, C]);
   ok(OverviewView.isRendering(), "Should be rendering overview a recording in progress is selected.");
 
   // Ensure overview is still rendering.
@@ -119,7 +119,7 @@ add_task(function*() {
   });
   yield console.profileEnd();
   yield stopped;
-  testRecordings(PerformanceController, [C+R+S, 0, C, C]);
+  testRecordings(PerformanceController, [C + R + S, 0, C, C]);
   ok(OverviewView.isRendering(), "Should be rendering overview a recording in progress is selected.");
 
   // Ensure overview is still rendering.
@@ -129,7 +129,7 @@ add_task(function*() {
 
   info("Start one more manual recording...");
   yield startRecording(panel);
-  testRecordings(PerformanceController, [C+R, 0, C, C, R+S]);
+  testRecordings(PerformanceController, [C + R, 0, C, C, R + S]);
   ok(OverviewView.isRendering(), "Should be rendering overview a recording in progress is selected.");
 
   // Ensure overview is still rendering.
@@ -139,7 +139,7 @@ add_task(function*() {
 
   info("Stop manual recording...");
   yield stopRecording(panel);
-  testRecordings(PerformanceController, [C+R, 0, C, C, S]);
+  testRecordings(PerformanceController, [C + R, 0, C, C, S]);
   ok(!OverviewView.isRendering(), "Stop rendering overview when a completed recording is selected.");
 
   info("Ending console.profileEnd()...");
@@ -172,10 +172,10 @@ function testRecordings(controller, expected) {
 
   recordings.forEach((recording, i) => {
     ok(recording.isConsole() == !!(expected[i] & C),
-      `Recording ${i+1} has expected console state.`);
+      `Recording ${i + 1} has expected console state.`);
     ok(recording.isRecording() == !!(expected[i] & R),
-      `Recording ${i+1} has expected console state.`);
+      `Recording ${i + 1} has expected console state.`);
     ok((recording == current) == !!(expected[i] & S),
-      `Recording ${i+1} has expected selected state.`);
+      `Recording ${i + 1} has expected selected state.`);
   });
 }

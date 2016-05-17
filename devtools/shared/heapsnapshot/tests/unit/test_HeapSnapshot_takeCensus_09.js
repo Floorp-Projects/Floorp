@@ -32,13 +32,13 @@ function run_test() {
     }
   }
 
-  let census = saveHeapSnapshotAndTakeCensus(dbg, { breakdown: { by: 'objectClass',
-                                                                 then: { by: 'allocationStack',
-                                                                         then: { by: 'count',
-                                                                                 label: 'haz stack'
+  let census = saveHeapSnapshotAndTakeCensus(dbg, { breakdown: { by: "objectClass",
+                                                                 then: { by: "allocationStack",
+                                                                         then: { by: "count",
+                                                                                 label: "haz stack"
                                                                                },
-                                                                         noStack: { by: 'count',
-                                                                                    label: 'no haz stack'
+                                                                         noStack: { by: "count",
+                                                                                    label: "no haz stack"
                                                                                   }
                                                                        }
                                                                }
@@ -46,46 +46,46 @@ function run_test() {
 
   let map = census.AllocationMarker;
   ok(map instanceof Map, "Should be a Map instance");
-  equal(map.size, 4, "Should have 4 allocation stacks (including the lack of a stack)")
+  equal(map.size, 4, "Should have 4 allocation stacks (including the lack of a stack)");
 
   // Gather the stacks we are expecting to appear as keys, and
   // check that there are no unexpected keys.
   let stacks = { };
 
   map.forEach((v, k) => {
-    if (k === 'noStack') {
+    if (k === "noStack") {
       // No need to save this key.
-    } else if (k.functionDisplayName === 'f' &&
-               k.parent.functionDisplayName === 'run_test') {
+    } else if (k.functionDisplayName === "f" &&
+               k.parent.functionDisplayName === "run_test") {
       stacks.f = k;
-    } else if (k.functionDisplayName === 'f' &&
-               k.parent.functionDisplayName === 'g' &&
-               k.parent.parent.functionDisplayName === 'run_test') {
+    } else if (k.functionDisplayName === "f" &&
+               k.parent.functionDisplayName === "g" &&
+               k.parent.parent.functionDisplayName === "run_test") {
       stacks.fg = k;
-    } else if (k.functionDisplayName === 'f' &&
-               k.parent.functionDisplayName === 'h' &&
-               k.parent.parent.functionDisplayName === 'run_test') {
+    } else if (k.functionDisplayName === "f" &&
+               k.parent.functionDisplayName === "h" &&
+               k.parent.parent.functionDisplayName === "run_test") {
       stacks.fh = k;
     } else {
-      dumpn("Unexpected allocation stack:")
+      dumpn("Unexpected allocation stack:");
       k.toString().split(/\n/g).forEach(s => dumpn(s));
       ok(false);
     }
   });
 
-  equal(map.get('noStack').label, 'no haz stack');
-  equal(map.get('noStack').count, 1);
+  equal(map.get("noStack").label, "no haz stack");
+  equal(map.get("noStack").count, 1);
 
   ok(stacks.f);
-  equal(map.get(stacks.f).label, 'haz stack');
+  equal(map.get(stacks.f).label, "haz stack");
   equal(map.get(stacks.f).count, 20);
 
   ok(stacks.fg);
-  equal(map.get(stacks.fg).label, 'haz stack');
+  equal(map.get(stacks.fg).label, "haz stack");
   equal(map.get(stacks.fg).count, 10);
 
   ok(stacks.fh);
-  equal(map.get(stacks.fh).label, 'haz stack');
+  equal(map.get(stacks.fh).label, "haz stack");
   equal(map.get(stacks.fh).count, 5);
 
   do_test_finished();

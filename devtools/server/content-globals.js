@@ -8,31 +8,31 @@ const Services = require("Services");
 
 var globalsCache = {};
 
-exports.addContentGlobal = function(options) {
-  if (!options || !options.global || !options['inner-window-id']) {
-    throw Error('Invalid arguments');
+exports.addContentGlobal = function (options) {
+  if (!options || !options.global || !options["inner-window-id"]) {
+    throw Error("Invalid arguments");
   }
-  let cache = getGlobalCache(options['inner-window-id']);
+  let cache = getGlobalCache(options["inner-window-id"]);
   cache.push(options.global);
   return undefined;
-}
+};
 
-exports.getContentGlobals = function(options) {
-  if (!options || !options['inner-window-id']) {
-    throw Error('Invalid arguments');
+exports.getContentGlobals = function (options) {
+  if (!options || !options["inner-window-id"]) {
+    throw Error("Invalid arguments");
   }
-  return Array.slice(globalsCache[options['inner-window-id']] || []);
-}
+  return Array.slice(globalsCache[options["inner-window-id"]] || []);
+};
 
-exports.removeContentGlobal = function(options) {
-  if (!options || !options.global || !options['inner-window-id']) {
-    throw Error('Invalid arguments');
+exports.removeContentGlobal = function (options) {
+  if (!options || !options.global || !options["inner-window-id"]) {
+    throw Error("Invalid arguments");
   }
-  let cache = getGlobalCache(options['inner-window-id']);
+  let cache = getGlobalCache(options["inner-window-id"]);
   let index = cache.indexOf(options.global);
   cache.splice(index, 1);
   return undefined;
-}
+};
 
 function getGlobalCache(aInnerWindowID) {
   return globalsCache[aInnerWindowID] = globalsCache[aInnerWindowID] || [];
@@ -43,5 +43,5 @@ if (!isWorker) {
   Services.obs.addObserver(function observer(subject, topic, data) {
     let id = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
     delete globalsCache[id];
-  }, 'inner-window-destroyed', false);
+  }, "inner-window-destroyed", false);
 }

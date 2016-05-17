@@ -14,8 +14,8 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-stack", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-stack", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_simple_eval();
     });
@@ -25,12 +25,12 @@ function run_test()
 
 function test_simple_eval()
 {
-  gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
+  gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
     let arg1Actor = aPacket.frame.arguments[0].actor;
-    gThreadClient.eval(null, "({ obj: true })", function(aResponse) {
+    gThreadClient.eval(null, "({ obj: true })", function (aResponse) {
       do_check_eq(aResponse.type, "resumed");
       // Expect a pause notification immediately.
-      gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
+      gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
         // Check the return value...
         do_check_eq(aPacket.type, "paused");
         do_check_eq(aPacket.why.type, "clientEvaluated");
@@ -38,9 +38,9 @@ function test_simple_eval()
         do_check_eq(aPacket.why.frameFinished.return.class, "Object");
 
         // Make sure the previous pause lifetime was correctly dropped.
-        gClient.request({ to: arg1Actor, type: "bogusRequest" }, function(aResponse) {
+        gClient.request({ to: arg1Actor, type: "bogusRequest" }, function (aResponse) {
           do_check_eq(aResponse.error, "noSuchActor");
-          gThreadClient.resume(function() {
+          gThreadClient.resume(function () {
             finishClient(gClient);
           });
         });
@@ -51,8 +51,8 @@ function test_simple_eval()
 
   });
 
-  gDebuggee.eval("(" + function() {
-    function stopMe(arg1) { debugger; };
+  gDebuggee.eval("(" + function () {
+    function stopMe(arg1) { debugger; }
     stopMe({obj: true});
   } + ")()");
 }

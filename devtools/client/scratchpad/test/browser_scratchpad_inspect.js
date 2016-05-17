@@ -21,7 +21,7 @@ function runTests()
 
   sp.setText("({ a: 'foobarBug636725' })");
 
-  sp.inspect().then(function() {
+  sp.inspect().then(function () {
     let sidebar = sp.sidebar;
     ok(sidebar.visible, "sidebar is open");
 
@@ -46,7 +46,7 @@ function runTests()
     ok(!tabbox.hasAttribute("hidden"), "Scratchpad sidebar visible");
     sidebar.hide();
     ok(tabbox.hasAttribute("hidden"), "Scratchpad sidebar hidden");
-    sp.inspect().then(function() {
+    sp.inspect().then(function () {
       is(tabbox.width, 300, "Scratchpad sidebar width is still correct");
       ok(!tabbox.hasAttribute("hidden"), "Scratchpad sidebar visible again");
       finish();

@@ -8,7 +8,7 @@
 const TEST_PAGE = "data:text/html;charset=utf-8,<div></div>";
 
 function test() {
-  return Task.spawn(function*() {
+  return Task.spawn(function* () {
     let options = yield helpers.openTab(TEST_PAGE);
     yield helpers.openToolbar(options);
 

@@ -22,7 +22,7 @@ add_task(function test() {
 
   compare(rootMarkerNode, gExpectedOutput);
 
-  function compare (marker, expected) {
+  function compare(marker, expected) {
     for (let prop in expected) {
       if (prop === "submarkers") {
         for (let i = 0; i < expected.submarkers.length; i++) {

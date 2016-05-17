@@ -39,7 +39,7 @@ function showPicker(options) {
   if (options.directory) {
     try {
       fp.displayDirectory = FileUtils.File(options.directory);
-    } catch(ex) {
+    } catch (ex) {
       console.warn(ex);
     }
   }
@@ -51,7 +51,7 @@ function showPicker(options) {
   fp.init(options.window, options.title, options.mode);
   let deferred = promise.defer();
   fp.open({
-    done: function(res) {
+    done: function (res) {
       if (res === Ci.nsIFilePicker.returnOK || res === Ci.nsIFilePicker.returnReplace) {
         deferred.resolve(fp.file.path);
       } else {

@@ -7,7 +7,7 @@
 // Test that switching to the inspector panel and not waiting for it to be fully
 // loaded doesn't fail the test with unhandled rejected promises.
 
-add_task(function*() {
+add_task(function* () {
   // At least one assertion is needed to avoid failing the test, but really,
   // what we're interested in is just having the test pass when switching to the
   // inspector.

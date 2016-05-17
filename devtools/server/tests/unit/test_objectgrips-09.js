@@ -16,7 +16,7 @@ function run_test()
     run_test_with_server(WorkerDebuggerServer, do_test_finished);
   });
   do_test_pending();
-};
+}
 
 function run_test_with_server(aServer, aCallback)
 {
@@ -28,8 +28,8 @@ function run_test_with_server(aServer, aCallback)
   }.toString());
 
   gClient = new DebuggerClient(aServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-grips", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-grips", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_object_grip();
     });
@@ -38,10 +38,10 @@ function run_test_with_server(aServer, aCallback)
 
 function test_object_grip()
 {
-  gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
+  gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
     let args = aPacket.frame.arguments;
 
-    gThreadClient.getPrototypesAndProperties([args[0].actor, args[1].actor], function(aResponse) {
+    gThreadClient.getPrototypesAndProperties([args[0].actor, args[1].actor], function (aResponse) {
       let obj1 = aResponse.actors[args[0].actor];
       let obj2 = aResponse.actors[args[1].actor];
       do_check_eq(obj1.ownProperties.x.configurable, true);
@@ -62,7 +62,7 @@ function test_object_grip()
       do_check_true(obj1.prototype != undefined);
       do_check_true(obj2.prototype != undefined);
 
-      gThreadClient.resume(function() {
+      gThreadClient.resume(function () {
         gClient.close(gCallback);
       });
     });

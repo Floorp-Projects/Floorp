@@ -33,7 +33,7 @@ SelectorHighlighter.prototype = {
    * string that will be used in querySelectorAll. On top of this, all of the
    * valid options to BoxModelHighlighter.show are also valid here.
    */
-  show: function(node, options = {}) {
+  show: function (node, options = {}) {
     this.hide();
 
     if (!isNodeValid(node) || !options.selector) {
@@ -68,14 +68,14 @@ SelectorHighlighter.prototype = {
     return true;
   },
 
-  hide: function() {
+  hide: function () {
     for (let highlighter of this._highlighters) {
       highlighter.destroy();
     }
     this._highlighters = [];
   },
 
-  destroy: function() {
+  destroy: function () {
     this.hide();
     this.highlighterEnv = null;
   }

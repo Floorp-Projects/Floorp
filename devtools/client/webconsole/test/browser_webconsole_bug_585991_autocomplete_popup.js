@@ -8,7 +8,7 @@
 const TEST_URI = "data:text/html;charset=utf-8,<p>bug 585991 - autocomplete " +
                  "popup test";
 
-add_task(function*() {
+add_task(function* () {
   yield loadTab(TEST_URI);
   let hud = yield openConsole();
 
@@ -49,7 +49,7 @@ function consoleOpened(HUD) {
     is(popup.itemCount, items.length, "items added");
 
     let sameItems = popup.getItems();
-    is(sameItems.every(function(aItem, aIndex) {
+    is(sameItems.every(function (aItem, aIndex) {
       return aItem === items[aIndex];
     }), true, "getItems returns back the same items");
 

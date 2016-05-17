@@ -29,7 +29,7 @@ var gToolbox, gTarget, gFront, gHeapAnalysesClient;
  */
 var gStore, gRoot, gApp, gProvider, unsubscribe, isHighlighted, telemetry;
 
-var initialize = Task.async(function*() {
+var initialize = Task.async(function* () {
   gRoot = document.querySelector("#app");
   gStore = Store();
   gApp = createElement(App, { toolbox: gToolbox, front: gFront, heapWorker: gHeapAnalysesClient });
@@ -38,7 +38,7 @@ var initialize = Task.async(function*() {
   unsubscribe = gStore.subscribe(onStateChange);
 });
 
-var destroy = Task.async(function*() {
+var destroy = Task.async(function* () {
   const ok = ReactDOM.unmountComponentAtNode(gRoot);
   assert(ok, "Should successfully unmount the memory tool's top level React component");
 
@@ -51,7 +51,7 @@ var destroy = Task.async(function*() {
  * Fired on any state change, currently only handles toggling
  * the highlighting of the tool when recording allocations.
  */
-function onStateChange () {
+function onStateChange() {
   let isRecording = gStore.getState().allocations.recording;
   if (isRecording === isHighlighted) {
     return;

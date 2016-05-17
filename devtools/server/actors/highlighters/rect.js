@@ -22,7 +22,7 @@ function RectHighlighter(highlighterEnv) {
 RectHighlighter.prototype = {
   typeName: "RectHighlighter",
 
-  _buildMarkup: function() {
+  _buildMarkup: function () {
     let doc = this.win.document;
 
     let container = doc.createElement("div");
@@ -33,16 +33,16 @@ RectHighlighter.prototype = {
     return container;
   },
 
-  destroy: function() {
+  destroy: function () {
     this.win = null;
     this.markup.destroy();
   },
 
-  getElement: function(id) {
+  getElement: function (id) {
     return this.markup.getElement(id);
   },
 
-  _hasValidOptions: function(options) {
+  _hasValidOptions: function (options) {
     let isValidNb = n => typeof n === "number" && n >= 0 && isFinite(n);
     return options && options.rect &&
            isValidNb(options.rect.x) &&
@@ -61,7 +61,7 @@ RectHighlighter.prototype = {
    *   properties
    * - fill: optional fill color for the rect
    */
-  show: function(node, options) {
+  show: function (node, options) {
     if (!this._hasValidOptions(options) || !node || !node.ownerDocument) {
       this.hide();
       return false;
@@ -95,7 +95,7 @@ RectHighlighter.prototype = {
     return true;
   },
 
-  hide: function() {
+  hide: function () {
     this.getElement("highlighted-rect").setAttribute("hidden", "true");
   }
 };

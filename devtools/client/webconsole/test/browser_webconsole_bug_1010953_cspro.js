@@ -44,7 +44,7 @@ add_task(function* () {
   yield waitForSuccess({
     name: "Confirmed that CSP and CSP-Report-Only log different messages to " +
           "the console.",
-    validator: function() {
+    validator: function () {
       console.log(hud.outputNode.textContent);
       let success = false;
       success = hud.outputNode.textContent.indexOf(CSP_VIOLATION_MSG) > -1 &&

@@ -78,7 +78,7 @@ function testVariablesView(aWebconsole, aEvent, aView) {
     { name: "gen2", isGenerator: true },
     { name: "iter1", isIterator: true },
     { name: "iter2", isIterator: true },
-  ], { webconsole: aWebconsole }).then(function() {
+  ], { webconsole: aWebconsole }).then(function () {
     executeSoon(finishTest);
   });
 }

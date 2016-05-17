@@ -11,7 +11,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 const DBG_XUL = "chrome://devtools/content/framework/toolbox-process-window.xul";
 const CHROME_DEBUGGER_PROFILE_NAME = "chrome_debugger_profile";
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm")
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 const { require, DevToolsLoader } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
 XPCOMUtils.defineLazyGetter(this, "Telemetry", function () {
@@ -43,10 +43,10 @@ this.BrowserToolboxProcess = function BrowserToolboxProcess(aOnClose, aOnRun, aO
   this.off = emitter.off.bind(emitter);
   this.once = emitter.once.bind(emitter);
   // Forward any events to the shared emitter.
-  this.emit = function(...args) {
+  this.emit = function (...args) {
     emitter.emit(...args);
     BrowserToolboxProcess.emit(...args);
-  }
+  };
 
   // If first argument is an object, use those properties instead of
   // all three arguments
@@ -85,7 +85,7 @@ EventEmitter.decorate(BrowserToolboxProcess);
  * Initializes and starts a chrome toolbox process.
  * @return object
  */
-BrowserToolboxProcess.init = function(aOnClose, aOnRun, aOptions) {
+BrowserToolboxProcess.init = function (aOnClose, aOnRun, aOptions) {
   return new BrowserToolboxProcess(aOnClose, aOnRun, aOptions);
 };
 
@@ -112,7 +112,7 @@ BrowserToolboxProcess.prototype = {
   /**
    * Initializes the debugger server.
    */
-  _initServer: function() {
+  _initServer: function () {
     if (this.debuggerServer) {
       dumpn("The chrome toolbox server is already running.");
       return;
@@ -152,7 +152,7 @@ BrowserToolboxProcess.prototype = {
   /**
    * Initializes a profile for the remote debugger process.
    */
-  _initProfile: function() {
+  _initProfile: function () {
     dumpn("Initializing the chrome toolbox user profile.");
 
     let debuggingProfileDir = Services.dirsvc.get("ProfLD", Ci.nsIFile);
@@ -190,7 +190,7 @@ BrowserToolboxProcess.prototype = {
   /**
    * Creates and initializes the profile & process for the remote debugger.
    */
-  _create: function() {
+  _create: function () {
     dumpn("Initializing chrome debugging process.");
     let process = this._dbgProcess = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
     process.init(Services.dirsvc.get("XREExeF", Ci.nsIFile));
@@ -235,7 +235,7 @@ BrowserToolboxProcess.prototype = {
   /**
    * Closes the remote debugging server and kills the toolbox process.
    */
-  close: function() {
+  close: function () {
     if (this.closed) {
       return;
     }

@@ -14,7 +14,7 @@
 const URL = "data:text/html;charset=utf8,test page";
 const {Toolbox} = require("devtools/client/framework/toolbox");
 
-add_task(function*() {
+add_task(function* () {
   info("Create a test tab and open the toolbox");
   let tab = yield addTab(URL);
   let target = TargetFactory.forTab(tab);

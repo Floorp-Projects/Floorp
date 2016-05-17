@@ -21,7 +21,7 @@ const {
 const TEST_URL_1 = "data:text/html;charset=utf-8,CanvasFrameAnonymousContentHelper test 1";
 const TEST_URL_2 = "data:text/html;charset=utf-8,CanvasFrameAnonymousContentHelper test 2";
 
-add_task(function*() {
+add_task(function* () {
   let browser = yield addTab(TEST_URL_2);
   let doc = browser.contentDocument;
 
@@ -31,7 +31,7 @@ add_task(function*() {
     child.style = "pointer-events:auto;width:200px;height:200px;background:red;";
     child.id = "child-element";
     child.className = "child-element";
-    child.textContent= "test content";
+    child.textContent = "test content";
     root.appendChild(child);
     return root;
   };
@@ -54,7 +54,7 @@ add_task(function*() {
   let mouseDownHandled = 0;
   function onMouseDown(e, id) {
     is(id, "child-element", "The mousedown event was triggered on the element");
-    mouseDownHandled ++;
+    mouseDownHandled++;
   }
   el.addEventListener("mousedown", onMouseDown);
 

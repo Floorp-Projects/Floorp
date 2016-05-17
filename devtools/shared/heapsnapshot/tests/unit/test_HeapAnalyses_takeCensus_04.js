@@ -30,7 +30,7 @@ add_task(function* test() {
 
   for (let [func, n] of [ [g.f, 20],
                           [g.g, 10],
-                          [g.h,  5] ]) {
+                          [g.h, 5] ]) {
     for (let i = 0; i < n; i++) {
       dbg.memory.trackingAllocationSites = true;
       // All allocations of allocationMarker occur with this line as the oldest
@@ -50,13 +50,13 @@ add_task(function* test() {
   // only the AllocationMarker objects we have complete control over.
 
   const { report } = yield client.takeCensus(snapshotFilePath, {
-    breakdown: { by: 'objectClass',
-                 then: { by: 'allocationStack',
-                         then: { by: 'count',
+    breakdown: { by: "objectClass",
+                 then: { by: "allocationStack",
+                         then: { by: "count",
                                  bytes: true,
                                  count: true
                                },
-                         noStack: { by: 'count',
+                         noStack: { by: "count",
                                     bytes: true,
                                     count: true
                                   }
@@ -74,33 +74,33 @@ add_task(function* test() {
   // constructor, so we can't use instanceof.
   equal(map.__proto__.constructor.name, "Map");
 
-  equal(map.size, 4, "Should have 4 allocation stacks (including the lack of a stack)")
+  equal(map.size, 4, "Should have 4 allocation stacks (including the lack of a stack)");
 
   // Gather the stacks we are expecting to appear as keys, and
   // check that there are no unexpected keys.
   let stacks = {};
 
   map.forEach((v, k) => {
-    if (k === 'noStack') {
+    if (k === "noStack") {
       // No need to save this key.
-    } else if (k.functionDisplayName === 'f' &&
-               k.parent.functionDisplayName === 'test') {
+    } else if (k.functionDisplayName === "f" &&
+               k.parent.functionDisplayName === "test") {
       stacks.f = k;
-    } else if (k.functionDisplayName === 'g' &&
-               k.parent.functionDisplayName === 'test') {
+    } else if (k.functionDisplayName === "g" &&
+               k.parent.functionDisplayName === "test") {
       stacks.g = k;
-    } else if (k.functionDisplayName === 'h' &&
-               k.parent.functionDisplayName === 'test') {
+    } else if (k.functionDisplayName === "h" &&
+               k.parent.functionDisplayName === "test") {
       stacks.h = k;
     } else {
-      dumpn("Unexpected allocation stack:")
+      dumpn("Unexpected allocation stack:");
       k.toString().split(/\n/g).forEach(s => dumpn(s));
       ok(false);
     }
   });
 
-  ok(map.get('noStack'));
-  equal(map.get('noStack').count, 1);
+  ok(map.get("noStack"));
+  equal(map.get("noStack").count, 1);
 
   ok(stacks.f);
   ok(map.get(stacks.f));

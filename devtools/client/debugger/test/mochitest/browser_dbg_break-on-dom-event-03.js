@@ -87,7 +87,7 @@ function testBreakOnLoad() {
 }
 
 function triggerButtonClick() {
-  let button  = content.document.querySelector("button");
+  let button = content.document.querySelector("button");
   EventUtils.sendMouseEvent({ type: "click" }, button);
 }
 
@@ -97,7 +97,7 @@ function closeConnection() {
   return deferred.promise;
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gClient = null;
   gThreadClient = null;
 });

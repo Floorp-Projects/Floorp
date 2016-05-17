@@ -56,9 +56,9 @@ function test() {
         collapsible: true,
         stacktrace: [{
           file: TEST_FILE,
-            fn: "domAPI",
-            line: 25,
-          }, {
+          fn: "domAPI",
+          line: 25,
+        }, {
             file: TEST_FILE,
             fn: "onLoadDomAPI",
             line: 33,
@@ -70,10 +70,10 @@ function test() {
         severity: SEVERITY_ERROR,
         collapsible: true,
         stacktrace: [{
-            file: TEST_FILE,
-            fn: "domException",
-            line: 29,
-          }, {
+          file: TEST_FILE,
+          fn: "domException",
+          line: 29,
+        }, {
             file: TEST_FILE,
             fn: "onLoadDomException",
             line: 36,

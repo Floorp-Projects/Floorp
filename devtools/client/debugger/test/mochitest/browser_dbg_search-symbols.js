@@ -169,7 +169,7 @@ function firstJsSearch() {
       ok(isCaretPos(gPanel, expectedResults[0][3], expectedResults[0][4]),
         "The editor didn't jump to the correct line again.");
 
-      deferred.resolve()
+      deferred.resolve();
     } else {
       ok(false, "How did you get here? Go away, you.");
     }
@@ -458,7 +458,7 @@ function writeInfo() {
   info("Debugger editor text:\n" + gEditor.getText());
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

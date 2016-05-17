@@ -9,7 +9,7 @@
  * All done in one test since this test takes a few seconds to clear GC.
  */
 
-add_task(function*() {
+add_task(function* () {
   // Use a longer timeout as garbage collection event
   // can be unpredictable.
   requestLongerTimeout(2);
