@@ -210,6 +210,8 @@ nsImageBoxFrame::UpdateImage()
 {
   nsPresContext* presContext = PresContext();
 
+  RefPtr<imgRequestProxy> oldImageRequest = mImageRequest;
+
   if (mImageRequest) {
     nsLayoutUtils::DeregisterImageRequest(presContext, mImageRequest,
                                           &mRequestRegistered);
@@ -223,26 +225,24 @@ nsImageBoxFrame::UpdateImage()
   mUseSrcAttr = !src.IsEmpty();
   if (mUseSrcAttr) {
     nsIDocument* doc = mContent->GetComposedDoc();
-    if (!doc) {
-      // No need to do anything here...
-      return;
-    }
-    nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
-    nsCOMPtr<nsIURI> uri;
-    nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri),
-                                              src,
-                                              doc,
-                                              baseURI);
-    if (uri) {
-      nsresult rv = nsContentUtils::LoadImage(uri, mContent, doc, mContent->NodePrincipal(),
-                                              doc->GetDocumentURI(), doc->GetReferrerPolicy(),
-                                              mListener, mLoadFlags,
-                                              EmptyString(), getter_AddRefs(mImageRequest));
+    if (doc) {
+      nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
+      nsCOMPtr<nsIURI> uri;
+      nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri),
+                                                src,
+                                                doc,
+                                                baseURI);
+      if (uri) {
+        nsresult rv = nsContentUtils::LoadImage(uri, mContent, doc, mContent->NodePrincipal(),
+                                                doc->GetDocumentURI(), doc->GetReferrerPolicy(),
+                                                mListener, mLoadFlags,
+                                                EmptyString(), getter_AddRefs(mImageRequest));
 
-      if (NS_SUCCEEDED(rv) && mImageRequest) {
-        nsLayoutUtils::RegisterImageRequestIfAnimated(presContext,
-                                                      mImageRequest,
-                                                      &mRequestRegistered);
+        if (NS_SUCCEEDED(rv) && mImageRequest) {
+          nsLayoutUtils::RegisterImageRequestIfAnimated(presContext,
+                                                        mImageRequest,
+                                                        &mRequestRegistered);
+        }
       }
     }
   } else {
@@ -266,6 +266,11 @@ nsImageBoxFrame::UpdateImage()
     // We don't want discarding or decode-on-draw for xul images.
     mImageRequest->StartDecoding();
     mImageRequest->LockImage();
+  }
+
+  // Do this _after_ locking the new image in case they are the same image.
+  if (oldImageRequest) {
+    oldImageRequest->UnlockImage();
   }
 }
 
