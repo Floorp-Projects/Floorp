@@ -12,7 +12,7 @@
 #include "mozilla/gfx/Tools.h"          // for GetAlignedStride, etc
 #include "mozilla/gfx/Types.h"
 #include "mozilla/mozalloc.h"           // for operator delete, etc
-#include "yuv_convert.h"                // for ConvertYCbCrToRGB32, etc
+#include "YCbCrUtils.h"                 // for YCbCr conversions
 
 namespace mozilla {
 namespace layers {
@@ -162,16 +162,22 @@ DataSourceSurfaceFromYCbCrDescriptor(uint8_t* aBuffer, const YCbCrDescriptor& aD
     return nullptr;
   }
 
-  gfx::YUVType type = TypeFromSize(ySize.width, ySize.height,
-                                   cbCrSize.width, cbCrSize.height);
-  gfx::ConvertYCbCrToRGB32(GetYChannel(aBuffer, aDescriptor),
-                           GetCbChannel(aBuffer, aDescriptor),
-                           GetCrChannel(aBuffer, aDescriptor),
-                           map.mData,
-                           0, 0, //pic x and y
-                           ySize.width, ySize.height,
-                           yStride, cbCrStride,
-                           map.mStride, type);
+  layers::PlanarYCbCrData ycbcrData;
+  ycbcrData.mYChannel     = GetYChannel(aBuffer, aDescriptor);
+  ycbcrData.mYStride      = yStride;
+  ycbcrData.mYSize        = ySize;
+  ycbcrData.mCbChannel    = GetCbChannel(aBuffer, aDescriptor);
+  ycbcrData.mCrChannel    = GetCrChannel(aBuffer, aDescriptor);
+  ycbcrData.mCbCrStride   = cbCrStride;
+  ycbcrData.mCbCrSize     = cbCrSize;
+  ycbcrData.mPicSize      = ySize;
+
+  gfx::ConvertYCbCrToRGB(ycbcrData,
+                         gfx::SurfaceFormat::B8G8R8X8,
+                         ySize,
+                         map.mData,
+                         map.mStride);
+
   result->Unmap();
   return result.forget();
 }
