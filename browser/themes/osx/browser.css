@@ -2375,14 +2375,8 @@ html|span.ac-emphasize-text-url {
 /* ----- SIDEBAR ELEMENTS ----- */
 
 #sidebar-box {
-  background-color: hsl(212,19%,85%);
-  background-image: linear-gradient(hsl(213,26%,93%), hsl(212,19%,85%));
+  -moz-appearance: -moz-mac-source-list;
   box-shadow: inset -2px 0 0 hsla(0,0%,100%,.2);
-}
-
-#sidebar-box:-moz-window-inactive {
-  background-color: hsl(0,0%,92%);
-  background-image: linear-gradient(hsl(0,0%,97%), hsl(0,0%,92%));
 }
 
 sidebarheader {
@@ -2434,13 +2428,7 @@ sidebarheader {
 
 @media (-moz-mac-yosemite-theme) {
   #sidebar-box {
-    -moz-appearance: -moz-mac-vibrancy-light;
-    background-image: none;
     box-shadow: none;
-  }
-
-  #sidebar-box:-moz-window-inactive {
-    background-image: none;
   }
 
   sidebarheader {
