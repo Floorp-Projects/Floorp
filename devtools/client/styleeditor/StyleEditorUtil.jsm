@@ -227,7 +227,7 @@ function showFilePicker(path, toSave, parentWindow, callback,
   }
 
   fp.init(parentWindow, getString(key + ".title"), mode);
-  fp.appendFilter(getString(key + ".filter"), "*.css");
+  fp.appendFilters(getString(key + ".filter"), "*.css");
   fp.appendFilters(fp.filterAll);
   fp.open(fpCallback);
   return;
