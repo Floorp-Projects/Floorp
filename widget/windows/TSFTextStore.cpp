@@ -26,7 +26,6 @@ namespace mozilla {
 namespace widget {
 
 static const char* kPrefNameEnableTSF = "intl.tsf.enable";
-static const char* kPrefNameForceEnableTSF = "intl.tsf.force_enable";
 
 /**
  * TSF related code should log its behavior even on release build especially
@@ -735,8 +734,7 @@ private:
 /* TSFStaticSink                                                  */
 /******************************************************************/
 
-class TSFStaticSink final : public ITfActiveLanguageProfileNotifySink
-                          , public ITfInputProcessorProfileActivationSink
+class TSFStaticSink final : public ITfInputProcessorProfileActivationSink
 {
 public:
   static TSFStaticSink* GetInstance()
@@ -761,9 +759,7 @@ public:
   {
     *ppv = nullptr;
     if (IID_IUnknown == riid ||
-        IID_ITfActiveLanguageProfileNotifySink == riid) {
-      *ppv = static_cast<ITfActiveLanguageProfileNotifySink*>(this);
-    } else if (IID_ITfInputProcessorProfileActivationSink == riid) {
+        IID_ITfInputProcessorProfileActivationSink == riid) {
       *ppv = static_cast<ITfInputProcessorProfileActivationSink*>(this);
     }
     if (*ppv) {
@@ -892,10 +888,6 @@ public:
         NS_LITERAL_STRING("\x5FAE\x8EDF\x4E94\x7B46"));
   }
 
-public: // ITfActiveLanguageProfileNotifySink
-  STDMETHODIMP OnActivated(REFCLSID clsid, REFGUID guidProfile,
-                           BOOL fActivated);
-
 public: // ITfInputProcessorProfileActivationSink
   STDMETHODIMP OnActivated(DWORD, LANGID, REFCLSID, REFGUID, REFGUID,
                            HKL, DWORD);
@@ -913,8 +905,6 @@ private:
 
   // Cookie of installing ITfInputProcessorProfileActivationSink
   DWORD mIPProfileCookie;
-  // Cookie of installing ITfActiveLanguageProfileNotifySink
-  DWORD mLangProfileCookie;
 
   LANGID mLangID;
 
@@ -940,7 +930,6 @@ StaticRefPtr<TSFStaticSink> TSFStaticSink::sInstance;
 
 TSFStaticSink::TSFStaticSink()
   : mIPProfileCookie(TF_INVALID_COOKIE)
-  , mLangProfileCookie(TF_INVALID_COOKIE)
   , mLangID(0)
   , mIsIMM_IME(false)
   , mOnActivatedCalled(false)
@@ -968,36 +957,22 @@ TSFStaticSink::Init(ITfThreadMgr* aThreadMgr,
     return false;
   }
 
-  // On Vista or later, Windows let us know activate IME changed only with
-  // ITfInputProcessorProfileActivationSink.  However, it's not available on XP.
-  // On XP, ITfActiveLanguageProfileNotifySink is available for it.
-  // NOTE: Each OnActivated() should be called when TSF becomes available.
-  if (IsVistaOrLater()) {
-    hr = source->AdviseSink(IID_ITfInputProcessorProfileActivationSink,
-                   static_cast<ITfInputProcessorProfileActivationSink*>(this),
-                   &mIPProfileCookie);
-    if (FAILED(hr) || mIPProfileCookie == TF_INVALID_COOKIE) {
-      MOZ_LOG(sTextStoreLog, LogLevel::Error,
-        ("TSF: 0x%p TSFStaticSink::Init() FAILED to install "
-         "ITfInputProcessorProfileActivationSink (0x%08X)", this, hr));
-      return false;
-    }
-  } else {
-    hr = source->AdviseSink(IID_ITfActiveLanguageProfileNotifySink,
-                   static_cast<ITfActiveLanguageProfileNotifySink*>(this),
-                   &mLangProfileCookie);
-    if (FAILED(hr) || mLangProfileCookie == TF_INVALID_COOKIE) {
-      MOZ_LOG(sTextStoreLog, LogLevel::Error,
-        ("TSF: 0x%p TSFStaticSink::Init() FAILED to install "
-         "ITfActiveLanguageProfileNotifySink (0x%08X)", this, hr));
-      return false;
-    }
+  // NOTE: On Vista or later, Windows let us know activate IME changed only
+  //       with ITfInputProcessorProfileActivationSink.
+  hr = source->AdviseSink(IID_ITfInputProcessorProfileActivationSink,
+                 static_cast<ITfInputProcessorProfileActivationSink*>(this),
+                 &mIPProfileCookie);
+  if (FAILED(hr) || mIPProfileCookie == TF_INVALID_COOKIE) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+      ("TSF: 0x%p TSFStaticSink::Init() FAILED to install "
+       "ITfInputProcessorProfileActivationSink (0x%08X)", this, hr));
+    return false;
   }
 
   MOZ_LOG(sTextStoreLog, LogLevel::Info,
     ("TSF: 0x%p TSFStaticSink::Init(), "
-     "mIPProfileCookie=0x%08X, mLangProfileCookie=0x%08X",
-     this, mIPProfileCookie, mLangProfileCookie));
+     "mIPProfileCookie=0x%08X",
+     this, mIPProfileCookie));
   return true;
 }
 
@@ -1006,8 +981,8 @@ TSFStaticSink::Destroy()
 {
   MOZ_LOG(sTextStoreLog, LogLevel::Info,
     ("TSF: 0x%p TSFStaticSink::Shutdown() "
-     "mIPProfileCookie=0x%08X, mLangProfileCookie=0x%08X",
-     this, mIPProfileCookie, mLangProfileCookie));
+     "mIPProfileCookie=0x%08X",
+     this, mIPProfileCookie));
 
   if (mIPProfileCookie != TF_INVALID_COOKIE) {
     RefPtr<ITfSource> source;
@@ -1028,62 +1003,8 @@ TSFStaticSink::Destroy()
     }
   }
 
-  if (mLangProfileCookie != TF_INVALID_COOKIE) {
-    RefPtr<ITfSource> source;
-    HRESULT hr =
-      mThreadMgr->QueryInterface(IID_ITfSource, getter_AddRefs(source));
-    if (FAILED(hr)) {
-      MOZ_LOG(sTextStoreLog, LogLevel::Error,
-        ("TSF: 0x%p   TSFStaticSink::Shutdown() FAILED to get "
-         "ITfSource instance (0x%08X)", this, hr));
-    } else {
-      hr = source->UnadviseSink(mLangProfileCookie);
-      if (FAILED(hr)) {
-        MOZ_LOG(sTextStoreLog, LogLevel::Error,
-          ("TSF: 0x%p   TSFStaticSink::Shutdown() FAILED to uninstall "
-           "ITfActiveLanguageProfileNotifySink (0x%08X)",
-           this, hr));
-      }
-    }
-  }
-
   mThreadMgr = nullptr;
   mInputProcessorProfiles = nullptr;
-}
-
-STDMETHODIMP
-TSFStaticSink::OnActivated(REFCLSID clsid, REFGUID guidProfile,
-                           BOOL fActivated)
-{
-  // NOTE: This is installed only on XP or Server 2003.
-  if (fActivated) {
-    // TODO: We should check if the profile's category is keyboard or not.
-    mOnActivatedCalled = true;
-    mActiveTIPGUID = guidProfile;
-    mIsIMM_IME = IsIMM_IME(::GetKeyboardLayout(0));
-
-    HRESULT hr = mInputProcessorProfiles->GetCurrentLanguage(&mLangID);
-    if (FAILED(hr)) {
-      MOZ_LOG(sTextStoreLog, LogLevel::Error,
-             ("TSF: TSFStaticSink::OnActivated() FAILED due to "
-              "GetCurrentLanguage() failure, hr=0x%08X", hr));
-    } else if (IsTIPCategoryKeyboard(clsid, mLangID, guidProfile)) {
-      GetTIPDescription(clsid, mLangID, guidProfile,
-                        mActiveTIPKeyboardDescription);
-    } else if (clsid == CLSID_NULL || guidProfile == GUID_NULL) {
-      // Perhaps, this case is that keyboard layout without TIP is activated.
-      mActiveTIPKeyboardDescription.Truncate();
-    }
-  }
-
-  MOZ_LOG(sTextStoreLog, LogLevel::Info,
-         ("TSF: 0x%p TSFStaticSink::OnActivated(rclsid=%s, guidProfile=%s, "
-          "fActivated=%s), mIsIMM_IME=%s, mActiveTIPDescription=\"%s\"",
-          this, GetCLSIDNameStr(clsid).get(),
-          GetGUIDNameStr(guidProfile).get(), GetBoolName(fActivated),
-          GetBoolName(mIsIMM_IME),
-          NS_ConvertUTF16toUTF8(mActiveTIPKeyboardDescription).get()));
-  return S_OK;
 }
 
 STDMETHODIMP
@@ -1095,9 +1016,6 @@ TSFStaticSink::OnActivated(DWORD dwProfileType,
                            HKL hkl,
                            DWORD dwFlags)
 {
-  // NOTE: This is installed only on Vista or later.  However, this may be
-  //       called by EnsureInitActiveLanguageProfile() even on XP or Server
-  //       2003.
   if ((dwFlags & TF_IPSINK_FLAG_ACTIVE) &&
       (dwProfileType == TF_PROFILETYPE_KEYBOARDLAYOUT ||
        catid == GUID_TFCAT_TIP_KEYBOARD)) {
@@ -1132,88 +1050,40 @@ TSFStaticSink::EnsureInitActiveTIPKeyboard()
     return true;
   }
 
-  if (IsVistaOrLater()) {
-    RefPtr<ITfInputProcessorProfileMgr> profileMgr;
-    HRESULT hr =
-      mInputProcessorProfiles->QueryInterface(IID_ITfInputProcessorProfileMgr,
-                                              getter_AddRefs(profileMgr));
-    if (FAILED(hr) || !profileMgr) {
-      MOZ_LOG(sTextStoreLog, LogLevel::Error,
-        ("TSF: 0x%p   TSFStaticSink::EnsureInitActiveLanguageProfile(), FAILED "
-         "to get input processor profile manager, hr=0x%08X", this, hr));
-      return false;
-    }
-
-    TF_INPUTPROCESSORPROFILE profile;
-    hr = profileMgr->GetActiveProfile(GUID_TFCAT_TIP_KEYBOARD, &profile);
-    if (hr == S_FALSE) {
-      MOZ_LOG(sTextStoreLog, LogLevel::Info,
-        ("TSF: 0x%p   TSFStaticSink::EnsureInitActiveLanguageProfile(), FAILED "
-         "to get active keyboard layout profile due to no active profile, "
-         "hr=0x%08X", this, hr));
-      // XXX Should we call OnActivated() with arguments like non-TIP in this
-      //     case?
-      return false;
-    }
-    if (FAILED(hr)) {
-      MOZ_LOG(sTextStoreLog, LogLevel::Error,
-        ("TSF: 0x%p   TSFStaticSink::EnsureInitActiveLanguageProfile(), FAILED "
-         "to get active TIP keyboard, hr=0x%08X", this, hr));
-      return false;
-    }
-
-    MOZ_LOG(sTextStoreLog, LogLevel::Info,
-      ("TSF: 0x%p   TSFStaticSink::EnsureInitActiveLanguageProfile(), "
-       "calling OnActivated() manually...", this));
-    OnActivated(profile.dwProfileType, profile.langid, profile.clsid,
-                profile.catid, profile.guidProfile, ::GetKeyboardLayout(0),
-                TF_IPSINK_FLAG_ACTIVE);
-    return true;
+  RefPtr<ITfInputProcessorProfileMgr> profileMgr;
+  HRESULT hr =
+    mInputProcessorProfiles->QueryInterface(IID_ITfInputProcessorProfileMgr,
+                                            getter_AddRefs(profileMgr));
+  if (FAILED(hr) || !profileMgr) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+      ("TSF: 0x%p   TSFStaticSink::EnsureInitActiveLanguageProfile(), FAILED "
+       "to get input processor profile manager, hr=0x%08X", this, hr));
+    return false;
   }
 
-  LANGID langID;
-  HRESULT hr = mInputProcessorProfiles->GetCurrentLanguage(&langID);
+  TF_INPUTPROCESSORPROFILE profile;
+  hr = profileMgr->GetActiveProfile(GUID_TFCAT_TIP_KEYBOARD, &profile);
+  if (hr == S_FALSE) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Info,
+      ("TSF: 0x%p   TSFStaticSink::EnsureInitActiveLanguageProfile(), FAILED "
+       "to get active keyboard layout profile due to no active profile, "
+       "hr=0x%08X", this, hr));
+    // XXX Should we call OnActivated() with arguments like non-TIP in this
+    //     case?
+    return false;
+  }
   if (FAILED(hr)) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
       ("TSF: 0x%p   TSFStaticSink::EnsureInitActiveLanguageProfile(), FAILED "
-       "to get current language ID, hr=0x%08X", this, hr));
+       "to get active TIP keyboard, hr=0x%08X", this, hr));
     return false;
-  }
-
-  RefPtr<IEnumTfLanguageProfiles> enumLangProfiles;
-  hr = mInputProcessorProfiles->EnumLanguageProfiles(langID,
-                                  getter_AddRefs(enumLangProfiles));
-  if (FAILED(hr) || !enumLangProfiles) {
-    MOZ_LOG(sTextStoreLog, LogLevel::Error,
-      ("TSF: 0x%p   TSFStaticSink::EnsureInitActiveLanguageProfile(), FAILED "
-       "to get language profiles enumerator, hr=0x%08X", this, hr));
-    return false;
-  }
-
-  TF_LANGUAGEPROFILE profile;
-  ULONG fetch = 0;
-  while (SUCCEEDED(enumLangProfiles->Next(1, &profile, &fetch)) && fetch) {
-    if (!profile.fActive || profile.catid != GUID_TFCAT_TIP_KEYBOARD) {
-      continue;
-    }
-    MOZ_LOG(sTextStoreLog, LogLevel::Info,
-      ("TSF: 0x%p   TSFStaticSink::EnsureInitActiveLanguageProfile(), "
-       "calling OnActivated() manually...", this));
-    bool isTIP = profile.guidProfile != GUID_NULL;
-    OnActivated(isTIP ? TF_PROFILETYPE_INPUTPROCESSOR :
-                        TF_PROFILETYPE_KEYBOARDLAYOUT,
-                profile.langid, profile.clsid, profile.catid,
-                profile.guidProfile, ::GetKeyboardLayout(0),
-                TF_IPSINK_FLAG_ACTIVE);
-    return true;
   }
 
   MOZ_LOG(sTextStoreLog, LogLevel::Info,
     ("TSF: 0x%p   TSFStaticSink::EnsureInitActiveLanguageProfile(), "
-     "calling OnActivated() without active TIP manually...", this));
-  OnActivated(TF_PROFILETYPE_KEYBOARDLAYOUT,
-              langID, CLSID_NULL, GUID_TFCAT_TIP_KEYBOARD,
-              GUID_NULL, ::GetKeyboardLayout(0),
+     "calling OnActivated() manually...", this));
+  OnActivated(profile.dwProfileType, profile.langid, profile.clsid,
+              profile.catid, profile.guidProfile, ::GetKeyboardLayout(0),
               TF_IPSINK_FLAG_ACTIVE);
   return true;
 }
@@ -5390,8 +5260,7 @@ TSFTextStore::Initialize()
   }
 
   bool enableTsf =
-    Preferences::GetBool(kPrefNameForceEnableTSF, false) ||
-    (IsVistaOrLater() && Preferences::GetBool(kPrefNameEnableTSF, false));
+    IsVistaOrLater() && Preferences::GetBool(kPrefNameEnableTSF, false);
   MOZ_LOG(sTextStoreLog, LogLevel::Info,
     ("TSF:   TSFTextStore::Initialize(), TSF is %s",
      enableTsf ? "enabled" : "disabled"));
@@ -5996,16 +5865,10 @@ TSFTextStore::CurrentKeyboardLayoutHasIME()
     // On Windows Vista or later, ImmIsIME() API always returns true.
     // If we failed to obtain the profile manager, we cannot know if current
     // keyboard layout has IME.
-    if (IsVistaOrLater()) {
-      MOZ_LOG(sTextStoreLog, LogLevel::Error,
-        ("TSF:   TSFTextStore::CurrentKeyboardLayoutHasIME() FAILED to query "
-         "ITfInputProcessorProfileMgr"));
-      return false;
-    }
-    // If the profiles instance doesn't have ITfInputProcessorProfileMgr
-    // interface, that means probably we're running on WinXP or WinServer2003
-    // (except WinServer2003 R2).  Then, we should use ImmIsIME().
-    return ::ImmIsIME(::GetKeyboardLayout(0));
+    MOZ_LOG(sTextStoreLog, LogLevel::Error,
+      ("TSF:   TSFTextStore::CurrentKeyboardLayoutHasIME() FAILED to query "
+       "ITfInputProcessorProfileMgr"));
+    return false;
   }
 
   TF_INPUTPROCESSORPROFILE profile;
