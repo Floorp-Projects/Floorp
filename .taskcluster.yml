@@ -1,0 +1,119 @@
+---
+version: 0
+metadata:
+  name: 'Taskcluster tasks for Gecko'
+  description: "The taskcluster task graph for Gecko trees"
+  owner: mozilla-taskcluster-maintenance@mozilla.com
+  source: {{{source}}}
+
+scopes:
+  # Note the below scopes are insecure however these get overriden on the server
+  # side to whatever scopes are set by mozilla-taskcluster.
+  - queue:*
+  - docker-worker:*
+  - scheduler:*
+
+# Available mustache parameters (see the mozilla-taskcluster source):
+#
+# - owner:          push user (email address)
+# - source:         URL of this YAML file
+# - url:            repository URL
+# - project:        alias for the destination repository (basename of
+#                   the repo url)
+# - level:          SCM level of the destination repository
+#                   (1 = try, 3 = core)
+# - revision:       (short) hg revision of the head of the push
+# - revision_hash:  (long) hg revision of the head of the push
+# - comment:        comment of the push
+# - pushlog_id:     id in the pushlog table of the repository
+#
+# and functions:
+# - as_slugid:      convert a label into a slugId
+# - from_now:       generate a timestamp at a fixed offset from now
+
+tasks:
+  - taskId: '{{#as_slugid}}decision task{{/as_slugid}}'
+    reruns: 3
+    task:
+      created: '{{now}}'
+      deadline: '{{#from_now}}1 day{{/from_now}}'
+      expires: '{{#from_now}}14 day{{/from_now}}'
+      metadata:
+        owner: mozilla-taskcluster-maintenance@mozilla.com
+        source: {{{source}}}
+        name: "Gecko Decision Task"
+        description: |
+            The task that creates all of the other tasks in the task graph
+
+      workerType: "gecko-decision"
+      provisionerId: "aws-provisioner-v1"
+
+      tags:
+        createdForUser: {{owner}}
+
+      scopes:
+        # Bug 1269443: cache scopes, etc. must be listed explicitly
+        - "docker-worker:cache:level-1-*"
+        - "docker-worker:cache:tooltool-cache"
+        - "secrets:get:project/taskcluster/gecko/hgfingerprint"
+        - "assume:repo:hg.mozilla.org/try:*"
+
+      routes:
+        - "index.gecko.v2.{{project}}.latest.firefox.decision"
+        - "tc-treeherder.{{project}}.{{revision_hash}}"
+        - "tc-treeherder-stage.{{project}}.{{revision_hash}}"
+
+      payload:
+        env:
+          # checkout-gecko uses these to check out the source; the inputs
+          # to `mach taskgraph decision` are all on the command line.
+          GECKO_BASE_REPOSITORY: 'https://hg.mozilla.org/mozilla-central'
+          GECKO_HEAD_REPOSITORY: '{{{url}}}'
+          GECKO_HEAD_REF: '{{revision}}'
+          GECKO_HEAD_REV: '{{revision}}'
+
+        cache:
+          level-{{level}}-{{project}}-tc-vcs-public-sources: /home/worker/.tc-vcs/
+          level-{{level}}-{{project}}-gecko-decision: /home/worker/workspace
+
+        features:
+          taskclusterProxy: true
+
+        # Note: This task is built server side without the context or tooling that
+        # exist in tree so we must hard code the version
+        image: 'taskcluster/decision:0.1.0'
+
+        maxRunTime: 1800
+
+        command:
+          - /bin/bash
+          - -cx
+          - >
+            mkdir -p /home/worker/artifacts &&
+            checkout-gecko workspace &&
+            cd workspace/gecko &&
+            ln -s /home/worker/artifacts artifacts &&
+            ./mach taskgraph decision
+            --target-tasks-method=try_option_syntax
+            --pushlog-id='{{pushlog_id}}'
+            --project='{{project}}'
+            --message='{{comment}}'
+            --owner='{{owner}}'
+            --level='{{level}}'
+            --base-repository='https://hg.mozilla.org/mozilla-central'
+            --head-repository='{{{url}}}'
+            --head-ref='{{revision}}'
+            --head-rev='{{revision}}'
+            --revision-hash='{{revision_hash}}'
+
+        artifacts:
+          'public':
+            type: 'directory'
+            path: '/home/worker/artifacts'
+            expires: '{{#from_now}}7 days{{/from_now}}'
+
+      extra:
+        treeherder:
+          symbol: D
+          revision: '{{revision}}'
+          revision_hash: '{{revision_hash}}'
