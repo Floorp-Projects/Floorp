@@ -56,6 +56,10 @@ toolbar[brighttext] #bookmarks-menu-button > .toolbarbutton-menubutton-dropmarke
   -moz-image-region: rect(0, 792px, 18px, 774px);
 }
 
+#containers-panelmenu[cui-areatype="toolbar"] {
+  -moz-image-region: rect(0, 810px, 18px, 792px);
+}
+
 #feed-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0, 288px, 18px, 270px);
 }
@@ -229,6 +233,10 @@ toolbar[brighttext] #bookmarks-menu-button > .toolbarbutton-menubutton-dropmarke
 
   #sync-button[cui-areatype="toolbar"] {
     -moz-image-region: rect(0, 1584px, 36px, 1548px);
+  }
+
+  #containers-panelmenu[cui-areatype="toolbar"] {
+    -moz-image-region: rect(0, 1620px, 36px, 1584px);
   }
 
   #feed-button[cui-areatype="toolbar"] {

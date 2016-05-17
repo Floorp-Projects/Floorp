@@ -248,6 +248,11 @@
       <label value="&feedsMenu2.label;" class="panel-subview-header"/>
     </panelview>
 
+    <panelview id="PanelUI-containers" flex="1">
+      <label value="&containersMenu.label;" class="panel-subview-header"/>
+      <vbox id="PanelUI-containersItems"/>
+    </panelview>
+
     <panelview id="PanelUI-helpView" flex="1" class="PanelUI-subView">
       <label value="&helpMenu.label;" class="panel-subview-header"/>
       <vbox id="PanelUI-helpItems" class="panel-subview-body"/>

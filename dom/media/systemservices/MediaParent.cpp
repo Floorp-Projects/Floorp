@@ -228,16 +228,17 @@ class OriginKeyStore : public nsISupports
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-      nsAutoCString buffer;
-      buffer.AppendLiteral(ORIGINKEYS_VERSION);
-      buffer.Append('\n');
+
+      nsAutoCString versionBuffer;
+      versionBuffer.AppendLiteral(ORIGINKEYS_VERSION);
+      versionBuffer.Append('\n');
 
       uint32_t count;
-      rv = stream->Write(buffer.Data(), buffer.Length(), &count);
+      rv = stream->Write(versionBuffer.Data(), versionBuffer.Length(), &count);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-      if (count != buffer.Length()) {
+      if (count != versionBuffer.Length()) {
         return NS_ERROR_UNEXPECTED;
       }
       for (auto iter = mKeys.Iter(); !iter.Done(); iter.Next()) {
@@ -247,17 +248,17 @@ class OriginKeyStore : public nsISupports
         if (!originKey->mSecondsStamp) {
           continue; // don't write temporal ones
         }
-        nsCString buffer;
-        buffer.Append(originKey->mKey);
-        buffer.Append(' ');
-        buffer.AppendInt(originKey->mSecondsStamp);
-        buffer.Append(' ');
-        buffer.Append(origin);
-        buffer.Append('\n');
 
-        uint32_t count;
-        nsresult rv = stream->Write(buffer.Data(), buffer.Length(), &count);
-        if (NS_WARN_IF(NS_FAILED(rv)) || count != buffer.Length()) {
+        nsCString originBuffer;
+        originBuffer.Append(originKey->mKey);
+        originBuffer.Append(' ');
+        originBuffer.AppendInt(originKey->mSecondsStamp);
+        originBuffer.Append(' ');
+        originBuffer.Append(origin);
+        originBuffer.Append('\n');
+
+        rv = stream->Write(originBuffer.Data(), originBuffer.Length(), &count);
+        if (NS_WARN_IF(NS_FAILED(rv)) || count != originBuffer.Length()) {
           break;
         }
       }

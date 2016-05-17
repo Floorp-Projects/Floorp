@@ -754,7 +754,7 @@ ApplyComposition_SIMD(DataSourceSurface* aSource, DataSourceSurface* aDest,
       ApplyComposition<i32x4_t,i16x8_t,u8x16_t, COMPOSITE_OPERATOR_XOR>(aSource, aDest);
       break;
     default:
-      MOZ_CRASH();
+      MOZ_CRASH("GFX: Incomplete switch");
   }
 }
 

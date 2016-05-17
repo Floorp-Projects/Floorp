@@ -25,8 +25,7 @@ tasks:
         source: {{{source}}}
         name: "[tc] Initial decision task for try"
         description: |
-          This is the single most important task as it decides how all other tasks
-          get built.
+          Create the task-graph for a try push
 
       workerType: "gecko-decision"
       provisionerId: "aws-provisioner-v1"
@@ -35,12 +34,11 @@ tasks:
         createdForUser: {{owner}}
 
       scopes:
-        - "docker-worker:cache:level-{{level}}-{{project}}-tc-vcs-public-sources"
-        - "docker-worker:cache:level-{{level}}-{{project}}-gecko-decision"
-        - "queue:route:tc-treeherder-stage.{{project}}.{{revision_hash}}"
-        - "queue:route:tc-treeherder.{{project}}.{{revision_hash}}"
-        - "scheduler:extend-task-graph:*"
+        # Bug 1269443: cache scopes, etc. must be listed explicitly
+        - "docker-worker:cache:level-1-*"
+        - "docker-worker:cache:tooltool-cache"
         - "secrets:get:project/taskcluster/gecko/hgfingerprint"
+        - "assume:repo:hg.mozilla.org/try:*"
 
       routes:
         - "index.gecko.v2.{{project}}.latest.firefox.decision"
@@ -81,32 +79,24 @@ tasks:
             mkdir -p /home/worker/artifacts &&
             checkout-gecko workspace &&
             cd workspace/gecko &&
-            ./mach taskcluster-graph
+            ln -s /home/worker/artifacts artifacts &&
+            ./mach taskgraph decision
+            --target-tasks-method=try_option_syntax
             --pushlog-id='{{pushlog_id}}'
             --project='{{project}}'
             --message='{{comment}}'
             --owner='{{owner}}'
             --level='{{level}}'
+            --base-repository='https://hg.mozilla.org/mozilla-central'
+            --head-repository='{{{url}}}'
+            --head-ref='{{revision}}'
+            --head-rev='{{revision}}'
             --revision-hash='{{revision_hash}}'
-            --extend-graph > /home/worker/artifacts/graph.json &&
-            ./mach taskcluster-graph
-            --pushlog-id='{{pushlog_id}}'
-            --project='{{project}}'
-            --message='try: -b do -p all -u all'
-            --owner='{{owner}}'
-            --revision-hash='{{revision_hash}}'
-            --extend-graph > /home/worker/artifacts/all_tasks.json
-
-        graphs:
-          - /home/worker/artifacts/graph.json
 
         artifacts:
           'public':
             type: 'directory'
             path: '/home/worker/artifacts'
-            # Arbitrary value for keeping these artifacts around.  They are just the
-            # graph.json and context directories for now, so nothing that needs
-            # to stay around for long.
             expires: '{{#from_now}}7 days{{/from_now}}'
 
       extra:

@@ -235,6 +235,9 @@ class SharedImmutableStringsCache
             rhs.refcount = 0;
         }
 
+        StringBox(const StringBox&) = delete;
+        StringBox& operator=(const StringBox&) = delete;
+
         ~StringBox() {
             MOZ_RELEASE_ASSERT(refcount == 0,
                                "There are `SharedImmutable[TwoByte]String`s outliving their "

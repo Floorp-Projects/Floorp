@@ -35,9 +35,26 @@ class ReleasePusher(BaseScript, VirtualenvMixin):
         }],
         [["--exclude"], {
             "dest": "excludes",
-            "default": [],
+            "default": [
+                r"^.*tests.*$",
+                r"^.*crashreporter.*$",
+                r"^.*[^k]\.zip(\.asc)?$",
+                r"^.*\.log$",
+                r"^.*\.txt$",
+                r"^.*/partner-repacks.*$",
+                r"^.*.checksums(\.asc)?$",
+                r"^.*/logs/.*$",
+                r"^.*/jsshell.*$",
+                r"^.*json$",
+                r"^.*/host.*$",
+                r"^.*/mar-tools/.*$",
+                r"^.*robocop.apk$",
+                r"^.*contrib.*",
+                r"^.*/beetmover-checksums/.*$",
+            ],
             "action": "append",
-            "help": "List of patterns to exclude from copy. See script source for default.",
+            "help": "List of patterns to exclude from copy. The list can be "
+                    "extended by passing multiple --exclude arguments.",
         }],
         [["-j", "--parallelization"], {
             "dest": "parallelization",
@@ -84,30 +101,6 @@ class ReleasePusher(BaseScript, VirtualenvMixin):
             # set the env var for boto to read our special config file
             # rather than anything else we have at ~/.boto
             os.environ["BOTO_CONFIG"] = os.path.abspath(self.config["credentials"])
-
-    def _pre_config_lock(self, rw_config):
-        super(ReleasePusher, self)._pre_config_lock(rw_config)
-
-        # This default is set here rather in the config because default
-        # lists cannot be completely overidden, only appended to.
-        if not self.config.get("excludes"):
-            self.config["excludes"] = [
-                r"^.*tests.*$",
-                r"^.*crashreporter.*$",
-                r"^.*[^k]\.zip(\.asc)?$",
-                r"^.*\.log$",
-                r"^.*\.txt$",
-                r"^.*/partner-repacks.*$",
-                r"^.*.checksums(\.asc)?$",
-                r"^.*/logs/.*$",
-                r"^.*/jsshell.*$",
-                r"^.*json$",
-                r"^.*/host.*$",
-                r"^.*/mar-tools/.*$",
-                r"^.*robocop.apk$",
-                r"^.*contrib.*",
-                r"^.*/beetmover-checksums/.*$",
-            ]
 
     def _get_candidates_prefix(self):
         return "pub/{}/candidates/{}-candidates/build{}/".format(

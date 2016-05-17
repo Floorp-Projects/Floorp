@@ -186,6 +186,7 @@ AppearanceForVibrancyType(VibrancyType aType)
     case VibrancyType::MENU:
     case VibrancyType::HIGHLIGHTED_MENUITEM:
     case VibrancyType::SHEET:
+    case VibrancyType::SOURCE_LIST:
       return [NSAppearanceClass performSelector:@selector(appearanceNamed:)
                                      withObject:@"NSAppearanceNameVibrantLight"];
     case VibrancyType::DARK:
@@ -208,7 +209,8 @@ enum {
 
 #if !defined(MAC_OS_X_VERSION_10_11) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_11
 enum {
-  NSVisualEffectMaterialMenu = 5
+  NSVisualEffectMaterialMenu = 5,
+  NSVisualEffectMaterialSidebar = 7
 };
 #endif
 
@@ -263,15 +265,15 @@ VibrancyManager::CreateEffectView(VibrancyType aType, NSRect aRect)
                    withObject:AppearanceForVibrancyType(aType)];
   [effectView setState:VisualEffectStateForVibrancyType(aType)];
 
+  BOOL canUseElCapitanMaterials = nsCocoaFeatures::OnElCapitanOrLater();
   if (aType == VibrancyType::MENU) {
-    if (nsCocoaFeatures::OnElCapitanOrLater()) {
-      [effectView setMaterial:NSVisualEffectMaterialMenu];
-    } else {
-      // Before 10.11 there is no material that perfectly matches the menu
-      // look. Of all available material types, NSVisualEffectMaterialTitlebar
-      // is the one that comes closest.
-      [effectView setMaterial:NSVisualEffectMaterialTitlebar];
-    }
+    // Before 10.11 there is no material that perfectly matches the menu
+    // look. Of all available material types, NSVisualEffectMaterialTitlebar
+    // is the one that comes closest.
+    [effectView setMaterial:canUseElCapitanMaterials ? NSVisualEffectMaterialMenu
+                                                     : NSVisualEffectMaterialTitlebar];
+  } else if (aType == VibrancyType::SOURCE_LIST && canUseElCapitanMaterials) {
+    [effectView setMaterial:NSVisualEffectMaterialSidebar];
   } else if (aType == VibrancyType::HIGHLIGHTED_MENUITEM) {
     [effectView setMaterial:NSVisualEffectMaterialMenuItem];
     if ([effectView respondsToSelector:@selector(setEmphasized:)]) {

@@ -390,23 +390,25 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, static_cast<mozilla::WidgetInputEvent>(aParam));
-    WriteParam(aMsg, static_cast<uint32_t>(aParam.mKeyNameIndex));
-    WriteParam(aMsg, static_cast<uint32_t>(aParam.mCodeNameIndex));
+    WriteParam(aMsg,
+               static_cast<mozilla::KeyNameIndexType>(aParam.mKeyNameIndex));
+    WriteParam(aMsg,
+               static_cast<mozilla::CodeNameIndexType>(aParam.mCodeNameIndex));
     WriteParam(aMsg, aParam.mKeyValue);
     WriteParam(aMsg, aParam.mCodeValue);
-    WriteParam(aMsg, aParam.keyCode);
-    WriteParam(aMsg, aParam.charCode);
+    WriteParam(aMsg, aParam.mKeyCode);
+    WriteParam(aMsg, aParam.mCharCode);
     WriteParam(aMsg, aParam.mPseudoCharCode);
-    WriteParam(aMsg, aParam.alternativeCharCodes);
-    WriteParam(aMsg, aParam.isChar);
+    WriteParam(aMsg, aParam.mAlternativeCharCodes);
+    WriteParam(aMsg, aParam.mIsChar);
     WriteParam(aMsg, aParam.mIsRepeat);
     WriteParam(aMsg, aParam.mIsReserved);
     WriteParam(aMsg, aParam.mAccessKeyForwardedToChild);
-    WriteParam(aMsg, aParam.location);
+    WriteParam(aMsg, aParam.mLocation);
     WriteParam(aMsg, aParam.mUniqueId);
     WriteParam(aMsg, aParam.mIsSynthesizedByTIP);
     WriteParam(aMsg,
-               static_cast<mozilla::WidgetKeyboardEvent::InputMethodAppStateType>
+               static_cast<paramType::InputMethodAppStateType>
                  (aParam.mInputMethodAppState));
 #ifdef XP_MACOSX
     WriteParam(aMsg, aParam.mNativeKeyCode);
@@ -421,24 +423,24 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent>
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    uint32_t keyNameIndex = 0, codeNameIndex = 0;
-    mozilla::WidgetKeyboardEvent::InputMethodAppStateType
-      inputMethodAppState = 0;
+    mozilla::KeyNameIndexType keyNameIndex = 0;
+    mozilla::CodeNameIndexType codeNameIndex = 0;
+    paramType::InputMethodAppStateType inputMethodAppState = 0;
     if (ReadParam(aMsg, aIter,
                   static_cast<mozilla::WidgetInputEvent*>(aResult)) &&
         ReadParam(aMsg, aIter, &keyNameIndex) &&
         ReadParam(aMsg, aIter, &codeNameIndex) &&
         ReadParam(aMsg, aIter, &aResult->mKeyValue) &&
         ReadParam(aMsg, aIter, &aResult->mCodeValue) &&
-        ReadParam(aMsg, aIter, &aResult->keyCode) &&
-        ReadParam(aMsg, aIter, &aResult->charCode) &&
+        ReadParam(aMsg, aIter, &aResult->mKeyCode) &&
+        ReadParam(aMsg, aIter, &aResult->mCharCode) &&
         ReadParam(aMsg, aIter, &aResult->mPseudoCharCode) &&
-        ReadParam(aMsg, aIter, &aResult->alternativeCharCodes) &&
-        ReadParam(aMsg, aIter, &aResult->isChar) &&
+        ReadParam(aMsg, aIter, &aResult->mAlternativeCharCodes) &&
+        ReadParam(aMsg, aIter, &aResult->mIsChar) &&
         ReadParam(aMsg, aIter, &aResult->mIsRepeat) &&
         ReadParam(aMsg, aIter, &aResult->mIsReserved) &&
         ReadParam(aMsg, aIter, &aResult->mAccessKeyForwardedToChild) &&
-        ReadParam(aMsg, aIter, &aResult->location) &&
+        ReadParam(aMsg, aIter, &aResult->mLocation) &&
         ReadParam(aMsg, aIter, &aResult->mUniqueId) &&
         ReadParam(aMsg, aIter, &aResult->mIsSynthesizedByTIP) &&
         ReadParam(aMsg, aIter, &inputMethodAppState)
@@ -456,8 +458,7 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent>
         static_cast<mozilla::CodeNameIndex>(codeNameIndex);
       aResult->mNativeKeyEvent = nullptr;
       aResult->mInputMethodAppState =
-        static_cast<mozilla::WidgetKeyboardEvent::InputMethodAppState>
-          (inputMethodAppState);
+        static_cast<paramType::InputMethodAppState>(inputMethodAppState);
       return true;
     }
     return false;

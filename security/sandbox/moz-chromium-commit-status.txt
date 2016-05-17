@@ -9,3 +9,5 @@ de2078cfbbb6770791d32575a1a72a288e6d66a6   chromium/sandbox/win/src/target_servi
 0e49d029d5a1a25d971880b9e44d67ac70b31a80   chromium/sandbox/win/src/filesystem_policy.cc
 0e49d029d5a1a25d971880b9e44d67ac70b31a80   chromium/sandbox/win/src/win_utils.cc
 0e49d029d5a1a25d971880b9e44d67ac70b31a80   chromium/sandbox/win/src/win_utils.h
+3181ba39ee787e1b40f4aea4be23f4f666ad0945   chromium/base/win/windows_version.cc
+3181ba39ee787e1b40f4aea4be23f4f666ad0945   chromium/base/win/windows_version.h

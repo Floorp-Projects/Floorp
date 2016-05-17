@@ -82,8 +82,8 @@ public:
     class Functors : public FunctorsBase
     {
     public:
-      Functors(OnSuccessType&& aOnSuccess, OnFailureType&& aOnFailure)
-        : mOnSuccess(Move(aOnSuccess)), mOnFailure(Move(aOnFailure)) {}
+      Functors(OnSuccessType&& aOnSuccessRef, OnFailureType&& aOnFailureRef)
+        : mOnSuccess(Move(aOnSuccessRef)), mOnFailure(Move(aOnFailureRef)) {}
 
       void Succeed(ValueType& result)
       {

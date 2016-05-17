@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Various mouse tests that spawn in new windows</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+var subtests = [
+  // Sanity test to synthesize a mouse click
+  {'file': 'helper_click.html'},
+  // Sanity test for click but with some mouse movement between the down and up
+  {'file': 'helper_drag_click.html'}
+];
+
+SimpleTest.waitForExplicitFinish();
+window.onload = function() {
+  if (!SpecialPowers.getDOMWindowUtils(window).asyncPanZoomEnabled) {
+    ok(true, "APZ is not enabled, this test is not relevant, sorry!\n");
+    SimpleTest.finish();
+    return;
+  }
+  runSubtestsSeriallyInFreshWindows(subtests)
+    .then(function() { SimpleTest.finish() });
+};
+
+  </script>
+</head>
+<body>
+</body>
+</html>

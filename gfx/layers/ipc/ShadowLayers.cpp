@@ -173,7 +173,6 @@ public:
       }
       default:
         MOZ_CRASH("GFX: SL Fallback destroy actors");
-        break;
       }
     }
     mDestroyedActors.Clear();
