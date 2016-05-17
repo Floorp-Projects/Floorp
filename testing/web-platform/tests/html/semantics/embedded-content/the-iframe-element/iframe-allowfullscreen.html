@@ -10,8 +10,9 @@
 
 <div id="log"></div>
 <script>
-  async_test(function(t) {
+  function test_allowfullscreen(t, setup_iframe) {
     var iframe = document.createElement("iframe");
+    setup_iframe(iframe);
     iframe.src = "support/blank.htm";
     var eventWatcher = new EventWatcher(t, iframe, "load");
     document.body.appendChild(iframe);
@@ -35,10 +36,21 @@
     })).then(t.step_func_done(function() {
       assert_false(iframe.contentDocument.fullscreenEnabled, "Fullscreen enabled flag should be reset when a new document is loaded with allowfullscreen attribute absent");
     }));
+  }
+
+  async_test(function(t) {
+    test_allowfullscreen(t, function(iframe) {});
   }, "iframe-allowfullscreen");
 
   async_test(function(t) {
+    test_allowfullscreen(t, function(iframe) {
+      iframe.setAttribute("sandbox", "allow-same-origin");
+    });
+  }, "iframe-sandbox-allowfullscreen");
+
+  function test_allowfullscreen_dialog(t, setup_iframe, check) {
     var iframe = document.createElement("iframe");
+    setup_iframe(iframe);
     iframe.src = "support/blank.htm";
     var eventWatcher = new EventWatcher(t, iframe, "load");
     document.body.appendChild(iframe);
@@ -57,7 +69,21 @@
       var newWinEventWatcher = new EventWatcher(t, newWin, "load");
       return newWinEventWatcher.wait_for("load");
     })).then(t.step_func_done(function() {
-      assert_true(newWin.document.fullscreenEnabled, "Document in the new window is a top level document, thus should has fullscreen enabled flag set");
+      check(newWin);
     }));
+  }
+
+  async_test(function(t) {
+    test_allowfullscreen_dialog(t, function() {}, function(newWin) {
+      assert_true(newWin.document.fullscreenEnabled, "Document in the new window is a top level document, thus should has fullscreen enabled flag set");
+    });
   }, "iframe-allowfullscreen-dialog");
+
+  async_test(function(t) {
+    test_allowfullscreen_dialog(t, function(iframe) {
+      iframe.setAttribute("sandbox", "allow-same-origin allow-popups");
+    }, function(newWin) {
+      assert_false(newWin.document.fullscreenEnabled, "Document in the new window should inherit the sandboxed fullscreen flag and should not have fullscreen enabled flag set");
+    });
+  }, "iframe-sandbox-allowfullscreen-dialog");
 </script>
