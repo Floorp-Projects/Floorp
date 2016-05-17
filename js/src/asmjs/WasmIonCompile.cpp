@@ -2582,6 +2582,43 @@ EmitSimdSplat(FunctionCompiler& f, ValType simdType)
     return true;
 }
 
+// Build a SIMD vector by inserting lanes one at a time into an initial constant.
+static bool
+EmitSimdChainedCtor(FunctionCompiler& f, ValType valType, MIRType type, const SimdConstant& init)
+{
+    const unsigned length = SimdTypeToLength(type);
+    MDefinition* val = f.constant(init, type);
+    for (unsigned i = 0; i < length; i++) {
+        MDefinition* scalar = 0;
+        if (!f.iter().readSimdCtorArg(ValType::I32, length, i, &scalar))
+            return false;
+        val = f.insertElementSimd(val, scalar, i, type);
+    }
+    if (!f.iter().readSimdCtorArgsEnd(length) || !f.iter().readSimdCtorReturn(valType))
+        return false;
+    f.iter().setResult(val);
+    return true;
+}
+
+// Build a boolean SIMD vector by inserting lanes one at a time into an initial constant.
+static bool
+EmitSimdBooleanChainedCtor(FunctionCompiler& f, ValType valType, MIRType type,
+                           const SimdConstant& init)
+{
+    const unsigned length = SimdTypeToLength(type);
+    MDefinition* val = f.constant(init, type);
+    for (unsigned i = 0; i < length; i++) {
+        MDefinition* scalar = 0;
+        if (!f.iter().readSimdCtorArg(ValType::I32, length, i, &scalar))
+            return false;
+        val = f.insertElementSimd(val, EmitSimdBooleanLaneExpr(f, scalar), i, type);
+    }
+    if (!f.iter().readSimdCtorArgsEnd(length) || !f.iter().readSimdCtorReturn(valType))
+        return false;
+    f.iter().setResult(val);
+    return true;
+}
+
 static bool
 EmitSimdCtor(FunctionCompiler& f, ValType type)
 {
@@ -2589,6 +2626,10 @@ EmitSimdCtor(FunctionCompiler& f, ValType type)
         return false;
 
     switch (type) {
+      case ValType::I8x16:
+        return EmitSimdChainedCtor(f, type, MIRType::Int8x16, SimdConstant::SplatX16(0));
+      case ValType::I16x8:
+        return EmitSimdChainedCtor(f, type, MIRType::Int16x8, SimdConstant::SplatX8(0));
       case ValType::I32x4: {
         MDefinition* args[4];
         for (unsigned i = 0; i < 4; i++) {
@@ -2613,6 +2654,10 @@ EmitSimdCtor(FunctionCompiler& f, ValType type)
                            MIRType::Float32x4));
         return true;
       }
+      case ValType::B8x16:
+        return EmitSimdBooleanChainedCtor(f, type, MIRType::Bool8x16, SimdConstant::SplatX16(0));
+      case ValType::B16x8:
+        return EmitSimdBooleanChainedCtor(f, type, MIRType::Bool16x8, SimdConstant::SplatX8(0));
       case ValType::B32x4: {
         MDefinition* args[4];
         for (unsigned i = 0; i < 4; i++) {
