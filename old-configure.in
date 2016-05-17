@@ -1025,18 +1025,6 @@ dnl ========================================================
 dnl Special rust checks
 dnl ========================================================
 
-if test -n "$MOZ_RUST"; then
-  AC_MSG_CHECKING([rustc target sse2 support])
-  case "$OS_ARCH:$CPU_ARCH" in
-    WINNT:x86)
-      RUSTFLAGS="${RUSTFLAGS} -C target-feature=-sse2"
-      AC_MSG_RESULT([no])
-      ;;
-    *)
-      AC_MSG_RESULT([ok])
-  esac
-fi
-
 if test -n "$MACOSX_DEPLOYMENT_TARGET" -a -n "$MOZ_RUST"; then
   AC_MSG_CHECKING([if we're targeting 32-bit])
   if test -z "$HAVE_64BIT_BUILD"; then
