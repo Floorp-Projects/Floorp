@@ -35,10 +35,6 @@ public:
   SourceBufferTaskQueue()
   : mMonitor("SourceBufferTaskQueue")
   {}
-  ~SourceBufferTaskQueue()
-  {
-    MOZ_ASSERT(mQueue.IsEmpty(), "All tasks must have been processed");
-  }
 
   void Push(SourceBufferTask* aTask)
   {
@@ -382,8 +378,8 @@ private:
 
   // SourceBuffer Queues and running context.
   SourceBufferTaskQueue mQueue;
-  void QueueTask(SourceBufferTask* aTask);
   void ProcessTasks();
+  void CancelAllTasks();
   // Set if the TrackBuffersManager is currently processing a task.
   // At this stage, this task is always a AppendBufferTask.
   RefPtr<SourceBufferTask> mCurrentTask;
@@ -400,6 +396,9 @@ private:
 
   // Set to true if mediasource state changed to ended.
   Atomic<bool> mEnded;
+  // Set to true if the parent SourceBuffer has shutdown.
+  // We will not reschedule or process new task once mDetached is set.
+  Atomic<bool> mDetached;
 
   // Global size of this source buffer content.
   Atomic<int64_t> mSizeSourceBuffer;
