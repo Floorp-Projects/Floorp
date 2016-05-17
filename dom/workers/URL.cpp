@@ -129,7 +129,7 @@ public:
     nsAutoCString url;
     nsresult rv = nsHostObjectProtocolHandler::AddDataEntry(
         NS_LITERAL_CSTRING(BLOBURI_SCHEME),
-        mBlobImpl, principal, url);
+        mBlobImpl, principal, mWorkerPrivate->IsInPrivateBrowsing(), url);
 
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to add data entry for the blob!");
