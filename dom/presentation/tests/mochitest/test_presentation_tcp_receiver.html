@@ -28,11 +28,13 @@ function setup() {
     gScript.sendAsyncMessage('trigger-device-add');
 
     var iframe = document.createElement('iframe');
+    iframe.setAttribute('mozbrowser', 'true');
+    iframe.setAttribute('mozpresentation', receiverUrl);
     iframe.setAttribute('src', receiverUrl);
 
     // This event is triggered when the iframe calls "postMessage".
-    window.addEventListener('message', function listener(aEvent) {
-      var message = aEvent.data;
+    iframe.addEventListener('mozbrowsershowmodalprompt', function listener(aEvent) {
+      var message = aEvent.detail.message;
       if (/^OK /.exec(message)) {
         ok(true, "Message from iframe: " + message);
       } else if (/^KO /.exec(message)) {
@@ -44,7 +46,7 @@ function setup() {
         gScript.sendAsyncMessage(command.name, command.data);
       } else if (/^DONE$/.exec(message)) {
         ok(true, "Messaging from iframe complete.");
-        window.removeEventListener('message', listener);
+        iframe.removeEventListener('mozbrowsershowmodalprompt', listener);
 
         teardown();
       }
@@ -120,8 +122,10 @@ SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPermissions([
   {type: 'presentation-device-manage', allow: false, context: document},
   {type: 'presentation', allow: true, context: document},
+  {type: 'browser', allow: true, context: document},
 ], function() {
   SpecialPowers.pushPrefEnv({ 'set': [["dom.presentation.enabled", true],
+                                      ["dom.mozBrowserFramesEnabled", true],
                                       ["dom.presentation.session_transport.data_channel.enable", false]]},
                             runTests);
 });
