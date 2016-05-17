@@ -73,6 +73,31 @@ CreateRadiobuttonWidget()
 }
 
 static GtkWidget*
+CreateMenuBarWidget()
+{
+  GtkWidget* widget = gtk_menu_bar_new();
+  AddToWindowContainer(widget);
+  return widget;
+}
+
+static GtkWidget*
+CreateMenuPopupWidget()
+{
+  GtkWidget* widget = gtk_menu_new();
+  gtk_menu_attach_to_widget(GTK_MENU(widget), GetWidget(MOZ_GTK_WINDOW),
+                            nullptr);
+  return widget;
+}
+
+static GtkWidget*
+CreateMenuItemWidget(WidgetNodeType aShellType)
+{
+  GtkWidget* widget = gtk_menu_item_new();
+  gtk_menu_shell_append(GTK_MENU_SHELL(GetWidget(aShellType)), widget);
+  return widget;
+}
+
+static GtkWidget*
 CreateWidget(WidgetNodeType aWidgetType)
 {
   switch (aWidgetType) {
@@ -90,6 +115,14 @@ CreateWidget(WidgetNodeType aWidgetType)
       return CreateCheckboxWidget();
     case MOZ_GTK_RADIOBUTTON_CONTAINER:
       return CreateRadiobuttonWidget();
+    case MOZ_GTK_MENUBAR:
+      return CreateMenuBarWidget();
+    case MOZ_GTK_MENUPOPUP:
+      return CreateMenuPopupWidget();
+    case MOZ_GTK_MENUBARITEM:
+      return CreateMenuItemWidget(MOZ_GTK_MENUBAR);
+    case MOZ_GTK_MENUITEM:
+      return CreateMenuItemWidget(MOZ_GTK_MENUPOPUP);
     default:
       /* Not implemented */
       return nullptr;
