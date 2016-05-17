@@ -7,6 +7,7 @@ config = {
     "device_ip": "127.0.0.1",
     "tooltool_manifest_path": "testing/config/tooltool-manifests/androidx86/releng.manifest",
     "tooltool_cache": "/builds/tooltool_cache",
+    "avds_dir": "/home/cltbld/.android",
     "emulator_manifest": """
         [
         {
