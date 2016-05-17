@@ -75,7 +75,7 @@ class Test1BrowserCall(LoopTestDriver, MarionetteTestCase):
         :param expectedText: The expected text of the chat message.
         """
         text_entry = self.wait_for_element_displayed(By.CSS_SELECTOR,
-                                                     ".text-chat-entry.received > p > span")
+                                                     ".text-chat-entry.received > p")
 
         self.assertEqual(text_entry.text, expectedText,
                          "should have received the correct message")

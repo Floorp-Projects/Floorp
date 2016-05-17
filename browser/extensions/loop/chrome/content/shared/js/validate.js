@@ -1,9 +1,9 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict"; /* This Source Code Form is subject to the terms of the Mozilla Public
+               * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+               * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var loop = loop || {};
-loop.validate = (function() {
+loop.validate = function () {
   "use strict";
 
   /**
@@ -14,10 +14,10 @@ loop.validate = (function() {
    * @return {Array}      Array difference
    */
   function difference(arr1, arr2) {
-    return arr1.filter(function(item) {
-      return arr2.indexOf(item) === -1;
-    });
-  }
+    return arr1.filter(function (item) {
+      return arr2.indexOf(item) === -1;});}
+
+
 
   /**
    * Retrieves the type name of an object or constructor. Fallback to "unknown"
@@ -28,19 +28,19 @@ loop.validate = (function() {
    */
   function typeName(obj) {
     if (obj === null) {
-      return "null";
-    }
+      return "null";}
+
 
     if (typeof obj === "function") {
-      return obj.name || obj.toString().match(/^function\s?([^\s(]*)/)[1];
-    }
+      return obj.name || obj.toString().match(/^function\s?([^\s(]*)/)[1];}
+
 
     if (typeof obj.constructor === "function") {
-      return typeName(obj.constructor);
-    }
+      return typeName(obj.constructor);}
 
-    return "unknown";
-  }
+
+    return "unknown";}
+
 
   /**
    * Simple typed values validator.
@@ -49,10 +49,10 @@ loop.validate = (function() {
    * @param  {Object} schema Validation schema
    */
   function Validator(schema) {
-    this.schema = schema || {};
-  }
+    this.schema = schema || {};}
 
-  Validator.prototype = {
+
+  Validator.prototype = { 
     /**
      * Validates all passed values against declared dependencies.
      *
@@ -60,11 +60,11 @@ loop.validate = (function() {
      * @return {Object}         The validated values object
      * @throws {TypeError}      If validation fails
      */
-    validate: function(values) {
+    validate: function validate(values) {
       this._checkRequiredProperties(values);
       this._checkRequiredTypes(values);
-      return values;
-    },
+      return values;}, 
+
 
     /**
      * Checks if any of Object values matches any of current dependency type
@@ -73,17 +73,17 @@ loop.validate = (function() {
      * @param  {Object} values The values object
      * @throws {TypeError}
      */
-    _checkRequiredTypes: function(values) {
-      Object.keys(this.schema).forEach(function(name) {
+    _checkRequiredTypes: function _checkRequiredTypes(values) {
+      Object.keys(this.schema).forEach(function (name) {
         var types = this.schema[name];
         types = Array.isArray(types) ? types : [types];
         if (!this._dependencyMatchTypes(values[name], types)) {
-          throw new TypeError("invalid dependency: " + name +
-                              "; expected " + types.map(typeName).join(", ") +
-                              ", got " + typeName(values[name]));
-        }
-      }, this);
-    },
+          throw new TypeError("invalid dependency: " + name + 
+          "; expected " + types.map(typeName).join(", ") + 
+          ", got " + typeName(values[name]));}}, 
+
+      this);}, 
+
 
     /**
      * Checks if a values object owns the required keys defined in dependencies.
@@ -92,15 +92,15 @@ loop.validate = (function() {
      * @param  {Object} values The values object
      * @throws {TypeError} If any dependency is missing.
      */
-    _checkRequiredProperties: function(values) {
-      var definedProperties = Object.keys(values).filter(function(name) {
-        return typeof values[name] !== "undefined";
-      });
+    _checkRequiredProperties: function _checkRequiredProperties(values) {
+      var definedProperties = Object.keys(values).filter(function (name) {
+        return typeof values[name] !== "undefined";});
+
       var diff = difference(Object.keys(this.schema), definedProperties);
       if (diff.length > 0) {
-        throw new TypeError("missing required " + diff.join(", "));
-      }
-    },
+        throw new TypeError("missing required " + diff.join(", "));}}, 
+
+
 
     /**
      * Checks if a given value matches any of the provided type requirements.
@@ -110,22 +110,20 @@ loop.validate = (function() {
      * @return {Boolean}
      * @throws {TypeError} If the value doesn't match any types.
      */
-    _dependencyMatchTypes: function(value, types) {
-      return types.some(function(Type) {
+    _dependencyMatchTypes: function _dependencyMatchTypes(value, types) {
+      return types.some(function (Type) {
         try {
           return typeof Type === "undefined" || // skip checking
-                 Type === null && value === null || // null type
-                 value.constructor === Type || // native type
-                 Type.prototype.isPrototypeOf(value) || // custom type
-                 typeName(value) === typeName(Type);    // type string eq.
+          Type === null && value === null || // null type
+          value.constructor === Type || // native type
+          Type.prototype.isPrototypeOf(value) || // custom type
+          typeName(value) === typeName(Type); // type string eq.
         } catch (e) {
-          return false;
-        }
-      });
-    }
-  };
+          return false;}});} };
 
-  return {
-    Validator: Validator
-  };
-})();
+
+
+
+
+  return { 
+    Validator: Validator };}();

@@ -1,6 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict"; /* This Source Code Form is subject to the terms of the Mozilla Public
+               * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+               * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var loop = loop || {};
 loop.store = loop.store || {};
@@ -8,7 +8,7 @@ loop.store = loop.store || {};
 /**
  *  Manages the different cursors' events being exchanged between the parts.
  */
-loop.store.RemoteCursorStore = (function() {
+loop.store.RemoteCursorStore = function () {
   "use strict";
 
   var CURSOR_MESSAGE_TYPES = loop.shared.utils.CURSOR_MESSAGE_TYPES;
@@ -16,13 +16,13 @@ loop.store.RemoteCursorStore = (function() {
   /**
    * A store to handle remote cursors events.
    */
-  var RemoteCursorStore = loop.store.createStore({
+  var RemoteCursorStore = loop.store.createStore({ 
     actions: [
-      "sendCursorData",
-      "receivedCursorData",
-      "videoDimensionsChanged",
-      "videoScreenStreamChanged"
-    ],
+    "sendCursorData", 
+    "receivedCursorData", 
+    "videoDimensionsChanged", 
+    "videoScreenStreamChanged"], 
+
 
     /**
      * Initializes the store.
@@ -32,39 +32,39 @@ loop.store.RemoteCursorStore = (function() {
      *                          - sdkDriver: The sdkDriver to use for sending
      *                                       the cursor events.
      */
-    initialize: function(options) {
+    initialize: function initialize(options) {
       options = options || {};
 
       if (!options.sdkDriver) {
-        throw new Error("Missing option sdkDriver");
-      }
+        throw new Error("Missing option sdkDriver");}
+
 
       this._sdkDriver = options.sdkDriver;
 
-      loop.subscribe("CursorPositionChange",
-                     this._cursorPositionChangeListener.bind(this));
-      loop.subscribe("CursorClick", this._cursorClickListener.bind(this));
-    },
+      loop.subscribe("CursorPositionChange", 
+      this._cursorPositionChangeListener.bind(this));
+      loop.subscribe("CursorClick", this._cursorClickListener.bind(this));}, 
+
 
     /**
      * Returns initial state data for this active room.
      */
-    getInitialStoreState: function() {
-      return {
-        realVideoSize: null,
-        remoteCursorClick: null,
-        remoteCursorPosition: null
-      };
-    },
+    getInitialStoreState: function getInitialStoreState() {
+      return { 
+        realVideoSize: null, 
+        remoteCursorClick: null, 
+        remoteCursorPosition: null };}, 
+
+
 
     /**
      * Sends cursor click position through the sdk.
      */
-    _cursorClickListener: function() {
-      this.sendCursorData({
-        type: CURSOR_MESSAGE_TYPES.CLICK
-      });
-    },
+    _cursorClickListener: function _cursorClickListener() {
+      this.sendCursorData({ 
+        type: CURSOR_MESSAGE_TYPES.CLICK });}, 
+
+
 
     /**
      * Prepares the cursor position object to be sent.
@@ -74,13 +74,13 @@ loop.store.RemoteCursorStore = (function() {
      *                       - ratioX: Left position. Number between 0 and 1.
      *                       - ratioY: Top position. Number between 0 and 1.
      */
-    _cursorPositionChangeListener: function(event) {
-      this.sendCursorData({
-        ratioX: event.ratioX,
-        ratioY: event.ratioY,
-        type: CURSOR_MESSAGE_TYPES.POSITION
-      });
-    },
+    _cursorPositionChangeListener: function _cursorPositionChangeListener(event) {
+      this.sendCursorData({ 
+        ratioX: event.ratioX, 
+        ratioY: event.ratioY, 
+        type: CURSOR_MESSAGE_TYPES.POSITION });}, 
+
+
 
     /**
      * Sends the cursor data to the SDK for broadcasting.
@@ -95,73 +95,72 @@ loop.store.RemoteCursorStore = (function() {
      *                | CURSOR_MESSAGE_TYPES.CLICK
      *      }
      */
-    sendCursorData: function(actionData) {
+    sendCursorData: function sendCursorData(actionData) {
       switch (actionData.type) {
         case CURSOR_MESSAGE_TYPES.POSITION:
         case CURSOR_MESSAGE_TYPES.CLICK:
           this._sdkDriver.sendCursorMessage(actionData);
-          break;
-      }
-    },
+          break;}}, 
+
+
 
     /**
      * Receives cursor data and updates the store.
      *
      * @param {sharedActions.receivedCursorData} actionData
      */
-    receivedCursorData: function(actionData) {
+    receivedCursorData: function receivedCursorData(actionData) {
       switch (actionData.type) {
         case CURSOR_MESSAGE_TYPES.POSITION:
-          this.setStoreState({
-            remoteCursorPosition: {
-              ratioX: actionData.ratioX,
-              ratioY: actionData.ratioY
-            }
-          });
+          this.setStoreState({ 
+            remoteCursorPosition: { 
+              ratioX: actionData.ratioX, 
+              ratioY: actionData.ratioY } });
+
+
           break;
         case CURSOR_MESSAGE_TYPES.CLICK:
-          this.setStoreState({
-            remoteCursorClick: true
-          });
-          break;
-      }
-    },
+          this.setStoreState({ 
+            remoteCursorClick: true });
+
+          break;}}, 
+
+
 
     /**
      * Listen to stream dimension changes.
      *
      * @param {sharedActions.VideoDimensionsChanged} actionData
      */
-    videoDimensionsChanged: function(actionData) {
+    videoDimensionsChanged: function videoDimensionsChanged(actionData) {
       if (actionData.videoType !== "screen") {
-        return;
-      }
+        return;}
 
-      this.setStoreState({
-        realVideoSize: {
-          height: actionData.dimensions.height,
-          width: actionData.dimensions.width
-        }
-      });
-    },
+
+      this.setStoreState({ 
+        realVideoSize: { 
+          height: actionData.dimensions.height, 
+          width: actionData.dimensions.width } });}, 
+
+
+
 
     /**
      * Listen to screen stream changes. Because the cursor's position is likely
      * to be different respect to the new screen size, it's better to delete the
      * previous position and keep waiting for the next one.
-
-     * @param {sharedActions.VideoScreenStreamChanged} actionData
+      * @param {sharedActions.VideoScreenStreamChanged} actionData
      */
-    videoScreenStreamChanged: function(actionData) {
+
+    videoScreenStreamChanged: function videoScreenStreamChanged(actionData) {
       if (actionData.hasVideo) {
-        return;
-      }
+        return;}
 
-      this.setStoreState({
-        remoteCursorPosition: null
-      });
-    }
-  });
 
-  return RemoteCursorStore;
-})();
+      this.setStoreState({ 
+        remoteCursorPosition: null });} });
+
+
+
+
+  return RemoteCursorStore;}();

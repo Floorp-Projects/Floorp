@@ -1,6 +1,6 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict"; /* This Source Code Form is subject to the terms of the Mozilla Public
+               * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+               * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var loop = loop || {};
 loop.conversation = function (mozL10n) {
@@ -18,91 +18,94 @@ loop.conversation = function (mozL10n) {
    * Master controller view for handling if incoming or outgoing calls are
    * in progress, and hence, which view to display.
    */
-  var AppControllerView = React.createClass({
-    displayName: "AppControllerView",
+  var AppControllerView = React.createClass({ displayName: "AppControllerView", 
+    mixins: [
+    Backbone.Events, 
+    loop.store.StoreMixin("conversationAppStore"), 
+    sharedMixins.DocumentTitleMixin, 
+    sharedMixins.WindowCloseMixin], 
 
-    mixins: [Backbone.Events, loop.store.StoreMixin("conversationAppStore"), sharedMixins.DocumentTitleMixin, sharedMixins.WindowCloseMixin],
 
-    propTypes: {
-      cursorStore: React.PropTypes.instanceOf(loop.store.RemoteCursorStore).isRequired,
-      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      roomStore: React.PropTypes.instanceOf(loop.store.RoomStore)
-    },
+    propTypes: { 
+      cursorStore: React.PropTypes.instanceOf(loop.store.RemoteCursorStore).isRequired, 
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired, 
+      roomStore: React.PropTypes.instanceOf(loop.store.RoomStore) }, 
 
-    componentWillMount: function () {
-      this.listenTo(this.props.cursorStore, "change:remoteCursorPosition", this._onRemoteCursorPositionChange);
-      this.listenTo(this.props.cursorStore, "change:remoteCursorClick", this._onRemoteCursorClick);
-    },
 
-    _onRemoteCursorPositionChange: function () {
-      loop.request("AddRemoteCursorOverlay", this.props.cursorStore.getStoreState("remoteCursorPosition"));
-    },
+    componentWillMount: function componentWillMount() {
+      this.listenTo(this.props.cursorStore, "change:remoteCursorPosition", 
+      this._onRemoteCursorPositionChange);
+      this.listenTo(this.props.cursorStore, "change:remoteCursorClick", 
+      this._onRemoteCursorClick);}, 
 
-    _onRemoteCursorClick: function () {
-      let click = this.props.cursorStore.getStoreState("remoteCursorClick");
+
+    _onRemoteCursorPositionChange: function _onRemoteCursorPositionChange() {
+      loop.request("AddRemoteCursorOverlay", 
+      this.props.cursorStore.getStoreState("remoteCursorPosition"));}, 
+
+
+    _onRemoteCursorClick: function _onRemoteCursorClick() {
+      var click = this.props.cursorStore.getStoreState("remoteCursorClick");
       // if the click is 'false', assume it is a storeState reset,
       // so don't do anything
       if (!click) {
-        return;
-      }
+        return;}
 
-      this.props.cursorStore.setStoreState({
-        remoteCursorClick: false
-      });
 
-      loop.request("ClickRemoteCursor", click);
-    },
+      this.props.cursorStore.setStoreState({ 
+        remoteCursorClick: false });
 
-    getInitialState: function () {
-      return this.getStoreState();
-    },
 
-    _renderFeedbackForm: function () {
+      loop.request("ClickRemoteCursor", click);}, 
+
+
+    getInitialState: function getInitialState() {
+      return this.getStoreState();}, 
+
+
+    _renderFeedbackForm: function _renderFeedbackForm() {
       this.setTitle(mozL10n.get("conversation_has_ended"));
 
-      return React.createElement(FeedbackView, {
-        onAfterFeedbackReceived: this.closeWindow });
-    },
+      return React.createElement(FeedbackView, { 
+        onAfterFeedbackReceived: this.closeWindow });}, 
+
 
     /**
      * We only show the feedback for once every 6 months, otherwise close
      * the window.
      */
-    handleCallTerminated: function () {
-      this.props.dispatcher.dispatch(new sharedActions.LeaveConversation());
-    },
+    handleCallTerminated: function handleCallTerminated() {
+      this.props.dispatcher.dispatch(new sharedActions.LeaveConversation());}, 
 
-    render: function () {
+
+    render: function render() {
       if (this.state.showFeedbackForm) {
-        return this._renderFeedbackForm();
-      }
+        return this._renderFeedbackForm();}
+
 
       switch (this.state.windowType) {
-        case "room":
-          {
-            return React.createElement(DesktopRoomConversationView, {
-              chatWindowDetached: this.state.chatWindowDetached,
-              cursorStore: this.props.cursorStore,
-              dispatcher: this.props.dispatcher,
-              facebookEnabled: this.state.facebookEnabled,
-              onCallTerminated: this.handleCallTerminated,
-              roomStore: this.props.roomStore });
-          }
-        case "failed":
-          {
-            return React.createElement(RoomFailureView, {
-              dispatcher: this.props.dispatcher,
-              failureReason: FAILURE_DETAILS.UNKNOWN });
-          }
-        default:
-          {
+        case "room":{
+            return React.createElement(DesktopRoomConversationView, { 
+              chatWindowDetached: this.state.chatWindowDetached, 
+              cursorStore: this.props.cursorStore, 
+              dispatcher: this.props.dispatcher, 
+              facebookEnabled: this.state.facebookEnabled, 
+              onCallTerminated: this.handleCallTerminated, 
+              roomStore: this.props.roomStore });}
+
+        case "failed":{
+            return React.createElement(RoomFailureView, { 
+              dispatcher: this.props.dispatcher, 
+              failureReason: FAILURE_DETAILS.UNKNOWN });}
+
+        default:{
             // If we don't have a windowType, we don't know what we are yet,
             // so don't display anything.
-            return null;
-          }
-      }
-    }
-  });
+            return null;}}} });
+
+
+
+
 
   /**
    * Conversation initialisation.
@@ -114,11 +117,21 @@ loop.conversation = function (mozL10n) {
 
     var hash = locationHash.match(/#(.*)/);
     if (hash) {
-      windowId = hash[1];
-    }
+      windowId = hash[1];}
 
-    var requests = [["GetAllConstants"], ["GetAllStrings"], ["GetLocale"], ["GetLoopPref", "ot.guid"], ["GetLoopPref", "feedback.periodSec"], ["GetLoopPref", "feedback.dateLastSeenSec"], ["GetLoopPref", "facebook.enabled"]];
-    var prefetch = [["GetConversationWindowData", windowId]];
+
+    var requests = [
+    ["GetAllConstants"], 
+    ["GetAllStrings"], 
+    ["GetLocale"], 
+    ["GetLoopPref", "ot.guid"], 
+    ["GetLoopPref", "feedback.periodSec"], 
+    ["GetLoopPref", "feedback.dateLastSeenSec"], 
+    ["GetLoopPref", "facebook.enabled"]];
+
+    var prefetch = [
+    ["GetConversationWindowData", windowId]];
+
 
     return loop.requestMulti.apply(null, requests.concat(prefetch)).then(function (results) {
       // `requestIdx` is keyed off the order of the `requests` and `prefetch`
@@ -129,101 +142,101 @@ loop.conversation = function (mozL10n) {
       // else to ensure the L10n environment is setup correctly.
       var stringBundle = results[++requestIdx];
       var locale = results[++requestIdx];
-      mozL10n.initialize({
-        locale: locale,
-        getStrings: function (key) {
+      mozL10n.initialize({ 
+        locale: locale, 
+        getStrings: function getStrings(key) {
           if (!(key in stringBundle)) {
             console.error("No string found for key: ", key);
-            return "{ textContent: '' }";
-          }
+            return "{ textContent: '' }";}
 
-          return JSON.stringify({ textContent: stringBundle[key] });
-        }
-      });
+
+          return JSON.stringify({ textContent: stringBundle[key] });} });
+
+
 
       // Plug in an alternate client ID mechanism, as localStorage and cookies
       // don't work in the conversation window
       var currGuid = results[++requestIdx];
-      window.OT.overrideGuidStorage({
-        get: function (callback) {
-          callback(null, currGuid);
-        },
-        set: function (guid, callback) {
+      window.OT.overrideGuidStorage({ 
+        get: function get(callback) {
+          callback(null, currGuid);}, 
+
+        set: function set(guid, callback) {
           // See nsIPrefBranch
           var PREF_STRING = 32;
           currGuid = guid;
           loop.request("SetLoopPref", "ot.guid", guid, PREF_STRING);
-          callback(null);
-        }
-      });
+          callback(null);} });
+
+
 
       var dispatcher = new loop.Dispatcher();
-      var sdkDriver = new loop.OTSdkDriver({
-        constants: constants,
-        isDesktop: true,
-        useDataChannels: true,
-        dispatcher: dispatcher,
-        sdk: OT
-      });
+      var sdkDriver = new loop.OTSdkDriver({ 
+        constants: constants, 
+        isDesktop: true, 
+        useDataChannels: true, 
+        dispatcher: dispatcher, 
+        sdk: OT });
+
 
       // expose for functional tests
       loop.conversation._sdkDriver = sdkDriver;
 
       // Create the stores.
-      var activeRoomStore = new loop.store.ActiveRoomStore(dispatcher, {
-        isDesktop: true,
-        sdkDriver: sdkDriver
-      });
-      var conversationAppStore = new loop.store.ConversationAppStore({
-        activeRoomStore: activeRoomStore,
-        dispatcher: dispatcher,
-        feedbackPeriod: results[++requestIdx],
-        feedbackTimestamp: results[++requestIdx],
-        facebookEnabled: results[++requestIdx]
-      });
+      var activeRoomStore = new loop.store.ActiveRoomStore(dispatcher, { 
+        isDesktop: true, 
+        sdkDriver: sdkDriver });
+
+      var conversationAppStore = new loop.store.ConversationAppStore(dispatcher, { 
+        activeRoomStore: activeRoomStore, 
+        feedbackPeriod: results[++requestIdx], 
+        feedbackTimestamp: results[++requestIdx], 
+        facebookEnabled: results[++requestIdx] });
+
 
       prefetch.forEach(function (req) {
         req.shift();
-        loop.storeRequest(req, results[++requestIdx]);
-      });
+        loop.storeRequest(req, results[++requestIdx]);});
 
-      var roomStore = new loop.store.RoomStore(dispatcher, {
-        activeRoomStore: activeRoomStore,
-        constants: constants
-      });
-      var textChatStore = new loop.store.TextChatStore(dispatcher, {
-        sdkDriver: sdkDriver
-      });
-      var remoteCursorStore = new loop.store.RemoteCursorStore(dispatcher, {
-        sdkDriver: sdkDriver
-      });
 
-      loop.store.StoreMixin.register({
-        conversationAppStore: conversationAppStore,
-        remoteCursorStore: remoteCursorStore,
-        textChatStore: textChatStore
-      });
+      var roomStore = new loop.store.RoomStore(dispatcher, { 
+        activeRoomStore: activeRoomStore, 
+        constants: constants });
 
-      React.render(React.createElement(AppControllerView, {
-        cursorStore: remoteCursorStore,
-        dispatcher: dispatcher,
+      var textChatStore = new loop.store.TextChatStore(dispatcher, { 
+        sdkDriver: sdkDriver });
+
+      var remoteCursorStore = new loop.store.RemoteCursorStore(dispatcher, { 
+        sdkDriver: sdkDriver });
+
+
+      loop.store.StoreMixin.register({ 
+        conversationAppStore: conversationAppStore, 
+        remoteCursorStore: remoteCursorStore, 
+        textChatStore: textChatStore });
+
+
+      ReactDOM.render(
+      React.createElement(AppControllerView, { 
+        cursorStore: remoteCursorStore, 
+        dispatcher: dispatcher, 
         roomStore: roomStore }), document.querySelector("#main"));
 
       document.documentElement.setAttribute("lang", mozL10n.language.code);
       document.documentElement.setAttribute("dir", mozL10n.language.direction);
       document.body.setAttribute("platform", loop.shared.utils.getPlatform());
 
-      dispatcher.dispatch(new sharedActions.GetWindowData({
-        windowId: windowId
-      }));
+      dispatcher.dispatch(new sharedActions.GetWindowData({ 
+        windowId: windowId }));
 
-      loop.request("TelemetryAddValue", "LOOP_ACTIVITY_COUNTER", constants.LOOP_MAU_TYPE.OPEN_CONVERSATION);
-    });
-  }
 
-  return {
-    AppControllerView: AppControllerView,
-    init: init,
+      loop.request("TelemetryAddValue", "LOOP_ACTIVITY_COUNTER", constants.LOOP_MAU_TYPE.OPEN_CONVERSATION);});}
+
+
+
+  return { 
+    AppControllerView: AppControllerView, 
+    init: init, 
 
     /**
      * Exposed for the use of functional tests to be able to check
@@ -231,8 +244,8 @@ loop.conversation = function (mozL10n) {
      *
      * @type loop.OTSdkDriver
      */
-    _sdkDriver: null
-  };
-}(document.mozL10n);
+    _sdkDriver: null };}(
+
+document.mozL10n);
 
 document.addEventListener("DOMContentLoaded", loop.conversation.init);

@@ -1,22 +1,22 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
+"use strict";var _Components = 
 
-const { utils: Cu } = Components;
+Components;var Cu = _Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
-const { MozLoopService, LOOP_SESSION_TYPE } =
-  Cu.import("chrome://loop/content/modules/MozLoopService.jsm", {});
-XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
-                                  "resource://services-common/utils.js");
+Cu.import("resource://gre/modules/Task.jsm");var _Cu$import = 
+
+Cu.import("chrome://loop/content/modules/MozLoopService.jsm", {});var MozLoopService = _Cu$import.MozLoopService;var LOOP_SESSION_TYPE = _Cu$import.LOOP_SESSION_TYPE;
+XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils", 
+"resource://services-common/utils.js");
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
 this.EXPORTED_SYMBOLS = ["LoopRoomsCache"];
 
-const LOOP_ROOMS_CACHE_FILENAME = "loopRoomsCache.json";
+var LOOP_ROOMS_CACHE_FILENAME = "loopRoomsCache.json";
 XPCOMUtils.defineConstant(this, "LOOP_ROOMS_CACHE_FILENAME", LOOP_ROOMS_CACHE_FILENAME);
 
 /**
@@ -47,26 +47,25 @@ function LoopRoomsCache(options) {
 
   this.baseDir = options.baseDir || OS.Constants.Path.profileDir;
   this.path = OS.Path.join(
-    this.baseDir,
-    options.filename || LOOP_ROOMS_CACHE_FILENAME
-  );
-  this._cache = null;
-}
+  this.baseDir, 
+  options.filename || LOOP_ROOMS_CACHE_FILENAME);
 
-LoopRoomsCache.prototype = {
+  this._cache = null;}
+
+
+LoopRoomsCache.prototype = { 
   /**
    * Updates the local copy of the cache and saves it to disk.
    *
    * @param  {Object} contents An object to be saved in json format.
    * @return {Promise} A promise that is resolved once the save is complete.
    */
-  _setCache: function(contents) {
+  _setCache: function _setCache(contents) {var _this = this;
     this._cache = contents;
 
-    return OS.File.makeDir(this.baseDir, { ignoreExisting: true }).then(() => {
-        return CommonUtils.writeJSON(contents, this.path);
-      });
-  },
+    return OS.File.makeDir(this.baseDir, { ignoreExisting: true }).then(function () {return (
+        CommonUtils.writeJSON(contents, _this.path));});}, 
+
 
   /**
    * Returns the local copy of the cache if there is one, otherwise it reads
@@ -76,28 +75,28 @@ LoopRoomsCache.prototype = {
    */
   _getCache: Task.async(function* () {
     if (this._cache) {
-      return this._cache;
-    }
+      return this._cache;}
+
 
     try {
-      return (this._cache = yield CommonUtils.readJSON(this.path));
-    } catch (error) {
+      return this._cache = yield CommonUtils.readJSON(this.path);} 
+    catch (error) {
       if (!error.becauseNoSuchFile) {
-        MozLoopService.log.debug("Error reading the cache:", error);
-      }
-      return (this._cache = {});
-    }
-  }),
+        MozLoopService.log.debug("Error reading the cache:", error);}
+
+      return this._cache = {};}}), 
+
+
 
   /**
    * Function for testability purposes. Clears the cache.
    *
    * @return {Promise} A promise that is resolved once the clear is complete.
    */
-  clear: function() {
+  clear: function clear() {
     this._cache = null;
-    return OS.File.remove(this.path);
-  },
+    return OS.File.remove(this.path);}, 
+
 
   /**
    * Gets a room key from the cache.
@@ -109,16 +108,16 @@ LoopRoomsCache.prototype = {
    */
   getKey: Task.async(function* (sessionType, roomToken) {
     if (sessionType != LOOP_SESSION_TYPE.FXA) {
-      return null;
-    }
+      return null;}
 
-    let sessionData = (yield this._getCache())[sessionType];
+
+    var sessionData = (yield this._getCache())[sessionType];
 
     if (!sessionData || !sessionData[roomToken]) {
-      return null;
-    }
-    return sessionData[roomToken].key;
-  }),
+      return null;}
+
+    return sessionData[roomToken].key;}), 
+
 
   /**
    * Stores a room key into the cache. Note, if the key has not changed,
@@ -131,30 +130,28 @@ LoopRoomsCache.prototype = {
    */
   setKey: Task.async(function* (sessionType, roomToken, roomKey) {
     if (sessionType != LOOP_SESSION_TYPE.FXA) {
-      return Promise.resolve();
-    }
+      return Promise.resolve();}
 
-    let cache = yield this._getCache();
+
+    var cache = yield this._getCache();
 
     // Create these objects if they don't exist.
     // We aim to do this creation and setting of the room key in a
     // forwards-compatible way so that if new fields are added to rooms later
     // then we don't mess them up (if there's no keys).
     if (!cache[sessionType]) {
-      cache[sessionType] = {};
-    }
+      cache[sessionType] = {};}
+
 
     if (!cache[sessionType][roomToken]) {
-      cache[sessionType][roomToken] = {};
-    }
+      cache[sessionType][roomToken] = {};}
+
 
     // Only save it if there's no key, or it is different.
-    if (!cache[sessionType][roomToken].key ||
-        cache[sessionType][roomToken].key != roomKey) {
+    if (!cache[sessionType][roomToken].key || 
+    cache[sessionType][roomToken].key != roomKey) {
       cache[sessionType][roomToken].key = roomKey;
-      return yield this._setCache(cache);
-    }
+      return yield this._setCache(cache);}
 
-    return Promise.resolve();
-  })
-};
+
+    return Promise.resolve();}) };

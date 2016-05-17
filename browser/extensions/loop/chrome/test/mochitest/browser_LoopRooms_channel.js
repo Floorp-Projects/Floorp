@@ -149,7 +149,7 @@ add_task(function* test_loopRooms_webchannel_openRoom() {
   // Check the room was opened.
   Assert.ok(openedUrl, "should open a chat window");
 
-  let windowId = openedUrl.match(/about:loopconversation\#(\w+)$/)[1];
+  let windowId = openedUrl.match(/about:loopconversation#(\w+)$/)[1];
   let windowData = MozLoopService.getConversationWindowData(windowId);
 
   Assert.equal(windowData.type, "room", "window data should contain room as the type");
