@@ -47,6 +47,8 @@ public:
 
   ID2D1GeometrySink *GetSink() { return mSink; }
 
+  bool IsFigureActive() const { return mFigureActive; }
+
 private:
   friend class PathD2D;
 
