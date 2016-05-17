@@ -130,14 +130,13 @@ nsresult
 VorbisDataDecoder::Input(MediaRawData* aSample)
 {
   mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
-                         this, &VorbisDataDecoder::Decode,
-                         RefPtr<MediaRawData>(aSample)));
+                       this, &VorbisDataDecoder::ProcessDecode, aSample));
 
   return NS_OK;
 }
 
 void
-VorbisDataDecoder::Decode(MediaRawData* aSample)
+VorbisDataDecoder::ProcessDecode(MediaRawData* aSample)
 {
   if (DoDecode(aSample) == -1) {
     mCallback->Error();
@@ -255,7 +254,7 @@ VorbisDataDecoder::DoDecode(MediaRawData* aSample)
 }
 
 void
-VorbisDataDecoder::DoDrain()
+VorbisDataDecoder::ProcessDrain()
 {
   mCallback->DrainComplete();
 }
@@ -263,7 +262,7 @@ VorbisDataDecoder::DoDrain()
 nsresult
 VorbisDataDecoder::Drain()
 {
-  mTaskQueue->Dispatch(NewRunnableMethod(this, &VorbisDataDecoder::DoDrain));
+  mTaskQueue->Dispatch(NewRunnableMethod(this, &VorbisDataDecoder::ProcessDrain));
   return NS_OK;
 }
 
