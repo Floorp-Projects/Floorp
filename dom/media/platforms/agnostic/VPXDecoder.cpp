@@ -9,6 +9,7 @@
 #include "nsError.h"
 #include "TimeUnits.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/SyncRunnable.h"
 #include "prsystem.h"
 
 #include <algorithm>
@@ -39,6 +40,7 @@ VPXDecoder::VPXDecoder(const VideoInfo& aConfig,
   : mImageContainer(aImageContainer)
   , mTaskQueue(aTaskQueue)
   , mCallback(aCallback)
+  , mIsFlushing(false)
   , mInfo(aConfig)
   , mCodec(MimeTypeToCodec(aConfig.mMimeType))
 {
@@ -89,7 +91,12 @@ VPXDecoder::Init()
 nsresult
 VPXDecoder::Flush()
 {
-  mTaskQueue->Flush();
+  mIsFlushing = true;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([this] () {
+    // nothing to do for now.
+  });
+  SyncRunnable::DispatchToThread(mTaskQueue, r);
+  mIsFlushing = false;
   return NS_OK;
 }
 
@@ -180,6 +187,9 @@ VPXDecoder::DoDecode(MediaRawData* aSample)
 void
 VPXDecoder::ProcessDecode(MediaRawData* aSample)
 {
+  if (mIsFlushing) {
+    return;
+  }
   if (DoDecode(aSample) == -1) {
     mCallback->Error();
   } else if (mTaskQueue->IsEmpty()) {
