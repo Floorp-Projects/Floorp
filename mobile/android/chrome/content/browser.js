@@ -5153,13 +5153,13 @@ var ErrorPageEventHandler = {
           // can use the right strings/links
           let bucketName = "";
           let sendTelemetry = false;
-          if (errorDoc.documentURI.contains("e=malwareBlocked")) {
+          if (errorDoc.documentURI.includes("e=malwareBlocked")) {
             sendTelemetry = true;
             bucketName = "WARNING_MALWARE_PAGE_";
-          } else if (errorDoc.documentURI.contains("e=deceptiveBlocked")) {
+          } else if (errorDoc.documentURI.includes("e=deceptiveBlocked")) {
             sendTelemetry = true;
             bucketName = "WARNING_PHISHING_PAGE_";
-          } else if (errorDoc.documentURI.contains("e=unwantedBlocked")) {
+          } else if (errorDoc.documentURI.includes("e=unwantedBlocked")) {
             sendTelemetry = true;
             bucketName = "WARNING_UNWANTED_PAGE_";
           }
