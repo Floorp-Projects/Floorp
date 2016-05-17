@@ -23,7 +23,10 @@ function backgroundScript() {
   browser.pageAction.show(tabId);
   browser.test.sendMessage("page-action-shown");
 
-  browser.test.notifyPass("page-action");
+  browser.pageAction.onClicked.addListener(tab => {
+    // TODO: Make sure we get the correct tab once the tabs API is supported.
+    browser.test.notifyPass("pageAction-clicked");
+  });
 }
 
 add_task(function* test_contentscript() {
@@ -42,7 +45,9 @@ add_task(function* test_contentscript() {
 
   is(isPageActionShown(extension.id), true, "The PageAction should be shown");
 
-  yield extension.awaitFinish("page-action");
+  clickPageAction(extension.id);
+
+  yield extension.awaitFinish("pageAction-clicked");
   yield extension.unload();
 
   is(isPageActionShown(extension.id), false, "The PageAction should be removed after unload");

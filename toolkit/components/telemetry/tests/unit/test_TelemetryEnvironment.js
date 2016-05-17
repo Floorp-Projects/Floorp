@@ -816,7 +816,7 @@ add_task(function* test_prefWatchPolicies() {
   Preferences.set(PREF_TEST_5, expectedValue);
 
   // Set the Environment preferences to watch.
-  TelemetryEnvironment._watchPreferences(PREFS_TO_WATCH);
+  TelemetryEnvironment.testWatchPreferences(PREFS_TO_WATCH);
   let deferred = PromiseUtils.defer();
 
   // Check that the pref values are missing or present as expected
@@ -864,7 +864,7 @@ add_task(function* test_prefWatch_prefReset() {
   fakeNow(gNow);
 
   // Set the Environment preferences to watch.
-  TelemetryEnvironment._watchPreferences(PREFS_TO_WATCH);
+  TelemetryEnvironment.testWatchPreferences(PREFS_TO_WATCH);
   let deferred = PromiseUtils.defer();
   TelemetryEnvironment.registerChangeListener("testWatchPrefs_reset", deferred.resolve);
 
@@ -1292,7 +1292,7 @@ add_task(function* test_changeThrottling() {
   fakeNow(gNow);
 
   // Set the Environment preferences to watch.
-  TelemetryEnvironment._watchPreferences(PREFS_TO_WATCH);
+  TelemetryEnvironment.testWatchPreferences(PREFS_TO_WATCH);
   let deferred = PromiseUtils.defer();
   let changeCount = 0;
   TelemetryEnvironment.registerChangeListener("testWatchPrefs_throttling", () => {
@@ -1450,7 +1450,7 @@ add_task(function* test_defaultSearchEngine() {
   // Set the clock in the future so our changes don't get throttled.
   gNow = fakeNow(futureDate(gNow, 10 * MILLISECONDS_PER_MINUTE));
   // Watch the test preference.
-  TelemetryEnvironment._watchPreferences(PREFS_TO_WATCH);
+  TelemetryEnvironment.testWatchPreferences(PREFS_TO_WATCH);
   deferred = PromiseUtils.defer();
   TelemetryEnvironment.registerChangeListener("testSearchEngine_pref", deferred.resolve);
   // Trigger an environment change.
@@ -1484,7 +1484,7 @@ add_task(function* test_environmentShutdown() {
   fakeNow(gNow);
 
   // Set up the preferences and listener, then the trigger shutdown
-  TelemetryEnvironment._watchPreferences(PREFS_TO_WATCH);
+  TelemetryEnvironment.testWatchPreferences(PREFS_TO_WATCH);
   TelemetryEnvironment.registerChangeListener("test_environmentShutdownChange", () => {
   // Register a new change listener that asserts if change is propogated
     Assert.ok(false, "No change should be propagated after shutdown.");

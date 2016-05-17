@@ -116,7 +116,7 @@ class SearchEngineRow extends AnimatedHeightLayout {
                     } else {
                         Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.SUGGESTION, (String) v.getTag());
                     }
-                    mSearchListener.onSearch(mSearchEngine, suggestion);
+                    mSearchListener.onSearch(mSearchEngine, suggestion, TelemetryContract.Method.SUGGESTION);
                 }
             }
         };
@@ -241,7 +241,7 @@ class SearchEngineRow extends AnimatedHeightLayout {
         String searchTerm = getSuggestionTextFromView(mUserEnteredView);
         if (mSearchListener != null) {
             Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.SUGGESTION, "user");
-            mSearchListener.onSearch(mSearchEngine, searchTerm);
+            mSearchListener.onSearch(mSearchEngine, searchTerm, TelemetryContract.Method.SUGGESTION);
         }
     }
 

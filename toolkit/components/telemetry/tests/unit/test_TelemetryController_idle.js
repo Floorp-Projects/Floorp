@@ -42,7 +42,7 @@ add_task(function* testSendPendingOnIdleDaily() {
   yield TelemetryStorage.savePing(PENDING_PING, true);
 
   // Telemetry will not send this ping at startup, because it's not overdue.
-  yield TelemetryController.setup();
+  yield TelemetryController.testSetup();
   TelemetrySend.setServer("http://localhost:" + gHttpServer.identity.primaryPort);
 
   let pendingPromise = new Promise(resolve =>

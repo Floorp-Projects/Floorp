@@ -3,8 +3,6 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!ENTITY firstrun_panel_title_welcome "Welcome">
-<!ENTITY  onboard_start_message3 "Browse with &brandShortName;">
-<!ENTITY  onboard_start_subtext3 "Make your mobile Web browsing experience truly your own.">
 
 <!ENTITY firstrun_urlbar_message "Welcome to &brandShortName;">
 <!ENTITY firstrun_urlbar_subtext "Find things faster with helpful search suggestion shortcuts.">
@@ -20,20 +18,36 @@
 <!ENTITY firstrun_signin_message "Get connected, get started">
 <!ENTITY firstrun_signin_button "Sign in to Sync">
 <!ENTITY  onboard_start_button_browser "Start Browsing">
+<!ENTITY firstrun_button_notnow "Not right now">
 <!ENTITY firstrun_button_next "Next">
 
-<!ENTITY  onboard_start_restricted1 "Stay safe and in control with this simplified version of &brandShortName;.">
+<!ENTITY firstrun_tabqueue_title "Links">
+<!-- Localization note (firstrun_tabqueue_message): 'Tab queue' is a feature that allows users to queue up or save links from outside of Firefox (without switching apps) - these links will be loaded in Firefox the next time Firefox is opened. -->
+<!ENTITY firstrun_tabqueue_message_off "Turn on Tab queue">
+<!ENTITY firstrun_tabqueue_subtext_off "Save links for later in &brandShortName; when tapping them in other apps.">
 
-<!ENTITY  reading_list_migration_title "Reading List connected">
-<!ENTITY  reading_list_migration_subtext "Your Reading List items will now be added to your Bookmarks">
-<!ENTITY  reading_list_migration_goto_bookmarks "Go to Bookmarks">
-<!ENTITY  reading_list_migration_bookmarks_hidden "Your Bookmarks panel is hidden">
+<!ENTITY firstrun_tabqueue_message_on "Success!">
+<!ENTITY firstrun_tabqueue_subtext_on "You can always turn this off in &settings; under &pref_category_general;.">
+
+<!ENTITY firstrun_notifications_title "Blogs">
+<!ENTITY firstrun_notifications_message "Stay informed">
+<!ENTITY firstrun_notifications_subtext "Get notified when blogs you have bookmarked post an update.">
+
+<!ENTITY firstrun_readerview_title "Articles">
+<!-- Localization note (firstrun_readerview_message): This is a casual way of describing getting rid of unnecessary things, and is referring to simplifying websites so only the article text and images are visible, removing unnecessary headers or ads. -->
+<!ENTITY firstrun_readerview_message "Lose the clutter">
+<!ENTITY firstrun_readerview_subtext "Use Reader View to make articles nicer to read \u2014 even offline.">
+
+<!-- Localization note (firstrun_devices_title): This is a casual way of addressing the user, somewhat referring to their online identity (which would include other devices, Firefox usage, accounts, etc). -->
+<!ENTITY firstrun_account_title "You">
+<!ENTITY firstrun_account_message "Have &brandShortName; on another device?">
+
+<!ENTITY  onboard_start_restricted1 "Stay safe and in control with this simplified version of &brandShortName;.">
 
 <!-- Localization note: These are used as the titles of different pages on the home screen.
      They are automatically converted to all caps by the Android platform. -->
 <!ENTITY  bookmarks_title "Bookmarks">
 <!ENTITY  history_title "History">
-<!ENTITY  reading_list_title "Reading List">
 <!ENTITY  recent_tabs_title "Recent Tabs">
 
 <!ENTITY  switch_to_tab "Switch to tab">

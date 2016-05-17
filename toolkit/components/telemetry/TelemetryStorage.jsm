@@ -447,6 +447,13 @@ this.TelemetryStorage = {
   _testGetArchivedPingDataFromFileName: function(aFileName) {
     return TelemetryStorageImpl._getArchivedPingDataFromFileName(aFileName);
   },
+
+  /**
+   * Only used in tests, this helper allows cleaning up the pending ping storage.
+   */
+  testClearPendingPings: function() {
+    return TelemetryStorageImpl.runRemovePendingPingsTask();
+  }
 };
 
 /**

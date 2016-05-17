@@ -9,6 +9,7 @@ import android.Manifest;
 import android.app.DownloadManager;
 import android.os.Environment;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 import org.json.JSONArray;
 import org.mozilla.gecko.adjust.AdjustHelperInterface;
@@ -78,6 +79,7 @@ import org.mozilla.gecko.tabs.TabHistoryController.OnShowTabHistory;
 import org.mozilla.gecko.tabs.TabHistoryFragment;
 import org.mozilla.gecko.tabs.TabHistoryPage;
 import org.mozilla.gecko.tabs.TabsPanel;
+import org.mozilla.gecko.telemetry.measurements.SearchCountMeasurements;
 import org.mozilla.gecko.telemetry.TelemetryDispatcher;
 import org.mozilla.gecko.telemetry.UploadTelemetryCorePingCallback;
 import org.mozilla.gecko.toolbar.AutocompleteHandler;
@@ -1954,6 +1956,8 @@ public class BrowserApp extends GeckoApp
 
             } else if (event.equals("Search:Keyword")) {
                 storeSearchQuery(message.getString("query"));
+                recordSearch(GeckoSharedPrefs.forProfile(this), message.getString("identifier"),
+                        TelemetryContract.Method.ACTIONBAR);
             } else if (event.equals("LightweightTheme:Update")) {
                 ThreadUtils.postToUiThread(new Runnable() {
                     @Override
@@ -2378,6 +2382,7 @@ public class BrowserApp extends GeckoApp
         }
 
         // Otherwise, check for a bookmark keyword.
+        final SharedPreferences sharedPrefs = GeckoSharedPrefs.forProfile(this);
         final BrowserDB db = getProfile().getDB();
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
@@ -2404,8 +2409,6 @@ public class BrowserApp extends GeckoApp
                     return;
                 }
 
-                recordSearch(null, "barkeyword");
-
                 // Otherwise, construct a search query from the bookmark keyword.
                 // Replace lower case bookmark keywords with URLencoded search query or
                 // replace upper case bookmark keywords with un-encoded search query.
@@ -2421,25 +2424,16 @@ public class BrowserApp extends GeckoApp
     }
 
     /**
-     * Record in Health Report that a search has occurred.
+     * Records in telemetry that a search has occurred.
      *
-     * @param engine
-     *        a search engine instance. Can be null.
-     * @param where
-     *        where the search was initialized; one of the values in
-     *        {@link BrowserHealthRecorder#SEARCH_LOCATIONS}.
+     * @param where where the search was started from
      */
-    private static void recordSearch(SearchEngine engine, String where) {
-        //try {
-        //    String identifier = (engine == null) ? "other" : engine.getEngineIdentifier();
-        //    JSONObject message = new JSONObject();
-        //    message.put("type", BrowserHealthRecorder.EVENT_SEARCH);
-        //    message.put("location", where);
-        //    message.put("identifier", identifier);
-        //    EventDispatcher.getInstance().dispatchEvent(message, null);
-        //} catch (Exception e) {
-        //    Log.e(LOGTAG, "Error recording search.", e);
-        //}
+    private static void recordSearch(@NonNull final SharedPreferences prefs, @NonNull final String engineIdentifier,
+            @NonNull final TelemetryContract.Method where) {
+        // We could include the engine identifier as an extra but we'll
+        // just capture that with core ping telemetry (bug 1253319).
+        Telemetry.sendUIEvent(TelemetryContract.Event.SEARCH, where);
+        SearchCountMeasurements.incrementSearch(prefs, engineIdentifier, where.name());
     }
 
     /**
@@ -2604,6 +2598,13 @@ public class BrowserApp extends GeckoApp
     }
 
     private void showFirstrunPager() {
+        if (Experiments.isInExperimentLocal(getContext(), Experiments.ONBOARDING3_A)) {
+            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, Experiments.ONBOARDING3_A);
+            GeckoSharedPrefs.forProfile(getContext()).edit().putString(Experiments.PREF_ONBOARDING_VERSION, Experiments.ONBOARDING3_A).apply();
+            Telemetry.stopUISession(TelemetryContract.Session.EXPERIMENT, Experiments.ONBOARDING3_A);
+            return;
+        }
+
         if (mFirstrunAnimationContainer == null) {
             final ViewStub firstrunPagerStub = (ViewStub) findViewById(R.id.firstrun_pager_stub);
             mFirstrunAnimationContainer = (FirstrunAnimationContainer) firstrunPagerStub.inflate();
@@ -3888,14 +3889,14 @@ public class BrowserApp extends GeckoApp
 
     // BrowserSearch.OnSearchListener
     @Override
-    public void onSearch(SearchEngine engine, String text) {
+    public void onSearch(SearchEngine engine, final String text, final TelemetryContract.Method method) {
         // Don't store searches that happen in private tabs. This assumes the user can only
         // perform a search inside the currently selected tab, which is true for searches
         // that come from SearchEngineRow.
         if (!Tabs.getInstance().getSelectedTab().isPrivate()) {
             storeSearchQuery(text);
         }
-        recordSearch(engine, "barsuggest");
+        recordSearch(GeckoSharedPrefs.forProfile(this), engine.getEngineIdentifier(), method);
         openUrlAndStopEditing(text, engine.name);
     }
 

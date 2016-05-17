@@ -35,7 +35,7 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
     private static final String LOGTAG = "GeckoHomeConfigBackend";
 
     // Increment this to trigger a migration.
-    private static final int VERSION = 5;
+    private static final int VERSION = 6;
 
     // This key was originally used to store only an array of panel configs.
     public static final String PREFS_CONFIG_KEY_OLD = "home_panels";
@@ -76,7 +76,6 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
 
 
         panelConfigs.add(createBuiltinPanelConfig(mContext, PanelType.RECENT_TABS));
-        panelConfigs.add(createBuiltinPanelConfig(mContext, PanelType.READING_LIST));
 
         return new State(panelConfigs, true);
     }
@@ -234,6 +233,48 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
     }
 
     /**
+     * Remove the reading list panel.
+     * If the reading list panel used to be the default panel, we make bookmarks the new default.
+     */
+    private static JSONArray removeReadingListPanel(Context context, JSONArray jsonPanels) throws JSONException {
+        boolean wasDefault = false;
+        int bookmarksIndex = -1;
+
+        // JSONArrary doesn't provide remove() for API < 19, therefore we need to manually copy all
+        // the items we don't want deleted into a new array.
+        final JSONArray newJSONPanels = new JSONArray();
+
+        for (int i = 0; i < jsonPanels.length(); i++) {
+            final JSONObject panelJSON = jsonPanels.getJSONObject(i);
+            final PanelConfig panelConfig = new PanelConfig(panelJSON);
+
+            if (panelConfig.getType() == PanelType.DEPRECATED_READING_LIST) {
+                // If this panel was the default we'll need to assign a new default:
+                wasDefault = panelConfig.isDefault();
+            } else {
+                if (panelConfig.getType() == PanelType.BOOKMARKS) {
+                    bookmarksIndex = newJSONPanels.length();
+                }
+
+                newJSONPanels.put(panelJSON);
+            }
+        }
+
+        if (wasDefault) {
+            // This will make the bookmarks panel visible if it was previously hidden - this is desired
+            // since this will make the new equivalent of the reading list visible by default.
+            final JSONObject bookmarksPanelConfig = createBuiltinPanelConfig(context, PanelType.BOOKMARKS, EnumSet.of(PanelConfig.Flags.DEFAULT_PANEL)).toJSON();
+            if (bookmarksIndex != -1) {
+                newJSONPanels.put(bookmarksIndex, bookmarksPanelConfig);
+            } else {
+                newJSONPanels.put(bookmarksPanelConfig);
+            }
+        }
+
+        return newJSONPanels;
+    }
+
+    /**
      * Checks to see if the reading list panel already exists.
      *
      * @param jsonPanels JSONArray array representing the curent set of panel configs.
@@ -246,7 +287,7 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
             try {
                 final JSONObject jsonPanelConfig = jsonPanels.getJSONObject(i);
                 final PanelConfig panelConfig = new PanelConfig(jsonPanelConfig);
-                if (panelConfig.getType() == PanelType.READING_LIST) {
+                if (panelConfig.getType() == PanelType.DEPRECATED_READING_LIST) {
                     return true;
                 }
             } catch (Exception e) {
@@ -323,10 +364,10 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
                     // considered "low memory". Now, we expose the panel to all devices.
                     // This migration should only occur for "low memory" devices.
                     // Note: This will not agree with the default configuration, which
-                    // has DEPRECATED_REMOTE_TABS after READING_LIST on some devices.
+                    // has DEPRECATED_REMOTE_TABS after DEPRECATED_READING_LIST on some devices.
                     if (!readingListPanelExists(jsonPanels)) {
                         addBuiltinPanelConfig(context, jsonPanels,
-                                PanelType.READING_LIST, Position.BACK, Position.BACK);
+                                PanelType.DEPRECATED_READING_LIST, Position.BACK, Position.BACK);
                     }
                     break;
 
@@ -340,6 +381,10 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
                 case 5:
                     // This is the fix for bug 1264136 where we lost track of the default panel during some migrations.
                     ensureDefaultPanelForV5(context, jsonPanels);
+                    break;
+
+                case 6:
+                    jsonPanels = removeReadingListPanel(context, jsonPanels);
                     break;
             }
         }
