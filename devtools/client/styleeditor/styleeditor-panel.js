@@ -19,10 +19,10 @@ Cu.import("resource://devtools/client/styleeditor/StyleEditorUI.jsm");
 Cu.import("resource://devtools/client/styleeditor/StyleEditorUtil.jsm");
 
 loader.lazyGetter(this, "StyleSheetsFront",
-  () => require("devtools/client/fronts/stylesheets").StyleSheetsFront);
+  () => require("devtools/shared/fronts/stylesheets").StyleSheetsFront);
 
 loader.lazyGetter(this, "StyleEditorFront",
-  () => require("devtools/client/fronts/styleeditor").StyleEditorFront);
+  () => require("devtools/shared/fronts/styleeditor").StyleEditorFront);
 
 var StyleEditorPanel = function StyleEditorPanel(panelWin, toolbox) {
   EventEmitter.decorate(this);

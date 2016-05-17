@@ -9,7 +9,7 @@
 const EventEmitter = require("devtools/shared/event-emitter");
 
 loader.lazyRequireGetter(this, "StorageFront",
-                         "devtools/client/fronts/storage", true);
+                         "devtools/shared/fronts/storage", true);
 loader.lazyRequireGetter(this, "StorageUI",
                          "devtools/client/storage/ui", true);
 
