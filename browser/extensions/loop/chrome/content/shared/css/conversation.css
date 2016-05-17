@@ -767,7 +767,7 @@ html, .fx-embedded, #main,
 .text-chat-view > .text-chat-entries {
   width: 100%;
   overflow: auto;
-  padding-top: 15px;
+  padding-top: 8px;
   /* 40px is the height of .text-chat-box. */
   height: calc(100% - 40px);
 }
@@ -1006,14 +1006,13 @@ html[dir="rtl"] .text-chat-entry.received .text-chat-arrow {
   max-width: 180px;
 }
 
-.text-chat-header.special.room-name {
+.text-chat-header.special {
   color: #666;
-  font-weight: bold;
   margin-bottom: 0;
   margin-right: 0;
 }
 
-.text-chat-header.special.room-name p {
+.text-chat-header.special p {
   width: 100%;
   padding: 0.8rem 1rem 1.4rem;
   margin: 0;

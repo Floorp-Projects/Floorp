@@ -50,7 +50,9 @@
   content/shared/vendor/lodash.js     (chrome/content/shared/vendor/lodash.js)
 #ifdef DEBUG
   content/shared/vendor/react.js      (chrome/content/shared/vendor/react.js)
+  content/shared/vendor/react-dom.js  (chrome/content/shared/vendor/react-dom.js)
 #else
   content/shared/vendor/react.js      (chrome/content/shared/vendor/react-prod.js)
+  content/shared/vendor/react-dom.js  (chrome/content/shared/vendor/react-dom-prod.js)
 #endif
   content/shared/vendor/sdk.js        (chrome/content/shared/vendor/sdk.js)

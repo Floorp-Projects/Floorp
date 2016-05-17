@@ -422,12 +422,6 @@ html[dir="rtl"] .rename-container > .input-group {
   top: 0;
 }
 
-/* keep the various room-entry row pieces aligned with each other */
-.room-list > .room-entry > h2 > button,
-.room-list > .room-entry > h2 > span {
-  vertical-align: middle;
-}
-
 /* Room entry context button (edit button) */
 .room-entry-context-actions {
   display: none;

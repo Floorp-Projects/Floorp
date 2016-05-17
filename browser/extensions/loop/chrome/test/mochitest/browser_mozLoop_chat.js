@@ -21,9 +21,8 @@ add_task(function* test_mozLoop_openchat() {
   let windowId = yield LoopRooms.open("fake1234");
   Assert.ok(isAnyLoopChatOpen(), "chat window should have been opened");
 
-  let chatboxesForRoom = [...Chat.chatboxes].filter(chatbox => {
-    return chatbox.src == MozLoopServiceInternal.getChatURL(windowId);
-  });
+  let chatboxesForRoom = [...Chat.chatboxes].filter(chatbox =>
+    chatbox.src == MozLoopServiceInternal.getChatURL(windowId));
   Assert.strictEqual(chatboxesForRoom.length, 1, "Only one chatbox should be open");
 });
 
