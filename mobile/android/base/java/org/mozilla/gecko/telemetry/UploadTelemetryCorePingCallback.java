@@ -17,6 +17,7 @@ import org.mozilla.gecko.distribution.DistributionStoreCallback;
 import org.mozilla.gecko.search.SearchEngineManager;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.telemetry.measurements.SearchCountMeasurements;
+import org.mozilla.gecko.telemetry.measurements.SessionMeasurements.SessionMeasurementsContainer;
 import org.mozilla.gecko.telemetry.pingbuilders.TelemetryCorePingBuilder;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -74,11 +75,15 @@ public class UploadTelemetryCorePingCallback implements SearchEngineManager.Sear
 
                 // Each profile can have different telemetry data so we intentionally grab the shared prefs for the profile.
                 final SharedPreferences sharedPrefs = GeckoSharedPrefs.forProfileName(activity, profile.getName());
+                final SessionMeasurementsContainer sessionMeasurementsContainer =
+                        activity.getSessionMeasurementDelegate().getAndResetSessionMeasurements(activity);
                 final TelemetryCorePingBuilder pingBuilder = new TelemetryCorePingBuilder(activity)
                         .setClientID(clientID)
                         .setDefaultSearchEngine(TelemetryCorePingBuilder.getEngineIdentifier(engine))
                         .setProfileCreationDate(TelemetryCorePingBuilder.getProfileCreationDate(activity, profile))
-                        .setSequenceNumber(TelemetryCorePingBuilder.getAndIncrementSequenceNumber(sharedPrefs));
+                        .setSequenceNumber(TelemetryCorePingBuilder.getAndIncrementSequenceNumber(sharedPrefs))
+                        .setSessionCount(sessionMeasurementsContainer.sessionCount)
+                        .setSessionDuration(sessionMeasurementsContainer.elapsedSeconds);
                 maybeSetOptionalMeasurements(sharedPrefs, pingBuilder);
 
                 activity.getTelemetryDispatcher().queuePingForUpload(activity, pingBuilder);
