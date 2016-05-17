@@ -7,18 +7,24 @@ from __future__ import absolute_import, print_function, unicode_literals
 import logging
 import os
 import tempfile
+import textwrap
 import unittest
 import sys
 
 from StringIO import StringIO
 
 from mozunit import main
+from mozpack import path as mozpath
 
 from mozbuild.configure.util import (
     ConfigureOutputHandler,
     LineIO,
     Version,
 )
+from mozbuild.util import exec_
+
+from buildconfig import topsrcdir
+from common import ConfigureTestSandbox
 
 
 class TestConfigureOutputHandler(unittest.TestCase):
@@ -437,6 +443,85 @@ class TestVersion(unittest.TestCase):
         self.assertEqual(v.major, 1)
         self.assertEqual(v.minor, 0)
         self.assertEqual(v.patch, 0)
+
+class TestCheckCmdOutput(unittest.TestCase):
+
+    def get_result(self, command='', paths=None):
+        paths = paths or {}
+        config = {}
+        out = StringIO()
+        sandbox = ConfigureTestSandbox(paths, config, {}, ['/bin/configure'],
+                                       out, out)
+        sandbox.include_file(mozpath.join(topsrcdir, 'build',
+                             'moz.configure', 'util.configure'))
+        status = 0
+        try:
+            exec_(command, sandbox)
+            sandbox.run()
+        except SystemExit as e:
+            status = e.code
+        return config, out.getvalue(), status
+
+    def test_simple_program(self):
+        def mock_simple_prog(_, args):
+            if len(args) == 1 and args[0] == '--help':
+                return 0, 'simple program help...', ''
+            self.fail("Unexpected arguments to mock_simple_program: %s" %
+                      args)
+        prog_path = mozpath.abspath('/simple/prog')
+        cmd = "log.info(check_cmd_output('%s', '--help'))" % prog_path
+        config, out, status = self.get_result(cmd,
+                                              paths={prog_path: mock_simple_prog})
+        self.assertEqual(config, {})
+        self.assertEqual(status, 0)
+        self.assertEqual(out, 'simple program help...\n')
+
+    def test_failing_program(self):
+        def mock_error_prog(_, args):
+            if len(args) == 1 and args[0] == '--error':
+                return (127, 'simple program output',
+                        'simple program error output')
+            self.fail("Unexpected arguments to mock_error_program: %s" %
+                      args)
+        prog_path = mozpath.abspath('/simple/prog')
+        cmd = "log.info(check_cmd_output('%s', '--error'))" % prog_path
+        config, out, status = self.get_result(cmd,
+                                              paths={prog_path: mock_error_prog})
+        self.assertEqual(config, {})
+        self.assertEqual(status, 1)
+        self.assertEqual(out, textwrap.dedent('''\
+            DEBUG: Executing: `%s --error`
+            DEBUG: The command returned non-zero exit status 127.
+            DEBUG: Its output was:
+            DEBUG: | simple program output
+            DEBUG: Its error output was:
+            DEBUG: | simple program error output
+            ERROR: Command `%s --error` failed with exit status 127.
+        ''' % (prog_path, prog_path)))
+
+    def test_error_callback(self):
+        def mock_error_prog(_, args):
+            if len(args) == 1 and args[0] == '--error':
+                return 127, 'simple program error...', ''
+            self.fail("Unexpected arguments to mock_error_program: %s" %
+                      args)
+
+        prog_path = mozpath.abspath('/simple/prog')
+        cmd = textwrap.dedent('''\
+            check_cmd_output('%s', '--error',
+                             onerror=lambda: die('`prog` produced an error'))
+        ''' % prog_path)
+        config, out, status = self.get_result(cmd,
+                                              paths={prog_path: mock_error_prog})
+        self.assertEqual(config, {})
+        self.assertEqual(status, 1)
+        self.assertEqual(out, textwrap.dedent('''\
+            DEBUG: Executing: `%s --error`
+            DEBUG: The command returned non-zero exit status 127.
+            DEBUG: Its output was:
+            DEBUG: | simple program error...
+            ERROR: `prog` produced an error
+        ''' % prog_path))
 
 
 if __name__ == '__main__':
