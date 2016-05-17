@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Sanity mouse-drag click test</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+function* runTest() {
+  document.addEventListener('click', clicked, false);
+
+  // mouse down, move it around, and release it near where it went down. this
+  // should generate a click at the release point
+  yield synthesizeNativeMouseEvent(document.getElementById('b'), 5, 5, nativeMouseDownEventMsg(), driveTest);
+  yield synthesizeNativeMouseEvent(document.getElementById('b'), 100, 100, nativeMouseMoveEventMsg(), driveTest);
+  yield synthesizeNativeMouseEvent(document.getElementById('b'), 10, 10, nativeMouseMoveEventMsg(), driveTest);
+  yield synthesizeNativeMouseEvent(document.getElementById('b'), 8, 8, nativeMouseUpEventMsg(), driveTest);
+  dump("Finished synthesizing click with a drag in the middle\n");
+}
+
+function clicked(e) {
+  // The mouse down at (5, 5) should not have generated a click, but the up
+  // at (8, 8) should have.
+  is(e.target, document.getElementById('b'), "Clicked on button, yay! (at " + e.clientX + "," + e.clientY + ")");
+  is(e.clientX, 8 + Math.floor(document.getElementById('b').getBoundingClientRect().left), 'x-coord of click event looks sane');
+  is(e.clientY, 8 + Math.floor(document.getElementById('b').getBoundingClientRect().top), 'y-coord of click event looks sane');
+  subtestDone();
+}
+
+var gTestContinuation = null;
+
+function driveTest() {
+  if (!gTestContinuation) {
+    gTestContinuation = runTest();
+  }
+  gTestContinuation.next();
+}
+
+window.onload = function() {
+  waitForAllPaints(function() {
+    flushApzRepaints(driveTest);
+  });
+}
+
+  </script>
+</head>
+<body>
+ <button id="b" style="width: 10px; height: 10px"></button>
+</body>
+</html>

@@ -200,6 +200,12 @@ public:
                                         double aPointerPressure,
                                         uint32_t aPointerOrientation,
                                         nsIObserver* aObserver) override;
+    nsresult SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
+                                        uint32_t aNativeMessage,
+                                        uint32_t aModifierFlags,
+                                        nsIObserver* aObserver) override;
+    nsresult SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
+                                       nsIObserver* aObserver) override;
 
 protected:
     void BringToFront();

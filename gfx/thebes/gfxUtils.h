@@ -130,32 +130,6 @@ public:
     static gfxFloat ClampToScaleFactor(gfxFloat aVal);
 
     /**
-     * Helper function for ConvertYCbCrToRGB that finds the
-     * RGB buffer size and format for given YCbCrImage.
-     * @param aSuggestedFormat will be set to SurfaceFormat::X8R8G8B8_UINT32
-     *   if the desired format is not supported.
-     * @param aSuggestedSize will be set to the picture size from aData
-     *   if either the suggested size was {0,0}
-     *   or simultaneous scaling and conversion is not supported.
-     */
-    static void
-    GetYCbCrToRGBDestFormatAndSize(const mozilla::layers::PlanarYCbCrData& aData,
-                                   gfxImageFormat& aSuggestedFormat,
-                                   mozilla::gfx::IntSize& aSuggestedSize);
-
-    /**
-     * Convert YCbCrImage into RGB aDestBuffer
-     * Format and Size parameters must have
-     *   been passed to GetYCbCrToRGBDestFormatAndSize
-     */
-    static void
-    ConvertYCbCrToRGB(const mozilla::layers::PlanarYCbCrData& aData,
-                      const gfxImageFormat& aDestFormat,
-                      const mozilla::gfx::IntSize& aDestSize,
-                      unsigned char* aDestBuffer,
-                      int32_t aStride);
-
-    /**
      * Clears surface to aColor (which defaults to transparent black).
      */
     static void ClearThebesSurface(gfxASurface* aSurface);

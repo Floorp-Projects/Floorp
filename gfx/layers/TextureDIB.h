@@ -112,7 +112,8 @@ public:
 
   virtual already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override
   {
-    MOZ_CRASH(); // Not implemented! It would be tricky to keep track of the
+    MOZ_CRASH("GFX: TextureHostFileMapping::GetAsSurface not implemented");
+                 // Not implemented! It would be tricky to keep track of the
                  // scope of the file mapping. We could do this through UserData
                  // on the DataSourceSurface but we don't need this right now.
   }

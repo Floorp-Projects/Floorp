@@ -18,6 +18,7 @@
 #include "MediaInfo.h"
 #include "MediaPrefs.h"
 #include "mozilla/Logging.h"
+#include "nsWindowsHelpers.h"
 #include "gfx2DGlue.h"
 #include "gfxWindowsPlatform.h"
 #include "IMFYCbCrImage.h"
@@ -150,6 +151,90 @@ WMFVideoMFTManager::GetMediaSubtypeGUID()
   };
 }
 
+struct BlacklistedD3D11DLL
+{
+  LPCWSTR name;
+  DWORD ms;
+  DWORD ls;
+};
+#define DLLVER(a, b, c, d) \
+        ((DWORD(a) << 16) | DWORD(b)),  ((DWORD(c) << 16) | DWORD(d))
+static const BlacklistedD3D11DLL sBlacklistedD3D11DLL[] =
+{
+  // Keep same DLL names together.
+  { L"igd10umd32.dll", DLLVER(9,17,10,2857) },
+  { L"tosqep.dll", DLLVER(1,2,15,526) },
+  { L"tosqep.dll", DLLVER(1,1,12,201) },
+  { L"tosqep.dll", DLLVER(1,0,11,318) },
+  { L"tosqep.dll", DLLVER(1,0,11,215) },
+  { L"tosqep64.dll", DLLVER(1,1,12,201) },
+  { L"tosqep64.dll", DLLVER(1,0,11,215) },
+  // Keep this last.
+  { nullptr, 0u, 0u }
+};
+#undef DLLVER
+
+// If a blacklisted DLL is found, return its information, otherwise nullptr.
+static const BlacklistedD3D11DLL*
+IsD3D11DLLBlacklisted()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
+  // Cache the result, so we only check DLLs once per browser run.
+  static const BlacklistedD3D11DLL* sAlreadySearched = nullptr;
+  if (sAlreadySearched) {
+    // If we point at the last empty entry, there's no actual blacklisting.
+    return sAlreadySearched->name ? sAlreadySearched : nullptr;
+  }
+
+  WCHAR systemPath[MAX_PATH + 1];
+  LPCWSTR previousDLLName = L"";
+  VS_FIXEDFILEINFO *vInfo = nullptr;
+  // vInfo is a pointer into infoData, that's why we keep it outside of the loop.
+  UniquePtr<unsigned char[]> infoData;
+
+  for (const BlacklistedD3D11DLL* dll = sBlacklistedD3D11DLL; ; ++dll) {
+    if (!dll->name) {
+      // End of list, no blacklisting.
+      sAlreadySearched = dll;
+      return nullptr;
+    }
+    // Check if we need to check another DLL (compare by pointer to name string)
+    if (wcscmp(previousDLLName, dll->name) != 0) {
+      previousDLLName = dll->name;
+      vInfo = nullptr;
+      infoData = nullptr;
+      if (!ConstructSystem32Path(dll->name, systemPath, MAX_PATH + 1)) {
+        // Cannot build path -> Assume it's not the blacklisted DLL.
+        continue;
+      }
+
+      DWORD zero;
+      DWORD infoSize = GetFileVersionInfoSizeW(systemPath, &zero);
+      if (infoSize == 0) {
+        // Can't get file info -> Assume we don't have the blacklisted DLL.
+        continue;
+      }
+      infoData = MakeUnique<unsigned char[]>(infoSize);
+      UINT vInfoLen;
+      if (!GetFileVersionInfoW(systemPath, 0, infoSize, infoData.get())
+          || !VerQueryValueW(infoData.get(), L"\\", (LPVOID*)&vInfo, &vInfoLen)) {
+        // Can't find version -> Assume it's not blacklisted.
+        vInfo = nullptr;
+        infoData = nullptr;
+        continue;
+      }
+    }
+
+    if (vInfo
+        && vInfo->dwFileVersionMS == dll->ms
+        && vInfo->dwFileVersionLS == dll->ls) {
+      // Blacklisted! Keep pointer to bad DLL.
+      sAlreadySearched = dll;
+      return dll;
+    }
+  }
+}
+
 class CreateDXVAManagerEvent : public Runnable {
 public:
   CreateDXVAManagerEvent(LayersBackend aBackend, nsCString& aFailureReason)
@@ -163,9 +248,18 @@ public:
     nsCString secondFailureReason;
     if (mBackend == LayersBackend::LAYERS_D3D11 &&
         MediaPrefs::PDMWMFAllowD3D11() && IsWin8OrLater()) {
-      mDXVA2Manager = DXVA2Manager::CreateD3D11DXVA(*failureReason);
-      if (mDXVA2Manager) {
-        return NS_OK;
+      const BlacklistedD3D11DLL* blacklistedDLL = IsD3D11DLLBlacklisted();
+      if (blacklistedDLL) {
+        failureReason->AppendPrintf(
+          "D3D11 blacklisted with DLL %s (%u.%u.%u.%u)",
+          blacklistedDLL->name,
+          blacklistedDLL->ms >> 16, blacklistedDLL->ms & 0xFFu,
+          blacklistedDLL->ls >> 16, blacklistedDLL->ls & 0xFFu);
+      } else {
+        mDXVA2Manager = DXVA2Manager::CreateD3D11DXVA(*failureReason);
+        if (mDXVA2Manager) {
+          return NS_OK;
+        }
       }
       // Try again with d3d9, but record the failure reason
       // into a new var to avoid overwriting the d3d11 failure.

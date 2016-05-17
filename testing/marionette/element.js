@@ -844,7 +844,7 @@ element.isVisible = function(el, x = undefined, y = undefined) {
 
   if (!element.inViewport(el, x, y)) {
     if (el.scrollIntoView) {
-      el.scrollIntoView(false);
+      el.scrollIntoView({block: "start", inline: "nearest"});
       if (!element.inViewport(el)) {
         return false;
       }

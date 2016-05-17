@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Various touch tests that spawn in new windows</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+var subtests = [
+  {'file': 'helper_tap.html'},
+  // For the following two tests, disable displayport suppression to make sure it
+  // doesn't interfere with the test by scheduling paints non-deterministically.
+  {'file': 'helper_scrollto_tap.html?true', 'prefs': [["apz.paint_skipping.enabled", true]], 'dp_suppression': false},
+  {'file': 'helper_scrollto_tap.html?false', 'prefs': [["apz.paint_skipping.enabled", false]], 'dp_suppression': false},
+  // For the long-tap test, reduce the content response timeout because the touchstart
+  // event doesn't get processed (because of the event listener) until this expires.
+  // Once we support passive event listeners, we can use that instead and stop mucking
+  // with the timeout.
+  {'file': 'helper_long_tap.html'},
+  // For the following test, we want to make sure APZ doesn't wait for a content
+  // response that is never going to arrive. To detect this we set the content response
+  // timeout to a day, so that the entire test times out and fails if APZ does
+  // end up waiting.
+  {'file': 'helper_tap_passive.html', 'prefs': [["apz.content_response_timeout", 24 * 60 * 60 * 1000]]},
+];
+
+SimpleTest.waitForExplicitFinish();
+window.onload = function() {
+  if (!SpecialPowers.getDOMWindowUtils(window).asyncPanZoomEnabled) {
+    ok(true, "APZ is not enabled, this test is not relevant, sorry!\n");
+    SimpleTest.finish();
+    return;
+  }
+  runSubtestsSeriallyInFreshWindows(subtests)
+    .then(function() { SimpleTest.finish() });
+};
+
+  </script>
+</head>
+<body>
+</body>
+</html>

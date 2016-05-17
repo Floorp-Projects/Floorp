@@ -466,7 +466,7 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
     keyEvent.SetCharCode(static_cast<uint32_t>(ch));
     if (aMessage == eKeyPress) {
       // keyCode of eKeyPress events of printable keys should be always 0.
-      keyEvent.keyCode = 0;
+      keyEvent.mKeyCode = 0;
       // eKeyPress events are dispatched for every character.
       // So, each key value of eKeyPress events should be a character.
       if (ch) {
@@ -498,7 +498,7 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
   // eKeyDown also needs alternative char codes because nsXBLWindowKeyHandler
   // needs to check if a following keypress event is reserved by chrome for
   // stopping propagation of its preceding keydown event.
-  keyEvent.alternativeCharCodes.Clear();
+  keyEvent.mAlternativeCharCodes.Clear();
   if ((WidgetKeyboardEvent::IsKeyDownOrKeyDownOnPlugin(aMessage) ||
        aMessage == eKeyPress) &&
       (keyEvent.IsControl() || keyEvent.IsAlt() ||
@@ -511,10 +511,10 @@ TextEventDispatcher::DispatchKeyboardEventInternal(
                                           aData);
       MOZ_ASSERT(keyEvent.mMessage ==
                    static_cast<WidgetKeyboardEvent&>(original).mMessage);
-      MOZ_ASSERT(keyEvent.keyCode ==
-                   static_cast<WidgetKeyboardEvent&>(original).keyCode);
-      MOZ_ASSERT(keyEvent.location ==
-                   static_cast<WidgetKeyboardEvent&>(original).location);
+      MOZ_ASSERT(keyEvent.mKeyCode ==
+                   static_cast<WidgetKeyboardEvent&>(original).mKeyCode);
+      MOZ_ASSERT(keyEvent.mLocation ==
+                   static_cast<WidgetKeyboardEvent&>(original).mLocation);
       MOZ_ASSERT(keyEvent.mIsRepeat ==
                    static_cast<WidgetKeyboardEvent&>(original).mIsRepeat);
       MOZ_ASSERT(keyEvent.mIsComposing ==

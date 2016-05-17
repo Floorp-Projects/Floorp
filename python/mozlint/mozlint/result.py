@@ -34,15 +34,15 @@ class ResultContainer(object):
         'lineoffset',
     )
 
-    def __init__(self, linter, path, message, lineno, column=1, hint=None,
-                 source=None, level='error', rule=None, lineoffset=None):
+    def __init__(self, linter, path, message, lineno, column=None, hint=None,
+                 source=None, level=None, rule=None, lineoffset=None):
         self.path = path
         self.message = message
         self.lineno = lineno
-        self.column = column
+        self.column = column or 1
         self.hint = hint
         self.source = source
-        self.level = level
+        self.level = level or 'error'
         self.linter = linter
         self.rule = rule
         self.lineoffset = lineoffset

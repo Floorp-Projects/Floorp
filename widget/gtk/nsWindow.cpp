@@ -6241,10 +6241,10 @@ get_inner_gdk_window (GdkWindow *aWindow,
 static inline bool
 is_context_menu_key(const WidgetKeyboardEvent& aKeyEvent)
 {
-    return ((aKeyEvent.keyCode == NS_VK_F10 && aKeyEvent.IsShift() &&
+    return ((aKeyEvent.mKeyCode == NS_VK_F10 && aKeyEvent.IsShift() &&
              !aKeyEvent.IsControl() && !aKeyEvent.IsMeta() &&
              !aKeyEvent.IsAlt()) ||
-            (aKeyEvent.keyCode == NS_VK_CONTEXT_MENU && !aKeyEvent.IsShift() &&
+            (aKeyEvent.mKeyCode == NS_VK_CONTEXT_MENU && !aKeyEvent.IsShift() &&
              !aKeyEvent.IsControl() && !aKeyEvent.IsMeta() &&
              !aKeyEvent.IsAlt()));
 }
@@ -6388,7 +6388,7 @@ nsWindow::ExecuteNativeKeyBindingRemapped(NativeKeyBindingsType aType,
                                           uint32_t aNativeKeyCode)
 {
     WidgetKeyboardEvent modifiedEvent(aEvent);
-    modifiedEvent.keyCode = aGeckoKeyCode;
+    modifiedEvent.mKeyCode = aGeckoKeyCode;
     static_cast<GdkEventKey*>(modifiedEvent.mNativeKeyEvent)->keyval =
         aNativeKeyCode;
 
@@ -6402,8 +6402,7 @@ nsWindow::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
                                   DoCommandCallback aCallback,
                                   void* aCallbackData)
 {
-    if (aEvent.keyCode >= nsIDOMKeyEvent::DOM_VK_LEFT &&
-        aEvent.keyCode <= nsIDOMKeyEvent::DOM_VK_DOWN) {
+    if (aEvent.mKeyCode >= NS_VK_LEFT && aEvent.mKeyCode <= NS_VK_DOWN) {
 
         // Check if we're targeting content with vertical writing mode,
         // and if so remap the arrow keys.
@@ -6414,34 +6413,34 @@ nsWindow::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
         if (query.mSucceeded && query.mReply.mWritingMode.IsVertical()) {
             uint32_t geckoCode = 0;
             uint32_t gdkCode = 0;
-            switch (aEvent.keyCode) {
-            case nsIDOMKeyEvent::DOM_VK_LEFT:
+            switch (aEvent.mKeyCode) {
+            case NS_VK_LEFT:
                 if (query.mReply.mWritingMode.IsVerticalLR()) {
-                    geckoCode = nsIDOMKeyEvent::DOM_VK_UP;
+                    geckoCode = NS_VK_UP;
                     gdkCode = GDK_Up;
                 } else {
-                    geckoCode = nsIDOMKeyEvent::DOM_VK_DOWN;
+                    geckoCode = NS_VK_DOWN;
                     gdkCode = GDK_Down;
                 }
                 break;
 
-            case nsIDOMKeyEvent::DOM_VK_RIGHT:
+            case NS_VK_RIGHT:
                 if (query.mReply.mWritingMode.IsVerticalLR()) {
-                    geckoCode = nsIDOMKeyEvent::DOM_VK_DOWN;
+                    geckoCode = NS_VK_DOWN;
                     gdkCode = GDK_Down;
                 } else {
-                    geckoCode = nsIDOMKeyEvent::DOM_VK_UP;
+                    geckoCode = NS_VK_UP;
                     gdkCode = GDK_Up;
                 }
                 break;
 
-            case nsIDOMKeyEvent::DOM_VK_UP:
-                geckoCode = nsIDOMKeyEvent::DOM_VK_LEFT;
+            case NS_VK_UP:
+                geckoCode = NS_VK_LEFT;
                 gdkCode = GDK_Left;
                 break;
 
-            case nsIDOMKeyEvent::DOM_VK_DOWN:
-                geckoCode = nsIDOMKeyEvent::DOM_VK_RIGHT;
+            case NS_VK_DOWN:
+                geckoCode = NS_VK_RIGHT;
                 gdkCode = GDK_Right;
                 break;
             }
@@ -6811,12 +6810,12 @@ nsWindow::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
 
   GdkDisplay* display = gdk_window_get_display(mGdkWindow);
 
-  // When a button-release event is requested, create it here and put it in the
+  // When a button-press/release event is requested, create it here and put it in the
   // event queue. This will not emit a motion event - this needs to be done
-  // explicitly *before* requesting a button-release. You will also need to wait
-  // for the motion event to be dispatched before requesting a button-release
+  // explicitly *before* requesting a button-press/release. You will also need to wait
+  // for the motion event to be dispatched before requesting a button-press/release
   // event to maintain the desired event order.
-  if (aNativeMessage == GDK_BUTTON_RELEASE) {
+  if (aNativeMessage == GDK_BUTTON_PRESS || aNativeMessage == GDK_BUTTON_RELEASE) {
     GdkEvent event;
     memset(&event, 0, sizeof(GdkEvent));
     event.type = (GdkEventType)aNativeMessage;
@@ -6830,11 +6829,18 @@ nsWindow::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
     event.button.device = gdk_device_manager_get_client_pointer(device_manager);
 #endif
 
+    event.button.x_root = DevicePixelsToGdkCoordRoundDown(aPoint.x);
+    event.button.y_root = DevicePixelsToGdkCoordRoundDown(aPoint.y);
+
+    LayoutDeviceIntPoint pointInWindow = aPoint - WidgetToScreenOffset();
+    event.button.x = DevicePixelsToGdkCoordRoundDown(pointInWindow.x);
+    event.button.y = DevicePixelsToGdkCoordRoundDown(pointInWindow.y);
+
     gdk_event_put(&event);
   } else {
-    // We don't support specific events other than button-release. In case
-    // aNativeMessage != GDK_BUTTON_RELEASE we'll synthesize a motion event
-    // that will be emitted by gdk_display_warp_pointer().
+    // We don't support specific events other than button-press/release. In all
+    // other cases we'll synthesize a motion event that will be emitted by
+    // gdk_display_warp_pointer().
     GdkScreen* screen = gdk_window_get_screen(mGdkWindow);
     GdkPoint point = DevicePixelsToGdkPointRoundDown(aPoint);
     gdk_display_warp_pointer(display, screen, point.x, point.y);

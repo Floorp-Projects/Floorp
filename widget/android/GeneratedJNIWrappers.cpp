@@ -1444,6 +1444,14 @@ auto GeckoLayerClient::SyncViewportInfo(int32_t a0, int32_t a1, int32_t a2, int3
     return mozilla::jni::Method<SyncViewportInfo_t>::Call(GeckoLayerClient::mCtx, nullptr, a0, a1, a2, a3, a4, a5, a6);
 }
 
+constexpr char GeckoLayerClient::SynthesizeNativeMouseEvent_t::name[];
+constexpr char GeckoLayerClient::SynthesizeNativeMouseEvent_t::signature[];
+
+auto GeckoLayerClient::SynthesizeNativeMouseEvent(int32_t a0, int32_t a1, int32_t a2) const -> void
+{
+    return mozilla::jni::Method<SynthesizeNativeMouseEvent_t>::Call(GeckoLayerClient::mCtx, nullptr, a0, a1, a2);
+}
+
 constexpr char GeckoLayerClient::SynthesizeNativeTouchPoint_t::name[];
 constexpr char GeckoLayerClient::SynthesizeNativeTouchPoint_t::signature[];
 

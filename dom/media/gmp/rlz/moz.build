@@ -9,7 +9,6 @@
 
 Library('rlz')
 FORCE_STATIC_LIB = True
-USE_STATIC_LIBS = True
 
 UNIFIED_SOURCES += [
     'lib/string_utils.cc',

@@ -60,7 +60,7 @@ MediaSystemResourceManager::Init()
   }
 
   ReentrantMonitor barrier("MediaSystemResourceManager::Init");
-  ReentrantMonitorAutoEnter autoMon(barrier);
+  ReentrantMonitorAutoEnter mainThreadAutoMon(barrier);
   bool done = false;
 
   RefPtr<Runnable> runnable =
@@ -68,7 +68,7 @@ MediaSystemResourceManager::Init()
       if (!sSingleton) {
         sSingleton = new MediaSystemResourceManager();
       }
-      ReentrantMonitorAutoEnter autoMon(barrier);
+      ReentrantMonitorAutoEnter childThreadAutoMon(barrier);
       done = true;
       barrier.NotifyAll();
     });
@@ -79,7 +79,6 @@ MediaSystemResourceManager::Init()
   while (!done) {
     barrier.Wait();
   }
-
 }
 
 MediaSystemResourceManager::MediaSystemResourceManager()

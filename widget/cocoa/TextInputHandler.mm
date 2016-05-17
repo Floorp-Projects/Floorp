@@ -914,12 +914,12 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
   }
 
   aKeyEvent.mRefPoint = LayoutDeviceIntPoint(0, 0);
-  aKeyEvent.isChar = false; // XXX not used in XP level
+  aKeyEvent.mIsChar = false; // XXX not used in XP level
 
   UInt32 kbType = GetKbdType();
   UInt32 nativeKeyCode = [aNativeKeyEvent keyCode];
 
-  aKeyEvent.keyCode =
+  aKeyEvent.mKeyCode =
     ComputeGeckoKeyCode(nativeKeyCode, kbType, aKeyEvent.IsMeta());
 
   switch (nativeKeyCode) {
@@ -927,14 +927,14 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
     case kVK_Shift:
     case kVK_Option:
     case kVK_Control:
-      aKeyEvent.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_LEFT;
+      aKeyEvent.mLocation = nsIDOMKeyEvent::DOM_KEY_LOCATION_LEFT;
       break;
 
     case kVK_RightCommand:
     case kVK_RightShift:
     case kVK_RightOption:
     case kVK_RightControl:
-      aKeyEvent.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_RIGHT;
+      aKeyEvent.mLocation = nsIDOMKeyEvent::DOM_KEY_LOCATION_RIGHT;
       break;
 
     case kVK_ANSI_Keypad0:
@@ -956,11 +956,11 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
     case kVK_ANSI_KeypadEnter:
     case kVK_JIS_KeypadComma:
     case kVK_Powerbook_KeypadEnter:
-      aKeyEvent.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_NUMPAD;
+      aKeyEvent.mLocation = nsIDOMKeyEvent::DOM_KEY_LOCATION_NUMPAD;
       break;
 
     default:
-      aKeyEvent.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD;
+      aKeyEvent.mLocation = nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD;
       break;
   }
 
@@ -1072,14 +1072,14 @@ TISInputSourceWrapper::WillDispatchKeyboardEvent(
     nsAutoString chars;
     nsCocoaUtils::GetStringForNSString([aNativeKeyEvent characters], chars);
     NS_ConvertUTF16toUTF8 utf8Chars(chars);
-    char16_t uniChar = static_cast<char16_t>(aKeyEvent.charCode);
+    char16_t uniChar = static_cast<char16_t>(aKeyEvent.mCharCode);
     MOZ_LOG(gLog, LogLevel::Info,
       ("%p TISInputSourceWrapper::WillDispatchKeyboardEvent, "
        "aNativeKeyEvent=%p, [aNativeKeyEvent characters]=\"%s\", "
-       "aKeyEvent={ mMessage=%s, charCode=0x%X(%s) }, kbType=0x%X, "
+       "aKeyEvent={ mMessage=%s, mCharCode=0x%X(%s) }, kbType=0x%X, "
        "IsOpenedIMEMode()=%s",
        this, aNativeKeyEvent, utf8Chars.get(),
-       GetGeckoKeyEventType(aKeyEvent), aKeyEvent.charCode,
+       GetGeckoKeyEventType(aKeyEvent), aKeyEvent.mCharCode,
        uniChar ? NS_ConvertUTF16toUTF8(&uniChar, 1).get() : "",
        kbType, TrueOrFalse(IsOpenedIMEMode())));
   }
@@ -1088,20 +1088,20 @@ TISInputSourceWrapper::WillDispatchKeyboardEvent(
   ComputeInsertStringForCharCode(aNativeKeyEvent, aKeyEvent, aInsertString,
                                  insertStringForCharCode);
 
-  // The charCode was set from mKeyValue. However, for example, when Ctrl key
+  // The mCharCode was set from mKeyValue. However, for example, when Ctrl key
   // is pressed, its value should indicate an ASCII character for backward
   // compatibility rather than inputting character without the modifiers.
-  // Therefore, we need to modify charCode value here.
+  // Therefore, we need to modify mCharCode value here.
   uint32_t charCode =
     insertStringForCharCode.IsEmpty() ? 0 : insertStringForCharCode[0];
   aKeyEvent.SetCharCode(charCode);
   // this is not a special key  XXX not used in XP
-  aKeyEvent.isChar = (aKeyEvent.mMessage == eKeyPress);
+  aKeyEvent.mIsChar = (aKeyEvent.mMessage == eKeyPress);
 
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p TISInputSourceWrapper::WillDispatchKeyboardEvent, "
-     "aKeyEvent.keyCode=0x%X, aKeyEvent.charCode=0x%X",
-     this, aKeyEvent.keyCode, aKeyEvent.charCode));
+     "aKeyEvent.mKeyCode=0x%X, aKeyEvent.mCharCode=0x%X",
+     this, aKeyEvent.mKeyCode, aKeyEvent.mCharCode));
 
   TISInputSourceWrapper USLayout("com.apple.keylayout.US");
   bool isRomanKeyboardLayout = IsASCIICapable();
@@ -1157,7 +1157,7 @@ TISInputSourceWrapper::WillDispatchKeyboardEvent(
   if ((unshiftedChar || shiftedChar) &&
       (!aKeyEvent.IsMeta() || !isDvorakQWERTY)) {
     AlternativeCharCode altCharCodes(unshiftedChar, shiftedChar);
-    aKeyEvent.alternativeCharCodes.AppendElement(altCharCodes);
+    aKeyEvent.mAlternativeCharCodes.AppendElement(altCharCodes);
   }
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p TISInputSourceWrapper::WillDispatchKeyboardEvent, "
@@ -1176,7 +1176,7 @@ TISInputSourceWrapper::WillDispatchKeyboardEvent(
   // even though Cmd+SS is 'SS' and Shift+'SS' is '?'.  This '/' seems
   // like a hack to make the Cmd+"?" event look the same as the Cmd+"?"
   // event on a US keyboard.  The user thinks they are typing Cmd+"?", so
-  // we'll prefer the "?" character, replacing charCode with shiftedChar
+  // we'll prefer the "?" character, replacing mCharCode with shiftedChar
   // when Shift is pressed.  However, in case there is a layout where the
   // character unique to Cmd+Shift is the character that the user expects,
   // we'll send it as an alternative char.
@@ -1219,7 +1219,7 @@ TISInputSourceWrapper::WillDispatchKeyboardEvent(
   if ((cmdedChar || cmdedShiftChar) && isCmdSwitchLayout &&
       (aKeyEvent.IsMeta() || !isDvorakQWERTY)) {
     AlternativeCharCode altCharCodes(cmdedChar, cmdedShiftChar);
-    aKeyEvent.alternativeCharCodes.AppendElement(altCharCodes);
+    aKeyEvent.mAlternativeCharCodes.AppendElement(altCharCodes);
   }
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p TISInputSourceWrapper::WillDispatchKeyboardEvent, "
@@ -1231,7 +1231,7 @@ TISInputSourceWrapper::WillDispatchKeyboardEvent(
   // hasCmdShiftOnlyChar definition for the detail.
   if (hasCmdShiftOnlyChar && originalCmdedShiftChar) {
     AlternativeCharCode altCharCodes(0, originalCmdedShiftChar);
-    aKeyEvent.alternativeCharCodes.AppendElement(altCharCodes);
+    aKeyEvent.mAlternativeCharCodes.AppendElement(altCharCodes);
   }
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p TISInputSourceWrapper::WillDispatchKeyboardEvent, "
@@ -2224,7 +2224,7 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
 
   // Dispatch keypress event with char instead of compositionchange event
   WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
-  keypressEvent.isChar = IsPrintableChar(str.CharAt(0));
+  keypressEvent.mIsChar = IsPrintableChar(str.CharAt(0));
 
   // Don't set other modifiers from the current event, because here in
   // -insertText: they've already been taken into account in creating
@@ -2235,13 +2235,13 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
     InitKeyEvent(keyEvent, keypressEvent, &str);
   } else {
     nsCocoaUtils::InitInputEvent(keypressEvent, static_cast<NSEvent*>(nullptr));
-    if (keypressEvent.isChar) {
-      keypressEvent.charCode = str.CharAt(0);
+    if (keypressEvent.mIsChar) {
+      keypressEvent.mCharCode = str.CharAt(0);
     }
     // Note that insertText is not called only at key pressing.
-    if (!keypressEvent.charCode) {
-      keypressEvent.keyCode =
-        WidgetUtils::ComputeKeyCodeFromChar(keypressEvent.charCode);
+    if (!keypressEvent.mCharCode) {
+      keypressEvent.mKeyCode =
+        WidgetUtils::ComputeKeyCodeFromChar(keypressEvent.mCharCode);
     }
   }
 
@@ -4167,7 +4167,7 @@ TextInputHandlerBase::AttachNativeKeyEvent(WidgetKeyboardEvent& aKeyEvent)
 
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p TextInputHandlerBase::AttachNativeKeyEvent, key=0x%X, char=0x%X, "
-     "mod=0x%X", this, aKeyEvent.keyCode, aKeyEvent.charCode,
+     "mod=0x%X", this, aKeyEvent.mKeyCode, aKeyEvent.mCharCode,
      aKeyEvent.mModifiers));
 
   NSEventType eventType;
@@ -4197,12 +4197,12 @@ TextInputHandlerBase::AttachNativeKeyEvent(WidgetKeyboardEvent& aKeyEvent)
   NSInteger windowNumber = [[mView window] windowNumber];
 
   NSString* characters;
-  if (aKeyEvent.charCode) {
+  if (aKeyEvent.mCharCode) {
     characters = [NSString stringWithCharacters:
-      reinterpret_cast<const unichar*>(&(aKeyEvent.charCode)) length:1];
+      reinterpret_cast<const unichar*>(&(aKeyEvent.mCharCode)) length:1];
   } else {
     uint32_t cocoaCharCode =
-      nsCocoaUtils::ConvertGeckoKeyCodeToMacCharCode(aKeyEvent.keyCode);
+      nsCocoaUtils::ConvertGeckoKeyCodeToMacCharCode(aKeyEvent.mKeyCode);
     characters = [NSString stringWithCharacters:
       reinterpret_cast<const unichar*>(&cocoaCharCode) length:1];
   }

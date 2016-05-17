@@ -1007,14 +1007,14 @@ public:
                          SourceSurface* aMask,
                          const Matrix& aMaskTransform,
                          const IntRect& aBounds = IntRect(),
-                         bool aCopyBackground = false) { MOZ_CRASH(); }
+                         bool aCopyBackground = false) { MOZ_CRASH("GFX: PushLayer"); }
 
   /**
    * This balances a call to PushLayer and proceeds to blend the layer back
    * onto the background. This blend will blend the temporary surface back
    * onto the target in device space using POINT sampling and operator over.
    */
-  virtual void PopLayer() { MOZ_CRASH(); }
+  virtual void PopLayer() { MOZ_CRASH("GFX: PopLayer"); }
 
   /**
    * Create a SourceSurface optimized for use with this DrawTarget from
@@ -1179,7 +1179,7 @@ public:
                                  const IntSize &aSize,
                                  SurfaceFormat aFormat)
   {
-    MOZ_CRASH();
+    MOZ_CRASH("GFX: InitWithGrContext");
   }
 #endif
 

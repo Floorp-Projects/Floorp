@@ -65,6 +65,10 @@ ScopedAppData::ScopedAppData(const nsXREAppData* aAppData)
   if (aAppData->size > offsetof(nsXREAppData, UAName)) {
     SetAllocatedString(this->UAName, aAppData->UAName);
   }
+
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+  sandboxBrokerServices = aAppData->sandboxBrokerServices;
+#endif
 }
 
 ScopedAppData::~ScopedAppData()

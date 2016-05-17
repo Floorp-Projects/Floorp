@@ -642,7 +642,7 @@ private:
     // In other contexts it is *unsafe*, as there might be multiple content
     // processes in existence!
     dom::ContentParent* mContentParent;
-    nsCOMPtr<nsIObserver> mOfflineObserver;
+    nsCOMPtr<nsIObserver> mPluginOfflineObserver;
 #ifdef MOZ_ENABLE_PROFILER_SPS
     RefPtr<mozilla::ProfileGatherer> mGatherer;
 #endif

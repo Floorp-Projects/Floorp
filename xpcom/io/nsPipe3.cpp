@@ -1125,16 +1125,6 @@ nsPipeEvents::~nsPipeEvents()
 NS_IMPL_ADDREF(nsPipeInputStream);
 NS_IMPL_RELEASE(nsPipeInputStream);
 
-/*
-NS_IMPL_QUERY_INTERFACE(nsPipeInputStream,
-                        nsIInputStream,
-                        nsIAsyncInputStream,
-                        nsISeekableStream,
-                        nsISearchableInputStream,
-                        nsICloneableInputStream,
-                        nsIBufferedInputStream,
-                        nsIClassInfo)
-*/
 NS_INTERFACE_TABLE_HEAD(nsPipeInputStream)
   NS_INTERFACE_TABLE_BEGIN
     NS_INTERFACE_TABLE_ENTRY(nsPipeInputStream, nsIAsyncInputStream)

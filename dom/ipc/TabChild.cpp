@@ -879,12 +879,20 @@ TabChild::NotifyTabContextUpdated()
     return;
   }
 
-  docShell->SetFrameType(IsMozBrowserElement() ?
-                           nsIDocShell::FRAME_TYPE_BROWSER :
-                           HasOwnApp() ?
-                             nsIDocShell::FRAME_TYPE_APP :
-                             nsIDocShell::FRAME_TYPE_REGULAR);
+  UpdateFrameType();
   nsDocShell::Cast(docShell)->SetOriginAttributes(OriginAttributesRef());
+}
+
+void
+TabChild::UpdateFrameType()
+{
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
+  MOZ_ASSERT(docShell);
+
+  // TODO: Bug 1252794 - remove frameType from nsIDocShell.idl
+  docShell->SetFrameType(IsMozBrowserElement() ? nsIDocShell::FRAME_TYPE_BROWSER :
+                           HasOwnApp() ? nsIDocShell::FRAME_TYPE_APP :
+                             nsIDocShell::FRAME_TYPE_REGULAR);
 }
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TabChild)
@@ -2365,7 +2373,11 @@ TabChild::RecvSwappedWithOtherRemoteLoader(const IPCTabContext& aContext)
   if (!UpdateTabContextAfterSwap(maybeContext.GetTabContext())) {
     MOZ_CRASH("Update to TabContext after swap was denied.");
   }
-  NotifyTabContextUpdated();
+
+  // Since mIsMozBrowserElement may change in UpdateTabContextAfterSwap, so we
+  // call UpdateFrameType here to make sure the frameType on the docshell is
+  // correct.
+  UpdateFrameType();
 
   // Ignore previous value of mTriedBrowserInit since owner content has changed.
   mTriedBrowserInit = true;
