@@ -82,8 +82,8 @@ enum class StyleBoxSizing : uint8_t {
 #define NS_STYLE_BOX_SHADOW_INSET         0
 
 // float-edge
-#define NS_STYLE_FLOAT_EDGE_CONTENT       0
-#define NS_STYLE_FLOAT_EDGE_MARGIN        1
+#define NS_STYLE_FLOAT_EDGE_CONTENT_BOX    0
+#define NS_STYLE_FLOAT_EDGE_MARGIN_BOX     1
 
 // user-focus
 #define NS_STYLE_USER_FOCUS_NONE            0

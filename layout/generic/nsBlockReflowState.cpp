@@ -264,13 +264,13 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
       const nsStyleBorder* borderStyle = aFrame->StyleBorder();
       switch (borderStyle->mFloatEdge) {
         default:
-        case NS_STYLE_FLOAT_EDGE_CONTENT:  // content and only content does runaround of floats
+        case NS_STYLE_FLOAT_EDGE_CONTENT_BOX:  // content and only content does runaround of floats
           // The child block will flow around the float. Therefore
           // give it all of the available space.
           aResult.IStart(wm) = mContentArea.IStart(wm);
           aResult.ISize(wm) = mContentArea.ISize(wm);
           break;
-        case NS_STYLE_FLOAT_EDGE_MARGIN:
+        case NS_STYLE_FLOAT_EDGE_MARGIN_BOX:
           {
             // The child block's margins should be placed adjacent to,
             // but not overlap the float.
