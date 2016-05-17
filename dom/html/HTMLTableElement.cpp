@@ -60,7 +60,7 @@ protected:
 
   // Those rows that are not in table sections
   HTMLTableElement* mParent;
-  RefPtr<nsContentList> mOrphanRows;  
+  RefPtr<nsContentList> mOrphanRows;
 };
 
 
@@ -148,18 +148,18 @@ static uint32_t
 CountRowsInRowGroup(nsIDOMHTMLCollection* rows)
 {
   uint32_t length = 0;
-  
+
   if (rows) {
     rows->GetLength(&length);
   }
-  
+
   return length;
 }
 
 // we re-count every call.  A better implementation would be to set
 // ourselves up as an observer of contentAppended, contentInserted,
 // and contentDeleted
-NS_IMETHODIMP 
+NS_IMETHODIMP
 TableRowsCollection::GetLength(uint32_t* aLength)
 {
   *aLength=0;
@@ -187,7 +187,7 @@ GetItemOrCountInRowGroup(nsIDOMHTMLCollection* rows,
       return list->GetElementAt(aIndex);
     }
   }
-  
+
   return nullptr;
 }
 
@@ -198,7 +198,7 @@ TableRowsCollection::GetElementAt(uint32_t aIndex)
     uint32_t count;
     Element* node = GetItemOrCountInRowGroup(rows, aIndex, &count);
     if (node) {
-      return node; 
+      return node;
     }
 
     NS_ASSERTION(count <= aIndex, "GetItemOrCountInRowGroup screwed up");
@@ -208,7 +208,7 @@ TableRowsCollection::GetElementAt(uint32_t aIndex)
   return nullptr;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 TableRowsCollection::Item(uint32_t aIndex, nsIDOMNode** aReturn)
 {
   nsISupports* node = GetElementAt(aIndex);
@@ -252,7 +252,7 @@ TableRowsCollection::GetSupportedNames(nsTArray<nsString>& aNames)
 }
 
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 TableRowsCollection::NamedItem(const nsAString& aName,
                                nsIDOMNode** aReturn)
 {
@@ -540,7 +540,7 @@ HTMLTableElement::InsertRow(int32_t aIndex, ErrorResult& aError)
       }
     }
   } else {
-    // the row count was 0, so 
+    // the row count was 0, so
     // find the last row group and insert there as first child
     nsCOMPtr<nsIContent> rowGroup;
     for (nsIContent* child = nsINode::GetLastChild();
@@ -641,7 +641,7 @@ HTMLTableElement::ParseAttribute(int32_t aNamespaceID,
       }
       return false;
     }
-    
+
     if (aAttribute == nsGkAtoms::align) {
       return ParseTableHAlignValue(aValue, aResult);
     }
@@ -717,7 +717,7 @@ HTMLTableElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       if (value && value->Type() == nsAttrValue::eInteger) {
         nsCSSValue* marginLeft = aData->ValueForMarginLeft();
         if (marginLeft->GetUnit() == eCSSUnit_Null)
-          marginLeft->SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel); 
+          marginLeft->SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
         nsCSSValue* marginRight = aData->ValueForMarginRight();
         if (marginRight->GetUnit() == eCSSUnit_Null)
           marginRight->SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
@@ -728,10 +728,10 @@ HTMLTableElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       if (value && value->Type() == nsAttrValue::eInteger) {
         nsCSSValue* marginTop = aData->ValueForMarginTop();
         if (marginTop->GetUnit() == eCSSUnit_Null)
-          marginTop->SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel); 
+          marginTop->SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
         nsCSSValue* marginBottom = aData->ValueForMarginBottom();
         if (marginBottom->GetUnit() == eCSSUnit_Null)
-          marginBottom->SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel); 
+          marginBottom->SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
       }
     }
   }
@@ -815,9 +815,9 @@ HTMLTableElement::IsAttributeMapped(const nsIAtom* aAttribute) const
     { &nsGkAtoms::height },
     { &nsGkAtoms::hspace },
     { &nsGkAtoms::vspace },
-    
+
     { &nsGkAtoms::bordercolor },
-    
+
     { &nsGkAtoms::align },
     { nullptr }
   };
