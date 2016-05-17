@@ -8,5 +8,11 @@ BROWSER_CHROME_MANIFESTS += [
     'test/browser/browser.ini',
 ]
 
+EXTRA_JS_MODULES += [
+    'ContextualIdentityService.jsm',
+]
+
+JAR_MANIFESTS += ['jar.mn']
+
 with Files('**'):
     BUG_COMPONENT = ('Firefox', 'Contextual Identity')
