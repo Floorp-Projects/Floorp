@@ -40,7 +40,7 @@ END_TEST(testThreadingThreadDetach)
 
 BEGIN_TEST(testThreadingThreadSetName)
 {
-    js::Thread thread([](){ThisThread::SetName("JSAPI Test Thread");});
+    js::Thread thread([](){js::ThisThread::SetName("JSAPI Test Thread");});
     thread.detach();
     return true;
 }
@@ -48,10 +48,10 @@ END_TEST(testThreadingThreadSetName)
 
 BEGIN_TEST(testThreadingThreadId)
 {
-    CHECK(Thread::Id() == Thread::Id());
-    Thread::Id fromOther;
-    js::Thread thread([](Thread::Id* idp){*idp = ThisThread::GetId();}, &fromOther);
-    Thread::Id fromMain = thread.get_id();
+    CHECK(js::Thread::Id() == js::Thread::Id());
+    js::Thread::Id fromOther;
+    js::Thread thread([](js::Thread::Id* idp){*idp = js::ThisThread::GetId();}, &fromOther);
+    js::Thread::Id fromMain = thread.get_id();
     thread.join();
     CHECK(fromOther == fromMain);
     return true;
