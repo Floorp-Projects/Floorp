@@ -47,7 +47,7 @@ DecodeULawSample(uint8_t aValue)
 }
 
 WaveDataDecoder::WaveDataDecoder(const AudioInfo& aConfig,
-                                 FlushableTaskQueue* aTaskQueue,
+                                 TaskQueue* aTaskQueue,
                                  MediaDataDecoderCallback* aCallback)
   : mInfo(aConfig)
   , mTaskQueue(aTaskQueue)

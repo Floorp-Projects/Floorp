@@ -16,7 +16,7 @@ class WaveDataDecoder : public MediaDataDecoder
 {
 public:
   WaveDataDecoder(const AudioInfo& aConfig,
-                  FlushableTaskQueue* aTaskQueue,
+                  TaskQueue* aTaskQueue,
                   MediaDataDecoderCallback* aCallback);
 
   // Return true if mimetype is Wave
@@ -38,7 +38,7 @@ private:
   void ProcessDrain();
 
   const AudioInfo& mInfo;
-  RefPtr<FlushableTaskQueue> mTaskQueue;
+  const RefPtr<TaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
   Atomic<bool> mIsFlushing;
 
