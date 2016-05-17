@@ -5275,6 +5275,8 @@ CheckSimdOperationCall(FunctionValidator& f, ParseNode* call, const ModuleValida
       case SimdOperation::Fn_fromUint8x16Bits:
       case SimdOperation::Fn_fromUint16x8Bits:
       case SimdOperation::Fn_fromFloat64x2Bits:
+      case SimdOperation::Fn_addSaturate:
+      case SimdOperation::Fn_subSaturate:
         MOZ_CRASH("NYI");
     }
     MOZ_CRASH("unexpected simd operation in CheckSimdOperationCall");
