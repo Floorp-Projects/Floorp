@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1265968
+-->
+<head>
+  <title>Test for Bug 1265968</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1265968">Mozilla Bug 1265968</a>
+<p id="display"></p>
+<div id="content">
+  <select id="select" onchange="++selectChange;">
+    <option>one</option>
+    <option>two</option>
+    <option>three</option>
+    <option>four</option>
+    <option>five</option>
+  </select>
+</div>
+<pre id="test">
+<script type="application/javascript">
+  var select = document.getElementById("select");
+  var selectChange = 0;
+  var expectedChange = 0;
+
+  select.focus();
+  for (var i = 1; i < select.length; i++) {
+    synthesizeKey("VK_DOWN", {});
+    is(select.options[i].selected, true, "Option should be selected");
+    is(selectChange, ++expectedChange, "Down key should fire change event.");
+  }
+
+  // We are at the end of the list, going down should not fire change event.
+  synthesizeKey("VK_DOWN", {});
+  is(selectChange, expectedChange, "Down key should not fire change event when reaching end of the list.");
+
+  for (var i = select.length - 2; i >= 0; i--) {
+    synthesizeKey("VK_UP", {});
+    is(select.options[i].selected, true, "Option should be selected");
+    is(selectChange, ++expectedChange, "Up key should fire change event.");
+  }
+
+  // We are at the top of the list, going up should not fire change event.
+  synthesizeKey("VK_UP", {});
+  is(selectChange, expectedChange, "Up key should not fire change event when reaching top of the list.");
+
+</script>
+</pre>
+</body>
+</html>
