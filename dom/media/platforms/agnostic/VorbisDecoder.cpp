@@ -131,6 +131,7 @@ VorbisDataDecoder::DecodeHeader(const unsigned char* aData, size_t aLength)
 nsresult
 VorbisDataDecoder::Input(MediaRawData* aSample)
 {
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
                        this, &VorbisDataDecoder::ProcessDecode, aSample));
 
@@ -140,6 +141,7 @@ VorbisDataDecoder::Input(MediaRawData* aSample)
 void
 VorbisDataDecoder::ProcessDecode(MediaRawData* aSample)
 {
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   if (mIsFlushing) {
     return;
   }
@@ -153,6 +155,8 @@ VorbisDataDecoder::ProcessDecode(MediaRawData* aSample)
 int
 VorbisDataDecoder::DoDecode(MediaRawData* aSample)
 {
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+
   const unsigned char* aData = aSample->Data();
   size_t aLength = aSample->Size();
   int64_t aOffset = aSample->mOffset;
@@ -261,12 +265,14 @@ VorbisDataDecoder::DoDecode(MediaRawData* aSample)
 void
 VorbisDataDecoder::ProcessDrain()
 {
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   mCallback->DrainComplete();
 }
 
 nsresult
 VorbisDataDecoder::Drain()
 {
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   mTaskQueue->Dispatch(NewRunnableMethod(this, &VorbisDataDecoder::ProcessDrain));
   return NS_OK;
 }
@@ -274,6 +280,7 @@ VorbisDataDecoder::Drain()
 nsresult
 VorbisDataDecoder::Flush()
 {
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   mIsFlushing = true;
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([this] () {
     // Ignore failed results from vorbis_synthesis_restart. They
