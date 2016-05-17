@@ -684,6 +684,25 @@ set_define('RELEASE_BUILD', delayed_getattr(milestone, 'is_release'))
 add_old_configure_assignment('RELEASE_BUILD',
                              delayed_getattr(milestone, 'is_release'))
 
+# The app update channel is 'default' when not supplied. The value is used in
+# the application's confvars.sh (and is made available to a project specific
+# moz.configure).
+option('--enable-update-channel',
+       nargs=1,
+       help='Select application update channel',
+       default='default')
+
+@depends('--enable-update-channel')
+def update_channel(channel):
+    if channel[0] == '':
+        return 'default'
+    return channel[0].lower()
+
+set_config('MOZ_UPDATE_CHANNEL', update_channel)
+set_define('MOZ_UPDATE_CHANNEL', update_channel)
+add_old_configure_assignment('MOZ_UPDATE_CHANNEL', update_channel)
+
+
 # A template providing a shorthand for setting a variable. The created
 # option will only be settable with imply_option.
 # It is expected that a project-specific moz.configure will call imply_option
