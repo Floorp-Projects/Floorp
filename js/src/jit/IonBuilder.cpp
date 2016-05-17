@@ -1645,6 +1645,7 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_NOP_DESTRUCTURING:
       case JSOP_LINENO:
       case JSOP_LOOPENTRY:
+      case JSOP_JUMPTARGET:
         return true;
 
       case JSOP_LABEL:
@@ -3006,7 +3007,8 @@ IonBuilder::processContinue(JSOp op)
     CFGState* found = nullptr;
     jsbytecode* target = pc + GetJumpOffset(pc);
     for (size_t i = loops_.length() - 1; i < loops_.length(); i--) {
-        if (loops_[i].continuepc == target ||
+        // +1 to skip JSOP_JUMPTARGET.
+        if (loops_[i].continuepc == target + 1 ||
             EffectiveContinue(loops_[i].continuepc) == target)
         {
             found = &cfgStack_[loops_[i].cfgEntry];
@@ -4071,7 +4073,8 @@ IonBuilder::jsop_condswitch()
         jssrcnote* caseSn = info().getNote(gsn, curCase);
         MOZ_ASSERT(caseSn && SN_TYPE(caseSn) == SRC_NEXTCASE);
         ptrdiff_t off = GetSrcNoteOffset(caseSn, 0);
-        curCase = off ? curCase + off : GetNextPc(curCase);
+        MOZ_ASSERT_IF(off == 0, JSOp(*GetNextPc(curCase)) == JSOP_JUMPTARGET);
+        curCase = off ? curCase + off : GetNextPc(GetNextPc(curCase));
         MOZ_ASSERT(pc < curCase && curCase <= exitpc);
 
         // Count non-aliased cases.
@@ -4151,7 +4154,8 @@ IonBuilder::processCondSwitchCase(CFGState& state)
     // Fetch the following case in which we will continue.
     jssrcnote* sn = info().getNote(gsn, pc);
     ptrdiff_t off = GetSrcNoteOffset(sn, 0);
-    jsbytecode* casePc = off ? pc + off : GetNextPc(pc);
+    MOZ_ASSERT_IF(off == 0, JSOp(*GetNextPc(pc)) == JSOP_JUMPTARGET);
+    jsbytecode* casePc = off ? pc + off : GetNextPc(GetNextPc(pc));
     bool caseIsDefault = JSOp(*casePc) == JSOP_DEFAULT;
     MOZ_ASSERT(JSOp(*casePc) == JSOP_CASE || caseIsDefault);
 

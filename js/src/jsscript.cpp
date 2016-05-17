@@ -3072,11 +3072,13 @@ JSScript::assertValidJumpTargets() const
         if (IsJumpOpcode(JSOp(*pc))) {
             jsbytecode* target = pc + GET_JUMP_OFFSET(pc);
             MOZ_ASSERT(mainEntry <= target && target < end);
+            MOZ_ASSERT(BytecodeIsJumpTarget(JSOp(*target)));
 
             // Check fallthrough of conditional jump instructions.
             if (BytecodeFallsThrough(JSOp(*pc))) {
                 jsbytecode* fallthrough = GetNextPc(pc);
                 MOZ_ASSERT(mainEntry <= fallthrough && fallthrough < end);
+                MOZ_ASSERT(BytecodeIsJumpTarget(JSOp(*fallthrough)));
             }
         }
 
@@ -3087,6 +3089,7 @@ JSScript::assertValidJumpTargets() const
 
             // Default target.
             MOZ_ASSERT(mainEntry <= pc + len && pc + len < end);
+            MOZ_ASSERT(BytecodeIsJumpTarget(JSOp(*(pc + len))));
 
             pc2 += JUMP_OFFSET_LEN;
             int32_t low = GET_JUMP_OFFSET(pc2);
@@ -3098,6 +3101,7 @@ JSScript::assertValidJumpTargets() const
                 int32_t off = (int32_t) GET_JUMP_OFFSET(pc2);
                 // Case (i + low)
                 MOZ_ASSERT_IF(off, mainEntry <= pc + off && pc + off < end);
+                MOZ_ASSERT_IF(off, BytecodeIsJumpTarget(JSOp(*(pc + off))));
             }
         }
     }
@@ -3114,6 +3118,7 @@ JSScript::assertValidJumpTargets() const
 
             jsbytecode* tryTarget = tryStart + tn->length;
             MOZ_ASSERT(mainEntry <= tryTarget && tryTarget < end);
+            MOZ_ASSERT(BytecodeIsJumpTarget(JSOp(*tryTarget)));
         }
     }
 }
