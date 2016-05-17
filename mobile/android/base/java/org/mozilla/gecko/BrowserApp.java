@@ -82,6 +82,7 @@ import org.mozilla.gecko.tabs.TabsPanel;
 import org.mozilla.gecko.telemetry.measurements.SearchCountMeasurements;
 import org.mozilla.gecko.telemetry.TelemetryDispatcher;
 import org.mozilla.gecko.telemetry.UploadTelemetryCorePingCallback;
+import org.mozilla.gecko.telemetry.measurements.SessionMeasurements;
 import org.mozilla.gecko.toolbar.AutocompleteHandler;
 import org.mozilla.gecko.toolbar.BrowserToolbar;
 import org.mozilla.gecko.toolbar.BrowserToolbar.TabEditingState;
@@ -319,6 +320,7 @@ public class BrowserApp extends GeckoApp
     private SearchEngineManager searchEngineManager; // Contains reference to Context - DO NOT LEAK!
 
     private TelemetryDispatcher mTelemetryDispatcher;
+    private final SessionMeasurements mSessionMeasurements = new SessionMeasurements();
 
     private boolean mHasResumed;
 
@@ -1001,6 +1003,7 @@ public class BrowserApp extends GeckoApp
 
         // Needed for Adjust to get accurate session measurements
         AdjustConstants.getAdjustHelper().onResume();
+        mSessionMeasurements.recordSessionStart();
 
         if (!mHasResumed) {
             EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener) this,
@@ -1024,6 +1027,10 @@ public class BrowserApp extends GeckoApp
 
         // Needed for Adjust to get accurate session measurements
         AdjustConstants.getAdjustHelper().onPause();
+
+        // onStart/onStop is ideal over onResume/onPause. However, onStop is not guaranteed to be called and
+        // dealing with that possibility adds a lot of complexity that we don't want to handle at this point.
+        mSessionMeasurements.recordSessionEnd(this);
 
         if (mHasResumed) {
             // Register for Prompt:ShowTop so we can foreground this activity even if it's hidden.
@@ -3915,6 +3922,10 @@ public class BrowserApp extends GeckoApp
 
     public TelemetryDispatcher getTelemetryDispatcher() {
         return mTelemetryDispatcher;
+    }
+
+    public SessionMeasurements getSessionMeasurementDelegate() {
+        return mSessionMeasurements;
     }
 
     // For use from tests only.
