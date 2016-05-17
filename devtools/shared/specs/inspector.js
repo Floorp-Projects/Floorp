@@ -10,8 +10,6 @@ const {
   generateActorSpec,
   types
 } = require("devtools/shared/protocol");
-require("devtools/shared/specs/styles");
-require("devtools/shared/specs/highlighters");
 
 types.addDictType("imageData", {
   // The image data
@@ -420,50 +418,3 @@ const walkerSpec = generateActorSpec({
 });
 
 exports.walkerSpec = walkerSpec;
-
-const inspectorSpec = generateActorSpec({
-  typeName: "inspector",
-
-  methods: {
-    getWalker: {
-      request: {
-        options: Arg(0, "nullable:json")
-      },
-      response: {
-        walker: RetVal("domwalker")
-      }
-    },
-    getPageStyle: {
-      request: {},
-      response: {
-        pageStyle: RetVal("pagestyle")
-      }
-    },
-    getHighlighter: {
-      request: {
-        autohide: Arg(0, "boolean")
-      },
-      response: {
-        highligter: RetVal("highlighter")
-      }
-    },
-    getHighlighterByType: {
-      request: {
-        typeName: Arg(0)
-      },
-      response: {
-        highlighter: RetVal("nullable:customhighlighter")
-      }
-    },
-    getImageDataFromURL: {
-      request: {url: Arg(0), maxDim: Arg(1, "nullable:number")},
-      response: RetVal("imageData")
-    },
-    resolveRelativeURL: {
-      request: {url: Arg(0, "string"), node: Arg(1, "nullable:domnode")},
-      response: {value: RetVal("string")}
-    }
-  }
-});
-
-exports.inspectorSpec = inspectorSpec;

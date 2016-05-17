@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {InspectorFront} = require("devtools/client/fronts/inspector");
+const {InspectorFront} = require("devtools/server/actors/inspector");
 const {TargetFactory} = require("devtools/client/framework/target");
 const AUTOCOMPLETION_PREF = "devtools.editor.autocomplete";
 const TEST_URI = "data:text/html;charset=UTF-8,<html><body><bar></bar>" +

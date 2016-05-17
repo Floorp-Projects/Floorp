@@ -5,8 +5,6 @@
 
 const Services = require("Services");
 const { Ci } = require("chrome");
-require("devtools/client/fronts/styles");
-require("devtools/client/fronts/highlighters");
 const { ShortLongString } = require("devtools/server/actors/string");
 const {
   Front,
@@ -17,7 +15,6 @@ const {
 } = require("devtools/shared/protocol.js");
 const { makeInfallible } = require("devtools/shared/DevToolsUtils");
 const {
-  inspectorSpec,
   nodeSpec,
   nodeListSpec,
   walkerSpec
@@ -928,49 +925,3 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
 });
 
 exports.WalkerFront = WalkerFront;
-
-/**
- * Client side of the inspector actor, which is used to create
- * inspector-related actors, including the walker.
- */
-var InspectorFront = FrontClassWithSpec(inspectorSpec, {
-  initialize: function (client, tabForm) {
-    Front.prototype.initialize.call(this, client);
-    this.actorID = tabForm.inspectorActor;
-
-    // XXX: This is the first actor type in its hierarchy to use the protocol
-    // library, so we're going to self-own on the client side for now.
-    this.manage(this);
-  },
-
-  destroy: function () {
-    delete this.walker;
-    Front.prototype.destroy.call(this);
-  },
-
-  getWalker: custom(function (options = {}) {
-    return this._getWalker(options).then(walker => {
-      this.walker = walker;
-      return walker;
-    });
-  }, {
-    impl: "_getWalker"
-  }),
-
-  getPageStyle: custom(function () {
-    return this._getPageStyle().then(pageStyle => {
-      // We need a walker to understand node references from the
-      // node style.
-      if (this.walker) {
-        return pageStyle;
-      }
-      return this.getWalker().then(() => {
-        return pageStyle;
-      });
-    });
-  }, {
-    impl: "_getPageStyle"
-  })
-});
-
-exports.InspectorFront = InspectorFront;
