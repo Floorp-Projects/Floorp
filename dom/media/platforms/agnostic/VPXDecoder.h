@@ -54,6 +54,7 @@ private:
   const RefPtr<ImageContainer> mImageContainer;
   const RefPtr<FlushableTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
+  Atomic<bool> mIsFlushing;
 
   // VPx decoder state
   vpx_codec_ctx_t mVPX;
