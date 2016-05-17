@@ -247,7 +247,22 @@ uint32_t
 HTMLIFrameElement::GetSandboxFlags()
 {
   const nsAttrValue* sandboxAttr = GetParsedAttr(nsGkAtoms::sandbox);
-  return nsContentUtils::ParseSandboxAttributeToFlags(sandboxAttr);
+  // No sandbox attribute, no sandbox flags.
+  if (!sandboxAttr) {
+    return 0;
+  }
+
+  //  Start off by setting all the restriction flags.
+  uint32_t out = SANDBOX_ALL_FLAGS;
+
+// Macro for updating the flag according to the keywords
+#define SANDBOX_KEYWORD(string, atom, flags)                             \
+  if (sandboxAttr->Contains(nsGkAtoms::atom, eIgnoreCase)) { out &= ~(flags); }
+
+#include "IframeSandboxKeywordList.h"
+
+  return out;
+#undef SANDBOX_KEYWORD
 }
 
 JSObject*
