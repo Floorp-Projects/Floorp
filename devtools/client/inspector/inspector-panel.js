@@ -15,6 +15,7 @@ var clipboard = require("sdk/clipboard");
 var {HostType} = require("devtools/client/framework/toolbox").Toolbox;
 const {executeSoon} = require("devtools/shared/DevToolsUtils");
 var {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
+var {Task} = require("devtools/shared/task");
 
 loader.lazyRequireGetter(this, "CSS", "CSS");
 

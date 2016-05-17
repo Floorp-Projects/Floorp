@@ -6,7 +6,6 @@
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://devtools/client/shared/widgets/SideMenuWidget.jsm");
 
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
@@ -18,6 +17,7 @@ const Editor = require("devtools/client/sourceeditor/editor");
 const {LocalizationHelper} = require("devtools/client/shared/l10n");
 const {Heritage, WidgetMethods, setNamedTimeout} =
   require("devtools/client/shared/widgets/view-helpers");
+const {Task} = require("devtools/shared/task");
 
 // The panel's window global is an EventEmitter firing the following events:
 const EVENTS = {

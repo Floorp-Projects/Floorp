@@ -41,7 +41,7 @@ const {parseAttribute} =
       require("devtools/client/shared/node-attribute-parser");
 const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis",
       Ci.nsIPrefLocalizedString).data;
-const {Task} = require("resource://gre/modules/Task.jsm");
+const {Task} = require("devtools/shared/task");
 const {scrollIntoViewIfNeeded} = require("devtools/shared/layout/utils");
 const {PrefObserver} = require("devtools/client/styleeditor/utils");
 const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");

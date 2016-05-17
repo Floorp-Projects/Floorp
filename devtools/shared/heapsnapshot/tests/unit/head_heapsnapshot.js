@@ -14,7 +14,7 @@ const { Match } = Cu.import("resource://test/Match.jsm", {});
 const { Census } = Cu.import("resource://test/Census.jsm", {});
 const { addDebuggerToGlobal } =
   Cu.import("resource://gre/modules/jsdebugger.jsm", {});
-const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
+const { Task } = require("devtools/shared/task");
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const HeapAnalysesClient =

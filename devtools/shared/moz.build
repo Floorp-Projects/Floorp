@@ -53,5 +53,6 @@ DevToolsModules(
     'path.js',
     'protocol.js',
     'system.js',
+    'task.js',
     'ThreadSafeDevToolsUtils.js',
 )

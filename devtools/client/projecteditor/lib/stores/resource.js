@@ -16,7 +16,7 @@ const promise = require("promise");
 const { OS } = Cu.import("resource://gre/modules/osfile.jsm", {});
 const { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 const mimeService = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
-const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
+const { Task } = require("devtools/shared/task");
 
 const gDecoder = new TextDecoder();
 const gEncoder = new TextEncoder();

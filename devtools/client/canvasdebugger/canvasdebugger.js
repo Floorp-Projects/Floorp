@@ -21,8 +21,7 @@ const { Heritage, WidgetMethods, setNamedTimeout, clearNamedTimeout,
 
 const CANVAS_ACTOR_RECORDING_ATTEMPT = DevToolsUtils.testing ? 500 : 5000;
 
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-  "resource://gre/modules/Task.jsm");
+const { Task } = require("devtools/shared/task");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
   "resource://gre/modules/PluralForm.jsm");

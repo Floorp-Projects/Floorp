@@ -15,7 +15,7 @@ const {
   styleRuleSpec
 } = require("devtools/shared/specs/styles");
 const promise = require("promise");
-const { Task } = require("resource://gre/modules/Task.jsm");
+const { Task } = require("devtools/shared/task");
 const { Class } = require("sdk/core/heritage");
 
 loader.lazyGetter(this, "RuleRewriter", () => {

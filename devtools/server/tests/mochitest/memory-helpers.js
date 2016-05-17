@@ -2,8 +2,8 @@ var Cu = Components.utils;
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 
-Cu.import("resource://gre/modules/Task.jsm");
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const { Task } = require("devtools/shared/task");
 var Services = require("Services");
 var { DebuggerClient } = require("devtools/shared/client/main");
 var { DebuggerServer } = require("devtools/server/main");

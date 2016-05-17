@@ -4,7 +4,7 @@
 
 "use strict";
 
-loader.lazyImporter(this, "Task", "resource://gre/modules/Task.jsm");
+var { Task } = require("devtools/shared/task");
 
 var Services = require("Services");
 var {gDevTools} = require("devtools/client/framework/devtools");

@@ -4,7 +4,7 @@
 "use strict";
 
 const { Cu } = require("chrome");
-const { Task } = require("resource://gre/modules/Task.jsm");
+const { Task } = require("devtools/shared/task");
 
 const Services = require("Services");
 const promise = require("promise");

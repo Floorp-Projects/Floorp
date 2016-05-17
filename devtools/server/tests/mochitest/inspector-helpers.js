@@ -3,7 +3,7 @@ var Cu = Components.utils;
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const {DebuggerClient} = require("devtools/shared/client/main");
 const {DebuggerServer} = require("devtools/server/main");
-Cu.import("resource://gre/modules/Task.jsm");
+const { Task } = require("devtools/shared/task");
 
 const Services = require("Services");
 const promise = require("promise");

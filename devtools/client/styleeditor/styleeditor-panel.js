@@ -10,7 +10,7 @@ const {Cu} = require("chrome");
 
 var Services = require("Services");
 var promise = require("promise");
-var {Task} = require("resource://gre/modules/Task.jsm");
+var {Task} = require("devtools/shared/task");
 var {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 var EventEmitter = require("devtools/shared/event-emitter");
 

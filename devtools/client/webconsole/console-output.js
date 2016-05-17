@@ -12,7 +12,6 @@ const Services = require("Services");
 
 loader.lazyImporter(this, "VariablesView", "resource://devtools/client/shared/widgets/VariablesView.jsm");
 loader.lazyImporter(this, "escapeHTML", "resource://devtools/client/shared/widgets/VariablesView.jsm");
-loader.lazyImporter(this, "Task", "resource://gre/modules/Task.jsm");
 loader.lazyImporter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
 
 loader.lazyRequireGetter(this, "promise");
@@ -28,6 +27,7 @@ const STRINGS_URI = "chrome://devtools/locale/webconsole.properties";
 
 const WebConsoleUtils = require("devtools/shared/webconsole/utils").Utils;
 const { getSourceNames } = require("devtools/client/shared/source-utils");
+const {Task} = require("devtools/shared/task");
 const l10n = new WebConsoleUtils.L10n(STRINGS_URI);
 
 const MAX_STRING_GRIP_LENGTH = 36;
