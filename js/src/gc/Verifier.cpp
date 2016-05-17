@@ -454,7 +454,9 @@ CheckHeapTracer::CheckHeapTracer(JSRuntime* rt)
     failures(0),
     parentIndex(-1)
 {
+#ifdef DEBUG
     setCheckEdges(false);
+#endif
 }
 
 bool

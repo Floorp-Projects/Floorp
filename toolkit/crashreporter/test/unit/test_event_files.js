@@ -28,8 +28,8 @@ add_task(function* test_main_process_crash() {
     function() {
       // TelemetrySession setup will trigger the session annotation
       let scope = {};
-      Components.utils.import("resource://gre/modules/TelemetrySession.jsm", scope);
-      scope.TelemetrySession.setup();
+      Components.utils.import("resource://gre/modules/TelemetryController.jsm", scope);
+      scope.TelemetryController.testSetup();
       crashType = CrashTestUtils.CRASH_RUNTIMEABORT;
       crashReporter.annotateCrashReport("ShutdownProgress", "event-test");
     },

@@ -6,7 +6,6 @@
 
 Cu.import("resource:///modules/experiments/Experiments.jsm");
 Cu.import("resource://gre/modules/TelemetryController.jsm", this);
-Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 
 const FILE_MANIFEST            = "experiments.manifest";
 const SEC_IN_ONE_DAY = 24 * 60 * 60;
@@ -53,8 +52,7 @@ add_task(function* test_setup() {
   createAppInfo();
   gProfileDir = do_get_profile();
   startAddonManagerOnly();
-  yield TelemetryController.setup();
-  yield TelemetrySession.setup();
+  yield TelemetryController.testSetup();
   gPolicy = new Experiments.Policy();
 
   patchPolicy(gPolicy, {
@@ -329,5 +327,5 @@ add_task(function* test_times() {
 });
 
 add_task(function* test_shutdown() {
-  yield TelemetrySession.shutdown(false);
+  yield TelemetryController.testShutdown();
 });
