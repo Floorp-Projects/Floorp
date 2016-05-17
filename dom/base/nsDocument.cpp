@@ -11768,12 +11768,6 @@ GetFullscreenError(nsIDocument* aDoc, bool aCallerIsChrome)
   if (!nsContentUtils::IsFullScreenApiEnabled()) {
     return "FullscreenDeniedDisabled";
   }
-  if (!aDoc->IsVisible()) {
-    return "FullscreenDeniedHidden";
-  }
-  if (HasFullScreenSubDocument(aDoc)) {
-    return "FullscreenDeniedSubDocFullScreen";
-  }
 
   // Ensure that all containing elements are <iframe> and have
   // allowfullscreen attribute set.
@@ -11808,6 +11802,14 @@ nsDocument::FullscreenElementReadyCheck(Element* aElement,
   }
   if (const char* msg = GetFullscreenError(this, aWasCallerChrome)) {
     DispatchFullscreenError(msg);
+    return false;
+  }
+  if (!IsVisible()) {
+    DispatchFullscreenError("FullscreenDeniedHidden");
+    return false;
+  }
+  if (HasFullScreenSubDocument(this)) {
+    DispatchFullscreenError("FullscreenDeniedSubDocFullScreen");
     return false;
   }
   if (GetFullscreenElement() &&
