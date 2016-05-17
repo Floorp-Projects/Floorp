@@ -150,6 +150,12 @@ public class TelemetryJSONFilePingStore implements TelemetryPingStore {
      * @return the JSON object from the given file or null if there is an error.
      */
     private JSONObject lockAndReadJSONFromFile(final File file) {
+        // lockAndReadFileAndCloseStream doesn't handle file size of 0.
+        if (file.length() == 0) {
+            Log.w(LOGTAG, "Unexpected empty file: " + file.getName() + ". Ignoring");
+            return null;
+        }
+
         final FileInputStream inputStream;
         try {
             inputStream = new FileInputStream(file);

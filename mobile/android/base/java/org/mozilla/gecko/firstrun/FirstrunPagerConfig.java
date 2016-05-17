@@ -27,33 +27,27 @@ public class FirstrunPagerConfig {
    public static List<FirstrunPanelConfig> getDefault(Context context) {
         final List<FirstrunPanelConfig> panels = new LinkedList<>();
 
-        if (Experiments.isInExperimentLocal(context, Experiments.ONBOARDING2_A)) {
-            panels.add(new FirstrunPanelConfig(WelcomePanel.class.getName(), WelcomePanel.TITLE_RES));
-            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, Experiments.ONBOARDING2_A);
-            GeckoSharedPrefs.forProfile(context).edit().putString(Experiments.PREF_ONBOARDING_VERSION, Experiments.ONBOARDING2_A).apply();
-        } else if (Experiments.isInExperimentLocal(context, Experiments.ONBOARDING2_B)) {
-            panels.add(SimplePanelConfigs.urlbarPanelConfig);
-            panels.add(SimplePanelConfigs.bookmarksPanelConfig);
-            panels.add(SimplePanelConfigs.syncPanelConfig);
-            panels.add(new FirstrunPanelConfig(SyncPanel.class.getName(), SyncPanel.TITLE_RES));
-            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, Experiments.ONBOARDING2_B);
-            GeckoSharedPrefs.forProfile(context).edit().putString(Experiments.PREF_ONBOARDING_VERSION, Experiments.ONBOARDING2_B).apply();
-        } else if (Experiments.isInExperimentLocal(context, Experiments.ONBOARDING2_C)) {
+        if (Experiments.isInExperimentLocal(context, Experiments.ONBOARDING3_B)) {
             panels.add(SimplePanelConfigs.urlbarPanelConfig);
             panels.add(SimplePanelConfigs.bookmarksPanelConfig);
             panels.add(SimplePanelConfigs.dataPanelConfig);
             panels.add(SimplePanelConfigs.syncPanelConfig);
-            panels.add(new FirstrunPanelConfig(SyncPanel.class.getName(), SyncPanel.TITLE_RES));
-            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, Experiments.ONBOARDING2_C);
-            GeckoSharedPrefs.forProfile(context).edit().putString(Experiments.PREF_ONBOARDING_VERSION, Experiments.ONBOARDING2_C).apply();
+            panels.add(SimplePanelConfigs.signInPanelConfig);
+            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, Experiments.ONBOARDING3_B);
+            GeckoSharedPrefs.forProfile(context).edit().putString(Experiments.PREF_ONBOARDING_VERSION, Experiments.ONBOARDING3_B).apply();
+        } else if (Experiments.isInExperimentLocal(context, Experiments.ONBOARDING3_C)) {
+            panels.add(SimplePanelConfigs.tabqueuePanelConfig);
+            panels.add(SimplePanelConfigs.notificationsPanelConfig);
+            panels.add(SimplePanelConfigs.readerviewPanelConfig);
+            panels.add(SimplePanelConfigs.accountPanelConfig);
+            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, Experiments.ONBOARDING3_C);
+            GeckoSharedPrefs.forProfile(context).edit().putString(Experiments.PREF_ONBOARDING_VERSION, Experiments.ONBOARDING3_C).apply();
         } else {
-            Log.d(LOGTAG, "Not in an experiment!");
-            panels.add(new FirstrunPanelConfig(WelcomePanel.class.getName(), WelcomePanel.TITLE_RES));
+            Log.e(LOGTAG, "Not in an experiment!");
+            panels.add(SimplePanelConfigs.signInPanelConfig);
         }
-
         return panels;
     }
-
 
     public static List<FirstrunPanelConfig> getRestricted() {
         final List<FirstrunPanelConfig> panels = new LinkedList<>();
@@ -100,10 +94,16 @@ public class FirstrunPagerConfig {
         }
     }
 
-    protected static class SimplePanelConfigs {
+    private static class SimplePanelConfigs {
         public static final FirstrunPanelConfig urlbarPanelConfig = new FirstrunPanelConfig(FirstrunPanel.class.getName(), R.string.firstrun_panel_title_welcome, R.drawable.firstrun_urlbar, R.string.firstrun_urlbar_message, R.string.firstrun_urlbar_subtext);
         public static final FirstrunPanelConfig bookmarksPanelConfig = new FirstrunPanelConfig(FirstrunPanel.class.getName(), R.string.firstrun_bookmarks_title, R.drawable.firstrun_bookmarks, R.string.firstrun_bookmarks_message, R.string.firstrun_bookmarks_subtext);
-        public static final FirstrunPanelConfig syncPanelConfig = new FirstrunPanelConfig(FirstrunPanel.class.getName(), R.string.firstrun_sync_title, R.drawable.firstrun_sync, R.string.firstrun_sync_message, R.string.firstrun_sync_subtext);
         public static final FirstrunPanelConfig dataPanelConfig = new FirstrunPanelConfig(DataPanel.class.getName(), R.string.firstrun_data_title, R.drawable.firstrun_data_off, R.string.firstrun_data_message, R.string.firstrun_data_subtext);
+        public static final FirstrunPanelConfig syncPanelConfig = new FirstrunPanelConfig(FirstrunPanel.class.getName(), R.string.firstrun_sync_title, R.drawable.firstrun_sync, R.string.firstrun_sync_message, R.string.firstrun_sync_subtext);
+        public static final FirstrunPanelConfig signInPanelConfig = new FirstrunPanelConfig(SyncPanel.class.getName(), R.string.pref_sync, R.drawable.firstrun_signin, R.string.firstrun_signin_message, R.string.firstrun_welcome_button_browser);
+
+        public static final FirstrunPanelConfig tabqueuePanelConfig = new FirstrunPanelConfig(TabQueuePanel.class.getName(), R.string.firstrun_tabqueue_title, R.drawable.firstrun_tabqueue_off, R.string.firstrun_tabqueue_message_off, R.string.firstrun_tabqueue_subtext_off);
+        public static final FirstrunPanelConfig notificationsPanelConfig = new FirstrunPanelConfig(FirstrunPanel.class.getName(), R.string.firstrun_notifications_title, R.drawable.firstrun_notifications, R.string.firstrun_notifications_message, R.string.firstrun_notifications_subtext);
+        public static final FirstrunPanelConfig readerviewPanelConfig = new FirstrunPanelConfig(FirstrunPanel.class.getName(), R.string.firstrun_readerview_title, R.drawable.firstrun_readerview, R.string.firstrun_readerview_message, R.string.firstrun_readerview_subtext);
+        public static final FirstrunPanelConfig accountPanelConfig = new FirstrunPanelConfig(SyncPanel.class.getName(), R.string.firstrun_account_title, R.drawable.firstrun_account, R.string.firstrun_account_message, R.string.firstrun_button_notnow);
     }
 }

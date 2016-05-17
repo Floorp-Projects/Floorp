@@ -117,7 +117,6 @@ public class StringHelper {
     public final String HISTORY_LABEL;
     public final String TOP_SITES_LABEL;
     public final String BOOKMARKS_LABEL;
-    public final String READING_LIST_LABEL;
     public final String TODAY_LABEL;
 
     // Desktop default bookmarks folders
@@ -290,7 +289,6 @@ public class StringHelper {
         HISTORY_LABEL = res.getString(R.string.home_history_title);
         TOP_SITES_LABEL = res.getString(R.string.home_top_sites_title);
         BOOKMARKS_LABEL = res.getString(R.string.bookmarks_title);
-        READING_LIST_LABEL = res.getString(R.string.reading_list_title);
         TODAY_LABEL = res.getString(R.string.history_today_section);
 
         BOOKMARKS_UP_TO = res.getString(R.string.home_move_back_to_filter);

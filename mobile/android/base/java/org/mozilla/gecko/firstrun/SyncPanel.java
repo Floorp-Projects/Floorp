@@ -10,6 +10,8 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -17,13 +19,20 @@ import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.activities.FxAccountWebFlowActivity;
 
 public class SyncPanel extends FirstrunPanel {
-    // XXX: To simplify localization, this uses the pref_sync string. If this is used in the final product, add a new string to Nightly.
-    public static final int TITLE_RES = R.string.pref_sync;
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstance) {
         final ViewGroup root = (ViewGroup) inflater.inflate(R.layout.firstrun_sync_fragment, container, false);
-        // TODO: Update id names.
+        final Bundle args = getArguments();
+        if (args != null) {
+            final int imageRes = args.getInt(FirstrunPagerConfig.KEY_IMAGE);
+            final int textRes = args.getInt(FirstrunPagerConfig.KEY_TEXT);
+            final int subtextRes = args.getInt(FirstrunPagerConfig.KEY_SUBTEXT);
+
+            ((ImageView) root.findViewById(R.id.firstrun_image)).setImageResource(imageRes);
+            ((TextView) root.findViewById(R.id.firstrun_text)).setText(textRes);
+            ((TextView) root.findViewById(R.id.welcome_browse)).setText(subtextRes);
+        }
+
         root.findViewById(R.id.welcome_account).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
