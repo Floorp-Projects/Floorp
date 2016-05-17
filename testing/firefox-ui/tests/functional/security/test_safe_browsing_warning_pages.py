@@ -37,7 +37,7 @@ class TestSafeBrowsingWarningPages(FirefoxTestCase):
 
     def tearDown(self):
         try:
-            self.utils.remove_perms('https://www.itisatrap.org', 'safe-browsing')
+            self.utils.permissions.remove('https://www.itisatrap.org', 'safe-browsing')
             self.browser.tabbar.close_all_tabs([self.browser.tabbar.tabs[0]])
         finally:
             FirefoxTestCase.tearDown(self)
@@ -106,4 +106,4 @@ class TestSafeBrowsingWarningPages(FirefoxTestCase):
         self.assertEquals(self.marionette.get_url(), self.browser.get_final_url(unsafe_page))
 
         # Clean up by removing safe browsing permission for unsafe page
-        self.utils.remove_perms('https://www.itisatrap.org', 'safe-browsing')
+        self.utils.permissions.remove('https://www.itisatrap.org', 'safe-browsing')
