@@ -116,12 +116,11 @@ add_old_configure_assignment('PERL', perl_for_old_configure)
 def perl_version_check(min_version):
     @depends(perl)
     @checking('for minimum required perl version >= %s' % min_version)
-    @imports('subprocess')
     def get_perl_version(perl):
-        try:
-            return Version(subprocess.check_output([perl, '-e', 'print $]']))
-        except subprocess.CalledProcessError as e:
-            die('Failed to get perl version: %s', e.message)
+        return Version(check_cmd_output(
+            perl, '-e', 'print $]',
+            onerror=lambda: die('Failed to get perl version.')
+        ))
 
     @depends(get_perl_version)
     def check_perl_version(version):

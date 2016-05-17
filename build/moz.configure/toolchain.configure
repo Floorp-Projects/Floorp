@@ -10,15 +10,12 @@ yasm = check_prog('YASM', ['yasm'], allow_missing=True)
 
 @depends_if(yasm)
 @checking('yasm version')
-@imports('subprocess')
 def yasm_version(yasm):
-    try:
-        version = Version(subprocess.check_output(
-            [yasm, '--version']
-        ).splitlines()[0].split()[1])
-        return version
-    except subprocess.CalledProcessError as e:
-        die('Failed to get yasm version: %s', e.message)
+    version = check_cmd_output(
+        yasm, '--version',
+        onerror=lambda: die('Failed to get yasm version.')
+    ).splitlines()[0].split()[1]
+    return version
 
 # Until we move all the yasm consumers out of old-configure.
 # bug 1257904
@@ -174,7 +171,6 @@ add_old_configure_assignment('TOOLCHAIN_PREFIX', toolchain_prefix)
 @imports('os')
 @imports('subprocess')
 @imports(_from='mozbuild.configure.util', _import='LineIO')
-@imports(_from='mozbuild.shellutil', _import='quote')
 @imports(_from='tempfile', _import='mkstemp')
 def try_preprocess(compiler, language, source):
     suffix = {
@@ -192,22 +188,8 @@ def try_preprocess(compiler, language, source):
 
         os.write(fd, source)
         os.close(fd)
-
         cmd = compiler + ['-E', path]
-        log.debug('Executing: `%s`', quote(*cmd))
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE)
-        stdout, stderr = proc.communicate()
-        retcode = proc.wait()
-        if retcode == 0:
-            return stdout
-
-        log.debug('The command returned non-zero exit status %d.', retcode)
-        for out, desc in ((stdout, 'output'), (stderr, 'error output')):
-            if out:
-                log.debug('Its %s was:', desc)
-                with LineIO(lambda l: log.debug('| %s', l)) as o:
-                    o.write(out)
+        return check_cmd_output(*cmd)
     finally:
         os.remove(path)
 
