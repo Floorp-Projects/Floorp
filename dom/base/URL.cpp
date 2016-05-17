@@ -129,16 +129,28 @@ void
 URL::CreateObjectURL(const GlobalObject& aGlobal, MediaSource& aSource,
                      const objectURLOptions& aOptions,
                      nsAString& aResult,
-                     ErrorResult& aError)
+                     ErrorResult& aRv)
 {
-  nsCOMPtr<nsIPrincipal> principal = nsContentUtils::ObjectPrincipal(aGlobal.Get());
+  nsCOMPtr<nsIPrincipal> principal =
+    nsContentUtils::ObjectPrincipal(aGlobal.Get());
+  if (NS_WARN_IF(!principal)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  nsCOMPtr<nsPIDOMWindowInner> window =
+    do_QueryInterface(aGlobal.GetAsSupports());
+  if (NS_WARN_IF(!window)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
 
   nsCString url;
-  nsresult rv = nsHostObjectProtocolHandler::
+  aRv = nsHostObjectProtocolHandler::
     AddDataEntry(NS_LITERAL_CSTRING(MEDIASOURCEURI_SCHEME),
-                 &aSource, principal, url);
-  if (NS_FAILED(rv)) {
-    aError.Throw(rv);
+                 &aSource, principal,
+                 nsGlobalWindow::Cast(window)->IsPrivateBrowsing(), url);
+  if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
@@ -166,11 +178,18 @@ URL::CreateObjectURLInternal(const GlobalObject& aGlobal, nsISupports* aObject,
 
   nsCOMPtr<nsIPrincipal> principal = nsContentUtils::ObjectPrincipal(aGlobal.Get());
 
+  nsCOMPtr<nsPIDOMWindowInner> window =
+    do_QueryInterface(aGlobal.GetAsSupports());
+  if (NS_WARN_IF(!window)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
   nsAutoCString url;
-  nsresult rv = nsHostObjectProtocolHandler::AddDataEntry(aScheme, aObject,
-                                                          principal, url);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
+  aRv =  nsHostObjectProtocolHandler::
+    AddDataEntry(aScheme, aObject, principal,
+                 nsGlobalWindow::Cast(window)->IsPrivateBrowsing(), url);
+  if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
