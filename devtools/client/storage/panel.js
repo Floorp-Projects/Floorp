@@ -51,7 +51,8 @@ StoragePanel.prototype = {
       this.target.on("close", this.destroy);
       this._front = new StorageFront(this.target.client, this.target.form);
 
-      this.UI = new StorageUI(this._front, this._target, this._panelWin);
+      this.UI = new StorageUI(this._front, this._target,
+                              this._panelWin, this._toolbox);
       this.isReady = true;
       this.emit("ready");
 
