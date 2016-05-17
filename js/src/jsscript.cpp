@@ -2993,10 +2993,6 @@ JSScript::fullyInitFromEmitter(ExclusiveContext* cx, HandleScript script, Byteco
     if (!SaveSharedScriptData(cx, script, ssd, nsrcnotes))
         return false;
 
-#ifdef DEBUG
-    script->assertLinkedProperties(bce);
-#endif
-
     if (bce->constList.length() != 0)
         bce->constList.finish(script->consts());
     if (bce->objectList.length != 0)
@@ -3026,6 +3022,11 @@ JSScript::fullyInitFromEmitter(ExclusiveContext* cx, HandleScript script, Byteco
             break;
         }
     }
+
+#ifdef DEBUG
+    script->assertLinkedProperties(bce);
+    script->assertValidJumpTargets();
+#endif
 
     return true;
 }
@@ -3058,6 +3059,62 @@ JSScript::assertLinkedProperties(js::frontend::BytecodeEmitter* bce) const
         MOZ_ASSERT(!hasMappedArgsObj());
         MOZ_ASSERT(!isGeneratorExp_);
         MOZ_ASSERT(generatorKind() == NotGenerator);
+    }
+}
+
+void
+JSScript::assertValidJumpTargets() const
+{
+    jsbytecode* end = codeEnd();
+    jsbytecode* mainEntry = main();
+    for (jsbytecode* pc = code(); pc != end; pc = GetNextPc(pc)) {
+        // Check jump instructions' target.
+        if (IsJumpOpcode(JSOp(*pc))) {
+            jsbytecode* target = pc + GET_JUMP_OFFSET(pc);
+            MOZ_ASSERT(mainEntry <= target && target < end);
+
+            // Check fallthrough of conditional jump instructions.
+            if (BytecodeFallsThrough(JSOp(*pc))) {
+                jsbytecode* fallthrough = GetNextPc(pc);
+                MOZ_ASSERT(mainEntry <= fallthrough && fallthrough < end);
+            }
+        }
+
+        // Check table switch case labels.
+        if (JSOp(*pc) == JSOP_TABLESWITCH) {
+            jsbytecode* pc2 = pc;
+            int32_t len = GET_JUMP_OFFSET(pc2);
+
+            // Default target.
+            MOZ_ASSERT(mainEntry <= pc + len && pc + len < end);
+
+            pc2 += JUMP_OFFSET_LEN;
+            int32_t low = GET_JUMP_OFFSET(pc2);
+            pc2 += JUMP_OFFSET_LEN;
+            int32_t high = GET_JUMP_OFFSET(pc2);
+
+            for (int i = 0; i < high - low + 1; i++) {
+                pc2 += JUMP_OFFSET_LEN;
+                int32_t off = (int32_t) GET_JUMP_OFFSET(pc2);
+                // Case (i + low)
+                MOZ_ASSERT_IF(off, mainEntry <= pc + off && pc + off < end);
+            }
+        }
+    }
+
+    // Check catch/finally blocks as jump targets.
+    if (hasTrynotes()) {
+        JSTryNote* tn = trynotes()->vector;
+        JSTryNote* tnlimit = tn + trynotes()->length;
+        for (; tn < tnlimit; tn++) {
+            jsbytecode* tryStart = mainEntry + tn->start;
+            jsbytecode* tryPc = tryStart - 1;
+            if (JSOp(*tryPc) != JSOP_TRY)
+                continue;
+
+            jsbytecode* tryTarget = tryStart + tn->length;
+            MOZ_ASSERT(mainEntry <= tryTarget && tryTarget < end);
+        }
     }
 }
 #endif
