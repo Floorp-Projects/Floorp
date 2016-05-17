@@ -728,7 +728,9 @@ Preferences::GetPreference(PrefSetting* aPref)
   if (!entry)
     return;
 
-  pref_GetPrefFromEntry(entry, aPref);
+  if (pref_EntryHasAdvisablySizedValues(entry)) {
+    pref_GetPrefFromEntry(entry, aPref);
+  }
 }
 
 void
@@ -737,6 +739,11 @@ Preferences::GetPreferences(InfallibleTArray<PrefSetting>* aPrefs)
   aPrefs->SetCapacity(gHashTable->Capacity());
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
     auto entry = static_cast<PrefHashEntry*>(iter.Get());
+
+    if (!pref_EntryHasAdvisablySizedValues(entry)) {
+      continue;
+    }
+
     dom::PrefSetting *pref = aPrefs->AppendElement();
     pref_GetPrefFromEntry(entry, pref);
   }
