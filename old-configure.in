@@ -1672,7 +1672,7 @@ if test "$GNU_CC" -a "$OS_TARGET" != WINNT; then
 fi         # GNU_CC
 
 case "${OS_TARGET}" in
-WINNT|Darwin|Android)
+Darwin)
   ;;
 *)
   STL_FLAGS="-I${DIST}/stl_wrappers"
