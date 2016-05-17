@@ -33,9 +33,9 @@ private:
     return "wave audio decoder";
   }
 
-  void Decode (MediaRawData* aSample);
-  bool DoDecode (MediaRawData* aSample);
-  void DoDrain ();
+  void ProcessDecode(MediaRawData* aSample);
+  bool DoDecode(MediaRawData* aSample);
+  void ProcessDrain();
 
   const AudioInfo& mInfo;
   RefPtr<FlushableTaskQueue> mTaskQueue;

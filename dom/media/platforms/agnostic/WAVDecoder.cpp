@@ -72,14 +72,13 @@ WaveDataDecoder::Input(MediaRawData* aSample)
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
-                         this, &WaveDataDecoder::Decode,
-                         RefPtr<MediaRawData>(aSample)));
+                       this, &WaveDataDecoder::ProcessDecode, aSample));
 
   return NS_OK;
 }
 
 void
-WaveDataDecoder::Decode(MediaRawData* aSample)
+WaveDataDecoder::ProcessDecode(MediaRawData* aSample)
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   if (!DoDecode(aSample)) {
@@ -152,7 +151,7 @@ WaveDataDecoder::DoDecode(MediaRawData* aSample)
 }
 
 void
-WaveDataDecoder::DoDrain()
+WaveDataDecoder::ProcessDrain()
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   mCallback->DrainComplete();
@@ -162,7 +161,7 @@ nsresult
 WaveDataDecoder::Drain()
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
-  mTaskQueue->Dispatch(NewRunnableMethod(this, &WaveDataDecoder::DoDrain));
+  mTaskQueue->Dispatch(NewRunnableMethod(this, &WaveDataDecoder::ProcessDrain));
   return NS_OK;
 }
 
