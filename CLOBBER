@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1265131 - Update Skia to m51 branch
+Bug 1273625 - Update win32 rustc target to i686
