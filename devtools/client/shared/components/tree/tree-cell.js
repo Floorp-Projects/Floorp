@@ -6,7 +6,7 @@
 "use strict";
 
 // Make this available to both AMD and CJS environments
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   const React = require("devtools/client/shared/vendor/react");
 
   // Shortcuts
@@ -18,6 +18,8 @@ define(function(require, exports, module) {
    * using <td> element (the row is <tr> and the entire tree is <table>).
    */
   let TreeCell = React.createClass({
+    displayName: "TreeCell",
+
     // See TreeView component for detailed property explanation.
     propTypes: {
       value: PropTypes.any,
@@ -27,18 +29,16 @@ define(function(require, exports, module) {
       renderValue: PropTypes.func.isRequired
     },
 
-    displayName: "TreeCell",
-
     /**
      * Optimize cell rendering. Rerender cell content only if
      * the value or expanded state changes.
      */
-    shouldComponentUpdate: function(nextProps) {
+    shouldComponentUpdate: function (nextProps) {
       return (this.props.value != nextProps.value) ||
         (this.props.member.open != nextProps.member.open);
     },
 
-    getCellClass: function(object, id) {
+    getCellClass: function (object, id) {
       let decorator = this.props.decorator;
       if (!decorator || !decorator.getCellClass) {
         return [];
@@ -57,7 +57,7 @@ define(function(require, exports, module) {
       return classNames;
     },
 
-    render: function() {
+    render: function () {
       let member = this.props.member;
       let type = member.type || "";
       let id = this.props.id;

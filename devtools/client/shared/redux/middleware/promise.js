@@ -6,11 +6,11 @@
 const uuidgen = require("sdk/util/uuid").uuid;
 const promise = require("promise");
 const {
-  entries, toObject, reportException, executeSoon
+  entries, toObject, executeSoon
 } = require("devtools/shared/DevToolsUtils");
 const PROMISE = exports.PROMISE = "@@dispatch/promise";
 
-function promiseMiddleware ({ dispatch, getState }) {
+function promiseMiddleware({ dispatch, getState }) {
   return next => action => {
     if (!(PROMISE in action)) {
       return next(action);

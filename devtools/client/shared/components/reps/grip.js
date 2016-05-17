@@ -6,7 +6,7 @@
 "use strict";
 
 // Make this available to both AMD and CJS environments
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   // ReactJS
   const React = require("devtools/client/shared/vendor/react");
 
@@ -22,18 +22,18 @@ define(function(require, exports, module) {
    * @template TODO docs
    */
   const Grip = React.createClass({
+    displayName: "Grip",
+
     propTypes: {
       object: React.PropTypes.object.isRequired,
       mode: React.PropTypes.string,
     },
 
-    displayName: "Grip",
-
-    getTitle: function() {
+    getTitle: function () {
       return "";
     },
 
-    longPropIterator: function(object) {
+    longPropIterator: function (object) {
       try {
         return this.propIterator(object, 100);
       } catch (err) {
@@ -42,7 +42,7 @@ define(function(require, exports, module) {
       return [];
     },
 
-    shortPropIterator: function(object) {
+    shortPropIterator: function (object) {
       try {
         return this.propIterator(object, 3);
       } catch (err) {
@@ -51,7 +51,7 @@ define(function(require, exports, module) {
       return [];
     },
 
-    propIterator: function(object, max) {
+    propIterator: function (object, max) {
       // Property filter. Show only interesting properties to the user.
       let isInterestingProp = (type, value) => {
         return (
@@ -97,7 +97,7 @@ define(function(require, exports, module) {
       return props;
     },
 
-    getProps: function(object, max, filter) {
+    getProps: function (object, max, filter) {
       let props = [];
 
       max = max || 3;
@@ -139,7 +139,7 @@ define(function(require, exports, module) {
       return props;
     },
 
-    render: function() {
+    render: function () {
       let object = this.props.object;
       let props = this.shortPropIterator(object);
 
@@ -167,15 +167,15 @@ define(function(require, exports, module) {
    * Property for a grip object.
    */
   let PropRep = React.createFactory(React.createClass({
+    displayName: "PropRep",
+
     propTypes: {
       name: React.PropTypes.string,
       equal: React.PropTypes.string,
       delim: React.PropTypes.string,
     },
 
-    displayName: "PropRep",
-
-    render: function() {
+    render: function () {
       let { Rep } = createFactories(require("./rep"));
 
       return (

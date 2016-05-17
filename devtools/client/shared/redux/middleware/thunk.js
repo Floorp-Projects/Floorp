@@ -14,6 +14,6 @@ function thunk({ dispatch, getState }) {
     return (typeof action === "function")
       ? action(dispatch, getState)
       : next(action);
-  }
+  };
 }
 exports.thunk = thunk;

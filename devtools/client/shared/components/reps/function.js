@@ -6,7 +6,7 @@
 "use strict";
 
 // Make this available to both AMD and CJS environments
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   // ReactJS
   const React = require("devtools/client/shared/vendor/react");
 
@@ -19,18 +19,18 @@ define(function(require, exports, module) {
    * This component represents a template for Function objects.
    */
   let Func = React.createClass({
+    displayName: "Func",
+
     propTypes: {
       object: React.PropTypes.object.isRequired
     },
 
-    displayName: "Func",
-
-    summarizeFunction: function(grip) {
+    summarizeFunction: function (grip) {
       let name = grip.displayName || grip.name || "function";
       return cropString(name + "()", 100);
     },
 
-    render: function() {
+    render: function () {
       let grip = this.props.object;
 
       return (
