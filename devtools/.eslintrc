@@ -42,12 +42,35 @@
     "react/prefer-es6-class": [1, "never"],
     // Disabled temporarily until errors are fixed.
     "react/prop-types": 0,
-    "react/sort-comp": [2, {
+    "react/sort-comp": [1, {
       order: [
-        "propTypes",
+        "lifecycle",
         "everything-else",
         "render"
-      ]
+      ],
+      groups: {
+        lifecycle: [
+          "displayName",
+          "propTypes",
+          "contextTypes",
+          "childContextTypes",
+          "mixins",
+          "statics",
+          "defaultProps",
+          "constructor",
+          "getDefaultProps",
+          "getInitialState",
+          "state",
+          "getChildContext",
+          "componentWillMount",
+          "componentDidMount",
+          "componentWillReceiveProps",
+          "shouldComponentUpdate",
+          "componentWillUpdate",
+          "componentDidUpdate",
+          "componentWillUnmount"
+        ]
+      }
     }],
 
     // Disallow using variables outside the blocks they are defined (especially
