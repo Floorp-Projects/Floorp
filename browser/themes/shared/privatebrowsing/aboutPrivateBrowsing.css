@@ -15,10 +15,6 @@
   --icon-margin: 64px;
 }
 
-html {
-  font-size: 1.5em;
-}
-
 html.private {
   --in-content-page-color: #beb8cc;
   --in-content-text-color: #beb8cc;
