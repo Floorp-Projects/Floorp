@@ -88,8 +88,20 @@ this.TelemetryEnvironment = {
   RECORD_PREF_VALUE: 2, // We only record user-set prefs.
 
   // Testing method
-  _watchPreferences: function(prefMap) {
+  testWatchPreferences: function(prefMap) {
     return getGlobal()._watchPreferences(prefMap);
+  },
+
+  /**
+   * Intended for use in tests only.
+   *
+   * In multiple tests we need a way to shut and re-start telemetry together
+   * with TelemetryEnvironment. This is problematic due to the fact that
+   * TelemetryEnvironment is a singleton. We, therefore, need this helper
+   * method to be able to re-set TelemetryEnvironment.
+   */
+  testReset: function() {
+    return getGlobal().reset();
   },
 };
 
@@ -1412,4 +1424,9 @@ EnvironmentCache.prototype = {
       }
     }
   },
+
+  reset: function () {
+    this._shutdown = false;
+    this._delayedInitFinished = false;
+  }
 };

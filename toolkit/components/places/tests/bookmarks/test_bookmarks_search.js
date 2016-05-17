@@ -24,10 +24,10 @@ add_task(function* search_bookmark() {
                                                  title: "another bookmark" });
   let bm3 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.menuGuid,
                                                  url: "http://menu.org/",
-                                                 title: "a menu bookmark" });
+                                                 title: "an on-menu bookmark" });
   let bm4 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.toolbarGuid,
                                                  url: "http://toolbar.org/",
-                                                 title: "a toolbar bookmark" });
+                                                 title: "an on-toolbar bookmark" });
   checkBookmarkObject(bm1);
   checkBookmarkObject(bm2);
   checkBookmarkObject(bm3);
@@ -46,13 +46,13 @@ add_task(function* search_bookmark() {
   checkBookmarkObject(results[1]);
 
   // finds menu bookmarks
-  results = yield PlacesUtils.bookmarks.search("a menu bookmark");
+  results = yield PlacesUtils.bookmarks.search("an on-menu bookmark");
   Assert.equal(results.length, 1);
   checkBookmarkObject(results[0]);
   Assert.deepEqual(bm3, results[0]);
 
   // finds toolbar bookmarks
-  results = yield PlacesUtils.bookmarks.search("a toolbar bookmark");
+  results = yield PlacesUtils.bookmarks.search("an on-toolbar bookmark");
   Assert.equal(results.length, 1);
   checkBookmarkObject(results[0]);
   Assert.deepEqual(bm4, results[0]);

@@ -6,9 +6,11 @@ WORKDIR /home/worker
 
 # install necessary npm packages
 RUN           npm install -g taskcluster-vcs@2.3.12
-RUN           npm install -g eslint@2.9.0
-RUN           npm install -g eslint-plugin-html@1.4.0
-RUN           npm install -g eslint-plugin-react@4.2.3
+
+# Install tooltool directly from github.
+RUN mkdir /build
+ADD https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py /build/tooltool.py
+RUN chmod +rx /build/tooltool.py
 
 # Set variable normally configured at login, by the shells parent process, these
 # are taken from GNU su manual

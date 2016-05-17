@@ -82,7 +82,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 const DB_URL_LENGTH_MAX = 65536;
 const DB_TITLE_LENGTH_MAX = 4096;
 
-const MATCH_BOUNDARY = Ci.mozIPlacesAutoComplete.MATCH_BOUNDARY;
+const MATCH_ANYWHERE_UNMODIFIED = Ci.mozIPlacesAutoComplete.MATCH_ANYWHERE_UNMODIFIED;
 const BEHAVIOR_BOOKMARK = Ci.mozIPlacesAutoComplete.BEHAVIOR_BOOKMARK;
 
 var Bookmarks = Object.freeze({
@@ -928,7 +928,7 @@ function queryBookmarks(info) {
   if (info.query) {
     queryString += " AND AUTOCOMPLETE_MATCH(:query, h.url, b.title, NULL, NULL, 1, 1, NULL, :matchBehavior, :searchBehavior) ";
     queryParams.query = info.query;
-    queryParams.matchBehavior = MATCH_BOUNDARY;
+    queryParams.matchBehavior = MATCH_ANYWHERE_UNMODIFIED;
     queryParams.searchBehavior = BEHAVIOR_BOOKMARK;
   }
 

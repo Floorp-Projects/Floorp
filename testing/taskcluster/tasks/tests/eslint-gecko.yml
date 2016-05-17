@@ -22,9 +22,13 @@ task:
       - -cx
       - >
           tc-vcs checkout ./gecko {{base_repository}} {{head_repository}} {{head_rev}} {{head_ref}} &&
-          cd gecko &&
-          npm link testing/eslint-plugin-mozilla &&
-          eslint --plugin html --ext [.js,.jsm,.jsx,.xml,.html] -f tools/lint/eslint-formatter .
+          cd gecko/testing/eslint &&
+          /build/tooltool.py fetch -m manifest.tt &&
+          tar xvfz eslint.tar.gz &&
+          rm eslint.tar.gz &&
+          cd ../.. &&
+          testing/eslint/node_modules/.bin/eslint --plugin html --ext [.js,.jsm,.jsx,.xml,.html] -f tools/lint/eslint-formatter .
+
   extra:
     locations:
         build: null

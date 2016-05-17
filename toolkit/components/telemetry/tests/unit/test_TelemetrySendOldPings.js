@@ -144,16 +144,6 @@ function pingHandler(aRequest) {
   gSeenPings++;
 }
 
-/**
- * Clear out all pending pings.
- */
-var clearPendingPings = Task.async(function*() {
-  const pending = yield TelemetryStorage.loadPendingPingList();
-  for (let p of pending) {
-    yield TelemetryStorage.removePendingPing(p.id);
-  }
-});
-
 function run_test() {
   PingServer.start();
   PingServer.registerPingHandler(pingHandler);
@@ -174,12 +164,12 @@ add_task(function* setupEnvironment() {
   // The following tests assume this pref to be true by default.
   Services.prefs.setBoolPref(PREF_FHR_UPLOAD, true);
 
-  yield TelemetryController.setup();
+  yield TelemetryController.testSetup();
 
   let directory = TelemetryStorage.pingDirectoryPath;
   yield File.makeDir(directory, { ignoreExisting: true, unixMode: OS.Constants.S_IRWXU });
 
-  yield clearPendingPings();
+  yield TelemetryStorage.testClearPendingPings();
 });
 
 /**
@@ -189,11 +179,11 @@ add_task(function* test_recent_pings_sent() {
   let pingTypes = [{ num: RECENT_PINGS }];
   let recentPings = yield createSavedPings(pingTypes);
 
-  yield TelemetryController.reset();
+  yield TelemetryController.testReset();
   yield TelemetrySend.testWaitOnOutgoingPings();
   assertReceivedPings(RECENT_PINGS);
 
-  yield clearPendingPings();
+  yield TelemetryStorage.testClearPendingPings();
 });
 
 /**
@@ -255,7 +245,7 @@ add_task(function* test_overdue_old_format() {
   }
 
   gSeenPings = 0;
-  yield TelemetryController.reset();
+  yield TelemetryController.testReset();
   yield TelemetrySend.testWaitOnOutgoingPings();
   assertReceivedPings(OLD_FORMAT_PINGS);
 
@@ -263,7 +253,7 @@ add_task(function* test_overdue_old_format() {
   // so remove it manually so that the next test doesn't fail.
   yield OS.File.remove(PING_FILES_PATHS[3]);
 
-  yield clearPendingPings();
+  yield TelemetryStorage.testClearPendingPings();
 });
 
 add_task(function* test_corrupted_pending_pings() {
@@ -314,7 +304,7 @@ add_task(function* test_corrupted_pending_pings() {
   let exists = yield OS.File.exists(getSavePathForPingId(pendingPingId));
   Assert.ok(!exists, "The unparseable ping should have been removed");
 
-  yield clearPendingPings();
+  yield TelemetryStorage.testClearPendingPings();
 });
 
 /**
@@ -329,7 +319,7 @@ add_task(function* test_overdue_pings_trigger_send() {
   let recentPings = pings.slice(0, RECENT_PINGS);
   let overduePings = pings.slice(-OVERDUE_PINGS);
 
-  yield TelemetryController.reset();
+  yield TelemetryController.testReset();
   yield TelemetrySend.testWaitOnOutgoingPings();
   assertReceivedPings(TOTAL_EXPECTED_PINGS);
 
@@ -339,7 +329,7 @@ add_task(function* test_overdue_pings_trigger_send() {
   Assert.equal(TelemetrySend.overduePingsCount, overduePings.length,
                "Should have tracked the correct amount of overdue pings");
 
-  yield clearPendingPings();
+  yield TelemetryStorage.testClearPendingPings();
 });
 
 /**
@@ -385,11 +375,11 @@ add_task(function* test_overdue_old_format() {
     receivedPings++;
   });
 
-  yield TelemetryController.reset();
+  yield TelemetryController.testReset();
   yield TelemetrySend.testWaitOnOutgoingPings();
   Assert.equal(receivedPings, 1, "We must receive a ping in the old format.");
 
-  yield clearPendingPings();
+  yield TelemetryStorage.testClearPendingPings();
   PingServer.resetPingHandler();
 });
 
@@ -401,13 +391,13 @@ add_task(function* test_pendingPingsQuota() {
 
   // Remove all the pending pings then startup and wait for the cleanup task to complete.
   // There should be nothing to remove.
-  yield clearPendingPings();
-  yield TelemetryController.reset();
+  yield TelemetryStorage.testClearPendingPings();
+  yield TelemetryController.testReset();
   yield TelemetrySend.testWaitOnOutgoingPings();
   yield TelemetryStorage.testPendingQuotaTaskPromise();
 
   // Remove the pending deletion ping generated when flipping FHR upload off.
-  yield clearPendingPings();
+  yield TelemetryStorage.testClearPendingPings();
 
   let expectedPrunedPings = [];
   let expectedNotPrunedPings = [];
@@ -455,7 +445,7 @@ add_task(function* test_pendingPingsQuota() {
   Telemetry.getHistogramById("TELEMETRY_PENDING_PINGS_EVICTED_OVER_QUOTA").clear();
   Telemetry.getHistogramById("TELEMETRY_PENDING_EVICTING_OVER_QUOTA_MS").clear();
 
-  yield TelemetryController.reset();
+  yield TelemetryController.testReset();
   yield TelemetryStorage.testPendingQuotaTaskPromise();
 
   // Check that the correct values for quota probes are reported when no quota is hit.
@@ -491,7 +481,7 @@ add_task(function* test_pendingPingsQuota() {
   expectedPrunedPings = pingsOutsideQuota;
 
   // Reset TelemetryController to start the pending pings cleanup.
-  yield TelemetryController.reset();
+  yield TelemetryController.testReset();
   yield TelemetryStorage.testPendingQuotaTaskPromise();
   yield checkPendingPings();
 
@@ -502,7 +492,7 @@ add_task(function* test_pendingPingsQuota() {
   Assert.equal(h.sum, 17, "Pending pings quota was hit, a special size must be reported.");
 
   // Trigger a cleanup again and make sure we're not removing anything.
-  yield TelemetryController.reset();
+  yield TelemetryController.testReset();
   yield TelemetryStorage.testPendingQuotaTaskPromise();
   yield checkPendingPings();
 
@@ -538,7 +528,7 @@ add_task(function* test_pendingPingsQuota() {
   expectedPrunedPings.push(OVERSIZED_PING_ID);
 
   // Scan the pending pings directory.
-  yield TelemetryController.reset();
+  yield TelemetryController.testReset();
   yield TelemetryStorage.testPendingQuotaTaskPromise();
   yield checkPendingPings();
 
