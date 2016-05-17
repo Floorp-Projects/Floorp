@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for proper listing indexedDB databases with no object stores</title>
+</head>
+<body>
+<script type="application/javascript;version=1.7">
+
+let db;
+
+window.setup = function* () {
+  db = yield new Promise((resolve, reject) => {
+    let request = indexedDB.open("idb", 1);
+
+    request.onsuccess = e => resolve(e.target.result);
+    request.onerror = e => reject(new Error("error opening db connection"));
+
+    request.onupgradeneeded = e => {
+      let db = e.target.result;
+      let store = db.createObjectStore("obj", { keyPath: "id" });
+    };
+  });
+
+  dump("opened indexedDB\n");
+};
+
+window.closeDb = function* () {
+  db.close();
+};
+
+window.deleteDb = function* () {
+  yield new Promise((resolve, reject) => {
+    let request = indexedDB.deleteDatabase("idb");
+
+    request.onsuccess = resolve;
+    request.onerror = e => reject(new Error("error deleting db"));
+  });
+};
+
+window.clear = function* () {
+  for (let dbName of ["idb1", "idb2"]) {
+    yield new Promise(resolve => {
+      indexedDB.deleteDatabase(dbName).onsuccess = resolve;
+    });
+  }
+  dump("removed indexedDB items from main page\n");
+};
+
+</script>
+</body>
+</html>

@@ -69,12 +69,13 @@ function addEllipsis(name) {
  * @param {Window} panelWin
  *        Window of the toolbox panel to populate UI in.
  */
-var StorageUI = this.StorageUI = function StorageUI(front, target, panelWin) {
+function StorageUI(front, target, panelWin, toolbox) {
   EventEmitter.decorate(this);
 
   this._target = target;
   this._window = panelWin;
   this._panelDoc = panelWin.document;
+  this._toolbox = toolbox;
   this.front = front;
 
   let treeNode = this._panelDoc.getElementById("storage-tree");
@@ -156,7 +157,7 @@ var StorageUI = this.StorageUI = function StorageUI(front, target, panelWin) {
     "storage-tree-popup-delete-database");
   this._treePopupDeleteDatabase.addEventListener("command",
     this.onRemoveDatabase);
-};
+}
 
 exports.StorageUI = StorageUI;
 
@@ -909,6 +910,22 @@ StorageUI.prototype = {
     let [type, host, name] = this.tree.selectedItem;
     let actor = this.storageTypes[type];
 
-    actor.removeDatabase(host, name);
+    actor.removeDatabase(host, name).then(result => {
+      if (result.blocked) {
+        let notificationBox = this._toolbox.getNotificationBox();
+        notificationBox.appendNotification(
+          L10N.getFormatStr("storage.idb.deleteBlocked", name),
+          "storage-idb-delete-blocked",
+          null,
+          notificationBox.PRIORITY_WARNING_LOW);
+      }
+    }).catch(error => {
+      let notificationBox = this._toolbox.getNotificationBox();
+      notificationBox.appendNotification(
+        L10N.getFormatStr("storage.idb.deleteError", name),
+        "storage-idb-delete-error",
+        null,
+        notificationBox.PRIORITY_CRITICAL_LOW);
+    });
   }
 };
