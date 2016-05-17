@@ -875,7 +875,7 @@ _nearest_sample (cairo_filter_t filter, double *tx, double *ty)
     return fabs (*tx) < PIXMAN_MAX_INT && fabs (*ty) < PIXMAN_MAX_INT;
 }
 
-#if HAS_ATOMIC_OPS
+#if PIXMAN_HAS_ATOMIC_OPS
 static pixman_image_t *__pixman_transparent_image;
 static pixman_image_t *__pixman_black_image;
 static pixman_image_t *__pixman_white_image;
@@ -969,23 +969,6 @@ _pixman_white_image (void)
 
     return image;
 }
-#else
-static pixman_image_t *
-_pixman_transparent_image (void)
-{
-    return _pixman_image_for_solid (&_cairo_pattern_clear);
-}
-static pixman_image_t *
-_pixman_black_image (void)
-{
-    return _pixman_image_for_solid (&_cairo_pattern_black);
-}
-static pixman_image_t *
-_pixman_white_image (void)
-{
-    return _pixman_image_for_solid (&_cairo_pattern_white);
-}
-#endif
 
 static uint32_t
 hars_petruska_f54_1_random (void)
@@ -1002,13 +985,33 @@ static struct {
 } cache[16];
 static int n_cached;
 
+#else  /* !PIXMAN_HAS_ATOMIC_OPS */
+static pixman_image_t *
+_pixman_transparent_image (void)
+{
+    return _pixman_image_for_solid (&_cairo_pattern_clear);
+}
+
+static pixman_image_t *
+_pixman_black_image (void)
+{
+    return _pixman_image_for_solid (&_cairo_pattern_black);
+}
+
+static pixman_image_t *
+_pixman_white_image (void)
+{
+    return _pixman_image_for_solid (&_cairo_pattern_white);
+}
+#endif /* !PIXMAN_HAS_ATOMIC_OPS */
+
 void
 _cairo_image_reset_static_data (void)
 {
+#if PIXMAN_HAS_ATOMIC_OPS
     while (n_cached)
 	pixman_image_unref (cache[--n_cached].image);
 
-#if HAS_ATOMIC_OPS
     if (__pixman_transparent_image) {
 	pixman_image_unref (__pixman_transparent_image);
 	__pixman_transparent_image = NULL;
@@ -1031,9 +1034,10 @@ _pixman_image_for_solid (const cairo_solid_pattern_t *pattern)
 {
     pixman_color_t color;
     pixman_image_t *image;
+
+#if PIXMAN_HAS_ATOMIC_OPS
     int i;
 
-#if HAS_ATOMIC_OPS
     if (pattern->color.alpha_short <= 0x00ff)
 	return _pixman_transparent_image ();
 
@@ -1052,7 +1056,6 @@ _pixman_image_for_solid (const cairo_solid_pattern_t *pattern)
 	    return _pixman_white_image ();
 	}
     }
-#endif
 
     CAIRO_MUTEX_LOCK (_cairo_image_solid_cache_mutex);
     for (i = 0; i < n_cached; i++) {
@@ -1061,6 +1064,7 @@ _pixman_image_for_solid (const cairo_solid_pattern_t *pattern)
 	    goto UNLOCK;
 	}
     }
+#endif
 
     color.red   = pattern->color.red_short;
     color.green = pattern->color.green_short;
@@ -1068,6 +1072,7 @@ _pixman_image_for_solid (const cairo_solid_pattern_t *pattern)
     color.alpha = pattern->color.alpha_short;
 
     image = pixman_image_create_solid_fill (&color);
+#if PIXMAN_HAS_ATOMIC_OPS
     if (image == NULL)
 	goto UNLOCK;
 
@@ -1082,6 +1087,7 @@ _pixman_image_for_solid (const cairo_solid_pattern_t *pattern)
 
 UNLOCK:
     CAIRO_MUTEX_UNLOCK (_cairo_image_solid_cache_mutex);
+#endif
     return image;
 }
 
@@ -1428,6 +1434,7 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 		}
 	    }
 
+#if PIXMAN_HAS_ATOMIC_OPS
 	    /* avoid allocating a 'pattern' image if we can reuse the original */
 	    if (extend == CAIRO_EXTEND_NONE &&
 		_cairo_matrix_is_translation (&pattern->base.matrix) &&
@@ -1437,6 +1444,7 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 		*iy = ty;
 		return pixman_image_ref (source->pixman_image);
 	    }
+#endif
 
 	    pixman_image = pixman_image_create_bits (source->pixman_format,
 						     source->width,
@@ -1471,6 +1479,7 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 		}
 	    }
 
+#if PIXMAN_HAS_ATOMIC_OPS
 	    if (is_contained &&
 		_cairo_matrix_is_translation (&pattern->base.matrix) &&
 		_nearest_sample (filter, &tx, &ty))
@@ -1479,13 +1488,17 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 		*iy = ty + sub->extents.y;
 		return pixman_image_ref (source->pixman_image);
 	    }
+#endif
 
 	    /* Avoid sub-byte offsets, force a copy in that case. */
 	    if (PIXMAN_FORMAT_BPP (source->pixman_format) >= 8) {
+		void *data = source->data
+		    + sub->extents.x * PIXMAN_FORMAT_BPP(source->pixman_format)/8
+		    + sub->extents.y * source->stride;
 		pixman_image = pixman_image_create_bits (source->pixman_format,
 							 sub->extents.width,
 							 sub->extents.height,
-							 (uint32_t *) (source->data + sub->extents.x * PIXMAN_FORMAT_BPP(source->pixman_format)/8 + sub->extents.y * source->stride),
+							 data,
 							 source->stride);
 		if (unlikely (pixman_image == NULL))
 		    return NULL;
