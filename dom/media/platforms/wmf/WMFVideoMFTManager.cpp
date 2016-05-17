@@ -153,28 +153,29 @@ WMFVideoMFTManager::GetMediaSubtypeGUID()
 
 struct BlacklistedD3D11DLL
 {
+  constexpr
+  BlacklistedD3D11DLL(LPCWSTR aName, DWORD a, DWORD b, DWORD c, DWORD d)
+    : name(aName), ms((a << 16) | b), ls((c << 16) | d)
+  {}
   LPCWSTR name;
   DWORD ms;
   DWORD ls;
 };
-#define DLLVER(a, b, c, d) \
-        ((DWORD(a) << 16) | DWORD(b)),  ((DWORD(c) << 16) | DWORD(d))
-static const BlacklistedD3D11DLL sBlacklistedD3D11DLL[] =
+static constexpr BlacklistedD3D11DLL sBlacklistedD3D11DLL[] =
 {
   // Keep same DLL names together.
-  { L"igd10umd32.dll", DLLVER(9,17,10,2857) },
-  { L"isonyvideoprocessor.dll", DLLVER(4,1,2247,8090) },
-  { L"isonyvideoprocessor.dll", DLLVER(4,1,2153,6200) },
-  { L"tosqep.dll", DLLVER(1,2,15,526) },
-  { L"tosqep.dll", DLLVER(1,1,12,201) },
-  { L"tosqep.dll", DLLVER(1,0,11,318) },
-  { L"tosqep.dll", DLLVER(1,0,11,215) },
-  { L"tosqep64.dll", DLLVER(1,1,12,201) },
-  { L"tosqep64.dll", DLLVER(1,0,11,215) },
+  BlacklistedD3D11DLL(L"igd10umd32.dll", 9,17,10,2857),
+  BlacklistedD3D11DLL(L"isonyvideoprocessor.dll", 4,1,2247,8090),
+  BlacklistedD3D11DLL(L"isonyvideoprocessor.dll", 4,1,2153,6200),
+  BlacklistedD3D11DLL(L"tosqep.dll", 1,2,15,526),
+  BlacklistedD3D11DLL(L"tosqep.dll", 1,1,12,201),
+  BlacklistedD3D11DLL(L"tosqep.dll", 1,0,11,318),
+  BlacklistedD3D11DLL(L"tosqep.dll", 1,0,11,215),
+  BlacklistedD3D11DLL(L"tosqep64.dll", 1,1,12,201),
+  BlacklistedD3D11DLL(L"tosqep64.dll", 1,0,11,215),
   // Keep this last.
-  { nullptr, 0u, 0u }
+  BlacklistedD3D11DLL(nullptr, 0,0,0,0)
 };
-#undef DLLVER
 
 // If a blacklisted DLL is found, return its information, otherwise nullptr.
 static const BlacklistedD3D11DLL*
