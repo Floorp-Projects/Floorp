@@ -23,10 +23,6 @@
 #define XRE_DONT_SUPPORT_XPSP2
 #endif
 
-#ifndef XRE_DONT_SUPPORT_XPSP2
-#include "WindowsCrtPatch.h"
-#endif
-
 #ifdef __MINGW32__
 
 /* MingW currently does not implement a wide version of the
@@ -87,10 +83,6 @@ FreeAllocStrings(int argc, char **argv)
 
 int wmain(int argc, WCHAR **argv)
 {
-#if !defined(XRE_DONT_SUPPORT_XPSP2)
-  WindowsCrtPatch::Init();
-#endif
-
 #if defined(_MSC_VER) && _MSC_VER < 1900 && defined(_M_X64)
   // Disable CRT use of FMA3 on non-AVX2 CPUs and on Win7RTM due to bug 1160148
   int cpuid0[4] = {0};

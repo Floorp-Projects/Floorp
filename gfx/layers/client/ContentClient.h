@@ -163,7 +163,7 @@ public:
 
   virtual TextureInfo GetTextureInfo() const override
   {
-    MOZ_CRASH("Should not be called on non-remote ContentClient");
+    MOZ_CRASH("GFX: Should not be called on non-remote ContentClient");
   }
 };
 

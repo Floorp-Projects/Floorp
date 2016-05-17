@@ -3006,6 +3006,31 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
       CGContextFillRect(cgContext, CGRectMake(x + 1, y + h - 1, w - 2, 1));
     }
       break;
+
+    case NS_THEME_MAC_SOURCE_LIST: {
+      if (VibrancyManager::SystemSupportsVibrancy()) {
+        ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aWidgetType);
+        DrawVibrancyBackground(cgContext, macRect, aFrame, type);
+      } else {
+        CGGradientRef backgroundGradient;
+        CGColorSpaceRef rgb = CGColorSpaceCreateDeviceRGB();
+        CGFloat activeGradientColors[8] = { 0.9137, 0.9294, 0.9490, 1.0,
+                                            0.8196, 0.8471, 0.8784, 1.0 };
+        CGFloat inactiveGradientColors[8] = { 0.9686, 0.9686, 0.9686, 1.0,
+                                              0.9216, 0.9216, 0.9216, 1.0 };
+        CGPoint start = macRect.origin;
+        CGPoint end = CGPointMake(macRect.origin.x,
+                                  macRect.origin.y + macRect.size.height);
+        BOOL isActive = FrameIsInActiveWindow(aFrame);
+        backgroundGradient =
+          CGGradientCreateWithColorComponents(rgb, isActive ? activeGradientColors
+                                                            : inactiveGradientColors, NULL, 2);
+        CGContextDrawLinearGradient(cgContext, backgroundGradient, start, end, 0);
+        CGGradientRelease(backgroundGradient);
+        CGColorSpaceRelease(rgb);
+      }
+    }
+      break;
     
     case NS_THEME_TAB:
       DrawSegment(cgContext, macRect, eventState, aFrame, tabRenderSettings);
@@ -3748,6 +3773,7 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_TREEVIEW_HEADER_SORTARROW:
     case NS_THEME_TREEVIEW_TREEITEM:
     case NS_THEME_TREEVIEW_LINE:
+    case NS_THEME_MAC_SOURCE_LIST:
 
     case NS_THEME_RANGE:
 
@@ -3888,6 +3914,7 @@ nsNativeThemeCocoa::NeedToClearBackgroundBehindWidget(nsIFrame* aFrame,
                                                       uint8_t aWidgetType)
 {
   switch (aWidgetType) {
+    case NS_THEME_MAC_SOURCE_LIST:
     case NS_THEME_MAC_VIBRANCY_LIGHT:
     case NS_THEME_MAC_VIBRANCY_DARK:
     case NS_THEME_TOOLTIP:
@@ -3917,6 +3944,7 @@ nsNativeThemeCocoa::WidgetProvidesFontSmoothingBackgroundColor(nsIFrame* aFrame,
                                                                nscolor* aColor)
 {
   switch (aWidgetType) {
+    case NS_THEME_MAC_SOURCE_LIST:
     case NS_THEME_MAC_VIBRANCY_LIGHT:
     case NS_THEME_MAC_VIBRANCY_DARK:
     case NS_THEME_TOOLTIP:
@@ -3973,6 +4001,8 @@ nsNativeThemeCocoa::ThemeGeometryTypeForWidget(nsIFrame* aFrame, uint8_t aWidget
     }
     case NS_THEME_DIALOG:
       return IsWindowSheet(aFrame) ? eThemeGeometryTypeSheet : eThemeGeometryTypeUnknown;
+    case NS_THEME_MAC_SOURCE_LIST:
+      return eThemeGeometryTypeSourceList;
     default:
       return eThemeGeometryTypeUnknown;
   }

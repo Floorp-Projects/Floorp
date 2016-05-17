@@ -26,6 +26,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
                                   "resource://gre/modules/Deprecated.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                   "resource://gre/modules/AppConstants.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+                                  "resource://gre/modules/NetUtil.jsm");
 
 var ContentAreaUtils = {
 
@@ -1314,12 +1316,11 @@ function openURL(aURL)
       }
     }
 
-    var channel = Services.io.newChannelFromURI2(uri,
-                                                 null,      // aLoadingNode
-                                                 Services.scriptSecurityManager.getSystemPrincipal(),
-                                                 null,      // aTriggeringPrincipal
-                                                 Components.interfaces.nsILoadInfo.SEC_NORMAL,
-                                                 Components.interfaces.nsIContentPolicy.TYPE_OTHER);
+    var channel = NetUtil.newChannel({
+      uri: uri,
+      loadUsingSystemPrincipal: true
+    });
+
     var uriLoader = Components.classes["@mozilla.org/uriloader;1"]
                               .getService(Components.interfaces.nsIURILoader);
     uriLoader.openURI(channel,

@@ -192,7 +192,6 @@ SharedPlanarYCbCrImage::Allocate(PlanarYCbCrData& aData)
   // of the lock/unlock interval. That's sad and new code should follow this example.
   if (!mTextureClient->Lock(OpenMode::OPEN_READ) || !mTextureClient->BorrowMappedYCbCrData(mapped)) {
     MOZ_CRASH("GFX: Cannot lock or borrow mapped YCbCr");
-    return false;
   }
 
   aData.mYChannel = mapped.y.data;

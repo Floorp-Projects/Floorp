@@ -142,12 +142,12 @@ public:
 
     virtual GLuint ProdTexture() {
         MOZ_ASSERT(mAttachType == AttachmentType::GLTexture);
-        MOZ_CRASH("Did you forget to override this function?");
+        MOZ_CRASH("GFX: Did you forget to override this function?");
     }
 
     virtual GLuint ProdRenderbuffer() {
         MOZ_ASSERT(mAttachType == AttachmentType::GLRenderbuffer);
-        MOZ_CRASH("Did you forget to override this function?");
+        MOZ_CRASH("GFX: Did you forget to override this function?");
     }
 
     virtual bool CopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x,

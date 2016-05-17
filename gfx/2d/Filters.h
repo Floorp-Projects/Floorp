@@ -482,23 +482,23 @@ public:
 
   virtual FilterBackend GetBackendType() = 0;
 
-  virtual void SetInput(uint32_t aIndex, SourceSurface *aSurface) { MOZ_CRASH(); }
-  virtual void SetInput(uint32_t aIndex, FilterNode *aFilter) { MOZ_CRASH(); }
+  virtual void SetInput(uint32_t aIndex, SourceSurface *aSurface) { MOZ_CRASH("GFX: FilterNode"); }
+  virtual void SetInput(uint32_t aIndex, FilterNode *aFilter) { MOZ_CRASH("GFX: FilterNode"); }
 
-  virtual void SetAttribute(uint32_t aIndex, bool) { MOZ_CRASH(); }
-  virtual void SetAttribute(uint32_t aIndex, uint32_t) { MOZ_CRASH(); }
-  virtual void SetAttribute(uint32_t aIndex, Float) { MOZ_CRASH(); }
-  virtual void SetAttribute(uint32_t aIndex, const Size &) { MOZ_CRASH(); }
-  virtual void SetAttribute(uint32_t aIndex, const IntSize &) { MOZ_CRASH(); }
-  virtual void SetAttribute(uint32_t aIndex, const IntPoint &) { MOZ_CRASH(); }
-  virtual void SetAttribute(uint32_t aIndex, const Rect &) { MOZ_CRASH(); }
-  virtual void SetAttribute(uint32_t aIndex, const IntRect &) { MOZ_CRASH(); }
-  virtual void SetAttribute(uint32_t aIndex, const Point &) { MOZ_CRASH(); }
-  virtual void SetAttribute(uint32_t aIndex, const Matrix &) { MOZ_CRASH(); }
-  virtual void SetAttribute(uint32_t aIndex, const Matrix5x4 &) { MOZ_CRASH(); }
-  virtual void SetAttribute(uint32_t aIndex, const Point3D &) { MOZ_CRASH(); }
-  virtual void SetAttribute(uint32_t aIndex, const Color &) { MOZ_CRASH(); }
-  virtual void SetAttribute(uint32_t aIndex, const Float* aFloat, uint32_t aSize) { MOZ_CRASH(); }
+  virtual void SetAttribute(uint32_t aIndex, bool) { MOZ_CRASH("GFX: FilterNode"); }
+  virtual void SetAttribute(uint32_t aIndex, uint32_t) { MOZ_CRASH("GFX: FilterNode"); }
+  virtual void SetAttribute(uint32_t aIndex, Float) { MOZ_CRASH("GFX: FilterNode"); }
+  virtual void SetAttribute(uint32_t aIndex, const Size &) { MOZ_CRASH("GFX: FilterNode"); }
+  virtual void SetAttribute(uint32_t aIndex, const IntSize &) { MOZ_CRASH("GFX: FilterNode"); }
+  virtual void SetAttribute(uint32_t aIndex, const IntPoint &) { MOZ_CRASH("GFX: FilterNode"); }
+  virtual void SetAttribute(uint32_t aIndex, const Rect &) { MOZ_CRASH("GFX: FilterNode"); }
+  virtual void SetAttribute(uint32_t aIndex, const IntRect &) { MOZ_CRASH("GFX: FilterNode"); }
+  virtual void SetAttribute(uint32_t aIndex, const Point &) { MOZ_CRASH("GFX: FilterNode"); }
+  virtual void SetAttribute(uint32_t aIndex, const Matrix &) { MOZ_CRASH("GFX: FilterNode"); }
+  virtual void SetAttribute(uint32_t aIndex, const Matrix5x4 &) { MOZ_CRASH("GFX: FilterNode"); }
+  virtual void SetAttribute(uint32_t aIndex, const Point3D &) { MOZ_CRASH("GFX: FilterNode"); }
+  virtual void SetAttribute(uint32_t aIndex, const Color &) { MOZ_CRASH("GFX: FilterNode"); }
+  virtual void SetAttribute(uint32_t aIndex, const Float* aFloat, uint32_t aSize) { MOZ_CRASH("GFX: FilterNode"); }
 
 protected:
   friend class Factory;

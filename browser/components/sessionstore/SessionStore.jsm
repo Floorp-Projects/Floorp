@@ -2072,9 +2072,10 @@ var SessionStoreInternal = {
     }
 
     // Create a new tab.
+    let userContextId = aTab.getAttribute("usercontextid");
     let newTab = aTab == aWindow.gBrowser.selectedTab ?
-      aWindow.gBrowser.addTab(null, {relatedToCurrent: true, ownerTab: aTab}) :
-      aWindow.gBrowser.addTab();
+      aWindow.gBrowser.addTab(null, {relatedToCurrent: true, ownerTab: aTab, userContextId}) :
+      aWindow.gBrowser.addTab(null, {userContextId});
 
     // Set tab title to "Connecting..." and start the throbber to pretend we're
     // doing something while actually waiting for data from the frame script.
@@ -3201,10 +3202,6 @@ var SessionStoreInternal = {
       tabbrowser.hideTab(tab);
     } else {
       tabbrowser.showTab(tab);
-    }
-
-    if (tabData.userContextId) {
-      tab.setUserContextId(tabData.userContextId);
     }
 
     if (!!tabData.muted != browser.audioMuted) {

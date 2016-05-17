@@ -5522,7 +5522,7 @@ class FlowGraphSummary {
             return Entry(SIZE_MAX, SIZE_MAX);
         }
 
-        Entry() {}
+        Entry() : lineno_(SIZE_MAX), column_(0) {}
 
         bool hasNoEdges() const {
             return lineno_ == SIZE_MAX && column_ != SIZE_MAX;
@@ -5574,8 +5574,6 @@ class FlowGraphSummary {
             return false;
         unsigned mainOffset = script->pcToOffset(script->main());
         entries_[mainOffset] = Entry::createWithMultipleEdgesFromMultipleLines();
-        for (size_t i = mainOffset + 1; i < script->length(); i++)
-            entries_[i] = Entry::createWithNoEdges();
 
         size_t prevLineno = script->lineno();
         size_t prevColumn = 0;

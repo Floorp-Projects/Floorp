@@ -262,13 +262,6 @@ var SessionHistoryInternal = {
   restore: function (docShell, tabData) {
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
     let history = webNavigation.sessionHistory;
-
-    if ("userContextId" in tabData) {
-      let attrs = docShell.getOriginAttributes();
-      attrs.userContextId = tabData.userContextId;
-      docShell.setOriginAttributes(attrs);
-    }
-
     if (history.count > 0) {
       history.PurgeHistory(history.count);
     }

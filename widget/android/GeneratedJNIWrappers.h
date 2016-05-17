@@ -3438,6 +3438,24 @@ public:
 
     auto SyncViewportInfo(int32_t, int32_t, int32_t, int32_t, float, bool, int32_t) const -> mozilla::jni::Object::LocalRef;
 
+    struct SynthesizeNativeMouseEvent_t {
+        typedef GeckoLayerClient Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t,
+                int32_t,
+                int32_t> Args;
+        static constexpr char name[] = "synthesizeNativeMouseEvent";
+        static constexpr char signature[] =
+                "(III)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    auto SynthesizeNativeMouseEvent(int32_t, int32_t, int32_t) const -> void;
+
     struct SynthesizeNativeTouchPoint_t {
         typedef GeckoLayerClient Owner;
         typedef void ReturnType;

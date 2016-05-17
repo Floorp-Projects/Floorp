@@ -857,6 +857,13 @@ public:
                          mozilla::ErrorResult& aError);
   void RemoveAnonymousContent(mozilla::dom::AnonymousContent& aContent,
                               mozilla::ErrorResult& aError);
+  /**
+   * If aNode is a descendant of anonymous content inserted by
+   * InsertAnonymousContent, this method returns the root element of the
+   * inserted anonymous content (in other words, the clone of the aElement
+   * that was passed to InsertAnonymousContent).
+   */
+  Element* GetAnonRootIfInAnonymousContentContainer(nsINode* aNode) const;
   nsTArray<RefPtr<mozilla::dom::AnonymousContent>>& GetAnonymousContents() {
     return mAnonymousContents;
   }

@@ -16,6 +16,10 @@ function setupPrefs(callback) {
   xhr.send(null);
   if (xhr.status == 200) {
     data = xhr.responseText;
+    // Convert the JSON to text and back to eliminate whitespace.
+    data = JSON.stringify(JSON.parse(data));
+    // Preferences can only be 4000 characters in a content process.
+    ok(data.length <= 4000, "Data for preferences must be 4000 characters or less.");
   }
 
   SpecialPowers.pushPrefEnv({"set": [
