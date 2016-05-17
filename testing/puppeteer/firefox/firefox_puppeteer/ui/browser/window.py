@@ -108,24 +108,39 @@ class BrowserWindow(BaseWindow):
         try:
             notification = self.window_element.find_element(
                 By.CSS_SELECTOR, '#notification-popup popupnotification')
+
+            notification_id = notification.get_attribute('id')
+            return notifications_map.get(notification_id, BaseNotification)(
+                lambda: self.marionette, self, notification)
+
         except NoSuchElementException:
             return None  # no notification is displayed
-        notification_id = notification.get_attribute('id')
-        return notifications_map[notification_id](
-            lambda: self.marionette, self, notification)
 
-    def wait_for_notification(self, notification_class=BaseNotification):
-        """Waits for the specified notification to be displayed."""
-        if notification_class is None:
-            Wait(self.marionette).until(
-                lambda _: self.notification is None,
-                message='Unexpected notification shown.')
-        else:
-            message = '{0} was not shown.'.format(notification_class.__name__)
+    def wait_for_notification(self, notification_class=BaseNotification,
+                              timeout=5):
+        """Waits for the specified notification to be displayed.
+
+        :param notification_class: Optional, the notification class to wait for.
+         If `None` is specified it will wait for any notification to be closed.
+         Defaults to `BaseNotification`.
+        :param timeout: Optional, how long to wait for the expected notification.
+         Defaults to 5 seconds.
+        """
+        wait = Wait(self.marionette, timeout=timeout)
+
+        if notification_class:
             if notification_class is BaseNotification:
                 message = 'No notification was shown.'
-            Wait(self.marionette).until(lambda _: isinstance(
-                self.notification, notification_class), message=message)
+            else:
+                message = '{0} was not shown.'.format(notification_class.__name__)
+            wait.until(
+                lambda _: isinstance(self.notification, notification_class),
+                message=message)
+        else:
+            message = 'Unexpected notification shown.'
+            wait.until(
+                lambda _: self.notification is None,
+                message='Unexpected notification shown.')
 
     @property
     def tabbar(self):
