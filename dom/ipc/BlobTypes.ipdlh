@@ -2,21 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PBlob;
 include protocol PFileDescriptorSet;
-include BlobTypes;
-include InputStreamParams;
+
+using struct mozilla::void_t
+  from "ipc/IPCMessageUtils.h";
 
 namespace mozilla {
 namespace dom {
 
-protocol PBlobStream
+union OptionalFileDescriptorSet
 {
-  manager PBlob;
-
-child:
-  async __delete__(InputStreamParams params, OptionalFileDescriptorSet fds);
+  PFileDescriptorSet;
+  FileDescriptor[];
+  void_t;
 };
 
-} // namespace dom
-} // namespace mozilla
+}
+}

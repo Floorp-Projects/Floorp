@@ -20,10 +20,10 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
+using mozilla::dom::OptionalFileDescriptorSet;
 using mozilla::ipc::AutoIPCStream;
 using mozilla::ipc::FileDescriptor;
 using mozilla::ipc::FileDescriptorSetChild;
-using mozilla::ipc::OptionalFileDescriptorSet;
 using mozilla::ipc::PFileDescriptorSetChild;
 
 // declared in ActorUtils.h
