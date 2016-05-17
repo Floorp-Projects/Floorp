@@ -17,6 +17,11 @@ var subtests = [
         // because in this test we move the mouse a bunch and want to recalculate
         // the target APZC after each such movement.
         ['mousewheel.transaction.ignoremovedelay', 0],
+        ['mousewheel.transaction.timeout', 0]]},
+  {'file': 'helper_bug1271432.html', 'prefs': [
+        // same prefs as in the previous test, for the same reasons.
+        ['general.smoothScroll', false],
+        ['mousewheel.transaction.ignoremovedelay', 0],
         ['mousewheel.transaction.timeout', 0]]}
 ];
 
