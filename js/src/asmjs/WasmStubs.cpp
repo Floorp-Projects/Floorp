@@ -185,7 +185,11 @@ wasm::GenerateEntry(MacroAssembler& masm, unsigned target, const Sig& sig, bool 
             static_assert(Module::SizeOfEntryArg >= jit::Simd128DataSize,
                           "EntryArg must be big enough to store SIMD values");
             switch (type) {
+              case MIRType::Int8x16:
+              case MIRType::Int16x8:
               case MIRType::Int32x4:
+              case MIRType::Bool8x16:
+              case MIRType::Bool16x8:
               case MIRType::Bool32x4:
                 masm.loadUnalignedSimd128Int(src, iter->fpu());
                 break;
@@ -224,7 +228,11 @@ wasm::GenerateEntry(MacroAssembler& masm, unsigned target, const Sig& sig, bool 
                 masm.storeFloat32(ScratchFloat32Reg,
                                   Address(masm.getStackPointer(), iter->offsetFromArgBase()));
                 break;
+              case MIRType::Int8x16:
+              case MIRType::Int16x8:
               case MIRType::Int32x4:
+              case MIRType::Bool8x16:
+              case MIRType::Bool16x8:
               case MIRType::Bool32x4:
                 masm.loadUnalignedSimd128Int(src, ScratchSimd128Reg);
                 masm.storeAlignedSimd128Int(
@@ -272,7 +280,11 @@ wasm::GenerateEntry(MacroAssembler& masm, unsigned target, const Sig& sig, bool 
         masm.canonicalizeDouble(ReturnDoubleReg);
         masm.storeDouble(ReturnDoubleReg, Address(argv, 0));
         break;
+      case ExprType::I8x16:
+      case ExprType::I16x8:
       case ExprType::I32x4:
+      case ExprType::B8x16:
+      case ExprType::B16x8:
       case ExprType::B32x4:
         // We don't have control on argv alignment, do an unaligned access.
         masm.storeUnalignedSimd128Int(ReturnSimd128Reg, Address(argv, 0));
@@ -473,8 +485,12 @@ wasm::GenerateInterpExit(MacroAssembler& masm, const Import& import, uint32_t im
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, JumpTarget::Throw);
         masm.loadDouble(argv, ReturnDoubleReg);
         break;
+      case ExprType::I8x16:
+      case ExprType::I16x8:
       case ExprType::I32x4:
       case ExprType::F32x4:
+      case ExprType::B8x16:
+      case ExprType::B16x8:
       case ExprType::B32x4:
         MOZ_CRASH("SIMD types shouldn't be returned from a FFI");
       case ExprType::Limit:
@@ -724,8 +740,12 @@ wasm::GenerateJitExit(MacroAssembler& masm, const Import& import, bool usesHeap)
       case ExprType::F64:
         masm.convertValueToDouble(JSReturnOperand, ReturnDoubleReg, &oolConvert);
         break;
+      case ExprType::I8x16:
+      case ExprType::I16x8:
       case ExprType::I32x4:
       case ExprType::F32x4:
+      case ExprType::B8x16:
+      case ExprType::B16x8:
       case ExprType::B32x4:
         MOZ_CRASH("SIMD types shouldn't be returned from an import");
       case ExprType::Limit:
