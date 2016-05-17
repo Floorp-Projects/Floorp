@@ -15,6 +15,10 @@
 #include <sstream>
 #include <vector>
 
+#ifdef MOZ_WIDGET_COCOA
+#include <ApplicationServices/ApplicationServices.h>
+#endif
+
 namespace mozilla {
 namespace gfx {
 
@@ -74,6 +78,16 @@ public:
   virtual void Fill(const Path *aPath,
                     const Pattern &aPattern,
                     const DrawOptions &aOptions = DrawOptions()) override;
+#ifdef MOZ_WIDGET_COCOA
+  CGContextRef BorrowCGContext(const DrawOptions &aOptions);
+  void ReturnCGContext(CGContextRef);
+  bool FillGlyphsWithCG(ScaledFont *aFont,
+                        const GlyphBuffer &aBuffer,
+                        const Pattern &aPattern,
+                        const DrawOptions &aOptions = DrawOptions(),
+                        const GlyphRenderingOptions *aRenderingOptions = nullptr);
+#endif
+
   virtual void FillGlyphs(ScaledFont *aFont,
                           const GlyphBuffer &aBuffer,
                           const Pattern &aPattern,
@@ -177,6 +191,13 @@ private:
   IntSize mSize;
   RefPtrSkia<SkCanvas> mCanvas;
   SourceSurfaceSkia* mSnapshot;
+
+#ifdef MOZ_WIDGET_COCOA
+  CGContextRef mCG;
+  CGColorSpaceRef mColorSpace;
+  uint8_t* mCanvasData;
+  IntSize mCGSize;
+#endif
 };
 
 } // namespace gfx

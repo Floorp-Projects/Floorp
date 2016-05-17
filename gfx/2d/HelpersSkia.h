@@ -16,6 +16,7 @@
 #include "mozilla/Assertions.h"
 #include <vector>
 #include "RefPtrSkia.h"
+#include "nsDebug.h"
 
 namespace mozilla {
 namespace gfx {
@@ -351,6 +352,24 @@ GfxHintingToSkiaHinting(FontHinting aHinting)
       return SkPaint::kFull_Hinting;
   }
   return SkPaint::kNormal_Hinting;
+}
+
+static inline FillRule GetFillRule(SkPath::FillType aFillType)
+{
+  switch (aFillType)
+  {
+  case SkPath::kWinding_FillType:
+    return FillRule::FILL_WINDING;
+  case SkPath::kEvenOdd_FillType:
+    return FillRule::FILL_EVEN_ODD;
+  case SkPath::kInverseWinding_FillType:
+  case SkPath::kInverseEvenOdd_FillType:
+  default:
+    NS_WARNING("Unsupported fill type\n");
+    break;
+  }
+
+  return FillRule::FILL_EVEN_ODD;
 }
 
 } // namespace gfx
