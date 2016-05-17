@@ -12,6 +12,8 @@ const Types = require("../types");
 const OPEN_DEVICE_MODAL_VALUE = "OPEN_DEVICE_MODAL";
 
 module.exports = createClass({
+  displayName: "DeviceSelector",
+
   propTypes: {
     devices: PropTypes.shape(Types.devices).isRequired,
     selectedDevice: PropTypes.string.isRequired,
@@ -19,8 +21,6 @@ module.exports = createClass({
     onResizeViewport: PropTypes.func.isRequired,
     onUpdateDeviceModalOpen: PropTypes.func.isRequired,
   },
-
-  displayName: "DeviceSelector",
 
   mixins: [ addons.PureRenderMixin ],
 

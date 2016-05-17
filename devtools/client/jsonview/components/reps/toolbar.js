@@ -14,14 +14,14 @@ define(function (require, exports, module) {
    * Renders a simple toolbar.
    */
   let Toolbar = React.createClass({
+    displayName: "Toolbar",
+
     propTypes: {
       children: React.PropTypes.oneOfType([
         React.PropTypes.array,
         React.PropTypes.element
       ])
     },
-
-    displayName: "Toolbar",
 
     render: function () {
       return (
@@ -36,13 +36,13 @@ define(function (require, exports, module) {
    * Renders a simple toolbar button.
    */
   let ToolbarButton = React.createClass({
+    displayName: "ToolbarButton",
+
     propTypes: {
       active: React.PropTypes.bool,
       disabled: React.PropTypes.bool,
       children: React.PropTypes.string,
     },
-
-    displayName: "ToolbarButton",
 
     render: function () {
       let props = Object.assign({className: "btn"}, this.props);

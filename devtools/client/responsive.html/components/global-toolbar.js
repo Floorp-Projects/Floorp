@@ -10,6 +10,8 @@ const { DOM: dom, createClass, PropTypes, addons } =
 const Types = require("../types");
 
 module.exports = createClass({
+  displayName: "GlobalToolbar",
+
   propTypes: {
     screenshot: PropTypes.shape(Types.screenshot).isRequired,
     touchSimulation: PropTypes.shape(Types.touchSimulation).isRequired,
@@ -17,8 +19,6 @@ module.exports = createClass({
     onScreenshot: PropTypes.func.isRequired,
     onUpdateTouchSimulationEnabled: PropTypes.func.isRequired,
   },
-
-  displayName: "GlobalToolbar",
 
   mixins: [ addons.PureRenderMixin ],
 

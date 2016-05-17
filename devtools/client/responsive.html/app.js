@@ -28,6 +28,8 @@ const { updateDeviceList } = require("./devices");
 const Types = require("./types");
 
 let App = createClass({
+  displayName: "App",
+
   propTypes: {
     devices: PropTypes.shape(Types.devices).isRequired,
     location: Types.location.isRequired,
@@ -35,8 +37,6 @@ let App = createClass({
     touchSimulation: PropTypes.shape(Types.touchSimulation).isRequired,
     viewports: PropTypes.arrayOf(PropTypes.shape(Types.viewport)).isRequired,
   },
-
-  displayName: "App",
 
   onBrowserMounted() {
     window.postMessage({ type: "browser-mounted" }, "*");

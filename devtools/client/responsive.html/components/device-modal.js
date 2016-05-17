@@ -10,14 +10,14 @@ const { getStr } = require("../utils/l10n");
 const Types = require("../types");
 
 module.exports = createClass({
+  displayName: "DeviceModal",
+
   propTypes: {
     devices: PropTypes.shape(Types.devices).isRequired,
     onDeviceListUpdate: PropTypes.func.isRequired,
     onUpdateDeviceDisplayed: PropTypes.func.isRequired,
     onUpdateDeviceModalOpen: PropTypes.func.isRequired,
   },
-
-  displayName: "DeviceModal",
 
   mixins: [ addons.PureRenderMixin ],
 

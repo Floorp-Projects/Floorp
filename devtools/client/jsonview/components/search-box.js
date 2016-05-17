@@ -19,11 +19,11 @@ define(function (require, exports, module) {
    * top right corner of the application.
    */
   let SearchBox = createClass({
+    displayName: "SearchBox",
+
     propTypes: {
       actions: PropTypes.object,
     },
-
-    displayName: "SearchBox",
 
     onSearch: function (event) {
       let searchBox = event.target;
