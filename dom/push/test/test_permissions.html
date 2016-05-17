@@ -83,6 +83,15 @@ http://creativecommons.org/licenses/publicdomain/
       yield setPushPermission(test.action);
       var state = yield registration.pushManager.permissionState();
       is(state, test.state, JSON.stringify(test));
+      try {
+        yield SpecialPowers.pushPrefEnv({ set: [
+          ["dom.push.testing.ignorePermission", true]] });
+        state = yield registration.pushManager.permissionState();
+        is(state, "granted", `Should ignore ${
+          test.action} if the override pref is set`);
+      } finally {
+        yield SpecialPowers.flushPrefEnv();
+      }
     }
   });
 
