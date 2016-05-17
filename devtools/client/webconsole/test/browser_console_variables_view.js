@@ -12,7 +12,7 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
 
 var hud, gVariablesView;
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   hud = gVariablesView = null;
 });
 

@@ -11,7 +11,7 @@ const {CubicBezierWidget} =
   require("devtools/client/shared/widgets/CubicBezierWidget");
 const {PREDEFINED} = require("devtools/client/shared/widgets/CubicBezierPresets");
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("about:blank");
   let [host, win, doc] = yield createHost("bottom", TEST_URI);
 
@@ -31,7 +31,7 @@ function* coordinatesCanBeChangedByProvidingAnArray(widget) {
   let onUpdated = widget.once("updated");
 
   info("Setting new coordinates");
-  widget.coordinates = [0,1,1,0];
+  widget.coordinates = [0, 1, 1, 0];
 
   let bezier = yield onUpdated;
   ok(true, "The updated event was fired as a result of setting coordinates");

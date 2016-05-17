@@ -12,7 +12,7 @@ const { CallView } = require("devtools/client/performance/modules/widgets/tree-v
 const { CATEGORY_MASK } = require("devtools/client/performance/modules/categories");
 const RecordingUtils = require("devtools/shared/performance/recording-utils");
 
-add_task(function() {
+add_task(function () {
   let threadNode = new ThreadNode(gProfile.threads[0], { startTime: 0, endTime: 20, contentOnly: true });
 
   // Don't display the synthesized (root) and the real (root) node twice.

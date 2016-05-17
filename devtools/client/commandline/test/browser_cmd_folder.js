@@ -6,51 +6,51 @@
 const TEST_URI = "data:text/html;charset=utf-8,cmd-folder";
 
 function test() {
-  helpers.addTabWithToolbar(TEST_URI, function(options) {
+  helpers.addTabWithToolbar(TEST_URI, function (options) {
     return helpers.audit(options, [
       {
-        setup: 'folder',
+        setup: "folder",
         check: {
-          input:  'folder',
-          hints:  ' open',
-          markup: 'IIIIII',
-          status: 'ERROR'
+          input:  "folder",
+          hints:  " open",
+          markup: "IIIIII",
+          status: "ERROR"
         },
       },
       {
-        setup: 'folder open',
+        setup: "folder open",
         check: {
-          input:  'folder open',
-          hints:  ' [path]',
-          markup: 'VVVVVVVVVVV',
-          status: 'VALID'
+          input:  "folder open",
+          hints:  " [path]",
+          markup: "VVVVVVVVVVV",
+          status: "VALID"
         }
       },
       {
-        setup: 'folder open ~',
+        setup: "folder open ~",
         check: {
-          input:  'folder open ~',
-          hints:  '',
-          markup: 'VVVVVVVVVVVVV',
-          status: 'VALID'
+          input:  "folder open ~",
+          hints:  "",
+          markup: "VVVVVVVVVVVVV",
+          status: "VALID"
         }
       },
       {
-        setup: 'folder openprofile',
+        setup: "folder openprofile",
         check: {
-          input:  'folder openprofile',
-          hints:  '',
-          markup: 'VVVVVVVVVVVVVVVVVV',
-          status: 'VALID'
+          input:  "folder openprofile",
+          hints:  "",
+          markup: "VVVVVVVVVVVVVVVVVV",
+          status: "VALID"
         }
       },
       {
-        setup: 'folder openprofile WRONG',
+        setup: "folder openprofile WRONG",
         check: {
-          input:  'folder openprofile WRONG',
-          hints:  '',
-          markup: 'VVVVVVVVVVVVVVVVVVVEEEEE',
-          status: 'ERROR'
+          input:  "folder openprofile WRONG",
+          hints:  "",
+          markup: "VVVVVVVVVVVVVVVVVVVEEEEE",
+          status: "ERROR"
         }
       }
     ]);

@@ -5,8 +5,8 @@
 
 requestLongerTimeout(10);
 
-const TEST_URL = "data:text/html;charset=utf-8,"+
-                 "<html><head><title>Test reload</title></head>"+
+const TEST_URL = "data:text/html;charset=utf-8," +
+                 "<html><head><title>Test reload</title></head>" +
                  "<body><h1>Testing reload from devtools</h1></body></html>";
 
 var {Toolbox} = require("devtools/client/framework/toolbox");
@@ -35,8 +35,8 @@ function startReloadTest(aToolbox) {
   let reloads = 0;
   let reloadCounter = (msg) => {
     reloads++;
-    info("Detected reload #"+reloads);
-    is(reloads, reloadsSent, "Reloaded from devtools window once and only for "+description+"");
+    info("Detected reload #" + reloads);
+    is(reloads, reloadsSent, "Reloaded from devtools window once and only for " + description + "");
   };
   gBrowser.selectedBrowser.messageManager.addMessageListener("devtools:test:load", reloadCounter);
 
@@ -52,10 +52,10 @@ function startReloadTest(aToolbox) {
         });
       });
     });
-  }, toolIDs.length-1 /* only test 1 tool in docked mode, to cut down test time */);
+  }, toolIDs.length - 1 /* only test 1 tool in docked mode, to cut down test time */);
 }
 
-function testAllTheTools(docked, callback, toolNum=0) {
+function testAllTheTools(docked, callback, toolNum = 0) {
   if (toolNum >= toolIDs.length) {
     return callback();
   }
@@ -64,7 +64,7 @@ function testAllTheTools(docked, callback, toolNum=0) {
       testReload("toolbox-reload-key2", docked, toolIDs[toolNum], () => {
         testReload("toolbox-force-reload-key", docked, toolIDs[toolNum], () => {
           testReload("toolbox-force-reload-key2", docked, toolIDs[toolNum], () => {
-            testAllTheTools(docked, callback, toolNum+1);
+            testAllTheTools(docked, callback, toolNum + 1);
           });
         });
       });
@@ -79,8 +79,8 @@ function testReload(key, docked, toolID, callback) {
   };
   gBrowser.selectedBrowser.messageManager.addMessageListener("devtools:test:load", complete);
 
-  description = docked+" devtools with tool "+toolID+", key #" + key;
-  info("Testing reload in "+description);
+  description = docked + " devtools with tool " + toolID + ", key #" + key;
+  info("Testing reload in " + description);
   let el = toolbox.doc.getElementById(key);
   synthesizeKeyElement(el);
   reloadsSent++;

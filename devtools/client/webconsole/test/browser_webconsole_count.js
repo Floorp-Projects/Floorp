@@ -27,7 +27,7 @@ function test() {
       "console.count() testcounter: 3",
       "console.count() testcounter: 4",
       "end"
-    ].forEach(function(msg) {
+    ].forEach(function (msg) {
       messages.push({
         text: msg,
         category: CATEGORY_WEBDEV,
@@ -55,7 +55,7 @@ function test() {
       "console.count() testcounter: 5",
       "console.count() testcounter: 6",
       "end"
-    ].forEach(function(msg) {
+    ].forEach(function (msg) {
       messages.push({
         text: msg,
         category: CATEGORY_WEBDEV,

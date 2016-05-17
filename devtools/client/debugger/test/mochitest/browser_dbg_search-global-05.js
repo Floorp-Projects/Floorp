@@ -75,9 +75,9 @@ function testExpandCollapse() {
   EventUtils.sendMouseEvent({ type: "click" }, secondHeader);
 
   is(item0.instance.expanded, false,
-    "The first source results should be collapsed on click. (2)")
+    "The first source results should be collapsed on click. (2)");
   is(item1.instance.expanded, false,
-    "The second source results should be collapsed on click. (2)")
+    "The second source results should be collapsed on click. (2)");
 
   EventUtils.sendMouseEvent({ type: "click" }, firstHeader);
   EventUtils.sendMouseEvent({ type: "click" }, secondHeader);
@@ -145,7 +145,7 @@ function testClickMatchToJump() {
   return deferred.promise;
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

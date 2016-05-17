@@ -18,14 +18,14 @@ const WORKER_DATA = (function () {
 const INTERVAL = 100;
 const DURATION = 1000;
 
-add_task(function*() {
+add_task(function* () {
   // Test both CJS and JSM versions
 
   yield testWorker("JSM", () => Cu.import("resource://devtools/shared/worker/worker.js", {}));
   yield testWorker("CommonJS", () => require("devtools/shared/worker/worker"));
 });
 
-function *testWorker (context, workerFactory) {
+function* testWorker(context, workerFactory) {
   let { DevToolsWorker, workerify } = workerFactory();
   let worker = new DevToolsWorker(WORKER_URL);
   let results = yield worker.performTask("plotTimestampsGraph", {
@@ -37,7 +37,7 @@ function *testWorker (context, workerFactory) {
   ok(results.plottedData.length,
     `worker should have returned an object with array properties in ${context}`);
 
-  let fn = workerify(function (x) { return x * x });
+  let fn = workerify(function (x) { return x * x; });
   is((yield fn(5)), 25, `workerify works in ${context}`);
   fn.destroy();
 

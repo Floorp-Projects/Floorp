@@ -15,18 +15,18 @@ const stack3 = saveStack();
 
 const REPORT1 = new Map([
   [stack1, { "count": 10, "bytes": 100 }],
-  [stack2, { "count": 1,  "bytes": 10  }],
+  [stack2, { "count": 1, "bytes": 10 }],
 ]);
 
 const REPORT2 = new Map([
   [stack2, { "count": 10, "bytes": 100 }],
-  [stack3, { "count": 1,  "bytes": 10  }],
+  [stack3, { "count": 1, "bytes": 10 }],
 ]);
 
 const EXPECTED = new Map([
   [stack1, { "count": -10, "bytes": -100 }],
-  [stack2, { "count": 9,   "bytes": 90   }],
-  [stack3, { "count": 1,   "bytes": 10   }],
+  [stack2, { "count": 9, "bytes": 90 }],
+  [stack3, { "count": 1, "bytes": 10 }],
 ]);
 
 function run_test() {

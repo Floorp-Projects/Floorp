@@ -43,7 +43,7 @@ const {Cc, Ci, Cu, Cr} = require("chrome");
 const {indexedDB} = require("sdk/indexed-db");
 const Promise = require("promise");
 
-module.exports = (function() {
+module.exports = (function () {
   "use strict";
 
   var DBNAME = "devtools-async-storage";
@@ -135,7 +135,7 @@ module.exports = (function() {
       withStore("readonly", (store) => {
         store.transaction.oncomplete = function onComplete() {
           resolve(req.result);
-        }
+        };
         req = store.count();
         req.onerror = function lengthOnError() {
           reject("Error in asyncStorage.length(): ", req.error.name);

@@ -15,13 +15,13 @@ const TEST_URI = 'data:text/xml,<?xml version="1.0" standalone="no"?>' +
 '  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">' +
 '<svg width="4cm" height="4cm" viewBox="0 0 400 400"' +
 '     xmlns="http://www.w3.org/2000/svg" version="1.1">' +
-'  <title>Example triangle01- simple example of a path</title>' +
-'  <desc>A path that draws a triangle</desc>' +
+"  <title>Example triangle01- simple example of a path</title>" +
+"  <desc>A path that draws a triangle</desc>" +
 '  <rect x="1" y="1" width="398" height="398"' +
 '        fill="none" stroke="blue" />' +
 '  <path d="M 100 100 L 300 100 L 200 300 z"' +
 '        fill="red" stroke="blue" stroke-width="3" />' +
-'</svg>';
+"</svg>";
 
 add_task(function* () {
   let { inspector, testActor } = yield openInspectorForURL(TEST_URI);

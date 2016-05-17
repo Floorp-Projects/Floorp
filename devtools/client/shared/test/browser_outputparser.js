@@ -7,7 +7,7 @@ var {Loader} = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js",
                          {});
 var {OutputParser} = require("devtools/client/shared/output-parser");
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("about:blank");
   yield performTest();
   gBrowser.removeCurrentTab();

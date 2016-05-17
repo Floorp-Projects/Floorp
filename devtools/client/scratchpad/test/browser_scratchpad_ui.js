@@ -52,7 +52,7 @@ function runTests()
 
     sp[methodName] = () => {
       lastMethodCalled = methodName;
-    }
+    };
 
     let menu = doc.getElementById(id);
     ok(menu, "found menuitem #" + id);

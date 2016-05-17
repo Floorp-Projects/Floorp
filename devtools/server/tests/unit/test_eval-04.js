@@ -14,8 +14,8 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-stack", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-stack", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_syntax_error_eval();
     });
@@ -25,29 +25,29 @@ function run_test()
 
 function test_syntax_error_eval()
 {
-  gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
+  gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
 
-    gThreadClient.getFrames(0, 2, function(aResponse) {
+    gThreadClient.getFrames(0, 2, function (aResponse) {
       let frame0 = aResponse.frames[0];
       let frame1 = aResponse.frames[1];
 
       // Eval against the top frame...
-      gThreadClient.eval(frame0.actor, "arg", function(aResponse) {
+      gThreadClient.eval(frame0.actor, "arg", function (aResponse) {
         do_check_eq(aResponse.type, "resumed");
-        gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
+        gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
           // 'arg' should have been evaluated in frame0
           do_check_eq(aPacket.type, "paused");
           do_check_eq(aPacket.why.type, "clientEvaluated");
           do_check_eq(aPacket.why.frameFinished.return, "arg0");
 
           // Now eval against the second frame.
-          gThreadClient.eval(frame1.actor, "arg", function(aResponse) {
-            gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
+          gThreadClient.eval(frame1.actor, "arg", function (aResponse) {
+            gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
               // 'arg' should have been evaluated in frame1
               do_check_eq(aPacket.type, "paused");
               do_check_eq(aPacket.why.frameFinished.return, "arg1");
 
-              gThreadClient.resume(function() {
+              gThreadClient.resume(function () {
                 finishClient(gClient);
               });
             });
@@ -57,7 +57,7 @@ function test_syntax_error_eval()
     });
   });
 
-  gDebuggee.eval("(" + function() {
+  gDebuggee.eval("(" + function () {
     function frame0(arg) {
       debugger;
     }

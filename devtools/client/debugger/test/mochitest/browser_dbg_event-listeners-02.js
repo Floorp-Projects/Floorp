@@ -85,7 +85,7 @@ function testEventListeners(aThreadClient) {
       });
       return lDeferred.promise;
     })).then(listeners => {
-      is (listeners.length, 3, "Found three event listeners.");
+      is(listeners.length, 3, "Found three event listeners.");
       for (let l of listeners) {
         let node = l.node;
         ok(node, "There is a node property.");
@@ -124,6 +124,6 @@ function closeConnection() {
   return deferred.promise;
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gClient = null;
 });

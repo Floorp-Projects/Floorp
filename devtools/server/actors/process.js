@@ -57,10 +57,10 @@ ProcessActorList.prototype = {
       for (let i = 0; i < ppmm.childCount; i++) {
         this._knownProcesses.push(ppmm.getChildAt(i));
       }
-      ppmm.addMessageListener('debug:new-process', this._onMessage);
+      ppmm.addMessageListener("debug:new-process", this._onMessage);
       ppmm.loadProcessScript(this._processScript, true);
     } else {
-      ppmm.removeMessageListener('debug:new-process', this._onMessage);
+      ppmm.removeMessageListener("debug:new-process", this._onMessage);
       ppmm.removeDelayedProcessScript(this._processScript);
     }
   },

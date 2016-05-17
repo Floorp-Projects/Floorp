@@ -6,7 +6,7 @@
 var {FlameGraphUtils} = require("devtools/client/shared/widgets/FlameGraph");
 var {PALLETTE_SIZE} = require("devtools/client/shared/widgets/FlameGraph");
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("about:blank");
   yield performTest();
   gBrowser.removeCurrentTab();

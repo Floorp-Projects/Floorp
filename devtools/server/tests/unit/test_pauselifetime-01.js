@@ -14,8 +14,8 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-stack", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-stack", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_pause_frame();
     });
@@ -25,18 +25,18 @@ function run_test()
 
 function test_pause_frame()
 {
-  gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
+  gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
     let pauseActor = aPacket.actor;
 
     // Make a bogus request to the pause-liftime actor.  Should get
     // unrecognized-packet-type (and not no-such-actor).
-    gClient.request({ to: pauseActor, type: "bogusRequest" }, function(aResponse) {
+    gClient.request({ to: pauseActor, type: "bogusRequest" }, function (aResponse) {
       do_check_eq(aResponse.error, "unrecognizedPacketType");
 
-      gThreadClient.resume(function() {
+      gThreadClient.resume(function () {
         // Now that we've resumed, should get no-such-actor for the
         // same request.
-        gClient.request({ to: pauseActor, type: "bogusRequest" }, function(aResponse) {
+        gClient.request({ to: pauseActor, type: "bogusRequest" }, function (aResponse) {
           do_check_eq(aResponse.error, "noSuchActor");
           finishClient(gClient);
         });
@@ -45,10 +45,10 @@ function test_pause_frame()
     });
   });
 
-  gDebuggee.eval("(" + function() {
+  gDebuggee.eval("(" + function () {
     function stopMe() {
       debugger;
-    };
+    }
     stopMe();
   } + ")()");
 }

@@ -10,7 +10,7 @@ var gScratchpad;
 var gFile;
 
 // Temporary file name.
-var gFileName = "testFileForBug751744.tmp"
+var gFileName = "testFileForBug751744.tmp";
 
 
 // Content for the temporary file.
@@ -115,7 +115,7 @@ function tempFileSaved(aStatus)
 
   // Import the file into Scratchpad.
   gScratchpad.setFilename(gFile.path);
-  gScratchpad.importFromFile(gFile.QueryInterface(Ci.nsILocalFile),  true,
+  gScratchpad.importFromFile(gFile.QueryInterface(Ci.nsILocalFile), true,
                              testAfterSaved);
 }
 

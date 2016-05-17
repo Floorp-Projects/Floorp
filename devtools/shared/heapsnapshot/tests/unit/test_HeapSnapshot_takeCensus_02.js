@@ -37,19 +37,19 @@ function run_test() {
   var g = newGlobalWithDefs();
   dbg.addDebuggee(g);
 
-  g.eval('var objs = times(100, () => ({}));');
-  g.eval('var rxs  = times(200, () => /foo/);');
-  g.eval('var ars  = times(400, () => []);');
-  g.eval('var fns  = times(800, () => () => {});');
+  g.eval("var objs = times(100, () => ({}));");
+  g.eval("var rxs  = times(200, () => /foo/);");
+  g.eval("var ars  = times(400, () => []);");
+  g.eval("var fns  = times(800, () => () => {});");
 
-  var census1 =  dbg.memory.takeCensus(dbg);
+  var census1 = dbg.memory.takeCensus(dbg);
   Census.walkCensus(census1, "census1",
                     Census.assertAllNotLessThan(
-                      { 'objects':
-                        { 'Object':   { count: 100 },
-                          'RegExp':   { count: 200 },
-                          'Array':    { count: 400 },
-                          'Function': { count: 800 }
+                      { "objects":
+                        { "Object":   { count: 100 },
+                          "RegExp":   { count: 200 },
+                          "Array":    { count: 400 },
+                          "Function": { count: 800 }
                         }
                       }));
 

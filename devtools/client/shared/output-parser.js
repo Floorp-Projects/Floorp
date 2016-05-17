@@ -42,7 +42,7 @@ const ANGLE_TAKING_FUNCTIONS = ["linear-gradient",
                                 "skewY",
                                 "hue-rotate"];
 
-loader.lazyGetter(this, "DOMUtils", function() {
+loader.lazyGetter(this, "DOMUtils", function () {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 });
 
@@ -87,7 +87,7 @@ OutputParser.prototype = {
    * @return {DocumentFragment}
    *         A document fragment containing color swatches etc.
    */
-  parseCssProperty: function(name, value, options = {}) {
+  parseCssProperty: function (name, value, options = {}) {
     options = this._mergeOptions(options);
 
     options.expectCubicBezier =
@@ -123,7 +123,7 @@ OutputParser.prototype = {
    * @return {String}
    *         The text of body of the function call.
    */
-  _collectFunctionText: function(initialToken, text, tokenStream) {
+  _collectFunctionText: function (initialToken, text, tokenStream) {
     let result = text.substring(initialToken.startOffset,
                                 initialToken.endOffset);
     let depth = 1;
@@ -160,7 +160,7 @@ OutputParser.prototype = {
    * @return {DocumentFragment}
    *         A document fragment.
    */
-  _parse: function(text, options = {}) {
+  _parse: function (text, options = {}) {
     text = text.trim();
     this.parsed.length = 0;
 
@@ -168,13 +168,13 @@ OutputParser.prototype = {
     let parenDepth = 0;
     let outerMostFunctionTakesColor = false;
 
-    let colorOK = function() {
+    let colorOK = function () {
       return options.supportsColor ||
         (options.expectFilter && parenDepth === 1 &&
          outerMostFunctionTakesColor);
     };
 
-    let angleOK = function(angle) {
+    let angleOK = function (angle) {
       return /^-?\d+\.?\d*(deg|rad|grad|turn)$/gi.test(angle);
     };
 
@@ -290,7 +290,7 @@ OutputParser.prototype = {
    *        Options object. For valid options and default values see
    *        _mergeOptions()
    */
-  _appendCubicBezier: function(bezier, options) {
+  _appendCubicBezier: function (bezier, options) {
     let container = this._createNode("span", {
       "data-bezier": bezier
     });
@@ -319,7 +319,7 @@ OutputParser.prototype = {
    *        Options object. For valid options and default values see
    *        _mergeOptions()
    */
-  _appendAngle: function(angle, options) {
+  _appendAngle: function (angle, options) {
     let angleObj = new angleUtils.CssAngle(angle);
     let container = this._createNode("span", {
       "data-angle": angle
@@ -336,7 +336,7 @@ OutputParser.prototype = {
       // in order to prevent the value input to be focused.
       // Bug 711942 will add a tooltip to edit angle values and we should
       // be able to move this listener to Tooltip.js when it'll be implemented.
-      swatch.addEventListener("click", function(event) {
+      swatch.addEventListener("click", function (event) {
         if (event.shiftKey) {
           event.stopPropagation();
         }
@@ -361,7 +361,7 @@ OutputParser.prototype = {
    * @param  {String} value
    *         CSS Property value to check
    */
-  _cssPropertySupportsValue: function(name, value) {
+  _cssPropertySupportsValue: function (name, value) {
     return DOMUtils.cssPropertyIsValid(name, value);
   },
 
@@ -370,7 +370,7 @@ OutputParser.prototype = {
    * Valid means it's really a color, not any of the CssColor SPECIAL_VALUES
    * except transparent
    */
-  _isValidColor: function(colorObj) {
+  _isValidColor: function (colorObj) {
     return colorObj.valid &&
       (!colorObj.specialValue || colorObj.specialValue === "transparent");
   },
@@ -384,12 +384,12 @@ OutputParser.prototype = {
    *         Options object. For valid options and default values see
    *         _mergeOptions().
    */
-  _appendColor: function(color, options={}) {
+  _appendColor: function (color, options = {}) {
     let colorObj = new colorUtils.CssColor(color);
 
     if (this._isValidColor(colorObj)) {
       let container = this._createNode("span", {
-         "data-color": color
+        "data-color": color
       });
 
       if (options.colorSwatchClass) {
@@ -432,7 +432,7 @@ OutputParser.prototype = {
    * @returns {object}
    *        A new node that supplies a filter swatch and that wraps |nodes|.
    */
-  _wrapFilter: function(filters, options, nodes) {
+  _wrapFilter: function (filters, options, nodes) {
     let container = this._createNode("span", {
       "data-filters": filters
     });
@@ -453,7 +453,7 @@ OutputParser.prototype = {
     return container;
   },
 
-  _onColorSwatchMouseDown: function(event) {
+  _onColorSwatchMouseDown: function (event) {
     // Prevent text selection in the case of shift-click or double-click.
     event.preventDefault();
 
@@ -469,7 +469,7 @@ OutputParser.prototype = {
     swatch.emit("unit-change", val);
   },
 
-  _onAngleSwatchMouseDown: function(event) {
+  _onAngleSwatchMouseDown: function (event) {
     // Prevent text selection in the case of shift-click or double-click.
     event.preventDefault();
 
@@ -488,7 +488,7 @@ OutputParser.prototype = {
   /**
    * A helper function that sanitizes a possibly-unterminated URL.
    */
-  _sanitizeURL: function(url) {
+  _sanitizeURL: function (url) {
     // Re-lex the URL and add any needed termination characters.
     let urlTokenizer = getCSSLexer(url);
     // Just read until EOF; there will only be a single token.
@@ -510,7 +510,7 @@ OutputParser.prototype = {
    *         Options object. For valid options and default values see
    *         _mergeOptions().
    */
-  _appendURL: function(match, url, options) {
+  _appendURL: function (match, url, options) {
     if (options.urlClass) {
       // Sanitize the URL.  Note that if we modify the URL, we just
       // leave the termination characters.  This isn't strictly
@@ -556,7 +556,7 @@ OutputParser.prototype = {
    *         the tag. This is useful e.g. for span tags.
    * @return {Node} Newly created Node.
    */
-  _createNode: function(tagName, attributes, value="") {
+  _createNode: function (tagName, attributes, value = "") {
     let node = this.doc.createElementNS(HTML_NS, tagName);
     let attrs = Object.getOwnPropertyNames(attributes);
 
@@ -585,7 +585,7 @@ OutputParser.prototype = {
    *         If a value is included it will be appended as a text node inside
    *         the tag. This is useful e.g. for span tags.
    */
-  _appendNode: function(tagName, attributes, value="") {
+  _appendNode: function (tagName, attributes, value = "") {
     let node = this._createNode(tagName, attributes, value);
     this.parsed.push(node);
   },
@@ -597,7 +597,7 @@ OutputParser.prototype = {
    * @param  {String} text
    *         Text to append
    */
-  _appendTextNode: function(text) {
+  _appendTextNode: function (text) {
     let lastItem = this.parsed[this.parsed.length - 1];
     if (typeof lastItem === "string") {
       this.parsed[this.parsed.length - 1] = lastItem + text;
@@ -612,7 +612,7 @@ OutputParser.prototype = {
    * @return {DocumentFragment}
    *         Document Fragment
    */
-  _toDOM: function() {
+  _toDOM: function () {
     let frag = this.doc.createDocumentFragment();
 
     for (let item of this.parsed) {
@@ -657,7 +657,7 @@ OutputParser.prototype = {
    * @return {Object}
    *         Overridden options object
    */
-  _mergeOptions: function(overrides) {
+  _mergeOptions: function (overrides) {
     let defaults = {
       defaultColorType: true,
       colorSwatchClass: "",
@@ -695,7 +695,7 @@ OutputParser.prototype = {
 function safeCssPropertySupportsType(name, type) {
   try {
     return DOMUtils.cssPropertySupportsType(name, type);
-  } catch(e) {
+  } catch (e) {
     return false;
   }
 }

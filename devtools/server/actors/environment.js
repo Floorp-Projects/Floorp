@@ -79,7 +79,7 @@ let EnvironmentActor = ActorClass({
   assign: method(function (name, value) {
     // TODO: enable the commented-out part when getVariableDescriptor lands
     // (bug 725815).
-    /*let desc = this.obj.getVariableDescriptor(name);
+    /* let desc = this.obj.getVariableDescriptor(name);
 
     if (!desc.writable) {
       return { error: "immutableBinding",
@@ -117,7 +117,7 @@ let EnvironmentActor = ActorClass({
     // TODO: this part should be removed in favor of the commented-out part
     // below when getVariableDescriptor lands (bug 725815).
     if (typeof this.obj.getVariable != "function") {
-    //if (typeof this.obj.getVariableDescriptor != "function") {
+    // if (typeof this.obj.getVariableDescriptor != "function") {
       return bindings;
     }
 
@@ -161,8 +161,8 @@ let EnvironmentActor = ActorClass({
 
     for (let name of this.obj.names()) {
       if (bindings.arguments.some(function exists(element) {
-                                    return !!element[name];
-                                  })) {
+        return !!element[name];
+      })) {
         continue;
       }
 
@@ -180,7 +180,7 @@ let EnvironmentActor = ActorClass({
         enumerable: true
       };
 
-      //let desc = this.obj.getVariableDescriptor(name);
+      // let desc = this.obj.getVariableDescriptor(name);
       let descForm = {
         enumerable: true,
         configurable: desc.configurable

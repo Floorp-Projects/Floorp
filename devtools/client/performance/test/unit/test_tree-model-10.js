@@ -39,23 +39,23 @@ add_task(function () {
 
   [ // total, self, name
     [ 50, 50, "C", [
-      [ 40,  0, "B", [
-        [ 30,  0, "A"]
+      [ 40, 0, "B", [
+        [ 30, 0, "A"]
       ]],
-      [ 10,  0, "A"]
+      [ 10, 0, "A"]
     ]],
     [ 40, 40, "D", [
-      [ 40,  0, "B", [
-        [ 40,  0, "A"],
+      [ 40, 0, "B", [
+        [ 40, 0, "A"],
       ]]
     ]],
     [ 10, 10, "B", [
-      [ 10,  0, "A"],
+      [ 10, 0, "A"],
     ]]
   ].forEach(compareFrameInfo(thread));
 });
 
-function compareFrameInfo (root, parent) {
+function compareFrameInfo(root, parent) {
   parent = parent || root;
   return function (def) {
     let [total, self, name, children] = def;
@@ -66,7 +66,7 @@ function compareFrameInfo (root, parent) {
     if (children) {
       children.forEach(compareFrameInfo(root, node));
     }
-  }
+  };
 }
 
 var gThread = synthesizeProfileForTest([{

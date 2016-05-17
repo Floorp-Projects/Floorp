@@ -46,7 +46,7 @@ function initializeAutoCompletion(ctx, options = {}) {
     win.tern = require("./tern/tern");
     cm.tern = new CodeMirror.TernServer({
       defs: defs,
-      typeTip: function(data) {
+      typeTip: function (data) {
         let tip = document.createElement("span");
         tip.className = "CodeMirror-Tern-information";
         let tipType = document.createElement("strong");
@@ -93,7 +93,7 @@ function initializeAutoCompletion(ctx, options = {}) {
     };
     cm.addKeyMap(keyMap);
 
-    let destroyTern = function() {
+    let destroyTern = function () {
       ed.off("destroy", destroyTern);
       cm.off("cursorActivity", updateArgHintsCallback);
       cm.removeKeyMap(keyMap);

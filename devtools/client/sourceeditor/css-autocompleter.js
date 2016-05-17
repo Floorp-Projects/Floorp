@@ -105,7 +105,7 @@ CSSCompleter.prototype = {
    *          - label {String} Full keyword for the suggestion
    *          - preLabel {String} Already entered part of the label
    */
-  complete: function(source, caret) {
+  complete: function (source, caret) {
     // Getting the context from the caret position.
     if (!this.resolveState(source, caret)) {
       // We couldn't resolve the context, we won't be able to complete.
@@ -155,7 +155,7 @@ CSSCompleter.prototype = {
    * @returns CSS_STATE
    *          One of CSS_STATE enum or null if the state cannot be resolved.
    */
-  resolveState: function(source, {line, ch}) {
+  resolveState: function (source, {line, ch}) {
     // Function to return the last element of an array
     let peek = arr => arr[arr.length - 1];
     // _state can be one of CSS_STATES;
@@ -715,7 +715,7 @@ CSSCompleter.prototype = {
    * Queries the DOM Walker actor for suggestions regarding the selector being
    * completed
    */
-  suggestSelectors: function() {
+  suggestSelectors: function () {
     let walker = this.walker;
     if (!walker) {
       return Promise.resolve([]);
@@ -765,7 +765,7 @@ CSSCompleter.prototype = {
  /**
   * Prepares the selector suggestions returned by the walker actor.
   */
-  prepareSelectorResults: function(result) {
+  prepareSelectorResults: function (result) {
     if (this._currentQuery != result.query) {
       return [];
     }
@@ -833,7 +833,7 @@ CSSCompleter.prototype = {
    *
    * @param startProp {String} Initial part of the property being completed.
    */
-  completeProperties: function(startProp) {
+  completeProperties: function (startProp) {
     let finalList = [];
     if (!startProp) {
       return Promise.resolve(finalList);
@@ -865,7 +865,7 @@ CSSCompleter.prototype = {
    *        belongs.
    * @param startValue {String} Initial part of the value being completed.
    */
-  completeValues: function(propName, startValue) {
+  completeValues: function (propName, startValue) {
     let finalList = [];
     let list = ["!important;", ...(properties[propName] || [])];
     // If there is no character being completed, we are showing an initial list
@@ -904,7 +904,7 @@ CSSCompleter.prototype = {
    * of the CSS source. This speeds up the tokenizing and the state machine a
    * lot while using autocompletion at high line numbers in a CSS source.
    */
-  findNearestNullState: function(line) {
+  findNearestNullState: function (line) {
     let arr = this.nullStates;
     let high = arr.length - 1;
     let low = 0;
@@ -948,7 +948,7 @@ CSSCompleter.prototype = {
   /**
    * Invalidates the state cache for and above the line.
    */
-  invalidateCache: function(line) {
+  invalidateCache: function (line) {
     this.nullStates.length = this.findNearestNullState(line) + 1;
   },
 
@@ -978,7 +978,7 @@ CSSCompleter.prototype = {
    *                 caret position of the whole selector, value or property.
    *                  - { start: {line, ch}, end: {line, ch}}
    */
-  getInfoAt: function(source, caret) {
+  getInfoAt: function (source, caret) {
     // Limits the input source till the {line, ch} caret position
     function limit(source, {line, ch}) {
       line++;

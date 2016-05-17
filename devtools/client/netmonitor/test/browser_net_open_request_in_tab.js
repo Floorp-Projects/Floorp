@@ -20,7 +20,7 @@ function test() {
       let requestItem = RequestsMenu.getItemAtIndex(0);
       RequestsMenu.selectedItem = requestItem;
 
-      gBrowser.tabContainer.addEventListener("TabOpen",function onOpen(event){
+      gBrowser.tabContainer.addEventListener("TabOpen", function onOpen(event) {
         ok(true, "A new tab has been opened ");
         gBrowser.tabContainer.removeEventListener("TabOpen", onOpen, false);
         cleanUp();
@@ -30,7 +30,7 @@ function test() {
     });
 
     aDebuggee.performRequests(1);
-    function cleanUp(){
+    function cleanUp() {
       teardown(aMonitor).then(() => {
         gBrowser.removeCurrentTab();
         finish();

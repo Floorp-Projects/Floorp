@@ -11,7 +11,7 @@ const { ThreadNode } = require("devtools/client/performance/modules/logic/tree-m
 const { CallView } = require("devtools/client/performance/modules/widgets/tree-view");
 const { synthesizeProfile } = require("devtools/client/performance/test/helpers/synth-utils");
 
-add_task(function() {
+add_task(function () {
   let profile = synthesizeProfile();
   let threadNode = new ThreadNode(profile.threads[0], { startTime: 0, endTime: 20 });
 

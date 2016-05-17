@@ -17,7 +17,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function *() {
+add_task(function* () {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
   yield front.attach();
@@ -60,12 +60,12 @@ add_task(function *() {
         "getSnapshotTotals reuslted in correct count when inverted");
 });
 
-function aggregate (report) {
+function aggregate(report) {
   let totalBytes = report.bytes;
   let totalCount = report.count;
   for (let child of (report.children || [])) {
     let { bytes, count } = aggregate(child);
-    totalBytes += bytes
+    totalBytes += bytes;
     totalCount += count;
   }
   return { bytes: totalBytes, count: totalCount };

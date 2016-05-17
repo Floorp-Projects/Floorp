@@ -5,161 +5,161 @@
 
  "use strict";
 
-function test() {
-  info("Test various cases where the escape key should hide the split console.");
+ function test() {
+   info("Test various cases where the escape key should hide the split console.");
 
-  let toolbox;
-  let hud;
-  let jsterm;
-  let hudMessages;
-  let variablesView;
+   let toolbox;
+   let hud;
+   let jsterm;
+   let hudMessages;
+   let variablesView;
 
-  Task.spawn(runner).then(finish);
+   Task.spawn(runner).then(finish);
 
-  function* runner() {
-    let {tab} = yield loadTab("data:text/html;charset=utf-8,<p>Web Console " +
+   function* runner() {
+     let {tab} = yield loadTab("data:text/html;charset=utf-8,<p>Web Console " +
                               "test for splitting");
-    let target = TargetFactory.forTab(tab);
-    toolbox = yield gDevTools.showToolbox(target, "inspector");
+     let target = TargetFactory.forTab(tab);
+     toolbox = yield gDevTools.showToolbox(target, "inspector");
 
-    yield testCreateSplitConsoleAfterEscape();
+     yield testCreateSplitConsoleAfterEscape();
 
-    yield showAutoCompletePopoup();
+     yield showAutoCompletePopoup();
 
-    yield testHideAutoCompletePopupAfterEscape();
+     yield testHideAutoCompletePopupAfterEscape();
 
-    yield executeJS();
-    yield clickMessageAndShowVariablesView();
-    jsterm.focus();
+     yield executeJS();
+     yield clickMessageAndShowVariablesView();
+     jsterm.focus();
 
-    yield testHideVariablesViewAfterEscape();
+     yield testHideVariablesViewAfterEscape();
 
-    yield clickMessageAndShowVariablesView();
-    yield startPropertyEditor();
+     yield clickMessageAndShowVariablesView();
+     yield startPropertyEditor();
 
-    yield testCancelPropertyEditorAfterEscape();
-    yield testHideVariablesViewAfterEscape();
-    yield testHideSplitConsoleAfterEscape();
-  }
+     yield testCancelPropertyEditorAfterEscape();
+     yield testHideVariablesViewAfterEscape();
+     yield testHideSplitConsoleAfterEscape();
+   }
 
-  function testCreateSplitConsoleAfterEscape() {
-    let result = toolbox.once("webconsole-ready", () => {
-      hud = toolbox.getPanel("webconsole").hud;
-      jsterm = hud.jsterm;
-      ok(toolbox.splitConsole, "Split console is created.");
-    });
+   function testCreateSplitConsoleAfterEscape() {
+     let result = toolbox.once("webconsole-ready", () => {
+       hud = toolbox.getPanel("webconsole").hud;
+       jsterm = hud.jsterm;
+       ok(toolbox.splitConsole, "Split console is created.");
+     });
 
-    let contentWindow = toolbox.win;
-    contentWindow.focus();
-    EventUtils.sendKey("ESCAPE", contentWindow);
+     let contentWindow = toolbox.win;
+     contentWindow.focus();
+     EventUtils.sendKey("ESCAPE", contentWindow);
 
-    return result;
-  }
+     return result;
+   }
 
-  function testHideSplitConsoleAfterEscape() {
-    let result = toolbox.once("split-console", () => {
-      ok(!toolbox.splitConsole, "Split console is hidden.");
-    });
-    EventUtils.sendKey("ESCAPE", toolbox.win);
+   function testHideSplitConsoleAfterEscape() {
+     let result = toolbox.once("split-console", () => {
+       ok(!toolbox.splitConsole, "Split console is hidden.");
+     });
+     EventUtils.sendKey("ESCAPE", toolbox.win);
 
-    return result;
-  }
+     return result;
+   }
 
-  function testHideVariablesViewAfterEscape() {
-    let result = jsterm.once("sidebar-closed", () => {
-      ok(!hud.ui.jsterm.sidebar,
+   function testHideVariablesViewAfterEscape() {
+     let result = jsterm.once("sidebar-closed", () => {
+       ok(!hud.ui.jsterm.sidebar,
         "Variables view is hidden.");
-      ok(toolbox.splitConsole,
+       ok(toolbox.splitConsole,
         "Split console is open after hiding the variables view.");
-    });
-    EventUtils.sendKey("ESCAPE", toolbox.win);
+     });
+     EventUtils.sendKey("ESCAPE", toolbox.win);
 
-    return result;
-  }
+     return result;
+   }
 
-  function testHideAutoCompletePopupAfterEscape() {
-    let deferred = promise.defer();
-    let popup = jsterm.autocompletePopup;
+   function testHideAutoCompletePopupAfterEscape() {
+     let deferred = promise.defer();
+     let popup = jsterm.autocompletePopup;
 
-    popup._panel.addEventListener("popuphidden", function popupHidden() {
-      popup._panel.removeEventListener("popuphidden", popupHidden, false);
-      ok(!popup.isOpen,
+     popup._panel.addEventListener("popuphidden", function popupHidden() {
+       popup._panel.removeEventListener("popuphidden", popupHidden, false);
+       ok(!popup.isOpen,
         "Auto complete popup is hidden.");
-      ok(toolbox.splitConsole,
+       ok(toolbox.splitConsole,
         "Split console is open after hiding the autocomplete popup.");
 
-      deferred.resolve();
-    }, false);
+       deferred.resolve();
+     }, false);
 
-    EventUtils.sendKey("ESCAPE", toolbox.win);
+     EventUtils.sendKey("ESCAPE", toolbox.win);
 
-    return deferred.promise;
-  }
+     return deferred.promise;
+   }
 
-  function testCancelPropertyEditorAfterEscape() {
-    EventUtils.sendKey("ESCAPE", variablesView.window);
-    ok(hud.ui.jsterm.sidebar,
+   function testCancelPropertyEditorAfterEscape() {
+     EventUtils.sendKey("ESCAPE", variablesView.window);
+     ok(hud.ui.jsterm.sidebar,
       "Variables view is open after canceling property editor.");
-    ok(toolbox.splitConsole,
+     ok(toolbox.splitConsole,
       "Split console is open after editing.");
-  }
+   }
 
-  function* executeJS() {
-    jsterm.execute("var foo = { bar: \"baz\" }; foo;");
-    hudMessages = yield waitForMessages({
-      webconsole: hud,
-      messages: [{
-        text: "Object { bar: \"baz\" }",
-        category: CATEGORY_OUTPUT,
-        objects: true
-      }],
-    });
-  }
+   function* executeJS() {
+     jsterm.execute("var foo = { bar: \"baz\" }; foo;");
+     hudMessages = yield waitForMessages({
+       webconsole: hud,
+       messages: [{
+         text: "Object { bar: \"baz\" }",
+         category: CATEGORY_OUTPUT,
+         objects: true
+       }],
+     });
+   }
 
-  function clickMessageAndShowVariablesView() {
-    let result = jsterm.once("variablesview-fetched", (event, vview) => {
-      variablesView = vview;
-    });
+   function clickMessageAndShowVariablesView() {
+     let result = jsterm.once("variablesview-fetched", (event, vview) => {
+       variablesView = vview;
+     });
 
-    let clickable = hudMessages[0].clickableElements[0];
-    EventUtils.synthesizeMouse(clickable, 2, 2, {}, hud.iframeWindow);
+     let clickable = hudMessages[0].clickableElements[0];
+     EventUtils.synthesizeMouse(clickable, 2, 2, {}, hud.iframeWindow);
 
-    return result;
-  }
+     return result;
+   }
 
-  function* startPropertyEditor() {
-    let results = yield findVariableViewProperties(variablesView, [
+   function* startPropertyEditor() {
+     let results = yield findVariableViewProperties(variablesView, [
       {name: "bar", value: "baz"}
-    ], {webconsole: hud});
-    results[0].matchedProp.focus();
-    EventUtils.synthesizeKey("VK_RETURN", variablesView.window);
-  }
+     ], {webconsole: hud});
+     results[0].matchedProp.focus();
+     EventUtils.synthesizeKey("VK_RETURN", variablesView.window);
+   }
 
-  function showAutoCompletePopoup() {
-    let deferred = promise.defer();
-    let popupPanel = jsterm.autocompletePopup._panel;
+   function showAutoCompletePopoup() {
+     let deferred = promise.defer();
+     let popupPanel = jsterm.autocompletePopup._panel;
 
-    popupPanel.addEventListener("popupshown", function popupShown() {
-      popupPanel.removeEventListener("popupshown", popupShown, false);
-      deferred.resolve();
-    }, false);
+     popupPanel.addEventListener("popupshown", function popupShown() {
+       popupPanel.removeEventListener("popupshown", popupShown, false);
+       deferred.resolve();
+     }, false);
 
-    jsterm.focus();
-    jsterm.setInputValue("document.location.");
-    EventUtils.sendKey("TAB", hud.iframeWindow);
+     jsterm.focus();
+     jsterm.setInputValue("document.location.");
+     EventUtils.sendKey("TAB", hud.iframeWindow);
 
-    return deferred.promise;
-  }
+     return deferred.promise;
+   }
 
-  function finish() {
-    toolbox.destroy().then(() => {
-      toolbox = null;
-      hud = null;
-      jsterm = null;
-      hudMessages = null;
-      variablesView = null;
+   function finish() {
+     toolbox.destroy().then(() => {
+       toolbox = null;
+       hud = null;
+       jsterm = null;
+       hudMessages = null;
+       variablesView = null;
 
-      finishTest();
-    });
-  }
-}
+       finishTest();
+     });
+   }
+ }

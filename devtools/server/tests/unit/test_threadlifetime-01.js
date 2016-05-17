@@ -14,8 +14,8 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-grips");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-grips", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-grips", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_thread_lifetime();
     });
@@ -25,21 +25,21 @@ function run_test()
 
 function test_thread_lifetime()
 {
-  gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
+  gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
     let pauseGrip = aPacket.frame.arguments[0];
 
     // Create a thread-lifetime actor for this object.
-    gClient.request({ to: pauseGrip.actor, type: "threadGrip" }, function(aResponse) {
+    gClient.request({ to: pauseGrip.actor, type: "threadGrip" }, function (aResponse) {
       // Successful promotion won't return an error.
       do_check_eq(aResponse.error, undefined);
-      gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
+      gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
         // Verify that the promoted actor is returned again.
         do_check_eq(pauseGrip.actor, aPacket.frame.arguments[0].actor);
         // Now that we've resumed, should get unrecognizePacketType for the
         // promoted grip.
-        gClient.request({ to: pauseGrip.actor, type: "bogusRequest"}, function(aResponse) {
+        gClient.request({ to: pauseGrip.actor, type: "bogusRequest"}, function (aResponse) {
           do_check_eq(aResponse.error, "unrecognizedPacketType");
-          gThreadClient.resume(function() {
+          gThreadClient.resume(function () {
             finishClient(gClient);
           });
         });
@@ -48,11 +48,11 @@ function test_thread_lifetime()
     });
   });
 
-  gDebuggee.eval("(" + function() {
+  gDebuggee.eval("(" + function () {
     function stopMe(arg1) {
       debugger;
       debugger;
-    };
+    }
     stopMe({obj: true});
   } + ")()");
 }

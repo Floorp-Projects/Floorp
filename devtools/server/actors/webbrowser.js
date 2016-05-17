@@ -549,7 +549,7 @@ BrowserTabList.prototype._listenForEventsIf =
  * @param aMessageNames array of strings
  *    An array of message names.
  */
-BrowserTabList.prototype._listenForMessagesIf = function(aShouldListen, aGuard, aMessageNames) {
+BrowserTabList.prototype._listenForMessagesIf = function (aShouldListen, aGuard, aMessageNames) {
   if (!aShouldListen !== !this[aGuard]) {
     let op = aShouldListen ? "addMessageListener" : "removeMessageListener";
     for (let win of allAppShellDOMWindows(DebuggerServer.chromeWindowType)) {
@@ -564,7 +564,7 @@ BrowserTabList.prototype._listenForMessagesIf = function(aShouldListen, aGuard, 
 /**
  * Implement nsIMessageListener.
  */
-BrowserTabList.prototype.receiveMessage = DevToolsUtils.makeInfallible(function(message) {
+BrowserTabList.prototype.receiveMessage = DevToolsUtils.makeInfallible(function (message) {
   let browser = message.target;
   switch (message.name) {
     case "DOMTitleChanged": {

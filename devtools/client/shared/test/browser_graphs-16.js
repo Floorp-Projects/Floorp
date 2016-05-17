@@ -19,7 +19,7 @@ const SECTIONS = [
   { color: "blue" }
 ];
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("about:blank");
   yield performTest();
   gBrowser.removeCurrentTab();

@@ -10,7 +10,7 @@
 const TEST_URI = `data:text/html;charset=utf-8,Web Console test for bug 922212:
   Add console.dirxml`;
 
-add_task(function*() {
+add_task(function* () {
   yield loadTab(TEST_URI);
   let hud = yield openConsole();
   hud.jsterm.clearOutput();

@@ -13,7 +13,7 @@ function test() {
   let gTab, gPanel, gDebugger;
   let gSources, gUtils;
 
-  initDebugger(TAB_URL).then(Task.async(function*([aTab,, aPanel]) {
+  initDebugger(TAB_URL).then(Task.async(function* ([aTab,, aPanel]) {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
@@ -23,7 +23,7 @@ function test() {
     let ellipsis = gPanel.panelWin.L10N.ellipsis;
     let nananana = new Array(20).join(NaN);
 
-    yield waitForSourceShown(gPanel, '.html');
+    yield waitForSourceShown(gPanel, ".html");
 
     // Test trimming url queries.
 
@@ -82,11 +82,11 @@ function test() {
     let id = 0;
     for (let { href, leaf } of urls) {
       let url = href + leaf;
-      let actor = 'actor' + id++;
+      let actor = "actor" + id++;
       let label = gUtils.trimUrlLength(gUtils.getSourceLabel(url));
       let group = gUtils.getSourceGroup(url);
       let dummy = document.createElement("label");
-      dummy.setAttribute('value', label);
+      dummy.setAttribute("value", label);
 
       gSources.push([dummy, actor], {
         attachment: {

@@ -316,13 +316,13 @@ const IDBValues = {
       ]
     }
   }
-}
+};
 
 function finishTests(client) {
 
   let closeConnection = () => {
 
-  }
+  };
 }
 
 function* testStores(data) {
@@ -341,7 +341,7 @@ function testCookies(cookiesActor) {
   return testCookiesObjects(0, cookiesActor.hosts, cookiesActor);
 }
 
-var testCookiesObjects = Task.async(function*(index, hosts, cookiesActor) {
+var testCookiesObjects = Task.async(function* (index, hosts, cookiesActor) {
   let host = Object.keys(hosts)[index];
   let matchItems = data => {
     is(data.total, storeMap.cookies[host].length,
@@ -379,7 +379,7 @@ function testLocalStorage(localStorageActor) {
   return testLocalStorageObjects(0, localStorageActor.hosts, localStorageActor);
 }
 
-var testLocalStorageObjects = Task.async(function*(index, hosts, localStorageActor) {
+var testLocalStorageObjects = Task.async(function* (index, hosts, localStorageActor) {
   let host = Object.keys(hosts)[index];
   let matchItems = data => {
     is(data.total, storeMap.localStorage[host].length,
@@ -413,7 +413,7 @@ function testSessionStorage(sessionStorageActor) {
                                    sessionStorageActor);
 }
 
-var testSessionStorageObjects = Task.async(function*(index, hosts, sessionStorageActor) {
+var testSessionStorageObjects = Task.async(function* (index, hosts, sessionStorageActor) {
   let host = Object.keys(hosts)[index];
   let matchItems = data => {
     is(data.total, storeMap.sessionStorage[host].length,
@@ -440,7 +440,7 @@ var testSessionStorageObjects = Task.async(function*(index, hosts, sessionStorag
   yield testSessionStorageObjects(++index, hosts, sessionStorageActor);
 });
 
-var testIndexedDB = Task.async(function*(indexedDBActor) {
+var testIndexedDB = Task.async(function* (indexedDBActor) {
   is(Object.keys(indexedDBActor.hosts).length, 3,
      "Correct number of host entries for indexed db");
 
@@ -459,11 +459,11 @@ var testIndexedDB = Task.async(function*(indexedDBActor) {
   }
 
   yield testIndexedDBs(0, indexedDBActor.hosts, indexedDBActor);
-  yield  testObjectStores(0, indexedDBActor.hosts, indexedDBActor);
-  yield  testIDBEntries(0, indexedDBActor.hosts, indexedDBActor);
+  yield testObjectStores(0, indexedDBActor.hosts, indexedDBActor);
+  yield testIDBEntries(0, indexedDBActor.hosts, indexedDBActor);
 });
 
-var testIndexedDBs = Task.async(function*(index, hosts, indexedDBActor) {
+var testIndexedDBs = Task.async(function* (index, hosts, indexedDBActor) {
   let host = Object.keys(hosts)[index];
   let matchItems = data => {
     is(data.total, IDBValues.dbDetails[host].length,
@@ -493,7 +493,7 @@ var testIndexedDBs = Task.async(function*(index, hosts, indexedDBActor) {
   yield testIndexedDBs(++index, hosts, indexedDBActor);
 });
 
-var testObjectStores = Task.async(function*(index, hosts, indexedDBActor) {
+var testObjectStores = Task.async(function* (index, hosts, indexedDBActor) {
   let host = Object.keys(hosts)[index];
   let matchItems = (data, db) => {
     is(data.total, IDBValues.objectStoreDetails[host][db].length,
@@ -544,7 +544,7 @@ var testObjectStores = Task.async(function*(index, hosts, indexedDBActor) {
   yield testObjectStores(++index, hosts, indexedDBActor);
 });
 
-var testIDBEntries = Task.async(function*(index, hosts, indexedDBActor) {
+var testIDBEntries = Task.async(function* (index, hosts, indexedDBActor) {
   let host = Object.keys(hosts)[index];
   let matchItems = (data, obj) => {
     is(data.total, IDBValues.entries[host][obj].length,
@@ -582,7 +582,7 @@ var testIDBEntries = Task.async(function*(index, hosts, indexedDBActor) {
   yield testObjectStores(++index, hosts, indexedDBActor);
 });
 
-add_task(function*() {
+add_task(function* () {
   yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-listings.html");
 
   initDebuggerServer();

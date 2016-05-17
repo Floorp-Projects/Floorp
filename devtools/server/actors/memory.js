@@ -68,7 +68,7 @@ var MemoryActor = exports.MemoryActor = protocol.ActorClass({
     },
   },
 
-  initialize: function(conn, parent, frameCache = new StackFrameCache()) {
+  initialize: function (conn, parent, frameCache = new StackFrameCache()) {
     protocol.Actor.prototype.initialize.call(this, conn);
 
     this._onGarbageCollection = this._onGarbageCollection.bind(this);
@@ -78,7 +78,7 @@ var MemoryActor = exports.MemoryActor = protocol.ActorClass({
     this.bridge.on("allocations", this._onAllocations);
   },
 
-  destroy: function() {
+  destroy: function () {
     this.bridge.off("garbage-collection", this._onGarbageCollection);
     this.bridge.off("allocations", this._onAllocations);
     this.bridge.destroy();
@@ -182,7 +182,7 @@ var MemoryActor = exports.MemoryActor = protocol.ActorClass({
 });
 
 exports.MemoryFront = protocol.FrontClass(MemoryActor, {
-  initialize: function(client, form, rootForm = null) {
+  initialize: function (client, form, rootForm = null) {
     protocol.Front.prototype.initialize.call(this, client, form);
     this._client = client;
     this.actorID = form.memoryActor;

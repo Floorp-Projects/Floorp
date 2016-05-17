@@ -17,7 +17,7 @@ function test() {
     NetworkDetails._params.lazyEmpty = false;
 
     waitForNetworkEvents(aMonitor, 0, 1).then(() => {
-      NetMonitorView.toggleDetailsPane({ visible: true }, 2)
+      NetMonitorView.toggleDetailsPane({ visible: true }, 2);
       RequestsMenu.selectedIndex = 0;
 
       let TAB_UPDATED = aMonitor.panelWin.EVENTS.TAB_UPDATED;

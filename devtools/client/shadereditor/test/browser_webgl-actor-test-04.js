@@ -12,7 +12,7 @@ function* ifWebGLSupported() {
 
   let programActor = yield once(front, "program-linked");
   ok(programActor,
-    "A program actor was sent along with the 'program-linked' notification.")
+    "A program actor was sent along with the 'program-linked' notification.");
 
   let vertexShader = yield programActor.getVertexShader();
   ok(programActor,

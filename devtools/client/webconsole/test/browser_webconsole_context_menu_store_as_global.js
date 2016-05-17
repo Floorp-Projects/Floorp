@@ -14,7 +14,7 @@ const TEST_URI = `data:text/html,<script>
   console.log("foo", window.bar);
 </script>`;
 
-add_task(function*() {
+add_task(function* () {
   yield loadTab(TEST_URI);
   let hud = yield openConsole();
 

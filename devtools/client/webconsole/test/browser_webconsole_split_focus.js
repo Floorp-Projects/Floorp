@@ -5,7 +5,7 @@
 
  "use strict";
 
-function test() {
+ function test() {
   info("Test that the split console state is persisted");
 
   let toolbox;

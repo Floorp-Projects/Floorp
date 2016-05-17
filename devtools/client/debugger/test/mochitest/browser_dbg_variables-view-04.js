@@ -128,11 +128,11 @@ function test() {
     is(variables.getItemForNode(parent.target), undefined,
        "VariablesView should not have a record of the parent anymore.");
     is(parent.target.parentNode, null,
-       "Parent element should not have a parent.")
+       "Parent element should not have a parent.");
     is(variables.getItemForNode(child.target), undefined,
        "VariablesView should not have a record of the child anymore.");
     is(child.target.parentNode, null,
-       "Child element should not have a parent.")
+       "Child element should not have a parent.");
     is([...parent].length, 0,
        "Parent should have zero children.");
 

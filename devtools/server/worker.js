@@ -1,4 +1,4 @@
-"use strict"
+"use strict";
 
 // This function is used to do remote procedure calls from the worker to the
 // main thread. It is exposed as a built-in global to every module by the
@@ -38,73 +38,73 @@ var connections = Object.create(null);
 var nextId = 0;
 var rpcDeferreds = [];
 
-this.addEventListener("message",  function (event) {
+this.addEventListener("message", function (event) {
   let packet = JSON.parse(event.data);
   switch (packet.type) {
-  case "connect":
+    case "connect":
     // Step 3: Create a connection to the parent.
-    let connection = DebuggerServer.connectToParent(packet.id, this);
-    connections[packet.id] = {
-      connection : connection,
-      rpcs: []
-    };
+      let connection = DebuggerServer.connectToParent(packet.id, this);
+      connections[packet.id] = {
+        connection : connection,
+        rpcs: []
+      };
 
     // Step 4: Create a thread actor for the connection to the parent.
-    let pool = new ActorPool(connection);
-    connection.addActorPool(pool);
+      let pool = new ActorPool(connection);
+      connection.addActorPool(pool);
 
-    let sources = null;
+      let sources = null;
 
-    let parent = {
-      actorID: packet.id,
+      let parent = {
+        actorID: packet.id,
 
-      makeDebugger: makeDebugger.bind(null, {
-        findDebuggees: () => {
-          return [this.global];
+        makeDebugger: makeDebugger.bind(null, {
+          findDebuggees: () => {
+            return [this.global];
+          },
+
+          shouldAddNewGlobalAsDebuggee: () => {
+            return true;
+          },
+        }),
+
+        get sources() {
+          if (sources === null) {
+            sources = new TabSources(threadActor);
+          }
+          return sources;
         },
 
-        shouldAddNewGlobalAsDebuggee: () => {
-          return true;
-        },
-      }),
+        window: global
+      };
 
-      get sources() {
-        if (sources === null) {
-          sources = new TabSources(threadActor);
-        }
-        return sources;
-      },
+      let threadActor = new ThreadActor(parent, global);
+      pool.addActor(threadActor);
 
-      window: global
-    };
-
-    let threadActor = new ThreadActor(parent, global);
-    pool.addActor(threadActor);
-
-    let consoleActor = new WebConsoleActor(connection, parent);
-    pool.addActor(consoleActor);
+      let consoleActor = new WebConsoleActor(connection, parent);
+      pool.addActor(consoleActor);
 
     // Step 5: Send a response packet to the parent to notify
     // it that a connection has been established.
-    postMessage(JSON.stringify({
-      type: "connected",
-      id: packet.id,
-      threadActor: threadActor.actorID,
-      consoleActor: consoleActor.actorID,
-    }));
-    break;
+      postMessage(JSON.stringify({
+        type: "connected",
+        id: packet.id,
+        threadActor: threadActor.actorID,
+        consoleActor: consoleActor.actorID,
+      }));
+      break;
 
-  case "disconnect":
-    connections[packet.id].connection.close();
-    break;
+    case "disconnect":
+      connections[packet.id].connection.close();
+      break;
 
-  case "rpc":
-    let deferred = rpcDeferreds[packet.id];
-    delete rpcDeferreds[packet.id];
-    if (packet.error) {
+    case "rpc":
+      let deferred = rpcDeferreds[packet.id];
+      delete rpcDeferreds[packet.id];
+      if (packet.error) {
         deferred.reject(packet.error);
-    }
-    deferred.resolve(packet.result);
-    break;
-  };
+      }
+      deferred.resolve(packet.result);
+      break;
+  }
 });

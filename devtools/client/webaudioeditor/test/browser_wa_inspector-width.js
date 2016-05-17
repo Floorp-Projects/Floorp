@@ -6,7 +6,7 @@
  * a preference
  */
 
-add_task(function*() {
+add_task(function* () {
   let { target, panel } = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, InspectorView } = panelWin;
@@ -34,7 +34,7 @@ add_task(function*() {
   $("#web-audio-inspector").setAttribute("width", newInspectorWidth);
   reload(target);
 
-  //Width should be 500 after reloading
+  // Width should be 500 after reloading
   [actors] = yield Promise.all([
     get3(gFront, "create-node"),
     waitForGraphRendered(panelWin, 3, 2)
@@ -46,7 +46,7 @@ add_task(function*() {
   yield once(panelWin, EVENTS.UI_INSPECTOR_TOGGLED);
 
   yield clickGraphNode(panelWin, findGraphNode(panelWin, nodeIds[1]));
- 
+
   // Getting the width of the audio inspector
   let width = $("#web-audio-inspector").getAttribute("width");
 

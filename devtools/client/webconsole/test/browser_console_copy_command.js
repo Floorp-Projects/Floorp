@@ -44,11 +44,11 @@ add_task(function* testCopy() {
                   [RANDOM, RANDOM],
                   [JSON.stringify(string), string],
                   [obj.toSource(), JSON.stringify(obj, null, "  ")],
-                  [
-                    "$('#" + ID + "')",
-                    content.document.getElementById(ID).outerHTML
-                  ]
-                ];
+    [
+      "$('#" + ID + "')",
+      content.document.getElementById(ID).outerHTML
+    ]
+  ];
   for (let [source, reference] of samples) {
     let deferredResult = promise.defer();
 

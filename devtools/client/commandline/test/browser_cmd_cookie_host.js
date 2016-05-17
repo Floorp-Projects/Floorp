@@ -9,32 +9,32 @@ const TEST_URI = "http://mochi.test:8888/browser/devtools/client/commandline/" +
                  "test/browser_cmd_cookie.html";
 
 function test() {
-  helpers.addTabWithToolbar(TEST_URI, function(options) {
+  helpers.addTabWithToolbar(TEST_URI, function (options) {
     return helpers.audit(options, [
-        {
-          setup: 'cookie list',
-          exec: {
+      {
+        setup: "cookie list",
+        exec: {
             output: [ /zap=zep/, /zip=zop/, /zig=zag/ ],
           }
-        },
-        {
-          setup: "cookie set zup banana",
-          check: {
+      },
+      {
+        setup: "cookie set zup banana",
+        check: {
             args: {
-              name: { value: 'zup' },
-              value: { value: 'banana' },
+              name: { value: "zup" },
+              value: { value: "banana" },
             }
           },
-          exec: {
+        exec: {
             output: ""
           }
-        },
-        {
-          setup: "cookie list",
-          exec: {
+      },
+      {
+        setup: "cookie list",
+        exec: {
             output: [ /zap=zep/, /zip=zop/, /zig=zag/, /zup=banana/, /Edit/ ]
           }
-        }
+      }
     ]);
   }).then(finish, helpers.handleError);
 }

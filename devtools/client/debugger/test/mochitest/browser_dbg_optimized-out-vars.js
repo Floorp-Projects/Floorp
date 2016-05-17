@@ -31,7 +31,7 @@ function test() {
     let upvarVar = outerScope.get("upvar");
     ok(upvarVar, "The variable `upvar` is shown.");
     is(upvarVar.target.querySelector(".value").getAttribute("value"),
-       gDebugger.L10N.getStr('variablesViewOptimizedOut'),
+       gDebugger.L10N.getStr("variablesViewOptimizedOut"),
        "Should show the optimized out message for upvar.");
 
     let argVar = outerScope.get("arg");

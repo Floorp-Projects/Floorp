@@ -12,7 +12,7 @@ function run_test() {
 
   assertThrowsValue(() => {
     saveHeapSnapshotAndTakeCensus(dbg, {
-      breakdown: { get by() { throw "ಠ_ಠ" } }
+      breakdown: { get by() { throw "ಠ_ಠ"; } }
     });
   }, "ಠ_ಠ");
 
@@ -20,27 +20,13 @@ function run_test() {
 
   assertThrowsValue(() => {
     saveHeapSnapshotAndTakeCensus(dbg, {
-      breakdown: { by: 'count', get count() { throw "ಠ_ಠ" } }
+      breakdown: { by: "count", get count() { throw "ಠ_ಠ"; } }
     });
   }, "ಠ_ಠ");
 
   assertThrowsValue(() => {
     saveHeapSnapshotAndTakeCensus(dbg, {
-      breakdown: { by: 'count', get bytes() { throw "ಠ_ಠ" } }
-    });
-  }, "ಠ_ಠ");
-
-
-
-  assertThrowsValue(() => {
-    saveHeapSnapshotAndTakeCensus(dbg, {
-      breakdown: { by: 'objectClass', get then() { throw "ಠ_ಠ" } }
-    });
-  }, "ಠ_ಠ");
-
-  assertThrowsValue(() => {
-    saveHeapSnapshotAndTakeCensus(dbg, {
-      breakdown: { by: 'objectClass', get other() { throw "ಠ_ಠ" } }
+      breakdown: { by: "count", get bytes() { throw "ಠ_ಠ"; } }
     });
   }, "ಠ_ಠ");
 
@@ -48,25 +34,13 @@ function run_test() {
 
   assertThrowsValue(() => {
     saveHeapSnapshotAndTakeCensus(dbg, {
-      breakdown: { by: 'coarseType', get objects() { throw "ಠ_ಠ" } }
+      breakdown: { by: "objectClass", get then() { throw "ಠ_ಠ"; } }
     });
   }, "ಠ_ಠ");
 
   assertThrowsValue(() => {
     saveHeapSnapshotAndTakeCensus(dbg, {
-      breakdown: { by: 'coarseType', get scripts() { throw "ಠ_ಠ" } }
-    });
-  }, "ಠ_ಠ");
-
-  assertThrowsValue(() => {
-    saveHeapSnapshotAndTakeCensus(dbg, {
-      breakdown: { by: 'coarseType', get strings() { throw "ಠ_ಠ" } }
-    });
-  }, "ಠ_ಠ");
-
-  assertThrowsValue(() => {
-    saveHeapSnapshotAndTakeCensus(dbg, {
-      breakdown: { by: 'coarseType', get other() { throw "ಠ_ಠ" } }
+      breakdown: { by: "objectClass", get other() { throw "ಠ_ಠ"; } }
     });
   }, "ಠ_ಠ");
 
@@ -74,7 +48,33 @@ function run_test() {
 
   assertThrowsValue(() => {
     saveHeapSnapshotAndTakeCensus(dbg, {
-      breakdown: { by: 'internalType', get then() { throw "ಠ_ಠ" } }
+      breakdown: { by: "coarseType", get objects() { throw "ಠ_ಠ"; } }
+    });
+  }, "ಠ_ಠ");
+
+  assertThrowsValue(() => {
+    saveHeapSnapshotAndTakeCensus(dbg, {
+      breakdown: { by: "coarseType", get scripts() { throw "ಠ_ಠ"; } }
+    });
+  }, "ಠ_ಠ");
+
+  assertThrowsValue(() => {
+    saveHeapSnapshotAndTakeCensus(dbg, {
+      breakdown: { by: "coarseType", get strings() { throw "ಠ_ಠ"; } }
+    });
+  }, "ಠ_ಠ");
+
+  assertThrowsValue(() => {
+    saveHeapSnapshotAndTakeCensus(dbg, {
+      breakdown: { by: "coarseType", get other() { throw "ಠ_ಠ"; } }
+    });
+  }, "ಠ_ಠ");
+
+
+
+  assertThrowsValue(() => {
+    saveHeapSnapshotAndTakeCensus(dbg, {
+      breakdown: { by: "internalType", get then() { throw "ಠ_ಠ"; } }
     });
   }, "ಠ_ಠ");
 

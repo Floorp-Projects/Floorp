@@ -14,7 +14,7 @@ const SHEET_B = TEST_BASE_HTTPS + "browser_cmd_csscoverage_sheetB.css";
 const SHEET_C = TEST_BASE_HTTPS + "browser_cmd_csscoverage_sheetC.css";
 const SHEET_D = TEST_BASE_HTTPS + "browser_cmd_csscoverage_sheetD.css";
 
-add_task(function*() {
+add_task(function* () {
   let options = yield helpers.openTab("about:blank");
   yield helpers.openToolbar(options);
 
@@ -63,9 +63,9 @@ function* navigate(usage, options) {
  */
 function* checkPages(usage) {
   // 'load' event order. '' is for the initial location
-  let expectedVisited = [ '', PAGE_2, PAGE_1, PAGE_3 ];
+  let expectedVisited = [ "", PAGE_2, PAGE_1, PAGE_3 ];
   let actualVisited = yield usage._testOnly_visitedPages();
-  isEqualJson(actualVisited, expectedVisited, 'Visited');
+  isEqualJson(actualVisited, expectedVisited, "Visited");
 }
 
 /**
@@ -82,7 +82,7 @@ function* checkEditorReport(usage) {
     ]
   };
   let actualPage1 = yield usage.createEditorReport(PAGE_1 + " \u2192 <style> index 0");
-  isEqualJson(actualPage1, expectedPage1, 'Page1');
+  isEqualJson(actualPage1, expectedPage1, "Page1");
 
   // Page2
   let expectedPage2 = {
@@ -94,7 +94,7 @@ function* checkEditorReport(usage) {
     ]
   };
   let actualPage2 = yield usage.createEditorReport(PAGE_2 + " \u2192 <style> index 0");
-  isEqualJson(actualPage2, expectedPage2, 'Page2');
+  isEqualJson(actualPage2, expectedPage2, "Page2");
 
   // Page3a
   let expectedPage3a = {
@@ -106,7 +106,7 @@ function* checkEditorReport(usage) {
     ]
   };
   let actualPage3a = yield usage.createEditorReport(PAGE_3 + " \u2192 <style> index 0");
-  isEqualJson(actualPage3a, expectedPage3a, 'Page3a');
+  isEqualJson(actualPage3a, expectedPage3a, "Page3a");
 
   // Page3b
   let expectedPage3b = {
@@ -118,7 +118,7 @@ function* checkEditorReport(usage) {
     ]
   };
   let actualPage3b = yield usage.createEditorReport(PAGE_3 + " \u2192 <style> index 1");
-  isEqualJson(actualPage3b, expectedPage3b, 'Page3b');
+  isEqualJson(actualPage3b, expectedPage3b, "Page3b");
 
   // SheetA
   let expectedSheetA = {
@@ -130,7 +130,7 @@ function* checkEditorReport(usage) {
     ]
   };
   let actualSheetA = yield usage.createEditorReport(SHEET_A);
-  isEqualJson(actualSheetA, expectedSheetA, 'SheetA');
+  isEqualJson(actualSheetA, expectedSheetA, "SheetA");
 
   // SheetB
   let expectedSheetB = {
@@ -142,7 +142,7 @@ function* checkEditorReport(usage) {
     ]
   };
   let actualSheetB = yield usage.createEditorReport(SHEET_B);
-  isEqualJson(actualSheetB, expectedSheetB, 'SheetB');
+  isEqualJson(actualSheetB, expectedSheetB, "SheetB");
 
   // SheetC
   let expectedSheetC = {
@@ -154,7 +154,7 @@ function* checkEditorReport(usage) {
     ]
   };
   let actualSheetC = yield usage.createEditorReport(SHEET_C);
-  isEqualJson(actualSheetC, expectedSheetC, 'SheetC');
+  isEqualJson(actualSheetC, expectedSheetC, "SheetC");
 
   // SheetD
   let expectedSheetD = {
@@ -166,7 +166,7 @@ function* checkEditorReport(usage) {
     ]
   };
   let actualSheetD = yield usage.createEditorReport(SHEET_D);
-  isEqualJson(actualSheetD, expectedSheetD, 'SheetD');
+  isEqualJson(actualSheetD, expectedSheetD, "SheetD");
 }
 
 /**
@@ -181,7 +181,7 @@ function* checkPageReport(usage) {
 
   // Check the summary
   let expectedSummary = { "used": 92, "unused": 22, "preload": 28 };
-  isEqualJson(actualReport.summary, expectedSummary, 'summary');
+  isEqualJson(actualReport.summary, expectedSummary, "summary");
 
   checkPageReportPreload(actualReport);
   checkPageReportUnused(actualReport);
@@ -192,10 +192,10 @@ function* checkPageReport(usage) {
  */
 function checkPageReportPreload(actualReport) {
   // Check the preload header
-  isEqualJson(actualReport.preload.length, 3, 'preload length');
+  isEqualJson(actualReport.preload.length, 3, "preload length");
 
   // Check the preload rules
-  isEqualJson(actualReport.preload[0].url, PAGE_2, 'preload url 0');
+  isEqualJson(actualReport.preload[0].url, PAGE_2, "preload url 0");
   let expectedPreloadRules0 = [
     // TODO: This is already pre-loaded, we should note this
     {
@@ -244,9 +244,9 @@ function checkPageReportPreload(actualReport) {
       selectorText: ".sheetC-test4"
     }
   ];
-  isEqualJson(actualReport.preload[0].rules, expectedPreloadRules0, 'preload rules 0');
+  isEqualJson(actualReport.preload[0].rules, expectedPreloadRules0, "preload rules 0");
 
-  isEqualJson(actualReport.preload[1].url, PAGE_1, 'preload url 1');
+  isEqualJson(actualReport.preload[1].url, PAGE_1, "preload url 1");
   let expectedPreloadRules1 = [
     {
       url:  SHEET_A,
@@ -299,9 +299,9 @@ function checkPageReportPreload(actualReport) {
       selectorText: ".page1-test3:hover"
     }
   ];
-  isEqualJson(actualReport.preload[1].rules, expectedPreloadRules1, 'preload rules 1');
+  isEqualJson(actualReport.preload[1].rules, expectedPreloadRules1, "preload rules 1");
 
-  isEqualJson(actualReport.preload[2].url, PAGE_3, 'preload url 2');
+  isEqualJson(actualReport.preload[2].url, PAGE_3, "preload url 2");
   let expectedPreloadRules2 = [
     {
       url: SHEET_A,
@@ -349,7 +349,7 @@ function checkPageReportPreload(actualReport) {
       selectorText: ".page3-test1"
     },
   ];
-  isEqualJson(actualReport.preload[2].rules, expectedPreloadRules2, 'preload rules 2');
+  isEqualJson(actualReport.preload[2].rules, expectedPreloadRules2, "preload rules 2");
 }
 
 /**
@@ -357,7 +357,7 @@ function checkPageReportPreload(actualReport) {
  */
 function checkPageReportUnused(actualReport) {
   // Check the unused header
-  isEqualJson(actualReport.unused.length, 8, 'unused length');
+  isEqualJson(actualReport.unused.length, 8, "unused length");
 
   // Check the unused rules
   isEqualJson(actualReport.unused[0].url, PAGE_2 + " \u2192 <style> index 0", "unused url 0");
@@ -368,7 +368,7 @@ function checkPageReportUnused(actualReport) {
       selectorText: ".page2-test2"
     }
   ];
-  isEqualJson(actualReport.unused[0].rules, expectedUnusedRules0, 'unused rules 0');
+  isEqualJson(actualReport.unused[0].rules, expectedUnusedRules0, "unused rules 0");
 
   isEqualJson(actualReport.unused[1].url, SHEET_A, "unused url 1");
   let expectedUnusedRules1 = [
@@ -378,7 +378,7 @@ function checkPageReportUnused(actualReport) {
       selectorText: ".sheetA-test2"
     }
   ];
-  isEqualJson(actualReport.unused[1].rules, expectedUnusedRules1, 'unused rules 1');
+  isEqualJson(actualReport.unused[1].rules, expectedUnusedRules1, "unused rules 1");
 
   isEqualJson(actualReport.unused[2].url, SHEET_B, "unused url 2");
   let expectedUnusedRules2 = [
@@ -388,7 +388,7 @@ function checkPageReportUnused(actualReport) {
       selectorText: ".sheetB-test2"
     }
   ];
-  isEqualJson(actualReport.unused[2].rules, expectedUnusedRules2, 'unused rules 2');
+  isEqualJson(actualReport.unused[2].rules, expectedUnusedRules2, "unused rules 2");
 
   isEqualJson(actualReport.unused[3].url, SHEET_D, "unused url 3");
   let expectedUnusedRules3 = [
@@ -398,7 +398,7 @@ function checkPageReportUnused(actualReport) {
       selectorText: ".sheetD-test2"
     }
   ];
-  isEqualJson(actualReport.unused[3].rules, expectedUnusedRules3, 'unused rules 3');
+  isEqualJson(actualReport.unused[3].rules, expectedUnusedRules3, "unused rules 3");
 
   isEqualJson(actualReport.unused[4].url, SHEET_C, "unused url 4");
   let expectedUnusedRules4 = [
@@ -408,7 +408,7 @@ function checkPageReportUnused(actualReport) {
       selectorText: ".sheetC-test2"
     }
   ];
-  isEqualJson(actualReport.unused[4].rules, expectedUnusedRules4, 'unused rules 4');
+  isEqualJson(actualReport.unused[4].rules, expectedUnusedRules4, "unused rules 4");
 
   isEqualJson(actualReport.unused[5].url, PAGE_1 + " \u2192 <style> index 0", "unused url 5");
   let expectedUnusedRules5 = [
@@ -418,7 +418,7 @@ function checkPageReportUnused(actualReport) {
       selectorText: ".page1-test2"
     }
   ];
-  isEqualJson(actualReport.unused[5].rules, expectedUnusedRules5, 'unused rules 5');
+  isEqualJson(actualReport.unused[5].rules, expectedUnusedRules5, "unused rules 5");
 
   isEqualJson(actualReport.unused[6].url, PAGE_3 + " \u2192 <style> index 0", "unused url 6");
   let expectedUnusedRules6 = [
@@ -428,7 +428,7 @@ function checkPageReportUnused(actualReport) {
       selectorText: ".page3-test2"
     }
   ];
-  isEqualJson(actualReport.unused[6].rules, expectedUnusedRules6, 'unused rules 6');
+  isEqualJson(actualReport.unused[6].rules, expectedUnusedRules6, "unused rules 6");
 
   isEqualJson(actualReport.unused[7].url, PAGE_3 + " \u2192 <style> index 1", "unused url 7");
   let expectedUnusedRules7 = [
@@ -438,7 +438,7 @@ function checkPageReportUnused(actualReport) {
       selectorText: ".page3-test3"
     }
   ];
-  isEqualJson(actualReport.unused[7].rules, expectedUnusedRules7, 'unused rules 7');
+  isEqualJson(actualReport.unused[7].rules, expectedUnusedRules7, "unused rules 7");
 }
 
 /**

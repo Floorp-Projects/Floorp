@@ -137,7 +137,7 @@ function takesIframesOffsetsIntoAccount(doc) {
 
   let [quad] = getAdjustedQuads(doc.defaultView, innerNode, "content");
 
-  //rootIframe margin + subIframe margin + node margin + node border + node padding
+  // rootIframe margin + subIframe margin + node margin + node border + node padding
   let p1x = 10 + 10 + 10 + 10 + 10;
   is(quad.p1.x, p1x, "The inner node's p1 x position is correct");
 

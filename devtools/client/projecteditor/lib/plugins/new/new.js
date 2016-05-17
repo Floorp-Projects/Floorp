@@ -12,7 +12,7 @@ const { getLocalizedString } = require("devtools/client/projecteditor/lib/helper
 var NewFile = Class({
   extends: Plugin,
 
-  init: function() {
+  init: function () {
     this.command = this.host.addCommand(this, {
       id: "cmd-new",
       key: getLocalizedString("projecteditor.new.commandkey"),
@@ -31,7 +31,7 @@ var NewFile = Class({
     });
   },
 
-  onCommand: function(cmd) {
+  onCommand: function (cmd) {
     if (cmd === "cmd-new") {
       let tree = this.host.projectTree;
       let resource = tree.getSelectedResource();
@@ -65,7 +65,7 @@ var NewFile = Class({
     }
   },
 
-  suggestName: function(parent, template, start=1) {
+  suggestName: function (parent, template, start = 1) {
     let i = start;
     let name;
     do {

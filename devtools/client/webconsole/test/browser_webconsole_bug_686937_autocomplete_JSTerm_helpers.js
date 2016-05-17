@@ -26,7 +26,7 @@ add_task(function* () {
   input.setSelectionRange(1, 1);
   yield complete(jsterm.COMPLETE_HINT_ONLY);
 
-  let newItems = popup.getItems().map(function(e) {
+  let newItems = popup.getItems().map(function (e) {
     return e.label;
   });
   ok(newItems.indexOf("inspect") > -1,
@@ -37,7 +37,7 @@ add_task(function* () {
   input.setSelectionRange(7, 7);
   yield complete(jsterm.COMPLETE_HINT_ONLY);
 
-  newItems = popup.getItems().map(function(e) {
+  newItems = popup.getItems().map(function (e) {
     return e.label;
   });
   is(newItems.indexOf("inspect"), -1,
@@ -48,7 +48,7 @@ add_task(function* () {
   input.setSelectionRange(6, 6);
   yield complete(jsterm.COMPLETE_HINT_ONLY);
 
-  newItems = popup.getItems().map(function(e) {
+  newItems = popup.getItems().map(function (e) {
     return e.label;
   });
   ok(newItems.indexOf("inspect") > -1,
@@ -59,7 +59,7 @@ add_task(function* () {
   input.setSelectionRange(13, 13);
   yield complete(jsterm.COMPLETE_HINT_ONLY);
 
-  newItems = popup.getItems().map(function(e) {
+  newItems = popup.getItems().map(function (e) {
     return e.label;
   });
   ok(newItems.indexOf("inspect") > -1,

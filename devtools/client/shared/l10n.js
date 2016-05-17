@@ -26,7 +26,7 @@ LocalizationHelper.prototype = {
    * @param string name
    * @return string
    */
-  getStr: function(name) {
+  getStr: function (name) {
     return this.stringBundle.GetStringFromName(name);
   },
 
@@ -37,7 +37,7 @@ LocalizationHelper.prototype = {
    * @param array args
    * @return string
    */
-  getFormatStr: function(name, ...args) {
+  getFormatStr: function (name, ...args) {
     return this.stringBundle.formatStringFromName(name, args, args.length);
   },
 
@@ -50,7 +50,7 @@ LocalizationHelper.prototype = {
    * @param array args
    * @return string
    */
-  getFormatStrWithNumbers: function(name, ...args) {
+  getFormatStrWithNumbers: function (name, ...args) {
     let newArgs = args.map(x => typeof x == "number" ? this.numberWithDecimals(x, 2) : x);
     return this.stringBundle.formatStringFromName(name, newArgs, newArgs.length);
   },
@@ -66,7 +66,7 @@ LocalizationHelper.prototype = {
    * @return string
    *         The localized number as a string.
    */
-  numberWithDecimals: function(number, decimals = 0) {
+  numberWithDecimals: function (number, decimals = 0) {
     // If this is an integer, don't do anything special.
     if (number === (number|0)) {
       return number;

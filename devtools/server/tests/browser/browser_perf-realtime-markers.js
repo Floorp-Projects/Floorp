@@ -7,7 +7,7 @@
 
 const { PerformanceFront } = require("devtools/server/actors/performance");
 
-add_task(function*() {
+add_task(function* () {
   let browser = yield addTab(MAIN_DOMAIN + "doc_perf.html");
   let doc = browser.contentDocument;
 
@@ -47,7 +47,7 @@ add_task(function*() {
   yield closeDebuggerClient(client);
   gBrowser.removeCurrentTab();
 
-  function handler (name, data) {
+  function handler(name, data) {
     if (name === "markers") {
       if (counters.markers.length >= 1) { return; }
       ok(data.markers[0].start, "received atleast one marker with `start`");
@@ -89,5 +89,5 @@ add_task(function*() {
         name === "ticks" && counters[name].length === 3) {
       deferreds[name].resolve();
     }
-  };
+  }
 });

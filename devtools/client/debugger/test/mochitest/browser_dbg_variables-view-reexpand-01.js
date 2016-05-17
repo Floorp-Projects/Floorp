@@ -19,7 +19,7 @@ function test() {
     const gDebugger = gPanel.panelWin;
     const gSources = gDebugger.DebuggerView.Sources;
     const gVariables = gDebugger.DebuggerView.Variables;
-    const queries = gDebugger.require('./content/queries');
+    const queries = gDebugger.require("./content/queries");
     const getState = gDebugger.DebuggerController.getState;
     const actions = bindActionCreators(gPanel);
 
@@ -194,7 +194,7 @@ function test() {
       return deferred.promise;
     }
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceShown(gPanel, ".html");
       yield addBreakpoint();
       yield ensureThreadClientState(gPanel, "resumed");
@@ -203,6 +203,6 @@ function test() {
       yield stepInDebuggee();
       yield testVariablesExpand();
       resumeDebuggerThenCloseAndFinish(gPanel);
-    })
+    });
   });
 }

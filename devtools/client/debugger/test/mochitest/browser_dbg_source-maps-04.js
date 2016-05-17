@@ -173,7 +173,7 @@ function disablePauseOnExceptions() {
   return deferred.promise;
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gPanel = null;
   gDebugger = null;
   gFrames = null;

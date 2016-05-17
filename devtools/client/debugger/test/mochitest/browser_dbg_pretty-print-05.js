@@ -16,12 +16,12 @@ function test() {
     const gDebugger = gPanel.panelWin;
     const gEditor = gDebugger.DebuggerView.editor;
     const gSources = gDebugger.DebuggerView.Sources;
-    const queries = gDebugger.require('./content/queries');
-    const constants = gDebugger.require('./content/constants');
+    const queries = gDebugger.require("./content/queries");
+    const constants = gDebugger.require("./content/constants");
     const actions = bindActionCreators(gPanel);
     const getState = gDebugger.DebuggerController.getState;
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceShown(gPanel, TAB_URL);
 
       // From this point onward, the source editor's text should never change.
@@ -39,7 +39,7 @@ function test() {
         yield actions.togglePrettyPrint(source);
         ok(false, "An error occurred while pretty-printing");
       }
-      catch(err) {
+      catch (err) {
         is(err.message, "Can't prettify non-javascript files.",
            "The promise was correctly rejected with a meaningful message.");
       }

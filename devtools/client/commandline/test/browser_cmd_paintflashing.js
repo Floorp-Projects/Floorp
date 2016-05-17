@@ -13,7 +13,7 @@ function test() {
 }
 
 var tests = {
-  testInput: function(options) {
+  testInput: function (options) {
     let toggleCommand = options.requisition.system.commands.get("paintflashing toggle");
 
     let _tab = options.tab;

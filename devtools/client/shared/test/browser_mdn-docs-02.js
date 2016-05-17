@@ -28,13 +28,13 @@ const {setBaseCssDocsUrl, MdnDocsWidget} = require("devtools/client/shared/widge
 const MDN_DOCS_TOOLTIP_FRAME = "chrome://devtools/content/shared/widgets/mdn-docs-frame.xhtml";
 
 const BASIC_EXPECTED_SUMMARY = "A summary of the property.";
-const BASIC_EXPECTED_SYNTAX = [{type: "comment",        text: "/* The part we want   */"},
-                               {type: "text",           text: "\n"},
-                               {type: "property-name",  text: "this"},
-                               {type: "text",           text: ":"},
-                               {type: "text",           text: " "},
+const BASIC_EXPECTED_SYNTAX = [{type: "comment", text: "/* The part we want   */"},
+                               {type: "text", text: "\n"},
+                               {type: "property-name", text: "this"},
+                               {type: "text", text: ":"},
+                               {type: "text", text: " "},
                                {type: "property-value", text: "is-the-part-we-want"},
-                               {type: "text",           text: ";"}];
+                               {type: "text", text: ";"}];
 
 const ERROR_MESSAGE = "Could not load docs page.";
 
@@ -69,7 +69,7 @@ const TEST_DATA = [{
     summary: BASIC_EXPECTED_SUMMARY,
     syntax: BASIC_EXPECTED_SYNTAX
   }
-},  {
+}, {
   desc: "Test a property whose page doesn't have a summary",
   docsPageUrl: NO_SUMMARY,
   expectedContents: {
@@ -96,7 +96,7 @@ const TEST_DATA = [{
 }
 ];
 
-add_task(function*() {
+add_task(function* () {
   setBaseCssDocsUrl(TEST_URI_ROOT);
 
   yield addTab("about:blank");

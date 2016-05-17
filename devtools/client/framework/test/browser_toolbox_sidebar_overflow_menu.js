@@ -26,7 +26,7 @@ const testToolDefinition = {
   }
 };
 
-add_task(function*() {
+add_task(function* () {
   let tab = yield addTab("about:blank");
   let target = TargetFactory.forTab(tab);
 
@@ -46,7 +46,7 @@ add_task(function*() {
   is(allTabsMenu.getAttribute("hidden"), "true", "The menu is hidden for now");
 
   info("Adding 10 tabs to the sidebar widget");
-  for (let nb = 0; nb < 10; nb ++) {
+  for (let nb = 0; nb < 10; nb++) {
     let url = `data:text/html;charset=utf8,<title>tab ${nb}</title><p>Test tab ${nb}</p>`;
     sidebar.addTab("tab" + nb, url, nb === 0);
   }
@@ -56,7 +56,7 @@ add_task(function*() {
   ok(!allTabsMenu.hasAttribute("hidden"), "The all-tabs menu is now shown");
 
   info("Select each tab, one by one");
-  for (let nb = 0; nb < 10; nb ++) {
+  for (let nb = 0; nb < 10; nb++) {
     let id = "tab" + nb;
 
     info("Found tab item nb " + nb);

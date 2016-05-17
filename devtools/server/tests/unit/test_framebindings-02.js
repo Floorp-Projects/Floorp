@@ -14,8 +14,8 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-stack", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-stack", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_pause_frame();
     });
@@ -25,7 +25,7 @@ function run_test()
 
 function test_pause_frame()
 {
-  gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
+  gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
     let parentEnv = aPacket.frame.environment.parent;
     let bindings = parentEnv.bindings;
     let args = bindings.arguments;
@@ -40,24 +40,24 @@ function test_pause_frame()
     parentEnv = parentEnv.parent.parent.parent;
     do_check_neq(parentEnv, undefined);
     let objClient = gThreadClient.pauseGrip(parentEnv.object);
-    objClient.getPrototypeAndProperties(function(aResponse) {
+    objClient.getPrototypeAndProperties(function (aResponse) {
       do_check_eq(aResponse.ownProperties.Object.value.type, "object");
       do_check_eq(aResponse.ownProperties.Object.value.class, "Function");
       do_check_true(!!aResponse.ownProperties.Object.value.actor);
 
-      gThreadClient.resume(function() {
+      gThreadClient.resume(function () {
         finishClient(gClient);
       });
     });
   });
 
-  gDebuggee.eval("(" + function() {
+  gDebuggee.eval("(" + function () {
     function stopMe(aNumber, aBool, aString, aNull, aUndefined, aObject) {
       var a = 1;
       var b = true;
       var c = { a: "a" };
       debugger;
-    };
+    }
     stopMe(42, true, "nasu", null, undefined, { foo: "bar" });
   } + ")()");
 }

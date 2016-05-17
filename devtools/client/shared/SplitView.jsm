@@ -31,7 +31,7 @@ this.SplitView = function SplitView(aRoot)
   this._controller = aRoot.querySelector(".splitview-controller");
   this._nav = aRoot.querySelector(".splitview-nav");
   this._side = aRoot.querySelector(".splitview-side-details");
-  this._activeSummary = null
+  this._activeSummary = null;
 
   this._mql = aRoot.ownerDocument.defaultView.matchMedia(LANDSCAPE_MEDIA_QUERY);
 
@@ -78,7 +78,7 @@ this.SplitView = function SplitView(aRoot)
       return false;
     }
   }, false);
-}
+};
 
 SplitView.prototype = {
   /**

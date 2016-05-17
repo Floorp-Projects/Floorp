@@ -53,7 +53,7 @@ function runTests() {
 
   // Test importing files with a mode-line in them.
   let content = "/* -sp-context:browser */\n" + gFileContent;
-  createTempFile("fileForBug644413.tmp", content, function(aStatus, aFile) {
+  createTempFile("fileForBug644413.tmp", content, function (aStatus, aFile) {
     ok(Components.isSuccessCode(aStatus), "File was saved successfully");
 
     gFile = aFile;
@@ -71,7 +71,7 @@ function fileImported(status, content) {
   // Set the pref and try again.
   Services.prefs.setBoolPref(DEVTOOLS_CHROME_ENABLED, true);
 
-  gScratchpad.importFromFile(gFile.QueryInterface(Ci.nsILocalFile), true, function(status, content) {
+  gScratchpad.importFromFile(gFile.QueryInterface(Ci.nsILocalFile), true, function (status, content) {
     ok(Components.isSuccessCode(status), "File was imported successfully");
     is(gScratchpad.executionContext, gScratchpadWindow.SCRATCHPAD_CONTEXT_BROWSER);
 

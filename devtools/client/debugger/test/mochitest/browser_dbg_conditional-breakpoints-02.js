@@ -16,8 +16,8 @@ function test() {
     const gDebugger = gPanel.panelWin;
     const gEditor = gDebugger.DebuggerView.editor;
     const gSources = gDebugger.DebuggerView.Sources;
-    const queries = gDebugger.require('./content/queries');
-    const constants = gDebugger.require('./content/constants');
+    const queries = gDebugger.require("./content/queries");
+    const constants = gDebugger.require("./content/constants");
     const actions = bindActionCreators(gPanel);
     const getState = gDebugger.DebuggerController.getState;
 
@@ -127,7 +127,7 @@ function test() {
       return waitForDispatch(gPanel, constants.SET_BREAKPOINT_CONDITION);
     }
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceAndCaretAndScopes(gPanel, ".html", 17);
 
       is(gDebugger.gThreadClient.state, "paused",
@@ -143,7 +143,7 @@ function test() {
          "No breakpoints currently added.");
 
       yield addBreakpoint1();
-      testBreakpoint(18, false, undefined)
+      testBreakpoint(18, false, undefined);
 
       yield addBreakpoint2();
       testBreakpoint(19, false, undefined);

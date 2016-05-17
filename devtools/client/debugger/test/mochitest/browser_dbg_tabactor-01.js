@@ -7,7 +7,7 @@
  * Check extension-added tab actor lifetimes.
  */
 
-const CHROME_URL = "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/"
+const CHROME_URL = "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/";
 const ACTORS_URL = CHROME_URL + "testactors.js";
 const TAB_URL = EXAMPLE_URL + "doc_empty-tab-01.html";
 
@@ -67,6 +67,6 @@ function closeConnection() {
   return deferred.promise;
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gClient = null;
 });

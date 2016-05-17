@@ -70,7 +70,7 @@ function autocompletePopupHidden() {
 
   ok(!popup.isOpen, "popup is not open");
 
-  jsterm.once("autocomplete-updated", function() {
+  jsterm.once("autocomplete-updated", function () {
     is(completeNode.value, testStr + "dy", "autocomplete shows document.body");
     deferred.resolve();
   });

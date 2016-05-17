@@ -469,8 +469,8 @@ CensusTreeNode.prototype = null;
 function compareByTotal(node1, node2) {
   return Math.abs(node2.totalBytes) - Math.abs(node1.totalBytes)
       || Math.abs(node2.totalCount) - Math.abs(node1.totalCount)
-      || Math.abs(node2.bytes)      - Math.abs(node1.bytes)
-      || Math.abs(node2.count)      - Math.abs(node1.count);
+      || Math.abs(node2.bytes) - Math.abs(node1.bytes)
+      || Math.abs(node2.count) - Math.abs(node1.count);
 }
 
 /**
@@ -484,8 +484,8 @@ function compareByTotal(node1, node2) {
  *          A number suitable for using with Array.prototype.sort.
  */
 function compareBySelf(node1, node2) {
-  return Math.abs(node2.bytes)      - Math.abs(node1.bytes)
-      || Math.abs(node2.count)      - Math.abs(node1.count)
+  return Math.abs(node2.bytes) - Math.abs(node1.bytes)
+      || Math.abs(node2.count) - Math.abs(node1.count)
       || Math.abs(node2.totalBytes) - Math.abs(node1.totalBytes)
       || Math.abs(node2.totalCount) - Math.abs(node1.totalCount);
 }
@@ -648,7 +648,7 @@ function filter(tree, predicate) {
   filtered.node.totalBytes = tree.totalBytes;
 
   return filtered.node;
-};
+}
 
 /**
  * Given a filter string, return a predicate function that takes a node and

@@ -60,7 +60,7 @@ this.ScratchpadManager = {
     }
 
     let wins = [];
-    aSession.forEach(function(state) {
+    aSession.forEach(function (state) {
       let win = this.openScratchpad(state);
       wins.push(win);
     }, this);
@@ -120,7 +120,7 @@ this.ScratchpadManager = {
     params.SetString(0, this.createUid());
 
     if (aState) {
-      if (typeof aState != 'object') {
+      if (typeof aState != "object") {
         return;
       }
 

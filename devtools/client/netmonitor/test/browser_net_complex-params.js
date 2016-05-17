@@ -16,7 +16,7 @@ function test() {
     RequestsMenu.lazyUpdate = false;
     NetworkDetails._params.lazyEmpty = false;
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForNetworkEvents(aMonitor, 1, 6);
 
       EventUtils.sendMouseEvent({ type: "mousedown" },
@@ -25,31 +25,31 @@ function test() {
         document.querySelectorAll("#details-pane tab")[2]);
 
       yield waitFor(aMonitor.panelWin, EVENTS.REQUEST_POST_PARAMS_DISPLAYED);
-      yield testParamsTab1('a', '""', '{ "foo": "bar" }', '""');
+      yield testParamsTab1("a", '""', '{ "foo": "bar" }', '""');
 
       RequestsMenu.selectedIndex = 1;
       yield waitFor(aMonitor.panelWin, EVENTS.REQUEST_POST_PARAMS_DISPLAYED);
-      yield testParamsTab1('a', '"b"', '{ "foo": "bar" }', '""');
+      yield testParamsTab1("a", '"b"', '{ "foo": "bar" }', '""');
 
       RequestsMenu.selectedIndex = 2;
       yield waitFor(aMonitor.panelWin, EVENTS.REQUEST_POST_PARAMS_DISPLAYED);
-      yield testParamsTab1('a', '"b"', 'foo', '"bar"');
+      yield testParamsTab1("a", '"b"', "foo", '"bar"');
 
       RequestsMenu.selectedIndex = 3;
       yield waitFor(aMonitor.panelWin, EVENTS.REQUEST_POST_PARAMS_DISPLAYED);
-      yield testParamsTab2('a', '""', '{ "foo": "bar" }', "js");
+      yield testParamsTab2("a", '""', '{ "foo": "bar" }', "js");
 
       RequestsMenu.selectedIndex = 4;
       yield waitFor(aMonitor.panelWin, EVENTS.REQUEST_POST_PARAMS_DISPLAYED);
-      yield testParamsTab2('a', '"b"', '{ "foo": "bar" }', "js");
+      yield testParamsTab2("a", '"b"', '{ "foo": "bar" }', "js");
 
       RequestsMenu.selectedIndex = 5;
       yield waitFor(aMonitor.panelWin, EVENTS.REQUEST_POST_PARAMS_DISPLAYED);
-      yield testParamsTab2('a', '"b"', '?foo=bar', "text");
+      yield testParamsTab2("a", '"b"', "?foo=bar", "text");
 
       RequestsMenu.selectedIndex = 6;
       yield waitFor(aMonitor.panelWin, EVENTS.SIDEBAR_POPULATED);
-      yield testParamsTab3('a', '"b"');
+      yield testParamsTab3("a", '"b"');
 
       yield teardown(aMonitor);
       finish();

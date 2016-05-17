@@ -83,6 +83,6 @@ function testFrame({ frames: [frame] }) {
   resumeDebuggerThenCloseAndFinish(gPanel);
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = gPanel = gClient = gThreadClient = null;
 });

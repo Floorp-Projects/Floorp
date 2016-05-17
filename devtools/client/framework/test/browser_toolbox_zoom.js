@@ -33,7 +33,7 @@ function testZoom() {
 }
 
 function testZoomLevel(type, times, expected) {
-  sendZoomKey("toolbox-zoom-"+ type + "-key", times);
+  sendZoomKey("toolbox-zoom-" + type + "-key", times);
 
   let zoom = getCurrentZoom(toolbox);
   is(zoom.toFixed(2), expected, "zoom level correct after zoom " + type);
@@ -55,7 +55,7 @@ function getCurrentZoom() {
 }
 
 function tidyUp() {
-  toolbox.destroy().then(function() {
+  toolbox.destroy().then(function () {
     gBrowser.removeCurrentTab();
 
     toolbox = modifiers = null;

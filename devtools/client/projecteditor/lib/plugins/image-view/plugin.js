@@ -13,13 +13,13 @@ const { registerPlugin, Plugin } = require("devtools/client/projecteditor/lib/pl
 var ImageEditorPlugin = Class({
   extends: Plugin,
 
-  editorForResource: function(node) {
+  editorForResource: function (node) {
     if (node.contentCategory === "image") {
       return ImageEditor;
     }
   },
 
-  init: function(host) {
+  init: function (host) {
 
   }
 });

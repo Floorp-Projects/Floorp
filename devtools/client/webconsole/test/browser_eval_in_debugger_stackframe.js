@@ -81,7 +81,7 @@ function onExecuteFooAndFoo2() {
       gThread.addOneTimeListener("framesadded", onFramesAdded);
 
       info("firstCall()");
-      ContentTask.spawn(gBrowser.selectedBrowser, {}, function*() {
+      ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
         content.wrappedJSObject.firstCall();
       });
     });

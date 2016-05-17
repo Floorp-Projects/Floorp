@@ -28,7 +28,7 @@ function test() {
          "Breakpoints should be " + (isDisabled ? "disabled" : "enabled") + ".");
     }
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceShown(gPanel, "-01.js");
 
       yield promise.all([

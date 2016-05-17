@@ -11,7 +11,7 @@ var {FLAME_GRAPH_BLOCK_TEXT_FONT_FAMILY} = require("devtools/client/shared/widge
 
 var L10N = new LocalizationHelper();
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("about:blank");
   yield performTest();
   gBrowser.removeCurrentTab();

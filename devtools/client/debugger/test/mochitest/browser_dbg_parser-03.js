@@ -13,15 +13,15 @@ function test() {
   let source = [
     "<!doctype html>",
     "<head>",
-      "<script>",
-        "let a = 42;",
-      "</script>",
-      "<script type='text/javascript'>",
-        "let b = 42;",
-      "</script>",
-      "<script type='text/javascript;version=1.8'>",
-        "let c = 42;",
-      "</script>",
+    "<script>",
+    "let a = 42;",
+    "</script>",
+    "<script type='text/javascript'>",
+    "let b = 42;",
+    "</script>",
+    "<script type='text/javascript;version=1.8'>",
+    "let c = 42;",
+    "</script>",
     "</head>"
   ].join("\n");
   let parser = new Parser();

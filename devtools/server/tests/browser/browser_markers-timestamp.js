@@ -9,7 +9,7 @@ const { PerformanceFront } = require("devtools/server/actors/performance");
 const { PMM_consoleMethod, PMM_loadFrameScripts, PMM_clearFrameScripts } = require("devtools/client/performance/test/helpers/profiler-mm-utils");
 const MARKER_NAME = "TimeStamp";
 
-add_task(function*() {
+add_task(function* () {
   let browser = yield addTab(MAIN_DOMAIN + "doc_perf.html");
   let doc = browser.contentDocument;
 

@@ -42,7 +42,7 @@ const { DebuggerClient } = require("devtools/shared/client/main");
  */
 
 function runTools(target) {
-  return Task.spawn(function*() {
+  return Task.spawn(function* () {
     let toolIds = gDevTools.getToolDefinitionArray()
                            .filter(def => def.isTargetSupported(target))
                            .map(def => def.id);
@@ -94,7 +94,7 @@ function getTarget(client) {
 }
 
 function test() {
-  Task.spawn(function*() {
+  Task.spawn(function* () {
     toggleAllTools(true);
     yield addTab("about:blank");
 

@@ -18,12 +18,12 @@ function test() {
     const gDebugger = gPanel.panelWin;
     const gEditor = gDebugger.DebuggerView.editor;
     const gSources = gDebugger.DebuggerView.Sources;
-    const queries = gDebugger.require('./content/queries');
-    const constants = gDebugger.require('./content/constants');
+    const queries = gDebugger.require("./content/queries");
+    const constants = gDebugger.require("./content/constants");
     const actions = bindActionCreators(gPanel);
     const getState = gDebugger.DebuggerController.getState;
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceShown(gPanel, "code_ugly-8");
       ok(!gEditor.getText().includes("\n  "),
          "The source shouldn't be pretty printed yet.");
@@ -35,7 +35,7 @@ function test() {
       yield finished;
 
       ok(gEditor.getText().includes("\n  "),
-         "The source should be pretty printed.")
+         "The source should be pretty printed.");
       is(deck.selectedIndex, 0, "The editor should be shown");
 
       const source = queries.getSelectedSource(getState());
@@ -44,6 +44,6 @@ function test() {
          "Subsequent calls to getText return the pretty printed source.");
 
       closeDebuggerAndFinish(gPanel);
-    })
+    });
   });
 }

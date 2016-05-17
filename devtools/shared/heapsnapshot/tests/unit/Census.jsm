@@ -33,7 +33,7 @@ this.Census = (function () {
   // right.
   Census.walkCensus = (subject, name, walker) => walk(subject, name, walker, 0);
   function walk(subject, name, walker, count) {
-    if (typeof subject === 'object') {
+    if (typeof subject === "object") {
       dumpn(name);
       for (let prop in subject) {
         count = walk(subject[prop],
@@ -88,7 +88,7 @@ this.Census = (function () {
   //   the subject's value.
   function makeBasisChecker({compare, missing, extra}) {
     return function makeWalker(basis) {
-      if (typeof basis === 'object') {
+      if (typeof basis === "object") {
         var unvisited = new Set(Object.getOwnPropertyNames(basis));
         return {
           enter: prop => {
@@ -124,7 +124,7 @@ this.Census = (function () {
   // Return a walker that checks that the subject census has counts all equal to
   // |basis|.
   Census.assertAllEqual = makeBasisChecker({
-    compare: (a, b) => { if (a !== b) throw new Error("Census mismatch: expected " + a + " got " + b)},
+    compare: (a, b) => { if (a !== b) throw new Error("Census mismatch: expected " + a + " got " + b);},
     missing: missingProp,
     extra: extraProp
   });
@@ -159,7 +159,7 @@ this.Census = (function () {
       missing: missingProp,
       extra: () => Census.walkAnything
     })(basis);
-  }
+  };
 
   return Census;
 }());

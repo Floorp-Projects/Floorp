@@ -32,7 +32,7 @@ const { ResponsiveUIManager } = Cu.import("resource://devtools/client/responsive
  * @param {method} The method to use to open the RDM (values: menu, keyboard)
  * @return {rdm, manager} Returns the RUI instance and the manager
  */
-var openRDM = Task.async(function*(tab = gBrowser.selectedTab,
+var openRDM = Task.async(function* (tab = gBrowser.selectedTab,
                                    method = "menu") {
   let manager = ResponsiveUIManager;
 
@@ -62,7 +62,7 @@ var openRDM = Task.async(function*(tab = gBrowser.selectedTab,
  * Close a responsive mode instance
  * @param {rdm} ResponsiveUI instance for the tab
  */
-var closeRDM = Task.async(function*(rdm) {
+var closeRDM = Task.async(function* (rdm) {
   let manager = ResponsiveUIManager;
   if (!rdm) {
     rdm = manager.getResponsiveUIForTab(gBrowser.selectedTab);
@@ -78,7 +78,7 @@ var closeRDM = Task.async(function*(rdm) {
  * Open the toolbox, with the inspector tool visible.
  * @return a promise that resolves when the inspector is ready
  */
-var openInspector = Task.async(function*() {
+var openInspector = Task.async(function* () {
   info("Opening the inspector");
   let target = TargetFactory.forTab(gBrowser.selectedTab);
 
@@ -115,7 +115,7 @@ var openInspector = Task.async(function*() {
   };
 });
 
-var closeToolbox = Task.async(function*() {
+var closeToolbox = Task.async(function* () {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   yield gDevTools.closeToolbox(target);
 });
@@ -138,7 +138,7 @@ function waitForToolboxFrameFocus(toolbox) {
  * @return a promise that resolves when the inspector is ready and the sidebar
  * view is visible and ready
  */
-var openInspectorSideBar = Task.async(function*(id) {
+var openInspectorSideBar = Task.async(function* (id) {
   let {toolbox, inspector} = yield openInspector();
 
   info("Selecting the " + id + " sidebar");
@@ -215,7 +215,7 @@ function wait(ms) {
 function waitForDocLoadComplete(aBrowser = gBrowser) {
   let deferred = promise.defer();
   let progressListener = {
-    onStateChange: function(webProgress, req, flags, status) {
+    onStateChange: function (webProgress, req, flags, status) {
       let docStop = Ci.nsIWebProgressListener.STATE_IS_NETWORK |
                     Ci.nsIWebProgressListener.STATE_STOP;
       info(`Saw state ${flags.toString(16)} and status ${status.toString(16)}`);
@@ -261,7 +261,7 @@ function getNodeFront(selector, {walker}) {
  * to highlight the node upon selection
  * @return {Promise} Resolves when the inspector is updated with the new node
  */
-var selectNode = Task.async(function*(selector, inspector, reason = "test") {
+var selectNode = Task.async(function* (selector, inspector, reason = "test") {
   info("Selecting the node for '" + selector + "'");
   let nodeFront = yield getNodeFront(selector, inspector);
   let updated = inspector.once("inspector-updated");
@@ -284,7 +284,7 @@ function waitForResizeTo(manager, width, height) {
   });
 }
 
-var setPresetIndex = Task.async(function*(rdm, manager, index) {
+var setPresetIndex = Task.async(function* (rdm, manager, index) {
   info(`Current preset: ${rdm.menulist.selectedIndex}, change to: ${index}`);
   if (rdm.menulist.selectedIndex != index) {
     let resized = once(manager, "contentResize");
@@ -293,7 +293,7 @@ var setPresetIndex = Task.async(function*(rdm, manager, index) {
   }
 });
 
-var setSize = Task.async(function*(rdm, manager, width, height) {
+var setSize = Task.async(function* (rdm, manager, width, height) {
   let size = rdm.getSize();
   info(`Current size: ${size.width} x ${size.height}, ` +
        `set to: ${width} x ${height}`);

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
 // PLEASE TALK TO SOMEONE IN DEVELOPER TOOLS BEFORE EDITING IT
@@ -27,40 +27,40 @@ function test() {
 
 // var helpers = require('./helpers');
 
-exports.testBasic = function(options) {
+exports.testBasic = function (options) {
   return helpers.audit(options, [
     {
-      name: 'exec setup',
-      setup: function() {
+      name: "exec setup",
+      setup: function () {
         // Just check that we've got focus, and everything is clear
         helpers.focusInput(options);
-        return helpers.setInput(options, 'echo hi');
+        return helpers.setInput(options, "echo hi");
       },
       check: { },
       exec: { }
     },
     {
-      setup:    'tsn deep',
+      setup:    "tsn deep",
       check: {
-        input:  'tsn deep',
-        hints:          ' down nested cmd',
-        markup: 'IIIVIIII',
+        input:  "tsn deep",
+        hints:          " down nested cmd",
+        markup: "IIIVIIII",
         cursor: 8,
-        status: 'ERROR',
-        outputState: 'false:default',
-        tooltipState: 'false:default'
+        status: "ERROR",
+        outputState: "false:default",
+        tooltipState: "false:default"
       }
     },
     {
-      setup:    'tsn deep<TAB>',
+      setup:    "tsn deep<TAB>",
       check: {
-        input:  'tsn deep down nested cmd ',
-        hints:                           '',
-        markup: 'VVVVVVVVVVVVVVVVVVVVVVVVV',
+        input:  "tsn deep down nested cmd ",
+        hints:                           "",
+        markup: "VVVVVVVVVVVVVVVVVVVVVVVVV",
         cursor: 25,
-        status: 'VALID',
-        outputState: 'false:default',
-        tooltipState: 'false:default'
+        status: "VALID",
+        outputState: "false:default",
+        tooltipState: "false:default"
       }
     }
   ]);

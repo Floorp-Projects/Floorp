@@ -8,7 +8,7 @@ function f() {
 
 self.onmessage = function (event) {
   if (event.data == "ping") {
-    f()
+    f();
     postMessage("pong");
   }
 };

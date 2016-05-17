@@ -28,7 +28,7 @@ add_task(function* () {
 
   yield waitForSuccess({
     name: "CSP policy URI warning displayed successfully",
-    validator: function() {
+    validator: function () {
       return hud.outputNode.textContent.indexOf(CSP_VIOLATION_MSG) > -1;
     }
   });

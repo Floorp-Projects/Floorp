@@ -2,11 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Cc,Ci,Cu,Cr} = require("chrome");
+const {Cc, Ci, Cu, Cr} = require("chrome");
 const promise = require("promise");
 
 const {EventEmitter} = Cu.import("resource://devtools/shared/event-emitter.js", {});
-const {generateUUID} = Cc['@mozilla.org/uuid-generator;1'].getService(Ci.nsIUUIDGenerator);
+const {generateUUID} = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 const {indexedDB} = require("sdk/indexed-db");
 
@@ -25,21 +25,21 @@ const IDB = {
     let deferred = promise.defer();
 
     let request = indexedDB.open(IDB.databaseName, 5);
-    request.onerror = function(event) {
+    request.onerror = function (event) {
       deferred.reject("Unable to open AppProjects indexedDB: " +
-                      this.error.name + " - " + this.error.message );
+                      this.error.name + " - " + this.error.message);
     };
-    request.onupgradeneeded = function(event) {
+    request.onupgradeneeded = function (event) {
       let db = event.target.result;
       db.createObjectStore("projects", { keyPath: "location" });
     };
 
-    request.onsuccess = function() {
+    request.onsuccess = function () {
       let db = IDB._db = request.result;
       let objectStore = db.transaction("projects").objectStore("projects");
       let projects = [];
       let toRemove = [];
-      objectStore.openCursor().onsuccess = function(event) {
+      objectStore.openCursor().onsuccess = function (event) {
         let cursor = event.target.result;
         if (cursor) {
           if (cursor.value.location) {
@@ -84,7 +84,7 @@ const IDB = {
     return deferred.promise;
   },
 
-  add: function(project) {
+  add: function (project) {
     let deferred = promise.defer();
 
     if (!project.location) {
@@ -94,11 +94,11 @@ const IDB = {
       let transaction = IDB._db.transaction(["projects"], "readwrite");
       let objectStore = transaction.objectStore("projects");
       let request = objectStore.add(project);
-      request.onerror = function(event) {
+      request.onerror = function (event) {
         deferred.reject("Unable to add project to the AppProjects indexedDB: " +
-                        this.error.name + " - " + this.error.message );
+                        this.error.name + " - " + this.error.message);
       };
-      request.onsuccess = function() {
+      request.onsuccess = function () {
         deferred.resolve();
       };
     }
@@ -106,35 +106,35 @@ const IDB = {
     return deferred.promise;
   },
 
-  update: function(project) {
+  update: function (project) {
     let deferred = promise.defer();
 
     var transaction = IDB._db.transaction(["projects"], "readwrite");
     var objectStore = transaction.objectStore("projects");
     var request = objectStore.put(project);
-    request.onerror = function(event) {
+    request.onerror = function (event) {
       deferred.reject("Unable to update project to the AppProjects indexedDB: " +
-                      this.error.name + " - " + this.error.message );
+                      this.error.name + " - " + this.error.message);
     };
-    request.onsuccess = function() {
+    request.onsuccess = function () {
       deferred.resolve();
     };
 
     return deferred.promise;
   },
 
-  remove: function(location) {
+  remove: function (location) {
     let deferred = promise.defer();
 
     let request = IDB._db.transaction(["projects"], "readwrite")
                     .objectStore("projects")
                     .delete(location);
-    request.onsuccess = function(event) {
+    request.onsuccess = function (event) {
       deferred.resolve();
     };
-    request.onerror = function() {
+    request.onerror = function () {
       deferred.reject("Unable to delete project to the AppProjects indexedDB: " +
-                      this.error.name + " - " + this.error.message );
+                      this.error.name + " - " + this.error.message);
     };
 
     return deferred.promise;
@@ -149,11 +149,11 @@ loadDeferred.resolve(IDB.open().then(function (projects) {
 }));
 
 const AppProjects = {
-  load: function() {
+  load: function () {
     return loadDeferred.promise;
   },
 
-  addPackaged: function(folder) {
+  addPackaged: function (folder) {
     let file = FileUtils.File(folder.path);
     if (!file.exists()) {
       return promise.reject("path doesn't exist");
@@ -180,7 +180,7 @@ const AppProjects = {
     });
   },
 
-  addHosted: function(manifestURL) {
+  addHosted: function (manifestURL) {
     let existingProject = this.get(manifestURL);
     if (existingProject) {
       return promise.reject("Already added");
@@ -199,7 +199,7 @@ const AppProjects = {
     return IDB.update(project);
   },
 
-  updateLocation: function(project, newLocation) {
+  updateLocation: function (project, newLocation) {
     return IDB.remove(project.location)
               .then(() => {
                 project.location = newLocation;
@@ -207,7 +207,7 @@ const AppProjects = {
               });
   },
 
-  remove: function(location) {
+  remove: function (location) {
     return IDB.remove(location).then(() => {
       for (let i = 0; i < this.projects.length; i++) {
         if (this.projects[i].location == location) {
@@ -219,7 +219,7 @@ const AppProjects = {
     });
   },
 
-  get: function(location) {
+  get: function (location) {
     for (let i = 0; i < this.projects.length; i++) {
       if (this.projects[i].location == location) {
         return this.projects[i];

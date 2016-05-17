@@ -5,7 +5,7 @@
 
 var {FlameGraphUtils} = require("devtools/client/shared/widgets/FlameGraph");
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("about:blank");
   yield performTest();
   gBrowser.removeCurrentTab();
@@ -14,7 +14,7 @@ add_task(function*() {
 function* performTest() {
   let out1 = FlameGraphUtils.createFlameGraphDataFromThread(TEST_DATA);
   let out2 = FlameGraphUtils.createFlameGraphDataFromThread(TEST_DATA);
-  is(out1, out2, "The outputted data is identical.")
+  is(out1, out2, "The outputted data is identical.");
 
   let out3 = FlameGraphUtils.createFlameGraphDataFromThread(TEST_DATA, { flattenRecursion: true });
   is(out2, out3, "The outputted data is still identical.");

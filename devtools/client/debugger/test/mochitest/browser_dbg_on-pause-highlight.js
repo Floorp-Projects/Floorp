@@ -54,7 +54,7 @@ function testPause() {
   // Evaluate a script to fully pause the debugger
   once(gDebugger.gClient, "willInterrupt").then(() => {
     evalInTab(gTab, "1+1;");
-  })
+  });
 }
 
 function testResume() {
@@ -73,7 +73,7 @@ function testResume() {
     gDebugger);
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

@@ -8,26 +8,26 @@
 const TEST_URI = "data:text/html;charset=utf-8,<body></body>";
 
 function test() {
- helpers.addTabWithToolbar(TEST_URI, function(options) {
-   return helpers.audit(options, [
-     {
-       setup: 'qsa',
-       check: {
-         input:  'qsa',
-         hints:  ' [query]',
-         markup: 'VVV',
-         status: 'VALID'
-       }
-     },
-     {
-       setup: 'qsa body',
-       check: {
-         input:  'qsa body',
-         hints:  '',
-         markup: 'VVVVVVVV',
-         status: 'VALID'
-       }
-     }
-   ]);
- }).then(finish, helpers.handleError);
+  helpers.addTabWithToolbar(TEST_URI, function (options) {
+    return helpers.audit(options, [
+      {
+        setup: "qsa",
+        check: {
+          input:  "qsa",
+          hints:  " [query]",
+          markup: "VVV",
+          status: "VALID"
+        }
+      },
+      {
+        setup: "qsa body",
+        check: {
+          input:  "qsa body",
+          hints:  "",
+          markup: "VVVVVVVV",
+          status: "VALID"
+        }
+      }
+    ]);
+  }).then(finish, helpers.handleError);
 }

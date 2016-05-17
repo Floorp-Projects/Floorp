@@ -21,7 +21,7 @@ function test() {
     const gDebugger = aPanel.panelWin;
     const gTarget = gDebugger.gTarget;
     const gSources = gDebugger.DebuggerView.Sources;
-    const queries = gDebugger.require('./content/queries');
+    const queries = gDebugger.require("./content/queries");
     const actions = bindActionCreators(gPanel);
     const getState = gDebugger.DebuggerController.getState;
     let gStep = 0;
@@ -52,30 +52,30 @@ function test() {
 
     function performTest() {
       switch (gStep++) {
-      case 0:
-        testCurrentSource(FIRST_URL, null);
-        reloadPage().then(performTest);
-        break;
-      case 1:
-        testCurrentSource(FIRST_URL);
-        reloadPage().then(performTest);
-        break;
-      case 2:
-        testCurrentSource(FIRST_URL);
-        switchAndReload(SECOND_URL).then(performTest);
-        break;
-      case 3:
-        testCurrentSource(SECOND_URL);
-        reloadPage().then(performTest);
-        break;
-      case 4:
-        testCurrentSource(SECOND_URL);
-        reloadPage().then(performTest);
-        break;
-      case 5:
-        testCurrentSource(SECOND_URL);
-        closeDebuggerAndFinish(gPanel);
-        break;
+        case 0:
+          testCurrentSource(FIRST_URL, null);
+          reloadPage().then(performTest);
+          break;
+        case 1:
+          testCurrentSource(FIRST_URL);
+          reloadPage().then(performTest);
+          break;
+        case 2:
+          testCurrentSource(FIRST_URL);
+          switchAndReload(SECOND_URL).then(performTest);
+          break;
+        case 3:
+          testCurrentSource(SECOND_URL);
+          reloadPage().then(performTest);
+          break;
+        case 4:
+          testCurrentSource(SECOND_URL);
+          reloadPage().then(performTest);
+          break;
+        case 5:
+          testCurrentSource(SECOND_URL);
+          closeDebuggerAndFinish(gPanel);
+          break;
       }
     }
 

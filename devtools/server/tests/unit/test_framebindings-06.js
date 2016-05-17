@@ -11,8 +11,8 @@ function run_test()
   gDebuggee = addTestGlobal("test-grips");
 
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-grips", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-grips", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_banana_environment();
     });
@@ -24,7 +24,7 @@ function test_banana_environment()
 {
 
   gThreadClient.addOneTimeListener("paused",
-    function(aEvent, aPacket) {
+    function (aEvent, aPacket) {
       equal(aPacket.type, "paused");
       let env = aPacket.frame.environment;
       equal(env.type, "function");
@@ -43,8 +43,8 @@ function test_banana_environment()
       equal(parent.function.name, "banana");
 
       gThreadClient.resume(function () {
-                             finishClient(gClient);
-                           });
+        finishClient(gClient);
+      });
     });
 
   gDebuggee.eval("\

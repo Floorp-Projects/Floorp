@@ -36,12 +36,12 @@ exports.PMM_clearFrameScripts = () => {
  * Resolves a returned promise when the response is received from the message
  * listener, with the same id as part of the response payload data.
  */
-exports.PMM_uniqueMessage = function(message, payload) {
+exports.PMM_uniqueMessage = function (message, payload) {
   if (!gMM) {
     throw new Error("`PMM_loadFrameScripts()` must be called when using MessageManager.");
   }
 
-  let { generateUUID } = Cc['@mozilla.org/uuid-generator;1'].getService(Ci.nsIUUIDGenerator);
+  let { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
   payload.id = generateUUID().toString();
 
   return new Promise(resolve => {
@@ -65,7 +65,7 @@ exports.PMM_isProfilerActive = () => {
 /**
  * Starts the nsProfiler module.
  */
-exports.PMM_startProfiler = Task.async(function*({ entries, interval, features }) {
+exports.PMM_startProfiler = Task.async(function* ({ entries, interval, features }) {
   let isActive = (yield exports.PMM_sendProfilerCommand("IsActive")).isActive;
   if (!isActive) {
     return exports.PMM_sendProfilerCommand("StartProfiler", [entries, interval, features, features.length]);
@@ -74,7 +74,7 @@ exports.PMM_startProfiler = Task.async(function*({ entries, interval, features }
 /**
  * Stops the nsProfiler module.
  */
-exports.PMM_stopProfiler = Task.async(function*() {
+exports.PMM_stopProfiler = Task.async(function* () {
   let isActive = (yield exports.PMM_sendProfilerCommand("IsActive")).isActive;
   if (isActive) {
     return exports.PMM_sendProfilerCommand("StopProfiler");

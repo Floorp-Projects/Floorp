@@ -96,7 +96,7 @@ var test = Task.async(function* () {
     yield onNetworkEvent;
 
     if (!RequestsMenu.getItemAtIndex(0)) {
-      info("Waiting for the request to be added to the view")
+      info("Waiting for the request to be added to the view");
       yield monitor.panelWin.once(monitor.panelWin.EVENTS.REQUEST_ADDED);
     }
 

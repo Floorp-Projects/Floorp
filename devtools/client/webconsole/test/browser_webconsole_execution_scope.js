@@ -10,7 +10,7 @@
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-console.html";
 
-add_task(function*() {
+add_task(function* () {
   yield loadTab(TEST_URI);
   let hud = yield openConsole();
   hud.jsterm.clearOutput();
@@ -22,10 +22,10 @@ add_task(function*() {
       text: "window.location.href;",
       category: CATEGORY_INPUT,
     },
-    {
-      text: TEST_URI,
-      category: CATEGORY_OUTPUT,
-    }],
+      {
+        text: TEST_URI,
+        category: CATEGORY_OUTPUT,
+      }],
   });
 
   let inputNode = [...input.matched][0];

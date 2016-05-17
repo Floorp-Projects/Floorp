@@ -10,7 +10,7 @@ const TEST_URI = "data:text/html;charset=utf-8," +
   "browser_inspector_invalidate.js\n" +
   "<div style=\"width: 100px; height: 100px; background:yellow;\"></div>";
 
-add_task(function*() {
+add_task(function* () {
   let {toolbox, inspector, testActor} = yield openInspectorForURL(TEST_URI);
   let divFront = yield getNodeFront("div", inspector);
 

@@ -17,7 +17,7 @@ add_task(function* () {
   let [tab,, panel] = yield initDebugger("about:blank");
   let win = panel.panelWin;
   let editor = win.DebuggerView.editor;
-  let queries = win.require('./content/queries');
+  let queries = win.require("./content/queries");
   let getState = win.DebuggerController.getState;
 
   yield navigateActiveTabTo(panel,
@@ -27,7 +27,7 @@ add_task(function* () {
   let source = queries.getSelectedSource(getState());
 
   is(queries.getSourceCount(getState()), 1,
-    "There should be one source displayed in the view.")
+    "There should be one source displayed in the view.");
   is(source.url, TAB_URL,
     "The correct source is currently selected in the view.");
   is(editor.getText(), GET_CONTENT,
@@ -35,7 +35,7 @@ add_task(function* () {
 
   // Submit the form and wait for debugger update
   let onSourceUpdated = waitForSourceShown(panel, TAB_URL);
-  yield ContentTask.spawn(tab.linkedBrowser, null, function() {
+  yield ContentTask.spawn(tab.linkedBrowser, null, function () {
     content.document.querySelector("input[type=\"submit\"]").click();
   });
   yield onSourceUpdated;
@@ -43,7 +43,7 @@ add_task(function* () {
   // Verify that the source updates to the POST page content
   source = queries.getSelectedSource(getState());
   is(queries.getSourceCount(getState()), 1,
-    "There should be one source displayed in the view.")
+    "There should be one source displayed in the view.");
   is(source.url, TAB_URL,
     "The correct source is currently selected in the view.");
   is(editor.getText(), POST_CONTENT,

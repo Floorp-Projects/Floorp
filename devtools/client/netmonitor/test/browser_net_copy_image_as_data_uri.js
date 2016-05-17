@@ -31,7 +31,7 @@ function test() {
 
     aDebuggee.performRequests();
 
-    function cleanUp(){
+    function cleanUp() {
       teardown(aMonitor).then(finish);
     }
   });

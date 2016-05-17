@@ -30,7 +30,7 @@
  * @param {...Object} ...objs
  * @returns {Object}
  */
-exports.immutableUpdate = function(...objs) {
+exports.immutableUpdate = function (...objs) {
   return Object.freeze(Object.assign({}, ...objs));
 };
 
@@ -95,8 +95,8 @@ exports.reportException = function reportException(who, exception) {
  * (SpiderMonkey does generate good names for anonymous functions, but we
  * don't have a way to get at them from JavaScript at the moment.)
  */
-exports.makeInfallible = function(handler, name = handler.name) {
-  return function(/* arguments */) {
+exports.makeInfallible = function (handler, name = handler.name) {
+  return function (/* arguments */) {
     try {
       return handler.apply(this, arguments);
     } catch (ex) {
@@ -115,7 +115,7 @@ exports.makeInfallible = function(handler, name = handler.name) {
  *
  * @param {Error|any} error
  */
-exports.safeErrorString = function(error) {
+exports.safeErrorString = function (error) {
   try {
     let errorString = error.toString();
     if (typeof errorString == "string") {
@@ -154,7 +154,7 @@ exports.safeErrorString = function(error) {
  * @returns Array
  *          The combined array, in the form [a1, b1, a2, b2, ...]
  */
-exports.zip = function(a, b) {
+exports.zip = function (a, b) {
   if (!b) {
     return a;
   }
@@ -186,7 +186,7 @@ exports.entries = function entries(obj) {
  * Takes an array of 2-element arrays as key/values pairs and
  * constructs an object using them.
  */
-exports.toObject = function(arr) {
+exports.toObject = function (arr) {
   const obj = {};
   for (let [k, v] of arr) {
     obj[k] = v;
@@ -247,7 +247,7 @@ exports.isSavedFrame = function (thing) {
 /**
  * Return true iff `thing` is a `Set` object (possibly from another global).
  */
-exports.isSet = function(thing) {
+exports.isSet = function (thing) {
   return Object.prototype.toString.call(thing) === "[object Set]";
 };
 
@@ -258,6 +258,6 @@ exports.isSet = function(thing) {
  * @param {Array<Array<Any>>} lists
  * @return {Array<Any>}
  */
-exports.flatten = function(lists) {
+exports.flatten = function (lists) {
   return Array.prototype.concat.apply([], lists);
 };

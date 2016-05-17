@@ -6,7 +6,7 @@
 
 // Test tree selection functionality
 
-add_task(function*() {
+add_task(function* () {
   let projecteditor = yield addProjectEditorTabForTempDirectory();
   ok(true, "ProjectEditor has loaded");
 
@@ -35,8 +35,8 @@ function* testDeleteOnRoot(projecteditor, container) {
   yield oncePopupShown;
 
   let deleteCommand = popup.querySelector("[command=cmd-delete]");
-  ok (deleteCommand, "Delete command exists in popup");
-  is (deleteCommand.getAttribute("hidden"), "true", "Delete command is hidden");
+  ok(deleteCommand, "Delete command exists in popup");
+  is(deleteCommand.getAttribute("hidden"), "true", "Delete command is hidden");
 }
 
 function deleteWithContextMenu(projecteditor, container) {
@@ -44,13 +44,13 @@ function deleteWithContextMenu(projecteditor, container) {
 
   let popup = projecteditor.contextMenuPopup;
   let resource = container.resource;
-  info ("Going to attempt deletion for: " + resource.path);
+  info("Going to attempt deletion for: " + resource.path);
 
   onPopupShow(popup).then(function () {
     let deleteCommand = popup.querySelector("[command=cmd-delete]");
-    ok (deleteCommand, "Delete command exists in popup");
-    is (deleteCommand.getAttribute("hidden"), "", "Delete command is visible");
-    is (deleteCommand.getAttribute("disabled"), "", "Delete command is enabled");
+    ok(deleteCommand, "Delete command exists in popup");
+    is(deleteCommand.getAttribute("hidden"), "", "Delete command is visible");
+    is(deleteCommand.getAttribute("disabled"), "", "Delete command is enabled");
 
     function onConfirmShown(aSubject) {
       info("confirm dialog observed as expected");
@@ -60,10 +60,10 @@ function deleteWithContextMenu(projecteditor, container) {
       projecteditor.project.on("refresh-complete", function refreshComplete() {
         projecteditor.project.off("refresh-complete", refreshComplete);
         OS.File.stat(resource.path).then(() => {
-          ok (false, "The file was not deleted");
+          ok(false, "The file was not deleted");
           defer.resolve();
         }, (ex) => {
-          ok (ex instanceof OS.File.Error && ex.becauseNoSuchFile, "OS.File.stat promise was rejected because the file is gone");
+          ok(ex instanceof OS.File.Error && ex.becauseNoSuchFile, "OS.File.stat promise was rejected because the file is gone");
           defer.resolve();
         });
       });

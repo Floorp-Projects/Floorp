@@ -26,8 +26,8 @@ function test() {
     gVars = gDebugger.DebuggerView.Variables;
     gWatch = gDebugger.DebuggerView.WatchExpressions;
 
-    gVars.switch = function() {};
-    gVars.delete = function() {};
+    gVars.switch = function () {};
+    gVars.delete = function () {};
 
     waitForSourceAndCaretAndScopes(gPanel, ".html", 24)
       .then(() => addWatchExpression())
@@ -91,7 +91,7 @@ function testEdit(aString, aExpected) {
   return finished;
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

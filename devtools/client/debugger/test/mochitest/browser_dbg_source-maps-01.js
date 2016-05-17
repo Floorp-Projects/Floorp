@@ -43,7 +43,7 @@ function checkSourceMapsEnabled() {
   is(gDebugger.Prefs.sourceMapsEnabled, true,
     "The source maps pref should be true from startup.");
   is(gDebugger.DebuggerView.Options._showOriginalSourceItem.getAttribute("checked"), "true",
-    "Source maps should be enabled from startup.")
+    "Source maps should be enabled from startup.");
 }
 
 function checkInitialSource() {
@@ -158,7 +158,7 @@ function testStepping() {
   return deferred.promise;
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

@@ -27,9 +27,9 @@ function test() {
       "The request menu should have two items at this point.");
   })
   .then(() => {
-     content.location.reload(true);
-     return waitForNetworkEvents(monitor, 2);
-   })
+    content.location.reload(true);
+    return waitForNetworkEvents(monitor, 2);
+  })
   .then(() => {
     // Since the reload clears the log, we still expect two requests in the log
     is(reqMenu.itemCount, 2,
@@ -37,10 +37,10 @@ function test() {
   })
   .then(() => {
     // Now we toggle the persistence logs on
-     Services.prefs.setBoolPref("devtools.webconsole.persistlog", true);
-     content.location.reload(true);
-     return waitForNetworkEvents(monitor, 2);
-   })
+    Services.prefs.setBoolPref("devtools.webconsole.persistlog", true);
+    content.location.reload(true);
+    return waitForNetworkEvents(monitor, 2);
+  })
   .then(() => {
     // Since we togged the persistence logs, we expect four items after the reload
     is(reqMenu.itemCount, 4,

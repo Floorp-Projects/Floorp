@@ -12,8 +12,8 @@ function run_test() {
   let sizeOfAM = byteSize(allocationMarker());
 
   // Allocate a single allocation marker, and check that we can find it.
-  g.eval('var hold = allocationMarker();');
-  let census = saveHeapSnapshotAndTakeCensus(dbg, { breakdown: { by: 'objectClass' } });
+  g.eval("var hold = allocationMarker();");
+  let census = saveHeapSnapshotAndTakeCensus(dbg, { breakdown: { by: "objectClass" } });
   equal(census.AllocationMarker.count, 1);
   equal(census.AllocationMarker.bytes, sizeOfAM);
   g.hold = null;
@@ -33,32 +33,32 @@ function run_test() {
   dbg.memory.trackingAllocationSites = false;
 
   census = saveHeapSnapshotAndTakeCensus(dbg, {
-    breakdown: { by: 'objectClass',
-                 then: { by: 'allocationStack' }
+    breakdown: { by: "objectClass",
+                 then: { by: "allocationStack" }
                }
   });
 
   let seen = 0;
   census.AllocationMarker.forEach((v, k) => {
-    equal(k.functionDisplayName, 'fnerd');
+    equal(k.functionDisplayName, "fnerd");
     switch (k.line) {
-    case 4:
-      equal(v.count, 1);
-      equal(v.bytes, sizeOfAM);
-      seen++;
-      break;
+      case 4:
+        equal(v.count, 1);
+        equal(v.bytes, sizeOfAM);
+        seen++;
+        break;
 
-    case 6:
-      equal(v.count, 10);
-      equal(v.bytes, 10 * sizeOfAM);
-      seen++;
-      break;
+      case 6:
+        equal(v.count, 10);
+        equal(v.bytes, 10 * sizeOfAM);
+        seen++;
+        break;
 
-    default:
-      dumpn("Unexpected stack:");
-      k.toString().split(/\n/g).forEach(s => dumpn(s));
-      ok(false);
-      break;
+      default:
+        dumpn("Unexpected stack:");
+        k.toString().split(/\n/g).forEach(s => dumpn(s));
+        ok(false);
+        break;
     }
   });
 

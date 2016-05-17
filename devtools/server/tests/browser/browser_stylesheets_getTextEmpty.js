@@ -11,7 +11,7 @@ const {StyleSheetsFront} = require("devtools/shared/fronts/stylesheets");
 const CONTENT = "<style>body { background-color: #f0c; }</style>";
 const TEST_URI = "data:text/html;charset=utf-8," + encodeURIComponent(CONTENT);
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(TEST_URI);
 
   info("Initialising the debugger server and client.");

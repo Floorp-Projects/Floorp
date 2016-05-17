@@ -15,7 +15,7 @@ add_task(function* () {
   performTestsAfterOutput(hud);
 });
 
-var testSelectionWhenMovingBetweenBoxes = Task.async(function*(hud) {
+var testSelectionWhenMovingBetweenBoxes = Task.async(function* (hud) {
   let jsterm = hud.jsterm;
 
   // Fill the console with some output.
@@ -30,14 +30,14 @@ var testSelectionWhenMovingBetweenBoxes = Task.async(function*(hud) {
       text: "3",
       category: CATEGORY_OUTPUT,
     },
-    {
-      text: "7",
-      category: CATEGORY_OUTPUT,
-    },
-    {
-      text: "11",
-      category: CATEGORY_OUTPUT,
-    }],
+      {
+        text: "7",
+        category: CATEGORY_OUTPUT,
+      },
+      {
+        text: "11",
+        category: CATEGORY_OUTPUT,
+      }],
   });
 });
 

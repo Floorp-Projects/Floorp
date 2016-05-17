@@ -142,7 +142,7 @@ const TEST_DATA = [
   },
 ];
 
-add_task(function*() {
+add_task(function* () {
   const {tab} = yield loadTab(TEST_URI);
   let hud = yield openConsole(tab);
 

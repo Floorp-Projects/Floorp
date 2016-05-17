@@ -10,7 +10,7 @@
 const TEST_URI = "data:text/html;charset=utf-8,<p>bug 900448 - autocomplete " +
                  "popup closes on tab switch";
 
-add_task(function*() {
+add_task(function* () {
   yield loadTab(TEST_URI);
   let hud = yield openConsole();
   let popup = hud.jsterm.autocompletePopup;
@@ -21,7 +21,7 @@ add_task(function*() {
 
   yield popupShown;
 
-  yield loadTab("data:text/html;charset=utf-8,<p>testing autocomplete closes")
+  yield loadTab("data:text/html;charset=utf-8,<p>testing autocomplete closes");
 
   ok(!popup.isOpen, "Popup closes on tab switch");
 });

@@ -26,7 +26,7 @@ function* spawnTest() {
 
   yield helpers.audit(options, [
     {
-      setup: 'pref show devtools.debugger.remote-host',
+      setup: "pref show devtools.debugger.remote-host",
       check: {
         args: {
           setting: {
@@ -39,7 +39,7 @@ function* spawnTest() {
       },
     },
     {
-      setup: 'pref set devtools.debugger.remote-host e.com',
+      setup: "pref set devtools.debugger.remote-host e.com",
       check: {
         args: {
           setting: {
@@ -49,11 +49,11 @@ function* spawnTest() {
         },
       },
       exec: {
-        output: '',
+        output: "",
       },
     },
     {
-      setup: 'pref show devtools.debugger.remote-host',
+      setup: "pref show devtools.debugger.remote-host",
       check: {
         args: {
           setting: {
@@ -64,14 +64,14 @@ function* spawnTest() {
       exec: {
         output: new RegExp("^devtools\.debugger\.remote-host: e.com$"),
       },
-      post: function() {
+      post: function () {
         var ecom = prefBranch.getComplexValue("devtools.debugger.remote-host",
                                               Ci.nsISupportsString).data;
         is(ecom, "e.com", "devtools.debugger.remote-host is e.com");
       }
     },
     {
-      setup: 'pref set devtools.debugger.remote-host moz.foo',
+      setup: "pref set devtools.debugger.remote-host moz.foo",
       check: {
         args: {
           setting: {
@@ -81,11 +81,11 @@ function* spawnTest() {
         },
       },
       exec: {
-        output: '',
+        output: "",
       },
     },
     {
-      setup: 'pref show devtools.debugger.remote-host',
+      setup: "pref show devtools.debugger.remote-host",
       check: {
         args: {
           setting: {
@@ -96,7 +96,7 @@ function* spawnTest() {
       exec: {
         output: new RegExp("^devtools\.debugger\.remote-host: moz.foo$"),
       },
-      post: function() {
+      post: function () {
         var mozfoo = prefBranch.getComplexValue("devtools.debugger.remote-host",
                                                 Ci.nsISupportsString).data;
         is(mozfoo, "moz.foo", "devtools.debugger.remote-host is moz.foo");

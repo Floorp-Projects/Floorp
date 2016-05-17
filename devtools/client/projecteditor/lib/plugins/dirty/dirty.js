@@ -11,10 +11,10 @@ const { emit } = require("sdk/event/core");
 var DirtyPlugin = Class({
   extends: Plugin,
 
-  onEditorSave: function(editor) { this.onEditorChange(editor); },
-  onEditorLoad: function(editor) { this.onEditorChange(editor); },
+  onEditorSave: function (editor) { this.onEditorChange(editor); },
+  onEditorLoad: function (editor) { this.onEditorChange(editor); },
 
-  onEditorChange: function(editor) {
+  onEditorChange: function (editor) {
     // Only run on a TextEditor
     if (!editor || !editor.editor) {
       return;
@@ -22,7 +22,7 @@ var DirtyPlugin = Class({
 
     // Dont' force a refresh unless the dirty state has changed...
     let priv = this.priv(editor);
-    let clean = editor.isClean()
+    let clean = editor.isClean();
     if (priv.isClean !== clean) {
       let resource = editor.shell.resource;
       emit(resource, "label-change", resource);
@@ -30,14 +30,14 @@ var DirtyPlugin = Class({
     }
   },
 
-  onAnnotate: function(resource, editor, elt) {
+  onAnnotate: function (resource, editor, elt) {
     // Only run on a TextEditor
     if (!editor || !editor.editor) {
       return;
     }
 
     if (!editor.isClean()) {
-      elt.textContent = '*' + resource.displayName;
+      elt.textContent = "*" + resource.displayName;
       return true;
     }
   }

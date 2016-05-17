@@ -24,7 +24,7 @@ const WIDTH = 160;
 const HEIGHT = 100;
 const HYPOTENUSE = Math.hypot(WIDTH, HEIGHT).toFixed(2);
 
-add_task(function*() {
+add_task(function* () {
   let helper = yield openInspectorForURL(TEST_URL)
                        .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
 

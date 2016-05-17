@@ -35,11 +35,11 @@ WalkerIndex.prototype = {
   /**
    * Destroy this instance, releasing all data and references
    */
-  destroy: function() {
+  destroy: function () {
     this.walker.off("any-mutation", this.clearIndex);
   },
 
-  clearIndex: function() {
+  clearIndex: function () {
     if (!this.currentlyIndexing) {
       this._data = null;
     }
@@ -68,7 +68,7 @@ WalkerIndex.prototype = {
     return this._data;
   },
 
-  _addToIndex: function(type, node, value) {
+  _addToIndex: function (type, node, value) {
     // Add an entry for this value if there isn't one
     let entry = this._data.get(value);
     if (!entry) {
@@ -82,7 +82,7 @@ WalkerIndex.prototype = {
     });
   },
 
-  index: function() {
+  index: function () {
     // Handle case where iterating nextNode() with the deepTreeWalker triggers
     // a mutation (Bug 1222558)
     this.currentlyIndexing = true;
@@ -144,12 +144,12 @@ function WalkerSearch(walker) {
 }
 
 WalkerSearch.prototype = {
-  destroy: function() {
+  destroy: function () {
     this.index.destroy();
     this.walker = null;
   },
 
-  _addResult: function(node, type, results) {
+  _addResult: function (node, type, results) {
     if (!results.has(node)) {
       results.set(node, []);
     }
@@ -170,7 +170,7 @@ WalkerSearch.prototype = {
     }
   },
 
-  _searchIndex: function(query, options, results) {
+  _searchIndex: function (query, options, results) {
     for (let [matched, res] of this.index.data) {
       if (!options.searchMethod(query, matched)) {
         continue;
@@ -185,7 +185,7 @@ WalkerSearch.prototype = {
     }
   },
 
-  _searchSelectors: function(query, options, results) {
+  _searchSelectors: function (query, options, results) {
     // If the query is just one "word", no need to search because _searchIndex
     // will lead the same results since it has access to tagnames anyway
     let isSelector = query && query.match(/[ >~.#\[\]]/);
@@ -214,7 +214,7 @@ WalkerSearch.prototype = {
    *   type: <the type of match: one of WalkerSearch.ALL_RESULTS_TYPES>
    * }
    */
-  search: function(query, options={}) {
+  search: function (query, options = {}) {
     options.searchMethod = options.searchMethod || WalkerSearch.SEARCH_METHOD_CONTAINS;
     options.types = options.types || WalkerSearch.ALL_RESULTS_TYPES;
 
@@ -251,7 +251,7 @@ WalkerSearch.prototype = {
     let documents = this.walker.tabActor.windows.map(win=>win.document);
 
     // Sort the resulting nodes by order of appearance in the DOM
-    resultList.sort((a,b) => {
+    resultList.sort((a, b) => {
       // Disconnected nodes won't get good results from compareDocumentPosition
       // so check the order of their document instead.
       if (a.node.ownerDocument != b.node.ownerDocument) {

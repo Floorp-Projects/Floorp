@@ -10,7 +10,7 @@ const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
 const { UI_EXPERIMENTAL_PREF } = require("devtools/client/performance/test/helpers/prefs");
 const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 
-add_task(function*() {
+add_task(function* () {
   Services.prefs.setBoolPref(UI_EXPERIMENTAL_PREF, false);
 
   let { panel } = yield initPerformanceInNewTab({

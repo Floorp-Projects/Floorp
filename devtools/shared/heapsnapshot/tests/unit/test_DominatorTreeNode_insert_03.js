@@ -110,7 +110,7 @@ const expected = {
     }
   ],
   moreChildrenAvailable: false
-}
+};
 
 function run_test() {
   assertDominatorTreeNodeInsertion(tree, path, newChildren, moreChildrenAvailable, expected);

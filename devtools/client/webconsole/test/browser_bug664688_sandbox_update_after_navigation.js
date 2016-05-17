@@ -76,7 +76,7 @@ add_task(function* () {
 
   yield waitForSuccess({
     name: "go back",
-    validator: function() {
+    validator: function () {
       return content.location.href == TEST_URI1;
     },
   });

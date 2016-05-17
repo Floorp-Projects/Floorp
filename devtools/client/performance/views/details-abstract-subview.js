@@ -28,7 +28,7 @@ var DetailsSubview = {
     let originalRenderFn = this.render;
     let afterRenderFn = () => this._wasRendered = true;
 
-    this.render = Task.async(function *(...args) {
+    this.render = Task.async(function* (...args) {
       let maybeRetval = yield originalRenderFn.apply(self, args);
       afterRenderFn();
       return maybeRetval;
@@ -104,7 +104,7 @@ var DetailsSubview = {
   /**
    * Called when recording stops or is selected.
    */
-  _onRecordingStoppedOrSelected: function(_, state, recording) {
+  _onRecordingStoppedOrSelected: function (_, state, recording) {
     if (typeof state !== "string") {
       recording = state;
     }
@@ -147,7 +147,7 @@ var DetailsSubview = {
   /**
    * Fired when a view is selected in the DetailsView.
    */
-  _onDetailsViewSelected: function() {
+  _onDetailsViewSelected: function () {
     if (DetailsView.isViewSelected(this) && this.shouldUpdateWhenShown) {
       this.render(OverviewView.getTimeInterval());
       this.shouldUpdateWhenShown = false;

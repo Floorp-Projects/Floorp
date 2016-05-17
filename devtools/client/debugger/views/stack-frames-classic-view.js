@@ -24,7 +24,7 @@ StackFramesClassicListView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Initialization function, called when the debugger is started.
    */
-  initialize: function() {
+  initialize: function () {
     dumpn("Initializing the StackFramesClassicListView");
 
     this.widget = new SideMenuWidget(document.getElementById("callstack-list"));
@@ -41,7 +41,7 @@ StackFramesClassicListView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Destruction function, called when the debugger is closed.
    */
-  destroy: function() {
+  destroy: function () {
     dumpn("Destroying the StackFramesClassicListView");
 
     this.widget.removeEventListener("select", this._onSelect, false);
@@ -59,7 +59,7 @@ StackFramesClassicListView.prototype = Heritage.extend(WidgetMethods, {
    * @param number aDepth
    *        The frame depth in the stack.
    */
-  addFrame: function(aTitle, aUrl, aLine, aDepth) {
+  addFrame: function (aTitle, aUrl, aLine, aDepth) {
     // Create the element node for the stack frame item.
     let frameView = this._createFrameView.apply(this, arguments);
 
@@ -85,7 +85,7 @@ StackFramesClassicListView.prototype = Heritage.extend(WidgetMethods, {
    * @return nsIDOMNode
    *         The stack frame view.
    */
-  _createFrameView: function(aTitle, aUrl, aLine, aDepth) {
+  _createFrameView: function (aTitle, aUrl, aLine, aDepth) {
     let container = document.createElement("hbox");
     container.id = "classic-stackframe-" + aDepth;
     container.className = "dbg-classic-stackframe";
@@ -124,7 +124,7 @@ StackFramesClassicListView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * The select listener for the stackframes container.
    */
-  _onSelect: function(e) {
+  _onSelect: function (e) {
     let stackframeItem = this.selectedItem;
     if (stackframeItem) {
       // The container is not empty and an actual item was selected.

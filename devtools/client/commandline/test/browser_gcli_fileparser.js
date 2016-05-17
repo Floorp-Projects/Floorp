@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
 // PLEASE TALK TO SOMEONE IN DEVELOPER TOOLS BEFORE EDITING IT
@@ -26,21 +26,21 @@ function test() {
 }
 
 // var assert = require('../testharness/assert');
-var fileparser = require('gcli/util/fileparser');
+var fileparser = require("gcli/util/fileparser");
 
 var local = false;
 
-exports.testGetPredictor = function(options) {
+exports.testGetPredictor = function (options) {
   if (!options.isNode || !local) {
-    assert.log('Skipping tests due to install differences.');
+    assert.log("Skipping tests due to install differences.");
     return;
   }
 
-  var opts = { filetype: 'file', existing: 'yes' };
-  var predictor = fileparser.getPredictor('/usr/locl/bin/nmp', opts);
-  return predictor().then(function(replies) {
+  var opts = { filetype: "file", existing: "yes" };
+  var predictor = fileparser.getPredictor("/usr/locl/bin/nmp", opts);
+  return predictor().then(function (replies) {
     assert.is(replies[0].name,
-              '/usr/local/bin/npm',
-              'predict npm');
+              "/usr/local/bin/npm",
+              "predict npm");
   });
 };

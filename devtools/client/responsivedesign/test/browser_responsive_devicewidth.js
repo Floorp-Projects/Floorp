@@ -3,7 +3,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-add_task(function*() {
+add_task(function* () {
   let tab = yield addTab("about:logo");
   let { rdm, manager } = yield openRDM(tab);
   ok(rdm, "An instance of the RDM should be attached to the tab.");
@@ -19,7 +19,7 @@ add_task(function*() {
   yield checkScreenProps();
 
   info("Setting docShell.deviceSizeIsPageSize to false");
-  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function*() {
+  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
     let docShell = content.QueryInterface(Ci.nsIInterfaceRequestor)
                           .getInterface(Ci.nsIWebNavigation)
                           .QueryInterface(Ci.nsIDocShell);
@@ -55,7 +55,7 @@ function* checkScreenProps2() {
 }
 
 function grabContentInfo() {
-  return ContentTask.spawn(gBrowser.selectedBrowser, {}, function*() {
+  return ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
     return {
       screen: {
         width: content.screen.width,

@@ -28,7 +28,7 @@ var PerformanceEntriesActor = exports.PerformanceEntriesActor = ActorClass({
     }
   },
 
-  initialize: function(conn, tabActor) {
+  initialize: function (conn, tabActor) {
     Actor.prototype.initialize.call(this, conn);
     this.window = tabActor.window;
   },
@@ -36,7 +36,7 @@ var PerformanceEntriesActor = exports.PerformanceEntriesActor = ActorClass({
   /**
    * Start tracking the user timings.
    */
-  start: method(function() {
+  start: method(function () {
     if (!this.listenerAdded) {
       this.onPerformanceEntry = this.onPerformanceEntry.bind(this);
       this.window.addEventListener("performanceentry", this.onPerformanceEntry, true);
@@ -47,18 +47,18 @@ var PerformanceEntriesActor = exports.PerformanceEntriesActor = ActorClass({
   /**
    * Stop tracking the user timings.
    */
-  stop: method(function() {
+  stop: method(function () {
     if (this.listenerAdded) {
       this.window.removeEventListener("performanceentry", this.onPerformanceEntry, true);
       this.listenerAdded = false;
     }
   }),
 
-  disconnect: function() {
+  disconnect: function () {
     this.destroy();
   },
 
-  destroy: function() {
+  destroy: function () {
     this.stop();
     Actor.prototype.destroy.call(this);
   },
@@ -70,12 +70,12 @@ var PerformanceEntriesActor = exports.PerformanceEntriesActor = ActorClass({
       origin: e.origin,
       epoch: e.epoch
     };
-    events.emit(this, 'entry', emitDetail);
+    events.emit(this, "entry", emitDetail);
   }
 });
 
 exports.PerformanceEntriesFront = FrontClass(PerformanceEntriesActor, {
-  initialize: function(client, form) {
+  initialize: function (client, form) {
     Front.prototype.initialize.call(this, client);
     this.actorID = form.performanceEntriesActor;
     this.manage(this);

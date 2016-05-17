@@ -26,7 +26,7 @@ function testFocus(aDoc, aToolbar, aElm) {
   is(aDoc.activeElement.id, id, "New control is focused");
 }
 
-add_task(function*() {
+add_task(function* () {
   info("Create a test tab and open the toolbox");
   let toolbox = yield openNewTabAndToolbox(TEST_URL, "webconsole");
   let doc = toolbox.doc;

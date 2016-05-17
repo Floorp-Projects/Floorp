@@ -9,7 +9,7 @@
 
 const TEST_URL = URL_ROOT + "doc_inspector_highlighter_rect.html";
 
-add_task(function*() {
+add_task(function* () {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
   let front = inspector.inspector;
   let highlighter = yield front.getHighlighterByType("RectHighlighter");

@@ -51,7 +51,7 @@ const COUNT_LABEL = L10N.getStr("tree-map.node-count");
  *         A DragZoom object representing the current state of the dragging
  *         and zooming behavior
  */
-exports.setupDraw = function(report, canvases, dragZoom) {
+exports.setupDraw = function (report, canvases, dragZoom) {
   let getTreemap = configureD3Treemap.bind(null, canvases.main.canvas);
 
   let treemap, nodes;
@@ -79,7 +79,7 @@ exports.setupDraw = function(report, canvases, dragZoom) {
  * @param  {HTMLCanvasElement} canvas
  * @return {Function}
  */
-const configureD3Treemap = exports.configureD3Treemap = function(canvas) {
+const configureD3Treemap = exports.configureD3Treemap = function (canvas) {
   let window = canvas.ownerDocument.defaultView;
   let ratio = window.devicePixelRatio;
   let treemap = window.d3.layout.treemap()
@@ -135,7 +135,7 @@ const configureD3Treemap = exports.configureD3Treemap = function(canvas) {
  *         the inner width of the containing treemap cell
  * @param  {Text} name
  */
-const drawTruncatedName = exports.drawTruncatedName = function(ctx, x, y,
+const drawTruncatedName = exports.drawTruncatedName = function (ctx, x, y,
                                                                innerWidth,
                                                                name) {
   let truncated = name.substr(0, Math.floor(name.length / 2));
@@ -164,7 +164,7 @@ const drawTruncatedName = exports.drawTruncatedName = function(ctx, x, y,
  * @param  {Object} dragZoom
  * @param  {Array}  padding
  */
-const drawText = exports.drawText = function(ctx, node, borderWidth, ratio,
+const drawText = exports.drawText = function (ctx, node, borderWidth, ratio,
                                               dragZoom, padding) {
   let { dx, dy, name, totalBytes, totalCount } = node;
   let scale = dragZoom.zoom + 1;
@@ -220,7 +220,7 @@ const drawText = exports.drawText = function(ctx, node, borderWidth, ratio,
  * @param  {Object} dragZoom
  * @param  {Array}  padding
  */
-const drawBox = exports.drawBox = function(ctx, node, borderWidth, dragZoom,
+const drawBox = exports.drawBox = function (ctx, node, borderWidth, dragZoom,
                                            padding) {
   let border = borderWidth(node);
   let fillHSL = colorCoarseType(node);
@@ -249,7 +249,7 @@ const drawBox = exports.drawBox = function(ctx, node, borderWidth, dragZoom,
  * @param  {Array} nodes
  * @param  {Objbect} dragZoom
  */
-const drawTreemap = exports.drawTreemap = function({canvas, ctx}, nodes,
+const drawTreemap = exports.drawTreemap = function ({canvas, ctx}, nodes,
                                                    dragZoom) {
   let window = canvas.ownerDocument.defaultView;
   let ratio = window.devicePixelRatio;
@@ -285,7 +285,7 @@ const drawTreemap = exports.drawTreemap = function({canvas, ctx}, nodes,
  * @param  {HTMLCanvasElement} canvas
  * @param  {Object} dragZoom
  */
-const positionZoomedCanvas = function(canvas, dragZoom) {
+const positionZoomedCanvas = function (canvas, dragZoom) {
   let scale = 1 / (1 + dragZoom.zoom);
   let x = -dragZoom.translateX;
   let y = -dragZoom.translateY;

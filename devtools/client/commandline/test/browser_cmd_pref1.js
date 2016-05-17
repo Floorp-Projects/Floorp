@@ -22,117 +22,117 @@ function* spawnTest() {
 
   yield helpers.audit(options, [
     {
-      setup: 'pref',
+      setup: "pref",
       check: {
-        input:  'pref',
-        hints:      ' reset',
-        markup: 'IIII',
-        status: 'ERROR'
+        input:  "pref",
+        hints:      " reset",
+        markup: "IIII",
+        status: "ERROR"
       },
     },
     {
-      setup: 'pref s',
+      setup: "pref s",
       check: {
-        input:  'pref s',
-        hints:        'et',
-        markup: 'IIIIVI',
-        status: 'ERROR'
+        input:  "pref s",
+        hints:        "et",
+        markup: "IIIIVI",
+        status: "ERROR"
       },
     },
     {
-      setup: 'pref sh',
+      setup: "pref sh",
       check: {
-        input:  'pref sh',
-        hints:         'ow',
-        markup: 'IIIIVII',
-        status: 'ERROR'
+        input:  "pref sh",
+        hints:         "ow",
+        markup: "IIIIVII",
+        status: "ERROR"
       },
     },
     {
-      setup: 'pref show ',
+      setup: "pref show ",
       check: {
-        input:  'pref show ',
-        markup: 'VVVVVVVVVV',
-        status: 'ERROR'
+        input:  "pref show ",
+        markup: "VVVVVVVVVV",
+        status: "ERROR"
       },
     },
     {
-      setup: 'pref show usetexttospeech',
+      setup: "pref show usetexttospeech",
       check: {
-        input:  'pref show usetexttospeech',
-        hints:                           ' -> accessibility.usetexttospeech',
-        markup: 'VVVVVVVVVVIIIIIIIIIIIIIII',
-        status: 'ERROR'
+        input:  "pref show usetexttospeech",
+        hints:                           " -> accessibility.usetexttospeech",
+        markup: "VVVVVVVVVVIIIIIIIIIIIIIII",
+        status: "ERROR"
       },
     },
     {
-      setup: 'pref show devtools.netmoni',
+      setup: "pref show devtools.netmoni",
       check: {
-        input:  'pref show devtools.netmoni',
-        hints:                        'tor.enabled',
-        markup: 'VVVVVVVVVVIIIIIIIIIIIIIIII',
-        status: 'ERROR',
-        tooltipState: 'true:importantFieldFlag',
+        input:  "pref show devtools.netmoni",
+        hints:                        "tor.enabled",
+        markup: "VVVVVVVVVVIIIIIIIIIIIIIIII",
+        status: "ERROR",
+        tooltipState: "true:importantFieldFlag",
         args: {
-          setting: { value: undefined, status: 'INCOMPLETE' },
+          setting: { value: undefined, status: "INCOMPLETE" },
         }
       },
     },
     {
-      setup: 'pref reset devtools.netmonitor.enabled',
+      setup: "pref reset devtools.netmonitor.enabled",
       check: {
-        input:  'pref reset devtools.netmonitor.enabled',
-        hints:                                  '',
-        markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
-        status: 'VALID'
+        input:  "pref reset devtools.netmonitor.enabled",
+        hints:                                  "",
+        markup: "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV",
+        status: "VALID"
       },
     },
     {
-      setup: 'pref show devtools.netmonitor.enabled 4',
+      setup: "pref show devtools.netmonitor.enabled 4",
       check: {
-        input:  'pref show devtools.netmonitor.enabled 4',
-        hints:                                   '',
-        markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVE',
-        status: 'ERROR'
+        input:  "pref show devtools.netmonitor.enabled 4",
+        hints:                                   "",
+        markup: "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVE",
+        status: "ERROR"
       },
     },
     {
-      setup: 'pref set devtools.netmonitor.enabled 4',
+      setup: "pref set devtools.netmonitor.enabled 4",
       check: {
-        input:  'pref set devtools.netmonitor.enabled 4',
-        hints:                                  '',
-        markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVE',
-        status: 'ERROR',
+        input:  "pref set devtools.netmonitor.enabled 4",
+        hints:                                  "",
+        markup: "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVE",
+        status: "ERROR",
         args: {
-          setting: { arg: ' devtools.netmonitor.enabled' },
-          value: { status: 'ERROR', message: 'Can\u2019t use \u20184\u2019.' },
+          setting: { arg: " devtools.netmonitor.enabled" },
+          value: { status: "ERROR", message: "Can\u2019t use \u20184\u2019." },
         }
       },
     },
     {
-      setup: 'pref set devtools.editor.tabsize 4',
+      setup: "pref set devtools.editor.tabsize 4",
       check: {
-        input:  'pref set devtools.editor.tabsize 4',
-        hints:                                    '',
-        markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
-        status: 'VALID',
+        input:  "pref set devtools.editor.tabsize 4",
+        hints:                                    "",
+        markup: "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV",
+        status: "VALID",
         args: {
-          setting: { arg: ' devtools.editor.tabsize' },
+          setting: { arg: " devtools.editor.tabsize" },
           value: { value: 4 },
         }
       },
     },
     {
-      setup: 'pref list',
+      setup: "pref list",
       check: {
-        input:  'pref list',
-        hints:           ' -> pref set',
-        markup: 'IIIIVIIII',
-        status: 'ERROR'
+        input:  "pref list",
+        hints:           " -> pref set",
+        markup: "IIIIVIIII",
+        status: "ERROR"
       },
     },
     {
-      setup: 'pref show devtools.netmonitor.enabled',
+      setup: "pref show devtools.netmonitor.enabled",
       check: {
         args: {
           setting: {
@@ -143,7 +143,7 @@ function* spawnTest() {
       exec: {
         output: "devtools.netmonitor.enabled: " + netmonEnabledOrig,
       },
-      post: function() {
+      post: function () {
         prefBranch.setBoolPref("devtools.netmonitor.enabled", netmonEnabledOrig);
       }
     },

@@ -21,10 +21,10 @@ var lists = {
 };
 
 // Temporary file names.
-var gFileName01 = "file01_ForBug651942.tmp"
-var gFileName02 = "☕" // See bug 783858 for more information
-var gFileName03 = "file03_ForBug651942.tmp"
-var gFileName04 = "file04_ForBug651942.tmp"
+var gFileName01 = "file01_ForBug651942.tmp";
+var gFileName02 = "☕"; // See bug 783858 for more information
+var gFileName03 = "file03_ForBug651942.tmp";
+var gFileName04 = "file04_ForBug651942.tmp";
 
 // Content for the temporary files.
 var gFileContent;
@@ -196,7 +196,7 @@ function createAndLoadTemporaryFile(aFile, aFileName, aFileContent)
             0o644, fout.DEFER_OPEN);
 
   gScratchpad.setFilename(aFile.path);
-  gScratchpad.importFromFile(aFile.QueryInterface(Ci.nsILocalFile),  true,
+  gScratchpad.importFromFile(aFile.QueryInterface(Ci.nsILocalFile), true,
                             fileImported);
   gScratchpad.saveFile(fileSaved);
 
@@ -302,7 +302,7 @@ var PreferenceObserver = {
     }
   },
 
-  uninit: function PO_uninit () {
+  uninit: function PO_uninit() {
     this.branch.removeObserver("", this);
   }
 };

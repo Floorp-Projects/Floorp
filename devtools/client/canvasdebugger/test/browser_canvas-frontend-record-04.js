@@ -21,7 +21,7 @@ function* ifTestingSupported() {
   // Wait until after the recording started to trigger the content.
   // Use the gFront method rather than the SNAPSHOT_RECORDING_STARTED event
   // which triggers before the underlying actor call
-  yield waitUntil(function*() { return !(yield gFront.isRecording()); });
+  yield waitUntil(function* () { return !(yield gFront.isRecording()); });
 
   // Start animation in content
   evalInDebuggee("start();");

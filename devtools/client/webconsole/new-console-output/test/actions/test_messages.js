@@ -15,7 +15,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function*() {
+add_task(function* () {
   const packet = testPackets.get("console.log");
   const action = messageAdd(packet);
   const expected = {
@@ -27,7 +27,7 @@ add_task(function*() {
     "messageAdd action creator returns expected action object");
 });
 
-add_task(function*() {
+add_task(function* () {
   const action = messagesClear();
   const expected = {
     type: constants.MESSAGES_CLEAR,

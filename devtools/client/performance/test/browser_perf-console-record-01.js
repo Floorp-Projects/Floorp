@@ -12,7 +12,7 @@ const { initPerformanceInTab, initConsoleInNewTab, teardownToolboxAndRemoveTab }
 const { waitUntil } = require("devtools/client/performance/test/helpers/wait-utils");
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
-add_task(function*() {
+add_task(function* () {
   let { target, toolbox, console } = yield initConsoleInNewTab({
     url: SIMPLE_URL,
     win: window

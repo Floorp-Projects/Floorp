@@ -9,7 +9,7 @@
 
 const {TimelineFront} = require("devtools/server/actors/timeline");
 
-add_task(function*() {
+add_task(function* () {
   let browser = yield addTab("data:text/html;charset=utf-8,mop");
   let doc = browser.contentDocument;
 
@@ -63,7 +63,7 @@ function waitUntil(predicate, interval = 10) {
     return Promise.resolve(true);
   }
   return new Promise(resolve =>
-    setTimeout(function() {
+    setTimeout(function () {
       waitUntil(predicate).then(() => resolve(true));
     }, interval));
 }

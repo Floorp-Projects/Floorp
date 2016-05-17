@@ -5,7 +5,7 @@ const TEST_URI = "data:text/html;charset=utf-8,browser_css_color.js";
 var {colorUtils} = require("devtools/client/shared/css-color");
 var origColorUnit;
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("about:blank");
   let [host, win, doc] = yield createHost("bottom", TEST_URI);
 
@@ -63,21 +63,21 @@ function testColorMatch(name, hex, hsl, rgb, rgba, canvas) {
   let target;
   let ctx = canvas.getContext("2d");
 
-  let clearCanvas = function() {
+  let clearCanvas = function () {
     canvas.width = 1;
   };
-  let setColor = function(aColor) {
+  let setColor = function (aColor) {
     ctx.fillStyle = aColor;
     ctx.fillRect(0, 0, 1, 1);
   };
-  let setTargetColor = function() {
+  let setTargetColor = function () {
     clearCanvas();
     // All colors have rgba so we can use this to compare against.
     setColor(rgba);
     let [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data;
     target = {r: r, g: g, b: b, a: a};
   };
-  let test = function(aColor, type) {
+  let test = function (aColor, type) {
     let tolerance = 3; // hsla -> rgba -> hsla produces inaccurate results so we
                        // need some tolerence here.
     clearCanvas();

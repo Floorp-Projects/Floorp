@@ -51,14 +51,14 @@ add_task(function* () {
   ok(!poller2.isPolling(), "isPolling() returns false for an off poller");
 });
 
-add_task(function *() {
+add_task(function* () {
   let count = -1;
   // Create a poller that returns a promise.
   // The promise is resolved asynchronously after adding 9 to the count, ensuring
   // that on every poll, we have a multiple of 10.
   let asyncPoller = new Poller(function () {
     count++;
-    ok(!(count%10), `Async poller called with a multiple of 10: ${count}`);
+    ok(!(count % 10), `Async poller called with a multiple of 10: ${count}`);
     return new Promise(function (resolve, reject) {
       let add9 = 9;
       let interval = setInterval(() => {
@@ -77,7 +77,7 @@ add_task(function *() {
   yield asyncPoller.off();
 });
 
-add_task(function *() {
+add_task(function* () {
   // Create a poller that returns a promise. This poll call
   // is called immediately, and then subsequently turned off.
   // The call to `off` should not resolve until the inflight call
@@ -100,7 +100,7 @@ add_task(function *() {
   is(pollCalls, 1, "should only be one poll call to occur before turning off polling");
 });
 
-add_task(function *() {
+add_task(function* () {
   // Create a poller that returns a promise. This poll call
   // is called immediately, and then subsequently turned off.
   // The call to `off` should not resolve until the inflight call
@@ -121,7 +121,7 @@ add_task(function *() {
   yield asyncPoller.destroy();
   ok(inflightFinished, "destroy() method does not resolve until remaining inflight poll calls finish");
   is(pollCalls, 1, "should only be one poll call to occur before destroying polling");
-  
+
   try {
     asyncPoller.on();
     ok(false, "Calling on() after destruction should throw");

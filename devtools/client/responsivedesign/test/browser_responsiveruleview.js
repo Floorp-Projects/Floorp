@@ -21,7 +21,7 @@ const TEST_URI = "data:text/html;charset=utf-8,<html><style>" +
                  "};" +
                  "</style><div></div></html>";
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(TEST_URI);
 
   info("Open the responsive design mode and set its size to 500x500 to start");

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
 // PLEASE TALK TO SOMEONE IN DEVELOPER TOOLS BEFORE EDITING IT
@@ -28,372 +28,372 @@ function test() {
 // var assert = require('../testharness/assert');
 // var helpers = require('./helpers');
 
-exports.testBlank = function(options) {
+exports.testBlank = function (options) {
   return helpers.audit(options, [
     {
-      setup:    '',
+      setup:    "",
       check: {
-        input:  '',
-        hints:  '',
-        markup: '',
+        input:  "",
+        hints:  "",
+        markup: "",
         cursor: 0,
-        current: '__command',
-        status: 'ERROR'
+        current: "__command",
+        status: "ERROR"
       },
-      post: function() {
+      post: function () {
         assert.is(options.requisition.commandAssignment.value, undefined);
       }
     },
     {
-      setup:    ' ',
+      setup:    " ",
       check: {
-        input:  ' ',
-        hints:   '',
-        markup: 'V',
+        input:  " ",
+        hints:   "",
+        markup: "V",
         cursor: 1,
-        current: '__command',
-        status: 'ERROR'
+        current: "__command",
+        status: "ERROR"
       },
-      post: function() {
+      post: function () {
         assert.is(options.requisition.commandAssignment.value, undefined);
       }
     },
     {
-      name: '| ',
-      setup: function() {
-        return helpers.setInput(options, ' ', 0);
+      name: "| ",
+      setup: function () {
+        return helpers.setInput(options, " ", 0);
       },
       check: {
-        input:  ' ',
-        hints:   '',
-        markup: 'V',
+        input:  " ",
+        hints:   "",
+        markup: "V",
         cursor: 0,
-        current: '__command',
-        status: 'ERROR'
+        current: "__command",
+        status: "ERROR"
       },
-      post: function() {
+      post: function () {
         assert.is(options.requisition.commandAssignment.value, undefined);
       }
     }
   ]);
 };
 
-exports.testDelete = function(options) {
+exports.testDelete = function (options) {
   return helpers.audit(options, [
     {
-      setup:    'x<BACKSPACE>',
+      setup:    "x<BACKSPACE>",
       check: {
-        input:  '',
-        hints:  '',
-        markup: '',
+        input:  "",
+        hints:  "",
+        markup: "",
         cursor: 0,
-        current: '__command',
-        status: 'ERROR'
+        current: "__command",
+        status: "ERROR"
       },
-      post: function() {
+      post: function () {
         assert.is(options.requisition.commandAssignment.value, undefined);
       }
     }
   ]);
 };
 
-exports.testIncompleteMultiMatch = function(options) {
+exports.testIncompleteMultiMatch = function (options) {
   return helpers.audit(options, [
     {
-      setup:    'tsn ex',
+      setup:    "tsn ex",
       check: {
-        input:  'tsn ex',
-        hints:        't',
-        markup: 'IIIVII',
+        input:  "tsn ex",
+        hints:        "t",
+        markup: "IIIVII",
         cursor: 6,
-        current: '__command',
-        status: 'ERROR',
+        current: "__command",
+        status: "ERROR",
         predictionsContains: [
-          'tsn ext', 'tsn exte', 'tsn exten', 'tsn extend'
+          "tsn ext", "tsn exte", "tsn exten", "tsn extend"
         ]
       }
     }
   ]);
 };
 
-exports.testIncompleteSingleMatch = function(options) {
+exports.testIncompleteSingleMatch = function (options) {
   return helpers.audit(options, [
     {
-      setup:    'tselar',
+      setup:    "tselar",
       check: {
-        input:  'tselar',
-        hints:        'r',
-        markup: 'IIIIII',
+        input:  "tselar",
+        hints:        "r",
+        markup: "IIIIII",
         cursor: 6,
-        current: '__command',
-        status: 'ERROR',
-        predictions: [ 'tselarr' ],
+        current: "__command",
+        status: "ERROR",
+        predictions: [ "tselarr" ],
         unassigned: [ ]
       }
     }
   ]);
 };
 
-exports.testTsv = function(options) {
+exports.testTsv = function (options) {
   return helpers.audit(options, [
     {
-      setup:    'tsv',
+      setup:    "tsv",
       check: {
-        input:  'tsv',
-        hints:     ' <optionType> <optionValue>',
-        markup: 'VVV',
+        input:  "tsv",
+        hints:     " <optionType> <optionValue>",
+        markup: "VVV",
         cursor: 3,
-        current: '__command',
-        status: 'ERROR',
+        current: "__command",
+        status: "ERROR",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsv' },
-          optionType: { arg: '', status: 'INCOMPLETE' },
-          optionValue: { arg: '', status: 'INCOMPLETE' }
+          command: { name: "tsv" },
+          optionType: { arg: "", status: "INCOMPLETE" },
+          optionValue: { arg: "", status: "INCOMPLETE" }
         }
       }
     },
     {
-      setup:    'tsv ',
+      setup:    "tsv ",
       check: {
-        input:  'tsv ',
-        hints:      'option1 <optionValue>',
-        markup: 'VVVV',
+        input:  "tsv ",
+        hints:      "option1 <optionValue>",
+        markup: "VVVV",
         cursor: 4,
-        current: 'optionType',
-        status: 'ERROR',
-        predictions: [ 'option1', 'option2', 'option3' ],
+        current: "optionType",
+        status: "ERROR",
+        predictions: [ "option1", "option2", "option3" ],
         unassigned: [ ],
-        tooltipState: 'true:importantFieldFlag',
+        tooltipState: "true:importantFieldFlag",
         args: {
-          command: { name: 'tsv' },
-          optionType: { arg: '', status: 'INCOMPLETE' },
-          optionValue: { arg: '', status: 'INCOMPLETE' }
+          command: { name: "tsv" },
+          optionType: { arg: "", status: "INCOMPLETE" },
+          optionValue: { arg: "", status: "INCOMPLETE" }
         }
       }
     },
     {
-      name: 'ts|v',
-      setup: function() {
-        return helpers.setInput(options, 'tsv ', 2);
+      name: "ts|v",
+      setup: function () {
+        return helpers.setInput(options, "tsv ", 2);
       },
       check: {
-        input:  'tsv ',
-        hints:      '<optionType> <optionValue>',
-        markup: 'VVVV',
+        input:  "tsv ",
+        hints:      "<optionType> <optionValue>",
+        markup: "VVVV",
         cursor: 2,
-        current: '__command',
-        status: 'ERROR',
+        current: "__command",
+        status: "ERROR",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsv' },
-          optionType: { arg: '', status: 'INCOMPLETE' },
-          optionValue: { arg: '', status: 'INCOMPLETE' }
+          command: { name: "tsv" },
+          optionType: { arg: "", status: "INCOMPLETE" },
+          optionValue: { arg: "", status: "INCOMPLETE" }
         }
       }
     },
     {
-      setup:    'tsv o',
+      setup:    "tsv o",
       check: {
-        input:  'tsv o',
-        hints:       'ption1 <optionValue>',
-        markup: 'VVVVI',
+        input:  "tsv o",
+        hints:       "ption1 <optionValue>",
+        markup: "VVVVI",
         cursor: 5,
-        current: 'optionType',
-        status: 'ERROR',
-        predictions: [ 'option1', 'option2', 'option3' ],
+        current: "optionType",
+        status: "ERROR",
+        predictions: [ "option1", "option2", "option3" ],
         unassigned: [ ],
-        tooltipState: 'true:importantFieldFlag',
+        tooltipState: "true:importantFieldFlag",
         args: {
-          command: { name: 'tsv' },
+          command: { name: "tsv" },
           optionType: {
             value: undefined,
-            arg: ' o',
-            status: 'INCOMPLETE',
-            message: 'Value required for \u2018optionType\u2019.'
+            arg: " o",
+            status: "INCOMPLETE",
+            message: "Value required for \u2018optionType\u2019."
           },
           optionValue: {
             value: undefined,
-            arg: '',
-            status: 'INCOMPLETE',
-            message: 'Value required for \u2018optionValue\u2019.'
+            arg: "",
+            status: "INCOMPLETE",
+            message: "Value required for \u2018optionValue\u2019."
           }
         }
       }
     },
     {
-      setup:    'tsv option',
+      setup:    "tsv option",
       check: {
-        input:  'tsv option',
-        hints:            '1 <optionValue>',
-        markup: 'VVVVIIIIII',
+        input:  "tsv option",
+        hints:            "1 <optionValue>",
+        markup: "VVVVIIIIII",
         cursor: 10,
-        current: 'optionType',
-        status: 'ERROR',
-        predictions: [ 'option1', 'option2', 'option3' ],
+        current: "optionType",
+        status: "ERROR",
+        predictions: [ "option1", "option2", "option3" ],
         unassigned: [ ],
-        tooltipState: 'true:importantFieldFlag',
+        tooltipState: "true:importantFieldFlag",
         args: {
-          command: { name: 'tsv' },
+          command: { name: "tsv" },
           optionType: {
             value: undefined,
-            arg: ' option',
-            status: 'INCOMPLETE',
-            message: 'Value required for \u2018optionType\u2019.'
+            arg: " option",
+            status: "INCOMPLETE",
+            message: "Value required for \u2018optionType\u2019."
           },
           optionValue: {
             value: undefined,
-            arg: '',
-            status: 'INCOMPLETE',
-            message: 'Value required for \u2018optionValue\u2019.'
+            arg: "",
+            status: "INCOMPLETE",
+            message: "Value required for \u2018optionValue\u2019."
           }
         }
       }
     },
     {
-      name: '|tsv option',
-      setup: function() {
-        return helpers.setInput(options, 'tsv option', 0);
+      name: "|tsv option",
+      setup: function () {
+        return helpers.setInput(options, "tsv option", 0);
       },
       check: {
-        input:  'tsv option',
-        hints:            ' <optionValue>',
-        markup: 'VVVVEEEEEE',
+        input:  "tsv option",
+        hints:            " <optionValue>",
+        markup: "VVVVEEEEEE",
         cursor: 0,
-        current: '__command',
-        status: 'ERROR',
+        current: "__command",
+        status: "ERROR",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsv' },
+          command: { name: "tsv" },
           optionType: {
             value: undefined,
-            arg: ' option',
-            status: 'INCOMPLETE',
-            message: 'Value required for \u2018optionType\u2019.'
+            arg: " option",
+            status: "INCOMPLETE",
+            message: "Value required for \u2018optionType\u2019."
           },
           optionValue: {
             value: undefined,
-            arg: '',
-            status: 'INCOMPLETE',
-            message: 'Value required for \u2018optionValue\u2019.'
+            arg: "",
+            status: "INCOMPLETE",
+            message: "Value required for \u2018optionValue\u2019."
           }
         }
       }
     },
     {
-      setup:    'tsv option ',
+      setup:    "tsv option ",
       check: {
-        input:  'tsv option ',
-        hints:             '<optionValue>',
-        markup: 'VVVVEEEEEEV',
+        input:  "tsv option ",
+        hints:             "<optionValue>",
+        markup: "VVVVEEEEEEV",
         cursor: 11,
-        current: 'optionValue',
-        status: 'ERROR',
+        current: "optionValue",
+        status: "ERROR",
         predictions: [ ],
         unassigned: [ ],
-        tooltipState: 'false:default',
+        tooltipState: "false:default",
         args: {
-          command: { name: 'tsv' },
+          command: { name: "tsv" },
           optionType: {
             value: undefined,
-            arg: ' option ',
-            status: 'ERROR',
-            message: 'Can\u2019t use \u2018option\u2019.'
+            arg: " option ",
+            status: "ERROR",
+            message: "Can\u2019t use \u2018option\u2019."
           },
           optionValue: {
             value: undefined,
-            arg: '',
-            status: 'INCOMPLETE',
-            message: 'Value required for \u2018optionValue\u2019.'
+            arg: "",
+            status: "INCOMPLETE",
+            message: "Value required for \u2018optionValue\u2019."
           }
         }
       }
     },
     {
-      setup:    'tsv option1',
+      setup:    "tsv option1",
       check: {
-        input:  'tsv option1',
-        hints:             ' <optionValue>',
-        markup: 'VVVVVVVVVVV',
+        input:  "tsv option1",
+        hints:             " <optionValue>",
+        markup: "VVVVVVVVVVV",
         cursor: 11,
-        current: 'optionType',
-        status: 'ERROR',
-        predictions: [ 'option1' ],
+        current: "optionType",
+        status: "ERROR",
+        predictions: [ "option1" ],
         unassigned: [ ],
-        tooltipState: 'true:importantFieldFlag',
+        tooltipState: "true:importantFieldFlag",
         args: {
-          command: { name: 'tsv' },
+          command: { name: "tsv" },
           optionType: {
-            value: 'string',
-            arg: ' option1',
-            status: 'VALID',
-            message: ''
+            value: "string",
+            arg: " option1",
+            status: "VALID",
+            message: ""
           },
           optionValue: {
             value: undefined,
-            arg: '',
-            status: 'INCOMPLETE',
-            message: 'Value required for \u2018optionValue\u2019.'
+            arg: "",
+            status: "INCOMPLETE",
+            message: "Value required for \u2018optionValue\u2019."
           }
         }
       }
     },
     {
-      setup:    'tsv option1 ',
+      setup:    "tsv option1 ",
       check: {
-        input:  'tsv option1 ',
-        hints:              '<optionValue>',
-        markup: 'VVVVVVVVVVVV',
+        input:  "tsv option1 ",
+        hints:              "<optionValue>",
+        markup: "VVVVVVVVVVVV",
         cursor: 12,
-        current: 'optionValue',
-        status: 'ERROR',
+        current: "optionValue",
+        status: "ERROR",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsv' },
+          command: { name: "tsv" },
           optionType: {
-            value: 'string',
-            arg: ' option1 ',
-            status: 'VALID',
-            message: ''
+            value: "string",
+            arg: " option1 ",
+            status: "VALID",
+            message: ""
           },
           optionValue: {
             value: undefined,
-            arg: '',
-            status: 'INCOMPLETE',
-            message: 'Value required for \u2018optionValue\u2019.'
+            arg: "",
+            status: "INCOMPLETE",
+            message: "Value required for \u2018optionValue\u2019."
           }
         }
       }
     },
     {
-      setup:    'tsv option2',
+      setup:    "tsv option2",
       check: {
-        input:  'tsv option2',
-        hints:             ' <optionValue>',
-        markup: 'VVVVVVVVVVV',
+        input:  "tsv option2",
+        hints:             " <optionValue>",
+        markup: "VVVVVVVVVVV",
         cursor: 11,
-        current: 'optionType',
-        status: 'ERROR',
-        predictions: [ 'option2' ],
+        current: "optionType",
+        status: "ERROR",
+        predictions: [ "option2" ],
         unassigned: [ ],
-        tooltipState: 'true:importantFieldFlag',
+        tooltipState: "true:importantFieldFlag",
         args: {
-          command: { name: 'tsv' },
+          command: { name: "tsv" },
           optionType: {
-            value: 'number',
-            arg: ' option2',
-            status: 'VALID',
-            message: ''
+            value: "number",
+            arg: " option2",
+            status: "VALID",
+            message: ""
           },
           optionValue: {
             value: undefined,
-            arg: '',
-            status: 'INCOMPLETE',
-            message: 'Value required for \u2018optionValue\u2019.'
+            arg: "",
+            status: "INCOMPLETE",
+            message: "Value required for \u2018optionValue\u2019."
           }
         }
       }
@@ -401,58 +401,58 @@ exports.testTsv = function(options) {
   ]);
 };
 
-exports.testTsvValues = function(options) {
+exports.testTsvValues = function (options) {
   return helpers.audit(options, [
     {
-      setup:    'tsv option1 6',
+      setup:    "tsv option1 6",
       check: {
-        input:  'tsv option1 6',
-        hints:               '',
-        markup: 'VVVVVVVVVVVVV',
+        input:  "tsv option1 6",
+        hints:               "",
+        markup: "VVVVVVVVVVVVV",
         cursor: 13,
-        current: 'optionValue',
-        status: 'VALID',
+        current: "optionValue",
+        status: "VALID",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsv' },
+          command: { name: "tsv" },
           optionType: {
-            value: 'string',
-            arg: ' option1',
-            status: 'VALID',
-            message: ''
+            value: "string",
+            arg: " option1",
+            status: "VALID",
+            message: ""
           },
           optionValue: {
-            arg: ' 6',
-            status: 'VALID',
-            message: ''
+            arg: " 6",
+            status: "VALID",
+            message: ""
           }
         }
       }
     },
     {
-      setup:    'tsv option2 6',
+      setup:    "tsv option2 6",
       check: {
-        input:  'tsv option2 6',
-        hints:               '',
-        markup: 'VVVVVVVVVVVVV',
+        input:  "tsv option2 6",
+        hints:               "",
+        markup: "VVVVVVVVVVVVV",
         cursor: 13,
-        current: 'optionValue',
-        status: 'VALID',
+        current: "optionValue",
+        status: "VALID",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsv' },
+          command: { name: "tsv" },
           optionType: {
-            value: 'number',
-            arg: ' option2',
-            status: 'VALID',
-            message: ''
+            value: "number",
+            arg: " option2",
+            status: "VALID",
+            message: ""
           },
           optionValue: {
-            arg: ' 6',
-            status: 'VALID',
-            message: ''
+            arg: " 6",
+            status: "VALID",
+            message: ""
           }
         }
       }
@@ -461,16 +461,16 @@ exports.testTsvValues = function(options) {
     // the value of 'value' when we're local
     {
       skipIf: options.isRemote,
-      setup: 'tsv option1 6',
+      setup: "tsv option1 6",
       check: {
         args: {
-          optionValue: { value: '6' }
+          optionValue: { value: "6" }
         }
       }
     },
     {
       skipIf: options.isRemote,
-      setup: 'tsv option2 6',
+      setup: "tsv option2 6",
       check: {
         args: {
           optionValue: { value: 6 }
@@ -480,48 +480,48 @@ exports.testTsvValues = function(options) {
   ]);
 };
 
-exports.testInvalid = function(options) {
+exports.testInvalid = function (options) {
   return helpers.audit(options, [
     {
-      setup:    'zxjq',
+      setup:    "zxjq",
       check: {
-        input:  'zxjq',
-        hints:      '',
-        markup: 'EEEE',
+        input:  "zxjq",
+        hints:      "",
+        markup: "EEEE",
         cursor: 4,
-        current: '__command',
-        status: 'ERROR',
+        current: "__command",
+        status: "ERROR",
         predictions: [ ],
         unassigned: [ ],
-        tooltipState: 'true:isError'
+        tooltipState: "true:isError"
       }
     },
     {
-      setup:    'zxjq ',
+      setup:    "zxjq ",
       check: {
-        input:  'zxjq ',
-        hints:       '',
-        markup: 'EEEEV',
+        input:  "zxjq ",
+        hints:       "",
+        markup: "EEEEV",
         cursor: 5,
-        current: '__command',
-        status: 'ERROR',
+        current: "__command",
+        status: "ERROR",
         predictions: [ ],
         unassigned: [ ],
-        tooltipState: 'true:isError'
+        tooltipState: "true:isError"
       }
     },
     {
-      setup:    'zxjq one',
+      setup:    "zxjq one",
       check: {
-        input:  'zxjq one',
-        hints:          '',
-        markup: 'EEEEVEEE',
+        input:  "zxjq one",
+        hints:          "",
+        markup: "EEEEVEEE",
         cursor: 8,
-        current: '__unassigned',
-        status: 'ERROR',
+        current: "__unassigned",
+        status: "ERROR",
         predictions: [ ],
-        unassigned: [ ' one' ],
-        tooltipState: 'true:isError'
+        unassigned: [ " one" ],
+        tooltipState: "true:isError"
       }
     }
   ]);

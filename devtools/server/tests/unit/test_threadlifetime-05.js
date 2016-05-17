@@ -16,8 +16,8 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-grips");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-grips", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-grips", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_thread_lifetime();
     });
@@ -55,10 +55,10 @@ function test_thread_lifetime()
     });
   });
 
-  gDebuggee.eval("(" + function() {
+  gDebuggee.eval("(" + function () {
     function stopMe(arg1, arg2, arg3) {
       debugger;
-    };
+    }
     stopMe({obj: 1}, {obj: 2}, {obj: 3});
   } + ")()");
 }

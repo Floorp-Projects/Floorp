@@ -22,7 +22,7 @@ do_register_cleanup(() => {
                              asyncStackEnabled);
 });
 
-add_task(function*() {
+add_task(function* () {
   Services.prefs.setBoolPref("javascript.options.asyncstack", true);
 
   yield waitForTick();

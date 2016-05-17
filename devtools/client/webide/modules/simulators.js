@@ -34,7 +34,7 @@ var Simulators = {
       return this._loadingPromise;
     }
 
-    this._loadingPromise = Task.spawn(function*() {
+    this._loadingPromise = Task.spawn(function* () {
       let jobs = [];
 
       let value = yield asyncStorage.getItem("simulators");
@@ -70,7 +70,7 @@ var Simulators = {
    *
    * @return Promise.
    */
-  _addUnusedAddons: Task.async(function*() {
+  _addUnusedAddons: Task.async(function* () {
     let jobs = [];
 
     let addons = yield Simulators.findSimulatorAddons();
@@ -86,7 +86,7 @@ var Simulators = {
    *
    * @return Promise.
    */
-  _save: Task.async(function*() {
+  _save: Task.async(function* () {
     yield this._load();
 
     let value = Simulators._simulators.map(simulator => {
@@ -105,7 +105,7 @@ var Simulators = {
    *
    * @return Promised simulator list.
    */
-  findSimulators: Task.async(function*() {
+  findSimulators: Task.async(function* () {
     yield this._load();
     return Simulators._simulators;
   }),

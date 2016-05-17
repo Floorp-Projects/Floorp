@@ -15,7 +15,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function *() {
+add_task(function* () {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
   yield front.attach();
@@ -62,7 +62,7 @@ add_task(function *() {
   dispatch(importSnapshotAndCensus(heapWorker, destPath));
 
   yield waitUntilState(store, () => { return snapshotI === snapshotStates.length &&
-                                      censusI === censusStates.length });
+                                      censusI === censusStates.length; });
   unsubscribe();
   equal(snapshotI, snapshotStates.length, "importSnapshotAndCensus() produces the correct sequence of states in a snapshot");
   equal(getState().snapshots[1].state, states.READ, "imported snapshot is in READ state");
@@ -84,7 +84,7 @@ add_task(function *() {
 
   equal(JSON.stringify(census1), JSON.stringify(census2), "Imported snapshot has correct census");
 
-  function stripUnique (obj) {
+  function stripUnique(obj) {
     let children = obj.children || [];
     for (let child of children) {
       delete child.id;

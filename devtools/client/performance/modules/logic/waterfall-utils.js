@@ -18,7 +18,7 @@ const { MarkerBlueprintUtils } = require("devtools/client/performance/modules/ma
  * @param object marker
  * @return object
  */
-function createParentNode (marker) {
+function createParentNode(marker) {
   return extend(marker, { submarkers: [] });
 }
 
@@ -110,7 +110,7 @@ function collapseMarkersIntoNode({ rootNode, markersList, filter }) {
  * @param {object} root
  * @return {object}
  */
-function createParentNodeFactory (root) {
+function createParentNodeFactory(root) {
   let parentMarkers = [];
   let factory = {
     /**

@@ -15,33 +15,33 @@ exports.synthesizeProfile = () => {
       samples: [{
         time: 1,
         frames: [
-          { category: CATEGORY_MASK("other"),  location: "(root)" },
-          { category: CATEGORY_MASK("other"),  location: "A (http://foo/bar/baz:12)" },
-          { category: CATEGORY_MASK("css"),    location: "B (http://foo/bar/baz:34)" },
-          { category: CATEGORY_MASK("js"),     location: "C (http://foo/bar/baz:56)" }
+          { category: CATEGORY_MASK("other"), location: "(root)" },
+          { category: CATEGORY_MASK("other"), location: "A (http://foo/bar/baz:12)" },
+          { category: CATEGORY_MASK("css"), location: "B (http://foo/bar/baz:34)" },
+          { category: CATEGORY_MASK("js"), location: "C (http://foo/bar/baz:56)" }
         ]
       }, {
         time: 1 + 1,
         frames: [
-          { category: CATEGORY_MASK("other"),  location: "(root)" },
-          { category: CATEGORY_MASK("other"),  location: "A (http://foo/bar/baz:12)" },
-          { category: CATEGORY_MASK("css"),    location: "B (http://foo/bar/baz:34)" },
-          { category: CATEGORY_MASK("gc", 1),  location: "D (http://foo/bar/baz:78:9)" }
+          { category: CATEGORY_MASK("other"), location: "(root)" },
+          { category: CATEGORY_MASK("other"), location: "A (http://foo/bar/baz:12)" },
+          { category: CATEGORY_MASK("css"), location: "B (http://foo/bar/baz:34)" },
+          { category: CATEGORY_MASK("gc", 1), location: "D (http://foo/bar/baz:78:9)" }
         ]
       }, {
         time: 1 + 1 + 2,
         frames: [
-          { category: CATEGORY_MASK("other"),  location: "(root)" },
-          { category: CATEGORY_MASK("other"),  location: "A (http://foo/bar/baz:12)" },
-          { category: CATEGORY_MASK("css"),    location: "B (http://foo/bar/baz:34)" },
-          { category: CATEGORY_MASK("gc", 1),  location: "D (http://foo/bar/baz:78:9)" }
+          { category: CATEGORY_MASK("other"), location: "(root)" },
+          { category: CATEGORY_MASK("other"), location: "A (http://foo/bar/baz:12)" },
+          { category: CATEGORY_MASK("css"), location: "B (http://foo/bar/baz:34)" },
+          { category: CATEGORY_MASK("gc", 1), location: "D (http://foo/bar/baz:78:9)" }
         ]
       }, {
         time: 1 + 1 + 2 + 3,
         frames: [
-          { category: CATEGORY_MASK("other"),   location: "(root)" },
-          { category: CATEGORY_MASK("other"),   location: "A (http://foo/bar/baz:12)" },
-          { category: CATEGORY_MASK("gc", 2),   location: "E (http://foo/bar/baz:90)" },
+          { category: CATEGORY_MASK("other"), location: "(root)" },
+          { category: CATEGORY_MASK("other"), location: "A (http://foo/bar/baz:12)" },
+          { category: CATEGORY_MASK("gc", 2), location: "E (http://foo/bar/baz:90)" },
           { category: CATEGORY_MASK("network"), location: "F (http://foo/bar/baz:99)" }
         ]
       }]
@@ -63,7 +63,7 @@ exports.synthesizeCustomTreeClass = () => {
   }
 
   MyCustomTreeItem.prototype = Heritage.extend(AbstractTreeItem.prototype, {
-    _displaySelf: function(document, arrowNode) {
+    _displaySelf: function (document, arrowNode) {
       let node = document.createElement("hbox");
       node.marginInlineStart = (this.level * 10) + "px";
       node.appendChild(arrowNode);
@@ -71,7 +71,7 @@ exports.synthesizeCustomTreeClass = () => {
       return node;
     },
 
-    _populateSelf: function(children) {
+    _populateSelf: function (children) {
       for (let childDataSrc of this.itemDataSrc.children) {
         children.push(new MyCustomTreeItem(childDataSrc, {
           parent: this,

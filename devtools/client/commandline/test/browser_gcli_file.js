@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
 // PLEASE TALK TO SOMEONE IN DEVELOPER TOOLS BEFORE EDITING IT
@@ -29,389 +29,389 @@ function test() {
 
 var local = false;
 
-exports.testBasic = function(options) {
+exports.testBasic = function (options) {
   return helpers.audit(options, [
     {
       skipRemainingIf: options.isFirefox, // No file implementation in Firefox
-      setup:    'tsfile open /',
+      setup:    "tsfile open /",
       check: {
-        input:  'tsfile open /',
-        hints:               '',
-        markup: 'VVVVVVVVVVVVI',
+        input:  "tsfile open /",
+        hints:               "",
+        markup: "VVVVVVVVVVVVI",
         cursor: 13,
-        current: 'p1',
-        status: 'ERROR',
-        message: '\'/\' is not a file',
+        current: "p1",
+        status: "ERROR",
+        message: "'/' is not a file",
         args: {
-          command: { name: 'tsfile open' },
+          command: { name: "tsfile open" },
           p1: {
             value: undefined,
-            arg: ' /',
-            status: 'INCOMPLETE',
-            message: '\'/\' is not a file'
+            arg: " /",
+            status: "INCOMPLETE",
+            message: "'/' is not a file"
           }
         }
       }
     },
     {
-      setup:    'tsfile open /zxcv',
+      setup:    "tsfile open /zxcv",
       check: {
-        input:  'tsfile open /zxcv',
+        input:  "tsfile open /zxcv",
         // hints:                   ' -> /etc/',
-        markup: 'VVVVVVVVVVVVIIIII',
+        markup: "VVVVVVVVVVVVIIIII",
         cursor: 17,
-        current: 'p1',
-        status: 'ERROR',
-        message: '\'/zxcv\' doesn\'t exist',
+        current: "p1",
+        status: "ERROR",
+        message: "'/zxcv' doesn't exist",
         args: {
-          command: { name: 'tsfile open' },
+          command: { name: "tsfile open" },
           p1: {
             value: undefined,
-            arg: ' /zxcv',
-            status: 'INCOMPLETE',
-            message: '\'/zxcv\' doesn\'t exist'
+            arg: " /zxcv",
+            status: "INCOMPLETE",
+            message: "'/zxcv' doesn't exist"
           }
         }
       }
     },
     {
       skipIf: !local,
-      setup:    'tsfile open /mach_kernel',
+      setup:    "tsfile open /mach_kernel",
       check: {
-        input:  'tsfile open /mach_kernel',
-        hints:                          '',
-        markup: 'VVVVVVVVVVVVVVVVVVVVVVVV',
+        input:  "tsfile open /mach_kernel",
+        hints:                          "",
+        markup: "VVVVVVVVVVVVVVVVVVVVVVVV",
         cursor: 24,
-        current: 'p1',
-        status: 'VALID',
-        message: '',
+        current: "p1",
+        status: "VALID",
+        message: "",
         args: {
-          command: { name: 'tsfile open' },
+          command: { name: "tsfile open" },
           p1: {
-            value: '/mach_kernel',
-            arg: ' /mach_kernel',
-            status: 'VALID',
-            message: ''
-           }
-        }
-      }
-    },
-    {
-      setup:    'tsfile saveas /',
-      check: {
-        input:  'tsfile saveas /',
-        hints:                 '',
-        markup: 'VVVVVVVVVVVVVVI',
-        cursor: 15,
-        current: 'p1',
-        status: 'ERROR',
-        message: '\'/\' already exists',
-        args: {
-          command: { name: 'tsfile saveas' },
-          p1: {
-            value: undefined,
-            arg: ' /',
-            status: 'INCOMPLETE',
-            message: '\'/\' already exists'
+            value: "/mach_kernel",
+            arg: " /mach_kernel",
+            status: "VALID",
+            message: ""
           }
         }
       }
     },
     {
-      setup:    'tsfile saveas /zxcv',
+      setup:    "tsfile saveas /",
       check: {
-        input:  'tsfile saveas /zxcv',
+        input:  "tsfile saveas /",
+        hints:                 "",
+        markup: "VVVVVVVVVVVVVVI",
+        cursor: 15,
+        current: "p1",
+        status: "ERROR",
+        message: "'/' already exists",
+        args: {
+          command: { name: "tsfile saveas" },
+          p1: {
+            value: undefined,
+            arg: " /",
+            status: "INCOMPLETE",
+            message: "'/' already exists"
+          }
+        }
+      }
+    },
+    {
+      setup:    "tsfile saveas /zxcv",
+      check: {
+        input:  "tsfile saveas /zxcv",
         // hints:                     ' -> /etc/',
-        markup: 'VVVVVVVVVVVVVVVVVVV',
+        markup: "VVVVVVVVVVVVVVVVVVV",
         cursor: 19,
-        current: 'p1',
-        status: 'VALID',
-        message: '',
+        current: "p1",
+        status: "VALID",
+        message: "",
         args: {
-          command: { name: 'tsfile saveas' },
+          command: { name: "tsfile saveas" },
           p1: {
-            value: '/zxcv',
-            arg: ' /zxcv',
-            status: 'VALID',
-            message: ''
+            value: "/zxcv",
+            arg: " /zxcv",
+            status: "VALID",
+            message: ""
           }
         }
       }
     },
     {
       skipIf: !local,
-      setup:    'tsfile saveas /mach_kernel',
+      setup:    "tsfile saveas /mach_kernel",
       check: {
-        input:  'tsfile saveas /mach_kernel',
-        hints:                            '',
-        markup: 'VVVVVVVVVVVVVVIIIIIIIIIIII',
+        input:  "tsfile saveas /mach_kernel",
+        hints:                            "",
+        markup: "VVVVVVVVVVVVVVIIIIIIIIIIII",
         cursor: 26,
-        current: 'p1',
-        status: 'ERROR',
-        message: '\'/mach_kernel\' already exists',
+        current: "p1",
+        status: "ERROR",
+        message: "'/mach_kernel' already exists",
         args: {
-          command: { name: 'tsfile saveas' },
+          command: { name: "tsfile saveas" },
           p1: {
             value: undefined,
-            arg: ' /mach_kernel',
-            status: 'INCOMPLETE',
-            message: '\'/mach_kernel\' already exists'
+            arg: " /mach_kernel",
+            status: "INCOMPLETE",
+            message: "'/mach_kernel' already exists"
           }
         }
       }
     },
     {
-      setup:    'tsfile save /',
+      setup:    "tsfile save /",
       check: {
-        input:  'tsfile save /',
-        hints:               '',
-        markup: 'VVVVVVVVVVVVI',
+        input:  "tsfile save /",
+        hints:               "",
+        markup: "VVVVVVVVVVVVI",
         cursor: 13,
-        current: 'p1',
-        status: 'ERROR',
-        message: '\'/\' is not a file',
+        current: "p1",
+        status: "ERROR",
+        message: "'/' is not a file",
         args: {
-          command: { name: 'tsfile save' },
+          command: { name: "tsfile save" },
           p1: {
             value: undefined,
-            arg: ' /',
-            status: 'INCOMPLETE',
-            message: '\'/\' is not a file'
+            arg: " /",
+            status: "INCOMPLETE",
+            message: "'/' is not a file"
           }
         }
       }
     },
     {
-      setup:    'tsfile save /zxcv',
+      setup:    "tsfile save /zxcv",
       check: {
-        input:  'tsfile save /zxcv',
+        input:  "tsfile save /zxcv",
         // hints:                   ' -> /etc/',
-        markup: 'VVVVVVVVVVVVVVVVV',
+        markup: "VVVVVVVVVVVVVVVVV",
         cursor: 17,
-        current: 'p1',
-        status: 'VALID',
-        message: '',
+        current: "p1",
+        status: "VALID",
+        message: "",
         args: {
-          command: { name: 'tsfile save' },
+          command: { name: "tsfile save" },
           p1: {
-            value: '/zxcv',
-            arg: ' /zxcv',
-            status: 'VALID',
-            message: ''
+            value: "/zxcv",
+            arg: " /zxcv",
+            status: "VALID",
+            message: ""
           }
         }
       }
     },
     {
       skipIf: !local,
-      setup:    'tsfile save /mach_kernel',
+      setup:    "tsfile save /mach_kernel",
       check: {
-        input:  'tsfile save /mach_kernel',
-        hints:                          '',
-        markup: 'VVVVVVVVVVVVVVVVVVVVVVVV',
+        input:  "tsfile save /mach_kernel",
+        hints:                          "",
+        markup: "VVVVVVVVVVVVVVVVVVVVVVVV",
         cursor: 24,
-        current: 'p1',
-        status: 'VALID',
-        message: '',
+        current: "p1",
+        status: "VALID",
+        message: "",
         args: {
-          command: { name: 'tsfile save' },
+          command: { name: "tsfile save" },
           p1: {
-            value: '/mach_kernel',
-            arg: ' /mach_kernel',
-            status: 'VALID',
-            message: ''
+            value: "/mach_kernel",
+            arg: " /mach_kernel",
+            status: "VALID",
+            message: ""
           }
         }
       }
     },
     {
-      setup:    'tsfile cd /',
+      setup:    "tsfile cd /",
       check: {
-        input:  'tsfile cd /',
-        hints:             '',
-        markup: 'VVVVVVVVVVV',
+        input:  "tsfile cd /",
+        hints:             "",
+        markup: "VVVVVVVVVVV",
         cursor: 11,
-        current: 'p1',
-        status: 'VALID',
-        message: '',
+        current: "p1",
+        status: "VALID",
+        message: "",
         args: {
-          command: { name: 'tsfile cd' },
+          command: { name: "tsfile cd" },
           p1: {
-            value: '/',
-            arg: ' /',
-            status: 'VALID',
-            message: ''
+            value: "/",
+            arg: " /",
+            status: "VALID",
+            message: ""
           }
         }
       }
     },
     {
-      setup:    'tsfile cd /zxcv',
+      setup:    "tsfile cd /zxcv",
       check: {
-        input:  'tsfile cd /zxcv',
+        input:  "tsfile cd /zxcv",
         // hints:                 ' -> /dev/',
-        markup: 'VVVVVVVVVVIIIII',
+        markup: "VVVVVVVVVVIIIII",
         cursor: 15,
-        current: 'p1',
-        status: 'ERROR',
-        message: '\'/zxcv\' doesn\'t exist',
+        current: "p1",
+        status: "ERROR",
+        message: "'/zxcv' doesn't exist",
         args: {
-          command: { name: 'tsfile cd' },
+          command: { name: "tsfile cd" },
           p1: {
             value: undefined,
-            arg: ' /zxcv',
-            status: 'INCOMPLETE',
-            message: '\'/zxcv\' doesn\'t exist'
+            arg: " /zxcv",
+            status: "INCOMPLETE",
+            message: "'/zxcv' doesn't exist"
           }
         }
       }
     },
     {
       skipIf: true || !local,
-      setup:    'tsfile cd /etc/passwd',
+      setup:    "tsfile cd /etc/passwd",
       check: {
-        input:  'tsfile cd /etc/passwd',
-        hints:                       ' -> /etc/pam.d/',
-        markup: 'VVVVVVVVVVIIIIIIIIIII',
+        input:  "tsfile cd /etc/passwd",
+        hints:                       " -> /etc/pam.d/",
+        markup: "VVVVVVVVVVIIIIIIIIIII",
         cursor: 21,
-        current: 'p1',
-        status: 'ERROR',
-        message: '\'/etc/passwd\' is not a directory',
+        current: "p1",
+        status: "ERROR",
+        message: "'/etc/passwd' is not a directory",
         args: {
-          command: { name: 'tsfile cd' },
+          command: { name: "tsfile cd" },
           p1: {
             value: undefined,
-            arg: ' /etc/passwd',
-            status: 'INCOMPLETE',
-            message: '\'/etc/passwd\' is not a directory'
+            arg: " /etc/passwd",
+            status: "INCOMPLETE",
+            message: "'/etc/passwd' is not a directory"
           }
         }
       }
     },
     {
-      setup:    'tsfile mkdir /',
+      setup:    "tsfile mkdir /",
       check: {
-        input:  'tsfile mkdir /',
-        hints:                '',
-        markup: 'VVVVVVVVVVVVVI',
+        input:  "tsfile mkdir /",
+        hints:                "",
+        markup: "VVVVVVVVVVVVVI",
         cursor: 14,
-        current: 'p1',
-        status: 'ERROR',
-        message: ''/' already exists',
+        current: "p1",
+        status: "ERROR",
+        message: "" / " already exists",
         args: {
-          command: { name: 'tsfile mkdir' },
+          command: { name: "tsfile mkdir" },
           p1: {
             value: undefined,
-            arg: ' /',
-            status: 'INCOMPLETE',
-            message: '\'/\' already exists'
+            arg: " /",
+            status: "INCOMPLETE",
+            message: "'/' already exists"
           }
         }
       }
     },
     {
-      setup:    'tsfile mkdir /zxcv',
+      setup:    "tsfile mkdir /zxcv",
       check: {
-        input:  'tsfile mkdir /zxcv',
+        input:  "tsfile mkdir /zxcv",
         // hints:                    ' -> /dev/',
-        markup: 'VVVVVVVVVVVVVVVVVV',
+        markup: "VVVVVVVVVVVVVVVVVV",
         cursor: 18,
-        current: 'p1',
-        status: 'VALID',
-        message: '',
+        current: "p1",
+        status: "VALID",
+        message: "",
         args: {
-          command: { name: 'tsfile mkdir' },
+          command: { name: "tsfile mkdir" },
           p1: {
-            value: '/zxcv',
-            arg: ' /zxcv',
-            status: 'VALID',
-            message: ''
+            value: "/zxcv",
+            arg: " /zxcv",
+            status: "VALID",
+            message: ""
           }
         }
       }
     },
     {
       skipIf: !local,
-      setup:    'tsfile mkdir /mach_kernel',
+      setup:    "tsfile mkdir /mach_kernel",
       check: {
-        input:  'tsfile mkdir /mach_kernel',
-        hints:                           '',
-        markup: 'VVVVVVVVVVVVVIIIIIIIIIIII',
+        input:  "tsfile mkdir /mach_kernel",
+        hints:                           "",
+        markup: "VVVVVVVVVVVVVIIIIIIIIIIII",
         cursor: 25,
-        current: 'p1',
-        status: 'ERROR',
-        message: '\'/mach_kernel\' already exists',
+        current: "p1",
+        status: "ERROR",
+        message: "'/mach_kernel' already exists",
         args: {
-          command: { name: 'tsfile mkdir' },
+          command: { name: "tsfile mkdir" },
           p1: {
             value: undefined,
-            arg: ' /mach_kernel',
-            status: 'INCOMPLETE',
-            message: '\'/mach_kernel\' already exists'
+            arg: " /mach_kernel",
+            status: "INCOMPLETE",
+            message: "'/mach_kernel' already exists"
           }
         }
       }
     },
     {
-      setup:    'tsfile rm /',
+      setup:    "tsfile rm /",
       check: {
-        input:  'tsfile rm /',
-        hints:             '',
-        markup: 'VVVVVVVVVVV',
+        input:  "tsfile rm /",
+        hints:             "",
+        markup: "VVVVVVVVVVV",
         cursor: 11,
-        current: 'p1',
-        status: 'VALID',
-        message: '',
+        current: "p1",
+        status: "VALID",
+        message: "",
         args: {
-          command: { name: 'tsfile rm' },
+          command: { name: "tsfile rm" },
           p1: {
-            value: '/',
-            arg: ' /',
-            status: 'VALID',
-            message: ''
+            value: "/",
+            arg: " /",
+            status: "VALID",
+            message: ""
           }
         }
       }
     },
     {
-      setup:    'tsfile rm /zxcv',
+      setup:    "tsfile rm /zxcv",
       check: {
-        input:  'tsfile rm /zxcv',
+        input:  "tsfile rm /zxcv",
         // hints:                 ' -> /etc/',
-        markup: 'VVVVVVVVVVIIIII',
+        markup: "VVVVVVVVVVIIIII",
         cursor: 15,
-        current: 'p1',
-        status: 'ERROR',
-        message: '\'/zxcv\' doesn\'t exist',
+        current: "p1",
+        status: "ERROR",
+        message: "'/zxcv' doesn't exist",
         args: {
-          command: { name: 'tsfile rm' },
+          command: { name: "tsfile rm" },
           p1: {
             value: undefined,
-            arg: ' /zxcv',
-            status: 'INCOMPLETE',
-            message: '\'/zxcv\' doesn\'t exist'
+            arg: " /zxcv",
+            status: "INCOMPLETE",
+            message: "'/zxcv' doesn't exist"
           }
         }
       }
     },
     {
       skipIf: !local,
-      setup:    'tsfile rm /mach_kernel',
+      setup:    "tsfile rm /mach_kernel",
       check: {
-        input:  'tsfile rm /mach_kernel',
-        hints:                        '',
-        markup: 'VVVVVVVVVVVVVVVVVVVVVV',
+        input:  "tsfile rm /mach_kernel",
+        hints:                        "",
+        markup: "VVVVVVVVVVVVVVVVVVVVVV",
         cursor: 22,
-        current: 'p1',
-        status: 'VALID',
-        message: '',
+        current: "p1",
+        status: "VALID",
+        message: "",
         args: {
-          command: { name: 'tsfile rm' },
+          command: { name: "tsfile rm" },
           p1: {
-            value: '/mach_kernel',
-            arg: ' /mach_kernel',
-            status: 'VALID',
-            message: ''
+            value: "/mach_kernel",
+            arg: " /mach_kernel",
+            status: "VALID",
+            message: ""
           }
         }
       }
@@ -419,7 +419,7 @@ exports.testBasic = function(options) {
   ]);
 };
 
-exports.testFirefoxBasic = function(options) {
+exports.testFirefoxBasic = function (options) {
   return helpers.audit(options, [
     {
       // These tests are just like the ones above tailored for running in
@@ -427,392 +427,392 @@ exports.testFirefoxBasic = function(options) {
       skipRemainingIf: true,
       // skipRemainingIf: !options.isFirefox,
       skipIf: true,
-      setup:    'tsfile open /',
+      setup:    "tsfile open /",
       check: {
-        input:  'tsfile open /',
-        hints:               '',
-        markup: 'VVVVVVVVVVVVI',
+        input:  "tsfile open /",
+        hints:               "",
+        markup: "VVVVVVVVVVVVI",
         cursor: 13,
-        current: 'p1',
-        status: 'ERROR',
-        message: '\'/\' is not a file',
+        current: "p1",
+        status: "ERROR",
+        message: "'/' is not a file",
         args: {
-          command: { name: 'tsfile open' },
+          command: { name: "tsfile open" },
           p1: {
             value: undefined,
-            arg: ' /',
-            status: 'INCOMPLETE',
-            message: '\'/\' is not a file'
+            arg: " /",
+            status: "INCOMPLETE",
+            message: "'/' is not a file"
           }
         }
       }
     },
     {
       skipIf: true,
-      setup:    'tsfile open /zxcv',
+      setup:    "tsfile open /zxcv",
       check: {
-        input:  'tsfile open /zxcv',
+        input:  "tsfile open /zxcv",
         // hints:                   ' -> /etc/',
-        markup: 'VVVVVVVVVVVVIIIII',
+        markup: "VVVVVVVVVVVVIIIII",
         cursor: 17,
-        current: 'p1',
-        status: 'ERROR',
-        message: '\'/zxcv\' doesn\'t exist',
+        current: "p1",
+        status: "ERROR",
+        message: "'/zxcv' doesn't exist",
         args: {
-          command: { name: 'tsfile open' },
+          command: { name: "tsfile open" },
           p1: {
             value: undefined,
-            arg: ' /zxcv',
-            status: 'INCOMPLETE',
-            message: '\'/zxcv\' doesn\'t exist'
+            arg: " /zxcv",
+            status: "INCOMPLETE",
+            message: "'/zxcv' doesn't exist"
           }
         }
       }
     },
     {
       skipIf: !local,
-      setup:    'tsfile open /mach_kernel',
+      setup:    "tsfile open /mach_kernel",
       check: {
-        input:  'tsfile open /mach_kernel',
-        hints:                          '',
-        markup: 'VVVVVVVVVVVVVVVVVVVVVVVV',
+        input:  "tsfile open /mach_kernel",
+        hints:                          "",
+        markup: "VVVVVVVVVVVVVVVVVVVVVVVV",
         cursor: 24,
-        current: 'p1',
-        status: 'VALID',
-        message: '',
+        current: "p1",
+        status: "VALID",
+        message: "",
         args: {
-          command: { name: 'tsfile open' },
+          command: { name: "tsfile open" },
           p1: {
-            value: '/mach_kernel',
-            arg: ' /mach_kernel',
-            status: 'VALID',
-            message: ''
-           }
+            value: "/mach_kernel",
+            arg: " /mach_kernel",
+            status: "VALID",
+            message: ""
+          }
         }
       }
     },
     {
       skipIf: true,
-      setup:    'tsfile saveas /',
+      setup:    "tsfile saveas /",
       check: {
-        input:  'tsfile saveas /',
-        hints:                 '',
-        markup: 'VVVVVVVVVVVVVVI',
+        input:  "tsfile saveas /",
+        hints:                 "",
+        markup: "VVVVVVVVVVVVVVI",
         cursor: 15,
-        current: 'p1',
-        status: 'ERROR',
-        message: '\'/\' already exists',
+        current: "p1",
+        status: "ERROR",
+        message: "'/' already exists",
         args: {
-          command: { name: 'tsfile saveas' },
+          command: { name: "tsfile saveas" },
           p1: {
             value: undefined,
-            arg: ' /',
-            status: 'INCOMPLETE',
-            message: '\'/\' already exists'
+            arg: " /",
+            status: "INCOMPLETE",
+            message: "'/' already exists"
           }
         }
       }
     },
     {
       skipIf: true,
-      setup:    'tsfile saveas /zxcv',
+      setup:    "tsfile saveas /zxcv",
       check: {
-        input:  'tsfile saveas /zxcv',
+        input:  "tsfile saveas /zxcv",
         // hints:                     ' -> /etc/',
-        markup: 'VVVVVVVVVVVVVVVVVVV',
+        markup: "VVVVVVVVVVVVVVVVVVV",
         cursor: 19,
-        current: 'p1',
-        status: 'VALID',
-        message: '',
+        current: "p1",
+        status: "VALID",
+        message: "",
         args: {
-          command: { name: 'tsfile saveas' },
+          command: { name: "tsfile saveas" },
           p1: {
-            value: '/zxcv',
-            arg: ' /zxcv',
-            status: 'VALID',
-            message: ''
+            value: "/zxcv",
+            arg: " /zxcv",
+            status: "VALID",
+            message: ""
           }
         }
       }
     },
     {
       skipIf: !local,
-      setup:    'tsfile saveas /mach_kernel',
+      setup:    "tsfile saveas /mach_kernel",
       check: {
-        input:  'tsfile saveas /mach_kernel',
-        hints:                            '',
-        markup: 'VVVVVVVVVVVVVVIIIIIIIIIIII',
+        input:  "tsfile saveas /mach_kernel",
+        hints:                            "",
+        markup: "VVVVVVVVVVVVVVIIIIIIIIIIII",
         cursor: 26,
-        current: 'p1',
-        status: 'ERROR',
-        message: '\'/mach_kernel\' already exists',
+        current: "p1",
+        status: "ERROR",
+        message: "'/mach_kernel' already exists",
         args: {
-          command: { name: 'tsfile saveas' },
+          command: { name: "tsfile saveas" },
           p1: {
             value: undefined,
-            arg: ' /mach_kernel',
-            status: 'INCOMPLETE',
-            message: '\'/mach_kernel\' already exists'
+            arg: " /mach_kernel",
+            status: "INCOMPLETE",
+            message: "'/mach_kernel' already exists"
           }
         }
       }
     },
     {
       skipIf: true,
-      setup:    'tsfile save /',
+      setup:    "tsfile save /",
       check: {
-        input:  'tsfile save /',
-        hints:               '',
-        markup: 'VVVVVVVVVVVVI',
+        input:  "tsfile save /",
+        hints:               "",
+        markup: "VVVVVVVVVVVVI",
         cursor: 13,
-        current: 'p1',
-        status: 'ERROR',
-        message: '\'/\' is not a file',
+        current: "p1",
+        status: "ERROR",
+        message: "'/' is not a file",
         args: {
-          command: { name: 'tsfile save' },
+          command: { name: "tsfile save" },
           p1: {
             value: undefined,
-            arg: ' /',
-            status: 'INCOMPLETE',
-            message: '\'/\' is not a file'
+            arg: " /",
+            status: "INCOMPLETE",
+            message: "'/' is not a file"
           }
         }
       }
     },
     {
       skipIf: true,
-      setup:    'tsfile save /zxcv',
+      setup:    "tsfile save /zxcv",
       check: {
-        input:  'tsfile save /zxcv',
+        input:  "tsfile save /zxcv",
         // hints:                   ' -> /etc/',
-        markup: 'VVVVVVVVVVVVVVVVV',
+        markup: "VVVVVVVVVVVVVVVVV",
         cursor: 17,
-        current: 'p1',
-        status: 'VALID',
-        message: '',
+        current: "p1",
+        status: "VALID",
+        message: "",
         args: {
-          command: { name: 'tsfile save' },
+          command: { name: "tsfile save" },
           p1: {
-            value: '/zxcv',
-            arg: ' /zxcv',
-            status: 'VALID',
-            message: ''
+            value: "/zxcv",
+            arg: " /zxcv",
+            status: "VALID",
+            message: ""
           }
         }
       }
     },
     {
       skipIf: !local,
-      setup:    'tsfile save /mach_kernel',
+      setup:    "tsfile save /mach_kernel",
       check: {
-        input:  'tsfile save /mach_kernel',
-        hints:                          '',
-        markup: 'VVVVVVVVVVVVVVVVVVVVVVVV',
+        input:  "tsfile save /mach_kernel",
+        hints:                          "",
+        markup: "VVVVVVVVVVVVVVVVVVVVVVVV",
         cursor: 24,
-        current: 'p1',
-        status: 'VALID',
-        message: '',
+        current: "p1",
+        status: "VALID",
+        message: "",
         args: {
-          command: { name: 'tsfile save' },
+          command: { name: "tsfile save" },
           p1: {
-            value: '/mach_kernel',
-            arg: ' /mach_kernel',
-            status: 'VALID',
-            message: ''
+            value: "/mach_kernel",
+            arg: " /mach_kernel",
+            status: "VALID",
+            message: ""
           }
         }
       }
     },
     {
-      setup:    'tsfile cd /',
+      setup:    "tsfile cd /",
       check: {
-        input:  'tsfile cd /',
-        hints:             '',
-        markup: 'VVVVVVVVVVV',
+        input:  "tsfile cd /",
+        hints:             "",
+        markup: "VVVVVVVVVVV",
         cursor: 11,
-        current: 'p1',
-        status: 'VALID',
-        message: '',
+        current: "p1",
+        status: "VALID",
+        message: "",
         args: {
-          command: { name: 'tsfile cd' },
+          command: { name: "tsfile cd" },
           p1: {
-            value: '/',
-            arg: ' /',
-            status: 'VALID',
-            message: ''
+            value: "/",
+            arg: " /",
+            status: "VALID",
+            message: ""
           }
         }
       }
     },
     {
-      setup:    'tsfile cd /zxcv',
+      setup:    "tsfile cd /zxcv",
       check: {
-        input:  'tsfile cd /zxcv',
+        input:  "tsfile cd /zxcv",
         // hints:                 ' -> /dev/',
         // markup: 'VVVVVVVVVVIIIII',
         cursor: 15,
-        current: 'p1',
+        current: "p1",
         // status: 'ERROR',
-        message: '\'/zxcv\' doesn\'t exist',
+        message: "'/zxcv' doesn't exist",
         args: {
-          command: { name: 'tsfile cd' },
+          command: { name: "tsfile cd" },
           p1: {
             value: undefined,
-            arg: ' /zxcv',
+            arg: " /zxcv",
             // status: 'INCOMPLETE',
-            message: '\'/zxcv\' doesn\'t exist'
+            message: "'/zxcv' doesn't exist"
           }
         }
       }
     },
     {
       skipIf: true || !local,
-      setup:    'tsfile cd /etc/passwd',
+      setup:    "tsfile cd /etc/passwd",
       check: {
-        input:  'tsfile cd /etc/passwd',
-        hints:                       ' -> /etc/pam.d/',
-        markup: 'VVVVVVVVVVIIIIIIIIIII',
+        input:  "tsfile cd /etc/passwd",
+        hints:                       " -> /etc/pam.d/",
+        markup: "VVVVVVVVVVIIIIIIIIIII",
         cursor: 21,
-        current: 'p1',
-        status: 'ERROR',
-        message: '\'/etc/passwd\' is not a directory',
+        current: "p1",
+        status: "ERROR",
+        message: "'/etc/passwd' is not a directory",
         args: {
-          command: { name: 'tsfile cd' },
+          command: { name: "tsfile cd" },
           p1: {
             value: undefined,
-            arg: ' /etc/passwd',
-            status: 'INCOMPLETE',
-            message: '\'/etc/passwd\' is not a directory'
+            arg: " /etc/passwd",
+            status: "INCOMPLETE",
+            message: "'/etc/passwd' is not a directory"
           }
         }
       }
     },
     {
-      setup:    'tsfile mkdir /',
+      setup:    "tsfile mkdir /",
       check: {
-        input:  'tsfile mkdir /',
-        hints:                '',
-        markup: 'VVVVVVVVVVVVVI',
+        input:  "tsfile mkdir /",
+        hints:                "",
+        markup: "VVVVVVVVVVVVVI",
         cursor: 14,
-        current: 'p1',
-        status: 'ERROR',
-        message: ''/' already exists',
+        current: "p1",
+        status: "ERROR",
+        message: "" / " already exists",
         args: {
-          command: { name: 'tsfile mkdir' },
+          command: { name: "tsfile mkdir" },
           p1: {
             value: undefined,
-            arg: ' /',
-            status: 'INCOMPLETE',
-            message: '\'/\' already exists'
+            arg: " /",
+            status: "INCOMPLETE",
+            message: "'/' already exists"
           }
         }
       }
     },
     {
-      setup:    'tsfile mkdir /zxcv',
+      setup:    "tsfile mkdir /zxcv",
       check: {
-        input:  'tsfile mkdir /zxcv',
+        input:  "tsfile mkdir /zxcv",
         // hints:                    ' -> /dev/',
-        markup: 'VVVVVVVVVVVVVVVVVV',
+        markup: "VVVVVVVVVVVVVVVVVV",
         cursor: 18,
-        current: 'p1',
-        status: 'VALID',
-        message: '',
+        current: "p1",
+        status: "VALID",
+        message: "",
         args: {
-          command: { name: 'tsfile mkdir' },
+          command: { name: "tsfile mkdir" },
           p1: {
-            value: '/zxcv',
-            arg: ' /zxcv',
-            status: 'VALID',
-            message: ''
+            value: "/zxcv",
+            arg: " /zxcv",
+            status: "VALID",
+            message: ""
           }
         }
       }
     },
     {
       skipIf: !local,
-      setup:    'tsfile mkdir /mach_kernel',
+      setup:    "tsfile mkdir /mach_kernel",
       check: {
-        input:  'tsfile mkdir /mach_kernel',
-        hints:                           '',
-        markup: 'VVVVVVVVVVVVVIIIIIIIIIIII',
+        input:  "tsfile mkdir /mach_kernel",
+        hints:                           "",
+        markup: "VVVVVVVVVVVVVIIIIIIIIIIII",
         cursor: 25,
-        current: 'p1',
-        status: 'ERROR',
-        message: '\'/mach_kernel\' already exists',
+        current: "p1",
+        status: "ERROR",
+        message: "'/mach_kernel' already exists",
         args: {
-          command: { name: 'tsfile mkdir' },
+          command: { name: "tsfile mkdir" },
           p1: {
             value: undefined,
-            arg: ' /mach_kernel',
-            status: 'INCOMPLETE',
-            message: '\'/mach_kernel\' already exists'
+            arg: " /mach_kernel",
+            status: "INCOMPLETE",
+            message: "'/mach_kernel' already exists"
           }
         }
       }
     },
     {
       skipIf: true,
-      setup:    'tsfile rm /',
+      setup:    "tsfile rm /",
       check: {
-        input:  'tsfile rm /',
-        hints:             '',
-        markup: 'VVVVVVVVVVV',
+        input:  "tsfile rm /",
+        hints:             "",
+        markup: "VVVVVVVVVVV",
         cursor: 11,
-        current: 'p1',
-        status: 'VALID',
-        message: '',
+        current: "p1",
+        status: "VALID",
+        message: "",
         args: {
-          command: { name: 'tsfile rm' },
+          command: { name: "tsfile rm" },
           p1: {
-            value: '/',
-            arg: ' /',
-            status: 'VALID',
-            message: ''
+            value: "/",
+            arg: " /",
+            status: "VALID",
+            message: ""
           }
         }
       }
     },
     {
       skipIf: true,
-      setup:    'tsfile rm /zxcv',
+      setup:    "tsfile rm /zxcv",
       check: {
-        input:  'tsfile rm /zxcv',
+        input:  "tsfile rm /zxcv",
         // hints:                 ' -> /etc/',
-        markup: 'VVVVVVVVVVIIIII',
+        markup: "VVVVVVVVVVIIIII",
         cursor: 15,
-        current: 'p1',
-        status: 'ERROR',
-        message: '\'/zxcv\' doesn\'t exist',
+        current: "p1",
+        status: "ERROR",
+        message: "'/zxcv' doesn't exist",
         args: {
-          command: { name: 'tsfile rm' },
+          command: { name: "tsfile rm" },
           p1: {
             value: undefined,
-            arg: ' /zxcv',
-            status: 'INCOMPLETE',
-            message: '\'/zxcv\' doesn\'t exist'
+            arg: " /zxcv",
+            status: "INCOMPLETE",
+            message: "'/zxcv' doesn't exist"
           }
         }
       }
     },
     {
       skipIf: !local,
-      setup:    'tsfile rm /mach_kernel',
+      setup:    "tsfile rm /mach_kernel",
       check: {
-        input:  'tsfile rm /mach_kernel',
-        hints:                        '',
-        markup: 'VVVVVVVVVVVVVVVVVVVVVV',
+        input:  "tsfile rm /mach_kernel",
+        hints:                        "",
+        markup: "VVVVVVVVVVVVVVVVVVVVVV",
         cursor: 22,
-        current: 'p1',
-        status: 'VALID',
-        message: '',
+        current: "p1",
+        status: "VALID",
+        message: "",
         args: {
-          command: { name: 'tsfile rm' },
+          command: { name: "tsfile rm" },
           p1: {
-            value: '/mach_kernel',
-            arg: ' /mach_kernel',
-            status: 'VALID',
-            message: ''
+            value: "/mach_kernel",
+            arg: " /mach_kernel",
+            status: "VALID",
+            message: ""
           }
         }
       }

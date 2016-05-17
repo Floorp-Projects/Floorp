@@ -32,7 +32,7 @@ const APP_MAP = {
 
 var CACHED_INFO = null;
 
-function *getSystemInfo() {
+function* getSystemInfo() {
   if (CACHED_INFO) {
     return CACHED_INFO;
   }
@@ -181,7 +181,7 @@ function *getSystemInfo() {
   return info;
 }
 
-function getProfileLocation () {
+function getProfileLocation() {
   // In child processes, we cannot access the profile location.
   try {
     let profd = Services.dirsvc.get("ProfD", Ci.nsILocalFile);

@@ -17,7 +17,7 @@ function run_test()
     run_test_with_server(WorkerDebuggerServer, do_test_finished);
   });
   do_test_pending();
-};
+}
 
 function run_test_with_server(aServer, aCallback)
 {
@@ -81,5 +81,5 @@ function test_second_child_skip_breakpoint()
     "debugger;\n" +        // line0 + 9
     "foo();\n",           // line0 + 10
     gDebuggee
-  )
+  );
 }

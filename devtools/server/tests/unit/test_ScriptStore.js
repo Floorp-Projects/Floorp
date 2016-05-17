@@ -113,7 +113,7 @@ function testAddScripts() {
 
 function testGetSources() {
   const ss = new ScriptStore();
-  ss.addScripts([...scripts])
+  ss.addScripts([...scripts]);
 
   const expected = new Set([firstSource, secondSource, thirdSource]);
   const actual = ss.getSources();
@@ -140,7 +140,7 @@ function testGetScriptsBySourceAndLine() {
   ss.addScripts([...scripts]);
 
   const expected = [...scripts].filter(
-    s => s.source === firstSource && contains(s, 65))
+    s => s.source === firstSource && contains(s, 65));
   const actual = ss.getScriptsBySourceAndLine(firstSource, 65);
 
   deepEqual(actual, expected);
@@ -161,7 +161,7 @@ function testGetScriptsByURLAndLine() {
   ss.addScripts([...scripts]);
 
   const expected = [...scripts].filter(
-    s => s.url === "index.html" && contains(s, 250))
+    s => s.url === "index.html" && contains(s, 250));
   const actual = ss.getScriptsByURLAndLine("index.html", 250);
 
   deepEqual(actual, expected);

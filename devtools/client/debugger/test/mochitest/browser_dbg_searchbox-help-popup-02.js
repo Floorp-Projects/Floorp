@@ -76,7 +76,7 @@ function testFocusLost() {
     "The search box panel should still not be visible.");
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;
