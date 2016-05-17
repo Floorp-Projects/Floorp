@@ -100,6 +100,8 @@ public:
     // Should only be called from NeckoChild. Use SetAppOffline instead.
     void SetAppOfflineInternal(uint32_t appId, int32_t status);
 
+    // Used to trigger a recheck of the captive portal status
+    nsresult RecheckCaptivePortal();
 private:
     // These shouldn't be called directly:
     // - construct using GetInstance

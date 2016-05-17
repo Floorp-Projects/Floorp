@@ -370,6 +370,16 @@ NS_IMPL_ISUPPORTS(nsIOService,
 ////////////////////////////////////////////////////////////////////////////////
 
 nsresult
+nsIOService::RecheckCaptivePortal()
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Must be called on the main thread");
+  if (mCaptivePortalService) {
+    mCaptivePortalService->RecheckCaptivePortal();
+  }
+  return NS_OK;
+}
+
+nsresult
 nsIOService::RecheckCaptivePortalIfLocalRedirect(nsIChannel* newChan)
 {
     nsresult rv;
@@ -1429,9 +1439,7 @@ nsIOService::NotifyWakeup()
                             MOZ_UTF16(NS_NETWORK_LINK_DATA_CHANGED));
     }
 
-    if (mCaptivePortalService) {
-        mCaptivePortalService->RecheckCaptivePortal();
-    }
+    RecheckCaptivePortal();
 
     return NS_OK;
 }
@@ -1704,10 +1712,8 @@ nsIOService::OnNetworkLinkEvent(const char *data)
     } else if (!strcmp(data, NS_NETWORK_LINK_DATA_DOWN)) {
         isUp = false;
     } else if (!strcmp(data, NS_NETWORK_LINK_DATA_UP)) {
-        if (mCaptivePortalService) {
-            // Interface is up. Triggering a captive portal recheck.
-            mCaptivePortalService->RecheckCaptivePortal();
-        }
+        // Interface is up. Triggering a captive portal recheck.
+        RecheckCaptivePortal();
         isUp = true;
     } else if (!strcmp(data, NS_NETWORK_LINK_DATA_UNKNOWN)) {
         nsresult rv = mNetworkLinkService->GetIsLinkUp(&isUp);
