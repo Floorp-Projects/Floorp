@@ -126,7 +126,9 @@ static_assert(nsIHttpChannelInternal::FETCH_CACHE_MODE_NO_CACHE == static_cast<u
              "RequestCache enumeration value should match Necko Cache mode value.");
 static_assert(nsIHttpChannelInternal::FETCH_CACHE_MODE_FORCE_CACHE == static_cast<uint32_t>(RequestCache::Force_cache),
              "RequestCache enumeration value should match Necko Cache mode value.");
-static_assert(5 == static_cast<uint32_t>(RequestCache::EndGuard_),
+static_assert(nsIHttpChannelInternal::FETCH_CACHE_MODE_ONLY_IF_CACHED == static_cast<uint32_t>(RequestCache::Only_if_cached),
+             "RequestCache enumeration value should match Necko Cache mode value.");
+static_assert(6 == static_cast<uint32_t>(RequestCache::EndGuard_),
              "RequestCache enumeration value should match Necko Cache mode value.");
 
 static StaticRefPtr<ServiceWorkerManager> gInstance;
