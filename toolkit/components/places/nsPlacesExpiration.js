@@ -12,7 +12,6 @@
  *   to preserve batteries in portable devices.
  * - At shutdown, only if the database is dirty, we should still avoid to
  *   expire too heavily on shutdown.
- * - On ClearHistory we run a full expiration for privacy reasons.
  * - On a repeating timer we expire in small chunks.
  *
  * Expiration algorithm will adapt itself based on:
@@ -109,11 +108,6 @@ const URIENTRY_AVG_SIZE = 600;
 // stand-by or mobile devices batteries.
 const IDLE_TIMEOUT_SECONDS = 5 * 60;
 
-// If a clear history ran just before we shutdown, we will skip most of the
-// expiration at shutdown.  This is maximum number of seconds from last
-// clearHistory to decide to skip expiration at shutdown.
-const SHUTDOWN_WITH_RECENT_CLEARHISTORY_TIMEOUT_SECONDS = 10;
-
 // If the number of pages over history limit is greater than this threshold,
 // expiration will be more aggressive, to bring back history to a saner size.
 const OVERLIMIT_PAGES_THRESHOLD = 1000;
@@ -134,7 +128,7 @@ const ANNOS_EXPIRE_POLICIES = [
 // When we expire we can use these limits:
 // - SMALL for usual partial expirations, will expire a small chunk.
 // - LARGE for idle or shutdown expirations, will expire a large chunk.
-// - UNLIMITED for clearHistory, will expire everything.
+// - UNLIMITED will expire all the orphans.
 // - DEBUG will use a known limit, passed along with the debug notification.
 const LIMIT = {
   SMALL: 0,
@@ -154,11 +148,10 @@ const STATUS = {
 const ACTION = {
   TIMED:           1 << 0, // happens every this._interval
   TIMED_OVERLIMIT: 1 << 1, // like TIMED but only when history is over limits
-  CLEAR_HISTORY:   1 << 2, // happens when history is cleared
-  SHUTDOWN_DIRTY:  1 << 3, // happens at shutdown for DIRTY state
-  IDLE_DIRTY:      1 << 4, // happens on idle for DIRTY state
-  IDLE_DAILY:      1 << 5, // happens once a day on idle
-  DEBUG:           1 << 6, // happens on TOPIC_DEBUG_START_EXPIRATION
+  SHUTDOWN_DIRTY:  1 << 2, // happens at shutdown for DIRTY state
+  IDLE_DIRTY:      1 << 3, // happens on idle for DIRTY state
+  IDLE_DAILY:      1 << 4, // happens once a day on idle
+  DEBUG:           1 << 5, // happens on TOPIC_DEBUG_START_EXPIRATION
 };
 
 // The queries we use to expire.
@@ -240,27 +233,12 @@ const EXPIRATION_QUERIES = {
              ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG
   },
 
-  // Expire orphan URIs from the database.
-  QUERY_SILENT_EXPIRE_ORPHAN_URIS: {
-    sql: `DELETE FROM moz_places WHERE id IN (
-            SELECT h.id
-            FROM moz_places h
-            LEFT JOIN moz_historyvisits v ON h.id = v.place_id
-            WHERE h.last_visit_date IS NULL
-              AND h.foreign_count = 0
-              AND v.id IS NULL
-            LIMIT :limit_uris
-          )`,
-    actions: ACTION.CLEAR_HISTORY
-  },
-
   // Hosts accumulated during the places delete are updated through a trigger
   // (see nsPlacesTriggers.h).
   QUERY_UPDATE_HOSTS: {
     sql: `DELETE FROM moz_updatehosts_temp`,
-    actions: ACTION.CLEAR_HISTORY | ACTION.TIMED | ACTION.TIMED_OVERLIMIT |
-             ACTION.SHUTDOWN_DIRTY | ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY |
-             ACTION.DEBUG
+    actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN_DIRTY |
+             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG
   },
 
   // Expire orphan pages from the icons database.
@@ -269,9 +247,8 @@ const EXPIRATION_QUERIES = {
           WHERE page_url_hash NOT IN (
             SELECT url_hash FROM moz_places
           )`,
-    actions: ACTION.TIMED_OVERLIMIT | ACTION.CLEAR_HISTORY |
-             ACTION.SHUTDOWN_DIRTY | ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY |
-             ACTION.DEBUG
+    actions: ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN_DIRTY |
+             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG
   },
 
   // Expire orphan icons from the database.
@@ -280,9 +257,8 @@ const EXPIRATION_QUERIES = {
           WHERE root = 0 AND id NOT IN (
             SELECT icon_id FROM moz_icons_to_pages
           )`,
-    actions: ACTION.TIMED_OVERLIMIT | ACTION.CLEAR_HISTORY |
-             ACTION.SHUTDOWN_DIRTY | ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY |
-             ACTION.DEBUG
+    actions: ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN_DIRTY |
+             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG
   },
 
   // Expire orphan page annotations from the database.
@@ -293,9 +269,8 @@ const EXPIRATION_QUERIES = {
             WHERE h.id IS NULL
             LIMIT :limit_annos
           )`,
-    actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.CLEAR_HISTORY |
-             ACTION.SHUTDOWN_DIRTY | ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY |
-             ACTION.DEBUG
+    actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN_DIRTY |
+             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG
   },
 
   // Expire page annotations based on expiration policy.
@@ -307,9 +282,8 @@ const EXPIRATION_QUERIES = {
             AND :expire_weeks_time > MAX(lastModified, dateAdded))
              OR (expiration = :expire_months
             AND :expire_months_time > MAX(lastModified, dateAdded))`,
-    actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.CLEAR_HISTORY |
-             ACTION.SHUTDOWN_DIRTY | ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY |
-             ACTION.DEBUG
+    actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN_DIRTY |
+             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG
   },
 
   // Expire items annotations based on expiration policy.
@@ -321,9 +295,8 @@ const EXPIRATION_QUERIES = {
             AND :expire_weeks_time > MAX(lastModified, dateAdded))
              OR (expiration = :expire_months
             AND :expire_months_time > MAX(lastModified, dateAdded))`,
-    actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.CLEAR_HISTORY |
-             ACTION.SHUTDOWN_DIRTY | ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY |
-             ACTION.DEBUG
+    actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN_DIRTY |
+             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG
   },
 
   // Expire page annotations based on expiration policy.
@@ -332,9 +305,8 @@ const EXPIRATION_QUERIES = {
           WHERE expiration = :expire_with_history
             AND NOT EXISTS (SELECT id FROM moz_historyvisits
                             WHERE place_id = moz_annos.place_id LIMIT 1)`,
-    actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.CLEAR_HISTORY |
-             ACTION.SHUTDOWN_DIRTY | ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY |
-             ACTION.DEBUG
+    actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN_DIRTY |
+             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG
   },
 
   // Expire item annos without a corresponding item id.
@@ -345,7 +317,7 @@ const EXPIRATION_QUERIES = {
             WHERE b.id IS NULL
             LIMIT :limit_annos
           )`,
-    actions: ACTION.CLEAR_HISTORY | ACTION.IDLE_DAILY | ACTION.DEBUG
+    actions: ACTION.IDLE_DAILY | ACTION.DEBUG
   },
 
   // Expire all annotation names without a corresponding annotation.
@@ -358,7 +330,7 @@ const EXPIRATION_QUERIES = {
               AND t.anno_attribute_id IS NULL
             LIMIT :limit_annos
           )`,
-    actions: ACTION.CLEAR_HISTORY | ACTION.SHUTDOWN_DIRTY | ACTION.IDLE_DIRTY |
+    actions: ACTION.SHUTDOWN_DIRTY | ACTION.IDLE_DIRTY |
              ACTION.IDLE_DAILY | ACTION.DEBUG
   },
 
@@ -370,21 +342,8 @@ const EXPIRATION_QUERIES = {
             WHERE h.id IS NULL
             LIMIT :limit_inputhistory
           )`,
-    actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.CLEAR_HISTORY |
-             ACTION.SHUTDOWN_DIRTY | ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY |
-             ACTION.DEBUG
-  },
-
-  // Expire all session annotations.  Should only be called at shutdown.
-  QUERY_EXPIRE_ANNOS_SESSION: {
-    sql: "DELETE FROM moz_annos WHERE expiration = :expire_session",
-    actions: ACTION.CLEAR_HISTORY | ACTION.DEBUG
-  },
-
-  // Expire all session item annotations.  Should only be called at shutdown.
-  QUERY_EXPIRE_ITEMS_ANNOS_SESSION: {
-    sql: "DELETE FROM moz_items_annos WHERE expiration = :expire_session",
-    actions: ACTION.CLEAR_HISTORY | ACTION.DEBUG
+    actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN_DIRTY |
+             ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG
   },
 
   // Select entries for notifications.
@@ -497,12 +456,9 @@ nsPlacesExpiration.prototype = {
         this._timer = null;
       }
 
-      // If we didn't ran a clearHistory recently and database is dirty, we
-      // want to expire some entries, to speed up the expiration process.
-      let hasRecentClearHistory =
-        Date.now() - this._lastClearHistoryTime <
-          SHUTDOWN_WITH_RECENT_CLEARHISTORY_TIMEOUT_SECONDS * 1000;
-      if (!hasRecentClearHistory && this.status == STATUS.DIRTY) {
+      // If the database is dirty, we want to expire some entries, to speed up
+      // the expiration process.
+      if (this.status == STATUS.DIRTY) {
         this._expireWithActionAndLimit(ACTION.SHUTDOWN_DIRTY, LIMIT.LARGE);
       }
 
@@ -577,12 +533,9 @@ nsPlacesExpiration.prototype = {
       this._newTimer();
   },
 
-  _lastClearHistoryTime: 0,
   onClearHistory: function PEX_onClearHistory() {
-    this._lastClearHistoryTime = Date.now();
-    // Expire orphans.  History status is clean after a clear history.
+    // History status is clean after a clear history.
     this.status = STATUS.CLEAN;
-    this._expireWithActionAndLimit(ACTION.CLEAR_HISTORY, LIMIT.UNLIMITED);
   },
 
   onVisit() {},
@@ -982,9 +935,6 @@ nsPlacesExpiration.prototype = {
       case "QUERY_FIND_URIS_TO_EXPIRE":
         params.limit_uris = baseLimit;
         break;
-      case "QUERY_SILENT_EXPIRE_ORPHAN_URIS":
-        params.limit_uris = baseLimit;
-        break;
       case "QUERY_EXPIRE_ANNOS":
         // Each page may have multiple annos.
         params.limit_annos = baseLimit * EXPIRE_AGGRESSIVITY_MULTIPLIER;
@@ -1008,10 +958,6 @@ nsPlacesExpiration.prototype = {
         break;
       case "QUERY_EXPIRE_INPUTHISTORY":
         params.limit_inputhistory = baseLimit;
-        break;
-      case "QUERY_EXPIRE_ANNOS_SESSION":
-      case "QUERY_EXPIRE_ITEMS_ANNOS_SESSION":
-        params.expire_session = Ci.nsIAnnotationService.EXPIRE_SESSION;
         break;
     }
 
