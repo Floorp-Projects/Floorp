@@ -1136,8 +1136,6 @@ moz_gtk_scrollbar_trough_paint(WidgetNodeType widget,
                           MOZ_GTK_SCROLLBAR_TROUGH_HORIZONTAL :
                           MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL,
                           direction);
-    // TODO - integate with ClaimStyleContext()?
-    gtk_style_context_set_direction(style, direction);
 
     gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
     gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
@@ -1160,12 +1158,7 @@ moz_gtk_scrollbar_thumb_paint(WidgetNodeType widget,
     GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
     GtkBorder margin;
 
-    GtkStyleContext* style = ClaimStyleContext(widget, direction);
-
-    // TODO - integate those with ClaimStyleContext()?
-    gtk_style_context_set_state(style, state_flags);
-    gtk_style_context_set_direction(style, direction);
-
+    GtkStyleContext* style = ClaimStyleContext(widget, direction, state_flags);
     gtk_style_context_get_margin (style, state_flags, &margin);
 
     gtk_render_slider(style, cr,
