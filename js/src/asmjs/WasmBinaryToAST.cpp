@@ -18,6 +18,7 @@
 
 #include "asmjs/WasmBinaryToAST.h"
 
+#include "mozilla/CheckedInt.h"
 #include "mozilla/MathAlgorithms.h"
 
 #include "asmjs/Wasm.h"
@@ -26,6 +27,7 @@
 using namespace js;
 using namespace js::wasm;
 
+using mozilla::CheckedInt;
 using mozilla::FloorLog2;
 
 enum AstDecodeTerminationKind

@@ -8,6 +8,8 @@
 #ifndef jit_EagerSimdUnbox_h
 #define jit_EagerSimdUnbox_h
 
+#include "mozilla/Attributes.h"
+
 namespace js {
 namespace jit {
 

@@ -7,6 +7,8 @@
 #ifndef frontend_NameFunctions_h
 #define frontend_NameFunctions_h
 
+#include "mozilla/Attributes.h"
+
 #include "js/TypeDecls.h"
 
 namespace js {
