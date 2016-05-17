@@ -22,13 +22,13 @@ const PropTypes = React.PropTypes;
  * from two main parts: toolbar and tree.
  */
 var MainFrame = React.createClass({
+  displayName: "MainFrame",
+
   propTypes: {
     object: PropTypes.any,
     filter: PropTypes.string,
     dispatch: PropTypes.func.isRequired,
   },
-
-  displayName: "MainFrame",
 
   /**
    * Render DOM panel content

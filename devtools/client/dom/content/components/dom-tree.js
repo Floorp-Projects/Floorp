@@ -26,14 +26,14 @@ const PropTypes = React.PropTypes;
  * Renders DOM panel tree.
  */
 var DomTree = React.createClass({
+  displayName: "DomTree",
+
   propTypes: {
     object: PropTypes.any,
     filter: PropTypes.string,
     dispatch: PropTypes.func.isRequired,
     grips: PropTypes.object,
   },
-
-  displayName: "DomTree",
 
   /**
    * Filter DOM properties. Return true if the object

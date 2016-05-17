@@ -28,12 +28,12 @@ const PropTypes = React.PropTypes;
  * within the 'Headers' panel.
  */
 var MainToolbar = React.createClass({
+  displayName: "MainToolbar",
+
   propTypes: {
     object: PropTypes.any.isRequired,
     dispatch: PropTypes.func.isRequired,
   },
-
-  displayName: "MainToolbar",
 
   onRefresh: function () {
     this.props.dispatch(fetchProperties(this.props.object));

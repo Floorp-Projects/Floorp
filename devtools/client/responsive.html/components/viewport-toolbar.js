@@ -11,6 +11,8 @@ const Types = require("../types");
 const DeviceSelector = createFactory(require("./device-selector"));
 
 module.exports = createClass({
+  displayName: "ViewportToolbar",
+
   propTypes: {
     devices: PropTypes.shape(Types.devices).isRequired,
     selectedDevice: PropTypes.string.isRequired,
@@ -19,8 +21,6 @@ module.exports = createClass({
     onRotateViewport: PropTypes.func.isRequired,
     onUpdateDeviceModalOpen: PropTypes.func.isRequired,
   },
-
-  displayName: "ViewportToolbar",
 
   mixins: [ addons.PureRenderMixin ],
 
