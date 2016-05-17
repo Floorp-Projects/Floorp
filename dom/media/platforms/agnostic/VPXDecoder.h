@@ -23,7 +23,7 @@ class VPXDecoder : public MediaDataDecoder
 public:
   VPXDecoder(const VideoInfo& aConfig,
              ImageContainer* aImageContainer,
-             FlushableTaskQueue* aTaskQueue,
+             TaskQueue* aTaskQueue,
              MediaDataDecoderCallback* aCallback);
 
   ~VPXDecoder();
@@ -52,7 +52,7 @@ private:
   void ProcessDrain();
 
   const RefPtr<ImageContainer> mImageContainer;
-  const RefPtr<FlushableTaskQueue> mTaskQueue;
+  const RefPtr<TaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
   Atomic<bool> mIsFlushing;
 
