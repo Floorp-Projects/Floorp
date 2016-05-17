@@ -56,7 +56,7 @@ public:
 
   void SetPlaying(bool aPlaying) override;
 
-  void Redraw() override;
+  void Redraw(const VideoInfo& aInfo) override;
 
   void Start(int64_t aStartTime, const MediaInfo& aInfo) override;
 
