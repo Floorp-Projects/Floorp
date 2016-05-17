@@ -64,11 +64,11 @@ function test2() {
 }
 
 function test3() {
-  // test changing char pref
+  // test changing char pref using the Promise
   is(SpecialPowers.getBoolPref('test.bool'), true, 'test.bool should be true');
   is(SpecialPowers.getIntPref('test.int'), 1, 'test.int should be 1');
   is(SpecialPowers.getCharPref('test.char'), 'test', 'test.char should be test');
-  SpecialPowers.pushPrefEnv({"set": [["test.bool", true], ["test.int", 1], ["test.char", "test2"]]}, test4);
+  SpecialPowers.pushPrefEnv({"set": [["test.bool", true], ["test.int", 1], ["test.char", "test2"]]}).then(test4);
 }
 
 function test4() {
@@ -137,7 +137,7 @@ function test7() {
     ok(true, 'getCharPref("test.char2") should throw');
   }
 
-  SpecialPowers.flushPrefEnv(test8);
+  SpecialPowers.flushPrefEnv().then(test8);
 }
 
 function test8() {
