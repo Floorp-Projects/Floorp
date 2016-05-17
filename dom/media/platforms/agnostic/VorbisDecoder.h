@@ -61,6 +61,7 @@ private:
   int64_t mFrames;
   Maybe<int64_t> mLastFrameTime;
   UniquePtr<AudioConverter> mAudioConverter;
+  Atomic<bool> mIsFlushing;
 };
 
 } // namespace mozilla
