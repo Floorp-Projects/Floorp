@@ -35943,6 +35943,7 @@
       "web-animations/keyframe-effect/getComputedTiming-progress.html",
       "web-animations/keyframe-effect/setFrames.html",
       "web-animations/animation-model/keyframes/effect-value-context.html",
+      "web-animations/animation-model/animation-types/not-animatable.html",
       "web-animations/keyframe-effect/keyframe-handling.html"
     ],
     "deleted_reftests": {},
