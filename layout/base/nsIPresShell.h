@@ -1436,6 +1436,12 @@ public:
   virtual bool ScaleToResolution() const = 0;
 
   /**
+   * Used by session restore code to restore a resolution before the first
+   * paint.
+   */
+  virtual void SetRestoreResolution(float aResolution) = 0;
+
+  /**
    * Returns whether we are in a DrawWindow() call that used the
    * DRAWWINDOW_DO_NOT_FLUSH flag.
    */
