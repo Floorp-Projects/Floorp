@@ -35,7 +35,7 @@ static int MimeTypeToCodec(const nsACString& aMimeType)
 
 VPXDecoder::VPXDecoder(const VideoInfo& aConfig,
                        ImageContainer* aImageContainer,
-                       FlushableTaskQueue* aTaskQueue,
+                       TaskQueue* aTaskQueue,
                        MediaDataDecoderCallback* aCallback)
   : mImageContainer(aImageContainer)
   , mTaskQueue(aTaskQueue)
