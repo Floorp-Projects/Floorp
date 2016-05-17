@@ -7,6 +7,7 @@
 #include "WAVDecoder.h"
 #include "AudioSampleFormat.h"
 #include "nsAutoPtr.h"
+#include "mozilla/SyncRunnable.h"
 
 using mp4_demuxer::ByteReader;
 
@@ -51,6 +52,7 @@ WaveDataDecoder::WaveDataDecoder(const AudioInfo& aConfig,
   : mInfo(aConfig)
   , mTaskQueue(aTaskQueue)
   , mCallback(aCallback)
+  , mIsFlushing(false)
   , mFrames(0)
 {
 }
@@ -81,6 +83,9 @@ void
 WaveDataDecoder::ProcessDecode(MediaRawData* aSample)
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  if (mIsFlushing) {
+    return;
+  }
   if (!DoDecode(aSample)) {
     mCallback->Error();
   } else if (mTaskQueue->IsEmpty()) {
@@ -169,8 +174,12 @@ nsresult
 WaveDataDecoder::Flush()
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
-  mTaskQueue->Flush();
-  mFrames = 0;
+  mIsFlushing = true;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([this] () {
+    mFrames = 0;
+  });
+  SyncRunnable::DispatchToThread(mTaskQueue, r);
+  mIsFlushing = false;
   return NS_OK;
 }
 
