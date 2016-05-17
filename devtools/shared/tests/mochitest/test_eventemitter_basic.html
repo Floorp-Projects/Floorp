@@ -26,7 +26,7 @@
       const promise = require("promise");
       const { EventEmitter } =
         Cu.import("resource://devtools/shared/event-emitter.js", {});
-      const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
+      const { Task } = require("devtools/shared/task");
 
       SimpleTest.waitForExplicitFinish();
 

@@ -17,8 +17,7 @@ loader.lazyRequireGetter(this, "cert",
   "devtools/shared/security/cert");
 loader.lazyRequireGetter(this, "asyncStorage",
   "devtools/shared/async-storage");
-DevToolsUtils.defineLazyModuleGetter(this, "Task",
-  "resource://gre/modules/Task.jsm");
+const { Task } = require("devtools/shared/task");
 
 /**
  * A simple enum-like object with keys mirrored to values.

@@ -12,9 +12,7 @@ const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { DebuggerServer } = require("devtools/server/main");
 const { DebuggerClient } = require("devtools/shared/client/main");
 const Services = require("Services");
-
-DevToolsUtils.defineLazyModuleGetter(this, "Task",
-  "resource://gre/modules/Task.jsm");
+const { Task } = require("devtools/shared/task");
 
 const REMOTE_TIMEOUT = "devtools.debugger.remote-timeout";
 

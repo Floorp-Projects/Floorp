@@ -10,7 +10,7 @@ const protocol = require("devtools/shared/protocol");
 const {LongStringActor} = require("devtools/server/actors/string");
 const {getDefinedGeometryProperties} = require("devtools/server/actors/highlighters/geometry-editor");
 const {parseDeclarations} = require("devtools/client/shared/css-parsing-utils");
-const {Task} = require("resource://gre/modules/Task.jsm");
+const {Task} = require("devtools/shared/task");
 const events = require("sdk/event/core");
 
 // This will also add the "stylesheet" actor type for protocol.js to recognize

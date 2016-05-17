@@ -149,11 +149,9 @@ var {Tooltip} = require("devtools/client/shared/widgets/Tooltip");
 var FastListWidget = require("devtools/client/shared/widgets/FastListWidget");
 var {LocalizationHelper} = require("devtools/client/shared/l10n");
 var {PrefsHelper} = require("devtools/client/shared/prefs");
+var {Task} = require("devtools/shared/task");
 
 XPCOMUtils.defineConstant(this, "EVENTS", EVENTS);
-
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-  "resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Parser",
   "resource://devtools/shared/Parser.jsm");

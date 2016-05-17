@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { Task } = require("resource://gre/modules/Task.jsm");
+const { Task } = require("devtools/shared/task");
 const {
   method, Arg, Option, RetVal, Front, FrontClass, Actor, ActorClass
 } = require("devtools/shared/protocol");

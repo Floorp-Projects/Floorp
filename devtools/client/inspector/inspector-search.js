@@ -7,6 +7,7 @@
 const {Cu, Ci} = require("chrome");
 
 const promise = require("promise");
+const {Task} = require("devtools/shared/task");
 
 loader.lazyGetter(this, "system", () => require("devtools/shared/system"));
 loader.lazyGetter(this, "EventEmitter", () => require("devtools/shared/event-emitter"));

@@ -23,6 +23,7 @@ const {
   WidgetMethods,
   setNamedTimeout
 } = require("devtools/client/shared/widgets/view-helpers");
+const { Task } = require("devtools/shared/task");
 
 const NEW_SOURCE_DISPLAY_DELAY = 200; // ms
 const FUNCTION_SEARCH_POPUP_POSITION = "topcenter bottomleft";

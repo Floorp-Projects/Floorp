@@ -12,7 +12,7 @@ var WebConsoleUtils = require("devtools/shared/webconsole/utils").Utils;
 var Heritage = require("sdk/core/heritage");
 var {TargetFactory} = require("devtools/client/framework/target");
 var {Tools} = require("devtools/client/definitions");
-const { Task } = require("resource://gre/modules/Task.jsm");
+const { Task } = require("devtools/shared/task");
 var promise = require("promise");
 var Services = require("Services");
 
