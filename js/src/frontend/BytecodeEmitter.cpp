@@ -331,6 +331,8 @@ bool
 BytecodeEmitter::emitJumpTarget(JumpTarget* target)
 {
     target->offset = offset();
+    if (!emit1(JSOP_JUMPTARGET))
+        return false;
     return true;
 }
 
@@ -402,6 +404,8 @@ BytecodeEmitter::patchJumpsToTarget(JumpList jump, JumpTarget target)
 {
     MOZ_ASSERT(-1 <= jump.offset && jump.offset <= offset());
     MOZ_ASSERT(0 <= target.offset && target.offset <= offset());
+    MOZ_ASSERT_IF(jump.offset != -1 && target.offset + 4 <= offset(),
+                  BytecodeIsJumpTarget(JSOp(*code(target.offset))));
     jump.patchAll(code(0), target);
 }
 

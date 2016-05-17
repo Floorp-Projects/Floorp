@@ -2180,14 +2180,23 @@
      *   Operands:
      *   Stack: =>
      */ \
-    macro(JSOP_NOP_DESTRUCTURING, 229, "nop-destructuring", NULL, 1, 0, 0, JOF_BYTE)
+    macro(JSOP_NOP_DESTRUCTURING, 229, "nop-destructuring", NULL, 1, 0, 0, JOF_BYTE) \
+    /*
+     * This opcode is a no-op and it indicates the location of a jump
+     * instruction target. Some other opcodes act as jump targets, such as
+     * LOOPENTRY, as well as all which are matched by BytecodeIsJumpTarget
+     * function.
+     *   Category: Other
+     *   Operands:
+     *   Stack: =>
+     */ \
+    macro(JSOP_JUMPTARGET,  230, "jumptarget",     NULL,  1,  0,  0,  JOF_BYTE)
 
 /*
  * In certain circumstances it may be useful to "pad out" the opcode space to
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(macro) \
-    macro(230) \
     macro(231) \
     macro(232) \
     macro(233) \

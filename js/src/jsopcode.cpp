@@ -529,6 +529,14 @@ BytecodeParser::parse()
             continue;
         }
 
+        // On a jump target, we reload the offsetStack saved for the current
+        // bytecode, as it contains either the original offset stack, or the
+        // merged offset stack.
+        if (BytecodeIsJumpTarget(op)) {
+            for (uint32_t n = 0; n < code->stackDepth; ++n)
+                offsetStack[n] = code->offsetStack[n];
+        }
+
         if (code->parsed) {
             // No need to reparse.
             continue;

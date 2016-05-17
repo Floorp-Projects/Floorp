@@ -223,7 +223,8 @@ namespace jit {
     _(JSOP_INITHIDDENELEM_GETTER) \
     _(JSOP_INITHIDDENELEM_SETTER) \
     _(JSOP_CHECKOBJCOERCIBLE)  \
-    _(JSOP_DEBUGCHECKSELFHOSTED)
+    _(JSOP_DEBUGCHECKSELFHOSTED) \
+    _(JSOP_JUMPTARGET)
 
 class BaselineCompiler : public BaselineCompilerSpecific
 {
