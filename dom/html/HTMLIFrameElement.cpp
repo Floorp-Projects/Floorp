@@ -12,6 +12,7 @@
 #include "nsRuleData.h"
 #include "nsStyleConsts.h"
 #include "nsContentUtils.h"
+#include "nsSandboxFlags.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(IFrame)
 
