@@ -37,6 +37,7 @@ public interface TelemetryPingStore extends Parcelable {
 
     /**
      * Removes telemetry pings from the store if there are too many pings or they take up too much space.
+     * Pings should be removed from oldest to newest.
      */
     void maybePrunePings();
 
