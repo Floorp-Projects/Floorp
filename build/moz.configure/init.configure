@@ -770,4 +770,8 @@ def js_option(*args, **kwargs):
     add_old_configure_arg(js_option)
 
 
+include('pkg.configure')
+# Make this assignment here rather than in pkg.configure to avoid
+# requiring this file in unit tests.
+add_old_configure_assignment('PKG_CONFIG', pkg_config)
 include(include_project_configure)
