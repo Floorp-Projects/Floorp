@@ -41,6 +41,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
     private String[] mButtons;
     private PromptInput[] mInputs;
     private AlertDialog mDialog;
+    private int mDoubleTapButtonType;
 
     private final LayoutInflater mInflater;
     private final Context mContext;
@@ -52,6 +53,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
     private static int mInputPaddingSize;
 
     private int mTabId = Tabs.INVALID_TAB_ID;
+    private Object mPreviousInputValue = null;
 
     public Prompt(Context context, PromptCallback callback) {
         this(context);
@@ -83,6 +85,9 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         mGuid = message.optString("guid");
 
         mButtons = getStringArray(message, "buttons");
+        final int buttonCount = mButtons == null ? 0 : mButtons.length;
+        mDoubleTapButtonType = convertIndexToButtonType(message.optInt("doubleTapButton", -1), buttonCount);
+        mPreviousInputValue = null;
 
         JSONArray inputs = getSafeArray(message, "inputs");
         mInputs = new PromptInput[inputs.length()];
@@ -108,6 +113,25 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         }
 
         show(title, text, menuitems, choiceMode);
+    }
+
+    private int convertIndexToButtonType(final int buttonIndex, final int buttonCount) {
+        if (buttonIndex < 0 || buttonIndex >= buttonCount) {
+            // All valid DialogInterface button values are < 0,
+            // so we return 0 as an invalid value.
+            return 0;
+        }
+
+        switch (buttonIndex) {
+            case 0:
+                return DialogInterface.BUTTON_POSITIVE;
+            case 1:
+                return DialogInterface.BUTTON_NEUTRAL;
+            case 2:
+                return DialogInterface.BUTTON_NEGATIVE;
+            default:
+                return 0;
+        }
     }
 
     public void show(String title, String text, PromptListItem[] listItems, int choiceMode) {
@@ -507,7 +531,21 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         // If there are no buttons on this dialog, assuming that "changing" an input
         // means something was selected and we can close. This provides a way to tap
         // on a list item and close the dialog automatically.
-        closeIfNoButtons(-1);
+        if (!closeIfNoButtons(-1)) {
+            // Alternatively, if a default button has been specified for double tapping,
+            // we want to close the dialog if the same input value has been transmitted
+            // twice in a row.
+            closeIfDoubleTapEnabled(input.getValue());
+        }
+    }
+
+    private boolean closeIfDoubleTapEnabled(Object inputValue) {
+        if (mDoubleTapButtonType != 0 && inputValue == mPreviousInputValue) {
+            closeDialog(mDoubleTapButtonType);
+            return true;
+        }
+        mPreviousInputValue = inputValue;
+        return false;
     }
 
     private static JSONArray getSafeArray(JSONObject json, String key) {
