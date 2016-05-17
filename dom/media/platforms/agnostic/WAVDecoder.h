@@ -40,6 +40,7 @@ private:
   const AudioInfo& mInfo;
   RefPtr<FlushableTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
+  Atomic<bool> mIsFlushing;
 
   int64_t mFrames;
 };
