@@ -2994,31 +2994,7 @@ JSScript::fullyInitFromEmitter(ExclusiveContext* cx, HandleScript script, Byteco
         return false;
 
 #ifdef DEBUG
-    FunctionBox* funbox = bce->sc->isFunctionBox() ? bce->sc->asFunctionBox() : nullptr;
-
-    // Assert that the properties set by linkToFunctionFromEmitter are
-    // correct.
-    if (funbox) {
-        MOZ_ASSERT(script->funHasExtensibleScope_ == funbox->hasExtensibleScope());
-        MOZ_ASSERT(script->funNeedsDeclEnvObject_ == funbox->needsDeclEnvObject());
-        MOZ_ASSERT(script->needsHomeObject_ == funbox->needsHomeObject());
-        MOZ_ASSERT(script->isDerivedClassConstructor_ == funbox->isDerivedClassConstructor());
-        MOZ_ASSERT(script->argumentsHasVarBinding() == funbox->argumentsHasLocalBinding());
-        MOZ_ASSERT(script->hasMappedArgsObj() == funbox->hasMappedArgsObj());
-        MOZ_ASSERT(script->functionHasThisBinding() == funbox->hasThisBinding());
-        MOZ_ASSERT(script->functionNonDelazifying() == funbox->function());
-        MOZ_ASSERT(script->isGeneratorExp_ == funbox->inGenexpLambda);
-        MOZ_ASSERT(script->generatorKind() == funbox->generatorKind());
-    } else {
-        MOZ_ASSERT(!script->funHasExtensibleScope_);
-        MOZ_ASSERT(!script->funNeedsDeclEnvObject_);
-        MOZ_ASSERT(!script->needsHomeObject_);
-        MOZ_ASSERT(!script->isDerivedClassConstructor_);
-        MOZ_ASSERT(!script->argumentsHasVarBinding());
-        MOZ_ASSERT(!script->hasMappedArgsObj());
-        MOZ_ASSERT(!script->isGeneratorExp_);
-        MOZ_ASSERT(script->generatorKind() == NotGenerator);
-    }
+    script->assertLinkedProperties(bce);
 #endif
 
     if (bce->constList.length() != 0)
@@ -3053,6 +3029,38 @@ JSScript::fullyInitFromEmitter(ExclusiveContext* cx, HandleScript script, Byteco
 
     return true;
 }
+
+#ifdef DEBUG
+void
+JSScript::assertLinkedProperties(js::frontend::BytecodeEmitter* bce) const
+{
+    FunctionBox* funbox = bce->sc->isFunctionBox() ? bce->sc->asFunctionBox() : nullptr;
+
+    // Assert that the properties set by linkToFunctionFromEmitter are
+    // correct.
+    if (funbox) {
+        MOZ_ASSERT(funHasExtensibleScope_ == funbox->hasExtensibleScope());
+        MOZ_ASSERT(funNeedsDeclEnvObject_ == funbox->needsDeclEnvObject());
+        MOZ_ASSERT(needsHomeObject_ == funbox->needsHomeObject());
+        MOZ_ASSERT(isDerivedClassConstructor_ == funbox->isDerivedClassConstructor());
+        MOZ_ASSERT(argumentsHasVarBinding() == funbox->argumentsHasLocalBinding());
+        MOZ_ASSERT(hasMappedArgsObj() == funbox->hasMappedArgsObj());
+        MOZ_ASSERT(functionHasThisBinding() == funbox->hasThisBinding());
+        MOZ_ASSERT(functionNonDelazifying() == funbox->function());
+        MOZ_ASSERT(isGeneratorExp_ == funbox->inGenexpLambda);
+        MOZ_ASSERT(generatorKind() == funbox->generatorKind());
+    } else {
+        MOZ_ASSERT(!funHasExtensibleScope_);
+        MOZ_ASSERT(!funNeedsDeclEnvObject_);
+        MOZ_ASSERT(!needsHomeObject_);
+        MOZ_ASSERT(!isDerivedClassConstructor_);
+        MOZ_ASSERT(!argumentsHasVarBinding());
+        MOZ_ASSERT(!hasMappedArgsObj());
+        MOZ_ASSERT(!isGeneratorExp_);
+        MOZ_ASSERT(generatorKind() == NotGenerator);
+    }
+}
+#endif
 
 size_t
 JSScript::computedSizeOfData() const

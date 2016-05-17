@@ -1247,6 +1247,13 @@ class JSScript : public js::gc::TenuredCell
     // Initialize a no-op script.
     static bool fullyInitTrivial(js::ExclusiveContext* cx, JS::Handle<JSScript*> script);
 
+#ifdef DEBUG
+  private:
+    // Assert that the properties set by linkToFunctionFromEmitter are correct.
+    void assertLinkedProperties(js::frontend::BytecodeEmitter* bce) const;
+#endif
+
+  public:
     inline JSPrincipals* principals();
 
     JSCompartment* compartment() const { return compartment_; }
