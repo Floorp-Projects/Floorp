@@ -163,6 +163,8 @@ static const BlacklistedD3D11DLL sBlacklistedD3D11DLL[] =
 {
   // Keep same DLL names together.
   { L"igd10umd32.dll", DLLVER(9,17,10,2857) },
+  { L"isonyvideoprocessor.dll", DLLVER(4,1,2247,8090) },
+  { L"isonyvideoprocessor.dll", DLLVER(4,1,2153,6200) },
   { L"tosqep.dll", DLLVER(1,2,15,526) },
   { L"tosqep.dll", DLLVER(1,1,12,201) },
   { L"tosqep.dll", DLLVER(1,0,11,318) },
