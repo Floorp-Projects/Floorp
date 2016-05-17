@@ -35955,6 +35955,12 @@
             "url": "/html/browsers/browsing-the-web/navigating-across-documents/javascript-url-return-value-handling.html"
           }
         ],
+        "html/semantics/embedded-content/the-iframe-element/iframe-allowfullscreen.html": [
+          {
+            "path": "html/semantics/embedded-content/the-iframe-element/iframe-allowfullscreen.html",
+            "url": "/html/semantics/embedded-content/the-iframe-element/iframe-allowfullscreen.html"
+          }
+        ],
         "html/semantics/embedded-content/the-iframe-element/iframe_sandbox_popups_escaping.html": [
           {
             "path": "html/semantics/embedded-content/the-iframe-element/iframe_sandbox_popups_escaping.html",
