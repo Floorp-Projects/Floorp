@@ -36020,6 +36020,12 @@
             "url": "/web-animations/document/getAnimations.html"
           }
         ],
+        "web-animations/keyframe-effect/processing-a-keyframes-argument.html": [
+          {
+            "path": "web-animations/keyframe-effect/processing-a-keyframes-argument.html",
+            "url": "/web-animations/keyframe-effect/processing-a-keyframes-argument.html"
+          }
+        ],
         "web-animations/keyframe-effect/setKeyframes.html": [
           {
             "path": "web-animations/keyframe-effect/setKeyframes.html",
