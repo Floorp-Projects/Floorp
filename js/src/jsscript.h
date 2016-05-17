@@ -643,14 +643,12 @@ class ScriptSource
     struct Compressed
     {
         SharedImmutableString raw;
-        size_t length;
+        size_t uncompressedLength;
 
-        Compressed(SharedImmutableString&& raw, size_t length)
+        Compressed(SharedImmutableString&& raw, size_t uncompressedLength)
           : raw(mozilla::Move(raw))
-          , length(length)
+          , uncompressedLength(uncompressedLength)
         { }
-
-        size_t nbytes() const { return raw.length(); }
     };
 
     using SourceType = mozilla::Variant<Missing, Uncompressed, Compressed>;
@@ -747,7 +745,7 @@ class ScriptSource
             }
 
             ReturnType match(const Compressed& c) {
-                return c.length;
+                return c.uncompressedLength;
             }
 
             ReturnType match(const Missing& m) {
@@ -769,18 +767,6 @@ class ScriptSource
     JSFlatString* substringDontDeflate(JSContext* cx, uint32_t start, uint32_t stop);
     void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                 JS::ScriptSourceInfo* info) const;
-
-    const char16_t* uncompressedChars() const {
-        return data.as<Uncompressed>().string.chars();
-    }
-
-    const void* compressedData() const {
-        return static_cast<const void*>(data.as<Compressed>().raw.chars());
-    }
-
-    size_t compressedBytes() const {
-        return data.as<Compressed>().nbytes();
-    }
 
     MOZ_MUST_USE bool setSource(ExclusiveContext* cx,
                                 mozilla::UniquePtr<char16_t[], JS::FreePolicy>&& source,

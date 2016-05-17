@@ -1887,8 +1887,8 @@ ScriptSource::chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holde
                 return nullptr;
             }
 
-            if (!DecompressString((const unsigned char*) ss.compressedData(),
-                                  ss.compressedBytes(),
+            if (!DecompressString((const unsigned char*) c.raw.chars(),
+                                  c.raw.length(),
                                   reinterpret_cast<unsigned char*>(decompressed.get()),
                                   lengthWithNull * sizeof(char16_t)))
             {
@@ -1911,7 +1911,7 @@ ScriptSource::chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holde
                     return nullptr;
                 }
                 ss.data = SourceType(Uncompressed(mozilla::Move(*str)));
-                return ss.uncompressedChars();
+                return ss.data.as<Uncompressed>().string.chars();
             }
 
             ReturnType ret = decompressed.get();
@@ -2056,6 +2056,8 @@ ScriptSource::setSourceCopy(ExclusiveContext* cx, SourceBufferHolder& srcBuf,
 SourceCompressionTask::ResultType
 SourceCompressionTask::work()
 {
+    MOZ_ASSERT(ss->data.is<ScriptSource::Uncompressed>());
+
     // Try to keep the maximum memory usage down by only allocating half the
     // size of the string, first.
     size_t inputBytes = ss->length() * sizeof(char16_t);
@@ -2064,7 +2066,9 @@ SourceCompressionTask::work()
     if (!compressed)
         return OOM;
 
-    Compressor comp(reinterpret_cast<const unsigned char*>(ss->uncompressedChars()), inputBytes);
+    const char16_t* chars = ss->data.as<ScriptSource::Uncompressed>().string.chars();
+    Compressor comp(reinterpret_cast<const unsigned char*>(chars),
+                    inputBytes);
     if (!comp.init())
         return OOM;
 
@@ -2132,7 +2136,7 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
         }
 
         ReturnType match(Compressed& c) {
-            return c.nbytes();
+            return c.raw.length();
         }
 
         ReturnType match(Missing&) {
