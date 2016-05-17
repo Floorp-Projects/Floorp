@@ -8,7 +8,7 @@
       display: none;
     }
     path {
-      fill: #4c4c4c;
+      fill: -moz-dialogtext;
     }
   </style>
   <path id="glyph-find-previous" d="M5.407,1.5l-5,4.599L1.65,7.283l3.757-3.387l3.705,3.385l1.296-1.158L5.407,1.5z"/>
