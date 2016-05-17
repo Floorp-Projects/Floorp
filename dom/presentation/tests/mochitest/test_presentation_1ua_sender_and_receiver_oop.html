@@ -17,7 +17,7 @@
 'use strict';
 
 var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('PresentationSessionChromeScript1UA.js'));
-var receiverUrl = SimpleTest.getTestFileURL('file_presentation_1ua_receiver_oop.html');
+var receiverUrl = SimpleTest.getTestFileURL('file_presentation_1ua_receiver.html');
 var request;
 var connection;
 var receiverIframe;
@@ -46,6 +46,7 @@ function setup() {
     receiverIframe = document.createElement('iframe');
     receiverIframe.setAttribute("remote", "true");
     receiverIframe.setAttribute("mozbrowser", "true");
+    receiverIframe.setAttribute("mozpresentation", receiverUrl);
     receiverIframe.setAttribute('src', receiverUrl);
     receiverIframe.addEventListener("mozbrowserloadend", function mozbrowserloadendHander() {
       receiverIframe.removeEventListener("mozbrowserloadend", mozbrowserloadendHander);
