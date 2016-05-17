@@ -304,7 +304,6 @@
       },
       {
         "name": "onVisitRemoved",
-        "unsupported": true,
         "type": "function",
         "description": "Fired when one or more URLs are removed from the history service.  When all visits have been removed the URL is purged from history.",
         "parameters": [
