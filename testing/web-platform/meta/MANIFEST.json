@@ -35941,7 +35941,8 @@
     "deleted": [
       "web-animations/keyframe-effect/getComputedTiming-currentIteration.html",
       "web-animations/keyframe-effect/getComputedTiming-progress.html",
-      "web-animations/keyframe-effect/setFrames.html"
+      "web-animations/keyframe-effect/setFrames.html",
+      "web-animations/animation-model/keyframes/effect-value-context.html"
     ],
     "deleted_reftests": {},
     "items": {
@@ -35992,6 +35993,12 @@
           {
             "path": "service-workers/service-worker/update-recovery.https.html",
             "url": "/service-workers/service-worker/update-recovery.https.html"
+          }
+        ],
+        "web-animations/animation-model/keyframe-effects/effect-value-context.html": [
+          {
+            "path": "web-animations/animation-model/keyframe-effects/effect-value-context.html",
+            "url": "/web-animations/animation-model/keyframe-effects/effect-value-context.html"
           }
         ],
         "web-animations/animation/startTime.html": [
