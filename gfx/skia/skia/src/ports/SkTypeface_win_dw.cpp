@@ -266,7 +266,7 @@ void DWriteFontTypeface::onFilterRec(SkScalerContext::Rec* rec) const {
     rec->setHinting(h);
 
 #if SK_FONT_HOST_USE_SYSTEM_SETTINGS
-    IDWriteFactory* factory = get_dwrite_factory();
+    IDWriteFactory* factory = sk_get_dwrite_factory();
     if (factory != nullptr) {
         SkTScopedComPtr<IDWriteRenderingParams> defaultRenderingParams;
         if (SUCCEEDED(factory->CreateRenderingParams(&defaultRenderingParams))) {
