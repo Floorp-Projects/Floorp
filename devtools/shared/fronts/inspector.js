@@ -5,8 +5,8 @@
 
 const Services = require("Services");
 const { Ci } = require("chrome");
-require("devtools/client/fronts/styles");
-require("devtools/client/fronts/highlighters");
+require("devtools/shared/fronts/styles");
+require("devtools/shared/fronts/highlighters");
 const { ShortLongString } = require("devtools/server/actors/string");
 const {
   Front,

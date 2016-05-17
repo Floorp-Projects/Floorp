@@ -11,6 +11,7 @@ DIRS += [
     'apps',
     'client',
     'discovery',
+    'fronts',
     'gcli',
     'heapsnapshot',
     'inspector',

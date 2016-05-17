@@ -37,7 +37,7 @@ var gInspector = null;
 addTest(function setup() {
   let url = document.getElementById("inspectorContent").href;
   attachURL(url, function(err, client, tab, doc) {
-    let {InspectorFront} = require("devtools/client/fronts/inspector");
+    let {InspectorFront} = require("devtools/shared/fronts/inspector");
     gInspector = InspectorFront(client, tab);
     runNextTest();
   });

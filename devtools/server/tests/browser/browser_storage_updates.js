@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {StorageFront} = require("devtools/client/fronts/storage");
+const {StorageFront} = require("devtools/shared/fronts/storage");
 const beforeReload = {
   cookies: ["test1.example.org", "sectest1.example.org"],
   localStorage: ["http://test1.example.org", "http://sectest1.example.org"],
