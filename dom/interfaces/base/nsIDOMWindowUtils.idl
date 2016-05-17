@@ -223,6 +223,13 @@ interface nsIDOMWindowUtils : nsISupports {
   void setResolutionAndScaleTo(in float aResolution);
 
   /**
+   * Set a resolution on the presShell which is the "restored" from history.
+   * This resolution should be used when painting for the first time. Calling
+   * this too late may have no effect.
+   */
+  void setRestoreResolution(in float aResolution);
+
+  /**
    * Whether the resolution has been set by the user.
    * This gives a way to check whether the provided resolution is the default
    * value or restored from a previous session.
