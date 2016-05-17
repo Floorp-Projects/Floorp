@@ -1364,18 +1364,12 @@ StorageActors.createActor({
    */
   removeDatabase: Task.async(function* (host, name) {
     let win = this.storageActor.getWindowFromHost(host);
-    if (win) {
-      let principal = win.document.nodePrincipal;
-      let result = yield this.removeDB(host, principal, name);
-      if (!result.error) {
-        if (this.hostVsStores.has(host)) {
-          this.hostVsStores.get(host).delete(name);
-        }
-        this.storageActor.update("deleted", "indexedDB", {
-          [host]: [ JSON.stringify([name]) ]
-        });
-      }
+    if (!win) {
+      return { error: `Window for host ${host} not found` };
     }
+
+    let principal = win.document.nodePrincipal;
+    return this.removeDB(host, principal, name);
   }),
 
   getHostName: function(location) {
@@ -1538,6 +1532,16 @@ StorageActors.createActor({
     };
   },
 
+  onDatabaseRemoved(host, name) {
+    if (this.hostVsStores.has(host)) {
+      this.hostVsStores.get(host).delete(name);
+    }
+
+    this.storageActor.update("deleted", "indexedDB", {
+      [host]: [ JSON.stringify([name]) ]
+    });
+  },
+
   maybeSetupChildProcess: function() {
     if (!DebuggerServer.isInChildProcess) {
       this.backToChild = function(...args) {
@@ -1573,14 +1577,19 @@ StorageActors.createActor({
 
     addMessageListener("storage:storage-indexedDB-request-child", msg => {
       switch (msg.json.method) {
-        case "backToChild":
-          let func = msg.json.args.shift();
+        case "backToChild": {
+          let [func, rv] = msg.json.args;
           let deferred = unresolvedPromises.get(func);
           if (deferred) {
             unresolvedPromises.delete(func);
-            deferred.resolve(msg.json.args[0]);
+            deferred.resolve(rv);
           }
           break;
+        }
+        case "onDatabaseRemoved": {
+          let [host, name] = msg.json.args;
+          this.onDatabaseRemoved(host, name);
+        }
       }
     });
 
@@ -1608,6 +1617,16 @@ var indexedDBHelpers = {
     mm.broadcastAsyncMessage("storage:storage-indexedDB-request-child", {
       method: "backToChild",
       args: args
+    });
+  },
+
+  onDatabaseRemoved: function (host, name) {
+    let mm = Cc["@mozilla.org/globalmessagemanager;1"]
+               .getService(Ci.nsIMessageListenerManager);
+
+    mm.broadcastAsyncMessage("storage:storage-indexedDB-request-child", {
+      method: "onDatabaseRemoved",
+      args: [ host, name ]
     });
   },
 
@@ -1650,12 +1669,13 @@ var indexedDBHelpers = {
     let result = new promise(resolve => {
       request.onsuccess = () => {
         resolve({});
+        this.onDatabaseRemoved(host, name);
       };
 
       request.onblocked = () => {
         console.error(
           `Deleting indexedDB database ${name} for host ${host} is blocked`);
-        resolve({ error: "blocked" });
+        resolve({ blocked: true });
       };
 
       request.onerror = () => {
@@ -1663,6 +1683,11 @@ var indexedDBHelpers = {
           `Error deleting indexedDB database ${name} for host ${host}`);
         resolve({ error: request.error });
       };
+
+      // If the database is blocked repeatedly, the onblocked event will not
+      // be fired again. To avoid waiting forever, report as blocked if nothing
+      // else happens after 3 seconds.
+      setTimeout(() => resolve({ blocked: true }), 3000);
     });
 
     return this.backToChild("removeDB", yield result);
