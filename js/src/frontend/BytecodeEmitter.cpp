@@ -4222,6 +4222,8 @@ BytecodeEmitter::emitDestructuringOpsArrayHelper(ParseNode* pattern, VarEmitOpti
                 return false;
             if (!emit1(JSOP_UNDEFINED))                           // ... OBJ? ITER UNDEFINED
                 return false;
+            if (!emit1(JSOP_NOP_DESTRUCTURING))
+                return false;
 
             /* Jump around else, fixup the branch, emit else, fixup jump. */
             JumpList jmp;
