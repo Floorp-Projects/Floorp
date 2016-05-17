@@ -3282,25 +3282,25 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
       containingPaintedLayerData->mMaybeHitRegion.SimplifyOutward(8);
     }
     nsLayoutUtils::TransformToAncestorAndCombineRegions(
-      data->mHitRegion.GetBounds(),
+      data->mHitRegion,
       mContainerReferenceFrame,
       containingPaintedLayerData->mReferenceFrame,
       &containingPaintedLayerData->mHitRegion,
       &containingPaintedLayerData->mMaybeHitRegion);
     nsLayoutUtils::TransformToAncestorAndCombineRegions(
-      data->mNoActionRegion.GetBounds(),
+      data->mNoActionRegion,
       mContainerReferenceFrame,
       containingPaintedLayerData->mReferenceFrame,
       &containingPaintedLayerData->mNoActionRegion,
       &containingPaintedLayerData->mDispatchToContentHitRegion);
     nsLayoutUtils::TransformToAncestorAndCombineRegions(
-      data->mHorizontalPanRegion.GetBounds(),
+      data->mHorizontalPanRegion,
       mContainerReferenceFrame,
       containingPaintedLayerData->mReferenceFrame,
       &containingPaintedLayerData->mHorizontalPanRegion,
       &containingPaintedLayerData->mDispatchToContentHitRegion);
     nsLayoutUtils::TransformToAncestorAndCombineRegions(
-      data->mVerticalPanRegion.GetBounds(),
+      data->mVerticalPanRegion,
       mContainerReferenceFrame,
       containingPaintedLayerData->mReferenceFrame,
       &containingPaintedLayerData->mVerticalPanRegion,

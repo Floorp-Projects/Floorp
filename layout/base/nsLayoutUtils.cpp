@@ -9015,23 +9015,24 @@ nsLayoutUtils::GetTouchActionFromFrame(nsIFrame* aFrame)
 
 /* static */  void
 nsLayoutUtils::TransformToAncestorAndCombineRegions(
-  const nsRect& aBounds,
+  const nsRegion& aRegion,
   nsIFrame* aFrame,
   const nsIFrame* aAncestorFrame,
   nsRegion* aPreciseTargetDest,
   nsRegion* aImpreciseTargetDest)
 {
-  if (aBounds.IsEmpty()) {
+  if (aRegion.IsEmpty()) {
     return;
   }
-  Matrix4x4 matrix = GetTransformToAncestor(aFrame, aAncestorFrame);
-  Matrix matrix2D;
-  bool isPrecise = (matrix.Is2D(&matrix2D)
-    && !matrix2D.HasNonAxisAlignedTransform());
-  nsRect transformed = TransformFrameRectToAncestor(
-    aFrame, aBounds, aAncestorFrame);
+  bool isPrecise;
+  nsRegion transformedRegion;
+  for (nsRegion::RectIterator it = aRegion.RectIter(); !it.Done(); it.Next()) {
+    nsRect transformed = TransformFrameRectToAncestor(
+      aFrame, it.Get(), aAncestorFrame, &isPrecise);
+    transformedRegion.OrWith(transformed);
+  }
   nsRegion* dest = isPrecise ? aPreciseTargetDest : aImpreciseTargetDest;
-  dest->OrWith(transformed);
+  dest->OrWith(transformedRegion);
 }
 
 /* static */ bool
