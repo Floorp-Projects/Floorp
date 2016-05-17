@@ -159,11 +159,25 @@ class FunctionCompiler
               case ValType::F64:
                 ins = MConstant::NewAsmJS(alloc(), DoubleValue(0.0), MIRType::Double);
                 break;
+              case ValType::I8x16:
+                ins = MSimdConstant::New(alloc(), SimdConstant::SplatX16(0), MIRType::Int8x16);
+                break;
+              case ValType::I16x8:
+                ins = MSimdConstant::New(alloc(), SimdConstant::SplatX8(0), MIRType::Int16x8);
+                break;
               case ValType::I32x4:
                 ins = MSimdConstant::New(alloc(), SimdConstant::SplatX4(0), MIRType::Int32x4);
                 break;
               case ValType::F32x4:
                 ins = MSimdConstant::New(alloc(), SimdConstant::SplatX4(0.f), MIRType::Float32x4);
+                break;
+              case ValType::B8x16:
+                // Bool8x16 uses the same data layout as Int8x16.
+                ins = MSimdConstant::New(alloc(), SimdConstant::SplatX16(0), MIRType::Bool8x16);
+                break;
+              case ValType::B16x8:
+                // Bool16x8 uses the same data layout as Int16x8.
+                ins = MSimdConstant::New(alloc(), SimdConstant::SplatX8(0), MIRType::Bool16x8);
                 break;
               case ValType::B32x4:
                 // Bool32x4 uses the same data layout as Int32x4.
