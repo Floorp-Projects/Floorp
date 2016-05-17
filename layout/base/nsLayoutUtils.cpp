@@ -2848,13 +2848,26 @@ static Rect
 TransformGfxRectToAncestor(nsIFrame *aFrame,
                            const Rect &aRect,
                            const nsIFrame *aAncestor,
-                           bool* aPreservesAxisAlignedRectangles = nullptr)
+                           bool* aPreservesAxisAlignedRectangles = nullptr,
+                           Maybe<Matrix4x4>* aMatrixCache = nullptr)
 {
-  Matrix4x4 ctm = nsLayoutUtils::GetTransformToAncestor(aFrame, aAncestor);
-  if (aPreservesAxisAlignedRectangles) {
-    Matrix matrix2d;
-    *aPreservesAxisAlignedRectangles =
-      ctm.Is2D(&matrix2d) && matrix2d.PreservesAxisAlignedRectangles();
+  Matrix4x4 ctm;
+  if (aMatrixCache && *aMatrixCache) {
+    // We are given a matrix to use, so use it
+    ctm = aMatrixCache->value();
+  } else {
+    // Else, compute it
+    ctm = nsLayoutUtils::GetTransformToAncestor(aFrame, aAncestor);
+    if (aMatrixCache) {
+      // and put it in the cache, if provided
+      *aMatrixCache = Some(ctm);
+    }
+    // If we computed it, also fill out the axis-alignment flag
+    if (aPreservesAxisAlignedRectangles) {
+      Matrix matrix2d;
+      *aPreservesAxisAlignedRectangles =
+        ctm.Is2D(&matrix2d) && matrix2d.PreservesAxisAlignedRectangles();
+    }
   }
   Rect maxBounds = Rect(-std::numeric_limits<float>::max() * 0.5,
                         -std::numeric_limits<float>::max() * 0.5,
@@ -2905,7 +2918,8 @@ nsRect
 nsLayoutUtils::TransformFrameRectToAncestor(nsIFrame* aFrame,
                                             const nsRect& aRect,
                                             const nsIFrame* aAncestor,
-                                            bool* aPreservesAxisAlignedRectangles /* = nullptr */)
+                                            bool* aPreservesAxisAlignedRectangles /* = nullptr */,
+                                            Maybe<Matrix4x4>* aMatrixCache /* = nullptr */)
 {
   SVGTextFrame* text = GetContainingSVGTextFrame(aFrame);
 
@@ -2914,7 +2928,7 @@ nsLayoutUtils::TransformFrameRectToAncestor(nsIFrame* aFrame,
 
   if (text) {
     result = ToRect(text->TransformFrameRectFromTextChild(aRect, aFrame));
-    result = TransformGfxRectToAncestor(text, result, aAncestor);
+    result = TransformGfxRectToAncestor(text, result, aAncestor, nullptr, aMatrixCache);
     // TransformFrameRectFromTextChild could involve any kind of transform, we
     // could drill down into it to get an answer out of it but we don't yet.
     if (aPreservesAxisAlignedRectangles)
@@ -2924,7 +2938,7 @@ nsLayoutUtils::TransformFrameRectToAncestor(nsIFrame* aFrame,
                   NSAppUnitsToFloatPixels(aRect.y, srcAppUnitsPerDevPixel),
                   NSAppUnitsToFloatPixels(aRect.width, srcAppUnitsPerDevPixel),
                   NSAppUnitsToFloatPixels(aRect.height, srcAppUnitsPerDevPixel));
-    result = TransformGfxRectToAncestor(aFrame, result, aAncestor, aPreservesAxisAlignedRectangles);
+    result = TransformGfxRectToAncestor(aFrame, result, aAncestor, aPreservesAxisAlignedRectangles, aMatrixCache);
   }
 
   float destAppUnitsPerDevPixel = aAncestor->PresContext()->AppUnitsPerDevPixel();
@@ -9019,7 +9033,8 @@ nsLayoutUtils::TransformToAncestorAndCombineRegions(
   nsIFrame* aFrame,
   const nsIFrame* aAncestorFrame,
   nsRegion* aPreciseTargetDest,
-  nsRegion* aImpreciseTargetDest)
+  nsRegion* aImpreciseTargetDest,
+  Maybe<Matrix4x4>* aMatrixCache)
 {
   if (aRegion.IsEmpty()) {
     return;
@@ -9028,7 +9043,7 @@ nsLayoutUtils::TransformToAncestorAndCombineRegions(
   nsRegion transformedRegion;
   for (nsRegion::RectIterator it = aRegion.RectIter(); !it.Done(); it.Next()) {
     nsRect transformed = TransformFrameRectToAncestor(
-      aFrame, it.Get(), aAncestorFrame, &isPrecise);
+      aFrame, it.Get(), aAncestorFrame, &isPrecise, aMatrixCache);
     transformedRegion.OrWith(transformed);
   }
   nsRegion* dest = isPrecise ? aPreciseTargetDest : aImpreciseTargetDest;
