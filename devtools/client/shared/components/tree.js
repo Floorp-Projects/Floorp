@@ -1,11 +1,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* eslint-env browser */
+"use strict";
 
 const { DOM: dom, createClass, createFactory, PropTypes } = require("devtools/client/shared/vendor/react");
-const { ViewHelpers } = require("devtools/client/shared/widgets/view-helpers");
 
-const AUTO_EXPAND_DEPTH = 0; // depth
+const AUTO_EXPAND_DEPTH = 0;
 const NUMBER_OF_OFFSCREEN_ITEMS = 1;
 
 /**
@@ -95,7 +96,7 @@ const NUMBER_OF_OFFSCREEN_ITEMS = 1;
  *       }
  *     });
  */
-const Tree = module.exports = createClass({
+module.exports = createClass({
   displayName: "Tree",
 
   propTypes: {
@@ -231,13 +232,13 @@ const Tree = module.exports = createClass({
     this._updateHeight();
   },
 
-  componentWillUnmount() {
-    window.removeEventListener("resize", this._updateHeight);
-  },
-
   componentWillReceiveProps(nextProps) {
     this._autoExpand();
     this._updateHeight();
+  },
+
+  componentWillUnmount() {
+    window.removeEventListener("resize", this._updateHeight);
   },
 
   _autoExpand() {
@@ -269,72 +270,6 @@ const Tree = module.exports = createClass({
     for (let i = 0; i < length; i++) {
       autoExpand(roots[i], 0);
     }
-  },
-
-  render() {
-    const traversal = this._dfsFromRoots();
-
-    // Remove `NUMBER_OF_OFFSCREEN_ITEMS` from `begin` and add `2 *
-    // NUMBER_OF_OFFSCREEN_ITEMS` to `end` so that the top and bottom of the
-    // page are filled with the `NUMBER_OF_OFFSCREEN_ITEMS` previous and next
-    // items respectively, rather than whitespace if the item is not in full
-    // view.
-    const begin = Math.max(((this.state.scroll / this.props.itemHeight) | 0) - NUMBER_OF_OFFSCREEN_ITEMS, 0);
-    const end = begin + (2 * NUMBER_OF_OFFSCREEN_ITEMS) + ((this.state.height / this.props.itemHeight) | 0);
-    const toRender = traversal.slice(begin, end);
-
-    const nodes = [
-      dom.div({
-        key: "top-spacer",
-        style: {
-          padding: 0,
-          margin: 0,
-          height: begin * this.props.itemHeight + "px"
-        }
-      })
-    ];
-
-    for (let i = 0; i < toRender.length; i++) {
-      let { item, depth } = toRender[i];
-      nodes.push(TreeNode({
-        key: this.props.getKey(item),
-        index: begin + i,
-        item: item,
-        depth: depth,
-        renderItem: this.props.renderItem,
-        focused: this.props.focused === item,
-        expanded: this.props.isExpanded(item),
-        hasChildren: !!this.props.getChildren(item).length,
-        onExpand: this._onExpand,
-        onCollapse: this._onCollapse,
-        onFocus: () => this._focus(begin + i, item),
-      }));
-    }
-
-    nodes.push(dom.div({
-      key: "bottom-spacer",
-      style: {
-        padding: 0,
-        margin: 0,
-        height: (traversal.length - 1 - end) * this.props.itemHeight + "px"
-      }
-    }));
-
-    return dom.div(
-      {
-        className: "tree",
-        ref: "tree",
-        onKeyDown: this._onKeyDown,
-        onKeyPress: this._preventArrowKeyScrolling,
-        onKeyUp: this._preventArrowKeyScrolling,
-        onScroll: this._onScroll,
-        style: {
-          padding: 0,
-          margin: 0
-        }
-      },
-      nodes
-    );
   },
 
   _preventArrowKeyScrolling(e) {
@@ -451,12 +386,12 @@ const Tree = module.exports = createClass({
       const itemStartPosition = index * this.props.itemHeight;
       const itemEndPosition = (index + 1) * this.props.itemHeight;
 
-      // Note that if the height of the viewport (this.state.height) is less than
-      // `this.props.itemHeight`, we could accidentally try and scroll both up and
-      // down in a futile attempt to make both the item's start and end positions
-      // visible. Instead, give priority to the start of the item by checking its
-      // position first, and then using an "else if", rather than a separate "if",
-      // for the end position.
+      // Note that if the height of the viewport (this.state.height) is less
+      // than `this.props.itemHeight`, we could accidentally try and scroll both
+      // up and down in a futile attempt to make both the item's start and end
+      // positions visible. Instead, give priority to the start of the item by
+      // checking its position first, and then using an "else if", rather than
+      // a separate "if", for the end position.
       if (this.state.scroll > itemStartPosition) {
         this.refs.tree.scrollTo(0, itemStartPosition);
       } else if ((this.state.scroll + this.state.height) < itemEndPosition) {
@@ -609,6 +544,74 @@ const Tree = module.exports = createClass({
 
     this._focus(parentIndex, parent);
   }),
+
+  render() {
+    const traversal = this._dfsFromRoots();
+
+    // Remove `NUMBER_OF_OFFSCREEN_ITEMS` from `begin` and add `2 *
+    // NUMBER_OF_OFFSCREEN_ITEMS` to `end` so that the top and bottom of the
+    // page are filled with the `NUMBER_OF_OFFSCREEN_ITEMS` previous and next
+    // items respectively, rather than whitespace if the item is not in full
+    // view.
+    const begin = Math.max(((this.state.scroll / this.props.itemHeight) | 0)
+                           - NUMBER_OF_OFFSCREEN_ITEMS, 0);
+    const end = begin + (2 * NUMBER_OF_OFFSCREEN_ITEMS)
+                      + ((this.state.height / this.props.itemHeight) | 0);
+    const toRender = traversal.slice(begin, end);
+
+    const nodes = [
+      dom.div({
+        key: "top-spacer",
+        style: {
+          padding: 0,
+          margin: 0,
+          height: begin * this.props.itemHeight + "px"
+        }
+      })
+    ];
+
+    for (let i = 0; i < toRender.length; i++) {
+      let { item, depth } = toRender[i];
+      nodes.push(TreeNode({
+        key: this.props.getKey(item),
+        index: begin + i,
+        item: item,
+        depth: depth,
+        renderItem: this.props.renderItem,
+        focused: this.props.focused === item,
+        expanded: this.props.isExpanded(item),
+        hasChildren: !!this.props.getChildren(item).length,
+        onExpand: this._onExpand,
+        onCollapse: this._onCollapse,
+        onFocus: () => this._focus(begin + i, item),
+      }));
+    }
+
+    nodes.push(dom.div({
+      key: "bottom-spacer",
+      style: {
+        padding: 0,
+        margin: 0,
+        height: (traversal.length - 1 - end) * this.props.itemHeight + "px"
+      }
+    }));
+
+    return dom.div(
+      {
+        className: "tree",
+        ref: "tree",
+        onKeyDown: this._onKeyDown,
+        onKeyPress: this._preventArrowKeyScrolling,
+        onKeyUp: this._preventArrowKeyScrolling,
+        onScroll: this._onScroll,
+        style: {
+          padding: 0,
+          margin: 0
+        }
+      },
+      nodes
+    );
+  }
 });
 
 /**
@@ -659,6 +662,22 @@ const TreeNode = createFactory(createClass({
     }
   },
 
+  _buttonAttrs: {
+    ref: "button",
+    style: {
+      opacity: 0,
+      width: "0 !important",
+      height: "0 !important",
+      padding: "0 !important",
+      outline: "none",
+      MozAppearance: "none",
+      // XXX: Despite resetting all of the above properties (and margin), the
+      // button still ends up with ~79px width, so we set a large negative
+      // margin to completely hide it.
+      MozMarginStart: "-1000px !important",
+    }
+  },
+
   render() {
     const arrow = ArrowExpander({
       item: this.props.item,
@@ -691,22 +710,6 @@ const TreeNode = createFactory(createClass({
       // unless there is an input/button child.
       dom.button(this._buttonAttrs)
     );
-  },
-
-  _buttonAttrs: {
-    ref: "button",
-    style: {
-      opacity: 0,
-      width: "0 !important",
-      height: "0 !important",
-      padding: "0 !important",
-      outline: "none",
-      MozAppearance: "none",
-      // XXX: Despite resetting all of the above properties (and margin), the
-      // button still ends up with ~79px width, so we set a large negative
-      // margin to completely hide it.
-      marginInlineStart: "-1000px !important",
-    }
   }
 }));
 

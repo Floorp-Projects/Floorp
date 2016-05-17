@@ -9,14 +9,14 @@ var promise = require("promise");
 
 DevToolsUtils.testing = true;
 
-function waitUntilState (store, predicate) {
+function waitUntilState(store, predicate) {
   let deferred = promise.defer();
   let unsubscribe = store.subscribe(check);
 
-  function check () {
+  function check() {
     if (predicate(store.getState())) {
       unsubscribe();
-      deferred.resolve()
+      deferred.resolve();
     }
   }
 

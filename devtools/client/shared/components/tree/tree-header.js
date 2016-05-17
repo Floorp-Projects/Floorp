@@ -6,7 +6,7 @@
 "use strict";
 
 // Make this available to both AMD and CJS environments
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   // ReactJS
   const React = require("devtools/client/shared/vendor/react");
 
@@ -19,6 +19,8 @@ define(function(require, exports, module) {
    * It's based on <thead> element.
    */
   let TreeHeader = React.createClass({
+    displayName: "TreeHeader",
+
     // See also TreeView component for detailed info about properties.
     propTypes: {
       // Custom tree decorator
@@ -29,9 +31,7 @@ define(function(require, exports, module) {
       columns: PropTypes.array
     },
 
-    displayName: "TreeHeader",
-
-    getDefaultProps: function() {
+    getDefaultProps: function () {
       return {
         columns: [{
           id: "default"
@@ -39,7 +39,7 @@ define(function(require, exports, module) {
       };
     },
 
-    getHeaderClass: function(colId) {
+    getHeaderClass: function (colId) {
       let decorator = this.props.decorator;
       if (!decorator || !decorator.getHeaderClass) {
         return [];
@@ -58,7 +58,7 @@ define(function(require, exports, module) {
       return classNames;
     },
 
-    render: function() {
+    render: function () {
       let cells = [];
       let visible = this.props.header;
 

@@ -6,7 +6,7 @@
 "use strict";
 
 // Make this available to both AMD and CJS environments
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   // ReactJS
   const React = require("devtools/client/shared/vendor/react");
   const ReactDOM = require("devtools/client/shared/vendor/react-dom");
@@ -24,6 +24,8 @@ define(function(require, exports, module) {
    * using <tr> element (the entire tree is one big <table>).
    */
   let TreeRow = React.createClass({
+    displayName: "TreeRow",
+
     // See TreeView component for more details about the props and
     // the 'member' object.
     propTypes: {
@@ -47,23 +49,6 @@ define(function(require, exports, module) {
       onClick: PropTypes.func.isRequired
     },
 
-    displayName: "TreeRow",
-
-    /**
-     * Optimize row rendering. If props are the same do not render.
-     * This makes the rendering a lot faster!
-     */
-    shouldComponentUpdate: function(nextProps) {
-      let props = ["name", "open", "value", "loading"];
-      for (let p in props) {
-        if (nextProps.member[props[p]] != this.props.member[props[p]]) {
-          return true;
-        }
-      }
-
-      return false;
-    },
-
     componentWillReceiveProps(nextProps) {
       // I don't like accessing the underlying DOM elements directly,
       // but this optimization makes the filtering so damn fast!
@@ -77,7 +62,22 @@ define(function(require, exports, module) {
       }
     },
 
-    getRowClass: function(object) {
+    /**
+     * Optimize row rendering. If props are the same do not render.
+     * This makes the rendering a lot faster!
+     */
+    shouldComponentUpdate: function (nextProps) {
+      let props = ["name", "open", "value", "loading"];
+      for (let p in props) {
+        if (nextProps.member[props[p]] != this.props.member[props[p]]) {
+          return true;
+        }
+      }
+
+      return false;
+    },
+
+    getRowClass: function (object) {
       let decorator = this.props.decorator;
       if (!decorator || !decorator.getRowClass) {
         return [];
@@ -96,7 +96,7 @@ define(function(require, exports, module) {
       return classNames;
     },
 
-    render: function() {
+    render: function () {
       let member = this.props.member;
       let decorator = this.props.decorator;
 

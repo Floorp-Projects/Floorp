@@ -14,7 +14,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function *() {
+add_task(function* () {
   let store = applyMiddleware(task)(createStore)(reducer);
 
   store.dispatch(comboAction());
@@ -28,21 +28,21 @@ add_task(function *() {
   equal(store.getState()[3].data.async, "async", "Return values of dispatched async values are correct");
 });
 
-function comboAction () {
-  return function *(dispatch, getState) {
+function comboAction() {
+  return function* (dispatch, getState) {
     let data = {};
     data.async = yield dispatch(fetchAsync("async"));
     data.sync = yield dispatch(fetchSync("sync"));
     dispatch({ type: "fetch-done", data });
-  }
+  };
 }
 
-function fetchSync (data) {
+function fetchSync(data) {
   return { type: "fetchSync", data };
 }
 
-function fetchAsync (data) {
-  return function *(dispatch) {
+function fetchAsync(data) {
+  return function* (dispatch) {
     dispatch({ type: "fetchAsync-start" });
     let val = yield new Promise(resolve => resolve(data));
     dispatch({ type: "fetchAsync-end" });
@@ -50,7 +50,7 @@ function fetchAsync (data) {
   };
 }
 
-function reducer (state=[], action) {
+function reducer(state = [], action) {
   do_print("Action called: " + action.type);
   if (/fetch/.test(action.type)) {
     state.push(action);

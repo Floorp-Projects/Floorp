@@ -13,7 +13,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function *() {
+add_task(function* () {
   let store = applyMiddleware(task)(createStore)(reducer);
 
   store.dispatch(generatorError());
@@ -22,13 +22,13 @@ add_task(function *() {
   equal(store.getState()[0].error, "task-middleware-error-generator", "generator errors dispatch ERROR_TYPE actions with error");
 });
 
-function generatorError () {
-  return function *(dispatch, getState) {
+function generatorError() {
+  return function* (dispatch, getState) {
     throw "task-middleware-error-generator";
   };
 }
 
-function reducer (state=[], action) {
+function reducer(state = [], action) {
   do_print("Action called: " + action.type);
   if (action.type === ERROR_TYPE) {
     state.push(action);

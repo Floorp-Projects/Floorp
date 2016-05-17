@@ -7,7 +7,7 @@
 "use strict";
 
 // Make this available to both AMD and CJS environments
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   // Dependencies
   const React = require("devtools/client/shared/vendor/react");
   const { createFactories } = require("./rep-utils");
@@ -19,18 +19,18 @@ define(function(require, exports, module) {
   const Number = React.createClass({
     displayName: "Number",
 
-    render: function() {
+    stringify: function (object) {
+      return (Object.is(object, -0) ? "-0" : String(object));
+    },
+
+    render: function () {
       let value = this.props.object;
       return (
         ObjectBox({className: "number"},
           this.stringify(value)
         )
       );
-    },
-
-    stringify: function(object) {
-      return (Object.is(object, -0) ? "-0" : String(object));
-    },
+    }
   });
 
   function supportsObject(object, type) {

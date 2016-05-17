@@ -14,7 +14,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function *() {
+add_task(function* () {
   let store = applyMiddleware(task)(createStore)(reducer);
 
   store.dispatch(fetch1("generator"));
@@ -26,8 +26,8 @@ add_task(function *() {
   equal(store.getState()[1].data, "sync", "task middleware sync dispatches an action via sync");
 });
 
-function fetch1 (data) {
-  return function *(dispatch, getState) {
+function fetch1(data) {
+  return function* (dispatch, getState) {
     equal(getState().length, 0, "`getState` is accessible in a generator action");
     let moreData = yield new Promise(resolve => resolve(data));
     // Ensure it handles more than one yield
@@ -36,14 +36,14 @@ function fetch1 (data) {
   };
 }
 
-function fetch2 (data) {
+function fetch2(data) {
   return {
     type: "fetch2",
     data
-  }
+  };
 }
 
-function reducer (state=[], action) {
+function reducer(state = [], action) {
   do_print("Action called: " + action.type);
   if (["fetch1", "fetch2"].includes(action.type)) {
     state.push(action);

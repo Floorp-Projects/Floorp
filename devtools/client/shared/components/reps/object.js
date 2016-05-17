@@ -7,7 +7,7 @@
 "use strict";
 
 // Make this available to both AMD and CJS environments
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   // Dependencies
   const React = require("devtools/client/shared/vendor/react");
   const { createFactories } = require("./rep-utils");
@@ -22,18 +22,18 @@ define(function(require, exports, module) {
    * properties enclosed in curly brackets.
    */
   const Obj = React.createClass({
+    displayName: "Obj",
+
     propTypes: {
       object: React.PropTypes.object,
       mode: React.PropTypes.string,
     },
 
-    displayName: "Obj",
-
-    getTitle: function() {
+    getTitle: function () {
       return "";
     },
 
-    longPropIterator: function(object) {
+    longPropIterator: function (object) {
       try {
         return this.propIterator(object, 100);
       } catch (err) {
@@ -42,7 +42,7 @@ define(function(require, exports, module) {
       return [];
     },
 
-    shortPropIterator: function(object) {
+    shortPropIterator: function (object) {
       try {
         return this.propIterator(object, 3);
       } catch (err) {
@@ -51,7 +51,7 @@ define(function(require, exports, module) {
       return [];
     },
 
-    propIterator: function(object, max) {
+    propIterator: function (object, max) {
       let isInterestingProp = (t, value) => {
         // Do not pick objects, it could cause recursion.
         return (t == "boolean" || t == "number" || (t == "string" && value));
@@ -90,7 +90,7 @@ define(function(require, exports, module) {
       return props;
     },
 
-    getProps: function(object, max, filter) {
+    getProps: function (object, max, filter) {
       let props = [];
 
       max = max || 3;
@@ -132,7 +132,7 @@ define(function(require, exports, module) {
       return props;
     },
 
-    render: function() {
+    render: function () {
       let object = this.props.object;
       let props = this.shortPropIterator(object);
 
@@ -151,6 +151,8 @@ define(function(require, exports, module) {
    * Renders object property, name-value pair.
    */
   let PropRep = React.createFactory(React.createClass({
+    displayName: "PropRep",
+
     propTypes: {
       object: React.PropTypes.any,
       mode: React.PropTypes.string,
@@ -159,9 +161,7 @@ define(function(require, exports, module) {
       delim: React.PropTypes.string,
     },
 
-    displayName: "PropRep",
-
-    render: function() {
+    render: function () {
       let { Rep } = createFactories(require("./rep"));
       let object = this.props.object;
       let mode = this.props.mode;

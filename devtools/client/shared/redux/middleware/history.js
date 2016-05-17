@@ -10,11 +10,11 @@ const DevToolsUtils = require("devtools/shared/DevToolsUtils");
  * in logging object. Should only be used for tests, as it collects all
  * action information, which will cause memory bloat.
  */
-exports.history = (log=[]) => ({ dispatch, getState }) => {
+exports.history = (log = []) => ({ dispatch, getState }) => {
   if (!DevToolsUtils.testing) {
-    console.warn(`Using history middleware stores all actions in state for testing\
-                  and devtools is not currently running in test mode. Be sure this is\
-                  intentional.`);
+    console.warn("Using history middleware stores all actions in state for " +
+                 "testing and devtools is not currently running in test " +
+                 "mode. Be sure this is intentional.");
   }
   return next => action => {
     log.push(action);
