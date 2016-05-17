@@ -43,6 +43,7 @@ XPCOMUtils.defineLazyGetter(this, "DEFAULT_AREA_PLACEMENTS", function() {
       "find-button",
       "preferences-button",
       "add-ons-button",
+      "sync-button",
       "developer-button",
     ],
     "nav-bar": [
@@ -91,7 +92,7 @@ XPCOMUtils.defineLazyGetter(this, "PALETTE_ITEMS", function() {
     "developer-button",
     "feed-button",
     "email-link-button",
-    "sync-button",
+    "containers-panelmenu",
   ];
 
   let panelPlacements = DEFAULT_AREA_PLACEMENTS["PanelUI-contents"];

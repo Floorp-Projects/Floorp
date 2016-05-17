@@ -74,7 +74,7 @@ public:
     }
 
     virtual bool ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor) override {
-        MOZ_CRASH("don't do this");
+        MOZ_CRASH("GFX: ToSurfaceDescriptor");
         return false;
     }
 };

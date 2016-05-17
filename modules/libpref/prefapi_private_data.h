@@ -29,6 +29,9 @@ pref_SetPref(const mozilla::dom::PrefSetting& aPref);
 int pref_CompareStrings(const void *v1, const void *v2, void* unused);
 PrefHashEntry* pref_HashTableLookup(const char *key);
 
+bool
+pref_EntryHasAdvisablySizedValues(PrefHashEntry* aHashEntry);
+
 void pref_GetPrefFromEntry(PrefHashEntry *aHashEntry,
                            mozilla::dom::PrefSetting* aPref);
 

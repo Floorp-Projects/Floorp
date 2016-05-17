@@ -159,6 +159,12 @@ LOCAL_INCLUDES += [
     '/xpcom/build',
 ]
 
+if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
+    LOCAL_INCLUDES += [
+        '/security/sandbox/chromium',
+        '/security/sandbox/chromium-shim',
+    ]
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     LOCAL_INCLUDES += [
         '/widget',

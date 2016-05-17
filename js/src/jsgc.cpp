@@ -6862,11 +6862,18 @@ GCRuntime::onOutOfMallocMemory(const AutoLockGC& lock)
 void
 GCRuntime::minorGCImpl(JS::gcreason::Reason reason, Nursery::ObjectGroupList* pretenureGroups)
 {
+    if (rt->mainThread.suppressGC)
+        return;
+
     minorGCTriggerReason = JS::gcreason::NO_REASON;
     TraceLoggerThread* logger = TraceLoggerForMainThread(rt);
     AutoTraceLog logMinorGC(logger, TraceLogger_MinorGC);
     nursery.collect(rt, reason, pretenureGroups);
-    MOZ_ASSERT_IF(!rt->mainThread.suppressGC, nursery.isEmpty());
+    MOZ_ASSERT(nursery.isEmpty());
+
+    AutoLockGC lock(rt);
+    for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next())
+        maybeAllocTriggerZoneGC(zone, lock);
 }
 
 // Alternate to the runtime-taking form that allows marking object groups as

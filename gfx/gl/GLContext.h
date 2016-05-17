@@ -730,7 +730,7 @@ private:
                 printf_stderr("Fatal: %s called on non-current context %p. The"
                               " current context for this thread is %p.\n",
                               funcName, this, tlsContext);
-                MOZ_CRASH("GLContext is not current.");
+                MOZ_CRASH("GFX: GLContext is not current.");
             }
         }
     }
@@ -815,7 +815,7 @@ private:
                 MOZ_ASSERT(strstr(MOZ_FUNCTION_NAME, #func) != nullptr, "Mismatched symbol check.");\
                 if (MOZ_UNLIKELY(!mSymbols.func)) {\
                     printf_stderr("RUNTIME ASSERT: Uninitialized GL function: %s\n", #func);\
-                    MOZ_CRASH();\
+                    MOZ_CRASH("GFX: Uninitialized GL function");\
                 }\
             } while (0)
 

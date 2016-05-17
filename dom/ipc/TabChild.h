@@ -679,11 +679,14 @@ protected:
 
 private:
   // Notify others that our TabContext has been updated.  (At the moment, this
-  // sets the appropriate app-id and is-browser flags on our docshell.)
+  // sets the appropriate origin attributes on our docshell.)
   //
   // You should call this after calling TabContext::SetTabContext().  We also
   // call this during Init().
   void NotifyTabContextUpdated();
+
+  // Update the frameType on our docshell.
+  void UpdateFrameType();
 
   void ActorDestroy(ActorDestroyReason why) override;
 

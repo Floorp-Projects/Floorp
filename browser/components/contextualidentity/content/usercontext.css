@@ -1,0 +1,27 @@
+:root {
+  /* This is used as a template for ContextualIdentityService. 'id' will be
+   * replaced with the userContextId */
+  --usercontext-tab-id: linear-gradient(to right, transparent 20%, var(--usercontext-color-id) 30%, var(--usercontext-color-id) 70%, transparent 80%);
+}
+
+#userContext-indicator {
+  height: 16px;
+  width: 16px;
+}
+
+#userContext-label {
+  margin-inline-end: 3px;
+  color: #909090;
+}
+
+#userContext-icons {
+  -moz-box-align: center;
+}
+
+/* User Context UI - change tab decoration depending on userContextId.
+   Defaults to gray for unknown usercontextids. */
+.tabbrowser-tab[usercontextid] {
+  background-image: linear-gradient(to right, transparent 20%, #909090 30%, #909090 70%, transparent 80%);
+  background-size: auto 2px;
+  background-repeat: no-repeat;
+}

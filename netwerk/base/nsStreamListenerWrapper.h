@@ -24,9 +24,23 @@ public:
   }
 
   NS_DECL_ISUPPORTS
-  NS_FORWARD_NSIREQUESTOBSERVER(mListener->)
   NS_FORWARD_NSISTREAMLISTENER(mListener->)
   NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
+
+  //  Don't use NS_FORWARD_NSIREQUESTOBSERVER(mListener->) here, because we need
+  //  to release mListener in OnStopRequest, and IDL-generated function doesn't.
+  NS_IMETHOD OnStartRequest(nsIRequest *aRequest,
+                            nsISupports *aContext) override
+  {
+    return mListener->OnStartRequest(aRequest, aContext);
+  }
+  NS_IMETHOD OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
+                           nsresult aStatusCode) override
+  {
+    nsresult rv = mListener->OnStopRequest(aRequest, aContext, aStatusCode);
+    mListener = nullptr;
+    return rv;
+  }
 
 private:
   ~nsStreamListenerWrapper() {}

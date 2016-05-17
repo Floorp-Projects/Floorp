@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 // Copyright (c) 2006-2008 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -540,7 +542,7 @@ void Pickle::EndWrite(char* dest, int length) {
   // memory.
   if (length % sizeof(memberAlignmentType))
     memset(dest + length, 0,
-	   sizeof(memberAlignmentType) - (length % sizeof(memberAlignmentType)));
+           sizeof(memberAlignmentType) - (length % sizeof(memberAlignmentType)));
 }
 
 bool Pickle::WriteBytes(const void* data, int data_len, uint32_t alignment) {
@@ -645,8 +647,8 @@ const char* Pickle::FindNext(uint32_t header_size,
 
 // static
 uint32_t Pickle::GetLength(uint32_t header_size,
-			   const char* start,
-			   const char* end) {
+                           const char* start,
+                           const char* end) {
   DCHECK(header_size == AlignInt(header_size));
   DCHECK(header_size <= static_cast<memberAlignmentType>(kPayloadUnit));
 

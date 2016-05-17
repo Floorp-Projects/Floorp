@@ -33,6 +33,9 @@ public:
 
   // OfflineDisconnect cancels all existing connections in the parent when
   // the app becomes offline.
+  // Since the offline observer holds a mutex while calling this,
+  // the implementation must make sure it doesn't call back into OfflineObserver
+  // or issue a notification for the "network:app-offline-status-changed" topic
   virtual void     OfflineDisconnect() { }
 };
 
@@ -64,7 +67,11 @@ private:
   void RemoveOfflineObserverMainThread();
 private:
   virtual ~OfflineObserver() { }
+  // This needs to be a raw pointer, or else the parent's destructor
+  // will not get called
   DisconnectableParent * mParent;
+  // We need to lock this mutex when accessing the value of mParent
+  mozilla::Mutex mLock;
 };
 
 } // namespace net

@@ -34,6 +34,17 @@ if CONFIG['_MSC_VER']:
 if CONFIG['OS_ARCH'] == 'WINNT':
     RCINCLUDE = 'xpcshell.rc'
 
+    if CONFIG['MOZ_SANDBOX']:
+        # For sandbox includes and the include dependencies those have
+        LOCAL_INCLUDES += [
+            '/security/sandbox/chromium',
+            '/security/sandbox/chromium-shim',
+        ]
+
+        USE_LIBS += [
+            'sandbox_s',
+        ]
+
 CFLAGS += CONFIG['TK_CFLAGS']
 CXXFLAGS += CONFIG['TK_CFLAGS']
 OS_LIBS += CONFIG['TK_LIBS']

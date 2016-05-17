@@ -26,10 +26,10 @@ extern mozilla::LogModule* GetPDMLog();
 namespace mozilla {
 
 AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig,
-                               FlushableTaskQueue* aVideoTaskQueue,
+                               TaskQueue* aTaskQueue,
                                MediaDataDecoderCallback* aCallback,
                                layers::ImageContainer* aImageContainer)
-  : AppleVDADecoder(aConfig, aVideoTaskQueue, aCallback, aImageContainer)
+  : AppleVDADecoder(aConfig, aTaskQueue, aCallback, aImageContainer)
   , mFormat(nullptr)
   , mSession(nullptr)
   , mIsHardwareAccelerated(false)
@@ -164,11 +164,10 @@ TimingInfoFromSample(MediaRawData* aSample)
 }
 
 nsresult
-AppleVTDecoder::ProcessDecode(MediaRawData* aSample)
+AppleVTDecoder::DoDecode(MediaRawData* aSample)
 {
   AssertOnTaskQueueThread();
 
-  mInputIncoming--;
   // For some reason this gives me a double-free error with stagefright.
   AutoCFRelease<CMBlockBufferRef> block = nullptr;
   AutoCFRelease<CMSampleBufferRef> sample = nullptr;
@@ -213,12 +212,6 @@ AppleVTDecoder::ProcessDecode(MediaRawData* aSample)
     NS_WARNING("Couldn't pass frame to decoder");
     mCallback->Error();
     return NS_ERROR_FAILURE;
-  }
-
-  // Ask for more data.
-  if (!mInputIncoming && mQueuedSamples <= mMaxRefFrames) {
-    LOG("AppleVTDecoder task queue empty; requesting more data");
-    mCallback->InputExhausted();
   }
 
   return NS_OK;

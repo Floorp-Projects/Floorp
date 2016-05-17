@@ -49,7 +49,7 @@ public:
     mStorage = (uint8_t*)malloc(mSize);
     if (mStorage == nullptr) {
       gfxCriticalError() << "Not enough Memory allocate a memory pool of size " << aStorageSize;
-      MOZ_CRASH();
+      MOZ_CRASH("GFX: Out of memory IterableArena");
     }
   }
 

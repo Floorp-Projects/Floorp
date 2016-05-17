@@ -74,62 +74,77 @@ JS::GetDeflatedUTF8StringLength(JSFlatString* s)
            : ::GetDeflatedUTF8StringLength(s->twoByteChars(nogc), s->length());
 }
 
-static void
-PutUTF8ReplacementCharacter(mozilla::RangedPtr<char>& dst)
-{
-    *dst++ = char(0xEF);
-    *dst++ = char(0xBF);
-    *dst++ = char(0xBD);
-}
+static const char16_t UTF8_REPLACEMENT_CHAR = 0xFFFD;
 
 template <typename CharT>
 static void
-DeflateStringToUTF8Buffer(const CharT* src, size_t srclen, mozilla::RangedPtr<char> dst)
+DeflateStringToUTF8Buffer(const CharT* src, size_t srclen, mozilla::RangedPtr<char> dst,
+                          size_t* dstlenp = nullptr, size_t* numcharsp = nullptr)
 {
+    size_t capacity = 0;
+    if (dstlenp) {
+        capacity = *dstlenp;
+        *dstlenp = 0;
+    }
+    if (numcharsp)
+        *numcharsp = 0;
+
     while (srclen) {
         uint32_t v;
         char16_t c = *src++;
         srclen--;
         if (c >= 0xDC00 && c <= 0xDFFF) {
-            PutUTF8ReplacementCharacter(dst);
-            continue;
+            v = UTF8_REPLACEMENT_CHAR;
         } else if (c < 0xD800 || c > 0xDBFF) {
             v = c;
         } else {
             if (srclen < 1) {
-                PutUTF8ReplacementCharacter(dst);
-                continue;
+                v = UTF8_REPLACEMENT_CHAR;
+            } else {
+                char16_t c2 = *src;
+                if (c2 < 0xDC00 || c2 > 0xDFFF) {
+                    v = UTF8_REPLACEMENT_CHAR;
+                } else {
+                    src++;
+                    srclen--;
+                    v = ((c - 0xD800) << 10) + (c2 - 0xDC00) + 0x10000;
+                }
             }
-            char16_t c2 = *src;
-            if ((c2 < 0xDC00) || (c2 > 0xDFFF)) {
-                PutUTF8ReplacementCharacter(dst);
-                continue;
-            }
-            src++;
-            srclen--;
-            v = ((c - 0xD800) << 10) + (c2 - 0xDC00) + 0x10000;
         }
+
         size_t utf8Len;
         if (v < 0x0080) {
             /* no encoding necessary - performance hack */
+            if (dstlenp && *dstlenp + 1 > capacity)
+                return;
             *dst++ = char(v);
             utf8Len = 1;
         } else {
             uint8_t utf8buf[4];
             utf8Len = OneUcs4ToUtf8Char(utf8buf, v);
+            if (dstlenp && *dstlenp + utf8Len > capacity)
+                return;
             for (size_t i = 0; i < utf8Len; i++)
                 *dst++ = char(utf8buf[i]);
         }
+
+        if (dstlenp)
+            *dstlenp += utf8Len;
+        if (numcharsp)
+            (*numcharsp)++;
     }
 }
 
 JS_PUBLIC_API(void)
-JS::DeflateStringToUTF8Buffer(JSFlatString* src, mozilla::RangedPtr<char> dst)
+JS::DeflateStringToUTF8Buffer(JSFlatString* src, mozilla::RangedPtr<char> dst,
+                              size_t* dstlenp, size_t* numcharsp)
 {
     JS::AutoCheckCannotGC nogc;
     return src->hasLatin1Chars()
-           ? ::DeflateStringToUTF8Buffer(src->latin1Chars(nogc), src->length(), dst)
-           : ::DeflateStringToUTF8Buffer(src->twoByteChars(nogc), src->length(), dst);
+           ? ::DeflateStringToUTF8Buffer(src->latin1Chars(nogc), src->length(), dst,
+                                         dstlenp, numcharsp)
+           : ::DeflateStringToUTF8Buffer(src->twoByteChars(nogc), src->length(), dst,
+                                         dstlenp, numcharsp);
 }
 
 template <typename CharT>

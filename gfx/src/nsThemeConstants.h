@@ -291,3 +291,4 @@
 #define NS_THEME_MAC_DISCLOSURE_BUTTON_CLOSED              246
 
 #define NS_THEME_GTK_INFO_BAR                              247
+#define NS_THEME_MAC_SOURCE_LIST                           248

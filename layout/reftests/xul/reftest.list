@@ -9,7 +9,7 @@ fails-if(cocoaWidget) fails-if(browserIsRemote&&d2d) fuzzy-if(xulRuntime.widgetT
 skip-if((B2G&&browserIsRemote)||Mulet) != tree-row-outline-1.xul tree-row-outline-1-notref.xul # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if((B2G&&browserIsRemote)||Mulet) == text-small-caps-1.xul text-small-caps-1-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,1,31) fuzzy-if(winWidget&&browserIsRemote&&layersGPUAccelerated,1,50) == inactive-fixed-bg-bug1205630.xul inactive-fixed-bg-bug1205630-ref.html
-
+skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,1,31) fuzzy-if(winWidget&&browserIsRemote&&layersGPUAccelerated,1,50) == inactive-fixed-bg-bug1272525.xul inactive-fixed-bg-bug1272525-ref.html
 
 # Tests for XUL <image> with 'object-fit' & 'object-position':
 # These tests should be very similar to tests in our w3c-css/submitted/images3

@@ -13,12 +13,6 @@
 
 #include "loggingTypes.h"
 
-#ifdef SANDBOX_EXPORTS
-#define SANDBOX_EXPORT __declspec(dllexport)
-#else
-#define SANDBOX_EXPORT __declspec(dllimport)
-#endif
-
 namespace sandbox {
 class TargetPolicy;
 }
@@ -28,10 +22,7 @@ namespace sandboxing {
 
 // This is used to pass a LogCallback to the sandboxing code, as the logging
 // requires code to which we cannot link directly.
-void SANDBOX_EXPORT ProvideLogFunction(LogFunction aLogFunction);
-
-// Set up dummy interceptions via the broker, so we can log calls.
-void ApplyLoggingPolicy(sandbox::TargetPolicy& aPolicy);
+void ProvideLogFunction(LogFunction aLogFunction);
 
 // Log a "BLOCKED" msg to the browser console and, if DEBUG build, stderr.
 // If the logging of a stack trace is enabled then the default aFramesToSkip

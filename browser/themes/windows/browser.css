@@ -2787,5 +2787,3 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton {
   padding: 0;
   overflow: hidden;
 }
-
-%include ../shared/usercontext/usercontext.inc.css
