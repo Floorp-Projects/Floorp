@@ -1,9 +1,9 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict"; /* Any copyright is dedicated to the Public Domain.
+               * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /* exported LoopMochaUtils */
 
-var LoopMochaUtils = (function(global, _) {
+var LoopMochaUtils = function (global, _) {
   "use strict";
 
   var gStubbedRequests;
@@ -37,15 +37,15 @@ var LoopMochaUtils = (function(global, _) {
     var resolved = false;
     var resolvedWith = null;
 
-    this.then = function(contFn) {
+    this.then = function (contFn) {
       if (resolved) {
         contFn(resolvedWith);
-        return this;
-      }
+        return this;}
+
 
       continuations.push(contFn);
-      return this;
-    };
+      return this;};
+
 
     /**
      * Used to resolve an object of type SyncThenable.
@@ -53,43 +53,43 @@ var LoopMochaUtils = (function(global, _) {
      * @param  {*} result     The result to return.
      * @return {SyncThenable} A resolved SyncThenable object.
      */
-    this.resolve = function(result) {
+    this.resolve = function (result) {
       resolved = true;
       resolvedWith = result;
 
       if (!continuations.length) {
-        return this;
-      }
+        return this;}
+
       var contFn = continuations.shift();
       while (contFn) {
         contFn(result);
-        contFn = continuations.shift();
-      }
-      return this;
-    };
+        contFn = continuations.shift();}
 
-    this.reject = function(result) {
-      throw result;
-    };
+      return this;};
 
-    this.catch = function() {};
 
-    asyncFn(this.resolve.bind(this), this.reject.bind(this));
-  }
+    this.reject = function (result) {
+      throw result;};
 
-  SyncThenable.all = function(promises) {
-    return new SyncThenable(function(resolve) {
+
+    this.catch = function () {};
+
+    asyncFn(this.resolve.bind(this), this.reject.bind(this));}
+
+
+  SyncThenable.all = function (promises) {
+    return new SyncThenable(function (resolve) {
       var results = [];
 
-      promises.forEach(function(promise) {
-        promise.then(function(result) {
-          results.push(result);
-        });
-      });
+      promises.forEach(function (promise) {
+        promise.then(function (result) {
+          results.push(result);});});
 
-      resolve(results);
-    });
-  };
+
+
+      resolve(results);});};
+
+
 
   /**
    * This simulates the equivalent of Promise.resolve() - calling the
@@ -98,11 +98,11 @@ var LoopMochaUtils = (function(global, _) {
    * @param  {*} result     The result to return.
    * @return {SyncThenable} A resolved SyncThenable object.
    */
-  SyncThenable.resolve = function(result) {
-    return new SyncThenable(function(resolve) {
-      resolve(result);
-    });
-  };
+  SyncThenable.resolve = function (result) {
+    return new SyncThenable(function (resolve) {
+      resolve(result);});};
+
+
 
   /**
    * Simple wrapper around `sinon.sandbox.create()` to also stub the native Promise
@@ -113,17 +113,17 @@ var LoopMochaUtils = (function(global, _) {
   function createSandbox() {
     var sandbox = sinon.sandbox.create();
     sandbox.stub(global, "Promise", SyncThenable);
-    return sandbox;
-  }
+    return sandbox;}
+
 
   /**
    * Internal, see `handleIncomingRequest`.
    */
   function invokeListenerCallbacks(data) {
-    gListenerCallbacks.forEach(function(cb) {
-      cb(data);
-    });
-  }
+    gListenerCallbacks.forEach(function (cb) {
+      cb(data);});}
+
+
 
   /**
    * Invoked when `window.sendAsyncMessage` is called. This means a message came
@@ -140,22 +140,22 @@ var LoopMochaUtils = (function(global, _) {
 
     if (action === "Batch") {
       result = {};
-      data[0].forEach(function(req) {
-        result[req[0]] = handleIncomingRequest(req, true);
-      });
-      invokeListenerCallbacks({ data: [seq, result] });
-    } else {
+      data[0].forEach(function (req) {
+        result[req[0]] = handleIncomingRequest(req, true);});
+
+      invokeListenerCallbacks({ data: [seq, result] });} else 
+    {
       if (!gStubbedRequests[action]) {
-        throw new Error("Action '" + action + "' not part of stubbed requests! Please add it!");
-      }
+        throw new Error("Action '" + action + "' not part of stubbed requests! Please add it!");}
+
       result = gStubbedRequests[action].apply(gStubbedRequests, data);
       if (isBatch) {
-        return result;
-      }
-      invokeListenerCallbacks({ data: [seq, result] });
-    }
-    return undefined;
-  }
+        return result;}
+
+      invokeListenerCallbacks({ data: [seq, result] });}
+
+    return undefined;}
+
 
   /**
    * Stub function that replaces `window.addMessageListener`.
@@ -166,11 +166,11 @@ var LoopMochaUtils = (function(global, _) {
    */
   function addMessageListenerInternal(name, listenerCallback) {
     if (name === "Loop:Message") {
-      gListenerCallbacks.push(listenerCallback);
-    } else if (name === "Loop:Message:Push") {
-      gPushListenerCallbacks.push(listenerCallback);
-    }
-  }
+      gListenerCallbacks.push(listenerCallback);} else 
+    if (name === "Loop:Message:Push") {
+      gPushListenerCallbacks.push(listenerCallback);}}
+
+
 
   /**
    * Stub function that replaces `window.sendAsyncMessageInternal`. See
@@ -180,8 +180,8 @@ var LoopMochaUtils = (function(global, _) {
    * @param  {Array}  data        Payload of the request.
    */
   function sendAsyncMessageInternal(messageName, data) {
-    handleIncomingRequest(data);
-  }
+    handleIncomingRequest(data);}
+
 
   /**
    * Entry point for test writers to add stubs for message handlers that they
@@ -199,20 +199,20 @@ var LoopMochaUtils = (function(global, _) {
     if (!global.addMessageListener || global.addMessageListener !== addMessageListenerInternal) {
       // Save older versions for later.
       if (!gOldSendAsyncMessage) {
-        gOldAddMessageListener = global.addMessageListener;
-      }
+        gOldAddMessageListener = global.addMessageListener;}
+
       if (!gOldSendAsyncMessage) {
-        gOldSendAsyncMessage = global.sendAsyncMessage;
-      }
+        gOldSendAsyncMessage = global.sendAsyncMessage;}
+
 
       global.addMessageListener = addMessageListenerInternal;
       global.sendAsyncMessage = sendAsyncMessageInternal;
 
-      gStubbedRequests = {};
-    }
+      gStubbedRequests = {};}
 
-    _.extend(gStubbedRequests, stubbedRequests);
-  }
+
+    _.extend(gStubbedRequests, stubbedRequests);}
+
 
   /**
    * Broadcast a push message on demand, which will invoke any active listeners
@@ -226,10 +226,10 @@ var LoopMochaUtils = (function(global, _) {
     // Convert to a proper array.
     var args = Array.prototype.slice.call(arguments);
     var name = args.shift();
-    gPushListenerCallbacks.forEach(function(cb) {
-      cb({ data: [name, args] });
-    });
-  }
+    gPushListenerCallbacks.forEach(function (cb) {
+      cb({ data: [name, args] });});}
+
+
 
   /**
    * Restores our internal state to its original values and reverts adjustments
@@ -239,25 +239,25 @@ var LoopMochaUtils = (function(global, _) {
    */
   function restore() {
     if (!global.addMessageListener) {
-      return;
-    }
+      return;}
+
 
     if (gOldAddMessageListener) {
-      global.addMessageListener = gOldAddMessageListener;
-    } else {
-      delete global.addMessageListener;
-    }
+      global.addMessageListener = gOldAddMessageListener;} else 
+    {
+      delete global.addMessageListener;}
+
     if (gOldSendAsyncMessage) {
-      global.sendAsyncMessage = gOldSendAsyncMessage;
-    } else {
-      delete global.sendAsyncMessage;
-    }
+      global.sendAsyncMessage = gOldSendAsyncMessage;} else 
+    {
+      delete global.sendAsyncMessage;}
+
     gStubbedRequests = null;
     gListenerCallbacks = [];
     gPushListenerCallbacks = [];
     loop.request.reset();
-    loop.subscribe.reset();
-  }
+    loop.subscribe.reset();}
+
 
   /**
    * Used to initiate trapping of errors and warnings when running tests.
@@ -265,73 +265,73 @@ var LoopMochaUtils = (function(global, _) {
    * results.
    */
   function trapErrors() {
-    window.addEventListener("error", function(error) {
-      gUncaughtError = error;
-    });
+    window.addEventListener("error", function (error) {
+      gUncaughtError = error;});
+
     var consoleWarn = console.warn;
     var consoleError = console.error;
-    console.warn = function() {
+    console.warn = function () {
       var args = Array.prototype.slice.call(arguments);
       try {
-        throw new Error();
-      } catch (e) {
-        gCaughtIssues.push([args, e.stack]);
-      }
-      consoleWarn.apply(console, args);
-    };
-    console.error = function() {
+        throw new Error();} 
+      catch (e) {
+        gCaughtIssues.push([args, e.stack]);}
+
+      consoleWarn.apply(console, args);};
+
+    console.error = function () {
       var args = Array.prototype.slice.call(arguments);
       try {
-        throw new Error();
-      } catch (e) {
-        gCaughtIssues.push([args, e.stack]);
-      }
-      consoleError.apply(console, args);
-    };
-  }
+        throw new Error();} 
+      catch (e) {
+        gCaughtIssues.push([args, e.stack]);}
+
+      consoleError.apply(console, args);};}
+
+
 
   /**
    * Adds tests to check no warnings nor errors have occurred since trapErrors
    * was called.
    */
   function addErrorCheckingTests() {
-    describe("Uncaught Error Check", function() {
-      it("should load the tests without errors", function() {
-        chai.expect(gUncaughtError && gUncaughtError.message).to.be.undefined;
-      });
-    });
+    describe("Uncaught Error Check", function () {
+      it("should load the tests without errors", function () {
+        chai.expect(gUncaughtError && gUncaughtError.message).to.be.undefined;});});
 
-    describe("Unexpected Logged Warnings and Errors Check", function() {
-      it("should not log any warnings nor errors", function() {
+
+
+    describe("Unexpected Logged Warnings and Errors Check", function () {
+      it("should not log any warnings nor errors", function () {
         if (gCaughtIssues.length) {
-          throw new Error(gCaughtIssues);
-        } else {
-          chai.expect(gCaughtIssues.length).to.eql(0);
-        }
-      });
-    });
-  }
+          throw new Error(gCaughtIssues);} else 
+        {
+          chai.expect(gCaughtIssues.length).to.eql(0);}});});}
+
+
+
+
 
   /**
    * Utility function for starting the mocha test run. Adds a marker for when
    * the tests have completed.
    */
   function runTests() {
-    mocha.run(function() {
+    mocha.run(function () {
       var completeNode = document.createElement("p");
       completeNode.setAttribute("id", "complete");
       completeNode.appendChild(document.createTextNode("Complete"));
-      document.getElementById("mocha").appendChild(completeNode);
-    });
-  }
+      document.getElementById("mocha").appendChild(completeNode);});}
 
-  return {
-    addErrorCheckingTests: addErrorCheckingTests,
-    createSandbox: createSandbox,
-    publish: publish,
-    restore: restore,
-    runTests: runTests,
-    stubLoopRequest: stubLoopRequest,
-    trapErrors: trapErrors
-  };
-})(this, _);
+
+
+  return { 
+    addErrorCheckingTests: addErrorCheckingTests, 
+    createSandbox: createSandbox, 
+    publish: publish, 
+    restore: restore, 
+    runTests: runTests, 
+    stubLoopRequest: stubLoopRequest, 
+    trapErrors: trapErrors };}(
+
+this, _);

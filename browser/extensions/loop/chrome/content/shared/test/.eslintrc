@@ -1,7 +1,6 @@
 {
-  "rules": {
-    // This is useful for some of the tests, e.g.
-    // expect(new Foo()).to.Throw(/error/)
-    "no-new": 0
+  "extends": "../../test/.eslintrc",
+  "globals": {
+    "ReactDOMServer": false,
   }
 }

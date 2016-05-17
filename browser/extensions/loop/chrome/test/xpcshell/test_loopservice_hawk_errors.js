@@ -22,7 +22,7 @@ function errorRequestHandler(request, response) {
   response.setStatusLine(null, responseCode, "Error");
   if (responseCode == 401) {
     response.write(JSON.stringify({
-      code: parseInt(responseCode),
+      code: parseInt(responseCode, 10),
       errno: INVALID_AUTH_TOKEN,
       error: "INVALID_AUTH_TOKEN",
       message: "INVALID_AUTH_TOKEN"
