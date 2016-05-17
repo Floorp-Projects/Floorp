@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
 // PLEASE TALK TO SOMEONE IN DEVELOPER TOOLS BEFORE EDITING IT
@@ -27,81 +27,81 @@ function test() {
 
 // var helpers = require('./helpers');
 
-exports.testBasic = function(options) {
+exports.testBasic = function (options) {
   return helpers.audit(options, [
     {
-      setup:    'tsslo',
+      setup:    "tsslo",
       check: {
-        input:  'tsslo',
-        hints:       'w',
-        markup: 'IIIII',
+        input:  "tsslo",
+        hints:       "w",
+        markup: "IIIII",
         cursor: 5,
-        current: '__command',
-        status: 'ERROR',
-        predictions: ['tsslow'],
+        current: "__command",
+        status: "ERROR",
+        predictions: ["tsslow"],
         unassigned: [ ]
       }
     },
     {
-      setup:    'tsslo<TAB>',
+      setup:    "tsslo<TAB>",
       check: {
-        input:  'tsslow ',
-        hints:         'Shalom',
-        markup: 'VVVVVVV',
+        input:  "tsslow ",
+        hints:         "Shalom",
+        markup: "VVVVVVV",
         cursor: 7,
-        current: 'hello',
-        status: 'ERROR',
+        current: "hello",
+        status: "ERROR",
         predictions: [
-          'Shalom', 'Namasté', 'Hallo', 'Dydd-da', 'Chào', 'Hej',
-          'Saluton', 'Sawubona'
+          "Shalom", "Namasté", "Hallo", "Dydd-da", "Chào", "Hej",
+          "Saluton", "Sawubona"
         ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsslow' },
+          command: { name: "tsslow" },
           hello: {
-            arg: '',
-            status: 'INCOMPLETE'
+            arg: "",
+            status: "INCOMPLETE"
           },
         }
       }
     },
     {
-      setup:    'tsslow S',
+      setup:    "tsslow S",
       check: {
-        input:  'tsslow S',
-        hints:          'halom',
-        markup: 'VVVVVVVI',
+        input:  "tsslow S",
+        hints:          "halom",
+        markup: "VVVVVVVI",
         cursor: 8,
-        current: 'hello',
-        status: 'ERROR',
-        predictions: [ 'Shalom', 'Saluton', 'Sawubona', 'Namasté' ],
+        current: "hello",
+        status: "ERROR",
+        predictions: [ "Shalom", "Saluton", "Sawubona", "Namasté" ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsslow' },
+          command: { name: "tsslow" },
           hello: {
-            arg: ' S',
-            status: 'INCOMPLETE'
+            arg: " S",
+            status: "INCOMPLETE"
           },
         }
       }
     },
     {
-      setup:    'tsslow S<TAB>',
+      setup:    "tsslow S<TAB>",
       check: {
-        input:  'tsslow Shalom ',
-        hints:                '',
-        markup: 'VVVVVVVVVVVVVV',
+        input:  "tsslow Shalom ",
+        hints:                "",
+        markup: "VVVVVVVVVVVVVV",
         cursor: 14,
-        current: 'hello',
-        status: 'VALID',
-        predictions: [ 'Shalom' ],
+        current: "hello",
+        status: "VALID",
+        predictions: [ "Shalom" ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsslow' },
+          command: { name: "tsslow" },
           hello: {
-            arg: ' Shalom ',
-            status: 'VALID',
-            message: ''
+            arg: " Shalom ",
+            status: "VALID",
+            message: ""
           },
         }
       }

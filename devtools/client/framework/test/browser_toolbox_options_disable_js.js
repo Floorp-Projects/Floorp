@@ -35,7 +35,7 @@ function testJSEnabled(event, tool, secondPass) {
 
   // We use executeSoon here because switching docSehll.allowJavascript to true
   // takes a while to become live.
-  executeSoon(function() {
+  executeSoon(function () {
     let output = doc.getElementById("output");
     doc.querySelector("#logJSEnabled").click();
     is(output.textContent, "JavaScript Enabled", 'Output is "JavaScript Enabled"');
@@ -59,7 +59,7 @@ function testJSEnabledIframe(secondPass) {
   }
 }
 
-let toggleJS = Task.async(function*() {
+let toggleJS = Task.async(function* () {
   let panel = toolbox.getCurrentPanel();
   let cbx = panel.panelDoc.getElementById("devtools-disable-javascript");
 
@@ -95,13 +95,13 @@ function testJSDisabledIframe() {
   iframeDoc.querySelector("#logJSDisabled").click();
   ok(output.textContent !== "JavaScript Disabled",
      'output is not "JavaScript Disabled" in iframe');
-  toggleJS().then(function() {
+  toggleJS().then(function () {
     testJSEnabled(null, null, true);
   });
 }
 
 function finishUp() {
-  toolbox.destroy().then(function() {
+  toolbox.destroy().then(function () {
     gBrowser.removeCurrentTab();
     toolbox = doc = null;
     finish();

@@ -8,7 +8,7 @@
 // be used, but when it restarts again (transitions back), then a new
 // AnimationPlayerFront should be sent, and the old one should be removed.
 
-add_task(function*() {
+add_task(function* () {
   let {client, walker, animations} =
     yield initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 

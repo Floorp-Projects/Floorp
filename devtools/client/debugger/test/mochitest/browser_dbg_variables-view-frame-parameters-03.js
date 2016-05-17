@@ -145,7 +145,7 @@ function testWindowVariable() {
     "Should have no child non-enumerable properties for 'undefined'.");
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

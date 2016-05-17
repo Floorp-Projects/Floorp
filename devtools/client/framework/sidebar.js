@@ -58,7 +58,7 @@ const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
  * - select : Same as above, but for any tab, the ID is passed with the event
  * - <tabid>-unselected : After tab <tabid> is unselected
  */
-function ToolSidebar(tabbox, panel, uid, options={}) {
+function ToolSidebar(tabbox, panel, uid, options = {}) {
   EventEmitter.decorate(this);
 
   this._tabbox = tabbox;
@@ -72,7 +72,7 @@ function ToolSidebar(tabbox, panel, uid, options={}) {
 
   try {
     this._width = Services.prefs.getIntPref("devtools.toolsidebar-width." + this._uid);
-  } catch(e) {}
+  } catch (e) {}
 
   if (!options.disableTelemetry) {
     this._telemetry = new Telemetry();
@@ -111,7 +111,7 @@ ToolSidebar.prototype = {
    * true, this is already done automatically. If not, you may call this
    * function at any time to add the menu.
    */
-  addAllTabsMenu: function() {
+  addAllTabsMenu: function () {
     if (this._allTabsBtn) {
       return;
     }
@@ -153,7 +153,7 @@ ToolSidebar.prototype = {
     }
   },
 
-  removeAllTabsMenu: function() {
+  removeAllTabsMenu: function () {
     if (!this._allTabsBtn) {
       return;
     }
@@ -170,18 +170,18 @@ ToolSidebar.prototype = {
     this._allTabsBtn = null;
   },
 
-  _onTabBoxOverflow: function() {
+  _onTabBoxOverflow: function () {
     this._allTabsBtn.removeAttribute("hidden");
   },
 
-  _onTabBoxUnderflow: function() {
+  _onTabBoxUnderflow: function () {
     this._allTabsBtn.setAttribute("hidden", "true");
   },
 
   /**
    * Add an item in the allTabs menu for a given tab.
    */
-  _addItemToAllTabsMenu: function(id, tab, selected=false) {
+  _addItemToAllTabsMenu: function (id, tab, selected = false) {
     if (!this._allTabsBtn) {
       return;
     }
@@ -215,7 +215,7 @@ ToolSidebar.prototype = {
    * @param {string} tab uniq id
    * @param {string} url
    */
-  addTab: function(id, url, selected=false) {
+  addTab: function (id, url, selected = false) {
     let iframe = this._panelDoc.createElementNS(XULNS, "iframe");
     iframe.className = "iframe-" + id;
     iframe.setAttribute("flex", "1");
@@ -277,7 +277,7 @@ ToolSidebar.prototype = {
   /**
    * Search for existing tabs in the markup that aren't know yet and add them.
    */
-  addExistingTabs: function() {
+  addExistingTabs: function () {
     let knownTabs = [...this._tabs.values()];
 
     for (let tab of this._tabbox.tabs.querySelectorAll("tab")) {
@@ -307,7 +307,7 @@ ToolSidebar.prototype = {
    * @param {String} tabPanelId Optional. If provided, this ID will be used
    * instead of the tabId to retrieve and remove the corresponding <tabpanel>
    */
-  removeTab: Task.async(function*(tabId, tabPanelId) {
+  removeTab: Task.async(function* (tabId, tabPanelId) {
     // Remove the tab if it can be found
     let tab = this.getTab(tabId);
     if (!tab) {
@@ -336,7 +336,7 @@ ToolSidebar.prototype = {
    * @param {Boolean} isVisible True to show the tab/tabpanel, False to hide it.
    * @param {String} id The ID of the tab to be hidden.
    */
-  toggleTab: function(isVisible, id) {
+  toggleTab: function (isVisible, id) {
     // Toggle the tab.
     let tab = this.getTab(id);
     if (!tab) {
@@ -353,7 +353,7 @@ ToolSidebar.prototype = {
   /**
    * Select a specific tab.
    */
-  select: function(id) {
+  select: function (id) {
     let tab = this.getTab(id);
     if (tab) {
       this._tabbox.selectedTab = tab;
@@ -366,7 +366,7 @@ ToolSidebar.prototype = {
    * @param  {String} id
    *         The sidebar tab id to select.
    */
-  _selectTabSoon: function(id) {
+  _selectTabSoon: function (id) {
     this._panelDoc.defaultView.setTimeout(() => {
       this.select(id);
     }, 0);
@@ -375,7 +375,7 @@ ToolSidebar.prototype = {
   /**
    * Return the id of the selected tab.
    */
-  getCurrentTabID: function() {
+  getCurrentTabID: function () {
     let currentID = null;
     for (let [id, tab] of this._tabs) {
       if (this._tabbox.tabs.selectedItem == tab) {
@@ -391,7 +391,7 @@ ToolSidebar.prototype = {
    * @param {String} id
    * @return {DOMNode}
    */
-  getTabPanel: function(id) {
+  getTabPanel: function (id) {
     // Search with and without the ID prefix as there might have been existing
     // tabpanels by the time the sidebar got created
     return this._tabbox.tabpanels.querySelector("#" + this.TABPANEL_ID_PREFIX + id + ", #" + id);
@@ -402,14 +402,14 @@ ToolSidebar.prototype = {
    * @param {String} id
    * @return {DOMNode}
    */
-  getTab: function(id) {
+  getTab: function (id) {
     return this._tabs.get(id);
   },
 
   /**
    * Event handler.
    */
-  handleEvent: function(event) {
+  handleEvent: function (event) {
     if (event.type !== "select" || this._destroyed) {
       return;
     }
@@ -455,7 +455,7 @@ ToolSidebar.prototype = {
   /**
    * Toggle sidebar's visibility state.
    */
-  toggle: function() {
+  toggle: function () {
     if (this._tabbox.hasAttribute("hidden")) {
       this.show();
     } else {
@@ -469,7 +469,7 @@ ToolSidebar.prototype = {
    * @param  {String} id
    *         The sidebar tab id to select.
    */
-  show: function(id) {
+  show: function (id) {
     if (this._width) {
       this._tabbox.width = this._width;
     }
@@ -493,7 +493,7 @@ ToolSidebar.prototype = {
   /**
    * Show the sidebar.
    */
-  hide: function() {
+  hide: function () {
     Services.prefs.setIntPref("devtools.toolsidebar-width." + this._uid, this._tabbox.width);
     this._tabbox.setAttribute("hidden", "true");
     this._panelDoc.activeElement.blur();
@@ -504,7 +504,7 @@ ToolSidebar.prototype = {
   /**
    * Return the window containing the tab content.
    */
-  getWindowForTab: function(id) {
+  getWindowForTab: function (id) {
     if (!this._tabs.has(id)) {
       return null;
     }
@@ -520,7 +520,7 @@ ToolSidebar.prototype = {
   /**
    * Clean-up.
    */
-  destroy: Task.async(function*() {
+  destroy: Task.async(function* () {
     if (this._destroyed) {
       return;
     }
@@ -561,11 +561,11 @@ ToolSidebar.prototype = {
     this._panelDoc = null;
     this._toolPanel = null;
   })
-}
+};
 
-XPCOMUtils.defineLazyGetter(this, "l10n", function() {
+XPCOMUtils.defineLazyGetter(this, "l10n", function () {
   let bundle = Services.strings.createBundle("chrome://devtools/locale/toolbox.properties");
-  let l10n = function(aName, ...aArgs) {
+  let l10n = function (aName, ...aArgs) {
     try {
       if (aArgs.length == 0) {
         return bundle.GetStringFromName(aName);

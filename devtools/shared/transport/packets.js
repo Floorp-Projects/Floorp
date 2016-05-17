@@ -61,7 +61,7 @@ function Packet(transport) {
  * @return Packet
  *         The parsed packet of the matching type, or null if no types matched.
  */
-Packet.fromHeader = function(header, transport) {
+Packet.fromHeader = function (header, transport) {
   return JSONPacket.fromHeader(header, transport) ||
          BulkPacket.fromHeader(header, transport);
 };
@@ -80,7 +80,7 @@ Packet.prototype = {
     this._length = length;
   },
 
-  destroy: function() {
+  destroy: function () {
     this._transport = null;
   }
 
@@ -113,7 +113,7 @@ function JSONPacket(transport) {
  * @return JSONPacket
  *         The parsed packet, or null if it's not a match.
  */
-JSONPacket.fromHeader = function(header, transport) {
+JSONPacket.fromHeader = function (header, transport) {
   let match = this.HEADER_PATTERN.exec(header);
 
   if (!match) {
@@ -134,12 +134,12 @@ Object.defineProperty(JSONPacket.prototype, "object", {
   /**
    * Gets the object (not the serialized string) being read or written.
    */
-  get: function() { return this._object; },
+  get: function () { return this._object; },
 
   /**
    * Sets the object to be sent when write() is called.
    */
-  set: function(object) {
+  set: function (object) {
     this._object = object;
     let data = JSON.stringify(object);
     this._data = unicodeConverter.ConvertFromUnicode(data);
@@ -147,7 +147,7 @@ Object.defineProperty(JSONPacket.prototype, "object", {
   }
 });
 
-JSONPacket.prototype.read = function(stream, scriptableStream) {
+JSONPacket.prototype.read = function (stream, scriptableStream) {
   dumpv("Reading JSON packet");
 
   // Read in more packet data.
@@ -162,7 +162,7 @@ JSONPacket.prototype.read = function(stream, scriptableStream) {
   try {
     json = unicodeConverter.ConvertToUnicode(json);
     this._object = JSON.parse(json);
-  } catch(e) {
+  } catch (e) {
     let msg = "Error parsing incoming packet: " + json + " (" + e +
               " - " + e.stack + ")";
     console.error(msg);
@@ -171,9 +171,9 @@ JSONPacket.prototype.read = function(stream, scriptableStream) {
   }
 
   this._transport._onJSONObjectReady(this._object);
-}
+};
 
-JSONPacket.prototype._readData = function(stream, scriptableStream) {
+JSONPacket.prototype._readData = function (stream, scriptableStream) {
   if (dumpv.wantVerbose) {
     dumpv("Reading JSON data: _l: " + this.length + " dL: " +
           this._data.length + " sA: " + stream.available());
@@ -182,9 +182,9 @@ JSONPacket.prototype._readData = function(stream, scriptableStream) {
                              stream.available());
   this._data += scriptableStream.readBytes(bytesToRead);
   this._done = this._data.length === this.length;
-}
+};
 
-JSONPacket.prototype.write = function(stream) {
+JSONPacket.prototype.write = function (stream) {
   dumpv("Writing JSON packet");
 
   if (this._outgoing === undefined) {
@@ -195,15 +195,15 @@ JSONPacket.prototype.write = function(stream) {
   let written = stream.write(this._outgoing, this._outgoing.length);
   this._outgoing = this._outgoing.slice(written);
   this._done = !this._outgoing.length;
-}
+};
 
 Object.defineProperty(JSONPacket.prototype, "done", {
-  get: function() { return this._done; }
+  get: function () { return this._done; }
 });
 
-JSONPacket.prototype.toString = function() {
+JSONPacket.prototype.toString = function () {
   return JSON.stringify(this._object, null, 2);
-}
+};
 
 exports.JSONPacket = JSONPacket;
 
@@ -238,7 +238,7 @@ function BulkPacket(transport) {
  * @return BulkPacket
  *         The parsed packet, or null if it's not a match.
  */
-BulkPacket.fromHeader = function(header, transport) {
+BulkPacket.fromHeader = function (header, transport) {
   let match = this.HEADER_PATTERN.exec(header);
 
   if (!match) {
@@ -259,7 +259,7 @@ BulkPacket.HEADER_PATTERN = /^bulk ([^: ]+) ([^: ]+) (\d+):$/;
 
 BulkPacket.prototype = Object.create(Packet.prototype);
 
-BulkPacket.prototype.read = function(stream) {
+BulkPacket.prototype.read = function (stream) {
   dumpv("Reading bulk packet, handing off input stream");
 
   // Temporarily pause monitoring of the input stream
@@ -292,9 +292,9 @@ BulkPacket.prototype.read = function(stream) {
   this.read = () => {
     throw new Error("Tried to read() a BulkPacket's stream multiple times.");
   };
-}
+};
 
-BulkPacket.prototype.write = function(stream) {
+BulkPacket.prototype.write = function (stream) {
   dumpv("Writing bulk packet");
 
   if (this._outgoingHeader === undefined) {
@@ -342,16 +342,16 @@ BulkPacket.prototype.write = function(stream) {
   this.write = () => {
     throw new Error("Tried to write() a BulkPacket's stream multiple times.");
   };
-}
+};
 
 Object.defineProperty(BulkPacket.prototype, "streamReadyForWriting", {
-  get: function() {
+  get: function () {
     return this._readyForWriting.promise;
   }
 });
 
 Object.defineProperty(BulkPacket.prototype, "header", {
-  get: function() {
+  get: function () {
     return {
       actor: this.actor,
       type: this.type,
@@ -359,7 +359,7 @@ Object.defineProperty(BulkPacket.prototype, "header", {
     };
   },
 
-  set: function(header) {
+  set: function (header) {
     this.actor = header.actor;
     this.type = header.type;
     this.length = header.length;
@@ -367,13 +367,13 @@ Object.defineProperty(BulkPacket.prototype, "header", {
 });
 
 Object.defineProperty(BulkPacket.prototype, "done", {
-  get: function() { return this._done; },
+  get: function () { return this._done; },
 });
 
 
-BulkPacket.prototype.toString = function() {
+BulkPacket.prototype.toString = function () {
   return "Bulk: " + JSON.stringify(this.header, null, 2);
-}
+};
 
 exports.BulkPacket = BulkPacket;
 
@@ -394,19 +394,19 @@ function RawPacket(transport, data) {
 
 RawPacket.prototype = Object.create(Packet.prototype);
 
-RawPacket.prototype.read = function(stream) {
+RawPacket.prototype.read = function (stream) {
   // This hasn't yet been needed for testing.
   throw Error("Not implmented.");
-}
+};
 
-RawPacket.prototype.write = function(stream) {
+RawPacket.prototype.write = function (stream) {
   let written = stream.write(this._data, this._data.length);
   this._data = this._data.slice(written);
   this._done = !this._data.length;
-}
+};
 
 Object.defineProperty(RawPacket.prototype, "done", {
-  get: function() { return this._done; }
+  get: function () { return this._done; }
 });
 
 exports.RawPacket = RawPacket;

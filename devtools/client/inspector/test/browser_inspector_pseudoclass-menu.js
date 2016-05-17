@@ -11,7 +11,7 @@ const TEST_URI = "data:text/html;charset=UTF-8," +
                  "<div>test div</div>";
 const PSEUDOS = ["hover", "active", "focus"];
 
-add_task(function*() {
+add_task(function* () {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URI);
   yield selectNode("div", inspector);
 

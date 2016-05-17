@@ -208,7 +208,7 @@ function performTest() {
       is(documentProtoProtoVar.target.querySelector(".value").getAttribute("value"), "DocumentPrototype",
         "Should have the right property value for '__proto__'.");
       ok(documentProtoProtoVar.target.querySelector(".value").className.includes("token-other"),
-        "Should have the right token class for '__proto__'.")
+        "Should have the right token class for '__proto__'.");
 
       is(buttonAsProtoProtoProtoVar.expanded, false,
         "The buttonAsProtoProtoProtoVar should not be expanded at this point.");
@@ -250,7 +250,7 @@ function performTest() {
   return deferred.promise;
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

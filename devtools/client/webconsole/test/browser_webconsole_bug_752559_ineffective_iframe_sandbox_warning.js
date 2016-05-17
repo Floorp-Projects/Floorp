@@ -46,7 +46,7 @@ function test() {
         is(msgs.length, 1, "one security message");
         testNoWarning(0);
       });
-    })
+    });
   });
 }
 

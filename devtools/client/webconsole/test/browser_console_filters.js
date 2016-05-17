@@ -12,7 +12,7 @@ const TEST_URI = "data:text/html;charset=utf8,<p>browser console filters";
 const WEB_CONSOLE_PREFIX = "devtools.webconsole.filter.";
 const BROWSER_CONSOLE_PREFIX = "devtools.browserconsole.filter.";
 
-add_task(function*() {
+add_task(function* () {
   yield loadTab(TEST_URI);
 
   info("open the web console");

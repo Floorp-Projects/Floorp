@@ -12,7 +12,7 @@ const FrameURL = "data:text/html;charset=UTF-8," +
 const URL = "data:text/html;charset=UTF-8," +
             encodeURI("<iframe src=\"" + FrameURL + "\"></iframe><div id=\"top\">top</div>");
 
-add_task(function*() {
+add_task(function* () {
   Services.prefs.setBoolPref("devtools.command-button-frames.enabled", true);
 
   let {inspector, toolbox, testActor} = yield openInspectorForURL(URL);

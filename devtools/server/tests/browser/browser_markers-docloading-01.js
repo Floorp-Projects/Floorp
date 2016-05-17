@@ -8,7 +8,7 @@
 const { TimelineFront } = require("devtools/server/actors/timeline");
 const MARKER_NAMES = ["document::DOMContentLoaded", "document::Load"];
 
-add_task(function*() {
+add_task(function* () {
   let browser = yield addTab(MAIN_DOMAIN + "doc_innerHTML.html");
   let doc = browser.contentDocument;
 

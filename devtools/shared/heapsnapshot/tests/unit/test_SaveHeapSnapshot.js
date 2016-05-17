@@ -54,7 +54,7 @@ function testBadParameters() {
 }
 
 const makeNewSandbox = () =>
-  Cu.Sandbox(CC('@mozilla.org/systemprincipal;1', 'nsIPrincipal')());
+  Cu.Sandbox(CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")());
 
 function testGoodParameters() {
   let sandbox = makeNewSandbox();

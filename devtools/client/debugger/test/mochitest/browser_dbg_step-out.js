@@ -35,7 +35,7 @@ function testNormalReturn() {
         "Should have the right property value for the returned value.");
       ok(returnVar._internalItem, "Should be an internal item");
       ok(returnVar._target.hasAttribute("pseudo-item"),
-         "Element should be marked as a pseudo-item")
+         "Element should be marked as a pseudo-item");
 
       resumeDebuggee().then(() => testReturnWithException());
     });
@@ -60,7 +60,7 @@ function testReturnWithException() {
         "Should have the right property value for the returned value.");
       ok(exceptionVar._internalItem, "Should be an internal item");
       ok(exceptionVar._target.hasAttribute("pseudo-item"),
-         "Element should be marked as a pseudo-item")
+         "Element should be marked as a pseudo-item");
 
       resumeDebuggee().then(() => closeDebuggerAndFinish(gPanel));
     });
@@ -79,7 +79,7 @@ function resumeDebuggee() {
   return deferred.promise;
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

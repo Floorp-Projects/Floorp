@@ -34,7 +34,7 @@ var gHud = undefined, gContentBrowser;
 var gCurrentTest;
 
 function test() {
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     gHud = gContentBrowser = null;
   });
 
@@ -57,7 +57,7 @@ function runTestLoop(theHud) {
   gContentBrowser.addEventListener("load", onLoad, true);
   if (gCurrentTest.pref) {
     SpecialPowers.pushPrefEnv({"set": gCurrentTest.pref},
-      function() {
+      function () {
         content.location = gCurrentTest.url;
       });
   } else {
@@ -69,21 +69,21 @@ function onLoad() {
   gContentBrowser.removeEventListener("load", onLoad, true);
 
   waitForSuccess({
-      name: gCurrentTest.name,
-      validator: function() {
-        if (gHud.outputNode.textContent.indexOf(TRIGGER_MSG) >= 0) {
-          for (let warning of gCurrentTest.warning) {
-            if (gHud.outputNode.textContent.indexOf(warning) < 0) {
-              return false;
-            }
+    name: gCurrentTest.name,
+    validator: function () {
+      if (gHud.outputNode.textContent.indexOf(TRIGGER_MSG) >= 0) {
+        for (let warning of gCurrentTest.warning) {
+          if (gHud.outputNode.textContent.indexOf(warning) < 0) {
+            return false;
           }
-          for (let nowarning of gCurrentTest.nowarning) {
-            if (gHud.outputNode.textContent.indexOf(nowarning) >= 0) {
-              return false;
-            }
-          }
-          return true;
         }
+        for (let nowarning of gCurrentTest.nowarning) {
+          if (gHud.outputNode.textContent.indexOf(nowarning) >= 0) {
+            return false;
+          }
+        }
+        return true;
       }
-    }).then(runTestLoop);
+    }
+  }).then(runTestLoop);
 }

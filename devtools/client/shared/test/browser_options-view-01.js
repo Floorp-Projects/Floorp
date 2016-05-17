@@ -12,7 +12,7 @@ const PRETTY_PRINT_PREF = "auto-pretty-print";
 var originalBlackBox = Services.prefs.getBoolPref(BRANCH + BLACK_BOX_PREF);
 var originalPrettyPrint = Services.prefs.getBoolPref(BRANCH + PRETTY_PRINT_PREF);
 
-add_task(function*() {
+add_task(function* () {
   info("Setting a couple of preferences");
   Services.prefs.setBoolPref(BRANCH + BLACK_BOX_PREF, false);
   Services.prefs.setBoolPref(BRANCH + PRETTY_PRINT_PREF, true);

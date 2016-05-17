@@ -119,14 +119,14 @@ function* testPreviousHost() {
   yield toolbox.switchToPreviousHost();
   checkHostType(toolbox, BOTTOM, WINDOW);
 
-  info("Forcing the previous host to match the current (bottom)")
+  info("Forcing the previous host to match the current (bottom)");
   Services.prefs.setCharPref("devtools.toolbox.previousHost", BOTTOM);
 
   info("Switching from bottom to side (since previous=current=bottom");
   yield toolbox.switchToPreviousHost();
   checkHostType(toolbox, SIDE, BOTTOM);
 
-  info("Forcing the previous host to match the current (side)")
+  info("Forcing the previous host to match the current (side)");
   Services.prefs.setCharPref("devtools.toolbox.previousHost", SIDE);
   info("Switching from side to bottom (since previous=current=side");
   yield toolbox.switchToPreviousHost();

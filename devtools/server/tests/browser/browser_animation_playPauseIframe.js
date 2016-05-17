@@ -9,7 +9,7 @@
 
 const URL = MAIN_DOMAIN + "animation.html";
 
-add_task(function*() {
+add_task(function* () {
   info("Creating a test document with 2 iframes containing animated nodes");
 
   let {client, walker, animations} = yield initAnimationsFrontForUrl(

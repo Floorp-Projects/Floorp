@@ -11,7 +11,7 @@
 const TAB_URL = EXAMPLE_URL + "doc_watch-expressions.html";
 
 function test() {
-  Task.spawn(function*() {
+  Task.spawn(function* () {
     let [tab,, panel] = yield initDebugger(TAB_URL);
     let win = panel.panelWin;
     let vars = win.DebuggerView.Variables;

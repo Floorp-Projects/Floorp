@@ -17,7 +17,7 @@ function test_with_error() {
   // Got the message.
   do_check_true(s.includes("foo bar"));
   // Got the stack.
-  do_check_true(s.includes("test_with_error"))
+  do_check_true(s.includes("test_with_error"));
   do_check_true(s.includes("test_safeErrorString.js"));
   // Got the lineNumber and columnNumber.
   do_check_true(s.includes("Line"));

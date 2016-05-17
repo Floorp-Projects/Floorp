@@ -14,8 +14,8 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-stack", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-stack", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_syntax_error_eval();
     });
@@ -25,19 +25,19 @@ function run_test()
 
 function test_syntax_error_eval()
 {
-  gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
-    gThreadClient.eval(null, "debugger", function(aResponse) {
+  gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
+    gThreadClient.eval(null, "debugger", function (aResponse) {
       // Expect a resume then a debuggerStatement pause.
       do_check_eq(aResponse.type, "resumed");
-      gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
+      gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
         do_check_eq(aPacket.why.type, "debuggerStatement");
         // Resume from the debugger statement should immediately re-pause
         // with a clientEvaluated reason.
-        gThreadClient.resume(function(aPacket) {
+        gThreadClient.resume(function (aPacket) {
           do_check_eq(aPacket.type, "resumed");
-          gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
+          gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
             do_check_eq(aPacket.why.type, "clientEvaluated");
-            gThreadClient.resume(function() {
+            gThreadClient.resume(function () {
               finishClient(gClient);
             });
           });
@@ -45,7 +45,7 @@ function test_syntax_error_eval()
       });
     });
   });
-  gDebuggee.eval("(" + function() {
+  gDebuggee.eval("(" + function () {
     function stopMe(arg) {
       debugger;
     }

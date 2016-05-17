@@ -36,13 +36,13 @@ function test() {
   });
 }
 
-function installAddon () {
+function installAddon() {
   return addAddon(ADDON3_URL).then(aAddon => {
     gAddon = aAddon;
   });
 }
 
-function attachAddonThread ([aGrip, aResponse]) {
+function attachAddonThread([aGrip, aResponse]) {
   info("attached addon actor for URL");
   let deferred = promise.defer();
 
@@ -55,12 +55,12 @@ function attachAddonThread ([aGrip, aResponse]) {
 }
 
 function testDebugger() {
-  info('Entering testDebugger');
+  info("Entering testDebugger");
   let deferred = promise.defer();
 
   once(gClient, "paused").then(() => {
     ok(true, "Should be able to attach to addon actor");
-    gThreadClient.resume(deferred.resolve)
+    gThreadClient.resume(deferred.resolve);
   });
 
   Services.obs.notifyObservers(null, "debuggerAttached", null);
@@ -87,13 +87,13 @@ function uninstallAddon() {
   return removeAddon(gAddon);
 }
 
-function closeConnection () {
+function closeConnection() {
   let deferred = promise.defer();
   gClient.close(deferred.resolve);
   return deferred.promise;
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gClient = null;
   gAddon = null;
   gThreadClient = null;

@@ -7,11 +7,11 @@
 // Test the creation of the geometry highlighter elements.
 
 const TEST_URL = "data:text/html;charset=utf-8," +
-                 "<div style='position:absolute;left: 0; top: 0; width: 40000px; height: 8000px'></div>"
+                 "<div style='position:absolute;left: 0; top: 0; width: 40000px; height: 8000px'></div>";
 
 const ID = "rulers-highlighter-";
 
-add_task(function*() {
+add_task(function* () {
   let { inspector, toolbox, testActor } = yield openInspectorForURL(TEST_URL);
   let front = inspector.inspector;
 

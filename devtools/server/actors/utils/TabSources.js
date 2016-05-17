@@ -22,7 +22,7 @@ loader.lazyRequireGetter(this, "SourceMapGenerator", "source-map", true);
  * Manages the sources for a thread. Handles source maps, locations in the
  * sources, etc for ThreadActors.
  */
-function TabSources(threadActor, allowSourceFn=() => true) {
+function TabSources(threadActor, allowSourceFn = () => true) {
   EventEmitter.decorate(this);
 
   this._thread = threadActor;
@@ -31,7 +31,7 @@ function TabSources(threadActor, allowSourceFn=() => true) {
   this._anonSourceMapId = 1;
   this.allowSource = source => {
     return !isHiddenSource(source) && allowSourceFn(source);
-  }
+  };
 
   this.blackBoxedSources = new Set();
   this.prettyPrintedSources = new Map();
@@ -58,15 +58,15 @@ TabSources.prototype = {
   /**
    * Update preferences and clear out existing sources
    */
-  setOptions: function(options) {
+  setOptions: function (options) {
     let shouldReset = false;
 
-    if ('useSourceMaps' in options) {
+    if ("useSourceMaps" in options) {
       shouldReset = true;
       this._useSourceMaps = options.useSourceMaps;
     }
 
-    if ('autoBlackBox' in options) {
+    if ("autoBlackBox" in options) {
       shouldReset = true;
       this._autoBlackBox = options.autoBlackBox;
     }
@@ -83,7 +83,7 @@ TabSources.prototype = {
    *        Specify { sourceMaps: true } if you also want to clear
    *        the source map cache (usually done on reload).
    */
-  reset: function(opts={}) {
+  reset: function (opts = {}) {
     this._sourceActors = new Map();
     this._sourceMaps = new Map();
     this._sourceMappedSourceActors = Object.create(null);
@@ -109,7 +109,7 @@ TabSources.prototype = {
    *        The content type of the source, if immediately available.
    * @returns a SourceActor representing the source or null.
    */
-  source: function  ({ source, originalUrl, generatedSource,
+  source: function ({ source, originalUrl, generatedSource,
                        isInlineSource, contentType }) {
     assert(source || (originalUrl && generatedSource),
            "TabSources.prototype.source needs an originalUrl or a source");
@@ -196,12 +196,12 @@ TabSources.prototype = {
     return actor;
   },
 
-  _emitNewSource: function(actor) {
+  _emitNewSource: function (actor) {
     if (!actor.source) {
       // Always notify if we don't have a source because that means
       // it's something that has been sourcemapped, or it represents
       // the HTML file that contains inline sources.
-      this.emit('newSource', actor);
+      this.emit("newSource", actor);
     }
     else {
       // If sourcemapping is enabled and a source has sourcemaps, we
@@ -214,13 +214,13 @@ TabSources.prototype = {
       // it's a generated source), don't send the notification.
       this.fetchSourceMap(actor.source).then(map => {
         if (!map) {
-          this.emit('newSource', actor);
+          this.emit("newSource", actor);
         }
       });
     }
   },
 
-  getSourceActor: function(source) {
+  getSourceActor: function (source) {
     if (source.url in this._sourceMappedSourceActors) {
       return this._sourceMappedSourceActors[source.url];
     }
@@ -229,11 +229,11 @@ TabSources.prototype = {
       return this._sourceActors.get(source);
     }
 
-    throw new Error('getSource: could not find source actor for ' +
-                    (source.url || 'source'));
+    throw new Error("getSource: could not find source actor for " +
+                    (source.url || "source"));
   },
 
-  getSourceActorByURL: function(url) {
+  getSourceActorByURL: function (url) {
     if (url) {
       for (let [source, actor] of this._sourceActors) {
         if (source.url === url) {
@@ -246,7 +246,7 @@ TabSources.prototype = {
       }
     }
 
-    throw new Error('getSourceByURL: could not find source for ' + url);
+    throw new Error("getSourceByURL: could not find source for " + url);
     return null;
   },
 
@@ -389,7 +389,7 @@ TabSources.prototype = {
    *        The source instance to create actors for.
    * @param Promise of an array of source actors
    */
-  createSourceActors: function(aSource) {
+  createSourceActors: function (aSource) {
     return this._createSourceMappedActors(aSource).then(actors => {
       let actor = this.createNonSourceMappedActor(aSource);
       return (actors || [actor]).filter(isNotNull);
@@ -432,7 +432,7 @@ TabSources.prototype = {
    * `aSource`. The resolved result may be null if the source does not
    * have a source map or source maps are disabled.
    */
-  getSourceMap: function(aSource) {
+  getSourceMap: function (aSource) {
     return resolve(this._sourceMaps.get(aSource));
   },
 
@@ -440,7 +440,7 @@ TabSources.prototype = {
    * Set a SourceMapConsumer for the source map for
    * |aSource|.
    */
-  setSourceMap: function(aSource, aMap) {
+  setSourceMap: function (aSource, aMap) {
     this._sourceMaps.set(aSource, resolve(aMap));
   },
 
@@ -521,7 +521,7 @@ TabSources.prototype = {
    *        - hard: Also remove the lower-level URL cache, which will
    *          make us completely forget about the source map.
    */
-  clearSourceMapCache: function(aSourceMapURL, opts = { hard: false }) {
+  clearSourceMapCache: function (aSourceMapURL, opts = { hard: false }) {
     let oldSm = this._sourceMapCache[aSourceMapURL];
 
     if (opts.hard) {
@@ -552,7 +552,7 @@ TabSources.prototype = {
    * @param aMap SourceMapConsumer
    *        The source map instance
    */
-  setSourceMapHard: function(aSource, aUrl, aMap) {
+  setSourceMapHard: function (aSource, aUrl, aMap) {
     let url = aUrl;
     if (!url) {
       // This is a littly hacky, but we want to forcefully set a
@@ -562,7 +562,7 @@ TabSources.prototype = {
       // instances are per-debugger, so we can't key off that). To
       // avoid tons of work serializing the sourcemap into a data url,
       // just make a fake URL and stick the sourcemap there.
-      url = "internal://sourcemap" + (this._anonSourceMapId++) + '/';
+      url = "internal://sourcemap" + (this._anonSourceMapId++) + "/";
     }
     aSource.sourceMapURL = url;
 
@@ -817,7 +817,7 @@ TabSources.prototype = {
  */
 function isHiddenSource(aSource) {
   // Ignore the internal Function.prototype script
-  return aSource.text === '() {\n}';
+  return aSource.text === "() {\n}";
 }
 
 /**

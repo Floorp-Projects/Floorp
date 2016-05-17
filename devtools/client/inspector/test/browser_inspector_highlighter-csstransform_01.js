@@ -12,7 +12,7 @@ const TEST_URL = "data:text/html;charset=utf-8," +
                  "<div id='untransformed' style='border:1px solid blue;width:100px;height:100px;'></div>" +
                  "<span id='inline' style='transform:rotate(90deg);'>this is an inline transformed element</span>";
 
-add_task(function*() {
+add_task(function* () {
   let {inspector, toolbox, testActor} = yield openInspectorForURL(TEST_URL);
   let front = inspector.inspector;
 

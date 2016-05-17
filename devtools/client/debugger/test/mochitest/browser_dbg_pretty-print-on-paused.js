@@ -14,7 +14,7 @@ var gTab, gPanel, gDebugger, gThreadClient, gSources;
 
 const SECOND_SOURCE_VALUE = EXAMPLE_URL + "code_ugly-2.js";
 
-function test(){
+function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
@@ -57,7 +57,7 @@ function test(){
   });
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

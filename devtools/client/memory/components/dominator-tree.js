@@ -147,7 +147,7 @@ const DominatorTree = module.exports = createClass({
       isExpanded: node => {
         return node instanceof DominatorTreeLazyChildren
           ? false
-          : dominatorTree.expanded.has(node.nodeId)
+          : dominatorTree.expanded.has(node.nodeId);
       },
       onExpand: item => {
         if (item instanceof DominatorTreeLazyChildren) {
@@ -205,7 +205,7 @@ const DominatorTree = module.exports = createClass({
           expanded,
           getPercentSize: size => (size / dominatorTree.root.retainedSize) * 100,
           onViewSourceInDebugger,
-        })
+        });
       },
       getRoots: () => [dominatorTree.root],
       getKey: node =>

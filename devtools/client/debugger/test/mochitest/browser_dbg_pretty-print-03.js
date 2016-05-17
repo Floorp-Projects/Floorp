@@ -15,7 +15,7 @@ function test() {
     const gPanel = aPanel;
     const gDebugger = gPanel.panelWin;
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceShown(gPanel, "code_ugly.js");
 
       const paused = waitForPause(gDebugger.gThreadClient);

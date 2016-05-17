@@ -6,7 +6,7 @@
 const TEST_URI = "http://mochi.test:8888/browser/devtools/client/" +
                  "responsivedesign/test/touch.html";
 
-add_task(function*() {
+add_task(function* () {
   let tab = yield addTab(TEST_URI);
   let {rdm} = yield openRDM(tab);
   yield testWithNoTouch();

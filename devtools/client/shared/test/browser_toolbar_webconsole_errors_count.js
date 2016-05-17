@@ -47,9 +47,9 @@ function test() {
   function addErrors() {
     expectUncaughtException();
 
-    waitForFocus(function() {
+    waitForFocus(function () {
       let button = content.document.querySelector("button");
-      executeSoon(function() {
+      executeSoon(function () {
         EventUtils.synthesizeMouse(button, 3, 2, {}, content);
       });
     }, content);
@@ -93,7 +93,7 @@ function test() {
     dump("lolz!!\n");
     waitForValue({
       name: "web console shows the page errors",
-      validator: function() {
+      validator: function () {
         return hud.outputNode.querySelectorAll(".message[category=exception][severity=error]").length;
       },
       value: 4,
@@ -108,7 +108,7 @@ function test() {
     let msgs = ["foobarBug762996a", "foobarBug762996b", "foobarBug762996load",
                 "foobarBug762996click", "foobarBug762996consoleLog",
                 "foobarBug762996css", "fooBug788445"];
-    msgs.forEach(function(msg) {
+    msgs.forEach(function (msg) {
       isnot(hud.outputNode.textContent.indexOf(msg), -1,
             msg + " found in the Web Console output");
     });
@@ -131,7 +131,7 @@ function test() {
 
     let waitForNewError = {
       name: "the Web Console displays the new error",
-      validator: function() {
+      validator: function () {
         return hud.outputNode.textContent.indexOf("foobarBug762996click") > -1;
       },
       success: doClearConsoleButton.bind(null, hud),
@@ -174,11 +174,11 @@ function test() {
 
     let waitForConsoleOutputAfterReload = {
       name: "the Web Console displays the correct number of errors after reload",
-      validator: function() {
+      validator: function () {
         return hud.outputNode.querySelectorAll(".message[category=exception][severity=error]").length;
       },
       value: 3,
-      success: function() {
+      success: function () {
         isnot(hud.outputNode.textContent.indexOf("foobarBug762996load"), -1,
               "foobarBug762996load found in console output after page reload");
         testEnd();

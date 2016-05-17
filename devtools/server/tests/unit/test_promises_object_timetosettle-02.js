@@ -12,7 +12,7 @@ const { setTimeout } = require("sdk/timers");
 
 var events = require("sdk/event/core");
 
-add_task(function*() {
+add_task(function* () {
   let client = yield startTestDebuggerServer("test-promises-timetosettle");
   let chromeActors = yield getChromeActors(client);
   yield attachTab(client, chromeActors);

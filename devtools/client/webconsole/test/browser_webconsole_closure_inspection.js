@@ -32,7 +32,7 @@ function test() {
         let deferred = promise.defer();
         fetchScopes(hud, toolbox, panelWin, deferred);
 
-        ContentTask.spawn(gBrowser.selectedBrowser, {}, function*() {
+        ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
           let button = content.document.querySelector("button");
           ok(button, "button element found");
           button.click();

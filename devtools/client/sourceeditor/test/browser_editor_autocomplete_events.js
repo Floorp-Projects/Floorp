@@ -12,7 +12,7 @@ const TEST_URI = "data:text/html;charset=UTF-8,<html><body><bar></bar>" +
 
 const wait = (delay) => new Promise(resolve => setTimeout(resolve, delay));
 
-add_task(function*() {
+add_task(function* () {
   yield promiseTab(TEST_URI);
   yield runTests();
 });

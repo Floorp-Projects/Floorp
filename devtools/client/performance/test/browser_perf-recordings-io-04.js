@@ -68,7 +68,7 @@ var PROFILER_DATA = (function () {
   return data;
 })();
 
-var test = Task.async(function*() {
+var test = Task.async(function* () {
   let { target, panel, toolbox } = yield initPerformance(SIMPLE_URL);
   let { $, EVENTS, PerformanceController, DetailsView, OverviewView, JsCallTreeView } = panel.panelWin;
 
@@ -138,7 +138,7 @@ var test = Task.async(function*() {
       is(importedData.configuration[field], expected[field], `${field} successfully converted in legacy import.`);
     } else if (field === "profile") {
       is(importedData.profile.toSource(), expected.profile,
-        `profiler data's samples successfully converted in legacy import.`);
+        "profiler data's samples successfully converted in legacy import.");
       is(importedData.profile.meta.version, 3, "Updated meta version to 3.");
     } else {
       let data = importedData[field];

@@ -58,7 +58,7 @@ const mimeCategoryMap = {
 
 var NetUtils = {};
 
-NetUtils.isImage = function(contentType) {
+NetUtils.isImage = function (contentType) {
   if (!contentType) {
     return false;
   }
@@ -68,7 +68,7 @@ NetUtils.isImage = function(contentType) {
   return mimeCategoryMap[contentType] == "image";
 };
 
-NetUtils.isHTML = function(contentType) {
+NetUtils.isHTML = function (contentType) {
   if (!contentType) {
     return false;
   }
@@ -78,7 +78,7 @@ NetUtils.isHTML = function(contentType) {
   return mimeCategoryMap[contentType] == "html";
 };
 
-NetUtils.getHeaderValue = function(headers, name) {
+NetUtils.getHeaderValue = function (headers, name) {
   if (!headers) {
     return null;
   }
@@ -92,7 +92,7 @@ NetUtils.getHeaderValue = function(headers, name) {
   }
 };
 
-NetUtils.parseXml = function(content) {
+NetUtils.parseXml = function (content) {
   let contentType = content.mimeType.split(";")[0];
   contentType = contentType.trim();
 
@@ -109,7 +109,7 @@ NetUtils.parseXml = function(content) {
   return doc;
 };
 
-NetUtils.isURLEncodedRequest = function(file) {
+NetUtils.isURLEncodedRequest = function (file) {
   let mimeType = "application/x-www-form-urlencoded";
 
   let postData = file.request.postData;
@@ -124,7 +124,7 @@ NetUtils.isURLEncodedRequest = function(file) {
   return value && value.startsWith(mimeType);
 };
 
-NetUtils.isMultiPartRequest = function(file) {
+NetUtils.isMultiPartRequest = function (file) {
   let mimeType = "multipart/form-data";
   let value = NetUtils.getHeaderValue(file.request.headers, "content-type");
   return value && value.startsWith(mimeType);

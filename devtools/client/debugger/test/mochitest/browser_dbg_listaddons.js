@@ -107,7 +107,7 @@ function closeConnection() {
   return deferred.promise;
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gAddon1 = null;
   gAddon1Actor = null;
   gAddon2 = null;

@@ -11,7 +11,7 @@ const {_documentWalker} = require("devtools/server/actors/inspector");
 
 // Always log packets when running tests.
 Services.prefs.setBoolPref("devtools.debugger.log", true);
-SimpleTest.registerCleanupFunction(function() {
+SimpleTest.registerCleanupFunction(function () {
   Services.prefs.clearUserPref("devtools.debugger.log");
 });
 
@@ -19,14 +19,14 @@ SimpleTest.registerCleanupFunction(function() {
 if (!DebuggerServer.initialized) {
   DebuggerServer.init();
   DebuggerServer.addBrowserActors();
-  SimpleTest.registerCleanupFunction(function() {
+  SimpleTest.registerCleanupFunction(function () {
     DebuggerServer.destroy();
   });
 }
 
 var gAttachCleanups = [];
 
-SimpleTest.registerCleanupFunction(function() {
+SimpleTest.registerCleanupFunction(function () {
   for (let cleanup of gAttachCleanups) {
     cleanup();
   }
@@ -63,10 +63,10 @@ function attachURL(url, callback) {
           for (let tab of response.tabs) {
             if (tab.url === url) {
               window.removeEventListener("message", loadListener, false);
-              client.attachTab(tab.actor, function(aResponse, aTabClient) {
+              client.attachTab(tab.actor, function (aResponse, aTabClient) {
                 try {
                   callback(null, client, tab, win.document);
-                } catch(ex) {
+                } catch (ex) {
                   Cu.reportError(ex);
                   dump(ex);
                 }
@@ -117,7 +117,7 @@ function serverOwnershipSubtree(walker, node) {
   return {
     name: actor.actorID,
     children: sortOwnershipChildren(children)
-  }
+  };
 }
 
 function serverOwnershipTree(walker) {
@@ -125,7 +125,7 @@ function serverOwnershipTree(walker) {
   let serverWalker = serverConnection.getActor(walker.actorID);
 
   return {
-    root: serverOwnershipSubtree(serverWalker, serverWalker.rootDoc ),
+    root: serverOwnershipSubtree(serverWalker, serverWalker.rootDoc),
     orphaned: [...serverWalker._orphaned].map(o => serverOwnershipSubtree(serverWalker, o.rawNode)),
     retained: [...serverWalker._retainedOrphans].map(o => serverOwnershipSubtree(serverWalker, o.rawNode))
   };
@@ -135,7 +135,7 @@ function clientOwnershipSubtree(node) {
   return {
     name: node.actorID,
     children: sortOwnershipChildren(node.treeChildren().map(child => clientOwnershipSubtree(child)))
-  }
+  };
 }
 
 function clientOwnershipTree(walker) {
@@ -143,7 +143,7 @@ function clientOwnershipTree(walker) {
     root: clientOwnershipSubtree(walker.rootNode),
     orphaned: [...walker._orphaned].map(o => clientOwnershipSubtree(o)),
     retained: [...walker._retainedOrphans].map(o => clientOwnershipSubtree(o))
-  }
+  };
 }
 
 function ownershipTreeSize(tree) {
@@ -157,7 +157,7 @@ function ownershipTreeSize(tree) {
 function assertOwnershipTrees(walker) {
   let serverTree = serverOwnershipTree(walker);
   let clientTree = clientOwnershipTree(walker);
-  is(JSON.stringify(clientTree, null, ' '), JSON.stringify(serverTree, null, ' '), "Server and client ownership trees should match.");
+  is(JSON.stringify(clientTree, null, " "), JSON.stringify(serverTree, null, " "), "Server and client ownership trees should match.");
 
   return ownershipTreeSize(clientTree.root);
 }
@@ -269,7 +269,7 @@ function assertChildList(mutations) {
 
 // Load mutations aren't predictable, so keep accumulating mutations until
 // the one we're looking for shows up.
-function waitForMutation(walker, test, mutations=[]) {
+function waitForMutation(walker, test, mutations = []) {
   let deferred = promise.defer();
   for (let change of mutations) {
     if (test(change)) {
@@ -280,7 +280,7 @@ function waitForMutation(walker, test, mutations=[]) {
   walker.once("mutations", newMutations => {
     waitForMutation(walker, test, mutations.concat(newMutations)).then(finalMutations => {
       deferred.resolve(finalMutations);
-    })
+    });
   });
 
   return deferred.promise;
@@ -298,7 +298,7 @@ function addAsyncTest(generator) {
 
 function runNextTest() {
   if (_tests.length == 0) {
-    SimpleTest.finish()
+    SimpleTest.finish();
     return;
   }
   var fn = _tests.shift();

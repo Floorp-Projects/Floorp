@@ -8,7 +8,7 @@
 
 const { PromisesFront } = require("devtools/server/actors/promises");
 
-add_task(function*() {
+add_task(function* () {
   let client = yield startTestDebuggerServer("promises-actor-test");
   let chromeActors = yield getChromeActors(client);
 
@@ -32,8 +32,8 @@ function* testAttach(client, parent) {
 
   try {
     yield promises.detach();
-    ok(false, "Should not be able to detach when in a detached state.")
-  } catch(e) {
+    ok(false, "Should not be able to detach when in a detached state.");
+  } catch (e) {
     ok(true, "Expected detach to fail when already in a detached state.");
   }
 
@@ -43,7 +43,7 @@ function* testAttach(client, parent) {
   try {
     yield promises.attach();
     ok(false, "Should not be able to attach when in an attached state.");
-  } catch(e) {
+  } catch (e) {
     ok(true, "Expected attach to fail when already in an attached state.");
   }
 

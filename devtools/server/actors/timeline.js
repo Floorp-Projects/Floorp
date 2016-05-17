@@ -114,7 +114,7 @@ var TimelineActor = exports.TimelineActor = protocol.ActorClass({
    * so it doesn't have a parent protocol actor that takes care of its lifetime.
    * So it needs a disconnect method to cleanup.
    */
-  disconnect: function() {
+  disconnect: function () {
     this.destroy();
   },
 
@@ -170,11 +170,11 @@ var TimelineActor = exports.TimelineActor = protocol.ActorClass({
 });
 
 exports.TimelineFront = protocol.FrontClass(TimelineActor, {
-  initialize: function(client, {timelineActor}) {
+  initialize: function (client, {timelineActor}) {
     protocol.Front.prototype.initialize.call(this, client, {actor: timelineActor});
     this.manage(this);
   },
-  destroy: function() {
+  destroy: function () {
     protocol.Front.prototype.destroy.call(this);
   },
 });

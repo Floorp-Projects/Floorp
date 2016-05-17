@@ -8,7 +8,7 @@
 // Adapted from https://github.com/mozilla-b2g/gaia/blob/f09993563fb5fec4393eb71816ce76cb00463190/apps/sharedtest/test/unit/async_storage_test.js.
 
 const asyncStorage = require("devtools/shared/async-storage");
-add_task(function*() {
+add_task(function* () {
   is(typeof asyncStorage.length, "function", "API exists.");
   is(typeof asyncStorage.key, "function", "API exists.");
   is(typeof asyncStorage.getItem, "function", "API exists.");
@@ -17,7 +17,7 @@ add_task(function*() {
   is(typeof asyncStorage.clear, "function", "API exists.");
 });
 
-add_task(function*() {
+add_task(function* () {
   yield asyncStorage.setItem("foo", "bar");
   let value = yield asyncStorage.getItem("foo");
   is(value, "bar", "value is correct");
@@ -29,7 +29,7 @@ add_task(function*() {
   is(value, null, "value is correct");
 });
 
-add_task(function*() {
+add_task(function* () {
   var object = {
     x: 1,
     y: "foo",
@@ -46,7 +46,7 @@ add_task(function*() {
   is(value, null, "value is correct");
 });
 
-add_task(function*() {
+add_task(function* () {
   yield asyncStorage.clear();
   let len = yield asyncStorage.length();
   is(len, 0, "length is correct");

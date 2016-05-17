@@ -16,7 +16,7 @@ function onNewMessage(aEvent, aNewMessages) {
   }
 }
 
-add_task(function*() {
+add_task(function* () {
   let consoleStorage = Cc["@mozilla.org/consoleAPI-storage;1"];
   let storage = consoleStorage.getService(Ci.nsIConsoleAPIStorage);
   storage.clearEvents();

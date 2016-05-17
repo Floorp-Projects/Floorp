@@ -27,7 +27,7 @@ const TESTS = [
     file: "test-bug-595934-html.html",
     category: "HTML",
     matchString: "multipart/form-data",
-    onload: function() {
+    onload: function () {
       let form = content.document.querySelector("form");
       form.submit();
     },

@@ -28,7 +28,7 @@ function test() {
     addTab(TAB_URL)
       .then((aTab) => {
         gTab = aTab;
-        return attachThreadActorForUrl(gClient, TAB_URL)
+        return attachThreadActorForUrl(gClient, TAB_URL);
       })
       .then(pauseDebuggee)
       .then(testEventListeners)
@@ -83,6 +83,6 @@ function closeConnection() {
   return deferred.promise;
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gClient = null;
 });

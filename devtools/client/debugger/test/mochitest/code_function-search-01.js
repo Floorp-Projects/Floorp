@@ -6,7 +6,7 @@ function test() {
 }
 
 test.prototype = {
-  anonymousExpression: function() {
+  anonymousExpression: function () {
   },
   namedExpression: function NAME() {
   },
@@ -19,17 +19,17 @@ test.prototype = {
 };
 
 var foo = {
-  a_test: function() {
+  a_test: function () {
   },
   n_test: function x() {
   },
   sub: {
-    a_test: function() {
+    a_test: function () {
     },
     n_test: function y() {
     },
     sub: {
-      a_test: function() {
+      a_test: function () {
       },
       n_test: function z() {
       },

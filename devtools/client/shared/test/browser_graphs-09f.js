@@ -7,7 +7,7 @@
 const TEST_DATA = [{ delta: 100, value: 60 }, { delta: 200, value: 1 }];
 var LineGraphWidget = require("devtools/client/shared/widgets/LineGraphWidget");
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("about:blank");
   yield performTest();
   gBrowser.removeCurrentTab();
@@ -25,7 +25,7 @@ function* performTest() {
   host.destroy();
 }
 
-function* testGraph (parent, options) {
+function* testGraph(parent, options) {
   options.metric = "fps";
   let graph = new LineGraphWidget(parent, options);
   yield graph.setDataWhenReady(TEST_DATA);

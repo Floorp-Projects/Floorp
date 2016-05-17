@@ -74,7 +74,7 @@ var WebAudioEditorController = {
   /**
    * Remove events emitted by the current tab target.
    */
-  destroy: function() {
+  destroy: function () {
     gTarget.off("will-navigate", this._onTabNavigated);
     gTarget.off("navigate", this._onTabNavigated);
     gFront.off("start-context", this._onStartContext);
@@ -107,7 +107,7 @@ var WebAudioEditorController = {
 
     if (!node) {
       let { resolve, promise } = defer();
-      gAudioNodes.on("add", function createNodeListener (createdNode) {
+      gAudioNodes.on("add", function createNodeListener(createdNode) {
         if (createdNode.id === id) {
           gAudioNodes.off("add", createNodeListener);
           resolve(createdNode);
@@ -172,7 +172,7 @@ var WebAudioEditorController = {
    * Called after the first audio node is created in an audio context,
    * signaling that the audio context is being used.
    */
-  _onStartContext: function() {
+  _onStartContext: function () {
     $("#reload-notice").hidden = true;
     $("#waiting-notice").hidden = true;
     $("#content").hidden = false;

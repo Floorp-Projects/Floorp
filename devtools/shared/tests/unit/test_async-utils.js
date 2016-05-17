@@ -16,7 +16,7 @@ const {asyncOnce, promiseInvoke, promiseCall} = require("devtools/shared/async-u
 
 function run_test() {
   do_test_pending();
-  Task.spawn(function*() {
+  Task.spawn(function* () {
     yield test_async_args(asyncOnce);
     yield test_async_return(asyncOnce);
     yield test_async_throw(asyncOnce);
@@ -32,7 +32,7 @@ function run_test() {
 // Test that arguments are correctly passed through to the async function.
 function test_async_args(async) {
   let obj = {
-    method: async(function*(a, b) {
+    method: async(function* (a, b) {
       do_check_eq(this, obj);
       do_check_eq(a, "foo");
       do_check_eq(b, "bar");
@@ -46,7 +46,7 @@ function test_async_args(async) {
 // the promise.
 function test_async_return(async) {
   let obj = {
-    method: async(function*(a, b) {
+    method: async(function* (a, b) {
       return a + b;
     })
   };
@@ -59,7 +59,7 @@ function test_async_return(async) {
 // Test that the throwing from an async function rejects the promise.
 function test_async_throw(async) {
   let obj = {
-    method: async(function*() {
+    method: async(function* () {
       throw "boom";
     })
   };
@@ -77,7 +77,7 @@ function test_async_once() {
   function Foo() {}
   Foo.prototype = {
     ran: false,
-    method: asyncOnce(function*() {
+    method: asyncOnce(function* () {
       yield Promise.resolve();
       if (this.ran) {
         do_throw("asyncOnce function unexpectedly ran twice on the same object");
@@ -114,7 +114,7 @@ function test_async_once() {
 
 // Test invoke and call.
 function test_async_invoke() {
-  return Task.spawn(function*() {
+  return Task.spawn(function* () {
     function func(a, b, expectedThis, callback) {
       "use strict";
       do_check_eq(a, "foo");

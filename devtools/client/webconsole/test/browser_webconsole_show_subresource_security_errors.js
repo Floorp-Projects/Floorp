@@ -26,7 +26,7 @@ add_task(function* () {
 
   yield waitForSuccess({
     name: "Subresource STS warning displayed successfully",
-    validator: function() {
+    validator: function () {
       return hud.outputNode.textContent.indexOf(SAMPLE_MSG) > -1;
     }
   });

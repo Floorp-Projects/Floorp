@@ -14,8 +14,8 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-stack", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-stack", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_pause_frame();
     });
@@ -46,12 +46,12 @@ var gSliceTests = [
 
 function test_frame_slice() {
   if (gSliceTests.length == 0) {
-    gThreadClient.resume(function() { finishClient(gClient); });
+    gThreadClient.resume(function () { finishClient(gClient); });
     return;
   }
 
   let test = gSliceTests.shift();
-  gThreadClient.getFrames(test.start, test.count, function(aResponse) {
+  gThreadClient.getFrames(test.start, test.count, function (aResponse) {
     var testFrames = gFrames.slice(test.start, test.count ? test.start + test.count : undefined);
     do_check_eq(testFrames.length, aResponse.frames.length);
     for (var i = 0; i < testFrames.length; i++) {
@@ -72,11 +72,11 @@ function test_frame_slice() {
 
 function test_pause_frame()
 {
-  gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket1) {
+  gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket1) {
     test_frame_slice();
   });
 
-  gDebuggee.eval("(" + function() {
+  gDebuggee.eval("(" + function () {
     function depth3() {
       debugger;
     }
@@ -85,7 +85,7 @@ function test_pause_frame()
     }
     function depth1() {
       depth2();
-    };
+    }
     depth1();
   } + ")()");
 }

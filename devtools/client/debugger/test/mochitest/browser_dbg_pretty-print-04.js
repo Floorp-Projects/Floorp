@@ -16,7 +16,7 @@ function test() {
     const gDebugger = gPanel.panelWin;
     const gSearchBox = gDebugger.DebuggerView.Filtering._searchbox;
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceShown(gPanel, "code_ugly.js");
 
       let popupShown = promise.defer();

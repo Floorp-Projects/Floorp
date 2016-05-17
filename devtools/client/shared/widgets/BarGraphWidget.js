@@ -64,7 +64,7 @@ const GRAPH_LEGEND_MOUSEOVER_DEBOUNCE = 50; // ms
  * @param nsIDOMNode parent
  *        The parent node holding the graph.
  */
-this.BarGraphWidget = function(parent, ...args) {
+this.BarGraphWidget = function (parent, ...args) {
   AbstractCanvasGraph.apply(this, [parent, "bar-graph", ...args]);
 
   this.once("ready", () => {
@@ -124,7 +124,7 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
    * Renders the graph's background.
    * @see AbstractCanvasGraph.prototype.buildBackgroundImage
    */
-  buildBackgroundImage: function() {
+  buildBackgroundImage: function () {
     let { canvas, ctx } = this._getNamedCanvas("bar-graph-background");
     let width = this._width;
     let height = this._height;
@@ -142,7 +142,7 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
    * Renders the graph's data source.
    * @see AbstractCanvasGraph.prototype.buildGraphImage
    */
-  buildGraphImage: function() {
+  buildGraphImage: function () {
     if (!this.format || !this.format.length) {
       throw "The graph format traits are mandatory to style the data source.";
     }
@@ -260,7 +260,7 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
    * @param function unpack [optional]
    *        @see AbstractCanvasGraph.prototype.getMappedSelection
    */
-  buildMaskImage: function(highlights, inPixels = false, unpack = e => e.delta) {
+  buildMaskImage: function (highlights, inPixels = false, unpack = e => e.delta) {
     // A null `highlights` array is used to clear the mask. An empty array
     // will mask the entire graph.
     if (!highlights) {
@@ -324,7 +324,7 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
    * @return number
    *         The tallest bar height in this graph.
    */
-  _calcMaxHeight: function({ data, dataScaleX, minBarsWidth }) {
+  _calcMaxHeight: function ({ data, dataScaleX, minBarsWidth }) {
     let maxHeight = 0;
     let prevRight = 0;
     let skippedCount = 0;
@@ -356,7 +356,7 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   /**
    * Creates the legend container when constructing this graph.
    */
-  _createLegend: function() {
+  _createLegend: function () {
     let legendNode = this._legendNode = this._document.createElementNS(HTML_NS, "div");
     legendNode.className = "bar-graph-widget-legend";
     this._container.appendChild(legendNode);
@@ -365,7 +365,7 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   /**
    * Creates a legend item when constructing this graph.
    */
-  _createLegendItem: function(color, label) {
+  _createLegendItem: function (color, label) {
     let itemNode = this._document.createElementNS(HTML_NS, "div");
     itemNode.className = "bar-graph-widget-legend-item";
 
@@ -390,7 +390,7 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   /**
    * Invoked whenever a color node in the legend is hovered.
    */
-  _onLegendMouseOver: function(e) {
+  _onLegendMouseOver: function (e) {
     setNamedTimeout("bar-graph-debounce", GRAPH_LEGEND_MOUSEOVER_DEBOUNCE, () => {
       let type = e.target.dataset.index;
       let rects = this._blocksBoundingRects.filter(e => e.type == type);
@@ -406,7 +406,7 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   /**
    * Invoked whenever a color node in the legend is unhovered.
    */
-  _onLegendMouseOut: function() {
+  _onLegendMouseOut: function () {
     clearNamedTimeout("bar-graph-debounce");
 
     if (this._hasCustomHighlights) {
@@ -421,7 +421,7 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   /**
    * Invoked whenever a color node in the legend is pressed.
    */
-  _onLegendMouseDown: function(e) {
+  _onLegendMouseDown: function (e) {
     e.preventDefault();
     e.stopPropagation();
 
@@ -441,7 +441,7 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   /**
    * Invoked whenever a color node in the legend is released.
    */
-  _onLegendMouseUp: function(e) {
+  _onLegendMouseUp: function (e) {
     e.preventDefault();
     e.stopPropagation();
   }

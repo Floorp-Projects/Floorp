@@ -20,7 +20,7 @@ function run_test() {
 // trigger assertion failures.
 EXPECTED_DTU_ASSERT_FAILURE_COUNT = 2;
 
-add_task(function *() {
+add_task(function* () {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
   yield front.attach();

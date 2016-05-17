@@ -9,11 +9,11 @@
  */
 
 function test() {
-  initDebugger('data:text/html,hi').then(([aTab,, aPanel]) => {
+  initDebugger("data:text/html,hi").then(([aTab,, aPanel]) => {
     const gPanel = aPanel;
     const gDebugger = gPanel.panelWin;
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       const editor = gDebugger.DebuggerView.editor;
       editor.emit("gutterClick", 0);
       is(editor.getBreakpoints().length, 0,

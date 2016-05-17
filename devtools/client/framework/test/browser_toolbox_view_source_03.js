@@ -11,7 +11,7 @@
 var URL = `${URL_ROOT}doc_viewsource.html`;
 var CSS_URL = `${URL_ROOT}doc_theme.css`;
 
-function *viewSource() {
+function* viewSource() {
   let toolbox = yield openNewTabAndToolbox(URL);
 
   let fileFound = yield toolbox.viewSourceInStyleEditor(CSS_URL, 2);
@@ -32,7 +32,7 @@ function *viewSource() {
   finish();
 }
 
-function test () {
+function test() {
   Task.spawn(viewSource).then(finish, (aError) => {
     ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
     finish();

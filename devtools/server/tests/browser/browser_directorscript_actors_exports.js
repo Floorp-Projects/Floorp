@@ -9,7 +9,7 @@ const {DirectorRegistry} = require("devtools/server/actors/director-registry");
 
 DirectorRegistry.clear();
 
-add_task(function*() {
+add_task(function* () {
   let browser = yield addTab(MAIN_DOMAIN + "director-script-target.html");
   let doc = browser.contentDocument;
 
@@ -23,8 +23,8 @@ add_task(function*() {
   // director scripts attach method defaults to module.exports
   let attachModuleExports = yield testDirectorScriptExports(directorManager, {
     scriptId: "testDirectorScript_moduleExports",
-    scriptCode: "(" + (function() {
-      module.exports = function() {};
+    scriptCode: "(" + (function () {
+      module.exports = function () {};
     }).toString() + ")();",
     scriptOptions: {}
   });
@@ -33,8 +33,8 @@ add_task(function*() {
   // director scripts attach method can be configured using the attachMethod scriptOptions
   let attachExportsAttach = yield testDirectorScriptExports(directorManager, {
     scriptId: "testDirectorScript_exportsAttach",
-    scriptCode: "(" + (function() {
-      exports.attach = function() {};
+    scriptCode: "(" + (function () {
+      exports.attach = function () {};
     }).toString() + ")();",
     scriptOptions: {
       attachMethod: "attach"
@@ -45,7 +45,7 @@ add_task(function*() {
   // director scripts without an attach method generates an error event
   let errorUndefinedAttachMethod = yield testDirectorScriptExports(directorManager, {
     scriptId: "testDirectorScript_undefinedAttachMethod",
-    scriptCode: "(" + (function() {
+    scriptCode: "(" + (function () {
       // this director script should raise an error
       // because it doesn't export any attach method
     }).toString() + ")();",

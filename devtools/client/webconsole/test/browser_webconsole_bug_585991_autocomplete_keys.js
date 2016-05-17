@@ -12,7 +12,7 @@ const TEST_URI = "data:text/html;charset=utf-8,<p>bug 585991 - autocomplete " +
 const PREF_AUTO_MULTILINE = "devtools.webconsole.autoMultiline";
 var HUD, popup, jsterm, inputNode, completeNode;
 
-add_task(function*() {
+add_task(function* () {
   Services.prefs.setBoolPref(PREF_AUTO_MULTILINE, false);
   yield loadTab(TEST_URI);
   let hud = yield openConsole();
@@ -30,7 +30,7 @@ add_task(function*() {
   Services.prefs.setBoolPref(PREF_AUTO_MULTILINE, true);
 });
 
-var consoleOpened = Task.async(function*(aHud) {
+var consoleOpened = Task.async(function* (aHud) {
   let deferred = promise.defer();
   HUD = aHud;
   info("web console opened");
@@ -62,10 +62,10 @@ var consoleOpened = Task.async(function*(aHud) {
     // toLocaleString toString toSource unwatch valueOf watch constructor.
     is(popup.itemCount, 19, "popup.itemCount is correct");
 
-    let sameItems = popup.getItems().reverse().map(function(e) {
+    let sameItems = popup.getItems().reverse().map(function (e) {
       return e.label;
     });
-    ok(sameItems.every(function(prop, index) {
+    ok(sameItems.every(function (prop, index) {
       return [
         "__defineGetter__",
         "__defineSetter__",
@@ -190,13 +190,13 @@ function popupHideAfterTab() {
     }, false);
 
     info("press Escape to close the popup");
-    executeSoon(function() {
+    executeSoon(function () {
       EventUtils.synthesizeKey("VK_ESCAPE", {});
     });
   }, false);
 
   info("wait for completion: window.foobarBug585991.");
-  executeSoon(function() {
+  executeSoon(function () {
     jsterm.setInputValue("window.foobarBug585991");
     EventUtils.synthesizeKey(".", {});
   });
@@ -251,7 +251,7 @@ function testReturnKey() {
 
   info("wait for completion suggestions: window.foobarBug585991.");
 
-  executeSoon(function() {
+  executeSoon(function () {
     jsterm.setInputValue("window.foobarBug58599");
     EventUtils.synthesizeKey("1", {});
     EventUtils.synthesizeKey(".", {});
@@ -264,7 +264,7 @@ function* dontShowArrayNumbers() {
   let deferred = promise.defer();
 
   info("dontShowArrayNumbers");
-  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function*() {
+  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
     content.wrappedJSObject.foobarBug585991 = ["Sherlock Holmes"];
   });
 
@@ -274,10 +274,10 @@ function* dontShowArrayNumbers() {
   popup._panel.addEventListener("popupshown", function onShown() {
     popup._panel.removeEventListener("popupshown", onShown, false);
 
-    let sameItems = popup.getItems().map(function(e) {
+    let sameItems = popup.getItems().map(function (e) {
       return e.label;
     });
-    ok(!sameItems.some(function(prop) {
+    ok(!sameItems.some(function (prop) {
       prop === "0";
     }), "Completing on an array doesn't show numbers.");
 

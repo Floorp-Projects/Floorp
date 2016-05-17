@@ -13,14 +13,14 @@
 
  function test() {
    initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
-    gTab = aTab;
-    gPanel = aPanel;
-    gDebugger = gPanel.panelWin;
-    gFrames = gDebugger.DebuggerView.StackFrames;
+     gTab = aTab;
+     gPanel = aPanel;
+     gDebugger = gPanel.panelWin;
+     gFrames = gDebugger.DebuggerView.StackFrames;
 
-    waitForDebuggerEvents(gPanel, gDebugger.EVENTS.AFTER_FRAMES_REFILLED)
+     waitForDebuggerEvents(gPanel, gDebugger.EVENTS.AFTER_FRAMES_REFILLED)
       .then(performTest);
-    callInTab(gTab, "simpleCall");
+     callInTab(gTab, "simpleCall");
    });
  }
 
@@ -33,7 +33,7 @@
    ok(gContextMenu, "The stack frame's context menupopup is available.");
 
    once(gContextMenu, "popupshown").then(testContextMenu);
-   EventUtils.synthesizeMouseAtCenter(gFrames.getItemAtIndex(0).prebuiltNode, {type: 'contextmenu', button: 2}, gDebugger);
+   EventUtils.synthesizeMouseAtCenter(gFrames.getItemAtIndex(0).prebuiltNode, {type: "contextmenu", button: 2}, gDebugger);
  }
 
  function testContextMenu() {
@@ -45,7 +45,7 @@
    resumeDebuggerThenCloseAndFinish(gPanel);
  }
 
- registerCleanupFunction(function() {
+ registerCleanupFunction(function () {
    gTab = null;
    gPanel = null;
    gDebugger = null;

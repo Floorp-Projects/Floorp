@@ -53,7 +53,7 @@ var Memory = exports.Memory = Class({
     events.on(this.parent, "window-ready", this._onWindowReady);
   },
 
-  destroy: function() {
+  destroy: function () {
     events.off(this.parent, "window-ready", this._onWindowReady);
 
     this._mgr = null;
@@ -76,21 +76,21 @@ var Memory = exports.Memory = Class({
    * recording allocations or take a census of the heap. In addition, the
    * MemoryBridge will start emitting GC events.
    */
-  attach: expectState("detached", function() {
+  attach: expectState("detached", function () {
     this.dbg.addDebuggees();
     this.dbg.memory.onGarbageCollection = this._onGarbageCollection.bind(this);
     this.state = "attached";
-  }, `attaching to the debugger`),
+  }, "attaching to the debugger"),
 
   /**
    * Detach from this MemoryBridge.
    */
-  detach: expectState("attached", function() {
+  detach: expectState("attached", function () {
     this._clearDebuggees();
     this.dbg.enabled = false;
     this._dbg = null;
     this.state = "detached";
-  }, `detaching from the debugger`),
+  }, "detaching from the debugger"),
 
   /**
    * Gets the current MemoryBridge attach/detach state.
@@ -99,7 +99,7 @@ var Memory = exports.Memory = Class({
     return this.state;
   },
 
-  _clearDebuggees: function() {
+  _clearDebuggees: function () {
     if (this._dbg) {
       if (this.isRecordingAllocations()) {
         this.dbg.memory.drainAllocationsLog();
@@ -109,7 +109,7 @@ var Memory = exports.Memory = Class({
     }
   },
 
-  _clearFrames: function() {
+  _clearFrames: function () {
     if (this.isRecordingAllocations()) {
       this._frameCache.clearFrames();
     }
@@ -118,7 +118,7 @@ var Memory = exports.Memory = Class({
   /**
    * Handler for the parent actor's "window-ready" event.
    */
-  _onWindowReady: function({ isTopLevel }) {
+  _onWindowReady: function ({ isTopLevel }) {
     if (this.state == "attached") {
       if (isTopLevel && this.isRecordingAllocations()) {
         this._clearDebuggees();
@@ -156,9 +156,9 @@ var Memory = exports.Memory = Class({
    * Take a census of the heap. See js/src/doc/Debugger/Debugger.Memory.md for
    * more information.
    */
-  takeCensus: expectState("attached", function() {
+  takeCensus: expectState("attached", function () {
     return this.dbg.memory.takeCensus();
-  }, `taking census`),
+  }, "taking census"),
 
   /**
    * Start recording allocation sites.
@@ -175,7 +175,7 @@ var Memory = exports.Memory = Class({
    *                 gets emitted (and drained), and also emits and drains on every GC event,
    *                 resetting the timer.
    */
-  startRecordingAllocations: expectState("attached", function(options = {}) {
+  startRecordingAllocations: expectState("attached", function (options = {}) {
     if (this.isRecordingAllocations()) {
       return this._getCurrentTime();
     }
@@ -202,12 +202,12 @@ var Memory = exports.Memory = Class({
     this.dbg.memory.trackingAllocationSites = true;
 
     return this._getCurrentTime();
-  }, `starting recording allocations`),
+  }, "starting recording allocations"),
 
   /**
    * Stop recording allocation sites.
    */
-  stopRecordingAllocations: expectState("attached", function() {
+  stopRecordingAllocations: expectState("attached", function () {
     if (!this.isRecordingAllocations()) {
       return this._getCurrentTime();
     }
@@ -220,18 +220,18 @@ var Memory = exports.Memory = Class({
     }
 
     return this._getCurrentTime();
-  }, `stopping recording allocations`),
+  }, "stopping recording allocations"),
 
   /**
    * Return settings used in `startRecordingAllocations` for `probability`
    * and `maxLogLength`. Currently only uses in tests.
    */
-  getAllocationsSettings: expectState("attached", function() {
+  getAllocationsSettings: expectState("attached", function () {
     return {
       maxLogLength: this.dbg.memory.maxAllocationsLogLength,
       probability: this.dbg.memory.allocationSamplingProbability
     };
-  }, `getting allocations settings`),
+  }, "getting allocations settings"),
 
   /**
    * Get a list of the most recent allocations since the last time we got
@@ -288,7 +288,7 @@ var Memory = exports.Memory = Class({
    *          usage to build the packet, and it should, of course, be guided by
    *          profiling and done only when necessary.
    */
-  getAllocations: expectState("attached", function() {
+  getAllocations: expectState("attached", function () {
     if (this.dbg.memory.allocationsLogOverflowed) {
       // Since the last time we drained the allocations log, there have been
       // more allocations than the log's capacity, and we lost some data. There
@@ -298,7 +298,7 @@ var Memory = exports.Memory = Class({
                       "Warning: allocations log overflowed and lost some data.");
     }
 
-    const allocations = this.dbg.memory.drainAllocationsLog()
+    const allocations = this.dbg.memory.drainAllocationsLog();
     const packet = {
       allocations: [],
       allocationsTimestamps: [],
@@ -324,7 +324,7 @@ var Memory = exports.Memory = Class({
     }
 
     return this._frameCache.updateFramePacket(packet);
-  }, `getting allocations`),
+  }, "getting allocations"),
 
   /*
    * Force a browser-wide GC.

@@ -6,7 +6,7 @@ const TEST_URI = "data:text/html;charset=utf-8," +
 
 var {EyedropperManager} = require("devtools/client/eyedropper/eyedropper");
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(TEST_URI);
   let Telemetry = loadTelemetryAndRecordLogs();
 

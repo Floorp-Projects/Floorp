@@ -10,7 +10,7 @@ const DIV_COLOR = "#0000FF";
  *  - Opening eyedropper and pressing ESC closes the eyedropper
  *  - Opening eyedropper and clicking copies the center color
  */
-add_task(function*() {
+add_task(function* () {
   yield addTab(TESTCASE_URI);
 
   info("added tab");
@@ -51,7 +51,7 @@ function* testSelect() {
 
 /* Helpers */
 
-function* inspectPage(dropper, click=true) {
+function* inspectPage(dropper, click = true) {
   yield dropper.open();
 
   info("dropper opened");

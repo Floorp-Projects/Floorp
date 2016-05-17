@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
 // PLEASE TALK TO SOMEONE IN DEVELOPER TOOLS BEFORE EDITING IT
@@ -27,7 +27,7 @@ function test() {
 
 // var helpers = require('./helpers');
 
-exports.testDecr = function(options) {
+exports.testDecr = function (options) {
   return helpers.audit(options, [
     /*
     // See notes at top of testIncr in testKeyboard2.js
@@ -45,68 +45,68 @@ exports.testDecr = function(options) {
     },
     */
     {
-      setup: 'tsu -5<DOWN>',
-      check: { input: 'tsu -5' }
+      setup: "tsu -5<DOWN>",
+      check: { input: "tsu -5" }
     },
     {
-      setup: 'tsu -4<DOWN>',
-      check: { input: 'tsu -5' }
+      setup: "tsu -4<DOWN>",
+      check: { input: "tsu -5" }
     },
     {
-      setup: 'tsu -3<DOWN>',
-      check: { input: 'tsu -5' }
+      setup: "tsu -3<DOWN>",
+      check: { input: "tsu -5" }
     },
     {
-      setup: 'tsu -2<DOWN>',
-      check: { input: 'tsu -3' }
+      setup: "tsu -2<DOWN>",
+      check: { input: "tsu -3" }
     },
     {
-      setup: 'tsu -1<DOWN>',
-      check: { input: 'tsu -3' }
+      setup: "tsu -1<DOWN>",
+      check: { input: "tsu -3" }
     },
     {
-      setup: 'tsu 0<DOWN>',
-      check: { input: 'tsu -3' }
+      setup: "tsu 0<DOWN>",
+      check: { input: "tsu -3" }
     },
     {
-      setup: 'tsu 1<DOWN>',
-      check: { input: 'tsu 0' }
+      setup: "tsu 1<DOWN>",
+      check: { input: "tsu 0" }
     },
     {
-      setup: 'tsu 2<DOWN>',
-      check: { input: 'tsu 0' }
+      setup: "tsu 2<DOWN>",
+      check: { input: "tsu 0" }
     },
     {
-      setup: 'tsu 3<DOWN>',
-      check: { input: 'tsu 0' }
+      setup: "tsu 3<DOWN>",
+      check: { input: "tsu 0" }
     },
     {
-      setup: 'tsu 4<DOWN>',
-      check: { input: 'tsu 3' }
+      setup: "tsu 4<DOWN>",
+      check: { input: "tsu 3" }
     },
     {
-      setup: 'tsu 5<DOWN>',
-      check: { input: 'tsu 3' }
+      setup: "tsu 5<DOWN>",
+      check: { input: "tsu 3" }
     },
     {
-      setup: 'tsu 6<DOWN>',
-      check: { input: 'tsu 3' }
+      setup: "tsu 6<DOWN>",
+      check: { input: "tsu 3" }
     },
     {
-      setup: 'tsu 7<DOWN>',
-      check: { input: 'tsu 6' }
+      setup: "tsu 7<DOWN>",
+      check: { input: "tsu 6" }
     },
     {
-      setup: 'tsu 8<DOWN>',
-      check: { input: 'tsu 6' }
+      setup: "tsu 8<DOWN>",
+      check: { input: "tsu 6" }
     },
     {
-      setup: 'tsu 9<DOWN>',
-      check: { input: 'tsu 6' }
+      setup: "tsu 9<DOWN>",
+      check: { input: "tsu 6" }
     },
     {
-      setup: 'tsu 10<DOWN>',
-      check: { input: 'tsu 9' }
+      setup: "tsu 10<DOWN>",
+      check: { input: "tsu 9" }
     }
     /*
     // See notes at top of testIncr

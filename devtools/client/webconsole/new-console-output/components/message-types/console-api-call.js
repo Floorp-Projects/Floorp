@@ -54,7 +54,7 @@ function ConsoleApiCall(props) {
 }
 
 function formatTextContent(args) {
-  return args.map(function(arg, i, arr) {
+  return args.map(function (arg, i, arr) {
     const str = dom.span({className: "console-string"}, arg);
     if (i < arr.length - 1) {
       return [str, " "];

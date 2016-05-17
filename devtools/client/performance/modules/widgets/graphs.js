@@ -73,7 +73,7 @@ PerformanceGraph.prototype = Heritage.extend(LineGraphWidget.prototype, {
   /**
    * Disables selection and empties this graph.
    */
-  clearView: function() {
+  clearView: function () {
     this.selectionEnabled = false;
     this.dropSelection();
     this.setData([]);
@@ -176,7 +176,7 @@ const GRAPH_DEFINITIONS = {
  * @param {function} getFilter
  * @param {function} getTheme
  */
-function GraphsController ({ definition, root, getFilter, getTheme }) {
+function GraphsController({ definition, root, getFilter, getTheme }) {
   this._graphs = {};
   this._enabled = new Set();
   this._definition = definition || GRAPH_DEFINITIONS;
@@ -206,7 +206,7 @@ GraphsController.prototype = {
    * Saves rendering progress as a promise to be consumed by `destroy`,
    * to wait for cleaning up rendering during destruction.
    */
-  render: Task.async(function *(recordingData, resolution) {
+  render: Task.async(function* (recordingData, resolution) {
     // Get the previous render promise so we don't start rendering
     // until the previous render cycle completes, which can occur
     // especially when a recording is finished, and triggers a
@@ -230,7 +230,7 @@ GraphsController.prototype = {
   /**
    * Destroys the underlying graphs.
    */
-  destroy: Task.async(function *() {
+  destroy: Task.async(function* () {
     let primary = this._getPrimaryLink();
 
     this._destroyed = true;
@@ -254,7 +254,7 @@ GraphsController.prototype = {
    * Applies the theme to the underlying graphs. Optionally takes
    * a `redraw` boolean in the options to force redraw.
    */
-  setTheme: function (options={}) {
+  setTheme: function (options = {}) {
     let theme = options.theme || this._getTheme();
     for (let graph of this.getWidgets()) {
       graph.setTheme(theme);
@@ -267,7 +267,7 @@ GraphsController.prototype = {
    * to the graph if it is enabled once it's ready, or otherwise returns
    * null if disabled.
    */
-  isAvailable: Task.async(function *(graphName) {
+  isAvailable: Task.async(function* (graphName) {
     if (!this._enabled.has(graphName)) {
       return null;
     }
@@ -356,7 +356,7 @@ GraphsController.prototype = {
   /**
    * Makes sure the selection is enabled or disabled in all the graphs.
    */
-  selectionEnabled: Task.async(function *(enabled) {
+  selectionEnabled: Task.async(function* (enabled) {
     for (let graph of (yield this._getEnabled())) {
       graph.selectionEnabled = enabled;
     }
@@ -365,7 +365,7 @@ GraphsController.prototype = {
   /**
    * Creates the graph `graphName` and initializes it.
    */
-  _construct: Task.async(function *(graphName) {
+  _construct: Task.async(function* (graphName) {
     let def = this._definition[graphName];
     let el = this.$(def.selector);
     let filter = this._getFilter();
@@ -410,7 +410,7 @@ GraphsController.prototype = {
    * as those could be enabled. Uses caching, as rendering happens many times per second,
    * compared to how often which graphs/features are changed (rarely).
    */
-  _getEnabled: Task.async(function *() {
+  _getEnabled: Task.async(function* () {
     if (this._enabledGraphs) {
       return this._enabledGraphs;
     }
@@ -440,7 +440,7 @@ function OptimizationsGraph(parent) {
 
 OptimizationsGraph.prototype = Heritage.extend(MountainGraphWidget.prototype, {
 
-  render: Task.async(function *(threadNode, frameNode) {
+  render: Task.async(function* (threadNode, frameNode) {
     // Regardless if we draw or clear the graph, wait
     // until it's ready.
     yield this.ready();

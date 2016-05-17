@@ -114,7 +114,7 @@ function test() {
             statusText: "OK",
             type: "html",
             fullMimeType: "text/html; charset=utf-8"
-        });
+          });
       }
       for (let i = 1; i < aVisibility.length; i += 9) {
         verifyRequestItemTarget(RequestsMenu.getItemAtIndex(i),
@@ -124,7 +124,7 @@ function test() {
             statusText: "OK",
             type: "css",
             fullMimeType: "text/css; charset=utf-8"
-        });
+          });
       }
       for (let i = 2; i < aVisibility.length; i += 9) {
         verifyRequestItemTarget(RequestsMenu.getItemAtIndex(i),
@@ -134,7 +134,7 @@ function test() {
             statusText: "OK",
             type: "js",
             fullMimeType: "application/javascript; charset=utf-8"
-        });
+          });
       }
       for (let i = 3; i < aVisibility.length; i += 9) {
         verifyRequestItemTarget(RequestsMenu.getItemAtIndex(i),
@@ -144,7 +144,7 @@ function test() {
             statusText: "OK",
             type: "woff",
             fullMimeType: "font/woff"
-        });
+          });
       }
       for (let i = 4; i < aVisibility.length; i += 9) {
         verifyRequestItemTarget(RequestsMenu.getItemAtIndex(i),
@@ -154,7 +154,7 @@ function test() {
             statusText: "OK",
             type: "png",
             fullMimeType: "image/png"
-        });
+          });
       }
       for (let i = 5; i < aVisibility.length; i += 9) {
         verifyRequestItemTarget(RequestsMenu.getItemAtIndex(i),
@@ -164,7 +164,7 @@ function test() {
             statusText: "OK",
             type: "ogg",
             fullMimeType: "audio/ogg"
-        });
+          });
       }
       for (let i = 6; i < aVisibility.length; i += 9) {
         verifyRequestItemTarget(RequestsMenu.getItemAtIndex(i),
@@ -174,7 +174,7 @@ function test() {
             statusText: "OK",
             type: "webm",
             fullMimeType: "video/webm"
-        });
+          });
       }
       for (let i = 7; i < aVisibility.length; i += 9) {
         verifyRequestItemTarget(RequestsMenu.getItemAtIndex(i),
@@ -184,7 +184,7 @@ function test() {
             statusText: "OK",
             type: "x-shockwave-flash",
             fullMimeType: "application/x-shockwave-flash"
-        });
+          });
       }
       for (let i = 8; i < aVisibility.length; i += 9) {
         verifyRequestItemTarget(RequestsMenu.getItemAtIndex(i),
@@ -192,7 +192,7 @@ function test() {
             fuzzyUrl: true,
             status: 101,
             statusText: "Switching Protocols"
-        });
+          });
       }
 
       return promise.resolve(null);

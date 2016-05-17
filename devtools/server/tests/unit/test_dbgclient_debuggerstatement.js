@@ -13,8 +13,8 @@ function run_test()
 
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
-  gClient.connect().then(function([aType, aTraits]) {
-    attachTestTab(gClient, "test-1", function(aReply, aTabClient) {
+  gClient.connect().then(function ([aType, aTraits]) {
+    attachTestTab(gClient, "test-1", function (aReply, aTabClient) {
       gTabClient = aTabClient;
       test_threadAttach(aReply.threadActor);
     });
@@ -25,10 +25,10 @@ function run_test()
 function test_threadAttach(aThreadActorID)
 {
   do_print("Trying to attach to thread " + aThreadActorID);
-  gTabClient.attachThread({}, function(aResponse, aThreadClient) {
+  gTabClient.attachThread({}, function (aResponse, aThreadClient) {
     do_check_eq(aThreadClient.state, "paused");
     do_check_eq(aThreadClient.actor, aThreadActorID);
-    aThreadClient.resume(function() {
+    aThreadClient.resume(function () {
       do_check_eq(aThreadClient.state, "attached");
       test_debugger_statement(aThreadClient);
     });
@@ -37,7 +37,7 @@ function test_threadAttach(aThreadActorID)
 
 function test_debugger_statement(aThreadClient)
 {
-  aThreadClient.addListener("paused", function(aEvent, aPacket) {
+  aThreadClient.addListener("paused", function (aEvent, aPacket) {
     do_check_eq(aThreadClient.state, "paused");
     // Reach around the protocol to check that the debuggee is in the state
     // we expect.
@@ -58,14 +58,14 @@ function test_debugger_statement(aThreadClient)
 
 function cleanup()
 {
-  gClient.addListener("closed", function(aEvent) {
+  gClient.addListener("closed", function (aEvent) {
     do_test_finished();
   });
 
   try {
     let xpcInspector = Cc["@mozilla.org/jsinspector;1"].getService(Ci.nsIJSInspector);
     do_check_eq(xpcInspector.eventLoopNestLevel, 0);
-  } catch(e) {
+  } catch (e) {
     dump(e);
   }
 

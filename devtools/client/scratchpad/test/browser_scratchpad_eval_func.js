@@ -31,7 +31,7 @@ function runTests(sw)
   const fullText =
     foo + "\n" +
     "\n" +
-    bar + "\n"
+    bar + "\n";
 
   sp.setText(fullText);
 

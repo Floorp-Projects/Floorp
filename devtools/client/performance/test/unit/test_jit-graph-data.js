@@ -36,7 +36,7 @@ add_task(function test() {
   equal(root.sampleTimes[root.sampleTimes.length - 1], endTime, "root recorded last sample time in scope");
 
   let frame = getFrameNodePath(root, "X");
-  let data = createTierGraphDataFromFrameNode(frame, root.sampleTimes, (endTime-startTime)/RESOLUTION);
+  let data = createTierGraphDataFromFrameNode(frame, root.sampleTimes, (endTime - startTime) / RESOLUTION);
 
   let TIME_PER_WINDOW = SAMPLE_COUNT / 2 / RESOLUTION * TIME_PER_SAMPLE;
 
@@ -44,7 +44,7 @@ add_task(function test() {
   // can render correctly.
   let filteredData = [];
   for (let i = 0; i < data.length; i++) {
-    if (!i || data[i].delta !== data[i-1].delta) {
+    if (!i || data[i].delta !== data[i - 1].delta) {
       filteredData.push(data[i]);
     }
   }
@@ -110,7 +110,7 @@ const TIER_PATTERNS = [
   ["X_0", "X_0", "X_0", "X_0", "X_0", "X_0", "X_0", "X_0", "X_0", "X_0"],
 ];
 
-function createSample (i, frames) {
+function createSample(i, frames) {
   let sample = {};
   sample.time = i * TIME_PER_SAMPLE;
   sample.frames = [{ location: "(root)" }];
@@ -127,9 +127,9 @@ var SAMPLES = (function () {
   let samples = [];
 
   for (let i = 0; i < SAMPLE_COUNT;) {
-    let pattern = TIER_PATTERNS[Math.floor(i/100)];
+    let pattern = TIER_PATTERNS[Math.floor(i / 100)];
     for (let j = 0; j < pattern.length; j++) {
-      samples.push(createSample(i+j, pattern[j]));
+      samples.push(createSample(i + j, pattern[j]));
     }
     i += 10;
   }
@@ -146,12 +146,12 @@ var gRawSite1 = {
     mirType: uniqStr("Object"),
     site: uniqStr("B (http://foo/bar:10)"),
     typeset: [{
-        keyedBy: uniqStr("constructor"),
-        name: uniqStr("Foo"),
-        location: uniqStr("B (http://foo/bar:10)")
+      keyedBy: uniqStr("constructor"),
+      name: uniqStr("Foo"),
+      location: uniqStr("B (http://foo/bar:10)")
     }, {
-        keyedBy: uniqStr("primitive"),
-        location: uniqStr("self-hosted")
+      keyedBy: uniqStr("primitive"),
+      location: uniqStr("self-hosted")
     }]
   }],
   attempts: {
@@ -167,7 +167,7 @@ var gRawSite1 = {
   }
 };
 
-function serialize (x) {
+function serialize(x) {
   return JSON.parse(JSON.stringify(x));
 }
 
@@ -180,20 +180,20 @@ gThread.frameTable.data.forEach((frame) => {
   switch (l) {
   // Rename some of the location sites so we can register different
   // frames with different opt sites
-  case "X_0":
-    frame[LOCATION_SLOT] = uniqStr("X");
-    frame[OPTIMIZATIONS_SLOT] = serialize(gRawSite1);
-    frame[IMPLEMENTATION_SLOT] = null;
-    break;
-  case "X_1":
-    frame[LOCATION_SLOT] = uniqStr("X");
-    frame[OPTIMIZATIONS_SLOT] = serialize(gRawSite1);
-    frame[IMPLEMENTATION_SLOT] = uniqStr("baseline");
-    break;
-  case "X_2":
-    frame[LOCATION_SLOT] = uniqStr("X");
-    frame[OPTIMIZATIONS_SLOT] = serialize(gRawSite1);
-    frame[IMPLEMENTATION_SLOT] = uniqStr("ion");
-    break;
+    case "X_0":
+      frame[LOCATION_SLOT] = uniqStr("X");
+      frame[OPTIMIZATIONS_SLOT] = serialize(gRawSite1);
+      frame[IMPLEMENTATION_SLOT] = null;
+      break;
+    case "X_1":
+      frame[LOCATION_SLOT] = uniqStr("X");
+      frame[OPTIMIZATIONS_SLOT] = serialize(gRawSite1);
+      frame[IMPLEMENTATION_SLOT] = uniqStr("baseline");
+      break;
+    case "X_2":
+      frame[LOCATION_SLOT] = uniqStr("X");
+      frame[OPTIMIZATIONS_SLOT] = serialize(gRawSite1);
+      frame[IMPLEMENTATION_SLOT] = uniqStr("ion");
+      break;
   }
 });

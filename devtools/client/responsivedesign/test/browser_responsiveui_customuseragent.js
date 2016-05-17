@@ -9,7 +9,7 @@ const DEFAULT_UA = Cc["@mozilla.org/network/protocol;1?name=http"]
                     .userAgent;
 const CHROME_UA = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36" +
                   " (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36";
-add_task(function*() {
+add_task(function* () {
   yield addTab(TEST_URI);
 
   let {rdm, manager} = yield openRDM();
@@ -49,7 +49,7 @@ function* setUserAgent(ua, rdm, manager) {
 }
 
 function* testUserAgent(value) {
-  let ua = yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function*() {
+  let ua = yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
     return content.navigator.userAgent;
   });
   is(ua, value, `UA should be set to ${value}`);

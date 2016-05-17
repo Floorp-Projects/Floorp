@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-///////////////////
+// /////////////////
 //
 // Whitelisting this test.
 // As part of bug 1077403, the leaking uncaught rejection should be fixed.
@@ -14,7 +14,7 @@ const TEST_URI = "data:text/html;charset=utf-8,<p>browser_telemetry_toolboxtabs_
 // opened we make use of setTimeout() to create tool active times.
 const TOOL_DELAY = 200;
 
-add_task(function*() {
+add_task(function* () {
   info("Active the sharer editor");
   let originalPref = Services.prefs.getBoolPref("devtools.shadereditor.enabled");
   Services.prefs.setBoolPref("devtools.shadereditor.enabled", true);

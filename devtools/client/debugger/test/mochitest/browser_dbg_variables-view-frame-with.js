@@ -201,7 +201,7 @@ function testFunctionScope() {
     "Should have the right token class for 'foo'.");
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

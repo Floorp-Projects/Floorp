@@ -26,14 +26,14 @@ var XULUtils = {
    *        An object where keys specify <command> ids and values
    *        specify event handlers to be bound on the `command` event
    */
-  addCommands: function(commandset, commands) {
+  addCommands: function (commandset, commands) {
     Object.keys(commands).forEach(name => {
-      let node = document.createElement('command');
+      let node = document.createElement("command");
       node.id = name;
       // XXX bug 371900: the command element must have an oncommand
       // attribute as a string set by `setAttribute` for keys to use it
-      node.setAttribute('oncommand', ' ');
-      node.addEventListener('command', commands[name]);
+      node.setAttribute("oncommand", " ");
+      node.addEventListener("command", commands[name]);
       commandset.appendChild(node);
     });
   }
@@ -59,7 +59,7 @@ var SourceUtils = {
    * @return boolean
    *         True if the source is likely javascript.
    */
-  isJavaScript: function(aUrl, aContentType = "") {
+  isJavaScript: function (aUrl, aContentType = "") {
     return (aUrl && /\.jsm?$/.test(this.trimUrlQuery(aUrl))) ||
            aContentType.includes("javascript");
   },
@@ -71,7 +71,7 @@ var SourceUtils = {
    * @return object
    *         A promise that resolves to true if source text is minified.
    */
-  isMinified: function(key, text) {
+  isMinified: function (key, text) {
     if (this._minifiedCache.has(key)) {
       return this._minifiedCache.get(key);
     }
@@ -89,7 +89,7 @@ var SourceUtils = {
     while (lines++ < SAMPLE_SIZE) {
       lineEndIndex = text.indexOf("\n", lineStartIndex);
       if (lineEndIndex == -1) {
-         break;
+        break;
       }
       if (/^\s+/.test(text.slice(lineStartIndex, lineEndIndex))) {
         indentCount++;
@@ -114,7 +114,7 @@ var SourceUtils = {
    * SourceUtils.getSourceLabel or Source Utils.getSourceGroup.
    * This should be done every time the content location changes.
    */
-  clearCache: function() {
+  clearCache: function () {
     this._labelsCache.clear();
     this._groupsCache.clear();
     this._minifiedCache.clear();
@@ -128,7 +128,7 @@ var SourceUtils = {
    * @return string
    *         The simplified label.
    */
-  getSourceLabel: function(aUrl) {
+  getSourceLabel: function (aUrl) {
     let cachedLabel = this._labelsCache.get(aUrl);
     if (cachedLabel) {
       return cachedLabel;
@@ -160,7 +160,7 @@ var SourceUtils = {
    * @return string
    *         The simplified group.
    */
-  getSourceGroup: function(aUrl) {
+  getSourceGroup: function (aUrl) {
     let cachedGroup = this._groupsCache.get(aUrl);
     if (cachedGroup) {
       return cachedGroup;
@@ -183,7 +183,7 @@ var SourceUtils = {
     }
 
     let unicodeLabel = NetworkHelper.convertToUnicode(unescape(groupLabel));
-    this._groupsCache.set(aUrl, unicodeLabel)
+    this._groupsCache.set(aUrl, unicodeLabel);
     return unicodeLabel;
   },
 
@@ -200,7 +200,7 @@ var SourceUtils = {
    * @return string
    *         The shortened url.
    */
-  trimUrlLength: function(aUrl, aLength, aSection) {
+  trimUrlLength: function (aUrl, aLength, aSection) {
     aLength = aLength || SOURCE_URL_DEFAULT_MAX_LENGTH;
     aSection = aSection || "end";
 
@@ -228,11 +228,11 @@ var SourceUtils = {
    * @return string
    *         The shortened url.
    */
-  trimUrlQuery: function(aUrl) {
+  trimUrlQuery: function (aUrl) {
     let length = aUrl.length;
-    let q1 = aUrl.indexOf('?');
-    let q2 = aUrl.indexOf('&');
-    let q3 = aUrl.indexOf('#');
+    let q1 = aUrl.indexOf("?");
+    let q2 = aUrl.indexOf("&");
+    let q3 = aUrl.indexOf("#");
     let q = Math.min(q1 != -1 ? q1 : length,
                      q2 != -1 ? q2 : length,
                      q3 != -1 ? q3 : length);
@@ -253,7 +253,7 @@ var SourceUtils = {
    * @return string
    *         The resulting label at the final step.
    */
-  trimUrl: function(aUrl, aLabel, aSeq) {
+  trimUrl: function (aUrl, aLabel, aSeq) {
     if (!(aUrl instanceof Ci.nsIURL)) {
       try {
         // Use an nsIURL to parse all the url path parts.
@@ -319,7 +319,7 @@ var SourceUtils = {
       try {
         // Bug 1261860: jar: URLs throw when accessing `hostPost`
         host = aUrl.hostPort;
-      } catch(e) {}
+      } catch (e) {}
       if (host) {
         return this.trimUrl(aUrl, host + "/" + aLabel, aSeq + 1);
       }
@@ -333,7 +333,7 @@ var SourceUtils = {
     return aUrl.spec;
   },
 
-  parseSource: function(aDebuggerView, aParser) {
+  parseSource: function (aDebuggerView, aParser) {
     let editor = aDebuggerView.editor;
 
     let contents = editor.getText();
@@ -343,7 +343,7 @@ var SourceUtils = {
     return parsedSource;
   },
 
-  findIdentifier: function(aEditor, parsedSource, x, y) {
+  findIdentifier: function (aEditor, parsedSource, x, y) {
     let editor = aEditor;
 
     // Calculate the editor's line and column at the current x and y coords.

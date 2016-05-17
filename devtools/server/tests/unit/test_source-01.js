@@ -24,8 +24,8 @@ function run_test()
   );
 
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-grips", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-grips", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_source();
     });
@@ -40,7 +40,7 @@ function test_source()
 {
   DebuggerServer.LONG_STRING_LENGTH = 200;
 
-  gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
+  gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
     gThreadClient.getSources(function (aResponse) {
       do_check_true(!!aResponse);
       do_check_true(!!aResponse.sources);

@@ -79,7 +79,7 @@ function testModification(aNewValue, aNewResult) {
   });
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

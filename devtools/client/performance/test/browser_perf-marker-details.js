@@ -133,11 +133,11 @@ function* spawnTest() {
   finish();
 }
 
-function shouldHaveStack ($, type, marker) {
+function shouldHaveStack($, type, marker) {
   ok($(`#waterfall-details .marker-details-stack[type=${type}]`), `${marker.name} has a stack: ${type}`);
 }
 
-function shouldHaveLabel ($, name, value, marker) {
+function shouldHaveLabel($, name, value, marker) {
   let $name = $(`#waterfall-details .marker-details-labelcontainer .marker-details-labelname[value="${name}"]`);
   let $value = $name.parentNode.querySelector(".marker-details-labelvalue");
   is($value.getAttribute("value"), value, `${marker.name} has correct label for ${name}:${value}`);

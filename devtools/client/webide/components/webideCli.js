@@ -16,7 +16,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services", "resource://gre/modules/Serv
 function webideCli() { }
 
 webideCli.prototype = {
-  handle: function(cmdLine) {
+  handle: function (cmdLine) {
     let param;
 
     if (!cmdLine.handleFlag("webide", false)) {

@@ -12,7 +12,7 @@ const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtoo
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
-add_task(function*() {
+add_task(function* () {
   // This test seems to take a very long time to finish on Linux VMs.
   requestLongerTimeout(4);
 

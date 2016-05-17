@@ -163,7 +163,7 @@ function parseLocation(location, fallbackLine, fallbackColumn) {
       let evalLine = line;
       let [, _fileName, , _line] = fileName.match(/(.+)(%20line%20(\d+)%20%3E%20eval)/) || [];
       fileName = `${_fileName} (eval:${evalLine})`;
-      line =  _line;
+      line = _line;
       assert(_fileName !== undefined,
              "Filename could not be found from an eval location site");
       assert(_line !== undefined,
@@ -180,7 +180,7 @@ function parseLocation(location, fallbackLine, fallbackColumn) {
   }
 
   return { functionName, fileName, host, port, url, line, column };
-};
+}
 
 /**
  * Sets the properties of `isContent` and `category` on a frame.
@@ -262,7 +262,7 @@ function getInflatedFrameCache(frameTable) {
   inflatedCache = Array.from({ length: frameTable.data.length }, () => null);
   gInflatedFrameStore.set(frameTable, inflatedCache);
   return inflatedCache;
-};
+}
 
 /**
  * Get or add an inflated frame to a cache.
@@ -278,7 +278,7 @@ function getOrAddInflatedFrame(cache, index, frameTable, stringTable) {
     inflatedFrame = cache[index] = new InflatedFrame(index, frameTable, stringTable);
   }
   return inflatedFrame;
-};
+}
 
 /**
  * An intermediate data structured used to hold inflated frames.
@@ -311,7 +311,7 @@ function InflatedFrame(index, frameTable, stringTable) {
   // attempt to generate a useful category, fallback to the one provided
   // by the profiling data, or fallback to an unknown category.
   computeIsContentAndCategory(this);
-};
+}
 
 /**
  * Gets the frame key (i.e., equivalence group) according to options. Content
@@ -376,7 +376,7 @@ function shouldDemangle(name) {
  *
  * @return {object}
  */
-function getFrameInfo (node, options) {
+function getFrameInfo(node, options) {
   let data = gFrameData.get(node);
 
   if (!data) {
@@ -446,7 +446,7 @@ exports.getFrameInfo = getFrameInfo;
  * @param {string} location
  * @return {?FrameNode}
  */
-function findFrameByLocation (threadNode, location) {
+function findFrameByLocation(threadNode, location) {
   if (!threadNode.inverted) {
     throw new Error("FrameUtils.findFrameByLocation only supports leaf nodes in an inverted tree.");
   }

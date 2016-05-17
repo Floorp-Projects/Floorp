@@ -77,7 +77,7 @@ function test()
       inspector.panelWin.document.getElementById("inspector-searchbox");
     popup = inspector.searchSuggestions.searchPopup;
 
-    focusSearchBoxUsingShortcut(inspector.panelWin, function() {
+    focusSearchBoxUsingShortcut(inspector.panelWin, function () {
       searchBox.addEventListener("command", checkState, true);
       checkStateAndMoveOn(0);
     });
@@ -101,16 +101,16 @@ function test()
     inspector.searchSuggestions._lastQuery.then(() => {
       let [key, suggestions] = keyStates[state];
       let actualSuggestions = popup.getItems();
-      is(popup.isOpen ? actualSuggestions.length: 0, suggestions.length,
+      is(popup.isOpen ? actualSuggestions.length : 0, suggestions.length,
          "There are expected number of suggestions at " + state + "th step.");
       actualSuggestions.reverse();
       for (let i = 0; i < suggestions.length; i++) {
         is(suggestions[i][0], actualSuggestions[i].label,
            "The suggestion at " + i + "th index for " + state +
-           "th step is correct.")
+           "th step is correct.");
         is(suggestions[i][1] || 1, actualSuggestions[i].count,
            "The count for suggestion at " + i + "th index for " + state +
-           "th step is correct.")
+           "th step is correct.");
       }
       checkStateAndMoveOn(state + 1);
     });

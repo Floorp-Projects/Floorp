@@ -29,7 +29,7 @@ function test() {
     info("hud.outputNode.textContent:\n" + hud.outputNode.textContent);
     let timestampNodes = hud.outputNode.querySelectorAll("span.timestamp");
     let aTimestampMilliseconds = Array.prototype.map.call(timestampNodes,
-      function(value) {
+      function (value) {
         // We are parsing timestamps as local time, relative to the begin of
         // the epoch.
         // This is not the correct value of the timestamp, but good enough for

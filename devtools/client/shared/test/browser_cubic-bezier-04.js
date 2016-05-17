@@ -11,7 +11,7 @@ const {CubicBezierPresetWidget} =
   require("devtools/client/shared/widgets/CubicBezierWidget");
 const {PRESETS} = require("devtools/client/shared/widgets/CubicBezierPresets");
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("about:blank");
   let [host, win, doc] = yield createHost("bottom", TEST_URI);
 

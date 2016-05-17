@@ -17,7 +17,7 @@ const FONTS = [
    format: "", cssName: "barnormal"},
 ];
 
-add_task(function*() {
+add_task(function* () {
   let { inspector, view } = yield openFontInspectorForURL(TEST_URI);
   ok(!!view, "Font inspector document is alive.");
 

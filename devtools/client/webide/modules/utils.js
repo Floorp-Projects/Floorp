@@ -7,13 +7,13 @@ const { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 const Services = require("Services");
 const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");
 
-function doesFileExist (location) {
+function doesFileExist(location) {
   let file = new FileUtils.File(location);
   return file.exists();
 }
 exports.doesFileExist = doesFileExist;
 
-function _getFile (location, ...pickerParams) {
+function _getFile(location, ...pickerParams) {
   if (location) {
     return new FileUtils.File(location);
   }
@@ -26,22 +26,22 @@ function _getFile (location, ...pickerParams) {
   return fp.file;
 }
 
-function getCustomBinary (window, location) {
+function getCustomBinary(window, location) {
   return _getFile(location, window, Strings.GetStringFromName("selectCustomBinary_title"), Ci.nsIFilePicker.modeOpen);
 }
 exports.getCustomBinary = getCustomBinary;
 
-function getCustomProfile (window, location) {
+function getCustomProfile(window, location) {
   return _getFile(location, window, Strings.GetStringFromName("selectCustomProfile_title"), Ci.nsIFilePicker.modeGetFolder);
 }
 exports.getCustomProfile = getCustomProfile;
 
-function getPackagedDirectory (window, location) {
+function getPackagedDirectory(window, location) {
   return _getFile(location, window, Strings.GetStringFromName("importPackagedApp_title"), Ci.nsIFilePicker.modeGetFolder);
 }
 exports.getPackagedDirectory = getPackagedDirectory;
 
-function getHostedURL (window, location) {
+function getHostedURL(window, location) {
   let ret = { value: null };
 
   if (!location) {
@@ -60,7 +60,7 @@ function getHostedURL (window, location) {
   location = location.trim();
   try { // Will fail if no scheme
     Services.io.extractScheme(location);
-  } catch(e) {
+  } catch (e) {
     location = "http://" + location;
   }
   return location;

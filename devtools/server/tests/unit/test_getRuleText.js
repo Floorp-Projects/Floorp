@@ -69,8 +69,8 @@ const TEST_DATA = [
     desc: "Multi-lines CSS and multi-line rule",
     input: [
       "/* ",
-       "* some comments",
-       "*/",
+      "* some comments",
+      "*/",
       "",
       "body {",
       "    margin: 0;",

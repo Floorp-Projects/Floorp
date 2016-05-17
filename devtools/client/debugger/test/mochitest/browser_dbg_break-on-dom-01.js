@@ -22,7 +22,7 @@ function test() {
     let gView = gDebugger.DebuggerView;
     let gEvents = gView.EventListeners;
     let gController = gDebugger.DebuggerController;
-    let constants = gDebugger.require('./content/constants');
+    let constants = gDebugger.require("./content/constants");
 
     gDebugger.on(gDebugger.EVENTS.EVENT_LISTENERS_FETCHED, () => {
       ok(false, "Shouldn't have fetched any event listeners.");
@@ -38,7 +38,7 @@ function test() {
     is(gView.instrumentsPaneTab, "variables-tab",
       "The variables tab should be selected by default.");
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceShown(aPanel, ".html");
       is(gEvents.itemCount, 0, "There should be no events before reloading.");
 

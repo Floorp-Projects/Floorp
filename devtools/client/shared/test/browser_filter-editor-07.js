@@ -13,7 +13,7 @@ const { LocalizationHelper } = require("devtools/client/shared/l10n");
 const STRINGS_URI = "chrome://devtools/locale/filterwidget.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("about:blank");
   let [host, win, doc] = yield createHost("bottom", TEST_URI);
 

@@ -41,7 +41,7 @@
 
 const TOOLS_OPENED_PREF = "devtools.telemetry.tools.opened.version";
 
-this.Telemetry = function() {
+this.Telemetry = function () {
   // Bind pretty much all functions so that callers do not need to.
   this.toolOpened = this.toolOpened.bind(this);
   this.toolClosed = this.toolClosed.bind(this);
@@ -246,7 +246,7 @@ Telemetry.prototype = {
    *         Used to look up the relevant histogram ID and log true to that
    *         histogram.
    */
-  toolOpened: function(id) {
+  toolOpened: function (id) {
     let charts = this._histograms[id] || this._histograms.custom;
 
     if (charts.histogram) {
@@ -269,7 +269,7 @@ Telemetry.prototype = {
     this.toolOpened(id);
   },
 
-  toolClosed: function(id) {
+  toolClosed: function (id) {
     let charts = this._histograms[id];
 
     if (!charts || !charts.timerHistogram) {
@@ -285,7 +285,7 @@ Telemetry.prototype = {
    * @param String histogramId
    *        Histogram in which the data is to be stored.
    */
-  startTimer: function(histogramId) {
+  startTimer: function (histogramId) {
     this._timers.set(histogramId, new Date());
   },
 
@@ -297,7 +297,7 @@ Telemetry.prototype = {
    * @param String key [optional]
    *        Optional key for a keyed histogram.
    */
-  stopTimer: function(histogramId, key) {
+  stopTimer: function (histogramId, key) {
     let startTime = this._timers.get(histogramId);
     if (startTime) {
       let time = (new Date() - startTime) / 1000;
@@ -318,12 +318,12 @@ Telemetry.prototype = {
    * @param  value
    *         Value to store.
    */
-  log: function(histogramId, value) {
+  log: function (histogramId, value) {
     if (histogramId) {
       try {
         let histogram = Services.telemetry.getHistogramById(histogramId);
         histogram.add(value);
-      } catch(e) {
+      } catch (e) {
         dump("Warning: An attempt was made to write to the " + histogramId +
              " histogram, which is not defined in Histograms.json\n");
       }
@@ -340,12 +340,12 @@ Telemetry.prototype = {
    * @param  value
    *         Value to store.
    */
-  logKeyed: function(histogramId, key, value) {
+  logKeyed: function (histogramId, key, value) {
     if (histogramId) {
       try {
         let histogram = Services.telemetry.getKeyedHistogramById(histogramId);
         histogram.add(key, value);
-      } catch(e) {
+      } catch (e) {
         dump("Warning: An attempt was made to write to the " + histogramId +
              " histogram, which is not defined in Histograms.json\n");
       }
@@ -359,7 +359,7 @@ Telemetry.prototype = {
    * @param  {String} perUserHistogram
    *         Histogram in which the data is to be stored.
    */
-  logOncePerBrowserVersion: function(perUserHistogram, value) {
+  logOncePerBrowserVersion: function (perUserHistogram, value) {
     let currentVersion = appInfo.version;
     let latest = Services.prefs.getCharPref(TOOLS_OPENED_PREF);
     let latestObj = JSON.parse(latest);
@@ -375,13 +375,13 @@ Telemetry.prototype = {
     }
   },
 
-  destroy: function() {
+  destroy: function () {
     for (let histogramId of this._timers.keys()) {
       this.stopTimer(histogramId);
     }
   }
 };
 
-XPCOMUtils.defineLazyGetter(this, "appInfo", function() {
+XPCOMUtils.defineLazyGetter(this, "appInfo", function () {
   return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
 });

@@ -58,7 +58,7 @@ function runTests()
   ok(!content.wrappedJSObject.foosbug653108,
      "no content.foosbug653108");
 
-  sp.run().then(function() {
+  sp.run().then(function () {
     is(content.wrappedJSObject.foosbug653108, "aloha",
        "content.foosbug653108 has been set");
 
@@ -73,11 +73,11 @@ function runTests2() {
   ok(!window.foosbug653108, "no window.foosbug653108");
 
   sp.setText("window.foosbug653108");
-  sp.run().then(function([, , result]) {
+  sp.run().then(function ([, , result]) {
     isnot(result, "aloha", "window.foosbug653108 is not aloha");
 
     sp.setText("window.foosbug653108 = 'ahoyhoy';");
-    sp.run().then(function() {
+    sp.run().then(function () {
       is(content.wrappedJSObject.foosbug653108, "ahoyhoy",
          "content.foosbug653108 has been set 2");
 
@@ -92,7 +92,7 @@ function runTests3() {
   // Check that the sandbox is not cached.
 
   sp.setText("typeof foosbug653108;");
-  sp.run().then(function([, , result]) {
+  sp.run().then(function ([, , result]) {
     is(result, "undefined", "global variable does not exist");
 
     tab1 = null;

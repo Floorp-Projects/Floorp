@@ -4,6 +4,6 @@
 // This is a file that test_xpcshell_debugging.js debugs.
 
 // We should hit this dump as it is the first debuggable line
-dump("hello from the debugee!\n")
+dump("hello from the debugee!\n");
 
 debugger; // and why not check we hit this!?

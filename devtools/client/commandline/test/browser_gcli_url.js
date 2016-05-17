@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
 // PLEASE TALK TO SOMEONE IN DEVELOPER TOOLS BEFORE EDITING IT
@@ -28,76 +28,76 @@ function test() {
 // var assert = require('../testharness/assert');
 // var helpers = require('./helpers');
 
-exports.testDefault = function(options) {
+exports.testDefault = function (options) {
   return helpers.audit(options, [
     {
       skipRemainingIf: options.isPhantomjs, // PhantomJS URL type is broken
-      setup:    'urlc',
+      setup:    "urlc",
       check: {
-        input:  'urlc',
-        markup: 'VVVV',
-        hints:        ' <url>',
-        status: 'ERROR',
+        input:  "urlc",
+        markup: "VVVV",
+        hints:        " <url>",
+        status: "ERROR",
         args: {
           url: {
             value: undefined,
-            arg: '',
-            status: 'INCOMPLETE'
+            arg: "",
+            status: "INCOMPLETE"
           }
         }
       }
     },
     {
-      setup:    'urlc example',
+      setup:    "urlc example",
       check: {
-        input:  'urlc example',
-        markup: 'VVVVVIIIIIII',
-        hints:              ' -> http://example/',
+        input:  "urlc example",
+        markup: "VVVVVIIIIIII",
+        hints:              " -> http://example/",
         predictions: [
-          'http://example/',
-          'https://example/',
-          'http://localhost:9999/example'
+          "http://example/",
+          "https://example/",
+          "http://localhost:9999/example"
         ],
-        status: 'ERROR',
+        status: "ERROR",
         args: {
           url: {
             value: undefined,
-            arg: ' example',
-            status: 'INCOMPLETE'
+            arg: " example",
+            status: "INCOMPLETE"
           }
         }
       },
     },
     {
-      setup:    'urlc example.com/',
+      setup:    "urlc example.com/",
       check: {
-        input:  'urlc example.com/',
-        markup: 'VVVVVIIIIIIIIIIII',
-        hints:                   ' -> http://example.com/',
-        status: 'ERROR',
+        input:  "urlc example.com/",
+        markup: "VVVVVIIIIIIIIIIII",
+        hints:                   " -> http://example.com/",
+        status: "ERROR",
         args: {
           url: {
             value: undefined,
-            arg: ' example.com/',
-            status: 'INCOMPLETE'
+            arg: " example.com/",
+            status: "INCOMPLETE"
           }
         }
       },
     },
     {
-      setup:    'urlc http://example.com/index?q=a#hash',
+      setup:    "urlc http://example.com/index?q=a#hash",
       check: {
-        input:  'urlc http://example.com/index?q=a#hash',
-        markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
-        hints:                                        '',
-        status: 'VALID',
+        input:  "urlc http://example.com/index?q=a#hash",
+        markup: "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV",
+        hints:                                        "",
+        status: "VALID",
         args: {
           url: {
-            value: function(data) {
-              assert.is(data.hash, '#hash', 'url hash');
+            value: function (data) {
+              assert.is(data.hash, "#hash", "url hash");
             },
-            arg: ' http://example.com/index?q=a#hash',
-            status: 'VALID'
+            arg: " http://example.com/index?q=a#hash",
+            status: "VALID"
           }
         }
       },

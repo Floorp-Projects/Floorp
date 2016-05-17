@@ -21,12 +21,12 @@ function test() {
     gSources = gDebugger.DebuggerView.Sources;
     gBreakpoints = gDebugger.DebuggerController.Breakpoints;
     gEditor = gDebugger.DebuggerView.editor;
-    const constants = gDebugger.require('./content/constants');
-    const queries = gDebugger.require('./content/queries');
+    const constants = gDebugger.require("./content/constants");
+    const queries = gDebugger.require("./content/queries");
     const actions = bindActionCreators(gPanel);
     const getState = gDebugger.DebuggerController.getState;
 
-    return Task.spawn(function*() {
+    return Task.spawn(function* () {
       yield waitForSourceShown(gPanel, "-eval.js");
       is(queries.getSourceCount(getState()), 1, "Should have 1 source");
 
@@ -43,8 +43,8 @@ function test() {
       actions.selectSource(source);
       yield shown;
 
-      ok(gEditor.getText().indexOf('bar = function() {') === 0,
-         'Correct source is shown');
+      ok(gEditor.getText().indexOf("bar = function() {") === 0,
+         "Correct source is shown");
 
       yield closeDebuggerAndFinish(gPanel);
     });

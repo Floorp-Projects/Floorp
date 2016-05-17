@@ -52,7 +52,7 @@ exports.DEFAULT_PREF_VALUES = [
  * Invokes callback when a pref which is not in the `DEFAULT_PREF_VALUES` store
  * is changed. Returns a cleanup function.
  */
-exports.whenUnknownPrefChanged = function(branch, callback) {
+exports.whenUnknownPrefChanged = function (branch, callback) {
   function onObserve(subject, topic, data) {
     if (!(data in exports.DEFAULT_PREF_VALUES)) {
       callback(data);
@@ -65,7 +65,7 @@ exports.whenUnknownPrefChanged = function(branch, callback) {
 /**
  * Reverts all known preferences to their default values.
  */
-exports.rollbackPrefsToDefault = function() {
+exports.rollbackPrefsToDefault = function () {
   for (let prefName of Object.keys(exports.DEFAULT_PREF_VALUES)) {
     Preferences.set(prefName, exports.DEFAULT_PREF_VALUES[prefName]);
   }

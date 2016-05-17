@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", function onDOMReady(e) {
       appManagerEditor.on("load", function foo() {
         appManagerEditor.off("load", foo);
         log("Working on: " + SAMPLE_PATH);
-      })
+      });
     }
   });
   projecteditor.on("onEditorDestroyed", (editor) => {
@@ -105,42 +105,42 @@ function buildTempDirectoryStructure() {
   let htmlFile = FileUtils.getFile("TmpD", ["ProjectEditor", "index.html"]);
   htmlFile.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
   writeToFile(htmlFile, [
-    '<!DOCTYPE html>',
+    "<!DOCTYPE html>",
     '<html lang="en">',
-    ' <head>',
+    " <head>",
     '   <meta charset="utf-8" />',
-    '   <title>ProjectEditor Temp File</title>',
+    "   <title>ProjectEditor Temp File</title>",
     '   <link rel="stylesheet" href="style.css" />',
-    ' </head>',
+    " </head>",
     ' <body id="home">',
-    '   <p>ProjectEditor Temp File</p>',
-    ' </body>',
-    '</html>'].join("\n")
+    "   <p>ProjectEditor Temp File</p>",
+    " </body>",
+    "</html>"].join("\n")
   );
 
   let readmeFile = FileUtils.getFile("TmpD", ["ProjectEditor", "README.md"]);
   readmeFile.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
   writeToFile(readmeFile, [
-    '## Readme'
-    ].join("\n")
+    "## Readme"
+  ].join("\n")
   );
 
   let licenseFile = FileUtils.getFile("TmpD", ["ProjectEditor", "LICENSE"]);
   licenseFile.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
   writeToFile(licenseFile, [
-   '/* This Source Code Form is subject to the terms of the Mozilla Public',
-   ' * License, v. 2.0. If a copy of the MPL was not distributed with this',
-   ' * file, You can obtain one at http://mozilla.org/MPL/2.0/. */'
-    ].join("\n")
+    "/* This Source Code Form is subject to the terms of the Mozilla Public",
+    " * License, v. 2.0. If a copy of the MPL was not distributed with this",
+    " * file, You can obtain one at http://mozilla.org/MPL/2.0/. */"
+  ].join("\n")
   );
 
   let cssFile = FileUtils.getFile("TmpD", ["ProjectEditor", "css", "styles.css"]);
   cssFile.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
   writeToFile(cssFile, [
-    'body {',
-    ' background: red;',
-    '}'
-    ].join("\n")
+    "body {",
+    " background: red;",
+    "}"
+  ].join("\n")
   );
 
   FileUtils.getFile("TmpD", ["ProjectEditor", "js", "script.js"]).createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
@@ -159,7 +159,7 @@ function buildTempDirectoryStructure() {
 function writeToFile(file, data) {
 
   let defer = promise.defer();
-  var ostream = FileUtils.openSafeFileOutputStream(file)
+  var ostream = FileUtils.openSafeFileOutputStream(file);
 
   var converter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"].
                   createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
@@ -167,7 +167,7 @@ function writeToFile(file, data) {
   var istream = converter.convertToInputStream(data);
 
   // The last argument (the callback) is optional.
-  NetUtil.asyncCopy(istream, ostream, function(status) {
+  NetUtil.asyncCopy(istream, ostream, function (status) {
     if (!Components.isSuccessCode(status)) {
       // Handle error!
       console.log("ERROR WRITING TEMP FILE", status);

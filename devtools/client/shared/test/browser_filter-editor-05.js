@@ -15,9 +15,9 @@ const SLOW_VALUE_MULTIPLIER = 0.1;
 const DEFAULT_VALUE_MULTIPLIER = 1;
 
 const GRAYSCALE_MAX = 100,
-      GRAYSCALE_MIN = 0;
+  GRAYSCALE_MIN = 0;
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("about:blank");
   let [host, win, doc] = yield createHost("bottom", TEST_URI);
 

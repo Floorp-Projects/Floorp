@@ -9,7 +9,7 @@ function run_test() {
   initTestDebuggerServer();
   add_test_bulk_actor();
 
-  add_task(function*() {
+  add_task(function* () {
     yield test_bulk_request_cs(socket_transport, "jsonReply", "json");
     yield test_bulk_request_cs(local_transport, "jsonReply", "json");
     yield test_bulk_request_cs(socket_transport, "bulkEcho", "bulk");
@@ -22,7 +22,7 @@ function run_test() {
   run_next_test();
 }
 
-/*** Sample Bulk Actor ***/
+/** * Sample Bulk Actor ***/
 
 function TestBulkActor(conn) {
   this.conn = conn;
@@ -32,7 +32,7 @@ TestBulkActor.prototype = {
 
   actorPrefix: "testBulk",
 
-  bulkEcho: function({actor, type, length, copyTo}) {
+  bulkEcho: function ({actor, type, length, copyTo}) {
     do_check_eq(length, really_long().length);
     this.conn.startBulkSend({
       actor: actor,
@@ -50,7 +50,7 @@ TestBulkActor.prototype = {
     });
   },
 
-  bulkReply: function({to, type}) {
+  bulkReply: function ({to, type}) {
     this.conn.startBulkSend({
       actor: to,
       type: type,
@@ -60,14 +60,14 @@ TestBulkActor.prototype = {
         uri: NetUtil.newURI(getTestTempFile("bulk-input")),
         loadUsingSystemPrincipal: true
       }, input => {
-          copyFrom(input).then(() => {
-            input.close();
-          });
+        copyFrom(input).then(() => {
+          input.close();
         });
+      });
     });
   },
 
-  jsonReply: function({length, copyTo}) {
+  jsonReply: function ({length, copyTo}) {
     do_check_eq(length, really_long().length);
 
     let outputFile = getTestTempFile("bulk-output", true);
@@ -95,11 +95,11 @@ function add_test_bulk_actor() {
   DebuggerServer.addGlobalActor(TestBulkActor);
 }
 
-/*** Reply Handlers ***/
+/** * Reply Handlers ***/
 
 var replyHandlers = {
 
-  json: function(request) {
+  json: function (request) {
     // Receive JSON reply from server
     let replyDeferred = promise.defer();
     request.on("json-reply", (reply) => {
@@ -109,7 +109,7 @@ var replyHandlers = {
     return replyDeferred.promise;
   },
 
-  bulk: function(request) {
+  bulk: function (request) {
     // Receive bulk data reply from server
     let replyDeferred = promise.defer();
     request.on("bulk-reply", ({length, copyTo}) => {
@@ -130,9 +130,9 @@ var replyHandlers = {
 
 };
 
-/*** Tests ***/
+/** * Tests ***/
 
-var test_bulk_request_cs = Task.async(function*(transportFactory, actorType, replyType) {
+var test_bulk_request_cs = Task.async(function* (transportFactory, actorType, replyType) {
   // Ensure test files are not present from a failed run
   cleanup_files();
   writeTestTempFile("bulk-input", really_long());
@@ -162,11 +162,11 @@ var test_bulk_request_cs = Task.async(function*(transportFactory, actorType, rep
         uri: NetUtil.newURI(getTestTempFile("bulk-input")),
         loadUsingSystemPrincipal: true
       }, input => {
-          copyFrom(input).then(() => {
-            input.close();
-            bulkCopyDeferred.resolve();
-          });
+        copyFrom(input).then(() => {
+          input.close();
+          bulkCopyDeferred.resolve();
         });
+      });
     });
 
     // Set up reply handling for this type
@@ -189,7 +189,7 @@ var test_bulk_request_cs = Task.async(function*(transportFactory, actorType, rep
   ]);
 });
 
-var test_json_request_cs = Task.async(function*(transportFactory, actorType, replyType) {
+var test_json_request_cs = Task.async(function* (transportFactory, actorType, replyType) {
   // Ensure test files are not present from a failed run
   cleanup_files();
   writeTestTempFile("bulk-input", really_long());
@@ -230,7 +230,7 @@ var test_json_request_cs = Task.async(function*(transportFactory, actorType, rep
   ]);
 });
 
-/*** Test Utils ***/
+/** * Test Utils ***/
 
 function verify_files() {
   let reallyLong = really_long();
@@ -247,12 +247,12 @@ function verify_files() {
     uri: NetUtil.newURI(getTestTempFile("bulk-output")),
     loadUsingSystemPrincipal: true
   }, input => {
-      let outputData = NetUtil.readInputStreamToString(input, reallyLong.length);
+    let outputData = NetUtil.readInputStreamToString(input, reallyLong.length);
       // Avoid do_check_eq here so we don't log the contents
-      do_check_true(outputData === reallyLong);
-      input.close();
-      compareDeferred.resolve();
-    });
+    do_check_true(outputData === reallyLong);
+    input.close();
+    compareDeferred.resolve();
+  });
 
   return compareDeferred.promise.then(cleanup_files);
 }

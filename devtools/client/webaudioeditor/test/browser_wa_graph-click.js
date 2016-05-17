@@ -6,7 +6,7 @@
  * the correct node in the InspectorView
  */
 
-add_task(function*() {
+add_task(function* () {
   let { target, panel } = yield initWebAudioEditor(COMPLEX_CONTEXT_URL);
   let panelWin = panel.panelWin;
   let { gFront, $, $$, InspectorView } = panelWin;

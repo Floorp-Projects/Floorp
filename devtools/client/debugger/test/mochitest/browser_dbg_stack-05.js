@@ -84,7 +84,7 @@ function test() {
       return deferred.promise;
     }
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceAndCaretAndScopes(gPanel, "-02.js", 1);
       yield initialChecks();
       yield testNewestFrame();

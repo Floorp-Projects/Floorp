@@ -38,7 +38,7 @@ function test() {
 
     let linkOpened = false;
     let oldOpenUILinkIn = window.openUILinkIn;
-    window.openUILinkIn = function(aLink) {
+    window.openUILinkIn = function (aLink) {
       if (aLink == TEST_PAGE_URI) {
         linkOpened = true;
       }

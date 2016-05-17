@@ -9,7 +9,7 @@
 // still, so we want the AnimationsActor to preserve the corresponding
 // AnimationPlayerActor.
 
-add_task(function*() {
+add_task(function* () {
   let {client, walker, animations} =
     yield initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 

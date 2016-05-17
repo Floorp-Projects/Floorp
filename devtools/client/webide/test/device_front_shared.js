@@ -109,7 +109,7 @@ function addNewFieldInteger() {
   is(customValue.value, "", "Custom integer value reset");
 }
 
-var editFieldInteger = Task.async(function*() {
+var editFieldInteger = Task.async(function* () {
   // Edit existing custom integer preference
   newField.value = 3;
   newField.click();
@@ -121,7 +121,7 @@ var editFieldInteger = Task.async(function*() {
 
   try {
     yield iframe.contentWindow.configView._defaultField;
-  } catch(err) {
+  } catch (err) {
     let fieldRow = doc.querySelector("#row-new-integer-field");
     if (!fieldRow) {
       found = false;
@@ -130,7 +130,7 @@ var editFieldInteger = Task.async(function*() {
   }
 });
 
-var resetExistingField = Task.async(function*(id) {
+var resetExistingField = Task.async(function* (id) {
   let existing = doc.getElementById(id);
   existing.click();
   is(existing.checked, true, "Existing boolean value is correct");
@@ -143,7 +143,7 @@ var resetExistingField = Task.async(function*(id) {
   is(existing.checked, true, "Existing field reset");
 });
 
-var resetNewField = Task.async(function*(id) {
+var resetNewField = Task.async(function* (id) {
   let custom = doc.getElementById(id);
   custom.click();
   is(custom.value, "test", "New string value is correct");

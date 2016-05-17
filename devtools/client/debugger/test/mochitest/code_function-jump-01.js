@@ -1,6 +1,6 @@
 
 function foo() {
-    //some function
+    // some function
 }
 
 foo();

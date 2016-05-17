@@ -34,7 +34,7 @@ const testToolDefinition = {
   }
 };
 
-add_task(function*() {
+add_task(function* () {
   let tab = yield addTab("about:blank");
 
   let target = TargetFactory.forTab(tab);
@@ -47,7 +47,7 @@ add_task(function*() {
 
   info("Creating the sidebar widget");
   let sidebar = new ToolSidebar(tabbox, toolPanel, "bug1101569");
-  
+
   info("Checking that existing tabs have been registered");
   ok(sidebar.getTab("tab1"), "Existing tab 1 was found");
   ok(sidebar.getTab("tab2"), "Existing tab 2 was found");

@@ -9,16 +9,16 @@
 const { Class } = require("sdk/core/heritage");
 
 var Plugin = Class({
-  initialize: function(host) {
+  initialize: function (host) {
     this.host = host;
     this.init(host);
   },
 
-  destroy: function(host) { },
+  destroy: function (host) { },
 
-  init: function(host) {},
+  init: function (host) {},
 
-  showForCategories: function(elt, categories) {
+  showForCategories: function (elt, categories) {
     this._showFor = this._showFor || [];
     let set = new Set(categories);
     this._showFor.push({
@@ -32,23 +32,23 @@ var Plugin = Class({
     }
   },
 
-  priv: function(item) {
+  priv: function (item) {
     if (!this._privData) {
       this._privData = new WeakMap();
     }
     if (!this._privData.has(item)) {
-       this._privData.set(item, {});
+      this._privData.set(item, {});
     }
     return this._privData.get(item);
   },
-  onTreeSelected: function(resource) {},
+  onTreeSelected: function (resource) {},
 
 
   // Editor state lifetime...
-  onEditorCreated: function(editor) {},
-  onEditorDestroyed: function(editor) {},
+  onEditorCreated: function (editor) {},
+  onEditorDestroyed: function (editor) {},
 
-  onEditorActivated: function(editor) {
+  onEditorActivated: function (editor) {
     if (this._showFor) {
       let category = editor.category;
       for (let item of this._showFor) {
@@ -60,7 +60,7 @@ var Plugin = Class({
       }
     }
   },
-  onEditorDeactivated: function(editor) {
+  onEditorDeactivated: function (editor) {
     if (this._showFor) {
       for (let item of this._showFor) {
         item.elt.classList.add("plugin-hidden");
@@ -68,10 +68,10 @@ var Plugin = Class({
     }
   },
 
-  onEditorLoad: function(editor) {},
-  onEditorSave: function(editor) {},
-  onEditorChange: function(editor) {},
-  onEditorCursorActivity: function(editor) {},
+  onEditorLoad: function (editor) {},
+  onEditorSave: function (editor) {},
+  onEditorChange: function (editor) {},
+  onEditorCursorActivity: function (editor) {},
 });
 exports.Plugin = Plugin;
 

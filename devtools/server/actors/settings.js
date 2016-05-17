@@ -15,11 +15,11 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 var defaultSettings = {};
 var settingsFile;
 
-exports.register = function(handle) {
+exports.register = function (handle) {
   handle.addGlobalActor(SettingsActor, "settingsActor");
 };
 
-exports.unregister = function(handle) {
+exports.unregister = function (handle) {
 };
 
 function getDefaultSettings() {
@@ -37,7 +37,7 @@ function getDefaultSettings() {
 
   try {
     defaultSettings = JSON.parse(rawstr);
-  } catch(e) { }
+  } catch (e) { }
   stream.close();
 }
 
@@ -66,19 +66,19 @@ function loadSettingsFile() {
 var SettingsActor = exports.SettingsActor = protocol.ActorClass({
   typeName: "settings",
 
-  _getSettingsService: function() {
+  _getSettingsService: function () {
     let win = Services.wm.getMostRecentWindow(DebuggerServer.chromeWindowType);
     return win.navigator.mozSettings;
   },
 
-  getSetting: method(function(name) {
+  getSetting: method(function (name) {
     let deferred = promise.defer();
     let lock = this._getSettingsService().createLock();
     let req = lock.get(name);
-    req.onsuccess = function() {
+    req.onsuccess = function () {
       deferred.resolve(req.result[name]);
     };
-    req.onerror = function() {
+    req.onerror = function () {
       deferred.reject(req.error);
     };
     return deferred.promise;
@@ -87,16 +87,16 @@ var SettingsActor = exports.SettingsActor = protocol.ActorClass({
     response: { value: RetVal("json") }
   }),
 
-  setSetting: method(function(name, value) {
+  setSetting: method(function (name, value) {
     let deferred = promise.defer();
     let data = {};
     data[name] = value;
     let lock = this._getSettingsService().createLock();
     let req = lock.set(data);
-    req.onsuccess = function() {
+    req.onsuccess = function () {
       deferred.resolve(true);
     };
-    req.onerror = function() {
+    req.onerror = function () {
       deferred.reject(req.error);
     };
     return deferred.promise;
@@ -105,14 +105,14 @@ var SettingsActor = exports.SettingsActor = protocol.ActorClass({
     response: {}
   }),
 
-  _hasUserSetting: function(name, value) {
+  _hasUserSetting: function (name, value) {
     if (typeof value === "object") {
       return JSON.stringify(defaultSettings[name]) !== JSON.stringify(value);
     }
     return (defaultSettings[name] !== value);
   },
 
-  getAllSettings: method(function() {
+  getAllSettings: method(function () {
     loadSettingsFile();
     let settings = {};
     let self = this;
@@ -121,7 +121,7 @@ var SettingsActor = exports.SettingsActor = protocol.ActorClass({
     let lock = this._getSettingsService().createLock();
     let req = lock.get("*");
 
-    req.onsuccess = function() {
+    req.onsuccess = function () {
       for (var name in req.result) {
         settings[name] = {
           value: req.result[name],
@@ -130,7 +130,7 @@ var SettingsActor = exports.SettingsActor = protocol.ActorClass({
       }
       deferred.resolve(settings);
     };
-    req.onfailure = function() {
+    req.onfailure = function () {
       deferred.reject(req.error);
     };
 
@@ -140,7 +140,7 @@ var SettingsActor = exports.SettingsActor = protocol.ActorClass({
     response: { value: RetVal("json") }
   }),
 
-  clearUserSetting: method(function(name) {
+  clearUserSetting: method(function (name) {
     loadSettingsFile();
     try {
       this.setSetting(name, defaultSettings[name]);
@@ -154,7 +154,7 @@ var SettingsActor = exports.SettingsActor = protocol.ActorClass({
 });
 
 var SettingsFront = protocol.FrontClass(SettingsActor, {
-  initialize: function(client, form) {
+  initialize: function (client, form) {
     protocol.Front.prototype.initialize.call(this, client);
     this.actorID = form.settingsActor;
     this.manage(this);
@@ -163,7 +163,7 @@ var SettingsFront = protocol.FrontClass(SettingsActor, {
 
 const _knownSettingsFronts = new WeakMap();
 
-exports.getSettingsFront = function(client, form) {
+exports.getSettingsFront = function (client, form) {
   if (!form.settingsActor) {
     return null;
   }
@@ -176,6 +176,6 @@ exports.getSettingsFront = function(client, form) {
 };
 
 // For tests
-exports._setDefaultSettings = function(settings) {
+exports._setDefaultSettings = function (settings) {
   defaultSettings = settings || {};
 };

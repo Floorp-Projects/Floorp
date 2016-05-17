@@ -25,7 +25,7 @@ const PERF_TOOL_SERIALIZER_CURRENT_VERSION = 2;
  * Gets a nsIScriptableUnicodeConverter instance with a default UTF-8 charset.
  * @return object
  */
-function getUnicodeConverter () {
+function getUnicodeConverter() {
   let cname = "@mozilla.org/intl/scriptableunicodeconverter";
   let converter = Cc[cname].createInstance(Ci.nsIScriptableUnicodeConverter);
   converter.charset = "UTF-8";
@@ -44,7 +44,7 @@ function getUnicodeConverter () {
  *         A promise that is resolved once streaming finishes, or rejected
  *         if there was an error.
  */
-function saveRecordingToFile (recordingData, file) {
+function saveRecordingToFile(recordingData, file) {
   recordingData.fileType = PERF_TOOL_SERIALIZER_IDENTIFIER;
   recordingData.version = PERF_TOOL_SERIALIZER_CURRENT_VERSION;
 
@@ -66,7 +66,7 @@ function saveRecordingToFile (recordingData, file) {
  *         A promise that is resolved once importing finishes, or rejected
  *         if there was an error.
  */
-function loadRecordingFromFile (file) {
+function loadRecordingFromFile(file) {
   let channel = NetUtil.newChannel({
     uri: NetUtil.newURI(file),
     loadUsingSystemPrincipal: true
@@ -122,7 +122,7 @@ function loadRecordingFromFile (file) {
  * @param number version
  * @return boolean
  */
-function isValidSerializerVersion (version) {
+function isValidSerializerVersion(version) {
   return !!~[
     PERF_TOOL_SERIALIZER_LEGACY_VERSION,
     PERF_TOOL_SERIALIZER_CURRENT_VERSION
@@ -137,7 +137,7 @@ function isValidSerializerVersion (version) {
  * @param object legacyData
  * @return object
  */
-function convertLegacyData (legacyData) {
+function convertLegacyData(legacyData) {
   let { profilerData, ticksData, recordingDuration } = legacyData;
 
   // The `profilerData` and `ticksData` stay, but the previously unrecorded

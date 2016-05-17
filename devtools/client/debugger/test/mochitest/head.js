@@ -19,7 +19,7 @@ var { DebuggerServer } = require("devtools/server/main");
 var { DebuggerClient, ObjectClient } = require("devtools/shared/client/main");
 var { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm", {});
 var EventEmitter = require("devtools/shared/event-emitter");
-var { Toolbox } = require("devtools/client/framework/toolbox")
+var { Toolbox } = require("devtools/client/framework/toolbox");
 
 // Override promise with deprecated-sync-thenables
 promise = Cu.import("resource://devtools/shared/deprecated-sync-thenables.js", {}).Promise;
@@ -50,7 +50,7 @@ registerCleanupFunction(function* () {
 
 // Import the GCLI test helper
 var testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
-testDir = testDir.replace(/\/\//g, '/');
+testDir = testDir.replace(/\/\//g, "/");
 testDir = testDir.replace("chrome:/mochitest", "chrome://mochitest");
 var helpersjs = testDir + "/../../../commandline/test/helpers.js";
 Services.scriptloader.loadSubScript(helpersjs, this);
@@ -90,7 +90,7 @@ this.addTab = function addTab(aUrl, aWindow) {
   }, true);
 
   return deferred.promise;
-}
+};
 
 this.removeTab = function removeTab(aTab, aWindow) {
   info("Removing tab.");
@@ -108,7 +108,7 @@ this.removeTab = function removeTab(aTab, aWindow) {
 
   targetBrowser.removeTab(aTab);
   return deferred.promise;
-}
+};
 
 function addAddon(aUrl) {
   info("Installing addon: " + aUrl);
@@ -118,11 +118,11 @@ function addAddon(aUrl) {
   AddonManager.getInstallForURL(aUrl, aInstaller => {
     aInstaller.install();
     let listener = {
-      onInstallEnded: function(aAddon, aAddonInstall) {
+      onInstallEnded: function (aAddon, aAddonInstall) {
         aInstaller.removeListener(listener);
 
         // Wait for add-on's startup scripts to execute. See bug 997408
-        executeSoon(function() {
+        executeSoon(function () {
           deferred.resolve(aAddonInstall);
         });
       }
@@ -139,7 +139,7 @@ function removeAddon(aAddon) {
   let deferred = promise.defer();
 
   let listener = {
-    onUninstalled: function(aUninstalledAddon) {
+    onUninstalled: function (aUninstalledAddon) {
       if (aUninstalledAddon != aAddon) {
         return;
       }
@@ -550,7 +550,7 @@ function AddonDebugger() {
 }
 
 AddonDebugger.prototype = {
-  init: Task.async(function*(aUrl) {
+  init: Task.async(function* (aUrl) {
     info("Initializing an addon debugger panel.");
 
     if (!DebuggerServer.initialized) {
@@ -588,13 +588,13 @@ AddonDebugger.prototype = {
     info("Addon debugger panel shown successfully.");
 
     this.debuggerPanel = toolbox.getCurrentPanel();
-    yield waitForSourceShown(this.debuggerPanel, '');
+    yield waitForSourceShown(this.debuggerPanel, "");
 
     prepareDebugger(this.debuggerPanel);
     yield this._attachConsole();
   }),
 
-  destroy: Task.async(function*() {
+  destroy: Task.async(function* () {
     let deferred = promise.defer();
     this.client.close(deferred.resolve);
     yield deferred.promise;
@@ -603,7 +603,7 @@ AddonDebugger.prototype = {
     window.removeEventListener("message", this._onMessage);
   }),
 
-  _attachConsole: function() {
+  _attachConsole: function () {
     let deferred = promise.defer();
     this.client.attachConsole(this.target.form.consoleActor, ["ConsoleAPI"], (aResponse, aWebConsoleClient) => {
       if (aResponse.error) {
@@ -618,7 +618,7 @@ AddonDebugger.prototype = {
     return deferred.promise;
   },
 
-  _onConsoleAPICall: function(aType, aPacket) {
+  _onConsoleAPICall: function (aType, aPacket) {
     if (aPacket.from != this.webConsole.actor)
       return;
     this.emit("console", aPacket.message);
@@ -630,7 +630,7 @@ AddonDebugger.prototype = {
    * sources property contains an array with objects for each source for that
    * group with properties label and url.
    */
-  getSourceGroups: Task.async(function*() {
+  getSourceGroups: Task.async(function* () {
     let debuggerWin = this.debuggerPanel.panelWin;
     let sources = yield getSources(debuggerWin.gThreadClient);
     ok(sources.length, "retrieved sources");
@@ -681,7 +681,7 @@ AddonDebugger.prototype = {
     return groups;
   }),
 
-  _onMessage: function(event) {
+  _onMessage: function (event) {
     let json = JSON.parse(event.data);
     switch (json.name) {
       case "toolbox-title":
@@ -689,7 +689,7 @@ AddonDebugger.prototype = {
         break;
     }
   }
-}
+};
 
 function initChromeDebugger(aOnClose) {
   info("Initializing a chrome debugger process.");
@@ -761,7 +761,7 @@ function getBlackBoxButton(aPanel) {
  * Returns the node that has the black-boxed class applied to it.
  */
 function getSelectedSourceElement(aPanel) {
-    return aPanel.panelWin.DebuggerView.Sources.selectedItem.prebuiltNode;
+  return aPanel.panelWin.DebuggerView.Sources.selectedItem.prebuiltNode;
 }
 
 function toggleBlackBoxing(aPanel, aSourceActor = null) {
@@ -775,7 +775,7 @@ function toggleBlackBoxing(aPanel, aSourceActor = null) {
   ).then(() => {
     return aSourceActor ?
       getSource(aPanel, aSourceActor) :
-      getSelectedSource(aPanel)
+      getSelectedSource(aPanel);
   });
 
   if (aSourceActor) {
@@ -839,8 +839,8 @@ function intendOpenVarPopup(aPanel, aPosition, aButtonPushed) {
 
   const deferred = promise.defer();
   window.setTimeout(
-    function() {
-      if(tooltip.isEmpty()) {
+    function () {
+      if (tooltip.isEmpty()) {
         deferred.resolve(false);
       } else {
         deferred.resolve(true);
@@ -960,7 +960,7 @@ function jsonrpc(tab, method, params) {
 
       messageManager.removeMessageListener("jsonrpc", listener);
       if (error != null) {
-         reject(error);
+        reject(error);
       }
 
       resolve(result);
@@ -1063,7 +1063,7 @@ function findWorker(workers, url) {
 
 function attachWorker(tabClient, worker) {
   info("Attaching to worker with url '" + worker.url + "'.");
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     tabClient.attachWorker(worker.actor, function (response, workerClient) {
       resolve([response, workerClient]);
     });
@@ -1082,7 +1082,7 @@ function waitForWorkerListChanged(tabClient) {
 
 function attachThread(workerClient, options) {
   info("Attaching to thread.");
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     workerClient.attachThread(options, function (response, threadClient) {
       resolve([response, threadClient]);
     });
@@ -1179,7 +1179,7 @@ function getSplitConsole(toolbox, win) {
 function waitForNavigation(gPanel) {
   const target = gPanel.panelWin.gTarget;
   const deferred = promise.defer();
-  target.once('navigate', () => {
+  target.once("navigate", () => {
     deferred.resolve();
   });
   info("Waiting for navigation...");
@@ -1191,7 +1191,7 @@ function waitForNavigation(gPanel) {
 function bindActionCreators(panel) {
   const win = panel.panelWin;
   const dispatch = win.DebuggerController.dispatch;
-  const { bindActionCreators } = win.require('devtools/client/shared/vendor/redux');
+  const { bindActionCreators } = win.require("devtools/client/shared/vendor/redux");
   return bindActionCreators(win.actions, dispatch);
 }
 
@@ -1227,7 +1227,7 @@ function _afterDispatchDone(store, type) {
         if (action.type === type) {
           return action.status ?
             (action.status === "done" || action.status === "error") :
-            true
+            true;
         }
       },
       run: (dispatch, getState, action) => {
@@ -1242,9 +1242,9 @@ function waitForDispatch(panel, type, eventRepeat = 1) {
   const actionType = panel.panelWin.constants[type];
   let count = 0;
 
-  return Task.spawn(function*() {
+  return Task.spawn(function* () {
     info("Waiting for " + type + " to dispatch " + eventRepeat + " time(s)");
-    while(count < eventRepeat) {
+    while (count < eventRepeat) {
       yield _afterDispatchDone(controller, actionType);
       count++;
       info(type + " dispatched " + count + " time(s)");

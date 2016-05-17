@@ -9,7 +9,7 @@
 
 var URL = `${URL_ROOT}doc_viewsource.html`;
 
-function *viewSource() {
+function* viewSource() {
   let toolbox = yield openNewTabAndToolbox(URL);
   let win = yield openScratchpadWindow();
   let { Scratchpad: scratchpad } = win;
@@ -31,7 +31,7 @@ function *viewSource() {
   finish();
 }
 
-function test () {
+function test() {
   Task.spawn(viewSource).then(finish, (aError) => {
     ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
     finish();

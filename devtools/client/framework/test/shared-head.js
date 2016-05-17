@@ -42,7 +42,7 @@ waitForExplicitFinish();
 
 var EXPECTED_DTU_ASSERT_FAILURE_COUNT = 0;
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   if (DevToolsUtils.assertionFailureCount !==
       EXPECTED_DTU_ASSERT_FAILURE_COUNT) {
     ok(false,
@@ -61,7 +61,7 @@ registerCleanupFunction(function() {
 const ConsoleObserver = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
-  observe: function(subject, topic, data) {
+  observe: function (subject, topic, data) {
     let message = subject.wrappedJSObject.arguments[0];
 
     if (/Failed propType/.test(message)) {
@@ -334,7 +334,7 @@ var openNewTabAndToolbox = Task.async(function* (url, toolId, hostType) {
  * @return {Promise} Resolves when the toolbox and tab have been destroyed and
  * closed.
  */
-var closeTabAndToolbox = Task.async(function*(tab = gBrowser.selectedTab) {
+var closeTabAndToolbox = Task.async(function* (tab = gBrowser.selectedTab) {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   if (target) {
     yield gDevTools.closeToolbox(target);
@@ -349,7 +349,7 @@ var closeTabAndToolbox = Task.async(function*(tab = gBrowser.selectedTab) {
  * @return {Promise} Resolves when the toolbox and tab have been destroyed and
  * closed.
  */
-var closeToolboxAndTab = Task.async(function*(toolbox) {
+var closeToolboxAndTab = Task.async(function* (toolbox) {
   yield toolbox.destroy();
   yield removeTab(gBrowser.selectedTab);
 });
@@ -367,7 +367,7 @@ function waitUntil(predicate, interval = 10) {
     return Promise.resolve(true);
   }
   return new Promise(resolve => {
-    setTimeout(function() {
+    setTimeout(function () {
       waitUntil(predicate, interval).then(() => resolve(true));
     }, interval);
   });
@@ -379,7 +379,7 @@ function waitUntil(predicate, interval = 10) {
  */
 let MM_INC_ID = 0;
 function evalInDebuggee(mm, script) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     let id = MM_INC_ID++;
     mm.sendAsyncMessage("devtools:test:eval", { script, id });
     mm.addMessageListener("devtools:test:eval:response", handler);

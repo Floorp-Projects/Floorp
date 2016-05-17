@@ -7,7 +7,7 @@
  * Tests if requests display the correct status code and text in the UI.
  */
 
-var test = Task.async(function*() {
+var test = Task.async(function* () {
   let [tab, debuggee, monitor] = yield initNetMonitor(STATUS_CODES_URL);
 
   info("Starting test... ");

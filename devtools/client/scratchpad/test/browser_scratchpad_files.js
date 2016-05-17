@@ -28,12 +28,12 @@ function runTests()
 {
   gScratchpad = gScratchpadWindow.Scratchpad;
 
-  createTempFile("fileForBug636725.tmp", gFileContent, function(aStatus, aFile) {
+  createTempFile("fileForBug636725.tmp", gFileContent, function (aStatus, aFile) {
     ok(Components.isSuccessCode(aStatus),
       "The temporary file was saved successfully");
 
-      gFile = aFile;
-      gScratchpad.importFromFile(gFile.QueryInterface(Ci.nsILocalFile), true,
+    gFile = aFile;
+    gScratchpad.importFromFile(gFile.QueryInterface(Ci.nsILocalFile), true,
         fileImported);
   });
 }
@@ -73,7 +73,7 @@ function fileExported(aStatus)
 
   let oldConfirm = gScratchpadWindow.confirm;
   let askedConfirmation = false;
-  gScratchpadWindow.confirm = function() {
+  gScratchpadWindow.confirm = function () {
     askedConfirmation = true;
     return false;
   };
@@ -107,7 +107,7 @@ function fileRead(aInputStream, aStatus)
      "the temporary file was read back successfully");
 
   let updatedContent =
-    NetUtil.readInputStreamToString(aInputStream, aInputStream.available());;
+    NetUtil.readInputStreamToString(aInputStream, aInputStream.available());
 
   is(updatedContent, gFileContent, "file properly updated");
 

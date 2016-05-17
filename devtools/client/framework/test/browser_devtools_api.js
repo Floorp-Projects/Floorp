@@ -3,7 +3,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-///////////////////
+// /////////////////
 //
 // Whitelisting this test.
 // As part of bug 1077403, the leaking uncaught rejections should be fixed.
@@ -34,7 +34,7 @@ function runTests1(aTab) {
     visibilityswitch: "devtools.test-tool.enabled",
     url: "about:blank",
     label: "someLabel",
-    build: function(iframeWindow, toolbox) {
+    build: function (iframeWindow, toolbox) {
       let panel = new DevToolPanel(iframeWindow, toolbox);
       return panel.open();
     },
@@ -95,7 +95,7 @@ function runTests2() {
     visibilityswitch: "devtools.test-tool.enabled",
     url: "about:blank",
     label: "someLabel",
-    build: function(iframeWindow, toolbox) {
+    build: function (iframeWindow, toolbox) {
       return new DevToolPanel(iframeWindow, toolbox);
     },
   };
@@ -151,7 +151,7 @@ function runTests2() {
   });
 }
 
-var continueTests = Task.async(function*(toolbox, panel) {
+var continueTests = Task.async(function* (toolbox, panel) {
   ok(toolbox.getCurrentPanel(), "panel value is correct");
   is(toolbox.currentToolId, toolId2, "toolbox _currentToolId is correct");
 
@@ -170,7 +170,7 @@ var continueTests = Task.async(function*(toolbox, panel) {
   info("Testing toolbox tool-unregistered event");
   let toolSelected = toolbox.once("select");
   let unregisteredTool = yield new Promise(resolve => {
-    toolbox.once("tool-unregistered", (e,id) => resolve(id));
+    toolbox.once("tool-unregistered", (e, id) => resolve(id));
     gDevTools.unregisterTool(toolId2);
   });
   yield toolSelected;
@@ -183,7 +183,7 @@ var continueTests = Task.async(function*(toolbox, panel) {
 
   info("Testing toolbox tool-registered event");
   let registeredTool = yield new Promise(resolve => {
-    toolbox.once("tool-registered", (e,id) => resolve(id));
+    toolbox.once("tool-registered", (e, id) => resolve(id));
     gDevTools.registerTool(toolDefinition);
   });
 
@@ -193,14 +193,14 @@ var continueTests = Task.async(function*(toolbox, panel) {
   ok(gDevTools.getToolDefinitionMap().has(toolId2),
     "The tool is registered");
 
-  info("Unregistering tool")
+  info("Unregistering tool");
   gDevTools.unregisterTool(toolId2);
 
   destroyToolbox(toolbox);
 });
 
 function destroyToolbox(toolbox) {
-  toolbox.destroy().then(function() {
+  toolbox.destroy().then(function () {
     let target = TargetFactory.forTab(gBrowser.selectedTab);
     ok(gDevTools._toolboxes.get(target) == null, "gDevTools doesn't know about target");
     ok(toolbox._target == null, "toolbox doesn't know about target.");
@@ -227,7 +227,7 @@ function DevToolPanel(iframeWindow, toolbox) {
 
   this._toolbox = toolbox;
 
-  /*let doc = iframeWindow.document
+  /* let doc = iframeWindow.document
   let label = doc.createElement("label");
   let textNode = doc.createTextNode("Some Tool");
 
@@ -236,7 +236,7 @@ function DevToolPanel(iframeWindow, toolbox) {
 }
 
 DevToolPanel.prototype = {
-  open: function() {
+  open: function () {
     let deferred = promise.defer();
 
     executeSoon(() => {

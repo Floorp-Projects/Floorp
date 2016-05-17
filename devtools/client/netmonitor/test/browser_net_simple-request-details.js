@@ -14,7 +14,7 @@ function test() {
     let TAB_UPDATED = aMonitor.panelWin.EVENTS.TAB_UPDATED;
     RequestsMenu.lazyUpdate = false;
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForNetworkEvents(aMonitor, 1);
       is(RequestsMenu.selectedItem, null,
         "There shouldn't be any selected item in the requests menu.");
@@ -33,7 +33,7 @@ function test() {
       is(NetMonitorView.detailsPaneHidden, false,
         "The details pane should not be hidden after toggle button was pressed.");
 
-      yield waitFor(aMonitor.panelWin, TAB_UPDATED)
+      yield waitFor(aMonitor.panelWin, TAB_UPDATED);
       testHeadersTab();
       yield testCookiesTab();
       testParamsTab();
@@ -76,7 +76,7 @@ function test() {
 
       is(responseScope.querySelector(".name").getAttribute("value"),
         L10N.getStr("responseHeaders") + " (" +
-        L10N.getFormatStr("networkMenu.sizeKB", L10N.numberWithDecimals(330/1024, 3)) + ")",
+        L10N.getFormatStr("networkMenu.sizeKB", L10N.numberWithDecimals(330 / 1024, 3)) + ")",
         "The response headers scope doesn't have the correct title.");
 
       ok(requestScope.querySelector(".name").getAttribute("value").includes(
@@ -129,7 +129,7 @@ function test() {
       EventUtils.sendMouseEvent({ type: "mousedown" },
         document.querySelectorAll("#details-pane tab")[1]);
 
-      return Task.spawn(function*() {
+      return Task.spawn(function* () {
         yield waitFor(aMonitor.panelWin, TAB_UPDATED);
 
         let tab = document.querySelectorAll("#details-pane tab")[1];
@@ -174,7 +174,7 @@ function test() {
       EventUtils.sendMouseEvent({ type: "mousedown" },
         document.querySelectorAll("#details-pane tab")[3]);
 
-      return Task.spawn(function*() {
+      return Task.spawn(function* () {
         yield waitFor(aMonitor.panelWin, TAB_UPDATED);
 
         let tab = document.querySelectorAll("#details-pane tab")[3];

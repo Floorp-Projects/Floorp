@@ -24,7 +24,7 @@ function* spawnTest() {
 
   let toolbox = yield gDevTools.showToolbox(options.target, "jsdebugger");
   let panel = toolbox.getCurrentPanel();
-  let constants = panel.panelWin.require('./content/constants');
+  let constants = panel.panelWin.require("./content/constants");
 
   yield waitForDebuggerEvents(panel, panel.panelWin.EVENTS.SOURCE_SHOWN);
 

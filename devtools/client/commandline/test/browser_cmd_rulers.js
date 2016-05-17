@@ -17,33 +17,33 @@ function* spawnTest() {
 
   yield helpers.audit(options, [
     {
-      setup: 'rulers',
+      setup: "rulers",
       check: {
-        input:  'rulers',
-        markup: 'VVVVVV',
-        status: 'VALID'
+        input:  "rulers",
+        markup: "VVVVVV",
+        status: "VALID"
       }
     },
     {
-      setup: 'rulers on',
+      setup: "rulers on",
       check: {
-        input:  'rulers on',
-        markup: 'VVVVVVVEE',
-        status: 'ERROR'
+        input:  "rulers on",
+        markup: "VVVVVVVEE",
+        status: "ERROR"
       },
       exec: {
-        output: 'Error: Too many arguments'
+        output: "Error: Too many arguments"
       }
     },
     {
-      setup: 'rulers --visible',
+      setup: "rulers --visible",
       check: {
-        input:  'rulers --visible',
-        markup: 'VVVVVVVEEEEEEEEE',
-        status: 'ERROR'
+        input:  "rulers --visible",
+        markup: "VVVVVVVEEEEEEEEE",
+        status: "ERROR"
       },
       exec: {
-        output: 'Error: Too many arguments'
+        output: "Error: Too many arguments"
       }
     }
   ]);

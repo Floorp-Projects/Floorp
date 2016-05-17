@@ -12,7 +12,7 @@ function run_test()
 
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
-  gClient.connect().then(function(aType, aTraits) {
+  gClient.connect().then(function (aType, aTraits) {
     attachTestTab(gClient, "test-1", test_attach);
   });
   do_test_pending();
@@ -20,9 +20,9 @@ function run_test()
 
 function test_attach(aResponse, aTabClient)
 {
-  aTabClient.attachThread({}, function(aResponse, aThreadClient) {
+  aTabClient.attachThread({}, function (aResponse, aThreadClient) {
     do_check_eq(aThreadClient.paused, true);
-    aThreadClient.resume(function() {
+    aThreadClient.resume(function () {
       test_interrupt(aThreadClient);
     });
   });
@@ -31,9 +31,9 @@ function test_attach(aResponse, aTabClient)
 function test_interrupt(aThreadClient)
 {
   do_check_eq(aThreadClient.paused, false);
-  aThreadClient.interrupt(function(aResponse) {
+  aThreadClient.interrupt(function (aResponse) {
     do_check_eq(aThreadClient.paused, true);
-    aThreadClient.resume(function() {
+    aThreadClient.resume(function () {
       do_check_eq(aThreadClient.paused, false);
       cleanup();
     });
@@ -42,7 +42,7 @@ function test_interrupt(aThreadClient)
 
 function cleanup()
 {
-  gClient.addListener("closed", function(aEvent) {
+  gClient.addListener("closed", function (aEvent) {
     do_test_finished();
   });
   gClient.close();

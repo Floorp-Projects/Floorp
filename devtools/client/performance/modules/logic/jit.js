@@ -154,7 +154,7 @@ const JITOptimizations = function (rawSites, stringTable) {
         id: site.id,
         strategy: stringTable[a[STRATEGY_SLOT]],
         outcome: stringTable[a[OUTCOME_SLOT]]
-      }
+      };
     });
     let types = data.types.map((t) => {
       let typeset = maybeTypeset(t.typeset, stringTable);
@@ -189,7 +189,7 @@ const JITOptimizations = function (rawSites, stringTable) {
  * Make JITOptimizations iterable.
  */
 JITOptimizations.prototype = {
-  [Symbol.iterator]: function *() {
+  [Symbol.iterator]: function* () {
     yield* this.optimizationSites;
   },
 
@@ -205,9 +205,9 @@ JITOptimizations.prototype = {
  * @return {boolean}
  */
 
-function isSuccessfulOutcome (outcome) {
+function isSuccessfulOutcome(outcome) {
   return !!~SUCCESSFUL_OUTCOMES.indexOf(outcome);
-};
+}
 
 /**
  * Takes an OptimizationSite. Returns a boolean indicating if the passed
@@ -217,11 +217,11 @@ function isSuccessfulOutcome (outcome) {
  * @return {boolean}
  */
 
-function hasSuccessfulOutcome (optimizationSite) {
+function hasSuccessfulOutcome(optimizationSite) {
   let attempts = optimizationSite.data.attempts;
   let lastOutcome = attempts[attempts.length - 1].outcome;
   return isSuccessfulOutcome(lastOutcome);
-};
+}
 
 function maybeString(stringTable, index) {
   return index ? stringTable[index] : undefined;
@@ -263,7 +263,7 @@ const IMPLEMENTATION_NAMES = Object.keys(IMPLEMENTATION_MAP);
  *                 `duration / resolution = bucketSize` in OptimizationsGraph.
  * @return {?Array<object>}
  */
-function createTierGraphDataFromFrameNode (frameNode, sampleTimes, bucketSize) {
+function createTierGraphDataFromFrameNode(frameNode, sampleTimes, bucketSize) {
   let tierData = frameNode.getTierData();
   let stringTable = frameNode._stringTable;
   let output = [];

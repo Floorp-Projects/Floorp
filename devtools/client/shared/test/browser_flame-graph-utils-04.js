@@ -7,7 +7,7 @@ var {FlameGraphUtils} = require("devtools/client/shared/widgets/FlameGraph");
 var {PALLETTE_SIZE} = require("devtools/client/shared/widgets/FlameGraph");
 var {FrameNode} = require("devtools/client/performance/modules/logic/tree-model");
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("about:blank");
   yield performTest();
   gBrowser.removeCurrentTab();
@@ -17,7 +17,7 @@ function* performTest() {
   let out = FlameGraphUtils.createFlameGraphDataFromThread(TEST_DATA, {
     flattenRecursion: true,
     contentOnly: true,
-    showIdleBlocks: '\m/'
+    showIdleBlocks: "\m/"
   });
 
   ok(out, "Some data was outputted properly");

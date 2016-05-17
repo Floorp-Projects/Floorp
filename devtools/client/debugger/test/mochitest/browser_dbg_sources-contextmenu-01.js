@@ -48,7 +48,7 @@ function test() {
   function openContextMenu() {
     let contextMenu = gDebugger.document.getElementById("debuggerSourcesContextMenu");
     let contextMenuShown = once(contextMenu, "popupshown");
-    EventUtils.synthesizeMouseAtCenter(gSources.selectedItem.prebuiltNode, {type: 'contextmenu'}, gDebugger);
+    EventUtils.synthesizeMouseAtCenter(gSources.selectedItem.prebuiltNode, {type: "contextmenu"}, gDebugger);
     return contextMenuShown;
   }
 }

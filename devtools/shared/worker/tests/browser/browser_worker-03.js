@@ -7,23 +7,23 @@
 // And tests `workerify` by doing so.
 
 const { DevToolsWorker, workerify } = require("devtools/shared/worker/worker");
-function square (x) {
+function square(x) {
   return x * x;
 }
 
-function squarePromise (x) {
-  return new Promise((resolve) => resolve(x*x));
+function squarePromise(x) {
+  return new Promise((resolve) => resolve(x * x));
 }
 
-function squareError (x) {
+function squareError(x) {
   return new Error("Nope");
 }
 
-function squarePromiseReject (x) {
+function squarePromiseReject(x) {
   return new Promise((_, reject) => reject("Nope"));
 }
 
-add_task(function*() {
+add_task(function* () {
   let fn = workerify(square);
   is((yield fn(5)), 25, "return primitives successful");
   fn.destroy();

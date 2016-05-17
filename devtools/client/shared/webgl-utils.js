@@ -25,7 +25,7 @@ function isWebGLSupportedByGFX()
     // if either the Angle or OpenGL renderers are available, WebGL should work
     supported = gfxInfo.getFeatureStatus(angle) === gfxInfo.FEATURE_STATUS_OK ||
                 gfxInfo.getFeatureStatus(opengl) === gfxInfo.FEATURE_STATUS_OK;
-  } catch(e) {
+  } catch (e) {
     return false;
   }
   return supported;
@@ -37,7 +37,7 @@ function create3DContext(aCanvas)
   let context = null;
   try {
     context = aCanvas.getContext(WEBGL_CONTEXT_NAME, aFlags);
-  } catch(e) {
+  } catch (e) {
     return null;
   }
   return context;

@@ -17,48 +17,48 @@ const l10n = require("gcli/l10n");
 
 exports.items = [
   {
-    name: 'resize',
-    description: l10n.lookup('resizeModeDesc')
+    name: "resize",
+    description: l10n.lookup("resizeModeDesc")
   },
   {
     item: "command",
     runAt: "client",
-    name: 'resize on',
-    description: l10n.lookup('resizeModeOnDesc'),
-    manual: l10n.lookupFormat('resizeModeManual2', [BRAND_SHORT_NAME]),
+    name: "resize on",
+    description: l10n.lookup("resizeModeOnDesc"),
+    manual: l10n.lookupFormat("resizeModeManual2", [BRAND_SHORT_NAME]),
     exec: gcli_cmd_resize
   },
   {
     item: "command",
     runAt: "client",
-    name: 'resize off',
-    description: l10n.lookup('resizeModeOffDesc'),
-    manual: l10n.lookupFormat('resizeModeManual2', [BRAND_SHORT_NAME]),
+    name: "resize off",
+    description: l10n.lookup("resizeModeOffDesc"),
+    manual: l10n.lookupFormat("resizeModeManual2", [BRAND_SHORT_NAME]),
     exec: gcli_cmd_resize
   },
   {
     item: "command",
     runAt: "client",
-    name: 'resize toggle',
+    name: "resize toggle",
     buttonId: "command-button-responsive",
     buttonClass: "command-button command-button-invertable",
     tooltipText: l10n.lookup("resizeModeToggleTooltip"),
-    description: l10n.lookup('resizeModeToggleDesc'),
-    manual: l10n.lookupFormat('resizeModeManual2', [BRAND_SHORT_NAME]),
+    description: l10n.lookup("resizeModeToggleDesc"),
+    manual: l10n.lookupFormat("resizeModeManual2", [BRAND_SHORT_NAME]),
     state: {
-      isChecked: function(aTarget) {
+      isChecked: function (aTarget) {
         if (!aTarget.tab) {
           return false;
         }
         return ResponsiveUIManager.isActiveForTab(aTarget.tab);
       },
-      onChange: function(aTarget, aChangeHandler) {
+      onChange: function (aTarget, aChangeHandler) {
         if (aTarget.tab) {
           ResponsiveUIManager.on("on", aChangeHandler);
           ResponsiveUIManager.on("off", aChangeHandler);
         }
       },
-      offChange: function(aTarget, aChangeHandler) {
+      offChange: function (aTarget, aChangeHandler) {
         if (aTarget.tab) {
           ResponsiveUIManager.off("on", aChangeHandler);
           ResponsiveUIManager.off("off", aChangeHandler);
@@ -70,17 +70,17 @@ exports.items = [
   {
     item: "command",
     runAt: "client",
-    name: 'resize to',
-    description: l10n.lookup('resizeModeToDesc'),
+    name: "resize to",
+    description: l10n.lookup("resizeModeToDesc"),
     params: [
       {
-        name: 'width',
-        type: 'number',
+        name: "width",
+        type: "number",
         description: l10n.lookup("resizePageArgWidthDesc"),
       },
       {
-        name: 'height',
-        type: 'number',
+        name: "height",
+        type: "number",
         description: l10n.lookup("resizePageArgHeightDesc"),
       },
     ],

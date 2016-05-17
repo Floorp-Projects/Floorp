@@ -10,7 +10,7 @@
 
 const TEST_URL = "data:text/html;charset=utf-8,Rect Highlighter Test";
 
-add_task(function*() {
+add_task(function* () {
   let {inspector, toolbox, testActor} = yield openInspectorForURL(TEST_URL);
   let front = inspector.inspector;
   let highlighter = yield front.getHighlighterByType("RectHighlighter");

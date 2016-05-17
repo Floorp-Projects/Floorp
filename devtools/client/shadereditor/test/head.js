@@ -19,7 +19,7 @@ var { Toolbox } = require("devtools/client/framework/toolbox");
 var { isWebGLSupported } = require("devtools/client/shared/webgl-utils");
 var mm = null;
 
-const FRAME_SCRIPT_UTILS_URL = "chrome://devtools/content/shared/frame-script-utils.js"
+const FRAME_SCRIPT_UTILS_URL = "chrome://devtools/content/shared/frame-script-utils.js";
 const EXAMPLE_URL = "http://example.com/browser/devtools/client/shadereditor/test/";
 const SIMPLE_CANVAS_URL = EXAMPLE_URL + "doc_simple-canvas.html";
 const SHADER_ORDER_URL = EXAMPLE_URL + "doc_shader-order.html";
@@ -57,7 +57,7 @@ registerCleanupFunction(() => {
  * to different pages, as bfcache and thus shader caching gets really strange if
  * frame script attached in the middle of the test.
  */
-function loadFrameScripts () {
+function loadFrameScripts() {
   if (Cu.isCrossProcessWrapper(content)) {
     mm = gBrowser.selectedBrowser.messageManager;
     mm.loadFrameScript(FRAME_SCRIPT_UTILS_URL, false);
@@ -182,8 +182,8 @@ function isApproxColor(aFirst, aSecond, aMargin) {
     isApprox(aFirst.a, aSecond.a, aMargin);
 }
 
-function ensurePixelIs (aFront, aPosition, aColor, aWaitFlag = false, aSelector = "canvas") {
-  return Task.spawn(function*() {
+function ensurePixelIs(aFront, aPosition, aColor, aWaitFlag = false, aSelector = "canvas") {
+  return Task.spawn(function* () {
     let pixel = yield aFront.getPixel({ selector: aSelector, position: aPosition });
     if (isApproxColor(pixel, aColor)) {
       ok(true, "Expected pixel is shown at: " + aPosition.toSource());
@@ -231,7 +231,7 @@ function initBackend(aUrl) {
     DebuggerServer.addBrowserActors();
   }
 
-  return Task.spawn(function*() {
+  return Task.spawn(function* () {
     let tab = yield addTab(aUrl);
     let target = TargetFactory.forTab(tab);
 
@@ -245,7 +245,7 @@ function initBackend(aUrl) {
 function initShaderEditor(aUrl) {
   info("Initializing a shader editor pane.");
 
-  return Task.spawn(function*() {
+  return Task.spawn(function* () {
     let tab = yield addTab(aUrl);
     let target = TargetFactory.forTab(tab);
 
@@ -278,10 +278,10 @@ function teardown(aPanel) {
 function getPrograms(front, count, onAdd) {
   let actors = [];
   let deferred = promise.defer();
-  front.on("program-linked", function onLink (actor) {
+  front.on("program-linked", function onLink(actor) {
     if (actors.length !== count) {
       actors.push(actor);
-      if (typeof onAdd === 'function') onAdd(actors)
+      if (typeof onAdd === "function") onAdd(actors);
     }
     if (actors.length === count) {
       front.off("program-linked", onLink);

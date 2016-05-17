@@ -4,7 +4,7 @@
 
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-var { generateUUID } = Cc['@mozilla.org/uuid-generator;1'].getService(Ci.nsIUUIDGenerator);
+var { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 var { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
@@ -20,7 +20,7 @@ var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { TargetFactory } = require("devtools/client/framework/target");
 var { Toolbox } = require("devtools/client/framework/toolbox");
 var { isWebGLSupported } = require("devtools/client/shared/webgl-utils");
-var mm = null
+var mm = null;
 
 const FRAME_SCRIPT_UTILS_URL = "chrome://devtools/content/shared/frame-script-utils.js";
 const EXAMPLE_URL = "http://example.com/browser/devtools/client/canvasdebugger/test/";
@@ -65,7 +65,7 @@ registerCleanupFunction(() => {
  * Call manually in tests that use frame script utils after initializing
  * the shader editor. Call after init but before navigating to different pages.
  */
-function loadFrameScripts () {
+function loadFrameScripts() {
   mm = gBrowser.selectedBrowser.messageManager;
   mm.loadFrameScript(FRAME_SCRIPT_UTILS_URL, false);
 }
@@ -201,7 +201,7 @@ function initCallWatcherBackend(aUrl) {
   info("Initializing a call watcher front.");
   initServer();
 
-  return Task.spawn(function*() {
+  return Task.spawn(function* () {
     let tab = yield addTab(aUrl);
     let target = TargetFactory.forTab(tab);
 
@@ -216,7 +216,7 @@ function initCanvasDebuggerBackend(aUrl) {
   info("Initializing a canvas debugger front.");
   initServer();
 
-  return Task.spawn(function*() {
+  return Task.spawn(function* () {
     let tab = yield addTab(aUrl);
     let target = TargetFactory.forTab(tab);
 
@@ -230,7 +230,7 @@ function initCanvasDebuggerBackend(aUrl) {
 function initCanvasDebuggerFrontend(aUrl) {
   info("Initializing a canvas debugger pane.");
 
-  return Task.spawn(function*() {
+  return Task.spawn(function* () {
     let tab = yield addTab(aUrl);
     let target = TargetFactory.forTab(tab);
 
@@ -256,7 +256,7 @@ function teardown({target}) {
  * Takes a string `script` and evaluates it directly in the content
  * in potentially a different process.
  */
-function evalInDebuggee (script) {
+function evalInDebuggee(script) {
   let deferred = promise.defer();
 
   if (!mm) {
@@ -267,7 +267,7 @@ function evalInDebuggee (script) {
   mm.sendAsyncMessage("devtools:test:eval", { script: script, id: id });
   mm.addMessageListener("devtools:test:eval:response", handler);
 
-  function handler ({ data }) {
+  function handler({ data }) {
     if (id !== data.id) {
       return;
     }
@@ -292,12 +292,12 @@ function getSourceActor(aSources, aURL) {
  * @param number interval [optional]
  *        How often the predicate is invoked, in milliseconds.
  */
-function *waitUntil (predicate, interval = 10) {
+function* waitUntil(predicate, interval = 10) {
   if (yield predicate()) {
     return Promise.resolve(true);
   }
   let deferred = Promise.defer();
-  setTimeout(function() {
+  setTimeout(function () {
     waitUntil(predicate).then(() => deferred.resolve(true));
   }, interval);
   return deferred.promise;

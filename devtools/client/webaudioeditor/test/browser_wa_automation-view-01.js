@@ -6,7 +6,7 @@
  * or params exist.
  */
 
-add_task(function*() {
+add_task(function* () {
   let { target, panel } = yield initWebAudioEditor(AUTOMATION_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS } = panelWin;

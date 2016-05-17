@@ -8,7 +8,7 @@ var {editableField, getInplaceEditorForSpan: inplaceEditor} = require("devtools/
 
 // Test the inplace-editor behavior.
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("data:text/html;charset=utf-8,inline editor tests");
   let [host, win, doc] = yield createHost();
 
@@ -34,10 +34,10 @@ function testMultipleInitialization(doc) {
   info("Clicking on the inplace-editor field to turn to edit mode");
   span.click();
 
-  is (span.style.display, "none", "The original <span> is hidden");
-  is (doc.querySelectorAll("input").length, 1, "Only one <input>");
-  is (doc.querySelectorAll("span").length, 2, "Correct number of <span> elements");
-  is (doc.querySelectorAll("span.autosizer").length, 1, "There is an autosizer element");
+  is(span.style.display, "none", "The original <span> is hidden");
+  is(doc.querySelectorAll("input").length, 1, "Only one <input>");
+  is(doc.querySelectorAll("span").length, 2, "Correct number of <span> elements");
+  is(doc.querySelectorAll("span.autosizer").length, 1, "There is an autosizer element");
 }
 
 function testReturnCommit(doc) {
@@ -46,7 +46,7 @@ function testReturnCommit(doc) {
 
   createInplaceEditorAndClick({
     initial: "explicit initial",
-    start: function(editor) {
+    start: function (editor) {
       is(editor.input.value, "explicit initial", "Explicit initial value should be used.");
       editor.input.value = "Test Value";
       EventUtils.sendKey("return");
@@ -62,7 +62,7 @@ function testBlurCommit(doc) {
   let def = promise.defer();
 
   createInplaceEditorAndClick({
-    start: function(editor) {
+    start: function (editor) {
       is(editor.input.value, "Edit Me!", "textContent of the span used.");
       editor.input.value = "Test Value";
       editor.input.blur();
@@ -79,7 +79,7 @@ function testAdvanceCharCommit(doc) {
 
   createInplaceEditorAndClick({
     advanceChars: ":",
-    start: function(editor) {
+    start: function (editor) {
       let input = editor.input;
       EventUtils.sendString("Test:");
     },
@@ -97,7 +97,7 @@ function testAdvanceCharsFunction(doc) {
 
   createInplaceEditorAndClick({
     initial: "",
-    advanceChars: function(aCharCode, aText, aInsertionPoint) {
+    advanceChars: function (aCharCode, aText, aInsertionPoint) {
       if (aCharCode !== Components.interfaces.nsIDOMKeyEvent.DOM_VK_COLON) {
         return false;
       }
@@ -109,7 +109,7 @@ function testAdvanceCharsFunction(doc) {
       // Just to make sure we check it somehow.
       return aText.length > 0;
     },
-    start: function(editor) {
+    start: function (editor) {
       for (let ch of ":Test:") {
         EventUtils.sendChar(ch);
       }
@@ -126,7 +126,7 @@ function testEscapeCancel(doc) {
 
   createInplaceEditorAndClick({
     initial: "initial text",
-    start: function(editor) {
+    start: function (editor) {
       editor.input.value = "Test Value";
       EventUtils.sendKey("escape");
     },
@@ -137,12 +137,12 @@ function testEscapeCancel(doc) {
 }
 
 function onDone(value, isCommit, def) {
-  return function(actualValue, actualCommit) {
+  return function (actualValue, actualCommit) {
     info("Inplace-editor's done callback executed, checking its state");
     is(actualValue, value, "The value is correct");
     is(actualCommit, isCommit, "The commit boolean is correct");
     def.resolve();
-  }
+  };
 }
 
 function createInplaceEditorAndClick(options, doc) {

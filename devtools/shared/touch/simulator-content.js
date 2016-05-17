@@ -9,13 +9,13 @@ var { interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-var systemAppOrigin = (function() {
+var systemAppOrigin = (function () {
   let systemOrigin = "_";
   try {
     systemOrigin = Services.io.newURI(
       Services.prefs.getCharPref("b2g.system_manifest_url"), null, null)
       .prePath;
-  } catch(e) {
+  } catch (e) {
     // Fall back to default value
   }
   return systemOrigin;
@@ -24,14 +24,14 @@ var systemAppOrigin = (function() {
 var threshold = 25;
 try {
   threshold = Services.prefs.getIntPref("ui.dragThresholdX");
-} catch(e) {
+} catch (e) {
   // Fall back to default value
 }
 
 var delay = 500;
 try {
   delay = Services.prefs.getIntPref("ui.click_hold_context_menus.delay");
-} catch(e) {
+} catch (e) {
   // Fall back to default value
 }
 
@@ -205,7 +205,7 @@ var simulator = {
             self.fireMouseEvent("mousedown", evt);
             self.fireMouseEvent("mousemove", evt);
             self.fireMouseEvent("mouseup", evt);
-          } catch(e) {
+          } catch (e) {
             console.error("Exception in touch event helper: " + e);
           }
         }, 0, this);

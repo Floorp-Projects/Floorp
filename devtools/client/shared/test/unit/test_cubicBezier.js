@@ -34,7 +34,7 @@ function throwsWhenIncorrectCoordinates() {
   }, "Throws an exception when coordinates are incorrect (empty array)");
 
   do_check_throws(() => {
-    new CubicBezier([0,0]);
+    new CubicBezier([0, 0]);
   }, "Throws an exception when coordinates are incorrect (incomplete array)");
 
   do_check_throws(() => {
@@ -125,10 +125,10 @@ function testParseTimingFunction() {
                            "did not see close paren"));
   ok(!_parseTimingFunction("cubic-bezier(1,2", "early EOF after number"));
   ok(!_parseTimingFunction("cubic-bezier(1,2,", "early EOF after comma"));
-  deepEqual(_parseTimingFunction("cubic-bezier(1,2,3,7)"), [1,2,3,7],
+  deepEqual(_parseTimingFunction("cubic-bezier(1,2,3,7)"), [1, 2, 3, 7],
             "correct invocation");
   deepEqual(_parseTimingFunction("cubic-bezier(1,  /* */ 2,3,   7  )"),
-            [1,2,3,7],
+            [1, 2, 3, 7],
             "correct with comments and whitespace");
 }
 

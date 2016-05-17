@@ -15,8 +15,8 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-stack", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-stack", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_pause_frame();
     });
@@ -26,11 +26,11 @@ function run_test()
 
 function test_pause_frame()
 {
-  gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
+  gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
     let args = aPacket.frame.arguments;
     let objActor1 = args[0].actor;
 
-    gThreadClient.getFrames(0, 1, function(aResponse) {
+    gThreadClient.getFrames(0, 1, function (aResponse) {
       let frame = aResponse.frames[0];
       do_check_eq(objActor1, frame.arguments[0].actor);
       gThreadClient.resume(function () {
@@ -39,10 +39,10 @@ function test_pause_frame()
     });
   });
 
-  gDebuggee.eval("(" + function() {
+  gDebuggee.eval("(" + function () {
     function stopMe(aObject) {
       debugger;
-    };
+    }
     stopMe({ foo: "bar" });
   } + ")()");
 }

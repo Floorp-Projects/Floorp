@@ -6,7 +6,7 @@
  * a curve as the last event to check duration spread.
  */
 
-add_task(function*() {
+add_task(function* () {
   let { target, front } = yield initBackend(SIMPLE_CONTEXT_URL);
   let [_, [destNode, oscNode, gainNode]] = yield Promise.all([
     front.setup({ reload: true }),
@@ -39,11 +39,11 @@ add_task(function*() {
   checkAutomationValue(values, 0.3, 1);
   checkAutomationValue(values, 0.35, 0.575);
   checkAutomationValue(values, 0.4, 0.15);
-  checkAutomationValue(values, 0.45, 0.15 * Math.pow(0.75/0.15,0.05/0.2));
-  checkAutomationValue(values, 0.5, 0.15 * Math.pow(0.75/0.15,0.5));
-  checkAutomationValue(values, 0.55, 0.15 * Math.pow(0.75/0.15,0.15/0.2));
+  checkAutomationValue(values, 0.45, 0.15 * Math.pow(0.75 / 0.15, 0.05 / 0.2));
+  checkAutomationValue(values, 0.5, 0.15 * Math.pow(0.75 / 0.15, 0.5));
+  checkAutomationValue(values, 0.55, 0.15 * Math.pow(0.75 / 0.15, 0.15 / 0.2));
   checkAutomationValue(values, 0.6, 0.75);
-  checkAutomationValue(values, 0.65, 0.75 * Math.pow(0.05/0.75, 0.5));
+  checkAutomationValue(values, 0.65, 0.75 * Math.pow(0.05 / 0.75, 0.5));
   checkAutomationValue(values, 0.705, -1); // Increase this time a bit to prevent off by the previous exponential amount
   checkAutomationValue(values, 0.8, 0);
   checkAutomationValue(values, 0.9, 1);

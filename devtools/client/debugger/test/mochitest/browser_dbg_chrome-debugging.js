@@ -11,8 +11,8 @@ const TAB_URL = EXAMPLE_URL + "doc_inline-debugger-statement.html";
 
 var gClient, gThreadClient;
 var gAttached = promise.defer();
-var gNewGlobal = promise.defer()
-var gNewChromeSource = promise.defer()
+var gNewGlobal = promise.defer();
+var gNewChromeSource = promise.defer();
 
 var { DevToolsLoader } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var customLoader = new DevToolsLoader();
@@ -90,7 +90,7 @@ function resumeAndCloseConnection() {
   return deferred.promise;
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gClient = null;
   gThreadClient = null;
   gAttached = null;

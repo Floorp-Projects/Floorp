@@ -85,7 +85,7 @@ function test() {
       EventUtils.sendMouseEvent({ type: "mousedown" },
         document.querySelectorAll("#details-pane tab")[3]);
 
-      Task.spawn(function*() {
+      Task.spawn(function* () {
         yield waitForResponseBodyDisplayed();
         yield testResponseTab("xml");
         RequestsMenu.selectedIndex = 1;
@@ -241,11 +241,11 @@ function test() {
         }
       }
 
-      function waitForTabUpdated () {
+      function waitForTabUpdated() {
         return waitFor(aMonitor.panelWin, aMonitor.panelWin.EVENTS.TAB_UPDATED);
       }
 
-      function waitForResponseBodyDisplayed () {
+      function waitForResponseBodyDisplayed() {
         return waitFor(aMonitor.panelWin, aMonitor.panelWin.EVENTS.RESPONSE_BODY_DISPLAYED);
       }
     });

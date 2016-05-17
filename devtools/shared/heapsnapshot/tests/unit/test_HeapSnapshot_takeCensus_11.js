@@ -27,7 +27,7 @@ function run_test() {
   var g = newGlobal();
   var dbg = new Debugger(g);
 
-  g.eval('this.markers = []');
+  g.eval("this.markers = []");
   const markerSize = byteSize(allocationMarker());
 
   // First, test that we get the same counts and sizes as we allocate and retain
@@ -38,8 +38,8 @@ function run_test() {
 
   for (var i = 0; i < 10; i++) {
     const { live, offline } = doLiveAndOfflineCensus(g, dbg, {
-      breakdown: { by: 'objectClass',
-                   then: { by: 'count'} }
+      breakdown: { by: "objectClass",
+                   then: { by: "count"} }
     });
 
     equal(live.AllocationMarker.count, offline.AllocationMarker.count);
@@ -55,8 +55,8 @@ function run_test() {
   // those allocation stacks match up.
 
   const { live, offline } = doLiveAndOfflineCensus(g, dbg, {
-    breakdown: { by: 'objectClass',
-                 then: { by: 'allocationStack'} }
+    breakdown: { by: "objectClass",
+                 then: { by: "allocationStack"} }
   });
 
   equal(live.AllocationMarker.size, offline.AllocationMarker.size);
@@ -74,7 +74,7 @@ function run_test() {
     dumpn("Allocation stack:");
     k.toString().split(/\n/g).forEach(s => dumpn(s));
 
-    equal(k.functionDisplayName, 'unsafeAtAnySpeed');
+    equal(k.functionDisplayName, "unsafeAtAnySpeed");
     equal(k.line, 4);
 
     liveEntries.push([k.toString(), v]);
@@ -85,7 +85,7 @@ function run_test() {
     dumpn("Allocation stack:");
     k.toString().split(/\n/g).forEach(s => dumpn(s));
 
-    equal(k.functionDisplayName, 'unsafeAtAnySpeed');
+    equal(k.functionDisplayName, "unsafeAtAnySpeed");
     equal(k.line, 4);
 
     offlineEntries.push([k.toString(), v]);

@@ -28,8 +28,8 @@ function test_simple_breakpoint()
   gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
     let source = gThreadClient.source(aPacket.frame.where.source);
     source.setBreakpoint({
-        line: 3,
-        condition: "a === 2"
+      line: 3,
+      condition: "a === 2"
     }, function (aResponse, bpClient) {
       gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
         // Check the return value.

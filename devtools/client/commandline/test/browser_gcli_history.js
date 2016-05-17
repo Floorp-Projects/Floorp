@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
 // PLEASE TALK TO SOMEONE IN DEVELOPER TOOLS BEFORE EDITING IT
@@ -26,47 +26,47 @@ function test() {
 }
 
 // var assert = require('../testharness/assert');
-var History = require('gcli/ui/history').History;
+var History = require("gcli/ui/history").History;
 
 exports.testSimpleHistory = function (options) {
   var history = new History({});
-  history.add('foo');
-  history.add('bar');
-  assert.is(history.backward(), 'bar');
-  assert.is(history.backward(), 'foo');
+  history.add("foo");
+  history.add("bar");
+  assert.is(history.backward(), "bar");
+  assert.is(history.backward(), "foo");
 
   // Adding to the history again moves us back to the start of the history.
-  history.add('quux');
-  assert.is(history.backward(), 'quux');
-  assert.is(history.backward(), 'bar');
-  assert.is(history.backward(), 'foo');
+  history.add("quux");
+  assert.is(history.backward(), "quux");
+  assert.is(history.backward(), "bar");
+  assert.is(history.backward(), "foo");
 };
 
 exports.testBackwardsPastIndex = function (options) {
   var history = new History({});
-  history.add('foo');
-  history.add('bar');
-  assert.is(history.backward(), 'bar');
-  assert.is(history.backward(), 'foo');
+  history.add("foo");
+  history.add("bar");
+  assert.is(history.backward(), "bar");
+  assert.is(history.backward(), "foo");
 
   // Moving backwards past recorded history just keeps giving you the last
   // item.
-  assert.is(history.backward(), 'foo');
+  assert.is(history.backward(), "foo");
 };
 
 exports.testForwardsPastIndex = function (options) {
   var history = new History({});
-  history.add('foo');
-  history.add('bar');
-  assert.is(history.backward(), 'bar');
-  assert.is(history.backward(), 'foo');
+  history.add("foo");
+  history.add("bar");
+  assert.is(history.backward(), "bar");
+  assert.is(history.backward(), "foo");
 
   // Going forward through the history again.
-  assert.is(history.forward(), 'bar');
+  assert.is(history.forward(), "bar");
 
   // 'Present' time.
-  assert.is(history.forward(), '');
+  assert.is(history.forward(), "");
 
   // Going to the 'future' just keeps giving us the empty string.
-  assert.is(history.forward(), '');
+  assert.is(history.forward(), "");
 };
