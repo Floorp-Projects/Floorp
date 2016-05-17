@@ -155,11 +155,24 @@ devtools/shared/pretty-fast/*
 devtools/shared/sourcemap/*
 devtools/shared/qrcode/decoder/*
 devtools/shared/qrcode/encoder/*
+devtools/client/shared/demangle.js
 devtools/client/shared/vendor/*
 devtools/client/sourceeditor/codemirror/*.js
 devtools/client/sourceeditor/codemirror/**/*.js
 devtools/client/sourceeditor/test/codemirror/*
 devtools/client/inspector/markup/test/lib_*
+devtools/client/jsonview/lib/require.js
+devtools/server/actors/utils/automation-timeline.js
+
+# Ignore devtools files testing sourcemaps / code style
+devtools/client/debugger/test/mochitest/code_binary_search.js
+devtools/client/debugger/test/mochitest/code_math.min.js
+devtools/client/debugger/test/mochitest/code_math_bogus_map.js
+devtools/client/debugger/test/mochitest/code_ugly*
+devtools/client/debugger/test/mochitest/code_worker-source-map.js
+devtools/client/framework/test/code_ugly*
+devtools/server/tests/unit/babel_and_browserify_script_with_source_map.js
+devtools/server/tests/unit/setBreakpoint*
 
 # mobile/android/ exclusions
 mobile/android/chrome/content
