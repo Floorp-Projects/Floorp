@@ -289,6 +289,40 @@ enum class Expr
 
     // SIMD
 #define SIMD_OPCODE(TYPE, OP) TYPE##OP,
+#define _(OP) SIMD_OPCODE(I8x16, OP)
+    FORALL_INT8X16_ASMJS_OP(_)
+    I8x16Constructor,
+    I8x16Const,
+#undef _
+    // Unsigned I8x16 operations. These are the SIMD.Uint8x16 operations that
+    // behave differently from their SIMD.Int8x16 counterparts.
+    I8x16extractLaneU,
+    I8x16addSaturateU,
+    I8x16subSaturateU,
+    I8x16shiftRightByScalarU,
+    I8x16lessThanU,
+    I8x16lessThanOrEqualU,
+    I8x16greaterThanU,
+    I8x16greaterThanOrEqualU,
+
+#define SIMD_OPCODE(TYPE, OP) TYPE##OP,
+#define _(OP) SIMD_OPCODE(I16x8, OP)
+    FORALL_INT16X8_ASMJS_OP(_)
+    I16x8Constructor,
+    I16x8Const,
+#undef _
+    // Unsigned I16x8 operations. These are the SIMD.Uint16x8 operations that
+    // behave differently from their SIMD.Int16x8 counterparts.
+    I16x8extractLaneU,
+    I16x8addSaturateU,
+    I16x8subSaturateU,
+    I16x8shiftRightByScalarU,
+    I16x8lessThanU,
+    I16x8lessThanOrEqualU,
+    I16x8greaterThanU,
+    I16x8greaterThanOrEqualU,
+
+#define SIMD_OPCODE(TYPE, OP) TYPE##OP,
 #define _(OP) SIMD_OPCODE(I32x4, OP)
     FORALL_INT32X4_ASMJS_OP(_)
     I32x4Constructor,
@@ -307,6 +341,21 @@ enum class Expr
     F32x4Constructor,
     F32x4Const,
 #undef _
+
+#define _(OP) SIMD_OPCODE(B8x16, OP)
+    FORALL_BOOL_SIMD_OP(_)
+    B8x16Constructor,
+    B8x16Const,
+#undef _
+#undef OPCODE
+
+#define _(OP) SIMD_OPCODE(B16x8, OP)
+    FORALL_BOOL_SIMD_OP(_)
+    B16x8Constructor,
+    B16x8Const,
+#undef _
+#undef OPCODE
+
 #define _(OP) SIMD_OPCODE(B32x4, OP)
     FORALL_BOOL_SIMD_OP(_)
     B32x4Constructor,
