@@ -468,8 +468,10 @@ MediaSourceTrackDemuxer::DoSkipToNextRandomAccessPoint(media::TimeUnit aTimeThre
   buffered.SetFuzz(MediaSourceDemuxer::EOS_FUZZ);
   if (buffered.Contains(aTimeThreadshold)) {
     bool found;
-    parsed =
-      mManager->SkipToNextRandomAccessPoint(mType, aTimeThreadshold, found);
+    parsed = mManager->SkipToNextRandomAccessPoint(mType,
+                                                   aTimeThreadshold,
+                                                   MediaSourceDemuxer::EOS_FUZZ,
+                                                   found);
     if (found) {
       return SkipAccessPointPromise::CreateAndResolve(parsed, __func__);
     }
