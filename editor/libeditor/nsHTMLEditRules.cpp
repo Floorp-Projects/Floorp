@@ -7030,7 +7030,12 @@ nsHTMLEditRules::ReapplyCachedStyles()
   // get selection point; if it doesn't exist, we have nothing to do
   NS_ENSURE_STATE(mHTMLEditor);
   RefPtr<Selection> selection = mHTMLEditor->GetSelection();
-  MOZ_ASSERT(selection);
+  if (!selection) {
+    // If the document is removed from its parent document during executing an
+    // editor operation with DOMMutationEvent or something, there may be no
+    // selection.
+    return NS_OK;
+  }
   if (!selection->RangeCount()) {
     // Nothing to do
     return NS_OK;
