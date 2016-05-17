@@ -5698,20 +5698,45 @@ DebuggerScript_getOffsetLocation(JSContext* cx, unsigned argc, Value* vp)
     while (!r.empty() && r.frontOffset() < offset)
         r.popFront();
 
+    offset = r.frontOffset();
+    bool isEntryPoint = r.frontIsEntryPoint();
+
+    // Line numbers are only correctly defined on entry points. Thus looks
+    // either for the next valid offset in the flowData, being the last entry
+    // point flowing into the current offset, or for the next valid entry point.
+    while (!r.frontIsEntryPoint() && !flowData[r.frontOffset()].hasSingleEdge()) {
+        r.popFront();
+        MOZ_ASSERT(!r.empty());
+    }
+
+    // If this is an entry point, take the line number associated with the entry
+    // point, otherwise settle on the next instruction and take the incoming
+    // edge position.
+    size_t lineno;
+    size_t column;
+    if (r.frontIsEntryPoint()) {
+        lineno = r.frontLineNumber();
+        column = r.frontColumnNumber();
+    } else {
+        MOZ_ASSERT(flowData[r.frontOffset()].hasSingleEdge());
+        lineno = flowData[r.frontOffset()].lineno();
+        column = flowData[r.frontOffset()].column();
+    }
+
     RootedId id(cx, NameToId(cx->names().lineNumber));
-    RootedValue value(cx, NumberValue(r.frontLineNumber()));
+    RootedValue value(cx, NumberValue(lineno));
     if (!DefineProperty(cx, result, id, value))
         return false;
 
-    value = NumberValue(r.frontColumnNumber());
+    value = NumberValue(column);
     if (!DefineProperty(cx, result, cx->names().columnNumber, value))
         return false;
 
     // The same entry point test that is used by getAllColumnOffsets.
-    bool isEntryPoint = (r.frontIsEntryPoint() &&
-                         !flowData[offset].hasNoEdges() &&
-                         (flowData[offset].lineno() != r.frontLineNumber() ||
-                          flowData[offset].column() != r.frontColumnNumber()));
+    isEntryPoint = (isEntryPoint &&
+                    !flowData[offset].hasNoEdges() &&
+                    (flowData[offset].lineno() != r.frontLineNumber() ||
+                     flowData[offset].column() != r.frontColumnNumber()));
     value.setBoolean(isEntryPoint);
     if (!DefineProperty(cx, result, cx->names().isEntryPoint, value))
         return false;
