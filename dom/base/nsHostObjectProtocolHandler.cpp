@@ -32,6 +32,7 @@ struct DataInfo
   // mObject is expected to be an nsIDOMBlob, DOMMediaStream, or MediaSource
   nsCOMPtr<nsISupports> mObject;
   nsCOMPtr<nsIPrincipal> mPrincipal;
+  bool mPrivateBrowsing;
   nsCString mStack;
 };
 
@@ -321,6 +322,7 @@ nsresult
 nsHostObjectProtocolHandler::AddDataEntry(const nsACString& aScheme,
                                           nsISupports* aObject,
                                           nsIPrincipal* aPrincipal,
+                                          bool aPrivateBrowsing,
                                           nsACString& aUri)
 {
   Init();
@@ -336,6 +338,7 @@ nsHostObjectProtocolHandler::AddDataEntry(const nsACString& aScheme,
 
   info->mObject = aObject;
   info->mPrincipal = aPrincipal;
+  info->mPrivateBrowsing = aPrivateBrowsing;
   mozilla::BlobURLsReporter::GetJSStackForBlob(info);
 
   gDataTable->Put(aUri, info);
@@ -537,6 +540,17 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
     return NS_ERROR_DOM_BAD_URI;
   }
 
+  bool usePrivateBrowsing = false;
+  ErrorResult rv;
+  rv = aLoadInfo->GetUsePrivateBrowsing(&usePrivateBrowsing);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
+  }
+
+  if (info->mPrivateBrowsing != usePrivateBrowsing) {
+    return NS_ERROR_DOM_BAD_URI;
+  }
+
   nsCOMPtr<BlobImpl> blob = do_QueryInterface(info->mObject);
   if (!blob) {
     return NS_ERROR_DOM_BAD_URI;
@@ -551,7 +565,6 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
   }
 #endif
 
-  ErrorResult rv;
   nsCOMPtr<nsIInputStream> stream;
   blob->GetInternalStream(getter_AddRefs(stream), rv);
   if (NS_WARN_IF(rv.Failed())) {
