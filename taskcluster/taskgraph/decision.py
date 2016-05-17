@@ -13,10 +13,25 @@ import yaml
 
 from .generator import TaskGraphGenerator
 from .create import create_tasks
-from .parameters import get_decision_parameters
+from .parameters import Parameters
 from .target_tasks import get_method
 
 ARTIFACTS_DIR = 'artifacts'
+
+logger = logging.getLogger(__name__)
+
+# For each project, this gives a set of parameters specific to the project.
+# See `taskcluster/docs/parameters.rst` for information on parameters.
+PER_PROJECT_PARAMETERS = {
+    'try': {
+        'target_tasks_method': 'try_option_syntax',
+    },
+
+    # the default parameters are used for projects that do not match above.
+    'default': {
+        'target_tasks_method': 'all_tasks',
+    }
+}
 
 
 def taskgraph_decision(log, options):
@@ -62,6 +77,38 @@ def taskgraph_decision(log, options):
 
     # actually create the graph
     create_tasks(tgg.optimized_task_graph)
+
+
+def get_decision_parameters(options):
+    """
+    Load parameters from the command-line options for 'taskgraph decision'.
+    This also applies per-project parameters, based on the given project.
+
+    """
+    parameters = {n: options[n] for n in [
+        'base_repository',
+        'head_repository',
+        'head_rev',
+        'head_ref',
+        'revision_hash',
+        'message',
+        'project',
+        'pushlog_id',
+        'owner',
+        'level',
+        'target_tasks_method',
+    ] if n in options}
+
+    project = parameters['project']
+    try:
+        parameters.update(PER_PROJECT_PARAMETERS[project])
+    except KeyError:
+        logger.warning("using default project parameters; add {} to "
+              "PER_PROJECT_PARAMETERS in {} to customize behavior "
+              "for this project".format(project, __file__))
+        parameters.update(PER_PROJECT_PARAMETERS['default'])
+
+    return Parameters(parameters)
 
 
 def taskgraph_to_json(taskgraph):

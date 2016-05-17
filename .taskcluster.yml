@@ -94,7 +94,6 @@ tasks:
             cd workspace/gecko &&
             ln -s /home/worker/artifacts artifacts &&
             ./mach taskgraph decision
-            --target-tasks-method=try_option_syntax
             --pushlog-id='{{pushlog_id}}'
             --project='{{project}}'
             --message='{{comment}}'
