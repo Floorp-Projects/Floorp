@@ -8,7 +8,6 @@ const { Ci } = require("chrome");
 
 const EventEmitter = require("devtools/shared/event-emitter");
 const events = require("sdk/event/core");
-const { HighlighterFront, CustomHighlighterFront } = require("devtools/client/fronts/highlighters");
 const protocol = require("devtools/shared/protocol");
 const { Arg, Option, method, RetVal } = protocol;
 const { isWindowIncluded } = require("devtools/shared/layout/utils");
