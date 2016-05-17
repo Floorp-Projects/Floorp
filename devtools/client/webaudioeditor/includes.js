@@ -11,7 +11,7 @@ const { loader, require } = Cu.import("resource://devtools/shared/Loader.jsm", {
 
 var { EventTarget } = require("sdk/event/target");
 
-const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
+const { Task } = require("devtools/shared/task");
 const { Class } = require("sdk/core/heritage");
 const EventEmitter = require("devtools/shared/event-emitter");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");

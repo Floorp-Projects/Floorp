@@ -23,7 +23,7 @@ const {
   walkerSpec
 } = require("devtools/shared/specs/inspector");
 const promise = require("promise");
-const { Task } = require("resource://gre/modules/Task.jsm");
+const { Task } = require("devtools/shared/task");
 const { Class } = require("sdk/core/heritage");
 const events = require("sdk/event/core");
 const object = require("sdk/util/object");

@@ -10,6 +10,7 @@ const { PROMISE } = require("devtools/client/shared/redux/middleware/promise");
 const {
   getSource, getBreakpoint, getBreakpoints, makeLocationId
 } = require("../queries");
+const { Task } = require("devtools/shared/task");
 
 // Because breakpoints are just simple data structures, we still need
 // a way to lookup the actual client instance to talk to the server.

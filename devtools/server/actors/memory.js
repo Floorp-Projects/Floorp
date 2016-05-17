@@ -9,13 +9,13 @@ const protocol = require("devtools/shared/protocol");
 const { method, RetVal, Arg, types } = protocol;
 const { Memory } = require("devtools/server/performance/memory");
 const { actorBridge } = require("devtools/server/actors/common");
+const { Task } = require("devtools/shared/task");
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
 loader.lazyRequireGetter(this, "StackFrameCache",
                          "devtools/server/actors/utils/stack", true);
 loader.lazyRequireGetter(this, "FileUtils",
                          "resource://gre/modules/FileUtils.jsm", true);
 loader.lazyRequireGetter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm", true);
-loader.lazyRequireGetter(this, "Task", "resource://gre/modules/Task.jsm", true);
 loader.lazyRequireGetter(this, "HeapSnapshotFileUtils",
                          "devtools/shared/heapsnapshot/HeapSnapshotFileUtils");
 loader.lazyRequireGetter(this, "ThreadSafeChromeUtils");

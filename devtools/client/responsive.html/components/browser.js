@@ -6,7 +6,7 @@
 
 "use strict";
 
-const { Task } = require("resource://gre/modules/Task.jsm");
+const { Task } = require("devtools/shared/task");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { getToplevelWindow } = require("sdk/window/utils");
 const { DOM: dom, createClass, addons, PropTypes } =

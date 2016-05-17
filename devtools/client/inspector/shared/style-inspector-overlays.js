@@ -12,7 +12,6 @@
 // - in-content highlighters that appear when hovering over property values
 // - etc.
 
-const {Cu} = require("chrome");
 const {
   Tooltip,
   SwatchColorPickerTooltip,
@@ -22,7 +21,7 @@ const {
 } = require("devtools/client/shared/widgets/Tooltip");
 const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
-Cu.import("resource://gre/modules/Task.jsm");
+const {Task} = require("devtools/shared/task");
 const Services = require("Services");
 
 const PREF_IMAGE_TOOLTIP_SIZE = "devtools.inspector.imagePreviewTooltipSize";

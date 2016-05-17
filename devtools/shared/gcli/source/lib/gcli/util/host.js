@@ -20,7 +20,7 @@ var Cc = require('chrome').Cc;
 var Ci = require('chrome').Ci;
 var URL = require('sdk/url').URL;
 
-var Task = require('resource://gre/modules/Task.jsm').Task;
+var { Task } = require("devtools/shared/task");
 
 var util = require('./util');
 

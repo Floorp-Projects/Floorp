@@ -14,11 +14,11 @@
 
 "use strict";
 
-const {Cc, Ci, Cu} = require("chrome");
+const {Cc, Ci} = require("chrome");
 loader.lazyRequireGetter(this, "CSS", "CSS");
 const promise = require("promise");
 const {getCSSLexer} = require("devtools/shared/css-lexer");
-Cu.import("resource://gre/modules/Task.jsm", this);
+const {Task} = require("devtools/shared/task");
 loader.lazyGetter(this, "DOMUtils", () => {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 });

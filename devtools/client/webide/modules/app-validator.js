@@ -8,7 +8,7 @@ const promise = require("promise");
 
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 const Services = require("Services");
-const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
+const {Task} = require("devtools/shared/task");
 var XMLHttpRequest = CC("@mozilla.org/xmlextras/xmlhttprequest;1");
 var strings = Services.strings.createBundle("chrome://devtools/locale/app-manager.properties");
 

@@ -13,7 +13,7 @@ const {
 
 const { getFormatStr } = require("../utils/l10n");
 const { getToplevelWindow } = require("sdk/window/utils");
-const { Task: { spawn } } = require("resource://gre/modules/Task.jsm");
+const { Task: { spawn } } = require("devtools/shared/task");
 const e10s = require("../utils/e10s");
 
 const BASE_URL = "resource://devtools/client/responsive.html";

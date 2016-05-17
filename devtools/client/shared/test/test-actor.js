@@ -9,7 +9,7 @@
 var { Cc, Ci, Cu, Cr } = require("chrome");
 const {getRect, getElementFromPoint, getAdjustedQuads} = require("devtools/shared/layout/utils");
 const promise = require("promise");
-const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
+const {Task} = require("devtools/shared/task");
 var DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
             .getService(Ci.mozIJSSubScriptLoader);

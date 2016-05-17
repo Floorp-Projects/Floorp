@@ -15,7 +15,7 @@ const {
   styleSheetsSpec
 } = require("devtools/shared/specs/stylesheets");
 const promise = require("promise");
-const { Task } = require("resource://gre/modules/Task.jsm");
+const { Task } = require("devtools/shared/task");
 const events = require("sdk/event/core");
 
 /**

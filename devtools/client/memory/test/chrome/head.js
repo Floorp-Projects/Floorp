@@ -12,7 +12,7 @@ var { require } = BrowserLoader({
   window: this
 });
 var Services = require("Services");
-var { Task } = require("resource://gre/modules/Task.jsm");
+var { Task } = require("devtools/shared/task");
 
 var EXPECTED_DTU_ASSERT_FAILURE_COUNT = 0;
 
