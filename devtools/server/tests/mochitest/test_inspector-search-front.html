@@ -16,7 +16,7 @@ window.onload = function() {
   const {Promise: promise} =
     Cu.import("resource://gre/modules/Promise.jsm", {});
   const {InspectorFront} =
-    devtools.require("devtools/client/fronts/inspector");
+    devtools.require("devtools/shared/fronts/inspector");
   const {console} = Cu.import("resource://gre/modules/Console.jsm", {});
 
   SimpleTest.waitForExplicitFinish();

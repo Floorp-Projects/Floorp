@@ -11,7 +11,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript;version=1.8" src="inspector-helpers.js"></script>
   <script type="application/javascript;version=1.8">
-const inspector = require("devtools/client/fronts/inspector");
+const inspector = require("devtools/shared/fronts/inspector");
 const DOMUtils = Components.classes["@mozilla.org/inspector/dom-utils;1"].
                    getService(Components.interfaces.inIDOMUtils);
 
@@ -31,7 +31,7 @@ function setup(callback) {
   let url = document.getElementById("inspectorContent").href;
   gCleanupConnection = attachURL(url, function(err, client, tab, doc) {
     gInspectee = doc;
-    let {InspectorFront} = require("devtools/client/fronts/inspector");
+    let {InspectorFront} = require("devtools/shared/fronts/inspector");
     let inspector = InspectorFront(client, tab);
     promiseDone(inspector.getWalker().then(walker => {
       gClient = client;

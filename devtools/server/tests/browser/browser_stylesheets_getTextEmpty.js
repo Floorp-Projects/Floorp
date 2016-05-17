@@ -6,7 +6,7 @@
 
 // Test that StyleSheetActor.getText handles empty text correctly.
 
-const {StyleSheetsFront} = require("devtools/client/fronts/stylesheets");
+const {StyleSheetsFront} = require("devtools/shared/fronts/stylesheets");
 
 const CONTENT = "<style>body { background-color: #f0c; }</style>";
 const TEST_URI = "data:text/html;charset=utf-8," + encodeURIComponent(CONTENT);
