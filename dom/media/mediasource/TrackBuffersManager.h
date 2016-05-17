@@ -378,6 +378,7 @@ private:
 
   // SourceBuffer Queues and running context.
   SourceBufferTaskQueue mQueue;
+  void QueueTask(SourceBufferTask* aTask);
   void ProcessTasks();
   void CancelAllTasks();
   // Set if the TrackBuffersManager is currently processing a task.
