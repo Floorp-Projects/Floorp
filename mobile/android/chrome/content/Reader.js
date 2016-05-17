@@ -153,9 +153,9 @@ var Reader = {
     readerModeCallback: function(browser) {
       let url = browser.currentURI.spec;
       if (url.startsWith("about:reader")) {
-        UITelemetry.addEvent("action.1", "button", "reader_exit");
+        UITelemetry.addEvent("action.1", "button", null, "reader_exit");
       } else {
-        UITelemetry.addEvent("action.1", "button", "reader_enter");
+        UITelemetry.addEvent("action.1", "button", null, "reader_enter");
       }
       browser.messageManager.sendAsyncMessage("Reader:ToggleReaderMode");
     },
@@ -194,9 +194,9 @@ var Reader = {
 
     if (browser.isArticle) {
       showPageAction("drawable://reader", Strings.reader.GetStringFromName("readerView.enter"));
-      UITelemetry.addEvent("show.1", "button", "reader_available");
+      UITelemetry.addEvent("show.1", "button", null, "reader_available");
     } else {
-      UITelemetry.addEvent("show.1", "button", "reader_unavailable");
+      UITelemetry.addEvent("show.1", "button", null, "reader_unavailable");
     }
   },
 
