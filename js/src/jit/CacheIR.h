@@ -13,6 +13,7 @@
 
 #include "gc/Rooting.h"
 #include "jit/CompactBuffer.h"
+#include "jit/SharedIC.h"
 
 namespace js {
 namespace jit {
