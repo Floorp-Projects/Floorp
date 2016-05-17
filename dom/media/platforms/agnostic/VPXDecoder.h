@@ -51,8 +51,8 @@ private:
   int DoDecode(MediaRawData* aSample);
   void ProcessDrain();
 
-  RefPtr<ImageContainer> mImageContainer;
-  RefPtr<FlushableTaskQueue> mTaskQueue;
+  const RefPtr<ImageContainer> mImageContainer;
+  const RefPtr<FlushableTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
 
   // VPx decoder state
@@ -60,7 +60,7 @@ private:
 
   const VideoInfo& mInfo;
 
-  int mCodec;
+  const int mCodec;
 };
 
 } // namespace mozilla
