@@ -156,8 +156,6 @@ devtools/shared/sourcemap/*
 devtools/shared/qrcode/decoder/*
 devtools/shared/qrcode/encoder/*
 devtools/client/shared/vendor/*
-devtools/client/shared/d3.js
-devtools/client/webaudioeditor/lib/dagre-d3.js
 devtools/client/sourceeditor/codemirror/*.js
 devtools/client/sourceeditor/codemirror/**/*.js
 devtools/client/sourceeditor/test/codemirror/*
