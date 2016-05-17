@@ -2630,20 +2630,6 @@ fi # SKIP_LIBRARY_CHECKS
 AC_SUBST(MOZ_PNG_ARM_NEON)
 
 dnl ========================================================
-dnl system HunSpell Support
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(system-hunspell,
-[  --enable-system-hunspell
-                          Use system hunspell (located with pkgconfig)],
-    MOZ_SYSTEM_HUNSPELL=1 )
-
-if test -n "$MOZ_SYSTEM_HUNSPELL"; then
-    PKG_CHECK_MODULES(MOZ_HUNSPELL, hunspell)
-fi
-
-AC_SUBST(MOZ_SYSTEM_HUNSPELL)
-
-dnl ========================================================
 dnl system libffi Support
 dnl ========================================================
 MOZ_CONFIG_FFI()
