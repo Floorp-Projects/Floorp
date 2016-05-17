@@ -1341,84 +1341,16 @@ JSScript::initScriptCounts(JSContext* cx)
 
     // Record all pc which are the first instruction of a basic block.
     mozilla::Vector<jsbytecode*, 16, SystemAllocPolicy> jumpTargets;
+    jsbytecode* mainPc = main();
     jsbytecode* end = codeEnd();
-    jsbytecode* mainEntry = main();
     for (jsbytecode* pc = code(); pc != end; pc = GetNextPc(pc)) {
-        if (pc == mainEntry) {
+        if (BytecodeIsJumpTarget(JSOp(*pc)) || pc == mainPc) {
             if (!jumpTargets.append(pc)) {
                 ReportOutOfMemory(cx);
                 return false;
             }
         }
-
-        bool jump = IsJumpOpcode(JSOp(*pc));
-        if (jump) {
-            jsbytecode* target = pc + GET_JUMP_OFFSET(pc);
-            if (!jumpTargets.append(target)) {
-                ReportOutOfMemory(cx);
-                return false;
-            }
-
-            if (BytecodeFallsThrough(JSOp(*pc))) {
-                jsbytecode* fallthrough = GetNextPc(pc);
-                if (!jumpTargets.append(fallthrough)) {
-                    ReportOutOfMemory(cx);
-                    return false;
-                }
-            }
-        }
-
-        if (JSOp(*pc) == JSOP_TABLESWITCH) {
-            jsbytecode* pc2 = pc;
-            int32_t len = GET_JUMP_OFFSET(pc2);
-
-            // Default target.
-            if (!jumpTargets.append(pc + len)) {
-                ReportOutOfMemory(cx);
-                return false;
-            }
-
-            pc2 += JUMP_OFFSET_LEN;
-            int32_t low = GET_JUMP_OFFSET(pc2);
-            pc2 += JUMP_OFFSET_LEN;
-            int32_t high = GET_JUMP_OFFSET(pc2);
-
-            for (int i = 0; i < high-low+1; i++) {
-                pc2 += JUMP_OFFSET_LEN;
-                int32_t off = (int32_t) GET_JUMP_OFFSET(pc2);
-                if (off) {
-                    // Case (i + low)
-                    if (!jumpTargets.append(pc + off)) {
-                        ReportOutOfMemory(cx);
-                        return false;
-                    }
-                }
-            }
-        }
     }
-
-    // Mark catch/finally blocks as being jump targets.
-    if (hasTrynotes()) {
-        JSTryNote* tn = trynotes()->vector;
-        JSTryNote* tnlimit = tn + trynotes()->length;
-        for (; tn < tnlimit; tn++) {
-            jsbytecode* tryStart = mainEntry + tn->start;
-            jsbytecode* tryPc = tryStart - 1;
-            if (JSOp(*tryPc) != JSOP_TRY)
-                continue;
-
-            jsbytecode* tryTarget = tryStart + tn->length;
-            if (!jumpTargets.append(tryTarget)) {
-                ReportOutOfMemory(cx);
-                return false;
-            }
-        }
-    }
-
-    // Sort all pc, and remove duplicates.
-    std::sort(jumpTargets.begin(), jumpTargets.end());
-    auto last = std::unique(jumpTargets.begin(), jumpTargets.end());
-    jumpTargets.erase(last, jumpTargets.end());
 
     // Initialize all PCCounts counters to 0.
     ScriptCounts::PCCountsVector base;
