@@ -126,3 +126,19 @@ def depends_if(*args):
                 return func(*args)
         return wrapper
     return decorator
+
+# Like @depends_if, but a distinguished value passed as a keyword argument
+# "when" is truth tested instead of every argument. This value is not passed
+# to the function if it is called.
+@template
+def depends_when(*args, **kwargs):
+    if not len(kwargs) == 1 and kwargs.get('when'):
+        die('depends_when requires a single keyword argument, "when"')
+    when = kwargs['when']
+    def decorator(fn):
+        @depends(when, *args)
+        def wrapper(val, *args):
+            if val:
+                return fn(*args)
+        return wrapper
+    return decorator
