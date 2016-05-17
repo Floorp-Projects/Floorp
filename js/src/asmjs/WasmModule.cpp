@@ -1341,6 +1341,20 @@ Module::callExport(JSContext* cx, uint32_t exportIndex, CallArgs args)
             if (!ToNumber(cx, v, (double*)&coercedArgs[i]))
                 return false;
             break;
+          case ValType::I8x16: {
+            SimdConstant simd;
+            if (!ToSimdConstant<Int8x16>(cx, v, &simd))
+                return false;
+            memcpy(&coercedArgs[i], simd.asInt8x16(), Simd128DataSize);
+            break;
+          }
+          case ValType::I16x8: {
+            SimdConstant simd;
+            if (!ToSimdConstant<Int16x8>(cx, v, &simd))
+                return false;
+            memcpy(&coercedArgs[i], simd.asInt16x8(), Simd128DataSize);
+            break;
+          }
           case ValType::I32x4: {
             SimdConstant simd;
             if (!ToSimdConstant<Int32x4>(cx, v, &simd))
@@ -1353,6 +1367,22 @@ Module::callExport(JSContext* cx, uint32_t exportIndex, CallArgs args)
             if (!ToSimdConstant<Float32x4>(cx, v, &simd))
                 return false;
             memcpy(&coercedArgs[i], simd.asFloat32x4(), Simd128DataSize);
+            break;
+          }
+          case ValType::B8x16: {
+            SimdConstant simd;
+            if (!ToSimdConstant<Bool8x16>(cx, v, &simd))
+                return false;
+            // Bool8x16 uses the same representation as Int8x16.
+            memcpy(&coercedArgs[i], simd.asInt8x16(), Simd128DataSize);
+            break;
+          }
+          case ValType::B16x8: {
+            SimdConstant simd;
+            if (!ToSimdConstant<Bool16x8>(cx, v, &simd))
+                return false;
+            // Bool16x8 uses the same representation as Int16x8.
+            memcpy(&coercedArgs[i], simd.asInt16x8(), Simd128DataSize);
             break;
           }
           case ValType::B32x4: {
@@ -1415,6 +1445,16 @@ Module::callExport(JSContext* cx, uint32_t exportIndex, CallArgs args)
       case ExprType::F64:
         args.rval().set(NumberValue(*(double*)retAddr));
         break;
+      case ExprType::I8x16:
+        retObj = CreateSimd<Int8x16>(cx, (int8_t*)retAddr);
+        if (!retObj)
+            return false;
+        break;
+      case ExprType::I16x8:
+        retObj = CreateSimd<Int16x8>(cx, (int16_t*)retAddr);
+        if (!retObj)
+            return false;
+        break;
       case ExprType::I32x4:
         retObj = CreateSimd<Int32x4>(cx, (int32_t*)retAddr);
         if (!retObj)
@@ -1422,6 +1462,16 @@ Module::callExport(JSContext* cx, uint32_t exportIndex, CallArgs args)
         break;
       case ExprType::F32x4:
         retObj = CreateSimd<Float32x4>(cx, (float*)retAddr);
+        if (!retObj)
+            return false;
+        break;
+      case ExprType::B8x16:
+        retObj = CreateSimd<Bool8x16>(cx, (int8_t*)retAddr);
+        if (!retObj)
+            return false;
+        break;
+      case ExprType::B16x8:
+        retObj = CreateSimd<Bool16x8>(cx, (int16_t*)retAddr);
         if (!retObj)
             return false;
         break;
