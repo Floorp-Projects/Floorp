@@ -166,6 +166,17 @@ check_prog('GENISOIMAGE', delayed_getattr(extra_programs, 'GENISOIMAGE'),
 check_prog('RPMBUILD', delayed_getattr(extra_programs, 'RPMBUILD'),
            allow_missing=True)
 
+option('--enable-system-hunspell',
+       help="Use system hunspell (located with pkgconfig)")
+
+@depends('--enable-system-hunspell', compile_environment)
+def check_for_hunspell(value, compile_env):
+    return value and compile_env
+
+system_hunspell = pkg_check_modules('MOZ_HUNSPELL', 'hunspell',
+                                    check_for_hunspell)
+
+set_config('MOZ_SYSTEM_HUNSPELL', system_hunspell)
 
 # Fallthrough to autoconf-based configure
 include('build/moz.configure/old.configure')
