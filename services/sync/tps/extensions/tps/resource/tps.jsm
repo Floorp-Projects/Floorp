@@ -17,6 +17,7 @@ var module = this;
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/main.js");
@@ -660,6 +661,8 @@ var TPS = {
       Logger.logInfo("Sync version: " + WEAVE_VERSION);
       Logger.logInfo("Firefox buildid: " + Services.appinfo.appBuildID);
       Logger.logInfo("Firefox version: " + Services.appinfo.version);
+      Logger.logInfo("Firefox source revision: " + (AppConstants.SOURCE_REVISION_URL || "unknown"));
+      Logger.logInfo("Firefox platform: " + AppConstants.platform);
       Logger.logInfo('Firefox Accounts enabled: ' + this.fxaccounts_enabled);
 
       // do some sync housekeeping
