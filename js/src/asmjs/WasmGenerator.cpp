@@ -574,8 +574,12 @@ ModuleGenerator::allocateGlobal(ValType type, bool isConst, uint32_t* index)
       case ValType::F64:
         width = 8;
         break;
+      case ValType::I8x16:
+      case ValType::I16x8:
       case ValType::I32x4:
       case ValType::F32x4:
+      case ValType::B8x16:
+      case ValType::B16x8:
       case ValType::B32x4:
         width = 16;
         break;

@@ -47,8 +47,12 @@ enum class ValType
     // The rest of these types are currently only emitted internally when
     // compiling asm.js and are rejected by wasm validation.
 
+    I8x16,
+    I16x8,
     I32x4,
     F32x4,
+    B8x16,
+    B16x8,
     B32x4,
 
     Limit
@@ -325,13 +329,19 @@ enum class ExprType
     I64   = uint8_t(ValType::I64),
     F32   = uint8_t(ValType::F32),
     F64   = uint8_t(ValType::F64),
+    I8x16 = uint8_t(ValType::I8x16),
+    I16x8 = uint8_t(ValType::I16x8),
     I32x4 = uint8_t(ValType::I32x4),
     F32x4 = uint8_t(ValType::F32x4),
+    B8x16 = uint8_t(ValType::B8x16),
+    B16x8 = uint8_t(ValType::B16x8),
     B32x4 = uint8_t(ValType::B32x4),
 
     Limit
 };
 
+typedef int8_t I8x16[16];
+typedef int16_t I16x8[8];
 typedef int32_t I32x4[4];
 typedef float F32x4[4];
 typedef Vector<uint8_t, 0, SystemAllocPolicy> Bytes;

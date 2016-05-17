@@ -1474,8 +1474,12 @@ Module::callImport(JSContext* cx, uint32_t importIndex, unsigned argc, const uin
             hasI64Arg = true;
             break;
           }
+          case ValType::I8x16:
+          case ValType::I16x8:
           case ValType::I32x4:
           case ValType::F32x4:
+          case ValType::B8x16:
+          case ValType::B16x8:
           case ValType::B32x4:
           case ValType::Limit:
             MOZ_CRASH("unhandled type in callImport");
@@ -1537,8 +1541,12 @@ Module::callImport(JSContext* cx, uint32_t importIndex, unsigned argc, const uin
           case ValType::I64:   MOZ_CRASH("can't happen because of above guard");
           case ValType::F32:   type = TypeSet::DoubleType(); break;
           case ValType::F64:   type = TypeSet::DoubleType(); break;
+          case ValType::I8x16: MOZ_CRASH("NYI");
+          case ValType::I16x8: MOZ_CRASH("NYI");
           case ValType::I32x4: MOZ_CRASH("NYI");
           case ValType::F32x4: MOZ_CRASH("NYI");
+          case ValType::B8x16: MOZ_CRASH("NYI");
+          case ValType::B16x8: MOZ_CRASH("NYI");
           case ValType::B32x4: MOZ_CRASH("NYI");
           case ValType::Limit: MOZ_CRASH("Limit");
         }

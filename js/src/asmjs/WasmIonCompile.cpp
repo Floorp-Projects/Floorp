@@ -2371,8 +2371,12 @@ static ValType
 SimdToLaneType(ValType type)
 {
     switch (type) {
+      case ValType::I8x16:
+      case ValType::I16x8:
       case ValType::I32x4:  return ValType::I32;
       case ValType::F32x4:  return ValType::F32;
+      case ValType::B8x16:
+      case ValType::B16x8:
       case ValType::B32x4:  return ValType::I32; // Boolean lanes are Int32 in asm.
       case ValType::I32:
       case ValType::I64:
