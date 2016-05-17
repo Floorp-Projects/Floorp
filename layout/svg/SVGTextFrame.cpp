@@ -4176,8 +4176,8 @@ SVGTextFrame::GetSubStringLength(nsIContent* aContent,
   // Find each rendered run that intersects with the range defined
   // by charnum/nchars.
   nscoord textLength = 0;
-  TextRenderedRunIterator it(this, TextRenderedRunIterator::eAllFrames);
-  TextRenderedRun run = it.Current();
+  TextRenderedRunIterator runIter(this, TextRenderedRunIterator::eAllFrames);
+  TextRenderedRun run = runIter.Current();
   while (run.mFrame) {
     // If this rendered run is past the substring we are interested in, we
     // are done.
@@ -4195,16 +4195,16 @@ SVGTextFrame::GetSubStringLength(nsIContent* aContent,
       // Convert offset into an index into the frame.
       offset += run.mTextFrameContentOffset - run.mTextElementCharIndex;
 
-      gfxSkipCharsIterator it =
+      gfxSkipCharsIterator skipCharsIter =
         run.mFrame->EnsureTextRun(nsTextFrame::eInflated);
       gfxTextRun* textRun = run.mFrame->GetTextRun(nsTextFrame::eInflated);
-      Range range = ConvertOriginalToSkipped(it, offset, length);
+      Range range = ConvertOriginalToSkipped(skipCharsIter, offset, length);
 
       // Accumulate the advance.
       textLength += textRun->GetAdvanceWidth(range, nullptr);
     }
 
-    run = it.Next();
+    run = runIter.Next();
   }
 
   nsPresContext* presContext = PresContext();
@@ -5720,4 +5720,3 @@ SVGTextFrame::TransformFrameRectFromTextChild(const nsRect& aRect,
 
   return result - framePosition;
 }
-

@@ -541,9 +541,9 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(gfxContext& aContext,
     complexEffects = true;
 
     aContext.Save();
-    nsRect clipRect =
+    nsRect overflowClipRect =
       aFrame->GetVisualOverflowRectRelativeToSelf() + toUserSpace;
-    aContext.Clip(NSRectToSnappedRect(clipRect,
+    aContext.Clip(NSRectToSnappedRect(overflowClipRect,
                                   aFrame->PresContext()->AppUnitsPerDevPixel(),
                                   *drawTarget));
 
@@ -571,26 +571,26 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(gfxContext& aContext,
       // Mask composition result on CoreGraphic::A8 surface is not correct
       // when mask-mode is not add(source over). Switch to skia when CG backend
       // detected.
-      RefPtr<DrawTarget> targetDT =
+      RefPtr<DrawTarget> maskTargetDT =
         (aContext.GetDrawTarget()->GetBackendType() == BackendType::COREGRAPHICS) ?
           Factory::CreateDrawTarget(BackendType::SKIA, drawRect.Size(),
                                     SurfaceFormat::A8) :
           aContext.GetDrawTarget()->CreateSimilarDrawTarget(drawRect.Size(),
                                                             SurfaceFormat::A8);
 
-      if (!targetDT || !targetDT->IsValid()) {
+      if (!maskTargetDT || !maskTargetDT->IsValid()) {
         aContext.Restore();
         return;
       }
 
-      RefPtr<gfxContext> target = gfxContext::ForDrawTarget(targetDT);
-      MOZ_ASSERT(target); // alrady checked the draw target above
-      target->SetMatrix(matrixAutoSaveRestore.Matrix() * gfxMatrix::Translation(-drawRect.TopLeft()));
+      RefPtr<gfxContext> maskTarget = gfxContext::ForDrawTarget(maskTargetDT);
+      MOZ_ASSERT(maskTarget); // already checked the draw target above
+      maskTarget->SetMatrix(matrixAutoSaveRestore.Matrix() * gfxMatrix::Translation(-drawRect.TopLeft()));
 
       // Compose all mask-images onto maskSurface.
       uint32_t flags = aBuilder->GetBackgroundPaintFlags() |
                        nsCSSRendering::PAINTBG_MASK_IMAGE;
-      nsRenderingContext rc(target);
+      nsRenderingContext rc(maskTarget);
       // FIXME We should use the return value, see bug 1258510.
       Unused << nsCSSRendering::PaintBackgroundWithSC(aFrame->PresContext(),
                                                       rc,
@@ -600,7 +600,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(gfxContext& aContext,
                                                       firstFrame->StyleContext(),
                                                       *aFrame->StyleBorder(),
                                                       flags);
-      maskSurface = targetDT->Snapshot();
+      maskSurface = maskTargetDT->Snapshot();
 
       // Compute mask transform.
       Matrix mat = ToMatrix(aContext.CurrentMatrix());
