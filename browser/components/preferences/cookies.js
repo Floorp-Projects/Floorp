@@ -7,7 +7,10 @@ const nsICookie = Components.interfaces.nsICookie;
 
 Components.utils.import("resource://gre/modules/PluralForm.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm")
-Components.utils.import("resource:///modules/UserContextUI.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
+                                  "resource:///modules/ContextualIdentityService.jsm");
 
 var gCookiesWindow = {
   _cm               : Components.classes["@mozilla.org/cookiemanager;1"]
@@ -516,7 +519,7 @@ var gCookiesWindow = {
       return this._bundle.getString("defaultUserContextLabel");
     }
 
-    return UserContextUI.getUserContextLabel(aUserContextId);
+    return ContextualIdentityService.getUserContextLabel(aUserContextId);
   },
 
   _updateCookieData: function (aItem) {

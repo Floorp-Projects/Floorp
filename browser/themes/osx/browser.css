@@ -3587,5 +3587,3 @@ menulist.translate-infobar-element > .menulist-dropmarker {
   padding: 0;
   overflow: hidden;
 }
-
-%include ../shared/usercontext/usercontext.inc.css
