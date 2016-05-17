@@ -18,8 +18,8 @@
 'use strict';
 
 var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('PresentationSessionChromeScript.js'));
-var receiverUrl = SimpleTest.getTestFileURL('file_presentation_receiver_oop.html');
-var nonReceiverUrl = SimpleTest.getTestFileURL('file_presentation_non_receiver_oop.html');
+var receiverUrl = SimpleTest.getTestFileURL('file_presentation_receiver.html');
+var nonReceiverUrl = SimpleTest.getTestFileURL('file_presentation_non_receiver.html');
 
 var isReceiverFinished = false;
 var isNonReceiverFinished = false;
@@ -35,6 +35,7 @@ function setup() {
     var receiverIframe = document.createElement('iframe');
     receiverIframe.setAttribute('remote', 'true');
     receiverIframe.setAttribute('mozbrowser', 'true');
+    receiverIframe.setAttribute('mozpresentation', receiverUrl);
     receiverIframe.setAttribute('src', receiverUrl);
 
     // This event is triggered when the iframe calls "alert".
