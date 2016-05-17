@@ -18,9 +18,6 @@
  * FOR_EACH_TRAILING_UNUSED_OPCODE and updating js::detail::LastDefinedOpcode
  * below.
  *
- * When changing the bytecode, don't forget to update XDR_BYTECODE_VERSION in
- * vm/Xdr.h!
- *
  * Includers must define a macro with the following form:
  *
  * #define MACRO(op,val,name,image,length,nuses,ndefs,format) ...
