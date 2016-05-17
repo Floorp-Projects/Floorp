@@ -24,6 +24,31 @@
                     "description": "Whether lower values are better for subtest",
                     "title": "Lower is better",
                     "type": "boolean"
+                },
+                "shouldAlert": {
+                    "description": "Whether we should alert",
+                    "title": "Should alert",
+                    "type": "boolean"
+                },
+                "alertThreshold": {
+                    "description": "% change threshold before alerting",
+                    "title": "Alert threshold",
+                    "type": "number"
+                },
+                "minBackWindow": {
+                    "description": "Minimum back window to use for alerting",
+                    "title": "Minimum back window",
+                    "type": "number"
+                },
+                "maxBackWindow": {
+                    "description": "Maximum back window to use for alerting",
+                    "title": "Maximum back window",
+                    "type": "number"
+                },
+                "foreWindow": {
+                    "description": "Fore window to use for alerting",
+                    "title": "Fore window",
+                    "type": "number"
                 }
             },
             "required": [
@@ -37,6 +62,14 @@
                 "name": {
                     "title": "Suite name",
                     "type": "string"
+                },
+                "extraOptions": {
+                    "type": "array",
+                    "title": "Extra options used in running suite",
+                    "items": {
+                        "type": "string"
+                    },
+                    "uniqueItems": true
                 },
                 "subtests": {
                     "items": {
@@ -53,6 +86,31 @@
                     "description": "Whether lower values are better for suite",
                     "title": "Lower is better",
                     "type": "boolean"
+                },
+                "shouldAlert": {
+                    "description": "Whether we should alert on this suite (overrides default behaviour)",
+                    "title": "Should alert",
+                    "type": "boolean"
+                },
+                "alertThreshold": {
+                    "description": "% change threshold before alerting",
+                    "title": "Alert threshold",
+                    "type": "number"
+                },
+                "minBackWindow": {
+                    "description": "Minimum back window to use for alerting",
+                    "title": "Minimum back window",
+                    "type": "number"
+                },
+                "maxBackWindow": {
+                    "description": "Maximum back window to use for alerting",
+                    "title": "Maximum back window",
+                    "type": "number"
+                },
+                "foreWindow": {
+                    "description": "Fore window to use for alerting",
+                    "title": "Fore window",
+                    "type": "number"
                 }
             },
             "required": [
