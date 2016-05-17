@@ -251,6 +251,88 @@ class TestConfigureOutputHandler(unittest.TestCase):
             'DEBUG:do bar\n'
         )
 
+    def test_queue_debug_reentrant(self):
+        out = StringIO()
+        name = '%s.test_queue_debug_reentrant' % self.__class__.__name__
+        logger = logging.getLogger(name)
+        logger.setLevel(logging.DEBUG)
+        handler =  ConfigureOutputHandler(out, out, maxlen=10)
+        handler.setFormatter(logging.Formatter('%(levelname)s| %(message)s'))
+        logger.addHandler(handler)
+
+        try:
+            with handler.queue_debug():
+                logger.info('outer info')
+                logger.debug('outer debug')
+                with handler.queue_debug():
+                    logger.info('inner info')
+                    logger.debug('inner debug')
+                    e = Exception('inner exception')
+                    raise e
+        except Exception as caught:
+            self.assertIs(caught, e)
+
+        self.assertEqual(out.getvalue(),
+                         'outer info\n'
+                         'inner info\n'
+                         'DEBUG| outer debug\n'
+                         'DEBUG| inner debug\n')
+
+        out.seek(0)
+        out.truncate()
+
+        try:
+            with handler.queue_debug():
+                logger.info('outer info')
+                logger.debug('outer debug')
+                with handler.queue_debug():
+                    logger.info('inner info')
+                    logger.debug('inner debug')
+                e = Exception('outer exception')
+                raise e
+        except Exception as caught:
+            self.assertIs(caught, e)
+
+        self.assertEqual(out.getvalue(),
+                         'outer info\n'
+                         'inner info\n'
+                         'DEBUG| outer debug\n'
+                         'DEBUG| inner debug\n')
+
+        out.seek(0)
+        out.truncate()
+
+        with handler.queue_debug():
+            logger.info('outer info')
+            logger.debug('outer debug')
+            with handler.queue_debug():
+                logger.info('inner info')
+                logger.debug('inner debug')
+                logger.error('inner error')
+        self.assertEqual(out.getvalue(),
+                         'outer info\n'
+                         'inner info\n'
+                         'DEBUG| outer debug\n'
+                         'DEBUG| inner debug\n'
+                         'ERROR| inner error\n')
+
+        out.seek(0)
+        out.truncate()
+
+        with handler.queue_debug():
+            logger.info('outer info')
+            logger.debug('outer debug')
+            with handler.queue_debug():
+                logger.info('inner info')
+                logger.debug('inner debug')
+            logger.error('outer error')
+        self.assertEqual(out.getvalue(),
+                         'outer info\n'
+                         'inner info\n'
+                         'DEBUG| outer debug\n'
+                         'DEBUG| inner debug\n'
+                         'ERROR| outer error\n')
+
     def test_is_same_output(self):
         fd1 = sys.stderr.fileno()
         fd2 = os.dup(fd1)
