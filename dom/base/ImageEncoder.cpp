@@ -17,6 +17,7 @@
 #include "nsNetUtil.h"
 #include "nsXPCOMCIDInternal.h"
 #include "WorkerPrivate.h"
+#include "YCbCrUtils.h"
 
 using namespace mozilla::gfx;
 
@@ -399,11 +400,11 @@ ImageEncoder::ExtractDataInternal(const nsAString& aType,
       size_t length = BufferSizeFromStrideAndHeight(stride, aSize.height);
       data.SetCapacity(length);
 
-      gfxUtils::ConvertYCbCrToRGB(*ycbcrImage->GetData(),
-                                  format,
-                                  aSize,
-                                  data.Elements(),
-                                  stride);
+      ConvertYCbCrToRGB(*ycbcrImage->GetData(),
+                        format,
+                        aSize,
+                        data.Elements(),
+                        stride);
 
       rv = aEncoder->InitFromData(data.Elements(),
                                   aSize.width * aSize.height * 4,
