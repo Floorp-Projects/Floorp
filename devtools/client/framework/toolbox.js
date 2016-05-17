@@ -57,7 +57,7 @@ loader.lazyRequireGetter(this, "Hosts",
 loader.lazyRequireGetter(this, "Selection",
   "devtools/client/framework/selection", true);
 loader.lazyRequireGetter(this, "InspectorFront",
-  "devtools/server/actors/inspector", true);
+  "devtools/client/fronts/inspector", true);
 loader.lazyRequireGetter(this, "DevToolsUtils",
   "devtools/shared/DevToolsUtils");
 loader.lazyRequireGetter(this, "showDoorhanger",
