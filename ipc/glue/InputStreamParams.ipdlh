@@ -3,9 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBlob;
-include protocol PFileDescriptorSet;
-
-include DOMTypes;
+include ProtocolTypes;
 
 using struct mozilla::void_t
   from "ipc/IPCMessageUtils.h";
@@ -84,13 +82,6 @@ struct MIMEInputStreamParams
   nsCString contentLength;
   bool startedReading;
   bool addContentLength;
-};
-
-union OptionalFileDescriptorSet
-{
-  PFileDescriptorSet;
-  FileDescriptor[];
-  void_t;
 };
 
 } // namespace ipc

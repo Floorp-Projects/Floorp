@@ -8,6 +8,7 @@
 include protocol PHttpChannel;
 include protocol PFTPChannel;
 include protocol PRtspChannel;
+include BlobTypes;
 include URIParams;
 include InputStreamParams;
 include PBackgroundSharedTypes;
