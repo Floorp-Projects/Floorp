@@ -85,7 +85,7 @@ class StructuredCloneData;
 class LayerTreeUpdateObserver : public layers::CompositorUpdateObserver
 {
 public:
-  LayerTreeUpdateObserver(TabParent* aTabParent)
+  explicit LayerTreeUpdateObserver(TabParent* aTabParent)
     : mTabParent(aTabParent)
   {
     MOZ_ASSERT(NS_IsMainThread());
