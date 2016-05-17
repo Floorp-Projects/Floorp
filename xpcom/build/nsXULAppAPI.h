@@ -19,6 +19,8 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Vector.h"
 #include "mozilla/TimeStamp.h"
+#include "XREChildData.h"
+#include "XREShellData.h"
 
 /**
  * A directory service key which provides the platform-correct "application
@@ -411,7 +413,7 @@ class GMPLoader;
 XRE_API(nsresult,
         XRE_InitChildProcess, (int aArgc,
                                char* aArgv[],
-                               mozilla::gmp::GMPLoader* aGMPLoader))
+                               const XREChildData* aChildData))
 
 XRE_API(GeckoProcessType,
         XRE_GetProcessType, ())
@@ -486,7 +488,8 @@ XRE_API(void,
 #endif // MOZ_B2G_LOADER
 
 XRE_API(int,
-        XRE_XPCShellMain, (int argc, char** argv, char** envp))
+        XRE_XPCShellMain, (int argc, char** argv, char** envp,
+                           const XREShellData* aShellData))
 
 #if MOZ_WIDGET_GTK == 2
 XRE_API(void,

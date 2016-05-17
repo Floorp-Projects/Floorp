@@ -249,29 +249,16 @@
 
 /* Place List, Place Content */
 #placesList {
-  background-color: hsl(212,19%,85%);
-  background-image: linear-gradient(hsl(213,26%,93%), hsl(212,19%,85%));
+  -moz-appearance: -moz-mac-source-list;
   box-shadow: inset -2px 0 0 hsla(0,0%,100%,.2);
   width: 160px;
 }
 
-#placesList:-moz-window-inactive {
-  background-color: hsl(0,0%,92%);
-  background-image: linear-gradient(hsl(0,0%,97%), hsl(0,0%,92%));
-}
-
 @media (-moz-mac-yosemite-theme) {
   #placesList {
-    -moz-appearance: -moz-mac-vibrancy-light;
-    background-image: none;
     box-shadow: none;
   }
-
-  #placesList:-moz-window-inactive {
-    background-image: none;
-  }
 }
-
 
 /* Info box */
 #detailsDeck {

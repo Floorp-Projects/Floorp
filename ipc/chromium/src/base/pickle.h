@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 // Copyright (c) 2006-2008 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -100,7 +102,7 @@ class Pickle {
   MOZ_MUST_USE bool ReadWString(void** iter, std::wstring* result) const;
   MOZ_MUST_USE bool ReadData(void** iter, const char** data, int* length) const;
   MOZ_MUST_USE bool ReadBytes(void** iter, const char** data, int length,
-					uint32_t alignment = sizeof(memberAlignmentType)) const;
+                              uint32_t alignment = sizeof(memberAlignmentType)) const;
 
   // Safer version of ReadInt() checks for the result not being negative.
   // Use it for reading the object sizes.
@@ -266,7 +268,7 @@ class Pickle {
   template<uint32_t alignment> struct ConstantAligner {
     static uint32_t align(int bytes) {
       static_assert((alignment & (alignment - 1)) == 0,
-			"alignment must be a power of two");
+                    "alignment must be a power of two");
       return (bytes + (alignment - 1)) & ~static_cast<uint32_t>(alignment - 1);
     }
   };

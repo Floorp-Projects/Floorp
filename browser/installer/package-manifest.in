@@ -763,7 +763,6 @@
 ; For process sandboxing
 #if defined(MOZ_SANDBOX)
 #if defined(XP_WIN)
-@BINPATH@/@DLL_PREFIX@sandboxbroker@DLL_SUFFIX@
 #if defined(WOW_HELPER)
 @BINPATH@/wow_helper.exe
 #endif

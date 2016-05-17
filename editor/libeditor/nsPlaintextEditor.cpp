@@ -366,17 +366,17 @@ nsPlaintextEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
   NS_ASSERTION(nativeKeyEvent->mMessage == eKeyPress,
                "HandleKeyPressEvent gets non-keypress event");
 
-  switch (nativeKeyEvent->keyCode) {
-    case nsIDOMKeyEvent::DOM_VK_META:
-    case nsIDOMKeyEvent::DOM_VK_WIN:
-    case nsIDOMKeyEvent::DOM_VK_SHIFT:
-    case nsIDOMKeyEvent::DOM_VK_CONTROL:
-    case nsIDOMKeyEvent::DOM_VK_ALT:
-    case nsIDOMKeyEvent::DOM_VK_BACK_SPACE:
-    case nsIDOMKeyEvent::DOM_VK_DELETE:
+  switch (nativeKeyEvent->mKeyCode) {
+    case NS_VK_META:
+    case NS_VK_WIN:
+    case NS_VK_SHIFT:
+    case NS_VK_CONTROL:
+    case NS_VK_ALT:
+    case NS_VK_BACK:
+    case NS_VK_DELETE:
       // These keys are handled on nsEditor
       return nsEditor::HandleKeyPressEvent(aKeyEvent);
-    case nsIDOMKeyEvent::DOM_VK_TAB: {
+    case NS_VK_TAB: {
       if (IsTabbable()) {
         return NS_OK; // let it be used for focus switching
       }
@@ -391,7 +391,7 @@ nsPlaintextEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
       aKeyEvent->AsEvent()->PreventDefault();
       return TypedText(NS_LITERAL_STRING("\t"), eTypedText);
     }
-    case nsIDOMKeyEvent::DOM_VK_RETURN:
+    case NS_VK_RETURN:
       if (IsSingleLineEditor() || nativeKeyEvent->IsControl() ||
           nativeKeyEvent->IsAlt() || nativeKeyEvent->IsMeta() ||
           nativeKeyEvent->IsOS()) {
@@ -403,14 +403,14 @@ nsPlaintextEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
 
   // NOTE: On some keyboard layout, some characters are inputted with Control
   // key or Alt key, but at that time, widget sets FALSE to these keys.
-  if (nativeKeyEvent->charCode == 0 || nativeKeyEvent->IsControl() ||
+  if (!nativeKeyEvent->mCharCode || nativeKeyEvent->IsControl() ||
       nativeKeyEvent->IsAlt() || nativeKeyEvent->IsMeta() ||
       nativeKeyEvent->IsOS()) {
     // we don't PreventDefault() here or keybindings like control-x won't work
     return NS_OK;
   }
   aKeyEvent->AsEvent()->PreventDefault();
-  nsAutoString str(nativeKeyEvent->charCode);
+  nsAutoString str(nativeKeyEvent->mCharCode);
   return TypedText(str, eTypedText);
 }
 

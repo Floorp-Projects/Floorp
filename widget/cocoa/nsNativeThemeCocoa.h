@@ -40,6 +40,7 @@ public:
     eThemeGeometryTypeVibrancyDark,
     eThemeGeometryTypeTooltip,
     eThemeGeometryTypeSheet,
+    eThemeGeometryTypeSourceList,
   };
 
   nsNativeThemeCocoa();

@@ -23,9 +23,9 @@ function startNewTabTestCase(aTestNumber) {
     });
 
     let menu = gTestWindow.document.getElementById("context-openlinkinusercontext-menu");
-    ok(menu && menu.firstChild, "The menu exists and it has a first child node.");
+    let menupopup = menu.menupopup;
+    menupopup.showPopup();
 
-    let menupopup = menu.firstChild;
     is(menupopup.nodeType, Node.ELEMENT_NODE, "We have a menupopup.");
     ok(menupopup.firstChild, "We have a first container entry.");
 

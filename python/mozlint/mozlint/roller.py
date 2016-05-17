@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import unicode_literals
+
 import signal
 import traceback
 from collections import defaultdict
@@ -34,6 +36,9 @@ def _run_linters(queue, paths, **lintargs):
         linter = parse(linter_path)
         func = supported_types[linter['type']]
         res = func(paths, linter, **lintargs) or []
+
+        if isinstance(res, basestring):
+            continue
 
         for r in res:
             results[r.path].append(r)

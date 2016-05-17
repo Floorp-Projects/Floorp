@@ -2461,9 +2461,9 @@ InitKeyEvent(WidgetKeyboardEvent& event,
 
     if (event.mMessage == eKeyPress) {
         // Android gives us \n, so filter out some control characters.
-        event.isChar = (charCode >= ' ');
-        event.charCode = event.isChar ? charCode : 0;
-        event.keyCode = event.isChar ? 0 : domKeyCode;
+        event.mIsChar = (charCode >= ' ');
+        event.mCharCode = event.mIsChar ? charCode : 0;
+        event.mKeyCode = event.mIsChar ? 0 : domKeyCode;
         event.mPluginEvent.Clear();
 
         // For keypress, if the unicode char already has modifiers applied, we
@@ -2478,9 +2478,9 @@ InitKeyEvent(WidgetKeyboardEvent& event,
         }
 
     } else {
-        event.isChar = false;
-        event.charCode = 0;
-        event.keyCode = domKeyCode;
+        event.mIsChar = false;
+        event.mCharCode = 0;
+        event.mKeyCode = domKeyCode;
 
         ANPEvent pluginEvent;
         pluginEvent.inSize = sizeof(pluginEvent);
@@ -2512,7 +2512,7 @@ InitKeyEvent(WidgetKeyboardEvent& event,
         event.mKeyValue = char16_t(domPrintableKeyValue);
     }
 
-    event.location =
+    event.mLocation =
         WidgetKeyboardEvent::ComputeLocationFromCodeValue(event.mCodeNameIndex);
     event.mTime = time;
 }
@@ -2648,12 +2648,12 @@ nsWindow::GeckoViewSupport::SendIMEDummyKeyEvents()
 {
     WidgetKeyboardEvent downEvent(true, eKeyDown, &window);
     window.InitEvent(downEvent, nullptr);
-    MOZ_ASSERT(downEvent.keyCode == 0);
+    MOZ_ASSERT(downEvent.mKeyCode == 0);
     window.DispatchEvent(&downEvent);
 
     WidgetKeyboardEvent upEvent(true, eKeyUp, &window);
     window.InitEvent(upEvent, nullptr);
-    MOZ_ASSERT(upEvent.keyCode == 0);
+    MOZ_ASSERT(upEvent.mKeyCode == 0);
     window.DispatchEvent(&upEvent);
 }
 
@@ -3405,6 +3405,33 @@ nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
     return NS_OK;
 }
 
+nsresult
+nsWindow::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
+                                     uint32_t aNativeMessage,
+                                     uint32_t aModifierFlags,
+                                     nsIObserver* aObserver)
+{
+    mozilla::widget::AutoObserverNotifier notifier(aObserver, "mouseevent");
+
+    MOZ_ASSERT(mGLControllerSupport);
+    GeckoLayerClient::LocalRef client = mGLControllerSupport->GetLayerClient();
+    client->SynthesizeNativeMouseEvent(aNativeMessage, aPoint.x, aPoint.y);
+
+    return NS_OK;
+}
+
+nsresult
+nsWindow::SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
+                                    nsIObserver* aObserver)
+{
+    mozilla::widget::AutoObserverNotifier notifier(aObserver, "mouseevent");
+
+    MOZ_ASSERT(mGLControllerSupport);
+    GeckoLayerClient::LocalRef client = mGLControllerSupport->GetLayerClient();
+    client->SynthesizeNativeMouseEvent(sdk::MotionEvent::ACTION_HOVER_MOVE, aPoint.x, aPoint.y);
+
+    return NS_OK;
+}
 
 void
 nsWindow::DrawWindowUnderlay(LayerManagerComposite* aManager,

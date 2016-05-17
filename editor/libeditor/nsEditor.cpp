@@ -4616,21 +4616,21 @@ nsEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
   if (IsReadonly() || IsDisabled()) {
     // consume backspace for disabled and readonly textfields, to prevent
     // back in history, which could be confusing to users
-    if (nativeKeyEvent->keyCode == nsIDOMKeyEvent::DOM_VK_BACK_SPACE) {
+    if (nativeKeyEvent->mKeyCode == NS_VK_BACK) {
       aKeyEvent->AsEvent()->PreventDefault();
     }
     return NS_OK;
   }
 
-  switch (nativeKeyEvent->keyCode) {
-    case nsIDOMKeyEvent::DOM_VK_META:
-    case nsIDOMKeyEvent::DOM_VK_WIN:
-    case nsIDOMKeyEvent::DOM_VK_SHIFT:
-    case nsIDOMKeyEvent::DOM_VK_CONTROL:
-    case nsIDOMKeyEvent::DOM_VK_ALT:
+  switch (nativeKeyEvent->mKeyCode) {
+    case NS_VK_META:
+    case NS_VK_WIN:
+    case NS_VK_SHIFT:
+    case NS_VK_CONTROL:
+    case NS_VK_ALT:
       aKeyEvent->AsEvent()->PreventDefault(); // consumed
       return NS_OK;
-    case nsIDOMKeyEvent::DOM_VK_BACK_SPACE:
+    case NS_VK_BACK:
       if (nativeKeyEvent->IsControl() || nativeKeyEvent->IsAlt() ||
           nativeKeyEvent->IsMeta() || nativeKeyEvent->IsOS()) {
         return NS_OK;
@@ -4638,7 +4638,7 @@ nsEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
       DeleteSelection(nsIEditor::ePrevious, nsIEditor::eStrip);
       aKeyEvent->AsEvent()->PreventDefault(); // consumed
       return NS_OK;
-    case nsIDOMKeyEvent::DOM_VK_DELETE:
+    case NS_VK_DELETE:
       // on certain platforms (such as windows) the shift key
       // modifies what delete does (cmd_cut in this case).
       // bailing here to allow the keybindings to do the cut.

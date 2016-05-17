@@ -23,6 +23,10 @@ banner = """/* This file is auto-generated, see gen-histogram-enum.py.  */
 
 def main(output, *filenames):
     print(banner, file=output)
+    print("#ifndef mozilla_TelemetryHistogramEnums_h", file=output);
+    print("#define mozilla_TelemetryHistogramEnums_h", file=output);
+    print("namespace mozilla {", file=output)
+    print("namespace Telemetry {", file=output)
     print("enum ID : uint32_t {", file=output)
 
     groups = itertools.groupby(histogram_tools.from_files(filenames),
@@ -63,6 +67,9 @@ def main(output, *filenames):
         print("  HistogramLastUseCounter = 0,", file=output)
         print("  HistogramUseCounterCount = 0", file=output)
     print("};", file=output)
+    print("} // namespace mozilla", file=output)
+    print("} // namespace Telemetry", file=output)
+    print("#endif // mozilla_TelemetryHistogramEnums_h", file=output);
 
 if __name__ == '__main__':
     main(sys.stdout, *sys.argv[1:])

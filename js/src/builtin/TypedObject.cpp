@@ -24,6 +24,7 @@
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
 
+#include "gc/StoreBuffer-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Shape-inl.h"
 

@@ -503,10 +503,10 @@ WidgetKeyboardEvent::GetShortcutKeyCandidates(
     aCandidates.AppendElement(key);
   }
 
-  uint32_t len = alternativeCharCodes.Length();
+  uint32_t len = mAlternativeCharCodes.Length();
   if (!IsShift()) {
     for (uint32_t i = 0; i < len; ++i) {
-      uint32_t ch = alternativeCharCodes[i].mUnshiftedCharCode;
+      uint32_t ch = mAlternativeCharCodes[i].mUnshiftedCharCode;
       if (!ch || ch == pseudoCharCode) {
         continue;
       }
@@ -519,7 +519,7 @@ WidgetKeyboardEvent::GetShortcutKeyCandidates(
     // However, the priority should be lowest.
     if (!HasASCIIDigit(aCandidates)) {
       for (uint32_t i = 0; i < len; ++i) {
-        uint32_t ch = alternativeCharCodes[i].mShiftedCharCode;
+        uint32_t ch = mAlternativeCharCodes[i].mShiftedCharCode;
         if (ch >= '0' && ch <= '9') {
           ShortcutKeyCandidate key(ch, false);
           aCandidates.AppendElement(key);
@@ -529,7 +529,7 @@ WidgetKeyboardEvent::GetShortcutKeyCandidates(
     }
   } else {
     for (uint32_t i = 0; i < len; ++i) {
-      uint32_t ch = alternativeCharCodes[i].mShiftedCharCode;
+      uint32_t ch = mAlternativeCharCodes[i].mShiftedCharCode;
       if (!ch) {
         continue;
       }
@@ -544,7 +544,7 @@ WidgetKeyboardEvent::GetShortcutKeyCandidates(
 
       // And checking the charCode is same as unshiftedCharCode too.
       // E.g., for Ctrl+Shift+(Plus of Numpad) should not run Ctrl+Plus.
-      uint32_t unshiftCh = alternativeCharCodes[i].mUnshiftedCharCode;
+      uint32_t unshiftCh = mAlternativeCharCodes[i].mUnshiftedCharCode;
       if (CharsCaseInsensitiveEqual(ch, unshiftCh)) {
         continue;
       }
@@ -569,9 +569,8 @@ WidgetKeyboardEvent::GetShortcutKeyCandidates(
   // press.  However, if the space key is assigned to a function key, it
   // shouldn't work as a space key.
   if (mKeyNameIndex == KEY_NAME_INDEX_USE_STRING &&
-      mCodeNameIndex == CODE_NAME_INDEX_Space &&
-      pseudoCharCode != static_cast<uint32_t>(' ')) {
-    ShortcutKeyCandidate spaceKey(static_cast<uint32_t>(' '), false);
+      mCodeNameIndex == CODE_NAME_INDEX_Space && pseudoCharCode != ' ') {
+    ShortcutKeyCandidate spaceKey(' ', false);
     aCandidates.AppendElement(spaceKey);
   }
 }
@@ -585,17 +584,17 @@ WidgetKeyboardEvent::GetAccessKeyCandidates(nsTArray<uint32_t>& aCandidates)
   // the priority of the charCodes are:
   //   0: charCode, 1: unshiftedCharCodes[0], 2: shiftedCharCodes[0]
   //   3: unshiftedCharCodes[1], 4: shiftedCharCodes[1],...
-  if (charCode) {
-    uint32_t ch = charCode;
+  if (mCharCode) {
+    uint32_t ch = mCharCode;
     if (IS_IN_BMP(ch)) {
       ch = ToLowerCase(static_cast<char16_t>(ch));
     }
     aCandidates.AppendElement(ch);
   }
-  for (uint32_t i = 0; i < alternativeCharCodes.Length(); ++i) {
+  for (uint32_t i = 0; i < mAlternativeCharCodes.Length(); ++i) {
     uint32_t ch[2] =
-      { alternativeCharCodes[i].mUnshiftedCharCode,
-        alternativeCharCodes[i].mShiftedCharCode };
+      { mAlternativeCharCodes[i].mUnshiftedCharCode,
+        mAlternativeCharCodes[i].mShiftedCharCode };
     for (uint32_t j = 0; j < 2; ++j) {
       if (!ch[j]) {
         continue;
@@ -603,7 +602,7 @@ WidgetKeyboardEvent::GetAccessKeyCandidates(nsTArray<uint32_t>& aCandidates)
       if (IS_IN_BMP(ch[j])) {
         ch[j] = ToLowerCase(static_cast<char16_t>(ch[j]));
       }
-      // Don't append the charCode that was already appended.
+      // Don't append the mCharCode that was already appended.
       if (aCandidates.IndexOf(ch[j]) == aCandidates.NoIndex) {
         aCandidates.AppendElement(ch[j]);
       }
@@ -615,9 +614,8 @@ WidgetKeyboardEvent::GetAccessKeyCandidates(nsTArray<uint32_t>& aCandidates)
   // press.  However, if the space key is assigned to a function key, it
   // shouldn't work as a space key.
   if (mKeyNameIndex == KEY_NAME_INDEX_USE_STRING &&
-      mCodeNameIndex == CODE_NAME_INDEX_Space &&
-      charCode != static_cast<uint32_t>(' ')) {
-    aCandidates.AppendElement(static_cast<uint32_t>(' '));
+      mCodeNameIndex == CODE_NAME_INDEX_Space && mCharCode != ' ') {
+    aCandidates.AppendElement(' ');
   }
   return;
 }

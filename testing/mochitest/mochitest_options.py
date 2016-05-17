@@ -660,7 +660,7 @@ class MochitestArguments(ArgumentContainer):
 
         if options.dmd and not options.dmdPath:
             if build_obj:
-                options.dmdPath = build_obj.bin_dir
+                options.dmdPath = build_obj.bindir
             else:
                 parser.error(
                     "could not find dmd libraries, specify them with --dmd-path")

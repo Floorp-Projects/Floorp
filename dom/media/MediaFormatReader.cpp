@@ -609,11 +609,13 @@ RefPtr<MediaDecoderReader::MediaDataPromise>
 MediaFormatReader::RequestAudioData()
 {
   MOZ_ASSERT(OnTaskQueue());
-  MOZ_DIAGNOSTIC_ASSERT(mSeekPromise.IsEmpty(), "No sample requests allowed while seeking");
-  MOZ_DIAGNOSTIC_ASSERT(!mAudio.mSeekRequest.Exists() ||
-                        mAudio.mTimeThreshold.isSome());
   MOZ_DIAGNOSTIC_ASSERT(!mAudio.HasPromise(), "No duplicate sample requests");
-  MOZ_DIAGNOSTIC_ASSERT(!IsSeeking(), "called mid-seek");
+  MOZ_DIAGNOSTIC_ASSERT(IsVideoSeeking() || mSeekPromise.IsEmpty(),
+                        "No sample requests allowed while seeking");
+  MOZ_DIAGNOSTIC_ASSERT(IsVideoSeeking() ||
+                        !mAudio.mSeekRequest.Exists() ||
+                        mAudio.mTimeThreshold.isSome());
+  MOZ_DIAGNOSTIC_ASSERT(IsVideoSeeking() || !IsSeeking(), "called mid-seek");
   LOGV("");
 
   if (!HasAudio()) {
@@ -833,13 +835,17 @@ MediaFormatReader::UpdateReceivedNewData(TrackType aTrack)
     return false;
   }
 
-  if (!mSeekPromise.IsEmpty()) {
+  if (!mSeekPromise.IsEmpty() &&
+      (!IsVideoSeeking() || aTrack == TrackInfo::kVideoTrack)) {
     MOZ_ASSERT(!decoder.HasPromise());
-    MOZ_DIAGNOSTIC_ASSERT(!mAudio.mTimeThreshold && !mVideo.mTimeThreshold,
+    MOZ_DIAGNOSTIC_ASSERT((IsVideoSeeking() || !mAudio.mTimeThreshold) &&
+                          !mVideo.mTimeThreshold,
                           "InternalSeek must have been aborted when Seek was first called");
-    MOZ_DIAGNOSTIC_ASSERT(!mAudio.HasWaitingPromise() && !mVideo.HasWaitingPromise(),
+    MOZ_DIAGNOSTIC_ASSERT((IsVideoSeeking() || !mAudio.HasWaitingPromise()) &&
+                          !mVideo.HasWaitingPromise(),
                           "Waiting promises must have been rejected when Seek was first called");
-    if (mVideo.mSeekRequest.Exists() || mAudio.mSeekRequest.Exists()) {
+    if (mVideo.mSeekRequest.Exists() ||
+        (!IsVideoSeeking() && mAudio.mSeekRequest.Exists())) {
       // Already waiting for a seek to complete. Nothing more to do.
       return true;
     }
@@ -1304,7 +1310,9 @@ MediaFormatReader::ResetDecode(TargetQueues aQueues)
   mSkipRequest.DisconnectIfExists();
 
   // Do the same for any data wait promises.
-  mAudio.mWaitingPromise.RejectIfExists(WaitForDataRejectValue(MediaData::AUDIO_DATA, WaitForDataRejectValue::CANCELED), __func__);
+  if (aQueues == AUDIO_VIDEO) {
+    mAudio.mWaitingPromise.RejectIfExists(WaitForDataRejectValue(MediaData::AUDIO_DATA, WaitForDataRejectValue::CANCELED), __func__);
+  }
   mVideo.mWaitingPromise.RejectIfExists(WaitForDataRejectValue(MediaData::VIDEO_DATA, WaitForDataRejectValue::CANCELED), __func__);
 
   // Reset miscellaneous seeking state.
@@ -1503,8 +1511,8 @@ MediaFormatReader::Seek(SeekTarget aTarget, int64_t aUnused)
     return SeekPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
-  mOriginalSeekTarget = Some(aTarget);
-  mPendingSeekTime = Some(aTarget.GetTime());
+  mOriginalSeekTarget = aTarget;
+  mFallbackSeekTime = mPendingSeekTime = Some(aTarget.GetTime());
 
   RefPtr<SeekPromise> p = mSeekPromise.Ensure(__func__);
 
@@ -1542,7 +1550,7 @@ MediaFormatReader::AttemptSeek()
   // Don't reset the audio demuxer not state when seeking video only
   // as it will cause the audio to seek back to the beginning
   // resulting in out-of-sync audio from video.
-  if (HasAudio() && !mOriginalSeekTarget->IsVideoOnly()) {
+  if (HasAudio() && !mOriginalSeekTarget.IsVideoOnly()) {
     mAudio.ResetDemuxer();
     mAudio.ResetState();
   }
@@ -1569,8 +1577,8 @@ MediaFormatReader::OnSeekFailed(TrackType aTrack, DemuxerFailureReason aResult)
 
   if (aResult == DemuxerFailureReason::WAITING_FOR_DATA) {
     if (HasVideo() && aTrack == TrackType::kAudioTrack &&
-        mOriginalSeekTarget.isSome() &&
-        mPendingSeekTime.ref() != mOriginalSeekTarget.ref().GetTime()) {
+        mFallbackSeekTime.isSome() &&
+        mPendingSeekTime.ref() != mFallbackSeekTime.ref()) {
       // We have failed to seek audio where video seeked to earlier.
       // Attempt to seek instead to the closest point that we know we have in
       // order to limit A/V sync discrepency.
@@ -1586,11 +1594,11 @@ MediaFormatReader::OnSeekFailed(TrackType aTrack, DemuxerFailureReason aResult)
         }
       }
       if (nextSeekTime.isNothing() ||
-          nextSeekTime.ref() > mOriginalSeekTarget.ref().GetTime()) {
-        nextSeekTime = Some(mOriginalSeekTarget.ref().GetTime());
+          nextSeekTime.ref() > mFallbackSeekTime.ref()) {
+        nextSeekTime = Some(mFallbackSeekTime.ref());
         LOG("Unable to seek audio to video seek time. A/V sync may be broken");
       } else {
-        mOriginalSeekTarget.reset();
+        mFallbackSeekTime.reset();
       }
       mPendingSeekTime = nextSeekTime;
       DoAudioSeek();
@@ -1623,10 +1631,9 @@ MediaFormatReader::OnVideoSeekCompleted(media::TimeUnit aTime)
   LOGV("Video seeked to %lld", aTime.ToMicroseconds());
   mVideo.mSeekRequest.Complete();
 
-  MOZ_ASSERT(mOriginalSeekTarget.isSome());
-  if (HasAudio() && !mOriginalSeekTarget->IsVideoOnly()) {
+  if (HasAudio() && !mOriginalSeekTarget.IsVideoOnly()) {
     MOZ_ASSERT(mPendingSeekTime.isSome());
-    if (mOriginalSeekTarget->IsFast()) {
+    if (mOriginalSeekTarget.IsFast()) {
       // We are performing a fast seek. We need to seek audio to where the
       // video seeked to, to ensure proper A/V sync once playback resume.
       mPendingSeekTime = Some(aTime);

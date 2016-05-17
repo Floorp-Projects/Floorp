@@ -32,7 +32,8 @@ CompositorWidgetProxy::GetBackBufferDrawTarget(gfx::DrawTarget* aScreenTarget,
                                                const LayoutDeviceIntRect& aClearRect)
 {
   MOZ_ASSERT(aScreenTarget);
-  gfx::SurfaceFormat format = gfx::SurfaceFormat::B8G8R8A8;
+  gfx::SurfaceFormat format =
+    aScreenTarget->GetFormat() == gfx::SurfaceFormat::B8G8R8X8 ? gfx::SurfaceFormat::B8G8R8X8 : gfx::SurfaceFormat::B8G8R8A8;
   gfx::IntSize size = aRect.ToUnknownRect().Size();
   gfx::IntSize clientSize(GetClientSize().ToUnknownSize());
 

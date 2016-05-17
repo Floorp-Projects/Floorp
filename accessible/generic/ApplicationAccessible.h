@@ -60,16 +60,20 @@ public:
 
   void AppName(nsAString& aName) const
   {
-    nsAutoCString cname;
-    mAppInfo->GetName(cname);
-    AppendUTF8toUTF16(cname, aName);
+    if (mAppInfo) {
+      nsAutoCString cname;
+      mAppInfo->GetName(cname);
+      AppendUTF8toUTF16(cname, aName);
+    }
   }
 
   void AppVersion(nsAString& aVersion) const
   {
-    nsAutoCString cversion;
-    mAppInfo->GetVersion(cversion);
-    AppendUTF8toUTF16(cversion, aVersion);
+    if (mAppInfo) {
+      nsAutoCString cversion;
+      mAppInfo->GetVersion(cversion);
+      AppendUTF8toUTF16(cversion, aVersion);
+    }
   }
 
   void PlatformName(nsAString& aName) const
@@ -79,9 +83,11 @@ public:
 
   void PlatformVersion(nsAString& aVersion) const
   {
-    nsAutoCString cversion;
-    mAppInfo->GetPlatformVersion(cversion);
-    AppendUTF8toUTF16(cversion, aVersion);
+    if (mAppInfo) {
+      nsAutoCString cversion;
+      mAppInfo->GetPlatformVersion(cversion);
+      AppendUTF8toUTF16(cversion, aVersion);
+    }
   }
 
 protected:

@@ -3,7 +3,8 @@
 
 LINTER = {
     'name': "RegexLinter",
-    'description': "Make sure the string 'foobar' never appears in a js variable files because it is bad.",
+    'description': "Make sure the string 'foobar' never appears "
+                   "in a js variable file because it is bad.",
     'rule': 'no-foobar',
     'include': [
         '**/*.js',

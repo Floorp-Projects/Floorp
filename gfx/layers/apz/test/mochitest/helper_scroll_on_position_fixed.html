@@ -6,9 +6,6 @@
   <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript">
 
-var is = window.opener.is;
-var ok = window.opener.ok;
-
 // Scroll the mouse wheel at (dx, dy) relative to |element|.
 function scrollWheelOver(element, dx, dy) {
   // Move the mouse to the desired wheel location.
@@ -71,7 +68,7 @@ function driveTest() {
   }
   var ret = gTestContinuation.next();
   if (ret.done) {
-    window.opener.testDone();
+    subtestDone();
   }
 }
 

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 // Copyright (c) 2008 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -210,14 +212,14 @@ bool Channel::ChannelImpl::CreatePipe(const std::wstring& channel_id,
     }
     // Set both ends to be non-blocking.
     if (fcntl(pipe_fds[0], F_SETFL, O_NONBLOCK) == -1 ||
-	fcntl(pipe_fds[1], F_SETFL, O_NONBLOCK) == -1) {
+        fcntl(pipe_fds[1], F_SETFL, O_NONBLOCK) == -1) {
       HANDLE_EINTR(close(pipe_fds[0]));
       HANDLE_EINTR(close(pipe_fds[1]));
       return false;
     }
 
     if (!SetCloseOnExec(pipe_fds[0]) ||
-	!SetCloseOnExec(pipe_fds[1])) {
+        !SetCloseOnExec(pipe_fds[1])) {
       HANDLE_EINTR(close(pipe_fds[0]));
       HANDLE_EINTR(close(pipe_fds[1]));
       return false;

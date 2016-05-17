@@ -1543,8 +1543,8 @@ UnescapeSubstr(TextChar* text, size_t start, size_t length, StringBuffer& buf)
                     if (code < 0x10000) {
                         status = buf.append((char16_t)code);
                     } else {
-                        status = status && buf.append((char16_t)((code - 0x10000) / 1024 + 0xD800));
-                        status = status && buf.append((char16_t)(((code - 0x10000) % 1024) + 0xDC00));
+                        status = buf.append((char16_t)((code - 0x10000) / 1024 + 0xD800)) &&
+                            buf.append((char16_t)(((code - 0x10000) % 1024) + 0xDC00));
                     }
                     break;
                 }

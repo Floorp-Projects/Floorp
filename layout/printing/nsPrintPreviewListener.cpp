@@ -131,16 +131,16 @@ GetActionForEvent(nsIDOMEvent* aEvent)
   }
 
   static const uint32_t kOKKeyCodes[] = {
-    nsIDOMKeyEvent::DOM_VK_PAGE_UP, nsIDOMKeyEvent::DOM_VK_PAGE_DOWN,
-    nsIDOMKeyEvent::DOM_VK_UP,      nsIDOMKeyEvent::DOM_VK_DOWN, 
-    nsIDOMKeyEvent::DOM_VK_HOME,    nsIDOMKeyEvent::DOM_VK_END 
+    NS_VK_PAGE_UP, NS_VK_PAGE_DOWN,
+    NS_VK_UP,      NS_VK_DOWN, 
+    NS_VK_HOME,    NS_VK_END 
   };
 
-  if (keyEvent->keyCode == nsIDOMKeyEvent::DOM_VK_TAB) {
+  if (keyEvent->mKeyCode == NS_VK_TAB) {
     return keyEvent->IsShift() ? eEventAction_ShiftTab : eEventAction_Tab;
   }
 
-  if (keyEvent->charCode == ' ' || keyEvent->keyCode == NS_VK_SPACE) {
+  if (keyEvent->mCharCode == ' ' || keyEvent->mKeyCode == NS_VK_SPACE) {
     return eEventAction_Propagate;
   }
 
@@ -149,7 +149,7 @@ GetActionForEvent(nsIDOMEvent* aEvent)
   }
 
   for (uint32_t i = 0; i < ArrayLength(kOKKeyCodes); ++i) {
-    if (keyEvent->keyCode == kOKKeyCodes[i]) {
+    if (keyEvent->mKeyCode == kOKKeyCodes[i]) {
       return eEventAction_Propagate;
     }
   }
