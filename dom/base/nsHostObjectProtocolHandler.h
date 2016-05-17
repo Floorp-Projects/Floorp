@@ -54,7 +54,6 @@ public:
   static nsresult AddDataEntry(const nsACString& aScheme,
                                nsISupports* aObject,
                                nsIPrincipal* aPrincipal,
-                               bool aIsPrivateBrowsing,
                                nsACString& aUri);
   static void RemoveDataEntry(const nsACString& aUri);
   static nsIPrincipal* GetDataEntryPrincipal(const nsACString& aUri);
