@@ -22,13 +22,13 @@ module.exports = createClass({
    * Any changes in props will cause the <iframe> to be removed and added again,
    * throwing away the current state of the page.
    */
+  displayName: "Browser",
+
   propTypes: {
     location: Types.location.isRequired,
     onBrowserMounted: PropTypes.func.isRequired,
     onContentResize: PropTypes.func.isRequired,
   },
-
-  displayName: "Browser",
 
   mixins: [ addons.PureRenderMixin ],
 

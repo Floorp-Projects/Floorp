@@ -17,12 +17,12 @@ define(function (require, exports, module) {
    * JSON as a text received from the server.
    */
   let TextPanel = createClass({
+    displayName: "TextPanel",
+
     propTypes: {
       actions: PropTypes.object,
       data: PropTypes.string
     },
-
-    displayName: "TextPanel",
 
     getInitialState: function () {
       return {};
@@ -47,11 +47,11 @@ define(function (require, exports, module) {
    * 'Raw Data' panel.
    */
   let TextToolbar = createFactory(createClass({
+    displayName: "TextToolbar",
+
     propTypes: {
       actions: PropTypes.object,
     },
-
-    displayName: "TextToolbar",
 
     // Commands
 

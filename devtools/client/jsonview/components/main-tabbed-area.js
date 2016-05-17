@@ -19,6 +19,8 @@ define(function (require, exports, module) {
    * responsible for rendering the basic tab layout.
    */
   let MainTabbedArea = createClass({
+    displayName: "MainTabbedArea",
+
     propTypes: {
       jsonText: PropTypes.string,
       tabActive: PropTypes.number,
@@ -31,8 +33,6 @@ define(function (require, exports, module) {
         PropTypes.array
       ])
     },
-
-    displayName: "MainTabbedArea",
 
     getInitialState: function () {
       return {

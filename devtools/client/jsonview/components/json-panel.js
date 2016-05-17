@@ -24,6 +24,8 @@ define(function (require, exports, module) {
    * inspection of JSON structure.
    */
   let JsonPanel = createClass({
+    displayName: "JsonPanel",
+
     propTypes: {
       data: PropTypes.oneOfType([
         PropTypes.string,
@@ -34,8 +36,6 @@ define(function (require, exports, module) {
       searchFilter: PropTypes.string,
       actions: PropTypes.object,
     },
-
-    displayName: "JsonPanel",
 
     getInitialState: function () {
       return {};
@@ -154,11 +154,11 @@ define(function (require, exports, module) {
    * This template represents a toolbar within the 'JSON' panel.
    */
   let JsonToolbar = createFactory(createClass({
+    displayName: "JsonToolbar",
+
     propTypes: {
       actions: PropTypes.object,
     },
-
-    displayName: "JsonToolbar",
 
     // Commands
 

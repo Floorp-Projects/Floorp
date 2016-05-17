@@ -31,6 +31,8 @@ define(function (require, exports, module) {
    * <div>
    */
   let Tabs = React.createClass({
+    displayName: "Tabs",
+
     propTypes: {
       className: React.PropTypes.oneOfType([
         React.PropTypes.array,
@@ -46,8 +48,6 @@ define(function (require, exports, module) {
         React.PropTypes.element
       ]).isRequired
     },
-
-    displayName: "Tabs",
 
     getDefaultProps: function () {
       return {
@@ -168,6 +168,8 @@ define(function (require, exports, module) {
    * Renders simple tab 'panel'.
    */
   let Panel = React.createClass({
+    displayName: "Panel",
+
     propTypes: {
       title: React.PropTypes.string.isRequired,
       children: React.PropTypes.oneOfType([
@@ -175,8 +177,6 @@ define(function (require, exports, module) {
         React.PropTypes.element
       ]).isRequired
     },
-
-    displayName: "Panel",
 
     render: function () {
       return DOM.div({},
