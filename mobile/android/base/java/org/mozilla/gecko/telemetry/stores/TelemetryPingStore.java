@@ -19,11 +19,14 @@ import java.util.Set;
  * An implementation of this class is expected to be thread-safe. Additionally,
  * multiple instances can be created and run simultaneously so they must be able
  * to synchronize state (or be stateless!).
+ *
+ * The pings in {@link #getAllPings()} and {@link #maybePrunePings()} are returned in the
+ * same order in order to guarantee consistent results.
  */
 public interface TelemetryPingStore extends Parcelable {
 
     /**
-     * @return a list of all the telemetry pings in the store that are ready for upload.
+     * @return a list of all the telemetry pings in the store that are ready for upload, ascending oldest to newest.
      */
     List<TelemetryPing> getAllPings();
 
