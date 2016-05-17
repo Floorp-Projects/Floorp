@@ -1,5 +1,6 @@
 #include "nsContentSecurityManager.h"
 #include "nsIChannel.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsIStreamListener.h"
 #include "nsILoadInfo.h"
 #include "nsContentUtils.h"
@@ -161,8 +162,12 @@ DoCORSChecks(nsIChannel* aChannel, nsILoadInfo* aLoadInfo,
 }
 
 static nsresult
-DoContentSecurityChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
+DoContentSecurityChecks(nsIChannel* aChannel, nsILoadInfo* aLoadInfo)
 {
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   nsContentPolicyType contentPolicyType =
     aLoadInfo->GetExternalContentPolicyType();
   nsContentPolicyType internalContentPolicyType =
@@ -290,7 +295,16 @@ DoContentSecurityChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
     }
 
     case nsIContentPolicy::TYPE_WEBSOCKET: {
-      MOZ_ASSERT(false, "contentPolicyType not supported yet");
+      // Websockets have to use the proxied URI:
+      // ws:// instead of http:// for CSP checks
+      nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal
+        = do_QueryInterface(aChannel);
+      MOZ_ASSERT(httpChannelInternal);
+      if (httpChannelInternal) {
+        httpChannelInternal->GetProxyURI(getter_AddRefs(uri));
+      }
+      mimeTypeGuess = EmptyCString();
+      requestingContext = aLoadInfo->LoadingNode();
       break;
     }
 
@@ -342,15 +356,15 @@ DoContentSecurityChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
   }
 
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-  nsresult rv = NS_CheckContentLoadPolicy(internalContentPolicyType,
-                                          aURI,
-                                          aLoadInfo->LoadingPrincipal(),
-                                          requestingContext,
-                                          mimeTypeGuess,
-                                          nullptr,        //extra,
-                                          &shouldLoad,
-                                          nsContentUtils::GetContentPolicy(),
-                                          nsContentUtils::GetSecurityManager());
+  rv = NS_CheckContentLoadPolicy(internalContentPolicyType,
+                                 uri,
+                                 aLoadInfo->LoadingPrincipal(),
+                                 requestingContext,
+                                 mimeTypeGuess,
+                                 nullptr,        //extra,
+                                 &shouldLoad,
+                                 nsContentUtils::GetContentPolicy(),
+                                 nsContentUtils::GetSecurityManager());
   NS_ENSURE_SUCCESS(rv, rv);
   if (NS_CP_REJECTED(shouldLoad)) {
     return NS_ERROR_CONTENT_BLOCKED;
@@ -415,12 +429,8 @@ nsContentSecurityManager::doContentSecurityCheck(nsIChannel* aChannel,
   rv = CheckChannel(aChannel);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIURI> finalChannelURI;
-  rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(finalChannelURI));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // Perform all ContentPolicy checks (MixedContent, CSP, ...)
-  rv = DoContentSecurityChecks(finalChannelURI, loadInfo);
+  rv = DoContentSecurityChecks(aChannel, loadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // now lets set the initalSecurityFlag for subsequent calls

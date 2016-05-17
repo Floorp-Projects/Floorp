@@ -15,6 +15,7 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/MessageEvent.h"
 #include "mozilla/dom/MessageEventBinding.h"
+#include "mozilla/dom/nsCSPService.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -1554,23 +1555,28 @@ WebSocketImpl::Init(JSContext* aCx,
       }
     }
 
-    // Check content policy.
-    int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-    aRv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_WEBSOCKET,
-                                    uri,
-                                    aPrincipal,
-                                    originDoc,
-                                    EmptyCString(),
-                                    nullptr,
-                                    &shouldLoad,
-                                    nsContentUtils::GetContentPolicy(),
-                                    nsContentUtils::GetSecurityManager());
+    // The 'real' nsHttpChannel of the websocket gets opened in the parent.
+    // Since we don't serialize the CSP within child and parent we have to
+    // perform the CSP check here instead of AsyncOpen2().
+    // Please note that websockets can't follow redirects, hence there is no
+    // need to perform a CSP check after redirects.
+    nsCOMPtr<nsIContentPolicy> cspService = do_GetService(CSPSERVICE_CONTRACTID);
+    int16_t shouldLoad = nsIContentPolicy::REJECT_REQUEST;
+    aRv = cspService->ShouldLoad(nsIContentPolicy::TYPE_WEBSOCKET,
+                                 uri,
+                                 nullptr, // aRequestOrigin not used within CSP
+                                 originDoc,
+                                 EmptyCString(), // aMimeTypeGuess
+                                 nullptr, // aExtra
+                                 aPrincipal,
+                                 &shouldLoad);
+
     if (NS_WARN_IF(aRv.Failed())) {
       return;
     }
 
     if (NS_CP_REJECTED(shouldLoad)) {
-      // Disallowed by content policy.
+      // Disallowed by CSP
       aRv.Throw(NS_ERROR_CONTENT_BLOCKED);
       return;
     }
@@ -1772,6 +1778,7 @@ WebSocketImpl::AsyncOpen(nsIPrincipal* aPrincipal, uint64_t aInnerWindowID,
 
   aRv = mChannel->AsyncOpen(uri, asciiOrigin, aInnerWindowID, this, nullptr);
   if (NS_WARN_IF(aRv.Failed())) {
+    aRv.Throw(NS_ERROR_CONTENT_BLOCKED);
     return;
   }
 
@@ -1842,7 +1849,7 @@ WebSocketImpl::InitializeConnection(nsIPrincipal* aPrincipal)
   wsChannel->InitLoadInfo(doc ? doc->AsDOMNode() : nullptr,
                           doc ? doc->NodePrincipal() : aPrincipal,
                           aPrincipal,
-                          nsILoadInfo::SEC_NORMAL,
+                          nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                           nsIContentPolicy::TYPE_WEBSOCKET);
 
   if (!mRequestedProtocolList.IsEmpty()) {
