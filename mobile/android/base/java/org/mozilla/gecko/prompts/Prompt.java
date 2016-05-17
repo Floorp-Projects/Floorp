@@ -110,7 +110,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         show(title, text, menuitems, choiceMode);
     }
 
-     public void show(String title, String text, PromptListItem[] listItems, int choiceMode) {
+    public void show(String title, String text, PromptListItem[] listItems, int choiceMode) {
         ThreadUtils.assertOnUiThread();
 
         try {
@@ -456,7 +456,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
     }
 
     /* Called in situations where we want to cancel the dialog . This can happen if the user hits back,
-     *  or if the dialog can't be created because of invalid JSON.
+     * or if the dialog can't be created because of invalid JSON.
      */
     private void cancelDialog() {
         JSONObject ret = new JSONObject();
