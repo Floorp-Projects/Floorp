@@ -504,7 +504,7 @@ MediaFormatReader::ShouldSkip(bool aSkipToNextKeyframe, media::TimeUnit aTimeThr
   return (nextKeyframe < aTimeThreshold ||
           (mVideo.mTimeThreshold &&
            mVideo.mTimeThreshold.ref().mTime < aTimeThreshold)) &&
-         nextKeyframe.ToMicroseconds() >= 0;
+         nextKeyframe.ToMicroseconds() >= 0 && !nextKeyframe.IsInfinite();
 }
 
 RefPtr<MediaDecoderReader::MediaDataPromise>
