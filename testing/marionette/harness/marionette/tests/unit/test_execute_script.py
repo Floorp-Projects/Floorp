@@ -6,7 +6,7 @@ import urllib
 import os
 
 from marionette_driver import By, errors
-from marionette import MarionetteTestCase
+from marionette import MarionetteTestCase, skip_if_b2g
 
 
 def inline(doc):
@@ -233,6 +233,7 @@ class TestExecuteContent(MarionetteTestCase):
             send("return typeof window.wrappedJSObject == 'undefined'"))
 
 
+@skip_if_b2g
 class TestExecuteChrome(TestExecuteContent):
     def setUp(self):
         super(TestExecuteChrome, self).setUp()
