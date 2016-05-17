@@ -1305,15 +1305,14 @@ gfxUserFontSet::UserFontCache::Entry::ReportMemory(nsIMemoryReporterCallback* aC
                                                    nsISupports* aClosure,
                                                    bool aAnonymize)
 {
+    MOZ_ASSERT(mFontEntry);
     nsAutoCString path("explicit/gfx/user-fonts/font(");
 
     if (aAnonymize) {
         path.AppendPrintf("<anonymized-%p>", this);
     } else {
-        if (mFontEntry) { // this should always be present
-            NS_ConvertUTF16toUTF8 familyName(mFontEntry->mFamilyName);
-            path.AppendPrintf("family=%s", familyName.get());
-        }
+        NS_ConvertUTF16toUTF8 familyName(mFontEntry->mFamilyName);
+        path.AppendPrintf("family=%s", familyName.get());
         if (mURI) {
             nsCString spec;
             mURI->GetSpec(spec);
