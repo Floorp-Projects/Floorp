@@ -6,7 +6,7 @@
 "use strict";
 
 // Make this available to both AMD and CJS environments
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   // ReactJS
   const React = require("devtools/client/shared/vendor/react");
 
@@ -18,13 +18,13 @@ define(function(require, exports, module) {
    * Renders DOM event objects.
    */
   let Event = React.createClass({
+    displayName: "event",
+
     propTypes: {
       object: React.PropTypes.object.isRequired
     },
 
-    displayName: "event",
-
-    summarizeEvent: function(grip) {
+    summarizeEvent: function (grip) {
       let info = [grip.preview.type, " "];
 
       let eventFamily = grip.class;
@@ -41,7 +41,7 @@ define(function(require, exports, module) {
       return info.join("");
     },
 
-    render: function() {
+    render: function () {
       let grip = this.props.object;
       return (
         ObjectLink({className: "event"},

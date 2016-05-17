@@ -7,7 +7,7 @@
 "use strict";
 
 // Make this available to both AMD and CJS environments
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   // Dependencies
   const React = require("devtools/client/shared/vendor/react");
   const DOM = React.DOM;
@@ -18,7 +18,7 @@ define(function(require, exports, module) {
   const ObjectLink = React.createClass({
     displayName: "ObjectLink",
 
-    render: function() {
+    render: function () {
       let className = this.props.className;
       let objectClassName = className ? " objectLink-" + className : "";
       let linkClassName = "objectLink" + objectClassName + " a11yFocus";

@@ -7,7 +7,7 @@
 "use strict";
 
 // Make this available to both AMD and CJS environments
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   // Dependencies
   const React = require("devtools/client/shared/vendor/react");
   const { createFactories } = require("./rep-utils");
@@ -24,54 +24,11 @@ define(function(require, exports, module) {
   let ArrayRep = React.createClass({
     displayName: "ArrayRep",
 
-    render: function() {
-      let mode = this.props.mode || "short";
-      let object = this.props.object;
-      let items;
-
-      if (mode == "tiny") {
-        items = DOM.span({className: "length"}, object.length);
-      } else {
-        let max = (mode == "short") ? 3 : 300;
-        items = this.arrayIterator(object, max);
-      }
-
-      return (
-        ObjectBox({
-          className: "array",
-          onClick: this.onToggleProperties},
-          DOM.a({
-            className: "objectLink",
-            onclick: this.onClickBracket},
-            DOM.span({
-              className: "arrayLeftBracket",
-              role: "presentation"},
-              "["
-            )
-          ),
-          items,
-          DOM.a({
-            className: "objectLink",
-            onclick: this.onClickBracket},
-            DOM.span({
-              className: "arrayRightBracket",
-              role: "presentation"},
-              "]"
-            )
-          ),
-          DOM.span({
-            className: "arrayProperties",
-            role: "group"}
-          )
-        )
-      );
-    },
-
-    getTitle: function(object, context) {
+    getTitle: function (object, context) {
       return "[" + object.length + "]";
     },
 
-    arrayIterator: function(array, max) {
+    arrayIterator: function (array, max) {
       let items = [];
       let delim;
 
@@ -125,7 +82,7 @@ define(function(require, exports, module) {
      *
      * @param {Array} array The array object.
      */
-    hasSpecialProperties: function(array) {
+    hasSpecialProperties: function (array) {
       function isInteger(x) {
         let y = parseInt(x, 10);
         if (isNaN(y)) {
@@ -154,11 +111,54 @@ define(function(require, exports, module) {
 
     // Event Handlers
 
-    onToggleProperties: function(event) {
+    onToggleProperties: function (event) {
     },
 
-    onClickBracket: function(event) {
-    }
+    onClickBracket: function (event) {
+    },
+
+    render: function () {
+      let mode = this.props.mode || "short";
+      let object = this.props.object;
+      let items;
+
+      if (mode == "tiny") {
+        items = DOM.span({className: "length"}, object.length);
+      } else {
+        let max = (mode == "short") ? 3 : 300;
+        items = this.arrayIterator(object, max);
+      }
+
+      return (
+        ObjectBox({
+          className: "array",
+          onClick: this.onToggleProperties},
+          DOM.a({
+            className: "objectLink",
+            onclick: this.onClickBracket},
+            DOM.span({
+              className: "arrayLeftBracket",
+              role: "presentation"},
+              "["
+            )
+          ),
+          items,
+          DOM.a({
+            className: "objectLink",
+            onclick: this.onClickBracket},
+            DOM.span({
+              className: "arrayRightBracket",
+              role: "presentation"},
+              "]"
+            )
+          ),
+          DOM.span({
+            className: "arrayProperties",
+            role: "group"}
+          )
+        )
+      );
+    },
   });
 
   /**
@@ -167,7 +167,7 @@ define(function(require, exports, module) {
   let ItemRep = React.createFactory(React.createClass({
     displayName: "ItemRep",
 
-    render: function() {
+    render: function () {
       const { Rep } = createFactories(require("./rep"));
 
       let object = this.props.object;
@@ -187,7 +187,7 @@ define(function(require, exports, module) {
   let Reference = React.createFactory(React.createClass({
     displayName: "Reference",
 
-    render: function() {
+    render: function () {
       let tooltip = "Circular reference";
       return (
         DOM.span({title: tooltip},

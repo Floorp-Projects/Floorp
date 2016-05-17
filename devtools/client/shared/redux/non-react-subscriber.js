@@ -90,7 +90,7 @@ function makeStateBroadcaster(stillAliveFunc) {
           enqueuedChanges.forEach(([name, payload]) => {
             if (listeners[name]) {
               listeners[name].forEach(listener => {
-                listener(payload)
+                listener(payload);
               });
             }
           });
@@ -115,7 +115,7 @@ function enhanceStoreWithBroadcaster(store, broadcaster) {
   store.onChange = broadcaster.onChange;
   store.offChange = broadcaster.offChange;
   return store;
-};
+}
 
 /**
  * Function that takes a hash of reducers, like `combineReducers`, and
@@ -132,16 +132,19 @@ function combineBroadcastingReducers(reducers, emitChange) {
   // Wrap each reducer with a wrapper function that calls
   // the reducer with a third argument, an `emitChange` function.
   // Use this rather than a new custom top level reducer that would ultimately
-  // have to replicate redux's `combineReducers` so we only pass in correct state,
-  // the error checking, and other edge cases.
+  // have to replicate redux's `combineReducers` so we only pass in correct
+  // state, the error checking, and other edge cases.
   function wrapReduce(newReducers, key) {
-    newReducers[key] = (state, action) => reducers[key](state, action, emitChange);
+    newReducers[key] = (state, action) => {
+      return reducers[key](state, action, emitChange);
+    };
     return newReducers;
   }
 
-  return combineReducers(Object.keys(reducers).reduce(wrapReduce, Object.create(null)));
+  return combineReducers(
+    Object.keys(reducers).reduce(wrapReduce, Object.create(null))
+  );
 }
-
 
 module.exports = {
   makeStateBroadcaster,

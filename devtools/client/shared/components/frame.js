@@ -11,6 +11,8 @@ const { LocalizationHelper } = require("devtools/client/shared/l10n");
 const l10n = new LocalizationHelper("chrome://devtools/locale/components.properties");
 
 module.exports = createClass({
+  displayName: "Frame",
+
   propTypes: {
     // SavedFrame, or an object containing all the required properties.
     frame: PropTypes.shape({
@@ -33,8 +35,6 @@ module.exports = createClass({
       showHost: false,
     };
   },
-
-  displayName: "Frame",
 
   render() {
     let { onClick, frame, showFunctionName, showHost } = this.props;
@@ -72,7 +72,8 @@ module.exports = createClass({
 
     if (showFunctionName && frame.functionDisplayName) {
       elements.push(
-        dom.span({ className: "frame-link-function-display-name" }, frame.functionDisplayName)
+        dom.span({ className: "frame-link-function-display-name" },
+                 frame.functionDisplayName)
       );
     }
 
@@ -87,7 +88,9 @@ module.exports = createClass({
       // Intentionally exclude 0
       if (column) {
         sourceElements.push(dom.span({ className: "frame-link-colon" }, ":"));
-        sourceElements.push(dom.span({ className: "frame-link-column" }, column));
+        sourceElements.push(
+          dom.span({ className: "frame-link-column" }, column)
+        );
         // Add `data-column` attribute for testing
         attributes["data-column"] = column;
       }

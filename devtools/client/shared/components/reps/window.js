@@ -6,7 +6,7 @@
 "use strict";
 
 // Make this available to both AMD and CJS environments
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   // ReactJS
   const React = require("devtools/client/shared/vendor/react");
 
@@ -22,17 +22,17 @@ define(function(require, exports, module) {
    * Renders a grip representing a window.
    */
   let Window = React.createClass({
+    displayName: "Window",
+
     propTypes: {
       object: React.PropTypes.object.isRequired,
     },
 
-    displayName: "Window",
-
-    getLocation: function(grip) {
+    getLocation: function (grip) {
       return cropString(grip.preview.url);
     },
 
-    render: function() {
+    render: function () {
       let grip = this.props.object;
 
       return (

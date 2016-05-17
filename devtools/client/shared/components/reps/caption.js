@@ -7,7 +7,7 @@
 "use strict";
 
 // Make this available to both AMD and CJS environments
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   // Dependencies
   const React = require("devtools/client/shared/vendor/react");
   const DOM = React.DOM;
@@ -19,7 +19,7 @@ define(function(require, exports, module) {
   const Caption = React.createClass({
     displayName: "Caption",
 
-    render: function() {
+    render: function () {
       return (
         DOM.span({"className": "caption"}, this.props.object)
       );

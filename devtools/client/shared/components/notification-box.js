@@ -33,6 +33,8 @@ const PriorityLevels = {
  * https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XUL/notificationbox
  */
 var NotificationBox = createClass({
+  displayName: "NotificationBox",
+
   propTypes: {
     // List of notifications appended into the box.
     notifications: PropTypes.arrayOf(PropTypes.shape({
@@ -73,8 +75,6 @@ var NotificationBox = createClass({
       eventCallback: PropTypes.func,
     })),
   },
-
-  displayName: "NotificationBox",
 
   getInitialState() {
     return {

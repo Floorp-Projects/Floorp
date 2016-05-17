@@ -6,7 +6,7 @@
 "use strict";
 
 // Make this available to both AMD and CJS environments
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   // ReactJS
   const React = require("devtools/client/shared/vendor/react");
 
@@ -18,15 +18,15 @@ define(function(require, exports, module) {
    * Render the default cell used for toggle buttons
    */
   let LabelCell = React.createClass({
+    displayName: "LabelCell",
+
     // See the TreeView component for details related
     // to the 'member' object.
     propTypes: {
       member: PropTypes.object.isRequired
     },
 
-    displayName: "LabelCell",
-
-    render: function() {
+    render: function () {
       let member = this.props.member;
       let level = member.level || 0;
 

@@ -40,8 +40,7 @@ function waitUntilService({ dispatch, getState }) {
     for (let request of pending) {
       if (request.predicate(action)) {
         readyRequests.push(request);
-      }
-      else {
+      } else {
         stillPending.push(request);
       }
     }
@@ -55,12 +54,11 @@ function waitUntilService({ dispatch, getState }) {
   return next => action => {
     if (action.type === NAME) {
       pending.push(action);
+      return null;
     }
-    else {
-      var result = next(action);
-      checkPending(action);
-      return result;
-    }
-  }
+    let result = next(action);
+    checkPending(action);
+    return result;
+  };
 }
 exports.waitUntilService = waitUntilService;

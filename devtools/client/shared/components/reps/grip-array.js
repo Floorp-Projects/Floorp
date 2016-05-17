@@ -7,7 +7,7 @@
 "use strict";
 
 // Make this available to both AMD and CJS environments
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   // Dependencies
   const React = require("devtools/client/shared/vendor/react");
   const { createFactories, isGrip } = require("./rep-utils");
@@ -22,23 +22,23 @@ define(function(require, exports, module) {
    * and the max number of rendered items depends on the current mode.
    */
   let GripArray = React.createClass({
+    displayName: "GripArray",
+
     propTypes: {
       object: React.PropTypes.object.isRequired,
       mode: React.PropTypes.string,
       provider: React.PropTypes.object,
     },
 
-    displayName: "GripArray",
-
-    getLength: function(grip) {
+    getLength: function (grip) {
       return grip.preview ? grip.preview.length : 0;
     },
 
-    getTitle: function(object, context) {
+    getTitle: function (object, context) {
       return "[" + object.length + "]";
     },
 
-    arrayIterator: function(grip, max) {
+    arrayIterator: function (grip, max) {
       let items = [];
 
       if (!grip.preview || !grip.preview.length) {
@@ -96,19 +96,19 @@ define(function(require, exports, module) {
       return items;
     },
 
-    hasSpecialProperties: function(array) {
+    hasSpecialProperties: function (array) {
       return false;
     },
 
     // Event Handlers
 
-    onToggleProperties: function(event) {
+    onToggleProperties: function (event) {
     },
 
-    onClickBracket: function(event) {
+    onClickBracket: function (event) {
     },
 
-    render: function() {
+    render: function () {
       let mode = this.props.mode || "short";
       let object = this.props.object;
 
@@ -158,13 +158,13 @@ define(function(require, exports, module) {
    * a delimiter (a comma by default).
    */
   let GripArrayItem = React.createFactory(React.createClass({
+    displayName: "GripArrayItem",
+
     propTypes: {
       delim: React.PropTypes.string,
     },
 
-    displayName: "GripArrayItem",
-
-    render: function() {
+    render: function () {
       let { Rep } = createFactories(require("./rep"));
 
       return (
@@ -184,7 +184,7 @@ define(function(require, exports, module) {
   let Reference = React.createFactory(React.createClass({
     displayName: "Reference",
 
-    render: function() {
+    render: function () {
       return (
         span({title: "Circular reference"},
           "[...]"
