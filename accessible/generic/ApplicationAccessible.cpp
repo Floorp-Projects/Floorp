@@ -27,6 +27,7 @@ ApplicationAccessible::ApplicationAccessible() :
 {
   mType = eApplicationType;
   mAppInfo = do_GetService("@mozilla.org/xre/app-info;1");
+  MOZ_ASSERT(mAppInfo, "no application info");
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(ApplicationAccessible, Accessible)

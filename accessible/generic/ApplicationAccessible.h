@@ -60,6 +60,8 @@ public:
 
   void AppName(nsAString& aName) const
   {
+    MOZ_ASSERT(mAppInfo, "no application info");
+
     if (mAppInfo) {
       nsAutoCString cname;
       mAppInfo->GetName(cname);
@@ -69,6 +71,8 @@ public:
 
   void AppVersion(nsAString& aVersion) const
   {
+    MOZ_ASSERT(mAppInfo, "no application info");
+
     if (mAppInfo) {
       nsAutoCString cversion;
       mAppInfo->GetVersion(cversion);
@@ -83,6 +87,8 @@ public:
 
   void PlatformVersion(nsAString& aVersion) const
   {
+    MOZ_ASSERT(mAppInfo, "no application info");
+
     if (mAppInfo) {
       nsAutoCString cversion;
       mAppInfo->GetPlatformVersion(cversion);
