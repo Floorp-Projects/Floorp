@@ -67,7 +67,6 @@ const {
   CustomHighlighterActor,
   isTypeRegistered,
 } = require("devtools/server/actors/highlighters");
-const {NodeFront, NodeListFront, WalkerFront} = require("devtools/client/fronts/inspector");
 const {
   isAnonymous,
   isNativeAnonymous,
@@ -81,7 +80,7 @@ const {getLayoutChangesObserver, releaseLayoutChangesObserver} =
 loader.lazyRequireGetter(this, "CSS", "CSS");
 
 const {EventParsers} = require("devtools/shared/event-parsers");
-const {nodeSpec, nodeListSpec, walkerSpec} = require("devtools/shared/specs/inspector");
+const {nodeSpec, nodeListSpec, walkerSpec, inspectorSpec} = require("devtools/shared/specs/inspector");
 
 const FONT_FAMILY_PREVIEW_TEXT = "The quick brown fox jumps over the lazy dog";
 const FONT_FAMILY_PREVIEW_TEXT_SIZE = 20;
@@ -758,8 +757,6 @@ var NodeListActor = exports.NodeListActor = protocol.ActorClassWithSpec(nodeList
 
   release: function () {}
 });
-
-exports.NodeListFront = NodeListFront;
 
 /**
  * Server side of the DOM walker.
@@ -2547,15 +2544,11 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   },
 });
 
-exports.WalkerFront = WalkerFront;
-
 /**
  * Server side of the inspector actor, which is used to create
  * inspector-related actors, including the walker.
  */
-var InspectorActor = exports.InspectorActor = protocol.ActorClass({
-  typeName: "inspector",
-
+var InspectorActor = exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
   initialize: function (conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.tabActor = tabActor;
@@ -2581,7 +2574,7 @@ var InspectorActor = exports.InspectorActor = protocol.ActorClass({
     return this.tabActor.window;
   },
 
-  getWalker: method(function (options = {}) {
+  getWalker: function (options = {}) {
     if (this._walkerPromise) {
       return this._walkerPromise;
     }
@@ -2609,16 +2602,9 @@ var InspectorActor = exports.InspectorActor = protocol.ActorClass({
     }
 
     return this._walkerPromise;
-  }, {
-    request: {
-      options: Arg(0, "nullable:json")
-    },
-    response: {
-      walker: RetVal("domwalker")
-    }
-  }),
+  },
 
-  getPageStyle: method(function () {
+  getPageStyle: function () {
     if (this._pageStylePromise) {
       return this._pageStylePromise;
     }
@@ -2629,12 +2615,7 @@ var InspectorActor = exports.InspectorActor = protocol.ActorClass({
       return pageStyle;
     });
     return this._pageStylePromise;
-  }, {
-    request: {},
-    response: {
-      pageStyle: RetVal("pagestyle")
-    }
-  }),
+  },
 
   /**
    * The most used highlighter actor is the HighlighterActor which can be
@@ -2649,7 +2630,7 @@ var InspectorActor = exports.InspectorActor = protocol.ActorClass({
    * element has been picked
    * @return {HighlighterActor}
    */
-  getHighlighter: method(function (autohide) {
+  getHighlighter: function (autohide) {
     if (this._highlighterPromise) {
       return this._highlighterPromise;
     }
@@ -2660,14 +2641,7 @@ var InspectorActor = exports.InspectorActor = protocol.ActorClass({
       return highlighter;
     });
     return this._highlighterPromise;
-  }, {
-    request: {
-      autohide: Arg(0, "boolean")
-    },
-    response: {
-      highligter: RetVal("highlighter")
-    }
-  }),
+  },
 
   /**
    * If consumers need to display several highlighters at the same time or
@@ -2680,19 +2654,12 @@ var InspectorActor = exports.InspectorActor = protocol.ActorClass({
    * @return {Highlighter} The highlighter actor instance or null if the
    * typeName passed doesn't match any available highlighter
    */
-  getHighlighterByType: method(function (typeName) {
+  getHighlighterByType: function (typeName) {
     if (isTypeRegistered(typeName)) {
       return CustomHighlighterActor(this, typeName);
     }
     return null;
-  }, {
-    request: {
-      typeName: Arg(0)
-    },
-    response: {
-      highlighter: RetVal("nullable:customhighlighter")
-    }
-  }),
+  },
 
   /**
    * Get the node's image data if any (for canvas and img nodes).
@@ -2705,7 +2672,7 @@ var InspectorActor = exports.InspectorActor = protocol.ActorClass({
    * is important as the resizing occurs server-side so that image-data being
    * transfered in the longstring back to the client will be that much smaller
    */
-  getImageDataFromURL: method(function(url, maxDim) {
+  getImageDataFromURL: function(url, maxDim) {
     let img = new this.window.Image();
     img.src = url;
 
@@ -2716,10 +2683,7 @@ var InspectorActor = exports.InspectorActor = protocol.ActorClass({
         size: imageData.size
       };
     });
-  }, {
-    request: {url: Arg(0), maxDim: Arg(1, "nullable:number")},
-    response: RetVal("imageData")
-  }),
+  },
 
   /**
    * Resolve a URL to its absolute form, in the scope of a given content window.
@@ -2729,7 +2693,7 @@ var InspectorActor = exports.InspectorActor = protocol.ActorClass({
    * used instead.
    * @return {String} url.
    */
-  resolveRelativeURL: method(function (url, node) {
+  resolveRelativeURL: function (url, node) {
     let document = isNodeDead(node)
                    ? this.window.document
                    : nodeDocument(node.rawNode);
@@ -2740,57 +2704,8 @@ var InspectorActor = exports.InspectorActor = protocol.ActorClass({
 
     let baseURI = Services.io.newURI(document.location.href, null, null);
     return Services.io.newURI(url, null, baseURI).spec;
-  }, {
-    request: {url: Arg(0, "string"), node: Arg(1, "nullable:domnode")},
-    response: {value: RetVal("string")}
-  })
+  }
 });
-
-/**
- * Client side of the inspector actor, which is used to create
- * inspector-related actors, including the walker.
- */
-var InspectorFront = protocol.FrontClass(InspectorActor, {
-  initialize: function (client, tabForm) {
-    protocol.Front.prototype.initialize.call(this, client);
-    this.actorID = tabForm.inspectorActor;
-
-    // XXX: This is the first actor type in its hierarchy to use the protocol
-    // library, so we're going to self-own on the client side for now.
-    this.manage(this);
-  },
-
-  destroy: function () {
-    delete this.walker;
-    protocol.Front.prototype.destroy.call(this);
-  },
-
-  getWalker: protocol.custom(function (options = {}) {
-    return this._getWalker(options).then(walker => {
-      this.walker = walker;
-      return walker;
-    });
-  }, {
-    impl: "_getWalker"
-  }),
-
-  getPageStyle: protocol.custom(function () {
-    return this._getPageStyle().then(pageStyle => {
-      // We need a walker to understand node references from the
-      // node style.
-      if (this.walker) {
-        return pageStyle;
-      }
-      return this.getWalker().then(() => {
-        return pageStyle;
-      });
-    });
-  }, {
-    impl: "_getPageStyle"
-  })
-});
-
-exports.InspectorFront = InspectorFront;
 
 // Exported for test purposes.
 exports._documentWalker = DocumentWalker;

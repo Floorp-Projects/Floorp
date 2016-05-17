@@ -50,7 +50,7 @@ var addTab = Task.async(function* (url) {
 
 function* initAnimationsFrontForUrl(url) {
   const {AnimationsFront} = require("devtools/server/actors/animation");
-  const {InspectorFront} = require("devtools/server/actors/inspector");
+  const {InspectorFront} = require("devtools/client/fronts/inspector");
 
   yield addTab(url);
 

@@ -30,7 +30,7 @@ addAsyncTest(function* setup() {
     attachURL(url, function(err, client, tab, doc) {
       gInspectee = doc;
       gClient = client;
-      let {InspectorFront} = require("devtools/server/actors/inspector");
+      let {InspectorFront} = require("devtools/client/fronts/inspector");
       inspector = InspectorFront(client, tab);
       resolve();
     });

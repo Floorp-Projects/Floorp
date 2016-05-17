@@ -26,7 +26,7 @@ addTest(function setup() {
   let url = document.getElementById("inspectorContent").href;
   attachURL(url, function(err, client, tab, doc) {
     gInspectee = doc;
-    let {InspectorFront} = require("devtools/server/actors/inspector");
+    let {InspectorFront} = require("devtools/client/fronts/inspector");
     let inspector = InspectorFront(client, tab);
     promiseDone(inspector.getWalker().then(walker => {
       ok(walker, "getWalker() should return an actor.");
