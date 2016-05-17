@@ -292,7 +292,6 @@ class BaselineCompiler : public BaselineCompilerSpecific
     void emitIsDebuggeeCheck();
     MOZ_MUST_USE bool emitDebugPrologue();
     MOZ_MUST_USE bool emitDebugTrap();
-    void emitCoverage(jsbytecode* pc);
     MOZ_MUST_USE bool emitTraceLoggerEnter();
     MOZ_MUST_USE bool emitTraceLoggerExit();
 
