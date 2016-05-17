@@ -2703,7 +2703,6 @@ if test -n "$MOZ_RTSP"; then
 fi
 BUILD_CTYPES=1
 MOZ_USE_NATIVE_POPUP_WINDOWS=
-MOZ_ANDROID_HISTORY=
 MOZ_WEBSMS_BACKEND=
 MOZ_EXCLUDE_HYPHENATION_DICTIONARIES=
 MOZ_INSTALL_TRACKING=
@@ -3482,17 +3481,6 @@ then
         MOZ_SYNTH_SPEECHD=1)
 fi
 AC_SUBST(MOZ_SYNTH_SPEECHD)
-
-dnl ========================================================
-dnl = Enable Android History instead of Places
-dnl ========================================================
-if test -n "$MOZ_ANDROID_HISTORY"; then
-    if test -z "$MOZ_PLACES"; then
-        AC_DEFINE(MOZ_ANDROID_HISTORY)
-    else
-        AC_MSG_ERROR([Cannot use MOZ_ANDROID_HISTORY alongside MOZ_PLACES.])
-    fi
-fi
 
 dnl ========================================================
 dnl = Disable WebSMS backend
@@ -6603,7 +6591,6 @@ AC_SUBST(MOZ_DIRECTX_SDK_PATH)
 AC_SUBST(MOZ_D3DCOMPILER_XP_DLL)
 AC_SUBST(MOZ_D3DCOMPILER_XP_CAB)
 
-AC_SUBST(MOZ_ANDROID_HISTORY)
 AC_SUBST(MOZ_WEBSMS_BACKEND)
 AC_SUBST(MOZ_DISABLE_GECKOVIEW)
 AC_SUBST(MOZ_ANDROID_GECKOLIBS_AAR)

@@ -397,7 +397,6 @@ set_config('OMNIJAR_NAME', omnijar_name)
 
 project_flag('MOZ_PLACES',
              help='Build Places if required',
-             set_for_old_configure=True,
              set_as_define=True)
 
 project_flag('MOZ_SOCIAL',
@@ -414,6 +413,15 @@ project_flag('MOZ_SERVICES_SYNC',
 
 project_flag('MOZ_SERVICES_CLOUDSYNC',
              help='Build Services/CloudSync if required')
+
+project_flag('MOZ_ANDROID_HISTORY',
+             help='Enable Android History instead of Places',
+             set_as_define=True)
+
+@depends('MOZ_PLACES', 'MOZ_ANDROID_HISTORY')
+def check_places_and_android_history(places, android_history):
+    if places and android_history:
+        die('Cannot use MOZ_ANDROID_HISTORY alongside MOZ_PLACES.')
 
 # Miscellaneous programs
 # ==============================================================
