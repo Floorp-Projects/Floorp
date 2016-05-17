@@ -402,7 +402,7 @@ TexImageTargetForTargetAndFace(TexTarget target, uint8_t face)
         MOZ_ASSERT(face < 6);
         return LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X + face;
     default:
-        MOZ_CRASH();
+        MOZ_CRASH("GFX: TexImageTargetForTargetAndFace");
     }
 }
 

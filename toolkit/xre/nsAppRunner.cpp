@@ -3373,10 +3373,11 @@ XREMain::XRE_mainInit(bool* aExitFlag)
 #endif
 
 #if defined(MOZ_SANDBOX) && defined(XP_WIN)
-  bool brokerInitialized = SandboxBroker::Initialize();
-  Telemetry::Accumulate(Telemetry::SANDBOX_BROKER_INITIALIZED,
-                        brokerInitialized);
-  if (!brokerInitialized) {
+  if (mAppData->sandboxBrokerServices) {
+    SandboxBroker::Initialize(mAppData->sandboxBrokerServices);
+    Telemetry::Accumulate(Telemetry::SANDBOX_BROKER_INITIALIZED, true);
+  } else {
+    Telemetry::Accumulate(Telemetry::SANDBOX_BROKER_INITIALIZED, false);
 #if defined(MOZ_CONTENT_SANDBOX)
     // If we're sandboxing content and we fail to initialize, then crashing here
     // seems like the sensible option.

@@ -104,21 +104,21 @@ public:
   virtual void BeginTransaction() override;
   virtual void BeginTransactionWithTarget(gfxContext* aTarget) override
   {
-    MOZ_CRASH("Use BeginTransactionWithDrawTarget");
+    MOZ_CRASH("GFX: Use BeginTransactionWithDrawTarget");
   }
   void BeginTransactionWithDrawTarget(gfx::DrawTarget* aTarget,
                                       const gfx::IntRect& aRect);
 
   virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) override
   {
-    MOZ_CRASH("Use EndTransaction(aTimeStamp)");
+    MOZ_CRASH("GFX: Use EndTransaction(aTimeStamp)");
     return false;
   }
   virtual void EndTransaction(DrawPaintedLayerCallback aCallback,
                               void* aCallbackData,
                               EndTransactionFlags aFlags = END_DEFAULT) override
   {
-    MOZ_CRASH("Use EndTransaction(aTimeStamp)");
+    MOZ_CRASH("GFX: Use EndTransaction(aTimeStamp)");
   }
   void EndTransaction(const TimeStamp& aTimeStamp,
                       EndTransactionFlags aFlags = END_DEFAULT);
@@ -131,7 +131,7 @@ public:
 
   virtual int32_t GetMaxTextureSize() const override
   {
-    MOZ_CRASH("Call on compositor, not LayerManagerComposite");
+    MOZ_CRASH("GFX: Call on compositor, not LayerManagerComposite");
   }
 
   virtual void ClearCachedResources(Layer* aSubtree = nullptr) override;
@@ -150,11 +150,11 @@ public:
 
   virtual LayersBackend GetBackendType() override
   {
-    MOZ_CRASH("Shouldn't be called for composited layer manager");
+    MOZ_CRASH("GFX: Shouldn't be called for composited layer manager");
   }
   virtual void GetBackendName(nsAString& name) override
   {
-    MOZ_CRASH("Shouldn't be called for composited layer manager");
+    MOZ_CRASH("GFX: Shouldn't be called for composited layer manager");
   }
 
   virtual bool AreComponentAlphaLayersEnabled() override;

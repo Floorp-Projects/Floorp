@@ -738,13 +738,13 @@ TextInputProcessor::PrepareKeyboardEventToDispatch(
     // If .location is initialized with specific value, using
     // KEY_KEEP_KEY_LOCATION_STANDARD must be a bug of the caller.
     // Let's throw an exception for notifying the developer of this bug.
-    if (NS_WARN_IF(aKeyboardEvent.location)) {
+    if (NS_WARN_IF(aKeyboardEvent.mLocation)) {
       return NS_ERROR_INVALID_ARG;
     }
-  } else if (!aKeyboardEvent.location) {
-    // If KeyboardEvent.location is 0, it may be uninitialized.  If so, we
-    // should compute proper location value from its .code value.
-    aKeyboardEvent.location =
+  } else if (!aKeyboardEvent.mLocation) {
+    // If KeyboardEvent.mLocation is 0, it may be uninitialized.  If so, we
+    // should compute proper mLocation value from its .code value.
+    aKeyboardEvent.mLocation =
       WidgetKeyboardEvent::ComputeLocationFromCodeValue(
         aKeyboardEvent.mCodeNameIndex);
   }
@@ -753,16 +753,16 @@ TextInputProcessor::PrepareKeyboardEventToDispatch(
     // If .keyCode is initialized with specific value, using
     // KEY_KEEP_KEYCODE_ZERO must be a bug of the caller.  Let's throw an
     // exception for notifying the developer of such bug.
-    if (NS_WARN_IF(aKeyboardEvent.keyCode)) {
+    if (NS_WARN_IF(aKeyboardEvent.mKeyCode)) {
       return NS_ERROR_INVALID_ARG;
     }
-  } else if (!aKeyboardEvent.keyCode &&
+  } else if (!aKeyboardEvent.mKeyCode &&
              aKeyboardEvent.mKeyNameIndex > KEY_NAME_INDEX_Unidentified &&
              aKeyboardEvent.mKeyNameIndex < KEY_NAME_INDEX_USE_STRING) {
     // If KeyboardEvent.keyCode is 0, it may be uninitialized.  If so, we may
     // be able to decide a good .keyCode value if the .key value is a
     // non-printable key.
-    aKeyboardEvent.keyCode =
+    aKeyboardEvent.mKeyCode =
       WidgetKeyboardEvent::ComputeKeyCodeFromKeyNameIndex(
         aKeyboardEvent.mKeyNameIndex);
   }

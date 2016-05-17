@@ -12,17 +12,10 @@
 #include "mozilla/Assertions.h"
 #include "base/MissingBasicTypes.h"
 #include "sandbox/win/src/sandbox.h"
-#include "sandbox/win/src/target_services.h"
 
-#ifdef TARGET_SANDBOX_EXPORTS
-#define TARGET_SANDBOX_EXPORT __declspec(dllexport)
-#else
-#define TARGET_SANDBOX_EXPORT __declspec(dllimport)
-#endif
 namespace mozilla {
 
-
-class TARGET_SANDBOX_EXPORT SandboxTarget
+class SandboxTarget
 {
 public:
   /**

@@ -152,7 +152,7 @@ public:
     template<typename A, typename B>
     void AppendNew(A a, B b) {
         if (mSize == mCapacity)
-            MOZ_CRASH("Bad EmplaceAppend.");
+            MOZ_CRASH("GFX: Bad EmplaceAppend.");
 
         // Placement `new`:
         new (&(mArray[mSize])) T(a, b);

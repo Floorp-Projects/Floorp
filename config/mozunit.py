@@ -167,5 +167,5 @@ class MockedOpen(object):
 
         return self._orig_path_exists(p)
 
-def main(*args):
-    unittest.main(testRunner=MozTestRunner(),*args)
+def main(*args, **kwargs):
+    unittest.main(testRunner=MozTestRunner(), *args, **kwargs)

@@ -7,52 +7,19 @@
 #ifndef security_sandbox_loggingCallbacks_h__
 #define security_sandbox_loggingCallbacks_h__
 
-#include "mozilla/sandboxing/loggingTypes.h"
-#include "mozilla/sandboxing/sandboxLogging.h"
-
-#ifdef TARGET_SANDBOX_EXPORTS
 #include <sstream>
 #include <iostream>
 
 #include "mozilla/Preferences.h"
+#include "mozilla/sandboxing/loggingTypes.h"
 #include "nsContentUtils.h"
 
 #ifdef MOZ_STACKWALKING
 #include "mozilla/StackWalk.h"
 #endif
 
-#define TARGET_SANDBOX_EXPORT __declspec(dllexport)
-#else
-#define TARGET_SANDBOX_EXPORT __declspec(dllimport)
-#endif
-
 namespace mozilla {
 namespace sandboxing {
-
-// We need to use a callback to work around the fact that sandbox_s lib is
-// linked into plugin-container.exe directly and also via xul.dll via
-// sandboxbroker.dll. This causes problems with holding the state required to
-// implement sandbox logging.
-// So, we provide a callback from plugin-container.exe that the code in xul.dll
-// can call to make sure we hit the right version of the code.
-void TARGET_SANDBOX_EXPORT
-SetProvideLogFunctionCb(ProvideLogFunctionCb aProvideLogFunctionCb);
-
-// Provide a call back so a pointer to a logging function can be passed later.
-static void
-PrepareForLogging()
-{
-  SetProvideLogFunctionCb(ProvideLogFunction);
-}
-
-#ifdef TARGET_SANDBOX_EXPORTS
-static ProvideLogFunctionCb sProvideLogFunctionCb = nullptr;
-
-void
-SetProvideLogFunctionCb(ProvideLogFunctionCb aProvideLogFunctionCb)
-{
-  sProvideLogFunctionCb = aProvideLogFunctionCb;
-}
 
 #ifdef MOZ_STACKWALKING
 static uint32_t sStackTraceDepth = 0;
@@ -110,15 +77,15 @@ Log(const char* aMessageType,
 
 // Initialize sandbox logging if required.
 static void
-InitLoggingIfRequired()
+InitLoggingIfRequired(ProvideLogFunctionCb aProvideLogFunctionCb)
 {
-  if (!sProvideLogFunctionCb) {
+  if (!aProvideLogFunctionCb) {
     return;
   }
 
   if (Preferences::GetBool("security.sandbox.windows.log") ||
       PR_GetEnv("MOZ_WIN_SANDBOX_LOGGING")) {
-    sProvideLogFunctionCb(Log);
+    aProvideLogFunctionCb(Log);
 
 #if defined(MOZ_CONTENT_SANDBOX) && defined(MOZ_STACKWALKING)
     // We can only log the stack trace on process types where we know that the
@@ -130,7 +97,7 @@ InitLoggingIfRequired()
 #endif
   }
 }
-#endif
+
 } // sandboxing
 } // mozilla
 

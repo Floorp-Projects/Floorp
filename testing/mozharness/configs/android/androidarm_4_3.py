@@ -6,7 +6,7 @@ config = {
     "robocop_package_name": "org.mozilla.roboexample.test",
     "tooltool_manifest_path": "testing/config/tooltool-manifests/androidarm_4_3/releng.manifest",
     "tooltool_cache": "/builds/tooltool_cache",
-    ".avds_dir": "/home/cltbld/.android",
+    "avds_dir": "/home/cltbld/.android",
     "emulator_manifest": """
         [
         {

@@ -184,7 +184,7 @@ KeyboardEvent::CharCode()
 {
   // If this event is initialized with ctor, we shouldn't check event type.
   if (mInitializedByCtor) {
-    return mEvent->AsKeyboardEvent()->charCode;
+    return mEvent->AsKeyboardEvent()->mCharCode;
   }
 
   switch (mEvent->mMessage) {
@@ -199,7 +199,7 @@ KeyboardEvent::CharCode()
     return 0;
   case eKeyPress:
   case eAccessKeyNotFound:
-    return mEvent->AsKeyboardEvent()->charCode;
+    return mEvent->AsKeyboardEvent()->mCharCode;
   default:
     break;
   }
@@ -219,11 +219,11 @@ KeyboardEvent::KeyCode()
 {
   // If this event is initialized with ctor, we shouldn't check event type.
   if (mInitializedByCtor) {
-    return mEvent->AsKeyboardEvent()->keyCode;
+    return mEvent->AsKeyboardEvent()->mKeyCode;
   }
 
   if (mEvent->HasKeyEventMessage()) {
-    return mEvent->AsKeyboardEvent()->keyCode;
+    return mEvent->AsKeyboardEvent()->mKeyCode;
   }
   return 0;
 }
@@ -250,7 +250,7 @@ KeyboardEvent::Which()
       //Special case for 4xp bug 62878.  Try to make value of which
       //more closely mirror the values that 4.x gave for RETURN and BACKSPACE
       {
-        uint32_t keyCode = mEvent->AsKeyboardEvent()->keyCode;
+        uint32_t keyCode = mEvent->AsKeyboardEvent()->mKeyCode;
         if (keyCode == NS_VK_RETURN || keyCode == NS_VK_BACK) {
           return keyCode;
         }
@@ -275,7 +275,7 @@ KeyboardEvent::GetLocation(uint32_t* aLocation)
 uint32_t
 KeyboardEvent::Location()
 {
-  return mEvent->AsKeyboardEvent()->location;
+  return mEvent->AsKeyboardEvent()->mLocation;
 }
 
 // static
@@ -310,7 +310,7 @@ KeyboardEvent::InitWithKeyboardEventInit(EventTarget* aOwner,
   mInitializedWhichValue = aParam.mWhich;
 
   WidgetKeyboardEvent* internalEvent = mEvent->AsKeyboardEvent();
-  internalEvent->location = aParam.mLocation;
+  internalEvent->mLocation = aParam.mLocation;
   internalEvent->mIsRepeat = aParam.mRepeat;
   internalEvent->mIsComposing = aParam.mIsComposing;
   internalEvent->mKeyNameIndex =
@@ -341,8 +341,8 @@ KeyboardEvent::InitKeyEvent(const nsAString& aType,
 
   WidgetKeyboardEvent* keyEvent = mEvent->AsKeyboardEvent();
   keyEvent->InitBasicModifiers(aCtrlKey, aAltKey, aShiftKey, aMetaKey);
-  keyEvent->keyCode = aKeyCode;
-  keyEvent->charCode = aCharCode;
+  keyEvent->mKeyCode = aKeyCode;
+  keyEvent->mCharCode = aCharCode;
 
   return NS_OK;
 }

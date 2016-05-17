@@ -145,12 +145,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             abs_dirs['abs_work_dir'], 'emulator')
         dirs['abs_mochitest_dir'] = os.path.join(
             dirs['abs_test_install_dir'], 'mochitest')
-
-        if self.config.get("developer_mode"):
-            dirs['abs_avds_dir'] = os.path.join(
-                abs_dirs['abs_work_dir'], "avds_dir")
-        else:
-            dirs['abs_avds_dir'] = "/home/cltbld/.android"
+        dirs['abs_avds_dir'] = self.config.get("avds_dir", "/home/cltbld/.android")
 
         for key in dirs.keys():
             if key not in abs_dirs:
@@ -233,7 +228,6 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         # constructed in start_emulators.
         env['LD_LIBRARY_PATH'] = self.abs_dirs['abs_work_dir']
 
-        # Specifically for developer mode we have to set this variable
         avd_home_dir = self.abs_dirs['abs_avds_dir']
         env['ANDROID_AVD_HOME'] = os.path.join(avd_home_dir, 'avd')
 
@@ -566,10 +560,9 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             self.fatal("properties in self.buildbot_config are required to "
                        "retrieve tooltool manifest to be used for avds setup")
 
-        if self.config.get("developer_mode"):
-            # For developer mode we have to modify the downloaded avds to
-            # point to the right directory.
-            avd_home_dir = self.abs_dirs['abs_avds_dir']
+        avd_home_dir = self.abs_dirs['abs_avds_dir']
+        if avd_home_dir != "/home/cltbld/.android":
+            # Modify the downloaded avds to point to the right directory.
             cmd = [
                 'bash', '-c',
                 'sed -i "s|/home/cltbld/.android|%s|" %s/test-*.ini' %

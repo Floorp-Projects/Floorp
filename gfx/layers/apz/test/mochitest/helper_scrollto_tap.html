@@ -29,7 +29,7 @@ function startTest() {
   window.scrollTo(0, 20);
   waitForAllPaints(function() {
     if (skipping) {
-      window.opener.is(utils.checkAndClearPaintedState(elem), false, "Document element didn't get painted");
+      is(utils.checkAndClearPaintedState(elem), false, "Document element didn't get painted");
     }
     // After that's done, we click on the button to make sure the
     // skipped-paint codepath still has working APZ event transformations.
@@ -39,8 +39,8 @@ function startTest() {
 
 function clickButton() {
   if (!window.TouchEvent) {
-    window.opener.ok(true, "Touch events are not supported on this platform, sorry!\n");
-    window.opener.testDone();
+    ok(true, "Touch events are not supported on this platform, sorry!\n");
+    subtestDone();
     return;
   }
 
@@ -52,8 +52,8 @@ function clickButton() {
 }
 
 function clicked(e) {
-  window.opener.is(e.target, document.getElementById('b'), "Clicked on button, yay! (at " + e.clientX + "," + e.clientY + ")");
-  window.opener.testDone();
+  is(e.target, document.getElementById('b'), "Clicked on button, yay! (at " + e.clientX + "," + e.clientY + ")");
+  subtestDone();
 }
 
 window.onload = function() {

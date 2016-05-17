@@ -39,8 +39,8 @@ public:
   WidgetGestureNotifyEvent(bool aIsTrusted, EventMessage aMessage,
                            nsIWidget *aWidget)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eGestureNotifyEventClass)
-    , panDirection(ePanNone)
-    , displayPanFeedback(false)
+    , mPanDirection(ePanNone)
+    , mDisplayPanFeedback(false)
   {
   }
 
@@ -61,7 +61,8 @@ public:
     return result;
   }
 
-  enum ePanDirection
+  typedef int8_t PanDirectionType;
+  enum PanDirection : PanDirectionType
   {
     ePanNone,
     ePanVertical,
@@ -69,16 +70,16 @@ public:
     ePanBoth
   };
 
-  ePanDirection panDirection;
-  bool displayPanFeedback;
+  PanDirection mPanDirection;
+  bool mDisplayPanFeedback;
 
   void AssignGestureNotifyEventData(const WidgetGestureNotifyEvent& aEvent,
                                     bool aCopyTargets)
   {
     AssignGUIEventData(aEvent, aCopyTargets);
 
-    panDirection = aEvent.panDirection;
-    displayPanFeedback = aEvent.displayPanFeedback;
+    mPanDirection = aEvent.mPanDirection;
+    mDisplayPanFeedback = aEvent.mDisplayPanFeedback;
   }
 };
 

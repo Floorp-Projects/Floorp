@@ -380,7 +380,10 @@ nsresult nsPrefBranch::CheckSanityOfStringLength(const char* aPrefName, const ui
   if (NS_FAILED(rv)) {
     return rv;
   }
-  nsAutoCString message(nsPrintfCString("Warning: attempting to write %d bytes to preference %s. This is bad for general performance and memory usage. Such an amount of data should rather be written to an external file.",
+  nsAutoCString message(nsPrintfCString("Warning: attempting to write %d bytes to preference %s. This is bad "
+                                        "for general performance and memory usage. Such an amount of data "
+                                        "should rather be written to an external file. This preference will "
+                                        "not be sent to any content processes.",
                                         aLength,
                                         getPrefName(aPrefName)));
   rv = console->LogStringMessage(NS_ConvertUTF8toUTF16(message).get());

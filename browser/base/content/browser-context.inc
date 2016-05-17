@@ -64,20 +64,8 @@
             label="&openLinkCmdInContainerTab.label;"
             accesskey="&openLinkCmdInContainerTab.accesskey;"
             hidden="true">
-        <menupopup oncommand="gContextMenu.openLinkInTab(event);">
-          <menuitem label="&userContextPersonal.label;"
-                    usercontextid="1"
-                    accesskey="&userContextPersonal.accesskey;"/>
-          <menuitem label="&userContextWork.label;"
-                    usercontextid="2"
-                    accesskey="&userContextWork.accesskey;"/>
-          <menuitem label="&userContextBanking.label;"
-                    usercontextid="3"
-                    accesskey="&userContextBanking.accesskey;"/>
-          <menuitem label="&userContextShopping.label;"
-                    usercontextid="4"
-                    accesskey="&userContextShopping.accesskey;"/>
-        </menupopup>
+        <menupopup oncommand="gContextMenu.openLinkInTab(event);"
+                   onpopupshowing="return createUserContextMenu(event, false);" />
       </menu>
 
       <menuitem id="context-openlink"

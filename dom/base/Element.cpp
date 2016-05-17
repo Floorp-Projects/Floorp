@@ -3040,7 +3040,7 @@ Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor)
   case eKeyPress:
     {
       WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
-      if (keyEvent && keyEvent->keyCode == NS_VK_RETURN) {
+      if (keyEvent && keyEvent->mKeyCode == NS_VK_RETURN) {
         nsEventStatus status = nsEventStatus_eIgnore;
         rv = DispatchClickEvent(aVisitor.mPresContext, keyEvent, this,
                                 false, nullptr, &status);

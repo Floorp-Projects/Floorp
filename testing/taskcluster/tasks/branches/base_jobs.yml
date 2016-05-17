@@ -47,7 +47,7 @@ builds:
   linux64:
     platforms:
       - Linux64
-    extra-builds:
+    extra-builds:  # see RIDEALONG_BUILDS in `mach taskgraph`
       - sm-plain
       - sm-arm-sim
       - sm-compacting
