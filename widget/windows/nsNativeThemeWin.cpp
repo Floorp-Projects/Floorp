@@ -2501,6 +2501,15 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aF
       aResult->height = GetSystemMetrics(SM_CYCAPTION);
       aResult->height += GetSystemMetrics(SM_CYFRAME);
       aResult->height += GetSystemMetrics(SM_CXPADDEDBORDER);
+      // On Win8.1, we don't want this scaling, because Windows doesn't scale
+      // the non-client area of the window, and we can end up with ugly overlap
+      // of the window frame controls into the tab bar or content area. But on
+      // Win10, we render the window controls ourselves, and the result looks
+      // better if we do apply this scaling (particularly with themes such as
+      // DevEdition; see bug 1267636).
+      if (IsWin10OrLater()) {
+        ScaleForFrameDPI(aResult, aFrame);
+      }
       *aIsOverridable = false;
       return rv;
 
