@@ -90,6 +90,7 @@ SOURCES += [
 ]
 
 IPDL_SOURCES += [
+    'BlobTypes.ipdlh',
     'DOMTypes.ipdlh',
     'PBlob.ipdl',
     'PBlobStream.ipdl',
