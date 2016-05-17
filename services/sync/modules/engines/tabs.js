@@ -265,7 +265,13 @@ TabStore.prototype = {
 
   create: function (record) {
     this._log.debug("Adding remote tabs from " + record.clientName);
-    this._remoteClients[record.id] = record.cleartext;
+    this._remoteClients[record.id] = Object.assign({}, record.cleartext, {
+      lastModified: record.modified
+    });
+
+    // We should remove the following code which sets the notifyTabState pref,
+    // it doesn't seem to be used anywhere and appears broken (we divide by
+    // 1000 but it is already seconds!). See bug 1272806.
 
     // Lose some precision, but that's good enough (seconds).
     let roundModify = Math.floor(record.modified / 1000);
