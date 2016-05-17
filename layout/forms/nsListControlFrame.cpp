@@ -1317,9 +1317,14 @@ nsListControlFrame::UpdateSelection()
     nsWeakFrame weakFrame(this);
     if (mComboboxFrame) {
       mComboboxFrame->RedisplaySelectedText();
+
+      // When dropdown list is open, onchange event will be fired when Enter key
+      // is hit or when dropdown list is dismissed.
+      if (mComboboxFrame->IsDroppedDown()) {
+        return weakFrame.IsAlive();
+      }
     }
-    // if it's a listbox, fire on change
-    else if (mIsAllContentHere) {
+    if (mIsAllContentHere) {
       FireOnChange();
     }
     return weakFrame.IsAlive();
@@ -2164,9 +2169,6 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
             return NS_OK;
           }
         }
-        // XXX This is strange. On other browsers, "change" event is fired
-        //     immediately after the selected item is changed rather than
-        //     Enter key is pressed.
         FireOnChange();
         return NS_OK;
       }
