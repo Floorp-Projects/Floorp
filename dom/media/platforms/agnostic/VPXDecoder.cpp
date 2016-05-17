@@ -22,6 +22,16 @@ namespace mozilla {
 using namespace gfx;
 using namespace layers;
 
+static int MimeTypeToCodec(const nsACString& aMimeType)
+{
+  if (aMimeType.EqualsLiteral("video/webm; codecs=vp8")) {
+    return VPXDecoder::Codec::VP8;
+  } else if (aMimeType.EqualsLiteral("video/webm; codecs=vp9")) {
+    return VPXDecoder::Codec::VP9;
+  }
+  return -1;
+}
+
 VPXDecoder::VPXDecoder(const VideoInfo& aConfig,
                        ImageContainer* aImageContainer,
                        FlushableTaskQueue* aTaskQueue,
@@ -30,15 +40,9 @@ VPXDecoder::VPXDecoder(const VideoInfo& aConfig,
   , mTaskQueue(aTaskQueue)
   , mCallback(aCallback)
   , mInfo(aConfig)
+  , mCodec(MimeTypeToCodec(aConfig.mMimeType))
 {
   MOZ_COUNT_CTOR(VPXDecoder);
-  if (aConfig.mMimeType.EqualsLiteral("video/webm; codecs=vp8")) {
-    mCodec = Codec::VP8;
-  } else if (aConfig.mMimeType.EqualsLiteral("video/webm; codecs=vp9")) {
-    mCodec = Codec::VP9;
-  } else {
-    mCodec = -1;
-  }
   PodZero(&mVPX);
 }
 
