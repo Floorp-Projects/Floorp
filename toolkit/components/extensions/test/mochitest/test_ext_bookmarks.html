@@ -254,7 +254,13 @@ function backgroundScript() {
       );
     });
 
-    // queries the url
+    // queries the full url
+    return browser.bookmarks.search("http://example.org/");
+  }).then(results => {
+    browser.test.assertEq(1, results.length, "Expected number of results returned for url search");
+    checkBookmark({title: "Example", url: "http://example.org/", index: 2}, results[0]);
+
+    // queries a partial url
     return browser.bookmarks.search("example.org");
   }).then(results => {
     browser.test.assertEq(1, results.length, "Expected number of results returned for url search");

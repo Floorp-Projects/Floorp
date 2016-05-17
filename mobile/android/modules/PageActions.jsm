@@ -31,7 +31,6 @@ function resolveGeckoURI(aURI) {
   return aURI;
 }
 
-
 var PageActions = {
   _items: { },
 
@@ -68,6 +67,13 @@ var PageActions = {
 
   isShown: function(id) {
     return !!this._items[id];
+  },
+
+  synthesizeClick: function(id) {
+    let item = this._items[id];
+    if (item && item.clickCallback) {
+      item.clickCallback();
+    }
   },
 
   add: function(aOptions) {

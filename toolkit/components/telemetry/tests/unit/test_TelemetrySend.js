@@ -120,7 +120,7 @@ add_task(function* test_sendPendingPings() {
   Preferences.set(PREF_TELEMETRY_SERVER, "http://localhost:" + PingServer.port);
 
   let timerPromise = waitForTimer();
-  yield TelemetryController.reset();
+  yield TelemetryController.testReset();
   let [pingSendTimerCallback, pingSendTimeout] = yield timerPromise;
   Assert.ok(!!pingSendTimerCallback, "Should have a timer callback");
 

@@ -100,8 +100,8 @@ testing/mozharness/logs/
 testing/mozharness/.coverage
 testing/mozharness/nosetests.xml
 
-# Ignore node_modules from eslint-plugin-mozilla
-testing/eslint-plugin-mozilla/node_modules/
+# Ignore node_modules
+testing/eslint/node_modules/
 
 # Ignore talos virtualenv and tp5n files.
 # The tp5n set is supposed to be decompressed at

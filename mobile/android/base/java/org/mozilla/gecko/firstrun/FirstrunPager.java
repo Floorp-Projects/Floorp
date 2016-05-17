@@ -35,7 +35,6 @@ public class FirstrunPager extends ViewPager {
     private Context context;
     protected FirstrunPanel.PagerNavigation pagerNavigation;
     private Decor mDecor;
-    private View mTabStrip;
 
     public FirstrunPager(Context context) {
         this(context, null);
@@ -51,8 +50,6 @@ public class FirstrunPager extends ViewPager {
         if (child instanceof Decor) {
             ((ViewPager.LayoutParams) params).isDecor = true;
             mDecor = (Decor) child;
-            mTabStrip = child;
-
             mDecor.setOnTitleClickListener(new TabMenuStrip.OnTitleClickListener() {
                 @Override
                 public void onTitleClicked(int index) {
@@ -71,9 +68,6 @@ public class FirstrunPager extends ViewPager {
             panels = FirstrunPagerConfig.getRestricted();
         } else {
             panels = FirstrunPagerConfig.getDefault(appContext);
-            if (panels.size() == 1) {
-                mTabStrip.setVisibility(GONE);
-            }
         }
 
         setAdapter(new ViewPagerAdapter(fm, panels));

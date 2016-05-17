@@ -165,6 +165,11 @@ TabStore.prototype = {
           continue;
         }
 
+        if (current.url.length >= (MAX_UPLOAD_BYTES - 1000)) {
+          this._log.trace("Skipping over-long URL.");
+          continue;
+        }
+
         // The element at `index` is the current page. Previous URLs were
         // previously visited URLs; subsequent URLs are in the 'forward' stack,
         // which we can't represent in Sync, so we truncate here.
