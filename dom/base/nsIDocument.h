@@ -2063,13 +2063,25 @@ public:
   virtual nsIDocument* GetTemplateContentsOwner() = 0;
 
   /**
-   * true when this document is a static clone of a normal document.
-   * For example print preview and printing use static documents.
+   * Returns true if this document is a static clone of a normal document.
+   *
+   * We create static clones for print preview and printing (possibly other
+   * things in future).
+   *
+   * Note that static documents are also "loaded as data" (if this method
+   * returns true, IsLoadedAsData() will also return true).
    */
   bool IsStaticDocument() { return mIsStaticDocument; }
 
   /**
-   * Clones the document and subdocuments and stylesheet etc.
+   * Clones the document along with any subdocuments, stylesheet, etc.
+   *
+   * The resulting document and everything it contains (including any
+   * sub-documents) are created purely via cloning.  The returned documents and
+   * any sub-documents are "loaded as data" documents to preserve the state as
+   * it was during the clone process (we don't want external resources to load
+   * and replace the cloned resources).
+   *
    * @param aCloneContainer The container for the clone document.
    */
   virtual already_AddRefed<nsIDocument>
