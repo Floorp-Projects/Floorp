@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint-env browser */
+
 "use strict";
 
 const { DOM: dom, createClass, PropTypes, addons } =
@@ -25,6 +27,10 @@ module.exports = createClass({
     return {};
   },
 
+  componentDidMount() {
+    window.addEventListener("keydown", this.onKeyDown, true);
+  },
+
   componentWillReceiveProps(nextProps) {
     let {
       devices,
@@ -37,6 +43,10 @@ module.exports = createClass({
         });
       }
     }
+  },
+
+  componentWillUnmount() {
+    window.removeEventListener("keydown", this.onKeyDown, true);
   },
 
   onDeviceCheckboxClick({ target }) {
@@ -78,17 +88,24 @@ module.exports = createClass({
     onUpdateDeviceModalOpen(false);
   },
 
+  onKeyDown(event) {
+    if (!this.props.devices.isModalOpen) {
+      return;
+    }
+    // Escape keycode
+    if (event.keyCode === 27) {
+      let {
+        onUpdateDeviceModalOpen
+      } = this.props;
+      onUpdateDeviceModalOpen(false);
+    }
+  },
+
   render() {
     let {
       devices,
       onUpdateDeviceModalOpen,
     } = this.props;
-
-    let modalClass = "device-modal container";
-
-    if (!devices.isModalOpen) {
-      modalClass += " hidden";
-    }
 
     const sortedDevices = {};
     for (let type of devices.types) {
@@ -98,54 +115,66 @@ module.exports = createClass({
 
     return dom.div(
       {
-        className: modalClass,
+        id: "device-modal-wrapper",
+        className: this.props.devices.isModalOpen ? "opened" : "closed",
       },
-      dom.button({
-        id: "device-close-button",
-        className: "toolbar-button devtools-button",
-        onClick: () => onUpdateDeviceModalOpen(false),
-      }),
       dom.div(
         {
-          className: "device-modal-content",
+          className: "device-modal container",
         },
-        devices.types.map(type => {
-          return dom.div(
-            {
-              className: "device-type",
-              key: type,
-            },
-            dom.header(
+        dom.button({
+          id: "device-close-button",
+          className: "toolbar-button devtools-button",
+          onClick: () => onUpdateDeviceModalOpen(false),
+        }),
+        dom.div(
+          {
+            className: "device-modal-content",
+          },
+          devices.types.map(type => {
+            return dom.div(
               {
-                className: "device-header",
+                className: "device-type",
+                key: type,
               },
-              type
-            ),
-            sortedDevices[type].map(device => {
-              return dom.label(
+              dom.header(
                 {
-                  className: "device-label",
-                  key: device.name,
+                  className: "device-header",
                 },
-                dom.input({
-                  className: "device-input-checkbox",
-                  type: "checkbox",
-                  value: device.name,
-                  checked: this.state[device.name],
-                  onChange: this.onDeviceCheckboxClick,
-                }),
-                device.name
-              );
-            })
-          );
-        })
+                type
+              ),
+              sortedDevices[type].map(device => {
+                return dom.label(
+                  {
+                    className: "device-label",
+                    key: device.name,
+                  },
+                  dom.input({
+                    className: "device-input-checkbox",
+                    type: "checkbox",
+                    value: device.name,
+                    checked: this.state[device.name],
+                    onChange: this.onDeviceCheckboxClick,
+                  }),
+                  device.name
+                );
+              })
+            );
+          })
+        ),
+        dom.button(
+          {
+            id: "device-submit-button",
+            onClick: this.onDeviceModalSubmit,
+          },
+          getStr("responsive.done")
+        )
       ),
-      dom.button(
+      dom.div(
         {
-          id: "device-submit-button",
-          onClick: this.onDeviceModalSubmit,
-        },
-        getStr("responsive.done")
+          className: "modal-overlay",
+          onClick: () => onUpdateDeviceModalOpen(false),
+        }
       )
     );
   },

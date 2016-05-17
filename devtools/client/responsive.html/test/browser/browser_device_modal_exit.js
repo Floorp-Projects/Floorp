@@ -10,7 +10,7 @@ const Types = require("devtools/client/responsive.html/types");
 
 addRDMTask(TEST_URL, function* ({ ui }) {
   let { store, document } = ui.toolWindow;
-  let modal = document.querySelector(".device-modal");
+  let modal = document.querySelector("#device-modal-wrapper");
   let closeButton = document.querySelector("#device-close-button");
 
   // Wait until the viewport has been added and the device list has been loaded
@@ -28,8 +28,8 @@ addRDMTask(TEST_URL, function* ({ ui }) {
   uncheckedCb.click();
   closeButton.click();
 
-  ok(modal.classList.contains("hidden"),
-    "The device modal is hidden on exit.");
+  ok(modal.classList.contains("closed") && !modal.classList.contains("opened"),
+    "The device modal is closed on exit.");
 
   info("Check that the device list remains unchanged after exitting.");
   let preferredDevicesAfter = _loadPreferredDevices();

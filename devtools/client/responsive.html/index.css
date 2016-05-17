@@ -39,6 +39,7 @@
 
 #root,
 html, body {
+  height: 100%;
   margin: 0;
 }
 
@@ -47,12 +48,10 @@ html, body {
   display: flex;
   align-items: center;
   flex-direction: column;
-  height: 100vh;
-
-  /* Snap to the top of the app when there isn't enough vertical space anymore
-     to center the viewports (so we don't lose the global toolbar) */
-  position: sticky;
-  top: 0;
+  padding-top: 15px;
+  padding-bottom: 1%;
+  position: relative;
+  height: 100%;
 }
 
 /**
@@ -86,7 +85,7 @@ html, body {
   color: var(--theme-body-color-alt);
   border-radius: 2px;
   box-shadow: var(--rdm-box-shadow);
-  margin: 10% 0 30px 0;
+  margin: 0 0 15px 0;
   padding: 4px 5px;
   display: inline-flex;
   -moz-user-select: none;
@@ -336,9 +335,33 @@ html, body {
  * Device Modal
  */
 
+@keyframes fade-in-and-up {
+  0% {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+}
+
+@keyframes fade-down-and-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(5px);
+    visibility: hidden;
+  }
+}
+
 .device-modal {
   border-radius: 2px;
   box-shadow: var(--rdm-box-shadow);
+  display: none;
   position: absolute;
   margin: auto;
   top: 0;
@@ -347,10 +370,31 @@ html, body {
   right: 0;
   width: 642px;
   height: 612px;
+  z-index: 1;
 }
 
-.device-modal.hidden {
-  display: none;
+/* Handles the opening/closing of the modal */
+#device-modal-wrapper.opened .device-modal {
+  animation: fade-in-and-up 0.3s ease;
+  animation-fill-mode: forwards;
+  display: block;
+}
+
+#device-modal-wrapper.closed .device-modal {
+  animation: fade-down-and-out 0.3s ease;
+  animation-fill-mode: forwards;
+  display: block;
+}
+
+#device-modal-wrapper.opened .modal-overlay {
+  background-color: var(--theme-splitter-color);
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  z-index: 0;
+  opacity: 0.5;
 }
 
 .device-modal-content {
