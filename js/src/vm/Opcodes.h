@@ -1512,16 +1512,7 @@
      *   Stack: => new.target
      */ \
     macro(JSOP_NEWTARGET,  148, "newtarget", NULL,      1,  0,  1,  JOF_BYTE) \
-    \
-    /*
-     * Placeholder opcode used during bytecode generation. This never
-     * appears in a finished script. FIXME: bug 473671.
-     *   Category: Statements
-     *   Type: Jumps
-     *   Operands: int32_t offset
-     *   Stack: =>
-     */ \
-    macro(JSOP_BACKPATCH,     149,"backpatch", NULL,      5,  0,  0,  JOF_JUMP) \
+    macro(JSOP_UNUSED149,  149, "unused149", NULL,      1,  0,  0,  JOF_BYTE) \
     /*
      * Pops the top two values 'lval' and 'rval' from the stack, then pushes
      * the result of 'Math.pow(lval, rval)'.
