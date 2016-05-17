@@ -4,7 +4,7 @@
 "use strict";
 
 let gConstants;
-LoopAPI.inspect()[1].GetAllConstants({}, constants => { return (gConstants = constants); });
+LoopAPI.inspect()[1].GetAllConstants({}, constants => (gConstants = constants));
 
 let { goDoCommand, gURLBar } = window;
 
@@ -48,14 +48,13 @@ add_task(function* test_init_copy_panel_private() {
   cleanUp();
   Services.prefs.setIntPref("loop.copy.ticket", -1);
 
-  let win = OpenBrowserWindow({ private: true });
-  yield new Promise(resolve => win.addEventListener("load", resolve));
+  let win = yield BrowserTestUtils.openNewBrowserWindow({ private: true });
   yield win.LoopUI.maybeAddCopyPanel();
 
   Assert.equal(win.document.getElementById("loop-copy-notification-panel"), null, "copy panel doesn't exist for private browsing");
   Assert.equal(Services.prefs.getIntPref("loop.copy.ticket"), -1, "ticket should be unchanged");
 
-  win.close();
+  yield BrowserTestUtils.closeWindow(win);
 });
 
 /**

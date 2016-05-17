@@ -96,7 +96,10 @@ function waitForCondition(condition, nextTest, errorMsg) {
     }
     tries++;
   }, 100);
-  var moveOn = function() { clearInterval(interval); nextTest(); };
+  var moveOn = function() {
+    clearInterval(interval);
+    nextTest();
+  };
 }
 
 function promiseWaitForCondition(aConditionFn) {
@@ -305,7 +308,7 @@ const mockDb = {
   },
   promise: function(method, ...params) {
     return new Promise((resolve, reject) => {
-      this[method](...params, (err, res) => err ? reject(err) : resolve(res));
+      this[method](...params, (err, res) => (err ? reject(err) : resolve(res)));
     });
   }
 };

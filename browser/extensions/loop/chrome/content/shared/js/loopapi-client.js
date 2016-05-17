@@ -1,9 +1,9 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict"; /* This Source Code Form is subject to the terms of the Mozilla Public
+               * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+               * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var loop = loop || {};
-(function() {
+(function () {
   "use strict";
 
   var _slice = Array.prototype.slice;
@@ -37,8 +37,8 @@ var loop = loop || {};
     var seq = ++loop._lastMessageID;
     args.unshift(seq, command);
 
-    return args;
-  }
+    return args;}
+
 
   /**
    * Send a request to chrome, running in the main process.
@@ -54,7 +54,7 @@ var loop = loop || {};
   loop.request = function request() {
     var args = _slice.call(arguments);
 
-    return new Promise(function(resolve) {
+    return new Promise(function (resolve) {
       var payload = buildRequestArray(args);
       var seq = payload[0];
 
@@ -62,27 +62,27 @@ var loop = loop || {};
         gListeningForMessages = function listener(message) {
           var replySeq = message.data[0];
           if (!gListenersMap[replySeq]) {
-            return;
-          }
-          gListenersMap[replySeq](message.data[1]);
-          delete gListenersMap[replySeq];
-        };
+            return;}
 
-        gRootObj.addMessageListener(kMessageName, gListeningForMessages);
-      }
+          gListenersMap[replySeq](message.data[1]);
+          delete gListenersMap[replySeq];};
+
+
+        gRootObj.addMessageListener(kMessageName, gListeningForMessages);}
+
 
       gListenersMap[seq] = resolve;
 
-      gRootObj.sendAsyncMessage(kMessageName, payload);
-    });
-  };
+      gRootObj.sendAsyncMessage(kMessageName, payload);});};
+
+
 
   // These functions should only be used in unit tests.
-  loop.request.inspect = function() { return _.extend({}, gListenersMap); };
-  loop.request.reset = function() {
+  loop.request.inspect = function () {return _.extend({}, gListenersMap);};
+  loop.request.reset = function () {
     gListeningForMessages = false;
-    gListenersMap = {};
-  };
+    gListenersMap = {};};
+
 
   loop.storedRequests = {};
 
@@ -92,9 +92,9 @@ var loop = loop || {};
    * @param  {Array} request Set of request parameters
    * @param  {mixed} result  Whatever the API returned as a result
    */
-  loop.storeRequest = function(request, result) {
-    loop.storedRequests[request.join("|")] = result;
-  };
+  loop.storeRequest = function (request, result) {
+    loop.storedRequests[request.join("|")] = result;};
+
 
   /**
    * Retrieve the result of a request that was stored previously. If the result
@@ -105,15 +105,15 @@ var loop = loop || {};
    * @return {mixed} Whatever the result of the API request was at the time it was
    *                 stored.
    */
-  loop.getStoredRequest = function(request) {
+  loop.getStoredRequest = function (request) {
     var key = request.join("|");
     if (!(key in loop.storedRequests)) {
       console.error("This request has not been stored!", request);
-      return null;
-    }
+      return null;}
 
-    return loop.storedRequests[key];
-  };
+
+    return loop.storedRequests[key];};
+
 
   /**
    * Send multiple requests at once as a batch.
@@ -126,35 +126,35 @@ var loop = loop || {};
    */
   loop.requestMulti = function requestMulti() {
     if (!arguments.length) {
-      throw new Error("loop.requestMulti: please pass in a list of calls to process in parallel.");
-    }
+      throw new Error("loop.requestMulti: please pass in a list of calls to process in parallel.");}
+
 
     var calls = _slice.call(arguments);
-    calls.forEach(function(call) {
+    calls.forEach(function (call) {
       if (!Array.isArray(call)) {
-        throw new Error("loop.requestMulti: each call must be an array of options, " +
-          "exactly the same as the argument signature of `loop.request()`");
-      }
+        throw new Error("loop.requestMulti: each call must be an array of options, " + 
+        "exactly the same as the argument signature of `loop.request()`");}
 
-      buildRequestArray(call);
-    });
 
-    return new Promise(function(resolve) {
-      loop.request(kBatchMessage, calls).then(function(resultSet) {
+      buildRequestArray(call);});
+
+
+    return new Promise(function (resolve) {
+      loop.request(kBatchMessage, calls).then(function (resultSet) {
         if (!resultSet) {
           resolve();
-          return;
-        }
+          return;}
+
 
         // Collect result as a sequenced array and pass it back.
-        var result = Object.getOwnPropertyNames(resultSet).map(function(seq) {
-          return resultSet[seq];
-        });
+        var result = Object.getOwnPropertyNames(resultSet).map(function (seq) {
+          return resultSet[seq];});
 
-        resolve(result);
-      });
-    });
-  };
+
+        resolve(result);});});};
+
+
+
 
   /**
    * Subscribe to push messages coming from chrome scripts. Since these may arrive
@@ -165,33 +165,33 @@ var loop = loop || {};
    */
   loop.subscribe = function subscribe(name, callback) {
     if (!gListeningForPushMessages) {
-      gRootObj.addMessageListener(kPushMessageName, gListeningForPushMessages = function(message) {
+      gRootObj.addMessageListener(kPushMessageName, gListeningForPushMessages = function gListeningForPushMessages(message) {
         var eventName = message.data[0];
         if (!gSubscriptionsMap[eventName]) {
-          return;
-        }
-        gSubscriptionsMap[eventName].forEach(function(cb) {
+          return;}
+
+        gSubscriptionsMap[eventName].forEach(function (cb) {
           var data = message.data[1];
           if (!Array.isArray(data)) {
-            data = [data];
-          }
-          cb.apply(null, data);
-        });
-      });
-    }
+            data = [data];}
+
+          cb.apply(null, data);});});}
+
+
+
 
     if (!gSubscriptionsMap[name]) {
-      gSubscriptionsMap[name] = [];
-    }
-    gSubscriptionsMap[name].push(callback);
-  };
+      gSubscriptionsMap[name] = [];}
+
+    gSubscriptionsMap[name].push(callback);};
+
 
   // These functions should only be used in unit tests.
-  loop.subscribe.inspect = function() { return _.extend({}, gSubscriptionsMap); };
-  loop.subscribe.reset = function() {
+  loop.subscribe.inspect = function () {return _.extend({}, gSubscriptionsMap);};
+  loop.subscribe.reset = function () {
     gListeningForPushMessages = false;
-    gSubscriptionsMap = {};
-  };
+    gSubscriptionsMap = {};};
+
 
   /**
    * Cancel a subscription to a specific push message.
@@ -201,14 +201,14 @@ var loop = loop || {};
    */
   loop.unsubscribe = function unsubscribe(name, callback) {
     if (!gSubscriptionsMap[name]) {
-      return;
-    }
+      return;}
+
     var idx = gSubscriptionsMap[name].indexOf(callback);
     if (idx === -1) {
-      return;
-    }
-    gSubscriptionsMap[name].splice(idx, 1);
-  };
+      return;}
+
+    gSubscriptionsMap[name].splice(idx, 1);};
+
 
   /**
    * Cancel all running subscriptions.
@@ -217,7 +217,4 @@ var loop = loop || {};
     gSubscriptionsMap = {};
     if (gListeningForPushMessages) {
       gRootObj.removeMessageListener(kPushMessageName, gListeningForPushMessages);
-      gListeningForPushMessages = false;
-    }
-  };
-})();
+      gListeningForPushMessages = false;}};})();

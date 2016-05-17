@@ -1,4 +1,4 @@
-// This is derived from Diego Perini's code,
+"use strict"; // This is derived from Diego Perini's code,
 // currently available at https://gist.github.com/dperini/729294
 
 // Regular Expression for URL validation
@@ -32,7 +32,7 @@
 
 var loop = loop || {};
 loop.shared = loop.shared || {};
-loop.shared.urlRegExps = (function() {
+loop.shared.urlRegExps = function () {
 
   "use strict";
 
@@ -40,33 +40,30 @@ loop.shared.urlRegExps = (function() {
   // if you need to debug changes to this:
 
   var fullUrlMatch = new RegExp(
-    // Protocol identifier.
-    "(?:(?:https?|ftp)://)" +
-      // User:pass authentication.
-    "((?:\\S+(?::\\S*)?@)?" +
-    "(?:" +
-      // IP address dotted notation octets:
-      // excludes loopback network 0.0.0.0,
-      // excludes reserved space >= 224.0.0.0,
-      // excludes network & broadcast addresses,
-      // (first & last IP address of each class).
-    "(?:[1-9]\\d?|1\\d\\d|2[01]\\d|22[0-3])" +
-    "(?:\\.(?:1?\\d{1,2}|2[0-4]\\d|25[0-5])){2}" +
-    "(?:\\.(?:[1-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))" +
-    "|" +
-      // Host name.
-    "(?:(?:[a-z\\u00a1-\\uffff0-9]-*)*[a-z\\u00a1-\\uffff0-9]+)" +
-      // Domain name.
-    "(?:\\.(?:[a-z\\u00a1-\\uffff0-9]-*)*[a-z\\u00a1-\\uffff0-9]+)*" +
-      // TLD identifier.
-    "(?:\\.(?:[a-z\\u00a1-\\uffff]{2,})))" +
-      // Port number.
-    "(?::\\d{2,5})?" +
-      // Resource path.
-    "(?:[/?#]\\S*)?)", "i");
+  // Protocol identifier.
+  "(?:(?:https?|ftp)://)" + 
+  // User:pass authentication.
+  "((?:\\S+(?::\\S*)?@)?" + 
+  "(?:" + 
+  // IP address dotted notation octets:
+  // excludes loopback network 0.0.0.0,
+  // excludes reserved space >= 224.0.0.0,
+  // excludes network & broadcast addresses,
+  // (first & last IP address of each class).
+  "(?:[1-9]\\d?|1\\d\\d|2[01]\\d|22[0-3])" + 
+  "(?:\\.(?:1?\\d{1,2}|2[0-4]\\d|25[0-5])){2}" + 
+  "(?:\\.(?:[1-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))" + 
+  "|" + 
+  // Host name.
+  "(?:(?:[a-z\\u00a1-\\uffff0-9]-*)*[a-z\\u00a1-\\uffff0-9]+)" + 
+  // Domain name.
+  "(?:\\.(?:[a-z\\u00a1-\\uffff0-9]-*)*[a-z\\u00a1-\\uffff0-9]+)*" + 
+  // TLD identifier.
+  "(?:\\.(?:[a-z\\u00a1-\\uffff]{2,})))" + 
+  // Port number.
+  "(?::\\d{2,5})?" + 
+  // Resource path.
+  "(?:[/?#]\\S*)?)", "i");
 
-  return {
-    fullUrlMatch: fullUrlMatch
-  };
-
-})();
+  return { 
+    fullUrlMatch: fullUrlMatch };}();
