@@ -437,6 +437,12 @@ class Encoder
     MOZ_MUST_USE bool writeFixedF64(double d) {
         return write<double>(d);
     }
+    MOZ_MUST_USE bool writeFixedI8x16(const I8x16& i8x16) {
+        return write<I8x16>(i8x16);
+    }
+    MOZ_MUST_USE bool writeFixedI16x8(const I16x8& i16x8) {
+        return write<I16x8>(i16x8);
+    }
     MOZ_MUST_USE bool writeFixedI32x4(const I32x4& i32x4) {
         return write<I32x4>(i32x4);
     }
@@ -635,6 +641,12 @@ class Decoder
     MOZ_MUST_USE bool readFixedF64(double* d) {
         return read<double>(d);
     }
+    MOZ_MUST_USE bool readFixedI8x16(I8x16* i8x16) {
+        return read<I8x16>(i8x16);
+    }
+    MOZ_MUST_USE bool readFixedI16x8(I16x8* i16x8) {
+        return read<I16x8>(i16x8);
+    }
     MOZ_MUST_USE bool readFixedI32x4(I32x4* i32x4) {
         return read<I32x4>(i32x4);
     }
@@ -807,6 +819,16 @@ class Decoder
         return u8 != UINT8_MAX
                ? Expr(u8)
                : Expr(uncheckedReadFixedU8() + UINT8_MAX);
+    }
+    void uncheckedReadFixedI8x16(I8x16* i8x16) {
+        struct T { I8x16 v; };
+        T t = uncheckedRead<T>();
+        memcpy(i8x16, &t, sizeof(t));
+    }
+    void uncheckedReadFixedI16x8(I16x8* i16x8) {
+        struct T { I16x8 v; };
+        T t = uncheckedRead<T>();
+        memcpy(i16x8, &t, sizeof(t));
     }
     void uncheckedReadFixedI32x4(I32x4* i32x4) {
         struct T { I32x4 v; };
