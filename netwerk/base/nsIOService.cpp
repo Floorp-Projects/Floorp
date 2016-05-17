@@ -50,6 +50,8 @@
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/net/DNS.h"
+#include "mozilla/ipc/URIUtils.h"
+#include "mozilla/net/NeckoChild.h"
 #include "CaptivePortalService.h"
 #include "ReferrerPolicy.h"
 #include "nsContentSecurityManager.h"
@@ -1855,6 +1857,13 @@ nsIOService::SpeculativeConnectInternal(nsIURI *aURI,
                                         nsIInterfaceRequestor *aCallbacks,
                                         bool aAnonymous)
 {
+    if (IsNeckoChild()) {
+        ipc::URIParams params;
+        SerializeURI(aURI, params);
+        gNeckoChild->SendSpeculativeConnect(params, aAnonymous);
+        return NS_OK;
+    }
+
     // Check for proxy information. If there is a proxy configured then a
     // speculative connect should not be performed because the potential
     // reward is slim with tcp peers closely located to the browser.
