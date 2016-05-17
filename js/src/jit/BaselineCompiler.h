@@ -31,6 +31,7 @@ namespace jit {
 
 #define OPCODE_LIST(_)         \
     _(JSOP_NOP)                \
+    _(JSOP_NOP_DESTRUCTURING)  \
     _(JSOP_LABEL)              \
     _(JSOP_POP)                \
     _(JSOP_POPN)               \
