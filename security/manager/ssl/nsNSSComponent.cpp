@@ -1600,6 +1600,13 @@ nsNSSComponent::InitializeNSS()
   // dynamic options from prefs
   setValidationOptions(true, lock);
 
+  // TLSServerSocket may be run with the session cache enabled. It is necessary
+  // to call this once before that can happen. This specifies a maximum of 1000
+  // cache entries (the default number of cache entries is 10000, which seems a
+  // little excessive as there probably won't be that many clients connecting to
+  // any TLSServerSockets the browser runs.)
+  SSL_ConfigServerSessionIDCache(1000, 0, 0, nullptr);
+
 #ifndef MOZ_NO_SMART_CARDS
   LaunchSmartCardThreads();
 #endif
@@ -1650,6 +1657,9 @@ nsNSSComponent::ShutdownNSS()
     ShutdownSmartCardThreads();
 #endif
     SSL_ClearSessionCache();
+    // TLSServerSocket may be run with the session cache enabled. This ensures
+    // those resources are cleaned up.
+    SSL_ShutdownServerSessionIDCache();
     UnloadLoadableRoots();
 #ifndef MOZ_NO_EV_CERTS
     CleanupIdentityInfo();
