@@ -393,7 +393,7 @@ tasks:
         - '**/.eslintignore'
         - '**/*eslintrc*'
         # The plugin implementing custom checks.
-        - 'testing/eslint-plugin-mozilla/**'
+        - 'testing/eslint/eslint-plugin-mozilla/**'
         # Other misc lint related files.
         - 'tools/lint/**'
   android-api-15-gradle-dependencies:
