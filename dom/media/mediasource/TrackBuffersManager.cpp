@@ -138,70 +138,79 @@ TrackBuffersManager::DoAppendData(RefPtr<MediaByteBuffer> aData,
 {
   RefPtr<AppendBufferTask> task = new AppendBufferTask(aData, aAttributes);
   RefPtr<AppendPromise> p = task->mPromise.Ensure(__func__);
-  mQueue.Push(task);
-
-  ProcessTasks();
+  QueueTask(task);
 
   return p;
 }
 
 void
+TrackBuffersManager::QueueTask(SourceBufferTask* aTask)
+{
+  if (!OnTaskQueue()) {
+    GetTaskQueue()->Dispatch(NewRunnableMethod<RefPtr<SourceBufferTask>>(
+      this, &TrackBuffersManager::QueueTask, aTask));
+    return;
+  }
+  MOZ_ASSERT(OnTaskQueue());
+  mQueue.Push(aTask);
+  ProcessTasks();
+}
+
+void
 TrackBuffersManager::ProcessTasks()
 {
+  MOZ_ASSERT(OnTaskQueue());
   typedef SourceBufferTask::Type Type;
 
   if (mDetached) {
     return;
   }
 
-  if (OnTaskQueue()) {
-    if (mCurrentTask) {
-      // Already have a task pending. ProcessTask will be scheduled once the
-      // current task complete.
-      return;
-    }
-    RefPtr<SourceBufferTask> task = mQueue.Pop();
-    if (!task) {
-      // nothing to do.
-      return;
-    }
-    switch (task->GetType()) {
-      case Type::AppendBuffer:
-        mCurrentTask = task;
-        if (!mInputBuffer) {
-          mInputBuffer = task->As<AppendBufferTask>()->mBuffer;
-        } else if (!mInputBuffer->AppendElements(*task->As<AppendBufferTask>()->mBuffer, fallible)) {
-          RejectAppend(NS_ERROR_OUT_OF_MEMORY, __func__);
-          return;
-        }
-        mSourceBufferAttributes =
-          MakeUnique<SourceBufferAttributes>(task->As<AppendBufferTask>()->mAttributes);
-        mAppendWindow =
-          TimeInterval(TimeUnit::FromSeconds(mSourceBufferAttributes->GetAppendWindowStart()),
-                       TimeUnit::FromSeconds(mSourceBufferAttributes->GetAppendWindowEnd()));
-        ScheduleSegmentParserLoop();
-        break;
-      case Type::RangeRemoval:
-      {
-        bool rv = CodedFrameRemoval(task->As<RangeRemovalTask>()->mRange);
-        task->As<RangeRemovalTask>()->mPromise.Resolve(rv, __func__);
-        break;
-      }
-      case Type::EvictData:
-        DoEvictData(task->As<EvictDataTask>()->mPlaybackTime,
-                    task->As<EvictDataTask>()->mSizeToEvict);
-        break;
-      case Type::Abort:
-        // not handled yet, and probably never.
-        break;
-      case Type::Reset:
-        CompleteResetParserState();
-        break;
-      default:
-        NS_WARNING("Invalid Task");
-    }
+  if (mCurrentTask) {
+    // Already have a task pending. ProcessTask will be scheduled once the
+    // current task complete.
+    return;
   }
-  GetTaskQueue()->Dispatch(NewRunnableMethod(this, &TrackBuffersManager::ProcessTasks));
+  RefPtr<SourceBufferTask> task = mQueue.Pop();
+  if (!task) {
+    // nothing to do.
+    return;
+  }
+  switch (task->GetType()) {
+    case Type::AppendBuffer:
+      mCurrentTask = task;
+      if (!mInputBuffer) {
+        mInputBuffer = task->As<AppendBufferTask>()->mBuffer;
+      } else if (!mInputBuffer->AppendElements(*task->As<AppendBufferTask>()->mBuffer, fallible)) {
+        RejectAppend(NS_ERROR_OUT_OF_MEMORY, __func__);
+        return;
+      }
+      mSourceBufferAttributes =
+        MakeUnique<SourceBufferAttributes>(task->As<AppendBufferTask>()->mAttributes);
+      mAppendWindow =
+        TimeInterval(TimeUnit::FromSeconds(mSourceBufferAttributes->GetAppendWindowStart()),
+                     TimeUnit::FromSeconds(mSourceBufferAttributes->GetAppendWindowEnd()));
+      ScheduleSegmentParserLoop();
+      break;
+    case Type::RangeRemoval:
+    {
+      bool rv = CodedFrameRemoval(task->As<RangeRemovalTask>()->mRange);
+      task->As<RangeRemovalTask>()->mPromise.Resolve(rv, __func__);
+      break;
+    }
+    case Type::EvictData:
+      DoEvictData(task->As<EvictDataTask>()->mPlaybackTime,
+                  task->As<EvictDataTask>()->mSizeToEvict);
+      break;
+    case Type::Abort:
+      // not handled yet, and probably never.
+      break;
+    case Type::Reset:
+      CompleteResetParserState();
+      break;
+    default:
+      NS_WARNING("Invalid Task");
+  }
 }
 
 // A PromiseHolder will assert upon destruction if it has a pending promise
@@ -253,9 +262,7 @@ TrackBuffersManager::AbortAppendData()
   MOZ_ASSERT(NS_IsMainThread());
   MSE_DEBUG("");
 
-  RefPtr<AbortTask> task = new AbortTask();
-  mQueue.Push(task);
-  ProcessTasks();
+  QueueTask(new AbortTask());
 }
 
 void
@@ -268,9 +275,7 @@ TrackBuffersManager::ResetParserState(SourceBufferAttributes& aAttributes)
   // 1. If the append state equals PARSING_MEDIA_SEGMENT and the input buffer contains some complete coded frames, then run the coded frame processing algorithm until all of these complete coded frames have been processed.
   // However, we will wait until all coded frames have been processed regardless
   // of the value of append state.
-  RefPtr<ResetTask> task = new ResetTask();
-  mQueue.Push(task);
-  ProcessTasks();
+  QueueTask(new ResetTask());
 
   // ResetParserState has some synchronous steps that much be performed now.
   // The remaining steps will be performed once the ResetTask gets executed.
@@ -324,9 +329,7 @@ TrackBuffersManager::EvictData(const TimeUnit& aPlaybackTime, int64_t aSize)
 
   MSE_DEBUG("Reaching our size limit, schedule eviction of %lld bytes", toEvict);
 
-  RefPtr<EvictDataTask> task = new EvictDataTask(aPlaybackTime, toEvict);
-  mQueue.Push(task);
-  ProcessTasks();
+  QueueTask(new EvictDataTask(aPlaybackTime, toEvict));
 
   return EvictDataResult::NO_DATA_EVICTED;
 }
@@ -522,8 +525,8 @@ TrackBuffersManager::CodedFrameRemovalWithPromise(TimeInterval aInterval)
 
   RefPtr<RangeRemovalTask> task = new RangeRemovalTask(aInterval);
   RefPtr<RangeRemovalPromise> p = task->mPromise.Ensure(__func__);
-  mQueue.Push(task);
-  ProcessTasks();
+  QueueTask(task);
+
   return p;
 }
 
