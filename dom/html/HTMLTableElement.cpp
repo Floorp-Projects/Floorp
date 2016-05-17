@@ -60,17 +60,11 @@ protected:
 
   // Those rows that are not in table sections
   HTMLTableElement* mParent;
-  RefPtr<nsContentList> mOrphanRows;
 };
 
 
 TableRowsCollection::TableRowsCollection(HTMLTableElement *aParent)
   : mParent(aParent)
-  , mOrphanRows(new nsContentList(mParent,
-                                  kNameSpaceID_XHTML,
-                                  nsGkAtoms::tr,
-                                  nsGkAtoms::tr,
-                                  false))
 {
 }
 
@@ -88,7 +82,7 @@ TableRowsCollection::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProt
   return HTMLCollectionBinding::Wrap(aCx, this, aGivenProto);
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(TableRowsCollection, mOrphanRows)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(TableRowsCollection)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TableRowsCollection)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TableRowsCollection)
 
@@ -101,48 +95,54 @@ NS_INTERFACE_MAP_END
 
 // Macro that can be used to avoid copy/pasting code to iterate over the
 // rowgroups.  _code should be the code to execute for each rowgroup.  The
-// rowgroup's rows will be in the nsIDOMHTMLCollection* named "rows".  Note
-// that this may be null at any time.  This macro assumes an nsresult named
+// rowgroup's rows will be in the nsIDOMHTMLCollection* named "rows".
+// _trCode should be the code to execute for each tr row.  Note that
+// this may be null at any time.  This macro assumes an nsresult named
 // |rv| is in scope.
-#define DO_FOR_EACH_ROWGROUP(_code)                                  \
-  do {                                                               \
-    if (mParent) {                                                   \
-      /* THead */                                                    \
-      HTMLTableSectionElement* rowGroup = mParent->GetTHead();       \
-      nsIHTMLCollection* rows;                                       \
-      if (rowGroup) {                                                \
-        rows = rowGroup->Rows();                                     \
-        do { /* gives scoping */                                     \
-          _code                                                      \
-        } while (0);                                                 \
-      }                                                              \
-      /* TBodies */                                                  \
-      for (nsIContent* _node = mParent->nsINode::GetFirstChild();    \
-           _node; _node = _node->GetNextSibling()) {                 \
-        if (_node->IsHTMLElement(nsGkAtoms::tbody)) {                \
-          rowGroup = static_cast<HTMLTableSectionElement*>(_node);   \
-          rows = rowGroup->Rows();                                   \
-          do { /* gives scoping */                                   \
-            _code                                                    \
-          } while (0);                                               \
+  #define DO_FOR_EACH_BY_ORDER(_code, _trCode)                       \
+    do {                                                             \
+      if (mParent) {                                                 \
+        HTMLTableSectionElement* rowGroup;                           \
+        nsIHTMLCollection* rows;                                     \
+        /* THead */                                                  \
+        for (nsIContent* _node = mParent->nsINode::GetFirstChild();  \
+             _node; _node = _node->GetNextSibling()) {               \
+           if (_node->IsHTMLElement(nsGkAtoms::thead)) {             \
+             rowGroup = static_cast<HTMLTableSectionElement*>(_node);\
+             rows = rowGroup->Rows();                                \
+             do { /* gives scoping */                                \
+               _code                                                 \
+             } while (0);                                            \
+           }                                                         \
+        }                                                            \
+        /* TBodies */                                                \
+        for (nsIContent* _node = mParent->nsINode::GetFirstChild();  \
+             _node; _node = _node->GetNextSibling()) {               \
+          if (_node->IsHTMLElement(nsGkAtoms::tr)) {                 \
+            do {                                                     \
+              _trCode                                                \
+            } while (0);                                             \
+          } else if (_node->IsHTMLElement(nsGkAtoms::tbody)) {       \
+            rowGroup = static_cast<HTMLTableSectionElement*>(_node); \
+            rows = rowGroup->Rows();                                 \
+            do { /* gives scoping */                                 \
+              _code                                                  \
+            } while (0);                                             \
+          }                                                          \
+        }                                                            \
+        /* TFoot */                                                  \
+        for (nsIContent* _node = mParent->nsINode::GetFirstChild();  \
+             _node; _node = _node->GetNextSibling()) {               \
+           if (_node->IsHTMLElement(nsGkAtoms::tfoot)) {             \
+             rowGroup = static_cast<HTMLTableSectionElement*>(_node);\
+             rows = rowGroup->Rows();                                \
+             do { /* gives scoping */                                \
+               _code                                                 \
+             } while (0);                                            \
+           }                                                         \
         }                                                            \
       }                                                              \
-      /* orphan rows */                                              \
-      rows = mOrphanRows;                                            \
-      do { /* gives scoping */                                       \
-        _code                                                        \
-      } while (0);                                                   \
-      /* TFoot */                                                    \
-      rowGroup = mParent->GetTFoot();                                \
-      rows = nullptr;                                                \
-      if (rowGroup) {                                                \
-        rows = rowGroup->Rows();                                     \
-        do { /* gives scoping */                                     \
-          _code                                                      \
-        } while (0);                                                 \
-      }                                                              \
-    }                                                                \
-  } while (0)
+    } while (0)
 
 static uint32_t
 CountRowsInRowGroup(nsIDOMHTMLCollection* rows)
@@ -164,9 +164,11 @@ TableRowsCollection::GetLength(uint32_t* aLength)
 {
   *aLength=0;
 
-  DO_FOR_EACH_ROWGROUP(
+  DO_FOR_EACH_BY_ORDER({
     *aLength += CountRowsInRowGroup(rows);
-  );
+  }, {
+    (*aLength)++;
+  });
 
   return NS_OK;
 }
@@ -194,7 +196,7 @@ GetItemOrCountInRowGroup(nsIDOMHTMLCollection* rows,
 Element*
 TableRowsCollection::GetElementAt(uint32_t aIndex)
 {
-  DO_FOR_EACH_ROWGROUP(
+  DO_FOR_EACH_BY_ORDER({
     uint32_t count;
     Element* node = GetItemOrCountInRowGroup(rows, aIndex, &count);
     if (node) {
@@ -203,7 +205,12 @@ TableRowsCollection::GetElementAt(uint32_t aIndex)
 
     NS_ASSERTION(count <= aIndex, "GetItemOrCountInRowGroup screwed up");
     aIndex -= count;
-  );
+  },{
+    if (aIndex == 0) {
+      return _node->AsElement();
+    }
+    aIndex--;
+  });
 
   return nullptr;
 }
@@ -225,19 +232,30 @@ Element*
 TableRowsCollection::GetFirstNamedElement(const nsAString& aName, bool& aFound)
 {
   aFound = false;
-  DO_FOR_EACH_ROWGROUP(
+  nsCOMPtr<nsIAtom> nameAtom = NS_Atomize(aName);
+  NS_ENSURE_TRUE(nameAtom, nullptr);
+  DO_FOR_EACH_BY_ORDER({
     Element* item = rows->NamedGetter(aName, aFound);
     if (aFound) {
       return item;
     }
-  );
+  }, {
+    if (_node->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
+                           nameAtom, eCaseMatters) ||
+        _node->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id,
+                           nameAtom, eCaseMatters)) {
+      aFound = true;
+      return _node->AsElement();
+    }
+  });
+
   return nullptr;
 }
 
 void
 TableRowsCollection::GetSupportedNames(nsTArray<nsString>& aNames)
 {
-  DO_FOR_EACH_ROWGROUP(
+  DO_FOR_EACH_BY_ORDER({
     nsTArray<nsString> names;
     nsCOMPtr<nsIHTMLCollection> coll = do_QueryInterface(rows);
     if (coll) {
@@ -248,7 +266,31 @@ TableRowsCollection::GetSupportedNames(nsTArray<nsString>& aNames)
         }
       }
     }
-  );
+  }, {
+    if (_node->HasID()) {
+      nsIAtom* idAtom = _node->GetID();
+      MOZ_ASSERT(idAtom != nsGkAtoms::_empty,
+                 "Empty ids don't get atomized");
+      nsDependentAtomString idStr(idAtom);
+      if (!aNames.Contains(idStr)) {
+        aNames.AppendElement(idStr);
+      }
+    }
+
+    nsGenericHTMLElement* el = nsGenericHTMLElement::FromContent(_node);
+    if (el) {
+      const nsAttrValue* val = el->GetParsedAttr(nsGkAtoms::name);
+      if (val && val->Type() == nsAttrValue::eAtom) {
+        nsIAtom* nameAtom = val->GetAtomValue();
+        MOZ_ASSERT(nameAtom != nsGkAtoms::_empty,
+                   "Empty names don't get atomized");
+        nsDependentAtomString nameStr(nameAtom);
+        if (!aNames.Contains(nameStr)) {
+          aNames.AppendElement(nameStr);
+        }
+      }
+    }
+  });
 }
 
 
@@ -256,18 +298,15 @@ NS_IMETHODIMP
 TableRowsCollection::NamedItem(const nsAString& aName,
                                nsIDOMNode** aReturn)
 {
-  DO_FOR_EACH_ROWGROUP(
-    nsCOMPtr<nsIHTMLCollection> collection = do_QueryInterface(rows);
-    if (collection) {
-      nsresult rv = collection->NamedItem(aName, aReturn);
-      if (NS_FAILED(rv) || *aReturn) {
-        return rv;
-      }
-    }
-  );
+  bool found;
+  nsISupports* node = GetFirstNamedElement(aName, found);
+  if (!node) {
+    *aReturn = nullptr;
 
-  *aReturn = nullptr;
-  return NS_OK;
+    return NS_OK;
+  }
+
+  return CallQueryInterface(node, aReturn);
 }
 
 NS_IMETHODIMP
