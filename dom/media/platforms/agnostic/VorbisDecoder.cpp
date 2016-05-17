@@ -33,7 +33,7 @@ ogg_packet InitVorbisPacket(const unsigned char* aData, size_t aLength,
 }
 
 VorbisDataDecoder::VorbisDataDecoder(const AudioInfo& aConfig,
-                                     FlushableTaskQueue* aTaskQueue,
+                                     TaskQueue* aTaskQueue,
                                      MediaDataDecoderCallback* aCallback)
   : mInfo(aConfig)
   , mTaskQueue(aTaskQueue)

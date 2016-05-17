@@ -22,7 +22,7 @@ class VorbisDataDecoder : public MediaDataDecoder
 {
 public:
   VorbisDataDecoder(const AudioInfo& aConfig,
-                FlushableTaskQueue* aTaskQueue,
+                TaskQueue* aTaskQueue,
                 MediaDataDecoderCallback* aCallback);
   ~VorbisDataDecoder();
 
@@ -48,7 +48,7 @@ private:
   void ProcessDrain();
 
   const AudioInfo& mInfo;
-  RefPtr<FlushableTaskQueue> mTaskQueue;
+  const RefPtr<TaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
 
   // Vorbis decoder state
