@@ -11,23 +11,27 @@
 "use strict";
 
 function is(a, b, msg) {
-  window.parent.postMessage((a === b ? 'OK ' : 'KO ') + msg, '*');
+  if (a === b) {
+    alert('OK ' + msg);
+  } else {
+    alert('KO ' + msg + ' | reason: ' + a + ' != ' + b);
+  }
 }
 
 function ok(a, msg) {
-  window.parent.postMessage((a ? 'OK ' : 'KO ') + msg, '*');
+  alert((a ? 'OK ' : 'KO ') + msg);
 }
 
 function info(msg) {
-  window.parent.postMessage('INFO ' + msg, '*');
+  alert('INFO ' + msg);
 }
 
-function command(msg) {
-  window.parent.postMessage('COMMAND ' + JSON.stringify(msg), '*');
+function command(name, data) {
+  alert('COMMAND ' + JSON.stringify({name: name, data: data}));
 }
 
 function finish() {
-  window.parent.postMessage('DONE', '*');
+  alert('DONE');
 }
 
 var connection;
@@ -63,7 +67,7 @@ function testUnexpectedControlChannelClose() {
     };
 
     // Trigger the control channel to be closed with error code.
-    command({ name: 'trigger-control-channel-close', data: 0x80004004 /* NS_ERROR_ABORT */ });
+    command('trigger-control-channel-close', 0x80004004 /* NS_ERROR_ABORT */);
   });
 }
 
