@@ -3268,6 +3268,9 @@ IonBuilder::inlineSimd(CallInfo& callInfo, JSFunction* target, SimdType type)
       case SimdOperation::Fn_minNum:
         return inlineSimdBinary<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_minNum,
                                                   type);
+      case SimdOperation::Fn_addSaturate:
+      case SimdOperation::Fn_subSaturate:
+        MOZ_CRASH("NYI");
 
         // Binary bitwise.
       case SimdOperation::Fn_and:
