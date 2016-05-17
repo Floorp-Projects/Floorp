@@ -348,6 +348,8 @@ class BytecodeParser
 
     uint32_t simulateOp(JSOp op, uint32_t offset, uint32_t* offsetStack, uint32_t stackDepth);
 
+    inline bool recordBytecode(uint32_t offset, const uint32_t* offsetStack, uint32_t stackDepth);
+
     inline bool addJump(uint32_t offset, uint32_t* currentOffset,
                         uint32_t stackDepth, const uint32_t* offsetStack);
 };
@@ -416,8 +418,8 @@ BytecodeParser::simulateOp(JSOp op, uint32_t offset, uint32_t* offsetStack, uint
 }
 
 bool
-BytecodeParser::addJump(uint32_t offset, uint32_t* currentOffset,
-                        uint32_t stackDepth, const uint32_t* offsetStack)
+BytecodeParser::recordBytecode(uint32_t offset, const uint32_t* offsetStack,
+                               uint32_t stackDepth)
 {
     MOZ_ASSERT(offset < script_->length());
 
@@ -434,6 +436,17 @@ BytecodeParser::addJump(uint32_t offset, uint32_t* currentOffset,
         code->mergeOffsetStack(offsetStack, stackDepth);
     }
 
+    return true;
+}
+
+bool
+BytecodeParser::addJump(uint32_t offset, uint32_t* currentOffset,
+                        uint32_t stackDepth, const uint32_t* offsetStack)
+{
+    if (!recordBytecode(offset, offsetStack, stackDepth))
+        return false;
+
+    Bytecode*& code = codeArray_[offset];
     if (offset < *currentOffset && !code->parsed) {
         // Backedge in a while/for loop, whose body has not been parsed due
         // to a lack of fallthrough at the loop head. Roll back the offset
@@ -568,23 +581,8 @@ BytecodeParser::parse()
 
         // Handle any fallthrough from this opcode.
         if (BytecodeFallsThrough(op)) {
-            MOZ_ASSERT(successorOffset < script_->length());
-
-            Bytecode*& nextcode = codeArray_[successorOffset];
-
-            if (!nextcode) {
-                nextcode = alloc().new_<Bytecode>();
-                if (!nextcode) {
-                    reportOOM();
-                    return false;
-                }
-                if (!nextcode->captureOffsetStack(alloc(), offsetStack, stackDepth)) {
-                    reportOOM();
-                    return false;
-                }
-            } else {
-                nextcode->mergeOffsetStack(offsetStack, stackDepth);
-            }
+            if (!recordBytecode(successorOffset, offsetStack, stackDepth))
+                return false;
         }
     }
 
