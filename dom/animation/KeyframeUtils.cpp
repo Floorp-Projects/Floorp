@@ -352,6 +352,9 @@ GetPropertyValuesPairs(JSContext* aCx,
                        nsTArray<PropertyValuesPair>& aResult);
 
 static bool
+IsAnimatableProperty(nsCSSProperty aProperty);
+
+static bool
 AppendStringOrStringSequenceToArray(JSContext* aCx,
                                     JS::Handle<JS::Value> aValue,
                                     ListAllowance aAllowLists,
@@ -717,12 +720,7 @@ GetPropertyValuesPairs(JSContext* aCx,
     nsCSSProperty property =
       nsCSSProps::LookupPropertyByIDLName(propName,
                                           CSSEnabledState::eForAllContent);
-    if (property != eCSSProperty_UNKNOWN &&
-        (nsCSSProps::IsShorthand(property) ||
-         nsCSSProps::kAnimTypeTable[property] != eStyleAnimType_None)) {
-      // Only need to check for longhands being animatable, as the
-      // StyleAnimationValue::ComputeValues calls later on will check for
-      // a shorthand's components being animatable.
+    if (IsAnimatableProperty(property)) {
       AdditionalProperty* p = properties.AppendElement();
       p->mProperty = property;
       p->mJsidIndex = i;
@@ -749,6 +747,31 @@ GetPropertyValuesPairs(JSContext* aCx,
   }
 
   return true;
+}
+
+/**
+ * Returns true if |aProperty| or, for shorthands, one or more of
+ * |aProperty|'s subproperties, is animatable.
+ */
+static bool
+IsAnimatableProperty(nsCSSProperty aProperty)
+{
+  if (aProperty == eCSSProperty_UNKNOWN) {
+    return false;
+  }
+
+  if (!nsCSSProps::IsShorthand(aProperty)) {
+    return nsCSSProps::kAnimTypeTable[aProperty] != eStyleAnimType_None;
+  }
+
+  CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subprop, aProperty,
+                                       CSSEnabledState::eForAllContent) {
+    if (nsCSSProps::kAnimTypeTable[*subprop] != eStyleAnimType_None) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 /**
