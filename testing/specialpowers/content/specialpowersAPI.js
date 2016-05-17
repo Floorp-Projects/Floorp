@@ -968,10 +968,22 @@ SpecialPowersAPI.prototype = {
     }
   },
 
-  /*
-   * Take in a list of pref changes to make, and invoke |callback| once those
-   * changes have taken effect.  When the test finishes, these changes are
-   * reverted.
+  /**
+   * Helper to resolve a promise by calling the resolve function and call an
+   * optional callback.
+   */
+  _resolveAndCallOptionalCallback(resolveFn, callback = null) {
+    resolveFn();
+
+    if (callback) {
+      callback();
+    }
+  },
+
+  /**
+   * Take in a list of pref changes to make, then invokes |callback| and resolves
+   * the returned Promise once those changes have taken effect.  When the test
+   * finishes, these changes are reverted.
    *
    * |inPrefs| must be an object with up to two properties: "set" and "clear".
    * pushPrefEnv will set prefs as indicated in |inPrefs.set| and will unset
@@ -997,7 +1009,7 @@ SpecialPowersAPI.prototype = {
    * TODO: complex values for original cleanup?
    *
    */
-  pushPrefEnv: function(inPrefs, callback) {
+  pushPrefEnv: function(inPrefs, callback = null) {
     var prefs = Services.prefs;
 
     var pref_string = [];
@@ -1065,40 +1077,49 @@ SpecialPowersAPI.prototype = {
       }
     }
 
-    if (pendingActions.length > 0) {
-      // The callback needs to be delayed twice. One delay is because the pref
-      // service doesn't guarantee the order it calls its observers in, so it
-      // may notify the observer holding the callback before the other
-      // observers have been notified and given a chance to make the changes
-      // that the callback checks for. The second delay is because pref
-      // observers often defer making their changes by posting an event to the
-      // event loop.
-      this._prefEnvUndoStack.push(cleanupActions);
-      this._pendingPrefs.push([pendingActions,
-                               this._delayCallbackTwice(callback)]);
-      this._applyPrefs();
-    } else {
-      this._setTimeout(callback);
-    }
+    return new Promise(resolve => {
+      let done = this._resolveAndCallOptionalCallback.bind(this, resolve, callback);
+      if (pendingActions.length > 0) {
+        // The callback needs to be delayed twice. One delay is because the pref
+        // service doesn't guarantee the order it calls its observers in, so it
+        // may notify the observer holding the callback before the other
+        // observers have been notified and given a chance to make the changes
+        // that the callback checks for. The second delay is because pref
+        // observers often defer making their changes by posting an event to the
+        // event loop.
+        this._prefEnvUndoStack.push(cleanupActions);
+        this._pendingPrefs.push([pendingActions,
+                                 this._delayCallbackTwice(done)]);
+        this._applyPrefs();
+      } else {
+        this._setTimeout(done);
+      }
+    });
   },
 
-  popPrefEnv: function(callback) {
-    if (this._prefEnvUndoStack.length > 0) {
-      // See pushPrefEnv comment regarding delay.
-      let cb = callback ? this._delayCallbackTwice(callback) : null;
-      /* Each pop will have a valid block of preferences */
-      this._pendingPrefs.push([this._prefEnvUndoStack.pop(), cb]);
-      this._applyPrefs();
-    } else {
-      this._setTimeout(callback);
-    }
+  popPrefEnv: function(callback = null) {
+    return new Promise(resolve => {
+      let done = this._resolveAndCallOptionalCallback.bind(this, resolve, callback);
+      if (this._prefEnvUndoStack.length > 0) {
+        // See pushPrefEnv comment regarding delay.
+        let cb = this._delayCallbackTwice(done);
+        /* Each pop will have a valid block of preferences */
+        this._pendingPrefs.push([this._prefEnvUndoStack.pop(), cb]);
+        this._applyPrefs();
+      } else {
+        this._setTimeout(done);
+      }
+    });
   },
 
-  flushPrefEnv: function(callback) {
+  flushPrefEnv: function(callback = null) {
     while (this._prefEnvUndoStack.length > 1)
       this.popPrefEnv(null);
 
-    this.popPrefEnv(callback);
+    return new Promise(resolve => {
+      let done = this._resolveAndCallOptionalCallback.bind(this, resolve, callback);
+      this.popPrefEnv(done);
+    });
   },
 
   /*
