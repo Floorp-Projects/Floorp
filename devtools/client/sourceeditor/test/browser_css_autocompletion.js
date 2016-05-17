@@ -5,7 +5,7 @@
 "use strict";
 
 const CSSCompleter = require("devtools/client/sourceeditor/css-autocompleter");
-const {InspectorFront} = require("devtools/server/actors/inspector");
+const {InspectorFront} = require("devtools/client/fronts/inspector");
 const {TargetFactory} = require("devtools/client/framework/target");
 const { Cc, Ci } = require("chrome");
 
