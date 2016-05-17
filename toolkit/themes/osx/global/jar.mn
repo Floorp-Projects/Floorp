@@ -94,7 +94,6 @@ toolkit.jar:
   skin/classic/global/icons/checkbox@2x.png                          (icons/checkbox@2x.png)
   skin/classic/global/icons/close.png                                (icons/close.png)
   skin/classic/global/icons/close@2x.png                             (icons/close@2x.png)
-  skin/classic/global/icons/find-arrows.svg                          (icons/find-arrows.svg)
   skin/classic/global/icons/glyph-dropdown.png                       (icons/glyph-dropdown.png)
   skin/classic/global/icons/glyph-dropdown@2x.png                    (icons/glyph-dropdown@2x.png)
   skin/classic/global/icons/information-16.png                       (icons/information-16.png)

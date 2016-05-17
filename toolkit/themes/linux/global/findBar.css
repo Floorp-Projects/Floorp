@@ -88,7 +88,6 @@ findbar[noanim] {
   background: linear-gradient(rgba(255,255,255,.9), rgba(255,255,255,.2));
   border: 1px solid ThreeDShadow;
   box-shadow: 0 1px #fff inset;
-  list-style-image: url("chrome://global/skin/icons/find-arrows.png");
   padding: 5px 9px;
   line-height: 1em;
 }
@@ -107,12 +106,12 @@ findbar[noanim] {
 }
 
 .findbar-find-previous {
-  -moz-image-region: rect(0, 12px, 9px, 0);
+  list-style-image: url(chrome://global/skin/icons/find-arrows.svg#glyph-find-previous);
   border-inline-end-width: 0;
 }
 
 .findbar-find-next {
-  -moz-image-region: rect(0, 24px, 9px, 12px);
+  list-style-image: url(chrome://global/skin/icons/find-arrows.svg#glyph-find-next);
 }
 
 .findbar-find-previous > .toolbarbutton-icon,
