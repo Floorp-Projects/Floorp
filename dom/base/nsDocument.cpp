@@ -1452,6 +1452,7 @@ nsIDocument::nsIDocument()
     mFontFaceSetDirty(true),
     mGetUserFontSetCalled(false),
     mPostedFlushUserFontSet(false),
+    mFullscreenEnabled(false),
     mPartID(0),
     mDidFireDOMContentLoaded(true),
     mHasScrollLinkedEffect(false),
@@ -2579,13 +2580,15 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   }
 
   // If this document is being loaded by a docshell, copy its sandbox flags
-  // to the document. These are immutable after being set here.
+  // to the document, and store the fullscreen enabled flag. These are
+  // immutable after being set here.
   nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(aContainer);
 
   if (docShell) {
     nsresult rv = docShell->GetSandboxFlags(&mSandboxFlags);
     NS_ENSURE_SUCCESS(rv, rv);
     WarnIfSandboxIneffective(docShell, mSandboxFlags, GetChannel());
+    mFullscreenEnabled = docShell->GetFullscreenAllowed();
   }
 
   // The CSP directive upgrade-insecure-requests not only applies to the
@@ -11768,14 +11771,9 @@ GetFullscreenError(nsIDocument* aDoc, bool aCallerIsChrome)
   if (!nsContentUtils::IsFullScreenApiEnabled()) {
     return "FullscreenDeniedDisabled";
   }
-
-  // Ensure that all containing elements are <iframe> and have
-  // allowfullscreen attribute set.
-  nsCOMPtr<nsIDocShell> docShell(aDoc->GetDocShell());
-  if (!docShell || !docShell->GetFullscreenAllowed()) {
+  if (!aDoc->FullscreenEnabledInternal()) {
     return "FullscreenDeniedContainerNotAllowed";
   }
-
   return nullptr;
 }
 
