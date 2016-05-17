@@ -2563,6 +2563,12 @@ public:
 
   static void SetScrollbarsVisibility(nsIDocShell* aDocShell, bool aVisible);
 
+  /*
+   * Return the associated presentation URL of the presented content.
+   * Will return empty string if the docshell is not in a presented content.
+   */
+  static void GetPresentationURL(nsIDocShell* aDocShell, nsAString& aPresentationUrl);
+
 private:
   static bool InitializeEventTable();
 

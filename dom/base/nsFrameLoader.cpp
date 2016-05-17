@@ -3357,13 +3357,19 @@ nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
     attrs.mUserContextId = userContextId;
   }
 
+  nsAutoString presentationURLStr;
+  mOwnerContent->GetAttr(kNameSpaceID_None,
+                         nsGkAtoms::mozpresentation,
+                         presentationURLStr);
+
   bool tabContextUpdated =
     aTabContext->SetTabContext(OwnerIsMozBrowserFrame(),
                                mIsPrerendered,
                                ownApp,
                                containingApp,
                                attrs,
-                               signedPkgOrigin);
+                               signedPkgOrigin,
+                               presentationURLStr);
   NS_ENSURE_STATE(tabContextUpdated);
 
   return NS_OK;
