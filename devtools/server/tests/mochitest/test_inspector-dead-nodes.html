@@ -11,7 +11,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1121528
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript;version=1.8" src="inspector-helpers.js"></script>
   <script type="application/javascript;version=1.8">
-const inspector = require("devtools/server/actors/inspector");
+const inspector = require("devtools/client/fronts/inspector");
 
 window.onload = function() {
   SimpleTest.waitForExplicitFinish();
@@ -30,7 +30,7 @@ addAsyncTest(function() {
   let {client, tab, doc} = yield def.promise;
   gDoc = doc;
 
-  let {InspectorFront} = require("devtools/server/actors/inspector");
+  let {InspectorFront} = require("devtools/client/fronts/inspector");
   let inspector = InspectorFront(client, tab);
   gWalker = yield inspector.getWalker();
 
