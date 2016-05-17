@@ -3292,10 +3292,6 @@ pref("intl.keyboard.per_window_layout", false);
 // Enable/Disable TSF support on Vista or later.
 pref("intl.tsf.enable", true);
 
-// Force enable TSF even on WinXP or WinServer 2003.
-// Be aware, TSF framework on prior to Vista is not enough stable.
-pref("intl.tsf.force_enable", false);
-
 // Support IMEs implemented with IMM in TSF mode.
 pref("intl.tsf.support_imm", true);
 
