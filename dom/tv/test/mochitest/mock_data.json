@@ -18,9 +18,9 @@
              "isFree" : true,
              "videoFilePath": "tv1.ogv",
              "programs": [
-               {"eventId":"734475972", "title":"News of Morning",  "startTime":"1430686800", "duration":"10800", "description":"Morning News", "rating":"0", "audioLanguages":["eng"], "subtitleLanguages":["eng"]},
-               {"eventId":"422158917", "title":"News of Midnight",  "startTime":"1431266400", "duration":"3600",  "description":"Summary of today news",  "rating":"0", "audioLanguages":["eng"], "subtitleLanguages":["eng"]},
-               {"eventId":"533612446", "title":"Entertainment Program",  "startTime":"1431270000", "duration":"7200",  "description":"Midnight entertainment program", "rating":"0", "audioLanguages":["eng"], "subtitleLanguages":["eng"]}
+               {"eventId":"734475972", "title":"News 1",  "startTime":"1430686800", "duration":"10800", "description":"Morning News", "rating":"0", "audioLanguages":["eng"], "subtitleLanguages":["eng"]},
+               {"eventId":"422158917", "title":"News 2",  "startTime":"1431266400", "duration":"3600",  "description":"Summary of today news",  "rating":"0", "audioLanguages":["eng"], "subtitleLanguages":["eng"]},
+               {"eventId":"533612446", "title":"Entertainment",  "startTime":"1431270000", "duration":"7200",  "description":"Some show", "rating":"0", "audioLanguages":["eng"], "subtitleLanguages":["eng"]}
                ]
              },
              {
@@ -35,7 +35,7 @@
              "isFree" : true,
              "videoFilePath": "tv2.ogv",
              "programs": [
-                 {"eventId":"931109607","title":"News of Morning",	"startTime":"1430686800",	"duration":"10800",	"description":"Provide news in morning",	"rating":"0",	"audioLanguages":["eng"],	"subtitleLanguages":["eng"]},
+                 {"eventId":"931109607","title":"News 1",	"startTime":"1430686800",	"duration":"10800",	"description":"Provide news in morning",	"rating":"0",	"audioLanguages":["eng"],	"subtitleLanguages":["eng"]},
                  {"eventId":"297834220","title":"Weekly News",	"startTime":"1431259200",	"duration":"10800",	"description":"Poopular Music program",	"rating":"0",	"audioLanguages":["eng"],	"subtitleLanguages":["eng"]},
                  {"eventId":"866886159","title":"Weekly news",	"startTime":"1431270000",	"duration":"7200",	"description":"Information program on Monday",	"rating":"0",	"audioLanguages":["eng"],	"subtitleLanguages":["eng"]}
                ]
@@ -52,9 +52,9 @@
              "isFree" : true,
              "videoFilePath": "tv1.ogv",
              "programs": [
-               {"eventId":"734475972", "title":"News of Morning",  "startTime":"1430686800", "duration":"10800", "description":"Morning News", "rating":"0", "audioLanguages":["eng"], "subtitleLanguages":["eng"]},
-               {"eventId":"586216742", "title":"Information Program", "startTime":"1430697600", "duration":"7200",  "description":"Provide program Information.",  "rating":"0", "audioLanguages":["eng"], "subtitleLanguages":["eng"]},
-               {"eventId":"533612446", "title":"Entertainment Program",  "startTime":"1431270000", "duration":"7200",  "description":"Midnight entertainment program", "rating":"0", "audioLanguages":["eng"], "subtitleLanguages":["eng"]}
+               {"eventId":"734475972", "title":"News 1",  "startTime":"1430686800", "duration":"10800", "description":"Morning News", "rating":"0", "audioLanguages":["eng"], "subtitleLanguages":["eng"]},
+               {"eventId":"586216742", "title":"Info Program", "startTime":"1430697600", "duration":"7200",  "description":"Provide program Information.",  "rating":"0", "audioLanguages":["eng"], "subtitleLanguages":["eng"]},
+               {"eventId":"533612446", "title":"Entertainment",  "startTime":"1431270000", "duration":"7200",  "description":"Some show", "rating":"0", "audioLanguages":["eng"], "subtitleLanguages":["eng"]}
                ]
              },
              {
@@ -69,7 +69,7 @@
              "isFree" : true,
              "videoFilePath": "tv2.ogv",
              "programs": [
-                 {"eventId":"931109607","title":"News of Morning",	"startTime":"1430686800",	"duration":"10800",	"description":"Provide news in morning",	"rating":"0",	"audioLanguages":["eng"],	"subtitleLanguages":["eng"]},
+                 {"eventId":"931109607","title":"News 1",	"startTime":"1430686800",	"duration":"10800",	"description":"Provide news in morning",	"rating":"0",	"audioLanguages":["eng"],	"subtitleLanguages":["eng"]},
                  {"eventId":"297834220","title":"Weekly News",	"startTime":"1431259200",	"duration":"10800",	"description":"Poopular Music program",	"rating":"0",	"audioLanguages":["eng"],	"subtitleLanguages":["eng"]},
                  {"eventId":"866886159","title":"Weekly news",	"startTime":"1431270000",	"duration":"7200",	"description":"Information program on Monday",	"rating":"0",	"audioLanguages":["eng"],	"subtitleLanguages":["eng"]}
                ]
@@ -86,9 +86,9 @@
              "isFree" : true,
              "videoFilePath": "tv1.ogv",
              "programs": [
-               {"eventId":"734475972", "title":"News of Morning",  "startTime":"1430686800", "duration":"10800", "description":"Morning News", "rating":"0", "audioLanguages":["eng"], "subtitleLanguages":["eng"]},
-               {"eventId":"586216742", "title":"Information Program", "startTime":"1430697600", "duration":"7200",  "description":"Provide program Information.",  "rating":"0", "audioLanguages":["eng"], "subtitleLanguages":["eng"]},
-               {"eventId":"533612446", "title":"Entertainment Program",  "startTime":"1431270000", "duration":"7200",  "description":"Midnight entertainment program", "rating":"0", "audioLanguages":["eng"], "subtitleLanguages":["eng"]}
+               {"eventId":"734475972", "title":"News 1",  "startTime":"1430686800", "duration":"10800", "description":"Morning News", "rating":"0", "audioLanguages":["eng"], "subtitleLanguages":["eng"]},
+               {"eventId":"586216742", "title":"Info Program", "startTime":"1430697600", "duration":"7200",  "description":"Provide program Information.",  "rating":"0", "audioLanguages":["eng"], "subtitleLanguages":["eng"]},
+               {"eventId":"533612446", "title":"Entertainment",  "startTime":"1431270000", "duration":"7200",  "description":"Some show", "rating":"0", "audioLanguages":["eng"], "subtitleLanguages":["eng"]}
                ]
              }
            ]
