@@ -52,4 +52,5 @@ if [ -n "$rev" ]; then
 else
   echo "Remember to update README_MOZILLA with the version details."
 fi
+patch -p3 < ./bug1269472.patch
 

@@ -1,0 +1,73 @@
+diff --git a/media/libcubeb/src/cubeb_audiounit.c b/media/libcubeb/src/cubeb_audiounit.c
+--- a/media/libcubeb/src/cubeb_audiounit.c
++++ b/media/libcubeb/src/cubeb_audiounit.c
+@@ -146,16 +146,22 @@ audiotimestamp_to_latency(AudioTimeStamp
+   }
+ 
+   uint64_t pres = AudioConvertHostTimeToNanos(tstamp->mHostTime);
+   uint64_t now = AudioConvertHostTimeToNanos(AudioGetCurrentHostTime());
+ 
+   return ((pres - now) * stream->output_desc.mSampleRate) / 1000000000LL;
+ }
+ 
++static void
++audiounit_make_silent(AudioBuffer * ioData)
++{
++  memset(ioData->mData, 0, ioData->mDataByteSize);
++}
++
+ static OSStatus
+ audiounit_input_callback(void * user_ptr,
+                          AudioUnitRenderActionFlags * flags,
+                          AudioTimeStamp const * tstamp,
+                          UInt32 bus,
+                          UInt32 input_frames,
+                          AudioBufferList * bufs)
+ {
+@@ -188,17 +194,22 @@ audiounit_input_callback(void * user_ptr
+ 
+   /* Render input samples */
+   OSStatus r = AudioUnitRender(stm->input_unit,
+                                flags,
+                                tstamp,
+                                bus,
+                                input_frames,
+                                &input_buffer_list);
+-  assert(r == noErr);
++  if (r != noErr) {
++    LOG("Input AudioUnitRender failed with error=%d", r);
++    audiounit_make_silent(input_buffer);
++    return r;
++  }
++
+   LOG("- input:  buffers %d, size %d, channels %d, frames %d\n",
+       input_buffer_list.mNumberBuffers,
+       input_buffer_list.mBuffers[0].mDataByteSize,
+       input_buffer_list.mBuffers[0].mNumberChannels,
+       input_frames);
+ 
+   assert(input_frames > 0);
+   stm->frames_read += input_frames;
+@@ -226,22 +237,16 @@ audiounit_input_callback(void * user_ptr
+     pthread_mutex_unlock(&stm->mutex);
+     return noErr;
+   }
+ 
+   pthread_mutex_unlock(&stm->mutex);
+   return noErr;
+ }
+ 
+-static void
+-audiounit_make_silent(AudioBuffer * ioData)
+-{
+-  memset(ioData->mData, 0, ioData->mDataByteSize);
+-}
+-
+ static OSStatus
+ audiounit_output_callback(void * user_ptr,
+                           AudioUnitRenderActionFlags * flags,
+                           AudioTimeStamp const * tstamp,
+                           UInt32 bus,
+                           UInt32 output_frames,
+                           AudioBufferList * outBufferList)
+ {
