@@ -67,10 +67,10 @@ function BuildResources(data) {
   var virt_fields = data.virt_fields;
   var swap_fields = data.swap_fields;
 
-  function convert(dest, source, key, fields) {
+  function convert(dest, source, sourceKey, destKey, fields) {
     var i = 0;
     fields.forEach(function (field) {
-      dest[key][field] = source[key][i];
+      dest[destKey][field] = source[sourceKey][i];
       i++;
     });
   }
@@ -85,16 +85,16 @@ function BuildResources(data) {
   this.ioTotal = {};
   var i = 0;
   io_fields.forEach(function (field) {
-    this.ioTotal[field] = data.io[i];
+    this.ioTotal[field] = data.overall.io[i];
     i++;
   }.bind(this));
 
-  data.resources.forEach(function (sample) {
+  data.samples.forEach(function (sample) {
     var entry = {
       start: sample.start - offset,
       end: sample.end - offset,
       duration: sample.duration,
-      cpu_percent: sample.cpu_percent,
+      cpu_percent: sample.cpu_percent_mean,
       cpu_times: {},
       cpu_times_percents: {},
       io: {},
@@ -102,10 +102,10 @@ function BuildResources(data) {
       swap: {},
     };
 
-    convert(entry, sample, "cpu_times", cpu_fields);
-    convert(entry, sample, "io", io_fields);
-    convert(entry, sample, "virt", virt_fields);
-    convert(entry, sample, "swap", swap_fields);
+    convert(entry, sample, "cpu_times_sum", "cpu_times", cpu_fields);
+    convert(entry, sample, "io", "io", io_fields);
+    convert(entry, sample, "virt", "virt", virt_fields);
+    convert(entry, sample, "swap", "swap", swap_fields);
 
     var total = 0;
     for (var k in entry.cpu_times) {
@@ -179,13 +179,13 @@ BuildResources.prototype = Object.freeze({
   },
 
   get cpuPercent() {
-    return this.data.cpu_percent;
+    return this.data.overall.cpu_percent_mean;
   },
 
   get tiers() {
     var t = [];
 
-    this.data.tiers.forEach(function (e) {
+    this.data.phases.forEach(function (e) {
       t.push(e.name);
     });
 
@@ -193,8 +193,8 @@ BuildResources.prototype = Object.freeze({
   },
 
   getTier: function (tier) {
-    for (var i = 0; i < this.data.tiers.length; i++) {
-      var t = this.data.tiers[i];
+    for (var i = 0; i < this.data.phases.length; i++) {
+      var t = this.data.phases[i];
 
       if (t.name == tier) {
         return t;
@@ -403,7 +403,7 @@ function renderResources(id, resources, what) {
 
       d3.select("#tt_tier").html(entry.tier);
       d3.select("#tt_duration").html(entry.duration || "n/a");
-      d3.select("#tt_cpu_percent").html(entry.cpu_percent || "n/a");
+      d3.select("#tt_cpu_percent").html(entry.cpu_percent_mean || "n/a");
 
       d3.select("#tooltip").style("display", "");
     })
