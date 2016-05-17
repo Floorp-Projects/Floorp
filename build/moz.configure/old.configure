@@ -257,7 +257,6 @@ def old_configure_options(*options):
     '--enable-tree-freetype',
     '--enable-ui-locale',
     '--enable-universalchardet',
-    '--enable-update-channel',
     '--enable-updater',
     '--enable-url-classifier',
     '--enable-valgrind',
