@@ -4,6 +4,10 @@
 
 package org.mozilla.gecko.sync.stage;
 
+import android.accounts.Account;
+import android.content.Context;
+import android.text.TextUtils;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -15,6 +19,8 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.fxa.FirefoxAccounts;
+import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.sync.CommandProcessor;
 import org.mozilla.gecko.sync.CommandProcessor.Command;
 import org.mozilla.gecko.sync.CryptoRecord;
@@ -384,6 +390,16 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
     r.appPackage = AppConstants.ANDROID_PACKAGE_NAME;
     r.device = android.os.Build.MODEL;
     r.formfactor = delegate.getFormFactor();
+
+    Context context = session.getContext();
+    final Account account = FirefoxAccounts.getFirefoxAccount(context);
+    if (account != null) {
+      final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
+      final String deviceId = fxAccount.getDeviceId();
+      if (!TextUtils.isEmpty(deviceId)) {
+        r.fxaDeviceId = deviceId;
+      }
+    }
 
     return r;
   }
