@@ -342,53 +342,22 @@ class MachCommands(MachCommandBase):
         return True
 
     def eslintModuleHasIssues(self):
-        print("Checking eslint and modules...")
-
         has_issues = False
-        npmPath = self.getNodeOrNpmPath("npm")
-        module_path = self.get_eslint_module_path()
+        node_module_path = os.path.join(self.get_eslint_module_path(), "node_modules")
 
         for pkg in ESLINT_PACKAGES:
             name, req_version = pkg.split("@")
+            path = os.path.join(node_module_path, name, "package.json")
 
-            try:
-                with open(os.devnull, "w") as fnull:
-                    global_install = subprocess.check_output([npmPath, "ls", "--json", name, "-g"],
-                                                             stderr=fnull)
-                info = json.loads(global_install)
-                global_version = info["dependencies"][name]["version"]
-            except subprocess.CalledProcessError:
-                global_version = None
+            if not os.path.exists(path):
+                print("%s v%s needs to be installed locally." % (name, req_version))
+                has_issues = True
+                continue
 
-            try:
-                with open(os.devnull, "w") as fnull:
-                    local_install = subprocess.check_output([npmPath, "ls", "--json", name],
-                                                            cwd=module_path, stderr=fnull)
-                info = json.loads(local_install)
-                local_version = info["dependencies"][name]["version"]
-            except subprocess.CalledProcessError:
-                local_version = None
+            data = json.load(open(path))
 
-            if global_version:
-                if name == "eslint-plugin-mozilla":
-                    print("%s should never be installed globally. This global "
-                          "module will be removed." % name)
-                    has_issues = True
-                else:
-                    print("%s is installed globally. This global module will "
-                          "be ignored. We recommend uninstalling it using "
-                          "sudo %s remove %s -g" % (name, npmPath, name))
-            if local_version:
-                if local_version != req_version:
-                    print("%s v%s is installed locally but is not the "
-                          "required version (v%s). This module will be "
-                          "reinstalled so that the versions match." %
-                          (name, local_version, req_version))
-                    has_issues = True
-            else:
-                print("%s v%s is not installed locally and only local modules "
-                      "are valid. This module will be installed locally."
-                      % (name, req_version))
+            if data["version"] != req_version:
+                print("%s v%s should be v%s." % (name, version, req_version))
                 has_issues = True
 
         return has_issues
