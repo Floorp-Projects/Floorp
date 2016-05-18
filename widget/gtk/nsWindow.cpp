@@ -2172,9 +2172,9 @@ nsWindow::OnExposeEvent(cairo_t *cr)
             return FALSE;
     }
 
-    if (clientLayers && mCompositorBridgeParent && clientLayers->NeedsComposite()) {
-        mCompositorBridgeParent->ScheduleRenderOnCompositorThread();
-        clientLayers->SetNeedsComposite(false);
+    if (clientLayers && clientLayers->NeedsComposite()) {
+      clientLayers->Composite();
+      clientLayers->SetNeedsComposite(false);
     }
 
     LOGDRAW(("sending expose event [%p] %p 0x%lx (rects follow):\n",
