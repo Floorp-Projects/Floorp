@@ -682,7 +682,7 @@ public:
     // will be passed to ComputeSize()).
     COMPUTE_SIZE_SHRINK_WRAP = (1<<2),
 
-    // The caller wants height:auto behavior (ComputeSizeFlags::eUseAutoHeight
+    // The caller wants 'auto' bsize behavior (ComputeSizeFlags::eUseAutoBSize
     // will be be passed to ComputeSize()).
     COMPUTE_SIZE_USE_AUTO_BSIZE = (1<<3),
 
