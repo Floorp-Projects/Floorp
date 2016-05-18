@@ -115,6 +115,7 @@ private:
   {
     return mDecoder->GetDescriptionName();
   }
+  void SetSeekThreshold(const media::TimeUnit& aTime) override;
 
   RefPtr<MediaDataDecoder> mDecoder;
   RefPtr<DecoderCallbackFuzzingWrapper> mCallbackWrapper;

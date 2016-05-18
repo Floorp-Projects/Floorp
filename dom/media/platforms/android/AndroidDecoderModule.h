@@ -65,6 +65,7 @@ public:
   {
     return "android decoder";
   }
+  void SetSeekThreshold(const media::TimeUnit& aTime) override;
 
 protected:
   enum ModuleState {
@@ -139,6 +140,8 @@ protected:
   SampleQueue mQueue;
   // Durations are stored in microseconds.
   std::deque<media::TimeUnit> mDurations;
+
+  Maybe<media::TimeUnit> mSeekTargetThreshold;
 };
 
 } // namespace mozilla

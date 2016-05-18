@@ -1631,6 +1631,11 @@ MediaFormatReader::OnVideoSeekCompleted(media::TimeUnit aTime)
   LOGV("Video seeked to %lld", aTime.ToMicroseconds());
   mVideo.mSeekRequest.Complete();
 
+  if (mVideo.mDecoder) {
+    auto& decoder = GetDecoderData(TrackInfo::kVideoTrack);
+    decoder.mDecoder->SetSeekThreshold(mPendingSeekTime.ref());
+  }
+
   if (HasAudio() && !mOriginalSeekTarget.IsVideoOnly()) {
     MOZ_ASSERT(mPendingSeekTime.isSome());
     if (mOriginalSeekTarget.IsFast()) {
