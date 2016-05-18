@@ -329,7 +329,8 @@ nsHTMLReflowState::SetComputedWidth(nscoord aComputedWidth)
   if (ComputedWidth() != aComputedWidth) {
     ComputedWidth() = aComputedWidth;
     nsIAtom* frameType = frame->GetType();
-    if (frameType != nsGkAtoms::viewportFrame) { // Or check GetParent()?
+    if (frameType != nsGkAtoms::viewportFrame || // Or check GetParent()?
+        mWritingMode.IsVertical()) {
       InitResizeFlags(frame->PresContext(), frameType);
     }
   }
@@ -351,7 +352,10 @@ nsHTMLReflowState::SetComputedHeight(nscoord aComputedHeight)
   NS_PRECONDITION(aComputedHeight >= 0, "Invalid computed height");
   if (ComputedHeight() != aComputedHeight) {
     ComputedHeight() = aComputedHeight;
-    InitResizeFlags(frame->PresContext(), frame->GetType());
+    nsIAtom* frameType = frame->GetType();
+    if (frameType != nsGkAtoms::viewportFrame || !mWritingMode.IsVertical()) {
+      InitResizeFlags(frame->PresContext(), frameType);
+    }
   }
 }
 
