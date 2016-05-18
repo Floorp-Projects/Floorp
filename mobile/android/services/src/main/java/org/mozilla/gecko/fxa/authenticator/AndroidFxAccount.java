@@ -15,7 +15,10 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.mozilla.gecko.background.common.GlobalConstants;
@@ -73,6 +76,9 @@ public class AndroidFxAccount {
   public static final String BUNDLE_KEY_STATE_LABEL = "stateLabel";
   public static final String BUNDLE_KEY_STATE = "state";
   public static final String BUNDLE_KEY_PROFILE_JSON = "profile";
+
+  public static final String ACCOUNT_KEY_DEVICE_ID = "deviceId";
+  public static final String ACCOUNT_KEY_DEVICE_REGISTRATION_VERSION = "deviceRegistrationVersion";
 
   // Account authentication token type for fetching account profile.
   public static final String PROFILE_OAUTH_TOKEN_TYPE = "oauth::profile";
@@ -771,6 +777,44 @@ public class AndroidFxAccount {
         context.startService(intent);
       }
     });
+  }
+
+  @Nullable
+  public synchronized String getDeviceId() {
+    return accountManager.getUserData(account, ACCOUNT_KEY_DEVICE_ID);
+  }
+
+  @NonNull
+  public synchronized int getDeviceRegistrationVersion() {
+    String versionStr = accountManager.getUserData(account, ACCOUNT_KEY_DEVICE_REGISTRATION_VERSION);
+    if (TextUtils.isEmpty(versionStr)) {
+      return 0;
+    } else {
+      try {
+        return Integer.parseInt(versionStr);
+      } catch (NumberFormatException ex) {
+        return 0;
+      }
+    }
+  }
+
+  public synchronized void setDeviceId(String id) {
+    accountManager.setUserData(account, ACCOUNT_KEY_DEVICE_ID, id);
+  }
+
+  public synchronized void setDeviceRegistrationVersion(int deviceRegistrationVersion) {
+    accountManager.setUserData(account, ACCOUNT_KEY_DEVICE_REGISTRATION_VERSION,
+        Integer.toString(deviceRegistrationVersion));
+  }
+
+  public synchronized void resetDeviceRegistrationVersion() {
+    setDeviceRegistrationVersion(0);
+  }
+
+  public synchronized void setFxAUserData(String id, int deviceRegistrationVersion) {
+    accountManager.setUserData(account, ACCOUNT_KEY_DEVICE_ID, id);
+    accountManager.setUserData(account, ACCOUNT_KEY_DEVICE_REGISTRATION_VERSION,
+        Integer.toString(deviceRegistrationVersion));
   }
 
   @SuppressLint("ParcelCreator") // The CREATOR field is defined in the super class.

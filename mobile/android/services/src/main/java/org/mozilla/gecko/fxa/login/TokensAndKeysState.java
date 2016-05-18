@@ -34,6 +34,10 @@ public abstract class TokensAndKeysState extends State {
     return o;
   }
 
+  public byte[] getSessionToken() {
+    return sessionToken;
+  }
+
   @Override
   public Action getNeededAction() {
     return Action.None;
