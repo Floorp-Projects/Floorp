@@ -2634,15 +2634,6 @@ private:
   static nsIIOService *sIOService;
   static nsIUUIDGenerator *sUUIDGenerator;
 
-  static bool sImgLoaderInitialized;
-  static void InitImgLoader();
-
-  // The following four members are initialized lazily
-  static imgLoader* sImgLoader;
-  static imgLoader* sPrivateImgLoader;
-  static imgICache* sImgCache;
-  static imgICache* sPrivateImgCache;
-
   static nsIConsoleService* sConsoleService;
 
   static nsDataHashtable<nsISupportsHashKey, EventNameMapping>* sAtomEventTable;
