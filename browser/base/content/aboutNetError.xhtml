@@ -117,6 +117,7 @@
       function showPrefChangeContainer() {
         const panel = document.getElementById("prefChangeContainer");
         panel.style.display = "block";
+        document.getElementById("netErrorButtonContainer").style.display = "none";
         document.getElementById("prefResetButton").addEventListener("click", function resetPreferences(e) {
           const event = new CustomEvent("AboutNetErrorResetPreferences", {bubbles:true});
           document.dispatchEvent(event);
@@ -581,13 +582,13 @@
         <!-- Long Description (Note: See netError.dtd for used XHTML tags) -->
         <div id="errorLongDesc" />
 
-        <div id="prefChangeContainer">
-          <p>&prefReset.longDesc;</p>
-          <button id="prefResetButton" autocomplete="off">&prefReset.label;</button>
-        </div>
-
         <div id="learnMoreContainer">
           <p><a href="https://support.mozilla.org/kb/what-does-your-connection-is-not-secure-mean" id="learnMoreLink" target="new">&errorReporting.learnMore;</a></p>
+        </div>
+
+        <div id="prefChangeContainer" class="button-container">
+          <p>&prefReset.longDesc;</p>
+          <button id="prefResetButton" class="primary" autocomplete="off">&prefReset.label;</button>
         </div>
 
         <div id="certErrorButtonContainer" class="button-container">
