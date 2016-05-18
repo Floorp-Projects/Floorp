@@ -21,6 +21,7 @@ import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Utils;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -194,5 +195,22 @@ public class MockFxAccountClient implements FxAccountClient {
     } catch (Exception e) {
       requestDelegate.handleError(e);
     }
+  }
+
+  @Override
+  public void deviceList(byte[] sessionToken, RequestDelegate<FxAccountDevice[]> requestDelegate) {
+    String email = sessionTokens.get(Utils.byte2Hex(sessionToken));
+    User user = users.get(email);
+    if (email == null || user == null) {
+      handleFailure(requestDelegate, HttpStatus.SC_UNAUTHORIZED, FxAccountRemoteError.INVALID_AUTHENTICATION_TOKEN, "invalid sessionToken");
+      return;
+    }
+    if (!user.verified) {
+      handleFailure(requestDelegate, HttpStatus.SC_BAD_REQUEST, FxAccountRemoteError.ATTEMPT_TO_OPERATE_ON_AN_UNVERIFIED_ACCOUNT, "user is unverified");
+      return;
+    }
+    Collection<FxAccountDevice> devices = user.devices.values();
+    FxAccountDevice[] devicesArray = devices.toArray(new FxAccountDevice[devices.size()]);
+    requestDelegate.handleSuccess(devicesArray);
   }
 }
