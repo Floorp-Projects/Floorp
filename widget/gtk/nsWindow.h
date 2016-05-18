@@ -42,10 +42,10 @@
 #include "nsTArray.h"
 #include "Units.h"
 
-extern PRLogModuleInfo *gWidgetLog;
-extern PRLogModuleInfo *gWidgetFocusLog;
-extern PRLogModuleInfo *gWidgetDragLog;
-extern PRLogModuleInfo *gWidgetDrawLog;
+extern mozilla::LazyLogModule gWidgetLog;
+extern mozilla::LazyLogModule gWidgetFocusLog;
+extern mozilla::LazyLogModule gWidgetDragLog;
+extern mozilla::LazyLogModule gWidgetDrawLog;
 
 #define LOG(args) MOZ_LOG(gWidgetLog, mozilla::LogLevel::Debug, args)
 #define LOGFOCUS(args) MOZ_LOG(gWidgetFocusLog, mozilla::LogLevel::Debug, args)
