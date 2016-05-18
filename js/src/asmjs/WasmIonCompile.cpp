@@ -2031,6 +2031,39 @@ EmitMinMax(FunctionCompiler& f, ValType operandType, MIRType mirType, bool isMax
 }
 
 static bool
+EmitCopySign(FunctionCompiler& f, ValType operandType)
+{
+    MDefinition* lhs;
+    MDefinition* rhs;
+    if (!f.iter().readBinary(operandType, &lhs, &rhs))
+        return false;
+
+    MIRType intType;
+    MDefinition* intMax;
+    MDefinition* intMin;
+    if (operandType == ValType::F32) {
+        intType = MIRType::Int32;
+        intMax = f.constant(Int32Value(INT32_MAX), MIRType::Int32);
+        intMin = f.constant(Int32Value(INT32_MIN), MIRType::Int32);
+    } else {
+        MOZ_ASSERT(operandType == ValType::F64);
+        intType = MIRType::Int64;
+        intMax = f.constant(int64_t(INT64_MAX));
+        intMin = f.constant(int64_t(INT64_MIN));
+    }
+
+    MDefinition* lhsi = f.unary<MAsmReinterpret>(lhs, intType);
+    MDefinition* rhsi = f.unary<MAsmReinterpret>(rhs, intType);
+
+    MDefinition* lhsNoSign = f.bitwise<MBitAnd>(lhsi, intMax, intType);
+    MDefinition* rhsSign = f.bitwise<MBitAnd>(rhsi, intMin, intType);
+
+    MDefinition* resi = f.bitwise<MBitOr>(lhsNoSign, rhsSign, intType);
+    f.iter().setResult(f.unary<MAsmReinterpret>(resi, ToMIRType(operandType)));
+    return true;
+}
+
+static bool
 EmitComparison(FunctionCompiler& f,
                ValType operandType, JSOp compareOp, MCompare::CompareType compareType)
 {
@@ -3005,6 +3038,8 @@ EmitExpr(FunctionCompiler& f)
       case Expr::F32Min:
       case Expr::F32Max:
         return EmitMinMax(f, ValType::F32, MIRType::Float32, expr == Expr::F32Max);
+      case Expr::F32CopySign:
+        return EmitCopySign(f, ValType::F32);
       case Expr::F32Neg:
         return EmitUnaryWithType<MAsmJSNeg>(f, ValType::F32, MIRType::Float32);
       case Expr::F32Abs:
@@ -3061,6 +3096,8 @@ EmitExpr(FunctionCompiler& f)
       case Expr::F64Min:
       case Expr::F64Max:
         return EmitMinMax(f, ValType::F64, MIRType::Double, expr == Expr::F64Max);
+      case Expr::F64CopySign:
+        return EmitCopySign(f, ValType::F64);
       case Expr::F64Neg:
         return EmitUnaryWithType<MAsmJSNeg>(f, ValType::F64, MIRType::Double);
       case Expr::F64Abs:
@@ -3333,8 +3370,6 @@ EmitExpr(FunctionCompiler& f)
         return EmitAtomicsExchange(f);
 
       // Future opcodes
-      case Expr::F32CopySign:
-      case Expr::F64CopySign:
       case Expr::I64Load8S:
       case Expr::I64Load16S:
       case Expr::I64Load32S:
