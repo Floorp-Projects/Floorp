@@ -71,23 +71,10 @@ WaveDataDecoder::Init()
 nsresult
 WaveDataDecoder::Input(MediaRawData* aSample)
 {
-  mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
-                       this, &WaveDataDecoder::ProcessDecode, aSample));
-
-  return NS_OK;
-}
-
-void
-WaveDataDecoder::ProcessDecode(MediaRawData* aSample)
-{
-  if (mIsFlushing) {
-    return;
-  }
   if (!DoDecode(aSample)) {
     mCallback->Error();
-  } else if (mTaskQueue->IsEmpty()) {
-    mCallback->InputExhausted();
   }
+  return NS_OK;
 }
 
 bool
@@ -149,27 +136,16 @@ WaveDataDecoder::DoDecode(MediaRawData* aSample)
   return true;
 }
 
-void
-WaveDataDecoder::ProcessDrain()
-{
-  mCallback->DrainComplete();
-}
-
 nsresult
 WaveDataDecoder::Drain()
 {
-  mTaskQueue->Dispatch(NewRunnableMethod(this, &WaveDataDecoder::ProcessDrain));
+  mCallback->DrainComplete();
   return NS_OK;
 }
 
 nsresult
 WaveDataDecoder::Flush()
 {
-  mIsFlushing = true;
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([this] () {
-  });
-  SyncRunnable::DispatchToThread(mTaskQueue, r);
-  mIsFlushing = false;
   return NS_OK;
 }
 
