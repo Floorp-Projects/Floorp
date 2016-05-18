@@ -151,6 +151,10 @@ public:
     return mDecoder->GetDescriptionName();
   }
 
+  void SetSeekThreshold(const media::TimeUnit& aTime) override {
+    mDecoder->SetSeekThreshold(aTime);
+  }
+
 private:
 
   RefPtr<MediaDataDecoder> mDecoder;

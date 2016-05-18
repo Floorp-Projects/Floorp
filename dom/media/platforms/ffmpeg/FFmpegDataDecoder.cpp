@@ -161,12 +161,23 @@ FFmpegDataDecoder<LIBAV_VER>::Drain()
 }
 
 void
+FFmpegDataDecoder<LIBAV_VER>::SetSeekThreshold(const media::TimeUnit& aTime)
+{
+  RefPtr<FFmpegDataDecoder> self = this;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self, aTime] () {
+    self->mSeekTargetThreshold = Some(aTime);
+  });
+  mTaskQueue->Dispatch(r.forget());
+}
+
+void
 FFmpegDataDecoder<LIBAV_VER>::ProcessFlush()
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   if (mCodecContext) {
     mLib->avcodec_flush_buffers(mCodecContext);
   }
+  mSeekTargetThreshold.reset();
 }
 
 void

@@ -96,4 +96,20 @@ MediaDataDecoderProxy::FlushComplete()
   mFlushComplete.Set(true);
 }
 
+void
+MediaDataDecoderProxy::SetSeekThreshold(const media::TimeUnit& aTime)
+{
+  MOZ_ASSERT(!IsOnProxyThread());
+  MOZ_ASSERT(!mIsShutdown);
+
+  int64_t threshold = aTime.ToMicroseconds();
+  RefPtr<MediaDataDecoderProxy> self = this;
+  nsCOMPtr<nsIRunnable> task =
+    NS_NewRunnableFunction([threshold, self] () {
+      media::TimeUnit time = media::TimeUnit::FromMicroseconds(threshold);
+      self->mProxyDecoder->SetSeekThreshold(time);
+  });
+  mProxyThread->Dispatch(task.forget());
+}
+
 } // namespace mozilla
