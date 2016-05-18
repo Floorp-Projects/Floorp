@@ -9176,8 +9176,9 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
         AddStateBits(NS_FRAME_IS_DIRTY);
       }
     }
-    if (metrics->mLastSize.height != aHeight)
+    if (metrics->mLastSize.height != aHeight) {
       reflowState.SetVResize(true);
+    }
 
     #ifdef DEBUG_REFLOW
       nsAdaptorAddIndents();
