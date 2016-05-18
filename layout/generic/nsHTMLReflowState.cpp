@@ -82,6 +82,9 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*       aPresContext,
   if (aFlags & COMPUTE_SIZE_SHRINK_WRAP) {
     mFlags.mShrinkWrap = true;
   }
+  if (aFlags & COMPUTE_SIZE_USE_AUTO_BSIZE) {
+    mFlags.mUseAutoBSize = true;
+  }
   if (aFlags & STATIC_POS_IS_CB_ORIGIN) {
     mFlags.mStaticPosIsCBOrigin = true;
   }
@@ -226,6 +229,7 @@ nsHTMLReflowState::nsHTMLReflowState(
   mFlags.mIsFlexContainerMeasuringHeight = false;
   mFlags.mDummyParentReflowState = false;
   mFlags.mShrinkWrap = !!(aFlags & COMPUTE_SIZE_SHRINK_WRAP);
+  mFlags.mUseAutoBSize = !!(aFlags & COMPUTE_SIZE_USE_AUTO_BSIZE);
   mFlags.mStaticPosIsCBOrigin = !!(aFlags & STATIC_POS_IS_CB_ORIGIN);
 
   mDiscoveredClearance = nullptr;
@@ -1618,6 +1622,10 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
     computeSizeFlags =
       ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eShrinkWrap);
   }
+  if (mFlags.mUseAutoBSize) {
+    computeSizeFlags =
+      ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eUseAutoHeight);
+  }
   if (wm.IsOrthogonalTo(cbwm)) {
     if (bStartIsAuto || bEndIsAuto) {
       computeSizeFlags =
@@ -2318,6 +2326,10 @@ nsHTMLReflowState::InitConstraints(nsPresContext*     aPresContext,
       if (mFlags.mShrinkWrap) {
         computeSizeFlags =
           ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eShrinkWrap);
+      }
+      if (mFlags.mUseAutoBSize) {
+        computeSizeFlags =
+          ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eUseAutoHeight);
       }
 
       nsIFrame* parent = frame->GetParent();

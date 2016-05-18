@@ -584,6 +584,7 @@ public:
                                         // (e.g. columns), it should always
                                         // reflow its placeholder children.
     uint16_t mShrinkWrap:1; // stores the COMPUTE_SIZE_SHRINK_WRAP ctor flag
+    uint16_t mUseAutoBSize:1; // stores the COMPUTE_SIZE_USE_AUTO_BSIZE ctor flag
     uint16_t mStaticPosIsCBOrigin:1; // the STATIC_POS_IS_CB_ORIGIN ctor flag
   } mFlags;
 
@@ -681,9 +682,13 @@ public:
     // will be passed to ComputeSize()).
     COMPUTE_SIZE_SHRINK_WRAP = (1<<2),
 
+    // The caller wants height:auto behavior (ComputeSizeFlags::eUseAutoHeight
+    // will be be passed to ComputeSize()).
+    COMPUTE_SIZE_USE_AUTO_BSIZE = (1<<3),
+
     // The caller wants the abs.pos. static-position resolved at the origin
     // of the containing block, i.e. at LogicalPoint(0, 0).
-    STATIC_POS_IS_CB_ORIGIN = (1<<3),
+    STATIC_POS_IS_CB_ORIGIN = (1<<4),
   };
 
   // This method initializes various data members. It is automatically
