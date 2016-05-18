@@ -558,13 +558,13 @@ public:
     uint16_t mAssumingVScrollbar:1;  // parent frame is an nsIScrollableFrame and it
                                      // is assuming a vertical scrollbar
 
-    uint16_t mIsHResize:1;           // Is frame (a) not dirty and (b) a
-                                     // different width than before?
+    uint16_t mIsIResize:1;           // Is frame (a) not dirty and (b) a
+                                     // different inline-size than before?
 
-    uint16_t mIsVResize:1;           // Is frame (a) not dirty and (b) a
-                                     // different height than before or
+    uint16_t mIsBResize:1;           // Is frame (a) not dirty and (b) a
+                                     // different block-size than before or
                                      // (potentially) in a context where
-                                     // percent heights have a different
+                                     // percent block-sizes have a different
                                      // basis?
     uint16_t mTableIsSplittable:1;   // tables are splittable, this should happen only inside a page
                                      // and never insider a column frame
@@ -592,39 +592,40 @@ public:
   // via these accessors, so that in due course we can change the storage from
   // physical to logical.
   bool IsHResize() const {
-    return mFlags.mIsHResize;
+    return mWritingMode.IsVertical() ? mFlags.mIsBResize : mFlags.mIsIResize;
   }
   bool IsVResize() const {
-    return mFlags.mIsVResize;
+    return mWritingMode.IsVertical() ? mFlags.mIsIResize : mFlags.mIsBResize;
   }
   bool IsIResize() const {
-    return mWritingMode.IsVertical() ? mFlags.mIsVResize : mFlags.mIsHResize;
+    return mFlags.mIsIResize;
   }
   bool IsBResize() const {
-    return mWritingMode.IsVertical() ? mFlags.mIsHResize : mFlags.mIsVResize;
+    return mFlags.mIsBResize;
   }
   bool IsBResizeForWM(mozilla::WritingMode aWM) const {
-    return aWM.IsVertical() ? mFlags.mIsHResize : mFlags.mIsVResize;
+    return aWM.IsOrthogonalTo(mWritingMode) ? mFlags.mIsIResize
+                                            : mFlags.mIsBResize;
   }
   void SetHResize(bool aValue) {
-    mFlags.mIsHResize = aValue;
+    if (mWritingMode.IsVertical()) {
+      mFlags.mIsBResize = aValue;
+    } else {
+      mFlags.mIsIResize = aValue;
+    }
   }
   void SetVResize(bool aValue) {
-    mFlags.mIsVResize = aValue;
+    if (mWritingMode.IsVertical()) {
+      mFlags.mIsIResize = aValue;
+    } else {
+      mFlags.mIsBResize = aValue;
+    }
   }
   void SetIResize(bool aValue) {
-    if (mWritingMode.IsVertical()) {
-      mFlags.mIsVResize = aValue;
-    } else {
-      mFlags.mIsHResize = aValue;
-    }
+    mFlags.mIsIResize = aValue;
   }
   void SetBResize(bool aValue) {
-    if (mWritingMode.IsVertical()) {
-      mFlags.mIsHResize = aValue;
-    } else {
-      mFlags.mIsVResize = aValue;
-    }
+    mFlags.mIsBResize = aValue;
   }
 
   // Note: The copy constructor is written by the compiler automatically. You
