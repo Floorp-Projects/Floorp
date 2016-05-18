@@ -4130,6 +4130,7 @@ void
 nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
                                         const GridItemInfo*    aGridItemInfo,
                                         nsSize                 aContainerSize,
+                                        Maybe<nscoord>         aStretchBSize,
                                         const Fragmentainer*   aFragmentainer,
                                         const GridReflowState& aState,
                                         const LogicalRect&     aContentArea,
@@ -4177,6 +4178,28 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
   Maybe<nsHTMLReflowState> childRS; // Maybe<> so we can reuse the space
   childRS.emplace(pc, *aState.mReflowState, aChild, childCBSize, &percentBasis);
   childRS->mFlags.mIsTopOfPage = aFragmentainer ? aFragmentainer->mIsTopOfPage : false;
+
+  // If the child is stretching in its block axis, and we might be fragmenting
+  // it in that axis, then setup a frame property to tell
+  // nsBlockFrame::ComputeFinalSize the size.
+  if (isConstrainedBSize && !wm.IsOrthogonalTo(childWM)) {
+    bool stretch = false;
+    if (!childRS->mStyleMargin->HasBlockAxisAuto(childWM) &&
+        childRS->mStylePosition->BSize(childWM).GetUnit() == eStyleUnit_Auto) {
+      auto blockAxisAlignment =
+        childRS->mStylePosition->ComputedAlignSelf(StyleContext());
+      if (blockAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
+          blockAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
+        stretch = true;
+      }
+    }
+    if (stretch) {
+      aChild->Properties().Set(FragStretchBSizeProperty(), *aStretchBSize);
+    } else {
+      aChild->Properties().Delete(FragStretchBSizeProperty());
+    }
+  }
+
   // We need the width of the child before we can correctly convert
   // the writing-mode of its origin, so we reflow at (0, 0) using a dummy
   // aContainerSize, and then pass the correct position to FinishReflowChild.
@@ -4273,7 +4296,8 @@ nsGridContainerFrame::ReflowInFragmentainer(GridReflowState&     aState,
   // Reflow our placeholder children; they must all be complete.
   for (auto child : placeholders) {
     nsReflowStatus childStatus;
-    ReflowInFlowChild(child, nullptr, aContainerSize, &aFragmentainer,
+    Maybe<nscoord> nothing;
+    ReflowInFlowChild(child, nullptr, aContainerSize, nothing, &aFragmentainer,
                       aState, aContentArea, aDesiredSize, childStatus);
     MOZ_ASSERT(NS_FRAME_IS_COMPLETE(childStatus),
                "nsPlaceholderFrame should never need to be fragmented");
@@ -4544,7 +4568,14 @@ nsGridContainerFrame::ReflowRowsInFragmentainer(
     // We only restart the loop once.
     aFragmentainer.mIsTopOfPage = isRowTopOfPage && !rowCanGrow;
     nsReflowStatus childStatus;
-    ReflowInFlowChild(child, info, aContainerSize, &aFragmentainer,
+    // Pass along how much to stretch this fragment, in case it's needed.
+    Maybe<nscoord> bSize;
+    bSize.emplace(
+      aState.mRows.GridLineEdge(std::min(aEndRow, info->mArea.mRows.mEnd),
+                                GridLineSide::eBeforeGridGap) -
+      aState.mRows.GridLineEdge(std::max(aStartRow, row),
+                                GridLineSide::eAfterGridGap));
+    ReflowInFlowChild(child, info, aContainerSize, bSize, &aFragmentainer,
                       aState, aContentArea, aDesiredSize, childStatus);
     MOZ_ASSERT(NS_INLINE_IS_BREAK_BEFORE(childStatus) ||
                !NS_FRAME_IS_FULLY_COMPLETE(childStatus) ||
@@ -4764,7 +4795,8 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
       if (child->GetType() != nsGkAtoms::placeholderFrame) {
         info = &aState.mGridItems[aState.mIter.GridItemIndex()];
       }
-      ReflowInFlowChild(*aState.mIter, info, containerSize, nullptr,
+      Maybe<nscoord> nothing;
+      ReflowInFlowChild(*aState.mIter, info, containerSize, nothing, nullptr,
                         aState, aContentArea, aDesiredSize, aStatus);
       MOZ_ASSERT(NS_FRAME_IS_COMPLETE(aStatus), "child should be complete "
                  "in unconstrained reflow");
