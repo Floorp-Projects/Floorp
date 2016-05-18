@@ -15,6 +15,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm
 XPCOMUtils.defineLazyModuleGetter(this, "Messaging", "resource://gre/modules/Messaging.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils", "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FormData", "resource://gre/modules/FormData.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ScrollPosition", "resource://gre/modules/ScrollPosition.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch", "resource://gre/modules/TelemetryStopwatch.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Log", "resource://gre/modules/AndroidLog.jsm", "AndroidLog");
 XPCOMUtils.defineLazyModuleGetter(this, "SharedPreferences", "resource://gre/modules/SharedPreferences.jsm");
@@ -61,6 +62,7 @@ SessionStore.prototype = {
   _interval: 10000,
   _maxTabsUndo: 5,
   _pendingWrite: 0,
+  _scrollSavePending: null,
 
   // The index where the most recently closed tab was in the tabs array
   // when it was closed.
@@ -275,13 +277,24 @@ SessionStore.prototype = {
         break;
       }
       case "load": {
-        // Handle restoring the text data into the content and frames. We wait
-        // until the main content and all frames are loaded before trying to
-        // restore the text data.
         let browser = aEvent.currentTarget;
+
+        // Skip subframe loads.
+        if (browser.contentDocument !== aEvent.originalTarget) {
+          return;
+        }
+
+        // Handle restoring the scroll position and text data into the content
+        // and frames. We wait until the main content and all frames are loaded
+        // before trying to restore this data.
         log("load for tab " + window.BrowserApp.getTabForBrowser(browser).id);
-        if (browser.__SS_restore_text_data) {
+        if (browser.__SS_restoreDataOnLoad) {
+          delete browser.__SS_restoreDataOnLoad;
           this._restoreTextData(browser.__SS_data.formdata, browser);
+          this._restoreScrollPosition(browser.__SS_data.scrolldata, browser);
+        } else {
+          // We're not restoring, capture the initial scroll position on load.
+          this.onTabScroll(window, browser);
         }
         break;
       }
@@ -291,6 +304,21 @@ SessionStore.prototype = {
         let browser = aEvent.currentTarget;
         log("TabInput for tab " + window.BrowserApp.getTabForBrowser(browser).id);
         this.onTabInput(window, browser);
+        break;
+      }
+      case "scroll": {
+        let browser = aEvent.currentTarget;
+        // Duplicated logging check to avoid calling getTabForBrowser on each scroll event.
+        if (loggingEnabled) {
+          log("scroll for tab " + window.BrowserApp.getTabForBrowser(browser).id);
+        }
+        if (!this._scrollSavePending) {
+          this._scrollSavePending =
+            window.setTimeout(() => {
+              this._scrollSavePending = null;
+              this.onTabScroll(window, browser);
+            }, 500);
+        }
         break;
       }
     }
@@ -374,6 +402,9 @@ SessionStore.prototype = {
     aBrowser.addEventListener("input", this, true);
     aBrowser.addEventListener("DOMAutoComplete", this, true);
 
+    // Record the current scroll position
+    aBrowser.addEventListener("scroll", this, true);
+
     log("onTabAdd() ran for tab " + aWindow.BrowserApp.getTabForBrowser(aBrowser).id +
         ", aNoNotification = " + aNoNotification);
     if (!aNoNotification) {
@@ -389,6 +420,7 @@ SessionStore.prototype = {
     aBrowser.removeEventListener("change", this, true);
     aBrowser.removeEventListener("input", this, true);
     aBrowser.removeEventListener("DOMAutoComplete", this, true);
+    aBrowser.removeEventListener("scroll", this, true);
 
     let tabId = aWindow.BrowserApp.getTabForBrowser(aBrowser).id;
 
@@ -467,17 +499,20 @@ SessionStore.prototype = {
     let data = { entries: entries, index: index };
 
     let formdata;
+    let scrolldata;
     if (aBrowser.__SS_data) {
       formdata = aBrowser.__SS_data.formdata;
+      scrolldata = aBrowser.__SS_data.scrolldata;
     }
     delete aBrowser.__SS_data;
 
     this._collectTabData(aWindow, aBrowser, data);
-    if (aBrowser.__SS_restore_text_data) {
+    if (aBrowser.__SS_restoreDataOnLoad) {
       // If the tab has been freshly restored and the "load" event
-      // hasn't yet fired, we need to restore any form data that
-      // might have been present.
+      // hasn't yet fired, we need to restore any form data and
+      // scroll positions that might have been present.
       aBrowser.__SS_data.formdata = formdata;
+      aBrowser.__SS_data.scrolldata = scrolldata;
     } else {
       // When navigating via the forward/back buttons, Gecko restores
       // the form data all by itself and doesn't invoke any input events.
@@ -575,6 +610,60 @@ SessionStore.prototype = {
     if (Object.keys(formdata).length) {
       data.formdata = formdata;
       log("onTabInput() ran for tab " + aWindow.BrowserApp.getTabForBrowser(aBrowser).id);
+      this.saveStateDelayed();
+    }
+  },
+
+  onTabScroll: function ss_onTabScroll(aWindow, aBrowser) {
+    // If we've been called directly, cancel any pending timeouts.
+    if (this._scrollSavePending) {
+      aWindow.clearTimeout(this._scrollSavePending);
+      this._scrollSavePending = null;
+      log("onTabScroll() clearing pending timeout");
+    }
+
+    // If this browser is being restored, skip any session save activity.
+    if (aBrowser.__SS_restore) {
+      return;
+    }
+
+    // Don't bother trying to save scroll positions if we don't have history yet.
+    let data = aBrowser.__SS_data;
+    if (!data || data.entries.length == 0) {
+      return;
+    }
+
+    // Neither bother if we're yet to restore the previous scroll position.
+    if (aBrowser.__SS_restoreDataOnLoad) {
+      return;
+    }
+
+    // Start with storing the main content.
+    let content = aBrowser.contentWindow;
+
+    // Store the main content.
+    let scrolldata = ScrollPosition.collect(content) || {};
+
+    // Loop over direct child frames, and store the scroll positions.
+    let children = [];
+    for (let i = 0; i < content.frames.length; i++) {
+      let frame = content.frames[i];
+
+      let result = ScrollPosition.collect(frame);
+      if (result && Object.keys(result).length) {
+        children[i] = result;
+      }
+    }
+
+    // If any frame had scroll positions, add them to the main scroll data.
+    if (children.length) {
+      scrolldata.children = children;
+    }
+
+    // If we found any scroll positions, main content or frames, let's save them.
+    if (Object.keys(scrolldata).length) {
+      data.scrolldata = scrolldata;
+      log("onTabScroll() ran for tab " + aWindow.BrowserApp.getTabForBrowser(aBrowser).id);
       this.saveStateDelayed();
     }
   },
@@ -1120,9 +1209,9 @@ SessionStore.prototype = {
     }
     this._restoreHistory(aTabData, aBrowser.sessionHistory);
 
-    // Restoring the text data requires waiting for the content to load. So
-    // we set a flag and delay this until the "load" event.
-    aBrowser.__SS_restore_text_data = true;
+    // Restoring text data and scroll position requires waiting for the content
+    // to load. So we set a flag and delay this until the appropriate event.
+    aBrowser.__SS_restoreDataOnLoad = true;
   },
 
   /**
@@ -1167,7 +1256,16 @@ SessionStore.prototype = {
       log("_restoreTextData()");
       FormData.restoreTree(aBrowser.contentWindow, aFormData);
     }
-    delete aBrowser.__SS_restore_text_data;
+  },
+
+  /**
+  * Takes serialized scroll positions and restores them into the given browser.
+  */
+  _restoreScrollPosition: function ss_restoreScrollPosition(aScrollData, aBrowser) {
+    if (aScrollData) {
+      log("_restoreScrollPosition()");
+      ScrollPosition.restoreTree(aBrowser.contentWindow, aScrollData);
+    }
   },
 
   getBrowserState: function ss_getBrowserState() {
