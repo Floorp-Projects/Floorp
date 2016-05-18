@@ -15,6 +15,7 @@ task:
         NEED_PULSEAUDIO: true
         GECKO_HEAD_REPOSITORY: '{{{head_repository}}}'
         GECKO_HEAD_REV: '{{{head_rev}}}'
+        MOZ_NODE_PATH: '/usr/local/bin/node'
 
     cache:
       # put the workspace and /tmp on a cache, less for inter-task caching than
