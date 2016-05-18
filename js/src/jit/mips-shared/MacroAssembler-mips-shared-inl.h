@@ -510,8 +510,9 @@ MacroAssembler::branchTestPtr(Condition cond, Register lhs, Register rhs, Label*
 void
 MacroAssembler::branchTestPtr(Condition cond, Register lhs, Imm32 rhs, Label* label)
 {
-    ma_li(ScratchRegister, rhs);
-    branchTestPtr(cond, lhs, ScratchRegister, label);
+    MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
+    ma_and(ScratchRegister, lhs, rhs);
+    ma_b(ScratchRegister, ScratchRegister, label, cond);
 }
 
 void
