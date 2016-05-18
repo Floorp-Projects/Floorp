@@ -43,13 +43,11 @@ class WithFakeKind(TaskGraphGenerator):
 class TestGenerator(unittest.TestCase):
 
     def setUp(self):
-        def log(level, name, data, message):
-            pass
         self.target_tasks = []
 
         def target_tasks_method(full_task_graph, parameters):
             return self.target_tasks
-        self.tgg = WithFakeKind('/root', log, {}, target_tasks_method)
+        self.tgg = WithFakeKind('/root', {}, target_tasks_method)
 
     def test_full_task_set(self):
         "The full_task_set property has all tasks"

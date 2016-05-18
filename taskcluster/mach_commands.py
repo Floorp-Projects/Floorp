@@ -6,6 +6,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import logging
 import sys
 import traceback
 
@@ -27,6 +28,10 @@ class ShowTaskGraphSubCommand(SubCommand):
         args = [
             CommandArgument('--root', '-r', default='taskcluster/ci',
                             help="root of the taskgraph definition relative to topsrcdir"),
+            CommandArgument('--quiet', '-q', action="store_true",
+                            help="suppress all logging output"),
+            CommandArgument('--verbose', '-v', action="store_true",
+                            help="include debug-level logging output"),
             CommandArgument('--parameters', '-p', required=True,
                             help="parameters file (.yml or .json; see "
                                  "`taskcluster/docs/parameters.rst`)`"),
@@ -137,10 +142,30 @@ class MachCommands(MachCommandBase):
 
         import taskgraph.decision
         try:
-            return taskgraph.decision.taskgraph_decision(self.log, options)
+            self.setup_logging()
+            return taskgraph.decision.taskgraph_decision(options)
         except Exception as e:
             traceback.print_exc()
             sys.exit(1)
+
+
+    def setup_logging(self, quiet=False, verbose=True):
+        """
+        Set up Python logging for all loggers, sending results to stderr (so
+        that command output can be redirected easily) and adding the typical
+        mach timestamp.
+        """
+        # remove the old terminal handler
+        self.log_manager.replace_terminal_handler(None)
+
+        # re-add it, with level and fh set appropriately
+        if not quiet:
+            level = logging.DEBUG if verbose else logging.INFO
+            self.log_manager.add_terminal_logging(fh=sys.stderr, level=level)
+
+        # all of the taskgraph logging is unstructured logging
+        self.log_manager.enable_unstructured()
+        
 
     def show_taskgraph(self, graph_attr, options):
         import taskgraph.parameters
@@ -148,13 +173,13 @@ class MachCommands(MachCommandBase):
         import taskgraph.generator
 
         try:
+            self.setup_logging(quiet=options['quiet'], verbose=options['verbose'])
             parameters = taskgraph.parameters.load_parameters_file(options)
 
             target_tasks_method = parameters.get('target_tasks_method', 'all_tasks')
             target_tasks_method = taskgraph.target_tasks.get_method(target_tasks_method)
             tgg = taskgraph.generator.TaskGraphGenerator(
                 root_dir=options['root'],
-                log=self.log,
                 parameters=parameters,
                 target_tasks_method=target_tasks_method)
 

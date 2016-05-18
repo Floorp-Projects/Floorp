@@ -47,7 +47,7 @@ class TestDecision(unittest.TestCase):
         tmpdir = tempfile.mkdtemp()
         try:
             decision.ARTIFACTS_DIR = os.path.join(tmpdir, "artifacts")
-            decision.write_artifact("artifact.json", data, lambda *args: None)
+            decision.write_artifact("artifact.json", data)
             with open(os.path.join(decision.ARTIFACTS_DIR, "artifact.json")) as f:
                 self.assertEqual(json.load(f), data)
         finally:
@@ -61,7 +61,7 @@ class TestDecision(unittest.TestCase):
         tmpdir = tempfile.mkdtemp()
         try:
             decision.ARTIFACTS_DIR = os.path.join(tmpdir, "artifacts")
-            decision.write_artifact("artifact.yml", data, lambda *args: None)
+            decision.write_artifact("artifact.yml", data)
             with open(os.path.join(decision.ARTIFACTS_DIR, "artifact.yml")) as f:
                 self.assertEqual(yaml.safe_load(f), data)
         finally:
