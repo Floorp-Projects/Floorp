@@ -228,6 +228,8 @@ pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == glyph-decomposition-g
 # test for bidi bug in graphite 1.3.2, fixed in 1.3.3 (bug 1207061)
 HTTP(..) == graphite-bidi-1.html graphite-bidi-1-ref.html
 
+HTTP(..) == graphite-surrogate-selection.html graphite-surrogate-selection-ref.html
+
 # Tests for hyphenation with hyphens property
 == auto-hyphenation-1.html auto-hyphenation-1-ref.html
 != auto-hyphenation-1.html auto-hyphenation-1-notref.html
