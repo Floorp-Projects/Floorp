@@ -3338,35 +3338,16 @@ PeerConnectionImpl::BuildStatsQuery_m(
   }
 
   for (int i = 0, len = mMedia->LocalStreamsLength(); i < len; i++) {
-    auto& pipelines = mMedia->GetLocalStreamByIndex(i)->GetPipelines();
-    if (aSelector) {
-      if (mMedia->GetLocalStreamByIndex(i)->GetMediaStream()->
-          HasTrack(*aSelector)) {
-        auto it = pipelines.find(trackId);
-        if (it != pipelines.end()) {
-          query->pipelines.AppendElement(it->second);
-        }
-      }
-    } else {
-      for (auto it = pipelines.begin(); it != pipelines.end(); ++it) {
-        query->pipelines.AppendElement(it->second);
+    for (auto pipeline : mMedia->GetLocalStreamByIndex(i)->GetPipelines()) {
+      if (!aSelector || pipeline.second->trackid() == trackId) {
+        query->pipelines.AppendElement(pipeline.second);
       }
     }
   }
-
-  for (size_t i = 0, len = mMedia->RemoteStreamsLength(); i < len; i++) {
-    auto& pipelines = mMedia->GetRemoteStreamByIndex(i)->GetPipelines();
-    if (aSelector) {
-      if (mMedia->GetRemoteStreamByIndex(i)->
-          GetMediaStream()->HasTrack(*aSelector)) {
-        auto it = pipelines.find(trackId);
-        if (it != pipelines.end()) {
-          query->pipelines.AppendElement(it->second);
-        }
-      }
-    } else {
-      for (auto it = pipelines.begin(); it != pipelines.end(); ++it) {
-        query->pipelines.AppendElement(it->second);
+  for (int i = 0, len = mMedia->RemoteStreamsLength(); i < len; i++) {
+    for (auto pipeline : mMedia->GetRemoteStreamByIndex(i)->GetPipelines()) {
+      if (!aSelector || pipeline.second->trackid() == trackId) {
+        query->pipelines.AppendElement(pipeline.second);
       }
     }
   }
