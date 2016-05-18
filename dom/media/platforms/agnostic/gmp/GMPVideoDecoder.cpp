@@ -24,6 +24,13 @@ VideoCallbackAdapter::Decoded(GMPVideoi420Frame* aDecodedFrame)
 
   MOZ_ASSERT(IsOnGMPThread());
 
+  if (mSeekTargetThreshold.isSome()) {
+    if (decodedFrame->Timestamp() < (uint64_t)mSeekTargetThreshold.ref().ToMicroseconds()) {
+      return;
+    }
+    mSeekTargetThreshold.reset();
+  }
+
   VideoData::YCbCrBuffer b;
   for (int i = 0; i < kGMPNumOfPlanes; ++i) {
     b.mPlanes[i].mData = decodedFrame->Buffer(GMPPlaneType(i));
@@ -102,6 +109,20 @@ VideoCallbackAdapter::Terminated()
   // Note that this *may* be called from the proxy thread also.
   NS_WARNING("H.264 GMP decoder terminated.");
   mCallback->Error();
+}
+
+void
+VideoCallbackAdapter::SetSeekThreshold(const media::TimeUnit& aTime)
+{
+  MOZ_ASSERT(IsOnGMPThread());
+  mSeekTargetThreshold = Some(aTime);
+}
+
+void
+VideoCallbackAdapter::ResetSeekThreshold()
+{
+  MOZ_ASSERT(IsOnGMPThread());
+  mSeekTargetThreshold.reset();
 }
 
 void
@@ -279,6 +300,7 @@ GMPVideoDecoder::Flush()
     // Abort the flush.
     mCallback->FlushComplete();
   }
+  mAdapter->ResetSeekThreshold();
 
   return NS_OK;
 }

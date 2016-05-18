@@ -41,9 +41,13 @@ public:
     mLastStreamOffset = aStreamOffset;
   }
 
+  void SetSeekThreshold(const media::TimeUnit& aTime);
+  void ResetSeekThreshold();
+
 private:
   MediaDataDecoderCallbackProxy* mCallback;
   int64_t mLastStreamOffset;
+  Maybe<media::TimeUnit> mSeekTargetThreshold;
 
   VideoInfo mVideoInfo;
   RefPtr<layers::ImageContainer> mImageContainer;
@@ -92,6 +96,11 @@ public:
   const char* GetDescriptionName() const override
   {
     return "GMP video decoder";
+  }
+
+  void SetSeekThreshold(const media::TimeUnit& aTime) override
+  {
+    mAdapter->SetSeekThreshold(aTime);
   }
 
 protected:

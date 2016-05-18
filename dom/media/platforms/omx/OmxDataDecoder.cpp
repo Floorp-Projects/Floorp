@@ -357,6 +357,14 @@ OmxDataDecoder::Output(BufferData* aData)
     mMediaDataHelper = new MediaDataHelper(mTrackInfo.get(), mImageContainer, mOmxLayer);
   }
 
+  if (mSeekTargetThreshold.isSome()) {
+    if (aData->mRawData->mTime < mSeekTargetThreshold.ref().ToMicroseconds()) {
+      aData->mStatus = BufferData::BufferStatus::FREE;
+      return;
+    }
+    mSeekTargetThreshold.reset();
+  }
+
   bool isPlatformData = false;
   RefPtr<MediaData> data = mMediaDataHelper->GetMediaData(aData, isPlatformData);
   if (!data) {
@@ -873,6 +881,8 @@ OmxDataDecoder::DoFlush()
 {
   MOZ_ASSERT(mOmxTaskQueue->IsCurrentThreadIn());
 
+  mSeekTargetThreshold.reset();
+
   // 1. Call OMX command OMX_CommandFlush in Omx TaskQueue.
   // 2. Remove all elements in mMediaRawDatas when flush is completed.
   mOmxLayer->SendCommand(OMX_CommandFlush, OMX_ALL, nullptr)
@@ -1035,6 +1045,17 @@ MediaDataHelper::CreateYUV420VideoData(BufferData* aBufferData)
       info.mImage.height, aBufferData->mBuffer->nTimeStamp);
 
   return data.forget();
+}
+
+void
+OmxDataDecoder::SetSeekThreshold(const media::TimeUnit& aTime)
+{
+  RefPtr<OmxDataDecoder> self = this;
+
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self, aTime] () {
+    self->mSeekTargetThreshold = Some(aTime);
+  });
+  mOmxTaskQueue->Dispatch(r.forget());
 }
 
 }
