@@ -680,7 +680,7 @@ nsNativeThemeWin::DrawThemedProgressMeter(nsIFrame* aFrame, int aWidgetType,
 
   EventStates eventStates = GetContentState(parentFrame, aWidgetType);
   bool vertical = IsVerticalProgress(parentFrame) ||
-                  aWidgetType == NS_THEME_PROGRESSBAR_CHUNK_VERTICAL;
+                  aWidgetType == NS_THEME_PROGRESSCHUNK_VERTICAL;
   bool indeterminate = IsIndeterminateProgress(parentFrame, eventStates);
   bool animate = indeterminate;
 
@@ -728,7 +728,7 @@ nsNativeThemeWin::GetTheme(uint8_t aWidgetType)
     // doing it the right way works fine with the MS themes,
     // but breaks on a lot of custom themes (presumably because MS
     // apps do the textfield border business as well).
-    if (aWidgetType == NS_THEME_DROPDOWN)
+    if (aWidgetType == NS_THEME_MENULIST)
       aWidgetType = NS_THEME_TEXTFIELD;
   }
 
@@ -753,58 +753,58 @@ nsNativeThemeWin::GetTheme(uint8_t aWidgetType)
       return nsUXThemeData::GetTheme(eUXMediaRebar);
     case NS_THEME_WIN_COMMUNICATIONS_TOOLBOX:
       return nsUXThemeData::GetTheme(eUXCommunicationsRebar);
-    case NS_THEME_WIN_BROWSER_TAB_BAR_TOOLBOX:
+    case NS_THEME_WIN_BROWSERTABBAR_TOOLBOX:
       return nsUXThemeData::GetTheme(eUXBrowserTabBarRebar);
     case NS_THEME_TOOLBAR:
-    case NS_THEME_TOOLBAR_BUTTON:
-    case NS_THEME_TOOLBAR_SEPARATOR:
+    case NS_THEME_TOOLBARBUTTON:
+    case NS_THEME_SEPARATOR:
       return nsUXThemeData::GetTheme(eUXToolbar);
     case NS_THEME_PROGRESSBAR:
     case NS_THEME_PROGRESSBAR_VERTICAL:
-    case NS_THEME_PROGRESSBAR_CHUNK:
-    case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
+    case NS_THEME_PROGRESSCHUNK:
+    case NS_THEME_PROGRESSCHUNK_VERTICAL:
       return nsUXThemeData::GetTheme(eUXProgress);
     case NS_THEME_TAB:
-    case NS_THEME_TAB_PANEL:
-    case NS_THEME_TAB_PANELS:
+    case NS_THEME_TABPANEL:
+    case NS_THEME_TABPANELS:
       return nsUXThemeData::GetTheme(eUXTab);
     case NS_THEME_SCROLLBAR:
     case NS_THEME_SCROLLBAR_SMALL:
     case NS_THEME_SCROLLBAR_VERTICAL:
     case NS_THEME_SCROLLBAR_HORIZONTAL:
-    case NS_THEME_SCROLLBAR_BUTTON_UP:
-    case NS_THEME_SCROLLBAR_BUTTON_DOWN:
-    case NS_THEME_SCROLLBAR_BUTTON_LEFT:
-    case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
-    case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
-    case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
+    case NS_THEME_SCROLLBARBUTTON_UP:
+    case NS_THEME_SCROLLBARBUTTON_DOWN:
+    case NS_THEME_SCROLLBARBUTTON_LEFT:
+    case NS_THEME_SCROLLBARBUTTON_RIGHT:
+    case NS_THEME_SCROLLBARTHUMB_VERTICAL:
+    case NS_THEME_SCROLLBARTHUMB_HORIZONTAL:
       return nsUXThemeData::GetTheme(eUXScrollbar);
     case NS_THEME_RANGE:
     case NS_THEME_RANGE_THUMB:
     case NS_THEME_SCALE_HORIZONTAL:
     case NS_THEME_SCALE_VERTICAL:
-    case NS_THEME_SCALE_THUMB_HORIZONTAL:
-    case NS_THEME_SCALE_THUMB_VERTICAL:
+    case NS_THEME_SCALETHUMB_HORIZONTAL:
+    case NS_THEME_SCALETHUMB_VERTICAL:
       return nsUXThemeData::GetTheme(eUXTrackbar);
-    case NS_THEME_SPINNER_UP_BUTTON:
-    case NS_THEME_SPINNER_DOWN_BUTTON:
+    case NS_THEME_SPINNER_UPBUTTON:
+    case NS_THEME_SPINNER_DOWNBUTTON:
       return nsUXThemeData::GetTheme(eUXSpin);
     case NS_THEME_STATUSBAR:
-    case NS_THEME_STATUSBAR_PANEL:
-    case NS_THEME_STATUSBAR_RESIZER_PANEL:
+    case NS_THEME_STATUSBARPANEL:
+    case NS_THEME_RESIZER_PANEL:
     case NS_THEME_RESIZER:
       return nsUXThemeData::GetTheme(eUXStatus);
-    case NS_THEME_DROPDOWN:
-    case NS_THEME_DROPDOWN_BUTTON:
+    case NS_THEME_MENULIST:
+    case NS_THEME_MENULIST_BUTTON:
       return nsUXThemeData::GetTheme(eUXCombobox);
-    case NS_THEME_TREEVIEW_HEADER_CELL:
-    case NS_THEME_TREEVIEW_HEADER_SORTARROW:
+    case NS_THEME_TREEHEADERCELL:
+    case NS_THEME_TREEHEADERSORTARROW:
       return nsUXThemeData::GetTheme(eUXHeader);
     case NS_THEME_LISTBOX:
-    case NS_THEME_LISTBOX_LISTITEM:
+    case NS_THEME_LISTITEM:
     case NS_THEME_TREEVIEW:
-    case NS_THEME_TREEVIEW_TWISTY_OPEN:
-    case NS_THEME_TREEVIEW_TREEITEM:
+    case NS_THEME_TREETWISTYOPEN:
+    case NS_THEME_TREEITEM:
       return nsUXThemeData::GetTheme(eUXListview);
     case NS_THEME_MENUBAR:
     case NS_THEME_MENUPOPUP:
@@ -875,7 +875,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
 {
   if (!IsVistaOrLater()) {
     // See GetTheme
-    if (aWidgetType == NS_THEME_DROPDOWN)
+    if (aWidgetType == NS_THEME_MENULIST)
       aWidgetType = NS_THEME_TEXTFIELD;
   }
 
@@ -1026,10 +1026,10 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
       aState = PBBS_NORMAL;
       return NS_OK;
     }
-    case NS_THEME_PROGRESSBAR_CHUNK:
-    case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL: {
+    case NS_THEME_PROGRESSCHUNK:
+    case NS_THEME_PROGRESSCHUNK_VERTICAL: {
       nsIFrame* parentFrame = aFrame->GetParent();
-      if (aWidgetType == NS_THEME_PROGRESSBAR_CHUNK_VERTICAL ||
+      if (aWidgetType == NS_THEME_PROGRESSCHUNK_VERTICAL ||
           IsVerticalProgress(parentFrame)) {
         aPart = IsVistaOrLater() ?
           PP_FILLVERT : PP_CHUNKVERT;
@@ -1041,7 +1041,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
       aState = PBBVS_NORMAL;
       return NS_OK;
     }
-    case NS_THEME_TOOLBAR_BUTTON: {
+    case NS_THEME_TOOLBARBUTTON: {
       aPart = BP_BUTTON;
       if (!aFrame) {
         aState = TS_NORMAL;
@@ -1075,17 +1075,17 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
      
       return NS_OK;
     }
-    case NS_THEME_TOOLBAR_SEPARATOR: {
+    case NS_THEME_SEPARATOR: {
       aPart = TP_SEPARATOR;
       aState = TS_NORMAL;
       return NS_OK;
     }
-    case NS_THEME_SCROLLBAR_BUTTON_UP:
-    case NS_THEME_SCROLLBAR_BUTTON_DOWN:
-    case NS_THEME_SCROLLBAR_BUTTON_LEFT:
-    case NS_THEME_SCROLLBAR_BUTTON_RIGHT: {
+    case NS_THEME_SCROLLBARBUTTON_UP:
+    case NS_THEME_SCROLLBARBUTTON_DOWN:
+    case NS_THEME_SCROLLBARBUTTON_LEFT:
+    case NS_THEME_SCROLLBARBUTTON_RIGHT: {
       aPart = SP_BUTTON;
-      aState = (aWidgetType - NS_THEME_SCROLLBAR_BUTTON_UP)*4;
+      aState = (aWidgetType - NS_THEME_SCROLLBARBUTTON_UP)*4;
       EventStates eventState = GetContentState(aFrame, aWidgetType);
       if (!aFrame)
         aState += TS_NORMAL;
@@ -1101,7 +1101,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
           aState += TS_HOVER;
         else if (IsVistaOrLater() &&
                  parentState.HasState(NS_EVENT_STATE_HOVER))
-          aState = (aWidgetType - NS_THEME_SCROLLBAR_BUTTON_UP) + SP_BUTTON_IMPLICIT_HOVER_BASE;
+          aState = (aWidgetType - NS_THEME_SCROLLBARBUTTON_UP) + SP_BUTTON_IMPLICIT_HOVER_BASE;
         else
           aState += TS_NORMAL;
       }
@@ -1114,9 +1114,9 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
       aState = TS_NORMAL;
       return NS_OK;
     }
-    case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
-    case NS_THEME_SCROLLBAR_THUMB_VERTICAL: {
-      aPart = (aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL) ?
+    case NS_THEME_SCROLLBARTHUMB_HORIZONTAL:
+    case NS_THEME_SCROLLBARTHUMB_VERTICAL: {
+      aPart = (aWidgetType == NS_THEME_SCROLLBARTHUMB_HORIZONTAL) ?
               SP_THUMBHOR : SP_THUMBVERT;
       EventStates eventState = GetContentState(aFrame, aWidgetType);
       if (!aFrame)
@@ -1150,8 +1150,8 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
       return NS_OK;
     }
     case NS_THEME_RANGE_THUMB:
-    case NS_THEME_SCALE_THUMB_HORIZONTAL:
-    case NS_THEME_SCALE_THUMB_VERTICAL: {
+    case NS_THEME_SCALETHUMB_HORIZONTAL:
+    case NS_THEME_SCALETHUMB_VERTICAL: {
       if (aWidgetType == NS_THEME_RANGE_THUMB) {
         if (IsRangeHorizontal(aFrame)) {
           aPart = TKP_THUMBBOTTOM;
@@ -1159,7 +1159,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
           aPart = IsFrameRTL(aFrame) ? TKP_THUMBLEFT : TKP_THUMBRIGHT;
         }
       } else {
-        aPart = (aWidgetType == NS_THEME_SCALE_THUMB_HORIZONTAL) ?
+        aPart = (aWidgetType == NS_THEME_SCALETHUMB_HORIZONTAL) ?
                 TKP_THUMB : TKP_THUMBVERT;
       }
       EventStates eventState = GetContentState(aFrame, aWidgetType);
@@ -1182,9 +1182,9 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
       }
       return NS_OK;
     }
-    case NS_THEME_SPINNER_UP_BUTTON:
-    case NS_THEME_SPINNER_DOWN_BUTTON: {
-      aPart = (aWidgetType == NS_THEME_SPINNER_UP_BUTTON) ?
+    case NS_THEME_SPINNER_UPBUTTON:
+    case NS_THEME_SPINNER_DOWNBUTTON: {
+      aPart = (aWidgetType == NS_THEME_SPINNER_UPBUTTON) ?
               SPNP_UP : SPNP_DOWN;
       EventStates eventState = GetContentState(aFrame, aWidgetType);
       if (!aFrame)
@@ -1198,7 +1198,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
     case NS_THEME_TOOLBOX:
     case NS_THEME_WIN_MEDIA_TOOLBOX:
     case NS_THEME_WIN_COMMUNICATIONS_TOOLBOX:
-    case NS_THEME_WIN_BROWSER_TAB_BAR_TOOLBOX:
+    case NS_THEME_WIN_BROWSERTABBAR_TOOLBOX:
     case NS_THEME_STATUSBAR:
     case NS_THEME_SCROLLBAR:
     case NS_THEME_SCROLLBAR_SMALL: {
@@ -1229,10 +1229,10 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
       }
       return NS_OK;
     }
-    case NS_THEME_STATUSBAR_PANEL:
-    case NS_THEME_STATUSBAR_RESIZER_PANEL:
+    case NS_THEME_STATUSBARPANEL:
+    case NS_THEME_RESIZER_PANEL:
     case NS_THEME_RESIZER: {
-      aPart = (aWidgetType - NS_THEME_STATUSBAR_PANEL) + 1;
+      aPart = (aWidgetType - NS_THEME_STATUSBARPANEL) + 1;
       aState = TS_NORMAL;
       return NS_OK;
     }
@@ -1242,12 +1242,12 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
       aState = TS_NORMAL;
       return NS_OK;
     }
-    case NS_THEME_TAB_PANELS: {
+    case NS_THEME_TABPANELS: {
       aPart = TABP_PANELS;
       aState = TS_NORMAL;
       return NS_OK;
     }
-    case NS_THEME_TAB_PANEL: {
+    case NS_THEME_TABPANEL: {
       aPart = TABP_PANEL;
       aState = TS_NORMAL;
       return NS_OK;
@@ -1274,13 +1274,13 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
       
       return NS_OK;
     }
-    case NS_THEME_TREEVIEW_HEADER_SORTARROW: {
+    case NS_THEME_TREEHEADERSORTARROW: {
       // XXX Probably will never work due to a bug in the Luna theme.
       aPart = 4;
       aState = 1;
       return NS_OK;
     }
-    case NS_THEME_TREEVIEW_HEADER_CELL: {
+    case NS_THEME_TREEHEADERCELL: {
       aPart = 1;
       if (!aFrame) {
         aState = TS_NORMAL;
@@ -1291,7 +1291,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
       
       return NS_OK;
     }
-    case NS_THEME_DROPDOWN: {
+    case NS_THEME_MENULIST: {
       nsIContent* content = aFrame->GetContent();
       bool isHTML = content && content->IsHTMLElement();
       bool useDropBorder = isHTML || IsMenuListEditable(aFrame);
@@ -1324,7 +1324,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
 
       return NS_OK;
     }
-    case NS_THEME_DROPDOWN_BUTTON: {
+    case NS_THEME_MENULIST_BUTTON: {
       bool isHTML = IsHTMLContent(aFrame);
       nsIFrame* parentFrame = aFrame->GetParent();
       bool isMenulist = !isHTML && parentFrame->GetType() == nsGkAtoms::menuFrame;
@@ -1341,7 +1341,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
       // For HTML controls with author styling, we should fall
       // back to the old dropmarker style to avoid clashes with
       // author-specified backgrounds and borders (bug #441034)
-      if (isHTML && IsWidgetStyled(aFrame->PresContext(), aFrame, NS_THEME_DROPDOWN))
+      if (isHTML && IsWidgetStyled(aFrame->PresContext(), aFrame, NS_THEME_MENULIST))
         aPart = CBP_DROPMARKER;
 
       if (IsDisabled(aFrame, eventState)) {
@@ -1848,7 +1848,7 @@ RENDER_AGAIN:
   }
   // The following widgets need to be RTL-aware
   else if (aWidgetType == NS_THEME_RESIZER ||
-           aWidgetType == NS_THEME_DROPDOWN_BUTTON)
+           aWidgetType == NS_THEME_MENULIST_BUTTON)
   {
     DrawThemeBGRTLAware(theme, hdc, part, state,
                         &widgetRect, &clipRect, IsFrameRTL(aFrame));
@@ -1875,8 +1875,8 @@ RENDER_AGAIN:
     SetPixel(hdc, widgetRect.right-1, widgetRect.bottom-1, color);
     SetPixel(hdc, widgetRect.left, widgetRect.bottom-1, color);
   }
-  else if (aWidgetType == NS_THEME_PROGRESSBAR_CHUNK ||
-           aWidgetType == NS_THEME_PROGRESSBAR_CHUNK_VERTICAL) {
+  else if (aWidgetType == NS_THEME_PROGRESSCHUNK ||
+           aWidgetType == NS_THEME_PROGRESSCHUNK_VERTICAL) {
     DrawThemedProgressMeter(aFrame, aWidgetType, theme, hdc, part, state,
                             &widgetRect, &clipRect, p2a);
   }
@@ -1966,14 +1966,14 @@ RENDER_AGAIN:
     widgetRect.bottom = widgetRect.top + TB_SEPARATOR_HEIGHT;
     DrawThemeEdge(theme, hdc, RP_BAND, 0, &widgetRect, EDGE_ETCHED, BF_TOP, nullptr);
   }
-  else if (aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL ||
-           aWidgetType == NS_THEME_SCROLLBAR_THUMB_VERTICAL)
+  else if (aWidgetType == NS_THEME_SCROLLBARTHUMB_HORIZONTAL ||
+           aWidgetType == NS_THEME_SCROLLBARTHUMB_VERTICAL)
   {
     // Draw the decorative gripper for the scrollbar thumb button, if it fits
 
     SIZE gripSize;
     MARGINS thumbMgns;
-    int gripPart = (aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL) ?
+    int gripPart = (aWidgetType == NS_THEME_SCROLLBARTHUMB_HORIZONTAL) ?
                    SP_GRIPPERHOR : SP_GRIPPERVERT;
 
     if (GetThemePartSize(theme, hdc, gripPart, state, nullptr, TS_TRUE, &gripSize) == S_OK &&
@@ -2037,15 +2037,15 @@ nsNativeThemeWin::GetWidgetBorder(nsDeviceContext* aContext,
       aWidgetType == NS_THEME_TOOLBOX || 
       aWidgetType == NS_THEME_WIN_MEDIA_TOOLBOX ||
       aWidgetType == NS_THEME_WIN_COMMUNICATIONS_TOOLBOX ||
-      aWidgetType == NS_THEME_WIN_BROWSER_TAB_BAR_TOOLBOX ||
+      aWidgetType == NS_THEME_WIN_BROWSERTABBAR_TOOLBOX ||
       aWidgetType == NS_THEME_STATUSBAR || 
-      aWidgetType == NS_THEME_RESIZER || aWidgetType == NS_THEME_TAB_PANEL ||
+      aWidgetType == NS_THEME_RESIZER || aWidgetType == NS_THEME_TABPANEL ||
       aWidgetType == NS_THEME_SCROLLBAR_HORIZONTAL ||
       aWidgetType == NS_THEME_SCROLLBAR_VERTICAL ||
       aWidgetType == NS_THEME_MENUITEM || aWidgetType == NS_THEME_CHECKMENUITEM ||
       aWidgetType == NS_THEME_RADIOMENUITEM || aWidgetType == NS_THEME_MENUPOPUP ||
       aWidgetType == NS_THEME_MENUIMAGE || aWidgetType == NS_THEME_MENUITEMTEXT ||
-      aWidgetType == NS_THEME_TOOLBAR_SEPARATOR ||
+      aWidgetType == NS_THEME_SEPARATOR ||
       aWidgetType == NS_THEME_WINDOW_TITLEBAR ||
       aWidgetType == NS_THEME_WINDOW_TITLEBAR_MAXIMIZED ||
       aWidgetType == NS_THEME_WIN_GLASS || aWidgetType == NS_THEME_WIN_BORDERLESS_GLASS)
@@ -2176,7 +2176,7 @@ nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext,
     if (aWidgetType == NS_THEME_NUMBER_INPUT ||
         aWidgetType == NS_THEME_TEXTFIELD ||
         aWidgetType == NS_THEME_TEXTFIELD_MULTILINE ||
-        aWidgetType == NS_THEME_DROPDOWN)
+        aWidgetType == NS_THEME_MENULIST)
     {
       /* If we have author-specified padding for these elements, don't do the fixups below */
       if (aFrame->PresContext()->HasAuthorSpecifiedRules(aFrame, NS_AUTHOR_SPECIFIED_PADDING))
@@ -2196,7 +2196,7 @@ nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext,
       aResult->left = aResult->right = 2;
       ScaleForFrameDPI(aResult, aFrame);
       return ok;
-    } else if (IsHTMLContent(aFrame) && aWidgetType == NS_THEME_DROPDOWN) {
+    } else if (IsHTMLContent(aFrame) && aWidgetType == NS_THEME_MENULIST) {
       /* For content menulist controls, we need an extra pixel so
        * that we have room to draw our focus rectangle stuff.
        * Otherwise, the focus rect might overlap the control's
@@ -2276,11 +2276,11 @@ nsNativeThemeWin::GetWidgetOverflow(nsDeviceContext* aContext,
      * up, right, and bottom so that they overlap the dropdown's border
      * like they're supposed to.
      */
-    if (aWidgetType == NS_THEME_DROPDOWN_BUTTON &&
+    if (aWidgetType == NS_THEME_MENULIST_BUTTON &&
         IsHTMLContent(aFrame) &&
         !IsWidgetStyled(aFrame->GetParent()->PresContext(),
                         aFrame->GetParent(),
-                        NS_THEME_DROPDOWN))
+                        NS_THEME_MENULIST))
     {
       int32_t p2a = aContext->AppUnitsPerDevPixel();
       /* Note: no overflow on the left */
@@ -2330,13 +2330,13 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aF
     case NS_THEME_TOOLBOX:
     case NS_THEME_WIN_MEDIA_TOOLBOX:
     case NS_THEME_WIN_COMMUNICATIONS_TOOLBOX:
-    case NS_THEME_WIN_BROWSER_TAB_BAR_TOOLBOX:
+    case NS_THEME_WIN_BROWSERTABBAR_TOOLBOX:
     case NS_THEME_TOOLBAR:
     case NS_THEME_STATUSBAR:
-    case NS_THEME_PROGRESSBAR_CHUNK:
-    case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
-    case NS_THEME_TAB_PANELS:
-    case NS_THEME_TAB_PANEL:
+    case NS_THEME_PROGRESSCHUNK:
+    case NS_THEME_PROGRESSCHUNK_VERTICAL:
+    case NS_THEME_TABPANELS:
+    case NS_THEME_TABPANEL:
     case NS_THEME_LISTBOX:
     case NS_THEME_TREEVIEW:
     case NS_THEME_MENUITEMTEXT:
@@ -2353,15 +2353,15 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aF
   //  Windows appears to always use metrics when drawing standard scrollbars)
   THEMESIZE sizeReq = TS_TRUE; // Best-fit size
   switch (aWidgetType) {
-    case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
-    case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
-    case NS_THEME_SCROLLBAR_BUTTON_UP:
-    case NS_THEME_SCROLLBAR_BUTTON_DOWN:
-    case NS_THEME_SCROLLBAR_BUTTON_LEFT:
-    case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
+    case NS_THEME_SCROLLBARTHUMB_VERTICAL:
+    case NS_THEME_SCROLLBARTHUMB_HORIZONTAL:
+    case NS_THEME_SCROLLBARBUTTON_UP:
+    case NS_THEME_SCROLLBARBUTTON_DOWN:
+    case NS_THEME_SCROLLBARBUTTON_LEFT:
+    case NS_THEME_SCROLLBARBUTTON_RIGHT:
     case NS_THEME_SCROLLBAR_HORIZONTAL:
     case NS_THEME_SCROLLBAR_VERTICAL:
-    case NS_THEME_DROPDOWN_BUTTON: {
+    case NS_THEME_MENULIST_BUTTON: {
       rv = ClassicGetMinimumWidgetSize(aFrame, aWidgetType, aResult, aIsOverridable);
       ScaleForFrameDPI(aResult, aFrame);
       return rv;
@@ -2407,14 +2407,14 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aF
       break;
 
     case NS_THEME_RANGE_THUMB:
-    case NS_THEME_SCALE_THUMB_HORIZONTAL:
-    case NS_THEME_SCALE_THUMB_VERTICAL:
+    case NS_THEME_SCALETHUMB_HORIZONTAL:
+    case NS_THEME_SCALETHUMB_VERTICAL:
     {
       *aIsOverridable = false;
       // on Vista, GetThemePartAndState returns odd values for
       // scale thumbs, so use a hardcoded size instead.
       if (IsVistaOrLater()) {
-        if (aWidgetType == NS_THEME_SCALE_THUMB_HORIZONTAL ||
+        if (aWidgetType == NS_THEME_SCALETHUMB_HORIZONTAL ||
             (aWidgetType == NS_THEME_RANGE_THUMB && IsRangeHorizontal(aFrame))) {
           aResult->width = 12;
           aResult->height = 20;
@@ -2441,7 +2441,7 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aF
       break;
     }
 
-    case NS_THEME_TOOLBAR_SEPARATOR:
+    case NS_THEME_SEPARATOR:
       // that's 2px left margin, 2px right margin and 2px separator
       // (the margin is drawn as part of the separator, though)
       aResult->width = 6;
@@ -2553,8 +2553,8 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aF
   aResult->height = sz.cy;
 
   switch(aWidgetType) {
-    case NS_THEME_SPINNER_UP_BUTTON:
-    case NS_THEME_SPINNER_DOWN_BUTTON:
+    case NS_THEME_SPINNER_UPBUTTON:
+    case NS_THEME_SPINNER_DOWNBUTTON:
       aResult->width++;
       aResult->height = aResult->height / 2 + 1;
       break;
@@ -2590,18 +2590,18 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType,
   if (aWidgetType == NS_THEME_TOOLBOX ||
       aWidgetType == NS_THEME_WIN_MEDIA_TOOLBOX ||
       aWidgetType == NS_THEME_WIN_COMMUNICATIONS_TOOLBOX ||
-      aWidgetType == NS_THEME_WIN_BROWSER_TAB_BAR_TOOLBOX ||
+      aWidgetType == NS_THEME_WIN_BROWSERTABBAR_TOOLBOX ||
       aWidgetType == NS_THEME_TOOLBAR ||
-      aWidgetType == NS_THEME_STATUSBAR || aWidgetType == NS_THEME_STATUSBAR_PANEL ||
-      aWidgetType == NS_THEME_STATUSBAR_RESIZER_PANEL ||
-      aWidgetType == NS_THEME_PROGRESSBAR_CHUNK ||
-      aWidgetType == NS_THEME_PROGRESSBAR_CHUNK_VERTICAL ||
+      aWidgetType == NS_THEME_STATUSBAR || aWidgetType == NS_THEME_STATUSBARPANEL ||
+      aWidgetType == NS_THEME_RESIZER_PANEL ||
+      aWidgetType == NS_THEME_PROGRESSCHUNK ||
+      aWidgetType == NS_THEME_PROGRESSCHUNK_VERTICAL ||
       aWidgetType == NS_THEME_PROGRESSBAR ||
       aWidgetType == NS_THEME_PROGRESSBAR_VERTICAL ||
       aWidgetType == NS_THEME_TOOLTIP ||
-      aWidgetType == NS_THEME_TAB_PANELS ||
-      aWidgetType == NS_THEME_TAB_PANEL ||
-      aWidgetType == NS_THEME_TOOLBAR_SEPARATOR ||
+      aWidgetType == NS_THEME_TABPANELS ||
+      aWidgetType == NS_THEME_TABPANEL ||
+      aWidgetType == NS_THEME_SEPARATOR ||
       aWidgetType == NS_THEME_WIN_GLASS ||
       aWidgetType == NS_THEME_WIN_BORDERLESS_GLASS) {
     *aShouldRepaint = false;
@@ -2632,7 +2632,7 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType,
   // We need to repaint the dropdown arrow in vista HTML combobox controls when
   // the control is closed to get rid of the hover effect.
   if (IsVistaOrLater() &&
-      (aWidgetType == NS_THEME_DROPDOWN || aWidgetType == NS_THEME_DROPDOWN_BUTTON) &&
+      (aWidgetType == NS_THEME_MENULIST || aWidgetType == NS_THEME_MENULIST_BUTTON) &&
       IsHTMLContent(aFrame))
   {
     *aShouldRepaint = true;
@@ -2708,7 +2708,7 @@ bool
 nsNativeThemeWin::WidgetIsContainer(uint8_t aWidgetType)
 {
   // XXXdwh At some point flesh all of this out.
-  if (aWidgetType == NS_THEME_DROPDOWN_BUTTON || 
+  if (aWidgetType == NS_THEME_MENULIST_BUTTON || 
       aWidgetType == NS_THEME_RADIO ||
       aWidgetType == NS_THEME_CHECKBOX)
     return false;
@@ -2783,8 +2783,8 @@ nsNativeThemeWin::GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType)
   case NS_THEME_SCALE_VERTICAL:
   case NS_THEME_PROGRESSBAR:
   case NS_THEME_PROGRESSBAR_VERTICAL:
-  case NS_THEME_PROGRESSBAR_CHUNK:
-  case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
+  case NS_THEME_PROGRESSCHUNK:
+  case NS_THEME_PROGRESSCHUNK_VERTICAL:
   case NS_THEME_RANGE:
     return eTransparent;
   }
@@ -2844,37 +2844,37 @@ nsNativeThemeWin::ClassicThemeSupportsWidget(nsIFrame* aFrame,
     case NS_THEME_RANGE:
     case NS_THEME_RANGE_THUMB:
     case NS_THEME_GROUPBOX:
-    case NS_THEME_SCROLLBAR_BUTTON_UP:
-    case NS_THEME_SCROLLBAR_BUTTON_DOWN:
-    case NS_THEME_SCROLLBAR_BUTTON_LEFT:
-    case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
-    case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
-    case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
+    case NS_THEME_SCROLLBARBUTTON_UP:
+    case NS_THEME_SCROLLBARBUTTON_DOWN:
+    case NS_THEME_SCROLLBARBUTTON_LEFT:
+    case NS_THEME_SCROLLBARBUTTON_RIGHT:
+    case NS_THEME_SCROLLBARTHUMB_VERTICAL:
+    case NS_THEME_SCROLLBARTHUMB_HORIZONTAL:
     case NS_THEME_SCROLLBAR_VERTICAL:
     case NS_THEME_SCROLLBAR_HORIZONTAL:
     case NS_THEME_SCROLLBAR_NON_DISAPPEARING:
     case NS_THEME_SCALE_HORIZONTAL:
     case NS_THEME_SCALE_VERTICAL:
-    case NS_THEME_SCALE_THUMB_HORIZONTAL:
-    case NS_THEME_SCALE_THUMB_VERTICAL:
-    case NS_THEME_DROPDOWN_BUTTON:
-    case NS_THEME_SPINNER_UP_BUTTON:
-    case NS_THEME_SPINNER_DOWN_BUTTON:
+    case NS_THEME_SCALETHUMB_HORIZONTAL:
+    case NS_THEME_SCALETHUMB_VERTICAL:
+    case NS_THEME_MENULIST_BUTTON:
+    case NS_THEME_SPINNER_UPBUTTON:
+    case NS_THEME_SPINNER_DOWNBUTTON:
     case NS_THEME_LISTBOX:
     case NS_THEME_TREEVIEW:
-    case NS_THEME_DROPDOWN_TEXTFIELD:
-    case NS_THEME_DROPDOWN:
+    case NS_THEME_MENULIST_TEXTFIELD:
+    case NS_THEME_MENULIST:
     case NS_THEME_TOOLTIP:
     case NS_THEME_STATUSBAR:
-    case NS_THEME_STATUSBAR_PANEL:
-    case NS_THEME_STATUSBAR_RESIZER_PANEL:
+    case NS_THEME_STATUSBARPANEL:
+    case NS_THEME_RESIZER_PANEL:
     case NS_THEME_PROGRESSBAR:
     case NS_THEME_PROGRESSBAR_VERTICAL:
-    case NS_THEME_PROGRESSBAR_CHUNK:
-    case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
+    case NS_THEME_PROGRESSCHUNK:
+    case NS_THEME_PROGRESSCHUNK_VERTICAL:
     case NS_THEME_TAB:
-    case NS_THEME_TAB_PANEL:
-    case NS_THEME_TAB_PANELS:
+    case NS_THEME_TABPANEL:
+    case NS_THEME_TABPANELS:
     case NS_THEME_MENUITEM:
     case NS_THEME_CHECKMENUITEM:
     case NS_THEME_RADIOMENUITEM:
@@ -2916,8 +2916,8 @@ nsNativeThemeWin::ClassicGetWidgetBorder(nsDeviceContext* aContext,
       break;
     case NS_THEME_LISTBOX:
     case NS_THEME_TREEVIEW:
-    case NS_THEME_DROPDOWN:
-    case NS_THEME_DROPDOWN_TEXTFIELD:
+    case NS_THEME_MENULIST:
+    case NS_THEME_MENULIST_TEXTFIELD:
     case NS_THEME_TAB:
     case NS_THEME_NUMBER_INPUT:
     case NS_THEME_TEXTFIELD:
@@ -2925,8 +2925,8 @@ nsNativeThemeWin::ClassicGetWidgetBorder(nsDeviceContext* aContext,
     case NS_THEME_FOCUS_OUTLINE:
       (*aResult).top = (*aResult).left = (*aResult).bottom = (*aResult).right = 2;
       break;
-    case NS_THEME_STATUSBAR_PANEL:
-    case NS_THEME_STATUSBAR_RESIZER_PANEL: {
+    case NS_THEME_STATUSBARPANEL:
+    case NS_THEME_RESIZER_PANEL: {
       (*aResult).top = 1;      
       (*aResult).left = 1;
       (*aResult).bottom = 1;
@@ -3013,20 +3013,20 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIFrame* aFrame,
       (*aResult).width = ::GetSystemMetrics(SM_CXMENUCHECK);
       (*aResult).height = ::GetSystemMetrics(SM_CYMENUCHECK);
       break;
-    case NS_THEME_SPINNER_UP_BUTTON:
-    case NS_THEME_SPINNER_DOWN_BUTTON:
+    case NS_THEME_SPINNER_UPBUTTON:
+    case NS_THEME_SPINNER_DOWNBUTTON:
       (*aResult).width = ::GetSystemMetrics(SM_CXVSCROLL);
       (*aResult).height = 8; // No good metrics available for this
       *aIsOverridable = false;
       break;
-    case NS_THEME_SCROLLBAR_BUTTON_UP:
-    case NS_THEME_SCROLLBAR_BUTTON_DOWN:
+    case NS_THEME_SCROLLBARBUTTON_UP:
+    case NS_THEME_SCROLLBARBUTTON_DOWN:
       (*aResult).width = ::GetSystemMetrics(SM_CXVSCROLL);
       (*aResult).height = ::GetSystemMetrics(SM_CYVSCROLL);
       *aIsOverridable = false;
       break;
-    case NS_THEME_SCROLLBAR_BUTTON_LEFT:
-    case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
+    case NS_THEME_SCROLLBARBUTTON_LEFT:
+    case NS_THEME_SCROLLBARBUTTON_RIGHT:
       (*aResult).width = ::GetSystemMetrics(SM_CXHSCROLL);
       (*aResult).height = ::GetSystemMetrics(SM_CYHSCROLL);
       *aIsOverridable = false;
@@ -3055,20 +3055,20 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIFrame* aFrame,
       *aIsOverridable = false;
       break;
     }
-    case NS_THEME_SCALE_THUMB_HORIZONTAL:
+    case NS_THEME_SCALETHUMB_HORIZONTAL:
       (*aResult).width = 12;
       (*aResult).height = 20;
       *aIsOverridable = false;
       break;
-    case NS_THEME_SCALE_THUMB_VERTICAL:
+    case NS_THEME_SCALETHUMB_VERTICAL:
       (*aResult).width = 20;
       (*aResult).height = 12;
       *aIsOverridable = false;
       break;
-    case NS_THEME_DROPDOWN_BUTTON:
+    case NS_THEME_MENULIST_BUTTON:
       (*aResult).width = ::GetSystemMetrics(SM_CXVSCROLL);
       break;
-    case NS_THEME_DROPDOWN:
+    case NS_THEME_MENULIST:
     case NS_THEME_BUTTON:
     case NS_THEME_GROUPBOX:
     case NS_THEME_LISTBOX:
@@ -3076,18 +3076,18 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIFrame* aFrame,
     case NS_THEME_NUMBER_INPUT:
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE:
-    case NS_THEME_DROPDOWN_TEXTFIELD:      
+    case NS_THEME_MENULIST_TEXTFIELD:      
     case NS_THEME_STATUSBAR:
-    case NS_THEME_STATUSBAR_PANEL:      
-    case NS_THEME_STATUSBAR_RESIZER_PANEL:
-    case NS_THEME_PROGRESSBAR_CHUNK:
-    case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
+    case NS_THEME_STATUSBARPANEL:      
+    case NS_THEME_RESIZER_PANEL:
+    case NS_THEME_PROGRESSCHUNK:
+    case NS_THEME_PROGRESSCHUNK_VERTICAL:
     case NS_THEME_TOOLTIP:
     case NS_THEME_PROGRESSBAR:
     case NS_THEME_PROGRESSBAR_VERTICAL:
     case NS_THEME_TAB:
-    case NS_THEME_TAB_PANEL:
-    case NS_THEME_TAB_PANELS:
+    case NS_THEME_TABPANEL:
+    case NS_THEME_TABPANELS:
       // no minimum widget size
       break;
     case NS_THEME_RESIZER: {     
@@ -3099,7 +3099,7 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIFrame* aFrame,
         (*aResult).width = (*aResult).height = 15;
       *aIsOverridable = false;
       break;
-    case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
+    case NS_THEME_SCROLLBARTHUMB_VERTICAL:
       (*aResult).width = ::GetSystemMetrics(SM_CXVSCROLL);
       (*aResult).height = ::GetSystemMetrics(SM_CYVTHUMB);
       // Without theming, divide the thumb size by two in order to look more
@@ -3108,7 +3108,7 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIFrame* aFrame,
         (*aResult).height >>= 1;
       *aIsOverridable = false;
       break;
-    case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
+    case NS_THEME_SCROLLBARTHUMB_HORIZONTAL:
       (*aResult).width = ::GetSystemMetrics(SM_CXHTHUMB);
       (*aResult).height = ::GetSystemMetrics(SM_CYHSCROLL);
       // Without theming, divide the thumb size by two in order to look more
@@ -3316,35 +3316,35 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, uint8_t
     case NS_THEME_FOCUS_OUTLINE:
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE:
-    case NS_THEME_DROPDOWN:
-    case NS_THEME_DROPDOWN_TEXTFIELD:
+    case NS_THEME_MENULIST:
+    case NS_THEME_MENULIST_TEXTFIELD:
     case NS_THEME_RANGE:
     case NS_THEME_RANGE_THUMB:
-    case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
-    case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:     
+    case NS_THEME_SCROLLBARTHUMB_VERTICAL:
+    case NS_THEME_SCROLLBARTHUMB_HORIZONTAL:     
     case NS_THEME_SCROLLBAR_VERTICAL:
     case NS_THEME_SCROLLBAR_HORIZONTAL:      
     case NS_THEME_SCALE_HORIZONTAL:
     case NS_THEME_SCALE_VERTICAL:
-    case NS_THEME_SCALE_THUMB_HORIZONTAL:
-    case NS_THEME_SCALE_THUMB_VERTICAL:
+    case NS_THEME_SCALETHUMB_HORIZONTAL:
+    case NS_THEME_SCALETHUMB_VERTICAL:
     case NS_THEME_STATUSBAR:
-    case NS_THEME_STATUSBAR_PANEL:
-    case NS_THEME_STATUSBAR_RESIZER_PANEL:
-    case NS_THEME_PROGRESSBAR_CHUNK:
-    case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
+    case NS_THEME_STATUSBARPANEL:
+    case NS_THEME_RESIZER_PANEL:
+    case NS_THEME_PROGRESSCHUNK:
+    case NS_THEME_PROGRESSCHUNK_VERTICAL:
     case NS_THEME_TOOLTIP:
     case NS_THEME_PROGRESSBAR:
     case NS_THEME_PROGRESSBAR_VERTICAL:
     case NS_THEME_TAB:
-    case NS_THEME_TAB_PANEL:
-    case NS_THEME_TAB_PANELS:
+    case NS_THEME_TABPANEL:
+    case NS_THEME_TABPANELS:
     case NS_THEME_MENUBAR:
     case NS_THEME_MENUPOPUP:
     case NS_THEME_GROUPBOX:
       // these don't use DrawFrameControl
       return NS_OK;
-    case NS_THEME_DROPDOWN_BUTTON: {
+    case NS_THEME_MENULIST_BUTTON: {
 
       aPart = DFC_SCROLL;
       aState = DFCS_SCROLLCOMBOBOX;
@@ -3383,24 +3383,24 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, uint8_t
 
       return NS_OK;
     }
-    case NS_THEME_SCROLLBAR_BUTTON_UP:
-    case NS_THEME_SCROLLBAR_BUTTON_DOWN:
-    case NS_THEME_SCROLLBAR_BUTTON_LEFT:
-    case NS_THEME_SCROLLBAR_BUTTON_RIGHT: {
+    case NS_THEME_SCROLLBARBUTTON_UP:
+    case NS_THEME_SCROLLBARBUTTON_DOWN:
+    case NS_THEME_SCROLLBARBUTTON_LEFT:
+    case NS_THEME_SCROLLBARBUTTON_RIGHT: {
       EventStates contentState = GetContentState(aFrame, aWidgetType);
 
       aPart = DFC_SCROLL;
       switch (aWidgetType) {
-        case NS_THEME_SCROLLBAR_BUTTON_UP:
+        case NS_THEME_SCROLLBARBUTTON_UP:
           aState = DFCS_SCROLLUP;
           break;
-        case NS_THEME_SCROLLBAR_BUTTON_DOWN:
+        case NS_THEME_SCROLLBARBUTTON_DOWN:
           aState = DFCS_SCROLLDOWN;
           break;
-        case NS_THEME_SCROLLBAR_BUTTON_LEFT:
+        case NS_THEME_SCROLLBARBUTTON_LEFT:
           aState = DFCS_SCROLLLEFT;
           break;
-        case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
+        case NS_THEME_SCROLLBARBUTTON_RIGHT:
           aState = DFCS_SCROLLRIGHT;
           break;
       }
@@ -3414,16 +3414,16 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, uint8_t
 
       return NS_OK;
     }
-    case NS_THEME_SPINNER_UP_BUTTON:
-    case NS_THEME_SPINNER_DOWN_BUTTON: {
+    case NS_THEME_SPINNER_UPBUTTON:
+    case NS_THEME_SPINNER_DOWNBUTTON: {
       EventStates contentState = GetContentState(aFrame, aWidgetType);
 
       aPart = DFC_SCROLL;
       switch (aWidgetType) {
-        case NS_THEME_SPINNER_UP_BUTTON:
+        case NS_THEME_SPINNER_UPBUTTON:
           aState = DFCS_SCROLLUP;
           break;
-        case NS_THEME_SPINNER_DOWN_BUTTON:
+        case NS_THEME_SPINNER_DOWNBUTTON:
           aState = DFCS_SCROLLDOWN;
           break;
       }
@@ -3719,13 +3719,13 @@ RENDER_AGAIN:
     // Draw controls supported by DrawFrameControl
     case NS_THEME_CHECKBOX:
     case NS_THEME_RADIO:
-    case NS_THEME_SCROLLBAR_BUTTON_UP:
-    case NS_THEME_SCROLLBAR_BUTTON_DOWN:
-    case NS_THEME_SCROLLBAR_BUTTON_LEFT:
-    case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
-    case NS_THEME_SPINNER_UP_BUTTON:
-    case NS_THEME_SPINNER_DOWN_BUTTON:
-    case NS_THEME_DROPDOWN_BUTTON:
+    case NS_THEME_SCROLLBARBUTTON_UP:
+    case NS_THEME_SCROLLBARBUTTON_DOWN:
+    case NS_THEME_SCROLLBARBUTTON_LEFT:
+    case NS_THEME_SCROLLBARBUTTON_RIGHT:
+    case NS_THEME_SPINNER_UPBUTTON:
+    case NS_THEME_SPINNER_DOWNBUTTON:
+    case NS_THEME_MENULIST_BUTTON:
     case NS_THEME_RESIZER: {
       int32_t oldTA;
       // setup DC to make DrawFrameControl draw correctly
@@ -3753,8 +3753,8 @@ RENDER_AGAIN:
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE:
     case NS_THEME_LISTBOX:
-    case NS_THEME_DROPDOWN:
-    case NS_THEME_DROPDOWN_TEXTFIELD: {
+    case NS_THEME_MENULIST:
+    case NS_THEME_MENULIST_TEXTFIELD: {
       // Draw inset edge
       ::DrawEdge(hdc, &widgetRect, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
       EventStates eventState = GetContentState(aFrame, aWidgetType);
@@ -3796,15 +3796,15 @@ RENDER_AGAIN:
       ::DrawEdge(hdc, &widgetRect, BDR_SUNKENOUTER, BF_RECT | BF_MIDDLE);
       InflateRect(&widgetRect, -1, -1);
       // fall through
-    case NS_THEME_TAB_PANEL:
+    case NS_THEME_TABPANEL:
     case NS_THEME_STATUSBAR:
-    case NS_THEME_STATUSBAR_RESIZER_PANEL: {
+    case NS_THEME_RESIZER_PANEL: {
       ::FillRect(hdc, &widgetRect, (HBRUSH) (COLOR_BTNFACE+1));
 
       break;
     }
     // Draw 3D inset statusbar panel
-    case NS_THEME_STATUSBAR_PANEL: {
+    case NS_THEME_STATUSBARPANEL: {
       if (aFrame->GetNextSibling())
         widgetRect.right -= 2; // space between sibling status panels
 
@@ -3813,14 +3813,14 @@ RENDER_AGAIN:
       break;
     }
     // Draw scrollbar thumb
-    case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
-    case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
+    case NS_THEME_SCROLLBARTHUMB_VERTICAL:
+    case NS_THEME_SCROLLBARTHUMB_HORIZONTAL:
       ::DrawEdge(hdc, &widgetRect, EDGE_RAISED, BF_RECT | BF_MIDDLE);
 
       break;
     case NS_THEME_RANGE_THUMB:
-    case NS_THEME_SCALE_THUMB_VERTICAL:
-    case NS_THEME_SCALE_THUMB_HORIZONTAL: {
+    case NS_THEME_SCALETHUMB_VERTICAL:
+    case NS_THEME_SCALETHUMB_HORIZONTAL: {
       EventStates eventState = GetContentState(aFrame, aWidgetType);
 
       ::DrawEdge(hdc, &widgetRect, EDGE_RAISED, BF_RECT | BF_SOFT | BF_MIDDLE | BF_ADJUST);
@@ -3883,17 +3883,17 @@ RENDER_AGAIN:
  
       break;
     }
-    case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
+    case NS_THEME_PROGRESSCHUNK_VERTICAL:
       ::FillRect(hdc, &widgetRect, (HBRUSH) (COLOR_HIGHLIGHT+1));
       break;
 
-    case NS_THEME_PROGRESSBAR_CHUNK: {
+    case NS_THEME_PROGRESSCHUNK: {
       nsIFrame* stateFrame = aFrame->GetParent();
       EventStates eventStates = GetContentState(stateFrame, aWidgetType);
 
       bool indeterminate = IsIndeterminateProgress(stateFrame, eventStates);
       bool vertical = IsVerticalProgress(stateFrame) ||
-                      aWidgetType == NS_THEME_PROGRESSBAR_CHUNK_VERTICAL;
+                      aWidgetType == NS_THEME_PROGRESSCHUNK_VERTICAL;
 
       nsIContent* content = aFrame->GetContent();
       if (!indeterminate || !content) {
@@ -3923,7 +3923,7 @@ RENDER_AGAIN:
 
       break;
     }
-    case NS_THEME_TAB_PANELS:
+    case NS_THEME_TABPANELS:
       ::DrawEdge(hdc, &widgetRect, EDGE_RAISED, BF_SOFT | BF_MIDDLE |
           BF_LEFT | BF_RIGHT | BF_BOTTOM);
 
@@ -4119,8 +4119,8 @@ nsNativeThemeWin::GetWidgetNativeDrawingFlags(uint8_t aWidgetType)
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE:
 
-    case NS_THEME_DROPDOWN:
-    case NS_THEME_DROPDOWN_TEXTFIELD:
+    case NS_THEME_MENULIST:
+    case NS_THEME_MENULIST_TEXTFIELD:
       return
         gfxWindowsNativeDrawing::CANNOT_DRAW_TO_COLOR_ALPHA |
         gfxWindowsNativeDrawing::CAN_AXIS_ALIGNED_SCALE |
@@ -4129,34 +4129,34 @@ nsNativeThemeWin::GetWidgetNativeDrawingFlags(uint8_t aWidgetType)
     // need to check these others
     case NS_THEME_RANGE:
     case NS_THEME_RANGE_THUMB:
-    case NS_THEME_SCROLLBAR_BUTTON_UP:
-    case NS_THEME_SCROLLBAR_BUTTON_DOWN:
-    case NS_THEME_SCROLLBAR_BUTTON_LEFT:
-    case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
-    case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
-    case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
+    case NS_THEME_SCROLLBARBUTTON_UP:
+    case NS_THEME_SCROLLBARBUTTON_DOWN:
+    case NS_THEME_SCROLLBARBUTTON_LEFT:
+    case NS_THEME_SCROLLBARBUTTON_RIGHT:
+    case NS_THEME_SCROLLBARTHUMB_VERTICAL:
+    case NS_THEME_SCROLLBARTHUMB_HORIZONTAL:
     case NS_THEME_SCROLLBAR_VERTICAL:
     case NS_THEME_SCROLLBAR_HORIZONTAL:
     case NS_THEME_SCALE_HORIZONTAL:
     case NS_THEME_SCALE_VERTICAL:
-    case NS_THEME_SCALE_THUMB_HORIZONTAL:
-    case NS_THEME_SCALE_THUMB_VERTICAL:
-    case NS_THEME_SPINNER_UP_BUTTON:
-    case NS_THEME_SPINNER_DOWN_BUTTON:
+    case NS_THEME_SCALETHUMB_HORIZONTAL:
+    case NS_THEME_SCALETHUMB_VERTICAL:
+    case NS_THEME_SPINNER_UPBUTTON:
+    case NS_THEME_SPINNER_DOWNBUTTON:
     case NS_THEME_LISTBOX:
     case NS_THEME_TREEVIEW:
     case NS_THEME_TOOLTIP:
     case NS_THEME_STATUSBAR:
-    case NS_THEME_STATUSBAR_PANEL:
-    case NS_THEME_STATUSBAR_RESIZER_PANEL:
+    case NS_THEME_STATUSBARPANEL:
+    case NS_THEME_RESIZER_PANEL:
     case NS_THEME_RESIZER:
     case NS_THEME_PROGRESSBAR:
     case NS_THEME_PROGRESSBAR_VERTICAL:
-    case NS_THEME_PROGRESSBAR_CHUNK:
-    case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
+    case NS_THEME_PROGRESSCHUNK:
+    case NS_THEME_PROGRESSCHUNK_VERTICAL:
     case NS_THEME_TAB:
-    case NS_THEME_TAB_PANEL:
-    case NS_THEME_TAB_PANELS:
+    case NS_THEME_TABPANEL:
+    case NS_THEME_TABPANELS:
     case NS_THEME_MENUBAR:
     case NS_THEME_MENUPOPUP:
     case NS_THEME_MENUITEM:
@@ -4165,7 +4165,7 @@ nsNativeThemeWin::GetWidgetNativeDrawingFlags(uint8_t aWidgetType)
     // the dropdown button /almost/ renders correctly with scaling,
     // except that the graphic in the dropdown button (the downward arrow)
     // doesn't get scaled up.
-    case NS_THEME_DROPDOWN_BUTTON:
+    case NS_THEME_MENULIST_BUTTON:
     // these are definitely no; they're all graphics that don't get scaled up
     case NS_THEME_CHECKBOX:
     case NS_THEME_RADIO:
