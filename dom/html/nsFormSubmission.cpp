@@ -281,8 +281,10 @@ nsFSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
       HandleMailtoSubject(path);
 
       // Append the body to and force-plain-text args to the mailto line
-      nsCString escapedBody;
-      escapedBody.Adopt(nsEscape(mQueryString.get(), url_XAlphas));
+      nsAutoCString escapedBody;
+      if (NS_WARN_IF(!NS_Escape(mQueryString, escapedBody, url_XAlphas))) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
 
       path += NS_LITERAL_CSTRING("&force-plain-text=Y&body=") + escapedBody;
 
@@ -666,11 +668,11 @@ nsFSTextPlain::GetEncodedSubmission(nsIURI* aURI,
     HandleMailtoSubject(path);
 
     // Append the body to and force-plain-text args to the mailto line
-    char* escapedBuf = nsEscape(NS_ConvertUTF16toUTF8(mBody).get(),
-                                url_XAlphas);
-    NS_ENSURE_TRUE(escapedBuf, NS_ERROR_OUT_OF_MEMORY);
-    nsCString escapedBody;
-    escapedBody.Adopt(escapedBuf);
+    nsAutoCString escapedBody;
+    if (NS_WARN_IF(!NS_Escape(NS_ConvertUTF16toUTF8(mBody), escapedBody,
+                              url_XAlphas))) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     path += NS_LITERAL_CSTRING("&force-plain-text=Y&body=") + escapedBody;
 
