@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<html lang="it-IT-noend">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1178738
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1178738: Make sure cancel is reentrant</title>
+  <script type="application/javascript">
+    window.SimpleTest = parent.SimpleTest;
+    window.info = parent.info;
+    window.is = parent.is;
+    window.isnot = parent.isnot;
+    window.ok = parent.ok;
+  </script>
+  <script type="application/javascript" src="common.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1178738">Mozilla Bug 1178738</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 1178738 **/
+
+function testFunc(done_cb) {
+  var utterance = new SpeechSynthesisUtterance("utterance 1");
+  var utterance2 = new SpeechSynthesisUtterance("utterance 2");
+  var utterance3 = new SpeechSynthesisUtterance("utterance 3");
+  var utterance4 = new SpeechSynthesisUtterance("utterance 4");
+  var utterance5 = new SpeechSynthesisUtterance("utterance 5");
+  utterance5.lang = "en-GB";
+
+  utterance.addEventListener('start', function(e) {
+    ok(true, 'start utterance 1');
+    speechSynthesis.cancel();
+  });
+
+
+  utterance.addEventListener('error', function(e) {
+    is(e.error, "interrupted", "utterance was interrupted");
+  });
+
+  utterance2.addEventListener("error", function(e) {
+    is(e.error, "canceled", "utterance was canceled");
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utterance3);
+  });
+
+  utterance2.addEventListener("start", function(e) {
+    ok(false, "Utterance should never be spoken")
+  });
+
+  utterance3.addEventListener('start', function(e) {
+    ok(true, 'start utterance 3');
+    speechSynthesis.speak(utterance4);
+    speechSynthesis.cancel();
+  });
+
+  utterance3.addEventListener('error', function(e) {
+    is(e.error, "interrupted", "utterance was interrupted");
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utterance5);
+  });
+
+  var utterance4_error = synthEventPromise(utterance4, "error").then(
+    e => is(e.error, "canceled", "utterance 4 was canceled"));
+  var utterance5_end = synthEventPromise(utterance5, "end").then(
+    e => ok(true, "utterance 5 ended"));
+
+  Promise.all([utterance4_error, utterance5_end]).then(done_cb);
+
+
+  speechSynthesis.speak(utterance);
+  speechSynthesis.speak(utterance2);
+}
+
+// Run test with no global queue, and then run it with a global queue.
+testFunc(SimpleTest.finish);
+
+</script>
+</pre>
+</body>
+</html>
