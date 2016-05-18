@@ -978,9 +978,11 @@ MediaPipelineFactory::EnsureExternalCodec(VideoSessionConduit& aConduit,
      }
 #endif
      return kMediaConduitNoError;
-  } else if (aConfig->mName == "VP9") {
+  }
+  if (aConfig->mName == "VP9") {
     return kMediaConduitNoError;
-  } else if (aConfig->mName == "H264") {
+  }
+  if (aConfig->mName == "H264") {
     if (aConduit.CodecPluginID() != 0) {
       return kMediaConduitNoError;
     }
