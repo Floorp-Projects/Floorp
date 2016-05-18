@@ -1616,13 +1616,29 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     }
   }
 
-  if (IS_TRUE_OVERFLOW_CONTAINER(this) &&
-      NS_FRAME_IS_NOT_COMPLETE(aState.mReflowStatus)) {
-    // Overflow containers can only be overflow complete.
-    // Note that auto height overflow containers have no normal children
-    NS_ASSERTION(finalSize.BSize(wm) == 0,
-                 "overflow containers must be zero-block-size");
-    NS_FRAME_SET_OVERFLOW_INCOMPLETE(aState.mReflowStatus);
+  if (IS_TRUE_OVERFLOW_CONTAINER(this)) {
+    if (NS_FRAME_IS_NOT_COMPLETE(aState.mReflowStatus)) {
+      // Overflow containers can only be overflow complete.
+      // Note that auto height overflow containers have no normal children
+      NS_ASSERTION(finalSize.BSize(wm) == 0,
+                   "overflow containers must be zero-block-size");
+      NS_FRAME_SET_OVERFLOW_INCOMPLETE(aState.mReflowStatus);
+    }
+  } else if (aReflowState.AvailableBSize() != NS_UNCONSTRAINEDSIZE &&
+             !NS_INLINE_IS_BREAK_BEFORE(aState.mReflowStatus) &&
+             NS_FRAME_IS_COMPLETE(aState.mReflowStatus)) {
+    // Currently only used for grid items, but could be used in other contexts.
+    // The FragStretchBSizeProperty is our expected non-fragmented block-size
+    // we should stretch to (for align-self:stretch etc).  In some fragmentation
+    // cases though, the last fragment (this frame since we're complete), needs
+    // to have extra size applied because earlier fragments consumed to much of
+    // our computed size due to overflowing their containing block.  (E.g. this
+    // ensures we fill the last row when a multi-row grid item is fragmented).
+    bool found;
+    nscoord bSize = Properties().Get(FragStretchBSizeProperty(), &found);
+    if (found) {
+      finalSize.BSize(wm) = std::max(bSize, finalSize.BSize(wm));
+    }
   }
 
   // Screen out negative block sizes --- can happen due to integer overflows :-(
