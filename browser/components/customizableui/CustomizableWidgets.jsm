@@ -1116,6 +1116,10 @@ if (Services.prefs.getBoolPref("privacy.userContext.enabled")) {
         win.openUILinkIn(win.BROWSER_NEW_TAB_URL, "tab", {userContextId});
       };
       items.addEventListener("command", onItemCommand);
+
+      if (PrivateBrowsingUtils.isWindowPrivate(win)) {
+        aNode.setAttribute("disabled", "true");
+      }
     },
     onViewShowing: function(aEvent) {
       let doc = aEvent.detail.ownerDocument;
