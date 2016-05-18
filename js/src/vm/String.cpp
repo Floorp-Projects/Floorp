@@ -944,7 +944,7 @@ AutoStableStringChars::allocOwnChars(JSContext* cx, size_t count)
 
     static_assert((JSString::MAX_LENGTH & mozilla::tl::MulOverflowMask<sizeof(T)>::value) == 0,
                   "Size calculation can overflow");
-    MOZ_ASSERT(count <= (JSString::MAX_LENGTH + 1));
+    MOZ_ASSERT(count <= JSString::MAX_LENGTH);
     size_t size = sizeof(T) * count;
 
     ownChars_.emplace(cx);
