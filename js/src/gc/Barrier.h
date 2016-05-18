@@ -141,7 +141,8 @@
  *  |  |  |  |
  *  |  |  | GCPtr            provides pre- and post-barriers
  *  |  |  |
- *  |  | RelocatablePtr      provides pre- and post-barriers and is relocatable
+ *  |  | HeapPtr             provides pre- and post-barriers; is relocatable
+ *  |  |                     and deletable for use inside C++ managed memory
  *  |  |
  *  | HeapSlot               similar to GCPtr, but tailored to slots storage
  *  |
@@ -161,7 +162,7 @@
  *      -> InternalBarrierMethods<T*>::preBarrier
  *          -> T::writeBarrierPre
  *
- * GCPtr<T>::post and RelocatablePtr<T>::post
+ * GCPtr<T>::post and HeapPtr<T>::post
  *  -> InternalBarrierMethods<T*>::postBarrier
  *      -> T::writeBarrierPost
  *  -> InternalBarrierMethods<Value>::postBarrier
@@ -369,10 +370,10 @@ class WriteBarrieredBase : public BarrieredBase<T>
 };
 
 /*
- * PreBarriered only automatically handles pre-barriers. Post-barriers must
- * be manually implemented when using this class. GCPtr and RelocatablePtr
- * should be used in all cases that do not require explicit low-level control
- * of moving behavior, e.g. for HashMap keys.
+ * PreBarriered only automatically handles pre-barriers. Post-barriers must be
+ * manually implemented when using this class. GCPtr and HeapPtr should be used
+ * in all cases that do not require explicit low-level control of moving
+ * behavior, e.g. for HashMap keys.
  */
 template <class T>
 class PreBarriered : public WriteBarrieredBase<T>
@@ -380,7 +381,8 @@ class PreBarriered : public WriteBarrieredBase<T>
   public:
     PreBarriered() : WriteBarrieredBase<T>(JS::GCPolicy<T>::initial()) {}
     /*
-     * Allow implicit construction for use in generic contexts, such as DebuggerWeakMap::markKeys.
+     * Allow implicit construction for use in generic contexts, such as
+     * DebuggerWeakMap::markKeys.
      */
     MOZ_IMPLICIT PreBarriered(T v) : WriteBarrieredBase<T>(v) {}
     explicit PreBarriered(const PreBarriered<T>& v) : WriteBarrieredBase<T>(v.value) {}
@@ -413,7 +415,7 @@ class PreBarriered : public WriteBarrieredBase<T>
  * containers.
  *
  * The post-barriers implemented by this class are faster than those
- * implemented by RelocatablePtr<T> or JS::Heap<T> at the cost of not
+ * implemented by js::HeapPtr<T> or JS::Heap<T> at the cost of not
  * automatically handling deletion or movement.
  */
 template <class T>
@@ -455,7 +457,7 @@ class GCPtr : public WriteBarrieredBase<T>
     }
 
     /*
-     * Unlike RelocatablePtr<T>, GCPtr<T> must be managed with GC lifetimes.
+     * Unlike HeapPtr<T>, GCPtr<T> must be managed with GC lifetimes.
      * Specifically, the memory used by the pointer itself must be live until
      * at least the next minor GC. For that reason, move semantics are invalid
      * and are deleted here. Please note that not all containers support move
@@ -472,42 +474,42 @@ class GCPtr : public WriteBarrieredBase<T>
  * The GC sometimes keeps pointers to pointers to GC things --- for example, to
  * track references into the nursery. However, C++ containers like GCVector and
  * GCHashMap usually reserve the right to relocate their elements any time
- * they're modified, invalidating all pointers to the elements. RelocatablePtr
+ * they're modified, invalidating all pointers to the elements. HeapPtr
  * has a move constructor which knows how to keep the GC up to date if it is
  * moved to a new location.
  *
- * However, because of this additional communication with the GC, RelocatablePtr
+ * However, because of this additional communication with the GC, HeapPtr
  * is somewhat slower, so it should only be used in contexts where this ability
  * is necessary.
  *
  * Obviously, JSObjects, JSStrings, and the like get tenured and compacted, so
  * whatever pointers they contain get relocated, in the sense used here.
  * However, since the GC itself is moving those values, it takes care of its
- * internal pointers to those pointers itself. RelocatablePtr is only necessary
+ * internal pointers to those pointers itself. HeapPtr is only necessary
  * when the relocation would otherwise occur without the GC's knowledge.
  */
 template <class T>
-class RelocatablePtr : public WriteBarrieredBase<T>
+class HeapPtr : public WriteBarrieredBase<T>
 {
   public:
-    RelocatablePtr() : WriteBarrieredBase<T>(JS::GCPolicy<T>::initial()) {}
+    HeapPtr() : WriteBarrieredBase<T>(JS::GCPolicy<T>::initial()) {}
 
     // Implicitly adding barriers is a reasonable default.
-    MOZ_IMPLICIT RelocatablePtr(const T& v) : WriteBarrieredBase<T>(v) {
+    MOZ_IMPLICIT HeapPtr(const T& v) : WriteBarrieredBase<T>(v) {
         this->post(JS::GCPolicy<T>::initial(), this->value);
     }
 
     /*
-     * For RelocatablePtr, move semantics are equivalent to copy semantics. In
+     * For HeapPtr, move semantics are equivalent to copy semantics. In
      * C++, a copy constructor taking const-ref is the way to get a single
      * function that will be used for both lvalue and rvalue copies, so we can
      * simply omit the rvalue variant.
      */
-    MOZ_IMPLICIT RelocatablePtr(const RelocatablePtr<T>& v) : WriteBarrieredBase<T>(v) {
+    MOZ_IMPLICIT HeapPtr(const HeapPtr<T>& v) : WriteBarrieredBase<T>(v) {
         this->post(JS::GCPolicy<T>::initial(), this->value);
     }
 
-    ~RelocatablePtr() {
+    ~HeapPtr() {
         this->pre();
         this->post(this->value, JS::GCPolicy<T>::initial());
     }
@@ -517,14 +519,14 @@ class RelocatablePtr : public WriteBarrieredBase<T>
         this->post(JS::GCPolicy<T>::initial(), this->value);
     }
 
-    DECLARE_POINTER_ASSIGN_OPS(RelocatablePtr, T);
+    DECLARE_POINTER_ASSIGN_OPS(HeapPtr, T);
 
     /* Make this friend so it can access pre() and post(). */
     template <class T1, class T2>
     friend inline void
     BarrieredSetPair(Zone* zone,
-                     RelocatablePtr<T1*>& v1, T1* val1,
-                     RelocatablePtr<T2*>& v2, T2* val2);
+                     HeapPtr<T1*>& v1, T1* val1,
+                     HeapPtr<T2*>& v2, T2* val2);
 
   protected:
     void set(const T& v) {
@@ -643,7 +645,7 @@ class BarrieredBaseMixins<JS::Value> : public ValueOperations<WriteBarrieredBase
 
 // A pre- and post-barriered Value that is specialized to be aware that it
 // resides in a slots or elements vector. This allows it to be relocated in
-// memory, but with substantially less overhead than a RelocatablePtr.
+// memory, but with substantially less overhead than a HeapPtr.
 class HeapSlot : public WriteBarrieredBase<Value>
 {
   public:
@@ -748,8 +750,8 @@ class HeapSlotArray
 template <class T1, class T2>
 static inline void
 BarrieredSetPair(Zone* zone,
-                 RelocatablePtr<T1*>& v1, T1* val1,
-                 RelocatablePtr<T2*>& v2, T2* val2)
+                 HeapPtr<T1*>& v1, T1* val1,
+                 HeapPtr<T2*>& v2, T2* val2)
 {
     if (T1::needWriteBarrierPre(zone)) {
         v1.pre();
@@ -805,9 +807,9 @@ struct MovableCellHasher<PreBarriered<T>>
 };
 
 template <typename T>
-struct MovableCellHasher<RelocatablePtr<T>>
+struct MovableCellHasher<HeapPtr<T>>
 {
-    using Key = RelocatablePtr<T>;
+    using Key = HeapPtr<T>;
     using Lookup = T;
 
     static HashNumber hash(const Lookup& l) { return MovableCellHasher<T>::hash(l); }
@@ -893,20 +895,6 @@ typedef PreBarriered<jit::JitCode*> PreBarrieredJitCode;
 typedef PreBarriered<JSString*> PreBarrieredString;
 typedef PreBarriered<JSAtom*> PreBarrieredAtom;
 
-typedef RelocatablePtr<JSObject*> RelocatablePtrObject;
-typedef RelocatablePtr<JSFunction*> RelocatablePtrFunction;
-typedef RelocatablePtr<PlainObject*> RelocatablePtrPlainObject;
-typedef RelocatablePtr<JSScript*> RelocatablePtrScript;
-typedef RelocatablePtr<NativeObject*> RelocatablePtrNativeObject;
-typedef RelocatablePtr<NestedScopeObject*> RelocatablePtrNestedScopeObject;
-typedef RelocatablePtr<Shape*> RelocatablePtrShape;
-typedef RelocatablePtr<ObjectGroup*> RelocatablePtrObjectGroup;
-typedef RelocatablePtr<jit::JitCode*> RelocatablePtrJitCode;
-typedef RelocatablePtr<JSLinearString*> RelocatablePtrLinearString;
-typedef RelocatablePtr<JSString*> RelocatablePtrString;
-typedef RelocatablePtr<JSAtom*> RelocatablePtrAtom;
-typedef RelocatablePtr<ArrayBufferObjectMaybeShared*> RelocatablePtrArrayBufferObjectMaybeShared;
-
 typedef GCPtr<NativeObject*> GCPtrNativeObject;
 typedef GCPtr<ArrayObject*> GCPtrArrayObject;
 typedef GCPtr<ArrayBufferObjectMaybeShared*> GCPtrArrayBufferObjectMaybeShared;
@@ -930,11 +918,9 @@ typedef GCPtr<jit::JitCode*> GCPtrJitCode;
 typedef GCPtr<ObjectGroup*> GCPtrObjectGroup;
 
 typedef PreBarriered<Value> PreBarrieredValue;
-typedef RelocatablePtr<Value> RelocatableValue;
 typedef GCPtr<Value> GCPtrValue;
 
 typedef PreBarriered<jsid> PreBarrieredId;
-typedef RelocatablePtr<jsid> RelocatableId;
 typedef GCPtr<jsid> GCPtrId;
 
 typedef ImmutableTenuredPtr<PropertyName*> ImmutablePropertyNamePtr;

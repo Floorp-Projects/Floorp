@@ -118,8 +118,8 @@ class IndirectBindingMap
     struct Binding
     {
         Binding(ModuleEnvironmentObject* environment, Shape* shape);
-        RelocatablePtr<ModuleEnvironmentObject*> environment;
-        RelocatablePtrShape shape;
+        HeapPtr<ModuleEnvironmentObject*> environment;
+        HeapPtr<Shape*> shape;
     };
 
     typedef HashMap<jsid, Binding, DefaultHasher<jsid>, ZoneAllocPolicy> Map;
@@ -194,8 +194,8 @@ struct FunctionDeclaration
     FunctionDeclaration(HandleAtom name, HandleFunction fun);
     void trace(JSTracer* trc);
 
-    RelocatablePtrAtom name;
-    RelocatablePtrFunction fun;
+    HeapPtr<JSAtom*> name;
+    HeapPtr<JSFunction*> fun;
 };
 
 using FunctionDeclarationVector = GCVector<FunctionDeclaration, 0, ZoneAllocPolicy>;

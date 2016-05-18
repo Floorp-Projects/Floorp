@@ -485,7 +485,7 @@ class Module : public mozilla::LinkedListElement<Module>
     };
     typedef Vector<FuncPtrTable, 0, SystemAllocPolicy> FuncPtrTableVector;
     typedef Vector<CacheableChars, 0, SystemAllocPolicy> FuncLabelVector;
-    typedef RelocatablePtrArrayBufferObjectMaybeShared BufferPtr;
+    typedef HeapPtr<ArrayBufferObjectMaybeShared*> BufferPtr;
     typedef GCPtr<WasmModuleObject*> ModuleObjectPtr;
 
     // Initialized when constructed:

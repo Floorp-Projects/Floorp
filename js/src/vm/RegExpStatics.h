@@ -21,19 +21,19 @@ class RegExpStatics
 {
     /* The latest RegExp output, set after execution. */
     VectorMatchPairs        matches;
-    RelocatablePtrLinearString matchesInput;
+    HeapPtr<JSLinearString*>  matchesInput;
 
     /*
      * The previous RegExp input, used to resolve lazy state.
      * A raw RegExpShared cannot be stored because it may be in
      * a different compartment via evalcx().
      */
-    RelocatablePtrAtom      lazySource;
+    HeapPtr<JSAtom*>          lazySource;
     RegExpFlag              lazyFlags;
     size_t                  lazyIndex;
 
     /* The latest RegExp input, set before execution. */
-    RelocatablePtrString    pendingInput;
+    HeapPtr<JSString*>        pendingInput;
 
     /*
      * If non-zero, |matchesInput| and the |lazy*| fields may be used

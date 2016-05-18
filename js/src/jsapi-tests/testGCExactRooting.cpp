@@ -46,8 +46,8 @@ END_TEST(testGCSuppressions)
 
 struct MyContainer
 {
-    RelocatablePtrObject obj;
-    RelocatablePtrString str;
+    HeapPtr<JSObject*> obj;
+    HeapPtr<JSString*> str;
 
     MyContainer() : obj(nullptr), str(nullptr) {}
     void trace(JSTracer* trc) {
@@ -59,15 +59,15 @@ struct MyContainer
 namespace js {
 template <>
 struct RootedBase<MyContainer> {
-    RelocatablePtrObject& obj() { return static_cast<Rooted<MyContainer>*>(this)->get().obj; }
-    RelocatablePtrString& str() { return static_cast<Rooted<MyContainer>*>(this)->get().str; }
+    HeapPtr<JSObject*>& obj() { return static_cast<Rooted<MyContainer>*>(this)->get().obj; }
+    HeapPtr<JSString*>& str() { return static_cast<Rooted<MyContainer>*>(this)->get().str; }
 };
 template <>
 struct PersistentRootedBase<MyContainer> {
-    RelocatablePtrObject& obj() {
+    HeapPtr<JSObject*>& obj() {
         return static_cast<PersistentRooted<MyContainer>*>(this)->get().obj;
     }
-    RelocatablePtrString& str() {
+    HeapPtr<JSString*>& str() {
         return static_cast<PersistentRooted<MyContainer>*>(this)->get().str;
     }
 };

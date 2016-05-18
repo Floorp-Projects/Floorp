@@ -1213,7 +1213,7 @@ class LiveScopeVal
     friend class MissingScopeKey;
 
     AbstractFramePtr frame_;
-    RelocatablePtrObject staticScope_;
+    HeapPtr<JSObject*> staticScope_;
 
     static void staticAsserts();
 

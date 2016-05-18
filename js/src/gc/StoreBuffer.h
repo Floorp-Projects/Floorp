@@ -64,7 +64,7 @@ class StoreBuffer
 
         /*
          * A one element cache in front of the canonical set to speed up
-         * temporary instances of RelocatablePtr.
+         * temporary instances of HeapPtr.
          */
         T last_;
 

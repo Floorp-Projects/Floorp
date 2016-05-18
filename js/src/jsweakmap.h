@@ -372,13 +372,13 @@ extern JSObject*
 InitWeakMapClass(JSContext* cx, HandleObject obj);
 
 
-class ObjectValueMap : public WeakMap<RelocatablePtrObject, RelocatableValue,
-                                      MovableCellHasher<RelocatablePtrObject>>
+class ObjectValueMap : public WeakMap<HeapPtr<JSObject*>, HeapPtr<Value>,
+                                      MovableCellHasher<HeapPtr<JSObject*>>>
 {
   public:
     ObjectValueMap(JSContext* cx, JSObject* obj)
-      : WeakMap<RelocatablePtrObject, RelocatableValue,
-                MovableCellHasher<RelocatablePtrObject>>(cx, obj)
+      : WeakMap<HeapPtr<JSObject*>, HeapPtr<Value>,
+                MovableCellHasher<HeapPtr<JSObject*>>>(cx, obj)
     {}
 
     virtual bool findZoneEdges();
