@@ -1895,6 +1895,8 @@ UpdateService.prototype = {
           Services.obs.removeObserver(this,
                                       APPID_TO_TOPIC[Services.appinfo.ID]);
         }
+        // intentional fallthrough
+      case "test-post-update-processing":
         // Clean up any extant updates
         this._postUpdateProcessing();
         break;
