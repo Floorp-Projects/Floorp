@@ -5269,6 +5269,7 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
   , mNoExtendContext(false)
   , mIsTransformSeparator(false)
   , mTransformPreserves3DInited(false)
+  , mIsFullyVisible(false)
 {
   MOZ_COUNT_CTOR(nsDisplayTransform);
   MOZ_ASSERT(aFrame, "Must have a frame!");
@@ -5318,16 +5319,13 @@ nsDisplayTransform::Init(nsDisplayListBuilder* aBuilder)
   mHasBounds = false;
   mStoredList.SetClip(aBuilder, DisplayItemClip::NoClip());
   mStoredList.SetVisibleRect(mChildrenVisibleRect);
-  // If this is true, then BuildDisplayListForStacking context should have already
-  // set the correct visible region and made sure we built all the necessary
-  // descendant display items.
-  mPrerender = ShouldPrerenderTransformedContent(aBuilder, mFrame);
 }
 
 nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
                                        nsIFrame *aFrame, nsDisplayList *aList,
                                        const nsRect& aChildrenVisibleRect,
-                                       uint32_t aIndex)
+                                       uint32_t aIndex,
+                                       bool aIsFullyVisible)
   : nsDisplayItem(aBuilder, aFrame)
   , mStoredList(aBuilder, aFrame, aList)
   , mTransformGetter(nullptr)
@@ -5338,6 +5336,7 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
   , mNoExtendContext(false)
   , mIsTransformSeparator(false)
   , mTransformPreserves3DInited(false)
+  , mIsFullyVisible(aIsFullyVisible)
 {
   MOZ_COUNT_CTOR(nsDisplayTransform);
   MOZ_ASSERT(aFrame, "Must have a frame!");
@@ -5360,6 +5359,7 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
   , mNoExtendContext(false)
   , mIsTransformSeparator(false)
   , mTransformPreserves3DInited(false)
+  , mIsFullyVisible(false)
 {
   MOZ_COUNT_CTOR(nsDisplayTransform);
   MOZ_ASSERT(aFrame, "Must have a frame!");
@@ -5383,6 +5383,7 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
   , mNoExtendContext(false)
   , mIsTransformSeparator(true)
   , mTransformPreserves3DInited(false)
+  , mIsFullyVisible(false)
 {
   MOZ_COUNT_CTOR(nsDisplayTransform);
   MOZ_ASSERT(aFrame, "Must have a frame!");
@@ -5784,14 +5785,9 @@ nsDisplayOpacity::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder)
 }
 
 bool
-nsDisplayTransform::ShouldPrerender() {
-  return mPrerender;
-}
-
-bool
 nsDisplayTransform::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder)
 {
-  return mPrerender;
+  return mIsFullyVisible;
 }
 
 /* static */ bool
@@ -5935,7 +5931,7 @@ nsDisplayTransform::ShouldBuildLayerEvenIfInvisible(nsDisplayListBuilder* aBuild
   // The visible rect of a Preserves-3D frame is just an intermediate
   // result.  It should always build a layer to make sure it is
   // rendering correctly.
-  return ShouldPrerender() || mFrame->Combines3DTransformWithAncestors();
+  return MayBeAnimated(aBuilder) || mFrame->Combines3DTransformWithAncestors();
 }
 
 already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBuilder,
@@ -5948,9 +5944,7 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
    */
   const Matrix4x4& newTransformMatrix = GetTransformForRendering();
 
-  uint32_t flags = ShouldPrerender() ?
-    FrameLayerBuilder::CONTAINER_NOT_CLIPPED_BY_ANCESTORS : 0;
-  flags |= FrameLayerBuilder::CONTAINER_ALLOW_PULL_BACKGROUND_COLOR;
+  uint32_t flags = FrameLayerBuilder::CONTAINER_ALLOW_PULL_BACKGROUND_COLOR;
   RefPtr<ContainerLayer> container = aManager->GetLayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mStoredList.GetChildren(),
                            aContainerParameters, &newTransformMatrix, flags);
@@ -5970,7 +5964,7 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
   nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(container, aBuilder,
                                                            this, mFrame,
                                                            eCSSProperty_transform);
-  if (ShouldPrerender()) {
+  if (mIsFullyVisible) {
     if (MayBeAnimated(aBuilder)) {
       // Only allow async updates to the transform if we're an animated layer, since that's what
       // triggers us to set the correct AGR in the constructor and makes sure FrameLayerBuilder
@@ -6038,8 +6032,7 @@ bool nsDisplayTransform::ComputeVisibility(nsDisplayListBuilder *aBuilder,
    * think that it's painting in its original rectangular coordinate space.
    * If we can't untransform, take the entire overflow rect */
   nsRect untransformedVisibleRect;
-  if (ShouldPrerender() ||
-      !UntransformVisibleRect(aBuilder, &untransformedVisibleRect))
+  if (!UntransformVisibleRect(aBuilder, &untransformedVisibleRect))
   {
     untransformedVisibleRect = mFrame->GetVisualOverflowRectRelativeToSelf();
   }
@@ -6184,9 +6177,7 @@ nsDisplayTransform::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
     return nsRect();
   }
 
-  nsRect untransformedBounds = ShouldPrerender() ?
-    mFrame->GetVisualOverflowRectRelativeToSelf() :
-    mStoredList.GetBounds(aBuilder, aSnap);
+  nsRect untransformedBounds = mStoredList.GetBounds(aBuilder, aSnap);
   // GetTransform always operates in dev pixels.
   float factor = mFrame->PresContext()->AppUnitsPerDevPixel();
   mBounds = nsLayoutUtils::MatrixTransformRect(untransformedBounds,
@@ -6223,9 +6214,7 @@ nsDisplayTransform::ComputeBounds(nsDisplayListBuilder* aBuilder)
    * nsDisplayListBuilder.
    */
   bool snap;
-  nsRect untransformedBounds = ShouldPrerender() ?
-    mFrame->GetVisualOverflowRectRelativeToSelf() :
-    mStoredList.GetBounds(aBuilder, &snap);
+  nsRect untransformedBounds = mStoredList.GetBounds(aBuilder, &snap);
   // GetTransform always operates in dev pixels.
   float factor = mFrame->PresContext()->AppUnitsPerDevPixel();
   nsRect rect =
@@ -6257,14 +6246,7 @@ nsRegion nsDisplayTransform::GetOpaqueRegion(nsDisplayListBuilder *aBuilder,
 {
   *aSnap = false;
   nsRect untransformedVisible;
-  // If we're going to prerender all our content, pretend like we
-  // don't have opqaue content so that everything under us is rendered
-  // as well.  That will increase graphics memory usage if our frame
-  // covers the entire window, but it allows our transform to be
-  // updated extremely cheaply, without invalidating any other
-  // content.
-  if (ShouldPrerender() ||
-      !UntransformVisibleRect(aBuilder, &untransformedVisible)) {
+  if (!UntransformVisibleRect(aBuilder, &untransformedVisible)) {
       return nsRegion();
   }
 
@@ -6592,8 +6574,7 @@ nsDisplayVR::BuildLayer(nsDisplayListBuilder* aBuilder,
                         const ContainerLayerParameters& aContainerParameters)
 {
   ContainerLayerParameters newContainerParameters = aContainerParameters;
-  uint32_t flags = FrameLayerBuilder::CONTAINER_NOT_CLIPPED_BY_ANCESTORS |
-                   FrameLayerBuilder::CONTAINER_ALLOW_PULL_BACKGROUND_COLOR;
+  uint32_t flags = FrameLayerBuilder::CONTAINER_ALLOW_PULL_BACKGROUND_COLOR;
   RefPtr<ContainerLayer> container = aManager->GetLayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
                            newContainerParameters, nullptr, flags);
