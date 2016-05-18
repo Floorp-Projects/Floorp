@@ -4,6 +4,7 @@
 
 package org.mozilla.gecko.background.fxa;
 
+import org.json.simple.JSONArray;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientMalformedResponseException;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
@@ -168,6 +169,11 @@ public class FxAccountClient20 implements FxAccountClient {
     });
   }
 
+  enum ResponseType {
+    JSON_ARRAY,
+    JSON_OBJECT
+  }
+
   /**
    * Translate resource callbacks into request callbacks invoked on the provided
    * executor.
@@ -177,19 +183,27 @@ public class FxAccountClient20 implements FxAccountClient {
    * invoked via the executor, so you don't need to delegate further.
    */
   protected abstract class ResourceDelegate<T> extends BaseResourceDelegate {
-    protected abstract void handleSuccess(final int status, HttpResponse response, final ExtendedJSONObject body);
+
+    protected void handleSuccess(final int status, HttpResponse response, final ExtendedJSONObject body) throws Exception {
+      throw new UnsupportedOperationException();
+    }
+
+    protected void handleSuccess(final int status, HttpResponse response, final JSONArray body) throws Exception {
+      throw new UnsupportedOperationException();
+    }
 
     protected final RequestDelegate<T> delegate;
 
     protected final byte[] tokenId;
     protected final byte[] reqHMACKey;
     protected final SkewHandler skewHandler;
+    protected final ResponseType responseType;
 
     /**
      * Create a delegate for an un-authenticated resource.
      */
-    public ResourceDelegate(final Resource resource, final RequestDelegate<T> delegate) {
-      this(resource, delegate, null, null);
+    public ResourceDelegate(final Resource resource, final RequestDelegate<T> delegate, ResponseType responseType) {
+      this(resource, delegate, responseType, null, null);
     }
 
     /**
@@ -198,12 +212,13 @@ public class FxAccountClient20 implements FxAccountClient {
      * Every Hawk request that encloses an entity (PATCH, POST, and PUT) will
      * include the payload verification hash.
      */
-    public ResourceDelegate(final Resource resource, final RequestDelegate<T> delegate, final byte[] tokenId, final byte[] reqHMACKey) {
+    public ResourceDelegate(final Resource resource, final RequestDelegate<T> delegate, ResponseType responseType, final byte[] tokenId, final byte[] reqHMACKey) {
       super(resource);
       this.delegate = delegate;
       this.reqHMACKey = reqHMACKey;
       this.tokenId = tokenId;
       this.skewHandler = SkewHandler.getSkewHandlerForResource(resource);
+      this.responseType = responseType;
     }
 
     @Override
@@ -250,8 +265,14 @@ public class FxAccountClient20 implements FxAccountClient {
         @Override
         public void run() {
           try {
-            ExtendedJSONObject body = new SyncResponse(response).jsonObjectBody();
-            ResourceDelegate.this.handleSuccess(status, response, body);
+            SyncResponse syncResponse = new SyncResponse(response);
+            if (responseType == ResponseType.JSON_ARRAY) {
+              JSONArray body = syncResponse.jsonArrayBody();
+              ResourceDelegate.this.handleSuccess(status, response, body);
+            } else {
+              ExtendedJSONObject body = syncResponse.jsonObjectBody();
+              ResourceDelegate.this.handleSuccess(status, response, body);
+            }
           } catch (Exception e) {
             delegate.handleError(e);
           }
@@ -413,19 +434,13 @@ public class FxAccountClient20 implements FxAccountClient {
       return;
     }
 
-    resource.delegate = new ResourceDelegate<TwoKeys>(resource, delegate, tokenId, reqHMACKey) {
+    resource.delegate = new ResourceDelegate<TwoKeys>(resource, delegate, ResponseType.JSON_OBJECT, tokenId, reqHMACKey) {
       @Override
-      public void handleSuccess(int status, HttpResponse response, ExtendedJSONObject body) {
-        try {
-          byte[] kA = new byte[FxAccountUtils.CRYPTO_KEY_LENGTH_BYTES];
-          byte[] wrapkB = new byte[FxAccountUtils.CRYPTO_KEY_LENGTH_BYTES];
-          unbundleBody(body, requestKey, FxAccountUtils.KW("account/keys"), kA, wrapkB);
-          delegate.handleSuccess(new TwoKeys(kA, wrapkB));
-          return;
-        } catch (Exception e) {
-          delegate.handleError(e);
-          return;
-        }
+      public void handleSuccess(int status, HttpResponse response, ExtendedJSONObject body) throws Exception {
+        byte[] kA = new byte[FxAccountUtils.CRYPTO_KEY_LENGTH_BYTES];
+        byte[] wrapkB = new byte[FxAccountUtils.CRYPTO_KEY_LENGTH_BYTES];
+        unbundleBody(body, requestKey, FxAccountUtils.KW("account/keys"), kA, wrapkB);
+        delegate.handleSuccess(new TwoKeys(kA, wrapkB));
       }
     };
     resource.get();
@@ -475,20 +490,14 @@ public class FxAccountClient20 implements FxAccountClient {
       return;
     }
 
-    resource.delegate = new ResourceDelegate<StatusResponse>(resource, delegate, tokenId, reqHMACKey) {
+    resource.delegate = new ResourceDelegate<StatusResponse>(resource, delegate, ResponseType.JSON_OBJECT, tokenId, reqHMACKey) {
       @Override
-      public void handleSuccess(int status, HttpResponse response, ExtendedJSONObject body) {
-        try {
-          String[] requiredStringFields = new String[] { JSON_KEY_EMAIL };
-          body.throwIfFieldsMissingOrMisTyped(requiredStringFields, String.class);
-          String email = body.getString(JSON_KEY_EMAIL);
-          Boolean verified = body.getBoolean(JSON_KEY_VERIFIED);
-          delegate.handleSuccess(new StatusResponse(email, verified));
-          return;
-        } catch (Exception e) {
-          delegate.handleError(e);
-          return;
-        }
+      public void handleSuccess(int status, HttpResponse response, ExtendedJSONObject body) throws Exception {
+        String[] requiredStringFields = new String[] { JSON_KEY_EMAIL };
+        body.throwIfFieldsMissingOrMisTyped(requiredStringFields, String.class);
+        String email = body.getString(JSON_KEY_EMAIL);
+        Boolean verified = body.getBoolean(JSON_KEY_VERIFIED);
+        delegate.handleSuccess(new StatusResponse(email, verified));
       }
     };
     resource.get();
@@ -517,9 +526,9 @@ public class FxAccountClient20 implements FxAccountClient {
       return;
     }
 
-    resource.delegate = new ResourceDelegate<String>(resource, delegate, tokenId, reqHMACKey) {
+    resource.delegate = new ResourceDelegate<String>(resource, delegate, ResponseType.JSON_OBJECT, tokenId, reqHMACKey) {
       @Override
-      public void handleSuccess(int status, HttpResponse response, ExtendedJSONObject body) {
+      public void handleSuccess(int status, HttpResponse response, ExtendedJSONObject body) throws Exception {
         String cert = body.getString("cert");
         if (cert == null) {
           delegate.handleError(new FxAccountClientException("cert must be a non-null string"));
@@ -580,31 +589,25 @@ public class FxAccountClient20 implements FxAccountClient {
       return;
     }
 
-    resource.delegate = new ResourceDelegate<LoginResponse>(resource, delegate) {
+    resource.delegate = new ResourceDelegate<LoginResponse>(resource, delegate, ResponseType.JSON_OBJECT) {
       @Override
-      public void handleSuccess(int status, HttpResponse response, ExtendedJSONObject body) {
-        try {
-          final String[] requiredStringFields = getKeys ? LOGIN_RESPONSE_REQUIRED_STRING_FIELDS_KEYS : LOGIN_RESPONSE_REQUIRED_STRING_FIELDS;
-          body.throwIfFieldsMissingOrMisTyped(requiredStringFields, String.class);
+      public void handleSuccess(int status, HttpResponse response,  ExtendedJSONObject body) throws Exception {
+        final String[] requiredStringFields = getKeys ? LOGIN_RESPONSE_REQUIRED_STRING_FIELDS_KEYS : LOGIN_RESPONSE_REQUIRED_STRING_FIELDS;
+        body.throwIfFieldsMissingOrMisTyped(requiredStringFields, String.class);
 
-          final String[] requiredBooleanFields = LOGIN_RESPONSE_REQUIRED_BOOLEAN_FIELDS;
-          body.throwIfFieldsMissingOrMisTyped(requiredBooleanFields, Boolean.class);
+        final String[] requiredBooleanFields = LOGIN_RESPONSE_REQUIRED_BOOLEAN_FIELDS;
+        body.throwIfFieldsMissingOrMisTyped(requiredBooleanFields, Boolean.class);
 
-          String uid = body.getString(JSON_KEY_UID);
-          boolean verified = body.getBoolean(JSON_KEY_VERIFIED);
-          byte[] sessionToken = Utils.hex2Byte(body.getString(JSON_KEY_SESSIONTOKEN));
-          byte[] keyFetchToken = null;
-          if (getKeys) {
-            keyFetchToken = Utils.hex2Byte(body.getString(JSON_KEY_KEYFETCHTOKEN));
-          }
-          LoginResponse loginResponse = new LoginResponse(new String(emailUTF8, "UTF-8"), uid, verified, sessionToken, keyFetchToken);
-
-          delegate.handleSuccess(loginResponse);
-          return;
-        } catch (Exception e) {
-          delegate.handleError(e);
-          return;
+        String uid = body.getString(JSON_KEY_UID);
+        boolean verified = body.getBoolean(JSON_KEY_VERIFIED);
+        byte[] sessionToken = Utils.hex2Byte(body.getString(JSON_KEY_SESSIONTOKEN));
+        byte[] keyFetchToken = null;
+        if (getKeys) {
+          keyFetchToken = Utils.hex2Byte(body.getString(JSON_KEY_KEYFETCHTOKEN));
         }
+        LoginResponse loginResponse = new LoginResponse(new String(emailUTF8, "UTF-8"), uid, verified, sessionToken, keyFetchToken);
+
+        delegate.handleSuccess(loginResponse);
       }
     };
 
@@ -635,30 +638,26 @@ public class FxAccountClient20 implements FxAccountClient {
     }
 
     // This is very similar to login, except verified is not required.
-    resource.delegate = new ResourceDelegate<LoginResponse>(resource, delegate) {
+    resource.delegate = new ResourceDelegate<LoginResponse>(resource, delegate, ResponseType.JSON_OBJECT) {
       @Override
-      public void handleSuccess(int status, HttpResponse response, ExtendedJSONObject body) {
-        try {
-          final String[] requiredStringFields = getKeys ? LOGIN_RESPONSE_REQUIRED_STRING_FIELDS_KEYS : LOGIN_RESPONSE_REQUIRED_STRING_FIELDS;
-          body.throwIfFieldsMissingOrMisTyped(requiredStringFields, String.class);
+      public void handleSuccess(int status, HttpResponse response, ExtendedJSONObject body) throws Exception {
+        final String[] requiredStringFields = getKeys ? LOGIN_RESPONSE_REQUIRED_STRING_FIELDS_KEYS : LOGIN_RESPONSE_REQUIRED_STRING_FIELDS;
+        body.throwIfFieldsMissingOrMisTyped(requiredStringFields, String.class);
 
-          String uid = body.getString(JSON_KEY_UID);
-          boolean verified = false; // In production, we're definitely not verified immediately upon creation.
-          Boolean tempVerified = body.getBoolean(JSON_KEY_VERIFIED);
-          if (tempVerified != null) {
-            verified = tempVerified;
-          }
-          byte[] sessionToken = Utils.hex2Byte(body.getString(JSON_KEY_SESSIONTOKEN));
-          byte[] keyFetchToken = null;
-          if (getKeys) {
-            keyFetchToken = Utils.hex2Byte(body.getString(JSON_KEY_KEYFETCHTOKEN));
-          }
-          LoginResponse loginResponse = new LoginResponse(new String(emailUTF8, "UTF-8"), uid, verified, sessionToken, keyFetchToken);
-
-          delegate.handleSuccess(loginResponse);
-        } catch (Exception e) {
-          delegate.handleError(e);
+        String uid = body.getString(JSON_KEY_UID);
+        boolean verified = false; // In production, we're definitely not verified immediately upon creation.
+        Boolean tempVerified = body.getBoolean(JSON_KEY_VERIFIED);
+        if (tempVerified != null) {
+          verified = tempVerified;
         }
+        byte[] sessionToken = Utils.hex2Byte(body.getString(JSON_KEY_SESSIONTOKEN));
+        byte[] keyFetchToken = null;
+        if (getKeys) {
+          keyFetchToken = Utils.hex2Byte(body.getString(JSON_KEY_KEYFETCHTOKEN));
+        }
+        LoginResponse loginResponse = new LoginResponse(new String(emailUTF8, "UTF-8"), uid, verified, sessionToken, keyFetchToken);
+
+        delegate.handleSuccess(loginResponse);
       }
     };
 
