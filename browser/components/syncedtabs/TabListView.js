@@ -51,7 +51,6 @@ function TabListView(window, props) {
   this.container = this._doc.createElement("div");
 
   this._attachFixedListeners();
-
   this._setupContextMenu();
 }
 
@@ -208,9 +207,7 @@ TabListView.prototype = {
    */
   _updateClient(item, itemNode) {
     itemNode.setAttribute("id", "item-" + item.id);
-    let lastSync = new Date(item.lastModified);
-    let lastSyncTitle = getChromeWindow(this._window).gSyncUI.formatLastSyncDate(lastSync);
-    itemNode.setAttribute("title", lastSyncTitle);
+    itemNode.setAttribute("title", item.name);
     if (item.closed) {
       itemNode.classList.add("closed");
     } else {
