@@ -80,12 +80,12 @@ resjar.javac_flags += ['-Xlint:all']
 mgjar = add_java_jar('gecko-mozglue')
 mgjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'mozglue/ByteBufferInputStream.java',
-    'mozglue/ContextUtils.java',
     'mozglue/DirectBufferAllocator.java',
     'mozglue/GeckoLoader.java',
     'mozglue/JNIObject.java',
     'mozglue/NativeReference.java',
     'mozglue/NativeZip.java',
+    'mozglue/SafeIntentUtils.java',
 ]]
 mgjar.generated_sources = [] # Keep it this way.
 mgjar.extra_jars += [
