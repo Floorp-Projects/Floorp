@@ -30,6 +30,7 @@
 #include "nsJSEnvironment.h"
 #include "xpcpublic.h"
 #include "jsapi.h"
+#include "js/TracingAPI.h"
 
 namespace mozilla {
 namespace dom {
@@ -184,6 +185,13 @@ private:
     mozilla::HoldJSObjects(this);
   }
 
+  inline void ClearJSReferences()
+  {
+    mCallback = nullptr;
+    mCreationStack = nullptr;
+    mIncumbentJSGlobal = nullptr;
+  }
+
   CallbackObject(const CallbackObject&) = delete;
   CallbackObject& operator =(const CallbackObject&) = delete;
 
@@ -192,12 +200,18 @@ protected:
   {
     MOZ_ASSERT_IF(mIncumbentJSGlobal, mCallback);
     if (mCallback) {
-      mCallback = nullptr;
-      mCreationStack = nullptr;
-      mIncumbentJSGlobal = nullptr;
+      ClearJSReferences();
       mozilla::DropJSObjects(this);
     }
   }
+
+  // For use from subclasses that want to be usable with Rooted.
+  void Trace(JSTracer* aTracer);
+
+  // For use from subclasses that want to be traced for a bit then possibly
+  // switch to HoldJSObjects.  If we have more than one owner, this will
+  // HoldJSObjects; otherwise it will just forget all our JS references.
+  void HoldJSObjectsIfMoreThanOneOwner();
 
   // Struct used as a way to force a CallbackObject constructor to not call
   // HoldJSObjects. We're putting it here so that CallbackObject subclasses will
@@ -505,6 +519,51 @@ ImplCycleCollectionUnlink(CallbackObjectHolder<T, U>& aField)
 {
   aField.UnlinkSelf();
 }
+
+// T is expected to be a RefPtr or OwningNonNull around a CallbackObject
+// subclass.  This class is used in bindings to safely handle Fast* callbacks;
+// it ensures that the callback is traced, and that if something is holding onto
+// the callback when we're done with it HoldJSObjects is called.
+template<typename T>
+class RootedCallback : public JS::Rooted<T>
+{
+public:
+  explicit RootedCallback(JSContext* cx)
+    : JS::Rooted<T>(cx)
+  {}
+
+  // We need a way to make assignment from pointers (how we're normally used)
+  // work.
+  template<typename S>
+  void operator=(S* arg)
+  {
+    this->get().operator=(arg);
+  }
+
+  // But nullptr can't use the above template, because it doesn't know which S
+  // to select.  So we need a special overload for nullptr.
+  void operator=(decltype(nullptr) arg)
+  {
+    this->get().operator=(arg);
+  }
+
+  // Codegen relies on being able to do Callback() on us.
+  JS::Handle<JSObject*> Callback() const
+  {
+    return this->get()->Callback();
+  }
+
+  ~RootedCallback()
+  {
+    // Ensure that our callback starts holding on to its own JS objects as
+    // needed.  Having to null-check here when T is OwningNonNull is a bit
+    // silly, but it's simpler than creating two separate RootedCallback
+    // instantiations for OwningNonNull and RefPtr.
+    if (this->get().get()) {
+      this->get()->HoldJSObjectsIfMoreThanOneOwner();
+    }
+  }
+};
 
 } // namespace dom
 } // namespace mozilla
