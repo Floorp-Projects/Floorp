@@ -2487,8 +2487,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
 #undef LOAD_AND_STORE_SCALAR_FN_DECLS
 
 #define LOAD_AND_STORE_REFERENCE_FN_DECLS(_constant, _type, _name)      \
-    JS_FN("Store_" #_name, js::StoreReference##_type::Func, 3, 0),      \
-    JS_FN("Load_" #_name,  js::LoadReference##_type::Func, 3, 0),
+    JS_FN("Store_" #_name, js::StoreReference##_name::Func, 3, 0),      \
+    JS_FN("Load_" #_name,  js::LoadReference##_name::Func, 3, 0),
     JS_FOR_EACH_REFERENCE_TYPE_REPR(LOAD_AND_STORE_REFERENCE_FN_DECLS)
 #undef LOAD_AND_STORE_REFERENCE_FN_DECLS
 

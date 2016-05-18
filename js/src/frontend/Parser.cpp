@@ -2908,7 +2908,7 @@ Parser<SyntaxParseHandler>::finishFunctionDefinition(Node pn, FunctionBox* funbo
         freeVariables[i++] = LazyScript::FreeVariable(r.front().key());
     MOZ_ASSERT(i == numFreeVariables);
 
-    HeapPtrFunction* innerFunctions = lazy->innerFunctions();
+    GCPtrFunction* innerFunctions = lazy->innerFunctions();
     for (size_t i = 0; i < numInnerFunctions; i++)
         innerFunctions[i].init(pc->innerFunctions[i]);
 

@@ -2747,7 +2747,7 @@ Debugger::markAllIteratively(GCMarker* trc)
                  *   - it isn't already marked
                  *   - it actually has hooks that might be called
                  */
-                HeapPtrNativeObject& dbgobj = dbg->toJSObjectRef();
+                GCPtrNativeObject& dbgobj = dbg->toJSObjectRef();
                 if (!dbgobj->zone()->isGCMarking())
                     continue;
 
@@ -2796,7 +2796,7 @@ Debugger::markAll(JSTracer* trc)
         for (WeakGlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront())
             TraceManuallyBarrieredEdge(trc, e.mutableFront().unsafeGet(), "Global Object");
 
-        HeapPtrNativeObject& dbgobj = dbg->toJSObjectRef();
+        GCPtrNativeObject& dbgobj = dbg->toJSObjectRef();
         TraceEdge(trc, &dbgobj, "Debugger Object");
 
         dbg->scripts.trace(trc);

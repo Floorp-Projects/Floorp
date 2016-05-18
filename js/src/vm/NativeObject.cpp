@@ -84,7 +84,7 @@ ObjectElements::ConvertElementsToDoubles(JSContext* cx, uintptr_t elementsPtr)
 /* static */ bool
 ObjectElements::MakeElementsCopyOnWrite(ExclusiveContext* cx, NativeObject* obj)
 {
-    static_assert(sizeof(HeapSlot) >= sizeof(HeapPtrObject),
+    static_assert(sizeof(HeapSlot) >= sizeof(GCPtrObject),
                   "there must be enough room for the owner object pointer at "
                   "the end of the elements");
     if (!obj->ensureElements(cx, obj->getDenseInitializedLength() + 1))
