@@ -163,3 +163,6 @@ assertErrorMessage(() => wasmEvalText('(module (memory 1) (func (f32.store offse
 
 assertErrorMessage(() => wasmEvalText('(module (memory 1) (func (i32.store offset=0 (i32.const 0) (f32.const 0))))'), TypeError, mismatchError("f32", "i32"));
 assertErrorMessage(() => wasmEvalText('(module (memory 1) (func (i32.store offset=0 (i32.const 0) (f64.const 0))))'), TypeError, mismatchError("f64", "i32"));
+
+wasmEvalText('(module (memory 0 65535))')
+assertErrorMessage(() => wasmEvalText('(module (memory 0 65536))'), TypeError, /maximum memory size too big/);
