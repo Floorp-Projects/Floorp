@@ -720,18 +720,6 @@ nsWindow::DestroyCompositor()
     nsBaseWidget::DestroyCompositor();
 }
 
-CompositorBridgeParent*
-nsWindow::NewCompositorBridgeParent(int aSurfaceWidth, int aSurfaceHeight)
-{
-    if (!mCompositorWidgetProxy) {
-        mCompositorWidgetProxy = NewCompositorWidgetProxy();
-    }
-    return new CompositorBridgeParent(mCompositorWidgetProxy,
-                                      GetDefaultScale(),
-                                      UseAPZ(),
-                                      true, aSurfaceWidth, aSurfaceHeight);
-}
-
 void
 nsWindow::BringToTop()
 {
