@@ -3569,19 +3569,6 @@ nsWindow::NeedsPaint()
     return nsIWidget::NeedsPaint();
 }
 
-CompositorBridgeParent*
-nsWindow::NewCompositorBridgeParent(int aSurfaceWidth, int aSurfaceHeight)
-{
-    if (!mCompositorWidgetProxy) {
-      mCompositorWidgetProxy = NewCompositorWidgetProxy();
-    }
-    return new CompositorBridgeParent(mCompositorWidgetProxy,
-                                      GetDefaultScale(),
-                                      UseAPZ(),
-                                      true,
-                                      aSurfaceWidth, aSurfaceHeight);
-}
-
 void
 nsWindow::ConfigureAPZControllerThread()
 {

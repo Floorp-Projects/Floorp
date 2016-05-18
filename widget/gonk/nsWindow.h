@@ -117,8 +117,6 @@ public:
                         bool* aAllowRetaining = nullptr);
     virtual void DestroyCompositor();
 
-    virtual CompositorBridgeParent* NewCompositorBridgeParent(int aSurfaceWidth, int aSurfaceHeight);
-
     NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
                                       const InputContextAction& aAction);
     NS_IMETHOD_(InputContext) GetInputContext();
@@ -147,6 +145,10 @@ protected:
     // Call this function when the users activity is the direct cause of an
     // event (like a keypress or mouse click).
     void UserActivity();
+
+    bool UseExternalCompositingSurface() const override {
+      return true;
+    }
 
 private:
     // This is used by SynthesizeNativeTouchPoint to maintain state between

@@ -937,20 +937,6 @@ nsBaseWidget::UseAPZ()
           (WindowType() == eWindowType_toplevel || WindowType() == eWindowType_child));
 }
 
-CompositorBridgeParent*
-nsBaseWidget::NewCompositorBridgeParent(int aSurfaceWidth,
-                                        int aSurfaceHeight)
-{
-  if (!mCompositorWidgetProxy) {
-    mCompositorWidgetProxy = NewCompositorWidgetProxy();
-  }
-  return new CompositorBridgeParent(mCompositorWidgetProxy,
-                                    GetDefaultScale(),
-                                    UseAPZ(),
-                                    false,
-                                    aSurfaceWidth, aSurfaceHeight);
-}
-
 void nsBaseWidget::CreateCompositor()
 {
   LayoutDeviceIntRect rect;
@@ -1286,7 +1272,17 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   }
 
   CreateCompositorVsyncDispatcher();
-  mCompositorBridgeParent = NewCompositorBridgeParent(aWidth, aHeight);
+
+  if (!mCompositorWidgetProxy) {
+    mCompositorWidgetProxy = NewCompositorWidgetProxy();
+  }
+
+  mCompositorBridgeParent = new CompositorBridgeParent(
+    mCompositorWidgetProxy,
+    GetDefaultScale(),
+    UseAPZ(),
+    UseExternalCompositingSurface(),
+    aWidth, aHeight);
   RefPtr<ClientLayerManager> lm = new ClientLayerManager(this);
   mCompositorBridgeChild = new CompositorBridgeChild(lm);
   mCompositorBridgeChild->OpenSameProcess(mCompositorBridgeParent);

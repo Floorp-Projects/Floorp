@@ -170,7 +170,6 @@ public:
 
   mozilla::CompositorVsyncDispatcher* GetCompositorVsyncDispatcher();
   void            CreateCompositorVsyncDispatcher();
-  virtual CompositorBridgeParent* NewCompositorBridgeParent(int aSurfaceWidth, int aSurfaceHeight);
   virtual void            CreateCompositor();
   virtual void            CreateCompositor(int aWidth, int aHeight);
   virtual void            PrepareWindowEffects() override {}
@@ -538,6 +537,11 @@ protected:
   bool UseAPZ();
 
 protected:
+  // Returns whether compositing should use an external surface size.
+  virtual bool UseExternalCompositingSurface() const {
+    return false;
+  }
+
   /**
    * Starts the OMTC compositor destruction sequence.
    *
