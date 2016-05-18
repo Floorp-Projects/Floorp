@@ -520,7 +520,8 @@ public:
                         const uint32_t& aAction) override;
 
   virtual bool RecvEndDragSession(const bool& aDoneDrag,
-                                  const bool& aUserCancelled) override;
+                                  const bool& aUserCancelled,
+                                  const mozilla::LayoutDeviceIntPoint& aEndDragPoint) override;
 
   virtual bool
   RecvPush(const nsCString& aScope,
