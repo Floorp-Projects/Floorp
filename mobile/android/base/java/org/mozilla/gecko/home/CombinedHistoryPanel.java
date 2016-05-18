@@ -425,7 +425,10 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
                     dialogBuilder.show();
                     break;
                 case CHILD_RECENT_TABS:
-                    mRecentTabsAdapter.restoreAllTabs();
+                    final String telemetryExtra = mRecentTabsAdapter.restoreAllTabs();
+                    if (telemetryExtra != null) {
+                        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.BUTTON, telemetryExtra);
+                    }
                     break;
             }
         }
