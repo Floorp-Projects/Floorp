@@ -45,7 +45,6 @@ UNIFIED_SOURCES += [
     'Intervals.cpp',
     'json.cpp',
     'Justifier.cpp',
-    'NameTable.cpp',
     'Pass.cpp',
     'Position.cpp',
     'SegCache.cpp',
@@ -57,6 +56,12 @@ UNIFIED_SOURCES += [
     'Sparse.cpp',
     'TtfUtil.cpp',
     'UtfCodec.cpp',
+]
+
+# Excluded from UNIFIED_SOURCES because <cmath> from other files breaks it,
+# see bug 1272647.
+SOURCES += [
+    'NameTable.cpp',
 ]
 
 # tell graphite2 not to export symbols, we'll be linking it directly with
