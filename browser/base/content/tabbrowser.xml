@@ -6603,7 +6603,12 @@
 
         let containersEnabled = Services.prefs.getBoolPref("privacy.userContext.enabled");
         document.getElementById("alltabs-popup-separator-1").hidden = !containersEnabled;
-        document.getElementById("alltabs_containersTab").hidden = !containersEnabled;
+        let containersTab = document.getElementById("alltabs_containersTab");
+
+        containersTab.hidden = !containersEnabled;
+        if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+          containersTab.setAttribute("disabled", "true");
+        }
 
         document.getElementById("alltabs_undoCloseTab").disabled =
           SessionStore.getClosedTabCount(window) == 0;
