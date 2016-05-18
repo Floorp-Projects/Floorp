@@ -4,8 +4,9 @@
 package org.mozilla.gecko.fxa.login;
 
 import org.mozilla.gecko.background.fxa.FxAccountClient;
+import org.mozilla.gecko.background.fxa.FxAccountClient20.AccountStatusResponse;
 import org.mozilla.gecko.background.fxa.FxAccountClient20.RequestDelegate;
-import org.mozilla.gecko.background.fxa.FxAccountClient20.StatusResponse;
+import org.mozilla.gecko.background.fxa.FxAccountClient20.RecoveryEmailStatusResponse;
 import org.mozilla.gecko.background.fxa.FxAccountClient20.TwoKeys;
 import org.mozilla.gecko.background.fxa.FxAccountClient20.LoginResponse;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
@@ -94,14 +95,26 @@ public class MockFxAccountClient implements FxAccountClient {
   }
 
   @Override
-  public void status(byte[] sessionToken, RequestDelegate<StatusResponse> requestDelegate) {
+  public void accountStatus(String uid, RequestDelegate<AccountStatusResponse> requestDelegate) {
+    boolean userFound = false;
+    for (User user : users.values()) {
+      if (user.uid.equals(uid)) {
+        userFound = true;
+        break;
+      }
+    }
+    requestDelegate.handleSuccess(new AccountStatusResponse(userFound));
+  }
+
+  @Override
+  public void recoveryEmailStatus(byte[] sessionToken, RequestDelegate<RecoveryEmailStatusResponse> requestDelegate) {
     String email = sessionTokens.get(Utils.byte2Hex(sessionToken));
     User user = users.get(email);
     if (email == null || user == null) {
       handleFailure(requestDelegate, HttpStatus.SC_UNAUTHORIZED, FxAccountRemoteError.INVALID_AUTHENTICATION_TOKEN, "invalid sessionToken");
       return;
     }
-    requestDelegate.handleSuccess(new StatusResponse(email, user.verified));
+    requestDelegate.handleSuccess(new RecoveryEmailStatusResponse(email, user.verified));
   }
 
   @Override

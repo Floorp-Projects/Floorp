@@ -68,6 +68,7 @@ public class FxAccountClient20 implements FxAccountClient {
   public static final String JSON_KEY_INFO = "info";
   public static final String JSON_KEY_CODE = "code";
   public static final String JSON_KEY_ERRNO = "errno";
+  public static final String JSON_KEY_EXISTS = "exists";
 
   protected static final String[] requiredErrorStringFields = { JSON_KEY_ERROR, JSON_KEY_MESSAGE, JSON_KEY_INFO };
   protected static final String[] requiredErrorLongFields = { JSON_KEY_CODE, JSON_KEY_ERRNO };
@@ -447,19 +448,56 @@ public class FxAccountClient20 implements FxAccountClient {
   }
 
   /**
-   * Thin container for status response.
+   * Thin container for account status response.
    */
-  public static class StatusResponse {
+  public static class AccountStatusResponse {
+    public final boolean exists;
+    public AccountStatusResponse(boolean exists) {
+      this.exists = exists;
+    }
+  }
+
+  /**
+   * Query the account status of an account given a uid.
+   *
+   * @param uid to query.
+   * @param delegate to invoke callbacks.
+   */
+  public void accountStatus(String uid, final RequestDelegate<AccountStatusResponse> delegate) {
+    final BaseResource resource;
+    try {
+      final Map<String, String> params = new HashMap<>(1);
+      params.put("uid", uid);
+      resource = getBaseResource("account/status", params);
+    } catch (URISyntaxException | UnsupportedEncodingException e) {
+      invokeHandleError(delegate, e);
+      return;
+    }
+
+    resource.delegate = new ResourceDelegate<AccountStatusResponse>(resource, delegate, ResponseType.JSON_OBJECT) {
+      @Override
+      public void handleSuccess(int status, HttpResponse response, ExtendedJSONObject body) throws Exception {
+        boolean exists = body.getBoolean(JSON_KEY_EXISTS);
+        delegate.handleSuccess(new AccountStatusResponse(exists));
+      }
+    };
+    resource.get();
+  }
+
+  /**
+   * Thin container for recovery email status response.
+   */
+  public static class RecoveryEmailStatusResponse {
     public final String email;
     public final boolean verified;
-    public StatusResponse(String email, boolean verified) {
+    public RecoveryEmailStatusResponse(String email, boolean verified) {
       this.email = email;
       this.verified = verified;
     }
   }
 
   /**
-   * Query the status of an account given a valid session token.
+   * Query the recovery email status of an account given a valid session token.
    * <p>
    * This API is a little odd: the auth server returns the email and
    * verification state of the account that corresponds to the (opaque) session
@@ -471,7 +509,7 @@ public class FxAccountClient20 implements FxAccountClient {
    * @param delegate
    *          to invoke callbacks.
    */
-  public void status(byte[] sessionToken, final RequestDelegate<StatusResponse> delegate) {
+  public void recoveryEmailStatus(byte[] sessionToken, final RequestDelegate<RecoveryEmailStatusResponse> delegate) {
     final byte[] tokenId = new byte[32];
     final byte[] reqHMACKey = new byte[32];
     final byte[] requestKey = new byte[32];
@@ -490,14 +528,14 @@ public class FxAccountClient20 implements FxAccountClient {
       return;
     }
 
-    resource.delegate = new ResourceDelegate<StatusResponse>(resource, delegate, ResponseType.JSON_OBJECT, tokenId, reqHMACKey) {
+    resource.delegate = new ResourceDelegate<RecoveryEmailStatusResponse>(resource, delegate, ResponseType.JSON_OBJECT, tokenId, reqHMACKey) {
       @Override
       public void handleSuccess(int status, HttpResponse response, ExtendedJSONObject body) throws Exception {
         String[] requiredStringFields = new String[] { JSON_KEY_EMAIL };
         body.throwIfFieldsMissingOrMisTyped(requiredStringFields, String.class);
         String email = body.getString(JSON_KEY_EMAIL);
         Boolean verified = body.getBoolean(JSON_KEY_VERIFIED);
-        delegate.handleSuccess(new StatusResponse(email, verified));
+        delegate.handleSuccess(new RecoveryEmailStatusResponse(email, verified));
       }
     };
     resource.get();
