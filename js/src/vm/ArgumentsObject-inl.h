@@ -33,7 +33,7 @@ inline void
 ArgumentsObject::setElement(JSContext* cx, uint32_t i, const Value& v)
 {
     MOZ_ASSERT(!isElementDeleted(i));
-    HeapValue& lhs = data()->args[i];
+    GCPtrValue& lhs = data()->args[i];
     if (IsMagicScopeSlotValue(lhs)) {
         uint32_t slot = SlotFromMagicScopeSlotValue(lhs);
         CallObject& callobj = getFixedSlot(MAYBE_CALL_SLOT).toObject().as<CallObject>();

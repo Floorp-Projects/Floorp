@@ -90,7 +90,7 @@ Shape::removeFromDictionary(NativeObject* obj)
 }
 
 void
-Shape::insertIntoDictionary(HeapPtrShape* dictp)
+Shape::insertIntoDictionary(GCPtrShape* dictp)
 {
     // Don't assert inDictionaryMode() here because we may be called from
     // JSObject::toDictionaryMode via JSObject::newDictionaryShape.
@@ -104,7 +104,7 @@ Shape::insertIntoDictionary(HeapPtrShape* dictp)
     setParent(dictp->get());
     if (parent)
         parent->listp = &parent;
-    listp = (HeapPtrShape*) dictp;
+    listp = (GCPtrShape*) dictp;
     *dictp = this;
 }
 
@@ -483,7 +483,7 @@ js::NativeObject::toDictionaryMode(ExclusiveContext* cx)
             return false;
         }
 
-        HeapPtrShape* listp = dictionaryShape ? &dictionaryShape->parent : nullptr;
+        GCPtrShape* listp = dictionaryShape ? &dictionaryShape->parent : nullptr;
         StackShape child(shape);
         dprop->initDictionaryShape(child, self->numFixedSlots(), listp);
 

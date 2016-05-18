@@ -89,7 +89,7 @@ ProxyObject::nuke(const BaseProxyHandler* handler)
 JS_FRIEND_API(void)
 js::SetValueInProxy(Value* slot, const Value& value)
 {
-    // Slots in proxies are not HeapValues, so do a cast whenever assigning
+    // Slots in proxies are not GCPtrValues, so do a cast whenever assigning
     // values to them which might trigger a barrier.
-    *reinterpret_cast<HeapValue*>(slot) = value;
+    *reinterpret_cast<GCPtrValue*>(slot) = value;
 }

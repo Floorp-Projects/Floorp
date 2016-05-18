@@ -40,12 +40,12 @@ FRAGMENT(Root, HeapSlot) {
 FRAGMENT(Root, barriers) {
   JSObject* obj = JS_NewPlainObject(cx);
   js::PreBarriered<JSObject*> prebarriered(obj);
-  js::HeapPtr<JSObject*> heapptr(obj);
+  js::GCPtr<JSObject*> heapptr(obj);
   js::RelocatablePtr<JSObject*> relocatable(obj);
 
   JS::Value val = JS::ObjectValue(*obj);
   js::PreBarrieredValue prebarrieredValue(JS::ObjectValue(*obj));
-  js::HeapValue heapValue(JS::ObjectValue(*obj));
+  js::GCPtrValue heapValue(JS::ObjectValue(*obj));
   js::RelocatableValue relocatableValue(JS::ObjectValue(*obj));
 
   breakpoint();

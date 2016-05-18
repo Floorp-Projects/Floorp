@@ -123,9 +123,7 @@
  * all that's necessary to make some field be barriered is to replace
  *     Type* field;
  * with
- *     HeapPtr<Type> field;
- * There are also special classes HeapValue and HeapId, which barrier js::Value
- * and jsid, respectively.
+ *     GCPtr<Type> field;
  *
  * One additional note: not all object writes need to be pre-barriered. Writes
  * to newly allocated objects do not need a pre-barrier. In these cases, we use
@@ -141,11 +139,11 @@
  *  |  |  |  |  |
  *  |  |  |  | PreBarriered  provides pre-barriers only
  *  |  |  |  |
- *  |  |  | HeapPtr          provides pre- and post-barriers
+ *  |  |  | GCPtr            provides pre- and post-barriers
  *  |  |  |
  *  |  | RelocatablePtr      provides pre- and post-barriers and is relocatable
  *  |  |
- *  | HeapSlot               similar to HeapPtr, but tailored to slots storage
+ *  | HeapSlot               similar to GCPtr, but tailored to slots storage
  *  |
  * ReadBarrieredBase         base class which provides common read operations
  *  |
@@ -163,7 +161,7 @@
  *      -> InternalBarrierMethods<T*>::preBarrier
  *          -> T::writeBarrierPre
  *
- * HeapPtr<T>::post and RelocatablePtr<T>::post
+ * GCPtr<T>::post and RelocatablePtr<T>::post
  *  -> InternalBarrierMethods<T*>::postBarrier
  *      -> T::writeBarrierPost
  *  -> InternalBarrierMethods<Value>::postBarrier
@@ -202,6 +200,7 @@ class BaseShape;
 class DebugScopeObject;
 class GlobalObject;
 class LazyScript;
+class ModuleObject;
 class ModuleEnvironmentObject;
 class ModuleNamespaceObject;
 class NativeObject;
@@ -371,7 +370,7 @@ class WriteBarrieredBase : public BarrieredBase<T>
 
 /*
  * PreBarriered only automatically handles pre-barriers. Post-barriers must
- * be manually implemented when using this class. HeapPtr and RelocatablePtr
+ * be manually implemented when using this class. GCPtr and RelocatablePtr
  * should be used in all cases that do not require explicit low-level control
  * of moving behavior, e.g. for HashMap keys.
  */
@@ -409,30 +408,27 @@ class PreBarriered : public WriteBarrieredBase<T>
 /*
  * A pre- and post-barriered heap pointer, for use inside the JS engine.
  *
- * It must only be stored in memory that has GC lifetime. HeapPtr must not be
+ * It must only be stored in memory that has GC lifetime. GCPtr must not be
  * used in contexts where it may be implicitly moved or deleted, e.g. most
  * containers.
- *
- * Not to be confused with JS::Heap<T>. This is a different class from the
- * external interface and implements substantially different semantics.
  *
  * The post-barriers implemented by this class are faster than those
  * implemented by RelocatablePtr<T> or JS::Heap<T> at the cost of not
  * automatically handling deletion or movement.
  */
 template <class T>
-class HeapPtr : public WriteBarrieredBase<T>
+class GCPtr : public WriteBarrieredBase<T>
 {
   public:
-    HeapPtr() : WriteBarrieredBase<T>(JS::GCPolicy<T>::initial()) {}
-    explicit HeapPtr(T v) : WriteBarrieredBase<T>(v) {
+    GCPtr() : WriteBarrieredBase<T>(JS::GCPolicy<T>::initial()) {}
+    explicit GCPtr(T v) : WriteBarrieredBase<T>(v) {
         this->post(JS::GCPolicy<T>::initial(), v);
     }
-    explicit HeapPtr(const HeapPtr<T>& v) : WriteBarrieredBase<T>(v) {
+    explicit GCPtr(const GCPtr<T>& v) : WriteBarrieredBase<T>(v) {
         this->post(JS::GCPolicy<T>::initial(), v);
     }
 #ifdef DEBUG
-    ~HeapPtr() {
+    ~GCPtr() {
         // No prebarrier necessary as this only happens when we are sweeping or
         // before the containing object becomes part of the GC graph.
         MOZ_ASSERT(CurrentThreadIsGCSweeping() || CurrentThreadIsHandlingInitFailure());
@@ -444,7 +440,7 @@ class HeapPtr : public WriteBarrieredBase<T>
         this->post(JS::GCPolicy<T>::initial(), v);
     }
 
-    DECLARE_POINTER_ASSIGN_OPS(HeapPtr, T);
+    DECLARE_POINTER_ASSIGN_OPS(GCPtr, T);
 
     T unbarrieredGet() const {
         return this->value;
@@ -459,14 +455,14 @@ class HeapPtr : public WriteBarrieredBase<T>
     }
 
     /*
-     * Unlike RelocatablePtr<T>, HeapPtr<T> must be managed with GC lifetimes.
+     * Unlike RelocatablePtr<T>, GCPtr<T> must be managed with GC lifetimes.
      * Specifically, the memory used by the pointer itself must be live until
      * at least the next minor GC. For that reason, move semantics are invalid
      * and are deleted here. Please note that not all containers support move
      * semantics, so this does not completely prevent invalid uses.
      */
-    HeapPtr(HeapPtr<T>&&) = delete;
-    HeapPtr<T>& operator=(HeapPtr<T>&&) = delete;
+    GCPtr(GCPtr<T>&&) = delete;
+    GCPtr<T>& operator=(GCPtr<T>&&) = delete;
 };
 
 /*
@@ -726,7 +722,7 @@ class HeapSlotArray
     {}
 
     operator const Value*() const {
-        JS_STATIC_ASSERT(sizeof(HeapPtr<Value>) == sizeof(Value));
+        JS_STATIC_ASSERT(sizeof(GCPtr<Value>) == sizeof(Value));
         JS_STATIC_ASSERT(sizeof(HeapSlot) == sizeof(Value));
         return reinterpret_cast<const Value*>(array);
     }
@@ -832,11 +828,11 @@ struct MovableCellHasher<ReadBarriered<T>>
     static void rekey(Key& k, const Key& newKey) { k.unsafeSet(newKey); }
 };
 
-/* Useful for hashtables with a HeapPtr as key. */
+/* Useful for hashtables with a GCPtr as key. */
 template <class T>
-struct HeapPtrHasher
+struct GCPtrHasher
 {
-    typedef HeapPtr<T> Key;
+    typedef GCPtr<T> Key;
     typedef T Lookup;
 
     static HashNumber hash(Lookup obj) { return DefaultHasher<T>::hash(obj); }
@@ -844,9 +840,9 @@ struct HeapPtrHasher
     static void rekey(Key& k, const Key& newKey) { k.unsafeSet(newKey); }
 };
 
-/* Specialized hashing policy for HeapPtrs. */
+/* Specialized hashing policy for GCPtrs. */
 template <class T>
-struct DefaultHasher<HeapPtr<T>> : HeapPtrHasher<T> { };
+struct DefaultHasher<GCPtr<T>> : GCPtrHasher<T> {};
 
 template <class T>
 struct PreBarrieredHasher
@@ -911,34 +907,35 @@ typedef RelocatablePtr<JSString*> RelocatablePtrString;
 typedef RelocatablePtr<JSAtom*> RelocatablePtrAtom;
 typedef RelocatablePtr<ArrayBufferObjectMaybeShared*> RelocatablePtrArrayBufferObjectMaybeShared;
 
-typedef HeapPtr<NativeObject*> HeapPtrNativeObject;
-typedef HeapPtr<ArrayObject*> HeapPtrArrayObject;
-typedef HeapPtr<ArrayBufferObjectMaybeShared*> HeapPtrArrayBufferObjectMaybeShared;
-typedef HeapPtr<ArrayBufferObject*> HeapPtrArrayBufferObject;
-typedef HeapPtr<BaseShape*> HeapPtrBaseShape;
-typedef HeapPtr<JSAtom*> HeapPtrAtom;
-typedef HeapPtr<JSFlatString*> HeapPtrFlatString;
-typedef HeapPtr<JSFunction*> HeapPtrFunction;
-typedef HeapPtr<JSLinearString*> HeapPtrLinearString;
-typedef HeapPtr<JSObject*> HeapPtrObject;
-typedef HeapPtr<JSScript*> HeapPtrScript;
-typedef HeapPtr<JSString*> HeapPtrString;
-typedef HeapPtr<ModuleEnvironmentObject*> HeapPtrModuleEnvironmentObject;
-typedef HeapPtr<ModuleNamespaceObject*> HeapPtrModuleNamespaceObject;
-typedef HeapPtr<PlainObject*> HeapPtrPlainObject;
-typedef HeapPtr<PropertyName*> HeapPtrPropertyName;
-typedef HeapPtr<Shape*> HeapPtrShape;
-typedef HeapPtr<UnownedBaseShape*> HeapPtrUnownedBaseShape;
-typedef HeapPtr<jit::JitCode*> HeapPtrJitCode;
-typedef HeapPtr<ObjectGroup*> HeapPtrObjectGroup;
+typedef GCPtr<NativeObject*> GCPtrNativeObject;
+typedef GCPtr<ArrayObject*> GCPtrArrayObject;
+typedef GCPtr<ArrayBufferObjectMaybeShared*> GCPtrArrayBufferObjectMaybeShared;
+typedef GCPtr<ArrayBufferObject*> GCPtrArrayBufferObject;
+typedef GCPtr<BaseShape*> GCPtrBaseShape;
+typedef GCPtr<JSAtom*> GCPtrAtom;
+typedef GCPtr<JSFlatString*> GCPtrFlatString;
+typedef GCPtr<JSFunction*> GCPtrFunction;
+typedef GCPtr<JSLinearString*> GCPtrLinearString;
+typedef GCPtr<JSObject*> GCPtrObject;
+typedef GCPtr<JSScript*> GCPtrScript;
+typedef GCPtr<JSString*> GCPtrString;
+typedef GCPtr<ModuleObject*> GCPtrModuleObject;
+typedef GCPtr<ModuleEnvironmentObject*> GCPtrModuleEnvironmentObject;
+typedef GCPtr<ModuleNamespaceObject*> GCPtrModuleNamespaceObject;
+typedef GCPtr<PlainObject*> GCPtrPlainObject;
+typedef GCPtr<PropertyName*> GCPtrPropertyName;
+typedef GCPtr<Shape*> GCPtrShape;
+typedef GCPtr<UnownedBaseShape*> GCPtrUnownedBaseShape;
+typedef GCPtr<jit::JitCode*> GCPtrJitCode;
+typedef GCPtr<ObjectGroup*> GCPtrObjectGroup;
 
 typedef PreBarriered<Value> PreBarrieredValue;
 typedef RelocatablePtr<Value> RelocatableValue;
-typedef HeapPtr<Value> HeapValue;
+typedef GCPtr<Value> GCPtrValue;
 
 typedef PreBarriered<jsid> PreBarrieredId;
 typedef RelocatablePtr<jsid> RelocatableId;
-typedef HeapPtr<jsid> HeapId;
+typedef GCPtr<jsid> GCPtrId;
 
 typedef ImmutableTenuredPtr<PropertyName*> ImmutablePropertyNamePtr;
 typedef ImmutableTenuredPtr<JS::Symbol*> ImmutableSymbolPtr;

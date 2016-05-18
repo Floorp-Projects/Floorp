@@ -1059,31 +1059,31 @@ BaselineCacheIRCompiler::init(CacheKind kind)
 }
 
 template <typename T>
-static HeapPtr<T>*
-AsHeapPtr(uintptr_t* ptr)
+static GCPtr<T>*
+AsGCPtr(uintptr_t* ptr)
 {
-    return reinterpret_cast<HeapPtr<T>*>(ptr);
+    return reinterpret_cast<GCPtr<T>*>(ptr);
 }
 
 template<class T>
-HeapPtr<T>&
+GCPtr<T>&
 CacheIRStubInfo::getStubField(ICStub* stub, uint32_t field) const
 {
     uint8_t* stubData = (uint8_t*)stub + stubDataOffset_;
     MOZ_ASSERT(uintptr_t(stubData) % sizeof(uintptr_t) == 0);
 
-    return *AsHeapPtr<T>((uintptr_t*)stubData + field);
+    return *AsGCPtr<T>((uintptr_t*)stubData + field);
 }
 
-template HeapPtr<Shape*>& CacheIRStubInfo::getStubField(ICStub* stub, uint32_t offset) const;
-template HeapPtr<ObjectGroup*>& CacheIRStubInfo::getStubField(ICStub* stub, uint32_t offset) const;
-template HeapPtr<JSObject*>& CacheIRStubInfo::getStubField(ICStub* stub, uint32_t offset) const;
+template GCPtr<Shape*>& CacheIRStubInfo::getStubField(ICStub* stub, uint32_t offset) const;
+template GCPtr<ObjectGroup*>& CacheIRStubInfo::getStubField(ICStub* stub, uint32_t offset) const;
+template GCPtr<JSObject*>& CacheIRStubInfo::getStubField(ICStub* stub, uint32_t offset) const;
 
 template <typename T>
 static void
-InitHeapPtr(uintptr_t* ptr, uintptr_t val)
+InitGCPtr(uintptr_t* ptr, uintptr_t val)
 {
-    AsHeapPtr<T*>(ptr)->init((T*)val);
+    AsGCPtr<T*>(ptr)->init((T*)val);
 }
 
 void
@@ -1097,13 +1097,13 @@ CacheIRWriter::copyStubData(uint8_t* dest) const
             destWords[i] = stubFields_[i].word;
             continue;
           case StubField::GCType::Shape:
-            InitHeapPtr<Shape>(destWords + i, stubFields_[i].word);
+            InitGCPtr<Shape>(destWords + i, stubFields_[i].word);
             continue;
           case StubField::GCType::JSObject:
-            InitHeapPtr<JSObject>(destWords + i, stubFields_[i].word);
+            InitGCPtr<JSObject>(destWords + i, stubFields_[i].word);
             continue;
           case StubField::GCType::ObjectGroup:
-            InitHeapPtr<ObjectGroup>(destWords + i, stubFields_[i].word);
+            InitGCPtr<ObjectGroup>(destWords + i, stubFields_[i].word);
             continue;
           case StubField::GCType::Limit:
             break;

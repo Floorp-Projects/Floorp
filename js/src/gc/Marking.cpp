@@ -982,7 +982,7 @@ LazyScript::traceChildren(JSTracer* trc)
         TraceManuallyBarrieredEdge(trc, &atom, "lazyScriptFreeVariable");
     }
 
-    HeapPtrFunction* innerFunctions = this->innerFunctions();
+    GCPtrFunction* innerFunctions = this->innerFunctions();
     for (auto i : MakeRange(numInnerFunctions()))
         TraceEdge(trc, &innerFunctions[i], "lazyScriptInnerFunction");
 }
@@ -1006,7 +1006,7 @@ js::GCMarker::eagerlyMarkChildren(LazyScript *thing)
     for (auto i : MakeRange(thing->numFreeVariables()))
         traverseEdge(thing, static_cast<JSString*>(freeVariables[i].atom()));
 
-    HeapPtrFunction* innerFunctions = thing->innerFunctions();
+    GCPtrFunction* innerFunctions = thing->innerFunctions();
     for (auto i : MakeRange(thing->numInnerFunctions()))
         traverseEdge(thing, static_cast<JSObject*>(innerFunctions[i]));
 }

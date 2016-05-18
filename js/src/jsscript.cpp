@@ -576,7 +576,7 @@ static inline uint32_t
 FindScopeObjectIndex(JSScript* script, NestedStaticScope& scope)
 {
     ObjectArray* objects = script->objects();
-    HeapPtrObject* vector = objects->vector;
+    GCPtrObject* vector = objects->vector;
     unsigned length = objects->length;
     for (unsigned i = 0; i < length; ++i) {
         if (vector[i] == &scope)
@@ -992,7 +992,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
     }
 
     if (nconsts) {
-        HeapValue* vector = script->consts()->vector;
+        GCPtrValue* vector = script->consts()->vector;
         RootedValue val(cx);
         for (i = 0; i != nconsts; ++i) {
             if (mode == XDR_ENCODE)
@@ -1010,7 +1010,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
      * after the enclosing block has been XDR'd.
      */
     for (i = 0; i != nobjects; ++i) {
-        HeapPtrObject* objp = &script->objects()->vector[i];
+        GCPtrObject* objp = &script->objects()->vector[i];
         XDRClassKind classk;
 
         if (mode == XDR_ENCODE) {
@@ -1289,7 +1289,7 @@ js::XDRLazyScript(XDRState<mode>* xdr, HandleObject enclosingScope, HandleScript
     // Code inner functions.
     {
         RootedFunction func(cx);
-        HeapPtrFunction* innerFunctions = lazy->innerFunctions();
+        GCPtrFunction* innerFunctions = lazy->innerFunctions();
         size_t numInnerFunctions = lazy->numInnerFunctions();
         for (size_t i = 0; i < numInnerFunctions; i++) {
             if (mode == XDR_ENCODE)
@@ -2447,12 +2447,12 @@ js::SharedScriptData::new_(ExclusiveContext* cx, uint32_t codeLength,
 
     /*
      * Call constructors to initialize the storage that will be accessed as a
-     * HeapPtrAtom array via atoms().
+     * GCPtrAtom array via atoms().
      */
-    HeapPtrAtom* atoms = entry->atoms();
+    GCPtrAtom* atoms = entry->atoms();
     MOZ_ASSERT(reinterpret_cast<uintptr_t>(atoms) % sizeof(JSAtom*) == 0);
     for (unsigned i = 0; i < natoms; ++i)
-        new (&atoms[i]) HeapPtrAtom();
+        new (&atoms[i]) GCPtrAtom();
 
     return entry;
 }
@@ -2641,17 +2641,17 @@ JS_STATIC_ASSERT(KEEPS_JSVAL_ALIGNMENT(TryNoteArray));
 JS_STATIC_ASSERT(KEEPS_JSVAL_ALIGNMENT(BlockScopeArray));
 
 /* These assertions ensure there is no padding required between array elements. */
-JS_STATIC_ASSERT(HAS_JSVAL_ALIGNMENT(HeapValue));
-JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(HeapValue, HeapPtrObject));
-JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(HeapPtrObject, HeapPtrObject));
-JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(HeapPtrObject, JSTryNote));
+JS_STATIC_ASSERT(HAS_JSVAL_ALIGNMENT(GCPtrValue));
+JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(GCPtrValue, GCPtrObject));
+JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(GCPtrObject, GCPtrObject));
+JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(GCPtrObject, JSTryNote));
 JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(JSTryNote, uint32_t));
 JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(uint32_t, uint32_t));
 
-JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(HeapValue, BlockScopeNote));
+JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(GCPtrValue, BlockScopeNote));
 JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(BlockScopeNote, BlockScopeNote));
 JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(JSTryNote, BlockScopeNote));
-JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(HeapPtrObject, BlockScopeNote));
+JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(GCPtrObject, BlockScopeNote));
 JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(BlockScopeNote, uint32_t));
 
 static inline size_t
@@ -2780,13 +2780,13 @@ JSScript::partiallyInit(ExclusiveContext* cx, HandleScript script, uint32_t ncon
     if (nconsts != 0) {
         MOZ_ASSERT(reinterpret_cast<uintptr_t>(cursor) % sizeof(JS::Value) == 0);
         script->consts()->length = nconsts;
-        script->consts()->vector = (HeapValue*)cursor;
+        script->consts()->vector = (GCPtrValue*)cursor;
         cursor += nconsts * sizeof(script->consts()->vector[0]);
     }
 
     if (nobjects != 0) {
         script->objects()->length = nobjects;
-        script->objects()->vector = (HeapPtrObject*)cursor;
+        script->objects()->vector = (GCPtrObject*)cursor;
         cursor += nobjects * sizeof(script->objects()->vector[0]);
     }
 
@@ -3484,7 +3484,7 @@ js::detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScri
 
     AutoObjectVector objects(cx);
     if (nobjects != 0) {
-        HeapPtrObject* vector = src->objects()->vector;
+        GCPtrObject* vector = src->objects()->vector;
         for (unsigned i = 0; i < nobjects; i++) {
             RootedObject obj(cx, vector[i]);
             RootedObject clone(cx);
@@ -3600,13 +3600,13 @@ js::detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScri
     dst->isDefaultClassConstructor_ = src->isDefaultClassConstructor();
 
     if (nconsts != 0) {
-        HeapValue* vector = Rebase<HeapValue>(dst, src, src->consts()->vector);
+        GCPtrValue* vector = Rebase<GCPtrValue>(dst, src, src->consts()->vector);
         dst->consts()->vector = vector;
         for (unsigned i = 0; i < nconsts; ++i)
             MOZ_ASSERT_IF(vector[i].isMarkable(), vector[i].toString()->isAtom());
     }
     if (nobjects != 0) {
-        HeapPtrObject* vector = Rebase<HeapPtrObject>(dst, src, src->objects()->vector);
+        GCPtrObject* vector = Rebase<GCPtrObject>(dst, src, src->objects()->vector);
         dst->objects()->vector = vector;
         for (unsigned i = 0; i < nobjects; ++i)
             vector[i].init(&objects[i]->as<NativeObject>());
@@ -4283,7 +4283,7 @@ LazyScript::CreateRaw(ExclusiveContext* cx, HandleFunction fun,
     p.treatAsRunOnce = false;
 
     size_t bytes = (p.numFreeVariables * sizeof(FreeVariable))
-                 + (p.numInnerFunctions * sizeof(HeapPtrFunction));
+                 + (p.numInnerFunctions * sizeof(GCPtrFunction));
 
     ScopedJSFreePtr<uint8_t> table(bytes ? fun->zone()->pod_malloc<uint8_t>(bytes) : nullptr);
     if (bytes && !table) {
@@ -4352,7 +4352,7 @@ LazyScript::Create(ExclusiveContext* cx, HandleFunction fun,
     for (i = 0, num = res->numFreeVariables(); i < num; i++)
         variables[i] = FreeVariable(dummyAtom);
 
-    HeapPtrFunction* functions = res->innerFunctions();
+    GCPtrFunction* functions = res->innerFunctions();
     for (i = 0, num = res->numInnerFunctions(); i < num; i++)
         functions[i].init(dummyFun);
 

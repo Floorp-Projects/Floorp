@@ -32,11 +32,11 @@ class PropertyIteratorObject;
 
 struct NativeIterator
 {
-    HeapPtrObject obj;                  // Object being iterated.
-    JSObject* iterObj_;                 // Internal iterator object.
-    HeapPtrFlatString* props_array;
-    HeapPtrFlatString* props_cursor;
-    HeapPtrFlatString* props_end;
+    GCPtrObject obj;    // Object being iterated.
+    JSObject* iterObj_; // Internal iterator object.
+    GCPtrFlatString* props_array;
+    GCPtrFlatString* props_cursor;
+    GCPtrFlatString* props_end;
     HeapReceiverGuard* guard_array;
     uint32_t guard_length;
     uint32_t guard_key;
@@ -52,11 +52,11 @@ struct NativeIterator
         return (flags & JSITER_FOREACH) == 0;
     }
 
-    inline HeapPtrFlatString* begin() const {
+    inline GCPtrFlatString* begin() const {
         return props_array;
     }
 
-    inline HeapPtrFlatString* end() const {
+    inline GCPtrFlatString* end() const {
         return props_end;
     }
 
@@ -67,7 +67,7 @@ struct NativeIterator
     JSObject* iterObj() const {
         return iterObj_;
     }
-    HeapPtrFlatString* current() const {
+    GCPtrFlatString* current() const {
         MOZ_ASSERT(props_cursor < props_end);
         return props_cursor;
     }

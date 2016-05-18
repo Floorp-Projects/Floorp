@@ -158,8 +158,8 @@ struct CopyTo
 
 struct CopyToHeap
 {
-    HeapValue* dst;
-    explicit CopyToHeap(HeapValue* dst) : dst(dst) {}
+    GCPtrValue* dst;
+    explicit CopyToHeap(GCPtrValue* dst) : dst(dst) {}
     void operator()(const Value& src) { dst->init(src); ++dst; }
 };
 
