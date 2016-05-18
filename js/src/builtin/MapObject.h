@@ -66,7 +66,7 @@ template <class T, class OrderedHashPolicy, class AllocPolicy>
 class OrderedHashSet;
 
 typedef OrderedHashMap<HashableValue,
-                       RelocatableValue,
+                       HeapPtr<Value>,
                        HashableValue::Hasher,
                        RuntimeAllocPolicy> ValueMap;
 
