@@ -5,6 +5,7 @@
 package org.mozilla.gecko.background.fxa;
 
 import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientMalformedResponseException;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
@@ -816,5 +817,45 @@ public class FxAccountClient20 implements FxAccountClient {
     };
 
     post(resource, body, delegate);
+  }
+
+  @Override
+  public void deviceList(byte[] sessionToken, RequestDelegate<FxAccountDevice[]> delegate) {
+    final byte[] tokenId = new byte[32];
+    final byte[] reqHMACKey = new byte[32];
+    final byte[] requestKey = new byte[32];
+    try {
+      HKDF.deriveMany(sessionToken, new byte[0], FxAccountUtils.KW("sessionToken"), tokenId, reqHMACKey, requestKey);
+    } catch (Exception e) {
+      invokeHandleError(delegate, e);
+      return;
+    }
+
+    final BaseResource resource;
+    final ExtendedJSONObject body;
+    try {
+      resource = getBaseResource("account/devices");
+    } catch (URISyntaxException | UnsupportedEncodingException e) {
+      invokeHandleError(delegate, e);
+      return;
+    }
+
+    resource.delegate = new ResourceDelegate<FxAccountDevice[]>(resource, delegate, ResponseType.JSON_ARRAY, tokenId, reqHMACKey) {
+      @Override
+      public void handleSuccess(int status, HttpResponse response, JSONArray devicesJson) {
+        try {
+          FxAccountDevice[] devices = new FxAccountDevice[devicesJson.size()];
+          for (int i = 0; i < devices.length; i++) {
+            ExtendedJSONObject deviceJson = new ExtendedJSONObject((JSONObject) devicesJson.get(i));
+            devices[i] = FxAccountDevice.fromJson(deviceJson);
+          }
+          delegate.handleSuccess(devices);
+        } catch (Exception e) {
+          delegate.handleError(e);
+        }
+      }
+    };
+
+    resource.get();
   }
 }
