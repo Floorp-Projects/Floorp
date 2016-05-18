@@ -47,6 +47,27 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(CallbackObject)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mIncumbentJSGlobal)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
+void
+CallbackObject::Trace(JSTracer* aTracer)
+{
+  JS::TraceEdge(aTracer, &mCallback, "CallbackObject.mCallback");
+  JS::TraceEdge(aTracer, &mCreationStack, "CallbackObject.mCreationStack");
+  JS::TraceEdge(aTracer, &mIncumbentJSGlobal,
+                "CallbackObject.mIncumbentJSGlobal");
+}
+
+void
+CallbackObject::HoldJSObjectsIfMoreThanOneOwner()
+{
+  MOZ_ASSERT(mRefCnt.get() > 0);
+  if (mRefCnt.get() > 1) {
+    mozilla::HoldJSObjects(this);
+  } else {
+    // We can just forget all our stuff.
+    ClearJSReferences();
+  }
+}
+
 CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
                                      ErrorResult& aRv,
                                      const char* aExecutionReason,
