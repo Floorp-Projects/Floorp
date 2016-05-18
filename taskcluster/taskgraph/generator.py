@@ -130,6 +130,7 @@ class TaskGraphGenerator(object):
             yield impl_class(path, config)
 
     def _run(self):
+        logger.info("Generating full task set")
         all_tasks = {}
         for kind in self._load_kinds():
             for task in kind.load_tasks(self.parameters):
@@ -140,6 +141,7 @@ class TaskGraphGenerator(object):
         full_task_set = TaskGraph(all_tasks, Graph(set(all_tasks), set()))
         yield 'full_task_set', full_task_set
 
+        logger.info("Generating full task graph")
         edges = set()
         for t in full_task_set:
             for dep, depname in t.kind.get_task_dependencies(t, full_task_set):
@@ -149,13 +151,14 @@ class TaskGraphGenerator(object):
                                     Graph(full_task_set.graph.nodes, edges))
         yield 'full_task_graph', full_task_graph
 
+        logger.info("Generating target task set")
         target_tasks = set(self.target_tasks_method(full_task_graph, self.parameters))
-
         target_task_set = TaskGraph(
             {l: all_tasks[l] for l in target_tasks},
             Graph(target_tasks, set()))
         yield 'target_task_set', target_task_set
 
+        logger.info("Generating target task graph")
         target_graph = full_task_graph.graph.transitive_closure(target_tasks)
         target_task_graph = TaskGraph(
             {l: all_tasks[l] for l in target_graph.nodes},
@@ -164,6 +167,7 @@ class TaskGraphGenerator(object):
 
         # optimization is not yet implemented
 
+        logger.info("Generating optimized task graph")
         yield 'optimized_task_graph', target_task_graph
 
     def _run_until(self, name):
