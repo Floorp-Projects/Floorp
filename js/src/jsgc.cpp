@@ -1718,7 +1718,7 @@ GCRuntime::addRoot(Value* vp, const char* name)
      * cases.
      */
     if (isIncrementalGCInProgress())
-        HeapValue::writeBarrierPre(*vp);
+        GCPtrValue::writeBarrierPre(*vp);
 
     return rootsHash.put(vp, name);
 }
@@ -2130,7 +2130,7 @@ RelocateCell(Zone* zone, TenuredCell* src, AllocKind thingKind, size_t thingSize
             // For copy-on-write objects that own their elements, fix up the
             // owner pointer to point to the relocated object.
             if (srcNative->denseElementsAreCopyOnWrite()) {
-                HeapPtrNativeObject& owner = dstNative->getElementsHeader()->ownerObject();
+                GCPtrNativeObject& owner = dstNative->getElementsHeader()->ownerObject();
                 if (owner == srcNative)
                     owner = dstNative;
             }
@@ -7589,7 +7589,7 @@ JS::IncrementalReferenceBarrier(GCCellPtr thing)
 JS_PUBLIC_API(void)
 JS::IncrementalValueBarrier(const Value& v)
 {
-    js::HeapValue::writeBarrierPre(v);
+    js::GCPtrValue::writeBarrierPre(v);
 }
 
 JS_PUBLIC_API(void)

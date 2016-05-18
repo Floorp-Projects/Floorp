@@ -55,7 +55,7 @@ static const gc::AllocKind ITERATOR_FINALIZE_KIND = gc::AllocKind::OBJECT2_BACKG
 void
 NativeIterator::trace(JSTracer* trc)
 {
-    for (HeapPtrFlatString* str = begin(); str < end(); str++)
+    for (GCPtrFlatString* str = begin(); str < end(); str++)
         TraceNullableEdge(trc, str, "prop");
     TraceNullableEdge(trc, &obj, "obj");
 
@@ -608,7 +608,7 @@ NativeIterator::allocateIterator(JSContext* cx, uint32_t numGuards, uint32_t ple
     void** extra = reinterpret_cast<void**>(ni + 1);
     PodZero(ni);
     PodZero(extra, extraLength);
-    ni->props_array = ni->props_cursor = reinterpret_cast<HeapPtrFlatString*>(extra);
+    ni->props_array = ni->props_cursor = reinterpret_cast<GCPtrFlatString*>(extra);
     ni->props_end = ni->props_array + plength;
     return ni;
 }
@@ -1293,9 +1293,9 @@ SuppressDeletedPropertyHelper(JSContext* cx, HandleObject obj, StringPredicate p
         /* This only works for identified suppressed keys, not values. */
         if (ni->isKeyIter() && ni->obj == obj && ni->props_cursor < ni->props_end) {
             /* Check whether id is still to come. */
-            HeapPtrFlatString* props_cursor = ni->current();
-            HeapPtrFlatString* props_end = ni->end();
-            for (HeapPtrFlatString* idp = props_cursor; idp < props_end; ++idp) {
+            GCPtrFlatString* props_cursor = ni->current();
+            GCPtrFlatString* props_end = ni->end();
+            for (GCPtrFlatString* idp = props_cursor; idp < props_end; ++idp) {
                 if (predicate(*idp)) {
                     /*
                      * Check whether another property along the prototype chain
@@ -1335,7 +1335,7 @@ SuppressDeletedPropertyHelper(JSContext* cx, HandleObject obj, StringPredicate p
                     if (idp == props_cursor) {
                         ni->incCursor();
                     } else {
-                        for (HeapPtrFlatString* p = idp; p + 1 != props_end; p++)
+                        for (GCPtrFlatString* p = idp; p + 1 != props_end; p++)
                             *p = *(p + 1);
                         ni->props_end = ni->end() - 1;
 

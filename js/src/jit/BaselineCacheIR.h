@@ -53,7 +53,7 @@ class CacheIRStubInfo
                                 const CacheIRWriter& writer);
 
     template <class T>
-    js::HeapPtr<T>& getStubField(ICStub* stub, uint32_t field) const;
+    js::GCPtr<T>& getStubField(ICStub* stub, uint32_t field) const;
 };
 
 void TraceBaselineCacheIRStub(JSTracer* trc, ICStub* stub, const CacheIRStubInfo* stubInfo);

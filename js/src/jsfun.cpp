@@ -711,7 +711,7 @@ JSFunction::trace(JSTracer* trc)
 {
     if (isExtended()) {
         TraceRange(trc, ArrayLength(toExtended()->extendedSlots),
-                   (HeapValue*)toExtended()->extendedSlots, "nativeReserved");
+                   (GCPtrValue*)toExtended()->extendedSlots, "nativeReserved");
     }
 
     TraceNullableEdge(trc, &atom_, "atom");

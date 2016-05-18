@@ -350,10 +350,10 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static void writeBarrierPost(Debugger** vp, Debugger* prev, Debugger* next) {}
 
   private:
-    HeapPtrNativeObject object;         /* The Debugger object. Strong reference. */
-    WeakGlobalObjectSet debuggees;      /* Debuggee globals. Cross-compartment weak references. */
+    GCPtrNativeObject object; /* The Debugger object. Strong reference. */
+    WeakGlobalObjectSet debuggees; /* Debuggee globals. Cross-compartment weak references. */
     JS::ZoneSet debuggeeZones; /* Set of zones that we have debuggees in. */
-    js::HeapPtrObject uncaughtExceptionHook; /* Strong reference. */
+    js::GCPtrObject uncaughtExceptionHook; /* Strong reference. */
     bool enabled;
     bool allowUnobservedAsmJS;
 
@@ -755,8 +755,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     ~Debugger();
 
     bool init(JSContext* cx);
-    inline const js::HeapPtrNativeObject& toJSObject() const;
-    inline js::HeapPtrNativeObject& toJSObjectRef();
+    inline const js::GCPtrNativeObject& toJSObject() const;
+    inline js::GCPtrNativeObject& toJSObjectRef();
     static inline Debugger* fromJSObject(const JSObject* obj);
     static Debugger* fromChildJSObject(JSObject* obj);
 
@@ -1163,14 +1163,14 @@ Debugger::fromOnNewGlobalObjectWatchersLink(JSCList* link) {
     return reinterpret_cast<Debugger*>(p - offsetof(Debugger, onNewGlobalObjectWatchersLink));
 }
 
-const js::HeapPtrNativeObject&
+const js::GCPtrNativeObject&
 Debugger::toJSObject() const
 {
     MOZ_ASSERT(object);
     return object;
 }
 
-js::HeapPtrNativeObject&
+js::GCPtrNativeObject&
 Debugger::toJSObjectRef()
 {
     MOZ_ASSERT(object);

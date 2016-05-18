@@ -467,8 +467,8 @@ class Module : public mozilla::LinkedListElement<Module>
     struct ImportExit {
         void* code;
         jit::BaselineScript* baselineScript;
-        HeapPtrFunction fun;
-        static_assert(sizeof(HeapPtrFunction) == sizeof(void*), "for JIT access");
+        GCPtrFunction fun;
+        static_assert(sizeof(GCPtrFunction) == sizeof(void*), "for JIT access");
     };
     struct EntryArg {
         uint64_t lo;
@@ -486,7 +486,7 @@ class Module : public mozilla::LinkedListElement<Module>
     typedef Vector<FuncPtrTable, 0, SystemAllocPolicy> FuncPtrTableVector;
     typedef Vector<CacheableChars, 0, SystemAllocPolicy> FuncLabelVector;
     typedef RelocatablePtrArrayBufferObjectMaybeShared BufferPtr;
-    typedef HeapPtr<WasmModuleObject*> ModuleObjectPtr;
+    typedef GCPtr<WasmModuleObject*> ModuleObjectPtr;
 
     // Initialized when constructed:
     const UniqueConstModuleData  module_;
@@ -538,7 +538,7 @@ class Module : public mozilla::LinkedListElement<Module>
     virtual void addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code, size_t* data);
 
     void setOwner(WasmModuleObject* owner) { MOZ_ASSERT(!ownerObject_); ownerObject_ = owner; }
-    inline const HeapPtr<WasmModuleObject*>& owner() const;
+    inline const GCPtr<WasmModuleObject*>& owner() const;
 
     void setSource(Bytes&& source) { source_ = Move(source); }
 
@@ -688,7 +688,7 @@ class WasmModuleObject : public NativeObject
     static const Class class_;
 };
 
-inline const HeapPtr<WasmModuleObject*>&
+inline const GCPtr<WasmModuleObject*>&
 wasm::Module::owner() const {
     MOZ_ASSERT(&ownerObject_->module() == this);
     return ownerObject_;

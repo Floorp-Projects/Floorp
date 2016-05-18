@@ -178,20 +178,20 @@ struct ForOfPIC
     {
       private:
         // Pointer to canonical Array.prototype and ArrayIterator.prototype
-        HeapPtrNativeObject arrayProto_;
-        HeapPtrNativeObject arrayIteratorProto_;
+        GCPtrNativeObject arrayProto_;
+        GCPtrNativeObject arrayIteratorProto_;
 
         // Shape of matching Array.prototype object, and slot containing
         // the @@iterator for it, and the canonical value.
-        HeapPtrShape arrayProtoShape_;
+        GCPtrShape arrayProtoShape_;
         uint32_t arrayProtoIteratorSlot_;
-        HeapValue canonicalIteratorFunc_;
+        GCPtrValue canonicalIteratorFunc_;
 
         // Shape of matching ArrayIteratorProto, and slot containing
         // the 'next' property, and the canonical value.
-        HeapPtrShape arrayIteratorProtoShape_;
+        GCPtrShape arrayIteratorProtoShape_;
         uint32_t arrayIteratorProtoNextSlot_;
-        HeapValue canonicalNextFunc_;
+        GCPtrValue canonicalNextFunc_;
 
         // Initialization flag marking lazy initialization of above fields.
         bool initialized_;

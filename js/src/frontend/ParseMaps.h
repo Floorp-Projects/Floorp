@@ -37,7 +37,7 @@ typedef InlineMap<JSAtom*, DefinitionList, 24> AtomDefnListMap;
  * the list and map->vector must point to pre-allocated memory.
  */
 void
-InitAtomMap(AtomIndexMap* indices, HeapPtrAtom* atoms);
+InitAtomMap(AtomIndexMap* indices, GCPtrAtom* atoms);
 
 /*
  * A pool that permits the reuse of the backing storage for the defn, index, or

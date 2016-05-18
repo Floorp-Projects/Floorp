@@ -84,7 +84,7 @@ class ObjectGroup : public gc::TenuredCell
     const Class* clasp_;
 
     /* Prototype shared by objects in this group. */
-    HeapPtr<TaggedProto> proto_;
+    GCPtr<TaggedProto> proto_;
 
     /* Compartment shared by objects in this group. */
     JSCompartment* compartment_;
@@ -103,11 +103,11 @@ class ObjectGroup : public gc::TenuredCell
         return proto_.isDynamic();
     }
 
-    const HeapPtr<TaggedProto>& proto() const {
+    const GCPtr<TaggedProto>& proto() const {
         return proto_;
     }
 
-    HeapPtr<TaggedProto>& proto() {
+    GCPtr<TaggedProto>& proto() {
         return proto_;
     }
 
@@ -280,7 +280,7 @@ class ObjectGroup : public gc::TenuredCell
         // Identifier for this property, JSID_VOID for the aggregate integer
         // index property, or JSID_EMPTY for properties holding constraints
         // listening to changes in the group's state.
-        HeapId id;
+        GCPtrId id;
 
         // Possible own types for this property.
         HeapTypeSet types;
