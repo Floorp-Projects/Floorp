@@ -2181,13 +2181,6 @@ GK_ATOM(TypingTxnName, "Typing")
 GK_ATOM(IMETxnName, "IME")
 GK_ATOM(DeleteTxnName, "Deleting")
 
-// Font families
-GK_ATOM(serif, "serif")
-GK_ATOM(sans_serif, "sans-serif")
-GK_ATOM(cursive, "cursive")
-GK_ATOM(fantasy, "fantasy")
-GK_ATOM(monospace, "monospace")
-
 // IPC stuff
 GK_ATOM(Remote, "remote")
 GK_ATOM(RemoteId, "_remote_id")
