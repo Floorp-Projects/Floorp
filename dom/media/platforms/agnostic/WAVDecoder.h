@@ -16,7 +16,6 @@ class WaveDataDecoder : public MediaDataDecoder
 {
 public:
   WaveDataDecoder(const AudioInfo& aConfig,
-                  TaskQueue* aTaskQueue,
                   MediaDataDecoderCallback* aCallback);
 
   // Return true if mimetype is Wave
@@ -36,9 +35,7 @@ private:
   bool DoDecode(MediaRawData* aSample);
 
   const AudioInfo& mInfo;
-  const RefPtr<TaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
-  Atomic<bool> mIsFlushing;
 };
 
 } // namespace mozilla
