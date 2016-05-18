@@ -124,6 +124,7 @@ public class CombinedHistoryRecyclerView extends RecyclerView
                 break;
 
             case CLOSED_TAB:
+                ((RecentTabsAdapter) getAdapter()).restoreTabFromPosition(position);
                 break;
         }
     }
