@@ -645,7 +645,7 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameT
     // as containing block for absolutely positioned elements?
     // Possibly; in that case we should at least be checking
     // NS_SUBTREE_DIRTY, I'd think.
-    SetBResize(mCBReflowState->IsBResize());
+    SetBResize(mCBReflowState->IsBResizeForWM(wm));
   } else if (mCBReflowState && !nsLayoutUtils::GetAsBlock(frame)) {
     // Some non-block frames (e.g. table frames) aggressively optimize out their
     // BSize recomputation when they don't have the BResize flag set.  This
@@ -665,14 +665,14 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameT
     // Note that we _also_ need to set the BResize flag if we have auto
     // ComputedBSize() and a dirty subtree, since that might require us to
     // change BSize due to kids having been added or removed.
-    SetBResize(mCBReflowState->IsBResize());
+    SetBResize(mCBReflowState->IsBResizeForWM(wm));
     if (ComputedBSize() == NS_AUTOHEIGHT) {
       SetBResize(IsBResize() || NS_SUBTREE_DIRTY(frame));
     }
   } else if (ComputedBSize() == NS_AUTOHEIGHT) {
     if (eCompatibility_NavQuirks == aPresContext->CompatibilityMode() &&
         mCBReflowState) {
-      SetBResize(mCBReflowState->IsBResize());
+      SetBResize(mCBReflowState->IsBResizeForWM(wm));
     } else {
       SetBResize(IsIResize());
     }
