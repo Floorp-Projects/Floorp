@@ -535,10 +535,19 @@ nsSpeechTask::DispatchErrorImpl(float aElapsedTime, uint32_t aCharIndex, uint32_
   }
 
   RefPtr<SpeechSynthesisUtterance> utterance = mUtterance;
-  utterance->mState = (utterance->mState == SpeechSynthesisUtterance::STATE_SPEAKING) ?
-    SpeechSynthesisUtterance::STATE_ENDED : SpeechSynthesisUtterance::STATE_NONE;
-  utterance->DispatchSpeechSynthesisErrorEvent(aCharIndex, aElapsedTime,
-                                               SpeechSynthesisErrorCode(aError));
+  SpeechSynthesisErrorCode err;
+  if (utterance->mState == SpeechSynthesisUtterance::STATE_PENDING &&
+      aError == uint32_t(SpeechSynthesisErrorCode::Interrupted)) {
+    // If utterance never started the error should be "canceled" instead of
+    // "interrupted".
+    err = SpeechSynthesisErrorCode::Canceled;
+    utterance->mState = SpeechSynthesisUtterance::STATE_NONE;
+  } else {
+    err = SpeechSynthesisErrorCode(aError);
+    utterance->mState = SpeechSynthesisUtterance::STATE_ENDED;
+  }
+
+  utterance->DispatchSpeechSynthesisErrorEvent(aCharIndex, aElapsedTime, err);
 
   return NS_OK;
 }

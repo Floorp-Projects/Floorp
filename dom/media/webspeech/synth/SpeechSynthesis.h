@@ -70,9 +70,13 @@ private:
 
   void AdvanceQueue();
 
+  void DispatchToCanceledQueue();
+
   bool HasVoices() const;
 
   nsTArray<RefPtr<SpeechSynthesisUtterance> > mSpeechQueue;
+
+  nsTArray<RefPtr<SpeechSynthesisUtterance> > mCanceledQueue;
 
   RefPtr<nsSpeechTask> mCurrentTask;
 
