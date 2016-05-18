@@ -145,13 +145,10 @@ public:
                        const media::TimeUnit& aFuzz);
   uint32_t SkipToNextRandomAccessPoint(TrackInfo::TrackType aTrack,
                                        const media::TimeUnit& aTimeThreadshold,
-                                       const media::TimeUnit& aFuzz,
                                        bool& aFound);
   already_AddRefed<MediaRawData> GetSample(TrackInfo::TrackType aTrack,
                                            const media::TimeUnit& aFuzz,
                                            bool& aError);
-  int32_t FindCurrentPosition(TrackInfo::TrackType aTrack,
-                              const media::TimeUnit& aFuzz);
   media::TimeUnit GetNextRandomAccessPoint(TrackInfo::TrackType aTrack,
                                            const media::TimeUnit& aFuzz);
 
