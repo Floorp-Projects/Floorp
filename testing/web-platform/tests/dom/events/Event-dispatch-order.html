@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- Submitted from TestTWF Paris -->
 <title>Event phases order</title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
@@ -16,13 +15,12 @@ async_test(function() {
         child.addEventListener('click', this.step_func(function(){ order.push(2) }), false);
         parent.addEventListener('click', this.step_func(function(){ order.push(3) }), false);
 
-        child.click();
+        child.dispatchEvent(new Event('click', {bubbles: true}));
 
         assert_array_equals(order, [1, 2, 3]);
     }));
 }, "Event phases order");
 </script>
-
-    <div id="parent">
-        <div id="child"></div>
-    </div>
+<div id="parent">
+    <div id="child"></div>
+</div>
