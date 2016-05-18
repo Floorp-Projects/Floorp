@@ -104,13 +104,13 @@ module.exports = createClass({
     let { workers } = this.state;
 
     return dom.div({
-      id,
+      id: id + "-panel",
       className: "panel",
       role: "tabpanel",
-      "aria-labelledby": "panel-workers-header-name"
+      "aria-labelledby": id + "-header"
     },
     PanelHeader({
-      id: "workers-panel-header-name",
+      id: id + "-header",
       name: Strings.GetStringFromName("workers")
     }),
     dom.div({ id: "workers", className: "inverted-icons" },
