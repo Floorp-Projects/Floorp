@@ -26,6 +26,7 @@ public:
   using nsGenericHTMLFormElement::GetForm;
   using nsIConstraintValidation::Validity;
   using nsIConstraintValidation::CheckValidity;
+  using nsIConstraintValidation::ReportValidity;
   using nsIConstraintValidation::GetValidationMessage;
 
   explicit HTMLFieldSetElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);

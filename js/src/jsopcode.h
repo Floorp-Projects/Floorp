@@ -431,6 +431,21 @@ BytecodeFallsThrough(JSOp op)
     }
 }
 
+static inline bool
+BytecodeIsJumpTarget(JSOp op)
+{
+    switch (op) {
+      case JSOP_JUMPTARGET:
+      case JSOP_LOOPHEAD:
+      case JSOP_LOOPENTRY:
+      case JSOP_ENDITER:
+      case JSOP_TRY:
+        return true;
+      default:
+        return false;
+    }
+}
+
 class SrcNoteLineScanner
 {
     /* offset of the current JSOp in the bytecode */

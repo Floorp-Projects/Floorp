@@ -41,8 +41,16 @@ wasm::Classify(Expr expr)
         return ExprKind::F32;
       case Expr::F64Const:
         return ExprKind::F64;
+      case Expr::I8x16Const:
+        return ExprKind::I8x16;
+      case Expr::I16x8Const:
+        return ExprKind::I16x8;
       case Expr::I32x4Const:
         return ExprKind::I32x4;
+      case Expr::B8x16Const:
+        return ExprKind::B8x16;
+      case Expr::B16x8Const:
+        return ExprKind::B16x8;
       case Expr::B32x4Const:
         return ExprKind::B32x4;
       case Expr::F32x4Const:
@@ -82,6 +90,10 @@ wasm::Classify(Expr expr)
       case Expr::F64Exp:
       case Expr::F64Log:
       case Expr::I32Neg:
+      case Expr::I8x16neg:
+      case Expr::I8x16not:
+      case Expr::I16x8neg:
+      case Expr::I16x8not:
       case Expr::I32x4neg:
       case Expr::I32x4not:
       case Expr::F32x4neg:
@@ -89,6 +101,8 @@ wasm::Classify(Expr expr)
       case Expr::F32x4abs:
       case Expr::F32x4reciprocalApproximation:
       case Expr::F32x4reciprocalSqrtApproximation:
+      case Expr::B8x16not:
+      case Expr::B16x8not:
       case Expr::B32x4not:
         return ExprKind::Unary;
       case Expr::I32Add:
@@ -140,6 +154,26 @@ wasm::Classify(Expr expr)
       case Expr::F64Mod:
       case Expr::F64Pow:
       case Expr::F64Atan2:
+      case Expr::I8x16add:
+      case Expr::I8x16sub:
+      case Expr::I8x16mul:
+      case Expr::I8x16addSaturate:
+      case Expr::I8x16subSaturate:
+      case Expr::I8x16addSaturateU:
+      case Expr::I8x16subSaturateU:
+      case Expr::I8x16and:
+      case Expr::I8x16or:
+      case Expr::I8x16xor:
+      case Expr::I16x8add:
+      case Expr::I16x8sub:
+      case Expr::I16x8mul:
+      case Expr::I16x8addSaturate:
+      case Expr::I16x8subSaturate:
+      case Expr::I16x8addSaturateU:
+      case Expr::I16x8subSaturateU:
+      case Expr::I16x8and:
+      case Expr::I16x8or:
+      case Expr::I16x8xor:
       case Expr::I32x4add:
       case Expr::I32x4sub:
       case Expr::I32x4mul:
@@ -154,6 +188,12 @@ wasm::Classify(Expr expr)
       case Expr::F32x4max:
       case Expr::F32x4minNum:
       case Expr::F32x4maxNum:
+      case Expr::B8x16and:
+      case Expr::B8x16or:
+      case Expr::B8x16xor:
+      case Expr::B16x8and:
+      case Expr::B16x8or:
+      case Expr::B16x8xor:
       case Expr::B32x4and:
       case Expr::B32x4or:
       case Expr::B32x4xor:
@@ -240,6 +280,8 @@ wasm::Classify(Expr expr)
       case Expr::I64Load:
       case Expr::F32Load:
       case Expr::F64Load:
+      case Expr::I8x16load:
+      case Expr::I16x8load:
       case Expr::I32x4load:
       case Expr::I32x4load1:
       case Expr::I32x4load2:
@@ -260,6 +302,8 @@ wasm::Classify(Expr expr)
       case Expr::F64Store:
       case Expr::F32StoreF64:
       case Expr::F64StoreF32:
+      case Expr::I8x16store:
+      case Expr::I16x8store:
       case Expr::I32x4store:
       case Expr::I32x4store1:
       case Expr::I32x4store2:
@@ -303,41 +347,99 @@ wasm::Classify(Expr expr)
         return ExprKind::AtomicCompareExchange;
       case Expr::I32AtomicsExchange:
         return ExprKind::AtomicExchange;
+      case Expr::I8x16extractLane:
+      case Expr::I8x16extractLaneU:
+      case Expr::I16x8extractLane:
+      case Expr::I16x8extractLaneU:
       case Expr::I32x4extractLane:
       case Expr::F32x4extractLane:
+      case Expr::B8x16extractLane:
+      case Expr::B16x8extractLane:
       case Expr::B32x4extractLane:
         return ExprKind::ExtractLane;
+      case Expr::I8x16replaceLane:
+      case Expr::I16x8replaceLane:
       case Expr::I32x4replaceLane:
       case Expr::F32x4replaceLane:
+      case Expr::B8x16replaceLane:
+      case Expr::B16x8replaceLane:
       case Expr::B32x4replaceLane:
         return ExprKind::ReplaceLane;
+      case Expr::I8x16swizzle:
+      case Expr::I16x8swizzle:
       case Expr::I32x4swizzle:
       case Expr::F32x4swizzle:
         return ExprKind::Swizzle;
+      case Expr::I8x16shuffle:
+      case Expr::I16x8shuffle:
       case Expr::I32x4shuffle:
       case Expr::F32x4shuffle:
         return ExprKind::Shuffle;
-      case Expr::I32x4splat:
-      case Expr::F32x4splat:
-      case Expr::B32x4splat:
+      case Expr::I16x8check:
+      case Expr::I16x8splat:
       case Expr::I32x4check:
+      case Expr::I32x4splat:
+      case Expr::I8x16check:
+      case Expr::I8x16splat:
       case Expr::F32x4check:
+      case Expr::F32x4splat:
+      case Expr::B16x8check:
+      case Expr::B16x8splat:
       case Expr::B32x4check:
+      case Expr::B32x4splat:
+      case Expr::B8x16check:
+      case Expr::B8x16splat:
         return ExprKind::Splat;
+      case Expr::I8x16select:
+      case Expr::I16x8select:
       case Expr::I32x4select:
       case Expr::F32x4select:
         return ExprKind::SimdSelect;
+      case Expr::I8x16Constructor:
+      case Expr::I16x8Constructor:
       case Expr::I32x4Constructor:
       case Expr::F32x4Constructor:
+      case Expr::B8x16Constructor:
+      case Expr::B16x8Constructor:
       case Expr::B32x4Constructor:
         return ExprKind::SimdCtor;
-      case Expr::B32x4anyTrue:
+      case Expr::B8x16allTrue:
+      case Expr::B8x16anyTrue:
+      case Expr::B16x8allTrue:
+      case Expr::B16x8anyTrue:
       case Expr::B32x4allTrue:
+      case Expr::B32x4anyTrue:
         return ExprKind::SimdBooleanReduction;
+      case Expr::I8x16shiftLeftByScalar:
+      case Expr::I8x16shiftRightByScalar:
+      case Expr::I8x16shiftRightByScalarU:
+      case Expr::I16x8shiftLeftByScalar:
+      case Expr::I16x8shiftRightByScalar:
+      case Expr::I16x8shiftRightByScalarU:
       case Expr::I32x4shiftLeftByScalar:
       case Expr::I32x4shiftRightByScalar:
       case Expr::I32x4shiftRightByScalarU:
         return ExprKind::SimdShiftByScalar;
+      case Expr::I8x16equal:
+      case Expr::I8x16notEqual:
+      case Expr::I8x16greaterThan:
+      case Expr::I8x16greaterThanOrEqual:
+      case Expr::I8x16lessThan:
+      case Expr::I8x16lessThanOrEqual:
+      case Expr::I8x16greaterThanU:
+      case Expr::I8x16greaterThanOrEqualU:
+      case Expr::I8x16lessThanU:
+      case Expr::I8x16lessThanOrEqualU:
+      case Expr::I16x8equal:
+      case Expr::I16x8notEqual:
+      case Expr::I16x8greaterThan:
+      case Expr::I16x8greaterThanOrEqual:
+      case Expr::I16x8lessThan:
+      case Expr::I16x8lessThanOrEqual:
+      case Expr::I16x8greaterThanU:
+      case Expr::I16x8greaterThanOrEqualU:
+      case Expr::I16x8lessThanU:
+      case Expr::I16x8lessThanOrEqualU:
       case Expr::I32x4equal:
       case Expr::I32x4notEqual:
       case Expr::I32x4greaterThan:

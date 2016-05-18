@@ -601,6 +601,11 @@
     _(maxNum)                         \
     _(minNum)
 
+// Binary operations on small integer (< 32 bits) vectors.
+#define FOREACH_SMINT_SIMD_BINOP(_)   \
+    _(addSaturate)                    \
+    _(subSaturate)
+
 // Comparison operators defined on numeric SIMD types.
 #define FOREACH_COMP_SIMD_OP(_)       \
     _(lessThan)                       \
@@ -626,6 +631,7 @@
     FOREACH_NUMERIC_SIMD_BINOP(_)     \
     FOREACH_FLOAT_SIMD_UNOP(_)        \
     FOREACH_FLOAT_SIMD_BINOP(_)       \
+    FOREACH_SMINT_SIMD_BINOP(_)       \
     FOREACH_COMP_SIMD_OP(_)
 
 /*
@@ -726,10 +732,28 @@
     FORALL_SIMD_NONCAST_OP(_)         \
     _(fromFloat32x4)                  \
     _(fromFloat32x4Bits)              \
+    _(fromInt8x16Bits)                \
+    _(fromInt16x8Bits)                \
     _(fromInt32x4)                    \
     _(fromInt32x4Bits)                \
+    _(fromUint8x16Bits)               \
+    _(fromUint16x8Bits)               \
     _(fromUint32x4)                   \
     _(fromUint32x4Bits)
+
+// All operations on Int8x16 or Uint8x16 in the asm.js world.
+// Note: this does not include conversions and casts to/from Uint8x16 because
+// this list is shared between Int8x16 and Uint8x16.
+#define FORALL_INT8X16_ASMJS_OP(_)    \
+    FORALL_INT_SIMD_OP(_)             \
+    FOREACH_SMINT_SIMD_BINOP(_)
+
+// All operations on Int16x8 or Uint16x8 in the asm.js world.
+// Note: this does not include conversions and casts to/from Uint16x8 because
+// this list is shared between Int16x8 and Uint16x8.
+#define FORALL_INT16X8_ASMJS_OP(_)    \
+    FORALL_INT_SIMD_OP(_)             \
+    FOREACH_SMINT_SIMD_BINOP(_)
 
 // All operations on Int32x4 or Uint32x4 in the asm.js world.
 // Note: this does not include conversions and casts to/from Uint32x4 because
@@ -1142,11 +1166,11 @@ simd_int16x8_##Name(JSContext* cx, unsigned argc, Value* vp);
 INT16X8_FUNCTION_LIST(DECLARE_SIMD_INT16X8_FUNCTION)
 #undef DECLARE_SIMD_INT16X8_FUNCTION
 
-#define DECLARE_SIMD_INT32x4_FUNCTION(Name, Func, Operands)     \
+#define DECLARE_SIMD_INT32X4_FUNCTION(Name, Func, Operands)     \
 extern MOZ_MUST_USE bool                                        \
 simd_int32x4_##Name(JSContext* cx, unsigned argc, Value* vp);
-INT32X4_FUNCTION_LIST(DECLARE_SIMD_INT32x4_FUNCTION)
-#undef DECLARE_SIMD_INT32x4_FUNCTION
+INT32X4_FUNCTION_LIST(DECLARE_SIMD_INT32X4_FUNCTION)
+#undef DECLARE_SIMD_INT32X4_FUNCTION
 
 #define DECLARE_SIMD_UINT8X16_FUNCTION(Name, Func, Operands)    \
 extern MOZ_MUST_USE bool                                        \
@@ -1160,11 +1184,11 @@ simd_uint16x8_##Name(JSContext* cx, unsigned argc, Value* vp);
 UINT16X8_FUNCTION_LIST(DECLARE_SIMD_UINT16X8_FUNCTION)
 #undef DECLARE_SIMD_UINT16X8_FUNCTION
 
-#define DECLARE_SIMD_UINT32x4_FUNCTION(Name, Func, Operands)    \
+#define DECLARE_SIMD_UINT32X4_FUNCTION(Name, Func, Operands)    \
 extern MOZ_MUST_USE bool                                        \
 simd_uint32x4_##Name(JSContext* cx, unsigned argc, Value* vp);
-UINT32X4_FUNCTION_LIST(DECLARE_SIMD_UINT32x4_FUNCTION)
-#undef DECLARE_SIMD_UINT32x4_FUNCTION
+UINT32X4_FUNCTION_LIST(DECLARE_SIMD_UINT32X4_FUNCTION)
+#undef DECLARE_SIMD_UINT32X4_FUNCTION
 
 #define DECLARE_SIMD_BOOL8X16_FUNCTION(Name, Func, Operands)    \
 extern MOZ_MUST_USE bool                                        \
@@ -1184,11 +1208,11 @@ simd_bool32x4_##Name(JSContext* cx, unsigned argc, Value* vp);
 BOOL32X4_FUNCTION_LIST(DECLARE_SIMD_BOOL32X4_FUNCTION)
 #undef DECLARE_SIMD_BOOL32X4_FUNCTION
 
-#define DECLARE_SIMD_BOOL64x2_FUNCTION(Name, Func, Operands)    \
+#define DECLARE_SIMD_BOOL64X2_FUNCTION(Name, Func, Operands)    \
 extern MOZ_MUST_USE bool                                        \
 simd_bool64x2_##Name(JSContext* cx, unsigned argc, Value* vp);
-BOOL64X2_FUNCTION_LIST(DECLARE_SIMD_BOOL64x2_FUNCTION)
-#undef DECLARE_SIMD_BOOL64x2_FUNCTION
+BOOL64X2_FUNCTION_LIST(DECLARE_SIMD_BOOL64X2_FUNCTION)
+#undef DECLARE_SIMD_BOOL64X2_FUNCTION
 
 }  /* namespace js */
 

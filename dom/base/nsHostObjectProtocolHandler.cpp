@@ -14,6 +14,7 @@
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/Preferences.h"
 #include "nsClassHashtable.h"
+#include "nsContentUtils.h"
 #include "nsError.h"
 #include "nsHostObjectURI.h"
 #include "nsIMemoryReporter.h"

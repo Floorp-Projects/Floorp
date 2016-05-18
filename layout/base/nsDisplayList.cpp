@@ -3418,9 +3418,13 @@ nsDisplayBackgroundColor::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
   if (!mBackgroundStyle)
     return nsRegion();
 
-  *aSnap = true;
 
   const nsStyleImageLayers::Layer& bottomLayer = mBackgroundStyle->BottomLayer();
+  if (bottomLayer.mClip == NS_STYLE_IMAGELAYER_CLIP_TEXT) {
+    return nsRegion();
+  }
+
+  *aSnap = true;
   return nsDisplayBackgroundImage::GetInsideClipRegion(this, bottomLayer.mClip,
                                                        mBackgroundRect, mBackgroundRect);
 }

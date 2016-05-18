@@ -822,8 +822,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleMargin
     return nsChangeHint(0);
   }
 
-  nsStyleSides  mMargin;          // [reset] coord, percent, calc, auto
-
   bool GetMargin(nsMargin& aMargin) const
   {
     if (mMargin.ConvertsToLength()) {
@@ -841,6 +839,13 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleMargin
       aMargin.Side(side) = mMargin.ToLength(side);
     }
   }
+
+  // Return true if either the start or end side in the axis is 'auto'.
+  // (defined in WritingModes.h since we need the full WritingMode type)
+  inline bool HasBlockAxisAuto(mozilla::WritingMode aWM) const;
+  inline bool HasInlineAxisAuto(mozilla::WritingMode aWM) const;
+
+  nsStyleSides  mMargin; // [reset] coord, percent, calc, auto
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePadding
@@ -3529,6 +3534,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVGReset
     return nsChangeHint_UpdateEffects |
            nsChangeHint_UpdateOverflow |
            nsChangeHint_NeutralChange |
+           nsChangeHint_UpdateBackgroundPosition |
            NS_STYLE_HINT_REFLOW;
   }
   static nsChangeHint DifferenceAlwaysHandledForDescendants() {

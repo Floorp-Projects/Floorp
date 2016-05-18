@@ -46,6 +46,7 @@ class CompositorBridgeParent;
 class APZCTreeManager;
 class GeckoContentController;
 class APZEventState;
+class CompositorSession;
 struct ScrollableLayerGuid;
 } // namespace layers
 
@@ -112,6 +113,7 @@ protected:
   typedef mozilla::CSSRect CSSRect;
   typedef mozilla::ScreenRotation ScreenRotation;
   typedef mozilla::widget::CompositorWidgetProxy CompositorWidgetProxy;
+  typedef mozilla::layers::CompositorSession CompositorSession;
 
   virtual ~nsBaseWidget();
 
@@ -170,7 +172,6 @@ public:
 
   mozilla::CompositorVsyncDispatcher* GetCompositorVsyncDispatcher();
   void            CreateCompositorVsyncDispatcher();
-  virtual CompositorBridgeParent* NewCompositorBridgeParent(int aSurfaceWidth, int aSurfaceHeight);
   virtual void            CreateCompositor();
   virtual void            CreateCompositor(int aWidth, int aHeight);
   virtual void            PrepareWindowEffects() override {}
@@ -538,6 +539,11 @@ protected:
   bool UseAPZ();
 
 protected:
+  // Returns whether compositing should use an external surface size.
+  virtual bool UseExternalCompositingSurface() const {
+    return false;
+  }
+
   /**
    * Starts the OMTC compositor destruction sequence.
    *
@@ -556,8 +562,8 @@ protected:
   nsIWidgetListener* mAttachedWidgetListener;
   nsIWidgetListener* mPreviouslyAttachedWidgetListener;
   RefPtr<LayerManager> mLayerManager;
+  RefPtr<CompositorSession> mCompositorSession;
   RefPtr<CompositorBridgeChild> mCompositorBridgeChild;
-  RefPtr<CompositorBridgeParent> mCompositorBridgeParent;
   RefPtr<mozilla::CompositorVsyncDispatcher> mCompositorVsyncDispatcher;
   RefPtr<APZCTreeManager> mAPZC;
   RefPtr<GeckoContentController> mRootContentController;

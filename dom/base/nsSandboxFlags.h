@@ -82,12 +82,7 @@ const unsigned long SANDBOXED_AUTOMATIC_FEATURES = 0x100;
 /**
  * This flag prevents content from using the requestFullscreen() method.
  */
-// We don't implement this yet.  See represent this as a sandbox flag; instead it's an explicit check for
-// the "allowfullscreen" attribute on the <iframe> that includes us.
-// XXXbz This is wrong in two ways: It can change during the life of the
-// document, and it doesn't get correctly propagated to popups.  See
-// https://bugzilla.mozilla.org/show_bug.cgi?id=1270648
-// const unsigned long SANDBOXED_FULLSCREEN = 0x400;
+const unsigned long SANDBOXED_FULLSCREEN = 0x400;
 
 /**
  * This flag blocks the document from changing document.domain.

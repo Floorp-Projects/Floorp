@@ -2502,6 +2502,10 @@ nsDocShell::GetFullscreenAllowed(bool* aFullscreenAllowed)
   // Assume false until we determine otherwise...
   *aFullscreenAllowed = false;
 
+  // If it is sandboxed, fullscreen is not allowed.
+  if (mSandboxFlags & SANDBOXED_FULLSCREEN) {
+    return NS_OK;
+  }
   nsCOMPtr<nsPIDOMWindowOuter> win = GetWindow();
   if (!win) {
     return NS_OK;
@@ -2519,6 +2523,10 @@ nsDocShell::GetFullscreenAllowed(bool* aFullscreenAllowed)
                                nsGkAtoms::allowfullscreen) &&
         !frameElement->HasAttr(kNameSpaceID_None,
                                nsGkAtoms::mozallowfullscreen)) {
+      return NS_OK;
+    }
+    nsIDocument* doc = frameElement->GetUncomposedDoc();
+    if (!doc || !doc->FullscreenEnabledInternal()) {
       return NS_OK;
     }
   }
@@ -2956,7 +2964,7 @@ nsDocShell::GetSessionStorageForPrincipal(nsIPrincipal* aPrincipal,
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> domWin = do_GetInterface(GetAsSupports(this));
+  nsCOMPtr<nsPIDOMWindowOuter> domWin = GetWindow();
 
   if (aCreate) {
     return manager->CreateStorage(domWin->GetCurrentInnerWindow(), aPrincipal,
@@ -9973,7 +9981,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
   // possible frameloader initialization before loading a new page.
   nsCOMPtr<nsIDocShellTreeItem> parent = GetParentDocshell();
   if (parent) {
-    nsCOMPtr<nsIDocument> doc = do_GetInterface(parent);
+    nsCOMPtr<nsIDocument> doc = parent->GetDocument();
     if (doc) {
       doc->TryCancelFrameLoaderInitialization(this);
     }
@@ -14464,4 +14472,11 @@ nsDocShell::GetTabChild()
   nsCOMPtr<nsIDocShellTreeOwner> owner(mTreeOwner);
   nsCOMPtr<nsITabChild> tc = do_GetInterface(owner);
   return tc.forget();
+}
+
+nsICommandManager*
+nsDocShell::GetCommandManager()
+{
+  NS_ENSURE_SUCCESS(EnsureCommandHandler(), nullptr);
+  return mCommandManager;
 }

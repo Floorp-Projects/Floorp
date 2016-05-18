@@ -25,148 +25,28 @@
 
 'use strict';
 
-// TODO: add equivalent tests without an animation-delay, but first we need to
-// change the timing of animationstart dispatch. (Right now the animationstart
-// event will fire before the ready Promise is resolved if there is no
-// animation-delay.)
-// See https://bugzilla.mozilla.org/show_bug.cgi?id=1134163
+// TODO: We should separate this test(Testing for CSS Animation events /
+// Testing for start time of Web Animation).
+// e.g:
+//  CSS Animation events test:
+//    - check the firing an event after setting an Animation.startTime
+//  The start time of Web Animation test:
+//    - check an start time value on several situation(init / processing..)
+//    - Based on W3C Spec, check the behavior of setting current time.
 
 // TODO: Once the computedTiming property is implemented, add checks to the
 // checker helpers to ensure that computedTiming's properties are updated as
 // expected.
 // See https://bugzilla.mozilla.org/show_bug.cgi?id=1108055
 
-
 const CSS_ANIM_EVENTS =
   ['animationstart', 'animationiteration', 'animationend'];
-const ANIM_DELAY_MS = 1000 * MS_PER_SEC; // 1000s
-const ANIM_DUR_MS = 1000 * MS_PER_SEC; // 1000s
-const ANIM_PROPERTY_VAL = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
-
-/**
- * These helpers get the value that the startTime needs to be set to, to put an
- * animation that uses the above ANIM_DELAY_MS and ANIM_DUR_MS values into the
- * middle of various phases or points through the active duration.
- */
-function startTimeForBeforePhase(timeline) {
-  return timeline.currentTime - ANIM_DELAY_MS / 2;
-}
-function startTimeForActivePhase(timeline) {
-  return timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS / 2;
-}
-function startTimeForAfterPhase(timeline) {
-  return timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS - ANIM_DELAY_MS / 2;
-}
-function startTimeForStartOfActiveInterval(timeline) {
-  return timeline.currentTime - ANIM_DELAY_MS;
-}
-function startTimeForFiftyPercentThroughActiveInterval(timeline) {
-  return timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS * 0.5;
-}
-function startTimeForEndOfActiveInterval(timeline) {
-  return timeline.currentTime - ANIM_DELAY_MS - ANIM_DUR_MS;
-}
-
-
-// Expected computed 'margin-left' values at points during the active interval:
-// When we assert_between_inclusive using these values we could in theory cause
-// intermittent failure due to very long delays between paints, but since the
-// active duration is 1000s long, a delay would need to be around 100s to cause
-// that. If that's happening then there are likely other issues that should be
-// fixed, so a failure to make us look into that seems like a good thing.
-const UNANIMATED_POSITION = 10;
-const INITIAL_POSITION = 100;
-const TEN_PCT_POSITION = 110;
-const FIFTY_PCT_POSITION = 150;
-const END_POSITION = 200;
-
-// The terms used for the naming of the following helper functions refer to
-// terms used in the Web Animations specification for specific phases of an
-// animation. The terms can be found here:
-//
-//   https://w3c.github.io/web-animations/#animation-effect-phases-and-states
-//
-// Note the distinction between the "animation start time" which occurs before
-// the start delay and the start of the active interval which occurs after it.
-
-// Called when the ready Promise's callbacks should happen
-function checkStateOnReadyPromiseResolved(animation)
-{
-  assert_less_than_equal(animation.startTime, animation.timeline.currentTime,
-    'Animation.startTime should be less than the timeline\'s ' +
-    'currentTime on the first paint tick after animation creation');
-
-  assert_equals(animation.playState, 'running',
-    'Animation.playState should be "running" on the first paint ' +
-    'tick after animation creation');
-
-  assert_equals(animation.effect.target.style.animationPlayState, 'running',
-    'Animation.effect.target.style.animationPlayState should be ' +
-    '"running" on the first paint tick after animation creation');
-
-  var div = animation.effect.target;
-  var marginLeft = parseFloat(getComputedStyle(div).marginLeft);
-  assert_equals(marginLeft, UNANIMATED_POSITION,
-                'the computed value of margin-left should be unaffected ' +
-                'by an animation with a delay on ready Promise resolve');
-}
-
-// Called when startTime is set to the time the active interval starts.
-function checkStateAtActiveIntervalStartTime(animation)
-{
-  // We don't test animation.startTime since our caller just set it.
-
-  assert_equals(animation.playState, 'running',
-    'Animation.playState should be "running" at the start of ' +
-    'the active interval');
-
-  assert_equals(animation.effect.target.style.animationPlayState, 'running',
-    'Animation.effect.target.style.animationPlayState should be ' +
-    '"running" at the start of the active interval');
-
-  var div = animation.effect.target;
-  var marginLeft = parseFloat(getComputedStyle(div).marginLeft);
-  assert_between_inclusive(marginLeft, INITIAL_POSITION, TEN_PCT_POSITION,
-    'the computed value of margin-left should be close to the value at the ' +
-    'beginning of the animation');
-}
-
-function checkStateAtFiftyPctOfActiveInterval(animation)
-{
-  // We don't test animation.startTime since our caller just set it.
-
-  var div = animation.effect.target;
-  var marginLeft = parseFloat(getComputedStyle(div).marginLeft);
-  assert_equals(marginLeft, FIFTY_PCT_POSITION,
-    'the computed value of margin-left should be half way through the ' +
-    'animation at the midpoint of the active interval');
-}
-
-// Called when startTime is set to the time the active interval ends.
-function checkStateAtActiveIntervalEndTime(animation)
-{
-  // We don't test animation.startTime since our caller just set it.
-
-  assert_equals(animation.playState, 'finished',
-    'Animation.playState should be "finished" at the end of ' +
-    'the active interval');
-
-  assert_equals(animation.effect.target.style.animationPlayState, "running",
-    'Animation.effect.target.style.animationPlayState should be ' +
-    '"finished" at the end of the active interval');
-
-  var div = animation.effect.target;
-  var marginLeft = parseFloat(getComputedStyle(div).marginLeft);
-  assert_equals(marginLeft, UNANIMATED_POSITION,
-    'the computed value of margin-left should be unaffected ' +
-    'by the animation at the end of the active duration when the ' +
-    'animation-fill-mode is none');
-}
 
 test(function(t)
 {
   var div = addDiv(t, { 'style': 'animation: anim 100s' });
   var animation = div.getAnimations()[0];
+
   assert_equals(animation.startTime, null, 'startTime is unresolved');
 }, 'startTime of a newly created (play-pending) animation is unresolved');
 
@@ -181,6 +61,7 @@ promise_test(function(t)
 {
   var div = addDiv(t, { 'style': 'animation: anim 100s' });
   var animation = div.getAnimations()[0];
+
   return animation.ready.then(function() {
     assert_true(animation.startTime > 0,
                 'startTime is resolved when running');
@@ -191,6 +72,7 @@ promise_test(function(t)
 {
   var div = addDiv(t, { 'style': 'animation: anim 100s paused' });
   var animation = div.getAnimations()[0];
+
   return animation.ready.then(function() {
     assert_equals(animation.startTime, null,
                   'startTime is unresolved when paused');
@@ -201,14 +83,17 @@ promise_test(function(t)
 {
   var div = addDiv(t, { 'style': 'animation: anim 100s' });
   var animation = div.getAnimations()[0];
+
   return animation.ready.then(function() {
     div.style.animationPlayState = 'paused';
     getComputedStyle(div).animationPlayState;
+
     assert_not_equals(animation.startTime, null,
                       'startTime is resolved when pause-pending');
 
     div.style.animationPlayState = 'running';
     getComputedStyle(div).animationPlayState;
+
     assert_not_equals(animation.startTime, null,
                       'startTime is preserved when a pause is aborted');
   });
@@ -219,9 +104,11 @@ promise_test(function(t) {
   var animation = div.getAnimations()[0];
   // Seek to end to put us in the finished state
   animation.currentTime = 100 * MS_PER_SEC;
+
   return animation.ready.then(function() {
     // Call play() which puts us back in the running state
     animation.play();
+
     assert_equals(animation.startTime, null, 'startTime is unresolved');
   });
 }, 'startTime while play-pending from finished state');
@@ -232,11 +119,12 @@ test(function(t) {
   animation.finish();
   // Call play() which puts us back in the running state
   animation.play();
+
   assert_equals(animation.startTime, null, 'startTime is unresolved');
 }, 'startTime while play-pending from finished state using finish()');
 
 promise_test(function(t) {
-  var div = addDiv(t, { style: 'animation: anim 1000s' });
+  var div = addDiv(t, { style: 'animation: anim 100s' });
   var animation = div.getAnimations()[0];
 
   assert_equals(animation.startTime, null, 'The initial startTime is null');
@@ -267,12 +155,12 @@ promise_test(function(t) {
 test(function(t)
 {
   var div = addDiv(t, {'class': 'animated-div'});
-  div.style.animation = ANIM_PROPERTY_VAL;
-
+  div.style.animation = 'anim 100s 100s';
   var animation = div.getAnimations()[0];
   var currentTime = animation.timeline.currentTime;
   animation.startTime = currentTime;
-  assert_approx_equals(animation.startTime, currentTime, 0.0001, // rounding error
+
+  assert_times_equal(animation.startTime, currentTime,
     'Check setting of startTime actually works');
 }, 'Sanity test to check round-tripping assigning to a new animation\'s ' +
    'startTime');
@@ -280,90 +168,57 @@ test(function(t)
 promise_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
-
-  div.style.animation = ANIM_PROPERTY_VAL;
-
+  div.style.animation = 'anim 100s 100s';
   var animation = div.getAnimations()[0];
 
   return animation.ready.then(function() {
-    checkStateOnReadyPromiseResolved(animation);
+    assert_less_than_equal(animation.startTime, animation.timeline.currentTime,
+      'Animation.startTime should be less than the timeline\'s ' +
+      'currentTime on the first paint tick after animation creation');
 
-    animation.startTime = startTimeForStartOfActiveInterval(animation.timeline);
+    animation.startTime = animation.timeline.currentTime - 100 * MS_PER_SEC;
     return eventWatcher.wait_for('animationstart');
   }).then(function() {
-    checkStateAtActiveIntervalStartTime(animation);
-
-    animation.startTime =
-      startTimeForFiftyPercentThroughActiveInterval(animation.timeline);
-    checkStateAtFiftyPctOfActiveInterval(animation);
-
-    animation.startTime = startTimeForEndOfActiveInterval(animation.timeline);
+    animation.startTime = animation.timeline.currentTime - 200 * MS_PER_SEC;
     return eventWatcher.wait_for('animationend');
-  }).then(function() {
-    checkStateAtActiveIntervalEndTime(animation);
   });
 }, 'Skipping forward through animation');
 
 promise_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
-
-  div.style.animation = ANIM_PROPERTY_VAL;
-
+  div.style.animation = 'anim 100s 100s';
   var animation = div.getAnimations()[0];
-
-  animation.startTime = startTimeForEndOfActiveInterval(animation.timeline);
-
+  animation.startTime = animation.timeline.currentTime - 200 * MS_PER_SEC;
   var previousTimelineTime = animation.timeline.currentTime;
 
-  // Skipping over the active interval will dispatch an 'animationstart' then
-  // an 'animationend' event. We need to wait for these events before we start
-  // testing going backwards since EventWatcher will fail the test if it gets
-  // an event that we haven't told it about.
   return eventWatcher.wait_for(['animationstart',
                                 'animationend']).then(function() {
     assert_true(document.timeline.currentTime - previousTimelineTime <
-                  ANIM_DUR_MS,
+                  100 * MS_PER_SEC,
                 'Sanity check that seeking worked rather than the events ' +
                 'firing after normal playback through the very long ' +
                 'animation duration');
 
-    // Now we can start the tests for skipping backwards, but first we check
-    // that after the events we're still in the same end time state:
-    checkStateAtActiveIntervalEndTime(animation);
-
-    animation.startTime =
-      startTimeForFiftyPercentThroughActiveInterval(animation.timeline);
+    animation.startTime = animation.timeline.currentTime - 150 * MS_PER_SEC;
 
     // Despite going backwards from after the end of the animation (to being
     // in the active interval), we now expect an 'animationstart' event
     // because the animation should go from being inactive to active.
-    //
-    // Calling checkStateAtFiftyPctOfActiveInterval will check computed style,
-    // causing computed style to be updated and the 'animationstart' event to
-    // be dispatched synchronously. We need to call wait_for first
-    // otherwise eventWatcher will assert that the event was unexpected.
-    var promise = eventWatcher.wait_for('animationstart');
-    checkStateAtFiftyPctOfActiveInterval(animation);
-    return promise;
+    return eventWatcher.wait_for('animationstart');
   }).then(function() {
-    animation.startTime = startTimeForStartOfActiveInterval(animation.timeline);
-    checkStateAtActiveIntervalStartTime(animation);
-
     animation.startTime = animation.timeline.currentTime;
+
     // Despite going backwards from just after the active interval starts to
     // the animation start time, we now expect an animationend event
     // because we went from inside to outside the active interval.
     return eventWatcher.wait_for('animationend');
   }).then(function() {
-    checkStateOnReadyPromiseResolved(animation);
-  })
-
-  // This must come after we've set up the Promise chain, since requesting
-  // computed style will force events to be dispatched.
-  checkStateAtActiveIntervalEndTime(animation);
+    assert_less_than_equal(animation.startTime, animation.timeline.currentTime,
+      'Animation.startTime should be less than the timeline\'s ' +
+      'currentTime on the first paint tick after animation creation');
+  });
 }, 'Skipping backwards through animation');
-
 
 // Next we have multiple tests to check that redundant startTime changes do NOT
 // dispatch events. It's impossible to distinguish between events not being
@@ -377,11 +232,11 @@ promise_test(function(t) {
 promise_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
-  div.style.animation = ANIM_PROPERTY_VAL;
+  div.style.animation = "anim 100s 100s";
   var animation = div.getAnimations()[0];
 
-  animation.startTime = startTimeForActivePhase(animation.timeline);
-  animation.startTime = startTimeForBeforePhase(animation.timeline);
+  animation.startTime = animation.timeline.currentTime - 150 * MS_PER_SEC;
+  animation.startTime = animation.timeline.currentTime - 50 * MS_PER_SEC;
 
   return waitForAnimationFrames(2);
 }, 'Redundant change, before -> active, then back');
@@ -389,11 +244,11 @@ promise_test(function(t) {
 promise_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
-  div.style.animation = ANIM_PROPERTY_VAL;
+  div.style.animation = "anim 100s 100s";
   var animation = div.getAnimations()[0];
 
-  animation.startTime = startTimeForAfterPhase(animation.timeline);
-  animation.startTime = startTimeForBeforePhase(animation.timeline);
+  animation.startTime = animation.timeline.currentTime - 250 * MS_PER_SEC;
+  animation.startTime = animation.timeline.currentTime - 50 * MS_PER_SEC;
 
   return waitForAnimationFrames(2);
 }, 'Redundant change, before -> after, then back');
@@ -401,17 +256,17 @@ promise_test(function(t) {
 promise_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
-  div.style.animation = ANIM_PROPERTY_VAL;
+  div.style.animation = "anim 100s 100s";
   var animation = div.getAnimations()[0];
 
   var retPromise =  eventWatcher.wait_for('animationstart').then(function() {
-    animation.startTime = startTimeForBeforePhase(animation.timeline);
-    animation.startTime = startTimeForActivePhase(animation.timeline);
+    animation.startTime = animation.timeline.currentTime - 50 * MS_PER_SEC;
+    animation.startTime = animation.timeline.currentTime - 150 * MS_PER_SEC;
 
     return waitForAnimationFrames(2);
   });
   // get us into the initial state:
-  animation.startTime = startTimeForActivePhase(animation.timeline);
+  animation.startTime = animation.timeline.currentTime - 150 * MS_PER_SEC;
 
   return retPromise;
 }, 'Redundant change, active -> before, then back');
@@ -419,17 +274,17 @@ promise_test(function(t) {
 promise_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
-  div.style.animation = ANIM_PROPERTY_VAL;
+  div.style.animation = "anim 100s 100s";
   var animation = div.getAnimations()[0];
 
   var retPromise = eventWatcher.wait_for('animationstart').then(function() {
-    animation.startTime = startTimeForAfterPhase(animation.timeline);
-    animation.startTime = startTimeForActivePhase(animation.timeline);
+    animation.startTime = animation.timeline.currentTime - 250 * MS_PER_SEC;
+    animation.startTime = animation.timeline.currentTime - 150 * MS_PER_SEC;
 
     return waitForAnimationFrames(2);
   });
   // get us into the initial state:
-  animation.startTime = startTimeForActivePhase(animation.timeline);
+  animation.startTime = animation.timeline.currentTime - 150 * MS_PER_SEC;
 
   return retPromise;
 }, 'Redundant change, active -> after, then back');
@@ -437,18 +292,18 @@ promise_test(function(t) {
 promise_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
-  div.style.animation = ANIM_PROPERTY_VAL;
+  div.style.animation = "anim 100s 100s";
   var animation = div.getAnimations()[0];
 
   var retPromise = eventWatcher.wait_for(['animationstart',
                                           'animationend']).then(function() {
-    animation.startTime = startTimeForBeforePhase(animation.timeline);
-    animation.startTime = startTimeForAfterPhase(animation.timeline);
+    animation.startTime = animation.timeline.currentTime - 50 * MS_PER_SEC;
+    animation.startTime = animation.timeline.currentTime - 250 * MS_PER_SEC;
 
     return waitForAnimationFrames(2);
   });
   // get us into the initial state:
-  animation.startTime = startTimeForAfterPhase(animation.timeline);
+  animation.startTime = animation.timeline.currentTime - 250 * MS_PER_SEC;
 
   return retPromise;
 }, 'Redundant change, after -> before, then back');
@@ -456,28 +311,27 @@ promise_test(function(t) {
 promise_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
-  div.style.animation = ANIM_PROPERTY_VAL;
+  div.style.animation = "anim 100s 100s";
   var animation = div.getAnimations()[0];
 
   var retPromise = eventWatcher.wait_for(['animationstart',
                                           'animationend']).then(function() {
-    animation.startTime = startTimeForActivePhase(animation.timeline);
-    animation.startTime = startTimeForAfterPhase(animation.timeline);
+    animation.startTime = animation.timeline.currentTime - 150 * MS_PER_SEC;
+    animation.startTime = animation.timeline.currentTime - 250 * MS_PER_SEC;
 
     return waitForAnimationFrames(2);
+
   });
   // get us into the initial state:
-  animation.startTime = startTimeForAfterPhase(animation.timeline);
+  animation.startTime = animation.timeline.currentTime - 250 * MS_PER_SEC;
 
   return retPromise;
 }, 'Redundant change, after -> active, then back');
 
 promise_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
-  div.style.animation = ANIM_PROPERTY_VAL;
-
+  div.style.animation = 'anim 100s 100s';
   var animation = div.getAnimations()[0];
-
   var storedCurrentTime;
 
   return animation.ready.then(function() {
@@ -493,7 +347,6 @@ promise_test(function(t) {
 promise_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.animation = 'anim 100s';
-
   var animation = div.getAnimations()[0];
 
   return animation.ready.then(function() {
@@ -515,8 +368,8 @@ promise_test(function(t) {
 promise_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.animation = 'anim 100s';
-
   var animation = div.getAnimations()[0];
+
   return animation.ready.then(function() {
     animation.cancel();
     assert_equals(animation.startTime, null,

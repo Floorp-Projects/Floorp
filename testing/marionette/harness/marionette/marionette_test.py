@@ -93,13 +93,6 @@ def skip_if_desktop(target):
         return target(self, *args, **kwargs)
     return wrapper
 
-def skip_if_b2g(target):
-    def wrapper(self, *args, **kwargs):
-        if self.marionette.session_capabilities.get('b2g') == True:
-            raise SkipTest('skipping due to b2g')
-        return target(self, *args, **kwargs)
-    return wrapper
-
 def skip_if_e10s(target):
     def wrapper(self, *args, **kwargs):
         with self.marionette.using_context('chrome'):

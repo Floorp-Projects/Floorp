@@ -73,6 +73,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in {
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     DEFINES['UNICODE'] = True
     DEFINES['_UNICODE'] = True
+    DEFINES['SK_FONT_HOST_USE_SYSTEM_SETTINGS'] = 1
     UNIFIED_SOURCES += [
         'skia/src/fonts/SkFontMgr_indirect.cpp',
         'skia/src/fonts/SkRemotableFontMgr.cpp',

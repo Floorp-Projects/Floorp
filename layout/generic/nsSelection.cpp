@@ -1885,115 +1885,133 @@ nsFrameSelection::GetFrameForNodeOffset(nsIContent*        aNode,
   if (aOffset < 0)
     return nullptr;
 
-  *aReturnOffset = aOffset;
+  if (!aNode->GetPrimaryFrame() &&
+      !mShell->FrameManager()->GetDisplayContentsStyleFor(aNode)) {
+    return nullptr;
+  }
 
-  nsCOMPtr<nsIContent> theNode = aNode;
+  nsIFrame* returnFrame = nullptr;
 
-  if (aNode->IsElement())
-  {
-    int32_t childIndex  = 0;
-    int32_t numChildren = theNode->GetChildCount();
+  while (true) {
+    *aReturnOffset = aOffset;
 
-    if (aHint == CARET_ASSOCIATE_BEFORE)
-    {
-      if (aOffset > 0)
-        childIndex = aOffset - 1;
-      else
-        childIndex = aOffset;
-    }
-    else
-    {
-      NS_ASSERTION(aHint == CARET_ASSOCIATE_AFTER, "unknown direction");
-      if (aOffset >= numChildren)
-      {
-        if (numChildren > 0)
-          childIndex = numChildren - 1;
-        else
-          childIndex = 0;
-      }
-      else
-        childIndex = aOffset;
-    }
-    
-    if (childIndex > 0 || numChildren > 0) {
-      nsCOMPtr<nsIContent> childNode = theNode->GetChildAt(childIndex);
+    nsCOMPtr<nsIContent> theNode = aNode;
 
-      if (!childNode)
-        return nullptr;
+    if (aNode->IsElement()) {
+      int32_t childIndex  = 0;
+      int32_t numChildren = theNode->GetChildCount();
 
-      theNode = childNode;
-    }
-
-    // Now that we have the child node, check if it too
-    // can contain children. If so, call this method again!
-    if (theNode->IsElement() &&
-        theNode->GetChildCount() &&
-        !theNode->HasIndependentSelection())
-    {
-      int32_t newOffset = 0;
-
-      if (aOffset > childIndex) {
-        numChildren = theNode->GetChildCount();
-        newOffset = numChildren;
-      }
-
-      return GetFrameForNodeOffset(theNode, newOffset, aHint, aReturnOffset);
-    } else {
-      // Check to see if theNode is a text node. If it is, translate
-      // aOffset into an offset into the text node.
-
-      nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(theNode);
-
-      if (textNode)
-      {
-        if (theNode->GetPrimaryFrame())
-        {
-          if (aOffset > childIndex)
-          {
-            uint32_t textLength = 0;
-
-            nsresult rv = textNode->GetLength(&textLength);
-            if (NS_FAILED(rv))
-              return nullptr;
-
-            *aReturnOffset = (int32_t)textLength;
-          }
-          else
-            *aReturnOffset = 0;
+      if (aHint == CARET_ASSOCIATE_BEFORE) {
+        if (aOffset > 0) {
+          childIndex = aOffset - 1;
         } else {
-          int32_t numChildren = aNode->GetChildCount();
-          int32_t newChildIndex =
-            aHint == CARET_ASSOCIATE_BEFORE ? childIndex - 1 : childIndex + 1;
-
-          if (newChildIndex >= 0 && newChildIndex < numChildren) {
-            nsCOMPtr<nsIContent> newChildNode = aNode->GetChildAt(newChildIndex);
-            if (!newChildNode)
-              return nullptr;
-
-            theNode = newChildNode;
-            int32_t newOffset =
-              aHint == CARET_ASSOCIATE_BEFORE ? theNode->GetChildCount() : 0;
-            return GetFrameForNodeOffset(theNode, newOffset, aHint, aReturnOffset);
+          childIndex = aOffset;
+        }
+      } else {
+        NS_ASSERTION(aHint == CARET_ASSOCIATE_AFTER, "unknown direction");
+        if (aOffset >= numChildren) {
+          if (numChildren > 0) {
+            childIndex = numChildren - 1;
           } else {
-            // newChildIndex is illegal which means we're at first or last
-            // child. Just use original node to get the frame.
-            theNode = aNode;
+            childIndex = 0;
+          }
+        } else {
+          childIndex = aOffset;
+        }
+      }
+      
+      if (childIndex > 0 || numChildren > 0) {
+        nsCOMPtr<nsIContent> childNode = theNode->GetChildAt(childIndex);
+
+        if (!childNode) {
+          break;
+        }
+
+        theNode = childNode;
+      }
+
+      // Now that we have the child node, check if it too
+      // can contain children. If so, descend into child.
+      if (theNode->IsElement() &&
+          theNode->GetChildCount() &&
+          !theNode->HasIndependentSelection()) {
+        aNode = theNode;
+        aOffset = aOffset > childIndex ? theNode->GetChildCount() : 0;
+        continue;
+      } else {
+        // Check to see if theNode is a text node. If it is, translate
+        // aOffset into an offset into the text node.
+
+        nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(theNode);
+        if (textNode) {
+          if (theNode->GetPrimaryFrame()) {
+            if (aOffset > childIndex) {
+              uint32_t textLength = 0;
+              nsresult rv = textNode->GetLength(&textLength);
+              if (NS_FAILED(rv)) {
+                break;
+              }
+
+              *aReturnOffset = (int32_t)textLength;
+            } else {
+              *aReturnOffset = 0;
+            }
+          } else {
+            int32_t numChildren = aNode->GetChildCount();
+            int32_t newChildIndex =
+              aHint == CARET_ASSOCIATE_BEFORE ? childIndex - 1 : childIndex + 1;
+
+            if (newChildIndex >= 0 && newChildIndex < numChildren) {
+              nsCOMPtr<nsIContent> newChildNode = aNode->GetChildAt(newChildIndex);
+              if (!newChildNode) {
+                return nullptr;
+              }
+
+              aNode = newChildNode;
+              aOffset = aHint == CARET_ASSOCIATE_BEFORE ? aNode->GetChildCount() : 0;
+              continue;
+            } else {
+              // newChildIndex is illegal which means we're at first or last
+              // child. Just use original node to get the frame.
+              theNode = aNode;
+            }
           }
         }
       }
     }
-  }
 
-  // If the node is a ShadowRoot, the frame needs to be adjusted,
-  // because a ShadowRoot does not get a frame. Its children are rendered
-  // as children of the host.
-  mozilla::dom::ShadowRoot* shadowRoot =
-    mozilla::dom::ShadowRoot::FromNode(theNode);
-  if (shadowRoot) {
-    theNode = shadowRoot->GetHost();
-  }
+    // If the node is a ShadowRoot, the frame needs to be adjusted,
+    // because a ShadowRoot does not get a frame. Its children are rendered
+    // as children of the host.
+    mozilla::dom::ShadowRoot* shadowRoot =
+      mozilla::dom::ShadowRoot::FromNode(theNode);
+    if (shadowRoot) {
+      theNode = shadowRoot->GetHost();
+    }
 
-  nsIFrame* returnFrame = theNode->GetPrimaryFrame();
+    returnFrame = theNode->GetPrimaryFrame();
+    if (!returnFrame) {
+      if (aHint == CARET_ASSOCIATE_BEFORE) {
+        if (aOffset > 0) {
+          --aOffset;
+          continue;
+        } else {
+          break;
+        }
+      } else {
+        int32_t end = theNode->GetChildCount();
+        if (aOffset < end) {
+          ++aOffset;
+          continue;
+        } else {
+          break;
+        }
+      }
+    }
+
+    break;
+  } // end while
+
   if (!returnFrame)
     return nullptr;
 

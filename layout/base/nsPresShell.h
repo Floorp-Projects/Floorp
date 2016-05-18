@@ -232,6 +232,7 @@ public:
   virtual bool ScaleToResolution() const override;
   virtual float GetCumulativeResolution() override;
   virtual float GetCumulativeNonRootScaleResolution() override;
+  virtual void SetRestoreResolution(float aResolution) override;
 
   //nsIViewObserver interface
 

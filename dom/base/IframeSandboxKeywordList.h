@@ -8,8 +8,6 @@
    times.  It has a list of the sandbox keywords we support, with their
    corresponding sandbox flags. */
 
-#include "nsSandboxFlags.h"
-
 // Each entry has the sandbox keyword as a string, the corresponding nsGkAtoms
 // atom name, and the corresponding sandbox flags.
 SANDBOX_KEYWORD("allow-same-origin", allowsameorigin,  SANDBOXED_ORIGIN)
