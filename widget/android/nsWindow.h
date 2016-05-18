@@ -177,9 +177,6 @@ public:
     virtual void DrawWindowUnderlay(LayerManagerComposite* aManager, LayoutDeviceIntRect aRect) override;
     virtual void DrawWindowOverlay(LayerManagerComposite* aManager, LayoutDeviceIntRect aRect) override;
 
-    virtual mozilla::layers::CompositorBridgeParent* NewCompositorBridgeParent(
-      int aSurfaceWidth, int aSurfaceHeight) override;
-
     static bool IsCompositionPaused();
     static void InvalidateAndScheduleComposite();
     static void SchedulePauseComposition();
@@ -238,6 +235,10 @@ protected:
 
     virtual nsresult NotifyIMEInternal(
                          const IMENotification& aIMENotification) override;
+
+    bool UseExternalCompositingSurface() const override {
+      return true;
+    }
 
     static void DumpWindows();
     static void DumpWindows(const nsTArray<nsWindow*>& wins, int indent = 0);
