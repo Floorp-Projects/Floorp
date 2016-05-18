@@ -603,6 +603,9 @@ public:
   bool IsBResize() const {
     return mWritingMode.IsVertical() ? mFlags.mIsHResize : mFlags.mIsVResize;
   }
+  bool IsBResizeForWM(mozilla::WritingMode aWM) const {
+    return aWM.IsVertical() ? mFlags.mIsHResize : mFlags.mIsVResize;
+  }
   void SetHResize(bool aValue) {
     mFlags.mIsHResize = aValue;
   }
