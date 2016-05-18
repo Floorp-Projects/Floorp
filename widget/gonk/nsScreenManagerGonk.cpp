@@ -29,6 +29,7 @@
 #include "nsWindow.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layers/CompositorThread.h"
 #include "mozilla/Services.h"
 #include "mozilla/ProcessPriorityManager.h"
 #include "nsIdleService.h"
@@ -161,7 +162,7 @@ nsScreenGonk::~nsScreenGonk()
 {
     // Release GLContext on compositor thread
     if (mGLContext) {
-        CompositorBridgeParent::CompositorLoop()->PostTask(
+        CompositorThreadHolder::Loop()->PostTask(
             NewRunnableFunction(&ReleaseGLContextSync,
                                 mGLContext.forget().take()));
         mGLContext = nullptr;
@@ -667,7 +668,7 @@ nsScreenGonk::EnableMirroring()
     // Update mMirroringWidget on compositor thread
     nsMainThreadPtrHandle<nsScreenGonk> primary =
       nsMainThreadPtrHandle<nsScreenGonk>(new nsMainThreadPtrHolder<nsScreenGonk>(primaryScreen, false));
-    CompositorBridgeParent::CompositorLoop()->PostTask(
+    CompositorThreadHolder::Loop()->PostTask(
         NewRunnableFunction(&UpdateMirroringWidgetSync,
                             primary,
                             window.forget().take()));
@@ -692,7 +693,7 @@ nsScreenGonk::DisableMirroring()
     // Update mMirroringWidget on compositor thread
     nsMainThreadPtrHandle<nsScreenGonk> primary =
       nsMainThreadPtrHandle<nsScreenGonk>(new nsMainThreadPtrHolder<nsScreenGonk>(primaryScreen, false));
-    CompositorBridgeParent::CompositorLoop()->PostTask(
+    CompositorThreadHolder::Loop()->PostTask(
         NewRunnableFunction(&UpdateMirroringWidgetSync,
                             primary,
                             nullptr));
