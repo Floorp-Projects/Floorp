@@ -7,6 +7,9 @@
 
 "use strict";
 
+// This test runs very slowly on linux32 debug - bug 1269977
+requestLongerTimeout(2);
+
 const TEST_NETWORK_REQUEST_URI =
   "http://example.com/browser/devtools/client/webconsole/test/" +
   "test-network-request.html";
