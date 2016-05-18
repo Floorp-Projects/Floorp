@@ -36003,210 +36003,6 @@
             "url": "/html/semantics/embedded-content/the-iframe-element/iframe_sandbox_popups_nonescaping.html"
           }
         ],
-        "web-animations/Animatable/animate.html": [
-          {
-            "path": "web-animations/Animatable/animate.html",
-            "url": "/web-animations/Animatable/animate.html"
-          }
-        ],
-        "web-animations/Animation/cancel.html": [
-          {
-            "path": "web-animations/Animation/cancel.html",
-            "url": "/web-animations/Animation/cancel.html"
-          }
-        ],
-        "web-animations/Animation/constructor.html": [
-          {
-            "path": "web-animations/Animation/constructor.html",
-            "url": "/web-animations/Animation/constructor.html"
-          }
-        ],
-        "web-animations/Animation/finish.html": [
-          {
-            "path": "web-animations/Animation/finish.html",
-            "url": "/web-animations/Animation/finish.html"
-          }
-        ],
-        "web-animations/Animation/finished.html": [
-          {
-            "path": "web-animations/Animation/finished.html",
-            "url": "/web-animations/Animation/finished.html"
-          }
-        ],
-        "web-animations/Animation/id.html": [
-          {
-            "path": "web-animations/Animation/id.html",
-            "url": "/web-animations/Animation/id.html"
-          }
-        ],
-        "web-animations/Animation/oncancel.html": [
-          {
-            "path": "web-animations/Animation/oncancel.html",
-            "url": "/web-animations/Animation/oncancel.html"
-          }
-        ],
-        "web-animations/Animation/onfinish.html": [
-          {
-            "path": "web-animations/Animation/onfinish.html",
-            "url": "/web-animations/Animation/onfinish.html"
-          }
-        ],
-        "web-animations/Animation/pause.html": [
-          {
-            "path": "web-animations/Animation/pause.html",
-            "url": "/web-animations/Animation/pause.html"
-          }
-        ],
-        "web-animations/Animation/play.html": [
-          {
-            "path": "web-animations/Animation/play.html",
-            "url": "/web-animations/Animation/play.html"
-          }
-        ],
-        "web-animations/Animation/playState.html": [
-          {
-            "path": "web-animations/Animation/playState.html",
-            "url": "/web-animations/Animation/playState.html"
-          }
-        ],
-        "web-animations/Animation/playbackRate.html": [
-          {
-            "path": "web-animations/Animation/playbackRate.html",
-            "url": "/web-animations/Animation/playbackRate.html"
-          }
-        ],
-        "web-animations/Animation/ready.html": [
-          {
-            "path": "web-animations/Animation/ready.html",
-            "url": "/web-animations/Animation/ready.html"
-          }
-        ],
-        "web-animations/Animation/reverse.html": [
-          {
-            "path": "web-animations/Animation/reverse.html",
-            "url": "/web-animations/Animation/reverse.html"
-          }
-        ],
-        "web-animations/Animation/startTime.html": [
-          {
-            "path": "web-animations/Animation/startTime.html",
-            "url": "/web-animations/Animation/startTime.html"
-          }
-        ],
-        "web-animations/AnimationEffectTiming/delay.html": [
-          {
-            "path": "web-animations/AnimationEffectTiming/delay.html",
-            "url": "/web-animations/AnimationEffectTiming/delay.html"
-          }
-        ],
-        "web-animations/AnimationEffectTiming/direction.html": [
-          {
-            "path": "web-animations/AnimationEffectTiming/direction.html",
-            "url": "/web-animations/AnimationEffectTiming/direction.html"
-          }
-        ],
-        "web-animations/AnimationEffectTiming/duration.html": [
-          {
-            "path": "web-animations/AnimationEffectTiming/duration.html",
-            "url": "/web-animations/AnimationEffectTiming/duration.html"
-          }
-        ],
-        "web-animations/AnimationEffectTiming/easing.html": [
-          {
-            "path": "web-animations/AnimationEffectTiming/easing.html",
-            "url": "/web-animations/AnimationEffectTiming/easing.html"
-          }
-        ],
-        "web-animations/AnimationEffectTiming/endDelay.html": [
-          {
-            "path": "web-animations/AnimationEffectTiming/endDelay.html",
-            "url": "/web-animations/AnimationEffectTiming/endDelay.html"
-          }
-        ],
-        "web-animations/AnimationEffectTiming/fill.html": [
-          {
-            "path": "web-animations/AnimationEffectTiming/fill.html",
-            "url": "/web-animations/AnimationEffectTiming/fill.html"
-          }
-        ],
-        "web-animations/AnimationEffectTiming/getAnimations.html": [
-          {
-            "path": "web-animations/AnimationEffectTiming/getAnimations.html",
-            "url": "/web-animations/AnimationEffectTiming/getAnimations.html"
-          }
-        ],
-        "web-animations/AnimationEffectTiming/getComputedStyle.html": [
-          {
-            "path": "web-animations/AnimationEffectTiming/getComputedStyle.html",
-            "url": "/web-animations/AnimationEffectTiming/getComputedStyle.html"
-          }
-        ],
-        "web-animations/AnimationEffectTiming/iterationStart.html": [
-          {
-            "path": "web-animations/AnimationEffectTiming/iterationStart.html",
-            "url": "/web-animations/AnimationEffectTiming/iterationStart.html"
-          }
-        ],
-        "web-animations/AnimationEffectTiming/iterations.html": [
-          {
-            "path": "web-animations/AnimationEffectTiming/iterations.html",
-            "url": "/web-animations/AnimationEffectTiming/iterations.html"
-          }
-        ],
-        "web-animations/AnimationTimeline/document-timeline.html": [
-          {
-            "path": "web-animations/AnimationTimeline/document-timeline.html",
-            "url": "/web-animations/AnimationTimeline/document-timeline.html"
-          }
-        ],
-        "web-animations/AnimationTimeline/idlharness.html": [
-          {
-            "path": "web-animations/AnimationTimeline/idlharness.html",
-            "url": "/web-animations/AnimationTimeline/idlharness.html"
-          }
-        ],
-        "web-animations/Document/getAnimations.html": [
-          {
-            "path": "web-animations/Document/getAnimations.html",
-            "url": "/web-animations/Document/getAnimations.html"
-          }
-        ],
-        "web-animations/KeyframeEffect/constructor.html": [
-          {
-            "path": "web-animations/KeyframeEffect/constructor.html",
-            "url": "/web-animations/KeyframeEffect/constructor.html"
-          }
-        ],
-        "web-animations/KeyframeEffect/effect-easing.html": [
-          {
-            "path": "web-animations/KeyframeEffect/effect-easing.html",
-            "url": "/web-animations/KeyframeEffect/effect-easing.html"
-          }
-        ],
-        "web-animations/KeyframeEffect/getComputedTiming.html": [
-          {
-            "path": "web-animations/KeyframeEffect/getComputedTiming.html",
-            "url": "/web-animations/KeyframeEffect/getComputedTiming.html"
-          }
-        ],
-        "web-animations/KeyframeEffect/processing-a-keyframes-argument.html": [
-          {
-            "path": "web-animations/KeyframeEffect/processing-a-keyframes-argument.html",
-            "url": "/web-animations/KeyframeEffect/processing-a-keyframes-argument.html"
-          }
-        ],
-        "web-animations/KeyframeEffect/setKeyframes.html": [
-          {
-            "path": "web-animations/KeyframeEffect/setKeyframes.html",
-            "url": "/web-animations/KeyframeEffect/setKeyframes.html"
-          }
-        ],
-        "web-animations/KeyframeEffect/setTarget.html": [
-          {
-            "path": "web-animations/KeyframeEffect/setTarget.html",
-            "url": "/web-animations/KeyframeEffect/setTarget.html"
-          }
-        ],
         "web-animations/animation-model/keyframe-effects/effect-value-context.html": [
           {
             "path": "web-animations/animation-model/keyframe-effects/effect-value-context.html",
@@ -36217,6 +36013,210 @@
           {
             "path": "web-animations/animation-model/keyframe-effects/the-effect-value-of-a-keyframe-effect.html",
             "url": "/web-animations/animation-model/keyframe-effects/the-effect-value-of-a-keyframe-effect.html"
+          }
+        ],
+        "web-animations/interfaces/Animatable/animate.html": [
+          {
+            "path": "web-animations/interfaces/Animatable/animate.html",
+            "url": "/web-animations/interfaces/Animatable/animate.html"
+          }
+        ],
+        "web-animations/interfaces/Animation/cancel.html": [
+          {
+            "path": "web-animations/interfaces/Animation/cancel.html",
+            "url": "/web-animations/interfaces/Animation/cancel.html"
+          }
+        ],
+        "web-animations/interfaces/Animation/constructor.html": [
+          {
+            "path": "web-animations/interfaces/Animation/constructor.html",
+            "url": "/web-animations/interfaces/Animation/constructor.html"
+          }
+        ],
+        "web-animations/interfaces/Animation/finish.html": [
+          {
+            "path": "web-animations/interfaces/Animation/finish.html",
+            "url": "/web-animations/interfaces/Animation/finish.html"
+          }
+        ],
+        "web-animations/interfaces/Animation/finished.html": [
+          {
+            "path": "web-animations/interfaces/Animation/finished.html",
+            "url": "/web-animations/interfaces/Animation/finished.html"
+          }
+        ],
+        "web-animations/interfaces/Animation/id.html": [
+          {
+            "path": "web-animations/interfaces/Animation/id.html",
+            "url": "/web-animations/interfaces/Animation/id.html"
+          }
+        ],
+        "web-animations/interfaces/Animation/oncancel.html": [
+          {
+            "path": "web-animations/interfaces/Animation/oncancel.html",
+            "url": "/web-animations/interfaces/Animation/oncancel.html"
+          }
+        ],
+        "web-animations/interfaces/Animation/onfinish.html": [
+          {
+            "path": "web-animations/interfaces/Animation/onfinish.html",
+            "url": "/web-animations/interfaces/Animation/onfinish.html"
+          }
+        ],
+        "web-animations/interfaces/Animation/pause.html": [
+          {
+            "path": "web-animations/interfaces/Animation/pause.html",
+            "url": "/web-animations/interfaces/Animation/pause.html"
+          }
+        ],
+        "web-animations/interfaces/Animation/play.html": [
+          {
+            "path": "web-animations/interfaces/Animation/play.html",
+            "url": "/web-animations/interfaces/Animation/play.html"
+          }
+        ],
+        "web-animations/interfaces/Animation/playState.html": [
+          {
+            "path": "web-animations/interfaces/Animation/playState.html",
+            "url": "/web-animations/interfaces/Animation/playState.html"
+          }
+        ],
+        "web-animations/interfaces/Animation/playbackRate.html": [
+          {
+            "path": "web-animations/interfaces/Animation/playbackRate.html",
+            "url": "/web-animations/interfaces/Animation/playbackRate.html"
+          }
+        ],
+        "web-animations/interfaces/Animation/ready.html": [
+          {
+            "path": "web-animations/interfaces/Animation/ready.html",
+            "url": "/web-animations/interfaces/Animation/ready.html"
+          }
+        ],
+        "web-animations/interfaces/Animation/reverse.html": [
+          {
+            "path": "web-animations/interfaces/Animation/reverse.html",
+            "url": "/web-animations/interfaces/Animation/reverse.html"
+          }
+        ],
+        "web-animations/interfaces/Animation/startTime.html": [
+          {
+            "path": "web-animations/interfaces/Animation/startTime.html",
+            "url": "/web-animations/interfaces/Animation/startTime.html"
+          }
+        ],
+        "web-animations/interfaces/AnimationEffectTiming/delay.html": [
+          {
+            "path": "web-animations/interfaces/AnimationEffectTiming/delay.html",
+            "url": "/web-animations/interfaces/AnimationEffectTiming/delay.html"
+          }
+        ],
+        "web-animations/interfaces/AnimationEffectTiming/direction.html": [
+          {
+            "path": "web-animations/interfaces/AnimationEffectTiming/direction.html",
+            "url": "/web-animations/interfaces/AnimationEffectTiming/direction.html"
+          }
+        ],
+        "web-animations/interfaces/AnimationEffectTiming/duration.html": [
+          {
+            "path": "web-animations/interfaces/AnimationEffectTiming/duration.html",
+            "url": "/web-animations/interfaces/AnimationEffectTiming/duration.html"
+          }
+        ],
+        "web-animations/interfaces/AnimationEffectTiming/easing.html": [
+          {
+            "path": "web-animations/interfaces/AnimationEffectTiming/easing.html",
+            "url": "/web-animations/interfaces/AnimationEffectTiming/easing.html"
+          }
+        ],
+        "web-animations/interfaces/AnimationEffectTiming/endDelay.html": [
+          {
+            "path": "web-animations/interfaces/AnimationEffectTiming/endDelay.html",
+            "url": "/web-animations/interfaces/AnimationEffectTiming/endDelay.html"
+          }
+        ],
+        "web-animations/interfaces/AnimationEffectTiming/fill.html": [
+          {
+            "path": "web-animations/interfaces/AnimationEffectTiming/fill.html",
+            "url": "/web-animations/interfaces/AnimationEffectTiming/fill.html"
+          }
+        ],
+        "web-animations/interfaces/AnimationEffectTiming/getAnimations.html": [
+          {
+            "path": "web-animations/interfaces/AnimationEffectTiming/getAnimations.html",
+            "url": "/web-animations/interfaces/AnimationEffectTiming/getAnimations.html"
+          }
+        ],
+        "web-animations/interfaces/AnimationEffectTiming/getComputedStyle.html": [
+          {
+            "path": "web-animations/interfaces/AnimationEffectTiming/getComputedStyle.html",
+            "url": "/web-animations/interfaces/AnimationEffectTiming/getComputedStyle.html"
+          }
+        ],
+        "web-animations/interfaces/AnimationEffectTiming/iterationStart.html": [
+          {
+            "path": "web-animations/interfaces/AnimationEffectTiming/iterationStart.html",
+            "url": "/web-animations/interfaces/AnimationEffectTiming/iterationStart.html"
+          }
+        ],
+        "web-animations/interfaces/AnimationEffectTiming/iterations.html": [
+          {
+            "path": "web-animations/interfaces/AnimationEffectTiming/iterations.html",
+            "url": "/web-animations/interfaces/AnimationEffectTiming/iterations.html"
+          }
+        ],
+        "web-animations/interfaces/AnimationTimeline/document-timeline.html": [
+          {
+            "path": "web-animations/interfaces/AnimationTimeline/document-timeline.html",
+            "url": "/web-animations/interfaces/AnimationTimeline/document-timeline.html"
+          }
+        ],
+        "web-animations/interfaces/AnimationTimeline/idlharness.html": [
+          {
+            "path": "web-animations/interfaces/AnimationTimeline/idlharness.html",
+            "url": "/web-animations/interfaces/AnimationTimeline/idlharness.html"
+          }
+        ],
+        "web-animations/interfaces/Document/getAnimations.html": [
+          {
+            "path": "web-animations/interfaces/Document/getAnimations.html",
+            "url": "/web-animations/interfaces/Document/getAnimations.html"
+          }
+        ],
+        "web-animations/interfaces/KeyframeEffect/constructor.html": [
+          {
+            "path": "web-animations/interfaces/KeyframeEffect/constructor.html",
+            "url": "/web-animations/interfaces/KeyframeEffect/constructor.html"
+          }
+        ],
+        "web-animations/interfaces/KeyframeEffect/effect-easing.html": [
+          {
+            "path": "web-animations/interfaces/KeyframeEffect/effect-easing.html",
+            "url": "/web-animations/interfaces/KeyframeEffect/effect-easing.html"
+          }
+        ],
+        "web-animations/interfaces/KeyframeEffect/getComputedTiming.html": [
+          {
+            "path": "web-animations/interfaces/KeyframeEffect/getComputedTiming.html",
+            "url": "/web-animations/interfaces/KeyframeEffect/getComputedTiming.html"
+          }
+        ],
+        "web-animations/interfaces/KeyframeEffect/processing-a-keyframes-argument.html": [
+          {
+            "path": "web-animations/interfaces/KeyframeEffect/processing-a-keyframes-argument.html",
+            "url": "/web-animations/interfaces/KeyframeEffect/processing-a-keyframes-argument.html"
+          }
+        ],
+        "web-animations/interfaces/KeyframeEffect/setKeyframes.html": [
+          {
+            "path": "web-animations/interfaces/KeyframeEffect/setKeyframes.html",
+            "url": "/web-animations/interfaces/KeyframeEffect/setKeyframes.html"
+          }
+        ],
+        "web-animations/interfaces/KeyframeEffect/setTarget.html": [
+          {
+            "path": "web-animations/interfaces/KeyframeEffect/setTarget.html",
+            "url": "/web-animations/interfaces/KeyframeEffect/setTarget.html"
           }
         ]
       }
