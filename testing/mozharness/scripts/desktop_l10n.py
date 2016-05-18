@@ -1070,7 +1070,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         repo = self.query_l10n_repo()
         if not repo:
             self.fatal("Unable to determine repository for querying the push info.")
-        pushinfo = self.vcs_query_pushinfo(repo, revision, vcs='hgtool')
+        pushinfo = self.vcs_query_pushinfo(repo, revision, vcs='hg')
         pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime(pushinfo.pushdate))
 
         routes_json = os.path.join(self.query_abs_dirs()['abs_mozilla_dir'],
