@@ -32,7 +32,7 @@ include $(topsrcdir)/config/config.mk
 # compiler path above.
 LIB = $(call lazy,LIB,$$(shell python -c 'import os; print ";".join(s.lower().replace(os.sep, "/").replace("/vc/lib", "/vc/lib/amd64").replace("/um/x86", "/um/x64").replace("/ucrt/x86", "/ucrt/x64") for s in os.environ["LIB"].split(";"))'))
 
-CXXFLAGS := $(filter-out -arch:%,$(CXXFLAGS))
+CXXFLAGS := $(filter-out -arch:IA32,$(CXXFLAGS))
 
 # OS_COMPILE_CXXFLAGS includes mozilla-config.h, which contains x86-specific
 # defines breaking the build.

@@ -1378,15 +1378,9 @@ case "$target" in
         CFLAGS="$CFLAGS -W3 -Gy"
         CXXFLAGS="$CXXFLAGS -W3 -Gy"
         if test "$CPU_ARCH" = "x86"; then
-            dnl VS2012+ defaults to -arch:SSE2. We want to target nothing
-            dnl more recent, so set that explicitly here unless another
-            dnl target arch has already been set.
-            if test -z `echo $CFLAGS | grep -i [-/]arch:`; then
-              CFLAGS="$CFLAGS -arch:SSE2"
-            fi
-            if test -z `echo $CXXFLAGS | grep -i [-/]arch:`; then
-              CXXFLAGS="$CXXFLAGS -arch:SSE2"
-            fi
+            dnl VS2012+ defaults to -arch:SSE2.
+            CFLAGS="$CFLAGS -arch:IA32"
+            CXXFLAGS="$CXXFLAGS -arch:IA32"
             SSE_FLAGS="-arch:SSE"
             SSE2_FLAGS="-arch:SSE2"
             dnl MSVC allows the use of intrinsics without any flags
