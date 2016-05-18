@@ -110,4 +110,16 @@ interface nsIBrowserElementAPI : nsISupports
    * http://w3c.github.io/manifest/
    */
   nsIDOMDOMRequest getWebManifest();
+
+  /**
+   * Returns a JSON string representing Microdata objects on the page.
+   * Format is described at:
+   *   https://html.spec.whatwg.org/multipage/microdata.html#json
+   *
+   * Also contains hCard and hCalendar objects after converting them
+   * to equivalent Microdata objects described at:
+   *   https://html.spec.whatwg.org/multipage/microdata.html#vcard
+   *   https://html.spec.whatwg.org/multipage/microdata.html#vevent
+   */
+  nsIDOMDOMRequest getStructuredData();
 };

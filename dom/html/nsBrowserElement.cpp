@@ -786,6 +786,22 @@ nsBrowserElement::ExecuteScript(const nsAString& aScript,
 }
 
 already_AddRefed<DOMRequest>
+nsBrowserElement::GetStructuredData(ErrorResult& aRv)
+{
+  NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
+
+  nsCOMPtr<nsIDOMDOMRequest> req;
+  nsresult rv = mBrowserElementAPI->GetStructuredData(getter_AddRefs(req));
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  return req.forget().downcast<DOMRequest>();
+}
+
+already_AddRefed<DOMRequest>
 nsBrowserElement::GetWebManifest(ErrorResult& aRv)
 {
   NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
