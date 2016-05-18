@@ -62,6 +62,26 @@ add_task(function* () {
   let defaultTheme = header.nextSibling;
   defaultTheme.doCommand();
   is(Services.prefs.getCharPref("lightweightThemes.selectedThemeID"), "", "No lwtheme should be selected");
+
+  yield endCustomizing();
+  Services.prefs.setCharPref("lightweightThemes.usedThemes", "[]");
+  Services.prefs.setCharPref("lightweightThemes.recommendedThemes", "[]");
+  info("Removed all recommended themes");
+  yield startCustomizing();
+  popupShownPromise = popupShown(popup);
+  EventUtils.synthesizeMouseAtCenter(themesButton, {});
+  info("Clicked on themes button a second time");
+  yield popupShownPromise;
+  header = document.getElementById("customization-lwtheme-menu-header");
+  is(header.hidden, false, "Header should never be hidden");
+  is(header.nextSibling.theme.id, DEFAULT_THEME_ID, "The first theme should be the Default theme");
+  is(header.nextSibling.hidden, false, "The default theme should never be hidden");
+  recommendedHeader = document.getElementById("customization-lwtheme-menu-recommended");
+  is(header.nextSibling.nextSibling, recommendedHeader,
+     "There should only be one theme (default) in the 'My Themes' section by default");
+  let footer = document.getElementById("customization-lwtheme-menu-footer");
+  is(recommendedHeader.nextSibling.id, footer.id, "There should be no recommended themes in the menu");
+  is(recommendedHeader.hidden, true, "The recommendedHeader should be hidden since there are no recommended themes");
 });
 
 add_task(function* asyncCleanup() {
