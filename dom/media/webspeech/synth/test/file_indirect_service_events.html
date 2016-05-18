@@ -50,7 +50,7 @@ function testFunc(done_cb) {
       speechSynthesis.cancel();
     });
 
-    utterance.addEventListener('end', function(e) {
+    utterance.addEventListener('error', function(e) {
       ok(e.charIndex, 1, 'resume event charIndex matches service arguments');
       ok(e.elapsedTime, 1.5, 'end event elapsedTime matches service arguments');
       test_no_events();
