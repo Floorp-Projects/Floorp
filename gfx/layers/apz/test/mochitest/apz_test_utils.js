@@ -191,7 +191,7 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
         w.SimpleTest = SimpleTest;
         w.is = is;
         w.ok = ok;
-        w.location = test.file;
+        w.location = location.href.substring(0, location.href.lastIndexOf('/') + 1) + aFile;
         return w;
       }
 
