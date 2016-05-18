@@ -139,6 +139,19 @@ Gecko_IsRootElement(RawGeckoElement* aElement)
   return aElement->OwnerDoc()->GetRootElement() == aElement;
 }
 
+nsIAtom*
+Gecko_LocalName(RawGeckoElement* aElement)
+{
+  return aElement->NodeInfo()->NameAtom();
+}
+
+nsIAtom*
+Gecko_Namespace(RawGeckoElement* aElement)
+{
+  int32_t id = aElement->NodeInfo()->NamespaceID();
+  return nsContentUtils::NameSpaceManager()->NameSpaceURIAtom(id);
+}
+
 ServoNodeData*
 Gecko_GetNodeData(RawGeckoNode* aNode)
 {
@@ -149,6 +162,67 @@ void
 Gecko_SetNodeData(RawGeckoNode* aNode, ServoNodeData* aData)
 {
   aNode->SetServoNodeData(aData);
+}
+
+nsIAtom*
+Gecko_Atomize(const char* aString, uint32_t aLength)
+{
+  // XXXbholley: This isn't yet threadsafe, but will probably need to be.
+  MOZ_ASSERT(NS_IsMainThread());
+  return NS_Atomize(nsDependentCSubstring(aString, aLength)).take();
+}
+
+void
+Gecko_AddRefAtom(nsIAtom* aAtom)
+{
+  // XXXbholley: This isn't yet threadsafe, but will probably need to be.
+  MOZ_ASSERT(NS_IsMainThread());
+  NS_ADDREF(aAtom);
+}
+
+void
+Gecko_ReleaseAtom(nsIAtom* aAtom)
+{
+  // XXXbholley: This isn't yet threadsafe, but will probably need to be.
+  MOZ_ASSERT(NS_IsMainThread());
+  NS_RELEASE(aAtom);
+}
+
+uint32_t
+Gecko_HashAtom(nsIAtom* aAtom)
+{
+  return aAtom->hash();
+}
+
+const uint16_t*
+Gecko_GetAtomAsUTF16(nsIAtom* aAtom, uint32_t* aLength)
+{
+  static_assert(sizeof(char16_t) == sizeof(uint16_t), "Servo doesn't know what a char16_t is");
+  MOZ_ASSERT(aAtom);
+  *aLength = aAtom->GetLength();
+  return reinterpret_cast<const uint16_t*>(aAtom->GetUTF16String());
+}
+
+bool
+Gecko_AtomEqualsUTF8(nsIAtom* aAtom, const char* aString, uint32_t aLength)
+{
+  // XXXbholley: We should be able to do this without converting, I just can't
+  // find the right thing to call.
+  nsAutoString atomStr;
+  aAtom->ToString(atomStr);
+  NS_ConvertUTF8toUTF16 inStr(nsDependentCString(aString, aLength));
+  return atomStr.Equals(inStr);
+}
+
+bool
+Gecko_AtomEqualsUTF8IgnoreCase(nsIAtom* aAtom, const char* aString, uint32_t aLength)
+{
+  // XXXbholley: We should be able to do this without converting, I just can't
+  // find the right thing to call.
+  nsAutoString atomStr;
+  aAtom->ToString(atomStr);
+  NS_ConvertUTF8toUTF16 inStr(nsDependentCString(aString, aLength));
+  return nsContentUtils::EqualsIgnoreASCIICase(atomStr, inStr);
 }
 
 void
