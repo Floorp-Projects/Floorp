@@ -129,7 +129,7 @@ ToolSidebar.prototype = {
     // Create the dropdown menu next to the tabs
     this._allTabsBtn = this._panelDoc.createElementNS(XULNS, "toolbarbutton");
     this._allTabsBtn.setAttribute("class", "devtools-sidebar-alltabs");
-    this._allTabsBtn.setAttribute("right", "0");
+    this._allTabsBtn.setAttribute("end", "0");
     this._allTabsBtn.setAttribute("top", "0");
     this._allTabsBtn.setAttribute("width", "15");
     this._allTabsBtn.setAttribute("type", "menu");
