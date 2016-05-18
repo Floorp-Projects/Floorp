@@ -84,6 +84,8 @@ public class FxAccountStatusFragment
   private static final long LAST_SYNCED_TIME_UPDATE_INTERVAL_IN_MILLISECONDS = 60 * 1000;
   private static final long PROFILE_FETCH_RETRY_INTERVAL_IN_MILLISECONDS = 60 * 1000;
 
+  private static final String[] STAGES_TO_SYNC_ON_DEVICE_NAME_CHANGE = new String[] { "clients" };
+
   // By default, the auth/account server preference is only shown when the
   // account is configured to use a custom server. In debug mode, this is set.
   private static boolean ALWAYS_SHOW_AUTH_SERVER = false;
@@ -939,7 +941,10 @@ public class FxAccountStatusFragment
       }
       final long now = System.currentTimeMillis();
       clientsDataDelegate.setClientName(newClientName, now);
-      requestDelayedSync(); // Try to update our remote client record.
+      // Force sync the client record, we want the user to see the device name change immediately
+      // on the FxA Device Manager if possible ( = we are online) to avoid confusion
+      // ("I changed my Android's device name but I don't see it on my computer").
+      fxAccount.requestImmediateSync(STAGES_TO_SYNC_ON_DEVICE_NAME_CHANGE, null);
       hardRefresh(); // Updates the value displayed to the user, among other things.
       return true;
     }
