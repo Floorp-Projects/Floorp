@@ -22,6 +22,7 @@
 #include <limits>
 #include "mozilla/dom/network/NetUtils.h"
 #include "mozilla/fallible.h"
+#include "base/task.h"
 
 #include <errno.h>
 #include <string.h>
