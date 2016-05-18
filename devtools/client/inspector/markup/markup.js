@@ -131,6 +131,7 @@ function MarkupView(inspector, frame, controllerWindow) {
   this._onToolboxPickerHover = this._onToolboxPickerHover.bind(this);
   this._onCollapseAttributesPrefChange =
     this._onCollapseAttributesPrefChange.bind(this);
+  this._isImagePreviewTarget = this._isImagePreviewTarget.bind(this)
   this._onBlur = this._onBlur.bind(this);
 
   EventEmitter.decorate(this);
@@ -169,17 +170,18 @@ MarkupView.prototype = {
   _selectedContainer: null,
 
   _initTooltips: function () {
-    this.tooltip = new Tooltip(this._inspector.panelDoc);
-    this._makeTooltipPersistent(false);
+    this.eventDetailsTooltip = new Tooltip(this._inspector.panelDoc);
+    this.imagePreviewTooltip = new Tooltip(this._inspector.panelDoc);
+    this._enableImagePreviewTooltip();
   },
 
-  _makeTooltipPersistent: function (state) {
-    if (state) {
-      this.tooltip.stopTogglingOnHover();
-    } else {
-      this.tooltip.startTogglingOnHover(this._elt,
-        this._isImagePreviewTarget.bind(this));
-    }
+  _enableImagePreviewTooltip: function () {
+    this.imagePreviewTooltip.startTogglingOnHover(this._elt,
+      this._isImagePreviewTarget);
+  },
+
+  _disableImagePreviewTooltip: function () {
+    this.imagePreviewTooltip.stopTogglingOnHover();
   },
 
   _onToolboxPickerHover: function (event, nodeFront) {
@@ -298,7 +300,8 @@ MarkupView.prototype = {
     if (container instanceof MarkupElementContainer) {
       // With the newly found container, delegate the tooltip content creation
       // and decision to show or not the tooltip
-      container._buildEventTooltipContent(event.target, this.tooltip);
+      container._buildEventTooltipContent(event.target,
+        this.eventDetailsTooltip);
     }
   },
 
@@ -494,7 +497,7 @@ MarkupView.prototype = {
     if (container instanceof MarkupElementContainer) {
       // With the newly found container, delegate the tooltip content creation
       // and decision to show or not the tooltip
-      return container.isImagePreviewTarget(target, this.tooltip);
+      return container.isImagePreviewTarget(target, this.imagePreviewTooltip);
     }
 
     return false;
@@ -1714,8 +1717,11 @@ MarkupView.prototype = {
     }
     this._containers = null;
 
-    this.tooltip.destroy();
-    this.tooltip = null;
+    this.eventDetailsTooltip.destroy();
+    this.eventDetailsTooltip = null;
+
+    this.imagePreviewTooltip.destroy();
+    this.imagePreviewTooltip = null;
 
     this.win = null;
     this.doc = null;
@@ -2596,9 +2602,11 @@ MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
           toolbox: this.markup._inspector.toolbox
         });
 
-        this.markup._makeTooltipPersistent(true);
+        // Disable the image preview tooltip while we display the event details
+        this.markup._disableImagePreviewTooltip();
         tooltip.once("hidden", () => {
-          this.markup._makeTooltipPersistent(false);
+          // Enable the image preview tooltip after closing the event details
+          this.markup._enableImagePreviewTooltip();
         });
         tooltip.show(target);
       });
