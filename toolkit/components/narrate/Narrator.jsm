@@ -177,9 +177,15 @@ Narrator.prototype = {
         }
       });
 
-      utterance.addEventListener("end", () => {
+      let onDone = (e) => {
         if (!this._win) {
           // page got unloaded, don't do anything.
+          return;
+        }
+
+        if (e.type == "error" &&
+            !(['interrupted', 'canceled'].includes(e.error))) {
+          reject("speech synthesis failed");
           return;
         }
 
@@ -195,11 +201,10 @@ Narrator.prototype = {
         } else {
           this._speakInner().then(resolve, reject);
         }
-      });
+      };
 
-      utterance.addEventListener("error", () => {
-        reject("speech synthesis failed");
-      });
+      utterance.addEventListener("end", onDone);
+      utterance.addEventListener("error", onDone);
 
       this._win.speechSynthesis.speak(utterance);
     });
