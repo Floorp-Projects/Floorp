@@ -476,8 +476,9 @@ template <class L>
 void
 MacroAssembler::branchTest32(Condition cond, Register lhs, Imm32 rhs, L label)
 {
-    ma_li(ScratchRegister, rhs);
-    branchTest32(cond, lhs, ScratchRegister, label);
+    MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
+    ma_and(ScratchRegister, lhs, rhs);
+    ma_b(ScratchRegister, ScratchRegister, label, cond);
 }
 
 void
