@@ -20,6 +20,7 @@
 #include <pthread.h>
 #include <hardware/gps.h>
 
+#include "base/task.h"
 #include "GeolocationUtil.h"
 #include "mozstumbler/MozStumbler.h"
 #include "mozilla/Preferences.h"
@@ -813,7 +814,7 @@ GonkGPSGeolocationProvider::Init()
   }
 #endif
 
-  NS_DispatchToMainThread(NS_NewRunnableMethod(this, &GonkGPSGeolocationProvider::StartGPS));
+  NS_DispatchToMainThread(NewRunnableMethod(this, &GonkGPSGeolocationProvider::StartGPS));
 }
 
 void
@@ -1001,7 +1002,7 @@ GonkGPSGeolocationProvider::Startup()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  mInitThread->Dispatch(NS_NewRunnableMethod(this, &GonkGPSGeolocationProvider::Init),
+  mInitThread->Dispatch(NewRunnableMethod(this, &GonkGPSGeolocationProvider::Init),
                         NS_DISPATCH_NORMAL);
 
   mNetworkLocationProvider = do_CreateInstance("@mozilla.org/geolocation/mls-provider;1");
@@ -1063,7 +1064,7 @@ GonkGPSGeolocationProvider::Shutdown()
     }
   }
 
-  mInitThread->Dispatch(NS_NewRunnableMethod(this, &GonkGPSGeolocationProvider::ShutdownGPS),
+  mInitThread->Dispatch(NewRunnableMethod(this, &GonkGPSGeolocationProvider::ShutdownGPS),
                         NS_DISPATCH_NORMAL);
 
   return NS_OK;
