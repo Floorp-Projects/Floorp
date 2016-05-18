@@ -10,16 +10,12 @@ builds:
     platforms:
       - Linux
     types:
-      opt:
-        task: tasks/builds/opt_linux32.yml
       debug:
         task: tasks/builds/dbg_linux32.yml
   linux64:
     platforms:
       - Linux64
     types:
-      opt:
-        task: tasks/builds/opt_linux64.yml
       debug:
         task: tasks/builds/dbg_linux64.yml
   linux64-st-an:
@@ -92,10 +88,6 @@ tests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_mochitest_chrome.yml
-  mochitest-webgl:
-    allowed_build_tasks:
-      tasks/builds/dbg_linux64.yml:
-        task: tasks/tests/fx_linux64_mochitest_gl.yml
   web-platform-tests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
