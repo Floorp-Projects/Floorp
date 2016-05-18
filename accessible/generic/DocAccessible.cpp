@@ -2181,19 +2181,9 @@ DocAccessible::CacheChildrenInSubtree(Accessible* aRoot,
     return;
   }
 
-  roles::Role role = aRoot->ARIARole();
-  if (role == roles::MENUPOPUP) {
-    FireDelayedEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_START, aRoot);
-    return;
-  }
-
-  if (role == roles::ALERT) {
-    FireDelayedEvent(nsIAccessibleEvent::EVENT_ALERT, aRoot);
-    return;
-  }
-
   // XXX: we should delay document load complete event if the ARIA document
   // has aria-busy.
+  roles::Role role = aRoot->ARIARole();
   if (!aRoot->IsDoc() && (role == roles::DIALOG || role == roles::DOCUMENT)) {
     FireDelayedEvent(nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE, aRoot);
   }
