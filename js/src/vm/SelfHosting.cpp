@@ -1172,7 +1172,7 @@ intrinsic_MoveTypedArrayElements(JSContext* cx, unsigned argc, Value* vp)
                "the not-detached requirement is wrong");
 
     if (tarray->hasDetachedBuffer()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
         return false;
     }
 
