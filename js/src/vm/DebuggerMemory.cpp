@@ -233,8 +233,8 @@ DebuggerMemory::drainAllocationsLog(JSContext* cx, unsigned argc, Value* vp)
         result->setDenseElement(i, ObjectValue(*obj));
 
         // Pop the front queue entry, and delete it immediately, so that the GC
-        // sees the AllocationsLogEntry's RelocatablePtr barriers run atomically
-        // with the change to the graph (the queeue link).
+        // sees the AllocationsLogEntry's HeapPtr barriers run atomically with
+        // the change to the graph (the queue link).
         if (!dbg->allocationsLog.popFront()) {
             ReportOutOfMemory(cx);
             return false;

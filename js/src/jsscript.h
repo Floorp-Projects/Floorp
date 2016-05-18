@@ -224,7 +224,7 @@ class Bindings
     template <typename Outer> friend class BindingsOperations;
     template <typename Outer> friend class MutableBindingsOperations;
 
-    RelocatablePtrShape callObjShape_;
+    HeapPtr<Shape*> callObjShape_;
     uintptr_t bindingArrayAndFlag_;
     uint16_t numArgs_;
     uint16_t numBlockScoped_;
@@ -369,7 +369,7 @@ class BindingsOperations
 
   public:
     // Direct data access to the underlying bindings.
-    const RelocatablePtrShape& callObjShape() const {
+    const HeapPtr<Shape*>& callObjShape() const {
         return bindings().callObjShape_;
     }
     uint16_t numArgs() const {

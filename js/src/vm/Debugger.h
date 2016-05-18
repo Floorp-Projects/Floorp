@@ -69,12 +69,12 @@ typedef HashSet<ReadBarrieredGlobalObject,
  * transitions.
  */
 template <class UnbarrieredKey, bool InvisibleKeysOk=false>
-class DebuggerWeakMap : private WeakMap<RelocatablePtr<UnbarrieredKey>, RelocatablePtrObject,
-                                        MovableCellHasher<RelocatablePtr<UnbarrieredKey>>>
+class DebuggerWeakMap : private WeakMap<HeapPtr<UnbarrieredKey>, HeapPtr<JSObject*>,
+                                        MovableCellHasher<HeapPtr<UnbarrieredKey>>>
 {
   private:
-    typedef RelocatablePtr<UnbarrieredKey> Key;
-    typedef RelocatablePtrObject Value;
+    typedef HeapPtr<UnbarrieredKey> Key;
+    typedef HeapPtr<JSObject*> Value;
 
     typedef HashMap<JS::Zone*,
                     uintptr_t,
@@ -330,10 +330,10 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
             MOZ_ASSERT_IF(frame, UncheckedUnwrap(frame)->is<SavedFrame>());
         };
 
-        RelocatablePtrObject frame;
+        HeapPtr<JSObject*> frame;
         double when;
         const char* className;
-        RelocatablePtrAtom ctorName;
+        HeapPtr<JSAtom*> ctorName;
         size_t size;
         bool inNursery;
 
@@ -440,7 +440,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * has to be different.
      */
     typedef HashMap<AbstractFramePtr,
-                    RelocatablePtrNativeObject,
+                    HeapPtr<NativeObject*>,
                     DefaultHasher<AbstractFramePtr>,
                     RuntimeAllocPolicy> FrameMap;
     FrameMap frames;
