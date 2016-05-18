@@ -490,8 +490,8 @@ MacroAssembler::branchTest32(Condition cond, const Address& lhs, Imm32 rhs, Labe
 void
 MacroAssembler::branchTest32(Condition cond, const AbsoluteAddress& lhs, Imm32 rhs, Label* label)
 {
-    load32(lhs, ScratchRegister);
-    branchTest32(cond, ScratchRegister, rhs, label);
+    load32(lhs, SecondScratchReg);
+    branchTest32(cond, SecondScratchReg, rhs, label);
 }
 
 void
