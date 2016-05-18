@@ -35979,6 +35979,12 @@
     "deleted_reftests": {},
     "items": {
       "testharness": {
+        "dom/events/EventListener-incumbent-global.sub.html": [
+          {
+            "path": "dom/events/EventListener-incumbent-global.sub.html",
+            "url": "/dom/events/EventListener-incumbent-global.sub.html"
+          }
+        ],
         "html/browsers/browsing-the-web/navigating-across-documents/javascript-url-return-value-handling.html": [
           {
             "path": "html/browsers/browsing-the-web/navigating-across-documents/javascript-url-return-value-handling.html",
