@@ -16,7 +16,6 @@
 #include "mozilla/dom/NodeInfo.h"
 #include "nsCOMArray.h"
 #include "nsContentCreatorFunctions.h"
-#include "nsGkAtoms.h"
 #include "nsString.h"
 #include "mozilla/dom/NodeInfo.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -25,6 +24,17 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+
+#define kXMLNSNameSpaceURI "http://www.w3.org/2000/xmlns/"
+#define kXMLNameSpaceURI "http://www.w3.org/XML/1998/namespace"
+#define kXHTMLNameSpaceURI "http://www.w3.org/1999/xhtml"
+#define kXLinkNameSpaceURI "http://www.w3.org/1999/xlink"
+#define kXSLTNameSpaceURI "http://www.w3.org/1999/XSL/Transform"
+#define kXBLNameSpaceURI "http://www.mozilla.org/xbl"
+#define kMathMLNameSpaceURI "http://www.w3.org/1998/Math/MathML"
+#define kRDFNameSpaceURI "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+#define kXULNameSpaceURI "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+#define kSVGNameSpaceURI "http://www.w3.org/2000/svg"
 
 StaticAutoPtr<nsNameSpaceManager> nsNameSpaceManager::sInstance;
 
@@ -47,20 +57,20 @@ bool nsNameSpaceManager::Init()
 {
   nsresult rv;
 #define REGISTER_NAMESPACE(uri, id) \
-  rv = AddNameSpace(dont_AddRef(uri), id); \
+  rv = AddNameSpace(NS_LITERAL_STRING(uri), id); \
   NS_ENSURE_SUCCESS(rv, false)
 
   // Need to be ordered according to ID.
-  REGISTER_NAMESPACE(nsGkAtoms::nsuri_xmlns, kNameSpaceID_XMLNS);
-  REGISTER_NAMESPACE(nsGkAtoms::nsuri_xml, kNameSpaceID_XML);
-  REGISTER_NAMESPACE(nsGkAtoms::nsuri_xhtml, kNameSpaceID_XHTML);
-  REGISTER_NAMESPACE(nsGkAtoms::nsuri_xlink, kNameSpaceID_XLink);
-  REGISTER_NAMESPACE(nsGkAtoms::nsuri_xslt, kNameSpaceID_XSLT);
-  REGISTER_NAMESPACE(nsGkAtoms::nsuri_xbl, kNameSpaceID_XBL);
-  REGISTER_NAMESPACE(nsGkAtoms::nsuri_mathml, kNameSpaceID_MathML);
-  REGISTER_NAMESPACE(nsGkAtoms::nsuri_rdf, kNameSpaceID_RDF);
-  REGISTER_NAMESPACE(nsGkAtoms::nsuri_xul, kNameSpaceID_XUL);
-  REGISTER_NAMESPACE(nsGkAtoms::nsuri_svg, kNameSpaceID_SVG);
+  REGISTER_NAMESPACE(kXMLNSNameSpaceURI, kNameSpaceID_XMLNS);
+  REGISTER_NAMESPACE(kXMLNameSpaceURI, kNameSpaceID_XML);
+  REGISTER_NAMESPACE(kXHTMLNameSpaceURI, kNameSpaceID_XHTML);
+  REGISTER_NAMESPACE(kXLinkNameSpaceURI, kNameSpaceID_XLink);
+  REGISTER_NAMESPACE(kXSLTNameSpaceURI, kNameSpaceID_XSLT);
+  REGISTER_NAMESPACE(kXBLNameSpaceURI, kNameSpaceID_XBL);
+  REGISTER_NAMESPACE(kMathMLNameSpaceURI, kNameSpaceID_MathML);
+  REGISTER_NAMESPACE(kRDFNameSpaceURI, kNameSpaceID_RDF);
+  REGISTER_NAMESPACE(kXULNameSpaceURI, kNameSpaceID_XUL);
+  REGISTER_NAMESPACE(kSVGNameSpaceURI, kNameSpaceID_SVG);
 
 #undef REGISTER_NAMESPACE
 
@@ -77,12 +87,11 @@ nsNameSpaceManager::RegisterNameSpace(const nsAString& aURI,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIAtom> atom = NS_Atomize(aURI);
   nsresult rv = NS_OK;
-  if (!mURIToIDTable.Get(atom, &aNameSpaceID)) {
+  if (!mURIToIDTable.Get(&aURI, &aNameSpaceID)) {
     aNameSpaceID = mURIArray.Length() + 1; // id is index + 1
 
-    rv = AddNameSpace(atom.forget(), aNameSpaceID);
+    rv = AddNameSpace(aURI, aNameSpaceID);
     if (NS_FAILED(rv)) {
       aNameSpaceID = kNameSpaceID_Unknown;
     }
@@ -105,7 +114,7 @@ nsNameSpaceManager::GetNameSpaceURI(int32_t aNameSpaceID, nsAString& aURI)
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  mURIArray.ElementAt(index)->ToString(aURI);
+  aURI = *mURIArray.ElementAt(index);
 
   return NS_OK;
 }
@@ -119,8 +128,7 @@ nsNameSpaceManager::GetNameSpaceID(const nsAString& aURI)
 
   int32_t nameSpaceID;
 
-  nsCOMPtr<nsIAtom> atom = NS_Atomize(aURI);
-  if (mURIToIDTable.Get(atom, &nameSpaceID)) {
+  if (mURIToIDTable.Get(&aURI, &nameSpaceID)) {
     NS_POSTCONDITION(nameSpaceID >= 0, "Bogus namespace ID");
     return nameSpaceID;
   }
@@ -169,10 +177,9 @@ nsNameSpaceManager::HasElementCreator(int32_t aNameSpaceID)
          false;
 }
 
-nsresult nsNameSpaceManager::AddNameSpace(already_AddRefed<nsIAtom> aURI,
+nsresult nsNameSpaceManager::AddNameSpace(const nsAString& aURI,
                                           const int32_t aNameSpaceID)
 {
-  nsCOMPtr<nsIAtom> uri = aURI;
   if (aNameSpaceID < 0) {
     // We've wrapped...  Can't do anything else here; just bail.
     return NS_ERROR_OUT_OF_MEMORY;
@@ -181,8 +188,13 @@ nsresult nsNameSpaceManager::AddNameSpace(already_AddRefed<nsIAtom> aURI,
   NS_ASSERTION(aNameSpaceID - 1 == (int32_t) mURIArray.Length(),
                "BAD! AddNameSpace not called in right order!");
 
-  mURIArray.AppendElement(uri.forget());
-  mURIToIDTable.Put(mURIArray.LastElement(), aNameSpaceID);
+  nsString* uri = new nsString(aURI);
+  if (!mURIArray.AppendElement(uri)) {
+    delete uri;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  mURIToIDTable.Put(uri, aNameSpaceID);
 
   return NS_OK;
 }
