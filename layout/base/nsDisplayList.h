@@ -4117,10 +4117,15 @@ public:
   bool MayBeAnimated(nsDisplayListBuilder* aBuilder);
 
   /**
+   * This will return if it's possible for this element to be prerendered.
+   * This should never return false if we're going to prerender.
+   */
+  bool MaybePrerender() const { return mMaybePrerender; }
+  /**
    * Check if this element will be prerendered. This must be done after the
    * display list has been fully built.
    */
-  bool ShouldPrerender();
+  bool ShouldPrerender(nsDisplayListBuilder* aBuilder);
 
   virtual void WriteDebugInfo(std::stringstream& aStream) override;
 
@@ -4206,7 +4211,9 @@ private:
   nsRect mBounds;
   // True for mBounds is valid.
   bool mHasBounds;
-  bool mPrerender;
+  // We wont know if we pre-render until the layer building phase where we can
+  // check layers will-change budget.
+  bool mMaybePrerender;
   // Be forced not to extend 3D context.  Since we don't create a
   // transform item, a container layer, for every frames in a
   // preserves3d context, the transform items of a child preserves3d
