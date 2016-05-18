@@ -217,6 +217,8 @@ public:
   void DidEndTransaction();
 
   enum {
+    CONTAINER_NOT_CLIPPED_BY_ANCESTORS = 0x01,
+
     /**
      * Set this when pulling an opaque background color from behind the
      * container layer into the container doesn't change the visual results,
@@ -224,7 +226,7 @@ public:
      * For example, this is compatible with opacity or clipping/masking, but
      * not with non-OVER blend modes or filters.
      */
-    CONTAINER_ALLOW_PULL_BACKGROUND_COLOR = 0x01
+    CONTAINER_ALLOW_PULL_BACKGROUND_COLOR = 0x02
   };
   /**
    * Build a container layer for a display item that contains a child

@@ -2513,12 +2513,8 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 
     if (!aBuilder->IsForGenerateGlyphMask() &&
         !aBuilder->IsForPaintingSelectionBG()) {
-      bool isFullyVisible =
-        dirtyRectOutsideSVGEffects.Contains(GetVisualOverflowRectRelativeToSelf());
       nsDisplayTransform *transformItem =
-        new (aBuilder) nsDisplayTransform(aBuilder, this,
-                                          &resultList, dirtyRect, 0,
-                                          isFullyVisible);
+        new (aBuilder) nsDisplayTransform(aBuilder, this, &resultList, dirtyRect);
       resultList.AppendNewToTop(transformItem);
     }
 
