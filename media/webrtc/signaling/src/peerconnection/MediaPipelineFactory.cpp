@@ -1009,14 +1009,11 @@ MediaPipelineFactory::EnsureExternalCodec(VideoSessionConduit& aConduit,
       return aConduit.SetExternalRecvCodec(aConfig, decoder);
     }
     return kMediaConduitInvalidReceiveCodec;
-  } else {
-    MOZ_MTLOG(ML_ERROR,
-              "Invalid video codec configured: " << aConfig->mName.c_str());
-    return aIsSend ? kMediaConduitInvalidSendCodec
-                   : kMediaConduitInvalidReceiveCodec;
   }
-
-  NS_NOTREACHED("Shouldn't get here!");
+  MOZ_MTLOG(ML_ERROR,
+            "Invalid video codec configured: " << aConfig->mName.c_str());
+  return aIsSend ? kMediaConduitInvalidSendCodec
+                 : kMediaConduitInvalidReceiveCodec;
 }
 
 } // namespace mozilla
