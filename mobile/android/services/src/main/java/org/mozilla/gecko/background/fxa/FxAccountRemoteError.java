@@ -26,6 +26,7 @@ public interface FxAccountRemoteError {
   public static final int INCORRECT_API_VERSION_FOR_THIS_ACCOUNT = 119;
   public static final int INCORRECT_EMAIL_CASE = 120;
   public static final int ACCOUNT_LOCKED = 121;
+  public static final int UNKNOWN_DEVICE = 123;
   public static final int SERVICE_TEMPORARILY_UNAVAILABLE_DUE_TO_HIGH_LOAD = 201;
   public static final int UNKNOWN_ERROR = 999;
 }
