@@ -234,6 +234,7 @@ private:
   void ReflowInFlowChild(nsIFrame*              aChild,
                          const GridItemInfo*    aGridItemInfo,
                          nsSize                 aContainerSize,
+                         mozilla::Maybe<nscoord>aStretchBSize,
                          const Fragmentainer*   aFragmentainer,
                          const GridReflowState& aState,
                          const LogicalRect&     aContentArea,
