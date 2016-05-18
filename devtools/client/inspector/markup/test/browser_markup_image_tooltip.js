@@ -43,17 +43,18 @@ function* getImageTooltipTarget({selector}, inspector) {
 
 function* assertTooltipShownOn(element, {markup}) {
   info("Is the element a valid hover target");
-  let isValid = yield isHoverTooltipTarget(markup.tooltip, element);
+  let isValid = yield isHoverTooltipTarget(markup.imagePreviewTooltip, element);
   ok(isValid, "The element is a valid hover target for the image tooltip");
 }
 
 function checkImageTooltip({selector, size}, {markup}) {
-  let images = markup.tooltip.panel.getElementsByTagName("image");
+  let panel = markup.imagePreviewTooltip.panel;
+  let images = panel.getElementsByTagName("image");
   is(images.length, 1, "Tooltip for [" + selector + "] contains an image");
 
-  let label = markup.tooltip.panel.querySelector(".devtools-tooltip-caption");
+  let label = panel.querySelector(".devtools-tooltip-caption");
   is(label.textContent, size,
      "Tooltip label for [" + selector + "] displays the right image size");
 
-  markup.tooltip.hide();
+  markup.imagePreviewTooltip.hide();
 }
