@@ -84,7 +84,6 @@ let SyncedTabsInternal = {
       type: "client",
       name: Weave.Service.clientsEngine.getClientName(client.id),
       isMobile: Weave.Service.clientsEngine.isMobile(client.id),
-      lastModified: client.lastModified * 1000, // sec to ms
       tabs: []
     };
   }),

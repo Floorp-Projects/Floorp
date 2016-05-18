@@ -179,19 +179,6 @@ add_task(function* testButtonActivitiesInNavBar() {
   yield doTestButtonActivities();
 });
 
-add_task(function* testFormatLastSyncDateNow() {
-  let now = new Date();
-  let nowString = gSyncUI.formatLastSyncDate(now);
-  Assert.equal(nowString, "Last sync: " + now.toLocaleDateString(undefined, {weekday: 'long', hour: 'numeric', minute: 'numeric'}));
-});
-
-add_task(function* testFormatLastSyncDateMonthAgo() {
-  let monthAgo = new Date();
-  monthAgo.setMonth(monthAgo.getMonth() - 1);
-  let monthAgoString = gSyncUI.formatLastSyncDate(monthAgo);
-  Assert.equal(monthAgoString, "Last sync: " + monthAgo.toLocaleDateString(undefined, {month: 'long', day: 'numeric'}));
-});
-
 add_task(function* testButtonActivitiesInPanel() {
   // check the button's functionality while the button is in the panel - it's
   // currently in the NavBar - move it to the panel and open it.
