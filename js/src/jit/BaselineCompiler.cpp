@@ -827,17 +827,6 @@ BaselineCompiler::emitDebugTrap()
     return appendICEntry(ICEntry::Kind_DebugTrap, masm.currentOffset());
 }
 
-void
-BaselineCompiler::emitCoverage(jsbytecode* pc)
-{
-    PCCounts* counts = script->maybeGetPCCounts(pc);
-    if (!counts)
-        return;
-
-    uint64_t* counterAddr = &counts->numExec();
-    masm.inc64(AbsoluteAddress(counterAddr));
-}
-
 #ifdef JS_TRACE_LOGGING
 bool
 BaselineCompiler::emitTraceLoggerEnter()
@@ -935,7 +924,6 @@ BaselineCompiler::emitBody()
     bool lastOpUnreachable = false;
     uint32_t emittedOps = 0;
     mozilla::DebugOnly<jsbytecode*> prevpc = pc;
-    bool compileCoverage = script->hasScriptCounts();
 
     while (true) {
         JSOp op = JSOp(*pc);
@@ -990,10 +978,6 @@ BaselineCompiler::emitBody()
         if (compileDebugInstrumentation_ && !emitDebugTrap())
             return Method_Error;
 
-        // Emit code coverage code, to fill the same data as the interpreter.
-        if (compileCoverage)
-            emitCoverage(pc);
-
         switch (op) {
           default:
             JitSpew(JitSpew_BaselineAbort, "Unhandled op: %s", CodeName[op]);
@@ -1026,6 +1010,12 @@ OPCODE_LIST(EMIT_OP)
 
 bool
 BaselineCompiler::emit_JSOP_NOP()
+{
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_NOP_DESTRUCTURING()
 {
     return true;
 }
@@ -1254,12 +1244,16 @@ BaselineCompiler::emit_JSOP_POS()
 bool
 BaselineCompiler::emit_JSOP_LOOPHEAD()
 {
+    if (!emit_JSOP_JUMPTARGET())
+        return false;
     return emitInterruptCheck();
 }
 
 bool
 BaselineCompiler::emit_JSOP_LOOPENTRY()
 {
+    if (!emit_JSOP_JUMPTARGET())
+        return false;
     frame.syncStack(0);
     return emitWarmUpCounterIncrement(LoopEntryCanIonOsr(pc));
 }
@@ -3339,6 +3333,9 @@ BaselineCompiler::emit_JSOP_THROWING()
 bool
 BaselineCompiler::emit_JSOP_TRY()
 {
+    if (!emit_JSOP_JUMPTARGET())
+        return false;
+
     // Ionmonkey can't inline function with JSOP_TRY.
     script->setUninlineable();
     return true;
@@ -3770,6 +3767,8 @@ BaselineCompiler::emit_JSOP_ISNOITER()
 bool
 BaselineCompiler::emit_JSOP_ENDITER()
 {
+    if (!emit_JSOP_JUMPTARGET())
+        return false;
     frame.popRegsAndSync(1);
 
     ICIteratorClose_Fallback::Compiler compiler(cx);
@@ -4319,4 +4318,15 @@ BaselineCompiler::emit_JSOP_DEBUGCHECKSELFHOSTED()
 #endif
     return true;
 
+}
+
+bool
+BaselineCompiler::emit_JSOP_JUMPTARGET()
+{
+    if (!script->hasScriptCounts())
+        return true;
+    PCCounts* counts = script->maybeGetPCCounts(pc);
+    uint64_t* counterAddr = &counts->numExec();
+    masm.inc64(AbsoluteAddress(counterAddr));
+    return true;
 }

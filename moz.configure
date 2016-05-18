@@ -116,12 +116,11 @@ add_old_configure_assignment('PERL', perl_for_old_configure)
 def perl_version_check(min_version):
     @depends(perl)
     @checking('for minimum required perl version >= %s' % min_version)
-    @imports('subprocess')
     def get_perl_version(perl):
-        try:
-            return Version(subprocess.check_output([perl, '-e', 'print $]']))
-        except subprocess.CalledProcessError as e:
-            die('Failed to get perl version: %s', e.message)
+        return Version(check_cmd_output(
+            perl, '-e', 'print $]',
+            onerror=lambda: die('Failed to get perl version.')
+        ))
 
     @depends(get_perl_version)
     def check_perl_version(version):
@@ -167,6 +166,17 @@ check_prog('GENISOIMAGE', delayed_getattr(extra_programs, 'GENISOIMAGE'),
 check_prog('RPMBUILD', delayed_getattr(extra_programs, 'RPMBUILD'),
            allow_missing=True)
 
+option('--enable-system-hunspell',
+       help="Use system hunspell (located with pkgconfig)")
+
+@depends('--enable-system-hunspell', compile_environment)
+def check_for_hunspell(value, compile_env):
+    return value and compile_env
+
+system_hunspell = pkg_check_modules('MOZ_HUNSPELL', 'hunspell',
+                                    check_for_hunspell)
+
+set_config('MOZ_SYSTEM_HUNSPELL', system_hunspell)
 
 # Fallthrough to autoconf-based configure
 include('build/moz.configure/old.configure')

@@ -258,15 +258,20 @@ class BytecodeParser
         }
 
         // When control-flow merges, intersect the stacks, marking slots that
-        // are defined by different offsets with the UINT32_MAX sentinel.
+        // are defined by different offsets with the UnknownOffset sentinel.
         // This is sufficient for forward control-flow.  It doesn't grok loops
         // -- for that you would have to iterate to a fixed point -- but there
         // shouldn't be operands on the stack at a loop back-edge anyway.
         void mergeOffsetStack(const uint32_t* stack, uint32_t depth) {
             MOZ_ASSERT(depth == stackDepth);
-            for (uint32_t n = 0; n < stackDepth; n++)
+            for (uint32_t n = 0; n < stackDepth; n++) {
+                if (stack[n] == SpecialOffsets::IgnoreOffset)
+                    continue;
+                if (offsetStack[n] == SpecialOffsets::IgnoreOffset)
+                    offsetStack[n] = stack[n];
                 if (offsetStack[n] != stack[n])
-                    offsetStack[n] = UINT32_MAX;
+                    offsetStack[n] = SpecialOffsets::UnknownOffset;
+            }
         }
     };
 
@@ -275,6 +280,14 @@ class BytecodeParser
     RootedScript script_;
 
     Bytecode** codeArray_;
+
+    // Use a struct instead of an enum class to avoid casting the enumerated
+    // value.
+    struct SpecialOffsets {
+        static const uint32_t UnknownOffset = UINT32_MAX;
+        static const uint32_t IgnoreOffset = UINT32_MAX - 1;
+        static const uint32_t FirstSpecialOffset = IgnoreOffset;
+    };
 
   public:
     BytecodeParser(JSContext* cx, JSScript* script)
@@ -309,7 +322,7 @@ class BytecodeParser
     }
     jsbytecode* pcForStackOperand(jsbytecode* pc, int operand) {
         uint32_t offset = offsetForStackOperand(script_->pcToOffset(pc), operand);
-        if (offset == UINT32_MAX)
+        if (offset >= SpecialOffsets::FirstSpecialOffset)
             return nullptr;
         return script_->offsetToPC(offsetForStackOperand(script_->pcToOffset(pc), operand));
     }
@@ -348,6 +361,8 @@ class BytecodeParser
 
     uint32_t simulateOp(JSOp op, uint32_t offset, uint32_t* offsetStack, uint32_t stackDepth);
 
+    inline bool recordBytecode(uint32_t offset, const uint32_t* offsetStack, uint32_t stackDepth);
+
     inline bool addJump(uint32_t offset, uint32_t* currentOffset,
                         uint32_t stackDepth, const uint32_t* offsetStack);
 };
@@ -371,6 +386,11 @@ BytecodeParser::simulateOp(JSOp op, uint32_t offset, uint32_t* offsetStack, uint
       default:
         for (uint32_t n = 0; n != ndefs; ++n)
             offsetStack[stackDepth + n] = offset;
+        break;
+
+      case JSOP_NOP_DESTRUCTURING:
+        // Poison the last offset to not obfuscate the error message.
+        offsetStack[stackDepth - 1] = SpecialOffsets::IgnoreOffset;
         break;
 
       case JSOP_CASE:
@@ -416,8 +436,8 @@ BytecodeParser::simulateOp(JSOp op, uint32_t offset, uint32_t* offsetStack, uint
 }
 
 bool
-BytecodeParser::addJump(uint32_t offset, uint32_t* currentOffset,
-                        uint32_t stackDepth, const uint32_t* offsetStack)
+BytecodeParser::recordBytecode(uint32_t offset, const uint32_t* offsetStack,
+                               uint32_t stackDepth)
 {
     MOZ_ASSERT(offset < script_->length());
 
@@ -434,6 +454,17 @@ BytecodeParser::addJump(uint32_t offset, uint32_t* currentOffset,
         code->mergeOffsetStack(offsetStack, stackDepth);
     }
 
+    return true;
+}
+
+bool
+BytecodeParser::addJump(uint32_t offset, uint32_t* currentOffset,
+                        uint32_t stackDepth, const uint32_t* offsetStack)
+{
+    if (!recordBytecode(offset, offsetStack, stackDepth))
+        return false;
+
+    Bytecode*& code = codeArray_[offset];
     if (offset < *currentOffset && !code->parsed) {
         // Backedge in a while/for loop, whose body has not been parsed due
         // to a lack of fallthrough at the loop head. Roll back the offset
@@ -496,6 +527,14 @@ BytecodeParser::parse()
         if (!code) {
             // Haven't found a path by which this bytecode is reachable.
             continue;
+        }
+
+        // On a jump target, we reload the offsetStack saved for the current
+        // bytecode, as it contains either the original offset stack, or the
+        // merged offset stack.
+        if (BytecodeIsJumpTarget(op)) {
+            for (uint32_t n = 0; n < code->stackDepth; ++n)
+                offsetStack[n] = code->offsetStack[n];
         }
 
         if (code->parsed) {
@@ -568,23 +607,8 @@ BytecodeParser::parse()
 
         // Handle any fallthrough from this opcode.
         if (BytecodeFallsThrough(op)) {
-            MOZ_ASSERT(successorOffset < script_->length());
-
-            Bytecode*& nextcode = codeArray_[successorOffset];
-
-            if (!nextcode) {
-                nextcode = alloc().new_<Bytecode>();
-                if (!nextcode) {
-                    reportOOM();
-                    return false;
-                }
-                if (!nextcode->captureOffsetStack(alloc(), offsetStack, stackDepth)) {
-                    reportOOM();
-                    return false;
-                }
-            } else {
-                nextcode->mergeOffsetStack(offsetStack, stackDepth);
-            }
+            if (!recordBytecode(successorOffset, offsetStack, stackDepth))
+                return false;
         }
     }
 

@@ -7,6 +7,7 @@
 #include "WAVDecoder.h"
 #include "AudioSampleFormat.h"
 #include "nsAutoPtr.h"
+#include "mozilla/SyncRunnable.h"
 
 using mp4_demuxer::ByteReader;
 
@@ -46,11 +47,12 @@ DecodeULawSample(uint8_t aValue)
 }
 
 WaveDataDecoder::WaveDataDecoder(const AudioInfo& aConfig,
-                                 FlushableTaskQueue* aTaskQueue,
+                                 TaskQueue* aTaskQueue,
                                  MediaDataDecoderCallback* aCallback)
   : mInfo(aConfig)
   , mTaskQueue(aTaskQueue)
   , mCallback(aCallback)
+  , mIsFlushing(false)
   , mFrames(0)
 {
 }
@@ -70,16 +72,20 @@ WaveDataDecoder::Init()
 nsresult
 WaveDataDecoder::Input(MediaRawData* aSample)
 {
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
-                         this, &WaveDataDecoder::Decode,
-                         RefPtr<MediaRawData>(aSample)));
+                       this, &WaveDataDecoder::ProcessDecode, aSample));
 
   return NS_OK;
 }
 
 void
-WaveDataDecoder::Decode(MediaRawData* aSample)
+WaveDataDecoder::ProcessDecode(MediaRawData* aSample)
 {
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  if (mIsFlushing) {
+    return;
+  }
   if (!DoDecode(aSample)) {
     mCallback->Error();
   } else if (mTaskQueue->IsEmpty()) {
@@ -90,6 +96,8 @@ WaveDataDecoder::Decode(MediaRawData* aSample)
 bool
 WaveDataDecoder::DoDecode(MediaRawData* aSample)
 {
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+
   size_t aLength = aSample->Size();
   ByteReader aReader = ByteReader(aSample->Data(), aLength);
   int64_t aOffset = aSample->mOffset;
@@ -148,23 +156,30 @@ WaveDataDecoder::DoDecode(MediaRawData* aSample)
 }
 
 void
-WaveDataDecoder::DoDrain()
+WaveDataDecoder::ProcessDrain()
 {
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   mCallback->DrainComplete();
 }
 
 nsresult
 WaveDataDecoder::Drain()
 {
-  mTaskQueue->Dispatch(NewRunnableMethod(this, &WaveDataDecoder::DoDrain));
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
+  mTaskQueue->Dispatch(NewRunnableMethod(this, &WaveDataDecoder::ProcessDrain));
   return NS_OK;
 }
 
 nsresult
 WaveDataDecoder::Flush()
 {
-  mTaskQueue->Flush();
-  mFrames = 0;
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
+  mIsFlushing = true;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([this] () {
+    mFrames = 0;
+  });
+  SyncRunnable::DispatchToThread(mTaskQueue, r);
+  mIsFlushing = false;
   return NS_OK;
 }
 

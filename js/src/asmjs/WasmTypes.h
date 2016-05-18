@@ -89,7 +89,18 @@ ToExprType(ValType vt)
 static inline bool
 IsSimdType(ValType vt)
 {
-    return vt == ValType::I32x4 || vt == ValType::F32x4 || vt == ValType::B32x4;
+    switch (vt) {
+      case ValType::I8x16:
+      case ValType::I16x8:
+      case ValType::I32x4:
+      case ValType::F32x4:
+      case ValType::B8x16:
+      case ValType::B16x8:
+      case ValType::B32x4:
+        return true;
+      default:
+        return false;
+    }
 }
 
 static inline uint32_t
@@ -97,6 +108,12 @@ NumSimdElements(ValType vt)
 {
     MOZ_ASSERT(IsSimdType(vt));
     switch (vt) {
+      case ValType::I8x16:
+      case ValType::B8x16:
+        return 16;
+      case ValType::I16x8:
+      case ValType::B16x8:
+        return 8;
       case ValType::I32x4:
       case ValType::F32x4:
       case ValType::B32x4:
@@ -111,10 +128,14 @@ SimdElementType(ValType vt)
 {
     MOZ_ASSERT(IsSimdType(vt));
     switch (vt) {
+      case ValType::I8x16:
+      case ValType::I16x8:
       case ValType::I32x4:
         return ValType::I32;
       case ValType::F32x4:
         return ValType::F32;
+      case ValType::B8x16:
+      case ValType::B16x8:
       case ValType::B32x4:
         return ValType::I32;
      default:
@@ -127,6 +148,12 @@ SimdBoolType(ValType vt)
 {
     MOZ_ASSERT(IsSimdType(vt));
     switch (vt) {
+      case ValType::I8x16:
+      case ValType::B8x16:
+        return ValType::B8x16;
+      case ValType::I16x8:
+      case ValType::B16x8:
+        return ValType::B16x8;
       case ValType::I32x4:
       case ValType::F32x4:
       case ValType::B32x4:
@@ -145,7 +172,7 @@ IsSimdType(ExprType et)
 static inline bool
 IsSimdBoolType(ValType vt)
 {
-    return vt == ValType::B32x4;
+    return vt == ValType::B8x16 || vt == ValType::B16x8 || vt == ValType::B32x4;
 }
 
 static inline jit::MIRType
@@ -156,8 +183,12 @@ ToMIRType(ValType vt)
       case ValType::I64: return jit::MIRType::Int64;
       case ValType::F32: return jit::MIRType::Float32;
       case ValType::F64: return jit::MIRType::Double;
+      case ValType::I8x16: return jit::MIRType::Int8x16;
+      case ValType::I16x8: return jit::MIRType::Int16x8;
       case ValType::I32x4: return jit::MIRType::Int32x4;
       case ValType::F32x4: return jit::MIRType::Float32x4;
+      case ValType::B8x16: return jit::MIRType::Bool8x16;
+      case ValType::B16x8: return jit::MIRType::Bool16x8;
       case ValType::B32x4: return jit::MIRType::Bool32x4;
       case ValType::Limit: break;
     }
@@ -179,8 +210,12 @@ ToCString(ExprType type)
       case ExprType::I64:   return "i64";
       case ExprType::F32:   return "f32";
       case ExprType::F64:   return "f64";
+      case ExprType::I8x16: return "i8x16";
+      case ExprType::I16x8: return "i16x8";
       case ExprType::I32x4: return "i32x4";
       case ExprType::F32x4: return "f32x4";
+      case ExprType::B8x16: return "b8x16";
+      case ExprType::B16x8: return "b16x8";
       case ExprType::B32x4: return "b32x4";
       case ExprType::Limit:;
     }
@@ -208,6 +243,8 @@ class Val
         uint64_t i64_;
         float f32_;
         double f64_;
+        I8x16 i8x16_;
+        I16x8 i16x8_;
         I32x4 i32x4_;
         F32x4 f32x4_;
     } u;
@@ -220,6 +257,14 @@ class Val
     explicit Val(float f32) : type_(ValType::F32) { u.f32_ = f32; }
     explicit Val(double f64) : type_(ValType::F64) { u.f64_ = f64; }
 
+    explicit Val(const I8x16& i8x16, ValType type = ValType::I8x16) : type_(type) {
+        MOZ_ASSERT(type_ == ValType::I8x16 || type_ == ValType::B8x16);
+        memcpy(u.i8x16_, i8x16, sizeof(u.i8x16_));
+    }
+    explicit Val(const I16x8& i16x8, ValType type = ValType::I16x8) : type_(type) {
+        MOZ_ASSERT(type_ == ValType::I16x8 || type_ == ValType::B16x8);
+        memcpy(u.i16x8_, i16x8, sizeof(u.i16x8_));
+    }
     explicit Val(const I32x4& i32x4, ValType type = ValType::I32x4) : type_(type) {
         MOZ_ASSERT(type_ == ValType::I32x4 || type_ == ValType::B32x4);
         memcpy(u.i32x4_, i32x4, sizeof(u.i32x4_));
@@ -233,6 +278,14 @@ class Val
     uint64_t i64() const { MOZ_ASSERT(type_ == ValType::I64); return u.i64_; }
     float f32() const { MOZ_ASSERT(type_ == ValType::F32); return u.f32_; }
     double f64() const { MOZ_ASSERT(type_ == ValType::F64); return u.f64_; }
+    const I8x16& i8x16() const {
+        MOZ_ASSERT(type_ == ValType::I8x16 || type_ == ValType::B8x16);
+        return u.i8x16_;
+    }
+    const I16x8& i16x8() const {
+        MOZ_ASSERT(type_ == ValType::I16x8 || type_ == ValType::B16x8);
+        return u.i16x8_;
+    }
     const I32x4& i32x4() const {
         MOZ_ASSERT(type_ == ValType::I32x4 || type_ == ValType::B32x4);
         return u.i32x4_;

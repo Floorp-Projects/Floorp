@@ -64,7 +64,6 @@
       },
       {
         "name": "hide",
-        "unsupported": true,
         "type": "function",
         "description": "Hides the page action.",
         "parameters": [

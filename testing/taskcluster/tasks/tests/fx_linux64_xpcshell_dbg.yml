@@ -5,3 +5,6 @@ task:
   payload:
     command:
       - --download-symbols=true
+  extra:
+    chunks:
+      total: 10

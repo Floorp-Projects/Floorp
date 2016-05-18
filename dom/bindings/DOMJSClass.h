@@ -31,6 +31,39 @@ class nsCycleCollectionParticipant;
 namespace mozilla {
 namespace dom {
 
+/**
+ * Returns true if code running in the given JSContext is allowed to access
+ * [SecureContext] API on the given JSObject.
+ *
+ * [SecureContext] API exposure is restricted to use by code in a Secure
+ * Contexts:
+ *
+ *   https://w3c.github.io/webappsec-secure-contexts/
+ *
+ * Since we want [SecureContext] exposure to depend on the privileges of the
+ * running code (rather than the privileges of an object's creator), this
+ * function checks to see whether the given JSContext's Compartment is flagged
+ * as a Secure Context.  That allows us to make sure that system principal code
+ * (which is marked as a Secure Context) can access Secure Context API on an
+ * object in a different compartment, regardless of whether the other
+ * compartment is a Secure Context or not.
+ *
+ * Checking the JSContext's Compartment doesn't work for expanded principal
+ * globals accessing a Secure Context web page though (e.g. those used by frame
+ * scripts).  To handle that we fall back to checking whether the JSObject came
+ * from a Secure Context.
+ *
+ * Note: We'd prefer this function to live in BindingUtils.h, but we need to
+ * call it in this header, and BindingUtils.h includes us (i.e. we'd have a
+ * circular dependency between headers if it lived there).
+ */
+inline bool
+IsSecureContextOrObjectIsFromSecureContext(JSContext* aCx, JSObject* aObj)
+{
+  return JS::CompartmentCreationOptionsRef(js::GetContextCompartment(aCx)).secureContext() ||
+         JS::CompartmentCreationOptionsRef(js::GetObjectCompartment(aObj)).secureContext();
+}
+
 typedef bool
 (* ResolveOwnProperty)(JSContext* cx, JS::Handle<JSObject*> wrapper,
                        JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
@@ -98,6 +131,9 @@ struct PrefableDisablers {
     if (!enabled) {
       return false;
     }
+    if (secureContext && !IsSecureContextOrObjectIsFromSecureContext(cx, obj)) {
+      return false;
+    }
     if (enabledFunc &&
         !enabledFunc(cx, js::GetGlobalForObjectCrossCompartment(obj))) {
       return false;
@@ -122,6 +158,9 @@ struct PrefableDisablers {
   // A boolean indicating whether this set of specs is enabled. Not const
   // because it will change at runtime if the corresponding pref is changed.
   bool enabled;
+
+  // A boolean indicating whether a Secure Context is required.
+  const bool secureContext;
 
   // Bitmask of global names that we should not be exposed in.
   const uint16_t nonExposedGlobals;

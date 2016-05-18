@@ -908,15 +908,6 @@ public:
                                      nsXPIDLString& aResult);
 
   /**
-   * A helper function that parses a sandbox attribute (of an <iframe> or
-   * a CSP directive) and converts it to the set of flags used internally.
-   *
-   * @param sandboxAttr   the sandbox attribute
-   * @return              the set of flags (0 if sandboxAttr is null)
-   */
-  static uint32_t ParseSandboxAttributeToFlags(const nsAttrValue* sandboxAttr);
-
-  /**
    * Helper function that generates a UUID.
    */
   static nsresult GenerateUUIDInPlace(nsID& aUUID);

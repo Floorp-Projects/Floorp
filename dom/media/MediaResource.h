@@ -700,10 +700,6 @@ protected:
   // isPending state at the time of the suspend request.
   bool mIgnoreResume;
 
-  // True if the stream can seek into unbuffered ranged, i.e. if the
-  // connection supports byte range requests.
-  bool mIsTransportSeekable;
-
   ChannelSuspendAgent mSuspendAgent;
 };
 

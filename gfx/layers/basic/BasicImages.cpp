@@ -35,6 +35,7 @@ public:
   BasicPlanarYCbCrImage(const gfx::IntSize& aScaleHint, gfxImageFormat aOffscreenFormat, BufferRecycleBin *aRecycleBin)
     : RecyclingPlanarYCbCrImage(aRecycleBin)
     , mScaleHint(aScaleHint)
+    , mStride(0)
     , mDelayedConversion(false)
   {
     SetOffscreenFormat(aOffscreenFormat);

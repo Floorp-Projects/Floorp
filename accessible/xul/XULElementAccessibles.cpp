@@ -69,7 +69,7 @@ XULLabelAccessible::NativeName(nsString& aName)
   if (mValueTextLeaf)
     return mValueTextLeaf->Name(aName);
 
-  return eNameOK;
+  return Accessible::NativeName(aName);
 }
 
 role

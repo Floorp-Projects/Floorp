@@ -123,11 +123,8 @@ class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared
     static const Class class_;
     static const Class protoClass;
     static const JSFunctionSpec jsfuncs[];
-    static const JSFunctionSpec jsstaticfuncs[];
 
     static bool byteLengthGetter(JSContext* cx, unsigned argc, Value* vp);
-
-    static bool fun_isView(JSContext* cx, unsigned argc, Value* vp);
 
     static bool class_constructor(JSContext* cx, unsigned argc, Value* vp);
 

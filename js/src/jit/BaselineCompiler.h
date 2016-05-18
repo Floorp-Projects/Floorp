@@ -31,6 +31,7 @@ namespace jit {
 
 #define OPCODE_LIST(_)         \
     _(JSOP_NOP)                \
+    _(JSOP_NOP_DESTRUCTURING)  \
     _(JSOP_LABEL)              \
     _(JSOP_POP)                \
     _(JSOP_POPN)               \
@@ -222,7 +223,8 @@ namespace jit {
     _(JSOP_INITHIDDENELEM_GETTER) \
     _(JSOP_INITHIDDENELEM_SETTER) \
     _(JSOP_CHECKOBJCOERCIBLE)  \
-    _(JSOP_DEBUGCHECKSELFHOSTED)
+    _(JSOP_DEBUGCHECKSELFHOSTED) \
+    _(JSOP_JUMPTARGET)
 
 class BaselineCompiler : public BaselineCompilerSpecific
 {
@@ -290,7 +292,6 @@ class BaselineCompiler : public BaselineCompilerSpecific
     void emitIsDebuggeeCheck();
     MOZ_MUST_USE bool emitDebugPrologue();
     MOZ_MUST_USE bool emitDebugTrap();
-    void emitCoverage(jsbytecode* pc);
     MOZ_MUST_USE bool emitTraceLoggerEnter();
     MOZ_MUST_USE bool emitTraceLoggerExit();
 

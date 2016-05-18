@@ -1673,15 +1673,42 @@ nsContainerFrame::DrainExcessOverflowContainersList(ChildFrameMerger aMergeFunc)
   }
 
   // Our own excess overflow containers from a previous reflow can still be
-  // present if our next-in-flow hasn't been reflown yet.
+  // present if our next-in-flow hasn't been reflown yet.  Move any children
+  // from it that don't have a continuation in this frame to the
+  // OverflowContainers list.
   nsFrameList* selfExcessOCFrames =
     RemovePropTableFrames(ExcessOverflowContainersProperty());
   if (selfExcessOCFrames) {
-    if (overflowContainers) {
-      aMergeFunc(*overflowContainers, *selfExcessOCFrames, this);
-      selfExcessOCFrames->Delete(PresContext()->PresShell());
+    nsFrameList toMove;
+    auto child = selfExcessOCFrames->FirstChild();
+    while (child) {
+      auto next = child->GetNextSibling();
+      MOZ_ASSERT(child->GetPrevInFlow(),
+                 "ExcessOverflowContainers frames must be continuations");
+      if (child->GetPrevInFlow()->GetParent() != this) {
+        selfExcessOCFrames->RemoveFrame(child);
+        toMove.AppendFrame(nullptr, child);
+      }
+      child = next;
+    }
+    if (toMove.IsEmpty()) {
+      SetPropTableFrames(selfExcessOCFrames, ExcessOverflowContainersProperty());
+    } else if (overflowContainers) {
+      aMergeFunc(*overflowContainers, toMove, this);
+      if (selfExcessOCFrames->IsEmpty()) {
+        selfExcessOCFrames->Delete(PresContext()->PresShell());
+      } else {
+        SetPropTableFrames(selfExcessOCFrames, ExcessOverflowContainersProperty());
+      }
     } else {
-      overflowContainers = selfExcessOCFrames;
+      if (selfExcessOCFrames->IsEmpty()) {
+        *selfExcessOCFrames = toMove;
+        overflowContainers = selfExcessOCFrames;
+      } else {
+        SetPropTableFrames(selfExcessOCFrames, ExcessOverflowContainersProperty());
+        auto shell = PresContext()->PresShell();
+        overflowContainers = new (shell) nsFrameList(toMove);
+      }
       SetPropTableFrames(overflowContainers, OverflowContainersProperty());
     }
   }

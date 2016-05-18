@@ -658,7 +658,12 @@
                     key="key_undoCloseTab"
                     label="&undoCloseTab.label;"
                     observes="History:UndoCloseTab"/>
-          <menuseparator id="alltabs-popup-separator"/>
+          <menuseparator id="alltabs-popup-separator-1"/>
+          <menu id="alltabs_containersTab"
+                label="&newUserContext.label;">
+            <menupopup id="alltabs_containersMenuTab" />
+          </menu>
+          <menuseparator id="alltabs-popup-separator-2"/>
         </menupopup>
       </toolbarbutton>
 

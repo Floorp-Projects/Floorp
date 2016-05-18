@@ -844,16 +844,16 @@ GfxInfo::GetGfxDriverInfo()
       DRIVER_LESS_THAN, V(8,17,11,8265), "FEATURE_FAILURE_NV_W7", "182.65" );
 
     /*
-     * AMD/ATI entries
+     * AMD/ATI entries. 8.56.1.15 is the driver that shipped with Windows 7 RTM
      */
     APPEND_TO_DRIVER_BLOCKLIST( DRIVER_OS_ALL,
       (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorATI), GfxDriverInfo::allDevices,
       GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
-      DRIVER_LESS_THAN, V(8,62,0,0), "FEATURE_FAILURE_AMD1", "9.6" );
+      DRIVER_LESS_THAN, V(8,56,1,15), "FEATURE_FAILURE_AMD1", "8.56.1.15" );
     APPEND_TO_DRIVER_BLOCKLIST( DRIVER_OS_ALL,
       (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorAMD), GfxDriverInfo::allDevices,
       GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
-      DRIVER_LESS_THAN, V(8,62,0,0), "FEATURE_FAILURE_AMD2", "9.6" );
+      DRIVER_LESS_THAN, V(8,56,1,15), "FEATURE_FAILURE_AMD2", "8.56.1.15" );
 
     // Bug 1099252
     APPEND_TO_DRIVER_BLOCKLIST2( DRIVER_OS_WINDOWS_7,
