@@ -553,8 +553,7 @@ ScreenOrientation::UpdateActiveOrientationLock(ScreenOrientationInternal aOrient
   if (aOrientation == eScreenOrientation_None) {
     hal::UnlockScreenOrientation();
   } else {
-    bool rv = hal::LockScreenOrientation(aOrientation);
-    NS_WARN_IF_FALSE(rv);
+    hal::LockScreenOrientation(aOrientation);
   }
 }
 
