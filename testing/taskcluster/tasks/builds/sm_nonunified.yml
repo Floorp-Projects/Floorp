@@ -15,3 +15,4 @@ task:
       symbol: nu
       collection:
         debug: true
+      tier: 3
