@@ -8,6 +8,7 @@
 #include "plstr.h"
 #include "plbase64.h"
 
+#include "mozilla/Base64.h"
 #include "mozilla/Services.h"
 #include "nsMemory.h"
 #include "nsString.h"
@@ -299,18 +300,11 @@ nsresult
 nsSecretDecoderRing::encode(const unsigned char* data, int32_t dataLen,
                             char** _retval)
 {
-  char* result = PL_Base64Encode((const char*)data, dataLen, nullptr);
-  if (!result) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (dataLen < 0) {
+    return NS_ERROR_INVALID_ARG;
   }
-
-  *_retval = NS_strdup(result);
-  PR_DELETE(result);
-  if (!*_retval) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return NS_OK;
+  return Base64Encode(BitwiseCast<const char*>(data),
+                      AssertedCast<uint32_t>(dataLen), _retval);
 }
 
 nsresult
