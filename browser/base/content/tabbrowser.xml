@@ -6597,7 +6597,8 @@
       <handler event="popupshowing">
       <![CDATA[
         if (event.target.getAttribute('id') == "alltabs_containersMenuTab") {
-          return createUserContextMenu(event);
+          createUserContextMenu(event);
+          return;
         }
 
         let containersEnabled = Services.prefs.getBoolPref("privacy.userContext.enabled");
