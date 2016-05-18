@@ -56,22 +56,11 @@ bool Gecko_IsTextNode(RawGeckoNode* node);
 bool Gecko_IsVisitedLink(RawGeckoElement* element);
 bool Gecko_IsUnvisitedLink(RawGeckoElement* element);
 bool Gecko_IsRootElement(RawGeckoElement* element);
-nsIAtom* Gecko_LocalName(RawGeckoElement* element);
-nsIAtom* Gecko_Namespace(RawGeckoElement* element);
 
 // Node data.
 ServoNodeData* Gecko_GetNodeData(RawGeckoNode* node);
 void Gecko_SetNodeData(RawGeckoNode* node, ServoNodeData* data);
 void Servo_DropNodeData(ServoNodeData* data);
-
-// Atoms.
-nsIAtom* Gecko_Atomize(const char* aString, uint32_t aLength);
-void Gecko_AddRefAtom(nsIAtom* aAtom);
-void Gecko_ReleaseAtom(nsIAtom* aAtom);
-uint32_t Gecko_HashAtom(nsIAtom* aAtom);
-const uint16_t* Gecko_GetAtomAsUTF16(nsIAtom* aAtom, uint32_t* aLength);
-bool Gecko_AtomEqualsUTF8(nsIAtom* aAtom, const char* aString, uint32_t aLength);
-bool Gecko_AtomEqualsUTF8IgnoreCase(nsIAtom* aAtom, const char* aString, uint32_t aLength);
 
 // Counter style.
 struct nsStyleList;
