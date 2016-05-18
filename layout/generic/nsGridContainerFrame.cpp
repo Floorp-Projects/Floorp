@@ -2185,6 +2185,8 @@ AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe, LogicalAxis aAxis,
     case NS_STYLE_ALIGN_LAST_BASELINE:
       NS_WARNING("NYI: baseline/last-baseline for grid (bug 1151204)"); // XXX
       MOZ_FALLTHROUGH;
+    case NS_STYLE_ALIGN_STRETCH:
+      MOZ_FALLTHROUGH; // ComputeSize() deals with it
     case NS_STYLE_ALIGN_START:
       offset = marginStart;
       break;
@@ -2200,6 +2202,7 @@ AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe, LogicalAxis aAxis,
       offset = (aCBSize - size + marginStart - marginEnd) / 2;
       break;
     }
+#if 0
     case NS_STYLE_ALIGN_STRETCH: {
       MOZ_ASSERT(!hasAutoMarginStart && !hasAutoMarginEnd);
       offset = marginStart;
@@ -2242,6 +2245,7 @@ AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe, LogicalAxis aAxis,
       }
       break;
     }
+#endif
     default:
       MOZ_ASSERT_UNREACHABLE("unknown align-/justify-self value");
   }
@@ -3268,7 +3272,8 @@ ContentContribution(nsIFrame*                         aChild,
     // XXX this will give mostly correct results for now (until bug 1174569).
     LogicalSize availableSize(wm, INFINITE_ISIZE_COORD, NS_UNCONSTRAINEDSIZE);
     nsHTMLReflowState childRS(pc, *rs, aChild, availableSize, nullptr,
-                              nsHTMLReflowState::COMPUTE_SIZE_SHRINK_WRAP);
+                              nsHTMLReflowState::COMPUTE_SIZE_SHRINK_WRAP |
+                              nsHTMLReflowState::COMPUTE_SIZE_USE_AUTO_BSIZE);
     nsHTMLReflowMetrics childSize(childRS);
     nsReflowStatus childStatus;
     const uint32_t flags = NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_SIZE_VIEW;
@@ -4149,12 +4154,7 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
     cb = aState.ContainingBlockFor(area);
     isConstrainedBSize = aFragmentainer && !wm.IsOrthogonalTo(childWM);
     if (isConstrainedBSize) {
-      nscoord fragCBOffset = cb.BStart(wm) - aState.mFragBStart;
-      if (fragCBOffset < 0) {
-        // Subtract the "consumed" part of the grid area.
-        cb.BSize(wm) = std::max(fragCBOffset + cb.BSize(wm), 0);
-      }
-      cb.BStart(wm) = std::max(fragCBOffset, 0);
+      cb.BStart(wm) = std::max(0, cb.BStart(wm) - aState.mFragBStart);
       toFragmentainerEnd = aFragmentainer->mToFragmentainerEnd -
         aState.mFragBStart - cb.BStart(wm);
       toFragmentainerEnd = std::max(toFragmentainerEnd, 0);

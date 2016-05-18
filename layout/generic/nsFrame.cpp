@@ -4729,12 +4729,32 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
   // (but not if we're auto-height or if we recieved the "eUseAutoHeight"
   // flag -- then, we'll just stick with the height that we already calculated
   // in the initial ComputeAutoSize() call.)
-  if (!nsLayoutUtils::IsAutoBSize(*blockStyleCoord, aCBSize.BSize(aWM)) &&
-      !(aFlags & nsIFrame::eUseAutoHeight)) {
-    result.BSize(aWM) =
-      nsLayoutUtils::ComputeBSizeValue(aCBSize.BSize(aWM),
-                                       boxSizingAdjust.BSize(aWM),
-                                       *blockStyleCoord);
+  if (!(aFlags & nsIFrame::eUseAutoHeight)) {
+    if (!nsLayoutUtils::IsAutoBSize(*blockStyleCoord, aCBSize.BSize(aWM))) {
+      result.BSize(aWM) =
+        nsLayoutUtils::ComputeBSizeValue(aCBSize.BSize(aWM),
+                                         boxSizingAdjust.BSize(aWM),
+                                         *blockStyleCoord);
+    } else if (MOZ_UNLIKELY(isGridItem) &&
+               blockStyleCoord->GetUnit() == eStyleUnit_Auto &&
+               !IS_TRUE_OVERFLOW_CONTAINER(this)) {
+      // 'auto' block-size for grid-level box - apply 'stretch' as needed:
+      auto cbSize = aCBSize.BSize(aWM);
+      if (cbSize != NS_AUTOHEIGHT &&
+          !StyleMargin()->HasBlockAxisAuto(aWM)) {
+        auto blockAxisAlignment =
+          !aWM.IsOrthogonalTo(GetParent()->GetWritingMode()) ?
+            StylePosition()->ComputedAlignSelf(StyleContext()->GetParent()) :
+            StylePosition()->ComputedJustifySelf(StyleContext()->GetParent());
+        if (blockAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
+            blockAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
+          result.BSize(aWM) = std::max(nscoord(0), cbSize -
+                                                   aPadding.BSize(aWM) -
+                                                   aBorder.BSize(aWM) -
+                                                   aMargin.BSize(aWM));
+        }
+      }
+    }
   }
 
   const nsStyleCoord& maxBSizeCoord = stylePos->MaxBSize(aWM);
