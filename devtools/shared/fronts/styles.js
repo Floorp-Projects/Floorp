@@ -9,11 +9,11 @@ const {
   FrontClassWithSpec,
   custom,
   preEvent
-} = require("devtools/shared/protocol.js");
+} = require("devtools/shared/protocol");
 const {
   pageStyleSpec,
   styleRuleSpec
-} = require("devtools/shared/specs/styles.js");
+} = require("devtools/shared/specs/styles");
 const promise = require("promise");
 const { Task } = require("resource://gre/modules/Task.jsm");
 const { Class } = require("sdk/core/heritage");
