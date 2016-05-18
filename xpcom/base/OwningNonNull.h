@@ -126,6 +126,18 @@ public:
   void swap(U& aOther)
   {
     mPtr.swap(aOther);
+#ifdef DEBUG
+    mInited = mPtr;
+#endif
+  }
+
+  // We have some consumers who want to check whether we're inited in non-debug
+  // builds as well.  Luckily, we have the invariant that we're inited precisely
+  // when mPtr is non-null.
+  bool isInitialized() const
+  {
+    MOZ_ASSERT(!!mPtr == mInited, "mInited out of sync with mPtr?");
+    return mPtr;
   }
 
 protected:
