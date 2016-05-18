@@ -3896,7 +3896,11 @@ public class BrowserApp extends GeckoApp
         if (!Tabs.getInstance().getSelectedTab().isPrivate()) {
             storeSearchQuery(text);
         }
-        recordSearch(GeckoSharedPrefs.forProfile(this), engine.getEngineIdentifier(), method);
+
+        // We don't use SearchEngine.getEngineIdentifier because it can
+        // return a custom search engine name, which is a privacy concern.
+        final String identifierToRecord = (engine.identifier != null) ? engine.identifier : "other";
+        recordSearch(GeckoSharedPrefs.forProfile(this), identifierToRecord, method);
         openUrlAndStopEditing(text, engine.name);
     }
 
