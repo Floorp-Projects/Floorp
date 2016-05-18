@@ -499,7 +499,11 @@ gfxWindowsPlatform::UpdateBackendPrefs()
   uint32_t canvasMask = BackendTypeBit(SOFTWARE_BACKEND);
   uint32_t contentMask = BackendTypeBit(SOFTWARE_BACKEND);
   BackendType defaultBackend = SOFTWARE_BACKEND;
-  if (gfxConfig::IsEnabled(Feature::DIRECT2D) && Factory::GetD2D1Device()) {
+  if (gfxConfig::IsEnabled(Feature::DIRECT2D)) {
+    MOZ_RELEASE_ASSERT(Factory::GetDirect3D11Device());
+    MOZ_RELEASE_ASSERT(Factory::GetD2D1Device());
+    MOZ_RELEASE_ASSERT(Factory::SupportsD2D1());
+
     contentMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
     canvasMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
     defaultBackend = BackendType::DIRECT2D1_1;
@@ -1967,11 +1971,6 @@ gfxWindowsPlatform::InitializeD3D9Config()
 
   FeatureState& d3d9 = gfxConfig::GetFeature(Feature::D3D9_COMPOSITING);
 
-  if (!gfxConfig::IsEnabled(Feature::D3D9_COMPOSITING)) {
-    d3d9.DisableByDefault(FeatureStatus::Unavailable, "Hardware compositing is disabled");
-    return;
-  }
-
   if (!IsVistaOrLater()) {
     d3d9.EnableByDefault();
   } else {
@@ -2529,17 +2528,14 @@ gfxWindowsPlatform::InitializeD2DConfig()
 
   if (!gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
     d2d1.DisableByDefault(FeatureStatus::Unavailable, "Direct2D requires Direct3D 11 compositing");
-    return;
-  }
-  if (!IsVistaOrLater()) {
+  } else if (!IsVistaOrLater()) {
     d2d1.DisableByDefault(FeatureStatus::Unavailable, "Direct2D is not available on Windows XP");
-    return;
+  } else {
+    d2d1.SetDefaultFromPref(
+      gfxPrefs::GetDirect2DDisabledPrefName(),
+      false,
+      gfxPrefs::GetDirect2DDisabledPrefDefault());
   }
-
-  d2d1.SetDefaultFromPref(
-    gfxPrefs::GetDirect2DDisabledPrefName(),
-    false,
-    gfxPrefs::GetDirect2DDisabledPrefDefault());
 
   nsCString message;
   if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT2D, &message)) {
