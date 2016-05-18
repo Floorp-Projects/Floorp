@@ -16,11 +16,10 @@ class Kind(object):
     """
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, path, config, log):
+    def __init__(self, path, config):
         self.name = os.path.basename(path)
         self.path = path
         self.config = config
-        self.log = log
 
     @abc.abstractmethod
     def load_tasks(self, parameters):

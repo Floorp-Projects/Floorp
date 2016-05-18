@@ -10,6 +10,8 @@ import yaml
 from .graph import Graph
 from .types import TaskGraph
 
+logger = logging.getLogger(__name__)
+
 class TaskGraphGenerator(object):
     """
     The central controller for taskgraph.  This handles all phases of graph
@@ -25,11 +27,10 @@ class TaskGraphGenerator(object):
     # each "phase" of generation.  This allows some mach subcommands to short-
     # circuit generation of the entire graph by never completing the generator.
 
-    def __init__(self, root_dir, log, parameters,
+    def __init__(self, root_dir, parameters,
                  target_tasks_method):
         """
         @param root_dir: root directory, with subdirectories for each kind
-        @param log: Mach log function
         @param parameters: parameters for this task-graph generation
         @type parameters: dict
         @param target_tasks_method: function to determine the target_task_set;
@@ -38,7 +39,6 @@ class TaskGraphGenerator(object):
         """
 
         self.root_dir = root_dir
-        self.log = log
         self.parameters = parameters
         self.target_tasks_method = target_tasks_method
 
@@ -105,10 +105,7 @@ class TaskGraphGenerator(object):
             if not os.path.isdir(path):
                 continue
             name = os.path.basename(path)
-            self.log(logging.DEBUG, 'loading-kind', {
-                'name': name,
-                'path': path,
-            }, "loading kind `{name}` from {path}")
+            logger.debug("loading kind `{}` from `{}`".format(name, path))
 
             kind_yml = os.path.join(path, 'kind.yml')
             with open(kind_yml) as f:
@@ -130,7 +127,7 @@ class TaskGraphGenerator(object):
             for a in impl_object.split('.'):
                 impl_class = getattr(impl_class, a)
 
-            yield impl_class(path, config, self.log)
+            yield impl_class(path, config)
 
     def _run(self):
         all_tasks = {}
