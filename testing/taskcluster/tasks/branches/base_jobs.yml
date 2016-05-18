@@ -10,16 +10,12 @@ builds:
     platforms:
       - Linux
     types:
-      opt:
-        task: tasks/builds/opt_linux32.yml
       debug:
         task: tasks/builds/dbg_linux32.yml
   linux64:
     platforms:
       - Linux64
     types:
-      opt:
-        task: tasks/builds/opt_linux64.yml
       debug:
         task: tasks/builds/dbg_linux64.yml
   linux64-st-an:
@@ -32,8 +28,6 @@ builds:
     platforms:
       - MacOSX64
     types:
-      opt:
-        task: tasks/builds/opt_macosx64.yml
       debug:
         task: tasks/builds/dbg_macosx64.yml
   macosx64-st-an:
