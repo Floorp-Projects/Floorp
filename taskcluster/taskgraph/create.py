@@ -7,8 +7,11 @@ from __future__ import absolute_import, print_function, unicode_literals
 import requests
 import json
 import collections
+import logging
 
 from slugid import nice as slugid
+
+logger = logging.getLogger(__name__)
 
 def create_tasks(taskgraph):
     # TODO: use the taskGroupId of the decision task
@@ -33,11 +36,11 @@ def create_tasks(taskgraph):
 def _create_task(session, task_id, label, task_def):
     # create the task using 'http://taskcluster/queue', which is proxied to the queue service
     # with credentials appropriate to this job.
-    print("Creating task with taskId {} for {}".format(task_id, label))
+    logger.debug("Creating task with taskId {} for {}".format(task_id, label))
     res = session.put('http://taskcluster/queue/v1/task/{}'.format(task_id), data=json.dumps(task_def))
     if res.status_code != 200:
         try:
-            print(res.json()['message'])
+            logger.error(res.json()['message'])
         except:
-            print(res.text)
+            logger.error(res.text)
         res.raise_for_status()
