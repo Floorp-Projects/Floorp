@@ -18,7 +18,6 @@
 #include "MediaInfo.h"
 #include "MediaPrefs.h"
 #include "mozilla/Logging.h"
-#include "mozilla/Preferences.h"
 #include "nsWindowsHelpers.h"
 #include "gfx2DGlue.h"
 #include "gfxWindowsPlatform.h"
@@ -27,7 +26,6 @@
 #include "mozilla/Telemetry.h"
 #include "nsPrintfCString.h"
 #include "MediaTelemetryConstants.h"
-#include "GMPUtils.h" // For SplitAt. TODO: Move SplitAt to a central place.
 
 extern mozilla::LogModule* GetPDMLog();
 #define LOG(...) MOZ_LOG(GetPDMLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
@@ -153,112 +151,91 @@ WMFVideoMFTManager::GetMediaSubtypeGUID()
   };
 }
 
-// If a blacklisted DLL is found, return its information, otherwise "".
-static const nsACString&
+struct BlacklistedD3D11DLL
+{
+  constexpr
+  BlacklistedD3D11DLL(LPCWSTR aName, DWORD a, DWORD b, DWORD c, DWORD d)
+    : name(aName), ms((a << 16) | b), ls((c << 16) | d)
+  {}
+  LPCWSTR name;
+  DWORD ms;
+  DWORD ls;
+};
+static constexpr BlacklistedD3D11DLL sBlacklistedD3D11DLL[] =
+{
+  // Keep same DLL names together.
+  BlacklistedD3D11DLL(L"igd10umd32.dll", 9,17,10,2857),
+  BlacklistedD3D11DLL(L"isonyvideoprocessor.dll", 4,1,2247,8090),
+  BlacklistedD3D11DLL(L"isonyvideoprocessor.dll", 4,1,2153,6200),
+  BlacklistedD3D11DLL(L"tosqep.dll", 1,2,15,526),
+  BlacklistedD3D11DLL(L"tosqep.dll", 1,1,12,201),
+  BlacklistedD3D11DLL(L"tosqep.dll", 1,0,11,318),
+  BlacklistedD3D11DLL(L"tosqep.dll", 1,0,11,215),
+  BlacklistedD3D11DLL(L"tosqep64.dll", 1,1,12,201),
+  BlacklistedD3D11DLL(L"tosqep64.dll", 1,0,11,215),
+  // Keep this last.
+  BlacklistedD3D11DLL(nullptr, 0,0,0,0)
+};
+
+// If a blacklisted DLL is found, return its information, otherwise nullptr.
+static const BlacklistedD3D11DLL*
 IsD3D11DLLBlacklisted()
 {
   NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
-
-  // Result is cached as long as pref doesn't change.
-  static nsCString sBlacklistedDLL;
-
-  nsAdoptingCString blacklist =
-    Preferences::GetCString("media.wmf.disable-d3d11-for-dlls");
-  if (blacklist.IsEmpty()) {
-    // Empty blacklist -> No blacklisting.
-    sBlacklistedDLL.SetLength(0);
-    return sBlacklistedDLL;
+  // Cache the result, so we only check DLLs once per browser run.
+  static const BlacklistedD3D11DLL* sAlreadySearched = nullptr;
+  if (sAlreadySearched) {
+    // If we point at the last empty entry, there's no actual blacklisting.
+    return sAlreadySearched->name ? sAlreadySearched : nullptr;
   }
 
-  // Remember pref between calls, to detect changes.
-  static nsCString sBlacklistPref;
-  if (sBlacklistPref.Equals(blacklist)) {
-    // Same blacklist -> Return same result (i.e., don't check DLLs again).
-    return sBlacklistedDLL;
-  }
-  // Adopt new pref now, so we don't work on it again.
-  sBlacklistPref = blacklist;
+  WCHAR systemPath[MAX_PATH + 1];
+  LPCWSTR previousDLLName = L"";
+  VS_FIXEDFILEINFO *vInfo = nullptr;
+  // vInfo is a pointer into infoData, that's why we keep it outside of the loop.
+  UniquePtr<unsigned char[]> infoData;
 
-  // media.wmf.disable-d3d11-for-dlls format: (whitespace is trimmed)
-  // "dll1.dll: 1.2.3.4[, more versions...][; more dlls...]"
-  nsTArray<nsCString> dlls;
-  SplitAt(";", blacklist, dlls);
-  for (const auto& dll : dlls) {
-    nsTArray<nsCString> nameAndVersions;
-    SplitAt(":", dll, nameAndVersions);
-    if (nameAndVersions.Length() != 2) {
-      NS_WARNING("Skipping incorrect 'media.wmf.disable-d3d11-for-dlls' dll:versions format");
-      continue;
+  for (const BlacklistedD3D11DLL* dll = sBlacklistedD3D11DLL; ; ++dll) {
+    if (!dll->name) {
+      // End of list, no blacklisting.
+      sAlreadySearched = dll;
+      return nullptr;
     }
-
-    nameAndVersions[0].CompressWhitespace();
-    NS_ConvertUTF8toUTF16 name(nameAndVersions[0]);
-    WCHAR systemPath[MAX_PATH + 1];
-    if (!ConstructSystem32Path(name.get(), systemPath, MAX_PATH + 1)) {
-      // Cannot build path -> Assume it's not the blacklisted DLL.
-      continue;
-    }
-
-    DWORD zero;
-    DWORD infoSize = GetFileVersionInfoSizeW(systemPath, &zero);
-    if (infoSize == 0) {
-      // Can't get file info -> Assume we don't have the blacklisted DLL.
-      continue;
-    }
-    // vInfo is a pointer into infoData, that's why we keep it outside of the loop.
-    auto infoData = MakeUnique<unsigned char[]>(infoSize);
-    VS_FIXEDFILEINFO *vInfo;
-    UINT vInfoLen;
-    if (!GetFileVersionInfoW(systemPath, 0, infoSize, infoData.get())
-        || !VerQueryValueW(infoData.get(), L"\\", (LPVOID*)&vInfo, &vInfoLen)
-        || !vInfo) {
-      // Can't find version -> Assume it's not blacklisted.
-      continue;
-    }
-
-    nsTArray<nsCString> versions;
-    SplitAt(",", nameAndVersions[1], versions);
-    for (const auto& version : versions) {
-      nsTArray<nsCString> numberStrings;
-      SplitAt(".", version, numberStrings);
-      if (numberStrings.Length() != 4) {
-        NS_WARNING("Skipping incorrect 'media.wmf.disable-d3d11-for-dlls' a.b.c.d version format");
-        continue;
-      }
-      DWORD numbers[4];
-      nsresult errorCode = NS_OK;
-      for (int i = 0; i < 4; ++i) {
-        numberStrings[i].CompressWhitespace();
-        numbers[i] = DWORD(numberStrings[i].ToInteger(&errorCode));
-        if (NS_FAILED(errorCode)) {
-          break;
-        }
-        if (numbers[i] > UINT16_MAX) {
-          errorCode = NS_ERROR_FAILURE;
-          break;
-        }
-      }
-
-      if (NS_FAILED(errorCode)) {
-        NS_WARNING("Skipping incorrect 'media.wmf.disable-d3d11-for-dlls' a.b.c.d version format");
+    // Check if we need to check another DLL (compare by pointer to name string)
+    if (wcscmp(previousDLLName, dll->name) != 0) {
+      previousDLLName = dll->name;
+      vInfo = nullptr;
+      infoData = nullptr;
+      if (!ConstructSystem32Path(dll->name, systemPath, MAX_PATH + 1)) {
+        // Cannot build path -> Assume it's not the blacklisted DLL.
         continue;
       }
 
-      if (vInfo->dwFileVersionMS == ((numbers[0] << 16) | numbers[1])
-          && vInfo->dwFileVersionLS == ((numbers[2] << 16) | numbers[3])) {
-        // Blacklisted! Record bad DLL.
-        sBlacklistedDLL.SetLength(0);
-        sBlacklistedDLL.AppendPrintf(
-          "%s (%lu.%lu.%lu.%lu)",
-          nameAndVersions[0].get(), numbers[0], numbers[1], numbers[2], numbers[3]);
-        return sBlacklistedDLL;
+      DWORD zero;
+      DWORD infoSize = GetFileVersionInfoSizeW(systemPath, &zero);
+      if (infoSize == 0) {
+        // Can't get file info -> Assume we don't have the blacklisted DLL.
+        continue;
+      }
+      infoData = MakeUnique<unsigned char[]>(infoSize);
+      UINT vInfoLen;
+      if (!GetFileVersionInfoW(systemPath, 0, infoSize, infoData.get())
+          || !VerQueryValueW(infoData.get(), L"\\", (LPVOID*)&vInfo, &vInfoLen)) {
+        // Can't find version -> Assume it's not blacklisted.
+        vInfo = nullptr;
+        infoData = nullptr;
+        continue;
       }
     }
-  }
 
-  // No blacklisted DLL.
-  sBlacklistedDLL.SetLength(0);
-  return sBlacklistedDLL;
+    if (vInfo
+        && vInfo->dwFileVersionMS == dll->ms
+        && vInfo->dwFileVersionLS == dll->ls) {
+      // Blacklisted! Keep pointer to bad DLL.
+      sAlreadySearched = dll;
+      return dll;
+    }
+  }
 }
 
 class CreateDXVAManagerEvent : public Runnable {
@@ -274,10 +251,13 @@ public:
     nsCString secondFailureReason;
     if (mBackend == LayersBackend::LAYERS_D3D11 &&
         MediaPrefs::PDMWMFAllowD3D11() && IsWin8OrLater()) {
-      const nsACString& blacklistedDLL = IsD3D11DLLBlacklisted();
-      if (!blacklistedDLL.IsEmpty()) {
-        failureReason->AppendPrintf("D3D11 blacklisted with DLL %s",
-                                    blacklistedDLL);
+      const BlacklistedD3D11DLL* blacklistedDLL = IsD3D11DLLBlacklisted();
+      if (blacklistedDLL) {
+        failureReason->AppendPrintf(
+          "D3D11 blacklisted with DLL %s (%u.%u.%u.%u)",
+          blacklistedDLL->name,
+          blacklistedDLL->ms >> 16, blacklistedDLL->ms & 0xFFu,
+          blacklistedDLL->ls >> 16, blacklistedDLL->ls & 0xFFu);
       } else {
         mDXVA2Manager = DXVA2Manager::CreateD3D11DXVA(*failureReason);
         if (mDXVA2Manager) {
