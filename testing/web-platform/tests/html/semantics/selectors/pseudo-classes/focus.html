@@ -33,19 +33,19 @@
 
     function run_test() {
       document.getElementById("input1").focus(); // set the focus on input1
-      testSelector(":focus", ["input1"], "input1 has the focus");
+      testSelectorIdsMatch(":focus", ["input1"], "input1 has the focus");
 
       document.getElementById("div1").focus();
-      testSelector(":focus", ["div1"], "tabindex attribute makes the element focusable");
+      testSelectorIdsMatch(":focus", ["div1"], "tabindex attribute makes the element focusable");
 
       document.getElementById("div2").focus();
-      testSelector(":focus", ["div2"], "editable elements are focusable");
+      testSelectorIdsMatch(":focus", ["div2"], "editable elements are focusable");
 
       document.body.focus();
-      testSelector(":focus", ["body"], "':focus' matches focussed body with tabindex");
+      testSelectorIdsMatch(":focus", ["body"], "':focus' matches focussed body with tabindex");
 
       document.getElementById("iframe").contentDocument.getElementById("inputiframe").focus();
-      testSelector(":focus", [], "':focus' doesn't match focused elements in iframe");
+      testSelectorIdsMatch(":focus", [], "':focus' doesn't match focused elements in iframe");
 
       done();
     }

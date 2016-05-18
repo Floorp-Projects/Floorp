@@ -1,0 +1,32 @@
+$inherits:
+  from: 'tasks/builds/base_linux64.yml'
+  variables:
+    build_name: 'linux64-pgo'
+    build_type: 'opt'
+task:
+  metadata:
+      name: '[TC] Linux64 PGO Opt'
+      description: 'Linux64 PGO Opt'
+
+  routes:
+    - 'index.buildbot.branches.{{project}}.linux64-pgo'
+    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.linux64-pgo'
+
+  workerType: opt-linux64
+
+  payload:
+    env:
+      # add various options to mozharness command line run
+      MOZHARNESS_OPTIONS: 'enable-pgo'
+
+  extra:
+    treeherder:
+      groupSymbol: tc
+      groupName: Submitted by taskcluster
+      machine:
+        # see https://github.com/mozilla/treeherder/blob/master/ui/js/values.js
+        platform: linux64
+      symbol: B
+      tier: 2
+      collection:
+        pgo: true

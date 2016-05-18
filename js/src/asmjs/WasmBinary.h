@@ -47,8 +47,12 @@ enum class ValType
     // The rest of these types are currently only emitted internally when
     // compiling asm.js and are rejected by wasm validation.
 
+    I8x16,
+    I16x8,
     I32x4,
     F32x4,
+    B8x16,
+    B16x8,
     B32x4,
 
     Limit
@@ -285,6 +289,40 @@ enum class Expr
 
     // SIMD
 #define SIMD_OPCODE(TYPE, OP) TYPE##OP,
+#define _(OP) SIMD_OPCODE(I8x16, OP)
+    FORALL_INT8X16_ASMJS_OP(_)
+    I8x16Constructor,
+    I8x16Const,
+#undef _
+    // Unsigned I8x16 operations. These are the SIMD.Uint8x16 operations that
+    // behave differently from their SIMD.Int8x16 counterparts.
+    I8x16extractLaneU,
+    I8x16addSaturateU,
+    I8x16subSaturateU,
+    I8x16shiftRightByScalarU,
+    I8x16lessThanU,
+    I8x16lessThanOrEqualU,
+    I8x16greaterThanU,
+    I8x16greaterThanOrEqualU,
+
+#define SIMD_OPCODE(TYPE, OP) TYPE##OP,
+#define _(OP) SIMD_OPCODE(I16x8, OP)
+    FORALL_INT16X8_ASMJS_OP(_)
+    I16x8Constructor,
+    I16x8Const,
+#undef _
+    // Unsigned I16x8 operations. These are the SIMD.Uint16x8 operations that
+    // behave differently from their SIMD.Int16x8 counterparts.
+    I16x8extractLaneU,
+    I16x8addSaturateU,
+    I16x8subSaturateU,
+    I16x8shiftRightByScalarU,
+    I16x8lessThanU,
+    I16x8lessThanOrEqualU,
+    I16x8greaterThanU,
+    I16x8greaterThanOrEqualU,
+
+#define SIMD_OPCODE(TYPE, OP) TYPE##OP,
 #define _(OP) SIMD_OPCODE(I32x4, OP)
     FORALL_INT32X4_ASMJS_OP(_)
     I32x4Constructor,
@@ -303,6 +341,21 @@ enum class Expr
     F32x4Constructor,
     F32x4Const,
 #undef _
+
+#define _(OP) SIMD_OPCODE(B8x16, OP)
+    FORALL_BOOL_SIMD_OP(_)
+    B8x16Constructor,
+    B8x16Const,
+#undef _
+#undef OPCODE
+
+#define _(OP) SIMD_OPCODE(B16x8, OP)
+    FORALL_BOOL_SIMD_OP(_)
+    B16x8Constructor,
+    B16x8Const,
+#undef _
+#undef OPCODE
+
 #define _(OP) SIMD_OPCODE(B32x4, OP)
     FORALL_BOOL_SIMD_OP(_)
     B32x4Constructor,
@@ -325,13 +378,19 @@ enum class ExprType
     I64   = uint8_t(ValType::I64),
     F32   = uint8_t(ValType::F32),
     F64   = uint8_t(ValType::F64),
+    I8x16 = uint8_t(ValType::I8x16),
+    I16x8 = uint8_t(ValType::I16x8),
     I32x4 = uint8_t(ValType::I32x4),
     F32x4 = uint8_t(ValType::F32x4),
+    B8x16 = uint8_t(ValType::B8x16),
+    B16x8 = uint8_t(ValType::B16x8),
     B32x4 = uint8_t(ValType::B32x4),
 
     Limit
 };
 
+typedef int8_t I8x16[16];
+typedef int16_t I16x8[8];
 typedef int32_t I32x4[4];
 typedef float F32x4[4];
 typedef Vector<uint8_t, 0, SystemAllocPolicy> Bytes;
@@ -426,6 +485,12 @@ class Encoder
     }
     MOZ_MUST_USE bool writeFixedF64(double d) {
         return write<double>(d);
+    }
+    MOZ_MUST_USE bool writeFixedI8x16(const I8x16& i8x16) {
+        return write<I8x16>(i8x16);
+    }
+    MOZ_MUST_USE bool writeFixedI16x8(const I16x8& i16x8) {
+        return write<I16x8>(i16x8);
     }
     MOZ_MUST_USE bool writeFixedI32x4(const I32x4& i32x4) {
         return write<I32x4>(i32x4);
@@ -625,6 +690,12 @@ class Decoder
     MOZ_MUST_USE bool readFixedF64(double* d) {
         return read<double>(d);
     }
+    MOZ_MUST_USE bool readFixedI8x16(I8x16* i8x16) {
+        return read<I8x16>(i8x16);
+    }
+    MOZ_MUST_USE bool readFixedI16x8(I16x8* i16x8) {
+        return read<I16x8>(i16x8);
+    }
     MOZ_MUST_USE bool readFixedI32x4(I32x4* i32x4) {
         return read<I32x4>(i32x4);
     }
@@ -797,6 +868,16 @@ class Decoder
         return u8 != UINT8_MAX
                ? Expr(u8)
                : Expr(uncheckedReadFixedU8() + UINT8_MAX);
+    }
+    void uncheckedReadFixedI8x16(I8x16* i8x16) {
+        struct T { I8x16 v; };
+        T t = uncheckedRead<T>();
+        memcpy(i8x16, &t, sizeof(t));
+    }
+    void uncheckedReadFixedI16x8(I16x8* i16x8) {
+        struct T { I16x8 v; };
+        T t = uncheckedRead<T>();
+        memcpy(i16x8, &t, sizeof(t));
     }
     void uncheckedReadFixedI32x4(I32x4* i32x4) {
         struct T { I32x4 v; };

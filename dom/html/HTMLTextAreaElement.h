@@ -265,6 +265,7 @@ public:
   // nsIConstraintValidation::GetValidationMessage() is fine.
   // nsIConstraintValidation::CheckValidity() is fine.
   using nsIConstraintValidation::CheckValidity;
+  using nsIConstraintValidation::ReportValidity;
   // nsIConstraintValidation::SetCustomValidity() is fine.
   // XPCOM Select is fine
   uint32_t GetSelectionStart(ErrorResult& aError);
@@ -304,9 +305,9 @@ protected:
   bool                     mCanShowInvalidUI;
   /** Whether we should make :-moz-ui-valid apply on the element. **/
   bool                     mCanShowValidUI;
-  
+
   void FireChangeEventIfNeeded();
-  
+
   nsString mFocusedValue;
 
   /** The state of the text editor (selection controller and the editor) **/

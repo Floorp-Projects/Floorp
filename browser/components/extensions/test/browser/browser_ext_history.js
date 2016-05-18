@@ -49,7 +49,7 @@ add_task(function* test_delete() {
   for (let i = 0; i < 8; ++i) {
     let baseUri = "http://mozilla.com/test_history/";
     let uri = (i > 4) ? `${baseUri}${i}/` : baseUri;
-    let dbDate = (Number(REFERENCE_DATE) + 3600 * 1000 * i) * 1000;
+    let dbDate = PlacesUtils.toPRTime(Number(REFERENCE_DATE) + 3600 * 1000 * i);
 
     let visit = {
       uri,
@@ -71,8 +71,8 @@ add_task(function* test_delete() {
   is(yield PlacesTestUtils.isPageInDB(testUrl), false, "expected url not found in history database");
 
   let filter = {
-    startTime: visits[1].visitDate / 1000,
-    endTime: visits[3].visitDate / 1000,
+    startTime: PlacesUtils.toTime(visits[1].visitDate),
+    endTime: PlacesUtils.toTime(visits[3].visitDate),
   };
 
   extension.sendMessage("delete-range", filter);
@@ -83,8 +83,8 @@ add_task(function* test_delete() {
   ok(yield PlacesTestUtils.isPageInDB(visits[5].uri), "expected uri found in history database");
   is(yield PlacesTestUtils.visitsInDB(visits[5].uri), 1, "1 visit for uri found in history database");
 
-  filter.startTime = visits[0].visitDate / 1000;
-  filter.endTime = visits[5].visitDate / 1000;
+  filter.startTime = PlacesUtils.toTime(visits[0].visitDate);
+  filter.endTime = PlacesUtils.toTime(visits[5].visitDate);
 
   extension.sendMessage("delete-range", filter);
   yield extension.awaitMessage("range-deleted");
@@ -101,4 +101,91 @@ add_task(function* test_delete() {
   is(PlacesUtils.history.hasHistoryEntries, false, "history is empty");
 
   yield extension.unload();
+});
+
+add_task(function* test_search() {
+  const SINGLE_VISIT_URL = "http://example.com/";
+  const DOUBLE_VISIT_URL = "http://example.com/2/";
+  const MOZILLA_VISIT_URL = "http://mozilla.com/";
+
+  function background() {
+    browser.test.onMessage.addListener(msg => {
+      browser.history.search({text: ""}).then(results => {
+        browser.test.sendMessage("empty-search", results);
+        return browser.history.search({text: "mozilla.com"});
+      }).then(results => {
+        browser.test.sendMessage("text-search", results);
+        return browser.history.search({text: "example.com", maxResults: 1});
+      }).then(results => {
+        browser.test.sendMessage("max-results-search", results);
+        return browser.history.search({text: "", startTime: Date.now()});
+      }).then(results => {
+        browser.test.assertEq(0, results.length, "no results returned for late start time");
+        return browser.history.search({text: "", endTime: 0});
+      }).then(results => {
+        browser.test.assertEq(0, results.length, "no results returned for early end time");
+        return browser.history.search({text: "", startTime: Date.now(), endTime: 0});
+      }).then(results => {
+        browser.test.fail("history.search rejects with startTime that is after the endTime");
+      }, error => {
+        browser.test.assertEq(
+          error.message,
+          "The startTime cannot be after the endTime",
+          "history.search rejects with startTime that is after the endTime");
+      }).then(() => {
+        browser.test.notifyPass("search");
+      });
+    });
+
+    browser.test.sendMessage("ready");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["history"],
+    },
+    background: `(${background})()`,
+  });
+
+  function findResult(url, results) {
+    return results.find(r => r.url === url);
+  }
+
+  function checkResult(results, url, expectedCount) {
+    let result = findResult(url, results);
+    isnot(result, null, `history.search result was found for ${url}`);
+    is(result.visitCount, expectedCount, `history.search reports ${expectedCount} visit(s)`);
+    is(result.title, `test visit for ${url}`, "title for search result is correct");
+  }
+
+  yield extension.startup();
+  yield extension.awaitMessage("ready");
+  yield PlacesTestUtils.clearHistory();
+
+  yield PlacesTestUtils.addVisits([
+    {uri: makeURI(MOZILLA_VISIT_URL)},
+    {uri: makeURI(DOUBLE_VISIT_URL)},
+    {uri: makeURI(SINGLE_VISIT_URL)},
+    {uri: makeURI(DOUBLE_VISIT_URL)},
+  ]);
+
+  extension.sendMessage("check-history");
+
+  let results = yield extension.awaitMessage("empty-search");
+  is(results.length, 3, "history.search returned 3 results");
+  checkResult(results, SINGLE_VISIT_URL, 1);
+  checkResult(results, DOUBLE_VISIT_URL, 2);
+  checkResult(results, MOZILLA_VISIT_URL, 1);
+
+  results = yield extension.awaitMessage("text-search");
+  is(results.length, 1, "history.search returned 1 result");
+  checkResult(results, MOZILLA_VISIT_URL, 1);
+
+  results = yield extension.awaitMessage("max-results-search");
+  is(results.length, 1, "history.search returned 1 result");
+  checkResult(results, DOUBLE_VISIT_URL, 2);
+
+  yield extension.awaitFinish("search");
+  yield extension.unload();
+  yield PlacesTestUtils.clearHistory();
 });

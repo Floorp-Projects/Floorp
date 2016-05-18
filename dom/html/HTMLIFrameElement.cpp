@@ -12,6 +12,7 @@
 #include "nsRuleData.h"
 #include "nsStyleConsts.h"
 #include "nsContentUtils.h"
+#include "nsSandboxFlags.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(IFrame)
 
@@ -215,7 +216,12 @@ HTMLIFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue,
                                 bool aNotify)
 {
-  if (aName == nsGkAtoms::sandbox && aNameSpaceID == kNameSpaceID_None && mFrameLoader) {
+  if ((aName == nsGkAtoms::sandbox ||
+       // The allowfullscreen attribute affects the sandboxed fullscreen
+       // flag, thus we should also reapply it if that is changed.
+       aName == nsGkAtoms::allowfullscreen ||
+       aName == nsGkAtoms::mozallowfullscreen) &&
+      aNameSpaceID == kNameSpaceID_None && mFrameLoader) {
     // If we have an nsFrameLoader, apply the new sandbox flags.
     // Since this is called after the setter, the sandbox flags have
     // alreay been updated.
@@ -246,7 +252,26 @@ uint32_t
 HTMLIFrameElement::GetSandboxFlags()
 {
   const nsAttrValue* sandboxAttr = GetParsedAttr(nsGkAtoms::sandbox);
-  return nsContentUtils::ParseSandboxAttributeToFlags(sandboxAttr);
+  // No sandbox attribute, no sandbox flags.
+  if (!sandboxAttr) {
+    return 0;
+  }
+
+  //  Start off by setting all the restriction flags.
+  uint32_t out = SANDBOX_ALL_FLAGS;
+
+// Macro for updating the flag according to the keywords
+#define SANDBOX_KEYWORD(string, atom, flags)                             \
+  if (sandboxAttr->Contains(nsGkAtoms::atom, eIgnoreCase)) { out &= ~(flags); }
+#include "IframeSandboxKeywordList.h"
+#undef SANDBOX_KEYWORD
+
+  if (GetParsedAttr(nsGkAtoms::allowfullscreen) ||
+      GetParsedAttr(nsGkAtoms::mozallowfullscreen)) {
+    out &= ~SANDBOXED_FULLSCREEN;
+  }
+
+  return out;
 }
 
 JSObject*

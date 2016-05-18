@@ -45,7 +45,7 @@
       // Trick cases. Self and recursive referencing.
       testName("rememberHistoryDays", "Remember 3 days");
       testName("historyDays", "Remember 3 days");
-      testName("rememberAfter", null); // XUL labels doesn't allow name from subtree
+      testName("rememberAfter", "days");
 
       // Anonymous content (see name.xbl#third)
       var anonBtn = getAccessible("labelledby_box_anon").lastChild;
@@ -172,6 +172,11 @@
       //////////////////////////////////////////////////////////////////////////
       // Name from aria-labelledby: menuitem label+ listitem label
       testName("li_labelledby", "Show an Alert The moment the event starts");
+
+      //////////////////////////////////////////////////////////////////////////
+      // groupbox labeling from caption label or its sub tree
+      testName("groupbox", "Some caption");
+      testName("groupbox2", "Some caption");
 
       SimpleTest.finish();
     }
@@ -340,6 +345,16 @@
       <description>i am visible</description>
       <description style="display:none">i am hidden</description>
     </hbox>
+
+    <!-- Name from label or sub tree -->
+    <groupbox id="groupbox">
+      <caption label="Some caption" />
+      <checkbox label="some checkbox label" />
+    </groupbox>
+    <groupbox id="groupbox2">
+      <caption><label>Some caption</label></caption>
+      <checkbox label="some checkbox label" />
+    </groupbox>
   </vbox>
 
   <!-- bug 441991; create name from other menuitem label listitem's own label -->

@@ -22228,7 +22228,7 @@ DeleteDatabaseOp::SendBlockedNotification()
   MOZ_ASSERT(mState == State::WaitingForOtherDatabasesToClose);
 
   if (!IsActorDestroyed()) {
-    Unused << SendBlocked(0);
+    Unused << SendBlocked(mPreviousVersion);
   }
 }
 

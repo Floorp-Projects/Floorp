@@ -21,6 +21,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Types.h" // for decltype
 #include "mozilla/Vector.h"
+#include "CGTextDrawing.h"
 
 using namespace std;
 
@@ -413,12 +414,6 @@ DrawTargetCG::DrawFilter(FilterNode *aNode,
 {
   FilterNodeSoftware* filter = static_cast<FilterNodeSoftware*>(aNode);
   filter->Draw(this, aSourceRect, aDestPoint, aOptions);
-}
-
-static CGColorRef ColorToCGColor(CGColorSpaceRef aColorSpace, const Color& aColor)
-{
-  CGFloat components[4] = {aColor.r, aColor.g, aColor.b, aColor.a};
-  return CGColorCreate(aColorSpace, components);
 }
 
 class GradientStopsCG : public GradientStops
@@ -1451,44 +1446,6 @@ DrawTargetCG::Fill(const Path *aPath, const Pattern &aPattern, const DrawOptions
   CGContextRestoreGState(mCg);
 }
 
-CGRect ComputeGlyphsExtents(CGRect *bboxes, CGPoint *positions, CFIndex count, float scale)
-{
-  CGFloat x1, x2, y1, y2;
-  if (count < 1)
-    return CGRectZero;
-
-  x1 = bboxes[0].origin.x + positions[0].x;
-  x2 = bboxes[0].origin.x + positions[0].x + scale*bboxes[0].size.width;
-  y1 = bboxes[0].origin.y + positions[0].y;
-  y2 = bboxes[0].origin.y + positions[0].y + scale*bboxes[0].size.height;
-
-  // accumulate max and minimum coordinates
-  for (int i = 1; i < count; i++) {
-    x1 = min(x1, bboxes[i].origin.x + positions[i].x);
-    y1 = min(y1, bboxes[i].origin.y + positions[i].y);
-    x2 = max(x2, bboxes[i].origin.x + positions[i].x + scale*bboxes[i].size.width);
-    y2 = max(y2, bboxes[i].origin.y + positions[i].y + scale*bboxes[i].size.height);
-  }
-
-  CGRect extents = {{x1, y1}, {x2-x1, y2-y1}};
-  return extents;
-}
-
-typedef void (*CGContextSetFontSmoothingBackgroundColorFunc) (CGContextRef cgContext, CGColorRef color);
-
-static CGContextSetFontSmoothingBackgroundColorFunc
-GetCGContextSetFontSmoothingBackgroundColorFunc()
-{
-  static CGContextSetFontSmoothingBackgroundColorFunc func = nullptr;
-  static bool lookedUpFunc = false;
-  if (!lookedUpFunc) {
-    func = (CGContextSetFontSmoothingBackgroundColorFunc)dlsym(
-      RTLD_DEFAULT, "CGContextSetFontSmoothingBackgroundColor");
-    lookedUpFunc = true;
-  }
-  return func;
-}
-
 void
 DrawTargetCG::FillGlyphs(ScaledFont *aFont, const GlyphBuffer &aBuffer, const Pattern &aPattern, const DrawOptions &aDrawOptions,
                          const GlyphRenderingOptions *aGlyphRenderingOptions)
@@ -1502,33 +1459,21 @@ DrawTargetCG::FillGlyphs(ScaledFont *aFont, const GlyphBuffer &aBuffer, const Pa
   assert(aBuffer.mNumGlyphs);
   CGContextSaveGState(mCg);
 
-  if (aGlyphRenderingOptions && aGlyphRenderingOptions->GetType() == FontType::MAC) {
-    Color fontSmoothingBackgroundColor =
-      static_cast<const GlyphRenderingOptionsCG*>(aGlyphRenderingOptions)->FontSmoothingBackgroundColor();
-    if (fontSmoothingBackgroundColor.a > 0) {
-      CGContextSetFontSmoothingBackgroundColorFunc setFontSmoothingBGColorFunc =
-        GetCGContextSetFontSmoothingBackgroundColorFunc();
-      if (setFontSmoothingBGColorFunc) {
-        CGColorRef color = ColorToCGColor(mColorSpace, fontSmoothingBackgroundColor);
-        setFontSmoothingBGColorFunc(mCg, color);
-        CGColorRelease(color);
-
-        // Font rendering with a non-transparent font smoothing background color
-        // can leave pixels in our buffer where the rgb components exceed the alpha
-        // component. When this happens we need to clean up the data afterwards.
-        // The purpose of this is probably the following: Correct compositing of
-        // subpixel anti-aliased fonts on transparent backgrounds requires
-        // different alpha values per RGB component. Usually, premultiplied color
-        // values are derived by multiplying all components with the same per-pixel
-        // alpha value. However, if you multiply each component with a *different*
-        // alpha, and set the alpha component of the pixel to, say, the average
-        // of the alpha values that you used during the premultiplication of the
-        // RGB components, you can trick OVER compositing into doing a simplified
-        // form of component alpha compositing. (You just need to make sure to
-        // clamp the components of the result pixel to [0,255] afterwards.)
-        mMayContainInvalidPremultipliedData = true;
-      }
-    }
+  if (SetFontSmoothingBackgroundColor(mCg, mColorSpace, aGlyphRenderingOptions)) {
+    // Font rendering with a non-transparent font smoothing background color
+    // can leave pixels in our buffer where the rgb components exceed the alpha
+    // component. When this happens we need to clean up the data afterwards.
+    // The purpose of this is probably the following: Correct compositing of
+    // subpixel anti-aliased fonts on transparent backgrounds requires
+    // different alpha values per RGB component. Usually, premultiplied color
+    // values are derived by multiplying all components with the same per-pixel
+    // alpha value. However, if you multiply each component with a *different*
+    // alpha, and set the alpha component of the pixel to, say, the average
+    // of the alpha values that you used during the premultiplication of the
+    // RGB components, you can trick OVER compositing into doing a simplified
+    // form of component alpha compositing. (You just need to make sure to
+    // clamp the components of the result pixel to [0,255] afterwards.)
+    mMayContainInvalidPremultipliedData = true;
   }
 
   CGContextSetBlendMode(mCg, ToBlendMode(aDrawOptions.mCompositionOp));
@@ -1560,17 +1505,20 @@ DrawTargetCG::FillGlyphs(ScaledFont *aFont, const GlyphBuffer &aBuffer, const Pa
 
   // Handle the flip
   CGContextScaleCTM(cg, 1, -1);
+
+  for (unsigned int i = 0; i < aBuffer.mNumGlyphs; i++) {
+    glyphs[i] = aBuffer.mGlyphs[i].mIndex;
+
+    // Negative Y axis since glyph positions assume top left is at (0, 0)
+    // whereas CG is bottom left.
+    positions[i] = CGPointMake(aBuffer.mGlyphs[i].mPosition.x,
+                               -aBuffer.mGlyphs[i].mPosition.y);
+  }
+
   // CGContextSetTextMatrix works differently with kCGTextClip && kCGTextFill
   // It seems that it transforms the positions with TextFill and not with TextClip
   // Therefore we'll avoid it. See also:
   // http://cgit.freedesktop.org/cairo/commit/?id=9c0d761bfcdd28d52c83d74f46dd3c709ae0fa69
-
-  for (unsigned int i = 0; i < aBuffer.mNumGlyphs; i++) {
-    glyphs[i] = aBuffer.mGlyphs[i].mIndex;
-    // XXX: CGPointMake might not be inlined
-    positions[i] = CGPointMake(aBuffer.mGlyphs[i].mPosition.x,
-                              -aBuffer.mGlyphs[i].mPosition.y);
-  }
 
   //XXX: CGContextShowGlyphsAtPositions is 10.5+ for older versions use CGContextShowGlyphsWithAdvances
   if (isGradient(aPattern)) {
@@ -1811,37 +1759,6 @@ DrawTargetCG::Init(BackendType aType,
   return true;
 }
 
-static void
-EnsureValidPremultipliedData(CGContextRef aContext)
-{
-  if (CGBitmapContextGetBitsPerPixel(aContext) != 32 ||
-      CGBitmapContextGetAlphaInfo(aContext) != kCGImageAlphaPremultipliedFirst) {
-    return;
-  }
-
-  uint8_t* bitmapData = (uint8_t*)CGBitmapContextGetData(aContext);
-  int w = CGBitmapContextGetWidth(aContext);
-  int h = CGBitmapContextGetHeight(aContext);
-  int stride = CGBitmapContextGetBytesPerRow(aContext);
-  for (int y = 0; y < h; y++) {
-    for (int x = 0; x < w; x++) {
-      int i = y * stride + x * 4;
-      uint8_t a = bitmapData[i + 3];
-
-      // Clamp rgb components to the alpha component.
-      if (bitmapData[i + 0] > a) {
-        bitmapData[i + 0] = a;
-      }
-      if (bitmapData[i + 1] > a) {
-        bitmapData[i + 1] = a;
-      }
-      if (bitmapData[i + 2] > a) {
-        bitmapData[i + 2] = a;
-      }
-    }
-  }
-}
-
 void
 DrawTargetCG::Flush()
 {
@@ -2008,8 +1925,6 @@ DrawTargetCG::PushClip(const Path *aPath)
   }
 
   CGContextSaveGState(mCg);
-
-  CGContextBeginPath(mCg);
   assert(aPath->GetBackendType() == BackendType::COREGRAPHICS);
 
   const PathCG *cgPath = static_cast<const PathCG*>(aPath);
@@ -2018,10 +1933,11 @@ DrawTargetCG::PushClip(const Path *aPath)
   // but emtpy rects as all clipped.  We detect this situation and
   // workaround it appropriately
   if (CGPathIsEmpty(cgPath->GetPath())) {
-    // XXX: should we return here?
     CGContextClipToRect(mCg, CGRectZero);
+    return;
   }
 
+  CGContextBeginPath(mCg);
 
   /* We go through a bit of trouble to temporarilly set the transform
    * while we add the path. XXX: this could be improved if we keep

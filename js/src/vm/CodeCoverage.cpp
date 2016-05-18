@@ -252,19 +252,20 @@ LCovSource::writeScript(JSScript* script)
             // Get the low and high from the tableswitch
             int32_t low = GET_JUMP_OFFSET(pc + JUMP_OFFSET_LEN * 1);
             int32_t high = GET_JUMP_OFFSET(pc + JUMP_OFFSET_LEN * 2);
-            int32_t numCases = high - low + 1;
+            MOZ_ASSERT(high > low);
+            size_t numCases = high - low + 1;
             jsbytecode* jumpTable = pc + JUMP_OFFSET_LEN * 3;
 
             jsbytecode* firstcasepc = exitpc;
-            for (int j = 0; j < numCases; j++) {
+            for (size_t j = 0; j < numCases; j++) {
                 jsbytecode* testpc = pc + GET_JUMP_OFFSET(jumpTable + JUMP_OFFSET_LEN * j);
                 if (testpc < firstcasepc)
                     firstcasepc = testpc;
             }
 
             jsbytecode* lastcasepc = firstcasepc;
-            uint64_t allCaseHits = 0;
-            for (int i = 0; i < numCases; i++) {
+            uint64_t fallsThroughHits = 0;
+            for (size_t i = 0; i < numCases; i++) {
                 jsbytecode* casepc = pc + GET_JUMP_OFFSET(jumpTable + JUMP_OFFSET_LEN * i);
                 // The case is not present, and jumps to the default pc if used.
                 if (casepc == pc)
@@ -272,7 +273,7 @@ LCovSource::writeScript(JSScript* script)
 
                 // PCs might not be in increasing order of case indexes.
                 lastcasepc = firstcasepc - 1;
-                for (int j = 0; j < numCases; j++) {
+                for (size_t j = 0; j < numCases; j++) {
                     jsbytecode* testpc = pc + GET_JUMP_OFFSET(jumpTable + JUMP_OFFSET_LEN * j);
                     if (lastcasepc < testpc && testpc < casepc)
                         lastcasepc = testpc;
@@ -287,16 +288,17 @@ LCovSource::writeScript(JSScript* script)
                             caseHits = counts->numExec();
 
                         // Remove fallthrough.
+                        fallsThroughHits = 0;
                         if (casepc != firstcasepc) {
                             jsbytecode* endpc = lastcasepc;
                             while (GetNextPc(endpc) < casepc)
                                 endpc = GetNextPc(endpc);
 
                             if (BytecodeFallsThrough(JSOp(*endpc)))
-                                caseHits -= script->getHitCount(endpc);
+                                fallsThroughHits = script->getHitCount(endpc);
                         }
 
-                        allCaseHits += caseHits;
+                        caseHits -= fallsThroughHits;
                     }
 
                     outBRDA_.printf("BRDA:%d,%d,%d,", lineno, branchId, i);
@@ -315,14 +317,30 @@ LCovSource::writeScript(JSScript* script)
             uint64_t defaultHits = 0;
 
             if (sc) {
+                // Look for the last case entry before the default pc.
+                lastcasepc = firstcasepc - 1;
+                for (size_t j = 0; j < numCases; j++) {
+                    jsbytecode* testpc = pc + GET_JUMP_OFFSET(jumpTable + JUMP_OFFSET_LEN * j);
+                    if (lastcasepc < testpc && testpc < defaultpc)
+                        lastcasepc = testpc;
+                }
+
+                // Look if the last case entry fallthrough to the default case,
+                // in which case we have to remove the number of fallthrough
+                // hits out of the default case hits.
+                if (lastcasepc != pc) {
+                    jsbytecode* endpc = lastcasepc;
+                    while (GetNextPc(endpc) < defaultpc)
+                        endpc = GetNextPc(endpc);
+
+                    if (BytecodeFallsThrough(JSOp(*endpc)))
+                        fallsThroughHits = script->getHitCount(endpc);
+                }
+
                 const PCCounts* counts = sc->maybeGetPCCounts(script->pcToOffset(defaultpc));
                 if (counts)
                     defaultHits = counts->numExec();
-
-                // Note: currently we do not track edges, so we might have
-                // false-positive if we have any throw / return inside some
-                // of the case statements.
-                defaultHits -= allCaseHits;
+                defaultHits -= fallsThroughHits;
             }
 
             outBRDA_.printf("BRDA:%d,%d,%d,", lineno, branchId, numCases);

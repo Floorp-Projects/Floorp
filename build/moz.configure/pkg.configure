@@ -1,0 +1,86 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+pkg_config = check_prog('PKG_CONFIG', ('pkg-config',), allow_missing=True)
+
+@depends_if(pkg_config)
+@checking('for pkg-config version')
+@imports('subprocess')
+def pkg_config_version(pkg_config):
+    return Version(check_cmd_output(pkg_config, '--version').rstrip())
+
+# Locates the given module using pkg-config.
+# - `var` determines the name of variables to set when the package is found.
+#   <var>_CFLAGS and <var>_LIBS are set with corresponding values.
+# - `package_desc` package name and version requirement string, list of
+#   strings describing packages to locate, or depends function that will
+#   resolve to such a string or list of strings.
+# - `condition` a depends function that will determine whether to perform
+#   any checks (default is to always perform checks).
+# - `allow_missing` If set, failure to fulfill the package description
+#   will not result in an error or logged message, and any error message
+#   will be returned to the caller.
+#   Returns `True` when the package description is fulfilled.
+@template
+@imports(_from='mozbuild.configure', _import='DependsFunction')
+def pkg_check_modules(var, package_desc,
+                      condition=depends('--help')(lambda _: True),
+                      allow_missing=False):
+    if isinstance(package_desc, (tuple, list)):
+        package_desc = ' '.join(package_desc)
+    if not isinstance(package_desc, DependsFunction):
+        package_desc = depends('--help')(lambda _: package_desc)
+
+    @depends_when(pkg_config, pkg_config_version, when=condition)
+    def check_pkg_config(pkg_config, version):
+        min_version = '0.9.0'
+        if pkg_config is None:
+            die("*** The pkg-config script could not be found. Make sure it is\n"
+                "*** in your path, or set the PKG_CONFIG environment variable\n"
+                "*** to the full path to pkg-config.")
+        if version < min_version:
+            die("*** Your version of pkg-config is too old. You need version %s or newer.",
+                min_version)
+
+    @depends_when(pkg_config, package_desc, when=condition)
+    @imports('subprocess')
+    @imports('sys')
+    @imports(_from='mozbuild.configure.util', _import='LineIO')
+    def package(pkg_config, package_desc):
+        # package_desc may start as a depends function, so we can't use
+        # @checking here.
+        log.info("checking for %s... " % package_desc)
+        with log.queue_debug():
+            try:
+                subprocess.check_output([pkg_config, '--errors-to-stdout',
+                                         '--print-errors', package_desc])
+                log.info("yes")
+                return True
+            except subprocess.CalledProcessError as e:
+                log.info("no")
+                log_writer = log.warning if allow_missing else log.error
+                with LineIO(lambda l: log_writer(l)) as o:
+                    o.write(e.output)
+                if not allow_missing:
+                    sys.exit(1)
+
+    @depends_when(pkg_config, package_desc, when=package)
+    @checking('%s_CFLAGS' % var, callback=lambda t: ' '.join(t))
+    def pkg_cflags(pkg_config, package_desc):
+        flags = check_cmd_output(pkg_config, '--cflags', package_desc)
+        return tuple(flags.split())
+
+    @depends_when(pkg_config, package_desc, when=package)
+    @checking('%s_LIBS' % var, callback=lambda t: ' '.join(t))
+    def pkg_libs(pkg_config, package_desc):
+        libs = check_cmd_output(pkg_config, '--libs', package_desc)
+        # Remove evil flags like -Wl,--export-dynamic
+        return tuple(libs.replace('-Wl,--export-dynamic', '').split())
+
+    set_config('%s_CFLAGS' % var, pkg_cflags)
+    set_config('%s_LIBS' % var, pkg_libs)
+
+    return package

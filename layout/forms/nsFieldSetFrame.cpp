@@ -579,31 +579,28 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
     // If the inner content rect is larger than the legend, we can align the
     // legend.
     if (innerContentRect.ISize(wm) > mLegendRect.ISize(wm)) {
+      // NOTE legend @align values are: left/right/center/top/bottom.
+      // GetLogicalAlign converts left/right to start/end for the given WM.
+      // @see HTMLLegendElement::ParseAttribute, nsLegendFrame::GetLogicalAlign
       int32_t align = static_cast<nsLegendFrame*>
-        (legend->GetContentInsertionFrame())->GetAlign();
-      if (!wm.IsBidiLTR()) {
-        if (align == NS_STYLE_TEXT_ALIGN_LEFT ||
-            align == NS_STYLE_TEXT_ALIGN_MOZ_LEFT) {
-          align = NS_STYLE_TEXT_ALIGN_END;
-        } else if (align == NS_STYLE_TEXT_ALIGN_RIGHT ||
-                   align == NS_STYLE_TEXT_ALIGN_MOZ_RIGHT) {
-          align = NS_STYLE_TEXT_ALIGN_START;
-        }
-      }
+        (legend->GetContentInsertionFrame())->GetLogicalAlign(wm);
       switch (align) {
         case NS_STYLE_TEXT_ALIGN_END:
           mLegendRect.IStart(wm) =
             innerContentRect.IEnd(wm) - mLegendRect.ISize(wm);
           break;
         case NS_STYLE_TEXT_ALIGN_CENTER:
-        case NS_STYLE_TEXT_ALIGN_MOZ_CENTER:
           // Note: rounding removed; there doesn't seem to be any need
           mLegendRect.IStart(wm) = innerContentRect.IStart(wm) +
             (innerContentRect.ISize(wm) - mLegendRect.ISize(wm)) / 2;
           break;
-        default:
+        case NS_STYLE_TEXT_ALIGN_START:
+        case NS_STYLE_VERTICAL_ALIGN_TOP:
+        case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
           mLegendRect.IStart(wm) = innerContentRect.IStart(wm);
           break;
+        default:
+          MOZ_ASSERT_UNREACHABLE("unexpected GetLogicalAlign value");
       }
     } else {
       // otherwise make place for the legend
