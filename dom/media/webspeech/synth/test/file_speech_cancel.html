@@ -44,10 +44,15 @@ function testFunc(done_cb) {
   utterance.addEventListener('start', function(e) {
     ok(true, 'start utterance 1');
     speechSynthesis.cancel();
-    info('cancel!');
-    speechSynthesis.speak(utterance2);
-    info('speak??');
   });
+
+  var utterance_never = new SpeechSynthesisUtterance("I never get uttered");
+  var promise_cancelled = synthEventPromise(utterance_never, "error").then(
+    e => is(e.error, "canceled", "utterance was canceled"));
+  var promise_interrupted = synthEventPromise(utterance, "error").then(
+    e => is(e.error, "interrupted", "utterance was interrupted"));
+  Promise.all([promise_cancelled, promise_interrupted]).then(
+    () => speechSynthesis.speak(utterance2));
 
   var utterance2 = new SpeechSynthesisUtterance("Proin ornare neque vitae " +
     "risus mattis rutrum. Suspendisse a velit ut est convallis aliquet." +
@@ -83,6 +88,7 @@ function testFunc(done_cb) {
   speechSynthesis.resume();
 
   speechSynthesis.speak(utterance);
+  speechSynthesis.speak(utterance_never);
   ok(!speechSynthesis.speaking, "speechSynthesis is not speaking yet.");
   ok(speechSynthesis.pending, "speechSynthesis has an utterance queued.");
 }

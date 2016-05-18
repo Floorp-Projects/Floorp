@@ -90,3 +90,9 @@ function testSynthState(win, expectedState) {
       win.document.title + ": '" + attr + '" does not match');
   }
 }
+
+function synthEventPromise(utterance, eventType) {
+  return new Promise(resolve => {
+    utterance.addEventListener(eventType, resolve);
+  });
+}
