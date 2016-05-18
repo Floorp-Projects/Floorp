@@ -146,10 +146,14 @@ void CacheStorageService::Shutdown()
     NewRunnableMethod(this, &CacheStorageService::ShutdownBackground);
   Dispatch(event);
 
-  mozilla::MutexAutoLock lock(mLock);
-  sGlobalEntryTables->Clear();
-  delete sGlobalEntryTables;
-  sGlobalEntryTables = nullptr;
+  {
+    mozilla::MutexAutoLock lock(mLock);
+#ifdef NS_FREE_PERMANENT_DATA
+    sGlobalEntryTables->Clear();
+    delete sGlobalEntryTables;
+#endif
+    sGlobalEntryTables = nullptr;
+  }
 
   LOG(("CacheStorageService::Shutdown - done"));
 }
@@ -163,10 +167,12 @@ void CacheStorageService::ShutdownBackground()
     mPurgeTimer->Cancel();
   }
 
+#ifdef NS_FREE_PERMANENT_DATA
   Pool(false).mFrecencyArray.Clear();
   Pool(false).mExpirationArray.Clear();
   Pool(true).mFrecencyArray.Clear();
   Pool(true).mExpirationArray.Clear();
+#endif
 }
 
 // Internal management methods
