@@ -54,6 +54,7 @@
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/plugins/PluginModuleParent.h"
 #include "mozilla/widget/WidgetMessageUtils.h"
+#include "nsBaseDragService.h"
 #include "mozilla/media/MediaChild.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/WebBrowserPersistDocumentChild.h"
@@ -3245,7 +3246,8 @@ ContentChild::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
 
 bool
 ContentChild::RecvEndDragSession(const bool& aDoneDrag,
-                                 const bool& aUserCancelled)
+                                 const bool& aUserCancelled,
+                                 const LayoutDeviceIntPoint& aDragEndPoint)
 {
   nsCOMPtr<nsIDragService> dragService =
     do_GetService("@mozilla.org/widget/dragservice;1");
@@ -3256,6 +3258,7 @@ ContentChild::RecvEndDragSession(const bool& aDoneDrag,
         dragSession->UserCancelled();
       }
     }
+    static_cast<nsBaseDragService*>(dragService.get())->SetDragEndPoint(aDragEndPoint);
     dragService->EndDragSession(aDoneDrag);
   }
   return true;
