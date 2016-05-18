@@ -11,11 +11,21 @@ from firefox_puppeteer.ui_base_lib import UIBaseLib
 
 class BaseNotification(UIBaseLib):
     """Abstract base class for any kind of notification."""
+
     __metaclass__ = ABCMeta
 
     @property
+    def close_button(self):
+        """Provide access to the close button.
+
+        :returns: The close button.
+        """
+        return self.element.find_element(By.ANON_ATTRIBUTE,
+                                         {'anonid': 'closebutton'})
+
+    @property
     def label(self):
-        """Provides access to the notification label.
+        """Provide access to the notification label.
 
         :returns: The notification label.
         """
@@ -23,34 +33,47 @@ class BaseNotification(UIBaseLib):
 
     @property
     def origin(self):
-        """Provides access to the notification origin.
+        """Provide access to the notification origin.
 
         :returns: The notification origin.
         """
         return self.element.get_attribute('origin')
 
-    def close(self):
-        """Close the notification."""
-        self.element.find_element(
-            By.ANON_ATTRIBUTE, {'anonid': 'closebutton'}).click()
+    def close(self, force=False):
+        """Close the notification.
+
+        :param force: Optional, if True force close the notification.
+         Defaults to False.
+        """
+        if force:
+            self.marionette.execute_script('arguments[0].click()',
+                                           script_args=[self.close_button])
+        else:
+            self.close_button.click()
+
+        self.window.wait_for_notification(None)
 
 
 class AddOnInstallBlockedNotification(BaseNotification):
     """Add-on install blocked notification."""
 
-    def allow(self):
-        """Allow the add-on to be installed."""
-        self.element.find_element(
+    @property
+    def allow_button(self):
+        """Provide access to the allow button.
+
+        :returns: The allow button.
+        """
+        return self.element.find_element(
             By.ANON_ATTRIBUTE, {'anonid': 'button'}).find_element(
-            By.ANON_ATTRIBUTE, {'anonid': 'button'}).click()
+            By.ANON_ATTRIBUTE, {'anonid': 'button'})
 
 
 class AddOnInstallConfirmationNotification(BaseNotification):
     """Add-on install confirmation notification."""
 
     @property
-    def add_on(self):
-        """Provides access to the add-on name.
+    def addon_name(self):
+        """Provide access to the add-on name.
 
         :returns: The add-on name.
         """
@@ -58,27 +81,36 @@ class AddOnInstallConfirmationNotification(BaseNotification):
             By.CSS_SELECTOR, '#addon-install-confirmation-content label')
         return label.get_attribute('value')
 
-    def cancel(self):
-        """Cancel installation of the add-on."""
-        self.element.find_element(
-            By.ID, 'addon-install-confirmation-cancel').click()
+    def cancel_button(self):
+        """Provide access to the cancel button.
 
-    def install(self):
-        """Proceed with installation of the add-on."""
-        self.element.find_element(
-            By.ID, 'addon-install-confirmation-accept').click()
+        :returns: The cancel button.
+        """
+        return self.element.find_element(
+            By.ID, 'addon-install-confirmation-cancel')
+
+    def install_button(self):
+        """Provide access to the install button.
+
+        :returns: The install button.
+        """
+        return self.element.find_element(
+            By.ID, 'addon-install-confirmation-accept')
 
 
 class AddOnInstallCompleteNotification(BaseNotification):
     """Add-on install complete notification."""
+
     pass
 
 
 class AddOnInstallFailedNotification(BaseNotification):
     """Add-on install failed notification."""
+
     pass
 
 
 class AddOnProgressNotification(BaseNotification):
     """Add-on progress notification."""
+
     pass

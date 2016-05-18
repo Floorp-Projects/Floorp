@@ -10,6 +10,19 @@ from firefox_puppeteer.base import BaseLib
 class Utils(BaseLib):
     """Low-level access to utility actions."""
 
+    def __init__(self, *args, **kwargs):
+        BaseLib.__init__(self, *args, **kwargs)
+
+        self._permissions = Permissions(lambda: self.marionette)
+
+    @property
+    def permissions(self):
+        """Handling of various permissions for hosts.
+
+        :returns: Instance of the Permissions class.
+        """
+        return self._permissions
+
     def compare_version(self, a, b):
         """Compare two version strings.
 
@@ -22,23 +35,6 @@ class Utils(BaseLib):
           Components.utils.import("resource://gre/modules/Services.jsm");
           return Services.vc.compare(arguments[0], arguments[1]);
         """, script_args=[a, b])
-
-    def remove_perms(self, host, permission):
-        """Remove permission for web host.
-
-        Permissions include safe-browsing, install, geolocation, and others described here:
-        https://dxr.mozilla.org/mozilla-central/source/browser/modules/SitePermissions.jsm#144
-        and elsewhere.
-
-        :param host: The web host whose permission will be removed.
-        :param permission: The type of permission to be removed.
-        """
-        with self.marionette.using_context('chrome'):
-            self.marionette.execute_script("""
-              Components.utils.import("resource://gre/modules/Services.jsm");
-              let uri = Services.io.newURI(arguments[0], null, null);
-              Services.perms.remove(uri, arguments[1]);
-            """, script_args=[host, permission])
 
     def sanitize(self, data_type):
         """Sanitize user data, including cache, cookies, offlineApps, history, formdata,
@@ -104,3 +100,41 @@ class Utils(BaseLib):
 
             if not result:
                 raise MarionetteException('Sanitizing of profile data failed.')
+
+
+class Permissions(BaseLib):
+
+    def add(self, host, permission):
+        """Add a permission for web host.
+
+        Permissions include safe-browsing, install, geolocation, and others described here:
+        https://dxr.mozilla.org/mozilla-central/source/browser/modules/SitePermissions.jsm#144
+        and elsewhere.
+
+        :param host: The web host whose permission will be added.
+        :param permission: The type of permission to be added.
+        """
+        with self.marionette.using_context('chrome'):
+            self.marionette.execute_script("""
+              Components.utils.import("resource://gre/modules/Services.jsm");
+              let uri = Services.io.newURI(arguments[0], null, null);
+              Services.perms.add(uri, arguments[1],
+                                 Components.interfaces.nsIPermissionManager.ALLOW_ACTION);
+            """, script_args=[host, permission])
+
+    def remove(self, host, permission):
+        """Remove a permission for web host.
+
+        Permissions include safe-browsing, install, geolocation, and others described here:
+        https://dxr.mozilla.org/mozilla-central/source/browser/modules/SitePermissions.jsm#144
+        and elsewhere.
+
+        :param host: The web host whose permission will be removed.
+        :param permission: The type of permission to be removed.
+        """
+        with self.marionette.using_context('chrome'):
+            self.marionette.execute_script("""
+              Components.utils.import("resource://gre/modules/Services.jsm");
+              let uri = Services.io.newURI(arguments[0], null, null);
+              Services.perms.remove(uri, arguments[1]);
+            """, script_args=[host, permission])

@@ -133,6 +133,61 @@ enum VarEmitOption {
     AnnexB,
 };
 
+// Linked list of jump instructions that need to be patched. The linked list is
+// stored in the bytes of the incomplete bytecode that will be patched, so no
+// extra memory is needed, and patching the instructions destroys the list.
+//
+// Example:
+//
+//     JumpList brList;
+//     if (!emitJump(JSOP_IFEQ, &brList))
+//         return false;
+//     ...
+//     JumpTarget label;
+//     if (!emitJumpTarget(&label))
+//         return false;
+//     ...
+//     if (!emitJump(JSOP_GOTO, &brList))
+//         return false;
+//     ...
+//     patchJumpsToTarget(brList, label);
+//
+//                 +-> -1
+//                 |
+//                 |
+//    ifeq ..   <+ +                +-+   ifeq ..
+//    ..         |                  |     ..
+//  label:       |                  +-> label:
+//    jumptarget |                  |     jumptarget
+//    ..         |                  |     ..
+//    goto .. <+ +                  +-+   goto .. <+
+//             |                                   |
+//             |                                   |
+//             +                                   +
+//           brList                              brList
+//
+//       |                                  ^
+//       +------- patchJumpsToTarget -------+
+//
+
+// Offset of a jump target instruction, used for patching jump instructions.
+struct JumpTarget {
+    ptrdiff_t offset;
+};
+
+struct JumpList {
+    // -1 is used to mark the end of jump lists.
+    JumpList() : offset(-1) {}
+    ptrdiff_t offset;
+
+    // Add a jump instruction to the list.
+    void push(jsbytecode* code, ptrdiff_t jumpOffset);
+
+    // Patch all jump instructions in this list to jump to `target`.  This
+    // clobbers the list.
+    void patchAll(jsbytecode* code, JumpTarget target);
+};
+
 struct BytecodeEmitter
 {
     SharedContext* const sc;      /* context shared between parsing and bytecode generation */
@@ -362,8 +417,6 @@ struct BytecodeEmitter
     // source note count is stored in the out outparam.
     MOZ_MUST_USE bool finishTakingSrcNotes(uint32_t* out);
 
-    void setJumpOffsetAt(ptrdiff_t off);
-
     // Control whether emitTree emits a line number note.
     enum EmitLineNumberNote {
         EMIT_LINENOTE,
@@ -395,10 +448,11 @@ struct BytecodeEmitter
 
     MOZ_MUST_USE bool tryConvertFreeName(ParseNode* pn);
 
-    void popStatement();
-    void pushStatement(StmtInfoBCE* stmt, StmtType type, ptrdiff_t top);
-    void pushStatementInner(StmtInfoBCE* stmt, StmtType type, ptrdiff_t top);
-    void pushLoopStatement(LoopStmtInfo* stmt, StmtType type, ptrdiff_t top);
+    bool popStatement();
+    bool popStatement(JumpTarget breakTarget);
+    void pushStatement(StmtInfoBCE* stmt, StmtType type, JumpTarget top);
+    void pushStatementInner(StmtInfoBCE* stmt, StmtType type, JumpTarget top);
+    void pushLoopStatement(LoopStmtInfo* stmt, StmtType type, JumpTarget top);
 
     MOZ_MUST_USE bool enterNestedScope(StmtInfoBCE* stmt, ObjectBox* objbox, StmtType stmtType);
     MOZ_MUST_USE bool leaveNestedScope(StmtInfoBCE* stmt);
@@ -462,19 +516,24 @@ struct BytecodeEmitter
 
     uint32_t computeHopsToEnclosingFunction();
 
-    MOZ_MUST_USE bool emitJump(JSOp op, ptrdiff_t off, ptrdiff_t* jumpOffset = nullptr);
+    // Handle jump opcodes and jump targets.
+    MOZ_MUST_USE bool emitJumpTarget(JumpTarget* target);
+    MOZ_MUST_USE bool emitJumpNoFallthrough(JSOp op, JumpList* jump);
+    MOZ_MUST_USE bool emitJump(JSOp op, JumpList* jump);
+    MOZ_MUST_USE bool emitBackwardJump(JSOp op, JumpTarget target, JumpList* jump,
+                                       JumpTarget* fallthrough);
+    void patchJumpsToTarget(JumpList jump, JumpTarget target);
+    MOZ_MUST_USE bool emitJumpTargetAndPatch(JumpList jump);
+
     MOZ_MUST_USE bool emitCall(JSOp op, uint16_t argc, ParseNode* pn = nullptr);
 
-    MOZ_MUST_USE bool emitLoopHead(ParseNode* nextpn);
-    MOZ_MUST_USE bool emitLoopEntry(ParseNode* nextpn);
+    MOZ_MUST_USE bool emitLoopHead(ParseNode* nextpn, JumpTarget* top);
+    MOZ_MUST_USE bool emitLoopEntry(ParseNode* nextpn, JumpList entryJump);
 
-    // Emit a backpatch op with offset pointing to the previous jump of this
-    // type, so that we can walk back up the chain fixing up the op and jump
-    // offset.
-    MOZ_MUST_USE bool emitBackPatchOp(ptrdiff_t* lastp);
-    void backPatch(ptrdiff_t last, jsbytecode* target, jsbytecode op);
+    void setContinueTarget(StmtInfoBCE* stmt, JumpTarget target);
+    void setContinueHere(StmtInfoBCE* stmt);
 
-    MOZ_MUST_USE bool emitGoto(StmtInfoBCE* toStmt, ptrdiff_t* lastp,
+    MOZ_MUST_USE bool emitGoto(StmtInfoBCE* toStmt, JumpList* jumplist,
                                SrcNoteType noteType = SRC_NULL);
 
     MOZ_MUST_USE bool emitIndex32(JSOp op, uint32_t index);
@@ -633,7 +692,7 @@ struct BytecodeEmitter
     MOZ_MUST_USE bool emitConditionalExpression(ConditionalExpression& conditional);
 
     MOZ_MUST_USE bool isRestParameter(ParseNode* pn, bool* result);
-    MOZ_MUST_USE bool emitOptimizeSpread(ParseNode* arg0, ptrdiff_t* jmp, bool* emitted);
+    MOZ_MUST_USE bool emitOptimizeSpread(ParseNode* arg0, JumpList* jmp, bool* emitted);
 
     MOZ_MUST_USE bool emitCallOrNew(ParseNode* pn);
     MOZ_MUST_USE bool emitDebugOnlyCheckSelfHosted();

@@ -910,7 +910,7 @@ private:
     if (topWorkerPrivate->IsDedicatedWorker()) {
       nsCOMPtr<nsPIDOMWindowInner> window = topWorkerPrivate->GetWindow();
       if (window) {
-        nsCOMPtr<nsIDocShell> docShell = do_GetInterface(window);
+        nsCOMPtr<nsIDocShell> docShell = window->GetDocShell();
         if (docShell) {
           nsresult rv = docShell->GetDefaultLoadFlags(&loadFlags);
           NS_ENSURE_SUCCESS(rv, rv);

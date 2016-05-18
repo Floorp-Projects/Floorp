@@ -643,14 +643,12 @@ class ScriptSource
     struct Compressed
     {
         SharedImmutableString raw;
-        size_t length;
+        size_t uncompressedLength;
 
-        Compressed(SharedImmutableString&& raw, size_t length)
+        Compressed(SharedImmutableString&& raw, size_t uncompressedLength)
           : raw(mozilla::Move(raw))
-          , length(length)
+          , uncompressedLength(uncompressedLength)
         { }
-
-        size_t nbytes() const { return raw.length(); }
     };
 
     using SourceType = mozilla::Variant<Missing, Uncompressed, Compressed>;
@@ -747,7 +745,7 @@ class ScriptSource
             }
 
             ReturnType match(const Compressed& c) {
-                return c.length;
+                return c.uncompressedLength;
             }
 
             ReturnType match(const Missing& m) {
@@ -769,18 +767,6 @@ class ScriptSource
     JSFlatString* substringDontDeflate(JSContext* cx, uint32_t start, uint32_t stop);
     void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                 JS::ScriptSourceInfo* info) const;
-
-    const char16_t* uncompressedChars() const {
-        return data.as<Uncompressed>().string.chars();
-    }
-
-    const void* compressedData() const {
-        return static_cast<const void*>(data.as<Compressed>().raw.chars());
-    }
-
-    size_t compressedBytes() const {
-        return data.as<Compressed>().nbytes();
-    }
 
     MOZ_MUST_USE bool setSource(ExclusiveContext* cx,
                                 mozilla::UniquePtr<char16_t[], JS::FreePolicy>&& source,
@@ -1247,6 +1233,15 @@ class JSScript : public js::gc::TenuredCell
     // Initialize a no-op script.
     static bool fullyInitTrivial(js::ExclusiveContext* cx, JS::Handle<JSScript*> script);
 
+#ifdef DEBUG
+  private:
+    // Assert that the properties set by linkToFunctionFromEmitter are correct.
+    void assertLinkedProperties(js::frontend::BytecodeEmitter* bce) const;
+    // Assert that jump targets are within the code array of the script.
+    void assertValidJumpTargets() const;
+#endif
+
+  public:
     inline JSPrincipals* principals();
 
     JSCompartment* compartment() const { return compartment_; }
@@ -1746,7 +1741,7 @@ class JSScript : public js::gc::TenuredCell
     // The entry should be removed after using this function.
     void takeOverScriptCountsMapEntry(js::ScriptCounts* entryValue);
 
-    jsbytecode* main() {
+    jsbytecode* main() const {
         return code() + mainOffset();
     }
 
@@ -1764,25 +1759,25 @@ class JSScript : public js::gc::TenuredCell
     /* Script notes are allocated right after the code. */
     jssrcnote* notes() { return (jssrcnote*)(code() + length()); }
 
-    bool hasArray(ArrayKind kind) {
+    bool hasArray(ArrayKind kind) const {
         return hasArrayBits & (1 << kind);
     }
     void setHasArray(ArrayKind kind) { hasArrayBits |= (1 << kind); }
     void cloneHasArray(JSScript* script) { hasArrayBits = script->hasArrayBits; }
 
-    bool hasConsts()        { return hasArray(CONSTS);      }
-    bool hasObjects()       { return hasArray(OBJECTS);     }
-    bool hasTrynotes()      { return hasArray(TRYNOTES);    }
-    bool hasBlockScopes()   { return hasArray(BLOCK_SCOPES); }
-    bool hasYieldOffsets()  { return isGenerator(); }
+    bool hasConsts() const        { return hasArray(CONSTS);      }
+    bool hasObjects() const       { return hasArray(OBJECTS);     }
+    bool hasTrynotes() const      { return hasArray(TRYNOTES);    }
+    bool hasBlockScopes() const   { return hasArray(BLOCK_SCOPES); }
+    bool hasYieldOffsets() const  { return isGenerator(); }
 
     #define OFF(fooOff, hasFoo, t)   (fooOff() + (hasFoo() ? sizeof(t) : 0))
 
-    size_t constsOffset()       { return 0; }
-    size_t objectsOffset()      { return OFF(constsOffset,      hasConsts,      js::ConstArray);      }
-    size_t trynotesOffset()     { return OFF(objectsOffset,     hasObjects,     js::ObjectArray);     }
-    size_t blockScopesOffset()  { return OFF(trynotesOffset,    hasTrynotes,    js::TryNoteArray);    }
-    size_t yieldOffsetsOffset() { return OFF(blockScopesOffset, hasBlockScopes, js::BlockScopeArray); }
+    size_t constsOffset() const       { return 0; }
+    size_t objectsOffset() const      { return OFF(constsOffset,      hasConsts,      js::ConstArray);      }
+    size_t trynotesOffset() const     { return OFF(objectsOffset,     hasObjects,     js::ObjectArray);     }
+    size_t blockScopesOffset() const  { return OFF(trynotesOffset,    hasTrynotes,    js::TryNoteArray);    }
+    size_t yieldOffsetsOffset() const { return OFF(blockScopesOffset, hasBlockScopes, js::BlockScopeArray); }
 
     size_t dataSize() const { return dataSize_; }
 
@@ -1796,7 +1791,7 @@ class JSScript : public js::gc::TenuredCell
         return reinterpret_cast<js::ObjectArray*>(data + objectsOffset());
     }
 
-    js::TryNoteArray* trynotes() {
+    js::TryNoteArray* trynotes() const {
         MOZ_ASSERT(hasTrynotes());
         return reinterpret_cast<js::TryNoteArray*>(data + trynotesOffset());
     }

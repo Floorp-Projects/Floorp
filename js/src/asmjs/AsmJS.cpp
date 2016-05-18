@@ -910,9 +910,15 @@ class NumLit
         BigUnsigned,
         Double,
         Float,
+        Int8x16,
+        Int16x8,
         Int32x4,
+        Uint8x16,
+        Uint16x8,
         Uint32x4,
         Float32x4,
+        Bool8x16,
+        Bool16x8,
         Bool32x4,
         OutOfRangeInt = -1
     };
@@ -965,9 +971,12 @@ class NumLit
         return u.scalar_;
     }
 
-    bool isSimd() const {
-        return which_ == Int32x4 || which_ == Uint32x4 || which_ == Float32x4 ||
-               which_ == Bool32x4;
+    bool isSimd() const
+    {
+        return which_ == Int8x16 || which_ == Uint8x16 || which_ == Int16x8 ||
+            which_ == Uint16x8 || which_ == Int32x4 || which_ == Uint32x4 ||
+            which_ == Float32x4 || which_ == Bool8x16 || which_ == Bool16x8 ||
+            which_ == Bool32x4;
     }
 
     const SimdConstant& simdValue() const {
@@ -990,13 +999,20 @@ class NumLit
             return toDouble() == 0.0 && !IsNegativeZero(toDouble());
           case NumLit::Float:
             return toFloat() == 0.f && !IsNegativeZero(toFloat());
+          case NumLit::Int8x16:
+          case NumLit::Uint8x16:
+          case NumLit::Bool8x16:
+            return simdValue() == SimdConstant::SplatX16(0);
+          case NumLit::Int16x8:
+          case NumLit::Uint16x8:
+          case NumLit::Bool16x8:
+            return simdValue() == SimdConstant::SplatX8(0);
           case NumLit::Int32x4:
           case NumLit::Uint32x4:
+          case NumLit::Bool32x4:
             return simdValue() == SimdConstant::SplatX4(0);
           case NumLit::Float32x4:
             return simdValue() == SimdConstant::SplatX4(0.f);
-          case NumLit::Bool32x4:
-            return simdValue() == SimdConstant::SplatX4(0);
           case NumLit::OutOfRangeInt:
             MOZ_CRASH("can't be here because of valid() check above");
         }
@@ -1013,11 +1029,21 @@ class NumLit
             return Val(toFloat());
           case NumLit::Double:
             return Val(toDouble());
+          case NumLit::Int8x16:
+          case NumLit::Uint8x16:
+            return Val(simdValue().asInt8x16());
+          case NumLit::Int16x8:
+          case NumLit::Uint16x8:
+            return Val(simdValue().asInt16x8());
           case NumLit::Int32x4:
           case NumLit::Uint32x4:
             return Val(simdValue().asInt32x4());
           case NumLit::Float32x4:
             return Val(simdValue().asFloat32x4());
+          case NumLit::Bool8x16:
+            return Val(simdValue().asInt8x16(), ValType::B8x16);
+          case NumLit::Bool16x8:
+            return Val(simdValue().asInt16x8(), ValType::B16x8);
           case NumLit::Bool32x4:
             return Val(simdValue().asInt32x4(), ValType::B32x4);
           case NumLit::OutOfRangeInt:;
@@ -1049,9 +1075,15 @@ class Type
         Unsigned = NumLit::BigUnsigned,
         DoubleLit = NumLit::Double,
         Float = NumLit::Float,
+        Int8x16 = NumLit::Int8x16,
+        Int16x8 = NumLit::Int16x8,
         Int32x4 = NumLit::Int32x4,
+        Uint8x16 = NumLit::Uint8x16,
+        Uint16x8 = NumLit::Uint16x8,
         Uint32x4 = NumLit::Uint32x4,
         Float32x4 = NumLit::Float32x4,
+        Bool8x16 = NumLit::Bool8x16,
+        Bool16x8 = NumLit::Bool16x8,
         Bool32x4 = NumLit::Bool32x4,
         Double,
         MaybeDouble,
@@ -1070,9 +1102,15 @@ class Type
     MOZ_IMPLICIT Type(Which w) : which_(w) {}
     MOZ_IMPLICIT Type(SimdType type) {
         switch (type) {
+          case SimdType::Int8x16:   which_ = Int8x16;   return;
+          case SimdType::Int16x8:   which_ = Int16x8;   return;
           case SimdType::Int32x4:   which_ = Int32x4;   return;
+          case SimdType::Uint8x16:  which_ = Uint8x16;  return;
+          case SimdType::Uint16x8:  which_ = Uint16x8;  return;
           case SimdType::Uint32x4:  which_ = Uint32x4;  return;
           case SimdType::Float32x4: which_ = Float32x4; return;
+          case SimdType::Bool8x16:  which_ = Bool8x16;  return;
+          case SimdType::Bool16x8:  which_ = Bool16x8;  return;
           case SimdType::Bool32x4:  which_ = Bool32x4;  return;
           default:                  break;
         }
@@ -1115,9 +1153,15 @@ class Type
           case Void:
             return Void;
 
+          case Int8x16:
+          case Int16x8:
           case Int32x4:
+          case Uint8x16:
+          case Uint16x8:
           case Uint32x4:
           case Float32x4:
+          case Bool8x16:
+          case Bool16x8:
           case Bool32x4:
             return t;
 
@@ -1144,9 +1188,15 @@ class Type
           case DoubleLit:   return isDoubleLit();
           case Double:      return isDouble();
           case Float:       return isFloat();
+          case Int8x16:     return isInt8x16();
+          case Int16x8:     return isInt16x8();
           case Int32x4:     return isInt32x4();
+          case Uint8x16:    return isUint8x16();
+          case Uint16x8:    return isUint16x8();
           case Uint32x4:    return isUint32x4();
           case Float32x4:   return isFloat32x4();
+          case Bool8x16:    return isBool8x16();
+          case Bool16x8:    return isBool16x8();
           case Bool32x4:    return isBool32x4();
           case MaybeDouble: return isMaybeDouble();
           case MaybeFloat:  return isMaybeFloat();
@@ -1211,8 +1261,24 @@ class Type
         return isDouble() || isSigned();
     }
 
+    bool isInt8x16() const {
+        return which_ == Int8x16;
+    }
+
+    bool isInt16x8() const {
+        return which_ == Int16x8;
+    }
+
     bool isInt32x4() const {
         return which_ == Int32x4;
+    }
+
+    bool isUint8x16() const {
+        return which_ == Uint8x16;
+    }
+
+    bool isUint16x8() const {
+        return which_ == Uint16x8;
     }
 
     bool isUint32x4() const {
@@ -1223,16 +1289,25 @@ class Type
         return which_ == Float32x4;
     }
 
+    bool isBool8x16() const {
+        return which_ == Bool8x16;
+    }
+
+    bool isBool16x8() const {
+        return which_ == Bool16x8;
+    }
+
     bool isBool32x4() const {
         return which_ == Bool32x4;
     }
 
     bool isSimd() const {
-        return isInt32x4() || isUint32x4() || isFloat32x4() || isBool32x4();
+        return isInt8x16() || isInt16x8() || isInt32x4() || isUint8x16() || isUint16x8() ||
+               isUint32x4() || isFloat32x4() || isBool8x16() || isBool16x8() || isBool32x4();
     }
 
     bool isUnsignedSimd() const {
-        return isUint32x4();
+        return isUint8x16() || isUint16x8() || isUint32x4();
     }
 
     // Check if this is one of the valid types for a function argument.
@@ -1277,9 +1352,15 @@ class Type
           case Float:     return ExprType::F32;
           case Double:    return ExprType::F64;
           case Void:      return ExprType::Void;
+          case Uint8x16:
+          case Int8x16:   return ExprType::I8x16;
+          case Uint16x8:
+          case Int16x8:   return ExprType::I16x8;
           case Uint32x4:
           case Int32x4:   return ExprType::I32x4;
           case Float32x4: return ExprType::F32x4;
+          case Bool8x16:  return ExprType::B8x16;
+          case Bool16x8:  return ExprType::B16x8;
           case Bool32x4:  return ExprType::B32x4;
           default:        MOZ_CRASH("Need canonical type");
         }
@@ -1303,9 +1384,15 @@ class Type
           case Signed:      return "signed";
           case Unsigned:    return "unsigned";
           case Intish:      return "intish";
+          case Int8x16:     return "int8x16";
+          case Int16x8:     return "int16x8";
           case Int32x4:     return "int32x4";
+          case Uint8x16:    return "uint8x16";
+          case Uint16x8:    return "uint16x8";
           case Uint32x4:    return "uint32x4";
           case Float32x4:   return "float32x4";
+          case Bool8x16:    return "bool8x16";
+          case Bool16x8:    return "bool16x8";
           case Bool32x4:    return "bool32x4";
           case Void:        return "void";
         }
@@ -2360,8 +2447,14 @@ IsSimdLiteral(ModuleValidator& m, ParseNode* pn)
 
         uint32_t _;
         switch (type) {
+          case SimdType::Int8x16:
+          case SimdType::Int16x8:
           case SimdType::Int32x4:
+          case SimdType::Uint8x16:
+          case SimdType::Uint16x8:
           case SimdType::Uint32x4:
+          case SimdType::Bool8x16:
+          case SimdType::Bool16x8:
           case SimdType::Bool32x4:
             if (!IsLiteralInt(m, arg, &_))
                 return false;
@@ -2415,9 +2508,36 @@ ExtractSimdValue(ModuleValidator& m, ParseNode* pn)
 
     SimdType type;
     JS_ALWAYS_TRUE(IsSimdTuple(m, pn, &type));
+    MOZ_ASSERT(CallArgListLength(pn) == GetSimdLanes(type));
 
     ParseNode* arg = CallArgList(pn);
     switch (type) {
+      case SimdType::Int8x16:
+      case SimdType::Uint8x16: {
+        MOZ_ASSERT(GetSimdLanes(type) == 16);
+        int8_t val[16];
+        for (size_t i = 0; i < 16; i++, arg = NextNode(arg)) {
+            uint32_t u32;
+            JS_ALWAYS_TRUE(IsLiteralInt(m, arg, &u32));
+            val[i] = int8_t(u32);
+        }
+        MOZ_ASSERT(arg == nullptr);
+        NumLit::Which w = type == SimdType::Uint8x16 ? NumLit::Uint8x16 : NumLit::Int8x16;
+        return NumLit(w, SimdConstant::CreateX16(val));
+      }
+      case SimdType::Int16x8:
+      case SimdType::Uint16x8: {
+        MOZ_ASSERT(GetSimdLanes(type) == 8);
+        int16_t val[8];
+        for (size_t i = 0; i < 8; i++, arg = NextNode(arg)) {
+            uint32_t u32;
+            JS_ALWAYS_TRUE(IsLiteralInt(m, arg, &u32));
+            val[i] = int16_t(u32);
+        }
+        MOZ_ASSERT(arg == nullptr);
+        NumLit::Which w = type == SimdType::Uint16x8 ? NumLit::Uint16x8 : NumLit::Int16x8;
+        return NumLit(w, SimdConstant::CreateX8(val));
+      }
       case SimdType::Int32x4:
       case SimdType::Uint32x4: {
         MOZ_ASSERT(GetSimdLanes(type) == 4);
@@ -2427,7 +2547,7 @@ ExtractSimdValue(ModuleValidator& m, ParseNode* pn)
             JS_ALWAYS_TRUE(IsLiteralInt(m, arg, &u32));
             val[i] = int32_t(u32);
         }
-        MOZ_ASSERT(arg== nullptr);
+        MOZ_ASSERT(arg == nullptr);
         NumLit::Which w = type == SimdType::Uint32x4 ? NumLit::Uint32x4 : NumLit::Int32x4;
         return NumLit(w, SimdConstant::CreateX4(val));
       }
@@ -2438,6 +2558,28 @@ ExtractSimdValue(ModuleValidator& m, ParseNode* pn)
             val[i] = float(ExtractNumericNonFloatValue(arg));
         MOZ_ASSERT(arg == nullptr);
         return NumLit(NumLit::Float32x4, SimdConstant::CreateX4(val));
+      }
+      case SimdType::Bool8x16: {
+        MOZ_ASSERT(GetSimdLanes(type) == 16);
+        int8_t val[16];
+        for (size_t i = 0; i < 16; i++, arg = NextNode(arg)) {
+            uint32_t u32;
+            JS_ALWAYS_TRUE(IsLiteralInt(m, arg, &u32));
+            val[i] = u32 ? -1 : 0;
+        }
+        MOZ_ASSERT(arg == nullptr);
+        return NumLit(NumLit::Bool8x16, SimdConstant::CreateX16(val));
+      }
+      case SimdType::Bool16x8: {
+        MOZ_ASSERT(GetSimdLanes(type) == 8);
+        int16_t val[8];
+        for (size_t i = 0; i < 8; i++, arg = NextNode(arg)) {
+            uint32_t u32;
+            JS_ALWAYS_TRUE(IsLiteralInt(m, arg, &u32));
+            val[i] = u32 ? -1 : 0;
+        }
+        MOZ_ASSERT(arg == nullptr);
+        return NumLit(NumLit::Bool16x8, SimdConstant::CreateX8(val));
       }
       case SimdType::Bool32x4: {
         MOZ_ASSERT(GetSimdLanes(type) == 4);
@@ -2471,7 +2613,6 @@ ExtractNumericLiteral(ModuleValidator& m, ParseNode* pn)
             return NumLit(NumLit::Float, DoubleValue(d));
         }
 
-        MOZ_ASSERT(CallArgListLength(pn) == 4);
         return ExtractSimdValue(m, pn);
     }
 
@@ -2518,9 +2659,15 @@ IsLiteralInt(NumLit lit, uint32_t* u32)
       case NumLit::Double:
       case NumLit::Float:
       case NumLit::OutOfRangeInt:
+      case NumLit::Int8x16:
+      case NumLit::Uint8x16:
+      case NumLit::Int16x8:
+      case NumLit::Uint16x8:
       case NumLit::Int32x4:
       case NumLit::Uint32x4:
       case NumLit::Float32x4:
+      case NumLit::Bool8x16:
+      case NumLit::Bool16x8:
       case NumLit::Bool32x4:
         return false;
     }
@@ -2539,9 +2686,13 @@ IsLiteralInt(ModuleValidator& m, ParseNode* pn, uint32_t* u32)
 namespace {
 
 #define CASE(TYPE, OP) case SimdOperation::Fn_##OP: return Expr::TYPE##OP;
-#define I32CASE(OP) CASE(I32x4, OP)
-#define F32CASE(OP) CASE(F32x4, OP)
-#define B32CASE(OP) CASE(B32x4, OP)
+#define I8x16CASE(OP) CASE(I8x16, OP)
+#define I16x8CASE(OP) CASE(I16x8, OP)
+#define I32x4CASE(OP) CASE(I32x4, OP)
+#define F32x4CASE(OP) CASE(F32x4, OP)
+#define B8x16CASE(OP) CASE(B8x16, OP)
+#define B16x8CASE(OP) CASE(B16x8, OP)
+#define B32x4CASE(OP) CASE(B32x4, OP)
 #define ENUMERATE(TYPE, FOR_ALL, DO)                                     \
     switch(op) {                                                         \
         case SimdOperation::Constructor: return Expr::TYPE##Constructor; \
@@ -2553,6 +2704,48 @@ static inline Expr
 SimdToExpr(SimdType type, SimdOperation op)
 {
     switch (type) {
+      case SimdType::Uint8x16:
+        // Handle the special unsigned opcodes, then fall through to Int8x16.
+        switch(op) {
+          case SimdOperation::Fn_addSaturate:        return Expr::I8x16addSaturateU;
+          case SimdOperation::Fn_subSaturate:        return Expr::I8x16subSaturateU;
+          case SimdOperation::Fn_extractLane:        return Expr::I8x16extractLaneU;
+          case SimdOperation::Fn_shiftRightByScalar: return Expr::I8x16shiftRightByScalarU;
+          case SimdOperation::Fn_lessThan:           return Expr::I8x16lessThanU;
+          case SimdOperation::Fn_lessThanOrEqual:    return Expr::I8x16lessThanOrEqualU;
+          case SimdOperation::Fn_greaterThan:        return Expr::I8x16greaterThanU;
+          case SimdOperation::Fn_greaterThanOrEqual: return Expr::I8x16greaterThanOrEqualU;
+          case SimdOperation::Fn_fromInt8x16Bits:    return Expr::Limit;
+          default: break;
+        }
+        MOZ_FALLTHROUGH;
+      case SimdType::Int8x16:
+        // Bitcasts Uint8x16 <--> Int8x16 become noops.
+        if (op == SimdOperation::Fn_fromUint8x16Bits) return Expr::Limit;
+        ENUMERATE(I8x16, FORALL_INT8X16_ASMJS_OP, I8x16CASE)
+        break;
+
+      case SimdType::Uint16x8:
+        // Handle the special unsigned opcodes, then fall through to Int16x8.
+        switch(op) {
+          case SimdOperation::Fn_addSaturate:        return Expr::I16x8addSaturateU;
+          case SimdOperation::Fn_subSaturate:        return Expr::I16x8subSaturateU;
+          case SimdOperation::Fn_extractLane:        return Expr::I16x8extractLaneU;
+          case SimdOperation::Fn_shiftRightByScalar: return Expr::I16x8shiftRightByScalarU;
+          case SimdOperation::Fn_lessThan:           return Expr::I16x8lessThanU;
+          case SimdOperation::Fn_lessThanOrEqual:    return Expr::I16x8lessThanOrEqualU;
+          case SimdOperation::Fn_greaterThan:        return Expr::I16x8greaterThanU;
+          case SimdOperation::Fn_greaterThanOrEqual: return Expr::I16x8greaterThanOrEqualU;
+          case SimdOperation::Fn_fromInt16x8Bits:    return Expr::Limit;
+          default: break;
+        }
+        MOZ_FALLTHROUGH;
+      case SimdType::Int16x8:
+        // Bitcasts Uint16x8 <--> Int16x8 become noops.
+        if (op == SimdOperation::Fn_fromUint16x8Bits) return Expr::Limit;
+        ENUMERATE(I16x8, FORALL_INT16X8_ASMJS_OP, I16x8CASE)
+        break;
+
       case SimdType::Uint32x4:
         // Handle the special unsigned opcodes, then fall through to Int32x4.
         switch(op) {
@@ -2566,23 +2759,31 @@ SimdToExpr(SimdType type, SimdOperation op)
           default: break;
         }
         MOZ_FALLTHROUGH;
-      case SimdType::Int32x4: {
+      case SimdType::Int32x4:
         // Bitcasts Uint32x4 <--> Int32x4 become noops.
         if (op == SimdOperation::Fn_fromUint32x4Bits) return Expr::Limit;
-        ENUMERATE(I32x4, FORALL_INT32X4_ASMJS_OP, I32CASE)
+        ENUMERATE(I32x4, FORALL_INT32X4_ASMJS_OP, I32x4CASE)
         break;
-      }
-      case SimdType::Float32x4: {
-        ENUMERATE(F32x4, FORALL_FLOAT32X4_ASMJS_OP, F32CASE)
+
+      case SimdType::Float32x4:
+        ENUMERATE(F32x4, FORALL_FLOAT32X4_ASMJS_OP, F32x4CASE)
         break;
-      }
-      case SimdType::Bool32x4: {
-        ENUMERATE(B32x4, FORALL_BOOL_SIMD_OP, B32CASE)
+
+      case SimdType::Bool8x16:
+        ENUMERATE(B8x16, FORALL_BOOL_SIMD_OP, B8x16CASE)
         break;
-      }
+
+      case SimdType::Bool16x8:
+        ENUMERATE(B16x8, FORALL_BOOL_SIMD_OP, B16x8CASE)
+        break;
+
+      case SimdType::Bool32x4:
+        ENUMERATE(B32x4, FORALL_BOOL_SIMD_OP, B32x4CASE)
+        break;
+
       default: break;
     }
-    MOZ_CRASH("unexpected SIMD type x operator combination");
+    MOZ_CRASH("unexpected SIMD (type, operator) combination");
 }
 
 #undef CASE
@@ -2856,6 +3057,14 @@ class MOZ_STACK_CLASS FunctionValidator
           case NumLit::Double:
             return encoder().writeExpr(Expr::F64Const) &&
                    encoder().writeFixedF64(lit.toDouble());
+          case NumLit::Int8x16:
+          case NumLit::Uint8x16:
+            return encoder().writeExpr(Expr::I8x16Const) &&
+                   encoder().writeFixedI8x16(lit.simdValue().asInt8x16());
+          case NumLit::Int16x8:
+          case NumLit::Uint16x8:
+            return encoder().writeExpr(Expr::I16x8Const) &&
+                   encoder().writeFixedI16x8(lit.simdValue().asInt16x8());
           case NumLit::Int32x4:
           case NumLit::Uint32x4:
             return encoder().writeExpr(Expr::I32x4Const) &&
@@ -2863,6 +3072,14 @@ class MOZ_STACK_CLASS FunctionValidator
           case NumLit::Float32x4:
             return encoder().writeExpr(Expr::F32x4Const) &&
                    encoder().writeFixedF32x4(lit.simdValue().asFloat32x4());
+          case NumLit::Bool8x16:
+            // Boolean vectors use the Int8x16 memory representation.
+            return encoder().writeExpr(Expr::B8x16Const) &&
+                   encoder().writeFixedI8x16(lit.simdValue().asInt8x16());
+          case NumLit::Bool16x8:
+            // Boolean vectors use the Int16x8 memory representation.
+            return encoder().writeExpr(Expr::B16x8Const) &&
+                   encoder().writeFixedI16x8(lit.simdValue().asInt16x8());
           case NumLit::Bool32x4:
             // Boolean vectors use the Int32x4 memory representation.
             return encoder().writeExpr(Expr::B32x4Const) &&
@@ -4738,8 +4955,14 @@ static inline Type
 SimdToCoercedScalarType(SimdType t)
 {
     switch (t) {
+      case SimdType::Int8x16:
+      case SimdType::Int16x8:
       case SimdType::Int32x4:
+      case SimdType::Uint8x16:
+      case SimdType::Uint16x8:
       case SimdType::Uint32x4:
+      case SimdType::Bool8x16:
+      case SimdType::Bool16x8:
       case SimdType::Bool32x4:
         return Type::Intish;
       case SimdType::Float32x4:
@@ -4882,9 +5105,15 @@ static bool
 CheckSimdExtractLane(FunctionValidator& f, ParseNode* call, SimdType opType, Type* type)
 {
     switch (opType) {
+      case SimdType::Int8x16:
+      case SimdType::Int16x8:
       case SimdType::Int32x4:   *type = Type::Signed; break;
+      case SimdType::Uint8x16:
+      case SimdType::Uint16x8:
       case SimdType::Uint32x4:  *type = Type::Unsigned; break;
       case SimdType::Float32x4: *type = Type::Float; break;
+      case SimdType::Bool8x16:
+      case SimdType::Bool16x8:
       case SimdType::Bool32x4:  *type = Type::Int; break;
       default:                  MOZ_CRASH("unhandled simd type");
     }
@@ -5215,6 +5444,7 @@ CheckSimdOperationCall(FunctionValidator& f, ParseNode* call, const ModuleValida
       FOREACH_NUMERIC_SIMD_BINOP(_CASE)
       FOREACH_FLOAT_SIMD_BINOP(_CASE)
       FOREACH_BITWISE_SIMD_BINOP(_CASE)
+      FOREACH_SMINT_SIMD_BINOP(_CASE)
         return CheckSimdBinary(f, call, opType, op, type);
 #undef _CASE
 
@@ -5223,6 +5453,14 @@ CheckSimdOperationCall(FunctionValidator& f, ParseNode* call, const ModuleValida
       case SimdOperation::Fn_replaceLane:
         return CheckSimdReplaceLane(f, call, opType, type);
 
+      case SimdOperation::Fn_fromInt8x16Bits:
+        return CheckSimdCast(f, call, SimdType::Int8x16, opType, op, type);
+      case SimdOperation::Fn_fromUint8x16Bits:
+        return CheckSimdCast(f, call, SimdType::Uint8x16, opType, op, type);
+      case SimdOperation::Fn_fromInt16x8Bits:
+        return CheckSimdCast(f, call, SimdType::Int16x8, opType, op, type);
+      case SimdOperation::Fn_fromUint16x8Bits:
+        return CheckSimdCast(f, call, SimdType::Uint16x8, opType, op, type);
       case SimdOperation::Fn_fromInt32x4:
       case SimdOperation::Fn_fromInt32x4Bits:
         return CheckSimdCast(f, call, SimdType::Int32x4, opType, op, type);
@@ -5270,10 +5508,6 @@ CheckSimdOperationCall(FunctionValidator& f, ParseNode* call, const ModuleValida
 
       case SimdOperation::Constructor:
         MOZ_CRASH("constructors are handled in CheckSimdCtorCall");
-      case SimdOperation::Fn_fromInt8x16Bits:
-      case SimdOperation::Fn_fromInt16x8Bits:
-      case SimdOperation::Fn_fromUint8x16Bits:
-      case SimdOperation::Fn_fromUint16x8Bits:
       case SimdOperation::Fn_fromFloat64x2Bits:
         MOZ_CRASH("NYI");
     }
@@ -5659,9 +5893,15 @@ IsValidIntMultiplyConstant(ModuleValidator& m, ParseNode* expr)
       case NumLit::Double:
       case NumLit::Float:
       case NumLit::OutOfRangeInt:
+      case NumLit::Int8x16:
+      case NumLit::Uint8x16:
+      case NumLit::Int16x8:
+      case NumLit::Uint16x8:
       case NumLit::Int32x4:
       case NumLit::Uint32x4:
       case NumLit::Float32x4:
+      case NumLit::Bool8x16:
+      case NumLit::Bool16x8:
       case NumLit::Bool32x4:
         return false;
     }
@@ -6292,9 +6532,15 @@ CheckCaseExpr(FunctionValidator& f, ParseNode* caseExpr, int32_t* value)
         return f.fail(caseExpr, "switch case expression out of integer range");
       case NumLit::Double:
       case NumLit::Float:
+      case NumLit::Int8x16:
+      case NumLit::Uint8x16:
+      case NumLit::Int16x8:
+      case NumLit::Uint16x8:
       case NumLit::Int32x4:
       case NumLit::Uint32x4:
       case NumLit::Float32x4:
+      case NumLit::Bool8x16:
+      case NumLit::Bool16x8:
       case NumLit::Bool32x4:
         return f.fail(caseExpr, "switch case expression must be an integer literal");
     }
@@ -7041,6 +7287,16 @@ ValidateGlobalVariable(JSContext* cx, const AsmJSGlobal& global, uint8_t* global
           case ValType::F64:
             *(double*)datum = v.f64();
             break;
+          case ValType::I8x16:
+          case ValType::B8x16:
+            // Bool8x16 uses the same data layout as Int8x16.
+            memcpy(datum, v.i8x16(), Simd128DataSize);
+            break;
+          case ValType::I16x8:
+          case ValType::B16x8:
+            // Bool16x8 uses the same data layout as Int16x8.
+            memcpy(datum, v.i16x8(), Simd128DataSize);
+            break;
           case ValType::I32x4:
           case ValType::B32x4:
             // Bool32x4 uses the same data layout as Int32x4.
@@ -7079,6 +7335,20 @@ ValidateGlobalVariable(JSContext* cx, const AsmJSGlobal& global, uint8_t* global
             if (!ToNumber(cx, v, (double*)datum))
                 return false;
             break;
+          case ValType::I8x16: {
+            SimdConstant simdConstant;
+            if (!ToSimdConstant<Int8x16>(cx, v, &simdConstant))
+                return false;
+            memcpy(datum, simdConstant.asInt8x16(), Simd128DataSize);
+            break;
+          }
+          case ValType::I16x8: {
+            SimdConstant simdConstant;
+            if (!ToSimdConstant<Int16x8>(cx, v, &simdConstant))
+                return false;
+            memcpy(datum, simdConstant.asInt16x8(), Simd128DataSize);
+            break;
+          }
           case ValType::I32x4: {
             SimdConstant simdConstant;
             if (!ToSimdConstant<Int32x4>(cx, v, &simdConstant))
@@ -7091,6 +7361,22 @@ ValidateGlobalVariable(JSContext* cx, const AsmJSGlobal& global, uint8_t* global
             if (!ToSimdConstant<Float32x4>(cx, v, &simdConstant))
                 return false;
             memcpy(datum, simdConstant.asFloat32x4(), Simd128DataSize);
+            break;
+          }
+          case ValType::B8x16: {
+            SimdConstant simdConstant;
+            if (!ToSimdConstant<Bool8x16>(cx, v, &simdConstant))
+                return false;
+            // Bool8x16 uses the same data layout as Int8x16.
+            memcpy(datum, simdConstant.asInt8x16(), Simd128DataSize);
+            break;
+          }
+          case ValType::B16x8: {
+            SimdConstant simdConstant;
+            if (!ToSimdConstant<Bool16x8>(cx, v, &simdConstant))
+                return false;
+            // Bool16x8 uses the same data layout as Int16x8.
+            memcpy(datum, simdConstant.asInt16x8(), Simd128DataSize);
             break;
           }
           case ValType::B32x4: {
@@ -7238,15 +7524,49 @@ ValidateSimdOperation(JSContext* cx, const AsmJSGlobal& global, HandleValue glob
 
     Native native = nullptr;
     switch (global.simdOperationType()) {
+#define SET_NATIVE_INT8X16(op) case SimdOperation::Fn_##op: native = simd_int8x16_##op; break;
+#define SET_NATIVE_INT16X8(op) case SimdOperation::Fn_##op: native = simd_int16x8_##op; break;
 #define SET_NATIVE_INT32X4(op) case SimdOperation::Fn_##op: native = simd_int32x4_##op; break;
+#define SET_NATIVE_UINT8X16(op) case SimdOperation::Fn_##op: native = simd_uint8x16_##op; break;
+#define SET_NATIVE_UINT16X8(op) case SimdOperation::Fn_##op: native = simd_uint16x8_##op; break;
 #define SET_NATIVE_UINT32X4(op) case SimdOperation::Fn_##op: native = simd_uint32x4_##op; break;
 #define SET_NATIVE_FLOAT32X4(op) case SimdOperation::Fn_##op: native = simd_float32x4_##op; break;
+#define SET_NATIVE_BOOL8X16(op) case SimdOperation::Fn_##op: native = simd_bool8x16_##op; break;
+#define SET_NATIVE_BOOL16X8(op) case SimdOperation::Fn_##op: native = simd_bool16x8_##op; break;
 #define SET_NATIVE_BOOL32X4(op) case SimdOperation::Fn_##op: native = simd_bool32x4_##op; break;
 #define FALLTHROUGH(op) case SimdOperation::Fn_##op:
+      case SimdType::Int8x16:
+        switch (global.simdOperation()) {
+          FORALL_INT8X16_ASMJS_OP(SET_NATIVE_INT8X16)
+          SET_NATIVE_INT8X16(fromUint8x16Bits)
+          default: MOZ_CRASH("shouldn't have been validated in the first place");
+        }
+        break;
+      case SimdType::Int16x8:
+        switch (global.simdOperation()) {
+          FORALL_INT16X8_ASMJS_OP(SET_NATIVE_INT16X8)
+          SET_NATIVE_INT16X8(fromUint16x8Bits)
+          default: MOZ_CRASH("shouldn't have been validated in the first place");
+        }
+        break;
       case SimdType::Int32x4:
         switch (global.simdOperation()) {
           FORALL_INT32X4_ASMJS_OP(SET_NATIVE_INT32X4)
           SET_NATIVE_INT32X4(fromUint32x4Bits)
+          default: MOZ_CRASH("shouldn't have been validated in the first place");
+        }
+        break;
+      case SimdType::Uint8x16:
+        switch (global.simdOperation()) {
+          FORALL_INT8X16_ASMJS_OP(SET_NATIVE_UINT8X16)
+          SET_NATIVE_UINT8X16(fromInt8x16Bits)
+          default: MOZ_CRASH("shouldn't have been validated in the first place");
+        }
+        break;
+      case SimdType::Uint16x8:
+        switch (global.simdOperation()) {
+          FORALL_INT16X8_ASMJS_OP(SET_NATIVE_UINT16X8)
+          SET_NATIVE_UINT16X8(fromInt16x8Bits)
           default: MOZ_CRASH("shouldn't have been validated in the first place");
         }
         break;
@@ -7263,6 +7583,18 @@ ValidateSimdOperation(JSContext* cx, const AsmJSGlobal& global, HandleValue glob
           default: MOZ_CRASH("shouldn't have been validated in the first place");
         }
         break;
+      case SimdType::Bool8x16:
+        switch (global.simdOperation()) {
+          FORALL_BOOL_SIMD_OP(SET_NATIVE_BOOL8X16)
+          default: MOZ_CRASH("shouldn't have been validated in the first place");
+        }
+        break;
+      case SimdType::Bool16x8:
+        switch (global.simdOperation()) {
+          FORALL_BOOL_SIMD_OP(SET_NATIVE_BOOL16X8)
+          default: MOZ_CRASH("shouldn't have been validated in the first place");
+        }
+        break;
       case SimdType::Bool32x4:
         switch (global.simdOperation()) {
           FORALL_BOOL_SIMD_OP(SET_NATIVE_BOOL32X4)
@@ -7271,9 +7603,15 @@ ValidateSimdOperation(JSContext* cx, const AsmJSGlobal& global, HandleValue glob
         break;
       default: MOZ_CRASH("unhandled simd type");
 #undef FALLTHROUGH
+#undef SET_NATIVE_INT8X16
+#undef SET_NATIVE_INT16X8
 #undef SET_NATIVE_INT32X4
+#undef SET_NATIVE_UINT8X16
+#undef SET_NATIVE_UINT16X8
 #undef SET_NATIVE_UINT32X4
 #undef SET_NATIVE_FLOAT32X4
+#undef SET_NATIVE_BOOL8X16
+#undef SET_NATIVE_BOOL16X8
 #undef SET_NATIVE_BOOL32X4
 #undef SET_NATIVE
     }

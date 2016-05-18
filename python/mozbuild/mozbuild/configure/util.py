@@ -98,6 +98,7 @@ class ConfigureOutputHandler(logging.Handler):
         self._stdout_waiting = None
         self._debug = deque(maxlen=maxlen + 1)
         self._keep_if_debug = self.THROW
+        self._queue_is_active = False
 
     @staticmethod
     def _is_same_output(fd1, fd2):
@@ -154,6 +155,10 @@ class ConfigureOutputHandler(logging.Handler):
 
     @contextmanager
     def queue_debug(self):
+        if self._queue_is_active:
+            yield
+            return
+        self._queue_is_active = True
         self._keep_if_debug = self.KEEP
         try:
             yield
@@ -162,6 +167,8 @@ class ConfigureOutputHandler(logging.Handler):
             # The exception will be handled and very probably printed out by
             # something upper in the stack.
             raise
+        finally:
+            self._queue_is_active = False
         self._keep_if_debug = self.THROW
         self._debug.clear()
 

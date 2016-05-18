@@ -52,7 +52,7 @@ namespace mozilla { namespace psm {
 static SECStatus
 CertIDHash(SHA384Buffer& buf, const CertID& certID)
 {
-  ScopedPK11Context context(PK11_CreateDigestContext(SEC_OID_SHA384));
+  UniquePK11Context context(PK11_CreateDigestContext(SEC_OID_SHA384));
   if (!context) {
     return SECFailure;
   }

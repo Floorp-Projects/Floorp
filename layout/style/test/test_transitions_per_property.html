@@ -2133,8 +2133,10 @@ function test_background_size_transition(prop) {
 }
 
 function test_background_position_transition(prop) {
-  var doesPropTakeListValues = (prop == "background-position");
-  var doesPropHaveDistanceComputation = (prop != "background-position");
+  var doesPropTakeListValues = (prop == "background-position") ||
+                               (prop == "mask-position");
+  var doesPropHaveDistanceComputation = (prop != "background-position") &&
+                                        (prop != "mask-position");
 
   // Test interpolation between edge keywords, and between edge keyword and a
   // percent value. (Note: edge keywords are really aliases for percent vals.)

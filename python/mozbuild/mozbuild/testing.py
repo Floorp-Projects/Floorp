@@ -18,7 +18,6 @@ from .util import OrderedDefaultDict
 from collections import defaultdict
 
 import manifestparser
-import reftest
 
 def rewrite_test_base(test, new_base, honor_install_to_subdir=False):
     """Rewrite paths in a test to be under a new base path.
@@ -503,6 +502,7 @@ def read_manifestparser_manifest(context, manifest_path):
                                        finder=context._finder)
 
 def read_reftest_manifest(context, manifest_path):
+    import reftest
     path = mozpath.normpath(mozpath.join(context.srcdir, manifest_path))
     manifest = reftest.ReftestManifest(finder=context._finder)
     manifest.load(path)
