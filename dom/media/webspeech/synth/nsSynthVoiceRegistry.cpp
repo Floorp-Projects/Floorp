@@ -20,6 +20,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/SpeechSynthesisErrorEvent.h"
 #include "mozilla/unused.h"
 
 #include "SpeechSynthesisChild.h"
@@ -704,7 +705,8 @@ nsSynthVoiceRegistry::Speak(const nsAString& aText,
 
   if (!voice) {
     NS_WARNING("No voices found.");
-    aTask->DispatchError(0, 0);
+    aTask->DispatchError(0, 0,
+      uint32_t(SpeechSynthesisErrorCode::Voice_unavailable));
     return;
   }
 
@@ -825,7 +827,8 @@ nsSynthVoiceRegistry::SpeakImpl(VoiceData* aVoice,
   if (NS_FAILED(aVoice->mService->Speak(aText, aVoice->mUri, aVolume, aRate,
                                         aPitch, aTask))) {
     if (serviceType == nsISpeechService::SERVICETYPE_INDIRECT_AUDIO) {
-      aTask->DispatchError(0, 0);
+      aTask->DispatchError(
+        0, 0, uint32_t(SpeechSynthesisErrorCode::Synthesis_failed));
     }
     // XXX When using direct audio, no way to dispatch error
   }

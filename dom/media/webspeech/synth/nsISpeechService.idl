@@ -42,7 +42,7 @@ interface nsISpeechTaskCallback : nsISupports
  * A task is associated with a single utterance. It is provided by the browser
  * to the service in the speak() method.
  */
-[scriptable, builtinclass, uuid(ad59949c-2437-4b35-8eeb-d760caab75c5)]
+[scriptable, builtinclass, uuid(6a918df5-4821-40bf-be28-a7abccaee15a)]
 interface nsISpeechTask : nsISupports
 {
   /**
@@ -104,8 +104,10 @@ interface nsISpeechTask : nsISupports
    *
    * @param aElapsedTime time in seconds since speech has started.
    * @param aCharIndex   offset of spoken characters.
+   * @param aError       error code as detailed in the enum in
+   *                       SpeechSynthesisErrorEvent.webidl
    */
-  void dispatchError(in float aElapsedTime, in unsigned long aCharIndex);
+  void dispatchError(in float aElapsedTime, in unsigned long aCharIndex, in unsigned long aError);
 
   /**
    * Dispatch boundary event.

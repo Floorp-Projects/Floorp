@@ -102,7 +102,7 @@ SpeechSynthesisRequestChild::RecvOnEnd(const bool& aIsError,
   mTask->mActor = nullptr;
 
   if (aIsError) {
-    mTask->DispatchErrorImpl(aElapsedTime, aCharIndex);
+    mTask->DispatchErrorImpl(aElapsedTime, aCharIndex, 0);
   } else {
     mTask->DispatchEndImpl(aElapsedTime, aCharIndex);
   }
