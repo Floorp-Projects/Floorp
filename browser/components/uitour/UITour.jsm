@@ -622,7 +622,9 @@ this.UITour = {
 
       case "resetFirefox": {
         // Open a reset profile dialog window.
-        ResetProfile.openConfirmationDialog(window);
+        if (ResetProfile.resetSupported()) {
+          ResetProfile.openConfirmationDialog(window);
+        }
         break;
       }
 
@@ -1938,6 +1940,9 @@ this.UITour = {
         this.sendPageCallback(aMessageManager, aCallbackID, {
           setup: Services.prefs.prefHasUserValue("services.sync.username"),
         });
+        break;
+      case "canReset":
+        this.sendPageCallback(aMessageManager, aCallbackID, ResetProfile.resetSupported());
         break;
       default:
         log.error("getConfiguration: Unknown configuration requested: " + aConfiguration);
