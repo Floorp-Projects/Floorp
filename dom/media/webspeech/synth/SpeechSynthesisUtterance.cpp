@@ -9,6 +9,7 @@
 #include "nsGkAtoms.h"
 
 #include "mozilla/dom/SpeechSynthesisEvent.h"
+#include "mozilla/dom/SpeechSynthesisErrorEvent.h"
 #include "mozilla/dom/SpeechSynthesisUtteranceBinding.h"
 #include "SpeechSynthesisUtterance.h"
 #include "SpeechSynthesisVoice.h"
@@ -171,6 +172,25 @@ SpeechSynthesisUtterance::DispatchSpeechSynthesisEvent(const nsAString& aEventTy
 
   RefPtr<SpeechSynthesisEvent> event =
     SpeechSynthesisEvent::Constructor(this, aEventType, init);
+  DispatchTrustedEvent(event);
+}
+
+void
+SpeechSynthesisUtterance::DispatchSpeechSynthesisErrorEvent(uint32_t aCharIndex,
+                                                            float aElapsedTime,
+                                                            SpeechSynthesisErrorCode aError)
+{
+  SpeechSynthesisErrorEventInit init;
+  init.mBubbles = false;
+  init.mCancelable = false;
+  init.mUtterance = this;
+  init.mCharIndex = aCharIndex;
+  init.mElapsedTime = aElapsedTime;
+  init.mName = NS_LITERAL_STRING("");
+  init.mError = aError;
+
+  RefPtr<SpeechSynthesisErrorEvent> event =
+    SpeechSynthesisErrorEvent::Constructor(this, NS_LITERAL_STRING("error"), init);
   DispatchTrustedEvent(event);
 }
 
