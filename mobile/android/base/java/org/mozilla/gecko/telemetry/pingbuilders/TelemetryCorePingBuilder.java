@@ -42,7 +42,7 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
     private static final String LOGTAG = StringUtils.safeSubstring(TelemetryCorePingBuilder.class.getSimpleName(), 0, 23);
 
     private static final String NAME = "core";
-    private static final int VERSION_VALUE = 6; // For version history, see toolkit/components/telemetry/docs/core-ping.rst
+    private static final int VERSION_VALUE = 7; // For version history, see toolkit/components/telemetry/docs/core-ping.rst
     private static final String OS_VALUE = "Android";
 
     private static final String ARCHITECTURE = "arch";
@@ -58,6 +58,8 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
     private static final String PROFILE_CREATION_DATE = "profileDate";
     private static final String SEARCH_COUNTS = "searches";
     private static final String SEQ = "seq";
+    private static final String SESSION_COUNT = "sessions";
+    private static final String SESSION_DURATION = "durations";
     private static final String TIMEZONE_OFFSET = "tz";
     private static final String VERSION_ATTR = "v";
 
@@ -172,6 +174,26 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
             Log.w(LOGTAG, "Expected positive sequence number. Received: " + seq);
         }
         payload.put(SEQ, seq);
+        return this;
+    }
+
+    public TelemetryCorePingBuilder setSessionCount(final int sessionCount) {
+        if (sessionCount < 0) {
+            // Since this is an increasing value, it's possible we can overflow into negative values and get into a
+            // crash loop so we don't crash on invalid arg - we can investigate if we see negative values on the server.
+            Log.w(LOGTAG, "Expected positive session count. Received: " + sessionCount);
+        }
+        payload.put(SESSION_COUNT, sessionCount);
+        return this;
+    }
+
+    public TelemetryCorePingBuilder setSessionDuration(final long sessionDuration) {
+        if (sessionDuration < 0) {
+            // Since this is an increasing value, it's possible we can overflow into negative values and get into a
+            // crash loop so we don't crash on invalid arg - we can investigate if we see negative values on the server.
+            Log.w(LOGTAG, "Expected positive session duration. Received: " + sessionDuration);
+        }
+        payload.put(SESSION_DURATION, sessionDuration);
         return this;
     }
 
