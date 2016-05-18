@@ -13,6 +13,7 @@
 
 #include "mozilla/dom/nsSynthVoiceRegistry.h"
 #include "mozilla/dom/nsSpeechTask.h"
+#include "mozilla/dom/SpeechSynthesisErrorEvent.h"
 
 #include "nsThreadUtils.h"
 #include "prenv.h"
@@ -250,7 +251,9 @@ FakeIndirectAudioSynth::Speak(const nsAString& aText, const nsAString& aUri,
 
     NS_IMETHOD Run() override
     {
-      mTask->DispatchError(mText.Length()/2, mText.Length());
+      mTask->DispatchError(
+        mText.Length()/2, mText.Length(),
+        uint32_t(SpeechSynthesisErrorCode::Synthesis_failed));
 
       return NS_OK;
     }

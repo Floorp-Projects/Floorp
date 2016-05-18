@@ -504,7 +504,7 @@ nsSpeechTask::DispatchResumeImpl(float aElapsedTime, uint32_t aCharIndex)
 }
 
 NS_IMETHODIMP
-nsSpeechTask::DispatchError(float aElapsedTime, uint32_t aCharIndex)
+nsSpeechTask::DispatchError(float aElapsedTime, uint32_t aCharIndex, uint32_t aError)
 {
   LOG(LogLevel::Debug, ("nsSpeechTask::DispatchError"));
 
@@ -517,11 +517,11 @@ nsSpeechTask::DispatchError(float aElapsedTime, uint32_t aCharIndex)
     nsSynthVoiceRegistry::GetInstance()->SpeakNext();
   }
 
-  return DispatchErrorImpl(aElapsedTime, aCharIndex);
+  return DispatchErrorImpl(aElapsedTime, aCharIndex, aError);
 }
 
 nsresult
-nsSpeechTask::DispatchErrorImpl(float aElapsedTime, uint32_t aCharIndex)
+nsSpeechTask::DispatchErrorImpl(float aElapsedTime, uint32_t aCharIndex, uint32_t aError)
 {
   MOZ_ASSERT(mUtterance);
   if(NS_WARN_IF(mUtterance->mState == SpeechSynthesisUtterance::STATE_ENDED)) {
