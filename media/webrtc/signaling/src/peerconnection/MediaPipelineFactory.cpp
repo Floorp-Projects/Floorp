@@ -997,20 +997,18 @@ MediaPipelineFactory::EnsureExternalCodec(VideoSessionConduit& aConduit,
         return aConduit.SetExternalSendCodec(aConfig, encoder);
       }
       return kMediaConduitInvalidSendCodec;
-    } else {
-      VideoDecoder* decoder = nullptr;
-#ifdef MOZ_WEBRTC_OMX
-      decoder =
-          OMXVideoCodec::CreateDecoder(OMXVideoCodec::CodecType::CODEC_H264);
-#else
-      decoder = GmpVideoCodec::CreateDecoder();
-#endif
-      if (decoder) {
-        return aConduit.SetExternalRecvCodec(aConfig, decoder);
-      }
-      return kMediaConduitInvalidReceiveCodec;
     }
-    NS_NOTREACHED("Shouldn't get here!");
+    VideoDecoder* decoder = nullptr;
+#ifdef MOZ_WEBRTC_OMX
+    decoder =
+      OMXVideoCodec::CreateDecoder(OMXVideoCodec::CodecType::CODEC_H264);
+#else
+    decoder = GmpVideoCodec::CreateDecoder();
+#endif
+    if (decoder) {
+      return aConduit.SetExternalRecvCodec(aConfig, decoder);
+    }
+    return kMediaConduitInvalidReceiveCodec;
   } else {
     MOZ_MTLOG(ML_ERROR,
               "Invalid video codec configured: " << aConfig->mName.c_str());
