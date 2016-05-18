@@ -2146,7 +2146,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         ? static_cast<ClientLayerManager*>(GetLayerManager())
         : nullptr;
 
-    if (clientLayers && mCompositorBridgeParent) {
+    if (clientLayers && mCompositorSession) {
         // We need to paint to the screen even if nothing changed, since if we
         // don't have a compositing window manager, our pixels could be stale.
         clientLayers->SetNeedsComposite(true);

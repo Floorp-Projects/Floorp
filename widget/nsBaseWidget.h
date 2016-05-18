@@ -46,6 +46,7 @@ class CompositorBridgeParent;
 class APZCTreeManager;
 class GeckoContentController;
 class APZEventState;
+class CompositorSession;
 struct ScrollableLayerGuid;
 } // namespace layers
 
@@ -112,6 +113,7 @@ protected:
   typedef mozilla::CSSRect CSSRect;
   typedef mozilla::ScreenRotation ScreenRotation;
   typedef mozilla::widget::CompositorWidgetProxy CompositorWidgetProxy;
+  typedef mozilla::layers::CompositorSession CompositorSession;
 
   virtual ~nsBaseWidget();
 
@@ -560,8 +562,8 @@ protected:
   nsIWidgetListener* mAttachedWidgetListener;
   nsIWidgetListener* mPreviouslyAttachedWidgetListener;
   RefPtr<LayerManager> mLayerManager;
+  RefPtr<CompositorSession> mCompositorSession;
   RefPtr<CompositorBridgeChild> mCompositorBridgeChild;
-  RefPtr<CompositorBridgeParent> mCompositorBridgeParent;
   RefPtr<mozilla::CompositorVsyncDispatcher> mCompositorVsyncDispatcher;
   RefPtr<APZCTreeManager> mAPZC;
   RefPtr<GeckoContentController> mRootContentController;

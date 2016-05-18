@@ -204,6 +204,8 @@ public:
     nsresult SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
                                        nsIObserver* aObserver) override;
 
+    CompositorBridgeParent* GetCompositorBridgeParent() const;
+
 protected:
     void BringToFront();
     nsWindow *FindTopLevel();

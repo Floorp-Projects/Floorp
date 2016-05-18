@@ -44,6 +44,7 @@
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layers/CompositorSession.h"
 #include "mozilla/TouchEvents.h"
 #include "HwcComposer2D.h"
 
@@ -697,10 +698,10 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
     }
 
     CreateCompositor();
-    if (mCompositorBridgeParent) {
-        mScreen->SetCompositorBridgeParent(mCompositorBridgeParent);
+    if (RefPtr<CompositorBridgeParent> bridge = GetCompositorBridgeParent()) {
+        mScreen->SetCompositorBridgeParent(bridge);
         if (mScreen->IsPrimaryScreen()) {
-            mComposer2D->SetCompositorBridgeParent(mCompositorBridgeParent);
+            mComposer2D->SetCompositorBridgeParent(bridge);
         }
     }
     MOZ_ASSERT(mLayerManager);
@@ -710,7 +711,7 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
 void
 nsWindow::DestroyCompositor()
 {
-    if (mCompositorBridgeParent) {
+    if (RefPtr<CompositorBridgeParent> bridge = GetCompositorBridgeParent()) {
         mScreen->SetCompositorBridgeParent(nullptr);
         if (mScreen->IsPrimaryScreen()) {
             // Unset CompositorBridgeParent
@@ -792,4 +793,10 @@ nsWindow::GetComposer2D()
     }
 
     return mComposer2D;
+}
+
+CompositorBridgeParent*
+nsWindow::GetCompositorBridgeParent() const
+{
+    return mCompositorSession ? mCompositorSession->GetInProcessBridge() : nullptr;
 }

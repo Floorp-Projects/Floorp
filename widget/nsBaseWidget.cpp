@@ -70,6 +70,7 @@
 #include "nsAccessibilityService.h"
 #endif
 #include "gfxConfig.h"
+#include "mozilla/layers/CompositorSession.h"
 
 #ifdef DEBUG
 #include "nsIObserver.h"
@@ -271,8 +272,8 @@ void nsBaseWidget::DestroyCompositor()
     // XXX CompositorBridgeChild and CompositorBridgeParent might be re-created in
     // ClientLayerManager destructor. See bug 1133426.
     RefPtr<CompositorBridgeChild> compositorChild = mCompositorBridgeChild;
-    RefPtr<CompositorBridgeParent> compositorParent = mCompositorBridgeParent;
-    mCompositorBridgeChild->Destroy();
+    RefPtr<CompositorSession> compositorSession = mCompositorSession;
+    mCompositorSession->Shutdown();
     mCompositorBridgeChild = nullptr;
   }
 
@@ -296,7 +297,7 @@ void nsBaseWidget::DestroyLayerManager()
 void
 nsBaseWidget::OnRenderingDeviceReset()
 {
-  if (!mLayerManager || !mCompositorBridgeParent) {
+  if (!mLayerManager || !mCompositorSession) {
     return;
   }
 
@@ -316,9 +317,14 @@ nsBaseWidget::OnRenderingDeviceReset()
     return;
   }
 
+  RefPtr<CompositorBridgeParent> parent = mCompositorSession->GetInProcessBridge();
+  if (!parent) {
+    return;
+  }
+
   // Recreate the compositor.
   TextureFactoryIdentifier identifier;
-  if (!mCompositorBridgeParent->ResetCompositor(backendHints, &identifier)) {
+  if (!parent->ResetCompositor(backendHints, &identifier)) {
     // No action was taken, so we don't have to do anything.
     return;
   }
@@ -988,8 +994,7 @@ void nsBaseWidget::ConfigureAPZCTreeManager()
 
   mRootContentController = CreateRootContentController();
   if (mRootContentController) {
-    uint64_t rootLayerTreeId = mCompositorBridgeParent->RootLayerTreeId();
-    CompositorBridgeParent::SetControllerForLayerTree(rootLayerTreeId, mRootContentController);
+    mCompositorSession->SetContentController(mRootContentController);
   }
 
   // When APZ is enabled, we can actually enable raw touch events because we
@@ -1025,7 +1030,7 @@ nsBaseWidget::UpdateZoomConstraints(const uint32_t& aPresShellId,
                                     const FrameMetrics::ViewID& aViewId,
                                     const Maybe<ZoomConstraints>& aConstraints)
 {
-  if (!mCompositorBridgeParent || !mAPZC) {
+  if (!mCompositorSession || !mAPZC) {
     if (mInitialZoomConstraints) {
       MOZ_ASSERT(mInitialZoomConstraints->mPresShellID == aPresShellId);
       MOZ_ASSERT(mInitialZoomConstraints->mViewID == aViewId);
@@ -1041,7 +1046,7 @@ nsBaseWidget::UpdateZoomConstraints(const uint32_t& aPresShellId,
     }
     return;
   }
-  uint64_t layersId = mCompositorBridgeParent->RootLayerTreeId();
+  uint64_t layersId = mCompositorSession->RootLayerTreeId();
   mAPZC->UpdateZoomConstraints(ScrollableLayerGuid(layersId, aPresShellId, aViewId),
                                aConstraints);
 }
@@ -1066,7 +1071,7 @@ nsBaseWidget::ProcessUntransformedAPZEvent(WidgetInputEvent* aEvent,
   // event. If the event is instead targeted to an APZC in the child process,
   // the transform will be applied in the child process before dispatching
   // the event there (see e.g. TabChild::RecvRealTouchEvent()).
-  if (aGuid.mLayersId == mCompositorBridgeParent->RootLayerTreeId()) {
+  if (aGuid.mLayersId == mCompositorSession->RootLayerTreeId()) {
     APZCCallbackHelper::ApplyCallbackTransform(*aEvent, aGuid,
         GetDefaultScale());
   }
@@ -1255,7 +1260,7 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   MOZ_ASSERT(gfxPlatform::UsesOffMainThreadCompositing(),
              "This function assumes OMTC");
 
-  MOZ_ASSERT(!mCompositorBridgeParent && !mCompositorBridgeChild,
+  MOZ_ASSERT(!mCompositorSession && !mCompositorBridgeChild,
     "Should have properly cleaned up the previous PCompositor pair beforehand");
 
   if (mCompositorBridgeChild) {
@@ -1277,21 +1282,18 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
     mCompositorWidgetProxy = NewCompositorWidgetProxy();
   }
 
-  mCompositorBridgeParent = new CompositorBridgeParent(
+  RefPtr<ClientLayerManager> lm = new ClientLayerManager(this);
+
+  mCompositorSession = CompositorSession::CreateTopLevel(
     mCompositorWidgetProxy,
+    lm,
     GetDefaultScale(),
     UseAPZ(),
     UseExternalCompositingSurface(),
     aWidth, aHeight);
-  RefPtr<ClientLayerManager> lm = new ClientLayerManager(this);
-  mCompositorBridgeChild = new CompositorBridgeChild(lm);
-  mCompositorBridgeChild->OpenSameProcess(mCompositorBridgeParent);
+  mCompositorBridgeChild = mCompositorSession->GetCompositorBridgeChild();
 
-  // Make sure the parent knows it is same process.
-  mCompositorBridgeParent->SetOtherProcessId(base::GetCurrentProcId());
-
-  uint64_t rootLayerTreeId = mCompositorBridgeParent->RootLayerTreeId();
-  mAPZC = CompositorBridgeParent::GetAPZCTreeManager(rootLayerTreeId);
+  mAPZC = mCompositorSession->GetAPZCTreeManager();
   if (mAPZC) {
     ConfigureAPZCTreeManager();
   }
@@ -1327,7 +1329,7 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
     DestroyCompositor();
     mLayerManager = nullptr;
     mCompositorBridgeChild = nullptr;
-    mCompositorBridgeParent = nullptr;
+    mCompositorSession = nullptr;
     mCompositorVsyncDispatcher = nullptr;
     return;
   }
@@ -1861,10 +1863,10 @@ nsBaseWidget::ZoomToRect(const uint32_t& aPresShellId,
                          const CSSRect& aRect,
                          const uint32_t& aFlags)
 {
-  if (!mCompositorBridgeParent || !mAPZC) {
+  if (!mCompositorSession || !mAPZC) {
     return;
   }
-  uint64_t layerId = mCompositorBridgeParent->RootLayerTreeId();
+  uint64_t layerId = mCompositorSession->RootLayerTreeId();
   mAPZC->ZoomToRect(ScrollableLayerGuid(layerId, aPresShellId, aViewId), aRect, aFlags);
 }
 
@@ -1910,9 +1912,9 @@ nsBaseWidget::StartAsyncScrollbarDrag(const AsyncDragMetrics& aDragMetrics)
     return;
   }
 
-  MOZ_ASSERT(XRE_IsParentProcess() && mCompositorBridgeParent);
+  MOZ_ASSERT(XRE_IsParentProcess() && mCompositorSession);
 
-  int layersId = mCompositorBridgeParent->RootLayerTreeId();;
+  int layersId = mCompositorSession->RootLayerTreeId();;
   ScrollableLayerGuid guid(layersId, aDragMetrics.mPresShellId, aDragMetrics.mViewId);
 
   APZThreadUtils::RunOnControllerThread(NewRunnableMethod

@@ -149,6 +149,7 @@ protected:
     bool UseExternalCompositingSurface() const override {
       return true;
     }
+    CompositorBridgeParent* GetCompositorBridgeParent() const;
 
 private:
     // This is used by SynthesizeNativeTouchPoint to maintain state between
