@@ -170,6 +170,17 @@ DocAccessible::CreateSubtree(Accessible* aChild)
   Accessible* focusedAcc = nullptr;
   CacheChildrenInSubtree(aChild, &focusedAcc);
 
+  // Fire events for ARIA elements.
+  if (aChild->HasARIARole()) {
+    roles::Role role = aChild->ARIARole();
+    if (role == roles::MENUPOPUP) {
+      FireDelayedEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_START, aChild);
+    }
+    else if (role == roles::ALERT) {
+      FireDelayedEvent(nsIAccessibleEvent::EVENT_ALERT, aChild);
+    }
+  }
+
   // XXX: do we really want to send focus to focused DOM node not taking into
   // account active item?
   if (focusedAcc) {
