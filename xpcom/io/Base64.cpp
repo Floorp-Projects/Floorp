@@ -282,6 +282,43 @@ Base64EncodeInputStream(nsIInputStream* aInputStream,
 }
 
 nsresult
+Base64Encode(const char* aBinary, uint32_t aBinaryLen, char** aBase64)
+{
+  // Check for overflow.
+  if (aBinaryLen > (UINT32_MAX / 4) * 3) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Don't ask PR_Base64Encode to encode empty strings.
+  if (aBinaryLen == 0) {
+    char* base64 = (char*)moz_xmalloc(1);
+    base64[0] = '\0';
+    *aBase64 = base64;
+    return NS_OK;
+  }
+
+  uint32_t base64Len = ((aBinaryLen + 2) / 3) * 4;
+
+  // Add one byte for null termination.
+  char* base64 = (char*)malloc(base64Len + 1);
+  if (!base64) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (!PL_Base64Encode(aBinary, aBinaryLen, base64)) {
+    free(base64);
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  // PL_Base64Encode doesn't null terminate the buffer for us when we pass
+  // the buffer in. Do that manually.
+  base64[base64Len] = '\0';
+
+  *aBase64 = base64;
+  return NS_OK;
+}
+
+nsresult
 Base64Encode(const nsACString& aBinary, nsACString& aBase64)
 {
   // Check for overflow.
@@ -289,7 +326,7 @@ Base64Encode(const nsACString& aBinary, nsACString& aBase64)
     return NS_ERROR_FAILURE;
   }
 
-  // Don't ask PR_Base64Encode to encode empty strings
+  // Don't ask PR_Base64Encode to encode empty strings.
   if (aBinary.IsEmpty()) {
     aBase64.Truncate();
     return NS_OK;
@@ -297,22 +334,24 @@ Base64Encode(const nsACString& aBinary, nsACString& aBase64)
 
   uint32_t base64Len = ((aBinary.Length() + 2) / 3) * 4;
 
-  char* base64;
-
   // Add one byte for null termination.
-  if (aBase64.SetCapacity(base64Len + 1, fallible) &&
-      (base64 = aBase64.BeginWriting()) &&
-      PL_Base64Encode(aBinary.BeginReading(), aBinary.Length(), base64)) {
-    // PL_Base64Encode doesn't null terminate the buffer for us when we pass
-    // the buffer in. Do that manually.
-    base64[base64Len] = '\0';
-
-    aBase64.SetLength(base64Len);
-    return NS_OK;
+  if (!aBase64.SetCapacity(base64Len + 1, fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  aBase64.Truncate();
-  return NS_ERROR_INVALID_ARG;
+  char* base64 = aBase64.BeginWriting();
+  if (!base64 ||
+      !PL_Base64Encode(aBinary.BeginReading(), aBinary.Length(), base64)) {
+    aBase64.Truncate();
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  // PL_Base64Encode doesn't null terminate the buffer for us when we pass
+  // the buffer in. Do that manually.
+  base64[base64Len] = '\0';
+
+  aBase64.SetLength(base64Len);
+  return NS_OK;
 }
 
 nsresult

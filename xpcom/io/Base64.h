@@ -25,6 +25,8 @@ Base64EncodeInputStream(nsIInputStream* aInputStream,
                         uint32_t aOffset = 0);
 
 nsresult
+Base64Encode(const char* aBinary, uint32_t aBinaryLen, char** aBase64);
+nsresult
 Base64Encode(const nsACString& aBinary, nsACString& aBase64);
 nsresult
 Base64Encode(const nsAString& aBinary, nsAString& aBase64);
