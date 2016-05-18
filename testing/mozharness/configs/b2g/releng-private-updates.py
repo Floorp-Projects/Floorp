@@ -37,8 +37,7 @@ config = {
     },
     "gittool_share_base": "/builds/git-shared/git",
     "gittool_base_mirror_urls": [],
-    "hgtool_share_base": "/builds/hg-shared",
-    "hgtool_base_bundle_urls": ["https://ftp-ssl.mozilla.org/pub/mozilla.org/firefox/bundles"],
+    "vcs_share_base": "/builds/hg-shared",
     "exes": {
         "tooltool.py": "/tools/tooltool.py",
     },
