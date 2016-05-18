@@ -503,7 +503,7 @@ MediaFormatReader::ShouldSkip(bool aSkipToNextKeyframe, media::TimeUnit aTimeThr
   }
   return (nextKeyframe < aTimeThreshold ||
           (mVideo.mTimeThreshold &&
-           mVideo.mTimeThreshold.ref().EndTime() < aTimeThreshold)) &&
+           mVideo.mTimeThreshold.ref().mTime < aTimeThreshold)) &&
          nextKeyframe.ToMicroseconds() >= 0 && !nextKeyframe.IsInfinite();
 }
 
@@ -971,13 +971,10 @@ MediaFormatReader::HandleDemuxedSamples(TrackType aTrack,
         decoder.mQueuedSamples.AppendElements(Move(samples));
         NotifyDecodingRequested(aTrack);
       } else {
-        TimeInterval time =
-          TimeInterval(TimeUnit::FromMicroseconds(sample->mTime),
-                       TimeUnit::FromMicroseconds(sample->GetEndTime()));
         InternalSeekTarget seekTarget =
-          decoder.mTimeThreshold.refOr(InternalSeekTarget(time, false));
+          decoder.mTimeThreshold.refOr(InternalSeekTarget(TimeUnit::FromMicroseconds(sample->mTime), false));
         LOG("Stream change occurred on a non-keyframe. Seeking to:%lld",
-            sample->mTime);
+            seekTarget.mTime.ToMicroseconds());
         InternalSeek(aTrack, seekTarget);
       }
       return;
@@ -1017,14 +1014,14 @@ MediaFormatReader::InternalSeek(TrackType aTrack, const InternalSeekTarget& aTar
 {
   MOZ_ASSERT(OnTaskQueue());
   LOG("%s internal seek to %f",
-      TrackTypeToStr(aTrack), aTarget.Time().ToSeconds());
+      TrackTypeToStr(aTrack), aTarget.mTime.ToSeconds());
 
   auto& decoder = GetDecoderData(aTrack);
   decoder.Flush();
   decoder.ResetDemuxer();
   decoder.mTimeThreshold = Some(aTarget);
   RefPtr<MediaFormatReader> self = this;
-  decoder.mSeekRequest.Begin(decoder.mTrackDemuxer->Seek(decoder.mTimeThreshold.ref().Time())
+  decoder.mSeekRequest.Begin(decoder.mTrackDemuxer->Seek(decoder.mTimeThreshold.ref().mTime)
              ->Then(OwnerThread(), __func__,
                     [self, aTrack] (media::TimeUnit aTime) {
                       auto& decoder = self->GetDecoderData(aTrack);
@@ -1124,15 +1121,15 @@ MediaFormatReader::Update(TrackType aTrack)
     RefPtr<MediaData>& output = decoder.mOutput[0];
     InternalSeekTarget target = decoder.mTimeThreshold.ref();
     media::TimeUnit time = media::TimeUnit::FromMicroseconds(output->mTime);
-    if (target.Contains(time)) {
+    if (time >= target.mTime) {
       // We have reached our internal seek target.
       decoder.mTimeThreshold.reset();
     }
-    if (time < target.Time() || (target.mDropTarget && target.Contains(time))) {
+    if (time < target.mTime || (target.mDropTarget && time == target.mTime)) {
       LOGV("Internal Seeking: Dropping %s frame time:%f wanted:%f (kf:%d)",
            TrackTypeToStr(aTrack),
            media::TimeUnit::FromMicroseconds(output->mTime).ToSeconds(),
-           target.Time().ToSeconds(),
+           target.mTime.ToSeconds(),
            output->mKeyframe);
       decoder.mOutput.RemoveElementAt(0);
     }
@@ -1155,8 +1152,7 @@ MediaFormatReader::Update(TrackType aTrack)
       decoder.mOutput.RemoveElementAt(0);
       decoder.mSizeOfQueue -= 1;
       decoder.mLastSampleTime =
-        Some(TimeInterval(TimeUnit::FromMicroseconds(output->mTime),
-                          TimeUnit::FromMicroseconds(output->GetEndTime())));
+        Some(media::TimeUnit::FromMicroseconds(output->mTime));
       ReturnOutput(output, aTrack);
     } else if (decoder.mError) {
       LOG("Rejecting %s promise: DECODE_ERROR", TrackTypeToStr(aTrack));
@@ -1176,7 +1172,7 @@ MediaFormatReader::Update(TrackType aTrack)
           // Set up the internal seek machinery to be able to resume from the
           // last sample decoded.
           LOG("Seeking to last sample time: %lld",
-              decoder.mLastSampleTime.ref().mStart.ToMicroseconds());
+              decoder.mLastSampleTime.ref().ToMicroseconds());
           InternalSeek(aTrack, InternalSeekTarget(decoder.mLastSampleTime.ref(), true));
         }
         if (!decoder.mReceivedNewData) {
@@ -1823,7 +1819,7 @@ MediaFormatReader::GetMozDebugReaderData(nsAString& aString)
                               int(mAudio.mQueuedSamples.Length()),
                               mAudio.mDecodingRequested,
                               mAudio.mTimeThreshold
-                              ? mAudio.mTimeThreshold.ref().Time().ToSeconds()
+                              ? mAudio.mTimeThreshold.ref().mTime.ToSeconds()
                               : -1.0,
                               mAudio.mTimeThreshold
                               ? mAudio.mTimeThreshold.ref().mHasSeeked
@@ -1847,7 +1843,7 @@ MediaFormatReader::GetMozDebugReaderData(nsAString& aString)
                               int(mVideo.mQueuedSamples.Length()),
                               mVideo.mDecodingRequested,
                               mVideo.mTimeThreshold
-                              ? mVideo.mTimeThreshold.ref().Time().ToSeconds()
+                              ? mVideo.mTimeThreshold.ref().mTime.ToSeconds()
                               : -1.0,
                               mVideo.mTimeThreshold
                               ? mVideo.mTimeThreshold.ref().mHasSeeked
