@@ -41,8 +41,6 @@ private:
   const RefPtr<TaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
   Atomic<bool> mIsFlushing;
-
-  int64_t mFrames;
 };
 
 } // namespace mozilla

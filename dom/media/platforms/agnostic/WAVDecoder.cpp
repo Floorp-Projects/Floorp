@@ -53,7 +53,6 @@ WaveDataDecoder::WaveDataDecoder(const AudioInfo& aConfig,
   , mTaskQueue(aTaskQueue)
   , mCallback(aCallback)
   , mIsFlushing(false)
-  , mFrames(0)
 {
 }
 
@@ -72,7 +71,6 @@ WaveDataDecoder::Init()
 nsresult
 WaveDataDecoder::Input(MediaRawData* aSample)
 {
-  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
                        this, &WaveDataDecoder::ProcessDecode, aSample));
 
@@ -82,7 +80,6 @@ WaveDataDecoder::Input(MediaRawData* aSample)
 void
 WaveDataDecoder::ProcessDecode(MediaRawData* aSample)
 {
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   if (mIsFlushing) {
     return;
   }
@@ -96,8 +93,6 @@ WaveDataDecoder::ProcessDecode(MediaRawData* aSample)
 bool
 WaveDataDecoder::DoDecode(MediaRawData* aSample)
 {
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-
   size_t aLength = aSample->Size();
   ByteReader aReader = ByteReader(aSample->Data(), aLength);
   int64_t aOffset = aSample->mOffset;
@@ -150,7 +145,6 @@ WaveDataDecoder::DoDecode(MediaRawData* aSample)
                                   Move(buffer),
                                   mInfo.mChannels,
                                   mInfo.mRate));
-  mFrames += frames;
 
   return true;
 }
@@ -158,14 +152,12 @@ WaveDataDecoder::DoDecode(MediaRawData* aSample)
 void
 WaveDataDecoder::ProcessDrain()
 {
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   mCallback->DrainComplete();
 }
 
 nsresult
 WaveDataDecoder::Drain()
 {
-  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   mTaskQueue->Dispatch(NewRunnableMethod(this, &WaveDataDecoder::ProcessDrain));
   return NS_OK;
 }
@@ -173,10 +165,8 @@ WaveDataDecoder::Drain()
 nsresult
 WaveDataDecoder::Flush()
 {
-  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   mIsFlushing = true;
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([this] () {
-    mFrames = 0;
   });
   SyncRunnable::DispatchToThread(mTaskQueue, r);
   mIsFlushing = false;
