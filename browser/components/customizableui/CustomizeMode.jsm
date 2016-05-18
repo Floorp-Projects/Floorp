@@ -1436,17 +1436,6 @@ CustomizeMode.prototype = {
       }
       let hideRecommendedLabel = (footer.previousSibling == recommendedLabel);
       recommendedLabel.hidden = hideRecommendedLabel;
-
-      let hideMyThemesSection = themesInMyThemesSection < 2 && hideRecommendedLabel;
-      let headerLabel = doc.getElementById("customization-lwtheme-menu-header");
-      if (hideMyThemesSection) {
-        let element = recommendedLabel.previousSibling;
-        while (element && element != headerLabel) {
-          element.hidden = true;
-          element = element.previousSibling;
-        }
-      }
-      headerLabel.hidden = hideMyThemesSection;
     }.bind(this));
   },
 
