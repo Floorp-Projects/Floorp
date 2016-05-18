@@ -15,7 +15,7 @@
 
 using mozilla::LogLevel;
 
-static PRLogModuleInfo* sIdleLog = nullptr;
+static mozilla::LazyLogModule sIdleLog("nsIIdleService");
 
 typedef bool (*_XScreenSaverQueryExtension_fn)(Display* dpy, int* event_base,
                                                  int* error_base);
@@ -65,9 +65,6 @@ static void Initialize()
 nsIdleServiceGTK::nsIdleServiceGTK()
     : mXssInfo(nullptr)
 {
-    if (!sIdleLog)
-        sIdleLog = PR_NewLogModule("nsIIdleService");
-
     Initialize();
 }
 

@@ -33,7 +33,7 @@ using mozilla::LogLevel;
                                NSPasteboardTypePNG, \
                                nil
 
-extern PRLogModuleInfo* sCocoaLog;
+extern mozilla::LazyLogModule sCocoaLog;
 
 extern void EnsureLogInitialized();
 
