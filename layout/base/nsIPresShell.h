@@ -1108,6 +1108,7 @@ public:
                                   gfxContext* aRenderedContext) = 0;
 
   enum {
+    RENDER_IS_IMAGE = 0x100,
     RENDER_AUTO_SCALE = 0x80
   };
 
@@ -1434,6 +1435,12 @@ public:
    * SetResolutionAndScaleTo(), and set to false by a call to SetResolution().
    */
   virtual bool ScaleToResolution() const = 0;
+
+  /**
+   * Used by session restore code to restore a resolution before the first
+   * paint.
+   */
+  virtual void SetRestoreResolution(float aResolution) = 0;
 
   /**
    * Returns whether we are in a DrawWindow() call that used the

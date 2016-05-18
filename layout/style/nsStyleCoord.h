@@ -295,6 +295,10 @@ public:
   inline nsStyleUnit GetIEndUnit(mozilla::WritingMode aWritingMode) const;
   inline nsStyleUnit GetBEndUnit(mozilla::WritingMode aWritingMode) const;
 
+  // Return true if either the start or end side in the axis is 'auto'.
+  inline bool HasBlockAxisAuto(mozilla::WritingMode aWritingMode) const;
+  inline bool HasInlineAxisAuto(mozilla::WritingMode aWritingMode) const;
+
   inline nsStyleCoord Get(mozilla::WritingMode aWritingMode,
                           mozilla::LogicalSide aSide) const;
   inline nsStyleCoord GetIStart(mozilla::WritingMode aWritingMode) const;

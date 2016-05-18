@@ -854,6 +854,16 @@ public:
   void Prefable23();
   void Prefable24();
 
+  // Conditionally exposed methods/attributes involving [SecureContext]
+  bool ConditionalOnSecureContext1();
+  bool ConditionalOnSecureContext2();
+  bool ConditionalOnSecureContext3();
+  bool ConditionalOnSecureContext4();
+  void ConditionalOnSecureContext5();
+  void ConditionalOnSecureContext6();
+  void ConditionalOnSecureContext7();
+  void ConditionalOnSecureContext8();
+
   // Miscellania
   int32_t AttrWithLenientThis();
   void SetAttrWithLenientThis(int32_t);
@@ -1370,6 +1380,20 @@ public:
   static
   already_AddRefed<TestInterfaceWithPromiseConstructorArg>
     Constructor(const GlobalObject&, Promise&, ErrorResult&);
+
+  virtual nsISupports* GetParentObject();
+};
+
+class TestSecureContextInterface : public nsISupports, public nsWrapperCache
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  static
+  already_AddRefed<TestSecureContextInterface>
+    Constructor(const GlobalObject&, ErrorResult&);
+
+  static void AlsoSecureContext(const GlobalObject&);
 
   virtual nsISupports* GetParentObject();
 };

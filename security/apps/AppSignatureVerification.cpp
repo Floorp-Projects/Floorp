@@ -176,12 +176,12 @@ VerifyStreamContentDigest(nsIInputStream* stream,
     return NS_ERROR_SIGNED_JAR_ENTRY_TOO_LARGE;
   }
 
-  ScopedPK11Context digestContext(PK11_CreateDigestContext(SEC_OID_SHA1));
+  UniquePK11Context digestContext(PK11_CreateDigestContext(SEC_OID_SHA1));
   if (!digestContext) {
     return mozilla::psm::GetXPCOMFromNSSError(PR_GetError());
   }
 
-  rv = MapSECStatus(PK11_DigestBegin(digestContext));
+  rv = MapSECStatus(PK11_DigestBegin(digestContext.get()));
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint64_t totalBytesRead = 0;
@@ -199,7 +199,7 @@ VerifyStreamContentDigest(nsIInputStream* stream,
       return NS_ERROR_SIGNED_JAR_ENTRY_TOO_LARGE;
     }
 
-    rv = MapSECStatus(PK11_DigestOp(digestContext, buf.data, bytesRead));
+    rv = MapSECStatus(PK11_DigestOp(digestContext.get(), buf.data, bytesRead));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

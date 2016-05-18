@@ -19,6 +19,7 @@ html,body {
   grid-auto-rows: 1in;
   grid-gap: 0.1in;
   border: 0.1in solid;
+  align-items: start;
 }
 span { display:block; background:lime; border:0.05in solid black; }
 x { display:block; height:0.2in; }
@@ -32,7 +33,7 @@ br { page-break-after:always; break-after:always; display:block; height:1px; }
 
 <div style="padding-top:1in; background:grey">
   <div class="grid t">
-    <span class="t"><x style="height:auto"></x></span>
+    <span class="t" style="align-self:stretch"><x style="height:auto"></x></span>
   </div>
   <div class="grid b" style="border-color:transparent; grid-auto-rows: 0;">
     <span class="b"><x style="height:0.04in"></x></span>

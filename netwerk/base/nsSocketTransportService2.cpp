@@ -27,6 +27,10 @@
 #include "nsIFile.h"
 #include "nsIWidget.h"
 
+#if defined(XP_WIN)
+#include "mozilla/WindowsVersion.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::net;
 
@@ -1178,6 +1182,28 @@ nsSocketTransportService::DoPollIteration(TimeDuration *pollDuration)
     return NS_OK;
 }
 
+void
+nsSocketTransportService::UpdateSendBufferPref(nsIPrefBranch *pref)
+{
+    int32_t bufferSize;
+
+    // If the pref is set, honor it. 0 means use OS defaults.
+    nsresult rv = pref->GetIntPref(SEND_BUFFER_PREF, &bufferSize);
+    if (NS_SUCCEEDED(rv)) {
+        mSendBufferSize = bufferSize;
+        return;
+    }
+
+#if defined(XP_WIN)
+    // If the pref is not set but this is windows set it depending on windows version
+    if (!mozilla::IsWin2003OrLater()) { // windows xp
+        mSendBufferSize = 131072;
+    } else { // vista or later
+        mSendBufferSize = 131072 * 4;
+    }
+#endif
+}
+
 nsresult
 nsSocketTransportService::UpdatePrefs()
 {
@@ -1185,14 +1211,11 @@ nsSocketTransportService::UpdatePrefs()
 
     nsCOMPtr<nsIPrefBranch> tmpPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (tmpPrefService) {
-        int32_t bufferSize;
-        nsresult rv = tmpPrefService->GetIntPref(SEND_BUFFER_PREF, &bufferSize);
-        if (NS_SUCCEEDED(rv) && bufferSize > 0)
-            mSendBufferSize = bufferSize;
+        UpdateSendBufferPref(tmpPrefService);
 
         // Default TCP Keepalive Values.
         int32_t keepaliveIdleTimeS;
-        rv = tmpPrefService->GetIntPref(KEEPALIVE_IDLE_TIME_PREF,
+        nsresult rv = tmpPrefService->GetIntPref(KEEPALIVE_IDLE_TIME_PREF,
                                         &keepaliveIdleTimeS);
         if (NS_SUCCEEDED(rv))
             mKeepaliveIdleTimeS = clamped(keepaliveIdleTimeS,

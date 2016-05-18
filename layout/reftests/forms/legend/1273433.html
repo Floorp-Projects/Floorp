@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 1273433</title>
+    <style type="text/css">
+
+html,body {
+    color:black; background-color:white; font-size:12px; padding:0; margin:0;
+}
+	
+fieldset { border: 1px solid black; }
+.v { writing-mode: vertical-lr; height:300px; float:left; }
+legend { width: 100px; border:1px solid blue; }
+.v legend, .rl legend { width: auto; height: 100px; }
+.rtl { direction:rtl; }
+.ltr { direction:ltr; }
+
+    </style>
+</head>
+<body>
+
+<fieldset><legend>(unset)</legend></fieldset>
+<fieldset><legend align="left">left</legend></fieldset>
+<fieldset><legend align="right">right</legend></fieldset>
+
+<fieldset class="rtl"><legend>(unset)</legend>RTL</fieldset>
+<fieldset class="rtl"><legend align="left">left</legend>RTL</fieldset>
+<fieldset class="rtl"><legend align="right">right</legend>RTL</fieldset>
+
+<fieldset class="rtl"><legend class="ltr" align="left">left</legend>RTL</fieldset>
+<fieldset class="rtl"><legend class="ltr" align="right">right</legend>RTL</fieldset>
+
+<fieldset><legend align="bottom">bottom</legend></fieldset>
+<fieldset><legend align="top">top</legend></fieldset>
+
+<fieldset class="v"><legend>(unset)</legend></fieldset>
+<fieldset class="v"><legend align="left">left</legend></fieldset>
+<fieldset class="v"><legend align="right">right</legend></fieldset>
+
+<fieldset class="v rtl"><legend>(unset)</legend>RTL</fieldset>
+<fieldset class="v rtl"><legend align="left">left</legend>RTL</fieldset>
+<fieldset class="v rtl"><legend align="right">right</legend>RTL</fieldset>
+
+<fieldset class="v rtl"><legend class="ltr" align="left">left</legend>RTL</fieldset>
+<fieldset class="v rtl"><legend class="ltr" align="right">right</legend>RTL</fieldset>
+
+<fieldset class="v"><legend align="bottom">bottom</legend></fieldset>
+<fieldset class="v"><legend align="top">top</legend></fieldset>
+
+</body>
+</html>

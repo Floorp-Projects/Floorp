@@ -42,9 +42,13 @@ enum class ExprKind {
     I64,
     F32,
     F64,
+    I8x16,
+    I16x8,
     I32x4,
-    B32x4,
     F32x4,
+    B8x16,
+    B16x8,
+    B32x4,
     Br,
     BrIf,
     BrTable,
@@ -282,6 +286,18 @@ class MOZ_STACK_CLASS ExprIter : private Policy
         *out = d_.uncheckedReadFixedF64();
         return true;
     }
+    MOZ_MUST_USE bool readFixedI8x16(I8x16* out) {
+        if (Validate)
+            return d_.readFixedI8x16(out);
+        d_.uncheckedReadFixedI8x16(out);
+        return true;
+    }
+    MOZ_MUST_USE bool readFixedI16x8(I16x8* out) {
+        if (Validate)
+            return d_.readFixedI16x8(out);
+        d_.uncheckedReadFixedI16x8(out);
+        return true;
+    }
     MOZ_MUST_USE bool readFixedI32x4(I32x4* out) {
         if (Validate)
             return d_.readFixedI32x4(out);
@@ -457,8 +473,12 @@ class MOZ_STACK_CLASS ExprIter : private Policy
     MOZ_MUST_USE bool readI64Const(int64_t* i64);
     MOZ_MUST_USE bool readF32Const(float* f32);
     MOZ_MUST_USE bool readF64Const(double* f64);
+    MOZ_MUST_USE bool readI8x16Const(I8x16* i8x16);
+    MOZ_MUST_USE bool readI16x8Const(I16x8* i16x8);
     MOZ_MUST_USE bool readI32x4Const(I32x4* i32x4);
     MOZ_MUST_USE bool readF32x4Const(F32x4* f32x4);
+    MOZ_MUST_USE bool readB8x16Const(I8x16* i8x16);
+    MOZ_MUST_USE bool readB16x8Const(I16x8* i16x8);
     MOZ_MUST_USE bool readB32x4Const(I32x4* i32x4);
     MOZ_MUST_USE bool readCall(uint32_t* calleeIndex, uint32_t* arity);
     MOZ_MUST_USE bool readCallIndirect(uint32_t* sigIndex, uint32_t* arity);
@@ -1291,6 +1311,28 @@ ExprIter<Policy>::readF64Const(double* f64)
 
 template <typename Policy>
 inline bool
+ExprIter<Policy>::readI8x16Const(I8x16* i8x16)
+{
+    MOZ_ASSERT(Classify(expr_) == ExprKind::I8x16);
+
+    I8x16 unused;
+    return readFixedI8x16(Output ? i8x16 : &unused) &&
+           push(ExprType::I8x16);
+}
+
+template <typename Policy>
+inline bool
+ExprIter<Policy>::readI16x8Const(I16x8* i16x8)
+{
+    MOZ_ASSERT(Classify(expr_) == ExprKind::I16x8);
+
+    I16x8 unused;
+    return readFixedI16x8(Output ? i16x8 : &unused) &&
+           push(ExprType::I16x8);
+}
+
+template <typename Policy>
+inline bool
 ExprIter<Policy>::readI32x4Const(I32x4* i32x4)
 {
     MOZ_ASSERT(Classify(expr_) == ExprKind::I32x4);
@@ -1309,6 +1351,28 @@ ExprIter<Policy>::readF32x4Const(F32x4* f32x4)
     F32x4 unused;
     return readFixedF32x4(Output ? f32x4 : &unused) &&
            push(ExprType::F32x4);
+}
+
+template <typename Policy>
+inline bool
+ExprIter<Policy>::readB8x16Const(I8x16* i8x16)
+{
+    MOZ_ASSERT(Classify(expr_) == ExprKind::B8x16);
+
+    I8x16 unused;
+    return readFixedI8x16(Output ? i8x16 : &unused) &&
+           push(ExprType::B8x16);
+}
+
+template <typename Policy>
+inline bool
+ExprIter<Policy>::readB16x8Const(I16x8* i16x8)
+{
+    MOZ_ASSERT(Classify(expr_) == ExprKind::B16x8);
+
+    I16x8 unused;
+    return readFixedI16x8(Output ? i16x8 : &unused) &&
+           push(ExprType::B16x8);
 }
 
 template <typename Policy>

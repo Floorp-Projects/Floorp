@@ -25,6 +25,7 @@ GetWidget(WidgetNodeType aNodeType);
 GtkStyleContext*
 ClaimStyleContext(WidgetNodeType aNodeType,
                   GtkTextDirection aDirection = GTK_TEXT_DIR_LTR,
+                  GtkStateFlags aStateFlags = GTK_STATE_FLAG_NORMAL,
                   StyleFlags aFlags = NO_STYLE_FLAGS);
 void
 ReleaseStyleContext(GtkStyleContext* style);

@@ -104,7 +104,6 @@ public:
 protected:
   nsCOMPtr<nsISupports> mContentData;
   nsPoint mScrollState;
-  bool mRestoringHistoryScrollPosition;
   float mResolution;
   bool mScaleToResolution;
   bool mDisabledSet;

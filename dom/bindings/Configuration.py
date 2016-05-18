@@ -770,6 +770,10 @@ class Descriptor(DescriptorProvider):
                 self.interface.parent)
 
     def hasThreadChecks(self):
+        # isExposedConditionally does not necessarily imply thread checks
+        # (since at least [SecureContext] is independent of them), but we're
+        # only used to decide whether to include nsThreadUtils.h, so we don't
+        # worry about that.
         return ((self.isExposedConditionally() and
                  not self.interface.isExposedInWindow()) or
                 self.interface.isExposedInSomeButNotAllWorkers())

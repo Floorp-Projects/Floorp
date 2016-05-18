@@ -90,12 +90,24 @@
             "description": "The $(topic:transition-types)[transition type] for this visit from its referrer."
           }
         }
+      },
+      {
+        "id": "HistoryTime",
+        "description": "A time specified as a Date object, a number or string representing milliseconds since the epoch, or an ISO 8601 string",
+        "choices": [
+          {
+            "type": "string",
+            "pattern": "^[1-9]\\d*$"
+          },
+          {
+            "$ref": "extensionTypes.Date"
+          }
+        ]
       }
     ],
     "functions": [
       {
         "name": "search",
-        "unsupported": true,
         "type": "function",
         "description": "Searches the history for the last visit time of each page matching the query.",
         "async": "callback",
@@ -109,19 +121,19 @@
                 "description": "A free-text query to the history service.  Leave empty to retrieve all pages."
               },
               "startTime": {
-                "type": "number",
+                "$ref": "HistoryTime",
                 "optional": true,
-                "description": "Limit results to those visited after this date, represented in milliseconds since the epoch. If not specified, this defaults to 24 hours in the past."
+                "description": "Limit results to those visited after this date. If not specified, this defaults to 24 hours in the past."
               },
               "endTime": {
-                "type": "number",
+                "$ref": "HistoryTime",
                 "optional": true,
-                "description": "Limit results to those visited before this date, represented in milliseconds since the epoch."
+                "description": "Limit results to those visited before this date."
               },
               "maxResults": {
                 "type": "integer",
                 "optional": true,
-                "minimum": 0,
+                "minimum": 1,
                 "description": "The maximum number of results to retrieve.  Defaults to 100."
               }
             }

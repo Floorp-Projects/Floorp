@@ -127,10 +127,7 @@ BackgroundFileSaver::~BackgroundFileSaver()
 void
 BackgroundFileSaver::destructorSafeDestroyNSSReference()
 {
-  if (mDigestContext) {
-    mozilla::psm::PK11_DestroyContext_true(mDigestContext.forget());
-    mDigestContext = nullptr;
-  }
+  mDigestContext = nullptr;
 }
 
 void
@@ -554,8 +551,8 @@ BackgroundFileSaver::ProcessStateChange()
   if (sha256Enabled && !mDigestContext) {
     nsNSSShutDownPreventionLock lock;
     if (!isAlreadyShutDown()) {
-      mDigestContext =
-        PK11_CreateDigestContext(static_cast<SECOidTag>(SEC_OID_SHA256));
+      mDigestContext = UniquePK11Context(
+        PK11_CreateDigestContext(SEC_OID_SHA256));
       NS_ENSURE_TRUE(mDigestContext, NS_ERROR_OUT_OF_MEMORY);
     }
   }
@@ -586,7 +583,7 @@ BackgroundFileSaver::ProcessStateChange()
           return NS_ERROR_NOT_AVAILABLE;
         }
 
-        nsresult rv = MapSECStatus(PK11_DigestOp(mDigestContext,
+        nsresult rv = MapSECStatus(PK11_DigestOp(mDigestContext.get(),
                                                  uint8_t_ptr_cast(buffer),
                                                  count));
         NS_ENSURE_SUCCESS(rv, rv);
@@ -632,7 +629,7 @@ BackgroundFileSaver::ProcessStateChange()
     // the outputStream. BackgroundFileSaver is reference-counted before the
     // call to AsyncCopy, and mDigestContext is never destroyed before
     // AsyncCopyCallback.
-    outputStream = new DigestOutputStream(outputStream, mDigestContext);
+    outputStream = new DigestOutputStream(outputStream, mDigestContext.get());
   }
 
   // Start copying our input to the target file.  No errors can be raised past

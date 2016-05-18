@@ -75,7 +75,6 @@ ChannelMediaResource::ChannelMediaResource(MediaResourceCallback* aCallback,
     mCacheStream(this),
     mLock("ChannelMediaResource.mLock"),
     mIgnoreResume(false),
-    mIsTransportSeekable(true),
     mSuspendAgent(mChannel)
 {
 }
@@ -297,7 +296,6 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
 
   {
     MutexAutoLock lock(mLock);
-    mIsTransportSeekable = seekable;
     mChannelStatistics->Start();
   }
 
@@ -315,8 +313,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
 bool
 ChannelMediaResource::IsTransportSeekable()
 {
-  MutexAutoLock lock(mLock);
-  return mIsTransportSeekable;
+  return mCacheStream.IsTransportSeekable();
 }
 
 nsresult

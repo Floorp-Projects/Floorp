@@ -123,8 +123,11 @@ nsGenericHTMLFrameElement::GetContentWindow()
 
   nsCOMPtr<nsIDocShell> doc_shell;
   mFrameLoader->GetDocShell(getter_AddRefs(doc_shell));
+  if (!doc_shell) {
+    return nullptr;
+  }
 
-  nsCOMPtr<nsPIDOMWindowOuter> win = do_GetInterface(doc_shell);
+  nsCOMPtr<nsPIDOMWindowOuter> win = doc_shell->GetWindow();
 
   if (!win) {
     return nullptr;

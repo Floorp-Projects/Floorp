@@ -708,7 +708,7 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(
 
     bool isReserved = false;
     if (commandElement) {
-      if (!IsExecutableElement(commandElement)) {
+      if (aExecute && !IsExecutableElement(commandElement)) {
         continue;
       }
 
