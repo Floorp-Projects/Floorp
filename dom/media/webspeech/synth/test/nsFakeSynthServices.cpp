@@ -90,7 +90,8 @@ public:
   NS_IMETHOD OnCancel() override
   {
     if (mTask) {
-      mTask->DispatchEnd(1.5, 1);
+      mTask->DispatchError(1.5, 1,
+                           uint32_t(SpeechSynthesisErrorCode::Interrupted));
     }
 
     return NS_OK;

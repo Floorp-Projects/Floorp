@@ -35,6 +35,7 @@ public:
     : mTask(aTask)
     , mSpeechSynthesizer(aSynth)
     , mOffsets(aOffsets)
+    , mCanceled(false)
   {
     mStartingTime = TimeStamp::Now();
   }
@@ -61,6 +62,7 @@ private:
   TimeStamp mStartingTime;
   uint32_t mCurrentIndex;
   nsTArray<size_t> mOffsets;
+  bool mCanceled;
 };
 
 NS_IMPL_CYCLE_COLLECTION(SpeechTaskCallback, mTask);
@@ -78,6 +80,7 @@ SpeechTaskCallback::OnCancel()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
+  mCanceled = true;
   [mSpeechSynthesizer stopSpeaking];
   return NS_OK;
 
@@ -163,7 +166,12 @@ SpeechTaskCallback::OnError(uint32_t aIndex)
 void
 SpeechTaskCallback::OnDidFinishSpeaking()
 {
-  mTask->DispatchEnd(GetTimeDurationFromStart(), mCurrentIndex);
+  if (mCanceled) {
+    mTask->DispatchError(GetTimeDurationFromStart(), mCurrentIndex,
+      uint32_t(dom::SpeechSynthesisErrorCode::Interrupted));
+  } else {
+    mTask->DispatchEnd(GetTimeDurationFromStart(), mCurrentIndex);
+  }
   // no longer needed
   [mSpeechSynthesizer setDelegate:nil];
   mTask = nullptr;

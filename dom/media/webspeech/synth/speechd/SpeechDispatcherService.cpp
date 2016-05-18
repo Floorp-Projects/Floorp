@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/nsSpeechTask.h"
 #include "mozilla/dom/nsSynthVoiceRegistry.h"
+#include "mozilla/dom/SpeechSynthesisErrorEvent.h"
 #include "mozilla/Preferences.h"
 #include "nsEscape.h"
 #include "nsISupports.h"
@@ -251,6 +252,11 @@ SpeechDispatcherCallback::OnSpeechEvent(SPDNotificationType state)
       break;
 
     case SPD_EVENT_CANCEL:
+      mTask->DispatchError((TimeStamp::Now() - mStartTime).ToSeconds(), 0,
+        uint32_t(SpeechSynthesisErrorCode::Interrupted));
+      remove = true;
+      break;
+
     case SPD_EVENT_END:
       mTask->DispatchEnd((TimeStamp::Now() - mStartTime).ToSeconds(), 0);
       remove = true;
