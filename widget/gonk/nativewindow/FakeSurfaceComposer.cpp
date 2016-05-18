@@ -42,6 +42,7 @@
 #include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layers/CompositorThread.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 
@@ -525,7 +526,7 @@ FakeSurfaceComposer::captureScreenImp(const sp<IGraphicBufferProducer>& producer
             NS_ReleaseOnMainThread(screenAlias.forget());
         });
 
-    mozilla::layers::CompositorBridgeParent::CompositorLoop()->PostTask(
+    layers::CompositorThreadHolder::Loop()->PostTask(
         MakeAndAddRef<RunnableCallTask>(runnable));
 }
 
