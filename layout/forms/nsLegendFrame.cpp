@@ -61,22 +61,25 @@ nsLegendFrame::Reflow(nsPresContext*          aPresContext,
   return nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }
 
-// REVIEW: We don't need to override BuildDisplayList, nsBlockFrame will honour
-// our visibility setting
-int32_t nsLegendFrame::GetAlign()
+int32_t
+nsLegendFrame::GetLogicalAlign(WritingMode aCBWM)
 {
-  int32_t intValue = NS_STYLE_TEXT_ALIGN_LEFT;
-  if (GetParent() &&
-      NS_STYLE_DIRECTION_RTL == GetParent()->StyleVisibility()->mDirection) {
-    intValue = NS_STYLE_TEXT_ALIGN_RIGHT;
-  }
-
-  nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
-
+  int32_t intValue = NS_STYLE_TEXT_ALIGN_START;
+  nsGenericHTMLElement* content = nsGenericHTMLElement::FromContent(mContent);
   if (content) {
     const nsAttrValue* attr = content->GetParsedAttr(nsGkAtoms::align);
     if (attr && attr->Type() == nsAttrValue::eEnum) {
       intValue = attr->GetEnumValue();
+      switch (intValue) {
+        case NS_STYLE_TEXT_ALIGN_LEFT:
+          intValue = aCBWM.IsBidiLTR() ? NS_STYLE_TEXT_ALIGN_START
+                                       : NS_STYLE_TEXT_ALIGN_END;
+          break;
+        case NS_STYLE_TEXT_ALIGN_RIGHT:
+          intValue = aCBWM.IsBidiLTR() ? NS_STYLE_TEXT_ALIGN_END
+                                       : NS_STYLE_TEXT_ALIGN_START;
+          break;
+      }
     }
   }
   return intValue;
