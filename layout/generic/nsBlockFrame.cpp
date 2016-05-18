@@ -1631,7 +1631,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     // The FragStretchBSizeProperty is our expected non-fragmented block-size
     // we should stretch to (for align-self:stretch etc).  In some fragmentation
     // cases though, the last fragment (this frame since we're complete), needs
-    // to have extra size applied because earlier fragments consumed to much of
+    // to have extra size applied because earlier fragments consumed too much of
     // our computed size due to overflowing their containing block.  (E.g. this
     // ensures we fill the last row when a multi-row grid item is fragmented).
     bool found;
