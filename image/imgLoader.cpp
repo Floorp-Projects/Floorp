@@ -1162,21 +1162,6 @@ imgLoader::imgLoader()
   sMemReporter->RegisterLoader(this);
 }
 
-already_AddRefed<imgLoader>
-imgLoader::GetInstance()
-{
-  static RefPtr<imgLoader> singleton;
-  if (!singleton) {
-    singleton = imgLoader::Create();
-    if (!singleton) {
-        return nullptr;
-    }
-    ClearOnShutdown(&singleton);
-  }
-  RefPtr<imgLoader> loader = singleton.get();
-  return loader.forget();
-}
-
 imgLoader::~imgLoader()
 {
   ClearChromeImageCache();
