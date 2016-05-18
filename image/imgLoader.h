@@ -267,9 +267,6 @@ public:
       return loader.forget().downcast<imgLoader>();
   }
 
-  static already_AddRefed<imgLoader>
-  GetInstance();
-
   nsresult LoadImage(nsIURI* aURI,
                      nsIURI* aInitialDocumentURI,
                      nsIURI* aReferrerURI,
