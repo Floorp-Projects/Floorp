@@ -7,11 +7,15 @@ package org.mozilla.gecko.home;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
@@ -201,6 +205,23 @@ public class RecentTabsAdapter extends RecyclerView.Adapter<CombinedHistoryItem>
         }
     }
 
+    public void restoreTabFromPosition(int position) {
+        final List<String> dataList = new ArrayList<>(1);
+        dataList.add(getClosedTabForPosition(position).data);
+        restoreSessionWithHistory(dataList);
+    }
+
+    private static void restoreSessionWithHistory(List<String> dataList) {
+        final JSONObject json = new JSONObject();
+        try {
+            json.put("tabs", new JSONArray(dataList));
+        } catch (JSONException e) {
+            Log.e(LOGTAG, "JSON error", e);
+        }
+
+        GeckoAppShell.notifyObservers("Session:RestoreRecentTabs", json.toString());
+    }
+
     @Override
     public CombinedHistoryItem onCreateViewHolder(ViewGroup parent, int viewType) {
         final LayoutInflater inflater = LayoutInflater.from(parent.getContext());
@@ -234,12 +255,7 @@ public class RecentTabsAdapter extends RecyclerView.Adapter<CombinedHistoryItem>
                 break;
 
             case CLOSED_TAB:
-                final ClosedTab closedTab;
-                if (position <= getLastRecentTabIndex()) {
-                    closedTab = recentlyClosedTabs[position - getFirstRecentTabIndex()];
-                } else {
-                    closedTab = lastSessionTabs[position - getFirstLastSessionTabIndex()];
-                }
+                final ClosedTab closedTab = getClosedTabForPosition(position);
                 ((CombinedHistoryItem.HistoryItem) holder).bind(closedTab);
                 break;
         }
@@ -303,6 +319,24 @@ public class RecentTabsAdapter extends RecyclerView.Adapter<CombinedHistoryItem>
 
     private int getLastLastSessionTabIndex() {
         return getLastRecentTabIndex() + lastSessionTabs.length;
+    }
+
+    /**
+     * Get the closed tab corresponding to a RecyclerView list item.
+     *
+     * The Recent Tab folder combines two data sources, so if we want to get the ClosedTab object
+     * behind a certain list item, we need to route this request to the corresponding data source
+     * and also transform the global list position into a local array index.
+     */
+    private ClosedTab getClosedTabForPosition(int position) {
+        final ClosedTab closedTab;
+        if (position <= getLastRecentTabIndex()) { // Upper part of the list is "Recently closed tabs".
+            closedTab = recentlyClosedTabs[position - getFirstRecentTabIndex()];
+        } else { // Lower part is "Tabs from last time".
+            closedTab = lastSessionTabs[position - getFirstLastSessionTabIndex()];
+        }
+
+        return closedTab;
     }
 
     @Override
