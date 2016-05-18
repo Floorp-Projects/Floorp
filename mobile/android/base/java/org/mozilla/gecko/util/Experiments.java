@@ -7,7 +7,7 @@ package org.mozilla.gecko.util;
 import android.content.Context;
 
 import android.util.Log;
-import org.mozilla.gecko.mozglue.ContextUtils.SafeIntent;
+import org.mozilla.gecko.mozglue.SafeIntentUtils.SafeIntent;
 import android.text.TextUtils;
 
 import com.keepsafe.switchboard.Preferences;
