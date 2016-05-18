@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 1273433</title>
+    <style type="text/css">
+
+html,body {
+    color:black; background-color:white; font-size:12px; padding:0; margin:0;
+}
+	
+fieldset { border: 1px solid black; }
+.v { writing-mode: vertical-lr; height:300px; float:left; }
+legend { width: 100px; border:1px solid blue; }
+.v legend, .rl legend { width: auto; height: 100px; }
+.rtl { direction:rtl; }
+.ltr { direction:ltr; }
+
+    </style>
+</head>
+<body>
+
+<fieldset align="left"><legend>(unset)</legend></fieldset>
+<fieldset><legend align="left">left</legend></fieldset>
+<fieldset class="rtl"><legend style="text-align:left">right</legend></fieldset>
+
+<fieldset><legend align="right" style="text-align:right">(unset)</legend><div class=rtl>RTL</div></fieldset>
+<fieldset><legend align="left" style="text-align:right">left</legend><div class=rtl>RTL</div></fieldset>
+<fieldset><legend align="right" style="text-align:right">right</legend><div class=rtl>RTL</div></fieldset>
+
+<fieldset><legend>left</legend><div class=rtl>RTL</div></fieldset>
+<fieldset><legend align="right" style="text-align:left">right</legend><div class=rtl>RTL</div></fieldset>
+
+<fieldset><legend align="left">bottom</legend></fieldset>
+<fieldset><legend align="left">top</legend></fieldset>
+
+<fieldset class="v"><legend align="left">(unset)</legend></fieldset>
+<fieldset class="v"><legend align="left">left</legend></fieldset>
+<fieldset class="v rtl"><legend style="text-align:left">right</legend></fieldset>
+
+<fieldset class="v"><legend align="right" style="text-align:right">(unset)</legend><div class=rtl>RTL</div></fieldset>
+<fieldset class="v"><legend align="left" style="text-align:right">left</legend><div class=rtl>RTL</div></fieldset>
+<fieldset class="v"><legend align="right" style="text-align:right">right</legend><div class=rtl>RTL</div></fieldset>
+
+<fieldset class="v"><legend>left</legend><div class=rtl>RTL</div></fieldset>
+<fieldset class="v"><legend align="right" style="text-align:left">right</legend><div class=rtl>RTL</div></fieldset>
+
+<fieldset class="v"><legend align="left">bottom</legend></fieldset>
+<fieldset class="v"><legend align="left">top</legend></fieldset>
+
+</body>
+</html>
