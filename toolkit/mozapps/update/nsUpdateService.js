@@ -183,6 +183,21 @@ const DEFAULT_SOCKET_MAX_ERRORS = 10;
 // The number of milliseconds to wait before retrying a connection error.
 const DEFAULT_UPDATE_RETRY_TIMEOUT = 2000;
 
+// This maps app IDs to their respective notification topic which signals when
+// the application's user interface has been displayed.
+const APPID_TO_TOPIC = {
+  // Firefox
+  "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}": "sessionstore-windows-restored",
+  // SeaMonkey
+  "{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}": "sessionstore-windows-restored",
+  // Fennec
+  "{aa3c5121-dab2-40e2-81ca-7ea25febc110}": "sessionstore-windows-restored",
+  // Thunderbird
+  "{3550f703-e582-4d05-9a08-453d09bdfdc6}": "mail-startup-done",
+  // Instantbird
+  "{33cb9019-c295-46dd-be21-8c4936574bee}": "xul-window-visible",
+};
+
 var gLocale = null;
 var gUpdateMutexHandle = null;
 
@@ -1864,6 +1879,22 @@ UpdateService.prototype = {
   observe: function AUS_observe(subject, topic, data) {
     switch (topic) {
       case "post-update-processing":
+        if (Services.appinfo.ID in APPID_TO_TOPIC) {
+          // Delay post-update processing to ensure that possible update
+          // dialogs are shown in front of the app window, if possible.
+          // See bug 311614.
+          Services.obs.addObserver(this, APPID_TO_TOPIC[Services.appinfo.ID],
+                                   false);
+          break;
+        }
+        // intentional fallthrough
+      case "sessionstore-windows-restored":
+      case "mail-startup-done":
+      case "xul-window-visible":
+        if (Services.appinfo.ID in APPID_TO_TOPIC) {
+          Services.obs.removeObserver(this,
+                                      APPID_TO_TOPIC[Services.appinfo.ID]);
+        }
         // Clean up any extant updates
         this._postUpdateProcessing();
         break;
