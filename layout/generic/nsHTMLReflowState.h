@@ -839,12 +839,12 @@ public:
     }
   }
 
-  void SetComputedHeightWithoutResettingResizeFlags(nscoord aComputedHeight) {
-    // Viewport frames reset the computed height on a copy of their reflow
+  void SetComputedBSizeWithoutResettingResizeFlags(nscoord aComputedBSize) {
+    // Viewport frames reset the computed block size on a copy of their reflow
     // state when reflowing fixed-pos kids.  In that case we actually don't
     // want to mess with the resize flags, because comparing the frame's rect
-    // to the munged computed width is pointless.
-    ComputedHeight() = aComputedHeight;
+    // to the munged computed isize is pointless.
+    ComputedBSize() = aComputedBSize;
   }
 
   void SetTruncated(const nsHTMLReflowMetrics& aMetrics, nsReflowStatus* aStatus) const;
