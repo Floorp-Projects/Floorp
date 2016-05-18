@@ -82,6 +82,10 @@ builds:
     types:
       debug:
         task: tasks/builds/haz_shell_linux.yml
+    when:
+      file_patterns:
+       - js/public/**
+       - js/src/**
   linux64-pgo:
     platforms:
       - Linux64 PGO
