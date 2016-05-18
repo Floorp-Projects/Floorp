@@ -6670,6 +6670,21 @@ nsDisplaySVGEffects::BuildLayer(nsDisplayListBuilder* aBuilder,
   return container.forget();
 }
 
+nsRect
+nsDisplaySVGEffects::GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder)
+{
+  nsIFrame* firstFrame =
+    nsLayoutUtils::FirstContinuationOrIBSplitSibling(mFrame);
+  nsSVGEffects::EffectProperties effectProperties =
+    nsSVGEffects::GetEffectProperties(firstFrame);
+
+  if (effectProperties.HasValidFilter()) {
+    return nsRect();
+  }
+
+  return nsDisplayWrapList::GetComponentAlphaBounds(aBuilder);
+}
+
 bool nsDisplaySVGEffects::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                               nsRegion* aVisibleRegion) {
   nsPoint offset = ToReferenceFrame();
