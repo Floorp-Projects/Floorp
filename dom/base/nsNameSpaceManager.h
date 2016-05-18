@@ -8,14 +8,50 @@
 #define nsNameSpaceManager_h___
 
 #include "nsDataHashtable.h"
-#include "nsHashKeys.h"
-#include "nsIAtom.h"
 #include "nsTArray.h"
 
 #include "mozilla/StaticPtr.h"
 
 class nsAString;
 
+class nsNameSpaceKey : public PLDHashEntryHdr
+{
+public:
+  typedef const nsAString* KeyType;
+  typedef const nsAString* KeyTypePointer;
+
+  explicit nsNameSpaceKey(KeyTypePointer aKey) : mKey(aKey)
+  {
+  }
+  nsNameSpaceKey(const nsNameSpaceKey& toCopy) : mKey(toCopy.mKey)
+  {
+  }
+
+  KeyType GetKey() const
+  {
+    return mKey;
+  }
+  bool KeyEquals(KeyType aKey) const
+  {
+    return mKey->Equals(*aKey);
+  }
+
+  static KeyTypePointer KeyToPointer(KeyType aKey)
+  {
+    return aKey;
+  }
+  static PLDHashNumber HashKey(KeyTypePointer aKey) {
+    return mozilla::HashString(*aKey);
+  }
+
+  enum {
+    ALLOW_MEMMOVE = true
+  };
+
+private:
+  const nsAString* mKey;
+};
+ 
 /**
  * The Name Space Manager tracks the association between a NameSpace
  * URI and the int32_t runtime id. Mappings between NameSpaces and 
@@ -39,12 +75,6 @@ public:
                                      int32_t& aNameSpaceID);
 
   virtual nsresult GetNameSpaceURI(int32_t aNameSpaceID, nsAString& aURI);
-
-  nsIAtom* NameSpaceURIAtom(int32_t aNameSpaceID) {
-    MOZ_ASSERT(aNameSpaceID > 0 && (int64_t) aNameSpaceID <= (int64_t) mURIArray.Length());
-    return mURIArray.ElementAt(aNameSpaceID - 1); // id is index + 1
-  }
-
   virtual int32_t GetNameSpaceID(const nsAString& aURI);
 
   virtual bool HasElementCreator(int32_t aNameSpaceID);
@@ -52,10 +82,10 @@ public:
   static nsNameSpaceManager* GetInstance();
 private:
   bool Init();
-  nsresult AddNameSpace(already_AddRefed<nsIAtom> aURI, const int32_t aNameSpaceID);
+  nsresult AddNameSpace(const nsAString& aURI, const int32_t aNameSpaceID);
 
-  nsDataHashtable<nsISupportsHashKey, int32_t> mURIToIDTable;
-  nsTArray<nsCOMPtr<nsIAtom>> mURIArray;
+  nsDataHashtable<nsNameSpaceKey,int32_t> mURIToIDTable;
+  nsTArray< nsAutoPtr<nsString> > mURIArray;
 
   static mozilla::StaticAutoPtr<nsNameSpaceManager> sInstance;
 };

@@ -2433,15 +2433,3 @@ GK_ATOM(vr_state, "vr-state")
 
 // Contextual Identity / Containers
 GK_ATOM(usercontextid, "usercontextid")
-
-// Namespaces
-GK_ATOM(nsuri_xmlns, "http://www.w3.org/2000/xmlns/")
-GK_ATOM(nsuri_xml, "http://www.w3.org/XML/1998/namespace")
-GK_ATOM(nsuri_xhtml, "http://www.w3.org/1999/xhtml")
-GK_ATOM(nsuri_xlink, "http://www.w3.org/1999/xlink")
-GK_ATOM(nsuri_xslt, "http://www.w3.org/1999/XSL/Transform")
-GK_ATOM(nsuri_xbl, "http://www.mozilla.org/xbl")
-GK_ATOM(nsuri_mathml, "http://www.w3.org/1998/Math/MathML")
-GK_ATOM(nsuri_rdf, "http://www.w3.org/1999/02/22-rdf-syntax-ns#")
-GK_ATOM(nsuri_xul, "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul")
-GK_ATOM(nsuri_svg, "http://www.w3.org/2000/svg")
