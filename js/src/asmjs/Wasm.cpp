@@ -339,18 +339,16 @@ DecodeExpr(FunctionDecoder& f)
       case Expr::F32Div:
       case Expr::F32Min:
       case Expr::F32Max:
-        return f.iter().readBinary(ValType::F32, nullptr, nullptr);
       case Expr::F32CopySign:
-        return f.iter().notYetImplemented("copysign");
+        return f.iter().readBinary(ValType::F32, nullptr, nullptr);
       case Expr::F64Add:
       case Expr::F64Sub:
       case Expr::F64Mul:
       case Expr::F64Div:
       case Expr::F64Min:
       case Expr::F64Max:
-        return f.iter().readBinary(ValType::F64, nullptr, nullptr);
       case Expr::F64CopySign:
-        return f.iter().notYetImplemented("copysign");
+        return f.iter().readBinary(ValType::F64, nullptr, nullptr);
       case Expr::I32Eq:
       case Expr::I32Ne:
       case Expr::I32LtS:
