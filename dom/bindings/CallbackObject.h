@@ -54,7 +54,7 @@ public:
   // is invoked.  aCx can be nullptr, in which case no stack is
   // captured.
   explicit CallbackObject(JSContext* aCx, JS::Handle<JSObject*> aCallback,
-                          nsIGlobalObject *aIncumbentGlobal)
+                          nsIGlobalObject* aIncumbentGlobal)
   {
     if (aCx && JS::RuntimeOptionsRef(aCx).asyncStack()) {
       JS::RootedObject stack(aCx);
@@ -72,7 +72,7 @@ public:
   // for that purpose.
   explicit CallbackObject(JS::Handle<JSObject*> aCallback,
                           JS::Handle<JSObject*> aAsyncStack,
-                          nsIGlobalObject *aIncumbentGlobal)
+                          nsIGlobalObject* aIncumbentGlobal)
   {
     Init(aCallback, aAsyncStack, aIncumbentGlobal);
   }
@@ -163,8 +163,8 @@ protected:
   }
 
 private:
-  inline void Init(JSObject* aCallback, JSObject* aCreationStack,
-                   nsIGlobalObject* aIncumbentGlobal)
+  inline void InitNoHold(JSObject* aCallback, JSObject* aCreationStack,
+                         nsIGlobalObject* aIncumbentGlobal)
   {
     MOZ_ASSERT(aCallback && !mCallback);
     // Set script objects before we hold, on the off chance that a GC could
@@ -175,6 +175,12 @@ private:
       mIncumbentGlobal = aIncumbentGlobal;
       mIncumbentJSGlobal = aIncumbentGlobal->GetGlobalJSObject();
     }
+  }
+
+  inline void Init(JSObject* aCallback, JSObject* aCreationStack,
+                   nsIGlobalObject* aIncumbentGlobal)
+  {
+    InitNoHold(aCallback, aCreationStack, aIncumbentGlobal);
     mozilla::HoldJSObjects(this);
   }
 
@@ -190,6 +196,33 @@ protected:
       mCreationStack = nullptr;
       mIncumbentJSGlobal = nullptr;
       mozilla::DropJSObjects(this);
+    }
+  }
+
+  // Struct used as a way to force a CallbackObject constructor to not call
+  // HoldJSObjects. We're putting it here so that CallbackObject subclasses will
+  // have access to it, but outside code will not.
+  //
+  // Places that use this need to ensure that the callback is traced (e.g. via a
+  // Rooted) until the HoldJSObjects call happens.
+  struct FastCallbackConstructor {
+  };
+
+  // Just like the public version without the FastCallbackConstructor argument,
+  // except for not calling HoldJSObjects.  If you use this, you MUST ensure
+  // that the object is traced until the HoldJSObjects happens!
+  CallbackObject(JSContext* aCx, JS::Handle<JSObject*> aCallback,
+                 nsIGlobalObject* aIncumbentGlobal,
+                 const FastCallbackConstructor&)
+  {
+    if (aCx && JS::RuntimeOptionsRef(aCx).asyncStack()) {
+      JS::RootedObject stack(aCx);
+      if (!JS::CaptureCurrentStack(aCx, &stack)) {
+        JS_ClearPendingException(aCx);
+      }
+      InitNoHold(aCallback, stack, aIncumbentGlobal);
+    } else {
+      InitNoHold(aCallback, nullptr, aIncumbentGlobal);
     }
   }
 
