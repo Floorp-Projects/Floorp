@@ -4928,6 +4928,7 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
     RemoveStateBits(NS_STATE_GRID_DID_PUSH_ITEMS);
     nsFrameList items;
     auto nif = static_cast<nsGridContainerFrame*>(GetNextInFlow());
+    auto firstNIF = nif;
     DebugOnly<bool> nifNeedPushedItem = false;
     while (nif) {
       nsFrameList nifItems;
@@ -4968,6 +4969,29 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
       nif = static_cast<nsGridContainerFrame*>(nif->GetNextInFlow());
       MOZ_ASSERT(nif || !nifNeedPushedItem || mDidPushItemsBitMayLie,
                  "NS_STATE_GRID_DID_PUSH_ITEMS lied");
+    }
+
+    if (!items.IsEmpty()) {
+      // Pull up the first next-in-flow of the pulled up items too, unless its
+      // parent is our nif (to avoid leaving a hole there).
+      nsFrameList childNIFs;
+      nsFrameList childOCNIFs;
+      for (auto child : items) {
+        auto childNIF = child->GetNextInFlow();
+        if (childNIF && childNIF->GetParent() != firstNIF) {
+          auto parent = childNIF->GetParent();
+          parent->StealFrame(childNIF);
+          ReparentFrame(childNIF, parent, firstNIF);
+          if ((childNIF->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
+            childOCNIFs.AppendFrame(nullptr, childNIF);
+          } else {
+            childNIFs.AppendFrame(nullptr, childNIF);
+          }
+        }
+      }
+      // Merge items' NIFs into our NIF's respective overflow child lists.
+      firstNIF->MergeSortedOverflow(childNIFs);
+      firstNIF->MergeSortedExcessOverflowContainers(childOCNIFs);
     }
 
     MOZ_ASSERT(foundOwnPushedChild || !items.IsEmpty() || mDidPushItemsBitMayLie,
