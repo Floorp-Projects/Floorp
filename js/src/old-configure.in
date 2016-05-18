@@ -1767,23 +1767,6 @@ dnl The macros used for command line options
 dnl are defined in build/autoconf/altoptions.m4.
 
 dnl ========================================================
-dnl = Mozilla update channel, used for disabling features
-dnl = not wanted for release.
-dnl ========================================================
-
-# app update channel is 'default' when not supplied.
-MOZ_ARG_ENABLE_STRING([update-channel],
-[  --enable-update-channel=CHANNEL
-                          Select application update channel (default=default)],
-    MOZ_UPDATE_CHANNEL=`echo $enableval | tr A-Z a-z`)
-
-if test -z "$MOZ_UPDATE_CHANNEL"; then
-    MOZ_UPDATE_CHANNEL=default
-fi
-AC_DEFINE_UNQUOTED(MOZ_UPDATE_CHANNEL, $MOZ_UPDATE_CHANNEL)
-AC_SUBST(MOZ_UPDATE_CHANNEL)
-
-dnl ========================================================
 dnl =
 dnl = Check for external package dependencies
 dnl =

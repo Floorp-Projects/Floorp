@@ -245,13 +245,15 @@ ResetWidgetCache(void)
 
 GtkStyleContext*
 ClaimStyleContext(WidgetNodeType aNodeType, GtkTextDirection aDirection,
-                  StyleFlags aFlags)
+                  GtkStateFlags aStateFlags, StyleFlags aFlags)
 {
   GtkStyleContext* style = GetStyleInternal(aNodeType);
 #ifdef DEBUG
   MOZ_ASSERT(!sCurrentStyleContext);
   sCurrentStyleContext = style;
 #endif
+  gtk_style_context_set_state(style, aStateFlags);
+  gtk_style_context_set_direction(style, aDirection);
   return style;
 }
 

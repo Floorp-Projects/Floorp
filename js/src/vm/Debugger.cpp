@@ -5398,14 +5398,19 @@ class BytecodeRangeWithPosition : private BytecodeRange
 
     BytecodeRangeWithPosition(JSContext* cx, JSScript* script)
       : BytecodeRange(cx, script), lineno(script->lineno()), column(0),
-        sn(script->notes()), snpc(script->code()), isEntryPoint(false)
+        sn(script->notes()), snpc(script->code()), isEntryPoint(false),
+        wasArtifactEntryPoint(false)
     {
         if (!SN_IS_TERMINATOR(sn))
             snpc += SN_DELTA(sn);
         updatePosition();
         while (frontPC() != script->main())
             popFront();
-        isEntryPoint = true;
+
+        if (frontOpcode() != JSOP_JUMPTARGET)
+            isEntryPoint = true;
+        else
+            wasArtifactEntryPoint =  true;
     }
 
     void popFront() {
@@ -5414,6 +5419,19 @@ class BytecodeRangeWithPosition : private BytecodeRange
             isEntryPoint = false;
         else
             updatePosition();
+
+        // The following conditions are handling artifacts introduced by the
+        // bytecode emitter, such that we do not add breakpoints on empty
+        // statements of the source code of the user.
+        if (wasArtifactEntryPoint) {
+            wasArtifactEntryPoint = false;
+            isEntryPoint = true;
+        }
+
+        if (isEntryPoint && frontOpcode() == JSOP_JUMPTARGET) {
+            wasArtifactEntryPoint = isEntryPoint;
+            isEntryPoint = false;
+        }
     }
 
     size_t frontLineNumber() const { return lineno; }
@@ -5463,6 +5481,7 @@ class BytecodeRangeWithPosition : private BytecodeRange
     jssrcnote* sn;
     jsbytecode* snpc;
     bool isEntryPoint;
+    bool wasArtifactEntryPoint;
 };
 
 /*
@@ -5579,12 +5598,22 @@ class FlowGraphSummary {
         size_t prevColumn = 0;
         JSOp prevOp = JSOP_NOP;
         for (BytecodeRangeWithPosition r(cx, script); !r.empty(); r.popFront()) {
-            size_t lineno = r.frontLineNumber();
-            size_t column = r.frontColumnNumber();
+            size_t lineno = prevLineno;
+            size_t column = prevColumn;
             JSOp op = r.frontOpcode();
 
             if (FlowsIntoNext(prevOp))
                 addEdge(prevLineno, prevColumn, r.frontOffset());
+
+            if (BytecodeIsJumpTarget(op)) {
+                lineno = entries_[r.frontOffset()].lineno();
+                column = entries_[r.frontOffset()].column();
+            }
+
+            if (r.frontIsEntryPoint()) {
+                lineno = r.frontLineNumber();
+                column = r.frontColumnNumber();
+            }
 
             if (CodeSpec[op].type() == JOF_JUMP) {
                 addEdge(lineno, column, r.frontOffset() + GET_JUMP_OFFSET(r.frontPC()));
@@ -5605,6 +5634,22 @@ class FlowGraphSummary {
                     size_t target = offset + GET_JUMP_OFFSET(pc);
                     addEdge(lineno, column, target);
                     pc += step;
+                }
+            } else if (op == JSOP_TRY) {
+                // As there is no literal incoming edge into the catch block, we
+                // make a fake one by copying the JSOP_TRY location, as-if this
+                // was an incoming edge of the catch block. This is needed
+                // because we only report offsets of entry points which have
+                // valid incoming edges.
+                JSTryNote* tn = script->trynotes()->vector;
+                JSTryNote* tnlimit = tn + script->trynotes()->length;
+                for (; tn < tnlimit; tn++) {
+                    uint32_t startOffset = script->mainOffset() + tn->start;
+                    if (startOffset == r.frontOffset() + 1) {
+                        uint32_t catchOffset = startOffset + tn->length;
+                        if (tn->kind == JSTRY_CATCH || tn->kind == JSTRY_FINALLY)
+                            addEdge(lineno, column, catchOffset);
+                    }
                 }
             }
 
@@ -5653,20 +5698,45 @@ DebuggerScript_getOffsetLocation(JSContext* cx, unsigned argc, Value* vp)
     while (!r.empty() && r.frontOffset() < offset)
         r.popFront();
 
+    offset = r.frontOffset();
+    bool isEntryPoint = r.frontIsEntryPoint();
+
+    // Line numbers are only correctly defined on entry points. Thus looks
+    // either for the next valid offset in the flowData, being the last entry
+    // point flowing into the current offset, or for the next valid entry point.
+    while (!r.frontIsEntryPoint() && !flowData[r.frontOffset()].hasSingleEdge()) {
+        r.popFront();
+        MOZ_ASSERT(!r.empty());
+    }
+
+    // If this is an entry point, take the line number associated with the entry
+    // point, otherwise settle on the next instruction and take the incoming
+    // edge position.
+    size_t lineno;
+    size_t column;
+    if (r.frontIsEntryPoint()) {
+        lineno = r.frontLineNumber();
+        column = r.frontColumnNumber();
+    } else {
+        MOZ_ASSERT(flowData[r.frontOffset()].hasSingleEdge());
+        lineno = flowData[r.frontOffset()].lineno();
+        column = flowData[r.frontOffset()].column();
+    }
+
     RootedId id(cx, NameToId(cx->names().lineNumber));
-    RootedValue value(cx, NumberValue(r.frontLineNumber()));
+    RootedValue value(cx, NumberValue(lineno));
     if (!DefineProperty(cx, result, id, value))
         return false;
 
-    value = NumberValue(r.frontColumnNumber());
+    value = NumberValue(column);
     if (!DefineProperty(cx, result, cx->names().columnNumber, value))
         return false;
 
     // The same entry point test that is used by getAllColumnOffsets.
-    bool isEntryPoint = (r.frontIsEntryPoint() &&
-                         !flowData[offset].hasNoEdges() &&
-                         (flowData[offset].lineno() != r.frontLineNumber() ||
-                          flowData[offset].column() != r.frontColumnNumber()));
+    isEntryPoint = (isEntryPoint &&
+                    !flowData[offset].hasNoEdges() &&
+                    (flowData[offset].lineno() != r.frontLineNumber() ||
+                     flowData[offset].column() != r.frontColumnNumber()));
     value.setBoolean(isEntryPoint);
     if (!DefineProperty(cx, result, cx->names().isEntryPoint, value))
         return false;

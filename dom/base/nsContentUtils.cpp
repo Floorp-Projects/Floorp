@@ -1346,32 +1346,6 @@ nsContentUtils::GetParserService()
   return sParserService;
 }
 
-/**
- * A helper function that parses a sandbox attribute (of an <iframe> or
- * a CSP directive) and converts it to the set of flags used internally.
- *
- * @param sandboxAttr   the sandbox attribute
- * @return              the set of flags (0 if sandboxAttr is null)
- */
-uint32_t
-nsContentUtils::ParseSandboxAttributeToFlags(const nsAttrValue* sandboxAttr)
-{
-  // No sandbox attribute, no sandbox flags.
-  if (!sandboxAttr) { return 0; }
-
-  //  Start off by setting all the restriction flags.
-  uint32_t out = SANDBOX_ALL_FLAGS;
-
-// Macro for updating the flag according to the keywords
-#define SANDBOX_KEYWORD(string, atom, flags)                             \
-  if (sandboxAttr->Contains(nsGkAtoms::atom, eIgnoreCase)) { out &= ~(flags); }
-
-#include "IframeSandboxKeywordList.h"
-
-  return out;
-#undef SANDBOX_KEYWORD
-}
-
 nsIBidiKeyboard*
 nsContentUtils::GetBidiKeyboard()
 {

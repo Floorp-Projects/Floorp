@@ -81,6 +81,12 @@ builds:
     types:
       debug:
         task: tasks/builds/haz_shell_linux.yml
+  linux64-pgo:
+    platforms:
+      - Linux64 PGO
+    types:
+      opt:
+        task: tasks/builds/opt_linux64_pgo.yml
   macosx64:
     platforms:
       - MacOSX64

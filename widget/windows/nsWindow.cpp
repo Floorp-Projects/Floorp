@@ -3629,7 +3629,7 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
   }
 
   if (!mLayerManager) {
-    MOZ_ASSERT(!mCompositorBridgeParent && !mCompositorBridgeChild);
+    MOZ_ASSERT(!mCompositorSession && !mCompositorBridgeChild);
 
     // Ensure we have a widget proxy even if we're not using the compositor,
     // since that's where we handle transparent windows.

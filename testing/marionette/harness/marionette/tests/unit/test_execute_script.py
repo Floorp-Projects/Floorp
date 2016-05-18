@@ -6,7 +6,7 @@ import urllib
 import os
 
 from marionette_driver import By, errors
-from marionette import MarionetteTestCase, skip_if_b2g
+from marionette import MarionetteTestCase
 
 
 def inline(doc):
@@ -233,10 +233,9 @@ class TestExecuteContent(MarionetteTestCase):
             send("return typeof window.wrappedJSObject == 'undefined'"))
 
 
-@skip_if_b2g
 class TestExecuteChrome(TestExecuteContent):
     def setUp(self):
-        super(TestExecuteChrome, self).setUp()
+        TestExecuteContent.setUp(self)
         self.win = self.marionette.current_window_handle
         self.marionette.set_context("chrome")
         self.marionette.execute_script(
@@ -250,7 +249,7 @@ class TestExecuteChrome(TestExecuteContent):
         self.assertEqual(self.win, self.marionette.current_window_handle)
         super(TestExecuteChrome, self).tearDown()
 
-    def test_execute_permission(self):
+    def test_permission(self):
         self.assertEqual(1, self.marionette.execute_script(
             "var c = Components.classes; return 1;"))
 
@@ -277,3 +276,15 @@ class TestExecuteChrome(TestExecuteContent):
             self.marionette.execute_script("""
                 return true;
             """)
+
+    def test_lasting_side_effects(self):
+        pass
+
+    def test_return_web_element(self):
+        pass
+
+    def test_return_web_element_array(self):
+        pass
+
+    def test_return_web_element_nodelist(self):
+        pass

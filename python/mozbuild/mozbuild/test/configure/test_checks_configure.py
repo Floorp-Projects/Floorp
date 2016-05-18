@@ -653,5 +653,140 @@ class TestChecksConfigure(unittest.TestCase):
              ERROR: The program jarsigner was not found.  Set $JAVA_HOME to your Java SDK directory or use '--with-java-bin-path={java-bin-dir}'
         ''' % (java, javah, jar)))
 
+    def test_pkg_check_modules(self):
+        mock_pkg_config_version = '0.10.0'
+        mock_pkg_config_path = mozpath.abspath('/usr/bin/pkg-config')
+
+        def mock_pkg_config(_, args):
+            if args[0:2] == ['--errors-to-stdout', '--print-errors']:
+                assert len(args) == 3
+                package = args[2]
+                if package == 'unknown':
+                    return (1, "Package unknown was not found in the pkg-config search path.\n"
+                            "Perhaps you should add the directory containing `unknown.pc'\n"
+                            "to the PKG_CONFIG_PATH environment variable\n"
+                            "No package 'unknown' found", '')
+                if package == 'valid':
+                    return 0, '', ''
+                if package == 'new > 1.1':
+                    return 1, "Requested 'new > 1.1' but version of new is 1.1", ''
+            if args[0] == '--cflags':
+                assert len(args) == 2
+                return 0, '-I/usr/include/%s' % args[1], ''
+            if args[0] == '--libs':
+                assert len(args) == 2
+                return 0, '-l%s' % args[1], ''
+            if args[0] == '--version':
+                return 0, mock_pkg_config_version, ''
+            self.fail("Unexpected arguments to mock_pkg_config: %s" % args)
+
+        extra_paths = {
+            mock_pkg_config_path: mock_pkg_config,
+        }
+        includes = ('util.configure', 'checks.configure', 'pkg.configure')
+
+        config, output, status = self.get_result("pkg_check_modules('MOZ_VALID', 'valid')",
+                                                 includes=includes)
+        self.assertEqual(status, 1)
+        self.assertEqual(output, textwrap.dedent('''\
+            checking for pkg_config... not found
+            ERROR: *** The pkg-config script could not be found. Make sure it is
+            *** in your path, or set the PKG_CONFIG environment variable
+            *** to the full path to pkg-config.
+        '''))
+
+
+        config, output, status = self.get_result("pkg_check_modules('MOZ_VALID', 'valid')",
+                                                 extra_paths=extra_paths,
+                                                 includes=includes)
+        self.assertEqual(status, 0)
+        self.assertEqual(output, textwrap.dedent('''\
+            checking for pkg_config... %s
+            checking for pkg-config version... %s
+            checking for valid... yes
+            checking MOZ_VALID_CFLAGS... -I/usr/include/valid
+            checking MOZ_VALID_LIBS... -lvalid
+        ''' % (mock_pkg_config_path, mock_pkg_config_version)))
+        self.assertEqual(config, {
+            'PKG_CONFIG': mock_pkg_config_path,
+            'MOZ_VALID_CFLAGS': ('-I/usr/include/valid',),
+            'MOZ_VALID_LIBS': ('-lvalid',),
+        })
+
+        config, output, status = self.get_result("pkg_check_modules('MOZ_UKNOWN', 'unknown')",
+                                                 extra_paths=extra_paths,
+                                                 includes=includes)
+        self.assertEqual(status, 1)
+        self.assertEqual(output, textwrap.dedent('''\
+            checking for pkg_config... %s
+            checking for pkg-config version... %s
+            checking for unknown... no
+            ERROR: Package unknown was not found in the pkg-config search path.
+            ERROR: Perhaps you should add the directory containing `unknown.pc'
+            ERROR: to the PKG_CONFIG_PATH environment variable
+            ERROR: No package 'unknown' found
+        ''' % (mock_pkg_config_path, mock_pkg_config_version)))
+        self.assertEqual(config, {
+            'PKG_CONFIG': mock_pkg_config_path,
+        })
+
+        config, output, status = self.get_result("pkg_check_modules('MOZ_NEW', 'new > 1.1')",
+                                                 extra_paths=extra_paths,
+                                                 includes=includes)
+        self.assertEqual(status, 1)
+        self.assertEqual(output, textwrap.dedent('''\
+            checking for pkg_config... %s
+            checking for pkg-config version... %s
+            checking for new > 1.1... no
+            ERROR: Requested 'new > 1.1' but version of new is 1.1
+        ''' % (mock_pkg_config_path, mock_pkg_config_version)))
+        self.assertEqual(config, {
+            'PKG_CONFIG': mock_pkg_config_path,
+        })
+
+        # allow_missing makes missing packages non-fatal.
+        cmd = textwrap.dedent('''\
+        have_new_module = pkg_check_modules('MOZ_NEW', 'new > 1.1', allow_missing=True)
+        @depends(have_new_module)
+        def log_new_module_error(mod):
+            if mod is not True:
+                log.info('Module not found.')
+        ''')
+
+        config, output, status = self.get_result(cmd,
+                                                 extra_paths=extra_paths,
+                                                 includes=includes)
+        self.assertEqual(status, 0)
+        self.assertEqual(output, textwrap.dedent('''\
+            checking for pkg_config... %s
+            checking for pkg-config version... %s
+            checking for new > 1.1... no
+            WARNING: Requested 'new > 1.1' but version of new is 1.1
+            Module not found.
+        ''' % (mock_pkg_config_path, mock_pkg_config_version)))
+        self.assertEqual(config, {
+            'PKG_CONFIG': mock_pkg_config_path,
+        })
+
+        def mock_old_pkg_config(_, args):
+            if args[0] == '--version':
+                return 0, '0.8.10', ''
+            self.fail("Unexpected arguments to mock_old_pkg_config: %s" % args)
+
+        extra_paths = {
+            mock_pkg_config_path: mock_old_pkg_config,
+        }
+
+        config, output, status = self.get_result("pkg_check_modules('MOZ_VALID', 'valid')",
+                                                 extra_paths=extra_paths,
+                                                 includes=includes)
+        self.assertEqual(status, 1)
+        self.assertEqual(output, textwrap.dedent('''\
+            checking for pkg_config... %s
+            checking for pkg-config version... 0.8.10
+            ERROR: *** Your version of pkg-config is too old. You need version 0.9.0 or newer.
+        ''' % mock_pkg_config_path))
+
+
 if __name__ == '__main__':
     main()

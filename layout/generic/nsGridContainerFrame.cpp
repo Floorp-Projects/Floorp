@@ -2088,12 +2088,11 @@ SpaceToFill(WritingMode aWM, const LogicalSize& aSize, nscoord aMargin,
   return aCBSize - (size + aMargin);
 }
 
-// Align (or stretch) an item's margin box in its aAxis inside aCBSize.
-static bool
+// Align an item's margin box in its aAxis inside aCBSize.
+static void
 AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe, LogicalAxis aAxis,
                  bool aSameSide, nscoord aCBSize, const nsHTMLReflowState& aRS,
-                 const LogicalSize& aChildSize, LogicalSize* aContentSize,
-                 LogicalPoint* aPos)
+                 const LogicalSize& aChildSize, LogicalPoint* aPos)
 {
   MOZ_ASSERT(aAlignment != NS_STYLE_ALIGN_AUTO, "unexpected 'auto' "
              "computed value for normal flow grid item");
@@ -2177,14 +2176,15 @@ AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe, LogicalAxis aAxis,
     }
   }
 
-  // Set the position and size (aPos/aContentSize) for the requested alignment.
-  bool didResize = false;
+  // Set the position (aPos) for the requested alignment.
   nscoord offset = 0; // NOTE: this is the resulting frame offset (border box).
   switch (aAlignment) {
     case NS_STYLE_ALIGN_BASELINE:
     case NS_STYLE_ALIGN_LAST_BASELINE:
       NS_WARNING("NYI: baseline/last-baseline for grid (bug 1151204)"); // XXX
       MOZ_FALLTHROUGH;
+    case NS_STYLE_ALIGN_STRETCH:
+      MOZ_FALLTHROUGH; // ComputeSize() deals with it
     case NS_STYLE_ALIGN_START:
       offset = marginStart;
       break;
@@ -2200,48 +2200,6 @@ AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe, LogicalAxis aAxis,
       offset = (aCBSize - size + marginStart - marginEnd) / 2;
       break;
     }
-    case NS_STYLE_ALIGN_STRETCH: {
-      MOZ_ASSERT(!hasAutoMarginStart && !hasAutoMarginEnd);
-      offset = marginStart;
-      if (aAxis == eLogicalAxisBlock
-            ? (aRS.mStylePosition->BSize(wm).GetUnit() == eStyleUnit_Auto)
-            : (aRS.mStylePosition->ISize(wm).GetUnit() == eStyleUnit_Auto)) {
-        nscoord size = aAxis == eLogicalAxisBlock ? aChildSize.BSize(wm)
-                                                  : aChildSize.ISize(wm);
-        nscoord gap = aCBSize - (size + marginStart + marginEnd);
-        if (gap > 0) {
-          // Note: The ComputedMax* values are always content-box max values,
-          // even for box-sizing:border-box.
-          LogicalMargin bp = aRS.ComputedLogicalBorderPadding();
-          // XXX ApplySkipSides is probably not very useful here since we
-          // might not have created any next-in-flow yet.  Use the reflow status
-          // instead?  Do all fragments stretch? (bug 1144096).
-          bp.ApplySkipSides(aRS.frame->GetLogicalSkipSides());
-          nscoord bpInAxis = aAxis == eLogicalAxisBlock ? bp.BStartEnd(wm)
-                                                        : bp.IStartEnd(wm);
-          nscoord contentSize = size - bpInAxis;
-          const nscoord unstretchedContentSize = contentSize;
-          contentSize += gap;
-          nscoord max = aAxis == eLogicalAxisBlock ? aRS.ComputedMaxBSize()
-                                                   : aRS.ComputedMaxISize();
-          if (MOZ_UNLIKELY(contentSize > max)) {
-            contentSize = max;
-            gap = contentSize - unstretchedContentSize;
-          }
-          // |gap| is now how much the content size is actually allowed to grow.
-          didResize = gap > 0;
-          // (nscoord overflow can make |contentSize| negative, bug 1225118)
-          if (didResize && MOZ_LIKELY(contentSize >= 0)) {
-            (aAxis == eLogicalAxisBlock ? aContentSize->BSize(wm)
-                                        : aContentSize->ISize(wm)) = contentSize;
-            if (MOZ_UNLIKELY(!aSameSide)) {
-              offset += gap;
-            }
-          }
-        }
-      }
-      break;
-    }
     default:
       MOZ_ASSERT_UNREACHABLE("unknown align-/justify-self value");
   }
@@ -2249,7 +2207,6 @@ AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe, LogicalAxis aAxis,
     nscoord& pos = aAxis == eLogicalAxisBlock ? aPos->B(wm) : aPos->I(wm);
     pos += MOZ_LIKELY(aSameSide) ? offset : -offset;
   }
-  return didResize;
 }
 
 static bool
@@ -2262,12 +2219,11 @@ SameSide(WritingMode aContainerWM, LogicalSide aContainerSide,
              aChildWM.PhysicalSide(aChildSide);
 }
 
-static Maybe<LogicalAxis>
+static void
 AlignSelf(uint8_t aAlignSelf, const LogicalRect& aCB, const WritingMode aCBWM,
           const nsHTMLReflowState& aRS, const LogicalSize& aSize,
-          LogicalSize* aContentSize, LogicalPoint* aPos)
+          LogicalPoint* aPos)
 {
-  Maybe<LogicalAxis> resizedAxis;
   auto alignSelf = aAlignSelf;
   bool overflowSafe = alignSelf & NS_STYLE_ALIGN_SAFE;
   alignSelf &= ~NS_STYLE_ALIGN_FLAG_BITS;
@@ -2286,19 +2242,15 @@ AlignSelf(uint8_t aAlignSelf, const LogicalRect& aCB, const WritingMode aCBWM,
                            childWM, isOrthogonal ? eLogicalSideIStart
                                                  : eLogicalSideBStart);
   LogicalAxis axis = isOrthogonal ? eLogicalAxisInline : eLogicalAxisBlock;
-  if (AlignJustifySelf(alignSelf, overflowSafe, axis, sameSide,
-                       aCB.BSize(aCBWM), aRS, aSize, aContentSize, aPos)) {
-    resizedAxis.emplace(axis);
-  }
-  return resizedAxis;
+  AlignJustifySelf(alignSelf, overflowSafe, axis, sameSide,
+                   aCB.BSize(aCBWM), aRS, aSize, aPos);
 }
 
-static Maybe<LogicalAxis>
+static void
 JustifySelf(uint8_t aJustifySelf, const LogicalRect& aCB, const WritingMode aCBWM,
             const nsHTMLReflowState& aRS, const LogicalSize& aSize,
-            LogicalSize* aContentSize, LogicalPoint* aPos)
+            LogicalPoint* aPos)
 {
-  Maybe<LogicalAxis> resizedAxis;
   auto justifySelf = aJustifySelf;
   bool overflowSafe = justifySelf & NS_STYLE_JUSTIFY_SAFE;
   justifySelf &= ~NS_STYLE_JUSTIFY_FLAG_BITS;
@@ -2326,11 +2278,8 @@ JustifySelf(uint8_t aJustifySelf, const LogicalRect& aCB, const WritingMode aCBW
   }
 
   LogicalAxis axis = isOrthogonal ? eLogicalAxisBlock : eLogicalAxisInline;
-  if (AlignJustifySelf(justifySelf, overflowSafe, axis, sameSide,
-                       aCB.ISize(aCBWM), aRS, aSize, aContentSize, aPos)) {
-    resizedAxis.emplace(axis);
-  }
-  return resizedAxis;
+  AlignJustifySelf(justifySelf, overflowSafe, axis, sameSide,
+                   aCB.ISize(aCBWM), aRS, aSize, aPos);
 }
 
 static uint16_t
@@ -3268,7 +3217,8 @@ ContentContribution(nsIFrame*                         aChild,
     // XXX this will give mostly correct results for now (until bug 1174569).
     LogicalSize availableSize(wm, INFINITE_ISIZE_COORD, NS_UNCONSTRAINEDSIZE);
     nsHTMLReflowState childRS(pc, *rs, aChild, availableSize, nullptr,
-                              nsHTMLReflowState::COMPUTE_SIZE_SHRINK_WRAP);
+                              nsHTMLReflowState::COMPUTE_SIZE_SHRINK_WRAP |
+                              nsHTMLReflowState::COMPUTE_SIZE_USE_AUTO_BSIZE);
     nsHTMLReflowMetrics childSize(childRS);
     nsReflowStatus childStatus;
     const uint32_t flags = NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_SIZE_VIEW;
@@ -4125,6 +4075,7 @@ void
 nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
                                         const GridItemInfo*    aGridItemInfo,
                                         nsSize                 aContainerSize,
+                                        Maybe<nscoord>         aStretchBSize,
                                         const Fragmentainer*   aFragmentainer,
                                         const GridReflowState& aState,
                                         const LogicalRect&     aContentArea,
@@ -4149,12 +4100,7 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
     cb = aState.ContainingBlockFor(area);
     isConstrainedBSize = aFragmentainer && !wm.IsOrthogonalTo(childWM);
     if (isConstrainedBSize) {
-      nscoord fragCBOffset = cb.BStart(wm) - aState.mFragBStart;
-      if (fragCBOffset < 0) {
-        // Subtract the "consumed" part of the grid area.
-        cb.BSize(wm) = std::max(fragCBOffset + cb.BSize(wm), 0);
-      }
-      cb.BStart(wm) = std::max(fragCBOffset, 0);
+      cb.BStart(wm) = std::max(0, cb.BStart(wm) - aState.mFragBStart);
       toFragmentainerEnd = aFragmentainer->mToFragmentainerEnd -
         aState.mFragBStart - cb.BStart(wm);
       toFragmentainerEnd = std::max(toFragmentainerEnd, 0);
@@ -4174,68 +4120,56 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
   }
 
   LogicalSize percentBasis(cb.Size(wm).ConvertTo(childWM, wm));
-  Maybe<nsHTMLReflowState> childRS; // Maybe<> so we can reuse the space
-  childRS.emplace(pc, *aState.mReflowState, aChild, childCBSize, &percentBasis);
-  childRS->mFlags.mIsTopOfPage = aFragmentainer ? aFragmentainer->mIsTopOfPage : false;
+  nsHTMLReflowState childRS(pc, *aState.mReflowState, aChild, childCBSize,
+                            &percentBasis);
+  childRS.mFlags.mIsTopOfPage = aFragmentainer ? aFragmentainer->mIsTopOfPage : false;
+
+  // If the child is stretching in its block axis, and we might be fragmenting
+  // it in that axis, then setup a frame property to tell
+  // nsBlockFrame::ComputeFinalSize the size.
+  if (isConstrainedBSize && !wm.IsOrthogonalTo(childWM)) {
+    bool stretch = false;
+    if (!childRS.mStyleMargin->HasBlockAxisAuto(childWM) &&
+        childRS.mStylePosition->BSize(childWM).GetUnit() == eStyleUnit_Auto) {
+      auto blockAxisAlignment =
+        childRS.mStylePosition->ComputedAlignSelf(StyleContext());
+      if (blockAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
+          blockAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
+        stretch = true;
+      }
+    }
+    if (stretch) {
+      aChild->Properties().Set(FragStretchBSizeProperty(), *aStretchBSize);
+    } else {
+      aChild->Properties().Delete(FragStretchBSizeProperty());
+    }
+  }
+
   // We need the width of the child before we can correctly convert
   // the writing-mode of its origin, so we reflow at (0, 0) using a dummy
   // aContainerSize, and then pass the correct position to FinishReflowChild.
-  Maybe<nsHTMLReflowMetrics> childSize; // Maybe<> so we can reuse the space
-  childSize.emplace(*childRS);
+  nsHTMLReflowMetrics childSize(childRS);
   const nsSize dummyContainerSize;
-  ReflowChild(aChild, pc, *childSize, *childRS, childWM, LogicalPoint(childWM),
+  ReflowChild(aChild, pc, childSize, childRS, childWM, LogicalPoint(childWM),
               dummyContainerSize, 0, aStatus);
   LogicalPoint childPos =
     cb.Origin(wm).ConvertTo(childWM, wm,
-                            aContainerSize - childSize->PhysicalSize());
+                            aContainerSize - childSize.PhysicalSize());
   // Apply align/justify-self and reflow again if that affects the size.
   if (MOZ_LIKELY(isGridItem)) {
-    LogicalSize oldSize = childSize->Size(childWM); // from the ReflowChild()
-    LogicalSize newContentSize(childWM);
-    auto align = childRS->mStylePosition->ComputedAlignSelf(containerSC);
-    Maybe<LogicalAxis> alignResize;
+    LogicalSize size = childSize.Size(childWM); // from the ReflowChild()
     if (NS_FRAME_IS_COMPLETE(aStatus)) {
-      alignResize =
-        AlignSelf(align, cb, wm, *childRS, oldSize, &newContentSize, &childPos);
+      auto align = childRS.mStylePosition->ComputedAlignSelf(containerSC);
+      AlignSelf(align, cb, wm, childRS, size, &childPos);
     }
-    auto justify = childRS->mStylePosition->ComputedJustifySelf(containerSC);
-    Maybe<LogicalAxis> justifyResize =
-      JustifySelf(justify, cb, wm, *childRS, oldSize, &newContentSize, &childPos);
-    if (alignResize || justifyResize) {
-      FinishReflowChild(aChild, pc, *childSize, childRS.ptr(), childWM,
-                        LogicalPoint(childWM), aContainerSize,
-                        NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_SIZE_VIEW);
-      childSize.reset(); // In reverse declaration order since it runs
-      childRS.reset();   // destructors.
-      childRS.emplace(pc, *aState.mReflowState, aChild, childCBSize, &percentBasis);
-      childRS->mFlags.mIsTopOfPage = aFragmentainer ? aFragmentainer->mIsTopOfPage : false;
-      if ((alignResize && alignResize.value() == eLogicalAxisBlock) ||
-          (justifyResize && justifyResize.value() == eLogicalAxisBlock)) {
-        nscoord childConsumedBSize = 0;
-        if (isConstrainedBSize) {
-          // XXX use aChild->GetConsumedBSize() instead after bug 1232194 is fixed
-          for (auto prev = aChild->GetPrevInFlow(); prev; prev = prev->GetPrevInFlow()) {
-            childConsumedBSize += prev->ContentBSize(childWM);
-          }
-        }
-        childRS->SetComputedBSize(childConsumedBSize + newContentSize.BSize(childWM));
-        childRS->SetBResize(true);
-      }
-      if ((alignResize && alignResize.value() == eLogicalAxisInline) ||
-          (justifyResize && justifyResize.value() == eLogicalAxisInline)) {
-        childRS->SetComputedISize(newContentSize.ISize(childWM));
-        childRS->SetIResize(true);
-      }
-      childSize.emplace(*childRS);
-      ReflowChild(aChild, pc, *childSize, *childRS, childWM,
-                  LogicalPoint(childWM), dummyContainerSize, 0, aStatus);
-    }
+    auto justify = childRS.mStylePosition->ComputedJustifySelf(containerSC);
+    JustifySelf(justify, cb, wm, childRS, size, &childPos);
   } else {
     // Put a placeholder at the padding edge, in case an ancestor is its CB.
     childPos -= padStart;
   }
-  childRS->ApplyRelativePositioning(&childPos, aContainerSize);
-  FinishReflowChild(aChild, pc, *childSize, childRS.ptr(), childWM, childPos,
+  childRS.ApplyRelativePositioning(&childPos, aContainerSize);
+  FinishReflowChild(aChild, pc, childSize, &childRS, childWM, childPos,
                     aContainerSize, 0);
   ConsiderChildOverflow(aDesiredSize.mOverflowAreas, aChild);
 }
@@ -4273,7 +4207,7 @@ nsGridContainerFrame::ReflowInFragmentainer(GridReflowState&     aState,
   // Reflow our placeholder children; they must all be complete.
   for (auto child : placeholders) {
     nsReflowStatus childStatus;
-    ReflowInFlowChild(child, nullptr, aContainerSize, &aFragmentainer,
+    ReflowInFlowChild(child, nullptr, aContainerSize, Nothing(), &aFragmentainer,
                       aState, aContentArea, aDesiredSize, childStatus);
     MOZ_ASSERT(NS_FRAME_IS_COMPLETE(childStatus),
                "nsPlaceholderFrame should never need to be fragmented");
@@ -4544,7 +4478,13 @@ nsGridContainerFrame::ReflowRowsInFragmentainer(
     // We only restart the loop once.
     aFragmentainer.mIsTopOfPage = isRowTopOfPage && !rowCanGrow;
     nsReflowStatus childStatus;
-    ReflowInFlowChild(child, info, aContainerSize, &aFragmentainer,
+    // Pass along how much to stretch this fragment, in case it's needed.
+    nscoord bSize =
+      aState.mRows.GridLineEdge(std::min(aEndRow, info->mArea.mRows.mEnd),
+                                GridLineSide::eBeforeGridGap) -
+      aState.mRows.GridLineEdge(std::max(aStartRow, row),
+                                GridLineSide::eAfterGridGap);
+    ReflowInFlowChild(child, info, aContainerSize, Some(bSize), &aFragmentainer,
                       aState, aContentArea, aDesiredSize, childStatus);
     MOZ_ASSERT(NS_INLINE_IS_BREAK_BEFORE(childStatus) ||
                !NS_FRAME_IS_FULLY_COMPLETE(childStatus) ||
@@ -4764,7 +4704,7 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
       if (child->GetType() != nsGkAtoms::placeholderFrame) {
         info = &aState.mGridItems[aState.mIter.GridItemIndex()];
       }
-      ReflowInFlowChild(*aState.mIter, info, containerSize, nullptr,
+      ReflowInFlowChild(*aState.mIter, info, containerSize, Nothing(), nullptr,
                         aState, aContentArea, aDesiredSize, aStatus);
       MOZ_ASSERT(NS_FRAME_IS_COMPLETE(aStatus), "child should be complete "
                  "in unconstrained reflow");
@@ -4928,6 +4868,7 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
     RemoveStateBits(NS_STATE_GRID_DID_PUSH_ITEMS);
     nsFrameList items;
     auto nif = static_cast<nsGridContainerFrame*>(GetNextInFlow());
+    auto firstNIF = nif;
     DebugOnly<bool> nifNeedPushedItem = false;
     while (nif) {
       nsFrameList nifItems;
@@ -4968,6 +4909,29 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
       nif = static_cast<nsGridContainerFrame*>(nif->GetNextInFlow());
       MOZ_ASSERT(nif || !nifNeedPushedItem || mDidPushItemsBitMayLie,
                  "NS_STATE_GRID_DID_PUSH_ITEMS lied");
+    }
+
+    if (!items.IsEmpty()) {
+      // Pull up the first next-in-flow of the pulled up items too, unless its
+      // parent is our nif (to avoid leaving a hole there).
+      nsFrameList childNIFs;
+      nsFrameList childOCNIFs;
+      for (auto child : items) {
+        auto childNIF = child->GetNextInFlow();
+        if (childNIF && childNIF->GetParent() != firstNIF) {
+          auto parent = childNIF->GetParent();
+          parent->StealFrame(childNIF);
+          ReparentFrame(childNIF, parent, firstNIF);
+          if ((childNIF->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
+            childOCNIFs.AppendFrame(nullptr, childNIF);
+          } else {
+            childNIFs.AppendFrame(nullptr, childNIF);
+          }
+        }
+      }
+      // Merge items' NIFs into our NIF's respective overflow child lists.
+      firstNIF->MergeSortedOverflow(childNIFs);
+      firstNIF->MergeSortedExcessOverflowContainers(childOCNIFs);
     }
 
     MOZ_ASSERT(foundOwnPushedChild || !items.IsEmpty() || mDidPushItemsBitMayLie,

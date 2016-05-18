@@ -820,7 +820,7 @@ nsEditingSession::OnLocationChange(nsIWebProgress *aWebProgress,
   nsIDocShell *docShell = piWindow->GetDocShell();
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsICommandManager> commandManager = do_GetInterface(docShell);
+  nsCOMPtr<nsICommandManager> commandManager = docShell->GetCommandManager();
   nsCOMPtr<nsPICommandUpdater> commandUpdater =
                                   do_QueryInterface(commandManager);
   NS_ENSURE_TRUE(commandUpdater, NS_ERROR_FAILURE);
