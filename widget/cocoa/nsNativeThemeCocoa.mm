@@ -1101,6 +1101,10 @@ nsNativeThemeCocoa::DrawSearchField(CGContextRef cgContext, const HIRect& inBoxR
   // NOTE: this could probably use inState
   [cell setShowsFirstResponder:IsFocused(aFrame)];
 
+  // When using the 10.11 SDK, the default string will be shown if we don't
+  // set the placeholder string.
+  [cell setPlaceholderString:@""];
+
   DrawCellWithSnapping(cell, cgContext, inBoxRect, searchFieldSettings,
                        VerticalAlignFactor(aFrame), mCellDrawView,
                        IsFrameRTL(aFrame));
