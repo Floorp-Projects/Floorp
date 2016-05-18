@@ -3903,7 +3903,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     }
     nsIntRect itemDrawRect = ScaleToOutsidePixels(itemContent, snap);
     bool prerenderedTransform = itemType == nsDisplayItem::TYPE_TRANSFORM &&
-        static_cast<nsDisplayTransform*>(item)->ShouldPrerender();
+        static_cast<nsDisplayTransform*>(item)->ShouldPrerender(mBuilder);
     ParentLayerIntRect clipRect;
     const DisplayItemClip& itemClip = item->GetClip();
     if (itemClip.HasClip()) {
