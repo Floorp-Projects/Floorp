@@ -90,6 +90,7 @@ public class CombinedHistoryRecyclerView extends RecyclerView
     public void onItemClicked(RecyclerView recyclerView, int position, View v) {
         final int viewType = getAdapter().getItemViewType(position);
         final CombinedHistoryItem.ItemType itemType = CombinedHistoryItem.ItemType.viewTypeToItemType(viewType);
+        final String telemetryExtra;
 
         switch (itemType) {
             case RECENT_TABS:
@@ -124,7 +125,8 @@ public class CombinedHistoryRecyclerView extends RecyclerView
                 break;
 
             case CLOSED_TAB:
-                ((RecentTabsAdapter) getAdapter()).restoreTabFromPosition(position);
+                telemetryExtra = ((RecentTabsAdapter) getAdapter()).restoreTabFromPosition(position);
+                Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.LIST_ITEM, telemetryExtra);
                 break;
         }
     }
