@@ -409,6 +409,107 @@ private:
   nsPoint mOffset;
 };
 
+static bool
+HasMaskToDraw(const nsStyleSVGReset* aSVGReset,
+              nsSVGEffects::EffectProperties& aEffectProperties)
+{
+  bool isOK = true;
+  // Keep moving forward even if svgMaskFrame is nullptr or isOK is false.
+  // This source is not a svg mask, but it still can be a correct mask image.
+  nsSVGMaskFrame *svgMaskFrame = aEffectProperties.GetMaskFrame(&isOK);
+
+  // hasMaskToDraw is true means we have at least one drawable mask resource.
+  // We need to apply mask only if hasMaskToDraw is true.
+  bool hasMaskToDraw = (svgMaskFrame != nullptr);
+  if (!hasMaskToDraw) {
+    NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, aSVGReset->mMask) {
+      if (!aSVGReset->mMask.mLayers[i].mImage.IsEmpty()) {
+        hasMaskToDraw = true;
+        break;
+      }
+    }
+  }
+
+  return hasMaskToDraw;
+}
+
+static void
+GenerateMaskSurface(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
+                    float aOpacity, nsStyleContext* aSC,
+                    nsSVGEffects::EffectProperties& aEffectProperties,
+                    gfxMatrix aOriginMatrix, Matrix& aOutMaskTransform,
+                    RefPtr<SourceSurface>& aOutMaskSurface)
+{
+  const nsStyleSVGReset *svgReset = aSC->StyleSVGReset();
+  MOZ_ASSERT(HasMaskToDraw(svgReset, aEffectProperties));
+
+  bool isOK = true;
+  // Keep moving forward even if svgMaskFrame is nullptr or isOK is false.
+  // This source is not a svg mask, but it still can be a correct mask image.
+  nsSVGMaskFrame *svgMaskFrame = aEffectProperties.GetMaskFrame(&isOK);
+  gfxContext& ctx = aParams.ctx;
+
+  if (svgMaskFrame) {
+    gfxMatrix cssPxToDevPxMatrix =
+      nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(aParams.frame);
+
+    // Generate aOutMaskSurface from a SVG mask.
+    aOutMaskSurface = svgMaskFrame->GetMaskForMaskedFrame(&ctx,
+                                                          aParams.frame,
+                                                          cssPxToDevPxMatrix,
+                                                          aOpacity,
+                                                          &aOutMaskTransform,
+                                                          svgReset->mMask.mLayers[0].mMaskMode);
+  } else {
+    // Create maskSuface.
+    gfxRect clipRect = ctx.GetClipExtents();
+    {
+      gfxContextMatrixAutoSaveRestore matRestore(&ctx);
+
+      ctx.SetMatrix(gfxMatrix());
+      clipRect = ctx.GetClipExtents();
+    }
+    IntRect drawRect = RoundedOut(ToRect(clipRect));
+
+    // Mask composition result on CoreGraphic::A8 surface is not correct
+    // when mask-mode is not add(source over). Switch to skia when CG backend
+    // detected.
+    RefPtr<DrawTarget> targetDT =
+      (ctx.GetDrawTarget()->GetBackendType() == BackendType::COREGRAPHICS) ?
+        Factory::CreateDrawTarget(BackendType::SKIA, drawRect.Size(),
+                                  SurfaceFormat::A8) :
+        ctx.GetDrawTarget()->CreateSimilarDrawTarget(drawRect.Size(),
+                                                     SurfaceFormat::A8);
+
+    if (!targetDT || !targetDT->IsValid()) {
+      return;
+    }
+
+    RefPtr<gfxContext> target = gfxContext::ForDrawTarget(targetDT);
+    MOZ_ASSERT(target); // alrady checked the draw target above
+    target->SetMatrix(aOriginMatrix * gfxMatrix::Translation(-drawRect.TopLeft()));
+
+    // Compose all mask-images onto aOutMaskSurface.
+    nsRenderingContext rc(target);
+    nsCSSRendering::PaintBGParams params =
+      nsCSSRendering::PaintBGParams::ForAllLayers(*aParams.frame->PresContext(),
+                                                  rc, aParams.dirtyRect,
+                                                  aParams.borderArea,
+                                                  aParams.frame,
+                                                  aParams.builder->GetBackgroundPaintFlags() |
+                                                  nsCSSRendering::PAINTBG_MASK_IMAGE);
+    // FIXME We should use the return value, see bug 1258510.
+    Unused << nsCSSRendering::PaintBackgroundWithSC(params, aSC,
+                                                    *aParams.frame->StyleBorder());
+    aOutMaskSurface = targetDT->Snapshot();
+
+    // Compute mask transform.
+    Matrix mat = ToMatrix(ctx.CurrentMatrix());
+    mat.Invert();
+    aOutMaskTransform = Matrix::Translation(drawRect.x, drawRect.y) * mat;
+  }
+}
+
 void
 nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
 {
@@ -507,25 +608,11 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
   gfxMatrix cssPxToDevPxMatrix = GetCSSPxToDevPxMatrix(frame);
 
   const nsStyleSVGReset *svgReset = firstFrame->StyleSVGReset();
-  // Keep moving forward even if svgMaskFrame is nullptr or isOK is false.
-  // This source is not a svg mask, but it still can be a correct mask image.
-  nsSVGMaskFrame *svgMaskFrame = effectProperties.GetMaskFrame(&isOK);
+  bool hasMaskToDraw = HasMaskToDraw(svgReset, effectProperties);
 
   // These are used if we require a temporary surface for a custom blend mode.
   RefPtr<gfxContext> target = &aParams.ctx;
   IntPoint targetOffset;
-
-  // hasMaskToDraw is true means we have at least one drawable mask resource.
-  // We need to apply mask only if hasMaskToDraw is true.
-  bool hasMaskToDraw = (svgMaskFrame != nullptr);
-  if (!hasMaskToDraw) {
-    NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, svgReset->mMask) {
-      if (!svgReset->mMask.mLayers[i].mImage.IsEmpty()) {
-        hasMaskToDraw = true;
-        break;
-      }
-    }
-  }
 
   bool complexEffects = false;
   /* Check if we need to do additional operations on this child's
@@ -543,65 +630,11 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
                                   *drawTarget));
     Matrix maskTransform;
     RefPtr<SourceSurface> maskSurface;
-    if (svgMaskFrame) {
-      // Generate maskSurface from a SVG mask.
-      maskSurface = svgMaskFrame->GetMaskForMaskedFrame(&context,
-                                                        aParams.frame,
-                                                        cssPxToDevPxMatrix,
-                                                        opacity,
-                                                        &maskTransform,
-                                                        svgReset->mMask.mLayers[0].mMaskMode);
-    } else if (hasMaskToDraw) {
-      // Create maskSuface.
-      gfxRect clipRect = context.GetClipExtents();
-      {
-        gfxContextMatrixAutoSaveRestore matRestore(&context);
 
-        context.SetMatrix(gfxMatrix());
-        clipRect = context.GetClipExtents();
-      }
-      IntRect drawRect = RoundedOut(ToRect(clipRect));
-
-      // Mask composition result on CoreGraphic::A8 surface is not correct
-      // when mask-mode is not add(source over). Switch to skia when CG backend
-      // detected.
-      RefPtr<DrawTarget> maskTargetDT =
-        (context.GetDrawTarget()->GetBackendType() == BackendType::COREGRAPHICS) ?
-          Factory::CreateDrawTarget(BackendType::SKIA, drawRect.Size(),
-                                    SurfaceFormat::A8) :
-          context.GetDrawTarget()->CreateSimilarDrawTarget(drawRect.Size(),
-                                                            SurfaceFormat::A8);
-
-      if (!maskTargetDT || !maskTargetDT->IsValid()) {
-        context.Restore();
-        return;
-      }
-
-      RefPtr<gfxContext> maskTarget = gfxContext::ForDrawTarget(maskTargetDT);
-      MOZ_ASSERT(maskTarget); // already checked the draw target above
-      maskTarget->SetMatrix(matrixAutoSaveRestore.Matrix() * gfxMatrix::Translation(-drawRect.TopLeft()));
-
-      // Compose all mask-images onto maskSurface.
-      nsRenderingContext rc(target);
-      nsCSSRendering::PaintBGParams params =
-        nsCSSRendering::PaintBGParams::ForAllLayers(*aParams.frame->PresContext(),
-                                                    rc,
-                                                    aParams.dirtyRect,
-                                                    aParams.borderArea,
-                                                    aParams.frame,
-                                                    aParams.builder->GetBackgroundPaintFlags() |
-                                                    nsCSSRendering::PAINTBG_MASK_IMAGE);
-
-      // FIXME We should use the return value, see bug 1258510.
-      Unused << nsCSSRendering::PaintBackgroundWithSC(params,
-                                                      firstFrame->StyleContext(),
-                                                      *frame->StyleBorder());
-      maskSurface = maskTargetDT->Snapshot();
-
-      // Compute mask transform.
-      Matrix mat = ToMatrix(context.CurrentMatrix());
-      mat.Invert();
-      maskTransform = Matrix::Translation(drawRect.x, drawRect.y) * mat;
+    if (hasMaskToDraw) {
+      GenerateMaskSurface(aParams, opacity, firstFrame->StyleContext(),
+                          effectProperties, matrixAutoSaveRestore.Matrix(),
+                          maskTransform, maskSurface);
     }
 
     if (hasMaskToDraw && !maskSurface) {
