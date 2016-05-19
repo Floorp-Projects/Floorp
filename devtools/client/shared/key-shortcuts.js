@@ -187,7 +187,12 @@ KeyShortcuts.prototype = {
     if (shortcut.keyCode) {
       return event.keyCode == shortcut.keyCode;
     }
-    return event.key.toLowerCase() == shortcut.key;
+    // For character keys, we match if the final character is the expected one.
+    // But for digits we also accept indirect match to please azerty keyboard,
+    // which requires Shift to be pressed to get digits.
+    return event.key.toLowerCase() == shortcut.key ||
+      ( shortcut.key.match(/[0-9]/) &&
+        event.keyCode == shortcut.key.charCodeAt(0) );
   },
 
   handleEvent(event) {
