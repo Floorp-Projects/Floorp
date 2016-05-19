@@ -44,23 +44,23 @@ printDiagnosticMessage(uint64_t seen)
 }
 
 void
-setBitAndCheck(CounterAndBit& counterAndBit)
+setBitAndCheck(CounterAndBit* counterAndBit)
 {
     while (true) {
         {
             // Set our bit. Repeatedly setting it is idempotent.
-            auto guard = counterAndBit.counter.lock();
+            auto guard = counterAndBit->counter.lock();
             printDiagnosticMessage(guard);
-            guard |= (uint64_t(1) << counterAndBit.bit);
+            guard |= (uint64_t(1) << counterAndBit->bit);
         }
 
         {
             // Check to see if we have observed all the other threads setting
             // their bit as well.
-            auto guard = counterAndBit.counter.lock();
+            auto guard = counterAndBit->counter.lock();
             printDiagnosticMessage(guard);
             if (guard == UINT64_MAX) {
-                js_delete(&counterAndBit);
+                js_delete(counterAndBit);
                 return;
             }
         }
@@ -77,7 +77,7 @@ BEGIN_TEST(testExclusiveData)
     for (auto i : mozilla::MakeRange(NumThreads)) {
         auto counterAndBit = js_new<CounterAndBit>(i, counter);
         CHECK(counterAndBit);
-        CHECK(threads.emplaceBack(setBitAndCheck, *counterAndBit));
+        CHECK(threads.emplaceBack(setBitAndCheck, counterAndBit));
     }
 
     for (auto& thread : threads)

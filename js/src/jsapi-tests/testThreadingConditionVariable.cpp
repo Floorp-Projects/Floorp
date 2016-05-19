@@ -20,13 +20,13 @@ struct TestState {
       : flag(false)
     {
         if (createThread)
-            MOZ_RELEASE_ASSERT(testThread.init(setFlag, *this));
+            MOZ_RELEASE_ASSERT(testThread.init(setFlag, this));
     }
 
-    static void setFlag(TestState& state) {
-        js::UniqueLock<js::Mutex> lock(state.mutex);
-        state.flag = true;
-        state.condition.notify_one();
+    static void setFlag(TestState* state) {
+        js::UniqueLock<js::Mutex> lock(state->mutex);
+        state->flag = true;
+        state->condition.notify_one();
     }
 
     void join() {

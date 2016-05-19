@@ -58,7 +58,11 @@ public:
   // be created for this Thread by calling |init|.
   Thread() : id_(Id()) {}
 
-  // Start a thread of execution at functor |f| with parameters |args|.
+  // Start a thread of execution at functor |f| with parameters |args|. Note
+  // that the arguments must be either POD or rvalue references (mozilla::Move).
+  // Attempting to pass a reference will result in the value being copied, which
+  // may not be the intended behavior. See the comment below on
+  // ThreadTrampoline::args for an explanation.
   template <typename F, typename... Args>
   explicit Thread(F&& f, Args&&... args) {
     MOZ_RELEASE_ASSERT(init(mozilla::Forward<F>(f),
@@ -145,13 +149,32 @@ namespace detail {
 template <typename F, typename... Args>
 class ThreadTrampoline
 {
+  // The functor to call.
   F f;
-  mozilla::Tuple<Args...> args;
+
+  // A std::decay copy of the arguments, as specified by std::thread. Using an
+  // rvalue reference for the arguments to Thread and ThreadTrampoline gives us
+  // move semantics for large structures, allowing us to quickly and easily pass
+  // enormous amounts of data to a new thread. Unfortunately, there is a
+  // downside: rvalue references becomes lvalue references when used with POD
+  // types. This becomes dangerous when attempting to pass POD stored on the
+  // stack to the new thread; the rvalue reference will implicitly become an
+  // lvalue reference to the stack location. Thus, the value may not exist if
+  // the parent thread leaves the frame before the read happens in the new
+  // thread. To avoid this dangerous and highly non-obvious footgun, the
+  // standard requires a "decay" copy of the arguments at the cost of making it
+  // impossible to pass references between threads.
+  mozilla::Tuple<typename mozilla::Decay<Args>::Type...> args;
 
 public:
-  explicit ThreadTrampoline(F&& aF, Args&&... aArgs)
-    : f(mozilla::Forward<F>(aF)),
-      args(mozilla::Forward<Args>(aArgs)...)
+  // Note that this template instatiation duplicates and is identical to the
+  // class template instantiation. It is required for perfect forwarding of
+  // rvalue references, which is only enabled for calls to a function template,
+  // even if the class template arguments are correct.
+  template <typename G, typename... ArgsT>
+  explicit ThreadTrampoline(G&& aG, ArgsT&&... aArgsT)
+    : f(mozilla::Forward<F>(aG)),
+      args(mozilla::Forward<Args>(aArgsT)...)
   {
   }
 
