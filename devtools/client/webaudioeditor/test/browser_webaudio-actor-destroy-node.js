@@ -16,6 +16,10 @@ add_task(function* () {
     getN(front, "create-node", 13)
   ]);
 
+  // Wait for a tick before gc to prevent this test from intermittent timeout
+  // where the node never get collected.
+  yield DevToolsUtils.waitForTick();
+
   // Force CC so we can ensure it's run to clear out dead AudioNodes
   forceCC();
 
