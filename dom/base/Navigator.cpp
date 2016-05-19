@@ -2403,36 +2403,40 @@ Navigator::HasPresentationSupport(JSContext* aCx, JSObject* aGlobal)
 
   // Grant access to browser receiving pages and their same-origin iframes. (App
   // pages should be controlled by "presentation" permission in app manifests.)
-  nsCOMPtr<nsIDocShell> docshell = inner->GetDocShell();
-  MOZ_ASSERT(docshell);
-
-  if (!docshell->GetIsInMozBrowserOrApp()) {
+  mozilla::dom::ContentChild* cc =
+    mozilla::dom::ContentChild::GetSingleton();
+  if (!cc || !cc->IsForBrowser()) {
     return false;
   }
 
-  nsAutoString presentationURL;
-  nsContentUtils::GetPresentationURL(docshell, presentationURL);
-
-  if (presentationURL.IsEmpty()) {
+  nsCOMPtr<nsPIDOMWindowOuter> win = inner->GetOuterWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> top = win->GetTop();
+  nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(win);
+  nsCOMPtr<nsIScriptObjectPrincipal> topSop = do_QueryInterface(top);
+  if (!sop || !topSop) {
     return false;
   }
 
-  nsCOMPtr<nsIScriptSecurityManager> securityManager =
-    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-  if (!securityManager) {
+  nsIPrincipal* principal = sop->GetPrincipal();
+  nsIPrincipal* topPrincipal = topSop->GetPrincipal();
+  if (!principal || !topPrincipal || !principal->Subsumes(topPrincipal)) {
     return false;
   }
 
-  nsCOMPtr<nsIURI> presentationURI;
-  nsresult rv = NS_NewURI(getter_AddRefs(presentationURI), presentationURL);
-  if (NS_FAILED(rv)) {
+  nsCOMPtr<nsPIDOMWindowInner> topInner;
+  if (!(topInner = top->GetCurrentInnerWindow())) {
     return false;
   }
 
-  nsCOMPtr<nsIURI> docURI = inner->GetDocumentURI();
-  return NS_SUCCEEDED(securityManager->CheckSameOriginURI(presentationURI,
-                                                          docURI,
-                                                          false));
+  nsCOMPtr<nsIPresentationService> presentationService =
+    do_GetService(PRESENTATION_SERVICE_CONTRACTID);
+  if (NS_WARN_IF(!presentationService)) {
+    return false;
+  }
+
+  nsAutoString sessionId;
+  presentationService->GetExistentSessionIdAtLaunch(topInner->WindowID(), sessionId);
+  return !sessionId.IsEmpty();
 }
 
 /* static */
