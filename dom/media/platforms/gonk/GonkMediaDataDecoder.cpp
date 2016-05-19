@@ -331,7 +331,6 @@ GonkDecoderManager::OnTaskLooper()
 #endif
 
 GonkMediaDataDecoder::GonkMediaDataDecoder(GonkDecoderManager* aManager,
-                                           FlushableTaskQueue* aTaskQueue,
                                            MediaDataDecoderCallback* aCallback)
   : mManager(aManager)
 {
