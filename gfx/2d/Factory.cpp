@@ -356,7 +356,6 @@ Factory::CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFor
     }
 #endif
   default:
-    gfxDebug() << "Invalid draw target type specified.";
     return nullptr;
   }
 
