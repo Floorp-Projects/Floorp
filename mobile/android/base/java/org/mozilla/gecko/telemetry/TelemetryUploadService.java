@@ -149,6 +149,11 @@ public class TelemetryUploadService extends IntentService {
             return false;
         }
 
+        if (!NetworkUtils.isConnected(context)) {
+            Log.w(LOGTAG, "Network is not connected; returning");
+            return false;
+        }
+
         if (!isIntentValid(intent)) {
             Log.w(LOGTAG, "Received invalid Intent; returning");
             return false;
@@ -167,6 +172,8 @@ public class TelemetryUploadService extends IntentService {
      * {@link #isUploadEnabledByProfileConfig(Context, GeckoProfile)} if the profile is available as it takes into
      * account more information.
      *
+     * You may wish to also check if the network is connected when calling this method.
+     *
      * Note that this method logs debug statements when upload is disabled.
      */
     public static boolean isUploadEnabledByAppConfig(final Context context) {
@@ -180,17 +187,14 @@ public class TelemetryUploadService extends IntentService {
             return false;
         }
 
-        if (!NetworkUtils.isBackgroundDataEnabled(context)) {
-            Log.d(LOGTAG, "Background data is disabled");
-            return false;
-        }
-
         return true;
     }
 
     /**
      * Determines if the telemetry upload feature is enabled via profile & application level configurations. This is the
      * preferred method.
+     *
+     * You may wish to also check if the network is connected when calling this method.
      *
      * Note that this method logs debug statements when upload is disabled.
      */
