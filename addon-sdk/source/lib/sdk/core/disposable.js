@@ -8,20 +8,18 @@ module.metadata = {
   "stability": "experimental"
 };
 
-
 const { Class } = require("./heritage");
 const { Observer, subscribe, unsubscribe, observe } = require("./observer");
-const { isWeak, WeakReference } = require("./reference");
+const { isWeak } = require("./reference");
+const SDKWeakSet = require("../lang/weak-set");
+
 const method = require("../../method/core");
 
 const unloadSubject = require('@loader/unload');
 const addonUnloadTopic = "sdk:loader:destroy";
 
-
-
 const uninstall = method("disposable/uninstall");
 exports.uninstall = uninstall;
-
 
 const shutdown = method("disposable/shutdown");
 exports.shutdown = shutdown;
@@ -42,28 +40,94 @@ const dispose = method("disposable/dispose");
 exports.dispose = dispose;
 dispose.define(Object, object => object.dispose());
 
-
 const setup = method("disposable/setup");
 exports.setup = setup;
 setup.define(Object, (object, ...args) => object.setup(...args));
 
+// DisposablesUnloadObserver is the class which subscribe the
+// Observer Service to be notified when the add-on loader is
+// unloading to be able to dispose all the existent disposables.
+const DisposablesUnloadObserver = Class({
+  implements: [Observer],
+  initialize: function(...args) {
+    // Set of the non-weak disposables registered to be disposed.
+    this.disposables = new Set();
+    // Target of the weak disposables registered to be disposed
+    // (and tracked on this target using the SDK weak-set module).
+    this.weakDisposables = {};
+  },
+  subscribe(disposable) {
+    if (isWeak(disposable)) {
+      SDKWeakSet.add(this.weakDisposables, disposable);
+    } else {
+      this.disposables.add(disposable);
+    }
+  },
+  unsubscribe(disposable) {
+    if (isWeak(disposable)) {
+      SDKWeakSet.remove(this.weakDisposables, disposable);
+    } else {
+      this.disposables.delete(disposable);
+    }
+  },
+  tryUnloadDisposable(disposable) {
+    try {
+      if (disposable) {
+        unload(disposable);
+      }
+    } catch(e) {
+      console.error("Error unloading a",
+                    isWeak(disposable) ? "weak disposable" : "disposable",
+                    disposable, e);
+    }
+  },
+  unloadAll() {
+    // Remove all the subscribed disposables.
+    for (let disposable of this.disposables) {
+      this.tryUnloadDisposable(disposable);
+    }
+
+    this.disposables.clear();
+
+    // Remove all the subscribed weak disposables.
+    for (let disposable of SDKWeakSet.iterator(this.weakDisposables)) {
+      this.tryUnloadDisposable(disposable);
+    }
+
+    SDKWeakSet.clear(this.weakDisposables);
+  }
+});
+const disposablesUnloadObserver = new DisposablesUnloadObserver();
+
+// The DisposablesUnloadObserver instance is the only object which subscribes
+// the Observer Service directly, it observes add-on unload notifications in
+// order to trigger `unload` on all its subscribed disposables.
+observe.define(DisposablesUnloadObserver, (obj, subject, topic, data) => {
+  const isUnloadTopic = topic === addonUnloadTopic;
+  const isUnloadSubject = subject.wrappedJSObject === unloadSubject;
+  if (isUnloadTopic && isUnloadSubject) {
+    unsubscribe(disposablesUnloadObserver, addonUnloadTopic);
+    disposablesUnloadObserver.unloadAll();
+  }
+});
+
+subscribe(disposablesUnloadObserver, addonUnloadTopic, false);
 
 // Set's up disposable instance.
 const setupDisposable = disposable => {
-  subscribe(disposable, addonUnloadTopic, isWeak(disposable));
+  disposablesUnloadObserver.subscribe(disposable);
 };
 exports.setupDisposable = setupDisposable;
 
 // Tears down disposable instance.
 const disposeDisposable = disposable => {
-  unsubscribe(disposable, addonUnloadTopic);
+  disposablesUnloadObserver.unsubscribe(disposable);
 };
 exports.disposeDisposable = disposeDisposable;
 
 // Base type that takes care of disposing it's instances on add-on unload.
 // Also makes sure to remove unload listener if it's already being disposed.
 const Disposable = Class({
-  implements: [Observer],
   initialize: function(...args) {
     // First setup instance before initializing it's disposal. If instance
     // fails to initialize then there is no instance to be disposed at the
@@ -86,17 +150,6 @@ const Disposable = Class({
 });
 exports.Disposable = Disposable;
 
-// Disposable instances observe add-on unload notifications in
-// order to trigger `unload` on them.
-observe.define(Disposable, (disposable, subject, topic, data) => {
-  const isUnloadTopic = topic === addonUnloadTopic;
-  const isUnloadSubject = subject.wrappedJSObject === unloadSubject;
-  if (isUnloadTopic && isUnloadSubject) {
-    unsubscribe(disposable, topic);
-    unload(disposable);
-  }
-});
-
 const unloaders = {
   destroy: dispose,
   uninstall: uninstall,
@@ -104,7 +157,8 @@ const unloaders = {
   disable: disable,
   upgrade: upgrade,
   downgrade: downgrade
-}
+};
+
 const unloaded = new WeakMap();
 unload.define(Disposable, (disposable, reason) => {
   if (!unloaded.get(disposable)) {
@@ -117,9 +171,8 @@ unload.define(Disposable, (disposable, reason) => {
   }
 });
 
-
-// If add-on is disabled munally, it's being upgraded, downgraded
-// or uniststalled `dispose` is invoked to undo any changes that
+// If add-on is disabled manually, it's being upgraded, downgraded
+// or uninstalled `dispose` is invoked to undo any changes that
 // has being done by it in this session.
 disable.define(Disposable, dispose);
 downgrade.define(Disposable, dispose);
