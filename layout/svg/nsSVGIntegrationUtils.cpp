@@ -443,6 +443,17 @@ GenerateMaskSurface(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
     nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(aParams.frame);
 
   gfxContext& ctx = aParams.ctx;
+
+  // There is only one mask. And that mask is a SVG mask.
+  if ((svgMaskFrames.Length() == 1) && svgMaskFrames[0]) {
+    aOutMaskSurface =
+      svgMaskFrames[0]->GetMaskForMaskedFrame(&ctx, aParams.frame,
+                                              cssPxToDevPxMatrix, aOpacity,
+                                              &aOutMaskTransform,
+                                              svgReset->mMask.mLayers[0].mMaskMode);
+    return;
+  }
+
   ctx.Save();
   ctx.SetMatrix(gfxMatrix());
   gfxRect clipExtents = ctx.GetClipExtents();
