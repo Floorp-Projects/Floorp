@@ -23,6 +23,7 @@
         "repo": "https://hg.mozilla.org/%(user_repo_override)s/buildbot-configs",
         "dest": "build/configs"
     }],
+    "vcs_share_base": "/builds/hg-shared",
     "hg_l10n_base": "https://hg.mozilla.org/users/stage-ffxbld",
     "required_config_vars": ["tag_override", "user_repo_override"],
     "l10n_dir": "mozilla-esr31",

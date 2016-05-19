@@ -23,6 +23,7 @@
         "repo": "https://hg.mozilla.org/build/buildbot-configs",
         "dest": "build/configs"
     }],
+    "vcs_share_base": "/builds/hg-shared",
     "hg_l10n_base": "https://hg.mozilla.org/releases/l10n/mozilla-release",
     "required_config_vars": ["tag_override"],
     "l10n_dir": "mozilla-esr31",
