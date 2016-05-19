@@ -217,23 +217,10 @@ js::Allocate(ExclusiveContext* cx)
     return GCRuntime::tryNewTenuredThing<T, allowGC>(cx, kind, thingSize);
 }
 
-#define FOR_ALL_NON_OBJECT_GC_LAYOUTS(macro) \
-    macro(JS::Symbol) \
-    macro(JSExternalString) \
-    macro(JSFatInlineString) \
-    macro(JSScript) \
-    macro(JSString) \
-    macro(js::AccessorShape) \
-    macro(js::BaseShape) \
-    macro(js::LazyScript) \
-    macro(js::ObjectGroup) \
-    macro(js::Shape) \
-    macro(js::jit::JitCode)
-
-#define DECL_ALLOCATOR_INSTANCES(type) \
+#define DECL_ALLOCATOR_INSTANCES(allocKind, traceKind, type, sizedType) \
     template type* js::Allocate<type, NoGC>(ExclusiveContext* cx);\
     template type* js::Allocate<type, CanGC>(ExclusiveContext* cx);
-FOR_ALL_NON_OBJECT_GC_LAYOUTS(DECL_ALLOCATOR_INSTANCES)
+FOR_EACH_NONOBJECT_ALLOCKIND(DECL_ALLOCATOR_INSTANCES)
 #undef DECL_ALLOCATOR_INSTANCES
 
 template <typename T, AllowGC allowGC>
