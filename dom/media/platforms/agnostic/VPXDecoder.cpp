@@ -86,13 +86,6 @@ nsresult
 VPXDecoder::Flush()
 {
   mTaskQueue->Flush();
-
-  RefPtr<VPXDecoder> self = this;
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self] () {
-    self->mSeekTargetThreshold.reset();
-  });
-  mTaskQueue->Dispatch(r.forget());
-
   return NS_OK;
 }
 
@@ -124,13 +117,6 @@ VPXDecoder::DoDecodeFrame(MediaRawData* aSample)
     NS_ASSERTION(img->fmt == VPX_IMG_FMT_I420 ||
                  img->fmt == VPX_IMG_FMT_I444,
                  "WebM image format not I420 or I444");
-
-    if (mSeekTargetThreshold.isSome()) {
-      if (aSample->mTime < mSeekTargetThreshold.ref().ToMicroseconds()) {
-        continue;
-      }
-      mSeekTargetThreshold.reset();
-    }
 
     // Chroma shifts are rounded down as per the decoding examples in the SDK
     VideoData::YCbCrBuffer b;
@@ -229,16 +215,6 @@ VPXDecoder::IsVPX(const nsACString& aMimeType, uint8_t aCodecMask)
           aMimeType.EqualsLiteral("video/webm; codecs=vp8")) ||
          ((aCodecMask & VPXDecoder::VP9) &&
           aMimeType.EqualsLiteral("video/webm; codecs=vp9"));
-}
-
-void
-VPXDecoder::SetSeekThreshold(const media::TimeUnit& aTime)
-{
-  RefPtr<VPXDecoder> self = this;
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self, aTime] () {
-    self->mSeekTargetThreshold = Some(aTime);
-  });
-  mTaskQueue->Dispatch(r.forget());
 }
 
 } // namespace mozilla

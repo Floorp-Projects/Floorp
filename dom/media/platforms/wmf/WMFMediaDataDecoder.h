@@ -36,10 +36,7 @@ public:
   virtual HRESULT Output(int64_t aStreamOffset,
                          RefPtr<MediaData>& aOutput) = 0;
 
-  void Flush() {
-    mDecoder->Flush();
-    mSeekTargetThreshold.reset();
-  }
+  void Flush() { mDecoder->Flush(); }
 
   void Drain()
   {
@@ -59,15 +56,9 @@ public:
 
   virtual const char* GetDescriptionName() const = 0;
 
-  void SetSeekThreshold(const media::TimeUnit& aTime) {
-    mSeekTargetThreshold = Some(aTime);
-  }
-
 protected:
   // IMFTransform wrapper that performs the decoding.
   RefPtr<MFTDecoder> mDecoder;
-
-  Maybe<media::TimeUnit> mSeekTargetThreshold;
 };
 
 // Decodes audio and video using Windows Media Foundation. Samples are decoded
@@ -100,8 +91,6 @@ public:
   {
     return mMFTManager ? mMFTManager->GetDescriptionName() : "";
   }
-
-  void SetSeekThreshold(const media::TimeUnit& aTime) override;
 
 private:
 

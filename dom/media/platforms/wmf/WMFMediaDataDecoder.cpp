@@ -237,19 +237,4 @@ WMFMediaDataDecoder::ProcessConfigurationChanged(UniquePtr<TrackInfo>&& aConfig)
   }
 }
 
-void
-WMFMediaDataDecoder::SetSeekThreshold(const media::TimeUnit& aTime)
-{
-  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
-  MOZ_DIAGNOSTIC_ASSERT(!mIsShutDown);
-
-  RefPtr<WMFMediaDataDecoder> self = this;
-  nsCOMPtr<nsIRunnable> runnable =
-    NS_NewRunnableFunction([self, aTime] () {
-      media::TimeUnit threshold = aTime;
-      self->mMFTManager->SetSeekThreshold(threshold);
-    });
-  mTaskQueue->Dispatch(runnable.forget());
-}
-
 } // namespace mozilla

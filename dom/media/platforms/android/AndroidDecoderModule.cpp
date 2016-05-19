@@ -585,29 +585,9 @@ MediaCodecDataDecoder::ProcessOutput(
 
   // The Surface will be updated at this point (for video).
   mDecoder->ReleaseOutputBuffer(aStatus, true);
-
-  {
-    MonitorAutoLock lock(mMonitor);
-    int64_t pts = 0;
-    if (mSeekTargetThreshold.isSome() &&
-        NS_SUCCEEDED(aInfo->PresentationTimeUs(&pts))) {
-      if (pts < mSeekTargetThreshold.ref().ToMicroseconds()) {
-        return NS_OK;
-      }
-      mSeekTargetThreshold.reset();
-    }
-  }
-
   PostOutput(aInfo, aFormat, duration.value());
 
   return NS_OK;
-}
-
-void
-MediaCodecDataDecoder::SetSeekThreshold(const media::TimeUnit& aTime)
-{
-  MonitorAutoLock lock(mMonitor);
-  mSeekTargetThreshold = Some(aTime);
 }
 
 void
@@ -769,7 +749,6 @@ nsresult
 MediaCodecDataDecoder::Flush()
 {
   MonitorAutoLock lock(mMonitor);
-  mSeekTargetThreshold.reset();
   if (!State(kFlushing)) {
     return NS_OK;
   }

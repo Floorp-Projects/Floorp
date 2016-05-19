@@ -98,13 +98,6 @@ DecoderFuzzingWrapper::ConfigurationChanged(const TrackInfo& aConfig)
   return mDecoder->ConfigurationChanged(aConfig);
 }
 
-void
-DecoderFuzzingWrapper::SetSeekThreshold(const media::TimeUnit& aTime)
-{
-  DFW_LOGV("");
-  MOZ_ASSERT(mDecoder);
-  mDecoder->SetSeekThreshold(aTime);
-}
 
 DecoderCallbackFuzzingWrapper::DecoderCallbackFuzzingWrapper(MediaDataDecoderCallback* aCallback)
   : mCallback(aCallback)

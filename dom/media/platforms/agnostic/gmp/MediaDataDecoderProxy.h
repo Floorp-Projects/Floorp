@@ -145,8 +145,6 @@ public:
     return "GMP proxy data decoder";
   }
 
-  void SetSeekThreshold(const media::TimeUnit& aTime) override;
-
   // Called by MediaDataDecoderCallbackProxy.
   void FlushComplete();
 
