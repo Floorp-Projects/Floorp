@@ -364,7 +364,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
             # trim off the filename, the build system wants a directory
             packageUrl = packageUrl.rsplit('/', 1)[0]
             self.info("Overriding en_us_binary_url with %s" % packageUrl)
-            replace_dict['en_us_binary_url'] = packageUrl
+            replace_dict['en_us_binary_url'] = str(packageUrl)
         # Override en_us_binary_url if passed as a buildbot property
         if self.buildbot_config["properties"].get("en_us_binary_url"):
             self.info("Overriding en_us_binary_url with %s" %
