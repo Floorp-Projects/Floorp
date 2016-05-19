@@ -9,7 +9,7 @@ MOZ_ARG_WITH_STRING(android-cxx-stl,
 [  --with-android-cxx-stl=VALUE
                           use the specified C++ STL (stlport, libstdc++, libc++)],
     android_cxx_stl=$withval,
-    android_cxx_stl=mozstlport)
+    android_cxx_stl=libc++)
 
 define([MIN_ANDROID_VERSION], [9])
 android_version=MIN_ANDROID_VERSION
