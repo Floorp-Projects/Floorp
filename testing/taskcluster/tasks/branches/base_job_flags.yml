@@ -75,11 +75,6 @@ flags:
     xpcshell: /xpcshell.*/
 
   builds:
-    - emulator
-    - emulator-jb
-    - emulator-kk
-    - emulator-x86-kk
-    - emulator-l
     - linux32_gecko  # b2g desktop linux 32 bit
     - linux64_gecko  # b2g desktop linux 64 bit
     - linux64-mulet  # Firefox desktop - b2g gecko linux 64 bit

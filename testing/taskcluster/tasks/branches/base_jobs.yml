@@ -12,30 +12,6 @@ builds:
     types:
       opt:
         task: tasks/builds/mulet_linux.yml
-  emulator-kk:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_emulator_kk_opt.yml
-      debug:
-        task: tasks/builds/b2g_emulator_kk_debug.yml
-  emulator-x86-kk:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_emulator_x86_kk_opt.yml
-      debug:
-        task: tasks/builds/b2g_emulator_x86_kk_debug.yml
-  emulator-l:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_emulator_l_opt.yml
-      debug:
-        task: tasks/builds/b2g_emulator_l_debug.yml
   linux:
     platforms:
       - Linux
@@ -188,18 +164,12 @@ builds:
 tests:
   cppunit:
     allowed_build_tasks:
-      tasks/builds/b2g_emulator_x86_kk_opt.yml:
-        task: tasks/tests/b2g_emulator_cpp_unit.yml
-      tasks/builds/b2g_emulator_x86_kk_debug.yml:
-        task: tasks/tests/b2g_emulator_cpp_unit.yml
       tasks/builds/opt_linux64.yml:
         task: tasks/tests/fx_linux64_cppunit_opt.yml
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_cppunit_dbg.yml
   crashtest:
     allowed_build_tasks:
-      tasks/builds/b2g_emulator_x86_kk_opt.yml:
-        task: tasks/tests/b2g_emulator_crashtest.yml
       tasks/builds/opt_linux64.yml:
         task: tasks/tests/fx_linux64_crashtest_opt.yml
       tasks/builds/dbg_linux64.yml:
@@ -258,16 +228,10 @@ tests:
         task: tasks/tests/fx_linux64_marionette_e10s_opt.yml
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_marionette_e10s_dbg.yml
-  marionette-webapi:
-    allowed_build_tasks:
-      tasks/builds/b2g_emulator_x86_kk_opt.yml:
-        task: tasks/tests/b2g_emulator_marionette_webapi.yml
   mochitest:
     allowed_build_tasks:
       tasks/builds/mulet_linux.yml:
         task: tasks/tests/mulet_mochitests.yml
-      tasks/builds/b2g_emulator_x86_kk_opt.yml:
-        task: tasks/tests/b2g_emulator_mochitest.yml
       tasks/builds/opt_linux64.yml:
         task: tasks/tests/fx_linux64_mochitest_plain_opt.yml
       tasks/builds/dbg_linux64.yml:
@@ -346,10 +310,6 @@ tests:
     allowed_build_tasks:
       tasks/builds/mulet_linux.yml:
         task: tasks/tests/mulet_reftests.yml
-      tasks/builds/b2g_emulator_kk_opt.yml:
-        task: tasks/tests/b2g_emulator_reftest.yml
-      tasks/builds/b2g_emulator_x86_kk_opt.yml:
-        task: tasks/tests/b2g_emulator_reftest.yml
       tasks/builds/opt_linux64.yml:
         task: tasks/tests/fx_linux64_reftest_opt.yml
       tasks/builds/dbg_linux64.yml:
@@ -390,8 +350,6 @@ tests:
         task: tasks/tests/fx_linux64_web_platform_tests_reftests_e10s_dbg.yml
   xpcshell:
     allowed_build_tasks:
-      tasks/builds/b2g_emulator_x86_kk_opt.yml:
-        task: tasks/tests/b2g_emulator_xpcshell_chunked.yml
       tasks/builds/opt_linux64.yml:
         task: tasks/tests/fx_linux64_xpcshell_opt.yml
       tasks/builds/dbg_linux64.yml:
