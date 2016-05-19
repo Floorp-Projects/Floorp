@@ -649,7 +649,7 @@ void
 CertBlocklist::PreferenceChanged(const char* aPref, void* aClosure)
 
 {
-  CertBlocklist* blocklist = reinterpret_cast<CertBlocklist*>(aClosure);
+  auto blocklist = static_cast<CertBlocklist*>(aClosure);
   MutexAutoLock lock(blocklist->mMutex);
 
   MOZ_LOG(gCertBlockPRLog, LogLevel::Warning,

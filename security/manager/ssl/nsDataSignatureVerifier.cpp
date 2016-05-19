@@ -154,7 +154,7 @@ VerifyCMSDetachedSignatureIncludingCertificate(
 
   // signedData is non-owning
   NSSCMSSignedData* signedData =
-    reinterpret_cast<NSSCMSSignedData*>(NSS_CMSContentInfo_GetContent(cinfo));
+    static_cast<NSSCMSSignedData*>(NSS_CMSContentInfo_GetContent(cinfo));
   if (!signedData) {
     return NS_ERROR_CMS_VERIFY_NO_CONTENT_INFO;
   }
@@ -242,7 +242,7 @@ VerifyCertificate(CERTCertificate* cert, void* voidContext, void* pinArg)
   }
 
   VerifyCertificateContext* context =
-    reinterpret_cast<VerifyCertificateContext*>(voidContext);
+    static_cast<VerifyCertificateContext*>(voidContext);
 
   nsCOMPtr<nsIX509Cert> xpcomCert(nsNSSCertificate::Create(cert));
   if (!xpcomCert) {
