@@ -774,6 +774,7 @@ irintl(long double x)
 #define copysign fdlibm::copysign
 #define scalbn fdlibm::scalbn
 #define trunc fdlibm::trunc
+#define truncf fdlibm::truncf
 #define floorf fdlibm::floorf
 
 /* fdlibm kernel function */
