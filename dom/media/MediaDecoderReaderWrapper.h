@@ -366,13 +366,15 @@ public:
   void RequestAudioData();
   void RequestVideoData(bool aSkipToNextKeyframe, media::TimeUnit aTimeThreshold);
 
+  // NOTE: please set callbacks before invoking WaitForData()!
+  void WaitForData(MediaData::Type aType);
+
   bool IsRequestingAudioData() const;
   bool IsRequestingVideoData() const;
   bool IsWaitingAudioData() const;
   bool IsWaitingVideoData() const;
 
   RefPtr<SeekPromise> Seek(SeekTarget aTarget, media::TimeUnit aEndTime);
-  RefPtr<WaitForDataPromise> WaitForData(MediaData::Type aType);
   RefPtr<BufferedUpdatePromise> UpdateBufferedWithPromise();
   RefPtr<ShutdownPromise> Shutdown();
 
@@ -427,6 +429,9 @@ private:
                        TimeStamp aVideoDecodeStartTime);
   void OnNotDecoded(CallbackBase* aCallback,
                     MediaDecoderReader::NotDecodedReason aReason);
+
+  UniquePtr<WaitForDataCallbackBase>& WaitCallbackRef(MediaData::Type aType);
+  MozPromiseRequestHolder<WaitForDataPromise>& WaitRequestRef(MediaData::Type aType);
 
   const bool mForceZeroStartTime;
   const RefPtr<AbstractThread> mOwnerThread;
