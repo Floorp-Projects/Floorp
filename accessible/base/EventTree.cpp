@@ -225,7 +225,7 @@ EventTree::Process()
 
       AccHideEvent* hideEvent = downcast_accEvent(mtEvent);
       if (hideEvent->NeedsShutdown()) {
-        mtEvent->GetDocAccessible()->ShutdownChildrenInSubtree(mtEvent->mAccessible);
+        mtEvent->Document()->ShutdownChildrenInSubtree(mtEvent->mAccessible);
       }
     }
   }
@@ -356,7 +356,7 @@ EventTree::Clear()
   for (uint32_t jdx = 0; jdx < eventsCount; jdx++) {
     AccHideEvent* ev = downcast_accEvent(mDependentEvents[jdx]);
     if (ev && ev->NeedsShutdown()) {
-      ev->GetDocAccessible()->ShutdownChildrenInSubtree(ev->mAccessible);
+      ev->Document()->ShutdownChildrenInSubtree(ev->mAccessible);
     }
   }
   mDependentEvents.Clear();
