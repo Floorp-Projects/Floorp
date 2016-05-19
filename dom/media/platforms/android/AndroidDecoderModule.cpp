@@ -269,7 +269,7 @@ AndroidDecoderModule::SupportsMimeType(const nsACString& aMimeType,
       aMimeType.EqualsLiteral("audio/wave; codecs=7") ||
       aMimeType.EqualsLiteral("audio/wave; codecs=65534")) {
     return false;
-  }  
+  }
 
   if ((VPXDecoder::IsVPX(aMimeType, VPXDecoder::VP8) &&
        !GetFeatureStatus(nsIGfxInfo::FEATURE_VP8_HW_DECODE)) ||
@@ -285,7 +285,7 @@ AndroidDecoderModule::SupportsMimeType(const nsACString& aMimeType,
 already_AddRefed<MediaDataDecoder>
 AndroidDecoderModule::CreateVideoDecoder(
     const VideoInfo& aConfig, layers::LayersBackend aLayersBackend,
-    layers::ImageContainer* aImageContainer, FlushableTaskQueue* aVideoTaskQueue,
+    layers::ImageContainer* aImageContainer, TaskQueue* aTaskQueue,
     MediaDataDecoderCallback* aCallback,
     DecoderDoctorDiagnostics* aDiagnostics)
 {
@@ -305,7 +305,7 @@ AndroidDecoderModule::CreateVideoDecoder(
 
 already_AddRefed<MediaDataDecoder>
 AndroidDecoderModule::CreateAudioDecoder(
-    const AudioInfo& aConfig, FlushableTaskQueue* aAudioTaskQueue,
+    const AudioInfo& aConfig, TaskQueue* aTaskQueue,
     MediaDataDecoderCallback* aCallback,
     DecoderDoctorDiagnostics* aDiagnostics)
 {

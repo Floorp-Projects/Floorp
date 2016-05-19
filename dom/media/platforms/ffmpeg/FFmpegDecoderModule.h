@@ -34,19 +34,19 @@ public:
   CreateVideoDecoder(const VideoInfo& aConfig,
                      layers::LayersBackend aLayersBackend,
                      layers::ImageContainer* aImageContainer,
-                     FlushableTaskQueue* aVideoTaskQueue,
+                     TaskQueue* aTaskQueue,
                      MediaDataDecoderCallback* aCallback,
                      DecoderDoctorDiagnostics* aDiagnostics) override
   {
     RefPtr<MediaDataDecoder> decoder =
-      new FFmpegVideoDecoder<V>(mLib, aVideoTaskQueue, aCallback, aConfig,
+      new FFmpegVideoDecoder<V>(mLib, aTaskQueue, aCallback, aConfig,
                                 aImageContainer);
     return decoder.forget();
   }
 
   already_AddRefed<MediaDataDecoder>
   CreateAudioDecoder(const AudioInfo& aConfig,
-                     FlushableTaskQueue* aAudioTaskQueue,
+                     TaskQueue* aTaskQueue,
                      MediaDataDecoderCallback* aCallback,
                      DecoderDoctorDiagnostics* aDiagnostics) override
   {
@@ -54,7 +54,7 @@ public:
     return nullptr;
 #else
     RefPtr<MediaDataDecoder> decoder =
-      new FFmpegAudioDecoder<V>(mLib, aAudioTaskQueue, aCallback, aConfig);
+      new FFmpegAudioDecoder<V>(mLib, aTaskQueue, aCallback, aConfig);
     return decoder.forget();
 #endif
   }

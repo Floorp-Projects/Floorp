@@ -26,7 +26,7 @@ already_AddRefed<MediaDataDecoder>
 AgnosticDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
                                           layers::LayersBackend aLayersBackend,
                                           layers::ImageContainer* aImageContainer,
-                                          FlushableTaskQueue* aVideoTaskQueue,
+                                          TaskQueue* aTaskQueue,
                                           MediaDataDecoderCallback* aCallback,
                                           DecoderDoctorDiagnostics* aDiagnostics)
 {
@@ -35,7 +35,7 @@ AgnosticDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
   if (VPXDecoder::IsVPX(aConfig.mMimeType)) {
     m = new VPXDecoder(*aConfig.GetAsVideoInfo(),
                        aImageContainer,
-                       aVideoTaskQueue,
+                       aTaskQueue,
                        aCallback);
   }
 
@@ -44,7 +44,7 @@ AgnosticDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
 
 already_AddRefed<MediaDataDecoder>
 AgnosticDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
-                                          FlushableTaskQueue* aAudioTaskQueue,
+                                          TaskQueue* aTaskQueue,
                                           MediaDataDecoderCallback* aCallback,
                                           DecoderDoctorDiagnostics* aDiagnostics)
 {
@@ -52,11 +52,11 @@ AgnosticDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
 
   if (VorbisDataDecoder::IsVorbis(aConfig.mMimeType)) {
     m = new VorbisDataDecoder(*aConfig.GetAsAudioInfo(),
-                              aAudioTaskQueue,
+                              aTaskQueue,
                               aCallback);
   } else if (OpusDataDecoder::IsOpus(aConfig.mMimeType)) {
     m = new OpusDataDecoder(*aConfig.GetAsAudioInfo(),
-                            aAudioTaskQueue,
+                            aTaskQueue,
                             aCallback);
   } else if (WaveDataDecoder::IsWave(aConfig.mMimeType)) {
     m = new WaveDataDecoder(*aConfig.GetAsAudioInfo(), aCallback);

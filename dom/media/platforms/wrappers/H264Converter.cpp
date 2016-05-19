@@ -19,7 +19,7 @@ H264Converter::H264Converter(PlatformDecoderModule* aPDM,
                              const VideoInfo& aConfig,
                              layers::LayersBackend aLayersBackend,
                              layers::ImageContainer* aImageContainer,
-                             FlushableTaskQueue* aVideoTaskQueue,
+                             TaskQueue* aTaskQueue,
                              MediaDataDecoderCallback* aCallback,
                              DecoderDoctorDiagnostics* aDiagnostics)
   : mPDM(aPDM)
@@ -27,7 +27,7 @@ H264Converter::H264Converter(PlatformDecoderModule* aPDM,
   , mCurrentConfig(aConfig)
   , mLayersBackend(aLayersBackend)
   , mImageContainer(aImageContainer)
-  , mVideoTaskQueue(aVideoTaskQueue)
+  , mTaskQueue(aTaskQueue)
   , mCallback(aCallback)
   , mDecoder(nullptr)
   , mNeedAVCC(aPDM->DecoderNeedsConversion(aConfig) == PlatformDecoderModule::kNeedAVCC)
@@ -149,7 +149,7 @@ H264Converter::CreateDecoder(DecoderDoctorDiagnostics* aDiagnostics)
   mDecoder = mPDM->CreateVideoDecoder(mNeedAVCC ? mCurrentConfig : mOriginalConfig,
                                       mLayersBackend,
                                       mImageContainer,
-                                      mVideoTaskQueue,
+                                      mTaskQueue,
                                       mCallback,
                                       aDiagnostics);
   if (!mDecoder) {
