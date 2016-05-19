@@ -176,6 +176,8 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
     // Ok, we're doing it with a class spec.
     //
 
+    bool isObjectOrFunction = key == JSProto_Function || key == JSProto_Object;
+
     // We need to create the prototype first, and immediately stash it in the
     // slot. This is so the following bootstrap ordering is possible:
     // * Object.prototype
@@ -185,9 +187,9 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
     //
     // We get the above when Object is resolved before Function. If Function
     // is resolved before Object, we'll end up re-entering resolveConstructor
-    // for Function, which is a problem. So if Function is being resolved before
-    // Object.prototype exists, we just resolve Object instead, since we know that
-    // Function will also be resolved before we return.
+    // for Function, which is a problem. So if Function is being resolved
+    // before Object.prototype exists, we just resolve Object instead, since we
+    // know that Function will also be resolved before we return.
     if (key == JSProto_Function && global->getPrototype(JSProto_Object).isUndefined())
         return resolveConstructor(cx, global, JSProto_Object);
 
@@ -200,14 +202,16 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
         if (!proto)
             return false;
 
-        // Make sure that creating the prototype didn't recursively resolve our
-        // own constructor. We can't just assert that there's no prototype; OOMs
-        // can result in incomplete resolutions in which the prototype is saved
-        // but not the constructor. So use the same criteria that protects entry
-        // into this function.
-        MOZ_ASSERT(!global->isStandardClassResolved(key));
+        if (isObjectOrFunction) {
+            // Make sure that creating the prototype didn't recursively resolve
+            // our own constructor. We can't just assert that there's no
+            // prototype; OOMs can result in incomplete resolutions in which
+            // the prototype is saved but not the constructor. So use the same
+            // criteria that protects entry into this function.
+            MOZ_ASSERT(!global->isStandardClassResolved(key));
 
-        global->setPrototype(key, ObjectValue(*proto));
+            global->setPrototype(key, ObjectValue(*proto));
+        }
     }
 
     // Create the constructor.
@@ -216,13 +220,15 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
         return false;
 
     RootedId id(cx, NameToId(ClassName(key, cx)));
-    if (clasp->specShouldDefineConstructor()) {
-        if (!global->addDataProperty(cx, id, constructorPropertySlot(key), 0))
-            return false;
-    }
+    if (isObjectOrFunction) {
+        if (clasp->specShouldDefineConstructor()) {
+            if (!global->addDataProperty(cx, id, constructorPropertySlot(key), 0))
+                return false;
+        }
 
-    global->setConstructor(key, ObjectValue(*ctor));
-    global->setConstructorPropertySlot(key, ObjectValue(*ctor));
+        global->setConstructor(key, ObjectValue(*ctor));
+        global->setConstructorPropertySlot(key, ObjectValue(*ctor));
+    }
 
     // Define any specified functions and properties, unless we're a dependent
     // standard class (in which case they live on the prototype), or we're
@@ -255,6 +261,23 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
     if (FinishClassInitOp finishInit = clasp->specFinishInitHook()) {
         if (!finishInit(cx, ctor, proto))
             return false;
+    }
+
+    if (!isObjectOrFunction) {
+        // Any operations that modifies the global object should be placed
+        // after any other fallible operations.
+
+        // Fallible operation that modifies the global object.
+        if (clasp->specShouldDefineConstructor()) {
+            if (!global->addDataProperty(cx, id, constructorPropertySlot(key), 0))
+                return false;
+        }
+
+        // Infallible operations that modify the global object.
+        global->setConstructor(key, ObjectValue(*ctor));
+        global->setConstructorPropertySlot(key, ObjectValue(*ctor));
+        if (proto)
+            global->setPrototype(key, ObjectValue(*proto));
     }
 
     if (clasp->specShouldDefineConstructor()) {
