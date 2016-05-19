@@ -69,12 +69,6 @@ typedef enum {
   MOZ_GTK_TAB_SELECTED        = 1 << 10
 } GtkTabFlags;
 
-/** flags for menuitems **/
-typedef enum {
-  /* menuitem is part of the menubar */
-  MOZ_TOPLEVEL_MENU_ITEM      = 1 << 0
-} GtkMenuItemFlags;
-
 /* function type for moz_gtk_enable_style_props */
 typedef gint (*style_prop_t)(GtkStyle*, const gchar*, gint);
 
@@ -189,7 +183,9 @@ typedef enum {
   MOZ_GTK_MENUARROW,
   /* Paints an arrow in a toolbar button. flags is a GtkArrowType. */
   MOZ_GTK_TOOLBARBUTTON_ARROW,
-  /* Paints items of menubar and popups. */
+  /* Paints items of menubar. */
+  MOZ_GTK_MENUBARITEM,
+  /* Paints items of popup menus. */
   MOZ_GTK_MENUITEM,
   MOZ_GTK_CHECKMENUITEM,
   MOZ_GTK_RADIOMENUITEM,

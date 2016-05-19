@@ -354,10 +354,8 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
 
           if (isTopLevel) {
             aState->inHover = menuFrame->IsOpen();
-            *aWidgetFlags |= MOZ_TOPLEVEL_MENU_ITEM;
           } else {
             aState->inHover = CheckBooleanAttr(aFrame, nsGkAtoms::menuactive);
-            *aWidgetFlags &= ~MOZ_TOPLEVEL_MENU_ITEM;
           }
 
           aState->active = FALSE;
@@ -679,6 +677,13 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
     aGtkWidgetType = MOZ_GTK_MENUPOPUP;
     break;
   case NS_THEME_MENUITEM:
+    {
+      nsMenuFrame *menuFrame = do_QueryFrame(aFrame);
+      if (menuFrame && menuFrame->IsOnMenuBar()) {
+        aGtkWidgetType = MOZ_GTK_MENUBARITEM;
+        break;
+      }
+    }
     aGtkWidgetType = MOZ_GTK_MENUITEM;
     break;
   case NS_THEME_MENUSEPARATOR:
