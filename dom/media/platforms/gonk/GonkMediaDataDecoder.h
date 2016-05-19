@@ -186,7 +186,6 @@ private:
 class GonkMediaDataDecoder : public MediaDataDecoder {
 public:
   GonkMediaDataDecoder(GonkDecoderManager* aDecoderManager,
-                       FlushableTaskQueue* aTaskQueue,
                        MediaDataDecoderCallback* aCallback);
 
   ~GonkMediaDataDecoder();
