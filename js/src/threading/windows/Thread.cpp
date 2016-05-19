@@ -72,8 +72,12 @@ js::Thread::create(unsigned int (__stdcall* aMain)(void*), void* aArg)
   // certain msvcrt functions and then exit.
   uintptr_t handle = _beginthreadex(nullptr, 0, aMain, aArg, 0,
                                     &id_.platformData()->id);
-  if (!handle)
+  if (!handle) {
+    // The documentation does not say what state the thread id has if the method
+    // fails, so assume that it is undefined and reset it manually.
+    id_ = Id();
     return false;
+  }
   id_.platformData()->handle = reinterpret_cast<HANDLE>(handle);
   return true;
 }
