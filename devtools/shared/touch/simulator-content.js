@@ -46,6 +46,10 @@ var simulator = {
     "mouseup",
     "touchstart",
     "touchend",
+    "mouseenter",
+    "mouseover",
+    "mouseout",
+    "mouseleave"
   ],
 
   messages: [
@@ -138,6 +142,14 @@ var simulator = {
     let eventTarget = this.target;
     let type = "";
     switch (evt.type) {
+      case "mouseenter":
+      case "mouseover":
+      case "mouseout":
+      case "mouseleave":
+        // Don't propagate events which are not related to touch events
+        evt.stopPropagation();
+        break;
+
       case "mousedown":
         this.target = evt.target;
 
@@ -157,6 +169,8 @@ var simulator = {
 
       case "mousemove":
         if (!eventTarget) {
+          // Don't propagate mousemove event when touchstart event isn't fired
+          evt.stopPropagation();
           return;
         }
 
@@ -208,7 +222,7 @@ var simulator = {
           } catch (e) {
             console.error("Exception in touch event helper: " + e);
           }
-        }, 0, this);
+        }, this.getDelayBeforeMouseEvent(evt), this);
         return;
     }
 
@@ -305,6 +319,53 @@ var simulator = {
       ? target.ownerDocument.defaultView
       : null;
     return win;
+  },
+
+  getDelayBeforeMouseEvent(evt) {
+    // On mobile platforms, Firefox inserts a 300ms delay between
+    // touch events and accompanying mouse events, except if the
+    // content window is not zoomable and the content window is
+    // auto-zoomed to device-width.
+
+    // If the preference dom.meta-viewport.enabled is set to false,
+    // we couldn't read viewport's information from getViewportInfo().
+    // So we always simulate 300ms delay when the
+    // dom.meta-viewport.enabled is false.
+    let savedMetaViewportEnabled =
+      Services.prefs.getBoolPref("dom.meta-viewport.enabled");
+    if (!savedMetaViewportEnabled) {
+      return 300;
+    }
+
+    let content = this.getContent(evt.target);
+    if (!content) {
+      return 0;
+    }
+
+    let utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIDOMWindowUtils);
+
+    let allowZoom = {},
+        minZoom = {},
+        maxZoom = {},
+        autoSize = {};
+
+    utils.getViewportInfo(content.innerWidth, content.innerHeight, {},
+                          allowZoom, minZoom, maxZoom, {}, {}, autoSize);
+
+    // FIXME: On Safari and Chrome mobile platform, if the css property
+    // touch-action set to none or manipulation would also suppress 300ms
+    // delay. But Firefox didn't support this property now, we can't get
+    // this value from utils.getVisitedDependentComputedStyle() to check
+    // if we should suppress 300ms delay.
+    if (!allowZoom.value ||                   // user-scalable = no
+        minZoom.value === maxZoom.value ||    // minimum-scale = maximum-scale
+        autoSize.value                        // width = device-width
+    ) {
+      return 0;
+    } else {
+      return 300;
+    }
   }
 };
 
