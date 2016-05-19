@@ -19,6 +19,9 @@
 
 //-----------------------------------------------------------------------------
 
+namespace mozilla {
+namespace net {
+
 class nsUDPSocket final : public nsASocketHandler
                         , public nsIUDPSocket
 {
@@ -61,15 +64,15 @@ private:
 
   // lock protects access to mListener;
   // so mListener is not cleared while being used/locked.
-  mozilla::Mutex                       mLock;
-  PRFileDesc                           *mFD;
-  mozilla::net::NetAddr                mAddr;
+  Mutex                                mLock;
+  PRFileDesc                          *mFD;
+  NetAddr                              mAddr;
   uint32_t                             mAppId;
   bool                                 mIsInIsolatedMozBrowserElement;
   nsCOMPtr<nsIUDPSocketListener>       mListener;
   nsCOMPtr<nsIEventTarget>             mListenerTarget;
   bool                                 mAttached;
-  RefPtr<nsSocketTransportService>   mSts;
+  RefPtr<nsSocketTransportService>     mSts;
 
   uint64_t   mByteReadCount;
   uint64_t   mByteWriteCount;
@@ -87,14 +90,14 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsUDPMessage)
   NS_DECL_NSIUDPMESSAGE
 
-  nsUDPMessage(mozilla::net::NetAddr* aAddr,
+  nsUDPMessage(NetAddr* aAddr,
                nsIOutputStream* aOutputStream,
                FallibleTArray<uint8_t>& aData);
 
 private:
   virtual ~nsUDPMessage();
 
-  mozilla::net::NetAddr mAddr;
+  NetAddr mAddr;
   nsCOMPtr<nsIOutputStream> mOutputStream;
   FallibleTArray<uint8_t> mData;
   JS::Heap<JSObject*> mJsobj;
@@ -121,5 +124,8 @@ private:
   PRNetAddr                   mPrClientAddr;
   bool                        mIsClosed;
 };
+
+} // namespace net
+} // namespace mozilla
 
 #endif // nsUDPSocket_h__

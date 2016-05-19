@@ -11,6 +11,9 @@
 
 //-----------------------------------------------------------------------------
 
+namespace mozilla {
+namespace net {
+
 class nsInputStreamChannel : public nsBaseChannel
                            , public nsIInputStreamChannel
 {
@@ -37,5 +40,8 @@ private:
     nsString mSrcdocData;
     bool mIsSrcdocChannel;
 };
+
+} // namespace net
+} // namespace mozilla
 
 #endif // !nsInputStreamChannel_h__

@@ -112,6 +112,7 @@ static const char *kPrefBlockURIs = "browser.safebrowsing.blockedURIs.enabled";
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::net;
 
 static LogModule*
 GetObjectLog()

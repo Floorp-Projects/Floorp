@@ -10,7 +10,7 @@
 #include "nsIPrincipal.h"
 #include "mozilla/LoadInfo.h"
 
-using mozilla::LoadInfo;
+using mozilla::net::LoadInfo;
 
 /**
  * URIUtils

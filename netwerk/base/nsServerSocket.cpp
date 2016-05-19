@@ -18,8 +18,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIFile.h"
 
-using namespace mozilla;
-using namespace mozilla::net;
+namespace mozilla { namespace net {
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
@@ -556,3 +555,6 @@ nsServerSocket::GetAddress(PRNetAddr *aResult)
   memcpy(aResult, &mAddr, sizeof(mAddr));
   return NS_OK;
 }
+
+} // namespace net
+} // namespace mozilla

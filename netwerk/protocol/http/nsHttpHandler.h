@@ -29,10 +29,12 @@ class nsISiteSecurityService;
 class nsIStreamConverterService;
 class nsITimer;
 
-extern mozilla::Atomic<PRThread*, mozilla::Relaxed> gSocketThread;
 
 namespace mozilla {
 namespace net {
+
+extern Atomic<PRThread*, Relaxed> gSocketThread;
+
 class ATokenBucketEvent;
 class EventTokenBucket;
 class Tickler;

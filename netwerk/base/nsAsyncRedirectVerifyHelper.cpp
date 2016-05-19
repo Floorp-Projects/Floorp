@@ -14,15 +14,18 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsILoadInfo.h"
 
-static mozilla::LazyLogModule gRedirectLog("nsRedirect");
+namespace mozilla {
+namespace net {
+
+static LazyLogModule gRedirectLog("nsRedirect");
 #undef LOG
-#define LOG(args) MOZ_LOG(gRedirectLog, mozilla::LogLevel::Debug, args)
+#define LOG(args) MOZ_LOG(gRedirectLog, LogLevel::Debug, args)
 
 NS_IMPL_ISUPPORTS(nsAsyncRedirectVerifyHelper,
                   nsIAsyncVerifyRedirectCallback,
                   nsIRunnable)
 
-class nsAsyncVerifyRedirectCallbackEvent : public mozilla::Runnable {
+class nsAsyncVerifyRedirectCallbackEvent : public Runnable {
 public:
     nsAsyncVerifyRedirectCallbackEvent(nsIAsyncVerifyRedirectCallback *cb,
                                        nsresult result)
@@ -272,3 +275,6 @@ nsAsyncRedirectVerifyHelper::IsOldChannelCanceled()
 
     return false;
 }
+
+} // namespace net
+} // namespace mozilla

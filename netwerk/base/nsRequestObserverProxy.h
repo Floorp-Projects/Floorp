@@ -13,6 +13,9 @@
 #include "nsCOMPtr.h"
 #include "nsProxyRelease.h"
 
+namespace mozilla {
+namespace net {
+
 class nsARequestObserverEvent;
 
 class nsRequestObserverProxy final : public nsIRequestObserverProxy
@@ -38,7 +41,7 @@ protected:
     friend class nsOnStopRequestEvent;
 };
 
-class nsARequestObserverEvent : public mozilla::Runnable
+class nsARequestObserverEvent : public Runnable
 {
 public:
     explicit nsARequestObserverEvent(nsIRequest *);
@@ -48,5 +51,8 @@ protected:
 
     nsCOMPtr<nsIRequest>  mRequest;
 };
+
+} // namespace net
+} // namespace mozilla
 
 #endif // nsRequestObserverProxy_h__

@@ -14,6 +14,9 @@
 
 class nsIRequest;
 
+namespace mozilla {
+namespace net {
+
 class nsStreamLoader final : public nsIStreamLoader
                            , public nsIThreadRetargetableStreamListener
 {
@@ -48,5 +51,8 @@ protected:
   // available.
   mozilla::Vector<uint8_t, 0> mData;
 };
+
+} // namespace net
+} // namespace mozilla
 
 #endif // nsStreamLoader_h__

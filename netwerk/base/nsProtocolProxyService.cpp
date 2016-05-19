@@ -34,23 +34,22 @@
 #include "nsISystemProxySettings.h"
 #include "nsINetworkLinkService.h"
 #include "nsIHttpChannelInternal.h"
+#include "mozilla/Logging.h"
 
 //----------------------------------------------------------------------------
 
 namespace mozilla {
+namespace net {
+
   extern const char kProxyType_HTTP[];
   extern const char kProxyType_HTTPS[];
   extern const char kProxyType_SOCKS[];
   extern const char kProxyType_SOCKS4[];
   extern const char kProxyType_SOCKS5[];
   extern const char kProxyType_DIRECT[];
-} // namespace mozilla
 
-using namespace mozilla;
-
-#include "mozilla/Logging.h"
 #undef LOG
-#define LOG(args) MOZ_LOG(net::gProxyLog, mozilla::LogLevel::Debug, args)
+#define LOG(args) MOZ_LOG(gProxyLog, LogLevel::Debug, args)
 
 //----------------------------------------------------------------------------
 
@@ -458,7 +457,7 @@ nsProtocolProxyService::Init()
         PrefsChanged(prefBranch, nullptr);
     }
 
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
     if (obs) {
         // register for shutdown notification so we can clean ourselves up
         // properly.
@@ -536,7 +535,7 @@ nsProtocolProxyService::Observe(nsISupports     *aSubject,
             mPACMan = nullptr;
         }
 
-        nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+        nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
         if (obs) {
             obs->RemoveObserver(this, NS_NETWORK_LINK_TOPIC);
             obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
@@ -805,7 +804,6 @@ nsProtocolProxyService::CanUseProxy(nsIURI *aURI, int32_t defaultPort)
 
 // kProxyType\* may be referred to externally in
 // nsProxyInfo in order to compare by string pointer
-namespace mozilla {
 const char kProxyType_HTTP[]    = "http";
 const char kProxyType_HTTPS[]   = "https";
 const char kProxyType_PROXY[]   = "proxy";
@@ -813,7 +811,6 @@ const char kProxyType_SOCKS[]   = "socks";
 const char kProxyType_SOCKS4[]  = "socks4";
 const char kProxyType_SOCKS5[]  = "socks5";
 const char kProxyType_DIRECT[]  = "direct";
-} // namespace mozilla
 
 const char *
 nsProtocolProxyService::ExtractProxyInfo(const char *start,
@@ -2088,3 +2085,6 @@ nsProtocolProxyService::PruneProxyInfo(const nsProtocolInfo &info,
 
     *list = head;  // Transfer ownership
 }
+
+} // namespace net
+} // namespace mozilla

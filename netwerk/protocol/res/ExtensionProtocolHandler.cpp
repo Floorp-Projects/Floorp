@@ -21,6 +21,7 @@
 #include "LoadInfo.h"
 
 namespace mozilla {
+namespace net {
 
 NS_IMPL_QUERY_INTERFACE(ExtensionProtocolHandler, nsISubstitutingProtocolHandler,
                         nsIProtocolHandler, nsIProtocolHandlerWithDynamicFlags,
@@ -124,7 +125,7 @@ ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsILoadInfo> loadInfo =
-      static_cast<mozilla::LoadInfo*>(aLoadInfo)->CloneForNewRequest();
+      static_cast<LoadInfo*>(aLoadInfo)->CloneForNewRequest();
     (*result)->SetLoadInfo(loadInfo);
 
     rv = (*result)->AsyncOpen2(converter);
@@ -155,4 +156,5 @@ ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
   return NS_OK;
 }
 
+} // namespace net
 } // namespace mozilla

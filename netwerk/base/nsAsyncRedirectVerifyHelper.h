@@ -18,6 +18,9 @@
 
 class nsIChannel;
 
+namespace mozilla {
+namespace net {
+
 /**
  * This class simplifies call of OnChannelRedirect of IOService and
  * the sink bound with the channel being redirected while the result of
@@ -121,4 +124,6 @@ private:
     nsresult mResult;
 };
 
+} // namespace net
+} // namespace mozilla
 #endif
