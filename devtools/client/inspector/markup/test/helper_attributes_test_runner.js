@@ -135,7 +135,7 @@ function* runEditAttributesTest(test, inspector, testActor) {
 
   info("Editing attribute " + test.name + " with value " + test.value);
 
-  let container = yield getContainerForSelector(test.node, inspector);
+  let container = yield focusNode(test.node, inspector);
   ok(container && container.editor, "The markup-container for " + test.node +
     " was found");
 

@@ -15,7 +15,7 @@ add_task(function* () {
   yield inspector.markup.expandAll();
 
   info("Selecting the test node");
-  yield selectNode("#retag-me", inspector);
+  yield focusNode("#retag-me", inspector);
 
   info("Getting the markup-container for the test node");
   let container = yield getContainerForSelector("#retag-me", inspector);

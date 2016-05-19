@@ -19,31 +19,31 @@
 <!-- NOTE THAT WE MAKE EXTENSIVE USE OF HTML COMMENTS IN THIS FILE IN ORDER -->
 <!-- TO MAKE SPANS READABLE WHILST AVOIDING SIGNIFICANT WHITESPACE          -->
 
-  <div id="root-wrapper">
-    <div id="root"></div>
+  <div id="root-wrapper" role="presentation">
+    <div id="root" role="presentation"></div>
   </div>
   <div id="templates" style="display:none">
 
     <ul class="children">
-      <li id="template-elementcontainer" save="${elt}" class="child collapsed">
-        <div save="${tagLine}" class="tag-line"><!--
-        --><span save="${tagState}" class="tag-state"></span><!--
-        --><span save="${expander}" class="theme-twisty expander"></span><!--
+      <li id="template-elementcontainer" save="${elt}" class="child collapsed" role="presentation">
+        <div save="${tagLine}" id="${id}" class="tag-line" role="treeitem" aria-level="${level}" aria-grabbed="${isDragging}"><!--
+        --><span save="${tagState}" class="tag-state" role="presentation"></span><!--
+        --><span save="${expander}" class="theme-twisty expander" role="presentation"></span><!--
      --></div>
-        <ul save="${children}" class="children"></ul>
+        <ul save="${children}" class="children" role="group"></ul>
       </li>
 
-      <li id="template-textcontainer" save="${elt}" class="child collapsed">
-        <div save="${tagLine}" class="tag-line"><span save="${tagState}" class="tag-state"></span></div>
-        <ul save="${children}" class="children"></ul>
+      <li id="template-textcontainer" save="${elt}" class="child collapsed" role="presentation">
+        <div save="${tagLine}" id="${id}" class="tag-line" role="treeitem" aria-level="${level}" aria-grabbed="${isDragging}"><span save="${tagState}" class="tag-state" role="presentation"></span></div>
+        <ul save="${children}" class="children" role="group"></ul>
       </li>
 
-      <li id="template-readonlycontainer" save="${elt}" class="child collapsed">
-        <div save="${tagLine}" class="tag-line"><!--
-        --><span save="${tagState}" class="tag-state"></span><!--
-        --><span save="${expander}" class="theme-twisty expander"></span><!--
+      <li id="template-readonlycontainer" save="${elt}" class="child collapsed" role="presentation">
+        <div save="${tagLine}" id="${id}" class="tag-line" role="treeitem" aria-level="${level}" aria-grabbed="${isDragging}"><!--
+        --><span save="${tagState}" class="tag-state" role="presentation"></span><!--
+        --><span save="${expander}" class="theme-twisty expander" role="presentation"></span><!--
      --></div>
-        <ul save="${children}" class="children"></ul>
+        <ul save="${children}" class="children" role="group"></ul>
       </li>
 
       <li id="template-more-nodes"
@@ -58,9 +58,9 @@
 
     <span id="template-element" save="${elt}" class="editor"><!--
    --><span class="open">&lt;<!--
-     --><span save="${tag}" class="tag theme-fg-color3" tabindex="0"></span><!--
+     --><span save="${tag}" class="tag theme-fg-color3" tabindex="-1"></span><!--
      --><span save="${attrList}"></span><!--
-     --><span save="${newAttr}" class="newattr" tabindex="0"></span><!--
+     --><span save="${newAttr}" class="newattr" tabindex="-1"></span><!--
      --><span class="closing-bracket">&gt;</span><!--
    --></span><!--
    --><span class="close">&lt;/<!--
@@ -76,7 +76,7 @@
           data-value="${attrValue}"
           class="attreditor"
           style="display:none"> <!--
-   --><span class="editable" save="${inner}" tabindex="0"><!--
+   --><span class="editable" save="${inner}" tabindex="-1"><!--
      --><span save="${name}" class="attr-name theme-fg-color2"></span><!--
      -->=&quot;<!--
      --><span save="${val}" class="attr-value theme-fg-color6"></span><!--
@@ -85,14 +85,14 @@
  --></span>
 
     <span id="template-text" save="${elt}" class="editor text"><!--
-   --><pre save="${value}" style="display:inline-block; white-space: normal;" tabindex="0"></pre><!--
+   --><pre save="${value}" style="display:inline-block; white-space: normal;" tabindex="-1"></pre><!--
  --></span>
 
     <span id="template-comment"
           save="${elt}"
           class="editor comment theme-comment"><!--
    --><span>&lt;!--</span><!--
-   --><pre save="${value}" style="display:inline-block; white-space: normal;" tabindex="0"></pre><!--
+   --><pre save="${value}" style="display:inline-block; white-space: normal;" tabindex="-1"></pre><!--
    --><span>--&gt;</span><!--
  --></span>
 

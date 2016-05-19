@@ -151,6 +151,8 @@ function createInplaceEditorAndClick(options, doc) {
 
   info("Creating an inplace-editor field");
   editableField(options);
+  is(span.getAttribute("role"), "button",
+    "Editable element should have button semantics");
 
   info("Clicking on the inplace-editor field to turn to edit mode");
   span.click();
