@@ -1400,14 +1400,7 @@ WebSocketChannel::BeginOpenInternal()
   }
 #endif
 
-  nsCOMPtr<nsILoadInfo> loadInfo = localChannel->GetLoadInfo();
-  if (loadInfo && loadInfo->GetEnforceSecurity()) {
-    rv = localChannel->AsyncOpen2(this);
-  }
-  else {
-    rv = localChannel->AsyncOpen(this, nullptr);
-  }
-
+  rv = localChannel->AsyncOpen(this, mHttpChannel);
   if (NS_FAILED(rv)) {
     LOG(("WebSocketChannel::BeginOpenInternal: cannot async open\n"));
     AbortSession(NS_ERROR_CONNECTION_REFUSED);
@@ -3557,7 +3550,7 @@ WebSocketChannel::OnStartRequest(nsIRequest *aRequest,
                                  nsISupports *aContext)
 {
   LOG(("WebSocketChannel::OnStartRequest(): %p [%p %p] recvdhttpupgrade=%d\n",
-       this, aRequest, mHttpChannel.get(), mRecvdHttpUpgradeTransport));
+       this, aRequest, aContext, mRecvdHttpUpgradeTransport));
   MOZ_ASSERT(NS_IsMainThread(), "not main thread");
   MOZ_ASSERT(!mGotUpgradeOK, "OTA duplicated");
 
@@ -3718,7 +3711,7 @@ WebSocketChannel::OnStopRequest(nsIRequest *aRequest,
                                 nsresult aStatusCode)
 {
   LOG(("WebSocketChannel::OnStopRequest() %p [%p %p %x]\n",
-       this, aRequest, mHttpChannel.get(), aStatusCode));
+       this, aRequest, aContext, aStatusCode));
   MOZ_ASSERT(NS_IsMainThread(), "not main thread");
 
   ReportConnectionTelemetry();
@@ -3881,7 +3874,7 @@ WebSocketChannel::OnDataAvailable(nsIRequest *aRequest,
                                     uint32_t aCount)
 {
   LOG(("WebSocketChannel::OnDataAvailable() %p [%p %p %p %llu %u]\n",
-         this, aRequest, mHttpChannel.get(), aInputStream, aOffset, aCount));
+         this, aRequest, aContext, aInputStream, aOffset, aCount));
 
   // This is the HTTP OnDataAvailable Method, which means this is http data in
   // response to the upgrade request and there should be no http response body
