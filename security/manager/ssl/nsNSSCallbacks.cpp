@@ -188,7 +188,7 @@ struct nsCancelHTTPDownloadEvent : Runnable {
 Result
 nsNSSHttpServerSession::createSessionFcn(const char* host,
                                          uint16_t portnum,
-                                         SEC_HTTP_SERVER_SESSION* pSession)
+                                 /*out*/ nsNSSHttpServerSession** pSession)
 {
   if (!host || !pSession) {
     return Result::FATAL_ERROR_INVALID_ARGS;
@@ -207,20 +207,15 @@ nsNSSHttpServerSession::createSessionFcn(const char* host,
 }
 
 Result
-nsNSSHttpRequestSession::createFcn(SEC_HTTP_SERVER_SESSION session,
+nsNSSHttpRequestSession::createFcn(const nsNSSHttpServerSession* session,
                                    const char* http_protocol_variant,
                                    const char* path_and_query_string,
                                    const char* http_request_method,
                                    const PRIntervalTime timeout,
-                                   SEC_HTTP_REQUEST_SESSION* pRequest)
+                           /*out*/ nsNSSHttpRequestSession** pRequest)
 {
   if (!session || !http_protocol_variant || !path_and_query_string ||
       !http_request_method || !pRequest) {
-    return Result::FATAL_ERROR_INVALID_ARGS;
-  }
-
-  nsNSSHttpServerSession* hss = static_cast<nsNSSHttpServerSession*>(session);
-  if (!hss) {
     return Result::FATAL_ERROR_INVALID_ARGS;
   }
 
@@ -240,14 +235,14 @@ nsNSSHttpRequestSession::createFcn(SEC_HTTP_SERVER_SESSION session,
 
   rs->mURL.Assign(http_protocol_variant);
   rs->mURL.AppendLiteral("://");
-  rs->mURL.Append(hss->mHost);
+  rs->mURL.Append(session->mHost);
   rs->mURL.Append(':');
-  rs->mURL.AppendInt(hss->mPort);
+  rs->mURL.AppendInt(session->mPort);
   rs->mURL.Append(path_and_query_string);
 
   rs->mRequestMethod = http_request_method;
 
-  *pRequest = (void*)rs;
+  *pRequest = rs;
   return Success;
 }
 
