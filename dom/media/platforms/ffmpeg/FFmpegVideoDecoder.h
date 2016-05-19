@@ -27,7 +27,7 @@ class FFmpegVideoDecoder<LIBAV_VER> : public FFmpegDataDecoder<LIBAV_VER>
   typedef mozilla::layers::ImageContainer ImageContainer;
 
 public:
-  FFmpegVideoDecoder(FFmpegLibWrapper* aLib, FlushableTaskQueue* aTaskQueue,
+  FFmpegVideoDecoder(FFmpegLibWrapper* aLib, TaskQueue* aTaskQueue,
                      MediaDataDecoderCallback* aCallback,
                      const VideoInfo& aConfig,
                      ImageContainer* aImageContainer);

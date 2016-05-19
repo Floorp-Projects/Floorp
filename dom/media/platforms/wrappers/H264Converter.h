@@ -25,7 +25,7 @@ public:
                 const VideoInfo& aConfig,
                 layers::LayersBackend aLayersBackend,
                 layers::ImageContainer* aImageContainer,
-                FlushableTaskQueue* aVideoTaskQueue,
+                TaskQueue* aTaskQueue,
                 MediaDataDecoderCallback* aCallback,
                 DecoderDoctorDiagnostics* aDiagnostics);
   virtual ~H264Converter();
@@ -65,7 +65,7 @@ private:
   VideoInfo mCurrentConfig;
   layers::LayersBackend mLayersBackend;
   RefPtr<layers::ImageContainer> mImageContainer;
-  RefPtr<FlushableTaskQueue> mVideoTaskQueue;
+  const RefPtr<TaskQueue> mTaskQueue;
   nsTArray<RefPtr<MediaRawData>> mMediaRawSamples;
   MediaDataDecoderCallback* mCallback;
   RefPtr<MediaDataDecoder> mDecoder;
