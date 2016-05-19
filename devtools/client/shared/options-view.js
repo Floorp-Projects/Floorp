@@ -14,13 +14,13 @@ const PREF_CHANGE_EVENT = "pref-changed";
  * argument. Fires events on opening/closing the XUL panel (OPTIONS_SHOW_EVENT, OPTIONS_HIDDEN_EVENT)
  * as the second argument in the listener, used for tests mostly.
  */
-const OptionsView = function (options={}) {
+const OptionsView = function (options = {}) {
   this.branchName = options.branchName;
   this.menupopup = options.menupopup;
   this.window = this.menupopup.ownerDocument.defaultView;
   let { document } = this.window;
   this.$ = document.querySelector.bind(document);
-  this.$$ = (selector, parent=document) => parent.querySelectorAll(selector);
+  this.$$ = (selector, parent = document) => parent.querySelectorAll(selector);
   // Get the corresponding button that opens the popup by looking
   // for an element with a `popup` attribute matching the menu's ID
   this.button = this.$(`[popup=${this.menupopup.getAttribute("id")}]`);

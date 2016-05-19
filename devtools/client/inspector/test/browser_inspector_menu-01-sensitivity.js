@@ -215,7 +215,7 @@ registerCleanupFunction(() => {
   clipboard = null;
 });
 
-add_task(function *() {
+add_task(function* () {
   let { inspector } = yield openInspectorForURL(TEST_URL);
   for (let test of TEST_CASES) {
     let { desc, disabled, selector, attributeTrigger } = test;
@@ -279,10 +279,10 @@ function setupClipboard(data, type) {
  * A helper that simulates a contextmenu event on the given chrome DOM element.
  */
 function contextMenuClick(element) {
-  let evt = element.ownerDocument.createEvent('MouseEvents');
+  let evt = element.ownerDocument.createEvent("MouseEvents");
   let button = 2;  // right click
 
-  evt.initMouseEvent('contextmenu', true, true,
+  evt.initMouseEvent("contextmenu", true, true,
        element.ownerDocument.defaultView, 1, 0, 0, 0, 0, false,
        false, false, false, button, null);
 

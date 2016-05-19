@@ -16,7 +16,7 @@ function* spawnTest() {
   let { EVENTS, $, $$, window, PerformanceController } = panel.panelWin;
   let { OverviewView, DetailsView, OptimizationsListView, JsCallTreeView, RecordingsView } = panel.panelWin;
 
-  let profilerData = { threads: [gThread] }
+  let profilerData = { threads: [gThread] };
 
   is(Services.prefs.getBoolPref(JIT_PREF), false, "record JIT Optimizations pref off by default");
   Services.prefs.setBoolPref(JIT_PREF, true);
@@ -89,7 +89,7 @@ function* spawnTest() {
   yield teardown(panel);
   finish();
 
-  function *injectAndRenderProfilerData() {
+  function* injectAndRenderProfilerData() {
     // Get current recording and inject our mock data
     info("Injecting mock profile data");
     let recording = PerformanceController.getCurrentRecording();
@@ -101,7 +101,7 @@ function* spawnTest() {
     yield rendered;
   }
 
-  function *checkFrame (frameIndex, hasOpts) {
+  function* checkFrame(frameIndex, hasOpts) {
     info(`Checking frame ${frameIndex}`);
     // Click the frame
     let rendered = once(JsCallTreeView, "focus");
@@ -175,12 +175,12 @@ var gRawSite1 = {
     mirType: uniqStr("Object"),
     site: uniqStr("A (http://foo/bar/bar:12)"),
     typeset: [{
-        keyedBy: uniqStr("constructor"),
-        name: uniqStr("Foo"),
-        location: uniqStr("A (http://foo/bar/baz:12)")
+      keyedBy: uniqStr("constructor"),
+      name: uniqStr("Foo"),
+      location: uniqStr("A (http://foo/bar/baz:12)")
     }, {
-        keyedBy: uniqStr("primitive"),
-        location: uniqStr("self-hosted")
+      keyedBy: uniqStr("primitive"),
+      location: uniqStr("self-hosted")
     }]
   }],
   attempts: {
@@ -242,17 +242,17 @@ gThread.frameTable.data.forEach((frame) => {
 
   let l = gThread.stringTable[frame[LOCATION_SLOT]];
   switch (l) {
-  case "A_O1":
-    frame[LOCATION_SLOT] = uniqStr("A (http://foo/bar/baz:12)");
-    frame[OPTIMIZATIONS_SLOT] = gRawSite1;
-    break;
-  case "B_O2":
-    frame[LOCATION_SLOT] = uniqStr("B (http://foo/bar/boo:10)");
-    frame[OPTIMIZATIONS_SLOT] = gRawSite2;
-    break;
-  case "B_O3":
-    frame[LOCATION_SLOT] = uniqStr("B (http://foo/bar/boo:10)");
-    frame[OPTIMIZATIONS_SLOT] = gRawSite3;
-    break;
+    case "A_O1":
+      frame[LOCATION_SLOT] = uniqStr("A (http://foo/bar/baz:12)");
+      frame[OPTIMIZATIONS_SLOT] = gRawSite1;
+      break;
+    case "B_O2":
+      frame[LOCATION_SLOT] = uniqStr("B (http://foo/bar/boo:10)");
+      frame[OPTIMIZATIONS_SLOT] = gRawSite2;
+      break;
+    case "B_O3":
+      frame[LOCATION_SLOT] = uniqStr("B (http://foo/bar/boo:10)");
+      frame[OPTIMIZATIONS_SLOT] = gRawSite3;
+      break;
   }
 });

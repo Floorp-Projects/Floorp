@@ -12,7 +12,7 @@ const { initPanelInNewTab, teardownToolboxAndRemoveTab } = require("devtools/cli
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 const { times, once } = require("devtools/client/performance/test/helpers/event-utils");
 
-add_task(function*() {
+add_task(function* () {
   let { panel } = yield initPanelInNewTab({
     tool: "performance",
     url: SIMPLE_URL,

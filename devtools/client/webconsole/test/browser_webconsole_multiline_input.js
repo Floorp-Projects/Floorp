@@ -33,12 +33,12 @@ let SHOULD_EXECUTE = [
   {input: "var a = 1;" },
   {input: "function foo() { var a = 1; }" },
   {input: '"asdf"' },
-  {input: '99 + 3' },
-  {input: '1, 2, 3' },
+  {input: "99 + 3" },
+  {input: "1, 2, 3" },
   // errors
-  {input: 'function f(x) { let y = 1, }' },
-  {input: 'function f(x=,) {' },
-  {input: '{2,}' },
+  {input: "function f(x) { let y = 1, }" },
+  {input: "function f(x=,) {" },
+  {input: "{2,}" },
 ];
 
 add_task(function* () {

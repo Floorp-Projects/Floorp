@@ -17,7 +17,7 @@ function ShaderEditorPanel(iframeWindow, toolbox) {
   this._destroyer = null;
 
   EventEmitter.decorate(this);
-};
+}
 
 exports.ShaderEditorPanel = ShaderEditorPanel;
 
@@ -28,7 +28,7 @@ ShaderEditorPanel.prototype = {
    * @return object
    *         A promise that is resolved when the Shader Editor completes opening.
    */
-  open: function() {
+  open: function () {
     let targetPromise;
 
     // Local debugging needs to make the target remote.
@@ -61,7 +61,7 @@ ShaderEditorPanel.prototype = {
     return this._toolbox.target;
   },
 
-  destroy: function() {
+  destroy: function () {
     // Make sure this panel is not already destroyed.
     if (this._destroyer) {
       return this._destroyer;

@@ -6,7 +6,7 @@
 
 var LineGraphWidget = require("devtools/client/shared/widgets/LineGraphWidget");
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("about:blank");
   yield performTest();
   gBrowser.removeCurrentTab();
@@ -48,7 +48,7 @@ function* testSelection(graph) {
   let thrown;
   try {
     graph.setSelection({ start: null, end: null });
-  } catch(e) {
+  } catch (e) {
     thrown = true;
   }
   ok(thrown, "Setting a null selection shouldn't work.");
@@ -90,7 +90,7 @@ function* testCursor(graph) {
   let thrown;
   try {
     graph.setCursor({ x: null, y: null });
-  } catch(e) {
+  } catch (e) {
     thrown = true;
   }
   ok(thrown, "Setting a null cursor shouldn't work.");

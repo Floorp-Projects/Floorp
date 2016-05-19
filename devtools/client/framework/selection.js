@@ -59,7 +59,7 @@ var EventEmitter = require("devtools/shared/event-emitter");
  *    the node change.
  *
  */
-function Selection(walker, node=null, track={attributes:true,detached:true}) {
+function Selection(walker, node = null, track = {attributes:true, detached:true}) {
   EventEmitter.decorate(this);
 
   this._onMutations = this._onMutations.bind(this);
@@ -74,7 +74,7 @@ Selection.prototype = {
   _walker: null,
   _node: null,
 
-  _onMutations: function(mutations) {
+  _onMutations: function (mutations) {
     let attributeChange = false;
     let pseudoChange = false;
     let detached = false;
@@ -115,12 +115,12 @@ Selection.prototype = {
     }
   },
 
-  destroy: function() {
+  destroy: function () {
     this.setNode(null);
     this.setWalker(null);
   },
 
-  setWalker: function(walker) {
+  setWalker: function (walker) {
     if (this._walker) {
       this._walker.off("mutations", this._onMutations);
     }
@@ -131,7 +131,7 @@ Selection.prototype = {
   },
 
   // Not remote-safe
-  setNode: function(value, reason="unknown") {
+  setNode: function (value, reason = "unknown") {
     if (value) {
       value = this._walker.frontForRawNode(value);
     }
@@ -159,7 +159,7 @@ Selection.prototype = {
     return null;
   },
 
-  setNodeFront: function(value, reason="unknown") {
+  setNodeFront: function (value, reason = "unknown") {
     this.reason = reason;
 
     // If a singleTextChild text node is being set, then set it's parent instead.
@@ -193,13 +193,13 @@ Selection.prototype = {
     return this._nodeFront;
   },
 
-  isRoot: function() {
+  isRoot: function () {
     return this.isNode() &&
            this.isConnected() &&
            this._nodeFront.isDocumentElement;
   },
 
-  isNode: function() {
+  isNode: function () {
     if (!this._nodeFront) {
       return false;
     }
@@ -213,11 +213,11 @@ Selection.prototype = {
     return true;
   },
 
-  isLocal: function() {
+  isLocal: function () {
     return !!this._node;
   },
 
-  isConnected: function() {
+  isConnected: function () {
     let node = this._nodeFront;
     if (!node || !node.actorID) {
       return false;
@@ -246,70 +246,70 @@ Selection.prototype = {
       return false;
     }
 
-    while(node) {
+    while (node) {
       if (node === this._walker.rootNode) {
         return true;
       }
       node = node.parentNode();
-    };
+    }
     return false;
   },
 
-  isHTMLNode: function() {
+  isHTMLNode: function () {
     let xhtml_ns = "http://www.w3.org/1999/xhtml";
     return this.isNode() && this.nodeFront.namespaceURI == xhtml_ns;
   },
 
   // Node type
 
-  isElementNode: function() {
+  isElementNode: function () {
     return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.ELEMENT_NODE;
   },
 
-  isPseudoElementNode: function() {
+  isPseudoElementNode: function () {
     return this.isNode() && this.nodeFront.isPseudoElement;
   },
 
-  isAnonymousNode: function() {
+  isAnonymousNode: function () {
     return this.isNode() && this.nodeFront.isAnonymous;
   },
 
-  isAttributeNode: function() {
+  isAttributeNode: function () {
     return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.ATTRIBUTE_NODE;
   },
 
-  isTextNode: function() {
+  isTextNode: function () {
     return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.TEXT_NODE;
   },
 
-  isCDATANode: function() {
+  isCDATANode: function () {
     return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.CDATA_SECTION_NODE;
   },
 
-  isEntityRefNode: function() {
+  isEntityRefNode: function () {
     return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.ENTITY_REFERENCE_NODE;
   },
 
-  isEntityNode: function() {
+  isEntityNode: function () {
     return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.ENTITY_NODE;
   },
 
-  isProcessingInstructionNode: function() {
+  isProcessingInstructionNode: function () {
     return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.PROCESSING_INSTRUCTION_NODE;
   },
 
-  isCommentNode: function() {
+  isCommentNode: function () {
     return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.PROCESSING_INSTRUCTION_NODE;
   },
 
-  isDocumentNode: function() {
+  isDocumentNode: function () {
     return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.DOCUMENT_NODE;
   },
 
   /**
    * @returns true if the selection is the <body> HTML element.
    */
-  isBodyNode: function() {
+  isBodyNode: function () {
     return this.isHTMLNode() &&
            this.isConnected() &&
            this.nodeFront.nodeName === "BODY";
@@ -318,21 +318,21 @@ Selection.prototype = {
   /**
    * @returns true if the selection is the <head> HTML element.
    */
-  isHeadNode: function() {
+  isHeadNode: function () {
     return this.isHTMLNode() &&
            this.isConnected() &&
            this.nodeFront.nodeName === "HEAD";
   },
 
-  isDocumentTypeNode: function() {
+  isDocumentTypeNode: function () {
     return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.DOCUMENT_TYPE_NODE;
   },
 
-  isDocumentFragmentNode: function() {
+  isDocumentFragmentNode: function () {
     return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.DOCUMENT_FRAGMENT_NODE;
   },
 
-  isNotationNode: function() {
+  isNotationNode: function () {
     return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.NOTATION_NODE;
   },
 };

@@ -38,7 +38,7 @@ add_task(function () {
   ].forEach(compareFrameInfo(thread));
 });
 
-function compareFrameInfo (root, parent) {
+function compareFrameInfo(root, parent) {
   parent = parent || root;
   let fields = [
     "selfSize", "selfSizePercentage", "selfCount", "selfCountPercentage",
@@ -69,7 +69,7 @@ function compareFrameInfo (root, parent) {
     if (children) {
       children.forEach(compareFrameInfo(root, node));
     }
-  }
+  };
 }
 
 var TEST_DATA = {
@@ -77,25 +77,25 @@ var TEST_DATA = {
   timestamps: [0, 150, 200, 250],
   sizes: [0, 100, 200, 700],
   frames: [{
-      source: "(root)"
-    }, {
-      source: "A",
-      line: 1,
-      column: 2,
-      functionDisplayName: "x",
-      parent: 0
-    }, {
-      source: "B",
-      line: 3,
-      column: 4,
-      functionDisplayName: "y",
-      parent: 1
-    }, {
-      source: "C",
-      line: 5,
-      column: 6,
-      functionDisplayName: "z",
-      parent: 2
-    }
+    source: "(root)"
+  }, {
+    source: "A",
+    line: 1,
+    column: 2,
+    functionDisplayName: "x",
+    parent: 0
+  }, {
+    source: "B",
+    line: 3,
+    column: 4,
+    functionDisplayName: "y",
+    parent: 1
+  }, {
+    source: "C",
+    line: 5,
+    column: 6,
+    functionDisplayName: "z",
+    parent: 2
+  }
   ]
 };

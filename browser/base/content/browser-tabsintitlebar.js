@@ -8,6 +8,9 @@
 
 var TabsInTitlebar = {
   init: function () {
+    if (this._initialized) {
+      return;
+    }
     this._readPref();
     Services.prefs.addObserver(this._prefName, this, false);
 

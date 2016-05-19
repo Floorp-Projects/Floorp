@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(function*() {
+add_task(function* () {
   let tab = yield addTab("data:text/html,mop");
 
   let {rdm, manager} = yield openRDM(tab, "menu");
@@ -226,7 +226,7 @@ function* testScreenshot(rdm) {
 
 function* getSizing() {
   let browser = gBrowser.selectedBrowser;
-  let sizing = yield ContentTask.spawn(browser, {}, function*() {
+  let sizing = yield ContentTask.spawn(browser, {}, function* () {
     return {
       width: content.innerWidth,
       height: content.innerHeight

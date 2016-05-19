@@ -15,10 +15,10 @@ var ChildActor = protocol.ActorClass({
     return {
       actor: this.actorID,
       extra: "extra"
-    }
+    };
   },
 
-  getChild: method(function() {
+  getChild: method(function () {
     return this;
   }, {
     response: RetVal("child")
@@ -54,7 +54,7 @@ var RootActor = protocol.ActorClass({
       from: "root",
       applicationType: "xpcshell-tests",
       traits: []
-    }
+    };
   },
 
   // This detail uses explicit DictType creation
@@ -70,7 +70,7 @@ var RootActor = protocol.ActorClass({
       return {
         actor: this.actorID,
         detailItem: this.child
-      }
+      };
     } else if (detail === "actorid") {
       return this.actorID;
     }
@@ -78,22 +78,22 @@ var RootActor = protocol.ActorClass({
     return {
       actor: this.actorID,
       childActor: this.child
-    }
+    };
   },
 
-  getDefault: method(function() {
+  getDefault: method(function () {
     return this;
   }, {
     response: RetVal("root")
   }),
 
-  getDetail1: method(function() {
+  getDetail1: method(function () {
     return this;
   }, {
     response: RetVal("root#detail1")
   }),
 
-  getDetail2: method(function() {
+  getDetail2: method(function () {
     return this;
   }, {
     response: {
@@ -101,7 +101,7 @@ var RootActor = protocol.ActorClass({
     }
   }),
 
-  getUnknownDetail: method(function() {
+  getUnknownDetail: method(function () {
     return this;
   }, {
     response: RetVal("root#unknownDetail")
@@ -122,7 +122,7 @@ var RootFront = protocol.FrontClass(RootActor, {
   }
 });
 
-const run_test = Test(function*() {
+const run_test = Test(function* () {
   DebuggerServer.createRootActor = (conn => {
     return RootActor(conn);
   });
@@ -147,13 +147,13 @@ const run_test = Test(function*() {
 
   retval = yield rootFront.getDetail2();
   do_check_true(retval instanceof RootFront);
-  do_check_true(typeof(rootFront.lastForm) === "string");
+  do_check_true(typeof (rootFront.lastForm) === "string");
 
   // getUnknownDetail should fail, since no typeName is specified.
   try {
     yield rootFront.getUnknownDetail();
     do_check_true(false);
-  } catch(ex) {
+  } catch (ex) {
   }
 
   yield client.close();

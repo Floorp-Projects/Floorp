@@ -6,7 +6,7 @@
 
 // Test that hovering over nodes on the breadcrumb buttons in the inspector shows the highlighter over
 // those nodes
-add_task(function*() {
+add_task(function* () {
   info("Loading the test document and opening the inspector");
   let {toolbox, inspector, testActor} = yield openInspectorForURL("data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>");
   info("Selecting the test node");

@@ -12,7 +12,7 @@ const { LocalizationHelper } = require("devtools/client/shared/l10n");
 const STRINGS_URI = "chrome://devtools/locale/filterwidget.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("about:blank");
   let [host, win, doc] = yield createHost("bottom", TEST_URI);
 
@@ -94,8 +94,8 @@ add_task(function*() {
 function testRenderedFilters(filters, expected) {
   for (let [index, filter] of [...filters].entries()) {
     let [name, value] = filter.children,
-        label = name.children[1],
-        [input, unit] = value.children;
+      label = name.children[1],
+      [input, unit] = value.children;
 
     const eq = expected[index];
     is(label.textContent, eq.label, "Label should match");

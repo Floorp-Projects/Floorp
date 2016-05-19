@@ -62,7 +62,7 @@ var Timeline = exports.Timeline = Class({
   /**
    * Destroys this actor, stopping recording first.
    */
-  destroy: function() {
+  destroy: function () {
     this.stop();
 
     events.off(this.tabActor, "window-ready", this._onWindowReady);
@@ -109,7 +109,7 @@ var Timeline = exports.Timeline = Class({
    * At regular intervals, pop the markers from the docshell, and forward
    * markers, memory, tick and frames events, if any.
    */
-  _pullTimelineData: function() {
+  _pullTimelineData: function () {
     let docShells = this.docShells;
     if (!this._isRecording || !docShells.length) {
       return;
@@ -207,7 +207,7 @@ var Timeline = exports.Timeline = Class({
    *         Boolean indicating whether or not DOMContentLoaded and Load
    *         marker events are emitted.
    */
-  start: Task.async(function *({
+  start: Task.async(function* ({
     withMarkers,
     withTicks,
     withMemory,
@@ -264,7 +264,7 @@ var Timeline = exports.Timeline = Class({
   /**
    * Stop recording profile markers.
    */
-  stop: Task.async(function *() {
+  stop: Task.async(function* () {
     let docShells = this.docShells;
     if (!docShells.length) {
       return -1;
@@ -316,7 +316,7 @@ var Timeline = exports.Timeline = Class({
    * When a new window becomes available in the tabActor, start recording its
    * markers if we were recording.
    */
-  _onWindowReady: function({ window }) {
+  _onWindowReady: function ({ window }) {
     if (this._isRecording) {
       let docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIWebNavigation)

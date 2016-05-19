@@ -16,15 +16,15 @@ exports.joinURI = (initialPath, ...paths) => {
   try {
     url = new URL(initialPath);
   }
-  catch(e) {
+  catch (e) {
     return;
   }
 
-  for(let path of paths) {
+  for (let path of paths) {
     if (path) {
       url = new URL(path, url);
     }
   }
 
   return url.href;
-}
+};

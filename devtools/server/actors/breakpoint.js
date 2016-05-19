@@ -44,7 +44,7 @@ let BreakpointActor = ActorClass({
    * @param OriginalLocation originalLocation
    *        The original location of the breakpoint.
    */
-  initialize: function(threadActor, originalLocation) {
+  initialize: function (threadActor, originalLocation) {
     // The set of Debugger.Script instances that this breakpoint has been set
     // upon.
     this.scripts = new Set();
@@ -55,11 +55,11 @@ let BreakpointActor = ActorClass({
     this.isPending = true;
   },
 
-  disconnect: function() {
+  disconnect: function () {
     this.removeScripts();
   },
 
-  hasScript: function(script) {
+  hasScript: function (script) {
     return this.scripts.has(script);
   },
 
@@ -70,7 +70,7 @@ let BreakpointActor = ActorClass({
    * @param script Debugger.Script
    *        The new source script on which the breakpoint has been set.
    */
-  addScript: function(script) {
+  addScript: function (script) {
     this.scripts.add(script);
     this.isPending = false;
   },
@@ -78,7 +78,7 @@ let BreakpointActor = ActorClass({
   /**
    * Remove the breakpoints from associated scripts and clear the script cache.
    */
-  removeScripts: function() {
+  removeScripts: function () {
     for (let script of this.scripts) {
       script.clearBreakpoint(this);
     }
@@ -99,7 +99,7 @@ let BreakpointActor = ActorClass({
    *          - message: string
    *            If the condition throws, this is the thrown message.
    */
-  checkCondition: function(frame) {
+  checkCondition: function (frame) {
     let completion = frame.eval(this.condition);
     if (completion) {
       if (completion.throw) {
@@ -156,7 +156,7 @@ let BreakpointActor = ActorClass({
       // TODO: add the rest of the breakpoints on that line (bug 676602).
       reason.actors = [ this.actorID ];
     } else {
-      let { result, message } = this.checkCondition(frame)
+      let { result, message } = this.checkCondition(frame);
 
       if (result) {
         if (!message) {
@@ -176,7 +176,7 @@ let BreakpointActor = ActorClass({
   /**
    * Handle a protocol request to remove this breakpoint.
    */
-  delete: method(function() {
+  delete: method(function () {
     // Remove from the breakpoint store.
     if (this.originalLocation) {
       this.threadActor.breakpointActorMap.deleteActor(this.originalLocation);

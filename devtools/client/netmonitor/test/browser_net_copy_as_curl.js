@@ -27,7 +27,7 @@ function test() {
     ].join(" ");
 
     const EXPECTED_WIN_RESULT = [
-      'curl',
+      "curl",
       '"' + SIMPLE_SJS + '"',
       '-H "Host: example.com"',
       '-H "User-Agent: ' + navigator.userAgent + '"',
@@ -39,7 +39,7 @@ function test() {
       '-H "X-Custom-Header-3: Mon, 3 Mar 2014 11:11:11 GMT"',
       '-H "Referer: ' + CURL_URL + '"',
       '-H "Connection: keep-alive"',
-      '-H "Pragma: no-cache"', 
+      '-H "Pragma: no-cache"',
       '-H "Cache-Control: no-cache"'
     ].join(" ");
 
@@ -70,7 +70,7 @@ function test() {
 
     aDebuggee.performRequest(SIMPLE_SJS);
 
-    function cleanUp(){
+    function cleanUp() {
       teardown(aMonitor).then(finish);
     }
   });

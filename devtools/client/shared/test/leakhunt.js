@@ -16,36 +16,36 @@ function leakHunt(root) {
 
   try {
     var output = leakHunt.inner(root, path, seen);
-    output.forEach(function(line) {
-      dump(line + '\n');
+    output.forEach(function (line) {
+      dump(line + "\n");
     });
   }
   catch (ex) {
-    dump(ex + '\n');
+    dump(ex + "\n");
   }
 }
 
 leakHunt.inner = function LH_inner(root, path, seen) {
-  var prefix = new Array(path.length).join('  ');
+  var prefix = new Array(path.length).join("  ");
 
   var reply = [];
   function log(msg) {
     reply.push(msg);
   }
 
-  var direct
+  var direct;
   try {
     direct = Object.keys(root);
   }
   catch (ex) {
-    log(prefix + '  Error enumerating: ' + ex);
+    log(prefix + "  Error enumerating: " + ex);
     return reply;
   }
 
   try {
     var index = 0;
     for (var data of root) {
-      var prop = '' + index;
+      var prop = "" + index;
       leakHunt.digProperty(prop, data, path, seen, direct, log);
       index++;
     }
@@ -58,7 +58,7 @@ leakHunt.inner = function LH_inner(root, path, seen) {
       data = root[prop];
     }
     catch (ex) {
-      log(prefix + '  ' + prop + ' = Error: ' + ex.toString().substring(0, 30));
+      log(prefix + "  " + prop + " = Error: " + ex.toString().substring(0, 30));
       continue;
     }
 
@@ -66,7 +66,7 @@ leakHunt.inner = function LH_inner(root, path, seen) {
   }
 
   return reply;
-}
+};
 
 leakHunt.hide = [ /^string$/, /^number$/, /^boolean$/, /^null/, /^undefined/ ];
 
@@ -80,7 +80,7 @@ leakHunt.noRecurse = [
 leakHunt.digProperty = function LH_digProperty(prop, data, path, seen, direct, log) {
   var newPath = path.slice();
   newPath.push(prop);
-  var prefix = new Array(newPath.length).join('  ');
+  var prefix = new Array(newPath.length).join("  ");
 
   var recurse = true;
   var message = leakHunt.getType(data);
@@ -89,21 +89,21 @@ leakHunt.digProperty = function LH_digProperty(prop, data, path, seen, direct, l
     return;
   }
 
-  if (message === 'function' && direct.indexOf(prop) == -1) {
+  if (message === "function" && direct.indexOf(prop) == -1) {
     return;
   }
 
-  if (message === 'string') {
-    var extra = data.length > 10 ? data.substring(0, 9) + '_' : data;
+  if (message === "string") {
+    var extra = data.length > 10 ? data.substring(0, 9) + "_" : data;
     message += ' "' + extra.replace(/\n/g, "|") + '"';
     recurse = false;
   }
   else if (leakHunt.matchesAnyPattern(message, leakHunt.noRecurse)) {
-    message += ' (no recurse)'
+    message += " (no recurse)";
     recurse = false;
   }
   else if (seen.indexOf(data) !== -1) {
-    message += ' (already seen)';
+    message += " (already seen)";
     recurse = false;
   }
 
@@ -111,26 +111,26 @@ leakHunt.digProperty = function LH_digProperty(prop, data, path, seen, direct, l
     seen.push(data);
     var lines = leakHunt.inner(data, newPath, seen);
     if (lines.length == 0) {
-      if (message !== 'function') {
-        log(prefix + prop + ' = ' + message + ' { }');
+      if (message !== "function") {
+        log(prefix + prop + " = " + message + " { }");
       }
     }
     else {
-      log(prefix + prop + ' = ' + message + ' {');
-      lines.forEach(function(line) {
+      log(prefix + prop + " = " + message + " {");
+      lines.forEach(function (line) {
         log(line);
       });
-      log(prefix + '}');
+      log(prefix + "}");
     }
   }
   else {
-    log(prefix + prop + ' = ' + message);
+    log(prefix + prop + " = " + message);
   }
 };
 
 leakHunt.matchesAnyPattern = function LH_matchesAnyPattern(str, patterns) {
   var match = false;
-  patterns.forEach(function(pattern) {
+  patterns.forEach(function (pattern) {
     if (str.match(pattern)) {
       match = true;
     }
@@ -140,14 +140,14 @@ leakHunt.matchesAnyPattern = function LH_matchesAnyPattern(str, patterns) {
 
 leakHunt.getType = function LH_getType(data) {
   if (data === null) {
-    return 'null';
+    return "null";
   }
   if (data === undefined) {
-    return 'undefined';
+    return "undefined";
   }
 
   var type = typeof data;
-  if (type === 'object' || type === 'Object') {
+  if (type === "object" || type === "Object") {
     type = leakHunt.getCtorName(data);
   }
 
@@ -161,7 +161,7 @@ leakHunt.getCtorName = function LH_getCtorName(aObj) {
     }
   }
   catch (ex) {
-    return 'UnknownObject';
+    return "UnknownObject";
   }
 
   // If that fails, use Objects toString which sometimes gives something

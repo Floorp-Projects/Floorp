@@ -12,7 +12,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function *() {
+add_task(function* () {
   let front = new StubbedMemoryFront();
   yield front.attach();
   let store = Store();
@@ -22,7 +22,7 @@ add_task(function *() {
   let foundPendingState = false;
   let foundDoneState = false;
 
-  function checkState () {
+  function checkState() {
     let { snapshots } = store.getState();
     let lastSnapshot = snapshots[snapshots.length - 1];
 

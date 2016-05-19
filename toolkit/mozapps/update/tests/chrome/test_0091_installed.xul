@@ -37,7 +37,7 @@ function runTest() {
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
   writeStatusFile(STATE_SUCCEEDED);
 
-  initUpdateServiceStub();
+  testPostUpdateProcessing();
 }
 
 ]]>

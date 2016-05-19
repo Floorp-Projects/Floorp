@@ -21,7 +21,7 @@ function test() {
     gVariables = gDebugger.DebuggerView.Variables;
     let bubble = gDebugger.DebuggerView.VariableBubble;
     let tooltip = bubble._tooltip.panel;
-    let testPopupHiding = Task.async(function *(){
+    let testPopupHiding = Task.async(function* () {
       yield addBreakpoint();
       yield ensureThreadClientState(gPanel, "resumed");
       yield pauseDebuggee();
@@ -30,7 +30,7 @@ function test() {
           "The popup should be open with a simple text entry");
       // Now we're stopped at a breakpoint with an open popup
       // we'll send a keypress and check if the popup closes
-      executeSoon(() => EventUtils.synthesizeKey('VK_F11', {}));
+      executeSoon(() => EventUtils.synthesizeKey("VK_F11", {}));
       // The keypress should cause one resumed event and one paused event
       yield waitForThreadEvents(gPanel, "resumed");
       yield waitForThreadEvents(gPanel, "paused");
@@ -38,7 +38,7 @@ function test() {
       checkVariablePopupClosed(bubble);
       yield resumeDebuggerThenCloseAndFinish(gPanel);
     });
-    waitForSourceShown(gPanel, ".html").then(testPopupHiding)
+    waitForSourceShown(gPanel, ".html").then(testPopupHiding);
   });
 }
 
@@ -57,7 +57,7 @@ function pauseDebuggee() {
   ]);
 }
 
-function checkVariablePopupClosed(bubble){
+function checkVariablePopupClosed(bubble) {
   ok(!bubble.contentsShown(),
     "When stepping, popup should close and be hidden.");
   ok(bubble._tooltip.isEmpty(),
@@ -66,7 +66,7 @@ function checkVariablePopupClosed(bubble){
     "The marked text in the editor was removed.");
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

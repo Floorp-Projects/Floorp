@@ -35,7 +35,7 @@ const TaskCache = require("./task-cache");
  * @param {Object}
  */
 const takeSnapshotAndCensus = exports.takeSnapshotAndCensus = function (front, heapWorker) {
-  return function *(dispatch, getState) {
+  return function* (dispatch, getState) {
     const id = yield dispatch(takeSnapshot(front));
     if (id === null) {
       return;
@@ -58,8 +58,8 @@ const takeSnapshotAndCensus = exports.takeSnapshotAndCensus = function (front, h
  * @param {HeapAnalysesClient} heapWorker
  * @param {snapshotId} id
  */
-const computeSnapshotData = exports.computeSnapshotData = function(heapWorker, id) {
-  return function*(dispatch, getState) {
+const computeSnapshotData = exports.computeSnapshotData = function (heapWorker, id) {
+  return function* (dispatch, getState) {
     if (getSnapshot(getState(), id).state !== states.READ) {
       return;
     }
@@ -83,7 +83,7 @@ const computeSnapshotData = exports.computeSnapshotData = function(heapWorker, i
  * @param {snapshotId} id
  */
 const selectSnapshotAndRefresh = exports.selectSnapshotAndRefresh = function (heapWorker, id) {
-  return function *(dispatch, getState) {
+  return function* (dispatch, getState) {
     if (getState().diffing || getState().individuals) {
       dispatch(view.changeView(viewState.CENSUS));
     }
@@ -100,7 +100,7 @@ const selectSnapshotAndRefresh = exports.selectSnapshotAndRefresh = function (he
  * @returns {Number|null}
  */
 const takeSnapshot = exports.takeSnapshot = function (front) {
-  return function *(dispatch, getState) {
+  return function* (dispatch, getState) {
     telemetry.countTakeSnapshot();
 
     if (getState().diffing || getState().individuals) {
@@ -139,7 +139,7 @@ TaskCache.declareCacheableTask({
     return id;
   },
 
-  task: function*(heapWorker, id, removeFromCache, dispatch, getState) {
+  task: function* (heapWorker, id, removeFromCache, dispatch, getState) {
     const snapshot = getSnapshot(getState(), id);
     assert([states.SAVED, states.IMPORTING].includes(snapshot.state),
            `Should only read a snapshot once. Found snapshot in state ${snapshot.state}`);
@@ -191,7 +191,7 @@ function makeTakeCensusTask({ getDisplay, getFilter, getCensus, beginAction,
       return `take-census-task-${thisTakeCensusTaskId}-${id}`;
     },
 
-    task: function*(heapWorker, id, removeFromCache, dispatch, getState) {
+    task: function* (heapWorker, id, removeFromCache, dispatch, getState) {
       const snapshot = getSnapshot(getState(), id);
       if (!snapshot) {
         removeFromCache();
@@ -306,7 +306,7 @@ const defaultCensusTaker = takeTreeMap;
  *
  * @param {string} value from viewState
  */
-const getCurrentCensusTaker = exports.getCurrentCensusTaker = function(currentView) {
+const getCurrentCensusTaker = exports.getCurrentCensusTaker = function (currentView) {
   switch (currentView) {
     case viewState.TREE_MAP:
       return takeTreeMap;
@@ -322,7 +322,7 @@ const getCurrentCensusTaker = exports.getCurrentCensusTaker = function(currentVi
  *
  * @param {DominatorTreeNode} node.
  */
-const focusIndividual = exports.focusIndividual = function(node) {
+const focusIndividual = exports.focusIndividual = function (node) {
   return {
     type: actions.FOCUS_INDIVIDUAL,
     node,
@@ -339,8 +339,8 @@ const focusIndividual = exports.focusIndividual = function(node) {
  * @param {Set<Number> | Number} reportLeafIndex
  */
 const fetchIndividuals = exports.fetchIndividuals =
-function(heapWorker, id, censusBreakdown, reportLeafIndex) {
-  return function*(dispatch, getState) {
+function (heapWorker, id, censusBreakdown, reportLeafIndex) {
+  return function* (dispatch, getState) {
     if (getState().view.state !== viewState.INDIVIDUALS) {
       dispatch(view.changeView(viewState.INDIVIDUALS));
     }
@@ -412,8 +412,8 @@ function(heapWorker, id, censusBreakdown, reportLeafIndex) {
  *
  * @param {HeapAnalysesClient} heapWorker
  */
-const refreshIndividuals = exports.refreshIndividuals = function(heapWorker) {
-  return function*(dispatch, getState) {
+const refreshIndividuals = exports.refreshIndividuals = function (heapWorker) {
+  return function* (dispatch, getState) {
     assert(getState().view.state === viewState.INDIVIDUALS,
            "Should be in INDIVIDUALS view.");
 
@@ -454,7 +454,7 @@ const refreshIndividuals = exports.refreshIndividuals = function(heapWorker) {
  * @param {HeapAnalysesClient} heapWorker
  */
 const refreshSelectedCensus = exports.refreshSelectedCensus = function (heapWorker) {
-  return function*(dispatch, getState) {
+  return function* (dispatch, getState) {
     let snapshot = getState().snapshots.find(s => s.selected);
     if (!snapshot || snapshot.state !== states.READ) {
       return;
@@ -480,7 +480,7 @@ const refreshSelectedCensus = exports.refreshSelectedCensus = function (heapWork
  * @param {HeapAnalysesClient} heapWorker
  */
 const refreshSelectedTreeMap = exports.refreshSelectedTreeMap = function (heapWorker) {
-  return function*(dispatch, getState) {
+  return function* (dispatch, getState) {
     let snapshot = getState().snapshots.find(s => s.selected);
     if (!snapshot || snapshot.state !== states.READ) {
       return;
@@ -514,7 +514,7 @@ TaskCache.declareCacheableTask({
     return id;
   },
 
-  task: function*(heapWorker, id, removeFromCache, dispatch, getState) {
+  task: function* (heapWorker, id, removeFromCache, dispatch, getState) {
     const snapshot = getSnapshot(getState(), id);
     assert(!(snapshot.dominatorTree && snapshot.dominatorTree.dominatorTreeId),
            "Should not re-compute dominator trees");
@@ -552,7 +552,7 @@ TaskCache.declareCacheableTask({
     return id;
   },
 
-  task: function*(heapWorker, id, removeFromCache, dispatch, getState) {
+  task: function* (heapWorker, id, removeFromCache, dispatch, getState) {
     const snapshot = getSnapshot(getState(), id);
     assert(dominatorTreeIsComputed(snapshot),
            "Should have dominator tree model and it should be computed");
@@ -602,7 +602,7 @@ TaskCache.declareCacheableTask({
     return `${id}-${lazyChildren.key()}`;
   },
 
-  task: function*(heapWorker, id, lazyChildren, removeFromCache, dispatch, getState) {
+  task: function* (heapWorker, id, lazyChildren, removeFromCache, dispatch, getState) {
     const snapshot = getSnapshot(getState(), id);
     assert(snapshot.dominatorTree, "Should have dominator tree model");
     assert(snapshot.dominatorTree.state === dominatorTreeState.LOADED ||
@@ -661,7 +661,7 @@ TaskCache.declareCacheableTask({
     return id;
   },
 
-  task: function*(heapWorker, id, removeFromCache, dispatch, getState) {
+  task: function* (heapWorker, id, removeFromCache, dispatch, getState) {
     const dominatorTreeId = yield dispatch(computeDominatorTree(heapWorker, id));
     if (dominatorTreeId === null) {
       removeFromCache();
@@ -685,7 +685,7 @@ TaskCache.declareCacheableTask({
  * @param {HeapAnalysesClient} heapWorker
  */
 const refreshSelectedDominatorTree = exports.refreshSelectedDominatorTree = function (heapWorker) {
-  return function*(dispatch, getState) {
+  return function* (dispatch, getState) {
     let snapshot = getState().snapshots.find(s => s.selected);
     if (!snapshot) {
       return;
@@ -708,7 +708,7 @@ const refreshSelectedDominatorTree = exports.refreshSelectedDominatorTree = func
         // If there was an error, we can't continue. If we are still saving or
         // reading the snapshot, then takeSnapshotAndCensus will finish the job
         // for us.
-        return;
+      return;
     }
   };
 };
@@ -732,7 +732,7 @@ const selectSnapshot = exports.selectSnapshot = function (id) {
  * @param {HeapAnalysesClient} heapWorker
  */
 const clearSnapshots = exports.clearSnapshots = function (heapWorker) {
-  return function*(dispatch, getState) {
+  return function* (dispatch, getState) {
     let snapshots = getState().snapshots.filter(s => {
       let snapshotReady = s.state === states.READ || s.state === states.ERROR;
       let censusReady = (s.treeMap && s.treeMap.state === treeMapState.SAVED) ||
@@ -770,7 +770,7 @@ const clearSnapshots = exports.clearSnapshots = function (heapWorker) {
  * @param {snapshotModel} snapshot
  */
 const deleteSnapshot = exports.deleteSnapshot = function (heapWorker, snapshot) {
-  return function*(dispatch, getState) {
+  return function* (dispatch, getState) {
     dispatch({ type: actions.DELETE_SNAPSHOTS_START, ids: [snapshot.id] });
 
     try {

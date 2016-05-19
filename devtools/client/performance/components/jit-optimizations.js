@@ -15,7 +15,7 @@ const OptimizationsItem = createFactory(require("./jit-optimizations-item"));
 const FrameView = createFactory(require("../../shared/components/frame"));
 
 const onClickTooltipString = frame =>
-  L10N.getFormatStr("viewsourceindebugger",`${frame.source}:${frame.line}:${frame.column}`);
+  L10N.getFormatStr("viewsourceindebugger", `${frame.source}:${frame.line}:${frame.column}`);
 const JIT_TITLE = L10N.getStr("jit.title");
 // If TREE_ROW_HEIGHT changes, be sure to change `var(--jit-tree-row-height)`
 // in `devtools/client/themes/jit-optimizations.css`
@@ -135,8 +135,8 @@ const JITOptimizations = module.exports = createClass({
              isAttempts(node) ? "attempts" :
              isTypes(node) ? "types" :
              isAttempt(node) ? "attempt" :
-             isType(node) ? "type":
-             isObservedType(node) ? "observedtype": null;
+             isType(node) ? "type" :
+             isObservedType(node) ? "observedtype" : null;
     };
 
     // Creates a unique key for each node in the

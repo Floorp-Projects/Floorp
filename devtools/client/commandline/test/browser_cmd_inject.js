@@ -3,60 +3,60 @@
 
 // Tests that the inject commands works as they should
 
-const TEST_URI = 'http://example.com/browser/devtools/client/commandline/'+
-                 'test/browser_cmd_inject.html';
+const TEST_URI = "http://example.com/browser/devtools/client/commandline/" +
+                 "test/browser_cmd_inject.html";
 
 function test() {
-  helpers.addTabWithToolbar(TEST_URI, function(options) {
+  helpers.addTabWithToolbar(TEST_URI, function (options) {
     return helpers.audit(options, [
       {
-        setup:    'inject',
+        setup:    "inject",
         check: {
-          input:  'inject',
-          markup: 'VVVVVV',
-          hints:        ' <library>',
-          status: 'ERROR'
+          input:  "inject",
+          markup: "VVVVVV",
+          hints:        " <library>",
+          status: "ERROR"
         },
       },
       {
-        setup:    'inject j',
+        setup:    "inject j",
         check: {
-          input:  'inject j',
-          markup: 'VVVVVVVI',
-          hints:          'Query',
-          status: 'ERROR'
+          input:  "inject j",
+          markup: "VVVVVVVI",
+          hints:          "Query",
+          status: "ERROR"
         },
       },
       {
-        setup: 'inject notauri',
+        setup: "inject notauri",
         check: {
-          input:  'inject notauri',
-          hints:                ' -> http://notauri/',
-          markup: 'VVVVVVVIIIIIII',
-          status: 'ERROR',
+          input:  "inject notauri",
+          hints:                " -> http://notauri/",
+          markup: "VVVVVVVIIIIIII",
+          status: "ERROR",
           args: {
             library: {
               value: undefined,
-              status: 'INCOMPLETE'
+              status: "INCOMPLETE"
             }
           }
         }
       },
       {
-        setup:    'inject http://example.com/browser/devtools/client/commandline/test/browser_cmd_inject.js',
+        setup:    "inject http://example.com/browser/devtools/client/commandline/test/browser_cmd_inject.js",
         check: {
-          input:  'inject http://example.com/browser/devtools/client/commandline/test/browser_cmd_inject.js',
-          markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
-          hints:                                                                                           '',
-          status: 'VALID',
+          input:  "inject http://example.com/browser/devtools/client/commandline/test/browser_cmd_inject.js",
+          markup: "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV",
+          hints:                                                                                           "",
+          status: "VALID",
           args: {
             library: {
-              value: function(library) {
-                is(library.type, 'url', 'inject type name');
-                is(library.url.origin, 'http://example.com', 'inject url hostname');
-                ok(library.url.path.indexOf('_inject.js') != -1, 'inject url path');
+              value: function (library) {
+                is(library.type, "url", "inject type name");
+                is(library.url.origin, "http://example.com", "inject url hostname");
+                ok(library.url.path.indexOf("_inject.js") != -1, "inject url path");
               },
-              status: 'VALID'
+              status: "VALID"
             }
           }
         },

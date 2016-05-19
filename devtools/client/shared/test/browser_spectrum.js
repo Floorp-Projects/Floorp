@@ -7,7 +7,7 @@
 const TEST_URI = "chrome://devtools/content/shared/widgets/spectrum-frame.xhtml";
 const {Spectrum} = require("devtools/client/shared/widgets/Spectrum");
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("about:blank");
   yield performTest();
   gBrowser.removeCurrentTab();
@@ -88,7 +88,7 @@ function testChangingColorShouldEmitEvents(doc) {
     });
 
     // Simulate a drag move event by calling the handler directly.
-    s.onDraggerMove(s.dragger.offsetWidth/2, s.dragger.offsetHeight/2);
+    s.onDraggerMove(s.dragger.offsetWidth / 2, s.dragger.offsetHeight / 2);
   });
 }
 
@@ -107,7 +107,7 @@ function testSettingColorShoudUpdateTheUI(doc) {
 
   s.rgb = [240, 32, 124, 0];
   s.updateUI();
-  is(s.alphaSliderHelper.style.left, - (s.alphaSliderHelper.offsetWidth/2) + "px",
+  is(s.alphaSliderHelper.style.left, -(s.alphaSliderHelper.offsetWidth / 2) + "px",
     "Alpha range UI has been updated again");
 
   s.destroy();

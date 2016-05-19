@@ -15,7 +15,7 @@ function run_test()
 {
   run_test_with_server(DebuggerServer, do_test_finished);
   do_test_pending();
-};
+}
 
 function run_test_with_server(aServer, aCallback)
 {
@@ -23,8 +23,8 @@ function run_test_with_server(aServer, aCallback)
   initTestDebuggerServer(aServer);
   gDebuggee = addTestGlobal("test-breakpoints", aServer);
   gClient = new DebuggerClient(aServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-breakpoints", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-breakpoints", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_breakpoints_columns();
     });

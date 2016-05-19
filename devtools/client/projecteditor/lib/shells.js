@@ -28,7 +28,7 @@ var Shell = Class({
    * @param ProjectEditor host
    * @param Resource resource
    */
-  initialize: function(host, resource) {
+  initialize: function (host, resource) {
     this.host = host;
     this.doc = host.document;
     this.resource = resource;
@@ -53,7 +53,7 @@ var Shell = Class({
    * a result of this function, so any listeners to 'editorAppended'
    * need to be added before calling this.
    */
-  load: function() {
+  load: function () {
     this.editorDeferred = promise.defer();
     this.editorLoaded = this.editorDeferred.promise;
     this.editor.load(this.resource);
@@ -62,7 +62,7 @@ var Shell = Class({
   /**
    * Destroy the shell and its associated editor
    */
-  destroy: function() {
+  destroy: function () {
     this.editor.destroy();
     this.resource.destroy();
   },
@@ -71,7 +71,7 @@ var Shell = Class({
    * Make sure the correct editor is selected for the resource.
    * @returns Type:Editor
    */
-  _editorTypeForResource: function() {
+  _editorTypeForResource: function () {
     let resource = this.resource;
     let constructor = EditorTypeForResource(resource);
 
@@ -106,7 +106,7 @@ var ShellDeck = Class({
    * @param ProjectEditor host
    * @param Document document
    */
-  initialize: function(host, document) {
+  initialize: function (host, document) {
     this.doc = document;
     this.host = host;
     this.deck = this.doc.createElement("deck");
@@ -126,7 +126,7 @@ var ShellDeck = Class({
    *                 The file to be opened
    * @returns Shell
    */
-  open: function(defaultResource) {
+  open: function (defaultResource) {
     let shell = this.shellFor(defaultResource);
     if (!shell) {
       shell = this._createShell(defaultResource);
@@ -141,7 +141,7 @@ var ShellDeck = Class({
    *
    * @returns Shell
    */
-  _createShell: function(defaultResource) {
+  _createShell: function (defaultResource) {
     let shell = Shell(this.host, defaultResource);
 
     shell.editorAppended.then(() => {
@@ -163,7 +163,7 @@ var ShellDeck = Class({
    *
    * @param Resource resource
    */
-  removeResource: function(resource) {
+  removeResource: function (resource) {
     let shell = this.shellFor(resource);
     if (shell) {
       this.shells.delete(resource);
@@ -171,7 +171,7 @@ var ShellDeck = Class({
     }
   },
 
-  destroy: function() {
+  destroy: function () {
     for (let [resource, shell] of this.shells.entries()) {
       this.shells.delete(resource);
       shell.destroy();
@@ -185,7 +185,7 @@ var ShellDeck = Class({
    *
    * @param Shell shell
    */
-  selectShell: function(shell) {
+  selectShell: function (shell) {
     // Don't fire another activate if this is already the active shell
     if (this._activeShell != shell) {
       if (this._activeShell) {
@@ -214,7 +214,7 @@ var ShellDeck = Class({
    * @param Resource resource
    * @returns Shell
    */
-  shellFor: function(resource) {
+  shellFor: function (resource) {
     return this.shells.get(resource);
   },
 

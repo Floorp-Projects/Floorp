@@ -12,8 +12,8 @@ function test() {
     let { document, $, NetMonitorView } = aMonitor.panelWin;
     let { RequestsMenu } = NetMonitorView;
     let detailsPane = $("#details-pane");
-    let detailsPaneToggleButton = $('#details-pane-toggle');
-    let clearButton = $('#requests-menu-clear-button');
+    let detailsPaneToggleButton = $("#details-pane-toggle");
+    let clearButton = $("#requests-menu-clear-button");
 
     RequestsMenu.lazyUpdate = false;
 

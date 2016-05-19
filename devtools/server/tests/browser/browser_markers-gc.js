@@ -8,7 +8,7 @@
 const { PerformanceFront } = require("devtools/server/actors/performance");
 const MARKER_NAME = "GarbageCollection";
 
-add_task(function*() {
+add_task(function* () {
   let browser = yield addTab(MAIN_DOMAIN + "doc_force_gc.html");
   let doc = browser.contentDocument;
 

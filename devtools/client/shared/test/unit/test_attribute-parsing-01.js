@@ -61,7 +61,7 @@ function run_test() {
     do_print("Checking that the number of parsed tokens is correct");
     do_check_eq(tokens.length, expected.length);
 
-    for (let i = 0; i < tokens.length; i ++) {
+    for (let i = 0; i < tokens.length; i++) {
       do_print("Checking the data in token " + i);
       do_check_eq(tokens[i].value, expected[i].value);
       if (expected[i].type) {

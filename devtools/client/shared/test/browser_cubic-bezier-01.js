@@ -10,7 +10,7 @@ const TEST_URI = "chrome://devtools/content/shared/widgets/cubic-bezier-frame.xh
 const {CubicBezierWidget} =
   require("devtools/client/shared/widgets/CubicBezierWidget");
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("about:blank");
   let [host, win, doc] = yield createHost("bottom", TEST_URI);
 

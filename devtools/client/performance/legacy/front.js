@@ -66,7 +66,7 @@ const LegacyPerformanceFront = Class({
    * @return object
    *         A promise that is resolved once the connection is established.
    */
-  connect: Task.async(function*() {
+  connect: Task.async(function* () {
     if (this._connecting) {
       return this._connecting.promise;
     }
@@ -88,7 +88,7 @@ const LegacyPerformanceFront = Class({
   /**
    * Destroys this connection.
    */
-  destroy: Task.async(function*() {
+  destroy: Task.async(function* () {
     if (this._connecting) {
       yield this._connecting.promise;
     } else {
@@ -110,7 +110,7 @@ const LegacyPerformanceFront = Class({
    * Initializes fronts and connects to the underlying actors using the facades
    * found in ./actors.js.
    */
-  _connectActors: Task.async(function*() {
+  _connectActors: Task.async(function* () {
     this._profiler = new Actors.LegacyProfilerFront(this._target);
     this._timeline = new Actors.LegacyTimelineFront(this._target);
 
@@ -166,7 +166,7 @@ const LegacyPerformanceFront = Class({
    *        The time (in milliseconds) when the call was made, relative to when
    *        the nsIProfiler module was started.
    */
-  _onConsoleProfileStart: Task.async(function *(_, { profileLabel, currentTime: startTime }) {
+  _onConsoleProfileStart: Task.async(function* (_, { profileLabel, currentTime: startTime }) {
     let recordings = this._recordings;
 
     // Abort if a profile with this label already exists.
@@ -191,7 +191,7 @@ const LegacyPerformanceFront = Class({
    *        The time (in milliseconds) when the call was made, relative to when
    *        the nsIProfiler module was started.
    */
-  _onConsoleProfileStop: Task.async(function *(_, data) {
+  _onConsoleProfileStop: Task.async(function* (_, data) {
     // If no data, abort; can occur if profiler isn't running and we get a surprise
     // call to console.profileEnd()
     if (!data) {
@@ -268,7 +268,7 @@ const LegacyPerformanceFront = Class({
    * @return object
    *         A promise that is resolved once recording has started.
    */
-  startRecording: Task.async(function*(options = {}) {
+  startRecording: Task.async(function* (options = {}) {
     let model = new LegacyPerformanceRecording(normalizePerformanceFeatures(options, this.traits.features));
 
     // All actors are started asynchronously over the remote debugging protocol.
@@ -303,7 +303,7 @@ const LegacyPerformanceFront = Class({
    * @return LegacyPerformanceRecording
    *         Returns the same model, populated with the profiling data.
    */
-  stopRecording: Task.async(function*(model) {
+  stopRecording: Task.async(function* (model) {
     // If model isn't in the LegacyPerformanceFront internal store,
     // then do nothing.
     if (this._recordings.indexOf(model) === -1) {
@@ -411,7 +411,7 @@ const LegacyPerformanceFront = Class({
    *
    * @return {object}
    */
-  getConfiguration: Task.async(function *() {
+  getConfiguration: Task.async(function* () {
     let profilerConfig = yield this._request("profiler", "getStartOptions");
     return profilerConfig;
   }),
@@ -453,7 +453,7 @@ const LegacyPerformanceFront = Class({
 /**
  * Creates an object of configurations based off of preferences for a LegacyPerformanceRecording.
  */
-function getLegacyPerformanceRecordingPrefs () {
+function getLegacyPerformanceRecordingPrefs() {
   return {
     withMarkers: true,
     withMemory: Services.prefs.getBoolPref("devtools.performance.ui.enable-memory"),

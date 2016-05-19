@@ -42,7 +42,7 @@ function registerNewActor() {
     .then(actorFront => gActorFront = actorFront)
     .then(talkToNewActor)
     .then(null, e => {
-      DevToolsUtils.reportException("registerNewActor", e)
+      DevToolsUtils.reportException("registerNewActor", e);
       do_check_true(false);
     });
 }
@@ -65,7 +65,7 @@ function unregisterNewActor() {
     .unregister()
     .then(testActorIsUnregistered)
     .then(null, e => {
-      DevToolsUtils.reportException("unregisterNewActor", e)
+      DevToolsUtils.reportException("unregisterNewActor", e);
       do_check_true(false);
     });
 }

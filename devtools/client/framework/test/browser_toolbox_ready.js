@@ -7,7 +7,7 @@ function test() {
   gBrowser.selectedTab = gBrowser.addTab();
   let target = TargetFactory.forTab(gBrowser.selectedTab);
 
-  const onLoad = Task.async(function *(evt) {
+  const onLoad = Task.async(function* (evt) {
     gBrowser.selectedBrowser.removeEventListener("load", onLoad);
 
     const toolbox = yield gDevTools.showToolbox(target, "webconsole");

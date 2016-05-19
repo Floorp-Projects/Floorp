@@ -43,7 +43,7 @@ function prepareDebugger(aPanel) {
   sources.preferredSource = getSourceActor(sources, PREFERRED_URL);
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gDebuggee = null;
   gPanel = null;

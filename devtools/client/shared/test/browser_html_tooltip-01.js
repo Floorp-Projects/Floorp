@@ -23,6 +23,7 @@ const TEST_URI = `data:text/xml;charset=UTF-8,<?xml version="1.0"?>
   </window>`;
 
 const {HTMLTooltip} = require("devtools/client/shared/widgets/HTMLTooltip");
+loadHelperScript("helper_html_tooltip.js");
 
 function getTooltipContent(doc) {
   let div = doc.createElementNS(HTML_NS, "div");
@@ -54,6 +55,7 @@ add_task(function* () {
   yield onShown;
   is(shown, 1, "Event shown was fired once");
 
+  yield waitForReflow(tooltip);
   is(tooltip.isVisible(), true, "Tooltip is visible");
 
   info("Hide the tooltip and check the expected events are fired.");
@@ -67,5 +69,6 @@ add_task(function* () {
   yield onPopupHidden;
   is(hidden, 1, "Event hidden was fired once");
 
+  yield waitForReflow(tooltip);
   is(tooltip.isVisible(), false, "Tooltip is not visible");
 });

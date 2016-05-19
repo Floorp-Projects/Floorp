@@ -32,12 +32,12 @@ const Logs = {
     AppManager.off("app-manager-update", Logs.onAppManagerUpdate);
   },
 
-  onAppManagerUpdate: function(event, what, details) {
+  onAppManagerUpdate: function (event, what, details) {
     switch (what) {
       case "pre-package":
         this.prePackageLog(details);
         break;
-    };
+    }
   },
 
   close: function () {

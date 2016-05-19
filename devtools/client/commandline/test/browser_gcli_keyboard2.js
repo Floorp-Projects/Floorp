@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
 // PLEASE TALK TO SOMEONE IN DEVELOPER TOOLS BEFORE EDITING IT
@@ -27,7 +27,7 @@ function test() {
 
 // var helpers = require('./helpers');
 
-exports.testIncr = function(options) {
+exports.testIncr = function (options) {
   return helpers.audit(options, [
     /*
     // We currently refuse to increment/decrement things with a non-valid
@@ -47,68 +47,68 @@ exports.testIncr = function(options) {
     },
     */
     {
-      setup: 'tsu -5<UP>',
-      check: { input: 'tsu -3' }
+      setup: "tsu -5<UP>",
+      check: { input: "tsu -3" }
     },
     {
-      setup: 'tsu -4<UP>',
-      check: { input: 'tsu -3' }
+      setup: "tsu -4<UP>",
+      check: { input: "tsu -3" }
     },
     {
-      setup: 'tsu -3<UP>',
-      check: { input: 'tsu 0' }
+      setup: "tsu -3<UP>",
+      check: { input: "tsu 0" }
     },
     {
-      setup: 'tsu -2<UP>',
-      check: { input: 'tsu 0' }
+      setup: "tsu -2<UP>",
+      check: { input: "tsu 0" }
     },
     {
-      setup: 'tsu -1<UP>',
-      check: { input: 'tsu 0' }
+      setup: "tsu -1<UP>",
+      check: { input: "tsu 0" }
     },
     {
-      setup: 'tsu 0<UP>',
-      check: { input: 'tsu 3' }
+      setup: "tsu 0<UP>",
+      check: { input: "tsu 3" }
     },
     {
-      setup: 'tsu 1<UP>',
-      check: { input: 'tsu 3' }
+      setup: "tsu 1<UP>",
+      check: { input: "tsu 3" }
     },
     {
-      setup: 'tsu 2<UP>',
-      check: { input: 'tsu 3' }
+      setup: "tsu 2<UP>",
+      check: { input: "tsu 3" }
     },
     {
-      setup: 'tsu 3<UP>',
-      check: { input: 'tsu 6' }
+      setup: "tsu 3<UP>",
+      check: { input: "tsu 6" }
     },
     {
-      setup: 'tsu 4<UP>',
-      check: { input: 'tsu 6' }
+      setup: "tsu 4<UP>",
+      check: { input: "tsu 6" }
     },
     {
-      setup: 'tsu 5<UP>',
-      check: { input: 'tsu 6' }
+      setup: "tsu 5<UP>",
+      check: { input: "tsu 6" }
     },
     {
-      setup: 'tsu 6<UP>',
-      check: { input: 'tsu 9' }
+      setup: "tsu 6<UP>",
+      check: { input: "tsu 9" }
     },
     {
-      setup: 'tsu 7<UP>',
-      check: { input: 'tsu 9' }
+      setup: "tsu 7<UP>",
+      check: { input: "tsu 9" }
     },
     {
-      setup: 'tsu 8<UP>',
-      check: { input: 'tsu 9' }
+      setup: "tsu 8<UP>",
+      check: { input: "tsu 9" }
     },
     {
-      setup: 'tsu 9<UP>',
-      check: { input: 'tsu 10' }
+      setup: "tsu 9<UP>",
+      check: { input: "tsu 10" }
     },
     {
-      setup: 'tsu 10<UP>',
-      check: { input: 'tsu 10' }
+      setup: "tsu 10<UP>",
+      check: { input: "tsu 10" }
     }
     /*
     // See notes above

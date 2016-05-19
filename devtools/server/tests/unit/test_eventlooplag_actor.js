@@ -24,7 +24,7 @@ function run_test()
 
   // Start tracking event loop lags.
   client.connect().then(function () {
-    client.listTabs(function(resp) {
+    client.listTabs(function (resp) {
       front = new EventLoopLagFront(client, resp);
       front.start().then(success => {
         do_check_true(success);

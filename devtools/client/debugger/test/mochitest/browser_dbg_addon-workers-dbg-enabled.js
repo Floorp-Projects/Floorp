@@ -11,7 +11,7 @@
 const ADDON_URL = EXAMPLE_URL + "addon3.xpi";
 
 function test() {
-  Task.spawn(function*() {
+  Task.spawn(function* () {
     info("Enable worker debugging.");
     yield new Promise(resolve => {
       SpecialPowers.pushPrefEnv({

@@ -15,7 +15,7 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-grips");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
+  gClient.connect().then(function () {
     attachTestTabAndResume(gClient, "test-grips", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_thread_lifetime();
@@ -37,17 +37,17 @@ function test_thread_lifetime()
 
       gClient.request({ to: pauseGrip.actor, type: "threadGrip" }, function (aResponse) {
         do_check_eq(threadGrip1, aResponse.from);
-        gThreadClient.resume(function() {
+        gThreadClient.resume(function () {
           finishClient(gClient);
         });
       });
     });
   });
 
-  gDebuggee.eval("(" + function() {
+  gDebuggee.eval("(" + function () {
     function stopMe(arg1) {
       debugger;
-    };
+    }
     stopMe({obj: true});
   } + ")()");
 }

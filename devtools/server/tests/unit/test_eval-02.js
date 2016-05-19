@@ -14,8 +14,8 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-stack", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-stack", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_throw_eval();
     });
@@ -25,24 +25,24 @@ function run_test()
 
 function test_throw_eval()
 {
-  gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
-    gThreadClient.eval(null, "throw 'failure'", function(aResponse) {
+  gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
+    gThreadClient.eval(null, "throw 'failure'", function (aResponse) {
       do_check_eq(aResponse.type, "resumed");
       // Expect a pause notification immediately.
-      gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
+      gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
         // Check the return value...
         do_check_eq(aPacket.type, "paused");
         do_check_eq(aPacket.why.type, "clientEvaluated");
         do_check_eq(aPacket.why.frameFinished.throw, "failure");
-        gThreadClient.resume(function() {
+        gThreadClient.resume(function () {
           finishClient(gClient);
         });
       });
     });
   });
 
-  gDebuggee.eval("(" + function() {
-    function stopMe(arg1) { debugger; };
+  gDebuggee.eval("(" + function () {
+    function stopMe(arg1) { debugger; }
     stopMe({obj: true});
   } + ")()");
 }

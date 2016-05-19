@@ -8,7 +8,7 @@
 // Test that network requests originating from the toolbox don't get recorded in
 // the network panel.
 
-add_task(function*() {
+add_task(function* () {
   // TODO: This test tries to verify the normal behavior of the netmonitor and
   // therefore needs to avoid the explicit check for tests. Bug 1167188 will
   // allow us to remove this workaround.

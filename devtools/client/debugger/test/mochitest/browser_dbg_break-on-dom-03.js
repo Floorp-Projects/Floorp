@@ -15,9 +15,9 @@ function test() {
     let gView = gDebugger.DebuggerView;
     let gEvents = gView.EventListeners;
     let gController = gDebugger.DebuggerController;
-    let constants = gDebugger.require('./content/constants');
+    let constants = gDebugger.require("./content/constants");
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceShown(aPanel, ".html");
 
       let fetched = waitForDispatch(aPanel, constants.FETCH_EVENT_LISTENERS);

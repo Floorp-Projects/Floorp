@@ -8,13 +8,13 @@ var Services = require("Services");
 exports.LazyActor = ActorClass({
   typeName: "lazy",
 
-  initialize: function(conn, id) {
+  initialize: function (conn, id) {
     Actor.prototype.initialize.call(this, conn);
 
     Services.obs.notifyObservers(null, "actor", "instantiated");
   },
 
-  hello: method(function(str) {
+  hello: method(function (str) {
     return "world";
   }, {
     response: { str: RetVal("string") }
@@ -24,7 +24,7 @@ exports.LazyActor = ActorClass({
 Services.obs.notifyObservers(null, "actor", "loaded");
 
 exports.LazyFront = FrontClass(exports.LazyActor, {
-  initialize: function(client, form) {
+  initialize: function (client, form) {
     Front.prototype.initialize.call(this, client);
     this.actorID = form.lazyActor;
 

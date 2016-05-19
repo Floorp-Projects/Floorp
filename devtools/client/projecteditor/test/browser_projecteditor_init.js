@@ -7,11 +7,11 @@
 // Test that projecteditor can be initialized.
 
 function test() {
-  info ("Initializing projecteditor");
+  info("Initializing projecteditor");
   addProjectEditorTab().then((projecteditor) => {
-    ok (projecteditor, "Load callback has been called");
-    ok (projecteditor.shells, "ProjectEditor has shells");
-    ok (projecteditor.project, "ProjectEditor has a project");
+    ok(projecteditor, "Load callback has been called");
+    ok(projecteditor.shells, "ProjectEditor has shells");
+    ok(projecteditor.project, "ProjectEditor has a project");
     finish();
   });
 }

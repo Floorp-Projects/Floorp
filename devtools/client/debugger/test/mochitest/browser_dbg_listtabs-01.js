@@ -94,7 +94,7 @@ function closeConnection() {
   return deferred.promise;
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab1 = null;
   gTab1Actor = null;
   gTab2 = null;

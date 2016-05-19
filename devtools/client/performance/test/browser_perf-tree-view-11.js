@@ -54,7 +54,7 @@ function* spawnTest() {
   yield teardown(panel);
   finish();
 
-  function *injectAndRenderProfilerData() {
+  function* injectAndRenderProfilerData() {
     // Get current recording and inject our mock data
     info("Injecting mock profile data");
     let recording = PerformanceController.getCurrentRecording();
@@ -98,7 +98,7 @@ var gThread = RecordingUtils.deflateThread({
     time: 5 + 1 + 2,
     frames: [
       { location: "(root)" },
-      { category: CATEGORY_MASK("other"),  location: "PlatformCode" }
+      { category: CATEGORY_MASK("other"), location: "PlatformCode" }
     ]
   }],
   markers: []
@@ -113,12 +113,12 @@ var gRawSite1 = {
     mirType: uniqStr("Object"),
     site: uniqStr("A (http://foo/bar/bar:12)"),
     typeset: [{
-        keyedBy: uniqStr("constructor"),
-        name: uniqStr("Foo"),
-        location: uniqStr("A (http://foo/bar/baz:12)")
+      keyedBy: uniqStr("constructor"),
+      name: uniqStr("Foo"),
+      location: uniqStr("A (http://foo/bar/baz:12)")
     }, {
-        keyedBy: uniqStr("primitive"),
-        location: uniqStr("self-hosted")
+      keyedBy: uniqStr("primitive"),
+      location: uniqStr("self-hosted")
     }]
   }],
   attempts: {
@@ -140,13 +140,13 @@ gThread.frameTable.data.forEach((frame) => {
 
   let l = gThread.stringTable[frame[LOCATION_SLOT]];
   switch (l) {
-  case "A (http://foo:1)":
-    frame[LOCATION_SLOT] = uniqStr("A (http://foo:1)");
-    frame[OPTIMIZATIONS_SLOT] = gRawSite1;
-    break;
-  case "PlatformCode":
-    frame[LOCATION_SLOT] = uniqStr("PlatformCode");
-    frame[OPTIMIZATIONS_SLOT] = gRawSite1;
-    break;
+    case "A (http://foo:1)":
+      frame[LOCATION_SLOT] = uniqStr("A (http://foo:1)");
+      frame[OPTIMIZATIONS_SLOT] = gRawSite1;
+      break;
+    case "PlatformCode":
+      frame[LOCATION_SLOT] = uniqStr("PlatformCode");
+      frame[OPTIMIZATIONS_SLOT] = gRawSite1;
+      break;
   }
 });

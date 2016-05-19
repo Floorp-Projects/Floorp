@@ -20,10 +20,10 @@ function run_test()
       test_data(client, actor, startTime, () => {
         deactivate_profiler(client, actor, () => {
           client.close(do_test_finished);
-        })
+        });
       });
     });
-  })
+  });
 
   do_test_pending();
 }
@@ -64,7 +64,7 @@ function test_data(client, actor, startTime, callback)
     while (Date.now() - start < delay) { stack = Components.stack; }
     do_print("Attempt: finished waiting.");
 
-    client.request({ to: actor, type: "getProfile", startTime  }, response => {
+    client.request({ to: actor, type: "getProfile", startTime }, response => {
       // Any valid getProfile response should have the following top
       // level structure.
       do_check_eq(typeof response.profile, "object");

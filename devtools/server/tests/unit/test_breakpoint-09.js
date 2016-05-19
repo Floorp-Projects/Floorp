@@ -16,7 +16,7 @@ function run_test()
     run_test_with_server(WorkerDebuggerServer, do_test_finished);
   });
   do_test_pending();
-};
+}
 
 function run_test_with_server(aServer, aCallback)
 {
@@ -56,10 +56,10 @@ function test_remove_breakpoint()
           gThreadClient.addOneTimeListener("paused",
                                            function (aEvent, aPacket) {
             // The breakpoint should not be hit again.
-            gThreadClient.resume(function () {
-              do_check_true(false);
-            });
-          });
+                                             gThreadClient.resume(function () {
+                                               do_check_true(false);
+                                             });
+                                           });
           gThreadClient.resume();
         });
 

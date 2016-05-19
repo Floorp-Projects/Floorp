@@ -20,9 +20,11 @@ const isMenuCheckedFor = ({document}) => {
 };
 
 add_task(function* () {
-  const window1 = yield openBrowserWindow(TEST_URL);
+  const window1 = yield openBrowserWindow();
 
   yield startup(window1);
+
+  yield BrowserTestUtils.openNewForegroundTab(window1.gBrowser, TEST_URL);
 
   const tab1 = getActiveTab(window1);
 

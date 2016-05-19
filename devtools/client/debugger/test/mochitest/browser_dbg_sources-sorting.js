@@ -43,7 +43,7 @@ function addSourceAndCheckOrder(aMethod) {
     { href: "si://interesting.address.moc/random/x/y/", leaf: "script.js?a=1&b=2&c=3" }
   ];
 
-  urls.sort(function(a, b) {
+  urls.sort(function (a, b) {
     return Math.random() - 0.5;
   });
 
@@ -53,7 +53,7 @@ function addSourceAndCheckOrder(aMethod) {
     case 1:
       for (let { href, leaf } of urls) {
         let url = href + leaf;
-        let actor = 'actor' + id++;
+        let actor = "actor" + id++;
         let label = gUtils.getSourceLabel(url);
         let dummy = document.createElement("label");
         gSources.push([dummy, actor], {
@@ -69,7 +69,7 @@ function addSourceAndCheckOrder(aMethod) {
     case 2:
       for (let { href, leaf } of urls) {
         let url = href + leaf;
-        let actor = 'actor' + id++;
+        let actor = "actor" + id++;
         let label = gUtils.getSourceLabel(url);
         let dummy = document.createElement("label");
         gSources.push([dummy, actor], {
@@ -82,11 +82,11 @@ function addSourceAndCheckOrder(aMethod) {
       break;
 
     case 3:
-      let i = 0
+      let i = 0;
       for (; i < urls.length / 2; i++) {
         let { href, leaf } = urls[i];
         let url = href + leaf;
-        let actor = 'actor' + id++;
+        let actor = "actor" + id++;
         let label = gUtils.getSourceLabel(url);
         let dummy = document.createElement("label");
         gSources.push([dummy, actor], {
@@ -101,7 +101,7 @@ function addSourceAndCheckOrder(aMethod) {
       for (; i < urls.length; i++) {
         let { href, leaf } = urls[i];
         let url = href + leaf;
-        let actor = 'actor' + id++;
+        let actor = "actor" + id++;
         let label = gUtils.getSourceLabel(url);
         let dummy = document.createElement("label");
         gSources.push([dummy, actor], {
@@ -129,7 +129,7 @@ function checkSourcesOrder(aMethod) {
   }
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

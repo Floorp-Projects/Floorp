@@ -10,7 +10,7 @@ const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
 const { initPerformanceInTab, initConsoleInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { waitForRecordingStartedEvents, waitForRecordingStoppedEvents } = require("devtools/client/performance/test/helpers/actions");
 
-add_task(function*() {
+add_task(function* () {
   let { target, console } = yield initConsoleInNewTab({
     url: SIMPLE_URL,
     win: window

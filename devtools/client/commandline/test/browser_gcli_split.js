@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
 // PLEASE TALK TO SOMEONE IN DEVELOPER TOOLS BEFORE EDITING IT
@@ -27,41 +27,41 @@ function test() {
 
 // var assert = require('../testharness/assert');
 
-var cli = require('gcli/cli');
+var cli = require("gcli/cli");
 
-exports.testSplitSimple = function(options) {
-  var args = cli.tokenize('s');
+exports.testSplitSimple = function (options) {
+  var args = cli.tokenize("s");
   options.requisition._split(args);
   assert.is(args.length, 0);
-  assert.is(options.requisition.commandAssignment.arg.text, 's');
+  assert.is(options.requisition.commandAssignment.arg.text, "s");
 };
 
-exports.testFlatCommand = function(options) {
-  var args = cli.tokenize('tsv');
+exports.testFlatCommand = function (options) {
+  var args = cli.tokenize("tsv");
   options.requisition._split(args);
   assert.is(args.length, 0);
-  assert.is(options.requisition.commandAssignment.value.name, 'tsv');
+  assert.is(options.requisition.commandAssignment.value.name, "tsv");
 
-  args = cli.tokenize('tsv a b');
+  args = cli.tokenize("tsv a b");
   options.requisition._split(args);
-  assert.is(options.requisition.commandAssignment.value.name, 'tsv');
+  assert.is(options.requisition.commandAssignment.value.name, "tsv");
   assert.is(args.length, 2);
-  assert.is(args[0].text, 'a');
-  assert.is(args[1].text, 'b');
+  assert.is(args[0].text, "a");
+  assert.is(args[1].text, "b");
 };
 
-exports.testJavascript = function(options) {
-  if (!options.requisition.system.commands.get('{')) {
-    assert.log('Skipping testJavascript because { is not registered');
+exports.testJavascript = function (options) {
+  if (!options.requisition.system.commands.get("{")) {
+    assert.log("Skipping testJavascript because { is not registered");
     return;
   }
 
-  var args = cli.tokenize('{');
+  var args = cli.tokenize("{");
   options.requisition._split(args);
   assert.is(args.length, 1);
-  assert.is(args[0].text, '');
-  assert.is(options.requisition.commandAssignment.arg.text, '');
-  assert.is(options.requisition.commandAssignment.value.name, '{');
+  assert.is(args[0].text, "");
+  assert.is(options.requisition.commandAssignment.arg.text, "");
+  assert.is(options.requisition.commandAssignment.value.name, "{");
 };
 
 // BUG 663081 - add tests for sub commands

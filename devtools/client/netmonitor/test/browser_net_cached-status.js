@@ -3,7 +3,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-///////////////////
+// /////////////////
 //
 // Whitelisting this test.
 // As part of bug 1077403, the leaking uncaught rejection should be fixed.
@@ -14,7 +14,7 @@ thisTestLeaksUncaughtRejectionsAndShouldBeFixed("TypeError: can't convert undefi
  * Tests if cached requests have the correct status code
  */
 
-var test = Task.async(function*() {
+var test = Task.async(function* () {
   let [tab, debuggee, monitor] = yield initNetMonitor(STATUS_CODES_URL, null, true);
   info("Starting test... ");
 
@@ -26,37 +26,37 @@ var test = Task.async(function*() {
 
   const REQUEST_DATA = [
     {
-      method: 'GET',
+      method: "GET",
       uri: STATUS_CODES_SJS + "?sts=ok&cached",
       details: {
         status: 200,
-        statusText: 'OK',
+        statusText: "OK",
         type: "plain",
         fullMimeType: "text/plain; charset=utf-8"
       }
     },
     {
-      method: 'GET',
+      method: "GET",
       uri: STATUS_CODES_SJS + "?sts=redirect&cached",
       details: {
         status: 301,
-        statusText: 'Moved Permanently',
+        statusText: "Moved Permanently",
         type: "html",
         fullMimeType: "text/html; charset=utf-8"
       }
     },
     {
-      method: 'GET',
-      uri: 'http://example.com/redirected',
+      method: "GET",
+      uri: "http://example.com/redirected",
       details: {
         status: 404,
-        statusText: 'Not Found',
+        statusText: "Not Found",
         type: "html",
         fullMimeType: "text/html; charset=utf-8"
       }
     },
     {
-      method: 'GET',
+      method: "GET",
       uri: STATUS_CODES_SJS + "?sts=ok&cached",
       details: {
         status: 200,
@@ -67,7 +67,7 @@ var test = Task.async(function*() {
       }
     },
     {
-      method: 'GET',
+      method: "GET",
       uri: STATUS_CODES_SJS + "?sts=redirect&cached",
       details: {
         status: 301,
@@ -78,11 +78,11 @@ var test = Task.async(function*() {
       }
     },
     {
-      method: 'GET',
-      uri: 'http://example.com/redirected',
+      method: "GET",
+      uri: "http://example.com/redirected",
       details: {
         status: 404,
-        statusText: 'Not Found',
+        statusText: "Not Found",
         type: "html",
         fullMimeType: "text/html; charset=utf-8"
       }

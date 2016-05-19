@@ -12,7 +12,7 @@ function run_test()
     run_test_with_server(WorkerDebuggerServer, do_test_finished);
   });
   do_test_pending();
-};
+}
 
 function run_test_with_server(aServer, aCallback)
 {
@@ -24,8 +24,8 @@ function run_test_with_server(aServer, aCallback)
   }.toString());
 
   gClient = new DebuggerClient(aServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-grips", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-grips", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_object_grip();
     });
@@ -34,19 +34,19 @@ function run_test_with_server(aServer, aCallback)
 
 function test_object_grip()
 {
-  gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
+  gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
     let args = aPacket.frame.arguments;
 
     do_check_eq(args[0].class, "Object");
 
     let objClient = gThreadClient.pauseGrip(args[0]);
-    objClient.getOwnPropertyNames(function(aResponse) {
+    objClient.getOwnPropertyNames(function (aResponse) {
       do_check_eq(aResponse.ownPropertyNames.length, 3);
       do_check_eq(aResponse.ownPropertyNames[0], "a");
       do_check_eq(aResponse.ownPropertyNames[1], "b");
       do_check_eq(aResponse.ownPropertyNames[2], "c");
 
-      gThreadClient.resume(function() {
+      gThreadClient.resume(function () {
         gClient.close(gCallback);
       });
     });

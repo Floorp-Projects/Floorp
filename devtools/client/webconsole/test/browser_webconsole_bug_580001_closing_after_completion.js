@@ -31,7 +31,7 @@ function testClosingAfterCompletion(hud, browser) {
   // Focus the jsterm and perform the keycombo to close the WebConsole.
   hud.jsterm.focus();
 
-  gDevTools.once("toolbox-destroyed", function() {
+  gDevTools.once("toolbox-destroyed", function () {
     browser.removeEventListener("error", errorListener, false);
     is(errorWhileClosing, false, "no error while closing the WebConsole");
     deferred.resolve();

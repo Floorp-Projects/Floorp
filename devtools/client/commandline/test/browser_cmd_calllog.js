@@ -8,7 +8,7 @@ const TEST_URI = "data:text/html;charset=utf-8,gcli-calllog";
 var tests = {};
 
 function test() {
-  return Task.spawn(function*() {
+  return Task.spawn(function* () {
     let options = yield helpers.openTab(TEST_URI);
     yield helpers.openToolbar(options);
 
@@ -19,42 +19,42 @@ function test() {
   }).then(finish, helpers.handleError);
 }
 
-tests.testCallLogStatus = function(options) {
+tests.testCallLogStatus = function (options) {
   return helpers.audit(options, [
     {
       setup: "calllog",
       check: {
-        input:  'calllog',
-        hints:         '',
-        markup: 'IIIIIII',
-        status: 'ERROR'
+        input:  "calllog",
+        hints:         "",
+        markup: "IIIIIII",
+        status: "ERROR"
       }
     },
     {
       setup: "calllog start",
       check: {
-        input:  'calllog start',
-        hints:               '',
-        markup: 'VVVVVVVVVVVVV',
-        status: 'VALID'
+        input:  "calllog start",
+        hints:               "",
+        markup: "VVVVVVVVVVVVV",
+        status: "VALID"
       }
     },
     {
       setup: "calllog stop",
       check: {
-        input:  'calllog stop',
-        hints:              '',
-        markup: 'VVVVVVVVVVVV',
-        status: 'VALID'
+        input:  "calllog stop",
+        hints:              "",
+        markup: "VVVVVVVVVVVV",
+        status: "VALID"
       }
     },
   ]);
 };
 
-tests.testCallLogExec = function(options) {
+tests.testCallLogExec = function (options) {
   var deferred = promise.defer();
 
-  var onWebConsoleOpen = function(subject) {
+  var onWebConsoleOpen = function (subject) {
     Services.obs.removeObserver(onWebConsoleOpen, "web-console-created");
 
     subject.QueryInterface(Ci.nsISupportsString);
@@ -73,7 +73,7 @@ tests.testCallLogExec = function(options) {
         exec: {
           output: "",
         },
-        post: function() {
+        post: function () {
           let labels = hud.outputNode.querySelectorAll(".webconsole-msg-output");
           is(labels.length, 0, "no output in console");
         }
@@ -84,7 +84,7 @@ tests.testCallLogExec = function(options) {
           output: "",
         }
       },
-    ]).then(function() {
+    ]).then(function () {
       deferred.resolve();
     });
   };
@@ -99,10 +99,10 @@ tests.testCallLogExec = function(options) {
     },
     {
       name: "calllog start",
-      setup: function() {
+      setup: function () {
         // This test wants to be in a different event
         var deferred = promise.defer();
-        executeSoon(function() {
+        executeSoon(function () {
           helpers.setInput(options, "calllog start").then(() => {
             deferred.resolve();
           });

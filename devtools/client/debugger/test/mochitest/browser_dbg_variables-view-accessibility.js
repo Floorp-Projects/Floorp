@@ -43,7 +43,7 @@ function performTest() {
     p5: [3, 4, 5],
     p6: { prop1: 7, prop2: 6 },
     get p7() { return arr; },
-    set p8(value) { arr[0] = value }
+    set p8(value) { arr[0] = value; }
   };
 
   let test = {
@@ -55,16 +55,16 @@ function performTest() {
     someProp5: arr,
     someProp6: obj,
     get someProp7() { return arr; },
-    set someProp7(value) { arr[0] = value }
+    set someProp7(value) { arr[0] = value; }
   };
 
-  gVariablesView.eval = function() {};
-  gVariablesView.switch = function() {};
-  gVariablesView.delete = function() {};
+  gVariablesView.eval = function () {};
+  gVariablesView.switch = function () {};
+  gVariablesView.delete = function () {};
   gVariablesView.rawObject = test;
   gVariablesView.scrollPageSize = 5;
 
-  return Task.spawn(function*() {
+  return Task.spawn(function* () {
     yield waitForTick();
 
     // Part 0: Test generic focus methods on the variables view.
@@ -486,8 +486,8 @@ function performTest() {
       + gVariablesView.getFocusedItem().value;
 
     waitForClipboard(expectedValue, function setup() {
-        EventUtils.synthesizeKey("C", { metaKey: true }, gDebugger);
-      }, copied.resolve, copied.reject
+      EventUtils.synthesizeKey("C", { metaKey: true }, gDebugger);
+    }, copied.resolve, copied.reject
     );
 
     try {
@@ -503,7 +503,7 @@ function performTest() {
   });
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

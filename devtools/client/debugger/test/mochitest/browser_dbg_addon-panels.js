@@ -17,7 +17,7 @@ var PREFS = [
   ["devtools.scratchpad.enabled", true]
 ];
 function test() {
-  Task.spawn(function*() {
+  Task.spawn(function* () {
     // Store and enable all optional dev tools panels
     yield pushPrefs(...PREFS);
 

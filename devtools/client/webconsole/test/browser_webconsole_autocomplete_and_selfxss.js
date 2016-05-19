@@ -41,7 +41,7 @@ function consoleOpened(HUD) {
     // Arguments: expected, setup, success, failure.
     waitForClipboard(
       stringToCopy,
-      function() {
+      function () {
         clipboardHelper.copyString(stringToCopy);
       },
       onClipboardCopy,

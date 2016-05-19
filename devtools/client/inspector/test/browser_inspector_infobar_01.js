@@ -8,7 +8,7 @@
 
 const TEST_URI = URL_ROOT + "doc_inspector_infobar_01.html";
 
-add_task(function*() {
+add_task(function* () {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URI);
 
   let testData = [
@@ -63,14 +63,14 @@ function* testPosition(test, inspector, testActor) {
 
   if (test.id) {
     let id = yield testActor.getHighlighterNodeTextContent("box-model-nodeinfobar-id");
-    is(id, "#" + test.id, "node " + test.selector  + ": id matches.");
+    is(id, "#" + test.id, "node " + test.selector + ": id matches.");
   }
 
   let classes = yield testActor.getHighlighterNodeTextContent("box-model-nodeinfobar-classes");
-  is(classes, test.classes, "node " + test.selector  + ": classes match.");
+  is(classes, test.classes, "node " + test.selector + ": classes match.");
 
   if (test.dims) {
     let dims = yield testActor.getHighlighterNodeTextContent("box-model-nodeinfobar-dimensions");
-    is(dims, test.dims, "node " + test.selector  + ": dims match.");
+    is(dims, test.dims, "node " + test.selector + ": dims match.");
   }
 }

@@ -2,8 +2,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const BUTTON_POSITION_CANCEL     = 1;
-const BUTTON_POSITION_DONT_SAVE  = 2;
+const BUTTON_POSITION_CANCEL = 1;
+const BUTTON_POSITION_DONT_SAVE = 2;
 
 
 function test()
@@ -59,12 +59,12 @@ function runTests({ Scratchpad })
 
 var CloseObserver = {
   expectedValue: null,
-  init: function()
+  init: function ()
   {
     Services.obs.addObserver(this, "browser-lastwindow-close-requested", false);
   },
 
-  observe: function(aSubject)
+  observe: function (aSubject)
   {
     aSubject.QueryInterface(Ci.nsISupportsPRBool);
     let message = this.expectedValue ? "close" : "stay open";
@@ -72,7 +72,7 @@ var CloseObserver = {
     aSubject.data = true;
   },
 
-  uninit: function()
+  uninit: function ()
   {
     Services.obs.removeObserver(this, "browser-lastwindow-close-requested", false);
   },

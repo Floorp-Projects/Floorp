@@ -8,11 +8,11 @@ const DEFAULT_CENSUS_DISPLAY = censusDisplays.coarseType;
 
 let handlers = Object.create(null);
 
-handlers[actions.SET_CENSUS_DISPLAY] = function(_, { display }) {
+handlers[actions.SET_CENSUS_DISPLAY] = function (_, { display }) {
   return display;
 };
 
-module.exports = function(state = DEFAULT_CENSUS_DISPLAY, action) {
+module.exports = function (state = DEFAULT_CENSUS_DISPLAY, action) {
   let handle = handlers[action.type];
   if (handle) {
     return handle(state, action);

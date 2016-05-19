@@ -86,12 +86,12 @@ function plotsCanvas() {
 }
 
 function getCubicBezier() {
-  return new CubicBezier([0,0,1,1]);
+  return new CubicBezier([0, 0, 1, 1]);
 }
 
-function getCanvasMock(w=200, h=400) {
+function getCanvasMock(w = 200, h = 400) {
   return {
-    getContext: function() {
+    getContext: function () {
       return {
         scale: () => {},
         translate: () => {},

@@ -51,51 +51,51 @@ function testVariablesAndPropertiesFiltering() {
   let step = 0;
 
   let tests = [
-    function() {
+    function () {
       assertExpansion([true, false, false, false, false]);
       EventUtils.sendKey("RETURN", gDebugger);
     },
-    function() {
+    function () {
       assertExpansion([true, false, false, false, false]);
       EventUtils.sendKey("RETURN", gDebugger);
     },
-    function() {
+    function () {
       assertExpansion([true, false, false, false, false]);
       gEditor.focus();
     },
-    function() {
+    function () {
       assertExpansion([true, false, false, false, false]);
       typeText(gSearchBox, "*");
     },
-    function() {
+    function () {
       assertExpansion([true, true, true, true, true]);
       EventUtils.sendKey("RETURN", gDebugger);
     },
-    function() {
+    function () {
       assertExpansion([true, true, true, true, true]);
       EventUtils.sendKey("RETURN", gDebugger);
     },
-    function() {
+    function () {
       assertExpansion([true, true, true, true, true]);
       gEditor.focus();
     },
-    function() {
+    function () {
       assertExpansion([true, true, true, true, true]);
       backspaceText(gSearchBox, 1);
     },
-    function() {
+    function () {
       assertExpansion([true, true, true, true, true]);
       EventUtils.sendKey("RETURN", gDebugger);
     },
-    function() {
+    function () {
       assertExpansion([true, true, true, true, true]);
       EventUtils.sendKey("RETURN", gDebugger);
     },
-    function() {
+    function () {
       assertExpansion([true, true, true, true, true]);
       gEditor.focus();
     },
-    function() {
+    function () {
       assertExpansion([true, true, true, true, true]);
       localScope.collapse();
       withScope.collapse();
@@ -103,52 +103,52 @@ function testVariablesAndPropertiesFiltering() {
       globalLexicalScope.collapse();
       globalScope.collapse();
     },
-    function() {
+    function () {
       assertExpansion([false, false, false, false, false]);
       EventUtils.sendKey("RETURN", gDebugger);
     },
-    function() {
+    function () {
       assertExpansion([false, false, false, false, false]);
       EventUtils.sendKey("RETURN", gDebugger);
     },
-    function() {
+    function () {
       assertExpansion([false, false, false, false, false]);
       gEditor.focus();
     },
-    function() {
+    function () {
       assertExpansion([false, false, false, false, false]);
       clearText(gSearchBox);
       typeText(gSearchBox, "*");
     },
-    function() {
+    function () {
       assertExpansion([true, true, true, true, true]);
       EventUtils.sendKey("RETURN", gDebugger);
     },
-    function() {
+    function () {
       assertExpansion([true, true, true, true, true]);
       EventUtils.sendKey("RETURN", gDebugger);
     },
-    function() {
+    function () {
       assertExpansion([true, true, true, true, true]);
       gEditor.focus();
     },
-    function() {
+    function () {
       assertExpansion([true, true, true, true, true]);
       backspaceText(gSearchBox, 1);
     },
-    function() {
+    function () {
       assertExpansion([true, true, true, true, true]);
       EventUtils.sendKey("RETURN", gDebugger);
     },
-    function() {
+    function () {
       assertExpansion([true, true, true, true, true]);
       EventUtils.sendKey("RETURN", gDebugger);
     },
-    function() {
+    function () {
       assertExpansion([true, true, true, true, true]);
       gEditor.focus();
     },
-    function() {
+    function () {
       assertExpansion([true, true, true, true, true]);
     }
   ];
@@ -230,7 +230,7 @@ function prepareVariablesAndProperties() {
   return deferred.promise;
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

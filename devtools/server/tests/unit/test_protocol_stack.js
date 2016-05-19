@@ -24,7 +24,7 @@ function simpleHello() {
 
 var RootActor = protocol.ActorClass({
   typeName: "root",
-  initialize: function(conn) {
+  initialize: function (conn) {
     protocol.Actor.prototype.initialize.call(this, conn);
     // Root actor owns itself.
     this.manage(this);
@@ -34,7 +34,7 @@ var RootActor = protocol.ActorClass({
 
   sayHello: simpleHello,
 
-  simpleReturn: method(function() {
+  simpleReturn: method(function () {
     return this.sequence++;
   }, {
     response: { value: RetVal() },
@@ -42,7 +42,7 @@ var RootActor = protocol.ActorClass({
 });
 
 var RootFront = protocol.FrontClass(RootActor, {
-  initialize: function(client) {
+  initialize: function (client) {
     this.actorID = "root";
     protocol.Front.prototype.initialize.call(this, client);
     // Root owns itself.
@@ -84,7 +84,7 @@ function run_test() {
       client.close(() => {
         do_test_finished();
       });
-    })
+    });
   });
 
   do_test_pending();

@@ -40,7 +40,7 @@ var MemoryCallTreeView = Heritage.extend(DetailsSubview, {
    * @param object interval [optional]
    *        The { startTime, endTime }, in milliseconds.
    */
-  render: function (interval={}) {
+  render: function (interval = {}) {
     let options = {
       invertTree: PerformanceController.getOption("invert-call-tree")
     };
@@ -79,7 +79,7 @@ var MemoryCallTreeView = Heritage.extend(DetailsSubview, {
   /**
    * Renders the call tree.
    */
-  _populateCallTree: function (frameNode, options={}) {
+  _populateCallTree: function (frameNode, options = {}) {
     // If we have an empty profile (no samples), then don't invert the tree, as
     // it would hide the root node and a completely blank call tree space can be
     // mis-interpreted as an error.

@@ -145,7 +145,7 @@ function testPanesStartupPref() {
     "The options menu item should now be unchecked.");
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

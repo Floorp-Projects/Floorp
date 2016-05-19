@@ -10,8 +10,8 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-stack", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-stack", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_pause_frame();
     });
@@ -21,17 +21,17 @@ function run_test()
 
 function test_pause_frame()
 {
-  gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
-    gThreadClient.addOneTimeListener("framesadded", function() {
+  gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
+    gThreadClient.addOneTimeListener("framesadded", function () {
       do_check_eq(gThreadClient.cachedFrames.length, 3);
       do_check_true(gThreadClient.moreFrames);
       do_check_false(gThreadClient.fillFrames(3));
 
       do_check_true(gThreadClient.fillFrames(30));
-      gThreadClient.addOneTimeListener("framesadded", function() {
+      gThreadClient.addOneTimeListener("framesadded", function () {
         do_check_false(gThreadClient.moreFrames);
         do_check_eq(gThreadClient.cachedFrames.length, 7);
-        gThreadClient.resume(function() {
+        gThreadClient.resume(function () {
           finishClient(gClient);
         });
       });
@@ -39,7 +39,7 @@ function test_pause_frame()
     do_check_true(gThreadClient.fillFrames(3));
   });
 
-  gDebuggee.eval("(" + function() {
+  gDebuggee.eval("(" + function () {
     var recurseLeft = 5;
     function recurse() {
       if (--recurseLeft == 0) {
@@ -47,7 +47,7 @@ function test_pause_frame()
         return;
       }
       recurse();
-    };
+    }
     recurse();
   } + ")()");
 }

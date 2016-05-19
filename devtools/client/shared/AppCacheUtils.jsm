@@ -28,7 +28,7 @@
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 var { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
-var { NetUtil }    = Cu.import("resource://gre/modules/NetUtil.jsm", {});
+var { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 var { LoadContextInfo } = Cu.import("resource://gre/modules/LoadContextInfo.jsm", {});
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var Services = require("Services");
@@ -69,7 +69,7 @@ AppCacheUtils.prototype = {
       this._getURIInfo(this.manifestURI).then(uriInfo => {
         this._parseManifest(uriInfo).then(() => {
           // Sort errors by line number.
-          this.errors.sort(function(a, b) {
+          this.errors.sort(function (a, b) {
             return a.line - b.line;
           });
           deferred.resolve(this.errors);
@@ -188,10 +188,10 @@ AppCacheUtils.prototype = {
     let deferred = promise.defer();
     let buffer = "";
     var channel = NetUtil.newChannel({
-                    uri: uri,
-                    loadUsingSystemPrincipal: true,
-                    securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL
-                  });
+      uri: uri,
+      loadUsingSystemPrincipal: true,
+      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL
+    });
 
     // Avoid the cache:
     channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
@@ -226,12 +226,12 @@ AppCacheUtils.prototype = {
           };
 
           result.requestHeaders = {};
-          request.visitRequestHeaders(function(header, value) {
+          request.visitRequestHeaders(function (header, value) {
             result.requestHeaders[header] = value;
           });
 
           result.responseHeaders = {};
-          request.visitResponseHeaders(function(header, value) {
+          request.visitResponseHeaders(function (header, value) {
             result.responseHeaders[header] = value;
           });
 
@@ -256,9 +256,9 @@ AppCacheUtils.prototype = {
 
     let appCacheStorage = Services.cache2.appCacheStorage(LoadContextInfo.default, null);
     appCacheStorage.asyncVisitStorage({
-      onCacheStorageInfo: function() {},
+      onCacheStorageInfo: function () {},
 
-      onCacheEntryInfo: function(aURI, aIdEnhance, aDataSize, aFetchCount, aLastModifiedTime, aExpirationTime) {
+      onCacheEntryInfo: function (aURI, aIdEnhance, aDataSize, aFetchCount, aLastModifiedTime, aExpirationTime) {
         let lowerKey = aURI.asciiSpec.toLowerCase();
 
         if (searchTerm && lowerKey.indexOf(searchTerm.toLowerCase()) == -1) {
@@ -305,7 +305,7 @@ AppCacheUtils.prototype = {
 
     let appCacheStorage = Services.cache2.appCacheStorage(LoadContextInfo.default, null);
     appCacheStorage.asyncEvictStorage({
-      onCacheEntryDoomed: function(result) {}
+      onCacheEntryDoomed: function (result) {}
     });
   },
 
@@ -617,12 +617,12 @@ ManifestParser.prototype = {
 XPCOMUtils.defineLazyGetter(this, "l10n", () => Services.strings
   .createBundle("chrome://devtools/locale/appcacheutils.properties"));
 
-XPCOMUtils.defineLazyGetter(this, "appcacheservice", function() {
+XPCOMUtils.defineLazyGetter(this, "appcacheservice", function () {
   return Cc["@mozilla.org/network/application-cache-service;1"]
            .getService(Ci.nsIApplicationCacheService);
 
 });
 
-XPCOMUtils.defineLazyGetter(this, "_DOMParser", function() {
+XPCOMUtils.defineLazyGetter(this, "_DOMParser", function () {
   return Cc["@mozilla.org/xmlextras/domparser;1"].createInstance(Ci.nsIDOMParser);
 });

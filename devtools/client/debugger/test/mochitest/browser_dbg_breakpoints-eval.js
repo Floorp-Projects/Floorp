@@ -17,7 +17,7 @@ function test() {
     const gSources = gDebugger.DebuggerView.Sources;
     const actions = bindActionCreators(gPanel);
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceShown(gPanel, "-eval.js");
 
       let newSource = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.NEW_SOURCE);
@@ -26,7 +26,7 @@ function test() {
       // Wait for it to be added to the UI
       yield waitForTick();
 
-      const newSourceActor = getSourceActor(gSources, EXAMPLE_URL + 'bar.js');
+      const newSourceActor = getSourceActor(gSources, EXAMPLE_URL + "bar.js");
       yield actions.addBreakpoint({
         actor: newSourceActor,
         line: 2

@@ -8,26 +8,26 @@
 // Common code shared by browser_toolbox_options_disable_cache-*.js
 const TEST_URI = URL_ROOT + "browser_toolbox_options_disable_cache.sjs";
 var tabs = [
-{
-  title: "Tab 0",
-  desc: "Toggles cache on.",
-  startToolbox: true
-},
-{
-  title: "Tab 1",
-  desc: "Toolbox open before Tab 1 toggles cache.",
-  startToolbox: true
-},
-{
-  title: "Tab 2",
-  desc: "Opens toolbox after Tab 1 has toggled cache. Also closes and opens.",
-  startToolbox: false
-},
-{
-  title: "Tab 3",
-  desc: "No toolbox",
-  startToolbox: false
-}];
+  {
+    title: "Tab 0",
+    desc: "Toggles cache on.",
+    startToolbox: true
+  },
+  {
+    title: "Tab 1",
+    desc: "Toolbox open before Tab 1 toggles cache.",
+    startToolbox: true
+  },
+  {
+    title: "Tab 2",
+    desc: "Opens toolbox after Tab 1 has toggled cache. Also closes and opens.",
+    startToolbox: false
+  },
+  {
+    title: "Tab 3",
+    desc: "No toolbox",
+    startToolbox: false
+  }];
 
 function* initTab(tabX, startToolbox) {
   tabX.tab = yield addTab(TEST_URI);
@@ -39,7 +39,7 @@ function* initTab(tabX, startToolbox) {
 }
 
 function* checkCacheStateForAllTabs(states) {
-  for (let i = 0; i < tabs.length; i ++) {
+  for (let i = 0; i < tabs.length; i++) {
     let tab = tabs[i];
     yield checkCacheEnabled(tab, states[i]);
   }
@@ -50,7 +50,7 @@ function* checkCacheEnabled(tabX, expected) {
 
   yield reloadTab(tabX);
 
-  let oldGuid = yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  let oldGuid = yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
     let doc = content.document;
     let h1 = doc.querySelector("h1");
     return h1.textContent;
@@ -58,7 +58,7 @@ function* checkCacheEnabled(tabX, expected) {
 
   yield reloadTab(tabX);
 
-  let guid = yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+  let guid = yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
     let doc = content.document;
     let h1 = doc.querySelector("h1");
     return h1.textContent;

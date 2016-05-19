@@ -18,108 +18,108 @@ function* spawnTest() {
 
   yield helpers.audit(options, [
     {
-      setup: 'highlight body --hide',
+      setup: "highlight body --hide",
       check: {
-        input:  'highlight body --hide',
-        hints:                       'guides [options]',
-        markup: 'VVVVVVVVVVVVVVVIIIIII',
-        status: 'ERROR'
+        input:  "highlight body --hide",
+        hints:                       "guides [options]",
+        markup: "VVVVVVVVVVVVVVVIIIIII",
+        status: "ERROR"
       },
       exec: {
-        output: 'Error: Too many arguments'
+        output: "Error: Too many arguments"
       }
     },
     {
-      setup: 'highlight body --show',
+      setup: "highlight body --show",
       check: {
-        input:  'highlight body --show',
-        hints:                       'infobar [options]',
-        markup: 'VVVVVVVVVVVVVVVIIIIII',
-        status: 'ERROR'
+        input:  "highlight body --show",
+        hints:                       "infobar [options]",
+        markup: "VVVVVVVVVVVVVVVIIIIII",
+        status: "ERROR"
       },
       exec: {
-        output: 'Error: Too many arguments'
+        output: "Error: Too many arguments"
       }
     },
     {
-      setup: 'highlight body --showa',
+      setup: "highlight body --showa",
       check: {
-        input:  'highlight body --showa',
-        hints:                        'll [options]',
-        markup: 'VVVVVVVVVVVVVVVIIIIIII',
-        status: 'ERROR'
+        input:  "highlight body --showa",
+        hints:                        "ll [options]",
+        markup: "VVVVVVVVVVVVVVVIIIIIII",
+        status: "ERROR"
       },
       exec: {
-        output: 'Error: Too many arguments'
+        output: "Error: Too many arguments"
       }
     },
     {
-      setup: 'highlight body --r',
+      setup: "highlight body --r",
       check: {
-        input:  'highlight body --r',
-        hints:                    'egion [options]',
-        markup: 'VVVVVVVVVVVVVVVIII',
-        status: 'ERROR'
+        input:  "highlight body --r",
+        hints:                    "egion [options]",
+        markup: "VVVVVVVVVVVVVVVIII",
+        status: "ERROR"
       },
       exec: {
-        output: 'Error: Too many arguments'
+        output: "Error: Too many arguments"
       }
     },
     {
-      setup: 'highlight body --region',
+      setup: "highlight body --region",
       check: {
-        input:  'highlight body --region',
-        hints:                         ' <selection> [options]',
-        markup: 'VVVVVVVVVVVVVVVIIIIIIII',
-        status: 'ERROR'
+        input:  "highlight body --region",
+        hints:                         " <selection> [options]",
+        markup: "VVVVVVVVVVVVVVVIIIIIIII",
+        status: "ERROR"
       },
       exec: {
-        output: 'Error: Value required for \u2018region\u2019.'
+        output: "Error: Value required for \u2018region\u2019."
       }
     },
     {
-      setup: 'highlight body --fi',
+      setup: "highlight body --fi",
       check: {
-        input:  'highlight body --fi',
-        hints:                     'll [options]',
-        markup: 'VVVVVVVVVVVVVVVIIII',
-        status: 'ERROR'
+        input:  "highlight body --fi",
+        hints:                     "ll [options]",
+        markup: "VVVVVVVVVVVVVVVIIII",
+        status: "ERROR"
       },
       exec: {
-        output: 'Error: Too many arguments'
+        output: "Error: Too many arguments"
       }
     },
     {
-      setup: 'highlight body --fill',
+      setup: "highlight body --fill",
       check: {
-        input:  'highlight body --fill',
-        hints:                       ' <string> [options]',
-        markup: 'VVVVVVVVVVVVVVVIIIIII',
-        status: 'ERROR'
+        input:  "highlight body --fill",
+        hints:                       " <string> [options]",
+        markup: "VVVVVVVVVVVVVVVIIIIII",
+        status: "ERROR"
       },
       exec: {
-        output: 'Error: Value required for \u2018fill\u2019.'
+        output: "Error: Value required for \u2018fill\u2019."
       }
     },
     {
-      setup: 'highlight body --ke',
+      setup: "highlight body --ke",
       check: {
-        input:  'highlight body --ke',
-        hints:                     'ep [options]',
-        markup: 'VVVVVVVVVVVVVVVIIII',
-        status: 'ERROR'
+        input:  "highlight body --ke",
+        hints:                     "ep [options]",
+        markup: "VVVVVVVVVVVVVVVIIII",
+        status: "ERROR"
       },
       exec: {
-        output: 'Error: Too many arguments'
+        output: "Error: Too many arguments"
       }
     },
     {
-      setup: 'unhighlight',
+      setup: "unhighlight",
       check: {
-        input:  'unhighlight',
-        hints:  '',
-        markup: 'VVVVVVVVVVV',
-        status: 'VALID'
+        input:  "unhighlight",
+        hints:  "",
+        markup: "VVVVVVVVVVV",
+        status: "VALID"
       }
     }
   ]);

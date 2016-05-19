@@ -100,12 +100,12 @@ var gRawSite1 = {
     mirType: uniqStr("Object"),
     site: uniqStr("B (http://foo/bar:10)"),
     typeset: [{
-        keyedBy: uniqStr("constructor"),
-        name: uniqStr("Foo"),
-        location: uniqStr("B (http://foo/bar:10)")
+      keyedBy: uniqStr("constructor"),
+      name: uniqStr("Foo"),
+      location: uniqStr("B (http://foo/bar:10)")
     }, {
-        keyedBy: uniqStr("primitive"),
-        location: uniqStr("self-hosted")
+      keyedBy: uniqStr("primitive"),
+      location: uniqStr("self-hosted")
     }]
   }],
   attempts: {
@@ -140,7 +140,7 @@ var gRawSite2 = {
   }
 };
 
-function serialize (x) {
+function serialize(x) {
   return JSON.parse(JSON.stringify(x));
 }
 
@@ -150,25 +150,25 @@ gThread.frameTable.data.forEach((frame) => {
 
   let l = gThread.stringTable[frame[LOCATION_SLOT]];
   switch (l) {
-  case "A":
-    frame[OPTIMIZATIONS_SLOT] = serialize(gRawSite1);
-    break;
+    case "A":
+      frame[OPTIMIZATIONS_SLOT] = serialize(gRawSite1);
+      break;
   // Rename some of the location sites so we can register different
   // frames with different opt sites
-  case "B_LEAF_1":
-    frame[OPTIMIZATIONS_SLOT] = serialize(gRawSite2);
-    frame[LOCATION_SLOT] = uniqStr("B");
-    break;
-  case "B_LEAF_2":
-    frame[OPTIMIZATIONS_SLOT] = serialize(gRawSite1);
-    frame[LOCATION_SLOT] = uniqStr("B");
-    break;
-  case "B_NOTLEAF":
-    frame[OPTIMIZATIONS_SLOT] = serialize(gRawSite1);
-    frame[LOCATION_SLOT] = uniqStr("B");
-    break;
-  case "C":
-    frame[OPTIMIZATIONS_SLOT] = serialize(gRawSite1);
-    break;
+    case "B_LEAF_1":
+      frame[OPTIMIZATIONS_SLOT] = serialize(gRawSite2);
+      frame[LOCATION_SLOT] = uniqStr("B");
+      break;
+    case "B_LEAF_2":
+      frame[OPTIMIZATIONS_SLOT] = serialize(gRawSite1);
+      frame[LOCATION_SLOT] = uniqStr("B");
+      break;
+    case "B_NOTLEAF":
+      frame[OPTIMIZATIONS_SLOT] = serialize(gRawSite1);
+      frame[LOCATION_SLOT] = uniqStr("B");
+      break;
+    case "C":
+      frame[OPTIMIZATIONS_SLOT] = serialize(gRawSite1);
+      break;
   }
 });

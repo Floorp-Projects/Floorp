@@ -23,7 +23,7 @@ add_task(function* () {
   let hud = yield openConsole();
 
   hud.jsterm.clearOutput(true);
-  hud.jsterm.execute("console.log('bazbaz', '" + longString +"', 'boom')");
+  hud.jsterm.execute("console.log('bazbaz', '" + longString + "', 'boom')");
 
   let [result] = yield waitForMessages({
     webconsole: hud,

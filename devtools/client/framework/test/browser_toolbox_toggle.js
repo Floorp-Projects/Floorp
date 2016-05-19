@@ -12,7 +12,7 @@ const URL = "data:text/html;charset=utf-8,Toggling devtools using shortcuts";
 
 var {Toolbox} = require("devtools/client/framework/toolbox");
 
-add_task(function*() {
+add_task(function* () {
   // Make sure this test starts with the selectedTool pref cleared. Previous
   // tests select various tools, and that sets this pref.
   Services.prefs.clearUserPref("devtools.toolbox.selectedTool");

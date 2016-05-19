@@ -110,7 +110,7 @@ function test() {
     });
 
     aMonitor.panelWin.once(aMonitor.panelWin.EVENTS.RECEIVED_REQUEST_POST_DATA, () => {
-      ok(false, "Trap listener: this request doesn't have any post data.")
+      ok(false, "Trap listener: this request doesn't have any post data.");
     });
 
     aMonitor.panelWin.once(aMonitor.panelWin.EVENTS.RECEIVED_RESPONSE_HEADERS, () => {

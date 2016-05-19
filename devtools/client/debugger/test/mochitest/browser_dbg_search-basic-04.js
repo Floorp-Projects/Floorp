@@ -122,7 +122,7 @@ function testTokenSearch() {
     "The searchbox should have been cleared.");
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

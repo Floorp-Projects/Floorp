@@ -84,7 +84,7 @@ function testSwitch2() {
     "The third source is displayed.");
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

@@ -37,7 +37,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.inspector.activeSidebar");
 });
 
-registerCleanupFunction(function*() {
+registerCleanupFunction(function* () {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   yield gDevTools.closeToolbox(target);
 
@@ -97,7 +97,7 @@ function getNode(nodeOrSelector, options = {}) {
  * Start the element picker and focus the content window.
  * @param {Toolbox} toolbox
  */
-var startPicker = Task.async(function*(toolbox) {
+var startPicker = Task.async(function* (toolbox) {
   info("Start the element picker");
   yield toolbox.highlighterUtils.startPicker();
   // Make sure the content window is focused since the picker does not focus
@@ -131,7 +131,7 @@ function selectAndHighlightNode(selector, inspector) {
  * to highlight the node upon selection
  * @return {Promise} Resolves when the inspector is updated with the new node
  */
-var selectNode = Task.async(function*(selector, inspector, reason="test") {
+var selectNode = Task.async(function* (selector, inspector, reason = "test") {
   info("Selecting the node for '" + selector + "'");
   let nodeFront = yield getNodeFront(selector, inspector);
   let updated = inspector.once("inspector-updated");
@@ -160,7 +160,7 @@ function clearCurrentNodeSelection(inspector) {
  * @return A promise that is resolved once the tab and inspector have loaded
  *         with an object: { tab, toolbox, inspector }.
  */
-var openInspectorForURL = Task.async(function*(url, hostType) {
+var openInspectorForURL = Task.async(function* (url, hostType) {
   let tab = yield addTab(url);
   let { inspector, toolbox, testActor } = yield openInspector(hostType);
   return { tab, inspector, toolbox, testActor };
@@ -171,7 +171,7 @@ var openInspectorForURL = Task.async(function*(url, hostType) {
  * @param {String} hostType Optional hostType, as defined in Toolbox.HostType
  * @return a promise that resolves when the inspector is ready
  */
-var openInspector = Task.async(function*(hostType) {
+var openInspector = Task.async(function* (hostType) {
   info("Opening the inspector");
 
   let toolbox = yield openToolboxForTab(gBrowser.selectedTab, "inspector", hostType);
@@ -199,7 +199,7 @@ function getActiveInspector() {
  * @param {String} selector The selector for the node to click on in the page.
  * @return {Promise} Resolves to the inspector when it has opened and is updated
  */
-var clickOnInspectMenuItem = Task.async(function*(testActor, selector) {
+var clickOnInspectMenuItem = Task.async(function* (testActor, selector) {
   info("Showing the contextual menu on node " + selector);
   let contentAreaContextMenu = document.querySelector("#contentAreaContextMenu");
   let contextOpened = once(contentAreaContextMenu, "popupshown");
@@ -332,8 +332,8 @@ function getNodeFront(selector, {walker}) {
  * to highlight the node upon selection
  * @return {Promise} Resolves when the inspector is updated with the new node
  */
-var getNodeFrontInFrame = Task.async(function*(selector, frameSelector,
-                                               inspector, reason="test") {
+var getNodeFrontInFrame = Task.async(function* (selector, frameSelector,
+                                               inspector, reason = "test") {
   let iframe = yield getNodeFront(frameSelector, inspector);
   let {nodes} = yield inspector.walker.children(iframe);
   return inspector.walker.querySelector(nodes[0], selector);
@@ -376,7 +376,7 @@ function getContainerForNodeFront(nodeFront, {markup}) {
  * loaded in the toolbox
  * @return {MarkupContainer}
  */
-var getContainerForSelector = Task.async(function*(selector, inspector) {
+var getContainerForSelector = Task.async(function* (selector, inspector) {
   info("Getting the markup-container for node " + selector);
   let nodeFront = yield getNodeFront(selector, inspector);
   let container = getContainerForNodeFront(nodeFront, inspector);
@@ -393,7 +393,7 @@ var getContainerForSelector = Task.async(function*(selector, inspector) {
  * @return {Promise} Resolves when the container is hovered and the higlighter
  * is shown on the corresponding node
  */
-var hoverContainer = Task.async(function*(selector, inspector) {
+var hoverContainer = Task.async(function* (selector, inspector) {
   info("Hovering over the markup-container for node " + selector);
 
   let nodeFront = yield getNodeFront(selector, inspector);
@@ -413,7 +413,7 @@ var hoverContainer = Task.async(function*(selector, inspector) {
  * loaded in the toolbox
  * @return {Promise} Resolves when the node has been selected.
  */
-var clickContainer = Task.async(function*(selector, inspector) {
+var clickContainer = Task.async(function* (selector, inspector) {
   info("Clicking on the markup-container for node " + selector);
 
   let nodeFront = yield getNodeFront(selector, inspector);
@@ -511,10 +511,10 @@ function dispatchCommandEvent(node) {
  * A helper that simulates a contextmenu event on the given chrome DOM element.
  */
 function contextMenuClick(element) {
-  let evt = element.ownerDocument.createEvent('MouseEvents');
+  let evt = element.ownerDocument.createEvent("MouseEvents");
   let button = 2;  // right click
 
-  evt.initMouseEvent('contextmenu', true, true,
+  evt.initMouseEvent("contextmenu", true, true,
        element.ownerDocument.defaultView, 1, 0, 0, 0, 0, false,
        false, false, false, button, null);
 
@@ -548,7 +548,7 @@ function* getNodeFrontForSelector(selector, inspector) {
  *    properties. (see `openInspector`)
  */
 const getHighlighterHelperFor = (type) => Task.async(
-  function*({inspector, testActor}) {
+  function* ({inspector, testActor}) {
     let front = inspector.inspector;
     let highlighter = yield front.getHighlighterByType(type);
 
@@ -558,7 +558,7 @@ const getHighlighterHelperFor = (type) => Task.async(
     let prevX, prevY;
 
     // Highlighted node
-    let  highlightedNode = null;
+    let highlightedNode = null;
 
     return {
       set prefix(value) {
@@ -570,38 +570,38 @@ const getHighlighterHelperFor = (type) => Task.async(
         }
 
         return {
-          getComputedStyle: function*(options = {}) {
+          getComputedStyle: function* (options = {}) {
             return yield inspector.pageStyle.getComputed(
               highlightedNode, options);
           }
         };
       },
 
-      show: function*(selector = ":root") {
+      show: function* (selector = ":root") {
         highlightedNode = yield getNodeFront(selector, inspector);
         return yield highlighter.show(highlightedNode);
       },
 
-      hide: function*() {
+      hide: function* () {
         yield highlighter.hide();
       },
 
-      isElementHidden: function*(id) {
+      isElementHidden: function* (id) {
         return (yield testActor.getHighlighterNodeAttribute(
           prefix + id, "hidden", highlighter)) === "true";
       },
 
-      getElementTextContent: function*(id) {
+      getElementTextContent: function* (id) {
         return yield testActor.getHighlighterNodeTextContent(
           prefix + id, highlighter);
       },
 
-      getElementAttribute: function*(id, name) {
+      getElementAttribute: function* (id, name) {
         return yield testActor.getHighlighterNodeAttribute(
           prefix + id, name, highlighter);
       },
 
-      synthesizeMouse: function*(options) {
+      synthesizeMouse: function* (options) {
         options = Object.assign({selector: ":root"}, options);
         yield testActor.synthesizeMouse(options);
       },
@@ -617,7 +617,7 @@ const getHighlighterHelperFor = (type) => Task.async(
       //   mouse.up();         // synthesize "mouseup" at 20,30
       mouse: new Proxy({}, {
         get: (target, name) =>
-          function*(x = prevX, y = prevY) {
+          function* (x = prevX, y = prevY) {
             prevX = x;
             prevY = y;
             yield testActor.synthesizeMouse({
@@ -625,11 +625,11 @@ const getHighlighterHelperFor = (type) => Task.async(
           }
       }),
 
-      reflow: function*() {
+      reflow: function* () {
         yield testActor.reflow();
       },
 
-      finalize: function*() {
+      finalize: function* () {
         highlightedNode = null;
         yield highlighter.finalize();
       }
@@ -643,11 +643,11 @@ const getHighlighterHelperFor = (type) => Task.async(
 function* waitForMultipleChildrenUpdates(inspector) {
 // As long as child updates are queued up while we wait for an update already
 // wait again
-    if (inspector.markup._queuedChildUpdates &&
+  if (inspector.markup._queuedChildUpdates &&
         inspector.markup._queuedChildUpdates.size) {
-        yield waitForChildrenUpdated(inspector);
-        return yield waitForMultipleChildrenUpdates(inspector);
-    }
+    yield waitForChildrenUpdated(inspector);
+    return yield waitForMultipleChildrenUpdates(inspector);
+  }
 }
 
 /**
@@ -659,12 +659,12 @@ function* waitForMultipleChildrenUpdates(inspector) {
  * handled
  */
 function waitForChildrenUpdated({markup}) {
-    info("Waiting for queued children updates to be handled");
-    let def = promise.defer();
-    markup._waitForChildren().then(() => {
-        executeSoon(def.resolve);
-    });
-    return def.promise;
+  info("Waiting for queued children updates to be handled");
+  let def = promise.defer();
+  markup._waitForChildren().then(() => {
+    executeSoon(def.resolve);
+  });
+  return def.promise;
 }
 
 /**
@@ -758,7 +758,7 @@ function containsFocus(doc, container) {
  *
  * @return a promise that resolves to the tab object
  */
-var waitForTab = Task.async(function*() {
+var waitForTab = Task.async(function* () {
   info("Waiting for a tab to open");
   yield once(gBrowser.tabContainer, "TabOpen");
   let tab = gBrowser.selectedTab;

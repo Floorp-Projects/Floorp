@@ -107,7 +107,7 @@ function test_indent_detection() {
   Services.prefs.setBoolPref(DETECT_INDENT, true);
 
   for (let test of TESTS) {
-    let iterFn = function(start, end, callback) {
+    let iterFn = function (start, end, callback) {
       test.input.slice(start, end).forEach(callback);
     };
 

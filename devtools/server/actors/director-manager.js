@@ -14,10 +14,10 @@ const { Cu, Ci } = require("chrome");
 const { on, once, off, emit } = events;
 const { method, Arg, Option, RetVal, types } = protocol;
 
-const { sandbox, evaluate } = require('sdk/loader/sandbox');
+const { sandbox, evaluate } = require("sdk/loader/sandbox");
 const { Class } = require("sdk/core/heritage");
 
-const { PlainTextConsole } = require('sdk/console/plain-text');
+const { PlainTextConsole } = require("sdk/console/plain-text");
 
 const { DirectorRegistry } = require("./director-registry");
 
@@ -57,7 +57,7 @@ var MessagePortActor = exports.MessagePortActor = protocol.ActorClass({
    * @param MessagePort port
    *        The wrapped MessagePort.
    */
-  initialize: function(conn, port) {
+  initialize: function (conn, port) {
     protocol.Actor.prototype.initialize.call(this, conn);
 
     // NOTE: can't get a weak reference because we need to subscribe events
@@ -65,7 +65,7 @@ var MessagePortActor = exports.MessagePortActor = protocol.ActorClass({
     this.port = port;
   },
 
-  destroy: function(conn) {
+  destroy: function (conn) {
     protocol.Actor.prototype.destroy.call(this, conn);
     this.finalize();
   },
@@ -252,7 +252,7 @@ var DirectorScriptActor = exports.DirectorScriptActor = protocol.ActorClass({
    * @param Object scriptOptions
    *        The director-script options object.
    */
-  initialize: function(conn, tabActor, { scriptId, scriptCode, scriptOptions }) {
+  initialize: function (conn, tabActor, { scriptId, scriptCode, scriptOptions }) {
     protocol.Actor.prototype.initialize.call(this, conn, tabActor);
 
     this.tabActor = tabActor;
@@ -262,10 +262,10 @@ var DirectorScriptActor = exports.DirectorScriptActor = protocol.ActorClass({
     this._scriptOptions = scriptOptions;
     this._setupCalled = false;
 
-    this._onGlobalCreated   = this._onGlobalCreated.bind(this);
+    this._onGlobalCreated = this._onGlobalCreated.bind(this);
     this._onGlobalDestroyed = this._onGlobalDestroyed.bind(this);
   },
-  destroy: function(conn) {
+  destroy: function (conn) {
     protocol.Actor.prototype.destroy.call(this, conn);
 
     this.finalize();
@@ -348,7 +348,7 @@ var DirectorScriptActor = exports.DirectorScriptActor = protocol.ActorClass({
   },
 
   /* event handlers */
-  _onGlobalCreated: function({ id, window, isTopLevel }) {
+  _onGlobalCreated: function ({ id, window, isTopLevel }) {
     if (!isTopLevel) {
       // filter iframes
       return;
@@ -375,37 +375,37 @@ var DirectorScriptActor = exports.DirectorScriptActor = protocol.ActorClass({
       this._lastAttachedWinId = id;
       var port = this._scriptSandbox.attach(window, id);
       this._onDirectorScriptAttach(window, port);
-    } catch(e) {
+    } catch (e) {
       this._onDirectorScriptError(e);
     }
   },
-  _onGlobalDestroyed: function({ id }) {
-     if (id !== this._lastAttachedWinId) {
+  _onGlobalDestroyed: function ({ id }) {
+    if (id !== this._lastAttachedWinId) {
        // filter destroyed globals
-       return;
-     }
+      return;
+    }
 
      // unmanage and cleanup the messageport actor
-     if (this._messagePortActor) {
-       this.unmanage(this._messagePortActor);
-       this._messagePortActor = null;
-     }
+    if (this._messagePortActor) {
+      this.unmanage(this._messagePortActor);
+      this._messagePortActor = null;
+    }
 
      // NOTE: destroy here the old worker
-     if (this._scriptSandbox) {
-       this._scriptSandbox.destroy(this._onDirectorScriptError.bind(this));
+    if (this._scriptSandbox) {
+      this._scriptSandbox.destroy(this._onDirectorScriptError.bind(this));
 
        // send a detach event to the debugger client
-       emit(this, "detach", {
-         directorScriptId: this._scriptId,
-         innerId: this._lastAttachedWinId
-       });
+      emit(this, "detach", {
+        directorScriptId: this._scriptId,
+        innerId: this._lastAttachedWinId
+      });
 
-       this._lastAttachedWinId = null;
-       this._scriptSandbox = null;
-     }
+      this._lastAttachedWinId = null;
+      this._scriptSandbox = null;
+    }
   },
-  _onDirectorScriptError: function(error) {
+  _onDirectorScriptError: function (error) {
     // route the content script error to the debugger client
     if (error) {
       // prevents silent director-script-errors
@@ -421,7 +421,7 @@ var DirectorScriptActor = exports.DirectorScriptActor = protocol.ActorClass({
       });
     }
   },
-  _onDirectorScriptAttach: function(window, port) {
+  _onDirectorScriptAttach: function (window, port) {
     let portActor = new MessagePortActor(this.conn, port);
     this.manage(portActor);
     this._messagePortActor = portActor;
@@ -469,12 +469,12 @@ const DirectorManagerActor = exports.DirectorManagerActor = protocol.ActorClass(
   },
 
   /* init & destroy methods */
-  initialize: function(conn, tabActor) {
+  initialize: function (conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.tabActor = tabActor;
     this._directorScriptActorsMap = new Map();
   },
-  destroy: function(conn) {
+  destroy: function (conn) {
     protocol.Actor.prototype.destroy.call(this, conn);
     this.finalize();
   },
@@ -504,7 +504,7 @@ const DirectorManagerActor = exports.DirectorManagerActor = protocol.ActorClass(
    * @param Boolean reload
    *        optionally reload the target window
    */
-  enableByScriptIds: method(function(selectedIds, { reload }) {
+  enableByScriptIds: method(function (selectedIds, { reload }) {
     if (selectedIds && selectedIds.length === 0) {
       // filtered all director scripts ids
       return;
@@ -544,7 +544,7 @@ const DirectorManagerActor = exports.DirectorManagerActor = protocol.ActorClass(
    * @param Boolean reload
    *        optionally reload the target window
    */
-  disableByScriptIds: method(function(selectedIds, { reload }) {
+  disableByScriptIds: method(function (selectedIds, { reload }) {
     if (selectedIds && selectedIds.length === 0) {
       // filtered all director scripts ids
       return;
@@ -583,7 +583,7 @@ const DirectorManagerActor = exports.DirectorManagerActor = protocol.ActorClass(
    * Retrieves the actor instance of an installed director-script
    * (and create the actor instance if it doesn't exists yet).
    */
-  getByScriptId: method(function(scriptId) {
+  getByScriptId: method(function (scriptId) {
     var id = scriptId;
     // raise an unknown director-script id exception
     if (!DirectorRegistry.checkInstalled(id)) {
@@ -625,7 +625,7 @@ const DirectorManagerActor = exports.DirectorManagerActor = protocol.ActorClass(
     }
   }),
 
-  finalize: method(function() {
+  finalize: method(function () {
     this.disableByScriptIds(["*"], false);
   }, {
     oneway: true
@@ -636,7 +636,7 @@ const DirectorManagerActor = exports.DirectorManagerActor = protocol.ActorClass(
  * The corresponding Front object for the DirectorManagerActor.
  */
 exports.DirectorManagerFront = protocol.FrontClass(DirectorManagerActor, {
-  initialize: function(client, { directorManagerActor }) {
+  initialize: function (client, { directorManagerActor }) {
     protocol.Front.prototype.initialize.call(this, client, {
       actor: directorManagerActor
     });
@@ -651,13 +651,13 @@ exports.DirectorManagerFront = protocol.FrontClass(DirectorManagerActor, {
  * to a target window.
  */
 const DirectorScriptSandbox = Class({
-  initialize: function({scriptId, scriptCode, scriptOptions}) {
+  initialize: function ({scriptId, scriptCode, scriptOptions}) {
     this._scriptId = scriptId;
     this._scriptCode = scriptCode;
     this._scriptOptions = scriptOptions;
   },
 
-  attach: function(window, innerId) {
+  attach: function (window, innerId) {
     this._innerId = innerId,
     this._window = window;
     this._proto = Cu.createObjectIn(this._window);
@@ -704,7 +704,7 @@ const DirectorScriptSandbox = Class({
     Object.defineProperties(this._sandbox, {
       require: {
         enumerable: true,
-        value: Cu.cloneInto(function() {
+        value: Cu.cloneInto(function () {
           throw Error("NOT IMPLEMENTED");
         }, this._sandbox, { cloneFunctions: true })
       }
@@ -714,7 +714,7 @@ const DirectorScriptSandbox = Class({
     // to the director actor the resource url instead of the entire javascript source code.
 
     // evaluate the director script source in the sandbox
-    evaluate(this._sandbox, this._scriptCode, 'javascript:' + this._scriptCode);
+    evaluate(this._sandbox, this._scriptCode, "javascript:" + this._scriptCode);
 
     // prepare the messageport connected to the debugger client
     let { port1, port2 } = new this._window.MessageChannel();
@@ -758,14 +758,14 @@ const DirectorScriptSandbox = Class({
 
     return port2;
   },
-  destroy:  function(onError) {
+  destroy:  function (onError) {
     // evaluate queue unload methods if any
-    while(this._sandboxOnUnloadQueue && this._sandboxOnUnloadQueue.length > 0) {
+    while (this._sandboxOnUnloadQueue && this._sandboxOnUnloadQueue.length > 0) {
       let cb = this._sandboxOnUnloadQueue.pop();
 
       try {
         cb();
-      } catch(e) {
+      } catch (e) {
         console.error("Exception on DirectorScript Sandbox destroy", e);
         onError(e);
       }

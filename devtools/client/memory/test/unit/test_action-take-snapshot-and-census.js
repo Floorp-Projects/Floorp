@@ -13,7 +13,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function *() {
+add_task(function* () {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
   yield front.attach();
@@ -48,7 +48,7 @@ add_task(function *() {
   store.dispatch(actions.takeSnapshotAndCensus(front, heapWorker));
 
   yield waitUntilState(store, () => { return snapshotI === snapshotStates.length &&
-                                      censusI === censusStates.length });
+                                      censusI === censusStates.length; });
   unsubscribe();
 
   ok(true, "takeSnapshotAndCensus() produces the correct sequence of states in a snapshot");

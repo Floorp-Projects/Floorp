@@ -8,7 +8,7 @@
 
 const { PerformanceFront } = require("devtools/server/actors/performance");
 
-add_task(function*() {
+add_task(function* () {
   let browser = yield addTab(MAIN_DOMAIN + "doc_perf.html");
   let doc = browser.contentDocument;
 
@@ -72,7 +72,7 @@ add_task(function*() {
   gBrowser.removeCurrentTab();
 });
 
-function checkSystemInfo (recording, type) {
+function checkSystemInfo(recording, type) {
   let data = recording[`get${type}SystemInfo`]();
   for (let field of ["appid", "apptype", "vendor", "name", "version"]) {
     ok(data[field], `get${type}SystemInfo() has ${field} property`);

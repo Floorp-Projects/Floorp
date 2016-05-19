@@ -12,54 +12,54 @@ const {DebuggerServer} = require("devtools/server/main");
 const {getSystemInfo, getSetting} = require("devtools/shared/system");
 
 Cu.importGlobalProperties(["FileReader"]);
-Cu.import("resource://gre/modules/PermissionsTable.jsm")
+Cu.import("resource://gre/modules/PermissionsTable.jsm");
 
 var DeviceActor = exports.DeviceActor = protocol.ActorClass({
   typeName: "device",
 
   _desc: null,
 
-  getDescription: method(function() {
+  getDescription: method(function () {
     return getSystemInfo();
-  }, {request: {},response: { value: RetVal("json")}}),
+  }, {request: {}, response: { value: RetVal("json")}}),
 
-  getWallpaper: method(function() {
+  getWallpaper: method(function () {
     let deferred = promise.defer();
     getSetting("wallpaper.image").then((blob) => {
       let reader = new FileReader();
       let conn = this.conn;
-      reader.addEventListener("load", function() {
+      reader.addEventListener("load", function () {
         let str = new LongStringActor(conn, reader.result);
         deferred.resolve(str);
       });
-      reader.addEventListener("error", function() {
+      reader.addEventListener("error", function () {
         deferred.reject(reader.error);
       });
       reader.readAsDataURL(blob);
     });
     return deferred.promise;
-  }, {request: {},response: { value: RetVal("longstring")}}),
+  }, {request: {}, response: { value: RetVal("longstring")}}),
 
-  screenshotToDataURL: method(function() {
+  screenshotToDataURL: method(function () {
     let window = Services.wm.getMostRecentWindow(DebuggerServer.chromeWindowType);
     var devicePixelRatio = window.devicePixelRatio;
     let canvas = window.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
     let width = window.innerWidth;
     let height = window.innerHeight;
-    canvas.setAttribute('width', Math.round(width * devicePixelRatio));
-    canvas.setAttribute('height', Math.round(height * devicePixelRatio));
-    let context = canvas.getContext('2d');
+    canvas.setAttribute("width", Math.round(width * devicePixelRatio));
+    canvas.setAttribute("height", Math.round(height * devicePixelRatio));
+    let context = canvas.getContext("2d");
     let flags =
           context.DRAWWINDOW_DRAW_CARET |
           context.DRAWWINDOW_DRAW_VIEW |
           context.DRAWWINDOW_USE_WIDGET_LAYERS;
     context.scale(devicePixelRatio, devicePixelRatio);
-    context.drawWindow(window, 0, 0, width, height, 'rgb(255,255,255)', flags);
-    let dataURL = canvas.toDataURL('image/png')
+    context.drawWindow(window, 0, 0, width, height, "rgb(255,255,255)", flags);
+    let dataURL = canvas.toDataURL("image/png");
     return new LongStringActor(this.conn, dataURL);
-  }, {request: {},response: { value: RetVal("longstring")}}),
+  }, {request: {}, response: { value: RetVal("longstring")}}),
 
-  getRawPermissionsTable: method(function() {
+  getRawPermissionsTable: method(function () {
     return {
       rawPermissionsTable: PermissionsTable,
       UNKNOWN_ACTION: Ci.nsIPermissionManager.UNKNOWN_ACTION,
@@ -67,17 +67,17 @@ var DeviceActor = exports.DeviceActor = protocol.ActorClass({
       DENY_ACTION: Ci.nsIPermissionManager.DENY_ACTION,
       PROMPT_ACTION: Ci.nsIPermissionManager.PROMPT_ACTION
     };
-  }, {request: {},response: { value: RetVal("json")}})
+  }, {request: {}, response: { value: RetVal("json")}})
 });
 
 var DeviceFront = protocol.FrontClass(DeviceActor, {
-  initialize: function(client, form) {
+  initialize: function (client, form) {
     protocol.Front.prototype.initialize.call(this, client);
     this.actorID = form.deviceActor;
     this.manage(this);
   },
 
-  screenshotToBlob: function() {
+  screenshotToBlob: function () {
     return this.screenshotToDataURL().then(longstr => {
       return longstr.string().then(dataURL => {
         let deferred = promise.defer();
@@ -90,7 +90,7 @@ var DeviceFront = protocol.FrontClass(DeviceActor, {
         };
         req.onerror = () => {
           deferred.reject(req.status);
-        }
+        };
         req.send();
         return deferred.promise;
       });
@@ -100,7 +100,7 @@ var DeviceFront = protocol.FrontClass(DeviceActor, {
 
 const _knownDeviceFronts = new WeakMap();
 
-exports.getDeviceFront = function(client, form) {
+exports.getDeviceFront = function (client, form) {
   if (!form.deviceActor) {
     return null;
   }

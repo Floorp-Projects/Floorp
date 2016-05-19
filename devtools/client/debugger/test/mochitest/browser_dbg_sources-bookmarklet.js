@@ -19,14 +19,14 @@ function test() {
     const gSources = gDebugger.DebuggerView.Sources;
     const gBreakpoints = gDebugger.DebuggerController.Breakpoints;
     const getState = gDebugger.DebuggerController.getState;
-    const constants = gDebugger.require('./content/constants');
-    const queries = gDebugger.require('./content/queries');
+    const constants = gDebugger.require("./content/constants");
+    const queries = gDebugger.require("./content/queries");
     const actions = bindActionCreators(gPanel);
 
-    return Task.spawn(function*() {
-      yield waitForSourceShown(gPanel, '.html');
+    return Task.spawn(function* () {
+      yield waitForSourceShown(gPanel, ".html");
 
-      const added =  waitForNextDispatch(gDebugger.DebuggerController, constants.ADD_SOURCE);
+      const added = waitForNextDispatch(gDebugger.DebuggerController, constants.ADD_SOURCE);
       // NOTE: devtools debugger panel needs to be already open,
       // or the bookmarklet script will not be shown in the sources panel
       callInTab(gTab, "injectBookmarklet", BOOKMARKLET_SCRIPT_CODE);

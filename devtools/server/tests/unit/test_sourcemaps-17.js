@@ -16,8 +16,8 @@ function run_test() {
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-source-map");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-source-map", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-source-map", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_source_map();
     });
@@ -32,7 +32,7 @@ function test_source_map() {
   const c = new SourceNode(1, 1, "c.js", "function c() { d(); }");
   const d = new SourceNode(null, null, null, "function d() { e(); }");
   const e = new SourceNode(1, 1, "e.js", "function e() { debugger; }");
-  const { map, code } = (new SourceNode(null, null, null, [a,b,c,d,e])).toStringWithSourceMap({
+  const { map, code } = (new SourceNode(null, null, null, [a, b, c, d, e])).toStringWithSourceMap({
     file: "root.js",
     sourceRoot: "root",
   });
@@ -45,7 +45,7 @@ function test_source_map() {
   );
 
   gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-    gThreadClient.getFrames(0, 50, function({ error, frames }) {
+    gThreadClient.getFrames(0, 50, function ({ error, frames }) {
       do_check_true(!error);
       do_check_eq(frames.length, 4);
       // b.js should be skipped
@@ -55,7 +55,7 @@ function test_source_map() {
       do_check_eq(frames[3].where.source.url, null);
 
       finishClient(gClient);
-    })
+    });
   });
 
     // Trigger it.

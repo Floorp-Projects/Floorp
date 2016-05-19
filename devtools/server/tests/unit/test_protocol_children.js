@@ -14,7 +14,7 @@ function simpleHello() {
     from: "root",
     applicationType: "xpcshell-tests",
     traits: [],
-  }
+  };
 }
 
 var testTypes = {};
@@ -27,21 +27,21 @@ var ChildActor = protocol.ActorClass({
   typeName: "childActor",
 
   // Actors returned by this actor should be owned by the root actor.
-  marshallPool: function() { return this.parent() },
+  marshallPool: function () { return this.parent(); },
 
-  toString: function() { return "[ChildActor " + this.childID + "]"; },
+  toString: function () { return "[ChildActor " + this.childID + "]"; },
 
-  initialize: function(conn, id) {
+  initialize: function (conn, id) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.childID = id;
   },
 
-  destroy: function() {
+  destroy: function () {
     protocol.Actor.prototype.destroy.call(this);
     this.destroyed = true;
   },
 
-  form: function(detail) {
+  form: function (detail) {
     if (detail === "actorid") {
       return this.actorID;
     }
@@ -52,7 +52,7 @@ var ChildActor = protocol.ActorClass({
     };
   },
 
-  echo: method(function(str) {
+  echo: method(function (str) {
     return str;
   }, {
     request: { str: Arg(0) },
@@ -60,21 +60,21 @@ var ChildActor = protocol.ActorClass({
     telemetry: "ECHO"
   }),
 
-  getDetail1: method(function() {
+  getDetail1: method(function () {
     return this;
   }, {
     // This also exercises return-value-as-packet.
     response: RetVal("childActor#detail1"),
   }),
 
-  getDetail2: method(function() {
+  getDetail2: method(function () {
     return this;
   }, {
     // This also exercises return-value-as-packet.
     response: RetVal("childActor#detail2"),
   }),
 
-  getIDDetail: method(function() {
+  getIDDetail: method(function () {
     return this;
   }, {
     response: {
@@ -82,9 +82,9 @@ var ChildActor = protocol.ActorClass({
     }
   }),
 
-  getIntArray: method(function(inputArray) {
+  getIntArray: method(function (inputArray) {
     // Test that protocol.js converts an iterator to an array.
-    let f = function*() {
+    let f = function* () {
       for (let i of inputArray) {
         yield 2 * i;
       }
@@ -95,14 +95,14 @@ var ChildActor = protocol.ActorClass({
     response: RetVal("array:number")
   }),
 
-  getSibling: method(function(id) {
+  getSibling: method(function (id) {
     return this.parent().getChild(id);
   }, {
     request: { id: Arg(0) },
     response: { sibling: RetVal("childActor") }
   }),
 
-  emitEvents: method(function() {
+  emitEvents: method(function () {
     events.emit(this, "event1", 1, 2, 3);
     events.emit(this, "event2", 4, 5, 6);
     events.emit(this, "named-event", 1, 2, 3);
@@ -112,7 +112,7 @@ var ChildActor = protocol.ActorClass({
     response: { value: "correct response" },
   }),
 
-  release: method(function() { }, { release: true }),
+  release: method(function () { }, { release: true }),
 
   events: {
     "event1" : {
@@ -143,20 +143,20 @@ var ChildActor = protocol.ActorClass({
 });
 
 var ChildFront = protocol.FrontClass(ChildActor, {
-  initialize: function(client, form) {
+  initialize: function (client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
   },
 
-  destroy: function() {
+  destroy: function () {
     this.destroyed = true;
     protocol.Front.prototype.destroy.call(this);
   },
 
-  marshallPool: function() { return this.parent() },
+  marshallPool: function () { return this.parent(); },
 
-  toString: function() { return "[child front " + this.childID + "]"; },
+  toString: function () { return "[child front " + this.childID + "]"; },
 
-  form: function(form, detail) {
+  form: function (form, detail) {
     if (detail === "actorid") {
       return;
     }
@@ -164,15 +164,15 @@ var ChildFront = protocol.FrontClass(ChildActor, {
     this.detail = form.detail;
   },
 
-  onEvent1: preEvent("event1", function(a, b, c) {
+  onEvent1: preEvent("event1", function (a, b, c) {
     this.event1arg3 = c;
   }),
 
-  onEvent2a: preEvent("event2", function(a, b, c) {
+  onEvent2a: preEvent("event2", function (a, b, c) {
     return promise.resolve().then(() => this.event2arg3 = c);
   }),
 
-  onEvent2b: preEvent("event2", function(a, b, c) {
+  onEvent2b: preEvent("event2", function (a, b, c) {
     this.event2arg2 = b;
   }),
 });
@@ -188,9 +188,9 @@ var rootActor = null;
 var RootActor = protocol.ActorClass({
   typeName: "root",
 
-  toString: function() { return "[root actor]"; },
+  toString: function () { return "[root actor]"; },
 
-  initialize: function(conn) {
+  initialize: function (conn) {
     rootActor = this;
     this.actorID = "root";
     this._children = {};
@@ -201,7 +201,7 @@ var RootActor = protocol.ActorClass({
 
   sayHello: simpleHello,
 
-  getChild: method(function(id) {
+  getChild: method(function (id) {
     if (id in this._children) {
       return this._children[id];
     }
@@ -213,15 +213,15 @@ var RootActor = protocol.ActorClass({
     response: { actor: RetVal("childActor") },
   }),
 
-  getChildren: method(function(ids) {
+  getChildren: method(function (ids) {
     return ids.map(id => this.getChild(id));
   }, {
     request: { ids: Arg(0, "array:string") },
     response: { children: RetVal("array:childActor") },
   }),
 
-  getChildren2: method(function(ids) {
-    let f = function*() {
+  getChildren2: method(function (ids) {
+    let f = function* () {
       for (let c of ids) {
         yield c;
       }
@@ -232,18 +232,18 @@ var RootActor = protocol.ActorClass({
     response: { children: RetVal("array:childActor") },
   }),
 
-  getManyChildren: method(function() {
+  getManyChildren: method(function () {
     return {
       foo: "bar", // note that this isn't in the specialization array.
       child5: this.getChild("child5"),
       more: [ this.getChild("child6"), this.getChild("child7") ]
-    }
+    };
   }, {
     response: RetVal("manyChildrenDict")
   }),
 
   // This should remind you of a pause actor.
-  getTemporaryChild: method(function(id) {
+  getTemporaryChild: method(function (id) {
     if (!this._temporaryHolder) {
       this._temporaryHolder = this.manage(new protocol.Actor(this.conn));
     }
@@ -253,7 +253,7 @@ var RootActor = protocol.ActorClass({
     response: { child: RetVal("temp:childActor") }
   }),
 
-  clearTemporaryChildren: method(function(id) {
+  clearTemporaryChildren: method(function (id) {
     if (!this._temporaryHolder) {
       return;
     }
@@ -263,26 +263,26 @@ var RootActor = protocol.ActorClass({
 });
 
 var RootFront = protocol.FrontClass(RootActor, {
-  toString: function() { return "[root front]"; },
-  initialize: function(client) {
+  toString: function () { return "[root front]"; },
+  initialize: function (client) {
     this.actorID = "root";
     protocol.Front.prototype.initialize.call(this, client);
     // Root actor owns itself.
     this.manage(this);
   },
 
-  getTemporaryChild: protocol.custom(function(id) {
+  getTemporaryChild: protocol.custom(function (id) {
     if (!this._temporaryHolder) {
       this._temporaryHolder = protocol.Front(this.conn);
       this._temporaryHolder.actorID = this.actorID + "_temp";
       this._temporaryHolder = this.manage(this._temporaryHolder);
     }
     return this._getTemporaryChild(id);
-  },{
-   impl: "_getTemporaryChild"
+  }, {
+    impl: "_getTemporaryChild"
   }),
 
-  clearTemporaryChildren: protocol.custom(function() {
+  clearTemporaryChildren: protocol.custom(function () {
     if (!this._temporaryHolder) {
       return promise.resolve(undefined);
     }
@@ -304,7 +304,7 @@ function run_test()
   let trace = connectPipeTracing();
   let client = new DebuggerClient(trace);
   client.connect().then(([applicationType, traits]) => {
-    trace.expectReceive({"from":"<actorid>","applicationType":"xpcshell-tests","traits":[]})
+    trace.expectReceive({"from":"<actorid>", "applicationType":"xpcshell-tests", "traits":[]});
     do_check_eq(applicationType, "xpcshell-tests");
 
     let rootFront = RootFront(client);
@@ -319,8 +319,8 @@ function run_test()
     };
 
     rootFront.getChild("child1").then(ret => {
-      trace.expectSend({"type":"getChild","str":"child1","to":"<actorid>"})
-      trace.expectReceive({"actor":"<actorid>","from":"<actorid>"})
+      trace.expectSend({"type":"getChild", "str":"child1", "to":"<actorid>"});
+      trace.expectReceive({"actor":"<actorid>", "from":"<actorid>"});
 
       childFront = ret;
       do_check_true(childFront instanceof ChildFront);
@@ -330,49 +330,49 @@ function run_test()
       // Request the child again, make sure the same is returned.
       return rootFront.getChild("child1");
     }).then(ret => {
-      trace.expectSend({"type":"getChild","str":"child1","to":"<actorid>"})
-      trace.expectReceive({"actor":"<actorid>","from":"<actorid>"})
+      trace.expectSend({"type":"getChild", "str":"child1", "to":"<actorid>"});
+      trace.expectReceive({"actor":"<actorid>", "from":"<actorid>"});
 
       expectRootChildren(1);
       do_check_true(ret === childFront);
     }).then(() => {
       return childFront.echo("hello");
     }).then(ret => {
-      trace.expectSend({"type":"echo","str":"hello","to":"<actorid>"})
-      trace.expectReceive({"str":"hello","from":"<actorid>"})
+      trace.expectSend({"type":"echo", "str":"hello", "to":"<actorid>"});
+      trace.expectReceive({"str":"hello", "from":"<actorid>"});
 
       do_check_eq(ret, "hello");
     }).then(() => {
       return childFront.getDetail1();
     }).then(ret => {
-      trace.expectSend({"type":"getDetail1","to":"<actorid>"});
-      trace.expectReceive({"actor":"<actorid>","childID":"child1","detail":"detail1","from":"<actorid>"});
+      trace.expectSend({"type":"getDetail1", "to":"<actorid>"});
+      trace.expectReceive({"actor":"<actorid>", "childID":"child1", "detail":"detail1", "from":"<actorid>"});
       do_check_true(ret === childFront);
       do_check_eq(childFront.detail, "detail1");
     }).then(() => {
       return childFront.getDetail2();
     }).then(ret => {
-      trace.expectSend({"type":"getDetail2","to":"<actorid>"});
-      trace.expectReceive({"actor":"<actorid>","childID":"child1","detail":"detail2","from":"<actorid>"});
+      trace.expectSend({"type":"getDetail2", "to":"<actorid>"});
+      trace.expectReceive({"actor":"<actorid>", "childID":"child1", "detail":"detail2", "from":"<actorid>"});
       do_check_true(ret === childFront);
       do_check_eq(childFront.detail, "detail2");
     }).then(() => {
       return childFront.getIDDetail();
     }).then(ret => {
-      trace.expectSend({"type":"getIDDetail","to":"<actorid>"});
-      trace.expectReceive({"idDetail": childFront.actorID,"from":"<actorid>"});
+      trace.expectSend({"type":"getIDDetail", "to":"<actorid>"});
+      trace.expectReceive({"idDetail": childFront.actorID, "from":"<actorid>"});
       do_check_true(ret === childFront);
     }).then(() => {
       return childFront.getSibling("siblingID");
     }).then(ret => {
-      trace.expectSend({"type":"getSibling","id":"siblingID","to":"<actorid>"});
-      trace.expectReceive({"sibling":{"actor":"<actorid>","childID":"siblingID"},"from":"<actorid>"});
+      trace.expectSend({"type":"getSibling", "id":"siblingID", "to":"<actorid>"});
+      trace.expectReceive({"sibling":{"actor":"<actorid>", "childID":"siblingID"}, "from":"<actorid>"});
 
       expectRootChildren(2);
     }).then(ret => {
       return rootFront.getTemporaryChild("temp1").then(temp1 => {
-        trace.expectSend({"type":"getTemporaryChild","id":"temp1","to":"<actorid>"});
-        trace.expectReceive({"child":{"actor":"<actorid>","childID":"temp1"},"from":"<actorid>"});
+        trace.expectSend({"type":"getTemporaryChild", "id":"temp1", "to":"<actorid>"});
+        trace.expectReceive({"child":{"actor":"<actorid>", "childID":"temp1"}, "from":"<actorid>"});
 
         // At this point we expect two direct children, plus the temporary holder
         // which should hold 1 itself.
@@ -381,8 +381,8 @@ function run_test()
 
         expectRootChildren(3);
         return rootFront.getTemporaryChild("temp2").then(temp2 => {
-          trace.expectSend({"type":"getTemporaryChild","id":"temp2","to":"<actorid>"});
-          trace.expectReceive({"child":{"actor":"<actorid>","childID":"temp2"},"from":"<actorid>"});
+          trace.expectSend({"type":"getTemporaryChild", "id":"temp2", "to":"<actorid>"});
+          trace.expectReceive({"child":{"actor":"<actorid>", "childID":"temp2"}, "from":"<actorid>"});
 
           // Same amount of direct children, and an extra in the temporary holder.
           expectRootChildren(3);
@@ -395,7 +395,7 @@ function run_test()
 
           // Now release the temporary holders and expect them to drop again.
           return rootFront.clearTemporaryChildren().then(() => {
-            trace.expectSend({"type":"clearTemporaryChildren","to":"<actorid>"});
+            trace.expectSend({"type":"clearTemporaryChildren", "to":"<actorid>"});
             trace.expectReceive({"from":"<actorid>"});
 
             expectRootChildren(2);
@@ -407,12 +407,12 @@ function run_test()
             }
           });
         });
-      })
+      });
     }).then(ret => {
       return rootFront.getChildren(["child1", "child2"]);
     }).then(ret => {
-      trace.expectSend({"type":"getChildren","ids":["child1","child2"],"to":"<actorid>"});
-      trace.expectReceive({"children":[{"actor":"<actorid>","childID":"child1"},{"actor":"<actorid>","childID":"child2"}],"from":"<actorid>"});
+      trace.expectSend({"type":"getChildren", "ids":["child1", "child2"], "to":"<actorid>"});
+      trace.expectReceive({"children":[{"actor":"<actorid>", "childID":"child1"}, {"actor":"<actorid>", "childID":"child2"}], "from":"<actorid>"});
 
       expectRootChildren(3);
       do_check_true(ret[0] === childFront);
@@ -462,9 +462,9 @@ function run_test()
         set.delete("array-object-event");
       });
 
-      let fail = function() {
+      let fail = function () {
         do_throw("Unexpected event");
-      }
+      };
       ret[1].on("event1", fail);
       ret[1].on("event2", fail);
       ret[1].on("named-event", fail);
@@ -472,13 +472,13 @@ function run_test()
       ret[1].on("array-object-event", fail);
 
       return childFront.emitEvents().then(() => {
-        trace.expectSend({"type":"emitEvents","to":"<actorid>"});
-        trace.expectReceive({"type":"event1","a":1,"b":2,"c":3,"from":"<actorid>"});
-        trace.expectReceive({"type":"event2","a":4,"b":5,"c":6,"from":"<actorid>"});
-        trace.expectReceive({"type":"namedEvent","a":1,"b":2,"c":3,"from":"<actorid>"});
-        trace.expectReceive({"type":"objectEvent","detail":{"actor":"<actorid>","childID":"child1","detail":"detail1"},"from":"<actorid>"});
-        trace.expectReceive({"type":"arrayObjectEvent","detail":[{"actor":"<actorid>","childID":"child1","detail":"detail2"}],"from":"<actorid>"});
-        trace.expectReceive({"value":"correct response","from":"<actorid>"});
+        trace.expectSend({"type":"emitEvents", "to":"<actorid>"});
+        trace.expectReceive({"type":"event1", "a":1, "b":2, "c":3, "from":"<actorid>"});
+        trace.expectReceive({"type":"event2", "a":4, "b":5, "c":6, "from":"<actorid>"});
+        trace.expectReceive({"type":"namedEvent", "a":1, "b":2, "c":3, "from":"<actorid>"});
+        trace.expectReceive({"type":"objectEvent", "detail":{"actor":"<actorid>", "childID":"child1", "detail":"detail1"}, "from":"<actorid>"});
+        trace.expectReceive({"type":"arrayObjectEvent", "detail":[{"actor":"<actorid>", "childID":"child1", "detail":"detail2"}], "from":"<actorid>"});
+        trace.expectReceive({"value":"correct response", "from":"<actorid>"});
 
 
         do_check_eq(set.size, 0);
@@ -486,8 +486,8 @@ function run_test()
     }).then(ret => {
       return rootFront.getManyChildren();
     }).then(ret => {
-      trace.expectSend({"type":"getManyChildren","to":"<actorid>"});
-      trace.expectReceive({"foo":"bar","child5":{"actor":"<actorid>","childID":"child5"},"more":[{"actor":"<actorid>","childID":"child6"},{"actor":"<actorid>","childID":"child7"}],"from":"<actorid>"});
+      trace.expectSend({"type":"getManyChildren", "to":"<actorid>"});
+      trace.expectReceive({"foo":"bar", "child5":{"actor":"<actorid>", "childID":"child5"}, "more":[{"actor":"<actorid>", "childID":"child6"}, {"actor":"<actorid>", "childID":"child7"}], "from":"<actorid>"});
 
       // Check all the crazy stuff we did in getManyChildren
       do_check_eq(ret.foo, "bar");
@@ -496,7 +496,7 @@ function run_test()
       do_check_eq(ret.more[1].childID, "child7");
     }).then(() => {
       // Test accepting a generator.
-      let f = function*() {
+      let f = function* () {
         for (let i of [1, 2, 3, 4, 5]) {
           yield i;
         }
@@ -511,7 +511,7 @@ function run_test()
     }).then(() => {
       return rootFront.getChildren(["child1", "child2"]);
     }).then(ids => {
-      let f = function*() {
+      let f = function* () {
         for (let id of ids) {
           yield id;
         }

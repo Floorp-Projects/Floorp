@@ -12,8 +12,8 @@ function run_test() {
   const debuggee = addTestGlobal("test-symbols");
   const client = new DebuggerClient(DebuggerServer.connectPipe());
 
-  client.connect().then(function() {
-    attachTestTabAndResume(client, "test-symbols", function(response, tabClient, threadClient) {
+  client.connect().then(function () {
+    attachTestTabAndResume(client, "test-symbols", function (response, tabClient, threadClient) {
       add_task(testSymbols.bind(null, client, debuggee));
       run_next_test();
     });

@@ -82,7 +82,7 @@ exports.items.push({
   runAt: "client",
   description: l10n.lookup("breaklistDesc"),
   returnType: "breakpoints",
-  exec: function(args, context) {
+  exec: function (args, context) {
     let dbg = getPanel(context, "jsdebugger", { ensureOpened: true });
     return dbg.then(getAllBreakpoints);
   }
@@ -92,7 +92,7 @@ exports.items.push({
   item: "converter",
   from: "breakpoints",
   to: "view",
-  exec: function(breakpoints, context) {
+  exec: function (breakpoints, context) {
     let dbg = getPanel(context, "jsdebugger");
     if (dbg && breakpoints.length) {
       return context.createView({
@@ -162,7 +162,7 @@ exports.items.push({
       name: "file",
       type: {
         name: "selection",
-        lookup: function(context) {
+        lookup: function (context) {
           return getAllSources(getPanel(context, "jsdebugger"));
         }
       },
@@ -175,7 +175,7 @@ exports.items.push({
     }
   ],
   returnType: "string",
-  exec: function(args, context) {
+  exec: function (args, context) {
     let dbg = getPanel(context, "jsdebugger");
     if (!dbg) {
       return l10n.lookup("debuggerStopped");
@@ -184,7 +184,7 @@ exports.items.push({
     let deferred = context.defer();
     let item = dbg._view.Sources.getItemForAttachment(a => {
       return a.source && a.source.actor === args.file;
-    })
+    });
     let position = { actor: item.value, line: args.line };
 
     dbg.addBreakpoint(position).then(() => {
@@ -210,7 +210,7 @@ exports.items.push({
       name: "breakpoint",
       type: {
         name: "selection",
-        lookup: function(context) {
+        lookup: function (context) {
           let dbg = getPanel(context, "jsdebugger");
           if (!dbg) {
             return [];
@@ -226,14 +226,14 @@ exports.items.push({
     }
   ],
   returnType: "string",
-  exec: function(args, context) {
+  exec: function (args, context) {
     let dbg = getPanel(context, "jsdebugger");
     if (!dbg) {
       return l10n.lookup("debuggerStopped");
     }
 
     let source = dbg._view.Sources.getItemForAttachment(a => {
-      return a.source && a.source.url === args.breakpoint.url
+      return a.source && a.source.url === args.breakpoint.url;
     });
 
     let deferred = context.defer();
@@ -268,7 +268,7 @@ exports.items.push({
   name: "dbg open",
   description: l10n.lookup("dbgOpen"),
   params: [],
-  exec: function(args, context) {
+  exec: function (args, context) {
     let target = context.environment.target;
     return gDevTools.showToolbox(target, "jsdebugger").then(() => null);
   }
@@ -283,7 +283,7 @@ exports.items.push({
   name: "dbg close",
   description: l10n.lookup("dbgClose"),
   params: [],
-  exec: function(args, context) {
+  exec: function (args, context) {
     if (!getPanel(context, "jsdebugger")) {
       return;
     }
@@ -301,7 +301,7 @@ exports.items.push({
   name: "dbg interrupt",
   description: l10n.lookup("dbgInterrupt"),
   params: [],
-  exec: function(args, context) {
+  exec: function (args, context) {
     let dbg = getPanel(context, "jsdebugger");
     if (!dbg) {
       return l10n.lookup("debuggerStopped");
@@ -324,7 +324,7 @@ exports.items.push({
   name: "dbg continue",
   description: l10n.lookup("dbgContinue"),
   params: [],
-  exec: function(args, context) {
+  exec: function (args, context) {
     let dbg = getPanel(context, "jsdebugger");
     if (!dbg) {
       return l10n.lookup("debuggerStopped");
@@ -358,7 +358,7 @@ exports.items.push({
   name: "dbg step over",
   description: l10n.lookup("dbgStepOverDesc"),
   params: [],
-  exec: function(args, context) {
+  exec: function (args, context) {
     let dbg = getPanel(context, "jsdebugger");
     if (!dbg) {
       return l10n.lookup("debuggerStopped");
@@ -378,10 +378,10 @@ exports.items.push({
 exports.items.push({
   item: "command",
   runAt: "client",
-  name: 'dbg step in',
+  name: "dbg step in",
   description: l10n.lookup("dbgStepInDesc"),
   params: [],
-  exec: function(args, context) {
+  exec: function (args, context) {
     let dbg = getPanel(context, "jsdebugger");
     if (!dbg) {
       return l10n.lookup("debuggerStopped");
@@ -401,10 +401,10 @@ exports.items.push({
 exports.items.push({
   item: "command",
   runAt: "client",
-  name: 'dbg step out',
+  name: "dbg step out",
   description: l10n.lookup("dbgStepOutDesc"),
   params: [],
-  exec: function(args, context) {
+  exec: function (args, context) {
     let dbg = getPanel(context, "jsdebugger");
     if (!dbg) {
       return l10n.lookup("debuggerStopped");
@@ -428,7 +428,7 @@ exports.items.push({
   description: l10n.lookup("dbgListSourcesDesc"),
   params: [],
   returnType: "dom",
-  exec: function(args, context) {
+  exec: function (args, context) {
     let dbg = getPanel(context, "jsdebugger");
     if (!dbg) {
       return l10n.lookup("debuggerClosed");
@@ -464,8 +464,8 @@ exports.items.push({
     clientMethod: "unblackBox",
     l10nPrefix: "dbgUnBlackBox"
   }
-].forEach(function(cmd) {
-  const lookup = function(id) {
+].forEach(function (cmd) {
+  const lookup = function (id) {
     return l10n.lookup(cmd.l10nPrefix + id);
   };
 
@@ -479,7 +479,7 @@ exports.items.push({
         name: "source",
         type: {
           name: "selection",
-          lookup: function(context) {
+          lookup: function (context) {
             return getAllSources(getPanel(context, "jsdebugger"));
           }
         },
@@ -499,7 +499,7 @@ exports.items.push({
       }
     ],
     returnType: "dom",
-    exec: function(args, context) {
+    exec: function (args, context) {
       const dbg = getPanel(context, "jsdebugger");
       const doc = context.environment.chromeDocument;
       if (!dbg) {
@@ -547,7 +547,7 @@ exports.items.push({
           if (toBlackBox.length === blackBoxed.length) {
             displayResults();
           }
-        })
+        });
       }
 
       // List the results for the user.
@@ -628,6 +628,6 @@ function globToRegExp(glob) {
     .replace(/\]/g, "\\]")
     .replace(/\-/g, "\\-")
   // Turn * into the match everything wildcard.
-    .replace(/\*/g, ".*")
+    .replace(/\*/g, ".*");
   return new RegExp("^" + reStr + "$");
 }

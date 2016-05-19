@@ -12,7 +12,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function *() {
+add_task(function* () {
   let front = new StubbedMemoryFront();
   yield front.attach();
   let store = Store();
@@ -34,4 +34,4 @@ add_task(function *() {
   }
 });
 
-function isDone (s) { return s.state === states.SAVED; }
+function isDone(s) { return s.state === states.SAVED; }

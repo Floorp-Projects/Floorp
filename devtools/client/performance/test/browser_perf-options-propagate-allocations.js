@@ -12,7 +12,7 @@ const { MEMORY_SAMPLE_PROB_PREF, MEMORY_MAX_LOG_LEN_PREF, UI_ENABLE_ALLOCATIONS_
 const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 
-add_task(function*() {
+add_task(function* () {
   let { panel, toolbox } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window

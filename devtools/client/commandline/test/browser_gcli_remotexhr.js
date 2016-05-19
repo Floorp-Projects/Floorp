@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
 // PLEASE TALK TO SOMEONE IN DEVELOPER TOOLS BEFORE EDITING IT
@@ -33,29 +33,29 @@ function test() {
 // They are kept separate to save adding complexity to the test system and so
 // to help us select the test that are available in different environments
 
-exports.testRemoteXhr = function(options) {
+exports.testRemoteXhr = function (options) {
   return helpers.audit(options, [
     {
       skipRemainingIf: options.isRemote || options.isNode || options.isFirefox,
-      setup:    'remote ',
+      setup:    "remote ",
       check: {
-        input:  'remote ',
-        hints:         '',
-        markup: 'EEEEEEV',
+        input:  "remote ",
+        hints:         "",
+        markup: "EEEEEEV",
         cursor: 7,
-        current: '__command',
-        status: 'ERROR',
+        current: "__command",
+        status: "ERROR",
         options: [ ],
-        message: 'Can\'t use \'remote\'.',
+        message: "Can't use 'remote'.",
         predictions: [ ],
         unassigned: [ ],
       }
     },
     {
-      setup: 'connect remote',
+      setup: "connect remote",
       check: {
         args: {
-          prefix: { value: 'remote' },
+          prefix: { value: "remote" },
           url: { value: undefined }
         }
       },
@@ -64,27 +64,27 @@ exports.testRemoteXhr = function(options) {
       }
     },
     {
-      setup: 'disconnect remote',
+      setup: "disconnect remote",
       check: {
         args: {
           prefix: {
-            value: function(front) {
-              assert.is(front.prefix, 'remote', 'disconnecting remote');
+            value: function (front) {
+              assert.is(front.prefix, "remote", "disconnecting remote");
             }
           }
         }
       },
       exec: {
         output: /^Removed [0-9]* commands.$/,
-        type: 'string',
+        type: "string",
         error: false
       }
     },
     {
-      setup: 'connect remote --method xhr',
+      setup: "connect remote --method xhr",
       check: {
         args: {
-          prefix: { value: 'remote' },
+          prefix: { value: "remote" },
           url: { value: undefined }
         }
       },
@@ -93,204 +93,204 @@ exports.testRemoteXhr = function(options) {
       }
     },
     {
-      setup: 'disconnect remote',
+      setup: "disconnect remote",
       check: {
         args: {
           prefix: {
-            value: function(front) {
-              assert.is(front.prefix, 'remote', 'disconnecting remote');
+            value: function (front) {
+              assert.is(front.prefix, "remote", "disconnecting remote");
             }
           }
         }
       },
       exec: {
         output: /^Removed [0-9]* commands.$/,
-        type: 'string',
+        type: "string",
         error: false
       }
     },
     {
-      setup: 'connect remote --method xhr',
+      setup: "connect remote --method xhr",
       check: {
         args: {
-          prefix: { value: 'remote' },
+          prefix: { value: "remote" },
           url: { value: undefined }
         }
       },
       exec: {
         output: /^Added [0-9]* commands.$/,
-        type: 'string',
+        type: "string",
         error: false
       }
     },
     {
-      setup:    'remote ',
+      setup:    "remote ",
       check: {
-        input:  'remote ',
+        input:  "remote ",
         // PhantomJS fails on this. Unsure why
         // hints:         ' {',
-        markup: 'IIIIIIV',
-        status: 'ERROR',
+        markup: "IIIIIIV",
+        status: "ERROR",
         optionsIncludes: [
-          'remote', 'remote cd', 'remote context', 'remote echo',
-          'remote exec', 'remote exit', 'remote firefox', 'remote help',
-          'remote intro', 'remote make'
+          "remote", "remote cd", "remote context", "remote echo",
+          "remote exec", "remote exit", "remote firefox", "remote help",
+          "remote intro", "remote make"
         ],
-        message: '',
-        predictionsIncludes: [ 'remote' ],
+        message: "",
+        predictionsIncludes: [ "remote" ],
         unassigned: [ ],
       }
     },
     {
-      setup:    'remote echo hello world',
+      setup:    "remote echo hello world",
       check: {
-        input:  'remote echo hello world',
-        hints:                         '',
-        markup: 'VVVVVVVVVVVVVVVVVVVVVVV',
+        input:  "remote echo hello world",
+        hints:                         "",
+        markup: "VVVVVVVVVVVVVVVVVVVVVVV",
         cursor: 23,
-        current: 'message',
-        status: 'VALID',
+        current: "message",
+        status: "VALID",
         options: [ ],
-        message: '',
+        message: "",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'remote echo' },
+          command: { name: "remote echo" },
           message: {
-            value: 'hello world',
-            arg: ' hello world',
-            status: 'VALID',
-            message: ''
+            value: "hello world",
+            arg: " hello world",
+            status: "VALID",
+            message: ""
           }
         }
       },
       exec: {
-        output: 'hello world',
-        type: 'string',
+        output: "hello world",
+        type: "string",
         error: false
       }
     },
     {
-      setup:    'remote exec ls',
+      setup:    "remote exec ls",
       check: {
-        input:  'remote exec ls',
-        hints:                '',
-        markup: 'VVVVVVVVVVVVVV',
+        input:  "remote exec ls",
+        hints:                "",
+        markup: "VVVVVVVVVVVVVV",
         cursor: 14,
-        current: 'command',
-        status: 'VALID',
+        current: "command",
+        status: "VALID",
         options: [ ],
-        message: '',
+        message: "",
         predictions: [ ],
         unassigned: [ ],
         args: {
           command: {
-            value: 'ls',
-            arg: ' ls',
-            status: 'VALID',
-            message: ''
+            value: "ls",
+            arg: " ls",
+            status: "VALID",
+            message: ""
           }
         }
       },
       exec: {
         // output: '', We can't rely on the contents of the FS
-        type: 'output',
+        type: "output",
         error: false
       }
     },
     {
-      setup:    'remote sleep mistake',
+      setup:    "remote sleep mistake",
       check: {
-        input:  'remote sleep mistake',
-        hints:                      '',
-        markup: 'VVVVVVVVVVVVVEEEEEEE',
+        input:  "remote sleep mistake",
+        hints:                      "",
+        markup: "VVVVVVVVVVVVVEEEEEEE",
         cursor: 20,
-        current: 'length',
-        status: 'ERROR',
+        current: "length",
+        status: "ERROR",
         options: [ ],
         message: 'Can\'t convert "mistake" to a number.',
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'remote sleep' },
+          command: { name: "remote sleep" },
           length: {
             value: undefined,
-            arg: ' mistake',
-            status: 'ERROR',
+            arg: " mistake",
+            status: "ERROR",
             message: 'Can\'t convert "mistake" to a number.'
           }
         }
       }
     },
     {
-      setup:    'remote sleep 1',
+      setup:    "remote sleep 1",
       check: {
-        input:  'remote sleep 1',
-        hints:                 '',
-        markup: 'VVVVVVVVVVVVVV',
+        input:  "remote sleep 1",
+        hints:                 "",
+        markup: "VVVVVVVVVVVVVV",
         cursor: 14,
-        current: 'length',
-        status: 'VALID',
+        current: "length",
+        status: "VALID",
         options: [ ],
-        message: '',
+        message: "",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'remote sleep' },
-          length: { value: 1, arg: ' 1', status: 'VALID', message: '' }
+          command: { name: "remote sleep" },
+          length: { value: 1, arg: " 1", status: "VALID", message: "" }
         }
       },
       exec: {
-        output: 'Done',
-        type: 'string',
+        output: "Done",
+        type: "string",
         error: false
       }
     },
     {
-      setup:    'remote help ',
+      setup:    "remote help ",
       skipIf: true, // The help command is not remotable
       check: {
-        input:  'remote help ',
-        hints:              '[search]',
-        markup: 'VVVVVVVVVVVV',
+        input:  "remote help ",
+        hints:              "[search]",
+        markup: "VVVVVVVVVVVV",
         cursor: 12,
-        current: 'search',
-        status: 'VALID',
+        current: "search",
+        status: "VALID",
         options: [ ],
-        message: '',
+        message: "",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'remote help' },
+          command: { name: "remote help" },
           search: {
             value: undefined,
-            arg: '',
-            status: 'VALID',
-            message: ''
+            arg: "",
+            status: "VALID",
+            message: ""
           }
         }
       },
       exec: {
-        output: '',
-        type: 'string',
+        output: "",
+        type: "string",
         error: false
       }
     },
     {
-      setup:    'remote intro',
+      setup:    "remote intro",
       check: {
-        input:  'remote intro',
-        hints:              '',
-        markup: 'VVVVVVVVVVVV',
+        input:  "remote intro",
+        hints:              "",
+        markup: "VVVVVVVVVVVV",
         cursor: 12,
-        current: '__command',
-        status: 'VALID',
+        current: "__command",
+        status: "VALID",
         options: [ ],
-        message: '',
+        message: "",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'remote intro' }
+          command: { name: "remote intro" }
         }
       },
       exec: {
@@ -298,24 +298,24 @@ exports.testRemoteXhr = function(options) {
           /GCLI is an experiment/,
           /F1\/Escape/
         ],
-        type: 'intro',
+        type: "intro",
         error: false
       }
     },
     {
-      setup:    'context remote',
+      setup:    "context remote",
       check: {
-        input:  'context remote',
+        input:  "context remote",
         // hints:                ' {',
-        markup: 'VVVVVVVVVVVVVV',
+        markup: "VVVVVVVVVVVVVV",
         cursor: 14,
-        current: 'prefix',
-        status: 'VALID',
+        current: "prefix",
+        status: "VALID",
         optionsContains: [
-          'remote', 'remote cd', 'remote echo', 'remote exec', 'remote exit',
-          'remote firefox', 'remote help', 'remote intro', 'remote make'
+          "remote", "remote cd", "remote echo", "remote exec", "remote exit",
+          "remote firefox", "remote help", "remote intro", "remote make"
         ],
-        message: '',
+        message: "",
         // predictionsContains: [
         //   'remote', 'remote cd', 'remote echo', 'remote exec', 'remote exit',
         //   'remote firefox', 'remote help', 'remote intro', 'remote make',
@@ -323,160 +323,160 @@ exports.testRemoteXhr = function(options) {
         // ],
         unassigned: [ ],
         args: {
-          command: { name: 'context' },
+          command: { name: "context" },
           prefix: {
-            arg: ' remote',
-            status: 'VALID',
-            message: ''
+            arg: " remote",
+            status: "VALID",
+            message: ""
           }
         }
       },
       exec: {
-        output: 'Using remote as a command prefix',
-        type: 'string',
+        output: "Using remote as a command prefix",
+        type: "string",
         error: false
       }
     },
     {
-      setup:    'exec ls',
+      setup:    "exec ls",
       check: {
-        input:  'exec ls',
-        hints:         '',
-        markup: 'VVVVVVV',
+        input:  "exec ls",
+        hints:         "",
+        markup: "VVVVVVV",
         cursor: 7,
-        current: 'command',
-        status: 'VALID',
+        current: "command",
+        status: "VALID",
         options: [ ],
-        message: '',
+        message: "",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { value: 'ls', arg: ' ls', status: 'VALID', message: '' },
+          command: { value: "ls", arg: " ls", status: "VALID", message: "" },
         }
       },
       exec: {
         // output: '', We can't rely on the contents of the filesystem
-        type: 'output',
+        type: "output",
         error: false
       }
     },
     {
-      setup:    'echo hello world',
+      setup:    "echo hello world",
       check: {
-        input:  'echo hello world',
-        hints:                  '',
-        markup: 'VVVVVVVVVVVVVVVV',
+        input:  "echo hello world",
+        hints:                  "",
+        markup: "VVVVVVVVVVVVVVVV",
         cursor: 16,
-        current: 'message',
-        status: 'VALID',
+        current: "message",
+        status: "VALID",
         options: [ ],
-        message: '',
+        message: "",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'remote echo' },
+          command: { name: "remote echo" },
           message: {
-            value: 'hello world',
-            arg: ' hello world',
-            status: 'VALID',
-            message: ''
+            value: "hello world",
+            arg: " hello world",
+            status: "VALID",
+            message: ""
           }
         }
       },
       exec: {
         output: /^hello world$/,
-        type: 'string',
+        type: "string",
         error: false
       }
     },
     {
-      setup:    'context',
+      setup:    "context",
       check: {
-        input:  'context',
-        hints:         ' [prefix]',
-        markup: 'VVVVVVV',
+        input:  "context",
+        hints:         " [prefix]",
+        markup: "VVVVVVV",
         cursor: 7,
-        current: '__command',
-        status: 'VALID',
+        current: "__command",
+        status: "VALID",
         optionsContains: [
-          'remote', 'remote cd', 'remote echo', 'remote exec', 'remote exit',
-          'remote firefox', 'remote help', 'remote intro', 'remote make'
+          "remote", "remote cd", "remote echo", "remote exec", "remote exit",
+          "remote firefox", "remote help", "remote intro", "remote make"
         ],
-        message: '',
+        message: "",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'context' },
-          prefix: { value: undefined, arg: '', status: 'VALID', message: '' }
+          command: { name: "context" },
+          prefix: { value: undefined, arg: "", status: "VALID", message: "" }
         }
       },
       exec: {
-        output: 'Command prefix is unset',
-        type: 'string',
+        output: "Command prefix is unset",
+        type: "string",
         error: false
       }
     },
     {
-      setup:    'disconnect ',
+      setup:    "disconnect ",
       check: {
-        input:  'disconnect ',
-        hints:             'remote',
-        markup: 'VVVVVVVVVVV',
+        input:  "disconnect ",
+        hints:             "remote",
+        markup: "VVVVVVVVVVV",
         cursor: 11,
-        current: 'prefix',
-        status: 'ERROR',
-        options: [ 'remote' ],
-        message: '',
-        predictions: [ 'remote' ],
+        current: "prefix",
+        status: "ERROR",
+        options: [ "remote" ],
+        message: "",
+        predictions: [ "remote" ],
         unassigned: [ ],
         args: {
-          command: { name: 'disconnect' },
+          command: { name: "disconnect" },
           prefix: {
             value: undefined,
-            arg: '',
-            status: 'INCOMPLETE',
-            message: 'Value required for \'prefix\'.'
+            arg: "",
+            status: "INCOMPLETE",
+            message: "Value required for 'prefix'."
           }
         }
       }
     },
     {
-      setup:    'disconnect remote',
+      setup:    "disconnect remote",
       check: {
-        input:  'disconnect remote',
-        hints:                   '',
-        markup: 'VVVVVVVVVVVVVVVVV',
-        status: 'VALID',
-        message: '',
+        input:  "disconnect remote",
+        hints:                   "",
+        markup: "VVVVVVVVVVVVVVVVV",
+        status: "VALID",
+        message: "",
         unassigned: [ ],
         args: {
           prefix: {
-            value: function(front) {
-              assert.is(front.prefix, 'remote', 'disconnecting remote');
+            value: function (front) {
+              assert.is(front.prefix, "remote", "disconnecting remote");
             },
-            arg: ' remote',
-            status: 'VALID',
-            message: ''
+            arg: " remote",
+            status: "VALID",
+            message: ""
           }
         }
       },
       exec: {
         output: /^Removed [0-9]* commands.$/,
-        type: 'string',
+        type: "string",
         error: false
       }
     },
     {
-      setup:    'remote ',
+      setup:    "remote ",
       check: {
-        input:  'remote ',
-        hints:         '',
-        markup: 'EEEEEEV',
+        input:  "remote ",
+        hints:         "",
+        markup: "EEEEEEV",
         cursor: 7,
-        current: '__command',
-        status: 'ERROR',
+        current: "__command",
+        status: "ERROR",
         options: [ ],
-        message: 'Can\'t use \'remote\'.',
+        message: "Can't use 'remote'.",
         predictions: [ ],
         unassigned: [ ],
       }

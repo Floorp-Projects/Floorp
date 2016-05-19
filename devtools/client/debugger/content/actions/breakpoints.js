@@ -3,13 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const constants = require('../constants');
-const promise = require('promise');
-const { asPaused } = require('../utils');
-const { PROMISE } = require('devtools/client/shared/redux/middleware/promise');
+const constants = require("../constants");
+const promise = require("promise");
+const { asPaused } = require("../utils");
+const { PROMISE } = require("devtools/client/shared/redux/middleware/promise");
 const {
   getSource, getBreakpoint, getBreakpoints, makeLocationId
-} = require('../queries');
+} = require("../queries");
 
 // Because breakpoints are just simple data structures, we still need
 // a way to lookup the actual client instance to talk to the server.
@@ -51,7 +51,7 @@ function addBreakpoint(location, condition) {
       type: constants.ADD_BREAKPOINT,
       breakpoint: bp,
       condition: condition,
-      [PROMISE]: Task.spawn(function*() {
+      [PROMISE]: Task.spawn(function* () {
         const sourceClient = gThreadClient.source(
           getSource(getState(), bp.location.actor)
         );
@@ -78,7 +78,7 @@ function addBreakpoint(location, condition) {
         };
       })
     });
-  }
+  };
 }
 
 function disableBreakpoint(location) {
@@ -93,12 +93,12 @@ function _removeOrDisableBreakpoint(location, isDisabled) {
   return (dispatch, getState) => {
     let bp = getBreakpoint(getState(), location);
     if (!bp) {
-      throw new Error('attempt to remove breakpoint that does not exist');
+      throw new Error("attempt to remove breakpoint that does not exist");
     }
     if (bp.loading) {
       // TODO(jwl): make this wait until the breakpoint is saved if it
       // is still loading
-      throw new Error('attempt to remove unsaved breakpoint');
+      throw new Error("attempt to remove unsaved breakpoint");
     }
 
     const bpClient = getBreakpointClient(bp.actor);
@@ -112,14 +112,14 @@ function _removeOrDisableBreakpoint(location, isDisabled) {
     // it from the server. We just need to dispatch an action
     // simulating a successful server request to remove it, and it
     // will be removed completely from the state.
-    if(!bp.disabled) {
+    if (!bp.disabled) {
       return dispatch(Object.assign({}, action, {
         [PROMISE]: bpClient.remove()
       }));
     } else {
       return dispatch(Object.assign({}, action, { status: "done" }));
     }
-  }
+  };
 }
 
 function removeAllBreakpoints() {
@@ -127,7 +127,7 @@ function removeAllBreakpoints() {
     const breakpoints = getBreakpoints(getState());
     const activeBreakpoints = breakpoints.filter(bp => !bp.disabled);
     activeBreakpoints.forEach(bp => removeBreakpoint(bp.location));
-  }
+  };
 }
 
 /**
@@ -146,7 +146,7 @@ function setBreakpointCondition(location, condition) {
     if (!bp) {
       throw new Error("Breakpoint does not exist at the specified location");
     }
-    if (bp.loading){
+    if (bp.loading) {
       // TODO(jwl): when this function is called, make sure the action
       // creator waits for the breakpoint to exist
       throw new Error("breakpoint must be saved");
@@ -162,9 +162,9 @@ function setBreakpointCondition(location, condition) {
     // If it's not disabled, we need to update the condition on the
     // server. Otherwise, just dispatch a non-remote action that
     // updates the condition locally.
-    if(!bp.disabled) {
+    if (!bp.disabled) {
       return dispatch(Object.assign({}, action, {
-        [PROMISE]: Task.spawn(function*() {
+        [PROMISE]: Task.spawn(function* () {
           const newClient = yield bpClient.setCondition(gThreadClient, condition);
 
           // Remove the old instance and save the new one
@@ -187,4 +187,4 @@ module.exports = {
   removeBreakpoint,
   removeAllBreakpoints,
   setBreakpointCondition
-}
+};

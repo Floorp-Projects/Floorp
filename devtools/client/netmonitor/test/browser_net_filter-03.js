@@ -117,7 +117,7 @@ function test() {
             statusText: "OK",
             type: "html",
             fullMimeType: "text/html; charset=utf-8"
-        });
+          });
       }
       for (let i = 0, len = aOrder.length / 7; i < len; i++) {
         verifyRequestItemTarget(RequestsMenu.getItemAtIndex(aOrder[i + len]),
@@ -127,7 +127,7 @@ function test() {
             statusText: "OK",
             type: "css",
             fullMimeType: "text/css; charset=utf-8"
-        });
+          });
       }
       for (let i = 0, len = aOrder.length / 7; i < len; i++) {
         verifyRequestItemTarget(RequestsMenu.getItemAtIndex(aOrder[i + len * 2]),
@@ -137,7 +137,7 @@ function test() {
             statusText: "OK",
             type: "js",
             fullMimeType: "application/javascript; charset=utf-8"
-        });
+          });
       }
       for (let i = 0, len = aOrder.length / 7; i < len; i++) {
         verifyRequestItemTarget(RequestsMenu.getItemAtIndex(aOrder[i + len * 3]),
@@ -147,7 +147,7 @@ function test() {
             statusText: "OK",
             type: "woff",
             fullMimeType: "font/woff"
-        });
+          });
       }
       for (let i = 0, len = aOrder.length / 7; i < len; i++) {
         verifyRequestItemTarget(RequestsMenu.getItemAtIndex(aOrder[i + len * 4]),
@@ -157,7 +157,7 @@ function test() {
             statusText: "OK",
             type: "png",
             fullMimeType: "image/png"
-        });
+          });
       }
       for (let i = 0, len = aOrder.length / 7; i < len; i++) {
         verifyRequestItemTarget(RequestsMenu.getItemAtIndex(aOrder[i + len * 5]),
@@ -167,7 +167,7 @@ function test() {
             statusText: "OK",
             type: "ogg",
             fullMimeType: "audio/ogg"
-        });
+          });
       }
       for (let i = 0, len = aOrder.length / 7; i < len; i++) {
         verifyRequestItemTarget(RequestsMenu.getItemAtIndex(aOrder[i + len * 6]),
@@ -177,7 +177,7 @@ function test() {
             statusText: "OK",
             type: "webm",
             fullMimeType: "video/webm"
-        });
+          });
       }
 
       return promise.resolve(null);

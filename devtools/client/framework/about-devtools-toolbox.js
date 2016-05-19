@@ -24,18 +24,18 @@ AboutURL.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([nsIAboutModule]),
 
-  newChannel: function(aURI, aLoadInfo) {
+  newChannel: function (aURI, aLoadInfo) {
     let chan = Services.io.newChannelFromURIWithLoadInfo(this.uri, aLoadInfo);
     chan.owner = Services.scriptSecurityManager.getSystemPrincipal();
     return chan;
   },
 
-  getURIFlags: function(aURI) {
+  getURIFlags: function (aURI) {
     return nsIAboutModule.ALLOW_SCRIPT || nsIAboutModule.ENABLE_INDEXED_DB;
   }
 };
 
-AboutURL.createInstance = function(outer, iid) {
+AboutURL.createInstance = function (outer, iid) {
   if (outer) {
     throw Cr.NS_ERROR_NO_AGGREGATION;
   }
@@ -52,10 +52,10 @@ exports.register = function () {
                        AboutURL.prototype.contractID,
                        AboutURL);
   }
-}
+};
 
 exports.unregister = function () {
   if (registrar.isCIDRegistered(AboutURL.prototype.classID)) {
     registrar.unregisterFactory(AboutURL.prototype.classID, AboutURL);
   }
-}
+};

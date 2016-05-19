@@ -19,7 +19,7 @@ function test() {
     const frames = gDebugger.DebuggerView.StackFrames;
     const classicFrames = gDebugger.DebuggerView.StackFramesClassicList;
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       framesScrollingInterval = window.setInterval(() => {
         frames.widget._list.scrollByIndex(-1);
       }, 100);

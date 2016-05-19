@@ -8,7 +8,7 @@ const Services = require("Services");
 Services.prefs.setBoolPref("devtools.debugger.log", true);
 Services.prefs.setBoolPref("dom.mozBrowserFramesEnabled", true);
 
-SimpleTest.registerCleanupFunction(function() {
+SimpleTest.registerCleanupFunction(function () {
   Services.prefs.clearUserPref("devtools.debugger.log");
   Services.prefs.clearUserPref("dom.mozBrowserFramesEnabled");
 });
@@ -20,7 +20,7 @@ const { DirectorManagerFront } = require("devtools/server/actors/director-manage
 
 const {Task} = require("resource://gre/modules/Task.jsm");
 
-/***********************************
+/** *********************************
  *  director helpers functions
  **********************************/
 

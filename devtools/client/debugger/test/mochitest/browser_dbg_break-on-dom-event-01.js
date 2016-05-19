@@ -223,7 +223,7 @@ function triggerInputChange() {
   gInput.blur();
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gClient = null;
   gThreadClient = null;
   gInput = null;

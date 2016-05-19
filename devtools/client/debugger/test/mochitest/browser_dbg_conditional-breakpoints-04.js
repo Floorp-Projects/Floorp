@@ -16,8 +16,8 @@ function test() {
     const gPanel = aPanel;
     const gDebugger = gPanel.panelWin;
     const gSources = gDebugger.DebuggerView.Sources;
-    const queries = gDebugger.require('./content/queries');
-    const constants = gDebugger.require('./content/constants');
+    const queries = gDebugger.require("./content/queries");
+    const constants = gDebugger.require("./content/constants");
     const actions = bindActionCreators(gPanel);
     const getState = gDebugger.DebuggerController.getState;
 
@@ -26,7 +26,7 @@ function test() {
     var client = gPanel.target.client;
     client.mainRoot.traits.conditionalBreakpoints = false;
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceAndCaretAndScopes(gPanel, ".html", 17);
       const location = { actor: gSources.selectedValue, line: 18 };
 

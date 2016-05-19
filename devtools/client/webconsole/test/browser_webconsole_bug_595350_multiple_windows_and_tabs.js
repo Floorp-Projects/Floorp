@@ -52,7 +52,7 @@ function addTabs(aWindow) {
 function openConsoles() {
   function open(i) {
     let tab = openTabs[i];
-    openConsole(tab).then(function(hud) {
+    openConsole(tab).then(function (hud) {
       ok(hud, "HUD is open for tab " + i);
       let window = hud.target.tab.linkedBrowser.contentWindow;
       window.console.log("message for tab " + i);

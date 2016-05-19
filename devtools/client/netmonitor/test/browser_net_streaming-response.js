@@ -7,7 +7,7 @@
  */
 
 function test() {
-  Task.spawn(function*() {
+  Task.spawn(function* () {
     let [tab, debuggee, monitor] = yield initNetMonitor(CUSTOM_GET_URL);
 
     info("Starting test... ");

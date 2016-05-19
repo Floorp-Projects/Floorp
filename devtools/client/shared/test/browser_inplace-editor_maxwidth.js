@@ -14,7 +14,7 @@ const LONG_TEXT = "I am a long text and I will not fit in a 300px container. " +
 // Test the inplace-editor behavior with a maxWidth configuration option
 // defined.
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("data:text/html;charset=utf-8,inplace editor max width tests");
   let [host, , doc] = yield createHost();
 

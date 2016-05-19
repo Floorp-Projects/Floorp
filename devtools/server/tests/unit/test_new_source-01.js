@@ -14,8 +14,8 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-stack", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-stack", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_simple_new_source();
     });
@@ -35,6 +35,6 @@ function test_simple_new_source()
   });
 
   Components.utils.evalInSandbox(function inc(n) {
-    return n+1;
+    return n + 1;
   }.toString(), gDebuggee);
 }

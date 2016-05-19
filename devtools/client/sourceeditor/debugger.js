@@ -41,7 +41,7 @@ function doSearch(ctx, rev, query) {
     return;
   }
 
-  cm.operation(function() {
+  cm.operation(function () {
     if (state.query) {
       return;
     }
@@ -57,7 +57,7 @@ function doSearch(ctx, rev, query) {
  */
 function searchNext(ctx, rev) {
   let { cm, ed } = ctx;
-  cm.operation(function() {
+  cm.operation(function () {
     let state = getSearchState(cm);
     let cursor = getSearchCursor(cm, state.query,
                                  rev ? state.posFrom : state.posTo);
@@ -190,7 +190,7 @@ function removeBreakpoints(ctx) {
     meta.breakpoints = {};
   }
 
-  cm.doc.iter((line) => { removeBreakpoint(ctx, line) });
+  cm.doc.iter((line) => { removeBreakpoint(ctx, line); });
 }
 
 /**

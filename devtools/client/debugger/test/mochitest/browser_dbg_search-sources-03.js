@@ -91,7 +91,7 @@ function verifySourcesPane() {
     "The third source's label should be correct.");
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

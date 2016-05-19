@@ -29,7 +29,7 @@ function* runTests([win, sp]) {
   const hints = editorWin.document.querySelector(".CodeMirror-hints");
 
   ok(hints,
-     "The hint container should exist.")
+     "The hint container should exist.");
   is(hints.childNodes.length, 3,
      "The hint container should have the completions.");
 

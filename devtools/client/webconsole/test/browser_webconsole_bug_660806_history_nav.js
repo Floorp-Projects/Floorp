@@ -21,7 +21,7 @@ function consoleOpened(HUD) {
 
   let jsterm = HUD.jsterm;
   let popup = jsterm.autocompletePopup;
-  let onShown = function() {
+  let onShown = function () {
     ok(false, "popup shown");
   };
 
@@ -45,7 +45,7 @@ function consoleOpened(HUD) {
   is(jsterm.lastInputValue, "window.foobarBug660806.location",
      "lastInputValue is correct, again");
 
-  executeSoon(function() {
+  executeSoon(function () {
     ok(!popup.isOpen, "popup is not open");
     popup._panel.removeEventListener("popupshown", onShown, false);
     executeSoon(deferred.resolve);

@@ -13,7 +13,7 @@ var DeletePlugin = Class({
   extends: Plugin,
   shouldConfirm: true,
 
-  init: function(host) {
+  init: function (host) {
     this.host.addCommand(this, {
       id: "cmd-delete"
     });
@@ -24,7 +24,7 @@ var DeletePlugin = Class({
     });
   },
 
-  confirmDelete: function(resource) {
+  confirmDelete: function (resource) {
     let deletePromptMessage = resource.isDir ?
       getLocalizedString("projecteditor.deleteFolderPromptMessage") :
       getLocalizedString("projecteditor.deleteFilePromptMessage");
@@ -34,7 +34,7 @@ var DeletePlugin = Class({
     );
   },
 
-  onContextMenuOpen: function(resource) {
+  onContextMenuOpen: function (resource) {
     // Do not allow deletion of the top level items in the tree.  In the
     // case of the Web IDE in particular this can leave the UI in a weird
     // state. If we'd like to add ability to delete the project folder from
@@ -47,7 +47,7 @@ var DeletePlugin = Class({
     }
   },
 
-  onCommand: function(cmd) {
+  onCommand: function (cmd) {
     if (cmd === "cmd-delete") {
       let tree = this.host.projectTree;
       let resource = tree.getSelectedResource();

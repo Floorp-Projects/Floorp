@@ -17,7 +17,7 @@ function test() {
     const gFrames = gDebugger.DebuggerView.StackFrames;
     const gClassicFrames = gDebugger.DebuggerView.StackFramesClassicList;
 
-    const performTest = Task.async(function*() {
+    const performTest = Task.async(function* () {
       is(gDebugger.gThreadClient.state, "paused",
          "Should only be getting stack frames while paused.");
       is(gFrames.itemCount, 2,
@@ -35,7 +35,7 @@ function test() {
       is(gFrames.getItemAtIndex(1).attachment.title,
          "(eval)", "Newest frame name should be correct.");
       is(gFrames.getItemAtIndex(1).attachment.url,
-         'SCRIPT0', "Newest frame url should be correct.");
+         "SCRIPT0", "Newest frame url should be correct.");
       is(gClassicFrames.getItemAtIndex(1).attachment.depth,
          1, "Newest frame name is mirrored correctly.");
 
@@ -99,9 +99,9 @@ function test() {
          "Oldest frame in the mirrored view should be selected.");
 
       resumeDebuggerThenCloseAndFinish(gPanel);
-    })
+    });
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceAndCaretAndScopes(gPanel, ".html", 1);
       performTest();
     });

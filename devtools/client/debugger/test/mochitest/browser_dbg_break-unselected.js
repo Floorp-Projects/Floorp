@@ -11,14 +11,14 @@
 const TAB_URL = EXAMPLE_URL + "doc_inline-debugger-statement.html";
 
 function test() {
-  Task.spawn(function*() {
+  Task.spawn(function* () {
     const tab = yield getTab(TAB_URL);
     const target = TargetFactory.forTab(tab);
     const toolbox = yield gDevTools.showToolbox(target, "webconsole");
 
     is(toolbox.currentToolId, "webconsole", "Console is the current panel");
 
-    toolbox.target.on('thread-paused', Task.async(function*() {
+    toolbox.target.on("thread-paused", Task.async(function* () {
       // Wait for the toolbox to handle the event and switch tools
       yield waitForTick();
 
@@ -28,7 +28,7 @@ function test() {
       yield toolbox.loadTool("jsdebugger");
 
       const panel = toolbox.getCurrentPanel();
-      const queries = panel.panelWin.require('./content/queries');
+      const queries = panel.panelWin.require("./content/queries");
       const getState = panel.panelWin.DebuggerController.getState;
 
       is(panel.panelWin.gThreadClient.state, "paused",
@@ -45,4 +45,4 @@ function test() {
 
     callInTab(tab, "runDebuggerStatement");
   });
-};
+}

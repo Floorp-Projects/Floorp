@@ -63,17 +63,17 @@ module.exports = createClass({
   },
 
   render() {
-    let { client } = this.props;
+    let { client, id } = this.props;
     let { tabs } = this.state;
 
     return dom.div({
-      id: "tabs-panel",
+      id: id + "-panel",
       className: "panel",
       role: "tabpanel",
-      "aria-labelledby": "tabs-panel-header-name"
+      "aria-labelledby": id + "-header"
     },
     PanelHeader({
-      id: "tabs-panel-header-name",
+      id: id + "-header",
       name: Strings.GetStringFromName("tabs")
     }),
     dom.div({},

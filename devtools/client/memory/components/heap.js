@@ -49,7 +49,7 @@ function getState(view, snapshot, diffing, individuals) {
       return diffing.state;
 
     case viewState.TREE_MAP:
-    return snapshot.treeMap
+      return snapshot.treeMap
       ? snapshot.treeMap.state
       : snapshot.state;
 
@@ -325,9 +325,9 @@ const Heap = module.exports = createClass({
     assert(census.report, "Should not render census that does not have a report");
 
     if (!census.report.children) {
-      const msg = diffing       ? L10N.getStr("heapview.no-difference")
+      const msg = diffing ? L10N.getStr("heapview.no-difference")
                 : census.filter ? L10N.getStr("heapview.none-match")
-                : /* else */      L10N.getStr("heapview.empty");
+                : L10N.getStr("heapview.empty");
       return this._renderHeapView(state, dom.div({ className: "empty" }, msg));
     }
 

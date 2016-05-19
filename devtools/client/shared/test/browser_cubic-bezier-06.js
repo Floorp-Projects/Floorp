@@ -12,7 +12,7 @@ const {CubicBezierWidget} =
   require("devtools/client/shared/widgets/CubicBezierWidget");
 const {PRESETS} = require("devtools/client/shared/widgets/CubicBezierPresets");
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("about:blank");
   let [host, win, doc] = yield createHost("bottom", TEST_URI);
 
@@ -54,7 +54,7 @@ function* adjustingBezierUpdatesPreset(widget, win, doc, rect) {
 
   is(widget.presets._activePreset, null,
      "There is no active preset");
- }
+}
 
 function* selectingPresetUpdatesBezier(widget, win, doc, rect) {
   info("Checking that selecting a preset updates bezier curve");

@@ -23,7 +23,7 @@ var DevToolsUtils = require("devtools/shared/DevToolsUtils");
  *
  * @return {Promise<boolean>}
  */
-exports.viewSourceInStyleEditor = Task.async(function *(toolbox, sourceURL, sourceLine) {
+exports.viewSourceInStyleEditor = Task.async(function* (toolbox, sourceURL, sourceLine) {
   let panel = yield toolbox.loadTool("styleeditor");
 
   try {
@@ -49,7 +49,7 @@ exports.viewSourceInStyleEditor = Task.async(function *(toolbox, sourceURL, sour
  *
  * @return {Promise<boolean>}
  */
-exports.viewSourceInDebugger = Task.async(function *(toolbox, sourceURL, sourceLine) {
+exports.viewSourceInDebugger = Task.async(function* (toolbox, sourceURL, sourceLine) {
   // If the Debugger was already open, switch to it and try to show the
   // source immediately. Otherwise, initialize it and wait for the sources
   // to be added first.
@@ -87,7 +87,7 @@ exports.viewSourceInDebugger = Task.async(function *(toolbox, sourceURL, sourceL
  *
  * @return {Promise}
  */
-exports.viewSourceInScratchpad = Task.async(function *(sourceURL, sourceLine) {
+exports.viewSourceInScratchpad = Task.async(function* (sourceURL, sourceLine) {
   // Check for matching top level scratchpad window.
   let wins = Services.wm.getEnumerator("devtools:scratchpad");
 
@@ -126,7 +126,7 @@ exports.viewSourceInScratchpad = Task.async(function *(sourceURL, sourceLine) {
  *
  * @return {Promise}
  */
-exports.viewSource = Task.async(function *(toolbox, sourceURL, sourceLine) {
+exports.viewSource = Task.async(function* (toolbox, sourceURL, sourceLine) {
   // Attempt to access view source via a browser first, which may display it in
   // a tab, if enabled.
   let browserWin = Services.wm.getMostRecentWindow("navigator:browser");

@@ -44,7 +44,7 @@ var DetailsView = {
   /**
    * Sets up the view with event binding, initializes subviews.
    */
-  initialize: Task.async(function *() {
+  initialize: Task.async(function* () {
     this.el = $("#details-pane");
     this.toolbar = $("#performance-toolbar-controls-detail-views");
 
@@ -66,7 +66,7 @@ var DetailsView = {
   /**
    * Unbinds events, destroys subviews.
    */
-  destroy: Task.async(function *() {
+  destroy: Task.async(function* () {
     for (let button of $$("toolbarbutton[data-view]", this.toolbar)) {
       button.removeEventListener("command", this._onViewToggle);
     }
@@ -110,7 +110,7 @@ var DetailsView = {
     //
     // 2. If we have a finished recording and no panel was selected yet,
     // use a default now that we have the recording configurations
-    if ((this._initialized  && isCompleted && invalidCurrentView) ||
+    if ((this._initialized && isCompleted && invalidCurrentView) ||
         (!this._initialized && isCompleted && recording)) {
       yield this.selectDefaultView();
     }
@@ -144,7 +144,7 @@ var DetailsView = {
    * @param String viewName
    *        Name of the view to be shown.
    */
-  selectView: Task.async(function *(viewName) {
+  selectView: Task.async(function* (viewName) {
     let component = this.components[viewName];
     this.el.selectedPanel = $("#" + component.id);
 
@@ -188,7 +188,7 @@ var DetailsView = {
    * @param object viewObject
    * @return boolean
    */
-  isViewSelected: function(viewObject) {
+  isViewSelected: function (viewObject) {
     // If not initialized, and we have no recordings,
     // no views are selected (even though there's a selected panel)
     if (!this._initialized) {
@@ -214,7 +214,7 @@ var DetailsView = {
    * @param object component
    *        A component descriptor from DetailsView.components
    */
-  _whenViewInitialized: Task.async(function *(component) {
+  _whenViewInitialized: Task.async(function* (component) {
     if (component.initialized) {
       return;
     }
@@ -234,7 +234,7 @@ var DetailsView = {
   /**
    * Called when recording stops or is selected.
    */
-  _onRecordingStoppedOrSelected: function(_, state, recording) {
+  _onRecordingStoppedOrSelected: function (_, state, recording) {
     if (typeof state === "string" && state !== "recording-stopped") {
       return;
     }

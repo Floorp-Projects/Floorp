@@ -29,7 +29,7 @@ function test() {
 
     aDebuggee.performRequests(1);
 
-    function cleanUp(){
+    function cleanUp() {
       teardown(aMonitor).then(finish);
     }
   });

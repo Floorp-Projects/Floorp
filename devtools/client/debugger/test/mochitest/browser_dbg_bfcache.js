@@ -82,7 +82,7 @@ function validateSecondPage() {
     "Found the single source label.");
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gDebuggee = null;
   gPanel = null;

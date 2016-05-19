@@ -156,7 +156,7 @@ function BrowserLoaderBuilder({ baseURI, window, useOnlyShared }) {
         }
       }
       return exports;
-    }
+    };
     const watcher = devtools.require("devtools/client/shared/devtools-file-watcher");
     let onFileChanged = (_, relativePath, path) => {
       this.hotReloadFile(componentProxies, "resource://devtools/" + relativePath);
@@ -187,7 +187,7 @@ BrowserLoaderBuilder.prototype = {
    * @param Boolean destructure
    *    Pass true if the property name is a member of the module's exports.
    */
-  lazyRequireGetter: function(obj, property, module, destructure) {
+  lazyRequireGetter: function (obj, property, module, destructure) {
     devtools.lazyGetter(obj, property, () => {
       return destructure
           ? this.require(module)[property]
@@ -195,7 +195,7 @@ BrowserLoaderBuilder.prototype = {
     });
   },
 
-  hotReloadFile: function(componentProxies, fileURI) {
+  hotReloadFile: function (componentProxies, fileURI) {
     if (fileURI.match(/\.js$/)) {
       // Test for React proxy components
       const proxy = componentProxies.get(fileURI);

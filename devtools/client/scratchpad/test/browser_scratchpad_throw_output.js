@@ -22,7 +22,7 @@ function testThrowOutput()
 
   let falsyValues = ["false", "0", "-0", "null", "undefined", "Infinity",
                       "-Infinity", "NaN"];
-  falsyValues.forEach(function(value) {
+  falsyValues.forEach(function (value) {
     tests.push({
       method: "display",
       code: "throw " + value + ";",
@@ -46,7 +46,7 @@ function testThrowOutput()
     label: "Correct exception message for a longString is shown"
   });
 
-  runAsyncTests(scratchpad, tests).then(function() {
+  runAsyncTests(scratchpad, tests).then(function () {
     finish();
   });
 }

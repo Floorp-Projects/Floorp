@@ -11,7 +11,7 @@
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-eval-in-stackframe.html";
-add_task(function*() {
+add_task(function* () {
   yield loadTab(TEST_URI);
 
   info("open the web console");

@@ -16,7 +16,7 @@ var StackFrameCache = Class({
   /**
    * Initialize this object.
    */
-  initialize: function() {
+  initialize: function () {
     this._framesToIndices = null;
     this._framesToForms = null;
     this._lastEventSize = 0;
@@ -25,7 +25,7 @@ var StackFrameCache = Class({
   /**
    * Prepare to accept frames.
    */
-  initFrames: function() {
+  initFrames: function () {
     if (this._framesToIndices) {
       // The maps are already initialized.
       return;
@@ -39,7 +39,7 @@ var StackFrameCache = Class({
   /**
    * Forget all stored frames and reset to the initialized state.
    */
-  clearFrames: function() {
+  clearFrames: function () {
     this._framesToIndices.clear();
     this._framesToIndices = null;
     this._framesToForms.clear();
@@ -51,7 +51,7 @@ var StackFrameCache = Class({
    * Add a frame to this stack frame cache, and return the index of
    * the frame.
    */
-  addFrame: function(frame) {
+  addFrame: function (frame) {
     this._assignFrameIndices(frame);
     this._createFrameForms(frame);
     return this._framesToIndices.get(frame);
@@ -68,7 +68,7 @@ var StackFrameCache = Class({
    *
    * @returns packet
    */
-  updateFramePacket: function(packet) {
+  updateFramePacket: function (packet) {
     // Now that we are guaranteed to have a form for every frame, we know the
     // size the "frames" property's array must be. We use that information to
     // create dense arrays even though we populate them out of order.
@@ -113,7 +113,7 @@ var StackFrameCache = Class({
    *
    * @returns array or null
    */
-  makeEvent: function() {
+  makeEvent: function () {
     const size = this._framesToForms.size;
     if (!size || size <= this._lastEventSize) {
       return null;
@@ -138,7 +138,7 @@ var StackFrameCache = Class({
    * @param SavedFrame frame
    *        A frame to assign an index to.
    */
-  _assignFrameIndices: function(frame) {
+  _assignFrameIndices: function (frame) {
     if (this._framesToIndices.has(frame)) {
       return;
     }
@@ -158,7 +158,7 @@ var StackFrameCache = Class({
    * @param SavedFrame frame
    *        A frame to create a form for.
    */
-  _createFrameForms: function(frame) {
+  _createFrameForms: function (frame) {
     if (this._framesToForms.has(frame)) {
       return;
     }

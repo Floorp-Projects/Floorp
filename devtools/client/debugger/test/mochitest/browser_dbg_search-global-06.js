@@ -99,8 +99,8 @@ function testEscape() {
   is(gSearchView._splitter.hidden, false,
     "The global search pane splitter should be visible from the previous search.");
 
-   gSearchBox.focus();
-   EventUtils.sendKey("ESCAPE", gDebugger);
+  gSearchBox.focus();
+  EventUtils.sendKey("ESCAPE", gDebugger);
 
   is(gSearchView.itemCount, 0,
     "The global search pane shouldn't have any child nodes after clearing.");
@@ -110,7 +110,7 @@ function testEscape() {
     "The global search pane splitter shouldn't be visible after clearing.");
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

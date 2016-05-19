@@ -41,7 +41,7 @@ function test() {
         gBrowser.tabContainer.removeEventListener("TabOpen", onOpen, false);
         ok(true, "A new tab loaded");
 
-        gBrowser.addEventListener("DOMContentLoaded", function onTabLoad(e){
+        gBrowser.addEventListener("DOMContentLoaded", function onTabLoad(e) {
           gBrowser.removeEventListener("DOMContentLoaded", onTabLoad, false);
           // Pass along the new tab's URI.
           resolve(gBrowser.currentURI.spec);
@@ -66,7 +66,7 @@ function test() {
   function openContextMenu() {
     let contextMenu = gDebugger.document.getElementById("debuggerSourcesContextMenu");
     let contextMenuShown = once(contextMenu, "popupshown");
-    EventUtils.synthesizeMouseAtCenter(gSources.selectedItem.prebuiltNode, {type: 'contextmenu'}, gDebugger);
+    EventUtils.synthesizeMouseAtCenter(gSources.selectedItem.prebuiltNode, {type: "contextmenu"}, gDebugger);
     return contextMenuShown;
   }
 }

@@ -57,10 +57,10 @@ var openRDM = Task.async(function* (tab) {
 /**
  * Close responsive design mode for the given tab.
  */
-var closeRDM = Task.async(function* (tab) {
+var closeRDM = Task.async(function* (tab, options) {
   info("Closing responsive design mode");
   let manager = ResponsiveUIManager;
-  yield manager.closeIfNeeded(window, tab);
+  yield manager.closeIfNeeded(window, tab, options);
   info("Responsive design mode closed");
 });
 
@@ -92,7 +92,7 @@ function addRDMTask(url, generator) {
 }
 
 function spawnViewportTask(ui, args, task) {
-  return ContentTask.spawn(ui.getViewportMessageManager(), args, task);
+  return ContentTask.spawn(ui.getViewportBrowser(), args, task);
 }
 
 function waitForFrameLoad(ui, targetURL) {

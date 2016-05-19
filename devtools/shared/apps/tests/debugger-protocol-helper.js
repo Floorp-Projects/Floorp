@@ -117,7 +117,7 @@ addMessageListener("install", function (aMessage) {
     webappActorRequest(request, function (aResponse) {
       sendAsyncMessage("installed", aResponse);
     });
-  } catch(e) {
+  } catch (e) {
     dump("installTestApp exception: " + e + "\n");
   }
 });
@@ -152,7 +152,7 @@ addMessageListener("addFrame", function (aMessage) {
 
 addMessageListener("tweak-app-object", function (aMessage) {
   let appId = aMessage.appId;
-  Cu.import('resource://gre/modules/Webapps.jsm');
+  Cu.import("resource://gre/modules/Webapps.jsm");
   let reg = DOMApplicationRegistry;
   if ("removable" in aMessage) {
     reg.webapps[appId].removable = aMessage.removable;

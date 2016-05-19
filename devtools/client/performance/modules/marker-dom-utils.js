@@ -112,7 +112,7 @@ exports.MarkerDOMUtils = {
    *          - number frameIndex: the index of the topmost stack frame
    *          - array frames: array of stack frames
    */
-  buildStackTrace: function(doc, { type, frameIndex, frames }) {
+  buildStackTrace: function (doc, { type, frameIndex, frames }) {
     let container = doc.createElement("vbox");
     container.className = "marker-details-stack";
     container.setAttribute("type", type);
@@ -246,7 +246,7 @@ exports.MarkerDOMUtils = {
  * @param object marker
  * @return boolean
  */
-function shouldShowAllocationsTrigger (marker) {
+function shouldShowAllocationsTrigger(marker) {
   if (marker.name == "GarbageCollection") {
     let showTriggers = PREFS["show-triggers-for-gc-types"];
     return showTriggers.split(" ").indexOf(marker.causeName) !== -1;

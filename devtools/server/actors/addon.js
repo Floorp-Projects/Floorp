@@ -85,6 +85,7 @@ BrowserAddonActor.prototype = {
       url: this.url,
       iconURL: this._addon.iconURL,
       debuggable: this._addon.isDebuggable,
+      temporarilyInstalled: this._addon.temporarilyInstalled,
       consoleActor: this._consoleActor.actorID,
 
       traits: {
@@ -163,7 +164,7 @@ BrowserAddonActor.prototype = {
       });
   },
 
-  preNest: function() {
+  preNest: function () {
     let e = Services.wm.getEnumerator(null);
     while (e.hasMoreElements()) {
       let win = e.getNext();
@@ -174,7 +175,7 @@ BrowserAddonActor.prototype = {
     }
   },
 
-  postNest: function() {
+  postNest: function () {
     let e = Services.wm.getEnumerator(null);
     while (e.hasMoreElements()) {
       let win = e.getNext();
@@ -232,7 +233,7 @@ BrowserAddonActor.prototype = {
    * sure every script and source with a URL is stored when debugging
    * add-ons.
    */
-  _allowSource: function(aSource) {
+  _allowSource: function (aSource) {
     // XPIProvider.jsm evals some code in every add-on's bootstrap.js. Hide it.
     if (aSource.url === "resource://gre/modules/addons/XPIProvider.jsm") {
       return false;

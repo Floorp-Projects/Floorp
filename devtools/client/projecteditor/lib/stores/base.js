@@ -25,18 +25,18 @@ var Store = Class({
   /**
    * Should be called during initialize() of a subclass.
    */
-  initStore: function() {
+  initStore: function () {
     this.resources = new Map();
   },
 
-  refresh: function() {
+  refresh: function () {
     return promise.resolve();
   },
 
   /**
    * Return a sorted Array of all Resources in the Store
    */
-  allResources: function() {
+  allResources: function () {
     var resources = [];
     function addResource(resource) {
       resources.push(resource);
@@ -46,11 +46,11 @@ var Store = Class({
     return resources;
   },
 
-  notifyAdd: function(resource) {
+  notifyAdd: function (resource) {
     emit(this, "resource-added", resource);
   },
 
-  notifyRemove: function(resource) {
+  notifyRemove: function (resource) {
     emit(this, "resource-removed", resource);
   }
 });

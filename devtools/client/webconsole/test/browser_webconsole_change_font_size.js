@@ -7,7 +7,7 @@
 
 const TEST_URI = "http://example.com/";
 
-add_task(function*() {
+add_task(function* () {
   yield loadTab(TEST_URI);
   Services.prefs.setIntPref("devtools.webconsole.fontSize", 10);
   let hud = yield HUDService.toggleBrowserConsole();

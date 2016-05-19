@@ -19,7 +19,7 @@ const promise = require("promise");
  * @param fileName {String} URL of the actor module (for proper stack traces)
  * @param options {Object} Configuration object
  */
-exports.registerActor = function(sourceText, fileName, options) {
+exports.registerActor = function (sourceText, fileName, options) {
   const principal = CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")();
   const sandbox = Cu.Sandbox(principal);
   const exports = sandbox.exports = {};
@@ -54,9 +54,9 @@ exports.registerActor = function(sourceText, fileName, options) {
     });
   }
   return promise.resolve();
-}
+};
 
-exports.unregisterActor = function(options) {
+exports.unregisterActor = function (options) {
   if (options.tab) {
     DebuggerServer.removeTabActor(options);
   }
@@ -74,4 +74,4 @@ exports.unregisterActor = function(options) {
       args: [options]
     });
   }
-}
+};

@@ -20,7 +20,7 @@ add_task(function test() {
     markersList: gTestMarkers
   });
 
-  function compare (marker, expected) {
+  function compare(marker, expected) {
     for (let prop in expected) {
       if (prop === "submarkers") {
         for (let i = 0; i < expected.submarkers.length; i++) {
@@ -60,4 +60,4 @@ const gExpectedOutput = {
         { start: 18, end: 19, name: "GarbageCollection" }
       ]}
     ]},
-]};
+  ]};

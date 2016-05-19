@@ -16,7 +16,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function *() {
+add_task(function* () {
   let [client, form] = yield getChromeActors();
   let front = new ProfilerFront(client, form);
 
@@ -63,7 +63,7 @@ add_task(function *() {
   do_check_true(totalEvents === eventsCalled, "No more profiler-status events after recording.");
 });
 
-function getChromeActors () {
+function getChromeActors() {
   let deferred = promise.defer();
   get_chrome_actors((client, form) => deferred.resolve([client, form]));
   return deferred.promise;

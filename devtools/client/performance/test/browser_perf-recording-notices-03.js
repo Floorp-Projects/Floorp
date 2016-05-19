@@ -16,7 +16,7 @@ const { startRecording, stopRecording } = require("devtools/client/performance/t
 const { waitUntil } = require("devtools/client/performance/test/helpers/wait-utils");
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 
-add_task(function*() {
+add_task(function* () {
   // Make sure the profiler module is stopped so we can set a new buffer limit.
   PMM_loadFrameScripts(gBrowser);
   yield PMM_stopProfiler();
@@ -43,7 +43,7 @@ add_task(function*() {
   // Start a manual recording.
   yield startRecording(panel);
 
-  yield waitUntil(function*() {
+  yield waitUntil(function* () {
     [, gPercent] = yield once(PerformanceView, EVENTS.UI_RECORDING_PROFILER_STATUS_RENDERED, { spreadArgs: true });
     return gPercent > 0;
   });
@@ -59,7 +59,7 @@ add_task(function*() {
   // Start a console profile.
   yield console.profile("rust");
 
-  yield waitUntil(function*() {
+  yield waitUntil(function* () {
     [, gPercent] = yield once(PerformanceView, EVENTS.UI_RECORDING_PROFILER_STATUS_RENDERED, { spreadArgs: true });
     return gPercent > Math.floor(bufferUsage * 100);
   });
@@ -77,7 +77,7 @@ add_task(function*() {
   RecordingsView.selectedIndex = 1;
   yield selected;
 
-  yield waitUntil(function*() {
+  yield waitUntil(function* () {
     [, gPercent] = yield once(PerformanceView, EVENTS.UI_RECORDING_PROFILER_STATUS_RENDERED, { spreadArgs: true });
     return gPercent > 0;
   });
@@ -96,7 +96,7 @@ add_task(function*() {
   RecordingsView.selectedIndex = 0;
   yield selected;
 
-  yield waitUntil(function*() {
+  yield waitUntil(function* () {
     [, gPercent] = yield once(PerformanceView, EVENTS.UI_RECORDING_PROFILER_STATUS_RENDERED, { spreadArgs: true });
     return gPercent > Math.floor(bufferUsage * 100);
   });

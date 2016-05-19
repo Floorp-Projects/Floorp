@@ -65,7 +65,7 @@ function onStyleEditorReady(panel) {
   ok(StyleEditorUI, "Style Editor UI is defined");
 
   function fireEvent(toolbox, href, line) {
-    toolbox.once("styleeditor-selected", function(evt) {
+    toolbox.once("styleeditor-selected", function (evt) {
       info(evt + " event fired");
 
       checkStyleEditorForSheetAndLine(href, line - 1).then(deferred.resolve);
@@ -74,14 +74,14 @@ function onStyleEditorReady(panel) {
     EventUtils.sendMouseEvent({ type: "click" }, nodes[1].querySelector(".frame-link-filename"));
   }
 
-  waitForFocus(function() {
+  waitForFocus(function () {
     info("style editor window focused");
 
     let href = nodes[0].getAttribute("data-url");
     let line = nodes[0].getAttribute("data-line");
     ok(line, "found source line");
 
-    checkStyleEditorForSheetAndLine(href, line - 1).then(function() {
+    checkStyleEditorForSheetAndLine(href, line - 1).then(function () {
       info("first check done");
 
       let target = TargetFactory.forTab(gBrowser.selectedTab);
@@ -91,7 +91,7 @@ function onStyleEditorReady(panel) {
       line = nodes[1].getAttribute("data-line");
       ok(line, "found source line");
 
-      toolbox.selectTool("webconsole").then(function() {
+      toolbox.selectTool("webconsole").then(function () {
         info("webconsole selected");
         fireEvent(toolbox, href, line);
       });

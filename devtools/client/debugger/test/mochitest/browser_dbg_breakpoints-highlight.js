@@ -16,16 +16,16 @@ function test() {
     const gDebugger = gPanel.panelWin;
     const gEditor = gDebugger.DebuggerView.editor;
     const gSources = gDebugger.DebuggerView.Sources;
-    const queries = gDebugger.require('./content/queries');
+    const queries = gDebugger.require("./content/queries");
     const actions = bindActionCreators(gPanel);
     const getState = gDebugger.DebuggerController.getState;
 
-    const addBreakpoints = Task.async(function*() {
+    const addBreakpoints = Task.async(function* () {
       yield actions.addBreakpoint({ actor: gSources.values[0], line: 5 });
       yield actions.addBreakpoint({ actor: gSources.values[1], line: 6 });
       yield actions.addBreakpoint({ actor: gSources.values[1], line: 7 });
       yield actions.addBreakpoint({ actor: gSources.values[1], line: 8 });
-      yield actions.addBreakpoint({ actor: gSources.values[1], line: 9 })
+      yield actions.addBreakpoint({ actor: gSources.values[1], line: 9 });
     });
 
     function clickBreakpointAndCheck(aBreakpointIndex, aSourceIndex, aCaretLine) {
@@ -73,7 +73,7 @@ function test() {
       }
     }
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceShown(gPanel, "-01.js");
 
       yield addBreakpoints();

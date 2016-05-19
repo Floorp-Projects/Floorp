@@ -1,7 +1,7 @@
 "use strict";
 
 var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-const { loadSubScript } = Cc['@mozilla.org/moz/jssubscript-loader;1'].
+const { loadSubScript } = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                           getService(Ci.mozIJSSubScriptLoader);
 
 // Set up a dummy environment so that EventUtils works. We need to be careful to
@@ -18,7 +18,7 @@ loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventU
 
 dump("Frame script loaded.\n");
 
-var workers = {}
+var workers = {};
 
 this.call = function (name, args) {
   dump("Calling function with name " + name + ".\n");
