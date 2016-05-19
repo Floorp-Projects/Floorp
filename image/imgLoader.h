@@ -246,11 +246,24 @@ public:
   NS_DECL_IMGICACHE
   NS_DECL_NSIOBSERVER
 
-  static imgLoader* Singleton();
-  static imgLoader* PBSingleton();
+  /**
+   * Get the normal image loader instance that is used by gecko code, creating
+   * it if necessary.
+   */
+  static imgLoader* NormalLoader();
 
   /**
-   * Gecko code should use Singleton() or PBSingleton() to get an image loader.
+   * Get the Private Browsing image loader instance that is used by gecko code,
+   * creating it if necessary.
+   *
+   * The nsIChannel objects that this instance creates are created with the
+   * nsILoadInfo::SEC_FORCE_PRIVATE_BROWSING flag.
+   */
+  static imgLoader* PrivateBrowsingLoader();
+
+  /**
+   * Gecko code should use NormalLoader() or PrivateBrowsingLoader() to get the
+   * appropriate image loader.
    *
    * This constructor is public because the XPCOM module code that creates
    * instances of "@mozilla.org/image/loader;1" / "@mozilla.org/image/cache;1"

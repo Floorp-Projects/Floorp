@@ -248,8 +248,8 @@ nsAlertsIconListener::StartRequest(const nsAString & aImageUrl, bool aInPrivateB
   if (!imageUri)
     return ShowAlert(nullptr);
 
-  imgLoader* il =
-    aInPrivateBrowsing ? imgLoader::PBSingleton() : imgLoader::Singleton();
+  imgLoader* il = aInPrivateBrowsing ? imgLoader::PrivateBrowsingLoader()
+                                     : imgLoader::NormalLoader();
   if (!il)
     return ShowAlert(nullptr);
 
