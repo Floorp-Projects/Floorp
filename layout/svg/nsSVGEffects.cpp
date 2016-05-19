@@ -475,8 +475,6 @@ GetEffectProperty(nsIURI *aURI, nsIFrame *aFrame,
   if (prop)
     return prop;
   prop = aCreate(aURI, aFrame, false);
-  if (!prop)
-    return nullptr;
   NS_ADDREF(prop);
   props.Set(aProperty, static_cast<nsISupports*>(prop));
   return prop;
@@ -494,8 +492,6 @@ GetOrCreateFilterProperty(nsIFrame *aFrame)
   if (prop)
     return prop;
   prop = new nsSVGFilterProperty(effects->mFilters, aFrame);
-  if (!prop)
-    return nullptr;
   NS_ADDREF(prop);
   props.Set(nsSVGEffects::FilterProperty(), prop);
   return prop;
