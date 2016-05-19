@@ -36,7 +36,6 @@ public:
   nsresult Flush() override;
   nsresult Drain() override;
   nsresult Shutdown() override;
-  void SetSeekThreshold(const media::TimeUnit& aTime) override;
 
   static AVCodec* FindAVCodec(FFmpegLibWrapper* aLib, AVCodecID aCodec);
 
@@ -61,9 +60,6 @@ protected:
   AVFrame*        mFrame;
   RefPtr<MediaByteBuffer> mExtraData;
   AVCodecID mCodecID;
-
-  // Accessed in mTaskQueue.
-  Maybe<media::TimeUnit> mSeekTargetThreshold;
 
 private:
   void ProcessDecode(MediaRawData* aSample);

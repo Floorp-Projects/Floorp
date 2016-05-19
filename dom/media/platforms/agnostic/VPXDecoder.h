@@ -37,7 +37,6 @@ public:
   {
     return "libvpx video decoder";
   }
-  void SetSeekThreshold(const media::TimeUnit& aTime) override;
 
   enum Codec: uint8_t {
     VP8 = 1 << 0,
@@ -56,8 +55,6 @@ private:
   RefPtr<ImageContainer> mImageContainer;
   RefPtr<FlushableTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
-
-  Maybe<media::TimeUnit> mSeekTargetThreshold;
 
   // VPx decoder state
   vpx_codec_ctx_t mVPX;

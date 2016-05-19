@@ -154,10 +154,6 @@ AppleVDADecoder::Flush()
   mIsFlushing = false;
   // All ProcessDecode() tasks should be done.
   MOZ_ASSERT(mInputIncoming == 0);
-
-  MonitorAutoLock mon(mMonitor);
-  mSeekTargetThreshold.reset();
-
   return NS_OK;
 }
 
@@ -295,14 +291,6 @@ AppleVDADecoder::ClearReorderedFrames()
   mQueuedSamples = 0;
 }
 
-void
-AppleVDADecoder::SetSeekThreshold(const media::TimeUnit& aTime)
-{
-  LOG("SetSeekThreshold %lld", aTime.ToMicroseconds());
-  MonitorAutoLock mon(mMonitor);
-  mSeekTargetThreshold = Some(aTime);
-}
-
 // Copy and return a decoded frame.
 nsresult
 AppleVDADecoder::OutputFrame(CVPixelBufferRef aImage,
@@ -332,17 +320,6 @@ AppleVDADecoder::OutputFrame(CVPixelBufferRef aImage,
   if (!aImage) {
     // Image was dropped by decoder.
     return NS_OK;
-  }
-
-  {
-    MonitorAutoLock mon(mMonitor);
-    if (mSeekTargetThreshold.isSome()) {
-      if (aFrameRef.composition_timestamp < mSeekTargetThreshold.ref()) {
-        return NS_OK;
-      } else {
-        mSeekTargetThreshold.reset();
-      }
-    }
   }
 
   // Where our resulting image will end up.
