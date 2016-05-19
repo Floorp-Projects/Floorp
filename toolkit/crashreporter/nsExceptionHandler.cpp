@@ -344,7 +344,7 @@ nsTArray<nsAutoPtr<DelayedNote> >* gDelayedAnnotations;
 
 #if defined(XP_WIN)
 // the following are used to prevent other DLLs reverting the last chance
-// exception handler to the windows default. Any attempt to change the 
+// exception handler to the windows default. Any attempt to change the
 // unhandled exception filter or to reset it is ignored and our crash
 // reporter is loaded instead (in case it became unloaded somehow)
 typedef LPTOP_LEVEL_EXCEPTION_FILTER (WINAPI *SetUnhandledExceptionFilter_func)
@@ -1103,6 +1103,7 @@ bool MinidumpCallback(
                        "-a", "org.mozilla.gecko.reportCrash",
                        "-n", crashReporterPath,
                        "--es", "minidumpPath", minidumpPath,
+                       "--ez", "minidumpSuccess", succeeded ? "true" : "false",
                        (char*)0);
     } else {
       Unused << execlp("/system/bin/am",
@@ -1111,6 +1112,7 @@ bool MinidumpCallback(
                        "-a", "org.mozilla.gecko.reportCrash",
                        "-n", crashReporterPath,
                        "--es", "minidumpPath", minidumpPath,
+                       "--ez", "minidumpSuccess", succeeded ? "true" : "false",
                        (char*)0);
     }
 #endif
@@ -1618,7 +1620,7 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
 
 #ifdef XP_WIN
   gExceptionHandler->set_handle_debug_exceptions(true);
-  
+
 #ifdef _WIN64
   // Tell JS about the new filter before we disable SetUnhandledExceptionFilter
   sUnhandledExceptionFilter = GetUnhandledExceptionFilter();
@@ -2095,7 +2097,7 @@ class DelayedNote
       AppendAppNotesToCrashReport(mData);
     }
   }
-  
+
  private:
   nsCString mKey;
   nsCString mData;
@@ -2443,7 +2445,7 @@ static nsresult PrefSubmitReports(bool* aSubmitReports, bool writePref)
 
   // We need to ensure the registry keys are created so we can properly
   // write values to it
-  
+
   // Create appVendor key
   if(!appVendor.IsEmpty()) {
     regPath.Append(appVendor);
@@ -2504,7 +2506,7 @@ static nsresult PrefSubmitReports(bool* aSubmitReports, bool writePref)
     *aSubmitReports = true;
     return NS_OK;
   }
-  
+
   rv = regKey->ReadIntValue(NS_LITERAL_STRING("SubmitCrashReport"), &value);
   // default to true on failure
   if (NS_FAILED(rv)) {
@@ -2582,7 +2584,7 @@ static nsresult PrefSubmitReports(bool* aSubmitReports, bool writePref)
     rv = iniWriter->WriteFile(nullptr, 0);
     return rv;
   }
-  
+
   nsAutoCString submitReportValue;
   rv = iniParser->GetString(NS_LITERAL_CSTRING("Crash Reporter"),
                             NS_LITERAL_CSTRING("SubmitReport"),
@@ -2816,7 +2818,7 @@ GetPendingDir(nsIFile** dir)
 
 // The "limbo" dir is where minidumps go to wait for something else to
 // use them.  If we're |ShouldReport()|, then the "something else" is
-// a minidump submitter, and they're coming from the 
+// a minidump submitter, and they're coming from the
 // Crash Reports/pending/ dir.  Otherwise, we don't know what the
 // "somthing else" is, but the minidumps stay in [profile]/minidumps/
 // limbo.
@@ -2858,7 +2860,7 @@ GetMinidumpForID(const nsAString& id, nsIFile** minidump)
 {
   if (!GetMinidumpLimboDir(minidump))
     return false;
-  (*minidump)->Append(id + NS_LITERAL_STRING(".dmp")); 
+  (*minidump)->Append(id + NS_LITERAL_STRING(".dmp"));
   return true;
 }
 
@@ -3863,7 +3865,7 @@ CreateMinidumpsAndPair(ProcessHandle aTargetPid,
   } else {
     incomingDump = aIncomingDumpToPair;
   }
-  
+
   RenameAdditionalHangMinidump(incomingDump, targetMinidump, aIncomingPairName);
 
   if (ShouldReport()) {

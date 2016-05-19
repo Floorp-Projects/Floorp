@@ -43,6 +43,7 @@
 #include "utils/threads.h"
 
 #include "base/message_loop.h"
+#include "base/task.h"
 
 #include "Hal.h"
 #include "HalImpl.h"

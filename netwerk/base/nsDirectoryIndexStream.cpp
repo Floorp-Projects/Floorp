@@ -269,24 +269,28 @@ nsDirectoryIndexStream::Read(char* aBuf, uint32_t aCount, uint32_t* aReadCount)
             mBuf.AppendLiteral("201: ");
 
             // The "filename" field
-            char* escaped = nullptr;
             if (!NS_IsNativeUTF8()) {
                 nsAutoString leafname;
                 rv = current->GetLeafName(leafname);
                 if (NS_FAILED(rv)) return rv;
-                if (!leafname.IsEmpty())
-                    escaped = nsEscape(NS_ConvertUTF16toUTF8(leafname).get(), url_Path);
+
+                nsAutoCString escaped;
+                if (!leafname.IsEmpty() &&
+                    NS_Escape(NS_ConvertUTF16toUTF8(leafname), escaped, url_Path)) {
+                    mBuf.Append(escaped);
+                    mBuf.Append(' ');
+                }
             } else {
                 nsAutoCString leafname;
                 rv = current->GetNativeLeafName(leafname);
                 if (NS_FAILED(rv)) return rv;
-                if (!leafname.IsEmpty())
-                    escaped = nsEscape(leafname.get(), url_Path);
-            }
-            if (escaped) {
-                mBuf += escaped;
-                mBuf.Append(' ');
-                free(escaped);
+
+                nsAutoCString escaped;
+                if (!leafname.IsEmpty() &&
+                    NS_Escape(leafname, escaped, url_Path)) {
+                    mBuf.Append(escaped);
+                    mBuf.Append(' ');
+                }
             }
 
             // The "content-length" field

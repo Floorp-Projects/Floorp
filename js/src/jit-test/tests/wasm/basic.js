@@ -147,11 +147,10 @@ wasmEvalText('(module (import $foo "a" "" (result f64)))', {a: ()=> {}});
 wasmEvalText('(module (memory 0))');
 wasmEvalText('(module (memory 1))');
 assertErrorMessage(() => wasmEvalText('(module (memory 65536))'), TypeError, /initial memory size too big/);
-assertErrorMessage(() => wasmEvalText('(module (memory 32768))'), TypeError, /initial memory size too big/);
 
 // May OOM, but must not crash:
 try {
-    wasmEvalText('(module (memory 32767))');
+    wasmEvalText('(module (memory 65535))');
 } catch (e) {
     print(e);
     assertEq(String(e).indexOf("out of memory") != -1, true);

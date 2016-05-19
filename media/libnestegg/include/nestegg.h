@@ -89,6 +89,10 @@ extern "C" {
 #define NESTEGG_LOG_ERROR    1000  /**< Error level log message. */
 #define NESTEGG_LOG_CRITICAL 10000 /**< Critical level log message. */
 
+#define NESTEGG_PACKET_HAS_KEYFRAME_FALSE   0 /**< Packet contains only keyframes. */
+#define NESTEGG_PACKET_HAS_KEYFRAME_TRUE    1 /**< Packet does not contain any keyframes */
+#define NESTEGG_PACKET_HAS_KEYFRAME_UNKNOWN 2 /**< Packet may or may not contain keyframes */
+
 typedef struct nestegg nestegg;               /**< Opaque handle referencing the stream state. */
 typedef struct nestegg_packet nestegg_packet; /**< Opaque handle referencing a packet of data. */
 
@@ -294,6 +298,12 @@ int nestegg_track_audio_params(nestegg * context, unsigned int track,
 int nestegg_track_default_duration(nestegg * context, unsigned int track,
                                    uint64_t * duration);
 
+/** Reset parser state to the last valid state before nestegg_read_packet failed.
+    @param context Stream context initialized by #nestegg_init.
+    @retval  0 Success.
+    @retval -1 Error. */
+int nestegg_read_reset(nestegg * context);
+
 /** Read a packet of media data.  A packet consists of one or more chunks of
     data associated with a single track.  nestegg_read_packet should be
     called in a loop while the return value is 1 to drive the stream parser
@@ -308,6 +318,14 @@ int nestegg_read_packet(nestegg * context, nestegg_packet ** packet);
 /** Destroy a nestegg_packet and free associated memory.
     @param packet #nestegg_packet to be freed. @see nestegg_read_packet */
 void nestegg_free_packet(nestegg_packet * packet);
+
+/** Query the keyframe status for a given packet.
+    @param packet Packet initialized by #nestegg_read_packet.
+    @retval #NESTEGG_PACKET_HAS_KEYFRAME_FALSE   Packet contains no keyframes.
+    @retval #NESTEGG_PACKET_HAS_KEYFRAME_TRUE    Packet contains keyframes.
+    @retval #NESTEGG_PACKET_HAS_KEYFRAME_UNKNOWN Unknown packet keyframe content.
+    @retval -1 Error. */
+int nestegg_packet_has_keyframe(nestegg_packet * packet);
 
 /** Query the track number of @a packet.
     @param packet Packet initialized by #nestegg_read_packet.
@@ -368,6 +386,14 @@ int nestegg_packet_additional_data(nestegg_packet * packet, unsigned int id,
     @retval -1 Error. */
 int nestegg_packet_discard_padding(nestegg_packet * packet,
                                    int64_t * discard_padding);
+
+/** Returns reference_block given packet
+    @param packet          Packet initialized by #nestegg_read_packet.
+    @param reference_block pointer to store reference block in.
+    @retval  0 Success.
+    @retval -1 Error. */
+int nestegg_packet_reference_block(nestegg_packet * packet,
+                                   int64_t * reference_block);
 
 /** Query the presence of cues.
     @param context  Stream context initialized by #nestegg_init.

@@ -123,15 +123,29 @@ public:
   static bool
   HitTestFrameForEffects(nsIFrame* aFrame, const nsPoint& aPt);
 
+  struct PaintFramesParams {
+    gfxContext& ctx;
+    nsIFrame* frame;
+    const nsRect& dirtyRect;
+    const nsRect& borderArea;
+    nsDisplayListBuilder* builder;
+    mozilla::layers::LayerManager* layerManager;
+    explicit PaintFramesParams(gfxContext& aCtx, nsIFrame* aFrame,
+                               const nsRect& aDirtyRect,
+                               const nsRect& aBorderArea,
+                               nsDisplayListBuilder* aBuilder,
+                               mozilla::layers::LayerManager* aLayerManager)
+      : ctx(aCtx), frame(aFrame), dirtyRect(aDirtyRect),
+        borderArea(aBorderArea), builder(aBuilder),
+        layerManager(aLayerManager)
+    { }
+  };
+
   /**
    * Paint non-SVG frame with SVG effects.
    */
   static void
-  PaintFramesWithEffects(gfxContext& aCtx,
-                         nsIFrame* aFrame, const nsRect& aDirtyRect,
-                         const nsRect& aBorderArea,
-                         nsDisplayListBuilder* aBuilder,
-                         mozilla::layers::LayerManager* aManager);
+  PaintFramesWithEffects(const PaintFramesParams& aParams);
 
   /**
    * SVG frames expect to paint in SVG user units, which are equal to CSS px

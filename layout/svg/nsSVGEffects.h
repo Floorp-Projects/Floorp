@@ -43,7 +43,8 @@ class nsSVGFilterChainObserver;
  * constructor and destructor, which should call StartListening and
  * StopListening, respectively.
  */
-class nsSVGRenderingObserver : public nsStubMutationObserver {
+class nsSVGRenderingObserver : public nsStubMutationObserver
+{
 
 protected:
   virtual ~nsSVGRenderingObserver()
@@ -108,7 +109,8 @@ protected:
  * object derived from nsSVGIDRenderingObserver to manage the relationship. The
  * property object is attached to the referencing frame.
  */
-class nsSVGIDRenderingObserver : public nsSVGRenderingObserver {
+class nsSVGIDRenderingObserver : public nsSVGRenderingObserver
+{
 public:
   typedef mozilla::dom::Element Element;
   nsSVGIDRenderingObserver(nsIURI* aURI, nsIContent* aObservingContent,
@@ -121,7 +123,8 @@ protected:
   // This is called when the referenced resource changes.
   virtual void DoUpdate() override;
 
-  class SourceReference : public nsReferencedElement {
+  class SourceReference : public nsReferencedElement
+  {
   public:
     explicit SourceReference(nsSVGIDRenderingObserver* aContainer) : mContainer(aContainer) {}
   protected:
@@ -169,7 +172,8 @@ private:
   nsIPresShell *mFramePresShell;
 };
 
-class nsSVGRenderingObserverProperty : public nsSVGIDRenderingObserver {
+class nsSVGRenderingObserverProperty : public nsSVGIDRenderingObserver
+{
 public:
   NS_DECL_ISUPPORTS
 
@@ -200,7 +204,8 @@ protected:
  * The nsSVGFilterChainObserver class manages a list of nsSVGFilterReferences.
  */
 class nsSVGFilterReference final : public nsSVGIDRenderingObserver
-                                 , public nsISVGFilterReference {
+                                 , public nsISVGFilterReference
+{
 public:
   nsSVGFilterReference(nsIURI* aURI,
                        nsIContent* aObservingContent,
@@ -246,7 +251,8 @@ private:
  * "blur(10px)" don't reference filter elements, so they don't need an
  * nsSVGFilterReference. The style system invalidates changes to CSS filters.
  */
-class nsSVGFilterChainObserver : public nsISupports {
+class nsSVGFilterChainObserver : public nsISupports
+{
 public:
   nsSVGFilterChainObserver(const nsTArray<nsStyleFilter>& aFilters,
                            nsIContent* aFilteredElement);
@@ -268,7 +274,8 @@ private:
   nsTArray<RefPtr<nsSVGFilterReference>> mReferences;
 };
 
-class nsSVGFilterProperty : public nsSVGFilterChainObserver {
+class nsSVGFilterProperty : public nsSVGFilterChainObserver
+{
 public:
   nsSVGFilterProperty(const nsTArray<nsStyleFilter> &aFilters,
                       nsIFrame *aFilteredFrame)
@@ -284,7 +291,8 @@ protected:
   nsSVGFrameReferenceFromProperty mFrameReference;
 };
 
-class nsSVGMarkerProperty final : public nsSVGRenderingObserverProperty {
+class nsSVGMarkerProperty final: public nsSVGRenderingObserverProperty
+{
 public:
   nsSVGMarkerProperty(nsIURI *aURI, nsIFrame *aFrame, bool aReferenceImage)
     : nsSVGRenderingObserverProperty(aURI, aFrame, aReferenceImage) {}
@@ -293,7 +301,8 @@ protected:
   virtual void DoUpdate() override;
 };
 
-class nsSVGTextPathProperty final : public nsSVGRenderingObserverProperty {
+class nsSVGTextPathProperty final : public nsSVGRenderingObserverProperty
+{
 public:
   nsSVGTextPathProperty(nsIURI *aURI, nsIFrame *aFrame, bool aReferenceImage)
     : nsSVGRenderingObserverProperty(aURI, aFrame, aReferenceImage)
@@ -313,13 +322,32 @@ private:
   bool mValid;
 };
 
-class nsSVGPaintingProperty final : public nsSVGRenderingObserverProperty {
+class nsSVGPaintingProperty final : public nsSVGRenderingObserverProperty
+{
 public:
   nsSVGPaintingProperty(nsIURI *aURI, nsIFrame *aFrame, bool aReferenceImage)
     : nsSVGRenderingObserverProperty(aURI, aFrame, aReferenceImage) {}
 
 protected:
   virtual void DoUpdate() override;
+};
+
+class nsSVGMaskProperty final : public nsISupports
+{
+public:
+  explicit nsSVGMaskProperty(nsIFrame* aFrame);
+
+  // nsISupports
+  NS_DECL_ISUPPORTS
+
+  const nsTArray<RefPtr<nsSVGPaintingProperty>>& GetProps() const
+  {
+    return mProperties;
+  }
+
+private:
+  virtual ~nsSVGMaskProperty() {}
+  nsTArray<RefPtr<nsSVGPaintingProperty>> mProperties;
 };
 
 /**
@@ -338,7 +366,8 @@ protected:
  * via nsSVGContainerFrame::RemoveFrame, since only frames in the frame
  * tree should be referenced.
  */
-class nsSVGRenderingObserverList {
+class nsSVGRenderingObserverList
+{
 public:
   nsSVGRenderingObserverList()
     : mObservers(4)
@@ -384,7 +413,8 @@ private:
   nsTHashtable<nsPtrHashKey<nsSVGRenderingObserver> > mObservers;
 };
 
-class nsSVGEffects {
+class nsSVGEffects
+{
 public:
   typedef mozilla::dom::Element Element;
   typedef nsInterfaceHashtable<nsURIHashKey, nsIMutationObserver>
@@ -407,7 +437,7 @@ public:
 
   NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(FilterProperty, nsSVGFilterProperty,
                                       DestroyFilterProperty)
-  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MaskProperty, nsISupports)
+  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MaskProperty, nsSVGMaskProperty)
   NS_DECLARE_FRAME_PROPERTY_RELEASABLE(ClipPathProperty, nsISupports)
   NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MarkerBeginProperty, nsISupports)
   NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MarkerMiddleProperty, nsISupports)
@@ -427,7 +457,7 @@ public:
 
   struct EffectProperties {
     nsSVGFilterProperty*   mFilter;
-    nsSVGPaintingProperty* mMask;
+    nsSVGMaskProperty*     mMask;
     nsSVGPaintingProperty* mClipPath;
 
     /**
@@ -438,12 +468,17 @@ public:
      */
     nsSVGClipPathFrame *GetClipPathFrame(bool *aOK);
     /**
-     * @return the mask frame, or null if there is no mask frame
+     * @return the first mask frame, or null if there is no mask frame
      * @param aOK if a mask was specified and the designated element
      * exists but is an element of the wrong type, *aOK is set to false.
      * Otherwise *aOK is untouched.
      */
-    nsSVGMaskFrame *GetMaskFrame(bool *aOK);
+    nsSVGMaskFrame *GetFirstMaskFrame(bool *aOK = nullptr);
+
+    /**
+     * @return an array which contains all SVG mask frames.
+     */
+    nsTArray<nsSVGMaskFrame*> GetMaskFrames();
 
     bool HasValidFilter() {
       return mFilter && mFilter->ReferencesValidResources();

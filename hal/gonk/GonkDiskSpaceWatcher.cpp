@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include "base/message_loop.h"
+#include "base/task.h"
 #include "DiskSpaceWatcher.h"
 #include "fanotify.h"
 #include "nsIObserverService.h"
@@ -23,13 +24,6 @@ using namespace mozilla;
 namespace mozilla { namespace hal_impl { class GonkDiskSpaceWatcher; } }
 
 using namespace mozilla::hal_impl;
-
-template<>
-struct RunnableMethodTraits<GonkDiskSpaceWatcher>
-{
-  static void RetainCallee(GonkDiskSpaceWatcher* obj) { }
-  static void ReleaseCallee(GonkDiskSpaceWatcher* obj) { }
-};
 
 namespace mozilla {
 namespace hal_impl {
@@ -311,7 +305,7 @@ StartDiskSpaceWatcher()
   gHalDiskSpaceWatcher = new GonkDiskSpaceWatcher();
 
   XRE_GetIOMessageLoop()->PostTask(
-    NewRunnableMethod(gHalDiskSpaceWatcher, &GonkDiskSpaceWatcher::DoStart));
+    NewNonOwningRunnableMethod(gHalDiskSpaceWatcher, &GonkDiskSpaceWatcher::DoStart));
 }
 
 void
@@ -323,7 +317,7 @@ StopDiskSpaceWatcher()
   }
 
   XRE_GetIOMessageLoop()->PostTask(
-    NewRunnableMethod(gHalDiskSpaceWatcher, &GonkDiskSpaceWatcher::DoStop));
+    NewNonOwningRunnableMethod(gHalDiskSpaceWatcher, &GonkDiskSpaceWatcher::DoStop));
 }
 
 } // namespace hal_impl

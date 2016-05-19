@@ -230,13 +230,14 @@ ViewportFrame::AdjustReflowStateForScrollbars(nsHTMLReflowState* aReflowState) c
   nsIScrollableFrame* scrollingFrame = do_QueryFrame(kidFrame);
 
   if (scrollingFrame) {
-    nsMargin scrollbars = scrollingFrame->GetActualScrollbarSizes();
-    aReflowState->SetComputedWidth(aReflowState->ComputedWidth() -
-                                   scrollbars.LeftRight());
-    aReflowState->AvailableWidth() -= scrollbars.LeftRight();
-    aReflowState->SetComputedHeightWithoutResettingResizeFlags(
-      aReflowState->ComputedHeight() - scrollbars.TopBottom());
-    return nsPoint(scrollbars.left, scrollbars.top);
+    WritingMode wm = aReflowState->GetWritingMode();
+    LogicalMargin scrollbars(wm, scrollingFrame->GetActualScrollbarSizes());
+    aReflowState->SetComputedISize(aReflowState->ComputedISize() -
+                                   scrollbars.IStartEnd(wm));
+    aReflowState->AvailableISize() -= scrollbars.IStartEnd(wm);
+    aReflowState->SetComputedBSizeWithoutResettingResizeFlags(
+      aReflowState->ComputedBSize() - scrollbars.BStartEnd(wm));
+    return nsPoint(scrollbars.Left(wm), scrollbars.Top(wm));
   }
   return nsPoint(0, 0);
 }
@@ -298,7 +299,7 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
     // Deal with a non-incremental reflow or an incremental reflow
     // targeted at our one-and-only principal child frame.
     if (aReflowState.ShouldReflowAllKids() ||
-        aReflowState.IsVResize() ||
+        aReflowState.IsBResize() ||
         NS_SUBTREE_DIRTY(mFrames.FirstChild())) {
       // Reflow our one-and-only principal child frame
       nsIFrame*           kidFrame = mFrames.FirstChild();

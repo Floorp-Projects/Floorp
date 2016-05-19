@@ -789,12 +789,6 @@ class MochitestArguments(ArgumentContainer):
         if options.nested_oop:
             options.e10s = True
 
-        # a11y and chrome tests don't run with e10s enabled in CI
-        if options.a11y or options.chrome:
-            options.e10s = False
-
-        mozinfo.update({"e10s": options.e10s})  # for test manifest parsing.
-
         options.leakThresholds = {
             "default": options.defaultLeakThreshold,
             "tab": 10000,  # See dependencies of bug 1051230.

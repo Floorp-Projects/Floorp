@@ -59,9 +59,7 @@ AgnosticDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
                             aAudioTaskQueue,
                             aCallback);
   } else if (WaveDataDecoder::IsWave(aConfig.mMimeType)) {
-    m = new WaveDataDecoder(*aConfig.GetAsAudioInfo(),
-                            aAudioTaskQueue,
-                            aCallback);
+    m = new WaveDataDecoder(*aConfig.GetAsAudioInfo(), aCallback);
   }
 
   return m.forget();

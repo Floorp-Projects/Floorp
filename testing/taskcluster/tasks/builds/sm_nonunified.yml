@@ -1,0 +1,18 @@
+$inherits:
+  from: 'tasks/builds/sm_base.yml'
+  variables:
+    build_name: 'sm-nonunified'
+    build_type: 'debug'
+task:
+  payload:
+    env:
+      SPIDERMONKEY_VARIANT: 'nonunified'
+  metadata:
+    name: '[TC] Spidermonkey Non-Unified Debug'
+    description: 'Spidermonkey Non-Unified Debug'
+  extra:
+    treeherder:
+      symbol: nu
+      collection:
+        debug: true
+      tier: 3

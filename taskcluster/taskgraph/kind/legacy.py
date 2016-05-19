@@ -54,6 +54,8 @@ DEFAULT_JOB_PATH = os.path.join(
 # time after which a try build's results will expire
 TRY_EXPIRATION = "14 days"
 
+logger = logging.getLogger(__name__)
+
 def mklabel():
     return TASKID_PLACEHOLDER.format(slugid())
 
@@ -108,13 +110,11 @@ class LegacyKind(base.Kind):
         if vcs_info:
             pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime(vcs_info.pushdate))
 
-            self.log(logging.DEBUG, 'vcs-info', {},
-                     '%d commits influencing task scheduling:\n' % len(vcs_info.changesets))
+            logger.debug('{} commits influencing task scheduling:'.format(len(vcs_info.changesets)))
             for c in vcs_info.changesets:
-                self.log(logging.DEBUG, 'vcs-relevant-commit', {
-                    'cset': c['node'][0:12],
-                    'desc': c['desc'].splitlines()[0].encode('ascii', 'ignore'),
-                }, "{cset} {desc}")
+                logger.debug("{cset} {desc}".format(
+                    cset=c['node'][0:12],
+                    desc=c['desc'].splitlines()[0].encode('ascii', 'ignore')))
                 changed_files |= set(c['files'])
 
         # Template parameters used when expanding the graph
@@ -190,20 +190,19 @@ class LegacyKind(base.Kind):
                 for pattern in file_patterns:
                     for path in changed_files:
                         if mozpackmatch(path, pattern):
-                            self.log(logging.DEBUG, 'schedule-task', {
-                                'schedule': True,
+                            logger.debug('scheduling {task} because pattern {pattern} '
+                                'matches {path}', format({
                                 'task': task['task'],
                                 'pattern': pattern,
                                 'path': path,
-                            }, 'scheduling {task} because pattern {pattern} '
-                                'matches {path}')
+                            }))
                             return True
 
                 # No file patterns matched. Discard task.
-                self.log(logging.DEBUG, 'schedule-task', {
-                    'schedule': False,
-                    'task': task['task'],
-                }, 'discarding {task} because no relevant files changed')
+                logger.debug('discarding {task} because no relevant files changed'.format(
+                    task=task['task'],
+                    pattern=pattern,
+                    path=path))
                 return False
 
             return True
@@ -213,9 +212,7 @@ class LegacyKind(base.Kind):
         all_routes = {}
 
         for build in job_graph:
-            self.log(logging.DEBUG, 'load-task', {
-                'task': build['task'],
-            }, 'loading task {task}')
+            logging.debug("loading build task {}".format(build['task']))
             interactive = cmdline_interactive or build["interactive"]
             build_parameters = merge_dicts(parameters, build['additional-parameters'])
             build_parameters['build_slugid'] = mklabel()
