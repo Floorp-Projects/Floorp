@@ -377,6 +377,58 @@
       }
     }
 
+    function hideNDestroyDoc()
+    {
+      this.txt = null;
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, function() { return this.txt; }.bind(this))
+      ];
+
+      this.invoke = function hideNDestroyDoc_invoke()
+      {
+        this.txt = getAccessible('c5').firstChild.firstChild;
+        this.txt.DOMNode.parentNode.removeChild(this.txt.DOMNode);
+      }
+
+      this.check = function hideNDestroyDoc_check()
+      {
+        getNode('c5').parentNode.removeChild(getNode('c5'));
+      }
+
+      this.getID = function hideNDestroyDoc_getID()
+      {
+        return "remove text node and destroy a document on hide event";
+      }
+    }
+
+    function hideHideNDestroyDoc()
+    {
+      this.target = null;
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, function() { return this.target; }.bind(this))
+      ];
+
+      this.invoke = function hideHideNDestroyDoc_invoke()
+      {
+        var doc = getAccessible('c6').firstChild;
+        var l1 = doc.firstChild;
+        this.target = l1.firstChild;
+        var l2 = doc.lastChild;
+        l1.DOMNode.removeChild(l1.DOMNode.firstChild);
+        l2.DOMNode.removeChild(l2.DOMNode.firstChild);
+      }
+
+      this.check = function hideHideNDestroyDoc_check()
+      {
+        getNode('c6').parentNode.removeChild(getNode('c6'));
+      }
+
+      this.getID = function hideHideNDestroyDoc_getID()
+      {
+        return "remove text nodes (2 events in the queue) and destroy a document on first hide event";
+      }
+    }
+
     /**
      * Target getters.
      */
@@ -507,6 +559,8 @@
       gQueue.push(new insertReferredElm("testContainer3"));
       gQueue.push(new showHiddenParentOfVisibleChild());
 
+      gQueue.push(new hideNDestroyDoc());
+      gQueue.push(new hideHideNDestroyDoc());
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
@@ -569,7 +623,10 @@
 
   <div id="c4">
     <div style="visibility:hidden" id="c4_middle">
-     <div style="visibility:visible" id="c4_child"></div>
-   </div>
+    <div style="visibility:visible" id="c4_child"></div>
+  </div>
+
+  <iframe id="c5" src="data:text/html,hey"></iframe>
+  <iframe id="c6" src="data:text/html,<label>l</label><label>l</label>"></iframe>
 </body>
 </html>
