@@ -236,7 +236,6 @@ PathifyURI(nsIURI *in, nsACString &out)
             out.Append('/');
             out.Append(path);
         } else { // Very unlikely
-            nsAutoCString spec;
             rv = uri->GetSpec(spec);
             NS_ENSURE_SUCCESS(rv, rv);
 

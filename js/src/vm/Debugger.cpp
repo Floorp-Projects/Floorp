@@ -7715,12 +7715,11 @@ DebuggerObject_checkThis(JSContext* cx, const CallArgs& args, const char* fnname
     return nthisobj;
 }
 
-#define THIS_DEBUGOBJECT(cx, argc, vp, fnname, args, obj, object)     \
-    CallArgs args = CallArgsFromVp(argc, vp);                         \
-    RootedObject obj(cx, DebuggerObject_checkThis(cx, args, fnname)); \
-    if (!obj)                                                         \
-        return false;                                                 \
-    DebuggerObject& object = obj->as<DebuggerObject>();               \
+#define THIS_DEBUGOBJECT(cx, argc, vp, fnname, object)                              \
+    CallArgs args = CallArgsFromVp(argc, vp);                                       \
+    Rooted<DebuggerObject*> object(cx, DebuggerObject_checkThis(cx, args, fnname)); \
+    if (!object)                                                                    \
+        return false;                                                               \
 
 #define THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, fnname, args, obj)            \
     CallArgs args = CallArgsFromVp(argc, vp);                                 \
@@ -8505,13 +8504,27 @@ DebuggerObject_preventExtensions(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
-DebuggerObject_isSealed(JSContext* cx, unsigned argc, Value* vp)
+DebuggerObject_isExtensible(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT(cx, argc, vp, "isSealed", args, obj, object);
+    THIS_DEBUGOBJECT(cx, argc, vp, "isExtensible", object)
 
     bool result;
-    if (!object.isSealed(cx, &result))
-      return false;
+    if (!DebuggerObject::isExtensible(cx, object, result))
+        return false;
+
+    args.rval().setBoolean(result);
+    return true;
+}
+
+static bool
+DebuggerObject_isSealed(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT(cx, argc, vp, "isSealed", object)
+
+    bool result;
+    if (!DebuggerObject::isSealed(cx, object, result))
+        return false;
+
     args.rval().setBoolean(result);
     return true;
 }
@@ -8519,23 +8532,12 @@ DebuggerObject_isSealed(JSContext* cx, unsigned argc, Value* vp)
 static bool
 DebuggerObject_isFrozen(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT(cx, argc, vp, "isFrozen", args, obj, object);
+    THIS_DEBUGOBJECT(cx, argc, vp, "isFrozen", object)
 
     bool result;
-    if (!object.isFrozen(cx, &result))
-      return false;
-    args.rval().setBoolean(result);
-    return true;
-}
+    if (!DebuggerObject::isFrozen(cx, object, result))
+        return false;
 
-static bool
-DebuggerObject_isExtensible(JSContext* cx, unsigned argc, Value* vp)
-{
-    THIS_DEBUGOBJECT(cx, argc, vp, "isExtensible", args, obj, object);
-
-    bool result;
-    if (!object.isExtensible(cx, &result))
-      return false;
     args.rval().setBoolean(result);
     return true;
 }
@@ -8885,10 +8887,10 @@ const JSFunctionSpec DebuggerObject::methods_[] = {
     JS_FN("seal", DebuggerObject_seal, 0, 0),
     JS_FN("freeze", DebuggerObject_freeze, 0, 0),
     JS_FN("preventExtensions", DebuggerObject_preventExtensions, 0, 0),
-    JS_FN("isSealed", DebuggerObject_isSealed, 0, 0),
     JS_FN("forceLexicalInitializationByName", DebuggerObject_forceLexicalInitializationByName, 1, 0),
-    JS_FN("isFrozen", DebuggerObject_isFrozen, 0, 0),
     JS_FN("isExtensible", DebuggerObject_isExtensible, 0, 0),
+    JS_FN("isSealed", DebuggerObject_isSealed, 0, 0),
+    JS_FN("isFrozen", DebuggerObject_isFrozen, 0, 0),
     JS_FN("apply", DebuggerObject_apply, 0, 0),
     JS_FN("call", DebuggerObject_call, 0, 0),
     JS_FN("makeDebuggeeValue", DebuggerObject_makeDebuggeeValue, 1, 0),
@@ -8933,34 +8935,37 @@ DebuggerObject::create(JSContext* cx, HandleObject proto, HandleObject referent,
   return &object;
 }
 
-bool
-DebuggerObject::isExtensible(JSContext* cx, bool* result) const
+/* static */ bool
+DebuggerObject::isExtensible(JSContext* cx, Handle<DebuggerObject*> object, bool& result)
 {
-  RootedObject obj(cx, referent());
-
-  Maybe<AutoCompartment> ac;
-  ac.emplace(cx, obj);
-  ErrorCopier ec(ac);
-  return IsExtensible(cx, obj, result);
-}
-
-bool
-DebuggerObject::isSealedHelper(JSContext* cx, SealHelperOp op, const char* name,
-                               bool* result) const
-{
-    RootedObject obj(cx, referent());
+    RootedObject referent(cx, object->referent());
 
     Maybe<AutoCompartment> ac;
-    ac.emplace(cx, obj);
+    ac.emplace(cx, referent);
     ErrorCopier ec(ac);
-    if (op == OpSeal) {
-        if (!TestIntegrityLevel(cx, obj, IntegrityLevel::Sealed, result))
-            return false;
-    } else {
-        if (!TestIntegrityLevel(cx, obj, IntegrityLevel::Frozen, result))
-            return false;
-    }
-    return true;
+    return IsExtensible(cx, referent, &result);
+}
+
+/* static */ bool
+DebuggerObject::isSealed(JSContext* cx, Handle<DebuggerObject*> object, bool& result)
+{
+    RootedObject referent(cx, object->referent());
+
+    Maybe<AutoCompartment> ac;
+    ac.emplace(cx, referent);
+    ErrorCopier ec(ac);
+    return TestIntegrityLevel(cx, referent, IntegrityLevel::Sealed, &result);
+}
+
+/* static */ bool
+DebuggerObject::isFrozen(JSContext* cx, Handle<DebuggerObject*> object, bool& result)
+{
+    RootedObject referent(cx, object->referent());
+
+    Maybe<AutoCompartment> ac;
+    ac.emplace(cx, referent);
+    ErrorCopier ec(ac);
+    return TestIntegrityLevel(cx, referent, IntegrityLevel::Frozen, &result);
 }
 
 

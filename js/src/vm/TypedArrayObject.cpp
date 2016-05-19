@@ -248,6 +248,18 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         {
             return false;
         }
+        return true;
+    }
+
+    static bool
+    getOrCreateCreateArrayFromBufferFunction(JSContext* cx, MutableHandleValue fval)
+    {
+        RootedValue cache(cx, cx->global()->createArrayFromBuffer<NativeType>());
+        if (cache.isObject()) {
+            MOZ_ASSERT(cache.toObject().is<JSFunction>());
+            fval.set(cache);
+            return true;
+        }
 
         RootedFunction fun(cx);
         fun = NewNativeFunction(cx, ArrayBufferObject::createTypedArrayFromBuffer<NativeType>,
@@ -256,6 +268,8 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             return false;
 
         cx->global()->setCreateArrayFromBuffer<NativeType>(fun);
+
+        fval.setObject(*fun);
         return true;
     }
 
@@ -576,7 +590,10 @@ class TypedArrayObjectTemplate : public TypedArrayObject
                 args[1].setInt32(lengthInt);
                 args[2].setObject(*protoRoot);
 
-                RootedValue fval(cx, cx->global()->createArrayFromBuffer<NativeType>());
+                RootedValue fval(cx);
+                if (!getOrCreateCreateArrayFromBufferFunction(cx, &fval))
+                    return nullptr;
+
                 RootedValue thisv(cx, ObjectValue(*bufobj));
                 RootedValue rval(cx);
                 if (!js::Call(cx, fval, thisv, args, &rval))
@@ -605,7 +622,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         }
 
         if (byteOffset > buffer->byteLength() || byteOffset % sizeof(NativeType) != 0) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_CONSTRUCT_BOUNDS);
             return nullptr; // invalid byteOffset
         }
 
@@ -614,7 +631,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             len = (buffer->byteLength() - byteOffset) / sizeof(NativeType);
             if (len * sizeof(NativeType) != buffer->byteLength() - byteOffset) {
                 JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                                     JSMSG_TYPED_ARRAY_BAD_ARGS);
+                                     JSMSG_TYPED_ARRAY_CONSTRUCT_BOUNDS);
                 return nullptr; // given byte array doesn't map exactly to sizeof(NativeType) * N
             }
         } else {
@@ -624,12 +641,12 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         // Go slowly and check for overflow.
         uint32_t arrayByteLength = len * sizeof(NativeType);
         if (len >= INT32_MAX / sizeof(NativeType) || byteOffset >= INT32_MAX - arrayByteLength) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_CONSTRUCT_BOUNDS);
             return nullptr; // overflow when calculating byteOffset + len * sizeof(NativeType)
         }
 
         if (arrayByteLength + byteOffset > buffer->byteLength()) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_CONSTRUCT_BOUNDS);
             return nullptr; // byteOffset + len is too big for the arraybuffer
         }
 

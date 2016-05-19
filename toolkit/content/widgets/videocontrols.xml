@@ -1007,7 +1007,7 @@
                     } else {
                         element.setAttribute("fadeout", true);
                         if (element.classList.contains("controlBar") && !this.hasError() &&
-                            document.fullscreenElement == this.video)
+                            document.mozFullScreenElement == this.video)
                             this.controlsSpacer.setAttribute("hideCursor", true);
 
                     }
@@ -1065,17 +1065,17 @@
                 },
 
                 isVideoInFullScreen : function () {
-                    return document.fullscreenElement == this.video;
+                    return document.mozFullScreenElement == this.video;
                 },
 
                 toggleFullscreen : function () {
                     this.isVideoInFullScreen() ?
-                        document.exitFullscreen() :
-                        this.video.requestFullscreen();
+                        document.mozCancelFullScreen() :
+                        this.video.mozRequestFullScreen();
                 },
 
                 setFullscreenButtonState : function () {
-                    if (this.isAudioOnly || !document.fullscreenEnabled) {
+                    if (this.isAudioOnly || !document.mozFullScreenEnabled) {
                         this.controlBar.setAttribute("fullscreen-unavailable", true);
                         this.adjustControlSize();
                         return;
@@ -1525,7 +1525,7 @@
 
                     addListener(this.videocontrols, "resizevideocontrols", this.adjustControlSize);
                     addListener(this.videocontrols, "transitionend", this.onTransitionEnd);
-                    addListener(this.video.ownerDocument, "fullscreenchange", this.onFullscreenChange);
+                    addListener(this.video.ownerDocument, "mozfullscreenchange", this.onFullscreenChange);
                     addListener(this.video, "keypress", this.keyHandler);
 
                     addListener(this.videocontrols, "dragstart", function(event) {

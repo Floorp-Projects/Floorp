@@ -114,13 +114,21 @@ struct Zone
     JSTracer* const barrierTracer_;     // A pointer to the JSRuntime's |gcMarker|.
 
   public:
+    // Stack GC roots for Rooted GC pointers.
+    js::RootedListHeads stackRoots_;
+    template <typename T> friend class JS::Rooted;
+
     bool needsIncrementalBarrier_;
 
     Zone(JSRuntime* runtime, JSTracer* barrierTracerArg)
       : runtime_(runtime),
         barrierTracer_(barrierTracerArg),
         needsIncrementalBarrier_(false)
-    {}
+    {
+        for (auto& stackRootPtr : stackRoots_) {
+            stackRootPtr = nullptr;
+        }
+    }
 
     bool needsIncrementalBarrier() const {
         return needsIncrementalBarrier_;
@@ -143,7 +151,7 @@ struct Zone
         return runtime_;
     }
 
-    static JS::shadow::Zone* asShadowZone(JS::Zone* zone) {
+    static MOZ_ALWAYS_INLINE JS::shadow::Zone* asShadowZone(JS::Zone* zone) {
         return reinterpret_cast<JS::shadow::Zone*>(zone);
     }
 };

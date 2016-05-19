@@ -205,7 +205,7 @@ struct ExprIterPolicy
     static const bool Output = false;
 
     // This function is called to report failures.
-    static bool fail(const char*, Decoder&) {
+    static bool fail(const char*, const Decoder&) {
         MOZ_CRASH("unexpected validation failure");
         return false;
     }
@@ -666,7 +666,7 @@ ExprIter<Policy>::readReturn(Value* value)
     uint32_t arity;
     if (!readVarU32(&arity))
         return fail("failed to read return arity");
-    if (arity > 1)
+    if (Validate && arity > 1)
         return fail("return arity too big");
 
     TypeAndValue<Value> tv;
@@ -880,7 +880,7 @@ ExprIter<Policy>::readBr(uint32_t* relativeDepth, ExprType* type, Value* value)
     uint32_t arity;
     if (!readVarU32(&arity))
         return fail("unable to read br arity");
-    if (arity > 1)
+    if (Validate && arity > 1)
         return fail("br arity too big");
 
     uint32_t validateRelativeDepth;
@@ -919,7 +919,7 @@ ExprIter<Policy>::readBrIf(uint32_t* relativeDepth, ExprType* type, Value* value
     uint32_t arity;
     if (!readVarU32(&arity))
         return fail("unable to read br_if arity");
-    if (arity > 1)
+    if (Validate && arity > 1)
         return fail("br_if arity too big");
 
     uint32_t validateRelativeDepth;
@@ -964,7 +964,7 @@ ExprIter<Policy>::readBrTable(uint32_t* tableLength, ExprType* type,
     uint32_t arity;
     if (!readVarU32(&arity))
         return fail("unable to read br_table arity");
-    if (arity > 1)
+    if (Validate && arity > 1)
         return fail("br_table arity too big");
 
     TypeAndValue<Value> tv;

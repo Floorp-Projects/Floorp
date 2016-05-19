@@ -26,7 +26,7 @@ this.ContextualIdentityService = {
       label: "userContextWork.label",
       accessKey: "userContextWork.accesskey" },
     { userContextId: 3,
-      icon: "chome://browser/skin/usercontext/banking.svg",
+      icon: "chrome://browser/skin/usercontext/banking.svg",
       color: "#7dc14c",
       label: "userContextBanking.label",
       accessKey: "userContextBanking.accesskey" },

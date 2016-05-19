@@ -13,6 +13,7 @@
 #include "nsXULAppAPI.h"
 
 #include "base/message_loop.h"
+#include "base/task.h"
 #include "mozilla/Scoped.h"
 #include "mozilla/StaticPtr.h"
 

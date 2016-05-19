@@ -1,0 +1,121 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset=utf-8>
+    <title>Tests for seeking using Animation.currentTime</title>
+    <style>
+.animated-div {
+  margin-left: -10px;
+  animation-timing-function: linear ! important;
+}
+
+@keyframes anim {
+  from { margin-left: 0px; }
+  to { margin-left: 100px; }
+}
+    </style>
+    <script src="../testcommon.js"></script>
+  </head>
+  <body>
+    <script type="text/javascript">
+'use strict';
+
+function assert_marginLeft_equals(target, expect, description) {
+  var marginLeft = parseFloat(getComputedStyle(target).marginLeft);
+  assert_equals(marginLeft, expect, description);
+}
+
+promise_test(function(t) {
+  var div = addDiv(t, {'class': 'animated-div'});
+  div.style.animation = "anim 100s";
+  var animation = div.getAnimations()[0];
+
+  return animation.ready.then(function() {
+    animation.currentTime = 90 * MS_PER_SEC;
+    assert_marginLeft_equals(div, 90,
+      'Computed style is updated when seeking forwards in active interval');
+
+    animation.currentTime = 10 * MS_PER_SEC;
+    assert_marginLeft_equals(div, 10,
+      'Computed style is updated when seeking backwards in active interval');
+  });
+}, 'Seeking forwards and backward in active interval');
+
+promise_test(function(t) {
+  var div = addDiv(t, {'class': 'animated-div'});
+  div.style.animation = "anim 100s 100s";
+  var animation = div.getAnimations()[0];
+
+  return animation.ready.then(function(t) {
+    assert_marginLeft_equals(div, -10,
+      'Computed style is unaffected in before phase with no backwards fill');
+
+    // before -> active (non-active -> active)
+    animation.currentTime = 150 * MS_PER_SEC;
+    assert_marginLeft_equals(div, 50,
+      'Computed style is updated when seeking forwards from ' +
+      'not \'in effect\' to \'in effect\' state');
+  });
+}, 'Seeking to non-\'in effect\' from \'in effect\' (before -> active)');
+
+promise_test(function(t) {
+  var div = addDiv(t, {'class': 'animated-div'});
+  div.style.animation = "anim 100s 100s";
+  var animation = div.getAnimations()[0];
+
+  return animation.ready.then(function(t) {
+    // move to after phase
+    animation.currentTime = 250 * MS_PER_SEC;
+    assert_marginLeft_equals(div, -10,
+      'Computed style is unaffected in after phase with no forwards fill');
+
+    // after -> active (non-active -> active)
+    animation.currentTime = 150 * MS_PER_SEC;
+    assert_marginLeft_equals(div, 50,
+      'Computed style is updated when seeking backwards from ' +
+      'not \'in effect\' to \'in effect\' state');
+  });
+}, 'Seeking to non-\'in effect\' from \'in effect\' (after -> active)');
+
+promise_test(function(t) {
+  var div = addDiv(t, {'class': 'animated-div'});
+  div.style.animation = "anim 100s 100s";
+  var animation = div.getAnimations()[0];
+
+  return animation.ready.then(function(t) {
+    // move to active phase
+    animation.currentTime = 150 * MS_PER_SEC;
+    assert_marginLeft_equals(div, 50,
+      'Computed value is set during active phase');
+
+    // active -> before
+    animation.currentTime = 50 * MS_PER_SEC;
+    assert_marginLeft_equals(div, -10,
+      'Computed value is not effected after seeking backwards from ' +
+      '\'in effect\' to not \'in effect\' state');
+  });
+}, 'Seeking to \'in effect\' from non-\'in effect\' (active -> before)');
+
+promise_test(function(t) {
+  var div = addDiv(t, {'class': 'animated-div'});
+  div.style.animation = "anim 100s 100s";
+  var animation = div.getAnimations()[0];
+
+  return animation.ready.then(function(t) {
+    // move to active phase
+    animation.currentTime = 150 * MS_PER_SEC;
+    assert_marginLeft_equals(div, 50,
+      'Computed value is set during active phase');
+
+    // active -> after
+    animation.currentTime = 250 * MS_PER_SEC;
+    assert_marginLeft_equals(div, -10,
+      'Computed value is not affected after seeking forwards from ' +
+      '\'in effect\' to not \'in effect\' state');
+  });
+}, 'Seeking to \'in effect\' from non-\'in effect\' (active -> after)');
+
+done();
+    </script>
+  </body>
+</html>
