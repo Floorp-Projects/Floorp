@@ -336,6 +336,26 @@
     "n_buckets": 50,
     "description": "Max time spent on one forget skippable (ms)"
   },
+  "FULLSCREEN_TRANSITION_BLACK_MS": {
+    "alert_emails": ["xquan@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 100,
+    "high": 5000,
+    "n_buckets": 50,
+    "bug_numbers": [1271160],
+    "description": "The time spent in the fully-black screen in fullscreen transition"
+  },
+  "FULLSCREEN_CHANGE_MS": {
+    "alert_emails": ["xquan@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 100,
+    "high": 5000,
+    "n_buckets": 50,
+    "bug_numbers": [1271160],
+    "description": "The time content uses to enter/exit fullscreen regardless of fullscreen transition timeout"
+  },
   "GC_REASON_2": {
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",

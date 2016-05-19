@@ -5978,6 +5978,7 @@ private:
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsISupports> mTransitionData;
 
+  TimeStamp mFullscreenChangeStartTime;
   FullscreenTransitionDuration mDuration;
   Stage mStage;
   bool mFullscreen;
@@ -6002,6 +6003,7 @@ FullscreenTransitionTask::Run()
                                          mDuration.mFadeIn, mTransitionData,
                                          this);
   } else if (stage == eToggleFullscreen) {
+    mFullscreenChangeStartTime = TimeStamp::Now();
     if (MOZ_UNLIKELY(mWindow->mFullScreen != mFullscreen)) {
       // This could happen in theory if several fullscreen requests in
       // different direction happen continuously in a short time. We
@@ -6038,6 +6040,8 @@ FullscreenTransitionTask::Run()
       Preferences::GetUint("full-screen-api.transition.timeout", 500);
     mTimer->Init(observer, timeout, nsITimer::TYPE_ONE_SHOT);
   } else if (stage == eAfterToggle) {
+    Telemetry::AccumulateTimeDelta(Telemetry::FULLSCREEN_TRANSITION_BLACK_MS,
+                                   mFullscreenChangeStartTime);
     mWidget->PerformFullscreenTransition(nsIWidget::eAfterFullscreenToggle,
                                          mDuration.mFadeOut, mTransitionData,
                                          this);
