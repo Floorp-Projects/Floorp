@@ -1,4 +1,9 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // sjs for remote about:newtab (bug 1226928)
+"use strict";
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -12,20 +17,29 @@ const goodFileBase = path + goodFileName;
 const goodFile = FileUtils.getDir("TmpD", [], true);
 goodFile.append(goodFileName);
 const goodSignature = path + "file_about_newtab_good_signature";
-const goodKeyId = "RemoteNewTab";
+const goodX5UString = "\"https://example.com/browser/dom/security/test/contentverifier/file_contentserver.sjs?x5u=default\"";
 
 const scriptFileName = "script.js";
 const cssFileName = "style.css";
 const badFile = path + "file_about_newtab_bad.html";
 const brokenSignature = path + "file_about_newtab_broken_signature";
 const badSignature = path + "file_about_newtab_bad_signature";
-const badKeyId = "OldRemoteNewTabKey";
+const badX5UString = "\"https://example.com/browser/dom/security/test/contentverifier/file_contentserver.sjs?x5u=bad\"";
+const httpX5UString = "\"http://example.com/browser/dom/security/test/contentverifier/file_contentserver.sjs?x5u=default\"";
 
 const sriFile = path + "file_about_newtab_sri.html";
 const sriSignature = path + "file_about_newtab_sri_signature";
 
 const badCspFile = path + "file_about_newtab_bad_csp.html";
 const badCspSignature = path + "file_about_newtab_bad_csp_signature";
+
+// This cert chain is copied from
+// security/manager/ssl/tests/unit/test_content_signing/
+// using the certificates
+// * content_signing_remote_newtab_ee.pem
+// * content_signing_int.pem
+// * content_signing_root.pem
+const goodCertChainPath = path + "goodChain.pem";
 
 const tempFileNames = [goodFileName, scriptFileName, cssFileName];
 
@@ -115,7 +129,7 @@ function cleanupTestFiles() {
  */
 function handleRequest(request, response) {
   let params = new URLSearchParams(request.queryString);
-  let keyType = params.get("key");
+  let x5uType = params.get("x5u");
   let signatureType = params.get("sig");
   let fileType = params.get("file");
   let headerType = params.get("header");
@@ -123,6 +137,7 @@ function handleRequest(request, response) {
   let invalidateFile = params.get("invalidateFile");
   let validateFile = params.get("validateFile");
   let resource = params.get("resource");
+  let x5uParam = params.get("x5u");
 
   if (params.get("cleanup")) {
     cleanupTestFiles();
@@ -171,6 +186,14 @@ function handleRequest(request, response) {
     return;
   }
 
+  // we have to return the certificate chain on request for the x5u parameter
+  if (x5uParam && x5uParam == "default") {
+    response.setHeader("Cache-Control", "max-age=216000", false);
+    response.setHeader("Content-Type", "text/plain", false);
+    response.write(loadFile(getFileName(goodCertChainPath, "CurWorkD")));
+    return;
+  }
+
   // avoid confusing cache behaviours
   if (!cached) {
     response.setHeader("Cache-Control", "no-cache", false);
@@ -186,11 +209,13 @@ function handleRequest(request, response) {
    * value has to be indicated in the url.
    */
   let csHeader = "";
-  let keyId = goodKeyId;
+  let x5uString = goodX5UString;
   let signature = goodSignature;
   let file = goodFile;
-  if (keyType == "bad") {
-    keyId = badKeyId;
+  if (x5uType == "bad") {
+    x5uString = badX5UString;
+  } else if (x5uType == "http") {
+    x5uString = httpX5UString;
   }
   if (signatureType == "bad") {
     signature = badSignature;
@@ -211,19 +236,19 @@ function handleRequest(request, response) {
 
   if (headerType == "good") {
     // a valid content-signature header
-    csHeader = "keyid=" + keyId + ";p384ecdsa=" +
+    csHeader = "x5u=" + x5uString + ";p384ecdsa=" +
                loadFile(getFileName(signature, "CurWorkD"));
   } else if (headerType == "error") {
     // this content-signature header is missing ; before p384ecdsa
-    csHeader = "keyid=" + keyId + "p384ecdsa=" +
+    csHeader = "x5u=" + x5uString + "p384ecdsa=" +
                loadFile(getFileName(signature, "CurWorkD"));
-  } else if (headerType == "errorInKeyid") {
+  } else if (headerType == "errorInX5U") {
     // this content-signature header is missing the keyid directive
-    csHeader = "keid=" + keyId + ";p384ecdsa=" +
+    csHeader = "x6u=" + x5uString + ";p384ecdsa=" +
                loadFile(getFileName(signature, "CurWorkD"));
   } else if (headerType == "errorInSignature") {
     // this content-signature header is missing the p384ecdsa directive
-    csHeader = "keyid=" + keyId + ";p385ecdsa=" +
+    csHeader = "x5u=" + x5uString + ";p385ecdsa=" +
                loadFile(getFileName(signature, "CurWorkD"));
   }
 
