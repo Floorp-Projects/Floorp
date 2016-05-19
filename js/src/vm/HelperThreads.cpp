@@ -29,6 +29,7 @@ using namespace js;
 
 using mozilla::ArrayLength;
 using mozilla::DebugOnly;
+using mozilla::TimeDuration;
 
 namespace js {
 
@@ -704,15 +705,13 @@ GlobalHelperThreadState::isLocked()
 #endif
 
 void
-GlobalHelperThreadState::wait(CondVar which, uint32_t millis)
+GlobalHelperThreadState::wait(CondVar which, TimeDuration timeout /* = TimeDuration::Forever() */)
 {
     MOZ_ASSERT(isLocked());
 #ifdef DEBUG
     lockOwner = nullptr;
 #endif
-    DebugOnly<PRStatus> status =
-        PR_WaitCondVar(whichWakeup(which),
-                       millis ? PR_MillisecondsToInterval(millis) : PR_INTERVAL_NO_TIMEOUT);
+    DebugOnly<PRStatus> status = PR_WaitCondVar(whichWakeup(which), DurationToPRInterval(timeout));
     MOZ_ASSERT(status == PR_SUCCESS);
 #ifdef DEBUG
     lockOwner = PR_GetCurrentThread();

@@ -14,6 +14,7 @@
 #include "mozilla/mozalloc.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/SizePrintfMacros.h"
+#include "mozilla/TimeStamp.h"
 
 #ifdef XP_WIN
 # include <direct.h>
@@ -107,6 +108,8 @@ using mozilla::Maybe;
 using mozilla::NumberEqualsInt32;
 using mozilla::PodCopy;
 using mozilla::PodEqual;
+using mozilla::TimeDuration;
+using mozilla::TimeStamp;
 
 enum JSShellExitCode {
     EXITCODE_RUNTIME_ERROR      = 3,
@@ -131,7 +134,7 @@ static const size_t gMaxStackSize = 128 * sizeof(size_t) * 1024;
  * Limit the timeout to 30 minutes to prevent an overflow on platfoms
  * that represent the time internally in microseconds using 32-bit int.
  */
-static const double MAX_TIMEOUT_INTERVAL = 1800.0;
+static const double MAX_TIMEOUT_INTERVAL = 1800.0;  // seconds
 
 #ifdef NIGHTLY_BUILD
 # define SHARED_MEMORY_DEFAULT 1
@@ -3086,13 +3089,10 @@ Sleep_fn(JSContext* cx, unsigned argc, Value* vp)
 {
     ShellRuntime* sr = GetShellRuntime(cx);
     CallArgs args = CallArgsFromVp(argc, vp);
-    int64_t t_ticks;
 
-    if (args.length() == 0) {
-        t_ticks = 0;
-    } else {
+    TimeDuration duration = TimeDuration::FromSeconds(0.0);
+    if (args.length() > 0) {
         double t_secs;
-
         if (!ToNumber(cx, args[0], &t_secs))
             return false;
 
@@ -3101,20 +3101,18 @@ Sleep_fn(JSContext* cx, unsigned argc, Value* vp)
             JS_ReportError(cx, "Excessive sleep interval");
             return false;
         }
-        t_ticks = (t_secs <= 0.0)
-                  ? 0
-                  : int64_t(PRMJ_USEC_PER_SEC * t_secs);
+        duration = TimeDuration::FromSeconds(Max(0.0, t_secs));
     }
     PR_Lock(sr->watchdogLock);
-    int64_t to_wakeup = PRMJ_Now() + t_ticks;
+    TimeStamp toWakeup = TimeStamp::Now() + duration;
     for (;;) {
-        PR_WaitCondVar(sr->sleepWakeup, PR_MillisecondsToInterval(t_ticks / 1000));
+        PR_WaitCondVar(sr->sleepWakeup, DurationToPRInterval(duration));
         if (sr->serviceInterrupt)
             break;
-        int64_t now = PRMJ_Now();
-        if (!IsBefore(now, to_wakeup))
+        auto now = TimeStamp::Now();
+        if (now >= toWakeup)
             break;
-        t_ticks = to_wakeup - now;
+        duration = toWakeup - now;
     }
     PR_Unlock(sr->watchdogLock);
     args.rval().setUndefined();
@@ -3196,11 +3194,11 @@ WatchdogMain(void* arg)
                 JS_RequestInterruptCallback(rt);
             }
 
-            uint64_t sleepDuration = PR_INTERVAL_NO_TIMEOUT;
-            if (sr->watchdogHasTimeout)
-                sleepDuration = PR_TicksPerSecond() / 10;
+            TimeDuration sleepDuration = sr->watchdogHasTimeout
+                                         ? TimeDuration::FromSeconds(0.1)
+                                         : TimeDuration::Forever();
             mozilla::DebugOnly<PRStatus> status =
-              PR_WaitCondVar(sr->watchdogWakeup, sleepDuration);
+              PR_WaitCondVar(sr->watchdogWakeup, DurationToPRInterval(sleepDuration));
             MOZ_ASSERT(status == PR_SUCCESS);
         }
     }
