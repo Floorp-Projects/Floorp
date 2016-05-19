@@ -87,7 +87,7 @@ private:
   /**
    * Processes the event queue and fires events.
    */
-  void Process();
+  void Process(const RefPtr<DocAccessible>& aDeathGrip);
 
   /**
    * Return an event subtree for the given accessible.
