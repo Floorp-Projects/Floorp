@@ -8,7 +8,7 @@ FRAGMENT(GCCellPtr, simple) {
 
   JS::Rooted<JSObject*> glob(cx, JS::CurrentGlobalOrNull(cx));
   JS::Rooted<JSString*> empty(cx, JS_NewStringCopyN(cx, nullptr, 0));
-  JS::Rooted<Symbol*> unique(cx, NewSymbol(cx, nullptr));
+  JS::Rooted<JS::Symbol*> unique(cx, JS::NewSymbol(cx, nullptr));
 
   JS::GCCellPtr object(glob.get());
   JS::GCCellPtr string(empty.get());

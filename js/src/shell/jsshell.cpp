@@ -9,6 +9,11 @@
 #include "shell/jsshell.h"
 
 #include "jsapi.h"
+#include "jsfriendapi.h"
+
+#include "vm/StringBuffer.h"
+
+using namespace JS;
 
 namespace js {
 namespace shell {

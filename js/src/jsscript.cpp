@@ -53,6 +53,7 @@
 #include "jsfuninlines.h"
 #include "jsobjinlines.h"
 
+#include "vm/NativeObject-inl.h"
 #include "vm/ScopeObject-inl.h"
 #include "vm/SharedImmutableStringsCache-inl.h"
 #include "vm/Stack-inl.h"

@@ -182,6 +182,7 @@ fi
 RUN_JSTESTS=true
 RUN_JITTEST=true
 RUN_JSAPITESTS=true
+RUN_CHECK_STYLE_ONLY=false
 
 PARENT=$$
 
@@ -224,7 +225,7 @@ elif [[ "$VARIANT" = "arm-sim" ||
 elif [[ "$VARIANT" = "nonunified" ]]; then
     RUN_JSTESTS=false
     RUN_JITTEST=false
-    RUN_JSAPITESTS=false
+    RUN_CHECK_STYLE_ONLY=true
 elif [[ "$VARIANT" = arm64* ]]; then
     # The ARM64 simulator is slow, so some tests are timing out.
     # Run a reduced set of test cases so this doesn't take hours.
@@ -232,7 +233,11 @@ elif [[ "$VARIANT" = arm64* ]]; then
     export JITTEST_EXTRA_ARGS="--jitflags=none --args=--baseline-eager -x ion/ -x asm.js/"
 fi
 
-$COMMAND_PREFIX $MAKE check || exit 1
+if $RUN_CHECK_STYLE_ONLY; then
+    $COMMAND_PREFIX $MAKE check-style || exit 1
+else
+    $COMMAND_PREFIX $MAKE check || exit 1
+fi
 
 RESULT=0
 
