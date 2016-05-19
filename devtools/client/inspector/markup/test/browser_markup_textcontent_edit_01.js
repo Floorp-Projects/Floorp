@@ -53,7 +53,7 @@ function* editContainer(inspector, testActor,
 
   info("Changing the text content");
   let onMutated = inspector.once("markupmutation");
-  let container = yield getContainerForSelector(selector, inspector);
+  let container = yield focusNode(selector, inspector);
   let field = container.elt.querySelector("pre");
 
   if (shortValue) {

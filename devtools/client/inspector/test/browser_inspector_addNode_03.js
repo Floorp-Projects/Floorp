@@ -5,9 +5,10 @@
 "use strict";
 
 // Test that adding nodes does work as expected: the parent gets expanded, the
-// new node gets selected and the corresponding markup-container focused.
+// new node gets selected.
 
 const TEST_URL = URL_ROOT + "doc_inspector_add_node.html";
+const PARENT_TREE_LEVEL = 3;
 
 add_task(function* () {
   let {inspector} = yield openInspectorForURL(TEST_URL);
@@ -38,6 +39,10 @@ add_task(function* () {
 function* testAddNode(parentNode, inspector) {
   let btn = inspector.panelDoc.querySelector("#inspector-element-add-button");
   let markupWindow = inspector.markup.win;
+  let parentContainer = inspector.markup.getContainer(parentNode);
+
+  is(parentContainer.tagLine.getAttribute("aria-level"), PARENT_TREE_LEVEL,
+    "Parent level should be up to date.");
 
   info("Clicking 'add node' and expecting a markup mutation and focus event");
   let onMutation = inspector.once("markupmutation");
@@ -56,18 +61,21 @@ function* testAddNode(parentNode, inspector) {
   is(newNode, inspector.selection.nodeFront,
      "The new node is selected");
 
-  ok(inspector.markup.getContainer(parentNode).expanded,
-     "The parent node is now expanded");
+  ok(parentContainer.expanded, "The parent node is now expanded");
 
   is(inspector.selection.nodeFront.parentNode(), parentNode,
      "The new node is inside the right parent");
 
   let focusedElement = markupWindow.document.activeElement;
-  let focusedContainer = focusedElement.closest(".child").container;
-  is(focusedContainer.node, inspector.selection.nodeFront,
-     "The right container is focused in the markup-view");
-  ok(focusedElement.classList.contains("tag"),
-     "The tagName part of the container is focused");
+  let focusedContainer = focusedElement.container;
+  let selectedContainer = inspector.markup._selectedContainer;
+  is(selectedContainer.tagLine.getAttribute("aria-level"),
+    PARENT_TREE_LEVEL + 1, "Added container level should be up to date.");
+  is(selectedContainer.node, inspector.selection.nodeFront,
+     "The right container is selected in the markup-view");
+  ok(selectedContainer.selected, "Selected container is set to selected");
+  is(focusedContainer.toString(), "[root container]",
+    "Root container is focused");
 }
 
 function collapseNode(node, inspector) {
