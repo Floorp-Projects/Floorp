@@ -464,8 +464,10 @@ gfxWindowsPlatform::HandleDeviceReset()
   mCompositorD3D11TextureSharingWorks = false;
   mDeviceResetReason = DeviceResetReason::OK;
 
-  imgLoader::Singleton()->ClearCache(true);
-  imgLoader::Singleton()->ClearCache(false);
+  imgLoader::Singleton()->NormalLoader(true);
+  imgLoader::Singleton()->NormalLoader(false);
+  imgLoader::Singleton()->PrivateBrowsingLoader(true);
+  imgLoader::Singleton()->PrivateBrowsingLoader(false);
   gfxAlphaBoxBlur::ShutdownBlurCache();
 
   InitializeDevices();
