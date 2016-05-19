@@ -38,8 +38,17 @@ public:
       JS::TraceEdge(trc, &mJSObj, "nsJSObjWrapperKey");
   }
 
+  nsJSObjWrapperKey(const nsJSObjWrapperKey& other)
+    : mJSObj(other.mJSObj),
+      mNpp(other.mNpp)
+  {}
+  void operator=(const nsJSObjWrapperKey& other) {
+    mJSObj = other.mJSObj;
+    mNpp = other.mNpp;
+  }
+
   JS::Heap<JSObject*> mJSObj;
-  const NPP mNpp;
+  NPP mNpp;
 };
 
 class nsJSObjWrapper : public NPObject
