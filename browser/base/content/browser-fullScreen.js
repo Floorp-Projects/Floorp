@@ -131,6 +131,7 @@ var FullScreen = {
           let topWin = event.target.ownerDocument.defaultView.top;
           browser = gBrowser.getBrowserForContentWindow(topWin);
         }
+        TelemetryStopwatch.start("FULLSCREEN_CHANGE_MS");
         if (!browser || !this.enterDomFullscreen(browser)) {
           if (document.fullscreenElement) {
             // MozDOMFullscreen:Entered is dispatched synchronously in
@@ -150,6 +151,7 @@ var FullScreen = {
         break;
       }
       case "MozDOMFullscreen:Exited":
+        TelemetryStopwatch.start("FULLSCREEN_CHANGE_MS");
         this.cleanupDomFullscreen();
         break;
     }
@@ -172,6 +174,7 @@ var FullScreen = {
       }
       case "DOMFullscreen:Painted": {
         Services.obs.notifyObservers(window, "fullscreen-painted", "");
+        TelemetryStopwatch.finish("FULLSCREEN_CHANGE_MS");
         break;
       }
     }
