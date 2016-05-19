@@ -34,7 +34,7 @@ has_cpuid_bits(unsigned int level, CPUIDRegister reg, unsigned int bits)
   regs[1] = ebx;
   regs[2] = ecx;
   regs[3] = edx;
-  return regs[reg] & bits;
+  return (regs[reg] & bits) == bits;
 }
 
 static uint64_t xgetbv(uint32_t xcr) {
