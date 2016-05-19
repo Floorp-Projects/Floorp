@@ -19,21 +19,12 @@ from mach.decorators import (
     Command,
 )
 
-MARIONETTE_DISABLED_B2G = '''
-The %s command requires a Marionette-enabled build.
-
-Please create an engineering build, which has Marionette enabled.  You can do
-this by ommitting the VARIANT variable when building, or using:
-
-VARIANT=eng ./build.sh
-'''
 
 def setup_argument_parser():
     from marionette.runner.base import BaseMarionetteArguments
     return BaseMarionetteArguments()
 
-def run_marionette(tests, b2g_path=None, emulator=None,
-    address=None, binary=None, topsrcdir=None, **kwargs):
+def run_marionette(tests, testtype=None, address=None, binary=None, topsrcdir=None, **kwargs):
     from mozlog.structured import commandline
 
     from marionette.runtests import (
@@ -51,13 +42,8 @@ def run_marionette(tests, b2g_path=None, emulator=None,
 
     args = parser.parse_args(args=tests)
 
-    if b2g_path:
-        args.homedir = b2g_path
-        if emulator:
-            args.emulator = emulator
-    else:
-        args.binary = binary
-        path, exe = os.path.split(args.binary)
+    args.binary = binary
+    path, exe = os.path.split(args.binary)
 
     for k, v in kwargs.iteritems():
         setattr(args, k, v)
