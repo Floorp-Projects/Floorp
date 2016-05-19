@@ -520,16 +520,19 @@ ImplCycleCollectionUnlink(CallbackObjectHolder<T, U>& aField)
   aField.UnlinkSelf();
 }
 
-// T is expected to be a RefPtr or OwningNonNull around a CallbackObject
-// subclass.  This class is used in bindings to safely handle Fast* callbacks;
-// it ensures that the callback is traced, and that if something is holding onto
-// the callback when we're done with it HoldJSObjects is called.
+// T is expected to be a CallbackObject subclass.  This class is used in
+// bindings to safely handle nullable Fast* callbacks; it ensures that the
+// callback is traced, and that if something is holding onto the callback when
+// we're done with it HoldJSObjects is called.  I wish I could share this code
+// with RootedCallbackOwningNonNull, but I can't figure out how to give two
+// different template specializations of the same two-param template (templated
+// on T and SmartPtr<T>), different destructors.
 template<typename T>
-class RootedCallback : public JS::Rooted<T>
+class RootedCallbackRefPtr : public JS::Rooted<RefPtr<T>>
 {
 public:
-  explicit RootedCallback(JSContext* cx)
-    : JS::Rooted<T>(cx)
+  explicit RootedCallbackRefPtr(JSContext* cx)
+    : JS::Rooted<RefPtr<T>>(cx)
   {}
 
   // We need a way to make assignment from pointers (how we're normally used)
@@ -553,13 +556,57 @@ public:
     return this->get()->Callback();
   }
 
-  ~RootedCallback()
+  ~RootedCallbackRefPtr()
   {
-    // Ensure that our callback starts holding on to its own JS objects as
-    // needed.  Having to null-check here when T is OwningNonNull is a bit
-    // silly, but it's simpler than creating two separate RootedCallback
-    // instantiations for OwningNonNull and RefPtr.
+    // Ensure that our callback, if not null, starts holding on to its own JS
+    // objects as needed.
     if (this->get().get()) {
+      this->get()->HoldJSObjectsIfMoreThanOneOwner();
+    }
+  }
+};
+
+// T is expected to be a CallbackObject subclass.  This class is used in
+// bindings to safely handle non-nullable Fast* callbacks; it ensures that the
+// callback is traced, and that if something is holding onto the callback when
+// we're done with it HoldJSObjects is called.  I wish I could share this code
+// with RootedCallbackRefPtr, but I can't figure out how to give two different
+// template specializations of the same two-param template (templated on T and
+// SmartPtr<T>), different destructors.
+template<typename T>
+class RootedCallbackOwningNonNull : public JS::Rooted<OwningNonNull<T>>
+{
+public:
+  explicit RootedCallbackOwningNonNull(JSContext* cx)
+    : JS::Rooted<OwningNonNull<T>>(cx)
+  {}
+
+  // We need a way to make assignment from pointers (how we're normally used)
+  // work.
+  template<typename S>
+  void operator=(S* arg)
+  {
+    this->get().operator=(arg);
+  }
+
+  // But nullptr can't use the above template, because it doesn't know which S
+  // to select.  So we need a special overload for nullptr.
+  void operator=(decltype(nullptr) arg)
+  {
+    this->get().operator=(arg);
+  }
+
+  // Codegen relies on being able to do Callback() on us.
+  JS::Handle<JSObject*> Callback() const
+  {
+    return this->get()->Callback();
+  }
+
+  ~RootedCallbackOwningNonNull()
+  {
+    // Ensure that our callback, if initialized (and hence nonnull), starts
+    // holding on to its own JS objects as needed.
+    if (this->get().isInitialized()) {
       this->get()->HoldJSObjectsIfMoreThanOneOwner();
     }
   }
