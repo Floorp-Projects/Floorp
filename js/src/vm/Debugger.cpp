@@ -395,6 +395,14 @@ Debugger::slowPathCheckNoExecute(JSContext* cx, HandleScript script)
     return EnterDebuggeeNoExecute::reportIfFoundInStack(cx, script);
 }
 
+static inline void
+NukeDebuggerWrapper(NativeObject *wrapper)
+{
+    // In some OOM failure cases, we need to destroy the edge to the referent,
+    // to avoid trying to trace it during untimely collections.
+    wrapper->setPrivate(nullptr);
+}
+
 
 /*** Breakpoints *********************************************************************************/
 
@@ -937,11 +945,14 @@ Debugger::wrapEnvironment(JSContext* cx, Handle<Env*> env, MutableHandleValue rv
             return false;
         envobj->setPrivateGCThing(env);
         envobj->setReservedSlot(JSSLOT_DEBUGENV_OWNER, ObjectValue(*object));
-        if (!p.add(cx, environments, env, envobj))
+        if (!p.add(cx, environments, env, envobj)) {
+            NukeDebuggerWrapper(envobj);
             return false;
+        }
 
         CrossCompartmentKey key(CrossCompartmentKey::DebuggerEnvironment, object, env);
         if (!object->compartment()->putWrapper(cx, key, ObjectValue(*envobj))) {
+            NukeDebuggerWrapper(envobj);
             environments.remove(env);
             ReportOutOfMemory(cx);
             return false;
@@ -980,12 +991,15 @@ Debugger::wrapDebuggeeValue(JSContext* cx, MutableHandleValue vp)
             dobj->setPrivateGCThing(obj);
             dobj->setReservedSlot(JSSLOT_DEBUGOBJECT_OWNER, ObjectValue(*object));
 
-            if (!p.add(cx, objects, obj, dobj))
+            if (!p.add(cx, objects, obj, dobj)) {
+                NukeDebuggerWrapper(dobj);
                 return false;
+            }
 
             if (obj->compartment() != object->compartment()) {
                 CrossCompartmentKey key(CrossCompartmentKey::DebuggerObject, object, obj);
                 if (!object->compartment()->putWrapper(cx, key, ObjectValue(*dobj))) {
+                    NukeDebuggerWrapper(dobj);
                     objects.remove(obj);
                     ReportOutOfMemory(cx);
                     return false;
@@ -4921,7 +4935,7 @@ const Class DebuggerScript_class = {
     DebuggerScript_trace
 };
 
-JSObject*
+NativeObject*
 Debugger::newDebuggerScript(JSContext* cx, HandleScript script)
 {
     assertSameCompartment(cx, object.get());
@@ -4945,15 +4959,18 @@ Debugger::wrapScript(JSContext* cx, HandleScript script)
     MOZ_ASSERT(cx->compartment() != script->compartment());
     DependentAddPtr<ScriptWeakMap> p(cx, scripts, script);
     if (!p) {
-        JSObject* scriptobj = newDebuggerScript(cx, script);
+        NativeObject* scriptobj = newDebuggerScript(cx, script);
         if (!scriptobj)
             return nullptr;
 
-        if (!p.add(cx, scripts, script, scriptobj))
+        if (!p.add(cx, scripts, script, scriptobj)) {
+            NukeDebuggerWrapper(scriptobj);
             return nullptr;
+        }
 
         CrossCompartmentKey key(CrossCompartmentKey::DebuggerScript, object, script);
         if (!object->compartment()->putWrapper(cx, key, ObjectValue(*scriptobj))) {
+            NukeDebuggerWrapper(scriptobj);
             scripts.remove(script);
             ReportOutOfMemory(cx);
             return nullptr;
@@ -6075,7 +6092,7 @@ const Class DebuggerSource_class = {
     DebuggerSource_trace
 };
 
-JSObject*
+NativeObject*
 Debugger::newDebuggerSource(JSContext* cx, HandleScriptSource source)
 {
     assertSameCompartment(cx, object.get());
@@ -6099,15 +6116,18 @@ Debugger::wrapSource(JSContext* cx, HandleScriptSource source)
     MOZ_ASSERT(cx->compartment() != source->compartment());
     DependentAddPtr<SourceWeakMap> p(cx, sources, source);
     if (!p) {
-        JSObject* sourceobj = newDebuggerSource(cx, source);
+        NativeObject* sourceobj = newDebuggerSource(cx, source);
         if (!sourceobj)
             return nullptr;
 
-        if (!p.add(cx, sources, source, sourceobj))
+        if (!p.add(cx, sources, source, sourceobj)) {
+            NukeDebuggerWrapper(sourceobj);
             return nullptr;
+        }
 
         CrossCompartmentKey key(CrossCompartmentKey::DebuggerSource, object, source);
         if (!object->compartment()->putWrapper(cx, key, ObjectValue(*sourceobj))) {
+            NukeDebuggerWrapper(sourceobj);
             sources.remove(source);
             ReportOutOfMemory(cx);
             return nullptr;
