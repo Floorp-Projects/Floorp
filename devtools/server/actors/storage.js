@@ -465,8 +465,10 @@ StorageActors.createActor({
 
   populateStoresForHost(host) {
     this.hostVsStores.set(host, new Map());
+    let doc = this.storageActor.document;
 
-    let cookies = this.getCookiesFromHost(host);
+    let cookies = this.getCookiesFromHost(host, doc.nodePrincipal
+                                                   .originAttributes);
 
     for (let cookie of cookies) {
       if (this.isCookieAtHost(cookie, host)) {
@@ -570,15 +572,22 @@ StorageActors.createActor({
    *        See editCookie() for format details.
    */
   editItem: Task.async(function* (data) {
+    let doc = this.storageActor.document;
+    data.originAttributes = doc.nodePrincipal
+                               .originAttributes;
     this.editCookie(data);
   }),
 
   removeItem: Task.async(function* (host, name) {
-    this.removeCookie(host, name);
+    let doc = this.storageActor.document;
+    this.removeCookie(host, name, doc.nodePrincipal
+                                     .originAttributes);
   }),
 
   removeAll: Task.async(function* (host, domain) {
-    this.removeAllCookies(host, domain);
+    let doc = this.storageActor.document;
+    this.removeAllCookies(host, domain, doc.nodePrincipal
+                                           .originAttributes);
   }),
 
   maybeSetupChildProcess() {
@@ -648,13 +657,13 @@ StorageActors.createActor({
 });
 
 var cookieHelpers = {
-  getCookiesFromHost(host) {
+  getCookiesFromHost(host, originAttributes) {
     // Local files have no host.
     if (host.startsWith("file:///")) {
       host = "";
     }
 
-    let cookies = Services.cookies.getCookiesFromHost(host);
+    let cookies = Services.cookies.getCookiesFromHost(host, originAttributes);
     let store = [];
 
     while (cookies.hasMoreElements()) {
@@ -698,7 +707,7 @@ var cookieHelpers = {
     let origPath = field === "path" ? oldValue : data.items.path;
     let cookie = null;
 
-    let enumerator = Services.cookies.getCookiesFromHost(origHost);
+    let enumerator = Services.cookies.getCookiesFromHost(origHost, data.originAttributes || {});
     while (enumerator.hasMoreElements()) {
       let nsiCookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
       if (nsiCookie.name === origName && nsiCookie.host === origHost) {
@@ -769,7 +778,8 @@ var cookieHelpers = {
       cookie.isSecure,
       cookie.isHttpOnly,
       cookie.isSession,
-      cookie.isSession ? MAX_COOKIE_EXPIRY : cookie.expires
+      cookie.isSession ? MAX_COOKIE_EXPIRY : cookie.expires,
+      cookie.originAttributes
     );
   },
 
@@ -784,7 +794,7 @@ var cookieHelpers = {
       return cookieHost == host;
     }
 
-    let enumerator = Services.cookies.getCookiesFromHost(host);
+    let enumerator = Services.cookies.getCookiesFromHost(host, opts.originAttributes || {});
     while (enumerator.hasMoreElements()) {
       let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
       if (hostMatches(cookie.host, host) &&
@@ -801,14 +811,14 @@ var cookieHelpers = {
     }
   },
 
-  removeCookie(host, name) {
+  removeCookie(host, name, originAttributes) {
     if (name !== undefined) {
-      this._removeCookies(host, { name });
+      this._removeCookies(host, { name, originAttributes });
     }
   },
 
-  removeAllCookies(host, domain) {
-    this._removeCookies(host, { domain });
+  removeAllCookies(host, domain, originAttributes) {
+    this._removeCookies(host, { domain, originAttributes });
   },
 
   addCookieObservers() {
@@ -861,7 +871,8 @@ var cookieHelpers = {
     switch (msg.json.method) {
       case "getCookiesFromHost": {
         let host = msg.data.args[0];
-        let cookies = cookieHelpers.getCookiesFromHost(host);
+        let originAttributes = msg.data.args[1];
+        let cookies = cookieHelpers.getCookiesFromHost(host, originAttributes);
         return JSON.stringify(cookies);
       }
       case "addCookieObservers": {
@@ -877,12 +888,14 @@ var cookieHelpers = {
       case "removeCookie": {
         let host = msg.data.args[0];
         let name = msg.data.args[1];
-        return cookieHelpers.removeCookie(host, name);
+        let originAttributes = msg.data.args[2];
+        return cookieHelpers.removeCookie(host, name, originAttributes);
       }
       case "removeAllCookies": {
         let host = msg.data.args[0];
         let domain = msg.data.args[1];
-        return cookieHelpers.removeAllCookies(host, domain);
+        let originAttributes = msg.data.args[2];
+        return cookieHelpers.removeAllCookies(host, domain, originAttributes);
       }
       default:
         console.error("ERR_DIRECTOR_PARENT_UNKNOWN_METHOD", msg.json.method);

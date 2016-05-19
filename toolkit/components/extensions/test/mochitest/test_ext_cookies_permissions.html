@@ -126,7 +126,7 @@ function* testCookies(options) {
 
   function getCookies(host) {
     let cookies = [];
-    let enum_ = cookieSvc.getCookiesFromHost(host);
+    let enum_ = cookieSvc.getCookiesFromHost(host, {});
     while (enum_.hasMoreElements()) {
       cookies.push(enum_.getNext().QueryInterface(SpecialPowers.Ci.nsICookie2));
     }
