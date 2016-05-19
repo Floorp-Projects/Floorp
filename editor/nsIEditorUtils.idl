@@ -1,0 +1,32 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "domstubs.idl"
+
+interface nsIDOMBlob;
+interface mozIDOMWindowProxy;
+
+[scriptable, uuid(eb8b8ad9-5d8f-43bd-8ce5-5b943c180d56)]
+interface nsIEditorBlobListener : nsISupports
+{
+  void onResult(in ACString aResult);
+  void onError(in AString aErrorName);
+};
+
+/**
+ * A collection of utility functions that editors can use that are more easily
+ * done in JavaScript.
+ */
+[scriptable, uuid(4bf94928-575e-4bd1-8321-a2c4b3d0119e)]
+interface nsIEditorUtils : nsISupports
+{
+  /**
+   * Given a blob, returns the data from that blob, asynchronously.
+   */
+  void slurpBlob(in nsIDOMBlob aBlob, in mozIDOMWindowProxy aScope,
+                 in nsIEditorBlobListener aListener);
+};
