@@ -407,13 +407,6 @@
                 hidden="true"/>
     </menupopup>
 
-    <menupopup id="hideRecentlyBookmarked">
-      <menuitem label="&hideRecentlyBookmarked.label;"
-                accesskey="&hideRecentlyBookmarked.accesskey;"
-                oncommand="BookmarkingUI.hideRecentlyBookmarked();"
-                closemenu="single"/>
-    </menupopup>
-
     <panel id="ctrlTab-panel" class="KUI-panel" hidden="true" norestorefocus="true" level="top">
       <hbox>
         <button class="ctrlTab-preview" flex="1"/>
