@@ -19,7 +19,6 @@ const TOPIC_CONNECTION_CLOSED = "places-connection-closed";
 
 var EXPECTED_NOTIFICATIONS = [
   "places-shutdown",
-  "places-will-close-connection",
   "places-expiration-finished",
   "places-connection-closed"
 ];
