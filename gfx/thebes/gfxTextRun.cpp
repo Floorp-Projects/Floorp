@@ -2637,12 +2637,10 @@ gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh, uint32_t aNextCh,
                               Script aRunScript, gfxFont *aPrevMatchedFont,
                               uint8_t *aMatchType)
 {
-    // If the char is a cluster extender or NNBSP, we want to use the same
-    // font as the preceding character if possible. This is preferable to using
+    // If the char is a cluster extender, we want to use the same font
+    // as the preceding character if possible. This is preferable to using
     // the font group because it avoids breaks in shaping within a cluster.
-    const uint32_t NARROW_NO_BREAK_SPACE = 0x202f;
-    if (aPrevMatchedFont &&
-        (IsClusterExtender(aCh) || aCh == NARROW_NO_BREAK_SPACE) &&
+    if (aPrevMatchedFont && IsClusterExtender(aCh) &&
         aPrevMatchedFont->HasCharacter(aCh)) {
         RefPtr<gfxFont> ret = aPrevMatchedFont;
         return ret.forget();
