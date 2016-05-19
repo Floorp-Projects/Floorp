@@ -26,7 +26,7 @@ class CallbackInterface : public CallbackObject
 public:
   // See CallbackObject for an explanation of the arguments.
   explicit CallbackInterface(JSContext* aCx, JS::Handle<JSObject*> aCallback,
-                             nsIGlobalObject* aIncumbentGlobal)
+                             nsIGlobalObject *aIncumbentGlobal)
     : CallbackObject(aCx, aCallback, aIncumbentGlobal)
   {
   }
@@ -43,14 +43,6 @@ protected:
   bool GetCallableProperty(JSContext* cx, JS::Handle<jsid> aPropId,
                            JS::MutableHandle<JS::Value> aCallable);
 
-  // See CallbackObject for an explanation of the arguments.
-  CallbackInterface(JSContext* aCx, JS::Handle<JSObject*> aCallable,
-                    nsIGlobalObject* aIncumbentGlobal,
-                    const FastCallbackConstructor&)
-    : CallbackObject(aCx, aCallable, aIncumbentGlobal,
-                     FastCallbackConstructor())
-  {
-  }
 };
 
 } // namespace dom
