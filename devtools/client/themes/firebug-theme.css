@@ -19,6 +19,7 @@
 .theme-firebug .command-button-invertable::before,
 .theme-firebug #sources-toolbar image,
 .theme-firebug [id$="pane-toggle"] > image,
+.theme-firebug [id$="pane-toggle"]::before,
 .theme-firebug #global-toolbar .devtools-button::before,
 .theme-firebug #element-picker::before,
 .theme-firebug #debugger-controls .toolbarbutton-icon,
