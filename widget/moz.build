@@ -95,7 +95,6 @@ EXPORTS += [
     'InputData.h',
     'nsBaseScreen.h',
     'nsBaseWidget.h',
-    'nsDeviceContextSpecProxy.h',
     'nsIDeviceContextSpec.h',
     'nsIKeyEventInPluginCallback.h',
     'nsIPluginWidget.h',
@@ -151,14 +150,12 @@ UNIFIED_SOURCES += [
     'nsClipboardProxy.cpp',
     'nsColorPickerProxy.cpp',
     'nsContentProcessWidgetFactory.cpp',
-    'nsDeviceContextSpecProxy.cpp',
     'nsDragServiceProxy.cpp',
     'nsFilePickerProxy.cpp',
     'nsHTMLFormatConverter.cpp',
     'nsIdleService.cpp',
     'nsIWidgetListener.cpp',
     'nsPrimitiveHelpers.cpp',
-    'nsPrintSession.cpp',
     'nsPrintSettingsImpl.cpp',
     'nsScreenManagerProxy.cpp',
     'nsTransferable.cpp',
@@ -176,10 +173,13 @@ UNIFIED_SOURCES += [
 
 if CONFIG['MOZ_XUL'] and CONFIG['NS_PRINTING']:
     EXPORTS += [
+        'nsDeviceContextSpecProxy.h',
         'nsPrintOptionsImpl.h',
     ]
     UNIFIED_SOURCES += [
+        'nsDeviceContextSpecProxy.cpp',
         'nsPrintOptionsImpl.cpp',
+        'nsPrintSession.cpp',
     ]
 
 # nsBaseWidget.cpp needs to be built separately because of name clashes in the OS X headers

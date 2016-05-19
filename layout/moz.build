@@ -22,6 +22,11 @@ DIRS += [
     'reftests',
 ]
 
+
+IPDL_SOURCES = [
+    'printing/ipc/PRemotePrintJob.ipdl',
+]
+
 if CONFIG['NS_PRINTING']:
     DIRS += ['printing']
 
