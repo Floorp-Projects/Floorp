@@ -1033,20 +1033,13 @@ class DebuggerObject : public NativeObject
   public:
     static const Class class_;
 
-    static NativeObject* initClass(JSContext* cx, HandleObject obj, HandleObject debuggerCtor);
-
+    static NativeObject* initClass(JSContext* cx, HandleObject obj, HandleObject debugCtor);
     static DebuggerObject* create(JSContext* cx, HandleObject proto, HandleObject obj,
                                   HandleNativeObject debugger);
 
-    bool isExtensible(JSContext* cx, bool* result) const;
-
-    bool isSealed(JSContext* cx, bool* result) const {
-        return isSealedHelper(cx, OpSeal, "isSealed", result);
-    }
-
-    bool isFrozen(JSContext* cx, bool* result) const {
-        return isSealedHelper(cx, OpFreeze, "isFrozen", result);
-    }
+    static bool isExtensible(JSContext* cx, Handle<DebuggerObject*> object, bool& result);
+    static bool isSealed(JSContext* cx, Handle<DebuggerObject*> object, bool& result);
+    static bool isFrozen(JSContext* cx, Handle<DebuggerObject*> object, bool& result);
 
   private:
     static const unsigned RESERVED_SLOTS = 1;
@@ -1062,10 +1055,6 @@ class DebuggerObject : public NativeObject
         MOZ_ASSERT(obj);
         return obj;
     }
-
-    enum SealHelperOp { OpSeal, OpFreeze };
-
-    bool isSealedHelper(JSContext* cx, SealHelperOp op, const char* name, bool* result) const;
 };
 
 class BreakpointSite {
