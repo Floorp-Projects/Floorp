@@ -68,16 +68,16 @@ function do_run_test()
   let shortExpiry = Math.floor(Date.now() / 1000 + 2);
   setCookies("captchart.com", 49, futureExpiry);
   Services.cookiemgr.add("captchart.com", "", "test100", "eviction",
-    false, false, false, shortExpiry);
+    false, false, false, shortExpiry, {});
   do_timeout(2100, continue_test);
   yield;
 
   do_check_eq(countCookies("captchart.com", "captchart.com"), 50);
   Services.cookiemgr.add("captchart.com", "", "test200", "eviction",
-    false, false, false, futureExpiry);
+    false, false, false, futureExpiry, {});
   do_check_eq(countCookies("captchart.com", "captchart.com"), 50);
 
-  enumerator = Services.cookiemgr.getCookiesFromHost("captchart.com");
+  enumerator = Services.cookiemgr.getCookiesFromHost("captchart.com", {});
   while (enumerator.hasMoreElements()) {
     let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
     do_check_true(cookie.expiry == futureExpiry);
@@ -92,7 +92,7 @@ setCookies(aHost, aNumber, aExpiry)
 {
   for (let i = 0; i < aNumber; ++i)
     Services.cookiemgr.add(aHost, "", "test" + i, "eviction",
-      false, false, false, aExpiry);
+      false, false, false, aExpiry, {});
 }
 
 // count how many cookies are within domain 'aBaseDomain', using three
@@ -123,7 +123,7 @@ countCookies(aBaseDomain, aHost)
     cookies.length);
   do_check_eq(Services.cookiemgr.countCookiesFromHost(aHost), cookies.length);
 
-  enumerator = Services.cookiemgr.getCookiesFromHost(aHost);
+  enumerator = Services.cookiemgr.getCookiesFromHost(aHost, {});
   while (enumerator.hasMoreElements()) {
     let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
 
