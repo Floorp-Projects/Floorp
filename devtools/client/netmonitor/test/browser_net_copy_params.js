@@ -14,7 +14,7 @@ function test() {
 
     RequestsMenu.lazyUpdate = false;
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForNetworkEvents(aMonitor, 1, 6);
 
       RequestsMenu.selectedItem = RequestsMenu.getItemAtIndex(0);

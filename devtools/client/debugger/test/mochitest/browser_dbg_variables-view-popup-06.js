@@ -12,7 +12,7 @@ const TAB_URL = EXAMPLE_URL + "doc_frame-parameters.html";
 
 function test() {
   requestLongerTimeout(2);
-  Task.spawn(function*() {
+  Task.spawn(function* () {
     let [tab,, panel] = yield initDebugger(TAB_URL);
     let win = panel.panelWin;
     let bubble = win.DebuggerView.VariableBubble;

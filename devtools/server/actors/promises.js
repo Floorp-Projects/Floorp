@@ -43,7 +43,7 @@ var PromisesActor = protocol.ActorClass({
    * @param conn DebuggerServerConnection.
    * @param parent TabActor|RootActor
    */
-  initialize: function(conn, parent) {
+  initialize: function (conn, parent) {
     protocol.Actor.prototype.initialize.call(this, conn);
 
     this.conn = conn;
@@ -60,7 +60,7 @@ var PromisesActor = protocol.ActorClass({
     this._onWindowReady = this._onWindowReady.bind(this);
   },
 
-  destroy: function() {
+  destroy: function () {
     protocol.Actor.prototype.destroy.call(this, this.conn);
 
     if (this.state === "attached") {
@@ -78,7 +78,7 @@ var PromisesActor = protocol.ActorClass({
   /**
    * Attach to the PromisesActor.
    */
-  attach: method(expectState("detached", function() {
+  attach: method(expectState("detached", function () {
     this.dbg.addDebuggees();
 
     this._navigationLifetimePool = this._createActorPool();
@@ -98,7 +98,7 @@ var PromisesActor = protocol.ActorClass({
     events.on(this.parent, "window-ready", this._onWindowReady);
 
     this.state = "attached";
-  }, `attaching to the PromisesActor`), {
+  }, "attaching to the PromisesActor"), {
     request: {},
     response: {}
   }),
@@ -106,7 +106,7 @@ var PromisesActor = protocol.ActorClass({
   /**
    * Detach from the PromisesActor upon Debugger closing.
    */
-  detach: method(expectState("attached", function() {
+  detach: method(expectState("attached", function () {
     this.dbg.removeAllDebuggees();
     this.dbg.enabled = false;
     this._dbg = null;
@@ -121,12 +121,12 @@ var PromisesActor = protocol.ActorClass({
     events.off(this.parent, "window-ready", this._onWindowReady);
 
     this.state = "detached";
-  }, `detaching from the PromisesActor`), {
+  }, "detaching from the PromisesActor"), {
     request: {},
     response: {}
   }),
 
-  _createActorPool: function() {
+  _createActorPool: function () {
     let pool = new ActorPool(this.conn);
     pool.objectActors = new WeakMap();
     return pool;
@@ -140,7 +140,7 @@ var PromisesActor = protocol.ActorClass({
    * @return object
    *        An ObjectActor object that wraps the given Promise object
    */
-  _createObjectActorForPromise: function(promise) {
+  _createObjectActorForPromise: function (promise) {
     if (this._navigationLifetimePool.objectActors.has(promise)) {
       return this._navigationLifetimePool.objectActors.get(promise);
     }
@@ -172,14 +172,14 @@ var PromisesActor = protocol.ActorClass({
    * @return object
    *        The grip for the given Promise object
    */
-  objectGrip: function(value) {
+  objectGrip: function (value) {
     return this._createObjectActorForPromise(value).grip();
   },
 
   /**
    * Get a list of ObjectActors for all live Promise Objects.
    */
-  listPromises: method(function() {
+  listPromises: method(function () {
     let promises = this.dbg.findObjects({ class: "Promise" });
 
     this.dbg.onNewPromise = this._makePromiseEventHandler(this._newPromises,
@@ -206,7 +206,7 @@ var PromisesActor = protocol.ActorClass({
    * @param string eventName
    *        The event name
    */
-  _makePromiseEventHandler: function(array, eventName) {
+  _makePromiseEventHandler: function (array, eventName) {
     return promise => {
       let actor = this._createObjectActorForPromise(promise);
       let needsScheduling = array.length == 0;
@@ -221,7 +221,7 @@ var PromisesActor = protocol.ActorClass({
     };
   },
 
-  _onWindowReady: expectState("attached", function({ isTopLevel }) {
+  _onWindowReady: expectState("attached", function ({ isTopLevel }) {
     if (!isTopLevel) {
       return;
     }
@@ -235,13 +235,13 @@ var PromisesActor = protocol.ActorClass({
 exports.PromisesActor = PromisesActor;
 
 exports.PromisesFront = protocol.FrontClass(PromisesActor, {
-  initialize: function(client, form) {
+  initialize: function (client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
     this.actorID = form.promisesActor;
     this.manage(this);
   },
 
-  destroy: function() {
+  destroy: function () {
     protocol.Front.prototype.destroy.call(this);
   }
 });

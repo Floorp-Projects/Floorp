@@ -13,7 +13,7 @@ const { once } = require("devtools/client/performance/test/helpers/event-utils")
 const { idleWait } = require("devtools/client/performance/test/helpers/wait-utils");
 const { dragStartCanvasGraph, dragStopCanvasGraph, clickCanvasGraph } = require("devtools/client/performance/test/helpers/input-utils");
 
-add_task(function*() {
+add_task(function* () {
   let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window

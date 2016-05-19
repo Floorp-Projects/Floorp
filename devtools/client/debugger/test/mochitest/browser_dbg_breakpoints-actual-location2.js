@@ -20,17 +20,17 @@ function test() {
     const gSources = gDebugger.DebuggerView.Sources;
     const gController = gDebugger.DebuggerController;
     const actions = bindActionCreators(gPanel);
-    const constants = gDebugger.require('./content/constants');
-    const queries = gDebugger.require('./content/queries');
+    const constants = gDebugger.require("./content/constants");
+    const queries = gDebugger.require("./content/queries");
 
     function resumeAndTestBreakpoint(line) {
-      return Task.spawn(function*() {
+      return Task.spawn(function* () {
         let event = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.FETCHED_SCOPES);
         doResume(gPanel);
         yield event;
         testBreakpoint(line);
       });
-    };
+    }
 
     function testBreakpoint(line) {
       let bp = gSources._selectedBreakpoint;
@@ -39,7 +39,7 @@ function test() {
          "The breakpoint on line " + line + " was not hit");
     }
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceAndCaretAndScopes(gPanel, ".html", 1);
 
       is(queries.getBreakpoints(gController.getState()).length, 0,

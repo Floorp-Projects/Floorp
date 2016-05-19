@@ -50,7 +50,7 @@ function fetchEventListeners() {
   };
 }
 
-const _getListeners = Task.async(function*() {
+const _getListeners = Task.async(function* () {
   const response = yield gThreadClient.eventListeners();
 
   // Make sure all the listeners are sorted by the event type, since
@@ -82,14 +82,14 @@ const _getListeners = Task.async(function*() {
   return listeners;
 });
 
-const _getDefinitionSite = Task.async(function*(aFunction) {
+const _getDefinitionSite = Task.async(function* (aFunction) {
   const grip = gThreadClient.pauseGrip(aFunction);
   let response;
 
   try {
     response = yield grip.getDefinitionSite();
   }
-  catch(e) {
+  catch (e) {
     // Don't make this error fatal, because it would break the entire events pane.
     reportException("_getDefinitionSite", e);
     return null;
@@ -101,7 +101,7 @@ const _getDefinitionSite = Task.async(function*(aFunction) {
 function updateEventBreakpoints(eventNames) {
   return dispatch => {
     setNamedTimeout("event-breakpoints-update", 0, () => {
-      gThreadClient.pauseOnDOMEvents(eventNames, function() {
+      gThreadClient.pauseOnDOMEvents(eventNames, function () {
         // Notify that event breakpoints were added/removed on the server.
         window.emit(EVENTS.EVENT_BREAKPOINTS_UPDATED);
 
@@ -111,7 +111,7 @@ function updateEventBreakpoints(eventNames) {
         });
       });
     });
-  }
+  };
 }
 
 module.exports = { updateEventBreakpoints, fetchEventListeners };

@@ -16,12 +16,12 @@ function simpleHello() {
     from: "root",
     applicationType: "xpcshell-tests",
     traits: [],
-  }
+  };
 }
 
 var RootActor = protocol.ActorClass({
   typeName: "root",
-  initialize: function(conn) {
+  initialize: function (conn) {
     protocol.Actor.prototype.initialize.call(this, conn);
     // Root actor owns itself.
     this.manage(this);
@@ -31,13 +31,13 @@ var RootActor = protocol.ActorClass({
 
   sayHello: simpleHello,
 
-  simpleReturn: method(function() {
+  simpleReturn: method(function () {
     return this.sequence++;
   }, {
     response: { value: RetVal() },
   }),
 
-  promiseReturn: method(function(toWait) {
+  promiseReturn: method(function (toWait) {
     // Guarantee that this resolves after simpleReturn returns.
     let deferred = promise.defer();
     let sequence = this.sequence++;
@@ -50,7 +50,7 @@ var RootActor = protocol.ActorClass({
         return;
       }
       deferred.resolve(sequence);
-    }
+    };
     do_execute_soon(check);
 
     return deferred.promise;
@@ -59,13 +59,13 @@ var RootActor = protocol.ActorClass({
     response: { value: RetVal("number") },
   }),
 
-  simpleThrow: method(function() {
+  simpleThrow: method(function () {
     throw new Error(this.sequence++);
   }, {
     response: { value: RetVal("number") }
   }),
 
-  promiseThrow: method(function() {
+  promiseThrow: method(function () {
     // Guarantee that this resolves after simpleReturn returns.
     let deferred = promise.defer();
     let sequence = this.sequence++;
@@ -80,7 +80,7 @@ var RootActor = protocol.ActorClass({
 });
 
 var RootFront = protocol.FrontClass(RootActor, {
-  initialize: function(client) {
+  initialize: function (client) {
     this.actorID = "root";
     protocol.Front.prototype.initialize.call(this, client);
     // Root owns itself.
@@ -168,7 +168,7 @@ function run_test()
       client.close(() => {
         do_test_finished();
       });
-    })
+    });
   });
   do_test_pending();
 }

@@ -6,7 +6,7 @@
 
 "use strict";
 
-add_task(function*() {
+add_task(function* () {
   yield runTest();
 });
 

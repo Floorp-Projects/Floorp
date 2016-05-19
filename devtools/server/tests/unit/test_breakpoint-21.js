@@ -18,7 +18,7 @@ function run_test()
     run_test_with_server(WorkerDebuggerServer, do_test_finished);
   });
   do_test_pending();
-};
+}
 
 function run_test_with_server(aServer, aCallback)
 {
@@ -30,13 +30,13 @@ function run_test_with_server(aServer, aCallback)
     attachTestTabAndResume(gClient,
                            "test-breakpoints",
                            function (aResponse, aTabClient, aThreadClient) {
-      gThreadClient = aThreadClient;
-      test();
-    });
+                             gThreadClient = aThreadClient;
+                             test();
+                           });
   });
 }
 
-const test = Task.async(function*() {
+const test = Task.async(function* () {
   // Populate the `ScriptStore` so that we only test that the script
   // is added through `onNewScript`
   yield getSources(gThreadClient);
@@ -65,13 +65,13 @@ const test = Task.async(function*() {
 function evalCode() {
   // Start a new script
   Components.utils.evalInSandbox(
-    "var line0 = Error().lineNumber;\n(" + function() {
+    "var line0 = Error().lineNumber;\n(" + function () {
       debugger;
-      var a = (function() {
-        return (function() {
-          return (function() {
-            return (function() {
-              return (function() {
+      var a = (function () {
+        return (function () {
+          return (function () {
+            return (function () {
+              return (function () {
                 var x = 10; // This line gets a breakpoint
                 return 1;
               })();

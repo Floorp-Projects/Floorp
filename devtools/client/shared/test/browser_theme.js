@@ -13,7 +13,7 @@ add_task(function* () {
   testColorExistence();
 });
 
-function testGetTheme () {
+function testGetTheme() {
   let originalTheme = getTheme();
   ok(originalTheme, "has some theme to start with.");
   Services.prefs.setCharPref("devtools.theme", "light");
@@ -25,7 +25,7 @@ function testGetTheme () {
   Services.prefs.setCharPref("devtools.theme", originalTheme);
 }
 
-function testSetTheme () {
+function testSetTheme() {
   let originalTheme = getTheme();
   gDevTools.once("pref-changed", (_, { pref, oldValue, newValue }) => {
     is(pref, "devtools.theme",
@@ -44,7 +44,7 @@ function testSetTheme () {
   Services.prefs.setCharPref("devtools.theme", originalTheme);
 }
 
-function testGetColor () {
+function testGetColor() {
   let BLUE_DARK = "#46afe3";
   let BLUE_LIGHT = "#0088cc";
   let originalTheme = getTheme();
@@ -63,7 +63,7 @@ function testGetColor () {
   setTheme(originalTheme);
 }
 
-function testColorExistence () {
+function testColorExistence() {
   var vars = ["body-background", "sidebar-background", "contrast-background", "tab-toolbar-background",
    "toolbar-background", "selection-background", "selection-color",
    "selection-background-semitransparent", "splitter-color", "comment", "body-color",
@@ -78,7 +78,7 @@ function testColorExistence () {
   }
 }
 
-function isColor (s) {
+function isColor(s) {
   // Regexes from Heather Arthur's `color-string`
   // https://github.com/harthur/color-string
   // MIT License

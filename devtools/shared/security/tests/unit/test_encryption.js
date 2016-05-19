@@ -20,12 +20,12 @@ function connectClient(client) {
   return deferred.promise;
 }
 
-add_task(function*() {
+add_task(function* () {
   initTestDebuggerServer();
 });
 
 // Client w/ encryption connects successfully to server w/ encryption
-add_task(function*() {
+add_task(function* () {
   equal(DebuggerServer.listeningSockets, 0, "0 listening sockets");
 
   let AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
@@ -36,7 +36,7 @@ add_task(function*() {
 
   let listener = DebuggerServer.createListener();
   ok(listener, "Socket listener created");
-  listener.portOrPath = -1 /* any available port */;
+  listener.portOrPath = -1;
   listener.authenticator = authenticator;
   listener.encryption = true;
   yield listener.open();
@@ -72,7 +72,7 @@ add_task(function*() {
 });
 
 // Client w/o encryption fails to connect to server w/ encryption
-add_task(function*() {
+add_task(function* () {
   equal(DebuggerServer.listeningSockets, 0, "0 listening sockets");
 
   let AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
@@ -83,7 +83,7 @@ add_task(function*() {
 
   let listener = DebuggerServer.createListener();
   ok(listener, "Socket listener created");
-  listener.portOrPath = -1 /* any available port */;
+  listener.portOrPath = -1;
   listener.authenticator = authenticator;
   listener.encryption = true;
   yield listener.open();
@@ -95,7 +95,7 @@ add_task(function*() {
       port: listener.port
       // encryption: false is the default
     });
-  } catch(e) {
+  } catch (e) {
     ok(true, "Client failed to connect as expected");
     listener.close();
     equal(DebuggerServer.listeningSockets, 0, "0 listening sockets");
@@ -105,6 +105,6 @@ add_task(function*() {
   do_throw("Connection unexpectedly succeeded");
 });
 
-add_task(function*() {
+add_task(function* () {
   DebuggerServer.destroy();
 });

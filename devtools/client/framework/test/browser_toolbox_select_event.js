@@ -7,7 +7,7 @@
 
 const PAGE_URL = "data:text/html;charset=utf-8,test select events";
 
-add_task(function*() {
+add_task(function* () {
   let tab = yield addTab(PAGE_URL);
 
   let toolbox = yield openToolboxForTab(tab, "webconsole", "bottom");

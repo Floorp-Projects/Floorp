@@ -27,7 +27,7 @@ add_task(function* () {
     let messagesAdded = webconsoleUI.once("new-messages");
     yield messagesAdded;
     info("Checking if 'inspect($0)' was evaluated");
-    ok(webconsoleUI.jsterm.history[0] === 'inspect($0)');
+    ok(webconsoleUI.jsterm.history[0] === "inspect($0)");
     yield toolbox.toggleSplitConsole();
   }
   function* testDuplicateNode() {

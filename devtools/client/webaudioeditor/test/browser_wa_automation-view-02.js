@@ -6,7 +6,7 @@
  * switching between AudioParam rerenders the graph.
  */
 
-add_task(function*() {
+add_task(function* () {
   let { target, panel } = yield initWebAudioEditor(AUTOMATION_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, AutomationView } = panelWin;

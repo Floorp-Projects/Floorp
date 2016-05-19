@@ -13,7 +13,7 @@ var loader = new Loader.Loader({
   },
   globals: {},
 });
-var require = Loader.Require(loader, { id: "undo-test" })
+var require = Loader.Require(loader, { id: "undo-test" });
 
 var {UndoStack} = require("devtools/client/shared/undo");
 
@@ -25,9 +25,9 @@ function run_test()
   let stack = new UndoStack(MAX_SIZE);
 
   function add(ch) {
-    stack.do(function() {
+    stack.do(function () {
       str += ch;
-    }, function() {
+    }, function () {
       str = str.slice(0, -1);
     });
   }
@@ -54,7 +54,7 @@ function run_test()
   do_check_true(stack.canRedo());
 
   stack.redo();
-  do_check_eq(str, "abcde")
+  do_check_eq(str, "abcde");
   do_check_false(stack.canRedo());
 
   // Check an undo followed by a new action

@@ -22,7 +22,7 @@ function test() {
         multipartForm: RequestsMenu.getItemAtIndex(3)
       };
 
-      Task.spawn(function*() {
+      Task.spawn(function* () {
         yield createCurlData(requests.get.attachment, gNetwork).then((aData) => {
           test_findHeader(aData);
         });
@@ -120,19 +120,19 @@ function test_removeBinaryDataFromMultipartText(aData) {
 
   const EXPECTED_WIN_RESULT = [
     '"' + boundary + '"^',
-    '\u000d\u000A\u000d\u000A',
+    "\u000d\u000A\u000d\u000A",
     '"Content-Disposition: form-data; name=""param1"""^',
-    '\u000d\u000A\u000d\u000A',
+    "\u000d\u000A\u000d\u000A",
     '"value1"^',
-    '\u000d\u000A',
+    "\u000d\u000A",
     '"' + boundary + '"^',
-    '\u000d\u000A\u000d\u000A',
+    "\u000d\u000A\u000d\u000A",
     '"Content-Disposition: form-data; name=""file""; filename=""filename.png"""^',
-    '\u000d\u000A',
+    "\u000d\u000A",
     '"Content-Type: image/png"^',
-    '\u000d\u000A\u000d\u000A',
+    "\u000d\u000A\u000d\u000A",
     '"' + generatedBoundary + '--"^',
-    '\u000d\u000A',
+    "\u000d\u000A",
     '""'
   ].join("");
 
@@ -205,7 +205,7 @@ function test_escapeStringWin() {
 }
 
 function createCurlData(aSelected, aNetwork) {
-  return Task.spawn(function*() {
+  return Task.spawn(function* () {
     // Create a sanitized object for the Curl command generator.
     let data = {
       url: aSelected.url,

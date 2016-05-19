@@ -10,7 +10,7 @@
 
 const BUG_1130901_URL = EXAMPLE_URL + "doc_bug_1130901.html";
 
-add_task(function*() {
+add_task(function* () {
   let { target, panel } = yield initWebAudioEditor(BUG_1130901_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, gAudioNodes } = panelWin;

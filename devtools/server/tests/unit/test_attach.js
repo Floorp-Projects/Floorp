@@ -12,8 +12,8 @@ function run_test()
 
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
-  gClient.connect().then(function([aType, aTraits]) {
-    attachTestTab(gClient, "test-1", function(aReply, aTabClient) {
+  gClient.connect().then(function ([aType, aTraits]) {
+    attachTestTab(gClient, "test-1", function (aReply, aTabClient) {
       test_attach(aTabClient);
     });
   });
@@ -22,7 +22,7 @@ function run_test()
 
 function test_attach(aTabClient)
 {
-  aTabClient.attachThread({}, function(aResponse, aThreadClient) {
+  aTabClient.attachThread({}, function (aResponse, aThreadClient) {
     do_check_eq(aThreadClient.state, "paused");
     aThreadClient.resume(cleanup);
   });
@@ -30,7 +30,7 @@ function test_attach(aTabClient)
 
 function cleanup()
 {
-  gClient.addListener("closed", function(aEvent) {
+  gClient.addListener("closed", function (aEvent) {
     do_test_finished();
   });
   gClient.close();

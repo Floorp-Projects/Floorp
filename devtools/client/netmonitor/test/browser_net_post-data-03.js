@@ -15,7 +15,7 @@ function test() {
     let TAB_UPDATED = aMonitor.panelWin.EVENTS.TAB_UPDATED;
     RequestsMenu.lazyUpdate = false;
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForNetworkEvents(aMonitor, 0, 1);
 
       NetMonitorView.toggleDetailsPane({ visible: true });
@@ -34,7 +34,7 @@ function test() {
 
       is(requestFromUploadScope.querySelector(".name").getAttribute("value"),
         L10N.getStr("requestHeadersFromUpload") + " (" +
-        L10N.getFormatStr("networkMenu.sizeKB", L10N.numberWithDecimals(74/1024, 3)) + ")",
+        L10N.getFormatStr("networkMenu.sizeKB", L10N.numberWithDecimals(74 / 1024, 3)) + ")",
         "The request headers from upload scope doesn't have the correct title.");
 
       is(requestFromUploadScope.querySelectorAll(".variables-view-variable").length, 2,

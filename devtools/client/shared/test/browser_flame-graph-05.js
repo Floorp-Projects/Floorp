@@ -14,7 +14,7 @@ const KEY_CODE_RIGHT = 39;
 
 var {FlameGraph} = require("devtools/client/shared/widgets/FlameGraph");
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("about:blank");
   yield performTest();
   gBrowser.removeCurrentTab();

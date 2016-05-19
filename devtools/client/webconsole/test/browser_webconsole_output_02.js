@@ -75,9 +75,9 @@ var inputTests = [
   // 7 - array with more than 10 elements
   {
     input: "window.array3",
-    output: 'Array [ 1, Window \u2192 test-console-output-02.html, null, ' +
+    output: "Array [ 1, Window \u2192 test-console-output-02.html, null, " +
             '"a", "b", undefined, false, "", -Infinity, ' +
-            'testfn3DisplayName(), 3 more\u2026 ]',
+            "testfn3DisplayName(), 3 more\u2026 ]",
     printOutput: '"1,[object Window],,a,b,,false,,-Infinity,' +
                  'function testfn3() { return 42; },[object Object],foo,bar"',
     inspectable: true,
@@ -96,7 +96,7 @@ var inputTests = [
   // 9
   {
     input: "window.typedarray1",
-    output: 'Int32Array [ 1, 287, 8651, 40983, 8754 ]',
+    output: "Int32Array [ 1, 287, 8651, 40983, 8754 ]",
     printOutput: "[object Int32Array]",
     inspectable: true,
     variablesViewLabel: "Int32Array[5]",
@@ -106,7 +106,7 @@ var inputTests = [
   {
     input: "window.set1",
     output: 'Set [ 1, 2, null, Array[13], "a", "b", undefined, <head>, ' +
-            'Set[9] ]',
+            "Set[9] ]",
     printOutput: "[object Set]",
     inspectable: true,
     variablesViewLabel: "Set[9]",
@@ -127,7 +127,7 @@ var inputTests = [
     input: "window.testobj3",
     output: 'Object { a: "b", c: "d", e: 1, f: "2", g: true, h: null, ' +
             'i: undefined, j: "", k: StyleSheetList[0], l: NodeList[5], ' +
-            '2 more\u2026 }',
+            "2 more\u2026 }",
     printOutput: "[object Object]",
     inspectable: true,
     variablesViewLabel: "Object",
@@ -174,7 +174,7 @@ var inputTests = [
 
 function test() {
   requestLongerTimeout(2);
-  Task.spawn(function*() {
+  Task.spawn(function* () {
     const {tab} = yield loadTab(TEST_URI);
     const hud = yield openConsole(tab);
     yield checkOutputForInputs(hud, inputTests);

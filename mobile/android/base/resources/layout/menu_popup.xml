@@ -3,14 +3,16 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
               android:id="@+id/menu_panel"
               android:layout_width="@dimen/menu_popup_width"
               android:layout_height="wrap_content"
               android:layout_alignParentRight="true"
               android:minWidth="@dimen/menu_popup_width"
-              android:background="@drawable/menu_popup_bg">
+              app:cardBackgroundColor="@color/toolbar_grey"
+              app:cardUseCompatPadding="true">
 
     <!-- MenuPanel will be added here dynamically -->
 
-</FrameLayout>
+</android.support.v7.widget.CardView>

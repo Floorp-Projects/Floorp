@@ -14,8 +14,8 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-stack", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-stack", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_pause_frame();
     });
@@ -25,7 +25,7 @@ function run_test()
 
 function test_pause_frame()
 {
-  gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
+  gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
     let env = aPacket.frame.environment;
     do_check_neq(env, undefined);
 
@@ -43,19 +43,19 @@ function test_pause_frame()
     do_check_true(!!vars.arguments.value.actor);
 
     let objClient = gThreadClient.pauseGrip(env.object);
-    objClient.getPrototypeAndProperties(function(aResponse) {
+    objClient.getPrototypeAndProperties(function (aResponse) {
       do_check_eq(aResponse.ownProperties.PI.value, Math.PI);
       do_check_eq(aResponse.ownProperties.cos.value.type, "object");
       do_check_eq(aResponse.ownProperties.cos.value.class, "Function");
       do_check_true(!!aResponse.ownProperties.cos.value.actor);
 
-      gThreadClient.resume(function() {
+      gThreadClient.resume(function () {
         finishClient(gClient);
       });
     });
   });
 
-  gDebuggee.eval("(" + function() {
+  gDebuggee.eval("(" + function () {
     function stopMe(aNumber) {
       var a;
       var r = aNumber;
@@ -63,7 +63,7 @@ function test_pause_frame()
         a = PI * r * r;
         debugger;
       }
-    };
+    }
     stopMe(10);
   } + ")()");
 }

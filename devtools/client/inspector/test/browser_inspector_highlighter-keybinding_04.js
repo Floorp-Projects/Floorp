@@ -9,7 +9,7 @@
 
 const TEST_URL = "data:text/html;charset=utf8,<div></div>";
 
-add_task(function*() {
+add_task(function* () {
   let {inspector, toolbox, testActor} = yield openInspectorForURL(TEST_URL);
 
   yield startPicker(toolbox);

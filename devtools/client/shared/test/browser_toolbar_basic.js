@@ -5,7 +5,7 @@
 
 const TEST_URI = TEST_URI_ROOT + "browser_toolbar_basic.html";
 
-add_task(function*() {
+add_task(function* () {
   info("Starting browser_toolbar_basic.js");
   yield addTab(TEST_URI);
 

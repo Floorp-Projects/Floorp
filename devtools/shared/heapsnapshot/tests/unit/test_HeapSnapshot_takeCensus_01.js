@@ -8,16 +8,16 @@ function run_test() {
   var dbg = new Debugger;
 
   function checkProperties(census) {
-    equal(typeof census, 'object');
+    equal(typeof census, "object");
     for (prop of Object.getOwnPropertyNames(census)) {
       var desc = Object.getOwnPropertyDescriptor(census, prop);
       equal(desc.enumerable, true);
       equal(desc.configurable, true);
       equal(desc.writable, true);
-      if (typeof desc.value === 'object')
+      if (typeof desc.value === "object")
         checkProperties(desc.value);
       else
-        equal(typeof desc.value, 'number');
+        equal(typeof desc.value, "number");
     }
   }
 

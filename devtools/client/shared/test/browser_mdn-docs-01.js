@@ -37,17 +37,17 @@ const MDN_DOCS_TOOLTIP_FRAME = "chrome://devtools/content/shared/widgets/mdn-doc
 const BASIC_TESTING_PROPERTY = "html-mdn-css-basic-testing.html";
 
 const BASIC_EXPECTED_SUMMARY = "A summary of the property.";
-const BASIC_EXPECTED_SYNTAX = [{type: "comment",        text: "/* The part we want   */"},
-                               {type: "text",           text: "\n"},
-                               {type: "property-name",  text: "this"},
-                               {type: "text",           text: ":"},
-                               {type: "text",           text: " "},
+const BASIC_EXPECTED_SYNTAX = [{type: "comment", text: "/* The part we want   */"},
+                               {type: "text", text: "\n"},
+                               {type: "property-name", text: "this"},
+                               {type: "text", text: ":"},
+                               {type: "text", text: " "},
                                {type: "property-value", text: "is-the-part-we-want"},
-                               {type: "text",           text: ";"}];
+                               {type: "text", text: ";"}];
 
 const URI_PARAMS = "?utm_source=mozilla&utm_medium=firefox-inspector&utm_campaign=default";
 
-add_task(function*() {
+add_task(function* () {
   setBaseCssDocsUrl(TEST_URI_ROOT);
 
   yield addTab("about:blank");
@@ -169,5 +169,5 @@ function checkTooltipContents(doc, expected) {
      expected.summary,
      "Summary is correct");
 
-   checkCssSyntaxHighlighterOutput(expected.syntax, doc.syntax);
+  checkCssSyntaxHighlighterOutput(expected.syntax, doc.syntax);
 }

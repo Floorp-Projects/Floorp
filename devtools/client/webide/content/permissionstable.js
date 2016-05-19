@@ -39,7 +39,7 @@ function generateFields(json) {
     let td = document.createElement("td");
     td.textContent = name;
     tr.appendChild(td);
-    for (let type of ["app","privileged","certified"]) {
+    for (let type of ["app", "privileged", "certified"]) {
       let td = document.createElement("td");
       if (permissionsTable[name][type] == json.ALLOW_ACTION) {
         td.textContent = "✓";
@@ -51,7 +51,7 @@ function generateFields(json) {
       }
       if (permissionsTable[name][type] == json.DENY_ACTION) {
         td.textContent = "✕";
-        td.className = "permdeny"
+        td.className = "permdeny";
       }
       tr.appendChild(td);
     }

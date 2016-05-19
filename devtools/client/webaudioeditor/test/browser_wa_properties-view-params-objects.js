@@ -6,7 +6,7 @@
  * like AudioBuffer and Float32Array in properties of AudioNodes.
  */
 
-add_task(function*() {
+add_task(function* () {
   let { target, panel } = yield initWebAudioEditor(BUFFER_AND_ARRAY_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, PropertiesView } = panelWin;
@@ -28,7 +28,7 @@ add_task(function*() {
     "curve": "Float32Array"
   }, "WaveShaper's `curve` is listed as an `Float32Array`.");
 
-  let aVar = gVars.getScopeAtIndex(0).get("curve")
+  let aVar = gVars.getScopeAtIndex(0).get("curve");
   let state = aVar.target.querySelector(".theme-twisty").hasAttribute("invisible");
   ok(state, "Float32Array property should not have a dropdown.");
 
@@ -38,7 +38,7 @@ add_task(function*() {
     "buffer": "AudioBuffer"
   }, "AudioBufferSourceNode's `buffer` is listed as an `AudioBuffer`.");
 
-  aVar = gVars.getScopeAtIndex(0).get("buffer")
+  aVar = gVars.getScopeAtIndex(0).get("buffer");
   state = aVar.target.querySelector(".theme-twisty").hasAttribute("invisible");
   ok(state, "AudioBuffer property should not have a dropdown.");
 

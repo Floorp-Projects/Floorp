@@ -13,8 +13,8 @@ function run_test()
   gDebuggee = addTestGlobal("test-closures");
 
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-closures", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-closures", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_object_grip();
     });
@@ -24,7 +24,7 @@ function run_test()
 
 function test_object_grip()
 {
-  gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
+  gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
     let person = aPacket.frame.environment.bindings.variables.person;
 
     do_check_eq(person.value.class, "Object");
@@ -57,14 +57,14 @@ function test_object_grip()
 
   });
 
-  gDebuggee.eval("(" + function() {
-    var PersonFactory = function(name, age) {
-        var foo = 10;
-        return {
-          getName: function() { return name; },
-          getAge: function() { return age; },
-          getFoo: function() { foo = Date.now(); return foo; }
-        };
+  gDebuggee.eval("(" + function () {
+    var PersonFactory = function (name, age) {
+      var foo = 10;
+      return {
+        getName: function () { return name; },
+        getAge: function () { return age; },
+        getFoo: function () { foo = Date.now(); return foo; }
+      };
     };
     var person = new PersonFactory("Bob", 58);
     debugger;

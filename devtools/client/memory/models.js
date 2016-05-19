@@ -352,7 +352,7 @@ let previousViewModel = exports.previousView = PropTypes.shape({
     switch (previous.state) {
       case viewState.DIFFING:
         assert(previous.diffing, "Should have previous diffing state.");
-        assert(!previous.selected, "Should not have a previously selected snapshot.")
+        assert(!previous.selected, "Should not have a previously selected snapshot.");
         break;
 
       case viewState.CENSUS:
@@ -411,7 +411,7 @@ const individualsModel = exports.individuals = PropTypes.shape({
 
   focused: PropTypes.object,
 
-  state: catchAndIgnore(function(individuals) {
+  state: catchAndIgnore(function (individuals) {
     switch (individuals.state) {
       case individualsState.COMPUTING_DOMINATOR_TREE:
       case individualsState.FETCHING:
@@ -477,10 +477,10 @@ let appModel = exports.app = {
   individuals: individualsModel,
 
   // The current type of view.
-  view: function(app) {
+  view: function (app) {
     viewModel.isRequired(app, "view");
 
-    catchAndIgnore(function(app) {
+    catchAndIgnore(function (app) {
       switch (app.view.state) {
         case viewState.DIFFING:
           assert(app.diffing, "Should be diffing");
@@ -498,7 +498,7 @@ let appModel = exports.app = {
       }
     })(app);
 
-    catchAndIgnore(function(app) {
+    catchAndIgnore(function (app) {
       switch (app.view.state) {
         case viewState.INDIVIDUALS:
           assert(app.individuals, "Should have individuals state");

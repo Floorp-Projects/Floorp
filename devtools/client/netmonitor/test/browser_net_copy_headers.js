@@ -5,7 +5,7 @@
  * Tests if copying a request's request/response headers works.
  */
 
-add_task(function*() {
+add_task(function* () {
 
   let [ aTab, aDebuggee, aMonitor ] = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");

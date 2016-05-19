@@ -30,7 +30,7 @@ function testTextNodeInsertion(hud) {
 
   let error = false;
   let listener = {
-    observe: function(aMessage) {
+    observe: function (aMessage) {
       let messageText = aMessage.message;
       if (messageText.indexOf("JavaScript Warning") !== -1) {
         error = true;
@@ -43,7 +43,7 @@ function testTextNodeInsertion(hud) {
   // This shouldn't fail.
   label.appendChild(document.createTextNode("foo"));
 
-  executeSoon(function() {
+  executeSoon(function () {
     Services.console.unregisterListener(listener);
     ok(!error, "no error when adding text nodes as children of labels");
 

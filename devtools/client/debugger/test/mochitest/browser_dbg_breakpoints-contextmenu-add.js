@@ -17,11 +17,11 @@ function test() {
     const gEditor = gDebugger.DebuggerView.editor;
     const gSources = gDebugger.DebuggerView.Sources;
     const gContextMenu = gDebugger.document.getElementById("sourceEditorContextMenu");
-    const queries = gDebugger.require('./content/queries');
+    const queries = gDebugger.require("./content/queries");
     const actions = bindActionCreators(gPanel);
     const getState = gDebugger.DebuggerController.getState;
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceAndCaretAndScopes(gPanel, "-02.js", 1);
 
       is(gDebugger.gThreadClient.state, "paused",
@@ -45,7 +45,7 @@ function test() {
       yield once(gContextMenu, "popupshown");
       is(queries.getBreakpoints(getState()).length, 0, "no breakpoints added");
 
-      let cmd = gContextMenu.querySelector('menuitem[command=addBreakpointCommand]');
+      let cmd = gContextMenu.querySelector("menuitem[command=addBreakpointCommand]");
       EventUtils.synthesizeMouseAtCenter(cmd, {}, gDebugger);
       yield waitForDispatch(gPanel, gDebugger.constants.ADD_BREAKPOINT);
 
@@ -62,7 +62,7 @@ function test() {
       is(queries.getBreakpoints(getState()).length, 1,
          "1 breakpoint correctly added");
 
-      cmd = gContextMenu.querySelector('menuitem[command=addConditionalBreakpointCommand]');
+      cmd = gContextMenu.querySelector("menuitem[command=addConditionalBreakpointCommand]");
       EventUtils.synthesizeMouseAtCenter(cmd, {}, gDebugger);
       yield waitForDispatch(gPanel, gDebugger.constants.ADD_BREAKPOINT);
 
@@ -76,5 +76,5 @@ function test() {
     });
 
     callInTab(gTab, "firstCall");
-  })
+  });
 }

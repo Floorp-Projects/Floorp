@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(function*() {
+add_task(function* () {
   let tab = yield addTab("data:text/html;charset=utf8,Test RDM custom presets");
 
   let { rdm, manager } = yield openRDM(tab);
@@ -12,7 +12,7 @@ add_task(function*() {
   Services.prompt = {
     value: "",
     returnBool: true,
-    prompt: function(parent, dialogTitle, text, value, checkMsg, checkState) {
+    prompt: function (parent, dialogTitle, text, value, checkMsg, checkState) {
       value.value = this.value;
       return this.returnBool;
     }
@@ -69,13 +69,13 @@ add_task(function*() {
   yield setPresetIndex(rdm, manager, customPresetIndex);
 
   let browser = gBrowser.selectedBrowser;
-  yield ContentTask.spawn(browser, null, function*() {
+  yield ContentTask.spawn(browser, null, function* () {
     let {innerWidth, innerHeight} = content;
     Assert.equal(innerWidth, 456, "Selecting preset should change the width");
     Assert.equal(innerHeight, 123, "Selecting preset should change the height");
   });
 
-  info(`menulist count: ${rdm.menulist.itemCount}`)
+  info(`menulist count: ${rdm.menulist.itemCount}`);
 
   rdm.removebutton.doCommand();
 
@@ -101,8 +101,8 @@ add_task(function*() {
   yield closeRDM(rdm);
 });
 
-var getPresetIndex = Task.async(function*(rdm, manager, presetLabel) {
-  var testOnePreset = Task.async(function*(c) {
+var getPresetIndex = Task.async(function* (rdm, manager, presetLabel) {
+  var testOnePreset = Task.async(function* (c) {
     if (c == 0) {
       return -1;
     }

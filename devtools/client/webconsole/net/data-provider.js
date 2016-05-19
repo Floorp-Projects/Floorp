@@ -17,11 +17,11 @@ var promises = new Map();
  * exchange.
  */
 var DataProvider = {
-  hasPendingRequests: function() {
+  hasPendingRequests: function () {
     return promises.size > 0;
   },
 
-  requestData: function(client, actor, method) {
+  requestData: function (client, actor, method) {
     let key = actor + ":" + method;
     let p = promises.get(key);
     if (p) {
@@ -45,7 +45,7 @@ var DataProvider = {
     return deferred.promise;
   },
 
-  resolveString: function(client, stringGrip) {
+  resolveString: function (client, stringGrip) {
     let key = stringGrip.actor + ":getString";
     let p = promises.get(key);
     if (p) {

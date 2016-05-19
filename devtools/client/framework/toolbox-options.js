@@ -14,9 +14,9 @@ const {gDevTools} = require("devtools/client/framework/devtools");
 
 exports.OptionsPanel = OptionsPanel;
 
-XPCOMUtils.defineLazyGetter(this, "l10n", function() {
+XPCOMUtils.defineLazyGetter(this, "l10n", function () {
   let bundle = Services.strings.createBundle("chrome://devtools/locale/toolbox.properties");
-  let l10n = function(name, ...aArgs) {
+  let l10n = function (name, ...aArgs) {
     try {
       if (aArgs.length == 0) {
         return bundle.GetStringFromName(name);
@@ -95,7 +95,7 @@ OptionsPanel.prototype = {
     return this.toolbox.target;
   },
 
-  open: Task.async(function*() {
+  open: Task.async(function* () {
     // For local debugging we need to make the target remote.
     if (!this.target.isRemote) {
       yield this.target.makeRemote();
@@ -110,19 +110,19 @@ OptionsPanel.prototype = {
     return this;
   }),
 
-  _addListeners: function() {
+  _addListeners: function () {
     gDevTools.on("pref-changed", this._prefChanged);
     gDevTools.on("theme-registered", this._themeRegistered);
     gDevTools.on("theme-unregistered", this._themeUnregistered);
   },
 
-  _removeListeners: function() {
+  _removeListeners: function () {
     gDevTools.off("pref-changed", this._prefChanged);
     gDevTools.off("theme-registered", this._themeRegistered);
     gDevTools.off("theme-unregistered", this._themeUnregistered);
   },
 
-  _prefChanged: function(event, data) {
+  _prefChanged: function (event, data) {
     if (data.pref === "devtools.cache.disabled") {
       let cacheDisabled = data.newValue;
       let cbx = this.panelDoc.getElementById("devtools-disable-cache");
@@ -133,11 +133,11 @@ OptionsPanel.prototype = {
     }
   },
 
-  _themeRegistered: function(event, themeId) {
+  _themeRegistered: function (event, themeId) {
     this.setupThemeList();
   },
 
-  _themeUnregistered: function(event, theme) {
+  _themeUnregistered: function (event, theme) {
     let themeBox = this.panelDoc.getElementById("devtools-theme-box");
     let themeInput = themeBox.querySelector(`[value=${theme.id}]`);
 
@@ -146,7 +146,7 @@ OptionsPanel.prototype = {
     }
   },
 
-  setupToolbarButtonsList: function() {
+  setupToolbarButtonsList: function () {
     let enabledToolbarButtonsBox = this.panelDoc.getElementById(
       "enabled-toolbox-buttons-box");
 
@@ -189,7 +189,7 @@ OptionsPanel.prototype = {
     }
   },
 
-  setupToolsList: function() {
+  setupToolsList: function () {
     let defaultToolsBox = this.panelDoc.getElementById("default-tools-box");
     let additionalToolsBox = this.panelDoc.getElementById(
       "additional-tools-box");
@@ -197,7 +197,7 @@ OptionsPanel.prototype = {
       "tools-not-supported-label");
     let atleastOneToolNotSupported = false;
 
-    let onCheckboxClick = function(id) {
+    let onCheckboxClick = function (id) {
       let toolDefinition = gDevTools._tools.get(id);
       // Set the kill switch pref boolean to true
       Services.prefs.setBoolPref(toolDefinition.visibilityswitch, this.checked);
@@ -265,7 +265,7 @@ OptionsPanel.prototype = {
     this.panelWin.focus();
   },
 
-  setupThemeList: function() {
+  setupThemeList: function () {
     let themeBox = this.panelDoc.getElementById("devtools-theme-box");
 
     let createThemeOption = theme => {
@@ -274,7 +274,7 @@ OptionsPanel.prototype = {
       inputRadio.setAttribute("type", "radio");
       inputRadio.setAttribute("value", theme.id);
       inputRadio.setAttribute("name", "devtools-theme-item");
-      inputRadio.addEventListener("change", function(e) {
+      inputRadio.addEventListener("change", function (e) {
         setPrefAndEmit(themeBox.getAttribute("data-pref"),
           e.target.value);
       });
@@ -296,14 +296,14 @@ OptionsPanel.prototype = {
     this.updateCurrentTheme();
   },
 
-  populatePreferences: function() {
+  populatePreferences: function () {
     let prefCheckboxes = this.panelDoc.querySelectorAll(
       "input[type=checkbox][data-pref]");
     for (let prefCheckbox of prefCheckboxes) {
       if (GetPref(prefCheckbox.getAttribute("data-pref"))) {
         prefCheckbox.setAttribute("checked", true);
       }
-      prefCheckbox.addEventListener("change", function(e) {
+      prefCheckbox.addEventListener("change", function (e) {
         let checkbox = e.target;
         setPrefAndEmit(checkbox.getAttribute("data-pref"), checkbox.checked);
       });
@@ -319,7 +319,7 @@ OptionsPanel.prototype = {
           radioInput.setAttribute("checked", true);
         }
 
-        radioInput.addEventListener("change", function(e) {
+        radioInput.addEventListener("change", function (e) {
           setPrefAndEmit(radioGroup.getAttribute("data-pref"),
             e.target.value);
         });
@@ -329,7 +329,7 @@ OptionsPanel.prototype = {
     for (let prefSelect of prefSelects) {
       let pref = GetPref(prefSelect.getAttribute("data-pref"));
       let options = [...prefSelect.options];
-      options.some(function(option) {
+      options.some(function (option) {
         let value = option.value;
         // non strict check to allow int values.
         if (value == pref) {
@@ -338,7 +338,7 @@ OptionsPanel.prototype = {
         }
       });
 
-      prefSelect.addEventListener("change", function(e) {
+      prefSelect.addEventListener("change", function (e) {
         let select = e.target;
         setPrefAndEmit(select.getAttribute("data-pref"),
           select.options[select.selectedIndex].value);
@@ -357,7 +357,7 @@ OptionsPanel.prototype = {
     this.disableJSNode.hidden = true;
   },
 
-  updateCurrentTheme: function() {
+  updateCurrentTheme: function () {
     let currentTheme = GetPref("devtools.theme");
     let themeBox = this.panelDoc.getElementById("devtools-theme-box");
     let themeRadioInput = themeBox.querySelector(`[value=${currentTheme}]`);
@@ -381,7 +381,7 @@ OptionsPanel.prototype = {
    * @param {Event} event
    *        The event sent by checking / unchecking the disable JS checkbox.
    */
-  _disableJSClicked: function(event) {
+  _disableJSClicked: function (event) {
     let checked = event.target.checked;
 
     let options = {
@@ -391,7 +391,7 @@ OptionsPanel.prototype = {
     this.target.activeTab.reconfigure(options);
   },
 
-  destroy: function() {
+  destroy: function () {
     if (this.destroyPromise) {
       return this.destroyPromise;
     }

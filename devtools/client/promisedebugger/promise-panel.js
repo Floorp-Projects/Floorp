@@ -14,7 +14,7 @@
 var PromisesPanel = {
   PANEL_INITIALIZED: "panel-initialized",
 
-  initialize: Task.async(function*() {
+  initialize: Task.async(function* () {
     if (PromisesController.destroyed) {
       return null;
     }
@@ -28,7 +28,7 @@ var PromisesPanel = {
     this.emit(this.PANEL_INITIALIZED);
   }),
 
-  destroy: Task.async(function*() {
+  destroy: Task.async(function* () {
     if (!this.initialized) {
       return null;
     }

@@ -13,7 +13,7 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-error.html";
 
 function test() {
-  Task.spawn(function*() {
+  Task.spawn(function* () {
     const {tab} = yield loadTab(TEST_URI);
     const hud = yield openConsole(tab);
     info("console opened");

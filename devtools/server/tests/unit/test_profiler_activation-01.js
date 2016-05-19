@@ -63,7 +63,7 @@ function test_activate(client1, actor1, client2, actor2, callback) {
 
         let origConnectionClosed = DebuggerServer._connectionClosed;
 
-        DebuggerServer._connectionClosed = function(conn) {
+        DebuggerServer._connectionClosed = function (conn) {
           origConnectionClosed.call(this, conn);
 
           // The first client is the only actor that started the profiler,
@@ -71,7 +71,7 @@ function test_activate(client1, actor1, client2, actor2, callback) {
           // at any moment, so the profiler module shouldn't have deactivated.
           do_check_true(Profiler.IsActive());
 
-          DebuggerServer._connectionClosed = function(conn) {
+          DebuggerServer._connectionClosed = function (conn) {
             origConnectionClosed.call(this, conn);
 
             // Now there are no open clients at all, it should *definitely*
@@ -79,7 +79,7 @@ function test_activate(client1, actor1, client2, actor2, callback) {
             do_check_false(Profiler.IsActive());
 
             callback();
-          }
+          };
           client2.close();
         };
         client1.close();

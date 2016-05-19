@@ -123,7 +123,7 @@ function watchCSS(window) {
 
         replaceCSS(
           window,
-          "chrome://devtools/content/" +  relativePath.replace(/^client\//, "")
+          "chrome://devtools/content/" + relativePath.replace(/^client\//, "")
         );
         replaceCSS(window, "resource://devtools/" + relativePath);
       } else if (relativePath.match(/\.(svg|png)$/)) {

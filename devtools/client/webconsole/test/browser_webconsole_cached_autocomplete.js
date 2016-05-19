@@ -45,7 +45,7 @@ add_task(function* () {
   yield complete(jsterm.COMPLETE_HINT_ONLY);
 
   let newItems = popup.getItems();
-  ok(newItems.every(function(item) {
+  ok(newItems.every(function (item) {
     return item.label != "docfoobar";
   }), "autocomplete cached results do not contain docfoobar. list has not " +
       "been updated");
@@ -56,7 +56,7 @@ add_task(function* () {
   yield complete(jsterm.COMPLETE_HINT_ONLY);
 
   newItems = popup.getItems();
-  ok(newItems.every(function(item) {
+  ok(newItems.every(function (item) {
     return item.label != "docfoobar";
   }), "autocomplete cached results do not contain docfoobar. list has not " +
       "been updated");
@@ -73,9 +73,9 @@ add_task(function* () {
   yield complete(jsterm.COMPLETE_HINT_ONLY);
 
   newItems = popup.getItems();
-  ok(!newItems.every(function(item) {
-       return item.label != "getComputedStyle";
-     }), "autocomplete results do contain getComputedStyle");
+  ok(!newItems.every(function (item) {
+    return item.label != "getComputedStyle";
+  }), "autocomplete results do contain getComputedStyle");
 
   // Test if 'dump(d' gives non-zero results
   input.value = "dump(d";
@@ -97,7 +97,7 @@ add_task(function* () {
   yield complete(jsterm.COMPLETE_HINT_ONLY);
 
   newItems = popup.getItems();
-  ok(newItems.every(function(item) {
+  ok(newItems.every(function (item) {
     return item.label != "docfoobar";
   }), "autocomplete cached results do not contain docfoobar. list has not " +
       "been updated");

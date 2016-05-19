@@ -58,7 +58,7 @@ Client.defaultSendOOB = ({ authResult, oob }) => {
   let token = oob.sha256.replace(/:/g, "").toLowerCase() + oob.k;
   let tokenMsg = bundle.formatStringFromName("clientSendOOBToken",
                                              [token], 1);
-  let msg =`${header}\n\n${hashMsg}\n${tokenMsg}`;
+  let msg = `${header}\n\n${hashMsg}\n${tokenMsg}`;
   let prompt = Services.prompt;
   let flags = prompt.BUTTON_POS_0 * prompt.BUTTON_TITLE_CANCEL;
 
@@ -136,7 +136,7 @@ Server.defaultAllowConnection = ({ client, server }) => {
     bundle.formatStringFromName("remoteIncomingPromptServerEndpoint",
                                 [serverEndpoint], 1);
   let footer = bundle.GetStringFromName("remoteIncomingPromptFooter");
-  let msg =`${header}\n\n${clientMsg}\n${serverMsg}\n\n${footer}`;
+  let msg = `${header}\n\n${clientMsg}\n${serverMsg}\n\n${footer}`;
   let disableButton = bundle.GetStringFromName("remoteIncomingPromptDisable");
   let prompt = Services.prompt;
   let flags = prompt.BUTTON_POS_0 * prompt.BUTTON_TITLE_OK +

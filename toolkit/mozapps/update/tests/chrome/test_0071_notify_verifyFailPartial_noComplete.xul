@@ -39,7 +39,7 @@ function runTest() {
   writeStatusFile(STATE_DOWNLOADING);
   reloadUpdateManagerData();
 
-  initUpdateServiceStub();
+  testPostUpdateProcessing();
 }
 
 ]]>

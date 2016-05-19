@@ -25,7 +25,7 @@ const LOCALE = Cc["@mozilla.org/chrome/chrome-registry;1"]
  * if it has not been shown before, and it's a locale build
  * for `en-US`
  */
-function shouldDevEditionPromoShow () {
+function shouldDevEditionPromoShow() {
   return Services.prefs.getBoolPref(DEV_EDITION_PROMO_ENABLED_PREF) &&
          !Services.prefs.getBoolPref(DEV_EDITION_PROMO_SHOWN_PREF) &&
          LOCALE === "en-US";
@@ -68,7 +68,7 @@ var panelAttrs = {
  *        The selector that the doorhanger should be appended to within `window`.
  *        Defaults to a XUL Document's `window` element.
  */
-exports.showDoorhanger = Task.async(function *({ window, type, anchor }) {
+exports.showDoorhanger = Task.async(function* ({ window, type, anchor }) {
   let { predicate, success, url, action } = TYPES[type];
   // Abort if predicate fails
   if (!predicate()) {
@@ -117,7 +117,7 @@ exports.showDoorhanger = Task.async(function *({ window, type, anchor }) {
   }
 });
 
-function setDoorhangerStyle (panel, frame) {
+function setDoorhangerStyle(panel, frame) {
   Object.keys(panelAttrs).forEach(prop => panel.setAttribute(prop, panelAttrs[prop]));
   panel.style.margin = "20px";
   panel.style.borderRadius = "5px";
@@ -131,7 +131,7 @@ function setDoorhangerStyle (panel, frame) {
   frame.setAttribute("height", "179");
 }
 
-function onFrameLoad (frame) {
+function onFrameLoad(frame) {
   let { resolve, promise } = Promise.defer();
 
   if (frame.contentWindow) {
@@ -141,18 +141,18 @@ function onFrameLoad (frame) {
     let callback = () => {
       frame.removeEventListener("DOMContentLoaded", callback);
       resolve();
-    }
+    };
     frame.addEventListener("DOMContentLoaded", callback);
   }
 
   return promise;
 }
 
-function getGBrowser () {
+function getGBrowser() {
   return getMostRecentBrowserWindow().gBrowser;
 }
 
-function wait (n) {
+function wait(n) {
   let { resolve, promise } = Promise.defer();
   setTimeout(resolve, n);
   return promise;

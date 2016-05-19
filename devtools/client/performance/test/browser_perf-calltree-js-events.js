@@ -13,7 +13,7 @@ const { synthesizeProfile } = require("devtools/client/performance/test/helpers/
 const { once } = require("devtools/client/performance/test/helpers/event-utils");
 const { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
 
-add_task(function*() {
+add_task(function* () {
   let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window

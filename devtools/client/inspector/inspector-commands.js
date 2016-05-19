@@ -22,7 +22,7 @@ exports.items = [{
       manual: l10n.lookup("inspectNodeManual")
     }
   ],
-  exec: function(args, context) {
+  exec: function (args, context) {
     let target = context.environment.target;
     return gDevTools.showToolbox(target, "inspector").then(toolbox => {
       toolbox.getCurrentPanel().selection.setNode(args.selector, "gcli");

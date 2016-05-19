@@ -107,7 +107,7 @@ InspectorPanel.prototype = {
   /**
    * open is effectively an asynchronous constructor
    */
-  open: function() {
+  open: function () {
     return this.target.makeRemote().then(() => {
       return this._getPageStyle();
     }).then(() => {
@@ -153,7 +153,7 @@ InspectorPanel.prototype = {
     return this._target.client.traits.pasteHTML;
   },
 
-  _deferredOpen: function(defaultSelection) {
+  _deferredOpen: function (defaultSelection) {
     let deferred = promise.defer();
 
     this.walker.on("new-root", this.onNewRoot);
@@ -219,7 +219,7 @@ InspectorPanel.prototype = {
     return deferred.promise;
   },
 
-  _onBeforeNavigate: function() {
+  _onBeforeNavigate: function () {
     this._defaultNode = null;
     this.selection.setNodeFront(null);
     this._destroyMarkup();
@@ -227,7 +227,7 @@ InspectorPanel.prototype = {
     this._pendingSelection = null;
   },
 
-  _getPageStyle: function() {
+  _getPageStyle: function () {
     return this._toolbox.inspector.getPageStyle().then(pageStyle => {
       this.pageStyle = pageStyle;
     });
@@ -236,7 +236,7 @@ InspectorPanel.prototype = {
   /**
    * Return a promise that will resolve to the default node for selection.
    */
-  _getDefaultNodeForSelection: function() {
+  _getDefaultNodeForSelection: function () {
     if (this._defaultNode) {
       return this._defaultNode;
     }
@@ -305,14 +305,14 @@ InspectorPanel.prototype = {
    * decide whether to show the "are you sure you want to navigate"
    * notification.
    */
-  markDirty: function() {
+  markDirty: function () {
     this.isDirty = true;
   },
 
   /**
    * Hooks the searchbar to show result and auto completion suggestions.
    */
-  setupSearchBox: function() {
+  setupSearchBox: function () {
     this.searchBox = this.panelDoc.getElementById("inspector-searchbox");
     this.searchResultsLabel = this.panelDoc.getElementById("inspector-searchlabel");
 
@@ -339,7 +339,7 @@ InspectorPanel.prototype = {
     return this.search.autocompleter;
   },
 
-  _updateSearchResultsLabel: function(event, result) {
+  _updateSearchResultsLabel: function (event, result) {
     let str = "";
     if (event !== "search-cleared") {
       if (result) {
@@ -357,7 +357,7 @@ InspectorPanel.prototype = {
   /**
    * Build the sidebar.
    */
-  setupSidebar: function() {
+  setupSidebar: function () {
     let tabbox = this.panelDoc.querySelector("#inspector-sidebar");
     this.sidebar = new ToolSidebar(tabbox, this, "inspector", {
       showAllTabsMenu: true
@@ -401,7 +401,7 @@ InspectorPanel.prototype = {
   /**
    * Add the expand/collapse behavior for the sidebar panel.
    */
-  setupSidebarToggle: function() {
+  setupSidebarToggle: function () {
     this._paneToggleButton = this.panelDoc.getElementById("inspector-pane-toggle");
     this._paneToggleButton.setAttribute("tooltiptext",
       strings.GetStringFromName("inspector.collapsePane"));
@@ -412,7 +412,7 @@ InspectorPanel.prototype = {
   /**
    * Reset the inspector on new root mutation.
    */
-  onNewRoot: function() {
+  onNewRoot: function () {
     this._defaultNode = null;
     this.selection.setNodeFront(null);
     this._destroyMarkup();
@@ -475,7 +475,7 @@ InspectorPanel.prototype = {
    * Can a new HTML element be inserted into the currently selected element?
    * @return {Boolean}
    */
-  canAddHTMLChild: function() {
+  canAddHTMLChild: function () {
     let selection = this.selection;
 
     // Don't allow to insert an element into these elements. This should only
@@ -493,7 +493,7 @@ InspectorPanel.prototype = {
   /**
    * When a new node is selected.
    */
-  onNewSelection: function(event, value, reason) {
+  onNewSelection: function (event, value, reason) {
     if (reason === "selection-destroy") {
       return;
     }
@@ -523,7 +523,7 @@ InspectorPanel.prototype = {
         if (!this._panelDestroyer) {
           console.error(e);
         } else {
-          console.warn("Could not set the unique selector for the newly "+
+          console.warn("Could not set the unique selector for the newly " +
             "selected node, the inspector was destroyed.");
         }
       });
@@ -545,7 +545,7 @@ InspectorPanel.prototype = {
    * invoked when the tool is done updating with the node
    * that the tool is viewing.
    */
-  updating: function(name) {
+  updating: function (name) {
     if (this._updateProgress && this._updateProgress.node != this.selection.nodeFront) {
       this.cancelUpdate();
     }
@@ -556,7 +556,7 @@ InspectorPanel.prototype = {
       this._updateProgress = {
         node: this.selection.nodeFront,
         outstanding: new Set(),
-        checkDone: function() {
+        checkDone: function () {
           if (this !== self._updateProgress) {
             return;
           }
@@ -577,7 +577,7 @@ InspectorPanel.prototype = {
     }
 
     let progress = this._updateProgress;
-    let done = function() {
+    let done = function () {
       progress.outstanding.delete(done);
       progress.checkDone();
     };
@@ -588,14 +588,14 @@ InspectorPanel.prototype = {
   /**
    * Cancel notification of inspector updates.
    */
-  cancelUpdate: function() {
+  cancelUpdate: function () {
     this._updateProgress = null;
   },
 
   /**
    * When a new node is selected, before the selection has changed.
    */
-  onBeforeNewSelection: function(event, node) {
+  onBeforeNewSelection: function (event, node) {
     if (this.breadcrumbs.indexOf(node) == -1) {
       // only clear locks if we'd have to update breadcrumbs
       this.clearPseudoClasses();
@@ -607,7 +607,7 @@ InspectorPanel.prototype = {
    * parent is found (may happen when deleting an iframe inside which the
    * node was selected).
    */
-  onDetached: function(event, parentNode) {
+  onDetached: function (event, parentNode) {
     this.breadcrumbs.cutAfter(this.breadcrumbs.indexOf(parentNode));
     this.selection.setNodeFront(parentNode ? parentNode : this._defaultNode, "detached");
   },
@@ -615,7 +615,7 @@ InspectorPanel.prototype = {
   /**
    * Destroy the inspector.
    */
-  destroy: function() {
+  destroy: function () {
     if (this._panelDestroyer) {
       return this._panelDestroyer;
     }
@@ -687,7 +687,7 @@ InspectorPanel.prototype = {
   /**
    * Show the node menu.
    */
-  showNodeMenu: function(aButton, aPosition, aExtraItems) {
+  showNodeMenu: function (aButton, aPosition, aExtraItems) {
     if (aExtraItems) {
       for (let item of aExtraItems) {
         this.nodemenu.appendChild(item);
@@ -696,7 +696,7 @@ InspectorPanel.prototype = {
     this.nodemenu.openPopup(aButton, aPosition, 0, 0, true, false);
   },
 
-  hideNodeMenu: function() {
+  hideNodeMenu: function () {
     this.nodemenu.hidePopup();
   },
 
@@ -704,7 +704,7 @@ InspectorPanel.prototype = {
    * Returns the clipboard content if it is appropriate for pasting
    * into the current node's outer HTML, otherwise returns null.
    */
-  _getClipboardContentForPaste: function() {
+  _getClipboardContentForPaste: function () {
     let flavors = clipboard.currentFlavors;
     if (flavors.indexOf("text") != -1 ||
         (flavors.indexOf("html") != -1 && flavors.indexOf("image") == -1)) {
@@ -720,7 +720,7 @@ InspectorPanel.prototype = {
    * Update, enable, disable, hide, show any menu item depending on the current
    * element.
    */
-  _setupNodeMenu: function(event) {
+  _setupNodeMenu: function (event) {
     let markupContainer = this.markup.getContainer(this.selection.nodeFront);
     this.nodeMenuTriggerInfo =
       markupContainer.editor.getInfoAtNode(event.target.triggerNode);
@@ -877,7 +877,7 @@ InspectorPanel.prototype = {
     this._setupAttributeMenu(isEditableElement);
   },
 
-  _setupAttributeMenu: function(isEditableElement) {
+  _setupAttributeMenu: function (isEditableElement) {
     let addAttribute = this.panelDoc.getElementById("node-menu-add-attribute");
     let editAttribute = this.panelDoc.getElementById("node-menu-edit-attribute");
     let removeAttribute = this.panelDoc.getElementById("node-menu-remove-attribute");
@@ -905,16 +905,16 @@ InspectorPanel.prototype = {
       editAttribute.setAttribute("disabled", "true");
       editAttribute.setAttribute("label",
         strings.formatStringFromName(
-          "inspector.menu.editAttribute.label", [''], 1));
+          "inspector.menu.editAttribute.label", [""], 1));
 
       removeAttribute.setAttribute("disabled", "true");
       removeAttribute.setAttribute("label",
         strings.formatStringFromName(
-          "inspector.menu.removeAttribute.label", [''], 1));
+          "inspector.menu.removeAttribute.label", [""], 1));
     }
   },
 
-  _resetNodeMenu: function() {
+  _resetNodeMenu: function () {
     // Remove any extra items
     while (this.lastNodemenuItem.nextSibling) {
       let toDelete = this.lastNodemenuItem.nextSibling;
@@ -926,7 +926,7 @@ InspectorPanel.prototype = {
    * Link menu items can be shown or hidden depending on the context and
    * selected node, and their labels can vary.
    */
-  _setupNodeLinkMenu: function() {
+  _setupNodeLinkMenu: function () {
     let linkSeparator = this.panelDoc.getElementById("node-menu-link-separator");
     let linkFollow = this.panelDoc.getElementById("node-menu-link-follow");
     let linkCopy = this.panelDoc.getElementById("node-menu-link-copy");
@@ -979,7 +979,7 @@ InspectorPanel.prototype = {
     }
   },
 
-  _initMarkup: function() {
+  _initMarkup: function () {
     let doc = this.panelDoc;
 
     this._markupBox = doc.getElementById("markup-box");
@@ -999,7 +999,7 @@ InspectorPanel.prototype = {
     this._markupFrame.setAttribute("aria-label", strings.GetStringFromName("inspector.panelLabel.markupView"));
   },
 
-  _onMarkupFrameLoad: function() {
+  _onMarkupFrameLoad: function () {
     this._markupFrame.removeEventListener("load", this._onMarkupFrameLoad, true);
 
     this._markupFrame.contentWindow.focus();
@@ -1011,7 +1011,7 @@ InspectorPanel.prototype = {
     this.emit("markuploaded");
   },
 
-  _destroyMarkup: function() {
+  _destroyMarkup: function () {
     let destroyPromise;
 
     if (this._markupFrame) {
@@ -1039,7 +1039,7 @@ InspectorPanel.prototype = {
    * When the pane toggle button is clicked, toggle the pane, change the button
    * state and tooltip.
    */
-  onPaneToggleButtonClicked: function(e) {
+  onPaneToggleButtonClicked: function (e) {
     let sidePane = this.panelDoc.querySelector("#inspector-sidebar");
     let button = this._paneToggleButton;
     let isVisible = !button.hasAttribute("pane-collapsed");
@@ -1095,7 +1095,7 @@ InspectorPanel.prototype = {
   /**
    * Toggle a pseudo class.
    */
-  togglePseudoClass: function(aPseudo) {
+  togglePseudoClass: function (aPseudo) {
     if (this.selection.isElementNode()) {
       let node = this.selection.nodeFront;
       if (node.hasPseudoClassLock(aPseudo)) {
@@ -1110,7 +1110,7 @@ InspectorPanel.prototype = {
   /**
    * Show DOM properties
    */
-  showDOMProperties: function() {
+  showDOMProperties: function () {
     this._toolbox.openSplitConsole().then(() => {
       let panel = this._toolbox.getPanel("webconsole");
       let jsterm = panel.hud.jsterm;
@@ -1127,7 +1127,7 @@ InspectorPanel.prototype = {
    * temp variable on the content window.  Also opens the split console and
    * autofills it with the temp variable.
    */
-  useInConsole: function() {
+  useInConsole: function () {
     this._toolbox.openSplitConsole().then(() => {
       let panel = this._toolbox.getPanel("webconsole");
       let jsterm = panel.hud.jsterm;
@@ -1153,7 +1153,7 @@ InspectorPanel.prototype = {
   /**
    * Clear any pseudo-class locks applied to the current hierarchy.
    */
-  clearPseudoClasses: function() {
+  clearPseudoClasses: function () {
     if (!this.walker) {
       return;
     }
@@ -1163,7 +1163,7 @@ InspectorPanel.prototype = {
   /**
    * Edit the outerHTML of the selected Node.
    */
-  editHTML: function() {
+  editHTML: function () {
     if (!this.selection.isNode()) {
       return;
     }
@@ -1175,7 +1175,7 @@ InspectorPanel.prototype = {
   /**
    * Paste the contents of the clipboard into the selected Node's outer HTML.
    */
-  pasteOuterHTML: function() {
+  pasteOuterHTML: function () {
     let content = this._getClipboardContentForPaste();
     if (!content)
       return promise.reject("No clipboard content for paste");
@@ -1189,7 +1189,7 @@ InspectorPanel.prototype = {
   /**
    * Paste the contents of the clipboard into the selected Node's inner HTML.
    */
-  pasteInnerHTML: function() {
+  pasteInnerHTML: function () {
     let content = this._getClipboardContentForPaste();
     if (!content)
       return promise.reject("No clipboard content for paste");
@@ -1205,7 +1205,7 @@ InspectorPanel.prototype = {
    * @param position The position as specified for Element.insertAdjacentHTML
    *        (i.e. "beforeBegin", "afterBegin", "beforeEnd", "afterEnd").
    */
-  pasteAdjacentHTML: function(position) {
+  pasteAdjacentHTML: function (position) {
     let content = this._getClipboardContentForPaste();
     if (!content)
       return promise.reject("No clipboard content for paste");
@@ -1217,7 +1217,7 @@ InspectorPanel.prototype = {
   /**
    * Copy the innerHTML of the selected Node to the clipboard.
    */
-  copyInnerHTML: function() {
+  copyInnerHTML: function () {
     if (!this.selection.isNode()) {
       return;
     }
@@ -1227,7 +1227,7 @@ InspectorPanel.prototype = {
   /**
    * Copy the outerHTML of the selected Node to the clipboard.
    */
-  copyOuterHTML: function() {
+  copyOuterHTML: function () {
     if (!this.selection.isNode()) {
       return;
     }
@@ -1251,7 +1251,7 @@ InspectorPanel.prototype = {
   /**
    * Copy the data-uri for the currently selected image in the clipboard.
    */
-  copyImageDataUri: function() {
+  copyImageDataUri: function () {
     let container = this.markup.getContainer(this.selection.nodeFront);
     if (container && container.isPreviewable()) {
       container.copyImageDataUri();
@@ -1263,7 +1263,7 @@ InspectorPanel.prototype = {
    * @param  {Promise} longStringActorPromise promise expected to resolve a LongStringActor instance
    * @return {Promise} promise resolving (with no argument) when the string is sent to the clipboard
    */
-  _copyLongString: function(longStringActorPromise) {
+  _copyLongString: function (longStringActorPromise) {
     return this._getLongString(longStringActorPromise).then(string => {
       clipboardHelper.copyString(string);
     }).catch(e => console.error(e));
@@ -1274,7 +1274,7 @@ InspectorPanel.prototype = {
    * @param  {Promise} longStringActorPromise promise expected to resolve a LongStringActor instance
    * @return {Promise} promise resolving with the retrieved string as argument
    */
-  _getLongString: function(longStringActorPromise) {
+  _getLongString: function (longStringActorPromise) {
     return longStringActorPromise.then(longStringActor => {
       return longStringActor.string().then(string => {
         longStringActor.release().catch(e => console.error(e));
@@ -1286,7 +1286,7 @@ InspectorPanel.prototype = {
   /**
    * Copy a unique selector of the selected Node to the clipboard.
    */
-  copyUniqueSelector: function() {
+  copyUniqueSelector: function () {
     if (!this.selection.isNode()) {
       return;
     }
@@ -1299,9 +1299,9 @@ InspectorPanel.prototype = {
   /**
    * Initiate gcli screenshot command on selected node
    */
-  screenshotNode: function() {
+  screenshotNode: function () {
     CommandUtils.createRequisition(this._target, {
-      environment: CommandUtils.createEnvironment(this, '_target')
+      environment: CommandUtils.createEnvironment(this, "_target")
     }).then(requisition => {
       // Bug 1180314 -  CssSelector might contain white space so need to make sure it is
       // passed to screenshot as a single parameter.  More work *might* be needed if
@@ -1313,7 +1313,7 @@ InspectorPanel.prototype = {
   /**
    * Scroll the node into view.
    */
-  scrollNodeIntoView: function() {
+  scrollNodeIntoView: function () {
     if (!this.selection.isNode()) {
       return;
     }
@@ -1324,7 +1324,7 @@ InspectorPanel.prototype = {
   /**
    * Duplicate the selected node
    */
-  duplicateNode: function() {
+  duplicateNode: function () {
     let selection = this.selection;
     if (!selection.isElementNode() ||
         selection.isRoot() ||
@@ -1338,7 +1338,7 @@ InspectorPanel.prototype = {
   /**
    * Delete the selected node.
    */
-  deleteNode: function() {
+  deleteNode: function () {
     if (!this.selection.isNode() ||
          this.selection.isRoot()) {
       return;
@@ -1358,7 +1358,7 @@ InspectorPanel.prototype = {
    * Add attribute to node.
    * Used for node context menu and shouldn't be called directly.
    */
-  onAddAttribute: function() {
+  onAddAttribute: function () {
     let container = this.markup.getContainer(this.selection.nodeFront);
     container.addAttribute();
   },
@@ -1367,7 +1367,7 @@ InspectorPanel.prototype = {
    * Edit attribute for node.
    * Used for node context menu and shouldn't be called directly.
    */
-  onEditAttribute: function() {
+  onEditAttribute: function () {
     let container = this.markup.getContainer(this.selection.nodeFront);
     container.editAttribute(this.nodeMenuTriggerInfo.name);
   },
@@ -1376,16 +1376,16 @@ InspectorPanel.prototype = {
    * Remove attribute from node.
    * Used for node context menu and shouldn't be called directly.
    */
-  onRemoveAttribute: function() {
+  onRemoveAttribute: function () {
     let container = this.markup.getContainer(this.selection.nodeFront);
     container.removeAttribute(this.nodeMenuTriggerInfo.name);
   },
 
-  expandNode: function() {
+  expandNode: function () {
     this.markup.expandAll(this.selection.nodeFront);
   },
 
-  collapseNode: function() {
+  collapseNode: function () {
     this.markup.collapseNode(this.selection.nodeFront);
   },
 
@@ -1393,7 +1393,7 @@ InspectorPanel.prototype = {
    * This method is here for the benefit of the node-menu-link-follow menu item
    * in the inspector contextual-menu.
    */
-  onFollowLink: function() {
+  onFollowLink: function () {
     let type = this.panelDoc.popupNode.dataset.type;
     let link = this.panelDoc.popupNode.dataset.link;
 
@@ -1405,7 +1405,7 @@ InspectorPanel.prototype = {
    * attempt to follow that link (which may result in opening a new tab, the
    * style editor or debugger).
    */
-  followAttributeLink: function(type, link) {
+  followAttributeLink: function (type, link) {
     if (!type || !link) {
       return;
     }
@@ -1442,7 +1442,7 @@ InspectorPanel.prototype = {
    * This method is here for the benefit of the node-menu-link-copy menu item
    * in the inspector contextual-menu.
    */
-  onCopyLink: function() {
+  onCopyLink: function () {
     let link = this.panelDoc.popupNode.dataset.link;
 
     this.copyAttributeLink(link);
@@ -1451,7 +1451,7 @@ InspectorPanel.prototype = {
   /**
    * This method is here for the benefit of copying links.
    */
-  copyAttributeLink: function(link) {
+  copyAttributeLink: function (link) {
     // When the inspector menu was setup on click (see _setupNodeLinkMenu), we
     // already checked that resolveRelativeURL existed.
     this.inspector.resolveRelativeURL(link, this.selection.nodeFront).then(url => {

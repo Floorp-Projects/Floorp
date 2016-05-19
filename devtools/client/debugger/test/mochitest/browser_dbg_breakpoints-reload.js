@@ -33,6 +33,6 @@ var test = Task.async(function* () {
   is(packet.frame.where.line, 10,
      "Should have stopped at line 10, where we set the breakpoint");
 
-  yield waitForDebuggerEvents(panel, panel.panelWin.EVENTS.SOURCE_SHOWN)
+  yield waitForDebuggerEvents(panel, panel.panelWin.EVENTS.SOURCE_SHOWN);
   yield resumeDebuggerThenCloseAndFinish(panel);
 });

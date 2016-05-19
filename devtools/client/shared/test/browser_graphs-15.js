@@ -7,7 +7,7 @@ const FAST_FPS = 60;
 const SLOW_FPS = 10;
 
 // Each element represents a second
-const FRAMES= [FAST_FPS, FAST_FPS, FAST_FPS, SLOW_FPS, FAST_FPS];
+const FRAMES = [FAST_FPS, FAST_FPS, FAST_FPS, SLOW_FPS, FAST_FPS];
 const TEST_DATA = [];
 const INTERVAL = 100;
 const DURATION = 5000; // 5s
@@ -22,7 +22,7 @@ for (let frameRate of FRAMES) {
 
 var LineGraphWidget = require("devtools/client/shared/widgets/LineGraphWidget");
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("about:blank");
   yield performTest();
   gBrowser.removeCurrentTab();

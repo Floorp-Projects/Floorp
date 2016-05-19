@@ -68,7 +68,7 @@ function* ifWebGLSupported() {
   yield teardown(panel);
   finish();
 
-  function checkFirstProgram () {
+  function checkFirstProgram() {
     is(ShadersListView.itemCount, 1,
       "The shaders list contains one entry.");
     is(ShadersListView.selectedItem, ShadersListView.items[0],
@@ -76,7 +76,7 @@ function* ifWebGLSupported() {
     is(ShadersListView.selectedIndex, 0,
       "The shaders list has a correct index selected.");
   }
-  function checkSecondProgram () {
+  function checkSecondProgram() {
     is(ShadersListView.itemCount, 2,
       "The shaders list contains two entries.");
     is(ShadersListView.selectedItem, ShadersListView.items[0],

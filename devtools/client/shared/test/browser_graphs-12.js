@@ -7,7 +7,7 @@ var LineGraphWidget = require("devtools/client/shared/widgets/LineGraphWidget");
 var BarGraphWidget = require("devtools/client/shared/widgets/BarGraphWidget");
 var {CanvasGraphUtils} = require("devtools/client/shared/widgets/Graphs");
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("about:blank");
   yield performTest();
   gBrowser.removeCurrentTab();

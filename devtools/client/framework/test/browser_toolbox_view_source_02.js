@@ -10,7 +10,7 @@
 var URL = `${URL_ROOT}doc_viewsource.html`;
 var JS_URL = `${URL_ROOT}code_math.js`;
 
-function *viewSource() {
+function* viewSource() {
   let toolbox = yield openNewTabAndToolbox(URL);
   let { panelWin: debuggerWin } = yield toolbox.selectTool("jsdebugger");
   let debuggerEvents = debuggerWin.EVENTS;
@@ -40,7 +40,7 @@ function *viewSource() {
   finish();
 }
 
-function test () {
+function test() {
   Task.spawn(viewSource).then(finish, (aError) => {
     ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
     finish();

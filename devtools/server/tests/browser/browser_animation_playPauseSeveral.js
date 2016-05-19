@@ -15,7 +15,7 @@
 const ALL_ANIMATED_NODES = [".simple-animation", ".multiple-animations",
                             ".delayed-animation"];
 
-add_task(function*() {
+add_task(function* () {
   let {client, walker, animations} =
     yield initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 

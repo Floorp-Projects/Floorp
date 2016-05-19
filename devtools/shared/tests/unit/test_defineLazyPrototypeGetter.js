@@ -57,8 +57,8 @@ function test_multiple_instances() {
 }
 
 function test_callback_receiver() {
-  function Foo() {};
-  DevToolsUtils.defineLazyPrototypeGetter(Foo.prototype, "foo", function() {
+  function Foo() {}
+  DevToolsUtils.defineLazyPrototypeGetter(Foo.prototype, "foo", function () {
     return this;
   });
 

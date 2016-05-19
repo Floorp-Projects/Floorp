@@ -48,10 +48,10 @@ function clickPrettyPrintButton() {
 
 function testSourceIsPretty() {
   ok(gEditor.getText().includes("\n  "),
-     "The source should be pretty printed.")
+     "The source should be pretty printed.");
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

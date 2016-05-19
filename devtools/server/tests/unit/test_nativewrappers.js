@@ -6,12 +6,12 @@ function run_test()
 
   var dbg = new Debugger();
   dbg.addDebuggee(g);
-  dbg.onDebuggerStatement = function(aFrame) {
+  dbg.onDebuggerStatement = function (aFrame) {
     let args = aFrame.arguments;
     try {
       args[0];
       do_check_true(true);
-    } catch(ex) {
+    } catch (ex) {
       do_check_true(false);
     }
   };

@@ -65,7 +65,7 @@ function installTestApp(zipName, appId, onDone) {
 
     onDone();
   });
-};
+}
 
 function setup() {
   // We have to setup a profile, otherwise indexed db used by webapps
@@ -80,7 +80,7 @@ function setup() {
   Components.utils.import("resource://testing-common/AppInfo.jsm");
   updateAppInfo();
 
-  Components.utils.import('resource://gre/modules/Webapps.jsm');
+  Components.utils.import("resource://gre/modules/Webapps.jsm");
 
   // Enable launch/close method of the webapps actor
   let {WebappsActor} = require("devtools/server/actors/webapps");
@@ -101,7 +101,7 @@ function do_get_webappsdir() {
   // Register our own provider for the profile directory.
   // It will return our special docshell profile directory.
   var provider = {
-    getFile: function(prop, persistent) {
+    getFile: function (prop, persistent) {
       persistent.value = true;
       if (prop == "webappsDir") {
         return webappsDir.clone();
@@ -111,7 +111,7 @@ function do_get_webappsdir() {
       }
       throw Cr.NS_ERROR_FAILURE;
     },
-    QueryInterface: function(iid) {
+    QueryInterface: function (iid) {
       if (iid.equals(Ci.nsIDirectoryServiceProvider) ||
           iid.equals(Ci.nsISupports)) {
         return this;

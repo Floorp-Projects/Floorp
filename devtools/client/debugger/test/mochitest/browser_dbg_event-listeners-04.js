@@ -17,12 +17,12 @@
 const TAB_URL = EXAMPLE_URL + "doc_event-listeners-01.html";
 
 function test() {
-  Task.spawn(function*() {
+  Task.spawn(function* () {
     let tab = yield addTab(TAB_URL);
 
     // Create a sandboxed content script the Add-on SDK way. Inspired by bug
     // 1145996.
-    let tabs = require('sdk/tabs');
+    let tabs = require("sdk/tabs");
     let sdkTab = [...tabs].find(tab => tab.url === TAB_URL);
     ok(sdkTab, "Add-on SDK found the loaded tab.");
 
@@ -35,8 +35,8 @@ function test() {
     let [,, panel, win] = yield initDebugger(tab);
     let dbg = panel.panelWin;
     let controller = dbg.DebuggerController;
-    let constants = dbg.require('./content/constants');
-    let actions = dbg.require('./content/actions/event-listeners');
+    let constants = dbg.require("./content/constants");
+    let actions = dbg.require("./content/actions/event-listeners");
     let fetched = waitForDispatch(panel, constants.FETCH_EVENT_LISTENERS);
 
     info("Scheduling event listener fetch.");

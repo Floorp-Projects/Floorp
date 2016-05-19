@@ -12,7 +12,7 @@ const URL = "data:text/html;charset=utf8,test page for toolbox switching";
 
 var {Toolbox} = require("devtools/client/framework/toolbox");
 
-add_task(function*() {
+add_task(function* () {
   info("Create a test tab and open the toolbox");
   let tab = yield addTab(URL);
   let target = TargetFactory.forTab(tab);
@@ -23,21 +23,21 @@ add_task(function*() {
   let {SIDE, BOTTOM, WINDOW} = Toolbox.HostType;
   checkHostType(toolbox, BOTTOM, SIDE);
 
-  info ("Switching from bottom to side");
+  info("Switching from bottom to side");
   synthesizeKeyElement(keyElement);
   yield toolbox.once("host-changed");
   checkHostType(toolbox, SIDE, BOTTOM);
 
-  info ("Switching from side to bottom");
+  info("Switching from side to bottom");
   synthesizeKeyElement(keyElement);
   yield toolbox.once("host-changed");
   checkHostType(toolbox, BOTTOM, SIDE);
 
-  info ("Switching to window");
+  info("Switching to window");
   yield toolbox.switchHost(WINDOW);
   checkHostType(toolbox, WINDOW, BOTTOM);
 
-  info ("Switching from window to bottom");
+  info("Switching from window to bottom");
   synthesizeKeyElement(keyElement);
   yield toolbox.once("host-changed");
   checkHostType(toolbox, BOTTOM, WINDOW);

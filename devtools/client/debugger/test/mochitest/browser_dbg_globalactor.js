@@ -7,7 +7,7 @@
  * Check extension-added global actor API.
  */
 
-const CHROME_URL = "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/"
+const CHROME_URL = "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/";
 const ACTORS_URL = CHROME_URL + "testactors.js";
 
 function test() {
@@ -28,7 +28,7 @@ function test() {
 
     gClient.listTabs(aResponse => {
       let globalActor = aResponse.testGlobalActor1;
-      ok(globalActor, "Found the test tab actor.")
+      ok(globalActor, "Found the test tab actor.");
       ok(globalActor.includes("test_one"),
         "testGlobalActor1's actorPrefix should be used.");
 

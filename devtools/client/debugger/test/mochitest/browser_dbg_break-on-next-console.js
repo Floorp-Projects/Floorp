@@ -29,7 +29,7 @@ function test() {
       .then(() => closeDebuggerAndFinish(gPanel));
   });
 
-  let testConsole = Task.async(function*() {
+  let testConsole = Task.async(function* () {
     info("Starting testConsole");
 
     let oncePaused = gTarget.once("thread-paused");

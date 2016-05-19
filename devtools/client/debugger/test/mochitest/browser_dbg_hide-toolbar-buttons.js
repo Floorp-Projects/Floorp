@@ -18,13 +18,13 @@ function test() {
 
   initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
     let document = aPanel.panelWin.document;
-    let ppButton = document.querySelector('#pretty-print');
-    let bbButton = document.querySelector('#black-box');
-    let sep = document.querySelector('#sources-toolbar .devtools-separator');
+    let ppButton = document.querySelector("#pretty-print");
+    let bbButton = document.querySelector("#black-box");
+    let sep = document.querySelector("#sources-toolbar .devtools-separator");
 
-    is(ppButton.style.display, 'none', 'The pretty-print button is hidden');
-    is(bbButton.style.display, 'none', 'The blackboxing button is hidden');
-    is(sep.style.display, 'none', 'The separator is hidden');
-    closeDebuggerAndFinish(aPanel)
+    is(ppButton.style.display, "none", "The pretty-print button is hidden");
+    is(bbButton.style.display, "none", "The blackboxing button is hidden");
+    is(sep.style.display, "none", "The separator is hidden");
+    closeDebuggerAndFinish(aPanel);
   });
 }

@@ -21,7 +21,7 @@ function* testScrollPosition(hud) {
   let scrollNode = hud.ui.outputWrapper;
 
   for (let i = 0; i < 150; i++) {
-    yield ContentTask.spawn(gBrowser.selectedBrowser, i, function*(i) {
+    yield ContentTask.spawn(gBrowser.selectedBrowser, i, function* (i) {
       content.console.log("test message " + i);
     });
   }

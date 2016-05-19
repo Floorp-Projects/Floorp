@@ -20,14 +20,14 @@ const JS_URL = `${DEBUGGER_ROOT}code_binary_search.js`;
 const COFFEE_URL = `${DEBUGGER_ROOT}code_binary_search.coffee`;
 const { SourceLocationController } = require("devtools/client/framework/source-location");
 
-add_task(function*() {
+add_task(function* () {
   let toolbox = yield openNewTabAndToolbox(PAGE_URL, "jsdebugger");
 
   let controller = new SourceLocationController(toolbox.target);
 
   let aggregator = [];
 
-  function onUpdate (oldLoc, newLoc) {
+  function onUpdate(oldLoc, newLoc) {
     if (oldLoc.line === 6) {
       checkLoc1(oldLoc, newLoc);
     } else if (oldLoc.line === 8) {
@@ -62,7 +62,7 @@ add_task(function*() {
   finish();
 });
 
-function checkLoc1 (oldLoc, newLoc) {
+function checkLoc1(oldLoc, newLoc) {
   is(oldLoc.line, 6, "Correct line for JS:6");
   is(oldLoc.column, null, "Correct column for JS:6");
   is(oldLoc.url, JS_URL, "Correct url for JS:6");
@@ -71,7 +71,7 @@ function checkLoc1 (oldLoc, newLoc) {
   is(newLoc.url, COFFEE_URL, "Correct url for JS:6 -> COFFEE");
 }
 
-function checkLoc2 (oldLoc, newLoc) {
+function checkLoc2(oldLoc, newLoc) {
   is(oldLoc.line, 8, "Correct line for JS:8:3");
   is(oldLoc.column, 3, "Correct column for JS:8:3");
   is(oldLoc.url, JS_URL, "Correct url for JS:8:3");
@@ -80,7 +80,7 @@ function checkLoc2 (oldLoc, newLoc) {
   is(newLoc.url, COFFEE_URL, "Correct url for JS:8:3 -> COFFEE");
 }
 
-function checkLoc3 (oldLoc, newLoc) {
+function checkLoc3(oldLoc, newLoc) {
   is(oldLoc.line, 2, "Correct line for COFFEE:2:0");
   is(oldLoc.column, 0, "Correct column for COFFEE:2:0");
   is(oldLoc.url, COFFEE_URL, "Correct url for COFFEE:2:0");
@@ -89,7 +89,7 @@ function checkLoc3 (oldLoc, newLoc) {
   is(newLoc.url, COFFEE_URL, "Correct url for COFFEE:2:0 -> COFFEE");
 }
 
-function createScript (url) {
+function createScript(url) {
   info(`Creating script: ${url}`);
   let mm = getFrameScript();
   let command = `

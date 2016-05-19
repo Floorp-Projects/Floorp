@@ -171,7 +171,7 @@ const PerformanceRecorder = exports.PerformanceRecorder = Class({
    *        The time (in milliseconds) when the call was made, relative to when
    *        the nsIProfiler module was started.
    */
-  _onConsoleProfileStart: Task.async(function *({ profileLabel, currentTime: startTime }) {
+  _onConsoleProfileStart: Task.async(function* ({ profileLabel, currentTime: startTime }) {
     let recordings = this._recordings;
 
     // Abort if a profile with this label already exists.
@@ -198,7 +198,7 @@ const PerformanceRecorder = exports.PerformanceRecorder = Class({
    *        The time (in milliseconds) when the call was made, relative to when
    *        the nsIProfiler module was started.
    */
-  _onConsoleProfileEnd: Task.async(function *(data) {
+  _onConsoleProfileEnd: Task.async(function* (data) {
     // If no data, abort; can occur if profiler isn't running and we get a surprise
     // call to console.profileEnd()
     if (!data) {
@@ -286,7 +286,7 @@ const PerformanceRecorder = exports.PerformanceRecorder = Class({
    * Checks whether or not recording is currently supported. At the moment,
    * this is only influenced by private browsing mode and the profiler.
    */
-  canCurrentlyRecord: function() {
+  canCurrentlyRecord: function () {
     let success = true;
     let reasons = [];
 
@@ -318,10 +318,10 @@ const PerformanceRecorder = exports.PerformanceRecorder = Class({
    * @return object
    *         A promise that is resolved once recording has started.
    */
-  startRecording: Task.async(function*(options) {
+  startRecording: Task.async(function* (options) {
     let profilerStart, timelineStart, memoryStart;
 
-    profilerStart = Task.spawn(function *() {
+    profilerStart = Task.spawn(function* () {
       let data = yield this._profiler.isActive();
       if (data.isActive) {
         return data;
@@ -383,7 +383,7 @@ const PerformanceRecorder = exports.PerformanceRecorder = Class({
    * @return PerformanceRecording
    *         Returns the same model, populated with the profiling data.
    */
-  stopRecording: Task.async(function *(model) {
+  stopRecording: Task.async(function* (model) {
     // If model isn't in the Recorder's internal store,
     // then do nothing, like if this was a console.profileEnd
     // from a different target.
@@ -482,7 +482,7 @@ const PerformanceRecorder = exports.PerformanceRecorder = Class({
 /**
  * Creates an object of configurations based off of preferences for a PerformanceRecording.
  */
-function getPerformanceRecordingPrefs () {
+function getPerformanceRecordingPrefs() {
   return {
     withMarkers: true,
     withMemory: Services.prefs.getBoolPref("devtools.performance.ui.enable-memory"),

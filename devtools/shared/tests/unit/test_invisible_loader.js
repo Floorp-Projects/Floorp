@@ -24,7 +24,7 @@ function visible_loader() {
   try {
     dbg.addDebuggee(sandbox);
     do_check_true(true);
-  } catch(e) {
+  } catch (e) {
     do_throw("debugger could not add visible value");
   }
 
@@ -45,7 +45,7 @@ function invisible_loader() {
   try {
     dbg.addDebuggee(sandbox);
     do_throw("debugger added invisible value");
-  } catch(e) {
+  } catch (e) {
     do_check_true(true);
   }
 

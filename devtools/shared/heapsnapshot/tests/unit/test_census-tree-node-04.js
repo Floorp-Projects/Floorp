@@ -32,11 +32,11 @@ function run_test() {
   stack5 = saveStack(1);
 
   const REPORT = new Map([
-    [stack1,    { bytes: 10, count: 1 }],
-    [stack2,    { bytes: 20, count: 2 }],
-    [stack3,    { bytes: 30, count: 3 }],
-    [stack4,    { bytes: 40, count: 4 }],
-    [stack5,    { bytes: 50, count: 5 }],
+    [stack1, { bytes: 10, count: 1 }],
+    [stack2, { bytes: 20, count: 2 }],
+    [stack3, { bytes: 30, count: 3 }],
+    [stack4, { bytes: 40, count: 4 }],
+    [stack5, { bytes: 50, count: 5 }],
     ["noStack", { bytes: 60, count: 6 }],
   ]);
 

@@ -38,7 +38,7 @@ var helperEditData = [
 ];
 
 function* selectFile(projecteditor, resource) {
-  ok (resource && resource.path, "A valid resource has been passed in for selection " + (resource && resource.path));
+  ok(resource && resource.path, "A valid resource has been passed in for selection " + (resource && resource.path));
   projecteditor.projectTree.selectResource(resource);
 
   if (resource.isDir) {
@@ -49,5 +49,5 @@ function* selectFile(projecteditor, resource) {
     onceEditorActivated(projecteditor)
   ]);
 
-  is (editorActivated, projecteditor.currentEditor,  "Editor has been activated for " + resource.path);
+  is(editorActivated, projecteditor.currentEditor, "Editor has been activated for " + resource.path);
 }

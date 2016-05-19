@@ -10,7 +10,7 @@
 var global = this;
 
 // Guard against loading this frame script mutiple times
-(function() {
+(function () {
   if (global.responsiveFrameScriptLoaded) {
     return;
   }
@@ -25,14 +25,23 @@ var global = this;
 
   addMessageListener("ResponsiveMode:Start", startResponsiveMode);
   addMessageListener("ResponsiveMode:Stop", stopResponsiveMode);
+  addMessageListener("ResponsiveMode:IsActive", isActive);
 
   function debug(msg) {
     // dump(`RDM CHILD: ${msg}\n`);
   }
 
+  /**
+   * Used by tests to verify the state of responsive mode.
+   */
+  function isActive() {
+    sendAsyncMessage("ResponsiveMode:IsActive:Done", { active });
+  }
+
   function startResponsiveMode({data:data}) {
     debug("START");
     if (active) {
+      debug("ALREADY STARTED, ABORT");
       return;
     }
     addMessageListener("ResponsiveMode:RequestScreenshot", screenshot);
@@ -89,6 +98,7 @@ var global = this;
   function stopResponsiveMode() {
     debug("STOP");
     if (!active) {
+      debug("ALREADY STOPPED, ABORT");
       return;
     }
     active = false;
@@ -118,7 +128,7 @@ var global = this;
       let winUtils = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
       try {
         winUtils.loadSheet(gFloatingScrollbarsStylesheet, win.AGENT_SHEET);
-      } catch(e) { }
+      } catch (e) { }
     }
 
     flushStyle();
@@ -134,7 +144,7 @@ var global = this;
       let winUtils = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
       try {
         winUtils.removeSheet(gFloatingScrollbarsStylesheet, win.AGENT_SHEET);
-      } catch(e) { }
+      } catch (e) { }
     }
     flushStyle();
   }
@@ -173,7 +183,7 @@ var global = this;
       if (aIID.equals(Ci.nsIWebProgressListener) ||
           aIID.equals(Ci.nsISupportsWeakReference) ||
           aIID.equals(Ci.nsISupports)) {
-          return this;
+        return this;
       }
       throw Components.results.NS_ERROR_NO_INTERFACE;
     }

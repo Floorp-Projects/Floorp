@@ -14,8 +14,8 @@ const { LocalStore } = require("devtools/client/projecteditor/lib/stores/local")
 const { OS } = Cu.import("resource://gre/modules/osfile.jsm", {});
 const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 const promise = require("promise");
-const { TextEncoder, TextDecoder } = require('sdk/io/buffer');
-const url = require('sdk/url');
+const { TextEncoder, TextDecoder } = require("sdk/io/buffer");
+const url = require("sdk/url");
 
 const gDecoder = new TextDecoder();
 const gEncoder = new TextEncoder();
@@ -42,20 +42,20 @@ var Project = Class({
    * @param Object options
    *               Options to be passed into Project.load function
    */
-  initialize: function(options) {
+  initialize: function (options) {
     this.localStores = new Map();
 
     this.load(options);
   },
 
-  destroy: function() {
+  destroy: function () {
     // We are removing the store because the project never gets persisted.
     // There may need to be separate destroy functionality that doesn't remove
     // from project if this is saved to DB.
     this.removeAllStores();
   },
 
-  toString: function() {
+  toString: function () {
     return "[Project] " + this.name;
   },
 
@@ -68,7 +68,7 @@ var Project = Class({
    *                name: The display name of the project
    *                directories: An array of path strings to load
    */
-  load: function(options) {
+  load: function (options) {
     this.id = options.id;
     this.name = options.name || "Untitled";
 
@@ -91,8 +91,8 @@ var Project = Class({
    * @returns Promise
    *          A promise that resolves when everything has been refreshed.
    */
-  refresh: function() {
-    return Task.spawn(function*() {
+  refresh: function () {
+    return Task.spawn(function* () {
       for (let [path, store] of this.localStores) {
         yield store.refresh();
       }
@@ -111,7 +111,7 @@ var Project = Class({
    * @returns Promise
    *          A promise that resolves with the Resource.
    */
-  resourceFor: function(path, options) {
+  resourceFor: function (path, options) {
     let store = this.storeContaining(path);
     return store.resourceFor(path, options);
   },
@@ -122,7 +122,7 @@ var Project = Class({
    * @returns Array<Resource>
    *          A list of all Resources in all Stores.
    */
-  allResources: function() {
+  allResources: function () {
     let resources = [];
     for (let store of this.allStores()) {
       resources = resources.concat(store.allResources());
@@ -136,7 +136,7 @@ var Project = Class({
    * @returns generator-iterator<Store>
    *          A list of all Stores
    */
-  allStores: function*() {
+  allStores: function* () {
     for (let [path, store] of this.localStores) {
       yield store;
     }
@@ -148,7 +148,7 @@ var Project = Class({
    * @returns Array<string>
    *          A list of all file paths
    */
-  allPaths: function() {
+  allPaths: function () {
     return [...this.localStores.keys()];
   },
 
@@ -159,7 +159,7 @@ var Project = Class({
    *          The store, if any.  Will return null if no store
    *          contains the given path.
    */
-  storeContaining: function(path) {
+  storeContaining: function (path) {
     let containingStore = null;
     for (let store of this.allStores()) {
       if (store.contains(path)) {
@@ -177,7 +177,7 @@ var Project = Class({
    * @param string path
    * @returns LocalStore
    */
-  addPath: function(path) {
+  addPath: function (path) {
     if (!this.localStores.has(path)) {
       this.addLocalStore(new LocalStore(path));
     }
@@ -189,7 +189,7 @@ var Project = Class({
    *
    * @param string path
    */
-  removePath: function(path) {
+  removePath: function (path) {
     this.removeLocalStore(this.localStores.get(path));
   },
 
@@ -200,7 +200,7 @@ var Project = Class({
    *
    * @param Store store
    */
-  addLocalStore: function(store) {
+  addLocalStore: function (store) {
     store.canPair = true;
     this.localStores.set(store.path, store);
 
@@ -210,7 +210,7 @@ var Project = Class({
     });
     on(this, store, "resource-removed", (resource) => {
       emit(this, "resource-removed", resource);
-    })
+    });
 
     emit(this, "store-added", store);
   },
@@ -219,7 +219,7 @@ var Project = Class({
   /**
    * Remove all of the Stores belonging to the project.
    */
-  removeAllStores: function() {
+  removeAllStores: function () {
     for (let store of this.allStores()) {
       this.removeLocalStore(store);
     }
@@ -231,7 +231,7 @@ var Project = Class({
    *
    * @param Store store
    */
-  removeLocalStore: function(store) {
+  removeLocalStore: function (store) {
     // XXX: tree selection should be reset if active element is affected by
     // the store being removed
     if (store) {

@@ -33,7 +33,7 @@ function testCleanExit() {
   callInTab(gTab, "runDebuggerStatement");
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

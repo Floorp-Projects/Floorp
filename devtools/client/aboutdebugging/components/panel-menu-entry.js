@@ -21,14 +21,14 @@ module.exports = createClass({
   },
 
   render() {
-    let { panelId, icon, name, selected } = this.props;
+    let { id, name, icon, selected } = this.props;
 
     // Here .category, .category-icon, .category-name classnames are used to
     // apply common styles defined.
     let className = "category" + (selected ? " selected" : "");
     return dom.div({
       "aria-selected": selected,
-      "aria-controls": panelId,
+      "aria-controls": id + "-panel",
       className,
       onClick: this.onClick,
       onKeyDown: this.onKeyDown,

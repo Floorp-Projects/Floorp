@@ -7,7 +7,7 @@
 
 const { setTheme } = require("devtools/client/shared/theme");
 
-add_task(function*() {
+add_task(function* () {
   let { target, panel } = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, MARKER_STYLING } = panelWin;
@@ -56,6 +56,6 @@ add_task(function*() {
  * Returns a hex value found in styling for an element. So parses
  * <marker style="fill: #abcdef"> and returns "#abcdef"
  */
-function getFill (el) {
+function getFill(el) {
   return el.getAttribute("style").match(/(#.*)$/)[1];
 }

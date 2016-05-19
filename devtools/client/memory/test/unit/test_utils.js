@@ -16,7 +16,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function *() {
+add_task(function* () {
   let s1 = utils.createSnapshot({ view: { state: viewState.CENSUS } });
   let s2 = utils.createSnapshot({ view: { state: viewState.CENSUS } });
   equal(s1.state, states.SAVING, "utils.createSnapshot() creates snapshot in saving state");

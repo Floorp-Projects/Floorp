@@ -7,7 +7,7 @@
 const {DirectorManagerFront} = require("devtools/server/actors/director-manager");
 const {DirectorRegistry} = require("devtools/server/actors/director-registry");
 
-add_task(function*() {
+add_task(function* () {
   let browser = yield addTab(MAIN_DOMAIN + "director-script-target.html");
   let doc = browser.contentDocument;
 
@@ -32,7 +32,7 @@ function* testErrorOnRequire(directorManager) {
   // director script require method should raise a "not implemented" exception
   let errorOnRequire = yield installAndEnableDirectorScript(directorManager, {
     scriptId: "testDirectorScript_errorOnRequire",
-    scriptCode: "(" + (function() {
+    scriptCode: "(" + (function () {
       // this director script should generate an error event
       // because require raise a "not implemented" exception
       require("fake_module");
@@ -51,7 +51,7 @@ function* testErrorOnEvaluate(directorManager) {
   // evaluation
   let errorOnEvaluate = yield installAndEnableDirectorScript(directorManager, {
     scriptId: "testDirectorScript_errorOnEvaluate",
-    scriptCode: "(" + (function() {
+    scriptCode: "(" + (function () {
       // this will raise an exception evaluating
       // the director script
       raise.an_error.during.content_script.load();
@@ -66,10 +66,10 @@ function* testErrorOnAttach(directorManager) {
   // evaluation
   let errorOnAttach = yield installAndEnableDirectorScript(directorManager, {
     scriptId: "testDirectorScript_errorOnAttach",
-    scriptCode: "(" + (function() {
+    scriptCode: "(" + (function () {
       // this will raise an exception on evaluating
       // the director script
-      module.exports = function() {
+      module.exports = function () {
         raise.an_error.during.content_script.load();
       };
     }).toString() + ")();",
@@ -83,10 +83,10 @@ function* testErrorOnDetach(directorManager) {
   // evaluation
   let attach = yield installAndEnableDirectorScript(directorManager, {
     scriptId: "testDirectorScript_errorOnDetach",
-    scriptCode: "(" + (function() {
+    scriptCode: "(" + (function () {
       module.exports = function ({onUnload}) {
         // this will raise an exception on unload the director script
-        onUnload(function() {
+        onUnload(function () {
           raise_an_error_onunload();
         });
       };

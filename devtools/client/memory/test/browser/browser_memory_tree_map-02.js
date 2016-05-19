@@ -9,7 +9,7 @@
 const CanvasUtils = require("devtools/client/memory/components/tree-map/canvas-utils");
 const DragZoom = require("devtools/client/memory/components/tree-map/drag-zoom");
 
-const TEST_URL = `data:text/html,<html><body></body></html>`;
+const TEST_URL = "data:text/html,<html><body></body></html>";
 const PIXEL_SCROLL_MODE = 0;
 const PIXEL_DELTA = 10;
 const MAX_RAF_LOOP = 1000;

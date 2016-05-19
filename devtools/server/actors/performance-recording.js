@@ -27,7 +27,7 @@ loader.lazyRequireGetter(this, "PerformanceRecordingCommon",
 var PerformanceRecordingActor = exports.PerformanceRecordingActor = protocol.ActorClass(merge({
   typeName: "performance-recording",
 
-  form: function(detail) {
+  form: function (detail) {
     if (detail === "actorid") {
       return this.actorID;
     }
@@ -108,7 +108,7 @@ var PerformanceRecordingActor = exports.PerformanceRecordingActor = protocol.Act
     }
   },
 
-  destroy: function() {
+  destroy: function () {
     protocol.Actor.prototype.destroy.call(this);
   },
 
@@ -146,7 +146,7 @@ var PerformanceRecordingActor = exports.PerformanceRecordingActor = protocol.Act
         this._completed = true;
         break;
       }
-    };
+    }
   },
 
 }, PerformanceRecordingCommon));
@@ -157,7 +157,7 @@ var PerformanceRecordingActor = exports.PerformanceRecordingActor = protocol.Act
  */
 var PerformanceRecordingFront = exports.PerformanceRecordingFront = protocol.FrontClass(PerformanceRecordingActor, merge({
 
-  form: function(form, detail) {
+  form: function (form, detail) {
     if (detail === "actorid") {
       this.actorID = form;
       return;

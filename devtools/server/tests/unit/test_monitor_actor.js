@@ -21,19 +21,19 @@ function run_test()
   }
   MonitorClient.prototype.destroy = function () {
     this.client.unregisterClient(this);
-  }
+  };
   MonitorClient.prototype.start = function (callback) {
     this.client.request({
       to: this.actor,
       type: "start"
     }, callback);
-  }
+  };
   MonitorClient.prototype.stop = function (callback) {
     this.client.request({
       to: this.actor,
       type: "stop"
     }, callback);
-  }
+  };
 
   let monitor, client;
 
@@ -58,7 +58,7 @@ function run_test()
   }
 
   function gotUpdate(type, packet) {
-    packet.data.forEach(function(event) {
+    packet.data.forEach(function (event) {
       // Ignore updates that were not sent by this test.
       if (event.graph === "Test") {
         do_check_eq(event.curve, "test");

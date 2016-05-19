@@ -8,7 +8,7 @@ const TEST_URI = "data:text/html;charset=utf-8," +
 // opened we make use of setTimeout() to create tool active times.
 const TOOL_DELAY = 200;
 
-add_task(function*() {
+add_task(function* () {
   info("Activate the canvasdebugger");
   let originalPref = Services.prefs.getBoolPref("devtools.canvasdebugger.enabled");
   Services.prefs.setBoolPref("devtools.canvasdebugger.enabled", true);

@@ -60,8 +60,8 @@ function testHideRawHeaders(document) {
   let requestTextarea = document.getElementById("raw-request-headers-textarea");
   let responseTextare = document.getElementById("raw-response-headers-textarea");
   ok(rawHeadersHidden, "raw headers textareas are hidden");
-  ok(requestTextarea.value == '', "raw request headers textarea is empty");
-  ok(responseTextare.value == '', "raw response headers textarea is empty");
+  ok(requestTextarea.value == "", "raw request headers textarea is empty");
+  ok(responseTextare.value == "", "raw response headers textarea is empty");
 }
 
 function finishUp(aMonitor) {

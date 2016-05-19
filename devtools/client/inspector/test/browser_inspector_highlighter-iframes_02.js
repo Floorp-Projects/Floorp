@@ -13,7 +13,7 @@ const TEST_URI = "data:text/html;charset=utf-8," +
   "<iframe style='margin:100px' src='data:text/html," +
   "<div id=\"inner\">Look I am here!</div>'>";
 
-add_task(function*() {
+add_task(function* () {
   info("Enable command-button-frames preference setting");
   Services.prefs.setBoolPref("devtools.command-button-frames.enabled", true);
   let {inspector, toolbox, testActor} = yield openInspectorForURL(TEST_URI);

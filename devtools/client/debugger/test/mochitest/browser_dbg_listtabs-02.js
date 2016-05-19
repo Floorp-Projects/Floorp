@@ -120,7 +120,7 @@ function testTabClosed() {
     ok(tabActors.has(gFirstActor), "gTabA closed: initial tab present");
 
     info("actors: " + [...tabActors].map(a => a.url));
-    gActorA = [...tabActors].filter(a => a!== gFirstActor)[0];
+    gActorA = [...tabActors].filter(a => a !== gFirstActor)[0];
     ok(gActorA.url.match(/^data:text\/html;/), "gTabA closed: new tab URL");
     is(gActorA.title, "JS Debugger BrowserTabList test page", "gTabA closed: new tab title");
   });

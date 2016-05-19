@@ -6,7 +6,7 @@
  * `setTargetAtTime`, which approaches its target to infinity.
  */
 
-add_task(function*() {
+add_task(function* () {
   let { target, front } = yield initBackend(SIMPLE_CONTEXT_URL);
   let [_, [destNode, oscNode, gainNode]] = yield Promise.all([
     front.setup({ reload: true }),
@@ -25,7 +25,7 @@ add_task(function*() {
   is(events.length, 4, "4 recorded events returned.");
   is(values.length, 4000, "4000 value points returned when ending with exponentiall approaching automator.");
 
-  checkAutomationValue(values, 2.01, 215.055)
+  checkAutomationValue(values, 2.01, 215.055);
   checkAutomationValue(values, 2.1, 345.930);
   checkAutomationValue(values, 3, 891.601);
   checkAutomationValue(values, 5, 998.01);
@@ -33,7 +33,7 @@ add_task(function*() {
   // Refetch the automation data to ensure it recalculates correctly (bug 1118071)
   var { events, values } = yield oscNode.getAutomationData("frequency");
 
-  checkAutomationValue(values, 2.01, 215.055)
+  checkAutomationValue(values, 2.01, 215.055);
   checkAutomationValue(values, 2.1, 345.930);
   checkAutomationValue(values, 3, 891.601);
   checkAutomationValue(values, 5, 998.01);

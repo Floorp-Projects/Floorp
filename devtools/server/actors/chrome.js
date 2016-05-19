@@ -88,7 +88,7 @@ Object.defineProperty(ChromeActor.prototype, "docShells", {
   }
 });
 
-ChromeActor.prototype.observe = function(aSubject, aTopic, aData) {
+ChromeActor.prototype.observe = function (aSubject, aTopic, aData) {
   TabActor.prototype.observe.call(this, aSubject, aTopic, aData);
   if (!this.attached) {
     return;
@@ -99,9 +99,9 @@ ChromeActor.prototype.observe = function(aSubject, aTopic, aData) {
   } else if (aTopic == "chrome-webnavigation-destroy") {
     this._onDocShellDestroy(aSubject);
   }
-}
+};
 
-ChromeActor.prototype._attach = function() {
+ChromeActor.prototype._attach = function () {
   if (this.attached) {
     return false;
   }
@@ -127,7 +127,7 @@ ChromeActor.prototype._attach = function() {
   }
 };
 
-ChromeActor.prototype._detach = function() {
+ChromeActor.prototype._detach = function () {
   if (!this.attached) {
     return false;
   }
@@ -157,7 +157,7 @@ ChromeActor.prototype._detach = function() {
 /**
  * Prepare to enter a nested event loop by disabling debuggee events.
  */
-ChromeActor.prototype.preNest = function() {
+ChromeActor.prototype.preNest = function () {
   // Disable events in all open windows.
   let e = Services.wm.getEnumerator(null);
   while (e.hasMoreElements()) {
@@ -167,12 +167,12 @@ ChromeActor.prototype.preNest = function() {
     windowUtils.suppressEventHandling(true);
     windowUtils.suspendTimeouts();
   }
-}
+};
 
 /**
  * Prepare to exit a nested event loop by enabling debuggee events.
  */
-ChromeActor.prototype.postNest = function(aNestData) {
+ChromeActor.prototype.postNest = function (aNestData) {
   // Enable events in all open windows.
   let e = Services.wm.getEnumerator(null);
   while (e.hasMoreElements()) {
@@ -182,4 +182,4 @@ ChromeActor.prototype.postNest = function(aNestData) {
     windowUtils.resumeTimeouts();
     windowUtils.suppressEventHandling(false);
   }
-}
+};

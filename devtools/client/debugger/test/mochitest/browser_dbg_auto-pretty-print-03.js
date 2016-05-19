@@ -14,7 +14,7 @@ const TAB_URL = EXAMPLE_URL + "doc_auto-pretty-print-02.html";
 var FIRST_SOURCE = "code_ugly-6.js";
 var SECOND_SOURCE = "code_ugly-7.js";
 
-function test(){
+function test() {
   initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
     const gTab = aTab;
     const gPanel = aPanel;
@@ -22,11 +22,11 @@ function test(){
 
     const gController = gDebugger.DebuggerController;
     const gEditor = gDebugger.DebuggerView.editor;
-    const constants = gDebugger.require('./content/constants');
-    const queries = gDebugger.require('./content/queries');
+    const constants = gDebugger.require("./content/constants");
+    const queries = gDebugger.require("./content/queries");
     const actions = bindActionCreators(gPanel);
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceShown(gPanel, FIRST_SOURCE);
 
       const secondSource = queries.getSourceByURL(gController.getState(), EXAMPLE_URL + SECOND_SOURCE);

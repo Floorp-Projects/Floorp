@@ -14,8 +14,8 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-stack", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-stack", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_pause_frame();
     });
@@ -25,12 +25,12 @@ function run_test()
 
 function test_pause_frame()
 {
-  gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
+  gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
     let env = aPacket.frame.environment;
     do_check_neq(env, undefined);
 
     let objClient = gThreadClient.pauseGrip(env.object);
-    objClient.getPrototypeAndProperties(function(aResponse) {
+    objClient.getPrototypeAndProperties(function (aResponse) {
       do_check_eq(aResponse.ownProperties.PI.value, Math.PI);
       do_check_eq(aResponse.ownProperties.cos.value.type, "object");
       do_check_eq(aResponse.ownProperties.cos.value.class, "Function");
@@ -41,14 +41,14 @@ function test_pause_frame()
       do_check_neq(parentEnv, undefined);
 
       let parentClient = gThreadClient.pauseGrip(parentEnv.object);
-      parentClient.getPrototypeAndProperties(function(aResponse) {
+      parentClient.getPrototypeAndProperties(function (aResponse) {
         do_check_eq(aResponse.ownProperties.a.value, Math.PI * 100);
         do_check_eq(aResponse.ownProperties.r.value, 10);
         do_check_eq(aResponse.ownProperties.Object.value.type, "object");
         do_check_eq(aResponse.ownProperties.Object.value.class, "Function");
         do_check_true(!!aResponse.ownProperties.Object.value.actor);
 
-        gThreadClient.resume(function() {
+        gThreadClient.resume(function () {
           finishClient(gClient);
         });
       });

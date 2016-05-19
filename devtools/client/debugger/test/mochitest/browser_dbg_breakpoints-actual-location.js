@@ -18,11 +18,11 @@ function test() {
     const gEditor = gDebugger.DebuggerView.editor;
     const gSources = gDebugger.DebuggerView.Sources;
     const gController = gDebugger.DebuggerController;
-    const constants = gDebugger.require('./content/constants');
-    const queries = gDebugger.require('./content/queries');
+    const constants = gDebugger.require("./content/constants");
+    const queries = gDebugger.require("./content/queries");
     const actions = bindActionCreators(gPanel);
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceAndCaretAndScopes(gPanel, "-02.js", 1);
 
       is(queries.getBreakpoints(gController.getState()).length, 0,
@@ -44,7 +44,7 @@ function test() {
          "There isn't any breakpoint added on an invalid line.");
 
       resumeDebuggerThenCloseAndFinish(gPanel);
-    })
+    });
 
     callInTab(gTab, "firstCall");
   });

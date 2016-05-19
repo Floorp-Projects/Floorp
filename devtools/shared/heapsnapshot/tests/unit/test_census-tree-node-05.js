@@ -29,7 +29,7 @@ function run_test() {
   }());
 
   const REPORT = new Map([
-    [stack,     { Foo:   { bytes: 10, count: 1 },
+    [stack, { Foo:   { bytes: 10, count: 1 },
                   Bar:   { bytes: 20, count: 2 },
                   Baz:   { bytes: 30, count: 3 },
                   other: { bytes: 40, count: 4 }

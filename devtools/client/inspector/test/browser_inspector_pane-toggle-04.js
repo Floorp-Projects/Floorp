@@ -59,7 +59,7 @@ add_task(function* () {
   hostWindow.resizeTo(originalWidth, originalHeight);
 });
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   // Restore the host type for other tests.
   Services.prefs.clearUserPref("devtools.toolbox.host");
 });

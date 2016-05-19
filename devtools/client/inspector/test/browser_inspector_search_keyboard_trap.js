@@ -69,7 +69,7 @@ const TEST_DATA = [
   }
 ];
 
-add_task(function*() {
+add_task(function* () {
   let { inspector } = yield openInspectorForURL(TEST_URL);
   let { searchBox } = inspector;
   let doc = inspector.panelDoc;

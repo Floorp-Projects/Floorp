@@ -16,8 +16,8 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-black-box");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-black-box", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-black-box", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_black_box();
     });
@@ -30,9 +30,9 @@ const SOURCE_URL = "http://example.com/source.js";
 
 function test_black_box()
 {
-  gClient.addOneTimeListener("paused", function  (aEvent, aPacket) {
-    gThreadClient.eval(aPacket.frame.actor, "doStuff", function(aResponse) {
-      gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
+  gClient.addOneTimeListener("paused", function (aEvent, aPacket) {
+    gThreadClient.eval(aPacket.frame.actor, "doStuff", function (aResponse) {
+      gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
         let obj = gThreadClient.pauseGrip(aPacket.why.frameFinished.return);
         obj.getDefinitionSite(runWithSource);
       });

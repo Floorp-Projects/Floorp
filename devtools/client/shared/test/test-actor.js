@@ -29,7 +29,7 @@ const {Arg, Option, method, RetVal, types} = protocol;
 
 var dumpn = msg => {
   dump(msg + "\n");
-}
+};
 
 /**
  * Get the instance of CanvasFrameAnonymousContentHelper used by a given
@@ -49,7 +49,7 @@ function getHighlighterCanvasFrameHelper(conn, actorID) {
 var TestActor = exports.TestActor = protocol.ActorClass({
   typeName: "testActor",
 
-  initialize: function(conn, tabActor, options) {
+  initialize: function (conn, tabActor, options) {
     this.conn = conn;
     this.tabActor = tabActor;
   },
@@ -69,7 +69,7 @@ var TestActor = exports.TestActor = protocol.ActorClass({
     let document = this.content.document;
     if (Array.isArray(selector)) {
       let fullSelector = selector.join(" >> ");
-      while(selector.length > 1) {
+      while (selector.length > 1) {
         let str = selector.shift();
         let iframe = document.querySelector(str);
         if (!iframe) {
@@ -95,7 +95,7 @@ var TestActor = exports.TestActor = protocol.ActorClass({
    * @param {string} CSS selector.
    */
   getNumberOfElementMatches: protocol.method(function (selector,
-                                                       root=this.content.document) {
+                                                       root = this.content.document) {
     return root.querySelectorAll(selector).length;
   }, {
     request: {
@@ -308,7 +308,7 @@ var TestActor = exports.TestActor = protocol.ActorClass({
    * @return {Object} An object with each property being a box-model region, each
    * of them being an object with the p1/p2/p3/p4 properties
    */
-  getAllAdjustedQuads: protocol.method(function(selector) {
+  getAllAdjustedQuads: protocol.method(function (selector) {
     let regions = {};
     let node = this._querySelector(selector);
     for (let boxType of ["content", "padding", "border", "margin"]) {
@@ -336,7 +336,7 @@ var TestActor = exports.TestActor = protocol.ActorClass({
    *                  synthesizeMouseAtCenter will be used instead
    * @param {Object} options Other event options
    */
-  synthesizeMouse: protocol.method(function({ selector, x, y, center, options }) {
+  synthesizeMouse: protocol.method(function ({ selector, x, y, center, options }) {
     let node = this._querySelector(selector);
 
     if (center) {
@@ -411,7 +411,7 @@ var TestActor = exports.TestActor = protocol.ActorClass({
       // _querySelector throws if the node doesn't exists
       this._querySelector(selector);
       return true;
-    } catch(e) {
+    } catch (e) {
       return false;
     }
   }, {
@@ -656,7 +656,7 @@ var TestActor = exports.TestActor = protocol.ActorClass({
    * - {String} innerHTML.
    * - {String} textContent.
    */
-  getNodeInfo: protocol.method(function(selector) {
+  getNodeInfo: protocol.method(function (selector) {
     let node = this._querySelector(selector);
     let info = null;
 
@@ -686,7 +686,7 @@ var TestActor = exports.TestActor = protocol.ActorClass({
 });
 
 var TestActorFront = exports.TestActorFront = protocol.FrontClass(TestActor, {
-  initialize: function(client, { testActor }, toolbox) {
+  initialize: function (client, { testActor }, toolbox) {
     protocol.Front.prototype.initialize.call(this, client, { actor: testActor });
     this.manage(this);
     this.toolbox = toolbox;
@@ -698,11 +698,11 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClass(TestActor, {
    * @return {Promise} The returned promise will only resolve when the
    * highlighter has updated to the new zoom level.
    */
-  zoomPageTo: function(level) {
+  zoomPageTo: function (level) {
     return this.changeZoomLevel(level, this.toolbox.highlighter.actorID);
   },
 
-  changeHighlightedNodeWaitForUpdate: protocol.custom(function(name, value, highlighter) {
+  changeHighlightedNodeWaitForUpdate: protocol.custom(function (name, value, highlighter) {
     return this._changeHighlightedNodeWaitForUpdate(name, value, (highlighter || this.toolbox.highlighter).actorID);
   }, {
     impl: "_changeHighlightedNodeWaitForUpdate"
@@ -715,11 +715,11 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClass(TestActor, {
    * @param {Object} highlighter Optional custom highlither to target
    * @return {String} value
    */
-  getHighlighterNodeAttribute: function(nodeID, name, highlighter) {
+  getHighlighterNodeAttribute: function (nodeID, name, highlighter) {
     return this.getHighlighterAttribute(nodeID, name, (highlighter || this.toolbox.highlighter).actorID);
   },
 
-  getHighlighterNodeTextContent: protocol.custom(function(nodeID, highlighter) {
+  getHighlighterNodeTextContent: protocol.custom(function (nodeID, highlighter) {
     return this._getHighlighterNodeTextContent(nodeID, (highlighter || this.toolbox.highlighter).actorID);
   }, {
     impl: "_getHighlighterNodeTextContent"
@@ -728,7 +728,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClass(TestActor, {
   /**
    * Is the highlighter currently visible on the page?
    */
-  isHighlighting: function() {
+  isHighlighting: function () {
     return this.getHighlighterNodeAttribute("box-model-elements", "hidden")
       .then(value => value === null);
   },
@@ -741,7 +741,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClass(TestActor, {
    * @param {String} prefix An optional prefix for logging information to the
    * console.
    */
-  isNodeCorrectlyHighlighted: Task.async(function*(selector, is, prefix="") {
+  isNodeCorrectlyHighlighted: Task.async(function* (selector, is, prefix = "") {
     prefix += (prefix ? " " : "") + selector + " ";
 
     let boxModel = yield this._getBoxModelStatus();
@@ -761,7 +761,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClass(TestActor, {
   /**
    * Get the current rect of the border region of the box-model highlighter
    */
-  getSimpleBorderRect: Task.async(function*(toolbox) {
+  getSimpleBorderRect: Task.async(function* (toolbox) {
     let {border} = yield this._getBoxModelStatus(toolbox);
     let {p1, p2, p3, p4} = border.points;
 
@@ -777,7 +777,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClass(TestActor, {
    * Get the current positions and visibility of the various box-model highlighter
    * elements.
    */
-  _getBoxModelStatus: Task.async(function*() {
+  _getBoxModelStatus: Task.async(function* () {
     let isVisible = yield this.isHighlighting();
 
     let ret = {
@@ -802,8 +802,8 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClass(TestActor, {
     // Taken and tweaked from:
     // https://github.com/iominh/point-in-polygon-extended/blob/master/src/index.js#L30-L85
     function isLeft(p0, p1, p2) {
-      let l = ( (p1[0] - p0[0]) * (p2[1] - p0[1]) ) -
-              ( (p2[0] - p0[0]) * (p1[1] - p0[1]) );
+      let l = ((p1[0] - p0[0]) * (p2[1] - p0[1])) -
+              ((p2[0] - p0[0]) * (p1[1] - p0[1]));
       return l;
     }
     function isInside(point, polygon) {
@@ -850,7 +850,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClass(TestActor, {
 
       // Converts points dictionnary into an array
       let list = [];
-      for(var i = 1; i <= 4; i++) {
+      for (var i = 1; i <= 4; i++) {
         let p = points["p" + i];
         list.push([p.x, p.y]);
       }
@@ -873,7 +873,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClass(TestActor, {
    * Get the coordinate (points attribute) from one of the polygon elements in the
    * box model highlighter.
    */
-  _getPointsForRegion: Task.async(function*(region) {
+  _getPointsForRegion: Task.async(function* (region) {
     let d = yield this.getHighlighterNodeAttribute("box-model-" + region, "d");
 
     let polygons = d.match(/M[^M]+/g);
@@ -882,7 +882,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClass(TestActor, {
     }
 
     let points = polygons[0].trim().split(" ").map(i => {
-      return i.replace(/M|L/, "").split(",")
+      return i.replace(/M|L/, "").split(",");
     });
 
     return {
@@ -909,12 +909,12 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClass(TestActor, {
    * Is a given region polygon element of the box-model highlighter currently
    * hidden?
    */
-  _isRegionHidden: Task.async(function*(region) {
+  _isRegionHidden: Task.async(function* (region) {
     let value = yield this.getHighlighterNodeAttribute("box-model-" + region, "hidden");
     return value !== null;
   }),
 
-  _getGuideStatus: Task.async(function*(location) {
+  _getGuideStatus: Task.async(function* (location) {
     let id = "box-model-guide-" + location;
 
     let hidden = yield this.getHighlighterNodeAttribute(id, "hidden");
@@ -938,7 +938,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClass(TestActor, {
    * @return {Object} Null if at least one guide is hidden. Otherwise an object
    * with p1, p2, p3, p4 properties being {x, y} objects.
    */
-  getGuidesRectangle: Task.async(function*() {
+  getGuidesRectangle: Task.async(function* () {
     let tGuide = yield this._getGuideStatus("top");
     let rGuide = yield this._getGuideStatus("right");
     let bGuide = yield this._getGuideStatus("bottom");
@@ -956,7 +956,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClass(TestActor, {
     };
   }),
 
-  waitForHighlighterEvent: protocol.custom(function(event) {
+  waitForHighlighterEvent: protocol.custom(function (event) {
     return this._waitForHighlighterEvent(event, this.toolbox.highlighter.actorID);
   }, {
     impl: "_waitForHighlighterEvent"
@@ -972,7 +972,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClass(TestActor, {
    * - points {Array} an array of all the polygons defined by the path. Each box
    *   is itself an Array of points, themselves being [x,y] coordinates arrays.
    */
-  getHighlighterRegionPath: Task.async(function*(region, highlighter) {
+  getHighlighterRegionPath: Task.async(function* (region, highlighter) {
     let d = yield this.getHighlighterNodeAttribute("box-model-" + region, "d", highlighter);
     if (!d) {
       return {d: null};
@@ -986,7 +986,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClass(TestActor, {
     let points = [];
     for (let polygon of polygons) {
       points.push(polygon.trim().split(" ").map(i => {
-        return i.replace(/M|L/, "").split(",")
+        return i.replace(/M|L/, "").split(",");
       }));
     }
 

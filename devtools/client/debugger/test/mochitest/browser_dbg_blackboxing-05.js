@@ -63,7 +63,7 @@ function getEditorBlackboxMessageButton() {
   return gDebugger.document.getElementById("black-boxed-message-button");
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

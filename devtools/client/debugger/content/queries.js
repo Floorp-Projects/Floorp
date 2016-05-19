@@ -12,7 +12,7 @@ function getSourceCount(state) {
 }
 
 function getSourceByURL(state, url) {
-  for(let k in state.sources.sources) {
+  for (let k in state.sources.sources) {
     const source = state.sources.sources[k];
     if (source.url === url) {
       return source;
@@ -21,7 +21,7 @@ function getSourceByURL(state, url) {
 }
 
 function getSourceByActor(state, actor) {
-  for(let k in state.sources.sources) {
+  for (let k in state.sources.sources) {
     const source = state.sources.sources[k];
     if (source.actor === actor) {
       return source;
@@ -52,7 +52,7 @@ function getBreakpoint(state, location) {
 }
 
 function makeLocationId(location) {
-  return location.actor + ':' + location.line.toString();
+  return location.actor + ":" + location.line.toString();
 }
 
 module.exports = {

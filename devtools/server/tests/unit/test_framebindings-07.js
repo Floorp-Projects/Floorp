@@ -12,8 +12,8 @@ function run_test()
   gDebuggee = addTestGlobal("test-bindings");
 
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-bindings", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-bindings", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_banana_environment();
     });
@@ -24,7 +24,7 @@ function run_test()
 function test_banana_environment()
 {
 
-  gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
+  gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
     let environment = aPacket.frame.environment;
     do_check_eq(environment.type, "function");
 

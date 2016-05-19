@@ -10,7 +10,7 @@
 const TEST_URI = EXAMPLE_URL + "doc_cmd-dbg.html";
 
 function test() {
-  return Task.spawn(function*() {
+  return Task.spawn(function* () {
     let options = yield helpers.openTab(TEST_URI);
     yield helpers.openToolbar(options);
 
@@ -31,19 +31,19 @@ function test() {
     let button = gDebuggee.document.querySelector("input[type=button]");
     let output = gDebuggee.document.querySelector("input[type=text]");
 
-    let cmd = function(aTyped, aState) {
+    let cmd = function (aTyped, aState) {
       return promise.all([
         waitForThreadEvents(gPanel, aState),
         helpers.audit(options, [{ setup: aTyped, exec: { output: "" } }])
       ]);
     };
 
-    let click = function(aElement, aState) {
+    let click = function (aElement, aState) {
       return promise.all([
         waitForThreadEvents(gPanel, aState),
         executeSoon(() => EventUtils.sendMouseEvent({ type: "click" }, aElement, gDebuggee))
       ]);
-    }
+    };
 
     yield cmd("dbg interrupt", "paused");
     is(gThreadClient.state, "paused", "Debugger is paused.");
@@ -68,7 +68,7 @@ function test() {
     yield cmd("dbg continue", "paused");
     is(output.value, "dbg continue", "Debugger continued.");
 
-    let closeDebugger = function() {
+    let closeDebugger = function () {
       let deferred = promise.defer();
 
       helpers.audit(options, [{

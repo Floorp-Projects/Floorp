@@ -341,6 +341,7 @@ case "$target" in
     AC_SUBST(ANDROID_TOOLS)
 
     MOZ_ANDROID_AAR(appcompat-v7, 23.0.1, android, com/android/support)
+    MOZ_ANDROID_AAR(cardview-v7, 23.0.1, android, com/android/support)
     MOZ_ANDROID_AAR(design, 23.0.1, android, com/android/support)
     MOZ_ANDROID_AAR(recyclerview-v7, 23.0.1, android, com/android/support)
     MOZ_ANDROID_AAR(support-v4, 23.0.1, android, com/android/support, REQUIRED_INTERNAL_IMPL)

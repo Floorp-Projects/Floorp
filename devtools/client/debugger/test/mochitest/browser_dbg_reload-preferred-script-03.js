@@ -51,7 +51,7 @@ function switchToSource(aUrl) {
   return finished;
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

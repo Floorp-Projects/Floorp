@@ -6,11 +6,11 @@ const {Cu, Cc, Ci} = require("chrome");
 
 const promise = require("promise");
 const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
-const { TextDecoder, OS }  = Cu.import("resource://gre/modules/osfile.jsm", {});
+const { TextDecoder, OS } = Cu.import("resource://gre/modules/osfile.jsm", {});
 const Subprocess = require("sdk/system/child_process/subprocess");
 
 const ProjectBuilding = exports.ProjectBuilding = {
-  fetchPackageManifest: Task.async(function * (project) {
+  fetchPackageManifest: Task.async(function* (project) {
     let manifestPath = OS.Path.join(project.location, "package.json");
     let exists = yield OS.File.exists(manifestPath);
     if (!exists) {
@@ -23,7 +23,7 @@ const ProjectBuilding = exports.ProjectBuilding = {
     let manifest;
     try {
       manifest = JSON.parse(data);
-    } catch(e) {
+    } catch (e) {
       throw new Error("Error while reading WebIDE manifest at: '" + manifestPath +
                       "', invalid JSON: " + e.message);
     }
@@ -36,7 +36,7 @@ const ProjectBuilding = exports.ProjectBuilding = {
    * with WebIDE.  Later on, perhaps an add-on could define such things for
    * different frameworks.
    */
-  generatePackageManifest: Task.async(function*(project) {
+  generatePackageManifest: Task.async(function* (project) {
     // Cordova
     let cordovaConfigPath = OS.Path.join(project.location, "config.xml");
     let exists = yield OS.File.exists(cordovaConfigPath);
@@ -72,7 +72,7 @@ const ProjectBuilding = exports.ProjectBuilding = {
     try {
       yield this._build(project, manifest, logger);
       logger("succeed");
-    } catch(e) {
+    } catch (e) {
       logger("failed", e);
     }
   }),
@@ -92,7 +92,7 @@ const ProjectBuilding = exports.ProjectBuilding = {
       }
     });
 
-    if (typeof(manifest.prepackage) === "string") {
+    if (typeof (manifest.prepackage) === "string") {
       command = manifest.prepackage.replace(/%project%/g, project.location);
     } else if (manifest.prepackage.command) {
       command = manifest.prepackage.command;
@@ -180,7 +180,7 @@ const ProjectBuilding = exports.ProjectBuilding = {
     }
   }),
 
-  getPackageDir: Task.async(function*(project) {
+  getPackageDir: Task.async(function* (project) {
     let manifest = yield ProjectBuilding.fetchPackageManifest(project);
     if (!manifest || !manifest.webide || !manifest.webide.packageDir) {
       return project.location;

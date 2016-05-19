@@ -208,14 +208,14 @@ const ProfilerManager = (function () {
      *
      * @return {object}
      */
-    getBufferInfo: function() {
+    getBufferInfo: function () {
       let position = {}, totalSize = {}, generation = {};
       nsIProfilerModule.GetBufferInfo(position, totalSize, generation);
       return {
         position: position.value,
         totalSize: totalSize.value,
         generation: generation.value
-      }
+      };
     },
 
     /**
@@ -224,7 +224,7 @@ const ProfilerManager = (function () {
      *
      * @param {object}
      */
-    getStartOptions: function() {
+    getStartOptions: function () {
       return this._profilerStartOptions || {};
     },
 
@@ -234,7 +234,7 @@ const ProfilerManager = (function () {
      *
      * @return {object}
      */
-    isActive: function() {
+    isActive: function () {
       let isActive = nsIProfilerModule.IsActive();
       let elapsedTime = isActive ? nsIProfilerModule.getElapsedTime() : undefined;
       let { position, totalSize, generation } = this.getBufferInfo();
@@ -246,7 +246,7 @@ const ProfilerManager = (function () {
      * which are currently loaded into our process. Can be called while the
      * profiler is stopped.
      */
-    getSharedLibraryInformation: function() {
+    getSharedLibraryInformation: function () {
       return { sharedLibraryInformation: nsIProfilerModule.getSharedLibraryInformation() };
     },
 
@@ -405,7 +405,7 @@ var Profiler = exports.Profiler = Class({
     ProfilerManager.addInstance(this);
   },
 
-  destroy: function() {
+  destroy: function () {
     this.unregisterEventNotifications({ events: Array.from(this.subscribedEvents) });
     this.subscribedEvents = null;
     ProfilerManager.removeInstance(this);
@@ -424,37 +424,37 @@ var Profiler = exports.Profiler = Class({
   /**
    * @see ProfilerManager.getProfile
    */
-  getProfile: function (request={}) { return ProfilerManager.getProfile(request); },
+  getProfile: function (request = {}) { return ProfilerManager.getProfile(request); },
 
   /**
    * @see ProfilerManager.getFeatures
    */
-  getFeatures: function() { return ProfilerManager.getFeatures(); },
+  getFeatures: function () { return ProfilerManager.getFeatures(); },
 
   /**
    * @see ProfilerManager.getBufferInfo
    */
-  getBufferInfo: function() { return ProfilerManager.getBufferInfo(); },
+  getBufferInfo: function () { return ProfilerManager.getBufferInfo(); },
 
   /**
    * @see ProfilerManager.getStartOptions
    */
-  getStartOptions: function() { return ProfilerManager.getStartOptions(); },
+  getStartOptions: function () { return ProfilerManager.getStartOptions(); },
 
   /**
    * @see ProfilerManager.isActive
    */
-  isActive: function() { return ProfilerManager.isActive(); },
+  isActive: function () { return ProfilerManager.isActive(); },
 
   /**
    * @see ProfilerManager.isActive
    */
-  getSharedLibraryInformation: function() { return ProfilerManager.getSharedLibraryInformation(); },
+  getSharedLibraryInformation: function () { return ProfilerManager.getSharedLibraryInformation(); },
 
   /**
    * @see ProfilerManager.setProfilerStatusInterval
    */
-  setProfilerStatusInterval: function(interval) { return ProfilerManager.setProfilerStatusInterval(interval); },
+  setProfilerStatusInterval: function (interval) { return ProfilerManager.setProfilerStatusInterval(interval); },
 
   /**
    * Subscribes this instance to one of several events defined in
@@ -467,7 +467,7 @@ var Profiler = exports.Profiler = Class({
    * @param {Array<string>} data.event
    * @return {object}
    */
-  registerEventNotifications: function(data={}) {
+  registerEventNotifications: function (data = {}) {
     let response = [];
     (data.events || []).forEach(e => {
       if (!this.subscribedEvents.has(e)) {
@@ -488,7 +488,7 @@ var Profiler = exports.Profiler = Class({
    * @param {Array<string>} data.event
    * @return {object}
    */
-  unregisterEventNotifications: function(data={}) {
+  unregisterEventNotifications: function (data = {}) {
     let response = [];
     (data.events || []).forEach(e => {
       if (this.subscribedEvents.has(e)) {
@@ -507,7 +507,7 @@ var Profiler = exports.Profiler = Class({
  * Checks whether or not the profiler module can currently run.
  * @return boolean
  */
-Profiler.canProfile = function() {
+Profiler.canProfile = function () {
   return nsIProfilerModule.CanProfile();
 };
 
@@ -533,7 +533,7 @@ function cycleBreaker(key, value) {
  * @param {function} handler
  * @return {function}
  */
-function sanitizeHandler (handler, identifier) {
+function sanitizeHandler(handler, identifier) {
   return DevToolsUtils.makeInfallible(function (subject, topic, data) {
     subject = (subject && !Cu.isXrayWrapper(subject) && subject.wrappedJSObject) || subject;
     subject = JSON.parse(JSON.stringify(subject, cycleBreaker));

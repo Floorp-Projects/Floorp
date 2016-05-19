@@ -29,7 +29,7 @@ add_task(function* () {
   Services.prefs.clearUserPref("security.mixed_content.block_active_content");
 });
 
-var testMixedContent = Task.async(function*(hud) {
+var testMixedContent = Task.async(function* (hud) {
   content.location = TEST_HTTPS_URI;
 
   let results = yield waitForMessages({

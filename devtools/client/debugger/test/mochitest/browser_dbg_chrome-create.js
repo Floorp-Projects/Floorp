@@ -58,7 +58,7 @@ function aOnClose() {
   finish();
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   Services.prefs.clearUserPref("devtools.debugger.remote-enabled");
   gProcess = null;
 });

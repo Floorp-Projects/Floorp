@@ -22,7 +22,7 @@ function test() {
     Services.prefs.setIntPref("devtools.hud.loglimit.cssparser", LOG_LIMIT);
     Services.prefs.setBoolPref("devtools.webconsole.filter.cssparser", true);
 
-    registerCleanupFunction(function() {
+    registerCleanupFunction(function () {
       Services.prefs.clearUserPref("devtools.hud.loglimit.cssparser");
       Services.prefs.clearUserPref("devtools.webconsole.filter.cssparser");
     });
@@ -54,12 +54,12 @@ function test() {
         category: CATEGORY_CSS,
         severity: SEVERITY_WARNING,
       },
-      {
+        {
         // LOG_LIMIT + 5
-        text: "css log 24",
-        category: CATEGORY_CSS,
-        severity: SEVERITY_WARNING,
-      }],
+          text: "css log 24",
+          category: CATEGORY_CSS,
+          severity: SEVERITY_WARNING,
+        }],
     });
 
     is(hud.ui.outputNode.querySelectorAll(".message").length, LOG_LIMIT,

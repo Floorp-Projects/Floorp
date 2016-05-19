@@ -8,7 +8,7 @@ dulwich==0.8.7
 hg-git==0.4.0
 logilab-astng==0.24.2
 logilab-common==0.59.0
-mercurial==2.6.3
+mercurial==3.7.3
 mock==1.0.1
 nose==1.2.1
 ordereddict==1.1

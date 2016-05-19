@@ -24,19 +24,16 @@ const Strings = Services.strings.createBundle(
 
 const panels = [{
   id: "addons",
-  panelId: "addons-panel",
   name: Strings.GetStringFromName("addons"),
   icon: "chrome://devtools/skin/images/debugging-addons.svg",
   component: AddonsPanel
 }, {
   id: "tabs",
-  panelId: "tabs-panel",
   name: Strings.GetStringFromName("tabs"),
   icon: "chrome://devtools/skin/images/debugging-tabs.svg",
   component: TabsPanel
 }, {
   id: "workers",
-  panelId: "workers-panel",
   name: Strings.GetStringFromName("workers"),
   icon: "chrome://devtools/skin/images/debugging-workers.svg",
   component: WorkersPanel

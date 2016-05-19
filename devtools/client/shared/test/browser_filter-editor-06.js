@@ -13,7 +13,7 @@ const { LocalizationHelper } = require("devtools/client/shared/l10n");
 const STRINGS_URI = "chrome://devtools/locale/filterwidget.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("about:blank");
   let [host, win, doc] = yield createHost("bottom", TEST_URI);
 
@@ -21,7 +21,7 @@ add_task(function*() {
   let widget = new CSSFilterEditorWidget(container, "none");
 
   const select = widget.el.querySelector("select"),
-        add = widget.el.querySelector("#add-filter");
+    add = widget.el.querySelector("#add-filter");
 
   const TEST_DATA = [
     {

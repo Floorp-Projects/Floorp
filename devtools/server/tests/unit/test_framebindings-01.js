@@ -14,8 +14,8 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-stack");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-stack", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-stack", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_pause_frame();
     });
@@ -25,7 +25,7 @@ function run_test()
 
 function test_pause_frame()
 {
-  gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
+  gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
     let bindings = aPacket.frame.environment.bindings;
     let args = bindings.arguments;
     let vars = bindings.variables;
@@ -47,7 +47,7 @@ function test_pause_frame()
     do_check_true(!!vars.c.value.actor);
 
     let objClient = gThreadClient.pauseGrip(vars.c.value);
-    objClient.getPrototypeAndProperties(function(aResponse) {
+    objClient.getPrototypeAndProperties(function (aResponse) {
       do_check_eq(aResponse.ownProperties.a.configurable, true);
       do_check_eq(aResponse.ownProperties.a.enumerable, true);
       do_check_eq(aResponse.ownProperties.a.writable, true);
@@ -59,19 +59,19 @@ function test_pause_frame()
       do_check_eq(aResponse.ownProperties.b.value.type, "undefined");
       do_check_false("class" in aResponse.ownProperties.b.value);
 
-      gThreadClient.resume(function() {
+      gThreadClient.resume(function () {
         finishClient(gClient);
       });
     });
   });
 
-  gDebuggee.eval("(" + function() {
+  gDebuggee.eval("(" + function () {
     function stopMe(aNumber, aBool, aString, aNull, aUndefined, aObject) {
       var a = 1;
       var b = true;
       var c = { a: "a", b: undefined };
       debugger;
-    };
+    }
     stopMe(42, true, "nasu", null, undefined, { foo: "bar" });
   } + ")()");
 }

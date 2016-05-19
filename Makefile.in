@@ -286,12 +286,10 @@ MAKE_SYM_STORE_ARGS += --install-manifest=$(DEPTH)/_build_manifests/install/dist
 
 SYM_STORE_SOURCE_DIRS := $(topsrcdir)
 
-ifdef MOZ_CRASHREPORTER
 include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
 
 SYMBOL_INDEX_NAME = \
   $(MOZ_APP_NAME)-$(MOZ_APP_VERSION)-$(OS_TARGET)-$(BUILDID)-$(CPU_ARCH)-symbols.txt
-endif
 
 buildsymbols:
 ifdef MOZ_CRASHREPORTER

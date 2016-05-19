@@ -10,9 +10,9 @@
 // Service workers only work on https
 const URL = EXAMPLE_URL.replace("http:", "https:");
 
-const TEST_URL =  URL + "service-workers/status-codes.html";
+const TEST_URL = URL + "service-workers/status-codes.html";
 
-var test = Task.async(function*() {
+var test = Task.async(function* () {
   let [tab, debuggee, monitor] = yield initNetMonitor(TEST_URL, null, true);
   info("Starting test... ");
 
@@ -21,12 +21,12 @@ var test = Task.async(function*() {
 
   const REQUEST_DATA = [
     {
-      method: 'GET',
+      method: "GET",
       uri: URL + "service-workers/test/200",
       details: {
         status: 200,
-        statusText: 'OK (service worker)',
-        displayedStatus: 'service worker',
+        statusText: "OK (service worker)",
+        displayedStatus: "service worker",
         type: "plain",
         fullMimeType: "text/plain; charset=UTF-8"
       }

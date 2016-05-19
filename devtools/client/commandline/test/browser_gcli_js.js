@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
 // PLEASE TALK TO SOMEONE IN DEVELOPER TOOLS BEFORE EDITING IT
@@ -28,25 +28,25 @@ function test() {
 // var assert = require('../testharness/assert');
 // var helpers = require('./helpers');
 
-exports.setup = function(options) {
+exports.setup = function (options) {
   if (jsTestDisallowed(options)) {
     return;
   }
 
   // Check that we're not trespassing on 'donteval'
   var win = options.requisition.environment.window;
-  Object.defineProperty(win, 'donteval', {
-    get: function() {
-      assert.ok(false, 'donteval should not be used');
+  Object.defineProperty(win, "donteval", {
+    get: function () {
+      assert.ok(false, "donteval should not be used");
       console.trace();
-      return { cant: '', touch: '', 'this': '' };
+      return { cant: "", touch: "", "this": "" };
     },
     enumerable: true,
     configurable: true
   });
 };
 
-exports.shutdown = function(options) {
+exports.shutdown = function (options) {
   if (jsTestDisallowed(options)) {
     return;
   }
@@ -57,157 +57,157 @@ exports.shutdown = function(options) {
 function jsTestDisallowed(options) {
   return options.isRemote || // Altering the environment (which isn't remoted)
          options.isNode ||
-         options.requisition.system.commands.get('{') == null;
+         options.requisition.system.commands.get("{") == null;
 }
 
-exports.testBasic = function(options) {
+exports.testBasic = function (options) {
   return helpers.audit(options, [
     {
       skipRemainingIf: jsTestDisallowed,
-      setup:    '{',
+      setup:    "{",
       check: {
-        input:  '{',
-        hints:   '',
-        markup: 'V',
+        input:  "{",
+        hints:   "",
+        markup: "V",
         cursor: 1,
-        current: 'javascript',
-        status: 'ERROR',
+        current: "javascript",
+        status: "ERROR",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: '{' },
+          command: { name: "{" },
           javascript: {
             value: undefined,
-            arg: '{',
-            status: 'INCOMPLETE'
+            arg: "{",
+            status: "INCOMPLETE"
           }
         }
       }
     },
     {
-      setup:    '{ ',
+      setup:    "{ ",
       check: {
-        input:  '{ ',
-        hints:    '',
-        markup: 'VV',
+        input:  "{ ",
+        hints:    "",
+        markup: "VV",
         cursor: 2,
-        current: 'javascript',
-        status: 'ERROR',
+        current: "javascript",
+        status: "ERROR",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: '{' },
+          command: { name: "{" },
           javascript: {
             value: undefined,
-            arg: '{ ',
-            status: 'INCOMPLETE'
+            arg: "{ ",
+            status: "INCOMPLETE"
           }
         }
       }
     },
     {
-      setup:    '{ w',
+      setup:    "{ w",
       check: {
-        input:  '{ w',
-        hints:     'indow',
-        markup: 'VVI',
+        input:  "{ w",
+        hints:     "indow",
+        markup: "VVI",
         cursor: 3,
-        current: 'javascript',
-        status: 'ERROR',
-        predictionsContains: [ 'window' ],
+        current: "javascript",
+        status: "ERROR",
+        predictionsContains: [ "window" ],
         unassigned: [ ],
         args: {
-          command: { name: '{' },
+          command: { name: "{" },
           javascript: {
-            value: 'w',
-            arg: '{ w',
-            status: 'INCOMPLETE'
+            value: "w",
+            arg: "{ w",
+            status: "INCOMPLETE"
           }
         }
       }
     },
     {
-      setup:    '{ windo',
+      setup:    "{ windo",
       check: {
-        input:  '{ windo',
-        hints:         'w',
-        markup: 'VVIIIII',
+        input:  "{ windo",
+        hints:         "w",
+        markup: "VVIIIII",
         cursor: 7,
-        current: 'javascript',
-        status: 'ERROR',
-        predictions: [ 'window' ],
+        current: "javascript",
+        status: "ERROR",
+        predictions: [ "window" ],
         unassigned: [ ],
         args: {
-          command: { name: '{' },
+          command: { name: "{" },
           javascript: {
-            value: 'windo',
-            arg: '{ windo',
-            status: 'INCOMPLETE'
+            value: "windo",
+            arg: "{ windo",
+            status: "INCOMPLETE"
           }
         }
       }
     },
     {
-      setup:    '{ window',
+      setup:    "{ window",
       check: {
-        input:  '{ window',
-        hints:          '',
-        markup: 'VVVVVVVV',
+        input:  "{ window",
+        hints:          "",
+        markup: "VVVVVVVV",
         cursor: 8,
-        current: 'javascript',
-        status: 'VALID',
+        current: "javascript",
+        status: "VALID",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: '{' },
+          command: { name: "{" },
           javascript: {
-            value: 'window',
-            arg: '{ window',
-            status: 'VALID',
-            message: ''
+            value: "window",
+            arg: "{ window",
+            status: "VALID",
+            message: ""
           }
         }
       }
     },
     {
-      setup:    '{ window.do',
+      setup:    "{ window.do",
       check: {
-        input:  '{ window.do',
-        hints:             'cument',
-        markup: 'VVIIIIIIIII',
+        input:  "{ window.do",
+        hints:             "cument",
+        markup: "VVIIIIIIIII",
         cursor: 11,
-        current: 'javascript',
-        status: 'ERROR',
-        predictionsContains: [ 'window.document' ],
+        current: "javascript",
+        status: "ERROR",
+        predictionsContains: [ "window.document" ],
         unassigned: [ ],
         args: {
-          command: { name: '{' },
+          command: { name: "{" },
           javascript: {
-            value: 'window.do',
-            arg: '{ window.do',
-            status: 'INCOMPLETE'
+            value: "window.do",
+            arg: "{ window.do",
+            status: "INCOMPLETE"
           }
         }
       }
     },
     {
-      setup:    '{ window.document.title',
+      setup:    "{ window.document.title",
       check: {
-        input:  '{ window.document.title',
-        hints:                         '',
-        markup: 'VVVVVVVVVVVVVVVVVVVVVVV',
+        input:  "{ window.document.title",
+        hints:                         "",
+        markup: "VVVVVVVVVVVVVVVVVVVVVVV",
         cursor: 23,
-        current: 'javascript',
-        status: 'VALID',
+        current: "javascript",
+        status: "VALID",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: '{' },
+          command: { name: "{" },
           javascript: {
-            value: 'window.document.title',
-            arg: '{ window.document.title',
-            status: 'VALID',
-            message: ''
+            value: "window.document.title",
+            arg: "{ window.document.title",
+            status: "VALID",
+            message: ""
           }
         }
       }
@@ -215,114 +215,114 @@ exports.testBasic = function(options) {
   ]);
 };
 
-exports.testDocument = function(options) {
+exports.testDocument = function (options) {
   return helpers.audit(options, [
     {
       skipRemainingIf: jsTestDisallowed,
-      setup:    '{ docu',
+      setup:    "{ docu",
       check: {
-        input:  '{ docu',
-        hints:        'ment',
-        markup: 'VVIIII',
+        input:  "{ docu",
+        hints:        "ment",
+        markup: "VVIIII",
         cursor: 6,
-        current: 'javascript',
-        status: 'ERROR',
-        predictions: [ 'document' ],
+        current: "javascript",
+        status: "ERROR",
+        predictions: [ "document" ],
         unassigned: [ ],
         args: {
-          command: { name: '{' },
+          command: { name: "{" },
           javascript: {
-            value: 'docu',
-            arg: '{ docu',
-            status: 'INCOMPLETE'
+            value: "docu",
+            arg: "{ docu",
+            status: "INCOMPLETE"
           }
         }
       }
     },
     {
-      setup: '{ docu<TAB>',
+      setup: "{ docu<TAB>",
       check: {
-        input:  '{ document',
-        hints:            '',
-        markup: 'VVVVVVVVVV',
+        input:  "{ document",
+        hints:            "",
+        markup: "VVVVVVVVVV",
         cursor: 10,
-        current: 'javascript',
-        status: 'VALID',
+        current: "javascript",
+        status: "VALID",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: '{' },
+          command: { name: "{" },
           javascript: {
-            value: 'document',
-            arg: '{ document',
-            status: 'VALID',
-            message: ''
+            value: "document",
+            arg: "{ document",
+            status: "VALID",
+            message: ""
           }
         }
       }
     },
     {
-      setup:    '{ document.titl',
+      setup:    "{ document.titl",
       check: {
-        input:  '{ document.titl',
-        hints:                 'e',
-        markup: 'VVIIIIIIIIIIIII',
+        input:  "{ document.titl",
+        hints:                 "e",
+        markup: "VVIIIIIIIIIIIII",
         cursor: 15,
-        current: 'javascript',
-        status: 'ERROR',
-        predictions: [ 'document.title' ],
+        current: "javascript",
+        status: "ERROR",
+        predictions: [ "document.title" ],
         unassigned: [ ],
         args: {
-          command: { name: '{' },
+          command: { name: "{" },
           javascript: {
-            value: 'document.titl',
-            arg: '{ document.titl',
-            status: 'INCOMPLETE'
+            value: "document.titl",
+            arg: "{ document.titl",
+            status: "INCOMPLETE"
           }
         }
       }
     },
     {
-      setup: '{ document.titl<TAB>',
+      setup: "{ document.titl<TAB>",
       check: {
-        input:  '{ document.title ',
-        hints:                   '',
-        markup: 'VVVVVVVVVVVVVVVVV',
+        input:  "{ document.title ",
+        hints:                   "",
+        markup: "VVVVVVVVVVVVVVVVV",
         cursor: 17,
-        current: 'javascript',
-        status: 'VALID',
+        current: "javascript",
+        status: "VALID",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: '{' },
+          command: { name: "{" },
           javascript: {
-            value: 'document.title',
+            value: "document.title",
             // arg: '{ document.title ',
             // Node/JSDom gets this wrong and omits the trailing space. Why?
-            status: 'VALID',
-            message: ''
+            status: "VALID",
+            message: ""
           }
         }
       }
     },
     {
-      setup:    '{ document.title',
+      setup:    "{ document.title",
       check: {
-        input:  '{ document.title',
-        hints:                  '',
-        markup: 'VVVVVVVVVVVVVVVV',
+        input:  "{ document.title",
+        hints:                  "",
+        markup: "VVVVVVVVVVVVVVVV",
         cursor: 16,
-        current: 'javascript',
-        status: 'VALID',
+        current: "javascript",
+        status: "VALID",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: '{' },
+          command: { name: "{" },
           javascript: {
-            value: 'document.title',
-            arg: '{ document.title',
-            status: 'VALID',
-            message: ''
+            value: "document.title",
+            arg: "{ document.title",
+            status: "VALID",
+            message: ""
           }
         }
       }
@@ -330,48 +330,48 @@ exports.testDocument = function(options) {
   ]);
 };
 
-exports.testDonteval = function(options) {
+exports.testDonteval = function (options) {
   return helpers.audit(options, [
     {
       skipRemainingIf: true, // Commented out until we fix non-enumerable props
-      setup:    '{ don',
+      setup:    "{ don",
       check: {
-        input:  '{ don',
-        hints:       'teval',
-        markup: 'VVIII',
+        input:  "{ don",
+        hints:       "teval",
+        markup: "VVIII",
         cursor: 5,
-        current: 'javascript',
-        status: 'ERROR',
-        predictions: [ 'donteval' ],
+        current: "javascript",
+        status: "ERROR",
+        predictions: [ "donteval" ],
         unassigned: [ ],
         args: {
-          command: { name: '{' },
+          command: { name: "{" },
           javascript: {
-            value: 'don',
-            arg: '{ don',
-            status: 'INCOMPLETE'
+            value: "don",
+            arg: "{ don",
+            status: "INCOMPLETE"
           }
         }
       }
     },
     {
-      setup:    '{ donteval',
+      setup:    "{ donteval",
       check: {
-        input:  '{ donteval',
-        hints:            '',
-        markup: 'VVVVVVVVVV',
+        input:  "{ donteval",
+        hints:            "",
+        markup: "VVVVVVVVVV",
         cursor: 10,
-        current: 'javascript',
-        status: 'VALID',
+        current: "javascript",
+        status: "VALID",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: '{' },
+          command: { name: "{" },
           javascript: {
-            value: 'donteval',
-            arg: '{ donteval',
-            status: 'VALID',
-            message: ''
+            value: "donteval",
+            arg: "{ donteval",
+            status: "VALID",
+            message: ""
           }
         }
       }
@@ -405,45 +405,45 @@ exports.testDonteval = function(options) {
     },
     */
     {
-      setup:    '{ donteval.cant',
+      setup:    "{ donteval.cant",
       check: {
-        input:  '{ donteval.cant',
-        hints:                 '',
-        markup: 'VVVVVVVVVVVVVVV',
+        input:  "{ donteval.cant",
+        hints:                 "",
+        markup: "VVVVVVVVVVVVVVV",
         cursor: 15,
-        current: 'javascript',
-        status: 'VALID',
+        current: "javascript",
+        status: "VALID",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: '{' },
+          command: { name: "{" },
           javascript: {
-            value: 'donteval.cant',
-            arg: '{ donteval.cant',
-            status: 'VALID',
-            message: ''
+            value: "donteval.cant",
+            arg: "{ donteval.cant",
+            status: "VALID",
+            message: ""
           }
         }
       }
     },
     {
-      setup:    '{ donteval.xxx',
+      setup:    "{ donteval.xxx",
       check: {
-        input:  '{ donteval.xxx',
-        hints:                '',
-        markup: 'VVVVVVVVVVVVVV',
+        input:  "{ donteval.xxx",
+        hints:                "",
+        markup: "VVVVVVVVVVVVVV",
         cursor: 14,
-        current: 'javascript',
-        status: 'VALID',
+        current: "javascript",
+        status: "VALID",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: '{' },
+          command: { name: "{" },
           javascript: {
-            value: 'donteval.xxx',
-            arg: '{ donteval.xxx',
-            status: 'VALID',
-            message: ''
+            value: "donteval.xxx",
+            arg: "{ donteval.xxx",
+            status: "VALID",
+            message: ""
           }
         }
       }
@@ -451,62 +451,62 @@ exports.testDonteval = function(options) {
   ]);
 };
 
-exports.testExec = function(options) {
+exports.testExec = function (options) {
   return helpers.audit(options, [
     {
       skipRemainingIf: jsTestDisallowed,
-      setup:    '{ 1+1',
+      setup:    "{ 1+1",
       check: {
-        input:  '{ 1+1',
-        hints:       '',
-        markup: 'VVVVV',
+        input:  "{ 1+1",
+        hints:       "",
+        markup: "VVVVV",
         cursor: 5,
-        current: 'javascript',
-        status: 'VALID',
+        current: "javascript",
+        status: "VALID",
         options: [ ],
-        message: '',
+        message: "",
         predictions: [ ],
         unassigned: [ ],
         args: {
           javascript: {
-            value: '1+1',
-            arg: '{ 1+1',
-            status: 'VALID',
-            message: ''
+            value: "1+1",
+            arg: "{ 1+1",
+            status: "VALID",
+            message: ""
           }
         }
       },
       exec: {
-        output: '2',
-        type: 'number',
+        output: "2",
+        type: "number",
         error: false
       }
     },
     {
-      setup:    '{ 1+1 }',
+      setup:    "{ 1+1 }",
       check: {
-        input:  '{ 1+1 }',
-        hints:         '',
-        markup: 'VVVVVVV',
+        input:  "{ 1+1 }",
+        hints:         "",
+        markup: "VVVVVVV",
         cursor: 7,
-        current: 'javascript',
-        status: 'VALID',
+        current: "javascript",
+        status: "VALID",
         options: [ ],
-        message: '',
+        message: "",
         predictions: [ ],
         unassigned: [ ],
         args: {
           javascript: {
-            value: '1+1',
-            arg: '{ 1+1 }',
-            status: 'VALID',
-            message: ''
+            value: "1+1",
+            arg: "{ 1+1 }",
+            status: "VALID",
+            message: ""
           }
         }
       },
       exec: {
-        output: '2',
-        type: 'number',
+        output: "2",
+        type: "number",
         error: false
       }
     },
@@ -514,27 +514,27 @@ exports.testExec = function(options) {
       setup:    '{ "hello"',
       check: {
         input:  '{ "hello"',
-        hints:           '',
-        markup: 'VVVVVVVVV',
+        hints:           "",
+        markup: "VVVVVVVVV",
         cursor: 9,
-        current: 'javascript',
-        status: 'VALID',
+        current: "javascript",
+        status: "VALID",
         options: [ ],
-        message: '',
+        message: "",
         predictions: [ ],
         unassigned: [ ],
         args: {
           javascript: {
             value: '"hello"',
             arg: '{ "hello"',
-            status: 'VALID',
-            message: ''
+            status: "VALID",
+            message: ""
           }
         }
       },
       exec: {
-        output: 'hello',
-        type: 'string',
+        output: "hello",
+        type: "string",
         error: false
       }
     },
@@ -542,27 +542,27 @@ exports.testExec = function(options) {
       setup:    '{ "hello" + 1',
       check: {
         input:  '{ "hello" + 1',
-        hints:               '',
-        markup: 'VVVVVVVVVVVVV',
+        hints:               "",
+        markup: "VVVVVVVVVVVVV",
         cursor: 13,
-        current: 'javascript',
-        status: 'VALID',
+        current: "javascript",
+        status: "VALID",
         options: [ ],
-        message: '',
+        message: "",
         predictions: [ ],
         unassigned: [ ],
         args: {
           javascript: {
             value: '"hello" + 1',
             arg: '{ "hello" + 1',
-            status: 'VALID',
-            message: ''
+            status: "VALID",
+            message: ""
           }
         }
       },
       exec: {
-        output: 'hello1',
-        type: 'string',
+        output: "hello1",
+        type: "string",
         error: false
       }
     }

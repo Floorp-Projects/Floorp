@@ -25,7 +25,7 @@ function performTest(request, console) {
   }
 
   console.webConsoleClient.getResponseHeaders(request.actor,
-    function(response) {
+    function (response) {
       headers = response.headers;
       ok(headers, "we have the response headers for reload");
 

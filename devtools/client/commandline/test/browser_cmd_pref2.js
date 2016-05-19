@@ -22,7 +22,7 @@ function* spawnTest() {
 
   yield helpers.audit(options, [
     {
-      setup: 'pref show devtools.editor.tabsize',
+      setup: "pref show devtools.editor.tabsize",
       check: {
         args: {
           setting: {
@@ -35,7 +35,7 @@ function* spawnTest() {
       },
     },
     {
-      setup: 'pref set devtools.editor.tabsize 20',
+      setup: "pref set devtools.editor.tabsize 20",
       check: {
         args: {
           setting: {
@@ -45,15 +45,15 @@ function* spawnTest() {
         },
       },
       exec: {
-        output: '',
+        output: "",
       },
-      post: function() {
+      post: function () {
         is(prefBranch.getIntPref("devtools.editor.tabsize"), 20,
                                  "devtools.editor.tabsize is 20");
       }
     },
     {
-      setup: 'pref show devtools.editor.tabsize',
+      setup: "pref show devtools.editor.tabsize",
       check: {
         args: {
           setting: {
@@ -66,7 +66,7 @@ function* spawnTest() {
       }
     },
     {
-      setup: 'pref set devtools.editor.tabsize 1',
+      setup: "pref set devtools.editor.tabsize 1",
       check: {
         args: {
           setting: {
@@ -76,11 +76,11 @@ function* spawnTest() {
         },
       },
       exec: {
-        output: '',
+        output: "",
       },
     },
     {
-      setup: 'pref show devtools.editor.tabsize',
+      setup: "pref show devtools.editor.tabsize",
       check: {
         args: {
           setting: {
@@ -91,7 +91,7 @@ function* spawnTest() {
       exec: {
         output: "devtools.editor.tabsize: 1",
       },
-      post: function() {
+      post: function () {
         is(prefBranch.getIntPref("devtools.editor.tabsize"), 1,
                                  "devtools.editor.tabsize is 1");
       }

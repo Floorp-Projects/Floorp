@@ -62,7 +62,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    * of there
    */
   // used by browser-sets.inc, command
-  toggleToolboxCommand: function(gBrowser) {
+  toggleToolboxCommand: function (gBrowser) {
     let target = TargetFactory.forTab(gBrowser.selectedTab);
     let toolbox = gDevTools.getToolbox(target);
 
@@ -78,7 +78,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    * depending on their relevant prefs. It gets run when a window is registered,
    * or when any of the devtools prefs change.
    */
-  updateCommandAvailability: function(win) {
+  updateCommandAvailability: function (win) {
     let doc = win.document;
 
     function toggleMenuItem(id, isEnabled) {
@@ -90,7 +90,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
         cmd.setAttribute("disabled", "true");
         cmd.setAttribute("hidden", "true");
       }
-    };
+    }
 
     // Enable developer toolbar?
     let devToolbarEnabled = Services.prefs.getBoolPref("devtools.toolbar.enabled");
@@ -127,7 +127,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     toggleMenuItem("menu_devtools_connect", devtoolsRemoteEnabled);
   },
 
-  observe: function(subject, topic, prefName) {
+  observe: function (subject, topic, prefName) {
     switch (topic) {
       case "browser-delayed-startup-finished":
         this._registerBrowserWindow(subject);
@@ -144,7 +144,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
 
   _prefObserverRegistered: false,
 
-  ensurePrefObserver: function() {
+  ensurePrefObserver: function () {
     if (!this._prefObserverRegistered) {
       this._prefObserverRegistered = true;
       Services.prefs.addObserver("devtools.", this, false);
@@ -167,7 +167,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    */
   // Used when: - registering a new tool
   //            - new xul window, to add menu items
-  selectToolCommand: function(gBrowser, toolId) {
+  selectToolCommand: function (gBrowser, toolId) {
     let target = TargetFactory.forTab(gBrowser.selectedTab);
     let toolbox = gDevTools.getToolbox(target);
     let toolDefinition = gDevTools.getToolDefinition(toolId);
@@ -199,7 +199,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    * Open a tab on "about:debugging", optionally pre-select a given tab.
    */
    // Used by browser-sets.inc, command
-  openAboutDebugging: function(gBrowser, hash) {
+  openAboutDebugging: function (gBrowser, hash) {
     let url = "about:debugging" + (hash ? "#" + hash : "");
     gBrowser.selectedTab = gBrowser.addTab(url);
   },
@@ -208,7 +208,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    * Open a tab to allow connects to a remote browser
    */
    // Used by browser-sets.inc, command
-  openConnectScreen: function(gBrowser) {
+  openConnectScreen: function (gBrowser) {
     gBrowser.selectedTab = gBrowser.addTab("chrome://devtools/content/framework/connect/connect.xhtml");
   },
 
@@ -217,7 +217,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    */
    // Used by browser-sets.inc, command
    //         itself, webide widget
-  openWebIDE: function() {
+  openWebIDE: function () {
     let win = Services.wm.getMostRecentWindow("devtools:webide");
     if (win) {
       win.focus();
@@ -302,7 +302,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
       defaultArea: AppConstants.MOZ_DEV_EDITION ?
                      CustomizableUI.AREA_NAVBAR :
                      CustomizableUI.AREA_PANEL,
-      onViewShowing: function(aEvent) {
+      onViewShowing: function (aEvent) {
         // Populate the subview with whatever menuitems are in the developer
         // menu. We skip menu elements, because the menu panel has no way
         // of dealing with those right now.
@@ -323,7 +323,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
         clearSubview(developerItems);
         fillSubviewFromMenuItems(itemsToDisplay, developerItems);
       },
-      onBeforeCreated: function(doc) {
+      onBeforeCreated: function (doc) {
         // Bug 1223127, CUI should make this easier to do.
         if (doc.getElementById("PanelUI-developerItems")) {
           return;
@@ -342,7 +342,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    * Install WebIDE widget
    */
   // Used by itself
-  installWebIDEWidget: function() {
+  installWebIDEWidget: function () {
     if (this.isWebIDEWidgetInstalled()) {
       return;
     }
@@ -360,13 +360,13 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
       label: "devtools-webide-button2.label",
       tooltiptext: "devtools-webide-button2.tooltiptext",
       defaultArea: defaultArea,
-      onCommand: function(aEvent) {
+      onCommand: function (aEvent) {
         gDevToolsBrowser.openWebIDE();
       }
     });
   },
 
-  isWebIDEWidgetInstalled: function() {
+  isWebIDEWidgetInstalled: function () {
     let widgetWrapper = CustomizableUI.getWidget("webide-button");
     return !!(widgetWrapper && widgetWrapper.provider == CustomizableUI.PROVIDER_API);
   },
@@ -379,7 +379,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
   /**
    * Uninstall WebIDE widget
    */
-  uninstallWebIDEWidget: function() {
+  uninstallWebIDEWidget: function () {
     if (this.isWebIDEWidgetInstalled()) {
       CustomizableUI.removeWidgetFromArea("webide-button");
     }
@@ -390,7 +390,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    * Move WebIDE widget to the navbar
    */
    // Used by webide.js
-  moveWebIDEWidgetInNavbar: function() {
+  moveWebIDEWidgetInNavbar: function () {
     CustomizableUI.addWidgetToArea("webide-button", CustomizableUI.AREA_NAVBAR);
   },
 
@@ -400,7 +400,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    * @param {XULDocument} doc
    *        The document to which devtools should be hooked to.
    */
-  _registerBrowserWindow: function(win) {
+  _registerBrowserWindow: function (win) {
     if (gDevToolsBrowser._trackedBrowserWindows.has(win)) {
       return;
     }
@@ -413,7 +413,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     gDevToolsBrowser.installDeveloperWidget();
 
     // Inject lazily DeveloperToolbar on the chrome window
-    loader.lazyGetter(win, "DeveloperToolbar", function() {
+    loader.lazyGetter(win, "DeveloperToolbar", function () {
       let { DeveloperToolbar } = require("devtools/client/shared/developer-toolbar");
       return new DeveloperToolbar(win);
     });
@@ -472,11 +472,11 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
           default:
             throw Error("invalid thread client state in slow script debug handler: " +
                         threadClient.state);
-          }
+        }
       });
     }
 
-    debugService.activationHandler = function(aWindow) {
+    debugService.activationHandler = function (aWindow) {
       let chromeWindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                                 .getInterface(Ci.nsIWebNavigation)
                                 .QueryInterface(Ci.nsIDocShellTreeItem)
@@ -500,7 +500,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
       utils.leaveModalState();
     };
 
-    debugService.remoteActivationHandler = function(aBrowser, aCallback) {
+    debugService.remoteActivationHandler = function (aBrowser, aCallback) {
       let chromeWindow = aBrowser.ownerDocument.defaultView;
       let tab = chromeWindow.gBrowser.getTabForBrowser(aBrowser);
       chromeWindow.gBrowser.selected = tab;
@@ -540,7 +540,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
          !Services.prefs.getBoolPref(toolDefinition.visibilityswitch)) {
         return;
       }
-    } catch(e) {}
+    } catch (e) {}
 
     // We need to insert the new tool in the right place, which means knowing
     // the tool that comes before the tool that we're trying to add
@@ -565,7 +565,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     }
   },
 
-  hasToolboxOpened: function(win) {
+  hasToolboxOpened: function (win) {
     let tab = win.gBrowser.selectedTab;
     for (let [target, toolbox] of gDevTools._toolboxes) {
       if (target.tab == tab) {
@@ -616,7 +616,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    * @param  {XULWindow} win
    *         The window containing the menu entry
    */
-  _forgetBrowserWindow: function(win) {
+  _forgetBrowserWindow: function (win) {
     if (!gDevToolsBrowser._trackedBrowserWindows.has(win)) {
       return;
     }
@@ -646,7 +646,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     tabContainer.removeEventListener("TabUnpinned", this, false);
   },
 
-  handleEvent: function(event) {
+  handleEvent: function (event) {
     switch (event.type) {
       case "TabOpen":
       case "TabClose":
@@ -668,19 +668,19 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
         this._tabStats.histPinned.push(pinned);
         this._tabStats.peakOpen = Math.max(open, this._tabStats.peakOpen);
         this._tabStats.peakPinned = Math.max(pinned, this._tabStats.peakPinned);
-      break;
+        break;
       case "TabSelect":
         gDevToolsBrowser._updateMenuCheckbox();
-      break;
+        break;
       case "unload":
         // top-level browser window unload
         gDevToolsBrowser._forgetBrowserWindow(event.target.defaultView);
-      break;
+        break;
     }
   },
 
-  _pingTelemetry: function() {
-    let mean = function(arr) {
+  _pingTelemetry: function () {
+    let mean = function (arr) {
       if (arr.length === 0) {
         return 0;
       }
@@ -699,7 +699,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
   /**
    * All browser windows have been closed, tidy up remaining objects.
    */
-  destroy: function() {
+  destroy: function () {
     Services.prefs.removeObserver("devtools.", gDevToolsBrowser);
     Services.obs.removeObserver(gDevToolsBrowser, "browser-delayed-startup-finished");
     Services.obs.removeObserver(gDevToolsBrowser.destroy, "quit-application");
@@ -711,18 +711,18 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
       gDevToolsBrowser._forgetBrowserWindow(win);
     }
   },
-}
+};
 
 // Handle all already registered tools,
 gDevTools.getToolDefinitionArray()
          .forEach(def => gDevToolsBrowser._addToolToWindows(def));
 // and the new ones.
-gDevTools.on("tool-registered", function(ev, toolId) {
+gDevTools.on("tool-registered", function (ev, toolId) {
   let toolDefinition = gDevTools._tools.get(toolId);
   gDevToolsBrowser._addToolToWindows(toolDefinition);
 });
 
-gDevTools.on("tool-unregistered", function(ev, toolId) {
+gDevTools.on("tool-unregistered", function (ev, toolId) {
   if (typeof toolId != "string") {
     toolId = toolId.id;
   }

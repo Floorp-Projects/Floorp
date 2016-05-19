@@ -33,7 +33,7 @@ selectNode = function* (node, inspector, reason) {
  * font-inspector tab.
  * @return {Promise} resolves to a {toolbox, inspector, view} object
  */
-var openFontInspectorForURL = Task.async(function*(url) {
+var openFontInspectorForURL = Task.async(function* (url) {
   yield addTab(url);
   let {toolbox, inspector} = yield openInspector();
 

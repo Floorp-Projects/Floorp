@@ -18,12 +18,14 @@ const VIEWPORT_MIN_WIDTH = Constants.MIN_VIEWPORT_DIMENSION;
 const VIEWPORT_MIN_HEIGHT = Constants.MIN_VIEWPORT_DIMENSION;
 
 module.exports = createClass({
+
   displayName: "ResizableViewport",
 
   propTypes: {
     devices: PropTypes.shape(Types.devices).isRequired,
     location: Types.location.isRequired,
     screenshot: PropTypes.shape(Types.screenshot).isRequired,
+    swapAfterMount: PropTypes.bool.isRequired,
     viewport: PropTypes.shape(Types.viewport).isRequired,
     onBrowserMounted: PropTypes.func.isRequired,
     onChangeViewportDevice: PropTypes.func.isRequired,
@@ -118,6 +120,7 @@ module.exports = createClass({
       devices,
       location,
       screenshot,
+      swapAfterMount,
       viewport,
       onBrowserMounted,
       onChangeViewportDevice,
@@ -159,6 +162,7 @@ module.exports = createClass({
         },
         Browser({
           location,
+          swapAfterMount,
           onBrowserMounted,
           onContentResize,
         })

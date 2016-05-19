@@ -4,7 +4,7 @@
 
 var toolbox;
 
-add_task(function*() {
+add_task(function* () {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   let toolbox = yield gDevTools.showToolbox(target);
   let doc = toolbox.frame.contentDocument;
@@ -30,7 +30,7 @@ add_task(function*() {
   }
 
   let sheetsFromTheme = gDevTools.getThemeDefinition(theme).stylesheets;
-  info ("Checking for existence of " + sheetsInDOM.length + " sheets");
+  info("Checking for existence of " + sheetsInDOM.length + " sheets");
   for (let sheet of sheetsFromTheme) {
     ok(sheetsInDOM.some(s=>s.includes(sheet)), "There is a stylesheet for " + sheet);
   }

@@ -47,7 +47,7 @@ function* ifTestingSupported() {
 
   let details = yield functionCalls[1].getDetails();
   ok(details,
-    "The first called function has some details available.")
+    "The first called function has some details available.");
 
   is(details.stack.length, 3,
     "The called function's stack depth is correct.");

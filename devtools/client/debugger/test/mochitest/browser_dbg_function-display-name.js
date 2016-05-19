@@ -56,7 +56,7 @@ function testInferredName() {
   gDebugger.gThreadClient.resume();
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

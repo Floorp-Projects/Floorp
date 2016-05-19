@@ -111,7 +111,7 @@ function run_test() {
             otherAttributes, attributeValue, expected} of TEST_DATA) {
     do_print("Testing <" + tagName + " " + attributeName + "='" + attributeValue + "'>");
 
-    let attributes = [...otherAttributes||[], {name: attributeName, value: attributeValue}];
+    let attributes = [...otherAttributes || [], {name: attributeName, value: attributeValue}];
     let tokens = parseAttribute(namespaceURI, tagName, attributes, attributeName);
     if (!expected) {
       do_check_true(!tokens);
@@ -121,7 +121,7 @@ function run_test() {
     do_print("Checking that the number of parsed tokens is correct");
     do_check_eq(tokens.length, expected.length);
 
-    for (let i = 0; i < tokens.length; i ++) {
+    for (let i = 0; i < tokens.length; i++) {
       do_print("Checking the data in token " + i);
       do_check_eq(tokens[i].value, expected[i].value);
       do_check_eq(tokens[i].type, expected[i].type);

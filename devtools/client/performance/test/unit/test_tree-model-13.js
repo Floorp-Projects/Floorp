@@ -53,7 +53,7 @@ var gThread = synthesizeProfileForTest([{
     { location: "(root)" },
     { location: "B" },
   ]
-},{
+}, {
   time: 20,
   frames: [
     { location: "(root)" },

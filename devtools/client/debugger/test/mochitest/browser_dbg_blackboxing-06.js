@@ -49,7 +49,7 @@ function testBlackBox() {
   return finished;
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

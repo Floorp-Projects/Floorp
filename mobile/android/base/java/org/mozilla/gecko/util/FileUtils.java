@@ -244,7 +244,16 @@ public class FileUtils {
     public static class FileLastModifiedComparator implements Comparator<File> {
         @Override
         public int compare(final File lhs, final File rhs) {
-            return Long.compare(lhs.lastModified(), rhs.lastModified());
+            // Long.compare is API 19+.
+            final long lhsModified = lhs.lastModified();
+            final long rhsModified = rhs.lastModified();
+            if (lhsModified < rhsModified) {
+                return -1;
+            } else if (lhsModified == rhsModified) {
+                return 0;
+            } else {
+                return 1;
+            }
         }
     }
 }

@@ -102,7 +102,7 @@
         }
       }
 
-      function handleError(error="Error") {
+      function handleError(error = "Error") {
         try {
           // First, try and structured clone the error across directly.
           self.postMessage({ id, error });

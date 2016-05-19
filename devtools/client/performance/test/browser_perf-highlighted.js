@@ -12,7 +12,7 @@ const { initPerformanceInTab, initConsoleInNewTab, teardownToolboxAndRemoveTab }
 const { startRecording, stopRecording } = require("devtools/client/performance/test/helpers/actions");
 const { waitUntil } = require("devtools/client/performance/test/helpers/wait-utils");
 
-add_task(function*() {
+add_task(function* () {
   let { target, toolbox, console } = yield initConsoleInNewTab({
     url: SIMPLE_URL,
     win: window

@@ -35,7 +35,7 @@ function findSourceDir(path) {
 }
 
 let worker = null;
-const onPrefChange = function() {
+const onPrefChange = function () {
   // We need to figure out a src dir to watch. These are the actual
   // files the user is working with, not the files in the obj dir. We
   // do this by walking up the filesystem and looking for the devtools
@@ -68,7 +68,7 @@ const onPrefChange = function() {
     worker.terminate();
     worker = null;
   }
-}
+};
 Services.prefs.addObserver(HOTRELOAD_PREF, {
   observe: onPrefChange
 }, false);

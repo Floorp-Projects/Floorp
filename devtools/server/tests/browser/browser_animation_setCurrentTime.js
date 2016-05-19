@@ -7,7 +7,7 @@
 // Check that a player's currentTime can be changed and that the AnimationsActor
 // allows changing many players' currentTimes at once.
 
-add_task(function*() {
+add_task(function* () {
   let {client, walker, animations} =
     yield initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 

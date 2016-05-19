@@ -134,10 +134,10 @@ add_task(function* () {
 
   function contextMenuClick(element) {
     info("Simulating contextmenu event on " + element);
-    let evt = element.ownerDocument.createEvent('MouseEvents');
+    let evt = element.ownerDocument.createEvent("MouseEvents");
     let button = 2;  // right click
 
-    evt.initMouseEvent('contextmenu', true, true,
+    evt.initMouseEvent("contextmenu", true, true,
          element.ownerDocument.defaultView, 1, 0, 0, 0, 0, false,
          false, false, false, button, null);
 

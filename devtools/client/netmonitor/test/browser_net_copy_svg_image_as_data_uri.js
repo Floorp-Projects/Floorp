@@ -34,7 +34,7 @@ function test() {
 
     aDebuggee.performRequest(SVG_URL);
 
-    function cleanUp(){
+    function cleanUp() {
       teardown(aMonitor).then(finish);
     }
   });

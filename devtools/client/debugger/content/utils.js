@@ -9,14 +9,14 @@ const { reportException } = require("devtools/shared/DevToolsUtils");
 
 function asPaused(client, func) {
   if (client.state != "paused") {
-    return Task.spawn(function*() {
+    return Task.spawn(function* () {
       yield client.interrupt();
       let result;
 
       try {
         result = yield func();
       }
-      catch(e) {
+      catch (e) {
         // Try to put the debugger back in a working state by resuming
         // it
         yield client.resume();
@@ -45,7 +45,7 @@ function onReducerEvents(controller, listeners, thisContext) {
 }
 
 function _getIn(destObj, path) {
-  return path.reduce(function(acc, name) {
+  return path.reduce(function (acc, name) {
     return acc[name];
   }, destObj);
 }
@@ -53,7 +53,7 @@ function _getIn(destObj, path) {
 function mergeIn(destObj, path, value) {
   path = [...path];
   path.reverse();
-  var obj = path.reduce(function(acc, name) {
+  var obj = path.reduce(function (acc, name) {
     return { [name]: acc };
   }, value);
 

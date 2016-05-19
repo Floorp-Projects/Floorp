@@ -183,7 +183,7 @@ function test() {
          "The global search pane splitter shouldn't be visible after clearing.");
     }
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceAndCaretAndScopes(gPanel, "-02.js", 1);
       yield firstSearch();
       yield doFirstJump();

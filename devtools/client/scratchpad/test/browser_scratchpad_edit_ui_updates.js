@@ -63,10 +63,10 @@ function runTests()
 
   let testSelfXss = function (oldVal) {
     // Self xss prevention tests (bug 994134)
-    info("Self xss paste tests")
-    is(WebConsoleUtils.usageCount, 0, "Test for usage count getter")
+    info("Self xss paste tests");
+    is(WebConsoleUtils.usageCount, 0, "Test for usage count getter");
     let notificationbox = doc.getElementById("scratchpad-notificationbox");
-    let notification = notificationbox.getNotificationWithValue('selfxss-notification');
+    let notification = notificationbox.getNotificationWithValue("selfxss-notification");
     ok(notification, "Self-xss notification shown");
     is(oldVal, sp.editor.getText(), "Paste blocked by self-xss prevention");
     Services.prefs.setIntPref("devtools.selfxss.count", 10);
@@ -74,7 +74,7 @@ function runTests()
     openMenu(10, 10, firstShow);
   };
 
-  let openMenu = function(aX, aY, aCallback) {
+  let openMenu = function (aX, aY, aCallback) {
     if (!editMenu || OS != "Darwin") {
       menuPopup.addEventListener("popupshown", function onPopupShown() {
         menuPopup.removeEventListener("popupshown", onPopupShown, false);
@@ -82,7 +82,7 @@ function runTests()
       }, false);
     }
 
-    executeSoon(function() {
+    executeSoon(function () {
       if (editMenu) {
         if (OS == "Darwin") {
           winUtils.forceUpdateNativeMenuAt(editMenuIndex);
@@ -96,7 +96,7 @@ function runTests()
     });
   };
 
-  let closeMenu = function(aCallback) {
+  let closeMenu = function (aCallback) {
     if (!editMenu || OS != "Darwin") {
       menuPopup.addEventListener("popuphidden", function onPopupHidden() {
         menuPopup.removeEventListener("popuphidden", onPopupHidden, false);
@@ -104,7 +104,7 @@ function runTests()
       }, false);
     }
 
-    executeSoon(function() {
+    executeSoon(function () {
       if (editMenu) {
         if (OS == "Darwin") {
           winUtils.forceUpdateNativeMenuAt(editMenuIndex);
@@ -118,22 +118,22 @@ function runTests()
     });
   };
 
-  let firstShow = function() {
+  let firstShow = function () {
     ok(!cutItem.hasAttribute("disabled"), "cut menuitem is enabled");
     closeMenu(firstHide);
   };
 
-  let firstHide = function() {
+  let firstHide = function () {
     sp.editor.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 10 });
     openMenu(11, 11, showAfterSelect);
   };
 
-  let showAfterSelect = function() {
+  let showAfterSelect = function () {
     ok(!cutItem.hasAttribute("disabled"), "cut menuitem is enabled after select");
     closeMenu(hideAfterSelect);
   };
 
-  let hideAfterSelect = function() {
+  let hideAfterSelect = function () {
     sp.editor.on("change", onCut);
     waitForFocus(function () {
       let selectedText = sp.editor.getSelection();
@@ -143,36 +143,36 @@ function runTests()
     }, gScratchpadWindow);
   };
 
-  let onCut = function() {
+  let onCut = function () {
     sp.editor.off("change", onCut);
     openMenu(12, 12, showAfterCut);
   };
 
-  let showAfterCut = function() {
+  let showAfterCut = function () {
     ok(!cutItem.hasAttribute("disabled"), "cut menuitem is enabled after cut");
     ok(!pasteItem.hasAttribute("disabled"), "paste menuitem is enabled after cut");
     closeMenu(hideAfterCut);
   };
 
-  let hideAfterCut = function() {
+  let hideAfterCut = function () {
     waitForFocus(function () {
       sp.editor.on("change", onPaste);
       EventUtils.synthesizeKey("v", {accelKey: true}, gScratchpadWindow);
     }, gScratchpadWindow);
   };
 
-  let onPaste = function() {
+  let onPaste = function () {
     sp.editor.off("change", onPaste);
     openMenu(13, 13, showAfterPaste);
   };
 
-  let showAfterPaste = function() {
+  let showAfterPaste = function () {
     ok(!cutItem.hasAttribute("disabled"), "cut menuitem is enabled after paste");
     ok(!pasteItem.hasAttribute("disabled"), "paste menuitem is enabled after paste");
     closeMenu(hideAfterPaste);
   };
 
-  let hideAfterPaste = function() {
+  let hideAfterPaste = function () {
     if (pass == 0) {
       pass++;
       testContextMenu();
@@ -182,7 +182,7 @@ function runTests()
     }
   };
 
-  let testContextMenu = function() {
+  let testContextMenu = function () {
     info("will test the context menu");
 
     editMenu = null;
@@ -198,9 +198,9 @@ function runTests()
     sp.setText("bug 699130: hello world! (context menu)");
     openMenu(10, 10, firstShow);
   };
-  waitForFocus(function(){
+  waitForFocus(function () {
     WebConsoleUtils.usageCount = 0;
     EventUtils.synthesizeKey("v", {accelKey: true}, gScratchpadWindow);
     testSelfXss(oldVal);
-  }, gScratchpadWindow)
+  }, gScratchpadWindow);
 }

@@ -346,7 +346,7 @@ ThreadNode.prototype = {
    *
    * @return object
    */
-  getInfo: function(options) {
+  getInfo: function (options) {
     return FrameUtils.getFrameInfo(this, options);
   },
 
@@ -481,7 +481,7 @@ FrameNode.prototype = {
       let opts = this._optimizations;
       let otherOpts = otherNode._optimizations;
       for (let i = 0; i < otherOpts.length; i++) {
-       opts.push(otherOpts[i]);
+        opts.push(otherOpts[i]);
       }
     }
 
@@ -510,7 +510,7 @@ FrameNode.prototype = {
    *         The computed { name, file, url, line } properties for this
    *         function call, as well as additional params if options specified.
    */
-  getInfo: function(options) {
+  getInfo: function (options) {
     return FrameUtils.getFrameInfo(this, options);
   },
 

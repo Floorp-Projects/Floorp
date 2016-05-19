@@ -7,7 +7,7 @@
 
 "use strict";
 
-addMessageListener("devtools:sw-test:register", function(msg) {
+addMessageListener("devtools:sw-test:register", function (msg) {
   content.navigator.serviceWorker.register("serviceworker.js")
     .then(swr => {
       sendAsyncMessage("devtools:sw-test:register", {success: true});
@@ -16,7 +16,7 @@ addMessageListener("devtools:sw-test:register", function(msg) {
     });
 });
 
-addMessageListener("devtools:sw-test:unregister", function(msg) {
+addMessageListener("devtools:sw-test:unregister", function (msg) {
   content.navigator.serviceWorker.getRegistration().then(swr => {
     swr.unregister().then(result => {
       sendAsyncMessage("devtools:sw-test:unregister",
@@ -25,7 +25,7 @@ addMessageListener("devtools:sw-test:unregister", function(msg) {
   });
 });
 
-addMessageListener("devtools:sw-test:iframe:register-and-unregister", function(msg) {
+addMessageListener("devtools:sw-test:iframe:register-and-unregister", function (msg) {
   var frame = content.document.createElement("iframe");
   frame.addEventListener("load", function onLoad() {
     frame.removeEventListener("load", onLoad);

@@ -46,9 +46,9 @@ add_task(function* runTest() {
     dump("Opening the browser toolbox and debugger panel\n");
     let window, document;
     let testUrl = "http://mozilla.org/browser-toolbox-test.js";
-    Task.spawn(function *() {
+    Task.spawn(function* () {
       dump("Waiting for debugger load\n");
-      let panel = yield toolbox.selectTool("jsdebugger")
+      let panel = yield toolbox.selectTool("jsdebugger");
       let window = panel.panelWin;
       let document = window.document;
 

@@ -8,7 +8,7 @@
 
 const TEST_URI = URL_ROOT + "browser_fontinspector.html";
 
-add_task(function*() {
+add_task(function* () {
   let { inspector, view } = yield openFontInspectorForURL(TEST_URI);
   let viewDoc = view.chromeDoc;
 

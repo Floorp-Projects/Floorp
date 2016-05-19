@@ -493,7 +493,7 @@ function addCmdExpression(aString) {
   gEditor.focus();
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

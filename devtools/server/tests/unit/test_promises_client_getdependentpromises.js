@@ -11,7 +11,7 @@ const { PromisesFront } = require("devtools/server/actors/promises");
 
 var events = require("sdk/event/core");
 
-add_task(function*() {
+add_task(function* () {
   let client = yield startTestDebuggerServer("test-promises-dependentpromises");
   let chromeActors = yield getChromeActors(client);
   yield attachTab(client, chromeActors);

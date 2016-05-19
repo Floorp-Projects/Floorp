@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
 // PLEASE TALK TO SOMEONE IN DEVELOPER TOOLS BEFORE EDITING IT
@@ -27,69 +27,69 @@ function test() {
 
 // var helpers = require('./helpers');
 
-exports.testSingleString = function(options) {
+exports.testSingleString = function (options) {
   return helpers.audit(options, [
     {
-      setup:    'tsr',
+      setup:    "tsr",
       check: {
-        input:  'tsr',
-        hints:     ' <text>',
-        markup: 'VVV',
+        input:  "tsr",
+        hints:     " <text>",
+        markup: "VVV",
         cursor: 3,
-        current: '__command',
-        status: 'ERROR',
+        current: "__command",
+        status: "ERROR",
         unassigned: [ ],
         args: {
-          command: { name: 'tsr' },
+          command: { name: "tsr" },
           text: {
             value: undefined,
-            arg: '',
-            status: 'INCOMPLETE',
-            message: 'Value required for \u2018text\u2019.'
+            arg: "",
+            status: "INCOMPLETE",
+            message: "Value required for \u2018text\u2019."
           }
         }
       }
     },
     {
-      setup:    'tsr ',
+      setup:    "tsr ",
       check: {
-        input:  'tsr ',
-        hints:      '<text>',
-        markup: 'VVVV',
+        input:  "tsr ",
+        hints:      "<text>",
+        markup: "VVVV",
         cursor: 4,
-        current: 'text',
-        status: 'ERROR',
+        current: "text",
+        status: "ERROR",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsr' },
+          command: { name: "tsr" },
           text: {
             value: undefined,
-            arg: '',
-            status: 'INCOMPLETE',
-            message: 'Value required for \u2018text\u2019.'
+            arg: "",
+            status: "INCOMPLETE",
+            message: "Value required for \u2018text\u2019."
           }
         }
       }
     },
     {
-      setup:    'tsr h',
+      setup:    "tsr h",
       check: {
-        input:  'tsr h',
-        hints:       '',
-        markup: 'VVVVV',
+        input:  "tsr h",
+        hints:       "",
+        markup: "VVVVV",
         cursor: 5,
-        current: 'text',
-        status: 'VALID',
+        current: "text",
+        status: "VALID",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsr' },
+          command: { name: "tsr" },
           text: {
-            value: 'h',
-            arg: ' h',
-            status: 'VALID',
-            message: ''
+            value: "h",
+            arg: " h",
+            status: "VALID",
+            message: ""
           }
         }
       }
@@ -98,42 +98,42 @@ exports.testSingleString = function(options) {
       setup:    'tsr "h h"',
       check: {
         input:  'tsr "h h"',
-        hints:           '',
-        markup: 'VVVVVVVVV',
+        hints:           "",
+        markup: "VVVVVVVVV",
         cursor: 9,
-        current: 'text',
-        status: 'VALID',
+        current: "text",
+        status: "VALID",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsr' },
+          command: { name: "tsr" },
           text: {
-            value: 'h h',
+            value: "h h",
             arg: ' "h h"',
-            status: 'VALID',
-            message: ''
+            status: "VALID",
+            message: ""
           }
         }
       }
     },
     {
-      setup:    'tsr h h h',
+      setup:    "tsr h h h",
       check: {
-        input:  'tsr h h h',
-        hints:           '',
-        markup: 'VVVVVVVVV',
+        input:  "tsr h h h",
+        hints:           "",
+        markup: "VVVVVVVVV",
         cursor: 9,
-        current: 'text',
-        status: 'VALID',
+        current: "text",
+        status: "VALID",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsr' },
+          command: { name: "tsr" },
           text: {
-            value: 'h h h',
-            arg: ' h h h',
-            status: 'VALID',
-            message: ''
+            value: "h h h",
+            arg: " h h h",
+            status: "VALID",
+            message: ""
           }
         }
       }
@@ -141,110 +141,110 @@ exports.testSingleString = function(options) {
   ]);
 };
 
-exports.testSingleNumber = function(options) {
+exports.testSingleNumber = function (options) {
   return helpers.audit(options, [
     {
-      setup:    'tsu',
+      setup:    "tsu",
       check: {
-        input:  'tsu',
-        hints:     ' <num>',
-        markup: 'VVV',
+        input:  "tsu",
+        hints:     " <num>",
+        markup: "VVV",
         cursor: 3,
-        current: '__command',
-        status: 'ERROR',
+        current: "__command",
+        status: "ERROR",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsu' },
+          command: { name: "tsu" },
           num: {
             value: undefined,
-            arg: '',
-            status: 'INCOMPLETE',
-            message: 'Value required for \u2018num\u2019.'
+            arg: "",
+            status: "INCOMPLETE",
+            message: "Value required for \u2018num\u2019."
           }
         }
       }
     },
     {
-      setup:    'tsu ',
+      setup:    "tsu ",
       check: {
-        input:  'tsu ',
-        hints:      '<num>',
-        markup: 'VVVV',
+        input:  "tsu ",
+        hints:      "<num>",
+        markup: "VVVV",
         cursor: 4,
-        current: 'num',
-        status: 'ERROR',
+        current: "num",
+        status: "ERROR",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsu' },
+          command: { name: "tsu" },
           num: {
             value: undefined,
-            arg: '',
-            status: 'INCOMPLETE',
-            message: 'Value required for \u2018num\u2019.'
+            arg: "",
+            status: "INCOMPLETE",
+            message: "Value required for \u2018num\u2019."
           }
         }
       }
     },
     {
-      setup:    'tsu 1',
+      setup:    "tsu 1",
       check: {
-        input:  'tsu 1',
-        hints:       '',
-        markup: 'VVVVV',
+        input:  "tsu 1",
+        hints:       "",
+        markup: "VVVVV",
         cursor: 5,
-        current: 'num',
-        status: 'VALID',
+        current: "num",
+        status: "VALID",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsu' },
-          num: { value: 1, arg: ' 1', status: 'VALID', message: '' }
+          command: { name: "tsu" },
+          num: { value: 1, arg: " 1", status: "VALID", message: "" }
         }
       }
     },
     {
-      setup:    'tsu x',
+      setup:    "tsu x",
       check: {
-        input:  'tsu x',
-        hints:       '',
-        markup: 'VVVVE',
+        input:  "tsu x",
+        hints:       "",
+        markup: "VVVVE",
         cursor: 5,
-        current: 'num',
-        status: 'ERROR',
+        current: "num",
+        status: "ERROR",
         predictions: [ ],
         unassigned: [ ],
-        tooltipState: 'true:isError',
+        tooltipState: "true:isError",
         args: {
-          command: { name: 'tsu' },
+          command: { name: "tsu" },
           num: {
             value: undefined,
-            arg: ' x',
-            status: 'ERROR',
-            message: 'Can\u2019t convert \u201cx\u201d to a number.'
+            arg: " x",
+            status: "ERROR",
+            message: "Can\u2019t convert \u201cx\u201d to a number."
           }
         }
       }
     },
     {
-      setup:    'tsu 1.5',
+      setup:    "tsu 1.5",
       check: {
-        input:  'tsu 1.5',
-        hints:       '',
-        markup: 'VVVVEEE',
+        input:  "tsu 1.5",
+        hints:       "",
+        markup: "VVVVEEE",
         cursor: 7,
-        current: 'num',
-        status: 'ERROR',
+        current: "num",
+        status: "ERROR",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsu' },
+          command: { name: "tsu" },
           num: {
             value: undefined,
-            arg: ' 1.5',
-            status: 'ERROR',
-            message: 'Can\u2019t convert \u201c1.5\u201d to an integer.'
+            arg: " 1.5",
+            status: "ERROR",
+            message: "Can\u2019t convert \u201c1.5\u201d to an integer."
           }
         }
       }
@@ -252,124 +252,124 @@ exports.testSingleNumber = function(options) {
   ]);
 };
 
-exports.testSingleFloat = function(options) {
+exports.testSingleFloat = function (options) {
   return helpers.audit(options, [
     {
-      setup:    'tsf',
+      setup:    "tsf",
       check: {
-        input:  'tsf',
-        hints:     ' <num>',
-        markup: 'VVV',
+        input:  "tsf",
+        hints:     " <num>",
+        markup: "VVV",
         cursor: 3,
-        current: '__command',
-        status: 'ERROR',
-        error: '',
+        current: "__command",
+        status: "ERROR",
+        error: "",
         unassigned: [ ],
         args: {
-          command: { name: 'tsf' },
+          command: { name: "tsf" },
           num: {
             value: undefined,
-            arg: '',
-            status: 'INCOMPLETE',
-            message: 'Value required for \u2018num\u2019.'
+            arg: "",
+            status: "INCOMPLETE",
+            message: "Value required for \u2018num\u2019."
           }
         }
       }
     },
     {
-      setup:    'tsf 1',
+      setup:    "tsf 1",
       check: {
-        input:  'tsf 1',
-        hints:       '',
-        markup: 'VVVVV',
+        input:  "tsf 1",
+        hints:       "",
+        markup: "VVVVV",
         cursor: 5,
-        current: 'num',
-        status: 'VALID',
-        error: '',
+        current: "num",
+        status: "VALID",
+        error: "",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsf' },
-          num: { value: 1, arg: ' 1', status: 'VALID', message: '' }
+          command: { name: "tsf" },
+          num: { value: 1, arg: " 1", status: "VALID", message: "" }
         }
       }
     },
     {
-      setup:    'tsf 1.',
+      setup:    "tsf 1.",
       check: {
-        input:  'tsf 1.',
-        hints:        '',
-        markup: 'VVVVVV',
+        input:  "tsf 1.",
+        hints:        "",
+        markup: "VVVVVV",
         cursor: 6,
-        current: 'num',
-        status: 'VALID',
-        error: '',
+        current: "num",
+        status: "VALID",
+        error: "",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsf' },
-          num: { value: 1, arg: ' 1.', status: 'VALID', message: '' }
+          command: { name: "tsf" },
+          num: { value: 1, arg: " 1.", status: "VALID", message: "" }
         }
       }
     },
     {
-      setup:    'tsf 1.5',
+      setup:    "tsf 1.5",
       check: {
-        input:  'tsf 1.5',
-        hints:         '',
-        markup: 'VVVVVVV',
+        input:  "tsf 1.5",
+        hints:         "",
+        markup: "VVVVVVV",
         cursor: 7,
-        current: 'num',
-        status: 'VALID',
-        error: '',
+        current: "num",
+        status: "VALID",
+        error: "",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsf' },
-          num: { value: 1.5, arg: ' 1.5', status: 'VALID', message: '' }
+          command: { name: "tsf" },
+          num: { value: 1.5, arg: " 1.5", status: "VALID", message: "" }
         }
       }
     },
     {
-      setup:    'tsf 1.5x',
+      setup:    "tsf 1.5x",
       check: {
-        input:  'tsf 1.5x',
-        hints:          '',
-        markup: 'VVVVVVVV',
+        input:  "tsf 1.5x",
+        hints:          "",
+        markup: "VVVVVVVV",
         cursor: 8,
-        current: 'num',
-        status: 'VALID',
-        error: '',
+        current: "num",
+        status: "VALID",
+        error: "",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsf' },
-          num: { value: 1.5, arg: ' 1.5x', status: 'VALID', message: '' }
+          command: { name: "tsf" },
+          num: { value: 1.5, arg: " 1.5x", status: "VALID", message: "" }
         }
       }
     },
     {
-      name: 'tsf x (cursor=4)',
-      setup: function() {
-        return helpers.setInput(options, 'tsf x', 4);
+      name: "tsf x (cursor=4)",
+      setup: function () {
+        return helpers.setInput(options, "tsf x", 4);
       },
       check: {
-        input:  'tsf x',
-        hints:       '',
-        markup: 'VVVVE',
+        input:  "tsf x",
+        hints:       "",
+        markup: "VVVVE",
         cursor: 4,
-        current: 'num',
-        status: 'ERROR',
-        error: 'Can\u2019t convert \u201cx\u201d to a number.',
+        current: "num",
+        status: "ERROR",
+        error: "Can\u2019t convert \u201cx\u201d to a number.",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsf' },
+          command: { name: "tsf" },
           num: {
             value: undefined,
-            arg: ' x',
-            status: 'ERROR',
-            message: 'Can\u2019t convert \u201cx\u201d to a number.'
+            arg: " x",
+            status: "ERROR",
+            message: "Can\u2019t convert \u201cx\u201d to a number."
           }
         }
       }
@@ -377,410 +377,410 @@ exports.testSingleFloat = function(options) {
   ]);
 };
 
-exports.testElementWeb = function(options) {
+exports.testElementWeb = function (options) {
   return helpers.audit(options, [
     {
-      setup:    'tse #gcli-root',
+      setup:    "tse #gcli-root",
       check: {
-        input:  'tse #gcli-root',
-        hints:                 ' [options]',
-        markup: 'VVVVVVVVVVVVVV',
+        input:  "tse #gcli-root",
+        hints:                 " [options]",
+        markup: "VVVVVVVVVVVVVV",
         cursor: 14,
-        current: 'node',
-        status: 'VALID',
+        current: "node",
+        status: "VALID",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'tse' },
+          command: { name: "tse" },
           node: {
-            arg: ' #gcli-root',
-            status: 'VALID',
-            message: ''
+            arg: " #gcli-root",
+            status: "VALID",
+            message: ""
           },
-          nodes: { arg: '', status: 'VALID', message: '' },
-          nodes2: { arg: '', status: 'VALID', message: '' },
+          nodes: { arg: "", status: "VALID", message: "" },
+          nodes2: { arg: "", status: "VALID", message: "" },
         }
       }
     }
   ]);
 };
 
-exports.testElement = function(options) {
+exports.testElement = function (options) {
   return helpers.audit(options, [
     {
-      setup:    'tse',
+      setup:    "tse",
       check: {
-        input:  'tse',
-        hints:     ' <node> [options]',
-        markup: 'VVV',
+        input:  "tse",
+        hints:     " <node> [options]",
+        markup: "VVV",
         cursor: 3,
-        current: '__command',
-        status: 'ERROR',
-        predictions: [ 'tse', 'tselarr' ],
+        current: "__command",
+        status: "ERROR",
+        predictions: [ "tse", "tselarr" ],
         unassigned: [ ],
         args: {
-          command: { name: 'tse' },
-          node: { arg: '', status: 'INCOMPLETE' },
-          nodes: { arg: '', status: 'VALID', message: '' },
-          nodes2: { arg: '', status: 'VALID', message: '' },
+          command: { name: "tse" },
+          node: { arg: "", status: "INCOMPLETE" },
+          nodes: { arg: "", status: "VALID", message: "" },
+          nodes2: { arg: "", status: "VALID", message: "" },
         }
       }
     },
     {
-      setup:    'tse #gcli-nomatch',
+      setup:    "tse #gcli-nomatch",
       check: {
-        input:  'tse #gcli-nomatch',
-        hints:                   ' [options]',
-        markup: 'VVVVIIIIIIIIIIIII',
+        input:  "tse #gcli-nomatch",
+        hints:                   " [options]",
+        markup: "VVVVIIIIIIIIIIIII",
         cursor: 17,
-        current: 'node',
-        status: 'ERROR',
+        current: "node",
+        status: "ERROR",
         predictions: [ ],
         unassigned: [ ],
-        outputState: 'false:default',
-        tooltipState: 'true:isError',
+        outputState: "false:default",
+        tooltipState: "true:isError",
         args: {
-          command: { name: 'tse' },
+          command: { name: "tse" },
           node: {
             value: undefined,
-            arg: ' #gcli-nomatch',
+            arg: " #gcli-nomatch",
             // This is somewhat debatable because this input can't be corrected
             // simply by typing so it's and error rather than incomplete,
             // however without digging into the CSS engine we can't tell that
             // so we default to incomplete
-            status: 'INCOMPLETE',
-            message: 'No matches'
+            status: "INCOMPLETE",
+            message: "No matches"
           },
-          nodes: { arg: '', status: 'VALID', message: '' },
-          nodes2: { arg: '', status: 'VALID', message: '' },
+          nodes: { arg: "", status: "VALID", message: "" },
+          nodes2: { arg: "", status: "VALID", message: "" },
         }
       }
     },
     {
-      setup:    'tse #',
+      setup:    "tse #",
       check: {
-        input:  'tse #',
-        hints:       ' [options]',
-        markup: 'VVVVE',
+        input:  "tse #",
+        hints:       " [options]",
+        markup: "VVVVE",
         cursor: 5,
-        current: 'node',
-        status: 'ERROR',
+        current: "node",
+        status: "ERROR",
         predictions: [ ],
         unassigned: [ ],
-        tooltipState: 'true:isError',
+        tooltipState: "true:isError",
         args: {
-          command: { name: 'tse' },
+          command: { name: "tse" },
           node: {
             value: undefined,
-            arg: ' #',
-            status: 'ERROR',
-            message: 'Syntax error in CSS query'
+            arg: " #",
+            status: "ERROR",
+            message: "Syntax error in CSS query"
           },
-          nodes: { arg: '', status: 'VALID', message: '' },
-          nodes2: { arg: '', status: 'VALID', message: '' },
+          nodes: { arg: "", status: "VALID", message: "" },
+          nodes2: { arg: "", status: "VALID", message: "" },
         }
       }
     },
     {
-      setup:    'tse .',
+      setup:    "tse .",
       check: {
-        input:  'tse .',
-        hints:       ' [options]',
-        markup: 'VVVVE',
+        input:  "tse .",
+        hints:       " [options]",
+        markup: "VVVVE",
         cursor: 5,
-        current: 'node',
-        status: 'ERROR',
+        current: "node",
+        status: "ERROR",
         predictions: [ ],
         unassigned: [ ],
-        tooltipState: 'true:isError',
+        tooltipState: "true:isError",
         args: {
-          command: { name: 'tse' },
+          command: { name: "tse" },
           node: {
             value: undefined,
-            arg: ' .',
-            status: 'ERROR',
-            message: 'Syntax error in CSS query'
+            arg: " .",
+            status: "ERROR",
+            message: "Syntax error in CSS query"
           },
-          nodes: { arg: '', status: 'VALID', message: '' },
-          nodes2: { arg: '', status: 'VALID', message: '' },
+          nodes: { arg: "", status: "VALID", message: "" },
+          nodes2: { arg: "", status: "VALID", message: "" },
         }
       }
     },
     {
-      setup:    'tse *',
+      setup:    "tse *",
       check: {
-        input:  'tse *',
-        hints:       ' [options]',
-        markup: 'VVVVE',
+        input:  "tse *",
+        hints:       " [options]",
+        markup: "VVVVE",
         cursor: 5,
-        current: 'node',
-        status: 'ERROR',
+        current: "node",
+        status: "ERROR",
         predictions: [ ],
         unassigned: [ ],
-        tooltipState: 'true:isError',
+        tooltipState: "true:isError",
         args: {
-          command: { name: 'tse' },
+          command: { name: "tse" },
           node: {
             value: undefined,
-            arg: ' *',
-            status: 'ERROR',
+            arg: " *",
+            status: "ERROR",
             message: /^Too many matches \([0-9]*\)/
           },
-          nodes: { arg: '', status: 'VALID', message: '' },
-          nodes2: { arg: '', status: 'VALID', message: '' },
+          nodes: { arg: "", status: "VALID", message: "" },
+          nodes2: { arg: "", status: "VALID", message: "" },
         }
       }
     }
   ]);
 };
 
-exports.testNestedCommand = function(options) {
+exports.testNestedCommand = function (options) {
   return helpers.audit(options, [
     {
-      setup:    'tsn',
+      setup:    "tsn",
       check: {
-        input:  'tsn',
-        hints:     ' deep down nested cmd',
-        markup: 'III',
+        input:  "tsn",
+        hints:     " deep down nested cmd",
+        markup: "III",
         cursor: 3,
-        current: '__command',
-        status: 'ERROR',
+        current: "__command",
+        status: "ERROR",
         predictionsInclude: [
-          'tsn deep', 'tsn deep down', 'tsn deep down nested',
-          'tsn deep down nested cmd', 'tsn dif'
+          "tsn deep", "tsn deep down", "tsn deep down nested",
+          "tsn deep down nested cmd", "tsn dif"
         ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsn' }
+          command: { name: "tsn" }
         }
       }
     },
     {
-      setup:    'tsn ',
+      setup:    "tsn ",
       check: {
-        input:  'tsn ',
-        hints:      ' deep down nested cmd',
-        markup: 'IIIV',
+        input:  "tsn ",
+        hints:      " deep down nested cmd",
+        markup: "IIIV",
         cursor: 4,
-        current: '__command',
-        status: 'ERROR',
+        current: "__command",
+        status: "ERROR",
         unassigned: [ ]
       }
     },
     {
       skipIf: options.isPhantomjs, // PhantomJS gets predictions wrong
-      setup:    'tsn x',
+      setup:    "tsn x",
       check: {
-        input:  'tsn x',
-        hints:       ' -> tsn ext',
-        markup: 'IIIVI',
+        input:  "tsn x",
+        hints:       " -> tsn ext",
+        markup: "IIIVI",
         cursor: 5,
-        current: '__command',
-        status: 'ERROR',
-        predictions: [ 'tsn ext' ],
+        current: "__command",
+        status: "ERROR",
+        predictions: [ "tsn ext" ],
         unassigned: [ ]
       }
     },
     {
-      setup:    'tsn dif',
+      setup:    "tsn dif",
       check: {
-        input:  'tsn dif',
-        hints:         ' <text>',
-        markup: 'VVVVVVV',
+        input:  "tsn dif",
+        hints:         " <text>",
+        markup: "VVVVVVV",
         cursor: 7,
-        current: '__command',
-        status: 'ERROR',
+        current: "__command",
+        status: "ERROR",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsn dif' },
+          command: { name: "tsn dif" },
           text: {
             value: undefined,
-            arg: '',
-            status: 'INCOMPLETE',
-            message: 'Value required for \u2018text\u2019.'
+            arg: "",
+            status: "INCOMPLETE",
+            message: "Value required for \u2018text\u2019."
           }
         }
       }
     },
     {
-      setup:    'tsn dif ',
+      setup:    "tsn dif ",
       check: {
-        input:  'tsn dif ',
-        hints:          '<text>',
-        markup: 'VVVVVVVV',
+        input:  "tsn dif ",
+        hints:          "<text>",
+        markup: "VVVVVVVV",
         cursor: 8,
-        current: 'text',
-        status: 'ERROR',
+        current: "text",
+        status: "ERROR",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsn dif' },
+          command: { name: "tsn dif" },
           text: {
             value: undefined,
-            arg: '',
-            status: 'INCOMPLETE',
-            message: 'Value required for \u2018text\u2019.'
+            arg: "",
+            status: "INCOMPLETE",
+            message: "Value required for \u2018text\u2019."
           }
         }
       }
     },
     {
-      setup:    'tsn dif x',
+      setup:    "tsn dif x",
       check: {
-        input:  'tsn dif x',
-        hints:           '',
-        markup: 'VVVVVVVVV',
+        input:  "tsn dif x",
+        hints:           "",
+        markup: "VVVVVVVVV",
         cursor: 9,
-        current: 'text',
-        status: 'VALID',
+        current: "text",
+        status: "VALID",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsn dif' },
-          text: { value: 'x', arg: ' x', status: 'VALID', message: '' }
+          command: { name: "tsn dif" },
+          text: { value: "x", arg: " x", status: "VALID", message: "" }
         }
       }
     },
     {
-      setup:    'tsn ext',
+      setup:    "tsn ext",
       check: {
-        input:  'tsn ext',
-        hints:         ' <text>',
-        markup: 'VVVVVVV',
+        input:  "tsn ext",
+        hints:         " <text>",
+        markup: "VVVVVVV",
         cursor: 7,
-        current: '__command',
-        status: 'ERROR',
-        predictions: [ 'tsn ext', 'tsn exte', 'tsn exten', 'tsn extend' ],
+        current: "__command",
+        status: "ERROR",
+        predictions: [ "tsn ext", "tsn exte", "tsn exten", "tsn extend" ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsn ext' },
+          command: { name: "tsn ext" },
           text: {
             value: undefined,
-            arg: '',
-            status: 'INCOMPLETE',
-            message: 'Value required for \u2018text\u2019.'
+            arg: "",
+            status: "INCOMPLETE",
+            message: "Value required for \u2018text\u2019."
           }
         }
       }
     },
     {
-      setup:    'tsn exte',
+      setup:    "tsn exte",
       check: {
-        input:  'tsn exte',
-        hints:          ' <text>',
-        markup: 'VVVVVVVV',
+        input:  "tsn exte",
+        hints:          " <text>",
+        markup: "VVVVVVVV",
         cursor: 8,
-        current: '__command',
-        status: 'ERROR',
-        predictions: [ 'tsn exte', 'tsn exten', 'tsn extend' ],
+        current: "__command",
+        status: "ERROR",
+        predictions: [ "tsn exte", "tsn exten", "tsn extend" ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsn exte' },
+          command: { name: "tsn exte" },
           text: {
             value: undefined,
-            arg: '',
-            status: 'INCOMPLETE',
-            message: 'Value required for \u2018text\u2019.'
+            arg: "",
+            status: "INCOMPLETE",
+            message: "Value required for \u2018text\u2019."
           }
         }
       }
     },
     {
-      setup:    'tsn exten',
+      setup:    "tsn exten",
       check: {
-        input:  'tsn exten',
-        hints:           ' <text>',
-        markup: 'VVVVVVVVV',
+        input:  "tsn exten",
+        hints:           " <text>",
+        markup: "VVVVVVVVV",
         cursor: 9,
-        current: '__command',
-        status: 'ERROR',
-        predictions: [ 'tsn exten', 'tsn extend' ],
+        current: "__command",
+        status: "ERROR",
+        predictions: [ "tsn exten", "tsn extend" ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsn exten' },
+          command: { name: "tsn exten" },
           text: {
             value: undefined,
-            arg: '',
-            status: 'INCOMPLETE',
-            message: 'Value required for \u2018text\u2019.'
+            arg: "",
+            status: "INCOMPLETE",
+            message: "Value required for \u2018text\u2019."
           }
         }
       }
     },
     {
-      setup:    'tsn extend',
+      setup:    "tsn extend",
       check: {
-        input:  'tsn extend',
-        hints:            ' <text>',
-        markup: 'VVVVVVVVVV',
+        input:  "tsn extend",
+        hints:            " <text>",
+        markup: "VVVVVVVVVV",
         cursor: 10,
-        current: '__command',
-        status: 'ERROR',
+        current: "__command",
+        status: "ERROR",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsn extend' },
+          command: { name: "tsn extend" },
           text: {
             value: undefined,
-            arg: '',
-            status: 'INCOMPLETE',
-            message: 'Value required for \u2018text\u2019.'
+            arg: "",
+            status: "INCOMPLETE",
+            message: "Value required for \u2018text\u2019."
           }
         }
       }
     },
     {
-      setup:    'ts ',
+      setup:    "ts ",
       check: {
-        input:  'ts ',
-        hints:     '',
-        markup: 'EEV',
+        input:  "ts ",
+        hints:     "",
+        markup: "EEV",
         cursor: 3,
-        current: '__command',
-        status: 'ERROR',
+        current: "__command",
+        status: "ERROR",
         predictions: [ ],
         unassigned: [ ],
-        tooltipState: 'true:isError'
+        tooltipState: "true:isError"
       }
     },
   ]);
 };
 
 // From Bug 664203
-exports.testDeeplyNested = function(options) {
+exports.testDeeplyNested = function (options) {
   return helpers.audit(options, [
     {
-      setup:    'tsn deep down nested',
+      setup:    "tsn deep down nested",
       check: {
-        input:  'tsn deep down nested',
-        hints:                      ' cmd',
-        markup: 'IIIVIIIIVIIIIVIIIIII',
+        input:  "tsn deep down nested",
+        hints:                      " cmd",
+        markup: "IIIVIIIIVIIIIVIIIIII",
         cursor: 20,
-        current: '__command',
-        status: 'ERROR',
-        predictions: [ 'tsn deep down nested cmd' ],
+        current: "__command",
+        status: "ERROR",
+        predictions: [ "tsn deep down nested cmd" ],
         unassigned: [ ],
-        outputState: 'false:default',
-        tooltipState: 'false:default',
+        outputState: "false:default",
+        tooltipState: "false:default",
         args: {
-          command: { name: 'tsn deep down nested' },
+          command: { name: "tsn deep down nested" },
         }
       }
     },
     {
-      setup:    'tsn deep down nested cmd',
+      setup:    "tsn deep down nested cmd",
       check: {
-        input:  'tsn deep down nested cmd',
-        hints:                          '',
-        markup: 'VVVVVVVVVVVVVVVVVVVVVVVV',
+        input:  "tsn deep down nested cmd",
+        hints:                          "",
+        markup: "VVVVVVVVVVVVVVVVVVVVVVVV",
         cursor: 24,
-        current: '__command',
-        status: 'VALID',
+        current: "__command",
+        status: "VALID",
         predictions: [ ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsn deep down nested cmd' },
+          command: { name: "tsn deep down nested cmd" },
         }
       }
     }

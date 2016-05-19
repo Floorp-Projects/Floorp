@@ -186,7 +186,7 @@ RootActor.prototype = {
   /**
    * Return a 'hello' packet as specified by the Remote Debugging Protocol.
    */
-  sayHello: function() {
+  sayHello: function () {
     return {
       from: this.actorID,
       applicationType: this.applicationType,
@@ -199,7 +199,7 @@ RootActor.prototype = {
   /**
    * Disconnects the actor from the browser window.
    */
-  disconnect: function() {
+  disconnect: function () {
     /* Tell the live lists we aren't watching any more. */
     if (this._parameters.tabList) {
       this._parameters.tabList.onListChanged = null;
@@ -213,7 +213,7 @@ RootActor.prototype = {
     if (this._parameters.serviceWorkerRegistrationList) {
       this._parameters.serviceWorkerRegistrationList.onListChanged = null;
     }
-    if (typeof this._parameters.onShutdown === 'function') {
+    if (typeof this._parameters.onShutdown === "function") {
       this._parameters.onShutdown();
     }
     this._extraActors = null;
@@ -230,7 +230,7 @@ RootActor.prototype = {
    * Handles the listTabs request. The actors will survive until at least
    * the next listTabs request.
    */
-  onListTabs: function() {
+  onListTabs: function () {
     let tabList = this._parameters.tabList;
     if (!tabList) {
       return { from: this.actorID, error: "noTabs",
@@ -309,19 +309,19 @@ RootActor.prototype = {
     }
     return tabList.getTab(options)
                   .then(tabActor => {
-      tabActor.parentID = this.actorID;
-      this._tabActorPool.addActor(tabActor);
+                    tabActor.parentID = this.actorID;
+                    this._tabActorPool.addActor(tabActor);
 
-      return { tab: tabActor.form() };
-    }, error => {
-      if (error.error) {
+                    return { tab: tabActor.form() };
+                  }, error => {
+                    if (error.error) {
         // Pipe expected errors as-is to the client
-        return error;
-      } else {
-        return { error: "noTab",
+                      return error;
+                    } else {
+                      return { error: "noTab",
                  message: "Unexpected error while calling getTab(): " + error };
-      }
-    });
+                    }
+                  });
   },
 
   onTabListChanged: function () {
@@ -340,7 +340,7 @@ RootActor.prototype = {
     return addonList.getList().then((addonActors) => {
       let addonActorPool = new ActorPool(this.conn);
       for (let addonActor of addonActors) {
-          addonActorPool.addActor(addonActor);
+        addonActorPool.addActor(addonActor);
       }
 
       if (this._addonActorPool) {
@@ -447,7 +447,7 @@ RootActor.prototype = {
       return { error: "forbidden",
                message: "You are not allowed to debug chrome." };
     }
-    if (("id" in aRequest) && typeof(aRequest.id) != "number") {
+    if (("id" in aRequest) && typeof (aRequest.id) != "number") {
       return { error: "wrongParameter",
                message: "getProcess requires a valid `id` attribute." };
     }
@@ -494,7 +494,7 @@ RootActor.prototype = {
    * Remove the extra actor (added by DebuggerServer.addGlobalActor or
    * DebuggerServer.addTabActor) name |aName|.
    */
-  removeActorByName: function(aName) {
+  removeActorByName: function (aName) {
     if (aName in this._extraActors) {
       const actor = this._extraActors[aName];
       if (this._globalActorPool.has(actor)) {
@@ -509,7 +509,7 @@ RootActor.prototype = {
       }
       delete this._extraActors[aName];
     }
-   }
+  }
 };
 
 RootActor.prototype.requestTypes = {

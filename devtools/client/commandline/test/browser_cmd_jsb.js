@@ -18,19 +18,19 @@ function* testTask() {
 
   helpers.audit(options, [
     {
-      setup: 'jsb',
+      setup: "jsb",
       check: {
-        input:  'jsb',
-        hints:     ' <url> [options]',
-        markup: 'VVV',
-        status: 'ERROR'
+        input:  "jsb",
+        hints:     " <url> [options]",
+        markup: "VVV",
+        status: "ERROR"
       }
     },
     {
-      setup: 'jsb ' + TEST_URI,
+      setup: "jsb " + TEST_URI,
       // Should result in a new scratchpad window
       exec: {
-        output: '',
+        output: "",
         error: false
       }
     }
@@ -93,7 +93,7 @@ function wwNotifyOnce() {
 function observeOnce(scratchpad) {
   return new Promise(resolve => {
     let observer = {
-      onReady: function() {
+      onReady: function () {
         scratchpad.removeObserver(observer);
         resolve();
       },

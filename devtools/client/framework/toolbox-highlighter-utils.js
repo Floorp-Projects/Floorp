@@ -30,7 +30,7 @@ const DevToolsUtils = require("devtools/shared/DevToolsUtils");
  * @param {Toolbox} toolbox
  * @return {Object} the highlighterUtils public API
  */
-exports.getHighlighterUtils = function(toolbox) {
+exports.getHighlighterUtils = function (toolbox) {
   if (!toolbox || !toolbox.target) {
     throw new Error("Missing or invalid toolbox passed to getHighlighterUtils");
     return;
@@ -52,9 +52,9 @@ exports.getHighlighterUtils = function(toolbox) {
   /**
    * Release this utils, nullifying the references to the toolbox
    */
-  exported.release = function() {
+  exported.release = function () {
     toolbox = target = null;
-  }
+  };
 
   /**
    * Does the target have the highlighter actor.
@@ -62,9 +62,9 @@ exports.getHighlighterUtils = function(toolbox) {
    * which doesn't have the highlighter actor. This can be removed as soon as
    * the minimal supported version becomes 1.4 (29)
    */
-  let isRemoteHighlightable = exported.isRemoteHighlightable = function() {
+  let isRemoteHighlightable = exported.isRemoteHighlightable = function () {
     return target.client.traits.highlightable;
-  }
+  };
 
   /**
    * Does the target support custom highlighters.
@@ -82,7 +82,7 @@ exports.getHighlighterUtils = function(toolbox) {
    */
   let isInspectorInitialized = false;
   let requireInspector = generator => {
-    return Task.async(function*(...args) {
+    return Task.async(function* (...args) {
       if (!isInspectorInitialized) {
         yield toolbox.initInspector();
         isInspectorInitialized = true;
@@ -95,13 +95,13 @@ exports.getHighlighterUtils = function(toolbox) {
    * Start/stop the element picker on the debuggee target.
    * @return A promise that resolves when done
    */
-  let togglePicker = exported.togglePicker = function() {
+  let togglePicker = exported.togglePicker = function () {
     if (isPicking) {
       return stopPicker();
     } else {
       return startPicker();
     }
-  }
+  };
 
   /**
    * Start the element picker on the debuggee target.
@@ -112,7 +112,7 @@ exports.getHighlighterUtils = function(toolbox) {
    * @return A promise that resolves when the picker has started or immediately
    * if it is already started
    */
-  let startPicker = exported.startPicker = requireInspector(function*() {
+  let startPicker = exported.startPicker = requireInspector(function* () {
     if (isPicking) {
       return;
     }
@@ -145,7 +145,7 @@ exports.getHighlighterUtils = function(toolbox) {
    * @return A promise that resolves when the picker has stopped or immediately
    * if it is already stopped
    */
-  let stopPicker = exported.stopPicker = requireInspector(function*() {
+  let stopPicker = exported.stopPicker = requireInspector(function* () {
     if (!isPicking) {
       return;
     }
@@ -203,7 +203,7 @@ exports.getHighlighterUtils = function(toolbox) {
    * @return A promise that resolves when the node has been highlighted
    */
   let highlightNodeFront = exported.highlightNodeFront = requireInspector(
-  function*(nodeFront, options={}) {
+  function* (nodeFront, options = {}) {
     if (!nodeFront) {
       return;
     }
@@ -228,7 +228,7 @@ exports.getHighlighterUtils = function(toolbox) {
    * @see highlightNodeFront
    */
   let highlightDomValueGrip = exported.highlightDomValueGrip = requireInspector(
-  function*(valueGrip, options={}) {
+  function* (valueGrip, options = {}) {
     let nodeFront = yield gripToNodeFront(valueGrip);
     if (nodeFront) {
       yield highlightNodeFront(nodeFront, options);
@@ -243,7 +243,7 @@ exports.getHighlighterUtils = function(toolbox) {
    * @return a promise that resolves to the node front when done
    */
   let gripToNodeFront = exported.gripToNodeFront = requireInspector(
-  function*(grip) {
+  function* (grip) {
     return yield toolbox.walker.getNodeActorFromObjectActor(grip.actor);
   });
 
@@ -257,7 +257,7 @@ exports.getHighlighterUtils = function(toolbox) {
    * @return a promise that resolves when the highlighter is hidden
    */
   let unhighlight = exported.unhighlight = Task.async(
-  function*(forceHide=false) {
+  function* (forceHide = false) {
     forceHide = forceHide || !DevToolsUtils.testing;
 
     // Note that if isRemoteHighlightable is true, there's no need to hide the
@@ -284,7 +284,7 @@ exports.getHighlighterUtils = function(toolbox) {
    * @return a promise that resolves to the highlighter
    */
   let getHighlighterByType = exported.getHighlighterByType = requireInspector(
-  function*(typeName) {
+  function* (typeName) {
     let highlighter = null;
 
     if (supportsCustomHighlighters()) {
