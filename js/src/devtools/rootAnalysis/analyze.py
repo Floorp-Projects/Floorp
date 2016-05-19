@@ -72,6 +72,7 @@ def generate_hazards(config, outfilename):
                         '%(gcEdges)s',
                         '%(suppressedFunctions_list)s',
                         '%(gcTypes)s',
+                        '%(typeInfo)s',
                         str(i+1), '%(jobs)s',
                         'tmp.%s' % (i+1,)),
                        config)
@@ -113,7 +114,7 @@ JOBS = { 'dbs':
               ()),
 
          'callgraph':
-             (('%(js)s', '%(analysis_scriptdir)s/computeCallgraph.js'),
+             (('%(js)s', '%(analysis_scriptdir)s/computeCallgraph.js', '%(typeInfo)s'),
               'callgraph.txt'),
 
          'gcFunctions':
@@ -122,8 +123,9 @@ JOBS = { 'dbs':
               ('gcFunctions.txt', 'gcFunctions.lst', 'gcEdges.txt', 'suppressedFunctions.lst')),
 
          'gcTypes':
-             (('%(js)s', '%(analysis_scriptdir)s/computeGCTypes.js',),
-              'gcTypes.txt'),
+             (('%(js)s', '%(analysis_scriptdir)s/computeGCTypes.js',
+               '[gcTypes]', '[typeInfo]'),
+              ('gcTypes.txt', 'typeInfo.txt')),
 
          'allFunctions':
              (('%(sixgill_bin)s/xdbkeys', 'src_body.xdb',),
@@ -259,8 +261,8 @@ if not data.get('source') and data.get('sixgill_bin'):
     data['source'] = path.replace("/js/src/jsapi.cpp", "")
 
 steps = [ 'dbs',
-          'callgraph',
           'gcTypes',
+          'callgraph',
           'gcFunctions',
           'allFunctions',
           'hazards',
