@@ -7761,6 +7761,16 @@ nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
               doCreateAlternate = false;
             }
           }
+
+          if (doCreateAlternate) {
+            // Skip doing this if our channel was redirected, because we
+            // shouldn't be guessing things about the post-redirect URI.
+            nsLoadFlags loadFlags = 0;
+            if (NS_FAILED(aChannel->GetLoadFlags(&loadFlags)) ||
+                (loadFlags & nsIChannel::LOAD_REPLACE)) {
+              doCreateAlternate = false;
+            }
+          }
         }
         if (doCreateAlternate) {
           newURI = nullptr;
