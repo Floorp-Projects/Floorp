@@ -2961,12 +2961,15 @@ nsDisplayBackgroundImage::PaintInternal(nsDisplayListBuilder* aBuilder,
     GenerateAndPushTextMask(mFrame, aCtx, mBackgroundRect);
   }
 
+  nsCSSRendering::PaintBGParams params =
+    nsCSSRendering::PaintBGParams::ForSingleLayer(*mFrame->PresContext(),
+                                                  *aCtx,
+                                                  aBounds, mBackgroundRect,
+                                                  mFrame, flags, mLayer,
+                                                  CompositionOp::OP_OVER);
+  params.bgClipRect = aClipRect;
   image::DrawResult result =
-    nsCSSRendering::PaintBackground(mFrame->PresContext(), *aCtx, mFrame,
-                                    aBounds,
-                                    mBackgroundRect,
-                                    flags, aClipRect, mLayer,
-                                    CompositionOp::OP_OVER);
+    nsCSSRendering::PaintBackground(params);
 
   if (clip == NS_STYLE_IMAGELAYER_CLIP_TEXT) {
     ctx->PopGroupAndBlend();
