@@ -1508,6 +1508,8 @@ WebSocketImpl::Init(JSContext* aCx,
     }
   }
 
+  // Check content policy.
+  int16_t shouldLoad = nsIContentPolicy::ACCEPT;
   nsCOMPtr<nsIDocument> originDoc = mWebSocket->GetDocumentIfCurrent();
   if (!originDoc) {
     nsresult rv = mWebSocket->CheckInnerWindowCorrectness();
@@ -1518,6 +1520,24 @@ WebSocketImpl::Init(JSContext* aCx,
   }
 
   mOriginDocument = do_GetWeakReference(originDoc);
+  aRv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_WEBSOCKET,
+                                  uri,
+                                  aPrincipal,
+                                  originDoc,
+                                  EmptyCString(),
+                                  nullptr,
+                                  &shouldLoad,
+                                  nsContentUtils::GetContentPolicy(),
+                                  nsContentUtils::GetSecurityManager());
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  if (NS_CP_REJECTED(shouldLoad)) {
+    // Disallowed by content policy.
+    aRv.Throw(NS_ERROR_CONTENT_BLOCKED);
+    return;
+  }
 
   // Potentially the page uses the CSP directive 'upgrade-insecure-requests'.
   // In such a case we have to upgrade ws: to wss: and also update mSecure
@@ -1702,7 +1722,6 @@ WebSocketImpl::AsyncOpen(nsIPrincipal* aPrincipal, uint64_t aInnerWindowID,
 
   aRv = mChannel->AsyncOpen(uri, asciiOrigin, aInnerWindowID, this, nullptr);
   if (NS_WARN_IF(aRv.Failed())) {
-    aRv.Throw(NS_ERROR_CONTENT_BLOCKED);
     return;
   }
 
@@ -1773,7 +1792,7 @@ WebSocketImpl::InitializeConnection(nsIPrincipal* aPrincipal)
   wsChannel->InitLoadInfo(doc ? doc->AsDOMNode() : nullptr,
                           doc ? doc->NodePrincipal() : aPrincipal,
                           aPrincipal,
-                          nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                          nsILoadInfo::SEC_NORMAL,
                           nsIContentPolicy::TYPE_WEBSOCKET);
 
   if (!mRequestedProtocolList.IsEmpty()) {
