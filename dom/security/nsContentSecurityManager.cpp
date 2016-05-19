@@ -302,8 +302,7 @@ DoContentSecurityChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
     }
 
     case nsIContentPolicy::TYPE_WEBSOCKET: {
-      mimeTypeGuess = EmptyCString();
-      requestingContext = aLoadInfo->LoadingNode();
+      MOZ_ASSERT(false, "contentPolicyType not supported yet");
       break;
     }
 
