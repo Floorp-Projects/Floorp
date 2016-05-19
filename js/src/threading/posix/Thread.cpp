@@ -87,8 +87,11 @@ bool
 js::Thread::create(void* (*aMain)(void*), void* aArg)
 {
   int r = pthread_create(&id_.platformData()->ptThread, nullptr, aMain, aArg);
-  if (r)
+  if (r) {
+    // |pthread_create| may leave id_ in an undefined state.
+    id_ = Id();
     return false;
+  }
   id_.platformData()->hasThread = true;
   return true;
 }
