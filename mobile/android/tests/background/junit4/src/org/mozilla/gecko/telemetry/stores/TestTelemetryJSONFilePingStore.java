@@ -20,6 +20,7 @@ import org.mozilla.gecko.util.FileUtils;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -109,7 +110,7 @@ public class TestTelemetryJSONFilePingStore {
     }
 
     @Test
-    public void testGetAllPings() throws Exception {
+    public void testGetAllPingsSavesData() throws Exception {
         final String urlPrefix = "url";
         writeTestPingsToStore(3, urlPrefix);
 
@@ -117,6 +118,19 @@ public class TestTelemetryJSONFilePingStore {
         for (final TelemetryPing ping : pings) {
             assertEquals("Expected url path value received", urlPrefix + ping.getDocID(), ping.getURLPath());
             assertIsGeneratedPayload(ping.getPayload());
+        }
+    }
+
+    @Test
+    public void testGetAllPingsIsSorted() throws Exception {
+        final List<String> storedDocIDs = writeTestPingsToStore(3, "urlPrefix");
+
+        final ArrayList<TelemetryPing> pings = testStore.getAllPings();
+        for (int i = 0; i < pings.size(); ++i) {
+            final String expectedDocID = storedDocIDs.get(i);
+            final TelemetryPing ping = pings.get(i);
+
+            assertEquals("Stored ping " + i + " retrieved in order", expectedDocID, ping.getDocID());
         }
     }
 
@@ -140,16 +154,13 @@ public class TestTelemetryJSONFilePingStore {
     @Test
     public void testMaybePrunePingsPrunesIfAboveMax() throws Exception {
         final int pingCount = TelemetryJSONFilePingStore.MAX_PING_COUNT + 1;
-        writeTestPingsToStore(pingCount, "whatever");
+        final List<String> expectedDocIDs = writeTestPingsToStore(pingCount, "whatever");
         assertStoreFileCount(pingCount);
         testStore.maybePrunePings();
         assertStoreFileCount(TelemetryJSONFilePingStore.MAX_PING_COUNT);
 
-        final HashSet<String> existingIDs = new HashSet<>(TelemetryJSONFilePingStore.MAX_PING_COUNT);
-        for (final String filename : testDir.list()) {
-            existingIDs.add(filename);
-        }
-        assertFalse("Smallest ID was removed", existingIDs.contains(1));
+        final HashSet<String> existingIDs = new HashSet<>(Arrays.asList(testDir.list()));
+        assertFalse("Oldest ping was removed", existingIDs.contains(expectedDocIDs.get(0)));
     }
 
     @Test
@@ -184,16 +195,22 @@ public class TestTelemetryJSONFilePingStore {
      *
      * Note: assumes {@link TelemetryJSONFilePingStore#getPingFile(String)} works.
      *
-     * @return a list of doc IDs saved to disk
+     * @return a list of doc IDs saved to disk in ascending order of last modified date
      */
     private List<String> writeTestPingsToStore(final int count, final String urlPrefix) throws Exception {
         final List<String> savedDocIDs = new ArrayList<>(count);
+        final long now = System.currentTimeMillis();
         for (int i = 1; i <= count; ++i) {
             final String docID = getDocID();
             final JSONObject obj = new JSONObject()
                     .put(TelemetryJSONFilePingStore.KEY_URL_PATH, urlPrefix + docID)
                     .put(TelemetryJSONFilePingStore.KEY_PAYLOAD, generateTelemetryPayload());
-            FileUtils.writeJSONObjectToFile(testStore.getPingFile(docID), obj);
+            final File pingFile = testStore.getPingFile(docID);
+            FileUtils.writeJSONObjectToFile(pingFile, obj);
+
+            // If we don't set an explicit time, the modified times are all equal.
+            // Also, last modified times are rounded by second.
+            assertTrue("Able to set last modified time", pingFile.setLastModified(now - (count * 10_000) + i * 10_000));
             savedDocIDs.add(docID);
         }
         return savedDocIDs;

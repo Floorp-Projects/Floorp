@@ -4,7 +4,7 @@
 
 function test() {
   waitForExplicitFinish();
-  Task.spawn(function*() {
+  Task.spawn(function* () {
     let win = yield openWebIDE();
     ok(document.querySelector("#webide-button"), "Found WebIDE button");
     Services.prefs.setBoolPref("devtools.webide.widget.enabled", false);

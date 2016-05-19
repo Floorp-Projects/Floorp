@@ -32,7 +32,7 @@ function test() {
       .then(disableIgnoreCaughtExceptions)
       .then(() => reloadActiveTab(gPanel, gDebugger.EVENTS.SOURCE_SHOWN))
       .then(() => {
-          generateMouseClickInTab(gTab, "content.document.querySelector('button')");
+        generateMouseClickInTab(gTab, "content.document.querySelector('button')");
       })
       .then(testPauseOnExceptionsAfterReload)
       .then(disablePauseOnExceptions)
@@ -190,7 +190,7 @@ function disableIgnoreCaughtExceptions() {
   return deferred.promise;
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

@@ -6,7 +6,7 @@ const protocol = require("devtools/shared/protocol");
 var HelloActor = protocol.ActorClass({
   typeName: "helloActor",
 
-  initialize: function() {
+  initialize: function () {
     protocol.Actor.prototype.initialize.apply(this, arguments);
     this.counter = 0;
   },

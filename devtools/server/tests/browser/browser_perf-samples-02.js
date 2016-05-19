@@ -11,7 +11,7 @@ const WAIT_TIME = 1000; // ms
 
 const { PerformanceFront } = require("devtools/server/actors/performance");
 
-add_task(function*() {
+add_task(function* () {
   let browser = yield addTab(MAIN_DOMAIN + "doc_perf.html");
   let doc = browser.contentDocument;
 

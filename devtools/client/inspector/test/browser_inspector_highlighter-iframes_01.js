@@ -19,7 +19,7 @@ const TEST_URI = "data:text/html;charset=utf-8," +
   "iframe tests for inspector" +
   "<iframe src=\"" + OUTER_FRAME_SRC + "\" />";
 
-add_task(function*() {
+add_task(function* () {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URI);
   let outerFrame = "iframe";
   let outerFrameDiv = ["iframe", "div"];
@@ -34,7 +34,7 @@ add_task(function*() {
   ok((yield testActor.assertHighlightedNode(outerFrameDiv)), "outerFrameDiv is highlighted.");
 
   info("Moving mouse over innerFrameDiv");
-  yield moveMouseOver(testActor,innerFrameDiv);
+  yield moveMouseOver(testActor, innerFrameDiv);
   ok((yield testActor.assertHighlightedNode(innerFrameDiv)), "innerFrameDiv is highlighted.");
 
   info("Selecting root node");

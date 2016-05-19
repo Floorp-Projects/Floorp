@@ -6,7 +6,7 @@ var Cu = Components.utils;
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
 Object.defineProperty(this, "NetworkHelper", {
-  get: function() {
+  get: function () {
     return require("devtools/shared/webconsole/network-helper");
   },
   configurable: true,
@@ -18,7 +18,7 @@ function run_test() {
   test_isTextMimeType();
 }
 
-function test_isTextMimeType () {
+function test_isTextMimeType() {
   do_check_eq(NetworkHelper.isTextMimeType("text/plain"), true);
   do_check_eq(NetworkHelper.isTextMimeType("application/javascript"), true);
   do_check_eq(NetworkHelper.isTextMimeType("application/json"), true);

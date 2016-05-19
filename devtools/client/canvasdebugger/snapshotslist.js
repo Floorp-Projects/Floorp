@@ -12,7 +12,7 @@ var SnapshotsListView = Heritage.extend(WidgetMethods, {
   /**
    * Initialization function, called when the tool is started.
    */
-  initialize: function() {
+  initialize: function () {
     this.widget = new SideMenuWidget($("#snapshots-list"), {
       showArrows: true
     });
@@ -34,7 +34,7 @@ var SnapshotsListView = Heritage.extend(WidgetMethods, {
   /**
    * Destruction function, called when the tool is closed.
    */
-  destroy: function() {
+  destroy: function () {
     clearNamedTimeout("canvas-actor-recording");
     window.off(EVENTS.SNAPSHOT_RECORDING_FINISHED, this._enableRecordButton);
     this.widget.removeEventListener("select", this._onSelect, false);
@@ -46,7 +46,7 @@ var SnapshotsListView = Heritage.extend(WidgetMethods, {
    * @return object
    *         The newly inserted item.
    */
-  addSnapshot: function() {
+  addSnapshot: function () {
     let contents = document.createElement("hbox");
     contents.className = "snapshot-item";
 
@@ -121,7 +121,7 @@ var SnapshotsListView = Heritage.extend(WidgetMethods, {
    * @param object snapshotOverview
    *        Additional data about the snapshot received from the backend.
    */
-  customizeSnapshot: function(snapshotItem, snapshotActor, snapshotOverview) {
+  customizeSnapshot: function (snapshotItem, snapshotActor, snapshotOverview) {
     // Make sure the function call actors are stored on the item,
     // to be used when populating the CallsListView.
     snapshotItem.attachment.actor = snapshotActor;
@@ -163,7 +163,7 @@ var SnapshotsListView = Heritage.extend(WidgetMethods, {
   /**
    * The select listener for this container.
    */
-  _onSelect: function({ detail: snapshotItem }) {
+  _onSelect: function ({ detail: snapshotItem }) {
     // Check to ensure the attachment has an actor, like
     // an in-progress recording.
     if (!snapshotItem || !snapshotItem.attachment.actor) {
@@ -179,7 +179,7 @@ var SnapshotsListView = Heritage.extend(WidgetMethods, {
     $("#screenshot-container").hidden = true;
     $("#snapshot-filmstrip").hidden = true;
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       // Wait for a few milliseconds between presenting the function calls,
       // screenshot and thumbnails, to allow each component being
       // sequentially drawn. This gives the illusion of snappiness.
@@ -204,8 +204,8 @@ var SnapshotsListView = Heritage.extend(WidgetMethods, {
   /**
    * The click listener for the "clear" button in this container.
    */
-  _onClearButtonClick: function() {
-    Task.spawn(function*() {
+  _onClearButtonClick: function () {
+    Task.spawn(function* () {
       SnapshotsListView.empty();
       CallsListView.empty();
 
@@ -270,7 +270,7 @@ var SnapshotsListView = Heritage.extend(WidgetMethods, {
   /**
    * Begins recording an animation.
    */
-  _recordAnimation: Task.async(function *() {
+  _recordAnimation: Task.async(function* () {
     if (this._recording) {
       return;
     }
@@ -300,7 +300,7 @@ var SnapshotsListView = Heritage.extend(WidgetMethods, {
    * Stops recording animation. Called when a click on the stopwatch occurs during a recording,
    * or if a recording times out.
    */
-  _stopRecordingAnimation: Task.async(function *() {
+  _stopRecordingAnimation: Task.async(function* () {
     clearNamedTimeout("canvas-actor-recording");
     let actorCanStop = yield gTarget.actorHasMethod("canvas", "stopRecordingAnimationFrame");
 
@@ -323,7 +323,7 @@ var SnapshotsListView = Heritage.extend(WidgetMethods, {
   /**
    * Resolves from the front's recordAnimationFrame to setup the interface with the screenshots.
    */
-  _onRecordSuccess: Task.async(function *(snapshotActor) {
+  _onRecordSuccess: Task.async(function* (snapshotActor) {
     // Clear bail-out case if frame found in CANVAS_ACTOR_RECORDING_ATTEMPT milliseconds
     clearNamedTimeout("canvas-actor-recording");
     let snapshotItem = this.getItemAtIndex(this.itemCount - 1);
@@ -351,7 +351,7 @@ var SnapshotsListView = Heritage.extend(WidgetMethods, {
   /**
    * The click listener for the "import" button in this container.
    */
-  _onImportButtonClick: function() {
+  _onImportButtonClick: function () {
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     fp.init(window, L10N.getStr("snapshotsList.saveDialogTitle"), Ci.nsIFilePicker.modeOpen);
     fp.appendFilter(L10N.getStr("snapshotsList.saveDialogJSONFilter"), "*.json");
@@ -397,7 +397,7 @@ var SnapshotsListView = Heritage.extend(WidgetMethods, {
   /**
    * The click listener for the "save" button of each item in this container.
    */
-  _onSaveButtonClick: function(e) {
+  _onSaveButtonClick: function (e) {
     let snapshotItem = this.getItemForElement(e.target);
 
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
@@ -408,7 +408,7 @@ var SnapshotsListView = Heritage.extend(WidgetMethods, {
 
     // Start serializing all the function call actors for the specified snapshot,
     // while the nsIFilePicker dialog is being opened. Snappy.
-    let serialized = Task.spawn(function*() {
+    let serialized = Task.spawn(function* () {
       let data = {
         fileType: CALLS_LIST_SERIALIZER_IDENTIFIER,
         version: CALLS_LIST_SERIALIZER_VERSION,
@@ -488,7 +488,7 @@ var SnapshotsListView = Heritage.extend(WidgetMethods, {
   }
 });
 
-function showNotification (toolbox, name, message) {
+function showNotification(toolbox, name, message) {
   let notificationBox = toolbox.getNotificationBox();
   let notification = notificationBox.getNotificationWithValue(name);
   if (!notification) {

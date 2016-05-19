@@ -28,7 +28,7 @@ var SYSTEM_PRINCIPAL = Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.ns
 
 var EXPECTED_DTU_ASSERT_FAILURE_COUNT = 0;
 
-do_register_cleanup(function() {
+do_register_cleanup(function () {
   equal(DevToolsUtils.assertionFailureCount, EXPECTED_DTU_ASSERT_FAILURE_COUNT,
         "Should have had the expected number of DevToolsUtils.assert() failures.");
 });
@@ -37,27 +37,27 @@ function dumpn(msg) {
   dump(`MEMORY-TEST: ${msg}\n`);
 }
 
-function initDebugger () {
+function initDebugger() {
   let global = new Cu.Sandbox(SYSTEM_PRINCIPAL, { freshZone: true });
   addDebuggerToGlobal(global);
   return new global.Debugger();
 }
 
-function StubbedMemoryFront () {
+function StubbedMemoryFront() {
   this.state = "detached";
   this.recordingAllocations = false;
   this.dbg = initDebugger();
 }
 
-StubbedMemoryFront.prototype.attach = Task.async(function *() {
+StubbedMemoryFront.prototype.attach = Task.async(function* () {
   this.state = "attached";
 });
 
-StubbedMemoryFront.prototype.detach = Task.async(function *() {
+StubbedMemoryFront.prototype.detach = Task.async(function* () {
   this.state = "detached";
 });
 
-StubbedMemoryFront.prototype.saveHeapSnapshot = expectState("attached", Task.async(function *() {
+StubbedMemoryFront.prototype.saveHeapSnapshot = expectState("attached", Task.async(function* () {
   return ThreadSafeChromeUtils.saveHeapSnapshot({ runtime: true });
 }), "saveHeapSnapshot");
 
@@ -69,7 +69,7 @@ StubbedMemoryFront.prototype.stopRecordingAllocations = expectState("attached", 
   this.recordingAllocations = false;
 }));
 
-function waitUntilSnapshotState (store, expected) {
+function waitUntilSnapshotState(store, expected) {
   let predicate = () => {
     let snapshots = store.getState().snapshots;
     do_print(snapshots.map(x => x.state));
@@ -97,12 +97,12 @@ function findReportLeafIndex(node, name = null) {
   return null;
 }
 
-function waitUntilCensusState (store, getCensus, expected) {
+function waitUntilCensusState(store, getCensus, expected) {
   let predicate = () => {
     let snapshots = store.getState().snapshots;
 
-    do_print('Current census state:' +
-             snapshots.map(x => getCensus(x) ? getCensus(x).state : null ));
+    do_print("Current census state:" +
+             snapshots.map(x => getCensus(x) ? getCensus(x).state : null));
 
     return snapshots.length === expected.length &&
            expected.every((state, i) => {
@@ -116,7 +116,7 @@ function waitUntilCensusState (store, getCensus, expected) {
   return waitUntilState(store, predicate);
 }
 
-function *createTempFile () {
+function* createTempFile() {
   let file = FileUtils.getFile("TmpD", ["tmp.fxsnapshot"]);
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
   let destPath = file.path;

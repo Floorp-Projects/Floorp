@@ -18,14 +18,14 @@ const VARIABLES_URI = "chrome://devtools/skin/variables.css";
 const THEME_SELECTOR_STRINGS = {
   light: ":root.theme-light {",
   dark: ":root.theme-dark {"
-}
+};
 
 let variableFileContents;
 
 /**
  * Returns a string of the file found at URI
  */
-function readURI (uri) {
+function readURI(uri) {
   let stream = NetUtil.newChannel({
     uri: NetUtil.newURI(uri, "UTF-8"),
     loadUsingSystemPrincipal: true}
@@ -41,7 +41,7 @@ function readURI (uri) {
  * Takes a theme name and returns the contents of its variable rule block.
  * The first time this runs fetches the variables CSS file and caches it.
  */
-function getThemeFile (name) {
+function getThemeFile(name) {
   if (!variableFileContents) {
     variableFileContents = readURI(VARIABLES_URI);
   }

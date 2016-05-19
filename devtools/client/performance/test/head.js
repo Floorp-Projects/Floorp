@@ -22,7 +22,7 @@ const either = (value, a, b, message) => {
   } else {
     ok(false, message);
   }
-}
+};
 
 // Shortcut for simulating a click on an element.
 const click = (node, win = window) => {
@@ -68,7 +68,7 @@ const key = (id, win = window) => {
   Services.prefs.setBoolPref(PrefUtils.UI_ENABLE_MEMORY_FLAME_CHART, true);
 
   registerCleanupFunction(() => {
-    info(`finish() was called, cleaning up...`);
+    info("finish() was called, cleaning up...");
     DevToolsUtils.testing = false;
 
     PrefUtils.rollbackPrefsToDefault();

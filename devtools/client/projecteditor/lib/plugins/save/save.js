@@ -13,7 +13,7 @@ const { getLocalizedString } = require("devtools/client/projecteditor/lib/helper
 var SavePlugin = Class({
   extends: Plugin,
 
-  init: function(host) {
+  init: function (host) {
 
     this.host.addCommand(this, {
       id: "cmd-save",
@@ -39,12 +39,12 @@ var SavePlugin = Class({
     });
   },
 
-  isCommandEnabled: function(cmd) {
+  isCommandEnabled: function (cmd) {
     let currentEditor = this.host.currentEditor;
     return currentEditor.isEditable;
   },
 
-  onCommand: function(cmd) {
+  onCommand: function (cmd) {
     if (cmd === "cmd-save") {
       this.onEditorSaveRequested();
     } else if (cmd === "cmd-saveas") {
@@ -52,7 +52,7 @@ var SavePlugin = Class({
     }
   },
 
-  saveAs: function() {
+  saveAs: function () {
     let editor = this.host.currentEditor;
     let project = this.host.resourceFor(editor);
 
@@ -71,7 +71,7 @@ var SavePlugin = Class({
     }).then(null, console.error);
   },
 
-  onEditorSaveRequested: function() {
+  onEditorSaveRequested: function () {
     let editor = this.host.currentEditor;
     let resource = this.host.resourceFor(editor);
     if (!resource) {
@@ -81,13 +81,13 @@ var SavePlugin = Class({
     return this.saveResource(editor, resource);
   },
 
-  createResource: function(path) {
-    return this.host.project.resourceFor(path, { create: true })
+  createResource: function (path) {
+    return this.host.project.resourceFor(path, { create: true });
   },
 
-  saveResource: function(editor, resource) {
+  saveResource: function (editor, resource) {
     return editor.save(resource);
   }
-})
+});
 exports.SavePlugin = SavePlugin;
 registerPlugin(SavePlugin);

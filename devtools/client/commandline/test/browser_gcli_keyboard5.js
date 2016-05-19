@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
 // PLEASE TALK TO SOMEONE IN DEVELOPER TOOLS BEFORE EDITING IT
@@ -27,31 +27,31 @@ function test() {
 
 // var helpers = require('./helpers');
 
-exports.testCompleteDown = function(options) {
+exports.testCompleteDown = function (options) {
   return helpers.audit(options, [
     {
-      setup: 'tsn e<DOWN><DOWN><DOWN><DOWN><DOWN><TAB>',
-      check: { input: 'tsn exte ' }
+      setup: "tsn e<DOWN><DOWN><DOWN><DOWN><DOWN><TAB>",
+      check: { input: "tsn exte " }
     },
     {
-      setup: 'tsn e<DOWN><DOWN><DOWN><DOWN><TAB>',
-      check: { input: 'tsn ext ' }
+      setup: "tsn e<DOWN><DOWN><DOWN><DOWN><TAB>",
+      check: { input: "tsn ext " }
     },
     {
-      setup: 'tsn e<DOWN><DOWN><DOWN><TAB>',
-      check: { input: 'tsn extend ' }
+      setup: "tsn e<DOWN><DOWN><DOWN><TAB>",
+      check: { input: "tsn extend " }
     },
     {
-      setup: 'tsn e<DOWN><DOWN><TAB>',
-      check: { input: 'tsn exten ' }
+      setup: "tsn e<DOWN><DOWN><TAB>",
+      check: { input: "tsn exten " }
     },
     {
-      setup: 'tsn e<DOWN><TAB>',
-      check: { input: 'tsn exte ' }
+      setup: "tsn e<DOWN><TAB>",
+      check: { input: "tsn exte " }
     },
     {
-      setup: 'tsn e<TAB>',
-      check: { input: 'tsn ext ' }
+      setup: "tsn e<TAB>",
+      check: { input: "tsn ext " }
     }
   ]);
 };

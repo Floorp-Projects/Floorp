@@ -274,7 +274,7 @@ var PerformanceView = {
   /**
    * Handler for clicking the import button.
    */
-  _onImportButtonClick: function(e) {
+  _onImportButtonClick: function (e) {
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     fp.init(window, L10N.getStr("recordingsList.importDialogTitle"), Ci.nsIFilePicker.modeOpen);
     fp.appendFilter(L10N.getStr("recordingsList.saveDialogJSONFilter"), "*.json");

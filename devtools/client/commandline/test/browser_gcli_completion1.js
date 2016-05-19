@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
 // PLEASE TALK TO SOMEONE IN DEVELOPER TOOLS BEFORE EDITING IT
@@ -27,250 +27,250 @@ function test() {
 
 // var helpers = require('./helpers');
 
-exports.testActivate = function(options) {
+exports.testActivate = function (options) {
   return helpers.audit(options, [
     {
-      setup: '',
+      setup: "",
       check: {
-        hints: ''
+        hints: ""
       }
     },
     {
-      setup: ' ',
+      setup: " ",
       check: {
-        hints: ''
+        hints: ""
       }
     },
     {
-      setup: 'tsr',
+      setup: "tsr",
       check: {
-        hints: ' <text>'
+        hints: " <text>"
       }
     },
     {
-      setup: 'tsr ',
+      setup: "tsr ",
       check: {
-        hints: '<text>'
+        hints: "<text>"
       }
     },
     {
-      setup: 'tsr b',
+      setup: "tsr b",
       check: {
-        hints: ''
+        hints: ""
       }
     },
     {
-      setup: 'tsb',
+      setup: "tsb",
       check: {
-        hints: ' [toggle]'
+        hints: " [toggle]"
       }
     },
     {
-      setup: 'tsm',
+      setup: "tsm",
       check: {
-        hints: ' <abc> <txt> <num>'
+        hints: " <abc> <txt> <num>"
       }
     },
     {
-      setup: 'tsm ',
+      setup: "tsm ",
       check: {
-        hints: 'a <txt> <num>'
+        hints: "a <txt> <num>"
       }
     },
     {
-      setup: 'tsm a',
+      setup: "tsm a",
       check: {
-        hints: ' <txt> <num>'
+        hints: " <txt> <num>"
       }
     },
     {
-      setup: 'tsm a ',
+      setup: "tsm a ",
       check: {
-        hints: '<txt> <num>'
+        hints: "<txt> <num>"
       }
     },
     {
-      setup: 'tsm a  ',
+      setup: "tsm a  ",
       check: {
-        hints: '<txt> <num>'
+        hints: "<txt> <num>"
       }
     },
     {
-      setup: 'tsm a  d',
+      setup: "tsm a  d",
       check: {
-        hints: ' <num>'
+        hints: " <num>"
       }
     },
     {
       setup: 'tsm a "d d"',
       check: {
-        hints: ' <num>'
+        hints: " <num>"
       }
     },
     {
       setup: 'tsm a "d ',
       check: {
-        hints: ' <num>'
+        hints: " <num>"
       }
     },
     {
       setup: 'tsm a "d d" ',
       check: {
-        hints: '<num>'
+        hints: "<num>"
       }
     },
     {
       setup: 'tsm a "d d ',
       check: {
-        hints: ' <num>'
+        hints: " <num>"
       }
     },
     {
-      setup: 'tsm d r',
+      setup: "tsm d r",
       check: {
-        hints: ' <num>'
+        hints: " <num>"
       }
     },
     {
-      setup: 'tsm a d ',
+      setup: "tsm a d ",
       check: {
-        hints: '<num>'
+        hints: "<num>"
       }
     },
     {
-      setup: 'tsm a d 4',
+      setup: "tsm a d 4",
       check: {
-        hints: ''
+        hints: ""
       }
     },
     {
-      setup: 'tsg',
+      setup: "tsg",
       check: {
-        hints: ' <solo> [options]'
+        hints: " <solo> [options]"
       }
     },
     {
-      setup: 'tsg ',
+      setup: "tsg ",
       check: {
-        hints: 'aaa [options]'
+        hints: "aaa [options]"
       }
     },
     {
-      setup: 'tsg a',
+      setup: "tsg a",
       check: {
-        hints: 'aa [options]'
+        hints: "aa [options]"
       }
     },
     {
-      setup: 'tsg b',
+      setup: "tsg b",
       check: {
-        hints: 'bb [options]'
+        hints: "bb [options]"
       }
     },
     {
       skipIf: options.isPhantomjs, // PhantomJS gets predictions wrong
-      setup: 'tsg d',
+      setup: "tsg d",
       check: {
-        hints: ' [options] -> ccc'
+        hints: " [options] -> ccc"
       }
     },
     {
-      setup: 'tsg aa',
+      setup: "tsg aa",
       check: {
-        hints: 'a [options]'
+        hints: "a [options]"
       }
     },
     {
-      setup: 'tsg aaa',
+      setup: "tsg aaa",
       check: {
-        hints: ' [options]'
+        hints: " [options]"
       }
     },
     {
-      setup: 'tsg aaa ',
+      setup: "tsg aaa ",
       check: {
-        hints: '[options]'
+        hints: "[options]"
       }
     },
     {
-      setup: 'tsg aaa d',
+      setup: "tsg aaa d",
       check: {
-        hints: ' [options]'
+        hints: " [options]"
       }
     },
     {
-      setup: 'tsg aaa dddddd',
+      setup: "tsg aaa dddddd",
       check: {
-        hints: ' [options]'
+        hints: " [options]"
       }
     },
     {
-      setup: 'tsg aaa dddddd ',
+      setup: "tsg aaa dddddd ",
       check: {
-        hints: '[options]'
+        hints: "[options]"
       }
     },
     {
       setup: 'tsg aaa "d',
       check: {
-        hints: ' [options]'
+        hints: " [options]"
       }
     },
     {
       setup: 'tsg aaa "d d',
       check: {
-        hints: ' [options]'
+        hints: " [options]"
       }
     },
     {
       setup: 'tsg aaa "d d"',
       check: {
-        hints: ' [options]'
+        hints: " [options]"
       }
     },
     {
-      setup: 'tsn ex ',
+      setup: "tsn ex ",
       check: {
-        hints: ''
+        hints: ""
       }
     },
     {
-      setup: 'selarr',
+      setup: "selarr",
       check: {
-        hints: ' -> tselarr'
+        hints: " -> tselarr"
       }
     },
     {
-      setup: 'tselar 1',
+      setup: "tselar 1",
       check: {
-        hints: ''
+        hints: ""
       }
     },
     {
-      name: 'tselar |1',
-      setup: function() {
-        return helpers.setInput(options, 'tselar 1', 7);
+      name: "tselar |1",
+      setup: function () {
+        return helpers.setInput(options, "tselar 1", 7);
       },
       check: {
-        hints: ''
+        hints: ""
       }
     },
     {
-      name: 'tselar| 1',
-      setup: function() {
-        return helpers.setInput(options, 'tselar 1', 6);
+      name: "tselar| 1",
+      setup: function () {
+        return helpers.setInput(options, "tselar 1", 6);
       },
       check: {
-        hints: ' -> tselarr'
+        hints: " -> tselarr"
       }
     },
     {
-      name: 'tsela|r 1',
-      setup: function() {
-        return helpers.setInput(options, 'tselar 1', 5);
+      name: "tsela|r 1",
+      setup: function () {
+        return helpers.setInput(options, "tselar 1", 5);
       },
       check: {
-        hints: ' -> tselarr'
+        hints: " -> tselarr"
       }
     },
   ]);

@@ -10,12 +10,12 @@
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-console.html";
 
-add_task(function*() {
+add_task(function* () {
   yield loadTab(TEST_URI);
   let hud = yield openConsole();
   hud.jsterm.clearOutput();
 
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function*() {
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
     for (let i = 0; i < 50; i++) {
       content.console.log("http://www.example.com/ " + i);
     }

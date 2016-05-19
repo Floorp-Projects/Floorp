@@ -15,7 +15,7 @@ exports.items = [{
   buttonClass: "command-button command-button-invertable",
   tooltipText: l10n.lookup("scratchpadOpenTooltip"),
   hidden: true,
-  exec: function(args, context) {
+  exec: function (args, context) {
     const {ScratchpadManager} = Cu.import("resource://devtools/client/scratchpad/scratchpad-manager.jsm", {});
     ScratchpadManager.openScratchpad();
   }

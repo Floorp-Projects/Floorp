@@ -17,8 +17,8 @@ function test() {
     const gDebugger = gPanel.panelWin;
     const gEditor = gDebugger.DebuggerView.editor;
     const gSources = gDebugger.DebuggerView.Sources;
-    const queries = gDebugger.require('./content/queries');
-    const constants = gDebugger.require('./content/constants');
+    const queries = gDebugger.require("./content/queries");
+    const constants = gDebugger.require("./content/constants");
     const actions = bindActionCreators(gPanel);
     const getState = gDebugger.DebuggerController.getState;
 
@@ -99,8 +99,8 @@ function test() {
          "The editor caret position is not properly set.");
     }
 
-    Task.spawn(function*() {
-      yield waitForSourceAndCaretAndScopes(gPanel, ".html", 17)
+    Task.spawn(function* () {
+      yield waitForSourceAndCaretAndScopes(gPanel, ".html", 17);
 
       yield actions.addBreakpoint(
         { actor: gSources.selectedValue, line: 18 }, " 1a"

@@ -37,12 +37,12 @@ var XHR_CSS_URL = "https://developer.mozilla.org/en-US/docs/Web/CSS/";
 
 // Parameters for the link to MDN in the tooltip, so
 // so we know which MDN visits come from this feature
-const PAGE_LINK_PARAMS = "?utm_source=mozilla&utm_medium=firefox-inspector&utm_campaign=default"
+const PAGE_LINK_PARAMS = "?utm_source=mozilla&utm_medium=firefox-inspector&utm_campaign=default";
 // URL for the page link omits locale, so a locale-specific page will be loaded
 var PAGE_LINK_URL = "https://developer.mozilla.org/docs/Web/CSS/";
 exports.PAGE_LINK_URL = PAGE_LINK_URL;
 
-const BROWSER_WINDOW = 'navigator:browser';
+const BROWSER_WINDOW = "navigator:browser";
 
 const PROPERTY_NAME_COLOR = "theme-fg-color5";
 const PROPERTY_VALUE_COLOR = "theme-fg-color1";
@@ -264,7 +264,7 @@ function MdnDocsWidget(tooltipDocument) {
 
   // listen for clicks and open in the browser window instead
   let browserWindow = Services.wm.getMostRecentWindow(BROWSER_WINDOW);
-  this.elements.linkToMdn.addEventListener("click", function(e) {
+  this.elements.linkToMdn.addEventListener("click", function (e) {
     e.stopPropagation();
     e.preventDefault();
     let link = e.target.href;
@@ -295,7 +295,7 @@ MdnDocsWidget.prototype = {
    * @param {string} propertyName
    * The name of the CSS property for which we need to display help.
    */
-  loadCssDocs: function(propertyName) {
+  loadCssDocs: function (propertyName) {
 
     /**
      * Do all the setup we can do synchronously, and get the document in
@@ -366,11 +366,11 @@ MdnDocsWidget.prototype = {
     return deferred.promise;
   },
 
-  destroy: function() {
+  destroy: function () {
     this.elements = null;
     this.doc = null;
   }
-}
+};
 
 /**
  * L10N utility class

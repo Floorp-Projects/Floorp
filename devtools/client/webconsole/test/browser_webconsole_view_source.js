@@ -11,7 +11,7 @@
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-error.html";
 
-add_task(function*() {
+add_task(function* () {
   yield loadTab(TEST_URI);
   let hud = yield openConsole(null);
   info("console opened");
@@ -23,7 +23,7 @@ add_task(function*() {
     expectUncaughtException();
   }
 
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function*() {
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
     let button = content.document.querySelector("button");
     ok(button, "we have the button on the page");
     button.click();

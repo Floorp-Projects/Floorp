@@ -3,76 +3,76 @@
 
 // Tests that the cookie commands works as they should
 
-const TEST_URI = "http://example.com/browser/devtools/client/commandline/"+
+const TEST_URI = "http://example.com/browser/devtools/client/commandline/" +
                  "test/browser_cmd_cookie.html";
 
 function test() {
-  helpers.addTabWithToolbar(TEST_URI, function(options) {
+  helpers.addTabWithToolbar(TEST_URI, function (options) {
     return helpers.audit(options, [
       {
-        setup: 'cookie',
+        setup: "cookie",
         check: {
-          input:  'cookie',
-          hints:        ' list',
-          markup: 'IIIIII',
-          status: 'ERROR'
+          input:  "cookie",
+          hints:        " list",
+          markup: "IIIIII",
+          status: "ERROR"
         },
       },
       {
-        setup: 'cookie lis',
+        setup: "cookie lis",
         check: {
-          input:  'cookie lis',
-          hints:            't',
-          markup: 'IIIIIIVIII',
-          status: 'ERROR'
+          input:  "cookie lis",
+          hints:            "t",
+          markup: "IIIIIIVIII",
+          status: "ERROR"
         },
       },
       {
-        setup: 'cookie list',
+        setup: "cookie list",
         check: {
-          input:  'cookie list',
-          hints:             '',
-          markup: 'VVVVVVVVVVV',
-          status: 'VALID'
+          input:  "cookie list",
+          hints:             "",
+          markup: "VVVVVVVVVVV",
+          status: "VALID"
         },
       },
       {
-        setup: 'cookie remove',
+        setup: "cookie remove",
         check: {
-          input:  'cookie remove',
-          hints:               ' <name>',
-          markup: 'VVVVVVVVVVVVV',
-          status: 'ERROR'
+          input:  "cookie remove",
+          hints:               " <name>",
+          markup: "VVVVVVVVVVVVV",
+          status: "ERROR"
         },
       },
       {
-        setup: 'cookie set',
+        setup: "cookie set",
         check: {
-          input:  'cookie set',
-          hints:            ' <name> <value> [options]',
-          markup: 'VVVVVVVVVV',
-          status: 'ERROR'
+          input:  "cookie set",
+          hints:            " <name> <value> [options]",
+          markup: "VVVVVVVVVV",
+          status: "ERROR"
         },
       },
       {
-        setup: 'cookie set fruit',
+        setup: "cookie set fruit",
         check: {
-          input:  'cookie set fruit',
-          hints:                  ' <value> [options]',
-          markup: 'VVVVVVVVVVVVVVVV',
-          status: 'ERROR'
+          input:  "cookie set fruit",
+          hints:                  " <value> [options]",
+          markup: "VVVVVVVVVVVVVVVV",
+          status: "ERROR"
         },
       },
       {
-        setup: 'cookie set fruit ban',
+        setup: "cookie set fruit ban",
         check: {
-          input:  'cookie set fruit ban',
-          hints:                      ' [options]',
-          markup: 'VVVVVVVVVVVVVVVVVVVV',
-          status: 'VALID',
+          input:  "cookie set fruit ban",
+          hints:                      " [options]",
+          markup: "VVVVVVVVVVVVVVVVVVVV",
+          status: "VALID",
           args: {
-            name: { value: 'fruit' },
-            value: { value: 'ban' },
+            name: { value: "fruit" },
+            value: { value: "ban" },
             secure: { value: false },
           }
         },
@@ -81,13 +81,13 @@ function test() {
         setup:    'cookie set fruit ban --path ""',
         check: {
           input:  'cookie set fruit ban --path ""',
-          hints:                                ' [options]',
-          markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
-          status: 'VALID',
+          hints:                                " [options]",
+          markup: "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVV",
+          status: "VALID",
           args: {
-            name: { value: 'fruit' },
-            value: { value: 'ban' },
-            path: { value: '' },
+            name: { value: "fruit" },
+            value: { value: "ban" },
+            path: { value: "" },
             secure: { value: false },
           }
         },
@@ -102,8 +102,8 @@ function test() {
         setup: "cookie set zup banana",
         check: {
           args: {
-            name: { value: 'zup' },
-            value: { value: 'banana' },
+            name: { value: "zup" },
+            value: { value: "banana" },
           }
         },
         exec: {
@@ -125,7 +125,7 @@ function test() {
         exec: {
           output: [ /zap=zep/, /zup=banana/, /Edit/ ]
         },
-        post: function(output, text) {
+        post: function (output, text) {
           ok(!text.includes("zip"), "");
           ok(!text.includes("zop"), "");
         }
@@ -139,7 +139,7 @@ function test() {
         exec: {
           output: [ /zup=banana/, /Edit/ ]
         },
-        post: function(output, text) {
+        post: function (output, text) {
           ok(!text.includes("zap"), "");
           ok(!text.includes("zep"), "");
           ok(!text.includes("zip"), "");
@@ -153,9 +153,9 @@ function test() {
       {
         setup: "cookie list",
         exec: {
-          output: 'No cookies found for host example.com'
+          output: "No cookies found for host example.com"
         },
-        post: function(output, text) {
+        post: function (output, text) {
           ok(!text.includes("zap"), "");
           ok(!text.includes("zep"), "");
           ok(!text.includes("zip"), "");

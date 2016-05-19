@@ -9,7 +9,7 @@
 
 const URL = MAIN_DOMAIN + "animation.html";
 
-add_task(function*() {
+add_task(function* () {
   let {client, walker, animations} = yield initAnimationsFrontForUrl(URL);
 
   info("Get the test node and its animation front");

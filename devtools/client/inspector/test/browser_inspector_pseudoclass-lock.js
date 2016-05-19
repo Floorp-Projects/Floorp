@@ -6,18 +6,18 @@
 // Test that locking the pseudoclass displays correctly in the ruleview
 
 const PSEUDO = ":hover";
-const TEST_URL = 'data:text/html;charset=UTF-8,' +
-                 '<head>' +
-                 '  <style>div {color:red;} div:hover {color:blue;}</style>' +
-                 '</head>' +
-                 '<body>' +
+const TEST_URL = "data:text/html;charset=UTF-8," +
+                 "<head>" +
+                 "  <style>div {color:red;} div:hover {color:blue;}</style>" +
+                 "</head>" +
+                 "<body>" +
                  '  <div id="parent-div">' +
                  '    <div id="div-1">test div</div>' +
                  '    <div id="div-2">test div2</div>' +
-                 '  </div>' +
-                 '</body>';
+                 "  </div>" +
+                 "</body>";
 
-add_task(function*() {
+add_task(function* () {
   info("Creating the test tab and opening the rule-view");
   let {toolbox, inspector, testActor} = yield openInspectorForURL(TEST_URL);
 

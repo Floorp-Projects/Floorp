@@ -9,7 +9,7 @@
  * returns null.
  */
 
-function findGraphNodeParent (el) {
+function findGraphNodeParent(el) {
   // Some targets may not contain `classList` property
   if (!el.classList)
     return null;
@@ -100,4 +100,4 @@ var ToggleMixin = {
   _onToggle: function () {
     this._viewController({ visible: !this.isVisible() });
   }
-}
+};

@@ -10,7 +10,7 @@
 const { initPerformanceInNewTab, teardownToolboxAndRemoveTab } = require("devtools/client/performance/test/helpers/panel-utils");
 const { SIMPLE_URL } = require("devtools/client/performance/test/helpers/urls");
 
-add_task(function*() {
+add_task(function* () {
   let { target, toolbox, panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
     win: window

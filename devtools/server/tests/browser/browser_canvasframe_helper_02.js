@@ -17,7 +17,7 @@ const {
   CanvasFrameAnonymousContentHelper
 } = require("devtools/server/actors/highlighters/utils/markup");
 
-add_task(function*() {
+add_task(function* () {
   let browser = yield addTab("about:preferences");
   let doc = browser.contentDocument;
 

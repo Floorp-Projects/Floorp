@@ -21,7 +21,7 @@ function test() {
     const gSearchView = gDebugger.DebuggerView.Filtering.FilteredSources;
     const gSearchBox = gDebugger.DebuggerView.Filtering._searchbox;
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       // move searches to yields
       // not sure what to do with the error...
 

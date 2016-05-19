@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
 // PLEASE TALK TO SOMEONE IN DEVELOPER TOOLS BEFORE EDITING IT
@@ -28,104 +28,104 @@ function test() {
 // var assert = require('../testharness/assert');
 // var helpers = require('./helpers');
 
-exports.testActivate = function(options) {
+exports.testActivate = function (options) {
   return helpers.audit(options, [
     {
-      setup:    ' ',
+      setup:    " ",
       check: {
-        input:  ' ',
-        hints:   '',
-        markup: 'V',
+        input:  " ",
+        hints:   "",
+        markup: "V",
         cursor: 1,
-        current: '__command',
-        status: 'ERROR',
-        message:  '',
+        current: "__command",
+        status: "ERROR",
+        message:  "",
         unassigned: [ ],
-        outputState: 'false:default',
-        tooltipState: 'false:default'
+        outputState: "false:default",
+        tooltipState: "false:default"
       }
     },
     {
-      setup:    'tsb ',
+      setup:    "tsb ",
       check: {
-        input:  'tsb ',
-        hints:      'false',
-        markup: 'VVVV',
+        input:  "tsb ",
+        hints:      "false",
+        markup: "VVVV",
         cursor: 4,
-        current: 'toggle',
-        status: 'VALID',
-        options: [ 'false', 'true' ],
-        message:  '',
-        predictions: [ 'false', 'true' ],
+        current: "toggle",
+        status: "VALID",
+        options: [ "false", "true" ],
+        message:  "",
+        predictions: [ "false", "true" ],
         unassigned: [ ],
-        outputState: 'false:default',
-        tooltipState: 'true:importantFieldFlag'
+        outputState: "false:default",
+        tooltipState: "true:importantFieldFlag"
       }
     },
     {
-      setup:    'tsb t',
+      setup:    "tsb t",
       check: {
-        input:  'tsb t',
-        hints:       'rue',
-        markup: 'VVVVI',
+        input:  "tsb t",
+        hints:       "rue",
+        markup: "VVVVI",
         cursor: 5,
-        current: 'toggle',
-        status: 'ERROR',
-        options: [ 'true' ],
-        message:  '',
-        predictions: [ 'true' ],
+        current: "toggle",
+        status: "ERROR",
+        options: [ "true" ],
+        message:  "",
+        predictions: [ "true" ],
         unassigned: [ ],
-        outputState: 'false:default',
-        tooltipState: 'true:importantFieldFlag'
+        outputState: "false:default",
+        tooltipState: "true:importantFieldFlag"
       }
     },
     {
-      setup:    'tsb tt',
+      setup:    "tsb tt",
       check: {
-        input:  'tsb tt',
-        hints:        ' -> true',
-        markup: 'VVVVII',
+        input:  "tsb tt",
+        hints:        " -> true",
+        markup: "VVVVII",
         cursor: 6,
-        current: 'toggle',
-        status: 'ERROR',
-        options: [ 'true' ],
-        message: '',
-        predictions: [ 'true' ],
+        current: "toggle",
+        status: "ERROR",
+        options: [ "true" ],
+        message: "",
+        predictions: [ "true" ],
         unassigned: [ ],
-        outputState: 'false:default',
-        tooltipState: 'true:importantFieldFlag'
+        outputState: "false:default",
+        tooltipState: "true:importantFieldFlag"
       }
     },
     {
-      setup:    'wxqy',
+      setup:    "wxqy",
       check: {
-        input:  'wxqy',
-        hints:      '',
-        markup: 'EEEE',
+        input:  "wxqy",
+        hints:      "",
+        markup: "EEEE",
         cursor: 4,
-        current: '__command',
-        status: 'ERROR',
+        current: "__command",
+        status: "ERROR",
         options: [ ],
-        message:  'Can\'t use \'wxqy\'.',
+        message:  "Can't use 'wxqy'.",
         predictions: [ ],
         unassigned: [ ],
-        outputState: 'false:default',
-        tooltipState: 'true:isError'
+        outputState: "false:default",
+        tooltipState: "true:isError"
       }
     },
     {
-      setup:    '',
+      setup:    "",
       check: {
-        input:  '',
-        hints:  '',
-        markup: '',
+        input:  "",
+        hints:  "",
+        markup: "",
         cursor: 0,
-        current: '__command',
-        status: 'ERROR',
-        message: '',
+        current: "__command",
+        status: "ERROR",
+        message: "",
         unassigned: [ ],
-        outputState: 'false:default',
-        tooltipState: 'false:default'
+        outputState: "false:default",
+        tooltipState: "false:default"
       }
     }
   ]);

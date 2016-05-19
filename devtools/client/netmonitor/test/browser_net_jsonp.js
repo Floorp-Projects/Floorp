@@ -35,7 +35,7 @@ function test() {
           time: true
         });
 
-      Task.spawn(function*() {
+      Task.spawn(function* () {
         let RESPONSE_BODY_DISPLAYED = aMonitor.panelWin.EVENTS.RESPONSE_BODY_DISPLAYED;
 
         EventUtils.sendMouseEvent({ type: "mousedown" },

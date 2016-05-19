@@ -78,7 +78,7 @@ function testCleanExit() {
   return deferred.promise;
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gWindow = null;
   gDebuggee = null;
   gPanel = null;

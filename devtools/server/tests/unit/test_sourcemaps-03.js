@@ -16,8 +16,8 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-source-map");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-source-map", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-source-map", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_simple_source_map();
     });
@@ -27,7 +27,7 @@ function run_test()
 
 function testBreakpointMapping(aName, aCallback)
 {
-  Task.spawn(function*() {
+  Task.spawn(function* () {
     let response = yield waitForPause(gThreadClient);
     do_check_eq(response.why.type, "debuggerStatement");
 

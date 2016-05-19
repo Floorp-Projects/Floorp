@@ -6,7 +6,7 @@ const TEST_URI = "data:text/html;charset=utf-8," +
 
 const { targetFromURL } = require("devtools/client/framework/target-from-url");
 
-function assertIsTabTarget(target, chrome=false) {
+function assertIsTabTarget(target, chrome = false) {
   is(target.url, TEST_URI);
   is(target.isLocalTab, false);
   is(target.chrome, chrome);
@@ -14,7 +14,7 @@ function assertIsTabTarget(target, chrome=false) {
   is(target.isRemote, true);
 }
 
-add_task(function*() {
+add_task(function* () {
   let tab = yield addTab(TEST_URI);
   let browser = tab.linkedBrowser;
   let target;
@@ -23,7 +23,7 @@ add_task(function*() {
   try {
     yield targetFromURL(new URL("http://foo?type=x"));
     ok(false, "Shouldn't pass");
-  } catch(e) {
+  } catch (e) {
     is(e.message, "targetFromURL, unsupported type='x' parameter");
   }
 
@@ -40,7 +40,7 @@ add_task(function*() {
   try {
     yield targetFromURL(new URL("http://foo?type=tab&id=1"));
     ok(false, "Shouldn't pass");
-  } catch(e) {
+  } catch (e) {
     is(e.message, "targetFromURL, tab with outerWindowID:'1' doesn't exist");
   }
 

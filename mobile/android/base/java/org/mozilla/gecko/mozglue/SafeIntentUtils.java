@@ -9,7 +9,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 
-public class ContextUtils {
+public class SafeIntentUtils {
     private static final String LOGTAG = "GeckoContextUtils";
 
     public static Bundle getBundleExtra(final Intent intent, final String name) {

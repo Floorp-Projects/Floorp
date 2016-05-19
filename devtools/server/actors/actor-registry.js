@@ -90,7 +90,7 @@ function request(uri) {
     NetUtil.asyncFetch({
       uri,
       loadUsingSystemPrincipal: true,
-     }, (stream, status, req) => {
+    }, (stream, status, req) => {
       if (!components.isSuccessCode(status)) {
         reject(new Error("Request failed with status code = "
                          + status

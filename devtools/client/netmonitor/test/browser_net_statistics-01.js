@@ -40,12 +40,12 @@ function test() {
         is($("#empty-cache-chart").childNodes.length, 1,
           "There should be a real empty cache chart created now.");
 
-        Task.spawn(function*() {
+        Task.spawn(function* () {
           yield until(() => $all(".pie-chart-container:not([placeholder=true])").length == 2);
           ok(true, "Two real pie charts appear to be rendered correctly.");
 
           yield until(() => $all(".table-chart-container:not([placeholder=true])").length == 2);
-          ok(true, "Two real table charts appear to be rendered correctly.")
+          ok(true, "Two real table charts appear to be rendered correctly.");
 
           teardown(aMonitor).then(finish);
         });
@@ -66,7 +66,7 @@ function waitForTick() {
 }
 
 function until(predicate) {
-  return Task.spawn(function*() {
+  return Task.spawn(function* () {
     while (!predicate()) yield waitForTick();
   });
 }

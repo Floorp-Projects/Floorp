@@ -41,7 +41,7 @@ const DirectorRegistry = exports.DirectorRegistry = {
    */
   install: function (id, scriptDef) {
     if (id in gDirectorScripts) {
-      console.error(ERR_DIRECTOR_INSTALL_TWICE,id);
+      console.error(ERR_DIRECTOR_INSTALL_TWICE, id);
       return false;
     }
 
@@ -60,7 +60,7 @@ const DirectorRegistry = exports.DirectorRegistry = {
    * @param id string
    *    The ID of a director script.
    */
-  uninstall: function(id) {
+  uninstall: function (id) {
     if (id in gDirectorScripts) {
       delete gDirectorScripts[id];
 
@@ -86,22 +86,22 @@ const DirectorRegistry = exports.DirectorRegistry = {
    * @param id string
    *    The ID of a director script.
    */
-  get: function(id) {
+  get: function (id) {
     return gDirectorScripts[id];
   },
 
   /**
    * Returns an array of registered director script ids.
    */
-  list: function() {
+  list: function () {
     return Object.keys(gDirectorScripts);
   },
 
   /**
    * Removes all the registered director scripts.
    */
-  clear: function() {
-   gDirectorScripts = Object.create(null);
+  clear: function () {
+    gDirectorScripts = Object.create(null);
   }
 };
 
@@ -139,13 +139,13 @@ exports.setupParentProcess = function setupParentProcess({mm, prefix}) {
 
   function handleChildRequest(msg) {
     switch (msg.json.method) {
-    case "get":
-      return DirectorRegistry.get(msg.json.args[0]);
-    case "list":
-      return DirectorRegistry.list();
-    default:
-      console.error(ERR_DIRECTOR_PARENT_UNKNOWN_METHOD, msg.json.method);
-      throw new Error(ERR_DIRECTOR_PARENT_UNKNOWN_METHOD);
+      case "get":
+        return DirectorRegistry.get(msg.json.args[0]);
+      case "list":
+        return DirectorRegistry.list();
+      default:
+        console.error(ERR_DIRECTOR_PARENT_UNKNOWN_METHOD, msg.json.method);
+        throw new Error(ERR_DIRECTOR_PARENT_UNKNOWN_METHOD);
     }
   }
 };
@@ -192,8 +192,8 @@ function setupChildProcess() {
     }
 
     return reply[0];
-  };
-};
+  }
+}
 
 /**
  * The DirectorRegistry Actor is a global actor which manages install/uninstall of
@@ -203,15 +203,15 @@ const DirectorRegistryActor = exports.DirectorRegistryActor = protocol.ActorClas
   typeName: "director-registry",
 
   /* init & destroy methods */
-  initialize: function(conn, parentActor) {
+  initialize: function (conn, parentActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
   },
-  destroy: function(conn) {
+  destroy: function (conn) {
     protocol.Actor.prototype.destroy.call(this, conn);
     this.finalize();
   },
 
-  finalize: method(function() {
+  finalize: method(function () {
     // nothing to cleanup
   }, {
     oneway: true
@@ -227,7 +227,7 @@ const DirectorRegistryActor = exports.DirectorRegistryActor = protocol.ActorClas
    * @param Object scriptOptions
    *        The director-script option object.
    */
-  install: method(function(id, { scriptCode, scriptOptions }) {
+  install: method(function (id, { scriptCode, scriptOptions }) {
     // TODO: add more checks on id format?
     if (!id || id.length === 0) {
       throw Error("director-script id is mandatory");
@@ -286,7 +286,7 @@ const DirectorRegistryActor = exports.DirectorRegistryActor = protocol.ActorClas
  * The corresponding Front object for the DirectorRegistryActor.
  */
 exports.DirectorRegistryFront = protocol.FrontClass(DirectorRegistryActor, {
-  initialize: function(client, { directorRegistryActor }) {
+  initialize: function (client, { directorRegistryActor }) {
     protocol.Front.prototype.initialize.call(this, client, {
       actor: directorRegistryActor
     });

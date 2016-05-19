@@ -46,13 +46,13 @@ const JITOptimizationsItem = module.exports = createClass({
 
     let content;
     switch (type) {
-      case "site":         content = this._renderSite(this.props); break;
-      case "attempts":     content = this._renderAttempts(this.props); break;
-      case "types":        content = this._renderTypes(this.props); break;
-      case "attempt":      content = this._renderAttempt(this.props); break;
-      case "type":         content = this._renderType(this.props); break;
+      case "site": content = this._renderSite(this.props); break;
+      case "attempts": content = this._renderAttempts(this.props); break;
+      case "types": content = this._renderTypes(this.props); break;
+      case "attempt": content = this._renderAttempt(this.props); break;
+      case "type": content = this._renderType(this.props); break;
       case "observedtype": content = this._renderObservedType(this.props); break;
-    };
+    }
 
     return dom.div(
       {
@@ -91,7 +91,7 @@ const JITOptimizationsItem = module.exports = createClass({
         line: +site.data.line,
         column: site.data.column,
       }
-    })
+    });
     let children = [text, frame];
 
     if (!hasSuccessfulOutcome(site)) {

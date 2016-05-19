@@ -67,7 +67,8 @@ module.exports = createClass({
             name: addon.name,
             icon: addon.iconURL || ExtensionIcon,
             addonID: addon.id,
-            addonActor: addon.actor
+            addonActor: addon.actor,
+            temporarilyInstalled: addon.temporarilyInstalled
           };
         });
 
@@ -112,13 +113,13 @@ module.exports = createClass({
     let targetClass = AddonTarget;
 
     return dom.div({
-      id,
+      id: id + "-panel",
       className: "panel",
       role: "tabpanel",
-      "aria-labelledby": "panel-addons-header-name"
+      "aria-labelledby": id + "-header"
     },
     PanelHeader({
-      id: "addons-panel-header-name",
+      id: id + "-header",
       name: Strings.GetStringFromName("addons")
     }),
     AddonsControls({ debugDisabled }),

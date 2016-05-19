@@ -241,7 +241,7 @@ function verifyNextLevels3(lastPage2, varName) {
   });
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

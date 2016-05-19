@@ -16,7 +16,7 @@ const { Class } = require("sdk/core/heritage");
  * This object is not exported.
  */
 var Scope = Class({
-  on: function(target, event, handler) {
+  on: function (target, event, handler) {
     this.listeners = this.listeners || [];
     this.listeners.push({
       target: target,
@@ -26,7 +26,7 @@ var Scope = Class({
     target.on(event, handler);
   },
 
-  off: function(t, e, h) {
+  off: function (t, e, h) {
     if (!this.listeners) return;
     this.listeners = this.listeners.filter(({ target, event, handler }) => {
       return !(target === t && event === e && handler === h);
@@ -34,7 +34,7 @@ var Scope = Class({
     target.off(event, handler);
   },
 
-  clear: function(clearTarget) {
+  clear: function (clearTarget) {
     if (!this.listeners) return;
     this.listeners = this.listeners.filter(({ target, event, handler }) => {
       if (target === clearTarget) {
@@ -45,7 +45,7 @@ var Scope = Class({
     });
   },
 
-  destroy: function() {
+  destroy: function () {
     if (!this.listeners) return;
     this.listeners.forEach(({ target, event, handler }) => {
       target.off(event, handler);
@@ -68,19 +68,19 @@ exports.scope = scope;
 exports.on = function on(owner, target, event, handler) {
   if (!target) return;
   scope(owner).on(target, event, handler);
-}
+};
 
 exports.off = function off(owner, target, event, handler) {
   if (!target) return;
   scope(owner).off(target, event, handler);
-}
+};
 
 exports.forget = function forget(owner, target) {
   scope(owner).clear(target);
-}
+};
 
 exports.done = function done(owner) {
   scope(owner).destroy();
   scopes.delete(owner);
-}
+};
 

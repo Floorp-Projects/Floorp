@@ -115,7 +115,7 @@ function verifySourceAndCaret(aUrl, aLine, aColumn, aSelection) {
     "The current editor selection appears to be correct.");
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

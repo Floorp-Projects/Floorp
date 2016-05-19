@@ -19,9 +19,9 @@ function test() {
     const gEditor = gDebugger.DebuggerView.editor;
     const gSources = gDebugger.DebuggerView.Sources;
     const gFrames = gDebugger.DebuggerView.StackFrames;
-    const constants = gDebugger.require('./content/constants');
+    const constants = gDebugger.require("./content/constants");
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceAndCaretAndScopes(gPanel, ".html", 14);
 
       const startedLoading = waitForNextDispatch(gDebugger.DebuggerController,

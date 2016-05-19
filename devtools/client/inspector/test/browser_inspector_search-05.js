@@ -75,7 +75,7 @@ add_task(function* () {
   yield checkCorrectButton(inspector, "#iframe-1");
 });
 
-let checkCorrectButton = Task.async(function*(inspector, frameSelector) {
+let checkCorrectButton = Task.async(function* (inspector, frameSelector) {
   let {walker} = inspector;
   let node = inspector.selection.nodeFront;
 

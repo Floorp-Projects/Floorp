@@ -96,20 +96,20 @@ StreamCopier._nextId = 0;
 
 StreamCopier.prototype = {
 
-  copy: function() {
+  copy: function () {
     // Dispatch to the next tick so that it's possible to attach a progress
     // event listener, even for extremely fast copies (like when testing).
     Services.tm.currentThread.dispatch(() => {
       try {
         this._copy();
-      } catch(e) {
+      } catch (e) {
         this._deferred.reject(e);
       }
     }, 0);
     return this;
   },
 
-  _copy: function() {
+  _copy: function () {
     let bytesAvailable = this.input.available();
     let amountToCopy = Math.min(bytesAvailable, this._amountLeft);
     this._debug("Trying to copy: " + amountToCopy);
@@ -117,7 +117,7 @@ StreamCopier.prototype = {
     let bytesCopied;
     try {
       bytesCopied = this.output.writeFrom(this.input, amountToCopy);
-    } catch(e) {
+    } catch (e) {
       if (e.result == Cr.NS_BASE_STREAM_WOULD_BLOCK) {
         this._debug("Base stream would block, will retry");
         this._debug("Waiting for output stream");
@@ -143,17 +143,17 @@ StreamCopier.prototype = {
     this.input.asyncWait(this, 0, 0, Services.tm.currentThread);
   },
 
-  _emitProgress: function() {
+  _emitProgress: function () {
     this.emit("progress", {
       bytesSent: this._length - this._amountLeft,
       totalBytes: this._length
     });
   },
 
-  _flush: function() {
+  _flush: function () {
     try {
       this.output.flush();
-    } catch(e) {
+    } catch (e) {
       if (e.result == Cr.NS_BASE_STREAM_WOULD_BLOCK ||
           e.result == Cr.NS_ERROR_FAILURE) {
         this._debug("Flush would block, will retry");
@@ -168,7 +168,7 @@ StreamCopier.prototype = {
     this._deferred.resolve();
   },
 
-  _destroy: function() {
+  _destroy: function () {
     this._destroy = null;
     this._copy = null;
     this._flush = null;
@@ -177,16 +177,16 @@ StreamCopier.prototype = {
   },
 
   // nsIInputStreamCallback
-  onInputStreamReady: function() {
+  onInputStreamReady: function () {
     this._streamReadyCallback();
   },
 
   // nsIOutputStreamCallback
-  onOutputStreamReady: function() {
+  onOutputStreamReady: function () {
     this._streamReadyCallback();
   },
 
-  _debug: function(msg) {
+  _debug: function (msg) {
     // Prefix logs with the copier ID, which makes logs much easier to
     // understand when several copiers are running simultaneously
     dumpv("Copier: " + this._id + " " + msg);

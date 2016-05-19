@@ -16,7 +16,7 @@ function run_test()
     run_test_with_server(WorkerDebuggerServer, do_test_finished);
   });
   do_test_pending();
-};
+}
 
 function run_test_with_server(aServer, aCallback)
 {
@@ -46,12 +46,12 @@ function test_breakpoint_running()
     });
 
     let source = gThreadClient.source(aPacket.frame.where.source);
-    source.setBreakpoint(location, function(aResponse) {
+    source.setBreakpoint(location, function (aResponse) {
       // Eval scripts don't stick around long enough for the breakpoint to be set,
       // so just make sure we got the expected response from the actor.
       do_check_neq(aResponse.error, "noScript");
 
-      do_execute_soon(function() {
+      do_execute_soon(function () {
         gClient.close(gCallback);
       });
     });

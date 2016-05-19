@@ -20,7 +20,7 @@ function test() {
     gSources = gDebugger.DebuggerView.Sources;
     gBreakpoints = gDebugger.DebuggerController.Breakpoints;
 
-    return Task.spawn(function*() {
+    return Task.spawn(function* () {
       yield waitForSourceShown(gPanel, "-eval.js");
       is(gSources.values.length, 1, "Should have 1 source");
 
@@ -32,8 +32,8 @@ function test() {
 
       let item = gSources.getItemForAttachment(e => e.label.indexOf("> eval") !== -1);
       ok(item, "Source label is incorrect.");
-      is(item.attachment.group, gDebugger.L10N.getStr('evalGroupLabel'),
-         'Source group is incorrect');
+      is(item.attachment.group, gDebugger.L10N.getStr("evalGroupLabel"),
+         "Source group is incorrect");
 
       yield closeDebuggerAndFinish(gPanel);
     });

@@ -17,7 +17,7 @@ window.addEventListener("load", function onLoad() {
   document.querySelector("#close").onclick = CloseUI;
   document.querySelector("#devtools-check button").onclick = EnableCertApps;
   document.querySelector("#adb-check button").onclick = RootADB;
-  document.querySelector("#unrestricted-privileges").onclick = function() {
+  document.querySelector("#unrestricted-privileges").onclick = function () {
     window.parent.UI.openInBrowser(UNRESTRICTED_HELP_URL);
   };
   AppManager.on("app-manager-update", OnAppManagerUpdate);
@@ -52,7 +52,7 @@ function generateFields(json) {
     td.textContent = json[name];
     tr.appendChild(td);
     table.appendChild(tr);
-  };
+  }
 }
 
 var getDescriptionPromise; // Used by tests
@@ -123,7 +123,7 @@ function CheckLockState() {
           devtoolsCheckResult.textContent = sYes;
         }
       }, e => console.error(e));
-    } catch(e) {
+    } catch (e) {
       // Exception. pref actor is only accessible if forbird-certified-apps is false
       devtoolsCheckResult.textContent = sNo;
       flipCertPerfAction.removeAttribute("hidden");

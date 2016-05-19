@@ -77,11 +77,11 @@ var ProfilerActor = exports.ProfilerActor = protocol.ActorClass({
    * `disconnect` method required to call destroy, since this
    * actor is not managed by a parent actor.
    */
-  disconnect: function() {
+  disconnect: function () {
     this.destroy();
   },
 
-  destroy: function() {
+  destroy: function () {
     events.off(this.bridge, "*", this._onProfilerEvent);
     this.bridge.destroy();
     protocol.Actor.prototype.destroy.call(this);
@@ -168,7 +168,7 @@ var ProfilerActor = exports.ProfilerActor = protocol.ActorClass({
  * be changed -- you must introduce a new method, and detect the server.
  */
 exports.ProfilerFront = protocol.FrontClass(ProfilerActor, {
-  initialize: function(client, form) {
+  initialize: function (client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
     this.actorID = form.profilerActor;
     this.manage(this);

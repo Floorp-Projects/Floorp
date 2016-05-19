@@ -58,7 +58,7 @@ const TEST_DATA = [
 ];
 
 function test() {
-  Task.spawn(function*() {
+  Task.spawn(function* () {
     let {tab} = yield loadTab(TEST_URI);
     let hud = yield openConsole(tab);
     let toolbox = gDevTools.getToolbox(hud.target);

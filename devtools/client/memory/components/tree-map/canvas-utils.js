@@ -33,7 +33,7 @@ const FULLSCREEN_STYLE = {
  * @return {Object}
  */
 function Canvases(parentEl, debounceRate) {
-  EventEmitter.decorate(this)
+  EventEmitter.decorate(this);
   this.container = createContainingDiv(parentEl);
 
   // This canvas contains all of the treemap
@@ -51,12 +51,12 @@ Canvases.prototype = {
    *
    * @return {type}  description
    */
-  destroy : function() {
+  destroy : function () {
     this.removeHandlers();
     this.container.removeChild(this.main.canvas);
     this.container.removeChild(this.zoom.canvas);
   }
-}
+};
 
 module.exports = Canvases;
 
@@ -117,7 +117,7 @@ function handleResizes(canvases, debounceRate) {
     zoom.canvas.width = width;
     zoom.canvas.height = height;
 
-    canvases.emit('resize');
+    canvases.emit("resize");
   }
 
   // Tests may not need debouncing

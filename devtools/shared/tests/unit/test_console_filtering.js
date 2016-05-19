@@ -10,12 +10,12 @@ var seenMessages = 0;
 var seenTypes = 0;
 
 var callback = {
-  onConsoleAPICall: function(aMessage) {
+  onConsoleAPICall: function (aMessage) {
     if (aMessage.consoleID && aMessage.consoleID == "addon/foo") {
       do_check_eq(aMessage.level, "warn");
       do_check_eq(aMessage.arguments[0], "Warning from foo");
       seenTypes |= 1;
-    } else if(aMessage.originAttributes &&
+    } else if (aMessage.originAttributes &&
               aMessage.originAttributes.addonId == "bar") {
       do_check_eq(aMessage.level, "error");
       do_check_eq(aMessage.arguments[0], "Error from bar");

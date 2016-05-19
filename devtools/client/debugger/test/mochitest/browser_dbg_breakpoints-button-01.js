@@ -27,7 +27,7 @@ function test() {
          "Breakpoints should be " + (isDisabled ? "disabled" : "enabled") + ".");
     }
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceShown(gPanel, "-01.js");
 
       yield actions.addBreakpoint({ actor: gSources.values[0], line: 5 });
@@ -37,7 +37,7 @@ function test() {
 
       gSources.toggleBreakpoints();
       yield waitForDispatch(gPanel, gDebugger.constants.REMOVE_BREAKPOINT, 3);
-      checkBreakpointsDisabled(true)
+      checkBreakpointsDisabled(true);
 
       const finished = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.BREAKPOINT_ADDED, 3);
       gSources.toggleBreakpoints();
@@ -47,7 +47,7 @@ function test() {
       if (gDebugger.gThreadClient.state !== "attached") {
         yield waitForThreadEvents(gPanel, "resumed");
       }
-      closeDebuggerAndFinish(gPanel)
+      closeDebuggerAndFinish(gPanel);
     });
   });
 }

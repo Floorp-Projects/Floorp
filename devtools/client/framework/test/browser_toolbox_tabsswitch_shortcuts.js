@@ -7,7 +7,7 @@ requestLongerTimeout(2);
 
 var {Toolbox} = require("devtools/client/framework/toolbox");
 
-add_task(function*() {
+add_task(function* () {
   let tab = yield addTab("about:blank");
   let target = TargetFactory.forTab(tab);
   yield target.makeRemote();

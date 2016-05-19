@@ -26,7 +26,7 @@ const ELEMENTS = ["box-model-root",
                   "box-model-nodeinfobar-pseudo-classes",
                   "box-model-nodeinfobar-dimensions"];
 
-add_task(function*() {
+add_task(function* () {
   let {inspector, toolbox, testActor} = yield openInspectorForURL(TEST_URL);
 
   info("Show the box-model highlighter");

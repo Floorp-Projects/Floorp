@@ -58,7 +58,7 @@ function test() {
       .then(function () {
         // Give the tools a chance to handle the navigation event before
         // destroying the toolbox.
-        executeSoon(function() {
+        executeSoon(function () {
           toolbox.destroy()
             .then(function () {
               // After destroying the toolbox, a fresh target is required.

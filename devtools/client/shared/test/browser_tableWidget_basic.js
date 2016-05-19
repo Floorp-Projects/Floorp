@@ -20,7 +20,7 @@ const TEST_URI = "data:text/xml;charset=UTF-8,<?xml version='1.0'?>" +
 
 const {TableWidget} = require("devtools/client/shared/widgets/TableWidget");
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("about:blank");
   let [host, , doc] = yield createHost("bottom", TEST_URI);
 

@@ -17,12 +17,12 @@ function test() {
     const gDebugger = gPanel.panelWin;
     const gEditor = gDebugger.DebuggerView.editor;
     const gSources = gDebugger.DebuggerView.Sources;
-    const queries = gDebugger.require('./content/queries');
-    const constants = gDebugger.require('./content/constants');
+    const queries = gDebugger.require("./content/queries");
+    const constants = gDebugger.require("./content/constants");
     const actions = bindActionCreators(gPanel);
     const getState = gDebugger.DebuggerController.getState;
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceShown(gPanel, "");
       const source = getSourceForm(gSources, TAB_URL);
       let shown = ensureSourceIs(gPanel, TAB_URL, true);
@@ -33,7 +33,7 @@ function test() {
         yield actions.togglePrettyPrint(source);
         ok(false, "An error occurred while pretty-printing");
       }
-      catch(err) {
+      catch (err) {
         is(err.message, "Can't prettify non-javascript files.",
            "The promise was correctly rejected with a meaningful message.");
       }
@@ -42,6 +42,6 @@ function test() {
          "The button shouldn't be checked after trying to pretty print a non-js file.");
 
       closeDebuggerAndFinish(gPanel);
-    })
+    });
   });
 }

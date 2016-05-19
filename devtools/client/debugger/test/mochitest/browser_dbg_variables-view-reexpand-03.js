@@ -19,7 +19,7 @@ function test() {
     const gDebugger = gPanel.panelWin;
     const gSources = gDebugger.DebuggerView.Sources;
     const gVariables = gDebugger.DebuggerView.Variables;
-    const queries = gDebugger.require('./content/queries');
+    const queries = gDebugger.require("./content/queries");
     const getState = gDebugger.DebuggerController.getState;
     const actions = bindActionCreators(gPanel);
 
@@ -103,7 +103,7 @@ function test() {
          "The globalScope should still not be expanded.");
     }
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceShown(gPanel, ".html");
       yield addBreakpoint();
       yield ensureThreadClientState(gPanel, "resumed");

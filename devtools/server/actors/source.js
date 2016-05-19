@@ -25,11 +25,11 @@ function isEvalSource(source) {
   let introType = source.introductionType;
   // These are all the sources that are essentially eval-ed (either
   // by calling eval or passing a string to one of these functions).
-  return (introType === 'eval' ||
-          introType === 'Function' ||
-          introType === 'eventHandler' ||
-          introType === 'setTimeout' ||
-          introType === 'setInterval');
+  return (introType === "eval" ||
+          introType === "Function" ||
+          introType === "eventHandler" ||
+          introType === "setTimeout" ||
+          introType === "setInterval");
 }
 
 exports.isEvalSource = isEvalSource;
@@ -43,7 +43,7 @@ function getSourceURL(source, window) {
     if (source.displayURL && source.introductionScript &&
        !isEvalSource(source.introductionScript.source)) {
 
-      if (source.introductionScript.source.url === 'debugger eval code') {
+      if (source.introductionScript.source.url === "debugger eval code") {
         if (window) {
           // If this is a named eval script created from the console, make it
           // relative to the current page. window is only available
@@ -58,7 +58,7 @@ function getSourceURL(source, window) {
 
     return source.displayURL;
   }
-  else if (source.url === 'debugger eval code') {
+  else if (source.url === "debugger eval code") {
     // Treat code evaluated by the console as unnamed eval scripts
     return null;
   }
@@ -230,7 +230,7 @@ let SourceActor = ActorClass({
     }
   },
 
-  _mapSourceToAddon: function() {
+  _mapSourceToAddon: function () {
     try {
       var nsuri = Services.io.newURI(this.url.split(" -> ").pop(), null, null);
     }
@@ -272,7 +272,7 @@ let SourceActor = ActorClass({
 
       if (!file) {
         const error = new Error("Could not find the root of the add-on for " + this.url);
-        DevToolsUtils.reportException("SourceActor.prototype._mapSourceToAddon", error)
+        DevToolsUtils.reportException("SourceActor.prototype._mapSourceToAddon", error);
         return;
       }
 
@@ -280,7 +280,7 @@ let SourceActor = ActorClass({
     }
   },
 
-  _reportLoadSourceError: function (error, map=null) {
+  _reportLoadSourceError: function (error, map = null) {
     try {
       DevToolsUtils.reportException("SourceActor", error);
 
@@ -439,7 +439,7 @@ let SourceActor = ActorClass({
    * @param Boolean onlyLine - will return only the line number
    * @return Set - Executable offsets/lines of the script
    **/
-  getExecutableOffsets: function  (source, onlyLine) {
+  getExecutableOffsets: function (source, onlyLine) {
     let offsets = new Set();
     for (let s of this.threadActor.scripts.getScriptsBySource(source)) {
       for (let offset of s.getAllColumnOffsets()) {
@@ -516,7 +516,7 @@ let SourceActor = ActorClass({
         url: this.url,
         indent: aIndent,
         source: content
-      })
+      });
     };
   },
 
@@ -563,7 +563,7 @@ let SourceActor = ActorClass({
    * pretty printing a source mapped source, we need to compose the existing
    * source map with our new one.
    */
-  _encodeAndSetSourceMapURL: function  ({ map: sm }) {
+  _encodeAndSetSourceMapURL: function ({ map: sm }) {
     let source = this.generatedSource || this.source;
     let sources = this.threadActor.sources;
 
@@ -600,7 +600,7 @@ let SourceActor = ActorClass({
       sources.setSourceMapHard(source,
                                this._oldSourceMapping.url,
                                this._oldSourceMapping.map);
-       this._oldSourceMapping = null;
+      this._oldSourceMapping = null;
     }
 
     this.threadActor.sources.disablePrettyPrint(this.url);
@@ -875,8 +875,8 @@ let SourceActor = ActorClass({
       for (let script of scripts) {
         let columnToOffsetMap = script.getAllColumnOffsets()
                                       .filter(({ lineNumber }) => {
-          return lineNumber === generatedLine;
-        });
+                                        return lineNumber === generatedLine;
+                                      });
         for (let { columnNumber: column, offset } of columnToOffsetMap) {
           if (column >= generatedColumn && column <= generatedLastColumn) {
             entryPoints.push({ script, offsets: [offset] });

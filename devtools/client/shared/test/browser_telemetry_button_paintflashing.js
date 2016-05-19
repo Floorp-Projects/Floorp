@@ -10,7 +10,7 @@ const TEST_URI = "data:text/html;charset=utf-8," +
 // opened we make use of setTimeout() to create tool active times.
 const TOOL_DELAY = 200;
 
-add_task(function*() {
+add_task(function* () {
   yield addTab(TEST_URI);
   let Telemetry = loadTelemetryAndRecordLogs();
 
@@ -74,7 +74,7 @@ function checkResults(histIdFocus, Telemetry) {
     } else if (histId.endsWith("OPENED_COUNT")) {
       ok(value.length > 1, histId + " has more than one entry");
 
-      let okay = value.every(function(element) {
+      let okay = value.every(function (element) {
         return element === true;
       });
 
@@ -82,7 +82,7 @@ function checkResults(histIdFocus, Telemetry) {
     } else if (histId.endsWith("TIME_ACTIVE_SECONDS")) {
       ok(value.length > 1, histId + " has more than one entry");
 
-      let okay = value.every(function(element) {
+      let okay = value.every(function (element) {
         return element > 0;
       });
 

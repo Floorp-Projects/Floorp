@@ -12,8 +12,8 @@ function run_test()
 
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
-  gClient.connect().then(function(aType, aTraits) {
-    attachTestTab(gClient, "test-1", function(aReply, aTabClient) {
+  gClient.connect().then(function (aType, aTraits) {
+    attachTestTab(gClient, "test-1", function (aReply, aTabClient) {
       test_close(transport);
     });
   });
@@ -26,14 +26,14 @@ function test_close(aTransport)
   // (like if a device is unplugged)
   // the client is automatically closed,
   // and we can still call client.close.
-  let onClosed = function() {
+  let onClosed = function () {
     gClient.removeListener("closed", onClosed);
     ok(true, "Client emitted 'closed' event");
-    gClient.close(function() {
+    gClient.close(function () {
       ok(true, "client.close() successfully called its callback");
       do_test_finished();
     });
-  }
+  };
   gClient.addListener("closed", onClosed);
   aTransport.close();
 }

@@ -11,7 +11,7 @@
 const TEST_URI = "data:text/html;charset=utf8,<title>bug870220</title>\n" +
                  "<p>hello world\n<p>native getters!";
 
-add_task(function*() {
+add_task(function* () {
   yield loadTab(TEST_URI);
   let hud = yield openConsole();
   let jsterm = hud.jsterm;

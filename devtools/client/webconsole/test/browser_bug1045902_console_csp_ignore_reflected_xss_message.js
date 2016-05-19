@@ -42,7 +42,7 @@ function testViolationMessage() {
   return waitForSuccess({
     name: "Confirming that CSP logs messages to the console when " +
           "\u2018reflected-xss\u2019 directive is used!",
-    validator: function() {
+    validator: function () {
       console.log(aOutputNode.textContent);
       let success = false;
       success = aOutputNode.textContent.indexOf(EXPECTED_RESULT) > -1;

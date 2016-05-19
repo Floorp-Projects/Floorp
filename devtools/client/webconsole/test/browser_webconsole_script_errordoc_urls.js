@@ -11,7 +11,7 @@
 const ErrorDocs = require("devtools/server/actors/errordocs");
 
 function makeURIData(script) {
-  return `data:text/html;charset=utf8,<script>${script}</script>`
+  return `data:text/html;charset=utf8,<script>${script}</script>`;
 }
 
 const TestData = [
@@ -25,7 +25,7 @@ const TestData = [
     script: "function a() { return; 1 + 1; };",
     isException: false,
   }
-]
+];
 
 add_task(function* () {
   yield loadTab("data:text/html;charset=utf8,errordoc tests");

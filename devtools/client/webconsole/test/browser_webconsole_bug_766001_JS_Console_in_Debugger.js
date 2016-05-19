@@ -34,11 +34,11 @@ function test() {
         category: CATEGORY_JS,
         severity: SEVERITY_ERROR,
       },
-      {
-        text: "Blah Blah",
-        category: CATEGORY_WEBDEV,
-        severity: SEVERITY_LOG,
-      }],
+        {
+          text: "Blah Blah",
+          category: CATEGORY_WEBDEV,
+          severity: SEVERITY_LOG,
+        }],
     });
 
     let exceptionMsg = [...exceptionRule.matched][0];

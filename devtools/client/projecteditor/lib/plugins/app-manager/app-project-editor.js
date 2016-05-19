@@ -14,19 +14,19 @@ var AppProjectEditor = Class({
 
   hidesToolbar: true,
 
-  initialize: function(host) {
+  initialize: function (host) {
     ItchEditor.prototype.initialize.apply(this, arguments);
     this.appended = promise.resolve();
     this.host = host;
     this.label = "app-manager";
   },
 
-  destroy: function() {
+  destroy: function () {
     this.elt.remove();
     this.elt = null;
   },
 
-  load: function(resource) {
+  load: function (resource) {
     let {appManagerOpts} = this.host.project;
 
     // Only load the frame the first time it is selected

@@ -83,7 +83,7 @@ OptionsStore.prototype = {
    *         actual values that have been set in the constructor, or from the
    *         defaults if that options was not specified.
    */
-  get: function(name) {
+  get: function (name) {
     if (typeof this.options[name] !== "undefined") {
       return this.options[name];
     }
@@ -102,7 +102,7 @@ var PanelFactory = {
    * @param {OptionsStore} options
    *        An options store to get some configuration from
    */
-  get: function(doc, options) {
+  get: function (doc, options) {
     // Create the tooltip
     let panel = doc.createElement("panel");
     panel.setAttribute("hidden", true);
@@ -258,7 +258,7 @@ Tooltip.prototype = {
    * @param {number} x, y [optional]
    *        The left and top offset coordinates, in pixels.
    */
-  show: function(anchor,
+  show: function (anchor,
     position = this.defaultPosition,
     x = this.defaultOffsetX,
     y = this.defaultOffsetY) {
@@ -269,25 +269,25 @@ Tooltip.prototype = {
   /**
    * Hide the tooltip
    */
-  hide: function() {
+  hide: function () {
     this.panel.hidden = true;
     this.panel.hidePopup();
   },
 
-  isShown: function() {
+  isShown: function () {
     return this.panel &&
            this.panel.state !== "closed" &&
            this.panel.state !== "hiding";
   },
 
-  setSize: function(width, height) {
+  setSize: function (width, height) {
     this.panel.sizeTo(width, height);
   },
 
   /**
    * Empty the tooltip's content
    */
-  empty: function() {
+  empty: function () {
     while (this.panel.hasChildNodes()) {
       this.panel.removeChild(this.panel.firstChild);
     }
@@ -297,7 +297,7 @@ Tooltip.prototype = {
    * Gets this panel's visibility state.
    * @return boolean
    */
-  isHidden: function() {
+  isHidden: function () {
     return this.panel.state == "closed" || this.panel.state == "hiding";
   },
 
@@ -305,14 +305,14 @@ Tooltip.prototype = {
    * Gets if this panel has any child nodes.
    * @return boolean
    */
-  isEmpty: function() {
+  isEmpty: function () {
     return !this.panel.hasChildNodes();
   },
 
   /**
    * Get rid of references and event listeners
    */
-  destroy: function() {
+  destroy: function () {
     this.hide();
 
     for (let eventName of POPUP_EVENTS) {
@@ -382,7 +382,7 @@ Tooltip.prototype = {
    * @param {boolean} isAlertTooltip [optional]
    *        Pass true to add an alert image for your tooltip.
    */
-  setTextContent: function(
+  setTextContent: function (
     {
       messages,
       messagesClass,
@@ -436,7 +436,7 @@ Tooltip.prototype = {
    *          @1 {toolbox} toolbox
    *             Toolbox used to select debugger panel.
    */
-  setEventContent: function({ eventListenerInfos, toolbox }) {
+  setEventContent: function ({ eventListenerInfos, toolbox }) {
     new EventTooltip(this, eventListenerInfos, toolbox);
   },
 
@@ -461,7 +461,7 @@ Tooltip.prototype = {
    *        Pass the instance of the current toolbox if you want the variables
    *        view widget to allow highlighting and selection of DOM nodes
    */
-  setVariableContent: function(objectActor,
+  setVariableContent: function (objectActor,
                                viewOptions = {},
                                controllerOptions = {},
                                relayEvents = {},
@@ -517,7 +517,7 @@ Tooltip.prototype = {
    * @return a promise that resolves when the image is shown in the tooltip or
    * resolves when the broken image tooltip content is ready, but never rejects.
    */
-  setRelativeImageContent: Task.async(function*(imageUrl, inspectorFront,
+  setRelativeImageContent: Task.async(function* (imageUrl, inspectorFront,
                                                 maxDim) {
     if (imageUrl.startsWith("data:")) {
       // If the imageUrl already is a data-url, save ourselves a round-trip
@@ -538,7 +538,7 @@ Tooltip.prototype = {
   /**
    * Fill the tooltip with a message explaining the the image is missing
    */
-  setBrokenImageContent: function() {
+  setBrokenImageContent: function () {
     this.setTextContent({
       messages: [l10n.strings.GetStringFromName("previewTooltip.image.brokenImage")]
     });
@@ -564,7 +564,7 @@ Tooltip.prototype = {
    *        - hideDimensionLabel : if the dimension label should be appended
    *        after the image.
    */
-  setImageContent: function(imageUrl, options={}) {
+  setImageContent: function (imageUrl, options = {}) {
     if (!imageUrl) {
       return;
     }
@@ -635,7 +635,7 @@ Tooltip.prototype = {
    * When the document is loaded, the function gets the content window
    * and resolves the promise with the content window.
    */
-  setIFrameContent: function({width, height}, url) {
+  setIFrameContent: function ({width, height}, url) {
     let def = promise.defer();
 
     // Create an iframe
@@ -668,7 +668,7 @@ Tooltip.prototype = {
    * initialized with the given color, and return a promise that resolves to
    * the instance of spectrum
    */
-  setColorPickerContent: function(color) {
+  setColorPickerContent: function (color) {
     let dimensions = {width: "210", height: "216"};
     let panel = this.panel;
     return this.setIFrameContent(dimensions, SPECTRUM_FRAME).then(onLoaded);
@@ -702,7 +702,7 @@ Tooltip.prototype = {
    * initialized with the given value, and return a promise that resolves to
    * the instance of the widget
    */
-  setCubicBezierContent: function(bezier) {
+  setCubicBezierContent: function (bezier) {
     let dimensions = {width: "500", height: "360"};
     let panel = this.panel;
     return this.setIFrameContent(dimensions, CUBIC_BEZIER_FRAME).then(onLoaded);
@@ -731,7 +731,7 @@ Tooltip.prototype = {
    * widget initialized with the given filter value, and return a promise
    * that resolves to the instance of the widget when ready.
    */
-  setFilterContent: function(filter) {
+  setFilterContent: function (filter) {
     let dimensions = {width: "500", height: "200"};
     let panel = this.panel;
 
@@ -769,7 +769,7 @@ Tooltip.prototype = {
    * @return A promise that resolves when the font tooltip content is ready, or
    *         rejects if no font is provided
    */
-  setFontFamilyContent: Task.async(function*(font, nodeFront) {
+  setFontFamilyContent: Task.async(function* (font, nodeFront) {
     if (!font || !nodeFront) {
       throw new Error("Missing font");
     }
@@ -803,7 +803,7 @@ Tooltip.prototype = {
    * The caller can use the MdnDocsWidget to update the tooltip's
    * UI with new content each time the tooltip is shown.
    */
-  setMdnDocsContent: function() {
+  setMdnDocsContent: function () {
     let dimensions = {width: "410", height: "300"};
     return this.setIFrameContent(dimensions, MDN_DOCS_FRAME).then(onLoaded);
 
@@ -856,7 +856,7 @@ function SwatchBasedEditorTooltip(doc) {
 }
 
 SwatchBasedEditorTooltip.prototype = {
-  show: function() {
+  show: function () {
     if (this.activeSwatch) {
       this.tooltip.show(this.activeSwatch, "topcenter bottomleft");
 
@@ -880,7 +880,7 @@ SwatchBasedEditorTooltip.prototype = {
     }
   },
 
-  hide: function() {
+  hide: function () {
     this.tooltip.hide();
   },
 
@@ -901,18 +901,18 @@ SwatchBasedEditorTooltip.prototype = {
    *        - onCommit: will be called when the user presses ENTER or clicks
    *        outside the tooltip.
    */
-  addSwatch: function(swatchEl, callbacks={}) {
+  addSwatch: function (swatchEl, callbacks = {}) {
     if (!callbacks.onShow) {
-      callbacks.onShow = function() {};
+      callbacks.onShow = function () {};
     }
     if (!callbacks.onPreview) {
-      callbacks.onPreview = function() {};
+      callbacks.onPreview = function () {};
     }
     if (!callbacks.onRevert) {
-      callbacks.onRevert = function() {};
+      callbacks.onRevert = function () {};
     }
     if (!callbacks.onCommit) {
-      callbacks.onCommit = function() {};
+      callbacks.onCommit = function () {};
     }
 
     this.swatches.set(swatchEl, {
@@ -921,7 +921,7 @@ SwatchBasedEditorTooltip.prototype = {
     swatchEl.addEventListener("click", this._onSwatchClick, false);
   },
 
-  removeSwatch: function(swatchEl) {
+  removeSwatch: function (swatchEl) {
     if (this.swatches.has(swatchEl)) {
       if (this.activeSwatch === swatchEl) {
         this.hide();
@@ -932,7 +932,7 @@ SwatchBasedEditorTooltip.prototype = {
     }
   },
 
-  _onSwatchClick: function(event) {
+  _onSwatchClick: function (event) {
     let swatch = this.swatches.get(event.target);
 
     if (event.shiftKey) {
@@ -950,7 +950,7 @@ SwatchBasedEditorTooltip.prototype = {
   /**
    * Not called by this parent class, needs to be taken care of by sub-classes
    */
-  preview: function(value) {
+  preview: function (value) {
     if (this.activeSwatch) {
       let swatch = this.swatches.get(this.activeSwatch);
       swatch.callbacks.onPreview(value);
@@ -960,7 +960,7 @@ SwatchBasedEditorTooltip.prototype = {
   /**
    * This parent class only calls this on <esc> keypress
    */
-  revert: function() {
+  revert: function () {
     if (this.activeSwatch) {
       this._reverted = true;
       let swatch = this.swatches.get(this.activeSwatch);
@@ -973,14 +973,14 @@ SwatchBasedEditorTooltip.prototype = {
   /**
    * This parent class only calls this on <enter> keypress
    */
-  commit: function() {
+  commit: function () {
     if (this.activeSwatch) {
       let swatch = this.swatches.get(this.activeSwatch);
       swatch.callbacks.onCommit();
     }
   },
 
-  destroy: function() {
+  destroy: function () {
     this.swatches.clear();
     this.activeSwatch = null;
     this.tooltip.off("keypress", this._onTooltipKeypress);
@@ -1014,7 +1014,7 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
    * Overriding the SwatchBasedEditorTooltip.show function to set spectrum's
    * color.
    */
-  show: function() {
+  show: function () {
     // Call then parent class' show function
     SwatchBasedEditorTooltip.prototype.show.call(this);
     // Then set spectrum's color and listen to color changes to preview them
@@ -1035,11 +1035,11 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
     eyeButton.addEventListener("click", this._openEyeDropper);
   },
 
-  _onSpectrumColorChange: function(event, rgba, cssColor) {
+  _onSpectrumColorChange: function (event, rgba, cssColor) {
     this._selectColor(cssColor);
   },
 
-  _selectColor: function(color) {
+  _selectColor: function (color) {
     if (this.activeSwatch) {
       this.activeSwatch.style.backgroundColor = color;
       this.activeSwatch.parentNode.dataset.color = color;
@@ -1054,7 +1054,7 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
     }
   },
 
- _openEyeDropper: function() {
+  _openEyeDropper: function () {
     let chromeWindow = this.tooltip.doc.defaultView.top;
     let windowType = chromeWindow.document.documentElement
                      .getAttribute("windowtype");
@@ -1090,19 +1090,19 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
     this.tooltip.emit("eyedropper-opened", dropper);
   },
 
-  _colorToRgba: function(color) {
+  _colorToRgba: function (color) {
     color = new colorUtils.CssColor(color);
     let rgba = color._getRGBATuple();
     return [rgba.r, rgba.g, rgba.b, rgba.a];
   },
 
-  _toDefaultType: function(color) {
+  _toDefaultType: function (color) {
     let colorObj = new colorUtils.CssColor(color);
     colorObj.setAuthoredUnitFromColor(this._originalColor);
     return colorObj.toString();
   },
 
-  destroy: function() {
+  destroy: function () {
     SwatchBasedEditorTooltip.prototype.destroy.call(this);
     this.currentSwatchColor = null;
     this.spectrum.then(spectrum => {
@@ -1126,7 +1126,7 @@ function EventTooltip(tooltip, eventListenerInfos, toolbox) {
 }
 
 EventTooltip.prototype = {
-  _init: function() {
+  _init: function () {
     let config = {
       mode: Editor.modes.js,
       lineNumbers: false,
@@ -1248,11 +1248,11 @@ EventTooltip.prototype = {
     }, false);
   },
 
-  _addContentListeners: function(header) {
+  _addContentListeners: function (header) {
     header.addEventListener("click", this._headerClicked);
   },
 
-  _headerClicked: function(event) {
+  _headerClicked: function (event) {
     if (event.target.classList.contains("event-tooltip-debugger-icon")) {
       this._debugClicked(event);
       event.stopPropagation();
@@ -1306,7 +1306,7 @@ EventTooltip.prototype = {
     }
   },
 
-  _debugClicked: function(event) {
+  _debugClicked: function (event) {
     let header = event.currentTarget;
     let content = header.nextElementSibling;
 
@@ -1370,7 +1370,7 @@ EventTooltip.prototype = {
     }
   },
 
-  destroy: function(container) {
+  destroy: function (container) {
     if (this._tooltip) {
       this._tooltip.panel.removeEventListener("popuphiding", this.destroy,
                                               false);
@@ -1426,7 +1426,7 @@ SwatchCubicBezierTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
    * Overriding the SwatchBasedEditorTooltip.show function to set the cubic
    * bezier curve in the widget
    */
-  show: function() {
+  show: function () {
     // Call the parent class' show function
     SwatchBasedEditorTooltip.prototype.show.call(this);
     // Then set the curve and listen to changes to preview them
@@ -1440,7 +1440,7 @@ SwatchCubicBezierTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
     }
   },
 
-  _onUpdate: function(event, bezier) {
+  _onUpdate: function (event, bezier) {
     if (!this.activeSwatch) {
       return;
     }
@@ -1449,7 +1449,7 @@ SwatchCubicBezierTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
     this.preview(bezier + "");
   },
 
-  destroy: function() {
+  destroy: function () {
     SwatchBasedEditorTooltip.prototype.destroy.call(this);
     this.currentBezierValue = null;
     this.widget.then(widget => {
@@ -1480,7 +1480,7 @@ CssDocsTooltip.prototype = {
    * Load CSS docs for the given property,
    * then display the tooltip.
    */
-  show: function(anchor, propertyName) {
+  show: function (anchor, propertyName) {
     function loadCssDocs(widget) {
       return widget.loadCssDocs(propertyName);
     }
@@ -1489,11 +1489,11 @@ CssDocsTooltip.prototype = {
     this.tooltip.show(anchor, "topcenter bottomleft");
   },
 
-  hide: function() {
+  hide: function () {
     this.tooltip.hide();
   },
 
-  destroy: function() {
+  destroy: function () {
     this.tooltip.destroy();
   }
 };
@@ -1519,7 +1519,7 @@ function SwatchFilterTooltip(doc) {
 exports.SwatchFilterTooltip = SwatchFilterTooltip;
 
 SwatchFilterTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.prototype, {
-  show: function() {
+  show: function () {
     // Call the parent class' show function
     SwatchBasedEditorTooltip.prototype.show.call(this);
     // Then set the filter value and listen to changes to preview them
@@ -1534,7 +1534,7 @@ SwatchFilterTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.prototy
     }
   },
 
-  _onUpdate: function(event, filters) {
+  _onUpdate: function (event, filters) {
     if (!this.activeSwatch) {
       return;
     }
@@ -1550,7 +1550,7 @@ SwatchFilterTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.prototy
     this.preview();
   },
 
-  destroy: function() {
+  destroy: function () {
     SwatchBasedEditorTooltip.prototype.destroy.call(this);
     this.currentFilterValue = null;
     this.widget.then(widget => {
@@ -1573,7 +1573,7 @@ SwatchFilterTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.prototy
    *        options to pass to the output parser, with
    *          the option |filterSwatch| set.
    */
-  addSwatch: function(swatchEl, callbacks, parser, options) {
+  addSwatch: function (swatchEl, callbacks, parser, options) {
     SwatchBasedEditorTooltip.prototype.addSwatch.call(this, swatchEl,
                                                       callbacks);
     this._parser = parser;

@@ -46,7 +46,7 @@ add_task(function* () {
   }
 });
 
-let sendKeyAndCheck = Task.async(function*(inspector, description, key, modifiers, expectedId) {
+let sendKeyAndCheck = Task.async(function* (inspector, description, key, modifiers, expectedId) {
   info(description);
   let onSelect = inspector.once("inspector-updated");
   EventUtils.synthesizeKey(key, modifiers, inspector.panelWin);

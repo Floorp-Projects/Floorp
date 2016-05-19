@@ -14,8 +14,8 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-black-box");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-black-box", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-black-box", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       testBlackBox();
     });
@@ -67,7 +67,7 @@ const testBlackBox = Task.async(function* () {
         if (f.where.source.url == BLACK_BOXED_URL) {
           do_check_true(f.where.source.isBlackBoxed);
         } else {
-          do_check_true(!f.where.source.isBlackBoxed)
+          do_check_true(!f.where.source.isBlackBoxed);
         }
       }
     }

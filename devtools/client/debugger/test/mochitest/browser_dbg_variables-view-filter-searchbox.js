@@ -138,7 +138,7 @@ function performTest() {
   closeDebuggerAndFinish(gPanel);
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

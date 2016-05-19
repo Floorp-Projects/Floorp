@@ -118,7 +118,7 @@ function start() {
     .then(reload)
     .then(register)
     .then(testRegisterFails)
-    .catch(function(e) {
+    .catch(function (e) {
       ok(false, "Some test failed with error " + e);
     }).then(finishUp);
 }

@@ -7,7 +7,7 @@ const { DevToolsWorker } = require("devtools/shared/worker/worker");
 const WORKER_URL =
   "resource://devtools/client/shared/widgets/GraphsWorker.js";
 
-add_task(function*() {
+add_task(function* () {
   try {
     let workerNotFound = new DevToolsWorker("resource://i/dont/exist.js");
     ok(false, "Creating a DevToolsWorker with an invalid URL throws");
@@ -35,12 +35,12 @@ add_task(function*() {
   worker.destroy();
   try {
     let results = yield worker.performTask("plotTimestampsGraph", {
-      timestamps: [0,1,2,3,4,5,6,7,8,9],
+      timestamps: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
       interval: 1,
       duration: 1
     });
     ok(false, "DevToolsWorker rejects when performing a task on a destroyed worker");
   } catch (e) {
     ok(true, "DevToolsWorker rejects when performing a task on a destroyed worker");
-  };
+  }
 });

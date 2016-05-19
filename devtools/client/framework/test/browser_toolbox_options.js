@@ -11,7 +11,7 @@
 
 var doc = null, toolbox = null, panelWin = null, modifiedPrefs = [];
 
-add_task(function*() {
+add_task(function* () {
   const URL = "data:text/html;charset=utf8,test for dynamically registering " +
               "and unregistering tools";
   registerNewTool();
@@ -152,7 +152,7 @@ function* testMouseClick(node, prefValue) {
 
   // We use executeSoon here to ensure that the element is in view and
   // clickable.
-  executeSoon(function() {
+  executeSoon(function () {
     info("Click event synthesized for pref " + pref);
     EventUtils.synthesizeMouseAtCenter(node, {}, panelWin);
   });

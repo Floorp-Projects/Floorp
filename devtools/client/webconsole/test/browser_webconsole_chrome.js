@@ -8,7 +8,7 @@
 "use strict";
 
 function test() {
-  Task.spawn(function*() {
+  Task.spawn(function* () {
     const {tab} = yield loadTab("about:config");
     ok(tab, "tab loaded");
 
@@ -28,7 +28,7 @@ function test() {
 
     let deferred = promise.defer();
 
-    jsterm.complete(jsterm.COMPLETE_HINT_ONLY, function() {
+    jsterm.complete(jsterm.COMPLETE_HINT_ONLY, function () {
       is(jsterm.completeNode.value, "    ment", "'docu' completion");
       deferred.resolve(null);
     });

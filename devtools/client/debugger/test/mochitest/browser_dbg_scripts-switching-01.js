@@ -121,7 +121,7 @@ function test() {
       waitForThreadEvents(gPanel, "paused").then(() => {
         waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCE_SHOWN).then(deferred.resolve);
         gDebugger.gThreadClient.stepOut();
-      })
+      });
       gDebugger.gThreadClient.stepOut();
 
       return deferred.promise;
@@ -146,7 +146,7 @@ function test() {
          "The debugged line is highlighted appropriately (3). (4)");
     }
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceShown(gPanel, "-01.js", 1);
       ok(gDebugger.document.title.endsWith(EXAMPLE_URL + gLabel1),
          "Title with first source is correct.");

@@ -31,7 +31,7 @@ const EXPECTED_INDIVIDUAL_STATES = [
   individualsState.FETCHED,
 ];
 
-add_task(function*() {
+add_task(function* () {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
   yield front.attach();

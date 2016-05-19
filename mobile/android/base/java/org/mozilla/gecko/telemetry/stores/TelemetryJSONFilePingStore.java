@@ -31,7 +31,9 @@ import java.io.IOException;
 import java.nio.channels.FileLock;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -70,6 +72,7 @@ public class TelemetryJSONFilePingStore implements TelemetryPingStore {
 
     private final File storeDir;
     private final FilenameFilter uuidFilenameFilter;
+    private final FileLastModifiedComparator fileLastModifiedComparator = new FileLastModifiedComparator();
 
     public TelemetryJSONFilePingStore(final File storeDir) {
         this.storeDir = storeDir;
@@ -105,7 +108,7 @@ public class TelemetryJSONFilePingStore implements TelemetryPingStore {
             return;
         }
 
-        final SortedSet<File> sortedFiles = new TreeSet<>(new FileLastModifiedComparator());
+        final SortedSet<File> sortedFiles = new TreeSet<>(fileLastModifiedComparator);
         sortedFiles.addAll(Arrays.asList(files));
         deleteSmallestFiles(sortedFiles, files.length - MAX_PING_COUNT);
     }
@@ -123,8 +126,9 @@ public class TelemetryJSONFilePingStore implements TelemetryPingStore {
 
     @Override
     public ArrayList<TelemetryPing> getAllPings() {
-        final File[] files = storeDir.listFiles(uuidFilenameFilter);
-        final ArrayList<TelemetryPing> out = new ArrayList<>(files.length);
+        final List<File> files = Arrays.asList(storeDir.listFiles(uuidFilenameFilter));
+        Collections.sort(files, fileLastModifiedComparator); // oldest to newest
+        final ArrayList<TelemetryPing> out = new ArrayList<>(files.size());
         for (final File file : files) {
             final JSONObject obj = lockAndReadJSONFromFile(file);
             if (obj == null) {

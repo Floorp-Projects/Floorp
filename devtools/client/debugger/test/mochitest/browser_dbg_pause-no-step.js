@@ -75,10 +75,10 @@ function testBreakAtLocation() {
     resumeDebuggerThenCloseAndFinish(gPanel);
   });
 
-  BrowserTestUtils.synthesizeMouseAtCenter('button', {}, gBrowser.selectedBrowser);
+  BrowserTestUtils.synthesizeMouseAtCenter("button", {}, gBrowser.selectedBrowser);
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gPanel = null;
   gDebugger = null;
   gResumeButton = null;

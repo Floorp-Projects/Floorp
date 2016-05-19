@@ -216,7 +216,7 @@ function test() {
           statusText: "OK",
           type: "html",
           fullMimeType: "text/html; charset=utf-8"
-      });
+        });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(1),
         "GET", CONTENT_TYPE_SJS + "?fmt=css", {
           fuzzyUrl: true,
@@ -224,7 +224,7 @@ function test() {
           statusText: "OK",
           type: "css",
           fullMimeType: "text/css; charset=utf-8"
-      });
+        });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(2),
         "GET", CONTENT_TYPE_SJS + "?fmt=js", {
           fuzzyUrl: true,
@@ -232,7 +232,7 @@ function test() {
           statusText: "OK",
           type: "js",
           fullMimeType: "application/javascript; charset=utf-8"
-      });
+        });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(3),
         "GET", CONTENT_TYPE_SJS + "?fmt=font", {
           fuzzyUrl: true,
@@ -240,7 +240,7 @@ function test() {
           statusText: "OK",
           type: "woff",
           fullMimeType: "font/woff"
-      });
+        });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(4),
         "GET", CONTENT_TYPE_SJS + "?fmt=image", {
           fuzzyUrl: true,
@@ -248,7 +248,7 @@ function test() {
           statusText: "OK",
           type: "png",
           fullMimeType: "image/png"
-      });
+        });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(5),
         "GET", CONTENT_TYPE_SJS + "?fmt=audio", {
           fuzzyUrl: true,
@@ -256,7 +256,7 @@ function test() {
           statusText: "OK",
           type: "ogg",
           fullMimeType: "audio/ogg"
-      });
+        });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(6),
         "GET", CONTENT_TYPE_SJS + "?fmt=video", {
           fuzzyUrl: true,
@@ -264,7 +264,7 @@ function test() {
           statusText: "OK",
           type: "webm",
           fullMimeType: "video/webm"
-      });
+        });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(7),
         "GET", CONTENT_TYPE_SJS + "?fmt=flash", {
           fuzzyUrl: true,
@@ -272,13 +272,13 @@ function test() {
           statusText: "OK",
           type: "x-shockwave-flash",
           fullMimeType: "application/x-shockwave-flash"
-      });
+        });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(8),
         "GET", CONTENT_TYPE_SJS + "?fmt=ws", {
           fuzzyUrl: true,
           status: 101,
           statusText: "Switching Protocols",
-      });
+        });
 
       return promise.resolve(null);
     }

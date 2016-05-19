@@ -12,7 +12,7 @@ var { MemoryFront } = require("devtools/server/actors/memory");
 
 // Always log packets when running tests.
 Services.prefs.setBoolPref("devtools.debugger.log", true);
-SimpleTest.registerCleanupFunction(function() {
+SimpleTest.registerCleanupFunction(function () {
   Services.prefs.clearUserPref("devtools.debugger.log");
 });
 
@@ -34,7 +34,7 @@ function startServerAndGetSelectedTabMemory() {
 function destroyServerAndFinish(client) {
   client.close(() => {
     DebuggerServer.destroy();
-    SimpleTest.finish()
+    SimpleTest.finish();
   });
 }
 

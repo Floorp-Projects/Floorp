@@ -13,7 +13,7 @@ function* ifTestingSupported() {
   yield reload(target);
 
   yield recordAndWaitForFirstSnapshot();
-  info("First snapshot recorded.")
+  info("First snapshot recorded.");
 
   is(SnapshotsListView.selectedIndex, 0,
     "A snapshot should be automatically selected after first recording.");
@@ -21,7 +21,7 @@ function* ifTestingSupported() {
     "There should be no call item automatically selected in the snapshot.");
 
   yield recordAndWaitForAnotherSnapshot();
-  info("Second snapshot recorded.")
+  info("Second snapshot recorded.");
 
   is(SnapshotsListView.selectedIndex, 0,
     "A snapshot should not be automatically selected after another recording.");

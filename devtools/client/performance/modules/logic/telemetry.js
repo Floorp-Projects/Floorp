@@ -18,7 +18,7 @@ const RECORDING_FEATURES = [
 
 const SELECTED_VIEW_HISTOGRAM_NAME = "DEVTOOLS_PERFTOOLS_SELECTED_VIEW_MS";
 
-function PerformanceTelemetry (emitter) {
+function PerformanceTelemetry(emitter) {
   this._emitter = emitter;
   this._telemetry = new Telemetry();
   this.onFlagEvent = this.onFlagEvent.bind(this);

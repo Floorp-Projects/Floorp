@@ -29,7 +29,7 @@ function test()
 
 function testListeners()
 {
-  openScratchpad(function(aWin, aScratchpad) {
+  openScratchpad(function (aWin, aScratchpad) {
     aScratchpad.setText("new text");
     ok(isStar(aWin), "show star if scratchpad text changes");
 
@@ -65,7 +65,7 @@ function testRestoreNotFromFile()
   }];
 
   let [win] = ScratchpadManager.restoreSession(session);
-  openScratchpad(function(aWin, aScratchpad) {
+  openScratchpad(function (aWin, aScratchpad) {
     aScratchpad.setText("new text");
     ok(isStar(win), "show star if restored scratchpad isn't from a file");
 
@@ -84,7 +84,7 @@ function testRestoreFromFileSaved()
   }];
 
   let [win] = ScratchpadManager.restoreSession(session);
-  openScratchpad(function(aWin, aScratchpad) {
+  openScratchpad(function (aWin, aScratchpad) {
     ok(!isStar(win), "no star before changing text in scratchpad restored from file");
 
     aScratchpad.setText("new text");
@@ -105,7 +105,7 @@ function testRestoreFromFileUnsaved()
   }];
 
   let [win] = ScratchpadManager.restoreSession(session);
-  openScratchpad(function() {
+  openScratchpad(function () {
     ok(isStar(win), "star with scratchpad restored with unsaved text");
 
     win.close();

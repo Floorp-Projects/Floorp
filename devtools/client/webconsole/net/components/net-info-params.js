@@ -26,7 +26,7 @@ var NetInfoParams = React.createClass({
   render() {
     let params = this.props.params || [];
 
-    params.sort(function(a, b) {
+    params.sort(function (a, b) {
       return a.name > b.name ? 1 : -1;
     });
 

@@ -8,7 +8,7 @@ const TEST_URI = "data:text/html;charset=utf-8,cmd-calllog-chrome";
 var tests = {};
 
 function test() {
-  return Task.spawn(function*() {
+  return Task.spawn(function* () {
     let options = yield helpers.openTab(TEST_URI);
     yield helpers.openToolbar(options);
 
@@ -19,7 +19,7 @@ function test() {
   }).then(finish, helpers.handleError);
 }
 
-tests.testCallLogStatus = function(options) {
+tests.testCallLogStatus = function (options) {
   return helpers.audit(options, [
     {
       setup: "calllog",
@@ -52,7 +52,7 @@ tests.testCallLogStatus = function(options) {
   ]);
 };
 
-tests.testCallLogExec = function(options) {
+tests.testCallLogExec = function (options) {
   let deferred = promise.defer();
 
   function onWebConsoleOpen(subject) {
@@ -78,9 +78,9 @@ tests.testCallLogExec = function(options) {
       {
         setup: "console clear",
         exec: {
-          output: '',
+          output: "",
         },
-        post: function() {
+        post: function () {
           let labels = hud.jsterm.outputNode.querySelectorAll(".webconsole-msg-output");
           is(labels.length, 0, "no output in console");
         }
@@ -88,10 +88,10 @@ tests.testCallLogExec = function(options) {
       {
         setup: "console close",
         exec: {
-          output: '',
+          output: "",
         },
       },
-    ]).then(function() {
+    ]).then(function () {
       deferred.resolve();
     });
   }

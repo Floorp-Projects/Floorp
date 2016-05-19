@@ -44,7 +44,7 @@ workerHelper.createTask(self, "pretty-print", ({ url, indent, source }) => {
       mappings: prettified.map._mappings
     };
   }
-  catch(e) {
+  catch (e) {
     return new Error(e.message + "\n" + e.stack);
   }
 });

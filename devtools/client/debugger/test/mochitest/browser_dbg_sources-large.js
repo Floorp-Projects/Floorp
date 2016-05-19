@@ -58,7 +58,7 @@ function test() {
         "Search box is prefilled with current token");
     }
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceShown(gPanel, "-01.js");
       yield testLargeFile();
 

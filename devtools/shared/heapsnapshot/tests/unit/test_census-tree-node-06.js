@@ -31,15 +31,15 @@ function run_test() {
   }
 
   const abc_Stack = a(3);
-  const  bc_Stack = b(2);
-  const   c_Stack = c(1);
+  const bc_Stack = b(2);
+  const c_Stack = c(1);
   const dbc_Stack = d(3);
-  const  ec_Stack = e(2);
+  const ec_Stack = e(2);
 
   const REPORT = new Map([
     [abc_Stack, { bytes: 10, count: 1 }],
     [ bc_Stack, { bytes: 10, count: 1 }],
-    [  c_Stack, { bytes: 10, count: 1 }],
+    [ c_Stack, { bytes: 10, count: 1 }],
     [dbc_Stack, { bytes: 10, count: 1 }],
     [ ec_Stack, { bytes: 10, count: 1 }],
     ["noStack", { bytes: 50, count: 5 }],

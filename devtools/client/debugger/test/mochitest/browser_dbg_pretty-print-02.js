@@ -18,7 +18,7 @@ function test() {
     const gEditor = gDebugger.DebuggerView.editor;
     const gContextMenu = gDebugger.document.getElementById("sourceEditorContextMenu");
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceShown(gPanel, "code_ugly.js");
 
       const finished = waitForSourceShown(gPanel, "code_ugly.js");
@@ -30,7 +30,7 @@ function test() {
       yield finished;
 
       ok(gEditor.getText().includes("\n  "),
-         "The source should be pretty printed.")
+         "The source should be pretty printed.");
 
       closeDebuggerAndFinish(gPanel);
     });

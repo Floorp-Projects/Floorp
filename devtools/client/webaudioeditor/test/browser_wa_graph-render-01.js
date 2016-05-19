@@ -7,7 +7,7 @@
 
 var connectCount = 0;
 
-add_task(function*() {
+add_task(function* () {
   let { target, panel } = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, gAudioNodes } = panelWin;
@@ -40,6 +40,6 @@ add_task(function*() {
   yield teardown(target);
 });
 
-function onConnectNode () {
+function onConnectNode() {
   ++connectCount;
 }

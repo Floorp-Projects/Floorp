@@ -98,7 +98,7 @@ function parseURL(location) {
  *           - {String?} host: If available, the host name for the source.
  *             - "http://page.com/test.js#go?q=query" -> "page.com"
  */
-function getSourceNames (source) {
+function getSourceNames(source) {
   let data = gSourceNamesStore.get(source);
 
   if (data) {
@@ -173,7 +173,7 @@ function getSourceNames (source) {
 // They are written this way because they are hot. Each frame is checked for
 // being content or chrome when processing the profile.
 
-function isColonSlashSlash(location, i=0) {
+function isColonSlashSlash(location, i = 0) {
   return location.charCodeAt(++i) === CHAR_CODE_COLON &&
          location.charCodeAt(++i) === CHAR_CODE_SLASH &&
          location.charCodeAt(++i) === CHAR_CODE_SLASH;
@@ -182,8 +182,8 @@ function isColonSlashSlash(location, i=0) {
 /**
  * Checks for a Scratchpad URI, like "Scratchpad/1"
  */
-function isScratchpadScheme(location, i=0) {
-  return location.charCodeAt(i)   === CHAR_CODE_CAP_S &&
+function isScratchpadScheme(location, i = 0) {
+  return location.charCodeAt(i) === CHAR_CODE_CAP_S &&
          location.charCodeAt(++i) === CHAR_CODE_C &&
          location.charCodeAt(++i) === CHAR_CODE_R &&
          location.charCodeAt(++i) === CHAR_CODE_A &&
@@ -196,89 +196,89 @@ function isScratchpadScheme(location, i=0) {
          location.charCodeAt(++i) === CHAR_CODE_SLASH;
 }
 
-function isDataScheme(location, i=0) {
-  return location.charCodeAt(i)   === CHAR_CODE_D &&
+function isDataScheme(location, i = 0) {
+  return location.charCodeAt(i) === CHAR_CODE_D &&
          location.charCodeAt(++i) === CHAR_CODE_A &&
          location.charCodeAt(++i) === CHAR_CODE_T &&
          location.charCodeAt(++i) === CHAR_CODE_A &&
          location.charCodeAt(++i) === CHAR_CODE_COLON;
 }
 
-function isContentScheme(location, i=0) {
+function isContentScheme(location, i = 0) {
   let firstChar = location.charCodeAt(i);
 
   switch (firstChar) {
-  case CHAR_CODE_H: // "http://" or "https://"
-    if (location.charCodeAt(++i) === CHAR_CODE_T &&
+    case CHAR_CODE_H: // "http://" or "https://"
+      if (location.charCodeAt(++i) === CHAR_CODE_T &&
         location.charCodeAt(++i) === CHAR_CODE_T &&
         location.charCodeAt(++i) === CHAR_CODE_P) {
-      if (location.charCodeAt(i + 1) === CHAR_CODE_S) {
-        ++i;
+        if (location.charCodeAt(i + 1) === CHAR_CODE_S) {
+          ++i;
+        }
+        return isColonSlashSlash(location, i);
       }
-      return isColonSlashSlash(location, i);
-    }
-    return false;
+      return false;
 
-  case CHAR_CODE_F: // "file://"
-    if (location.charCodeAt(++i) === CHAR_CODE_I &&
+    case CHAR_CODE_F: // "file://"
+      if (location.charCodeAt(++i) === CHAR_CODE_I &&
         location.charCodeAt(++i) === CHAR_CODE_L &&
         location.charCodeAt(++i) === CHAR_CODE_E) {
-      return isColonSlashSlash(location, i);
-    }
-    return false;
+        return isColonSlashSlash(location, i);
+      }
+      return false;
 
-  case CHAR_CODE_A: // "app://"
-    if (location.charCodeAt(++i) == CHAR_CODE_P &&
+    case CHAR_CODE_A: // "app://"
+      if (location.charCodeAt(++i) == CHAR_CODE_P &&
         location.charCodeAt(++i) == CHAR_CODE_P) {
-      return isColonSlashSlash(location, i);
-    }
-    return false;
+        return isColonSlashSlash(location, i);
+      }
+      return false;
 
-  default:
-    return false;
+    default:
+      return false;
   }
 }
 
-function isChromeScheme(location, i=0) {
+function isChromeScheme(location, i = 0) {
   let firstChar = location.charCodeAt(i);
 
   switch (firstChar) {
-  case CHAR_CODE_C: // "chrome://"
-    if (location.charCodeAt(++i) === CHAR_CODE_H &&
+    case CHAR_CODE_C: // "chrome://"
+      if (location.charCodeAt(++i) === CHAR_CODE_H &&
         location.charCodeAt(++i) === CHAR_CODE_R &&
         location.charCodeAt(++i) === CHAR_CODE_O &&
         location.charCodeAt(++i) === CHAR_CODE_M &&
         location.charCodeAt(++i) === CHAR_CODE_E) {
-      return isColonSlashSlash(location, i);
-    }
-    return false;
+        return isColonSlashSlash(location, i);
+      }
+      return false;
 
-  case CHAR_CODE_R: // "resource://"
-    if (location.charCodeAt(++i) === CHAR_CODE_E &&
+    case CHAR_CODE_R: // "resource://"
+      if (location.charCodeAt(++i) === CHAR_CODE_E &&
         location.charCodeAt(++i) === CHAR_CODE_S &&
         location.charCodeAt(++i) === CHAR_CODE_O &&
         location.charCodeAt(++i) === CHAR_CODE_U &&
         location.charCodeAt(++i) === CHAR_CODE_R &&
         location.charCodeAt(++i) === CHAR_CODE_C &&
         location.charCodeAt(++i) === CHAR_CODE_E) {
-      return isColonSlashSlash(location, i);
-    }
-    return false;
+        return isColonSlashSlash(location, i);
+      }
+      return false;
 
-  case CHAR_CODE_J: // "jar:file://"
-    if (location.charCodeAt(++i) === CHAR_CODE_A &&
+    case CHAR_CODE_J: // "jar:file://"
+      if (location.charCodeAt(++i) === CHAR_CODE_A &&
         location.charCodeAt(++i) === CHAR_CODE_R &&
         location.charCodeAt(++i) === CHAR_CODE_COLON &&
         location.charCodeAt(++i) === CHAR_CODE_F &&
         location.charCodeAt(++i) === CHAR_CODE_I &&
         location.charCodeAt(++i) === CHAR_CODE_L &&
         location.charCodeAt(++i) === CHAR_CODE_E) {
-      return isColonSlashSlash(location, i);
-    }
-    return false;
+        return isColonSlashSlash(location, i);
+      }
+      return false;
 
-  default:
-    return false;
+    default:
+      return false;
   }
 }
 

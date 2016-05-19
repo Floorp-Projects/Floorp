@@ -31,10 +31,10 @@ function test() {
 
       let thrownNode = attachment.view.container.querySelector(".dbg-breakpoint-condition-thrown-message");
       ok(thrownNode,
-         "The breakpoint item should contain a thrown message node.")
+         "The breakpoint item should contain a thrown message node.");
 
       ok(!attachment.view.container.classList.contains("dbg-breakpoint-condition-thrown"),
-         "The thrown message on line " + aCaretLine + " should be hidden when condition has not been evaluated.")
+         "The thrown message on line " + aCaretLine + " should be hidden when condition has not been evaluated.");
     }
 
     function resumeAndTestThrownMessage(line) {
@@ -47,7 +47,7 @@ function test() {
           { actor: gSources.values[0], line: line }
         );
         let attachment = gSources._getBreakpoint(bp).attachment;
-        ok(attachment.view.container.classList.contains('dbg-breakpoint-condition-thrown'),
+        ok(attachment.view.container.classList.contains("dbg-breakpoint-condition-thrown"),
            "Message on line " + line + " should be shown when condition throws.");
       });
     }
@@ -56,7 +56,7 @@ function test() {
       doResume(gPanel);
 
       return waitForCaretUpdated(gPanel, line).then(() => {
-        //test that the thrown message is correctly shown
+        // test that the thrown message is correctly shown
         let bp = gDebugger.queries.getBreakpoint(
           getState(),
           { actor: gSources.values[0], line: line }
@@ -67,7 +67,7 @@ function test() {
       });
     }
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceAndCaretAndScopes(gPanel, ".html", 17);
 
       yield actions.addBreakpoint({ actor: gSources.selectedValue, line: 18 }, " 1afff");
@@ -90,7 +90,7 @@ function test() {
 
       yield actions.addBreakpoint({ actor: gSources.selectedValue, line: 22 }, "randomVar");
       gSources._hideConditionalPopup();
-      initialCheck(22)
+      initialCheck(22);
 
       yield resumeAndTestThrownMessage(18);
       yield resumeAndTestNoThrownMessage(19);

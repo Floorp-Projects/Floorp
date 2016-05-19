@@ -29,11 +29,11 @@ function performTest(HUD, [result]) {
   let selection = getSelection();
   let contentSelection = content.getSelection();
 
-  let clipboardSetup = function() {
+  let clipboardSetup = function () {
     goDoCommand("cmd_copy");
   };
 
-  let clipboardCopyDone = function() {
+  let clipboardCopyDone = function () {
     finishTest();
   };
 

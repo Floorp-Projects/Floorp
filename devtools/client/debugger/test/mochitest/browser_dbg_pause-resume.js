@@ -77,7 +77,7 @@ function testResume() {
   EventUtils.sendMouseEvent({ type: "mousedown" }, gResumeButton, gDebugger);
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

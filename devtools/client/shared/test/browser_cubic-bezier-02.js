@@ -11,7 +11,7 @@ const {CubicBezierWidget} =
   require("devtools/client/shared/widgets/CubicBezierWidget");
 const {PREDEFINED} = require("devtools/client/shared/widgets/CubicBezierPresets");
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("about:blank");
   let [host, win, doc] = yield createHost("bottom", TEST_URI);
 
@@ -186,7 +186,7 @@ function* pointsCanBeMovedWithKeyboard(widget, win, doc, offsets) {
   is(bezier.P2[1], 0.25, "The new P2 progress coordinate is correct");
 }
 
-function getKeyEvent(target, keyCode, shift=false) {
+function getKeyEvent(target, keyCode, shift = false) {
   return {
     target: target,
     keyCode: keyCode,

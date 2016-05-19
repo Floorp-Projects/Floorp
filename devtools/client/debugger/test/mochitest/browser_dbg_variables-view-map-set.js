@@ -11,7 +11,7 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_map-set.html";
 
-var test = Task.async(function*() {
+var test = Task.async(function* () {
   const [tab,, panel] = yield initDebugger(TAB_URL);
   yield ensureSourceIs(panel, "doc_map-set.html", true);
 

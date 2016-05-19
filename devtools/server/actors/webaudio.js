@@ -388,7 +388,7 @@ var AudioNodeActor = exports.AudioNodeActor = protocol.ActorClass({
    * @param Array args
    *        Arguments passed into the automation call.
    */
-  addAutomationEvent: method(function (paramName, eventName, args=[]) {
+  addAutomationEvent: method(function (paramName, eventName, args = []) {
     let node = this.node.get();
     let timeline = this.automation[paramName];
 
@@ -500,7 +500,7 @@ var AudioNodeFront = protocol.FrontClass(AudioNodeActor, {
  */
 var WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
   typeName: "webaudio",
-  initialize: function(conn, tabActor) {
+  initialize: function (conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.tabActor = tabActor;
 
@@ -516,7 +516,7 @@ var WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
     this._onGlobalCreated = this._onGlobalCreated.bind(this);
   },
 
-  destroy: function(conn) {
+  destroy: function (conn) {
     protocol.Actor.prototype.destroy.call(this, conn);
     this.finalize();
   },
@@ -538,7 +538,7 @@ var WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
    *
    * See ContentObserver and WebAudioInstrumenter for more details.
    */
-  setup: method(function({ reload }) {
+  setup: method(function ({ reload }) {
     // Used to track when something is happening with the web audio API
     // the first time, to ultimately fire `start-context` event
     this._firstNodeCreated = false;
@@ -577,7 +577,7 @@ var WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
    * Invoked whenever an instrumented function is called, like an AudioContext
    * method or an AudioNode method.
    */
-  _onContentFunctionCall: function(functionCall) {
+  _onContentFunctionCall: function (functionCall) {
     let { name } = functionCall.details;
 
     // All Web Audio nodes inherit from AudioNode's prototype, so
@@ -593,7 +593,7 @@ var WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
     }
   },
 
-  _handleRoutingCall: function(functionCall) {
+  _handleRoutingCall: function (functionCall) {
     let { caller, args, name } = functionCall.details;
     let source = caller;
     let dest = args[0];
@@ -654,7 +654,7 @@ var WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
    * to hibernation. This method is called automatically just before the
    * actor is destroyed.
    */
-  finalize: method(function() {
+  finalize: method(function () {
     if (!this._initialized) {
       return;
     }
@@ -669,7 +669,7 @@ var WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
     this._callWatcher.finalize();
     this._callWatcher = null;
   }, {
-   oneway: true
+    oneway: true
   }),
 
   /**
@@ -858,7 +858,7 @@ var WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
    * Fired when an automation event is added to an AudioNode.
    */
   _onAutomationEvent: function ({node, paramName, eventName, args}) {
-    emit(this, "automation-event",  {
+    emit(this, "automation-event", {
       node: node,
       paramName: paramName,
       eventName: eventName,
@@ -887,7 +887,7 @@ var WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
  * The corresponding Front object for the WebAudioActor.
  */
 var WebAudioFront = exports.WebAudioFront = protocol.FrontClass(WebAudioActor, {
-  initialize: function(client, { webaudioActor }) {
+  initialize: function (client, { webaudioActor }) {
     protocol.Front.prototype.initialize.call(this, client, { actor: webaudioActor });
     this.manage(this);
   },
@@ -921,7 +921,7 @@ WebAudioFront.NODE_ROUTING_METHODS = new Set(NODE_ROUTING_METHODS);
  *        Property of `node` to evaluate to see if it's an AudioParam.
  * @return Boolean
  */
-function isAudioParam (node, prop) {
+function isAudioParam(node, prop) {
   return !!(node[prop] && /AudioParam/.test(node[prop].toString()));
 }
 
@@ -932,7 +932,7 @@ function isAudioParam (node, prop) {
  *        A TypeError, RangeError, etc.
  * @return Object
  */
-function constructError (err) {
+function constructError(err) {
   return {
     message: err.message,
     type: err.constructor.name
@@ -945,14 +945,14 @@ function constructError (err) {
  *
  * @return Object
  */
-function CollectedAudioNodeError () {
+function CollectedAudioNodeError() {
   return {
     message: "AudioNode has been garbage collected and can no longer be reached.",
     type: "UnreachableAudioNode"
   };
 }
 
-function InvalidCommandError () {
+function InvalidCommandError() {
   return {
     message: "The command on AudioNode is invalid.",
     type: "InvalidCommand"
@@ -966,7 +966,7 @@ function InvalidCommandError () {
  * to a string of just the constructor name, like "OscillatorNode",
  * or "Float32Array".
  */
-function getConstructorName (obj) {
+function getConstructorName(obj) {
   return obj.toString().match(/\[object ([^\[\]]*)\]\]?$/)[1];
 }
 
@@ -975,7 +975,7 @@ function getConstructorName (obj) {
  * to the front-end for things like Float32Arrays, AudioBuffers,
  * without tracking them in an actor pool.
  */
-function createObjectGrip (value) {
+function createObjectGrip(value) {
   return {
     type: "object",
     preview: {
@@ -990,7 +990,7 @@ function createObjectGrip (value) {
  * Converts all TypedArrays of the array that cannot
  * be passed over the wire into a normal Array equivilent.
  */
-function sanitizeAutomationArgs (args) {
+function sanitizeAutomationArgs(args) {
   return args.reduce((newArgs, el) => {
     newArgs.push(typeof el === "object" && getConstructorName(el) === "Float32Array" ? castToArray(el) : el);
     return newArgs;
@@ -1001,7 +1001,7 @@ function sanitizeAutomationArgs (args) {
  * Casts TypedArray to a normal array via a
  * new scope.
  */
-function castToArray (typedArray) {
+function castToArray(typedArray) {
   // The Xray machinery for TypedArrays denies indexed access on the grounds
   // that it's slow, and advises callers to do a structured clone instead.
   let global = Cu.getGlobalForObject(this);
@@ -1013,7 +1013,7 @@ function castToArray (typedArray) {
  * Copies values of an array-like `source` into
  * a similarly array-like `dest`.
  */
-function copyInto (dest, source) {
+function copyInto(dest, source) {
   for (let i = 0; i < source.length; i++) {
     dest[i] = source[i];
   }

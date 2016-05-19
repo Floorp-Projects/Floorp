@@ -70,7 +70,7 @@ const ATTRIBUTE_TYPES = [
   {namespaceURI: HTML_NS, attributeName: "href", tagName: "area", type: TYPE_URI},
   {namespaceURI: "*", attributeName: "href", tagName: "link", type: TYPE_CSS_RESOURCE_URI,
    isValid: (namespaceURI, tagName, attributes) => {
-    return getAttribute(attributes, "rel") === "stylesheet";
+     return getAttribute(attributes, "rel") === "stylesheet";
    }},
   {namespaceURI: "*", attributeName: "href", tagName: "link", type: TYPE_URI},
   {namespaceURI: HTML_NS, attributeName: "href", tagName: "base", type: TYPE_URI},
@@ -125,13 +125,13 @@ const ATTRIBUTE_TYPES = [
 ];
 
 var parsers = {
-  [TYPE_URI]: function(attributeValue) {
+  [TYPE_URI]: function (attributeValue) {
     return [{
       type: TYPE_URI,
       value: attributeValue
     }];
   },
-  [TYPE_URI_LIST]: function(attributeValue) {
+  [TYPE_URI_LIST]: function (attributeValue) {
     let data = splitBy(attributeValue, " ");
     for (let token of data) {
       if (!token.type) {
@@ -140,25 +140,25 @@ var parsers = {
     }
     return data;
   },
-  [TYPE_JS_RESOURCE_URI]: function(attributeValue) {
+  [TYPE_JS_RESOURCE_URI]: function (attributeValue) {
     return [{
       type: TYPE_JS_RESOURCE_URI,
       value: attributeValue
     }];
   },
-  [TYPE_CSS_RESOURCE_URI]: function(attributeValue) {
+  [TYPE_CSS_RESOURCE_URI]: function (attributeValue) {
     return [{
       type: TYPE_CSS_RESOURCE_URI,
       value: attributeValue
     }];
   },
-  [TYPE_IDREF]: function(attributeValue) {
+  [TYPE_IDREF]: function (attributeValue) {
     return [{
       type: TYPE_IDREF,
       value: attributeValue
     }];
   },
-  [TYPE_IDREF_LIST]: function(attributeValue) {
+  [TYPE_IDREF_LIST]: function (attributeValue) {
     let data = splitBy(attributeValue, " ");
     for (let token of data) {
       if (!token.type) {
@@ -277,7 +277,7 @@ function splitBy(value, splitChar) {
       buffer += value[i];
     }
 
-    i ++;
+    i++;
   }
   return data;
 }

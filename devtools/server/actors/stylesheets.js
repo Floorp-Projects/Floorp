@@ -64,7 +64,7 @@ let modifiedStyleSheets = new WeakMap();
  * in a source map.
  */
 var OriginalSourceActor = protocol.ActorClassWithSpec(originalSourceSpec, {
-  initialize: function(aUrl, aSourceMap, aParentActor) {
+  initialize: function (aUrl, aSourceMap, aParentActor) {
     protocol.Actor.prototype.initialize.call(this, null);
 
     this.url = aUrl;
@@ -75,7 +75,7 @@ var OriginalSourceActor = protocol.ActorClassWithSpec(originalSourceSpec, {
     this.text = null;
   },
 
-  form: function() {
+  form: function () {
     return {
       actor: this.actorID, // actorID is set when it's added to a pool
       url: this.url,
@@ -83,7 +83,7 @@ var OriginalSourceActor = protocol.ActorClassWithSpec(originalSourceSpec, {
     };
   },
 
-  _getText: function() {
+  _getText: function () {
     if (this.text) {
       return promise.resolve(this.text);
     }
@@ -105,12 +105,12 @@ var OriginalSourceActor = protocol.ActorClassWithSpec(originalSourceSpec, {
   /**
    * Protocol method to get the text of this source.
    */
-  getText: function() {
+  getText: function () {
     return this._getText().then((text) => {
       return new LongStringActor(this.conn, text || "");
     });
   }
-})
+});
 
 /**
  * A MediaRuleActor lives on the server and provides access to properties
@@ -129,7 +129,7 @@ var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
     return this.mql ? this.mql.matches : null;
   },
 
-  initialize: function(aMediaRule, aParentActor) {
+  initialize: function (aMediaRule, aParentActor) {
     protocol.Actor.prototype.initialize.call(this, null);
 
     this.rawRule = aMediaRule;
@@ -143,7 +143,7 @@ var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
 
     try {
       this.mql = this.window.matchMedia(aMediaRule.media.mediaText);
-    } catch(e) {
+    } catch (e) {
     }
 
     if (this.mql) {
@@ -151,7 +151,7 @@ var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
     }
   },
 
-  destroy: function()
+  destroy: function ()
   {
     if (this.mql) {
       this.mql.removeListener(this._matchesChange);
@@ -160,7 +160,7 @@ var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
     protocol.Actor.prototype.destroy.call(this);
   },
 
-  form: function(detail) {
+  form: function (detail) {
     if (detail === "actorid") {
       return this.actorID;
     }
@@ -178,7 +178,7 @@ var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
     return form;
   },
 
-  _matchesChange: function() {
+  _matchesChange: function () {
     events.emit(this, "matches-change", this.matches);
   }
 });
@@ -190,7 +190,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
   /* List of original sources that generated this stylesheet */
   _originalSources: null,
 
-  toString: function() {
+  toString: function () {
     return "[StyleSheetActor " + this.actorID + "]";
   },
 
@@ -253,7 +253,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
     return this._styleSheetIndex;
   },
 
-  initialize: function(aStyleSheet, aParentActor, aWindow) {
+  initialize: function (aStyleSheet, aParentActor, aWindow) {
     protocol.Actor.prototype.initialize.call(this, null);
 
     this.rawSheet = aStyleSheet;
@@ -274,7 +274,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * @return {Boolean} true if all the rules have source; false if
    *         some rule was created via CSSOM.
    */
-  allRulesHaveSource: function() {
+  allRulesHaveSource: function () {
     let rules;
     try {
       rules = this.rawSheet.cssRules;
@@ -299,7 +299,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * @return {Promise}
    *         Promise that resolves with a CSSRuleList
    */
-  getCSSRules: function() {
+  getCSSRules: function () {
     let rules;
     try {
       rules = this.rawSheet.cssRules;
@@ -343,7 +343,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    *         With properties of the underlying stylesheet, plus 'text',
    *        'styleSheetIndex' and 'parentActor' if it's @imported
    */
-  form: function(detail) {
+  form: function (detail) {
     if (detail === "actorid") {
       return this.actorID;
     }
@@ -366,12 +366,12 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
       title: this.rawSheet.title,
       system: !CssLogic.isContentStylesheet(this.rawSheet),
       styleSheetIndex: this.styleSheetIndex
-    }
+    };
 
     try {
       form.ruleCount = this.rawSheet.cssRules.length;
     }
-    catch(e) {
+    catch (e) {
       // stylesheet had an @import rule that wasn't loaded yet
       this.getCSSRules().then(() => {
         this._notifyPropertyChanged("ruleCount");
@@ -386,7 +386,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * @return {object}
    *         'disabled' - the disabled state after toggling.
    */
-  toggleDisabled: function() {
+  toggleDisabled: function () {
     this.rawSheet.disabled = !this.rawSheet.disabled;
     this._notifyPropertyChanged("disabled");
 
@@ -400,14 +400,14 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * @param  {string} property
    *         Name of the changed property
    */
-  _notifyPropertyChanged: function(property) {
+  _notifyPropertyChanged: function (property) {
     events.emit(this, "property-change", property, this.form()[property]);
   },
 
   /**
    * Protocol method to get the text of this stylesheet.
    */
-  getText: function() {
+  getText: function () {
     return this._getText().then((text) => {
       return new LongStringActor(this.conn, text || "");
     });
@@ -420,7 +420,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * @return {Promise}
    *         Promise that resolves with a string text of the stylesheet.
    */
-  _getText: function() {
+  _getText: function () {
     if (typeof this.text === "string") {
       return promise.resolve(this.text);
     }
@@ -455,7 +455,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * Protocol method to get the original source (actors) for this
    * stylesheet if it has uses source maps.
    */
-  getOriginalSources: function() {
+  getOriginalSources: function () {
     if (this._originalSources) {
       return promise.resolve(this._originalSources);
     }
@@ -469,7 +469,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * @return {Promise}
    *         Promise that resolves with an array of OriginalSourceActors
    */
-  _fetchOriginalSources: function() {
+  _fetchOriginalSources: function () {
     this._clearOriginalSources();
     this._originalSources = [];
 
@@ -484,7 +484,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
         this._originalSources.push(actor);
       }
       return this._originalSources;
-    })
+    });
   },
 
   /**
@@ -494,7 +494,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * @return {Promise}
    *         A promise that resolves with a SourceMapConsumer, or null.
    */
-  getSourceMap: function() {
+  getSourceMap: function () {
     if (this._sourceMap) {
       return this._sourceMap;
     }
@@ -507,7 +507,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * @return {Promise}
    *         A promise that resolves with a SourceMapConsumer, or null.
    */
-  _fetchSourceMap: function() {
+  _fetchSourceMap: function () {
     let deferred = promise.defer();
 
     this._getText().then(sheetContent => {
@@ -552,7 +552,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
   /**
    * Clear and unmanage the original source actors for this stylesheet.
    */
-  _clearOriginalSources: function() {
+  _clearOriginalSources: function () {
     for (actor in this._originalSources) {
       this.unmanage(actor);
     }
@@ -562,7 +562,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
   /**
    * Sets the source map's sourceRoot to be relative to the source map url.
    */
-  _setSourceMapRoot: function(aSourceMap, aAbsSourceMapURL, aScriptURL) {
+  _setSourceMapRoot: function (aSourceMap, aAbsSourceMapURL, aScriptURL) {
     if (aScriptURL.startsWith("blob:")) {
       aScriptURL = aScriptURL.replace("blob:", "");
     }
@@ -583,7 +583,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * @return {string}
    *         Url of source map.
    */
-  _extractSourceMapUrl: function(content) {
+  _extractSourceMapUrl: function (content) {
     var matches = /sourceMappingURL\=([^\s\*]*)/.exec(content);
     if (matches) {
       return matches[1];
@@ -596,7 +596,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * line, column pair in this stylesheet, if its source mapped, otherwise
    * a promise of the same location.
    */
-  getOriginalLocation: function(line, column) {
+  getOriginalLocation: function (line, column) {
     return this.getSourceMap().then((sourceMap) => {
       if (sourceMap) {
         return sourceMap.originalPositionFor({ line: line, column: column });
@@ -613,7 +613,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
   /**
    * Protocol method to get the media rules for the stylesheet.
    */
-  getMediaRules: function() {
+  getMediaRules: function () {
     return this._getMediaRules();
   },
 
@@ -623,7 +623,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * @return {promise}
    *         A promise that resolves with an array of MediaRuleActors.
    */
-  _getMediaRules: function() {
+  _getMediaRules: function () {
     return this.getCSSRules().then((rules) => {
       let mediaRules = [];
       for (let i = 0; i < rules.length; i++) {
@@ -647,7 +647,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * @param string channelCharset
    *        Charset of the source string if set by the HTTP channel.
    */
-  _getCSSCharset: function(channelCharset)
+  _getCSSCharset: function (channelCharset)
   {
     // StyleSheet's charset can be specified from multiple sources
     if (channelCharset && channelCharset.length > 0) {
@@ -700,7 +700,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    *         'transition' - whether to do CSS transition for change.
    *         'kind' - either UPDATE_PRESERVING_RULES or UPDATE_GENERAL
    */
-  update: function(text, transition, kind = UPDATE_GENERAL) {
+  update: function (text, transition, kind = UPDATE_GENERAL) {
     DOMUtils.parseStyleSheet(this.rawSheet, text);
 
     modifiedStyleSheets.set(this.rawSheet, text);
@@ -725,7 +725,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * Insert a catch-all transition rule into the document. Set a timeout
    * to remove the rule after a certain time.
    */
-  _insertTransistionRule: function(kind) {
+  _insertTransistionRule: function (kind) {
     this.document.documentElement.classList.add(TRANSITION_CLASS);
 
     // We always add the rule since we've just reset all the rules
@@ -742,7 +742,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    * This cleans up class and rule added for transition effect and then
    * notifies that the style has been applied.
    */
-  _onTransitionEnd: function(kind)
+  _onTransitionEnd: function (kind)
   {
     this.document.documentElement.classList.remove(TRANSITION_CLASS);
 
@@ -754,7 +754,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
 
     events.emit(this, "style-applied", kind, this);
   }
-})
+});
 
 exports.StyleSheetActor = StyleSheetActor;
 
@@ -777,7 +777,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
     return this.window.document;
   },
 
-  form: function()
+  form: function ()
   {
     return { actor: this.actorID };
   },
@@ -825,7 +825,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
    * @return boolean
    *         Whether the stylesheet should be listed.
    */
-  _shouldListSheet: function(doc, sheet) {
+  _shouldListSheet: function (doc, sheet) {
     // Special case about:PreferenceStyleSheet, as it is generated on the
     // fly and the URI is not registered with the about: handler.
     // https://bugzilla.mozilla.org/show_bug.cgi?id=935803#c37
@@ -846,9 +846,9 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
    * @return {Promise}
    *         Promise that resolves to an array of StyleSheetActors
    */
-  _addStyleSheets: function(win)
+  _addStyleSheets: function (win)
   {
-    return Task.spawn(function*() {
+    return Task.spawn(function* () {
       let doc = win.document;
       // readyState can be uninitialized if an iframe has just been created but
       // it has not started to load yet.
@@ -892,8 +892,8 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
    * @return {Promise}
    *         A promise that resolves with an array of StyleSheetActors
    */
-  _getImported: function(doc, styleSheet) {
-    return Task.spawn(function*() {
+  _getImported: function (doc, styleSheet) {
+    return Task.spawn(function* () {
       let rules = yield styleSheet.getCSSRules();
       let imported = [];
 
@@ -932,7 +932,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
    * @return {object}
    *         Object with 'styelSheet' property for form on new actor.
    */
-  addStyleSheet: function(text) {
+  addStyleSheet: function (text) {
     let parent = this.document.documentElement;
     let style = this.document.createElementNS("http://www.w3.org/1999/xhtml", "style");
     style.setAttribute("type", "text/css");

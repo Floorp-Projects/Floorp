@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
 // PLEASE TALK TO SOMEONE IN DEVELOPER TOOLS BEFORE EDITING IT
@@ -27,167 +27,167 @@ function test() {
 
 // var helpers = require('./helpers');
 
-exports.testBaseline = function(options) {
+exports.testBaseline = function (options) {
   return helpers.audit(options, [
     // These 3 establish a baseline for comparison when we have used the
     // context command
     {
-      setup:    'ext',
+      setup:    "ext",
       check: {
-        input:  'ext',
-        hints:     ' -> context',
-        markup: 'III',
-        message: '',
-        predictions: [ 'context', 'tsn ext', 'tsn exte', 'tsn exten', 'tsn extend' ],
+        input:  "ext",
+        hints:     " -> context",
+        markup: "III",
+        message: "",
+        predictions: [ "context", "tsn ext", "tsn exte", "tsn exten", "tsn extend" ],
         unassigned: [ ],
       }
     },
     {
-      setup:    'ext test',
+      setup:    "ext test",
       check: {
-        input:  'ext test',
-        hints:          '',
-        markup: 'IIIVEEEE',
-        status: 'ERROR',
-        message: 'Too many arguments',
-        unassigned: [ ' test' ],
+        input:  "ext test",
+        hints:          "",
+        markup: "IIIVEEEE",
+        status: "ERROR",
+        message: "Too many arguments",
+        unassigned: [ " test" ],
       }
     },
     {
-      setup:    'tsn',
+      setup:    "tsn",
       check: {
-        input:  'tsn',
-        hints:     ' deep down nested cmd',
-        markup: 'III',
+        input:  "tsn",
+        hints:     " deep down nested cmd",
+        markup: "III",
         cursor: 3,
-        current: '__command',
-        status: 'ERROR',
-        predictionsContains: [ 'tsn deep down nested cmd', 'tsn ext', 'tsn exte' ],
+        current: "__command",
+        status: "ERROR",
+        predictionsContains: [ "tsn deep down nested cmd", "tsn ext", "tsn exte" ],
         args: {
-          command: { name: 'tsn' },
+          command: { name: "tsn" },
         }
       }
     }
   ]);
 };
 
-exports.testContext = function(options) {
+exports.testContext = function (options) {
   return helpers.audit(options, [
     // Use the 'tsn' context
     {
-      setup:    'context tsn',
+      setup:    "context tsn",
       check: {
-        input:  'context tsn',
-        hints:             ' deep down nested cmd',
-        markup: 'VVVVVVVVVVV',
-        message: '',
-        predictionsContains: [ 'tsn deep down nested cmd', 'tsn ext', 'tsn exte' ],
+        input:  "context tsn",
+        hints:             " deep down nested cmd",
+        markup: "VVVVVVVVVVV",
+        message: "",
+        predictionsContains: [ "tsn deep down nested cmd", "tsn ext", "tsn exte" ],
         args: {
-          command: { name: 'context' },
+          command: { name: "context" },
           prefix: {
-            value: options.requisition.system.commands.get('tsn'),
-            status: 'VALID',
-            message: ''
+            value: options.requisition.system.commands.get("tsn"),
+            status: "VALID",
+            message: ""
           }
         }
       },
       exec: {
-        output: 'Using tsn as a command prefix'
+        output: "Using tsn as a command prefix"
       }
     },
     // For comparison with earlier
     {
-      setup:    'ext',
+      setup:    "ext",
       check: {
-        input:  'ext',
-        hints:     ' <text>',
-        markup: 'VVV',
-        predictions: [ 'tsn ext', 'tsn exte', 'tsn exten', 'tsn extend' ],
+        input:  "ext",
+        hints:     " <text>",
+        markup: "VVV",
+        predictions: [ "tsn ext", "tsn exte", "tsn exten", "tsn extend" ],
         args: {
-          command: { name: 'tsn ext' },
+          command: { name: "tsn ext" },
           text: {
             value: undefined,
-            arg: '',
-            status: 'INCOMPLETE'
+            arg: "",
+            status: "INCOMPLETE"
           }
         }
       }
     },
     {
-      setup:    'ext test',
+      setup:    "ext test",
       check: {
-        input:  'ext test',
-        hints:          '',
-        markup: 'VVVVVVVV',
+        input:  "ext test",
+        hints:          "",
+        markup: "VVVVVVVV",
         args: {
-          command: { name: 'tsn ext' },
+          command: { name: "tsn ext" },
           text: {
-            value: 'test',
-            arg: ' test',
-            status: 'VALID',
-            message: ''
+            value: "test",
+            arg: " test",
+            status: "VALID",
+            message: ""
           }
         }
       },
       exec: {
-        output: 'Exec: tsnExt text=test'
+        output: "Exec: tsnExt text=test"
       }
     },
     {
-      setup:    'tsn',
+      setup:    "tsn",
       check: {
-        input:  'tsn',
-        hints:     ' deep down nested cmd',
-        markup: 'III',
-        message: '',
-        predictionsContains: [ 'tsn deep down nested cmd', 'tsn ext', 'tsn exte' ],
+        input:  "tsn",
+        hints:     " deep down nested cmd",
+        markup: "III",
+        message: "",
+        predictionsContains: [ "tsn deep down nested cmd", "tsn ext", "tsn exte" ],
         args: {
-          command: { name: 'tsn' },
+          command: { name: "tsn" },
         }
       }
     },
     // Does it actually work?
     {
-      setup:    'tsb true',
+      setup:    "tsb true",
       check: {
-        input:  'tsb true',
-        hints:          '',
-        markup: 'VVVVVVVV',
-        options: [ 'true' ],
-        message: '',
-        predictions: [ 'true' ],
+        input:  "tsb true",
+        hints:          "",
+        markup: "VVVVVVVV",
+        options: [ "true" ],
+        message: "",
+        predictions: [ "true" ],
         unassigned: [ ],
         args: {
-          command: { name: 'tsb' },
-          toggle: { value: true, arg: ' true', status: 'VALID', message: '' }
+          command: { name: "tsb" },
+          toggle: { value: true, arg: " true", status: "VALID", message: "" }
         }
       }
     },
     {
       // Bug 866710 - GCLI should allow argument merging for non-string parameters
-      setup: 'context tsn ext',
+      setup: "context tsn ext",
       skip: true
     },
     {
       setup:    'context "tsn ext"',
       check: {
         input:  'context "tsn ext"',
-        hints:                   '',
-        markup: 'VVVVVVVVVVVVVVVVV',
-        message: '',
-        predictions: [ 'tsn ext', 'tsn exte', 'tsn exten', 'tsn extend' ],
+        hints:                   "",
+        markup: "VVVVVVVVVVVVVVVVV",
+        message: "",
+        predictions: [ "tsn ext", "tsn exte", "tsn exten", "tsn extend" ],
         unassigned: [ ],
         args: {
-          command: { name: 'context' },
+          command: { name: "context" },
           prefix: {
-            value: options.requisition.system.commands.get('tsn ext'),
-            status: 'VALID',
-            message: ''
+            value: options.requisition.system.commands.get("tsn ext"),
+            status: "VALID",
+            message: ""
           }
         }
       },
       exec: {
-        output: 'Can\'t use \'tsn ext\' as a prefix because it is not a parent command.',
+        output: "Can't use 'tsn ext' as a prefix because it is not a parent command.",
         error: true
       }
     },
@@ -217,21 +217,21 @@ exports.testContext = function(options) {
     },
     */
     {
-      setup:    'context',
+      setup:    "context",
       check: {
-        input:  'context',
-        hints:         ' [prefix]',
-        markup: 'VVVVVVV',
-        status: 'VALID',
+        input:  "context",
+        hints:         " [prefix]",
+        markup: "VVVVVVV",
+        status: "VALID",
         unassigned: [ ],
         args: {
-          command: { name: 'context' },
-          prefix: { value: undefined, arg: '', status: 'VALID', message: '' },
+          command: { name: "context" },
+          prefix: { value: undefined, arg: "", status: "VALID", message: "" },
         }
       },
       exec: {
-        output: 'Command prefix is unset',
-        type: 'string',
+        output: "Command prefix is unset",
+        type: "string",
         error: false
       }
     }

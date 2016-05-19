@@ -3,7 +3,7 @@
 
 "use strict";
 
-///////////////////
+// /////////////////
 //
 // Whitelisting this test.
 // As part of bug 1077403, the leaking uncaught rejection should be fixed.
@@ -35,7 +35,7 @@ function test() {
         exec: {
           output: ""
         },
-        post: Task.async(function*() {
+        post: Task.async(function* () {
           yield done;
           ok(isOpen(), "responsive mode is open");
         }),
@@ -54,7 +54,7 @@ function test() {
         exec: {
           output: ""
         },
-        post: Task.async(function*() {
+        post: Task.async(function* () {
           yield done;
           ok(!isOpen(), "responsive mode is closed");
         }),
@@ -73,7 +73,7 @@ function test() {
         exec: {
           output: ""
         },
-        post: Task.async(function*() {
+        post: Task.async(function* () {
           yield done;
           ok(isOpen(), "responsive mode is open");
         }),
@@ -92,7 +92,7 @@ function test() {
         exec: {
           output: ""
         },
-        post: Task.async(function*() {
+        post: Task.async(function* () {
           yield done;
           ok(!isOpen(), "responsive mode is closed");
         }),
@@ -115,7 +115,7 @@ function test() {
         exec: {
           output: ""
         },
-        post: Task.async(function*() {
+        post: Task.async(function* () {
           yield done;
           ok(isOpen(), "responsive mode is open");
         }),
@@ -134,7 +134,7 @@ function test() {
         exec: {
           output: ""
         },
-        post: Task.async(function*() {
+        post: Task.async(function* () {
           yield done;
           ok(!isOpen(), "responsive mode is closed");
         }),

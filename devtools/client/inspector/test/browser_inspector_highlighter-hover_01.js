@@ -10,7 +10,7 @@
 
 const TEST_URL = "data:text/html;charset=utf-8,<p>It's going to be legen....</p>";
 
-add_task(function*() {
+add_task(function* () {
   let {toolbox, inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   info("hovering over the <p> line in the markup-view");

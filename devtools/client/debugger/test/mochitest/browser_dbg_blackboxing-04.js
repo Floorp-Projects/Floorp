@@ -9,7 +9,7 @@
  */
 
 const TAB_URL = EXAMPLE_URL + "doc_blackboxing.html";
-const BLACKBOXME_URL = EXAMPLE_URL + "code_blackboxing_blackboxme.js"
+const BLACKBOXME_URL = EXAMPLE_URL + "code_blackboxing_blackboxme.js";
 
 var gTab, gPanel, gDebugger;
 var gFrames, gSources;
@@ -53,7 +53,7 @@ function testBlackBoxStack() {
   return finished;
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

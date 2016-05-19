@@ -75,7 +75,7 @@ MarkerDetails.prototype = {
   /**
    * Clears the marker details from this view.
    */
-  empty: function() {
+  empty: function () {
     this._parent.innerHTML = "";
   },
 
@@ -133,7 +133,7 @@ MarkerDetails.prototype = {
   /**
    * Handles the "mouseup" event on the marker details view splitter.
    */
-  _onSplitterMouseUp: function() {
+  _onSplitterMouseUp: function () {
     this.emit("resize");
   }
 };
@@ -148,7 +148,7 @@ MarkerDetails.prototype = {
  * @param {Element} container
  * @return {?object}
  */
-function findActionFromEvent (target, container) {
+function findActionFromEvent(target, container) {
   let el = target;
   let action;
   while (el !== container) {

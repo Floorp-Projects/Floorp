@@ -14,7 +14,7 @@ function run_test() {
   run_test_with_server(DebuggerServer, function () {
     run_test_with_server(WorkerDebuggerServer, do_test_finished);
   });
-};
+}
 
 function run_test_with_server(aServer, aCallback) {
   gCallback = aCallback;
@@ -24,14 +24,14 @@ function run_test_with_server(aServer, aCallback) {
   gClient.connect(testSteppingAndReturns);
 }
 
-const testSteppingAndReturns = Task.async(function*() {
+const testSteppingAndReturns = Task.async(function* () {
   const [attachResponse, tabClient, threadClient] = yield attachTestTabAndResume(gClient, "test-stepping");
   ok(!attachResponse.error, "Should not get an error attaching");
 
   dumpn("Evaluating test code and waiting for first debugger statement");
-  const dbgStmt1 = yield executeOnNextTickAndWaitForPause(evaluateTestCode, gClient)
+  const dbgStmt1 = yield executeOnNextTickAndWaitForPause(evaluateTestCode, gClient);
   equal(dbgStmt1.frame.where.line, 3,
-        "Should be at debugger statement on line 3")
+        "Should be at debugger statement on line 3");
 
   dumpn("Testing stepping with implicit return");
   const step1 = yield stepOver(gClient, threadClient);
@@ -48,7 +48,7 @@ const testSteppingAndReturns = Task.async(function*() {
   dumpn("Continuing and waiting for second debugger statement");
   const dbgStmt2 = yield resumeAndWaitForPause(gClient, threadClient);
   equal(dbgStmt2.frame.where.line, 12,
-        "Should be at debugger statement on line 3")
+        "Should be at debugger statement on line 3");
 
   dumpn("Testing stepping with explicit return");
   const step3 = yield stepOver(gClient, threadClient);

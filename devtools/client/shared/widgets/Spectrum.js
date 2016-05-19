@@ -85,7 +85,7 @@ function Spectrum(parentEl, rgb) {
 
 module.exports.Spectrum = Spectrum;
 
-Spectrum.hsvToRgb = function(h, s, v, a) {
+Spectrum.hsvToRgb = function (h, s, v, a) {
   let r, g, b;
 
   let i = Math.floor(h * 6);
@@ -94,7 +94,7 @@ Spectrum.hsvToRgb = function(h, s, v, a) {
   let q = v * (1 - f * s);
   let t = v * (1 - (1 - f) * s);
 
-  switch(i % 6) {
+  switch (i % 6) {
     case 0: r = v; g = t; b = p; break;
     case 1: r = q; g = v; b = p; break;
     case 2: r = p; g = v; b = t; break;
@@ -106,7 +106,7 @@ Spectrum.hsvToRgb = function(h, s, v, a) {
   return [r * 255, g * 255, b * 255, a];
 };
 
-Spectrum.rgbToHsv = function(r, g, b, a) {
+Spectrum.rgbToHsv = function (r, g, b, a) {
   r = r / 255;
   g = g / 255;
   b = b / 255;
@@ -121,7 +121,7 @@ Spectrum.rgbToHsv = function(r, g, b, a) {
     // achromatic
     h = 0;
   } else {
-    switch(max) {
+    switch (max) {
       case r: h = (g - b) / d + (g < b ? 6 : 0); break;
       case g: h = (b - r) / d + 2; break;
       case b: h = (r - g) / d + 4; break;
@@ -131,7 +131,7 @@ Spectrum.rgbToHsv = function(r, g, b, a) {
   return [h, s, v, a];
 };
 
-Spectrum.getOffset = function(el) {
+Spectrum.getOffset = function (el) {
   let curleft = 0, curtop = 0;
   if (el.offsetParent) {
     while (el) {
@@ -146,10 +146,10 @@ Spectrum.getOffset = function(el) {
   };
 };
 
-Spectrum.draggable = function(element, onmove, onstart, onstop) {
-  onmove = onmove || function() {};
-  onstart = onstart || function() {};
-  onstop = onstop || function() {};
+Spectrum.draggable = function (element, onmove, onstart, onstop) {
+  onmove = onmove || function () {};
+  onstart = onstart || function () {};
+  onstop = onstop || function () {};
 
   let doc = element.ownerDocument;
   let dragging = false;
@@ -238,7 +238,7 @@ Spectrum.prototype = {
       rgb[3] + ")";
   },
 
-  show: function() {
+  show: function () {
     this.element.classList.add("spectrum-show");
 
     this.slideHeight = this.slider.offsetHeight;
@@ -252,34 +252,34 @@ Spectrum.prototype = {
     this.updateUI();
   },
 
-  onElementClick: function(e) {
+  onElementClick: function (e) {
     e.stopPropagation();
   },
 
-  onSliderMove: function(dragX, dragY) {
+  onSliderMove: function (dragX, dragY) {
     this.hsv[0] = (dragY / this.slideHeight);
     this.updateUI();
     this.onChange();
   },
 
-  onDraggerMove: function(dragX, dragY) {
+  onDraggerMove: function (dragX, dragY) {
     this.hsv[1] = dragX / this.dragWidth;
     this.hsv[2] = (this.dragHeight - dragY) / this.dragHeight;
     this.updateUI();
     this.onChange();
   },
 
-  onAlphaSliderMove: function(dragX, dragY) {
+  onAlphaSliderMove: function (dragX, dragY) {
     this.hsv[3] = dragX / this.alphaSliderWidth;
     this.updateUI();
     this.onChange();
   },
 
-  onChange: function() {
+  onChange: function () {
     this.emit("changed", this.rgb, this.rgbCssString);
   },
 
-  updateHelperLocations: function() {
+  updateHelperLocations: function () {
     // If the UI hasn't been shown yet then none of the dimensions will be
     // correct
     if (!this.element.classList.contains("spectrum-show")) {
@@ -317,7 +317,7 @@ Spectrum.prototype = {
     this.alphaSliderHelper.style.left = alphaSliderX + "px";
   },
 
-  updateUI: function() {
+  updateUI: function () {
     this.updateHelperLocations();
 
     let rgb = this.rgb;
@@ -335,7 +335,7 @@ Spectrum.prototype = {
     this.alphaSliderInner.style.background = alphaGradient;
   },
 
-  destroy: function() {
+  destroy: function () {
     this.element.removeEventListener("click", this.onElementClick, false);
 
     this.parentEl.removeChild(this.element);

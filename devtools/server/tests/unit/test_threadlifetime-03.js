@@ -14,8 +14,8 @@ function run_test()
   initTestDebuggerServer();
   gDebuggee = addTestGlobal("test-grips");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-grips", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-grips", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_thread_lifetime();
     });
@@ -26,12 +26,12 @@ function run_test()
 function test_thread_lifetime()
 {
   // Get three thread-lifetime grips.
-  gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
+  gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
     let grips = [];
 
-    let handler = function(aResponse) {
+    let handler = function (aResponse) {
       if (aResponse.error) {
-        do_check_eq(aResponse.error, '');
+        do_check_eq(aResponse.error, "");
         finishClient(gClient);
       }
       grips.push(aResponse.from);
@@ -45,10 +45,10 @@ function test_thread_lifetime()
     }
   });
 
-  gDebuggee.eval("(" + function() {
+  gDebuggee.eval("(" + function () {
     function stopMe(arg1, arg2, arg3) {
       debugger;
-    };
+    }
     stopMe({obj: 1}, {obj: 2}, {obj: 3});
   } + ")()");
 }
@@ -59,19 +59,19 @@ function test_release_many(grips)
 
   let release = [grips[0], grips[1]];
 
-  gThreadClient.releaseMany(release, function(aResponse) {
+  gThreadClient.releaseMany(release, function (aResponse) {
     // First two actors should return a noSuchActor error, because
     // they're gone now.
-    gClient.request({ to: grips[0], type: "bogusRequest" }, function(aResponse) {
+    gClient.request({ to: grips[0], type: "bogusRequest" }, function (aResponse) {
       do_check_eq(aResponse.error, "noSuchActor");
-      gClient.request({ to: grips[1], type: "bogusRequest" }, function(aResponse) {
+      gClient.request({ to: grips[1], type: "bogusRequest" }, function (aResponse) {
         do_check_eq(aResponse.error, "noSuchActor");
 
         // Last actor should return unrecognizedPacketType, because it's still
         // alive.
-        gClient.request({ to: grips[2], type: "bogusRequest" }, function(aResponse) {
+        gClient.request({ to: grips[2], type: "bogusRequest" }, function (aResponse) {
           do_check_eq(aResponse.error, "unrecognizedPacketType");
-          gThreadClient.resume(function() {
+          gThreadClient.resume(function () {
             finishClient(gClient);
           });
         });

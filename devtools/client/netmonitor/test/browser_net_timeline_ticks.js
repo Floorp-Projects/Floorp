@@ -72,22 +72,22 @@ function test() {
       let data = imageData.data;
       ok(data, "The image data should contain a pixel array.");
 
-      ok( hasPixelAt(0), "The tick at 0 is should not be empty.");
+      ok(hasPixelAt(0), "The tick at 0 is should not be empty.");
       ok(!hasPixelAt(1), "The tick at 1 is should be empty.");
       ok(!hasPixelAt(19), "The tick at 19 is should be empty.");
-      ok( hasPixelAt(20), "The tick at 20 is should not be empty.");
+      ok(hasPixelAt(20), "The tick at 20 is should not be empty.");
       ok(!hasPixelAt(21), "The tick at 21 is should be empty.");
       ok(!hasPixelAt(39), "The tick at 39 is should be empty.");
-      ok( hasPixelAt(40), "The tick at 40 is should not be empty.");
+      ok(hasPixelAt(40), "The tick at 40 is should not be empty.");
       ok(!hasPixelAt(41), "The tick at 41 is should be empty.");
       ok(!hasPixelAt(59), "The tick at 59 is should be empty.");
-      ok( hasPixelAt(60), "The tick at 60 is should not be empty.");
+      ok(hasPixelAt(60), "The tick at 60 is should not be empty.");
       ok(!hasPixelAt(61), "The tick at 61 is should be empty.");
       ok(!hasPixelAt(79), "The tick at 79 is should be empty.");
-      ok( hasPixelAt(80), "The tick at 80 is should not be empty.");
+      ok(hasPixelAt(80), "The tick at 80 is should not be empty.");
       ok(!hasPixelAt(81), "The tick at 81 is should be empty.");
       ok(!hasPixelAt(159), "The tick at 159 is should be empty.");
-      ok( hasPixelAt(160), "The tick at 160 is should not be empty.");
+      ok(hasPixelAt(160), "The tick at 160 is should not be empty.");
       ok(!hasPixelAt(161), "The tick at 161 is should be empty.");
 
       ok(isPixelBrighterAtThan(0, 20),

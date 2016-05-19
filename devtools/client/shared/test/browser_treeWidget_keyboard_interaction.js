@@ -10,7 +10,7 @@ const TEST_URI = "data:text/html;charset=utf-8,<head>" +
 const {TreeWidget} = require("devtools/client/shared/widgets/TreeWidget");
 const Promise = require("promise");
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("about:blank");
   let [host, win, doc] = yield createHost("bottom", TEST_URI);
 

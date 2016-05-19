@@ -15,7 +15,7 @@ var gSecondSourceLabel = "code_ugly-6.js";
 
 var gOriginalPref = Services.prefs.getBoolPref("devtools.debugger.auto-pretty-print");
 
-function test(){
+function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
@@ -26,7 +26,7 @@ function test(){
     gOptions = gDebugger.DebuggerView.Options;
     gView = gDebugger.DebuggerView;
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
       yield waitForSourceShown(gPanel, gFirstSourceLabel);
       testSourceIsUgly();
 
@@ -59,7 +59,7 @@ function testSourceIsUgly() {
     "The source shouldn't be pretty printed yet.");
 }
 
-function testSecondSourceLabel(){
+function testSecondSourceLabel() {
   let source = gSources.selectedItem.attachment.source;
   ok(source.url === EXAMPLE_URL + gSecondSourceLabel,
     "Second source url is correct.");
@@ -70,26 +70,26 @@ function testProgressBarShown() {
   is(deck.selectedIndex, 2, "The progress bar should be shown");
 }
 
-function testAutoPrettyPrintOn(){
+function testAutoPrettyPrintOn() {
   is(gPrefs.autoPrettyPrint, true,
     "The auto-pretty-print pref should be on.");
   is(gOptions._autoPrettyPrint.getAttribute("checked"), "true",
     "The Auto pretty print menu item should be checked.");
 }
 
-function disableAutoPrettyPrint(){
+function disableAutoPrettyPrint() {
   gOptions._autoPrettyPrint.setAttribute("checked", "false");
   gOptions._toggleAutoPrettyPrint();
   gOptions._onPopupHidden();
 }
 
-function enableAutoPrettyPrint(){
+function enableAutoPrettyPrint() {
   gOptions._autoPrettyPrint.setAttribute("checked", "true");
   gOptions._toggleAutoPrettyPrint();
   gOptions._onPopupHidden();
 }
 
-function testAutoPrettyPrintOff(){
+function testAutoPrettyPrintOff() {
   is(gPrefs.autoPrettyPrint, false,
     "The auto-pretty-print pref should be off.");
   isnot(gOptions._autoPrettyPrint.getAttribute("checked"), "true",
@@ -98,10 +98,10 @@ function testAutoPrettyPrintOff(){
 
 function testSourceIsPretty() {
   ok(gEditor.getText().includes("\n  "),
-    "The source should be pretty printed.")
+    "The source should be pretty printed.");
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gTab = null;
   gPanel = null;
   gDebugger = null;

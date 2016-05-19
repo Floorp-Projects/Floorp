@@ -9,7 +9,7 @@ const TEST_DATA = [{ delta: 112, value: 48 }, { delta: 213, value: 59 }, { delta
 
 var LineGraphWidget = require("devtools/client/shared/widgets/LineGraphWidget");
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("about:blank");
   yield performTest();
   gBrowser.removeCurrentTab();

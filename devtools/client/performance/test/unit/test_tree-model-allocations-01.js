@@ -34,7 +34,7 @@ add_task(function () {
   ].forEach(compareFrameInfo(thread));
 });
 
-function compareFrameInfo (root, parent) {
+function compareFrameInfo(root, parent) {
   parent = parent || root;
   let fields = [
     "selfSize", "selfSizePercentage", "selfCount", "selfCountPercentage",
@@ -62,7 +62,7 @@ function compareFrameInfo (root, parent) {
     if (children) {
       children.forEach(compareFrameInfo(root, node));
     }
-  }
+  };
 }
 
 var TEST_DATA = {

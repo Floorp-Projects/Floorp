@@ -16,8 +16,8 @@ function run_test()
   }.toString());
 
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-grips", function(aResponse, aTabClient, aThreadClient) {
+  gClient.connect().then(function () {
+    attachTestTabAndResume(gClient, "test-grips", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
       test_object_grip();
     });
@@ -27,11 +27,11 @@ function run_test()
 
 function test_object_grip()
 {
-  gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
+  gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
     let args = aPacket.frame.arguments;
 
     let objClient = gThreadClient.pauseGrip(args[0]);
-    objClient.getOwnPropertyNames(function(aResponse) {
+    objClient.getOwnPropertyNames(function (aResponse) {
       var opn = aResponse.ownPropertyNames;
       do_check_eq(opn.length, 4);
       opn.sort();
@@ -40,7 +40,7 @@ function test_object_grip()
       do_check_eq(opn[2], "lineNumber");
       do_check_eq(opn[3], "message");
 
-      gThreadClient.resume(function() {
+      gThreadClient.resume(function () {
         finishClient(gClient);
       });
     });

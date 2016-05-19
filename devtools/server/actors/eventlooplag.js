@@ -31,9 +31,9 @@ var EventLoopLagActor = exports.EventLoopLagActor = protocol.ActorClass({
   /**
    * Start tracking the event loop lags.
    */
-  start: method(function() {
+  start: method(function () {
     if (!this._observerAdded) {
-      Services.obs.addObserver(this, 'event-loop-lag', false);
+      Services.obs.addObserver(this, "event-loop-lag", false);
       this._observerAdded = true;
     }
     return Services.appShell.startEventLoopLagTracking();
@@ -45,15 +45,15 @@ var EventLoopLagActor = exports.EventLoopLagActor = protocol.ActorClass({
   /**
    * Stop tracking the event loop lags.
    */
-  stop: method(function() {
+  stop: method(function () {
     if (this._observerAdded) {
-      Services.obs.removeObserver(this, 'event-loop-lag');
+      Services.obs.removeObserver(this, "event-loop-lag");
       this._observerAdded = false;
     }
     Services.appShell.stopEventLoopLagTracking();
-  }, {request: {},response: {}}),
+  }, {request: {}, response: {}}),
 
-  destroy: function() {
+  destroy: function () {
     this.stop();
     protocol.Actor.prototype.destroy.call(this);
   },
@@ -71,7 +71,7 @@ var EventLoopLagActor = exports.EventLoopLagActor = protocol.ActorClass({
 });
 
 exports.EventLoopLagFront = protocol.FrontClass(EventLoopLagActor, {
-  initialize: function(client, form) {
+  initialize: function (client, form) {
     protocol.Front.prototype.initialize.call(this, client);
     this.actorID = form.eventLoopLagActor;
     this.manage(this);

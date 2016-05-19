@@ -56,7 +56,7 @@ function* ifTestingSupported() {
   is(firstScreenshot.height, 128,
     "The screenshot for the first non-draw function has the correct height.");
 
-  let secondActualScreenshot =  yield snapshotActor.generateScreenshotFor(functionCalls[2]);
+  let secondActualScreenshot = yield snapshotActor.generateScreenshotFor(functionCalls[2]);
   ok(sameArray(secondScreenshot.pixels, secondActualScreenshot.pixels),
     "The screenshot for the second non-draw function is correct.");
   is(secondScreenshot.width, 128,

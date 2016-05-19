@@ -9,12 +9,12 @@ function run_test()
   dbg.uncaughtExceptionHook = testExceptionHook;
 
   dbg.addDebuggee(g);
-  dbg.onDebuggerStatement = function(aFrame) {
+  dbg.onDebuggerStatement = function (aFrame) {
     do_check_true(aFrame === dbg.getNewestFrame());
     // Execute from the nested event loop, dbg.getNewestFrame() won't
     // be working anymore.
 
-    do_execute_soon(function() {
+    do_execute_soon(function () {
       try {
         do_check_true(aFrame === dbg.getNewestFrame());
       } finally {

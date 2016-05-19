@@ -6,7 +6,7 @@
 
 // Simple checks for the AnimationsActor
 
-add_task(function*() {
+add_task(function* () {
   let {client, walker, animations} = yield initAnimationsFrontForUrl(
     "data:text/html;charset=utf-8,<title>test</title><div></div>");
 

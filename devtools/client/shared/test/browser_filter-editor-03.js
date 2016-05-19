@@ -11,7 +11,7 @@ const {CSSFilterEditorWidget} = require("devtools/client/shared/widgets/FilterWi
 const GRAYSCALE_MAX = 100;
 const INVERT_MIN = 0;
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("about:blank");
   let [host, win, doc] = yield createHost("bottom", TEST_URI);
 
@@ -24,19 +24,19 @@ add_task(function*() {
      "Should add filters");
 
   const url = widget.add("url", "test.svg");
-  is(widget.getCssValue(), `blur(10.2px) url(test.svg)`,
+  is(widget.getCssValue(), "blur(10.2px) url(test.svg)",
      "Should add filters in order");
 
   info("Test updateValueAt method");
   widget.updateValueAt(url, "test2.svg");
   widget.updateValueAt(blur, 5);
-  is(widget.getCssValue(), `blur(5px) url(test2.svg)`,
+  is(widget.getCssValue(), "blur(5px) url(test2.svg)",
      "Should update values correctly");
 
   info("Test getValueAt method");
   is(widget.getValueAt(blur), "5px",
      "Should return value + unit");
-  is(widget.getValueAt(url), `test2.svg`,
+  is(widget.getValueAt(url), "test2.svg",
      "Should return value for string-type filters");
 
   info("Test removeAt method");

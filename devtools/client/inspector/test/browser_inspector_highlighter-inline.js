@@ -21,7 +21,7 @@ const TEST_DATA = [
   "[dir=rtl] > span"
 ];
 
-add_task(function*() {
+add_task(function* () {
   info("Loading the test document and opening the inspector");
   let {toolbox, inspector, testActor} = yield openInspectorForURL(TEST_URL);
 

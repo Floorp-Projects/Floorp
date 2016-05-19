@@ -83,7 +83,7 @@ var PROFILER_DATA = (function () {
   return data;
 })();
 
-var test = Task.async(function*() {
+var test = Task.async(function* () {
   let { target, panel, toolbox } = yield initPerformance(SIMPLE_URL);
   let { $, EVENTS, PerformanceController, DetailsView, JsCallTreeView } = panel.panelWin;
 

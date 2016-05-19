@@ -58,7 +58,7 @@ function scanFiles(files, onChangedFile) {
   });
 }
 
-onmessage = function(event) {
+onmessage = function (event) {
   const { path, fileRegex } = event.data;
 
   const info = OS.File.stat(path);

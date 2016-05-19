@@ -7,6 +7,9 @@
 
 "use strict";
 
+// This test runs very slowly on linux32 debug - bug 1269977
+requestLongerTimeout(2);
+
 const TEST_NETWORK_REQUEST_URI =
   "http://example.com/browser/devtools/client/webconsole/test/" +
   "test-network-request.html";
@@ -102,7 +105,7 @@ add_task(function* testFormSubmission() {
   let pageLoadRequestFinished = waitForFinishedRequest(PAGE_REQUEST_PREDICATE);
   let hud = yield loadPageAndGetHud(TEST_NETWORK_REQUEST_URI);
 
-  info("Waiting for the page load to be finished.")
+  info("Waiting for the page load to be finished.");
   yield pageLoadRequestFinished;
 
   // The form POSTs to the page URL but over https (page over http).

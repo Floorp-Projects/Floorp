@@ -23,7 +23,7 @@ var Json = {};
 /**
  * Parsing JSON
  */
-Json.parseJSONString = function(jsonString) {
+Json.parseJSONString = function (jsonString) {
   if (!jsonString.length) {
     return null;
   }
@@ -197,7 +197,7 @@ function pseudoJsonToJson(json) {
   return ret;
 }
 
-Json.isJSON = function(contentType, data) {
+Json.isJSON = function (contentType, data) {
   // Workaround for JSON responses without proper content type
   // Let's consider all responses starting with "{" as JSON. In the worst
   // case there will be an exception when parsing. This means that no-JSON

@@ -13,7 +13,7 @@ var CallsListView = Heritage.extend(WidgetMethods, {
   /**
    * Initialization function, called when the tool is started.
    */
-  initialize: function() {
+  initialize: function () {
     this.widget = new SideMenuWidget($("#calls-list"));
     this._slider = $("#calls-slider");
     this._searchbox = $("#calls-searchbox");
@@ -40,7 +40,7 @@ var CallsListView = Heritage.extend(WidgetMethods, {
   /**
    * Destruction function, called when the tool is closed.
    */
-  destroy: function() {
+  destroy: function () {
     this.widget.removeEventListener("select", this._onSelect, false);
     this._slider.removeEventListener("mousedown", this._onSlideMouseDown, false);
     this._slider.removeEventListener("mouseup", this._onSlideMouseUp, false);
@@ -55,7 +55,7 @@ var CallsListView = Heritage.extend(WidgetMethods, {
    * @param array functionCalls
    *        A list of function call actors received from the backend.
    */
-  showCalls: function(functionCalls) {
+  showCalls: function (functionCalls) {
     this.empty();
 
     for (let i = 0, len = functionCalls.length; i < len; i++) {
@@ -156,7 +156,7 @@ var CallsListView = Heritage.extend(WidgetMethods, {
    * @param array screenshot
    *        A single "snapshot-image" instance received from the backend.
    */
-  showScreenshot: function(screenshot) {
+  showScreenshot: function (screenshot) {
     let { index, width, height, scaling, flipped, pixels } = screenshot;
 
     let screenshotNode = $("#screenshot-image");
@@ -179,7 +179,7 @@ var CallsListView = Heritage.extend(WidgetMethods, {
    * @param array thumbnails
    *        An array of "snapshot-image" instances received from the backend.
    */
-  showThumbnails: function(thumbnails) {
+  showThumbnails: function (thumbnails) {
     while (this._filmstrip.hasChildNodes()) {
       this._filmstrip.firstChild.remove();
     }
@@ -197,7 +197,7 @@ var CallsListView = Heritage.extend(WidgetMethods, {
    * @param array thumbnail
    *        A single "snapshot-image" instance received from the backend.
    */
-  appendThumbnail: function(thumbnail) {
+  appendThumbnail: function (thumbnail) {
     let { index, width, height, flipped, pixels } = thumbnail;
 
     let thumbnailNode = document.createElementNS(HTML_NS, "canvas");
@@ -226,7 +226,7 @@ var CallsListView = Heritage.extend(WidgetMethods, {
       return;
     }
 
-    let prevIndex = this._highlightedThumbnailIndex
+    let prevIndex = this._highlightedThumbnailIndex;
     let prevHighlightedThumbnail = $(".filmstrip-thumbnail[index='" + prevIndex + "']");
     if (prevHighlightedThumbnail) {
       prevHighlightedThumbnail.removeAttribute("highlighted");
@@ -248,7 +248,7 @@ var CallsListView = Heritage.extend(WidgetMethods, {
   /**
    * The select listener for this container.
    */
-  _onSelect: function({ detail: callItem }) {
+  _onSelect: function ({ detail: callItem }) {
     if (!callItem) {
       return;
     }
@@ -283,7 +283,7 @@ var CallsListView = Heritage.extend(WidgetMethods, {
     setConditionalTimeout("screenshot-display", SCREENSHOT_DISPLAY_DELAY, () => {
       return !this._isSliding;
     }, () => {
-      let frameSnapshot = SnapshotsListView.selectedItem.attachment.actor
+      let frameSnapshot = SnapshotsListView.selectedItem.attachment.actor;
       let functionCall = callItem.attachment.actor;
       frameSnapshot.generateScreenshotFor(functionCall).then(screenshot => {
         this.showScreenshot(screenshot);
@@ -295,21 +295,21 @@ var CallsListView = Heritage.extend(WidgetMethods, {
   /**
    * The mousedown listener for the call selection slider.
    */
-  _onSlideMouseDown: function() {
+  _onSlideMouseDown: function () {
     this._isSliding = true;
   },
 
   /**
    * The mouseup listener for the call selection slider.
    */
-  _onSlideMouseUp: function() {
+  _onSlideMouseUp: function () {
     this._isSliding = false;
   },
 
   /**
    * The change listener for the call selection slider.
    */
-  _onSlide: function() {
+  _onSlide: function () {
     // Avoid performing any operations when programatically changing the value.
     if (this._ignoreSliderChanges) {
       return;
@@ -343,7 +343,7 @@ var CallsListView = Heritage.extend(WidgetMethods, {
   /**
    * The input listener for the calls searchbox.
    */
-  _onSearch: function(e) {
+  _onSearch: function (e) {
     let lowerCaseSearchToken = this._searchbox.value.toLowerCase();
 
     this.filterContents(e => {
@@ -363,7 +363,7 @@ var CallsListView = Heritage.extend(WidgetMethods, {
   /**
    * The wheel listener for the filmstrip that contains all the thumbnails.
    */
-  _onScroll: function(e) {
+  _onScroll: function (e) {
     this._filmstrip.scrollLeft += e.deltaX;
   },
 
@@ -371,7 +371,7 @@ var CallsListView = Heritage.extend(WidgetMethods, {
    * The click/dblclick listener for an item or location url in this container.
    * When expanding an item, it's corresponding call stack will be displayed.
    */
-  _onExpand: function(e) {
+  _onExpand: function (e) {
     let callItem = this.getItemForElement(e.target);
     let view = $(".call-item-view", callItem.target);
 
@@ -455,7 +455,7 @@ var CallsListView = Heritage.extend(WidgetMethods, {
    * @param number line
    *        The line of the respective function.
    */
-  _onStackFileClick: function(e, { file, line }) {
+  _onStackFileClick: function (e, { file, line }) {
     this._viewSourceInDebugger(file, line);
   },
 
@@ -465,14 +465,14 @@ var CallsListView = Heritage.extend(WidgetMethods, {
    * @param number index
    *        The function index in the recorded animation frame snapshot.
    */
-  _onThumbnailClick: function(e, index) {
+  _onThumbnailClick: function (e, index) {
     this.selectedIndex = index;
   },
 
   /**
    * The click listener for the "resume" button in this container's toolbar.
    */
-  _onResume: function() {
+  _onResume: function () {
     // Jump to the next draw call in the recorded animation frame snapshot.
     let drawCall = getNextDrawCall(this.items, this.selectedItem);
     if (drawCall) {
@@ -487,14 +487,14 @@ var CallsListView = Heritage.extend(WidgetMethods, {
   /**
    * The click listener for the "step over" button in this container's toolbar.
    */
-  _onStepOver: function() {
+  _onStepOver: function () {
     this.selectedIndex++;
   },
 
   /**
    * The click listener for the "step in" button in this container's toolbar.
    */
-  _onStepIn: function() {
+  _onStepIn: function () {
     if (this.selectedIndex == -1) {
       this._onResume();
       return;
@@ -507,7 +507,7 @@ var CallsListView = Heritage.extend(WidgetMethods, {
   /**
    * The click listener for the "step out" button in this container's toolbar.
    */
-  _onStepOut: function() {
+  _onStepOut: function () {
     this.selectedIndex = this.itemCount - 1;
   },
 

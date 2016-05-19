@@ -30,11 +30,11 @@ function* initWorkerDebugger(TAB_URL, WORKER_URL) {
   let debuggerPanel = toolbox.getCurrentPanel();
   let gDebugger = debuggerPanel.panelWin;
 
-  return {client,tab,tabClient,workerClient,toolbox,gDebugger};
+  return {client, tab, tabClient, workerClient, toolbox, gDebugger};
 }
 
 add_task(function* testNormalExecution() {
-  let {client,tab,tabClient,workerClient,toolbox,gDebugger} =
+  let {client, tab, tabClient, workerClient, toolbox, gDebugger} =
     yield initWorkerDebugger(TAB_URL, WORKER_URL);
 
   let jsterm = yield getSplitConsole(toolbox);
@@ -50,7 +50,7 @@ add_task(function* testNormalExecution() {
 });
 
 add_task(function* testWhilePaused() {
-  let {client,tab,tabClient,workerClient,toolbox,gDebugger} =
+  let {client, tab, tabClient, workerClient, toolbox, gDebugger} =
     yield initWorkerDebugger(TAB_URL, WORKER_URL);
 
   let gTarget = gDebugger.gTarget;
@@ -76,17 +76,17 @@ add_task(function* testWhilePaused() {
   let command2 = jsterm.execute("10000+3");
   let command3 = jsterm.execute("foobar"); // throw an error
 
-  info ("Trying to get the result of command1");
+  info("Trying to get the result of command1");
   executed = yield command1;
   ok(executed.textContent.includes("10002"),
       "command1 executed successfully");
 
-  info ("Trying to get the result of command2");
+  info("Trying to get the result of command2");
   executed = yield command2;
   ok(executed.textContent.includes("10003"),
       "command2 executed successfully");
 
-  info ("Trying to get the result of command3")
+  info("Trying to get the result of command3");
   executed = yield command3;
   // XXXworkers This is failing until Bug 1215120 is resolved.
   todo(executed.textContent.includes("ReferenceError: foobar is not defined"),
@@ -105,7 +105,7 @@ add_task(function* testWhilePaused() {
 
 // Test to see if creating the pause from the console works.
 add_task(function* testPausedByConsole() {
-  let {client,tab,tabClient,workerClient,toolbox,gDebugger} =
+  let {client, tab, tabClient, workerClient, toolbox, gDebugger} =
     yield initWorkerDebugger(TAB_URL, WORKER_URL);
 
   let gTarget = gDebugger.gTarget;

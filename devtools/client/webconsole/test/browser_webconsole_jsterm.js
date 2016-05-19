@@ -61,7 +61,7 @@ function* testJSTerm(hud) {
 
   yield waitForSuccess({
     name: "clear() worked",
-    validator: function() {
+    validator: function () {
       return jsterm.outputNode.childNodes.length == 0;
     }
   });
@@ -109,7 +109,7 @@ function* testJSTerm(hud) {
   // check for occurrences of Object XRayWrapper, bug 604430
   jsterm.clearOutput();
   yield jsterm.execute("document");
-  yield checkResult(function(node) {
+  yield checkResult(function (node) {
     return node.textContent.search(/\[object xraywrapper/i) == -1;
   }, "document - no XrayWrapper");
 
@@ -130,7 +130,7 @@ function* testJSTerm(hud) {
   // check that pprint(function) shows function source, bug 618344
   jsterm.clearOutput();
   yield jsterm.execute("pprint(function() { var someCanaryValue = 42; })");
-  yield checkResult(function(node) {
+  yield checkResult(function (node) {
     return node.textContent.indexOf("someCanaryValue") > -1;
   }, "pprint(function) shows source");
 

@@ -33,7 +33,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
   "resource://gre/modules/NetUtil.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "NetworkHelper", function() {
+XPCOMUtils.defineLazyGetter(this, "NetworkHelper", function () {
   return require("devtools/shared/webconsole/network-helper");
 });
 
@@ -129,7 +129,7 @@ var EventsHandler = {
   /**
    * Listen for events emitted by the current tab target.
    */
-  initialize: function() {
+  initialize: function () {
     this._onTabNavigated = this._onTabNavigated.bind(this);
     gTarget.on("will-navigate", this._onTabNavigated);
     gTarget.on("navigate", this._onTabNavigated);
@@ -138,7 +138,7 @@ var EventsHandler = {
   /**
    * Remove events emitted by the current tab target.
    */
-  destroy: function() {
+  destroy: function () {
     gTarget.off("will-navigate", this._onTabNavigated);
     gTarget.off("navigate", this._onTabNavigated);
   },
@@ -146,7 +146,7 @@ var EventsHandler = {
   /**
    * Called for each location change in the debugged tab.
    */
-  _onTabNavigated: function(event) {
+  _onTabNavigated: function (event) {
     if (event != "will-navigate") {
       return;
     }

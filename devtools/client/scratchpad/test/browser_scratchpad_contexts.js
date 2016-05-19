@@ -27,7 +27,7 @@ function runTests() {
 
   let tests = [{
     method: "run",
-    prepare: function*() {
+    prepare: function* () {
       sp.setContentContext();
 
       is(sp.executionContext, gScratchpadWindow.SCRATCHPAD_CONTEXT_CONTENT,
@@ -44,18 +44,18 @@ function runTests() {
 
       sp.editor.setText("window.foobarBug636725 = 'aloha';");
 
-      let pageResult = yield inContent(function*() {
+      let pageResult = yield inContent(function* () {
         return content.wrappedJSObject.foobarBug636725;
       });
       ok(!pageResult, "no content.foobarBug636725");
     },
-    then: function*() {
+    then: function* () {
       is(content.wrappedJSObject.foobarBug636725, "aloha",
          "content.foobarBug636725 has been set");
     }
   }, {
     method: "run",
-    prepare: function*() {
+    prepare: function* () {
       sp.setBrowserContext();
 
       is(sp.executionContext, gScratchpadWindow.SCRATCHPAD_CONTEXT_BROWSER,
@@ -76,7 +76,7 @@ function runTests() {
       is(sp.getText(), "window.foobarBug636725 = 'aloha2';",
          "setText() worked");
     },
-    then: function*() {
+    then: function* () {
       is(window.foobarBug636725, "aloha2",
          "window.foobarBug636725 has been set");
 
@@ -85,48 +85,48 @@ function runTests() {
     }
   }, {
     method: "run",
-    prepare: function*() {
+    prepare: function* () {
       sp.editor.replaceText("gBrowser", sp.editor.getPosition(7));
 
       is(sp.getText(), "window.gBrowser",
          "setText() worked with no end for the replace range");
     },
-    then: function*([, , result]) {
+    then: function* ([, , result]) {
       is(result.class, "XULElement",
          "chrome context has access to chrome objects");
     }
   }, {
     method: "run",
-    prepare: function*() {
+    prepare: function* () {
       // Check that the sandbox is cached.
       sp.editor.setText("typeof foobarBug636725cache;");
     },
-    then: function*([, , result]) {
+    then: function* ([, , result]) {
       is(result, "undefined", "global variable does not exist");
     }
   }, {
     method: "run",
-    prepare: function*() {
+    prepare: function* () {
       sp.editor.setText("window.foobarBug636725cache = 'foo';" +
                  "typeof foobarBug636725cache;");
     },
-    then: function*([, , result]) {
+    then: function* ([, , result]) {
       is(result, "string",
          "global variable exists across two different executions");
     }
   }, {
     method: "run",
-    prepare: function*() {
+    prepare: function* () {
       sp.editor.setText("window.foobarBug636725cache2 = 'foo';" +
                  "typeof foobarBug636725cache2;");
     },
-    then: function*([, , result]) {
+    then: function* ([, , result]) {
       is(result, "string",
          "global variable exists across two different executions");
     }
   }, {
     method: "run",
-    prepare: function*() {
+    prepare: function* () {
       sp.setContentContext();
 
       is(sp.executionContext, gScratchpadWindow.SCRATCHPAD_CONTEXT_CONTENT,
@@ -134,7 +134,7 @@ function runTests() {
 
       sp.editor.setText("typeof foobarBug636725cache2;");
     },
-    then: function*([, , result]) {
+    then: function* ([, , result]) {
       is(result, "undefined",
          "global variable no longer exists after changing the context");
     }

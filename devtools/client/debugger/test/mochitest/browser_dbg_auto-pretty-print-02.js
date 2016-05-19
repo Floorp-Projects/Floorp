@@ -20,7 +20,7 @@ var gSecondSourceLabel = "code_ugly-7.js";
 var gOriginalPref = Services.prefs.getBoolPref("devtools.debugger.auto-pretty-print");
 Services.prefs.setBoolPref("devtools.debugger.auto-pretty-print", true);
 
-function test(){
+function test() {
   initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
     const gTab = aTab;
     const gDebuggee = aDebuggee;
@@ -35,7 +35,7 @@ function test(){
     // Should be on by default.
     testAutoPrettyPrintOn();
 
-    Task.spawn(function*() {
+    Task.spawn(function* () {
 
       yield waitForSourceShown(gPanel, gFirstSourceLabel);
       testSourceIsUgly();
@@ -59,7 +59,7 @@ function test(){
       closeDebuggerAndFinish(gPanel)
         .then(null, aError => {
           ok(false, "Got an error: " + DevToolsUtils.safeErrorString(aError));
-        })
+        });
     });
 
     function selectSecondSource() {
@@ -79,31 +79,31 @@ function test(){
         "The source shouldn't be pretty printed yet.");
     }
 
-    function testFirstSourceLabel(){
+    function testFirstSourceLabel() {
       let source = gSources.selectedItem.attachment.source;
       ok(source.url === EXAMPLE_URL + gFirstSourceLabel,
         "First source url is correct.");
     }
 
-    function testSecondSourceLabel(){
+    function testSecondSourceLabel() {
       let source = gSources.selectedItem.attachment.source;
       ok(source.url === EXAMPLE_URL + gSecondSourceLabel,
         "Second source url is correct.");
     }
 
-    function testAutoPrettyPrintOn(){
+    function testAutoPrettyPrintOn() {
       is(gPrefs.autoPrettyPrint, true,
         "The auto-pretty-print pref should be on.");
       is(gOptions._autoPrettyPrint.getAttribute("checked"), "true",
         "The Auto pretty print menu item should be checked.");
     }
 
-    function testPrettyPrintButtonOn(){
+    function testPrettyPrintButtonOn() {
       is(gDebugger.document.getElementById("pretty-print").checked, true,
         "The button should be checked when the source is selected.");
     }
 
-    function disableAutoPrettyPrint(){
+    function disableAutoPrettyPrint() {
       gOptions._autoPrettyPrint.setAttribute("checked", "false");
       gOptions._toggleAutoPrettyPrint();
       gOptions._onPopupHidden();
@@ -112,10 +112,10 @@ function test(){
 
     function testSourceIsPretty() {
       ok(gEditor.getText().includes("\n  "),
-        "The source should be pretty printed.")
+        "The source should be pretty printed.");
     }
 
-    registerCleanupFunction(function() {
+    registerCleanupFunction(function () {
       Services.prefs.setBoolPref("devtools.debugger.auto-pretty-print", gOriginalPref);
     });
 

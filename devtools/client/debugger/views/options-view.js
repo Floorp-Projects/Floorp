@@ -36,7 +36,7 @@ OptionsView.prototype = {
   /**
    * Initialization function, called when the debugger is started.
    */
-  initialize: function() {
+  initialize: function () {
     dumpn("Initializing the OptionsView");
 
     this._button = document.getElementById("debugger-options");
@@ -64,7 +64,7 @@ OptionsView.prototype = {
   /**
    * Destruction function, called when the debugger is closed.
    */
-  destroy: function() {
+  destroy: function () {
     dumpn("Destroying the OptionsView");
     // Nothing to do here yet.
   },
@@ -72,8 +72,8 @@ OptionsView.prototype = {
   /**
    * Add commands that XUL can fire.
    */
-  _addCommands: function() {
-    XULUtils.addCommands(document.getElementById('debuggerCommands'), {
+  _addCommands: function () {
+    XULUtils.addCommands(document.getElementById("debuggerCommands"), {
       toggleAutoPrettyPrint: () => this._toggleAutoPrettyPrint(),
       togglePauseOnExceptions: () => this._togglePauseOnExceptions(),
       toggleIgnoreCaughtExceptions: () => this._toggleIgnoreCaughtExceptions(),
@@ -81,14 +81,14 @@ OptionsView.prototype = {
       toggleShowOnlyEnum: () => this._toggleShowVariablesOnlyEnum(),
       toggleShowVariablesFilterBox: () => this._toggleShowVariablesFilterBox(),
       toggleShowOriginalSource: () => this._toggleShowOriginalSource(),
-      toggleAutoBlackBox: () =>  this._toggleAutoBlackBox()
+      toggleAutoBlackBox: () => this._toggleAutoBlackBox()
     });
   },
 
   /**
    * Listener handling the 'gear menu' popup showing event.
    */
-  _onPopupShowing: function() {
+  _onPopupShowing: function () {
     this._button.setAttribute("open", "true");
     window.emit(EVENTS.OPTIONS_POPUP_SHOWING);
   },
@@ -96,21 +96,21 @@ OptionsView.prototype = {
   /**
    * Listener handling the 'gear menu' popup hiding event.
    */
-  _onPopupHiding: function() {
+  _onPopupHiding: function () {
     this._button.removeAttribute("open");
   },
 
   /**
    * Listener handling the 'gear menu' popup hidden event.
    */
-  _onPopupHidden: function() {
+  _onPopupHidden: function () {
     window.emit(EVENTS.OPTIONS_POPUP_HIDDEN);
   },
 
   /**
    * Listener handling the 'auto pretty print' menuitem command.
    */
-  _toggleAutoPrettyPrint: function(){
+  _toggleAutoPrettyPrint: function () {
     Prefs.autoPrettyPrint =
       this._autoPrettyPrint.getAttribute("checked") == "true";
   },
@@ -118,7 +118,7 @@ OptionsView.prototype = {
   /**
    * Listener handling the 'pause on exceptions' menuitem command.
    */
-  _togglePauseOnExceptions: function() {
+  _togglePauseOnExceptions: function () {
     Prefs.pauseOnExceptions =
       this._pauseOnExceptionsItem.getAttribute("checked") == "true";
 
@@ -127,7 +127,7 @@ OptionsView.prototype = {
       Prefs.ignoreCaughtExceptions);
   },
 
-  _toggleIgnoreCaughtExceptions: function() {
+  _toggleIgnoreCaughtExceptions: function () {
     Prefs.ignoreCaughtExceptions =
       this._ignoreCaughtExceptionsItem.getAttribute("checked") == "true";
 
@@ -139,7 +139,7 @@ OptionsView.prototype = {
   /**
    * Listener handling the 'show panes on startup' menuitem command.
    */
-  _toggleShowPanesOnStartup: function() {
+  _toggleShowPanesOnStartup: function () {
     Prefs.panesVisibleOnStartup =
       this._showPanesOnStartupItem.getAttribute("checked") == "true";
   },
@@ -147,7 +147,7 @@ OptionsView.prototype = {
   /**
    * Listener handling the 'show non-enumerables' menuitem command.
    */
-  _toggleShowVariablesOnlyEnum: function() {
+  _toggleShowVariablesOnlyEnum: function () {
     let pref = Prefs.variablesOnlyEnumVisible =
       this._showVariablesOnlyEnumItem.getAttribute("checked") == "true";
 
@@ -157,7 +157,7 @@ OptionsView.prototype = {
   /**
    * Listener handling the 'show variables searchbox' menuitem command.
    */
-  _toggleShowVariablesFilterBox: function() {
+  _toggleShowVariablesFilterBox: function () {
     let pref = Prefs.variablesSearchboxVisible =
       this._showVariablesFilterBoxItem.getAttribute("checked") == "true";
 
@@ -167,7 +167,7 @@ OptionsView.prototype = {
   /**
    * Listener handling the 'show original source' menuitem command.
    */
-  _toggleShowOriginalSource: function() {
+  _toggleShowOriginalSource: function () {
     let pref = Prefs.sourceMapsEnabled =
       this._showOriginalSourceItem.getAttribute("checked") == "true";
 
@@ -187,7 +187,7 @@ OptionsView.prototype = {
    * Listener handling the 'automatically black box minified sources' menuitem
    * command.
    */
-  _toggleAutoBlackBox: function() {
+  _toggleAutoBlackBox: function () {
     let pref = Prefs.autoBlackBox =
       this._autoBlackBoxItem.getAttribute("checked") == "true";
 

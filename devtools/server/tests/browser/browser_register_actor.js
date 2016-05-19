@@ -33,9 +33,9 @@ function test() {
             // Clean up
             actorFront.unregister().then(() => {
               gClient.close(() => {
-                 DebuggerServer.destroy();
-                 gClient = null;
-                 finish();
+                DebuggerServer.destroy();
+                gClient = null;
+                finish();
               });
             });
           });
@@ -45,7 +45,7 @@ function test() {
 }
 
 function checkActorState(helloActor, callback) {
-getCount(helloActor, response => {
+  getCount(helloActor, response => {
     ok(!response.error, "No error");
     is(response.count, 1, "The counter must be valid");
 

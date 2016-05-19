@@ -10,7 +10,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function *() {
+add_task(function* () {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();
   yield front.attach();
@@ -25,7 +25,7 @@ add_task(function *() {
                              [treeMapState.SAVED, treeMapState.SAVED]);
 
   let errorHeapWorker = {
-    deleteHeapSnapshot: function() {
+    deleteHeapSnapshot: function () {
       return Promise.reject("_");
     }
   };

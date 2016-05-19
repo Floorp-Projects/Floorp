@@ -12,15 +12,15 @@ const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.p
 var AppManagerRenderer = Class({
   extends: Plugin,
 
-  isAppManagerProject: function() {
+  isAppManagerProject: function () {
     return !!this.host.project.appManagerOpts;
   },
-  editorForResource: function(resource) {
+  editorForResource: function (resource) {
     if (!resource.parent && this.isAppManagerProject()) {
       return AppProjectEditor;
     }
   },
-  getUI: function(parent) {
+  getUI: function (parent) {
     let doc = parent.ownerDocument;
     if (parent.childElementCount == 0) {
       let image = doc.createElement("image");
@@ -49,7 +49,7 @@ var AppManagerRenderer = Class({
       statusElement: parent.querySelector(".project-status")
     };
   },
-  onAnnotate: function(resource, editor, elt) {
+  onAnnotate: function (resource, editor, elt) {
     if (resource.parent || !this.isAppManagerProject()) {
       return;
     }
@@ -57,7 +57,7 @@ var AppManagerRenderer = Class({
     let {appManagerOpts} = this.host.project;
     let doc = elt.ownerDocument;
 
-    let {image,nameLabel,statusElement} = this.getUI(elt);
+    let {image, nameLabel, statusElement} = this.getUI(elt);
     let name = appManagerOpts.name || resource.basename;
     let url = appManagerOpts.iconUrl || "icon-sample.png";
     let status = appManagerOpts.validationStatus || "unknown";

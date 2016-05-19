@@ -16,7 +16,7 @@ const { registerPlugin, Plugin } = require("devtools/client/projecteditor/lib/pl
 var StatusBarPlugin = Class({
   extends: Plugin,
 
-  init: function() {
+  init: function () {
     this.box = this.host.createElement("hbox", {
       parent: "#projecteditor-toolbar-bottom"
     });
@@ -37,7 +37,7 @@ var StatusBarPlugin = Class({
     });
   },
 
-  destroy: function() {
+  destroy: function () {
   },
 
   /**
@@ -45,7 +45,7 @@ var StatusBarPlugin = Class({
    *
    * @param Editor editor
    */
-  render: function(editor, resource) {
+  render: function (editor, resource) {
     if (!resource || resource.isDir) {
       this.fileLabel.textContent = "";
       this.cursorPosition.value = "";
@@ -74,7 +74,7 @@ var StatusBarPlugin = Class({
    *
    * @param Resource resource
    */
-  onTreeSelected: function(resource) {
+  onTreeSelected: function (resource) {
     if (!resource || resource.isDir) {
       this.fileLabel.textContent = "";
       return;
@@ -82,20 +82,20 @@ var StatusBarPlugin = Class({
     this.fileLabel.textContent = resource.basename;
   },
 
-  onEditorDeactivated: function(editor) {
+  onEditorDeactivated: function (editor) {
     this.fileLabel.textContent = "";
     this.cursorPosition.value = "";
   },
 
-  onEditorChange: function(editor, resource) {
+  onEditorChange: function (editor, resource) {
     this.render(editor, resource);
   },
 
-  onEditorCursorActivity: function(editor, resource) {
+  onEditorCursorActivity: function (editor, resource) {
     this.render(editor, resource);
   },
 
-  onEditorActivated: function(editor, resource) {
+  onEditorActivated: function (editor, resource) {
     this.render(editor, resource);
   },
 
