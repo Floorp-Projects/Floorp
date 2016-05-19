@@ -194,7 +194,7 @@ class LegacyKind(base.Kind):
                 for pattern in file_patterns:
                     for path in changed_files:
                         if mozpackmatch(path, pattern):
-                            logger.debug('scheduling {task} because pattern {pattern} '+
+                            logger.debug('scheduling {task} because pattern {pattern} '
                                          'matches {path}'.format(
                                              task=task['task'],
                                              pattern=pattern,
