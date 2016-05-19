@@ -1040,18 +1040,16 @@ KEY_MAP_QT      (LaunchMail, Qt::Key_LaunchMail)
 KEY_MAP_ANDROID (LaunchMail, AKEYCODE_ENVELOPE)
 
 // LaunchMediaPlayer
+KEY_MAP_WIN     (LaunchMediaPlayer, VK_LAUNCH_MEDIA_SELECT)
+KEY_MAP_WIN_CMD (LaunchMediaPlayer, APPCOMMAND_LAUNCH_MEDIA_SELECT)
 // GDK_CD is defined as "Launch CD/DVD player" in XF86keysym.h.
 // Therefore, let's map it to media player rather than music player.
 KEY_MAP_GTK     (LaunchMediaPlayer, GDK_CD)
 KEY_MAP_GTK     (LaunchMediaPlayer, GDK_Video)
+KEY_MAP_GTK     (LaunchMediaPlayer, GDK_AudioMedia)
 KEY_MAP_QT      (LaunchMediaPlayer, Qt::Key_LaunchMedia)
 KEY_MAP_QT      (LaunchMediaPlayer, Qt::Key_CD)
 KEY_MAP_QT      (LaunchMediaPlayer, Qt::Key_Video)
-
-// MediaSelect (should be renamed to LaunchMediaPlayer)
-KEY_MAP_WIN     (MediaSelect, VK_LAUNCH_MEDIA_SELECT)
-KEY_MAP_WIN_CMD (MediaSelect, APPCOMMAND_LAUNCH_MEDIA_SELECT)
-KEY_MAP_GTK     (MediaSelect, GDK_AudioMedia)
 
 // LaunchMusicPlayer
 KEY_MAP_GTK     (LaunchMusicPlayer, GDK_Music)
