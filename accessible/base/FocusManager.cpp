@@ -279,7 +279,7 @@ FocusManager::ProcessFocusEvent(AccEvent* aEvent)
 
     // Check if still focused. Otherwise we can end up with storing the active
     // item for control that isn't focused anymore.
-    DocAccessible* document = aEvent->GetDocAccessible();
+    DocAccessible* document = aEvent->Document();
     nsINode* focusedNode = FocusedDOMNode();
     if (!focusedNode)
       return;

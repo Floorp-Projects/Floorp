@@ -88,7 +88,7 @@ public:
     { return static_cast<EIsFromUserInput>(mIsFromUserInput); }
 
   Accessible* GetAccessible() const { return mAccessible; }
-  DocAccessible* GetDocAccessible() const { return mAccessible->Document(); }
+  DocAccessible* Document() const { return mAccessible->Document(); }
 
   /**
    * Down casting.

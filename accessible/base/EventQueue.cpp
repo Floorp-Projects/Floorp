@@ -30,7 +30,7 @@ bool
 EventQueue::PushEvent(AccEvent* aEvent)
 {
   NS_ASSERTION((aEvent->mAccessible && aEvent->mAccessible->IsApplication()) ||
-               aEvent->GetDocAccessible() == mDocument,
+               aEvent->Document() == mDocument,
                "Queued event belongs to another document!");
 
   if (!mEvents.AppendElement(aEvent))
