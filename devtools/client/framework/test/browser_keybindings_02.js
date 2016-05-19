@@ -10,6 +10,8 @@
 const URL = "data:text/html;charset=utf8,test page";
 
 var {Toolbox} = require("devtools/client/framework/toolbox");
+var strings = Services.strings.createBundle(
+  "chrome://devtools/locale/toolbox.properties");
 
 add_task(function* () {
   info("Create a test tab and open the toolbox");
@@ -33,26 +35,26 @@ add_task(function* () {
 });
 
 function zoomWithKey(toolbox, key) {
-  if (!key) {
+  let shortcut = strings.GetStringFromName(key);
+  if (!shortcut) {
     info("Key was empty, skipping zoomWithKey");
     return;
   }
-
   info("Zooming with key: " + key);
   let currentZoom = toolbox.zoomValue;
-  EventUtils.synthesizeKey(key, {accelKey: true}, toolbox.win);
+  synthesizeKeyShortcut(shortcut);
   isnot(toolbox.zoomValue, currentZoom, "The zoom level was changed in the toolbox");
 }
 
 function* checkKeyBindings(toolbox) {
-  zoomWithKey(toolbox, toolbox.doc.getElementById("toolbox-zoom-in-key").getAttribute("key"));
-  zoomWithKey(toolbox, toolbox.doc.getElementById("toolbox-zoom-in-key2").getAttribute("key"));
-  zoomWithKey(toolbox, toolbox.doc.getElementById("toolbox-zoom-in-key3").getAttribute("key"));
+  zoomWithKey(toolbox, "toolbox.zoomIn.key");
+  zoomWithKey(toolbox, "toolbox.zoomIn2.key");
+  zoomWithKey(toolbox, "toolbox.zoomIn3.key");
 
-  zoomWithKey(toolbox, toolbox.doc.getElementById("toolbox-zoom-reset-key").getAttribute("key"));
+  zoomWithKey(toolbox, "toolbox.zoomReset.key");
 
-  zoomWithKey(toolbox, toolbox.doc.getElementById("toolbox-zoom-out-key").getAttribute("key"));
-  zoomWithKey(toolbox, toolbox.doc.getElementById("toolbox-zoom-out-key2").getAttribute("key"));
+  zoomWithKey(toolbox, "toolbox.zoomOut.key");
+  zoomWithKey(toolbox, "toolbox.zoomOut2.key");
 
-  zoomWithKey(toolbox, toolbox.doc.getElementById("toolbox-zoom-reset-key2").getAttribute("key"));
+  zoomWithKey(toolbox, "toolbox.zoomReset2.key");
 }
