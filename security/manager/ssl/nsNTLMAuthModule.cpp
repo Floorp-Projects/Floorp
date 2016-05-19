@@ -493,7 +493,7 @@ ParseType2Msg(const void *inBuf, uint32_t inLen, Type2Msg *msg)
   cursor += sizeof(msg->challenge);
 
   LOG(("NTLM type 2 message:\n"));
-  LogBuf("target", reinterpret_cast<const uint8_t*> (msg->target), msg->targetLen);
+  LogBuf("target", msg->target, msg->targetLen);
   LogBuf("flags", reinterpret_cast<const uint8_t*> (&msg->flags), 4);
   LogFlags(msg->flags);
   LogBuf("challenge", msg->challenge, sizeof(msg->challenge));
@@ -788,7 +788,7 @@ GenerateType3Msg(const nsString &domain,
     if (NS_FAILED(rv)) {
       return rv;
     }
-    rv = hasher->Update(reinterpret_cast<const uint8_t*> (msg.targetInfo), msg.targetInfoLen);
+    rv = hasher->Update(msg.targetInfo, msg.targetInfoLen);
     if (NS_FAILED(rv)) {
       return rv;
     }

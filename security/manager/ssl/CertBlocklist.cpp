@@ -585,8 +585,7 @@ CertBlocklist::IsCertRevoked(const uint8_t* aIssuer,
     return rv;
   }
 
-  rv = crypto->Update(reinterpret_cast<const unsigned char*>(aPubKey),
-                      aPubKeyLength);
+  rv = crypto->Update(aPubKey, aPubKeyLength);
   if (NS_FAILED(rv)) {
     return rv;
   }
