@@ -51,6 +51,7 @@
   skin/classic/browser/customizableui/subView-arrow-back-inverted-rtl@2x.png  (../shared/customizableui/subView-arrow-back-inverted-rtl@2x.png)
   skin/classic/browser/customizableui/whimsy.png               (../shared/customizableui/whimsy.png)
   skin/classic/browser/customizableui/whimsy@2x.png            (../shared/customizableui/whimsy@2x.png)
+  skin/classic/browser/download-blocked.svg                    (../shared/download-blocked.svg)
   skin/classic/browser/downloads/contentAreaDownloadsView.css  (../shared/downloads/contentAreaDownloadsView.css)
   skin/classic/browser/drm-icon.svg                            (../shared/drm-icon.svg)
   skin/classic/browser/fullscreen/insecure.svg                 (../shared/fullscreen/insecure.svg)

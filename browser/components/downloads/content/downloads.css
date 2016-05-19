@@ -53,12 +53,6 @@ richlistitem.download button {
 }
 
 /*** Visibility of controls inside download items ***/
-
-.download-state:-moz-any(     [state="6"], /* Blocked (parental) */
-                              [state="8"], /* Blocked (dirty)    */
-                              [state="9"]) /* Blocked (policy)   */
-                                           .downloadTypeIcon:not(.blockedIcon),
-
 .download-state:not(:-moz-any([state="6"], /* Blocked (parental) */
                               [state="8"], /* Blocked (dirty)    */
                               [state="9"]) /* Blocked (policy)   */)
