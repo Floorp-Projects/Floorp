@@ -486,6 +486,7 @@ private:
 
   void SkipVideoDemuxToNextKeyFrame(media::TimeUnit aTimeThreshold);
   MozPromiseRequestHolder<MediaTrackDemuxer::SkipAccessPointPromise> mSkipRequest;
+  void VideoSkipReset(uint32_t aSkipped);
   void OnVideoSkipCompleted(uint32_t aSkipped);
   void OnVideoSkipFailed(MediaTrackDemuxer::SkipFailureHolder aFailure);
 

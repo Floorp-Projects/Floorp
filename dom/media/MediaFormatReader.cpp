@@ -1105,6 +1105,11 @@ MediaFormatReader::Update(TrackType aTrack)
     return;
   }
 
+  if (aTrack == TrackType::kVideoTrack && mSkipRequest.Exists()) {
+    LOGV("Skipping in progress, nothing more to do");
+    return;
+  }
+
   if (UpdateReceivedNewData(aTrack)) {
     LOGV("Nothing more to do");
     return;
@@ -1414,28 +1419,6 @@ MediaFormatReader::SkipVideoDemuxToNextKeyFrame(media::TimeUnit aTimeThreshold)
   MOZ_ASSERT(mVideo.HasPromise());
   LOG("Skipping up to %lld", aTimeThreshold.ToMicroseconds());
 
-  // Cancel any pending demux request and pending demuxed samples.
-  mVideo.mDemuxRequest.DisconnectIfExists();
-
-  // I think it's still possible for an output to have been sent from the decoder
-  // and is currently sitting in our event queue waiting to be processed. The following
-  // flush won't clear it, and when we return to the event loop it'll be added to our
-  // output queue and be used.
-  // This code will count that as dropped, which was the intent, but not quite true.
-  mDecoder->NotifyDecodedFrames(0, 0, SizeOfVideoQueueInFrames());
-
-  if (mVideo.mTimeThreshold) {
-    LOGV("Internal Seek pending, cancelling it");
-  }
-  Reset(TrackInfo::kVideoTrack);
-
-  if (mVideo.mError) {
-    // We have flushed the decoder, and we are in error state, we can
-    // immediately reject the promise as there is nothing more to do.
-    mVideo.RejectPromise(DECODE_ERROR, __func__);
-    return;
-  }
-
   mSkipRequest.Begin(mVideo.mTrackDemuxer->SkipToNextRandomAccessPoint(aTimeThreshold)
                           ->Then(OwnerThread(), __func__, this,
                                  &MediaFormatReader::OnVideoSkipCompleted,
@@ -1444,18 +1427,39 @@ MediaFormatReader::SkipVideoDemuxToNextKeyFrame(media::TimeUnit aTimeThreshold)
 }
 
 void
+MediaFormatReader::VideoSkipReset(uint32_t aSkipped)
+{
+  MOZ_ASSERT(OnTaskQueue());
+  // I think it's still possible for an output to have been sent from the decoder
+  // and is currently sitting in our event queue waiting to be processed. The following
+  // flush won't clear it, and when we return to the event loop it'll be added to our
+  // output queue and be used.
+  // This code will count that as dropped, which was the intent, but not quite true.
+  if (mDecoder) {
+    mDecoder->NotifyDecodedFrames(0, 0, SizeOfVideoQueueInFrames());
+  }
+
+  // Cancel any pending demux request and pending demuxed samples.
+  mVideo.mDemuxRequest.DisconnectIfExists();
+  Reset(TrackType::kVideoTrack);
+
+  if (mDecoder) {
+    mDecoder->NotifyDecodedFrames(aSkipped, 0, aSkipped);
+  }
+
+  mVideo.mNumSamplesSkippedTotal += aSkipped;
+  mVideo.mNumSamplesSkippedTotalSinceTelemetry += aSkipped;
+}
+
+void
 MediaFormatReader::OnVideoSkipCompleted(uint32_t aSkipped)
 {
   MOZ_ASSERT(OnTaskQueue());
   LOG("Skipping succeeded, skipped %u frames", aSkipped);
   mSkipRequest.Complete();
-  if (mDecoder) {
-    mDecoder->NotifyDecodedFrames(aSkipped, 0, aSkipped);
-  }
-  mVideo.mNumSamplesSkippedTotal += aSkipped;
-  mVideo.mNumSamplesSkippedTotalSinceTelemetry += aSkipped;
-  MOZ_ASSERT(!mVideo.mError); // We have flushed the decoder, no frame could
-                              // have been decoded (and as such errored)
+
+  VideoSkipReset(aSkipped);
+
   NotifyDecodingRequested(TrackInfo::kVideoTrack);
 }
 
@@ -1465,25 +1469,17 @@ MediaFormatReader::OnVideoSkipFailed(MediaTrackDemuxer::SkipFailureHolder aFailu
   MOZ_ASSERT(OnTaskQueue());
   LOG("Skipping failed, skipped %u frames", aFailure.mSkipped);
   mSkipRequest.Complete();
-  if (mDecoder) {
-    mDecoder->NotifyDecodedFrames(aFailure.mSkipped, 0, aFailure.mSkipped);
-  }
+
   MOZ_ASSERT(mVideo.HasPromise());
   switch (aFailure.mFailure) {
     case DemuxerFailureReason::END_OF_STREAM:
+      VideoSkipReset(aFailure.mSkipped);
       NotifyEndOfStream(TrackType::kVideoTrack);
       break;
     case DemuxerFailureReason::WAITING_FOR_DATA:
-      // While there is nothing to drain considering the decoder has been
-      // flushed in SkipVideoDemuxToNextKeyFrame, we need to set mNeedDraining
-      // to true as the video MediaDataPromise will only be rejected once drain
-      // has completed.
-      MOZ_DIAGNOSTIC_ASSERT(!mVideo.mDecodingRequested,
-                            "Reset must have been called");
-      if (!mVideo.mWaitingForData) {
-        mVideo.mNeedDraining = true;
-      }
-      NotifyWaitingForData(TrackType::kVideoTrack);
+      // We can't complete the skip operation, will just service a video frame
+      // normally.
+      NotifyDecodingRequested(TrackInfo::kVideoTrack);
       break;
     case DemuxerFailureReason::CANCELED:
     case DemuxerFailureReason::SHUTDOWN:
