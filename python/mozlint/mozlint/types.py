@@ -38,10 +38,13 @@ class BaseType(object):
             return self._lint(paths, linter, **lintargs)
 
         errors = []
-        for p in paths:
-            result = self._lint(p, linter, **lintargs)
-            if result:
-                errors.extend(result)
+        try:
+            for p in paths:
+                result = self._lint(p, linter, **lintargs)
+                if result:
+                    errors.extend(result)
+        except KeyboardInterrupt:
+            pass
         return errors
 
     @abstractmethod

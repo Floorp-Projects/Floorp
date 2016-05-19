@@ -44,6 +44,7 @@
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/CompositorSession.h"
 #include "mozilla/TouchEvents.h"
 #include "HwcComposer2D.h"
@@ -132,7 +133,7 @@ nsWindow::DoDraw(void)
 void
 nsWindow::ConfigureAPZControllerThread()
 {
-    APZThreadUtils::SetControllerThread(CompositorBridgeParent::CompositorLoop());
+    APZThreadUtils::SetControllerThread(CompositorThreadHolder::Loop());
 }
 
 /*static*/ nsEventStatus

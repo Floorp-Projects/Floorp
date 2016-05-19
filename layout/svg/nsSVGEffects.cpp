@@ -364,6 +364,20 @@ nsSVGMarkerProperty::DoUpdate()
     frame->GetContent()->AsElement(), nsRestyleHint(0), changeHint);
 }
 
+NS_IMPL_ISUPPORTS(nsSVGMaskProperty, nsISupports)
+
+nsSVGMaskProperty::nsSVGMaskProperty(nsIFrame* aFrame)
+{
+  const nsStyleSVGReset *svgReset = aFrame->StyleSVGReset();
+
+  for (uint32_t i = 0; i < svgReset->mMask.mImageCount; i++) {
+    nsSVGPaintingProperty* prop =
+      new nsSVGPaintingProperty(svgReset->mMask.mLayers[i].mSourceURI, aFrame,
+                                false);
+    mProperties.AppendElement(prop);
+  }
+}
+
 bool
 nsSVGTextPathProperty::TargetIsValid()
 {
@@ -461,8 +475,6 @@ GetEffectProperty(nsIURI *aURI, nsIFrame *aFrame,
   if (prop)
     return prop;
   prop = aCreate(aURI, aFrame, false);
-  if (!prop)
-    return nullptr;
   NS_ADDREF(prop);
   props.Set(aProperty, static_cast<nsISupports*>(prop));
   return prop;
@@ -480,10 +492,22 @@ GetOrCreateFilterProperty(nsIFrame *aFrame)
   if (prop)
     return prop;
   prop = new nsSVGFilterProperty(effects->mFilters, aFrame);
-  if (!prop)
-    return nullptr;
   NS_ADDREF(prop);
   props.Set(nsSVGEffects::FilterProperty(), prop);
+  return prop;
+}
+
+static nsSVGMaskProperty*
+GetOrCreateMaskProperty(nsIFrame *aFrame)
+{
+  FrameProperties props = aFrame->Properties();
+  nsSVGMaskProperty *prop = props.Get(nsSVGEffects::MaskProperty());
+  if (prop)
+    return prop;
+
+  prop = new nsSVGMaskProperty(aFrame);
+  NS_ADDREF(prop);
+  props.Set(nsSVGEffects::MaskProperty(), prop);
   return prop;
 }
 
@@ -553,7 +577,9 @@ nsSVGEffects::GetEffectProperties(nsIFrame *aFrame)
 
   EffectProperties result;
   const nsStyleSVGReset *style = aFrame->StyleSVGReset();
+
   result.mFilter = GetOrCreateFilterProperty(aFrame);
+
   if (style->mClipPath.GetType() == NS_STYLE_CLIP_PATH_URL) {
     result.mClipPath =
       GetPaintingProperty(style->mClipPath.GetURL(), aFrame, ClipPathProperty());
@@ -561,12 +587,9 @@ nsSVGEffects::GetEffectProperties(nsIFrame *aFrame)
     result.mClipPath = nullptr;
   }
 
-  // FIXME: Bug 1228280.
-  // Before fixing bug 1228280, we support only single svg mask as before.
   MOZ_ASSERT(style->mMask.mImageCount > 0);
-  nsCOMPtr<nsIURI> uri = style->mMask.mLayers[0].mSourceURI;
-  result.mMask = uri ? GetPaintingProperty(uri, aFrame, MaskProperty()) :
-                         nullptr;
+  result.mMask = style->mMask.HasLayerWithImage()
+                 ? GetOrCreateMaskProperty(aFrame) : nullptr;
 
   return result;
 }
@@ -621,12 +644,39 @@ nsSVGEffects::EffectProperties::GetClipPathFrame(bool *aOK)
 }
 
 nsSVGMaskFrame *
-nsSVGEffects::EffectProperties::GetMaskFrame(bool *aOK)
+nsSVGEffects::EffectProperties::GetFirstMaskFrame(bool *aOK)
 {
-  if (!mMask)
+  if (!mMask) {
     return nullptr;
+  }
+
+  const nsTArray<RefPtr<nsSVGPaintingProperty>>& props = mMask->GetProps();
+
+  if (props.IsEmpty()) {
+    return nullptr;
+  }
+
   return static_cast<nsSVGMaskFrame *>
-    (mMask->GetReferencedFrame(nsGkAtoms::svgMaskFrame, aOK));
+    (props[0]->GetReferencedFrame(nsGkAtoms::svgMaskFrame, aOK));
+}
+
+nsTArray<nsSVGMaskFrame *>
+nsSVGEffects::EffectProperties::GetMaskFrames()
+{
+  nsTArray<nsSVGMaskFrame *> result;
+  if (!mMask)
+    return result;
+
+  bool ok = false;
+  const nsTArray<RefPtr<nsSVGPaintingProperty>>& props = mMask->GetProps();
+  for (size_t i = 0; i < props.Length(); i++) {
+    nsSVGMaskFrame* maskFrame =
+      static_cast<nsSVGMaskFrame *>(props[i]->GetReferencedFrame(
+                                                nsGkAtoms::svgMaskFrame, &ok));
+    result.AppendElement(maskFrame);
+  }
+
+  return result;
 }
 
 void

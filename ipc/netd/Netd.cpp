@@ -9,6 +9,7 @@
 #include <sys/socket.h>
 
 #include "android/log.h"
+#include "base/task.h"
 
 #include "nsWhitespaceTokenizer.h"
 #include "nsXULAppAPI.h"

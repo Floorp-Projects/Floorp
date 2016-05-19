@@ -49,6 +49,7 @@ builds:
       - Linux64
     extra-builds:  # see RIDEALONG_BUILDS in `mach taskgraph`
       - sm-plain
+      - sm-nonunified
       - sm-arm-sim
       - sm-compacting
       - sm-rootanalysis
@@ -81,6 +82,10 @@ builds:
     types:
       debug:
         task: tasks/builds/haz_shell_linux.yml
+    when:
+      file_patterns:
+       - js/public/**
+       - js/src/**
   linux64-pgo:
     platforms:
       - Linux64 PGO
@@ -115,6 +120,16 @@ builds:
         task: tasks/builds/sm_plain.yml
       debug:
         task: tasks/builds/sm_plaindebug.yml
+    when:
+      file_patterns:
+       - js/public/**
+       - js/src/**
+  sm-nonunified:
+    platforms:
+      - Linux64
+    types:
+      debug:
+        task: tasks/builds/sm_nonunified.yml
     when:
       file_patterns:
        - js/public/**

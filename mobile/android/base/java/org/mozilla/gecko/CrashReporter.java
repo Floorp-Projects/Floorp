@@ -46,6 +46,7 @@ public class CrashReporter extends AppCompatActivity
     private static final String LOGTAG = "GeckoCrashReporter";
 
     private static final String PASSED_MINI_DUMP_KEY = "minidumpPath";
+    private static final String PASSED_MINI_DUMP_SUCCESS_KEY = "minidumpSuccess";
     private static final String MINI_DUMP_PATH_KEY = "upload_file_minidump";
     private static final String PAGE_URL_KEY = "URL";
     private static final String NOTES_KEY = "Notes";
@@ -65,6 +66,7 @@ public class CrashReporter extends AppCompatActivity
     private File mPendingMinidumpFile;
     private File mPendingExtrasFile;
     private HashMap<String, String> mExtrasStringMap;
+    private boolean mMinidumpSucceeded;
 
     private boolean moveFile(File inFile, File outFile) {
         Log.i(LOGTAG, "moving " + inFile + " to " + outFile);
@@ -121,6 +123,10 @@ public class CrashReporter extends AppCompatActivity
         mProgressDialog = new ProgressDialog(this);
         mProgressDialog.setMessage(getString(R.string.sending_crash_report));
 
+        mMinidumpSucceeded = getIntent().getBooleanExtra(PASSED_MINI_DUMP_SUCCESS_KEY, false);
+        if (!mMinidumpSucceeded) {
+            Log.i(LOGTAG, "Failed to get minidump.");
+        }
         String passedMinidumpPath = getIntent().getStringExtra(PASSED_MINI_DUMP_KEY);
         File passedMinidumpFile = new File(passedMinidumpPath);
         File pendingDir = new File(getFilesDir(), PENDING_SUFFIX);
@@ -422,6 +428,7 @@ public class CrashReporter extends AppCompatActivity
                 sendPart(os, boundary, "Email", email);
             }
 
+            sendPart(os, boundary, PASSED_MINI_DUMP_SUCCESS_KEY, mMinidumpSucceeded ? "True" : "False");
             sendFile(os, boundary, MINI_DUMP_PATH_KEY, minidumpFile);
             os.write(("\r\n--" + boundary + "--\r\n").getBytes());
             os.flush();

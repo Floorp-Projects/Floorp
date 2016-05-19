@@ -577,7 +577,7 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
   bool complexEffects = false;
 
   nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame(&isOK);
-  nsSVGMaskFrame *maskFrame = effectProperties.GetMaskFrame(&isOK);
+  nsSVGMaskFrame *maskFrame = effectProperties.GetFirstMaskFrame(&isOK);
 
   bool isTrivialClip = clipPathFrame ? clipPathFrame->IsTrivial() : true;
 

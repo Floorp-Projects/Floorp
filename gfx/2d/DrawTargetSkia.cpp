@@ -136,7 +136,7 @@ DrawTargetSkia::DrawTargetSkia()
   : mSnapshot(nullptr)
 #ifdef MOZ_WIDGET_COCOA
   , mCG(nullptr)
-  , mColorSpace(CGColorSpaceCreateDeviceRGB())
+  , mColorSpace(nullptr)
   , mCanvasData(nullptr)
   , mCGSize(0, 0)
 #endif
@@ -147,9 +147,13 @@ DrawTargetSkia::~DrawTargetSkia()
 {
 #ifdef MOZ_WIDGET_COCOA
   if (mCG) {
-    CGColorSpaceRelease(mColorSpace);
     CGContextRelease(mCG);
     mCG = nullptr;
+  }
+
+  if (mColorSpace) {
+    CGColorSpaceRelease(mColorSpace);
+    mColorSpace = nullptr;
   }
 #endif
 }
@@ -844,6 +848,10 @@ DrawTargetSkia::BorrowCGContext(const DrawOptions &aOptions)
     return mCG;
   }
 
+  if (!mColorSpace) {
+    mColorSpace = CGColorSpaceCreateDeviceRGB();
+  }
+
   if (mCG) {
     // Release the old CG context since it's no longer valid.
     CGContextRelease(mCG);
@@ -923,6 +931,7 @@ DrawTargetSkia::FillGlyphsWithCG(ScaledFont *aFont,
   Vector<CGGlyph,32> glyphs;
   Vector<CGPoint,32> positions;
   if (!SetupCGGlyphs(cgContext, aBuffer, glyphs, positions)) {
+    ReturnCGContext(cgContext);
     return false;
   }
 

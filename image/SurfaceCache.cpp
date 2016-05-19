@@ -1036,7 +1036,8 @@ SurfaceCache::Insert(imgFrame*         aSurface,
 
   // Refuse null surfaces.
   if (!aSurface) {
-    MOZ_CRASH("Don't pass null surfaces to SurfaceCache::Insert");
+    gfxDevCrash(LogReason::InvalidCacheSurface) << "Null surface in SurfaceCache::Insert";
+    return InsertOutcome::FAILURE;
   }
 
   MutexAutoLock lock(sInstance->GetMutex());

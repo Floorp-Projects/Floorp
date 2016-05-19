@@ -572,7 +572,7 @@ nsGonkCameraControl::PushParameters()
   if (NS_GetCurrentThread() != mCameraThread) {
     DOM_CAMERA_LOGT("%s:%d - dispatching to Camera Thread\n", __func__, __LINE__);
     nsCOMPtr<nsIRunnable> pushParametersTask =
-      NS_NewRunnableMethod(this, &nsGonkCameraControl::PushParametersImpl);
+      NewRunnableMethod(this, &nsGonkCameraControl::PushParametersImpl);
     return mCameraThread->Dispatch(pushParametersTask, NS_DISPATCH_NORMAL);
   }
 

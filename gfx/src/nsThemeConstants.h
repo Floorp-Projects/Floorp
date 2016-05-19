@@ -28,13 +28,13 @@
 #define NS_THEME_TOOLBAR                                   12
 
 // A single toolbar button (with no associated dropdown)
-#define NS_THEME_TOOLBAR_BUTTON                            13
+#define NS_THEME_TOOLBARBUTTON                             13
 
 // A dual toolbar button (e.g., a Back button with a dropdown)
-#define NS_THEME_TOOLBAR_DUAL_BUTTON                       14
+#define NS_THEME_DUALBUTTON                                14
 
 // The dropdown portion of a toolbar button
-#define NS_THEME_TOOLBAR_BUTTON_DROPDOWN                   15
+#define NS_THEME_TOOLBARBUTTON_DROPDOWN                    15
 
 // Various arrows that go in buttons
 #define NS_THEME_BUTTON_ARROW_UP                           16
@@ -43,10 +43,10 @@
 #define NS_THEME_BUTTON_ARROW_PREVIOUS                     19
 
 // A separator.  Can be horizontal or vertical.
-#define NS_THEME_TOOLBAR_SEPARATOR                         20
+#define NS_THEME_SEPARATOR                                 20
 
 // The gripper for a toolbar.
-#define NS_THEME_TOOLBAR_GRIPPER                           21
+#define NS_THEME_TOOLBARGRIPPER                            21
 
 // A splitter.  Can be horizontal or vertical.
 #define NS_THEME_SPLITTER                                  22
@@ -55,11 +55,11 @@
 #define NS_THEME_STATUSBAR                                 23
 
 // A single pane of a status bar.
-#define NS_THEME_STATUSBAR_PANEL                           24
+#define NS_THEME_STATUSBARPANEL                            24
 
 // The resizer background area in a status bar 
 // for the resizer widget in the corner of a window.
-#define NS_THEME_STATUSBAR_RESIZER_PANEL                   25
+#define NS_THEME_RESIZER_PANEL                             25
 
 // The resizer itself.
 #define NS_THEME_RESIZER                                   26
@@ -68,62 +68,62 @@
 #define NS_THEME_LISTBOX                                   31
 
 // A listbox item
-#define NS_THEME_LISTBOX_LISTITEM                          32
+#define NS_THEME_LISTITEM                                  32
 
 // A tree widget
 #define NS_THEME_TREEVIEW                                  41
 
 // A tree item
-#define NS_THEME_TREEVIEW_TREEITEM                         42
+#define NS_THEME_TREEITEM                                  42
 
 // A tree widget twisty
-#define NS_THEME_TREEVIEW_TWISTY                           43
+#define NS_THEME_TREETWISTY                                43
 
 // A tree widget branch line
-#define NS_THEME_TREEVIEW_LINE                             44
+#define NS_THEME_TREELINE                                  44
 
 // A listbox or tree widget header
-#define NS_THEME_TREEVIEW_HEADER                           45
+#define NS_THEME_TREEHEADER                                45
 
 // An individual header cell
-#define NS_THEME_TREEVIEW_HEADER_CELL                      46
+#define NS_THEME_TREEHEADERCELL                            46
 
 // The sort arrow for a header.
-#define NS_THEME_TREEVIEW_HEADER_SORTARROW                 47
+#define NS_THEME_TREEHEADERSORTARROW                       47
 
 // Open tree widget twisty
-#define NS_THEME_TREEVIEW_TWISTY_OPEN                      48
+#define NS_THEME_TREETWISTYOPEN                            48
 
 // A horizontal progress bar.
 #define NS_THEME_PROGRESSBAR                               51
 
 // The progress bar's progress indicator
-#define NS_THEME_PROGRESSBAR_CHUNK                         52
+#define NS_THEME_PROGRESSCHUNK                             52
 
 // A vertical progress bar.
 #define NS_THEME_PROGRESSBAR_VERTICAL                      53
 
 // A vertical progress chunk
-#define NS_THEME_PROGRESSBAR_CHUNK_VERTICAL                54
+#define NS_THEME_PROGRESSCHUNK_VERTICAL                    54
 
 // A horizontal meter bar.
 #define NS_THEME_METERBAR                                  55
 
 // The meter bar's meter indicator
-#define NS_THEME_METERBAR_CHUNK                            56
+#define NS_THEME_METERCHUNK                                56
 
 // A single tab in a tab widget.
 #define NS_THEME_TAB                                       61
 
 // A single pane (inside the tabpanels container)
-#define NS_THEME_TAB_PANEL                                 62
+#define NS_THEME_TABPANEL                                  62
 
 // The tab panels container.
-#define NS_THEME_TAB_PANELS                                65
+#define NS_THEME_TABPANELS                                 65
 
 // The tabs scroll arrows (left/right)
-#define NS_THEME_TAB_SCROLLARROW_BACK                      66
-#define NS_THEME_TAB_SCROLLARROW_FORWARD                   67
+#define NS_THEME_TAB_SCROLL_ARROW_BACK                     66
+#define NS_THEME_TAB_SCROLL_ARROW_FORWARD                  67
 
 // A tooltip
 #define NS_THEME_TOOLTIP                                   71
@@ -132,10 +132,10 @@
 #define NS_THEME_SPINNER                                   72
 
 // The up button of a spin control
-#define NS_THEME_SPINNER_UP_BUTTON                         73
+#define NS_THEME_SPINNER_UPBUTTON                          73
 
 // The down button of a spin control
-#define NS_THEME_SPINNER_DOWN_BUTTON                       74
+#define NS_THEME_SPINNER_DOWNBUTTON                        74
 
 // The textfield of a spin control
 #define NS_THEME_SPINNER_TEXTFIELD                         75
@@ -154,18 +154,18 @@
 #define NS_THEME_SCROLLBAR_VERTICAL                        83
 
 // A scrollbar button (up/down/left/right)
-#define NS_THEME_SCROLLBAR_BUTTON_UP                       84
-#define NS_THEME_SCROLLBAR_BUTTON_DOWN                     85
-#define NS_THEME_SCROLLBAR_BUTTON_LEFT                     86
-#define NS_THEME_SCROLLBAR_BUTTON_RIGHT                    87
+#define NS_THEME_SCROLLBARBUTTON_UP                        84
+#define NS_THEME_SCROLLBARBUTTON_DOWN                      85
+#define NS_THEME_SCROLLBARBUTTON_LEFT                      86
+#define NS_THEME_SCROLLBARBUTTON_RIGHT                     87
 
 // The scrollbar track
-#define NS_THEME_SCROLLBAR_TRACK_HORIZONTAL                88
-#define NS_THEME_SCROLLBAR_TRACK_VERTICAL                  89
+#define NS_THEME_SCROLLBARTRACK_HORIZONTAL                 88
+#define NS_THEME_SCROLLBARTRACK_VERTICAL                   89
 
 // The scrollbar thumb
-#define NS_THEME_SCROLLBAR_THUMB_HORIZONTAL                90
-#define NS_THEME_SCROLLBAR_THUMB_VERTICAL                  91
+#define NS_THEME_SCROLLBARTHUMB_HORIZONTAL                 90
+#define NS_THEME_SCROLLBARTHUMB_VERTICAL                   91
 
 // A non-disappearing scrollbar.
 #define NS_THEME_SCROLLBAR_NON_DISAPPEARING                92
@@ -183,36 +183,36 @@
 #define NS_THEME_SEARCHFIELD                               98
 
 // A dropdown list.
-#define NS_THEME_DROPDOWN                                  101
+#define NS_THEME_MENULIST                                  101
 
 // The dropdown button(s) that open up a dropdown list.
-#define NS_THEME_DROPDOWN_BUTTON                           102
+#define NS_THEME_MENULIST_BUTTON                           102
 
 // The text part of a dropdown list, to left of button
-#define NS_THEME_DROPDOWN_TEXT                             103
+#define NS_THEME_MENULIST_TEXT                             103
 
 // An editable textfield with a dropdown list (a combobox)
-#define NS_THEME_DROPDOWN_TEXTFIELD                        104
+#define NS_THEME_MENULIST_TEXTFIELD                        104
 
 // A slider
-#define NS_THEME_SCALE_HORIZONTAL                         111
-#define NS_THEME_SCALE_VERTICAL                           112
+#define NS_THEME_SCALE_HORIZONTAL                          111
+#define NS_THEME_SCALE_VERTICAL                            112
 
 // A slider's thumb
-#define NS_THEME_SCALE_THUMB_HORIZONTAL                   113
-#define NS_THEME_SCALE_THUMB_VERTICAL                     114
+#define NS_THEME_SCALETHUMB_HORIZONTAL                     113
+#define NS_THEME_SCALETHUMB_VERTICAL                       114
 
 // If the platform supports it, the left/right chunks
 // of the slider thumb
-#define NS_THEME_SCALE_THUMB_START                        115
-#define NS_THEME_SCALE_THUMB_END                          116
+#define NS_THEME_SCALETHUMBSTART                           115
+#define NS_THEME_SCALETHUMBEND                             116
 
 // The ticks for a slider.
-#define NS_THEME_SCALE_TICK                               117
+#define NS_THEME_SCALETHUMBTICK                            117
 
 // nsRangeFrame and its subparts
-#define NS_THEME_RANGE                                    120
-#define NS_THEME_RANGE_THUMB                              121
+#define NS_THEME_RANGE                                     120
+#define NS_THEME_RANGE_THUMB                               121
 
 // A groupbox
 #define NS_THEME_GROUPBOX                                  149
@@ -257,13 +257,13 @@
 // Vista Rebars
 #define NS_THEME_WIN_COMMUNICATIONS_TOOLBOX                221
 #define NS_THEME_WIN_MEDIA_TOOLBOX                         222
-#define NS_THEME_WIN_BROWSER_TAB_BAR_TOOLBOX               223
+#define NS_THEME_WIN_BROWSERTABBAR_TOOLBOX                 223
 
 // Titlebar elements on the Mac
-#define NS_THEME_MOZ_MAC_FULLSCREEN_BUTTON                 226
+#define NS_THEME_MAC_FULLSCREEN_BUTTON                     226
 
 // Mac help button
-#define NS_THEME_MOZ_MAC_HELP_BUTTON                       227
+#define NS_THEME_MAC_HELP_BUTTON                           227
 
 // Vista glass
 #define NS_THEME_WIN_BORDERLESS_GLASS                      229

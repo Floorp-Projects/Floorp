@@ -34,21 +34,3 @@ def load_parameters_file(options):
             return Parameters(**json.load(f))
         else:
             raise TypeError("Parameters file `{}` is not JSON or YAML".format(filename))
-
-def get_decision_parameters(options):
-    """
-    Load parameters from the command-line options for 'taskgraph decision'.
-    """
-    return Parameters({n: options[n] for n in [
-        'base_repository',
-        'head_repository',
-        'head_rev',
-        'head_ref',
-        'revision_hash',
-        'message',
-        'project',
-        'pushlog_id',
-        'owner',
-        'level',
-        'target_tasks_method',
-    ] if n in options})
