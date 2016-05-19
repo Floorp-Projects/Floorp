@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+/* eslint-env worker */
+
 /**
  * Import `createTask` to communicate with `devtools/shared/worker`.
  */
@@ -16,13 +18,13 @@ const { createTask } = require("resource://devtools/shared/worker/helper.js");
  * @param number interval
  * @param number duration
  */
-createTask(self, "plotTimestampsGraph", function ({ timestamps, interval, duration }) {
+createTask(self, "plotTimestampsGraph", function ({ timestamps,
+                                                    interval, duration }) {
   let plottedData = plotTimestamps(timestamps, interval);
   let plottedMinMaxSum = getMinMaxAvg(plottedData, timestamps, duration);
 
   return { plottedData, plottedMinMaxSum };
 });
-
 
 /**
  * Gets the min, max and average of the values in an array.
@@ -32,14 +34,13 @@ createTask(self, "plotTimestampsGraph", function ({ timestamps, interval, durati
  * @return object
  */
 function getMinMaxAvg(source, timestamps, duration) {
-  let totalTicks = source.length;
   let totalFrames = timestamps.length;
   let maxValue = Number.MIN_SAFE_INTEGER;
   let minValue = Number.MAX_SAFE_INTEGER;
   // Calculate the average by counting how many frames occurred
   // in the duration of the recording, rather than average the frame points
-  // we have, as that weights higher FPS, as there'll be more timestamps for those
-  // values
+  // we have, as that weights higher FPS, as there'll be more timestamps for
+  // those values
   let avgValue = totalFrames / (duration / 1000);
 
   for (let { value } of source) {

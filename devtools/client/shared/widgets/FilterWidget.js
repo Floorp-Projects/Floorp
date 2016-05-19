@@ -10,8 +10,7 @@
   */
 
 const EventEmitter = require("devtools/shared/event-emitter");
-const { Cu, Cc, Ci } = require("chrome");
-const { ViewHelpers } = require("devtools/client/shared/widgets/view-helpers");
+const { Cc, Ci } = require("chrome");
 
 const { LocalizationHelper } = require("devtools/client/shared/l10n");
 const STRINGS_URI = "chrome://devtools/locale/filterwidget.properties";
@@ -539,7 +538,8 @@ CSSFilterEditorWidget.prototype = {
       if (el.classList.contains("remove-button")) {
         // If the click happened on the remove button.
         presets.splice(id, 1);
-        this.setPresets(presets).then(this.renderPresets, e => console.error(e));
+        this.setPresets(presets).then(this.renderPresets,
+                                      ex => console.error(ex));
       } else {
         // Or if the click happened on a preset.
         let p = presets[id];
@@ -547,7 +547,7 @@ CSSFilterEditorWidget.prototype = {
         this.setCssValue(p.value);
         this.addPresetInput.value = p.name;
       }
-    }, e => console.error(e));
+    }, ex => console.error(ex));
   },
 
   _togglePresets: function () {
@@ -575,8 +575,9 @@ CSSFilterEditorWidget.prototype = {
         presets.push({name, value});
       }
 
-      this.setPresets(presets).then(this.renderPresets, e => console.error(e));
-    }, e => console.error(e));
+      this.setPresets(presets).then(this.renderPresets,
+                                    ex => console.error(ex));
+    }, ex => console.error(ex));
   },
 
   /**
@@ -840,7 +841,7 @@ CSSFilterEditorWidget.prototype = {
 
   removeAt: function (index) {
     if (!this.filters[index]) {
-      return null;
+      return;
     }
 
     this.filters.splice(index, 1);

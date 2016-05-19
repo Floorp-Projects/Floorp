@@ -174,7 +174,8 @@ KeyShortcuts.prototype = {
 
   on(key, listener) {
     if (typeof listener !== "function") {
-      throw new Error("KeyShortcuts.on() expects a function as second argument");
+      throw new Error("KeyShortcuts.on() expects a function as " +
+                      "second argument");
     }
     if (!this.keys.has(key)) {
       let shortcut = KeyShortcuts.parseElectronKey(this.window, key);

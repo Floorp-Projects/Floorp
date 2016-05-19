@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {Cc, Ci, Cu} = require("chrome");
+const {Cc, Ci} = require("chrome");
 const {angleUtils} = require("devtools/client/shared/css-angle");
 const {colorUtils} = require("devtools/client/shared/css-color");
 const {getCSSLexer} = require("devtools/shared/css-lexer");
@@ -398,7 +398,8 @@ OutputParser.prototype = {
           style: "background-color:" + color
         });
         this.colorSwatches.set(swatch, colorObj);
-        swatch.addEventListener("mousedown", this._onColorSwatchMouseDown, false);
+        swatch.addEventListener("mousedown", this._onColorSwatchMouseDown,
+                                false);
         EventEmitter.decorate(swatch);
         container.appendChild(swatch);
       }
