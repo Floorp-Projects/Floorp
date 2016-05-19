@@ -43,6 +43,7 @@ class Compositor;
 class CompositableParentManager;
 class CompositorBridgeParent;
 class SurfaceDescriptor;
+class HostIPCAllocator;
 class ISurfaceAllocator;
 class TextureHostOGL;
 class TextureSourceOGL;
@@ -482,7 +483,7 @@ public:
    * are for use with the managing IPDL protocols only (so that they can
    * implement AllocPTextureParent and DeallocPTextureParent).
    */
-  static PTextureParent* CreateIPDLActor(ISurfaceAllocator* aAllocator,
+  static PTextureParent* CreateIPDLActor(HostIPCAllocator* aAllocator,
                                          const SurfaceDescriptor& aSharedData,
                                          LayersBackend aLayersBackend,
                                          TextureFlags aFlags);
