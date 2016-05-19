@@ -59,7 +59,7 @@
 
 // The resizer background area in a status bar 
 // for the resizer widget in the corner of a window.
-#define NS_THEME_RESIZER_PANEL                             25
+#define NS_THEME_RESIZERPANEL                              25
 
 // The resizer itself.
 #define NS_THEME_RESIZER                                   26
@@ -174,7 +174,7 @@
 #define NS_THEME_TEXTFIELD                                 95
 
 // The caret of a text area
-#define NS_THEME_TEXTFIELD_CARET                           96
+#define NS_THEME_CARET                                     96
 
 // A multiline text field
 #define NS_THEME_TEXTFIELD_MULTILINE                       97
