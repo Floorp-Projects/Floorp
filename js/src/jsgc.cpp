@@ -3911,7 +3911,7 @@ class CompartmentCheckTracer : public JS::CallbackTracer
 namespace {
 struct IsDestComparatorFunctor {
     JS::GCCellPtr dst_;
-    IsDestComparatorFunctor(JS::GCCellPtr dst) : dst_(dst) {}
+    explicit IsDestComparatorFunctor(JS::GCCellPtr dst) : dst_(dst) {}
 
     using ReturnType = bool;
     template <typename T> bool operator()(T* t) { return (*t) == dst_.asCell(); }
