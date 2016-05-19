@@ -14,6 +14,7 @@
 
 #include "vm/Shape.h"
 
+#include "vm/NativeObject-inl.h"
 #include "vm/Shape-inl.h"
 
 using namespace js;

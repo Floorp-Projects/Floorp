@@ -1164,15 +1164,6 @@ Forwarded(const JS::Value& value)
     return DispatchTyped(ForwardedFunctor(), value);
 }
 
-inline void
-MakeAccessibleAfterMovingGC(void* anyp) {}
-
-inline void
-MakeAccessibleAfterMovingGC(JSObject* obj) {
-    if (obj->isNative())
-        obj->as<NativeObject>().updateShapeAfterMovingGC();
-}
-
 template <typename T>
 inline T
 MaybeForwarded(T t)

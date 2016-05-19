@@ -17,7 +17,7 @@ FRAGMENT(JSObject, simple) {
   JSObject* funcRaw = func;
 
   static const JSClass cls = { "\xc7X" };
-  RootedObject badClassName(cx, JS_NewObject(cx, &cls));
+  JS::RootedObject badClassName(cx, JS_NewObject(cx, &cls));
 
   breakpoint();
 
