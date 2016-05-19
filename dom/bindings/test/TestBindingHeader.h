@@ -540,6 +540,32 @@ public:
   void SetNullableTreatAsNullCallback(TestTreatAsNullCallback*);
   already_AddRefed<TestTreatAsNullCallback> GetNullableTreatAsNullCallback();
 
+  void ForceCallbackGeneration(TestIntegerReturn&,
+                               TestNullableIntegerReturn&,
+                               TestBooleanReturn&,
+                               TestFloatReturn&,
+                               TestStringReturn&,
+                               TestEnumReturn&,
+                               TestInterfaceReturn&,
+                               TestNullableInterfaceReturn&,
+                               TestExternalInterfaceReturn&,
+                               TestNullableExternalInterfaceReturn&,
+                               TestCallbackInterfaceReturn&,
+                               TestNullableCallbackInterfaceReturn&,
+                               TestCallbackReturn&,
+                               TestNullableCallbackReturn&,
+                               TestObjectReturn&,
+                               TestNullableObjectReturn&,
+                               TestTypedArrayReturn&,
+                               TestNullableTypedArrayReturn&,
+                               TestSequenceReturn&,
+                               TestNullableSequenceReturn&,
+                               TestIntegerArguments&,
+                               TestInterfaceArguments&,
+                               TestStringEnumArguments&,
+                               TestObjectArguments&,
+                               TestOptionalArguments&);
+
   // Any types
   void PassAny(JSContext*, JS::Handle<JS::Value>);
   void PassVariadicAny(JSContext*, const Sequence<JS::Value>&);
