@@ -96,14 +96,6 @@
   border: 1px dotted ThreeDDarkShadow;
 }
 
-@item@[verdict="PotentiallyUnwanted"] .blockedIcon {
-  list-style-image: url("chrome://global/skin/icons/Warning.png");
-}
-
-@item@[verdict="Uncommon"] .blockedIcon {
-  list-style-image: url("chrome://global/skin/icons/information-32.png");
-}
-
 /*** Highlighted list items ***/
 
 @keyfocus@ @itemFocused@ {

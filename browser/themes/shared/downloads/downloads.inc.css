@@ -92,15 +92,32 @@ richlistitem[type="download"]:last-child {
   border-bottom: 1px solid transparent;
 }
 
+.downloadStackIcon {
+  --inline-offset: 8px;
+  --block-offset: 4px;
+  --icon-size: 32px;
+}
+
 .downloadTypeIcon {
   margin-inline-end: 8px;
   /* Prevent flickering when changing states. */
-  height: 32px;
-  width: 32px;
+  width: calc(var(--icon-size) + var(--inline-offset));
+  height: calc(var(--icon-size) + var(--block-offset));
+  padding: var(--block-offset) var(--inline-offset) 0 0;
 }
 
 .blockedIcon {
-  list-style-image: url("chrome://global/skin/icons/Error.png");
+  --overlay-image-dimensions: top right / 16px no-repeat;
+  padding: 0;
+  background: url("chrome://browser/skin/download-blocked.svg") var(--overlay-image-dimensions);
+}
+
+@item@[verdict="PotentiallyUnwanted"] .blockedIcon {
+  background: url("chrome://browser/skin/warning.svg") var(--overlay-image-dimensions);
+}
+
+@item@[verdict="Uncommon"] .blockedIcon {
+  background: url("chrome://browser/skin/info.svg") var(--overlay-image-dimensions);
 }
 
 /* We hold .downloadTarget, .downloadProgress and .downloadDetails inside of
