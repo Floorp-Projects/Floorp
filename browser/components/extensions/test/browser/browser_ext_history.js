@@ -109,6 +109,8 @@ add_task(function* test_search() {
   const MOZILLA_VISIT_URL = "http://mozilla.com/";
 
   function background() {
+    const futureTime = Date.now() + 24 * 60 * 60 * 1000;
+
     browser.test.onMessage.addListener(msg => {
       browser.history.search({text: ""}).then(results => {
         browser.test.sendMessage("empty-search", results);
@@ -118,7 +120,7 @@ add_task(function* test_search() {
         return browser.history.search({text: "example.com", maxResults: 1});
       }).then(results => {
         browser.test.sendMessage("max-results-search", results);
-        return browser.history.search({text: "", startTime: Date.now()});
+        return browser.history.search({text: "", startTime: futureTime});
       }).then(results => {
         browser.test.assertEq(0, results.length, "no results returned for late start time");
         return browser.history.search({text: "", endTime: 0});
@@ -129,8 +131,8 @@ add_task(function* test_search() {
         browser.test.fail("history.search rejects with startTime that is after the endTime");
       }, error => {
         browser.test.assertEq(
-          error.message,
           "The startTime cannot be after the endTime",
+          error.message,
           "history.search rejects with startTime that is after the endTime");
       }).then(() => {
         browser.test.notifyPass("search");
