@@ -1,0 +1,7 @@
+---
+$inherits:
+  from: 'tasks/tests/fx_linux64_external_media_tests.yml'
+task:
+  payload:
+    command:
+      - --download-symbols=ondemand
