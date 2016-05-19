@@ -147,6 +147,7 @@ JsepCodecDescToCodecConfig(const JsepCodecDescription& aCodec,
   configRaw->mAckFbTypes = desc.mAckFbTypes;
   configRaw->mNackFbTypes = desc.mNackFbTypes;
   configRaw->mCcmFbTypes = desc.mCcmFbTypes;
+  configRaw->mRembFbSet = desc.RtcpFbRembIsSet();
 
   *aConfig = configRaw;
   return NS_OK;

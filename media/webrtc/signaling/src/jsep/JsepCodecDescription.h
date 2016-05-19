@@ -631,6 +631,17 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
     return true;
   }
 
+  virtual bool
+  RtcpFbRembIsSet() const
+  {
+    for (const auto& fb : mOtherFbTypes) {
+      if (fb.type == SdpRtcpFbAttributeList::kRemb) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   JSEP_CODEC_CLONE(JsepVideoCodecDescription)
 
   std::vector<std::string> mAckFbTypes;
