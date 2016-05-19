@@ -2264,15 +2264,6 @@ nsresult
 PeerConnectionImpl::AddTrack(MediaStreamTrack& aTrack,
                              DOMMediaStream& aMediaStream)
 {
-  if (!aMediaStream.HasTrack(aTrack)) {
-    CSFLogError(logTag, "%s: Track is not in stream", __FUNCTION__);
-    return NS_ERROR_FAILURE;
-  }
-  if (!aMediaStream.OwnsTrack(aTrack)) {
-    CSFLogError(logTag, "%s: Track is not in owned stream (Bug 1259236)", __FUNCTION__);
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
   std::string streamId = PeerConnectionImpl::GetStreamId(aMediaStream);
   std::string trackId = PeerConnectionImpl::GetTrackId(aTrack);
   nsresult res = mMedia->AddTrack(aMediaStream, streamId, aTrack, trackId);
