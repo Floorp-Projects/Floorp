@@ -17,6 +17,11 @@ fails == mask-image-1a.html mask-image-1-ref.html
 fails == mask-image-1b.html mask-image-1-ref.html
 fails == mask-image-1c.html mask-image-1-ref.html
 fails == mask-image-2.html mask-image-2-ref.html
+fails == mask-image-3a.html mask-image-3-ref.html
+fails == mask-image-3b.html mask-image-3-ref.html
+fails == mask-image-3c.html mask-image-3-ref.html
+fails == mask-image-3d.html mask-image-3-ref.html
+fails == mask-image-3e.html mask-image-3-ref.html
 
 # mask-clip test cases
 fails == mask-clip-1.html mask-clip-1-ref.html
