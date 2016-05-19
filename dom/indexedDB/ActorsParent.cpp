@@ -15515,7 +15515,11 @@ VersionChangeTransaction::SendCompleteNotification(nsresult aResult)
   }
 
   if (NS_FAILED(aResult) && NS_SUCCEEDED(openDatabaseOp->mResultCode)) {
-    openDatabaseOp->mResultCode = aResult;
+    // 3.3.1 Opening a database:
+    // "If the upgrade transaction was aborted, run the steps for closing a
+    //  database connection with connection, create and return a new AbortError
+    //  exception and abort these steps."
+    openDatabaseOp->mResultCode = NS_ERROR_DOM_INDEXEDDB_ABORT_ERR;
   }
 
   openDatabaseOp->mState = OpenDatabaseOp::State::SendingResults;
