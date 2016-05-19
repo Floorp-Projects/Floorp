@@ -1472,18 +1472,18 @@ var BookmarkingUI = {
                                  "menuitem");
       item.setAttribute("label", title || uri);
       item.setAttribute("targetURI", uri);
-      item.setAttribute("context", "hideRecentlyBookmarked");
+      item.setAttribute("simulated-places-node", true);
       item.setAttribute("class", "menuitem-iconic menuitem-with-favicon bookmark-item " +
                                  aExtraCSSClass);
       item.addEventListener("command", onItemCommand);
       if (icon) {
         item.setAttribute("image", icon);
       }
+      item._placesNode = node;
       fragment.appendChild(item);
     }
     root.containerOpen = false;
     aHeaderItem.parentNode.insertBefore(fragment, aHeaderItem.nextSibling);
-    aHeaderItem.setAttribute("context", "hideRecentlyBookmarked");
   },
 
   showRecentlyBookmarked() {
