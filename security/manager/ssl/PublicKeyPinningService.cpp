@@ -135,10 +135,9 @@ EvalChain(const UniqueCERTCertList& certList,
   Comparator for the is public key pinned host.
 */
 static int
-TransportSecurityPreloadCompare(const void *key, const void *entry) {
-  const char *keyStr = reinterpret_cast<const char *>(key);
-  const TransportSecurityPreload *preloadEntry =
-    reinterpret_cast<const TransportSecurityPreload *>(entry);
+TransportSecurityPreloadCompare(const void* key, const void* entry) {
+  auto keyStr = static_cast<const char*>(key);
+  auto preloadEntry = static_cast<const TransportSecurityPreload*>(entry);
 
   return strcmp(keyStr, preloadEntry->mHost);
 }
