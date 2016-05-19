@@ -271,7 +271,7 @@ public:
   WorkerFetchResponseRunnable(WorkerPrivate* aWorkerPrivate,
                               WorkerFetchResolver* aResolver,
                               InternalResponse* aResponse)
-    : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
+    : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
     , mResolver(aResolver)
     , mInternalResponse(aResponse)
   {
@@ -295,6 +295,25 @@ public:
       promise->MaybeReject(result);
     }
     return true;
+  }
+
+  bool
+  PreDispatch(WorkerPrivate* aWorkerPrivate) override
+  {
+    // Don't call default PreDispatch() since it incorrectly asserts we are
+    // dispatching from the parent worker thread.  We always dispatch from
+    // the main thread.
+    AssertIsOnMainThread();
+    return true;
+  }
+
+  void
+  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override
+  {
+    // Don't call default PostDispatch() since it incorrectly asserts we are
+    // dispatching from the parent worker thread.  We always dispatch from
+    // the main thread.
+    AssertIsOnMainThread();
   }
 };
 
@@ -323,7 +342,7 @@ class WorkerFetchResponseEndRunnable final : public WorkerRunnable
 public:
   explicit WorkerFetchResponseEndRunnable(PromiseWorkerProxy* aPromiseProxy)
     : WorkerRunnable(aPromiseProxy->GetWorkerPrivate(),
-                     WorkerThreadModifyBusyCount)
+                     WorkerThreadUnchangedBusyCount)
     , WorkerFetchResponseEndBase(aPromiseProxy)
   {
   }
@@ -343,15 +362,33 @@ public:
     Run();
     return WorkerRunnable::Cancel();
   }
+
+  bool
+  PreDispatch(WorkerPrivate* aWorkerPrivate) override
+  {
+    // Don't call default PreDispatch() since it incorrectly asserts we are
+    // dispatching from the parent worker thread.  We always dispatch from
+    // the main thread.
+    AssertIsOnMainThread();
+    return true;
+  }
+
+  void
+  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override
+  {
+    // Don't call default PostDispatch() since it incorrectly asserts we are
+    // dispatching from the parent worker thread.  We always dispatch from
+    // the main thread.
+    AssertIsOnMainThread();
+  }
 };
 
-class WorkerFetchResponseEndControlRunnable final : public WorkerControlRunnable
+class WorkerFetchResponseEndControlRunnable final : public MainThreadWorkerControlRunnable
                                                   , public WorkerFetchResponseEndBase
 {
 public:
   explicit WorkerFetchResponseEndControlRunnable(PromiseWorkerProxy* aPromiseProxy)
-    : WorkerControlRunnable(aPromiseProxy->GetWorkerPrivate(),
-                            WorkerThreadUnchangedBusyCount)
+    : MainThreadWorkerControlRunnable(aPromiseProxy->GetWorkerPrivate())
     , WorkerFetchResponseEndBase(aPromiseProxy)
   {
   }
@@ -589,7 +626,7 @@ class ContinueConsumeBodyRunnable final : public WorkerRunnable
 public:
   ContinueConsumeBodyRunnable(FetchBody<Derived>* aFetchBody, nsresult aStatus,
                               uint32_t aLength, uint8_t* aResult)
-    : WorkerRunnable(aFetchBody->mWorkerPrivate, WorkerThreadModifyBusyCount)
+    : WorkerRunnable(aFetchBody->mWorkerPrivate, WorkerThreadUnchangedBusyCount)
     , mFetchBody(aFetchBody)
     , mStatus(aStatus)
     , mLength(aLength)
@@ -603,6 +640,25 @@ public:
   {
     mFetchBody->ContinueConsumeBody(mStatus, mLength, mResult);
     return true;
+  }
+
+  bool
+  PreDispatch(WorkerPrivate* aWorkerPrivate) override
+  {
+    // Don't call default PreDispatch() since it incorrectly asserts we are
+    // dispatching from the parent worker thread.  We always dispatch from
+    // the main thread.
+    AssertIsOnMainThread();
+    return true;
+  }
+
+  void
+  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override
+  {
+    // Don't call default PostDispatch() since it incorrectly asserts we are
+    // dispatching from the parent worker thread.  We always dispatch from
+    // the main thread.
+    AssertIsOnMainThread();
   }
 };
 
