@@ -34,10 +34,10 @@ const TYPE_IDREF_LIST = "idrefList";
 const TYPE_JS_RESOURCE_URI = "jsresource";
 const TYPE_CSS_RESOURCE_URI = "cssresource";
 
-const SVG_NS = "http://www.w3.org/2000/svg";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
+/* eslint-disable max-len */
 const ATTRIBUTE_TYPES = [
   {namespaceURI: HTML_NS, attributeName: "action", tagName: "form", type: TYPE_URI},
   {namespaceURI: HTML_NS, attributeName: "background", tagName: "body", type: TYPE_URI},
@@ -69,9 +69,11 @@ const ATTRIBUTE_TYPES = [
   {namespaceURI: HTML_NS, attributeName: "href", tagName: "a", type: TYPE_URI},
   {namespaceURI: HTML_NS, attributeName: "href", tagName: "area", type: TYPE_URI},
   {namespaceURI: "*", attributeName: "href", tagName: "link", type: TYPE_CSS_RESOURCE_URI,
-   isValid: (namespaceURI, tagName, attributes) => {
-     return getAttribute(attributes, "rel") === "stylesheet";
-   }},
+  /* eslint-enable */
+    isValid: (namespaceURI, tagName, attributes) => {
+      return getAttribute(attributes, "rel") === "stylesheet";
+    }},
+  /* eslint-disable max-len */
   {namespaceURI: "*", attributeName: "href", tagName: "link", type: TYPE_URI},
   {namespaceURI: HTML_NS, attributeName: "href", tagName: "base", type: TYPE_URI},
   {namespaceURI: HTML_NS, attributeName: "icon", tagName: "menuitem", type: TYPE_URI},
@@ -115,6 +117,7 @@ const ATTRIBUTE_TYPES = [
   {namespaceURI: XUL_NS, attributeName: "src", tagName: "stringbundle", type: TYPE_URI},
   {namespaceURI: XUL_NS, attributeName: "template", tagName: "*", type: TYPE_IDREF},
   {namespaceURI: XUL_NS, attributeName: "tooltip", tagName: "*", type: TYPE_IDREF},
+  /* eslint-enable */
   // SVG links aren't handled yet, see bug 1158831.
   // {namespaceURI: SVG_NS, attributeName: "fill", tagName: "*", type: },
   // {namespaceURI: SVG_NS, attributeName: "stroke", tagName: "*", type: },
@@ -188,7 +191,8 @@ var parsers = {
  */
 function parseAttribute(namespaceURI, tagName, attributes, attributeName) {
   if (!hasAttribute(attributes, attributeName)) {
-    throw new Error(`Attribute ${attributeName} isn't part of the provided attributes`);
+    throw new Error(`Attribute ${attributeName} isn't part of the ` +
+                    "provided attributes");
   }
 
   let type = getType(namespaceURI, tagName, attributes, attributeName);
@@ -214,17 +218,20 @@ function parseAttribute(namespaceURI, tagName, attributes, attributeName) {
  */
 function getType(namespaceURI, tagName, attributes, attributeName) {
   for (let typeData of ATTRIBUTE_TYPES) {
-    let hasAttribute = attributeName === typeData.attributeName ||
-                       typeData.attributeName === "*";
+    let containsAttribute = attributeName === typeData.attributeName ||
+                            typeData.attributeName === "*";
     let hasNamespace = namespaceURI === typeData.namespaceURI ||
                        typeData.namespaceURI === "*";
     let hasTagName = tagName.toLowerCase() === typeData.tagName ||
                      typeData.tagName === "*";
     let isValid = typeData.isValid
-                  ? typeData.isValid(namespaceURI, tagName, attributes, attributeName)
+                  ? typeData.isValid(namespaceURI,
+                                     tagName,
+                                     attributes,
+                                     attributeName)
                   : true;
 
-    if (hasAttribute && hasNamespace && hasTagName && isValid) {
+    if (containsAttribute && hasNamespace && hasTagName && isValid) {
       return typeData.type;
     }
   }
@@ -242,7 +249,7 @@ function getAttribute(attributes, attributeName) {
 }
 
 function hasAttribute(attributes, attributeName) {
-  for (let {name, value} of attributes) {
+  for (let {name} of attributes) {
     if (name === attributeName) {
       return true;
     }
