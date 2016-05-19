@@ -2512,9 +2512,9 @@ ContainerState::FindOpaqueBackgroundColorInLayer(const PaintedLayerData* aData,
       return NS_RGBA(0,0,0,0);
     }
 
-    nscolor color;
-    if (item->IsUniform(mBuilder, &color) && NS_GET_A(color) == 255)
-      return color;
+    Maybe<nscolor> color = item->IsUniform(mBuilder);
+    if (color && NS_GET_A(*color) == 255)
+      return *color;
 
     return NS_RGBA(0,0,0,0);
   }
@@ -3422,34 +3422,33 @@ PaintedLayerData::Accumulate(ContainerState* aState,
     }
   }
 
-  nscolor uniformColor;
-  bool isUniform = aItem->IsUniform(aState->mBuilder, &uniformColor);
+  Maybe<nscolor> uniformColor = aItem->IsUniform(aState->mBuilder);
 
   // Some display items have to exist (so they can set forceTransparentSurface
   // below) but don't draw anything. They'll return true for isUniform but
   // a color with opacity 0.
-  if (!isUniform || NS_GET_A(uniformColor) > 0) {
+  if (!uniformColor || NS_GET_A(*uniformColor) > 0) {
     // Make sure that the visible area is covered by uniform pixels. In
     // particular this excludes cases where the edges of the item are not
     // pixel-aligned (thus the item will not be truly uniform).
-    if (isUniform) {
+    if (uniformColor) {
       bool snap;
       nsRect bounds = aItem->GetBounds(aState->mBuilder, &snap);
       if (!aState->ScaleToInsidePixels(bounds, snap).Contains(aVisibleRect)) {
-        isUniform = false;
+        uniformColor = Nothing();
         FLB_LOG_PAINTED_LAYER_DECISION(this, "  Display item does not cover the visible rect\n");
       }
     }
-    if (isUniform) {
+    if (uniformColor) {
       if (isFirstVisibleItem) {
         // This color is all we have
-        mSolidColor = uniformColor;
+        mSolidColor = *uniformColor;
         mIsSolidColorInVisibleRegion = true;
       } else if (mIsSolidColorInVisibleRegion &&
                  mVisibleRegion.IsEqual(nsIntRegion(aVisibleRect)) &&
                  clipMatches) {
         // we can just blend the colors together
-        mSolidColor = NS_ComposeColors(mSolidColor, uniformColor);
+        mSolidColor = NS_ComposeColors(mSolidColor, *uniformColor);
       } else {
         FLB_LOG_PAINTED_LAYER_DECISION(this, "  Layer not a solid color: Can't blend colors togethers\n");
         mIsSolidColorInVisibleRegion = false;
