@@ -9,6 +9,7 @@
 
 #include "ScopedNSSTypes.h"
 #include "md4.h"
+#include "mozilla/Casting.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Endian.h"
 #include "mozilla/Likely.h"
@@ -494,7 +495,8 @@ ParseType2Msg(const void *inBuf, uint32_t inLen, Type2Msg *msg)
 
   LOG(("NTLM type 2 message:\n"));
   LogBuf("target", msg->target, msg->targetLen);
-  LogBuf("flags", reinterpret_cast<const uint8_t*> (&msg->flags), 4);
+  LogBuf("flags",
+         mozilla::BitwiseCast<const uint8_t*, const uint32_t*>(&msg->flags), 4);
   LogFlags(msg->flags);
   LogBuf("challenge", msg->challenge, sizeof(msg->challenge));
 
@@ -688,7 +690,8 @@ GenerateType3Msg(const nsString &domain,
 #endif
 
     NTLM_Hash(password, ntlmHash);
-    ntlmHashStr = nsAutoCString(reinterpret_cast<const char *>(ntlmHash), NTLM_HASH_LEN);
+    ntlmHashStr = nsAutoCString(
+      mozilla::BitwiseCast<const char*, const uint8_t*>(ntlmHash), NTLM_HASH_LEN);
 
     nsCOMPtr<nsIKeyObjectFactory> keyFactory =
         do_CreateInstance(NS_KEYMODULEOBJECTFACTORY_CONTRACTID, &rv);
@@ -817,7 +820,6 @@ GenerateType3Msg(const nsString &domain,
   } else if (msg.flags & NTLM_NegotiateNTLM2Key) {
     // compute NTLM2 session response
     nsCString sessionHashString;
-    const uint8_t *sessionHash;
 
     PK11_GenerateRandom(lmResp, NTLM_CHAL_LEN);
     memset(lmResp + NTLM_CHAL_LEN, 0, LM_RESP_LEN - NTLM_CHAL_LEN);
@@ -844,7 +846,8 @@ GenerateType3Msg(const nsString &domain,
       return rv;
     }
 
-    sessionHash = reinterpret_cast<const uint8_t*> (sessionHashString.get());
+    auto sessionHash = mozilla::BitwiseCast<const uint8_t*, const char*>(
+      sessionHashString.get());
 
     LogBuf("NTLM2 effective key: ", sessionHash, 8);
 

@@ -6,6 +6,8 @@
 
 #include "nsNSSCallbacks.h"
 
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/Casting.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "nsContentUtils.h"
@@ -861,17 +863,18 @@ PreliminaryHandshakeDone(PRFileDesc* fd)
   unsigned char npnbuf[256];
   unsigned int npnlen;
 
-  if (SSL_GetNextProto(fd, &state, npnbuf, &npnlen, 256) == SECSuccess) {
+  if (SSL_GetNextProto(fd, &state, npnbuf, &npnlen,
+                       AssertedCast<unsigned int>(ArrayLength(npnbuf)))
+        == SECSuccess) {
     if (state == SSL_NEXT_PROTO_NEGOTIATED ||
         state == SSL_NEXT_PROTO_SELECTED) {
-      infoObject->SetNegotiatedNPN(reinterpret_cast<char *>(npnbuf), npnlen);
-    }
-    else {
+      infoObject->SetNegotiatedNPN(BitwiseCast<char*, unsigned char*>(npnbuf),
+                                   npnlen);
+    } else {
       infoObject->SetNegotiatedNPN(nullptr, 0);
     }
     mozilla::Telemetry::Accumulate(Telemetry::SSL_NPN_TYPE, state);
-  }
-  else {
+  } else {
     infoObject->SetNegotiatedNPN(nullptr, 0);
   }
 

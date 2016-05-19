@@ -10,6 +10,7 @@
 
 #include "ScopedNSSTypes.h"
 #include "mozilla/Base64.h"
+#include "mozilla/Casting.h"
 #include "nsIURLParser.h"
 #include "nsNSSCallbacks.h"
 #include "nsNetCID.h"
@@ -49,7 +50,8 @@ AppendEscapedBase64Item(const SECItem* encodedRequest, nsACString& path)
 {
   nsresult rv;
   nsDependentCSubstring requestAsSubstring(
-    reinterpret_cast<const char*>(encodedRequest->data), encodedRequest->len);
+    BitwiseCast<char*, unsigned char*>(encodedRequest->data),
+    encodedRequest->len);
   nsCString base64Request;
   rv = Base64Encode(requestAsSubstring, base64Request);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -180,7 +182,8 @@ DoOCSPRequest(const UniquePLArenaPool& arena, const char* url,
 
   if (!useGET) {
     rv = nsNSSHttpInterface::setPostDataFcn(
-      requestSession.get(), reinterpret_cast<char*>(encodedRequest->data),
+      requestSession.get(),
+      BitwiseCast<char*, unsigned char*>(encodedRequest->data),
       encodedRequest->len, "application/ocsp-request");
     if (rv != Success) {
       return rv;

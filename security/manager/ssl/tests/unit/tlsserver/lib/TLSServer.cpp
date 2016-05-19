@@ -129,7 +129,7 @@ AddKeyFromFile(const char* basePath, const char* filename)
 
   unsigned int binLength;
   UniquePORTString bin(
-    reinterpret_cast<char*>(ATOB_AsciiToData(base64, &binLength)));
+    BitwiseCast<char*, unsigned char*>(ATOB_AsciiToData(base64, &binLength)));
   if (!bin || binLength == 0) {
     PrintPRError("ATOB_AsciiToData failed");
     return SECFailure;

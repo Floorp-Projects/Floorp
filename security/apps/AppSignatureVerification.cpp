@@ -12,6 +12,7 @@
 #include "ScopedNSSTypes.h"
 #include "base64.h"
 #include "certdb.h"
+#include "mozilla/Casting.h"
 #include "mozilla/Logging.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
@@ -916,7 +917,7 @@ VerifySignedManifest(AppTrustedRoot aTrustedRoot,
   // Calculate SHA1 digest of the base64 encoded string
   Digest doubleDigest;
   rv = doubleDigest.DigestBuf(SEC_OID_SHA1,
-                              reinterpret_cast<uint8_t*>(base64EncDigest.get()),
+                              BitwiseCast<uint8_t*, char*>(base64EncDigest.get()),
                               strlen(base64EncDigest.get()));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

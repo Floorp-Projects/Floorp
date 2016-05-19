@@ -182,17 +182,20 @@ PSMContentStreamListener::ImportCertificate()
 
   switch (mType) {
   case X509_CA_CERT:
-    certdb->ImportCertificates(reinterpret_cast<uint8_t*>(mByteData.BeginWriting()),
+    certdb->ImportCertificates(BitwiseCast<uint8_t*, char*>(
+                                 mByteData.BeginWriting()),
                                mByteData.Length(), mType, ctx);
     break;
 
   case X509_USER_CERT:
-    certdb->ImportUserCertificate(reinterpret_cast<uint8_t*>(mByteData.BeginWriting()),
+    certdb->ImportUserCertificate(BitwiseCast<uint8_t*, char*>(
+                                    mByteData.BeginWriting()),
                                   mByteData.Length(), ctx);
     break;
 
   case X509_EMAIL_CERT:
-    certdb->ImportEmailCertificate(reinterpret_cast<uint8_t*>(mByteData.BeginWriting()),
+    certdb->ImportEmailCertificate(BitwiseCast<uint8_t*, char*>(
+                                     mByteData.BeginWriting()),
                                    mByteData.Length(), ctx);
     break;
 

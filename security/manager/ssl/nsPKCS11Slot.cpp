@@ -4,6 +4,7 @@
 
 #include "nsPKCS11Slot.h"
 
+#include "mozilla/Casting.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/unused.h"
@@ -41,7 +42,8 @@ nsPKCS11Slot::refreshSlotInfo(const nsNSSShutDownPreventionLock& /*proofOfLock*/
   }
 
   // Set the Description field
-  const char* ccDesc = reinterpret_cast<const char*>(slotInfo.slotDescription);
+  const char* ccDesc =
+    mozilla::BitwiseCast<char*, CK_UTF8CHAR*>(slotInfo.slotDescription);
   const nsACString& cDesc = Substring(
     ccDesc,
     ccDesc + PL_strnlen(ccDesc, sizeof(slotInfo.slotDescription)));
@@ -49,7 +51,8 @@ nsPKCS11Slot::refreshSlotInfo(const nsNSSShutDownPreventionLock& /*proofOfLock*/
   mSlotDesc.Trim(" ", false, true);
 
   // Set the Manufacturer field
-  const char* ccManID = reinterpret_cast<const char*>(slotInfo.manufacturerID);
+  const char* ccManID =
+    mozilla::BitwiseCast<char*, CK_UTF8CHAR*>(slotInfo.manufacturerID);
   const nsACString& cManID = Substring(
     ccManID,
     ccManID + PL_strnlen(ccManID, sizeof(slotInfo.manufacturerID)));
