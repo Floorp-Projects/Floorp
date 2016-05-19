@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <iframe id="test" style="width:350px;"
+            src="data:text/html,
+                 <html>
+                   <style>
+                     html { writing-mode:vertical-rl; }
+                     div { writing-mode:initial; position:absolute;
+                           right:0; padding:5px; }
+                   </style>
+                   <div>This text should NOT be cut off</div>">
+    </iframe>
+  </body>
+</html>

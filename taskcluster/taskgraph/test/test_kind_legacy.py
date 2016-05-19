@@ -17,9 +17,7 @@ class TestLegacyKind(unittest.TestCase):
     # attempt to test the entire class.
 
     def setUp(self):
-        def log(level, name, data, message):
-            pass
-        self.kind = LegacyKind('/root', {}, log)
+        self.kind = LegacyKind('/root', {})
 
     def test_get_task_definition_artifact_sub(self):
         "get_task_definition correctly substiatutes artifact URLs"

@@ -4030,8 +4030,11 @@ function openNewUserContextTab(event)
  */
 function updateUserContextUIVisibility()
 {
-  let userContextEnabled = Services.prefs.getBoolPref("privacy.userContext.enabled");
-  document.getElementById("menu_newUserContext").hidden = !userContextEnabled;
+  let menu = document.getElementById("menu_newUserContext");
+  menu.hidden = !Services.prefs.getBoolPref("privacy.userContext.enabled");
+  if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+    menu.setAttribute("disabled", "true");
+  }
 }
 
 /**

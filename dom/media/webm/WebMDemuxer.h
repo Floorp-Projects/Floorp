@@ -230,6 +230,8 @@ public:
 
   media::TimeIntervals GetBuffered() override;
 
+  int64_t GetEvictionOffset(const media::TimeUnit& aTime) override;
+
   void BreakCycles() override;
 
 private:

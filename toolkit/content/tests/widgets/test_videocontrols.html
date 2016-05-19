@@ -304,7 +304,7 @@ function runTest(event) {
       break;
 
     case 24:
-      is(event.type, "fullscreenchange", "checking event type");
+      is(event.type, "mozfullscreenchange", "checking event type");
       is(video.volume, 0.6, "Volume should still be 0.6");
       isVolumeSliderShowingCorrectVolume(video.volume);
 
@@ -312,7 +312,7 @@ function runTest(event) {
       break;
 
     case 25:
-      is(event.type, "fullscreenchange", "checking event type");
+      is(event.type, "mozfullscreenchange", "checking event type");
       is(video.volume, 0.6, "Volume should still be 0.6");
       isVolumeSliderShowingCorrectVolume(video.volume);
 
@@ -336,7 +336,7 @@ function canplaythroughevent(event) {
   video.addEventListener("volumechange", runTest, false);
   video.addEventListener("seeking", runTest, false);
   video.addEventListener("seeked", runTest, false);
-  document.addEventListener("fullscreenchange", runTest, false);
+  document.addEventListener("mozfullscreenchange", runTest, false);
   // Begin the test.
   runTest(event);
 }

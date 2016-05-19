@@ -5,6 +5,7 @@
 #include "nsVolume.h"
 
 #include "base/message_loop.h"
+#include "base/task.h"
 #include "nsIPowerManagerService.h"
 #include "nsISupportsUtils.h"
 #include "nsIVolume.h"

@@ -11,7 +11,7 @@
 #include "AbstractMediaDecoder.h"
 #include "AudioChannelService.h"
 #include "MediaStreamSource.h"
-#include "gfxPrefs.h"
+#include "MediaPrefs.h"
 
 #ifdef MOZ_AUDIO_OFFLOAD
 #include <stagefright/Utils.h>
@@ -35,7 +35,7 @@ MediaOmxCommonReader::MediaOmxCommonReader(AbstractMediaDecoder *aDecoder)
 
 bool MediaOmxCommonReader::IsMonoAudioEnabled()
 {
-  return gfxPrefs::MonoAudio();
+  return MediaPrefs::MonoAudio();
 }
 
 #ifdef MOZ_AUDIO_OFFLOAD

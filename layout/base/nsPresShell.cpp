@@ -1830,8 +1830,6 @@ nsresult
 PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight)
 {
   NS_PRECONDITION(!mIsReflowing, "Shouldn't be in reflow here!");
-  NS_PRECONDITION(aWidth != NS_UNCONSTRAINEDSIZE,
-                  "shouldn't use unconstrained widths anymore");
 
   // If we don't have a root frame yet, that means we haven't had our initial
   // reflow... If that's the case, and aWidth or aHeight is unconstrained,
@@ -1843,15 +1841,21 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  const bool isHeightChanging =
-    (mPresContext->GetVisibleArea().height != aHeight);
-
+  nsSize oldVisibleSize = mPresContext->GetVisibleArea().Size();
   mPresContext->SetVisibleArea(nsRect(0, 0, aWidth, aHeight));
 
   // There isn't anything useful we can do if the initial reflow hasn't happened.
   if (!rootFrame) {
     return NS_OK;
   }
+
+  WritingMode wm = rootFrame->GetWritingMode();
+  NS_PRECONDITION((wm.IsVertical() ? aHeight : aWidth) != NS_UNCONSTRAINEDSIZE,
+                  "shouldn't use unconstrained isize anymore");
+
+  const bool isBSizeChanging = wm.IsVertical()
+                               ? oldVisibleSize.width != aWidth
+                               : oldVisibleSize.height != aHeight;
 
   RefPtr<nsViewManager> viewManagerDeathGrip = mViewManager;
   // Take this ref after viewManager so it'll make sure to go away first.
@@ -1873,7 +1877,7 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight)
       // XXX Do a full invalidate at the beginning so that invalidates along
       // the way don't have region accumulation issues?
 
-      if (isHeightChanging) {
+      if (isBSizeChanging) {
         // For BSize changes driven by style, RestyleManager handles this.
         // For height:auto BSizes (i.e. layout-controlled), descendant
         // intrinsic sizes can't depend on them. So the only other case is
@@ -1898,9 +1902,19 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight)
   }
 
   rootFrame = mFrameConstructor->GetRootFrame();
-  if (aHeight == NS_UNCONSTRAINEDSIZE && rootFrame) {
-    mPresContext->SetVisibleArea(
-      nsRect(0, 0, aWidth, rootFrame->GetRect().height));
+  if (rootFrame) {
+    wm = rootFrame->GetWritingMode();
+    if (wm.IsVertical()) {
+      if (aWidth == NS_UNCONSTRAINEDSIZE) {
+        mPresContext->SetVisibleArea(
+          nsRect(0, 0, rootFrame->GetRect().width, aHeight));
+      }
+    } else {
+      if (aHeight == NS_UNCONSTRAINEDSIZE) {
+        mPresContext->SetVisibleArea(
+          nsRect(0, 0, aWidth, rootFrame->GetRect().height));
+      }
+    }
   }
 
   if (!mIsDestroying && !mResizeEvent.IsPending() &&
@@ -9527,7 +9541,7 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
     bool hasUnconstrainedBSize = size.BSize(wm) == NS_UNCONSTRAINEDSIZE;
 
     if (hasUnconstrainedBSize || mLastRootReflowHadUnconstrainedBSize) {
-      reflowState.SetVResize(true);
+      reflowState.SetBResize(true);
     }
 
     mLastRootReflowHadUnconstrainedBSize = hasUnconstrainedBSize;

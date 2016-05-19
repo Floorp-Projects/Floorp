@@ -231,7 +231,7 @@ nsNativeTheme::IsButtonTypeMenu(nsIFrame* aFrame)
 bool
 nsNativeTheme::IsPressedButton(nsIFrame* aFrame)
 {
-  EventStates eventState = GetContentState(aFrame, NS_THEME_TOOLBAR_BUTTON);
+  EventStates eventState = GetContentState(aFrame, NS_THEME_TOOLBARBUTTON);
   if (IsDisabled(aFrame, eventState))
     return false;
 
@@ -295,9 +295,9 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
    * Progress bar appearance should be the same for the bar and the container
    * frame. nsProgressFrame owns the logic and will tell us what we should do.
    */
-  if (aWidgetType == NS_THEME_PROGRESSBAR_CHUNK ||
+  if (aWidgetType == NS_THEME_PROGRESSCHUNK ||
       aWidgetType == NS_THEME_PROGRESSBAR) {
-    nsProgressFrame* progressFrame = do_QueryFrame(aWidgetType == NS_THEME_PROGRESSBAR_CHUNK
+    nsProgressFrame* progressFrame = do_QueryFrame(aWidgetType == NS_THEME_PROGRESSCHUNK
                                        ? aFrame->GetParent() : aFrame);
     if (progressFrame) {
       return !progressFrame->ShouldUseNativeStyle();
@@ -308,9 +308,9 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
    * Meter bar appearance should be the same for the bar and the container
    * frame. nsMeterFrame owns the logic and will tell us what we should do.
    */
-  if (aWidgetType == NS_THEME_METERBAR_CHUNK ||
+  if (aWidgetType == NS_THEME_METERCHUNK ||
       aWidgetType == NS_THEME_METERBAR) {
-    nsMeterFrame* meterFrame = do_QueryFrame(aWidgetType == NS_THEME_METERBAR_CHUNK
+    nsMeterFrame* meterFrame = do_QueryFrame(aWidgetType == NS_THEME_METERCHUNK
                                        ? aFrame->GetParent() : aFrame);
     if (meterFrame) {
       return !meterFrame->ShouldUseNativeStyle();
@@ -332,8 +332,8 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
     }
   }
 
-  if (aWidgetType == NS_THEME_SPINNER_UP_BUTTON ||
-      aWidgetType == NS_THEME_SPINNER_DOWN_BUTTON) {
+  if (aWidgetType == NS_THEME_SPINNER_UPBUTTON ||
+      aWidgetType == NS_THEME_SPINNER_DOWNBUTTON) {
     nsNumberControlFrame* numberControlFrame =
       nsNumberControlFrame::GetNumberControlFrameForSpinButton(aFrame);
     if (numberControlFrame) {
@@ -346,7 +346,7 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
           aWidgetType == NS_THEME_TEXTFIELD ||
           aWidgetType == NS_THEME_TEXTFIELD_MULTILINE ||
           aWidgetType == NS_THEME_LISTBOX ||
-          aWidgetType == NS_THEME_DROPDOWN) &&
+          aWidgetType == NS_THEME_MENULIST) &&
          aFrame->GetContent()->IsHTMLElement() &&
          aPresContext->HasAuthorSpecifiedRules(aFrame,
                                                NS_AUTHOR_SPECIFIED_BORDER |

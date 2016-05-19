@@ -350,6 +350,9 @@ AssertRootMarkingPhase(JSTracer* trc)
 // statically select the correct Cell layout for marking. Below, we instantiate
 // each override with a declaration of the most derived layout type.
 //
+// The use of TraceKind::Null for the case where the type is not matched
+// generates a compile error as no template instantiated for that kind.
+//
 // Usage:
 //   BaseGCType<T>::type
 //
@@ -357,16 +360,13 @@ AssertRootMarkingPhase(JSTracer* trc)
 //   BaseGCType<JSFunction>::type => JSObject
 //   BaseGCType<UnownedBaseShape>::type => BaseShape
 //   etc.
-template <typename T,
-          JS::TraceKind = IsBaseOf<JSObject, T>::value     ? JS::TraceKind::Object
-                        : IsBaseOf<JSString, T>::value     ? JS::TraceKind::String
-                        : IsBaseOf<JS::Symbol, T>::value   ? JS::TraceKind::Symbol
-                        : IsBaseOf<JSScript, T>::value     ? JS::TraceKind::Script
-                        : IsBaseOf<Shape, T>::value        ? JS::TraceKind::Shape
-                        : IsBaseOf<BaseShape, T>::value    ? JS::TraceKind::BaseShape
-                        : IsBaseOf<jit::JitCode, T>::value ? JS::TraceKind::JitCode
-                        : IsBaseOf<LazyScript, T>::value   ? JS::TraceKind::LazyScript
-                        :                                    JS::TraceKind::ObjectGroup>
+template <typename T, JS::TraceKind =
+#define EXPAND_MATCH_TYPE(name, type, _) \
+          IsBaseOf<type, T>::value ? JS::TraceKind::name :
+JS_FOR_EACH_TRACEKIND(EXPAND_MATCH_TYPE)
+#undef EXPAND_MATCH_TYPE
+          JS::TraceKind::Null>
+
 struct BaseGCType;
 #define IMPL_BASE_GC_TYPE(name, type_, _) \
     template <typename T> struct BaseGCType<T, JS::TraceKind:: name> { typedef type_ type; };

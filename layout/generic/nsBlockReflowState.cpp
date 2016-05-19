@@ -264,13 +264,13 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
       const nsStyleBorder* borderStyle = aFrame->StyleBorder();
       switch (borderStyle->mFloatEdge) {
         default:
-        case NS_STYLE_FLOAT_EDGE_CONTENT:  // content and only content does runaround of floats
+        case NS_STYLE_FLOAT_EDGE_CONTENT_BOX:  // content and only content does runaround of floats
           // The child block will flow around the float. Therefore
           // give it all of the available space.
           aResult.IStart(wm) = mContentArea.IStart(wm);
           aResult.ISize(wm) = mContentArea.ISize(wm);
           break;
-        case NS_STYLE_FLOAT_EDGE_MARGIN:
+        case NS_STYLE_FLOAT_EDGE_MARGIN_BOX:
           {
             // The child block's margins should be placed adjacent to,
             // but not overlap the float.
@@ -719,8 +719,6 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
   // placement are for the float only, not for any non-floating
   // content.
   AutoRestore<nscoord> restoreBCoord(mBCoord);
-  // FIXME: Should give AutoRestore a getter for the value to avoid this.
-  const nscoord saveBCoord = mBCoord;
 
   // Grab the float's display information
   const nsStyleDisplay* floatDisplay = aFloat->StyleDisplay();
@@ -904,7 +902,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
   // Reflow the float after computing its vertical position so it knows
   // where to break.
   if (!earlyFloatReflow) {
-    bool pushedDown = mBCoord != saveBCoord;
+    bool pushedDown = mBCoord != restoreBCoord.SavedValue();
     mBlock->ReflowFloat(*this, adjustedAvailableSpace, aFloat, floatMargin,
                         floatOffsets, pushedDown, reflowStatus);
   }

@@ -22,6 +22,7 @@
 
 #include "base/basictypes.h"
 #include "base/thread.h"
+#include "base/task.h"
 
 #include "GonkSensorsInterface.h"
 #include "GonkSensorsPollInterface.h"

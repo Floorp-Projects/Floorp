@@ -4087,12 +4087,12 @@ nsTreeBodyFrame::PaintBackgroundLayer(nsStyleContext*      aStyleContext,
                                       const nsRect&        aDirtyRect)
 {
   const nsStyleBorder* myBorder = aStyleContext->StyleBorder();
-
+  nsCSSRendering::PaintBGParams params =
+    nsCSSRendering::PaintBGParams::ForAllLayers(*aPresContext, aRenderingContext,
+                                                aDirtyRect, aRect, this,
+                                                nsCSSRendering::PAINTBG_SYNC_DECODE_IMAGES);
   DrawResult result =
-    nsCSSRendering::PaintBackgroundWithSC(aPresContext, aRenderingContext,
-                                          this, aDirtyRect, aRect,
-                                          aStyleContext, *myBorder,
-                                          nsCSSRendering::PAINTBG_SYNC_DECODE_IMAGES);
+    nsCSSRendering::PaintBackgroundWithSC(params, aStyleContext, *myBorder);
 
   result &=
     nsCSSRendering::PaintBorderWithStyleBorder(aPresContext, aRenderingContext,

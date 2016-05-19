@@ -87,8 +87,7 @@ NS_IMETHODIMP  nsTextToSubURI::ConvertAndEscape(
             outlen += finLen;
           }
         }
-        pBuf[outlen] = '\0';
-        *_retval = nsEscape(pBuf, url_XPAlphas);
+        *_retval = nsEscape(pBuf, outlen, nullptr, url_XPAlphas);
         if (nullptr == *_retval) {
           rv = NS_ERROR_OUT_OF_MEMORY;
         }

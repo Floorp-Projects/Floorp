@@ -221,6 +221,10 @@ def normalize_image_details(graph, task, seen_images, params, decision_task_id):
                                                    get_json_routes(),
                                                    image_parameters)
 
+    image_task['attributes'] = {
+        'kind': 'legacy',
+    }
+
     graph['tasks'].append(image_task);
     task['requires'].append(details['taskId'])
 

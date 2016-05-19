@@ -705,11 +705,11 @@ nsNumberControlFrame::ShouldUseNativeStyleForSpinner() const
   nsIFrame* spinDownFrame = mSpinDown->GetPrimaryFrame();
 
   return spinUpFrame &&
-    spinUpFrame->StyleDisplay()->mAppearance == NS_THEME_SPINNER_UP_BUTTON &&
+    spinUpFrame->StyleDisplay()->mAppearance == NS_THEME_SPINNER_UPBUTTON &&
     !PresContext()->HasAuthorSpecifiedRules(spinUpFrame,
                                             STYLES_DISABLING_NATIVE_THEMING) &&
     spinDownFrame &&
-    spinDownFrame->StyleDisplay()->mAppearance == NS_THEME_SPINNER_DOWN_BUTTON &&
+    spinDownFrame->StyleDisplay()->mAppearance == NS_THEME_SPINNER_DOWNBUTTON &&
     !PresContext()->HasAuthorSpecifiedRules(spinDownFrame,
                                             STYLES_DISABLING_NATIVE_THEMING);
 }
