@@ -12,7 +12,6 @@ else:
 
 config = {
     # marionette options
-    "test_type": "b2g",
     "marionette_address": "localhost:2828",
     "gaiatest": True,
     "xre_url": xre_url,
@@ -55,7 +54,6 @@ config = {
             "options": [
                 "--restart",
                 "--timeout=%(timeout)s",
-                "--type=%(type)s",
                 "--testvars=%(testvars)s",
                 "--profile=%(profile)s",
                 "--symbols-path=%(symbols_path)s",
@@ -76,7 +74,6 @@ config = {
             "options": [
                 "--restart",
                 "--timeout=%(timeout)s",
-                "--type=%(type)s",
                 "--testvars=%(testvars)s",
                 "--profile=%(profile)s",
                 "--symbols-path=%(symbols_path)s",
@@ -93,7 +90,6 @@ config = {
         },
         "marionette_desktop": {
             "options": [
-                "--type=%(type)s",
                 "--log-raw=%(raw_log_file)s",
                 "--log-errorsummary=%(error_summary_file)s",
                 "--binary=%(binary)s",
@@ -105,7 +101,6 @@ config = {
         },
         "marionette_emulator": {
             "options": [
-                "--type=%(type)s",
                 "--log-raw=%(raw_log_file)s",
                 "--log-errorsummary=%(error_summary_file)s",
                 "--logcat-dir=%(logcat_dir)s",
@@ -123,7 +118,6 @@ config = {
         },
         "webapi_emulator": {
             "options": [
-                "--type=%(type)s",
                 "--log-raw=%(raw_log_file)s",
                 "--log-errorsummary=%(error_summary_file)s",
                 "--symbols-path=%(symbols_path)s",
