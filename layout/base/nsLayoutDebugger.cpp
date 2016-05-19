@@ -134,7 +134,6 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
   bool snap;
   nsRect rect = aItem->GetBounds(aBuilder, &snap);
   nsRect layerRect = rect - (*aItem->GetAnimatedGeometryRoot())->GetOffsetToCrossDoc(aItem->ReferenceFrame());
-  nscolor color;
   nsRect vis = aItem->GetVisibleRect();
   nsRect component = aItem->GetComponentAlphaBounds(aBuilder);
   nsDisplayList* list = aItem->GetChildren();
@@ -159,7 +158,7 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
           component.x, component.y, component.width, component.height,
           clip.ToString().get(),
           DisplayItemScrollClip::ToString(aItem->ScrollClip()).get(),
-          aItem->IsUniform(aBuilder, &color) ? " uniform" : "",
+          aItem->IsUniform(aBuilder) ? " uniform" : "",
           aItem->ReferenceFrame(), aItem->GetAnimatedGeometryRoot()->mFrame);
 
   for (auto iter = opaque.RectIter(); !iter.Done(); iter.Next()) {

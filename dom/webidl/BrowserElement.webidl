@@ -178,11 +178,6 @@ interface BrowserElementPrivileged {
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
    CheckAllPermissions="browser"]
-  DOMRequest getStructuredData();
-
-  [Throws,
-   Pref="dom.mozBrowserFramesEnabled",
-   CheckAllPermissions="browser"]
   DOMRequest getWebManifest();
 
 };

@@ -37,7 +37,7 @@ Symbol::newInternal(ExclusiveContext* cx, JS::SymbolCode code, JSAtom* descripti
 Symbol*
 Symbol::new_(ExclusiveContext* cx, JS::SymbolCode code, JSString* description)
 {
-    RootedAtom atom(cx);
+    JSAtom* atom = nullptr;
     if (description) {
         atom = AtomizeString(cx, description);
         if (!atom)

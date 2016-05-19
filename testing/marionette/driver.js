@@ -2448,8 +2448,8 @@ GeckoDriver.prototype.setWindowSize = function(cmd, resp) {
   let height = parseInt(cmd.parameters.height);
 
   let win = this.getCurrentWindow();
-  if (width >= win.screen.availWidth && height >= win.screen.availHeight) {
-    throw new UnsupportedOperationError("Invalid requested size, cannot maximize");
+  if (width >= win.screen.availWidth || height >= win.screen.availHeight) {
+    throw new UnsupportedOperationError("Requested size exceeds screen size")
   }
 
   win.resizeTo(width, height);

@@ -115,7 +115,7 @@ GeckoTouchDispatcher::NotifyTouch(MultiTouchInput& aTouch, TimeStamp aEventTime)
       // move events because we might end up dispatching events out of order.
       // Instead, fall back to a non-resampling in-order dispatch until we're
       // done processing the non-move events.
-      layers::APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
+      layers::APZThreadUtils::RunOnControllerThread(NewRunnableMethod<MultiTouchInput>(
         this, &GeckoTouchDispatcher::DispatchTouchEvent, aTouch));
       return;
     }
@@ -127,7 +127,7 @@ GeckoTouchDispatcher::NotifyTouch(MultiTouchInput& aTouch, TimeStamp aEventTime)
       MutexAutoLock lock(mTouchQueueLock);
       mInflightNonMoveEvents++;
     }
-    layers::APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
+    layers::APZThreadUtils::RunOnControllerThread(NewRunnableMethod<MultiTouchInput>(
       this, &GeckoTouchDispatcher::DispatchTouchNonMoveEvent, aTouch));
   }
 }

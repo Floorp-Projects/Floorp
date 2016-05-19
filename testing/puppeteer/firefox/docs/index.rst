@@ -32,6 +32,23 @@ In both cases all necessary files including all dependencies will be installed.
 .. _Python package: https://pypi.python.org/pypi/firefox-puppeteer
 .. _mozilla-central: https://hg.mozilla.org/mozilla-central
 
+Versioning
+----------
+
+Puppeteer versions as regularly released from the Python source code, will follow
+a specific versioning schema. It means the major version number will always
+be identical with the supported Firefox version. Minor releases - the second part
+of the version number - are done throughout the life-cycle of a Firefox version
+when Puppeteer itself needs API changes for back-end and front-end modules. The
+last part of the version number is the patch level, and is only used for bugfix
+releases without any API changes.
+
+Examples:
+
+  firefox_puppeteer_45.0.0 - First release for Firefox 45.0 and Firefox 45.xESR
+  firefox_puppeteer_46.2.0 - Second release for Firefox 46.0 caused by API changes
+  firefox_puppeteer_47.0.1 - First bugfix release for the new Firefox 47.0 support
+
 
 Libraries
 ---------

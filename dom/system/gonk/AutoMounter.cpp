@@ -23,6 +23,7 @@
 #include "nsVolumeService.h"
 #include "AutoMounterSetting.h"
 #include "base/message_loop.h"
+#include "base/task.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/Hal.h"

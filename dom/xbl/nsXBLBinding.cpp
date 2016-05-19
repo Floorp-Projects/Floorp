@@ -957,6 +957,15 @@ GetOrCreateMapEntryForPrototype(JSContext *cx, JS::Handle<JSObject*> proto)
   return entry;
 }
 
+static
+nsXBLPrototypeBinding*
+GetProtoBindingFromClassObject(JSObject* obj)
+{
+  MOZ_ASSERT(JS_GetClass(obj) == &gPrototypeJSClass);
+  return static_cast<nsXBLPrototypeBinding*>(::JS_GetReservedSlot(obj, 0).toPrivate());
+}
+
+
 // static
 nsresult
 nsXBLBinding::DoInitJSClass(JSContext *cx,
@@ -1012,7 +1021,9 @@ nsXBLBinding::DoInitJSClass(JSContext *cx,
   *aNew = !desc.object();
   if (desc.object()) {
     proto = &desc.value().toObject();
-    MOZ_ASSERT(JS_GetClass(js::UncheckedUnwrap(proto)) == &gPrototypeJSClass);
+    DebugOnly<nsXBLPrototypeBinding*> cachedBinding =
+      GetProtoBindingFromClassObject(js::UncheckedUnwrap(proto));
+    MOZ_ASSERT(cachedBinding == aProtoBinding);
   } else {
 
     // We need to create the prototype. First, enter the compartment where it's

@@ -2,8 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from marionette_driver.errors import MarionetteException
+from marionette_driver.errors import UnsupportedOperationException
 from marionette import MarionetteTestCase
+
 
 class TestSetWindowSize(MarionetteTestCase):
     def setUp(self):
@@ -48,7 +49,7 @@ class TestSetWindowSize(MarionetteTestCase):
         height = self.max_height - 100
         self.marionette.set_window_size(width, height)
         # invalid size (cannot maximize)
-        with self.assertRaisesRegexp(MarionetteException, "Invalid requested size"):
+        with self.assertRaisesRegexp(UnsupportedOperationException, "Requested size exceeds screen size"):
             self.marionette.set_window_size(self.max_width, self.max_height)
         size = self.marionette.window_size
         self.assertEqual(size['width'], width, "Window width should not have changed")

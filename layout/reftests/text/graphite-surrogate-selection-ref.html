@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Bug 1260825 reference</title>
+<meta charset="utf-8">
+<style>
+@font-face { font-family: test; src: url(../fonts/MiaoUnicode-Regular.ttf); }
+#test { font-family: test, serif; font-size: 60px; }
+.sel { background: cyan; }
+.inv { color: transparent; }
+</style>
+</head>
+<body>
+All lines should show the same single glyph &amp; background area:
+<div id="test">
+<span class="sel">&#x16f50;</span><br>
+<span class="sel">&#x16f50;</span><br>
+<span class="sel">&#x16f50;</span><br>
+<span class="sel">&#x16f50;</span><br>
+<span class="sel">&#x16f50;</span><br>
+</div>
+</body>
+</html>
