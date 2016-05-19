@@ -231,7 +231,7 @@ const SEC_ERROR_OCSP_FUTURE_RESPONSE               = SEC_ERROR_BASE + 131;
 const SEC_ERROR_OCSP_OLD_RESPONSE                  = SEC_ERROR_BASE + 132;
 const MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE = MOZILLA_PKIX_ERROR_BASE + 5;
 
-const PREF_KINTO_CLOCK_SKEW_SECONDS = "services.kinto.clock_skew_seconds";
+const PREF_BLOCKLIST_CLOCK_SKEW_SECONDS = "services.blocklist.clock_skew_seconds";
 
 const PREF_SSL_IMPACT_ROOTS = ["security.tls.version.min", "security.tls.version.max", "security.ssl3."];
 
@@ -280,16 +280,16 @@ var AboutNetAndCertErrorListener = {
         break;
 
       // in case the certificate expired we make sure the system clock
-      // matches kinto server time
+      // matches settings server (kinto) time
       case SEC_ERROR_EXPIRED_CERTIFICATE:
       case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
       case SEC_ERROR_OCSP_FUTURE_RESPONSE:
       case SEC_ERROR_OCSP_OLD_RESPONSE:
       case MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE:
 
-        // use Kinto stats if available
-        if (Services.prefs.getPrefType(PREF_KINTO_CLOCK_SKEW_SECONDS)) {
-          let difference = Services.prefs.getIntPref(PREF_KINTO_CLOCK_SKEW_SECONDS);
+        // use blocklist stats if available
+        if (Services.prefs.getPrefType(PREF_BLOCKLIST_CLOCK_SKEW_SECONDS)) {
+          let difference = Services.prefs.getIntPref(PREF_BLOCKLIST_CLOCK_SKEW_SECONDS);
 
           // if the difference is more than a day
           if (Math.abs(difference) > 60 * 60 * 24) {
