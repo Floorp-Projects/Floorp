@@ -44,6 +44,7 @@
 #include <algorithm>
 
 using namespace mozilla;
+using namespace mozilla::net;
 
 /******************************************************************************
  * nsCacheProfilePrefObserver

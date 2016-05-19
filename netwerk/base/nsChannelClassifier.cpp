@@ -35,17 +35,17 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 
-using mozilla::ArrayLength;
-using mozilla::Preferences;
+namespace mozilla {
+namespace net {
 
 //
 // NSPR_LOG_MODULES=nsChannelClassifier:5
 //
-static mozilla::LazyLogModule gChannelClassifierLog("nsChannelClassifier");
+static LazyLogModule gChannelClassifierLog("nsChannelClassifier");
 
 #undef LOG
-#define LOG(args)     MOZ_LOG(gChannelClassifierLog, mozilla::LogLevel::Debug, args)
-#define LOG_ENABLED() MOZ_LOG_TEST(gChannelClassifierLog, mozilla::LogLevel::Debug)
+#define LOG(args)     MOZ_LOG(gChannelClassifierLog, LogLevel::Debug, args)
+#define LOG_ENABLED() MOZ_LOG_TEST(gChannelClassifierLog, LogLevel::Debug)
 
 NS_IMPL_ISUPPORTS(nsChannelClassifier,
                   nsIURIClassifierCallback)
@@ -424,7 +424,7 @@ nsChannelClassifier::MarkEntryClassified(nsresult status)
 
     if (LOG_ENABLED()) {
       nsAutoCString errorName;
-      mozilla::GetErrorName(status, errorName);
+      GetErrorName(status, errorName);
       nsCOMPtr<nsIURI> uri;
       mChannel->GetURI(getter_AddRefs(uri));
       nsAutoCString spec;
@@ -666,7 +666,7 @@ nsChannelClassifier::OnClassifyComplete(nsresult aErrorCode)
     if (mSuspendedChannel) {
       nsAutoCString errorName;
       if (LOG_ENABLED()) {
-        mozilla::GetErrorName(aErrorCode, errorName);
+        GetErrorName(aErrorCode, errorName);
         LOG(("nsChannelClassifier[%p]:OnClassifyComplete %s (suspended channel)",
              this, errorName.get()));
       }
@@ -701,3 +701,6 @@ nsChannelClassifier::OnClassifyComplete(nsresult aErrorCode)
 
     return NS_OK;
 }
+
+} // namespace net
+} // namespace mozilla

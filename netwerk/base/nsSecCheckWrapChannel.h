@@ -14,6 +14,9 @@
 #include "nsIWyciwygChannel.h"
 #include "mozilla/LoadInfo.h"
 
+namespace mozilla {
+namespace net {
+
 /*
  * The nsSecCheckWrapChannelBase wraps channels that do *not*
  *  * provide a newChannel2() implementation
@@ -96,5 +99,8 @@ protected:
 
   nsCOMPtr<nsILoadInfo> mLoadInfo;
 };
+
+} // namespace net
+} // namespace mozilla
 
 #endif // nsSecCheckWrapChannel_h__

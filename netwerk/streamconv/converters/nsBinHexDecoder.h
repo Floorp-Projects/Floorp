@@ -33,6 +33,9 @@
   { 0x89, 0x45, 0x81, 0xf7, 0xdb, 0xc2, 0x18, 0x6b } \
 }
 
+namespace mozilla {
+namespace net {
+
 typedef struct _binhex_header
 {
   uint32_t type, creator;
@@ -116,5 +119,8 @@ protected:
   int32_t mPosInbuff;     /* the index of the inbuff.  */
   int32_t mPosOutputBuff; /* the position of the out buff.    */
 };
+
+} // namespace net
+} // namespace mozilla
 
 #endif /* nsBinHexDecoder_h__ */

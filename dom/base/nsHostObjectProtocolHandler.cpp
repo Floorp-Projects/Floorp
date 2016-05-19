@@ -24,7 +24,7 @@
 
 using mozilla::dom::BlobImpl;
 using mozilla::ErrorResult;
-using mozilla::LoadInfo;
+using mozilla::net::LoadInfo;
 
 // -----------------------------------------------------------------------
 // Hash table
@@ -720,7 +720,7 @@ nsFontTableProtocolHandler::NewURI(const nsACString& aSpec,
     // fonttable: scheme.
     // If aSpec is a relative URI -other- than a bare #ref,
     // this will leave uri empty, and we'll return a failure code below.
-    uri = new nsSimpleURI();
+    uri = new mozilla::net::nsSimpleURI();
     uri->SetSpec(aSpec);
   }
 

@@ -15,13 +15,13 @@
 #include "nsISupportsPriority.h"
 #include "SimpleBuffer.h"
 
-class nsStandardURL;
 class nsIInputStream;
 class nsIOutputStream;
 
 namespace mozilla {
 namespace net {
 
+class nsStandardURL;
 class Http2Session;
 class Http2Decompressor;
 

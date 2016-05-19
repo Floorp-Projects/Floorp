@@ -11,6 +11,9 @@
 
 #define VIEW_SOURCE "view-source"
 
+namespace mozilla {
+namespace net {
+
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMPL_ISUPPORTS(nsViewSourceHandler, nsIProtocolHandler)
@@ -167,3 +170,6 @@ nsViewSourceHandler::GetInstance()
 {
     return gInstance;
 }
+
+} // namespace net
+} // namespace mozilla

@@ -24,8 +24,8 @@
 
 #include "mozilla/net/NeckoChild.h"
 
-using namespace mozilla;
-using namespace mozilla::net;
+namespace mozilla {
+namespace net {
 
 //
 // Log module for nsILoadGroup logging...
@@ -1080,5 +1080,8 @@ nsresult nsLoadGroup::Init()
 
     return NS_OK;
 }
+
+} // namespace net
+} // namespace mozilla
 
 #undef LOG

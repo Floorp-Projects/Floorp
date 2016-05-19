@@ -24,6 +24,7 @@
 using namespace mozilla::dom;
 
 namespace mozilla {
+namespace net {
 
 static void
 InheritOriginAttributes(nsIPrincipal* aLoadingPrincipal, NeckoOriginAttributes& aAttrs)
@@ -725,4 +726,5 @@ LoadInfo::MaybeIncreaseTainting(uint32_t aTainting)
   return NS_OK;
 }
 
+} // namespace net
 } // namespace mozilla

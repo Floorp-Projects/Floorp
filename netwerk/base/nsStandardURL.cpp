@@ -28,6 +28,9 @@
 using mozilla::dom::EncodingUtils;
 using namespace mozilla::ipc;
 
+namespace mozilla {
+namespace net {
+
 static NS_DEFINE_CID(kThisImplCID, NS_THIS_STANDARDURL_IMPL_CID);
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 
@@ -40,13 +43,13 @@ char nsStandardURL::gHostLimitDigits[] = { '/', '\\', '?', '#', 0 };
 //
 // setenv NSPR_LOG_MODULES nsStandardURL:5
 //
-static mozilla::LazyLogModule gStandardURLLog("nsStandardURL");
+static LazyLogModule gStandardURLLog("nsStandardURL");
 
 // The Chromium code defines its own LOG macro which we don't want
 #undef LOG
-#define LOG(args)     MOZ_LOG(gStandardURLLog, mozilla::LogLevel::Debug, args)
+#define LOG(args)     MOZ_LOG(gStandardURLLog, LogLevel::Debug, args)
 #undef LOG_ENABLED
-#define LOG_ENABLED() MOZ_LOG_TEST(gStandardURLLog, mozilla::LogLevel::Debug)
+#define LOG_ENABLED() MOZ_LOG_TEST(gStandardURLLog, LogLevel::Debug)
 
 //----------------------------------------------------------------------------
 
@@ -622,7 +625,7 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
     // generate the normalized URL string
     //
     // approxLen should be correct or 1 high
-    if (!mSpec.SetLength(approxLen+1, mozilla::fallible)) // buf needs a trailing '\0' below
+    if (!mSpec.SetLength(approxLen+1, fallible)) // buf needs a trailing '\0' below
         return NS_ERROR_OUT_OF_MEMORY;
     char *buf;
     mSpec.BeginWriting(buf);
@@ -3259,15 +3262,15 @@ nsStandardURL::Write(nsIObjectOutputStream *stream)
 //---------------------------------------------------------------------------
 
 inline
-mozilla::ipc::StandardURLSegment
+ipc::StandardURLSegment
 ToIPCSegment(const nsStandardURL::URLSegment& aSegment)
 {
-    return mozilla::ipc::StandardURLSegment(aSegment.mPos, aSegment.mLen);
+    return ipc::StandardURLSegment(aSegment.mPos, aSegment.mLen);
 }
 
 inline
 nsStandardURL::URLSegment
-FromIPCSegment(const mozilla::ipc::StandardURLSegment& aSegment)
+FromIPCSegment(const ipc::StandardURLSegment& aSegment)
 {
     return nsStandardURL::URLSegment(aSegment.position(), aSegment.length());
 }
@@ -3426,7 +3429,7 @@ nsStandardURL::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 //----------------------------------------------------------------------------
 
 size_t
-nsStandardURL::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+nsStandardURL::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
   return mSpec.SizeOfExcludingThisIfUnshared(aMallocSizeOf) +
          mOriginCharset.SizeOfExcludingThisIfUnshared(aMallocSizeOf) +
@@ -3439,6 +3442,9 @@ nsStandardURL::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 }
 
 size_t
-nsStandardURL::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+nsStandardURL::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
+
+} // namespace net
+} // namespace mozilla
