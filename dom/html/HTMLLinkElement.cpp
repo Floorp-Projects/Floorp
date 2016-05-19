@@ -470,6 +470,7 @@ static const DOMTokenListSupportedToken sSupportedRelValues[] = {
   "alternate",
   "preconnect",
   "icon",
+  "search",
   nullptr
 };
 
