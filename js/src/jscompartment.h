@@ -707,6 +707,8 @@ struct JSCompartment
     // The code coverage can be enabled either for each compartment, with the
     // Debugger API, or for the entire runtime.
     bool collectCoverage() const;
+    bool collectCoverageForDebug() const;
+    bool collectCoverageForPGO() const;
     void clearScriptCounts();
 
     bool needsDelazificationForDebugger() const {

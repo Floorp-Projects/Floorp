@@ -1111,8 +1111,20 @@ JSCompartment::updateDebuggerObservesCoverage()
 bool
 JSCompartment::collectCoverage() const
 {
-    return !JitOptions.disablePgo ||
-           debuggerObservesCoverage() ||
+    return collectCoverageForPGO() ||
+           collectCoverageForDebug();
+}
+
+bool
+JSCompartment::collectCoverageForPGO() const
+{
+    return !JitOptions.disablePgo;
+}
+
+bool
+JSCompartment::collectCoverageForDebug() const
+{
+    return debuggerObservesCoverage() ||
            runtimeFromAnyThread()->profilingScripts ||
            runtimeFromAnyThread()->lcovOutput.isEnabled();
 }
