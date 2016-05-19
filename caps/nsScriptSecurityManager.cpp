@@ -672,7 +672,7 @@ EqualOrSubdomain(nsIURI* aProbeArg, nsIURI* aBase)
         }
 
         nsAutoCString host, newHost;
-        nsresult rv = probe->GetHost(host);
+        rv = probe->GetHost(host);
         NS_ENSURE_SUCCESS(rv, false);
 
         rv = tldService->GetNextSubDomain(host, newHost);
@@ -850,8 +850,6 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
         // as long as they don't represent null principals...
         // Or they don't require an special permission to do so
         // See bug#773886
-
-        bool hasFlags;
         rv = NS_URIChainHasFlags(targetBaseURI,
                                  nsIProtocolHandler::URI_CROSS_ORIGIN_NEEDS_WEBAPPS_PERM,
                                  &hasFlags);
