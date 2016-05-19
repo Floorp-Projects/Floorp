@@ -93,14 +93,14 @@ public:
     MOZ_ASSERT(aUsePrivateBrowsing == (aAttrs.mPrivateBrowsingId != 0));
   }
 
-  // Constructor taking reserved appId for the safebrowsing cookie.
-  explicit LoadContext(uint32_t aAppId)
+  // Constructor taking reserved origin attributes.
+  explicit LoadContext(DocShellOriginAttributes& aAttrs)
     : mTopFrameElement(nullptr)
     , mNestedFrameId(0)
     , mIsContent(false)
-    , mUsePrivateBrowsing(false)
+    , mUsePrivateBrowsing(aAttrs.mPrivateBrowsingId != 0)
     , mUseRemoteTabs(false)
-    , mOriginAttributes(aAppId, false)
+    , mOriginAttributes(aAttrs)
 #ifdef DEBUG
     , mIsNotNull(true)
 #endif
