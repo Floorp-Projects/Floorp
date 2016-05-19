@@ -629,3 +629,24 @@ diff --git a/modules/fdlibm/src/s_trunc.cpp b/modules/fdlibm/src/s_trunc.cpp
  trunc(double x)
  {
  	int32_t i0,i1,j0;
+diff --git a/modules/fdlibm/src/s_truncf.cpp b/modules/fdlibm/src/s_truncf.cpp
+--- a/modules/fdlibm/src/s_truncf.cpp
++++ b/modules/fdlibm/src/s_truncf.cpp
+@@ -17,17 +17,16 @@
+  * truncf(x)
+  * Return x rounded toward 0 to integral value
+  * Method:
+  *	Bit twiddling.
+  * Exception:
+  *	Inexact flag raised if x not equal to truncf(x).
+  */
+ 
+-#include "math.h"
+ #include "math_private.h"
+ 
+ static const float huge = 1.0e30F;
+ 
+ float
+ truncf(float x)
+ {
+ 	int32_t i0,j0;
