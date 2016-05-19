@@ -167,17 +167,6 @@
           is(e.name, "InvalidParameterError",
              "addTrack existing track should fail");
         }
-        return navigator.mediaDevices.getUserMedia({video:true})
-          .then(differentStream => {
-            var track = differentStream.getVideoTracks()[0];
-            try {
-              test.pcLocal._pc.addTrack(track, stream);
-              ok(false, "addTrack w/wrong stream should fail");
-            } catch (e) {
-              is(e.name, "InvalidParameterError",
-                 "addTrack w/wrong stream should fail");
-            }
-          });
       }
     ]);
     test.run();
