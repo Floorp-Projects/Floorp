@@ -551,7 +551,6 @@ BasePrincipal::CreateCodebasePrincipal(nsIURI* aURI, const PrincipalOriginAttrib
   bool inheritsPrincipal;
   nsresult rv = NS_URIChainHasFlags(aURI, nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
                                     &inheritsPrincipal);
-  nsCOMPtr<nsIPrincipal> principal;
   if (NS_FAILED(rv) || inheritsPrincipal) {
     return nsNullPrincipal::Create(aAttrs);
   }
