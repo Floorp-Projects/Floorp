@@ -454,8 +454,6 @@ class BaseShape : public gc::TenuredCell
     void traceChildren(JSTracer* trc);
     void traceChildrenSkipShapeTable(JSTracer* trc);
 
-    void fixupAfterMovingGC() {}
-
   private:
     static void staticAsserts() {
         JS_STATIC_ASSERT(offsetof(BaseShape, clasp_) == offsetof(js::shadow::BaseShape, clasp_));

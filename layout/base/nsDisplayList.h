@@ -1559,11 +1559,11 @@ public:
     return nsRegion();
   }
   /**
-   * If this returns true, then aColor is set to the uniform color
-   * @return true if the item is guaranteed to paint every pixel in its
+   * @return Some(nscolor) if the item is guaranteed to paint every pixel in its
    * bounds with the same (possibly translucent) color
    */
-  virtual bool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) { return false; }
+  virtual mozilla::Maybe<nscolor> IsUniform(nsDisplayListBuilder* aBuilder)
+  { return mozilla::Nothing(); }
   /**
    * @return true if the contents of this item are rendered fixed relative
    * to the nearest viewport.
@@ -2621,10 +2621,9 @@ public:
     return result;
   }
 
-  virtual bool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) override
+  virtual mozilla::Maybe<nscolor> IsUniform(nsDisplayListBuilder* aBuilder) override
   {
-    *aColor = mColor;
-    return true;
+    return mozilla::Some(mColor);
   }
 
 protected:
@@ -2701,7 +2700,7 @@ public:
                                  nsRegion* aVisibleRegion) override;
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                    bool* aSnap) override;
-  virtual bool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) override;
+  virtual mozilla::Maybe<nscolor> IsUniform(nsDisplayListBuilder* aBuilder) override;
   /**
    * GetBounds() returns the background painting area.
    */
@@ -2797,7 +2796,7 @@ public:
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) override;
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                    bool* aSnap) override;
-  virtual bool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) override;
+  virtual mozilla::Maybe<nscolor> IsUniform(nsDisplayListBuilder* aBuilder) override;
   virtual bool ProvidesFontSmoothingBackgroundColor(nscolor* aColor) override;
 
   /**
@@ -2861,7 +2860,7 @@ public:
 
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                    bool* aSnap) override;
-  virtual bool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) override;
+  virtual mozilla::Maybe<nscolor> IsUniform(nsDisplayListBuilder* aBuilder) override;
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) override;
 
@@ -2922,10 +2921,9 @@ public:
     return GetBounds(aBuilder, aSnap);
   }
 
-  virtual bool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) override
+  virtual mozilla::Maybe<nscolor> IsUniform(nsDisplayListBuilder* aBuilder) override
   {
-    *aColor = NS_RGBA(0, 0, 0, 0);
-    return true;
+    return mozilla::Some(NS_RGBA(0, 0, 0, 0));
   }
 
   virtual bool ClearsBackground() override
@@ -3233,7 +3231,7 @@ public:
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) override;
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                    bool* aSnap) override;
-  virtual bool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) override;
+  virtual mozilla::Maybe<nscolor> IsUniform(nsDisplayListBuilder* aBuilder) override;
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) override;
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                  nsRegion* aVisibleRegion) override;
@@ -3797,6 +3795,7 @@ public:
     *aSnap = false;
     return mEffectsBounds + ToReferenceFrame();
   }
+  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) override;
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                  nsRegion* aVisibleRegion) override;
   virtual bool TryMerge(nsDisplayItem* aItem) override;
@@ -3898,7 +3897,7 @@ public:
    */
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
                      nsDisplayList *aList, const nsRect& aChildrenVisibleRect,
-                     uint32_t aIndex = 0);
+                     uint32_t aIndex = 0, bool aIsFullyVisible = false);
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
                      nsDisplayItem *aItem, const nsRect& aChildrenVisibleRect,
                      uint32_t aIndex = 0);
@@ -3933,7 +3932,7 @@ public:
   virtual nsRect GetBounds(nsDisplayListBuilder *aBuilder, bool* aSnap) override;
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder *aBuilder,
                                    bool* aSnap) override;
-  virtual bool IsUniform(nsDisplayListBuilder *aBuilder, nscolor* aColor) override;
+  virtual mozilla::Maybe<nscolor> IsUniform(nsDisplayListBuilder *aBuilder) override;
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
                                    const ContainerLayerParameters& aParameters) override;
@@ -4116,17 +4115,6 @@ public:
 
   bool MayBeAnimated(nsDisplayListBuilder* aBuilder);
 
-  /**
-   * This will return if it's possible for this element to be prerendered.
-   * This should never return false if we're going to prerender.
-   */
-  bool MaybePrerender() const { return mMaybePrerender; }
-  /**
-   * Check if this element will be prerendered. This must be done after the
-   * display list has been fully built.
-   */
-  bool ShouldPrerender(nsDisplayListBuilder* aBuilder);
-
   virtual void WriteDebugInfo(std::stringstream& aStream) override;
 
   // Force the layer created for this item not to extend 3D context.
@@ -4211,9 +4199,6 @@ private:
   nsRect mBounds;
   // True for mBounds is valid.
   bool mHasBounds;
-  // We wont know if we pre-render until the layer building phase where we can
-  // check layers will-change budget.
-  bool mMaybePrerender;
   // Be forced not to extend 3D context.  Since we don't create a
   // transform item, a container layer, for every frames in a
   // preserves3d context, the transform items of a child preserves3d
@@ -4226,6 +4211,9 @@ private:
   bool mIsTransformSeparator;
   // True if mTransformPreserves3D have been initialized.
   bool mTransformPreserves3DInited;
+  // True if the entire untransformed area has been treated as
+  // visible during display list construction.
+  bool mIsFullyVisible;
 };
 
 /* A display item that applies a perspective transformation to a single
@@ -4268,9 +4256,9 @@ public:
     return mList.GetOpaqueRegion(aBuilder, aSnap);
   }
 
-  virtual bool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) override
+  virtual mozilla::Maybe<nscolor> IsUniform(nsDisplayListBuilder* aBuilder) override
   {
-    return mList.IsUniform(aBuilder, aColor);
+    return mList.IsUniform(aBuilder);
   }
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,

@@ -664,9 +664,9 @@ class Decoder
         return cur_ == end_;
     }
 
-    uintptr_t bytesRemain() const {
+    size_t bytesRemain() const {
         MOZ_ASSERT(end_ >= cur_);
-        return uintptr_t(end_ - cur_);
+        return size_t(end_ - cur_);
     }
     const uint8_t* currentPosition() const {
         return cur_;

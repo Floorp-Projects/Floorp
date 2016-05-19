@@ -38,18 +38,10 @@ extern "C" {
  * @param aMask How to escape the string
  * @return A newly allocated escaped string that must be free'd with
  *         nsCRT::free, or null on failure
+ * @note: Please, don't use this function. Use NS_Escape instead!
  */
-char* nsEscapeWithLength(const char* aStr, size_t aLength, size_t* aOutputLen,
-                         nsEscapeMask aMask);
-
-/**
- * Escape the given string according to mask
- * @param aStr The string to escape
- * @param aMask How to escape the string
- * @return A newly allocated escaped string that must be free'd with
- *         nsCRT::free, or null on failure
- */
-char* nsEscape(const char* aStr, nsEscapeMask aMask);
+char* nsEscape(const char* aStr, size_t aLength, size_t* aOutputLen,
+               nsEscapeMask aMask);
 
 char* nsUnescape(char* aStr);
 /* decode % escaped hex codes into character values,
@@ -201,8 +193,8 @@ NS_Escape(const nsACString& aOriginal, nsACString& aEscaped,
           nsEscapeMask aMask)
 {
   size_t escLen = 0;
-  char* esc = nsEscapeWithLength(aOriginal.BeginReading(), aOriginal.Length(),
-                                 &escLen, aMask);
+  char* esc = nsEscape(aOriginal.BeginReading(), aOriginal.Length(), &escLen,
+                       aMask);
   if (! esc) {
     return false;
   }

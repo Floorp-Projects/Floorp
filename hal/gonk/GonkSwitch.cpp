@@ -18,6 +18,7 @@
 #include <sysutils/NetlinkEvent.h>
 
 #include "base/message_loop.h"
+#include "base/task.h"
 
 #include "Hal.h"
 #include "HalLog.h"

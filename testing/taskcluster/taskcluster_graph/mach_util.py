@@ -10,10 +10,13 @@ import copy
 import re
 import sys
 import time
+import logging
 from collections import namedtuple
 
 ROOT = os.path.dirname(os.path.realpath(__file__))
 GECKO = os.path.realpath(os.path.join(ROOT, '..', '..', '..'))
+
+logger = logging.getLogger(__name__)
 
 def merge_dicts(*dicts):
     merged_dict = {}
@@ -130,7 +133,7 @@ def query_vcs_info(repository, revision):
     similar. It may or may not work for other hg repositories.
     """
     if not repository or not revision:
-        sys.stderr.write('cannot query vcs info because vcs info not provided\n')
+        logger.warning('cannot query vcs info because vcs info not provided')
         return None
 
     VCSInfo = namedtuple('VCSInfo', ['pushid', 'pushdate', 'changesets'])
@@ -139,7 +142,7 @@ def query_vcs_info(repository, revision):
         import requests
         url = '%s/json-automationrelevance/%s' % (repository.rstrip('/'),
                                                   revision)
-        sys.stderr.write("Querying version control for metadata: %s\n" % url)
+        logger.debug("Querying version control for metadata: %s" % url)
         contents = requests.get(url).json()
 
         changesets = []
@@ -152,8 +155,8 @@ def query_vcs_info(repository, revision):
         return VCSInfo(pushid, pushdate, changesets)
 
     except Exception:
-        sys.stderr.write(
-            "Error querying VCS info for '%s' revision '%s'\n" % (
+        logger.exception(
+            "Error querying VCS info for '%s' revision '%s'" % (
                 repository, revision,
             )
         )

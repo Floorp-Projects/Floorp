@@ -7518,7 +7518,7 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
               border->mFloatEdge, conditions,
               SETDSC_ENUMERATED | SETDSC_UNSET_INITIAL,
               parentBorder->mFloatEdge,
-              NS_STYLE_FLOAT_EDGE_CONTENT, 0, 0, 0, 0);
+              NS_STYLE_FLOAT_EDGE_CONTENT_BOX, 0, 0, 0, 0);
 
   // border-image-source
   const nsCSSValue* borderImageSource = aRuleData->ValueForBorderImageSource();

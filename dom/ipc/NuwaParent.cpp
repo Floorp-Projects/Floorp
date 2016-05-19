@@ -169,7 +169,7 @@ NuwaParent::RecvNotifyReady()
   // mContentParent have to go the the main thread. The mContentParent will
   // be alive when the runnable runs.
   nsCOMPtr<nsIRunnable> runnable =
-    NS_NewNonOwningRunnableMethod(mContentParent.get(),
+    NewNonOwningRunnableMethod(mContentParent.get(),
                                   &ContentParent::OnNuwaReady);
   MOZ_ASSERT(runnable);
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
@@ -200,7 +200,7 @@ NuwaParent::RecvAddNewProcess(const uint32_t& aPid,
     mBlocked = false;
   } else {
     nsCOMPtr<nsIRunnable> runnable =
-      NS_NewNonOwningRunnableMethodWithArgs<
+      NewNonOwningRunnableMethod<
         uint32_t,
         UniquePtr<nsTArray<ProtocolFdMapping>>&& >(
           mContentParent.get(),

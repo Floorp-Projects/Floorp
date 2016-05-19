@@ -82,13 +82,13 @@ function testSharedTypedArray() {
     assertThrowsInstanceOf(() => new Int8Array(b, -7), RangeError);
 
     // not congruent mod element size
-    assertThrowsInstanceOf(() => new Int32Array(b, 3), TypeError); // Bug 1227207: should be RangeError
+    assertThrowsInstanceOf(() => new Int32Array(b, 3), RangeError);
 
     // start out of range
-    assertThrowsInstanceOf(() => new Int32Array(b, 4104), TypeError); // Ditto
+    assertThrowsInstanceOf(() => new Int32Array(b, 4104), RangeError);
 
     // end out of range
-    assertThrowsInstanceOf(() => new Int32Array(b, 4092, 2), TypeError); // Ditto
+    assertThrowsInstanceOf(() => new Int32Array(b, 4092, 2), RangeError);
 
     // Views alias the storage
     x2[0] = -1;

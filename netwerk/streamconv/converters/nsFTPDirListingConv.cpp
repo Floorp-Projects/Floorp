@@ -307,9 +307,9 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
         PR_FormatTimeUSEnglish(buffer, sizeof(buffer),
                                "%a, %d %b %Y %H:%M:%S", &result.fe_time );
 
-        char *escapedDate = nsEscape(buffer, url_Path);
-        aString.Append(escapedDate);
-        free(escapedDate);
+        nsAutoCString escaped;
+        NS_WARN_IF(!NS_Escape(nsDependentCString(buffer), escaped, url_Path));
+        aString.Append(escaped);
         aString.Append(' ');
 
         // ENTRY TYPE

@@ -1101,6 +1101,10 @@ nsNativeThemeCocoa::DrawSearchField(CGContextRef cgContext, const HIRect& inBoxR
   // NOTE: this could probably use inState
   [cell setShowsFirstResponder:IsFocused(aFrame)];
 
+  // When using the 10.11 SDK, the default string will be shown if we don't
+  // set the placeholder string.
+  [cell setPlaceholderString:@""];
+
   DrawCellWithSnapping(cell, cgContext, inBoxRect, searchFieldSettings,
                        VerticalAlignFactor(aFrame), mCellDrawView,
                        IsFrameRTL(aFrame));
@@ -1226,7 +1230,7 @@ nsNativeThemeCocoa::DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRe
   BOOL isDisabled = IsDisabled(aFrame, inState);
 
   NSButtonCell* cell = (aWidgetType == NS_THEME_BUTTON) ? mPushButtonCell :
-    (aWidgetType == NS_THEME_MOZ_MAC_HELP_BUTTON) ? mHelpButtonCell : mDisclosureButtonCell;
+    (aWidgetType == NS_THEME_MAC_HELP_BUTTON) ? mHelpButtonCell : mDisclosureButtonCell;
   [cell setEnabled:!isDisabled];
   [cell setHighlighted:isActive &&
                        inState.HasAllStates(NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_HOVER)];
@@ -1234,7 +1238,7 @@ nsNativeThemeCocoa::DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRe
 
   if (aWidgetType != NS_THEME_BUTTON) { // Help button or disclosure button.
     NSSize buttonSize = NSMakeSize(0, 0);
-    if (aWidgetType == NS_THEME_MOZ_MAC_HELP_BUTTON) {
+    if (aWidgetType == NS_THEME_MAC_HELP_BUTTON) {
       buttonSize = kHelpButtonSize;
     } else { // Disclosure button.
       buttonSize = kDisclosureButtonSize;
@@ -1517,7 +1521,7 @@ nsNativeThemeCocoa::DrawDropdown(CGContextRef cgContext, const HIRect& inBoxRect
 
   [mDropdownCell setPullsDown:(aWidgetType == NS_THEME_BUTTON)];
 
-  BOOL isEditable = (aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD);
+  BOOL isEditable = (aWidgetType == NS_THEME_MENULIST_TEXTFIELD);
   NSCell* cell = isEditable ? (NSCell*)mComboBoxCell : (NSCell*)mDropdownCell;
 
   [cell setEnabled:!IsDisabled(aFrame, inState)];
@@ -1593,8 +1597,8 @@ nsNativeThemeCocoa::DrawSpinButton(CGContextRef cgContext,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  MOZ_ASSERT(aWidgetType == NS_THEME_SPINNER_UP_BUTTON ||
-             aWidgetType == NS_THEME_SPINNER_DOWN_BUTTON);
+  MOZ_ASSERT(aWidgetType == NS_THEME_SPINNER_UPBUTTON ||
+             aWidgetType == NS_THEME_SPINNER_DOWNBUTTON);
 
   HIThemeButtonDrawInfo bdi;
   bdi.version = 0;
@@ -1613,7 +1617,7 @@ nsNativeThemeCocoa::DrawSpinButton(CGContextRef cgContext,
   // both buttons, using clip to hide the one we don't want to paint.
   HIRect drawRect = inBoxRect;
   drawRect.size.height *= 2;
-  if (aWidgetType == NS_THEME_SPINNER_DOWN_BUTTON) {
+  if (aWidgetType == NS_THEME_SPINNER_DOWNBUTTON) {
     drawRect.origin.y -= inBoxRect.size.height;
   }
 
@@ -2619,7 +2623,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
       DrawFocusOutline(cgContext, macRect, eventState, aWidgetType, aFrame);
       break;
 
-    case NS_THEME_MOZ_MAC_HELP_BUTTON:
+    case NS_THEME_MAC_HELP_BUTTON:
     case NS_THEME_MAC_DISCLOSURE_BUTTON_OPEN:
     case NS_THEME_MAC_DISCLOSURE_BUTTON_CLOSED:
       DrawPushButton(cgContext, macRect, eventState, aWidgetType, aFrame);
@@ -2654,8 +2658,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
     }
       break;
 
-    case NS_THEME_SPINNER_UP_BUTTON:
-    case NS_THEME_SPINNER_DOWN_BUTTON: {
+    case NS_THEME_SPINNER_UPBUTTON:
+    case NS_THEME_SPINNER_DOWNBUTTON: {
       nsNumberControlFrame* numberControlFrame =
         nsNumberControlFrame::GetNumberControlFrameForSpinButton(aFrame);
       if (numberControlFrame) {
@@ -2671,11 +2675,11 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
     }
       break;
 
-    case NS_THEME_TOOLBAR_BUTTON:
+    case NS_THEME_TOOLBARBUTTON:
       DrawSegment(cgContext, macRect, eventState, aFrame, toolbarButtonRenderSettings);
       break;
 
-    case NS_THEME_TOOLBAR_SEPARATOR: {
+    case NS_THEME_SEPARATOR: {
       HIThemeSeparatorDrawInfo sdi = { 0, kThemeStateActive };
       HIThemeDrawSeparator(&macRect, &sdi, cgContext, HITHEME_ORIENTATION);
     }
@@ -2719,12 +2723,12 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
       DrawStatusBar(cgContext, macRect, aFrame);
       break;
 
-    case NS_THEME_DROPDOWN:
-    case NS_THEME_DROPDOWN_TEXTFIELD:
+    case NS_THEME_MENULIST:
+    case NS_THEME_MENULIST_TEXTFIELD:
       DrawDropdown(cgContext, macRect, eventState, aWidgetType, aFrame);
       break;
 
-    case NS_THEME_DROPDOWN_BUTTON:
+    case NS_THEME_MENULIST_BUTTON:
       DrawButton(cgContext, kThemeArrowButton, macRect, false, kThemeButtonOn,
                  kThemeAdornmentArrowDownArrow, eventState, aFrame);
       break;
@@ -2784,23 +2788,23 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
       DrawMeter(cgContext, macRect, aFrame);
       break;
 
-    case NS_THEME_PROGRESSBAR_CHUNK:
-    case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
-    case NS_THEME_METERBAR_CHUNK:
+    case NS_THEME_PROGRESSCHUNK:
+    case NS_THEME_PROGRESSCHUNK_VERTICAL:
+    case NS_THEME_METERCHUNK:
       // Do nothing: progress and meter bars cases will draw chunks.
       break;
 
-    case NS_THEME_TREEVIEW_TWISTY:
+    case NS_THEME_TREETWISTY:
       DrawButton(cgContext, kThemeDisclosureButton, macRect, false,
                  kThemeDisclosureRight, kThemeAdornmentNone, eventState, aFrame);
       break;
 
-    case NS_THEME_TREEVIEW_TWISTY_OPEN:
+    case NS_THEME_TREETWISTYOPEN:
       DrawButton(cgContext, kThemeDisclosureButton, macRect, false,
                  kThemeDisclosureDown, kThemeAdornmentNone, eventState, aFrame);
       break;
 
-    case NS_THEME_TREEVIEW_HEADER_CELL: {
+    case NS_THEME_TREEHEADERCELL: {
       TreeSortDirection sortDirection = GetTreeSortDirection(aFrame);
       DrawButton(cgContext, kThemeListHeaderButton, macRect, false,
                  sortDirection == eTreeSortDirection_Natural ? kThemeButtonOff : kThemeButtonOn,
@@ -2809,7 +2813,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
     }
       break;
 
-    case NS_THEME_TREEVIEW_TREEITEM:
+    case NS_THEME_TREEITEM:
     case NS_THEME_TREEVIEW:
       // HIThemeSetFill is not available on 10.3
       // HIThemeSetFill(kThemeBrushWhite, NULL, cgContext, HITHEME_ORIENTATION);
@@ -2817,11 +2821,11 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
       CGContextFillRect(cgContext, macRect);
       break;
 
-    case NS_THEME_TREEVIEW_HEADER:
+    case NS_THEME_TREEHEADER:
       // do nothing, taken care of by individual header cells
-    case NS_THEME_TREEVIEW_HEADER_SORTARROW:
+    case NS_THEME_TREEHEADERSORTARROW:
       // do nothing, taken care of by treeview header
-    case NS_THEME_TREEVIEW_LINE:
+    case NS_THEME_TREELINE:
       // do nothing, these lines don't exist on macos
       break;
 
@@ -2842,8 +2846,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
     }
       break;
 
-    case NS_THEME_SCALE_THUMB_HORIZONTAL:
-    case NS_THEME_SCALE_THUMB_VERTICAL:
+    case NS_THEME_SCALETHUMB_HORIZONTAL:
+    case NS_THEME_SCALETHUMB_VERTICAL:
       // do nothing, drawn by scale
       break;
 
@@ -2870,11 +2874,11 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
         DrawScrollbar(cgContext, macRect, aFrame);
       }
       break;
-    case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
-    case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
+    case NS_THEME_SCROLLBARTHUMB_VERTICAL:
+    case NS_THEME_SCROLLBARTHUMB_HORIZONTAL:
       if (ScrollbarTrackAndThumbDrawSeparately()) {
         BOOL isOverlay = nsLookAndFeel::UseOverlayScrollbars();
-        BOOL isHorizontal = (aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL);
+        BOOL isHorizontal = (aWidgetType == NS_THEME_SCROLLBARTHUMB_HORIZONTAL);
         BOOL isRolledOver = IsParentScrollbarRolledOver(aFrame);
         nsIFrame* scrollbarFrame = GetParentScrollbarFrame(aFrame);
         bool isSmall = (scrollbarFrame && scrollbarFrame->StyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL);
@@ -2907,26 +2911,26 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
                 true);
       }
       break;
-    case NS_THEME_SCROLLBAR_BUTTON_UP:
-    case NS_THEME_SCROLLBAR_BUTTON_LEFT:
+    case NS_THEME_SCROLLBARBUTTON_UP:
+    case NS_THEME_SCROLLBARBUTTON_LEFT:
 #if SCROLLBARS_VISUAL_DEBUG
       CGContextSetRGBFillColor(cgContext, 1.0, 0, 0, 0.6);
       CGContextFillRect(cgContext, macRect);
 #endif
     break;
-    case NS_THEME_SCROLLBAR_BUTTON_DOWN:
-    case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
+    case NS_THEME_SCROLLBARBUTTON_DOWN:
+    case NS_THEME_SCROLLBARBUTTON_RIGHT:
 #if SCROLLBARS_VISUAL_DEBUG
       CGContextSetRGBFillColor(cgContext, 0, 1.0, 0, 0.6);
       CGContextFillRect(cgContext, macRect);
 #endif
     break;
-    case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
-    case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
+    case NS_THEME_SCROLLBARTRACK_HORIZONTAL:
+    case NS_THEME_SCROLLBARTRACK_VERTICAL:
       if (ScrollbarTrackAndThumbDrawSeparately()) {
         BOOL isOverlay = nsLookAndFeel::UseOverlayScrollbars();
         if (!isOverlay || IsParentScrollbarRolledOver(aFrame)) {
-          BOOL isHorizontal = (aWidgetType == NS_THEME_SCROLLBAR_TRACK_HORIZONTAL);
+          BOOL isHorizontal = (aWidgetType == NS_THEME_SCROLLBARTRACK_HORIZONTAL);
           nsIFrame* scrollbarFrame = GetParentScrollbarFrame(aFrame);
           bool isSmall = (scrollbarFrame && scrollbarFrame->StyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL);
           if (isOverlay && !nsCocoaFeatures::OnMountainLionOrLater()) {
@@ -3036,7 +3040,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
       DrawSegment(cgContext, macRect, eventState, aFrame, tabRenderSettings);
       break;
 
-    case NS_THEME_TAB_PANELS:
+    case NS_THEME_TABPANELS:
       DrawTabPanel(cgContext, macRect, aFrame);
       break;
 
@@ -3102,7 +3106,7 @@ nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
       break;
     }
 
-    case NS_THEME_TOOLBAR_BUTTON:
+    case NS_THEME_TOOLBARBUTTON:
     {
       *aResult = DirectionAwareMargin(nsIntMargin(1, 4, 1, 4), aFrame);
       break;
@@ -3117,12 +3121,12 @@ nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
       break;
     }
 
-    case NS_THEME_DROPDOWN:
-    case NS_THEME_DROPDOWN_BUTTON:
+    case NS_THEME_MENULIST:
+    case NS_THEME_MENULIST_BUTTON:
       *aResult = DirectionAwareMargin(kAquaDropdownBorder, aFrame);
       break;
 
-    case NS_THEME_DROPDOWN_TEXTFIELD:
+    case NS_THEME_MENULIST_TEXTFIELD:
       *aResult = DirectionAwareMargin(kAquaComboboxBorder, aFrame);
       break;
 
@@ -3157,10 +3161,10 @@ nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
       break;
     }
 
-    case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
-    case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
+    case NS_THEME_SCROLLBARTRACK_HORIZONTAL:
+    case NS_THEME_SCROLLBARTRACK_VERTICAL:
     {
-      bool isHorizontal = (aWidgetType == NS_THEME_SCROLLBAR_TRACK_HORIZONTAL);
+      bool isHorizontal = (aWidgetType == NS_THEME_SCROLLBARTRACK_HORIZONTAL);
 
       // On Lion and later, scrollbars have no arrows.
       if (!nsCocoaFeatures::OnLionOrLater()) {
@@ -3240,16 +3244,16 @@ nsNativeThemeCocoa::GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFram
     case NS_THEME_BUTTON:
     case NS_THEME_MAC_DISCLOSURE_BUTTON_OPEN:
     case NS_THEME_MAC_DISCLOSURE_BUTTON_CLOSED:
-    case NS_THEME_MOZ_MAC_HELP_BUTTON:
-    case NS_THEME_TOOLBAR_BUTTON:
+    case NS_THEME_MAC_HELP_BUTTON:
+    case NS_THEME_TOOLBARBUTTON:
     case NS_THEME_NUMBER_INPUT:
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE:
     case NS_THEME_SEARCHFIELD:
     case NS_THEME_LISTBOX:
-    case NS_THEME_DROPDOWN:
-    case NS_THEME_DROPDOWN_BUTTON:
-    case NS_THEME_DROPDOWN_TEXTFIELD:
+    case NS_THEME_MENULIST:
+    case NS_THEME_MENULIST_BUTTON:
+    case NS_THEME_MENULIST_TEXTFIELD:
     case NS_THEME_CHECKBOX:
     case NS_THEME_RADIO:
     case NS_THEME_TAB:
@@ -3330,22 +3334,22 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
       break;
     }
 
-    case NS_THEME_MOZ_MAC_HELP_BUTTON:
+    case NS_THEME_MAC_HELP_BUTTON:
     {
       aResult->SizeTo(kHelpButtonSize.width, kHelpButtonSize.height);
       *aIsOverridable = false;
       break;
     }
 
-    case NS_THEME_TOOLBAR_BUTTON:
+    case NS_THEME_TOOLBARBUTTON:
     {
       aResult->SizeTo(0, toolbarButtonHeights[miniControlSize]);
       break;
     }
 
     case NS_THEME_SPINNER:
-    case NS_THEME_SPINNER_UP_BUTTON:
-    case NS_THEME_SPINNER_DOWN_BUTTON:
+    case NS_THEME_SPINNER_UPBUTTON:
+    case NS_THEME_SPINNER_DOWNBUTTON:
     {
       SInt32 buttonHeight = 0, buttonWidth = 0;
       if (aFrame->GetContent()->IsXULElement()) {
@@ -3366,8 +3370,8 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
       break;
     }
 
-    case NS_THEME_DROPDOWN:
-    case NS_THEME_DROPDOWN_BUTTON:
+    case NS_THEME_MENULIST:
+    case NS_THEME_MENULIST_BUTTON:
     {
       SInt32 popupHeight = 0;
       ::GetThemeMetric(kThemeMetricPopupButtonHeight, &popupHeight);
@@ -3394,7 +3398,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
       break;
     }
 
-    case NS_THEME_MOZ_MAC_FULLSCREEN_BUTTON: {
+    case NS_THEME_MAC_FULLSCREEN_BUTTON: {
       if ([NativeWindowForFrame(aFrame) respondsToSelector:@selector(toggleFullScreen:)] &&
           !nsCocoaFeatures::OnYosemiteOrLater()) {
         // This value is hardcoded because it's needed before we can measure the
@@ -3413,8 +3417,8 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
       break;
     }
 
-    case NS_THEME_TREEVIEW_TWISTY:
-    case NS_THEME_TREEVIEW_TWISTY_OPEN:   
+    case NS_THEME_TREETWISTY:
+    case NS_THEME_TREETWISTYOPEN:   
     {
       SInt32 twistyHeight = 0, twistyWidth = 0;
       ::GetThemeMetric(kThemeMetricDisclosureButtonWidth, &twistyWidth);
@@ -3424,8 +3428,8 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
       break;
     }
     
-    case NS_THEME_TREEVIEW_HEADER:
-    case NS_THEME_TREEVIEW_HEADER_CELL:
+    case NS_THEME_TREEHEADER:
+    case NS_THEME_TREEHEADERCELL:
     {
       SInt32 headerHeight = 0;
       ::GetThemeMetric(kThemeMetricListHeaderHeight, &headerHeight);
@@ -3486,8 +3490,8 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
       break;
     }
 
-    case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
-    case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
+    case NS_THEME_SCROLLBARTHUMB_HORIZONTAL:
+    case NS_THEME_SCROLLBARTHUMB_VERTICAL:
     {
       // Find our parent scrollbar frame in order to find out whether we're in
       // a small or a large scrollbar.
@@ -3496,7 +3500,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
         return NS_ERROR_FAILURE;
 
       bool isSmall = (scrollbarFrame->StyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL);
-      bool isHorizontal = (aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL);
+      bool isHorizontal = (aWidgetType == NS_THEME_SCROLLBARTHUMB_HORIZONTAL);
       int32_t& minSize = isHorizontal ? aResult->width : aResult->height;
       minSize = isSmall ? kSmallScrollbarThumbMinSize : kRegularScrollbarThumbMinSize;
       break;
@@ -3504,8 +3508,8 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
 
     case NS_THEME_SCROLLBAR:
     case NS_THEME_SCROLLBAR_SMALL:
-    case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
-    case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
+    case NS_THEME_SCROLLBARTRACK_VERTICAL:
+    case NS_THEME_SCROLLBARTRACK_HORIZONTAL:
     {
       *aIsOverridable = false;
 
@@ -3562,15 +3566,15 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
       break;
     }
 
-    case NS_THEME_SCROLLBAR_BUTTON_UP:
-    case NS_THEME_SCROLLBAR_BUTTON_DOWN:
-    case NS_THEME_SCROLLBAR_BUTTON_LEFT:
-    case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
+    case NS_THEME_SCROLLBARBUTTON_UP:
+    case NS_THEME_SCROLLBARBUTTON_DOWN:
+    case NS_THEME_SCROLLBARBUTTON_LEFT:
+    case NS_THEME_SCROLLBARBUTTON_RIGHT:
     {
       nsIFrame *scrollbarFrame = GetParentScrollbarFrame(aFrame);
       if (!scrollbarFrame) return NS_ERROR_FAILURE;
 
-      // Since there is no NS_THEME_SCROLLBAR_BUTTON_UP_SMALL we need to ask the parent what appearance style it has.
+      // Since there is no NS_THEME_SCROLLBARBUTTON_UP_SMALL we need to ask the parent what appearance style it has.
       int32_t themeMetric = (scrollbarFrame->StyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL) ?
                             kThemeMetricSmallScrollBarWidth :
                             kThemeMetricScrollBarWidth;
@@ -3578,7 +3582,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
       ::GetThemeMetric(themeMetric, &scrollbarWidth);
 
       // It seems that for both sizes of scrollbar, the buttons are one pixel "longer".
-      if (aWidgetType == NS_THEME_SCROLLBAR_BUTTON_LEFT || aWidgetType == NS_THEME_SCROLLBAR_BUTTON_RIGHT)
+      if (aWidgetType == NS_THEME_SCROLLBARBUTTON_LEFT || aWidgetType == NS_THEME_SCROLLBARBUTTON_RIGHT)
         aResult->SizeTo(scrollbarWidth+1, scrollbarWidth);
       else
         aResult->SizeTo(scrollbarWidth, scrollbarWidth+1);
@@ -3622,20 +3626,20 @@ nsNativeThemeCocoa::WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType,
     case NS_THEME_TOOLBOX:
     case NS_THEME_TOOLBAR:
     case NS_THEME_STATUSBAR:
-    case NS_THEME_STATUSBAR_PANEL:
-    case NS_THEME_STATUSBAR_RESIZER_PANEL:
+    case NS_THEME_STATUSBARPANEL:
+    case NS_THEME_RESIZER_PANEL:
     case NS_THEME_TOOLTIP:
-    case NS_THEME_TAB_PANELS:
-    case NS_THEME_TAB_PANEL:
+    case NS_THEME_TABPANELS:
+    case NS_THEME_TABPANEL:
     case NS_THEME_DIALOG:
     case NS_THEME_MENUPOPUP:
     case NS_THEME_GROUPBOX:
-    case NS_THEME_PROGRESSBAR_CHUNK:
-    case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
+    case NS_THEME_PROGRESSCHUNK:
+    case NS_THEME_PROGRESSCHUNK_VERTICAL:
     case NS_THEME_PROGRESSBAR:
     case NS_THEME_PROGRESSBAR_VERTICAL:
     case NS_THEME_METERBAR:
-    case NS_THEME_METERBAR_CHUNK:
+    case NS_THEME_METERCHUNK:
     case NS_THEME_MAC_VIBRANCY_LIGHT:
     case NS_THEME_MAC_VIBRANCY_DARK:
       *aShouldRepaint = false;
@@ -3699,7 +3703,7 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     return false;
 
   // if this is a dropdown button in a combobox the answer is always no
-  if (aWidgetType == NS_THEME_DROPDOWN_BUTTON) {
+  if (aWidgetType == NS_THEME_MENULIST_BUTTON) {
     nsIFrame* parentFrame = aFrame->GetParent();
     if (parentFrame && (parentFrame->GetType() == nsGkAtoms::comboboxControlFrame))
       return false;
@@ -3707,10 +3711,10 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
 
   switch (aWidgetType) {
     // Combobox dropdowns don't support native theming in vertical mode.
-    case NS_THEME_DROPDOWN:
-    case NS_THEME_DROPDOWN_BUTTON:
-    case NS_THEME_DROPDOWN_TEXT:
-    case NS_THEME_DROPDOWN_TEXTFIELD:
+    case NS_THEME_MENULIST:
+    case NS_THEME_MENULIST_BUTTON:
+    case NS_THEME_MENULIST_TEXT:
+    case NS_THEME_MENULIST_TEXTFIELD:
       if (aFrame && aFrame->GetWritingMode().IsVertical()) {
         return false;
       }
@@ -3727,7 +3731,7 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_MENUARROW:
     case NS_THEME_MENUITEM:
     case NS_THEME_MENUSEPARATOR:
-    case NS_THEME_MOZ_MAC_FULLSCREEN_BUTTON:
+    case NS_THEME_MAC_FULLSCREEN_BUTTON:
     case NS_THEME_TOOLTIP:
     
     case NS_THEME_CHECKBOX:
@@ -3735,17 +3739,17 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_RADIO:
     case NS_THEME_RADIO_CONTAINER:
     case NS_THEME_GROUPBOX:
-    case NS_THEME_MOZ_MAC_HELP_BUTTON:
+    case NS_THEME_MAC_HELP_BUTTON:
     case NS_THEME_MAC_DISCLOSURE_BUTTON_OPEN:
     case NS_THEME_MAC_DISCLOSURE_BUTTON_CLOSED:
     case NS_THEME_BUTTON:
     case NS_THEME_BUTTON_ARROW_UP:
     case NS_THEME_BUTTON_ARROW_DOWN:
     case NS_THEME_BUTTON_BEVEL:
-    case NS_THEME_TOOLBAR_BUTTON:
+    case NS_THEME_TOOLBARBUTTON:
     case NS_THEME_SPINNER:
-    case NS_THEME_SPINNER_UP_BUTTON:
-    case NS_THEME_SPINNER_DOWN_BUTTON:
+    case NS_THEME_SPINNER_UPBUTTON:
+    case NS_THEME_SPINNER_DOWNBUTTON:
     case NS_THEME_TOOLBAR:
     case NS_THEME_STATUSBAR:
     case NS_THEME_NUMBER_INPUT:
@@ -3753,45 +3757,45 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_TEXTFIELD_MULTILINE:
     case NS_THEME_SEARCHFIELD:
     case NS_THEME_TOOLBOX:
-    //case NS_THEME_TOOLBAR_BUTTON:
+    //case NS_THEME_TOOLBARBUTTON:
     case NS_THEME_PROGRESSBAR:
     case NS_THEME_PROGRESSBAR_VERTICAL:
-    case NS_THEME_PROGRESSBAR_CHUNK:
-    case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
+    case NS_THEME_PROGRESSCHUNK:
+    case NS_THEME_PROGRESSCHUNK_VERTICAL:
     case NS_THEME_METERBAR:
-    case NS_THEME_METERBAR_CHUNK:
-    case NS_THEME_TOOLBAR_SEPARATOR:
+    case NS_THEME_METERCHUNK:
+    case NS_THEME_SEPARATOR:
     
-    case NS_THEME_TAB_PANELS:
+    case NS_THEME_TABPANELS:
     case NS_THEME_TAB:
     
-    case NS_THEME_TREEVIEW_TWISTY:
-    case NS_THEME_TREEVIEW_TWISTY_OPEN:
+    case NS_THEME_TREETWISTY:
+    case NS_THEME_TREETWISTYOPEN:
     case NS_THEME_TREEVIEW:
-    case NS_THEME_TREEVIEW_HEADER:
-    case NS_THEME_TREEVIEW_HEADER_CELL:
-    case NS_THEME_TREEVIEW_HEADER_SORTARROW:
-    case NS_THEME_TREEVIEW_TREEITEM:
-    case NS_THEME_TREEVIEW_LINE:
+    case NS_THEME_TREEHEADER:
+    case NS_THEME_TREEHEADERCELL:
+    case NS_THEME_TREEHEADERSORTARROW:
+    case NS_THEME_TREEITEM:
+    case NS_THEME_TREELINE:
     case NS_THEME_MAC_SOURCE_LIST:
 
     case NS_THEME_RANGE:
 
     case NS_THEME_SCALE_HORIZONTAL:
-    case NS_THEME_SCALE_THUMB_HORIZONTAL:
+    case NS_THEME_SCALETHUMB_HORIZONTAL:
     case NS_THEME_SCALE_VERTICAL:
-    case NS_THEME_SCALE_THUMB_VERTICAL:
+    case NS_THEME_SCALETHUMB_VERTICAL:
 
     case NS_THEME_SCROLLBAR:
     case NS_THEME_SCROLLBAR_SMALL:
-    case NS_THEME_SCROLLBAR_BUTTON_UP:
-    case NS_THEME_SCROLLBAR_BUTTON_DOWN:
-    case NS_THEME_SCROLLBAR_BUTTON_LEFT:
-    case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
-    case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
-    case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
-    case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
-    case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
+    case NS_THEME_SCROLLBARBUTTON_UP:
+    case NS_THEME_SCROLLBARBUTTON_DOWN:
+    case NS_THEME_SCROLLBARBUTTON_LEFT:
+    case NS_THEME_SCROLLBARBUTTON_RIGHT:
+    case NS_THEME_SCROLLBARTHUMB_HORIZONTAL:
+    case NS_THEME_SCROLLBARTHUMB_VERTICAL:
+    case NS_THEME_SCROLLBARTRACK_VERTICAL:
+    case NS_THEME_SCROLLBARTRACK_HORIZONTAL:
     case NS_THEME_SCROLLBAR_NON_DISAPPEARING:
       return !IsWidgetStyled(aPresContext, aFrame, aWidgetType);
 
@@ -3827,13 +3831,13 @@ nsNativeThemeCocoa::WidgetIsContainer(uint8_t aWidgetType)
 {
   // flesh this out at some point
   switch (aWidgetType) {
-   case NS_THEME_DROPDOWN_BUTTON:
+   case NS_THEME_MENULIST_BUTTON:
    case NS_THEME_RADIO:
    case NS_THEME_CHECKBOX:
    case NS_THEME_PROGRESSBAR:
    case NS_THEME_METERBAR:
    case NS_THEME_RANGE:
-   case NS_THEME_MOZ_MAC_HELP_BUTTON:
+   case NS_THEME_MAC_HELP_BUTTON:
    case NS_THEME_MAC_DISCLOSURE_BUTTON_OPEN:
    case NS_THEME_MAC_DISCLOSURE_BUTTON_CLOSED:
     return false;
@@ -3844,10 +3848,10 @@ nsNativeThemeCocoa::WidgetIsContainer(uint8_t aWidgetType)
 bool
 nsNativeThemeCocoa::ThemeDrawsFocusForWidget(uint8_t aWidgetType)
 {
-  if (aWidgetType == NS_THEME_DROPDOWN ||
-      aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD ||
+  if (aWidgetType == NS_THEME_MENULIST ||
+      aWidgetType == NS_THEME_MENULIST_TEXTFIELD ||
       aWidgetType == NS_THEME_BUTTON ||
-      aWidgetType == NS_THEME_MOZ_MAC_HELP_BUTTON ||
+      aWidgetType == NS_THEME_MAC_HELP_BUTTON ||
       aWidgetType == NS_THEME_MAC_DISCLOSURE_BUTTON_OPEN ||
       aWidgetType == NS_THEME_MAC_DISCLOSURE_BUTTON_CLOSED ||
       aWidgetType == NS_THEME_RADIO ||
@@ -3870,7 +3874,7 @@ nsNativeThemeCocoa::WidgetAppearanceDependsOnWindowFocus(uint8_t aWidgetType)
   switch (aWidgetType) {
     case NS_THEME_DIALOG:
     case NS_THEME_GROUPBOX:
-    case NS_THEME_TAB_PANELS:
+    case NS_THEME_TABPANELS:
     case NS_THEME_BUTTON_ARROW_UP:
     case NS_THEME_BUTTON_ARROW_DOWN:
     case NS_THEME_CHECKMENUITEM:
@@ -3880,14 +3884,14 @@ nsNativeThemeCocoa::WidgetAppearanceDependsOnWindowFocus(uint8_t aWidgetType)
     case NS_THEME_MENUSEPARATOR:
     case NS_THEME_TOOLTIP:
     case NS_THEME_SPINNER:
-    case NS_THEME_SPINNER_UP_BUTTON:
-    case NS_THEME_SPINNER_DOWN_BUTTON:
-    case NS_THEME_TOOLBAR_SEPARATOR:
+    case NS_THEME_SPINNER_UPBUTTON:
+    case NS_THEME_SPINNER_DOWNBUTTON:
+    case NS_THEME_SEPARATOR:
     case NS_THEME_TOOLBOX:
     case NS_THEME_NUMBER_INPUT:
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TREEVIEW:
-    case NS_THEME_TREEVIEW_LINE:
+    case NS_THEME_TREELINE:
     case NS_THEME_TEXTFIELD_MULTILINE:
     case NS_THEME_LISTBOX:
     case NS_THEME_RESIZER:
@@ -3982,7 +3986,7 @@ nsNativeThemeCocoa::ThemeGeometryTypeForWidget(nsIFrame* aFrame, uint8_t aWidget
       return eThemeGeometryTypeToolbox;
     case NS_THEME_WINDOW_BUTTON_BOX:
       return eThemeGeometryTypeWindowButtons;
-    case NS_THEME_MOZ_MAC_FULLSCREEN_BUTTON:
+    case NS_THEME_MAC_FULLSCREEN_BUTTON:
       return eThemeGeometryTypeFullscreenButton;
     case NS_THEME_MAC_VIBRANCY_LIGHT:
       return eThemeGeometryTypeVibrancyLight;

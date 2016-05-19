@@ -522,7 +522,7 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
   kidReflowState.SetComputedBSize(computedBSize);
   kidReflowState.ComputedMinBSize() = computedMinBSize;
   kidReflowState.ComputedMaxBSize() = computedMaxBSize;
-  if (aState->mReflowState.IsBResize()) {
+  if (aState->mReflowState.IsBResizeForWM(kidReflowState.GetWritingMode())) {
     kidReflowState.SetBResize(true);
   }
 

@@ -1641,46 +1641,79 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
   }
 }
 
+/* static */
+nsCSSRendering::PaintBGParams
+nsCSSRendering::PaintBGParams::ForAllLayers(nsPresContext& aPresCtx,
+                                            nsRenderingContext& aRenderingCtx,
+                                            const nsRect& aDirtyRect,
+                                            const nsRect& aBorderArea,
+                                            nsIFrame *aFrame,
+                                            uint32_t aPaintFlags)
+{
+  MOZ_ASSERT(aFrame);
+
+  PaintBGParams result(aPresCtx, aRenderingCtx, aDirtyRect, aBorderArea);
+
+  result.frame = aFrame;
+  result.paintFlags = aPaintFlags;
+  result.layer = -1;
+
+  return result;
+}
+
+/* static */
+nsCSSRendering::PaintBGParams
+nsCSSRendering::PaintBGParams::ForSingleLayer(nsPresContext& aPresCtx,
+                                              nsRenderingContext& aRenderingCtx,
+                                              const nsRect& aDirtyRect,
+                                              const nsRect& aBorderArea,
+                                              nsIFrame *aFrame,
+                                              uint32_t aPaintFlags,
+                                              int32_t aLayer,
+                                              CompositionOp aCompositionOp)
+{
+  MOZ_ASSERT(aFrame && (aLayer != -1));
+
+  PaintBGParams result(aPresCtx, aRenderingCtx, aDirtyRect, aBorderArea);
+
+  result.frame = aFrame;
+  result.paintFlags = aPaintFlags;
+
+  result.layer = aLayer;
+  result.compositionOp = aCompositionOp;
+
+  return result;
+}
+
 DrawResult
-nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
-                                nsRenderingContext& aRenderingContext,
-                                nsIFrame* aForFrame,
-                                const nsRect& aDirtyRect,
-                                const nsRect& aBorderArea,
-                                uint32_t aFlags,
-                                nsRect* aBGClipRect,
-                                int32_t aLayer,
-                                CompositionOp aCompositonOp)
+nsCSSRendering::PaintBackground(const PaintBGParams& aParams)
 {
   PROFILER_LABEL("nsCSSRendering", "PaintBackground",
     js::ProfileEntry::Category::GRAPHICS);
 
-  NS_PRECONDITION(aForFrame,
+  NS_PRECONDITION(aParams.frame,
                   "Frame is expected to be provided to PaintBackground");
 
   nsStyleContext *sc;
-  if (!FindBackground(aForFrame, &sc)) {
+  if (!FindBackground(aParams.frame, &sc)) {
     // We don't want to bail out if moz-appearance is set on a root
     // node. If it has a parent content node, bail because it's not
     // a root, otherwise keep going in order to let the theme stuff
     // draw the background. The canvas really should be drawing the
     // bg, but there's no way to hook that up via css.
-    if (!aForFrame->StyleDisplay()->mAppearance) {
+    if (!aParams.frame->StyleDisplay()->mAppearance) {
       return DrawResult::SUCCESS;
     }
 
-    nsIContent* content = aForFrame->GetContent();
+    nsIContent* content = aParams.frame->GetContent();
     if (!content || content->GetParent()) {
       return DrawResult::SUCCESS;
     }
 
-    sc = aForFrame->StyleContext();
+    sc = aParams.frame->StyleContext();
   }
 
-  return PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,
-                               aDirtyRect, aBorderArea, sc,
-                               *aForFrame->StyleBorder(), aFlags,
-                               aBGClipRect, aLayer, aCompositonOp);
+  return PaintBackgroundWithSC(aParams, sc, *aParams.frame->StyleBorder());
 }
 
 static bool
@@ -2855,41 +2888,36 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
 }
 
 DrawResult
-nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
-                                      nsRenderingContext& aRenderingContext,
-                                      nsIFrame* aForFrame,
-                                      const nsRect& aDirtyRect,
-                                      const nsRect& aBorderArea,
-                                      nsStyleContext* aBackgroundSC,
-                                      const nsStyleBorder& aBorder,
-                                      uint32_t aFlags,
-                                      nsRect* aBGClipRect,
-                                      int32_t aLayer,
-                                      CompositionOp aCompositonOp)
+nsCSSRendering::PaintBackgroundWithSC(const PaintBGParams& aParams,
+                                      nsStyleContext *aBackgroundSC,
+                                      const nsStyleBorder& aBorder)
 {
-  NS_PRECONDITION(aForFrame,
+  NS_PRECONDITION(aParams.frame,
                   "Frame is expected to be provided to PaintBackground");
 
   // If we're drawing all layers, aCompositonOp is ignored, so make sure that
   // it was left at its default value.
-  MOZ_ASSERT_IF(aLayer == -1, aCompositonOp == CompositionOp::OP_OVER);
+  MOZ_ASSERT_IF(aParams.layer == -1,
+                aParams.compositionOp == CompositionOp::OP_OVER);
 
   DrawResult result = DrawResult::SUCCESS;
 
   // Check to see if we have an appearance defined.  If so, we let the theme
   // renderer draw the background and bail out.
-  // XXXzw this ignores aBGClipRect.
-  const nsStyleDisplay* displayData = aForFrame->StyleDisplay();
+  // XXXzw this ignores aParams.bgClipRect.
+  const nsStyleDisplay* displayData = aParams.frame->StyleDisplay();
   if (displayData->mAppearance) {
-    nsITheme *theme = aPresContext->GetTheme();
-    if (theme && theme->ThemeSupportsWidget(aPresContext, aForFrame,
+    nsITheme *theme = aParams.presCtx.GetTheme();
+    if (theme && theme->ThemeSupportsWidget(&aParams.presCtx,
+                                            aParams.frame,
                                             displayData->mAppearance)) {
-      nsRect drawing(aBorderArea);
-      theme->GetWidgetOverflow(aPresContext->DeviceContext(),
-                               aForFrame, displayData->mAppearance, &drawing);
-      drawing.IntersectRect(drawing, aDirtyRect);
-      theme->DrawWidgetBackground(&aRenderingContext, aForFrame,
-                                  displayData->mAppearance, aBorderArea,
+      nsRect drawing(aParams.borderArea);
+      theme->GetWidgetOverflow(aParams.presCtx.DeviceContext(),
+                               aParams.frame, displayData->mAppearance,
+                               &drawing);
+      drawing.IntersectRect(drawing, aParams.dirtyRect);
+      theme->DrawWidgetBackground(&aParams.renderingCtx, aParams.frame,
+                                  displayData->mAppearance, aParams.borderArea,
                                   drawing);
       return DrawResult::SUCCESS;
     }
@@ -2902,26 +2930,26 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   // nsPresShell::AddCanvasBackgroundColorItem, and painted by
   // nsDisplayCanvasBackground directly.) Either way we don't need to
   // paint the background color here.
-  bool isCanvasFrame = IsCanvasFrame(aForFrame);
+  bool isCanvasFrame = IsCanvasFrame(aParams.frame);
 
   // Determine whether we are drawing background images and/or
   // background colors.
   bool drawBackgroundImage;
   bool drawBackgroundColor;
 
-  nscolor bgColor = DetermineBackgroundColor(aPresContext,
+  nscolor bgColor = DetermineBackgroundColor(&aParams.presCtx,
                                              aBackgroundSC,
-                                             aForFrame,
+                                             aParams.frame,
                                              drawBackgroundImage,
                                              drawBackgroundColor);
 
-  bool paintMask = (aFlags & PAINTBG_MASK_IMAGE);
+  bool paintMask = (aParams.paintFlags & PAINTBG_MASK_IMAGE);
   const nsStyleImageLayers& layers = paintMask ?
     aBackgroundSC->StyleSVGReset()->mMask :
     aBackgroundSC->StyleBackground()->mImage;
   // If we're drawing a specific layer, we don't want to draw the
   // background color.
-  if ((drawBackgroundColor && aLayer >= 0) || paintMask) {
+  if ((drawBackgroundColor && aParams.layer >= 0) || paintMask) {
     drawBackgroundColor = false;
   }
 
@@ -2932,32 +2960,35 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     return DrawResult::SUCCESS;
 
   // Compute the outermost boundary of the area that might be painted.
-  // Same coordinate space as aBorderArea & aBGClipRect.
-  Sides skipSides = aForFrame->GetSkipSides();
+  // Same coordinate space as aParams.borderArea & aParams.bgClipRect.
+  Sides skipSides = aParams.frame->GetSkipSides();
   nsRect paintBorderArea =
-    ::BoxDecorationRectForBackground(aForFrame, aBorderArea, skipSides, &aBorder);
+    ::BoxDecorationRectForBackground(aParams.frame, aParams.borderArea,
+                                     skipSides, &aBorder);
   nsRect clipBorderArea =
-    ::BoxDecorationRectForBorder(aForFrame, aBorderArea, skipSides, &aBorder);
+    ::BoxDecorationRectForBorder(aParams.frame, aParams.borderArea,
+                                 skipSides, &aBorder);
 
   // The 'bgClipArea' (used only by the image tiling logic, far below)
-  // is the caller-provided aBGClipRect if any, or else the area
+  // is the caller-provided aParams.bgClipRect if any, or else the area
   // determined by the value of 'background-clip' in
   // SetupCurrentBackgroundClip.  (Arguably it should be the
   // intersection, but that breaks the table painter -- in particular,
   // taking the intersection breaks reftests/bugs/403249-1[ab].)
-  gfxContext* ctx = aRenderingContext.ThebesContext();
-  nscoord appUnitsPerPixel = aPresContext->AppUnitsPerDevPixel();
+  gfxContext* ctx = aParams.renderingCtx.ThebesContext();
+  nscoord appUnitsPerPixel = aParams.presCtx.AppUnitsPerDevPixel();
   ImageLayerClipState clipState;
-  if (aBGClipRect) {
-    clipState.mBGClipArea = *aBGClipRect;
+  if (aParams.bgClipRect) {
+    clipState.mBGClipArea = *aParams.bgClipRect;
     clipState.mCustomClip = true;
     clipState.mHasRoundedCorners = false;
-    SetupDirtyRects(clipState.mBGClipArea, aDirtyRect, appUnitsPerPixel,
+    SetupDirtyRects(clipState.mBGClipArea, aParams.dirtyRect, appUnitsPerPixel,
                     &clipState.mDirtyRect, &clipState.mDirtyRectGfx);
   } else {
     GetImageLayerClip(layers.BottomLayer(),
-                      aForFrame, aBorder, aBorderArea,
-                      aDirtyRect, (aFlags & PAINTBG_WILL_PAINT_BORDER),
+                      aParams.frame, aBorder, aParams.borderArea,
+                      aParams.dirtyRect,
+                      (aParams.paintFlags & PAINTBG_WILL_PAINT_BORDER),
                       appUnitsPerPixel,
                       &clipState);
   }
@@ -2987,7 +3018,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   }
 
   // Validate the layer range before we start iterating.
-  int32_t startLayer = aLayer;
+  int32_t startLayer = aParams.layer;
   int32_t nLayers = 1;
   if (startLayer < 0) {
     startLayer = (int32_t)layers.mImageCount - 1;
@@ -2997,9 +3028,10 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   // Ensure we get invalidated for loads of the image.  We need to do
   // this here because this might be the only code that knows about the
   // association of the style data with the frame.
-  if (aBackgroundSC != aForFrame->StyleContext()) {
+  if (aBackgroundSC != aParams.frame->StyleContext()) {
     NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT_WITH_RANGE(i, layers, startLayer, nLayers) {
-      aForFrame->AssociateImage(layers.mLayers[i].mImage, aPresContext);
+      aParams.frame->AssociateImage(layers.mLayers[i].mImage,
+                                    &aParams.presCtx);
     }
   }
 
@@ -3016,7 +3048,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
                                                          nLayers + (layers.mImageCount -
                                                          startLayer - 1)) {
       const nsStyleImageLayers::Layer& layer = layers.mLayers[i];
-      if (!aBGClipRect) {
+      if (!aParams.bgClipRect) {
         if (currentBackgroundClip != layer.mClip || !clipSet) {
           currentBackgroundClip = layer.mClip;
           // If clipSet is false that means this is the bottom layer and we
@@ -3024,17 +3056,18 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
           // in clipState.
           if (clipSet) {
             autoSR.Restore(); // reset the previous one
-            GetImageLayerClip(layer, aForFrame,
-                              aBorder, aBorderArea, aDirtyRect, (aFlags & PAINTBG_WILL_PAINT_BORDER),
+            GetImageLayerClip(layer, aParams.frame,
+                              aBorder, aParams.borderArea, aParams.dirtyRect,
+                              (aParams.paintFlags & PAINTBG_WILL_PAINT_BORDER),
                               appUnitsPerPixel, &clipState);
           }
           SetupImageLayerClip(clipState, ctx, appUnitsPerPixel, &autoSR);
           clipSet = true;
-          if (!clipBorderArea.IsEqualEdges(aBorderArea)) {
+          if (!clipBorderArea.IsEqualEdges(aParams.borderArea)) {
             // We're drawing the background for the joined continuation boxes
             // so we need to clip that to the slice that we want for this frame.
             gfxRect clip =
-              nsLayoutUtils::RectToGfxRect(aBorderArea, appUnitsPerPixel);
+              nsLayoutUtils::RectToGfxRect(aParams.borderArea, appUnitsPerPixel);
             autoSR.EnsureSaved(ctx);
             ctx->NewPath();
             ctx->SnappedRectangle(clip);
@@ -3042,16 +3075,16 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
           }
         }
       }
-      if ((aLayer < 0 || i == (uint32_t)startLayer) &&
+      if ((aParams.layer < 0 || i == (uint32_t)startLayer) &&
           !clipState.mDirtyRectGfx.IsEmpty()) {
         // When we're drawing a single layer, use the specified composition op,
         // otherwise get the compositon op from the image layer.
-        CompositionOp co = (aLayer >= 0) ? aCompositonOp :
+        CompositionOp co = (aParams.layer >= 0) ? aParams.compositionOp :
           (paintMask ? GetGFXCompositeMode(layer.mComposite) :
                        GetGFXBlendMode(layer.mBlendMode));
         nsBackgroundLayerState state =
-          PrepareImageLayer(aPresContext, aForFrame,
-                            aFlags, paintBorderArea, clipState.mBGClipArea,
+          PrepareImageLayer(&aParams.presCtx, aParams.frame,
+                            aParams.paintFlags, paintBorderArea, clipState.mBGClipArea,
                             layer, nullptr, co);
         result &= state.mImageRenderer.PrepareResult();
         if (!state.mFillArea.IsEmpty()) {
@@ -3065,7 +3098,8 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
           }
 
           result &=
-            state.mImageRenderer.DrawBackground(aPresContext, aRenderingContext,
+            state.mImageRenderer.DrawBackground(&aParams.presCtx,
+                                                aParams.renderingCtx,
                                                 state.mDestArea, state.mFillArea,
                                                 state.mAnchor + paintBorderArea.TopLeft(),
                                                 clipState.mDirtyRect);

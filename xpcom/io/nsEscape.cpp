@@ -74,20 +74,8 @@ AppendPercentHex(char16_t* aBuffer, char16_t aChar)
 
 //----------------------------------------------------------------------------------------
 char*
-nsEscape(const char* aStr, nsEscapeMask aFlags)
-//----------------------------------------------------------------------------------------
-{
-  if (!aStr) {
-    return nullptr;
-  }
-
-  return nsEscapeWithLength(aStr, strlen(aStr), nullptr, aFlags);
-}
-
-//----------------------------------------------------------------------------------------
-char*
-nsEscapeWithLength(const char* aStr, size_t aLength, size_t* aOutputLength,
-                   nsEscapeMask aFlags)
+nsEscape(const char* aStr, size_t aLength, size_t* aOutputLength,
+         nsEscapeMask aFlags)
 //----------------------------------------------------------------------------------------
 {
   if (!aStr) {

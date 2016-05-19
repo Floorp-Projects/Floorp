@@ -942,9 +942,8 @@ MediaPipelineFactory::EnsureExternalCodec(VideoSessionConduit& aConduit,
                encoder = MediaCodecVideoCodec::CreateEncoder(MediaCodecVideoCodec::CodecType::CODEC_VP8);
                if (encoder) {
                  return aConduit.SetExternalSendCodec(aConfig, encoder);
-               } else {
-                 return kMediaConduitNoError;
                }
+               return kMediaConduitNoError;
              }
            }
          }
@@ -968,9 +967,8 @@ MediaPipelineFactory::EnsureExternalCodec(VideoSessionConduit& aConduit,
                decoder = MediaCodecVideoCodec::CreateDecoder(MediaCodecVideoCodec::CodecType::CODEC_VP8);
                if (decoder) {
                  return aConduit.SetExternalRecvCodec(aConfig, decoder);
-               } else {
-                 return kMediaConduitNoError;
                }
+               return kMediaConduitNoError;
              }
            }
          }
@@ -978,9 +976,11 @@ MediaPipelineFactory::EnsureExternalCodec(VideoSessionConduit& aConduit,
      }
 #endif
      return kMediaConduitNoError;
-  } else if (aConfig->mName == "VP9") {
+  }
+  if (aConfig->mName == "VP9") {
     return kMediaConduitNoError;
-  } else if (aConfig->mName == "H264") {
+  }
+  if (aConfig->mName == "H264") {
     if (aConduit.CodecPluginID() != 0) {
       return kMediaConduitNoError;
     }
@@ -995,32 +995,25 @@ MediaPipelineFactory::EnsureExternalCodec(VideoSessionConduit& aConduit,
 #endif
       if (encoder) {
         return aConduit.SetExternalSendCodec(aConfig, encoder);
-      } else {
-        return kMediaConduitInvalidSendCodec;
       }
-    } else {
-      VideoDecoder* decoder = nullptr;
-#ifdef MOZ_WEBRTC_OMX
-      decoder =
-          OMXVideoCodec::CreateDecoder(OMXVideoCodec::CodecType::CODEC_H264);
-#else
-      decoder = GmpVideoCodec::CreateDecoder();
-#endif
-      if (decoder) {
-        return aConduit.SetExternalRecvCodec(aConfig, decoder);
-      } else {
-        return kMediaConduitInvalidReceiveCodec;
-      }
+      return kMediaConduitInvalidSendCodec;
     }
-    NS_NOTREACHED("Shouldn't get here!");
-  } else {
-    MOZ_MTLOG(ML_ERROR,
-              "Invalid video codec configured: " << aConfig->mName.c_str());
-    return aIsSend ? kMediaConduitInvalidSendCodec
-                   : kMediaConduitInvalidReceiveCodec;
+    VideoDecoder* decoder = nullptr;
+#ifdef MOZ_WEBRTC_OMX
+    decoder =
+      OMXVideoCodec::CreateDecoder(OMXVideoCodec::CodecType::CODEC_H264);
+#else
+    decoder = GmpVideoCodec::CreateDecoder();
+#endif
+    if (decoder) {
+      return aConduit.SetExternalRecvCodec(aConfig, decoder);
+    }
+    return kMediaConduitInvalidReceiveCodec;
   }
-
-  NS_NOTREACHED("Shouldn't get here!");
+  MOZ_MTLOG(ML_ERROR,
+            "Invalid video codec configured: " << aConfig->mName.c_str());
+  return aIsSend ? kMediaConduitInvalidSendCodec
+                 : kMediaConduitInvalidReceiveCodec;
 }
 
 } // namespace mozilla
