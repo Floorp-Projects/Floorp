@@ -9,11 +9,15 @@ const TEST_URL = "data:text/html;charset=utf-8,";
 
 const tabUtils = require("sdk/tabs/utils");
 const { startup } = require("sdk/window/helpers");
-const { activate } = require("devtools/client/responsive.html/events");
-const events = require("sdk/event/core");
 
 const activateTab = (tab) => new Promise(resolve => {
-  events.once(activate, "data", resolve);
+  let { tabContainer } = tabUtils.getOwnerWindow(tab).gBrowser;
+
+  tabContainer.addEventListener("TabSelect", function listener({type}) {
+    tabContainer.removeEventListener(type, listener);
+    resolve();
+  });
+
   tabUtils.activateTab(tab);
 });
 

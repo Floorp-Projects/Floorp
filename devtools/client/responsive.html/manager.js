@@ -9,9 +9,7 @@ const { Task } = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { TouchEventSimulator } = require("devtools/shared/touch/simulator");
 const { getOwnerWindow } = require("sdk/tabs/utils");
-const { on, off } = require("sdk/event/core");
 const { startup } = require("sdk/window/helpers");
-const events = require("./events");
 const message = require("./utils/message");
 const { swapToInnerBrowser } = require("./browser/swap");
 
@@ -63,16 +61,15 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
       return promise.reject(new Error("RDM only available for remote tabs."));
     }
     if (!this.isActiveForTab(tab)) {
-      if (!this.activeTabs.size) {
-        on(events.activate, "data", onActivate);
-        on(events.close, "data", onClose);
-      }
+      this.initMenuCheckListenerFor(window);
+
       let ui = new ResponsiveUI(window, tab);
       this.activeTabs.set(tab, ui);
-      yield setMenuCheckFor(tab, window);
+      yield this.setMenuCheckFor(tab, window);
       yield ui.inited;
       this.emit("on", { tab });
     }
+
     return this.getResponsiveUIForTab(tab);
   }),
 
@@ -97,12 +94,12 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
         return;
       }
       this.activeTabs.delete(tab);
-      if (!this.activeTabs.size) {
-        off(events.activate, "data", onActivate);
-        off(events.close, "data", onClose);
+
+      if (!this.isActiveForWindow(window)) {
+        this.removeMenuCheckListenerFor(window);
       }
       this.emit("off", { tab });
-      yield setMenuCheckFor(tab, window);
+      yield this.setMenuCheckFor(tab, window);
     }
   }),
 
@@ -115,6 +112,17 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
    */
   isActiveForTab(tab) {
     return this.activeTabs.has(tab);
+  },
+
+  /**
+   * Returns true if responsive UI is active in any tab in the given window.
+   *
+   * @param window
+   *        The main browser chrome window.
+   * @return boolean
+   */
+  isActiveForWindow(window) {
+    return [...this.activeTabs.keys()].some(t => getOwnerWindow(t) === window);
   },
 
   /**
@@ -141,7 +149,7 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
    * @param args
    *        The GCLI command arguments.
    */
-  handleGcliCommand: function (window, tab, command, args) {
+  handleGcliCommand(window, tab, command, args) {
     let completed;
     switch (command) {
       case "resize to":
@@ -160,7 +168,32 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
       default:
     }
     completed.catch(e => console.error(e));
-  }
+  },
+
+  handleMenuCheck({target}) {
+    ResponsiveUIManager.setMenuCheckFor(target);
+  },
+
+  initMenuCheckListenerFor(window) {
+    let { tabContainer } = window.gBrowser;
+    tabContainer.addEventListener("TabSelect", this.handleMenuCheck);
+  },
+
+  removeMenuCheckListenerFor(window) {
+    if (window && window.gBrowser && window.gBrowser.tabContainer) {
+      let { tabContainer } = window.gBrowser;
+      tabContainer.removeEventListener("TabSelect", this.handleMenuCheck);
+    }
+  },
+
+  setMenuCheckFor: Task.async(function* (tab, window = getOwnerWindow(tab)) {
+    yield startup(window);
+
+    let menu = window.document.getElementById("menu_responsiveUI");
+    if (menu) {
+      menu.setAttribute("checked", this.isActiveForTab(tab));
+    }
+  })
 };
 
 // GCLI commands in ../responsivedesign/resize-commands.js listen for events
@@ -398,22 +431,3 @@ ResponsiveUI.prototype = {
 };
 
 EventEmitter.decorate(ResponsiveUI.prototype);
-
-const onActivate = (tab) => setMenuCheckFor(tab);
-
-const onClose = ({ window, tabs }) => {
-  for (let tab of tabs) {
-    ResponsiveUIManager.closeIfNeeded(window, tab);
-  }
-};
-
-const setMenuCheckFor = Task.async(
-  function* (tab, window = getOwnerWindow(tab)) {
-    yield startup(window);
-
-    let menu = window.document.getElementById("menu_responsiveUI");
-    if (menu) {
-      menu.setAttribute("checked", ResponsiveUIManager.isActiveForTab(tab));
-    }
-  }
-);
