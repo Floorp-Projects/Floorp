@@ -28,6 +28,7 @@ config = {
         "tag": "default",
         "dest": BUILD_DIR,
     }],
+    "vcs_share_base": "/builds/hg-shared",
     "l10n_repos": [{
         "repo": "https://hg.mozilla.org/build/compare-locales",
         "tag": "RELEASE_AUTOMATION"
