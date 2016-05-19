@@ -17,11 +17,11 @@
 #include "js/Value.h"
 
 #include "mozilla/Maybe.h"
-#include "mozilla/RootedOwningNonNull.h"
-#include "mozilla/RootedRefPtr.h"
+#include "mozilla/OwningNonNull.h"
 
 #include "mozilla/dom/DOMString.h"
 
+#include "nsAutoPtr.h" // for nsRefPtr member variables
 #include "nsCOMPtr.h"
 #include "nsStringGlue.h"
 #include "nsTArray.h"

@@ -12,8 +12,6 @@ EXPORTS.ipc += [
 
 EXPORTS.mozilla += [
     'ErrorResult.h',
-    'RootedOwningNonNull.h',
-    'RootedRefPtr.h',
 ]
 
 EXPORTS.mozilla.dom += [
