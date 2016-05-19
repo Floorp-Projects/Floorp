@@ -4,10 +4,12 @@ set -e
 
 BASE_URL=https://raw.githubusercontent.com/freebsd/freebsd/master/lib/msun/src
 
-function download_source() {
+download_source() {
     REMOTE_FILENAME=$1
     LOCAL_FILENAME=$2
-    curl -o "src/${LOCAL_FILENAME}" "${BASE_URL}/${REMOTE_FILENAME}"
+    while true; do
+        curl -o "src/${LOCAL_FILENAME}" "${BASE_URL}/${REMOTE_FILENAME}" && break
+    done
 }
 
 mkdir -p src
@@ -93,6 +95,7 @@ download_source s_tanh.c s_tanh.cpp
 
 # Math.trunc
 download_source s_trunc.c s_trunc.cpp
+download_source s_truncf.c s_truncf.cpp
 
 # dependencies
 download_source k_exp.c k_exp.cpp
