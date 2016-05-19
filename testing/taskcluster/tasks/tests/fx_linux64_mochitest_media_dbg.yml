@@ -4,3 +4,4 @@ task:
   payload:
     command:
       - --download-symbols=true
+    timeout: 5400
