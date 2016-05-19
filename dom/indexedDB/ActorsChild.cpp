@@ -742,7 +742,11 @@ DispatchErrorEvent(IDBRequest* aRequest,
 
   MOZ_ASSERT(!transaction || transaction->IsOpen() || transaction->IsAborted());
 
-  if (transaction && transaction->IsOpen()) {
+  // Do not abort the transaction here if this request is failed due to the
+  // abortion of its transaction to ensure that the correct error cause of
+  // the abort event be set in IDBTransaction::FireCompleteOrAbortEvents() later.
+  if (transaction && transaction->IsOpen() &&
+      aErrorCode != NS_ERROR_DOM_INDEXEDDB_ABORT_ERR) {
     WidgetEvent* internalEvent = aEvent->WidgetEventPtr();
     MOZ_ASSERT(internalEvent);
 
