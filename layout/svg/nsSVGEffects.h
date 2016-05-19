@@ -322,6 +322,24 @@ protected:
   virtual void DoUpdate() override;
 };
 
+class nsSVGMaskProperty final : public nsISupports
+{
+public:
+  explicit nsSVGMaskProperty(nsIFrame* aFrame);
+
+  // nsISupports
+  NS_DECL_ISUPPORTS
+
+  const nsTArray<RefPtr<nsSVGPaintingProperty>>& GetProps() const
+  {
+    return mProperties;
+  }
+
+private:
+  virtual ~nsSVGMaskProperty() {}
+  nsTArray<RefPtr<nsSVGPaintingProperty>> mProperties;
+};
+
 /**
  * A manager for one-shot nsSVGRenderingObserver tracking.
  * nsSVGRenderingObservers can be added or removed. They are not strongly
@@ -407,7 +425,7 @@ public:
 
   NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(FilterProperty, nsSVGFilterProperty,
                                       DestroyFilterProperty)
-  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MaskProperty, nsISupports)
+  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MaskProperty, nsSVGMaskProperty)
   NS_DECLARE_FRAME_PROPERTY_RELEASABLE(ClipPathProperty, nsISupports)
   NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MarkerBeginProperty, nsISupports)
   NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MarkerMiddleProperty, nsISupports)
@@ -427,7 +445,7 @@ public:
 
   struct EffectProperties {
     nsSVGFilterProperty*   mFilter;
-    nsSVGPaintingProperty* mMask;
+    nsSVGMaskProperty*     mMask;
     nsSVGPaintingProperty* mClipPath;
 
     /**
@@ -438,12 +456,17 @@ public:
      */
     nsSVGClipPathFrame *GetClipPathFrame(bool *aOK);
     /**
-     * @return the mask frame, or null if there is no mask frame
+     * @return the first mask frame, or null if there is no mask frame
      * @param aOK if a mask was specified and the designated element
      * exists but is an element of the wrong type, *aOK is set to false.
      * Otherwise *aOK is untouched.
      */
-    nsSVGMaskFrame *GetMaskFrame(bool *aOK);
+    nsSVGMaskFrame *GetFirstMaskFrame(bool *aOK = nullptr);
+
+    /**
+     * @return an array which contains all SVG mask frames.
+     */
+    nsTArray<nsSVGMaskFrame*> GetMaskFrames();
 
     bool HasValidFilter() {
       return mFilter && mFilter->ReferencesValidResources();
