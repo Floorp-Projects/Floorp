@@ -6800,7 +6800,7 @@ nsDisplaySVGEffects::PrintEffects(nsACString& aTo)
     aTo += "filter";
     first = false;
   }
-  if (effectProperties.GetMaskFrame(&isOK)) {
+  if (effectProperties.GetFirstMaskFrame()) {
     if (!first) {
       aTo += ", ";
     }
