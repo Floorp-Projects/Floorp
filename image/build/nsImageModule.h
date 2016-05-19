@@ -11,7 +11,7 @@
 namespace mozilla {
 namespace image {
 
-nsresult InitModule();
+nsresult EnsureModuleInitialized();
 void ShutdownModule();
 
 } /* namespace image */

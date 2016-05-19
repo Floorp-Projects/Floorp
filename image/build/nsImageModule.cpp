@@ -29,6 +29,8 @@
 // objects that just require generic constructors
 using namespace mozilla::image;
 
+// XXX We would like to get rid of the imgLoader factory constructor.  See the
+// comment documenting the imgLoader constructor.
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(imgLoader, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(imgRequestProxy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(imgTools)
@@ -85,9 +87,14 @@ static const mozilla::Module::CategoryEntry kImageCategories[] = {
 
 static bool sInitialized = false;
 nsresult
-mozilla::image::InitModule()
+mozilla::image::EnsureModuleInitialized()
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (sInitialized) {
+    return NS_OK;
+  }
+
   // Make sure the preferences are initialized
   gfxPrefs::GetSingleton();
 
@@ -118,7 +125,7 @@ static const mozilla::Module kImageModule = {
   kImageContracts,
   kImageCategories,
   nullptr,
-  mozilla::image::InitModule,
+  mozilla::image::EnsureModuleInitialized,
   // We need to be careful about shutdown ordering to avoid intermittent crashes
   // when hashtable enumeration decides to destroy modules in an unfortunate
   // order. So our shutdown is invoked explicitly during layout module shutdown.
