@@ -107,6 +107,7 @@
 #include "SharedSSLState.h"
 #include "cert.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Casting.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"
@@ -963,7 +964,8 @@ GatherBaselineRequirementsTelemetry(const UniqueCERTCertList& certList)
   do {
     nsAutoCString altName;
     if (currentName->type == certDNSName) {
-      altName.Assign(reinterpret_cast<char*>(currentName->name.other.data),
+      altName.Assign(BitwiseCast<char*, unsigned char*>(
+                       currentName->name.other.data),
                      currentName->name.other.len);
       nsDependentCString altNameWithoutWildcard(altName, 0);
       if (StringBeginsWith(altNameWithoutWildcard, NS_LITERAL_CSTRING("*."))) {

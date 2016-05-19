@@ -12,6 +12,7 @@
 #include "SharedSSLState.h"
 #include "cert.h"
 #include "certdb.h"
+#include "mozilla/Casting.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PublicSSL.h"
 #include "mozilla/Services.h"
@@ -440,7 +441,7 @@ GetUserSid(nsAString& sidString)
     return false;
   }
   char sid_buffer[SECURITY_MAX_SID_SIZE];
-  SID* sid = reinterpret_cast<SID*>(sid_buffer);
+  SID* sid = BitwiseCast<SID*, char*>(sid_buffer);
   DWORD cbSid = MOZ_ARRAY_LENGTH(sid_buffer);
   SID_NAME_USE eUse;
   // There doesn't appear to be a defined maximum length for the domain name

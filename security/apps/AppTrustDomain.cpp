@@ -5,17 +5,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AppTrustDomain.h"
-#include "certdb.h"
-#include "pkix/pkixnss.h"
-#include "mozilla/ArrayUtils.h"
 #include "MainThreadUtils.h"
+#include "certdb.h"
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/Casting.h"
 #include "mozilla/Preferences.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIFile.h"
 #include "nsIFileStreams.h"
 #include "nsIX509CertDB.h"
-#include "nsNetUtil.h"
 #include "nsNSSCertificate.h"
+#include "nsNetUtil.h"
+#include "pkix/pkixnss.h"
 #include "prerror.h"
 #include "secerr.h"
 
@@ -152,7 +153,8 @@ AppTrustDomain::SetTrustedRoot(AppTrustedRoot trustedRoot)
         }
 
         MOZ_ASSERT(length == sDevImportedDERLen);
-        sDevImportedDERData.reset(reinterpret_cast<unsigned char*>(data.release()));
+        sDevImportedDERData.reset(
+          BitwiseCast<unsigned char*, char*>(data.release()));
       }
 
       trustedDER.data = sDevImportedDERData.get();

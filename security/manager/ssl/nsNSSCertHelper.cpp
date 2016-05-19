@@ -6,6 +6,7 @@
 
 #include <algorithm>
 
+#include "mozilla/Casting.h"
 #include "mozilla/Snprintf.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
@@ -100,7 +101,7 @@ ProcessVersion(SECItem* versionItem, nsINSSComponent* nssComponent,
     if (versionItem->len != 1) {
       return NS_ERROR_FAILURE;
     }
-    version = *reinterpret_cast<const uint8_t*>(versionItem->data);
+    version = *BitwiseCast<uint8_t*, unsigned char*>(versionItem->data);
   } else {
     // If there is no version present in the cert, then RFC 5280 says we
     // default to v1 (0).
