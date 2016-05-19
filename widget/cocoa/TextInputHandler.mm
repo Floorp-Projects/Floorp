@@ -22,8 +22,6 @@
 #include "nsCocoaUtils.h"
 #include "WidgetUtils.h"
 #include "nsPrintfCString.h"
-#include "mozilla/unused.h"
-#include "mozilla/dom/ContentParent.h"
 #include "ComplexTextInputPanel.h"
 
 using namespace mozilla;
@@ -2424,11 +2422,7 @@ IMEInputHandler::OnCurrentTextInputSourceChange(CFNotificationCenterRef aCenter,
    * by the general case (sCachedIsForRTLLangage is initially false)
    */
   if (sCachedIsForRTLLangage != tis.IsForRTLLanguage()) {
-    nsTArray<dom::ContentParent*> children;
-    dom::ContentParent::GetAll(children);
-    for (uint32_t i = 0; i < children.Length(); i++) {
-      Unused << children[i]->SendBidiKeyboardNotify(tis.IsForRTLLanguage());
-    }
+    WidgetUtils::SendBidiKeyboardInfoToContent();
     sCachedIsForRTLLangage = tis.IsForRTLLanguage();
   }
 }
