@@ -238,7 +238,7 @@ already_AddRefed<MediaDataDecoder>
 EMEDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
                                      layers::LayersBackend aLayersBackend,
                                      layers::ImageContainer* aImageContainer,
-                                     FlushableTaskQueue* aVideoTaskQueue,
+                                     TaskQueue* aTaskQueue,
                                      MediaDataDecoderCallback* aCallback,
                                      DecoderDoctorDiagnostics* aDiagnostics)
 {
@@ -246,12 +246,12 @@ EMEDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
 
   if (SupportsMimeType(aConfig.mMimeType, nullptr)) {
     // GMP decodes. Assume that means it can decrypt too.
-    RefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(aCallback, mProxy, aVideoTaskQueue);
+    RefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(aCallback, mProxy, aTaskQueue);
     wrapper->SetProxyTarget(new EMEVideoDecoder(mProxy,
                                                 aConfig,
                                                 aLayersBackend,
                                                 aImageContainer,
-                                                aVideoTaskQueue,
+                                                aTaskQueue,
                                                 wrapper->Callback()));
     return wrapper.forget();
   }
@@ -259,7 +259,7 @@ EMEDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
   MOZ_ASSERT(mPDM);
   RefPtr<MediaDataDecoder> decoder(
     mPDM->CreateDecoder(aConfig,
-                        aVideoTaskQueue,
+                        aTaskQueue,
                         aCallback,
                         aDiagnostics,
                         aLayersBackend,
@@ -277,7 +277,7 @@ EMEDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
 
 already_AddRefed<MediaDataDecoder>
 EMEDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
-                                     FlushableTaskQueue* aAudioTaskQueue,
+                                     TaskQueue* aTaskQueue,
                                      MediaDataDecoderCallback* aCallback,
                                      DecoderDoctorDiagnostics* aDiagnostics)
 {
@@ -285,17 +285,17 @@ EMEDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
 
   if (SupportsMimeType(aConfig.mMimeType, nullptr)) {
     // GMP decodes. Assume that means it can decrypt too.
-    RefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(aCallback, mProxy, aAudioTaskQueue);
+    RefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(aCallback, mProxy, aTaskQueue);
     wrapper->SetProxyTarget(new EMEAudioDecoder(mProxy,
                                                 aConfig,
-                                                aAudioTaskQueue,
+                                                aTaskQueue,
                                                 wrapper->Callback()));
     return wrapper.forget();
   }
 
   MOZ_ASSERT(mPDM);
   RefPtr<MediaDataDecoder> decoder(
-    mPDM->CreateDecoder(aConfig, aAudioTaskQueue, aCallback, aDiagnostics));
+    mPDM->CreateDecoder(aConfig, aTaskQueue, aCallback, aDiagnostics));
   if (!decoder) {
     return nullptr;
   }
