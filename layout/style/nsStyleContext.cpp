@@ -442,13 +442,28 @@ const void* nsStyleContext::StyleData(nsStyleStructID aSID)
   if (cachedData)
     return cachedData; // We have computed data stored on this node in the context tree.
   // Our style source will take care of it for us.
-  const void* newData = mSource.IsGeckoRuleNode()
-                          ? mSource.AsGeckoRuleNode()->GetStyleData(aSID, this, true)
-                          : StyleStructFromServoComputedValues(aSID);
-  if (!nsCachedStyleData::IsReset(aSID)) {
-    // always cache inherited data on the style context; the rule
-    // node set the bit in mBits for us if needed.
-    mCachedInheritedData.mStyleStructs[aSID] = const_cast<void*>(newData);
+  const void* newData;
+  if (mSource.IsGeckoRuleNode()) {
+    newData = mSource.AsGeckoRuleNode()->GetStyleData(aSID, this, true);
+    if (!nsCachedStyleData::IsReset(aSID)) {
+      // always cache inherited data on the style context; the rule
+      // node set the bit in mBits for us if needed.
+      mCachedInheritedData.mStyleStructs[aSID] = const_cast<void*>(newData);
+    }
+  } else {
+    // The Servo-backed StyleContextSource owns the struct.
+    newData = StyleStructFromServoComputedValues(aSID);
+    AddStyleBit(nsCachedStyleData::GetBitForSID(aSID));
+
+    // XXXbholley: Unconditionally caching reset structs here defeats the memory
+    // optimization where we lazily allocate mCachedResetData, so that we can avoid
+    // performing an FFI call each time we want to get the style structs. We should
+    // measure the tradeoffs at some point. If the FFI overhead is low and the memory
+    // win significant, we should consider _always_ grabbing the struct over FFI, and
+    // potentially giving mCachedInheritedData the same treatment.
+    //
+    // Note that there is a similar comment in the struct getters in nsStyleContext.h.
+    SetStyle(aSID, const_cast<void*>(newData));
   }
   return newData;
 }
