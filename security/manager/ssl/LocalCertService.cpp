@@ -4,10 +4,12 @@
 
 #include "LocalCertService.h"
 
+#include "CryptoTask.h"
+#include "ScopedNSSTypes.h"
+#include "cert.h"
+#include "mozilla/Casting.h"
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/RefPtr.h"
-#include "cert.h"
-#include "CryptoTask.h"
 #include "nsIPK11Token.h"
 #include "nsIPK11TokenDB.h"
 #include "nsIX509Cert.h"
@@ -18,7 +20,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "pk11pub.h"
-#include "ScopedNSSTypes.h"
 
 namespace mozilla {
 
@@ -181,10 +182,9 @@ private:
     // Generate random serial
     unsigned long serial;
     // This serial in principle could collide, but it's unlikely
-    rv = MapSECStatus(
-           PK11_GenerateRandomOnSlot(slot.get(),
-                                     reinterpret_cast<unsigned char *>(&serial),
-                                     sizeof(serial)));
+    rv = MapSECStatus(PK11_GenerateRandomOnSlot(
+           slot.get(), BitwiseCast<unsigned char*, unsigned long*>(&serial),
+           sizeof(serial)));
     if (NS_FAILED(rv)) {
       return rv;
     }

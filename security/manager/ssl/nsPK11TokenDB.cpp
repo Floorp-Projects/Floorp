@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "nsPK11TokenDB.h"
 
+#include "mozilla/Casting.h"
 #include "mozilla/unused.h"
 #include "nsIMutableArray.h"
 #include "nsISupports.h"
@@ -46,7 +47,7 @@ nsPK11Token::refreshTokenInfo(const nsNSSShutDownPreventionLock& /*proofOfLock*/
   }
 
   // Set the Label field
-  const char* ccLabel = reinterpret_cast<const char*>(tokInfo.label);
+  const char* ccLabel = mozilla::BitwiseCast<char*, CK_UTF8CHAR*>(tokInfo.label);
   const nsACString& cLabel = Substring(
     ccLabel,
     ccLabel + PL_strnlen(ccLabel, sizeof(tokInfo.label)));
@@ -54,7 +55,8 @@ nsPK11Token::refreshTokenInfo(const nsNSSShutDownPreventionLock& /*proofOfLock*/
   mTokenLabel.Trim(" ", false, true);
 
   // Set the Manufacturer field
-  const char* ccManID = reinterpret_cast<const char*>(tokInfo.manufacturerID);
+  const char* ccManID =
+    mozilla::BitwiseCast<char*, CK_UTF8CHAR*>(tokInfo.manufacturerID);
   const nsACString& cManID = Substring(
     ccManID,
     ccManID + PL_strnlen(ccManID, sizeof(tokInfo.manufacturerID)));
@@ -72,7 +74,8 @@ nsPK11Token::refreshTokenInfo(const nsNSSShutDownPreventionLock& /*proofOfLock*/
   mTokenFWVersion.AppendInt(tokInfo.firmwareVersion.minor);
 
   // Set the Serial Number field
-  const char* ccSerial = reinterpret_cast<const char*>(tokInfo.serialNumber);
+  const char* ccSerial =
+    mozilla::BitwiseCast<char*, CK_CHAR*>(tokInfo.serialNumber);
   const nsACString& cSerial = Substring(
     ccSerial,
     ccSerial + PL_strnlen(ccSerial, sizeof(tokInfo.serialNumber)));

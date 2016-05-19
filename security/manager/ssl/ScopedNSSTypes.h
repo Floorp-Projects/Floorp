@@ -16,6 +16,7 @@
 #include "cms.h"
 #include "cryptohi.h"
 #include "keyhi.h"
+#include "mozilla/Casting.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Scoped.h"
 #include "mozilla/UniquePtr.h"
@@ -37,21 +38,23 @@
 
 namespace mozilla {
 
+// Deprecated: Use something like |mozilla::BitwiseCast<char*, uint8_t*>(p)|
+//             instead.
 // It is very common to cast between char* and uint8_t* when doing crypto stuff.
 // Here, we provide more type-safe wrappers around reinterpret_cast so you don't
 // shoot yourself in the foot by reinterpret_casting completely unrelated types.
 
-inline char *
-char_ptr_cast(uint8_t * p) { return reinterpret_cast<char *>(p); }
+inline char*
+char_ptr_cast(uint8_t* p) { return BitwiseCast<char*>(p); }
 
-inline const char *
-char_ptr_cast(const uint8_t * p) { return reinterpret_cast<const char *>(p); }
+inline const char*
+char_ptr_cast(const uint8_t* p) { return BitwiseCast<const char*>(p); }
 
-inline uint8_t *
-uint8_t_ptr_cast(char * p) { return reinterpret_cast<uint8_t*>(p); }
+inline uint8_t*
+uint8_t_ptr_cast(char* p) { return BitwiseCast<uint8_t*>(p); }
 
-inline const uint8_t *
-uint8_t_ptr_cast(const char * p) { return reinterpret_cast<const uint8_t*>(p); }
+inline const uint8_t*
+uint8_t_ptr_cast(const char* p) { return BitwiseCast<const uint8_t*>(p); }
 
 // NSPR APIs use PRStatus/PR_GetError and NSS APIs use SECStatus/PR_GetError to
 // report success/failure. This function makes it more convenient and *safer*

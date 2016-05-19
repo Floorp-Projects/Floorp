@@ -5,6 +5,7 @@
 #include "nsPKCS12Blob.h"
 
 #include "ScopedNSSTypes.h"
+#include "mozilla/Casting.h"
 #include "nsCRT.h"
 #include "nsCRTGlue.h"
 #include "nsDirectoryServiceDefs.h"
@@ -597,8 +598,8 @@ nsPKCS12Blob::digest_write(void *arg, unsigned char *buf, unsigned long len)
   // make sure we are in write mode, read iterator has not yet been allocated
   NS_ENSURE_FALSE(cx->mDigestIterator, SECFailure);
 
-  cx->mDigest->Append(reinterpret_cast<char *>(buf),
-                     static_cast<uint32_t>(len));
+  cx->mDigest->Append(BitwiseCast<char*, unsigned char*>(buf),
+                      static_cast<uint32_t>(len));
 
   return len;
 }
