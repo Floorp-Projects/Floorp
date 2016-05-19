@@ -39,6 +39,8 @@
 // invalidating GC pointers.
 # define JS_HAZ_GC_CALL __attribute__((tag("GC Call")))
 
+# define JS_HAZ_GC_SUPPRESSED __attribute__((tag("Suppress GC")))
+
 #else
 
 # define JS_HAZ_GC_THING
@@ -47,6 +49,7 @@
 # define JS_HAZ_GC_INVALIDATED
 # define JS_HAZ_NON_GC_POINTER
 # define JS_HAZ_GC_CALL
+# define JS_HAZ_GC_SUPPRESSED
 
 #endif
 

@@ -12,7 +12,7 @@ var functionName;
 var functionBodies;
 
 if (typeof scriptArgs[0] != 'string' || typeof scriptArgs[1] != 'string')
-    throw "Usage: analyzeRoots.js [-f function_name] <gcFunctions.lst> <gcEdges.txt> <suppressedFunctions.lst> <gcTypes.txt> [start end [tmpfile]]";
+    throw "Usage: analyzeRoots.js [-f function_name] <gcFunctions.lst> <gcEdges.txt> <suppressedFunctions.lst> <gcTypes.txt> <typeInfo.txt> [start end [tmpfile]]";
 
 var theFunctionNameToFind;
 if (scriptArgs[0] == '--function') {
@@ -20,13 +20,16 @@ if (scriptArgs[0] == '--function') {
     scriptArgs = scriptArgs.slice(2);
 }
 
-var gcFunctionsFile = scriptArgs[0];
-var gcEdgesFile = scriptArgs[1];
-var suppressedFunctionsFile = scriptArgs[2];
-var gcTypesFile = scriptArgs[3];
-var batch = (scriptArgs[4]|0) || 1;
-var numBatches = (scriptArgs[5]|0) || 1;
-var tmpfile = scriptArgs[6] || "tmp.txt";
+var gcFunctionsFile = scriptArgs[0] || "gcFunctions.lst";
+var gcEdgesFile = scriptArgs[1] || "gcEdges.txt";
+var suppressedFunctionsFile = scriptArgs[2] || "suppressedFunctions.lst";
+var gcTypesFile = scriptArgs[3] || "gcTypes.txt";
+var typeInfoFile = scriptArgs[4] || "typeInfo.txt";
+var batch = (scriptArgs[5]|0) || 1;
+var numBatches = (scriptArgs[6]|0) || 1;
+var tmpfile = scriptArgs[7] || "tmp.txt";
+
+GCSuppressionTypes = loadTypeInfo(typeInfoFile)["Suppress GC"];
 
 var gcFunctions = {};
 var text = snarf("gcFunctions.lst").split("\n");

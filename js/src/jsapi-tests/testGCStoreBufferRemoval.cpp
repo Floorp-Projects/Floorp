@@ -16,7 +16,7 @@ struct AutoIgnoreRootingHazards {
     static volatile int depth;
     AutoIgnoreRootingHazards() { depth++; }
     ~AutoIgnoreRootingHazards() { depth--; }
-};
+} JS_HAZ_GC_SUPPRESSED;
 volatile int AutoIgnoreRootingHazards::depth = 0;
 
 BEGIN_TEST(testGCStoreBufferRemoval)
