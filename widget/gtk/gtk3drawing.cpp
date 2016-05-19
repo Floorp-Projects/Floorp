@@ -2455,9 +2455,8 @@ moz_gtk_menu_separator_paint(cairo_t *cr, GdkRectangle* rect,
 
 // See gtk_menu_item_draw() for reference.
 static gint
-moz_gtk_menu_item_paint(cairo_t *cr, GdkRectangle* rect,
-                        GtkWidgetState* state,
-                        gint flags, GtkTextDirection direction)
+moz_gtk_menu_item_paint(WidgetNodeType widget, cairo_t *cr, GdkRectangle* rect,
+                        GtkWidgetState* state, GtkTextDirection direction)
 {
     GtkStyleContext* style;
     GtkWidget* item_widget;
@@ -2465,7 +2464,7 @@ moz_gtk_menu_item_paint(cairo_t *cr, GdkRectangle* rect,
     gint x, y, w, h;
 
     if (state->inHover && !state->disabled) {   
-        if (flags & MOZ_TOPLEVEL_MENU_ITEM) {
+        if (widget == MOZ_GTK_MENUBARITEM) {
             ensure_menu_bar_item_widget();
             item_widget = gMenuBarItemWidget;
         } else {
@@ -2474,7 +2473,7 @@ moz_gtk_menu_item_paint(cairo_t *cr, GdkRectangle* rect,
         }
         style = gtk_widget_get_style_context(item_widget);
 
-        if (flags & MOZ_TOPLEVEL_MENU_ITEM) {
+        if (widget == MOZ_GTK_MENUBARITEM) {
             gtk_style_context_add_class(style, GTK_STYLE_CLASS_MENUBAR);
         }
 
@@ -2491,7 +2490,7 @@ moz_gtk_menu_item_paint(cairo_t *cr, GdkRectangle* rect,
         gtk_render_background(style, cr, x, y, w, h);
         gtk_render_frame(style, cr, x, y, w, h);
 
-        if (flags & MOZ_TOPLEVEL_MENU_ITEM) {
+        if (widget == MOZ_GTK_MENUBARITEM) {
             gtk_style_context_remove_class(style, GTK_STYLE_CLASS_MENUBAR);
         }
         gtk_style_context_set_state(style, GTK_STATE_FLAG_NORMAL);
@@ -2537,7 +2536,7 @@ moz_gtk_check_menu_item_paint(cairo_t *cr, GdkRectangle* rect,
     gint indicator_size, horizontal_padding;
     gint x, y;
 
-    moz_gtk_menu_item_paint(cr, rect, state, FALSE, direction);
+    moz_gtk_menu_item_paint(MOZ_GTK_MENUITEM, cr, rect, state, direction);
 
     ensure_check_menu_item_widget();
     gtk_widget_set_direction(gCheckMenuItemWidget, direction);
@@ -2808,16 +2807,15 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
         ensure_menu_popup_widget();
         w = gMenuPopupWidget;
         break;
+    case MOZ_GTK_MENUBARITEM:
     case MOZ_GTK_MENUITEM:
     case MOZ_GTK_CHECKMENUITEM:
     case MOZ_GTK_RADIOMENUITEM:
         {
-            if (widget == MOZ_GTK_MENUITEM) {
+            if (widget == MOZ_GTK_MENUBARITEM || widget == MOZ_GTK_MENUITEM) {
                 ensure_menu_item_widget();
-                ensure_menu_bar_item_widget();
-                w = gMenuItemWidget;
-            }
-            else {
+                w = gMenuItemWidget; // Bug 1274143 for MOZ_GTK_MENUBARITEM
+            } else {
                 ensure_check_menu_item_widget();
                 w = gCheckMenuItemWidget;
             }
@@ -3318,9 +3316,9 @@ moz_gtk_widget_paint(WidgetNodeType widget, cairo_t *cr,
         return moz_gtk_menu_separator_paint(cr, rect,
                                             direction);
         break;
+    case MOZ_GTK_MENUBARITEM:
     case MOZ_GTK_MENUITEM:
-        return moz_gtk_menu_item_paint(cr, rect, state, flags,
-                                       direction);
+        return moz_gtk_menu_item_paint(widget, cr, rect, state, direction);
         break;
     case MOZ_GTK_MENUARROW:
         return moz_gtk_menu_arrow_paint(cr, rect, state,
