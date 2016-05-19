@@ -32,7 +32,7 @@ using namespace mozilla;
 using namespace mozilla::pkix;
 
 #define PREF_BACKGROUND_UPDATE_TIMER "app.update.lastUpdateTime.blocklist-background-update-timer"
-#define PREF_KINTO_ONECRL_CHECKED "services.kinto.onecrl.checked"
+#define PREF_BLOCKLIST_ONECRL_CHECKED "services.blocklist.onecrl.checked"
 #define PREF_MAX_STALENESS_IN_SECONDS "security.onecrl.maximum_staleness_in_seconds"
 #define PREF_ONECRL_VIA_AMO "security.onecrl.via.amo"
 
@@ -146,7 +146,7 @@ CertBlocklist::~CertBlocklist()
                                   PREF_ONECRL_VIA_AMO,
                                   this);
   Preferences::UnregisterCallback(CertBlocklist::PreferenceChanged,
-                                  PREF_KINTO_ONECRL_CHECKED,
+                                  PREF_BLOCKLIST_ONECRL_CHECKED,
                                   this);
 }
 
@@ -183,7 +183,7 @@ CertBlocklist::Init()
     return rv;
   }
   rv = Preferences::RegisterCallbackAndCall(CertBlocklist::PreferenceChanged,
-                                            PREF_KINTO_ONECRL_CHECKED,
+                                            PREF_BLOCKLIST_ONECRL_CHECKED,
                                             this);
   if (NS_FAILED(rv)) {
     return rv;
@@ -659,8 +659,8 @@ CertBlocklist::PreferenceChanged(const char* aPref, void* aClosure)
   if (strcmp(aPref, PREF_BACKGROUND_UPDATE_TIMER) == 0) {
     sLastBlocklistUpdate = Preferences::GetUint(PREF_BACKGROUND_UPDATE_TIMER,
                                                 uint32_t(0));
-  } else if (strcmp(aPref, PREF_KINTO_ONECRL_CHECKED) == 0) {
-    sLastKintoUpdate = Preferences::GetUint(PREF_KINTO_ONECRL_CHECKED,
+  } else if (strcmp(aPref, PREF_BLOCKLIST_ONECRL_CHECKED) == 0) {
+    sLastKintoUpdate = Preferences::GetUint(PREF_BLOCKLIST_ONECRL_CHECKED,
                                             uint32_t(0));
   } else if (strcmp(aPref, PREF_MAX_STALENESS_IN_SECONDS) == 0) {
     sMaxStaleness = Preferences::GetUint(PREF_MAX_STALENESS_IN_SECONDS,
