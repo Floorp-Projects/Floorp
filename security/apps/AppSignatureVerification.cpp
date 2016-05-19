@@ -633,7 +633,7 @@ VerifyCertificate(CERTCertificate* signerCert, void* voidContext, void* pinArg)
     return NS_ERROR_INVALID_ARG;
   }
   const VerifyCertificateContext& context =
-    *reinterpret_cast<const VerifyCertificateContext*>(voidContext);
+    *static_cast<const VerifyCertificateContext*>(voidContext);
 
   AppTrustDomain trustDomain(context.builtChain, pinArg);
   if (trustDomain.SetTrustedRoot(context.trustedRoot) != SECSuccess) {

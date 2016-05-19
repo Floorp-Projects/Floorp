@@ -182,10 +182,10 @@ nsCertTree::FreeCertArray()
   mDispInfo.Clear();
 }
 
-CompareCacheHashEntry *
-nsCertTree::getCacheEntry(void *cache, void *aCert)
+CompareCacheHashEntry*
+nsCertTree::getCacheEntry(void* cache, void* aCert)
 {
-  PLDHashTable &aCompareCache = *reinterpret_cast<PLDHashTable*>(cache);
+  PLDHashTable& aCompareCache = *static_cast<PLDHashTable*>(cache);
   auto entryPtr = static_cast<CompareCacheHashEntryPtr*>
                              (aCompareCache.Add(aCert, fallible));
   return entryPtr ? entryPtr->entry : nullptr;
