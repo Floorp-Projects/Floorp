@@ -18,7 +18,7 @@ class OpusDataDecoder : public MediaDataDecoder
 {
 public:
   OpusDataDecoder(const AudioInfo& aConfig,
-                  FlushableTaskQueue* aTaskQueue,
+                  TaskQueue* aTaskQueue,
                   MediaDataDecoderCallback* aCallback);
   ~OpusDataDecoder();
 
@@ -43,7 +43,7 @@ private:
   void ProcessDrain();
 
   const AudioInfo& mInfo;
-  RefPtr<FlushableTaskQueue> mTaskQueue;
+  const RefPtr<TaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
 
   // Opus decoder state

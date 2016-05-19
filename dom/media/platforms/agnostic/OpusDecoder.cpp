@@ -22,7 +22,7 @@ extern mozilla::LogModule* GetPDMLog();
 namespace mozilla {
 
 OpusDataDecoder::OpusDataDecoder(const AudioInfo& aConfig,
-                                 FlushableTaskQueue* aTaskQueue,
+                                 TaskQueue* aTaskQueue,
                                  MediaDataDecoderCallback* aCallback)
   : mInfo(aConfig)
   , mTaskQueue(aTaskQueue)
