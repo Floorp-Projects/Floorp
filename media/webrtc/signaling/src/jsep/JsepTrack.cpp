@@ -294,6 +294,8 @@ JsepTrack::CreateEncodings(
         encoding->mConstraints = jsConstraints.constraints;
       }
     }
+
+    encoding->UpdateMaxBitrate(remote);
   }
 }
 
