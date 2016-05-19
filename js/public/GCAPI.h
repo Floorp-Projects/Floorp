@@ -551,7 +551,7 @@ class JS_PUBLIC_API(AutoSuppressGCAnalysis) : public AutoAssertNoAlloc
   public:
     AutoSuppressGCAnalysis() : AutoAssertNoAlloc() {}
     explicit AutoSuppressGCAnalysis(JSRuntime* rt) : AutoAssertNoAlloc(rt) {}
-};
+} JS_HAZ_GC_SUPPRESSED;
 
 /**
  * Assert that code is only ever called from a GC callback, disable the static

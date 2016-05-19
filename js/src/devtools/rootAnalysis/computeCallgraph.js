@@ -12,6 +12,8 @@ if (scriptArgs[0] == '--function') {
     scriptArgs = scriptArgs.slice(2);
 }
 
+var typeInfo_filename = scriptArgs[0] || "typeInfo.txt";
+
 var subclasses = new Map(); // Map from csu => set of immediate subclasses
 var superclasses = new Map(); // Map from csu => set of immediate superclasses
 var classFunctions = new Map(); // Map from "csu:name" => set of full method name
@@ -305,6 +307,8 @@ function processBody(functionName, body)
         }
     }
 }
+
+GCSuppressionTypes = loadTypeInfo(typeInfo_filename)["Suppress GC"];
 
 var xdb = xdbLibrary();
 xdb.open("src_comp.xdb");

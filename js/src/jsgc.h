@@ -1269,7 +1269,7 @@ MaybeVerifyBarriers(JSContext* cx, bool always = false)
  * read the comment in vm/Runtime.h above |suppressGC| and take all appropriate
  * precautions before instantiating this class.
  */
-class MOZ_RAII AutoSuppressGC
+class MOZ_RAII JS_HAZ_GC_SUPPRESSED AutoSuppressGC
 {
     int32_t& suppressGC_;
 

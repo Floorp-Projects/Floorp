@@ -5,13 +5,19 @@
 loadRelativeToScript('utility.js');
 loadRelativeToScript('annotations.js');
 
+var gcTypes_filename = scriptArgs[0] || "gcTypes.txt";
+var typeInfo_filename = scriptArgs[1] || "typeInfo.txt";
+
 var annotations = {
     'GCPointers': [],
     'GCThings': [],
     'NonGCTypes': {}, // unused
     'NonGCPointers': {},
     'RootedPointers': {},
+    'GCSuppressors': {},
 };
+
+var gDescriptors = new Map; // Map from descriptor string => Set of typeName
 
 var structureParents = {}; // Map from field => list of <parent, fieldName>
 var pointerParents = {}; // Map from field => list of <parent, fieldName>
@@ -64,6 +70,8 @@ function processCSU(csu, body)
             annotations.NonGCPointers[csu] = true;
         else if (tag == 'Rooted Pointer')
             annotations.RootedPointers[csu] = true;
+        else if (tag == 'Suppress GC')
+            annotations.GCSuppressors[csu] = true;
     }
 }
 
@@ -207,6 +215,26 @@ function addGCPointer(typeName)
     markGCType(typeName, '<pointer-annotation>', '(annotation)', 1, 0, "");
 }
 
+// Add an arbitrary descriptor to a type, and apply it recursively to all base
+// structs and structs that contain the given typeName as a field.
+function addDescriptor(typeName, descriptor)
+{
+    if (!gDescriptors.has(descriptor))
+        gDescriptors.set(descriptor, new Set);
+    let descriptorTypes = gDescriptors.get(descriptor);
+    if (!descriptorTypes.has(typeName)) {
+        descriptorTypes.add(typeName);
+        if (typeName in structureParents) {
+            for (let [holder, field] of structureParents[typeName])
+                addDescriptor(holder, descriptor);
+        }
+        if (typeName in baseClasses) {
+            for (let base of baseClasses[typeName])
+                addDescriptor(base, descriptor);
+        }
+    }
+}
+
 for (var type of listNonGCPointers())
     annotations.NonGCPointers[type] = true;
 
@@ -246,6 +274,8 @@ function explain(csu, indent, seen) {
     }
 }
 
+var origOut = os.file.redirect(gcTypes_filename);
+
 for (var csu in gcTypes) {
     print("GCThing: " + csu);
     explain(csu, "  ");
@@ -254,3 +284,16 @@ for (var csu in gcPointers) {
     print("GCPointer: " + csu);
     explain(csu, "  ");
 }
+
+// Redirect output to the typeInfo file and close the gcTypes file.
+os.file.close(os.file.redirect(typeInfo_filename));
+
+for (let csu in annotations.GCSuppressors)
+    addDescriptor(csu, 'Suppress GC');
+
+for (let [descriptor, types] of gDescriptors) {
+    for (let csu of types)
+        print(descriptor + "$$" + csu);
+}
+
+os.file.close(os.file.redirect(origOut));
