@@ -131,11 +131,15 @@ function MarkupView(inspector, frame, controllerWindow) {
   this._onToolboxPickerHover = this._onToolboxPickerHover.bind(this);
   this._onCollapseAttributesPrefChange =
     this._onCollapseAttributesPrefChange.bind(this);
+  this._onBlur = this._onBlur.bind(this);
+
+  EventEmitter.decorate(this);
 
   // Listening to various events.
   this._elt.addEventListener("click", this._onMouseClick, false);
   this._elt.addEventListener("mousemove", this._onMouseMove, false);
   this._elt.addEventListener("mouseleave", this._onMouseLeave, false);
+  this._elt.addEventListener("blur", this._onBlur, true);
   this.win.addEventListener("mouseup", this._onMouseUp);
   this.win.addEventListener("copy", this._onCopy);
   this._frame.addEventListener("focus", this._onFocus, false);
@@ -154,8 +158,6 @@ function MarkupView(inspector, frame, controllerWindow) {
                         this._onCollapseAttributesPrefChange);
 
   this._initShortcuts();
-
-  EventEmitter.decorate(this);
 }
 
 MarkupView.prototype = {
@@ -218,6 +220,25 @@ MarkupView.prototype = {
     this._showContainerAsHovered(container.node);
 
     this.emit("node-hover");
+  },
+
+  /**
+   * If focus is moved outside of the markup view document and there is a
+   * selected container, make its contents not focusable by a keyboard.
+   */
+  _onBlur: function (event) {
+    if (!this._selectedContainer) {
+      return;
+    }
+
+    let {relatedTarget} = event;
+    if (relatedTarget && relatedTarget.ownerDocument === this.doc) {
+      return;
+    }
+
+    if (this._selectedContainer) {
+      this._selectedContainer.clearFocus();
+    }
   },
 
   /**
@@ -541,8 +562,8 @@ MarkupView.prototype = {
       // Mark the node as selected.
       this.markNodeAsSelected(selection.nodeFront);
 
-      // Make sure the new selection receives focus so the keyboard can be used.
-      this.maybeFocusNewSelection();
+      // Make sure the new selection is navigated to.
+      this.maybeNavigateToNewSelection();
       return undefined;
     }).catch(e => {
       if (!this._destroyer) {
@@ -557,14 +578,14 @@ MarkupView.prototype = {
   },
 
   /**
-   * Maybe focus the current node selection's MarkupContainer depending on why
-   * the current node got selected.
+   * Maybe make selected the current node selection's MarkupContainer depending
+   * on why the current node got selected.
    */
-  maybeFocusNewSelection: function () {
+  maybeNavigateToNewSelection: function () {
     let {reason, nodeFront} = this._inspector.selection;
 
-    // The list of reasons that should lead to focusing the node.
-    let reasonsToFocus = [
+    // The list of reasons that should lead to navigating to the node.
+    let reasonsToNavigate = [
       // If the user picked an element with the element picker.
       "picker-node-picked",
       // If the user selected an element with the browser context menu.
@@ -573,8 +594,9 @@ MarkupView.prototype = {
       "node-inserted"
     ];
 
-    if (reasonsToFocus.includes(reason)) {
-      this.getContainer(nodeFront).focus();
+    if (reasonsToNavigate.includes(reason)) {
+      this.getContainer(this._rootNode).elt.focus();
+      this.navigate(this.getContainer(nodeFront));
     }
   },
 
@@ -633,7 +655,7 @@ MarkupView.prototype = {
 
     // Process generic keys:
     ["Delete", "Backspace", "Home", "Left", "Right", "Up", "Down", "PageUp",
-     "PageDown", "Esc"].forEach(key => {
+     "PageDown", "Esc", "Enter", "Space"].forEach(key => {
        shortcuts.on(key, this._onShortcut);
      });
   },
@@ -742,6 +764,17 @@ MarkupView.prototype = {
         this.navigate(selection);
         break;
       }
+      case "Enter":
+      case "Space": {
+        if (!this._selectedContainer.canFocus) {
+          this._selectedContainer.canFocus = true;
+          this._selectedContainer.focus();
+        } else {
+          // Return early to prevent cancelling the event.
+          return;
+        }
+        break;
+      }
       case "Esc": {
         if (this.isDragging) {
           this.cancelDragging();
@@ -842,7 +875,7 @@ MarkupView.prototype = {
       parent = parent.parentNode;
     }
     if (parent) {
-      this.navigate(parent.container, true);
+      this.navigate(parent.container);
     }
   },
 
@@ -852,20 +885,14 @@ MarkupView.prototype = {
    *
    * @param  {MarkupContainer} container
    *         The container we're navigating to.
-   * @param  {Boolean} ignoreFocus
-   *         If false, keyboard focus will be moved to the container too.
    */
-  navigate: function (container, ignoreFocus) {
+  navigate: function (container) {
     if (!container) {
       return;
     }
 
     let node = container.node;
     this.markNodeAsSelected(node, "treepanel");
-
-    if (!ignoreFocus) {
-      container.focus();
-    }
   },
 
   /**
@@ -944,8 +971,11 @@ MarkupView.prototype = {
         container.update();
       } else if (type === "childList" || type === "nativeAnonymousChildList") {
         container.childrenDirty = true;
-        // Update the children to take care of changes in the markup view DOM.
-        this._updateChildren(container, {flash: true});
+        // Update the children to take care of changes in the markup view DOM
+        // and update container (and its subtree) DOM tree depth level for
+        // accessibility where necessary.
+        this._updateChildren(container, {flash: true}).then(() =>
+          container.updateLevel());
       }
     }
 
@@ -1387,13 +1417,15 @@ MarkupView.prototype = {
    */
   markNodeAsSelected: function (node, reason) {
     let container = this.getContainer(node);
+
     if (this._selectedContainer === container) {
       return false;
     }
 
-    // Un-select the previous container.
+    // Un-select and remove focus from the previous container.
     if (this._selectedContainer) {
       this._selectedContainer.selected = false;
+      this._selectedContainer.clearFocus();
     }
 
     // Select the new container.
@@ -1488,6 +1520,9 @@ MarkupView.prototype = {
     let flash = options && options.flash;
 
     container.hasChildren = container.node.hasChildren;
+    // Accessibility should either ignore empty children or semantically
+    // consider them a group.
+    container.setChildrenRole();
 
     if (!this._queuedChildUpdates) {
       this._queuedChildUpdates = new Map();
@@ -1656,6 +1691,7 @@ MarkupView.prototype = {
     this._elt.removeEventListener("click", this._onMouseClick, false);
     this._elt.removeEventListener("mousemove", this._onMouseMove, false);
     this._elt.removeEventListener("mouseleave", this._onMouseLeave, false);
+    this._elt.removeEventListener("blur", this._onBlur, true);
     this.win.removeEventListener("mouseup", this._onMouseUp);
     this.win.removeEventListener("copy", this._onCopy);
     this._frame.removeEventListener("focus", this._onFocus, false);
@@ -1793,6 +1829,12 @@ MarkupView.prototype = {
  */
 function MarkupContainer() { }
 
+/**
+ * Unique identifier used to set markup container node id.
+ * @type {Number}
+ */
+let markupContainerID = 0;
+
 MarkupContainer.prototype = {
   /*
    * Initialize the MarkupContainer.  Should be called while one
@@ -1810,6 +1852,7 @@ MarkupContainer.prototype = {
     this.node = node;
     this.undo = this.markup.undo;
     this.win = this.markup._frame.contentWindow;
+    this.id = "treeitem-" + markupContainerID++;
 
     // The template will fill the following properties
     this.elt = null;
@@ -1824,6 +1867,7 @@ MarkupContainer.prototype = {
     this._onToggle = this._onToggle.bind(this);
     this._onMouseUp = this._onMouseUp.bind(this);
     this._onMouseMove = this._onMouseMove.bind(this);
+    this._onKeyDown = this._onKeyDown.bind(this);
 
     // Binding event listeners
     this.elt.addEventListener("mousedown", this._onMouseDown, false);
@@ -1881,6 +1925,67 @@ MarkupContainer.prototype = {
   },
 
   /**
+   * A list of all elements with tabindex that are not in container's children.
+   */
+  get focusableElms() {
+    return [...this.tagLine.querySelectorAll("[tabindex]")];
+  },
+
+  /**
+   * An indicator that the container internals are focusable.
+   */
+  get canFocus() {
+    return this._canFocus;
+  },
+
+  /**
+   * Toggle focusable state for container internals.
+   */
+  set canFocus(value) {
+    if (this._canFocus === value) {
+      return;
+    }
+
+    this._canFocus = value;
+
+    if (value) {
+      this.tagLine.addEventListener("keydown", this._onKeyDown, true);
+      this.focusableElms.forEach(elm => elm.setAttribute("tabindex", "0"));
+    } else {
+      this.tagLine.removeEventListener("keydown", this._onKeyDown, true);
+      // Exclude from tab order.
+      this.focusableElms.forEach(elm => elm.setAttribute("tabindex", "-1"));
+    }
+  },
+
+  /**
+   * If conatiner and its contents are focusable, exclude them from tab order,
+   * and, if necessary, remove focus.
+   */
+  clearFocus: function () {
+    if (!this.canFocus) {
+      return;
+    }
+
+    this.canFocus = false;
+    let doc = this.markup.doc;
+
+    if (!doc.activeElement || doc.activeElement === doc.body) {
+      return;
+    }
+
+    let parent = doc.activeElement;
+
+    while (parent && parent !== this.elt) {
+      parent = parent.parentNode;
+    }
+
+    if (parent) {
+      doc.activeElement.blur();
+    }
+  },
+
+  /**
    * True if the current node can be expanded.
    */
   get canExpand() {
@@ -1894,15 +1999,55 @@ MarkupContainer.prototype = {
     return this.node._parent === this.markup.walker.rootNode;
   },
 
+  /**
+   * True if current node can be expanded and collapsed.
+   */
+  get showExpander() {
+    return this.canExpand && !this.mustExpand;
+  },
+
   updateExpander: function () {
     if (!this.expander) {
       return;
     }
 
-    if (this.canExpand && !this.mustExpand) {
+    if (this.showExpander) {
       this.expander.style.visibility = "visible";
+      // Update accessibility expanded state.
+      this.tagLine.setAttribute("aria-expanded", this.expanded);
     } else {
       this.expander.style.visibility = "hidden";
+      // No need for accessible expanded state indicator when expander is not
+      // shown.
+      this.tagLine.removeAttribute("aria-expanded");
+    }
+  },
+
+  /**
+   * If current node has no children, ignore them. Otherwise, consider them a
+   * group from the accessibility point of view.
+   */
+  setChildrenRole: function () {
+    this.children.setAttribute("role",
+      this.hasChildren ? "group" : "presentation");
+  },
+
+  /**
+   * Set an appropriate DOM tree depth level for a node and its subtree.
+   */
+  updateLevel: function () {
+    // ARIA level should already be set when container template is rendered.
+    let currentLevel = this.tagLine.getAttribute("aria-level");
+    let newLevel = this.level;
+    if (currentLevel === newLevel) {
+      // If level did not change, ignore this node and its subtree.
+      return;
+    }
+
+    this.tagLine.setAttribute("aria-level", newLevel);
+    let childContainers = this.getChildContainers();
+    if (childContainers) {
+      childContainers.forEach(container => container.updateLevel());
     }
   },
 
@@ -1945,6 +2090,8 @@ MarkupContainer.prototype = {
         if (!this.closeTagLine) {
           let line = this.markup.doc.createElement("div");
           line.classList.add("tag-line");
+          // Closing tag is not important for accessibility.
+          line.setAttribute("role", "presentation");
 
           let tagState = this.markup.doc.createElement("div");
           tagState.classList.add("tag-state");
@@ -1961,6 +2108,7 @@ MarkupContainer.prototype = {
       this.elt.classList.remove("collapsed");
       this.expander.setAttribute("open", "");
       this.hovered = false;
+      this.markup.emit("expanded");
     } else if (!value) {
       if (this.closeTagLine) {
         this.elt.removeChild(this.closeTagLine);
@@ -1968,6 +2116,10 @@ MarkupContainer.prototype = {
       }
       this.elt.classList.add("collapsed");
       this.expander.removeAttribute("open");
+      this.markup.emit("collapsed");
+    }
+    if (this.showExpander) {
+      this.tagLine.setAttribute("aria-expanded", this.expanded);
     }
   },
 
@@ -1975,19 +2127,37 @@ MarkupContainer.prototype = {
     return this.elt.parentNode ? this.elt.parentNode.container : null;
   },
 
+  /**
+   * Determine tree depth level of a given node. This is used to specify ARIA
+   * level for node tree items and to give them better semantic context.
+   */
+  get level() {
+    let level = 1;
+    let parent = this.node.parentNode();
+    while (parent && parent !== this.markup.walker.rootNode) {
+      level++;
+      parent = parent.parentNode();
+    }
+    return level;
+  },
+
   _isDragging: false,
   _dragStartY: 0,
 
   set isDragging(isDragging) {
+    let rootElt = this.markup.getContainer(this.markup._rootNode).elt;
     this._isDragging = isDragging;
     this.markup.isDragging = isDragging;
+    this.tagLine.setAttribute("aria-grabbed", isDragging);
 
     if (isDragging) {
       this.elt.classList.add("dragging");
       this.markup.doc.body.classList.add("dragging");
+      rootElt.setAttribute("aria-dropeffect", "move");
     } else {
       this.elt.classList.remove("dragging");
       this.markup.doc.body.classList.remove("dragging");
+      rootElt.setAttribute("aria-dropeffect", "none");
     }
   },
 
@@ -2010,6 +2180,77 @@ MarkupContainer.prototype = {
            this.node.parentNode().tagName !== null;
   },
 
+  /**
+   * Move keyboard focus to a next/previous focusable element inside container
+   * that is not part of its children (only if current focus is on first or last
+   * element).
+   *
+   * @param  {DOMNode} current  currently focused element
+   * @param  {Boolean} back     direction
+   * @return {DOMNode}          newly focused element if any
+   */
+  _wrapMoveFocus: function (current, back) {
+    let elms = this.focusableElms;
+    let next;
+    if (back) {
+      if (elms.indexOf(current) === 0) {
+        next = elms[elms.length - 1];
+        next.focus();
+      }
+    } else if (elms.indexOf(current) === elms.length - 1) {
+      next = elms[0];
+      next.focus();
+    }
+    return next;
+  },
+
+  _onKeyDown: function (event) {
+    let {target, keyCode, shiftKey} = event;
+    let isInput = this.markup._isInputOrTextarea(target);
+
+    // Ignore all keystrokes that originated in editors except for when 'Tab' is
+    // pressed.
+    if (isInput && keyCode !== event.DOM_VK_TAB) {
+      return;
+    }
+
+    switch (keyCode) {
+      case event.DOM_VK_TAB:
+        // Only handle 'Tab' if tabbable element is on the edge (first or last).
+        if (isInput) {
+          // Corresponding tabbable element is editor's next sibling.
+          let next = this._wrapMoveFocus(target.nextSibling, shiftKey);
+          if (next) {
+            event.preventDefault();
+            // Keep the editing state if possible.
+            if (next._editable) {
+              let e = this.markup.doc.createEvent("Event");
+              e.initEvent(next._trigger, true, true);
+              next.dispatchEvent(e);
+            }
+          }
+        } else {
+          let next = this._wrapMoveFocus(target, shiftKey);
+          if (next) {
+            event.preventDefault();
+          }
+        }
+        break;
+      case event.DOM_VK_ESCAPE:
+        this.clearFocus();
+        this.markup.getContainer(this.markup._rootNode).elt.focus();
+        if (this.isDragging) {
+          // Escape when dragging is handled by markup view itself.
+          return;
+        }
+        event.preventDefault();
+        break;
+      default:
+        return;
+    }
+    event.stopPropagation();
+  },
+
   _onMouseDown: function (event) {
     let {target, button, metaKey, ctrlKey} = event;
     let isLeftClick = button === 0;
@@ -2024,6 +2265,9 @@ MarkupContainer.prototype = {
     // target is the MarkupContainer itself.
     this.hovered = false;
     this.markup.navigate(this);
+    // Make container tabbable descendants tabbable and focus in.
+    this.canFocus = true;
+    this.focus();
     event.stopPropagation();
 
     // Preventing the default behavior will avoid the body to gain focus on
@@ -2039,6 +2283,8 @@ MarkupContainer.prototype = {
     if (isMiddleClick || isMetaClick) {
       let link = target.dataset.link;
       let type = target.dataset.type;
+      // Make container tabbable descendants not tabbable (by default).
+      this.canFocus = false;
       this.markup._inspector.followAttributeLink(type, link);
       return;
     }
@@ -2182,7 +2428,11 @@ MarkupContainer.prototype = {
     this.tagState.classList.remove("flash-out");
     this._selected = value;
     this.editor.selected = value;
+    // Markup tree item should have accessible selected state.
+    this.tagLine.setAttribute("aria-selected", value);
     if (this._selected) {
+      this.markup.getContainer(this.markup._rootNode).elt.setAttribute(
+        "aria-activedescendant", this.id);
       this.tagLine.setAttribute("selected", "");
       this.tagState.classList.add("theme-selected");
     } else {
@@ -2211,7 +2461,8 @@ MarkupContainer.prototype = {
    * Try to put keyboard focus on the current editor.
    */
   focus: function () {
-    let focusable = this.editor.elt.querySelector("[tabindex]");
+    // Elements with tabindex of -1 are not focusable.
+    let focusable = this.editor.elt.querySelector("[tabindex='0']");
     if (focusable) {
       focusable.focus();
     }
@@ -2233,6 +2484,7 @@ MarkupContainer.prototype = {
     // Remove event listeners
     this.elt.removeEventListener("mousedown", this._onMouseDown, false);
     this.elt.removeEventListener("dblclick", this._onToggle, false);
+    this.tagLine.removeEventListener("keydown", this._onKeyDown, true);
     if (this.win) {
       this.win.removeEventListener("mouseup", this._onMouseUp, true);
       this.win.removeEventListener("mousemove", this._onMouseMove, true);
@@ -2490,6 +2742,10 @@ MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
 function RootContainer(markupView, node) {
   this.doc = markupView.doc;
   this.elt = this.doc.createElement("ul");
+  // Root container has tree semantics for accessibility.
+  this.elt.setAttribute("role", "tree");
+  this.elt.setAttribute("tabindex", "0");
+  this.elt.setAttribute("aria-dropeffect", "none");
   this.elt.container = this;
   this.children = this.elt;
   this.node = node;
@@ -2514,7 +2770,17 @@ RootContainer.prototype = {
    * Set the expanded state of the container node.
    * @param  {Boolean} value
    */
-  setExpanded: function () {}
+  setExpanded: function () {},
+
+  /**
+   * Set an appropriate role of the container's children node.
+   */
+  setChildrenRole: function () {},
+
+  /**
+   * Set an appropriate DOM tree depth level for a node and its subtree.
+   */
+  updateLevel: function () {}
 };
 
 /**
@@ -2680,7 +2946,8 @@ function ElementEditor(container, node) {
   // Make the tag name editable (unless this is a remote node or
   // a document element)
   if (!node.isDocumentElement) {
-    this.tag.setAttribute("tabindex", "0");
+    // Make the tag optionally tabbable but not by default.
+    this.tag.setAttribute("tabindex", "-1");
     editableField({
       element: this.tag,
       trigger: "dblclick",
