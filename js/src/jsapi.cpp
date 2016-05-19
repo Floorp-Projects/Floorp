@@ -6447,19 +6447,67 @@ DescribeScriptedCaller(JSContext* cx, AutoFilename* filename, unsigned* lineno,
     return true;
 }
 
+// Fast path to get the activation to use for GetScriptedCallerGlobal. If this
+// returns false, the fast path didn't work out and the caller has to use the
+// (much slower) NonBuiltinFrameIter path.
+//
+// The optimization here is that we skip Ion-inlined frames and only look at
+// 'outer' frames. That's fine: each activation is tied to a single compartment,
+// so if an activation contains at least one non-self-hosted frame, we can use
+// the activation's global for GetScriptedCallerGlobal. If, however, all 'outer'
+// frames are self-hosted, it's possible Ion inlined a non-self-hosted script,
+// so we must return false and use the slower path.
+static bool
+GetScriptedCallerActivationFast(JSContext* cx, Activation** activation)
+{
+    ActivationIterator activationIter(cx->runtime());
+
+    while (!activationIter.done() && activationIter->cx() != cx)
+        ++activationIter;
+
+    if (activationIter.done()) {
+        *activation = nullptr;
+        return true;
+    }
+
+    *activation = activationIter.activation();
+
+    if (activationIter->isJit()) {
+        for (jit::JitFrameIterator iter(activationIter); !iter.done(); ++iter) {
+            if (iter.isScripted() && !iter.script()->selfHosted())
+                return true;
+        }
+    } else if (activationIter->isInterpreter()) {
+        for (InterpreterFrameIterator iter((*activation)->asInterpreter()); !iter.done(); ++iter) {
+            if (!iter.frame()->script()->selfHosted())
+                return true;
+        }
+    }
+
+    return false;
+}
+
 JS_PUBLIC_API(JSObject*)
 GetScriptedCallerGlobal(JSContext* cx)
 {
-    NonBuiltinFrameIter i(cx);
-    if (i.done())
-        return nullptr;
+    Activation* activation;
+
+    if (GetScriptedCallerActivationFast(cx, &activation)) {
+        if (!activation)
+            return nullptr;
+    } else {
+        NonBuiltinFrameIter i(cx);
+        if (i.done())
+            return nullptr;
+        activation = i.activation();
+    }
 
     // If the caller is hidden, the embedding wants us to return null here so
     // that it can check its own stack (see HideScriptedCaller).
-    if (i.activation()->scriptedCallerIsHidden())
+    if (activation->scriptedCallerIsHidden())
         return nullptr;
 
-    GlobalObject* global = i.activation()->compartment()->maybeGlobal();
+    GlobalObject* global = activation->compartment()->maybeGlobal();
 
     // Noone should be running code in the atoms compartment or running code in
     // a compartment without any live objects, so there should definitely be a
