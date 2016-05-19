@@ -2,6 +2,10 @@
 
 "use strict";
 
+// RAII types within which we should assume GC is suppressed, eg
+// AutoSuppressGC.
+var GCSuppressionTypes = [];
+
 // Ignore calls made through these function pointers
 var ignoreIndirectCalls = {
     "mallocSizeOf" : true,
@@ -186,6 +190,7 @@ var ignoreFunctions = {
     // up wrapping a pending exception. See bug 898815 for the heavyweight fix.
     "void js::AutoCompartment::~AutoCompartment(int32)" : true,
     "void JSAutoCompartment::~JSAutoCompartment(int32)" : true,
+    "void js::AutoClearTypeInferenceStateOnOOM::~AutoClearTypeInferenceStateOnOOM()" : true,
 
     // Bug 948646 - the only thing AutoJSContext's constructor calls
     // is an Init() routine whose entire body is covered with an
@@ -322,13 +327,7 @@ function isUnsafeStorage(typeName)
 function isSuppressConstructor(varName)
 {
     // varName[1] contains the unqualified name
-    return [
-        "AutoSuppressGC",
-        "AutoAssertGCCallback",
-        "AutoEnterAnalysis",
-        "AutoSuppressGCAnalysis",
-        "AutoIgnoreRootingHazards"
-    ].indexOf(varName[1]) != -1;
+    return GCSuppressionTypes.indexOf(varName[1]) != -1;
 }
 
 // nsISupports subclasses' methods may be scriptable (or overridden

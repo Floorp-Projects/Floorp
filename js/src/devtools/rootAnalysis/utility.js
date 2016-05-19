@@ -191,3 +191,21 @@ function* readFileLines_gen(filename)
     libc.fclose(fp);
     libc.free(ctypes.void_t.ptr(linebuf));
 }
+
+function addToKeyedList(collection, key, entry)
+{
+    if (!(key in collection))
+        collection[key] = [];
+    collection[key].push(entry);
+}
+
+function loadTypeInfo(filename)
+{
+    var info = {};
+    for (var line of readFileLines_gen(filename)) {
+        line = line.replace(/\n/, "");
+        let [property, name] = line.split("$$");
+        addToKeyedList(info, property, name);
+    }
+    return info;
+}
