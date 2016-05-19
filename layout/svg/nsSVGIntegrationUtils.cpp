@@ -416,7 +416,7 @@ HasMaskToDraw(const nsStyleSVGReset* aSVGReset,
   bool isOK = true;
   // Keep moving forward even if svgMaskFrame is nullptr or isOK is false.
   // This source is not a svg mask, but it still can be a correct mask image.
-  nsSVGMaskFrame *svgMaskFrame = aEffectProperties.GetMaskFrame(&isOK);
+  nsSVGMaskFrame *svgMaskFrame = aEffectProperties.GetFirstMaskFrame(&isOK);
 
   // hasMaskToDraw is true means we have at least one drawable mask resource.
   // We need to apply mask only if hasMaskToDraw is true.
@@ -443,10 +443,9 @@ GenerateMaskSurface(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
   const nsStyleSVGReset *svgReset = aSC->StyleSVGReset();
   MOZ_ASSERT(HasMaskToDraw(svgReset, aEffectProperties));
 
-  bool isOK = true;
-  // Keep moving forward even if svgMaskFrame is nullptr or isOK is false.
+  // Keep moving forward even if svgMaskFrame is nullptr.
   // This source is not a svg mask, but it still can be a correct mask image.
-  nsSVGMaskFrame *svgMaskFrame = aEffectProperties.GetMaskFrame(&isOK);
+  nsSVGMaskFrame *svgMaskFrame = aEffectProperties.GetFirstMaskFrame();
   gfxContext& ctx = aParams.ctx;
 
   if (svgMaskFrame) {
