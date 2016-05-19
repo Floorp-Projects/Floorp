@@ -483,7 +483,7 @@ this.PushServiceWebSocket = {
     socket.initLoadInfo(null, // aLoadingNode
                         Services.scriptSecurityManager.getSystemPrincipal(),
                         null, // aTriggeringPrincipal
-                        Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                        Ci.nsILoadInfo.SEC_NORMAL,
                         Ci.nsIContentPolicy.TYPE_WEBSOCKET);
 
     return socket;
