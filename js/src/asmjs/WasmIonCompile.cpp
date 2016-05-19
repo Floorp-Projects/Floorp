@@ -3015,6 +3015,10 @@ EmitExpr(FunctionCompiler& f)
         return EmitUnaryMathBuiltinCall(f, exprOffset, SymbolicAddress::CeilF, ValType::F32);
       case Expr::F32Floor:
         return EmitUnaryMathBuiltinCall(f, exprOffset, SymbolicAddress::FloorF, ValType::F32);
+      case Expr::F32Trunc:
+        return EmitUnaryMathBuiltinCall(f, exprOffset, SymbolicAddress::TruncF, ValType::F32);
+      case Expr::F32Nearest:
+        return EmitUnaryMathBuiltinCall(f, exprOffset, SymbolicAddress::NearbyIntF, ValType::F32);
       case Expr::F32DemoteF64:
         return EmitConversion<MToFloat32>(f, ValType::F64, ValType::F32);
       case Expr::F32ConvertSI32:
@@ -3066,8 +3070,11 @@ EmitExpr(FunctionCompiler& f)
       case Expr::F64Ceil:
         return EmitUnaryMathBuiltinCall(f, exprOffset, SymbolicAddress::CeilD, ValType::F64);
       case Expr::F64Floor:
-        return EmitUnaryMathBuiltinCall(f, exprOffset, SymbolicAddress::FloorD,
-                                        ValType::F64);
+        return EmitUnaryMathBuiltinCall(f, exprOffset, SymbolicAddress::FloorD, ValType::F64);
+      case Expr::F64Trunc:
+        return EmitUnaryMathBuiltinCall(f, exprOffset, SymbolicAddress::TruncD, ValType::F64);
+      case Expr::F64Nearest:
+        return EmitUnaryMathBuiltinCall(f, exprOffset, SymbolicAddress::NearbyIntD, ValType::F64);
       case Expr::F64Sin:
         return EmitUnaryMathBuiltinCall(f, exprOffset, SymbolicAddress::SinD, ValType::F64);
       case Expr::F64Cos:
@@ -3327,11 +3334,7 @@ EmitExpr(FunctionCompiler& f)
 
       // Future opcodes
       case Expr::F32CopySign:
-      case Expr::F32Trunc:
-      case Expr::F32Nearest:
       case Expr::F64CopySign:
-      case Expr::F64Nearest:
-      case Expr::F64Trunc:
       case Expr::I64Load8S:
       case Expr::I64Load16S:
       case Expr::I64Load32S:
