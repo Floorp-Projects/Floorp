@@ -79,4 +79,3 @@ onmessage = function (event) {
     });
   }, 1000);
 };
-
