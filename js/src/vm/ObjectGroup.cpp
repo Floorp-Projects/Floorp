@@ -1354,6 +1354,13 @@ struct ObjectGroupCompartment::AllocationSiteKey : public DefaultHasher<Allocati
         MOZ_ASSERT(offset_ < OFFSET_LIMIT);
     }
 
+    AllocationSiteKey(const AllocationSiteKey& key)
+      : script(key.script),
+        offset(key.offset),
+        kind(key.kind),
+        proto(key.proto)
+    { }
+
     AllocationSiteKey(AllocationSiteKey&& key)
       : script(mozilla::Move(key.script)),
         offset(key.offset),
@@ -1361,12 +1368,12 @@ struct ObjectGroupCompartment::AllocationSiteKey : public DefaultHasher<Allocati
         proto(mozilla::Move(key.proto))
     { }
 
-    AllocationSiteKey(const AllocationSiteKey& key)
-      : script(key.script),
-        offset(key.offset),
-        kind(key.kind),
-        proto(key.proto)
-    { }
+    void operator=(AllocationSiteKey&& key) {
+        script = mozilla::Move(key.script);
+        offset = key.offset;
+        kind = key.kind;
+        proto = mozilla::Move(key.proto);
+    }
 
     static inline uint32_t hash(AllocationSiteKey key) {
         return uint32_t(size_t(key.script->offsetToPC(key.offset)) ^ key.kind ^
