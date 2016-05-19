@@ -140,14 +140,13 @@ DoOCSPRequest(const UniquePLArenaPool& arena, const char* url,
     hostname(url + authorityPos + hostnamePos,
              static_cast<nsACString_internal::size_type>(hostnameLen));
 
-  SEC_HTTP_SERVER_SESSION serverSessionPtr = nullptr;
+  nsNSSHttpServerSession* serverSessionPtr = nullptr;
   Result rv = nsNSSHttpInterface::createSessionFcn(
     hostname.BeginReading(), static_cast<uint16_t>(port), &serverSessionPtr);
   if (rv != Success) {
     return rv;
   }
-  UniqueHTTPServerSession serverSession(
-    reinterpret_cast<nsNSSHttpServerSession*>(serverSessionPtr));
+  UniqueHTTPServerSession serverSession(serverSessionPtr);
 
   nsAutoCString path;
   if (pathLen > 0) {
@@ -170,15 +169,14 @@ DoOCSPRequest(const UniquePLArenaPool& arena, const char* url,
     }
   }
 
-  SEC_HTTP_REQUEST_SESSION requestSessionPtr;
+  nsNSSHttpRequestSession* requestSessionPtr;
   rv = nsNSSHttpInterface::createFcn(serverSession.get(), "http", path.get(),
                                      method.get(), timeout, &requestSessionPtr);
   if (rv != Success) {
     return rv;
   }
 
-  UniqueHTTPRequestSession requestSession(
-    reinterpret_cast<nsNSSHttpRequestSession*>(requestSessionPtr));
+  UniqueHTTPRequestSession requestSession(requestSessionPtr);
 
   if (!useGET) {
     rv = nsNSSHttpInterface::setPostDataFcn(

@@ -237,8 +237,7 @@ nsNSSCertificateDB::getCertsFromPackage(const UniquePLArenaPool& arena,
                                         uint8_t* data, uint32_t length,
                                         const nsNSSShutDownPreventionLock& /*proofOfLock*/)
 {
-  CERTDERCerts* collectArgs =
-    (CERTDERCerts*)PORT_ArenaZAlloc(arena.get(), sizeof(CERTDERCerts));
+  CERTDERCerts* collectArgs = PORT_ArenaZNew(arena.get(), CERTDERCerts);
   if (!collectArgs) {
     return nullptr;
   }
