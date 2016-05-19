@@ -3056,10 +3056,11 @@ nsContentUtils::GetImgLoaderForDocument(nsIDocument* aDoc)
   NS_ENSURE_TRUE(!DocumentInactiveForImageLoads(aDoc), nullptr);
 
   if (!aDoc) {
-    return imgLoader::Singleton();
+    return imgLoader::NormalLoader();
   }
   bool isPrivate = IsInPrivateBrowsing(aDoc);
-  return isPrivate ? imgLoader::PBSingleton() : imgLoader::Singleton();
+  return isPrivate ? imgLoader::PrivateBrowsingLoader()
+                   : imgLoader::NormalLoader();
 }
 
 // static
@@ -3069,11 +3070,14 @@ nsContentUtils::GetImgLoaderForChannel(nsIChannel* aChannel,
 {
   NS_ENSURE_TRUE(!DocumentInactiveForImageLoads(aContext), nullptr);
 
-  if (!aChannel)
-    return imgLoader::Singleton();
+  if (!aChannel) {
+    return imgLoader::NormalLoader();
+  }
   nsCOMPtr<nsILoadContext> context;
   NS_QueryNotificationCallbacks(aChannel, context);
-  return context && context->UsePrivateBrowsing() ? imgLoader::PBSingleton() : imgLoader::Singleton();
+  return context && context->UsePrivateBrowsing() ?
+                      imgLoader::PrivateBrowsingLoader() :
+                      imgLoader::NormalLoader();
 }
 
 // static
