@@ -115,7 +115,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -204,7 +203,6 @@
 #include "nsICookieService.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/BloomFilter.h"
-#include "TabChild.h"
 
 #include "nsIBidiKeyboard.h"
 
@@ -8840,32 +8838,4 @@ nsContentUtils::SetScrollbarsVisibility(nsIDocShell* aDocShell, bool aVisible)
     scroller->SetDefaultScrollbarPreferences(
                 nsIScrollable::ScrollOrientation_X, prefValue);
   }
-}
-
-/* static */ void
-nsContentUtils::GetPresentationURL(nsIDocShell* aDocShell, nsAString& aPresentationUrl)
-{
-  MOZ_ASSERT(aDocShell);
-
-  if (XRE_IsContentProcess()) {
-    nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
-    aDocShell->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
-    nsCOMPtr<nsIDocShellTreeItem> root;
-    aDocShell->GetRootTreeItem(getter_AddRefs(root));
-    if (sameTypeRoot.get() == root.get()) {
-      // presentation URL is stored in TabChild for the top most
-      // <iframe mozbrowser> in content process.
-      TabChild* tabChild = TabChild::GetFrom(aDocShell);
-      if (tabChild) {
-        aPresentationUrl = tabChild->PresentationURL();
-      }
-      return;
-    }
-  }
-
-  nsCOMPtr<nsILoadContext> loadContext(do_QueryInterface(aDocShell));
-  nsCOMPtr<nsIDOMElement> topFrameElement;
-  loadContext->GetTopFrameElement(getter_AddRefs(topFrameElement));
-
-  topFrameElement->GetAttribute(NS_LITERAL_STRING("mozpresentation"), aPresentationUrl);
 }

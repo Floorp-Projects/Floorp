@@ -33,14 +33,14 @@ public:
 
   already_AddRefed<PresentationRequest> GetDefaultRequest() const;
 
-  already_AddRefed<PresentationReceiver> GetReceiver();
+  already_AddRefed<PresentationReceiver> GetReceiver() const;
 
 private:
   explicit Presentation(nsPIDOMWindowInner* aWindow);
 
   ~Presentation();
 
-  bool IsInPresentedContent() const;
+  bool Init();
 
   RefPtr<PresentationRequest> mDefaultRequest;
   RefPtr<PresentationReceiver> mReceiver;

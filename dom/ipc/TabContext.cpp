@@ -190,19 +190,12 @@ TabContext::SignedPkgOriginNoSuffix() const
   return mSignedPkgOriginNoSuffix;
 }
 
-const nsAString&
-TabContext::PresentationURL() const
-{
-  return mPresentationURL;
-}
-
 bool
 TabContext::SetTabContext(bool aIsMozBrowserElement,
                           mozIApplication* aOwnApp,
                           mozIApplication* aAppFrameOwnerApp,
                           const DocShellOriginAttributes& aOriginAttributes,
-                          const nsACString& aSignedPkgOriginNoSuffix,
-                          const nsAString& aPresentationURL)
+                          const nsACString& aSignedPkgOriginNoSuffix)
 {
   NS_ENSURE_FALSE(mInitialized, false);
 
@@ -234,7 +227,6 @@ TabContext::SetTabContext(bool aIsMozBrowserElement,
   mOwnApp = aOwnApp;
   mContainingApp = aAppFrameOwnerApp;
   mSignedPkgOriginNoSuffix = aSignedPkgOriginNoSuffix;
-  mPresentationURL = aPresentationURL;
   return true;
 }
 
@@ -246,8 +238,7 @@ TabContext::AsIPCTabContext() const
   return IPCTabContext(FrameIPCTabContext(originSuffix,
                                           mContainingAppId,
                                           mSignedPkgOriginNoSuffix,
-                                          mIsMozBrowserElement,
-                                          mPresentationURL));
+                                          mIsMozBrowserElement));
 }
 
 static already_AddRefed<mozIApplication>
@@ -270,7 +261,6 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
   DocShellOriginAttributes originAttributes;
   nsAutoCString originSuffix;
   nsAutoCString signedPkgOriginNoSuffix;
-  nsAutoString presentationURL;
 
   switch(aParams.type()) {
     case IPCTabContext::TPopupIPCTabContext: {
@@ -331,7 +321,6 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
       isMozBrowserElement = ipcContext.isMozBrowserElement();
       containingAppId = ipcContext.frameOwnerAppId();
       signedPkgOriginNoSuffix = ipcContext.signedPkgOriginNoSuffix();
-      presentationURL = ipcContext.presentationURL();
       originSuffix = ipcContext.originSuffix();
       originAttributes.PopulateFromSuffix(originSuffix);
       break;
@@ -380,8 +369,7 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
                                  ownApp,
                                  containingApp,
                                  originAttributes,
-                                 signedPkgOriginNoSuffix,
-                                 presentationURL);
+                                 signedPkgOriginNoSuffix);
   if (!rv) {
     mInvalidReason = "Couldn't initialize TabContext.";
   }
