@@ -15,6 +15,7 @@
 
 #include "mozilla/GuardObjects.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/Variant.h"
 
 #include "jscntxt.h"
@@ -132,7 +133,7 @@ class GlobalHelperThreadState
         PAUSE
     };
 
-    void wait(CondVar which, uint32_t timeoutMillis = 0);
+    void wait(CondVar which, mozilla::TimeDuration timeout = mozilla::TimeDuration::Forever());
     void notifyAll(CondVar which);
     void notifyOne(CondVar which);
 

@@ -343,7 +343,7 @@ PR_TicksPerSecond()
 }
 
 PRStatus
-PR_WaitCondVar(PRCondVar* cvar, uint32_t timeout)
+PR_WaitCondVar(PRCondVar* cvar, PRIntervalTime timeout)
 {
     if (timeout == PR_INTERVAL_NO_TIMEOUT) {
         if (pthread_cond_wait(&cvar->cond(), &cvar->lock()->mutex()))
