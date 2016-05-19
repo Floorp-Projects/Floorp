@@ -9,7 +9,36 @@ const { Disposable } = require("sdk/core/disposable");
 const { Cc, Ci, Cu } = require("chrome");
 const { setTimeout } = require("sdk/timers");
 
+exports["test disposeDisposable"] = assert => {
+  let loader = Loader(module);
+
+  const { Disposable, disposeDisposable } = loader.require("sdk/core/disposable");
+  const { isWeak, WeakReference } = loader.require("sdk/core/reference");
+
+  let disposals = 0;
+
+  const Foo = Class({
+    extends: Disposable,
+    implements: [WeakReference],
+    dispose(...params) {
+      disposeDisposable(this);
+      disposals = disposals + 1;
+    }
+  });
+
+  const f1 = new Foo();
+  assert.equal(isWeak(f1), true, "f1 has WeakReference support");
+
+  f1.dispose();
+  assert.equal(disposals, 1, "disposed on dispose");
+
+  loader.unload("uninstall");
+  assert.equal(disposals, 1, "after disposeDisposable, dispose is not called anymore");
+};
+
 exports["test destroy reasons"] = assert => {
+  let disposals = 0;
+
   const Foo = Class({
     extends: Disposable,
     dispose: function() {
@@ -17,7 +46,6 @@ exports["test destroy reasons"] = assert => {
     }
   });
 
-  let disposals = 0;
   const f1 = new Foo();
 
   f1.destroy();
@@ -38,9 +66,10 @@ exports["test destroy reasons"] = assert => {
   const f3 = new Foo();
 
   f3.destroy("shutdown");
-  assert.equal(disposals, 0, "shutdown doesn't invoke disposal");
+  assert.equal(disposals, 0, "shutdown invoke disposal");
+  f3.destroy("shutdown");
   f3.destroy();
-  assert.equal(disposals, 0, "shutdown already skipped disposal");
+  assert.equal(disposals, 0, "shutdown disposal happens just once");
 
   disposals = 0;
   const f4 = new Foo();
@@ -149,7 +178,7 @@ exports["test different unload hooks"] = assert => {
   assert.deepEqual(u7.log, ["dispose"], "dispose hook invoked");
 };
 
-exports["test disposables are desposed on unload"] = function(assert) {
+exports["test disposables are disposed on unload"] = function(assert) {
   let loader = Loader(module);
   let { Disposable } = loader.require("sdk/core/disposable");
 
