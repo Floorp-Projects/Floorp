@@ -77,8 +77,9 @@ function hasExpectedProperties(containerEl) {
 function hasExpectedWarnings(containerEl) {
   let warnings = [...containerEl.querySelectorAll(".warning")];
   for (let warning of warnings) {
-    if (warning.getAttribute("title") ==
-         L10N.getStr("AnimationWarningTransformWithGeometricProperties")) {
+    let warningID =
+      "CompositorAnimationWarningTransformWithGeometricProperties";
+    if (warning.getAttribute("title") == L10N.getStr(warningID)) {
       return true;
     }
   }
