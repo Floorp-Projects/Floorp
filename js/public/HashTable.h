@@ -704,6 +704,11 @@ class HashMapEntry
         value_(mozilla::Move(rhs.value_))
     {}
 
+    void operator=(HashMapEntry&& rhs) {
+        key_ = mozilla::Move(rhs.key_);
+        value_ = mozilla::Move(rhs.value_);
+    }
+
     typedef Key KeyType;
     typedef Value ValueType;
 
@@ -774,8 +779,16 @@ class HashTableEntry
     }
 
     void swap(HashTableEntry* other) {
+        if (this == other)
+            return;
+        MOZ_ASSERT(isLive());
+        if (other->isLive()) {
+            mozilla::Swap(*mem.addr(), *other->mem.addr());
+        } else {
+            *other->mem.addr() = mozilla::Move(*mem.addr());
+            destroy();
+        }
         mozilla::Swap(keyHash, other->keyHash);
-        mozilla::Swap(mem, other->mem);
     }
 
     T& get() { MOZ_ASSERT(isLive()); return *mem.addr(); }
