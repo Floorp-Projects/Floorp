@@ -4203,14 +4203,17 @@ def getCallbackConversionInfo(type, idlObject, isMember, isCallbackReturnValue,
         name = "binding_detail::Fast%s" % name
 
     if type.nullable() or isCallbackReturnValue:
-        declType = CGGeneric("RefPtr<%s>" % name)
+        smartPtrType = "RefPtr"
     else:
-        declType = CGGeneric("OwningNonNull<%s>" % name)
+        smartPtrType = "OwningNonNull"
+
+    declType = CGGeneric(name)
 
     if useFastCallback:
-        declType = CGTemplatedType("RootedCallback", declType)
+        declType = CGTemplatedType("RootedCallback%s" % smartPtrType, declType)
         declArgs = "cx"
     else:
+        declType = CGTemplatedType(smartPtrType, declType)
         declArgs = None
 
     conversion = indent(CGCallbackTempRoot(name).define())
