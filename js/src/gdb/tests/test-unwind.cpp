@@ -5,9 +5,9 @@
 #include <string.h>
 
 static bool
-Something(JSContext* cx, unsigned argc, Value* vp)
+Something(JSContext* cx, unsigned argc, JS::Value* vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
+    JS::CallArgs args = CallArgsFromVp(argc, vp);
     args.rval().setInt32(23);
     breakpoint();
     return true;

@@ -18,6 +18,15 @@
 namespace js {
 namespace gc {
 
+inline void
+MakeAccessibleAfterMovingGC(void* anyp) {}
+
+inline void
+MakeAccessibleAfterMovingGC(JSObject* obj) {
+    if (obj->isNative())
+        obj->as<NativeObject>().updateShapeAfterMovingGC();
+}
+
 static inline AllocKind
 GetGCObjectKind(const Class* clasp)
 {
