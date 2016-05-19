@@ -8,6 +8,9 @@
 //-----------------------------------------------------------------------------
 // nsInputStreamChannel
 
+namespace mozilla {
+namespace net {
+
 nsresult
 nsInputStreamChannel::OpenContentStream(bool async, nsIInputStream **result,
                                         nsIChannel** channel)
@@ -104,3 +107,6 @@ nsInputStreamChannel::SetBaseURI(nsIURI* aBaseURI)
   mBaseURI = aBaseURI;
   return NS_OK;
 }
+
+} // namespace net
+} // namespace mozilla

@@ -13,6 +13,9 @@ class nsIChannel;
 class nsIHttpChannelInternal;
 class nsIDocument;
 
+namespace mozilla {
+namespace net {
+
 class nsChannelClassifier final : public nsIURIClassifierCallback
 {
 public:
@@ -55,5 +58,8 @@ public:
     static nsresult SetBlockedTrackingContent(nsIChannel *channel);
     static nsresult NotifyTrackingProtectionDisabled(nsIChannel *aChannel);
 };
+
+} // namespace net
+} // namespace mozilla
 
 #endif

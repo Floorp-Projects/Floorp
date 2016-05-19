@@ -12,6 +12,9 @@
 
 class nsILoadInfo;
 
+namespace mozilla {
+namespace net {
+
 class nsViewSourceHandler final : public nsIProtocolHandler
 {
 public:
@@ -35,5 +38,8 @@ private:
 
     static nsViewSourceHandler* gInstance;
 };
+
+} // namespace net
+} // namespace mozilla
 
 #endif /* !defined( nsViewSourceHandler_h___ ) */

@@ -13,6 +13,9 @@
 
 #include "mozilla/ipc/URIUtils.h"
 
+namespace mozilla {
+namespace net {
+
 NS_IMPL_ISUPPORTS_INHERITED(nsSimpleNestedURI, nsSimpleURI, nsINestedURI)
 
 nsSimpleNestedURI::nsSimpleNestedURI(nsIURI* innerURI)
@@ -175,3 +178,6 @@ nsSimpleNestedURI::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
     *aClassIDNoAlloc = kSimpleNestedURICID;
     return NS_OK;
 }
+
+} // namespace net
+} // namespace mozilla
