@@ -7,14 +7,16 @@ set -e
 
 API_BASE_URL=https://api.github.com/repos/freebsd/freebsd
 
-function get_commit {
+get_commit() {
     curl -s "${API_BASE_URL}/commits?path=lib/msun/src&per_page=1" \
         | python -c 'import json, sys; print(json.loads(sys.stdin.read())[0]["sha"])'
 }
 
+mv ./src/moz.build ./src_moz.build
 rm -rf src
 BEFORE_COMMIT=$(get_commit)
 sh ./import.sh
+mv ./src_moz.build ./src/moz.build
 COMMIT=$(get_commit)
 if [ ${BEFORE_COMMIT} != ${COMMIT} ]; then
     echo "Latest commit is changed during import.  Please run again."
