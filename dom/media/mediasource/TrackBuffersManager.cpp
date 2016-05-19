@@ -1939,6 +1939,7 @@ TrackBuffersManager::SkipToNextRandomAccessPoint(TrackInfo::TrackType aTrack,
   TimeUnit nextSampleTimecode = trackData.mNextSampleTimecode;
   TimeUnit nextSampleTime = trackData.mNextSampleTime;
   uint32_t i = trackData.mNextGetSampleIndex.ref();
+  int32_t originalPos = i;
 
   for (; i < track.Length(); i++) {
     const MediaRawData* sample =
@@ -1964,10 +1965,29 @@ TrackBuffersManager::SkipToNextRandomAccessPoint(TrackInfo::TrackType aTrack,
   // Adjust the next demux time and index so that the next call to
   // SkipToNextRandomAccessPoint will not count again the parsed sample as
   // skipped.
-  trackData.mNextSampleTimecode = nextSampleTimecode;
-  trackData.mNextSampleTime = nextSampleTime;
-  trackData.mNextGetSampleIndex = Some(i);
-
+  if (aFound) {
+    trackData.mNextSampleTimecode = nextSampleTimecode;
+    trackData.mNextSampleTime = nextSampleTime;
+    trackData.mNextGetSampleIndex = Some(i);
+  } else if (i > 0) {
+    // Go back to the previous keyframe or the original position so the next
+    // demux can succeed and be decoded.
+    for (int j = i - 1; j >= originalPos; j--) {
+      const RefPtr<MediaRawData>& sample = track[j];
+      if (sample->mKeyframe) {
+        trackData.mNextSampleTimecode =
+          TimeUnit::FromMicroseconds(sample->mTimecode);
+        trackData.mNextSampleTime = TimeUnit::FromMicroseconds(sample->mTime);
+        trackData.mNextGetSampleIndex = Some(uint32_t(j));
+        // We are unable to skip to a keyframe past aTimeThreshold, however
+        // we are speeding up decoding by dropping the unplayable frames.
+        // So we can mark aFound as true.
+        aFound = true;
+        break;
+      }
+      parsed--;
+    }
+  }
   return parsed;
 }
 
