@@ -588,18 +588,18 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(gfxContext& aContext,
       maskTarget->SetMatrix(matrixAutoSaveRestore.Matrix() * gfxMatrix::Translation(-drawRect.TopLeft()));
 
       // Compose all mask-images onto maskSurface.
-      uint32_t flags = aBuilder->GetBackgroundPaintFlags() |
-                       nsCSSRendering::PAINTBG_MASK_IMAGE;
-      nsRenderingContext rc(maskTarget);
+      nsRenderingContext rc(target);
+      nsCSSRendering::PaintBGParams params =
+        nsCSSRendering::PaintBGParams::ForAllLayers(*aFrame->PresContext(), rc,
+                                                    aDirtyRect, aBorderArea,
+                                                    aFrame,
+                                                    aBuilder->GetBackgroundPaintFlags() |
+                                                    nsCSSRendering::PAINTBG_MASK_IMAGE);
+
       // FIXME We should use the return value, see bug 1258510.
-      Unused << nsCSSRendering::PaintBackgroundWithSC(aFrame->PresContext(),
-                                                      rc,
-                                                      aFrame,
-                                                      aDirtyRect,
-                                                      aBorderArea,
+      Unused << nsCSSRendering::PaintBackgroundWithSC(params,
                                                       firstFrame->StyleContext(),
-                                                      *aFrame->StyleBorder(),
-                                                      flags);
+                                                      *aFrame->StyleBorder());
       maskSurface = maskTargetDT->Snapshot();
 
       // Compute mask transform.

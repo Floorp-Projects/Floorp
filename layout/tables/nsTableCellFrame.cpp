@@ -372,8 +372,12 @@ nsTableCellFrame::PaintBackground(nsRenderingContext& aRenderingContext,
                                   uint32_t             aFlags)
 {
   nsRect rect(aPt, GetSize());
-  return nsCSSRendering::PaintBackground(PresContext(), aRenderingContext, this,
-                                         aDirtyRect, rect, aFlags);
+  nsCSSRendering::PaintBGParams params =
+    nsCSSRendering::PaintBGParams::ForAllLayers(*PresContext(),
+                                                aRenderingContext,
+                                                aDirtyRect, rect,
+                                                this, aFlags);
+  return nsCSSRendering::PaintBackground(params);
 }
 
 // Called by nsTablePainter
@@ -1218,11 +1222,13 @@ nsBCTableCellFrame::PaintBackground(nsRenderingContext& aRenderingContext,
     myBorder.SetBorderWidth(side, borderWidth.Side(side));
   }
 
-  nsRect rect(aPt, GetSize());
   // bypassing nsCSSRendering::PaintBackground is safe because this kind
   // of frame cannot be used for the root element
-  return nsCSSRendering::PaintBackgroundWithSC(PresContext(), aRenderingContext,
-                                               this, aDirtyRect, rect,
-                                               StyleContext(), myBorder,
-                                               aFlags, nullptr);
+  nsRect rect(aPt, GetSize());
+  nsCSSRendering::PaintBGParams params =
+    nsCSSRendering::PaintBGParams::ForAllLayers(*PresContext(),
+                                                aRenderingContext, aDirtyRect,
+                                                rect, this,
+                                                aFlags);
+  return nsCSSRendering::PaintBackgroundWithSC(params, StyleContext(), myBorder);
 }
