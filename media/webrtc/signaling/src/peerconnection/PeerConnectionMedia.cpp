@@ -1495,26 +1495,6 @@ SourceStreamInfo::AnyCodecHasPluginID(uint64_t aPluginID)
   return false;
 }
 
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-RefPtr<mozilla::dom::VideoStreamTrack>
-SourceStreamInfo::GetVideoTrackByTrackId(const std::string& trackId)
-{
-  nsTArray<RefPtr<mozilla::dom::VideoStreamTrack>> videoTracks;
-
-  mMediaStream->GetVideoTracks(videoTracks);
-
-  for (size_t i = 0; i < videoTracks.Length(); ++i) {
-    nsString aTrackId;
-    videoTracks[i]->GetId(aTrackId);
-    if (aTrackId.EqualsIgnoreCase(trackId.c_str())) {
-      return videoTracks[i];
-    }
-  }
-
-  return nullptr;
-}
-#endif
-
 nsresult
 SourceStreamInfo::StorePipeline(
     const std::string& trackId,

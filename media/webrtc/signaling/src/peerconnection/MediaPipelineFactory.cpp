@@ -870,8 +870,11 @@ MediaPipelineFactory::ConfigureVideoCodecMode(const JsepTrack& aTrack,
     mPCMedia->GetLocalStreamByTrackId(aTrack.GetTrackId());
 
   //get video track
+  RefPtr<mozilla::dom::MediaStreamTrack> track =
+    stream->GetTrackById(aTrack.GetTrackId());
+
   RefPtr<mozilla::dom::VideoStreamTrack> videotrack =
-    stream->GetVideoTrackByTrackId(aTrack.GetTrackId());
+    track->AsVideoStreamTrack();
 
   if (!videotrack) {
     MOZ_MTLOG(ML_ERROR, "video track not available");

@@ -115,9 +115,6 @@ public:
   void DetachTransport_s();
   void DetachMedia_m();
   bool AnyCodecHasPluginID(uint64_t aPluginID);
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  RefPtr<mozilla::dom::VideoStreamTrack> GetVideoTrackByTrackId(const std::string& trackId);
-#endif
 protected:
   RefPtr<DOMMediaStream> mMediaStream;
   PeerConnectionMedia *mParent;
