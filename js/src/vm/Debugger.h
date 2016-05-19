@@ -660,13 +660,13 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * Allocate and initialize a Debugger.Script instance whose referent is
      * |script|.
      */
-    JSObject* newDebuggerScript(JSContext* cx, HandleScript script);
+    NativeObject* newDebuggerScript(JSContext* cx, HandleScript script);
 
     /*
      * Allocate and initialize a Debugger.Source instance whose referent is
      * |source|.
      */
-    JSObject* newDebuggerSource(JSContext* cx, js::HandleScriptSource source);
+    NativeObject* newDebuggerSource(JSContext* cx, js::HandleScriptSource source);
 
     /*
      * Receive a "new script" event from the engine. A new script was compiled
