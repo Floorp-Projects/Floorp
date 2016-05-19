@@ -31,10 +31,17 @@
 }
 %endif
 
+.downloadStackIcon {
+  --inline-offset: 8px;
+  --block-offset: 4px;
+  --icon-size: 32px;
+}
+
 .downloadTypeIcon {
   margin-inline-end: 8px;
-  width: 32px;
-  height: 32px;
+  width: calc(var(--icon-size) + var(--inline-offset));
+  height: calc(var(--icon-size) + var(--block-offset));
+  padding: var(--block-offset) var(--inline-offset) 0 0;
 }
 
 %ifdef XP_WIN
@@ -46,7 +53,17 @@
 %endif
 
 .blockedIcon {
-  list-style-image: url("chrome://global/skin/icons/Error.png");
+  --overlay-image-dimensions: top right / 16px no-repeat;
+  padding: 0;
+  background: url("chrome://browser/skin/download-blocked.svg") var(--overlay-image-dimensions);
+}
+
+@item@[verdict="PotentiallyUnwanted"] .blockedIcon {
+  background: url("chrome://browser/skin/warning.svg") var(--overlay-image-dimensions);
+}
+
+@item@[verdict="Uncommon"] .blockedIcon {
+  background: url("chrome://browser/skin/info.svg") var(--overlay-image-dimensions);
 }
 
 .downloadTarget {

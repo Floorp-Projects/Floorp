@@ -47,14 +47,6 @@
   outline-offset: -2px;
 }
 
-@item@[verdict="PotentiallyUnwanted"] .blockedIcon {
-  list-style-image: url("chrome://global/skin/icons/warning-32.png");
-}
-
-@item@[verdict="Uncommon"] .blockedIcon {
-  list-style-image: url("chrome://global/skin/icons/information-32.png");
-}
-
 /*** Highlighted list items ***/
 
 @keyfocus@ @itemFocused@,
