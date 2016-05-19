@@ -87,8 +87,6 @@ private:
     return "apple VDA decoder";
   }
 
-  void SetSeekThreshold(const media::TimeUnit& aTime) override;
-
 protected:
   AppleVDADecoder(const VideoInfo& aConfig,
                   TaskQueue* aTaskQueue,
@@ -135,17 +133,13 @@ private:
   const bool mUseSoftwareImages;
   const bool mIs106;
 
-  // Protects mReorderQueue and mSeekTargetThreshold.
+  // Protects mReorderQueue.
   Monitor mMonitor;
   // Set on reader/decode thread calling Flush() to indicate that output is
   // not required and so input samples on mTaskQueue need not be processed.
   // Cleared on mTaskQueue in ProcessDrain().
   Atomic<bool> mIsFlushing;
   ReorderQueue mReorderQueue;
-  // Decoded frame will be dropped if its pts is smaller than this
-  // value. It is accessed in VideoToolbox thread and reader taskqueue so it
-  // should be protected by mMonitor.
-  Maybe<media::TimeUnit> mSeekTargetThreshold;
 
   // Method to set up the decompression session.
   nsresult InitializeSession();
