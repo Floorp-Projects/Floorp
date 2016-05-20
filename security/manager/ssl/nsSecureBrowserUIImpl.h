@@ -3,28 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsSecureBrowserUIImpl_h_
-#define nsSecureBrowserUIImpl_h_
+#ifndef nsSecureBrowserUIImpl_h
+#define nsSecureBrowserUIImpl_h
 
-#ifdef DEBUG
-#include "mozilla/Atomics.h"
-#endif
-#include "mozilla/ReentrantMonitor.h"
-#include "nsCOMPtr.h"
-#include "nsString.h"
-#include "nsIDOMElement.h"
-#include "nsIDOMWindow.h"
-#include "nsISecureBrowserUI.h"
-#include "nsIDocShell.h"
-#include "nsIDocShellTreeItem.h"
-#include "nsIWebProgressListener.h"
-#include "nsIURI.h"
-#include "nsISecurityEventSink.h"
-#include "nsWeakReference.h"
-#include "nsISSLStatusProvider.h"
-#include "nsIAssociatedContentSecurity.h"
 #include "PLDHashTable.h"
+#include "mozilla/ReentrancyGuard.h"
+#include "nsCOMPtr.h"
 #include "nsINetUtil.h"
+#include "nsISSLStatusProvider.h"
+#include "nsISecureBrowserUI.h"
+#include "nsISecurityEventSink.h"
+#include "nsIURI.h"
+#include "nsIWebProgressListener.h"
+#include "nsWeakReference.h"
 
 class nsISSLStatus;
 class nsIChannel;
@@ -38,6 +29,8 @@ class nsSecureBrowserUIImpl : public nsISecureBrowserUI,
                               public nsSupportsWeakReference,
                               public nsISSLStatusProvider
 {
+  friend class mozilla::ReentrancyGuard;
+
 public:
   nsSecureBrowserUIImpl();
 
@@ -78,7 +71,7 @@ protected:
   bool mRestoreSubrequests;
   bool mOnLocationChangeSeen;
 #ifdef DEBUG
-  mozilla::Atomic<int32_t> mOnStateLocationChangeReentranceDetection;
+  bool mEntered; // For ReentrancyGuard.
 #endif
 
   static already_AddRefed<nsISupports> ExtractSecurityInfo(nsIRequest* aRequest);
@@ -100,5 +93,4 @@ protected:
   PLDHashTable mTransferringRequests;
 };
 
-
-#endif /* nsSecureBrowserUIImpl_h_ */
+#endif // nsSecureBrowserUIImpl_h
