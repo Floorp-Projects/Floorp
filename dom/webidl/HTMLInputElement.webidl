@@ -86,7 +86,7 @@ interface HTMLInputElement : HTMLElement {
            attribute DOMString type;
   [Pure, SetterThrows]
            attribute DOMString defaultValue;
-  [Pure, TreatNullAs=EmptyString, SetterThrows]
+  [Pure, TreatNullAs=EmptyString, Throws]
            attribute DOMString value;
   [Throws, Pref="dom.experimental_forms"]
            attribute Date? valueAsDate;
