@@ -832,7 +832,7 @@ function guessKeyNameFromKeyCode_(aKeyCode, win = window)
     case KeyboardEvent.DOM_VK_SCROLL_LOCK:
       return "ScrollLock";
     case KeyboardEvent.DOM_VK_VOLUME_MUTE:
-      return "VolumeMute";
+      return "AudioVolumeMute";
     case KeyboardEvent.DOM_VK_VOLUME_DOWN:
       return "AudioVolumeDown";
     case KeyboardEvent.DOM_VK_VOLUME_UP:
