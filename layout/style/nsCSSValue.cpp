@@ -216,6 +216,19 @@ nsCSSValue& nsCSSValue::operator=(const nsCSSValue& aCopy)
   return *this;
 }
 
+nsCSSValue&
+nsCSSValue::operator=(nsCSSValue&& aOther)
+{
+  MOZ_ASSERT(this != &aOther, "Self assigment with rvalue reference");
+
+  Reset();
+  mUnit = aOther.mUnit;
+  mValue = aOther.mValue;
+  aOther.mUnit = eCSSUnit_Null;
+
+  return *this;
+}
+
 bool nsCSSValue::operator==(const nsCSSValue& aOther) const
 {
   MOZ_ASSERT(mUnit != eCSSUnit_ListDep &&

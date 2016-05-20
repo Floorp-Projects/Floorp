@@ -458,9 +458,16 @@ public:
   explicit nsCSSValue(mozilla::css::GridTemplateAreasValue* aValue);
   explicit nsCSSValue(mozilla::css::FontFamilyListRefCnt* aValue);
   nsCSSValue(const nsCSSValue& aCopy);
+  nsCSSValue(nsCSSValue&& aOther)
+    : mUnit(aOther.mUnit)
+    , mValue(aOther.mValue)
+  {
+    aOther.mUnit = eCSSUnit_Null;
+  }
   ~nsCSSValue() { Reset(); }
 
   nsCSSValue&  operator=(const nsCSSValue& aCopy);
+  nsCSSValue&  operator=(nsCSSValue&& aCopy);
   bool        operator==(const nsCSSValue& aOther) const;
 
   bool operator!=(const nsCSSValue& aOther) const
