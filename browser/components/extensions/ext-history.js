@@ -14,6 +14,25 @@ const {
   normalizeTime,
 } = ExtensionUtils;
 
+let historySvc = Ci.nsINavHistoryService;
+const TRANSITION_TO_TRANSITION_TYPES_MAP = new Map([
+  ["link", historySvc.TRANSITION_LINK],
+  ["typed", historySvc.TRANSITION_TYPED],
+  ["auto_bookmark", historySvc.TRANSITION_BOOKMARK],
+  ["auto_subframe", historySvc.TRANSITION_EMBED],
+  ["manual_subframe", historySvc.TRANSITION_FRAMED_LINK],
+]);
+
+function getTransitionType(transition) {
+  // cannot set a default value for the transition argument as the framework sets it to null
+  transition = transition || "link";
+  let transitionType = TRANSITION_TO_TRANSITION_TYPES_MAP.get(transition);
+  if (!transitionType) {
+    throw new Error(`|${transition}| is not a supported transition for history`);
+  }
+  return transitionType;
+}
+
 /*
  * Converts a nsINavHistoryResultNode into a plain object
  *
@@ -48,6 +67,32 @@ function convertNavHistoryContainerResultNode(container) {
 extensions.registerSchemaAPI("history", "history", (extension, context) => {
   return {
     history: {
+      addUrl: function(details) {
+        let transition, date;
+        try {
+          transition = getTransitionType(details.transition);
+        } catch (error) {
+          return Promise.reject({message: error.message});
+        }
+        if (details.visitTime) {
+          date = normalizeTime(details.visitTime);
+        }
+        let pageInfo = {
+          title: details.title,
+          url: details.url,
+          visits: [
+            {
+              transition,
+              date,
+            },
+          ],
+        };
+        try {
+          return History.insert(pageInfo).then(() => undefined);
+        } catch (error) {
+          return Promise.reject({message: error.message});
+        }
+      },
       deleteAll: function() {
         return History.clear();
       },
