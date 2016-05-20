@@ -6,9 +6,6 @@
 #include "nsISupports.idl"
 
 %{C++
-#include "nsTArray.h"
-#include "mozilla/Maybe.h"
-
 #define PUSHNOTIFIER_CONTRACTID \
   "@mozilla.org/push/Notifier;1"
 
@@ -19,8 +16,6 @@
 %}
 
 interface nsIPrincipal;
-
-[ref] native MaybeData(const mozilla::Maybe<nsTArray<uint8_t>>);
 
 /**
  * Fires XPCOM observer notifications and service worker events for
@@ -67,37 +62,6 @@ interface nsIPushNotifier : nsISupports
 
   void notifyError(in ACString scope, in nsIPrincipal principal,
                    in DOMString message, in uint32_t flags);
-
-  /**
-   * Internal methods used to fire service worker events and observer
-   * notifications. These are not exposed to JavaScript.
-   */
-
-  [noscript, nostdcall]
-  void notifyPushWorkers(in ACString scope,
-                         in nsIPrincipal principal,
-                         in DOMString messageId,
-                         in MaybeData data);
-
-  [noscript, nostdcall]
-  void notifyPushObservers(in ACString scope, in nsIPrincipal principal,
-                           in MaybeData data);
-
-  [noscript, nostdcall]
-  void notifySubscriptionChangeWorkers(in ACString scope,
-                                       in nsIPrincipal principal);
-
-  [noscript, nostdcall]
-  void notifySubscriptionChangeObservers(in ACString scope,
-                                         in nsIPrincipal principal);
-
-  [noscript, nostdcall]
-  void notifySubscriptionModifiedObservers(in ACString scope,
-                                           in nsIPrincipal principal);
-
-  [noscript, nostdcall, notxpcom]
-  void notifyErrorWorkers(in ACString scope, in DOMString message,
-                          in uint32_t flags);
 };
 
 /**
