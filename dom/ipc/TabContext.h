@@ -155,6 +155,7 @@ protected:
    *  - a non-browser, non-app frame. Both own app and owner app should be null.
    */
   bool SetTabContext(bool aIsMozBrowserElement,
+                     bool aIsPrerendered,
                      mozIApplication* aOwnApp,
                      mozIApplication* aAppFrameOwnerApp,
                      const DocShellOriginAttributes& aOriginAttributes,
@@ -170,6 +171,11 @@ protected:
    * returns false.
    */
   bool UpdateTabContextAfterSwap(const TabContext& aContext);
+
+  /**
+   * Whether this TabContext is in prerender mode.
+   */
+  bool mIsPrerendered;
 
 private:
   /**
@@ -232,12 +238,14 @@ public:
 
   bool
   SetTabContext(bool aIsMozBrowserElement,
+                bool aIsPrerendered,
                 mozIApplication* aOwnApp,
                 mozIApplication* aAppFrameOwnerApp,
                 const DocShellOriginAttributes& aOriginAttributes,
                 const nsACString& aSignedPkgOriginNoSuffix = EmptyCString())
   {
     return TabContext::SetTabContext(aIsMozBrowserElement,
+                                     aIsPrerendered,
                                      aOwnApp,
                                      aAppFrameOwnerApp,
                                      aOriginAttributes,

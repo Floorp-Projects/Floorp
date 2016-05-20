@@ -47,6 +47,9 @@ struct FrameIPCTabContext
   // Whether this is a mozbrowser frame.  <iframe mozbrowser mozapp> and
   // <xul:browser> are not considered to be mozbrowser frames.
   bool isMozBrowserElement;
+
+  // Whether this TabContext should work in prerender mode.
+  bool isPrerendered;
 };
 
 // XXXcatalinb: This is only used by ServiceWorkerClients::OpenWindow.
