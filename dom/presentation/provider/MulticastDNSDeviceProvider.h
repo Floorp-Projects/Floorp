@@ -13,7 +13,7 @@
 #include "nsIObserver.h"
 #include "nsIPresentationDevice.h"
 #include "nsIPresentationDeviceProvider.h"
-#include "nsITCPPresentationServer.h"
+#include "nsIPresentationControlService.h"
 #include "nsITimer.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -31,7 +31,7 @@ class MulticastDNSDeviceProvider final
   , public nsIDNSServiceDiscoveryListener
   , public nsIDNSRegistrationListener
   , public nsIDNSServiceResolveListener
-  , public nsITCPPresentationServerListener
+  , public nsIPresentationControlServerListener
   , public nsIObserver
 {
 public:
@@ -40,7 +40,7 @@ public:
   NS_DECL_NSIDNSSERVICEDISCOVERYLISTENER
   NS_DECL_NSIDNSREGISTRATIONLISTENER
   NS_DECL_NSIDNSSERVICERESOLVELISTENER
-  NS_DECL_NSITCPPRESENTATIONSERVERLISTENER
+  NS_DECL_NSIPRESENTATIONCONTROLSERVERLISTENER
   NS_DECL_NSIOBSERVER
 
   explicit MulticastDNSDeviceProvider() = default;
@@ -175,7 +175,7 @@ private:
 
   bool mInitialized = false;
   nsWeakPtr mDeviceListener;
-  nsCOMPtr<nsITCPPresentationServer> mPresentationServer;
+  nsCOMPtr<nsIPresentationControlService> mPresentationService;
   nsCOMPtr<nsIDNSServiceDiscovery> mMulticastDNS;
   RefPtr<DNSServiceWrappedListener> mWrappedListener;
 
