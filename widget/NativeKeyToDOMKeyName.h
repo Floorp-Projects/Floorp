@@ -1232,12 +1232,14 @@ KEY_MAP_ANDROID (Call, AKEYCODE_CALL)
 KEY_MAP_QT      (Camera, Qt::Key_Camera)
 KEY_MAP_ANDROID (Camera, AKEYCODE_CAMERA)
 
-// CameraFocusAdjust (should be renamed to CameraFocus)
-KEY_MAP_QT      (CameraFocusAdjust, Qt::Key_CameraFocus)
-KEY_MAP_ANDROID (CameraFocusAdjust, AKEYCODE_FOCUS)
+// CameraFocus
+KEY_MAP_QT                (CameraFocus,       Qt::Key_CameraFocus)
+KEY_MAP_ANDROID_EXCEPT_B2G(CameraFocus,       AKEYCODE_FOCUS)
+KEY_MAP_B2G               (CameraFocusAdjust, AKEYCODE_FOCUS)
 
-// HomeScreen (should be renamed to GoHome)
-KEY_MAP_ANDROID (HomeScreen, AKEYCODE_HOME)
+// GoHome
+KEY_MAP_ANDROID_EXCEPT_B2G(GoHome,     AKEYCODE_HOME)
+KEY_MAP_B2G               (HomeScreen, AKEYCODE_HOME)
 
 /******************************************************************************
  * TV Keys
