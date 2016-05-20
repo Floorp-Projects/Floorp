@@ -631,7 +631,8 @@ var gViewController = {
 
   initialize: function() {
     this.viewPort = document.getElementById("view-port");
-    this.headerEl = document.getElementById("header");
+    this.headeredViews = document.getElementById("headered-views");
+    this.headeredViewsDeck = document.getElementById("headered-views-content");
 
     this.viewObjects["search"] = gSearchView;
     this.viewObjects["discover"] = gDiscoverView;
@@ -752,6 +753,24 @@ var gViewController = {
     notifyInitialized();
   },
 
+  get displayedView() {
+    if (this.viewPort.selectedPanel == this.headeredViews) {
+      return this.headeredViewsDeck.selectedPanel;
+    } else {
+      return this.viewPort.selectedPanel;
+    }
+  },
+
+  set displayedView(view) {
+    let node = view.node;
+    if (node.parentNode == this.headeredViewsDeck) {
+      this.headeredViewsDeck.selectedPanel = node;
+      this.viewPort.selectedPanel = this.headeredViews;
+    } else {
+      this.viewPort.selectedPanel = node;
+    }
+  },
+
   loadViewInternal: function(aViewId, aPreviousView, aState) {
     var view = this.parseViewId(aViewId);
 
@@ -763,13 +782,11 @@ var gViewController = {
       throw Components.Exception("Root node doesn't exist for '" + view.type + "' view");
 
     if (this.currentViewObj && aViewId != aPreviousView) {
-      this.headerEl.hidden = Boolean(viewObj.hideHeader);
-
       try {
         let canHide = this.currentViewObj.hide();
         if (canHide === false)
           return;
-        this.viewPort.selectedPanel.removeAttribute("loading");
+        this.displayedView.removeAttribute("loading");
       } catch (e) {
         // this shouldn't be fatal
         Cu.reportError(e);
@@ -781,8 +798,8 @@ var gViewController = {
     this.currentViewId = aViewId;
     this.currentViewObj = viewObj;
 
-    this.viewPort.selectedPanel = this.currentViewObj.node;
-    this.viewPort.selectedPanel.setAttribute("loading", "true");
+    this.displayedView = this.currentViewObj;
+    this.currentViewObj.node.setAttribute("loading", "true");
     this.currentViewObj.node.focus();
 
     if (aViewId == aPreviousView)
@@ -798,7 +815,7 @@ var gViewController = {
   },
 
   notifyViewChanged: function() {
-    this.viewPort.selectedPanel.removeAttribute("loading");
+    this.displayedView.removeAttribute("loading");
 
     if (this.viewChangeCallback) {
       this.viewChangeCallback();
@@ -3323,7 +3340,7 @@ var gDetailView = {
     // relies on us finishing before the ViewChanged event bubbles up to its
     // listeners, and promises resolve asynchronously.
     let whenViewLoaded = callback => {
-      if (gViewController.viewPort.selectedPanel.hasAttribute("loading")) {
+      if (gViewController.displayedView.hasAttribute("loading")) {
         gDetailView.node.addEventListener("ViewChanged", function viewChangedEventListener() {
           gDetailView.node.removeEventListener("ViewChanged", viewChangedEventListener);
           callback();
