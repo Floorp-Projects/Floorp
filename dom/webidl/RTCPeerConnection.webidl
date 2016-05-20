@@ -116,9 +116,9 @@ interface RTCPeerConnection : EventTarget  {
   attribute DOMString id;
 
   RTCConfiguration      getConfiguration ();
-  [UnsafeInPrerendering]
+  [UnsafeInPrerendering, Deprecated="RTCPeerConnectionGetStreams"]
   sequence<MediaStream> getLocalStreams ();
-  [UnsafeInPrerendering]
+  [UnsafeInPrerendering, Deprecated="RTCPeerConnectionGetStreams"]
   sequence<MediaStream> getRemoteStreams ();
   [UnsafeInPrerendering]
   MediaStream? getStreamById (DOMString streamId);
