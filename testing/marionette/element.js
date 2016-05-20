@@ -59,18 +59,18 @@ element.Strategy = {
   AnonAttribute: "anon attribute",
 };
 
-this.ElementManager = function ElementManager() {
-  this.seenItems = {};
-  this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-};
+this.ElementManager = class {
+  constructor() {
+    this.seenItems = {};
+    this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  }
 
-ElementManager.prototype = {
   /**
    * Reset values
    */
-  reset: function EM_clear() {
+  reset() {
     this.seenItems = {};
-  },
+  }
 
   /**
    * Make a collection of elements seen.
@@ -85,21 +85,21 @@ ElementManager.prototype = {
    *     List of the web element references associated with each element
    *     from |els|.
    */
-  addAll: function(els) {
+  addAll(els) {
     let add = this.add.bind(this);
     return [...els].map(add);
-  },
+  }
 
   /**
-  * Make an element seen.
-  *
-  * @param {nsIDOMElement} el
-  *    Element to add to set of seen elements.
-  *
-  * @return {string}
-  *     Web element reference associated with element.
-  */
-  add: function(el) {
+   * Make an element seen.
+   *
+   * @param {nsIDOMElement} el
+   *    Element to add to set of seen elements.
+   *
+   * @return {string}
+   *     Web element reference associated with element.
+   */
+  add(el) {
     for (let i in this.seenItems) {
       let foundEl;
       try {
@@ -119,7 +119,7 @@ ElementManager.prototype = {
     let id = element.generateUUID();
     this.seenItems[id] = Cu.getWeakReference(el);
     return id;
-  },
+  }
 
   /**
    * Retrieve element from its unique ID
@@ -132,7 +132,7 @@ ElementManager.prototype = {
    * @returns nsIDOMElement
    *        Returns the element or throws Exception if not found
    */
-  getKnownElement: function EM_getKnownElement(id, container) {
+  getKnownElement(id, container) {
     let el = this.seenItems[id];
     if (!el) {
       throw new JavaScriptError(`Element has not been seen before. Id given was ${id}`);
@@ -160,7 +160,7 @@ ElementManager.prototype = {
           "is no longer attached to the DOM or the page has been refreshed.");
     }
     return el;
-  },
+  }
 
   /**
    * Check if the element is detached from the current frame as well as the
@@ -174,7 +174,7 @@ ElementManager.prototype = {
    *        root.
    * @return {Boolean} a flag indicating that the element is disconnected
    */
-  isDisconnected: function EM_isDisconnected(el, shadowRoot, frame) {
+  isDisconnected(el, shadowRoot, frame) {
     if (shadowRoot && frame.ShadowRoot) {
       if (el.compareDocumentPosition(shadowRoot) &
         DOCUMENT_POSITION_DISCONNECTED) {
@@ -190,7 +190,7 @@ ElementManager.prototype = {
       return el.compareDocumentPosition(frame.document.documentElement) &
         DOCUMENT_POSITION_DISCONNECTED;
     }
-  },
+  }
 
   /**
    * Convert values to primitives that can be transported over the
@@ -207,7 +207,7 @@ ElementManager.prototype = {
    * @return object
    *         Returns a JSON primitive or Object
    */
-  wrapValue: function EM_wrapValue(val) {
+  wrapValue(val) {
     let result = null;
 
     switch (typeof(val)) {
@@ -252,7 +252,7 @@ ElementManager.prototype = {
     }
 
     return result;
-  },
+  }
 
   /**
    * Convert any ELEMENT references in 'args' to the actual elements
@@ -266,7 +266,7 @@ ElementManager.prototype = {
    *        Returns the objects passed in by the client, with the
    *        reference IDs replaced by the actual elements.
    */
-  convertWrappedArguments: function EM_convertWrappedArguments(args, container) {
+  convertWrappedArguments(args, container) {
     let converted;
     switch (typeof(args)) {
       case 'number':
