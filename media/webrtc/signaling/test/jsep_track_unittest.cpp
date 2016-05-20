@@ -210,6 +210,51 @@ class JsepTrackTest : public ::testing::Test
       CheckEncodingCount(expected, mSendAns, mRecvOff);
     }
 
+    const JsepVideoCodecDescription*
+    GetVideoCodec(const JsepTrack& track) const
+    {
+      if (!track.GetNegotiatedDetails() ||
+          track.GetNegotiatedDetails()->GetEncodingCount() != 1U) {
+        return nullptr;
+      }
+      const std::vector<JsepCodecDescription*>& codecs =
+        track.GetNegotiatedDetails()->GetEncoding(0).GetCodecs();
+      if (codecs.size() != 1U ||
+          codecs[0]->mType != SdpMediaSection::kVideo) {
+        return nullptr;
+      }
+      return static_cast<const JsepVideoCodecDescription*>(codecs[0]);
+    }
+
+    void CheckOtherFbsSize(const JsepTrack& track, size_t expected) const
+    {
+      const JsepVideoCodecDescription* videoCodec = GetVideoCodec(track);
+      ASSERT_NE(videoCodec, nullptr);
+      ASSERT_EQ(videoCodec->mOtherFbTypes.size(), expected);
+    }
+
+    void CheckOtherFbExists(const JsepTrack& track,
+                            SdpRtcpFbAttributeList::Type type) const
+    {
+      const JsepVideoCodecDescription* videoCodec = GetVideoCodec(track);
+      ASSERT_NE(videoCodec, nullptr);
+      for (const auto& fb : videoCodec->mOtherFbTypes) {
+          if (fb.type == type) {
+            return; // found the RtcpFb type, so stop looking
+          }
+      }
+      FAIL();  // RtcpFb type not found
+    }
+
+    void SanityCheckRtcpFbs(const JsepVideoCodecDescription& a,
+                            const JsepVideoCodecDescription& b) const
+    {
+      ASSERT_EQ(a.mNackFbTypes.size(), b.mNackFbTypes.size());
+      ASSERT_EQ(a.mAckFbTypes.size(), b.mAckFbTypes.size());
+      ASSERT_EQ(a.mCcmFbTypes.size(), b.mCcmFbTypes.size());
+      ASSERT_EQ(a.mOtherFbTypes.size(), b.mOtherFbTypes.size());
+    }
+
     void SanityCheckCodecs(const JsepCodecDescription& a,
                            const JsepCodecDescription& b) const
     {
@@ -221,6 +266,11 @@ class JsepTrackTest : public ::testing::Test
       ASSERT_NE(a.mDirection, b.mDirection);
       // These constraints are for fmtp and rid, which _are_ signaled
       ASSERT_EQ(a.mConstraints, b.mConstraints);
+
+      if (a.mType == SdpMediaSection::kVideo) {
+        SanityCheckRtcpFbs(static_cast<const JsepVideoCodecDescription&>(a),
+                           static_cast<const JsepVideoCodecDescription&>(b));
+      }
     }
 
     void SanityCheckEncodings(const JsepTrackEncoding& a,
@@ -314,6 +364,83 @@ TEST_F(JsepTrackTest, VideoNegotiation)
   OfferAnswer();
   CheckOffEncodingCount(1);
   CheckAnsEncodingCount(1);
+}
+
+TEST_F(JsepTrackTest, VideoNegotiationOfferRemb)
+{
+  InitCodecs();
+  // enable remb on the offer codecs
+  ((JsepVideoCodecDescription*)mOffCodecs.values[2])->EnableRemb();
+  InitTracks(SdpMediaSection::kVideo);
+  InitSdp(SdpMediaSection::kVideo);
+  OfferAnswer();
+
+  // make sure REMB is on offer and not on answer
+  ASSERT_NE(mOffer->ToString().find("a=rtcp-fb:120 goog-remb"),
+            std::string::npos);
+  ASSERT_EQ(mAnswer->ToString().find("a=rtcp-fb:120 goog-remb"),
+            std::string::npos);
+  CheckOffEncodingCount(1);
+  CheckAnsEncodingCount(1);
+
+  CheckOtherFbsSize(*mSendOff, 0);
+  CheckOtherFbsSize(*mRecvAns, 0);
+
+  CheckOtherFbsSize(*mSendAns, 0);
+  CheckOtherFbsSize(*mRecvOff, 0);
+}
+
+TEST_F(JsepTrackTest, VideoNegotiationAnswerRemb)
+{
+  InitCodecs();
+  // enable remb on the answer codecs
+  ((JsepVideoCodecDescription*)mAnsCodecs.values[2])->EnableRemb();
+  InitTracks(SdpMediaSection::kVideo);
+  InitSdp(SdpMediaSection::kVideo);
+  OfferAnswer();
+
+  // make sure REMB is not on offer and not on answer
+  ASSERT_EQ(mOffer->ToString().find("a=rtcp-fb:120 goog-remb"),
+            std::string::npos);
+  ASSERT_EQ(mAnswer->ToString().find("a=rtcp-fb:120 goog-remb"),
+            std::string::npos);
+  CheckOffEncodingCount(1);
+  CheckAnsEncodingCount(1);
+
+  CheckOtherFbsSize(*mSendOff, 0);
+  CheckOtherFbsSize(*mRecvAns, 0);
+
+  CheckOtherFbsSize(*mSendAns, 0);
+  CheckOtherFbsSize(*mRecvOff, 0);
+}
+
+TEST_F(JsepTrackTest, VideoNegotiationOfferAnswerRemb)
+{
+  InitCodecs();
+  // enable remb on the offer and answer codecs
+  ((JsepVideoCodecDescription*)mOffCodecs.values[2])->EnableRemb();
+  ((JsepVideoCodecDescription*)mAnsCodecs.values[2])->EnableRemb();
+  InitTracks(SdpMediaSection::kVideo);
+  InitSdp(SdpMediaSection::kVideo);
+  OfferAnswer();
+
+  // make sure REMB is on offer and on answer
+  ASSERT_NE(mOffer->ToString().find("a=rtcp-fb:120 goog-remb"),
+            std::string::npos);
+  ASSERT_NE(mAnswer->ToString().find("a=rtcp-fb:120 goog-remb"),
+            std::string::npos);
+  CheckOffEncodingCount(1);
+  CheckAnsEncodingCount(1);
+
+  CheckOtherFbsSize(*mSendOff, 1);
+  CheckOtherFbsSize(*mRecvAns, 1);
+  CheckOtherFbExists(*mSendOff, SdpRtcpFbAttributeList::kRemb);
+  CheckOtherFbExists(*mRecvAns, SdpRtcpFbAttributeList::kRemb);
+
+  CheckOtherFbsSize(*mSendAns, 1);
+  CheckOtherFbsSize(*mRecvOff, 1);
+  CheckOtherFbExists(*mSendAns, SdpRtcpFbAttributeList::kRemb);
+  CheckOtherFbExists(*mRecvOff, SdpRtcpFbAttributeList::kRemb);
 }
 
 TEST_F(JsepTrackTest, AudioOffSendonlyAnsRecvonly)
