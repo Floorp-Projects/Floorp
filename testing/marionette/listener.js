@@ -42,7 +42,7 @@ var curContainer = { frame: content, shadowRoot: null };
 var isRemoteBrowser = () => curContainer.frame.contentWindow !== null;
 var previousContainer = null;
 
-var elementManager = new ElementManager();
+var elementManager = new element.Store();
 var SUPPORTED_STRATEGIES = new Set([
   element.Strategy.ClassName,
   element.Strategy.Selector,
@@ -644,7 +644,7 @@ function emitTouchEvent(type, touch) {
  * Function that perform a single tap
  */
 function singleTap(id, corx, cory) {
-  let el = elementManager.getKnownElement(id, curContainer);
+  let el = elementManager.get(id, curContainer);
   // after this block, the element will be scrolled into view
   let visible = element.isVisible(el, corx, cory);
   if (!visible) {
@@ -769,7 +769,7 @@ function setDispatch(batches, touches, batchIndex=0) {
 
     switch (command) {
       case "press":
-        el = elementManager.getKnownElement(pack[2], curContainer);
+        el = elementManager.get(pack[2], curContainer);
         c = element.coordinates(el, pack[3], pack[4]);
         touch = createATouch(el, c.x, c.y, touchId);
         multiLast[touchId] = touch;
@@ -786,7 +786,7 @@ function setDispatch(batches, touches, batchIndex=0) {
         break;
 
       case "move":
-        el = elementManager.getKnownElement(pack[2], curContainer);
+        el = elementManager.get(pack[2], curContainer);
         c = element.coordinates(el);
         touch = createATouch(multiLast[touchId].target, c.x, c.y, touchId);
         touchIndex = touches.indexOf(lastTouch);
@@ -1028,7 +1028,7 @@ function* findElementContent(strategy, selector, opts = {}) {
 
   opts.all = false;
   if (opts.startNode) {
-    opts.startNode = elementManager.getKnownElement(opts.startNode, curContainer);
+    opts.startNode = elementManager.get(opts.startNode, curContainer);
   }
 
   let el = yield element.find(curContainer, strategy, selector, opts);
@@ -1048,7 +1048,7 @@ function* findElementsContent(strategy, selector, opts = {}) {
 
   opts.all = true;
   if (opts.startNode) {
-    opts.startNode = elementManager.getKnownElement(opts.startNode, curContainer);
+    opts.startNode = elementManager.get(opts.startNode, curContainer);
   }
 
   let els = yield element.find(curContainer, strategy, selector, opts);
@@ -1079,7 +1079,7 @@ function getActiveElement() {
  *     Reference to the web element to click.
  */
 function clickElement(id) {
-  let el = elementManager.getKnownElement(id, curContainer);
+  let el = elementManager.get(id, curContainer);
   return interaction.clickElement(
       el,
       !!capabilities.raisesAccessibilityExceptions,
@@ -1087,7 +1087,7 @@ function clickElement(id) {
 }
 
 function getElementAttribute(id, name) {
-  let el = elementManager.getKnownElement(id, curContainer);
+  let el = elementManager.get(id, curContainer);
   if (element.isBooleanAttribute(el, name)) {
     if (el.hasAttribute(name)) {
       return "true";
@@ -1100,7 +1100,7 @@ function getElementAttribute(id, name) {
 }
 
 function getElementProperty(id, name) {
-  let el = elementManager.getKnownElement(id, curContainer);
+  let el = elementManager.get(id, curContainer);
   return el[name];
 }
 
@@ -1114,7 +1114,7 @@ function getElementProperty(id, name) {
  *     Text of element.
  */
 function getElementText(id) {
-  let el = elementManager.getKnownElement(id, curContainer);
+  let el = elementManager.get(id, curContainer);
   return atom.getElementText(el, curContainer.frame);
 }
 
@@ -1128,7 +1128,7 @@ function getElementText(id) {
  *     Tag name of element.
  */
 function getElementTagName(id) {
-  let el = elementManager.getKnownElement(id, curContainer);
+  let el = elementManager.get(id, curContainer);
   return el.tagName.toLowerCase();
 }
 
@@ -1139,7 +1139,7 @@ function getElementTagName(id) {
  * capability.
  */
 function isElementDisplayed(id) {
-  let el = elementManager.getKnownElement(id, curContainer);
+  let el = elementManager.get(id, curContainer);
   return interaction.isElementDisplayed(
       el, capabilities.raisesAccessibilityExceptions);
 }
@@ -1157,7 +1157,7 @@ function isElementDisplayed(id) {
  *     Effective value of the requested CSS property.
  */
 function getElementValueOfCssProperty(id, prop) {
-  let el = elementManager.getKnownElement(id, curContainer);
+  let el = elementManager.get(id, curContainer);
   let st = curContainer.frame.document.defaultView.getComputedStyle(el, null);
   return st.getPropertyValue(prop);
 }
@@ -1172,7 +1172,7 @@ function getElementValueOfCssProperty(id, prop) {
  *     The x, y, width, and height properties of the element.
  */
 function getElementRect(id) {
-  let el = elementManager.getKnownElement(id, curContainer);
+  let el = elementManager.get(id, curContainer);
   let clientRect = el.getBoundingClientRect();
   return {
     x: clientRect.x + curContainer.frame.pageXOffset,
@@ -1192,7 +1192,7 @@ function getElementRect(id) {
  *     True if enabled, false otherwise.
  */
 function isElementEnabled(id) {
-  let el = elementManager.getKnownElement(id, curContainer);
+  let el = elementManager.get(id, curContainer);
   return interaction.isElementEnabled(
       el, capabilities.raisesAccessibilityExceptions);
 }
@@ -1204,7 +1204,7 @@ function isElementEnabled(id) {
  * and Radio Button states, or option elements.
  */
 function isElementSelected(id) {
-  let el = elementManager.getKnownElement(id, curContainer);
+  let el = elementManager.get(id, curContainer);
   return interaction.isElementSelected(
       el, capabilities.raisesAccessibilityExceptions);
 }
@@ -1216,7 +1216,7 @@ function sendKeysToElement(msg) {
   let command_id = msg.json.command_id;
   let val = msg.json.value;
   let id = msg.json.id;
-  let el = elementManager.getKnownElement(id, curContainer);
+  let el = elementManager.get(id, curContainer);
 
   if (el.type == "file") {
     let p = val.join("");
@@ -1239,7 +1239,7 @@ function sendKeysToElement(msg) {
  */
 function clearElement(id) {
   try {
-    let el = elementManager.getKnownElement(id, curContainer);
+    let el = elementManager.get(id, curContainer);
     if (el.type == "file") {
       el.value = null;
     } else {
@@ -1284,7 +1284,7 @@ function switchToShadowRoot(id) {
   }
 
   let foundShadowRoot;
-  let hostEl = elementManager.getKnownElement(id, curContainer);
+  let hostEl = elementManager.get(id, curContainer);
   foundShadowRoot = hostEl.shadowRoot;
   if (!foundShadowRoot) {
     throw new NoSuchElementError('Unable to locate shadow root: ' + id);
@@ -1354,38 +1354,40 @@ function switchToFrame(msg) {
     checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
     return;
   }
-  if (msg.json.element != undefined) {
-    if (elementManager.seenItems[msg.json.element] != undefined) {
-      let wantedFrame;
-      try {
-        wantedFrame = elementManager.getKnownElement(msg.json.element, curContainer); //Frame Element
-      } catch (e) {
-        sendError(e, command_id);
-      }
 
-      if (frames.length > 0) {
-        for (let i = 0; i < frames.length; i++) {
-          // use XPCNativeWrapper to compare elements; see bug 834266
-          if (XPCNativeWrapper(frames[i].frameElement) == XPCNativeWrapper(wantedFrame)) {
-            curContainer.frame = frames[i].frameElement;
-            foundFrame = i;
-          }
+  let id = msg.json.element;
+  if (elementManager.has(id)) {
+    let wantedFrame;
+    try {
+      wantedFrame = elementManager.get(id, curContainer);
+    } catch (e) {
+      sendError(e, command_id);
+    }
+
+    if (frames.length > 0) {
+      for (let i = 0; i < frames.length; i++) {
+        // use XPCNativeWrapper to compare elements; see bug 834266
+        if (XPCNativeWrapper(frames[i].frameElement) == XPCNativeWrapper(wantedFrame)) {
+          curContainer.frame = frames[i].frameElement;
+          foundFrame = i;
         }
       }
-      if (foundFrame === null) {
-        // Either the frame has been removed or we have a OOP frame
-        // so lets just get all the iframes and do a quick loop before
-        // throwing in the towel
-        let iframes = curContainer.frame.document.getElementsByTagName("iframe");
-        for (var i = 0; i < iframes.length; i++) {
-          if (XPCNativeWrapper(iframes[i]) == XPCNativeWrapper(wantedFrame)) {
-            curContainer.frame = iframes[i];
-            foundFrame = i;
-          }
+    }
+
+    if (foundFrame === null) {
+      // Either the frame has been removed or we have a OOP frame
+      // so lets just get all the iframes and do a quick loop before
+      // throwing in the towel
+      let iframes = curContainer.frame.document.getElementsByTagName("iframe");
+      for (var i = 0; i < iframes.length; i++) {
+        if (XPCNativeWrapper(iframes[i]) == XPCNativeWrapper(wantedFrame)) {
+          curContainer.frame = iframes[i];
+          foundFrame = i;
         }
       }
     }
   }
+
   if (foundFrame === null) {
     if (typeof(msg.json.id) === 'number') {
       try {
@@ -1564,7 +1566,7 @@ function screenshot(id, full=true, highlights=[]) {
 
   let highlightEls = [];
   for (let h of highlights) {
-    let el = elementManager.getKnownElement(h, curContainer);
+    let el = elementManager.get(h, curContainer);
     highlightEls.push(el);
   }
 
@@ -1576,7 +1578,7 @@ function screenshot(id, full=true, highlights=[]) {
   } else {
     let node;
     if (id) {
-      node = elementManager.getKnownElement(id, curContainer);
+      node = elementManager.get(id, curContainer);
     } else {
       node = curContainer.frame.document.documentElement;
     }
