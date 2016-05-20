@@ -617,7 +617,7 @@ add_test(function() {
 
 // Tests that compatible-by-default addons are shown if strict compatibility checking is disabled
 add_test(function() {
-  restart_manager(gManagerWindow, null, function(aWindow) {
+  restart_manager(gManagerWindow, "addons://list/extension", function(aWindow) {
     gManagerWindow = aWindow;
     gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
@@ -649,13 +649,16 @@ add_test(function() {
     // Installed add-on is considered local on new search
     gAddonInstalled = true;
 
-    search(QUERY, false, function() {
-      check_filtered_results(QUERY, "relevancescore", false);
+    // Switch over to extensions list so we can do a new search
+    gCategoryUtilities.openType("extension", function() {
+      search(QUERY, false, function() {
+        check_filtered_results(QUERY, "relevancescore", false);
 
-      var installBtn = get_install_button(get_addon_item(REMOTE_TO_INSTALL));
-      is(installBtn.hidden, true, "Install button should be hidden for installed item");
+        var installBtn = get_install_button(get_addon_item(REMOTE_TO_INSTALL));
+        is(installBtn.hidden, true, "Install button should be hidden for installed item");
 
-      run_next_test();
+        run_next_test();
+      });
     });
   });
 });
