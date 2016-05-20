@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AudioBufferSourceNode.h"
+#include "nsDebug.h"
 #include "mozilla/dom/AudioBufferSourceNodeBinding.h"
 #include "mozilla/dom/AudioParam.h"
 #include "mozilla/FloatingPoint.h"
@@ -181,7 +182,10 @@ public:
       if (mResamplerOutRate == aOutRate) {
         return;
       }
-      speex_resampler_set_rate(mResampler, mBufferSampleRate, aOutRate);
+      if (speex_resampler_set_rate(mResampler, mBufferSampleRate, aOutRate) != RESAMPLER_ERR_SUCCESS) {
+        NS_ASSERTION(false, "speex_resampler_set_rate failed");
+        return;
+      }
     }
 
     mResamplerOutRate = aOutRate;
