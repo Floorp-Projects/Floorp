@@ -160,7 +160,10 @@ nsStyleContext::FinishConstruction(bool aSkipParentDisplayBasedStyleFixup)
     mParent->AddChild(this);
   }
 
-  ApplyStyleFixups(aSkipParentDisplayBasedStyleFixup);
+  SetStyleBits();
+  if (!mSource.IsServoComputedValues()) {
+    ApplyStyleFixups(aSkipParentDisplayBasedStyleFixup);
+  }
 
   #define eStyleStruct_LastItem (nsStyleStructID_Length - 1)
   NS_ASSERTION(NS_STYLE_INHERIT_MASK & NS_STYLE_INHERIT_BIT(LastItem),
@@ -474,6 +477,9 @@ const void* nsStyleContext::StyleData(nsStyleStructID aSID)
 void* 
 nsStyleContext::GetUniqueStyleData(const nsStyleStructID& aSID)
 {
+  MOZ_ASSERT(!mSource.IsServoComputedValues(),
+             "Can't COW-mutate servo values from Gecko!");
+
   // If we already own the struct and no kids could depend on it, then
   // just return it.  (We leak in this case if there are kids -- and this
   // function really shouldn't be called for style contexts that could
@@ -652,8 +658,45 @@ ShouldBlockifyChildren(const nsStyleDisplay* aStyleDisp)
 }
 
 void
+nsStyleContext::SetStyleBits()
+{
+  // XXXbholley: We should get this information directly from the
+  // ServoComputedValues rather than computing it here. This setup for
+  // ServoComputedValues-backed nsStyleContexts is probably not something
+  // we should ship.
+  //
+  // For example, NS_STYLE_IS_TEXT_COMBINED is still set in ApplyStyleFixups,
+  // which isn't called for ServoComputedValues.
+
+  // See if we have any text decorations.
+  // First see if our parent has text decorations.  If our parent does, then we inherit the bit.
+  if (mParent && mParent->HasTextDecorationLines()) {
+    mBits |= NS_STYLE_HAS_TEXT_DECORATION_LINES;
+  } else {
+    // We might have defined a decoration.
+    if (StyleTextReset()->HasTextDecorationLines()) {
+      mBits |= NS_STYLE_HAS_TEXT_DECORATION_LINES;
+    }
+  }
+
+  if ((mParent && mParent->HasPseudoElementData()) || mPseudoTag) {
+    mBits |= NS_STYLE_HAS_PSEUDO_ELEMENT_DATA;
+  }
+
+  // Set the NS_STYLE_IN_DISPLAY_NONE_SUBTREE bit
+  const nsStyleDisplay* disp = StyleDisplay();
+  if ((mParent && mParent->IsInDisplayNoneSubtree()) ||
+      disp->mDisplay == NS_STYLE_DISPLAY_NONE) {
+    mBits |= NS_STYLE_IN_DISPLAY_NONE_SUBTREE;
+  }
+}
+
+void
 nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
 {
+  MOZ_ASSERT(!mSource.IsServoComputedValues(),
+             "Can't do Gecko style fixups on Servo values");
+
 #define GET_UNIQUE_STYLE_DATA(name_) \
   static_cast<nsStyle##name_*>(GetUniqueStyleData(eStyleStruct_##name_))
 
@@ -673,21 +716,6 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
     nsStyleVisibility* mutableVis = GET_UNIQUE_STYLE_DATA(Visibility);
     mutableVis->mWritingMode = NS_STYLE_WRITING_MODE_HORIZONTAL_TB;
     AddStyleBit(NS_STYLE_IS_TEXT_COMBINED);
-  }
-
-  // See if we have any text decorations.
-  // First see if our parent has text decorations.  If our parent does, then we inherit the bit.
-  if (mParent && mParent->HasTextDecorationLines()) {
-    mBits |= NS_STYLE_HAS_TEXT_DECORATION_LINES;
-  } else {
-    // We might have defined a decoration.
-    if (StyleTextReset()->HasTextDecorationLines()) {
-      mBits |= NS_STYLE_HAS_TEXT_DECORATION_LINES;
-    }
-  }
-
-  if ((mParent && mParent->HasPseudoElementData()) || mPseudoTag) {
-    mBits |= NS_STYLE_HAS_PSEUDO_ELEMENT_DATA;
   }
 
   // CSS 2.1 10.1: Propagate the root element's 'direction' to the ICB.
@@ -798,12 +826,8 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
     }
   }
 
-  // Set the NS_STYLE_IN_DISPLAY_NONE_SUBTREE bit
-  if ((mParent && mParent->IsInDisplayNoneSubtree()) ||
-      disp->mDisplay == NS_STYLE_DISPLAY_NONE) {
-    mBits |= NS_STYLE_IN_DISPLAY_NONE_SUBTREE;
-  }
-
+  // Note: This must come after the blockification above, otherwise we fail
+  // the grid-item-blockifying-001.html reftest.
   if (mParent && ::ShouldSuppressLineBreak(this, disp, mParent,
                                            mParent->StyleDisplay())) {
     mBits |= NS_STYLE_SUPPRESS_LINEBREAK;
