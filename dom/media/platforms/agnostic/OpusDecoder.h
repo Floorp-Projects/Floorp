@@ -38,9 +38,9 @@ public:
 private:
   nsresult DecodeHeader(const unsigned char* aData, size_t aLength);
 
-  void Decode (MediaRawData* aSample);
-  int DoDecode (MediaRawData* aSample);
-  void DoDrain ();
+  void ProcessDecode(MediaRawData* aSample);
+  int DoDecode(MediaRawData* aSample);
+  void ProcessDrain();
 
   const AudioInfo& mInfo;
   RefPtr<FlushableTaskQueue> mTaskQueue;
