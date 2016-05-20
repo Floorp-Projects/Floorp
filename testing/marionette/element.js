@@ -58,16 +58,10 @@ element.Strategy = {
   Anon: "anon",
   AnonAttribute: "anon attribute",
 };
-element.Strategies = new Set(Object.values(element.Strategy));
 
-this.ElementManager = function ElementManager(unsupportedStrategies = []) {
+this.ElementManager = function ElementManager() {
   this.seenItems = {};
   this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-
-  this.supportedStrategies = new Set(element.Strategies);
-  for (let s of unsupportedStrategies) {
-    this.supportedStrategies.delete(s);
-  }
 };
 
 ElementManager.prototype = {
@@ -79,20 +73,39 @@ ElementManager.prototype = {
   },
 
   /**
-  * Add element to list of seen elements
+   * Make a collection of elements seen.
+   *
+   * The oder of the returned web element references is guaranteed to
+   * match that of the collection passed in.
+   *
+   * @param {NodeList} els
+   *     Sequence of elements to add to set of seen elements.
+   *
+   * @return {Array.<WebElement>}
+   *     List of the web element references associated with each element
+   *     from |els|.
+   */
+  addAll: function(els) {
+    let add = this.add.bind(this);
+    return [...els].map(add);
+  },
+
+  /**
+  * Make an element seen.
   *
-  * @param nsIDOMElement element
-  *        The element to add
+  * @param {nsIDOMElement} el
+  *    Element to add to set of seen elements.
   *
-  * @return string
-  *        Returns the server-assigned reference ID
+  * @return {string}
+  *     Web element reference associated with element.
   */
-  addToKnownElements: function EM_addToKnownElements(el) {
+  add: function(el) {
     for (let i in this.seenItems) {
-      let foundEl = null;
+      let foundEl;
       try {
         foundEl = this.seenItems[i].get();
       } catch (e) {}
+
       if (foundEl) {
         if (XPCNativeWrapper(foundEl) == XPCNativeWrapper(el)) {
           return i;
@@ -102,6 +115,7 @@ ElementManager.prototype = {
         delete this.seenItems[i];
       }
     }
+
     let id = element.generateUUID();
     this.seenItems[id] = Cu.getWeakReference(el);
     return id;
@@ -221,7 +235,7 @@ ElementManager.prototype = {
           result = null;
         }
         else if (val.nodeType == 1) {
-          let elementId = this.addToKnownElements(val);
+          let elementId = this.add(val);
           result = {[element.LegacyKey]: elementId, [element.Key]: elementId};
         }
         else {
@@ -289,332 +303,315 @@ ElementManager.prototype = {
     }
     return converted;
   },
+};
 
-  /**
-   * Find a single element or a collection of elements starting at the
-   * document root or a given node.
-   *
-   * If |timeout| is above 0, an implicit search technique is used.
-   * This will wait for the duration of |timeout| for the element
-   * to appear in the DOM.
-   *
-   * See the |element.Strategy| enum for a full list of supported
-   * search strategies that can be passed to |strategy|.
-   *
-   * Available flags for |opts|:
-   *
-   *     |all|
-   *       If true, a multi-element search selector is used and a sequence
-   *       of elements will be returned.  Otherwise a single element.
-   *
-   *     |timeout|
-   *       Duration to wait before timing out the search.  If |all| is
-   *       false, a NoSuchElementError is thrown if unable to find
-   *       the element within the timeout duration.
-   *
-   *     |startNode|
-   *       Element to use as the root of the search.
-   *
-   * @param {Object.<string, Window>} container
-   *     Window object and an optional shadow root that contains the
-   *     root shadow DOM element.
-   * @param {string} strategy
-   *     Search strategy whereby to locate the element(s).
-   * @param {string} selector
-   *     Selector search pattern.  The selector must be compatible with
-   *     the chosen search |strategy|.
-   * @param {Object.<string, ?>} opts
-   *     Options.
-   *
-   * @return {Promise: (WebElement|Array<WebElement>)}
-   *     Single element or a sequence of elements.
-   *
-   * @throws InvalidSelectorError
-   *     If |strategy| is unknown.
-   * @throws InvalidSelectorError
-   *     If |selector| is malformed.
-   * @throws NoSuchElementError
-   *     If a single element is requested, this error will throw if the
-   *     element is not found.
-   */
-  find: function(container, strategy, selector, opts = {}) {
-    opts.all = !!opts.all;
-    opts.timeout = opts.timeout || 0;
+/**
+ * Find a single element or a collection of elements starting at the
+ * document root or a given node.
+ *
+ * If |timeout| is above 0, an implicit search technique is used.
+ * This will wait for the duration of |timeout| for the element
+ * to appear in the DOM.
+ *
+ * See the |element.Strategy| enum for a full list of supported
+ * search strategies that can be passed to |strategy|.
+ *
+ * Available flags for |opts|:
+ *
+ *     |all|
+ *       If true, a multi-element search selector is used and a sequence
+ *       of elements will be returned.  Otherwise a single element.
+ *
+ *     |timeout|
+ *       Duration to wait before timing out the search.  If |all| is
+ *       false, a NoSuchElementError is thrown if unable to find
+ *       the element within the timeout duration.
+ *
+ *     |startNode|
+ *       Element to use as the root of the search.
+ *
+ * @param {Object.<string, Window>} container
+ *     Window object and an optional shadow root that contains the
+ *     root shadow DOM element.
+ * @param {string} strategy
+ *     Search strategy whereby to locate the element(s).
+ * @param {string} selector
+ *     Selector search pattern.  The selector must be compatible with
+ *     the chosen search |strategy|.
+ * @param {Object.<string, ?>} opts
+ *     Options.
+ *
+ * @return {Promise: (nsIDOMElement|Array<nsIDOMElement>)}
+ *     Single element or a sequence of elements.
+ *
+ * @throws InvalidSelectorError
+ *     If |strategy| is unknown.
+ * @throws InvalidSelectorError
+ *     If |selector| is malformed.
+ * @throws NoSuchElementError
+ *     If a single element is requested, this error will throw if the
+ *     element is not found.
+ */
+element.find = function(container, strategy, selector, opts = {}) {
+  opts.all = !!opts.all;
+  opts.timeout = opts.timeout || 0;
 
-    let searchFn;
-    if (opts.all) {
-      searchFn = this.findElements.bind(this);
-    } else {
-      searchFn = this.findElement.bind(this);
-    }
+  let searchFn;
+  if (opts.all) {
+    searchFn = findElements.bind(this);
+  } else {
+    searchFn = findElement.bind(this);
+  }
 
-    return new Promise((resolve, reject) => {
-      let findElements = implicitlyWaitFor(
-          () => this.find_(container, strategy, selector, searchFn, opts),
-          opts.timeout);
+  return new Promise((resolve, reject) => {
+    let findElements = implicitlyWaitFor(
+        () => find_(container, strategy, selector, searchFn, opts),
+        opts.timeout);
 
-      findElements.then(foundEls => {
-        // the following code ought to be moved into findElement
-        // and findElements when bug 1254486 is addressed
-        if (!opts.all && (!foundEls || foundEls.length == 0)) {
-          let msg;
-          switch (strategy) {
-            case element.Strategy.AnonAttribute:
-              msg = "Unable to locate anonymous element: " + JSON.stringify(selector);
-              break;
+    findElements.then(foundEls => {
+      // the following code ought to be moved into findElement
+      // and findElements when bug 1254486 is addressed
+      if (!opts.all && (!foundEls || foundEls.length == 0)) {
+        let msg;
+        switch (strategy) {
+          case element.Strategy.AnonAttribute:
+            msg = "Unable to locate anonymous element: " + JSON.stringify(selector);
+            break;
 
-            default:
-              msg = "Unable to locate element: " + selector;
-          }
-
-          reject(new NoSuchElementError(msg));
+          default:
+            msg = "Unable to locate element: " + selector;
         }
 
-        // serialise elements for return
-        let rv = [];
-        for (let el of foundEls) {
-          let ref = this.addToKnownElements(el);
-          let we = element.makeWebElement(ref);
-          rv.push(we);
-        }
+        reject(new NoSuchElementError(msg));
+      }
 
-        if (opts.all) {
-          resolve(rv);
-        }
-        resolve(rv[0]);
-      }, reject);
-    });
-  },
+      if (opts.all) {
+        resolve(foundEls);
+      }
+      resolve(foundEls[0]);
+    }, reject);
+  });
+};
 
-  find_: function(container, strategy, selector, searchFn, opts) {
-    let rootNode = container.shadowRoot || container.frame.document;
-    let startNode;
-    if (opts.startNode) {
-      startNode = this.getKnownElement(opts.startNode, container);
-    } else {
-      startNode = rootNode;
-    }
+function find_(container, strategy, selector, searchFn, opts) {
+  let rootNode = container.shadowRoot || container.frame.document;
+  let startNode = opts.startNode || rootNode;
 
-    if (!this.supportedStrategies.has(strategy)) {
-      throw new InvalidSelectorError("Strategy not supported: " + strategy);
-    }
+  let res;
+  try {
+    res = searchFn(strategy, selector, rootNode, startNode);
+  } catch (e) {
+    throw new InvalidSelectorError(
+        `Given ${strategy} expression "${selector}" is invalid: ${e}`);
+  }
 
-    let res;
-    try {
-      res = searchFn(strategy, selector, rootNode, startNode);
-    } catch (e) {
-      throw new InvalidSelectorError(
-          `Given ${strategy} expression "${selector}" is invalid`);
-    }
+  if (element.isElementCollection(res)) {
+    return res;
+  } else if (res) {
+    return [res];
+  }
+  return [];
+}
 
-    if (element.isElementCollection(res)) {
-      return res;
-    } else if (res) {
-      return [res];
-    }
-    return [];
-  },
+/**
+ * Find a value by XPATH
+ *
+ * @param nsIDOMElement root
+ *        Document root
+ * @param string value
+ *        XPATH search string
+ * @param nsIDOMElement node
+ *        start node
+ *
+ * @return nsIDOMElement
+ *        returns the found element
+ */
+function findByXPath(root, value, node) {
+  return root.evaluate(value, node, null,
+          Ci.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+}
 
-  /**
-   * Find a value by XPATH
-   *
-   * @param nsIDOMElement root
-   *        Document root
-   * @param string value
-   *        XPATH search string
-   * @param nsIDOMElement node
-   *        start node
-   *
-   * @return nsIDOMElement
-   *        returns the found element
-   */
-  findByXPath: function EM_findByXPath(root, value, node) {
-    return root.evaluate(value, node, null,
-            Ci.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-  },
+/**
+ * Find values by XPATH
+ *
+ * @param nsIDOMElement root
+ *        Document root
+ * @param string value
+ *        XPATH search string
+ * @param nsIDOMElement node
+ *        start node
+ *
+ * @return object
+ *        returns a list of found nsIDOMElements
+ */
+function findByXPathAll(root, value, node) {
+  let values = root.evaluate(value, node, null,
+                    Ci.nsIDOMXPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
+  let elements = [];
+  let element = values.iterateNext();
+  while (element) {
+    elements.push(element);
+    element = values.iterateNext();
+  }
+  return elements;
+}
 
-  /**
-   * Find values by XPATH
-   *
-   * @param nsIDOMElement root
-   *        Document root
-   * @param string value
-   *        XPATH search string
-   * @param nsIDOMElement node
-   *        start node
-   *
-   * @return object
-   *        returns a list of found nsIDOMElements
-   */
-  findByXPathAll: function EM_findByXPathAll(root, value, node) {
-    let values = root.evaluate(value, node, null,
-                      Ci.nsIDOMXPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
-    let elements = [];
-    let element = values.iterateNext();
-    while (element) {
-      elements.push(element);
-      element = values.iterateNext();
-    }
-    return elements;
-  },
+/**
+ * Finds a single element.
+ *
+ * @param {element.Strategy} using
+ *     Selector strategy to use.
+ * @param {string} value
+ *     Selector expression.
+ * @param {DOMElement} rootNode
+ *     Document root.
+ * @param {DOMElement=} startNode
+ *     Optional node from which to start searching.
+ *
+ * @return {DOMElement}
+ *     Found elements.
+ *
+ * @throws {InvalidSelectorError}
+ *     If strategy |using| is not recognised.
+ * @throws {Error}
+ *     If selector expression |value| is malformed.
+ */
+function findElement(using, value, rootNode, startNode) {
+  switch (using) {
+    case element.Strategy.ID:
+      if (startNode.getElementById) {
+        return startNode.getElementById(value);
+      }
+      return findByXPath(rootNode, `.//*[@id="${value}"]`, startNode);
 
-  /**
-   * Finds a single element.
-   *
-   * @param {element.Strategy} using
-   *     Selector strategy to use.
-   * @param {string} value
-   *     Selector expression.
-   * @param {DOMElement} rootNode
-   *     Document root.
-   * @param {DOMElement=} startNode
-   *     Optional node from which to start searching.
-   *
-   * @return {DOMElement}
-   *     Found elements.
-   *
-   * @throws {InvalidSelectorError}
-   *     If strategy |using| is not recognised.
-   * @throws {Error}
-   *     If selector expression |value| is malformed.
-   */
-  findElement: function(using, value, rootNode, startNode) {
-    switch (using) {
-      case element.Strategy.ID:
-        if (startNode.getElementById) {
-          return startNode.getElementById(value);
-        }
-        return this.findByXPath(rootNode, `.//*[@id="${value}"]`, startNode);
+    case element.Strategy.Name:
+      if (startNode.getElementsByName) {
+        return startNode.getElementsByName(value)[0];
+      }
+      return findByXPath(rootNode, `.//*[@name="${value}"]`, startNode);
 
-      case element.Strategy.Name:
-        if (startNode.getElementsByName) {
-          return startNode.getElementsByName(value)[0];
-        }
-        return this.findByXPath(rootNode, `.//*[@name="${value}"]`, startNode);
+    case element.Strategy.ClassName:
+      // works for >= Firefox 3
+      return  startNode.getElementsByClassName(value)[0];
 
-      case element.Strategy.ClassName:
-        // works for >= Firefox 3
-        return  startNode.getElementsByClassName(value)[0];
+    case element.Strategy.TagName:
+      // works for all elements
+      return startNode.getElementsByTagName(value)[0];
 
-      case element.Strategy.TagName:
-        // works for all elements
-        return startNode.getElementsByTagName(value)[0];
+    case element.Strategy.XPath:
+      return  findByXPath(rootNode, value, startNode);
 
-      case element.Strategy.XPath:
-        return  this.findByXPath(rootNode, value, startNode);
-
-      // TODO(ato): Rewrite this, it's hairy:
-      case element.Strategy.LinkText:
-      case element.Strategy.PartialLinkText:
-        let el;
-        let allLinks = startNode.getElementsByTagName("A");
-        for (let i = 0; i < allLinks.length && !el; i++) {
-          let text = allLinks[i].text;
-          if (using == element.Strategy.PartialLinkText) {
-            if (text.indexOf(value) != -1) {
-              el = allLinks[i];
-            }
-          } else if (text == value) {
+    // TODO(ato): Rewrite this, it's hairy:
+    case element.Strategy.LinkText:
+    case element.Strategy.PartialLinkText:
+      let el;
+      let allLinks = startNode.getElementsByTagName("A");
+      for (let i = 0; i < allLinks.length && !el; i++) {
+        let text = allLinks[i].text;
+        if (using == element.Strategy.PartialLinkText) {
+          if (text.indexOf(value) != -1) {
             el = allLinks[i];
           }
+        } else if (text == value) {
+          el = allLinks[i];
         }
-        return el;
+      }
+      return el;
 
-      case element.Strategy.Selector:
-        try {
-          return startNode.querySelector(value);
-        } catch (e) {
-          throw new InvalidSelectorError(`${e.message}: "${value}"`);
-        }
+    case element.Strategy.Selector:
+      try {
+        return startNode.querySelector(value);
+      } catch (e) {
+        throw new InvalidSelectorError(`${e.message}: "${value}"`);
+      }
 
-      case element.Strategy.Anon:
-        return rootNode.getAnonymousNodes(startNode);
+    case element.Strategy.Anon:
+      return rootNode.getAnonymousNodes(startNode);
 
-      case element.Strategy.AnonAttribute:
-        let attr = Object.keys(value)[0];
-        return rootNode.getAnonymousElementByAttribute(startNode, attr, value[attr]);
+    case element.Strategy.AnonAttribute:
+      let attr = Object.keys(value)[0];
+      return rootNode.getAnonymousElementByAttribute(startNode, attr, value[attr]);
 
-      default:
-        throw new InvalidSelectorError(`No such strategy: ${using}`);
-    }
-},
+    default:
+      throw new InvalidSelectorError(`No such strategy: ${using}`);
+  }
+};
 
-  /**
-   * Find multiple elements.
-   *
-   * @param {element.Strategy} using
-   *     Selector strategy to use.
-   * @param {string} value
-   *     Selector expression.
-   * @param {DOMElement} rootNode
-   *     Document root.
-   * @param {DOMElement=} startNode
-   *     Optional node from which to start searching.
-   *
-   * @return {DOMElement}
-   *     Found elements.
-   *
-   * @throws {InvalidSelectorError}
-   *     If strategy |using| is not recognised.
-   * @throws {Error}
-   *     If selector expression |value| is malformed.
-   */
-  findElements: function(using, value, rootNode, startNode) {
-    switch (using) {
-      case element.Strategy.ID:
-        value = `.//*[@id="${value}"]`;
+/**
+ * Find multiple elements.
+ *
+ * @param {element.Strategy} using
+ *     Selector strategy to use.
+ * @param {string} value
+ *     Selector expression.
+ * @param {DOMElement} rootNode
+ *     Document root.
+ * @param {DOMElement=} startNode
+ *     Optional node from which to start searching.
+ *
+ * @return {DOMElement}
+ *     Found elements.
+ *
+ * @throws {InvalidSelectorError}
+ *     If strategy |using| is not recognised.
+ * @throws {Error}
+ *     If selector expression |value| is malformed.
+ */
+function findElements(using, value, rootNode, startNode) {
+  switch (using) {
+    case element.Strategy.ID:
+      value = `.//*[@id="${value}"]`;
 
-      // fall through
-      case element.Strategy.XPath:
-        return this.findByXPathAll(rootNode, value, startNode);
+    // fall through
+    case element.Strategy.XPath:
+      return findByXPathAll(rootNode, value, startNode);
 
-      case element.Strategy.Name:
-        if (startNode.getElementsByName) {
-          return startNode.getElementsByName(value);
-        }
-        return this.findByXPathAll(rootNode, `.//*[@name="${value}"]`, startNode);
+    case element.Strategy.Name:
+      if (startNode.getElementsByName) {
+        return startNode.getElementsByName(value);
+      }
+      return findByXPathAll(rootNode, `.//*[@name="${value}"]`, startNode);
 
-      case element.Strategy.ClassName:
-        return startNode.getElementsByClassName(value);
+    case element.Strategy.ClassName:
+      return startNode.getElementsByClassName(value);
 
-      case element.Strategy.TagName:
-        return startNode.getElementsByTagName(value);
+    case element.Strategy.TagName:
+      return startNode.getElementsByTagName(value);
 
-      case element.Strategy.LinkText:
-      case element.Strategy.PartialLinkText:
-        let els = [];
-        let allLinks = startNode.getElementsByTagName("A");
-        for (let i = 0; i < allLinks.length; i++) {
-          let text = allLinks[i].text;
-          if (using == element.Strategy.PartialLinkText) {
-            if (text.indexOf(value) != -1) {
-              els.push(allLinks[i]);
-            }
-          } else if (text == value) {
+    case element.Strategy.LinkText:
+    case element.Strategy.PartialLinkText:
+      let els = [];
+      let allLinks = startNode.getElementsByTagName("A");
+      for (let i = 0; i < allLinks.length; i++) {
+        let text = allLinks[i].text;
+        if (using == element.Strategy.PartialLinkText) {
+          if (text.indexOf(value) != -1) {
             els.push(allLinks[i]);
           }
+        } else if (text == value) {
+          els.push(allLinks[i]);
         }
-        return els;
+      }
+      return els;
 
-      case element.Strategy.Selector:
-        return Array.slice(startNode.querySelectorAll(value));
+    case element.Strategy.Selector:
+      return startNode.querySelectorAll(value);
 
-      case element.Strategy.Anon:
-        return rootNode.getAnonymousNodes(startNode);
+    case element.Strategy.Anon:
+      return rootNode.getAnonymousNodes(startNode);
 
-      case element.Strategy.AnonAttribute:
-        let attr = Object.keys(value)[0];
-        let el = rootNode.getAnonymousElementByAttribute(startNode, attr, value[attr]);
-        if (el) {
-          return [el];
-        }
-        return [];
+    case element.Strategy.AnonAttribute:
+      let attr = Object.keys(value)[0];
+      let el = rootNode.getAnonymousElementByAttribute(startNode, attr, value[attr]);
+      if (el) {
+        return [el];
+      }
+      return [];
 
-      default:
-        throw new InvalidSelectorError(`No such strategy: ${using}`);
-    }
-  },
-};
+    default:
+      throw new InvalidSelectorError(`No such strategy: ${using}`);
+  }
+}
 
 /**
  * Runs function off the main thread until its return value is truthy
