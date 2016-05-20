@@ -37,6 +37,16 @@ const BROWSER_STARTUP_FINISHED = "browser-delayed-startup-finished";
 const CLICK_TO_START_PREF = "marionette.debugging.clicktostart";
 const CONTENT_LISTENER_PREF = "marionette.contentListener";
 
+const SUPPORTED_STRATEGIES = new Set([
+  element.Strategy.ClassName,
+  element.Strategy.Selector,
+  element.Strategy.ID,
+  element.Strategy.TagName,
+  element.Strategy.XPath,
+  element.Strategy.Anon,
+  element.Strategy.AnonAttribute,
+]);
+
 const logger = Log.repository.getLogger("Marionette");
 const globalMessageManager = Cc["@mozilla.org/globalmessagemanager;1"]
     .getService(Ci.nsIMessageBroadcaster);
@@ -1346,7 +1356,7 @@ GeckoDriver.prototype.getActiveFrame = function(cmd, resp) {
       resp.body.value = null;
       if (this.curFrame) {
         resp.body.value = this.curBrowser.elementManager
-            .addToKnownElements(this.curFrame.frameElement);
+            .add(this.curFrame.frameElement);
       }
       break;
 
@@ -1647,6 +1657,8 @@ GeckoDriver.prototype.multiAction = function*(cmd, resp) {
  *     Value the client is looking for.
  */
 GeckoDriver.prototype.findElement = function*(cmd, resp) {
+  let strategy = cmd.parameters.using;
+  let expr = cmd.parameters.value;
   let opts = {
     startNode: cmd.parameters.element,
     timeout: this.searchTimeout,
@@ -1655,18 +1667,25 @@ GeckoDriver.prototype.findElement = function*(cmd, resp) {
 
   switch (this.context) {
     case Context.CHROME:
+      if (!SUPPORTED_STRATEGIES.has(strategy)) {
+        throw new InvalidSelectorError(`Strategy not supported: ${strategy}`);
+      }
+
       let container = {frame: this.getCurrentWindow()};
-      resp.body.value = yield this.curBrowser.elementManager.find(
-          container,
-          cmd.parameters.using,
-          cmd.parameters.value,
-          opts);
+      if (opts.startNode) {
+        opts.startNode = this.curBrowser.elementManager.getKnownElement(opts.startNode, container);
+      }
+      let el = yield element.find(container, strategy, expr, opts);
+      let elRef = this.curBrowser.elementManager.add(el);
+      let webEl = element.makeWebElement(elRef);
+
+      resp.body.value = webEl;
       break;
 
     case Context.CONTENT:
       resp.body.value = yield this.listener.findElementContent(
-          cmd.parameters.using,
-          cmd.parameters.value,
+          strategy,
+          expr,
           opts);
       break;
   }
@@ -1681,6 +1700,8 @@ GeckoDriver.prototype.findElement = function*(cmd, resp) {
  *     Value the client is looking for.
  */
 GeckoDriver.prototype.findElements = function*(cmd, resp) {
+  let strategy = cmd.parameters.using;
+  let expr = cmd.parameters.value;
   let opts = {
     startNode: cmd.parameters.element,
     timeout: this.searchTimeout,
@@ -1689,12 +1710,19 @@ GeckoDriver.prototype.findElements = function*(cmd, resp) {
 
   switch (this.context) {
     case Context.CHROME:
+      if (!SUPPORTED_STRATEGIES.has(strategy)) {
+        throw new InvalidSelectorError(`Strategy not supported: ${strategy}`);
+      }
+
       let container = {frame: this.getCurrentWindow()};
-      resp.body = yield this.curBrowser.elementManager.find(
-          container,
-          cmd.parameters.using,
-          cmd.parameters.value,
-          opts);
+      if (opts.startNode) {
+        opts.startNode = this.curBrowser.elementManager.getKnownElement(opts.startNode, container);
+      }
+      let els = yield element.find(container, strategy, expr, opts);
+
+      let elRefs = this.curBrowser.elementManager.addAll(els);
+      let webEls = elRefs.map(element.makeWebElement);
+      resp.body = webEls;
       break;
 
     case Context.CONTENT:
