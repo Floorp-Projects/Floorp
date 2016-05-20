@@ -27,8 +27,12 @@
 #define KEY_MAP_GTK(aCPPKeyName, aNativeKey)
 // Qt
 #define KEY_MAP_QT(aCPPKeyName, aNativeKey)
-// Android and Gonk
+// Android and B2G
 #define KEY_MAP_ANDROID(aCPPKeyName, aNativeKey)
+// Only for Android
+#define KEY_MAP_ANDROID_EXCEPT_B2G(aCPPKeyName, aNativeKey)
+// Only for B2G
+#define KEY_MAP_B2G(aCPPKeyName, aNativeKey)
 
 #if defined(XP_WIN)
 #if defined(NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX)
@@ -82,6 +86,15 @@
 #undef KEY_MAP_ANDROID
 #define KEY_MAP_ANDROID(aCPPKeyName, aNativeKey) \
   NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, KEY_NAME_INDEX_##aCPPKeyName)
+#ifndef MOZ_B2G
+#undef KEY_MAP_ANDROID_EXCEPT_B2G
+#define KEY_MAP_ANDROID_EXCEPT_B2G(aCPPKeyName, aNativeKey) \
+  NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, KEY_NAME_INDEX_##aCPPKeyName)
+#else // #ifndef MOZ_B2G
+#undef KEY_MAP_B2G
+#define KEY_MAP_B2G(aCPPKeyName, aNativeKey) \
+  NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, KEY_NAME_INDEX_##aCPPKeyName)
+#endif  // #ifndef MOZ_B2G #else
 #endif
 
 /******************************************************************************
@@ -995,13 +1008,14 @@ KEY_MAP_QT      (AudioBassBoostDown, Qt::Key_BassDown)
 KEY_MAP_WIN_CMD (AudioBassBoostUp, APPCOMMAND_BASS_UP)
 KEY_MAP_QT      (AudioBassBoostUp, Qt::Key_BassUp)
 
-// VolumeDown (should be renamed to AudioVolumeDown)
-KEY_MAP_WIN     (VolumeDown, VK_VOLUME_DOWN)
-KEY_MAP_WIN_CMD (VolumeDown, APPCOMMAND_VOLUME_DOWN)
-KEY_MAP_COCOA   (VolumeDown, kVK_VolumeDown)
-KEY_MAP_GTK     (VolumeDown, GDK_AudioLowerVolume)
-KEY_MAP_QT      (VolumeDown, Qt::Key_VolumeDown)
-KEY_MAP_ANDROID (VolumeDown, AKEYCODE_VOLUME_DOWN)
+// AudioVolumeDown
+KEY_MAP_WIN               (AudioVolumeDown, VK_VOLUME_DOWN)
+KEY_MAP_WIN_CMD           (AudioVolumeDown, APPCOMMAND_VOLUME_DOWN)
+KEY_MAP_COCOA             (AudioVolumeDown, kVK_VolumeDown)
+KEY_MAP_GTK               (AudioVolumeDown, GDK_AudioLowerVolume)
+KEY_MAP_QT                (AudioVolumeDown, Qt::Key_VolumeDown)
+KEY_MAP_ANDROID_EXCEPT_B2G(AudioVolumeDown, AKEYCODE_VOLUME_DOWN)
+KEY_MAP_B2G               (VolumeDown,      AKEYCODE_VOLUME_DOWN)
 
 // VolumeUp (should be renamed to AudioVolumeUp)
 KEY_MAP_WIN     (VolumeUp, VK_VOLUME_UP)
@@ -1329,3 +1343,5 @@ KEY_MAP_ANDROID (SoftRight, AKEYCODE_SOFT_RIGHT)
 #undef KEY_MAP_GTK
 #undef KEY_MAP_QT
 #undef KEY_MAP_ANDROID
+#undef KEY_MAP_ANDROID_EXCEPT_B2G
+#undef KEY_MAP_B2G

@@ -204,8 +204,13 @@ function guessKeyNameFromKeyCode(KeyboardEvent, aKeyCode) {
       return "ScrollLock";
     case KeyboardEvent.DOM_VK_VOLUME_MUTE:
       return "VolumeMute";
+#ifndef MOZ_B2G
+    case KeyboardEvent.DOM_VK_VOLUME_DOWN:
+      return "AudioVolumeDown";
+#else
     case KeyboardEvent.DOM_VK_VOLUME_DOWN:
       return "VolumeDown";
+#endif
     case KeyboardEvent.DOM_VK_VOLUME_UP:
       return "VolumeUp";
     case KeyboardEvent.DOM_VK_META:
