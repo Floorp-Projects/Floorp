@@ -19,6 +19,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BookmarkHTMLUtils",
                                   "resource://gre/modules/BookmarkHTMLUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
+                                  "resource://gre/modules/PromiseUtils.jsm");
 
 var gMigrators = null;
 var gProfileStartup = null;
@@ -227,8 +229,15 @@ this.MigratorPrototype = {
     if (aItems != Ci.nsIBrowserProfileMigrator.ALL)
       resources = resources.filter(r => aItems & r.type);
 
+    // Used to periodically give back control to the main-thread loop.
+    let unblockMainThread = function () {
+      return new Promise(resolve => {
+        Services.tm.mainThread.dispatch(resolve, Ci.nsIThread.DISPATCH_NORMAL);
+      });
+    };
+
     // Called either directly or through the bookmarks import callback.
-    function doMigrate() {
+    let doMigrate = Task.async(function*() {
       // TODO: use Map (for the items) and Set (for the resources)
       // once they are iterable.
       let resourcesGroupedByItems = new Map();
@@ -256,6 +265,7 @@ this.MigratorPrototype = {
         let itemSuccess = false;
         for (let res of itemResources) {
           let resource = res;
+          let completeDeferred = PromiseUtils.defer();
           let resourceDone = function(aSuccess) {
             let resourceIndex = itemResources.indexOf(resource);
             if (resourceIndex != -1) {
@@ -269,23 +279,31 @@ this.MigratorPrototype = {
                 if (resourcesGroupedByItems.size == 0)
                   notify("Migration:Ended");
               }
+              completeDeferred.resolve();
             }
           }
 
-          Services.tm.mainThread.dispatch(function() {
-            // If migrate throws, an error occurred, and the callback
-            // (itemMayBeDone) might haven't been called.
-            try {
-              resource.migrate(resourceDone);
-            }
-            catch(ex) {
-              Cu.reportError(ex);
-              resourceDone(false);
-            }
-          }, Ci.nsIThread.DISPATCH_NORMAL);
+          // If migrate throws, an error occurred, and the callback
+          // (itemMayBeDone) might haven't been called.
+          try {
+            resource.migrate(resourceDone);
+          }
+          catch(ex) {
+            Cu.reportError(ex);
+            resourceDone(false);
+          }
+
+          // Certain resources must be ran sequentially or they could fail,
+          // for example bookmarks and history (See bug 1272652).
+          if (key == MigrationUtils.resourceTypes.BOOKMARKS ||
+              key == MigrationUtils.resourceTypes.HISTORY) {
+            yield completeDeferred.promise;
+          }
+
+          yield unblockMainThread();
         }
       }
-    }
+    });
 
     if (MigrationUtils.isStartupMigration && !this.startupOnlyMigrator) {
       MigrationUtils.profileStartup.doStartup();
