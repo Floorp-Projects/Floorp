@@ -14712,6 +14712,10 @@
         "url": "/dom/nodes/Node-isSameNode.html"
       },
       {
+        "path": "dom/nodes/Node-isConnected.html",
+        "url": "/dom/nodes/Node-isConnected.html"
+      },
+      {
         "path": "dom/nodes/Node-lookupNamespaceURI.html",
         "url": "/dom/nodes/Node-lookupNamespaceURI.html"
       },
