@@ -31,8 +31,8 @@ addRDMTask(TEST_URL, function* ({ ui }) {
 
   info("Check that the device list remains unchanged after exitting.");
   let deviceListAfter = loadDeviceList();
-  is(deviceListBefore.size, deviceListAfter.size,
+  is(deviceListBefore.length, deviceListAfter.length,
     "Got expected number of displayed devices.");
-  ok(!deviceListAfter.has(value),
+  ok(!deviceListAfter.includes(value),
     value + " was not added to displayed device list.");
 });
