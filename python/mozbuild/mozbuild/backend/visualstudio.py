@@ -37,39 +37,14 @@ MSBUILD_NAMESPACE = 'http://schemas.microsoft.com/developer/msbuild/2003'
 def get_id(name):
     return str(uuid.uuid5(uuid.NAMESPACE_URL, name)).upper()
 
-# TODO validate mappings are correct. only 2010 confirmed so far
 def visual_studio_product_to_internal_version(version, solution=False):
-    if solution:
-        if version == '2010':
-            return '11.00'
-        elif version == '2011':
-            return '12.00'
-        elif version == '2012':
-            return '12.00'
-        elif version == '2013':
-            return '12.00'
-        else:
-            raise Exception('Unknown version seen: %s' % version)
+    if version == '2013':
+        return '12.00'
     else:
-        if version == '2010':
-            return '10.00'
-        elif version == '2011':
-            return '11.00'
-        elif version == '2012':
-            return '12.00'
-        elif version == '2013':
-            return '12.00'
-        else:
-            raise Exception('Unknown version seen: %s' % version)
+        raise Exception('Unknown version seen: %s' % version)
 
 def visual_studio_product_to_platform_toolset_version(version):
-    if version == '2010':
-        return 'v100'
-    elif version == '2011':
-        return 'v110'
-    elif version == '2012':
-        return 'v120'
-    elif version == '2013':
+    if version == '2013':
         return 'v120'
     else:
         raise Exception('Unknown version seen: %s' % version)
