@@ -108,15 +108,17 @@ self.addEventListener('fetch', function(event) {
                 reject(new Response(JSON.stringify({
                   result: 'failure',
                   detail: 'got '+ response.redirected +
-                          ' Response.redirected instead of ' + expectedRedirected
+                          ' Response.redirected instead of ' +
+                          expectedRedirected
                 })));
               } else {
-                // Resolve a JSON object with a failure since promise is expected
-                // to be rejected.
+                // Resolve a JSON object with a failure since promise is
+                // expected to be rejected.
                 resolve(new Response(JSON.stringify({
                   result: 'failure',
                   detail: 'got '+ response.redirected +
-                          ' Response.redirected instead of ' + expectedRedirected
+                          ' Response.redirected instead of ' +
+                          expectedRedirected
                 })));
               }
             }
