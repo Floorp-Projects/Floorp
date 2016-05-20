@@ -69,7 +69,7 @@ element.Store = class {
     this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   }
 
-  reset() {
+  clear() {
     this.els = {};
   }
 
