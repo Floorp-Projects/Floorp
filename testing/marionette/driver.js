@@ -1420,57 +1420,54 @@ GeckoDriver.prototype.switchToFrame = function*(cmd, resp) {
     }
 
     // by element
-    if (typeof element != "undefined") {
-      if (this.curBrowser.elementManager.seenItems[element]) {
-        // HTMLIFrameElement
-        let wantedFrame = this.curBrowser.elementManager
-            .getKnownElement(element, {frame: curWindow});
-        // Deal with an embedded xul:browser case
-        if (wantedFrame.tagName == "xul:browser" || wantedFrame.tagName == "browser") {
-          curWindow = wantedFrame.contentWindow;
+    if (this.curBrowser.seenEls.has(element)) {
+      // HTMLIFrameElement
+      let wantedFrame = this.curBrowser.elementManager.get(element, {frame: curWindow});
+      // Deal with an embedded xul:browser case
+      if (wantedFrame.tagName == "xul:browser" || wantedFrame.tagName == "browser") {
+        curWindow = wantedFrame.contentWindow;
+        this.curFrame = curWindow;
+        if (focus) {
+          this.curFrame.focus();
+        }
+        checkTimer.initWithCallback(checkLoad.bind(this), 100, Ci.nsITimer.TYPE_ONE_SHOT);
+        return;
+      }
+
+      // Check if the frame is XBL anonymous
+      let parent = curWindow.document.getBindingParent(wantedFrame);
+      // Shadow nodes also show up in getAnonymousNodes, we should ignore them.
+      if (parent && !(parent.shadowRoot && parent.shadowRoot.contains(wantedFrame))) {
+        let anonNodes = [...curWindow.document.getAnonymousNodes(parent) || []];
+        if (anonNodes.length > 0) {
+          let el = wantedFrame;
+          while (el) {
+            if (anonNodes.indexOf(el) > -1) {
+              curWindow = wantedFrame.contentWindow;
+              this.curFrame = curWindow;
+              if (focus) {
+                this.curFrame.focus();
+              }
+              checkTimer.initWithCallback(checkLoad.bind(this), 100, Ci.nsITimer.TYPE_ONE_SHOT);
+              return;
+            }
+            el = el.parentNode;
+          }
+        }
+      }
+
+      // else, assume iframe
+      let frames = curWindow.document.getElementsByTagName("iframe");
+      let numFrames = frames.length;
+      for (let i = 0; i < numFrames; i++) {
+        if (new XPCNativeWrapper(frames[i]) == new XPCNativeWrapper(wantedFrame)) {
+          curWindow = frames[i].contentWindow;
           this.curFrame = curWindow;
           if (focus) {
             this.curFrame.focus();
           }
           checkTimer.initWithCallback(checkLoad.bind(this), 100, Ci.nsITimer.TYPE_ONE_SHOT);
           return;
-        }
-
-        // Check if the frame is XBL anonymous
-        let parent = curWindow.document.getBindingParent(wantedFrame);
-        // Shadow nodes also show up in getAnonymousNodes, we should ignore them.
-        if (parent && !(parent.shadowRoot && parent.shadowRoot.contains(wantedFrame))) {
-          let anonNodes = [...curWindow.document.getAnonymousNodes(parent) || []];
-          if (anonNodes.length > 0) {
-            let el = wantedFrame;
-            while (el) {
-              if (anonNodes.indexOf(el) > -1) {
-                curWindow = wantedFrame.contentWindow;
-                this.curFrame = curWindow;
-                if (focus) {
-                  this.curFrame.focus();
-                }
-                checkTimer.initWithCallback(checkLoad.bind(this), 100, Ci.nsITimer.TYPE_ONE_SHOT);
-                return;
-              }
-              el = el.parentNode;
-            }
-          }
-        }
-
-        // else, assume iframe
-        let frames = curWindow.document.getElementsByTagName("iframe");
-        let numFrames = frames.length;
-        for (let i = 0; i < numFrames; i++) {
-          if (new XPCNativeWrapper(frames[i]) == new XPCNativeWrapper(wantedFrame)) {
-            curWindow = frames[i].contentWindow;
-            this.curFrame = curWindow;
-            if (focus) {
-              this.curFrame.focus();
-            }
-            checkTimer.initWithCallback(checkLoad.bind(this), 100, Ci.nsITimer.TYPE_ONE_SHOT);
-            return;
-          }
         }
       }
     }
@@ -1681,7 +1678,7 @@ GeckoDriver.prototype.findElement = function*(cmd, resp) {
 
       let container = {frame: this.getCurrentWindow()};
       if (opts.startNode) {
-        opts.startNode = this.curBrowser.elementManager.getKnownElement(opts.startNode, container);
+        opts.startNode = this.curBrowser.elementManager.get(opts.startNode, container);
       }
       let el = yield element.find(container, strategy, expr, opts);
       let elRef = this.curBrowser.elementManager.add(el);
@@ -1724,7 +1721,7 @@ GeckoDriver.prototype.findElements = function*(cmd, resp) {
 
       let container = {frame: this.getCurrentWindow()};
       if (opts.startNode) {
-        opts.startNode = this.curBrowser.elementManager.getKnownElement(opts.startNode, container);
+        opts.startNode = this.curBrowser.elementManager.get(opts.startNode, container);
       }
       let els = yield element.find(container, strategy, expr, opts);
 
@@ -1759,7 +1756,7 @@ GeckoDriver.prototype.clickElement = function*(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(id, {frame: win});
+      let el = this.curBrowser.elementManager.get(id, {frame: win});
       yield interaction.clickElement(
           el, this.sessionCapabilities.raisesAccessibilityExceptions);
       break;
@@ -1792,7 +1789,7 @@ GeckoDriver.prototype.getElementAttribute = function*(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(id, {frame: win});
+      let el = this.curBrowser.elementManager.get(id, {frame: win});
       resp.body.value = atom.getElementAttribute(el, name, this.getCurrentWindow());
       break;
 
@@ -1839,7 +1836,7 @@ GeckoDriver.prototype.getElementText = function*(cmd, resp) {
     case Context.CHROME:
       // for chrome, we look at text nodes, and any node with a "label" field
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(id, { frame: win });
+      let el = this.curBrowser.elementManager.get(id, {frame: win});
       let lines = [];
       this.getVisibleText(el, lines);
       resp.body.value = lines.join("\n");
@@ -1863,7 +1860,7 @@ GeckoDriver.prototype.getElementTagName = function*(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(id, {frame: win});
+      let el = this.curBrowser.elementManager.get(id, {frame: win});
       resp.body.value = el.tagName.toLowerCase();
       break;
 
@@ -1885,8 +1882,7 @@ GeckoDriver.prototype.isElementDisplayed = function*(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(
-          id, {frame: win});
+      let el = this.curBrowser.elementManager.get(id, {frame: win});
       resp.body.value = yield interaction.isElementDisplayed(
           el, this.sessionCapabilities.raisesAccessibilityExceptions);
       break;
@@ -1911,7 +1907,7 @@ GeckoDriver.prototype.getElementValueOfCssProperty = function*(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(id, { frame: win });
+      let el = this.curBrowser.elementManager.get(id, {frame: win});
       let sty = win.document.defaultView.getComputedStyle(el, null);
       resp.body.value = sty.getPropertyValue(prop);
       break;
@@ -1935,8 +1931,7 @@ GeckoDriver.prototype.isElementEnabled = function*(cmd, resp) {
     case Context.CHROME:
       // Selenium atom doesn't quite work here
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(
-          id, {frame: win});
+      let el = this.curBrowser.elementManager.get(id, {frame: win});
       resp.body.value = yield interaction.isElementEnabled(
           el, this.sessionCapabilities.raisesAccessibilityExceptions);
       break;
@@ -1960,8 +1955,7 @@ GeckoDriver.prototype.isElementSelected = function*(cmd, resp) {
     case Context.CHROME:
       // Selenium atom doesn't quite work here
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(
-          id, {frame: win});
+      let el = this.curBrowser.elementManager.get(id, {frame: win});
       resp.body.value = yield interaction.isElementSelected(
           el, this.sessionCapabilities.raisesAccessibilityExceptions);
       break;
@@ -1978,7 +1972,7 @@ GeckoDriver.prototype.getElementRect = function*(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(id, { frame: win });
+      let el = this.curBrowser.elementManager.get(id, {frame: win});
       let rect = el.getBoundingClientRect();
       resp.body = {
         x: rect.x + win.pageXOffset,
@@ -2012,8 +2006,7 @@ GeckoDriver.prototype.sendKeysToElement = function*(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(
-          id, {frame: win});
+      let el = this.curBrowser.elementManager.get(id, {frame: win});
       yield interaction.sendKeysToElement(
           el, value, true, this.sessionCapabilities.raisesAccessibilityExceptions);
       break;
@@ -2073,7 +2066,7 @@ GeckoDriver.prototype.clearElement = function*(cmd, resp) {
     case Context.CHROME:
       // the selenium atom doesn't work here
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(id, { frame: win });
+      let el = this.curBrowser.elementManager.get(id, {frame: win});
       if (el.nodeName == "textbox") {
         el.value = "";
       } else if (el.nodeName == "checkbox") {

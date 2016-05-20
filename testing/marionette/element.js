@@ -59,17 +59,21 @@ element.Strategy = {
   AnonAttribute: "anon attribute",
 };
 
-this.ElementManager = class {
+/**
+ * Stores known/seen elements and their associated web element
+ * references.
+ *
+ * Elements are added by calling |add(el)| or |addAll(elements)|, and
+ * may be queried by their web element reference using |get(element)|.
+ */
+element.Store = class {
   constructor() {
-    this.seenItems = {};
+    this.els = {};
     this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   }
 
-  /**
-   * Reset values
-   */
   reset() {
-    this.seenItems = {};
+    this.els = {};
   }
 
   /**
@@ -100,95 +104,126 @@ this.ElementManager = class {
    *     Web element reference associated with element.
    */
   add(el) {
-    for (let i in this.seenItems) {
+    for (let i in this.els) {
       let foundEl;
       try {
-        foundEl = this.seenItems[i].get();
+        foundEl = this.els[i].get();
       } catch (e) {}
 
       if (foundEl) {
-        if (XPCNativeWrapper(foundEl) == XPCNativeWrapper(el)) {
+        if (new XPCNativeWrapper(foundEl) == new XPCNativeWrapper(el)) {
           return i;
         }
+
+      // cleanup reference to gc'd element
       } else {
-        // cleanup reference to GC'd element
-        delete this.seenItems[i];
+        delete this.els[i];
       }
     }
 
     let id = element.generateUUID();
-    this.seenItems[id] = Cu.getWeakReference(el);
+    this.els[id] = Cu.getWeakReference(el);
     return id;
   }
 
   /**
-   * Retrieve element from its unique ID
+   * Determine if the provided web element reference has been seen
+   * before/is in the element store.
    *
-   * @param String id
-   *        The DOM reference ID
-   * @param nsIDOMWindow, ShadowRoot container
-   *        The window and an optional shadow root that contains the element
+   * @param {string} uuid
+   *     Element's associated web element reference.
    *
-   * @returns nsIDOMElement
-   *        Returns the element or throws Exception if not found
+   * @return {boolean}
+   *     True if element is in the store, false otherwise.
    */
-  getKnownElement(id, container) {
-    let el = this.seenItems[id];
+  has(uuid) {
+    return Object.keys(this.els).includes(uuid);
+  }
+
+  /**
+   * Retrieve a DOM element by its unique web element reference/UUID.
+   *
+   * @param {string} uuid
+   *     Web element reference, or UUID.
+   * @param {(nsIDOMWindow|ShadowRoot)} container
+   * Window and an optional shadow root that contains the element.
+   *
+   * @returns {nsIDOMElement}
+   *     Element associated with reference.
+   *
+   * @throws {JavaScriptError}
+   *     If the provided reference is unknown.
+   * @throws {StaleElementReferenceError}
+   *     If element has gone stale, indicating it is no longer attached to
+   *     the DOM provided in the container.
+   */
+  get(uuid, container) {
+    let el = this.els[uuid];
     if (!el) {
-      throw new JavaScriptError(`Element has not been seen before. Id given was ${id}`);
-    }
-    try {
-      el = el.get();
-    }
-    catch(e) {
-      el = null;
-      delete this.seenItems[id];
-    }
-    // use XPCNativeWrapper to compare elements; see bug 834266
-    let wrappedFrame = XPCNativeWrapper(container.frame);
-    let wrappedShadowRoot;
-    if (container.shadowRoot) {
-      wrappedShadowRoot = XPCNativeWrapper(container.shadowRoot);
+      throw new JavaScriptError(`Element reference not seen before: ${uuid}`);
     }
 
+    try {
+      el = el.get();
+    } catch (e) {
+      el = null;
+      delete this.els[id];
+    }
+
+    // use XPCNativeWrapper to compare elements (see bug 834266)
+    let wrappedFrame = new XPCNativeWrapper(container.frame);
+    let wrappedShadowRoot;
+    if (container.shadowRoot) {
+      wrappedShadowRoot = new XPCNativeWrapper(container.shadowRoot);
+    }
+
+    let wrappedEl = new XPCNativeWrapper(el);
     if (!el ||
-        !(XPCNativeWrapper(el).ownerDocument == wrappedFrame.document) ||
-        this.isDisconnected(XPCNativeWrapper(el), wrappedShadowRoot,
-          wrappedFrame)) {
+        !(wrappedEl.ownerDocument == wrappedFrame.document) ||
+        this.isDisconnected(wrappedEl, wrappedFrame, wrappedShadowRoot)) {
       throw new StaleElementReferenceError(
           "The element reference is stale. Either the element " +
           "is no longer attached to the DOM or the page has been refreshed.");
     }
+
     return el;
   }
 
   /**
-   * Check if the element is detached from the current frame as well as the
-   * optional shadow root (when inside a Shadow DOM context).
-   * @param nsIDOMElement el
-   *        element to be checked
-   * @param ShadowRoot shadowRoot
-   *        an optional shadow root containing an element
+   * Check if the element is detached from the current frame as well as
+   * the optional shadow root (when inside a Shadow DOM context).
+   *
+   * @param {nsIDOMElement} el
+   *     Element to be checked.
    * @param nsIDOMWindow frame
-   *        window that contains the element or the current host of the shadow
-   *        root.
-   * @return {Boolean} a flag indicating that the element is disconnected
+   *     Window object that contains the element or the current host
+   *     of the shadow root.
+   * @param {ShadowRoot=} shadowRoot
+   *     An optional shadow root containing an element.
+   *
+   * @return {boolean}
+   *     Flag indicating that the element is disconnected.
    */
-  isDisconnected(el, shadowRoot, frame) {
+  isDisconnected(el, frame, shadowRoot = undefined) {
+    // shadow dom
     if (shadowRoot && frame.ShadowRoot) {
       if (el.compareDocumentPosition(shadowRoot) &
-        DOCUMENT_POSITION_DISCONNECTED) {
+          DOCUMENT_POSITION_DISCONNECTED) {
         return true;
       }
-      // Looking for next possible ShadowRoot ancestor
+
+      // looking for next possible ShadowRoot ancestor
       let parent = shadowRoot.host;
       while (parent && !(parent instanceof frame.ShadowRoot)) {
         parent = parent.parentNode;
       }
       return this.isDisconnected(shadowRoot.host, parent, frame);
+
+    // outside shadow dom
     } else {
-      return el.compareDocumentPosition(frame.document.documentElement) &
-        DOCUMENT_POSITION_DISCONNECTED;
+      let docEl = frame.document.documentElement;
+      return el.compareDocumentPosition(docEl) &
+          DOCUMENT_POSITION_DISCONNECTED;
     }
   }
 
@@ -288,7 +323,7 @@ this.ElementManager = class {
                  ((typeof(args[element.Key]) === 'string') &&
                      args.hasOwnProperty(element.Key))) {
           let elementUniqueIdentifier = args[element.Key] ? args[element.Key] : args[element.LegacyKey];
-          converted = this.getKnownElement(elementUniqueIdentifier, container);
+          converted = this.get(elementUniqueIdentifier, container);
           if (converted == null) {
             throw new WebDriverError(`Unknown element: ${elementUniqueIdentifier}`);
           }
