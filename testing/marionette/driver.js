@@ -887,9 +887,9 @@ GeckoDriver.prototype.execute_ = function(script, args, timeout, opts = {}) {
 
       opts.timeout = timeout;
       script = this.importedScripts.for(Context.CHROME).concat(script);
-      let wargs = element.fromJson(args, this.curBrowser.elementManager, sb.window);
+      let wargs = element.fromJson(args, this.curBrowser.seenEls, sb.window);
       let evaluatePromise = evaluate.sandbox(sb, script, wargs, opts);
-      return evaluatePromise.then(res => element.toJson(res, this.curBrowser.elementManager));
+      return evaluatePromise.then(res => element.toJson(res, this.curBrowser.seenEls));
   }
 };
 
@@ -912,7 +912,7 @@ GeckoDriver.prototype.executeJSScript = function(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      let wargs = element.fromJson(args, this.curBrowser.elementManager, win);
+      let wargs = element.fromJson(args, this.curBrowser.seenEls, win);
       let harness = new simpletest.Harness(
           win,
           Context.CHROME,
@@ -926,7 +926,7 @@ GeckoDriver.prototype.executeJSScript = function(cmd, resp) {
       sb = sandbox.augment(sb, new logging.Adapter(this.marionetteLog));
 
       let res = yield evaluate.sandbox(sb, script, wargs, opts);
-      resp.body.value = element.toJson(res, this.curBrowser.elementManager);
+      resp.body.value = element.toJson(res, this.curBrowser.seenEls);
       break;
 
     case Context.CONTENT:
@@ -1363,7 +1363,7 @@ GeckoDriver.prototype.getActiveFrame = function(cmd, resp) {
       // no frame means top-level
       resp.body.value = null;
       if (this.curFrame) {
-        resp.body.value = this.curBrowser.elementManager
+        resp.body.value = this.curBrowser.seenEls
             .add(this.curFrame.frameElement);
       }
       break;
@@ -1422,7 +1422,7 @@ GeckoDriver.prototype.switchToFrame = function*(cmd, resp) {
     // by element
     if (this.curBrowser.seenEls.has(element)) {
       // HTMLIFrameElement
-      let wantedFrame = this.curBrowser.elementManager.get(element, {frame: curWindow});
+      let wantedFrame = this.curBrowser.seenEls.get(element, {frame: curWindow});
       // Deal with an embedded xul:browser case
       if (wantedFrame.tagName == "xul:browser" || wantedFrame.tagName == "browser") {
         curWindow = wantedFrame.contentWindow;
@@ -1621,9 +1621,8 @@ GeckoDriver.prototype.actionChain = function*(cmd, resp) {
       }
 
       let win = this.getCurrentWindow();
-      let elm = this.curBrowser.elementManager;
       resp.body.value = yield this.actions.dispatchActions(
-          chain, nextId, {frame: win}, elm);
+          chain, nextId, {frame: win}, this.curBrowser.seenEls);
       break;
 
     case Context.CONTENT:
@@ -1678,10 +1677,10 @@ GeckoDriver.prototype.findElement = function*(cmd, resp) {
 
       let container = {frame: this.getCurrentWindow()};
       if (opts.startNode) {
-        opts.startNode = this.curBrowser.elementManager.get(opts.startNode, container);
+        opts.startNode = this.curBrowser.seenEls.get(opts.startNode, container);
       }
       let el = yield element.find(container, strategy, expr, opts);
-      let elRef = this.curBrowser.elementManager.add(el);
+      let elRef = this.curBrowser.seenEls.add(el);
       let webEl = element.makeWebElement(elRef);
 
       resp.body.value = webEl;
@@ -1721,11 +1720,11 @@ GeckoDriver.prototype.findElements = function*(cmd, resp) {
 
       let container = {frame: this.getCurrentWindow()};
       if (opts.startNode) {
-        opts.startNode = this.curBrowser.elementManager.get(opts.startNode, container);
+        opts.startNode = this.curBrowser.seenEls.get(opts.startNode, container);
       }
       let els = yield element.find(container, strategy, expr, opts);
 
-      let elRefs = this.curBrowser.elementManager.addAll(els);
+      let elRefs = this.curBrowser.seenEls.addAll(els);
       let webEls = elRefs.map(element.makeWebElement);
       resp.body = webEls;
       break;
@@ -1756,7 +1755,7 @@ GeckoDriver.prototype.clickElement = function*(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id, {frame: win});
       yield interaction.clickElement(
           el, this.sessionCapabilities.raisesAccessibilityExceptions);
       break;
@@ -1789,7 +1788,7 @@ GeckoDriver.prototype.getElementAttribute = function*(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id, {frame: win});
       resp.body.value = atom.getElementAttribute(el, name, this.getCurrentWindow());
       break;
 
@@ -1836,7 +1835,7 @@ GeckoDriver.prototype.getElementText = function*(cmd, resp) {
     case Context.CHROME:
       // for chrome, we look at text nodes, and any node with a "label" field
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id, {frame: win});
       let lines = [];
       this.getVisibleText(el, lines);
       resp.body.value = lines.join("\n");
@@ -1860,7 +1859,7 @@ GeckoDriver.prototype.getElementTagName = function*(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id, {frame: win});
       resp.body.value = el.tagName.toLowerCase();
       break;
 
@@ -1882,7 +1881,7 @@ GeckoDriver.prototype.isElementDisplayed = function*(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id, {frame: win});
       resp.body.value = yield interaction.isElementDisplayed(
           el, this.sessionCapabilities.raisesAccessibilityExceptions);
       break;
@@ -1907,7 +1906,7 @@ GeckoDriver.prototype.getElementValueOfCssProperty = function*(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id, {frame: win});
       let sty = win.document.defaultView.getComputedStyle(el, null);
       resp.body.value = sty.getPropertyValue(prop);
       break;
@@ -1931,7 +1930,7 @@ GeckoDriver.prototype.isElementEnabled = function*(cmd, resp) {
     case Context.CHROME:
       // Selenium atom doesn't quite work here
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id, {frame: win});
       resp.body.value = yield interaction.isElementEnabled(
           el, this.sessionCapabilities.raisesAccessibilityExceptions);
       break;
@@ -1955,7 +1954,7 @@ GeckoDriver.prototype.isElementSelected = function*(cmd, resp) {
     case Context.CHROME:
       // Selenium atom doesn't quite work here
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id, {frame: win});
       resp.body.value = yield interaction.isElementSelected(
           el, this.sessionCapabilities.raisesAccessibilityExceptions);
       break;
@@ -1972,7 +1971,7 @@ GeckoDriver.prototype.getElementRect = function*(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id, {frame: win});
       let rect = el.getBoundingClientRect();
       resp.body = {
         x: rect.x + win.pageXOffset,
@@ -2006,7 +2005,7 @@ GeckoDriver.prototype.sendKeysToElement = function*(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id, {frame: win});
       yield interaction.sendKeysToElement(
           el, value, true, this.sessionCapabilities.raisesAccessibilityExceptions);
       break;
@@ -2066,7 +2065,7 @@ GeckoDriver.prototype.clearElement = function*(cmd, resp) {
     case Context.CHROME:
       // the selenium atom doesn't work here
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id, {frame: win});
       if (el.nodeName == "textbox") {
         el.value = "";
       } else if (el.nodeName == "checkbox") {
