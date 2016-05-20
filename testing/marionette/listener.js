@@ -41,7 +41,19 @@ var listenerId = null; // unique ID of this listener
 var curContainer = { frame: content, shadowRoot: null };
 var isRemoteBrowser = () => curContainer.frame.contentWindow !== null;
 var previousContainer = null;
+
 var elementManager = new ElementManager();
+var SUPPORTED_STRATEGIES = new Set([
+  element.Strategy.ClassName,
+  element.Strategy.Selector,
+  element.Strategy.ID,
+  element.Strategy.Name,
+  element.Strategy.LinkText,
+  element.Strategy.PartialLinkText,
+  element.Strategy.TagName,
+  element.Strategy.XPath,
+]);
+
 var capabilities = {};
 
 var actions = new action.Chain(checkForInterrupted);
@@ -1009,26 +1021,40 @@ function refresh(msg) {
  * Find an element in the current browsing context's document using the
  * given search strategy.
  */
-function findElementContent(strategy, selector, opts = {}) {
+function* findElementContent(strategy, selector, opts = {}) {
+  if (!SUPPORTED_STRATEGIES.has(strategy)) {
+    throw new InvalidSelectorError("Strategy not supported: " + strategy);
+  }
+
   opts.all = false;
-  return elementManager.find(
-      curContainer,
-      strategy,
-      selector,
-      opts);
+  if (opts.startNode) {
+    opts.startNode = elementManager.getKnownElement(opts.startNode, curContainer);
+  }
+
+  let el = yield element.find(curContainer, strategy, selector, opts);
+  let elRef = elementManager.add(el);
+  let webEl = element.makeWebElement(elRef);
+  return webEl;
 }
 
 /**
  * Find elements in the current browsing context's document using the
  * given search strategy.
  */
-function findElementsContent(strategy, selector, opts = {}) {
+function* findElementsContent(strategy, selector, opts = {}) {
+  if (!SUPPORTED_STRATEGIES.has(strategy)) {
+    throw new InvalidSelectorError("Strategy not supported: " + strategy);
+  }
+
   opts.all = true;
-  return elementManager.find(
-      curContainer,
-      strategy,
-      selector,
-      opts);
+  if (opts.startNode) {
+    opts.startNode = elementManager.getKnownElement(opts.startNode, curContainer);
+  }
+
+  let els = yield element.find(curContainer, strategy, selector, opts);
+  let elRefs = elementManager.addAll(els);
+  let webEls = elRefs.map(element.makeWebElement);
+  return webEls;
 }
 
 /**
@@ -1039,7 +1065,11 @@ function findElementsContent(strategy, selector, opts = {}) {
  */
 function getActiveElement() {
   let el = curContainer.frame.document.activeElement;
-  return elementManager.addToKnownElements(el);
+  let elRef = elementManager.add(el);
+  // TODO(ato): This incorrectly returns
+  // the element's associated UUID as a string
+  // instead of a web element.
+  return elRef;
 }
 
 /**
@@ -1269,7 +1299,7 @@ function switchToShadowRoot(id) {
  function switchToParentFrame(msg) {
    let command_id = msg.json.command_id;
    curContainer.frame = curContainer.frame.parent;
-   let parentElement = elementManager.addToKnownElements(curContainer.frame);
+   let parentElement = elementManager.add(curContainer.frame);
 
    sendSyncMessage("Marionette:switchedToFrame", { frameValue: parentElement });
 
@@ -1362,7 +1392,7 @@ function switchToFrame(msg) {
         foundFrame = frames[msg.json.id].frameElement;
         if (foundFrame !== null) {
           curContainer.frame = foundFrame;
-          foundFrame = elementManager.addToKnownElements(curContainer.frame);
+          foundFrame = elementManager.add(curContainer.frame);
         }
         else {
           // If foundFrame is null at this point then we have the top level browsing
