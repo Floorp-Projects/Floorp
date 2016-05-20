@@ -219,10 +219,10 @@ LayerManager::LayerUserDataDestroy(void* data)
   delete static_cast<LayerUserData*>(data);
 }
 
-UniquePtr<LayerUserData>
+nsAutoPtr<LayerUserData>
 LayerManager::RemoveUserData(void* aKey)
 {
-  UniquePtr<LayerUserData> d(static_cast<LayerUserData*>(mUserData.Remove(static_cast<gfx::UserDataKey*>(aKey))));
+  nsAutoPtr<LayerUserData> d(static_cast<LayerUserData*>(mUserData.Remove(static_cast<gfx::UserDataKey*>(aKey))));
   return d;
 }
 
@@ -2148,10 +2148,10 @@ Layer::IsBackfaceHidden()
   return false;
 }
 
-UniquePtr<LayerUserData>
+nsAutoPtr<LayerUserData>
 Layer::RemoveUserData(void* aKey)
 {
-  UniquePtr<LayerUserData> d(static_cast<LayerUserData*>(mUserData.Remove(static_cast<gfx::UserDataKey*>(aKey))));
+  nsAutoPtr<LayerUserData> d(static_cast<LayerUserData*>(mUserData.Remove(static_cast<gfx::UserDataKey*>(aKey))));
   return d;
 }
 
