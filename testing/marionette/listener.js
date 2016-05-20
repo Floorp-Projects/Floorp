@@ -43,7 +43,7 @@ var curContainer = { frame: content, shadowRoot: null };
 var isRemoteBrowser = () => curContainer.frame.contentWindow !== null;
 var previousContainer = null;
 
-var elementManager = new element.Store();
+var seenEls = new element.Store();
 var SUPPORTED_STRATEGIES = new Set([
   element.Strategy.ClassName,
   element.Strategy.Selector,
@@ -408,7 +408,7 @@ function deleteSession(msg) {
   if (isB2G) {
     content.removeEventListener("mozbrowsershowmodalprompt", modalHandler, false);
   }
-  elementManager.reset();
+  seenEls.reset();
   // reset container frame to the top-most frame
   curContainer = { frame: content, shadowRoot: null };
   curContainer.frame.focus();
@@ -527,10 +527,10 @@ function* execute(script, args, timeout, opts) {
 
   let sb = sandbox.createMutable(curContainer.frame);
   let wargs = element.fromJson(
-      args, elementManager, curContainer.frame, curContainer.shadowRoot);
+      args, seenEls, curContainer.frame, curContainer.shadowRoot);
   let res = yield evaluate.sandbox(sb, script, wargs, opts);
 
-  return element.toJson(res, elementManager);
+  return element.toJson(res, seenEls);
 }
 
 function* executeInSandbox(script, args, timeout, opts) {
@@ -546,14 +546,14 @@ function* executeInSandbox(script, args, timeout, opts) {
   }
 
   let wargs = element.fromJson(
-      args, elementManager, curContainer.frame, curContainer.shadowRoot);
+      args, seenEls, curContainer.frame, curContainer.shadowRoot);
   let evaluatePromise = evaluate.sandbox(sb, script, wargs, opts);
 
   let res = yield evaluatePromise;
   sendSyncMessage(
       "Marionette:shareData",
-      {log: element.toJson(contentLog.get(), elementManager)});
-  return element.toJson(res, elementManager);
+      {log: element.toJson(contentLog.get(), seenEls)});
+  return element.toJson(res, seenEls);
 }
 
 function* executeSimpleTest(script, args, timeout, opts) {
@@ -572,14 +572,14 @@ function* executeSimpleTest(script, args, timeout, opts) {
   sb = sandbox.augment(sb, new logging.Adapter(contentLog));
 
   let wargs = element.fromJson(
-      args, elementManager, curContainer.frame, curContainer.shadowRoot);
+      args, seenEls, curContainer.frame, curContainer.shadowRoot);
   let evaluatePromise = evaluate.sandbox(sb, script, wargs, opts);
 
   let res = yield evaluatePromise;
   sendSyncMessage(
       "Marionette:shareData",
-      {log: element.toJson(contentLog.get(), elementManager)});
-  return element.toJson(res, elementManager);
+      {log: element.toJson(contentLog.get(), seenEls)});
+  return element.toJson(res, seenEls);
 }
 
 /**
@@ -643,7 +643,7 @@ function emitTouchEvent(type, touch) {
     contentLog.log(loggingInfo, "TRACE");
     sendSyncMessage(
         "Marionette:shareData",
-        {log: element.toJson(contentLog.get(), elementManager)});
+        {log: element.toJson(contentLog.get(), seenEls)});
     contentLog.clear();
     */
     let domWindowUtils = curContainer.frame.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils);
@@ -655,7 +655,7 @@ function emitTouchEvent(type, touch) {
  * Function that perform a single tap
  */
 function singleTap(id, corx, cory) {
-  let el = elementManager.get(id, curContainer);
+  let el = seenEls.get(id, curContainer);
   // after this block, the element will be scrolled into view
   let visible = element.isVisible(el, corx, cory);
   if (!visible) {
@@ -705,7 +705,7 @@ function actionChain(chain, touchId) {
       chain,
       touchId,
       curContainer,
-      elementManager,
+      seenEls,
       touchProvider);
 }
 
@@ -780,7 +780,7 @@ function setDispatch(batches, touches, batchIndex=0) {
 
     switch (command) {
       case "press":
-        el = elementManager.get(pack[2], curContainer);
+        el = seenEls.get(pack[2], curContainer);
         c = element.coordinates(el, pack[3], pack[4]);
         touch = createATouch(el, c.x, c.y, touchId);
         multiLast[touchId] = touch;
@@ -797,7 +797,7 @@ function setDispatch(batches, touches, batchIndex=0) {
         break;
 
       case "move":
-        el = elementManager.get(pack[2], curContainer);
+        el = seenEls.get(pack[2], curContainer);
         c = element.coordinates(el);
         touch = createATouch(multiLast[touchId].target, c.x, c.y, touchId);
         touchIndex = touches.indexOf(lastTouch);
@@ -854,7 +854,7 @@ function setDispatch(batches, touches, batchIndex=0) {
 function multiAction(args, maxLen) {
   // unwrap the original nested array
   let commandArray = element.fromJson(
-      args, elementManager, curContainer.frame, curContainer.shadowRoot);
+      args, seenEls, curContainer.frame, curContainer.shadowRoot);
   let concurrentEvent = [];
   let temp;
   for (let i = 0; i < maxLen; i++) {
@@ -1040,11 +1040,11 @@ function* findElementContent(strategy, selector, opts = {}) {
 
   opts.all = false;
   if (opts.startNode) {
-    opts.startNode = elementManager.get(opts.startNode, curContainer);
+    opts.startNode = seenEls.get(opts.startNode, curContainer);
   }
 
   let el = yield element.find(curContainer, strategy, selector, opts);
-  let elRef = elementManager.add(el);
+  let elRef = seenEls.add(el);
   let webEl = element.makeWebElement(elRef);
   return webEl;
 }
@@ -1060,11 +1060,11 @@ function* findElementsContent(strategy, selector, opts = {}) {
 
   opts.all = true;
   if (opts.startNode) {
-    opts.startNode = elementManager.get(opts.startNode, curContainer);
+    opts.startNode = seenEls.get(opts.startNode, curContainer);
   }
 
   let els = yield element.find(curContainer, strategy, selector, opts);
-  let elRefs = elementManager.addAll(els);
+  let elRefs = seenEls.addAll(els);
   let webEls = elRefs.map(element.makeWebElement);
   return webEls;
 }
@@ -1077,7 +1077,7 @@ function* findElementsContent(strategy, selector, opts = {}) {
  */
 function getActiveElement() {
   let el = curContainer.frame.document.activeElement;
-  let elRef = elementManager.add(el);
+  let elRef = seenEls.add(el);
   // TODO(ato): This incorrectly returns
   // the element's associated UUID as a string
   // instead of a web element.
@@ -1091,7 +1091,7 @@ function getActiveElement() {
  *     Reference to the web element to click.
  */
 function clickElement(id) {
-  let el = elementManager.get(id, curContainer);
+  let el = seenEls.get(id, curContainer);
   return interaction.clickElement(
       el,
       !!capabilities.raisesAccessibilityExceptions,
@@ -1099,7 +1099,7 @@ function clickElement(id) {
 }
 
 function getElementAttribute(id, name) {
-  let el = elementManager.get(id, curContainer);
+  let el = seenEls.get(id, curContainer);
   if (element.isBooleanAttribute(el, name)) {
     if (el.hasAttribute(name)) {
       return "true";
@@ -1112,7 +1112,7 @@ function getElementAttribute(id, name) {
 }
 
 function getElementProperty(id, name) {
-  let el = elementManager.get(id, curContainer);
+  let el = seenEls.get(id, curContainer);
   return el[name];
 }
 
@@ -1126,7 +1126,7 @@ function getElementProperty(id, name) {
  *     Text of element.
  */
 function getElementText(id) {
-  let el = elementManager.get(id, curContainer);
+  let el = seenEls.get(id, curContainer);
   return atom.getElementText(el, curContainer.frame);
 }
 
@@ -1140,7 +1140,7 @@ function getElementText(id) {
  *     Tag name of element.
  */
 function getElementTagName(id) {
-  let el = elementManager.get(id, curContainer);
+  let el = seenEls.get(id, curContainer);
   return el.tagName.toLowerCase();
 }
 
@@ -1151,7 +1151,7 @@ function getElementTagName(id) {
  * capability.
  */
 function isElementDisplayed(id) {
-  let el = elementManager.get(id, curContainer);
+  let el = seenEls.get(id, curContainer);
   return interaction.isElementDisplayed(
       el, capabilities.raisesAccessibilityExceptions);
 }
@@ -1169,7 +1169,7 @@ function isElementDisplayed(id) {
  *     Effective value of the requested CSS property.
  */
 function getElementValueOfCssProperty(id, prop) {
-  let el = elementManager.get(id, curContainer);
+  let el = seenEls.get(id, curContainer);
   let st = curContainer.frame.document.defaultView.getComputedStyle(el, null);
   return st.getPropertyValue(prop);
 }
@@ -1184,7 +1184,7 @@ function getElementValueOfCssProperty(id, prop) {
  *     The x, y, width, and height properties of the element.
  */
 function getElementRect(id) {
-  let el = elementManager.get(id, curContainer);
+  let el = seenEls.get(id, curContainer);
   let clientRect = el.getBoundingClientRect();
   return {
     x: clientRect.x + curContainer.frame.pageXOffset,
@@ -1204,7 +1204,7 @@ function getElementRect(id) {
  *     True if enabled, false otherwise.
  */
 function isElementEnabled(id) {
-  let el = elementManager.get(id, curContainer);
+  let el = seenEls.get(id, curContainer);
   return interaction.isElementEnabled(
       el, capabilities.raisesAccessibilityExceptions);
 }
@@ -1216,7 +1216,7 @@ function isElementEnabled(id) {
  * and Radio Button states, or option elements.
  */
 function isElementSelected(id) {
-  let el = elementManager.get(id, curContainer);
+  let el = seenEls.get(id, curContainer);
   return interaction.isElementSelected(
       el, capabilities.raisesAccessibilityExceptions);
 }
@@ -1228,7 +1228,7 @@ function sendKeysToElement(msg) {
   let command_id = msg.json.command_id;
   let val = msg.json.value;
   let id = msg.json.id;
-  let el = elementManager.get(id, curContainer);
+  let el = seenEls.get(id, curContainer);
 
   if (el.type == "file") {
     let p = val.join("");
@@ -1251,7 +1251,7 @@ function sendKeysToElement(msg) {
  */
 function clearElement(id) {
   try {
-    let el = elementManager.get(id, curContainer);
+    let el = seenEls.get(id, curContainer);
     if (el.type == "file") {
       el.value = null;
     } else {
@@ -1296,7 +1296,7 @@ function switchToShadowRoot(id) {
   }
 
   let foundShadowRoot;
-  let hostEl = elementManager.get(id, curContainer);
+  let hostEl = seenEls.get(id, curContainer);
   foundShadowRoot = hostEl.shadowRoot;
   if (!foundShadowRoot) {
     throw new NoSuchElementError('Unable to locate shadow root: ' + id);
@@ -1311,9 +1311,10 @@ function switchToShadowRoot(id) {
  function switchToParentFrame(msg) {
    let command_id = msg.json.command_id;
    curContainer.frame = curContainer.frame.parent;
-   let parentElement = elementManager.add(curContainer.frame);
+   let parentElement = seenEls.add(curContainer.frame);
 
-   sendSyncMessage("Marionette:switchedToFrame", { frameValue: parentElement });
+   sendSyncMessage(
+       "Marionette:switchedToFrame", {frameValue: parentElement});
 
    sendOk(msg.json.command_id);
  }
@@ -1368,10 +1369,10 @@ function switchToFrame(msg) {
   }
 
   let id = msg.json.element;
-  if (elementManager.has(id)) {
+  if (seenEls.has(id)) {
     let wantedFrame;
     try {
-      wantedFrame = elementManager.get(id, curContainer);
+      wantedFrame = seenEls.get(id, curContainer);
     } catch (e) {
       sendError(e, command_id);
     }
@@ -1406,7 +1407,7 @@ function switchToFrame(msg) {
         foundFrame = frames[msg.json.id].frameElement;
         if (foundFrame !== null) {
           curContainer.frame = foundFrame;
-          foundFrame = elementManager.add(curContainer.frame);
+          foundFrame = seenEls.add(curContainer.frame);
         }
         else {
           // If foundFrame is null at this point then we have the top level browsing
@@ -1441,7 +1442,7 @@ function switchToFrame(msg) {
   // send a synchronous message to let the server update the currently active
   // frame element (for getActiveFrame)
   let frameValue = element.toJson(
-      curContainer.frame.wrappedJSObject, elementManager)[element.Key];
+      curContainer.frame.wrappedJSObject, seenEls)[element.Key];
   sendSyncMessage("Marionette:switchedToFrame", {frameValue: frameValue});
 
   let rv = null;
@@ -1579,7 +1580,7 @@ function screenshot(id, full=true, highlights=[]) {
 
   let highlightEls = [];
   for (let h of highlights) {
-    let el = elementManager.get(h, curContainer);
+    let el = seenEls.get(h, curContainer);
     highlightEls.push(el);
   }
 
@@ -1591,7 +1592,7 @@ function screenshot(id, full=true, highlights=[]) {
   } else {
     let node;
     if (id) {
-      node = elementManager.get(id, curContainer);
+      node = seenEls.get(id, curContainer);
     } else {
       node = curContainer.frame.document.documentElement;
     }
