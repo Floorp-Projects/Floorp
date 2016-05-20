@@ -14,8 +14,8 @@ Cu.import("chrome://marionette/content/error.js");
 const logger = Log.repository.getLogger("Marionette");
 
 /**
- * The ElementManager manages DOM element references and
- * interactions with elements.
+ * This module provides shared functionality for dealing with DOM-
+ * and web elements in Marionette.
  *
  * A web element is an abstraction used to identify an element when it
  * is transported across the protocol, between remote- and local ends.
@@ -25,15 +25,12 @@ const logger = Log.repository.getLogger("Marionette");
  * web element reference for every element representing the same element
  * is the same.
  *
- * The element manager provides a mapping between web element references
- * and DOM elements for each browsing context.  It also provides
+ * The @code{element.Store} provides a mapping between web element
+ * references and DOM elements for each browsing context.  It also provides
  * functionality for looking up and retrieving elements.
  */
 
-this.EXPORTED_SYMBOLS = [
-  "element",
-  "ElementManager",
-];
+this.EXPORTED_SYMBOLS = ["element"];
 
 const DOCUMENT_POSITION_DISCONNECTED = 1;
 const XMLNS = "http://www.w3.org/1999/xhtml";
@@ -43,8 +40,8 @@ const uuidGen = Cc["@mozilla.org/uuid-generator;1"]
 
 this.element = {};
 
-element.LegacyKey = "ELEMENT";
 element.Key = "element-6066-11e4-a52e-4f735466cecf";
+element.LegacyKey = "ELEMENT";
 
 element.Strategy = {
   ClassName: "class name",
