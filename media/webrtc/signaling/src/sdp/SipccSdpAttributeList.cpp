@@ -931,6 +931,9 @@ SipccSdpAttributeList::LoadRtcpFb(sdp_t* sdp, uint16_t level,
         os << rtcpfb->param.trr_int;
         parameter = os.str();
       } break;
+      case SDP_RTCP_FB_REMB: {
+        type = SdpRtcpFbAttributeList::kRemb;
+      } break;
       default:
         // Type we don't care about, ignore.
         continue;

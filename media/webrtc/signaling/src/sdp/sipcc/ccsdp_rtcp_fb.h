@@ -13,6 +13,8 @@ typedef enum {
     SDP_RTCP_FB_CCM,
     SDP_RTCP_FB_NACK,
     SDP_RTCP_FB_TRR_INT,
+    // from https://www.ietf.org/archive/id/draft-alvestrand-rmcat-remb-03.txt
+    SDP_RTCP_FB_REMB,
     SDP_MAX_RTCP_FB,
     SDP_RTCP_FB_UNKNOWN
 } sdp_rtcp_fb_type_e;
@@ -40,6 +42,7 @@ typedef enum {
     SDP_RTCP_FB_ACK_UNKNOWN
 } sdp_rtcp_fb_ack_type_e;
 
+// Codec Control Messages - defined by RFC 5104
 typedef enum {
     SDP_RTCP_FB_CCM_NOT_FOUND = -1,
     SDP_RTCP_FB_CCM_FIR = 0,
