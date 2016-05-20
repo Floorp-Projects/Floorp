@@ -294,6 +294,42 @@ var expectedEvents =
 for (var i = 0; i < expectedEvents.length; ++i) {
   is((new Event(expectedEvents[i])).type, expectedEvents[i], "Unexpected event type!");
 }
+
+var timeEvents = ["begin", "repeat", "end"];
+var expectedEvents = ["begin", "beginEvent", "repeat", "repeatEvent", "end", "endEvent"];
+var d = document.createElement("div");
+for (var i = 0; i < timeEvents.length; ++i) {
+  d.addEventListener(timeEvents[i], function(e) {
+    is(e.type, expectedEvents[0], "Got the expected event type.");
+    expectedEvents.shift();
+  });
+
+  // Without "Event" suffix.
+  var e = document.createEvent("timeevent");
+  e.initEvent(timeEvents[i], true, true);
+  d.dispatchEvent(e);
+
+  // With "Event" suffix.
+  e = document.createEvent("timeevent");
+  e.initEvent(timeEvents[i] + "Event", true, true);
+  d.dispatchEvent(e);
+}
+is(expectedEvents.length, 0, "Got all the expected events.");
+
+expectedEvents = ["zoom", "SVGZoom"];
+d.addEventListener("zoom", function(e) {
+  is(e.type, expectedEvents[0]);
+  expectedEvents.shift();
+});
+
+var zoomEvent = document.createEvent("svgzoomevent");
+zoomEvent.initEvent("zoom", true, true);
+d.dispatchEvent(zoomEvent);
+zoomEvent = document.createEvent("svgzoomevent");
+zoomEvent.initEvent("SVGZoom", true, true);
+d.dispatchEvent(zoomEvent);
+is(expectedEvents.length, 0, "Got all the expected events.");
+
 ]]>
 </script>
 </pre>
