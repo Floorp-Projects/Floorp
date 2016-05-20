@@ -52,9 +52,8 @@ VISUAL_STUDIO_ADVERTISEMENT = '''
 ===============================
 Visual Studio Support Available
 
-You are building Firefox on Windows. Please help us test the experimental
-Visual Studio project files (yes, IntelliSense works) by running the
-following:
+You are building Firefox on Windows. You can generate Visual Studio
+files by running:
 
    mach build-backend --backend=VisualStudio
 
