@@ -182,9 +182,30 @@ nsFrameLoader::Create(Element* aOwner, bool aNetworkCreated)
 {
   NS_ENSURE_TRUE(aOwner, nullptr);
   nsIDocument* doc = aOwner->OwnerDoc();
+
+  // We never create nsFrameLoaders for elements in resource documents.
+  //
+  // We never create nsFrameLoaders for elements in data documents, unless the
+  // document is a static document.
+  // Static documents are an exception because any sub-documents need an
+  // nsFrameLoader to keep the relevant docShell alive, even though the
+  // nsFrameLoader isn't used to load anything (the sub-document is created by
+  // the static clone process).
+  //
+  // We never create nsFrameLoaders for elements that are not
+  // in-composed-document, unless the element belongs to a static document.
+  // Static documents are an exception because this method is called at a point
+  // in the static clone process before aOwner has been inserted into its
+  // document.  For other types of documents this wouldn't be a problem since
+  // we'd create the nsFrameLoader as necessary after aOwner is inserted into a
+  // document, but the mechanisms that take care of that don't apply for static
+  // documents so we need to create the nsFrameLoader now. (This isn't wasteful
+  // since for a static document we know aOwner will end up in a document and
+  // the nsFrameLoader will be used for its docShell.)
+  //
   NS_ENSURE_TRUE(!doc->IsResourceDoc() &&
-                 ((!doc->IsLoadedAsData() && aOwner->GetComposedDoc()) ||
-                   doc->IsStaticDocument()),
+                 ((!doc->IsLoadedAsData() && aOwner->IsInComposedDoc()) ||
+                  doc->IsStaticDocument()),
                  nullptr);
 
   return new nsFrameLoader(aOwner, aNetworkCreated);

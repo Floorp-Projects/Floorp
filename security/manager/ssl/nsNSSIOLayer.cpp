@@ -465,7 +465,7 @@ nsNSSSocketInfo::SetNPNList(nsTArray<nsCString>& protocolArray)
 
   if (SSL_SetNextProtoNego(
         mFd,
-        reinterpret_cast<const unsigned char*>(npnList.get()),
+        BitwiseCast<const unsigned char*, const char*>(npnList.get()),
         npnList.Length()) != SECSuccess)
     return NS_ERROR_FAILURE;
 
@@ -747,6 +747,8 @@ nsSSLIOLayerHelpers::rememberIntolerantAtVersion(const nsACString& hostName,
       return false;
     }
 
+    // This telemetry doesn't support TLS 1.3
+    // See bug 1250582
     uint32_t fallbackLimitBucket = 0;
     // added if the version has reached the min version.
     if (intolerant <= minVersion) {
@@ -1133,6 +1135,10 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
   Telemetry::ID pre;
   Telemetry::ID post;
   switch (range.max) {
+    case SSL_LIBRARY_VERSION_TLS_1_3:
+      pre = Telemetry::SSL_TLS13_INTOLERANCE_REASON_PRE;
+      post = Telemetry::SSL_TLS13_INTOLERANCE_REASON_POST;
+      break;
     case SSL_LIBRARY_VERSION_TLS_1_2:
       pre = Telemetry::SSL_TLS12_INTOLERANCE_REASON_PRE;
       post = Telemetry::SSL_TLS12_INTOLERANCE_REASON_POST;
@@ -2037,7 +2043,7 @@ nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
   }
 
   RefPtr<nsNSSSocketInfo> info(
-    reinterpret_cast<nsNSSSocketInfo*>(socket->higher->secret));
+    BitwiseCast<nsNSSSocketInfo*, PRFilePrivate*>(socket->higher->secret));
 
   UniqueCERTCertificate serverCert(SSL_PeerCertificate(socket));
   if (!serverCert) {
@@ -2234,7 +2240,7 @@ ClientAuthDataRunnable::RunOnTargetThread()
             getter_AddRefs(found_cert));
           if (NS_SUCCEEDED(find_rv) && found_cert) {
             nsNSSCertificate* obj_cert =
-              reinterpret_cast<nsNSSCertificate*>(found_cert.get());
+              BitwiseCast<nsNSSCertificate*, nsIX509Cert*>(found_cert.get());
             if (obj_cert) {
               cert.reset(obj_cert->GetCert());
             }

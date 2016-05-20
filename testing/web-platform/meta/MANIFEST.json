@@ -35979,10 +35979,22 @@
     "deleted_reftests": {},
     "items": {
       "testharness": {
-        "dom/events/EventListener-incumbent-global.sub.html": [
+        "dom/events/EventListener-incumbent-global-1.sub.html": [
           {
-            "path": "dom/events/EventListener-incumbent-global.sub.html",
-            "url": "/dom/events/EventListener-incumbent-global.sub.html"
+            "path": "dom/events/EventListener-incumbent-global-1.sub.html",
+            "url": "/dom/events/EventListener-incumbent-global-1.sub.html"
+          }
+        ],
+        "dom/events/EventListener-incumbent-global-2.sub.html": [
+          {
+            "path": "dom/events/EventListener-incumbent-global-2.sub.html",
+            "url": "/dom/events/EventListener-incumbent-global-2.sub.html"
+          }
+        ],
+        "dom/nodes/ProcessingInstruction-escapes-1.xhtml": [
+          {
+            "path": "dom/nodes/ProcessingInstruction-escapes-1.xhtml",
+            "url": "/dom/nodes/ProcessingInstruction-escapes-1.xhtml"
           }
         ],
         "html/browsers/browsing-the-web/navigating-across-documents/javascript-url-return-value-handling.html": [

@@ -20,6 +20,7 @@ interface nsISSLStatus : nsISupports {
   const short TLS_VERSION_1   = 1;
   const short TLS_VERSION_1_1 = 2;
   const short TLS_VERSION_1_2 = 3;
+  const short TLS_VERSION_1_3 = 4;
   readonly attribute unsigned short protocolVersion;
 
   readonly attribute boolean isDomainMismatch;

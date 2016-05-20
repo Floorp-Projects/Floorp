@@ -10,6 +10,7 @@
 
 #include "ScopedNSSTypes.h"
 #include "mozilla/Base64.h"
+#include "mozilla/Casting.h"
 #include "nsIURLParser.h"
 #include "nsNSSCallbacks.h"
 #include "nsNetCID.h"
@@ -49,7 +50,8 @@ AppendEscapedBase64Item(const SECItem* encodedRequest, nsACString& path)
 {
   nsresult rv;
   nsDependentCSubstring requestAsSubstring(
-    reinterpret_cast<const char*>(encodedRequest->data), encodedRequest->len);
+    BitwiseCast<char*, unsigned char*>(encodedRequest->data),
+    encodedRequest->len);
   nsCString base64Request;
   rv = Base64Encode(requestAsSubstring, base64Request);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -140,14 +142,13 @@ DoOCSPRequest(const UniquePLArenaPool& arena, const char* url,
     hostname(url + authorityPos + hostnamePos,
              static_cast<nsACString_internal::size_type>(hostnameLen));
 
-  SEC_HTTP_SERVER_SESSION serverSessionPtr = nullptr;
+  nsNSSHttpServerSession* serverSessionPtr = nullptr;
   Result rv = nsNSSHttpInterface::createSessionFcn(
     hostname.BeginReading(), static_cast<uint16_t>(port), &serverSessionPtr);
   if (rv != Success) {
     return rv;
   }
-  UniqueHTTPServerSession serverSession(
-    reinterpret_cast<nsNSSHttpServerSession*>(serverSessionPtr));
+  UniqueHTTPServerSession serverSession(serverSessionPtr);
 
   nsAutoCString path;
   if (pathLen > 0) {
@@ -170,19 +171,19 @@ DoOCSPRequest(const UniquePLArenaPool& arena, const char* url,
     }
   }
 
-  SEC_HTTP_REQUEST_SESSION requestSessionPtr;
+  nsNSSHttpRequestSession* requestSessionPtr;
   rv = nsNSSHttpInterface::createFcn(serverSession.get(), "http", path.get(),
                                      method.get(), timeout, &requestSessionPtr);
   if (rv != Success) {
     return rv;
   }
 
-  UniqueHTTPRequestSession requestSession(
-    reinterpret_cast<nsNSSHttpRequestSession*>(requestSessionPtr));
+  UniqueHTTPRequestSession requestSession(requestSessionPtr);
 
   if (!useGET) {
     rv = nsNSSHttpInterface::setPostDataFcn(
-      requestSession.get(), reinterpret_cast<char*>(encodedRequest->data),
+      requestSession.get(),
+      BitwiseCast<char*, unsigned char*>(encodedRequest->data),
       encodedRequest->len, "application/ocsp-request");
     if (rv != Success) {
       return rv;

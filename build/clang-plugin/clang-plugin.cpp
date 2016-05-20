@@ -319,6 +319,7 @@ public:
 private:
   bool hasLiteralAnnotation(QualType T) const;
   AnnotationReason directAnnotationReason(QualType T);
+  AnnotationReason tmplArgAnnotationReason(ArrayRef<TemplateArgument> Args);
 
 protected:
   // Allow subclasses to apply annotations to external code:
@@ -882,16 +883,10 @@ CustomTypeAnnotation::directAnnotationReason(QualType T) {
         if (Spec) {
           const TemplateArgumentList &Args = Spec->getTemplateArgs();
 
-          for (const TemplateArgument &Arg : Args.asArray()) {
-            if (Arg.getKind() == TemplateArgument::Type) {
-              QualType Type = Arg.getAsType();
-
-              if (hasEffectiveAnnotation(Type)) {
-                AnnotationReason Reason = {Type, RK_TemplateInherited, nullptr};
-                Cache[Key] = Reason;
-                return Reason;
-              }
-            }
+          AnnotationReason Reason = tmplArgAnnotationReason(Args.asArray());
+          if (Reason.Kind != RK_None) {
+            Cache[Key] = Reason;
+            return Reason;
           }
         }
       }
@@ -900,6 +895,27 @@ CustomTypeAnnotation::directAnnotationReason(QualType T) {
 
   AnnotationReason Reason = {QualType(), RK_None, nullptr};
   Cache[Key] = Reason;
+  return Reason;
+}
+
+CustomTypeAnnotation::AnnotationReason
+CustomTypeAnnotation::tmplArgAnnotationReason(ArrayRef<TemplateArgument> Args) {
+  for (const TemplateArgument &Arg : Args) {
+    if (Arg.getKind() == TemplateArgument::Type) {
+      QualType Type = Arg.getAsType();
+      if (hasEffectiveAnnotation(Type)) {
+        AnnotationReason Reason = {Type, RK_TemplateInherited, nullptr};
+        return Reason;
+      }
+    } else if (Arg.getKind() == TemplateArgument::Pack) {
+      AnnotationReason Reason = tmplArgAnnotationReason(Arg.getPackAsArray());
+      if (Reason.Kind != RK_None) {
+        return Reason;
+      }
+    }
+  }
+
+  AnnotationReason Reason = {QualType(), RK_None, nullptr};
   return Reason;
 }
 

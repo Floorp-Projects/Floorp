@@ -32,6 +32,10 @@ const TEST_CASES = [
     input: 3,
     expected: "TLSv1.2"
   }, {
+    description: "TLS_VERSION_1.3",
+    input: 4,
+    expected: "TLSv1.3"
+  }, {
     description: "invalid version",
     input: -1,
     expected: "Unknown"

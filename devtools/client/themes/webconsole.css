@@ -406,6 +406,7 @@ a {
 .jsterm-input-node,
 .jsterm-complete-node {
   border: none;
+  padding: 0;
   padding-inline-start: 20px;
   margin: 0;
   -moz-appearance: none;

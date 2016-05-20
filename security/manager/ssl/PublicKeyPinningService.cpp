@@ -4,15 +4,16 @@
 
 #include "PublicKeyPinningService.h"
 
+#include "RootCertificateTelemetryUtils.h"
 #include "mozilla/Base64.h"
+#include "mozilla/Casting.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Telemetry.h"
 #include "nsISiteSecurityService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsSiteSecurityService.h"
 #include "nssb64.h"
 #include "pkix/pkixtypes.h"
-#include "mozilla/Logging.h"
-#include "RootCertificateTelemetryUtils.h"
 #include "seccomon.h"
 #include "sechash.h"
 
@@ -39,7 +40,7 @@ GetBase64HashSPKI(const CERTCertificate* cert, nsACString& hashSPKIDigest)
     return rv;
   }
   return Base64Encode(nsDependentCSubstring(
-                        reinterpret_cast<const char*>(digest.get().data),
+                        BitwiseCast<char*, unsigned char*>(digest.get().data),
                         digest.get().len),
                       hashSPKIDigest);
 }
@@ -135,10 +136,9 @@ EvalChain(const UniqueCERTCertList& certList,
   Comparator for the is public key pinned host.
 */
 static int
-TransportSecurityPreloadCompare(const void *key, const void *entry) {
-  const char *keyStr = reinterpret_cast<const char *>(key);
-  const TransportSecurityPreload *preloadEntry =
-    reinterpret_cast<const TransportSecurityPreload *>(entry);
+TransportSecurityPreloadCompare(const void* key, const void* entry) {
+  auto keyStr = static_cast<const char*>(key);
+  auto preloadEntry = static_cast<const TransportSecurityPreload*>(entry);
 
   return strcmp(keyStr, preloadEntry->mHost);
 }

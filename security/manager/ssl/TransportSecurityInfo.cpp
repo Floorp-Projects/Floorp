@@ -6,28 +6,28 @@
 
 #include "TransportSecurityInfo.h"
 
-#include "pkix/pkixtypes.h"
-#include "nsNSSComponent.h"
-#include "nsIWebProgressListener.h"
-#include "nsNSSCertificate.h"
-#include "nsIX509CertValidity.h"
-#include "nsIDateTimeFormat.h"
+#include "PSMRunnable.h"
+#include "mozilla/Casting.h"
+#include "nsComponentManagerUtils.h"
+#include "nsIArray.h"
 #include "nsICertOverrideService.h"
+#include "nsIDateTimeFormat.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
+#include "nsIWebProgressListener.h"
+#include "nsIX509CertValidity.h"
 #include "nsNSSCertHelper.h"
-#include "nsIArray.h"
-#include "nsComponentManagerUtils.h"
+#include "nsNSSCertificate.h"
+#include "nsNSSComponent.h"
 #include "nsReadableUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsXULAppAPI.h"
-#include "PSMRunnable.h"
-
+#include "pkix/pkixtypes.h"
 #include "secerr.h"
 
 //#define DEBUG_SSL_VERBOSE //Enable this define to get minimal 
                             //reports when doing SSL read/write
-                            
+
 //#define DUMP_BUFFER  //Enable this define along with
                        //DEBUG_SSL_VERBOSE to dump SSL
                        //read/write buffer to a log.
@@ -421,7 +421,7 @@ TransportSecurityInfo::Read(nsIObjectInputStream* stream)
   if (NS_FAILED(rv)) {
     return rv;
   }
-  mSSLStatus = reinterpret_cast<nsSSLStatus*>(supports.get());
+  mSSLStatus = BitwiseCast<nsSSLStatus*, nsISupports*>(supports.get());
 
   nsCOMPtr<nsISupports> failedCertChainSupports;
   rv = NS_ReadOptionalObject(stream, true, getter_AddRefs(failedCertChainSupports));
@@ -650,9 +650,9 @@ GetSubjectAltNames(CERTCertificate* nssCert, nsString& allNames)
     switch (current->type) {
       case certDNSName:
         {
-          nsDependentCSubstring nameFromCert(reinterpret_cast<char*>
-                                              (current->name.other.data),
-                                              current->name.other.len);
+          nsDependentCSubstring nameFromCert(BitwiseCast<char*, unsigned char*>(
+                                               current->name.other.data),
+                                             current->name.other.len);
           // dNSName fields are defined as type IA5String and thus should
           // be limited to ASCII characters.
           if (IsASCII(nameFromCert)) {

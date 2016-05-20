@@ -6,6 +6,8 @@
 
 #include "nsNSSCallbacks.h"
 
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/Casting.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "nsContentUtils.h"
@@ -188,7 +190,7 @@ struct nsCancelHTTPDownloadEvent : Runnable {
 Result
 nsNSSHttpServerSession::createSessionFcn(const char* host,
                                          uint16_t portnum,
-                                         SEC_HTTP_SERVER_SESSION* pSession)
+                                 /*out*/ nsNSSHttpServerSession** pSession)
 {
   if (!host || !pSession) {
     return Result::FATAL_ERROR_INVALID_ARGS;
@@ -207,20 +209,15 @@ nsNSSHttpServerSession::createSessionFcn(const char* host,
 }
 
 Result
-nsNSSHttpRequestSession::createFcn(SEC_HTTP_SERVER_SESSION session,
+nsNSSHttpRequestSession::createFcn(const nsNSSHttpServerSession* session,
                                    const char* http_protocol_variant,
                                    const char* path_and_query_string,
                                    const char* http_request_method,
                                    const PRIntervalTime timeout,
-                                   SEC_HTTP_REQUEST_SESSION* pRequest)
+                           /*out*/ nsNSSHttpRequestSession** pRequest)
 {
   if (!session || !http_protocol_variant || !path_and_query_string ||
       !http_request_method || !pRequest) {
-    return Result::FATAL_ERROR_INVALID_ARGS;
-  }
-
-  nsNSSHttpServerSession* hss = static_cast<nsNSSHttpServerSession*>(session);
-  if (!hss) {
     return Result::FATAL_ERROR_INVALID_ARGS;
   }
 
@@ -240,14 +237,14 @@ nsNSSHttpRequestSession::createFcn(SEC_HTTP_SERVER_SESSION session,
 
   rs->mURL.Assign(http_protocol_variant);
   rs->mURL.AppendLiteral("://");
-  rs->mURL.Append(hss->mHost);
+  rs->mURL.Append(session->mHost);
   rs->mURL.Append(':');
-  rs->mURL.AppendInt(hss->mPort);
+  rs->mURL.AppendInt(session->mPort);
   rs->mURL.Append(path_and_query_string);
 
   rs->mRequestMethod = http_request_method;
 
-  *pRequest = (void*)rs;
+  *pRequest = rs;
   return Success;
 }
 
@@ -866,17 +863,18 @@ PreliminaryHandshakeDone(PRFileDesc* fd)
   unsigned char npnbuf[256];
   unsigned int npnlen;
 
-  if (SSL_GetNextProto(fd, &state, npnbuf, &npnlen, 256) == SECSuccess) {
+  if (SSL_GetNextProto(fd, &state, npnbuf, &npnlen,
+                       AssertedCast<unsigned int>(ArrayLength(npnbuf)))
+        == SECSuccess) {
     if (state == SSL_NEXT_PROTO_NEGOTIATED ||
         state == SSL_NEXT_PROTO_SELECTED) {
-      infoObject->SetNegotiatedNPN(reinterpret_cast<char *>(npnbuf), npnlen);
-    }
-    else {
+      infoObject->SetNegotiatedNPN(BitwiseCast<char*, unsigned char*>(npnbuf),
+                                   npnlen);
+    } else {
       infoObject->SetNegotiatedNPN(nullptr, 0);
     }
     mozilla::Telemetry::Accumulate(Telemetry::SSL_NPN_TYPE, state);
-  }
-  else {
+  } else {
     infoObject->SetNegotiatedNPN(nullptr, 0);
   }
 
@@ -1064,6 +1062,8 @@ AccumulateCipherSuite(Telemetry::ID probe, const SSLChannelInfo& channelInfo)
     case TLS_RSA_WITH_SEED_CBC_SHA: value = 67; break;
     case TLS_RSA_WITH_RC4_128_SHA: value = 68; break;
     case TLS_RSA_WITH_RC4_128_MD5: value = 69; break;
+    // TLS 1.3 PSK resumption
+    case TLS_ECDHE_PSK_WITH_AES_128_GCM_SHA256: value = 70; break;
     // unknown
     default:
       value = 0;

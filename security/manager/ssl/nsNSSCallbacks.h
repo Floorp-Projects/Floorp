@@ -84,7 +84,7 @@ public:
 
   static Result createSessionFcn(const char* host,
                                  uint16_t portnum,
-                                 SEC_HTTP_SERVER_SESSION* pSession);
+                         /*out*/ nsNSSHttpServerSession** pSession);
 };
 
 class nsNSSHttpRequestSession
@@ -95,12 +95,12 @@ protected:
 public:
   typedef mozilla::pkix::Result Result;
 
-  static Result createFcn(SEC_HTTP_SERVER_SESSION session,
+  static Result createFcn(const nsNSSHttpServerSession* session,
                           const char* httpProtocolVariant,
                           const char* pathAndQueryString,
                           const char* httpRequestMethod,
                           const PRIntervalTime timeout,
-                          SEC_HTTP_REQUEST_SESSION* pRequest);
+                  /*out*/ nsNSSHttpRequestSession** pRequest);
 
   Result setPostDataFcn(const char* httpData,
                         const uint32_t httpDataLen,
@@ -147,17 +147,17 @@ public:
 
   static Result createSessionFcn(const char* host,
                                  uint16_t portnum,
-                                 SEC_HTTP_SERVER_SESSION* pSession)
+                         /*out*/ nsNSSHttpServerSession** pSession)
   {
     return nsNSSHttpServerSession::createSessionFcn(host, portnum, pSession);
   }
 
-  static Result createFcn(SEC_HTTP_SERVER_SESSION session,
+  static Result createFcn(const nsNSSHttpServerSession* session,
                           const char* httpProtocolVariant,
                           const char* pathAndQueryString,
                           const char* httpRequestMethod,
                           const PRIntervalTime timeout,
-                          SEC_HTTP_REQUEST_SESSION* pRequest)
+                  /*out*/ nsNSSHttpRequestSession** pRequest)
   {
     return nsNSSHttpRequestSession::createFcn(session, httpProtocolVariant,
                                               pathAndQueryString,
@@ -165,16 +165,15 @@ public:
                                               pRequest);
   }
 
-  static Result setPostDataFcn(SEC_HTTP_REQUEST_SESSION request,
+  static Result setPostDataFcn(nsNSSHttpRequestSession* request,
                                const char* httpData,
                                const uint32_t httpDataLen,
                                const char* httpContentType)
   {
-    return static_cast<nsNSSHttpRequestSession*>(request)
-      ->setPostDataFcn(httpData, httpDataLen, httpContentType);
+    return request->setPostDataFcn(httpData, httpDataLen, httpContentType);
   }
 
-  static Result trySendAndReceiveFcn(SEC_HTTP_REQUEST_SESSION request,
+  static Result trySendAndReceiveFcn(nsNSSHttpRequestSession* request,
                                      PRPollDesc** pPollDesc,
                                      uint16_t* httpResponseCode,
                                      const char** httpResponseContentType,
@@ -182,10 +181,10 @@ public:
                                      const char** httpResponseData,
                                      uint32_t* httpResponseDataLen)
   {
-    return static_cast<nsNSSHttpRequestSession*>(request)
-      ->trySendAndReceiveFcn(pPollDesc, httpResponseCode,
-                             httpResponseContentType, httpResponseHeaders,
-                             httpResponseData, httpResponseDataLen);
+    return request->trySendAndReceiveFcn(pPollDesc, httpResponseCode,
+                                         httpResponseContentType,
+                                         httpResponseHeaders,
+                                         httpResponseData, httpResponseDataLen);
   }
 };
 

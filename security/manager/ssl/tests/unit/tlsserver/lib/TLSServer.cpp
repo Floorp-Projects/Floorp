@@ -129,7 +129,7 @@ AddKeyFromFile(const char* basePath, const char* filename)
 
   unsigned int binLength;
   UniquePORTString bin(
-    reinterpret_cast<char*>(ATOB_AsciiToData(base64, &binLength)));
+    BitwiseCast<char*, unsigned char*>(ATOB_AsciiToData(base64, &binLength)));
   if (!bin || binLength == 0) {
     PrintPRError("ATOB_AsciiToData failed");
     return SECFailure;
@@ -447,7 +447,7 @@ ConfigSecureServerWithNamedCert(PRFileDesc* fd, const char* certName,
     certList->arena = arena.release();
     // We also have to manually copy the certificates we care about to the
     // list, because there aren't any utility functions for that either.
-    certList->certs = reinterpret_cast<SECItem*>(
+    certList->certs = static_cast<SECItem*>(
       PORT_ArenaAlloc(certList->arena, 2 * sizeof(SECItem)));
     if (SECITEM_CopyItem(certList->arena, certList->certs, &cert->derCert)
           != SECSuccess) {

@@ -182,10 +182,10 @@ nsCertTree::FreeCertArray()
   mDispInfo.Clear();
 }
 
-CompareCacheHashEntry *
-nsCertTree::getCacheEntry(void *cache, void *aCert)
+CompareCacheHashEntry*
+nsCertTree::getCacheEntry(void* cache, void* aCert)
 {
-  PLDHashTable &aCompareCache = *reinterpret_cast<PLDHashTable*>(cache);
+  PLDHashTable& aCompareCache = *static_cast<PLDHashTable*>(cache);
   auto entryPtr = static_cast<CompareCacheHashEntryPtr*>
                              (aCompareCache.Add(aCert, fallible));
   return entryPtr ? entryPtr->entry : nullptr;
@@ -634,7 +634,7 @@ nsCertTree::GetCertsByTypeFromCache(nsIX509CertList   *aCache,
   // more encapsulated types that handled NSS shutdown themselves, we wouldn't
   // be having these kinds of problems.
   nsNSSShutDownPreventionLock locker;
-  CERTCertList *certList = reinterpret_cast<CERTCertList*>(aCache->GetRawCertList());
+  CERTCertList* certList = aCache->GetRawCertList();
   if (!certList)
     return NS_ERROR_FAILURE;
   return GetCertsByTypeFromCertList(certList, aType, aCertCmpFn, aCertCmpFnArg);

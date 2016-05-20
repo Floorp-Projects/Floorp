@@ -7,6 +7,7 @@
 #include "CertVerifier.h"
 #include "OCSPCache.h"
 #include "gtest/gtest.h"
+#include "mozilla/Casting.h"
 #include "mozilla/Snprintf.h"
 #include "nss.h"
 #include "pkix/pkixtypes.h"
@@ -22,6 +23,9 @@ template <size_t N>
 inline Input
 LiteralInput(const char(&valueString)[N])
 {
+  // Ideally we would use mozilla::BitwiseCast() here rather than
+  // reinterpret_cast for better type checking, but the |N - 1| part trips
+  // static asserts.
   return Input(reinterpret_cast<const uint8_t(&)[N - 1]>(valueString));
 }
 
@@ -85,7 +89,8 @@ TEST_F(OCSPCacheTest, TestVariousGets)
   SCOPED_TRACE("");
   for (int i = 0; i < MaxCacheEntries; i++) {
     uint8_t serialBuf[8];
-    snprintf(reinterpret_cast<char*>(serialBuf), sizeof(serialBuf), "%04d", i);
+    snprintf(mozilla::BitwiseCast<char*, uint8_t*>(serialBuf), sizeof(serialBuf),
+             "%04d", i);
     Input fakeSerial;
     ASSERT_EQ(Success, fakeSerial.Init(serialBuf, 4));
     Time timeIn(now);
@@ -134,7 +139,8 @@ TEST_F(OCSPCacheTest, TestEviction)
   // we cause the least recently used entry to be evicted.
   for (int i = 0; i < MaxCacheEntries + 1; i++) {
     uint8_t serialBuf[8];
-    snprintf(reinterpret_cast<char*>(serialBuf), sizeof(serialBuf), "%04d", i);
+    snprintf(mozilla::BitwiseCast<char*, uint8_t*>(serialBuf), sizeof(serialBuf),
+             "%04d", i);
     Input fakeSerial;
     ASSERT_EQ(Success, fakeSerial.Init(serialBuf, 4));
     Time timeIn(now);
@@ -159,7 +165,8 @@ TEST_F(OCSPCacheTest, TestNoEvictionForRevokedResponses)
   // we cause the least recently used entry that isn't revoked to be evicted.
   for (int i = 1; i < MaxCacheEntries + 1; i++) {
     uint8_t serialBuf[8];
-    snprintf(reinterpret_cast<char*>(serialBuf), sizeof(serialBuf), "%04d", i);
+    snprintf(mozilla::BitwiseCast<char*, uint8_t*>(serialBuf), sizeof(serialBuf),
+             "%04d", i);
     Input fakeSerial;
     ASSERT_EQ(Success, fakeSerial.Init(serialBuf, 4));
     Time timeIn(now);
@@ -185,7 +192,8 @@ TEST_F(OCSPCacheTest, TestEverythingIsRevoked)
   // Fill up the cache with revoked responses.
   for (int i = 0; i < MaxCacheEntries; i++) {
     uint8_t serialBuf[8];
-    snprintf(reinterpret_cast<char*>(serialBuf), sizeof(serialBuf), "%04d", i);
+    snprintf(mozilla::BitwiseCast<char*, uint8_t*>(serialBuf), sizeof(serialBuf),
+             "%04d", i);
     Input fakeSerial;
     ASSERT_EQ(Success, fakeSerial.Init(serialBuf, 4));
     Time timeIn(now);

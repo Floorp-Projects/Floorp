@@ -425,7 +425,7 @@ nsNSSCertListFakeTransport::DeleteCert(nsIX509Cert* aCert)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-void*
+CERTCertList*
 nsNSSCertListFakeTransport::GetRawCertList()
 {
   NS_NOTREACHED("Unimplemented on content process");

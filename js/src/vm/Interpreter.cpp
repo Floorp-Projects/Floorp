@@ -1634,9 +1634,11 @@ Interpret(JSContext* cx, RunState& state)
      */
 #define INIT_COVERAGE()                                                       \
     JS_BEGIN_MACRO                                                            \
-        if (!script->hasScriptCounts() && cx->compartment()->collectCoverage()) { \
-            if (!script->initScriptCounts(cx))                                \
-                goto error;                                                   \
+        if (!script->hasScriptCounts()) {                                     \
+            if (cx->compartment()->collectCoverageForDebug()) {               \
+                if (!script->initScriptCounts(cx))                            \
+                    goto error;                                               \
+            }                                                                 \
         }                                                                     \
     JS_END_MACRO
 
@@ -1752,10 +1754,9 @@ CASE(EnableInterruptsPseudoOpcode)
     bool moreInterrupts = false;
     jsbytecode op = *REGS.pc;
 
-    if (!script->hasScriptCounts() && cx->compartment()->collectCoverage()) {
+    if (!script->hasScriptCounts() && cx->compartment()->collectCoverageForDebug()) {
         if (!script->initScriptCounts(cx))
             goto error;
-        moreInterrupts = true;
     }
 
     if (script->isDebuggee()) {

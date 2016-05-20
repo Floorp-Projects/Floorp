@@ -180,7 +180,7 @@ AccVCChangeEvent::
 already_AddRefed<nsIAccessibleEvent>
 a11y::MakeXPCEvent(AccEvent* aEvent)
 {
-  DocAccessible* doc = aEvent->GetDocAccessible();
+  DocAccessible* doc = aEvent->Document();
   Accessible* acc = aEvent->GetAccessible();
   nsINode* node = acc->GetNode();
   nsIDOMNode* domNode = node ? node->AsDOMNode() : nullptr;

@@ -36,6 +36,27 @@ function testScript(script) {
     });
   }
 
+  function nestedWorkerTest() {
+    return new Promise(function(resolve, reject) {
+      var worker = new Worker("nested_worker_wrapper.js");
+      worker.onmessage = function(event) {
+        if (event.data.context != "NestedWorker") {
+          return;
+        }
+        if (event.data.type == 'finish') {
+          resolve();
+        } else if (event.data.type == 'status') {
+          ok(event.data.status, event.data.context + ": " + event.data.msg);
+        }
+      }
+      worker.onerror = function(event) {
+        reject("Nested Worker error: " + event.message);
+      };
+
+      worker.postMessage({ "script": script });
+    });
+  }
+
   function serviceWorkerTest() {
     var isB2G = !navigator.userAgent.includes("Android") &&
                 /Mobile|Tablet/.test(navigator.userAgent);
@@ -111,6 +132,9 @@ function testScript(script) {
     })
     .then(function() {
       return workerTest();
+    })
+    .then(function() {
+      return nestedWorkerTest();
     })
     .then(function() {
       return serviceWorkerTest();
