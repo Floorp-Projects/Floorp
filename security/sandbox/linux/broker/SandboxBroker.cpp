@@ -386,7 +386,7 @@ SandboxBroker::ThreadMain(void)
         break;
 
       case SANDBOX_FILE_STAT:
-        if (permissive || DoStat(pathBuf, &statBuf, req.mFlags) == 0) {
+        if (DoStat(pathBuf, &statBuf, req.mFlags) == 0) {
           resp.mError = 0;
           ios[1].iov_base = &statBuf;
           ios[1].iov_len = sizeof(statBuf);
