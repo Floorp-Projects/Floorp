@@ -11,7 +11,7 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 
 const DEBUG = Services.prefs.getBoolPref("dom.presentation.tcp_server.debug");
 function log(aMsg) {
-  dump("-*- TCPPresentationServer.js: " + aMsg + "\n");
+  dump("-*- PresentationControlService.js: " + aMsg + "\n");
 }
 
 function TCPDeviceInfo(aAddress, aPort, aId) {
@@ -20,13 +20,13 @@ function TCPDeviceInfo(aAddress, aPort, aId) {
   this.id = aId;
 }
 
-function TCPPresentationServer() {
+function PresentationControlService() {
   this._id = null;
   this._port = 0;
   this._serverSocket = null;
 }
 
-TCPPresentationServer.prototype = {
+PresentationControlService.prototype = {
   /**
    * If a user agent connects to this server, we create a control channel but
    * hand it to |TCPDevice.listener| when the initial information exchange
@@ -34,9 +34,9 @@ TCPPresentationServer.prototype = {
    */
   _controlChannels: [],
 
-  startService: function(aPort) {
+  startServer: function(aPort) {
     if (this._isServiceInit()) {
-      DEBUG && log("TCPPresentationServer - server socket has been initialized");
+      DEBUG && log("PresentationControlService - server socket has been initialized");
       throw Cr.NS_ERROR_FAILURE;
     }
 
@@ -50,7 +50,7 @@ TCPPresentationServer.prototype = {
                          .createInstance(Ci.nsIServerSocket);
 
     if (!this._serverSocket) {
-      DEBUG && log("TCPPresentationServer - create server socket fail.");
+      DEBUG && log("PresentationControlService - create server socket fail.");
       throw Cr.NS_ERROR_FAILURE;
     }
 
@@ -59,13 +59,13 @@ TCPPresentationServer.prototype = {
       this._serverSocket.asyncListen(this);
     } catch (e) {
       // NS_ERROR_SOCKET_ADDRESS_IN_USE
-      DEBUG && log("TCPPresentationServer - init server socket fail: " + e);
+      DEBUG && log("PresentationControlService - init server socket fail: " + e);
       throw Cr.NS_ERROR_FAILURE;
     }
 
     this._port = this._serverSocket.port;
 
-    DEBUG && log("TCPPresentationServer - service start on port: " + this._port);
+    DEBUG && log("PresentationControlService - service start on port: " + this._port);
 
     // Monitor network interface change to restart server socket.
     // Only B2G has nsINetworkManager
@@ -99,10 +99,10 @@ TCPPresentationServer.prototype = {
 
   requestSession: function(aDeviceInfo, aUrl, aPresentationId) {
     if (!this.id) {
-      DEBUG && log("TCPPresentationServer - Id has not initialized; requestSession fails");
+      DEBUG && log("PresentationControlService - Id has not initialized; requestSession fails");
       return null;
     }
-    DEBUG && log("TCPPresentationServer - requestSession to " + aDeviceInfo.id
+    DEBUG && log("PresentationControlService - requestSession to " + aDeviceInfo.id
                  + ": " + aUrl + ", " + aPresentationId);
 
     let sts = Cc["@mozilla.org/network/socket-transport-service;1"]
@@ -116,7 +116,7 @@ TCPPresentationServer.prototype = {
                                             aDeviceInfo.port,
                                             null);
     } catch (e) {
-      DEBUG && log("TCPPresentationServer - createTransport throws: " + e);
+      DEBUG && log("PresentationControlService - createTransport throws: " + e);
       // Pop the exception to |TCPDevice.establishControlChannel|
       throw Cr.NS_ERROR_FAILURE;
     }
@@ -130,11 +130,11 @@ TCPPresentationServer.prototype = {
 
   responseSession: function(aDeviceInfo, aSocketTransport) {
     if (!this._isServiceInit()) {
-      DEBUG && log("TCPPresentationServer - should never receive remote " +
+      DEBUG && log("PresentationControlService - should never receive remote " +
                    "session request before server socket initialization");
       return null;
     }
-    DEBUG && log("TCPPresentationServer - responseSession to "
+    DEBUG && log("PresentationControlService - responseSession to "
                  + JSON.stringify(aDeviceInfo));
     return new TCPControlChannel(this,
                                  aSocketTransport,
@@ -147,7 +147,7 @@ TCPPresentationServer.prototype = {
 
   // Triggered by TCPControlChannel
   onSessionRequest: function(aDeviceInfo, aUrl, aPresentationId, aControlChannel) {
-    DEBUG && log("TCPPresentationServer - onSessionRequest: "
+    DEBUG && log("PresentationControlService - onSessionRequest: "
                  + aDeviceInfo.address + ":" + aDeviceInfo.port);
     this.listener.onSessionRequest(aDeviceInfo,
                                    aUrl,
@@ -158,7 +158,7 @@ TCPPresentationServer.prototype = {
 
   // nsIServerSocketListener (Triggered by nsIServerSocket.init)
   onSocketAccepted: function(aServerSocket, aClientSocket) {
-    DEBUG && log("TCPPresentationServer - onSocketAccepted: "
+    DEBUG && log("PresentationControlService - onSocketAccepted: "
                  + aClientSocket.host + ":" + aClientSocket.port);
     let deviceInfo = new TCPDeviceInfo(aClientSocket.host, aClientSocket.port);
     this.holdControlChannel(this.responseSession(deviceInfo, aClientSocket));
@@ -177,13 +177,13 @@ TCPPresentationServer.prototype = {
 
   // nsIServerSocketListener (Triggered by nsIServerSocket.init)
   onStopListening: function(aServerSocket, aStatus) {
-    DEBUG && log("TCPPresentationServer - onStopListening: " + aStatus);
+    DEBUG && log("PresentationControlService - onStopListening: " + aStatus);
   },
 
   close: function() {
-    DEBUG && log("TCPPresentationServer - close");
+    DEBUG && log("PresentationControlService - close");
     if (this._isServiceInit()) {
-      DEBUG && log("TCPPresentationServer - close server socket");
+      DEBUG && log("PresentationControlService - close server socket");
       this._serverSocket.close();
       this._serverSocket = null;
 
@@ -195,7 +195,7 @@ TCPPresentationServer.prototype = {
 
   // nsIObserver
   observe: function(aSubject, aTopic, aData) {
-    DEBUG && log("TCPPresentationServer - observe: " + aTopic);
+    DEBUG && log("PresentationControlService - observe: " + aTopic);
     switch (aTopic) {
       case "network-active-changed": {
         if (!aSubject) {
@@ -208,7 +208,7 @@ TCPPresentationServer.prototype = {
          * cases will be handled by "network:offline-status-changed".
          */
         if (!Services.io.offline) {
-          this._restartService();
+          this._restartServer();
         }
         break;
       }
@@ -217,14 +217,14 @@ TCPPresentationServer.prototype = {
           DEBUG && log("network offline");
           return;
         }
-        this._restartService();
+        this._restartServer();
         break;
       }
     }
   },
 
-  _restartService: function() {
-    DEBUG && log("TCPPresentationServer - restart service");
+  _restartServer: function() {
+    DEBUG && log("PresentationControlService - restart service");
 
     // restart server socket
     if (this._isServiceInit()) {
@@ -232,19 +232,19 @@ TCPPresentationServer.prototype = {
       this.close();
 
       try {
-        this.startService();
+        this.startServer();
         if (this._listener && this._port !== port) {
            this._listener.onPortChange(this._port);
         }
       } catch (e) {
-        DEBUG && log("TCPPresentationServer - restart service fail: " + e);
+        DEBUG && log("PresentationControlService - restart service fail: " + e);
       }
     }
   },
 
   classID: Components.ID("{f4079b8b-ede5-4b90-a112-5b415a931deb}"),
   QueryInterface : XPCOMUtils.generateQI([Ci.nsIServerSocketListener,
-                                          Ci.nsITCPPresentationServer,
+                                          Ci.nsIPresentationControlService,
                                           Ci.nsIObserver]),
 };
 
@@ -316,7 +316,7 @@ function discriptionAsJson(aDescription) {
   return json;
 }
 
-function TCPControlChannel(presentationServer,
+function TCPControlChannel(presentationService,
                            transport,
                            deviceInfo,
                            presentationId,
@@ -330,7 +330,7 @@ function TCPControlChannel(presentationServer,
   this._transport = transport;
   this._url = url;
 
-  this._presentationServer =  presentationServer;
+  this._presentationService =  presentationService;
 
   let currentThread = Services.tm.currentThread;
   transport.setEventSink(this, currentThread);
@@ -390,7 +390,7 @@ TCPControlChannel.prototype = {
       type: "requestSession:Init",
       presentationId: this._presentationId,
       url: this._url,
-      id: this._presentationServer.id,
+      id: this._presentationService.id,
     };
 
     this._sendMessage("init", msg, function(e) {
@@ -532,10 +532,10 @@ TCPControlChannel.prototype = {
         this._deviceInfo.id = aMsg.id;
         this._url = aMsg.url;
         this._presentationId = aMsg.presentationId;
-        this._presentationServer.onSessionRequest(this._deviceInfo,
-                                                  aMsg.url,
-                                                  aMsg.presentationId,
-                                                  this);
+        this._presentationService.onSessionRequest(this._deviceInfo,
+                                                   aMsg.url,
+                                                   aMsg.presentationId,
+                                                   this);
         this._notifyOpened();
         break;
       }
@@ -686,7 +686,7 @@ TCPControlChannel.prototype = {
 
       this._input.close();
       this._output.close();
-      this._presentationServer.releaseControlChannel(this);
+      this._presentationService.releaseControlChannel(this);
 
       this._connected = false;
     }
@@ -697,4 +697,4 @@ TCPControlChannel.prototype = {
                                          Ci.nsIStreamListener]),
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TCPPresentationServer]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([PresentationControlService]);
