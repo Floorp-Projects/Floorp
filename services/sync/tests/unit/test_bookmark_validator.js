@@ -201,7 +201,7 @@ add_test(function test_cswc_serverMissing() {
   let c = new BookmarkValidator().compareServerWithClient(server, client).problemData;
   deepEqual(c.serverMissing, ['cccccccccccc']);
   equal(c.clientMissing.length, 0);
-  deepEqual(c.differences, [{id: 'aaaaaaaaaaaa', differences: ['childGUIDs']}]);
+  deepEqual(c.structuralDifferences, [{id: 'aaaaaaaaaaaa', differences: ['childGUIDs']}]);
   run_next_test();
 });
 
@@ -212,7 +212,7 @@ add_test(function test_cswc_clientMissing() {
   let c = new BookmarkValidator().compareServerWithClient(server, client).problemData;
   deepEqual(c.clientMissing, ['cccccccccccc']);
   equal(c.serverMissing.length, 0);
-  deepEqual(c.differences, [{id: 'aaaaaaaaaaaa', differences: ['childGUIDs']}]);
+  deepEqual(c.structuralDifferences, [{id: 'aaaaaaaaaaaa', differences: ['childGUIDs']}]);
   run_next_test();
 });
 
