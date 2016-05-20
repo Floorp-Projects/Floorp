@@ -824,20 +824,14 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleMargin
 
   bool GetMargin(nsMargin& aMargin) const
   {
-    if (mMargin.ConvertsToLength()) {
-      GetMarginNoPercentage(aMargin);
-      return true;
+    if (!mMargin.ConvertsToLength()) {
+      return false;
     }
 
-    return false;
-  }
-
-  void GetMarginNoPercentage(nsMargin& aMargin) const
-  {
-    MOZ_ASSERT(mMargin.ConvertsToLength());
     NS_FOR_CSS_SIDES(side) {
       aMargin.Side(side) = mMargin.ToLength(side);
     }
+    return true;
   }
 
   // Return true if either the start or end side in the axis is 'auto'.
@@ -888,21 +882,15 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePadding
 
   bool GetPadding(nsMargin& aPadding) const
   {
-    if (mPadding.ConvertsToLength()) {
-      GetPaddingNoPercentage(aPadding);
-      return true;
+    if (!mPadding.ConvertsToLength()) {
+      return false;
     }
 
-    return false;
-  }
-
-  void GetPaddingNoPercentage(nsMargin& aPadding) const
-  {
-    MOZ_ASSERT(mPadding.ConvertsToLength());
     NS_FOR_CSS_SIDES(side) {
       // Clamp negative calc() to 0.
       aPadding.Side(side) = std::max(mPadding.ToLength(side), 0);
     }
+    return true;
   }
 };
 
