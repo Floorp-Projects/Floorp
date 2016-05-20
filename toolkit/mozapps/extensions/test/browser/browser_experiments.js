@@ -28,7 +28,7 @@ function getExperimentAddons() {
 
 function getInstallItem() {
   let doc = gManagerWindow.document;
-  let view = doc.getElementById("view-port").selectedPanel;
+  let view = get_current_view(gManagerWindow);
   let list = doc.getElementById("addon-list");
 
   let node = list.firstChild;

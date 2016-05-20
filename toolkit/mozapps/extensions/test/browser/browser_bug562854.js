@@ -30,14 +30,14 @@ function is_in_list(aManager, view) {
   var doc = aManager.document;
 
   is(doc.getElementById("categories").selectedItem.value, view, "Should be on the right category");
-  is(doc.getElementById("view-port").selectedPanel.id, "list-view", "Should be on the right view");
+  is(get_current_view(aManager).id, "list-view", "Should be on the right view");
 }
 
 function is_in_detail(aManager, view) {
   var doc = aManager.document;
 
   is(doc.getElementById("categories").selectedItem.value, view, "Should be on the right category");
-  is(doc.getElementById("view-port").selectedPanel.id, "detail-view", "Should be on the right view");
+  is(get_current_view(aManager).id, "detail-view", "Should be on the right view");
 }
 
 // Check that double-click does something.
