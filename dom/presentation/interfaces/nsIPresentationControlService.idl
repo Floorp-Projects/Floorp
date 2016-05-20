@@ -7,12 +7,12 @@
 interface nsIPresentationControlChannel;
 
 %{C++
-#define TCP_PRESENTATION_SERVER_CONTACT_ID \
-  "@mozilla.org/presentation-device/tcp-presentation-server;1"
+#define PRESENTATION_CONTROL_SERVICE_CONTACT_ID \
+  "@mozilla.org/presentation/control-service;1"
 %}
 
 /*
- * The device information required for establishing TCP control channel.
+ * The device information required for establishing control channel.
  */
 [scriptable, uuid(296fd171-e4d0-4de0-99ff-ad8ed52ddef3)]
 interface nsITCPDeviceInfo: nsISupports
@@ -23,7 +23,7 @@ interface nsITCPDeviceInfo: nsISupports
 };
 
 [scriptable, uuid(09bddfaf-fcc2-4dc9-b33e-a509a1c2fb6d)]
-interface nsITCPPresentationServerListener: nsISupports
+interface nsIPresentationControlServerListener: nsISupports
 {
   /**
    * Callback while the server socket changes port.
@@ -48,10 +48,11 @@ interface nsITCPPresentationServerListener: nsISupports
 };
 
 /**
- * TCP presentation server which can be used by discovery services.
+ * Presentation control service which can be used for both presentation
+ * control client and server.
  */
 [scriptable, uuid(55d6b605-2389-4aae-a8fe-60d4440540ea)]
-interface nsITCPPresentationServer: nsISupports
+interface nsIPresentationControlService: nsISupports
 {
   /**
    * This method initialize server socket.
@@ -61,10 +62,10 @@ interface nsITCPPresentationServer: nsISupports
    * @throws  NS_ERROR_FAILURE if the server socket has been inited or the
    *          server socket can not be inited.
    */
-  void startService([optional] in uint16_t aPort);
+  void startServer([optional] in uint16_t aPort);
 
   /**
-   * Request session to designated remote TCP device.
+   * Request session to designated remote presentation control receiver.
    * @param   aDeviceInfo
    *          The remtoe device info for establish connection.
    * @param   aUrl
@@ -96,7 +97,7 @@ interface nsITCPPresentationServer: nsISupports
   attribute AUTF8String id;
 
   /**
-   * the listener for handling events of this TCP presentation server
+   * the listener for handling events of this presentation control server
    */
-  attribute nsITCPPresentationServerListener listener;
+  attribute nsIPresentationControlServerListener listener;
 };
