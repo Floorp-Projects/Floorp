@@ -133,14 +133,13 @@ nsresult
 OpusDataDecoder::Input(MediaRawData* aSample)
 {
   mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
-                         this, &OpusDataDecoder::Decode,
-                         RefPtr<MediaRawData>(aSample)));
+                       this, &OpusDataDecoder::ProcessDecode, aSample));
 
   return NS_OK;
 }
 
 void
-OpusDataDecoder::Decode(MediaRawData* aSample)
+OpusDataDecoder::ProcessDecode(MediaRawData* aSample)
 {
   if (DoDecode(aSample) == -1) {
     mCallback->Error();
@@ -299,7 +298,7 @@ OpusDataDecoder::DoDecode(MediaRawData* aSample)
 }
 
 void
-OpusDataDecoder::DoDrain()
+OpusDataDecoder::ProcessDrain()
 {
   mCallback->DrainComplete();
 }
@@ -307,7 +306,7 @@ OpusDataDecoder::DoDrain()
 nsresult
 OpusDataDecoder::Drain()
 {
-  mTaskQueue->Dispatch(NewRunnableMethod(this, &OpusDataDecoder::DoDrain));
+  mTaskQueue->Dispatch(NewRunnableMethod(this, &OpusDataDecoder::ProcessDrain));
   return NS_OK;
 }
 
