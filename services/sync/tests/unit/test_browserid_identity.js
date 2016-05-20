@@ -16,6 +16,7 @@ Cu.import("resource://gre/modules/FxAccountsCommon.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-common/tokenserverclient.js");
 
 const SECOND_MS = 1000;
 const MINUTE_MS = SECOND_MS * 60;
@@ -436,6 +437,74 @@ add_task(function* test_getTokenErrors() {
   Assert.equal(Status.login, LOGIN_FAILED_NETWORK_ERROR, "login state is LOGIN_FAILED_NETWORK_ERROR");
 });
 
+add_task(function* test_refreshCertificateOn401() {
+  _("BrowserIDManager refreshes the FXA certificate after a 401.");
+  var identityConfig = makeIdentityConfig();
+  var browseridManager = new BrowserIDManager();
+  // Use the real `_getAssertion` method that calls
+  // `mockFxAClient.signCertificate`.
+  let fxaInternal = makeFxAccountsInternalMock(identityConfig);
+  delete fxaInternal._getAssertion;
+  configureFxAccountIdentity(browseridManager, identityConfig, fxaInternal);
+  browseridManager._fxaService.internal.initialize();
+
+  let getCertCount = 0;
+
+  let MockFxAccountsClient = function() {
+    FxAccountsClient.apply(this);
+  };
+  MockFxAccountsClient.prototype = {
+    __proto__: FxAccountsClient.prototype,
+    signCertificate() {
+      ++getCertCount;
+    }
+  };
+
+  let mockFxAClient = new MockFxAccountsClient();
+  browseridManager._fxaService.internal._fxAccountsClient = mockFxAClient;
+
+  let didReturn401 = false;
+  let didReturn200 = false;
+  let mockTSC = mockTokenServer(() => {
+    if (getCertCount <= 1) {
+      didReturn401 = true;
+      return {
+        status: 401,
+        headers: {"content-type": "application/json"},
+        body: JSON.stringify({}),
+      };
+    } else {
+      didReturn200 = true;
+      return {
+        status: 200,
+        headers: {"content-type": "application/json"},
+        body: JSON.stringify({
+          id:           "id",
+          key:          "key",
+          api_endpoint: "http://example.com/",
+          uid:          "uid",
+          duration:     300,
+        })
+      };
+    }
+  });
+
+  browseridManager._tokenServerClient = mockTSC;
+
+  yield browseridManager.initializeWithCurrentIdentity();
+  yield browseridManager.whenReadyToAuthenticate.promise;
+
+  do_check_eq(getCertCount, 2);
+  do_check_true(didReturn401);
+  do_check_true(didReturn200);
+  do_check_true(browseridManager.account);
+  do_check_true(browseridManager._token);
+  do_check_true(browseridManager.hasValidToken());
+  do_check_true(browseridManager.account);
+});
+
+
+
 add_task(function* test_getTokenErrorWithRetry() {
   _("tokenserver sends an observer notification on various backoff headers.");
 
@@ -793,3 +862,29 @@ function getTimestampDelta(hawkAuthHeader, now=Date.now()) {
   return Math.abs(getTimestamp(hawkAuthHeader) - now);
 }
 
+function mockTokenServer(func) {
+  let requestLog = Log.repository.getLogger("testing.mock-rest");
+  if (!requestLog.appenders.length) { // might as well see what it says :)
+    requestLog.addAppender(new Log.DumpAppender());
+    requestLog.level = Log.Level.Trace;
+  }
+  function MockRESTRequest(url) {};
+  MockRESTRequest.prototype = {
+    _log: requestLog,
+    setHeader: function() {},
+    get: function(callback) {
+      this.response = func();
+      callback.call(this);
+    }
+  }
+  // The mocked TokenServer client which will get the response.
+  function MockTSC() { }
+  MockTSC.prototype = new TokenServerClient();
+  MockTSC.prototype.constructor = MockTSC;
+  MockTSC.prototype.newRESTRequest = function(url) {
+    return new MockRESTRequest(url);
+  }
+  // Arrange for the same observerPrefix as browserid_identity uses.
+  MockTSC.prototype.observerPrefix = "weave:service";
+  return new MockTSC();
+}
