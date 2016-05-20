@@ -123,7 +123,8 @@ self.addEventListener('fetch', function(event) {
           }
 
           if (params['cache']) {
-            var cacheName = "cached-fetches-" + Date.now();
+            var cacheName = "cached-fetches-" + performance.now() + "-" +
+                            event.request.url;
             var cache;
             var cachedResponse;
             return self.caches.open(cacheName).then(function(opened) {
