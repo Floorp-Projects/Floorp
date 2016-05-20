@@ -343,7 +343,7 @@ public:
      */
     virtual void NotifySelectionBackgroundNeedsFill(const Rect& aBackgroundRect,
                                                     nscolor aColor,
-                                                    DrawTarget& aDrawTarget);
+                                                    DrawTarget& aDrawTarget) { }
 
     /**
      * Called before (for under/over-line) or after (for line-through) the text
@@ -381,8 +381,6 @@ public:
      * has been emitted to the gfxContext.
      */
     virtual void NotifySelectionDecorationLinePathEmitted() { }
-
-    virtual void NotifyGlyphPathEmitted() override {}
   };
 
   struct PaintTextParams
