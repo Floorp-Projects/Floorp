@@ -111,14 +111,16 @@ NS_INTERFACE_MAP_END_THREADSAFE
 
 CacheFileHandle::CacheFileHandle(const SHA1Sum::Hash *aHash, bool aPriority, PinningStatus aPinning)
   : mHash(aHash)
-  , mPriority(aPriority)
+  , mIsDoomed(false)
   , mClosed(false)
+  , mPriority(aPriority)
   , mSpecialFile(false)
   , mInvalid(false)
   , mFileExists(false)
-  , mPinning(aPinning)
+  , mLeakIt(false)
   , mDoomWhenFoundPinned(false)
   , mDoomWhenFoundNonPinned(false)
+  , mPinning(aPinning)
   , mFileSize(-1)
   , mFD(nullptr)
 {
@@ -133,14 +135,16 @@ CacheFileHandle::CacheFileHandle(const SHA1Sum::Hash *aHash, bool aPriority, Pin
 
 CacheFileHandle::CacheFileHandle(const nsACString &aKey, bool aPriority, PinningStatus aPinning)
   : mHash(nullptr)
-  , mPriority(aPriority)
+  , mIsDoomed(false)
   , mClosed(false)
+  , mPriority(aPriority)
   , mSpecialFile(true)
   , mInvalid(false)
   , mFileExists(false)
-  , mPinning(aPinning)
+  , mLeakIt(false)
   , mDoomWhenFoundPinned(false)
   , mDoomWhenFoundNonPinned(false)
+  , mPinning(aPinning)
   , mFileSize(-1)
   , mFD(nullptr)
   , mKey(aKey)
@@ -172,16 +176,19 @@ CacheFileHandle::Log()
   }
 
   if (mSpecialFile) {
-    LOG(("CacheFileHandle::Log() - special file [this=%p, isDoomed=%d, "
-         "priority=%d, closed=%d, invalid=%d, fileExists=%d, fileSize=%lld, "
-         "leafName=%s, key=%s]", this, int(mIsDoomed), mPriority, mClosed, mInvalid,
-         mFileExists, mFileSize, leafName.get(), mKey.get()));
+    LOG(("CacheFileHandle::Log() - special file [this=%p, "
+         "isDoomed=%d, priority=%d, closed=%d, invalid=%d, leakit=%d, "
+         "pinning=%d, fileExists=%d, fileSize=%lld, leafName=%s, key=%s]",
+         this,
+         bool(mIsDoomed), bool(mPriority), bool(mClosed), bool(mInvalid), bool(mLeakIt),
+         mPinning, bool(mFileExists), mFileSize, leafName.get(), mKey.get()));
   } else {
-    LOG(("CacheFileHandle::Log() - entry file [this=%p, hash=%08x%08x%08x%08x"
-         "%08x, isDoomed=%d, priority=%d, closed=%d, invalid=%d, fileExists=%d,"
-         " fileSize=%lld, leafName=%s, key=%s]", this, LOGSHA1(mHash),
-         int(mIsDoomed), mPriority, mClosed, mInvalid, mFileExists, mFileSize,
-         leafName.get(), mKey.get()));
+    LOG(("CacheFileHandle::Log() - entry file [this=%p, hash=%08x%08x%08x%08x%08x, "
+         "isDoomed=%d, priority=%d, closed=%d, invalid=%d, leakit=%d, "
+         "pinning=%d, fileExists=%d, fileSize=%lld, leafName=%s, key=%s]",
+         this, LOGSHA1(mHash),
+         bool(mIsDoomed), bool(mPriority), bool(mClosed), bool(mInvalid), bool(mLeakIt),
+         mPinning, bool(mFileExists), mFileSize, leafName.get(), mKey.get()));
   }
 }
 
@@ -1213,7 +1220,7 @@ CacheFileIOManager::ShutdownInternal()
     }
 
     // Remove file if entry is doomed or invalid
-    if (h->mFileExists && (h->mIsDoomed || h->mInvalid)) {
+    if (h->mFileExists && !h->mLeakIt && (h->mIsDoomed || h->mInvalid)) {
       LOG(("CacheFileIOManager::ShutdownInternal() - Removing file from disk"));
       h->mFile->Remove(false);
     }
@@ -1783,7 +1790,7 @@ CacheFileIOManager::CloseHandleInternal(CacheFileHandle *aHandle)
   }
 
   // Delete the file if the entry was doomed or invalid
-  if (aHandle->mIsDoomed || aHandle->mInvalid) {
+  if ((aHandle->mIsDoomed || aHandle->mInvalid) && MOZ_LIKELY(!aHandle->mLeakIt)) {
     LOG(("CacheFileIOManager::CloseHandleInternal() - Removing file from "
          "disk"));
     aHandle->mFile->Remove(false);
@@ -2270,11 +2277,12 @@ CacheFileIOManager::ReleaseNSPRHandleInternal(CacheFileHandle *aHandle,
 #endif
       MOZ_UNLIKELY(!aIgnoreShutdownLag &&
                    CacheObserver::IsPastShutdownIOLag())) {
-    // Pretend this file has been validated (the metadata has been written)
-    // to prevent removal I/O on this apparently used file.  The entry will
-    // never be used, since it doesn't have correct metadata, thus we don't
-    // need to worry about removing it.
-    aHandle->mInvalid = false;
+    // Don't bother closing (and removing) this file.
+    // For mInvalid == true the entry will never be used, since it doesn't
+    // have correct metadata, thus we don't need to worry about removing it.
+    // For mIsDoomed == true the file is already in the doomed sub-dir and
+    // will be removed on next session start.
+    aHandle->mLeakIt = true;
     LOG(("  past the shutdown I/O lag, leaking file handle"));
   } else {
     PR_Close(aHandle->mFD);
