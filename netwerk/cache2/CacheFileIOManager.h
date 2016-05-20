@@ -80,16 +80,25 @@ private:
   virtual ~CacheFileHandle();
 
   const SHA1Sum::Hash *mHash;
-  mozilla::Atomic<bool,ReleaseAcquire> mIsDoomed;
-  bool                 mPriority;
-  bool                 mClosed;
-  bool                 mSpecialFile;
-  bool                 mInvalid;
-  bool                 mFileExists; // This means that the file should exists,
-                                    // but it can be still deleted by OS/user
-                                    // and then a subsequent OpenNSPRFileDesc()
-                                    // will fail.
+  mozilla::Atomic<bool, ReleaseAcquire> mIsDoomed;
+  mozilla::Atomic<bool, ReleaseAcquire> mClosed;
+  bool const           mPriority : 1;
+  bool const           mSpecialFile : 1;
 
+  // These bit flags are all accessed only on the IO thread
+  bool                 mInvalid : 1;
+  bool                 mFileExists : 1; // This means that the file should exists,
+                                        // but it can be still deleted by OS/user
+                                        // and then a subsequent OpenNSPRFileDesc()
+                                        // will fail.
+  bool                 mLeakIt : 1; // Don't close the file descriptor of this handle.
+
+  // Both initially false.  Can be raised to true only when this handle is to be doomed
+  // during the period when the pinning status is unknown.  After the pinning status
+  // determination we check these flags and possibly doom.
+  // These flags are only accessed on the IO thread.
+  bool                 mDoomWhenFoundPinned : 1;
+  bool                 mDoomWhenFoundNonPinned : 1;
   // For existing files this is always pre-set to UNKNOWN.  The status is udpated accordingly
   // after the matadata has been parsed.
   // For new files the flag is set according to which storage kind is opening
@@ -98,12 +107,6 @@ private:
   // and it stays unchanged afterwards.
   // This status is only accessed on the IO thread.
   PinningStatus        mPinning;
-  // Both initially false.  Can be raised to true only when this handle is to be doomed
-  // during the period when the pinning status is unknown.  After the pinning status
-  // determination we check these flags and possibly doom.
-  // These flags are only accessed on the IO thread.
-  bool                 mDoomWhenFoundPinned : 1;
-  bool                 mDoomWhenFoundNonPinned : 1;
 
   nsCOMPtr<nsIFile>    mFile;
   int64_t              mFileSize;
