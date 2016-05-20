@@ -95,6 +95,7 @@
 #include "nsCORSListenerProxy.h"
 #include "nsISocketProvider.h"
 #include "mozilla/net/Predictor.h"
+#include "CacheControlParser.h"
 
 namespace mozilla { namespace net {
 
@@ -3146,6 +3147,14 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
 
     uint32_t cacheEntryOpenFlags;
     bool offline = gIOService->IsOffline() || appOffline;
+
+    nsAutoCString cacheControlRequestHeader;
+    mRequestHead.GetHeader(nsHttp::Cache_Control, cacheControlRequestHeader);
+    CacheControlParser cacheControlRequest(cacheControlRequestHeader);
+    if (cacheControlRequest.NoStore() && !PossiblyIntercepted()) {
+        goto bypassCacheEntryOpen;
+    }
+
     if (offline || (mLoadFlags & INHIBIT_CACHING)) {
         if (BYPASS_LOCAL_CACHE(mLoadFlags) && !offline && !PossiblyIntercepted()) {
             goto bypassCacheEntryOpen;
@@ -3313,6 +3322,16 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
 
     LOG(("nsHttpChannel::OnCacheEntryCheck enter [channel=%p entry=%p]",
         this, entry));
+
+    nsAutoCString cacheControlRequestHeader;
+    mRequestHead.GetHeader(nsHttp::Cache_Control, cacheControlRequestHeader);
+    CacheControlParser cacheControlRequest(cacheControlRequestHeader);
+
+    if (cacheControlRequest.NoStore()) {
+        LOG(("Not using cached response based on no-store request cache directive\n"));
+        *aResult = ENTRY_NOT_WANTED;
+        return NS_OK;
+    }
 
     // Remember the request is a custom conditional request so that we can
     // process any 304 response correctly.
@@ -3522,26 +3541,52 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
         // and didn't do heuristic on it. but defacto that is allowed now.
         //
         // Check if the cache entry has expired...
-        uint32_t time = 0; // a temporary variable for storing time values...
 
-        rv = entry->GetExpirationTime(&time);
+        uint32_t now = NowInSeconds();
+
+        uint32_t age = 0;
+        rv = mCachedResponseHead->ComputeCurrentAge(now, now, &age);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        LOG(("  NowInSeconds()=%u, time=%u", NowInSeconds(), time));
-        if (NowInSeconds() <= time)
-            doValidation = false;
-        else if (mCachedResponseHead->MustValidateIfExpired())
+        uint32_t freshness = 0;
+        rv = mCachedResponseHead->ComputeFreshnessLifetime(&freshness);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        uint32_t expiration = 0;
+        rv = entry->GetExpirationTime(&expiration);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        uint32_t maxAgeRequest, maxStaleRequest, minFreshRequest;
+
+        LOG(("  NowInSeconds()=%u, expiration time=%u, freshness lifetime=%u, age=%u",
+             now, expiration, freshness, age));
+
+        if (cacheControlRequest.NoCache()) {
+            LOG(("  validating, no-cache request"));
             doValidation = true;
-        else if (mLoadFlags & nsIRequest::VALIDATE_ONCE_PER_SESSION) {
+        } else if (cacheControlRequest.MaxStale(&maxStaleRequest)) {
+            uint32_t staleTime = age > freshness ? age - freshness : 0;
+            doValidation = staleTime > maxStaleRequest;
+            LOG(("  validating=%d, max-stale=%u requested", doValidation, maxStaleRequest));
+        } else if (cacheControlRequest.MaxAge(&maxAgeRequest)) {
+            doValidation = age > maxAgeRequest;
+            LOG(("  validating=%d, max-age=%u requested", doValidation, maxAgeRequest));
+        } else if (cacheControlRequest.MinFresh(&minFreshRequest)) {
+            uint32_t freshTime = freshness > age ? freshness - age : 0;
+            doValidation = freshTime < minFreshRequest;
+            LOG(("  validating=%d, min-fresh=%u requested", doValidation, minFreshRequest));
+        } else if (now <= expiration) {
+            doValidation = false;
+            LOG(("  not validating, expire time not in the past"));
+        } else if (mCachedResponseHead->MustValidateIfExpired()) {
+            doValidation = true;
+        } else if (mLoadFlags & nsIRequest::VALIDATE_ONCE_PER_SESSION) {
             // If the cached response does not include expiration infor-
             // mation, then we must validate the response, despite whether
             // or not this is the first access this session.  This behavior
             // is consistent with existing browsers and is generally expected
             // by web authors.
-            rv = mCachedResponseHead->ComputeFreshnessLifetime(&time);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            if (time == 0)
+            if (freshness == 0)
                 doValidation = true;
             else
                 doValidation = fromPreviousSession;
