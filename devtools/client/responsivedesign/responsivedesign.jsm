@@ -611,10 +611,10 @@ ResponsiveUI.prototype = {
     let volumeDown = this.chromeDoc.createElement("button");
     volumeDown.className = "devtools-responsiveui-volume-down-button";
     volumeDown.addEventListener("mousedown", () => {
-      SystemAppProxy.dispatchKeyboardEvent("keydown", {key: "VolumeDown"});
+      SystemAppProxy.dispatchKeyboardEvent("keydown", {key: "AudioVolumeDown"});
     });
     volumeDown.addEventListener("mouseup", () => {
-      SystemAppProxy.dispatchKeyboardEvent("keyup", {key: "VolumeDown"});
+      SystemAppProxy.dispatchKeyboardEvent("keyup", {key: "AudioVolumeDown"});
     });
 
     volumeButtons.appendChild(volumeUp);
