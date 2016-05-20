@@ -42,11 +42,7 @@ browser.Context = class {
     this.mainContentId = null;
     // used to set curFrameId upon new session
     this.newSession = true;
-    this.elementManager = new ElementManager([
-      element.Strategy.Name,
-      element.Strategy.LinkText,
-      element.Strategy.PartialLinkText,
-    ]);
+    this.elementManager = new element.Store();
     this.setBrowser(win);
 
     // A reference to the tab corresponding to the current window handle, if any.
