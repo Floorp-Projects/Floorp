@@ -7,7 +7,7 @@
 "use strict";
 
 const promise = require("promise");
-const {Task} = require("resource://gre/modules/Task.jsm");
+const {Task} = require("devtools/shared/task");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 /**

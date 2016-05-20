@@ -13,7 +13,7 @@ const { require } = BrowserLoader({
   baseURI: "resource://devtools/client/responsive.html/",
   window: this
 });
-const { Task } = require("resource://gre/modules/Task.jsm");
+const { Task } = require("devtools/shared/task");
 const Telemetry = require("devtools/client/shared/telemetry");
 const { loadSheet } = require("sdk/stylesheet/utils");
 

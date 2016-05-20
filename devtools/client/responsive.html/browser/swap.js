@@ -5,7 +5,7 @@
 "use strict";
 
 const promise = require("promise");
-const { Task } = require("resource://gre/modules/Task.jsm");
+const { Task } = require("devtools/shared/task");
 
 /**
  * Swap page content from an existing tab into a new browser within a container

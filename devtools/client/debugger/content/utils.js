@@ -6,6 +6,7 @@
 "use strict";
 
 const { reportException } = require("devtools/shared/DevToolsUtils");
+const { Task } = require("devtools/shared/task");
 
 function asPaused(client, func) {
   if (client.state != "paused") {

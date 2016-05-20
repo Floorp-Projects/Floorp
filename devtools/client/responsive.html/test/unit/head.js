@@ -9,7 +9,7 @@ const { utils: Cu } = Components;
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
 const promise = require("promise");
-const { Task } = require("resource://gre/modules/Task.jsm");
+const { Task } = require("devtools/shared/task");
 const Store = require("devtools/client/responsive.html/store");
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");

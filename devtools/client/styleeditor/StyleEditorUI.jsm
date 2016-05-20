@@ -14,7 +14,7 @@ const {require, loader} = Cu.import("resource://devtools/shared/Loader.jsm", {})
 const Services = require("Services");
 const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 const {OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
-const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
+const {Task} = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {gDevTools} = require("devtools/client/framework/devtools");
 /* import-globals-from StyleEditorUtil.jsm */

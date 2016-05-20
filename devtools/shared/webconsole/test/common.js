@@ -10,14 +10,13 @@ var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
-const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
-
 // This gives logging to stdout for tests
 var {console} = Cu.import("resource://gre/modules/Console.jsm", {});
 
 var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var Services = require("Services");
 var WebConsoleUtils = require("devtools/shared/webconsole/utils").Utils;
+var {Task} = require("devtools/shared/task");
 
 var ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
                           .getService(Ci.nsIConsoleAPIStorage);

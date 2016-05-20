@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* global PromisesController, promise */
+/* import-globals-from promise-controller.js */
 
 "use strict";
 

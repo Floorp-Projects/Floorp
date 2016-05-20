@@ -38,6 +38,9 @@ add_task(function* () {
   // Click a soon-to-be dead buffer node
   yield clickGraphNode(panelWin, actorIDs[5]);
 
+  // Wait for a tick before gc to prevent this test from intermittent timeout
+  // where the node never get collected.
+  yield DevToolsUtils.waitForTick();
   forceCC();
 
   // Wait for destruction and graph to re-render

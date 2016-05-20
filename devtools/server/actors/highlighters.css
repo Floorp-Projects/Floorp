@@ -158,7 +158,6 @@
 
 :-moz-native-anonymous .box-model-nodeinfobar-tagname {
   color: hsl(285,100%,75%);
-  text-transform: lowercase;
 }
 
 :-moz-native-anonymous .box-model-nodeinfobar-id {
