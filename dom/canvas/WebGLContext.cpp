@@ -848,16 +848,14 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
         return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
-    bool failIfMajorPerformanceCaveat =
-                    !gfxPrefs::WebGLDisableFailIfMajorPerformanceCaveat() &&
-                    !HasAcceleratedLayers(gfxInfo);
-    if (failIfMajorPerformanceCaveat) {
-        dom::Nullable<dom::WebGLContextAttributes> contextAttributes;
-        this->GetContextAttributes(contextAttributes);
-        if (contextAttributes.Value().mFailIfMajorPerformanceCaveat) {
+    if (gfxPrefs::WebGLDisableFailIfMajorPerformanceCaveat()) {
+        mOptions.failIfMajorPerformanceCaveat = false;
+    }
+
+    if (mOptions.failIfMajorPerformanceCaveat) {
+        nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+        if (!HasAcceleratedLayers(gfxInfo))
             return NS_ERROR_FAILURE;
-        }
     }
 
     // Alright, now let's start trying.
@@ -870,8 +868,12 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
         return NS_ERROR_FAILURE;
     }
     MOZ_ASSERT(gl);
-
     MOZ_ASSERT_IF(mOptions.alpha, gl->Caps().alpha);
+
+    if (mOptions.failIfMajorPerformanceCaveat) {
+        if (gl->IsWARP())
+            return NS_ERROR_FAILURE;
+    }
 
     if (!ResizeBackbuffer(width, height)) {
         GenerateWarning("Initializing WebGL backbuffer failed.");
