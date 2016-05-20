@@ -2408,7 +2408,7 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
                                                      nsIFrame* aFrame,
                                                      nsDisplayList* aList)
 {
-  if (aBuilder->IsForGenerateGlyphPath()) {
+  if (aBuilder->IsForGenerateGlyphMask()) {
     return true;
   }
 
