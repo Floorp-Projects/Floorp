@@ -4,15 +4,31 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-XPCOMUtils.defineLazyGetter(this, "History", () => {
-  Cu.import("resource://gre/modules/PlacesUtils.jsm");
-  return PlacesUtils.history;
-});
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
+let History = PlacesUtils.history;
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 const {
   normalizeTime,
 } = ExtensionUtils;
+
+const TRANSITION_TO_TRANSITION_TYPES_MAP = new Map([
+  ["link", History.TRANSITION_LINK],
+  ["typed", History.TRANSITION_TYPED],
+  ["auto_bookmark", History.TRANSITION_BOOKMARK],
+  ["auto_subframe", History.TRANSITION_EMBED],
+  ["manual_subframe", History.TRANSITION_FRAMED_LINK],
+]);
+
+function getTransitionType(transition) {
+  // cannot set a default value for the transition argument as the framework sets it to null
+  transition = transition || "link";
+  let transitionType = TRANSITION_TO_TRANSITION_TYPES_MAP.get(transition);
+  if (!transitionType) {
+    throw new Error(`|${transition}| is not a supported transition for history`);
+  }
+  return transitionType;
+}
 
 /*
  * Converts a nsINavHistoryResultNode into a plain object
@@ -48,6 +64,32 @@ function convertNavHistoryContainerResultNode(container) {
 extensions.registerSchemaAPI("history", "history", (extension, context) => {
   return {
     history: {
+      addUrl: function(details) {
+        let transition, date;
+        try {
+          transition = getTransitionType(details.transition);
+        } catch (error) {
+          return Promise.reject({message: error.message});
+        }
+        if (details.visitTime) {
+          date = normalizeTime(details.visitTime);
+        }
+        let pageInfo = {
+          title: details.title,
+          url: details.url,
+          visits: [
+            {
+              transition,
+              date,
+            },
+          ],
+        };
+        try {
+          return History.insert(pageInfo).then(() => undefined);
+        } catch (error) {
+          return Promise.reject({message: error.message});
+        }
+      },
       deleteAll: function() {
         return History.clear();
       },
