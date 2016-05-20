@@ -72,3 +72,5 @@ skip-if((B2G&&browserIsRemote)||Mulet) == object-position-png-002.xul object-pos
 # annotation with "skip-if((B2G&&browserIsRemote)||Mulet)", like above tests.
 skip == treecell-image-svg-1a.xul treecell-image-svg-1-ref.xul # bug 1218954
 skip == treecell-image-svg-1b.xul treecell-image-svg-1-ref.xul # bug 1218954
+
+skip-if((B2G&&browserIsRemote)||Mulet) == treechildren-padding-percent-1.xul treechildren-padding-percent-1-ref.xul
