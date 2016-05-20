@@ -6,6 +6,7 @@
 
 #include "TestHarness.h"
 #include "md4.h"
+#include "mozilla/Casting.h"
 
 // The md4 implementation isn't built as a separate library. This is the easiest
 // way to expose the symbols necessary to test the implementation.
@@ -52,7 +53,8 @@ TestMD4()
 
   for (size_t i = 0; i < MOZ_ARRAY_LENGTH(rfc1320_test_values); i++) {
     uint8_t md4_result[16];
-    md4sum(reinterpret_cast<const uint8_t*>(rfc1320_test_values[i].data),
+    md4sum(mozilla::BitwiseCast<const uint8_t*, const char*>(
+             rfc1320_test_values[i].data),
            strlen(rfc1320_test_values[i].data), md4_result);
     if (memcmp(md4_result, rfc1320_test_values[i].md4, 16) != 0) {
       fail("MD4 comparison test value #%d from RFC1320 failed", i + 1);

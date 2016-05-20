@@ -65,7 +65,7 @@ namespace layers {
 class TextureParent : public ParentActor<PTextureParent>
 {
 public:
-  explicit TextureParent(ISurfaceAllocator* aAllocator);
+  explicit TextureParent(HostIPCAllocator* aAllocator);
 
   ~TextureParent();
 
@@ -83,14 +83,14 @@ public:
 
   virtual void Destroy() override;
 
-  ISurfaceAllocator* mSurfaceAllocator;
+  HostIPCAllocator* mSurfaceAllocator;
   RefPtr<TextureHost> mWaitForClientRecycle;
   RefPtr<TextureHost> mTextureHost;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 PTextureParent*
-TextureHost::CreateIPDLActor(ISurfaceAllocator* aAllocator,
+TextureHost::CreateIPDLActor(HostIPCAllocator* aAllocator,
                              const SurfaceDescriptor& aSharedData,
                              LayersBackend aLayersBackend,
                              TextureFlags aFlags)
@@ -895,7 +895,7 @@ size_t MemoryTextureHost::GetBufferSize()
   return std::numeric_limits<size_t>::max();
 }
 
-TextureParent::TextureParent(ISurfaceAllocator* aSurfaceAllocator)
+TextureParent::TextureParent(HostIPCAllocator* aSurfaceAllocator)
 : mSurfaceAllocator(aSurfaceAllocator)
 {
   MOZ_COUNT_CTOR(TextureParent);

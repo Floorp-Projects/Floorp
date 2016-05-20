@@ -10,6 +10,7 @@
 #include "NSSCertDBTrustDomain.h"
 #include "certdb.h"
 #include "mozilla/Base64.h"
+#include "mozilla/Casting.h"
 #include "mozilla/unused.h"
 #include "nsArray.h"
 #include "nsCOMPtr.h"
@@ -532,12 +533,14 @@ nsNSSCertificate::GetDbKey(const UniqueCERTCertificate& cert, nsACString& aDbKey
   const char leadingZeroes[] = {0, 0, 0, 0, 0, 0, 0, 0};
   buf.Append(leadingZeroes, sizeof(leadingZeroes));
   uint32_t serialNumberLen = htonl(cert->serialNumber.len);
-  buf.Append(reinterpret_cast<const char*>(&serialNumberLen), sizeof(uint32_t));
+  buf.Append(BitwiseCast<const char*, const uint32_t*>(&serialNumberLen),
+             sizeof(uint32_t));
   uint32_t issuerLen = htonl(cert->derIssuer.len);
-  buf.Append(reinterpret_cast<const char*>(&issuerLen), sizeof(uint32_t));
-  buf.Append(reinterpret_cast<const char*>(cert->serialNumber.data),
+  buf.Append(BitwiseCast<const char*, const uint32_t*>(&issuerLen),
+             sizeof(uint32_t));
+  buf.Append(BitwiseCast<char*, unsigned char*>(cert->serialNumber.data),
              cert->serialNumber.len);
-  buf.Append(reinterpret_cast<const char*>(cert->derIssuer.data),
+  buf.Append(BitwiseCast<char*, unsigned char*>(cert->derIssuer.data),
              cert->derIssuer.len);
 
   return Base64Encode(buf, aDbKey);
@@ -1101,7 +1104,7 @@ nsNSSCertificate::GetSha256SubjectPublicKeyInfoDigest(nsACString& aSha256SPKIDig
     return rv;
   }
   rv = Base64Encode(nsDependentCSubstring(
-                      reinterpret_cast<const char*> (digest.get().data),
+                      BitwiseCast<char*, unsigned char*>(digest.get().data),
                       digest.get().len),
                     aSha256SPKIDigest);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1634,7 +1637,7 @@ nsNSSCertList::DupCertList(const UniqueCERTCertList& certList,
   return newList;
 }
 
-void*
+CERTCertList*
 nsNSSCertList::GetRawCertList()
 {
   // This function should only be called after acquiring a

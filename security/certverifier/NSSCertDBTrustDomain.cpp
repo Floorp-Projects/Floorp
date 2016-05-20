@@ -15,6 +15,7 @@
 #include "PublicKeyPinningService.h"
 #include "cert.h"
 #include "certdb.h"
+#include "mozilla/Casting.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/unused.h"
 #include "nsNSSCertificate.h"
@@ -778,7 +779,7 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time)
       return Result::FATAL_ERROR_LIBRARY_FAILURE;
     }
     const uint8_t* certHash(
-      reinterpret_cast<const uint8_t*>(digest.get().data));
+      BitwiseCast<uint8_t*, unsigned char*>(digest.get().data));
     size_t certHashLen = digest.get().len;
     size_t unused;
     if (!mozilla::BinarySearchIf(WhitelistedCNNICHashes, 0,

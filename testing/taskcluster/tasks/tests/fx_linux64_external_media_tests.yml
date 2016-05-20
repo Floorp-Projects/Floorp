@@ -7,7 +7,6 @@ task:
       - --no-read-buildbot-config
       - --installer-url={{build_url}}
       - --test-packages-url={{test_packages_url}}
-      - --download-symbols=ondemand
     env:
         MOZHARNESS_SCRIPT: 'mozharness/scripts/firefox_media_tests_buildbot.py'
         MOZHARNESS_CONFIG: >
@@ -23,7 +22,6 @@ task:
       flavor: external-media-tests
     treeherder:
       groupName: VideoPuppeteer
-      groupSymbol: VP
-      symbol: m
+      groupSymbol: tc-VP
+      symbol: b-m
       tier: 2
-

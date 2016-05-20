@@ -12,6 +12,7 @@
 #include "SharedSSLState.h"
 #include "cert.h"
 #include "certdb.h"
+#include "mozilla/Casting.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PublicSSL.h"
 #include "mozilla/Services.h"
@@ -440,7 +441,7 @@ GetUserSid(nsAString& sidString)
     return false;
   }
   char sid_buffer[SECURITY_MAX_SID_SIZE];
-  SID* sid = reinterpret_cast<SID*>(sid_buffer);
+  SID* sid = BitwiseCast<SID*, char*>(sid_buffer);
   DWORD cbSid = MOZ_ARRAY_LENGTH(sid_buffer);
   SID_NAME_USE eUse;
   // There doesn't appear to be a defined maximum length for the domain name
@@ -1094,6 +1095,9 @@ static const CipherPref sCipherPrefs[] = {
 
  { "security.ssl3.dhe_rsa_aes_256_sha",
    TLS_DHE_RSA_WITH_AES_256_CBC_SHA, true },
+
+ { "security.ssl3.ecdhe_psk_aes_128_gcm_sha256",
+   TLS_ECDHE_PSK_WITH_AES_128_GCM_SHA256, true },
 
  { "security.ssl3.ecdhe_rsa_rc4_128_sha",
    TLS_ECDHE_RSA_WITH_RC4_128_SHA, true, true }, // deprecated (RC4)

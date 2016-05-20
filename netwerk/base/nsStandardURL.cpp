@@ -1857,7 +1857,7 @@ void
 nsStandardURL::ReplacePortInSpec(int32_t aNewPort)
 {
     MOZ_ASSERT(mMutable, "Caller should ensure we're mutable");
-    NS_ASSERTION(aNewPort != mDefaultPort,
+    NS_ASSERTION(aNewPort != mDefaultPort || mDefaultPort == -1,
                  "Caller should check its passed-in value and pass -1 instead of "
                  "mDefaultPort, to avoid encoding default port into mSpec");
 

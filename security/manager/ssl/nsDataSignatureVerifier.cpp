@@ -7,6 +7,7 @@
 #include "cms.h"
 #include "cryptohi.h"
 #include "keyhi.h"
+#include "mozilla/Casting.h"
 #include "mozilla/unused.h"
 #include "nsCOMPtr.h"
 #include "nsNSSComponent.h"
@@ -108,7 +109,8 @@ nsDataSignatureVerifier::VerifyData(const nsACString& aData,
   // Perform the final verification
   DER_ConvertBitString(&(sigData.signature));
   srv = VFY_VerifyDataWithAlgorithmID(
-    reinterpret_cast<const unsigned char*>(PromiseFlatCString(aData).get()),
+    BitwiseCast<const unsigned char*, const char*>(
+      PromiseFlatCString(aData).get()),
     aData.Length(), publicKey.get(), &(sigData.signature),
     &(sigData.signatureAlgorithm), nullptr, nullptr);
 
@@ -154,7 +156,7 @@ VerifyCMSDetachedSignatureIncludingCertificate(
 
   // signedData is non-owning
   NSSCMSSignedData* signedData =
-    reinterpret_cast<NSSCMSSignedData*>(NSS_CMSContentInfo_GetContent(cinfo));
+    static_cast<NSSCMSSignedData*>(NSS_CMSContentInfo_GetContent(cinfo));
   if (!signedData) {
     return NS_ERROR_CMS_VERIFY_NO_CONTENT_INFO;
   }
@@ -242,7 +244,7 @@ VerifyCertificate(CERTCertificate* cert, void* voidContext, void* pinArg)
   }
 
   VerifyCertificateContext* context =
-    reinterpret_cast<VerifyCertificateContext*>(voidContext);
+    static_cast<VerifyCertificateContext*>(voidContext);
 
   nsCOMPtr<nsIX509Cert> xpcomCert(nsNSSCertificate::Create(cert));
   if (!xpcomCert) {
@@ -292,7 +294,7 @@ nsDataSignatureVerifier::VerifySignature(const char* aRSABuf,
 
   SECItem buffer = {
     siBuffer,
-    reinterpret_cast<uint8_t*>(const_cast<char*>(aRSABuf)),
+    BitwiseCast<unsigned char*, const char*>(aRSABuf),
     aRSABufLen
   };
 

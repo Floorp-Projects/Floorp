@@ -29,7 +29,7 @@ nsRandomGenerator::GenerateRandomBytes(uint32_t aLength,
     return NS_ERROR_FAILURE;
   }
 
-  uint8_t* buf = reinterpret_cast<uint8_t*>(moz_xmalloc(aLength));
+  auto buf = static_cast<uint8_t*>(moz_xmalloc(aLength));
   if (!buf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

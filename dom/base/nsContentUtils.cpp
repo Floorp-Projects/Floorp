@@ -1214,16 +1214,13 @@ nsContentUtils::GetPseudoAttributeValue(const nsString& aSource, nsIAtom *aName,
         if (*chunkEnd == kAmpersand) {
           aValue.Append(start, chunkEnd - start);
 
-          // Point to first character after the ampersand.
-          ++chunkEnd;
-
           const char16_t *afterEntity = nullptr;
           char16_t result[2];
           uint32_t count =
             MOZ_XMLTranslateEntity(reinterpret_cast<const char*>(chunkEnd),
-                                  reinterpret_cast<const char*>(iter),
-                                  reinterpret_cast<const char**>(&afterEntity),
-                                  result);
+                                   reinterpret_cast<const char*>(iter),
+                                   reinterpret_cast<const char**>(&afterEntity),
+                                   result);
           if (count == 0) {
             aValue.Truncate();
 

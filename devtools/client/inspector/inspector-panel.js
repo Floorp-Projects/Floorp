@@ -404,6 +404,8 @@ InspectorPanel.prototype = {
    */
   setupSidebarToggle: function () {
     this._paneToggleButton = this.panelDoc.getElementById("inspector-pane-toggle");
+    this._paneToggleButton.setAttribute("tooltiptext",
+      strings.GetStringFromName("inspector.collapsePane"));
     this._paneToggleButton.addEventListener("mousedown",
       this.onPaneToggleButtonClicked);
   },

@@ -706,7 +706,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * whenever possible.
      */
     template <typename ReferentVariant, typename Referent, typename Map>
-    JSObject* wrapVariantReferent(JSContext* cx, Map& map, CrossCompartmentKey::Kind keyKind,
+    JSObject* wrapVariantReferent(JSContext* cx, Map& map, Handle<CrossCompartmentKey> key,
                                   Handle<ReferentVariant> referent);
     JSObject* wrapVariantReferent(JSContext* cx, Handle<DebuggerScriptReferent> referent);
     JSObject* wrapVariantReferent(JSContext* cx, Handle<DebuggerSourceReferent> referent);
