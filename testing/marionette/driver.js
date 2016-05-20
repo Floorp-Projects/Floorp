@@ -881,7 +881,7 @@ GeckoDriver.prototype.execute_ = function(script, args, timeout, opts = {}) {
       script = this.importedScripts.for(Context.CHROME).concat(script);
       let wargs = element.fromJson(args, this.curBrowser.elementManager, sb.window);
       let evaluatePromise = evaluate.sandbox(sb, script, wargs, opts);
-      return evaluatePromise.then(res => this.curBrowser.elementManager.wrapValue(res));
+      return evaluatePromise.then(res => element.toJson(res, this.curBrowser.elementManager));
   }
 };
 
@@ -918,7 +918,7 @@ GeckoDriver.prototype.executeJSScript = function(cmd, resp) {
       sb = sandbox.augment(sb, new logging.Adapter(this.marionetteLog));
 
       let res = yield evaluate.sandbox(sb, script, wargs, opts);
-      resp.body.value = this.curBrowser.elementManager.wrapValue(res);
+      resp.body.value = element.toJson(res, this.curBrowser.elementManager);
       break;
 
     case Context.CONTENT:

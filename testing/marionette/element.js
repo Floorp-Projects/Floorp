@@ -188,68 +188,6 @@ element.Store = class {
 
     return el;
   }
-
-  /**
-   * Convert values to primitives that can be transported over the
-   * Marionette protocol.
-   *
-   * This function implements the marshaling algorithm defined in the
-   * WebDriver specification:
-   *
-   *     https://dvcs.w3.org/hg/webdriver/raw-file/tip/webdriver-spec.html#synchronous-javascript-execution
-   *
-   * @param object val
-   *        object to be marshaled
-   *
-   * @return object
-   *         Returns a JSON primitive or Object
-   */
-  wrapValue(val) {
-    let result = null;
-
-    switch (typeof(val)) {
-      case "undefined":
-        result = null;
-        break;
-
-      case "string":
-      case "number":
-      case "boolean":
-        result = val;
-        break;
-
-      case "object":
-        let type = Object.prototype.toString.call(val);
-        if (type == "[object Array]" ||
-            type == "[object NodeList]") {
-          result = [];
-          for (let i = 0; i < val.length; ++i) {
-            result.push(this.wrapValue(val[i]));
-
-          }
-        }
-        else if (val == null) {
-          result = null;
-        }
-        else if (val.nodeType == 1) {
-          let elementId = this.add(val);
-          result = {[element.LegacyKey]: elementId, [element.Key]: elementId};
-        }
-        else {
-          result = {};
-          for (let prop in val) {
-            try {
-              result[prop] = this.wrapValue(val[prop]);
-            } catch (e if (e.result == Cr.NS_ERROR_NOT_IMPLEMENTED)) {
-              logger.debug(`Skipping ${prop} due to: ${e.message}`);
-            }
-          }
-        }
-        break;
-    }
-
-    return result;
-  }
 };
 
 /**
@@ -674,7 +612,7 @@ element.generateUUID = function() {
  */
 element.fromJson = function(
     obj, seenEls, win, shadowRoot = undefined) {
-  switch (typeof(obj)) {
+  switch (typeof obj) {
     case "boolean":
     case "number":
     case "string":
@@ -706,6 +644,63 @@ element.fromJson = function(
         let rv = {};
         for (let prop in obj) {
           rv[prop] = element.fromJson(obj[prop], seenEls, win, shadowRoot);
+        }
+        return rv;
+      }
+  }
+};
+
+/**
+ * Convert arbitrary objects to JSON-safe primitives that can be
+ * transported over the Marionette protocol.
+ *
+ * Any DOM elements are converted to web elements by looking them up
+ * and/or adding them to the element store provided.
+ *
+ * @param {?} obj
+ *     Object to be marshaled.
+ * @param {element.Store} seenEls
+ *     Element store to use for lookup of web element references.
+ *
+ * @return {?}
+ *     Same object as provided by |obj| with the elements replaced by
+ *     web elements.
+ */
+element.toJson = function(obj, seenEls) {
+  switch (typeof obj) {
+    case "undefined":
+      return null;
+
+    case "boolean":
+    case "number":
+    case "string":
+      return obj;
+
+    case "object":
+      if (obj === null) {
+        return obj;
+      }
+
+      // NodeList, HTMLCollection
+      else if (element.isElementCollection(obj)) {
+        return [...obj].map(el => element.toJson(el, seenEls));
+      }
+
+      // DOM element
+      else if (obj.nodeType == 1) {
+        let uuid = seenEls.add(obj);
+        return {[element.Key]: uuid, [element.LegacyKey]: uuid};
+      }
+
+      // arbitrary objects
+      else {
+        let rv = {};
+        for (let prop in obj) {
+          try {
+            rv[prop] = element.toJson(obj[prop], seenEls);
+          } catch (e if (e.result == Cr.NS_ERROR_NOT_IMPLEMENTED)) {
+            logger.debug(`Skipping ${prop}: ${e.message}`);
+          }
         }
         return rv;
       }
