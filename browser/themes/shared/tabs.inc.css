@@ -176,26 +176,32 @@
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio.svg#tab-audio-backgroundTab-muted-pressed");
 }
 
+.tab-icon-sound:-moz-lwtheme,
 .tab-icon-sound[visuallyselected=true][soundplaying] {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio.svg#tab-audio");
 }
 
+.tab-icon-sound:hover:-moz-lwtheme,
 .tab-icon-sound[visuallyselected=true][soundplaying]:hover {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio.svg#tab-audio-hover");
 }
 
+.tab-icon-sound:hover:active:-moz-lwtheme,
 .tab-icon-sound[visuallyselected=true][soundplaying]:hover:active {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio.svg#tab-audio-pressed");
 }
 
+.tab-icon-sound[muted]:-moz-lwtheme,
 .tab-icon-sound[visuallyselected=true][muted] {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio.svg#tab-audio-muted");
 }
 
+.tab-icon-sound[muted]:hover:-moz-lwtheme,
 .tab-icon-sound[visuallyselected=true][muted]:hover {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio.svg#tab-audio-muted-hover");
 }
 
+.tab-icon-sound[muted]:hover:active:-moz-lwtheme,
 .tab-icon-sound[visuallyselected=true][muted]:hover:active {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio.svg#tab-audio-muted-pressed");
 }
