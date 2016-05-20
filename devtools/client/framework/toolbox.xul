@@ -53,10 +53,7 @@
         <toolbarbutton id="command-button-frames"
                        class="command-button command-button-invertable devtools-toolbarbutton"
                        tooltiptext="&toolboxFramesTooltip;"
-                       type="menu"
-                       hidden="true">
-          <menupopup position="bottomright topright"></menupopup>
-        </toolbarbutton>
+                       hidden="true" />
         <toolbarbutton id="command-button-noautohide"
                        class="command-button command-button-invertable"
                        tooltiptext="&toolboxNoAutoHideTooltip;"
