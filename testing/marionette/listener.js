@@ -529,7 +529,7 @@ function* execute(script, args, timeout, opts) {
       args, elementManager, curContainer.frame, curContainer.shadowRoot);
   let res = yield evaluate.sandbox(sb, script, wargs, opts);
 
-  return elementManager.wrapValue(res);
+  return element.toJson(res, elementManager);
 }
 
 function* executeInSandbox(script, args, timeout, opts) {
@@ -547,8 +547,10 @@ function* executeInSandbox(script, args, timeout, opts) {
   let evaluatePromise = evaluate.sandbox(sb, script, wargs, opts);
 
   let res = yield evaluatePromise;
-  sendSyncMessage("Marionette:shareData", {log: elementManager.wrapValue(contentLog.get())});
-  return elementManager.wrapValue(res);
+  sendSyncMessage(
+      "Marionette:shareData",
+      {log: element.toJson(contentLog.get(), elementManager)});
+  return element.toJson(res, elementManager);
 }
 
 function* executeSimpleTest(script, args, timeout, opts) {
@@ -571,8 +573,10 @@ function* executeSimpleTest(script, args, timeout, opts) {
   let evaluatePromise = evaluate.sandbox(sb, script, wargs, opts);
 
   let res = yield evaluatePromise;
-  sendSyncMessage("Marionette:shareData", {log: elementManager.wrapValue(contentLog.get())});
-  return elementManager.wrapValue(res);
+  sendSyncMessage(
+      "Marionette:shareData",
+      {log: element.toJson(contentLog.get(), elementManager)});
+  return element.toJson(res, elementManager);
 }
 
 /**
@@ -634,8 +638,9 @@ function emitTouchEvent(type, touch) {
     /*
     Disabled per bug 888303
     contentLog.log(loggingInfo, "TRACE");
-    sendSyncMessage("Marionette:shareData",
-                    {log: elementManager.wrapValue(contentLog.get())});
+    sendSyncMessage(
+        "Marionette:shareData",
+        {log: element.toJson(contentLog.get(), elementManager)});
     contentLog.clear();
     */
     let domWindowUtils = curContainer.frame.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils);
@@ -1432,7 +1437,8 @@ function switchToFrame(msg) {
 
   // send a synchronous message to let the server update the currently active
   // frame element (for getActiveFrame)
-  let frameValue = elementManager.wrapValue(curContainer.frame.wrappedJSObject).ELEMENT;
+  let frameValue = element.toJson(
+      curContainer.frame.wrappedJSObject, elementManager)[element.Key];
   sendSyncMessage("Marionette:switchedToFrame", {frameValue: frameValue});
 
   let rv = null;
