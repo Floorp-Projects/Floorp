@@ -196,7 +196,7 @@ PlacesViewBase.prototype = {
     if (selectedNode) {
       let popup = document.popupNode;
       if (!popup._placesNode || popup._placesNode == this._resultNode ||
-          popup._placesNode.itemId == -1) {
+          popup._placesNode.itemId == -1 || !selectedNode.parent) {
         // If a static menuitem is selected, or if the root node is selected,
         // the insertion point is inside the folder, at the end.
         container = selectedNode;
@@ -894,7 +894,8 @@ PlacesViewBase.prototype = {
         break;
       }
 
-      if (child._placesNode && !firstNonStaticNodeFound) {
+      if (child._placesNode && !child.hasAttribute("simulated-places-node") &&
+          !firstNonStaticNodeFound) {
         firstNonStaticNodeFound = true;
         aPopup.insertBefore(aPopup._startMarker, child);
       }

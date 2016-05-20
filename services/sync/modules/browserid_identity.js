@@ -569,7 +569,7 @@ this.BrowserIDManager.prototype = {
       );
     }
 
-    let getToken = (tokenServerURI, assertion) => {
+    let getToken = assertion => {
       log.debug("Getting a token");
       let deferred = Promise.defer();
       let cb = function (err, token) {
@@ -597,7 +597,18 @@ this.BrowserIDManager.prototype = {
     return fxa.whenVerified(this._signedInUser)
       .then(() => maybeFetchKeys())
       .then(() => getAssertion())
-      .then(assertion => getToken(tokenServerURI, assertion))
+      .then(assertion => getToken(assertion))
+      .catch(err => {
+        // If we get a 401 fetching the token it may be that our certificate
+        // needs to be regenerated.
+        if (!err.response || err.response.status !== 401) {
+          return Promise.reject(err);
+        }
+        log.warn("Token server returned 401, refreshing certificate and retrying token fetch");
+        return fxa.invalidateCertificate()
+          .then(() => getAssertion())
+          .then(assertion => getToken(assertion))
+      })
       .then(token => {
         // TODO: Make it be only 80% of the duration, so refresh the token
         // before it actually expires. This is to avoid sync storage errors
