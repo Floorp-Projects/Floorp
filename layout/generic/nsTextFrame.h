@@ -393,6 +393,7 @@ public:
     gfxTextContextPaint* contextPaint = nullptr;
     DrawPathCallbacks* callbacks = nullptr;
     bool generateTextMask = false;
+    bool paintSelectionBackground = false;
     explicit PaintTextParams(gfxContext* aContext) : context(aContext) {}
   };
 

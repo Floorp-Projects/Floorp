@@ -498,13 +498,29 @@ GenerateAndPushTextMask(nsIFrame* aFrame, nsRenderingContext* aContext,
   // The main function of enabling background-clip:text property value.
   // When a nsDisplayBackgroundImage detects "text" bg-clip style, it will call
   // this function to
-  // 1. Generate a mask by all descendant text frames
-  // 2. Push the generated mask into aContext.
+  // 1. Paint background color of the selection text if any.
+  // 2. Generate a mask by all descendant text frames
+  // 3. Push the generated mask into aContext.
+  //
+  // TBD: we actually generate display list of aFrame twice here. It's better
+  // to reuse the same display list and paint that one twice, one for selection
+  // background, one for generating text mask.
 
   gfxContext* sourceCtx = aContext->ThebesContext();
   gfxRect bounds =
     nsLayoutUtils::RectToGfxRect(aFillRect,
                                  aFrame->PresContext()->AppUnitsPerDevPixel());
+
+  {
+    // Paint text selection background into sourceCtx.
+    gfxContextMatrixAutoSaveRestore save(sourceCtx);
+    sourceCtx->SetMatrix(sourceCtx->CurrentMatrix().Translate(bounds.TopLeft()));
+
+    nsLayoutUtils::PaintFrame(aContext, aFrame,
+                              nsRect(nsPoint(0, 0), aFrame->GetSize()),
+                              NS_RGB(255, 255, 255),
+                              nsDisplayListBuilderMode::PAINTING_SELECTION_BACKGROUND);
+  }
 
   // Evaluate required surface size.
   IntRect drawRect;
@@ -2437,7 +2453,8 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
                                                      nsIFrame* aFrame,
                                                      nsDisplayList* aList)
 {
-  if (aBuilder->IsForGenerateGlyphMask()) {
+  if (aBuilder->IsForGenerateGlyphMask() ||
+      aBuilder->IsForPaintingSelectionBG()) {
     return true;
   }
 
