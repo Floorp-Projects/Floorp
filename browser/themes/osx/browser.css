@@ -560,6 +560,7 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
   list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png");
 }
 
+#menu_unsortedBookmarks,
 #BMB_unsortedBookmarks,
 #panelMenu_unsortedBookmarks {
   list-style-image: url("chrome://browser/skin/places/unfiledBookmarks.png");
