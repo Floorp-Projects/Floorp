@@ -25,7 +25,7 @@ ping”, not total for the whole application lifetime.
 Structure::
 
     {
-      "v": 5, // ping format version
+      "v": 6, // ping format version
       "clientId": <string>, // client id, e.g.
                             // "c641eacf-c30c-4171-b403-f077724e848a"
       "seq": <positive integer>, // running ping counter, e.g. 3
@@ -45,6 +45,9 @@ Structure::
                            // in local time, "yyyy-mm-dd"
       "tz": <integer>, // timezone offset (in minutes) of the
                        // device when the ping was created
+      "searches": <object>, // Optional, object of search use counts in the
+                            // format: { "engine.source": <pos integer> }
+                            // e.g.: { "yahoo.searchbar": 3, "other.searchbar": 1 }
       "experiments": [<string>, …], // Optional, array of identifiers
                                     // for the active experiments
     }
@@ -123,6 +126,7 @@ et al (e.g. "Tue, 01 Feb 2011 14:00:00 GMT").
 
 Version history
 ---------------
+* v6: added ``searches``
 * v5: added ``created`` & ``tz``
 * v4: ``profileDate`` will return package install time when times.json is not available
 * v3: added ``defaultSearch``

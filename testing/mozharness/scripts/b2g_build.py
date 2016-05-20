@@ -130,7 +130,7 @@ class B2GBuild(LocalesMixin, PurgeMixin,
                  default_actions=default_actions):
         # Default configuration
         default_config = {
-            'default_vcs': 'hgtool',
+            'default_vcs': 'hg',
             'ccache': True,
             'locales_dir': 'gecko/b2g/locales',
             'l10n_dir': 'gecko-l10n',
@@ -141,7 +141,7 @@ class B2GBuild(LocalesMixin, PurgeMixin,
             'merge_locales': True,
             'compare_locales_repo': 'https://hg.mozilla.org/build/compare-locales',
             'compare_locales_rev': 'RELEASE_AUTOMATION',
-            'compare_locales_vcs': 'hgtool',
+            'compare_locales_vcs': 'hg',
             'repo_remote_mappings': {},
             'influx_credentials_file': 'oauth.txt',
             'balrog_credentials_file': 'oauth.txt',

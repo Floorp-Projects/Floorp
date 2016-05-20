@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 
-<meta charset=utf-8 />
+<meta charset="utf-8" />
+<meta name="viewport" />
 <title>test</title>
 
 
@@ -11,18 +12,24 @@
   }
 </style>
 
-<div></div>
+<div data-is-delay="false"></div>
 
 <script>
   var div = document.querySelector("div");
   var initX, initY;
+  var previousEvent = "", touchendTime = 0;
+  var updatePreviousEvent = function(e){
+    previousEvent = e.type;
+  };
 
   div.style.transform = "none";
+  div.style.backgroundColor = "";
 
   div.addEventListener("touchstart", function(evt) {
     var touch = evt.changedTouches[0];
     initX = touch.pageX;
     initY = touch.pageY;
+    updatePreviousEvent(evt);
   }, true);
 
   div.addEventListener("touchmove", function(evt) {
@@ -30,11 +37,49 @@
     var deltaX = touch.pageX - initX;
     var deltaY = touch.pageY - initY;
     div.style.transform = "translate(" + deltaX + "px, " + deltaY + "px)";
+    updatePreviousEvent(evt);
   }, true);
 
   div.addEventListener("touchend", function(evt) {
     if (!evt.touches.length) {
       div.style.transform = "none";
     }
+    touchendTime = new Date().getTime();
+    updatePreviousEvent(evt);
   }, true);
+
+  div.addEventListener("mouseenter", function(evt) {
+    div.style.backgroundColor = "red";
+    updatePreviousEvent(evt);
+  }, true);
+  div.addEventListener("mouseover", function(evt) {
+    div.style.backgroundColor = "red";
+    updatePreviousEvent(evt);
+  }, true);
+
+  div.addEventListener("mouseout", function(evt) {
+    div.style.backgroundColor = "blue";
+    updatePreviousEvent(evt);
+  }, true);
+
+  div.addEventListener("mouseleave", function(evt) {
+    div.style.backgroundColor = "blue";
+    updatePreviousEvent(evt);
+  }, true);
+
+  div.addEventListener("mousedown", function(evt){
+    if (previousEvent === "touchend" && touchendTime !== 0) {
+      let now = new Date().getTime();
+      div.dataset.isDelay = ((now - touchendTime) >= 300) ? true : false;
+    } else {
+      div.dataset.isDelay = false;
+    }
+    updatePreviousEvent(evt);
+  }, true);
+
+  div.addEventListener("mousemove", updatePreviousEvent, true);
+
+  div.addEventListener("mouseup", updatePreviousEvent, true);
+
+  div.addEventListener("click", updatePreviousEvent, true);
 </script>
