@@ -101,6 +101,33 @@ function errorWithResult(message, result = Cr.NS_ERROR_FAILURE) {
 }
 
 /**
+ * Copied from ForgetAboutSite.jsm.
+ *
+ * Returns true if the string passed in is part of the root domain of the
+ * current string.  For example, if this is "www.mozilla.org", and we pass in
+ * "mozilla.org", this will return true.  It would return false the other way
+ * around.
+ */
+function hasRootDomain(str, aDomain)
+{
+  let index = str.indexOf(aDomain);
+  // If aDomain is not found, we know we do not have it as a root domain.
+  if (index == -1)
+    return false;
+
+  // If the strings are the same, we obviously have a match.
+  if (str == aDomain)
+    return true;
+
+  // Otherwise, we have aDomain as our root domain iff the index of aDomain is
+  // aDomain.length subtracted from our length and (since we do not have an
+  // exact match) the character before the index is a dot or slash.
+  let prevChar = str[index - 1];
+  return (index == (str.length - aDomain.length)) &&
+         (prevChar == "." || prevChar == "/");
+}
+
+/**
  * The implementation of the push system. It uses WebSockets
  * (PushServiceWebSocket) to communicate with the server and PushDB (IndexedDB)
  * for persistence.
@@ -330,14 +357,8 @@ this.PushService = {
     }
 
     let pattern = JSON.parse(data);
-    return this._db.clearIf(record => {
-      if (!record.matchesOriginAttributes(pattern)) {
-        return false;
-      }
-      this._backgroundUnregister(record,
-                                 Ci.nsIPushErrorReporter.UNSUBSCRIBE_MANUAL);
-      return true;
-    });
+    return this._dropRegistrationsIf(record =>
+      record.matchesOriginAttributes(pattern));
   },
 
   /**
@@ -1187,56 +1208,16 @@ this.PushService = {
   },
 
   clear: function(info) {
-    if (info.domain == "*") {
-      return this._clearAll();
-    }
-    return this._clearForDomain(info.domain);
-  },
-
-  _clearAll: function _clearAll() {
     return this._checkActivated()
-      .then(_ => this._db.drop())
-      .catch(_ => Promise.resolve());
-  },
-
-  _clearForDomain: function(domain) {
-    /**
-     * Copied from ForgetAboutSite.jsm.
-     *
-     * Returns true if the string passed in is part of the root domain of the
-     * current string.  For example, if this is "www.mozilla.org", and we pass in
-     * "mozilla.org", this will return true.  It would return false the other way
-     * around.
-     */
-    function hasRootDomain(str, aDomain)
-    {
-      let index = str.indexOf(aDomain);
-      // If aDomain is not found, we know we do not have it as a root domain.
-      if (index == -1)
-        return false;
-
-      // If the strings are the same, we obviously have a match.
-      if (str == aDomain)
-        return true;
-
-      // Otherwise, we have aDomain as our root domain iff the index of aDomain is
-      // aDomain.length subtracted from our length and (since we do not have an
-      // exact match) the character before the index is a dot or slash.
-      let prevChar = str[index - 1];
-      return (index == (str.length - aDomain.length)) &&
-             (prevChar == "." || prevChar == "/");
-    }
-
-    let clear = (db, domain) => {
-      db.clearIf(record => {
-        return record.uri && hasRootDomain(record.uri.prePath, domain);
-      });
-    }
-
-    return this._checkActivated()
-      .then(_ => clear(this._db, domain))
+      .then(_ => {
+        return this._dropRegistrationsIf(record =>
+          info.domain == "*" ||
+          (record.uri && hasRootDomain(record.uri.prePath, info.domain))
+        );
+      })
       .catch(e => {
-        console.warn("clearForDomain: Error forgetting about domain", e);
+        console.warn("clear: Error dropping subscriptions for domain",
+          info.domain, e);
         return Promise.resolve();
       });
   },
@@ -1303,16 +1284,8 @@ this.PushService = {
         // Only drop registrations that are subject to quota.
         return false;
       }
-      if (record.isExpired()) {
-        // Fire subscription modified notifications for expired
-        // records.
-        gPushNotifier.notifySubscriptionModified(record.scope,
-                                                 record.principal);
-      } else {
-        // Drop unexpired registrations in the background.
-        this._backgroundUnregister(record,
-          Ci.nsIPushErrorReporter.UNSUBSCRIBE_PERMISSION_REVOKED);
-      }
+      this._backgroundUnregister(record,
+        Ci.nsIPushErrorReporter.UNSUBSCRIBE_PERMISSION_REVOKED);
       return true;
     });
   },
@@ -1399,5 +1372,34 @@ this.PushService = {
     }
     record.resetQuota();
     cursor.update(record);
+  },
+
+  /**
+   * Drops all matching registrations from the database. Notifies the
+   * associated service workers if permission is granted, and removes
+   * unexpired registrations from the server.
+   *
+   * @param {Function} predicate A function called for each record.
+   * @returns {Promise} Resolves once the registrations have been dropped.
+   */
+  _dropRegistrationsIf(predicate) {
+    return this._db.clearIf(record => {
+      if (!predicate(record)) {
+        return false;
+      }
+      if (record.hasPermission()) {
+        // "Clear Recent History" and the Forget button remove permissions
+        // before clearing registrations, but it's possible for the worker to
+        // resubscribe if the "dom.push.testing.ignorePermission" pref is set.
+        this._notifySubscriptionChangeObservers(record);
+      }
+      if (!record.isExpired()) {
+        // Only unregister active registrations, since we already told the
+        // server about expired ones.
+        this._backgroundUnregister(record,
+                                   Ci.nsIPushErrorReporter.UNSUBSCRIBE_MANUAL);
+      }
+      return true;
+    });
   },
 };
