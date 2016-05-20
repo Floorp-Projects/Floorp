@@ -1151,7 +1151,9 @@ EXPORT int speex_resampler_set_rate_frac(SpeexResamplerState *st, spx_uint32_t r
       for (i=0;i<st->nb_channels;i++)
       {
          if (!_muldiv_safe(st->samp_frac_num[i],st->den_rate,old_den))
-            return RESAMPLER_ERR_OVERFLOW;
+         {
+             st->samp_frac_num[i] = st->den_rate-1;
+         }
          st->samp_frac_num[i]= _muldiv(st->samp_frac_num[i],st->den_rate,old_den);
          /* Safety net */
          if (st->samp_frac_num[i] >= st->den_rate)
