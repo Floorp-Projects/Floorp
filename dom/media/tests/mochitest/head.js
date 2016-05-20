@@ -403,7 +403,7 @@ function checkMediaStreamTracks(constraints, mediaStream) {
  */
 function checkMediaStreamContains(mediaStream, tracks, message) {
   message = message ? (message + ": ") : "";
-  tracks.forEach(t => ok(mediaStream.getTracks().includes(t),
+  tracks.forEach(t => ok(mediaStream.getTrackById(t.id),
                          message + "MediaStream " + mediaStream.id +
                          " contains track " + t.id));
   is(mediaStream.getTracks().length, tracks.length,
@@ -421,7 +421,7 @@ function checkMediaStreamCloneAgainstOriginal(clone, original) {
   is(clone.getVideoTracks().length, original.getVideoTracks().length,
      "All video tracks should get cloned");
   original.getTracks()
-          .forEach(t => ok(!clone.getTracks().includes(t),
+          .forEach(t => ok(!clone.getTrackById(t.id),
                            "The clone's tracks should be originals"));
 }
 
