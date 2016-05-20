@@ -1034,13 +1034,19 @@
                         return;
                     }
 
-                    // Read defaultPrevented asynchronously, since Web content
-                    // may want to consume the "click" event but will only
-                    // receive it after us.
-                    let self = this;
-                    setTimeout(function clickToPlayCallback() {
-                        if (!e.defaultPrevented)
-                            self.togglePause();
+                    // Read defaultPrevented and the playback state asynchronously,
+                    // since Web content may want to consume the "click" event
+                    // but will only receive it after us. If web content
+                    // doesn't use preventDefault but still toggles playback,
+                    // we will treat that act the same as a call to preventDefault()
+                    // so the web content-initiated toggle is not reverted.
+                    let previousState = this.video.paused;
+                    setTimeout(() => {
+                        if (e.defaultPrevented ||
+                            this.video.paused != previousState) {
+                            return;
+                        }
+                        this.togglePause();
                     }, 0);
                 },
                 hideClickToPlay : function () {
@@ -1212,7 +1218,7 @@
 
                 log : function (msg) {
                     if (this.debug)
-                        dump("videoctl: " + msg + "\n");
+                        console.log("videoctl: " + msg + "\n");
                 },
 
                 get isTopLevelSyntheticDocument() {
@@ -1341,7 +1347,7 @@
                     }
 
                     addListener(this.muteButton, "command", this.toggleMute);
-                    addListener(this.playButton, "command", this.togglePause);
+                    addListener(this.playButton, "click", this.clickToPlayClickHandler);
                     addListener(this.fullscreenButton, "command", this.toggleFullscreen);
                     addListener(this.clickToPlay, "click", this.clickToPlayClickHandler);
                     addListener(this.controlsSpacer, "click", this.clickToPlayClickHandler);
