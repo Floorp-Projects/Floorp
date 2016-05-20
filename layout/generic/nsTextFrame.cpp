@@ -4771,7 +4771,7 @@ nsDisplayText::Paint(nsDisplayListBuilder* aBuilder,
   pixelVisible.Inflate(2);
   pixelVisible.RoundOut();
 
-  if (!aBuilder->IsForGenerateGlyphPath()) {
+  if (!aBuilder->IsForGenerateGlyphMask()) {
     ctx->NewPath();
     ctx->Rectangle(pixelVisible);
     ctx->Clip();
@@ -4798,7 +4798,7 @@ nsDisplayText::Paint(nsDisplayListBuilder* aBuilder,
 
   params.dirtyRect = extraVisible;
   nsTextFrame::DrawPathCallbacks callbacks;
-  if (aBuilder->IsForGenerateGlyphPath()) {
+  if (aBuilder->IsForGenerateGlyphMask()) {
     params.callbacks = &callbacks;
   }
 
