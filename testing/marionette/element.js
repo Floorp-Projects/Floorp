@@ -299,7 +299,7 @@ element.Store = class {
         break;
     }
     return converted;
-  },
+  }
 };
 
 /**
