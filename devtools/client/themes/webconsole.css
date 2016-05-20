@@ -414,7 +414,10 @@ a {
 }
 
 .jsterm-input-node[focused="true"] {
-  box-shadow: var(--theme-focus-box-shadow-inset-bottom);
+  outline: var(--theme-focus-outline);
+  outline-offset: -1px;
+  transition: none;
+  box-shadow: none;
 }
 
 .jsterm-complete-node {
