@@ -5,7 +5,7 @@
 
 const { Cc, Ci, Cu, Cr } = require("chrome");
 
-const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
+const { Task } = require("devtools/shared/task");
 const { Heritage, setNamedTimeout, clearNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
 const { getCurrentZoom } = require("devtools/shared/layout/utils");
 

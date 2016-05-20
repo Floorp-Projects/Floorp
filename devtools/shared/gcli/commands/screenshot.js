@@ -10,9 +10,9 @@ const Services = require("Services");
 const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
 const { getRect } = require("devtools/shared/layout/utils");
 const promise = require("promise");
+const { Task } = require("devtools/shared/task");
 
 loader.lazyImporter(this, "Downloads", "resource://gre/modules/Downloads.jsm");
-loader.lazyImporter(this, "Task", "resource://gre/modules/Task.jsm");
 loader.lazyImporter(this, "OS", "resource://gre/modules/osfile.jsm");
 loader.lazyImporter(this, "FileUtils", "resource://gre/modules/FileUtils.jsm");
 loader.lazyImporter(this, "PrivateBrowsingUtils",

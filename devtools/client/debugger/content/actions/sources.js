@@ -9,6 +9,7 @@ const Services = require("Services");
 const { dumpn } = require("devtools/shared/DevToolsUtils");
 const { PROMISE, HISTOGRAM_ID } = require("devtools/client/shared/redux/middleware/promise");
 const { getSource, getSourceText } = require("../queries");
+const { Task } = require("devtools/shared/task");
 
 const NEW_SOURCE_IGNORED_URLS = ["debugger eval code", "XStringBundle"];
 const FETCH_SOURCE_RESPONSE_DELAY = 200; // ms

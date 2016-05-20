@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Task } = require("resource://gre/modules/Task.jsm");
+const { Task } = require("devtools/shared/task");
 const { ViewHelpers, setNamedTimeout, clearNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
 const { LocalizationHelper } = require("devtools/client/shared/l10n");
 

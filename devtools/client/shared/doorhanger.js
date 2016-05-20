@@ -7,7 +7,7 @@
 const { Ci, Cc } = require("chrome");
 const Services = require("Services");
 const { DOMHelpers } = require("resource://devtools/client/shared/DOMHelpers.jsm");
-const { Task } = require("resource://gre/modules/Task.jsm");
+const { Task } = require("devtools/shared/task");
 const { Promise } = require("resource://gre/modules/Promise.jsm");
 const { getMostRecentBrowserWindow } = require("sdk/window/utils");
 

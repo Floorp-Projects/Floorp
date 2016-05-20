@@ -5,7 +5,7 @@
 "use strict";
 
 const Services = require("Services");
-const { Task } = require("resource://gre/modules/Task.jsm");
+const { Task } = require("devtools/shared/task");
 const { GetDevices } = require("devtools/client/shared/devices");
 const { addDevice, addDeviceType } = require("./actions/devices");
 

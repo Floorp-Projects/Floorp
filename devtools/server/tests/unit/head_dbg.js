@@ -11,7 +11,7 @@ var CC = Components.Constructor;
 const { require, loader } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const { worker } = Cu.import("resource://devtools/shared/worker/loader.js", {});
 const promise = require("promise");
-const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
+const { Task } = require("devtools/shared/task");
 
 const Services = require("Services");
 // Always log packets when running tests. runxpcshelltests.py will throw

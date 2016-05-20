@@ -13,10 +13,10 @@ const Services = require("Services");
 const promise = require("promise");
 const {isWindowIncluded} = require("devtools/shared/layout/utils");
 const specs = require("devtools/shared/specs/storage");
+const { Task } = require("devtools/shared/task");
 
 loader.lazyImporter(this, "OS", "resource://gre/modules/osfile.jsm");
 loader.lazyImporter(this, "Sqlite", "resource://gre/modules/Sqlite.jsm");
-loader.lazyImporter(this, "Task", "resource://gre/modules/Task.jsm", "Task");
 
 var gTrackedMessageManager = new Map();
 

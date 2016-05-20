@@ -7,6 +7,7 @@
 const {Cu, Ci} = require("chrome");
 
 const promise = require("promise");
+const {Task} = require("devtools/shared/task");
 
 loader.lazyGetter(this, "system", () => require("devtools/shared/system"));
 loader.lazyGetter(this, "EventEmitter", () => require("devtools/shared/event-emitter"));
@@ -450,11 +451,6 @@ SelectorAutocompleter.prototype = {
         preLabel: query,
         label: value
       };
-
-      // In case of tagNames, change the case to small
-      if (value.match(/.*[\.#][^\.#]{0,}$/) == null) {
-        item.label = value.toLowerCase();
-      }
 
       // In case the query's state is tag and the item's state is id or class
       // adjust the preLabel

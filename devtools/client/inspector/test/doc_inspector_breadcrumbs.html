@@ -64,5 +64,11 @@
       <link />
     </article>
     <div id='pseudo-container'></div>
+    <svg id="vector" viewBox="0 0 10 10">
+      <clipPath id="clip">
+        <rect id="rectangle" x="0" y="0" width="10" height="5"></rect>
+      </clipPath>
+      <circle cx="5" cy="5" r="5" fill="blue" clip-path="url(#clip)"></circle>
+    </svg>
   </body>
 </html>

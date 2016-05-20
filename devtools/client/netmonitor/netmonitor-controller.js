@@ -119,6 +119,7 @@ const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const EventEmitter = require("devtools/shared/event-emitter");
 const Editor = require("devtools/client/sourceeditor/editor");
 const {TimelineFront} = require("devtools/server/actors/timeline");
+const { Task } = require("devtools/shared/task");
 
 XPCOMUtils.defineConstant(this, "EVENTS", EVENTS);
 XPCOMUtils.defineConstant(this, "ACTIVITY_TYPE", ACTIVITY_TYPE);
@@ -132,9 +133,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Curl",
 
 XPCOMUtils.defineLazyModuleGetter(this, "CurlUtils",
   "resource://devtools/client/shared/Curl.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-  "resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
   "resource://gre/modules/PluralForm.jsm");

@@ -6,7 +6,7 @@
 var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 const {require, loader} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const promise = require("promise");
-loader.lazyImporter(this, "Task", "resource://gre/modules/Task.jsm", "Task");
+const { Task } = require("devtools/shared/task");
 
 loader.lazyGetter(this, "nsIProfilerModule", () => {
   return Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);

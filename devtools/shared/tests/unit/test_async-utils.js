@@ -4,7 +4,7 @@
 
 // Test async-utils.js
 
-const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
+const {Task} = require("devtools/shared/task");
 // |const| will not work because
 // it will make the Promise object immutable before assigning.
 // Using Object.defineProperty() instead.

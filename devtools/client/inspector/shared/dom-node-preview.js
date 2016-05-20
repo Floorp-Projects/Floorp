@@ -3,8 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Cu} = require("chrome");
-const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
+const {Task} = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {createNode} = require("devtools/client/animationinspector/utils");
 const { LocalizationHelper } = require("devtools/client/shared/l10n");
@@ -278,7 +277,7 @@ DomNodePreview.prototype = {
 
   render: function (nodeFront) {
     this.nodeFront = nodeFront;
-    let {tagName, attributes} = nodeFront;
+    let {displayName, attributes} = nodeFront;
 
     if (nodeFront.isPseudoElement) {
       this.pseudoEl.textContent = nodeFront.isBeforePseudoElement
@@ -287,7 +286,7 @@ DomNodePreview.prototype = {
       this.pseudoEl.style.display = "inline";
       this.tagNameEl.style.display = "none";
     } else {
-      this.tagNameEl.textContent = tagName.toLowerCase();
+      this.tagNameEl.textContent = displayName;
       this.pseudoEl.style.display = "none";
       this.tagNameEl.style.display = "inline";
     }

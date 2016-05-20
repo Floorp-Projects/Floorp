@@ -6,7 +6,7 @@
 "use strict";
 
 const { Cc, Ci, Cu, Cr } = require("chrome");
-const { Task } = require("resource://gre/modules/Task.jsm");
+const { Task } = require("devtools/shared/task");
 
 loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "EventEmitter",

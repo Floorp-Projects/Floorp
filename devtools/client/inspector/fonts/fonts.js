@@ -6,16 +6,13 @@
 
 "use strict";
 
-const {Cu} = require("chrome");
 const {gDevTools} = require("devtools/client/framework/devtools");
 const Services = require("Services");
 
 const DEFAULT_PREVIEW_TEXT = "Abc";
 const PREVIEW_UPDATE_DELAY = 150;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-  "resource://gre/modules/Task.jsm");
+const {Task} = require("devtools/shared/task");
 
 function FontInspector(inspector, window) {
   this.inspector = inspector;

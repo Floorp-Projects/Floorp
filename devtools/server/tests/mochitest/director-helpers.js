@@ -18,7 +18,7 @@ const { DirectorRegistry,
 
 const { DirectorManagerFront } = require("devtools/server/actors/director-manager");
 
-const {Task} = require("resource://gre/modules/Task.jsm");
+const { Task } = require("devtools/shared/task");
 
 /** *********************************
  *  director helpers functions
