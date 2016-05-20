@@ -294,14 +294,15 @@ TestSampled(const char* aTestName, const char* aMode, int aSeven)
   UseItOrLoseIt(s, aSeven);
 
   // These together constitute exactly one sample.
+  // TODO(ER): Isn't this two samples?
   for (int i = 0; i < aSeven + 9; i++) {
     s = (char*) malloc(16);
     UseItOrLoseIt(s, aSeven);
   }
 
-  // These fall 8 bytes short of a full sample.
-  for (int i = 0; i < aSeven + 8; i++) {
-    s = (char*) malloc(8);
+  // These fall 16 bytes short of a full sample.
+  for (int i = 0; i < aSeven; i++) {
+    s = (char*) malloc(16);
     UseItOrLoseIt(s, aSeven);
   }
 
@@ -309,13 +310,13 @@ TestSampled(const char* aTestName, const char* aMode, int aSeven)
   s = (char*) malloc(256);
   UseItOrLoseIt(s, aSeven);
 
-  // This gets more than to a full sample from the |i < aSeven + 8| loop above.
+  // This gets more than to a full sample from the |i < aSeven| loop above.
   s = (char*) malloc(96);
   UseItOrLoseIt(s, aSeven);
 
   // This gets to another full sample.
-  for (int i = 0; i < aSeven - 2; i++) {
-    s = (char*) malloc(8);
+  for (int i = 0; i < aSeven - 4; i++) {
+    s = (char*) malloc(16);
     UseItOrLoseIt(s, aSeven);
   }
 
