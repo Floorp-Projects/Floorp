@@ -506,8 +506,9 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
   BufferMode bufferMode = BufferMode::BUFFERED;
   if (mTarget) {
     // If we have a copy target, then we don't have a widget-provided mDrawTarget (currently). Use a dummy
-    // placeholder so that CreateRenderTarget() works.
-    mDrawTarget = gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
+    // placeholder so that CreateRenderTarget() works. This is only used to create a new buffered
+    // draw target that we composite into, then copy the results the destination.
+    mDrawTarget = mTarget;
   } else {
     // StartRemoteDrawingInRegion can mutate mInvalidRegion.
     mDrawTarget = mWidget->StartRemoteDrawingInRegion(mInvalidRegion, &bufferMode);
