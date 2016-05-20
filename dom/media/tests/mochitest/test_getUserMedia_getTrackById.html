@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    title: "Basic getTrackById test of gUM stream",
+    bug: "1208390",
+  });
+
+  runTest(() => {
+    var constraints = {audio: true, video: true};
+    return getUserMedia(constraints).then(stream => {
+      is(stream.getTrackById(""), null,
+         "getTrackById of non-matching string should return null");
+
+      let audioTrack = stream.getAudioTracks()[0];
+      is(stream.getTrackById(audioTrack.id), audioTrack,
+         "getTrackById with matching id should return the track");
+
+      let videoTrack = stream.getVideoTracks()[0];
+      is(stream.getTrackById(videoTrack.id), videoTrack,
+         "getTrackById with matching id should return the track");
+
+      stream.removeTrack(audioTrack);
+      is(stream.getTrackById(audioTrack.id), null,
+         "getTrackById with id of removed track should return null");
+
+      let newStream = new MediaStream();
+      is(newStream.getTrackById(videoTrack.id), null,
+         "getTrackById with id of track in other stream should return null");
+
+      newStream.addTrack(audioTrack);
+      is(newStream.getTrackById(audioTrack.id), audioTrack,
+         "getTrackByid with matching id should return the track");
+
+      newStream.addTrack(videoTrack);
+      is(newStream.getTrackById(videoTrack.id), videoTrack,
+         "getTrackByid with matching id should return the track");
+    });
+  });
+
+</script>
+</pre>
+</body>
+</html>
