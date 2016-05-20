@@ -34,6 +34,8 @@ interface Node : EventTarget {
   [Pure]
   readonly attribute DOMString? baseURI;
 
+  [Pure, BinaryName=getComposedDoc]
+  readonly attribute boolean isConnected;
   [Pure]
   readonly attribute Document? ownerDocument;
   [Pure, Pref="dom.node.rootNode.enabled"]
