@@ -11,8 +11,6 @@
 const URL = "data:text/html;charset=utf8,test page for toolbox switching";
 
 var {Toolbox} = require("devtools/client/framework/toolbox");
-var strings = Services.strings.createBundle(
-  "chrome://devtools/locale/toolbox.properties");
 
 add_task(function* () {
   info("Create a test tab and open the toolbox");
@@ -20,18 +18,18 @@ add_task(function* () {
   let target = TargetFactory.forTab(tab);
   let toolbox = yield gDevTools.showToolbox(target, "webconsole");
 
-  let shortcut = strings.GetStringFromName("toolbox.toggleHost.key");
+  let keyElement = toolbox.doc.getElementById("toolbox-toggle-host-key");
 
   let {SIDE, BOTTOM, WINDOW} = Toolbox.HostType;
   checkHostType(toolbox, BOTTOM, SIDE);
 
   info("Switching from bottom to side");
-  synthesizeKeyShortcut(shortcut, toolbox.win);
+  synthesizeKeyElement(keyElement);
   yield toolbox.once("host-changed");
   checkHostType(toolbox, SIDE, BOTTOM);
 
   info("Switching from side to bottom");
-  synthesizeKeyShortcut(shortcut, toolbox.win);
+  synthesizeKeyElement(keyElement);
   yield toolbox.once("host-changed");
   checkHostType(toolbox, BOTTOM, SIDE);
 
@@ -40,7 +38,7 @@ add_task(function* () {
   checkHostType(toolbox, WINDOW, BOTTOM);
 
   info("Switching from window to bottom");
-  synthesizeKeyShortcut(shortcut, toolbox.win);
+  synthesizeKeyElement(keyElement);
   yield toolbox.once("host-changed");
   checkHostType(toolbox, BOTTOM, WINDOW);
 
