@@ -29,13 +29,13 @@ let initDevices = Task.async(function* (dispatch) {
       }
 
       let newDevice = Object.assign({}, device, {
-        displayed: deviceList.has(device.name) ?
+        displayed: deviceList.includes(device.name) ?
                    true :
                    !!device.featured,
       });
 
       if (newDevice.displayed) {
-        deviceList.add(newDevice.name);
+        deviceList.push(newDevice.name);
       }
 
       dispatch(addDevice(newDevice, type));
@@ -46,18 +46,18 @@ let initDevices = Task.async(function* (dispatch) {
 });
 
 /**
- * Returns a set containing the user preference of displayed devices.
+ * Returns an array containing the user preference of displayed devices.
  *
- * @return {Set} containing the device names that are to be displayed in the
+ * @return {Array} containing the device names that are to be displayed in the
  *         device catalog.
  */
 function loadDeviceList() {
-  let deviceList = new Set();
+  let deviceList = [];
 
   if (Services.prefs.prefHasUserValue(DISPLAYED_DEVICES_PREF)) {
     try {
-      let savedList = Services.prefs.getCharPref(DISPLAYED_DEVICES_PREF);
-      deviceList = new Set(JSON.parse(savedList));
+      deviceList = JSON.parse(Services.prefs.getCharPref(
+        DISPLAYED_DEVICES_PREF));
     } catch (e) {
       console.error(e);
     }
@@ -69,12 +69,11 @@ function loadDeviceList() {
 /**
  * Update the displayed device list preference with the given device list.
  *
- * @param  {Set} devices
- *         Set of device names that are displayed in the device catalog.
+ * @param  {Array} devices
+ *         Array of device names that are displayed in the device catalog.
  */
 function updateDeviceList(devices) {
-  let listToSave = JSON.stringify(Array.from(devices));
-  Services.prefs.setCharPref(DISPLAYED_DEVICES_PREF, listToSave);
+  Services.prefs.setCharPref(DISPLAYED_DEVICES_PREF, JSON.stringify(devices));
 }
 
 exports.initDevices = initDevices;
