@@ -505,7 +505,7 @@ public:
   /**
    * This can be used anytime. Ownership passes to the caller!
    */
-  UniquePtr<LayerUserData> RemoveUserData(void* aKey);
+  nsAutoPtr<LayerUserData> RemoveUserData(void* aKey);
 
   /**
    * This getter can be used anytime.
@@ -1462,7 +1462,7 @@ public:
   /**
    * This can be used anytime. Ownership passes to the caller!
    */
-  UniquePtr<LayerUserData> RemoveUserData(void* aKey);
+  nsAutoPtr<LayerUserData> RemoveUserData(void* aKey);
   /**
    * This getter can be used anytime.
    */

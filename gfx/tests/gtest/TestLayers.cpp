@@ -150,9 +150,9 @@ TEST(Layers, UserData) {
   layer.SetUserData(key3, data3);
 
   // Also checking that the user data is returned but not free'd
-  UniquePtr<LayerUserData> d1(layer.RemoveUserData(key1));
-  UniquePtr<LayerUserData> d2(layer.RemoveUserData(key2));
-  UniquePtr<LayerUserData> d3(layer.RemoveUserData(key3));
+  UniquePtr<LayerUserData> d1(layer.RemoveUserData(key1).forget());
+  UniquePtr<LayerUserData> d2(layer.RemoveUserData(key2).forget());
+  UniquePtr<LayerUserData> d3(layer.RemoveUserData(key3).forget());
   ASSERT_EQ(data1, d1.get());
   ASSERT_EQ(data2, d2.get());
   ASSERT_EQ(data3, d3.get());
