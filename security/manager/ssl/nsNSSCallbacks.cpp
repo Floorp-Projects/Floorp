@@ -1161,10 +1161,6 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
               AccumulateNonECCKeySize(Telemetry::SSL_AUTH_RSA_KEY_SIZE_FULL,
                                       channelInfo.authKeyBits);
               break;
-            case ssl_auth_dsa:
-              AccumulateNonECCKeySize(Telemetry::SSL_AUTH_DSA_KEY_SIZE_FULL,
-                                      channelInfo.authKeyBits);
-              break;
             case ssl_auth_ecdsa:
               AccumulateECCCurve(Telemetry::SSL_AUTH_ECDSA_CURVE_FULL,
                                  channelInfo.authKeyBits);
