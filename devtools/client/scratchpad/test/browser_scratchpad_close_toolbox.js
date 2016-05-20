@@ -4,7 +4,7 @@
 // Test that closing the toolbox after having opened a scratchpad leaves the
 // latter in a functioning state.
 
-var {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
+var {Task} = require("devtools/shared/task");
 var {TargetFactory} = require("devtools/client/framework/target");
 
 function test() {

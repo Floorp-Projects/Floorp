@@ -4,7 +4,7 @@
 "use strict";
 
 const { Cc, Ci, Cu, Cr } = require("chrome");
-const { Task } = require("resource://gre/modules/Task.jsm");
+const { Task } = require("devtools/shared/task");
 
 const PerformanceIO = require("devtools/client/performance/modules/io");
 const RecordingUtils = require("devtools/shared/performance/recording-utils");

@@ -9,7 +9,7 @@ const { Cu, Ci } = require("chrome");
 const { TargetFactory } = require("devtools/client/framework/target");
 const { DebuggerServer } = require("devtools/server/main");
 const { DebuggerClient } = require("devtools/shared/client/main");
-const { Task } = require("resource://gre/modules/Task.jsm");
+const { Task } = require("devtools/shared/task");
 
 /**
  * Construct a Target for a given URL object having various query parameters:

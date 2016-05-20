@@ -25,7 +25,7 @@ const { Class } = require("sdk/core/heritage");
 // Be aggressive about lazy loading, as this will run on every
 // toolbox startup
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
-loader.lazyRequireGetter(this, "Task", "resource://gre/modules/Task.jsm", true);
+loader.lazyRequireGetter(this, "Task", "devtools/shared/task", true);
 loader.lazyRequireGetter(this, "Memory", "devtools/server/performance/memory", true);
 loader.lazyRequireGetter(this, "Framerate", "devtools/server/performance/framerate", true);
 loader.lazyRequireGetter(this, "StackFrameCache", "devtools/server/actors/utils/stack", true);

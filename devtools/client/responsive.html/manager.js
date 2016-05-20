@@ -5,7 +5,7 @@
 "use strict";
 
 const promise = require("promise");
-const { Task } = require("resource://gre/modules/Task.jsm");
+const { Task } = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { TouchEventSimulator } = require("devtools/shared/touch/simulator");
 const { getOwnerWindow } = require("sdk/tabs/utils");

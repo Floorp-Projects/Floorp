@@ -6,7 +6,7 @@
 
 "use strict";
 
-const {Task} = require("resource://gre/modules/Task.jsm");
+const {Task} = require("devtools/shared/task");
 
 const DEFAULT_SHOW_DELAY = 50;
 

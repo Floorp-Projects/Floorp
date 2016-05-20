@@ -9,7 +9,7 @@
 const Services = require("Services");
 const promise = require("promise");
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
-const {Task} = require("resource://gre/modules/Task.jsm");
+const {Task} = require("devtools/shared/task");
 const {gDevTools} = require("devtools/client/framework/devtools");
 
 exports.OptionsPanel = OptionsPanel;

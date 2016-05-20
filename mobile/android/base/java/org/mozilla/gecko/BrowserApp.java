@@ -317,7 +317,7 @@ public class BrowserApp extends GeckoApp
     ));
 
     @NonNull
-    private SearchEngineManager searchEngineManager; // Contains reference to Context - DO NOT LEAK!
+    private SearchEngineManager mSearchEngineManager; // Contains reference to Context - DO NOT LEAK!
 
     private TelemetryDispatcher mTelemetryDispatcher;
     private final SessionMeasurements mSessionMeasurements = new SessionMeasurements();
@@ -702,7 +702,7 @@ public class BrowserApp extends GeckoApp
         final Distribution distribution = Distribution.init(this);
         distribution.addOnDistributionReadyCallback(new DistributionStoreCallback(this, profile.getName()));
 
-        searchEngineManager = new SearchEngineManager(this, distribution);
+        mSearchEngineManager = new SearchEngineManager(this, distribution);
         mTelemetryDispatcher = new TelemetryDispatcher(profile.getDir().getAbsolutePath());
 
         // Init suggested sites engine in BrowserDB.
@@ -1092,7 +1092,7 @@ public class BrowserApp extends GeckoApp
         // including by our own Activities/dialogs, and there is no reason to upload each time we're unobscured.
         //
         // So we're left with onStart/onStop.
-        searchEngineManager.getEngine(new UploadTelemetryCorePingCallback(BrowserApp.this));
+        mSearchEngineManager.getEngine(new UploadTelemetryCorePingCallback(BrowserApp.this));
 
         for (final BrowserAppDelegate delegate : delegates) {
             delegate.onStart(this);
@@ -1393,7 +1393,7 @@ public class BrowserApp extends GeckoApp
             mZoomedView.destroy();
         }
 
-        searchEngineManager.unregisterListeners();
+        mSearchEngineManager.unregisterListeners();
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener) this,
             "Gecko:DelayedStartup",

@@ -4,8 +4,8 @@
 
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-var { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+var { Task } = require("devtools/shared/task");
 var Services = require("Services");
 var { gDevTools } = require("devtools/client/framework/devtools");
 var { TargetFactory } = require("devtools/client/framework/target");
