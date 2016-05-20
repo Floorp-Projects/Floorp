@@ -380,6 +380,11 @@ BrowserGlue.prototype = {
           if (win) {
             data = JSON.parse(data);
             let where = win.whereToOpenLink(data);
+            // Preserve legacy behavior of non-modifier left-clicks
+            // opening in a new selected tab.
+            if (where == "current") {
+              where = "tab";
+            }
             win.openUILinkIn(data.href, where);
             linkHandled.data = true;
           }
