@@ -623,8 +623,22 @@ private:
       } else {                                                          \
         newData =                                                       \
           Servo_GetStyle##name_(mSource.AsServoComputedValues());       \
-        /* the Servo-backed StyleContextSource owns the struct */       \
+        /* The Servo-backed StyleContextSource owns the struct.         \
+         *                                                              \
+         * XXXbholley: Unconditionally caching reset structs here       \
+         * defeats the memory optimization where we lazily allocate     \
+         * mCachedResetData, so that we can avoid performing an FFI     \
+         * call each time we want to get the style structs. We should   \
+         * measure the tradeoffs at some point. If the FFI overhead is  \
+         * low and the memory win significant, we should consider       \
+         * _always_ grabbing the struct over FFI, and potentially       \
+         * giving mCachedInheritedData the same treatment.              \
+         *                                                              \
+         * Note that there is a similar comment in StyleData().         \
+         */                                                             \
         AddStyleBit(NS_STYLE_INHERIT_BIT(name_));                       \
+        SetStyle(eStyleStruct_##name_,                                  \
+                 const_cast<nsStyle##name_*>(newData));                 \
       }                                                                 \
       return newData;                                                   \
     }
