@@ -11,6 +11,7 @@
 #include "mozilla/CSSStyleSheet.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Move.h"
 #include "mozilla/css/ImageLoader.h"
 #include "CSSCalc.h"
 #include "gfxFontConstants.h"
@@ -640,9 +641,7 @@ nsCSSValue::AdoptListValue(UniquePtr<nsCSSValueList> aValue)
   // We have to copy the first element since for owned lists the first
   // element should be an nsCSSValueList_heap object.
   SetListValue();
-  // FIXME: If nsCSSValue gets a swap method or move assignment operator,
-  // we should use that here to avoid allocating an extra value.
-  mValue.mList->mValue = aValue->mValue;
+  mValue.mList->mValue = Move(aValue->mValue);
   mValue.mList->mNext  = aValue->mNext;
   aValue->mNext = nullptr;
   aValue.reset();
@@ -672,10 +671,8 @@ nsCSSValue::AdoptPairListValue(UniquePtr<nsCSSValuePairList> aValue)
   // We have to copy the first element, since for owned pair lists, the first
   // element should be an nsCSSValuePairList_heap object.
   SetPairListValue();
-  // FIXME: If nsCSSValue gets a swap method or move assignment operator,
-  // we should use that here to avoid allocating extra values.
-  mValue.mPairList->mXValue = aValue->mXValue;
-  mValue.mPairList->mYValue = aValue->mYValue;
+  mValue.mPairList->mXValue = Move(aValue->mXValue);
+  mValue.mPairList->mYValue = Move(aValue->mYValue);
   mValue.mPairList->mNext   = aValue->mNext;
   aValue->mNext = nullptr;
   aValue.reset();
