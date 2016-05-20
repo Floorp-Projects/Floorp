@@ -525,7 +525,8 @@ function* execute(script, args, timeout, opts) {
   script = importedScripts.for("content").concat(script);
 
   let sb = sandbox.createMutable(curContainer.frame);
-  let wargs = elementManager.convertWrappedArguments(args, curContainer);
+  let wargs = element.fromJson(
+      args, elementManager, curContainer.frame, curContainer.shadowRoot);
   let res = yield evaluate.sandbox(sb, script, wargs, opts);
 
   return elementManager.wrapValue(res);
@@ -541,7 +542,8 @@ function* executeInSandbox(script, args, timeout, opts) {
     sb = sandbox.augment(sb, new logging.Adapter(contentLog));
   }
 
-  let wargs = elementManager.convertWrappedArguments(args, curContainer);
+  let wargs = element.fromJson(
+      args, elementManager, curContainer.frame, curContainer.shadowRoot);
   let evaluatePromise = evaluate.sandbox(sb, script, wargs, opts);
 
   let res = yield evaluatePromise;
@@ -564,7 +566,8 @@ function* executeSimpleTest(script, args, timeout, opts) {
   // TODO(ato): Not sure this is needed:
   sb = sandbox.augment(sb, new logging.Adapter(contentLog));
 
-  let wargs = elementManager.convertWrappedArguments(args, curContainer);
+  let wargs = element.fromJson(
+      args, elementManager, curContainer.frame, curContainer.shadowRoot);
   let evaluatePromise = evaluate.sandbox(sb, script, wargs, opts);
 
   let res = yield evaluatePromise;
@@ -842,7 +845,8 @@ function setDispatch(batches, touches, batchIndex=0) {
  */
 function multiAction(args, maxLen) {
   // unwrap the original nested array
-  let commandArray = elementManager.convertWrappedArguments(args, curContainer);
+  let commandArray = element.fromJson(
+      args, elementManager, curContainer.frame, curContainer.shadowRoot);
   let concurrentEvent = [];
   let temp;
   for (let i = 0; i < maxLen; i++) {

@@ -58,8 +58,9 @@ action.Chain.prototype.dispatchActions = function(
   }
 
   this.elementManager = elementManager;
-  let commandArray = elementManager.convertWrappedArguments(args, container);
   this.container = container;
+  let commandArray = element.fromJson(
+      args, elementManager, container.frame, container.shadowRoot);
 
   if (touchId == null) {
     touchId = this.nextTouchId++;

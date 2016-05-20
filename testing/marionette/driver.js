@@ -879,7 +879,7 @@ GeckoDriver.prototype.execute_ = function(script, args, timeout, opts = {}) {
 
       opts.timeout = timeout;
       script = this.importedScripts.for(Context.CHROME).concat(script);
-      let wargs = this.curBrowser.elementManager.convertWrappedArguments(args, {frame: sb.window});
+      let wargs = element.fromJson(args, this.curBrowser.elementManager, sb.window);
       let evaluatePromise = evaluate.sandbox(sb, script, wargs, opts);
       return evaluatePromise.then(res => this.curBrowser.elementManager.wrapValue(res));
   }
@@ -904,7 +904,7 @@ GeckoDriver.prototype.executeJSScript = function(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      let wargs = this.curBrowser.elementManager.convertWrappedArguments(args, {frame: win});
+      let wargs = element.fromJson(args, this.curBrowser.elementManager, win);
       let harness = new simpletest.Harness(
           win,
           Context.CHROME,
