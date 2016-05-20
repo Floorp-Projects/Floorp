@@ -53,10 +53,11 @@ tasks:
 
       scopes:
         # Bug 1269443: cache scopes, etc. must be listed explicitly
-        - "docker-worker:cache:level-1-*"
+        - "docker-worker:cache:level-{{level}}-*"
         - "docker-worker:cache:tooltool-cache"
         - "secrets:get:project/taskcluster/gecko/hgfingerprint"
-        - "assume:repo:hg.mozilla.org/try:*"
+        # mozilla-taskcluster will append the appropriate assume:repo:<repo>
+        # scope here.
 
       routes:
         - "index.gecko.v2.{{project}}.latest.firefox.decision"
