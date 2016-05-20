@@ -3,52 +3,37 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nspr.h"
-#include "mozilla/Logging.h"
-
-#include "nsISecureBrowserUI.h"
 #include "nsSecureBrowserUIImpl.h"
-#include "nsCOMPtr.h"
-#include "nsIServiceManager.h"
+
+#include "imgIRequest.h"
+#include "mozilla/Logging.h"
 #include "nsCURILoader.h"
+#include "nsIAssociatedContentSecurity.h"
+#include "nsIChannel.h"
+#include "nsIDOMWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocument.h"
-#include "nsIDOMElement.h"
-#include "nsPIDOMWindow.h"
-#include "nsIWebProgress.h"
-#include "nsIWebProgressListener.h"
-#include "nsIChannel.h"
-#include "nsIHttpChannel.h"
-#include "nsIFileChannel.h"
-#include "nsIWyciwygChannel.h"
 #include "nsIFTPChannel.h"
-#include "nsITransportSecurityInfo.h"
-#include "nsISSLStatus.h"
-#include "nsIURI.h"
-#include "nsISecurityEventSink.h"
-#include "nsISecurityInfoProvider.h"
-#include "imgIRequest.h"
-#include "nsThreadUtils.h"
-#include "nsNetCID.h"
-#include "nsNetUtil.h"
-#include "nsCRT.h"
+#include "nsIFileChannel.h"
+#include "nsIHttpChannel.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIProtocolHandler.h"
+#include "nsISSLStatus.h"
+#include "nsISecurityInfoProvider.h"
+#include "nsIServiceManager.h"
+#include "nsITransportSecurityInfo.h"
+#include "nsIWebProgress.h"
+#include "nsIWyciwygChannel.h"
+#include "nsNetCID.h"
+#include "nsNetUtil.h"
+#include "nsPIDOMWindow.h"
+#include "nsThreadUtils.h"
+#include "nspr.h"
+#include "nsString.h"
 
 using namespace mozilla;
 
-//
-// Log module for nsSecureBrowserUI logging...
-//
-// To enable logging (see prlog.h for full details):
-//
-//    set NSPR_LOG_MODULES=nsSecureBrowserUI:5
-//    set NSPR_LOG_FILE=nspr.log
-//
-// this enables LogLevel::Debug level information and places all output in
-// the file nspr.log
-//
 LazyLogModule gSecureDocLog("nsSecureBrowserUI");
 
 struct RequestHashEntry : PLDHashEntryHdr {
@@ -77,26 +62,6 @@ static const PLDHashTableOps gMapOps = {
   RequestMapInitEntry
 };
 
-#ifdef DEBUG
-class nsAutoAtomic {
-  public:
-    explicit nsAutoAtomic(Atomic<int32_t> &i)
-    :mI(i) {
-      mI++;
-    }
-
-    ~nsAutoAtomic() {
-      mI--;
-    }
-
-  protected:
-    Atomic<int32_t> &mI;
-
-  private:
-    nsAutoAtomic(); // not accessible
-};
-#endif
-
 nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
   : mNotifiedSecurityState(lis_no_security)
   , mNotifiedToplevelIsEV(false)
@@ -110,7 +75,7 @@ nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
   , mRestoreSubrequests(false)
   , mOnLocationChangeSeen(false)
 #ifdef DEBUG
-  , mOnStateLocationChangeReentranceDetection(0)
+  , mEntered(false)
 #endif
   , mTransferringRequests(&gMapOps, sizeof(RequestHashEntry))
 {
@@ -467,11 +432,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
                                      nsresult aStatus)
 {
   MOZ_ASSERT(NS_IsMainThread());
-#ifdef DEBUG
-  nsAutoAtomic atomic(mOnStateLocationChangeReentranceDetection);
-  NS_ASSERTION(mOnStateLocationChangeReentranceDetection == 1,
-               "unexpected parallel nsIWebProgress OnStateChange and/or OnLocationChange notification");
-#endif
+  ReentrancyGuard guard(*this);
   /*
     All discussion, unless otherwise mentioned, only refers to
     http, https, file or wyciwig requests.
@@ -1088,11 +1049,8 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
                                         uint32_t aFlags)
 {
   MOZ_ASSERT(NS_IsMainThread());
-#ifdef DEBUG
-  nsAutoAtomic atomic(mOnStateLocationChangeReentranceDetection);
-  NS_ASSERTION(mOnStateLocationChangeReentranceDetection == 1,
-               "unexpected parallel nsIWebProgress OnStateChange and/or OnLocationChange notification");
-#endif
+  ReentrancyGuard guard(*this);
+
   MOZ_LOG(gSecureDocLog, LogLevel::Debug,
          ("SecureUI:%p: OnLocationChange\n", this));
 
