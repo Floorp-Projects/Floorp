@@ -75,3 +75,7 @@ FINAL_LIBRARY = 'xul-gtest'
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wno-error=shadow']
+
+USE_LIBS += [
+   'rlz',
+]
