@@ -2858,6 +2858,8 @@ TabParent::GetUseAsyncPanZoom(bool* useAsyncPanZoom)
 NS_IMETHODIMP
 TabParent::SetDocShellIsActive(bool isActive)
 {
+  // docshell is consider prerendered only if not active yet
+  mIsPrerendered &= !isActive;
   mDocShellIsActive = isActive;
   Unused << SendSetDocShellIsActive(isActive, true);
   return NS_OK;
@@ -2871,8 +2873,17 @@ TabParent::GetDocShellIsActive(bool* aIsActive)
 }
 
 NS_IMETHODIMP
+TabParent::GetIsPrerendered(bool* aIsPrerendered)
+{
+  *aIsPrerendered = mIsPrerendered;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 TabParent::SetDocShellIsActiveAndForeground(bool isActive)
 {
+  // docshell is consider prerendered only if not active yet
+  mIsPrerendered &= !isActive;
   mDocShellIsActive = isActive;
   Unused << SendSetDocShellIsActive(isActive, false);
   return NS_OK;

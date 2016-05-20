@@ -287,6 +287,17 @@
         </body>
       </method>
 
+      <method name="makePrerenderedBrowserActive">
+        <body>
+        <![CDATA[
+          let frameLoader = this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
+          if (frameLoader) {
+            frameLoader.makePrerenderedLoaderActive();
+          }
+        ]]>
+        </body>
+      </method>
+
       <property name="imageDocument"
                 readonly="true">
         <getter>
