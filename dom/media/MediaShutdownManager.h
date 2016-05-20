@@ -7,14 +7,14 @@
 #if !defined(MediaShutdownManager_h_)
 #define MediaShutdownManager_h_
 
-#include "nsIObserver.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
-#include "nsIThread.h"
 #include "nsCOMPtr.h"
-#include "nsTHashtable.h"
+#include "nsIAsyncShutdown.h"
+#include "nsIThread.h"
 #include "nsHashKeys.h"
+#include "nsTHashtable.h"
 
 namespace mozilla {
 
@@ -57,10 +57,10 @@ class MediaDecoder;
 //  MediaShutdownManager& instance = MediaShutdownManager::Instance();
 //  instance.Unregister(someDecoder); // Warning! May delete instance!
 //  instance.Register(someOtherDecoder); // BAD! instance may be dangling!
-class MediaShutdownManager : public nsIObserver {
+class MediaShutdownManager : public nsIAsyncShutdownBlocker {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
+  NS_DECL_NSIASYNCSHUTDOWNBLOCKER
 
   // The MediaShutdownManager is a singleton, access its instance with
   // this accessor.
@@ -79,8 +79,6 @@ private:
 
   MediaShutdownManager();
   virtual ~MediaShutdownManager();
-
-  void Shutdown();
 
   // Ensures we have a shutdown listener if we need one, and removes the
   // listener and destroys the singleton if we don't.
