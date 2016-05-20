@@ -250,56 +250,6 @@ element.Store = class {
 
     return result;
   }
-
-  /**
-   * Convert any ELEMENT references in 'args' to the actual elements
-   *
-   * @param object args
-   *        Arguments passed in by client
-   * @param nsIDOMWindow, ShadowRoot container
-   *        The window and an optional shadow root that contains the element
-   *
-   * @returns object
-   *        Returns the objects passed in by the client, with the
-   *        reference IDs replaced by the actual elements.
-   */
-  convertWrappedArguments(args, container) {
-    let converted;
-    switch (typeof(args)) {
-      case 'number':
-      case 'string':
-      case 'boolean':
-        converted = args;
-        break;
-      case 'object':
-        if (args == null) {
-          converted = null;
-        }
-        else if (Object.prototype.toString.call(args) == '[object Array]') {
-          converted = [];
-          for (let i in args) {
-            converted.push(this.convertWrappedArguments(args[i], container));
-          }
-        }
-        else if (((typeof(args[element.LegacyKey]) === 'string') && args.hasOwnProperty(element.LegacyKey)) ||
-                 ((typeof(args[element.Key]) === 'string') &&
-                     args.hasOwnProperty(element.Key))) {
-          let elementUniqueIdentifier = args[element.Key] ? args[element.Key] : args[element.LegacyKey];
-          converted = this.get(elementUniqueIdentifier, container);
-          if (converted == null) {
-            throw new WebDriverError(`Unknown element: ${elementUniqueIdentifier}`);
-          }
-        }
-        else {
-          converted = {};
-          for (let prop in args) {
-            converted[prop] = this.convertWrappedArguments(args[prop], container);
-          }
-        }
-        break;
-    }
-    return converted;
-  }
 };
 
 /**
@@ -703,6 +653,63 @@ element.makeWebElement = function(uuid) {
 element.generateUUID = function() {
   let uuid = uuidGen.generateUUID().toString();
   return uuid.substring(1, uuid.length - 1);
+};
+
+/**
+ * Convert any web elements in arbitrary objects to DOM elements by
+ * looking them up in the seen element store.
+ *
+ * @param {?} obj
+ *     Arbitrary object containing web elements.
+ * @param {element.Store} seenEls
+ *     Element store to use for lookup of web element references.
+ * @param {Window} win
+ *     Window.
+ * @param {ShadowRoot} shadowRoot
+ *     Shadow root.
+ *
+ * @return {?}
+ *     Same object as provided by |obj| with the web elements replaced
+ *     by DOM elements.
+ */
+element.fromJson = function(
+    obj, seenEls, win, shadowRoot = undefined) {
+  switch (typeof(obj)) {
+    case "boolean":
+    case "number":
+    case "string":
+      return obj;
+
+    case "object":
+      if (obj === null) {
+        return obj;
+      }
+
+      // arrays
+      else if (Array.isArray(obj)) {
+        return obj.map(e => element.fromJson(e, seenEls, win, shadowRoot));
+      }
+
+      // web elements
+      else if (Object.keys(obj).includes(element.Key) ||
+          Object.keys(obj).includes(element.LegacyKey)) {
+        let uuid = obj[element.Key] || obj[element.LegacyKey];
+        let el = seenEls.get(uuid, {frame: win, shadowRoot: shadowRoot});
+        if (!el) {
+          throw new WebDriverError(`Unknown element: ${uuid}`);
+        }
+        return el;
+      }
+
+      // arbitrary objects
+      else {
+        let rv = {};
+        for (let prop in obj) {
+          rv[prop] = element.fromJson(obj[prop], seenEls, win, shadowRoot);
+        }
+        return rv;
+      }
+  }
 };
 
 /**
