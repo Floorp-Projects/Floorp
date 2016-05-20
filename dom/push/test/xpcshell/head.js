@@ -24,6 +24,8 @@ const servicePrefs = new Preferences('dom.push.');
 
 const WEBSOCKET_CLOSE_GOING_AWAY = 1001;
 
+const MS_IN_ONE_DAY = 24 * 60 * 60 * 1000;
+
 var isParent = Cc['@mozilla.org/xre/runtime;1']
                  .getService(Ci.nsIXULRuntime).processType ==
                  Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
