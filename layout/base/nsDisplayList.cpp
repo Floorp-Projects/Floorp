@@ -3394,20 +3394,19 @@ nsDisplayBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
   aDrawTarget.FillRect(rect, color);
 #else
   gfxContext* ctx = aCtx->ThebesContext();
+  gfxRect bounds =
+    nsLayoutUtils::RectToGfxRect(borderBox,
+                                 mFrame->PresContext()->AppUnitsPerDevPixel());
 
   uint8_t clip = mBackgroundStyle->mImage.mLayers[0].mClip;
   if (clip == NS_STYLE_IMAGELAYER_CLIP_TEXT) {
-    gfxContextAutoSaveRestore save(ctx);
-
     GenerateAndPushTextMask(mFrame, aCtx, borderBox);
     ctx->SetColor(mColor);
+    ctx->Rectangle(bounds, true);
     ctx->Fill();
     ctx->PopGroupAndBlend();
     return;
   }
-
-  gfxRect bounds =
-    nsLayoutUtils::RectToGfxRect(borderBox, mFrame->PresContext()->AppUnitsPerDevPixel());
 
   ctx->SetColor(mColor);
   ctx->NewPath();
