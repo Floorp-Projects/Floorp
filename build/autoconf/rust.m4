@@ -106,7 +106,7 @@ AC_DEFUN([MOZ_RUST_SUPPORT], [
       i*86-pc-mingw32)
           # XXX better detection of CXX needed here, to figure out whether
           # we need i686-pc-windows-gnu instead, since mingw32 builds work.
-          rust_target=i586-pc-windows-msvc
+          rust_target=i686-pc-windows-msvc
           ;;
       x86_64-pc-mingw32)
           # XXX and here as well

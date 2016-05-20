@@ -7,16 +7,23 @@
 interface nsISimpleEnumerator;
 interface nsIX509Cert;
 
+%{C++
+typedef struct CERTCertListStr CERTCertList;
+%}
+[ptr] native CERTCertListPtr(CERTCertList);
+
 [scriptable, uuid(ae74cda5-cd2f-473f-96f5-f0b7fff62c68)]
 interface nsIX509CertList : nsISupports {
    void addCert(in nsIX509Cert cert);
    void deleteCert(in nsIX509Cert cert);
    nsISimpleEnumerator getEnumerator();
 
-   /* getRawCertList MUST be called only from functions where
-    * the nssShutdownPreventionLock has been adquired.
+   /**
+    * Returns the raw, backing cert list.
+    * Must be called only from functions where an nsNSSShutDownPreventionLock
+    * has been acquired.
     */
-   [notxpcom, noscript] voidPtr getRawCertList();
+   [notxpcom, noscript] CERTCertListPtr getRawCertList();
 
    /**
     * Test whether two certificate list instances represent the same

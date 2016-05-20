@@ -948,7 +948,7 @@ Debugger::wrapEnvironment(JSContext* cx, Handle<Env*> env, MutableHandleValue rv
             return false;
         }
 
-        CrossCompartmentKey key(CrossCompartmentKey::DebuggerEnvironment, object, env);
+        CrossCompartmentKey key(object, env, CrossCompartmentKey::DebuggerEnvironment);
         if (!object->compartment()->putWrapper(cx, key, ObjectValue(*envobj))) {
             NukeDebuggerWrapper(envobj);
             environments.remove(env);
@@ -992,7 +992,7 @@ Debugger::wrapDebuggeeValue(JSContext* cx, MutableHandleValue vp)
             }
 
             if (obj->compartment() != object->compartment()) {
-                CrossCompartmentKey key(CrossCompartmentKey::DebuggerObject, object, obj);
+                CrossCompartmentKey key(object, obj, CrossCompartmentKey::DebuggerObject);
                 if (!object->compartment()->putWrapper(cx, key, ObjectValue(*dobj))) {
                     NukeDebuggerWrapper(dobj);
                     objects.remove(obj);
@@ -5063,7 +5063,7 @@ Debugger::newDebuggerScript(JSContext* cx, Handle<DebuggerScriptReferent> refere
 
 template <typename ReferentVariant, typename Referent, typename Map>
 JSObject*
-Debugger::wrapVariantReferent(JSContext* cx, Map& map, CrossCompartmentKey::Kind keyKind,
+Debugger::wrapVariantReferent(JSContext* cx, Map& map, Handle<CrossCompartmentKey> key,
                               Handle<ReferentVariant> referent)
 {
     assertSameCompartment(cx, object);
@@ -5082,7 +5082,6 @@ Debugger::wrapVariantReferent(JSContext* cx, Map& map, CrossCompartmentKey::Kind
             return nullptr;
         }
 
-        CrossCompartmentKey key(keyKind, object, untaggedReferent);
         if (!object->compartment()->putWrapper(cx, key, ObjectValue(*wrapper))) {
             NukeDebuggerWrapper(wrapper);
             map.remove(untaggedReferent);
@@ -5100,11 +5099,16 @@ Debugger::wrapVariantReferent(JSContext* cx, Handle<DebuggerScriptReferent> refe
 {
     JSObject* obj;
     if (referent.is<JSScript*>()) {
+        Handle<JSScript*> untaggedReferent = referent.template as<JSScript*>();
+        Rooted<CrossCompartmentKey> key(cx, CrossCompartmentKey(object, untaggedReferent));
         obj = wrapVariantReferent<DebuggerScriptReferent, JSScript*, ScriptWeakMap>(
-            cx, scripts, CrossCompartmentKey::DebuggerScript, referent);
+            cx, scripts, key, referent);
     } else {
+        Handle<WasmModuleObject*> untaggedReferent = referent.template as<WasmModuleObject*>();
+        Rooted<CrossCompartmentKey> key(cx, CrossCompartmentKey(object, untaggedReferent,
+                                        CrossCompartmentKey::DebuggerObjectKind::DebuggerWasmScript));
         obj = wrapVariantReferent<DebuggerScriptReferent, WasmModuleObject*, WasmModuleWeakMap>(
-            cx, wasmModuleScripts, CrossCompartmentKey::DebuggerWasmScript, referent);
+            cx, wasmModuleScripts, key, referent);
     }
     MOZ_ASSERT_IF(obj, GetScriptReferent(obj) == referent);
     return obj;
@@ -6410,11 +6414,17 @@ Debugger::wrapVariantReferent(JSContext* cx, Handle<DebuggerSourceReferent> refe
 {
     JSObject* obj;
     if (referent.is<ScriptSourceObject*>()) {
+        Handle<ScriptSourceObject*> untaggedReferent = referent.template as<ScriptSourceObject*>();
+        Rooted<CrossCompartmentKey> key(cx, CrossCompartmentKey(object, untaggedReferent,
+                                    CrossCompartmentKey::DebuggerObjectKind::DebuggerSource));
         obj = wrapVariantReferent<DebuggerSourceReferent, ScriptSourceObject*, SourceWeakMap>(
-            cx, sources, CrossCompartmentKey::DebuggerSource, referent);
+            cx, sources, key, referent);
     } else {
+        Handle<WasmModuleObject*> untaggedReferent = referent.template as<WasmModuleObject*>();
+        Rooted<CrossCompartmentKey> key(cx, CrossCompartmentKey(object, untaggedReferent,
+                                    CrossCompartmentKey::DebuggerObjectKind::DebuggerWasmSource));
         obj = wrapVariantReferent<DebuggerSourceReferent, WasmModuleObject*, WasmModuleWeakMap>(
-            cx, wasmModuleSources, CrossCompartmentKey::DebuggerWasmSource, referent);
+            cx, wasmModuleSources, key, referent);
     }
     MOZ_ASSERT_IF(obj, GetSourceReferent(obj) == referent);
     return obj;

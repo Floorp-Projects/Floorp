@@ -117,6 +117,8 @@ callback TestOptionalArguments = void(optional DOMString aString,
                                       optional TestInterface? anInterface,
                                       optional TestInterface anotherInterface,
                                       optional long aLong);
+// If you add a new test callback, add it to the forceCallbackGeneration
+// method on TestInterface so it actually gets tested.
 
 TestInterface implements ImplementedInterface;
 
@@ -518,6 +520,33 @@ interface TestInterface {
   void passOptionalNullableTreatAsNullCallbackWithDefaultValue(optional TestTreatAsNullCallback? arg = null);
   attribute TestTreatAsNullCallback treatAsNullCallback;
   attribute TestTreatAsNullCallback? nullableTreatAsNullCallback;
+
+  // Force code generation of the various test callbacks we have.
+  void forceCallbackGeneration(TestIntegerReturn arg1,
+                               TestNullableIntegerReturn arg2,
+                               TestBooleanReturn arg3,
+                               TestFloatReturn arg4,
+                               TestStringReturn arg5,
+                               TestEnumReturn arg6,
+                               TestInterfaceReturn arg7,
+                               TestNullableInterfaceReturn arg8,
+                               TestExternalInterfaceReturn arg9,
+                               TestNullableExternalInterfaceReturn arg10,
+                               TestCallbackInterfaceReturn arg11,
+                               TestNullableCallbackInterfaceReturn arg12,
+                               TestCallbackReturn arg13,
+                               TestNullableCallbackReturn arg14,
+                               TestObjectReturn arg15,
+                               TestNullableObjectReturn arg16,
+                               TestTypedArrayReturn arg17,
+                               TestNullableTypedArrayReturn arg18,
+                               TestSequenceReturn arg19,
+                               TestNullableSequenceReturn arg20,
+                               TestIntegerArguments arg21,
+                               TestInterfaceArguments arg22,
+                               TestStringEnumArguments arg23,
+                               TestObjectArguments arg24,
+                               TestOptionalArguments arg25);
 
   // Any types
   void passAny(any arg);

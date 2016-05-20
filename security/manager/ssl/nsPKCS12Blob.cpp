@@ -5,6 +5,7 @@
 #include "nsPKCS12Blob.h"
 
 #include "ScopedNSSTypes.h"
+#include "mozilla/Casting.h"
 #include "nsCRT.h"
 #include "nsCRTGlue.h"
 #include "nsDirectoryServiceDefs.h"
@@ -513,9 +514,9 @@ nsPKCS12Blob::inputToDecoder(SEC_PKCS12DecoderContext *dcx, nsIFile *file)
 SECStatus
 nsPKCS12Blob::digest_open(void *arg, PRBool reading)
 {
-  nsPKCS12Blob *cx = reinterpret_cast<nsPKCS12Blob *>(arg);
+  auto cx = static_cast<nsPKCS12Blob*>(arg);
   NS_ENSURE_TRUE(cx, SECFailure);
-  
+
   if (reading) {
     NS_ENSURE_TRUE(cx->mDigest, SECFailure);
 
@@ -548,17 +549,17 @@ nsPKCS12Blob::digest_open(void *arg, PRBool reading)
 SECStatus
 nsPKCS12Blob::digest_close(void *arg, PRBool remove_it)
 {
-  nsPKCS12Blob *cx = reinterpret_cast<nsPKCS12Blob *>(arg);
+  auto cx = static_cast<nsPKCS12Blob*>(arg);
   NS_ENSURE_TRUE(cx, SECFailure);
 
   delete cx->mDigestIterator;
   cx->mDigestIterator = nullptr;
 
-  if (remove_it) {  
+  if (remove_it) {
     delete cx->mDigest;
     cx->mDigest = nullptr;
   }
-  
+
   return SECSuccess;
 }
 
@@ -567,7 +568,7 @@ nsPKCS12Blob::digest_close(void *arg, PRBool remove_it)
 int
 nsPKCS12Blob::digest_read(void *arg, unsigned char *buf, unsigned long len)
 {
-  nsPKCS12Blob *cx = reinterpret_cast<nsPKCS12Blob *>(arg);
+  auto cx = static_cast<nsPKCS12Blob*>(arg);
   NS_ENSURE_TRUE(cx, SECFailure);
   NS_ENSURE_TRUE(cx->mDigest, SECFailure);
 
@@ -575,13 +576,13 @@ nsPKCS12Blob::digest_read(void *arg, unsigned char *buf, unsigned long len)
   NS_ENSURE_TRUE(cx->mDigestIterator, SECFailure);
 
   unsigned long available = cx->mDigestIterator->size_forward();
-  
+
   if (len > available)
     len = available;
 
   memcpy(buf, cx->mDigestIterator->get(), len);
   cx->mDigestIterator->advance(len);
-  
+
   return len;
 }
 
@@ -590,16 +591,16 @@ nsPKCS12Blob::digest_read(void *arg, unsigned char *buf, unsigned long len)
 int
 nsPKCS12Blob::digest_write(void *arg, unsigned char *buf, unsigned long len)
 {
-  nsPKCS12Blob *cx = reinterpret_cast<nsPKCS12Blob *>(arg);
+  auto cx = static_cast<nsPKCS12Blob*>(arg);
   NS_ENSURE_TRUE(cx, SECFailure);
   NS_ENSURE_TRUE(cx->mDigest, SECFailure);
 
   // make sure we are in write mode, read iterator has not yet been allocated
   NS_ENSURE_FALSE(cx->mDigestIterator, SECFailure);
-  
-  cx->mDigest->Append(reinterpret_cast<char *>(buf),
-                     static_cast<uint32_t>(len));
-  
+
+  cx->mDigest->Append(BitwiseCast<char*, unsigned char*>(buf),
+                      static_cast<uint32_t>(len));
+
   return len;
 }
 

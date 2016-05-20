@@ -7,6 +7,7 @@
 #include "nsNSSU2FToken.h"
 
 #include "CryptoBuffer.h"
+#include "mozilla/Casting.h"
 #include "nsNSSComponent.h"
 #include "pk11pub.h"
 #include "prerror.h"
@@ -245,7 +246,8 @@ GetAttestationCertificate(const UniquePK11SlotInfo& aSlot,
   }
 
   unsigned long serial;
-  unsigned char* serialBytes = reinterpret_cast<unsigned char *>(&serial);
+  unsigned char* serialBytes =
+    mozilla::BitwiseCast<unsigned char*, unsigned long*>(&serial);
   SECStatus srv = PK11_GenerateRandomOnSlot(aSlot.get(), serialBytes,
                                             sizeof(serial));
   if (srv != SECSuccess) {

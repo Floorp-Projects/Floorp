@@ -1806,7 +1806,7 @@ CompositorBridgeParent::RequestNotifyLayerTreeCleared(uint64_t aLayersId, Compos
  */
 class CrossProcessCompositorBridgeParent final : public PCompositorBridgeParent,
                                                  public ShadowLayersManager,
-                                                 public ISurfaceAllocator,
+                                                 public HostIPCAllocator,
                                                  public ShmemAllocator
 {
   friend class CompositorBridgeParent;
@@ -1963,6 +1963,11 @@ public:
                                 mozilla::ipc::Shmem* aShmem) override;
 
   virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
+
+  virtual base::ProcessId GetChildProcessId() override
+  {
+    return OtherPid();
+  }
 
 protected:
   void OnChannelConnected(int32_t pid) override {

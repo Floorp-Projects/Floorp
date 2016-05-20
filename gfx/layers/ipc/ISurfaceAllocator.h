@@ -48,6 +48,7 @@ class ShmemAllocator;
 class ShmemSectionAllocator;
 class LegacySurfaceDescriptorAllocator;
 class ClientIPCAllocator;
+class HostIPCAllocator;
 
 enum BufferCapabilities {
   DEFAULT_BUFFER_CAPS = 0,
@@ -92,6 +93,8 @@ public:
 
   virtual ClientIPCAllocator* AsClientAllocator() { return nullptr; }
 
+  virtual HostIPCAllocator* AsHostIPCAllocator() { return nullptr; }
+
   virtual LegacySurfaceDescriptorAllocator*
   AsLegacySurfaceDescriptorAllocator() { return nullptr; }
 
@@ -121,6 +124,19 @@ public:
 
   virtual int32_t GetMaxTextureSize() const { return gfxPrefs::MaxTextureSize(); }
 };
+
+/// Methods that are specific to the host/parent side.
+class HostIPCAllocator : public ISurfaceAllocator
+{
+public:
+  virtual HostIPCAllocator* AsHostIPCAllocator() override { return this; }
+
+  /**
+   * Get child side's process Id.
+   */
+  virtual base::ProcessId GetChildProcessId() = 0;
+};
+
 
 /// An allocator can provide shared memory.
 ///

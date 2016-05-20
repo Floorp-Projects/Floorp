@@ -1679,6 +1679,11 @@ JSFunction::maybeRelazify(JSRuntime* rt)
     if (comp->isDebuggee() || comp->isSelfHosting)
         return;
 
+    // Don't relazify if the compartment and/or runtime is instrumented to
+    // collect code coverage for analysis.
+    if (comp->collectCoverageForDebug())
+        return;
+
     // Don't relazify functions with JIT code.
     if (!u.i.s.script_->isRelazifiable())
         return;

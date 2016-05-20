@@ -126,6 +126,27 @@ js::TraceChildren(JSTracer* trc, void* thing, JS::TraceKind kind)
     DispatchTraceKindTyped(f, kind, trc, thing);
 }
 
+namespace {
+struct TraceIncomingFunctor {
+    JSTracer* trc_;
+    const JS::CompartmentSet& compartments_;
+    TraceIncomingFunctor(JSTracer* trc, const JS::CompartmentSet& compartments)
+      : trc_(trc), compartments_(compartments)
+    {}
+    using ReturnType = void;
+    template <typename T>
+    ReturnType operator()(T tp) {
+        if (!compartments_.has((*tp)->compartment()))
+            return;
+        TraceManuallyBarrieredEdge(trc_, tp, "cross-compartment wrapper");
+    }
+    // StringWrappers are just used to avoid copying strings
+    // across zones multiple times, and don't hold a strong
+    // reference.
+    ReturnType operator()(JSString** tp) {}
+};
+} // namespace (anonymous)
+
 JS_PUBLIC_API(void)
 JS::TraceIncomingCCWs(JSTracer* trc, const JS::CompartmentSet& compartments)
 {
@@ -134,44 +155,9 @@ JS::TraceIncomingCCWs(JSTracer* trc, const JS::CompartmentSet& compartments)
             continue;
 
         for (JSCompartment::WrapperEnum e(comp); !e.empty(); e.popFront()) {
-            const CrossCompartmentKey& key = e.front().key();
-            JSObject* obj;
-            JSScript* script;
-
-            switch (key.kind) {
-              case CrossCompartmentKey::StringWrapper:
-                // StringWrappers are just used to avoid copying strings
-                // across zones multiple times, and don't hold a strong
-                // reference.
-                continue;
-
-              case CrossCompartmentKey::ObjectWrapper:
-              case CrossCompartmentKey::DebuggerObject:
-              case CrossCompartmentKey::DebuggerSource:
-              case CrossCompartmentKey::DebuggerEnvironment:
-              case CrossCompartmentKey::DebuggerWasmScript:
-              case CrossCompartmentKey::DebuggerWasmSource:
-                obj = static_cast<JSObject*>(key.wrapped);
-                // Ignore CCWs whose wrapped value doesn't live in our given
-                // set of zones.
-                if (!compartments.has(obj->compartment()))
-                    continue;
-
-                TraceManuallyBarrieredEdge(trc, &obj, "cross-compartment wrapper");
-                MOZ_ASSERT(obj == key.wrapped);
-                break;
-
-              case CrossCompartmentKey::DebuggerScript:
-                script = static_cast<JSScript*>(key.wrapped);
-                // Ignore CCWs whose wrapped value doesn't live in our given
-                // set of compartments.
-                if (!compartments.has(script->compartment()))
-                    continue;
-
-                TraceManuallyBarrieredEdge(trc, &script, "cross-compartment wrapper");
-                MOZ_ASSERT(script == key.wrapped);
-                break;
-            }
+            mozilla::DebugOnly<const CrossCompartmentKey> prior = e.front().key();
+            e.front().mutableKey().applyToWrapped(TraceIncomingFunctor(trc, compartments));
+            MOZ_ASSERT(e.front().key() == prior);
         }
     }
 }
