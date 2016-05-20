@@ -836,7 +836,7 @@ function guessKeyNameFromKeyCode_(aKeyCode, win = window)
     case KeyboardEvent.DOM_VK_VOLUME_DOWN:
       return "AudioVolumeDown";
     case KeyboardEvent.DOM_VK_VOLUME_UP:
-      return "VolumeUp";
+      return "AudioVolumeUp";
     case KeyboardEvent.DOM_VK_META:
       return "Meta";
     case KeyboardEvent.DOM_VK_ALTGR:
