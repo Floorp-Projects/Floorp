@@ -21,7 +21,8 @@ namespace mozilla {
 namespace dom {
 
 TabContext::TabContext()
-  : mInitialized(false)
+  : mIsPrerendered(false)
+  , mInitialized(false)
   , mIsMozBrowserElement(false)
   , mContainingAppId(NO_APP_ID)
   , mOriginAttributes()
@@ -192,6 +193,7 @@ TabContext::SignedPkgOriginNoSuffix() const
 
 bool
 TabContext::SetTabContext(bool aIsMozBrowserElement,
+                          bool aIsPrerendered,
                           mozIApplication* aOwnApp,
                           mozIApplication* aAppFrameOwnerApp,
                           const DocShellOriginAttributes& aOriginAttributes,
@@ -222,6 +224,7 @@ TabContext::SetTabContext(bool aIsMozBrowserElement,
 
   mInitialized = true;
   mIsMozBrowserElement = aIsMozBrowserElement;
+  mIsPrerendered = aIsPrerendered;
   mOriginAttributes = aOriginAttributes;
   mContainingAppId = containingAppId;
   mOwnApp = aOwnApp;
@@ -238,7 +241,8 @@ TabContext::AsIPCTabContext() const
   return IPCTabContext(FrameIPCTabContext(originSuffix,
                                           mContainingAppId,
                                           mSignedPkgOriginNoSuffix,
-                                          mIsMozBrowserElement));
+                                          mIsMozBrowserElement,
+                                          mIsPrerendered));
 }
 
 static already_AddRefed<mozIApplication>
@@ -257,6 +261,7 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
   : mInvalidReason(nullptr)
 {
   bool isMozBrowserElement = false;
+  bool isPrerendered = false;
   uint32_t containingAppId = NO_APP_ID;
   DocShellOriginAttributes originAttributes;
   nsAutoCString originSuffix;
@@ -319,6 +324,7 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
         aParams.get_FrameIPCTabContext();
 
       isMozBrowserElement = ipcContext.isMozBrowserElement();
+      isPrerendered = ipcContext.isPrerendered();
       containingAppId = ipcContext.frameOwnerAppId();
       signedPkgOriginNoSuffix = ipcContext.signedPkgOriginNoSuffix();
       originSuffix = ipcContext.originSuffix();
@@ -366,6 +372,7 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
 
   bool rv;
   rv = mTabContext.SetTabContext(isMozBrowserElement,
+                                 isPrerendered,
                                  ownApp,
                                  containingApp,
                                  originAttributes,

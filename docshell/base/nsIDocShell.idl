@@ -647,7 +647,11 @@ interface nsIDocShell : nsIDocShellTreeItem
    * Puts the docshell in prerendering mode. noscript because we want only
    * native code to be able to put a docshell in prerendering.
    */
-  [noscript] void SetIsPrerendered(in boolean prerendered);
+  [noscript] void SetIsPrerendered();
+
+  /**
+   * Whether this docshell is in prerender mode.
+   */
   [infallible] readonly attribute boolean isPrerendered;
 
   /**
