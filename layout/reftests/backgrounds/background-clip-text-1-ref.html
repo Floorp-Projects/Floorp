@@ -1,19 +1,23 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <title>background-clip: text reference</title>
+    <style>
+      div.out {
+        width: 500px;
+        height: 300px;
+        margin: 0px;
+        color: green;
+        font-size: 100px;
+        font-family: serif;
+        -moz-osx-font-smoothing: grayscale;
+      }
+    </style>
   </head>
   <body style="margin: 0px;">
-    <div style="width: 500px; height: 300px;">
-      <svg xmlns="http://www.w3.org/2000/svg" width="500px" height="300px">
-        <defs>
-          <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" style="stop-color:green;stop-opacity:1" />
-            <stop offset="100%" style="stop-color:green;stop-opacity:1" />
-          </linearGradient>
-        </defs>
-        <text x="0" y="200" font-size="100px" fill="url(#grad1)" font-family="serif">TEXT clip</text>
-      </svg>
+    <div class="out">
+      TEXT clip
+      <div style="display:inline-block; width:0px; height:200px;"/>
     </div>
   </body>
 </html>
