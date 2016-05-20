@@ -61,11 +61,6 @@ class VisualStudioBackend(CommonBackend):
 
     This backend is currently considered experimental. There are many things
     not optimal about how it works.
-
-    It's worth noting that lots of file I/O here is not using
-    self._write_file(). That's because we need Windows line endings preserved
-    and self._write_file() currently opens files in text mode, which behaves
-    oddly under MozillaBuild.
     """
 
     def _init(self):
@@ -142,16 +137,6 @@ class VisualStudioBackend(CommonBackend):
     def consume_finished(self):
         out_dir = self._out_dir
         out_proj_dir = os.path.join(self._out_dir, self._projsubdir)
-        try:
-            os.makedirs(out_dir)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
-        try:
-            os.makedirs(out_proj_dir)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
 
         projects = self._write_projects_for_sources(self._libs_to_paths,
             "library", out_proj_dir)
@@ -179,7 +164,7 @@ class VisualStudioBackend(CommonBackend):
 
         # Write out a shared property file with common variables.
         props_path = os.path.join(out_proj_dir, 'mozilla.props')
-        with open(props_path, 'wb') as fh:
+        with self._write_file(props_path, mode='rb') as fh:
             self._write_props(fh)
 
         # Generate some wrapper scripts that allow us to invoke mach inside
@@ -188,15 +173,15 @@ class VisualStudioBackend(CommonBackend):
         # to buffer output from within Visual Studio (surely this is
         # configurable) and the default execution policy of PowerShell doesn't
         # allow custom scripts to be executed.
-        with open(os.path.join(out_dir, 'mach.bat'), 'wb') as fh:
+        with self._write_file(os.path.join(out_dir, 'mach.bat'), mode='rb') as fh:
             self._write_mach_batch(fh)
 
-        with open(os.path.join(out_dir, 'mach.ps1'), 'wb') as fh:
+        with self._write_file(os.path.join(out_dir, 'mach.ps1'), mode='rb') as fh:
             self._write_mach_powershell(fh)
 
         # Write out a solution file to tie it all together.
         solution_path = os.path.join(out_dir, 'mozilla.sln')
-        with open(solution_path, 'wb') as fh:
+        with self._write_file(solution_path, mode='rb') as fh:
             self._write_solution(fh, projects)
 
     def _write_projects_for_sources(self, sources, prefix, out_dir):
@@ -455,11 +440,11 @@ class VisualStudioBackend(CommonBackend):
         root = '%s.vcxproj' % basename
         project_id = get_id(basename.encode('utf-8'))
 
-        with open(os.path.join(out_dir, root), 'wb') as fh:
+        with self._write_file(os.path.join(out_dir, root), mode='rb') as fh:
             project_id, name = VisualStudioBackend.write_vs_project(fh,
                 self._version, project_id, name, **kwargs)
 
-        with open(os.path.join(out_dir, '%s.user' % root), 'w') as fh:
+        with self._write_file(os.path.join(out_dir, '%s.user' % root), mode='rb') as fh:
             fh.write('<?xml version="1.0" encoding="utf-8"?>\r\n')
             fh.write('<Project ToolsVersion="4.0" xmlns="%s">\r\n' %
                 MSBUILD_NAMESPACE)
