@@ -7,8 +7,8 @@
 <window title="datepicker" width="500" height="600"
         onload="setTimeout(testtag_datepickers, 0);"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>  
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>  
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
 <hbox onpopupshown="testtag_datepicker_UI_popup()"
       onpopuphidden="testtag_finish()">
@@ -125,11 +125,6 @@ function testtag_datepicker(dp, type, testid)
   setDateField("date", 15, false, 2002, 10, 15);
   setDateField("date", 0, true, 2002, 10, 15);
   setDateField("date", 32, true, 2002, 10, 15);
-
-  // check that dates overflow properly
-  setDateField("value", "2002-2-40", false, 2002, 2, 12);
-  setDateField("value", "2003-03-32", false, 2003, 3, 1);
-  setDateField("value", "2003-12-32", false, 2004, 0, 1);
 
   // check leap year handling
   setDateField("value", "1600-2-29", false, 1600, 1, 29);
