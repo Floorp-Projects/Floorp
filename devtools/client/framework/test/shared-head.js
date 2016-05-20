@@ -171,10 +171,8 @@ function synthesizeKeyFromKeyTag(key) {
  * https://github.com/electron/electron/blob/master/docs/api/accelerator.md
  *
  * @param {String} key
- * @param {DOMWindow} target
- *        Optional window where to fire the key event
  */
-function synthesizeKeyShortcut(key, target) {
+function synthesizeKeyShortcut(key) {
   // parseElectronKey requires any window, just to access `KeyboardEvent`
   let window = Services.appShell.hiddenDOMWindow;
   let shortcut = KeyShortcuts.parseElectronKey(window, key);
@@ -186,7 +184,7 @@ function synthesizeKeyShortcut(key, target) {
     ctrlKey: shortcut.ctrl,
     metaKey: shortcut.meta,
     shiftKey: shortcut.shift
-  }, target);
+  });
 }
 
 /**

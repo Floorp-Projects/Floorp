@@ -6,8 +6,6 @@
 requestLongerTimeout(2);
 
 var {Toolbox} = require("devtools/client/framework/toolbox");
-var strings = Services.strings.createBundle(
-  "chrome://devtools/locale/toolbox.properties");
 
 add_task(function* () {
   let tab = yield addTab("about:blank");
@@ -20,43 +18,45 @@ add_task(function* () {
 
   let toolbox = yield gDevTools.showToolbox(target, toolIDs[0],
                                             Toolbox.HostType.BOTTOM);
-  let nextShortcut = strings.GetStringFromName("toolbox.nextTool.key")
-  let prevShortcut = strings.GetStringFromName("toolbox.previousTool.key")
+  let nextKey = toolbox.doc.getElementById("toolbox-next-tool-key")
+                           .getAttribute("key");
+  let prevKey = toolbox.doc.getElementById("toolbox-previous-tool-key")
+                           .getAttribute("key");
 
   // Iterate over all tools, starting from options to netmonitor, in normal
   // order.
   for (let i = 1; i < toolIDs.length; i++) {
-    yield testShortcuts(toolbox, i, nextShortcut, toolIDs);
+    yield testShortcuts(toolbox, i, nextKey, toolIDs);
   }
 
   // Iterate again, in the same order, starting from netmonitor (so next one is
   // 0: options).
   for (let i = 0; i < toolIDs.length; i++) {
-    yield testShortcuts(toolbox, i, nextShortcut, toolIDs);
+    yield testShortcuts(toolbox, i, nextKey, toolIDs);
   }
 
   // Iterate over all tools in reverse order, starting from netmonitor to
   // options.
   for (let i = toolIDs.length - 2; i >= 0; i--) {
-    yield testShortcuts(toolbox, i, prevShortcut, toolIDs);
+    yield testShortcuts(toolbox, i, prevKey, toolIDs);
   }
 
   // Iterate again, in reverse order again, starting from options (so next one
   // is length-1: netmonitor).
   for (let i = toolIDs.length - 1; i >= 0; i--) {
-    yield testShortcuts(toolbox, i, prevShortcut, toolIDs);
+    yield testShortcuts(toolbox, i, prevKey, toolIDs);
   }
 
   yield toolbox.destroy();
   gBrowser.removeCurrentTab();
 });
 
-function* testShortcuts(toolbox, index, shortcut, toolIDs) {
+function* testShortcuts(toolbox, index, key, toolIDs) {
   info("Testing shortcut to switch to tool " + index + ":" + toolIDs[index] +
-       " using shortcut " + shortcut);
+       " using key " + key);
 
   let onToolSelected = toolbox.once("select");
-  synthesizeKeyShortcut(shortcut);
+  EventUtils.synthesizeKey(key, {accelKey: true}, toolbox.win);
   let id = yield onToolSelected;
 
   info("toolbox-select event from " + id);
