@@ -4798,10 +4798,7 @@ nsDisplayText::Paint(nsDisplayListBuilder* aBuilder,
 
   params.dirtyRect = extraVisible;
   nsTextFrame::DrawPathCallbacks callbacks;
-  if (aBuilder->IsForGenerateGlyphMask()) {
-    params.callbacks = &callbacks;
-  }
-
+  params.generateTextMask = aBuilder->IsForGenerateGlyphMask();
   f->PaintText(params, *this, mOpacity);
 }
 
@@ -6595,7 +6592,9 @@ nsTextFrame::PaintText(const PaintTextParams& aParams,
     }
   }
 
-  nscolor foregroundColor = textPaintStyle.GetTextColor();
+  nscolor foregroundColor = aParams.generateTextMask
+                            ? NS_RGBA(0, 0, 0, 255)
+                            : textPaintStyle.GetTextColor();
   if (aOpacity != 1.0f) {
     gfx::Color gfxColor = gfx::Color::FromABGR(foregroundColor);
     gfxColor.a *= aOpacity;

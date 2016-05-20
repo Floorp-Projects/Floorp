@@ -492,30 +492,59 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
 }
 
 static void
-ClipBackgroundByText(nsIFrame* aFrame, nsRenderingContext* aContext,
-                     const nsRect& aFillRect)
+GenerateAndPushTextMask(nsIFrame* aFrame, nsRenderingContext* aContext,
+                        const nsRect& aFillRect)
 {
   // The main function of enabling background-clip:text property value.
   // When a nsDisplayBackgroundImage detects "text" bg-clip style, it will call
   // this function to
-  // 1. Ask every text frame objects in aFrame puts glyph paths into aContext.
-  // 2. Clip aContext.
-  //
-  // Then, nsDisplayBackgroundImage paints bg-images into this clipped region,
-  // so we get images embedded in text shape!
+  // 1. Generate a mask by all descendant text frames
+  // 2. Push the generated mask into aContext.
 
-  gfxContext* ctx = aContext->ThebesContext();
-  gfxContextMatrixAutoSaveRestore save(ctx);
-  gfxRect bounds = nsLayoutUtils::RectToGfxRect(aFillRect, aFrame->PresContext()->AppUnitsPerDevPixel());
-  ctx->SetMatrix(ctx->CurrentMatrix().Translate(bounds.TopLeft()));
-  ctx->NewPath();
+  gfxContext* sourceCtx = aContext->ThebesContext();
+  gfxRect bounds =
+    nsLayoutUtils::RectToGfxRect(aFillRect,
+                                 aFrame->PresContext()->AppUnitsPerDevPixel());
 
-  nsLayoutUtils::PaintFrame(aContext, aFrame,
+  // Evaluate required surface size.
+  IntRect drawRect;
+  {
+    gfxContextMatrixAutoSaveRestore matRestore(sourceCtx);
+
+    sourceCtx->SetMatrix(gfxMatrix());
+    gfxRect clipRect = sourceCtx->GetClipExtents();
+    drawRect = RoundedOut(ToRect(clipRect));
+  }
+
+  // Create a mask surface.
+  RefPtr<DrawTarget> sourceTarget = sourceCtx->GetDrawTarget();
+  RefPtr<DrawTarget> maskDT =
+    sourceTarget->CreateSimilarDrawTarget(drawRect.Size(),
+                                          SurfaceFormat::A8);
+  if (!maskDT) {
+    NS_ABORT_OOM(drawRect.width * drawRect.height);
+  }
+  RefPtr<gfxContext> maskCtx = gfxContext::ForDrawTargetWithTransform(maskDT);
+  gfxMatrix currentMatrix = sourceCtx->CurrentMatrix();
+  maskCtx->SetMatrix(gfxMatrix::Translation(bounds.TopLeft()) *
+                     currentMatrix *
+                     gfxMatrix::Translation(-drawRect.TopLeft()));
+
+  // Shade text shape into mask A8 surface.
+  nsRenderingContext rc(maskCtx);
+  nsLayoutUtils::PaintFrame(&rc, aFrame,
                             nsRect(nsPoint(0, 0), aFrame->GetSize()),
                             NS_RGB(255, 255, 255),
                             nsDisplayListBuilderMode::GENERATE_GLYPH, 0);
 
-  ctx->Clip();
+  // Push the generated mask into aContext, so that the caller can pop and
+  // blend with it.
+  Matrix maskTransform = ToMatrix(currentMatrix) *
+                         Matrix::Translation(-drawRect.x, -drawRect.y);
+  maskTransform.Invert();
+
+  RefPtr<SourceSurface> maskSurface = maskDT->Snapshot();
+  sourceCtx->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, 1.0, maskSurface, maskTransform);
 }
 
 /* static */ void
@@ -2920,8 +2949,7 @@ nsDisplayBackgroundImage::PaintInternal(nsDisplayListBuilder* aBuilder,
   uint8_t clip = mBackgroundStyle->mImage.mLayers[mLayer].mClip;
 
   if (clip == NS_STYLE_IMAGELAYER_CLIP_TEXT) {
-    ctx->Save();
-    ClipBackgroundByText(mFrame, aCtx, borderBox);
+    GenerateAndPushTextMask(mFrame, aCtx, borderBox);
   }
 
   image::DrawResult result =
@@ -2932,7 +2960,7 @@ nsDisplayBackgroundImage::PaintInternal(nsDisplayListBuilder* aBuilder,
                                     CompositionOp::OP_OVER);
 
   if (clip == NS_STYLE_IMAGELAYER_CLIP_TEXT) {
-    ctx->Restore();
+    ctx->PopGroupAndBlend();
   }
 
   nsDisplayBackgroundGeometry::UpdateDrawResult(this, result);
@@ -3354,10 +3382,10 @@ nsDisplayBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
   if (clip == NS_STYLE_IMAGELAYER_CLIP_TEXT) {
     gfxContextAutoSaveRestore save(ctx);
 
-    ClipBackgroundByText(mFrame, aCtx, borderBox);
+    GenerateAndPushTextMask(mFrame, aCtx, borderBox);
     ctx->SetColor(mColor);
     ctx->Fill();
-
+    ctx->PopGroupAndBlend();
     return;
   }
 
