@@ -1,5 +1,9 @@
 == first-letter-1.html first-letter-1-ref.html
 != first-letter-1.html first-letter-1-noref.html
+
+== focus-area-percent-units-1.html focus-area-percent-units-1-ref.html
+== focus-area-percent-units-2.html focus-area-percent-units-2-ref.html
+
 == max-height.html max-height-ref.html
 == min-height.html min-height-ref.html
 == overflow-areas-1.html overflow-areas-1-ref.html
