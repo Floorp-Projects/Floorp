@@ -849,6 +849,11 @@ or run without that action (ie: --no-{action})"
         # first grab the buildid
         env['MOZ_BUILD_DATE'] = self.query_buildid()
 
+        # Set the source repository to what we're building from since
+        # the default is to query `hg paths` which isn't reliable with pooled
+        # storage
+        env['MOZ_SOURCE_REPO'] = self.repo_path
+
         if self.query_is_nightly() or self.query_is_nightly_promotion():
             if self.query_is_nightly():
                 # nightly promotion needs to set update_channel but not do all the 'IS_NIGHTLY'
