@@ -26,6 +26,8 @@ var Telemetry = require("devtools/client/shared/telemetry");
 var HUDService = require("devtools/client/webconsole/hudservice");
 var viewSource = require("devtools/client/shared/view-source");
 var { attachThread, detachThread } = require("./attach-thread");
+var Menu = require("devtools/client/framework/menu");
+var MenuItem = require("devtools/client/framework/menu-item");
 
 Cu.import("resource://devtools/client/scratchpad/scratchpad-manager.jsm");
 Cu.import("resource://devtools/client/shared/DOMHelpers.jsm");
@@ -126,11 +128,15 @@ function Toolbox(target, selectedTool, hostType, hostOptions) {
   this._initInspector = null;
   this._inspector = null;
 
+  // Map of frames (id => frame-info) and currently selected frame id.
+  this.frameMap = new Map();
+  this.selectedFrameId = null;
+
   this._toolRegistered = this._toolRegistered.bind(this);
   this._toolUnregistered = this._toolUnregistered.bind(this);
   this._refreshHostTitle = this._refreshHostTitle.bind(this);
   this._toggleAutohide = this._toggleAutohide.bind(this);
-  this.selectFrame = this.selectFrame.bind(this);
+  this.showFramesMenu = this.showFramesMenu.bind(this);
   this._updateFrames = this._updateFrames.bind(this);
   this._splitConsoleOnKeypress = this._splitConsoleOnKeypress.bind(this);
   this.destroy = this.destroy.bind(this);
@@ -410,7 +416,7 @@ Toolbox.prototype = {
       gDevTools.on("pref-changed", this._prefChanged);
 
       let framesMenu = this.doc.getElementById("command-button-frames");
-      framesMenu.addEventListener("command", this.selectFrame, true);
+      framesMenu.addEventListener("click", this.showFramesMenu, false);
 
       let noautohideMenu = this.doc.getElementById("command-button-noautohide");
       noautohideMenu.addEventListener("command", this._toggleAutohide, true);
@@ -1697,17 +1703,67 @@ Toolbox.prototype = {
     });
   },
 
-  selectFrame: function (event) {
-    let windowId = event.target.getAttribute("data-window-id");
+  /**
+   * Show a drop down menu that allows the user to switch frames.
+   */
+  showFramesMenu: function (event) {
+    let menu = new Menu();
+
+    // Generate list of menu items from the list of frames.
+    this.frameMap.forEach(frame => {
+      // A frame is checked if it's the selected one.
+      let checked = frame.id == this.selectedFrameId;
+
+      // Create menu item.
+      menu.append(new MenuItem({
+        label: frame.url,
+        type: "radio",
+        checked,
+        click: () => {
+          this.onSelectFrame(frame.id);
+        }
+      }));
+    });
+
+    // Show a drop down menu with frames.
+    // XXX Missing menu API for specifying target (anchor)
+    // and relative position to it. See also:
+    // https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XUL/Method/openPopup
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1274551
+    let rect = event.target.getBoundingClientRect();
+    let screenX = event.target.ownerDocument.defaultView.mozInnerScreenX;
+    let screenY = event.target.ownerDocument.defaultView.mozInnerScreenY;
+    menu.popup(rect.left + screenX, rect.bottom + screenY, this);
+  },
+
+  /**
+   * Select a frame by sending 'switchToFrame' packet to the backend.
+   */
+  onSelectFrame: function (frameId) {
+    // Send packet to the backend to select specified frame and
+    // wait for 'frameUpdate' event packet to update the UI.
     let packet = {
       to: this._target.form.actor,
       type: "switchToFrame",
-      windowId: windowId
+      windowId: frameId
     };
     this._target.client.request(packet);
-    // Wait for frameUpdate event to update the UI
   },
 
+  /**
+   * A handler for 'frameUpdate' packets received from the backend.
+   * Following properties might be set on the packet:
+   *
+   * destroyAll {Boolean}: All frames have been destroyed.
+   * selected {Number}: A frame has been selected
+   * frames {Array}: list of frames. Every frame can have:
+   *                 id {Number}: frame ID
+   *                 url {String}: frame URL
+   *                 title {String}: frame title
+   *                 destroy {Boolean}: Set to true if destroyed
+   *                 parentID {Number}: ID of the parent frame (not set
+   *                                    for top level window)
+   */
   _updateFrames: function (event, data) {
     if (!Services.prefs.getBoolPref("devtools.command-button-frames.enabled")) {
       return;
@@ -1718,58 +1774,41 @@ Toolbox.prototype = {
       return;
     }
 
-    let menu = this.doc.getElementById("command-button-frames");
-
+    // Store (synchronize) data about all existing frames on the backend
     if (data.destroyAll) {
-      let menupopup = menu.firstChild;
-      while (menupopup.firstChild) {
-        menupopup.firstChild.remove();
-      }
-      return;
+      this.frameMap.clear();
     } else if (data.selected) {
-      let item = menu.querySelector("menuitem[data-window-id=\"" + data.selected + "\"]");
-      if (!item) {
-        return;
-      }
-      // Toggle the toolbarbutton if we selected a non top-level frame
-      if (item.hasAttribute("data-parent-id")) {
-        menu.setAttribute("checked", "true");
-      } else {
-        menu.removeAttribute("checked");
-      }
-      // Uncheck the previously selected frame
-      let selected = menu.querySelector("menuitem[checked=true]");
-      if (selected) {
-        selected.removeAttribute("checked");
-      }
-      // Check the new one
-      item.setAttribute("checked", "true");
+      this.selectedFrameId = data.selected;
     } else if (data.frames) {
-      data.frames.forEach(win => {
-        let item = menu.querySelector("menuitem[data-window-id=\"" + win.id + "\"]");
-        if (win.destroy) {
-          if (item) {
-            item.remove();
-          }
-          return;
+      data.frames.forEach(frame => {
+        if (frame.destroy) {
+          this.frameMap.delete(frame.id);
+        } else {
+          this.frameMap.set(frame.id, frame);
         }
-        if (!item) {
-          item = this.doc.createElement("menuitem");
-          item.setAttribute("type", "radio");
-          item.setAttribute("data-window-id", win.id);
-          if (win.parentID) {
-            item.setAttribute("data-parent-id", win.parentID);
-          }
-          // If we register a root docshell and we don't have any selected,
-          // consider it as the currently targeted one.
-          if (!win.parentID && !menu.querySelector("menuitem[checked=true]")) {
-            item.setAttribute("checked", "true");
-            menu.removeAttribute("checked");
-          }
-          menu.firstChild.appendChild(item);
-        }
-        item.setAttribute("label", win.url);
       });
+    }
+
+    // If there is no selected frame select the first top level
+    // frame by default. Note that there might be more top level
+    // frames in case of the BrowserToolbox.
+    if (!this.selectedFrameId) {
+      this.selectedFrameId = [...this.frameMap.values()].filter(
+        frame => !frame.parentID)[0].id;
+    }
+
+    // Check out whether top frame is currently selected.
+    // Note that only child frame has parentID.
+    let frame = this.frameMap.get(this.selectedFrameId);
+    let topFrameSelected = !frame.parentID;
+
+    // If non-top level frame is selected the toolbar button is
+    // marked as 'checked' indicating that a child frame is active.
+    let button = this.doc.getElementById("command-button-frames");
+    if (topFrameSelected) {
+      button.removeAttribute("checked");
+    } else {
+      button.setAttribute("checked", "true");
     }
   },
 
