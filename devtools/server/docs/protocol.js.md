@@ -5,35 +5,16 @@ A Simple Hello World
 --------------------
 
 Here's a simple Hello World actor.  It is a global actor (not associated with a given browser tab).
+It has two parts: a spec and an implementation. The spec would go somewhere like
+`devtools/shared/specs/hello-world.js` and would look like:
 
-    let protocol = require("devtools/shared/protocol");
-    let {method, Arg, Option, RetVal} = protocol;
+    const {Arg, RetVal, generateActorSpec} = require("devtools/shared/protocol");
 
-    // This will be called by the framework when you call DebuggerServer.
-    // registerModule(), and adds the actor as a 'helloActor' property
-    // on the root actor.
-    exports.register = function(handle) {
-        handle.addGlobalActor(HelloActor, "helloActor");
-    }
+    const helloWorldSpec = generateActorSpec({
+      typeName: "helloWorld", // I'll explain types later, I promise.
 
-    // This will be called by the framework during shutdown/unload.
-    exports.unregister = function(handle) {
-        handle.removeGlobalActor(HelloActor); // This is optional, all registered actors will be removed automatically
-    }
-
-    // Create the hello actor.  This uses addon-sdk's heritage module
-    // behind the scenes in case you want to understand the class stuff
-    // a bit better.
-
-    let HelloActor = protocol.ActorClass({
-        typeName: "helloWorld", // I'll explain types later, I promise.
-        initialize: function(conn) {
-            protocol.Actor.prototype.initialize.call(this, conn); // This is the worst part of heritage.
-        },
-
-        sayHello: method(function() {
-           return "hello";
-        }, {
+      methods: {
+        sayHello: {
           // The request packet template.  There are no arguments, so
           // it is empty.  The framework will add the "type" and "to"
           // request properties.
@@ -44,21 +25,58 @@ Here's a simple Hello World actor.  It is a global actor (not associated with a 
           response: {
             greeting: RetVal("string") // "string" is the return value type.
           }
-        }
+        },
+      },
     });
 
-This actor now supports a `sayHello` request.  A request/reply will look like this:
+    // Expose the spec so it can be imported by the implementation.
+    exports.helloWorldSpec = helloWorldSpec;
+
+The actor implementation would go somewhere like
+`devtools/server/actors/hello-world.js` and would look like:
+
+    const protocol = require("devtools/shared/protocol");
+    const {helloWorldSpec} = require("devtools/shared/specs/hello-world");
+
+    const HelloActor = protocol.ActorClassWithSpec(helloWorldSpec, {
+      initialize: function (conn) {
+        protocol.Actor.prototype.initialize.call(this, conn); // This is the worst part of heritage.
+      },
+
+      sayHello: function () {
+       return "hello";
+      },
+    });
+
+    // You also need to export the actor class in your module for discovery.
+    exports.HelloActor = HelloActor;
+
+To activate your actor, register it in the `addBrowserActors` method in `server/main.js`.
+The registration code would look something like this:
+
+    this.registerModule("devtools/server/actors/hello-world", {
+      prefix: "hello",
+      constructor: "HelloActor",
+      type: { global: true }
+    });
+
+Your spec allows the actor to support a `sayHello` request.
+A request/reply will look like this:
 
     -> { to: <actorID>, type: "sayHello" }
     <- { from: <actorID>, greeting: "hello" }
 
-Now we can create a client side object.  We call these *front* objects.
+Now we can create a client side object.  We call these *front* objects and
+they typically go in `devtools/shared/fronts/`.
 
 Here's the front for the HelloActor:
 
-    let HelloFront = protocol.FrontClass(HelloActor, {
-      initialize: function(client, form) {
+    const HelloFront = protocol.FrontClassWithSpec(helloWorldSpec, {
+      initialize: function (client, form) {
         protocol.Front.prototype.initialize.call(this, client, form);
+        // This call may not be required but it's a good idea. It will
+        // guarantee that your instance is managed in the pool.
+        this.manage(this);
       }
     });
 
@@ -86,14 +104,21 @@ Magically - Once you have an initial reference to a protocol.js object, it can r
 Arguments
 ---------
 
-`sayHello` has no arguments, so let's add a method that does take arguments:
+`sayHello` has no arguments, so let's add a method that does take arguments.
+Here's an adjustment to the spec:
 
-    echo: method(function(str) {
-        return str + "... " + str + "...";
-    }, {
-      request: { echo: Arg(0, "string") },
-      response: { echoed: RetVal("string") }
-    })
+    methods: {
+      echo: {
+        request: { echo: Arg(0, "string") },
+        response: { echoed: RetVal("string") }
+      }
+    }
+
+Here's an adjustment to the implementation:
+
+    echo: function (str) {
+      return str + "... " + str + "...";
+    }
 
 This tells the library to place the 0th argument, which should be a string, in the `echo` property of the request packet.
 
@@ -112,14 +137,20 @@ The library tries hard to make using fronts feel like natural javascript (or as 
 Returning JSON
 --------------
 
-Maybe your response is an object:
+Maybe your response is an object. Here's an example of a spec:
 
-    addOneTwice: method(function(a, b) {
-        return { a: a + 1, b: b + 1 };
-    }, {
+    methods: {
+      addOneTwice: {
         request: { a: Arg(0, "number"), b: Arg(1, "number") },
         response: { ret: RetVal("json") }
-    });
+      }
+    }
+
+Here's an example implementation:
+
+    addOneTwice: function (a, b) {
+      return { a: a + 1, b: b + 1 };
+    }
 
 This will generate a response packet that looks like:
 
@@ -140,23 +171,29 @@ Things have been pretty simple up to this point - all the arguments we've passed
 
 Again, the protocol lib tries hard to provide a natural API to actors and clients, and sometime that natural API might involve object APIs. I'm going to use a wickedly contrived example, bear with me.  Let's say I have a small object that contains a number and has a few methods associated with it:
 
-    let Incrementor = function(i) {
+    let Incrementor = function (i) {
       this.value = value;
     }
     Incrementor.prototype = {
-        increment: function() { this.value++ },
-        decrement: function() { this.value-- }
+        increment: function () { this.value++ },
+        decrement: function () { this.value-- }
     };
 
 
 and I want to return it from a backend function:
 
-    getIncrementor: method(function(i) {
-        return new Incrementor(i)
-    }, {
+    // spec:
+    methods: {
+      getIncrementor: {
         request: { number: Arg(0, "number") },
         response: { value: RetVal("incrementor") } // We'll define "incrementor" below.
-    });
+      }
+    }
+
+    // implementation:
+    getIncrementor: function (i) {
+      return new Incrementor(i)
+    }
 
 I want that response to look like `{ from: <actorID>, value: <number> }`, but the client side needs to know to return an Incrementor, not a primitive number.  So let's tell the protocol lib about Incrementors:
 
@@ -178,12 +215,18 @@ And now our client can use the API as expected:
 
 You can do the same thing with arguments:
 
-    passIncrementor: method(function(inc) {
-        w.increment();
-        assert(incrementor.value === 6);
-    }, {
+    // spec:
+    methods: {
+      passIncrementor: {
         request: { Arg(0, "incrementor") },
-    });
+      }
+    }
+
+    // implementation:
+    passIncrementor: function (inc) {
+      w.increment();
+      assert(incrementor.value === 6);
+    }
 
     front.passIncrementor(new Incrementor(5));
 
@@ -191,41 +234,54 @@ The library provides primitiive `boolean`, `number`, `string`, and `json` types.
 
 Moving right along, let's say you want to pass/return an array of Incrementors.  You can just prepend `array:` to the type name:
 
-    incrementAll: method(function(incrementors) {
-        incrementors.forEach(incrementor => {
-          incrementor.increment();
-        }
-        return incrementors;
-    }, {
+    // spec:
+    methods: {
+      incrementAll: {
         request: { incrementors: Arg(0, "array:incrementor") },
         response: { incrementors: RetVal("array:incrementor") }
-    })
+      }
+    }
+
+    // implementation:
+    incrementAll: function (incrementors) {
+      incrementors.forEach(incrementor => {
+        incrementor.increment();
+      }
+      return incrementors;
+    }
 
 You can use an iterator in place of an array as an argument or return value, and the library will handle the conversion automatically.
 
 Or maybe you want to return a dictionary where one item is a incrementor.  To do this you need to tell the type system which members of the dictionary need custom marshallers:
 
     protocol.types.addDictType("contrivedObject", {
-        incrementor: "incrementor",
-        incrementorArray: "array:incrementor"
+      incrementor: "incrementor",
+      incrementorArray: "array:incrementor"
     });
 
-    reallyContrivedExample: method(function() {
-        return {
-            /* a and b are primitives and so don't need to be called out specifically in addDictType */
-            a: "hello", b: "world",
-            incrementor: new Incrementor(1), incrementorArray: [new Incrementor(2), new Incrementor(3)]
-        }
-    }, {
+    // spec:
+    methods: {
+      reallyContrivedExample: {
         response: RetVal("contrivedObject")
-    });
+      }
+    }
+
+    // implementations:
+    reallyContrivedExample: function () {
+      return {
+        /* a and b are primitives and so don't need to be called out specifically in addDictType */
+        a: "hello", b: "world",
+        incrementor: new Incrementor(1),
+        incrementorArray: [new Incrementor(2), new Incrementor(3)]
+      }
+    }
 
     front.reallyContrivedExample().then(obj => {
-        assert(obj.a == "hello");
-        assert(obj.b == "world");
-        assert(incrementor.i == 1);
-        assert(incrementorArray[0].i == 2);
-        assert(incrementorArray[1].i == 3);
+      assert(obj.a == "hello");
+      assert(obj.b == "world");
+      assert(incrementor.i == 1);
+      assert(incrementorArray[0].i == 2);
+      assert(incrementorArray[1].i == 3);
     });
 
 Nullables
@@ -243,40 +299,56 @@ Actors
 
 Probably the most common objects that need custom martialing are actors themselves.  These are more interesting than the Incrementor object, but by default they're somewhat easy to work with.  Let's add a ChildActor implementation that will be returned by the HelloActor (which is rapidly becoming the OverwhelminglyComplexActor):
 
-    let ChildActor = protocol.ActorClass({
-        actorType: "childActor",
-        initialize: function(conn, id) {
-            protocol.Actor.prototype.initialize.call(this, conn);
-            this.greeting = "hello from " + id;
-        },
-        getGreeting: method(function() {
-            return this.greeting;
-        }, {
-            response: { greeting: RetVal("string") },
+    // spec:
+    const childActorSpec = generateActorSpec({
+      actorType: "childActor",
+      methods: {
+        getGreeting: {
+          response: { greeting: RetVal("string") },
         }
+      }
     });
 
-    let ChildFront = protocol.FrontClass(ChildActor, {
-        initialize: function(client, form) {
-            protocol.Front.prototype.initialize.call(this, client, form);
-        },
+    // implementation:
+    const ChildActor = protocol.ActorClassWithSpec(childActorSpec, {
+      initialize: function (conn, id) {
+        protocol.Actor.prototype.initialize.call(this, conn);
+        this.greeting = "hello from " + id;
+      },
+      getGreeting: function () {
+        return this.greeting;
+      },
+    });
+
+    exports.ChildActor = ChildActor;
+
+    const ChildFront = protocol.FrontClassWithSpec(childActorSpec, {
+      initialize: function (client, form) {
+        protocol.Front.prototype.initialize.call(this, client, form);
+      },
     });
 
 The library will register a marshaller for the actor type itself, using typeName as its tag.
 
 So we can now add the following code to HelloActor:
 
-    getChild: method(function(id) {
-        return ChildActor(this.conn, id);
-    }, {
+    // spec:
+    methods: {
+      getChild: {
         request: { id: Arg(0, "string") },
         response: { child: RetVal("childActor") }
-    });
+      }
+    }
+
+    // implementation:
+    getChild: function (id) {
+      return ChildActor(this.conn, id);
+    }
 
     front.getChild("child1").then(childFront => {
-        return childFront.getGreeting();
+      return childFront.getGreeting();
     }).then(greeting => {
-        assert(id === "hello from child1");
+      assert(id === "hello from child1");
     });
 
 The conversation will look like this:
@@ -290,7 +362,7 @@ But the ID is the only interesting part of this made-up example.  You're never g
 
 You can customize the marshalling of an actor by providing a `form` method in the `ChildActor` class:
 
-    form: function() {
+    form: function () {
         return {
             actor: this.actorID,
             greeting: this.greeting
@@ -299,7 +371,7 @@ You can customize the marshalling of an actor by providing a `form` method in th
 
 And you can demarshal in the `ChildFront` class by implementing a matching `form` method:
 
-    form: function(form) {
+    form: function (form) {
         this.actorID = form.actor;
         this.greeting = form.greeting;
     }
@@ -311,7 +383,7 @@ Now you can use the id immediately:
 You may come across a situation where you want to customize the output of a `form` method depending on the operation being performed.  For example, imagine that ChildActor is a bit more complex, with a, b, c, and d members:
 
     ChildActor:
-        form: function() {
+        form: function () {
             return {
                 actor: this.actorID,
                 greeting: this.greeting,
@@ -322,7 +394,7 @@ You may come across a situation where you want to customize the output of a `for
             }
         }
     ChildFront:
-        form: function(form) {
+        form: function (form) {
             this.actorID = form.actorID;
             this.id = form.id;
             this.a = form.a;
@@ -339,13 +411,19 @@ And imagine you want to change 'c' and return the object:
 
     ...
 
-    changeC: method(function(newC) {
-        c = newC;
-        return this;
-    }, {
+    // spec:
+    methods: {
+      changeC: {
         request: { newC: Arg(0) },
         response: { self: RetVal("childActor") }
-    });
+      }
+    }
+
+    // implementation:
+    changeC: function (newC) {
+      c = newC;
+      return this;
+    }
 
     ...
 
@@ -361,22 +439,22 @@ But that's wasteful.  Only c changed.  So we can provide a *detail* to the type 
 
 and update our form methods to make use of that data:
 
-    ChildActor:
-    form: function(detail) {
+    // In ChildActor:
+    form: function (detail) {
         if (detail === "changec") {
             return { actor: this.actorID, c: this.c }
         }
-        ... // the rest of the form method stays the same.
+        // ... the rest of the form method stays the same.
     }
 
-    ChildFront:
-    form: function(form, detail) {
+    // In ChildFront:
+    form: function (form, detail) {
         if (detail === "changec") {
             this.actorID = form.actor;
             this.c = form.c;
             return;
         }
-        ... // the rest of the form method stays the same.
+        // ... the rest of the form method stays the same.
     }
 
 Now the packet looks like a much more reasonable `{ from: <childActorID>, self: { actor: <childActorID>, c: "hello" } }`
@@ -391,52 +469,64 @@ Events
 
 Your actor has great news!
 
-Actors are subclasses of jetpack `EventTarget`, so you can just emit:
-
-    let event = require("sdk/event/core");
-
-    giveGoodNews: method(function(news) {
-        event.emit(this, "good-news", news);
-    }, {
-        request: { news: Arg(0) }
-    });
-
-... but nobody will really care, because that's not going over the protocol.  But you can describe the packet in an `events` member, the same way you would specify a request:
+Actors are subclasses of jetpack `EventTarget`, so you can just emit events.
+Here's how you'd set it up in a spec:
 
     events: {
-        "good-news": {
-            type: "goodNews", // event target naming and packet naming are at odds, and we want both to be natural!
-            news: Arg(0)
-        }
+      "good-news": {
+        type: "goodNews", // event target naming and packet naming are at odds, and we want both to be natural!
+        news: Arg(0)
+      }
     }
 
-And now you can listen to events on a front:
+    methods: {
+      giveGoodNews: {
+        request: { news: Arg(0) }
+      }
+    }
+
+Here's how the implementation would look:
+
+    const event = require("sdk/event/core");
+
+    // In your protocol.ActorClassWithSpec definition:
+    giveGoodNews: function (news) {
+      event.emit(this, "good-news", news);
+    }
+
+Now you can listen to events on a front:
 
     front.on("good-news", news => {
-        console.log("Got good news: " + news + "\n");
+      console.log(`Got some good news: ${news}\n`);
     });
     front.giveGoodNews().then(() => { console.log("request returned.") });
 
 You might want to update your front's state when an event is fired, before emitting it against the front.  You can use `preEvent` in the front definition for that:
 
-    countGoodNews: protocol.preEvent("good-news", function(news) {
+    countGoodNews: protocol.preEvent("good-news", function (news) {
         this.amountOfGoodNews++;
     });
 
 You can have events wait until an asynchronous action completes before firing by returning a promise. If you have multiple preEvents defined for a specific event, and atleast one fires asynchronously, then all preEvents most resolve before all events are fired.
 
-    countGoodNews: protocol.preEvent("good-news", function(news) {
+    countGoodNews: protocol.preEvent("good-news", function (news) {
         return this.updateGoodNews().then(() => this.amountOfGoodNews++);
     });
 
 On a somewhat related note, not every method needs to be request/response.  Just like an actor can emit a one-way event, a method can be marked as a one-way request.  Maybe we don't care about giveGoodNews returning anything:
 
-    giveGoodNews: method(function(news) {
-        emit(this, "good-news", news);
-    }, {
+    // spec:
+    methods: {
+      giveGoodNews: {
         request: { news: Arg(0, "string") },
         oneway: true
-    });
+      }
+    }
+
+    // implementation:
+    giveGoodNews: function (news) {
+      emit(this, "good-news", news);
+    }
 
 Lifetimes
 ---------
@@ -448,7 +538,7 @@ Custom Front Methods
 
 You might have some bookkeeping to do before issuing a request.  Let's say you're calling `echo`, but you want to count the number of times you issue that request.  Just use the `custom` tag in your front implementation:
 
-    echo: custom(function(str) {
+    echo: custom(function (str) {
         this.numEchos++;
         return this._echo(str);
     }, {
@@ -468,23 +558,35 @@ The protocol library will maintain the child/parent relationships for you, but i
 
 The default parent of an object is the first object that returns it after it is created.  So to revisit our earlier HelloActor `getChild` implementation:
 
-    getChild: method(function(id) {
-        return new ChildActor(this.conn, id);
-    }, {
+    // spec:
+    methods: {
+      getChild: {
         request: { id: Arg(0) },
         response: { child: RetVal("childActor") }
-    });
+      }
+    }
+
+    // implementation:
+    getChild: function (id) {
+      return new ChildActor(this.conn, id);
+    }
 
 The ChildActor's parent is the HelloActor, because it's the one that created it.
 
 You can customize this behavior in two ways.  The first is by defining a `marshallPool` property in your actor.  Imagine a new ChildActor method:
 
-    getSibling: method(function(id) {
-        return new ChildActor(this.conn, id);
-    }, {
+    // spec:
+    methods: {
+      getSibling: {
         request: { id: Arg(0) },
         response: { child: RetVal("childActor") }
-    });
+      }
+    }
+
+    // implementation:
+    getSibling: function (id) {
+      return new ChildActor(this.conn, id);
+    }
 
 This creates a new child actor owned by the current child actor.  But in this example we want all actors created by the child to be owned by the HelloActor.  So we can define a `defaultParent` property that makes use of the `parent` proeprty provided by the Actor class:
 
@@ -497,30 +599,39 @@ For more complex situations, you can define your own lifetime properties.  Take 
     // When the "temp" lifetime is specified, look for the _temporaryParent attribute as the owner.
     types.addLifetime("temp", "_temporaryParent");
 
-    getTemporaryChild: method(function(id) {
-        if (!this._temporaryParent) {
-            // Create an actor to serve as the parent for all temporary children and explicitly
-            // add it as a child of this actor.
-            this._temporaryParent = this.manage(new Actor(this.conn));
-        }
-        return new ChildActor(this.conn, id);
-    }, {
+    // spec:
+    methods: {
+      getTemporaryChild: {
         request: { id: Arg(0) },
         response: {
-            child: RetVal("temp:childActor") // use the lifetime name here to specify the expected lifetime.
+          child: RetVal("temp:childActor") // use the lifetime name here to specify the expected lifetime.
         }
-    });
+      },
+      clearTemporaryChildren: {
+        oneway: true
+      }
+    }
 
-    clearTemporaryChildren: method(function(id) {
-        if (this._temporaryParent) {
-            this._temporaryParent.destroy();
-            delete this._temporaryParent;
-        }
-    });
+    // implementation:
+    getTemporaryChild: function (id) {
+      if (!this._temporaryParent) {
+        // Create an actor to serve as the parent for all temporary children and explicitly
+        // add it as a child of this actor.
+        this._temporaryParent = this.manage(new Actor(this.conn));
+      }
+      return new ChildActor(this.conn, id);
+    }
+
+    clearTemporaryChildren: function () {
+      if (this._temporaryParent) {
+        this._temporaryParent.destroy();
+        delete this._temporaryParent;
+      }
+    }
 
 This will require some matching work on the front:
 
-    getTemporaryChild: protocol.custom(function(id) {
+    getTemporaryChild: protocol.custom(function (id) {
         if (!this._temporaryParent) {
             this._temporaryParent = this.manage(new Front(this.client));
         }
@@ -529,7 +640,7 @@ This will require some matching work on the front:
         impl: "_getTemporaryChild"
     }),
 
-    clearTemporaryChildren: protocol.custom(function(id) {
+    clearTemporaryChildren: protocol.custom(function (id) {
         if (this._temporaryParent) {
             this._temporaryParent.destroy();
             delete this._temporaryParent;
@@ -544,12 +655,18 @@ Telemetry
 
 You can specify a telemetry probe id in your method spec:
 
-    echo: method(function(str) {
-        return str;
-    }, {
+    // spec:
+    methods: {
+      echo: {
         request: { str: Arg(0) },
         response: { str: RetVal() },
         telemetry: "ECHO"
-    });
+      }
+    }
+
+    // implementation:
+    echo: function (str) {
+      return str;
+    }
 
 ... and the time to execute that request will be included as a telemetry probe.
