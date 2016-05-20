@@ -180,51 +180,13 @@ element.Store = class {
     let wrappedEl = new XPCNativeWrapper(el);
     if (!el ||
         !(wrappedEl.ownerDocument == wrappedFrame.document) ||
-        this.isDisconnected(wrappedEl, wrappedFrame, wrappedShadowRoot)) {
+        element.isDisconnected(wrappedEl, wrappedFrame, wrappedShadowRoot)) {
       throw new StaleElementReferenceError(
           "The element reference is stale. Either the element " +
           "is no longer attached to the DOM or the page has been refreshed.");
     }
 
     return el;
-  }
-
-  /**
-   * Check if the element is detached from the current frame as well as
-   * the optional shadow root (when inside a Shadow DOM context).
-   *
-   * @param {nsIDOMElement} el
-   *     Element to be checked.
-   * @param nsIDOMWindow frame
-   *     Window object that contains the element or the current host
-   *     of the shadow root.
-   * @param {ShadowRoot=} shadowRoot
-   *     An optional shadow root containing an element.
-   *
-   * @return {boolean}
-   *     Flag indicating that the element is disconnected.
-   */
-  isDisconnected(el, frame, shadowRoot = undefined) {
-    // shadow dom
-    if (shadowRoot && frame.ShadowRoot) {
-      if (el.compareDocumentPosition(shadowRoot) &
-          DOCUMENT_POSITION_DISCONNECTED) {
-        return true;
-      }
-
-      // looking for next possible ShadowRoot ancestor
-      let parent = shadowRoot.host;
-      while (parent && !(parent instanceof frame.ShadowRoot)) {
-        parent = parent.parentNode;
-      }
-      return this.isDisconnected(shadowRoot.host, parent, frame);
-
-    // outside shadow dom
-    } else {
-      let docEl = frame.document.documentElement;
-      return el.compareDocumentPosition(docEl) &
-          DOCUMENT_POSITION_DISCONNECTED;
-    }
   }
 
   /**
@@ -741,6 +703,44 @@ element.makeWebElement = function(uuid) {
 element.generateUUID = function() {
   let uuid = uuidGen.generateUUID().toString();
   return uuid.substring(1, uuid.length - 1);
+};
+
+/**
+ * Check if the element is detached from the current frame as well as
+ * the optional shadow root (when inside a Shadow DOM context).
+ *
+ * @param {nsIDOMElement} el
+ *     Element to be checked.
+ * @param nsIDOMWindow frame
+ *     Window object that contains the element or the current host
+ *     of the shadow root.
+ * @param {ShadowRoot=} shadowRoot
+ *     An optional shadow root containing an element.
+ *
+ * @return {boolean}
+ *     Flag indicating that the element is disconnected.
+ */
+element.isDisconnected = function(el, frame, shadowRoot = undefined) {
+  // shadow dom
+  if (shadowRoot && frame.ShadowRoot) {
+    if (el.compareDocumentPosition(shadowRoot) &
+        DOCUMENT_POSITION_DISCONNECTED) {
+      return true;
+    }
+
+    // looking for next possible ShadowRoot ancestor
+    let parent = shadowRoot.host;
+    while (parent && !(parent instanceof frame.ShadowRoot)) {
+      parent = parent.parentNode;
+    }
+    return element.isDisconnected(shadowRoot.host, frame, parent);
+
+  // outside shadow dom
+  } else {
+    let docEl = frame.document.documentElement;
+    return el.compareDocumentPosition(docEl) &
+        DOCUMENT_POSITION_DISCONNECTED;
+  }
 };
 
 /**
