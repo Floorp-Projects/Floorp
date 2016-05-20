@@ -40,12 +40,16 @@ def get_id(name):
 def visual_studio_product_to_internal_version(version, solution=False):
     if version == '2013':
         return '12.00'
+    elif version == '2015':
+        return '14.00'
     else:
         raise Exception('Unknown version seen: %s' % version)
 
 def visual_studio_product_to_platform_toolset_version(version):
     if version == '2013':
         return 'v120'
+    elif version == '2015':
+        return 'v140'
     else:
         raise Exception('Unknown version seen: %s' % version)
 
