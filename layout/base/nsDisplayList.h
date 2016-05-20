@@ -292,7 +292,7 @@ public:
    * items should only create glyph paths in target context, instead of
    * drawing text into it.
    */
-  bool IsForGenerateGlyphPath()
+  bool IsForGenerateGlyphMask()
   {
     return mMode == nsDisplayListBuilderMode::GENERATE_GLYPH;
   }
