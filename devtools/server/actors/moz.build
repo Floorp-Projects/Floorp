@@ -12,6 +12,7 @@ DIRS += [
 DevToolsModules(
     'actor-registry.js',
     'addon.js',
+    'addons.js',
     'animation.js',
     'breakpoint.js',
     'call-watcher.js',
