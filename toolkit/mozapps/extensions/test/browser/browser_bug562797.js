@@ -127,7 +127,7 @@ function is_in_list(aManager, view, canGoBack, canGoForward) {
   var doc = aManager.document;
 
   is(doc.getElementById("categories").selectedItem.value, view, "Should be on the right category");
-  is(doc.getElementById("view-port").selectedPanel.id, "list-view", "Should be on the right view");
+  is(get_current_view(aManager).id, "list-view", "Should be on the right view");
 
   check_state(aManager, canGoBack, canGoForward);
 }
@@ -136,7 +136,7 @@ function is_in_search(aManager, query, canGoBack, canGoForward) {
   var doc = aManager.document;
 
   is(doc.getElementById("categories").selectedItem.value, "addons://search/", "Should be on the right category");
-  is(doc.getElementById("view-port").selectedPanel.id, "search-view", "Should be on the right view");
+  is(get_current_view(aManager).id, "search-view", "Should be on the right view");
   is(doc.getElementById("header-search").value, query, "Should have used the right query");
 
   check_state(aManager, canGoBack, canGoForward);
@@ -146,7 +146,7 @@ function is_in_detail(aManager, view, canGoBack, canGoForward) {
   var doc = aManager.document;
 
   is(doc.getElementById("categories").selectedItem.value, view, "Should be on the right category");
-  is(doc.getElementById("view-port").selectedPanel.id, "detail-view", "Should be on the right view");
+  is(get_current_view(aManager).id, "detail-view", "Should be on the right view");
 
   check_state(aManager, canGoBack, canGoForward);
 }
