@@ -158,6 +158,22 @@ nsHttpDigestAuth::ChallengeReceived(nsIHttpAuthenticableChannel *authChannel,
   return NS_OK;
 }
 
+
+NS_IMETHODIMP
+nsHttpDigestAuth::GenerateCredentialsAsync(nsIHttpAuthenticableChannel *authChannel,
+                                           nsIHttpAuthenticatorCallback* aCallback,
+                                           const char *challenge,
+                                           bool isProxyAuth,
+                                           const char16_t *domain,
+                                           const char16_t *username,
+                                           const char16_t *password,
+                                           nsISupports *sessionState,
+                                           nsISupports *continuationState,
+                                           nsICancelable **aCancellable)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP
 nsHttpDigestAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
                                       const char *challenge,
