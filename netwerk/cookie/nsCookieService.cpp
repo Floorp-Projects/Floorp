@@ -2026,8 +2026,8 @@ nsCookieService::SetCookieStringInternal(nsIURI                 *aHostURI,
   nsCookieKey key(baseDomain, aOriginAttrs);
 
   // check default prefs
-  CookieStatus cookieStatus = CheckPrefs(aHostURI, aIsForeign, requireHostMatch,
-                                         aCookieHeader.get());
+  CookieStatus cookieStatus = CheckSafe(aHostURI, aIsForeign, requireHostMatch,
+                                        aCookieHeader.get(), true);
   // fire a notification if third party or if cookie was rejected
   // (but not if there was an error)
   switch (cookieStatus) {
@@ -3004,9 +3004,9 @@ nsCookieService::GetCookieStringInternal(nsIURI *aHostURI,
     return;
   }
 
-  // check default prefs
-  CookieStatus cookieStatus = CheckPrefs(aHostURI, aIsForeign, requireHostMatch,
-                                         nullptr);
+  // make sure we are sending the cookie to the correct place and are allowed to
+  CookieStatus cookieStatus = CheckSafe(aHostURI, aIsForeign, requireHostMatch,
+                                        nullptr, false);
   // for GetCookie(), we don't fire rejection notifications.
   switch (cookieStatus) {
   case STATUS_REJECTED:
@@ -3787,10 +3787,11 @@ static inline bool IsSubdomainOf(const nsCString &a, const nsCString &b)
 }
 
 CookieStatus
-nsCookieService::CheckPrefs(nsIURI          *aHostURI,
-                            bool             aIsForeign,
-                            bool             aRequireHostMatch,
-                            const char      *aCookieHeader)
+nsCookieService::CheckSafe(nsIURI          *aHostURI,
+                           bool             aIsForeign,
+                           bool             aRequireHostMatch,
+                           const char      *aCookieHeader,
+                           bool             aCheckPrefs)
 {
   nsresult rv;
 
@@ -3803,7 +3804,8 @@ nsCookieService::CheckPrefs(nsIURI          *aHostURI,
 
   // check the permission list first; if we find an entry, it overrides
   // default prefs. see bug 184059.
-  if (mPermissionService) {
+  // aCheckPrefs allows us to ignore user preferences
+  if (mPermissionService && aCheckPrefs) {
     nsCookieAccess access;
     // Not passing an nsIChannel here is probably OK; our implementation
     // doesn't do anything with it anyway.
