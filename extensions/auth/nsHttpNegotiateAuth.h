@@ -10,6 +10,7 @@
 #include "nsIURI.h"
 #include "nsSubstring.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/LazyIdleThread.h"
 
 // The nsHttpNegotiateAuth class provides responses for the GSS-API Negotiate method
 // as specified by Microsoft in draft-brezak-spnego-http-04.txt
@@ -17,7 +18,7 @@
 class nsHttpNegotiateAuth final : public nsIHttpAuthenticator
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIHTTPAUTHENTICATOR
 
 private:
@@ -37,5 +38,7 @@ private:
                           int32_t             port,
                           const char         *baseStart,
                           const char         *baseEnd);
+    // Thread for GenerateCredentialsAsync
+    RefPtr<mozilla::LazyIdleThread> mNegotiateThread;
 };
 #endif /* nsHttpNegotiateAuth_h__ */
