@@ -90,7 +90,7 @@ VPXDecoder::Flush()
 }
 
 int
-VPXDecoder::DoDecodeFrame(MediaRawData* aSample)
+VPXDecoder::DoDecode(MediaRawData* aSample)
 {
 #if defined(DEBUG)
   vpx_codec_stream_info_t si;
@@ -174,9 +174,9 @@ VPXDecoder::DoDecodeFrame(MediaRawData* aSample)
 }
 
 void
-VPXDecoder::DecodeFrame(MediaRawData* aSample)
+VPXDecoder::ProcessDecode(MediaRawData* aSample)
 {
-  if (DoDecodeFrame(aSample) == -1) {
+  if (DoDecode(aSample) == -1) {
     mCallback->Error();
   } else if (mTaskQueue->IsEmpty()) {
     mCallback->InputExhausted();
@@ -187,14 +187,13 @@ nsresult
 VPXDecoder::Input(MediaRawData* aSample)
 {
   mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
-                         this, &VPXDecoder::DecodeFrame,
-                         RefPtr<MediaRawData>(aSample)));
+                       this, &VPXDecoder::ProcessDecode, aSample));
 
   return NS_OK;
 }
 
 void
-VPXDecoder::DoDrain()
+VPXDecoder::ProcessDrain()
 {
   mCallback->DrainComplete();
 }
@@ -202,7 +201,7 @@ VPXDecoder::DoDrain()
 nsresult
 VPXDecoder::Drain()
 {
-  mTaskQueue->Dispatch(NewRunnableMethod(this, &VPXDecoder::DoDrain));
+  mTaskQueue->Dispatch(NewRunnableMethod(this, &VPXDecoder::ProcessDrain));
 
   return NS_OK;
 }
