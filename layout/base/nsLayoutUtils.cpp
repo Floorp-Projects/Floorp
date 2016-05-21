@@ -9068,7 +9068,7 @@ nsLayoutUtils::TransformToAncestorAndCombineRegions(
   for (nsRegion::RectIterator it = aRegion.RectIter(); !it.Done(); it.Next()) {
     nsRect transformed = TransformFrameRectToAncestor(
       aFrame, it.Get(), aAncestorFrame, &isPrecise, aMatrixCache);
-    transformedRegion.Or(transformed);
+    transformedRegion.OrWith(transformed);
   }
   nsRegion* dest = isPrecise ? aPreciseTargetDest : aImpreciseTargetDest;
   dest->OrWith(transformedRegion.ToRegion());
