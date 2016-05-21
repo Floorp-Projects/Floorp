@@ -9064,14 +9064,14 @@ nsLayoutUtils::TransformToAncestorAndCombineRegions(
     return;
   }
   bool isPrecise;
-  RegionBuilder<nsRegion> transformedRegion;
+  nsRegion transformedRegion;
   for (nsRegion::RectIterator it = aRegion.RectIter(); !it.Done(); it.Next()) {
     nsRect transformed = TransformFrameRectToAncestor(
       aFrame, it.Get(), aAncestorFrame, &isPrecise, aMatrixCache);
     transformedRegion.OrWith(transformed);
   }
   nsRegion* dest = isPrecise ? aPreciseTargetDest : aImpreciseTargetDest;
-  dest->OrWith(transformedRegion.ToRegion());
+  dest->OrWith(transformedRegion);
 }
 
 /* static */ bool
