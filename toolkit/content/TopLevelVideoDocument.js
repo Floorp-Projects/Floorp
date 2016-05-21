@@ -29,10 +29,10 @@ document.addEventListener("keypress", ev => {
     ev.preventDefault();
     ev.stopPropagation();
 
-    if (!document.fullscreenElement) {
-      videoElement.requestFullscreen();
+    if (!document.mozFullScreenElement) {
+      videoElement.mozRequestFullScreen();
     } else {
-      document.exitFullscreen();
+      document.mozCancelFullScreen();
     }
     return;
   }
