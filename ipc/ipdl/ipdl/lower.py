@@ -5279,7 +5279,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                          retcallsems='out',
                                          implicit=implicit))))
         failif.addifstmts([
-            _protocolErrorBreakpoint('Handler for '+ md.name +' returned error code'),
+            _protocolErrorBreakpoint('Handler returned error code!'),
             StmtReturn(_Result.ProcessingError)
         ])
         return [ failif ]
