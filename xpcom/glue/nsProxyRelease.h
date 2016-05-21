@@ -170,6 +170,13 @@ public:
     MOZ_ASSERT(!mStrict || NS_IsMainThread());
     NS_IF_ADDREF(mRawPtr = aPtr);
   }
+  explicit nsMainThreadPtrHolder(already_AddRefed<T> aPtr, bool aString = true)
+    : mRawPtr(aPtr.take())
+    , mStrict(aString)
+  {
+    // Since we don't need to AddRef the pointer, this constructor is safe to
+    // call on any thread.
+  }
 
 private:
   // We can be released on any thread.
@@ -226,6 +233,11 @@ public:
   nsMainThreadPtrHandle() : mPtr(nullptr) {}
   MOZ_IMPLICIT nsMainThreadPtrHandle(decltype(nullptr)) : mPtr(nullptr) {}
   explicit nsMainThreadPtrHandle(nsMainThreadPtrHolder<T>* aHolder)
+    : mPtr(aHolder)
+  {
+  }
+  explicit nsMainThreadPtrHandle(
+      already_AddRefed<nsMainThreadPtrHolder<T>> aHolder)
     : mPtr(aHolder)
   {
   }
