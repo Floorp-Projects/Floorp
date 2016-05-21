@@ -1095,7 +1095,14 @@ nsNativeThemeGTK::DrawWidgetBackground(nsRenderingContext* aContext,
 {
   GtkWidgetState state;
   WidgetNodeType gtkWidgetType;
-  GtkTextDirection direction = GetTextDirection(aFrame);
+  // For resizer drawing, we want IsFrameRTL, which treats vertical-rl modes
+  // as right-to-left (in addition to horizontal text with direction=RTL),
+  // rather than just considering the text direction.
+  // This will make resizers on vertically-oriented elements render properly.
+  GtkTextDirection direction =
+    aWidgetType == NS_THEME_RESIZER
+    ? (IsFrameRTL(aFrame) ? GTK_TEXT_DIR_RTL : GTK_TEXT_DIR_LTR)
+    : GetTextDirection(aFrame);
   gint flags;
   if (!GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, &state,
                             &flags))
