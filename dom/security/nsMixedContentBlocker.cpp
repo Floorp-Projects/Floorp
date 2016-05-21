@@ -646,32 +646,6 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   nsCOMPtr<nsIDocShell> docShell = NS_CP_GetDocShellFromContext(aRequestingContext);
   NS_ENSURE_TRUE(docShell, NS_OK);
 
-  // The page might have set the CSP directive 'block-all-mixed-content' which
-  // should block not only active mixed content loads but in fact all mixed content
-  // loads, see https://www.w3.org/TR/mixed-content/#strict-checking
-  // Block all non secure loads in case the CSP directive is present. Please note
-  // that at this point we already know, based on |schemeSecure| that the load is
-  // not secure, so we can bail out early at this point.
-  if (docShell->GetDocument()->GetBlockAllMixedContent(isPreload)) {
-    // log a message to the console before returning.
-    nsAutoCString spec;
-    rv = aContentLocation->GetSpec(spec);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ConvertUTF8toUTF16 reportSpec(spec);
-
-    const char16_t* params[] = { reportSpec.get()};
-    CSP_LogLocalizedStr(MOZ_UTF16("blockAllMixedContent"),
-                        params, ArrayLength(params),
-                        EmptyString(), // aSourceFile
-                        EmptyString(), // aScriptSample
-                        0, // aLineNumber
-                        0, // aColumnNumber
-                        nsIScriptError::errorFlag, "CSP",
-                        docShell->GetDocument()->InnerWindowID());
-    *aDecision = REJECT_REQUEST;
-    return NS_OK;
-  }
-
   // Disallow mixed content loads for workers, shared workers and service
   // workers.
   if (isWorkerType) {
@@ -705,6 +679,32 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   NS_ENSURE_SUCCESS(rv, rv);
   if (isHttpScheme && docShell->GetDocument()->GetUpgradeInsecureRequests(isPreload)) {
     *aDecision = ACCEPT;
+    return NS_OK;
+  }
+
+  // The page might have set the CSP directive 'block-all-mixed-content' which
+  // should block not only active mixed content loads but in fact all mixed content
+  // loads, see https://www.w3.org/TR/mixed-content/#strict-checking
+  // Block all non secure loads in case the CSP directive is present. Please note
+  // that at this point we already know, based on |schemeSecure| that the load is
+  // not secure, so we can bail out early at this point.
+  if (docShell->GetDocument()->GetBlockAllMixedContent(isPreload)) {
+    // log a message to the console before returning.
+    nsAutoCString spec;
+    rv = aContentLocation->GetSpec(spec);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ConvertUTF8toUTF16 reportSpec(spec);
+
+    const char16_t* params[] = { reportSpec.get()};
+    CSP_LogLocalizedStr(MOZ_UTF16("blockAllMixedContent"),
+                        params, ArrayLength(params),
+                        EmptyString(), // aSourceFile
+                        EmptyString(), // aScriptSample
+                        0, // aLineNumber
+                        0, // aColumnNumber
+                        nsIScriptError::errorFlag, "CSP",
+                        docShell->GetDocument()->InnerWindowID());
+    *aDecision = REJECT_REQUEST;
     return NS_OK;
   }
 
