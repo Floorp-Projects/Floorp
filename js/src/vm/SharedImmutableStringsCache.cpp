@@ -14,9 +14,6 @@ SharedImmutableString::SharedImmutableString(SharedImmutableStringsCache&& cache
                                              SharedImmutableStringsCache::StringBox* box)
   : cache_(mozilla::Move(cache))
   , box_(box)
-#ifdef DEBUG
-  , hash_(mozilla::HashString(box->chars(), box->length()))
-#endif
 {
     MOZ_ASSERT(box);
     MOZ_ASSERT(box->refcount > 0);
@@ -25,14 +22,10 @@ SharedImmutableString::SharedImmutableString(SharedImmutableStringsCache&& cache
 SharedImmutableString::SharedImmutableString(SharedImmutableString&& rhs)
   : cache_(mozilla::Move(rhs.cache_))
   , box_(rhs.box_)
-#ifdef DEBUG
-  , hash_(mozilla::HashString(box_->chars(), box_->length()))
-#endif
 {
     MOZ_ASSERT(this != &rhs, "self move not allowed");
     MOZ_ASSERT(rhs.box_);
     MOZ_ASSERT(rhs.box_->refcount > 0);
-    MOZ_ASSERT(rhs.hash_ == hash_);
 
     rhs.box_ = nullptr;
 }
@@ -73,8 +66,6 @@ SharedImmutableTwoByteString::operator=(SharedImmutableTwoByteString&& rhs)
 SharedImmutableString::~SharedImmutableString() {
     if (!box_)
         return;
-
-    MOZ_ASSERT(mozilla::HashString(chars(), length()) == hash_);
 
     auto locked = cache_.inner_->lock();
 
