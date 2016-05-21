@@ -191,7 +191,7 @@ typedef IPCMessageStart ProtocolId;
 /**
  * All RPC protocols should implement this interface.
  */
-class IProtocol : protected MessageListener
+class IProtocol : public MessageListener
 {
 public:
     /**
