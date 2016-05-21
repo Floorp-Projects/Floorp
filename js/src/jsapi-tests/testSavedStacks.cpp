@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/ScopeExit.h"
+
 #include "jscompartment.h"
 #include "jsfriendapi.h"
 #include "jsstr.h"
@@ -202,3 +204,100 @@ BEGIN_TEST(testSavedStacks_selfHostedFrames)
     return true;
 }
 END_TEST(testSavedStacks_selfHostedFrames)
+
+BEGIN_TEST(test_JS_GetPendingExceptionStack)
+{
+    CHECK(js::DefineTestingFunctions(cx, global, false, false));
+
+    const char* sourceText =
+    //            1         2         3
+    //   123456789012345678901234567890123456789
+        "(function one() {                      \n"  // 1
+        "  (function two() {                    \n"  // 2
+        "    (function three() {                \n"  // 3
+        "      throw 5;                         \n"  // 4
+        "    }());                              \n"  // 5
+        "  }());                                \n"  // 6
+        "}())                                   \n"; // 7
+
+    JS::RootedValue val(cx);
+    JS::CompileOptions opts(cx);
+    opts.setFileAndLine("filename.js", 1U);
+    JS::ContextOptionsRef(cx).setDontReportUncaught(true);
+    JSContext* context = cx;
+    auto resetReportUncaught = mozilla::MakeScopeExit([=]() {
+        JS::ContextOptionsRef(context).setDontReportUncaught(false);
+    });
+    bool ok = JS::Evaluate(cx, opts, sourceText, strlen(sourceText), &val);
+
+    CHECK(!ok);
+    CHECK(JS_IsExceptionPending(cx));
+    CHECK(val.isUndefined());
+
+    JS::RootedObject stack(cx);
+    CHECK(JS::GetPendingExceptionStack(cx, &stack));
+    CHECK(stack);
+    CHECK(stack->is<js::SavedFrame>());
+    JS::Rooted<js::SavedFrame*> savedFrameStack(cx, &stack->as<SavedFrame>());
+
+    JS_GetPendingException(cx, &val);
+    CHECK(val.isInt32());
+    CHECK(val.toInt32() == 5);
+
+    struct {
+        uint32_t line;
+        uint32_t column;
+        const char* source;
+        const char* functionDisplayName;
+    } expected[] = {
+        { 4, 7, "filename.js", "three" },
+        { 3, 15, "filename.js", "two" },
+        { 2, 13, "filename.js", "one" },
+        { 1, 11, "filename.js", nullptr }
+    };
+
+    size_t i = 0;
+    for (JS::Handle<js::SavedFrame*> frame : js::SavedFrame::RootedRange(cx, savedFrameStack)) {
+        CHECK(i < 4);
+
+        // Line
+        uint32_t line = 123;
+        JS::SavedFrameResult result = JS::GetSavedFrameLine(cx, frame, &line,
+                                                            JS::SavedFrameSelfHosted::Exclude);
+        CHECK(result == JS::SavedFrameResult::Ok);
+        CHECK_EQUAL(line, expected[i].line);
+
+        // Column
+        uint32_t column = 123;
+        result = JS::GetSavedFrameColumn(cx, frame, &column,
+                                         JS::SavedFrameSelfHosted::Exclude);
+        CHECK(result == JS::SavedFrameResult::Ok);
+        CHECK_EQUAL(column, expected[i].column);
+
+        // Source
+        JS::RootedString str(cx);
+        result = JS::GetSavedFrameSource(cx, frame, &str, JS::SavedFrameSelfHosted::Exclude);
+        CHECK(result == JS::SavedFrameResult::Ok);
+        JSLinearString* linear = str->ensureLinear(cx);
+        CHECK(linear);
+        CHECK(js::StringEqualsAscii(linear, expected[i].source));
+
+        // Function display name
+        result = JS::GetSavedFrameFunctionDisplayName(cx, frame, &str,
+                                                      JS::SavedFrameSelfHosted::Exclude);
+        CHECK(result == JS::SavedFrameResult::Ok);
+        if (auto expectedName = expected[i].functionDisplayName) {
+            CHECK(str);
+            linear = str->ensureLinear(cx);
+            CHECK(linear);
+            CHECK(js::StringEqualsAscii(linear, expectedName));
+        } else {
+            CHECK(!str);
+        }
+
+        i++;
+    }
+
+    return true;
+}
+END_TEST(test_JS_GetPendingExceptionStack)
