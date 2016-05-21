@@ -74,6 +74,7 @@ this.UpdateUtils = {
     url = url.replace(/%BUILD_ID%/g, Services.appinfo.appBuildID);
     url = url.replace(/%BUILD_TARGET%/g, Services.appinfo.OS + "_" + this.ABI);
     url = url.replace(/%OS_VERSION%/g, this.OSVersion);
+    url = url.replace(/%SYSTEM_CAPABILITIES%/g, gSystemCapabilities);
     if (/%LOCALE%/.test(url)) {
       url = url.replace(/%LOCALE%/g, this.Locale);
     }
@@ -148,6 +149,45 @@ XPCOMUtils.defineLazyGetter(UpdateUtils, "Locale", function() {
                  "application or GRE directories");
 
   return null;
+});
+
+/**
+ * Provides adhoc system capability information for application update.
+ */
+XPCOMUtils.defineLazyGetter(this, "gSystemCapabilities", function aus_gSC() {
+  if (AppConstants.platform == "win") {
+    const PF_MMX_INSTRUCTIONS_AVAILABLE = 3; // MMX
+    const PF_XMMI_INSTRUCTIONS_AVAILABLE = 6; // SSE
+    const PF_XMMI64_INSTRUCTIONS_AVAILABLE = 10; // SSE2
+    const PF_SSE3_INSTRUCTIONS_AVAILABLE = 13; // SSE3
+
+    let lib = ctypes.open("kernel32.dll");
+    let IsProcessorFeaturePresent = lib.declare("IsProcessorFeaturePresent",
+                                                ctypes.winapi_abi,
+                                                ctypes.int32_t, /* success */
+                                                ctypes.uint32_t); /* DWORD */
+    let instructionSet = "unknown";
+    try {
+      if (IsProcessorFeaturePresent(PF_SSE3_INSTRUCTIONS_AVAILABLE)) {
+        instructionSet = "SSE3";
+      } else if (IsProcessorFeaturePresent(PF_XMMI64_INSTRUCTIONS_AVAILABLE)) {
+        instructionSet = "SSE2";
+      } else if (IsProcessorFeaturePresent(PF_XMMI_INSTRUCTIONS_AVAILABLE)) {
+        instructionSet = "SSE";
+      } else if (IsProcessorFeaturePresent(PF_MMX_INSTRUCTIONS_AVAILABLE)) {
+        instructionSet = "MMX";
+      }
+    } catch (e) {
+      instructionSet = "error";
+      Cu.reportError("Error getting processor instruction set. " +
+                     "Exception: " + e);
+    }
+
+    lib.close();
+    return instructionSet;
+  }
+
+  return "NA"
 });
 
 /* Windows only getter that returns the processor architecture. */
