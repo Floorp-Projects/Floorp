@@ -374,7 +374,6 @@ private:
       MOZ_ASSERT(mOwner->OnTaskQueue());
       mDemuxEOS = false;
       mWaitingForData = false;
-      mReceivedNewData = false;
       mDiscontinuity = true;
       mQueuedSamples.Clear();
       mDecodingRequested = false;
