@@ -231,12 +231,23 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
     }
 
     /**
-     * Remove the reading list panel.
-     * If the reading list panel used to be the default panel, we make bookmarks the new default.
+     * Removes a panel from the home panel config.
+     * If the removed panel was set as the default home panel, we provide a replacement for it.
+     *
+     * @param context Android context
+     * @param jsonPanels array of original JSON panels
+     * @param panelToRemove The home panel to be removed.
+     * @param replacementPanel The panel which will replace it if the removed panel
+     *                         was the default home panel.
+     * @param alwaysUnhide If true, the replacement panel will always be unhidden,
+     *                     otherwise only if we turn it into the new default panel.
+     * @return new array of updated JSON panels
+     * @throws JSONException
      */
-    private static JSONArray removeReadingListPanel(Context context, JSONArray jsonPanels) throws JSONException {
+    private static JSONArray removePanel(Context context, JSONArray jsonPanels,
+                                         PanelType panelToRemove, PanelType replacementPanel, boolean alwaysUnhide) throws JSONException {
         boolean wasDefault = false;
-        int bookmarksIndex = -1;
+        int replacementPanelIndex = -1;
 
         // JSONArrary doesn't provide remove() for API < 19, therefore we need to manually copy all
         // the items we don't want deleted into a new array.
@@ -246,26 +257,33 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
             final JSONObject panelJSON = jsonPanels.getJSONObject(i);
             final PanelConfig panelConfig = new PanelConfig(panelJSON);
 
-            if (panelConfig.getType() == PanelType.DEPRECATED_READING_LIST) {
+            if (panelConfig.getType() == panelToRemove) {
                 // If this panel was the default we'll need to assign a new default:
                 wasDefault = panelConfig.isDefault();
             } else {
-                if (panelConfig.getType() == PanelType.BOOKMARKS) {
-                    bookmarksIndex = newJSONPanels.length();
+                if (panelConfig.getType() == replacementPanel) {
+                    replacementPanelIndex = newJSONPanels.length();
                 }
 
                 newJSONPanels.put(panelJSON);
             }
         }
 
-        if (wasDefault) {
-            // This will make the bookmarks panel visible if it was previously hidden - this is desired
-            // since this will make the new equivalent of the reading list visible by default.
-            final JSONObject bookmarksPanelConfig = createBuiltinPanelConfig(context, PanelType.BOOKMARKS, EnumSet.of(PanelConfig.Flags.DEFAULT_PANEL)).toJSON();
-            if (bookmarksIndex != -1) {
-                newJSONPanels.put(bookmarksIndex, bookmarksPanelConfig);
+        // Unless alwaysUnhide is true, we make the replacement panel visible only if it is going
+        // to be the new default panel, since a hidden default panel doesn't make sense.
+        // This is to allow preserving the behaviour of the original reading list migration function.
+        if (wasDefault || alwaysUnhide) {
+            final JSONObject replacementPanelConfig;
+            if (wasDefault) {
+                replacementPanelConfig = createBuiltinPanelConfig(context, replacementPanel, EnumSet.of(PanelConfig.Flags.DEFAULT_PANEL)).toJSON();
             } else {
-                newJSONPanels.put(bookmarksPanelConfig);
+                replacementPanelConfig = createBuiltinPanelConfig(context, replacementPanel).toJSON();
+            }
+
+            if (replacementPanelIndex != -1) {
+                newJSONPanels.put(replacementPanelIndex, replacementPanelConfig);
+            } else {
+                newJSONPanels.put(replacementPanelConfig);
             }
         }
 
@@ -382,7 +400,8 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
                     break;
 
                 case 6:
-                    jsonPanels = removeReadingListPanel(context, jsonPanels);
+                    jsonPanels = removePanel(context, jsonPanels,
+                            PanelType.DEPRECATED_READING_LIST, PanelType.BOOKMARKS, false);
                     break;
             }
         }
