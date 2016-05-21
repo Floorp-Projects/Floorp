@@ -146,13 +146,13 @@ function* query(detailsIn, props, extension) {
   if ("url" in details) {
     try {
       uri = NetUtil.newURI(details.url).QueryInterface(Ci.nsIURL);
-      enumerator = Services.cookies.getCookiesFromHost(uri.host, {});
+      enumerator = Services.cookies.getCookiesFromHost(uri.host);
     } catch (ex) {
       // This often happens for about: URLs
       return;
     }
   } else if ("domain" in details) {
-    enumerator = Services.cookies.getCookiesFromHost(details.domain, {});
+    enumerator = Services.cookies.getCookiesFromHost(details.domain);
   } else {
     enumerator = Services.cookies.enumerator;
   }
@@ -288,7 +288,7 @@ extensions.registerSchemaAPI("cookies", "cookies", (extension, context) => {
         // The permission check may have modified the domain, so use
         // the new value instead.
         Services.cookies.add(cookieAttrs.host, path, name, value,
-                             secure, httpOnly, isSession, expiry, {});
+                             secure, httpOnly, isSession, expiry);
 
         return self.cookies.get(details);
       },
