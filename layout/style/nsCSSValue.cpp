@@ -2495,8 +2495,9 @@ nsCSSValue::Array::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) cons
   return n;
 }
 
-css::URLValue::URLValue(nsIURI* aURI, nsStringBuffer* aString,
-                        nsIURI* aReferrer, nsIPrincipal* aOriginPrincipal)
+css::URLValueData::URLValueData(nsIURI* aURI, nsStringBuffer* aString,
+                                nsIURI* aReferrer,
+                                nsIPrincipal* aOriginPrincipal)
   : mURI(aURI),
     mString(aString),
     mReferrer(aReferrer),
@@ -2506,8 +2507,9 @@ css::URLValue::URLValue(nsIURI* aURI, nsStringBuffer* aString,
   MOZ_ASSERT(aOriginPrincipal, "Must have an origin principal");
 }
 
-css::URLValue::URLValue(nsStringBuffer* aString, nsIURI* aBaseURI,
-                        nsIURI* aReferrer, nsIPrincipal* aOriginPrincipal)
+css::URLValueData::URLValueData(nsStringBuffer* aString, nsIURI* aBaseURI,
+                                nsIURI* aReferrer,
+                                nsIPrincipal* aOriginPrincipal)
   : mURI(aBaseURI),
     mString(aString),
     mReferrer(aReferrer),
@@ -2518,7 +2520,7 @@ css::URLValue::URLValue(nsStringBuffer* aString, nsIURI* aBaseURI,
 }
 
 bool
-css::URLValue::operator==(const URLValue& aOther) const
+css::URLValueData::operator==(const URLValueData& aOther) const
 {
   bool eq;
   return NS_strcmp(nsCSSValue::GetBufferValue(mString),
@@ -2533,7 +2535,7 @@ css::URLValue::operator==(const URLValue& aOther) const
 }
 
 bool
-css::URLValue::URIEquals(const URLValue& aOther) const
+css::URLValueData::URIEquals(const URLValueData& aOther) const
 {
   MOZ_ASSERT(mURIResolved && aOther.mURIResolved,
              "How do you know the URIs aren't null?");
@@ -2550,7 +2552,7 @@ css::URLValue::URIEquals(const URLValue& aOther) const
 }
 
 nsIURI*
-css::URLValue::GetURI() const
+css::URLValueData::GetURI() const
 {
   if (!mURIResolved) {
     mURIResolved = true;
@@ -2566,28 +2568,35 @@ css::URLValue::GetURI() const
 }
 
 size_t
+css::URLValueData::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = 0;
+  n += mString->SizeOfIncludingThisIfUnshared(aMallocSizeOf);
+
+  // Measurement of the following members may be added later if DMD finds it
+  // is worthwhile:
+  // - mURI
+  // - mReferrer
+  // - mOriginPrincipal
+  return n;
+}
+
+size_t
 css::URLValue::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   // Only measure it if it's unshared, to avoid double-counting.
   size_t n = 0;
   if (mRefCnt <= 1) {
     n += aMallocSizeOf(this);
-    n += mString->SizeOfIncludingThisIfUnshared(aMallocSizeOf);
-
-    // Measurement of the following members may be added later if DMD finds it
-    // is worthwhile:
-    // - mURI
-    // - mReferrer
-    // - mOriginPrincipal
+    n += URLValueData::SizeOfExcludingThis(aMallocSizeOf);
   }
   return n;
 }
 
-
 css::ImageValue::ImageValue(nsIURI* aURI, nsStringBuffer* aString,
                             nsIURI* aReferrer, nsIPrincipal* aOriginPrincipal,
                             nsIDocument* aDocument)
-  : URLValue(aURI, aString, aReferrer, aOriginPrincipal)
+  : URLValueData(aURI, aString, aReferrer, aOriginPrincipal)
 {
   // NB: If aDocument is not the original document, we may not be able to load
   // images from aDocument.  Instead we do the image load from the original doc
@@ -2622,9 +2631,6 @@ css::ImageValue::~ImageValue()
     iter.Remove();
   }
 }
-
-NS_IMPL_ADDREF(css::ImageValue)
-NS_IMPL_RELEASE(css::ImageValue)
 
 nsCSSValueGradientStop::nsCSSValueGradientStop()
   : mLocation(eCSSUnit_None),
