@@ -1610,6 +1610,11 @@ Navigator::GetDeprecatedBattery(ErrorResult& aRv)
     mBatteryManager->Init();
   }
 
+  nsIDocument* doc = mWindow->GetDoc();
+  if (doc) {
+    doc->WarnOnceAbout(nsIDocument::eNavigatorBattery);
+  }
+
   return mBatteryManager;
 }
 
