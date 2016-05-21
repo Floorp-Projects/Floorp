@@ -1946,27 +1946,3 @@ var BookmarkingUI = {
     Ci.nsINavBookmarkObserver
   ])
 };
-
-var AutoShowBookmarksToolbar = {
-  init() {
-    Services.obs.addObserver(this, "autoshow-bookmarks-toolbar", false);
-  },
-
-  uninit() {
-    Services.obs.removeObserver(this, "autoshow-bookmarks-toolbar");
-  },
-
-  observe(subject, topic, data) {
-    let toolbar = document.getElementById("PersonalToolbar");
-    if (!toolbar.collapsed)
-      return;
-
-    let placement = CustomizableUI.getPlacementOfWidget("personal-bookmarks");
-    let area = placement && placement.area;
-    if (area != CustomizableUI.AREA_BOOKMARKS)
-      return;
-
-    setToolbarVisibility(toolbar, true);
-  }
-};
-
