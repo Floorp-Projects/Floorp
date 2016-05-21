@@ -40,8 +40,7 @@ SharedImmutableStringsCache::getOrCreate(const char* chars, size_t length,
     (*entry)->refcount++;
     locked->refcount++;
     return mozilla::Some(SharedImmutableString(SharedImmutableStringsCache(inner_),
-                                               (*entry)->chars(),
-                                               (*entry)->length()));
+                                               entry->get()));
 }
 
 template <typename IntoOwnedTwoByteChars>
@@ -73,8 +72,7 @@ SharedImmutableStringsCache::getOrCreate(const char16_t* chars, size_t length,
     (*entry)->refcount++;
     locked->refcount++;
     return mozilla::Some(SharedImmutableTwoByteString(SharedImmutableStringsCache(inner_),
-                                                      (*entry)->chars(),
-                                                      (*entry)->length()));
+                                                      entry->get()));
 }
 
 } // namespace js

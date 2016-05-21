@@ -1288,6 +1288,15 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::MathCache* maybeGetMathCache() {
         return mathCache_;
     }
+
+    // If this particular JSRuntime has a SharedImmutableStringsCache, return a
+    // pointer to it, otherwise return nullptr.
+    js::SharedImmutableStringsCache* maybeThisRuntimeSharedImmutableStrings() {
+        return sharedImmutableStrings_.isSome() ? &*sharedImmutableStrings_ : nullptr;
+    }
+
+    // Get a reference to this JSRuntime's or its parent's
+    // SharedImmutableStringsCache.
     js::SharedImmutableStringsCache& sharedImmutableStrings() {
         MOZ_ASSERT_IF(parentRuntime, !sharedImmutableStrings_);
         MOZ_ASSERT_IF(!parentRuntime, sharedImmutableStrings_);

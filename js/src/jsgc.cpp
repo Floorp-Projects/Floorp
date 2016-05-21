@@ -3871,6 +3871,9 @@ GCRuntime::purgeRuntime()
 
     if (!rt->hasActiveCompilations())
         rt->parseMapPool().purgeAll();
+
+    if (auto cache = rt->maybeThisRuntimeSharedImmutableStrings())
+        cache->purge();
 }
 
 bool
