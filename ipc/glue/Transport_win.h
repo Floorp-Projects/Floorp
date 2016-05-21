@@ -12,7 +12,7 @@
 
 #include "base/process.h"
 #include "ipc/IPCMessageUtils.h"
-
+#include "nsWindowsHelpers.h"
 
 namespace mozilla {
 namespace ipc {
@@ -41,23 +41,68 @@ struct ParamTraits<mozilla::ipc::TransportDescriptor>
   {
     HANDLE pipe = mozilla::ipc::TransferHandleToProcess(aParam.mServerPipeHandle,
                                                         aParam.mDestinationProcessId);
+    DWORD duplicateFromProcessId = 0;
+    if (!pipe) {
+      if (XRE_IsParentProcess()) {
+        // If we are the parent and failed to transfer then there is no hope,
+        // just close the handle.
+        ::CloseHandle(aParam.mServerPipeHandle);
+      } else {
+        // We are probably sending to parent so it should be able to duplicate.
+        pipe = aParam.mServerPipeHandle;
+        duplicateFromProcessId = ::GetCurrentProcessId();
+      }
+    }
 
     WriteParam(aMsg, aParam.mPipeName);
     WriteParam(aMsg, pipe);
+    WriteParam(aMsg, duplicateFromProcessId);
     WriteParam(aMsg, aParam.mDestinationProcessId);
   }
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
+    DWORD duplicateFromProcessId;
     bool r = (ReadParam(aMsg, aIter, &aResult->mPipeName) &&
               ReadParam(aMsg, aIter, &aResult->mServerPipeHandle) &&
+              ReadParam(aMsg, aIter, &duplicateFromProcessId) &&
               ReadParam(aMsg, aIter, &aResult->mDestinationProcessId));
     if (!r) {
       return r;
     }
-    if (aResult->mServerPipeHandle != INVALID_HANDLE_VALUE) {
-      MOZ_RELEASE_ASSERT(aResult->mDestinationProcessId == base::GetCurrentProcId());
+
+    MOZ_RELEASE_ASSERT(aResult->mServerPipeHandle,
+                       "Main process failed to duplicate pipe handle to child.");
+
+    // If this is a not the "server" side descriptor, we have finished.
+    if (aResult->mServerPipeHandle == INVALID_HANDLE_VALUE) {
+      return true;
     }
-    return r;
+
+    MOZ_RELEASE_ASSERT(aResult->mDestinationProcessId == base::GetCurrentProcId());
+
+    // If the pipe has already been duplicated to us, we have finished.
+    if (!duplicateFromProcessId) {
+      return true;
+    }
+
+    // Otherwise duplicate the handle to us.
+    nsAutoHandle sourceProcess(::OpenProcess(PROCESS_DUP_HANDLE, FALSE,
+                                             duplicateFromProcessId));
+    if (!sourceProcess) {
+      return false;
+    }
+
+    HANDLE ourHandle;
+    BOOL duped = ::DuplicateHandle(sourceProcess, aResult->mServerPipeHandle,
+                                   ::GetCurrentProcess(), &ourHandle, 0, FALSE,
+                                   DUPLICATE_CLOSE_SOURCE | DUPLICATE_SAME_ACCESS);
+    if (!duped) {
+      aResult->mServerPipeHandle = INVALID_HANDLE_VALUE;
+      return false;
+    }
+
+    aResult->mServerPipeHandle = ourHandle;
+    return true;
   }
 };
 
