@@ -779,6 +779,8 @@ class HashTableEntry
     }
 
     void swap(HashTableEntry* other) {
+        if (this == other)
+            return;
         MOZ_ASSERT(isLive());
         if (other->isLive()) {
             mozilla::Swap(*mem.addr(), *other->mem.addr());
