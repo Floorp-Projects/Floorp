@@ -130,7 +130,7 @@ private:
   bool mSoftTextValid;
 
   void InvalidateWords() { mSoftTextValid = false; }
-  void EnsureWords();
+  nsresult EnsureWords();
   
   int32_t MapDOMPositionToSoftTextOffset(NodeOffset aNodeOffset);
   // Map an offset into mSoftText to a DOM position. Note that two DOM positions
@@ -154,9 +154,9 @@ private:
   // build mSoftText and mSoftTextDOMMapping
   void BuildSoftText();
   // Build mRealWords array
-  void BuildRealWords();
+  nsresult BuildRealWords();
 
-  void SplitDOMWord(int32_t aStart, int32_t aEnd);
+  nsresult SplitDOMWord(int32_t aStart, int32_t aEnd);
 
   // Convenience functions, object must be initialized
   nsresult MakeRange(NodeOffset aBegin, NodeOffset aEnd, nsRange** aRange);
