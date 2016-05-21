@@ -319,7 +319,7 @@ public class BrowserApp extends GeckoApp
     @NonNull
     private SearchEngineManager mSearchEngineManager; // Contains reference to Context - DO NOT LEAK!
 
-    private TelemetryDispatcher mTelemetryDispatcher;
+    private TelemetryDispatcher mTelemetryDispatcher; // lazy.
     private final SessionMeasurements mSessionMeasurements = new SessionMeasurements();
 
     private boolean mHasResumed;
@@ -703,7 +703,6 @@ public class BrowserApp extends GeckoApp
         distribution.addOnDistributionReadyCallback(new DistributionStoreCallback(this, profile.getName()));
 
         mSearchEngineManager = new SearchEngineManager(this, distribution);
-        mTelemetryDispatcher = new TelemetryDispatcher(profile.getDir().getAbsolutePath());
 
         // Init suggested sites engine in BrowserDB.
         final SuggestedSites suggestedSites = new SuggestedSites(appContext, distribution);
@@ -3920,7 +3919,11 @@ public class BrowserApp extends GeckoApp
     @Override
     public int getLayout() { return R.layout.gecko_app; }
 
+    @WorkerThread // via constructor
     public TelemetryDispatcher getTelemetryDispatcher() {
+        if (mTelemetryDispatcher == null) {
+            mTelemetryDispatcher = new TelemetryDispatcher(getProfile().getDir().getAbsolutePath());
+        }
         return mTelemetryDispatcher;
     }
 
