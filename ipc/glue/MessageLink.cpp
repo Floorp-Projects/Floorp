@@ -158,12 +158,7 @@ ProcessLink::EchoMessage(Message *msg)
 void
 ProcessLink::SendMessage(Message *msg)
 {
-    if (msg->size() > IPC::Channel::kMaximumMessageSize) {
-      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IPCMessageName"), nsDependentCString(msg->name()));
-      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IPCMessageSize"), nsPrintfCString("%d", msg->size()));
-      MOZ_CRASH("IPC message size is too large");
-    }
-
+    MOZ_RELEASE_ASSERT(msg->size() < IPC::Channel::kMaximumMessageSize);
     mChan->AssertWorkerThread();
     mChan->mMonitor->AssertCurrentThreadOwns();
 
