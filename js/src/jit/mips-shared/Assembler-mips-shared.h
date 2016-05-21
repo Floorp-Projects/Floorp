@@ -815,6 +815,16 @@ class AssemblerMIPSShared : public AssemblerShared
         FCC7
     };
 
+    enum FPControl {
+        FIR  = 0,
+        UFR,
+        UNFR = 4,
+        FCCR = 25,
+        FEXR,
+        FENR = 28,
+        FCSR = 31
+    };
+
     enum FloatFormat {
         SingleFloat,
         DoubleFloat
@@ -1103,6 +1113,9 @@ class AssemblerMIPSShared : public AssemblerShared
 
     BufferOffset as_movs(FloatRegister fd, FloatRegister fs);
     BufferOffset as_movd(FloatRegister fd, FloatRegister fs);
+
+    BufferOffset as_ctc1(Register rt, FPControl fc);
+    BufferOffset as_cfc1(Register rt, FPControl fc);
 
     BufferOffset as_mtc1(Register rt, FloatRegister fs);
     BufferOffset as_mfc1(Register rt, FloatRegister fs);
