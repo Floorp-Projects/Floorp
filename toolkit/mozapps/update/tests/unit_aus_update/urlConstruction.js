@@ -349,9 +349,68 @@ function check_test_pt9() {
   run_test_pt10();
 }
 
-// url constructed with %DISTRIBUTION%
+// url constructed with %SYSTEM_CAPABILITIES%
 function run_test_pt10() {
   gCheckFunc = check_test_pt10;
+  let url = URL_PREFIX + "%SYSTEM_CAPABILITIES%/";
+  debugDump("testing url constructed with %SYSTEM_CAPABILITIES% - " + url);
+  setUpdateURLOverride(url);
+  gUpdateChecker.checkForUpdates(updateCheckListener, true);
+}
+
+/**
+ * Provides system capability information for application update though it may
+ * be used by other consumers.
+ */
+function getSystemCapabilities() {
+  if (IS_WIN) {
+    const PF_MMX_INSTRUCTIONS_AVAILABLE = 3; // MMX
+    const PF_XMMI_INSTRUCTIONS_AVAILABLE = 6; // SSE
+    const PF_XMMI64_INSTRUCTIONS_AVAILABLE = 10; // SSE2
+    const PF_SSE3_INSTRUCTIONS_AVAILABLE = 13; // SSE3
+
+    let lib = ctypes.open("kernel32.dll");
+    let IsProcessorFeaturePresent = lib.declare("IsProcessorFeaturePresent",
+                                                ctypes.winapi_abi,
+                                                ctypes.int32_t, /* success */
+                                                ctypes.uint32_t); /* DWORD */
+    let instructionSet = "unknown";
+    try {
+      if (IsProcessorFeaturePresent(PF_SSE3_INSTRUCTIONS_AVAILABLE)) {
+        instructionSet = "SSE3";
+      } else if (IsProcessorFeaturePresent(PF_XMMI64_INSTRUCTIONS_AVAILABLE)) {
+        instructionSet = "SSE2";
+      } else if (IsProcessorFeaturePresent(PF_XMMI_INSTRUCTIONS_AVAILABLE)) {
+        instructionSet = "SSE";
+      } else if (IsProcessorFeaturePresent(PF_MMX_INSTRUCTIONS_AVAILABLE)) {
+        instructionSet = "MMX";
+      }
+    } catch (e) {
+        Cu.reportError("Error getting processor instruction set. " +
+                       "Exception: " + e);
+    }
+
+    lib.close();
+    return instructionSet;
+  }
+
+  return "NA"
+}
+
+function check_test_pt10() {
+  let systemCapabilities = "NA";
+  if (IS_WIN) {
+    systemCapabilities = getSystemCapabilities();
+  }
+
+  Assert.equal(getResult(gRequestURL), systemCapabilities,
+               "the url param for %SYSTEM_CAPABILITIES%" + MSG_SHOULD_EQUAL);
+  run_test_pt11();
+}
+
+// url constructed with %DISTRIBUTION%
+function run_test_pt11() {
+  gCheckFunc = check_test_pt11;
   let url = URL_PREFIX + "%DISTRIBUTION%/";
   debugDump("testing url constructed with %DISTRIBUTION% - " + url);
   setUpdateURLOverride(url);
@@ -359,15 +418,15 @@ function run_test_pt10() {
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 
-function check_test_pt10() {
+function check_test_pt11() {
   Assert.equal(getResult(gRequestURL), "test_distro",
                "the url param for %DISTRIBUTION%" + MSG_SHOULD_EQUAL);
-  run_test_pt11();
+  run_test_pt12();
 }
 
 // url constructed with %DISTRIBUTION_VERSION%
-function run_test_pt11() {
-  gCheckFunc = check_test_pt11;
+function run_test_pt12() {
+  gCheckFunc = check_test_pt12;
   let url = URL_PREFIX + "%DISTRIBUTION_VERSION%/";
   debugDump("testing url constructed with %DISTRIBUTION_VERSION% - " + url);
   setUpdateURLOverride(url);
@@ -375,15 +434,15 @@ function run_test_pt11() {
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 
-function check_test_pt11() {
+function check_test_pt12() {
   Assert.equal(getResult(gRequestURL), "test_distro_version",
                "the url param for %DISTRIBUTION_VERSION%" + MSG_SHOULD_EQUAL);
-  run_test_pt12();
+  run_test_pt13();
 }
 
 // url with force param that doesn't already have a param - bug 454357
-function run_test_pt12() {
-  gCheckFunc = check_test_pt12;
+function run_test_pt13() {
+  gCheckFunc = check_test_pt13;
   let url = URL_PREFIX;
   debugDump("testing url with force param that doesn't already have a " +
             "param - " + url);
@@ -391,38 +450,38 @@ function run_test_pt12() {
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 
-function check_test_pt12() {
+function check_test_pt13() {
   Assert.equal(getResult(gRequestURL), "?force=1",
                "the url query string for force" + MSG_SHOULD_EQUAL);
-  run_test_pt13();
+  run_test_pt14();
 }
 
 // url with force param that already has a param - bug 454357
-function run_test_pt13() {
-  gCheckFunc = check_test_pt13;
+function run_test_pt14() {
+  gCheckFunc = check_test_pt14;
   let url = URL_PREFIX + "?extra=param";
   debugDump("testing url with force param that already has a param - " + url);
   setUpdateURLOverride(url);
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 
-function check_test_pt13() {
+function check_test_pt14() {
   Assert.equal(getResult(gRequestURL), "?extra=param&force=1",
                "the url query string for force with an extra string" +
                MSG_SHOULD_EQUAL);
-  run_test_pt14();
+  run_test_pt15();
 }
 
-function run_test_pt14() {
+function run_test_pt15() {
   Services.prefs.setCharPref("app.update.custom", "custom");
-  gCheckFunc = check_test_pt14;
+  gCheckFunc = check_test_pt15;
   let url = URL_PREFIX + "?custom=%CUSTOM%";
   debugDump("testing url constructed with %CUSTOM% - " + url);
   setUpdateURLOverride(url);
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 
-function check_test_pt14() {
+function check_test_pt15() {
   Assert.equal(getResult(gRequestURL), "?custom=custom&force=1",
                "the url query string for force with a custom string" +
                MSG_SHOULD_EQUAL);
