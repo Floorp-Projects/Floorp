@@ -141,9 +141,9 @@ class SharedImmutableStringsCache
         // Size of the table.
         n += locked->set.sizeOfExcludingThis(mallocSizeOf);
 
-        // Sizes of the strings.
+        // Sizes of the strings and their boxes.
         for (auto r = locked->set.all(); !r.empty(); r.popFront())
-            n += mallocSizeOf(r.front().chars());
+            n += mallocSizeOf(r.front().get()) + mallocSizeOf(r.front()->chars());
 
         return n;
     }
@@ -218,12 +218,18 @@ class SharedImmutableStringsCache
       public:
         mutable size_t refcount;
 
+        using Ptr = mozilla::UniquePtr<StringBox, JS::DeletePolicy<StringBox>>;
+
         StringBox(OwnedChars&& chars, size_t length)
           : chars_(mozilla::Move(chars))
           , length_(length)
           , refcount(0)
         {
             MOZ_ASSERT(chars_);
+        }
+
+        static Ptr Create(OwnedChars&& chars, size_t length) {
+            return Ptr(js_new<StringBox>(mozilla::Move(chars), length));
         }
 
         StringBox(StringBox&& rhs)
@@ -287,17 +293,17 @@ class SharedImmutableStringsCache
             return mozilla::HashString(lookup.chars_, lookup.length_);
         }
 
-        static bool match(const StringBox& key, const Lookup& lookup) {
+        static bool match(const StringBox::Ptr& key, const Lookup& lookup) {
             MOZ_ASSERT(lookup.chars_);
-            MOZ_ASSERT(key.chars());
+            MOZ_ASSERT(key->chars());
 
-            if (key.length() != lookup.length_)
+            if (key->length() != lookup.length_)
                 return false;
 
-            if (key.chars() == lookup.chars_)
+            if (key->chars() == lookup.chars_)
                 return true;
 
-            return memcmp(key.chars(), lookup.chars_, key.length()) == 0;
+            return memcmp(key->chars(), lookup.chars_, key->length()) == 0;
         }
     };
 
@@ -306,7 +312,7 @@ class SharedImmutableStringsCache
     // `SharedImmutable[TwoByte]String` holders.
     struct Inner
     {
-        using Set = HashSet<StringBox, Hasher, SystemAllocPolicy>;
+        using Set = HashSet<StringBox::Ptr, Hasher, SystemAllocPolicy>;
 
         size_t refcount;
         Set set;
