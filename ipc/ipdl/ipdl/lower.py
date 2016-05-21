@@ -5317,7 +5317,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
     def checkedRead(self, ipdltype, expr, msgexpr, iterexpr, errfn, paramtype):
         ifbad = StmtIf(ExprNot(self.read(ipdltype, expr, msgexpr, iterexpr)))
-        ifbad.addifstmts(errfn('Error deserializing ' + paramtype))
+        if isinstance(paramtype, list):
+            errorcall = errfn(*paramtype)
+        else:
+            errorcall = errfn('Error deserializing ' + paramtype)
+        ifbad.addifstmts(errorcall)
         return ifbad
 
     def endRead(self, msgexpr, iterexpr):
