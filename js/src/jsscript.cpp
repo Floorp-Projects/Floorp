@@ -15,6 +15,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/unused.h"
 #include "mozilla/Vector.h"
 
 #include <algorithm>
@@ -2063,7 +2064,7 @@ SourceCompressionTask::work()
     // size of the string, first.
     size_t inputBytes = ss->length() * sizeof(char16_t);
     size_t firstSize = inputBytes / 2;
-    compressed = js_malloc(firstSize);
+    compressed.reset(js_pod_malloc<char>(firstSize));
     if (!compressed)
         return OOM;
 
@@ -2073,7 +2074,7 @@ SourceCompressionTask::work()
     if (!comp.init())
         return OOM;
 
-    comp.setOutput((unsigned char*) compressed, firstSize);
+    comp.setOutput(reinterpret_cast<unsigned char*>(compressed.get()), firstSize);
     bool cont = true;
     while (cont) {
         if (abort_)
@@ -2090,11 +2091,11 @@ SourceCompressionTask::work()
 
             // The compressed output is greater than half the size of the
             // original string. Reallocate to the full size.
-            compressed = js_realloc(compressed, inputBytes);
+            compressed.reset(static_cast<char*>(js_realloc(compressed.release(), inputBytes)));
             if (!compressed)
                 return OOM;
 
-            comp.setOutput((unsigned char*) compressed, inputBytes);
+            comp.setOutput(reinterpret_cast<unsigned char*>(compressed.get()), inputBytes);
             break;
           }
           case Compressor::DONE:
@@ -2105,11 +2106,14 @@ SourceCompressionTask::work()
         }
     }
     compressedBytes = comp.outWritten();
-    compressedHash = mozilla::HashBytes(compressed, compressedBytes);
+    compressedHash = mozilla::HashBytes(compressed.get(), compressedBytes);
 
     // Shrink the buffer to the size of the compressed data.
-    if (void* newCompressed = js_realloc(compressed, compressedBytes))
-        compressed = newCompressed;
+    if (auto newCompressed = static_cast<char*>(js_realloc(compressed.get(), compressedBytes))) {
+        // If the realloc succeeded, compressed is now a freed pointer.
+        mozilla::Unused << compressed.release();
+        compressed.reset(newCompressed);
+    }
 
     return Success;
 }
