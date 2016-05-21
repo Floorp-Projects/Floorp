@@ -3495,6 +3495,40 @@ GetModuleEnvironmentValue(JSContext* cx, unsigned argc, Value* vp)
     return GetProperty(cx, env, env, id, args.rval());
 }
 
+static bool
+CatchAndReturnPendingExceptionStack(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() != 1) {
+        JS_ReportError(cx, "Wrong number of arguments, expected exactly 1");
+        return false;
+    }
+
+    if (!args[0].isObject() || !IsCallable(args[0])) {
+        JS_ReportError(cx, "Argument must be callable");
+        return false;
+    }
+
+    RootedValue thisv(cx, NullValue());
+    RootedObject fun(cx, &args[0].toObject());
+    RootedValue rval(cx);
+    if (JS::Call(cx, UndefinedHandleValue, fun, JS::HandleValueArray::empty(), &rval) ||
+        !cx->isExceptionPending())
+    {
+        JS_ReportError(cx, "Supplied callable did not throw");
+        return false;
+    }
+
+    RootedObject stack(cx);
+    if (!JS::GetPendingExceptionStack(cx, &stack))
+        return false;
+    cx->clearPendingException();
+
+    MOZ_ASSERT_IF(stack, stack->is<SavedFrame>());
+    args.rval().setObjectOrNull(stack);
+    return true;
+}
+
 static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
 "gc([obj] | 'compartment' [, 'shrinking'])",
@@ -4011,6 +4045,11 @@ gc::ZealModeHelpText),
     JS_FN_HELP("getModuleEnvironmentValue", GetModuleEnvironmentValue, 2, 0,
 "getModuleEnvironmentValue(module, name)",
 "  Get the value of a bound name in a module environment.\n"),
+
+    JS_FN_HELP("catchAndReturnPendingExceptionStack", CatchAndReturnPendingExceptionStack, 1, 0,
+"catchAndReturnPendingExceptionStack(func)",
+"  Call `func`, catch its thrown exception, and return the stack captured when\n"
+"  the exception was thrown.\n"),
 
     JS_FS_HELP_END
 };
