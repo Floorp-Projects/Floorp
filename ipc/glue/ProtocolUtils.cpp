@@ -518,5 +518,11 @@ UnionTypeReadError(const char* aUnionName)
   NS_RUNTIMEABORT(message.get());
 }
 
+void ArrayLengthReadError(const char* aElementName)
+{
+  nsPrintfCString message("error deserializing length of %s[]", aElementName);
+  NS_RUNTIMEABORT(message.get());
+}
+
 } // namespace ipc
 } // namespace mozilla

@@ -342,6 +342,9 @@ MismatchedActorTypeError(const char* aActorDescription);
 MOZ_NEVER_INLINE void
 UnionTypeReadError(const char* aUnionName);
 
+MOZ_NEVER_INLINE void
+ArrayLengthReadError(const char* aElementName);
+
 struct PrivateIPDLInterface {};
 
 nsresult
