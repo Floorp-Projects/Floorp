@@ -410,10 +410,8 @@ ErrorCopier::~ErrorCopier()
             ac.reset();
             Rooted<ErrorObject*> errObj(cx, &exc.toObject().as<ErrorObject>());
             JSObject* copyobj = CopyErrorObject(cx, errObj);
-            if (copyobj) {
-                RootedValue v(cx, ObjectValue(*copyobj));
-                cx->setPendingException(v, JS::ExceptionStackBehavior::DoNotCapture);
-            }
+            if (copyobj)
+                cx->setPendingException(ObjectValue(*copyobj));
         }
     }
 }

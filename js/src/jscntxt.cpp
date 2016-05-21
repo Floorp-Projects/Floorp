@@ -302,8 +302,7 @@ js::ReportOutOfMemory(ExclusiveContext* cxArg)
         oomCallback(cx, cx->runtime()->oomCallbackData);
 
     if (cx->options().autoJSAPIOwnsErrorReporting() || JS_IsRunning(cx)) {
-        RootedValue v(cx, StringValue(cx->names().outOfMemory));
-        cx->setPendingException(v);
+        cx->setPendingException(StringValue(cx->names().outOfMemory));
         return;
     }
 
@@ -962,7 +961,6 @@ JSContext::JSContext(JSRuntime* rt)
   : ExclusiveContext(rt, &rt->mainThread, Context_JS),
     throwing(false),
     unwrappedException_(this),
-    unwrappedPendingExceptionStack_(this),
     options_(),
     overRecursed_(false),
     propagatingForcedReturn_(false),
@@ -999,25 +997,8 @@ JSContext::getPendingException(MutableHandleValue rval)
     if (!compartment()->wrap(this, rval))
         return false;
     assertSameCompartment(this, rval);
-    setPendingException(rval, JS::ExceptionStackBehavior::DoNotCapture);
+    setPendingException(rval);
     overRecursed_ = wasOverRecursed;
-    return true;
-}
-
-bool
-JSContext::getPendingExceptionStack(MutableHandleObject stackp)
-{
-    if (!unwrappedPendingExceptionStack_) {
-        stackp.set(nullptr);
-        return true;
-    }
-
-    stackp.set(unwrappedPendingExceptionStack_);
-    if (!compartment()->wrap(this, stackp)) {
-        stackp.set(nullptr);
-        return false;
-    }
-
     return true;
 }
 
