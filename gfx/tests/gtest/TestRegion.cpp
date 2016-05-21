@@ -719,13 +719,13 @@ void BenchRegionBuilderOr() {
 
   RegionBuilder<nsRegion> r;
   for (int i = 0; i < size; i++) {
-    r.Or(nsRect(i, i, i + 10, i + 10));
+    r.OrWith(nsRect(i, i, i + 10, i + 10));
   }
   r.ToRegion();
 
   RegionBuilder<nsIntRegion> rInt;
   for (int i = 0; i < size; i++) {
-    rInt.Or(nsIntRect(i, i, i + 10, i + 10));
+    rInt.OrWith(nsIntRect(i, i, i + 10, i + 10));
   }
   rInt.ToRegion();
 }
