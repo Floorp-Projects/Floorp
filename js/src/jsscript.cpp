@@ -2106,7 +2106,6 @@ SourceCompressionTask::work()
         }
     }
     compressedBytes = comp.outWritten();
-    compressedHash = mozilla::HashBytes(compressed.get(), compressedBytes);
 
     // Shrink the buffer to the size of the compressed data.
     if (auto newCompressed = static_cast<char*>(js_realloc(compressed.get(), compressedBytes))) {
