@@ -13,7 +13,7 @@ function run_test() {
 
   // test that variants of 'baz.com' get normalized appropriately, but that
   // malformed hosts are rejected
-  cm.add("baz.com", "/", "foo", "bar", false, false, true, expiry, {});
+  cm.add("baz.com", "/", "foo", "bar", false, false, true, expiry);
   do_check_eq(cm.countCookiesFromHost("baz.com"), 1);
   do_check_eq(cm.countCookiesFromHost("BAZ.com"), 1);
   do_check_eq(cm.countCookiesFromHost(".baz.com"), 1);
@@ -34,7 +34,7 @@ function run_test() {
   do_check_eq(cm.countCookiesFromHost("baz.com"), 0);
 
   // Test that 'baz.com' and 'baz.com.' are treated differently
-  cm.add("baz.com.", "/", "foo", "bar", false, false, true, expiry, {});
+  cm.add("baz.com.", "/", "foo", "bar", false, false, true, expiry);
   do_check_eq(cm.countCookiesFromHost("baz.com"), 0);
   do_check_eq(cm.countCookiesFromHost("BAZ.com"), 0);
   do_check_eq(cm.countCookiesFromHost(".baz.com"), 0);
@@ -47,7 +47,7 @@ function run_test() {
 
   // test that domain cookies are illegal for IP addresses, aliases such as
   // 'localhost', and eTLD's such as 'co.uk'
-  cm.add("192.168.0.1", "/", "foo", "bar", false, false, true, expiry, {});
+  cm.add("192.168.0.1", "/", "foo", "bar", false, false, true, expiry);
   do_check_eq(cm.countCookiesFromHost("192.168.0.1"), 1);
   do_check_eq(cm.countCookiesFromHost("192.168.0.1."), 0);
   do_check_throws(function() {
@@ -57,7 +57,7 @@ function run_test() {
     cm.countCookiesFromHost(".192.168.0.1.");
   }, Cr.NS_ERROR_ILLEGAL_VALUE);
 
-  cm.add("localhost", "/", "foo", "bar", false, false, true, expiry, {});
+  cm.add("localhost", "/", "foo", "bar", false, false, true, expiry);
   do_check_eq(cm.countCookiesFromHost("localhost"), 1);
   do_check_eq(cm.countCookiesFromHost("localhost."), 0);
   do_check_throws(function() {
@@ -67,7 +67,7 @@ function run_test() {
     cm.countCookiesFromHost(".localhost.");
   }, Cr.NS_ERROR_ILLEGAL_VALUE);
 
-  cm.add("co.uk", "/", "foo", "bar", false, false, true, expiry, {});
+  cm.add("co.uk", "/", "foo", "bar", false, false, true, expiry);
   do_check_eq(cm.countCookiesFromHost("co.uk"), 1);
   do_check_eq(cm.countCookiesFromHost("co.uk."), 0);
   do_check_throws(function() {
@@ -105,26 +105,26 @@ function run_test() {
     cm.countCookiesFromHost("..");
   }, Cr.NS_ERROR_ILLEGAL_VALUE);
 
-  var e = cm.getCookiesFromHost("", {});
+  var e = cm.getCookiesFromHost("");
   do_check_false(e.hasMoreElements());
   do_check_throws(function() {
-    cm.getCookiesFromHost(".", {});
+    cm.getCookiesFromHost(".");
   }, Cr.NS_ERROR_ILLEGAL_VALUE);
   do_check_throws(function() {
-    cm.getCookiesFromHost("..", {});
+    cm.getCookiesFromHost("..");
   }, Cr.NS_ERROR_ILLEGAL_VALUE);
 
-  e = cm.getCookiesFromHost("baz.com", {});
+  e = cm.getCookiesFromHost("baz.com");
   do_check_true(e.hasMoreElements());
   do_check_eq(e.getNext().QueryInterface(Ci.nsICookie2).name, "foo");
   do_check_false(e.hasMoreElements());
-  e = cm.getCookiesFromHost("", {});
+  e = cm.getCookiesFromHost("");
   do_check_false(e.hasMoreElements());
   do_check_throws(function() {
-    cm.getCookiesFromHost(".", {});
+    cm.getCookiesFromHost(".");
   }, Cr.NS_ERROR_ILLEGAL_VALUE);
   do_check_throws(function() {
-    cm.getCookiesFromHost("..", {});
+    cm.getCookiesFromHost("..");
   }, Cr.NS_ERROR_ILLEGAL_VALUE);
 
   cm.removeAll();
@@ -151,26 +151,26 @@ function run_test() {
     cm.countCookiesFromHost(".");
   }, Cr.NS_ERROR_ILLEGAL_VALUE);
 
-  e = cm.getCookiesFromHost("baz.com", {});
+  e = cm.getCookiesFromHost("baz.com");
   do_check_false(e.hasMoreElements());
-  e = cm.getCookiesFromHost("", {});
+  e = cm.getCookiesFromHost("");
   do_check_true(e.hasMoreElements());
   e.getNext();
   do_check_true(e.hasMoreElements());
   e.getNext();
   do_check_false(e.hasMoreElements());
   do_check_throws(function() {
-    cm.getCookiesFromHost(".", {});
+    cm.getCookiesFromHost(".");
   }, Cr.NS_ERROR_ILLEGAL_VALUE);
 
   cm.removeAll();
 
   // test that an empty host to add() or remove() works,
   // but a host of '.' doesn't
-  cm.add("", "/", "foo2", "bar", false, false, true, expiry, {});
+  cm.add("", "/", "foo2", "bar", false, false, true, expiry);
   do_check_eq(getCookieCount(), 1);
   do_check_throws(function() {
-    cm.add(".", "/", "foo3", "bar", false, false, true, expiry, {});
+    cm.add(".", "/", "foo3", "bar", false, false, true, expiry);
   }, Cr.NS_ERROR_ILLEGAL_VALUE);
   do_check_eq(getCookieCount(), 1);
 
@@ -216,13 +216,13 @@ function testDomainCookie(uriString, domain) {
 
   var uri = NetUtil.newURI(uriString);
   cs.setCookieString(uri, null, "foo=bar; domain=" + domain, null);
-  var e = cm.getCookiesFromHost(domain, {});
+  var e = cm.getCookiesFromHost(domain);
   do_check_true(e.hasMoreElements());
   do_check_eq(e.getNext().QueryInterface(Ci.nsICookie2).host, domain);
   cm.removeAll();
 
   cs.setCookieString(uri, null, "foo=bar; domain=." + domain, null);
-  e = cm.getCookiesFromHost(domain, {});
+  e = cm.getCookiesFromHost(domain);
   do_check_true(e.hasMoreElements());
   do_check_eq(e.getNext().QueryInterface(Ci.nsICookie2).host, domain);
   cm.removeAll();

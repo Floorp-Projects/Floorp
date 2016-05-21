@@ -125,7 +125,7 @@ var SessionCookiesInternal = {
       if (!Services.cookies.cookieExists(cookieObj)) {
         Services.cookies.add(cookie.host, cookie.path || "", cookie.name || "",
                              cookie.value, !!cookie.secure, !!cookie.httponly,
-                             /* isSession = */ true, expiry, cookie.originAttributes);
+                             /* isSession = */ true, expiry);
       }
     }
   },
@@ -415,10 +415,6 @@ var CookieStore = {
 
     if (cookie.expiry < MAX_EXPIRY) {
       jscookie.expiry = cookie.expiry;
-    }
-
-    if (cookie.originAttributes) {
-      jscookie.originAttributes = cookie.originAttributes;
     }
 
     this._ensureMap(cookie).set(cookie.name, jscookie);
