@@ -1210,6 +1210,18 @@ AssemblerMIPSShared::as_movd(FloatRegister fd, FloatRegister fs)
 }
 
 BufferOffset
+AssemblerMIPSShared::as_ctc1(Register rt, FPControl fc)
+{
+    return writeInst(InstReg(op_cop1, rs_ctc1, rt, FloatRegister(fc)).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_cfc1(Register rt, FPControl fc)
+{
+    return writeInst(InstReg(op_cop1, rs_cfc1, rt, FloatRegister(fc)).encode());
+}
+
+BufferOffset
 AssemblerMIPSShared::as_mtc1(Register rt, FloatRegister fs)
 {
     return writeInst(InstReg(op_cop1, rs_mtc1, rt, fs).encode());
