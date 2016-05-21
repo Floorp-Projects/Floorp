@@ -1131,11 +1131,13 @@ class AssemblerMIPSShared : public AssemblerShared
     BufferOffset as_floorws(FloatRegister fd, FloatRegister fs);
     BufferOffset as_roundws(FloatRegister fd, FloatRegister fs);
     BufferOffset as_truncws(FloatRegister fd, FloatRegister fs);
+    BufferOffset as_truncls(FloatRegister fd, FloatRegister fs);
 
     BufferOffset as_ceilwd(FloatRegister fd, FloatRegister fs);
     BufferOffset as_floorwd(FloatRegister fd, FloatRegister fs);
     BufferOffset as_roundwd(FloatRegister fd, FloatRegister fs);
     BufferOffset as_truncwd(FloatRegister fd, FloatRegister fs);
+    BufferOffset as_truncld(FloatRegister fd, FloatRegister fs);
 
     BufferOffset as_cvtdl(FloatRegister fd, FloatRegister fs);
     BufferOffset as_cvtds(FloatRegister fd, FloatRegister fs);
