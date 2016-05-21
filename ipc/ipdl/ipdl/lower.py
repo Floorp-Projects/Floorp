@@ -4348,7 +4348,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             StmtDecl(Decl(_actorIdType(), idvar.name)),
             self.checkedRead(None, ExprAddrOf(idvar),
                              self.msgvar, self.itervar, errfnRead,
-                             'id\' for \'' + cxxtype.name),
+                             '\'id\' for \'' + cxxtype.name + '\''),
         ])
 
         ifbadid = StmtIf(ExprBinary(
@@ -4442,14 +4442,14 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         forread.addstmt(
             self.checkedRead(eltipdltype, ExprAddrOf(ExprIndex(favar, ivar)),
                              msgvar, itervar, errfnRead,
-                             eltipdltype.name() + '[i]'))
+                             '\'' + eltipdltype.name() + '[i]\''))
         read.addstmts([
             StmtDecl(Decl(_cxxArrayType(_cxxBareType(arraytype.basetype, self.side)), favar.name)),
             StmtDecl(Decl(Type.UINT32, lenvar.name)),
             self.checkedRead(None, ExprAddrOf(lenvar),
                              msgvar, itervar, errfnRead,
-                             'length\' (' + Type.UINT32.name + ') of \'' +
-                             arraytype.name()),
+                             '\'length\' (' + Type.UINT32.name + ') of \'' +
+                             arraytype.name() + '\''),
             Whitespace.NL,
             StmtExpr(_callCxxArraySetLength(favar, lenvar)),
             forread,
@@ -4579,8 +4579,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             return ExprCall(f.getMethod(thisexpr=var, sel=sel))
 
         for f in sd.fields:
-            desc = f.getMethod().name + '\' (' + f.ipdltype.name() + \
-                   ') member of \'' + intype.name
+            desc = '\'' + f.getMethod().name + '\' (' + f.ipdltype.name() + \
+                   ') member of \'' + intype.name + '\''
             writefield = StmtExpr(self.write(f.ipdltype, get('.', f), msgvar))
             readfield = self.checkedRead(f.ipdltype,
                                          ExprAddrOf(get('->', f)),
@@ -4673,7 +4673,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             StmtDecl(Decl(Type.INT, typevar.name)),
             self.checkedRead(
                 None, ExprAddrOf(typevar), msgvar, itervar, errfnRead,
-                typevar.name + '\' (' + Type.INT.name + ') of union \'' + uniontype.name()),
+                '\'' + typevar.name + '\' (' + Type.INT.name + ') of union \'' + uniontype.name() + '\''),
             Whitespace.NL,
             readswitch,
         ])
@@ -5171,7 +5171,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             decls = [ StmtDecl(Decl(handletype, handlevar.name)) ]
             reads = [ self.checkedRead(None, ExprAddrOf(handlevar), msgexpr,
                                        ExprAddrOf(self.itervar),
-                                       errfn, handletype.name) ]
+                                       errfn, "'%s'" % handletype.name) ]
             start = 1
 
         stmts.extend((
@@ -5182,7 +5182,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             + [ Whitespace.NL ]
             + reads + [ self.checkedRead(p.ipdltype, ExprAddrOf(p.var()),
                                          msgexpr, ExprAddrOf(itervar),
-                                         errfn, p.bareType(side).name)
+                                         errfn, "'%s'" % p.bareType(side).name)
                         for p in md.params[start:] ]
             + [ self.endRead(msgvar, itervar) ]))
 
@@ -5204,7 +5204,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             + [ self.checkedRead(r.ipdltype, r.var(),
                                  ExprAddrOf(self.replyvar),
                                  ExprAddrOf(self.itervar),
-                                 errfn, r.bareType(side).name)
+                                 errfn, "'%s'" % r.bareType(side).name)
                 for r in md.returns ]
             + [ self.endRead(self.replyvar, itervar) ])
 
@@ -5357,7 +5357,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
     def checkedRead(self, ipdltype, expr, msgexpr, iterexpr, errfn, paramtype):
         ifbad = StmtIf(ExprNot(self.read(ipdltype, expr, msgexpr, iterexpr)))
-        ifbad.addifstmts(errfn('Error deserializing \'' + paramtype + '\''))
+        ifbad.addifstmts(errfn('Error deserializing ' + paramtype))
         return ifbad
 
     def endRead(self, msgexpr, iterexpr):
