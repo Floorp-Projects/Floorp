@@ -31,17 +31,17 @@ SharedImmutableStringsCache::getOrCreate(const char* chars, size_t length,
             return mozilla::Nothing();
         MOZ_ASSERT(ownedChars.get() == chars ||
                    memcmp(ownedChars.get(), chars, length) == 0);
-        StringBox box(mozilla::Move(ownedChars), length);
-        if (!locked->set.add(entry, mozilla::Move(box)))
+        auto box = StringBox::Create(mozilla::Move(ownedChars), length);
+        if (!box || !locked->set.add(entry, mozilla::Move(box)))
             return mozilla::Nothing();
     }
 
-    MOZ_ASSERT(entry);
-    entry->refcount++;
+    MOZ_ASSERT(entry && *entry);
+    (*entry)->refcount++;
     locked->refcount++;
     return mozilla::Some(SharedImmutableString(SharedImmutableStringsCache(inner_),
-                                               entry->chars(),
-                                               entry->length()));
+                                               (*entry)->chars(),
+                                               (*entry)->length()));
 }
 
 template <typename IntoOwnedTwoByteChars>
@@ -64,17 +64,17 @@ SharedImmutableStringsCache::getOrCreate(const char16_t* chars, size_t length,
         MOZ_ASSERT(ownedTwoByteChars.get() == chars ||
                    memcmp(ownedTwoByteChars.get(), chars, length * sizeof(char16_t)) == 0);
         OwnedChars ownedChars(reinterpret_cast<char*>(ownedTwoByteChars.release()));
-        StringBox box(mozilla::Move(ownedChars), length * sizeof(char16_t));
-        if (!locked->set.add(entry, mozilla::Move(box)))
+        auto box = StringBox::Create(mozilla::Move(ownedChars), length * sizeof(char16_t));
+        if (!box || !locked->set.add(entry, mozilla::Move(box)))
             return mozilla::Nothing();
     }
 
-    MOZ_ASSERT(entry);
-    entry->refcount++;
+    MOZ_ASSERT(entry && *entry);
+    (*entry)->refcount++;
     locked->refcount++;
     return mozilla::Some(SharedImmutableTwoByteString(SharedImmutableStringsCache(inner_),
-                                                      entry->chars(),
-                                                      entry->length()));
+                                                      (*entry)->chars(),
+                                                      (*entry)->length()));
 }
 
 } // namespace js

@@ -81,11 +81,11 @@ SharedImmutableString::~SharedImmutableString() {
     auto locked = cache_.inner_->lock();
     auto entry = locked->set.lookup(lookup);
 
-    MOZ_ASSERT(entry);
-    MOZ_ASSERT(entry->refcount > 0);
+    MOZ_ASSERT(entry && *entry);
+    MOZ_ASSERT((*entry)->refcount > 0);
 
-    entry->refcount--;
-    if (entry->refcount == 0)
+    (*entry)->refcount--;
+    if ((*entry)->refcount == 0)
         locked->set.remove(entry);
 }
 
