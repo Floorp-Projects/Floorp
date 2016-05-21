@@ -57,7 +57,7 @@ extern r_debug _r_debug;
 
 #define USE_GLIBC_BACKTRACE 1
 // To debug, use #define JPROF_STATIC
-#define JPROF_STATIC //static
+#define JPROF_STATIC static
 
 static int gLogFD = -1;
 static pthread_t main_thread;
