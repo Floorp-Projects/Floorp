@@ -161,12 +161,8 @@ class SharedImmutableStringsCache
         if (!inner)
             return mozilla::Nothing();
 
-        auto ret = mozilla::Some(SharedImmutableStringsCache(inner));
-#ifdef DEBUG
-        auto locked = ret->inner_->lock();
-        MOZ_ASSERT(locked->refcount == 1);
-#endif
-        return ret;
+        auto locked = inner->lock();
+        return mozilla::Some(SharedImmutableStringsCache(locked));
     }
 
     SharedImmutableStringsCache(SharedImmutableStringsCache&& rhs)
@@ -183,6 +179,12 @@ class SharedImmutableStringsCache
     }
 
     SharedImmutableStringsCache& operator=(const SharedImmutableStringsCache&) = delete;
+
+    SharedImmutableStringsCache clone() {
+        MOZ_ASSERT(inner_);
+        auto locked = inner_->lock();
+        return SharedImmutableStringsCache(locked);
+    }
 
     ~SharedImmutableStringsCache() {
         if (!inner_)
@@ -325,7 +327,7 @@ class SharedImmutableStringsCache
         Set set;
 
         Inner()
-          : refcount(1)
+          : refcount(0)
           , set()
         { }
 
@@ -340,18 +342,10 @@ class SharedImmutableStringsCache
 
     const ExclusiveData<Inner>* inner_;
 
-    // The refcount++ on inner must have already been performed by the
-    // caller. The matching refcount-- is performed in the
-    // ~SharedImmutableStringsCache destructor.
-    explicit SharedImmutableStringsCache(const ExclusiveData<Inner>* inner)
-      : inner_(inner)
+    explicit SharedImmutableStringsCache(ExclusiveData<Inner>::Guard& locked)
+      : inner_(locked.parent())
     {
-        MOZ_ASSERT(inner_);
-    }
-
-    static SharedImmutableStringsCache Clone(ExclusiveData<Inner>::Guard& locked) {
         locked->refcount++;
-        return SharedImmutableStringsCache(locked.parent());
     }
 };
 
@@ -368,7 +362,7 @@ class SharedImmutableString
     mutable SharedImmutableStringsCache cache_;
     mutable SharedImmutableStringsCache::StringBox* box_;
 
-    SharedImmutableString(SharedImmutableStringsCache&& cache,
+    SharedImmutableString(ExclusiveData<SharedImmutableStringsCache::Inner>::Guard& locked,
                           SharedImmutableStringsCache::StringBox* box);
 
   public:
@@ -425,7 +419,7 @@ class SharedImmutableTwoByteString
     SharedImmutableString string_;
 
     explicit SharedImmutableTwoByteString(SharedImmutableString&& string);
-    SharedImmutableTwoByteString(SharedImmutableStringsCache&& cache,
+    SharedImmutableTwoByteString(ExclusiveData<SharedImmutableStringsCache::Inner>::Guard& locked,
                                  SharedImmutableStringsCache::StringBox* box);
 
   public:

@@ -10,13 +10,14 @@
 
 namespace js {
 
-SharedImmutableString::SharedImmutableString(SharedImmutableStringsCache&& cache,
-                                             SharedImmutableStringsCache::StringBox* box)
-  : cache_(mozilla::Move(cache))
+SharedImmutableString::SharedImmutableString(
+    ExclusiveData<SharedImmutableStringsCache::Inner>::Guard& locked,
+    SharedImmutableStringsCache::StringBox* box)
+  : cache_(locked)
   , box_(box)
 {
     MOZ_ASSERT(box);
-    MOZ_ASSERT(box->refcount > 0);
+    box->refcount++;
 }
 
 SharedImmutableString::SharedImmutableString(SharedImmutableString&& rhs)
@@ -42,9 +43,9 @@ SharedImmutableTwoByteString::SharedImmutableTwoByteString(SharedImmutableString
 { }
 
 SharedImmutableTwoByteString::SharedImmutableTwoByteString(
-    SharedImmutableStringsCache&& cache,
+    ExclusiveData<SharedImmutableStringsCache::Inner>::Guard& locked,
     SharedImmutableStringsCache::StringBox* box)
-  : string_(mozilla::Move(cache), box)
+  : string_(locked, box)
 {
     MOZ_ASSERT(box->length() % sizeof(char16_t) == 0);
 }
@@ -82,8 +83,7 @@ SharedImmutableString::clone() const
     auto locked = cache_.inner_->lock();
     MOZ_ASSERT(box_);
     MOZ_ASSERT(box_->refcount > 0);
-    box_->refcount++;
-    return SharedImmutableString(SharedImmutableStringsCache::Clone(locked), box_);
+    return SharedImmutableString(locked, box_);
 }
 
 SharedImmutableTwoByteString
