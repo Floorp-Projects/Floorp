@@ -1303,6 +1303,102 @@ CodeGeneratorMIPSShared::visitTruncateFToInt32(LTruncateFToInt32* ins)
 }
 
 void
+CodeGeneratorMIPSShared::visitWasmTruncateToInt32(LWasmTruncateToInt32* lir)
+{
+    auto input = ToFloatRegister(lir->input());
+    auto output = ToRegister(lir->output());
+
+    MWasmTruncateToInt32* mir = lir->mir();
+    MIRType fromType = mir->input()->type();
+
+    auto* ool = new (alloc()) OutOfLineWasmTruncateCheck(mir, input);
+    addOutOfLineCode(ool, mir);
+
+    if (mir->isUnsigned()) {
+        // When the input value is Infinity, NaN, or rounds to an integer outside the
+        // range [INT64_MIN; INT64_MAX + 1[, the Invalid Operation flag is set in the FCSR.
+        if (fromType == MIRType::Double)
+            masm.as_truncld(ScratchDoubleReg, input);
+        else if (fromType == MIRType::Float32)
+            masm.as_truncls(ScratchDoubleReg, input);
+        else
+            MOZ_CRASH("unexpected type in visitWasmTruncateToInt32");
+
+        // Check that the result is in the uint32_t range.
+        masm.moveFromDoubleHi(ScratchDoubleReg, output);
+        masm.as_cfc1(ScratchRegister, Assembler::FCSR);
+        masm.as_ext(ScratchRegister, ScratchRegister, 16, 1);
+        masm.ma_or(output, ScratchRegister);
+        masm.ma_b(output, Imm32(0), ool->entry(), Assembler::NotEqual);
+
+        masm.moveFromFloat32(ScratchDoubleReg, output);
+        return;
+    }
+
+    // When the input value is Infinity, NaN, or rounds to an integer outside the
+    // range [INT32_MIN; INT32_MAX + 1[, the Invalid Operation flag is set in the FCSR.
+    if (fromType == MIRType::Double)
+        masm.as_truncwd(ScratchFloat32Reg, input);
+    else if (fromType == MIRType::Float32)
+        masm.as_truncws(ScratchFloat32Reg, input);
+    else
+        MOZ_CRASH("unexpected type in visitWasmTruncateToInt32");
+
+    // Check that the result is in the int32_t range.
+    masm.as_cfc1(output, Assembler::FCSR);
+    masm.as_ext(output, output, 16, 1);
+    masm.ma_b(output, Imm32(0), ool->entry(), Assembler::NotEqual);
+
+    masm.bind(ool->rejoin());
+    masm.moveFromFloat32(ScratchFloat32Reg, output);
+}
+
+void
+CodeGeneratorMIPSShared::visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* ool)
+{
+    FloatRegister input = ool->input();
+    MIRType fromType = ool->fromType();
+    MIRType toType = ool->toType();
+
+    // Eagerly take care of NaNs.
+    Label inputIsNaN;
+    if (fromType == MIRType::Double)
+        masm.branchDouble(Assembler::DoubleUnordered, input, input, &inputIsNaN);
+    else if (fromType == MIRType::Float32)
+        masm.branchFloat(Assembler::DoubleUnordered, input, input, &inputIsNaN);
+    else
+        MOZ_CRASH("unexpected type in visitOutOfLineWasmTruncateCheck");
+
+    Label fail;
+
+    // Handle special values (not needed for unsigned values).
+    if (!ool->isUnsigned()) {
+        if (toType == MIRType::Int32) {
+            // MWasmTruncateToInt32
+            if (fromType == MIRType::Double) {
+                // we've used truncwd. the only valid double values that can
+                // truncate to INT32_MIN are in ]INT32_MIN - 1; INT32_MIN].
+                masm.loadConstantDouble(double(INT32_MIN) - 1.0, ScratchDoubleReg);
+                masm.branchDouble(Assembler::DoubleLessThanOrEqual, input, ScratchDoubleReg, &fail);
+
+                masm.loadConstantDouble(double(INT32_MIN), ScratchDoubleReg);
+                masm.branchDouble(Assembler::DoubleGreaterThan, input, ScratchDoubleReg, &fail);
+
+                masm.as_truncwd(ScratchFloat32Reg, ScratchDoubleReg);
+                masm.jump(ool->rejoin());
+            }
+        }
+    }
+
+    // Handle errors.
+    masm.bind(&fail);
+    masm.jump(wasm::JumpTarget::IntegerOverflow);
+
+    masm.bind(&inputIsNaN);
+    masm.jump(wasm::JumpTarget::InvalidConversionToInteger);
+}
+
+void
 CodeGeneratorMIPSShared::visitValue(LValue* value)
 {
     const ValueOperand out = ToOutValue(value);
