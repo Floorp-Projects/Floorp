@@ -238,7 +238,7 @@ BEGIN_TEST(test_JS_GetPendingExceptionStack)
     CHECK(JS::GetPendingExceptionStack(cx, &stack));
     CHECK(stack);
     CHECK(stack->is<js::SavedFrame>());
-    JS::Rooted<js::SavedFrame*> savedFrameStack(cx, &stack->as<SavedFrame>());
+    JS::Rooted<js::SavedFrame*> savedFrameStack(cx, &stack->as<js::SavedFrame>());
 
     JS_GetPendingException(cx, &val);
     CHECK(val.isInt32());
