@@ -10,7 +10,7 @@ function test() {
   var cm = Components.classes["@mozilla.org/cookiemanager;1"]
                      .getService(Components.interfaces.nsICookieManager2);
   cm.add("example.com", "/browser/" + RELATIVE_DIR, "xpinstall", "true", false,
-         false, true, (Date.now() / 1000) + 60, {});
+         false, true, (Date.now() / 1000) + 60);
 
   var pm = Services.perms;
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);

@@ -83,7 +83,7 @@ function add_cookie(aDomain)
   check_cookie_exists(aDomain, false);
   let cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
   cm.add(aDomain, COOKIE_PATH, COOKIE_NAME, "", false, false, false,
-         COOKIE_EXPIRY, {});
+         COOKIE_EXPIRY);
   check_cookie_exists(aDomain, true);
 }
 
