@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1462472009000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1463504139000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -1909,6 +1909,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i1214" id="firefoxdav@icloud.com">
+                        <versionRange  minVersion="0" maxVersion="1.4.22" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i434" id="afurladvisor@anchorfree.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
@@ -2519,6 +2525,12 @@
               </prefs>
     </emItem>
       <emItem  blockID="i970" id="hha8771ui3-Fo9j9h7aH98jsdfa8sda@jetpack">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i1213" id="unblocker20__web@unblocker.yt">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
@@ -3612,7 +3624,6 @@
                       <device>0x0046</device>
                   </devices>
             <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.2086</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g1208">      <os>All</os>      <vendor>0x8086</vendor>            <feature>HARDWARE_VIDEO_DECODING</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>10.18.10.3947</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
     </gfxItems>
 
   <certItems>
