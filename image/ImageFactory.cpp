@@ -106,16 +106,6 @@ template <typename T>
 static already_AddRefed<Image>
 BadImage(const char* aMessage, RefPtr<T>& aImage)
 {
-#ifdef DEBUG
-  nsAutoCString msg(aMessage);
-  const ImageURL* uri = aImage->GetURI();
-  if (uri && uri->Spec()) {
-    msg.AppendLiteral(" for ");
-    msg.Append(uri->Spec());
-  }
-  NS_WARNING(msg.get());
-#endif
-
   aImage->SetHasError();
   return aImage.forget();
 }
