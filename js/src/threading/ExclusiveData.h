@@ -167,6 +167,11 @@ class ExclusiveData
         operator T& () const { return get(); }
         T* operator->() const { return &get(); }
 
+        const ExclusiveData<T>* parent() const {
+            MOZ_ASSERT(parent_);
+            return parent_;
+        }
+
         ~Guard() {
             if (parent_)
                 parent_->release();
