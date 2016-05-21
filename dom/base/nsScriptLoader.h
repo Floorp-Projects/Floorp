@@ -352,7 +352,23 @@ public:
   }
   void RemoveParserBlockingScriptExecutionBlocker()
   {
-    if (!--mParserBlockingBlockerCount) {
+    if (!--mParserBlockingBlockerCount && ReadyToExecuteScripts()) {
+      ProcessPendingRequestsAsync();
+    }
+  }
+
+  /**
+   * Add/remove a blocker for execution of all scripts.  Blockers will stop
+   * scripts from executing, but not from loading.
+   */
+  void AddExecuteBlocker()
+  {
+    ++mBlockerCount;
+  }
+  void RemoveExecuteBlocker()
+  {
+    MOZ_ASSERT(mBlockerCount);
+    if (!--mBlockerCount) {
       ProcessPendingRequestsAsync();
     }
   }
@@ -513,7 +529,15 @@ private:
    */
   bool SelfReadyToExecuteParserBlockingScripts()
   {
-    return mEnabled && !mParserBlockingBlockerCount;
+    return ReadyToExecuteScripts() && !mParserBlockingBlockerCount;
+  }
+
+  /**
+   * Return whether this loader is ready to execute scripts in general.
+   */
+  bool ReadyToExecuteScripts()
+  {
+    return mEnabled && !mBlockerCount;
   }
 
   nsresult AttemptAsyncScriptCompile(nsScriptLoadRequest* aRequest);
@@ -604,6 +628,7 @@ private:
   nsCOMPtr<nsIScriptElement> mCurrentParserInsertedScript;
   nsTArray< RefPtr<nsScriptLoader> > mPendingChildLoaders;
   uint32_t mParserBlockingBlockerCount;
+  uint32_t mBlockerCount;
   uint32_t mNumberOfProcessors;
   bool mEnabled;
   bool mDeferEnabled;
