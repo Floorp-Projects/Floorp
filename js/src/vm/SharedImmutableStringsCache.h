@@ -368,10 +368,6 @@ class SharedImmutableString
     mutable SharedImmutableStringsCache cache_;
     mutable SharedImmutableStringsCache::StringBox* box_;
 
-#ifdef DEBUG
-    HashNumber hash_;
-#endif
-
     SharedImmutableString(SharedImmutableStringsCache&& cache,
                           SharedImmutableStringsCache::StringBox* box);
 
