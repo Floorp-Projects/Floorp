@@ -169,11 +169,8 @@ protected:
                                  bool* aIsScoped,
                                  bool* aIsAlternate) override;
 protected:
-  // nsGenericHTMLElement
-  virtual void GetItemValueText(DOMString& text) override;
-  virtual void SetItemValueText(const nsAString& text) override;
+  RefPtr<nsDOMTokenList> mRelList;
 
-  RefPtr<nsDOMTokenList > mRelList;
 private:
   RefPtr<ImportLoader> mImportLoader;
 };

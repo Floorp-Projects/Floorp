@@ -93,17 +93,6 @@ public:
 
   virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) const override;
 
-  // For Track, ItemValue reflects the src attribute
-  virtual void GetItemValueText(DOMString& aText) override
-  {
-    GetSrc(aText);
-  }
-  virtual void SetItemValueText(const nsAString& aText) override
-  {
-    ErrorResult rv;
-    SetSrc(aText, rv);
-  }
-
   // Override ParseAttribute() to convert kind strings to enum values.
   virtual bool ParseAttribute(int32_t aNamespaceID,
                               nsIAtom* aAttribute,

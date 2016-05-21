@@ -898,17 +898,7 @@ interface HTMLOptionsCollection : HTMLCollection {
            attribute long selectedIndex;
 };
 
-interface HTMLPropertiesCollection : HTMLCollection {
-  // inherits length and item()
-  getter PropertyNodeList? namedItem(DOMString name); // shadows inherited namedItem()
-  readonly attribute DOMString[] names;
-};
-
 typedef sequence<any> PropertyValueArray;
-
-interface PropertyNodeList : NodeList {
-  PropertyValueArray getValues();
-};
 
 [OverrideBuiltins, Exposed=(Window,Worker)]
 interface DOMStringMap {
@@ -952,7 +942,6 @@ partial /*sealed*/ interface Document {
   readonly attribute HTMLCollection forms;
   readonly attribute HTMLCollection scripts;
   NodeList getElementsByName(DOMString elementName);
-  NodeList getItems(optional DOMString typeNames = ""); // microdata
   readonly attribute DOMElementMap cssElementMap;
   readonly attribute HTMLScriptElement? currentScript;
 
@@ -994,15 +983,6 @@ interface HTMLElement : Element {
            attribute boolean translate;
            attribute DOMString dir;
   readonly attribute DOMStringMap dataset;
-
-  // microdata
-           attribute boolean itemScope;
-  [PutForwards=value] readonly attribute DOMTokenList itemType;
-           attribute DOMString itemId;
-  [PutForwards=value] readonly attribute DOMTokenList itemRef;
-  [PutForwards=value] readonly attribute DOMTokenList itemProp;
-  readonly attribute HTMLPropertiesCollection properties;
-           attribute any itemValue; // acts as DOMString on setting
 
   // user interaction
            attribute boolean hidden;
@@ -3194,8 +3174,6 @@ window.onload = function() {
     HTMLFormControlsCollection: ['document.createElement("form").elements'],
     RadioNodeList: [],
     HTMLOptionsCollection: ['document.createElement("select").options'],
-    HTMLPropertiesCollection: ['document.head.properties'],
-    PropertyNodeList: [],
     DOMStringMap: ['document.head.dataset'],
     DOMElementMap: ['document.cssElementMap'],
     Transferable: [],

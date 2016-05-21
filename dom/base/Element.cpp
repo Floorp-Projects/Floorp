@@ -3077,10 +3077,6 @@ nsDOMTokenListPropertyDestructor(void *aObject, nsIAtom *aProperty,
 
 static nsIAtom** sPropertiesToTraverseAndUnlink[] =
   {
-    &nsGkAtoms::microdataProperties,
-    &nsGkAtoms::itemtype,
-    &nsGkAtoms::itemref,
-    &nsGkAtoms::itemprop,
     &nsGkAtoms::sandbox,
     &nsGkAtoms::sizes,
     nullptr
@@ -3120,26 +3116,6 @@ Element::GetTokenList(nsIAtom* aAtom,
     SetProperty(aAtom, list, nsDOMTokenListPropertyDestructor);
   }
   return list;
-}
-
-void
-Element::GetTokenList(nsIAtom* aAtom, nsIVariant** aResult)
-{
-  nsISupports* itemType = GetTokenList(aAtom);
-  nsCOMPtr<nsIWritableVariant> out = new nsVariant();
-  out->SetAsInterface(NS_GET_IID(nsISupports), itemType);
-  out.forget(aResult);
-}
-
-nsresult
-Element::SetTokenList(nsIAtom* aAtom, nsIVariant* aValue)
-{
-  nsDOMTokenList* itemType = GetTokenList(aAtom);
-  nsAutoString string;
-  aValue->GetAsAString(string);
-  ErrorResult rv;
-  itemType->SetValue(string, rv);
-  return rv.StealNSResult();
 }
 
 Element*
