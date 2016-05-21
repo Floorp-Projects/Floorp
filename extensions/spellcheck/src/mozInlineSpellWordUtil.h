@@ -46,6 +46,14 @@ public:
     
     NodeOffset(nsINode* aNode, int32_t aOffset) :
       mNode(aNode), mOffset(aOffset) {}
+
+    bool operator==(const NodeOffset& aOther) const {
+      return mNode == aOther.mNode && mOffset == aOther.mOffset;
+    }
+
+    bool operator!=(const NodeOffset& aOther) const {
+      return !(*this == aOther);
+    }
   };
 
   mozInlineSpellWordUtil()

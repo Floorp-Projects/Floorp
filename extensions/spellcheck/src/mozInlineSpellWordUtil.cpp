@@ -246,14 +246,16 @@ mozInlineSpellWordUtil::GetRangeForWord(nsIDOMNode* aWordNode,
   // Set our soft end and start
   nsCOMPtr<nsINode> wordNode = do_QueryInterface(aWordNode);
   NodeOffset pt = NodeOffset(wordNode, aWordOffset);
-  
-  InvalidateWords();
-  mSoftBegin = mSoftEnd = pt;
-  nsresult rv = EnsureWords();
-  if (NS_FAILED(rv)) {
-    return rv;
+
+  if (!mSoftTextValid || pt != mSoftBegin || pt != mSoftEnd) {
+    InvalidateWords();
+    mSoftBegin = mSoftEnd = pt;
+    nsresult rv = EnsureWords();
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
-  
+
   int32_t offset = MapDOMPositionToSoftTextOffset(pt);
   if (offset < 0)
     return MakeRange(pt, pt, aRange);
