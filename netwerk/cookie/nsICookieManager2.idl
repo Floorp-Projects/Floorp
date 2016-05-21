@@ -46,10 +46,7 @@ interface nsICookieManager2 : nsICookieManager
    *        expiration date, in seconds since midnight (00:00:00), January 1,
    *        1970 UTC. note that expiry time will also be honored for session cookies;
    *        in this way, the more restrictive of the two will take effect.
-   * @param aOriginAttributes The originAttributes of this cookie. This
-   *                          attribute is optional to avoid breaking add-ons.
    */
-  [implicit_jscontext, optional_argc]
   void add(in AUTF8String aHost,
            in AUTF8String aPath,
            in ACString    aName,
@@ -57,19 +54,7 @@ interface nsICookieManager2 : nsICookieManager
            in boolean     aIsSecure,
            in boolean     aIsHttpOnly,
            in boolean     aIsSession,
-           in int64_t     aExpiry,
-           [optional] in jsval aOriginAttributes);
-
-  [notxpcom]
-  nsresult addNative(in AUTF8String aHost,
-                     in AUTF8String aPath,
-                     in ACString    aName,
-                     in ACString    aValue,
-                     in boolean     aIsSecure,
-                     in boolean     aIsHttpOnly,
-                     in boolean     aIsSession,
-                     in int64_t     aExpiry,
-                     in NeckoOriginAttributesPtr aOriginAttributes);
+           in int64_t     aExpiry);
 
   /**
    * Find whether a given cookie already exists.
@@ -107,17 +92,12 @@ interface nsICookieManager2 : nsICookieManager
    *        the host string to search for, e.g. "google.com". this should consist
    *        of only the host portion of a URI. see @add for a description of
    *        acceptable host strings.
-   * @param aOriginAttributes The originAttributes of cookies that would be
-   *                          retrived. This attribute is optional to avoid
-   *                          breaking add-ons.
    *
    * @return an nsISimpleEnumerator of nsICookie2 objects.
    *
    * @see countCookiesFromHost
    */
-  [implicit_jscontext, optional_argc]
-  nsISimpleEnumerator getCookiesFromHost(in AUTF8String aHost,
-                                         [optional] in jsval aOriginAttributes);
+  nsISimpleEnumerator getCookiesFromHost(in AUTF8String aHost);
 
   /**
    * Import an old-style cookie file. Imported cookies will be added to the
