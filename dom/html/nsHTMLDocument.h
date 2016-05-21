@@ -194,7 +194,6 @@ public:
     return NS_GetFuncStringNodeList(this, MatchNameAttribute, nullptr,
                                     UseExistingNameString, aName);
   }
-  already_AddRefed<nsINodeList> GetItems(const nsAString& aTypeNames);
   already_AddRefed<nsIDocument> Open(JSContext* cx,
                                      const nsAString& aType,
                                      const nsAString& aReplace,

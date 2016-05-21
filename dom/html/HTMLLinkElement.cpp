@@ -132,18 +132,6 @@ NS_IMPL_STRING_ATTR(HTMLLinkElement, Target, target)
 NS_IMPL_STRING_ATTR(HTMLLinkElement, Type, type)
 
 void
-HTMLLinkElement::GetItemValueText(DOMString& aValue)
-{
-  GetHref(aValue);
-}
-
-void
-HTMLLinkElement::SetItemValueText(const nsAString& aValue)
-{
-  SetHref(aValue);
-}
-
-void
 HTMLLinkElement::OnDNSPrefetchRequested()
 {
   UnsetFlags(HTML_LINK_DNS_PREFETCH_DEFERRED);

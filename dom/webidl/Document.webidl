@@ -116,7 +116,6 @@ partial interface Document {
   //(HTML only)readonly attribute HTMLCollection forms;
   //(HTML only)readonly attribute HTMLCollection scripts;
   //(HTML only)NodeList getElementsByName(DOMString elementName);
-  //(HTML only)NodeList getItems(optional DOMString typeNames); // microdata
   //(Not implemented)readonly attribute DOMElementMap cssElementMap;
 
   // dynamic markup insertion

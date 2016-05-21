@@ -38,18 +38,6 @@ NS_IMPL_STRING_ATTR(HTMLMetaElement, HttpEquiv, httpEquiv)
 NS_IMPL_STRING_ATTR(HTMLMetaElement, Name, name)
 NS_IMPL_STRING_ATTR(HTMLMetaElement, Scheme, scheme)
 
-void
-HTMLMetaElement::GetItemValueText(DOMString& aValue)
-{
-  GetContent(aValue);
-}
-
-void
-HTMLMetaElement::SetItemValueText(const nsAString& aValue)
-{
-  SetContent(aValue);
-}
-
 nsresult
 HTMLMetaElement::SetMetaReferrer(nsIDocument* aDocument)
 {
