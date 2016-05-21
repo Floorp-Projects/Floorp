@@ -296,4 +296,14 @@ public:
   }
 };
 
+namespace mozilla {
+
+template<typename T>
+using PtrHolder = nsMainThreadPtrHolder<T>;
+
+template<typename T>
+using PtrHandle = nsMainThreadPtrHandle<T>;
+
+} // namespace mozilla
+
 #endif
