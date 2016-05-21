@@ -107,6 +107,15 @@ void Gecko_CopyListStyleTypeFrom(nsStyleList* dst, const nsStyleList* src);
 NS_DECL_HOLDER_FFI_REFCOUNTING(nsIPrincipal, Principal)
 NS_DECL_HOLDER_FFI_REFCOUNTING(nsIURI, URI)
 
+// Display style.
+struct nsStyleDisplay;
+void Gecko_SetMozBinding(nsStyleDisplay* style_struct,
+                         const uint8_t* string_bytes, uint32_t string_length,
+                         ThreadSafeURIHolder* base_uri,
+                         ThreadSafeURIHolder* referrer,
+                         ThreadSafePrincipalHolder* principal);
+void Gecko_CopyMozBindingFrom(nsStyleDisplay* des, const nsStyleDisplay* src);
+
 // Styleset and Stylesheet management.
 //
 // TODO: Make these return already_AddRefed and UniquePtr when the binding
