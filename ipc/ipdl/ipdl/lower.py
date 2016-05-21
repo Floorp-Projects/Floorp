@@ -403,6 +403,11 @@ def _logicError(msg):
     return StmtExpr(
         ExprCall(ExprVar('mozilla::ipc::LogicError'), args=[ ExprLiteral.String(msg) ]))
 
+def _unionTypeReadError(unionname):
+    return StmtExpr(
+        ExprCall(ExprVar('mozilla::ipc::UnionTypeReadError'),
+                 args=[ ExprLiteral.String(unionname) ]))
+
 def _killProcess(pid):
     return ExprCall(
         ExprVar('base::KillProcess'),
@@ -461,6 +466,9 @@ def errfnRecv(msg, errcode=_Result.ValuError):
 # used in Read() methods
 def errfnRead(msg):
     return [ _fatalError(msg), StmtReturn.FALSE ]
+
+def errfnUnionType(unionname):
+    return [ _unionTypeReadError(unionname), StmtReturn.FALSE ]
 
 def _destroyMethod():
     return ExprVar('ActorDestroy')
@@ -4632,8 +4640,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             uniontdef,
             StmtDecl(Decl(Type.INT, typevar.name)),
             self.checkedRead(
-                None, ExprAddrOf(typevar), msgvar, itervar, errfnRead,
-                '\'' + typevar.name + '\' (' + Type.INT.name + ') of union \'' + uniontype.name() + '\''),
+                None, ExprAddrOf(typevar), msgvar, itervar, errfnUnionType,
+                [ uniontype.name() ]),
             Whitespace.NL,
             readswitch,
         ])
