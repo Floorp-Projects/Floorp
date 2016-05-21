@@ -147,7 +147,8 @@ ImportLoader::Updater::UpdateMainReferrer(uint32_t aNewIdx)
   if (mLoader->IsBlocking()) {
     // Our import parent is changed, let's block the new one and later unblock
     // the old one.
-    newMainReferrer->OwnerDoc()->ScriptLoader()->AddExecuteBlocker();
+    newMainReferrer->OwnerDoc()->
+      ScriptLoader()->AddParserBlockingScriptExecutionBlocker();
     newMainReferrer->OwnerDoc()->BlockDOMContentLoaded();
   }
 
@@ -167,7 +168,8 @@ ImportLoader::Updater::UpdateMainReferrer(uint32_t aNewIdx)
   }
 
   if (mLoader->IsBlocking()) {
-    mLoader->mImportParent->ScriptLoader()->RemoveExecuteBlocker();
+    mLoader->mImportParent->
+      ScriptLoader()->RemoveParserBlockingScriptExecutionBlocker();
     mLoader->mImportParent->UnblockDOMContentLoaded();
   }
 
@@ -300,7 +302,7 @@ void
 ImportLoader::BlockScripts()
 {
   MOZ_ASSERT(!mBlockingScripts);
-  mImportParent->ScriptLoader()->AddExecuteBlocker();
+  mImportParent->ScriptLoader()->AddParserBlockingScriptExecutionBlocker();
   mImportParent->BlockDOMContentLoaded();
   mBlockingScripts = true;
 }
@@ -309,10 +311,10 @@ void
 ImportLoader::UnblockScripts()
 {
   MOZ_ASSERT(mBlockingScripts);
-  mImportParent->ScriptLoader()->RemoveExecuteBlocker();
+  mImportParent->ScriptLoader()->RemoveParserBlockingScriptExecutionBlocker();
   mImportParent->UnblockDOMContentLoaded();
   for (uint32_t i = 0; i < mBlockedScriptLoaders.Length(); i++) {
-    mBlockedScriptLoaders[i]->RemoveExecuteBlocker();
+    mBlockedScriptLoaders[i]->RemoveParserBlockingScriptExecutionBlocker();
   }
   mBlockedScriptLoaders.Clear();
   mBlockingScripts = false;
@@ -343,7 +345,7 @@ ImportLoader::AddBlockedScriptLoader(nsScriptLoader* aScriptLoader)
     return;
   }
 
-  aScriptLoader->AddExecuteBlocker();
+  aScriptLoader->AddParserBlockingScriptExecutionBlocker();
 
   // Let's keep track of the pending script loaders.
   mBlockedScriptLoaders.AppendElement(aScriptLoader);
@@ -352,7 +354,7 @@ ImportLoader::AddBlockedScriptLoader(nsScriptLoader* aScriptLoader)
 bool
 ImportLoader::RemoveBlockedScriptLoader(nsScriptLoader* aScriptLoader)
 {
-  aScriptLoader->RemoveExecuteBlocker();
+  aScriptLoader->RemoveParserBlockingScriptExecutionBlocker();
   return mBlockedScriptLoaders.RemoveElement(aScriptLoader);
 }
 

@@ -592,7 +592,7 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
                                   &isAlternate);
       if (NS_SUCCEEDED(rv) && willNotify && !isAlternate && !mRunsToCompletion) {
         ++mPendingSheetCount;
-        mScriptLoader->AddExecuteBlocker();
+        mScriptLoader->AddParserBlockingScriptExecutionBlocker();
       }
     }
   }
@@ -1213,7 +1213,7 @@ nsXMLContentSink::HandleProcessingInstruction(const char16_t *aTarget,
       // Successfully started a stylesheet load
       if (!isAlternate && !mRunsToCompletion) {
         ++mPendingSheetCount;
-        mScriptLoader->AddExecuteBlocker();
+        mScriptLoader->AddParserBlockingScriptExecutionBlocker();
       }
 
       return NS_OK;
