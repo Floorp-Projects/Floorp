@@ -161,7 +161,7 @@ var pktApi = (function() {
     function getCookiesFromPocket() {
 
         var cookieManager = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
-        var pocketCookies = cookieManager.getCookiesFromHost(pocketSiteHost, {});
+        var pocketCookies = cookieManager.getCookiesFromHost(pocketSiteHost);
         var cookies = {};
         while (pocketCookies.hasMoreElements()) {
             var cookie = pocketCookies.getNext().QueryInterface(Ci.nsICookie2);
