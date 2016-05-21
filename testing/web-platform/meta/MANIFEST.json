@@ -35979,6 +35979,18 @@
     "deleted_reftests": {},
     "items": {
       "testharness": {
+        "XMLHttpRequest/xmlhttprequest-sync-block-defer-scripts.html": [
+          {
+            "path": "XMLHttpRequest/xmlhttprequest-sync-block-defer-scripts.html",
+            "url": "/XMLHttpRequest/xmlhttprequest-sync-block-defer-scripts.html"
+          }
+        ],
+        "XMLHttpRequest/xmlhttprequest-sync-block-scripts.html": [
+          {
+            "path": "XMLHttpRequest/xmlhttprequest-sync-block-scripts.html",
+            "url": "/XMLHttpRequest/xmlhttprequest-sync-block-scripts.html"
+          }
+        ],
         "dom/events/EventListener-incumbent-global-1.sub.html": [
           {
             "path": "dom/events/EventListener-incumbent-global-1.sub.html",
