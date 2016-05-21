@@ -3532,7 +3532,9 @@ Tab.prototype = {
         url: aURL,
         title: truncate(title, MAX_TITLE_LENGTH)
       }],
-      index: 1
+      index: 1,
+      desktopMode: this.desktopMode,
+      isPrivate: isPrivate
     };
 
     if (aParams.delayLoad) {
