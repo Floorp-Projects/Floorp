@@ -511,5 +511,12 @@ MismatchedActorTypeError(const char* aActorDescription)
   ProtocolErrorBreakpoint(message.get());
 }
 
+void
+UnionTypeReadError(const char* aUnionName)
+{
+  nsPrintfCString message("error deserializing type of union %s", aUnionName);
+  NS_RUNTIMEABORT(message.get());
+}
+
 } // namespace ipc
 } // namespace mozilla
