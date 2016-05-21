@@ -35,7 +35,7 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
     private static final String LOGTAG = "GeckoHomeConfigBackend";
 
     // Increment this to trigger a migration.
-    private static final int VERSION = 6;
+    private static final int VERSION = 7;
 
     // This key was originally used to store only an array of panel configs.
     public static final String PREFS_CONFIG_KEY_OLD = "home_panels";
@@ -402,6 +402,11 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
                 case 6:
                     jsonPanels = removePanel(context, jsonPanels,
                             PanelType.DEPRECATED_READING_LIST, PanelType.BOOKMARKS, false);
+                    break;
+
+                case 7:
+                    jsonPanels = removePanel(context, jsonPanels,
+                            PanelType.RECENT_TABS, PanelType.COMBINED_HISTORY, true);
                     break;
             }
         }
