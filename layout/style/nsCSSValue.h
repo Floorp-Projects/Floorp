@@ -85,7 +85,8 @@ class CSSStyleSheet;
 namespace mozilla {
 namespace css {
 
-struct URLValue {
+struct URLValueData
+{
   // Methods are not inline because using an nsIPrincipal means requiring
   // caps, which leads to REQUIRES hell, since this header is included all
   // over.
@@ -94,27 +95,23 @@ struct URLValue {
   // For both constructors aOriginPrincipal must not be null.
   // Construct with a base URI; this will create the actual URI lazily from
   // aString and aBaseURI.
-  URLValue(nsStringBuffer* aString, nsIURI* aBaseURI, nsIURI* aReferrer,
-           nsIPrincipal* aOriginPrincipal);
+  URLValueData(nsStringBuffer* aString, nsIURI* aBaseURI, nsIURI* aReferrer,
+               nsIPrincipal* aOriginPrincipal);
   // Construct with the actual URI.
-  URLValue(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aReferrer,
-           nsIPrincipal* aOriginPrincipal);
+  URLValueData(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aReferrer,
+               nsIPrincipal* aOriginPrincipal);
 
-protected:
-  ~URLValue() {};
-
-public:
-  bool operator==(const URLValue& aOther) const;
+  bool operator==(const URLValueData& aOther) const;
 
   // URIEquals only compares URIs and principals (unlike operator==, which
   // also compares the original strings).  URIEquals also assumes that the
   // mURI member of both URL objects is non-null.  Do NOT call this method
   // unless you're sure this is the case.
-  bool URIEquals(const URLValue& aOther) const;
+  bool URIEquals(const URLValueData& aOther) const;
 
   nsIURI* GetURI() const;
 
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 private:
   // If mURIResolved is false, mURI stores the base URI.
@@ -125,23 +122,42 @@ public:
   RefPtr<nsStringBuffer> mString;
   nsCOMPtr<nsIURI> mReferrer;
   nsCOMPtr<nsIPrincipal> mOriginPrincipal;
-
-  NS_INLINE_DECL_REFCOUNTING(URLValue)
-
 private:
   mutable bool mURIResolved;
 
-  URLValue(const URLValue& aOther) = delete;
-  URLValue& operator=(const URLValue& aOther) = delete;
+  URLValueData(const URLValueData& aOther) = delete;
+  URLValueData& operator=(const URLValueData& aOther) = delete;
 };
 
-struct ImageValue : public URLValue {
+struct URLValue : public URLValueData
+{
+  URLValue(nsStringBuffer* aString, nsIURI* aBaseURI, nsIURI* aReferrer,
+           nsIPrincipal* aOriginPrincipal)
+    : URLValueData(aString, aBaseURI, aReferrer, aOriginPrincipal) {}
+  URLValue(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aReferrer,
+           nsIPrincipal* aOriginPrincipal)
+    : URLValueData(aURI, aString, aReferrer, aOriginPrincipal) {}
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
+protected:
+  ~URLValue() {}
+
+public:
+  NS_INLINE_DECL_REFCOUNTING(URLValue)
+};
+
+struct ImageValue : public URLValueData
+{
   // Not making the constructor and destructor inline because that would
   // force us to include imgIRequest.h, which leads to REQUIRES hell, since
   // this header is included all over.
   // aString must not be null.
   ImageValue(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aReferrer,
              nsIPrincipal* aOriginPrincipal, nsIDocument* aDocument);
+
+  // XXXheycam We should have our own SizeOfIncludingThis method.
+
 private:
   ~ImageValue();
 
@@ -150,11 +166,7 @@ public:
 
   nsRefPtrHashtable<nsPtrHashKey<nsIDocument>, imgRequestProxy> mRequests;
 
-  // Override AddRef and Release to not only log ourselves correctly, but
-  // also so that we delete correctly without a virtual destructor (assuming
-  // callers always call *our* Release method and not our base class's).
-  NS_METHOD_(MozExternalRefCountType) AddRef();
-  NS_METHOD_(MozExternalRefCountType) Release();
+  NS_INLINE_DECL_REFCOUNTING(ImageValue)
 };
 
 struct GridNamedArea {
@@ -404,7 +416,7 @@ public:
   struct Array;
   friend struct Array;
 
-  friend struct mozilla::css::URLValue;
+  friend struct mozilla::css::URLValueData;
 
   friend struct mozilla::css::ImageValue;
 
