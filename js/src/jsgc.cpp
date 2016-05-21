@@ -7099,34 +7099,8 @@ js::ReleaseAllJITCode(FreeOp* fop)
     fop->runtime()->gc.evictNursery();
 
     for (ZonesIter zone(fop->runtime(), SkipAtoms); !zone.done(); zone.next()) {
-        if (!zone->jitZone())
-            continue;
-
-#ifdef DEBUG
-        /* Assert no baseline scripts are marked as active. */
-        for (ZoneCellIter i(zone, AllocKind::SCRIPT); !i.done(); i.next()) {
-            JSScript* script = i.get<JSScript>();
-            MOZ_ASSERT_IF(script->hasBaselineScript(), !script->baselineScript()->active());
-        }
-#endif
-
-        /* Mark baseline scripts on the stack as active. */
-        jit::MarkActiveBaselineScripts(zone);
-
-        jit::InvalidateAll(fop, zone);
-
-        for (ZoneCellIter i(zone, AllocKind::SCRIPT); !i.done(); i.next()) {
-            JSScript* script = i.get<JSScript>();
-            jit::FinishInvalidation(fop, script);
-
-            /*
-             * Discard baseline script if it's not marked as active. Note that
-             * this also resets the active flag.
-             */
-            jit::FinishDiscardBaselineScript(fop, script);
-        }
-
-        zone->jitZone()->optimizedStubSpace()->free();
+        zone->setPreservingCode(false);
+        zone->discardJitCode(fop);
     }
 }
 
