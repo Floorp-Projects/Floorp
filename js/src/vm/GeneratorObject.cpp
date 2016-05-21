@@ -137,8 +137,7 @@ js::GeneratorThrowOrClose(JSContext* cx, AbstractFramePtr frame, Handle<Generato
             MOZ_ASSERT(arg.isUndefined());
         }
 
-        RootedValue v(cx, MagicValue(JS_GENERATOR_CLOSING));
-        cx->setPendingException(v);
+        cx->setPendingException(MagicValue(JS_GENERATOR_CLOSING));
         genObj->setClosing();
     }
     return false;

@@ -5463,18 +5463,6 @@ JS_GetRegExpSource(JSContext* cx, JS::HandleObject obj);
 
 /************************************************************************/
 
-namespace JS {
-
-enum class ExceptionStackBehavior: bool {
-    // Capture the current JS stack when setting the exception. It may be
-    // retrieved by JS::GetPendingExceptionStack.
-    Capture,
-    // Do not capture any stack.
-    DoNotCapture
-};
-
-} // namespace JS
-
 extern JS_PUBLIC_API(bool)
 JS_IsExceptionPending(JSContext* cx);
 
@@ -5482,8 +5470,7 @@ extern JS_PUBLIC_API(bool)
 JS_GetPendingException(JSContext* cx, JS::MutableHandleValue vp);
 
 extern JS_PUBLIC_API(void)
-JS_SetPendingException(JSContext* cx, JS::HandleValue v,
-                       JS::ExceptionStackBehavior behavior = JS::ExceptionStackBehavior::Capture);
+JS_SetPendingException(JSContext* cx, JS::HandleValue v);
 
 extern JS_PUBLIC_API(void)
 JS_ClearPendingException(JSContext* cx);
@@ -5992,32 +5979,6 @@ SetOutOfMemoryCallback(JSRuntime* rt, OutOfMemoryCallback cb, void* data);
  */
 extern JS_PUBLIC_API(bool)
 CaptureCurrentStack(JSContext* cx, MutableHandleObject stackp, unsigned maxFrameCount = 0);
-
-/**
- * Get the `SavedFrame` stack object captured when the pending exception was set
- * on the `JSContext`. This will correspond to a 'throw' statement in JS, or the
- * state at which `JS_SetPendingException` is called by VM code or a JSAPI
- * consumer.
- *
- * This is not the same stack as `e.stack` when `e` is an `Error` object. (That
- * would be `JS::ExceptionStackOrNull`). That stack is the stack when the
- * `Error` object was created, which could be much earlier than when it is
- * thrown.
- *
- * Note that it is possible that `stackp` is null with a `true` return value
- * when any of the following situations:
- *   - There is no pending exception (and hence no stack for the pending
- *     exception).
- *   - The exception was set on the `cx` when there was no JS on
- *     the stack (and therefore the stack is correctly empty).
- *   - The exception being thrown is an out of memory exception.
- *     a stack via `JS::ExceptionStackBehavior::DoNotCapture`.
- *
- * If `stackp` is non-null after this call, it is guaranteed to be in the same
- * compartment that `cx` is in.
- */
-extern JS_PUBLIC_API(MOZ_MUST_USE bool)
-GetPendingExceptionStack(JSContext* cx, MutableHandleObject stackp);
 
 /*
  * This is a utility function for preparing an async stack to be used

@@ -3634,8 +3634,7 @@ CASE(JSOP_RETSUB)
          * be necessary, but it seems clearer.  And it points out a FIXME:
          * 350509, due to Igor Bukanov.
          */
-        ReservedRooted<Value> v(&rootValue0, rval);
-        cx->setPendingException(v);
+        cx->setPendingException(rval);
         goto error;
     }
     MOZ_ASSERT(rval.isInt32());

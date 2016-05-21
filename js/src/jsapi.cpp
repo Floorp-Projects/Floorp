@@ -5994,12 +5994,12 @@ JS_GetPendingException(JSContext* cx, MutableHandleValue vp)
 }
 
 JS_PUBLIC_API(void)
-JS_SetPendingException(JSContext* cx, HandleValue value, JS::ExceptionStackBehavior behavior)
+JS_SetPendingException(JSContext* cx, HandleValue value)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, value);
-    cx->setPendingException(value, behavior);
+    cx->setPendingException(value);
 }
 
 JS_PUBLIC_API(void)
@@ -6701,12 +6701,4 @@ JS::GCThingTraceKind(void* thing)
 {
     MOZ_ASSERT(thing);
     return static_cast<js::gc::Cell*>(thing)->getTraceKind();
-}
-
-
-JS_PUBLIC_API(bool)
-JS::GetPendingExceptionStack(JSContext* cx, JS::MutableHandleObject stackp)
-{
-    MOZ_ASSERT(cx);
-    return cx->getPendingExceptionStack(stackp);
 }

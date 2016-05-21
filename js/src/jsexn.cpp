@@ -678,7 +678,7 @@ js::ReportUncaughtException(JSContext* cx)
         return false;
     }
 
-    cx->setPendingException(exn, JS::ExceptionStackBehavior::DoNotCapture);
+    cx->setPendingException(exn);
     CallErrorReporter(cx, err.message(), err.report());
     cx->clearPendingException();
     return true;
