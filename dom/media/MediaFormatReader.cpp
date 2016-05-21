@@ -801,6 +801,12 @@ MediaFormatReader::UpdateReceivedNewData(TrackType aTrack)
     // Nothing more to do until this operation complete.
     return true;
   }
+
+  if (aTrack == TrackType::kVideoTrack && mSkipRequest.Exists()) {
+    LOGV("Skipping in progress, nothing more to do");
+    return true;
+  }
+
   if (decoder.mDemuxRequest.Exists()) {
     // We may have pending operations to process, so we want to continue
     // after UpdateReceivedNewData returns.
@@ -1100,11 +1106,6 @@ MediaFormatReader::Update(TrackType aTrack)
   decoder.mUpdateScheduled = false;
 
   if (!mInitDone) {
-    return;
-  }
-
-  if (aTrack == TrackType::kVideoTrack && mSkipRequest.Exists()) {
-    LOGV("Skipping in progress, nothing more to do");
     return;
   }
 
