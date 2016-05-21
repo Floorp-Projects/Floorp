@@ -16,7 +16,7 @@ public:
   RegionBuilder()
   {}
 
-  void Or(const RectType& aRect) {
+  void OrWith(const RectType& aRect) {
     pixman_box32_t box = { aRect.x, aRect.y, aRect.XMost(), aRect.YMost() };
     mRects.AppendElement(box);
   }
