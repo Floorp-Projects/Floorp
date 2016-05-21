@@ -2260,45 +2260,6 @@ nsCookieService::GetEnumerator(nsISimpleEnumerator **aEnumerator)
   return NS_NewArrayEnumerator(aEnumerator, cookieList);
 }
 
-static nsresult
-InitializeOriginAttributes(NeckoOriginAttributes* aAttrs,
-                           JS::HandleValue aOriginAttributes,
-                           JSContext* aCx,
-                           uint8_t aArgc,
-                           const char16_t* aAPI,
-                           const char16_t* aInterfaceSuffix)
-{
-  MOZ_ASSERT(aAttrs);
-  MOZ_ASSERT(aCx);
-  MOZ_ASSERT(aAPI);
-  MOZ_ASSERT(aInterfaceSuffix);
-
-  if (aArgc == 0) {
-    const char16_t* params[] = {
-      aAPI,
-      aInterfaceSuffix
-    };
-
-    // This is supposed to be temporary and in 1 or 2 releases we want to
-    // have originAttributes param as mandatory. But for now, we don't want to
-    // break existing addons, so we write a console message to inform the addon
-    // developers about it.
-    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                    NS_LITERAL_CSTRING("Cookie Manager"),
-                                    nullptr,
-                                    nsContentUtils::eNECKO_PROPERTIES,
-                                    "nsICookieManagerAPIDeprecated",
-                                    params, ArrayLength(params));
-  } else if (aArgc == 1) {
-    if (!aOriginAttributes.isObject() ||
-        !aAttrs->Init(aCx, aOriginAttributes)) {
-      return NS_ERROR_INVALID_ARG;
-    }
-  }
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsCookieService::Add(const nsACString &aHost,
                      const nsACString &aPath,
@@ -2307,41 +2268,8 @@ nsCookieService::Add(const nsACString &aHost,
                      bool              aIsSecure,
                      bool              aIsHttpOnly,
                      bool              aIsSession,
-                     int64_t           aExpiry,
-                     JS::HandleValue   aOriginAttributes,
-                     JSContext*        aCx,
-                     uint8_t           aArgc)
+                     int64_t           aExpiry)
 {
-  MOZ_ASSERT(aArgc == 0 || aArgc == 1);
-
-  NeckoOriginAttributes attrs;
-  nsresult rv = InitializeOriginAttributes(&attrs,
-                                           aOriginAttributes,
-                                           aCx,
-                                           aArgc,
-                                           MOZ_UTF16("nsICookieManager2.add()"),
-                                           MOZ_UTF16("2"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return AddNative(aHost, aPath, aName, aValue, aIsSecure, aIsHttpOnly,
-                   aIsSession, aExpiry, &attrs);
-}
-
-NS_IMETHODIMP_(nsresult)
-nsCookieService::AddNative(const nsACString &aHost,
-                           const nsACString &aPath,
-                           const nsACString &aName,
-                           const nsACString &aValue,
-                           bool              aIsSecure,
-                           bool              aIsHttpOnly,
-                           bool              aIsSession,
-                           int64_t           aExpiry,
-                           NeckoOriginAttributes* aOriginAttributes)
-{
-  if (NS_WARN_IF(!aOriginAttributes)) {
-    return NS_ERROR_FAILURE;
-  }
-
   if (!mDBState) {
     NS_WARNING("No DBState! Profile already closed?");
     return NS_ERROR_NOT_AVAILABLE;
@@ -2359,7 +2287,7 @@ nsCookieService::AddNative(const nsACString &aHost,
   NS_ENSURE_SUCCESS(rv, rv);
 
   int64_t currentTimeInUsec = PR_Now();
-  nsCookieKey key = nsCookieKey(baseDomain, *aOriginAttributes);
+  nsCookieKey key = DEFAULT_APP_KEY(baseDomain);
 
   RefPtr<nsCookie> cookie =
     nsCookie::Create(aName, aValue, host, aPath,
@@ -2442,16 +2370,24 @@ nsCookieService::Remove(const nsACString &aHost,
                         uint8_t          aArgc)
 {
   MOZ_ASSERT(aArgc == 0 || aArgc == 1);
+  if (aArgc == 0) {
+    // This is supposed to be temporary and in 1 or 2 releases we want to
+    // have originAttributes param as mandatory. But for now, we don't want to
+    // break existing addons, so we write a console message to inform the addon
+    // developers about it.
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                    NS_LITERAL_CSTRING("Cookie Manager"),
+                                    nullptr,
+                                    nsContentUtils::eNECKO_PROPERTIES,
+                                    "nsICookieManagerRemoveDeprecated");
+  }
 
   NeckoOriginAttributes attrs;
-  nsresult rv = InitializeOriginAttributes(&attrs,
-                                           aOriginAttributes,
-                                           aCx,
-                                           aArgc,
-                                           MOZ_UTF16("nsICookieManager.remove()"),
-                                           MOZ_UTF16(""));
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  if (aArgc == 1 &&
+      (!aOriginAttributes.isObject() ||
+       !attrs.Init(aCx, aOriginAttributes))) {
+    return NS_ERROR_INVALID_ARG;
+  }
   return RemoveNative(aHost, aName, aPath, aBlocked, &attrs);
 }
 
@@ -4362,13 +4298,8 @@ nsCookieService::CountCookiesFromHost(const nsACString &aHost,
 // nsICookieManager2 interface.
 NS_IMETHODIMP
 nsCookieService::GetCookiesFromHost(const nsACString     &aHost,
-                                    JS::HandleValue       aOriginAttributes,
-                                    JSContext*            aCx,
-                                    uint8_t               aArgc,
                                     nsISimpleEnumerator **aEnumerator)
 {
-  MOZ_ASSERT(aArgc == 0 || aArgc == 1);
-
   if (!mDBState) {
     NS_WARNING("No DBState! Profile already closed?");
     return NS_ERROR_NOT_AVAILABLE;
@@ -4383,16 +4314,7 @@ nsCookieService::GetCookiesFromHost(const nsACString     &aHost,
   rv = GetBaseDomainFromHost(host, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NeckoOriginAttributes attrs;
-  rv = InitializeOriginAttributes(&attrs,
-                                  aOriginAttributes,
-                                  aCx,
-                                  aArgc,
-                                  MOZ_UTF16("nsICookieManager2.getCookiesFromHost()"),
-                                  MOZ_UTF16("2"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCookieKey key = nsCookieKey(baseDomain, attrs);
+  nsCookieKey key = DEFAULT_APP_KEY(baseDomain);
   EnsureReadDomain(key);
 
   nsCookieEntry *entry = mDBState->hostTable.GetEntry(key);

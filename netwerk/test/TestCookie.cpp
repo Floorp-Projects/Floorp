@@ -597,38 +597,33 @@ main(int32_t argc, char *argv[])
       nsCOMPtr<nsICookieManager2> cookieMgr2 = do_QueryInterface(cookieMgr);
       if (!cookieMgr2) return -1;
 
-      mozilla::NeckoOriginAttributes attrs;
-
       // first, ensure a clean slate
       rv[0] = NS_SUCCEEDED(cookieMgr->RemoveAll());
       // add some cookies
-      rv[1] = NS_SUCCEEDED(cookieMgr2->AddNative(NS_LITERAL_CSTRING("cookiemgr.test"), // domain
+      rv[1] = NS_SUCCEEDED(cookieMgr2->Add(NS_LITERAL_CSTRING("cookiemgr.test"), // domain
                                            NS_LITERAL_CSTRING("/foo"),           // path
                                            NS_LITERAL_CSTRING("test1"),          // name
                                            NS_LITERAL_CSTRING("yes"),            // value
                                            false,                             // is secure
                                            false,                             // is httponly
                                            true,                              // is session
-                                           INT64_MAX,                            // expiry time
-                                           &attrs));                         // originAttributes
-      rv[2] = NS_SUCCEEDED(cookieMgr2->AddNative(NS_LITERAL_CSTRING("cookiemgr.test"), // domain
+                                           INT64_MAX));                          // expiry time
+      rv[2] = NS_SUCCEEDED(cookieMgr2->Add(NS_LITERAL_CSTRING("cookiemgr.test"), // domain
                                            NS_LITERAL_CSTRING("/foo"),           // path
                                            NS_LITERAL_CSTRING("test2"),          // name
                                            NS_LITERAL_CSTRING("yes"),            // value
                                            false,                             // is secure
                                            true,                              // is httponly
                                            true,                              // is session
-                                           PR_Now() / PR_USEC_PER_SEC + 2,       // expiry time
-                                           &attrs));                         // originAttributes
-      rv[3] = NS_SUCCEEDED(cookieMgr2->AddNative(NS_LITERAL_CSTRING("new.domain"),     // domain
+                                           PR_Now() / PR_USEC_PER_SEC + 2));     // expiry time
+      rv[3] = NS_SUCCEEDED(cookieMgr2->Add(NS_LITERAL_CSTRING("new.domain"),     // domain
                                            NS_LITERAL_CSTRING("/rabbit"),        // path
                                            NS_LITERAL_CSTRING("test3"),          // name
                                            NS_LITERAL_CSTRING("yes"),            // value
                                            false,                             // is secure
                                            false,                             // is httponly
                                            true,                              // is session
-                                           INT64_MAX,                            // expiry time
-                                           &attrs));                         // originAttributes
+                                           INT64_MAX));                          // expiry time
       // confirm using enumerator
       nsCOMPtr<nsISimpleEnumerator> enumerator;
       rv[4] = NS_SUCCEEDED(cookieMgr->GetEnumerator(getter_AddRefs(enumerator)));
@@ -664,6 +659,7 @@ main(int32_t argc, char *argv[])
       bool found;
       rv[9] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && found;
 
+      mozilla::NeckoOriginAttributes attrs;
 
       // remove the cookie, block it, and ensure it can't be added again
       rv[10] = NS_SUCCEEDED(cookieMgr->RemoveNative(NS_LITERAL_CSTRING("new.domain"), // domain
@@ -672,15 +668,14 @@ main(int32_t argc, char *argv[])
                                                     true,                             // is blocked
                                                     &attrs));                         // originAttributes
       rv[11] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && !found;
-      rv[12] = NS_SUCCEEDED(cookieMgr2->AddNative(NS_LITERAL_CSTRING("new.domain"),     // domain
+      rv[12] = NS_SUCCEEDED(cookieMgr2->Add(NS_LITERAL_CSTRING("new.domain"),     // domain
                                             NS_LITERAL_CSTRING("/rabbit"),        // path
                                             NS_LITERAL_CSTRING("test3"),          // name
                                             NS_LITERAL_CSTRING("yes"),            // value
                                             false,                             // is secure
                                             false,                             // is httponly
                                             true,                              // is session
-                                            INT64_MIN,                            // expiry time
-                                            &attrs));                         // originAttributes
+                                            INT64_MIN));                          // expiry time
       rv[13] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && !found;
       // sleep four seconds, to make sure the second cookie has expired
       PR_Sleep(4 * PR_TicksPerSecond());

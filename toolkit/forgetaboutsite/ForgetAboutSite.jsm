@@ -74,7 +74,7 @@ this.ForgetAboutSite = {
     // Cookies
     let cm = Cc["@mozilla.org/cookiemanager;1"].
              getService(Ci.nsICookieManager2);
-    let enumerator = cm.getCookiesFromHost(aDomain, {});
+    let enumerator = cm.getCookiesFromHost(aDomain);
     while (enumerator.hasMoreElements()) {
       let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie);
       cm.remove(cookie.host, cookie.name, cookie.path, false, cookie.originAttributes);
