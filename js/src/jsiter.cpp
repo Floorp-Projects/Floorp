@@ -975,10 +975,8 @@ js::ThrowStopIteration(JSContext* cx)
     // StopIteration isn't a constructor, but it's stored in GlobalObject
     // as one, out of laziness. Hence the GetBuiltinConstructor call here.
     RootedObject ctor(cx);
-    if (GetBuiltinConstructor(cx, JSProto_StopIteration, &ctor)) {
-        RootedValue v(cx, ObjectValue(*ctor));
-        cx->setPendingException(v);
-    }
+    if (GetBuiltinConstructor(cx, JSProto_StopIteration, &ctor))
+        cx->setPendingException(ObjectValue(*ctor));
     return false;
 }
 
@@ -1252,7 +1250,7 @@ js::UnwindIteratorForException(JSContext* cx, HandleObject obj)
         return false;
     if (!getOk)
         return false;
-    cx->setPendingException(v, JS::ExceptionStackBehavior::DoNotCapture);
+    cx->setPendingException(v);
     return true;
 }
 
