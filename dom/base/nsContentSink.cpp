@@ -235,7 +235,7 @@ nsContentSink::StyleSheetLoaded(StyleSheetHandle aSheet,
       ScrollToRef();
     }
     
-    mScriptLoader->RemoveExecuteBlocker();
+    mScriptLoader->RemoveParserBlockingScriptExecutionBlocker();
   }
 
   return NS_OK;
@@ -772,7 +772,7 @@ nsContentSink::ProcessStyleLink(nsIContent* aElement,
   
   if (!isAlternate && !mRunsToCompletion) {
     ++mPendingSheetCount;
-    mScriptLoader->AddExecuteBlocker();
+    mScriptLoader->AddParserBlockingScriptExecutionBlocker();
   }
 
   return NS_OK;

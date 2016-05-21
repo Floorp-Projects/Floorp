@@ -78,7 +78,7 @@ nsHtml5DocumentBuilder::UpdateStyleSheet(nsIContent* aElement)
                                        &isAlternate);
   if (NS_SUCCEEDED(rv) && willNotify && !isAlternate && !mRunsToCompletion) {
     ++mPendingSheetCount;
-    mScriptLoader->AddExecuteBlocker();
+    mScriptLoader->AddParserBlockingScriptExecutionBlocker();
   }
 
   // Re-open update
