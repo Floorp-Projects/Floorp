@@ -403,6 +403,11 @@ def _logicError(msg):
     return StmtExpr(
         ExprCall(ExprVar('mozilla::ipc::LogicError'), args=[ ExprLiteral.String(msg) ]))
 
+def _arrayLengthReadError(elementname):
+    return StmtExpr(
+        ExprCall(ExprVar('mozilla::ipc::ArrayLengthReadError'),
+                 args=[ ExprLiteral.String(elementname) ]))
+
 def _unionTypeReadError(unionname):
     return StmtExpr(
         ExprCall(ExprVar('mozilla::ipc::UnionTypeReadError'),
@@ -466,6 +471,9 @@ def errfnRecv(msg, errcode=_Result.ValuError):
 # used in Read() methods
 def errfnRead(msg):
     return [ _fatalError(msg), StmtReturn.FALSE ]
+
+def errfnArrayLength(elementname):
+    return [ _arrayLengthReadError(elementname), StmtReturn.FALSE ]
 
 def errfnUnionType(unionname):
     return [ _unionTypeReadError(unionname), StmtReturn.FALSE ]
@@ -4415,9 +4423,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             StmtDecl(Decl(_cxxArrayType(_cxxBareType(arraytype.basetype, self.side)), favar.name)),
             StmtDecl(Decl(Type.UINT32, lenvar.name)),
             self.checkedRead(None, ExprAddrOf(lenvar),
-                             msgvar, itervar, errfnRead,
-                             '\'length\' (' + Type.UINT32.name + ') of \'' +
-                             arraytype.name() + '\''),
+                             msgvar, itervar, errfnArrayLength,
+                             [ arraytype.name() ]),
             Whitespace.NL,
             StmtExpr(_callCxxArraySetLength(favar, lenvar)),
             forread,
