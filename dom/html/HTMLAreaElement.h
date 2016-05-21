@@ -185,8 +185,6 @@ protected:
 
   virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual void GetItemValueText(DOMString& text) override;
-  virtual void SetItemValueText(const nsAString& text) override;
   RefPtr<nsDOMTokenList > mRelList;
 };
 

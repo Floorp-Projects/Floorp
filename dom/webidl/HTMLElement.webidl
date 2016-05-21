@@ -25,19 +25,6 @@ interface HTMLElement : Element {
   [GetterThrows, Pure]
            attribute DOMString innerText;
 
-  // microdata 
-  [SetterThrows, Pure]
-           attribute boolean itemScope;
-  [PutForwards=value,Constant] readonly attribute DOMTokenList itemType;
-  [SetterThrows, Pure]
-           attribute DOMString itemId;
-  [PutForwards=value,Constant] readonly attribute DOMTokenList itemRef;
-  [PutForwards=value,Constant] readonly attribute DOMTokenList itemProp;
-  [Constant]
-  readonly attribute HTMLPropertiesCollection properties;
-  [Throws]
-           attribute any itemValue;
-
   // user interaction
   [SetterThrows, Pure]
            attribute boolean hidden;

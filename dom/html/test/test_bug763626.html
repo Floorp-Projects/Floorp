@@ -15,7 +15,7 @@ SimpleTest.waitForExplicitFinish();
 
 function boom()
 {
-  var r = document.createElement("div").itemRef;
+  var r = document.createElement("iframe").sandbox;
   SpecialPowers.DOMWindowUtils.garbageCollect();
   is("" + r, "", "ToString should return empty string when element is gone");
   SimpleTest.finish();

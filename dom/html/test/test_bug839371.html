@@ -32,15 +32,6 @@ is(d1.value, "9678AOU879", "value property reflects content attribute");
 d1.value = "123";
 is(d1.value, "123", "value property can be set via setter");
 
-// .itemValue getter for <data>'s microdata
-var data = document.getItems()[0];
-is(data.properties["product-id"][0].itemValue, "123", "itemValue getter reflects value attribute");
-
-// .itemValue setter uses value
-data.properties["product-id"][0].itemValue = "456";
-is(data.properties["product-id"][0].value, "456", "setting itemValue updates value");
-is(data.properties["product-id"][0].itemValue, "456", "setting itemValue updates itemValue");
-
 // .value reflects value attribute
 reflectString({
   element: d2,

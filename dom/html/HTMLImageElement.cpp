@@ -195,18 +195,6 @@ HTMLImageElement::GetCurrentSrc(nsAString& aValue)
   return NS_OK;
 }
 
-void
-HTMLImageElement::GetItemValueText(DOMString& aValue)
-{
-  GetSrc(aValue);
-}
-
-void
-HTMLImageElement::SetItemValueText(const nsAString& aValue)
-{
-  SetSrc(aValue);
-}
-
 bool
 HTMLImageElement::Draggable() const
 {

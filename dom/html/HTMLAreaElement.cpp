@@ -65,18 +65,6 @@ HTMLAreaElement::TabIndexDefault()
   return 0;
 }
 
-void
-HTMLAreaElement::GetItemValueText(DOMString& aValue)
-{
-  GetHref(aValue);
-}
-
-void
-HTMLAreaElement::SetItemValueText(const nsAString& aValue)
-{
-  SetHref(aValue);
-}
-
 NS_IMETHODIMP
 HTMLAreaElement::GetTarget(nsAString& aValue)
 {
