@@ -117,11 +117,15 @@ private:
   // A list of the "real words" in mSoftText, ordered by mSoftTextOffset
   struct RealWord {
     int32_t      mSoftTextOffset;
-    int32_t      mLength;
-    bool mCheckableWord;
+    int32_t      mLength : 31;
+    int32_t mCheckableWord : 1;
     
     RealWord(int32_t aOffset, int32_t aLength, bool aCheckable)
-      : mSoftTextOffset(aOffset), mLength(aLength), mCheckableWord(aCheckable) {}
+      : mSoftTextOffset(aOffset), mLength(aLength), mCheckableWord(aCheckable)
+    {
+      static_assert(sizeof(RealWord) == 8, "RealWord should be limited to 8 bytes");
+    }
+
     int32_t EndOffset() const { return mSoftTextOffset + mLength; }
   };
   nsTArray<RealWord> mRealWords;
