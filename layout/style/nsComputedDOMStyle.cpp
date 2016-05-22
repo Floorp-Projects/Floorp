@@ -5887,83 +5887,93 @@ nsComputedDOMStyle::BasicShapeRadiiToString(nsAString& aCssText,
 }
 
 already_AddRefed<CSSValue>
+nsComputedDOMStyle::CreatePrimitiveValueForBasicShape(
+  const nsStyleBasicShape* aStyleBasicShape)
+{
+  MOZ_ASSERT(aStyleBasicShape, "Expect a valid basic shape pointer!");
+
+  nsStyleBasicShape::Type type = aStyleBasicShape->GetShapeType();
+  // Shape function name and opening parenthesis.
+  nsAutoString shapeFunctionString;
+  AppendASCIItoUTF16(nsCSSKeywords::GetStringValue(
+                       aStyleBasicShape->GetShapeTypeName()),
+                     shapeFunctionString);
+  shapeFunctionString.Append('(');
+  switch (type) {
+    case nsStyleBasicShape::Type::ePolygon: {
+      bool hasEvenOdd = aStyleBasicShape->GetFillRule() ==
+        NS_STYLE_FILL_RULE_EVENODD;
+      if (hasEvenOdd) {
+        shapeFunctionString.AppendLiteral("evenodd");
+      }
+      for (size_t i = 0;
+           i < aStyleBasicShape->Coordinates().Length(); i += 2) {
+        nsAutoString coordString;
+        if (i > 0 || hasEvenOdd) {
+          shapeFunctionString.AppendLiteral(", ");
+        }
+        SetCssTextToCoord(coordString,
+                          aStyleBasicShape->Coordinates()[i]);
+        shapeFunctionString.Append(coordString);
+        shapeFunctionString.Append(' ');
+        SetCssTextToCoord(coordString,
+                          aStyleBasicShape->Coordinates()[i + 1]);
+        shapeFunctionString.Append(coordString);
+      }
+      break;
+    }
+    case nsStyleBasicShape::Type::eCircle:
+    case nsStyleBasicShape::Type::eEllipse: {
+      const nsTArray<nsStyleCoord>& radii = aStyleBasicShape->Coordinates();
+      MOZ_ASSERT(radii.Length() ==
+                 (type == nsStyleBasicShape::Type::eCircle ? 1 : 2),
+                 "wrong number of radii");
+      for (size_t i = 0; i < radii.Length(); ++i) {
+        nsAutoString radius;
+        RefPtr<nsROCSSPrimitiveValue> value = new nsROCSSPrimitiveValue;
+        bool clampNegativeCalc = true;
+        SetValueToCoord(value, radii[i], clampNegativeCalc, nullptr,
+                        nsCSSProps::kShapeRadiusKTable);
+        value->GetCssText(radius);
+        shapeFunctionString.Append(radius);
+        shapeFunctionString.Append(' ');
+      }
+      shapeFunctionString.AppendLiteral("at ");
+
+      RefPtr<nsDOMCSSValueList> position = GetROCSSValueList(false);
+      nsAutoString positionString;
+      SetValueToPosition(aStyleBasicShape->GetPosition(), position);
+      position->GetCssText(positionString);
+      shapeFunctionString.Append(positionString);
+      break;
+    }
+    case nsStyleBasicShape::Type::eInset: {
+      BoxValuesToString(shapeFunctionString, aStyleBasicShape->Coordinates());
+      if (aStyleBasicShape->HasRadius()) {
+        shapeFunctionString.AppendLiteral(" round ");
+        nsAutoString radiiString;
+        BasicShapeRadiiToString(radiiString, aStyleBasicShape->GetRadius());
+        shapeFunctionString.Append(radiiString);
+      }
+      break;
+    }
+    default:
+      NS_NOTREACHED("unexpected type");
+  }
+  shapeFunctionString.Append(')');
+  RefPtr<nsROCSSPrimitiveValue> functionValue = new nsROCSSPrimitiveValue;
+  functionValue->SetString(shapeFunctionString);
+  return functionValue.forget();
+}
+
+already_AddRefed<CSSValue>
 nsComputedDOMStyle::CreatePrimitiveValueForClipPath(
   const nsStyleBasicShape* aStyleBasicShape, uint8_t aSizingBox)
 {
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
   if (aStyleBasicShape) {
-    nsStyleBasicShape::Type type = aStyleBasicShape->GetShapeType();
-    // Shape function name and opening parenthesis.
-    nsAutoString shapeFunctionString;
-    AppendASCIItoUTF16(nsCSSKeywords::GetStringValue(
-                         aStyleBasicShape->GetShapeTypeName()),
-                       shapeFunctionString);
-    shapeFunctionString.Append('(');
-    switch (type) {
-      case nsStyleBasicShape::Type::ePolygon: {
-        bool hasEvenOdd = aStyleBasicShape->GetFillRule() ==
-                              NS_STYLE_FILL_RULE_EVENODD;
-        if (hasEvenOdd) {
-          shapeFunctionString.AppendLiteral("evenodd");
-        }
-        for (size_t i = 0;
-             i < aStyleBasicShape->Coordinates().Length(); i += 2) {
-          nsAutoString coordString;
-          if (i > 0 || hasEvenOdd) {
-            shapeFunctionString.AppendLiteral(", ");
-          }
-          SetCssTextToCoord(coordString,
-                            aStyleBasicShape->Coordinates()[i]);
-          shapeFunctionString.Append(coordString);
-          shapeFunctionString.Append(' ');
-          SetCssTextToCoord(coordString,
-                            aStyleBasicShape->Coordinates()[i + 1]);
-          shapeFunctionString.Append(coordString);
-        }
-        break;
-      }
-      case nsStyleBasicShape::Type::eCircle:
-      case nsStyleBasicShape::Type::eEllipse: {
-        const nsTArray<nsStyleCoord>& radii = aStyleBasicShape->Coordinates();
-        MOZ_ASSERT(radii.Length() ==
-                   (type == nsStyleBasicShape::Type::eCircle ? 1 : 2),
-                   "wrong number of radii");
-        for (size_t i = 0; i < radii.Length(); ++i) {
-          nsAutoString radius;
-          RefPtr<nsROCSSPrimitiveValue> value = new nsROCSSPrimitiveValue;
-          bool clampNegativeCalc = true;
-          SetValueToCoord(value, radii[i], clampNegativeCalc, nullptr,
-                          nsCSSProps::kShapeRadiusKTable);
-          value->GetCssText(radius);
-          shapeFunctionString.Append(radius);
-          shapeFunctionString.Append(' ');
-        }
-        shapeFunctionString.AppendLiteral("at ");
-
-        RefPtr<nsDOMCSSValueList> position = GetROCSSValueList(false);
-        nsAutoString positionString;
-        SetValueToPosition(aStyleBasicShape->GetPosition(), position);
-        position->GetCssText(positionString);
-        shapeFunctionString.Append(positionString);
-        break;
-      }
-      case nsStyleBasicShape::Type::eInset: {
-        BoxValuesToString(shapeFunctionString, aStyleBasicShape->Coordinates());
-        if (aStyleBasicShape->HasRadius()) {
-          shapeFunctionString.AppendLiteral(" round ");
-          nsAutoString radiiString;
-          BasicShapeRadiiToString(radiiString, aStyleBasicShape->GetRadius());
-          shapeFunctionString.Append(radiiString);
-        }
-        break;
-      }
-      default:
-        NS_NOTREACHED("unexpected type");
-    }
-    shapeFunctionString.Append(')');
-    RefPtr<nsROCSSPrimitiveValue> functionValue = new nsROCSSPrimitiveValue;
-    functionValue->SetString(shapeFunctionString);
-    valueList->AppendCSSValue(functionValue.forget());
+    valueList->AppendCSSValue(
+      CreatePrimitiveValueForBasicShape(aStyleBasicShape));
   }
 
   if (aSizingBox == NS_STYLE_CLIP_SHAPE_SIZING_NOBOX) {
