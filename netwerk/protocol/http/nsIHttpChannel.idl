@@ -52,6 +52,8 @@ interface nsIHttpChannel : nsIChannel
      * URI is rejected.
      *
      * @throws NS_ERROR_IN_PROGRESS if set after the channel has been opened.
+     * @throws NS_ERROR_FAILURE if used for setting referrer during
+     *         visitRequestHeaders. Getting the value will not throw.
      */
     attribute nsIURI referrer;
 
@@ -86,6 +88,7 @@ interface nsIHttpChannel : nsIChannel
 
     /**
      * Set the HTTP referrer URI with a referrer policy.
+     * @throws NS_ERROR_FAILURE if called during visitRequestHeaders.
      */
     void setReferrerWithPolicy(in nsIURI referrer, in unsigned long referrerPolicy);
 
@@ -152,6 +155,7 @@ interface nsIHttpChannel : nsIChannel
      *
      * @throws NS_ERROR_IN_PROGRESS if called after the channel has been
      *         opened.
+     * @throws NS_ERROR_FAILURE if called during visitRequestHeaders.
      */
     void setRequestHeader(in ACString aHeader,
                           in ACString aValue,
@@ -171,6 +175,7 @@ interface nsIHttpChannel : nsIChannel
      *
      * @throws NS_ERROR_IN_PROGRESS if called after the channel has been
      *         opened.
+     * @throws NS_ERROR_FAILURE if called during visitRequestHeaders.
      */
     void setEmptyRequestHeader(in ACString aHeader);
 
