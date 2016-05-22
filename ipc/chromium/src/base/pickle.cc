@@ -8,7 +8,7 @@
 
 #include "mozilla/Alignment.h"
 #include "mozilla/CheckedInt.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/TypeTraits.h"
 
 #include <stdlib.h>

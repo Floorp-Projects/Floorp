@@ -23,7 +23,7 @@
 
 #include "fdlibm.h"
 
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 
 /*
  * The original fdlibm code used statements like:

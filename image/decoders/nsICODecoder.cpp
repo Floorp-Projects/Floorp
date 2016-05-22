@@ -8,7 +8,7 @@
 
 #include <stdlib.h>
 
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/Move.h"
 #include "nsICODecoder.h"
 

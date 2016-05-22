@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 
 #include <stddef.h>
 
@@ -49,7 +49,7 @@ TestSingleNoSwap(T aValue, T aUnswappedValue)
 #endif
 }
 
-// Endian.h functions are declared as protected in an base class and
+// EndianUtils.h functions are declared as protected in a base class and
 // then re-exported as public in public derived classes.  The
 // standardese around explicit instantiation of templates is not clear
 // in such cases.  Provide these wrappers to make things more explicit.

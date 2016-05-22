@@ -11,7 +11,7 @@
 #include "md4.h"
 #include "mozilla/Casting.h"
 #include "mozilla/CheckedInt.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
