@@ -190,16 +190,7 @@ Accessible::Description(nsString& aDescription)
                            aDescription);
 
   if (aDescription.IsEmpty()) {
-    bool isXUL = mContent->IsXULElement();
-    if (isXUL) {
-      // Try XUL <description control="[id]">description text</description>
-      XULDescriptionIterator iter(Document(), mContent);
-      Accessible* descr = nullptr;
-      while ((descr = iter.Next())) {
-        nsTextEquivUtils::AppendTextEquivFromContent(this, descr->GetContent(),
-                                                     &aDescription);
-      }
-    }
+    NativeDescription(aDescription);
 
     if (aDescription.IsEmpty()) {
       // Keep the Name() method logic.
@@ -1966,6 +1957,22 @@ Accessible::NativeName(nsString& aName)
   }
 
   return eNameOK;
+}
+
+// Accessible protected
+void
+Accessible::NativeDescription(nsString& aDescription)
+{
+  bool isXUL = mContent->IsXULElement();
+  if (isXUL) {
+    // Try XUL <description control="[id]">description text</description>
+    XULDescriptionIterator iter(Document(), mContent);
+    Accessible* descr = nullptr;
+    while ((descr = iter.Next())) {
+      nsTextEquivUtils::AppendTextEquivFromContent(this, descr->GetContent(),
+                                                   &aDescription);
+    }
+  }
 }
 
 // Accessible protected
