@@ -712,7 +712,7 @@ function testListing(metadata, response)
           ),
           DIV({class: "clear"}),
           DIV({class: "frameholder"},
-            IFRAME({scrolling: "no", id: "testframe"})
+            IFRAME({scrolling: "no", id: "testframe", "allowfullscreen": true})
           ),
           DIV({class: "clear"}),
           DIV({class: "toggle"},
