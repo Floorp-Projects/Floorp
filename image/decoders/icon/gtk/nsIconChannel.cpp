@@ -7,7 +7,7 @@
 #include <unistd.h>
 
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include <algorithm>
 
 #ifdef MOZ_ENABLE_GIO

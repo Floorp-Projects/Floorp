@@ -10,7 +10,7 @@
 #include <algorithm>
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "VideoUtils.h"
 #include "TimeUnits.h"
 #include "prenv.h"

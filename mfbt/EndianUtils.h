@@ -61,8 +61,8 @@
  * };
  */
 
-#ifndef mozilla_Endian_h
-#define mozilla_Endian_h
+#ifndef mozilla_EndianUtils_h
+#define mozilla_EndianUtils_h
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -692,4 +692,4 @@ public:
 
 } /* namespace mozilla */
 
-#endif /* mozilla_Endian_h */
+#endif /* mozilla_EndianUtils_h */

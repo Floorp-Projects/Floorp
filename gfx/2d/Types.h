@@ -6,7 +6,7 @@
 #ifndef MOZILLA_GFX_TYPES_H_
 #define MOZILLA_GFX_TYPES_H_
 
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 
 #include <stddef.h>
 #include <stdint.h>

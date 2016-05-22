@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include "BluetoothInterface.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "nsClassHashtable.h"
 
 BEGIN_BLUETOOTH_NAMESPACE

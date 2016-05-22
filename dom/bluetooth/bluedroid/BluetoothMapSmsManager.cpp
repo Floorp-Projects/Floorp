@@ -15,7 +15,7 @@
 
 #include "mozilla/dom/BluetoothMapParametersBinding.h"
 #include "mozilla/dom/ipc/BlobParent.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/dom/File.h"
 
 #include "mozilla/RefPtr.h"

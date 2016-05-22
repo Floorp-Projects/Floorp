@@ -5,7 +5,7 @@
 
 #include "EXIF.h"
 
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 
 namespace mozilla {
 namespace image {
