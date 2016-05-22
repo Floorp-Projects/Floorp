@@ -30,7 +30,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 
 #include <algorithm>
 #include <elf.h>

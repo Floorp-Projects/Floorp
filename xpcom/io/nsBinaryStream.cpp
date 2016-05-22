@@ -23,7 +23,7 @@
 
 #include "nsBinaryStream.h"
 
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/UniquePtr.h"
 

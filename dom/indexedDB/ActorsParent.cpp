@@ -21,7 +21,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/AppProcessChecker.h"
 #include "mozilla/AutoRestore.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Preferences.h"

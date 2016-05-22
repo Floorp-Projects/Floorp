@@ -10,7 +10,7 @@
 #include "nsAppRunner.h"
 #include "Composer2D.h"
 #include "Effects.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TimeStamp.h"

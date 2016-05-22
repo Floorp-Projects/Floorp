@@ -5,7 +5,7 @@
 
 #include "EbmlComposer.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "libmkv/EbmlIDs.h"
 #include "libmkv/EbmlWriter.h"
 #include "libmkv/WebMElement.h"

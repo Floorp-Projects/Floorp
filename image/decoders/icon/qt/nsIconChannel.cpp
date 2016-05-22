@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 
 #include "nsMimeTypes.h"
 #include "nsIMIMEService.h"

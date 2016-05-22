@@ -5,7 +5,7 @@
 
 #include "MDNSResponderOperator.h"
 #include "MDNSResponderReply.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/Logging.h"
 #include "mozilla/ScopeExit.h"
 #include "nsComponentManagerUtils.h"

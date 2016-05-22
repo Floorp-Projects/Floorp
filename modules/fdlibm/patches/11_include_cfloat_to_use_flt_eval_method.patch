@@ -16,6 +16,6 @@ diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private
  
  #include "fdlibm.h"
  
- #include "mozilla/Endian.h"
+ #include "mozilla/EndianUtils.h"
  
  /*
