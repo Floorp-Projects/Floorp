@@ -83,35 +83,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
           secondMove.mozMovementY = e.mozMovementY;
 
           div.removeEventListener("mousemove", moveMouseAgain, false);
-          document.exitFullscreen();
-        };
-
-        function fullscreenchange() {
-          if (document.fullscreenElement === div) {
-            info("Got fullscreenchange for entering");
-            var screenX = window.screenX;
-            var screenY = window.screenY;
-            if (screenX != 0 || screenY != 0) {
-              todo(screenX == 0 && screenY == 0,
-                "We should only receive fullscreenchange once we've finished fullscreen transition");
-              setTimeout(fullscreenchange, 250);
-              return;
-            } 
-            info("Finish waiting for fullscreenchange");
-            div.addEventListener("mousemove", moveMouse, false);
-            synthesizeMouseAtCenter(div, {type: "mousemove"}, window);
-          }
-          else {
+          addFullscreenChangeContinuation("exit", function() {
             info("Got fullscreenchange for exiting");
             runTests();
             SimpleTest.finish();
-          }
-        }
-        
-        document.addEventListener("fullscreenchange", fullscreenchange, false);
+          });
+          document.exitFullscreen();
+        };
 
         function start() {
           info("Requesting fullscreen on parent");
+          addFullscreenChangeContinuation("enter", function() {
+            info("Got fullscreenchange for entering");
+            div.addEventListener("mousemove", moveMouse, false);
+            synthesizeMouseAtCenter(div, {type: "mousemove"}, window);
+          });
           div.requestFullscreen();
         }
       </script>
