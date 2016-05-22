@@ -117,6 +117,23 @@ Tokenizer::SkipWhites(WhiteSkipping aIncludeNewLines)
   mRollback = rollback;
 }
 
+void
+Tokenizer::SkipUntil(Token const& aToken)
+{
+  nsACString::const_char_iterator rollback = mCursor;
+  const Token eof = Token::EndOfFile();
+
+  Token t;
+  while (Next(t)) {
+    if (aToken.Equals(t) || eof.Equals(t)) {
+      Rollback();
+      break;
+    }
+  }
+
+  mRollback = rollback;
+}
+
 bool
 Tokenizer::CheckChar(bool (*aClassifier)(const char aChar))
 {
