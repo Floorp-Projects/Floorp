@@ -161,6 +161,12 @@ public:
    */
   void SkipWhites(WhiteSkipping aIncludeNewLines = DONT_INCLUDE_NEW_LINE);
 
+  /**
+   * Skips all tokens until the given one is found or EOF is hit.  The token
+   * or EOF are next to read.
+   */
+  void SkipUntil(Token const& aToken);
+
   // These are mostly shortcuts for the Check() methods above.
 
   /**
@@ -300,12 +306,10 @@ public:
    * Calling Rollback() after ReadUntil() will return the read cursor to the
    * position it had before ReadUntil was called.
    */
-  MOZ_MUST_USE bool
-  ReadUntil(Token const& aToken, nsDependentCSubstring& aResult,
-            ClaimInclusion aInclude = EXCLUDE_LAST);
-  MOZ_MUST_USE bool
-  ReadUntil(Token const& aToken, nsACString& aResult,
-            ClaimInclusion aInclude = EXCLUDE_LAST);
+  MOZ_MUST_USE bool ReadUntil(Token const& aToken, nsDependentCSubstring& aResult,
+                              ClaimInclusion aInclude = EXCLUDE_LAST);
+  MOZ_MUST_USE bool ReadUntil(Token const& aToken, nsACString& aResult,
+                              ClaimInclusion aInclude = EXCLUDE_LAST);
 
 protected:
   // false if we have already read the EOF token.
