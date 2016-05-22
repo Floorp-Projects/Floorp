@@ -128,7 +128,6 @@ private:
 SharedBufferManagerParent::SharedBufferManagerParent(Transport* aTransport, base::ProcessId aOwner, base::Thread* aThread)
   : mTransport(aTransport)
   , mThread(aThread)
-  , mMainMessageLoop(MessageLoop::current())
   , mDestroyed(false)
   , mLock("SharedBufferManagerParent.mLock")
 {
@@ -171,7 +170,7 @@ SharedBufferManagerParent::ActorDestroy(ActorDestroyReason aWhy)
 #endif
   RefPtr<DeleteSharedBufferManagerParentTask> task =
     new DeleteSharedBufferManagerParentTask(UniquePtr<SharedBufferManagerParent>(this));
-  mMainMessageLoop->PostTask(task.forget());
+  NS_DispatchToMainThread(task.forget());
 }
 
 static void
