@@ -788,6 +788,11 @@ protected:
                             nsStyleContext* aContext,
                             bool aIsBoxShadow,
                             mozilla::RuleNodeCacheConditions& aConditions);
+  already_AddRefed<nsStyleBasicShape>
+  GetStyleBasicShapeFromCSSValue(const nsCSSValue& aValue,
+                                 nsStyleContext* aStyleContext,
+                                 nsPresContext* aPresContext,
+                                 mozilla::RuleNodeCacheConditions& aConditions);
   bool SetStyleFilterToCSSValue(nsStyleFilter* aStyleFilter,
                                 const nsCSSValue& aValue,
                                 nsStyleContext* aStyleContext,
