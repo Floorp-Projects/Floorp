@@ -874,11 +874,11 @@ RefreshBlocker.init();
 
 var UserContextIdNotifier = {
   init() {
-    addEventListener("DOMContentLoaded", this);
+    addEventListener("DOMWindowCreated", this);
   },
 
   uninit() {
-    removeEventListener("DOMContentLoaded", this);
+    removeEventListener("DOMWindowCreated", this);
   },
 
   handleEvent(aEvent) {
