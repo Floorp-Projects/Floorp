@@ -653,6 +653,7 @@ MediaDecoder::Shutdown()
     // the hashtable iterating in MediaShutdownManager::Shutdown().
     RefPtr<MediaDecoder> self = this;
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self] () {
+      self->mVideoFrameContainer = nullptr;
       MediaShutdownManager::Instance().Unregister(self);
     });
     AbstractThread::MainThread()->Dispatch(r.forget());
@@ -706,6 +707,7 @@ MediaDecoder::FinishShutdown()
   MOZ_ASSERT(NS_IsMainThread());
   mDecoderStateMachine->BreakCycles();
   SetStateMachine(nullptr);
+  mVideoFrameContainer = nullptr;
   MediaShutdownManager::Instance().Unregister(this);
 }
 

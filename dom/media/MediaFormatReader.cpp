@@ -136,6 +136,7 @@ MediaFormatReader::Shutdown()
 
   mDemuxer = nullptr;
   mPlatform = nullptr;
+  mVideoFrameContainer = nullptr;
 
   return MediaDecoderReader::Shutdown();
 }
