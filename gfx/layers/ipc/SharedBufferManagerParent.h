@@ -104,7 +104,6 @@ protected:
   Transport* mTransport;
   base::ProcessId mOwner;
   base::Thread* mThread;
-  MessageLoop* mMainMessageLoop;
   bool mDestroyed;
   Mutex mLock;
 
