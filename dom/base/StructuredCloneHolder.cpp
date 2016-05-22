@@ -275,6 +275,7 @@ StructuredCloneHolder::Write(JSContext* aCx,
                 mCreationThread == NS_GetCurrentThread());
 
   if (!StructuredCloneHolderBase::Write(aCx, aValue, aTransfer)) {
+    JS_ClearPendingException(aCx);
     aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
     return;
   }
