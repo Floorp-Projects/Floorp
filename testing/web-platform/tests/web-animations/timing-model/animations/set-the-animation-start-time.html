@@ -19,7 +19,7 @@ test(function(t)
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC));
 
   assert_equals(animation.currentTime, null, 'Intial current time');
-  assert_equals(animation.startTuime, null, 'Intial start time');
+  assert_equals(animation.startTime, null, 'Intial start time');
 
   animation.currentTime = 1000;
   assert_equals(animation.currentTime, 1000,
@@ -49,7 +49,7 @@ test(function(t)
     new Animation(new KeyframeEffect(createDiv(t), null, 100 * MS_PER_SEC));
 
   assert_equals(animation.currentTime, null, 'Intial current time');
-  assert_equals(animation.startTuime, null, 'Intial start time');
+  assert_equals(animation.startTime, null, 'Intial start time');
 
   animation.currentTime = 1000;
   assert_equals(animation.currentTime, 1000,

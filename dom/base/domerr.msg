@@ -118,7 +118,6 @@ DOM4_MSG_DEF(BtAuthRejectedError, "Authentication rejected",  NS_ERROR_DOM_BLUET
 /* Web Animations errors */
 
 DOM4_MSG_DEF(NotSupportedError, "Animation to or from an underlying value is not yet supported.", NS_ERROR_DOM_ANIM_MISSING_PROPS_ERR)
-DOM4_MSG_DEF(NotSupportedError, "Animation with no timeline is not yet supported.", NS_ERROR_DOM_ANIM_NO_TIMELINE_ERR)
 DOM4_MSG_DEF(NotSupportedError, "Animation with no effect is not yet supported.", NS_ERROR_DOM_ANIM_NO_EFFECT_ERR)
 
 /* common global codes (from nsError.h) */
