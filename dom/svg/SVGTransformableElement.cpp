@@ -84,8 +84,8 @@ SVGTransformableElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
       NS_UpdateHint(retval, nsChangeHint_ReconstructFrame);
     } else {
       // We just assume the old and new transforms are different.
-      NS_UpdateHint(retval, NS_CombineHint(nsChangeHint_UpdatePostTransformOverflow,
-                                           nsChangeHint_UpdateTransformLayer));
+      NS_UpdateHint(retval, nsChangeHint_UpdatePostTransformOverflow |
+                            nsChangeHint_UpdateTransformLayer);
     }
   }
   return retval;
