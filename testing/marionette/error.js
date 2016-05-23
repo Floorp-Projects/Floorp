@@ -140,8 +140,8 @@ error.toJson = function(err) {
 
   let json = {
     error: err.status,
-    message: err.message || null,
-    stacktrace: err.stack || null,
+    message: err.message || "",
+    stacktrace: err.stack || "",
   };
   return json;
 };
