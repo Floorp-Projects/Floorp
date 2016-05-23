@@ -25,12 +25,12 @@
 #include "mozilla/EventStateManager.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
+#include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/Hal.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/ipc/DocumentRendererParent.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layers/AsyncDragMetrics.h"
-#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/LookAndFeel.h"
@@ -105,6 +105,7 @@ using namespace mozilla::layout;
 using namespace mozilla::services;
 using namespace mozilla::widget;
 using namespace mozilla::jsipc;
+using namespace mozilla::gfx;
 
 // The flags passed by the webProgress notifications are 16 bits shifted
 // from the ones registered by webProgressListeners.
@@ -2977,7 +2978,7 @@ TabParent::RequestNotifyLayerTreeReady()
   if (!frame || !frame->IsInitted()) {
     mNeedLayerTreeReadyNotification = true;
   } else {
-    CompositorBridgeParent::RequestNotifyLayerTreeReady(
+    GPUProcessManager::Get()->RequestNotifyLayerTreeReady(
       frame->GetLayersId(),
       mLayerUpdateObserver);
   }
@@ -2992,7 +2993,7 @@ TabParent::RequestNotifyLayerTreeCleared()
     return false;
   }
 
-  CompositorBridgeParent::RequestNotifyLayerTreeCleared(
+  GPUProcessManager::Get()->RequestNotifyLayerTreeCleared(
     frame->GetLayersId(),
     mLayerUpdateObserver);
   return true;
@@ -3033,10 +3034,10 @@ TabParent::SwapLayerTreeObservers(TabParent* aOther)
     return;
   }
 
-  // The swap that happens for the observers in CompositorBridgeParent has to
+  // The swap that happens for the observers in GPUProcessManager has to
   // happen in a lock so that an update being processed on the compositor thread
   // can't grab the layer update observer for the wrong tab parent.
-  CompositorBridgeParent::SwapLayerTreeObservers(
+  GPUProcessManager::Get()->SwapLayerTreeObservers(
     rfp->GetLayersId(),
     otherRfp->GetLayersId());
 
