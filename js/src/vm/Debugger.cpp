@@ -8499,10 +8499,10 @@ DebuggerObject_call(JSContext* cx, unsigned argc, Value* vp)
 
     Rooted<ValueVector> args(cx, ValueVector(cx));
     if (callArgs.length() >= 2) {
-	if (!args.growBy(callArgs.length() - 1))
-	    return false;
-	for (size_t i = 1; i < callArgs.length(); ++i)
-	    args[i - 1].set(callArgs[i]);
+        if (!args.growBy(callArgs.length() - 1))
+            return false;
+        for (size_t i = 1; i < callArgs.length(); ++i)
+            args[i - 1].set(callArgs[i]);
     }
 
     return object->call(cx, object, thisv, args, callArgs.rval());
@@ -8517,18 +8517,18 @@ DebuggerObject_apply(JSContext* cx, unsigned argc, Value* vp)
 
     Rooted<ValueVector> args(cx, ValueVector(cx));
     if (callArgs.length() >= 2 && !callArgs[1].isNullOrUndefined()) {
-	if (!callArgs[1].isObject()) {
-	    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_APPLY_ARGS,
-				 js_apply_str);
-	    return false;
-	}
+        if (!callArgs[1].isObject()) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_APPLY_ARGS,
+                                 js_apply_str);
+            return false;
+        }
 
         RootedObject argsobj(cx, &callArgs[1].toObject());
 
-	unsigned argc = 0;
+        unsigned argc = 0;
         if (!GetLengthProperty(cx, argsobj, &argc))
             return false;
-	argc = unsigned(Min(argc, ARGS_LENGTH_MAX));
+        argc = unsigned(Min(argc, ARGS_LENGTH_MAX));
 
         if (!args.growBy(argc) || !GetElements(cx, argsobj, argc, args.begin()))
             return false;
@@ -8869,12 +8869,12 @@ DebuggerObject::getOwnPropertyNames(JSContext* cx, Handle<DebuggerObject*> objec
 
     AutoIdVector ids(cx);
     {
-	Maybe<AutoCompartment> ac;
-	ac.emplace(cx, referent);
+        Maybe<AutoCompartment> ac;
+        ac.emplace(cx, referent);
 
-	ErrorCopier ec(ac);
-	if (!GetPropertyKeys(cx, referent, JSITER_OWNONLY | JSITER_HIDDEN, &ids))
-	    return false;
+        ErrorCopier ec(ac);
+        if (!GetPropertyKeys(cx, referent, JSITER_OWNONLY | JSITER_HIDDEN, &ids))
+            return false;
     }
 
     return result.append(ids.begin(), ids.end());
@@ -8888,14 +8888,14 @@ DebuggerObject::getOwnPropertySymbols(JSContext* cx, Handle<DebuggerObject*> obj
 
     AutoIdVector ids(cx);
     {
-	Maybe<AutoCompartment> ac;
-	ac.emplace(cx, referent);
+        Maybe<AutoCompartment> ac;
+        ac.emplace(cx, referent);
 
-	ErrorCopier ec(ac);
-	if (!GetPropertyKeys(cx, referent,
-			     JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS | JSITER_SYMBOLSONLY,
-			     &ids))
-	    return false;
+        ErrorCopier ec(ac);
+        if (!GetPropertyKeys(cx, referent,
+                             JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS | JSITER_SYMBOLSONLY,
+                             &ids))
+            return false;
     }
 
     return result.append(ids.begin(), ids.end());
@@ -8995,11 +8995,11 @@ DebuggerObject::defineProperty(JSContext* cx, Handle<DebuggerObject*> object, Ha
     Maybe<AutoCompartment> ac;
     ac.emplace(cx, referent);
     if (!cx->compartment()->wrap(cx, &desc))
-	return false;
+        return false;
 
     ErrorCopier ec(ac);
     if (!DefineProperty(cx, referent, id, desc))
-	return false;
+        return false;
 
     return true;
 }
@@ -9025,14 +9025,14 @@ DebuggerObject::defineProperties(JSContext* cx, Handle<DebuggerObject*> object,
     Maybe<AutoCompartment> ac;
     ac.emplace(cx, referent);
     for (size_t i = 0; i < descs.length(); i++) {
-	if (!cx->compartment()->wrap(cx, descs[i]))
-	    return false;
+        if (!cx->compartment()->wrap(cx, descs[i]))
+            return false;
     }
 
     ErrorCopier ec(ac);
     for (size_t i = 0; i < descs.length(); i++) {
-	if (!DefineProperty(cx, referent, ids[i], descs[i]))
-	    return false;
+        if (!DefineProperty(cx, referent, ids[i], descs[i]))
+            return false;
     }
 
     return true;
