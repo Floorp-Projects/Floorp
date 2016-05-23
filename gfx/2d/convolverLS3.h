@@ -43,6 +43,13 @@ void ConvolveHorizontally_LS3(const unsigned char* src_data,
                                const ConvolutionFilter1D& filter,
                                unsigned char* out_row);
 
+// Convolves horizontally along a single row. The row data is given in
+// |src_data| and continues for the [begin, end) of the filter.
+// Process one pixel at a time.
+void ConvolveHorizontally1_LS3(const unsigned char* src_data,
+                               const ConvolutionFilter1D& filter,
+                               unsigned char* out_row);
+
 // Convolves horizontally along four rows. The row data is given in
 // |src_data| and continues for the [begin, end) of the filter.
 // The algorithm is almost same as |ConvolveHorizontally_LS3|. Please
