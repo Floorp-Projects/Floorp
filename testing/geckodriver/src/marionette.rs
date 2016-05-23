@@ -37,7 +37,7 @@ use webdriver::command::WebDriverCommand::{
     DeleteCookies, DeleteCookie, SetTimeouts, DismissAlert,
     AcceptAlert, GetAlertText, SendAlertText, TakeScreenshot, Extension};
 use webdriver::command::{
-    CapabilitiesParameters, GetParameters, WindowSizeParameters, SwitchToWindowParameters,
+    NewSessionParameters, GetParameters, WindowSizeParameters, SwitchToWindowParameters,
     SwitchToFrameParameters, LocatorParameters, JavascriptCommandParameters,
     GetCookieParameters, AddCookieParameters, TimeoutsParameters,
     TakeScreenshotParameters};
@@ -266,7 +266,7 @@ impl MarionetteHandler {
     }
 
     fn create_connection(&mut self, session_id: &Option<String>,
-                         capabilities: &CapabilitiesParameters) -> WebDriverResult<()> {
+                         capabilities: &NewSessionParameters) -> WebDriverResult<()> {
         let profile = try!(self.load_profile(capabilities));
         match self.start_browser(profile) {
             Err(e) => {
@@ -322,7 +322,7 @@ impl MarionetteHandler {
         Ok(())
     }
 
-    pub fn load_profile(&self, capabilities: &CapabilitiesParameters) -> WebDriverResult<Option<Profile>> {
+    pub fn load_profile(&self, capabilities: &NewSessionParameters) -> WebDriverResult<Option<Profile>> {
         let profile_opt = capabilities.get("firefox_profile");
         if profile_opt.is_none() {
             return Ok(None);
