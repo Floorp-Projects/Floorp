@@ -60,6 +60,14 @@ GPUProcessManager::CreateTopLevelCompositor(widget::CompositorWidgetProxy* aProx
     aSurfaceHeight);
 }
 
+PCompositorBridgeParent*
+GPUProcessManager::CreateTabCompositorBridge(ipc::Transport* aTransport,
+                                             base::ProcessId aOtherProcess,
+                                             ipc::GeckoChildProcessHost* aSubprocess)
+{
+  return CompositorBridgeParent::Create(aTransport, aOtherProcess, aSubprocess);
+}
+
 already_AddRefed<APZCTreeManager>
 GPUProcessManager::GetAPZCTreeManagerForLayers(uint64_t aLayersId)
 {
@@ -94,6 +102,19 @@ void
 GPUProcessManager::SwapLayerTreeObservers(uint64_t aLayer, uint64_t aOtherLayer)
 {
   CompositorBridgeParent::SwapLayerTreeObservers(aLayer, aOtherLayer);
+}
+
+bool
+GPUProcessManager::UpdateRemoteContentController(uint64_t aLayersId,
+                                                 dom::ContentParent* aContentParent,
+                                                 const dom::TabId& aTabId,
+                                                 dom::TabParent* aBrowserParent)
+{
+  return CompositorBridgeParent::UpdateRemoteContentController(
+    aLayersId,
+    aContentParent,
+    aTabId,
+    aBrowserParent);
 }
 
 } // namespace gfx
