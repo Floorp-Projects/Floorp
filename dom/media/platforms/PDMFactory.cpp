@@ -257,7 +257,7 @@ PDMFactory::CreatePDMs()
     m = new WMFDecoderModule();
     mWMFFailedToLoad = !StartupPDM(m);
   } else {
-    mWMFFailedToLoad = false;
+    mWMFFailedToLoad = MediaPrefs::DecoderDoctorWMFDisabledIsFailure();
   }
 #endif
 #ifdef MOZ_FFVPX
