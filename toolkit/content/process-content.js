@@ -18,11 +18,3 @@ Services.cpmm.addMessageListener("gmp-plugin-crash", msg => {
 
   gmpservice.RunPluginCrashCallbacks(msg.data.pluginID, msg.data.pluginName);
 });
-
-// Forward inner-window-destroyed notifications with the inner window ID,
-// so that code in the parent that should do something when content
-// windows go away can do it
-Services.obs.addObserver((subject, topic, data) => {
-  let innerWindowID = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
-  Services.cpmm.sendAsyncMessage("Toolkit:inner-window-destroyed", innerWindowID);
-}, "inner-window-destroyed", false);
