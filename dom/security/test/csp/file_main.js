@@ -1,12 +1,8 @@
-function doXHR(uri, callback) {
+function doXHR(uri) {
   try {
     var xhr = new XMLHttpRequest();
     xhr.open("GET", uri);
-    xhr.responseType = "blob";
     xhr.send();
-    xhr.onload = function () {
-      if (callback) callback(xhr.response);
-    }
   } catch(ex) {}
 }
 
@@ -19,35 +15,14 @@ try {
   navigator.sendBeacon("http://example.com/tests/dom/security/test/csp/file_CSP.sjs?testid=beacon_bad");
 } catch(ex) {}
 
-var topWorkerBlob;
-var nestedWorkerBlob;
 
-doXHR("file_main_worker.js", function (topResponse) {
-  topWorkerBlob = URL.createObjectURL(topResponse);
-  doXHR("file_child_worker.js", function (response) {
-    nestedWorkerBlob = URL.createObjectURL(response);
-    runWorker();
-  });
-});
+new Worker("file_main_worker.js").postMessage({inherited : false});
 
-function runWorker() {
-  // Top level worker, no subworker
-  // Worker does not inherit CSP from owner document
-  new Worker("file_main_worker.js").postMessage({inherited : "none"});
 
-  // Top level worker, no subworker
-  // Worker inherits CSP from owner document
-  new Worker(topWorkerBlob).postMessage({inherited : "document"});
-
-  // Subworker
-  // Worker does not inherit CSP from parent worker
-  new Worker("file_main_worker.js").postMessage({inherited : "none", nested : nestedWorkerBlob});
-
-  // Subworker
-  // Worker inherits CSP from parent worker
-  new Worker("file_main_worker.js").postMessage({inherited : "parent", nested : nestedWorkerBlob});
-
-  // Subworker
-  // Worker inherits CSP from owner document -> parent worker -> subworker
-  new Worker(topWorkerBlob).postMessage({inherited : "document", nested : nestedWorkerBlob});
+var blobxhr = new XMLHttpRequest();
+blobxhr.open("GET", "file_main_worker.js")
+blobxhr.responseType = "blob";
+blobxhr.send();
+blobxhr.onload = () => {
+  new Worker(URL.createObjectURL(blobxhr.response)).postMessage({inherited : true});
 }
