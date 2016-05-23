@@ -35,14 +35,6 @@ function performTest(request, console) {
       ok(!contentType, "we do not have the Content-Type header");
       isnot(contentLength, 60, "Content-Length != 60");
 
-      if (contentType || contentLength == 60) {
-        console.debug("lastFinishedRequest", lastFinishedRequest,
-                      "request", lastFinishedRequest.request,
-                      "response", lastFinishedRequest.response,
-                      "updates", lastFinishedRequest.updates,
-                      "response headers", headers);
-      }
-
       executeSoon(deferred.resolve);
     });
 
@@ -72,11 +64,11 @@ add_task(function* () {
   let gotLastRequest = waitForRequest();
 
   let loaded = loadBrowser(browser);
-  content.location = TEST_URI;
+  BrowserTestUtils.loadURI(browser, TEST_URI);
   yield loaded;
 
   let reloaded = loadBrowser(browser);
-  content.location.reload();
+  ContentTask.spawn(browser, null, "() => content.location.reload()");
   yield reloaded;
 
   yield gotLastRequest;
