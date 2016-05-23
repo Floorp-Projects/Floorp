@@ -84,6 +84,7 @@ ifdef MOZ_ANDROID_GCM
         $(ANDROID_PLAY_SERVICES_BASE_AAR_LIB) \
         $(ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB) \
         $(ANDROID_PLAY_SERVICES_GCM_AAR_LIB) \
+        $(ANDROID_PLAY_SERVICES_MEASUREMENT_AAR_LIB) \
         $(NULL)
 endif
 
@@ -124,6 +125,7 @@ ifdef MOZ_ANDROID_GCM
         $(ANDROID_PLAY_SERVICES_BASE_AAR_LIB) \
         $(ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB) \
         $(ANDROID_PLAY_SERVICES_GCM_AAR_LIB) \
+        $(ANDROID_PLAY_SERVICES_MEASUREMENT_AAR_LIB) \
         $(NULL)
 endif
 
@@ -431,6 +433,7 @@ generated/com/google/android/gms/appindexing/R.java: .aapt.deps ;
 generated/com/google/android/gms/base/R.java: .aapt.deps ;
 generated/com/google/android/gms/cast/R.java: .aapt.deps ;
 generated/com/google/android/gms/gcm/R.java: .aapt.deps ;
+generated/com/google/android/gms/measurement/R.java: .aapt.deps ;
 
 gecko.ap_: .aapt.deps ;
 R.txt: .aapt.deps ;

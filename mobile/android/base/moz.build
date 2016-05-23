@@ -775,6 +775,7 @@ if CONFIG['MOZ_ANDROID_GCM']:
         CONFIG['ANDROID_PLAY_SERVICES_BASE_AAR_LIB'],
         CONFIG['ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB'],
         CONFIG['ANDROID_PLAY_SERVICES_GCM_AAR_LIB'],
+        CONFIG['ANDROID_PLAY_SERVICES_MEASUREMENT_AAR_LIB'],
     ]
 
     if CONFIG['ANDROID_PLAY_SERVICES_BASE_AAR']:
@@ -791,6 +792,11 @@ if CONFIG['MOZ_ANDROID_GCM']:
         ANDROID_EXTRA_PACKAGES += ['com.google.android.gms.gcm']
         ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PLAY_SERVICES_GCM_AAR_RES']]
         resjar.generated_sources += ['com/google/android/gms/gcm/R.java']
+
+    if CONFIG['ANDROID_PLAY_SERVICES_MEASUREMENT_AAR']:
+        ANDROID_EXTRA_PACKAGES += ['com.google.android.gms.measurement']
+        ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PLAY_SERVICES_MEASUREMENT_AAR_RES']]
+        resjar.generated_sources += ['com/google/android/gms/measurement/R.java']
 
 if CONFIG['MOZ_INSTALL_TRACKING']:
     gbjar.extra_jars += [

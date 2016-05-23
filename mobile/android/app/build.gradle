@@ -195,6 +195,7 @@ dependencies {
         compile "com.google.android.gms:play-services-basement:${mozconfig.substs.ANDROID_GOOGLE_PLAY_SERVICES_VERSION}"
         compile "com.google.android.gms:play-services-base:${mozconfig.substs.ANDROID_GOOGLE_PLAY_SERVICES_VERSION}"
         compile "com.google.android.gms:play-services-gcm:${mozconfig.substs.ANDROID_GOOGLE_PLAY_SERVICES_VERSION}"
+        compile "com.google.android.gms:play-services-measurement:${mozconfig.substs.ANDROID_GOOGLE_PLAY_SERVICES_VERSION}"
     }
 
     // Gradle based builds include LeakCanary.  Gradle based tests include the no-op version.  Mach
