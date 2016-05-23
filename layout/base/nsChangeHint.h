@@ -220,15 +220,6 @@ inline void operator>=(nsChangeHint s1, nsChangeHint s2) {}
 
 // Operators on nsChangeHints
 
-// Merge the "src" hint into the "dst" hint
-// Returns true iff the destination changed
-inline bool NS_UpdateHint(nsChangeHint& aDest, nsChangeHint aSrc) {
-  nsChangeHint r = (nsChangeHint)(aDest | aSrc);
-  bool changed = (int)r != (int)aDest;
-  aDest = r;
-  return changed;
-}
-
 // Returns true iff the second hint contains all the hints of the first hint
 inline bool NS_IsHintSubset(nsChangeHint aSubset, nsChangeHint aSuperSet) {
   return (aSubset & aSuperSet) == aSubset;
@@ -326,14 +317,14 @@ inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint)
     if (NS_IsHintSubset(nsChangeHint_NeedReflow, aChangeHint)) {
       // If NeedDirtyReflow is *not* set, then NeedReflow is a
       // non-inherited hint.
-      NS_UpdateHint(result, nsChangeHint_NeedReflow);
+      result |= nsChangeHint_NeedReflow;
     }
 
     if (NS_IsHintSubset(nsChangeHint_ReflowChangesSizeOrPosition,
                         aChangeHint)) {
       // If NeedDirtyReflow is *not* set, then ReflowChangesSizeOrPosition is a
       // non-inherited hint.
-      NS_UpdateHint(result, nsChangeHint_ReflowChangesSizeOrPosition);
+      result |= nsChangeHint_ReflowChangesSizeOrPosition;
     }
   }
 
@@ -341,7 +332,7 @@ inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint)
       NS_IsHintSubset(nsChangeHint_ClearAncestorIntrinsics, aChangeHint)) {
     // If ClearDescendantIntrinsics is *not* set, then
     // ClearAncestorIntrinsics is a non-inherited hint.
-    NS_UpdateHint(result, nsChangeHint_ClearAncestorIntrinsics);
+    result |= nsChangeHint_ClearAncestorIntrinsics;
   }
 
   MOZ_ASSERT(NS_IsHintSubset(result,
