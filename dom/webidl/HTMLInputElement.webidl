@@ -205,9 +205,6 @@ partial interface HTMLInputElement {
   Promise<sequence<(File or Directory)>> getFilesAndDirectories();
 
   [Throws, Pref="dom.input.dirpicker"]
-  Promise<sequence<File>> getFiles(optional boolean recursiveFlag = false);
-
-  [Throws, Pref="dom.input.dirpicker"]
   void chooseDirectory();
 };
 
