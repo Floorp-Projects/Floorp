@@ -226,7 +226,8 @@ MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder)
   , mShutdown(false)
   , mAudioDiscontinuity(false)
   , mVideoDiscontinuity(false)
-  , mIsSuspended(true)
+  , mIsSuspended(mTaskQueue, true,
+                 "MediaDecoderReader::mIsSuspended (Canonical)")
 {
   MOZ_COUNT_CTOR(MediaDecoderReader);
   MOZ_ASSERT(NS_IsMainThread());
@@ -522,6 +523,7 @@ MediaDecoderReader::Shutdown()
   ReleaseMediaResources();
   mDuration.DisconnectIfConnected();
   mBuffered.DisconnectAll();
+  mIsSuspended.DisconnectAll();
 
   // Shut down the watch manager before shutting down our task queue.
   mWatchManager.Shutdown();
