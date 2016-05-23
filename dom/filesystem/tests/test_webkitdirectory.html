@@ -1,0 +1,122 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for webkitdirectory and webkitRelativePath</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<input id="inputFileWebkitDirectory" type="file" webkitdirectory></input>
+<input id="inputFileWebkitDirectoryAndDirectory" type="file" webkitdirectory directory></input>
+<input id="inputFileDirectory" type="file" directory></input>
+
+<script type="application/javascript;version=1.7">
+
+function populateInputFile(aInputFile) {
+  var url = SimpleTest.getTestFileURL("script_fileList.js");
+  var script = SpecialPowers.loadChromeScript(url);
+
+  var MockFilePicker = SpecialPowers.MockFilePicker;
+  MockFilePicker.init(window, "A Mock File Picker", SpecialPowers.Ci.nsIFilePicker.modeOpen);
+
+  function onOpened(message) {
+    MockFilePicker.useDirectory(message.dir);
+
+    var input = document.getElementById(aInputFile);
+    input.addEventListener('change', function() {
+      MockFilePicker.cleanup();
+      script.destroy();
+      next();
+    });
+
+    input.click();
+  }
+
+  script.addMessageListener("dir.opened", onOpened);
+  script.sendAsyncMessage("dir.open", { path: 'test' });
+}
+
+function checkFile(file, fileList) {
+  for (var i = 0; i < fileList.length; ++i) {
+    ok(fileList[i] instanceof File, "We want just files.");
+    if (fileList[i].name == file.name) {
+      is(fileList[i].webkitRelativePath, file.path, "Path matches");
+      return;
+    }
+  }
+
+  ok(false, "File not found.");
+}
+
+function test_fileList(aInputFile, aWhat) {
+  var input = document.getElementById(aInputFile);
+  var fileList = input.files;
+
+  if (aWhat == null) {
+    is(fileList, null, "We want a null fileList for " + aInputFile);
+    next();
+    return;
+  }
+
+  is(fileList.length, aWhat.length, "We want just " + aWhat.length + " elements for " + aInputFile);
+  for (var i = 0; i < aWhat.length; ++i) {
+    checkFile(aWhat[i], fileList);
+  }
+
+  next();
+}
+
+function test_webkitdirectory_attribute() {
+  var a = document.createElement("input");
+  a.setAttribute("type", "file");
+
+  ok("webkitdirectory" in a, "HTMLInputElement.webkitdirectory exists");
+
+  ok(!a.hasAttribute("webkitdirectory"), "No webkitdirectory DOM attribute by default");
+  ok(!a.webkitdirectory, "No webkitdirectory attribute by default");
+
+  a.webkitdirectory = true;
+
+  ok(a.hasAttribute("webkitdirectory"), "Webkitdirectory DOM attribute is set");
+  ok(a.webkitdirectory, "Webkitdirectory attribute is set");
+
+  next();
+}
+
+function test_setup() {
+  SpecialPowers.pushPrefEnv({"set": [["dom.input.dirpicker", true],
+                                     ["dom.webkitBlink.dirPicker.enabled", true]]}, next);
+}
+
+var tests = [
+  test_setup,
+
+  function() { populateInputFile('inputFileWebkitDirectory'); },
+  function() { populateInputFile('inputFileWebkitDirectoryAndDirectory'); },
+  function() { populateInputFile('inputFileDirectory'); },
+
+  function() { test_fileList('inputFileWebkitDirectory', [ { name: 'foo.txt', path: '/foo.txt' },
+                                                           { name: 'bar.txt', path: '/subdir/bar.txt' }]); },
+  function() { test_fileList('inputFileWebkitDirectoryAndDirectory', [ { name: 'foo.txt', path: '/foo.txt' },
+                                                                       { name: 'bar.txt', path: '/subdir/bar.txt' }]); },
+  function() { test_fileList('inputFileDirectory', null); },
+
+  test_webkitdirectory_attribute,
+];
+
+function next() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+SimpleTest.waitForExplicitFinish();
+next();
+</script>
+</body>
+</html>
