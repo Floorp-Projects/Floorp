@@ -9,7 +9,7 @@ license = "MPL-2.0"
 [dependencies]
 argparse = "0.2.1"
 env_logger = "0.3.2"
-hyper = {version = "0.8", default-features = false}
+hyper = {version = "0.9", default-features = false}
 lazy_static = "0.1"
 log = "0.3"
 mozprofile = "0.2"
