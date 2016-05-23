@@ -98,7 +98,7 @@ this.GeckoDriver = function(appName, device, stopSignal, emulator) {
   this.emulator.sendToListener = this.sendAsync.bind(this);
 
   this.sessionId = null;
-  // holds list of browser.Context's
+  this.wins = new browser.Windows();
   this.browsers = {};
   // points to current browser
   this.curBrowser = null;
@@ -287,10 +287,10 @@ GeckoDriver.prototype.addBrowser = function(win) {
   winId = winId + ((this.appName == "B2G") ? "-b2g" : "");
   this.browsers[winId] = bc;
   this.curBrowser = this.browsers[winId];
-  if (typeof this.curBrowser.elementManager.seenItems[winId] == "undefined") {
+  if (!this.wins.has(winId)) {
     // add this to seenItems so we can guarantee
     // the user will get winId as this window's id
-    this.curBrowser.elementManager.seenItems[winId] = Cu.getWeakReference(win);
+    this.wins.set(winId, win);
   }
 };
 
@@ -416,8 +416,7 @@ GeckoDriver.prototype.registerBrowser = function(id, be) {
     this.mainContentFrameId = this.curBrowser.curFrameId;
   }
 
-  this.curBrowser.elementManager.seenItems[reg.id] =
-      Cu.getWeakReference(listenerWindow);
+  this.wins.set(reg.id, listenerWindow);
   if (nullPrevious && (this.curBrowser.curFrameId !== null)) {
     this.sendAsync("newSession", this.sessionCapabilities, this.newSessionCommandId);
     if (this.curBrowser.isNewSession) {
