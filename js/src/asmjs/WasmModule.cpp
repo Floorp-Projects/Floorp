@@ -25,6 +25,7 @@
 
 #include "jsprf.h"
 
+#include "asmjs/WasmBinaryToExperimentalText.h"
 #include "asmjs/WasmBinaryToText.h"
 #include "asmjs/WasmSerialize.h"
 #include "builtin/AtomicsObject.h"
@@ -1673,7 +1674,7 @@ Module::createText(JSContext* cx)
     if (!source_.empty()) {
         if (!buffer.append(experimentalWarning))
             return nullptr;
-        if (!BinaryToText(cx, source_.begin(), source_.length(), buffer))
+        if (!BinaryToExperimentalText(cx, source_.begin(), source_.length(), buffer, ExperimentalTextFormatting()))
             return nullptr;
     } else {
         if (!buffer.append(enabledMessage))
