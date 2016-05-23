@@ -964,13 +964,13 @@ impl MarionetteError {
                      ErrorStatus::UnknownError,
                      "Error value has no message").as_string(),
             ErrorStatus::UnknownError,
-            "Error messsage was not a string").into();
+            "Error message was not a string").into();
 
         let stacktrace = match data.find("stacktrace") {
             None | Some(&Json::Null) => None,
             Some(x) => Some(try_opt!(x.as_string(),
                                      ErrorStatus::UnknownError,
-                                     "Error messsage was not a string").into()),
+                                     "Error message was not a string").into()),
         };
         Ok(MarionetteError::new(status, message, stacktrace))
     }
