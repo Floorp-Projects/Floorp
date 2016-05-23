@@ -12,13 +12,13 @@
 "versions": [
   "Android SDK 6.0 / API 23",
   "Android tools r24.4",
-  "Android build tools 23.0.1",
+  "Android build tools 23.0.3",
   "Android Support Repository (Support Library 23.0.1)",
   "Google Support Repository (Google Play Services 8.1.0)"
 ],
-"size": 510613380,
+"size": 573952124,
 "visibility": "internal", 
-"digest": "cdc5d661e5879ba9095c506090e1ed372a810ba073cf4e3e2c680b8d6a35016161d00c5f4b4859fe97a0decab816e9b882255271ed385b311304ad8cd600ac16",
+"digest": "1d495d7a7386af3f27b14982e0ff7b0963fd1a63a08040b9b1db0e94c9681fa3704c195ba8be23b5f73e15101b2b767293bc8f96e0584e17867ef13b074e5038",
 "algorithm": "sha512",
 "filename": "android-sdk-linux.tar.xz",
 "unpack": true
