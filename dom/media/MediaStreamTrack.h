@@ -30,6 +30,7 @@ class PeerConnectionMedia;
 class PeerIdentity;
 class ProcessedMediaStream;
 class RemoteSourceStreamInfo;
+class SourceStreamInfo;
 
 namespace dom {
 
@@ -228,6 +229,7 @@ class MediaStreamTrack : public DOMEventTargetHelper,
   // PeerConnection and friends need to know our owning DOMStream and track id.
   friend class mozilla::PeerConnectionImpl;
   friend class mozilla::PeerConnectionMedia;
+  friend class mozilla::SourceStreamInfo;
   friend class mozilla::RemoteSourceStreamInfo;
 
   class PrincipalHandleListener;
