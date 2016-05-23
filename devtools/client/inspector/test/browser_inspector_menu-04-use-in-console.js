@@ -18,7 +18,8 @@ add_task(function* () {
 
   function* testUseInConsole() {
     info("Testing 'Use in Console' menu item.");
-    let useInConsoleNode = inspector.panelDoc.getElementById("node-menu-useinconsole");
+    let useInConsoleNode = inspector.panelDoc.getElementById(
+      "node-menu-useinconsole");
 
     yield selectNode("#console-var", inspector);
     dispatchCommandEvent(useInConsoleNode);
@@ -31,7 +32,8 @@ add_task(function* () {
     is(jstermInput.value, "temp0", "first console variable is named temp0");
 
     let result = yield jsterm.execute();
-    isnot(result.textContent.indexOf('<p id="console-var">'), -1, "variable temp0 references correct node");
+    isnot(result.textContent.indexOf('<p id="console-var">'), -1,
+          "variable temp0 references correct node");
 
     yield selectNode("#console-var-multi", inspector);
     dispatchCommandEvent(useInConsoleNode);
@@ -40,7 +42,8 @@ add_task(function* () {
     is(jstermInput.value, "temp1", "second console variable is named temp1");
 
     result = yield jsterm.execute();
-    isnot(result.textContent.indexOf('<p id="console-var-multi">'), -1, "variable temp1 references correct node");
+    isnot(result.textContent.indexOf('<p id="console-var-multi">'), -1,
+          "variable temp1 references correct node");
 
     jsterm.clearHistory();
   }

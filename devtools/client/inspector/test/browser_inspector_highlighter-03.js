@@ -55,7 +55,8 @@ add_task(function* () {
   info("Moving mouse over iframe body");
   yield moveMouseOver("iframe", 40, 40);
 
-  ok((yield testActor.assertHighlightedNode(iframeBodySelector)), "highlighter shows the right node");
+  ok((yield testActor.assertHighlightedNode(iframeBodySelector)),
+     "highlighter shows the right node");
   yield testActor.isNodeCorrectlyHighlighted(iframeBodySelector, is);
 
   info("Waiting for the element picker to deactivate.");

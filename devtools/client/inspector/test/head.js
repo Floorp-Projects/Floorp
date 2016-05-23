@@ -6,6 +6,7 @@
 /* import-globals-from ../../framework/test/shared-head.js */
 /* import-globals-from ../../commandline/test/helpers.js */
 /* import-globals-from ../../shared/test/test-actor-registry.js */
+/* globals registerTestActor, getTestActor */
 "use strict";
 
 // Load the shared-head file first.
@@ -81,8 +82,7 @@ function getNode(nodeOrSelector, options = {}) {
     let node = document.querySelector(nodeOrSelector);
     if (noMatches) {
       ok(!node, "Selector " + nodeOrSelector + " didn't match any nodes.");
-    }
-    else {
+    } else {
       ok(node, "Selector " + nodeOrSelector + " matched a node.");
     }
 
@@ -174,7 +174,8 @@ var openInspectorForURL = Task.async(function* (url, hostType) {
 var openInspector = Task.async(function* (hostType) {
   info("Opening the inspector");
 
-  let toolbox = yield openToolboxForTab(gBrowser.selectedTab, "inspector", hostType);
+  let toolbox = yield openToolboxForTab(gBrowser.selectedTab, "inspector",
+                                        hostType);
   let inspector = toolbox.getPanel("inspector");
 
   info("Waiting for the inspector to update");
@@ -201,7 +202,8 @@ function getActiveInspector() {
  */
 var clickOnInspectMenuItem = Task.async(function* (testActor, selector) {
   info("Showing the contextual menu on node " + selector);
-  let contentAreaContextMenu = document.querySelector("#contentAreaContextMenu");
+  let contentAreaContextMenu = document.querySelector(
+    "#contentAreaContextMenu");
   let contextOpened = once(contentAreaContextMenu, "popupshown");
 
   yield testActor.synthesizeMouse({
@@ -328,12 +330,10 @@ function getNodeFront(selector, {walker}) {
  * the node is in
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * loaded in the toolbox
- * @param {String} reason Defaults to "test" which instructs the inspector not
- * to highlight the node upon selection
  * @return {Promise} Resolves when the inspector is updated with the new node
  */
 var getNodeFrontInFrame = Task.async(function* (selector, frameSelector,
-                                               inspector, reason = "test") {
+                                                inspector) {
   let iframe = yield getNodeFront(frameSelector, inspector);
   let {nodes} = yield inspector.walker.children(iframe);
   return inspector.walker.querySelector(nodes[0], selector);
@@ -429,7 +429,8 @@ var clickContainer = Task.async(function* (selector, inspector) {
 
 /**
  * Simulate the mouse leaving the markup-view area
- * @param {InspectorPanel} inspector The instance of InspectorPanel currently loaded in the toolbox
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently
+ * loaded in the toolbox
  * @return a promise when done
  */
 function mouseLeaveMarkupView(inspector) {
@@ -512,7 +513,7 @@ function dispatchCommandEvent(node) {
  */
 function contextMenuClick(element) {
   let evt = element.ownerDocument.createEvent("MouseEvents");
-  let button = 2;  // right click
+  let button = 2;
 
   evt.initMouseEvent("contextmenu", true, true,
        element.ownerDocument.defaultView, 1, 0, 0, 0, 0, false,
@@ -529,11 +530,11 @@ function* getNodeFrontForSelector(selector, inspector) {
   if (selector) {
     info("Retrieving front for selector " + selector);
     return getNodeFront(selector, inspector);
-  } else {
-    info("Retrieving front for doctype node");
-    let {nodes} = yield inspector.walker.children(inspector.walker.rootNode);
-    return nodes[0];
   }
+
+  info("Retrieving front for doctype node");
+  let {nodes} = yield inspector.walker.children(inspector.walker.rootNode);
+  return nodes[0];
 }
 
 /**
@@ -638,16 +639,17 @@ const getHighlighterHelperFor = (type) => Task.async(
 );
 
 // The expand all operation of the markup-view calls itself recursively and
-// there's not one event we can wait for to know when it's done
-// so use this helper function to wait until all recursive children updates are done.
+// there's not one event we can wait for to know when it's done so use this
+// helper function to wait until all recursive children updates are done.
 function* waitForMultipleChildrenUpdates(inspector) {
-// As long as child updates are queued up while we wait for an update already
-// wait again
+  // As long as child updates are queued up while we wait for an update already
+  // wait again
   if (inspector.markup._queuedChildUpdates &&
         inspector.markup._queuedChildUpdates.size) {
     yield waitForChildrenUpdated(inspector);
     return yield waitForMultipleChildrenUpdates(inspector);
   }
+  return null;
 }
 
 /**

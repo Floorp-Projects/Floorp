@@ -33,7 +33,8 @@ add_task(function* () {
       {type: "contextmenu", button: 2}, inspector.panelWin);
 
     info("Waiting for the context menu to open.");
-    yield once(inspector.panelDoc.getElementById("inspectorPopupSet"), "popupshown");
+    yield once(inspector.panelDoc.getElementById("inspectorPopupSet"),
+               "popupshown");
 
     info("Clicking 'Delete Node' in the context menu.");
     inspector.panelDoc.getElementById("node-menu-delete").click();
@@ -42,7 +43,8 @@ add_task(function* () {
     yield inspector.once("inspector-updated");
 
     info("Inspector updated, performing checks.");
-    yield assertNodeSelectedAndPanelsUpdated("#selectedAfterDelete", "li#selectedAfterDelete");
+    yield assertNodeSelectedAndPanelsUpdated("#selectedAfterDelete",
+                                             "li#selectedAfterDelete");
   }
 
   function* testAutomaticallyDeleteSelectedNode() {
@@ -59,7 +61,8 @@ add_task(function* () {
     yield inspector.once("inspector-updated");
 
     info("Inspector updated, performing checks.");
-    yield assertNodeSelectedAndPanelsUpdated("#deleteChildren", "ul#deleteChildren");
+    yield assertNodeSelectedAndPanelsUpdated("#deleteChildren",
+                                             "ul#deleteChildren");
   }
 
   function* testDeleteSelectedNodeContainerFrame() {
@@ -86,8 +89,10 @@ add_task(function* () {
     let nodeFront = yield getNodeFront(selector, inspector);
     is(inspector.selection.nodeFront, nodeFront, "The right node is selected");
 
-    let breadcrumbs = inspector.panelDoc.getElementById("inspector-breadcrumbs");
-    is(breadcrumbs.querySelector("button[checked=true]").textContent, crumbLabel,
-      "The right breadcrumb is selected");
+    let breadcrumbs = inspector.panelDoc.getElementById(
+      "inspector-breadcrumbs");
+    is(breadcrumbs.querySelector("button[checked=true]").textContent,
+       crumbLabel,
+       "The right breadcrumb is selected");
   }
 });

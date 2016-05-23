@@ -26,5 +26,5 @@ add_task(function* () {
        "toolbox is destroyed.");
   yield pickerStopped;
 
-  ok(true, "picker-stopped event fired after switch tools, so picker is closed.");
+  ok(true, "picker-stopped event fired after switch tools so picker is closed");
 });

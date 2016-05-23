@@ -11,7 +11,7 @@
 const TEST_URI = URL_ROOT + "doc_inspector_highlighter.html";
 
 add_task(function* () {
-  let {toolbox, inspector, testActor} = yield openInspectorForURL(TEST_URI);
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URI);
 
   info("Selecting the simple, non-transformed DIV");
   yield selectAndHighlightNode("#simple-div", inspector);
@@ -34,5 +34,6 @@ add_task(function* () {
 
   isVisible = yield testActor.isHighlighting();
   ok(isVisible, "The highlighter is shown");
-  yield testActor.isNodeCorrectlyHighlighted("#widthHeightZero-div", is, "zero width height");
+  yield testActor.isNodeCorrectlyHighlighted("#widthHeightZero-div", is,
+                                             "zero width height");
 });
