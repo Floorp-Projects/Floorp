@@ -32,9 +32,6 @@ function main()
   is(svg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
 
   testBundleList(gPacedBundles, new SMILTimingData(1.0, 6.0));
-  // Set "display:none" on everything and run the tests again
-  SMILUtil.hideSubtree(SMILUtil.getSVGRoot(), false, false);
-  testBundleList(gPacedBundles, new SMILTimingData(1.0, 6.0));
 
   SimpleTest.finish();
 }

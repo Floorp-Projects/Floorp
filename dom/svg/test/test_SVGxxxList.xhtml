@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=515116
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=515116">Mozilla Bug 515116</a>
 <p id="display"></p>
-<div id="content" style="display:none;">
+<div id="content">
 <svg id="svg" xmlns="http://www.w3.org/2000/svg" width="100" height="100"
      onload="this.pauseAnimations();">
   <desc>
@@ -98,7 +98,7 @@ function keys(obj) {
     var rval = [];
     for (var prop in obj) {
         rval.push(prop);
-    }    
+    }
     return rval;
 };
 
@@ -268,7 +268,7 @@ var tests = [
 
       // Compare the properties, skipping the constant properties inherited
       // from 'SVGPathSeg', and skipping the pathSegTypeAsLetter field since we
-      // already checked that above. 
+      // already checked that above.
       for (var prop in itemA) {
         if (!SVGPathSeg.hasOwnProperty(prop) &&
             prop != 'pathSegTypeAsLetter') {
