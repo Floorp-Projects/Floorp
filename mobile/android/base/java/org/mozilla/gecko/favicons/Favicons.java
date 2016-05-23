@@ -255,7 +255,7 @@ public class Favicons {
      * @return The cached Favicon, rescaled to be as close as possible to the target size, if any exists.
      *         null if no applicable Favicon exists in the cache.
      */
-    public static Bitmap getSizedFaviconFromCache(String faviconURL, int targetSize) {
+    static Bitmap getSizedFaviconFromCache(String faviconURL, int targetSize) {
         return faviconsCache.getFaviconForDimensions(faviconURL, targetSize);
     }
 
