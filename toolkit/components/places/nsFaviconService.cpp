@@ -416,7 +416,9 @@ nsFaviconService::ReplaceFaviconDataFromDataURL(nsIURI* aFaviconURI,
     new mozilla::LoadInfo(loadingPrincipal,
                           nullptr, // aTriggeringPrincipal
                           nullptr, // aLoadingNode
-                          nsILoadInfo::SEC_NORMAL,
+                          nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
+                          nsILoadInfo::SEC_ALLOW_CHROME |
+                          nsILoadInfo::SEC_DISALLOW_SCRIPT,
                           nsIContentPolicy::TYPE_INTERNAL_IMAGE);
 
   nsCOMPtr<nsIChannel> channel;
@@ -425,7 +427,7 @@ nsFaviconService::ReplaceFaviconDataFromDataURL(nsIURI* aFaviconURI,
 
   // Blocking stream is OK for data URIs.
   nsCOMPtr<nsIInputStream> stream;
-  rv = channel->Open(getter_AddRefs(stream));
+  rv = channel->Open2(getter_AddRefs(stream));
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint64_t available64;
