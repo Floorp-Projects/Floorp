@@ -1783,6 +1783,23 @@ testingFunc_bailout(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+testingFunc_bailAfter(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() != 1 || !args[0].isInt32() || args[0].toInt32() < 0) {
+        JS_ReportError(cx, "Argument must be a positive number that fits an int32");
+        return false;
+    }
+
+#ifdef DEBUG
+    cx->runtime()->setIonBailAfter(args[0].toInt32());
+#endif
+
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
 testingFunc_inJit(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -3797,6 +3814,12 @@ gc::ZealModeHelpText),
     JS_INLINABLE_FN_HELP("bailout", testingFunc_bailout, 0, 0, TestBailout,
 "bailout()",
 "  Force a bailout out of ionmonkey (if running in ionmonkey)."),
+
+    JS_FN_HELP("bailAfter", testingFunc_bailAfter, 1, 0,
+"bailAfter(number)",
+"  Start a counter to bail once after passing the given amount of possible bailout positions in\n"
+"  ionmonkey.\n"),
+
 
     JS_FN_HELP("inJit", testingFunc_inJit, 0, 0,
 "inJit()",

@@ -416,6 +416,8 @@ class CodeGenerator : public CodeGeneratorSpecific
 
     void visitRandom(LRandom* ins);
 
+    void emitDebugForceBailing(LInstruction* lir);
+
     IonScriptCounts* extractScriptCounts() {
         IonScriptCounts* counts = scriptCounts_;
         scriptCounts_ = nullptr;  // prevent delete in dtor

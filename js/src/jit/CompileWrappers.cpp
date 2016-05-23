@@ -59,6 +59,12 @@ CompileRuntime::addressOfJitStackLimit()
 }
 
 const void*
+CompileRuntime::addressOfIonBailAfter()
+{
+    return runtime()->addressOfIonBailAfter();
+}
+
+const void*
 CompileRuntime::addressOfJSContext()
 {
     return &runtime()->jitJSContext;

@@ -668,6 +668,22 @@ struct JSRuntime : public JS::shadow::Runtime,
     // Information about the heap allocated backtrack stack used by RegExp JIT code.
     js::irregexp::RegExpStack regexpStack;
 
+#ifdef DEBUG
+  private:
+    // The number of possible bailing places encounters before forcefully bailing
+    // in that place. Zero means inactive.
+    uint32_t ionBailAfter_;
+
+  public:
+    void* addressOfIonBailAfter() { return &ionBailAfter_; }
+
+    // Set after how many bailing places we should forcefully bail.
+    // Zero disables this feature.
+    void setIonBailAfter(uint32_t after) {
+        ionBailAfter_ = after;
+    }
+#endif
+
   private:
     friend class js::Activation;
     friend class js::ActivationIterator;
