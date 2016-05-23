@@ -48,6 +48,7 @@ class CancelableRunnable;
 
 namespace gfx {
 class DrawTarget;
+class GPUProcessManager;
 } // namespace gfx
 
 namespace ipc {
@@ -66,6 +67,7 @@ class LayerTransactionParent;
 class PAPZParent;
 class CrossProcessCompositorBridgeParent;
 class CompositorThreadHolder;
+class InProcessCompositorSession;
 
 struct ScopedLayerTreeRegistration
 {
@@ -208,6 +210,8 @@ class CompositorBridgeParent final : public PCompositorBridgeParent,
 {
   friend class CompositorVsyncScheduler;
   friend class CompositorThreadHolder;
+  friend class InProcessCompositorSession;
+  friend class gfx::GPUProcessManager;
 
 public:
   explicit CompositorBridgeParent(widget::CompositorWidgetProxy* aWidget,
@@ -401,12 +405,6 @@ public:
                                         GeckoContentController* aController);
 
   /**
-   * This returns a reference to the APZCTreeManager to which
-   * pan/zoom-related events can be sent.
-   */
-  static APZCTreeManager* GetAPZCTreeManager(uint64_t aLayersId);
-
-  /**
    * A new child process has been configured to push transactions
    * directly to us.  Transport is to its thread context.
    */
@@ -500,6 +498,13 @@ public:
   bool AsyncPanZoomEnabled() const {
     return !!mApzcTreeManager;
   }
+
+private:
+  /**
+   * This returns a reference to the APZCTreeManager to which
+   * pan/zoom-related events can be sent.
+   */
+  static already_AddRefed<APZCTreeManager> GetAPZCTreeManager(uint64_t aLayersId);
 
 protected:
   // Protected destructor, to discourage deletion outside of Release():
