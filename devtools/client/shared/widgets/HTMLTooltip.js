@@ -31,13 +31,13 @@ function HTMLTooltip(toolbox,
   {type = "normal", autofocus = true, consumeOutsideClicks = true} = {}) {
   EventEmitter.decorate(this);
 
-  this.document = toolbox.doc;
+  this.doc = toolbox.doc;
   this.type = type;
   this.autofocus = autofocus;
   this.consumeOutsideClicks = consumeOutsideClicks;
 
   // Use the topmost window to listen for click events to close the tooltip
-  this.topWindow = this.document.defaultView.top;
+  this.topWindow = this.doc.defaultView.top;
 
   this._onClick = this._onClick.bind(this);
 
@@ -69,15 +69,6 @@ HTMLTooltip.prototype = {
     BOTTOM: "bottom",
   },
 
-  get parent() {
-    if (this._isXUL()) {
-      // In XUL context, we are wrapping the HTML content in an iframe.
-      let win = this.container.contentWindow.wrappedJSObject;
-      return win.document.getElementById(IFRAME_CONTAINER_ID);
-    }
-    return this.container;
-  },
-
   /**
    * Set the tooltip content element. The preferred width/height should also be
    * specified here.
@@ -96,8 +87,8 @@ HTMLTooltip.prototype = {
     this.preferredHeight = height;
 
     return this.containerReady.then(() => {
-      this.parent.innerHTML = "";
-      this.parent.appendChild(content);
+      this.panel.innerHTML = "";
+      this.panel.appendChild(content);
     });
   },
 
@@ -133,7 +124,7 @@ HTMLTooltip.prototype = {
         this.container.focus();
       }
 
-      this.attachEventsTimer = this.document.defaultView.setTimeout(() => {
+      this.attachEventsTimer = this.doc.defaultView.setTimeout(() => {
         this.topWindow.addEventListener("click", this._onClick, true);
         this.emit("shown");
       }, 0);
@@ -145,7 +136,7 @@ HTMLTooltip.prototype = {
    * is hidden.
    */
   hide: function () {
-    this.document.defaultView.clearTimeout(this.attachEventsTimer);
+    this.doc.defaultView.clearTimeout(this.attachEventsTimer);
 
     if (this.isVisible()) {
       this.topWindow.removeEventListener("click", this._onClick, true);
@@ -154,12 +145,21 @@ HTMLTooltip.prototype = {
     }
   },
 
+  get panel() {
+    if (this._isXUL()) {
+      // In XUL context, we are wrapping the HTML content in an iframe.
+      let win = this.container.contentWindow.wrappedJSObject;
+      return win.document.getElementById(IFRAME_CONTAINER_ID);
+    }
+    return this.container;
+  },
+
   /**
    * Check if the tooltip is currently displayed.
    * @return {Boolean} true if the tooltip is visible
    */
   isVisible: function () {
-    let win = this.document.defaultView;
+    let win = this.doc.defaultView;
     return win.getComputedStyle(this.container).display != "none";
   },
 
@@ -175,12 +175,12 @@ HTMLTooltip.prototype = {
   _createContainer: function () {
     let container;
     if (this._isXUL()) {
-      container = this.document.createElementNS(XHTML_NS, "iframe");
+      container = this.doc.createElementNS(XHTML_NS, "iframe");
       container.classList.add("devtools-tooltip-iframe");
-      this.document.querySelector("window").appendChild(container);
+      this.doc.querySelector("window").appendChild(container);
     } else {
-      container = this.document.createElementNS(XHTML_NS, "div");
-      this.document.body.appendChild(container);
+      container = this.doc.createElementNS(XHTML_NS, "div");
+      this.doc.body.appendChild(container);
     }
 
     container.classList.add("theme-body");
@@ -202,13 +202,13 @@ HTMLTooltip.prototype = {
   },
 
   _isInTooltipContainer: function (node) {
-    let contentWindow = this.parent.ownerDocument.defaultView;
+    let contentWindow = this.panel.ownerDocument.defaultView;
     let win = node.ownerDocument.defaultView;
 
     if (win === contentWindow) {
       // If node is in the same window as the tooltip, check if the tooltip
       // parent contains node.
-      return this.parent.contains(node);
+      return this.panel.contains(node);
     }
 
     // Otherwise check if the node window is in the tooltip window.
@@ -226,10 +226,10 @@ HTMLTooltip.prototype = {
     let {TOP, BOTTOM} = this.position;
 
     let {left: anchorLeft, top: anchorTop, height: anchorHeight}
-      = this._getRelativeRect(anchor, this.document);
+      = this._getRelativeRect(anchor, this.doc);
 
     let {bottom: docBottom, right: docRight} =
-      this.document.documentElement.getBoundingClientRect();
+      this.doc.documentElement.getBoundingClientRect();
 
     let height = this.preferredHeight;
     // Check if the popup can fit above the anchor.
@@ -290,6 +290,6 @@ HTMLTooltip.prototype = {
   },
 
   _isXUL: function () {
-    return this.document.documentElement.namespaceURI === XUL_NS;
+    return this.doc.documentElement.namespaceURI === XUL_NS;
   },
 };
