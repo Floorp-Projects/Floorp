@@ -1051,6 +1051,8 @@ class DebuggerObject : public NativeObject
     static bool freeze(JSContext* cx, Handle<DebuggerObject*> object);
     static bool defineProperty(JSContext* cx, Handle<DebuggerObject*> object, HandleId id,
                                MutableHandle<PropertyDescriptor> desc);
+    static bool deleteProperty(JSContext* cx, Handle<DebuggerObject*> object, HandleId id,
+                               ObjectOpResult& result);
 
   private:
     enum {
