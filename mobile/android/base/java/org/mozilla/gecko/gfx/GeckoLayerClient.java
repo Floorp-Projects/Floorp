@@ -281,8 +281,10 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             Log.d(LOGTAG, "Window-size changed to " + mWindowSize);
         }
 
-        mView.getGLController().onSizeChanged(mWindowSize.width, mWindowSize.height,
-                                              mScreenSize.width, mScreenSize.height);
+        if (mView != null) {
+            mView.getGLController().onSizeChanged(mWindowSize.width, mWindowSize.height,
+                                                  mScreenSize.width, mScreenSize.height);
+        }
 
         String json = "";
         try {
