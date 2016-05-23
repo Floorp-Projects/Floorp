@@ -254,12 +254,6 @@ function plInit() {
                      browserWindow.focus();
 
                      content = browserWindow.getBrowser();
-                     if (content.selectedBrowser) {
-                       content.selectedBrowser.focus();
-                     } else {
-                       dump("WARNING: cannot focus content area\n");
-                     }
-
                      gUseE10S = !gDisableE10S || (plPageFlags() & EXECUTE_SCROLL_TEST) ||
                                  (content.selectedBrowser &&
                                  content.selectedBrowser.getAttribute("remote") == "true")
