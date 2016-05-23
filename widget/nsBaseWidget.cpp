@@ -58,7 +58,6 @@
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/TabParent.h"
-#include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/Move.h"
 #include "mozilla/Services.h"
 #include "mozilla/Snprintf.h"
@@ -1285,8 +1284,7 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 
   RefPtr<ClientLayerManager> lm = new ClientLayerManager(this);
 
-  gfx::GPUProcessManager* gpu = gfx::GPUProcessManager::Get();
-  mCompositorSession = gpu->CreateTopLevelCompositor(
+  mCompositorSession = CompositorSession::CreateTopLevel(
     mCompositorWidgetProxy,
     lm,
     GetDefaultScale(),

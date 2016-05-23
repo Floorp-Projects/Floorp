@@ -31,7 +31,6 @@
 #include "nsView.h"
 #include "nsViewportFrame.h"
 #include "RenderFrameParent.h"
-#include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "ClientLayerManager.h"
@@ -219,10 +218,10 @@ void
 RenderFrameParent::ActorDestroy(ActorDestroyReason why)
 {
   if (mLayersId != 0) {
-    if (XRE_IsParentProcess()) {
-      GPUProcessManager::Get()->DeallocateLayerTreeId(mLayersId);
-    } else if (XRE_IsContentProcess()) {
+    if (XRE_IsContentProcess()) {
       ContentChild::GetSingleton()->SendDeallocateLayerTreeId(mLayersId);
+    } else {
+      CompositorBridgeParent::DeallocateLayerTreeId(mLayersId);
     }
   }
 
