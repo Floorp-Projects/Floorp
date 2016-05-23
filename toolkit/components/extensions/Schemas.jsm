@@ -946,10 +946,11 @@ class ArrayType extends Type {
 }
 
 class FunctionType extends Type {
-  constructor(schema, parameters, isAsync) {
+  constructor(schema, parameters, isAsync, hasAsyncCallback) {
     super(schema);
     this.parameters = parameters;
     this.isAsync = isAsync;
+    this.hasAsyncCallback = hasAsyncCallback;
   }
 
   normalize(value, context) {
@@ -1156,6 +1157,7 @@ class FunctionEntry extends CallEntry {
     this.permissions = permissions;
 
     this.isAsync = type.isAsync;
+    this.hasAsyncCallback = type.hasAsyncCallback;
   }
 
   inject(path, name, dest, context) {
@@ -1172,7 +1174,10 @@ class FunctionEntry extends CallEntry {
       stub = (...args) => {
         this.checkDeprecated(context);
         let actuals = this.checkParameters(args, context);
-        let callback = actuals.pop();
+        let callback = null;
+        if (this.hasAsyncCallback) {
+          callback = actuals.pop();
+        }
         return context.callAsyncFunction(path, name, actuals, callback);
       };
     } else if (!this.returns) {
@@ -1403,7 +1408,7 @@ this.Schemas = {
       checkTypeProperties();
       return new BooleanType(type);
     } else if (type.type == "function") {
-      let isAsync = typeof(type.async) == "string";
+      let isAsync = Boolean(type.async);
 
       let parameters = null;
       if ("parameters" in type) {
@@ -1421,9 +1426,10 @@ this.Schemas = {
         }
       }
 
+      let hasAsyncCallback = false;
       if (isAsync) {
-        if (!parameters || !parameters.length || parameters[parameters.length - 1].name != type.async) {
-          throw new Error(`Internal error: "async" property must name the last parameter of the function.`);
+        if (parameters && parameters.length && parameters[parameters.length - 1].name == type.async) {
+          hasAsyncCallback = true;
         }
         if (type.returns || type.allowAmbiguousOptionalArguments) {
           throw new Error(`Internal error: Async functions must not have return values or ambiguous arguments.`);
@@ -1431,7 +1437,7 @@ this.Schemas = {
       }
 
       checkTypeProperties("parameters", "async", "returns");
-      return new FunctionType(type, parameters, isAsync);
+      return new FunctionType(type, parameters, isAsync, hasAsyncCallback);
     } else if (type.type == "any") {
       // Need to see what minimum and maximum are supposed to do here.
       checkTypeProperties("minimum", "maximum");
