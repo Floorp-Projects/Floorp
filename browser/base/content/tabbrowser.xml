@@ -4328,6 +4328,7 @@
                 tab.setUserContextId(data.userContextId);
               }
 
+              updateUserContextUIIndicator(browser);
               break;
             }
             case "Findbar:Keypress": {
