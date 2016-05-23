@@ -63,16 +63,9 @@
         Components.classes["@mozilla.org/docshell/urifixup;1"]
                   .getService(Components.interfaces.nsIURIFixup);
       </field>
-      <field name="mFaviconService" readonly="true">
-        Components.classes["@mozilla.org/browser/favicon-service;1"]
-                  .getService(Components.interfaces.nsIFaviconService);
-      </field>
       <field name="_unifiedComplete" readonly="true">
          Components.classes["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"]
                    .getService(Components.interfaces.mozIPlacesAutoComplete);
-      </field>
-      <field name="PlacesUtils" readonly="true">
-        (Components.utils.import("resource://gre/modules/PlacesUtils.jsm", {})).PlacesUtils;
       </field>
       <field name="AppConstants" readonly="true">
         (Components.utils.import("resource://gre/modules/AppConstants.jsm", {})).AppConstants;
@@ -862,7 +855,7 @@
             let browser = this.getBrowserForTab(aTab);
             browser.mIconURL = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
 
-            if (aURI && this.mFaviconService) {
+            if (aURI) {
               if (!(aURI instanceof Ci.nsIURI)) {
                 aURI = makeURI(aURI);
               }
@@ -872,12 +865,7 @@
               let loadingPrincipal = aLoadingPrincipal
                 ? aLoadingPrincipal
                 : Services.scriptSecurityManager.getSystemPrincipal();
-              let loadType = PrivateBrowsingUtils.isWindowPrivate(window)
-                ? this.mFaviconService.FAVICON_LOAD_PRIVATE
-                : this.mFaviconService.FAVICON_LOAD_NON_PRIVATE;
-
-              this.mFaviconService.setAndFetchFaviconForPage(
-                browser.currentURI, aURI, false, loadType, null, loadingPrincipal);
+              PlacesUIUtils.loadFavicon(browser, loadingPrincipal, aURI);
             }
 
             let sizedIconUrl = browser.mIconURL || "";
@@ -950,12 +938,9 @@
         <parameter name="aURI"/>
         <body>
           <![CDATA[
-            if (this.mFaviconService) {
-              if (!(aURI instanceof Ci.nsIURI))
-                aURI = makeURI(aURI);
-              return this.mFaviconService.isFailedFavicon(aURI);
-            }
-            return null;
+            if (!(aURI instanceof Ci.nsIURI))
+              aURI = makeURI(aURI);
+            return PlacesUtils.favicons.isFailedFavicon(aURI);
           ]]>
         </body>
       </method>
