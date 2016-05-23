@@ -108,6 +108,7 @@ FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(FFmpegLibWrapper* aLib,
   , mImageContainer(aImageContainer)
   , mInfo(aConfig)
   , mCodecParser(nullptr)
+  , mLastInputDts(INT64_MIN)
 {
   MOZ_COUNT_CTOR(FFmpegVideoDecoder);
   // Use a new MediaByteBuffer as the object will be modified during initialization.
@@ -210,7 +211,7 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
 
   packet.data = aData;
   packet.size = aSize;
-  packet.dts = aSample->mTimecode;
+  packet.dts = mLastInputDts = aSample->mTimecode;
   packet.pts = aSample->mTime;
   packet.flags = aSample->mKeyframe ? AV_PKT_FLAG_KEY : 0;
   packet.pos = aSample->mOffset;
@@ -312,7 +313,7 @@ void
 FFmpegVideoDecoder<LIBAV_VER>::ProcessDrain()
 {
   RefPtr<MediaRawData> empty(new MediaRawData());
-  empty->mTimecode = mPtsContext.LastDts();
+  empty->mTimecode = mLastInputDts;
   while (DoDecode(empty) == DecodeResult::DECODE_FRAME) {
   }
   mCallback->DrainComplete();
