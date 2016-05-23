@@ -50,3 +50,16 @@ addEventListener("TalosPowersContentForceCCAndGC", (e) => {
   Cu.forceShrinkingGC();
   sendSyncMessage("TalosPowersContent:ForceCCAndGC");
 });
+
+addEventListener("TalosPowersContentFocus", (e) => {
+  if (content.location.protocol != "file:" &&
+      content.location.hostname != "localhost" &&
+      content.location.hostname != "127.0.0.1") {
+    throw new Error("TalosPowersContentFocus may only be used with local content");
+  }
+  content.focus();
+  let contentEvent = Cu.cloneInto({
+    bubbles: true,
+  }, content);
+  content.dispatchEvent(new content.CustomEvent("TalosPowersContentFocused", contentEvent));
+}, true, true);
