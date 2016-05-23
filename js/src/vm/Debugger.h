@@ -1044,11 +1044,17 @@ class DebuggerObject : public NativeObject
                                     AutoIdVector& result);
     static bool getOwnPropertySymbols(JSContext* cx, Handle<DebuggerObject*> object,
                                       AutoIdVector& result);
+    static bool getOwnPropertyDescriptor(JSContext* cx, Handle<DebuggerObject*> object,
+                                         HandleId id, MutableHandle<PropertyDescriptor> desc);
     static bool preventExtensions(JSContext* cx, Handle<DebuggerObject*> object);
     static bool seal(JSContext* cx, Handle<DebuggerObject*> object);
     static bool freeze(JSContext* cx, Handle<DebuggerObject*> object);
 
   private:
+    enum {
+        OWNER_SLOT
+    };
+
     static const unsigned RESERVED_SLOTS = 1;
 
     static const JSPropertySpec properties_[];
@@ -1062,6 +1068,8 @@ class DebuggerObject : public NativeObject
         MOZ_ASSERT(obj);
         return obj;
     }
+
+    Debugger* owner() const;
 };
 
 class BreakpointSite {

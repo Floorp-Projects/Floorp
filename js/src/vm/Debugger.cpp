@@ -8271,51 +8271,6 @@ DebuggerObject_getErrorMessageName(JSContext *cx, unsigned argc, Value* vp)
 }
 
 static bool
-DebuggerObject_getOwnPropertyDescriptor(JSContext* cx, unsigned argc, Value* vp)
-{
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "getOwnPropertyDescriptor", args, dbg, obj);
-
-    RootedId id(cx);
-    if (!ValueToId<CanGC>(cx, args.get(0), &id))
-        return false;
-
-    /* Bug: This can cause the debuggee to run! */
-    Rooted<PropertyDescriptor> desc(cx);
-    {
-        Maybe<AutoCompartment> ac;
-        ac.emplace(cx, obj);
-
-        ErrorCopier ec(ac);
-        if (!GetOwnPropertyDescriptor(cx, obj, id, &desc))
-            return false;
-    }
-
-    if (desc.object()) {
-        /* Rewrap the debuggee values in desc for the debugger. */
-        if (!dbg->wrapDebuggeeValue(cx, desc.value()))
-            return false;
-
-        if (desc.hasGetterObject()) {
-            RootedValue get(cx, ObjectOrNullValue(desc.getterObject()));
-            if (!dbg->wrapDebuggeeValue(cx, &get))
-                return false;
-            desc.setGetterObject(get.toObjectOrNull());
-        }
-        if (desc.hasSetterObject()) {
-            RootedValue set(cx, ObjectOrNullValue(desc.setterObject()));
-            if (!dbg->wrapDebuggeeValue(cx, &set))
-                return false;
-            desc.setSetterObject(set.toObjectOrNull());
-        }
-
-        // Avoid tripping same-compartment assertions in JS::FromPropertyDescriptor().
-        desc.object().set(&args.thisv().toObject());
-    }
-
-    return JS::FromPropertyDescriptor(cx, desc, args.rval());
-}
-
-static bool
 DebuggerObject_defineProperty(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "defineProperty", args, dbg, obj);
@@ -8514,6 +8469,22 @@ DebuggerObject_getOwnPropertySymbols(JSContext* cx, unsigned argc, Value* vp)
 
     args.rval().setObject(*obj);
     return true;
+}
+
+static bool
+DebuggerObject_getOwnPropertyDescriptor(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT(cx, argc, vp, "getOwnPropertyDescriptor", object)
+
+    RootedId id(cx);
+    if (!ValueToId<CanGC>(cx, args.get(0), &id))
+        return false;
+
+    Rooted<PropertyDescriptor> desc(cx);
+    if (!DebuggerObject::getOwnPropertyDescriptor(cx, object, id, &desc))
+      return false;
+
+    return JS::FromPropertyDescriptor(cx, desc, args.rval());
 }
 
 static bool
@@ -8888,7 +8859,6 @@ const JSPropertySpec DebuggerObject::promiseProperties_[] = {
 #endif // SPIDERMONKEY_PROMISE
 
 const JSFunctionSpec DebuggerObject::methods_[] = {
-    JS_FN("getOwnPropertyDescriptor", DebuggerObject_getOwnPropertyDescriptor, 1, 0),
     JS_FN("defineProperty", DebuggerObject_defineProperty, 2, 0),
     JS_FN("defineProperties", DebuggerObject_defineProperties, 1, 0),
     JS_FN("deleteProperty", DebuggerObject_deleteProperty, 1, 0),
@@ -8898,6 +8868,7 @@ const JSFunctionSpec DebuggerObject::methods_[] = {
     JS_FN("isFrozen", DebuggerObject_isFrozen, 0, 0),
     JS_FN("getOwnPropertyNames", DebuggerObject_getOwnPropertyNames, 0, 0),
     JS_FN("getOwnPropertySymbols", DebuggerObject_getOwnPropertySymbols, 0, 0),
+    JS_FN("getOwnPropertyDescriptor", DebuggerObject_getOwnPropertyDescriptor, 1, 0),
     JS_FN("preventExtensions", DebuggerObject_preventExtensions, 0, 0),
     JS_FN("seal", DebuggerObject_seal, 0, 0),
     JS_FN("freeze", DebuggerObject_freeze, 0, 0),
@@ -9002,6 +8973,48 @@ DebuggerObject::getOwnPropertySymbols(JSContext* cx, Handle<DebuggerObject*> obj
     return GetPropertyKeys(cx, referent,
                            JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS | JSITER_SYMBOLSONLY,
                            &result);
+}
+
+/* static */ bool
+DebuggerObject::getOwnPropertyDescriptor(JSContext* cx, Handle<DebuggerObject*> object,
+                                         HandleId id, MutableHandle<PropertyDescriptor> desc)
+{
+    RootedObject referent(cx, object->referent());
+    Debugger* owner = object->owner();
+
+    /* Bug: This can cause the debuggee to run! */
+    {
+        Maybe<AutoCompartment> ac;
+        ac.emplace(cx, referent);
+
+        ErrorCopier ec(ac);
+        if (!GetOwnPropertyDescriptor(cx, referent, id, desc))
+            return false;
+    }
+
+    if (desc.object()) {
+        /* Rewrap the debuggee values in desc for the debugger. */
+        if (!owner->wrapDebuggeeValue(cx, desc.value()))
+            return false;
+
+        if (desc.hasGetterObject()) {
+            RootedValue get(cx, ObjectOrNullValue(desc.getterObject()));
+            if (!owner->wrapDebuggeeValue(cx, &get))
+                return false;
+            desc.setGetterObject(get.toObjectOrNull());
+        }
+        if (desc.hasSetterObject()) {
+            RootedValue set(cx, ObjectOrNullValue(desc.setterObject()));
+            if (!owner->wrapDebuggeeValue(cx, &set))
+                return false;
+            desc.setSetterObject(set.toObjectOrNull());
+        }
+
+        // Avoid tripping same-compartment assertions in JS::FromPropertyDescriptor().
+        desc.object().set(object);
+    }
+
+    return true;
 }
 
 /* static */ bool
