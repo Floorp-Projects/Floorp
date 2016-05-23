@@ -16,8 +16,6 @@ from contextlib import contextmanager
 from decorators import do_crash_check
 from keys import Keys
 
-from mozrunner import B2GEmulatorRunner
-
 import geckoinstance
 import errors
 import transport
@@ -541,13 +539,12 @@ class Marionette(object):
     DEFAULT_SOCKET_TIMEOUT = 360
     DEFAULT_STARTUP_TIMEOUT = 60
 
-    def __init__(self, host='localhost', port=2828, app=None, app_args=None, bin=None,
-                 profile=None, addons=None, emulator=None, sdcard=None, emulator_img=None,
-                 emulator_binary=None, emulator_res=None, connect_to_running_emulator=False,
-                 gecko_log=None, homedir=None, baseurl=None, no_window=False, logdir=None,
-                 busybox=None, symbols_path=None, timeout=None,
-                 socket_timeout=DEFAULT_SOCKET_TIMEOUT, device_serial=None, adb_path=None,
-                 process_args=None, adb_host=None, adb_port=None, prefs=None,
+    def __init__(self, host='localhost', port=2828, app=None, app_args=None,
+                 bin=None, profile=None, addons=None,
+                 gecko_log=None, baseurl=None,
+                 symbols_path=None, timeout=None,
+                 socket_timeout=DEFAULT_SOCKET_TIMEOUT,
+                 process_args=None, prefs=None,
                  startup_timeout=None, workspace=None, verbose=0):
         self.host = host
         self.port = self.local_port = port
@@ -559,17 +556,10 @@ class Marionette(object):
         self.session_id = None
         self.window = None
         self.chrome_window = None
-        self.runner = None
-        self.emulator = None
-        self.extra_emulators = []
         self.baseurl = baseurl
-        self.no_window = no_window
         self._test_name = None
         self.timeout = timeout
         self.socket_timeout = socket_timeout
-        self.device_serial = device_serial
-        self.adb_host = adb_host
-        self.adb_port = adb_port
 
         startup_timeout = startup_timeout or self.DEFAULT_STARTUP_TIMEOUT
 
@@ -597,7 +587,6 @@ class Marionette(object):
                     instance_class = geckoinstance.GeckoInstance
             self.instance = instance_class(host=self.host, port=self.port,
                                            bin=self.bin, profile=self.profile,
-                                           app_args=app_args,
                                            symbols_path=symbols_path,
                                            gecko_log=gecko_log, prefs=prefs,
                                            addons=self.addons,
@@ -606,50 +595,10 @@ class Marionette(object):
             self.instance.start()
             self.raise_for_port(self.wait_for_port(timeout=startup_timeout))
 
-        if emulator:
-            self.runner = B2GEmulatorRunner(b2g_home=homedir,
-                                            no_window=self.no_window,
-                                            logdir=logdir,
-                                            arch=emulator,
-                                            sdcard=sdcard,
-                                            symbols_path=symbols_path,
-                                            binary=emulator_binary,
-                                            userdata=emulator_img,
-                                            resolution=emulator_res,
-                                            profile=self.profile,
-                                            addons=self.addons,
-                                            adb_path=adb_path,
-                                            process_args=process_args)
-            self.emulator = self.runner.device
-            self.emulator.start()
-            self.port = self.emulator.setup_port_forwarding(remote_port=self.port)
-            self.raise_for_port(self.emulator.wait_for_port(self.port))
-
-        if connect_to_running_emulator:
-            self.runner = B2GEmulatorRunner(b2g_home=homedir,
-                                            logdir=logdir,
-                                            process_args=process_args)
-            self.emulator = self.runner.device
-            self.emulator.connect()
-            self.port = self.emulator.setup_port_forwarding(remote_port=self.port)
-            self.raise_for_port(self.emulator.wait_for_port(self.port))
-
-        if emulator:
-            if busybox:
-                self.emulator.install_busybox(busybox=busybox)
-            self.emulator.wait_for_system_message(self)
-
-        # for callbacks from a protocol level 2 or lower remote,
-        # we store the callback ID so it can be used by _send_emulator_result
-        self.emulator_callback_id = None
-
     @property
     def profile_path(self):
         if self.instance and self.instance.profile:
             return self.instance.profile.profile
-        elif self.runner and self.runner.profile:
-            return self.runner.profile.profile
-
 
     def cleanup(self):
         if self.session:
@@ -661,12 +610,8 @@ class Marionette(object):
                 # do no further server-side cleanup in this case.
                 pass
             self.session = None
-        if self.runner:
-            self.runner.cleanup()
         if self.instance:
             self.instance.close()
-        for qemu in self.extra_emulators:
-            qemu.emulator.close()
 
     def __del__(self):
         self.cleanup()
@@ -701,13 +646,6 @@ class Marionette(object):
         Marionette provides an asynchronous, non-blocking interface and
         this attempts to paper over this by providing a synchronous API
         to the user.
-
-        In particular, the Python client can be instructed to carry out
-        a sequence of instructions on the connected emulator.  For this
-        reason, if ``execute_script``, ``execute_js_script``, or
-        ``execute_async_script`` is called, it will loop until all
-        commands requested from the server have been exhausted, and we
-        receive our expected response.
 
         :param name: Requested command key.
         :param params: Optional dictionary of key/value arguments.
@@ -745,18 +683,6 @@ class Marionette(object):
             self.client.close()
             raise errors.TimeoutException("Connection timed out")
 
-        # support execution of commands on the client,
-        # loop until we receive our expected response
-        while isinstance(msg, transport.Command):
-            if msg.name == "runEmulatorCmd":
-                self.emulator_callback_id = msg.params.get("id")
-                msg = self._emulator_cmd(msg.params["emulator_cmd"])
-            elif msg.name == "runEmulatorShell":
-                self.emulator_callback_id = msg.params.get("id")
-                msg = self._emulator_shell(msg.params["emulator_shell"])
-            else:
-                raise IOError("Unknown command: %s" % msg)
-
         res, err = msg.result, msg.error
         if err:
             self._handle_error(err)
@@ -777,34 +703,6 @@ class Marionette(object):
             return list(self._unwrap_response(item) for item in value)
         else:
             return value
-
-    def _emulator_cmd(self, cmd):
-        if not self.emulator:
-            raise errors.MarionetteException(
-                "No emulator in this test to run command against")
-        payload = cmd.encode("ascii")
-        result = self.emulator._run_telnet(payload)
-        return self._send_emulator_result(result)
-
-    def _emulator_shell(self, args):
-        if not isinstance(args, list) or not self.emulator:
-            raise errors.MarionetteException(
-                "No emulator in this test to run shell command against")
-        buf = StringIO.StringIO()
-        self.emulator.dm.shell(args, buf)
-        result = str(buf.getvalue()[0:-1]).rstrip().splitlines()
-        buf.close()
-        return self._send_emulator_result(result)
-
-    def _send_emulator_result(self, result):
-        if self.protocol < 3:
-            body = {"name": "emulatorCmdResult",
-                    "id": self.emulator_callback_id,
-                    "result": result}
-            self.client.send(body)
-            return self.client.receive()
-        else:
-            return self.client.respond(result)
 
     def _handle_error(self, obj):
         if self.protocol == 1:
@@ -834,12 +732,7 @@ class Marionette(object):
         returncode = None
         name = None
         crashed = False
-        if self.runner:
-            if self.runner.check_for_crashes(test_name=self.test_name):
-                returncode = self.emulator.proc.returncode
-                name = 'emulator'
-                crashed = True
-        elif self.instance:
+        if self.instance:
             if self.instance.runner.check_for_crashes(
                     test_name=self.test_name):
                 crashed = True
@@ -1181,7 +1074,6 @@ class Marionette(object):
 
         self.session_id = resp["sessionId"]
         self.session = resp["value"] if self.protocol == 1 else resp["capabilities"]
-        self.b2g = "b2g" in self.session
 
         return self.session
 
@@ -1994,8 +1886,6 @@ class Marionette(object):
         """
         body = {"orientation": orientation}
         self._send_message("setScreenOrientation", body)
-        if self.emulator:
-            self.emulator.screen.orientation = orientation.lower()
 
     @property
     def window_size(self):
