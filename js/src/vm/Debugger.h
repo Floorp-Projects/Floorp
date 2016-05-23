@@ -787,7 +787,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static void markAll(JSTracer* trc);
     static void sweepAll(FreeOp* fop);
     static void detachAllDebuggersFromGlobal(FreeOp* fop, GlobalObject* global);
-    static void findZoneEdges(JS::Zone* v, gc::ComponentFinder<JS::Zone>& finder);
+    static void findZoneEdges(JS::Zone* v, gc::ZoneComponentFinder& finder);
 
     // Checks it the current compartment is allowed to execute code.
     static inline bool checkNoExecute(JSContext* cx, HandleScript script);

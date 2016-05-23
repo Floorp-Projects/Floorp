@@ -29,7 +29,7 @@ class JitCompartment;
 } // namespace jit
 
 namespace gc {
-template<class Node> class ComponentFinder;
+template <typename Node, typename Derived> class ComponentFinder;
 } // namespace gc
 
 namespace wasm {
@@ -656,7 +656,7 @@ struct JSCompartment
 
     js::SavedStacks& savedStacks() { return savedStacks_; }
 
-    void findOutgoingEdges(js::gc::ComponentFinder<JS::Zone>& finder);
+    void findOutgoingEdges(js::gc::ZoneComponentFinder& finder);
 
     js::DtoaCache dtoaCache;
 

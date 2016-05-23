@@ -32,8 +32,9 @@ class MOZ_RAII AutoTraceSession
     explicit AutoTraceSession(JSRuntime* rt, JS::HeapState state = JS::HeapState::Tracing);
     ~AutoTraceSession();
 
-  protected:
     AutoLockForExclusiveAccess lock;
+
+  protected:
     JSRuntime* runtime;
 
   private:
@@ -44,11 +45,13 @@ class MOZ_RAII AutoTraceSession
     AutoSPSEntry pseudoFrame;
 };
 
-struct MOZ_RAII AutoPrepareForTracing
+class MOZ_RAII AutoPrepareForTracing
 {
-    mozilla::Maybe<AutoTraceSession> session;
+    mozilla::Maybe<AutoTraceSession> session_;
 
+  public:
     AutoPrepareForTracing(JSRuntime* rt, ZoneSelector selector);
+    AutoTraceSession& session() { return session_.ref(); }
 };
 
 class IncrementalSafety
@@ -121,7 +124,7 @@ struct MOZ_RAII AutoStopVerifyingBarriers
 
 #ifdef JSGC_HASH_TABLE_CHECKS
 void CheckHashTablesAfterMovingGC(JSRuntime* rt);
-void CheckHeapAfterMovingGC(JSRuntime* rt);
+void CheckHeapAfterMovingGC(JSRuntime* rt, AutoLockForExclusiveAccess& lock);
 #endif
 
 struct MovingTracer : JS::CallbackTracer
