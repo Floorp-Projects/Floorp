@@ -430,7 +430,6 @@ public:
     , mCapIndex(aIndex)
     , mChannel(-1)
     , mNrAllocations(0)
-    , mInitDone(false)
     , mStarted(false)
     , mSampleFrequency(MediaEngine::DEFAULT_SAMPLE_RATE)
     , mEchoOn(false), mAgcOn(false), mNoiseOn(false)
@@ -445,7 +444,7 @@ public:
     mDeviceName.Assign(NS_ConvertUTF8toUTF16(name));
     mDeviceUUID.Assign(uuid);
     mListener = new mozilla::WebRTCAudioDataListener(this);
-    Init();
+    // We'll init lazily as needed
   }
 
   void GetName(nsAString& aName) override;
@@ -513,16 +512,24 @@ protected:
   }
 
 private:
-  void Init();
+  // These allocate/configure and release the channel
+  bool AllocChannel();
+  void FreeChannel();
+  // These start/stop VoEBase and associated interfaces
+  bool InitEngine();
+  void DeInitEngine();
 
   webrtc::VoiceEngine* mVoiceEngine;
   RefPtr<mozilla::AudioInput> mAudioInput;
   RefPtr<WebRTCAudioDataListener> mListener;
 
-  ScopedCustomReleasePtr<webrtc::VoEBase> mVoEBase;
-  ScopedCustomReleasePtr<webrtc::VoEExternalMedia> mVoERender;
-  ScopedCustomReleasePtr<webrtc::VoENetwork> mVoENetwork;
-  ScopedCustomReleasePtr<webrtc::VoEAudioProcessing> mVoEProcessing;
+  // Note: shared across all microphone sources - we don't want to Terminate()
+  // the VoEBase until there are no active captures
+  static int sChannelsOpen;
+  static ScopedCustomReleasePtr<webrtc::VoEBase> mVoEBase;
+  static ScopedCustomReleasePtr<webrtc::VoEExternalMedia> mVoERender;
+  static ScopedCustomReleasePtr<webrtc::VoENetwork> mVoENetwork;
+  static ScopedCustomReleasePtr<webrtc::VoEAudioProcessing> mVoEProcessing;
 
   // accessed from the GraphDriver thread except for deletion
   nsAutoPtr<AudioPacketizer<AudioDataValue, int16_t>> mPacketizer;
@@ -535,12 +542,12 @@ private:
   Monitor mMonitor;
   nsTArray<RefPtr<SourceMediaStream>> mSources;
   nsTArray<PrincipalHandle> mPrincipalHandles; // Maps to mSources.
+
   nsCOMPtr<nsIThread> mThread;
   int mCapIndex;
   int mChannel;
-  int mNrAllocations; // When this becomes 0, we shut down HW
+  int mNrAllocations; // Per-channel - When this becomes 0, we shut down HW for the channel
   TrackID mTrackID;
-  bool mInitDone;
   bool mStarted;
 
   nsString mDeviceName;
