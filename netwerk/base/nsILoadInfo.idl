@@ -148,6 +148,11 @@ interface nsILoadInfo : nsISupports
   const unsigned long SEC_ALLOW_CHROME = (1<<10);
 
   /**
+   * Disallow access to javascript: uris.
+   */
+  const unsigned long SEC_DISALLOW_SCRIPT = (1<<11);
+
+  /**
    * Don't follow redirects. Instead the redirect response is returned
    * as a successful response for the channel.
    *
@@ -158,7 +163,7 @@ interface nsILoadInfo : nsISupports
    * the response body might not be available.
    * This can happen if the redirect was cached.
    */
-  const unsigned long SEC_DONT_FOLLOW_REDIRECTS = (1<<11);
+  const unsigned long SEC_DONT_FOLLOW_REDIRECTS = (1<<12);
 
   /**
    * Force private browsing. Setting this flag the private browsing can be
@@ -167,7 +172,7 @@ interface nsILoadInfo : nsISupports
    * If the flag is true, even if a document context is present,
    * GetUsePrivateBrowsing will always return true.
    */
-  const unsigned long SEC_FORCE_PRIVATE_BROWSING = (1<<12);
+  const unsigned long SEC_FORCE_PRIVATE_BROWSING = (1<<13);
 
   /**
    * The SEC_FORCE_INHERIT_PRINCIPAL flag may be dropped when a load info
@@ -175,7 +180,7 @@ interface nsILoadInfo : nsISupports
    * flag is also present.  This flag is set if SEC_FORCE_INHERIT_PRINCIPAL was
    * dropped.
    */
-  const unsigned long SEC_FORCE_INHERIT_PRINCIPAL_WAS_DROPPED = (1<<13);
+  const unsigned long SEC_FORCE_INHERIT_PRINCIPAL_WAS_DROPPED = (1<<14);
 
   /**
    * The loadingPrincipal is the principal that is responsible for the load.
@@ -312,6 +317,12 @@ interface nsILoadInfo : nsISupports
    * when calling CheckLoadURIWithPrincipal().
    */
   [infallible] readonly attribute boolean allowChrome;
+
+  /**
+   * If disallowScript is true, then use nsIScriptSecurityManager::DISALLOW_SCRIPT
+   * when calling CheckLoadURIWithPrincipal().
+   */
+  [infallible] readonly attribute boolean disallowScript;
 
   /**
    * Returns true if SEC_DONT_FOLLOW_REDIRECTS is set.
