@@ -168,3 +168,6 @@ runTest(`
   (export "test" $test)
   (memory 1)
 )`);
+
+// default memory export from binaryen
+runTest(`(module (func (nop)) (memory 0 65535))`);
