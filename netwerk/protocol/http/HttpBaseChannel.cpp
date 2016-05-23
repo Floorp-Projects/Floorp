@@ -2567,15 +2567,29 @@ HttpBaseChannel::AddConsoleReport(uint32_t aErrorFlags,
 }
 
 void
-HttpBaseChannel::FlushConsoleReports(nsIDocument* aDocument)
+HttpBaseChannel::FlushConsoleReports(nsIDocument* aDocument,
+                                     ReportAction aAction)
 {
-  mReportCollector->FlushConsoleReports(aDocument);
+  mReportCollector->FlushConsoleReports(aDocument, aAction);
 }
 
 void
 HttpBaseChannel::FlushConsoleReports(nsIConsoleReportCollector* aCollector)
 {
   mReportCollector->FlushConsoleReports(aCollector);
+}
+
+void
+HttpBaseChannel::FlushReportsByWindowId(uint64_t aWindowId,
+                                        ReportAction aAction)
+{
+  mReportCollector->FlushReportsByWindowId(aWindowId, aAction);
+}
+
+void
+HttpBaseChannel::ClearConsoleReports()
+{
+  mReportCollector->ClearConsoleReports();
 }
 
 nsIPrincipal *
