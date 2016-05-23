@@ -33,12 +33,12 @@ private:
 };
 
 already_AddRefed<CompositorSession>
-CompositorSession::CreateTopLevel(widget::CompositorWidgetProxy* aWidgetProxy,
-                                  ClientLayerManager* aLayerManager,
-                                  CSSToLayoutDeviceScale aScale,
-                                  bool aUseAPZ,
-                                  bool aUseExternalSurfaceSize,
-                                  int aSurfaceWidth, int aSurfaceHeight)
+CompositorSession::CreateInProcess(widget::CompositorWidgetProxy* aWidgetProxy,
+                                   ClientLayerManager* aLayerManager,
+                                   CSSToLayoutDeviceScale aScale,
+                                   bool aUseAPZ,
+                                   bool aUseExternalSurfaceSize,
+                                   int aSurfaceWidth, int aSurfaceHeight)
 {
   RefPtr<InProcessCompositorSession> session = new InProcessCompositorSession(
     aWidgetProxy,
