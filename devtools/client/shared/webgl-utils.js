@@ -33,7 +33,7 @@ function create3DContext(canvas) {
   // try to get a valid context from an existing canvas
   let context = null;
   try {
-    context = canvas.getContext(WEBGL_CONTEXT_NAME, {});
+    context = canvas.getContext(WEBGL_CONTEXT_NAME, aFlags);
   } catch (e) {
     return null;
   }
