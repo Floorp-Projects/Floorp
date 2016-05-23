@@ -220,11 +220,6 @@ inline void operator>=(nsChangeHint s1, nsChangeHint s2) {}
 
 // Operators on nsChangeHints
 
-// Merge two hints, taking the union
-inline nsChangeHint NS_SubtractHint(nsChangeHint aH1, nsChangeHint aH2) {
-  return (nsChangeHint)(aH1 & ~aH2);
-}
-
 // Merge the "src" hint into the "dst" hint
 // Returns true iff the destination changed
 inline bool NS_UpdateHint(nsChangeHint& aDest, nsChangeHint aSrc) {

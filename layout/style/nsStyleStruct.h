@@ -859,8 +859,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePadding
 
   nsChangeHint CalcDifference(const nsStylePadding& aOther) const;
   static nsChangeHint MaxDifference() {
-    return NS_SubtractHint(NS_STYLE_HINT_REFLOW,
-                           nsChangeHint_ClearDescendantIntrinsics);
+    return NS_STYLE_HINT_REFLOW & ~nsChangeHint_ClearDescendantIntrinsics;
   }
   static nsChangeHint DifferenceAlwaysHandledForDescendants() {
     // CalcDifference can return nsChangeHint_ClearAncestorIntrinsics as
