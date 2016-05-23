@@ -381,6 +381,8 @@ protected:
 
   void BufferedRangeUpdated();
 
+  void ReaderSuspendedChanged();
+
   // Inserts MediaData* samples into their respective MediaQueues.
   // aSample must not be null.
 
@@ -518,10 +520,11 @@ protected:
   // The decoder monitor must be held.
   void InitiateSeek(SeekJob aSeekJob);
 
-  // Clears any previous seeking state and initiates a video-only seek on the
-  // decoder to catch up the video to the current audio position, when recovering
-  // from video decoding being suspended in background.
-  void InitiateVideoDecodeRecoverySeek();
+  // Clears any previous seeking state and initiates a seek on the decoder to
+  // resync the video and audio positions, when recovering from video decoding
+  // being suspended in background or from audio and video decoding being
+  // suspended due to the decoder limit.
+  void InitiateDecodeRecoverySeek(MediaDecoderReader::TargetQueues aQueues);
 
   nsresult DispatchAudioDecodeTaskIfNeeded();
 
@@ -974,6 +977,8 @@ private:
 private:
   // The buffered range. Mirrored from the decoder thread.
   Mirror<media::TimeIntervals> mBuffered;
+
+  Mirror<bool> mIsReaderSuspended;
 
   // The duration according to the demuxer's current estimate, mirrored from the main thread.
   Mirror<media::NullableTimeUnit> mEstimatedDuration;
