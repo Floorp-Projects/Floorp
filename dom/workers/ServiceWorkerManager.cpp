@@ -1918,13 +1918,10 @@ ServiceWorkerManager::StopControllingADocument(ServiceWorkerRegistrationInfo* aR
     if (aRegistration->mPendingUninstall) {
       RemoveRegistration(aRegistration);
     } else {
-      // If the registration has an active worker that is running
-      // this might be a good time to stop it.
-      if (aRegistration->GetActive()) {
-        ServiceWorkerPrivate* serviceWorkerPrivate =
-          aRegistration->GetActive()->WorkerPrivate();
-        serviceWorkerPrivate->NoteStoppedControllingDocuments();
-      }
+      // We use to aggressively terminate the worker at this point, but it
+      // caused problems.  There are more uses for a service worker than actively
+      // controlled documents.  We need to let the worker naturally terminate
+      // in case its handling push events, message events, etc.
       aRegistration->TryToActivateAsync();
     }
   }

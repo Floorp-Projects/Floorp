@@ -84,7 +84,6 @@ NS_IMPL_ISUPPORTS0(KeepAliveToken)
 
 ServiceWorkerPrivate::ServiceWorkerPrivate(ServiceWorkerInfo* aInfo)
   : mInfo(aInfo)
-  , mIsPushWorker(false)
   , mDebuggerCount(0)
   , mTokenCount(0)
 {
@@ -1598,7 +1597,6 @@ ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
     return error.StealNSResult();
   }
 
-  mIsPushWorker = false;
   RenewKeepAliveToken(aWhy);
 
   return NS_OK;
@@ -1656,17 +1654,6 @@ ServiceWorkerPrivate::NoteDeadServiceWorkerInfo()
 {
   AssertIsOnMainThread();
   mInfo = nullptr;
-  TerminateWorker();
-}
-
-void
-ServiceWorkerPrivate::NoteStoppedControllingDocuments()
-{
-  AssertIsOnMainThread();
-  if (mIsPushWorker || mDebuggerCount) {
-    return;
-  }
-
   TerminateWorker();
 }
 
@@ -1800,10 +1787,6 @@ ServiceWorkerPrivate::RenewKeepAliveToken(WakeUpReason aWhy)
 {
   // We should have an active worker if we're renewing the keep alive token.
   MOZ_ASSERT(mWorkerPrivate);
-
-  if (aWhy == PushEvent || aWhy == PushSubscriptionChangeEvent) {
-    mIsPushWorker = true;
-  }
 
   // If there is at least one debugger attached to the worker, the idle worker
   // timeout was canceled when the first debugger attached to the worker. It
