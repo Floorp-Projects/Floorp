@@ -10,7 +10,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=507067
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=507067">Mozilla Bug 507067</a>
 <p id="display"></p>
-<div id="content" style="display: none">
+<div id="content">
 <svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px"
      onload="this.pauseAnimations()">
   <g font-size="10px">
@@ -40,7 +40,7 @@ SimpleTest.waitForExplicitFinish();
 //  WebKit -- July 09 trunk build
 //  Batik -- 1.7
 //  Firefox -- July 09 trunk build
-// 
+//
 
 function main() {
   ok(svg.animationsPaused(), "should be paused by <svg> load handler");
@@ -85,7 +85,7 @@ function checkAfterChangeFontSize() {
   // (2) Check that changing the font-size of the parent element is reflected in
   // the anim val
   is(circle.cx.baseVal.value, -100,
-    "(2) Unexpected value for baseVal after changing font-size during " + 
+    "(2) Unexpected value for baseVal after changing font-size during " +
     "animation");
   is(circle.cx.animVal.value, 25,
     "(2) Unexpected value for animVal after changing font-size during " +
@@ -103,7 +103,7 @@ function checkWhilstFrozen() {
   // (3) Check that changing the font-size of the parent element is reflected in
   // the anim val
   is(circle.cx.baseVal.value, -100,
-    "(3) Unexpected value for baseVal after changing font-size whilst " + 
+    "(3) Unexpected value for baseVal after changing font-size whilst " +
     "frozen");
   is(circle.cx.animVal.value, 70,
     "(3) Unexpected value for animVal after changing font-size whilst " +
