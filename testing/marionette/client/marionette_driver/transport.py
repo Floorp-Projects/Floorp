@@ -85,16 +85,6 @@ class Proto2Command(Command):
     def __init__(self, name, params):
         Command.__init__(self, None, name, params)
 
-    @staticmethod
-    def from_data(data):
-        if "emulator_cmd" in data:
-            name = "runEmulatorCmd"
-        elif "emulator_shell" in data:
-            name = "runEmulatorShell"
-        else:
-            raise ValueError
-        return Proto2Command(name, data)
-
 
 class Proto2Response(Response):
     """Compatibility shim that marshals messages from a protocol level
@@ -161,13 +151,7 @@ class TcpTransport(object):
         else:
             data = json.loads(packet)
 
-            # emulator callbacks
-            if isinstance(data, dict) and any(k in data for k in ("emulator_cmd", "emulator_shell")):
-                msg = Proto2Command.from_data(data)
-
-            # everything else
-            else:
-                msg = Proto2Response.from_data(data)
+            msg = Proto2Response.from_data(data)
 
         return msg
 
