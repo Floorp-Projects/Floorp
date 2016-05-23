@@ -2924,7 +2924,7 @@ PresShell::CreateReferenceRenderingContext()
   if (mPresContext->IsScreen()) {
     rc = gfxContext::ForDrawTarget(gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget());
     MOZ_RELEASE_ASSERT(rc, "ScreenReferenceDrawTarget never returns null and "
-                           "ForDrawTarget always succeeds with it";
+                           "ForDrawTarget always succeeds with it");
   } else {
     // We assume the devCtx has positive width and height for this call.
     // However, width and height, may be outside of the reasonable range
