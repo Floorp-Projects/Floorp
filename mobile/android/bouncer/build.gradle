@@ -4,7 +4,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.1"
+    buildToolsVersion mozconfig.substs.ANDROID_BUILD_TOOLS_VERSION
 
     defaultConfig {
         targetSdkVersion 23
