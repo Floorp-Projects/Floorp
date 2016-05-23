@@ -525,6 +525,9 @@ class AssemblerX86Shared : public AssemblerShared
           case Operand::MEM_SCALE:
             masm.movl_i32m(imm32.value, dest.disp(), dest.base(), dest.index(), dest.scale());
             break;
+          case Operand::MEM_ADDRESS32:
+            masm.movl_i32m(imm32.value, dest.address());
+            break;
           default:
             MOZ_CRASH("unexpected operand kind");
         }

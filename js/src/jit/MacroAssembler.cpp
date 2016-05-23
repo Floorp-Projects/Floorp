@@ -1518,7 +1518,10 @@ MacroAssembler::printf(const char* output)
 
 static void
 Printf1_(const char* output, uintptr_t value) {
+    AutoEnterOOMUnsafeRegion oomUnsafe;
     char* line = JS_sprintf_append(nullptr, output, value);
+    if (!line)
+        oomUnsafe.crash("OOM at masm.printf");
     fprintf(stderr, "%s", line);
     js_free(line);
 }

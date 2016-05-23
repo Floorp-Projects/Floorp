@@ -133,6 +133,9 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     jitActivation(nullptr),
     jitStackLimit_(0xbad),
     jitStackLimitNoInterrupt_(0xbad),
+#ifdef DEBUG
+    ionBailAfter_(0),
+#endif
     activation_(nullptr),
     profilingActivation_(nullptr),
     profilerSampleBufferGen_(0),
