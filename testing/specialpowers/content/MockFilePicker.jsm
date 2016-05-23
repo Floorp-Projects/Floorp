@@ -103,11 +103,6 @@ this.MockFilePicker = {
     this.returnFiles = [file];
   },
 
-  useDirectory: function(aPath) {
-    var directory = new this.window.Directory(aPath);
-    this.returnFiles = [directory];
-  },
-
   isNsIFile: function(aFile) {
     let ret = false;
     try {
