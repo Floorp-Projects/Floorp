@@ -306,15 +306,7 @@ public class Favicons {
         }
 
         // No joy using in-memory resources. Go to background thread and ask the database.
-        final LoadFaviconTask task =
-            new LoadFaviconTask(context, pageURL, targetURL, 0, callback, targetSize, true);
-        final int taskId = task.getId();
-        synchronized (loadTasks) {
-            loadTasks.put(taskId, task);
-        }
-        task.execute();
-
-        return taskId;
+        return loadUncachedFavicon(context, pageURL, targetURL, 0, targetSize, callback);
     }
 
     public static int getSizedFaviconForPageFromLocal(Context context, final String pageURL, final OnFaviconLoadedListener callback) {
