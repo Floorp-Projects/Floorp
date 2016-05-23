@@ -9,6 +9,7 @@
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/SharedBufferManagerChild.h"
 #include "mozilla/layers/ISurfaceAllocator.h"     // for GfxMemoryImageReporter
+#include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
@@ -591,6 +592,8 @@ gfxPlatform::Init()
     gfxPrefs::GetSingleton();
     MediaPrefs::GetSingleton();
 
+    GPUProcessManager::Initialize();
+
     auto fwd = new CrashStatsLogForwarder("GraphicsCriticalError");
     fwd->SetCircularBufferSize(gfxPrefs::GfxLoggingCrashLength());
 
@@ -838,6 +841,8 @@ gfxPlatform::Shutdown()
     // WebGL on Optimus.
     GLContextProviderEGL::Shutdown();
 #endif
+
+    GPUProcessManager::Shutdown();
 
     // This is a bit iffy - we're assuming that we were the ones that set the
     // log forwarder in the Factory, so that it's our responsibility to
