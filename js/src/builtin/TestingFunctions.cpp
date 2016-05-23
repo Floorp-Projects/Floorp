@@ -21,6 +21,7 @@
 
 #include "asmjs/AsmJS.h"
 #include "asmjs/Wasm.h"
+#include "asmjs/WasmBinaryToExperimentalText.h"
 #include "asmjs/WasmBinaryToText.h"
 #include "asmjs/WasmTextToBinary.h"
 #include "builtin/Promise.h"
@@ -580,11 +581,30 @@ WasmBinaryToText(JSContext* cx, unsigned argc, Value* vp)
         bytes = copy.begin();
     }
 
+    bool experimental = false;
+    if (args.length() > 1) {
+        JSString* opt = JS::ToString(cx, args[1]);
+        if (!opt)
+            return false;
+        bool match;
+        if (!JS_StringEqualsAscii(cx, opt, "experimental", &match))
+            return false;
+        experimental = match;
+    }
+
     StringBuffer buffer(cx);
-    if (!wasm::BinaryToText(cx, bytes, length, buffer)) {
-        if (!cx->isExceptionPending())
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL, "print error");
-        return false;
+    if (experimental) {
+        if (!wasm::BinaryToExperimentalText(cx, bytes, length, buffer, wasm::ExperimentalTextFormatting())) {
+            if (!cx->isExceptionPending())
+                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL, "print error");
+            return false;
+        }
+    } else {
+        if (!wasm::BinaryToText(cx, bytes, length, buffer)) {
+            if (!cx->isExceptionPending())
+                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL, "print error");
+            return false;
+        }
     }
 
     JSString* result = buffer.finishString();
