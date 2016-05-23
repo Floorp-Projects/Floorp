@@ -78,6 +78,8 @@ class AstDecodeContext
     AstIndexVector funcSigs_;
     AstDecodeExprIter *iter_;
     const ValTypeVector* locals_;
+    AstNameVector blockLabels_;
+    uint32_t currentLabelIndex_;
 
   public:
     AstDecodeContext(JSContext* cx, LifoAlloc& lifo, Decoder& d, AstModule& module, bool generateNames)
@@ -91,23 +93,31 @@ class AstDecodeContext
        module_(module),
        funcSigs_(lifo),
        iter_(nullptr),
-       locals_(nullptr)
+       locals_(nullptr),
+       blockLabels_(lifo)
     {}
 
     AstModule& module() { return module_; }
     AstIndexVector& funcSigs() { return funcSigs_; }
     AstDecodeExprIter& iter() { return *iter_; }
     const ValTypeVector& locals() { return *locals_; }
+    AstNameVector& blockLabels() { return blockLabels_; }
 
     void startFunction(AstDecodeExprIter *iter, const ValTypeVector* locals)
     {
         iter_ = iter;
         locals_ = locals;
+        currentLabelIndex_ = 0;
     }
     void endFunction()
     {
         iter_ = nullptr;
         locals_ = nullptr;
+        MOZ_ASSERT(blockLabels_.length() == 0);
+    }
+    uint32_t nextLabelIndex()
+    {
+        return currentLabelIndex_++;
     }
 };
 
@@ -312,6 +322,25 @@ AstDecodeCallImport(AstDecodeContext& c)
 }
 
 static bool
+AstDecodeGetBlockRef(AstDecodeContext& c, uint32_t depth, AstRef* ref)
+{
+    if (!c.generateNames || depth >= c.blockLabels().length()) {
+        // Also ignoring if it's a function body label.
+        *ref = AstRef(AstName(), depth);
+        return true;
+    }
+
+    uint32_t index = c.blockLabels().length() - depth - 1;
+    if (c.blockLabels()[index].empty()) {
+        if (!AstDecodeGenerateName(c, AstName(MOZ_UTF16("$label$"), 7), c.nextLabelIndex(), &c.blockLabels()[index]))
+            return false;
+    }
+    *ref = AstRef(c.blockLabels()[index], AstNoIndex);
+    ref->setIndex(depth);
+    return true;
+}
+
+static bool
 AstDecodeBrTable(AstDecodeContext& c)
 {
     uint32_t tableLength;
@@ -329,14 +358,18 @@ AstDecodeBrTable(AstDecodeContext& c)
     for (size_t i = 0, e = tableLength; i < e; ++i) {
         if (!c.iter().readBrTableEntry(type, &depth))
             return false;
-        table[i] = AstRef(AstName(), depth);
+        if (!AstDecodeGetBlockRef(c, depth, &table[i]))
+            return false;
     }
 
     // Read the default label.
     if (!c.iter().readBrTableEntry(type, &depth))
         return false;
 
-    AstRef def(AstName(), depth);
+    AstRef def;
+    if (!AstDecodeGetBlockRef(c, depth, &def))
+        return false;
+
     AstBranchTable* branchTable = new(c.lifo) AstBranchTable(*index.expr, def, Move(table), value.expr);
     if (!branchTable)
         return false;
@@ -351,9 +384,13 @@ AstDecodeBlock(AstDecodeContext& c, Expr expr)
     MOZ_ASSERT(expr == Expr::Block || expr == Expr::Loop);
 
     if (expr == Expr::Loop) {
+      if (!c.blockLabels().append(AstName()) || !c.blockLabels().append(AstName()))
+          return false;
       if (!c.iter().readLoop())
           return false;
     } else {
+      if (!c.blockLabels().append(AstName()))
+          return false;
       if (!c.iter().readBlock())
           return false;
     }
@@ -372,7 +409,11 @@ AstDecodeBlock(AstDecodeContext& c, Expr expr)
             return false;
     }
 
-    AstBlock* block = new(c.lifo) AstBlock(expr, AstName(), AstName(), Move(exprs));
+    AstName continueName;
+    if (expr == Expr::Loop)
+        continueName = c.blockLabels().popCopy();
+    AstName breakName = c.blockLabels().popCopy();
+    AstBlock* block = new(c.lifo) AstBlock(expr, breakName, continueName, Move(exprs));
     if (!block)
         return false;
 
@@ -389,6 +430,8 @@ AstDecodeIf(AstDecodeContext& c)
 
     bool hasElse = false;
 
+    if (!c.blockLabels().append(AstName()))
+        return false;
     AstExprVector thenExprs(c.lifo);
     while (true) {
         if (!AstDecodeExpr(c))
@@ -404,9 +447,13 @@ AstDecodeIf(AstDecodeContext& c)
         if (!thenExprs.append(item.expr))
             return false;
     }
+    AstName thenName = c.blockLabels().popCopy();
 
+    AstName elseName;
     AstExprVector elseExprs(c.lifo);
     if (hasElse) {
+        if (!c.blockLabels().append(AstName()))
+            return false;
         while (true) {
             if (!AstDecodeExpr(c))
                 return false;
@@ -419,9 +466,10 @@ AstDecodeIf(AstDecodeContext& c)
             if (!elseExprs.append(item.expr))
                 return false;
         }
+        elseName = c.blockLabels().popCopy();
     }
 
-    AstIf* if_ = new(c.lifo) AstIf(cond.expr, AstName(), Move(thenExprs), AstName(), Move(elseExprs));
+    AstIf* if_ = new(c.lifo) AstIf(cond.expr, thenName, Move(thenExprs), elseName, Move(elseExprs));
     if (!if_)
         return false;
 
@@ -593,7 +641,10 @@ AstDecodeBranch(AstDecodeContext& c, Expr expr)
         popped = value.expr ? 2 : 1;
     }
 
-    AstRef depthRef(AstName(), depth);
+    AstRef depthRef;
+    if (!AstDecodeGetBlockRef(c, depth, &depthRef))
+        return false;
+
     AstBranch* branch = new(c.lifo) AstBranch(expr, cond.expr, depthRef, value.expr);
     if (!branch)
         return false;
@@ -1307,6 +1358,10 @@ AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcIndex, AstFunc** func)
 
     c.startFunction(&iter, &locals);
 
+    AstName funcName;
+    if (!AstDecodeGenerateName(c, AstName(MOZ_UTF16("$func$"), 6), funcIndex, &funcName))
+        return false;
+
     uint32_t numParams = sig->args().length();
     uint32_t numLocals = locals.length();
     for (uint32_t i = numParams; i < numLocals; i++) {
@@ -1341,10 +1396,6 @@ AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcIndex, AstFunc** func)
 
     if (c.d.currentPosition() != bodyEnd)
         return AstDecodeFail(c, "function body length mismatch");
-
-    AstName funcName;
-    if (!AstDecodeGenerateName(c, AstName(MOZ_UTF16("$func$"), 6), funcIndex, &funcName))
-        return false;
 
     AstRef sigRef;
     if (!AstDecodeGenerateRef(c, AstName(MOZ_UTF16("$type$"), 6), sigIndex, &sigRef))
