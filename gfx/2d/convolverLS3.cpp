@@ -237,6 +237,94 @@ void ConvolveHorizontally_LS3(const unsigned char* src_data,
   }
 }
 
+// Convolves horizontally along a single row. The row data is given in
+// |src_data| and continues for the [begin, end) of the filter.
+// Process one pixel at a time.
+void ConvolveHorizontally1_LS3(const unsigned char* src_data,
+                               const ConvolutionFilter1D& filter,
+                               unsigned char* out_row) {
+  int num_values = filter.num_values();
+  double zero;
+  double sra;
+
+  asm volatile (
+    ".set push \n"
+    ".set arch=loongson3a \n"
+    "xor %[zero], %[zero], %[zero] \n"
+    "mtc1 %[sk_sra], %[sra] \n"
+    ".set pop \n"
+    :[zero]"=&f"(zero), [sra]"=&f"(sra)
+    :[sk_sra]"r"(ConvolutionFilter1D::kShiftBits)
+  );
+  // Loop over each pixel on this row in the output image.
+  for (int out_x = 0; out_x < num_values; out_x++) {
+    // Get the filter that determines the current output pixel.
+    int filter_offset;
+    int filter_length;
+    const ConvolutionFilter1D::Fixed* filter_values =
+        filter.FilterForValue(out_x, &filter_offset, &filter_length);
+
+    // Compute the first pixel in this row that the filter affects. It will
+    // touch |filter_length| pixels (4 bytes each) after this.
+    const unsigned char* row_to_filter = &src_data[filter_offset * 4];
+
+    // Apply the filter to the row to get the destination pixel in |accum|.
+    double accuml;
+    double accumh;
+    asm volatile (
+      ".set push \n"
+      ".set arch=loongson3a \n"
+      "xor %[accuml], %[accuml], %[accuml] \n"
+      "xor %[accumh], %[accumh], %[accumh] \n"
+      ".set pop \n"
+      :[accuml]"=&f"(accuml), [accumh]"=&f"(accumh)
+    );
+    for (int filter_x = 0; filter_x < filter_length; filter_x++) {
+      double src8;
+      double src16;
+      double coeff;
+      double coeff16;
+      asm volatile (
+        ".set push \n"
+        ".set arch=loongson3a \n"
+        "lwc1 %[src8], %[rtf] \n"
+        "mtc1 %[fv], %[coeff] \n"
+        "pshufh %[coeff16], %[coeff], %[zero] \n"
+        "punpcklbh %[src16], %[src8], %[zero] \n"
+        "pmullh %[src8], %[src16], %[coeff16] \n"
+        "pmulhh %[coeff], %[src16], %[coeff16] \n"
+        "punpcklhw %[src16], %[src8], %[coeff] \n"
+        "punpckhhw %[coeff16], %[src8], %[coeff] \n"
+        "paddw %[accuml], %[accuml], %[src16] \n"
+        "paddw %[accumh], %[accumh], %[coeff16] \n"
+        ".set pop \n"
+        :[accuml]"+f"(accuml), [accumh]"+f"(accumh),
+         [src8]"=&f"(src8), [src16]"=&f"(src16),
+         [coeff]"=&f"(coeff), [coeff16]"=&f"(coeff16)
+        :[rtf]"m"(row_to_filter[filter_x * 4]),
+         [fv]"r"(filter_values[filter_x]), [zero]"f"(zero)
+      );
+    }
+
+    asm volatile (
+      ".set push \n"
+      ".set arch=loongson3a \n"
+      // Bring this value back in range. All of the filter scaling factors
+      // are in fixed point with kShiftBits bits of fractional part.
+      "psraw %[accuml], %[accuml], %[sra] \n"
+      "psraw %[accumh], %[accumh], %[sra] \n"
+      // Store the new pixel.
+      "packsswh %[accuml], %[accuml], %[accumh] \n"
+      "packushb %[accuml], %[accuml], %[zero] \n"
+      "swc1 %[accuml], %[out_row] \n"
+      ".set pop \n"
+      :[accuml]"+f"(accuml), [accumh]"+f"(accumh)
+      :[sra]"f"(sra), [zero]"f"(zero), [out_row]"m"(out_row[out_x * 4])
+      :"memory"
+    );
+  }
+}
+
 // Convolves horizontally along four rows. The row data is given in
 // |src_data| and continues for the num_values() of the filter.
 // The algorithm is almost same as |ConvolveHorizontally_LS3|. Please
