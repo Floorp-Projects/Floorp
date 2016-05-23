@@ -246,6 +246,14 @@ public:
     mWasSkippedInPrevSample = true;
   }
 
+  /**
+   * Returns true if we need to recalculate the animation value on every sample.
+   * (e.g. because it depends on context like the font-size)
+   */
+  bool ValueNeedsReparsingEverySample() const {
+    return mValueNeedsReparsingEverySample;
+  }
+
   // Comparator utility class, used for sorting nsSMILAnimationFunctions
   class Comparator {
     public:

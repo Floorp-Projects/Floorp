@@ -142,8 +142,12 @@ protected:
 
   static void SampleTimedElement(mozilla::dom::SVGAnimationElement* aElement,
                                  TimeContainerHashtable* aActiveContainers);
+
   static void AddAnimationToCompositorTable(
-    mozilla::dom::SVGAnimationElement* aElement, nsSMILCompositorTable* aCompositorTable);
+      mozilla::dom::SVGAnimationElement* aElement,
+      nsSMILCompositorTable* aCompositorTable,
+      bool& aStyleFlushNeeded);
+
   static bool GetTargetIdentifierForAnimation(
       mozilla::dom::SVGAnimationElement* aAnimElem, nsSMILTargetIdentifier& aResult);
 

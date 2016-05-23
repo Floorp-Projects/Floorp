@@ -52,8 +52,9 @@ public:
 
   // Composes the attribute's current value with the list of animation
   // functions, and assigns the resulting value to this compositor's target
-  // attribute
-  void ComposeAttribute();
+  // attribute. If a change is made that might produce style updates,
+  // aMightHavePendingStyleUpdates is set to true. Otherwise it is not modified.
+  void ComposeAttribute(bool& aMightHavePendingStyleUpdates);
 
   // Clears animation effects on my target attribute
   void ClearAnimationEffects();
@@ -74,7 +75,7 @@ public:
   // Create a nsISMILAttr for my target, on the heap.  Caller is responsible
   // for deallocating the returned object.
   nsISMILAttr* CreateSMILAttr();
-  
+
   // Finds the index of the first function that will affect our animation
   // sandwich. Also toggles the 'mForceCompositing' flag if it finds that any
   // (used) functions have changed.
