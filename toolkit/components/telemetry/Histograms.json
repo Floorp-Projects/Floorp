@@ -2882,13 +2882,6 @@
     "kind": "boolean",
     "description": "The URL path contains !//"
   },
-  "NETWORK_SESSION_AT_256FD": {
-    "expires_in_version": "49",
-    "kind": "boolean",
-    "description": "session exceeded old 256 limit",
-    "bug_numbers": [1260218],
-    "alert_emails": ["necko@mozilla.com"]
-  },
   "NETWORK_SESSION_AT_900FD": {
     "expires_in_version": "never",
     "kind": "boolean",
