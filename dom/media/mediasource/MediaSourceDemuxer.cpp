@@ -149,7 +149,6 @@ MediaSourceDemuxer::GetTrackDemuxer(TrackType aType, uint32_t aTrackNumber)
 {
   RefPtr<TrackBuffersManager> manager = GetManager(aType);
   if (!manager) {
-    MOZ_CRASH("TODO: sourcebuffer was deleted from under us");
     return nullptr;
   }
   RefPtr<MediaSourceTrackDemuxer> e =
