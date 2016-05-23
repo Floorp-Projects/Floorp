@@ -1049,6 +1049,8 @@ class DebuggerObject : public NativeObject
     static bool preventExtensions(JSContext* cx, Handle<DebuggerObject*> object);
     static bool seal(JSContext* cx, Handle<DebuggerObject*> object);
     static bool freeze(JSContext* cx, Handle<DebuggerObject*> object);
+    static bool defineProperty(JSContext* cx, Handle<DebuggerObject*> object, HandleId id,
+                               MutableHandle<PropertyDescriptor> desc);
 
   private:
     enum {
