@@ -159,7 +159,7 @@ public:
     rv = GetDefaultIcon(loadInfo, getter_AddRefs(newChannel));
     NS_ENSURE_SUCCESS(rv, mOutputStream->Close());
 
-    rv = newChannel->AsyncOpen(listener, nullptr);
+    rv = newChannel->AsyncOpen2(listener);
     NS_ENSURE_SUCCESS(rv, mOutputStream->Close());
 
     return NS_OK;

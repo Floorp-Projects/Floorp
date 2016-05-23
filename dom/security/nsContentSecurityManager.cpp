@@ -92,6 +92,9 @@ DoCheckLoadURIChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
   if (aLoadInfo->GetAllowChrome()) {
     flags |= nsIScriptSecurityManager::ALLOW_CHROME;
   }
+  if (aLoadInfo->GetDisallowScript()) {
+    flags |= nsIScriptSecurityManager::DISALLOW_SCRIPT;
+  }
 
   bool isImageInEditorType = IsImageLoadInEditorAppType(aLoadInfo);
 
