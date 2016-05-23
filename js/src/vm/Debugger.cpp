@@ -8271,41 +8271,6 @@ DebuggerObject_getErrorMessageName(JSContext *cx, unsigned argc, Value* vp)
 }
 
 static bool
-DebuggerObject_defineProperty(JSContext* cx, unsigned argc, Value* vp)
-{
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "defineProperty", args, dbg, obj);
-    if (!args.requireAtLeast(cx, "Debugger.Object.defineProperty", 2))
-        return false;
-
-    RootedId id(cx);
-    if (!ValueToId<CanGC>(cx, args[0], &id))
-        return false;
-
-    Rooted<PropertyDescriptor> desc(cx);
-    if (!ToPropertyDescriptor(cx, args[1], false, &desc))
-        return false;
-
-    if (!dbg->unwrapPropertyDescriptor(cx, obj, &desc))
-        return false;
-    if (!CheckPropertyDescriptorAccessors(cx, desc))
-        return false;
-
-    {
-        Maybe<AutoCompartment> ac;
-        ac.emplace(cx, obj);
-        if (!cx->compartment()->wrap(cx, &desc))
-            return false;
-
-        ErrorCopier ec(ac);
-        if (!DefineProperty(cx, obj, id, desc))
-            return false;
-    }
-
-    args.rval().setUndefined();
-    return true;
-}
-
-static bool
 DebuggerObject_defineProperties(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "defineProperties", args, dbg, obj);
@@ -8517,6 +8482,28 @@ DebuggerObject_freeze(JSContext* cx, unsigned argc, Value* vp)
     THIS_DEBUGOBJECT(cx, argc, vp, "freeze", object)
 
     if (!DebuggerObject::freeze(cx, object))
+        return false;
+
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
+DebuggerObject_defineProperty(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT(cx, argc, vp, "defineProperty", object)
+    if (!args.requireAtLeast(cx, "Debugger.Object.defineProperty", 2))
+        return false;
+
+    RootedId id(cx);
+    if (!ValueToId<CanGC>(cx, args[0], &id))
+        return false;
+
+    Rooted<PropertyDescriptor> desc(cx);
+    if (!ToPropertyDescriptor(cx, args[1], false, &desc))
+        return false;
+
+    if (!DebuggerObject::defineProperty(cx, object, id, &desc))
         return false;
 
     args.rval().setUndefined();
@@ -8859,7 +8846,6 @@ const JSPropertySpec DebuggerObject::promiseProperties_[] = {
 #endif // SPIDERMONKEY_PROMISE
 
 const JSFunctionSpec DebuggerObject::methods_[] = {
-    JS_FN("defineProperty", DebuggerObject_defineProperty, 2, 0),
     JS_FN("defineProperties", DebuggerObject_defineProperties, 1, 0),
     JS_FN("deleteProperty", DebuggerObject_deleteProperty, 1, 0),
     JS_FN("forceLexicalInitializationByName", DebuggerObject_forceLexicalInitializationByName, 1, 0),
@@ -8872,6 +8858,7 @@ const JSFunctionSpec DebuggerObject::methods_[] = {
     JS_FN("preventExtensions", DebuggerObject_preventExtensions, 0, 0),
     JS_FN("seal", DebuggerObject_seal, 0, 0),
     JS_FN("freeze", DebuggerObject_freeze, 0, 0),
+    JS_FN("defineProperty", DebuggerObject_defineProperty, 2, 0),
     JS_FN("apply", DebuggerObject_apply, 0, 0),
     JS_FN("call", DebuggerObject_call, 0, 0),
     JS_FN("makeDebuggeeValue", DebuggerObject_makeDebuggeeValue, 1, 0),
@@ -9048,6 +9035,32 @@ DebuggerObject::freeze(JSContext* cx, Handle<DebuggerObject*> object)
     ac.emplace(cx, referent);
     ErrorCopier ec(ac);
     return SetIntegrityLevel(cx, referent, IntegrityLevel::Frozen);
+}
+
+/* static */ bool
+DebuggerObject::defineProperty(JSContext* cx, Handle<DebuggerObject*> object, HandleId id,
+                               MutableHandle<PropertyDescriptor> desc)
+{
+    RootedObject referent(cx, object->referent());
+    Debugger* owner = object->owner();
+
+    if (!owner->unwrapPropertyDescriptor(cx, referent, desc))
+        return false;
+    if (!CheckPropertyDescriptorAccessors(cx, desc))
+        return false;
+
+    {
+        Maybe<AutoCompartment> ac;
+        ac.emplace(cx, referent);
+        if (!cx->compartment()->wrap(cx, desc))
+            return false;
+
+        ErrorCopier ec(ac);
+        if (!DefineProperty(cx, referent, id, desc))
+            return false;
+    }
+
+    return true;
 }
 
 
