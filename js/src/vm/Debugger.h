@@ -1040,6 +1040,10 @@ class DebuggerObject : public NativeObject
     static bool isExtensible(JSContext* cx, Handle<DebuggerObject*> object, bool& result);
     static bool isSealed(JSContext* cx, Handle<DebuggerObject*> object, bool& result);
     static bool isFrozen(JSContext* cx, Handle<DebuggerObject*> object, bool& result);
+    static bool getOwnPropertyNames(JSContext* cx, Handle<DebuggerObject*> object,
+                                    AutoIdVector& result);
+    static bool getOwnPropertySymbols(JSContext* cx, Handle<DebuggerObject*> object,
+                                      AutoIdVector& result);
     static bool preventExtensions(JSContext* cx, Handle<DebuggerObject*> object);
     static bool seal(JSContext* cx, Handle<DebuggerObject*> object);
     static bool freeze(JSContext* cx, Handle<DebuggerObject*> object);
