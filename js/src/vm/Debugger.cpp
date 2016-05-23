@@ -8271,50 +8271,6 @@ DebuggerObject_getErrorMessageName(JSContext *cx, unsigned argc, Value* vp)
 }
 
 static bool
-DebuggerObject_defineProperties(JSContext* cx, unsigned argc, Value* vp)
-{
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "defineProperties", args, dbg, obj);
-    if (!args.requireAtLeast(cx, "Debugger.Object.defineProperties", 1))
-        return false;
-
-    RootedValue arg(cx, args[0]);
-    RootedObject props(cx, ToObject(cx, arg));
-    if (!props)
-        return false;
-
-    AutoIdVector ids(cx);
-    Rooted<PropertyDescriptorVector> descs(cx, PropertyDescriptorVector(cx));
-    if (!ReadPropertyDescriptors(cx, props, false, &ids, &descs))
-        return false;
-    size_t n = ids.length();
-
-    for (size_t i = 0; i < n; i++) {
-        if (!dbg->unwrapPropertyDescriptor(cx, obj, descs[i]))
-            return false;
-        if (!CheckPropertyDescriptorAccessors(cx, descs[i]))
-            return false;
-    }
-
-    {
-        Maybe<AutoCompartment> ac;
-        ac.emplace(cx, obj);
-        for (size_t i = 0; i < n; i++) {
-            if (!cx->compartment()->wrap(cx, descs[i]))
-                return false;
-        }
-
-        ErrorCopier ec(ac);
-        for (size_t i = 0; i < n; i++) {
-            if (!DefineProperty(cx, obj, ids[i], descs[i]))
-                return false;
-        }
-    }
-
-    args.rval().setUndefined();
-    return true;
-}
-
-static bool
 DebuggerObject_isExtensible(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "isExtensible", object)
@@ -8481,6 +8437,30 @@ DebuggerObject_defineProperty(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (!DebuggerObject::defineProperty(cx, object, id, &desc))
+        return false;
+
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
+DebuggerObject_defineProperties(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT(cx, argc, vp, "defineProperties", object);
+    if (!args.requireAtLeast(cx, "Debugger.Object.defineProperties", 1))
+        return false;
+
+    RootedValue arg(cx, args[0]);
+    RootedObject props(cx, ToObject(cx, arg));
+    if (!props)
+        return false;
+
+    AutoIdVector ids(cx);
+    Rooted<PropertyDescriptorVector> descs(cx, PropertyDescriptorVector(cx));
+    if (!ReadPropertyDescriptors(cx, props, false, &ids, &descs))
+        return false;
+
+    if (!DebuggerObject::defineProperties(cx, object, ids, &descs))
         return false;
 
     args.rval().setUndefined();
@@ -8844,7 +8824,6 @@ const JSPropertySpec DebuggerObject::promiseProperties_[] = {
 #endif // SPIDERMONKEY_PROMISE
 
 const JSFunctionSpec DebuggerObject::methods_[] = {
-    JS_FN("defineProperties", DebuggerObject_defineProperties, 1, 0),
     JS_FN("forceLexicalInitializationByName", DebuggerObject_forceLexicalInitializationByName, 1, 0),
     JS_FN("isExtensible", DebuggerObject_isExtensible, 0, 0),
     JS_FN("isSealed", DebuggerObject_isSealed, 0, 0),
@@ -8856,6 +8835,7 @@ const JSFunctionSpec DebuggerObject::methods_[] = {
     JS_FN("seal", DebuggerObject_seal, 0, 0),
     JS_FN("freeze", DebuggerObject_freeze, 0, 0),
     JS_FN("defineProperty", DebuggerObject_defineProperty, 2, 0),
+    JS_FN("defineProperties", DebuggerObject_defineProperties, 1, 0),
     JS_FN("deleteProperty", DebuggerObject_deleteProperty, 1, 0),
     JS_FN("apply", DebuggerObject_apply, 0, 0),
     JS_FN("call", DebuggerObject_call, 0, 0),
@@ -9056,6 +9036,39 @@ DebuggerObject::defineProperty(JSContext* cx, Handle<DebuggerObject*> object, Ha
         ErrorCopier ec(ac);
         if (!DefineProperty(cx, referent, id, desc))
             return false;
+    }
+
+    return true;
+}
+
+/* static */ bool
+DebuggerObject::defineProperties(JSContext* cx, Handle<DebuggerObject*> object,
+                                 const AutoIdVector& ids,
+                                 MutableHandle<PropertyDescriptorVector> descs)
+{
+    RootedObject referent(cx, object->referent());
+    Debugger* owner = object->owner();
+
+    size_t n = ids.length();
+
+    for (size_t i = 0; i < n; i++) {
+        if (!owner->unwrapPropertyDescriptor(cx, referent, descs[i]))
+            return false;
+        if (!CheckPropertyDescriptorAccessors(cx, descs[i]))
+            return false;
+    }
+
+    Maybe<AutoCompartment> ac;
+    ac.emplace(cx, referent);
+    for (size_t i = 0; i < n; i++) {
+	if (!cx->compartment()->wrap(cx, descs[i]))
+	    return false;
+    }
+
+    ErrorCopier ec(ac);
+    for (size_t i = 0; i < n; i++) {
+	if (!DefineProperty(cx, referent, ids[i], descs[i]))
+	    return false;
     }
 
     return true;

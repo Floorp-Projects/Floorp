@@ -1051,6 +1051,9 @@ class DebuggerObject : public NativeObject
     static bool freeze(JSContext* cx, Handle<DebuggerObject*> object);
     static bool defineProperty(JSContext* cx, Handle<DebuggerObject*> object, HandleId id,
                                MutableHandle<PropertyDescriptor> desc);
+    static bool defineProperties(JSContext* cx, Handle<DebuggerObject*> object,
+                                 const AutoIdVector& ids,
+                                 MutableHandle<PropertyDescriptorVector> descs);
     static bool deleteProperty(JSContext* cx, Handle<DebuggerObject*> object, HandleId id,
                                ObjectOpResult& result);
 
