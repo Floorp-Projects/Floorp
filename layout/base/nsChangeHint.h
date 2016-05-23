@@ -221,11 +221,6 @@ inline void operator>=(nsChangeHint s1, nsChangeHint s2) {}
 // Operators on nsChangeHints
 
 // Merge two hints, taking the union
-inline nsChangeHint NS_CombineHint(nsChangeHint aH1, nsChangeHint aH2) {
-  return (nsChangeHint)(aH1 | aH2);
-}
-
-// Merge two hints, taking the union
 inline nsChangeHint NS_SubtractHint(nsChangeHint aH1, nsChangeHint aH2) {
   return (nsChangeHint)(aH1 & ~aH2);
 }
