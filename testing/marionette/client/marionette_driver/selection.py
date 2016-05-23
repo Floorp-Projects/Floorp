@@ -120,7 +120,7 @@ class SelectionManager(object):
         first_rect, last_rect = first_rect_list['0'], last_rect_list[str(last_list_length - 1)]
         origin_x, origin_y = self.element.rect['x'], self.element.rect['y']
 
-        if self.element.get_attribute('dir') == 'rtl':  # such as Arabic
+        if self.element.get_property('dir') == 'rtl':  # such as Arabic
             start_pos, end_pos = 'right', 'left'
         else:
             start_pos, end_pos = 'left', 'right'
@@ -213,7 +213,7 @@ class SelectionManager(object):
     def content(self):
         '''Return all the content of the element.'''
         if self._input_or_textarea():
-            return self.element.get_attribute('value')
+            return self.element.get_property('value')
         else:
             return self.element.text
 
