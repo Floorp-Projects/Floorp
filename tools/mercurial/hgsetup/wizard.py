@@ -67,18 +67,6 @@ not configured to produce patches in that format.
 (Relevant config options: diff.git, diff.showfunc, diff.unified)
 '''.strip()
 
-MQ_INFO = '''
-The mq extension manages patches as separate files. It provides an
-alternative to the recommended bookmark-based development workflow.
-
-If you are a newcomer to Mercurial or are coming from Git, it is
-recommended to avoid mq.
-
-(Relevant config option: extensions.mq)
-
-Would you like to activate the mq extension
-'''.strip()
-
 BZEXPORT_INFO = '''
 If you plan on uploading patches to Mozilla, there is an extension called
 bzexport that makes it easy to upload patches from the command line via the
@@ -88,33 +76,6 @@ https://hg.mozilla.org/hgcustom/version-control-tools/file/default/hgext/bzexpor
 (Relevant config option: extensions.bzexport)
 
 Would you like to activate bzexport
-'''.strip()
-
-MQEXT_INFO = '''
-The mqext extension adds a number of features, including automatically committing
-changes to your mq patch queue. More info is available at
-https://hg.mozilla.org/hgcustom/version-control-tools/file/default/hgext/mqext/README.txt
-
-(Relevant config option: extensions.mqext)
-
-Would you like to activate mqext
-'''.strip()
-
-QIMPORTBZ_INFO = '''
-The qimportbz extension
-(https://hg.mozilla.org/hgcustom/version-control-tools/file/default/hgext/qimportbz/README) makes it possible to
-import patches from Bugzilla using a friendly bz:// URL handler. e.g.
-|hg qimport bz://123456|.
-
-(Relevant config option: extensions.qimportbz)
-
-Would you like to activate qimportbz
-'''.strip()
-
-QNEWCURRENTUSER_INFO = '''
-The mercurial queues command |hg qnew|, which creates new patches in your patch
-queue does not set patch author information by default. Author information
-should be included when uploading for review.
 '''.strip()
 
 FINISHED = '''
@@ -412,8 +373,6 @@ class MercurialSetupWizard(object):
                 print('Error compiling hgwatchman; will not install hgwatchman')
                 print(e.output)
 
-        self.prompt_native_extension(c, 'mq', MQ_INFO)
-
         if 'reviewboard' not in c.extensions:
             if hg_version < REVIEWBOARD_MINIMUM_VERSION:
                 print(REVIEWBOARD_INCOMPATIBLE % REVIEWBOARD_MINIMUM_VERSION)
@@ -449,25 +408,6 @@ class MercurialSetupWizard(object):
         if not c.have_wip():
             if self._prompt_yn(WIP_INFO):
                 c.install_wip_alias()
-
-        if 'mq' in c.extensions:
-            self.prompt_external_extension(c, 'mqext', MQEXT_INFO)
-
-            if 'mqext' in c.extensions and not c.have_mqext_autocommit_mq():
-                if self._prompt_yn('Would you like to configure mqext to '
-                    'automatically commit changes as you modify patches'):
-                    c.ensure_mqext_autocommit_mq()
-                    print('Configured mqext to auto-commit.\n')
-
-            self.prompt_external_extension(c, 'qimportbz', QIMPORTBZ_INFO)
-
-            if not c.have_qnew_currentuser_default():
-                print(QNEWCURRENTUSER_INFO)
-                if self._prompt_yn('Would you like qnew to set patch author by '
-                                   'default'):
-                    c.ensure_qnew_currentuser_default()
-                    print('Configured qnew to set patch author by default.')
-                    print('')
 
         if 'reviewboard' in c.extensions or 'bzpost' in c.extensions:
             bzuser, bzpass, bzuserid, bzcookie, bzapikey = c.get_bugzilla_credentials()
