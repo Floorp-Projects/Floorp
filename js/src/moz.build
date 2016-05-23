@@ -603,6 +603,13 @@ HostSimplePrograms([
     'host_jskwgen',
 ])
 
+GENERATED_FILES += ['jsautokw.h']
+jsautokw = GENERATED_FILES['jsautokw.h']
+jsautokw.script = 'jsautokw.py'
+jsautokw.inputs += [
+    '!host_jskwgen%s' % CONFIG['HOST_BIN_SUFFIX'],
+]
+
 # JavaScript must be built shared, even for static builds, as it is used by
 # other modules which are always built shared. Failure to do so results in
 # the js code getting copied into xpinstall and jsd as well as mozilla-bin,
