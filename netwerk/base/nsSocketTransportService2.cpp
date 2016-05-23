@@ -246,20 +246,14 @@ bool
 nsSocketTransportService::CanAttachSocket()
 {
     static bool reported900FDLimit = false;
-    static bool reported256FDLimit = false;
 
     uint32_t total = mActiveCount + mIdleCount;
     bool rv = total < gMaxCount;
 
-    if (mTelemetryEnabledPref) {
-        if (((total >= 900) || !rv) && !reported900FDLimit) {
-            reported900FDLimit = true;
-            Telemetry::Accumulate(Telemetry::NETWORK_SESSION_AT_900FD, true);
-        }
-        if ((total >= 256) && !reported256FDLimit) {
-            reported256FDLimit = true;
-            Telemetry::Accumulate(Telemetry::NETWORK_SESSION_AT_256FD, true);
-        }
+    if (mTelemetryEnabledPref &&
+        (((total >= 900) || !rv) && !reported900FDLimit)) {
+        reported900FDLimit = true;
+        Telemetry::Accumulate(Telemetry::NETWORK_SESSION_AT_900FD, true);
     }
 
     return rv;
