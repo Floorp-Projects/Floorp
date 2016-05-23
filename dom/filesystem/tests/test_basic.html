@@ -77,6 +77,55 @@ function test_duplicateGetFilesAndDirectories() {
   script.sendAsyncMessage("dir.open", { path: 'test' });
 }
 
+function test_inputGetFiles() {
+  var url = SimpleTest.getTestFileURL("script_fileList.js");
+  var script = SpecialPowers.loadChromeScript(url);
+
+  function onOpened(message) {
+    var fileList = document.getElementById('fileList');
+    SpecialPowers.wrap(fileList).mozSetDirectory(message.dir);
+
+    fileList.getFilesAndDirectories()
+    .then(function(result) {
+       is(result.length, 1, "getFilesAndDirectories should return 1 element");
+       ok(result[0] instanceof Directory, "getFilesAndDirectories should return 1 directory");
+
+      return fileList.getFiles(false);
+    })
+    .then(function(result) {
+      is(result.length, 1, "getFiles should return 1 element");
+      ok(result[0] instanceof File, "getFile should return 1 file");
+      is(result[0].name, 'foo.txt', "getFiles()[0].name should be 'foo.txt'");
+      is(result[0].webkitRelativePath, '/foo.txt', "getFiles()[0].webkitRelativePath should be '/foo.txt'");
+
+      return fileList.getFiles(true);
+    })
+    .then(function(result) {
+      is(result.length, 2, "getFiles should return 2 elements");
+
+      function checkFile(file) {
+        ok(file instanceof File, "getFile[x] should return a file");
+        if (file.name == 'foo.txt') {
+          is(file.webkitRelativePath, '/foo.txt', "getFiles()[x].webkitRelativePath should be '/foo.txt'");
+        } else {
+          is(file.name, 'bar.txt', "getFiles()[x].name should be 'bar.txt'");
+          is(file.webkitRelativePath, '/subdir/bar.txt', "getFiles()[x].webkitRelativePath should be '/subdir/bar.txt'");
+        }
+      }
+
+      checkFile(result[0]);
+      checkFile(result[1]);
+    })
+    .then(function() {
+      script.destroy();
+      next();
+    });
+  }
+
+  script.addMessageListener("dir.opened", onOpened);
+  script.sendAsyncMessage("dir.open", { path: 'test' });
+}
+
 var tests = [
   function() { setup_tests(next); },
 
@@ -95,6 +144,7 @@ var tests = [
   function() { test_getFiles(directory, false, next); },
 
   test_duplicateGetFilesAndDirectories,
+  test_inputGetFiles,
   test_simpleFilePicker
 ];
 
