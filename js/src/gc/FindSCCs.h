@@ -7,6 +7,8 @@
 #ifndef gc_FindSCCs_h
 #define gc_FindSCCs_h
 
+#include "mozilla/Move.h"
+
 #include "jsfriendapi.h"
 #include "jsutil.h"
 
@@ -47,9 +49,11 @@ struct GraphNodeBase
  * Nodes derive from GraphNodeBase and implement findGraphEdges, which calls
  * finder.addEdgeTo to describe the outgoing edges from that node:
  *
+ * struct MyComponentFinder;
+ *
  * struct MyGraphNode : public GraphNodeBase
  * {
- *     void findOutgoingEdges(ComponentFinder<MyGraphNode>& finder)
+ *     void findOutgoingEdges(MyComponentFinder& finder)
  *     {
  *         for edge in my_outgoing_edges:
  *             if is_relevant(edge):
@@ -57,10 +61,16 @@ struct GraphNodeBase
  *     }
  * }
  *
- * ComponentFinder<MyGraphNode> finder;
+ * struct MyComponentFinder : public ComponentFinder<MyGraphNode, MyComponentFinder>
+ * {
+ *     ...
+ * };
+ *
+ * MyComponentFinder finder;
  * finder.addNode(v);
  */
-template<class Node>
+
+template <typename Node, typename Derived>
 class ComponentFinder
 {
   public:
@@ -156,7 +166,7 @@ class ComponentFinder
 
         Node* old = cur;
         cur = v;
-        cur->findOutgoingEdges(*this);
+        cur->findOutgoingEdges(*static_cast<Derived*>(this));
         cur = old;
 
         if (stackFull)

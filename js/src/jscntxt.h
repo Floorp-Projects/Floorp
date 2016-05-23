@@ -269,20 +269,20 @@ class ExclusiveContext : public ContextFriendFields,
     inline js::Handle<js::GlobalObject*> global() const;
 
     // Methods to access runtime data that must be protected by locks.
-    frontend::ParseMapPool& parseMapPool() {
-        return runtime_->parseMapPool();
+    frontend::ParseMapPool& parseMapPool(AutoLockForExclusiveAccess& lock) {
+        return runtime_->parseMapPool(lock);
     }
-    AtomSet& atoms() {
-        return runtime_->atoms();
+    AtomSet& atoms(js::AutoLockForExclusiveAccess& lock) {
+        return runtime_->atoms(lock);
     }
-    JSCompartment* atomsCompartment() {
-        return runtime_->atomsCompartment();
+    JSCompartment* atomsCompartment(js::AutoLockForExclusiveAccess& lock) {
+        return runtime_->atomsCompartment(lock);
     }
-    SymbolRegistry& symbolRegistry() {
-        return runtime_->symbolRegistry();
+    SymbolRegistry& symbolRegistry(js::AutoLockForExclusiveAccess& lock) {
+        return runtime_->symbolRegistry(lock);
     }
-    ScriptDataTable& scriptDataTable() {
-        return runtime_->scriptDataTable();
+    ScriptDataTable& scriptDataTable(AutoLockForExclusiveAccess& lock) {
+        return runtime_->scriptDataTable(lock);
     }
 
     // Methods specific to any HelperThread for the context.

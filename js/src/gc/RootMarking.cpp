@@ -272,7 +272,8 @@ PropertyDescriptor::trace(JSTracer* trc)
 }
 
 void
-js::gc::GCRuntime::markRuntime(JSTracer* trc, TraceOrMarkRuntime traceOrMark)
+js::gc::GCRuntime::markRuntime(JSTracer* trc, TraceOrMarkRuntime traceOrMark,
+                               AutoLockForExclusiveAccess& lock)
 {
     gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_ROOTS);
 
@@ -306,11 +307,11 @@ js::gc::GCRuntime::markRuntime(JSTracer* trc, TraceOrMarkRuntime traceOrMark)
     if (!rt->isBeingDestroyed() && !rt->isHeapMinorCollecting()) {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_RUNTIME_DATA);
 
-        if (traceOrMark == TraceRuntime || rt->atomsCompartment()->zone()->isCollecting()) {
+        if (traceOrMark == TraceRuntime || rt->atomsCompartment(lock)->zone()->isCollecting()) {
             MarkPermanentAtoms(trc);
-            MarkAtoms(trc);
+            MarkAtoms(trc, lock);
             MarkWellKnownSymbols(trc);
-            jit::JitRuntime::Mark(trc);
+            jit::JitRuntime::Mark(trc, lock);
         }
     }
 

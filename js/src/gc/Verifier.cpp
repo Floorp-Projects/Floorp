@@ -206,7 +206,7 @@ gc::GCRuntime::startVerifyPreBarriers()
     incrementalState = MARK_ROOTS;
 
     /* Make all the roots be edges emanating from the root node. */
-    markRuntime(trc);
+    markRuntime(trc, TraceRuntime, prep.session().lock);
 
     VerifyNode* node;
     node = trc->curnode;
@@ -421,7 +421,7 @@ class CheckHeapTracer : public JS::CallbackTracer
   public:
     explicit CheckHeapTracer(JSRuntime* rt);
     bool init();
-    bool check();
+    bool check(AutoLockForExclusiveAccess& lock);
 
   private:
     void onChild(const JS::GCCellPtr& thing) override;
@@ -496,11 +496,11 @@ CheckHeapTracer::onChild(const JS::GCCellPtr& thing)
 }
 
 bool
-CheckHeapTracer::check()
+CheckHeapTracer::check(AutoLockForExclusiveAccess& lock)
 {
     // The analysis thinks that markRuntime might GC by calling a GC callback.
     JS::AutoSuppressGCAnalysis nogc(rt);
-    rt->gc.markRuntime(this, GCRuntime::TraceRuntime);
+    rt->gc.markRuntime(this, GCRuntime::TraceRuntime, lock);
 
     while (!stack.empty()) {
         WorkItem item = stack.back();
@@ -526,11 +526,11 @@ CheckHeapTracer::check()
 }
 
 void
-js::gc::CheckHeapAfterMovingGC(JSRuntime* rt)
+js::gc::CheckHeapAfterMovingGC(JSRuntime* rt, AutoLockForExclusiveAccess& lock)
 {
     MOZ_ASSERT(rt->isHeapCollecting());
     CheckHeapTracer tracer(rt);
-    if (!tracer.init() || !tracer.check())
+    if (!tracer.init() || !tracer.check(lock))
         fprintf(stderr, "OOM checking heap\n");
 }
 
