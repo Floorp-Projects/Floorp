@@ -1,0 +1,22 @@
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait">
+
+  <title>Test animation element in 'defs' element with 'fill' property</title>
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+
+  <rect id="target" fill="red" width="100%" height="100%"/>
+  <defs>
+    <animate xlink:href="#target"
+             attributeName="fill"
+             calcMode="discrete"
+             values="red;lime"
+             dur="100s"/>
+  </defs>
+
+  <script>
+    window.addEventListener("MozReftestInvalidate", function() {
+      setTimeAndWaitToSnapshot(49.9, 0.1);
+    });
+  </script>
+</svg>
