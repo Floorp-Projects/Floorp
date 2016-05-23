@@ -261,10 +261,6 @@ waitForAllPaints(function() {
     yield ensureElementRemoval(parentElement);
   });
 
-  /*
-   Disabled for now since, on Android and B2G, the opacity animation runs on the
-   compositor even if the associated element has visibility:hidden.
-   We will fix this in bug 1237454 or a follow-up bug.
   add_task_if_omta_enabled(function* no_restyling_compositor_animations_in_visiblily_hidden_element() {
     var div = addDiv(null,
      { style: 'animation: opacity 100s; visibility: hidden' });
@@ -280,7 +276,6 @@ waitForAllPaints(function() {
             'visibility hidden element should never cause restyles');
     yield ensureElementRemoval(div);
   });
-  */
 
   add_task(function* no_restyling_main_thread_animations_in_visiblily_hidden_element() {
     var div = addDiv(null,
