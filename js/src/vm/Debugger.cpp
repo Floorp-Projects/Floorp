@@ -7725,7 +7725,7 @@ DebuggerObject_checkThis(JSContext* cx, const CallArgs& args, const char* fnname
     return nthisobj;
 }
 
-#define THIS_DEBUGOBJECT(cx, argc, vp, fnname, object)                              \
+#define THIS_DEBUGOBJECT(cx, argc, vp, fnname, args, object)                        \
     CallArgs args = CallArgsFromVp(argc, vp);                                       \
     Rooted<DebuggerObject*> object(cx, DebuggerObject_checkThis(cx, args, fnname)); \
     if (!object)                                                                    \
@@ -8273,7 +8273,7 @@ DebuggerObject_getErrorMessageName(JSContext *cx, unsigned argc, Value* vp)
 static bool
 DebuggerObject_isExtensible(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT(cx, argc, vp, "isExtensible", object)
+    THIS_DEBUGOBJECT(cx, argc, vp, "isExtensible", args, object)
 
     bool result;
     if (!DebuggerObject::isExtensible(cx, object, result))
@@ -8286,7 +8286,7 @@ DebuggerObject_isExtensible(JSContext* cx, unsigned argc, Value* vp)
 static bool
 DebuggerObject_isSealed(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT(cx, argc, vp, "isSealed", object)
+    THIS_DEBUGOBJECT(cx, argc, vp, "isSealed", args, object)
 
     bool result;
     if (!DebuggerObject::isSealed(cx, object, result))
@@ -8299,7 +8299,7 @@ DebuggerObject_isSealed(JSContext* cx, unsigned argc, Value* vp)
 static bool
 DebuggerObject_isFrozen(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT(cx, argc, vp, "isFrozen", object)
+    THIS_DEBUGOBJECT(cx, argc, vp, "isFrozen", args, object)
 
     bool result;
     if (!DebuggerObject::isFrozen(cx, object, result))
@@ -8338,7 +8338,7 @@ IdVectorToArray(JSContext* cx, const AutoIdVector& ids)
 static bool
 DebuggerObject_getOwnPropertyNames(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT(cx, argc, vp, "getOwnPropertyNames", object)
+    THIS_DEBUGOBJECT(cx, argc, vp, "getOwnPropertyNames", args, object)
 
     AutoIdVector ids(cx);
     if (!DebuggerObject::getOwnPropertyNames(cx, object, ids))
@@ -8355,7 +8355,7 @@ DebuggerObject_getOwnPropertyNames(JSContext* cx, unsigned argc, Value* vp)
 static bool
 DebuggerObject_getOwnPropertySymbols(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT(cx, argc, vp, "getOwnPropertySymbols", object)
+    THIS_DEBUGOBJECT(cx, argc, vp, "getOwnPropertySymbols", args, object)
 
     AutoIdVector ids(cx);
     if (!DebuggerObject::getOwnPropertySymbols(cx, object, ids))
@@ -8372,7 +8372,7 @@ DebuggerObject_getOwnPropertySymbols(JSContext* cx, unsigned argc, Value* vp)
 static bool
 DebuggerObject_getOwnPropertyDescriptor(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT(cx, argc, vp, "getOwnPropertyDescriptor", object)
+    THIS_DEBUGOBJECT(cx, argc, vp, "getOwnPropertyDescriptor", args, object)
 
     RootedId id(cx);
     if (!ValueToId<CanGC>(cx, args.get(0), &id))
@@ -8388,7 +8388,7 @@ DebuggerObject_getOwnPropertyDescriptor(JSContext* cx, unsigned argc, Value* vp)
 static bool
 DebuggerObject_preventExtensions(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT(cx, argc, vp, "preventExtensions", object)
+    THIS_DEBUGOBJECT(cx, argc, vp, "preventExtensions", args, object)
 
     if (!DebuggerObject::preventExtensions(cx, object))
         return false;
@@ -8400,7 +8400,7 @@ DebuggerObject_preventExtensions(JSContext* cx, unsigned argc, Value* vp)
 static bool
 DebuggerObject_seal(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT(cx, argc, vp, "seal", object)
+    THIS_DEBUGOBJECT(cx, argc, vp, "seal", args, object)
 
     if (!DebuggerObject::seal(cx, object))
         return false;
@@ -8412,7 +8412,7 @@ DebuggerObject_seal(JSContext* cx, unsigned argc, Value* vp)
 static bool
 DebuggerObject_freeze(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT(cx, argc, vp, "freeze", object)
+    THIS_DEBUGOBJECT(cx, argc, vp, "freeze", args, object)
 
     if (!DebuggerObject::freeze(cx, object))
         return false;
@@ -8424,7 +8424,7 @@ DebuggerObject_freeze(JSContext* cx, unsigned argc, Value* vp)
 static bool
 DebuggerObject_defineProperty(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT(cx, argc, vp, "defineProperty", object)
+    THIS_DEBUGOBJECT(cx, argc, vp, "defineProperty", args, object)
     if (!args.requireAtLeast(cx, "Debugger.Object.defineProperty", 2))
         return false;
 
@@ -8446,7 +8446,7 @@ DebuggerObject_defineProperty(JSContext* cx, unsigned argc, Value* vp)
 static bool
 DebuggerObject_defineProperties(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT(cx, argc, vp, "defineProperties", object);
+    THIS_DEBUGOBJECT(cx, argc, vp, "defineProperties", args, object);
     if (!args.requireAtLeast(cx, "Debugger.Object.defineProperties", 1))
         return false;
 
@@ -8474,7 +8474,7 @@ DebuggerObject_defineProperties(JSContext* cx, unsigned argc, Value* vp)
 static bool
 DebuggerObject_deleteProperty(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT(cx, argc, vp, "deleteProperty", object)
+    THIS_DEBUGOBJECT(cx, argc, vp, "deleteProperty", args, object)
 
     RootedId id(cx);
     if (!ValueToId<CanGC>(cx, args.get(0), &id))
@@ -8945,7 +8945,7 @@ DebuggerObject::getOwnPropertyDescriptor(JSContext* cx, Handle<DebuggerObject*> 
                                          HandleId id, MutableHandle<PropertyDescriptor> desc)
 {
     RootedObject referent(cx, object->referent());
-    Debugger* owner = object->owner();
+    Debugger* dbg = object->owner();
 
     /* Bug: This can cause the debuggee to run! */
     {
@@ -8959,18 +8959,18 @@ DebuggerObject::getOwnPropertyDescriptor(JSContext* cx, Handle<DebuggerObject*> 
 
     if (desc.object()) {
         /* Rewrap the debuggee values in desc for the debugger. */
-        if (!owner->wrapDebuggeeValue(cx, desc.value()))
+        if (!dbg->wrapDebuggeeValue(cx, desc.value()))
             return false;
 
         if (desc.hasGetterObject()) {
             RootedValue get(cx, ObjectOrNullValue(desc.getterObject()));
-            if (!owner->wrapDebuggeeValue(cx, &get))
+            if (!dbg->wrapDebuggeeValue(cx, &get))
                 return false;
             desc.setGetterObject(get.toObjectOrNull());
         }
         if (desc.hasSetterObject()) {
             RootedValue set(cx, ObjectOrNullValue(desc.setterObject()));
-            if (!owner->wrapDebuggeeValue(cx, &set))
+            if (!dbg->wrapDebuggeeValue(cx, &set))
                 return false;
             desc.setSetterObject(set.toObjectOrNull());
         }
@@ -9020,9 +9020,9 @@ DebuggerObject::defineProperty(JSContext* cx, Handle<DebuggerObject*> object, Ha
                                MutableHandle<PropertyDescriptor> desc)
 {
     RootedObject referent(cx, object->referent());
-    Debugger* owner = object->owner();
+    Debugger* dbg = object->owner();
 
-    if (!owner->unwrapPropertyDescriptor(cx, referent, desc))
+    if (!dbg->unwrapPropertyDescriptor(cx, referent, desc))
         return false;
     if (!CheckPropertyDescriptorAccessors(cx, desc))
         return false;
@@ -9047,12 +9047,12 @@ DebuggerObject::defineProperties(JSContext* cx, Handle<DebuggerObject*> object,
                                  MutableHandle<PropertyDescriptorVector> descs)
 {
     RootedObject referent(cx, object->referent());
-    Debugger* owner = object->owner();
+    Debugger* dbg = object->owner();
 
     size_t n = ids.length();
 
     for (size_t i = 0; i < n; i++) {
-        if (!owner->unwrapPropertyDescriptor(cx, referent, descs[i]))
+        if (!dbg->unwrapPropertyDescriptor(cx, referent, descs[i]))
             return false;
         if (!CheckPropertyDescriptorAccessors(cx, descs[i]))
             return false;
