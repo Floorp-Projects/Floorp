@@ -66,5 +66,17 @@ GPUProcessManager::GetAPZCTreeManagerForLayers(uint64_t aLayersId)
   return CompositorBridgeParent::GetAPZCTreeManager(aLayersId);
 }
 
+uint64_t
+GPUProcessManager::AllocateLayerTreeId()
+{
+  return CompositorBridgeParent::AllocateLayerTreeId();
+}
+
+void
+GPUProcessManager::DeallocateLayerTreeId(uint64_t aLayersId)
+{
+  CompositorBridgeParent::DeallocateLayerTreeId(aLayersId);
+}
+
 } // namespace gfx
 } // namespace mozilla
