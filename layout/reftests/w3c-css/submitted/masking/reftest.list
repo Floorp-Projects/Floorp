@@ -11,6 +11,7 @@ fails == mask-composite-2b.html mask-composite-2-ref.html
 # mask-mode test cases
 fails == mask-mode-a.html mask-mode-ref.html
 fails == mask-mode-b.html mask-mode-ref.html
+fails == mask-type.html mask-type-ref.html
 
 # mask-image test cases
 fails == mask-image-1a.html mask-image-1-ref.html
