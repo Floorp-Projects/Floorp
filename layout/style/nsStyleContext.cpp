@@ -934,8 +934,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther,
         /* differences.                                           */          \
         *aEqualStructs |= NS_STYLE_INHERIT_BIT(struct_);                      \
       } else if (compare ||                                                   \
-                 (NS_SubtractHint(maxDifference,                              \
-                                  differenceAlwaysHandledForDescendants) &    \
+                 ((maxDifference & ~differenceAlwaysHandledForDescendants) &  \
                   aParentHintsNotHandledForDescendants)) {                    \
         nsChangeHint difference =                                             \
           this##struct_->CalcDifference(*other##struct_ EXTRA_DIFF_ARGS);     \
@@ -1176,7 +1175,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther,
     }
   }
 
-  return NS_SubtractHint(hint, nsChangeHint_NeutralChange);
+  return hint & ~nsChangeHint_NeutralChange;
 }
 
 #ifdef DEBUG

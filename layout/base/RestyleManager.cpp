@@ -358,7 +358,7 @@ ApplyRenderingChangeToTree(nsPresContext* aPresContext,
   nsIPresShell *shell = aPresContext->PresShell();
   if (shell->IsPaintingSuppressed()) {
     // Don't allow synchronous rendering changes when painting is turned off.
-    aChange = NS_SubtractHint(aChange, nsChangeHint_RepaintFrame);
+    aChange &= ~nsChangeHint_RepaintFrame;
     if (!aChange) {
       return;
     }
@@ -381,7 +381,7 @@ ApplyRenderingChangeToTree(nsPresContext* aPresContext,
 
     if (propagatedFrame != aFrame) {
       DoApplyRenderingChangeToTree(propagatedFrame, nsChangeHint_RepaintFrame);
-      aChange = NS_SubtractHint(aChange, nsChangeHint_RepaintFrame);
+      aChange &= ~nsChangeHint_RepaintFrame;
       if (!aChange) {
         return;
       }
@@ -839,17 +839,17 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       if (!frame->FrameMaintainsOverflow()) {
         // frame does not maintain overflow rects, so avoid calling
         // FinishAndStoreOverflow on it:
-        hint = NS_SubtractHint(hint, nsChangeHint_UpdateOverflow |
-                                     nsChangeHint_ChildrenOnlyTransform |
-                                     nsChangeHint_UpdatePostTransformOverflow |
-                                     nsChangeHint_UpdateParentOverflow);
+        hint &= ~(nsChangeHint_UpdateOverflow |
+                  nsChangeHint_ChildrenOnlyTransform |
+                  nsChangeHint_UpdatePostTransformOverflow |
+                  nsChangeHint_UpdateParentOverflow);
       }
 
       if (!(frame->GetStateBits() & NS_FRAME_MAY_BE_TRANSFORMED)) {
         // Frame can not be transformed, and thus a change in transform will
         // have no effect and we should not use the
         // nsChangeHint_UpdatePostTransformOverflow hint.
-        hint = NS_SubtractHint(hint, nsChangeHint_UpdatePostTransformOverflow);
+        hint &= ~nsChangeHint_UpdatePostTransformOverflow;
       }
 
       if (hint & nsChangeHint_UpdateEffects) {
@@ -924,8 +924,8 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
           }
           // The work we just did in AddSubtreeToOverflowTracker
           // subsumes some of the other hints:
-          hint = NS_SubtractHint(hint, nsChangeHint_UpdateOverflow |
-                                       nsChangeHint_UpdatePostTransformOverflow);
+          hint &= ~(nsChangeHint_UpdateOverflow |
+                    nsChangeHint_UpdatePostTransformOverflow);
         }
         if (hint & nsChangeHint_ChildrenOnlyTransform) {
           // The overflow areas of the child frames need to be updated:
@@ -2581,8 +2581,8 @@ ElementRestyler::ElementRestyler(nsPresContext* aPresContext,
     // comment above assertion at start of ElementRestyler::Restyle.)
   , mContent(mFrame->GetContent() ? mFrame->GetContent() : mParentContent)
   , mChangeList(aChangeList)
-  , mHintsHandled(NS_SubtractHint(aHintsHandledByAncestors,
-                  NS_HintsNotHandledForDescendantsIn(aHintsHandledByAncestors)))
+  , mHintsHandled(aHintsHandledByAncestors &
+                  ~NS_HintsNotHandledForDescendantsIn(aHintsHandledByAncestors))
   , mParentFrameHintsNotHandledForDescendants(nsChangeHint(0))
   , mHintsNotHandledForDescendants(nsChangeHint(0))
   , mRestyleTracker(aRestyleTracker)
@@ -2614,8 +2614,8 @@ ElementRestyler::ElementRestyler(const ElementRestyler& aParentRestyler,
     // comment above assertion at start of ElementRestyler::Restyle.)
   , mContent(mFrame->GetContent() ? mFrame->GetContent() : mParentContent)
   , mChangeList(aParentRestyler.mChangeList)
-  , mHintsHandled(NS_SubtractHint(aParentRestyler.mHintsHandled,
-                  NS_HintsNotHandledForDescendantsIn(aParentRestyler.mHintsHandled)))
+  , mHintsHandled(aParentRestyler.mHintsHandled &
+                  ~NS_HintsNotHandledForDescendantsIn(aParentRestyler.mHintsHandled))
   , mParentFrameHintsNotHandledForDescendants(
       aParentRestyler.mHintsNotHandledForDescendants)
   , mHintsNotHandledForDescendants(nsChangeHint(0))
@@ -2647,7 +2647,7 @@ ElementRestyler::ElementRestyler(const ElementRestyler& aParentRestyler,
     // also need reflow).  In the cases when the out-of-flow _is_ a
     // geometric descendant of a frame we already have a reflow hint
     // for, reflow coalescing should keep us from doing the work twice.
-    mHintsHandled = NS_SubtractHint(mHintsHandled, nsChangeHint_AllReflowHints);
+    mHintsHandled &= ~nsChangeHint_AllReflowHints;
   }
 }
 
@@ -2661,8 +2661,8 @@ ElementRestyler::ElementRestyler(ParentContextFromChildFrame,
     // comment above assertion at start of ElementRestyler::Restyle.)
   , mContent(mFrame->GetContent() ? mFrame->GetContent() : mParentContent)
   , mChangeList(aParentRestyler.mChangeList)
-  , mHintsHandled(NS_SubtractHint(aParentRestyler.mHintsHandled,
-                  NS_HintsNotHandledForDescendantsIn(aParentRestyler.mHintsHandled)))
+  , mHintsHandled(aParentRestyler.mHintsHandled &
+                  ~NS_HintsNotHandledForDescendantsIn(aParentRestyler.mHintsHandled))
   , mParentFrameHintsNotHandledForDescendants(
       // assume the worst
       nsChangeHint_Hints_NotHandledForDescendants)
@@ -2703,8 +2703,8 @@ ElementRestyler::ElementRestyler(nsPresContext* aPresContext,
   , mParentContent(nullptr)
   , mContent(aContent)
   , mChangeList(aChangeList)
-  , mHintsHandled(NS_SubtractHint(aHintsHandledByAncestors,
-                  NS_HintsNotHandledForDescendantsIn(aHintsHandledByAncestors)))
+  , mHintsHandled(aHintsHandledByAncestors &
+                  ~NS_HintsNotHandledForDescendantsIn(aHintsHandledByAncestors))
   , mParentFrameHintsNotHandledForDescendants(nsChangeHint(0))
   , mHintsNotHandledForDescendants(nsChangeHint(0))
   , mRestyleTracker(aRestyleTracker)
@@ -2792,7 +2792,7 @@ ElementRestyler::CaptureChange(nsStyleContext* aOldContext,
   // text nodes.
   if ((ourChange & nsChangeHint_UpdateEffects) &&
       mContent && !mContent->IsElement()) {
-    ourChange = NS_SubtractHint(ourChange, nsChangeHint_UpdateEffects);
+    ourChange &= ~nsChangeHint_UpdateEffects;
   }
 
   NS_UpdateHint(ourChange, aChangeToAssume);

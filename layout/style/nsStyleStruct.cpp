@@ -319,8 +319,7 @@ nsChangeHint nsStylePadding::CalcDifference(const nsStylePadding& aOther) const
   // to force children to reflow so that we can reposition them, since their
   // offsets are from our frame bounds but our content rect's position within
   // those bounds is moving.
-  return NS_SubtractHint(NS_STYLE_HINT_REFLOW,
-                         nsChangeHint_ClearDescendantIntrinsics);
+  return NS_STYLE_HINT_REFLOW & ~nsChangeHint_ClearDescendantIntrinsics;
 }
 
 nsStyleBorder::nsStyleBorder(StyleStructContext aContext)
@@ -1644,9 +1643,9 @@ nsStylePosition::CalcDifference(const nsStylePosition& aOther,
       // None of our inline-size differences can affect descendant
       // intrinsic sizes and none of them need to force children to
       // reflow.
-      NS_UpdateHint(hint, NS_SubtractHint(nsChangeHint_AllReflowHints,
-                                          nsChangeHint_ClearDescendantIntrinsics |
-                                          nsChangeHint_NeedDirtyReflow));
+      NS_UpdateHint(hint, nsChangeHint_AllReflowHints &
+                          ~(nsChangeHint_ClearDescendantIntrinsics |
+                            nsChangeHint_NeedDirtyReflow));
     }
   } else {
     if (widthChanged || heightChanged) {
@@ -2975,10 +2974,9 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
 
   if (mFloats != aOther.mFloats) {
     // Changing which side we float on doesn't affect descendants directly
-    NS_UpdateHint(hint,
-       NS_SubtractHint(nsChangeHint_AllReflowHints,
-                       nsChangeHint_ClearDescendantIntrinsics |
-                       nsChangeHint_NeedDirtyReflow));
+    NS_UpdateHint(hint, nsChangeHint_AllReflowHints &
+                        ~(nsChangeHint_ClearDescendantIntrinsics |
+                          nsChangeHint_NeedDirtyReflow));
   }
 
   if (mVerticalAlign != aOther.mVerticalAlign) {
