@@ -5066,11 +5066,11 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
         break;
       case NS_ERROR_CORRUPTED_CONTENT:
         // Broken Content Detected. e.g. Content-MD5 check failure.
-        error.AssignLiteral("corruptedContentError");
+        error.AssignLiteral("corruptedContentErrorv2");
         break;
       case NS_ERROR_INTERCEPTION_FAILED:
         // ServiceWorker intercepted request, but something went wrong.
-        error.AssignLiteral("corruptedContentError");
+        error.AssignLiteral("corruptedContentErrorv2");
         break;
       case NS_ERROR_NET_INADEQUATE_SECURITY:
         // Server negotiated bad TLS for HTTP/2.

@@ -1673,7 +1673,7 @@ BrowserElementChild.prototype = {
             sendAsyncMsg('error', { type: 'unsafeContentType' });
             return;
           case Cr.NS_ERROR_CORRUPTED_CONTENT :
-            sendAsyncMsg('error', { type: 'corruptedContentError' });
+            sendAsyncMsg('error', { type: 'corruptedContentErrorv2' });
             return;
 
           default:
