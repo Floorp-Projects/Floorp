@@ -2332,6 +2332,9 @@ class AssemblerX86Shared : public AssemblerShared
     void vcmpneqps(const Operand& src1, FloatRegister src0, FloatRegister dest) {
         vcmpps(X86Encoding::ConditionCmp_NEQ, src1, src0, dest);
     }
+    void vcmpordps(const Operand& src1, FloatRegister src0, FloatRegister dest) {
+        vcmpps(X86Encoding::ConditionCmp_ORD, src1, src0, dest);
+    }
     void vrcpps(const Operand& src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
         switch (src.kind()) {

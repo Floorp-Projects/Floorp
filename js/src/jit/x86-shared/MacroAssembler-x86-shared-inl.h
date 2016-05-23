@@ -911,56 +911,83 @@ MacroAssembler::branchTestMagicImpl(Condition cond, const T& t, L label)
 }
 
 // ========================================================================
+// Canonicalization primitives.
+void
+MacroAssembler::canonicalizeFloat32x4(FloatRegister reg, FloatRegister scratch)
+{
+    ScratchSimd128Scope scratch2(*this);
+
+    MOZ_ASSERT(scratch.asSimd128() != scratch2.asSimd128());
+    MOZ_ASSERT(reg.asSimd128() != scratch2.asSimd128());
+    MOZ_ASSERT(reg.asSimd128() != scratch.asSimd128());
+
+    FloatRegister mask = scratch;
+    vcmpordps(Operand(reg), reg, mask);
+
+    FloatRegister ifFalse = scratch2;
+    float nanf = float(JS::GenericNaN());
+    loadConstantSimd128Float(SimdConstant::SplatX4(nanf), ifFalse);
+
+    bitwiseAndX4(Operand(mask), reg);
+    bitwiseAndNotX4(Operand(ifFalse), mask);
+    bitwiseOrX4(Operand(mask), reg);
+}
+
+// ========================================================================
 // Memory access primitives.
 void
-MacroAssembler::storeDouble(FloatRegister src, const Address& dest)
+MacroAssembler::storeUncanonicalizedDouble(FloatRegister src, const Address& dest)
 {
     vmovsd(src, dest);
 }
 void
-MacroAssembler::storeDouble(FloatRegister src, const BaseIndex& dest)
+MacroAssembler::storeUncanonicalizedDouble(FloatRegister src, const BaseIndex& dest)
 {
     vmovsd(src, dest);
 }
 void
-MacroAssembler::storeDouble(FloatRegister src, const Operand& dest)
+MacroAssembler::storeUncanonicalizedDouble(FloatRegister src, const Operand& dest)
 {
     switch (dest.kind()) {
       case Operand::MEM_REG_DISP:
-        storeDouble(src, dest.toAddress());
+        storeUncanonicalizedDouble(src, dest.toAddress());
         break;
       case Operand::MEM_SCALE:
-        storeDouble(src, dest.toBaseIndex());
+        storeUncanonicalizedDouble(src, dest.toBaseIndex());
         break;
       default:
         MOZ_CRASH("unexpected operand kind");
     }
 }
 
+template void MacroAssembler::storeDouble(FloatRegister src, const Operand& dest);
+
 void
-MacroAssembler::storeFloat32(FloatRegister src, const Address& dest)
+MacroAssembler::storeUncanonicalizedFloat32(FloatRegister src, const Address& dest)
 {
     vmovss(src, dest);
 }
 void
-MacroAssembler::storeFloat32(FloatRegister src, const BaseIndex& dest)
+MacroAssembler::storeUncanonicalizedFloat32(FloatRegister src, const BaseIndex& dest)
 {
     vmovss(src, dest);
 }
 void
-MacroAssembler::storeFloat32(FloatRegister src, const Operand& dest)
+MacroAssembler::storeUncanonicalizedFloat32(FloatRegister src, const Operand& dest)
 {
     switch (dest.kind()) {
       case Operand::MEM_REG_DISP:
-        storeFloat32(src, dest.toAddress());
+        storeUncanonicalizedFloat32(src, dest.toAddress());
         break;
       case Operand::MEM_SCALE:
-        storeFloat32(src, dest.toBaseIndex());
+        storeUncanonicalizedFloat32(src, dest.toBaseIndex());
         break;
       default:
         MOZ_CRASH("unexpected operand kind");
     }
 }
+
+template void MacroAssembler::storeFloat32(FloatRegister src, const Operand& dest);
 
 void
 MacroAssembler::storeFloat32x3(FloatRegister src, const Address& dest)

@@ -1122,18 +1122,38 @@ class MacroAssembler : public MacroAssemblerSpecific
 
   public:
     // ========================================================================
-    // Memory access primitives.
-    inline void storeDouble(FloatRegister src, const Address& dest)
-        DEFINED_ON(x86_shared, arm, arm64, mips32, mips64);
-    inline void storeDouble(FloatRegister src, const BaseIndex& dest)
-        DEFINED_ON(x86_shared, arm, arm64, mips32, mips64);
-    inline void storeDouble(FloatRegister src, const Operand& dest) DEFINED_ON(x86_shared);
+    // Canonicalization primitives.
+    inline void canonicalizeDouble(FloatRegister reg);
+    inline void canonicalizeDoubleIfDeterministic(FloatRegister reg);
 
-    inline void storeFloat32(FloatRegister src, const Address& dest)
+    inline void canonicalizeFloat(FloatRegister reg);
+    inline void canonicalizeFloatIfDeterministic(FloatRegister reg);
+
+    inline void canonicalizeFloat32x4(FloatRegister reg, FloatRegister scratch)
+        DEFINED_ON(x86_shared);
+
+  public:
+    // ========================================================================
+    // Memory access primitives.
+    inline void storeUncanonicalizedDouble(FloatRegister src, const Address& dest)
         DEFINED_ON(x86_shared, arm, arm64, mips32, mips64);
-    inline void storeFloat32(FloatRegister src, const BaseIndex& dest)
+    inline void storeUncanonicalizedDouble(FloatRegister src, const BaseIndex& dest)
         DEFINED_ON(x86_shared, arm, arm64, mips32, mips64);
-    inline void storeFloat32(FloatRegister src, const Operand& dest) DEFINED_ON(x86_shared);
+    inline void storeUncanonicalizedDouble(FloatRegister src, const Operand& dest)
+        DEFINED_ON(x86_shared);
+
+    template<class T>
+    inline void storeDouble(FloatRegister src, const T& dest);
+
+    inline void storeUncanonicalizedFloat32(FloatRegister src, const Address& dest)
+        DEFINED_ON(x86_shared, arm, arm64, mips32, mips64);
+    inline void storeUncanonicalizedFloat32(FloatRegister src, const BaseIndex& dest)
+        DEFINED_ON(x86_shared, arm, arm64, mips32, mips64);
+    inline void storeUncanonicalizedFloat32(FloatRegister src, const Operand& dest)
+        DEFINED_ON(x86_shared);
+
+    template<class T>
+    inline void storeFloat32(FloatRegister src, const T& dest);
 
     inline void storeFloat32x3(FloatRegister src, const Address& dest) PER_SHARED_ARCH;
     inline void storeFloat32x3(FloatRegister src, const BaseIndex& dest) PER_SHARED_ARCH;
@@ -1331,10 +1351,6 @@ class MacroAssembler : public MacroAssemblerSpecific
         haltingAlign(8);
         bind(&done);
     }
-
-    inline void canonicalizeDouble(FloatRegister reg);
-
-    inline void canonicalizeFloat(FloatRegister reg);
 
     template<typename T>
     void loadFromTypedArray(Scalar::Type arrayType, const T& src, AnyRegister dest, Register temp, Label* fail,
@@ -1594,7 +1610,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
 #define DISPATCH_FLOATING_POINT_OP(method, type, arg1d, arg1f, arg2)    \
     MOZ_ASSERT(IsFloatingPointType(type));                              \
-    if (type == MIRType::Double)                                         \
+    if (type == MIRType::Double)                                        \
         method##Double(arg1d, arg2);                                    \
     else                                                                \
         method##Float32(arg1f, arg2);                                   \
