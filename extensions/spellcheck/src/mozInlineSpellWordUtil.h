@@ -125,13 +125,14 @@ private:
   // A list of the "real words" in mSoftText, ordered by mSoftTextOffset
   struct RealWord {
     int32_t      mSoftTextOffset;
-    int32_t      mLength : 31;
-    int32_t mCheckableWord : 1;
+    uint32_t      mLength : 31;
+    uint32_t mCheckableWord : 1;
     
-    RealWord(int32_t aOffset, int32_t aLength, bool aCheckable)
+    RealWord(int32_t aOffset, uint32_t aLength, bool aCheckable)
       : mSoftTextOffset(aOffset), mLength(aLength), mCheckableWord(aCheckable)
     {
       static_assert(sizeof(RealWord) == 8, "RealWord should be limited to 8 bytes");
+      MOZ_ASSERT(aLength < INT32_MAX, "Word length is too large to fit in the bitfield");
     }
 
     int32_t EndOffset() const { return mSoftTextOffset + mLength; }
