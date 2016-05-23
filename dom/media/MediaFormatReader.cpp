@@ -1359,15 +1359,15 @@ MediaFormatReader::ResetDecode(TargetQueues aQueues)
 void
 MediaFormatReader::Output(TrackType aTrack, MediaData* aSample)
 {
-  LOGV("Decoded %s sample time=%lld timecode=%lld kf=%d dur=%lld",
-       TrackTypeToStr(aTrack), aSample->mTime, aSample->mTimecode,
-       aSample->mKeyframe, aSample->mDuration);
-
   if (!aSample) {
     NS_WARNING("MediaFormatReader::Output() passed a null sample");
     Error(aTrack);
     return;
   }
+
+  LOGV("Decoded %s sample time=%lld timecode=%lld kf=%d dur=%lld",
+       TrackTypeToStr(aTrack), aSample->mTime, aSample->mTimecode,
+       aSample->mKeyframe, aSample->mDuration);
 
   RefPtr<nsIRunnable> task =
     NewRunnableMethod<TrackType, MediaData*>(
