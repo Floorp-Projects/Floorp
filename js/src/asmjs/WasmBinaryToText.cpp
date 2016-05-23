@@ -298,6 +298,10 @@ RenderCallIndirect(WasmRenderContext& c, AstCallIndirect& call)
         return false;
     if (!RenderCallArgs(c, call.args()))
         return false;
+
+    if (!c.buffer.append(")"))
+        return false;
+
     return true;
 }
 
@@ -1045,10 +1049,10 @@ RenderTypeSection(WasmRenderContext& c, const AstModule::SigVector& sigs)
         if (!c.buffer.append("(type"))
             return false;
         if (!sig->name().empty()) {
-          if (!c.buffer.append(" "))
-              return false;
-          if (!RenderName(c, sig->name()))
-              return false;
+            if (!c.buffer.append(" "))
+                return false;
+            if (!RenderName(c, sig->name()))
+                return false;
         }
         if (!c.buffer.append(" (func"))
             return false;
@@ -1068,10 +1072,15 @@ RenderTableSection(WasmRenderContext& c, AstTable* maybeTable, const AstModule::
 
     uint32_t numTableElems = maybeTable->elems().length();
 
-    if (!c.buffer.append("(table "))
+    if (!RenderIndent(c))
+        return false;
+
+    if (!c.buffer.append("(table"))
         return false;
 
     for (uint32_t i = 0; i < numTableElems; i++) {
+        if (!c.buffer.append(" "))
+            return false;
         AstRef& elem = maybeTable->elems()[i];
         AstFunc* func = funcs[elem.index()];
         if (func->name().empty()) {
@@ -1083,7 +1092,7 @@ RenderTableSection(WasmRenderContext& c, AstTable* maybeTable, const AstModule::
         }
     }
 
-    if (!c.buffer.append(")"))
+    if (!c.buffer.append(")\n"))
         return false;
 
     return true;
