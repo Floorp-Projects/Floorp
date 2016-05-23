@@ -7,7 +7,10 @@
 #define _include_mozilla_gfx_ipc_GPUProcessManager_h_
 
 #include "base/basictypes.h"
+#include "base/process.h"
 #include "Units.h"
+#include "mozilla/dom/ipc/IdType.h"
+#include "mozilla/ipc/Transport.h"
 
 namespace mozilla {
 namespace layers {
@@ -15,10 +18,18 @@ class APZCTreeManager;
 class CompositorSession;
 class ClientLayerManager;
 class CompositorUpdateObserver;
+class PCompositorBridgeParent;
 } // namespace layers
 namespace widget {
 class CompositorWidgetProxy;
 } // namespace widget
+namespace dom {
+class ContentParent;
+class TabParent;
+} // namespace dom
+namespace ipc {
+class GeckoChildProcessHost;
+} // namespace ipc
 namespace gfx {
 
 // The GPUProcessManager is a singleton responsible for creating GPU-bound
@@ -45,6 +56,11 @@ public:
     int aSurfaceWidth,
     int aSurfaceHeight);
 
+  layers::PCompositorBridgeParent* CreateTabCompositorBridge(
+    ipc::Transport* aTransport,
+    base::ProcessId aOtherProcess,
+    ipc::GeckoChildProcessHost* aSubprocess);
+
   // This returns a reference to the APZCTreeManager to which
   // pan/zoom-related events can be sent.
   already_AddRefed<APZCTreeManager> GetAPZCTreeManagerForLayers(uint64_t aLayersId);
@@ -63,6 +79,18 @@ public:
   void RequestNotifyLayerTreeReady(uint64_t aLayersId, CompositorUpdateObserver* aObserver);
   void RequestNotifyLayerTreeCleared(uint64_t aLayersId, CompositorUpdateObserver* aObserver);
   void SwapLayerTreeObservers(uint64_t aLayer, uint64_t aOtherLayer);
+
+  // Creates a new RemoteContentController for aTabId. Should only be called on
+  // the main thread.
+  //
+  // aLayersId      The layers id for the browser corresponding to aTabId.
+  // aContentParent The ContentParent for the process that the TabChild for
+  //                aTabId lives in.
+  // aBrowserParent The toplevel TabParent for aTabId.
+  bool UpdateRemoteContentController(uint64_t aLayersId,
+                                     dom::ContentParent* aContentParent,
+                                     const dom::TabId& aTabId,
+                                     dom::TabParent* aBrowserParent);
 
 private:
   GPUProcessManager();
