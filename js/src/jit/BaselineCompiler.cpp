@@ -992,6 +992,13 @@ OPCODE_LIST(EMIT_OP)
 #undef EMIT_OP
         }
 
+        // If the main instruction is not a jump target, then we emit the
+        //  corresponding code coverage counter.
+        if (pc == script->main() && !BytecodeIsJumpTarget(op)) {
+            if (!emit_JSOP_JUMPTARGET())
+                return Method_Error;
+        }
+
         // Test if last instructions and stop emitting in that case.
         pc += GetBytecodeLength(pc);
         if (pc >= script->codeEnd())
