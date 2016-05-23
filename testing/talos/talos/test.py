@@ -104,7 +104,6 @@ class TsBase(Test):
         'xperf_user_providers',
         'xperf_stackwalk',
         'tpmozafterpaint',
-        'test_name_extension',
         'extensions',
         'filters',
         'setup',
@@ -236,8 +235,7 @@ class PageloaderTest(Test):
             'timeout', 'shutdown', 'responsiveness', 'profile_path',
             'xperf_providers', 'xperf_user_providers', 'xperf_stackwalk',
             'filters', 'preferences', 'extensions', 'setup', 'cleanup',
-            'test_name_extension', 'lower_is_better', 'alert_threshold',
-            'unit']
+            'lower_is_better', 'alert_threshold', 'unit']
 
 
 @register_test()
