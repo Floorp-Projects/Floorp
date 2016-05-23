@@ -516,12 +516,12 @@ class IonBuilder
     // jsop_newarray helpers.
     bool newArrayTrySharedStub(bool* emitted);
     bool newArrayTryTemplateObject(bool* emitted, JSObject* templateObject, uint32_t length);
-    bool newArrayTryVM(bool* emitted, uint32_t length);
+    bool newArrayTryVM(bool* emitted, JSObject* templateObject, uint32_t length);
 
     // jsop_newobject helpers.
     bool newObjectTrySharedStub(bool* emitted);
     bool newObjectTryTemplateObject(bool* emitted, JSObject* templateObject);
-    bool newObjectTryVM(bool* emitted);
+    bool newObjectTryVM(bool* emitted, JSObject* templateObject);
 
     // jsop_in helpers.
     bool inTryDense(bool* emitted, MDefinition* obj, MDefinition* id);
