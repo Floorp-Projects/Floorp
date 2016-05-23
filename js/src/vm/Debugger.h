@@ -1056,6 +1056,8 @@ class DebuggerObject : public NativeObject
                                  MutableHandle<PropertyDescriptorVector> descs);
     static bool deleteProperty(JSContext* cx, Handle<DebuggerObject*> object, HandleId id,
                                ObjectOpResult& result);
+    static bool call(JSContext* cx, Handle<DebuggerObject*> object, MutableHandleValue thisv,
+                     AutoValueVector& args, MutableHandleValue rval);
 
   private:
     enum {

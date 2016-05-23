@@ -8488,108 +8488,51 @@ DebuggerObject_deleteProperty(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-enum ApplyOrCallMode { ApplyMode, CallMode };
-
 static bool
-ApplyOrCall(JSContext* cx, unsigned argc, Value* vp, ApplyOrCallMode mode)
+DebuggerObject_call(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "apply", args, dbg, obj);
+    THIS_DEBUGOBJECT(cx, argc, vp, "call", callArgs, object);
 
-    /*
-     * Any JS exceptions thrown must be in the debugger compartment, so do
-     * sanity checks and fallible conversions before entering the debuggee.
-     */
-    RootedValue calleev(cx, ObjectValue(*obj));
-    if (!obj->isCallable()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
-                             "Debugger.Object", "apply", obj->getClass()->name);
-        return false;
+    RootedValue thisv(cx, callArgs.get(0));
+
+    AutoValueVector args(cx);
+    if (callArgs.length() >= 2) {
+	if (!args.growBy(callArgs.length() - 1))
+	    return false;
+	for (size_t i = 1; i < callArgs.length(); ++i)
+	    args[i - 1].set(callArgs[i]);
     }
 
-    /*
-     * Unwrap Debugger.Objects. This happens in the debugger's compartment since
-     * that is where any exceptions must be reported.
-     */
-    RootedValue thisv(cx, args.get(0));
-    if (!dbg->unwrapDebuggeeValue(cx, &thisv))
-        return false;
-    unsigned callArgc = 0;
-    Value* callArgv = nullptr;
-    AutoValueVector argv(cx);
-    if (mode == ApplyMode) {
-        if (args.length() >= 2 && !args[1].isNullOrUndefined()) {
-            if (!args[1].isObject()) {
-                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_APPLY_ARGS,
-                                     js_apply_str);
-                return false;
-            }
-            RootedObject argsobj(cx, &args[1].toObject());
-            if (!GetLengthProperty(cx, argsobj, &callArgc))
-                return false;
-            callArgc = unsigned(Min(callArgc, ARGS_LENGTH_MAX));
-            if (!argv.growBy(callArgc) || !GetElements(cx, argsobj, callArgc, argv.begin()))
-                return false;
-            callArgv = argv.begin();
-        }
-    } else {
-        callArgc = args.length() > 0 ? unsigned(Min(args.length() - 1, ARGS_LENGTH_MAX)) : 0;
-        callArgv = args.array() + 1;
-    }
-
-    AutoArrayRooter callArgvRooter(cx, callArgc, callArgv);
-    for (unsigned i = 0; i < callArgc; i++) {
-        if (!dbg->unwrapDebuggeeValue(cx, callArgvRooter.handleAt(i)))
-            return false;
-    }
-
-    /*
-     * Enter the debuggee compartment and rewrap all input value for that compartment.
-     * (Rewrapping always takes place in the destination compartment.)
-     */
-    Maybe<AutoCompartment> ac;
-    ac.emplace(cx, obj);
-    if (!cx->compartment()->wrap(cx, &calleev) || !cx->compartment()->wrap(cx, &thisv))
-        return false;
-
-    RootedValue arg(cx);
-    for (unsigned i = 0; i < callArgc; i++) {
-        if (!cx->compartment()->wrap(cx, callArgvRooter.handleAt(i)))
-             return false;
-    }
-
-    /*
-     * Call the function. Use receiveCompletionValue to return to the debugger
-     * compartment and populate args.rval().
-     */
-    LeaveDebuggeeNoExecute nnx(cx);
-
-    RootedValue rval(cx);
-    bool ok;
-    {
-        InvokeArgs args(cx);
-
-        ok = args.init(callArgc);
-        if (ok) {
-            for (size_t i = 0; i < callArgc; i++)
-                args[i].set(callArgv[i]);
-
-            ok = js::Call(cx, calleev, thisv, args, &rval);
-        }
-    }
-
-    return dbg->receiveCompletionValue(ac, ok, rval, args.rval());
+    return object->call(cx, object, &thisv, args, callArgs.rval());
 }
 
 static bool
 DebuggerObject_apply(JSContext* cx, unsigned argc, Value* vp)
 {
-    return ApplyOrCall(cx, argc, vp, ApplyMode);
-}
+    THIS_DEBUGOBJECT(cx, argc, vp, "apply", callArgs, object);
 
-static bool
-DebuggerObject_call(JSContext* cx, unsigned argc, Value* vp)
-{
-    return ApplyOrCall(cx, argc, vp, CallMode);
+    RootedValue thisv(cx, callArgs.get(0));
+
+    AutoValueVector args(cx);
+    if (callArgs.length() >= 2 && !callArgs[1].isNullOrUndefined()) {
+	if (!callArgs[1].isObject()) {
+	    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_APPLY_ARGS,
+				 js_apply_str);
+	    return false;
+	}
+
+        RootedObject argsobj(cx, &callArgs[1].toObject());
+
+	unsigned argc = 0;
+        if (!GetLengthProperty(cx, argsobj, &argc))
+            return false;
+	argc = unsigned(Min(argc, ARGS_LENGTH_MAX));
+
+        if (!args.growBy(argc) || !GetElements(cx, argsobj, argc, args.begin()))
+            return false;
+    }
+
+    return object->call(cx, object, &thisv, args, callArgs.rval());
 }
 
 static bool
@@ -8837,8 +8780,8 @@ const JSFunctionSpec DebuggerObject::methods_[] = {
     JS_FN("defineProperty", DebuggerObject_defineProperty, 2, 0),
     JS_FN("defineProperties", DebuggerObject_defineProperties, 1, 0),
     JS_FN("deleteProperty", DebuggerObject_deleteProperty, 1, 0),
-    JS_FN("apply", DebuggerObject_apply, 0, 0),
     JS_FN("call", DebuggerObject_call, 0, 0),
+    JS_FN("apply", DebuggerObject_apply, 0, 0),
     JS_FN("makeDebuggeeValue", DebuggerObject_makeDebuggeeValue, 1, 0),
     JS_FN("executeInGlobal", DebuggerObject_executeInGlobal, 1, 0),
     JS_FN("executeInGlobalWithBindings", DebuggerObject_executeInGlobalWithBindings, 2, 0),
@@ -9084,6 +9027,71 @@ DebuggerObject::deleteProperty(JSContext* cx, Handle<DebuggerObject*> object, Ha
     ac.emplace(cx, referent);
     ErrorCopier ec(ac);
     return DeleteProperty(cx, referent, id, result);
+}
+
+/* static */ bool
+DebuggerObject::call(JSContext* cx, Handle<DebuggerObject*> object, MutableHandleValue thisv,
+                     AutoValueVector& args, MutableHandleValue rval)
+{
+    RootedObject referent(cx, object->referent());
+    Debugger* dbg = object->owner();
+
+    if (!referent->isCallable()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
+                             "Debugger.Object", "call", referent->getClass()->name);
+        return false;
+    }
+
+    /*
+     * Unwrap Debugger.Objects. This happens in the debugger's compartment since
+     * that is where any exceptions must be reported.
+     */
+    RootedValue calleev(cx, ObjectValue(*referent));
+
+    if (!dbg->unwrapDebuggeeValue(cx, thisv))
+        return false;
+
+    AutoArrayRooter argsRooter(cx, args.length(), args.begin());
+    for (unsigned i = 0; i < argsRooter.length(); ++i) {
+        if (!dbg->unwrapDebuggeeValue(cx, argsRooter[i]))
+            return false;
+    }
+
+    /*
+     * Enter the debuggee compartment and rewrap all input value for that compartment.
+     * (Rewrapping always takes place in the destination compartment.)
+     */
+    Maybe<AutoCompartment> ac;
+    ac.emplace(cx, referent);
+
+    if (!cx->compartment()->wrap(cx, &calleev) || !cx->compartment()->wrap(cx, thisv))
+        return false;
+
+    for (unsigned i = 0; i < argsRooter.length(); ++i) {
+        if (!cx->compartment()->wrap(cx, argsRooter[i]))
+             return false;
+    }
+
+    /*
+     * Call the function. Use receiveCompletionValue to return to the debugger
+     * compartment and populate args.rval().
+     */
+    LeaveDebuggeeNoExecute nnx(cx);
+
+    bool ok;
+    {
+        InvokeArgs invokeArgs(cx);
+
+        ok = invokeArgs.init(argsRooter.length());
+        if (ok) {
+            for (size_t i = 0; i < argsRooter.length(); ++i)
+                invokeArgs[i].set(argsRooter[i]);
+
+            ok = js::Call(cx, calleev, thisv, invokeArgs, rval);
+        }
+    }
+
+    return dbg->receiveCompletionValue(ac, ok, rval, rval);
 }
 
 
