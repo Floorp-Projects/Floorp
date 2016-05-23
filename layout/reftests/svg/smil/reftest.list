@@ -275,3 +275,7 @@ fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,2) == anim-gradient-attr-presence-0
 == anim-defs-gradient-attribute.svg lime.svg
 == anim-defs-fill.svg lime.svg
 == anim-defs-width.svg lime.svg
+
+# Test animation that changes 'display' attribute
+== anim-display.svg lime.svg
+== anim-display-in-g-element.svg lime.svg
