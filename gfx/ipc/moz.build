@@ -10,6 +10,7 @@ EXPORTS.mozilla += [
 ]
 
 EXPORTS.mozilla.gfx += [
+    'GPUProcessManager.h',
     'SharedDIB.h',
 ]
 
@@ -30,6 +31,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 UNIFIED_SOURCES += [
     'CompositorSession.cpp',
     'D3DMessageUtils.cpp',
+    'GPUProcessManager.cpp',
     'SharedDIB.cpp',
 ]
 
