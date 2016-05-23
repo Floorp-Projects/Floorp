@@ -116,6 +116,59 @@ var multipleResponsesCompletionSet = [
   }
 ];
 
+function buildCompletionRequest(aCompletionSet) {
+  let prefixes = [];
+  let prefixSet = new Set();
+  aCompletionSet.forEach(s => {
+    let prefix = s.hash.substring(0, 4);
+    if (prefixSet.has(prefix)) {
+      return;
+    }
+    prefixSet.add(prefix);
+    prefixes.push(prefix);
+  });
+  return 4 + ":" + (4 * prefixes.length) + "\n" + prefixes.join("");
+}
+
+function parseCompletionRequest(aRequest) {
+  // Format: [partial_length]:[num_of_prefix * partial_length]\n[prefixes_data]
+
+  let tokens = /(\d):(\d+)/.exec(aRequest);
+  if (tokens.length < 3) {
+    dump("Request format error.");
+    return null;
+  }
+
+  let partialLength = parseInt(tokens[1]);
+  let payloadLength = parseInt(tokens[2]);
+
+  let payloadStart = tokens[1].length + // partial length
+                     1 +                // ':'
+                     tokens[2].length + // payload length
+                     1;                 // '\n'
+
+  let prefixSet = [];
+  for (let i = payloadStart; i < aRequest.length; i += partialLength) {
+    let prefix = aRequest.substr(i, partialLength);
+    if (prefix.length !== partialLength) {
+      dump("Header info not correct: " + aRequest.substr(0, payloadStart));
+      return null;
+    }
+    prefixSet.push(prefix);
+  }
+  prefixSet.sort();
+
+  return prefixSet;
+}
+
+// Compare the requests in string format.
+function compareCompletionRequest(aRequest1, aRequest2) {
+  let prefixSet1 = parseCompletionRequest(aRequest1);
+  let prefixSet2 = parseCompletionRequest(aRequest2);
+
+  return equal(JSON.stringify(prefixSet1), JSON.stringify(prefixSet2));
+}
+
 // The fifth completion set is added at runtime by getRandomCompletionSet.
 // Each completion in the set only has one response and its purpose is to
 // provide an easy way to test the HashCompleter handling an arbitrarily large
@@ -255,6 +308,10 @@ function hashCompleterServer(aRequest, aResponse) {
 
   let len = stream.available();
   let data = wrapperStream.readBytes(len);
+
+  // Check if we got the expected completion request.
+  let expectedRequest = buildCompletionRequest(completionSets[currentCompletionSet]);
+  compareCompletionRequest(data, expectedRequest);
 
   // To avoid a response with duplicate hash completions, we keep track of all
   // completed hash prefixes so far.
