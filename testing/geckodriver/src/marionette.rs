@@ -698,14 +698,6 @@ impl MarionetteSession {
                                             ErrorStatus::UnknownError,
                                             "Failed to interpret domain as String"))))
                                     }));
-            let max_age = try!(
-                Nullable::from_json(x.find("maxAge").unwrap_or(&Json::Null),
-                                    |x| {
-                                        Ok(Date::new((try_opt!(
-                                            x.as_u64(),
-                                            ErrorStatus::UnknownError,
-                                            "Failed to interpret domain as String"))))
-                                    }));
             let secure = try_opt!(
                 x.find("secure").map_or(Some(false), |x| x.as_boolean()),
                 ErrorStatus::UnknownError,
@@ -714,7 +706,7 @@ impl MarionetteSession {
                 x.find("httpOnly").map_or(Some(false), |x| x.as_boolean()),
                 ErrorStatus::UnknownError,
                 "Failed to interpret httpOnly as boolean");
-            Ok(Cookie::new(name, value, path, domain, expiry, max_age, secure, http_only))
+            Ok(Cookie::new(name, value, path, domain, expiry, secure, http_only))
         }).collect::<Result<Vec<_>, _>>()
     }
 
@@ -1246,9 +1238,6 @@ impl ToMarionette for AddCookieParameters {
         }
         if self.expiry.is_value() {
             cookie.insert("expiry".to_string(), self.expiry.to_json());
-        }
-        if self.maxAge.is_value() {
-            cookie.insert("maxAge".to_string(), self.maxAge.to_json());
         }
         cookie.insert("secure".to_string(), self.secure.to_json());
         cookie.insert("httpOnly".to_string(), self.httpOnly.to_json());
