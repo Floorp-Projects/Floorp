@@ -9,10 +9,9 @@ from marionette_driver.by import By
 
 
 class TestKeyActions(MarionetteTestCase):
-
     def setUp(self):
         MarionetteTestCase.setUp(self)
-        if self.marionette.session_capabilities['platformName'] == 'Darwin':
+        if self.marionette.session_capabilities["platformName"] == "Darwin":
             self.mod_key = Keys.META
         else:
             self.mod_key = Keys.CONTROL
@@ -24,53 +23,53 @@ class TestKeyActions(MarionetteTestCase):
 
     @property
     def key_reporter_value(self):
-        return self.reporter_element.get_attribute('value')
+        return self.reporter_element.get_property("value")
 
     def test_key_action_basic_input(self):
-        self.key_action.key_down('a').key_down('b').key_down('c').perform()
+        self.key_action.key_down("a").key_down("b").key_down("c").perform()
         self.assertEqual(self.key_reporter_value, "abc")
 
     def test_upcase_input(self):
         (self.key_action.key_down(Keys.SHIFT)
-                        .key_down('a')
+                        .key_down("a")
                         .key_up(Keys.SHIFT)
-                        .key_down('b')
-                        .key_down('c')
+                        .key_down("b")
+                        .key_down("c")
                         .perform())
         self.assertEqual(self.key_reporter_value, "Abc")
 
     def test_replace_input(self):
-        self.key_action.key_down('a').key_down('b').key_down('c').perform()
+        self.key_action.key_down("a").key_down("b").key_down("c").perform()
         self.assertEqual(self.key_reporter_value, "abc")
         (self.key_action.key_down(self.mod_key)
-                        .key_down('a')
+                        .key_down("a")
                         .key_up(self.mod_key)
-                        .key_down('x')
+                        .key_down("x")
                         .perform())
         self.assertEqual(self.key_reporter_value, "x")
 
     def test_clear_input(self):
-        self.key_action.key_down('a').key_down('b').key_down('c').perform()
+        self.key_action.key_down("a").key_down("b").key_down("c").perform()
         self.assertEqual(self.key_reporter_value, "abc")
         (self.key_action.key_down(self.mod_key)
-                        .key_down('a')
-                        .key_down('x')
+                        .key_down("a")
+                        .key_down("x")
                         .perform())
         self.assertEqual(self.key_reporter_value, "")
-        self.key_action.key_down('a').key_down('b').key_down('c').perform()
+        self.key_action.key_down("a").key_down("b").key_down("c").perform()
         self.assertEqual(self.key_reporter_value, "abc")
 
     def test_input_with_wait(self):
-        self.key_action.key_down('a').key_down('b').key_down('c').perform()
+        self.key_action.key_down("a").key_down("b").key_down("c").perform()
         (self.key_action.key_down(self.mod_key)
-                        .key_down('a')
+                        .key_down("a")
                         .wait(.5)
-                        .key_down('x')
+                        .key_down("x")
                         .perform())
         self.assertEqual(self.key_reporter_value, "")
 
     def test_open_in_new_window_shortcut(self):
-        el = self.marionette.find_element(By.ID, 'updatediv')
+        el = self.marionette.find_element(By.ID, "updatediv")
         start_win = self.marionette.current_chrome_window_handle
         (self.key_action.key_down(Keys.SHIFT)
                         .press(el)

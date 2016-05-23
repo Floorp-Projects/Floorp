@@ -78,7 +78,7 @@ class TestText(MarionetteTestCase):
         key_reporter = self.marionette.find_element(By.ID, "keyReporter")
         key_reporter.send_keys("abc def")
 
-        self.assertEqual("abc def", key_reporter.get_attribute('value'))
+        self.assertEqual("abc def", key_reporter.get_property("value"))
 
     def test_should_type_uppercase_characters(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
@@ -86,7 +86,7 @@ class TestText(MarionetteTestCase):
         key_reporter = self.marionette.find_element(By.ID, "keyReporter")
         key_reporter.send_keys("ABC DEF")
 
-        self.assertEqual("ABC DEF", key_reporter.get_attribute('value'))
+        self.assertEqual("ABC DEF", key_reporter.get_property("value"))
 
     def test_should_type_a_quote_characters(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
@@ -94,7 +94,7 @@ class TestText(MarionetteTestCase):
         key_reporter = self.marionette.find_element(By.ID, "keyReporter")
         key_reporter.send_keys('"')
 
-        self.assertEqual('"', key_reporter.get_attribute('value'))
+        self.assertEqual('"', key_reporter.get_property("value"))
 
     def test_should_type_an_at_character(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
@@ -102,15 +102,15 @@ class TestText(MarionetteTestCase):
         key_reporter = self.marionette.find_element(By.ID, "keyReporter")
         key_reporter.send_keys('@')
 
-        self.assertEqual('@', key_reporter.get_attribute('value'))
+        self.assertEqual("@", key_reporter.get_property("value"))
 
     def test_should_type_a_mix_of_upper_and_lower_case_character(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
         key_reporter = self.marionette.find_element(By.ID, "keyReporter")
-        key_reporter.send_keys('me@EXampLe.com')
+        key_reporter.send_keys("me@EXampLe.com")
 
-        self.assertEqual('me@EXampLe.com', key_reporter.get_attribute('value'))
+        self.assertEqual("me@EXampLe.com", key_reporter.get_property("value"))
 
     def test_arrow_keys_are_not_printable(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
@@ -118,7 +118,7 @@ class TestText(MarionetteTestCase):
         key_reporter = self.marionette.find_element(By.ID, "keyReporter")
         key_reporter.send_keys(Keys.ARROW_LEFT)
 
-        self.assertEqual('', key_reporter.get_attribute('value'))
+        self.assertEqual("", key_reporter.get_property("value"))
 
     def test_will_simulate_a_key_up_when_entering_text_into_input_elements(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
@@ -204,7 +204,7 @@ class TestText(MarionetteTestCase):
         self.assertTrue("up: 39" in result.text.strip())
 
         #  And leave no rubbish/printable keys in the "keyReporter"
-        self.assertEqual(element.get_attribute("value"), "")
+        self.assertEqual("", element.get_property("value"))
 
     def testNumericNonShiftKeys(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
@@ -212,11 +212,11 @@ class TestText(MarionetteTestCase):
         element = self.marionette.find_element(By.ID, "keyReporter")
         numericLineCharsNonShifted = "`1234567890-=[]\\,.'/42"
         element.send_keys(numericLineCharsNonShifted)
-        self.assertEqual(element.get_attribute("value"), numericLineCharsNonShifted)
+        self.assertEqual(numericLineCharsNonShifted, element.get_property("value"))
 
     def testShouldTypeAnInteger(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
         element = self.marionette.find_element(By.ID, "keyReporter")
         element.send_keys(1234)
-        self.assertEqual(element.get_attribute("value"), "1234")
+        self.assertEqual("1234", element.get_property("value"))
