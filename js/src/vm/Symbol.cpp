@@ -20,10 +20,10 @@ using JS::Symbol;
 using namespace js;
 
 Symbol*
-Symbol::newInternal(ExclusiveContext* cx, JS::SymbolCode code, JSAtom* description)
+Symbol::newInternal(ExclusiveContext* cx, JS::SymbolCode code, JSAtom* description,
+                    AutoLockForExclusiveAccess& lock)
 {
-    MOZ_ASSERT(cx->compartment() == cx->atomsCompartment());
-    MOZ_ASSERT(cx->atomsCompartment()->runtimeFromAnyThread()->currentThreadHasExclusiveAccess());
+    MOZ_ASSERT(cx->compartment() == cx->atomsCompartment(lock));
 
     // Following js::AtomizeString, we grudgingly forgo last-ditch GC here.
     Symbol* p = Allocate<JS::Symbol, NoGC>(cx);
@@ -47,8 +47,8 @@ Symbol::new_(ExclusiveContext* cx, JS::SymbolCode code, JSString* description)
     // Lock to allocate. If symbol allocation becomes a bottleneck, this can
     // probably be replaced with an assertion that we're on the main thread.
     AutoLockForExclusiveAccess lock(cx);
-    AutoCompartment ac(cx, cx->atomsCompartment());
-    return newInternal(cx, code, atom);
+    AutoCompartment ac(cx, cx->atomsCompartment(lock));
+    return newInternal(cx, code, atom, lock);
 }
 
 Symbol*
@@ -60,13 +60,13 @@ Symbol::for_(js::ExclusiveContext* cx, HandleString description)
 
     AutoLockForExclusiveAccess lock(cx);
 
-    SymbolRegistry& registry = cx->symbolRegistry();
+    SymbolRegistry& registry = cx->symbolRegistry(lock);
     SymbolRegistry::AddPtr p = registry.lookupForAdd(atom);
     if (p)
         return *p;
 
-    AutoCompartment ac(cx, cx->atomsCompartment());
-    Symbol* sym = newInternal(cx, SymbolCode::InSymbolRegistry, atom);
+    AutoCompartment ac(cx, cx->atomsCompartment(lock));
+    Symbol* sym = newInternal(cx, SymbolCode::InSymbolRegistry, atom, lock);
     if (!sym)
         return nullptr;
 

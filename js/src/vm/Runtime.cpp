@@ -434,17 +434,14 @@ JSRuntime::~JSRuntime()
 
     MOZ_ASSERT(!exclusiveAccessOwner);
 
-    // Avoid bogus asserts during teardown.
     MOZ_ASSERT(!numExclusiveThreads);
-#ifdef DEBUG
-    mainThreadHasExclusiveAccess = true;
-#endif
+    AutoLockForExclusiveAccess lock(this);
 
     /*
      * Even though all objects in the compartment are dead, we may have keep
      * some filenames around because of gcKeepAtoms.
      */
-    FreeScriptData(this);
+    FreeScriptData(this, lock);
 
 #ifdef DEBUG
     /* Don't hurt everyone in leaky ol' Mozilla with a fatal MOZ_ASSERT! */
@@ -529,7 +526,7 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
 
     rtSizes->object += mallocSizeOf(this);
 
-    rtSizes->atomsTable += atoms().sizeOfIncludingThis(mallocSizeOf);
+    rtSizes->atomsTable += atoms(lock).sizeOfIncludingThis(mallocSizeOf);
 
     if (!parentRuntime) {
         rtSizes->atomsTable += mallocSizeOf(staticStrings);
@@ -553,8 +550,8 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
 
     rtSizes->uncompressedSourceCache += uncompressedSourceCache.sizeOfExcludingThis(mallocSizeOf);
 
-    rtSizes->scriptData += scriptDataTable().sizeOfExcludingThis(mallocSizeOf);
-    for (ScriptDataTable::Range r = scriptDataTable().all(); !r.empty(); r.popFront())
+    rtSizes->scriptData += scriptDataTable(lock).sizeOfExcludingThis(mallocSizeOf);
+    for (ScriptDataTable::Range r = scriptDataTable(lock).all(); !r.empty(); r.popFront())
         rtSizes->scriptData += mallocSizeOf(r.front());
 
     if (jitRuntime_) {

@@ -21,6 +21,10 @@
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 
+namespace js {
+class AutoLockForExclusiveAccess;
+} // namespace js
+
 namespace JS {
 
 class Symbol : public js::gc::TenuredCell
@@ -45,7 +49,8 @@ class Symbol : public js::gc::TenuredCell
     void operator=(const Symbol&) = delete;
 
     static Symbol*
-    newInternal(js::ExclusiveContext* cx, SymbolCode code, JSAtom* description);
+    newInternal(js::ExclusiveContext* cx, SymbolCode code, JSAtom* description,
+                js::AutoLockForExclusiveAccess& lock);
 
   public:
     static Symbol* new_(js::ExclusiveContext* cx, SymbolCode code, JSString* description);

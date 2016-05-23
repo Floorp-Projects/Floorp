@@ -197,10 +197,10 @@ JSRuntime::finishAtoms()
 }
 
 void
-js::MarkAtoms(JSTracer* trc)
+js::MarkAtoms(JSTracer* trc, AutoLockForExclusiveAccess& lock)
 {
     JSRuntime* rt = trc->runtime();
-    for (AtomSet::Enum e(rt->atoms()); !e.empty(); e.popFront()) {
+    for (AtomSet::Enum e(rt->atoms(lock)); !e.empty(); e.popFront()) {
         const AtomStateEntry& entry = e.front();
         if (!entry.isPinned())
             continue;
@@ -296,7 +296,7 @@ AtomIsPinned(JSContext* cx, JSAtom* atom)
 
     AutoLockForExclusiveAccess lock(cx);
 
-    p = cx->runtime()->atoms().lookup(lookup);
+    p = cx->runtime()->atoms(lock).lookup(lookup);
     if (!p)
         return false;
 
@@ -327,7 +327,7 @@ AtomizeAndCopyChars(ExclusiveContext* cx, const CharT* tbchars, size_t length, P
 
     AutoLockForExclusiveAccess lock(cx);
 
-    AtomSet& atoms = cx->atoms();
+    AtomSet& atoms = cx->atoms(lock);
     AtomSet::AddPtr p = atoms.lookupForAdd(lookup);
     if (p) {
         JSAtom* atom = p->asPtr();
@@ -335,7 +335,7 @@ AtomizeAndCopyChars(ExclusiveContext* cx, const CharT* tbchars, size_t length, P
         return atom;
     }
 
-    AutoCompartment ac(cx, cx->atomsCompartment());
+    AutoCompartment ac(cx, cx->atomsCompartment(lock));
 
     JSFlatString* flat = NewStringCopyN<NoGC>(cx, tbchars, length);
     if (!flat) {
@@ -385,7 +385,7 @@ js::AtomizeString(ExclusiveContext* cx, JSString* str,
 
         AutoLockForExclusiveAccess lock(cx);
 
-        p = cx->atoms().lookup(lookup);
+        p = cx->atoms(lock).lookup(lookup);
         MOZ_ASSERT(p); /* Non-static atom must exist in atom state set. */
         MOZ_ASSERT(p->asPtr() == &atom);
         MOZ_ASSERT(pin == PinAtom);

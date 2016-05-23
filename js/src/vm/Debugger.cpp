@@ -2888,7 +2888,7 @@ Debugger::detachAllDebuggersFromGlobal(FreeOp* fop, GlobalObject* global)
 }
 
 /* static */ void
-Debugger::findZoneEdges(Zone* zone, js::gc::ComponentFinder<Zone>& finder)
+Debugger::findZoneEdges(Zone* zone, js::gc::ZoneComponentFinder& finder)
 {
     /*
      * For debugger cross compartment wrappers, add edges in the opposite
