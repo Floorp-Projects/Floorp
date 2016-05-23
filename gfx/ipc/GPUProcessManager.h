@@ -11,6 +11,7 @@
 
 namespace mozilla {
 namespace layers {
+class APZCTreeManager;
 class CompositorSession;
 class ClientLayerManager;
 } // namespace layers
@@ -24,6 +25,8 @@ namespace gfx {
 // to the compositor via CompositorBridgeParent.
 class GPUProcessManager final
 {
+  typedef layers::APZCTreeManager APZCTreeManager;
+
 public:
   static void Initialize();
   static void Shutdown();
@@ -39,6 +42,10 @@ public:
     bool aUseExternalSurfaceSize,
     int aSurfaceWidth,
     int aSurfaceHeight);
+
+  // This returns a reference to the APZCTreeManager to which
+  // pan/zoom-related events can be sent.
+  already_AddRefed<APZCTreeManager> GetAPZCTreeManagerForLayers(uint64_t aLayersId);
 
 private:
   GPUProcessManager();

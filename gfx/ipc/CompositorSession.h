@@ -46,7 +46,7 @@ public:
   virtual uint64_t RootLayerTreeId() const = 0;
 
   // Return the Async Pan/Zoom Tree Manager for this compositor.
-  virtual APZCTreeManager* GetAPZCTreeManager() const = 0;
+  virtual already_AddRefed<APZCTreeManager> GetAPZCTreeManager() const = 0;
 
   // Return the child end of the compositor IPC bridge.
   CompositorBridgeChild* GetCompositorBridgeChild();
