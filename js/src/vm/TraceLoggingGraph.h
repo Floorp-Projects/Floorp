@@ -68,6 +68,7 @@ void DestroyTraceLoggerGraphState();
 class TraceLoggerGraphState
 {
     uint32_t numLoggers;
+    uint32_t pid_;
 
     // File pointer to the "tl-data.json" file. (Explained above).
     FILE* out;
@@ -81,8 +82,9 @@ class TraceLoggerGraphState
 
   public:
     TraceLoggerGraphState()
-      : numLoggers(0)
-      , out(nullptr)
+      : numLoggers(0),
+        pid_(0),
+        out(nullptr)
 #ifdef DEBUG
       , initialized(false)
 #endif
@@ -92,6 +94,7 @@ class TraceLoggerGraphState
     ~TraceLoggerGraphState();
 
     uint32_t nextLoggerId();
+    uint32_t pid() { return pid_; }
 };
 
 class TraceLoggerGraph
