@@ -8310,10 +8310,10 @@ DebuggerObject_isFrozen(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static JSObject*
-IdVectorToArray(JSContext* cx, const AutoIdVector& ids)
+IdVectorToArray(JSContext* cx, Handle<IdVector> ids)
 {
-    AutoValueVector vals(cx);
-    if (!vals.resize(ids.length()))
+    Rooted<ValueVector> vals(cx, ValueVector(cx));
+    if (!vals.growBy(ids.length()))
         return nullptr;
 
     for (size_t i = 0, len = ids.length(); i < len; i++) {
@@ -8340,8 +8340,8 @@ DebuggerObject_getOwnPropertyNames(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "getOwnPropertyNames", args, object)
 
-    AutoIdVector ids(cx);
-    if (!DebuggerObject::getOwnPropertyNames(cx, object, ids))
+    Rooted<IdVector> ids(cx, IdVector(cx));
+    if (!DebuggerObject::getOwnPropertyNames(cx, object, &ids))
         return false;
 
     RootedObject obj(cx, IdVectorToArray(cx, ids));
@@ -8357,8 +8357,8 @@ DebuggerObject_getOwnPropertySymbols(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "getOwnPropertySymbols", args, object)
 
-    AutoIdVector ids(cx);
-    if (!DebuggerObject::getOwnPropertySymbols(cx, object, ids))
+    Rooted<IdVector> ids(cx, IdVector(cx));
+    if (!DebuggerObject::getOwnPropertySymbols(cx, object, &ids))
         return false;
 
     RootedObject obj(cx, IdVectorToArray(cx, ids));
@@ -8436,7 +8436,7 @@ DebuggerObject_defineProperty(JSContext* cx, unsigned argc, Value* vp)
     if (!ToPropertyDescriptor(cx, args[1], false, &desc))
         return false;
 
-    if (!DebuggerObject::defineProperty(cx, object, id, &desc))
+    if (!DebuggerObject::defineProperty(cx, object, id, desc))
         return false;
 
     args.rval().setUndefined();
@@ -8454,13 +8454,15 @@ DebuggerObject_defineProperties(JSContext* cx, unsigned argc, Value* vp)
     RootedObject props(cx, ToObject(cx, arg));
     if (!props)
         return false;
-
     AutoIdVector ids(cx);
     Rooted<PropertyDescriptorVector> descs(cx, PropertyDescriptorVector(cx));
     if (!ReadPropertyDescriptors(cx, props, false, &ids, &descs))
         return false;
+    Rooted<IdVector> ids2(cx, IdVector(cx));
+    if (!ids2.append(ids.begin(), ids.end()))
+       return false;
 
-    if (!DebuggerObject::defineProperties(cx, object, ids, &descs))
+    if (!DebuggerObject::defineProperties(cx, object, ids2, descs))
         return false;
 
     args.rval().setUndefined();
@@ -8495,7 +8497,7 @@ DebuggerObject_call(JSContext* cx, unsigned argc, Value* vp)
 
     RootedValue thisv(cx, callArgs.get(0));
 
-    AutoValueVector args(cx);
+    Rooted<ValueVector> args(cx, ValueVector(cx));
     if (callArgs.length() >= 2) {
 	if (!args.growBy(callArgs.length() - 1))
 	    return false;
@@ -8503,7 +8505,7 @@ DebuggerObject_call(JSContext* cx, unsigned argc, Value* vp)
 	    args[i - 1].set(callArgs[i]);
     }
 
-    return object->call(cx, object, &thisv, args, callArgs.rval());
+    return object->call(cx, object, thisv, args, callArgs.rval());
 }
 
 static bool
@@ -8513,7 +8515,7 @@ DebuggerObject_apply(JSContext* cx, unsigned argc, Value* vp)
 
     RootedValue thisv(cx, callArgs.get(0));
 
-    AutoValueVector args(cx);
+    Rooted<ValueVector> args(cx, ValueVector(cx));
     if (callArgs.length() >= 2 && !callArgs[1].isNullOrUndefined()) {
 	if (!callArgs[1].isObject()) {
 	    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_APPLY_ARGS,
@@ -8532,7 +8534,7 @@ DebuggerObject_apply(JSContext* cx, unsigned argc, Value* vp)
             return false;
     }
 
-    return object->call(cx, object, &thisv, args, callArgs.rval());
+    return object->call(cx, object, thisv, args, callArgs.rval());
 }
 
 static bool
@@ -8842,6 +8844,7 @@ DebuggerObject::isSealed(JSContext* cx, Handle<DebuggerObject*> object, bool& re
 
     Maybe<AutoCompartment> ac;
     ac.emplace(cx, referent);
+
     ErrorCopier ec(ac);
     return TestIntegrityLevel(cx, referent, IntegrityLevel::Sealed, &result);
 }
@@ -8853,34 +8856,49 @@ DebuggerObject::isFrozen(JSContext* cx, Handle<DebuggerObject*> object, bool& re
 
     Maybe<AutoCompartment> ac;
     ac.emplace(cx, referent);
+
     ErrorCopier ec(ac);
     return TestIntegrityLevel(cx, referent, IntegrityLevel::Frozen, &result);
 }
 
 /* static */ bool
 DebuggerObject::getOwnPropertyNames(JSContext* cx, Handle<DebuggerObject*> object,
-                                    AutoIdVector& result)
+                                    MutableHandle<IdVector> result)
 {
     RootedObject referent(cx, object->referent());
 
-    Maybe<AutoCompartment> ac;
-    ac.emplace(cx, referent);
-    ErrorCopier ec(ac);
-    return GetPropertyKeys(cx, referent, JSITER_OWNONLY | JSITER_HIDDEN, &result);
+    AutoIdVector ids(cx);
+    {
+	Maybe<AutoCompartment> ac;
+	ac.emplace(cx, referent);
+
+	ErrorCopier ec(ac);
+	if (!GetPropertyKeys(cx, referent, JSITER_OWNONLY | JSITER_HIDDEN, &ids))
+	    return false;
+    }
+
+    return result.append(ids.begin(), ids.end());
 }
 
 /* static */ bool
 DebuggerObject::getOwnPropertySymbols(JSContext* cx, Handle<DebuggerObject*> object,
-                                      AutoIdVector& result)
+                                      MutableHandle<IdVector> result)
 {
     RootedObject referent(cx, object->referent());
 
-    Maybe<AutoCompartment> ac;
-    ac.emplace(cx, referent);
-    ErrorCopier ec(ac);
-    return GetPropertyKeys(cx, referent,
-                           JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS | JSITER_SYMBOLSONLY,
-                           &result);
+    AutoIdVector ids(cx);
+    {
+	Maybe<AutoCompartment> ac;
+	ac.emplace(cx, referent);
+
+	ErrorCopier ec(ac);
+	if (!GetPropertyKeys(cx, referent,
+			     JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS | JSITER_SYMBOLSONLY,
+			     &ids))
+	    return false;
+    }
+
+    return result.append(ids.begin(), ids.end());
 }
 
 /* static */ bool
@@ -8932,6 +8950,7 @@ DebuggerObject::preventExtensions(JSContext* cx, Handle<DebuggerObject*> object)
 
     Maybe<AutoCompartment> ac;
     ac.emplace(cx, referent);
+
     ErrorCopier ec(ac);
     return PreventExtensions(cx, referent);
 }
@@ -8943,6 +8962,7 @@ DebuggerObject::seal(JSContext* cx, Handle<DebuggerObject*> object)
 
     Maybe<AutoCompartment> ac;
     ac.emplace(cx, referent);
+
     ErrorCopier ec(ac);
     return SetIntegrityLevel(cx, referent, IntegrityLevel::Sealed);
 }
@@ -8954,47 +8974,48 @@ DebuggerObject::freeze(JSContext* cx, Handle<DebuggerObject*> object)
 
     Maybe<AutoCompartment> ac;
     ac.emplace(cx, referent);
+
     ErrorCopier ec(ac);
     return SetIntegrityLevel(cx, referent, IntegrityLevel::Frozen);
 }
 
 /* static */ bool
 DebuggerObject::defineProperty(JSContext* cx, Handle<DebuggerObject*> object, HandleId id,
-                               MutableHandle<PropertyDescriptor> desc)
+                               Handle<PropertyDescriptor> desc_)
 {
     RootedObject referent(cx, object->referent());
     Debugger* dbg = object->owner();
 
-    if (!dbg->unwrapPropertyDescriptor(cx, referent, desc))
+    Rooted<PropertyDescriptor> desc(cx, desc_);
+    if (!dbg->unwrapPropertyDescriptor(cx, referent, &desc))
         return false;
     if (!CheckPropertyDescriptorAccessors(cx, desc))
         return false;
 
-    {
-        Maybe<AutoCompartment> ac;
-        ac.emplace(cx, referent);
-        if (!cx->compartment()->wrap(cx, desc))
-            return false;
+    Maybe<AutoCompartment> ac;
+    ac.emplace(cx, referent);
+    if (!cx->compartment()->wrap(cx, &desc))
+	return false;
 
-        ErrorCopier ec(ac);
-        if (!DefineProperty(cx, referent, id, desc))
-            return false;
-    }
+    ErrorCopier ec(ac);
+    if (!DefineProperty(cx, referent, id, desc))
+	return false;
 
     return true;
 }
 
 /* static */ bool
 DebuggerObject::defineProperties(JSContext* cx, Handle<DebuggerObject*> object,
-                                 const AutoIdVector& ids,
-                                 MutableHandle<PropertyDescriptorVector> descs)
+                                 Handle<IdVector> ids,
+                                 Handle<PropertyDescriptorVector> descs_)
 {
     RootedObject referent(cx, object->referent());
     Debugger* dbg = object->owner();
 
-    size_t n = ids.length();
-
-    for (size_t i = 0; i < n; i++) {
+    Rooted<PropertyDescriptorVector> descs(cx, PropertyDescriptorVector(cx));
+    if (!descs.append(descs_.begin(), descs_.end()))
+        return false;
+    for (size_t i = 0; i < descs.length(); i++) {
         if (!dbg->unwrapPropertyDescriptor(cx, referent, descs[i]))
             return false;
         if (!CheckPropertyDescriptorAccessors(cx, descs[i]))
@@ -9003,13 +9024,13 @@ DebuggerObject::defineProperties(JSContext* cx, Handle<DebuggerObject*> object,
 
     Maybe<AutoCompartment> ac;
     ac.emplace(cx, referent);
-    for (size_t i = 0; i < n; i++) {
+    for (size_t i = 0; i < descs.length(); i++) {
 	if (!cx->compartment()->wrap(cx, descs[i]))
 	    return false;
     }
 
     ErrorCopier ec(ac);
-    for (size_t i = 0; i < n; i++) {
+    for (size_t i = 0; i < descs.length(); i++) {
 	if (!DefineProperty(cx, referent, ids[i], descs[i]))
 	    return false;
     }
@@ -9025,13 +9046,14 @@ DebuggerObject::deleteProperty(JSContext* cx, Handle<DebuggerObject*> object, Ha
 
     Maybe<AutoCompartment> ac;
     ac.emplace(cx, referent);
+
     ErrorCopier ec(ac);
     return DeleteProperty(cx, referent, id, result);
 }
 
 /* static */ bool
-DebuggerObject::call(JSContext* cx, Handle<DebuggerObject*> object, MutableHandleValue thisv,
-                     AutoValueVector& args, MutableHandleValue rval)
+DebuggerObject::call(JSContext* cx, Handle<DebuggerObject*> object, HandleValue thisv_,
+                     Handle<ValueVector> args, MutableHandleValue result)
 {
     RootedObject referent(cx, object->referent());
     Debugger* dbg = object->owner();
@@ -9042,18 +9064,20 @@ DebuggerObject::call(JSContext* cx, Handle<DebuggerObject*> object, MutableHandl
         return false;
     }
 
+    RootedValue calleev(cx, ObjectValue(*referent));
+
     /*
      * Unwrap Debugger.Objects. This happens in the debugger's compartment since
      * that is where any exceptions must be reported.
      */
-    RootedValue calleev(cx, ObjectValue(*referent));
-
-    if (!dbg->unwrapDebuggeeValue(cx, thisv))
+    RootedValue thisv(cx, thisv_);
+    if (!dbg->unwrapDebuggeeValue(cx, &thisv))
         return false;
-
-    AutoArrayRooter argsRooter(cx, args.length(), args.begin());
-    for (unsigned i = 0; i < argsRooter.length(); ++i) {
-        if (!dbg->unwrapDebuggeeValue(cx, argsRooter[i]))
+    Rooted<ValueVector> args2(cx, ValueVector(cx));
+    if (!args2.append(args.begin(), args.end()))
+        return false;
+    for (unsigned i = 0; i < args2.length(); ++i) {
+        if (!dbg->unwrapDebuggeeValue(cx, args2[i]))
             return false;
     }
 
@@ -9063,12 +9087,10 @@ DebuggerObject::call(JSContext* cx, Handle<DebuggerObject*> object, MutableHandl
      */
     Maybe<AutoCompartment> ac;
     ac.emplace(cx, referent);
-
-    if (!cx->compartment()->wrap(cx, &calleev) || !cx->compartment()->wrap(cx, thisv))
+    if (!cx->compartment()->wrap(cx, &calleev) || !cx->compartment()->wrap(cx, &thisv))
         return false;
-
-    for (unsigned i = 0; i < argsRooter.length(); ++i) {
-        if (!cx->compartment()->wrap(cx, argsRooter[i]))
+    for (unsigned i = 0; i < args2.length(); ++i) {
+        if (!cx->compartment()->wrap(cx, args2[i]))
              return false;
     }
 
@@ -9082,16 +9104,16 @@ DebuggerObject::call(JSContext* cx, Handle<DebuggerObject*> object, MutableHandl
     {
         InvokeArgs invokeArgs(cx);
 
-        ok = invokeArgs.init(argsRooter.length());
+        ok = invokeArgs.init(args2.length());
         if (ok) {
-            for (size_t i = 0; i < argsRooter.length(); ++i)
-                invokeArgs[i].set(argsRooter[i]);
+            for (size_t i = 0; i < args2.length(); ++i)
+                invokeArgs[i].set(args2[i]);
 
-            ok = js::Call(cx, calleev, thisv, invokeArgs, rval);
+            ok = js::Call(cx, calleev, thisv, invokeArgs, result);
         }
     }
 
-    return dbg->receiveCompletionValue(ac, ok, rval, rval);
+    return dbg->receiveCompletionValue(ac, ok, result, result);
 }
 
 
