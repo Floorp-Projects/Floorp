@@ -259,3 +259,55 @@ browser.Context = class {
   }
 
 };
+
+/**
+ * The window storage is used to save outer window IDs mapped to weak
+ * references of Window objects.
+ *
+ * Usage:
+ *
+ *     let wins = new browser.Windows();
+ *     wins.set(browser.outerWindowID, window);
+ *
+ *     ...
+ *
+ *     let win = wins.get(browser.outerWindowID);
+ *
+ */
+browser.Windows = class extends Map {
+
+  /**
+   * Save a weak reference to the Window object.
+   *
+   * @param {string} id
+   *     Outer window ID.
+   * @param {Window} win
+   *     Window object to save.
+   *
+   * @return {browser.Windows}
+   *     Instance of self.
+   */
+  set(id, win) {
+    let wref = Cu.getWeakReference(win);
+    super.set(id, wref);
+    return this;
+  }
+
+  /**
+   * Get the window object stored by provided |id|.
+   *
+   * @param {string} id
+   *     Outer window ID.
+   *
+   * @return {Window}
+   *     Saved window object, or |undefined| if no window is stored by
+   *     provided |id|.
+   */
+  get(id) {
+    let wref = super.get(id);
+    if (wref) {
+      return wref.get();
+    }
+  }
+
+};
