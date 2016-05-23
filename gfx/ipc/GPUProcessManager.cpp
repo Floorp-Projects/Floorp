@@ -60,5 +60,11 @@ GPUProcessManager::CreateTopLevelCompositor(widget::CompositorWidgetProxy* aProx
     aSurfaceHeight);
 }
 
+already_AddRefed<APZCTreeManager>
+GPUProcessManager::GetAPZCTreeManagerForLayers(uint64_t aLayersId)
+{
+  return CompositorBridgeParent::GetAPZCTreeManager(aLayersId);
+}
+
 } // namespace gfx
 } // namespace mozilla

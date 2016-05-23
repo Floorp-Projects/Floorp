@@ -25,7 +25,7 @@ public:
   CompositorBridgeParent* GetInProcessBridge() const override;
   void SetContentController(GeckoContentController* aController) override;
   uint64_t RootLayerTreeId() const override;
-  APZCTreeManager* GetAPZCTreeManager() const override;
+  already_AddRefed<APZCTreeManager> GetAPZCTreeManager() const override;
   void Shutdown() override;
 
 private:
@@ -101,7 +101,7 @@ InProcessCompositorSession::RootLayerTreeId() const
   return mCompositorBridgeParent->RootLayerTreeId();
 }
 
-APZCTreeManager*
+already_AddRefed<APZCTreeManager>
 InProcessCompositorSession::GetAPZCTreeManager() const
 {
   return mCompositorBridgeParent->GetAPZCTreeManager(RootLayerTreeId());
