@@ -334,11 +334,15 @@ void ConvolveHorizontally(const unsigned char* src_data,
 #endif
 
   if (width > processed) {
+#if defined(_MIPS_ARCH_LOONGSON3A)
+    ConvolveHorizontally1_LS3(src_data, filter, out_row);
+#else
     if (has_alpha) {
       ConvolveHorizontally<true>(src_data, filter, out_row);
     } else {
       ConvolveHorizontally<false>(src_data, filter, out_row);
     }
+#endif
   }
 }
 
