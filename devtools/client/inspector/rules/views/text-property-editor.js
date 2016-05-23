@@ -18,7 +18,7 @@ const {
 const {
   parseDeclarations,
   parseSingleValue,
-} = require("devtools/client/shared/css-parsing-utils");
+} = require("devtools/shared/css-parsing-utils");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const IOService = Cc["@mozilla.org/network/io-service;1"]
