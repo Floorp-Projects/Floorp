@@ -104,8 +104,6 @@ public class FloatingToolbarTextSelection implements TextSelection, GeckoEventLi
 
     @Override
     public void handleMessage(final String event, final JSONObject message) {
-        Log.w("SKDBG", "Received event " + event + " with message: " + message.toString());
-
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
