@@ -19,7 +19,7 @@ const { Task } = require("devtools/shared/task");
 const { Class } = require("sdk/core/heritage");
 
 loader.lazyGetter(this, "RuleRewriter", () => {
-  return require("devtools/client/shared/css-parsing-utils").RuleRewriter;
+  return require("devtools/shared/css-parsing-utils").RuleRewriter;
 });
 
 /**
