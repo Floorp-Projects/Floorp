@@ -76,31 +76,12 @@ public:
 
   uint32_t VideoWidth() const
   {
-    if (mMediaInfo.HasVideo()) {
-      if (mMediaInfo.mVideo.mRotation == VideoInfo::Rotation::kDegree_90 ||
-          mMediaInfo.mVideo.mRotation == VideoInfo::Rotation::kDegree_270) {
-        return mMediaInfo.mVideo.mDisplay.height;
-      }
-      return mMediaInfo.mVideo.mDisplay.width;
-    }
-    return 0;
+    return mMediaInfo.HasVideo() ? mMediaInfo.mVideo.mDisplay.width : 0;
   }
 
   uint32_t VideoHeight() const
   {
-    if (mMediaInfo.HasVideo()) {
-      if (mMediaInfo.mVideo.mRotation == VideoInfo::Rotation::kDegree_90 ||
-          mMediaInfo.mVideo.mRotation == VideoInfo::Rotation::kDegree_270) {
-        return mMediaInfo.mVideo.mDisplay.width;
-      }
-      return mMediaInfo.mVideo.mDisplay.height;
-    }
-    return 0;
-  }
-
-  VideoInfo::Rotation RotationDegrees() const
-  {
-    return mMediaInfo.mVideo.mRotation;
+    return mMediaInfo.HasVideo() ? mMediaInfo.mVideo.mDisplay.height : 0;
   }
 
   void GetPoster(nsAString& aValue)
