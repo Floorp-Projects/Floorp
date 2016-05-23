@@ -118,7 +118,7 @@ fn main() {
 mod tests {
     use std::collections::BTreeMap;
     use marionette::{MarionetteSettings, MarionetteHandler, BrowserLauncher};
-    use webdriver::command::CapabilitiesParameters;
+    use webdriver::command::NewSessionParameters;
     use rustc_serialize::json::Json;
     use std::fs::File;
     use rustc_serialize::base64::{ToBase64, Config, CharacterSet, Newline};
@@ -141,7 +141,7 @@ mod tests {
         let desired: BTreeMap<String, Json> = BTreeMap::new();
         let mut required: BTreeMap<String, Json> = BTreeMap::new();
         required.insert("firefox_profile".into(), encoded_profile);
-        let capabilities = CapabilitiesParameters {
+        let capabilities = NewSessionParameters {
             desired: desired,
             required: required
         };
