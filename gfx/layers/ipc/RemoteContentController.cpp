@@ -14,8 +14,8 @@
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/APZThreadUtils.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layout/RenderFrameParent.h"
-#include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/unused.h"
 #include "Units.h"
 #ifdef MOZ_WIDGET_ANDROID
@@ -24,8 +24,6 @@
 
 namespace mozilla {
 namespace layers {
-
-using namespace mozilla::gfx;
 
 static std::map<uint64_t, RefPtr<RemoteContentController>> sDestroyedControllers;
 
@@ -358,7 +356,7 @@ RemoteContentController::GetApzcTreeManager()
   // we first need it and cache the result.
   MutexAutoLock lock(mMutex);
   if (!mApzcTreeManager) {
-    mApzcTreeManager = GPUProcessManager::Get()->GetAPZCTreeManagerForLayers(mLayersId);
+    mApzcTreeManager = CompositorBridgeParent::GetAPZCTreeManager(mLayersId);
   }
   RefPtr<APZCTreeManager> apzcTreeManager(mApzcTreeManager);
   return apzcTreeManager.forget();
