@@ -31,8 +31,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OSCrypto",
                                   "resource://gre/modules/OSCrypto.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Sqlite",
-                                  "resource://gre/modules/Sqlite.jsm");
+
 /**
  * Get an nsIFile instance representing the expected location of user data
  * for this copy of Chrome/Chromium/Canary on different OSes.
@@ -291,63 +290,54 @@ function GetHistoryResource(aProfileFolder) {
   return {
     type: MigrationUtils.resourceTypes.HISTORY,
 
-    migrate(aCallback) {
-      Task.spawn(function* () {
-        let db = yield Sqlite.openConnection({
-          path: historyFile.path
-        });
+    migrate: function(aCallback) {
+      let dbConn = Services.storage.openUnsharedDatabase(historyFile);
+      let stmt = dbConn.createAsyncStatement(
+        "SELECT url, title, last_visit_time, typed_count FROM urls WHERE hidden = 0");
 
-        let rows = yield db.execute(`SELECT url, title, last_visit_time, typed_count
-                                     FROM urls WHERE hidden = 0`);
-        yield db.close();
+      stmt.executeAsync({
+        handleResult : function(aResults) {
+          let places = [];
+          for (let row = aResults.getNextRow(); row; row = aResults.getNextRow()) {
+            try {
+              // if having typed_count, we changes transition type to typed.
+              let transType = PlacesUtils.history.TRANSITION_LINK;
+              if (row.getResultByName("typed_count") > 0)
+                transType = PlacesUtils.history.TRANSITION_TYPED;
 
-        let places = [];
-        for (let row of rows) {
+              places.push({
+                uri: NetUtil.newURI(row.getResultByName("url")),
+                title: row.getResultByName("title"),
+                visits: [{
+                  transitionType: transType,
+                  visitDate: chromeTimeToDate(
+                               row.getResultByName(
+                                 "last_visit_time")) * 1000,
+                }],
+              });
+            } catch (e) {
+              Cu.reportError(e);
+            }
+          }
+
           try {
-            // if having typed_count, we changes transition type to typed.
-            let transType = PlacesUtils.history.TRANSITION_LINK;
-            if (row.getResultByName("typed_count") > 0)
-              transType = PlacesUtils.history.TRANSITION_TYPED;
-
-            places.push({
-              uri: NetUtil.newURI(row.getResultByName("url")),
-              title: row.getResultByName("title"),
-              visits: [{
-                transitionType: transType,
-                visitDate: chromeTimeToDate(
-                             row.getResultByName(
-                               "last_visit_time")) * 1000,
-              }],
-            });
+            PlacesUtils.asyncHistory.updatePlaces(places);
           } catch (e) {
             Cu.reportError(e);
           }
-        }
+        },
 
-        if (places.length > 0) {
-          yield new Promise((resolve, reject) => {
-            PlacesUtils.asyncHistory.updatePlaces(places, {
-              _success: false,
-              handleResult: function() {
-                // Importing any entry is considered a successful import.
-                this._success = true;
-              },
-              handleError: function() {},
-              handleCompletion: function() {
-                if (this._success) {
-                  resolve();
-                } else {
-                  reject(new Error("Couldn't add visits"));
-                }
-              }
-            });
-          });
+        handleError : function(aError) {
+          Cu.reportError("Async statement execution returned with '" +
+                         aError.result + "', '" + aError.message + "'");
+        },
+
+        handleCompletion : function(aReason) {
+          dbConn.asyncClose();
+          aCallback(aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED);
         }
-      }).then(() => { aCallback(true); },
-              ex => {
-                Cu.reportError(ex);
-                aCallback(false);
-              });
+      });
+      stmt.finalize();
     }
   };
 }
