@@ -8314,29 +8314,6 @@ DebuggerObject_defineProperties(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-/*
- * This does a non-strict delete, as a matter of API design. The case where the
- * property is non-configurable isn't necessarily exceptional here.
- */
-static bool
-DebuggerObject_deleteProperty(JSContext* cx, unsigned argc, Value* vp)
-{
-    THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "deleteProperty", args, obj);
-    RootedId id(cx);
-    if (!ValueToId<CanGC>(cx, args.get(0), &id))
-        return false;
-
-    Maybe<AutoCompartment> ac;
-    ac.emplace(cx, obj);
-    ErrorCopier ec(ac);
-
-    ObjectOpResult result;
-    if (!DeleteProperty(cx, obj, id, result))
-        return false;
-    args.rval().setBoolean(result.ok());
-    return true;
-}
-
 static bool
 DebuggerObject_isExtensible(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -8507,6 +8484,27 @@ DebuggerObject_defineProperty(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     args.rval().setUndefined();
+    return true;
+}
+
+/*
+ * This does a non-strict delete, as a matter of API design. The case where the
+ * property is non-configurable isn't necessarily exceptional here.
+ */
+static bool
+DebuggerObject_deleteProperty(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT(cx, argc, vp, "deleteProperty", object)
+
+    RootedId id(cx);
+    if (!ValueToId<CanGC>(cx, args.get(0), &id))
+        return false;
+
+    ObjectOpResult result;
+    if (!DebuggerObject::deleteProperty(cx, object, id, result))
+        return false;
+
+    args.rval().setBoolean(result.ok());
     return true;
 }
 
@@ -8847,7 +8845,6 @@ const JSPropertySpec DebuggerObject::promiseProperties_[] = {
 
 const JSFunctionSpec DebuggerObject::methods_[] = {
     JS_FN("defineProperties", DebuggerObject_defineProperties, 1, 0),
-    JS_FN("deleteProperty", DebuggerObject_deleteProperty, 1, 0),
     JS_FN("forceLexicalInitializationByName", DebuggerObject_forceLexicalInitializationByName, 1, 0),
     JS_FN("isExtensible", DebuggerObject_isExtensible, 0, 0),
     JS_FN("isSealed", DebuggerObject_isSealed, 0, 0),
@@ -8859,6 +8856,7 @@ const JSFunctionSpec DebuggerObject::methods_[] = {
     JS_FN("seal", DebuggerObject_seal, 0, 0),
     JS_FN("freeze", DebuggerObject_freeze, 0, 0),
     JS_FN("defineProperty", DebuggerObject_defineProperty, 2, 0),
+    JS_FN("deleteProperty", DebuggerObject_deleteProperty, 1, 0),
     JS_FN("apply", DebuggerObject_apply, 0, 0),
     JS_FN("call", DebuggerObject_call, 0, 0),
     JS_FN("makeDebuggeeValue", DebuggerObject_makeDebuggeeValue, 1, 0),
@@ -9061,6 +9059,18 @@ DebuggerObject::defineProperty(JSContext* cx, Handle<DebuggerObject*> object, Ha
     }
 
     return true;
+}
+
+/* static */ bool
+DebuggerObject::deleteProperty(JSContext* cx, Handle<DebuggerObject*> object, HandleId id,
+                               ObjectOpResult& result)
+{
+    RootedObject referent(cx, object->referent());
+
+    Maybe<AutoCompartment> ac;
+    ac.emplace(cx, referent);
+    ErrorCopier ec(ac);
+    return DeleteProperty(cx, referent, id, result);
 }
 
 
