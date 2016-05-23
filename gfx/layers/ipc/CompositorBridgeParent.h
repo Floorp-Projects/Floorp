@@ -458,10 +458,6 @@ public:
    */
   static void PostInsertVsyncProfilerMarker(mozilla::TimeStamp aVsyncTimestamp);
 
-  static void RequestNotifyLayerTreeReady(uint64_t aLayersId, CompositorUpdateObserver* aObserver);
-  static void RequestNotifyLayerTreeCleared(uint64_t aLayersId, CompositorUpdateObserver* aObserver);
-  static void SwapLayerTreeObservers(uint64_t aLayer, uint64_t aOtherLayer);
-
   float ComputeRenderIntegrity();
 
   widget::CompositorWidgetProxy* GetWidgetProxy() { return mWidgetProxy; }
@@ -505,6 +501,10 @@ private:
    * Must run on the content main thread.
    */
   static void DeallocateLayerTreeId(uint64_t aId);
+
+  static void RequestNotifyLayerTreeReady(uint64_t aLayersId, CompositorUpdateObserver* aObserver);
+  static void RequestNotifyLayerTreeCleared(uint64_t aLayersId, CompositorUpdateObserver* aObserver);
+  static void SwapLayerTreeObservers(uint64_t aLayer, uint64_t aOtherLayer);
 
 protected:
   // Protected destructor, to discourage deletion outside of Release():
