@@ -49,12 +49,7 @@
 using namespace js;
 using namespace js::gc;
 
-using mozilla::IsNaN;
-using mozilla::NegativeInfinity;
-using mozilla::PodCopy;
-using mozilla::PositiveInfinity;
 using JS::CanonicalizeNaN;
-using JS::GenericNaN;
 using JS::ToInt32;
 using JS::ToUint32;
 

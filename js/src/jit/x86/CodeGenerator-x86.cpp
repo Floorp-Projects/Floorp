@@ -473,16 +473,34 @@ CodeGeneratorX86::store(Scalar::Type accessType, const LAllocation* value, const
     switch (accessType) {
       case Scalar::Int8:
       case Scalar::Uint8Clamped:
-      case Scalar::Uint8:        masm.movbWithPatch(ToRegister(value), dstAddr); break;
+      case Scalar::Uint8:
+        masm.movbWithPatch(ToRegister(value), dstAddr);
+        break;
+
       case Scalar::Int16:
-      case Scalar::Uint16:       masm.movwWithPatch(ToRegister(value), dstAddr); break;
+      case Scalar::Uint16:
+        masm.movwWithPatch(ToRegister(value), dstAddr);
+        break;
+
       case Scalar::Int32:
-      case Scalar::Uint32:       masm.movlWithPatch(ToRegister(value), dstAddr); break;
-      case Scalar::Float32:      masm.vmovssWithPatch(ToFloatRegister(value), dstAddr); break;
-      case Scalar::Float64:      masm.vmovsdWithPatch(ToFloatRegister(value), dstAddr); break;
+      case Scalar::Uint32:
+        masm.movlWithPatch(ToRegister(value), dstAddr);
+        break;
+
+      case Scalar::Float32:
+        masm.vmovssWithPatch(ToFloatRegister(value), dstAddr);
+        break;
+
+      case Scalar::Float64:
+        masm.vmovsdWithPatch(ToFloatRegister(value), dstAddr);
+        break;
+
       case Scalar::Float32x4:
-      case Scalar::Int32x4:      MOZ_CRASH("SIMD stores should be handled in emitSimdStore");
-      case Scalar::MaxTypedArrayViewType: MOZ_CRASH("unexpected type");
+      case Scalar::Int32x4:
+        MOZ_CRASH("SIMD stores should be handled in emitSimdStore");
+
+      case Scalar::MaxTypedArrayViewType:
+        MOZ_CRASH("unexpected type");
     }
 }
 
@@ -493,8 +511,10 @@ CodeGeneratorX86::visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStati
     Scalar::Type accessType = mir->accessType();
     Register ptr = ToRegister(ins->ptr());
     const LAllocation* value = ins->value();
-    uint32_t offset = mir->offset();
 
+    canonicalizeIfDeterministic(accessType, value);
+
+    uint32_t offset = mir->offset();
     if (!mir->needsBoundsCheck()) {
         Operand dstAddr(ptr, int32_t(mir->base().asValue()) + int32_t(offset));
         store(accessType, value, dstAddr);
@@ -605,11 +625,13 @@ CodeGeneratorX86::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
 {
     const MAsmJSStoreHeap* mir = ins->mir();
     Scalar::Type accessType = mir->accessType();
+    const LAllocation* value = ins->value();
+
+    canonicalizeIfDeterministic(accessType, value);
 
     if (Scalar::isSimdType(accessType))
         return emitSimdStore(ins);
 
-    const LAllocation* value = ins->value();
     const LAllocation* ptr = ins->ptr();
     Operand dstAddr = ptr->isBogus()
                       ? Operand(PatchedAbsoluteAddress(mir->offset()))

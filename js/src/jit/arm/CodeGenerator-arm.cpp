@@ -2330,9 +2330,9 @@ CodeGeneratorARM::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
             VFPRegister vd(ToFloatRegister(ins->value()));
             Address addr(HeapReg, ptrImm);
             if (size == 32)
-                masm.ma_vstr(vd.singleOverlay(), addr, Assembler::Always);
+                masm.storeFloat32(vd, addr);
             else
-                masm.ma_vstr(vd, addr, Assembler::Always);
+                masm.storeDouble(vd, addr);
         } else {
             masm.ma_dataTransferN(IsStore, size, isSigned, HeapReg, Imm32(ptrImm),
                                   ToRegister(ins->value()), Offset, Assembler::Always);
@@ -2347,10 +2347,11 @@ CodeGeneratorARM::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
         Register ptrReg = ToRegister(ptr);
         if (isFloat) {
             VFPRegister vd(ToFloatRegister(ins->value()));
+            BaseIndex addr(HeapReg, ptrReg, TimesOne, 0);
             if (size == 32)
-                masm.ma_vstr(vd.singleOverlay(), HeapReg, ptrReg, 0, 0, Assembler::Always);
+                masm.storeFloat32(vd, addr);
             else
-                masm.ma_vstr(vd, HeapReg, ptrReg, 0, 0, Assembler::Always);
+                masm.storeDouble(vd, addr);
         } else {
             masm.ma_dataTransferN(IsStore, size, isSigned, HeapReg, ptrReg,
                                   ToRegister(ins->value()), Offset, Assembler::Always);

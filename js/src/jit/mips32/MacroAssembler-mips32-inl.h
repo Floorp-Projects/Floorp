@@ -423,24 +423,24 @@ MacroAssembler::branchTestMagic(Condition cond, const Address& valaddr, JSWhyMag
 // ========================================================================
 // Memory access primitives.
 void
-MacroAssembler::storeDouble(FloatRegister src, const Address& addr)
+MacroAssembler::storeUncanonicalizedDouble(FloatRegister src, const Address& addr)
 {
     ma_sd(src, addr);
 }
 void
-MacroAssembler::storeDouble(FloatRegister src, const BaseIndex& addr)
+MacroAssembler::storeUncanonicalizedDouble(FloatRegister src, const BaseIndex& addr)
 {
     MOZ_ASSERT(addr.offset == 0);
     ma_sd(src, addr);
 }
 
 void
-MacroAssembler::storeFloat32(FloatRegister src, const Address& addr)
+MacroAssembler::storeUncanonicalizedFloat32(FloatRegister src, const Address& addr)
 {
     ma_ss(src, addr);
 }
 void
-MacroAssembler::storeFloat32(FloatRegister src, const BaseIndex& addr)
+MacroAssembler::storeUncanonicalizedFloat32(FloatRegister src, const BaseIndex& addr)
 {
     MOZ_ASSERT(addr.offset == 0);
     ma_ss(src, addr);
