@@ -12,6 +12,7 @@ generated = [
     'KeyEvent',
     'MediaCodec',
     'MotionEvent',
+    'OverScroller',
     'SurfaceTexture'
 ]
 
