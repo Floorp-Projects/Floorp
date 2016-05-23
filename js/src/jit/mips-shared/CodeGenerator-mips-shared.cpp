@@ -528,7 +528,9 @@ CodeGeneratorMIPSShared::visitDivI(LDivI* ins)
 
     // Handle divide by zero.
     if (mir->canBeDivideByZero()) {
-        if (mir->canTruncateInfinities()) {
+        if (mir->trapOnError()) {
+            masm.ma_b(rhs, rhs, wasm::JumpTarget::IntegerDivideByZero, Assembler::Zero);
+        } else if (mir->canTruncateInfinities()) {
             // Truncated division by zero is zero (Infinity|0 == 0)
             Label notzero;
             masm.ma_b(rhs, rhs, &notzero, Assembler::NonZero, ShortJump);
@@ -548,7 +550,9 @@ CodeGeneratorMIPSShared::visitDivI(LDivI* ins)
         masm.ma_b(lhs, temp, &notMinInt, Assembler::NotEqual, ShortJump);
 
         masm.move32(Imm32(-1), temp);
-        if (mir->canTruncateOverflow()) {
+        if (mir->trapOnError()) {
+            masm.ma_b(rhs, temp, wasm::JumpTarget::IntegerOverflow, Assembler::Equal);
+        } else if (mir->canTruncateOverflow()) {
             // (-INT32_MIN)|0 == INT32_MIN
             Label skip;
             masm.ma_b(rhs, temp, &skip, Assembler::NotEqual, ShortJump);
@@ -674,11 +678,15 @@ CodeGeneratorMIPSShared::visitModI(LModI* ins)
 
     if (mir->canBeDivideByZero()) {
         if (mir->isTruncated()) {
-            Label skip;
-            masm.ma_b(rhs, Imm32(0), &skip, Assembler::NotEqual, ShortJump);
-            masm.move32(Imm32(0), dest);
-            masm.ma_b(&done, ShortJump);
-            masm.bind(&skip);
+            if (mir->trapOnError()) {
+                masm.ma_b(rhs, rhs, wasm::JumpTarget::IntegerDivideByZero, Assembler::Zero);
+            } else {
+                Label skip;
+                masm.ma_b(rhs, Imm32(0), &skip, Assembler::NotEqual, ShortJump);
+                masm.move32(Imm32(0), dest);
+                masm.ma_b(&done, ShortJump);
+                masm.bind(&skip);
+            }
         } else {
             MOZ_ASSERT(mir->fallible());
             bailoutCmp32(Assembler::Equal, rhs, Imm32(0), ins->snapshot());
@@ -2082,12 +2090,16 @@ CodeGeneratorMIPSShared::visitUDivOrMod(LUDivOrMod* ins)
     // Prevent divide by zero.
     if (ins->canBeDivideByZero()) {
         if (ins->mir()->isTruncated()) {
-            // Infinity|0 == 0
-            Label notzero;
-            masm.ma_b(rhs, rhs, &notzero, Assembler::NonZero, ShortJump);
-            masm.move32(Imm32(0), output);
-            masm.ma_b(&done, ShortJump);
-            masm.bind(&notzero);
+            if (ins->trapOnError()) {
+                masm.ma_b(rhs, rhs, wasm::JumpTarget::IntegerDivideByZero, Assembler::Zero);
+            } else {
+                // Infinity|0 == 0
+                Label notzero;
+                masm.ma_b(rhs, rhs, &notzero, Assembler::NonZero, ShortJump);
+                masm.move32(Imm32(0), output);
+                masm.ma_b(&done, ShortJump);
+                masm.bind(&notzero);
+            }
         } else {
             bailoutCmp32(Assembler::Equal, rhs, Imm32(0), ins->snapshot());
         }
