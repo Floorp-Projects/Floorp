@@ -14,6 +14,7 @@ namespace layers {
 class APZCTreeManager;
 class CompositorSession;
 class ClientLayerManager;
+class CompositorUpdateObserver;
 } // namespace layers
 namespace widget {
 class CompositorWidgetProxy;
@@ -26,6 +27,7 @@ namespace gfx {
 class GPUProcessManager final
 {
   typedef layers::APZCTreeManager APZCTreeManager;
+  typedef layers::CompositorUpdateObserver CompositorUpdateObserver;
 
 public:
   static void Initialize();
@@ -57,6 +59,10 @@ public:
   //
   // Must run on the content main thread.
   void DeallocateLayerTreeId(uint64_t aLayersId);
+
+  void RequestNotifyLayerTreeReady(uint64_t aLayersId, CompositorUpdateObserver* aObserver);
+  void RequestNotifyLayerTreeCleared(uint64_t aLayersId, CompositorUpdateObserver* aObserver);
+  void SwapLayerTreeObservers(uint64_t aLayer, uint64_t aOtherLayer);
 
 private:
   GPUProcessManager();
