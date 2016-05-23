@@ -11,9 +11,13 @@ const Cc = Components.classes;
 const Cu = Components.utils;
 const Cr = Components.results;
 
+const INTEGER = /^[1-9]\d*$/;
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
+                                  "resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                   "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LanguageDetector",
@@ -390,6 +394,133 @@ class BaseContext {
     }
   }
 }
+
+// Manages icon details for toolbar buttons in the |pageAction| and
+// |browserAction| APIs.
+let IconDetails = {
+  // Normalizes the various acceptable input formats into an object
+  // with icon size as key and icon URL as value.
+  //
+  // If a context is specified (function is called from an extension):
+  // Throws an error if an invalid icon size was provided or the
+  // extension is not allowed to load the specified resources.
+  //
+  // If no context is specified, instead of throwing an error, this
+  // function simply logs a warning message.
+  normalize(details, extension, context = null) {
+    let result = {};
+
+    try {
+      if (details.imageData) {
+        let imageData = details.imageData;
+
+        // The global might actually be from Schema.jsm, which
+        // normalizes most of our arguments. In that case it won't have
+        // an ImageData property. But Schema.jsm doesn't normalize
+        // actual ImageData objects, so they will come from a global
+        // with the right property.
+        if (instanceOf(imageData, "ImageData")) {
+          imageData = {"19": imageData};
+        }
+
+        for (let size of Object.keys(imageData)) {
+          if (!INTEGER.test(size)) {
+            throw new Error(`Invalid icon size ${size}, must be an integer`);
+          }
+          result[size] = this.convertImageDataToDataURI(imageData[size], context);
+        }
+      }
+
+      if (details.path) {
+        let path = details.path;
+        if (typeof path != "object") {
+          path = {"19": path};
+        }
+
+        let baseURI = context ? context.uri : extension.baseURI;
+
+        for (let size of Object.keys(path)) {
+          if (!INTEGER.test(size)) {
+            throw new Error(`Invalid icon size ${size}, must be an integer`);
+          }
+
+          let url = baseURI.resolve(path[size]);
+
+          // The Chrome documentation specifies these parameters as
+          // relative paths. We currently accept absolute URLs as well,
+          // which means we need to check that the extension is allowed
+          // to load them. This will throw an error if it's not allowed.
+          Services.scriptSecurityManager.checkLoadURIStrWithPrincipal(
+            extension.principal, url,
+            Services.scriptSecurityManager.DISALLOW_SCRIPT);
+
+          result[size] = url;
+        }
+      }
+    } catch (e) {
+      // Function is called from extension code, delegate error.
+      if (context) {
+        throw e;
+      }
+      // If there's no context, it's because we're handling this
+      // as a manifest directive. Log a warning rather than
+      // raising an error.
+      extension.manifestError(`Invalid icon data: ${e}`);
+    }
+
+    return result;
+  },
+
+  // Returns the appropriate icon URL for the given icons object and the
+  // screen resolution of the given window.
+  getURL(icons, window, extension, size = 18) {
+    const DEFAULT = "chrome://browser/content/extension.svg";
+
+    return AddonManager.getPreferredIconURL({icons: icons}, size, window) || DEFAULT;
+  },
+
+  convertImageURLToDataURL(imageURL, context, browserWindow, size = 18) {
+    return new Promise((resolve, reject) => {
+      let image = new context.contentWindow.Image();
+      image.onload = function() {
+        let canvas = context.contentWindow.document.createElement("canvas");
+        let ctx = canvas.getContext("2d");
+        let dSize = size * browserWindow.devicePixelRatio;
+
+        // Scales the image while maintaing width to height ratio.
+        // If the width and height differ, the image is centered using the
+        // smaller of the two dimensions.
+        let dWidth, dHeight, dx, dy;
+        if (this.width > this.height) {
+          dWidth = dSize;
+          dHeight = image.height * (dSize / image.width);
+          dx = 0;
+          dy = (dSize - dHeight) / 2;
+        } else {
+          dWidth = image.width * (dSize / image.height);
+          dHeight = dSize;
+          dx = (dSize - dWidth) / 2;
+          dy = 0;
+        }
+
+        ctx.drawImage(this, 0, 0, this.width, this.height, dx, dy, dWidth, dHeight);
+        resolve(canvas.toDataURL("image/png"));
+      };
+      image.onerror = reject;
+      image.src = imageURL;
+    });
+  },
+
+  convertImageDataToDataURL(imageData, context) {
+    let document = context.contentWindow.document;
+    let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+    canvas.width = imageData.width;
+    canvas.height = imageData.height;
+    canvas.getContext("2d").putImageData(imageData, 0, 0);
+
+    return canvas.toDataURL("image/png");
+  },
+};
 
 function LocaleData(data) {
   this.defaultLocale = data.defaultLocale;
@@ -1256,6 +1387,7 @@ this.ExtensionUtils = {
   BaseContext,
   DefaultWeakMap,
   EventManager,
+  IconDetails,
   LocaleData,
   Messenger,
   PlatformInfo,
