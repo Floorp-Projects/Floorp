@@ -334,8 +334,7 @@ class TestAgentReceive : public TestAgent {
         static_cast<mozilla::AudioSessionConduit *>(audio_conduit_.get()),
         audio_rtp_transport_.flow_,
         audio_rtcp_transport_.flow_,
-        bundle_filter_,
-        false);
+        bundle_filter_);
 
     audio_pipeline_->Init();
   }
