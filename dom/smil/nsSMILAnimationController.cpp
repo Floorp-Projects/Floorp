@@ -319,12 +319,13 @@ nsSMILAnimationController::DoSample(bool aSkipUnchangedContainers)
     return;
   }
 
+  bool isStyleFlushNeeded = mResampleNeeded;
   mResampleNeeded = false;
   // Set running sample flag -- do this before flushing styles so that when we
   // flush styles we don't end up requesting extra samples
   AutoRestore<bool> autoRestoreRunningSample(mRunningSample);
   mRunningSample = true;
-  
+
   // STEP 1: Bring model up to date
   // (i)  Rewind elements where necessary
   // (ii) Run milestone samples
@@ -378,7 +379,9 @@ nsSMILAnimationController::DoSample(bool aSkipUnchangedContainers)
   for (auto iter = mAnimationElementTable.Iter(); !iter.Done(); iter.Next()) {
     SVGAnimationElement* animElem = iter.Get()->GetKey();
     SampleTimedElement(animElem, &activeContainers);
-    AddAnimationToCompositorTable(animElem, currentCompositorTable);
+    AddAnimationToCompositorTable(animElem,
+                                  currentCompositorTable,
+                                  isStyleFlushNeeded);
   }
   activeContainers.Clear();
 
@@ -422,9 +425,11 @@ nsSMILAnimationController::DoSample(bool aSkipUnchangedContainers)
   }
 
   nsCOMPtr<nsIDocument> kungFuDeathGrip(mDocument);  // keeps 'this' alive too
-  mDocument->FlushPendingNotifications(Flush_Style);
+  if (isStyleFlushNeeded) {
+    mDocument->FlushPendingNotifications(Flush_Style);
+  }
 
-  // WARNING: 
+  // WARNING:
   // WARNING: the above flush may have destroyed the pres shell and/or
   // WARNING: frames and other layout related objects.
   // WARNING:
@@ -434,13 +439,14 @@ nsSMILAnimationController::DoSample(bool aSkipUnchangedContainers)
   // random order. For animation from/to 'inherit' values to work correctly
   // when the inherited value is *also* being animated, we really should be
   // traversing our animated nodes in an ancestors-first order (bug 501183)
+  bool mightHavePendingStyleUpdates = false;
   for (auto iter = currentCompositorTable->Iter(); !iter.Done(); iter.Next()) {
-    iter.Get()->ComposeAttribute();
+    iter.Get()->ComposeAttribute(mightHavePendingStyleUpdates);
   }
 
   // Update last compositor table
   mLastCompositorTable = currentCompositorTable.forget();
-  mMightHavePendingStyleUpdates = true;
+  mMightHavePendingStyleUpdates = mightHavePendingStyleUpdates;
 
   NS_ASSERTION(!mResampleNeeded, "Resample dirty flag set during sample!");
 }
@@ -596,7 +602,9 @@ nsSMILAnimationController::SampleTimedElement(
 
 /*static*/ void
 nsSMILAnimationController::AddAnimationToCompositorTable(
-  SVGAnimationElement* aElement, nsSMILCompositorTable* aCompositorTable)
+  SVGAnimationElement* aElement,
+  nsSMILCompositorTable* aCompositorTable,
+  bool& aStyleFlushNeeded)
 {
   // Add a compositor to the hash table if there's not already one there
   nsSMILTargetIdentifier key;
@@ -629,6 +637,7 @@ nsSMILAnimationController::AddAnimationToCompositorTable(
     // trigger this same clause in future samples (until it changes again).
     func.ClearHasChanged();
   }
+  aStyleFlushNeeded |= func.ValueNeedsReparsingEverySample();
 }
 
 static inline bool
