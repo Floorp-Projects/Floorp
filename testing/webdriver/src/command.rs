@@ -9,7 +9,7 @@ use httpapi::{Route, WebDriverExtensionRoute, VoidWebDriverExtensionRoute};
 
 #[derive(PartialEq)]
 pub enum WebDriverCommand<T: WebDriverExtensionCommand> {
-    NewSession,
+    NewSession(NewSessionParameters),
     DeleteSession,
     Get(GetParameters),
     GetCurrentUrl,
@@ -104,7 +104,10 @@ impl <U: WebDriverExtensionRoute> WebDriverMessage<U> {
             Json::Null
         };
         let command = match match_type {
-            Route::NewSession => WebDriverCommand::NewSession,
+            Route::NewSession => {
+                let parameters: NewSessionParameters = try!(Parameters::from_json(&body_data));
+                WebDriverCommand::NewSession(parameters)
+            },
             Route::DeleteSession => WebDriverCommand::DeleteSession,
             Route::Get => {
                 let parameters: GetParameters = try!(Parameters::from_json(&body_data));
@@ -313,7 +316,7 @@ impl <U: WebDriverExtensionRoute> WebDriverMessage<U> {
 impl <U:WebDriverExtensionRoute> ToJson for WebDriverMessage<U> {
     fn to_json(&self) -> Json {
         let parameters = match self.command {
-            WebDriverCommand::NewSession |
+            WebDriverCommand::NewSession(_) |
             WebDriverCommand::DeleteSession | WebDriverCommand::GetCurrentUrl |
             WebDriverCommand::GoBack | WebDriverCommand::GoForward | WebDriverCommand::Refresh |
             WebDriverCommand::GetTitle | WebDriverCommand::GetPageSource |
@@ -362,6 +365,50 @@ pub trait Parameters: Sized {
 }
 
 #[derive(PartialEq)]
+pub struct NewSessionParameters {
+    pub desired: BTreeMap<String, Json>,
+    pub required: BTreeMap<String, Json>,
+}
+
+impl Parameters for NewSessionParameters {
+    fn from_json(body: &Json) -> WebDriverResult<NewSessionParameters> {
+        let data = try_opt!(body.as_object(),
+                            ErrorStatus::UnknownError,
+                            "Message body was not an object");
+
+        let desired_capabilities =
+            if let Some(capabilities) = data.get("desiredCapabilities") {
+                try_opt!(capabilities.as_object(),
+                         ErrorStatus::InvalidArgument,
+                         "'desiredCapabilities' parameter is not an object").clone()
+            } else {
+                BTreeMap::new()
+            };
+
+        let required_capabilities =
+            if let Some(capabilities) = data.get("requiredCapabilities") {
+                try_opt!(capabilities.as_object(),
+                         ErrorStatus::InvalidArgument,
+                         "'requiredCapabilities' parameter is not an object").clone()
+            } else {
+                BTreeMap::new()
+            };
+
+        Ok(NewSessionParameters {
+            desired: desired_capabilities,
+            required: required_capabilities
+        })
+    }
+}
+
+impl NewSessionParameters {
+    pub fn get(&self, name: &str) -> Option<&Json> {
+        debug!("Getting {} from capabilities", name);
+        self.required.get(name).or_else(|| self.desired.get(name))
+    }
+}
+
+#[derive(PartialEq)]
 pub struct GetParameters {
     pub url: String
 }
@@ -376,7 +423,7 @@ impl Parameters for GetParameters {
                      "Missing 'url' parameter").as_string(),
             ErrorStatus::InvalidArgument,
             "'url' not a string");
-        return Ok(GetParameters {
+        Ok(GetParameters {
             url: url.to_string()
         })
     }
