@@ -18,8 +18,6 @@
 
 #include "asmjs/WasmBinaryToText.h"
 
-#include "mozilla/CheckedInt.h"
-
 #include "jsnum.h"
 #include "jsprf.h"
 
@@ -33,7 +31,6 @@
 using namespace js;
 using namespace js::wasm;
 
-using mozilla::CheckedInt;
 using mozilla::IsInfinite;
 using mozilla::IsNaN;
 using mozilla::IsNegativeZero;
@@ -44,11 +41,6 @@ struct WasmRenderContext
     AstModule* module;
     StringBuffer& buffer;
     uint32_t indent;
-
-    DeclaredSigVector signatures;
-    Uint32Vector funcSigs;
-    Uint32Vector funcLocals;
-    Uint32Vector importSigs;
 
     uint32_t currentFuncIndex;
 
