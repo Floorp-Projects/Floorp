@@ -6,6 +6,13 @@
 
 #include "vm/TraceLoggingGraph.h"
 
+#ifdef XP_WIN
+#include <process.h>
+#define getpid _getpid
+#else
+#include <unistd.h>
+#endif
+
 #include "mozilla/Endian.h"
 
 #include "jsstr.h"
@@ -28,11 +35,22 @@ TraceLoggerGraphState* traceLoggerGraphState = nullptr;
 bool
 TraceLoggerGraphState::init()
 {
-    out = fopen(TRACE_LOG_DIR "tl-data.json", "w");
+    pid_ = (uint32_t) getpid();
+
+    char filename[sizeof TRACE_LOG_DIR "tl-data.4294967295.json"];
+    sprintf(filename, TRACE_LOG_DIR "tl-data.%u.json", pid_);
+    out = fopen(filename, "w");
     if (!out)
         return false;
 
     fprintf(out, "[");
+
+    // Write the last tl-data.*.json file to tl-data.json.
+    // In most cases that is the wanted file.
+    if (FILE* last = fopen(TRACE_LOG_DIR "tl-data.json", "w")) {
+        fprintf(last, "\"tl-data.%u.json\"", pid_);
+        fclose(last);
+    }
 
 #ifdef DEBUG
     initialized = true;
@@ -73,9 +91,9 @@ TraceLoggerGraphState::nextLoggerId()
         }
     }
 
-    int written = fprintf(out, "{\"tree\":\"tl-tree.%d.tl\", \"events\":\"tl-event.%d.tl\", "
-                               "\"dict\":\"tl-dict.%d.json\", \"treeFormat\":\"64,64,31,1,32\"}",
-                          numLoggers, numLoggers, numLoggers);
+    int written = fprintf(out, "{\"tree\":\"tl-tree.%u.%d.tl\", \"events\":\"tl-event.%u.%d.tl\", "
+                               "\"dict\":\"tl-dict.%u.%d.json\", \"treeFormat\":\"64,64,31,1,32\"}",
+                          pid_, numLoggers, pid_, numLoggers, pid_, numLoggers);
     if (written < 0) {
         fprintf(stderr, "TraceLogging: Error while writing.\n");
         return uint32_t(-1);
@@ -134,16 +152,18 @@ TraceLoggerGraph::init(uint64_t startTimestamp)
         return false;
     }
 
-    char dictFilename[sizeof TRACE_LOG_DIR "tl-dict.100.json"];
-    sprintf(dictFilename, TRACE_LOG_DIR "tl-dict.%d.json", loggerId);
+    uint32_t pid = traceLoggerGraphState->pid();
+
+    char dictFilename[sizeof TRACE_LOG_DIR "tl-dict.4294967295.100.json"];
+    sprintf(dictFilename, TRACE_LOG_DIR "tl-dict.%u.%d.json", pid, loggerId);
     dictFile = fopen(dictFilename, "w");
     if (!dictFile) {
         failed = true;
         return false;
     }
 
-    char treeFilename[sizeof TRACE_LOG_DIR "tl-tree.100.tl"];
-    sprintf(treeFilename, TRACE_LOG_DIR "tl-tree.%d.tl", loggerId);
+    char treeFilename[sizeof TRACE_LOG_DIR "tl-tree.4294967295.100.tl"];
+    sprintf(treeFilename, TRACE_LOG_DIR "tl-tree.%u.%d.tl", pid, loggerId);
     treeFile = fopen(treeFilename, "w+b");
     if (!treeFile) {
         fclose(dictFile);
@@ -152,8 +172,8 @@ TraceLoggerGraph::init(uint64_t startTimestamp)
         return false;
     }
 
-    char eventFilename[sizeof TRACE_LOG_DIR "tl-event.100.tl"];
-    sprintf(eventFilename, TRACE_LOG_DIR "tl-event.%d.tl", loggerId);
+    char eventFilename[sizeof TRACE_LOG_DIR "tl-event.4294967295.100.tl"];
+    sprintf(eventFilename, TRACE_LOG_DIR "tl-event.%u.%d.tl", pid, loggerId);
     eventFile = fopen(eventFilename, "wb");
     if (!eventFile) {
         fclose(dictFile);
@@ -570,3 +590,5 @@ TraceLoggerGraph::addTextId(uint32_t id, const char* text)
     if (!js::FileEscapedString(dictFile, text, strlen(text), '"'))
         failed = true;
 }
+
+#undef getpid
