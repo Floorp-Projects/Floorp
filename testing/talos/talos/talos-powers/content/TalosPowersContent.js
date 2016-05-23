@@ -16,5 +16,18 @@ var TalosPowersContent;
       });
       document.dispatchEvent(event);
     },
+
+    focus(callback) {
+      if (callback) {
+        addEventListener("TalosPowersContentFocused", function focused() {
+          removeEventListener("TalosPowersContentFocused", focused);
+          callback();
+        });
+      };
+      document.dispatchEvent(new CustomEvent("TalosPowersContentFocus", {
+        bubbles: true,
+      }));
+    },
+
   };
 })();
