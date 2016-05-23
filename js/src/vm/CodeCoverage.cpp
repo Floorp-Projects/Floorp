@@ -252,7 +252,7 @@ LCovSource::writeScript(JSScript* script)
             // Get the low and high from the tableswitch
             int32_t low = GET_JUMP_OFFSET(pc + JUMP_OFFSET_LEN * 1);
             int32_t high = GET_JUMP_OFFSET(pc + JUMP_OFFSET_LEN * 2);
-            MOZ_ASSERT(high > low);
+            MOZ_ASSERT(high - low + 1 >= 0);
             size_t numCases = high - low + 1;
             jsbytecode* jumpTable = pc + JUMP_OFFSET_LEN * 3;
 
