@@ -3,16 +3,17 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* Experimenting with 100 char long lines */
+/* eslint max-len: [2, 100, 2, {ignoreUrls: true, "ignorePattern": "\\s*require\\s*\\(|^\\s*loader\\.lazy|-\\*-"}] */ // eslint-disable-line
 
 "use strict";
 
-const {Cc, Ci, Cu} = require("chrome");
+const {Cc, Ci} = require("chrome");
 
 var Services = require("Services");
 var promise = require("promise");
 var EventEmitter = require("devtools/shared/event-emitter");
 var clipboard = require("sdk/clipboard");
-var {HostType} = require("devtools/client/framework/toolbox").Toolbox;
 const {executeSoon} = require("devtools/shared/DevToolsUtils");
 var {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
 var {Task} = require("devtools/shared/task");
@@ -39,7 +40,6 @@ loader.lazyGetter(this, "toolboxStrings", () => {
 loader.lazyGetter(this, "clipboardHelper", () => {
   return Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
 });
-
 
 /**
  * Represents an open instance of the Inspector for a tab.
@@ -191,7 +191,6 @@ InspectorPanel.prototype = {
         if (notification && !this._toolbox.threadClient.paused) {
           notificationBox.removeNotification(notification);
         }
-
       };
       this.target.on("thread-paused", this.updateDebuggerPausedWarning);
       this.target.on("thread-resumed", this.updateDebuggerPausedWarning);
@@ -251,15 +250,16 @@ InspectorPanel.prototype = {
 
     // If available, set either the previously selected node or the body
     // as default selected, else set documentElement
-    return walker.getRootNode().then(aRootNode => {
+    return walker.getRootNode().then(node => {
       if (hasNavigated()) {
         return promise.reject("navigated; resolution of _defaultNode aborted");
       }
 
-      rootNode = aRootNode;
+      rootNode = node;
       if (this.selectionCssSelector) {
         return walker.querySelector(rootNode, this.selectionCssSelector);
       }
+      return null;
     }).then(front => {
       if (hasNavigated()) {
         return promise.reject("navigated; resolution of _defaultNode aborted");
@@ -391,7 +391,7 @@ InspectorPanel.prototype = {
     if (this.target.form.animationsActor) {
       this.sidebar.addTab("animationinspector",
                           "chrome://devtools/content/animationinspector/animation-inspector.xhtml",
-                          "animationinspector" == defaultTab);
+                          defaultTab == "animationinspector");
     }
 
     this.sidebar.show(defaultTab);
@@ -467,9 +467,8 @@ InspectorPanel.prototype = {
     if (this._selectionCssSelector &&
         this._selectionCssSelector.url === this._target.url) {
       return this._selectionCssSelector.selector;
-    } else {
-      return null;
     }
+    return null;
   },
 
   /**
@@ -688,13 +687,13 @@ InspectorPanel.prototype = {
   /**
    * Show the node menu.
    */
-  showNodeMenu: function (aButton, aPosition, aExtraItems) {
-    if (aExtraItems) {
-      for (let item of aExtraItems) {
+  showNodeMenu: function (button, position, extraItems) {
+    if (extraItems) {
+      for (let item of extraItems) {
         this.nodemenu.appendChild(item);
       }
     }
-    this.nodemenu.openPopup(aButton, aPosition, 0, 0, true, false);
+    this.nodemenu.openPopup(button, position, 0, 0, true, false);
   },
 
   hideNodeMenu: function () {
@@ -796,8 +795,7 @@ InspectorPanel.prototype = {
 
     if (isDuplicatableElement) {
       duplicateNode.removeAttribute("disabled");
-    }
-    else {
+    } else {
       duplicateNode.setAttribute("disabled", "true");
     }
 
@@ -997,7 +995,8 @@ InspectorPanel.prototype = {
     this._markupBox.setAttribute("collapsed", true);
     this._markupBox.appendChild(this._markupFrame);
     this._markupFrame.setAttribute("src", "chrome://devtools/content/inspector/markup/markup.xhtml");
-    this._markupFrame.setAttribute("aria-label", strings.GetStringFromName("inspector.panelLabel.markupView"));
+    this._markupFrame.setAttribute("aria-label",
+      strings.GetStringFromName("inspector.panelLabel.markupView"));
   },
 
   _onMarkupFrameLoad: function () {
@@ -1096,16 +1095,17 @@ InspectorPanel.prototype = {
   /**
    * Toggle a pseudo class.
    */
-  togglePseudoClass: function (aPseudo) {
+  togglePseudoClass: function (pseudo) {
     if (this.selection.isElementNode()) {
       let node = this.selection.nodeFront;
-      if (node.hasPseudoClassLock(aPseudo)) {
-        return this.walker.removePseudoClassLock(node, aPseudo, {parents: true});
+      if (node.hasPseudoClassLock(pseudo)) {
+        return this.walker.removePseudoClassLock(node, pseudo, {parents: true});
       }
 
-      let hierarchical = aPseudo == ":hover" || aPseudo == ":active";
-      return this.walker.addPseudoClassLock(node, aPseudo, {parents: hierarchical});
+      let hierarchical = pseudo == ":hover" || pseudo == ":active";
+      return this.walker.addPseudoClassLock(node, pseudo, {parents: hierarchical});
     }
+    return promise.resolve();
   },
 
   /**
@@ -1156,7 +1156,7 @@ InspectorPanel.prototype = {
    */
   clearPseudoClasses: function () {
     if (!this.walker) {
-      return;
+      return promise.resolve();
     }
     return this.walker.clearPseudoClassLocks().then(null, console.error);
   },
@@ -1178,8 +1178,9 @@ InspectorPanel.prototype = {
    */
   pasteOuterHTML: function () {
     let content = this._getClipboardContentForPaste();
-    if (!content)
+    if (!content) {
       return promise.reject("No clipboard content for paste");
+    }
 
     let node = this.selection.nodeFront;
     return this.markup.getNodeOuterHTML(node).then(oldContent => {
@@ -1192,8 +1193,9 @@ InspectorPanel.prototype = {
    */
   pasteInnerHTML: function () {
     let content = this._getClipboardContentForPaste();
-    if (!content)
+    if (!content) {
       return promise.reject("No clipboard content for paste");
+    }
 
     let node = this.selection.nodeFront;
     return this.markup.getNodeInnerHTML(node).then(oldContent => {
@@ -1208,8 +1210,9 @@ InspectorPanel.prototype = {
    */
   pasteAdjacentHTML: function (position) {
     let content = this._getClipboardContentForPaste();
-    if (!content)
+    if (!content) {
       return promise.reject("No clipboard content for paste");
+    }
 
     let node = this.selection.nodeFront;
     return this.markup.insertAdjacentHTMLToNode(node, position, content);
@@ -1415,16 +1418,18 @@ InspectorPanel.prototype = {
       // Open link in a new tab.
       // When the inspector menu was setup on click (see _setupNodeLinkMenu), we
       // already checked that resolveRelativeURL existed.
-      this.inspector.resolveRelativeURL(link, this.selection.nodeFront).then(url => {
-        if (type === "uri") {
-          let browserWin = this.target.tab.ownerDocument.defaultView;
-          browserWin.openUILinkIn(url, "tab");
-        } else if (type === "cssresource") {
-          return this.toolbox.viewSourceInStyleEditor(url);
-        } else if (type === "jsresource") {
-          return this.toolbox.viewSourceInDebugger(url);
-        }
-      }).catch(e => console.error(e));
+      this.inspector.resolveRelativeURL(
+        link, this.selection.nodeFront).then(url => {
+          if (type === "uri") {
+            let browserWin = this.target.tab.ownerDocument.defaultView;
+            browserWin.openUILinkIn(url, "tab");
+          } else if (type === "cssresource") {
+            return this.toolbox.viewSourceInStyleEditor(url);
+          } else if (type === "jsresource") {
+            return this.toolbox.viewSourceInDebugger(url);
+          }
+          return null;
+        }).catch(e => console.error(e));
     } else if (type == "idref") {
       // Select the node in the same document.
       this.walker.document(this.selection.nodeFront).then(doc => {

@@ -9,11 +9,11 @@
 const TEST_URL = URL_ROOT + "doc_inspector_remove-iframe-during-load.html";
 
 add_task(function* () {
-  let {inspector, toolbox, testActor} = yield openInspectorForURL("about:blank");
+  let {inspector, testActor} = yield openInspectorForURL("about:blank");
   yield selectNode("body", inspector);
 
   // We do not want to wait for the inspector to be fully ready before testing
-  // so we load TEST_URL and just wait for the content window to be done loading.
+  // so we load TEST_URL and just wait for the content window to be done loading
   yield testActor.loadAndWaitForCustomEvent(TEST_URL);
 
   // The content doc contains a script that creates iframes and deletes them
@@ -28,7 +28,7 @@ add_task(function* () {
   info("Creating and removing an iframe.");
   let onMarkupLoaded = inspector.once("markuploaded");
   testActor.eval("new " + function () {
-    var iframe = document.createElement("iframe");
+    let iframe = document.createElement("iframe");
     document.body.appendChild(iframe);
     iframe.remove();
   });
@@ -41,7 +41,8 @@ add_task(function* () {
 
   // Assert that the markup-view is displayed and works
   ok(!(yield testActor.hasNode("iframe")), "Iframe has been removed.");
-  is((yield testActor.getProperty("#yay", "textContent")), "load", "Load event fired.");
+  is((yield testActor.getProperty("#yay", "textContent")), "load",
+     "Load event fired.");
 
   yield selectNode("#yay", inspector);
 });

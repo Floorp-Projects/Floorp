@@ -14,7 +14,8 @@ add_task(function* () {
   yield testScrollIntoView();
   function* testShowDOMProperties() {
     info("Testing 'Show DOM Properties' menu item.");
-    let showDOMPropertiesNode = inspector.panelDoc.getElementById("node-menu-showdomproperties");
+    let showDOMPropertiesNode = inspector.panelDoc.getElementById(
+      "node-menu-showdomproperties");
     ok(showDOMPropertiesNode, "the popup menu has a show dom properties item");
 
     let consoleOpened = toolbox.once("webconsole-ready");

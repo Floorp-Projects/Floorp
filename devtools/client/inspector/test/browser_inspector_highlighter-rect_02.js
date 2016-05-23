@@ -22,7 +22,8 @@ add_task(function* () {
     rect: {x: 50, y: 50, width: 100, height: 100}
   });
 
-  let style = yield testActor.getHighlighterNodeAttribute("highlighted-rect", "style", highlighter);
+  let style = yield testActor.getHighlighterNodeAttribute("highlighted-rect",
+    "style", highlighter);
 
   // The parent body has margin=50px and border=10px
   // The parent iframe also has margin=50px and border=10px
