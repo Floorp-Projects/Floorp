@@ -48,13 +48,12 @@ def build_xpi(template_root_dir, manifest, xpi_path,
     if os.path.isfile(os.path.join(pkgdir, 'chrome.manifest')):
       files_to_copy['chrome.manifest'] = os.path.join(pkgdir, 'chrome.manifest')
 
-    # chrome folder (would contain content, skin, and locale folders typically)
-    folder = 'chrome'
-    if os.path.exists(os.path.join(pkgdir, folder)):
-      dirs_to_create.add('chrome')
-      # cp -r folder
-      abs_dirname = os.path.join(pkgdir, folder)
-      for dirpath, dirnames, filenames in os.walk(abs_dirname):
+    def add_special_dir(folder):
+      if os.path.exists(os.path.join(pkgdir, folder)):
+        dirs_to_create.add(folder)
+        # cp -r folder
+        abs_dirname = os.path.join(pkgdir, folder)
+        for dirpath, dirnames, filenames in os.walk(abs_dirname):
           goodfiles = list(filter_filenames(filenames, IGNORED_FILES))
           dirnames[:] = filter_dirnames(dirnames)
           for dirname in dirnames:
@@ -68,6 +67,12 @@ def build_xpi(template_root_dir, manifest, xpi_path,
                    make_zipfile_path(abs_dirname, os.path.join(dirpath, filename)),
                    ])
               files_to_copy[str(arcpath)] = str(abspath)
+
+
+    # chrome folder (would contain content, skin, and locale folders typically)
+    add_special_dir('chrome')
+    # optionally include a `webextension/` dir from the add-on dir.
+    add_special_dir('webextension')
 
     for dirpath, dirnames, filenames in os.walk(template_root_dir):
         if template_root_dir == dirpath:
