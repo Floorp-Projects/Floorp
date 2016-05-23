@@ -277,18 +277,18 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>,
         return markedAny;
     }
 
-  private:
-    void exposeGCThingToActiveJS(const JS::Value& v) const { JS::ExposeValueToActiveJS(v); }
-    void exposeGCThingToActiveJS(JSObject* obj) const { JS::ExposeObjectToActiveJS(obj); }
-
     JSObject* getDelegate(JSObject* key) const {
         JSWeakmapKeyDelegateOp op = key->getClass()->extWeakmapKeyDelegateOp();
         return op ? op(key) : nullptr;
     }
 
-    JSObject* getDelegate(gc::Cell* cell) const {
+    JSObject* getDelegate(JSScript* script) const {
         return nullptr;
     }
+
+  private:
+    void exposeGCThingToActiveJS(const JS::Value& v) const { JS::ExposeValueToActiveJS(v); }
+    void exposeGCThingToActiveJS(JSObject* obj) const { JS::ExposeObjectToActiveJS(obj); }
 
     bool keyNeedsMark(JSObject* key) const {
         JSObject* delegate = getDelegate(key);
@@ -299,7 +299,7 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>,
         return delegate && gc::IsMarkedUnbarriered(&delegate);
     }
 
-    bool keyNeedsMark(gc::Cell* cell) const {
+    bool keyNeedsMark(JSScript* script) const {
         return false;
     }
 
