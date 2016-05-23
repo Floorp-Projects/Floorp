@@ -25,6 +25,8 @@
 namespace mozilla {
 namespace layers {
 
+using namespace mozilla::gfx;
+
 static std::map<uint64_t, RefPtr<RemoteContentController>> sDestroyedControllers;
 
 RemoteContentController::RemoteContentController(uint64_t aLayersId,

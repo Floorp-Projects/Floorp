@@ -382,20 +382,6 @@ public:
   static CompositorBridgeParent* GetCompositor(uint64_t id);
 
   /**
-   * Allocate an ID that can be used to refer to a layer tree and
-   * associated resources that live only on the compositor thread.
-   *
-   * Must run on the content main thread.
-   */
-  static uint64_t AllocateLayerTreeId();
-  /**
-   * Release compositor-thread resources referred to by |aID|.
-   *
-   * Must run on the content main thread.
-   */
-  static void DeallocateLayerTreeId(uint64_t aId);
-
-  /**
    * Set aController as the pan/zoom callback for the subtree referred
    * to by aLayersId.
    *
@@ -505,6 +491,20 @@ private:
    * pan/zoom-related events can be sent.
    */
   static already_AddRefed<APZCTreeManager> GetAPZCTreeManager(uint64_t aLayersId);
+
+  /**
+   * Allocate an ID that can be used to refer to a layer tree and
+   * associated resources that live only on the compositor thread.
+   *
+   * Must run on the content main thread.
+   */
+  static uint64_t AllocateLayerTreeId();
+  /**
+   * Release compositor-thread resources referred to by |aID|.
+   *
+   * Must run on the content main thread.
+   */
+  static void DeallocateLayerTreeId(uint64_t aId);
 
 protected:
   // Protected destructor, to discourage deletion outside of Release():
