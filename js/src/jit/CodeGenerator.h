@@ -416,7 +416,9 @@ class CodeGenerator : public CodeGeneratorSpecific
 
     void visitRandom(LRandom* ins);
 
+#ifdef DEBUG
     void emitDebugForceBailing(LInstruction* lir);
+#endif
 
     IonScriptCounts* extractScriptCounts() {
         IonScriptCounts* counts = scriptCounts_;

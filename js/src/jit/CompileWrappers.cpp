@@ -58,11 +58,13 @@ CompileRuntime::addressOfJitStackLimit()
     return runtime()->addressOfJitStackLimit();
 }
 
+#ifdef DEBUG
 const void*
 CompileRuntime::addressOfIonBailAfter()
 {
     return runtime()->addressOfIonBailAfter();
 }
+#endif
 
 const void*
 CompileRuntime::addressOfJSContext()
