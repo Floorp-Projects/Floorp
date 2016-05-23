@@ -110,6 +110,10 @@ function run_test() {
     {
       input: "ipv6 parenthesis port: (http://[2001:db8::1]:80/) test",
       url: "http://[2001:db8::1]:80/"
+    },
+    {
+      input: "test http://www.map.com/map.php?t=Nova_Scotia&markers=//Not_a_survey||description=plm2 test",
+      url: "http://www.map.com/map.php?t=Nova_Scotia&amp;markers=//Not_a_survey||description=plm2"
     }
   ];
 
