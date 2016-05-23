@@ -23,6 +23,7 @@ loader.lazyRequireGetter(this, "events", "sdk/event/core");
 loader.lazyRequireGetter(this, "ServerLoggingListener", "devtools/shared/webconsole/server-logger", true);
 loader.lazyRequireGetter(this, "JSPropertyProvider", "devtools/shared/webconsole/js-property-provider", true);
 loader.lazyRequireGetter(this, "Parser", "resource://devtools/shared/Parser.jsm", true);
+loader.lazyRequireGetter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm", true);
 
 for (let name of ["WebConsoleUtils", "ConsoleServiceListener",
     "ConsoleAPIListener", "addWebConsoleCommands",
@@ -1563,23 +1564,46 @@ WebConsoleActor.prototype =
   /**
    * Send a new HTTP request from the target's window.
    *
-   * @param object aMessage
+   * @param object message
    *        Object with 'request' - the HTTP request details.
    */
-  onSendHTTPRequest: function WCA_onSendHTTPRequest(aMessage)
-  {
-    let details = aMessage.request;
+  onSendHTTPRequest(message) {
+    let { url, method, headers, body } = message.request;
 
-    // send request from target's window
-    let request = new this.window.XMLHttpRequest();
-    request.open(details.method, details.url, true);
+    // Set the loadingNode and loadGroup to the target document - otherwise the
+    // request won't show up in the opened netmonitor.
+    let doc = this.window.document;
 
-    for (let {name, value} of details.headers) {
-      request.setRequestHeader(name, value);
+    let channel = NetUtil.newChannel({
+      uri: NetUtil.newURI(url),
+      loadingNode: doc,
+      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+      contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER
+    });
+
+    channel.QueryInterface(Ci.nsIHttpChannel);
+
+    channel.loadGroup = doc.documentLoadGroup;
+    channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE |
+                         Ci.nsIRequest.INHIBIT_CACHING |
+                         Ci.nsIRequest.LOAD_ANONYMOUS;
+
+    channel.requestMethod = method;
+
+    for (let {name, value} of headers) {
+      channel.setRequestHeader(name, value, false);
     }
-    request.send(details.body);
 
-    let channel = request.channel.QueryInterface(Ci.nsIHttpChannel);
+    if (body) {
+      channel.QueryInterface(Ci.nsIUploadChannel2);
+      let bodyStream = Cc["@mozilla.org/io/string-input-stream;1"]
+        .createInstance(Ci.nsIStringInputStream);
+      bodyStream.setData(body, body.length);
+      channel.explicitSetUploadStream(bodyStream, null, -1, method, false);
+    }
+
+    NetUtil.asyncFetch(channel, () => {});
+
     let actor = this.getNetworkEventActor(channel.channelId);
 
     // map channel to actor so we can associate future events with it
