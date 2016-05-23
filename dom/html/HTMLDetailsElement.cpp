@@ -66,7 +66,7 @@ HTMLDetailsElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
   nsChangeHint hint =
     nsGenericHTMLElement::GetAttributeChangeHint(aAttribute, aModType);
   if (aAttribute == nsGkAtoms::open) {
-    NS_UpdateHint(hint, nsChangeHint_ReconstructFrame);
+    hint |= nsChangeHint_ReconstructFrame;
   }
   return hint;
 }

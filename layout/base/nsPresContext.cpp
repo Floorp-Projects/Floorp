@@ -768,7 +768,7 @@ nsPresContext::UpdateAfterPreferencesChanged()
   nsChangeHint hint = nsChangeHint(0);
 
   if (mPrefChangePendingNeedsReflow) {
-    NS_UpdateHint(hint, NS_STYLE_HINT_REFLOW);
+    hint |= NS_STYLE_HINT_REFLOW;
   }
 
   // Preferences require rerunning selector matching because we rebuild

@@ -941,7 +941,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther,
         NS_ASSERTION(NS_IsHintSubset(difference, maxDifference),              \
                      "CalcDifference() returned bigger hint than "            \
                      "MaxDifference()");                                      \
-        NS_UpdateHint(hint, difference);                                      \
+        hint |= difference;                                                   \
         if (!difference) {                                                    \
           *aEqualStructs |= NS_STYLE_INHERIT_BIT(struct_);                    \
         }                                                                     \
@@ -1054,7 +1054,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther,
   if (!thisVis != !otherVis) {
     // One style context has a style-if-visited and the other doesn't.
     // Presume a difference.
-    NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+    hint |= nsChangeHint_RepaintFrame;
   } else if (thisVis && !NS_IsHintSubset(nsChangeHint_RepaintFrame, hint)) {
     // Both style contexts have a style-if-visited.
     bool change = false;
@@ -1171,7 +1171,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther,
     }
 
     if (change) {
-      NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+      hint |= nsChangeHint_RepaintFrame;
     }
   }
 

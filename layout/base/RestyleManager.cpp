@@ -793,7 +793,7 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
           frame->GetContentInsertionFrame() != frame) {
         // The frame has positioned children that need to be reparented, or
         // it can't easily be converted to/from being an abs-pos container correctly.
-        NS_UpdateHint(hint, nsChangeHint_ReconstructFrame);
+        hint |= nsChangeHint_ReconstructFrame;
       } else {
         for (nsIFrame *cont = frame; cont;
              cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
@@ -1063,7 +1063,7 @@ RestyleManager::RestyleElement(Element*               aElement,
         if (aRestyleHint & eRestyle_SomeDescendants) {
           mRebuildAllRestyleHint |= eRestyle_Subtree;
         }
-        NS_UpdateHint(mRebuildAllExtraHint, aMinHint);
+        mRebuildAllExtraHint |= aMinHint;
         StartRebuildAllStyleData(aRestyleTracker);
         return;
       }
@@ -1212,7 +1212,7 @@ RestyleManager::ContentStateChanged(nsIContent* aContent,
           bool repaint = false;
           theme->WidgetStateChanged(primaryFrame, app, nullptr, &repaint, nullptr);
           if (repaint) {
-            NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+            hint |= nsChangeHint_RepaintFrame;
           }
         }
       }
@@ -1248,7 +1248,7 @@ RestyleManager::ContentStateChanged(nsIContent* aContent,
     // Exposing information to the page about whether the link is
     // visited or not isn't really something we can worry about here.
     // FIXME: We could probably do this a bit better.
-    NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+    hint |= nsChangeHint_RepaintFrame;
   }
 
   PostRestyleEvent(aElement, rshint, hint);
@@ -1342,7 +1342,7 @@ RestyleManager::AttributeChanged(Element* aElement,
         theme->WidgetStateChanged(primaryFrame, disp->mAppearance, aAttribute,
             &repaint, aOldValue);
         if (repaint)
-          NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+          hint |= nsChangeHint_RepaintFrame;
       }
     }
 
@@ -1652,7 +1652,7 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
              "the only bits allowed in aRestyleHint are eRestyle_Subtree and "
              "eRestyle_ForceDescendants");
 
-  NS_UpdateHint(mRebuildAllExtraHint, aExtraHint);
+  mRebuildAllExtraHint |= aExtraHint;
   mRebuildAllRestyleHint |= aRestyleHint;
 
   // Processing the style changes could cause a flush that propagates to
@@ -1969,7 +1969,7 @@ RestyleManager::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
              "eRestyle_SomeDescendants");
 
   mDoRebuildAllStyleData = true;
-  NS_UpdateHint(mRebuildAllExtraHint, aExtraHint);
+  mRebuildAllExtraHint |= aExtraHint;
   mRebuildAllRestyleHint |= aRestyleHint;
 
   // Get a restyle event posted if necessary
@@ -2749,7 +2749,7 @@ ElementRestyler::AddLayerChangesForAnimation()
           !mFrame->StyleDisplay()->HasTransformStyle()) {
         continue;
       }
-      NS_UpdateHint(hint, layerInfo.mChangeHint);
+      hint |= layerInfo.mChangeHint;
     }
   }
   if (hint) {
@@ -2795,8 +2795,9 @@ ElementRestyler::CaptureChange(nsStyleContext* aOldContext,
     ourChange &= ~nsChangeHint_UpdateEffects;
   }
 
-  NS_UpdateHint(ourChange, aChangeToAssume);
-  if (NS_UpdateHint(mHintsHandled, ourChange)) {
+  ourChange |= aChangeToAssume;
+  if (!NS_IsHintSubset(ourChange, mHintsHandled)) {
+    mHintsHandled |= ourChange;
     if (!(ourChange & nsChangeHint_ReconstructFrame) || mContent) {
       LOG_RESTYLE("appending change %s",
                   RestyleManager::ChangeHintToString(ourChange).get());
@@ -2805,8 +2806,8 @@ ElementRestyler::CaptureChange(nsStyleContext* aOldContext,
       LOG_RESTYLE("change has already been handled");
     }
   }
-  NS_UpdateHint(mHintsNotHandledForDescendants,
-                NS_HintsNotHandledForDescendantsIn(ourChange));
+  mHintsNotHandledForDescendants |=
+    NS_HintsNotHandledForDescendantsIn(ourChange);
   LOG_RESTYLE("mHintsNotHandledForDescendants = %s",
               RestyleManager::ChangeHintToString(mHintsNotHandledForDescendants).get());
 }
@@ -3270,7 +3271,8 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
     mContent->OwnerDoc()->FlushPendingLinkUpdates();
     nsAutoPtr<RestyleTracker::RestyleData> restyleData;
     if (mRestyleTracker.GetRestyleData(mContent->AsElement(), restyleData)) {
-      if (NS_UpdateHint(mHintsHandled, restyleData->mChangeHint)) {
+      if (!NS_IsHintSubset(restyleData->mChangeHint, mHintsHandled)) {
+        mHintsHandled |= restyleData->mChangeHint;
         mChangeList->AppendChange(mFrame, mContent, restyleData->mChangeHint);
       }
       mSelectorsForDescendants.AppendElements(
@@ -4003,7 +4005,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
                                                          mTreeMatchContext);
           if (!newContext) {
             // This pseudo should no longer exist; gotta reframe
-            NS_UpdateHint(mHintsHandled, nsChangeHint_ReconstructFrame);
+            mHintsHandled |= nsChangeHint_ReconstructFrame;
             mChangeList->AppendChange(aSelf, element,
                                       nsChangeHint_ReconstructFrame);
             // We're reframing anyway; just keep the same context
@@ -4739,7 +4741,7 @@ ElementRestyler::MaybeReframeForPseudo(CSSPseudoElementType aPseudoType,
     // Have to create the new ::before/::after frame.
     LOG_RESTYLE("MaybeReframeForPseudo, appending "
                 "nsChangeHint_ReconstructFrame");
-    NS_UpdateHint(mHintsHandled, nsChangeHint_ReconstructFrame);
+    mHintsHandled |= nsChangeHint_ReconstructFrame;
     mChangeList->AppendChange(aFrame, aContent, nsChangeHint_ReconstructFrame);
   }
 }
