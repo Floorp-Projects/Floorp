@@ -91,6 +91,7 @@ VPXDecoder::Init()
 nsresult
 VPXDecoder::Flush()
 {
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   mIsFlushing = true;
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([this] () {
     // nothing to do for now.
@@ -103,6 +104,7 @@ VPXDecoder::Flush()
 int
 VPXDecoder::DoDecode(MediaRawData* aSample)
 {
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
 #if defined(DEBUG)
   vpx_codec_stream_info_t si;
   PodZero(&si);
@@ -187,6 +189,7 @@ VPXDecoder::DoDecode(MediaRawData* aSample)
 void
 VPXDecoder::ProcessDecode(MediaRawData* aSample)
 {
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   if (mIsFlushing) {
     return;
   }
@@ -200,6 +203,7 @@ VPXDecoder::ProcessDecode(MediaRawData* aSample)
 nsresult
 VPXDecoder::Input(MediaRawData* aSample)
 {
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
                        this, &VPXDecoder::ProcessDecode, aSample));
 
@@ -209,12 +213,14 @@ VPXDecoder::Input(MediaRawData* aSample)
 void
 VPXDecoder::ProcessDrain()
 {
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   mCallback->DrainComplete();
 }
 
 nsresult
 VPXDecoder::Drain()
 {
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   mTaskQueue->Dispatch(NewRunnableMethod(this, &VPXDecoder::ProcessDrain));
 
   return NS_OK;
