@@ -19,7 +19,6 @@
                 "preprocess": "localize"
               },
               "default_icon": {
-                "unsupported": true,
                 "$ref": "IconPath",
                 "optional": true
               },
@@ -57,6 +56,7 @@
         "name": "show",
         "type": "function",
         "description": "Shows the page action. The page action is shown whenever the tab is selected.",
+        "async": true,
         "parameters": [
           {"type": "integer", "name": "tabId", "minimum": 0, "description": "The id of the tab for which you want to modify the page action."}
         ]
@@ -65,6 +65,7 @@
         "name": "hide",
         "type": "function",
         "description": "Hides the page action.",
+        "async": true,
         "parameters": [
           {"type": "integer", "name": "tabId", "minimum": 0, "description": "The id of the tab for which you want to modify the page action."}
         ]
@@ -161,6 +162,7 @@
       {
         "name": "setPopup",
         "type": "function",
+        "async": true,
         "description": "Sets the html document to be opened as a popup when the user clicks on the page action's icon.",
         "parameters": [
           {
@@ -180,7 +182,7 @@
         "name": "getPopup",
         "type": "function",
         "description": "Gets the html document set as the popup for this page action.",
-        "async": "callback",
+        "async": true,
         "parameters": [
           {
             "name": "details",
@@ -191,16 +193,6 @@
                 "description": "Specify the tab to get the popup from."
               }
             }
-          },
-          {
-            "type": "function",
-            "name": "callback",
-            "parameters": [
-              {
-                "name": "result",
-                "type": "string"
-              }
-            ]
           }
         ]
       }
