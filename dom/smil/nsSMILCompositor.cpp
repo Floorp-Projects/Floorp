@@ -140,6 +140,15 @@ nsSMILCompositor::CreateSMILAttr()
 uint32_t
 nsSMILCompositor::GetFirstFuncToAffectSandwich()
 {
+  // canThrottle is true when attributeName is not 'display' and
+  // the element or subtree is display:none
+  RefPtr<nsStyleContext> styleContext =
+    nsComputedDOMStyle::GetStyleContextForElementNoFlush(mKey.mElement,
+                                                         nullptr, nullptr);
+  bool canThrottle = mKey.mAttributeName != nsGkAtoms::display &&
+                     styleContext &&
+                     styleContext->IsInDisplayNoneSubtree();
+
   uint32_t i;
   for (i = mAnimationFunctions.Length(); i > 0; --i) {
     nsSMILAnimationFunction* curAnimFunc = mAnimationFunctions[i-1];
@@ -150,7 +159,7 @@ nsSMILCompositor::GetFirstFuncToAffectSandwich()
     // changes to the target in subsequent samples.
     mForceCompositing |=
       curAnimFunc->UpdateCachedTarget(mKey) ||
-      curAnimFunc->HasChanged() ||
+      (curAnimFunc->HasChanged() && !canThrottle) ||
       curAnimFunc->WasSkippedInPrevSample();
 
     if (curAnimFunc->WillReplace()) {
@@ -158,6 +167,7 @@ nsSMILCompositor::GetFirstFuncToAffectSandwich()
       break;
     }
   }
+
   // Mark remaining animation functions as having been skipped so if we later
   // use them we'll know to force compositing.
   // Note that we only really need to do this if something has changed
