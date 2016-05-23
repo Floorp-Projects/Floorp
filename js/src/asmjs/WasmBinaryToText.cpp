@@ -381,9 +381,25 @@ RenderBlock(WasmRenderContext& c, AstBlock& block)
     if (block.expr() == Expr::Block) {
         if (!c.buffer.append("(block "))
             return false;
+        if (!RenderName(c, block.breakName()))
+            return false;
     } else if (block.expr() == Expr::Loop) {
         if (!c.buffer.append("(loop "))
             return false;
+        if (block.breakName().empty() && !block.continueName().empty()) {
+            // Giving auto label if continue label is present.
+            if (!c.buffer.append("$exit$"))
+                return false;
+        } else {
+            if (!RenderName(c, block.breakName()))
+                return false;
+        }
+        if (!block.continueName().empty()) {
+          if (!c.buffer.append(" "))
+              return false;
+          if (!RenderName(c, block.continueName()))
+              return false;
+        }
     } else
         return false;
 
@@ -651,6 +667,9 @@ RenderIf(WasmRenderContext& c, AstIf& if_)
     if (!c.buffer.append(" (then "))
         return false;
 
+    if (!RenderName(c, if_.thenName()))
+        return false;
+
     c.indent++;
     if (!RenderExprList(c, if_.thenExprs()))
         return false;
@@ -658,6 +677,9 @@ RenderIf(WasmRenderContext& c, AstIf& if_)
 
     if (if_.hasElse()) {
         if (!c.buffer.append(") (else "))
+            return false;
+
+        if (!RenderName(c, if_.elseName()))
             return false;
 
         c.indent++;
