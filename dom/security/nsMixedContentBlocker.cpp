@@ -739,8 +739,21 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
       nsCOMPtr<nsIURI> parentURI;
 
       parentAsNav->GetCurrentURI(getter_AddRefs(parentURI));
-      if (!parentURI || NS_FAILED(parentURI->SchemeIs("https", &httpsParentExists))) {
-        // if getting the URI or the scheme fails, assume there is a https parent and break.
+      if (!parentURI) {
+        // if getting the URI fails, assume there is a https parent and break.
+        httpsParentExists = true;
+        break;
+      }
+
+      nsCOMPtr<nsIURI> innerParentURI = NS_GetInnermostURI(parentURI);
+      if (!innerParentURI) {
+        NS_ERROR("Can't get innerURI from parentURI");
+        *aDecision = REJECT_REQUEST;
+        return NS_OK;
+      }
+
+      if (NS_FAILED(innerParentURI->SchemeIs("https", &httpsParentExists))) {
+        // if getting the scheme fails, assume there is a https parent and break.
         httpsParentExists = true;
         break;
       }
