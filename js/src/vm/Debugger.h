@@ -1040,6 +1040,9 @@ class DebuggerObject : public NativeObject
     static bool isExtensible(JSContext* cx, Handle<DebuggerObject*> object, bool& result);
     static bool isSealed(JSContext* cx, Handle<DebuggerObject*> object, bool& result);
     static bool isFrozen(JSContext* cx, Handle<DebuggerObject*> object, bool& result);
+    static bool preventExtensions(JSContext* cx, Handle<DebuggerObject*> object);
+    static bool seal(JSContext* cx, Handle<DebuggerObject*> object);
+    static bool freeze(JSContext* cx, Handle<DebuggerObject*> object);
 
   private:
     static const unsigned RESERVED_SLOTS = 1;
