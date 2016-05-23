@@ -32,8 +32,9 @@ add_task(function* () {
       browser.tabs.query({active: true, currentWindow: true}, tabs => {
         let tabId = tabs[0].id;
 
-        browser.pageAction.show(tabId);
-        browser.test.sendMessage("page-action-shown");
+        browser.pageAction.show(tabId).then(() => {
+          browser.test.sendMessage("page-action-shown");
+        });
       });
     },
   });

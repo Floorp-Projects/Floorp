@@ -14,8 +14,9 @@ add_task(function* testPageActionPopupResize() {
       browser.tabs.query({active: true, currentWindow: true}, tabs => {
         const tabId = tabs[0].id;
 
-        browser.pageAction.show(tabId);
-        browser.test.sendMessage("action-shown");
+        browser.pageAction.show(tabId).then(() => {
+          browser.test.sendMessage("action-shown");
+        });
       });
     },
 
