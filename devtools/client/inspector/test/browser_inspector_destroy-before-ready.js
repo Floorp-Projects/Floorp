@@ -22,5 +22,5 @@ add_task(function* () {
   info("Switch to the inspector panel and immediately end the test");
   let onInspectorSelected = toolbox.once("inspector-selected");
   toolbox.selectTool("inspector");
-  let inspector = yield onInspectorSelected;
+  yield onInspectorSelected;
 });

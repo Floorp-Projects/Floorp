@@ -8,7 +8,8 @@
 // those nodes
 add_task(function* () {
   info("Loading the test document and opening the inspector");
-  let {toolbox, inspector, testActor} = yield openInspectorForURL("data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>");
+  let {toolbox, inspector, testActor} = yield openInspectorForURL(
+    "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>");
 
   let isVisible = yield testActor.isHighlighting(toolbox);
   ok(!isVisible, "The highlighter is hidden by default");
@@ -25,5 +26,6 @@ add_task(function* () {
   isVisible = yield testActor.isHighlighting();
   ok(isVisible, "The highlighter is shown on a markup container hover");
 
-  ok((yield testActor.assertHighlightedNode("h1")), "The highlighter highlights the right node");
+  ok((yield testActor.assertHighlightedNode("h1")),
+     "The highlighter highlights the right node");
 });

@@ -19,7 +19,8 @@ add_task(function* () {
   // Testing pick-node shortcut
   info("Testing enter/return key as pick-node command");
   yield doKeyPick({key: "VK_RETURN", options: {}});
-  is(inspector.selection.nodeFront.id, "another", "The #another node was selected. Passed.");
+  is(inspector.selection.nodeFront.id, "another",
+     "The #another node was selected. Passed.");
 
   // Testing cancel-picker command
   yield startPicker(toolbox);
@@ -29,7 +30,8 @@ add_task(function* () {
 
   info("Testing escape key as cancel-picker command");
   yield doKeyStop({key: "VK_ESCAPE", options: {}});
-  is(inspector.selection.nodeFront.id, "another", "The #another DIV is still selected. Passed.");
+  is(inspector.selection.nodeFront.id, "another",
+     "The #another DIV is still selected. Passed.");
 
   function doKeyPick(args) {
     info("Key pressed. Waiting for element to be picked");
@@ -57,5 +59,4 @@ add_task(function* () {
     });
     return promise.all([onHighlighterReady, onPickerNodeHovered]);
   }
-
 });

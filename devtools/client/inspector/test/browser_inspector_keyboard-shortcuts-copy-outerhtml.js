@@ -48,4 +48,5 @@ function getElementByType(inspector, type) {
       return node;
     }
   }
+  return null;
 }

@@ -10,7 +10,8 @@
 const FrameURL = "data:text/html;charset=UTF-8," +
                  encodeURI("<div id=\"frame\">frame</div>");
 const URL = "data:text/html;charset=UTF-8," +
-            encodeURI("<iframe src=\"" + FrameURL + "\"></iframe><div id=\"top\">top</div>");
+            encodeURI('<iframe src="' + FrameURL +
+                      '"></iframe><div id="top">top</div>');
 
 add_task(function* () {
   Services.prefs.setBoolPref("devtools.command-button-frames.enabled", true);
@@ -18,20 +19,25 @@ add_task(function* () {
   let {inspector, toolbox, testActor} = yield openInspectorForURL(URL);
 
   // Verify we are on the top level document
-  ok((yield testActor.hasNode("#top")), "We have the test node on the top level document");
+  ok((yield testActor.hasNode("#top")),
+     "We have the test node on the top level document");
 
   assertMarkupViewIsLoaded(inspector);
 
   // Verify that the frame list button is visible and populated
   let btn = toolbox.doc.getElementById("command-button-frames");
-  ok(!btn.firstChild.getAttribute("hidden"), "The frame list button is visible");
-  let frameBtns = Array.slice(btn.firstChild.querySelectorAll("[data-window-id]"));
+  ok(!btn.firstChild.getAttribute("hidden"),
+     "The frame list button is visible");
+  let frameBtns = Array.slice(
+    btn.firstChild.querySelectorAll("[data-window-id]"));
   is(frameBtns.length, 2, "We have both frames in the list");
   frameBtns.sort(function (a, b) {
     return a.getAttribute("label").localeCompare(b.getAttribute("label"));
   });
-  is(frameBtns[0].getAttribute("label"), FrameURL, "Got top level document in the list");
-  is(frameBtns[1].getAttribute("label"), URL, "Got iframe document in the list");
+  is(frameBtns[0].getAttribute("label"), FrameURL,
+     "Got top level document in the list");
+  is(frameBtns[1].getAttribute("label"), URL,
+     "Got iframe document in the list");
 
   // Listen to will-navigate to check if the view is empty
   let willNavigate = toolbox.target.once("will-navigate").then(() => {
@@ -52,8 +58,10 @@ add_task(function* () {
   info("Navigation to the iframe is done, the inspector should be back up");
 
   // Verify we are on page one
-  ok(!(yield testActor.hasNode("iframe")), "We not longer have access to the top frame elements");
-  ok((yield testActor.hasNode("#frame")), "But now have direct access to the iframe elements");
+  ok(!(yield testActor.hasNode("iframe")),
+     "We not longer have access to the top frame elements");
+  ok((yield testActor.hasNode("#frame")),
+     "But now have direct access to the iframe elements");
 
   // On page 2 load, verify we have the right content
   assertMarkupViewIsLoaded(inspector);
