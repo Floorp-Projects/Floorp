@@ -4067,5 +4067,37 @@ CodeGeneratorX86Shared::emitWasmSignedTruncateToInt32(OutOfLineWasmTruncateCheck
     masm.j(Assembler::Overflow, ool->entry());
 }
 
+void
+CodeGeneratorX86Shared::canonicalizeIfDeterministic(Scalar::Type type, const LAllocation* value)
+{
+#ifdef JS_MORE_DETERMINISTIC
+    switch (type) {
+      case Scalar::Float32: {
+        FloatRegister in = ToFloatRegister(value);
+        masm.canonicalizeFloatIfDeterministic(in);
+        break;
+      }
+      case Scalar::Float64: {
+        FloatRegister in = ToFloatRegister(value);
+        masm.canonicalizeDoubleIfDeterministic(in);
+        break;
+      }
+      case Scalar::Float32x4: {
+        FloatRegister in = ToFloatRegister(value);
+        MOZ_ASSERT(in.isSimd128());
+        FloatRegister scratch = in != xmm0.asSimd128() ? xmm0 : xmm1;
+        masm.push(scratch);
+        masm.canonicalizeFloat32x4(in, scratch);
+        masm.pop(scratch);
+        break;
+      }
+      default: {
+        // Other types don't need canonicalization.
+        break;
+      }
+    }
+#endif // JS_MORE_DETERMINISTIC
+}
+
 } // namespace jit
 } // namespace js

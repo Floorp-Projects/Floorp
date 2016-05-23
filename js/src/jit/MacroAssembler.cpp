@@ -238,10 +238,6 @@ StoreToTypedFloatArray(MacroAssembler& masm, int arrayType, const S& value, cons
         masm.storeFloat32(value, dest);
         break;
       case Scalar::Float64:
-#ifdef JS_MORE_DETERMINISTIC
-        // See the comment in TypedArrayObjectTemplate::doubleToNative.
-        masm.canonicalizeDouble(value);
-#endif
         masm.storeDouble(value, dest);
         break;
       case Scalar::Float32x4:
