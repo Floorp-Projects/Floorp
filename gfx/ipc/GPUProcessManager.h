@@ -47,6 +47,17 @@ public:
   // pan/zoom-related events can be sent.
   already_AddRefed<APZCTreeManager> GetAPZCTreeManagerForLayers(uint64_t aLayersId);
 
+  // Allocate an ID that can be used to refer to a layer tree and
+  // associated resources that live only on the compositor thread.
+  //
+  // Must run on the content main thread.
+  uint64_t AllocateLayerTreeId();
+
+  // Release compositor-thread resources referred to by |aID|.
+  //
+  // Must run on the content main thread.
+  void DeallocateLayerTreeId(uint64_t aLayersId);
+
 private:
   GPUProcessManager();
 
