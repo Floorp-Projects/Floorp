@@ -60,21 +60,8 @@ nsresult HTMLVideoElement::GetVideoSize(nsIntSize* size)
     return NS_ERROR_FAILURE;
   }
 
-  switch (mMediaInfo.mVideo.mRotation) {
-    case VideoInfo::Rotation::kDegree_90:
-    case VideoInfo::Rotation::kDegree_270: {
-      size->width = mMediaInfo.mVideo.mDisplay.height;
-      size->height = mMediaInfo.mVideo.mDisplay.width;
-      break;
-    }
-    case VideoInfo::Rotation::kDegree_0:
-    case VideoInfo::Rotation::kDegree_180:
-    default: {
-      size->height = mMediaInfo.mVideo.mDisplay.height;
-      size->width = mMediaInfo.mVideo.mDisplay.width;
-      break;
-    }
-  }
+  size->height = mMediaInfo.mVideo.mDisplay.height;
+  size->width = mMediaInfo.mVideo.mDisplay.width;
   return NS_OK;
 }
 
