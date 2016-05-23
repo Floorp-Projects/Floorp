@@ -4530,12 +4530,13 @@ MArrayState::Copy(TempAllocator& alloc, MArrayState* state)
 }
 
 MNewArray::MNewArray(CompilerConstraintList* constraints, uint32_t length, MConstant* templateConst,
-                     gc::InitialHeap initialHeap, jsbytecode* pc)
+                     gc::InitialHeap initialHeap, jsbytecode* pc, bool vmCall)
   : MUnaryInstruction(templateConst),
     length_(length),
     initialHeap_(initialHeap),
     convertDoubleElements_(false),
-    pc_(pc)
+    pc_(pc),
+    vmCall_(vmCall)
 {
     setResultType(MIRType_Object);
     if (templateObject()) {
