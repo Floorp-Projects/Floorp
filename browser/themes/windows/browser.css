@@ -1424,10 +1424,6 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
   color: hsl(0, 0%, 0%);
 }
 
-html|span.ac-emphasize-text-title {
-  color: hsl(0, 0%, 50%);
-}
-
 .ac-tags {
   font-size: 12px;
 }
@@ -1438,10 +1434,6 @@ html|span.ac-tag {
   border-radius: 2px;
   border: 1px solid transparent;
   padding: 0 1px;
-}
-
-html|span.ac-emphasize-text-tag {
-  color: hsl(0, 0%, 50%);
 }
 
 .ac-separator,
@@ -1458,10 +1450,6 @@ html|span.ac-emphasize-text-tag {
   color: hsl(210, 77%, 47%);
 }
 
-html|span.ac-emphasize-text-url {
-  color: hsl(210, 86%, 64%);
-}
-
 .ac-action {
   color: hsl(178, 100%, 28%);
 }
@@ -1469,10 +1457,7 @@ html|span.ac-emphasize-text-url {
 .ac-title[selected=true],
 .ac-separator[selected],
 .ac-url[selected=true],
-.ac-action[selected=true],
-.ac-title-text[selected=true] > html|span.ac-emphasize-text,
-.ac-url-text[selected=true] > html|span.ac-emphasize-text,
-.ac-action-text[selected=true] > html|span.ac-emphasize-text {
+.ac-action[selected=true] {
   color: hsl(0, 0%, 100%);
 }
 
@@ -1481,8 +1466,10 @@ html|span.ac-emphasize-text-url {
   color: hsl(210, 80%, 40%);
 }
 
-.ac-tags-text[selected] > html|span.ac-tag > html|span.ac-emphasize-text-tag {
-  color: hsl(210, 80%, 52%);
+html|span.ac-emphasize-text-title,
+html|span.ac-emphasize-text-tag,
+html|span.ac-emphasize-text-url {
+  font-weight: 600;
 }
 
 @media not all and (-moz-windows-default-theme) {
@@ -1490,26 +1477,22 @@ html|span.ac-emphasize-text-url {
     background-color: Highlight;
   }
 
-  .ac-title,
-  html|span.ac-emphasize-text-title {
+  .ac-title {
     color: inherit;
   }
 
-  html|span.ac-tag,
-  html|span.ac-emphasize-text-tag {
+  html|span.ac-tag {
     background-color: -moz-FieldText;
     color: -moz-Field;
   }
 
   .ac-separator,
   .ac-url,
-  .ac-action,
-  html|span.ac-emphasize-text-url {
+  .ac-action {
     color: -moz-nativehyperlinktext;
   }
 
-  .ac-tags-text[selected] > html|span.ac-tag,
-  .ac-tags-text[selected] > html|span.ac-tag > html|span.ac-emphasize-text-tag {
+  .ac-tags-text[selected] > html|span.ac-tag {
     background-color: HighlightText;
     color: Highlight;
   }
