@@ -2439,7 +2439,7 @@ public class BrowserApp extends GeckoApp
         // We could include the engine identifier as an extra but we'll
         // just capture that with core ping telemetry (bug 1253319).
         Telemetry.sendUIEvent(TelemetryContract.Event.SEARCH, where);
-        SearchCountMeasurements.incrementSearch(prefs, engineIdentifier, where.name());
+        SearchCountMeasurements.incrementSearch(prefs, engineIdentifier, where.toString());
     }
 
     /**
