@@ -218,7 +218,7 @@ GeckoDriver.prototype.sendAsync = function(name, msg, cmdId) {
       if (this.curBrowser.curFrameId) {
         this.mm.broadcastAsyncMessage(name + this.curBrowser.curFrameId, msg);
       } else {
-        throw new NoSuchFrameError(
+        throw new NoSuchWindowError(
             "No such content frame; perhaps the listener was not registered?");
       }
     });
