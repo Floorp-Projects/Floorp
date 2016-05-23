@@ -201,9 +201,9 @@ add_task(function* testDetailsObjects() {
 
     browser.tabs.query({active: true, currentWindow: true}, tabs => {
       tabId = tabs[0].id;
-      browser.pageAction.show(tabId);
-
-      browser.test.sendMessage("ready", tests);
+      browser.pageAction.show(tabId).then(() => {
+        browser.test.sendMessage("ready", tests);
+      });
     });
   }
 
@@ -337,8 +337,9 @@ add_task(function* testDefaultDetails() {
         browser.tabs.query({active: true, currentWindow: true}, tabs => {
           let tabId = tabs[0].id;
 
-          browser.pageAction.show(tabId);
-          browser.test.sendMessage("ready");
+          browser.pageAction.show(tabId).then(() => {
+            browser.test.sendMessage("ready");
+          });
         });
       }
     });

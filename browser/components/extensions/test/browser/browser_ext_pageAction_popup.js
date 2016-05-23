@@ -128,8 +128,9 @@ add_task(function* testPageActionPopup() {
         browser.tabs.query({active: true, currentWindow: true}, tabs => {
           tabId = tabs[0].id;
 
-          browser.pageAction.show(tabId);
-          browser.test.sendMessage("next-test");
+          browser.pageAction.show(tabId).then(() => {
+            browser.test.sendMessage("next-test");
+          });
         });
       },
     },
