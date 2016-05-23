@@ -1,4 +1,5 @@
 use hyper::status::StatusCode;
+use rustc_serialize::base64::FromBase64Error;
 use rustc_serialize::json::{Json, ToJson, ParserError, DecoderError};
 use std::borrow::Cow;
 use std::collections::BTreeMap;
@@ -164,20 +165,34 @@ impl Error for WebDriverError {
 impl From<ParserError> for WebDriverError {
     fn from(err: ParserError) -> WebDriverError {
         WebDriverError::new(ErrorStatus::UnknownError,
-                            err.description().to_string())
+            err.description().to_string())
     }
 }
 
 impl From<IoError> for WebDriverError {
     fn from(err: IoError) -> WebDriverError {
         WebDriverError::new(ErrorStatus::UnknownError,
-                            err.description().to_string())
+            err.description().to_string())
     }
 }
 
 impl From<DecoderError> for WebDriverError {
     fn from(err: DecoderError) -> WebDriverError {
         WebDriverError::new(ErrorStatus::UnknownError,
-                            format!("Could not decode json string:\n{}", err.description()))
+                            err.description().to_string())
+    }
+}
+
+impl From<FromBase64Error> for WebDriverError {
+    fn from(err: FromBase64Error) -> WebDriverError {
+        WebDriverError::new(ErrorStatus::UnknownError,
+                            err.description().to_string())
+    }
+}
+
+impl From<Box<Error>> for WebDriverError {
+    fn from(err: Box<Error>) -> WebDriverError {
+        WebDriverError::new(ErrorStatus::UnknownError,
+                            err.description().to_string())
     }
 }
