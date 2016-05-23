@@ -511,9 +511,7 @@ AsyncFetchAndSetIconForPage::AsyncOnChannelRedirect(
 , nsIAsyncVerifyRedirectCallback *cb
 )
 {
-  // If we've been canceled, stop the redirect with NS_BINDING_ABORTED, and
-  // handle the cancel on the original channel.
-  (void)cb->OnRedirectVerifyCallback(mCanceled ? NS_BINDING_ABORTED : NS_OK);
+  (void)cb->OnRedirectVerifyCallback(NS_OK);
   return NS_OK;
 }
 
