@@ -315,7 +315,8 @@ class OSXBootstrapper(BaseBootstrapper):
             ('git', 'git'),
             ('autoconf213', HOMEBREW_AUTOCONF213),
             ('gnu-tar', 'gnu-tar'),
-            ('watchman', 'watchman',)
+            ('watchman', 'watchman',),
+            ('terminal-notifier', 'terminal-notifier')
         ]
         self._ensure_homebrew_packages(packages)
 
