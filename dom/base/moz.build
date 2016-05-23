@@ -444,6 +444,7 @@ LOCAL_INCLUDES += [
     '/js/xpconnect/src',
     '/js/xpconnect/wrappers',
     '/layout/base',
+    '/layout/forms',
     '/layout/generic',
     '/layout/style',
     '/layout/svg',
