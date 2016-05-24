@@ -3631,14 +3631,16 @@ public class BrowserApp extends GeckoApp
                 try {
                     int itemId = new JSONObject(result).getInt("button");
                     if (itemId == 0) {
+                        final Context context = GeckoAppShell.getApplicationContext();
                         if (type == GuestModeDialog.ENTERING) {
-                            doRestart(GuestSession.GUEST_BROWSING_ARG);
+                            GuestSession.enter(context);
                         } else {
+                            GuestSession.leave(context);
                             // Now's a good time to make sure we're not displaying the
                             // Guest Browsing notification.
-                            GuestSession.hideNotification(GeckoAppShell.getApplicationContext());
-                            doRestart();
+                            GuestSession.hideNotification(context);
                         }
+                        doRestart();
                     }
                 } catch (JSONException ex) {
                     Log.e(LOGTAG, "Exception reading guest mode prompt result", ex);

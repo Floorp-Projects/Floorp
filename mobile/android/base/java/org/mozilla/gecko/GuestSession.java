@@ -19,7 +19,19 @@ public final class GuestSession {
     private static final String LOGTAG = "GeckoGuestSession";
 
     public static final String NOTIFICATION_INTENT = "org.mozilla.gecko.GUEST_SESSION_INPROGRESS";
-    public static final String GUEST_BROWSING_ARG = "--guest";
+    public static final String GUEST_MODE_PREF = "guestMode";
+
+    public static boolean shouldUse(final Context context) {
+        return GeckoSharedPrefs.forApp(context).getBoolean(GUEST_MODE_PREF, false);
+    }
+
+    public static void enter(final Context context) {
+        GeckoSharedPrefs.forApp(context).edit().putBoolean(GUEST_MODE_PREF, true).commit();
+    }
+
+    public static void leave(final Context context) {
+        GeckoSharedPrefs.forApp(context).edit().putBoolean(GUEST_MODE_PREF, false).commit();
+    }
 
     private static PendingIntent getNotificationIntent(Context context) {
         Intent intent = new Intent(NOTIFICATION_INTENT);
