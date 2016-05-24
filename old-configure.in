@@ -2630,7 +2630,6 @@ dnl ========================================================
 
 MOZ_ARG_HEADER(Application)
 
-ENABLE_TESTS=1
 ENABLE_SYSTEM_EXTENSION_DIRS=1
 MOZ_BRANDING_DIRECTORY=
 MOZ_OFFICIAL_BRANDING=
@@ -4797,32 +4796,6 @@ if test -n "$MOZ_UPDATER"; then
 fi
 
 dnl ========================================================
-dnl build the tests by default
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(tests,
-[  --disable-tests         Do not build test libraries & programs],
-    ENABLE_TESTS=,
-    ENABLE_TESTS=1 )
-
-if test -n "$ENABLE_TESTS"; then
-    GTEST_HAS_RTTI=0
-    AC_DEFINE(ENABLE_TESTS)
-    AC_DEFINE_UNQUOTED(GTEST_HAS_RTTI, 0)
-    AC_SUBST(GTEST_HAS_RTTI)
-    if test -n "$_WIN32_MSVC"; then
-          AC_DEFINE_UNQUOTED(_VARIADIC_MAX, 10)
-    fi
-    if test "${OS_TARGET}" = "Android"; then
-        AC_DEFINE(GTEST_OS_LINUX_ANDROID)
-        AC_DEFINE(GTEST_USE_OWN_TR1_TUPLE)
-        AC_DEFINE_UNQUOTED(GTEST_HAS_CLONE, 0)
-        AC_SUBST(GTEST_OS_LINUX_ANDROID)
-        AC_SUBST(GTEST_USE_OWN_TR1_TUPLE)
-        AC_SUBST(GTEST_HAS_CLONE)
-    fi
-fi
-
-dnl ========================================================
 dnl parental controls (for Windows Vista)
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(parental-controls,
@@ -6545,7 +6518,6 @@ AC_SUBST(MOZ_FEEDS)
 AC_SUBST(NS_PRINTING)
 AC_SUBST(MOZ_HELP_VIEWER)
 
-AC_SUBST(ENABLE_TESTS)
 AC_SUBST(MOZ_UNIVERSALCHARDET)
 AC_SUBST(ACCESSIBILITY)
 AC_SUBST(MOZ_SPELLCHECK)
