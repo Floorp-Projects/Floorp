@@ -126,12 +126,6 @@ function savePing(aPing) {
   }
 }
 
-function tomorrow(date) {
-  let d = new Date(date);
-  d.setDate(d.getDate() + 1);
-  return d;
-}
-
 /**
  * @return {String} This returns a string with the gzip compressed data.
  */

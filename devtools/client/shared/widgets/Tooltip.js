@@ -493,7 +493,9 @@ Tooltip.prototype = {
     // Analyzing state history isn't useful with transient object inspectors.
     widget.commitHierarchy = () => {};
 
-    for (let e in relayEvents) widget.on(e, relayEvents[e]);
+    for (let e in relayEvents) {
+      widget.on(e, relayEvents[e]);
+    }
     VariablesViewController.attach(widget, controllerOptions);
 
     // Some of the view options are allowed to change between uses.
@@ -517,7 +519,7 @@ Tooltip.prototype = {
    * resolves when the broken image tooltip content is ready, but never rejects.
    */
   setRelativeImageContent: Task.async(function* (imageUrl, inspectorFront,
-                                                maxDim) {
+                                                 maxDim) {
     if (imageUrl.startsWith("data:")) {
       // If the imageUrl already is a data-url, save ourselves a round-trip
       this.setImageContent(imageUrl, {maxDim: maxDim});
@@ -539,7 +541,9 @@ Tooltip.prototype = {
    */
   setBrokenImageContent: function () {
     this.setTextContent({
-      messages: [l10n.strings.GetStringFromName("previewTooltip.image.brokenImage")]
+      messages: [
+        l10n.strings.GetStringFromName("previewTooltip.image.brokenImage")
+      ]
     });
   },
 
@@ -738,7 +742,6 @@ Tooltip.prototype = {
 
     function onLoaded(iframe) {
       let win = iframe.contentWindow.wrappedJSObject;
-      let doc = win.document.documentElement;
       let def = promise.defer();
       let container = win.document.getElementById("container");
       let widget = new CSSFilterEditorWidget(container, filter);
@@ -1008,7 +1011,8 @@ function SwatchColorPickerTooltip(doc) {
 
 module.exports.SwatchColorPickerTooltip = SwatchColorPickerTooltip;
 
-SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.prototype, {
+SwatchColorPickerTooltip.prototype =
+Heritage.extend(SwatchBasedEditorTooltip.prototype, {
   /**
    * Overriding the SwatchBasedEditorTooltip.show function to set spectrum's
    * color.
@@ -1287,8 +1291,9 @@ EventTooltip.prototype = {
       iframe.setAttribute("style", "width:100%;");
 
       editor.appendTo(content, iframe).then(() => {
+        /* eslint-disable camelcase */
         let tidied = beautify.js(handler, { indent_size: 2 });
-
+        /* eslint-enable */
         editor.setText(tidied);
 
         eventEditors.appended = true;
@@ -1335,7 +1340,9 @@ EventTooltip.prototype = {
         );
         if (item) {
           let actor = item.attachment.source.actor;
-          DebuggerView.setEditorLocation(actor, line, {noDebug: true}).then(() => {
+          DebuggerView.setEditorLocation(
+            actor, line, {noDebug: true}
+          ).then(() => {
             if (dom0) {
               let text = DebuggerView.editor.getText();
               let index = text.indexOf(searchString);
@@ -1420,7 +1427,8 @@ function SwatchCubicBezierTooltip(doc) {
 
 module.exports.SwatchCubicBezierTooltip = SwatchCubicBezierTooltip;
 
-SwatchCubicBezierTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.prototype, {
+SwatchCubicBezierTooltip.prototype =
+Heritage.extend(SwatchBasedEditorTooltip.prototype, {
   /**
    * Overriding the SwatchBasedEditorTooltip.show function to set the cubic
    * bezier curve in the widget
@@ -1517,7 +1525,8 @@ function SwatchFilterTooltip(doc) {
 
 exports.SwatchFilterTooltip = SwatchFilterTooltip;
 
-SwatchFilterTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.prototype, {
+SwatchFilterTooltip.prototype =
+Heritage.extend(SwatchBasedEditorTooltip.prototype, {
   show: function () {
     // Call the parent class' show function
     SwatchBasedEditorTooltip.prototype.show.call(this);

@@ -166,7 +166,8 @@ Spectrum.draggable = function (element, onmove, onstart, onstop) {
     if (dragging) {
       if (e.buttons === 0) {
         // The button is no longer pressed but we did not get a mouseup event.
-        return stop();
+        stop();
+        return;
       }
       let pageX = e.pageX;
       let pageY = e.pageY;
