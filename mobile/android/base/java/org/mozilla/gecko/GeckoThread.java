@@ -383,25 +383,16 @@ public class GeckoThread extends Thread {
     private String addCustomProfileArg(String args) {
         String profileArg = "";
 
-        if (mProfile != null && mProfile.inGuestMode()) {
-            profileArg = " -profile " + mProfile.getDir().getAbsolutePath();
+        // Make sure a profile exists.
+        final GeckoProfile profile = getProfile();
+        profile.getDir(); // call the lazy initializer
 
-            if (args == null || !args.contains(BrowserApp.GUEST_BROWSING_ARG)) {
-                profileArg += " " + BrowserApp.GUEST_BROWSING_ARG;
-            }
-
-        } else {
-            // Make sure a profile exists.
-            final GeckoProfile profile = getProfile();
-            profile.getDir(); // call the lazy initializer
-
-            // If args don't include the profile, make sure it's included.
-            if (args == null || !args.matches(".*\\B-(P|profile)\\s+\\S+.*")) {
-                if (profile.isCustomProfile()) {
-                    profileArg = " -profile " + profile.getDir().getAbsolutePath();
-                } else {
-                    profileArg = " -P " + profile.getName();
-                }
+        // If args don't include the profile, make sure it's included.
+        if (args == null || !args.matches(".*\\B-(P|profile)\\s+\\S+.*")) {
+            if (profile.isCustomProfile()) {
+                profileArg = " -profile " + profile.getDir().getAbsolutePath();
+            } else {
+                profileArg = " -P " + profile.getName();
             }
         }
 
@@ -451,12 +442,7 @@ public class GeckoThread extends Thread {
     public synchronized GeckoProfile getProfile() {
         if (mProfile == null) {
             final Context context = GeckoAppShell.getApplicationContext();
-            mProfile = GeckoProfile.getFromArgs(context, mArgs);
-
-            // fall back to default profile if we didn't load a specific one
-            if (mProfile == null) {
-                mProfile = GeckoProfile.getDefaultProfile(context);
-            }
+            mProfile = GeckoProfile.initFromArgs(context, mArgs);
         }
         return mProfile;
     }

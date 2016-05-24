@@ -15,29 +15,11 @@ import android.view.Window;
 import android.view.WindowManager;
 
 // Utility methods for entering/exiting guest mode.
-public class GuestSession {
-    public static final String NOTIFICATION_INTENT = "org.mozilla.gecko.GUEST_SESSION_INPROGRESS";
+public final class GuestSession {
     private static final String LOGTAG = "GeckoGuestSession";
 
-    /* Returns true if you should be in guest mode. This can be because a secure keyguard
-     * is locked, or because the user has explicitly started guest mode via a dialog. If the
-     * user has explicitly started Fennec in guest mode, this will return true until they
-     * explicitly exit it.
-     */
-    public static boolean shouldUse(final Context context, final String args) {
-        // Did the command line args request guest mode?
-        if (args != null && args.contains(BrowserApp.GUEST_BROWSING_ARG)) {
-            return true;
-        }
-
-        // Otherwise, is there a locked guest mode profile?
-        final GeckoProfile profile = GeckoProfile.getGuestProfile(context);
-        if (profile == null) {
-            return false;
-        }
-
-        return profile.locked();
-    }
+    public static final String NOTIFICATION_INTENT = "org.mozilla.gecko.GUEST_SESSION_INPROGRESS";
+    public static final String GUEST_BROWSING_ARG = "--guest";
 
     private static PendingIntent getNotificationIntent(Context context) {
         Intent intent = new Intent(NOTIFICATION_INTENT);
