@@ -456,12 +456,31 @@ CheckSilverlight()
   return eNoSilverlight;
 }
 
-static void AppendToStringList(nsAString& list, const nsAString& item)
+static nsString
+CleanItemForFormatsList(const nsAString& aItem)
 {
-  if (!list.IsEmpty()) {
-    list += NS_LITERAL_STRING(", ");
+  nsString item(aItem);
+  // Remove commas from item, as commas are used to separate items. It's fine
+  // to have a one-way mapping, it's only used for comparisons and in
+  // console display (where formats shouldn't contain commas in the first place)
+  item.ReplaceChar(',', ' ');
+  item.CompressWhitespace();
+  return item;
+}
+
+static void
+AppendToFormatsList(nsAString& aList, const nsAString& aItem)
+{
+  if (!aList.IsEmpty()) {
+    aList += NS_LITERAL_STRING(", ");
   }
-  list += item;
+  aList += CleanItemForFormatsList(aItem);
+}
+
+static bool
+FormatsListContains(const nsAString& aList, const nsAString& aItem)
+{
+  return StringListContains(aList, CleanItemForFormatsList(aItem));
 }
 
 void
@@ -487,32 +506,32 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
     switch (diag.mDecoderDoctorDiagnostics.Type()) {
       case DecoderDoctorDiagnostics::eFormatSupportCheck:
         if (diag.mDecoderDoctorDiagnostics.CanPlay()) {
-          AppendToStringList(playableFormats,
-                             diag.mDecoderDoctorDiagnostics.Format());
+          AppendToFormatsList(playableFormats,
+                              diag.mDecoderDoctorDiagnostics.Format());
         } else {
-          AppendToStringList(unplayableFormats,
-                             diag.mDecoderDoctorDiagnostics.Format());
+          AppendToFormatsList(unplayableFormats,
+                              diag.mDecoderDoctorDiagnostics.Format());
 #if defined(XP_WIN)
           if (diag.mDecoderDoctorDiagnostics.DidWMFFailToLoad()) {
-            AppendToStringList(formatsRequiringWMF,
-                               diag.mDecoderDoctorDiagnostics.Format());
+            AppendToFormatsList(formatsRequiringWMF,
+                                diag.mDecoderDoctorDiagnostics.Format());
           }
 #endif
 #if defined(MOZ_FFMPEG)
           if (diag.mDecoderDoctorDiagnostics.DidFFmpegFailToLoad()) {
-            AppendToStringList(formatsRequiringFFMpeg,
-                               diag.mDecoderDoctorDiagnostics.Format());
+            AppendToFormatsList(formatsRequiringFFMpeg,
+                                diag.mDecoderDoctorDiagnostics.Format());
           }
 #endif
         }
         break;
       case DecoderDoctorDiagnostics::eMediaKeySystemAccessRequest:
         if (diag.mDecoderDoctorDiagnostics.IsKeySystemSupported()) {
-          AppendToStringList(supportedKeySystems,
-                             diag.mDecoderDoctorDiagnostics.KeySystem());
+          AppendToFormatsList(supportedKeySystems,
+                              diag.mDecoderDoctorDiagnostics.KeySystem());
         } else {
-          AppendToStringList(unsupportedKeySystems,
-                             diag.mDecoderDoctorDiagnostics.KeySystem());
+          AppendToFormatsList(unsupportedKeySystems,
+                              diag.mDecoderDoctorDiagnostics.KeySystem());
           DecoderDoctorDiagnostics::KeySystemIssue issue =
             diag.mDecoderDoctorDiagnostics.GetKeySystemIssue();
           if (issue != DecoderDoctorDiagnostics::eUnset) {
