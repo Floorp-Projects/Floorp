@@ -19,7 +19,6 @@
 #include "base/posix/eintr_wrapper.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/Telemetry.h"
 #include "sandbox/linux/seccomp-bpf/linux_seccomp.h"
 #include "sandbox/linux/services/linux_syscalls.h"
 
@@ -253,30 +252,6 @@ SandboxInfo::ThreadingCheck()
   flags |= kUnexpectedThreads;
   flags &= ~(kHasUserNamespaces | kHasPrivilegedUserNamespaces);
   sSingleton.mFlags = static_cast<Flags>(flags);
-}
-
-/* static */ void
-SandboxInfo::SubmitTelemetry()
-{
-  SandboxInfo sandboxInfo = Get();
-  Telemetry::Accumulate(
-    Telemetry::SANDBOX_CAPABILITIES_SECCOMP_BPF,
-    sandboxInfo.Test(SandboxInfo::kHasSeccompBPF));
-  Telemetry::Accumulate(
-    Telemetry::SANDBOX_CAPABILITIES_SECCOMP_TSYNC,
-    sandboxInfo.Test(SandboxInfo::kHasSeccompTSync));
-  Telemetry::Accumulate(
-    Telemetry::SANDBOX_CAPABILITIES_USER_NAMESPACES_PRIVILEGED,
-    sandboxInfo.Test(SandboxInfo::kHasPrivilegedUserNamespaces));
-  Telemetry::Accumulate(
-    Telemetry::SANDBOX_CAPABILITIES_USER_NAMESPACES,
-    sandboxInfo.Test(SandboxInfo::kHasUserNamespaces));
-  Telemetry::Accumulate(
-    Telemetry::SANDBOX_CAPABILITIES_ENABLED_CONTENT,
-    sandboxInfo.Test(SandboxInfo::kEnabledForContent));
-  Telemetry::Accumulate(
-    Telemetry::SANDBOX_CAPABILITIES_ENABLED_MEDIA,
-    sandboxInfo.Test(SandboxInfo::kEnabledForMedia));
 }
 
 } // namespace mozilla
