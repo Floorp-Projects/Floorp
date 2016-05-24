@@ -806,7 +806,7 @@ intrinsic_ActiveFunction(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 0);
 
-    ScriptFrameIter iter(cx);
+    ScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
     MOZ_ASSERT(iter.isFunctionFrame());
     args.rval().setObject(*iter.callee(cx));
     return true;
@@ -1761,7 +1761,7 @@ js::ReportIncompatibleSelfHostedMethod(JSContext* cx, const CallArgs& args)
     // self-hosted things until we find a non-self-hosted one because of cases
     // like array.sort(somethingSelfHosted), where we want to report the error
     // in the somethingSelfHosted, not in the sort() call.
-    ScriptFrameIter iter(cx);
+    ScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
     MOZ_ASSERT(iter.isFunctionFrame());
 
     while (!iter.done()) {
@@ -1880,7 +1880,7 @@ intrinsic_IsConstructing(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 0);
 
-    ScriptFrameIter iter(cx);
+    ScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
     bool isConstructing = iter.isConstructing();
     args.rval().setBoolean(isConstructing);
     return true;
