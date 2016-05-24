@@ -1337,6 +1337,19 @@ EventListenerManager::Disconnect()
   RemoveAllListeners();
 }
 
+static EventListenerFlags
+GetEventListenerFlagsFromOptions(const EventListenerOptions& aOptions)
+{
+  EventListenerFlags flags;
+  flags.mCapture = aOptions.mCapture;
+  if (aOptions.mMozSystemGroup) {
+    JSContext* cx = nsContentUtils::GetCurrentJSContext();
+    MOZ_ASSERT(cx, "Not being called from JS?");
+    flags.mInSystemGroup = IsChromeOrXBL(cx, nullptr);
+  }
+  return flags;
+}
+
 void
 EventListenerManager::AddEventListener(
                         const nsAString& aType,
@@ -1361,8 +1374,9 @@ EventListenerManager::AddEventListener(
   if (aOptions.IsBoolean()) {
     flags.mCapture = aOptions.GetAsBoolean();
   } else {
-    flags.mCapture = aOptions.GetAsAddEventListenerOptions().mCapture;
-    flags.mPassive = aOptions.GetAsAddEventListenerOptions().mPassive;
+    const auto& options = aOptions.GetAsAddEventListenerOptions();
+    flags = GetEventListenerFlagsFromOptions(options);
+    flags.mPassive = options.mPassive;
   }
   flags.mAllowUntrustedEvents = aWantsUntrusted;
   return AddEventListenerByType(aListenerHolder, aType, flags);
@@ -1386,9 +1400,12 @@ EventListenerManager::RemoveEventListener(
                         const dom::EventListenerOptionsOrBoolean& aOptions)
 {
   EventListenerFlags flags;
-  flags.mCapture =
-    aOptions.IsBoolean() ? aOptions.GetAsBoolean()
-                         : aOptions.GetAsEventListenerOptions().mCapture;
+  if (aOptions.IsBoolean()) {
+    flags.mCapture = aOptions.GetAsBoolean();
+  } else {
+    const auto& options = aOptions.GetAsEventListenerOptions();
+    flags = GetEventListenerFlagsFromOptions(options);
+  }
   RemoveEventListenerByType(aListenerHolder, aType, flags);
 }
 
