@@ -1481,7 +1481,7 @@ Debugger::fireDebuggerStatement(JSContext* cx, MutableHandleValue vp)
     Maybe<AutoCompartment> ac;
     ac.emplace(cx, object);
 
-    ScriptFrameIter iter(cx);
+    ScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
     RootedValue scriptFrame(cx);
     if (!getScriptFrame(cx, iter, &scriptFrame))
         return handleUncaughtException(ac, false);
@@ -1510,7 +1510,7 @@ Debugger::fireExceptionUnwind(JSContext* cx, MutableHandleValue vp)
     RootedValue scriptFrame(cx);
     RootedValue wrappedExc(cx, exc);
 
-    ScriptFrameIter iter(cx);
+    ScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
     if (!getScriptFrame(cx, iter, &scriptFrame) || !wrapDebuggeeValue(cx, &wrappedExc))
         return handleUncaughtException(ac, false);
 
@@ -1682,7 +1682,7 @@ Debugger::slowPathOnNewWasmModule(JSContext* cx, Handle<WasmModuleObject*> wasmM
 /* static */ JSTrapStatus
 Debugger::onTrap(JSContext* cx, MutableHandleValue vp)
 {
-    ScriptFrameIter iter(cx);
+    ScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
     RootedScript script(cx, iter.script());
     MOZ_ASSERT(script->isDebuggee());
     Rooted<GlobalObject*> scriptGlobal(cx, &script->global());
@@ -1746,7 +1746,7 @@ Debugger::onTrap(JSContext* cx, MutableHandleValue vp)
 /* static */ JSTrapStatus
 Debugger::onSingleStep(JSContext* cx, MutableHandleValue vp)
 {
-    ScriptFrameIter iter(cx);
+    ScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
 
     /*
      * We may be stepping over a JSOP_EXCEPTION, that pushes the context's
@@ -6040,7 +6040,7 @@ Debugger::removeFromFrameMapsAndClearBreakpointsIn(JSContext* cx, AbstractFrameP
 /* static */ bool
 Debugger::handleBaselineOsr(JSContext* cx, InterpreterFrame* from, jit::BaselineFrame* to)
 {
-    ScriptFrameIter iter(cx);
+    ScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
     MOZ_ASSERT(iter.abstractFramePtr() == to);
     return replaceFrameGuts(cx, from, to, iter);
 }
@@ -6056,7 +6056,7 @@ Debugger::handleIonBailout(JSContext* cx, jit::RematerializedFrame* from, jit::B
     // across any inlined frames younger than |to|, the baseline frame
     // reconstructed during bailout from the Ion frame corresponding to
     // |from|.
-    ScriptFrameIter iter(cx);
+    ScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
     while (iter.abstractFramePtr() != to)
         ++iter;
     return replaceFrameGuts(cx, from, to, iter);

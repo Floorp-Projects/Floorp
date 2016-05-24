@@ -164,7 +164,7 @@ ArgumentsGetterImpl(JSContext* cx, const CallArgs& args)
         return false;
 
     // Return null if this function wasn't found on the stack.
-    NonBuiltinScriptFrameIter iter(cx);
+    NonBuiltinScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
     if (!AdvanceToActiveCallLinear(cx, iter, fun)) {
         args.rval().setNull();
         return true;
@@ -255,7 +255,7 @@ CallerGetterImpl(JSContext* cx, const CallArgs& args)
         return false;
 
     // Also return null if this function wasn't found on the stack.
-    NonBuiltinScriptFrameIter iter(cx);
+    NonBuiltinScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
     if (!AdvanceToActiveCallLinear(cx, iter, fun)) {
         args.rval().setNull();
         return true;
@@ -326,7 +326,7 @@ CallerSetterImpl(JSContext* cx, const CallArgs& args)
     // computing the caller, checking that no security boundaries are crossed,
     // and throwing a TypeError if the resulting caller is strict.
 
-    NonBuiltinScriptFrameIter iter(cx);
+    NonBuiltinScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
     if (!AdvanceToActiveCallLinear(cx, iter, fun))
         return true;
 
@@ -1221,7 +1221,7 @@ js::fun_apply(JSContext* cx, unsigned argc, Value* vp)
     // the calling frame (which we must do now).
     if (args[1].isMagic(JS_OPTIMIZED_ARGUMENTS)) {
         // Step 3-6.
-        ScriptFrameIter iter(cx);
+        ScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
         MOZ_ASSERT(iter.numActualArgs() <= ARGS_LENGTH_MAX);
         if (!args2.init(iter.numActualArgs()))
             return false;

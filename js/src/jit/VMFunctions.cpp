@@ -1270,7 +1270,7 @@ MarkObjectGroupFromIon(JSRuntime* rt, ObjectGroup** groupp)
 bool
 ThrowRuntimeLexicalError(JSContext* cx, unsigned errorNumber)
 {
-    ScriptFrameIter iter(cx);
+    ScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
     RootedScript script(cx, iter.script());
     ReportRuntimeLexicalError(cx, errorNumber, script, iter.pc());
     return false;
