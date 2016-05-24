@@ -7,7 +7,6 @@
    installAddon, uninstallAddon, waitForMutation, assertHasTarget,
    getServiceWorkerList, getTabList, openPanel, waitForInitialAddonList,
    waitForServiceWorkerRegistered, unregisterServiceWorker */
-/* global sendAsyncMessage */
 
 "use strict";
 
@@ -273,24 +272,13 @@ function assertHasTarget(expected, document, type, name) {
  * Returns a promise that will resolve after the service worker in the page
  * has successfully registered itself.
  * @param {Tab} tab
+ * @return {Promise} Resolves when the service worker is registered.
  */
 function waitForServiceWorkerRegistered(tab) {
-  // Make the test page notify us when the service worker is registered.
-  let frameScript = function () {
+  return ContentTask.spawn(tab.linkedBrowser, {}, function* () {
     // Retrieve the `sw` promise created in the html page.
     let { sw } = content.wrappedJSObject;
-    sw.then(function (registration) {
-      sendAsyncMessage("sw-registered");
-    });
-  };
-  let mm = tab.linkedBrowser.messageManager;
-  mm.loadFrameScript("data:,(" + encodeURIComponent(frameScript) + ")()", true);
-
-  return new Promise(done => {
-    mm.addMessageListener("sw-registered", function listener() {
-      mm.removeMessageListener("sw-registered", listener);
-      done();
-    });
+    yield sw;
   });
 }
 
@@ -298,28 +286,13 @@ function waitForServiceWorkerRegistered(tab) {
  * Asks the service worker within the test page to unregister, and returns a
  * promise that will resolve when it has successfully unregistered itself.
  * @param {Tab} tab
+ * @return {Promise} Resolves when the service worker is unregistered.
  */
 function unregisterServiceWorker(tab) {
-  // Use message manager to work with e10s.
-  let frameScript = function () {
-    // Retrieve the `sw` promise created in the html page.
+  return ContentTask.spawn(tab.linkedBrowser, {}, function* () {
+    // Retrieve the `sw` promise created in the html page
     let { sw } = content.wrappedJSObject;
-    sw.then(function (registration) {
-      registration.unregister().then(function () {
-        sendAsyncMessage("sw-unregistered");
-      },
-      function (e) {
-        dump("SW not unregistered; " + e + "\n");
-      });
-    });
-  };
-  let mm = tab.linkedBrowser.messageManager;
-  mm.loadFrameScript("data:,(" + encodeURIComponent(frameScript) + ")()", true);
-
-  return new Promise(done => {
-    mm.addMessageListener("sw-unregistered", function listener() {
-      mm.removeMessageListener("sw-unregistered", listener);
-      done();
-    });
+    let registration = yield sw;
+    yield registration.unregister();
   });
 }
