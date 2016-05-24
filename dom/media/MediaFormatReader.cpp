@@ -1153,7 +1153,6 @@ MediaFormatReader::Update(TrackType aTrack)
         Some(TimeInterval(TimeUnit::FromMicroseconds(output->mTime),
                           TimeUnit::FromMicroseconds(output->GetEndTime())));
       decoder.mNumSamplesOutputTotal++;
-      decoder.mNumSamplesOutputTotalSinceTelemetry++;
       ReturnOutput(output, aTrack);
       // We have a decoded sample ready to be returned.
       if (aTrack == TrackType::kVideoTrack) {
