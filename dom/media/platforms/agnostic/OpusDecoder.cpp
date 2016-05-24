@@ -15,8 +15,7 @@
 #include <stdint.h>
 #include <inttypes.h>  // For PRId64
 
-extern mozilla::LogModule* GetPDMLog();
-#define OPUS_DEBUG(arg, ...) MOZ_LOG(GetPDMLog(), mozilla::LogLevel::Debug, \
+#define OPUS_DEBUG(arg, ...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, \
     ("OpusDataDecoder(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 
 namespace mozilla {
