@@ -1809,8 +1809,6 @@ dnl ========================================================
 
 MOZ_ARG_HEADER(Application)
 
-ENABLE_TESTS=1
-
 dnl ========================================================
 dnl =
 dnl = Components & Features
@@ -1826,14 +1824,6 @@ MOZ_ARG_ENABLE_STRING(ui-locale,
                           Select the user interface locale (default: en-US)],
     MOZ_UI_LOCALE=$enableval )
 AC_SUBST(MOZ_UI_LOCALE)
-
-dnl ========================================================
-dnl build the tests by default
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(tests,
-[  --disable-tests         Do not build test libraries & programs],
-    ENABLE_TESTS=,
-    ENABLE_TESTS=1 )
 
 dnl ========================================================
 dnl =
@@ -2468,8 +2458,6 @@ AC_SUBST(MOZ_DEBUG_SYMBOLS)
 AC_SUBST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST(WARNINGS_AS_ERRORS)
 AC_SUBST(LIBICONV)
-
-AC_SUBST(ENABLE_TESTS)
 
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)

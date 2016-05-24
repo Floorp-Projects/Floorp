@@ -251,7 +251,6 @@ def old_configure_options(*options):
     '--enable-system-pixman',
     '--enable-system-sqlite',
     '--enable-tasktracer',
-    '--enable-tests',
     '--enable-thread-sanitizer',
     '--enable-trace-logging',
     '--enable-tree-freetype',
