@@ -67,8 +67,6 @@ def mach_parsed_kwargs(logger):
     call to mach marionette-test
     """
     return {
-         'adb_host': None,
-         'adb_port': None,
          'addon': None,
          'address': None,
          'app': None,
@@ -76,10 +74,6 @@ def mach_parsed_kwargs(logger):
          'binary': u'/path/to/firefox',
          'device_serial': None,
          'e10s': False,
-         'emulator': None,
-         'emulator_binary': None,
-         'emulator_img': None,
-         'emulator_res': None,
          'gecko_log': None,
          'homedir': None,
          'jsdebugger': False,
@@ -96,7 +90,6 @@ def mach_parsed_kwargs(logger):
          'log_tbpl_level': None,
          'log_unittest': None,
          'log_xunit': None,
-         'logcat_stdout': False,
          'logdir': None,
          'logger_name': 'Marionette-based Tests',
          'no_window': False,
@@ -250,7 +243,7 @@ def test_crash_is_recorded_as_error(empty_marionette_test,
     # collect results from the empty test
     result = MarionetteTestResult(
         marionette=empty_marionette_test._marionette_weakref(),
-        b2g_pid=0, logcat_stdout=False, logger=logger, verbosity=None,
+        b2g_pid=0, logger=logger, verbosity=None,
         stream=None, descriptions=None,
     )
     result.startTest(empty_marionette_test)
