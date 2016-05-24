@@ -5518,6 +5518,16 @@
     "kind": "boolean",
     "description": "search service has been initialized synchronously"
   },
+  "SEARCH_SERVICE_ENGINE_COUNT": {
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["florian@mozilla.com"],
+    "expires_in_version": "55",
+    "bug_numbers": [1268424],
+    "kind": "linear",
+    "high": 200,
+    "n_buckets": 50,
+    "description": "Recorded once per session near startup: records the search plugin count, including both built-in plugins (including the ones the user has hidden) and user-installed plugins."
+  },
   "SEARCH_SERVICE_HAS_UPDATES": {
     "alert_emails": ["florian@mozilla.com"],
     "expires_in_version": "50",
