@@ -491,10 +491,15 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
   }
 }
 
-static void
+static bool
 GenerateAndPushTextMask(nsIFrame* aFrame, nsRenderingContext* aContext,
-                        const nsRect& aFillRect)
+                        const nsRect& aFillRect, nsDisplayListBuilder* aBuilder)
 {
+  if (aBuilder->IsForGenerateGlyphMask() ||
+      aBuilder->IsForPaintingSelectionBG()) {
+    return false;
+  }
+
   // The main function of enabling background-clip:text property value.
   // When a nsDisplayBackgroundImage detects "text" bg-clip style, it will call
   // this function to
@@ -561,6 +566,8 @@ GenerateAndPushTextMask(nsIFrame* aFrame, nsRenderingContext* aContext,
 
   RefPtr<SourceSurface> maskSurface = maskDT->Snapshot();
   sourceCtx->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, 1.0, maskSurface, maskTransform);
+
+  return true;
 }
 
 /* static */ void
@@ -2453,11 +2460,6 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
                                                      nsIFrame* aFrame,
                                                      nsDisplayList* aList)
 {
-  if (aBuilder->IsForGenerateGlyphMask() ||
-      aBuilder->IsForPaintingSelectionBG()) {
-    return true;
-  }
-
   nsStyleContext* bgSC = nullptr;
   const nsStyleBackground* bg = nullptr;
   nsPresContext* presContext = aFrame->PresContext();
@@ -2966,7 +2968,9 @@ nsDisplayBackgroundImage::PaintInternal(nsDisplayListBuilder* aBuilder,
   uint8_t clip = mBackgroundStyle->mImage.mLayers[mLayer].mClip;
 
   if (clip == NS_STYLE_IMAGELAYER_CLIP_TEXT) {
-    GenerateAndPushTextMask(mFrame, aCtx, borderBox);
+    if (!GenerateAndPushTextMask(mFrame, aCtx, borderBox, aBuilder)) {
+      return;
+    }
   }
 
   image::DrawResult result =
@@ -3400,7 +3404,10 @@ nsDisplayBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
 
   uint8_t clip = mBackgroundStyle->mImage.mLayers[0].mClip;
   if (clip == NS_STYLE_IMAGELAYER_CLIP_TEXT) {
-    GenerateAndPushTextMask(mFrame, aCtx, borderBox);
+    if (!GenerateAndPushTextMask(mFrame, aCtx, borderBox, aBuilder)) {
+      return;
+    }
+
     ctx->SetColor(mColor);
     ctx->Rectangle(bounds, true);
     ctx->Fill();
