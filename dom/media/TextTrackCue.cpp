@@ -41,6 +41,7 @@ TextTrackCue::SetDefaultCueSettings()
   mAlign = AlignSetting::Middle;
   mLineAlign = AlignSetting::Start;
   mVertical = DirectionSetting::_empty;
+  mActive = false;
 }
 
 TextTrackCue::TextTrackCue(nsPIDOMWindowInner* aOwnerWindow,
