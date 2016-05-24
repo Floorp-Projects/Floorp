@@ -109,12 +109,15 @@ def build_backends_choices(help):
 option('--enable-build-backend', nargs='+', choices=build_backends_choices,
        help='Enable additional build backends')
 
-@depends('--enable-build-backend', '--enable-artifact-builds')
-def build_backend(backends, artifact_builds):
+@depends('--enable-build-backend', '--enable-artifact-builds', target,
+         compile_environment)
+def build_backend(backends, artifact_builds, target, compile_environment):
     if artifact_builds:
         all_backends = ['FasterMake+RecursiveMake']
     else:
         all_backends = ['RecursiveMake', 'FasterMake']
+    if target.os == 'WINNT' and compile_environment:
+        all_backends.append('VisualStudio')
     all_backends.extend(backends)
     return unique_list(all_backends)
 
