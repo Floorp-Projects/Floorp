@@ -272,15 +272,14 @@ this.PlacesUtils = {
   },
 
   /**
-   * Convert a PRTime to a time.
+   * Convert a PRTime to a Date object.
    *
    * @param time
    *        microseconds from the epoch.
-   * @return time
-   *        milliseconds from the epoch.
+   * @return a Date object.
    */
-  toTime(time) {
-    return time / 1000;
+  toDate(time) {
+    return new Date(parseInt(time / 1000));
   },
 
   /**
