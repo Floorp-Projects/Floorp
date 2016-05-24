@@ -15,3 +15,9 @@ addEventListener('install', evt => {
   evt.waitUntil(new Promise(function() { }));
   postMessageToTest({ type: 'INSTALL_EVENT' });
 });
+
+addEventListener('message', evt => {
+  if (evt.data.type === 'ping') {
+    postMessageToTest({ type: 'pong' });
+  }
+});

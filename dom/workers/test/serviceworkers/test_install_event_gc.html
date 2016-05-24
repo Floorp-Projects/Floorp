@@ -38,13 +38,49 @@ function waitForInstallEvent() {
 }
 
 function gcWorker() {
-  return new Promise(function(resolve) {
-    // XXX: We need to trigger a CC/GC on the worker thread, but special
-    //      powers does not support that.  A setTimeout() longer than our
-    //      CC period is the only solution I have found.
-    SimpleTest.requestFlakyTimeout('No way to force an immediate CC/GC of a ' +
-                                   'worker JS runtime.');
-    setTimeout(resolve, 10000);
+  return new Promise(function(resolve, reject) {
+    // We are able to trigger asynchronous garbage collection and cycle
+    // collection by emitting "child-cc-request" and "child-gc-request"
+    // observer notifications.  The worker RuntimeService will translate
+    // these notifications into the appropriate operation on all known
+    // worker threads.
+    //
+    // In the failure case where GC/CC causes us to abort the installation,
+    // we will know something happened from the statechange event.
+    const statechangeHandler = evt => {
+      // Reject rather than resolving to avoid the possibility of us seeing
+      // an unrelated racing statechange somehow.  Since in the success case we
+      // will still see a state change on termination, we do explicitly need to
+      // be removed on the success path.
+      ok(registration.installing, 'service worker is still installing?');
+      reject();
+    };
+    registration.installing.addEventListener('statechange', statechangeHandler);
+    // In the success case since the service worker installation is effectively
+    // hung, we instead depend on sending a 'ping' message to the service worker
+    // and hearing it 'pong' back.  Since we issue our postMessage after we
+    // trigger the GC/CC, our 'ping' will only be processed after the GC/CC and
+    // therefore the pong will also strictly occur after the cycle collection.
+    navigator.serviceWorker.addEventListener('message', evt => {
+      if (evt.data.type === 'pong') {
+        registration.installing.removeEventListener(
+          'statechange', statechangeHandler);
+        resolve();
+      }
+    });
+    // At the current time, the service worker will exist in our same process
+    // and notifyObservers is synchronous.  However, in the future, service
+    // workers may end up in a separate process and in that case it will be
+    // appropriate to use notifyObserversInParentProcess or something like it.
+    // (notifyObserversInParentProcess is a synchronous IPC call to the parent
+    // process's main thread.  IPDL PContent::CycleCollect is an async message.
+    // Ordering will be maintained if the postMessage goes via PContent as well,
+    // but that seems unlikely.)
+    SpecialPowers.notifyObservers(null, 'child-gc-request', null);
+    SpecialPowers.notifyObservers(null, 'child-cc-request', null);
+    SpecialPowers.notifyObservers(null, 'child-gc-request', null);
+    // (Only send the ping after we set the gc/cc/gc in motion.)
+    registration.installing.postMessage({ type: 'ping' });
   });
 }
 
@@ -83,4 +119,3 @@ SpecialPowers.pushPrefEnv({"set": [
 </pre>
 </body>
 </html>
-
