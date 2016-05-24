@@ -74,11 +74,11 @@ protected:
   void NotifyDataArrivedInternal() override;
 public:
 
-  nsresult ResetDecode() override
+  nsresult ResetDecode(TargetQueues aQueues) override
   {
     mSeekRequest.DisconnectIfExists();
     mSeekPromise.RejectIfExists(NS_OK, __func__);
-    return MediaDecoderReader::ResetDecode();
+    return MediaDecoderReader::ResetDecode(aQueues);
   }
 
   bool DecodeAudioData() override;

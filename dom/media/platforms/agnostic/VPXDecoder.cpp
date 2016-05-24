@@ -9,6 +9,7 @@
 #include "nsError.h"
 #include "TimeUnits.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/SyncRunnable.h"
 #include "prsystem.h"
 
 #include <algorithm>
@@ -22,23 +23,28 @@ namespace mozilla {
 using namespace gfx;
 using namespace layers;
 
+static int MimeTypeToCodec(const nsACString& aMimeType)
+{
+  if (aMimeType.EqualsLiteral("video/webm; codecs=vp8")) {
+    return VPXDecoder::Codec::VP8;
+  } else if (aMimeType.EqualsLiteral("video/webm; codecs=vp9")) {
+    return VPXDecoder::Codec::VP9;
+  }
+  return -1;
+}
+
 VPXDecoder::VPXDecoder(const VideoInfo& aConfig,
                        ImageContainer* aImageContainer,
-                       FlushableTaskQueue* aTaskQueue,
+                       TaskQueue* aTaskQueue,
                        MediaDataDecoderCallback* aCallback)
   : mImageContainer(aImageContainer)
   , mTaskQueue(aTaskQueue)
   , mCallback(aCallback)
+  , mIsFlushing(false)
   , mInfo(aConfig)
+  , mCodec(MimeTypeToCodec(aConfig.mMimeType))
 {
   MOZ_COUNT_CTOR(VPXDecoder);
-  if (aConfig.mMimeType.EqualsLiteral("video/webm; codecs=vp8")) {
-    mCodec = Codec::VP8;
-  } else if (aConfig.mMimeType.EqualsLiteral("video/webm; codecs=vp9")) {
-    mCodec = Codec::VP9;
-  } else {
-    mCodec = -1;
-  }
   PodZero(&mVPX);
 }
 
@@ -85,13 +91,20 @@ VPXDecoder::Init()
 nsresult
 VPXDecoder::Flush()
 {
-  mTaskQueue->Flush();
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
+  mIsFlushing = true;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([this] () {
+    // nothing to do for now.
+  });
+  SyncRunnable::DispatchToThread(mTaskQueue, r);
+  mIsFlushing = false;
   return NS_OK;
 }
 
 int
-VPXDecoder::DoDecodeFrame(MediaRawData* aSample)
+VPXDecoder::DoDecode(MediaRawData* aSample)
 {
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
 #if defined(DEBUG)
   vpx_codec_stream_info_t si;
   PodZero(&si);
@@ -174,9 +187,13 @@ VPXDecoder::DoDecodeFrame(MediaRawData* aSample)
 }
 
 void
-VPXDecoder::DecodeFrame(MediaRawData* aSample)
+VPXDecoder::ProcessDecode(MediaRawData* aSample)
 {
-  if (DoDecodeFrame(aSample) == -1) {
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  if (mIsFlushing) {
+    return;
+  }
+  if (DoDecode(aSample) == -1) {
     mCallback->Error();
   } else if (mTaskQueue->IsEmpty()) {
     mCallback->InputExhausted();
@@ -186,23 +203,25 @@ VPXDecoder::DecodeFrame(MediaRawData* aSample)
 nsresult
 VPXDecoder::Input(MediaRawData* aSample)
 {
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
-                         this, &VPXDecoder::DecodeFrame,
-                         RefPtr<MediaRawData>(aSample)));
+                       this, &VPXDecoder::ProcessDecode, aSample));
 
   return NS_OK;
 }
 
 void
-VPXDecoder::DoDrain()
+VPXDecoder::ProcessDrain()
 {
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   mCallback->DrainComplete();
 }
 
 nsresult
 VPXDecoder::Drain()
 {
-  mTaskQueue->Dispatch(NewRunnableMethod(this, &VPXDecoder::DoDrain));
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
+  mTaskQueue->Dispatch(NewRunnableMethod(this, &VPXDecoder::ProcessDrain));
 
   return NS_OK;
 }

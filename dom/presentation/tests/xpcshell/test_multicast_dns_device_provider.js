@@ -14,7 +14,7 @@ const INFO_CONTRACT_ID = "@mozilla.org/toolkit/components/mdnsresponder/dns-info
 const PROVIDER_CONTRACT_ID = "@mozilla.org/presentation-device/multicastdns-provider;1";
 const SD_CONTRACT_ID = "@mozilla.org/toolkit/components/mdnsresponder/dns-sd;1";
 const UUID_CONTRACT_ID = "@mozilla.org/uuid-generator;1";
-const SERVER_CONTRACT_ID = "@mozilla.org/presentation-device/tcp-presentation-server;1";
+const SERVER_CONTRACT_ID = "@mozilla.org/presentation/control-service;1";
 
 const PREF_DISCOVERY = "dom.presentation.discovery.enabled";
 const PREF_DISCOVERABLE = "dom.presentation.discoverable";
@@ -417,7 +417,7 @@ function handleSessionRequest() {
   };
 
   let mockServerObj = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsITCPPresentationServer]),
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlService]),
     requestSession: function(deviceInfo, url, presentationId) {
       this.request = {
         deviceInfo: deviceInfo,
@@ -489,8 +489,8 @@ function handleOnSessionRequest() {
   };
 
   let mockServerObj = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsITCPPresentationServer]),
-    startService: function() {},
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlService]),
+    startServer: function() {},
     sessionRequest: function() {},
     close: function() {},
     id: '',
@@ -531,7 +531,7 @@ function handleOnSessionRequest() {
   const testControlChannel = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlChannel]),
   };
-  provider.QueryInterface(Ci.nsITCPPresentationServerListener)
+  provider.QueryInterface(Ci.nsIPresentationControlServerListener)
           .onSessionRequest(deviceInfo, testUrl, testPresentationId, testControlChannel);
 
   Assert.equal(listener.request.deviceId, deviceInfo.id);
@@ -555,8 +555,8 @@ function handleOnSessionRequestFromUnknownDevice() {
   };
 
   let mockServerObj = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsITCPPresentationServer]),
-    startService: function() {},
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlService]),
+    startServer: function() {},
     sessionRequest: function() {},
     close: function() {},
     id: '',
@@ -603,7 +603,7 @@ function handleOnSessionRequestFromUnknownDevice() {
   const testControlChannel = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlChannel]),
   };
-  provider.QueryInterface(Ci.nsITCPPresentationServerListener)
+  provider.QueryInterface(Ci.nsIPresentationControlServerListener)
           .onSessionRequest(deviceInfo, testUrl, testPresentationId, testControlChannel);
 
   Assert.equal(listener.request.deviceId, deviceInfo.id);
@@ -687,8 +687,8 @@ function ignoreSelfDevice() {
   };
 
   let mockServerObj = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsITCPPresentationServer]),
-    startService: function() {},
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlService]),
+    startServer: function() {},
     sessionRequest: function() {},
     close: function() {},
     id: '',
@@ -1001,7 +1001,7 @@ function serverClosed() {
   Assert.equal(mockObj.serviceUnregistered, 0);
   Assert.equal(listener.devices.length, 1);
 
-  let serverListener = provider.QueryInterface(Ci.nsITCPPresentationServerListener);
+  let serverListener = provider.QueryInterface(Ci.nsIPresentationControlServerListener);
   let randomPort = 9527;
   serverListener.onPortChange(randomPort);
 

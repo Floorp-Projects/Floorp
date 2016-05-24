@@ -74,7 +74,7 @@ nsSystemPrincipal::EnsureCSP(nsIDOMDocument* aDocument,
                              nsIContentSecurityPolicy** aCSP)
 {
   // CSP on a system principal makes no sense
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

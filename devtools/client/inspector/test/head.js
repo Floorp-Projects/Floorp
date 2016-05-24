@@ -140,6 +140,22 @@ var selectNode = Task.async(function* (selector, inspector, reason = "test") {
 });
 
 /**
+ * Select node for a given selector, make it focusable and set focus in its
+ * container element.
+ * @param {String|NodeFront} selector
+ * @param {InspectorPanel} inspector The current inspector-panel instance.
+ * @return {MarkupContainer}
+ */
+function* focusNode(selector, inspector) {
+  getContainerForNodeFront(inspector.walker.rootNode, inspector).elt.focus();
+  let nodeFront = yield getNodeFront(selector, inspector);
+  let container = getContainerForNodeFront(nodeFront, inspector);
+  yield selectNode(nodeFront, inspector);
+  EventUtils.sendKey("return", inspector.panelWin);
+  return container;
+}
+
+/**
  * Set the inspector's current selection to null so that no node is selected
  *
  * @param {InspectorPanel} inspector

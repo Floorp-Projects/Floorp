@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>WebCrypto Test Suite</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link rel="stylesheet" href="./test_WebCrypto.css"/>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+
+<!-- General testing framework -->
+<script src="./test-array.js"></script>
+
+<script>/*<![CDATA[*/
+"use strict";
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Import the same ECDSA key multiple times and ensure that it can be used.",
+  function () {
+    var alg = { name: "ECDSA", namedCurve: "P-256", hash: "SHA-256" };
+    crypto.subtle.generateKey(alg, true, ["sign", "verify"])
+    .then(function(keyPair) {
+      return crypto.subtle.exportKey("jwk", keyPair.privateKey);
+    })
+    .then(function(exportedKey) {
+      let keyImportPromises = [];
+      for (let i = 0; i < 20; i++) {
+        keyImportPromises.push(
+          crypto.subtle.importKey("jwk", exportedKey, alg, false, ["sign"]));
+      }
+      return Promise.all(keyImportPromises);
+    })
+    .then(function(importedKeys) {
+      let signPromises = [];
+      let data = crypto.getRandomValues(new Uint8Array(32));
+      for (let key of importedKeys) {
+        signPromises.push(crypto.subtle.sign(alg, key, data));
+      }
+      return Promise.all(signPromises);
+    })
+    .then(complete(this, function(signatures) {
+      return signatures.length == 20;
+    }), error(this));
+  }
+);
+
+// -----------------------------------------------------------------------------
+// This is the same test, but with an RSA key. This test framework stringifies
+// each test so it can be sent to and ran in a worker, which unfortunately
+// means we can't factor out common code here.
+TestArray.addTest(
+  "Import the same RSA key multiple times and ensure that it can be used.",
+  function () {
+    var alg = {
+      name: "RSASSA-PKCS1-v1_5",
+      modulusLength: 2048,
+      publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
+      hash: "SHA-256"
+    };
+    crypto.subtle.generateKey(alg, true, ["sign", "verify"])
+    .then(function(keyPair) {
+      return crypto.subtle.exportKey("jwk", keyPair.privateKey);
+    })
+    .then(function(exportedKey) {
+      let keyImportPromises = [];
+      for (let i = 0; i < 20; i++) {
+        keyImportPromises.push(
+          crypto.subtle.importKey("jwk", exportedKey, alg, false, ["sign"]));
+      }
+      return Promise.all(keyImportPromises);
+    })
+    .then(function(importedKeys) {
+      let signPromises = [];
+      let data = crypto.getRandomValues(new Uint8Array(32));
+      for (let key of importedKeys) {
+        signPromises.push(crypto.subtle.sign(alg, key, data));
+      }
+      return Promise.all(signPromises);
+    })
+    .then(complete(this, function(signatures) {
+      return signatures.length == 20;
+    }), error(this));
+  }
+);
+/*]]>*/</script>
+</head>
+
+<body>
+
+<div id="content">
+	<div id="head">
+		<b>Web</b>Crypto<br>
+	</div>
+
+    <div id="start" onclick="start();">RUN ALL</div>
+
+    <div id="resultDiv" class="content">
+    Summary:
+    <span class="pass"><span id="passN">0</span> passed, </span>
+    <span class="fail"><span id="failN">0</span> failed, </span>
+    <span class="pending"><span id="pendingN">0</span> pending.</span>
+    <br/>
+    <br/>
+
+    <table id="results">
+        <tr>
+            <th>Test</th>
+            <th>Result</th>
+            <th>Time</th>
+        </tr>
+    </table>
+
+    </div>
+
+    <div id="foot"></div>
+</div>
+
+</body>
+</html>

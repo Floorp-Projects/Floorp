@@ -878,7 +878,10 @@ PeerConnectionWrapper.prototype = {
       streamId: stream.id,
     };
 
-    this.ensureMediaElement(track, stream, "local");
+    // This will create one media element per track, which might not be how
+    // we set up things with the RTCPeerConnection. It's the only way
+    // we can ensure all sent tracks are flowing however.
+    this.ensureMediaElement(track, new MediaStream([track]), "local");
 
     return this.observedNegotiationNeeded;
   },
@@ -1131,9 +1134,7 @@ PeerConnectionWrapper.prototype = {
   },
 
   isTrackOnPC: function(track) {
-    return this._pc.getRemoteStreams().some(stream => {
-      return stream.getTracks().some(pcTrack => pcTrack.id == track.id);
-    });
+    return this._pc.getRemoteStreams().some(s => !!s.getTrackById(track.id));
   },
 
   allExpectedTracksAreObserved: function(expected, observed) {
@@ -1478,7 +1479,7 @@ PeerConnectionWrapper.prototype = {
     // As input we use the stream of |from|'s first available audio sender.
     var inputSenderTracks = from._pc.getSenders().map(sn => sn.track);
     var inputAudioStream = from._pc.getLocalStreams()
-      .find(s => s.getAudioTracks().some(t => inputSenderTracks.some(t2 => t == t2)));
+      .find(s => inputSenderTracks.some(t => t.kind == "audio" && s.getTrackById(t.id)));
     var inputAnalyser = new AudioStreamAnalyser(audiocontext, inputAudioStream);
 
     // It would have been nice to have a working getReceivers() here, but until

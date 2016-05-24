@@ -1730,7 +1730,7 @@ ShellAllocationMetadataBuilder::build(JSContext* cx, HandleObject,
     int stackIndex = 0;
     RootedId id(cx);
     RootedValue callee(cx);
-    for (NonBuiltinScriptFrameIter iter(cx); !iter.done(); ++iter) {
+    for (NonBuiltinScriptFrameIter iter(cx, FrameIter::GO_THROUGH_SAVED); !iter.done(); ++iter) {
         if (iter.isFunctionFrame() && iter.compartment() == cx->compartment()) {
             id = INT_TO_JSID(stackIndex);
             RootedObject callee(cx, iter.callee(cx));
@@ -1783,6 +1783,23 @@ testingFunc_bailout(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+testingFunc_bailAfter(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() != 1 || !args[0].isInt32() || args[0].toInt32() < 0) {
+        JS_ReportError(cx, "Argument must be a positive number that fits an int32");
+        return false;
+    }
+
+#ifdef DEBUG
+    cx->runtime()->setIonBailAfter(args[0].toInt32());
+#endif
+
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
 testingFunc_inJit(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1824,7 +1841,7 @@ testingFunc_inIon(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
-    ScriptFrameIter iter(cx);
+    ScriptFrameIter iter(cx, FrameIter::GO_THROUGH_SAVED);
     if (iter.isIon()) {
         // Reset the counter of the IonScript's script.
         jit::JitFrameIterator jitIter(cx);
@@ -3797,6 +3814,12 @@ gc::ZealModeHelpText),
     JS_INLINABLE_FN_HELP("bailout", testingFunc_bailout, 0, 0, TestBailout,
 "bailout()",
 "  Force a bailout out of ionmonkey (if running in ionmonkey)."),
+
+    JS_FN_HELP("bailAfter", testingFunc_bailAfter, 1, 0,
+"bailAfter(number)",
+"  Start a counter to bail once after passing the given amount of possible bailout positions in\n"
+"  ionmonkey.\n"),
+
 
     JS_FN_HELP("inJit", testingFunc_inJit, 0, 0,
 "inJit()",

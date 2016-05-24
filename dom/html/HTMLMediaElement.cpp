@@ -2325,20 +2325,6 @@ HTMLMediaElement::~HTMLMediaElement()
   WakeLockRelease();
 }
 
-void
-HTMLMediaElement::GetItemValueText(DOMString& aValue)
-{
-  // Can't call GetSrc because we don't have a JSContext
-  GetURIAttr(nsGkAtoms::src, nullptr, aValue);
-}
-
-void
-HTMLMediaElement::SetItemValueText(const nsAString& aValue)
-{
-  // Can't call SetSrc because we don't have a JSContext
-  SetAttr(kNameSpaceID_None, nsGkAtoms::src, aValue, true);
-}
-
 void HTMLMediaElement::StopSuspendingAfterFirstFrame()
 {
   mAllowSuspendAfterFirstFrame = false;

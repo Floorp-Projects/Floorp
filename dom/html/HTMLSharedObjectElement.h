@@ -212,9 +212,6 @@ private:
   // always true for <embed>, per the documentation in nsIContent.h.
   bool mIsDoneAddingChildren;
 
-  virtual void GetItemValueText(DOMString& text) override;
-  virtual void SetItemValueText(const nsAString& text) override;
-
   virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,

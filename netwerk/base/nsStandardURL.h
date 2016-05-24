@@ -33,6 +33,9 @@ class nsIPrefBranch;
 class nsIFile;
 class nsIURLParser;
 
+namespace mozilla {
+namespace net {
+
 //-----------------------------------------------------------------------------
 // standard URL implementation
 //-----------------------------------------------------------------------------
@@ -61,8 +64,8 @@ public:
     NS_DECL_NSISENSITIVEINFOHIDDENURI
 
     // nsISizeOf
-    virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
-    virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
+    virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
+    virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 
     explicit nsStandardURL(bool aSupportsFileURL = false, bool aTrackURL = true);
 
@@ -388,5 +391,8 @@ nsStandardURL::Filename()
     }
     return Substring(mSpec, pos, len);
 }
+
+} // namespace net
+} // namespace mozilla
 
 #endif // nsStandardURL_h__

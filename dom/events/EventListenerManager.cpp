@@ -700,9 +700,11 @@ EventListenerManager::AddEventListenerByType(
                         const nsAString& aType,
                         const EventListenerFlags& aFlags)
 {
-  nsCOMPtr<nsIAtom> atom =
-    mIsMainThreadELM ? NS_Atomize(NS_LITERAL_STRING("on") + aType) : nullptr;
-  EventMessage message = nsContentUtils::GetEventMessage(atom);
+  nsCOMPtr<nsIAtom> atom;
+  EventMessage message = mIsMainThreadELM ?
+    nsContentUtils::GetEventMessageAndAtomForListener(aType,
+                                                      getter_AddRefs(atom)) :
+    eUnidentifiedEvent;
   AddEventListenerInternal(aListenerHolder, message, atom, aType, aFlags);
 }
 
@@ -712,9 +714,11 @@ EventListenerManager::RemoveEventListenerByType(
                         const nsAString& aType,
                         const EventListenerFlags& aFlags)
 {
-  nsCOMPtr<nsIAtom> atom =
-    mIsMainThreadELM ? NS_Atomize(NS_LITERAL_STRING("on") + aType) : nullptr;
-  EventMessage message = nsContentUtils::GetEventMessage(atom);
+  nsCOMPtr<nsIAtom> atom;
+  EventMessage message = mIsMainThreadELM ?
+    nsContentUtils::GetEventMessageAndAtomForListener(aType,
+                                                      getter_AddRefs(atom)) :
+    eUnidentifiedEvent;
   RemoveEventListenerInternal(aListenerHolder, message, atom, aType, aFlags);
 }
 

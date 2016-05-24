@@ -20,6 +20,8 @@
 
 using namespace std;
 
+std::string FakeDecryptor::sNodeId;
+
 FakeDecryptor* FakeDecryptor::sInstance = nullptr;
 extern GMPPlatformAPI* g_platform_api; // Defined in gmp-fake.cpp
 
@@ -567,6 +569,8 @@ FakeDecryptor::UpdateSession(uint32_t aPromiseId,
     Message("retrieved plugin-voucher: " + voucher);
   } else if (task == "retrieve-record-names") {
     GMPEnumRecordNames(&RecvGMPRecordIterator, this);
+  } else if (task == "retrieve-node-id") {
+    Message("node-id " + sNodeId);
   }
 }
 

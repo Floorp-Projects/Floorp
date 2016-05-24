@@ -29,6 +29,11 @@ interface nsITabParent : nsISupports
   attribute boolean docShellIsActive;
 
   /**
+   * Whether this tabParent is in prerender mode.
+   */
+  [infallible] readonly attribute boolean isPrerendered;
+
+  /**
     * As an optimisation, setting the docshell's active state to
     * inactive also triggers a layer invalidation to free up some
     * potentially unhelpful memory usage. This attribute should be

@@ -265,6 +265,7 @@ AudioConverter::ResampleAudio(void* aOut, const void* aIn, size_t aFrames)
                                               out, &outframes);
   } else {
     MOZ_DIAGNOSTIC_ASSERT(false, "Unsupported data type");
+    error = RESAMPLER_ERR_ALLOC_FAILED;
   }
   MOZ_ASSERT(error == RESAMPLER_ERR_SUCCESS);
   if (error != RESAMPLER_ERR_SUCCESS) {

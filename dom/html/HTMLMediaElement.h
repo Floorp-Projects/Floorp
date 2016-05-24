@@ -733,9 +733,6 @@ protected:
     mDecoder = aDecoder;
   }
 
-  virtual void GetItemValueText(DOMString& text) override;
-  virtual void SetItemValueText(const nsAString& text) override;
-
   class WakeLockBoolWrapper {
   public:
     explicit WakeLockBoolWrapper(bool val = false)

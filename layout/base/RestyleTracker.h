@@ -465,7 +465,7 @@ RestyleTracker::AddPendingRestyleToTable(Element* aElement,
     (existingData->mRestyleHint & eRestyle_LaterSiblings) != 0;
   existingData->mRestyleHint =
     nsRestyleHint(existingData->mRestyleHint | aRestyleHint);
-  NS_UpdateHint(existingData->mChangeHint, aMinChangeHint);
+  existingData->mChangeHint |= aMinChangeHint;
   if (aRestyleHintData) {
     existingData->mRestyleHintData.mSelectorsForDescendants
       .AppendElements(aRestyleHintData->mSelectorsForDescendants);

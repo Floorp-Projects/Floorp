@@ -20,6 +20,7 @@
 using mozilla::dom::ContentParent;
 
 namespace mozilla {
+namespace net {
 
 // Log module for Substituting Protocol logging. We keep the pre-existing module
 // name of "nsResProtocol" to avoid disruption.
@@ -396,4 +397,5 @@ SubstitutingProtocolHandler::ResolveURI(nsIURI *uri, nsACString &result)
   return rv;
 }
 
+} // namespace net
 } // namespace mozilla

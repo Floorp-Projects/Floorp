@@ -56,6 +56,10 @@ struct WebIDLNameTableEntry : public PLDHashEntryHdr
   typedef const WebIDLNameTableKey* KeyTypePointer;
 
   explicit WebIDLNameTableEntry(KeyTypePointer aKey)
+    : mNameOffset(0),
+      mNameLength(0),
+      mDefine(nullptr),
+      mEnabled(nullptr)
   {}
   WebIDLNameTableEntry(WebIDLNameTableEntry&& aEntry)
     : mNameOffset(aEntry.mNameOffset),

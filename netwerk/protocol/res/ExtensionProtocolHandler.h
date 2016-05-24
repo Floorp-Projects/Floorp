@@ -10,17 +10,18 @@
 #include "nsWeakReference.h"
 
 namespace mozilla {
+namespace net {
 
 class ExtensionProtocolHandler final : public nsISubstitutingProtocolHandler,
                                        public nsIProtocolHandlerWithDynamicFlags,
-                                       public mozilla::SubstitutingProtocolHandler,
+                                       public SubstitutingProtocolHandler,
                                        public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIPROTOCOLHANDLERWITHDYNAMICFLAGS
-  NS_FORWARD_NSIPROTOCOLHANDLER(mozilla::SubstitutingProtocolHandler::)
-  NS_FORWARD_NSISUBSTITUTINGPROTOCOLHANDLER(mozilla::SubstitutingProtocolHandler::)
+  NS_FORWARD_NSIPROTOCOLHANDLER(SubstitutingProtocolHandler::)
+  NS_FORWARD_NSISUBSTITUTINGPROTOCOLHANDLER(SubstitutingProtocolHandler::)
 
   ExtensionProtocolHandler() : SubstitutingProtocolHandler("moz-extension") {}
 
@@ -43,6 +44,7 @@ protected:
   virtual nsresult SubstituteChannel(nsIURI* uri, nsILoadInfo* aLoadInfo, nsIChannel** result) override;
 };
 
+} // namespace net
 } // namespace mozilla
 
 #endif /* ExtensionProtocolHandler_h___ */

@@ -386,7 +386,7 @@ nsButtonFrameRenderer::GetButtonOuterFocusBorderAndPadding()
   nsMargin result(0,0,0,0);
 
   if (mOuterFocusStyle) {
-    mOuterFocusStyle->StylePadding()->GetPaddingNoPercentage(result);
+    mOuterFocusStyle->StylePadding()->GetPadding(result);
     result += mOuterFocusStyle->StyleBorder()->GetComputedBorder();
   }
 
@@ -409,7 +409,7 @@ nsButtonFrameRenderer::GetButtonInnerFocusMargin()
 
   if (mInnerFocusStyle) {
     const nsStyleMargin* margin = mInnerFocusStyle->StyleMargin();
-    margin->GetMarginNoPercentage(innerFocusMargin);
+    margin->GetMargin(innerFocusMargin);
   }
 
   return innerFocusMargin;
@@ -421,7 +421,7 @@ nsButtonFrameRenderer::GetButtonInnerFocusBorderAndPadding()
   nsMargin result(0,0,0,0);
 
   if (mInnerFocusStyle) {
-    mInnerFocusStyle->StylePadding()->GetPaddingNoPercentage(result);
+    mInnerFocusStyle->StylePadding()->GetPadding(result);
     result += mInnerFocusStyle->StyleBorder()->GetComputedBorder();
   }
 

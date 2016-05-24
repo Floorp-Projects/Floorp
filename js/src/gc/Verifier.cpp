@@ -174,21 +174,19 @@ gc::GCRuntime::startVerifyPreBarriers()
     if (verifyPreData || isIncrementalGCInProgress())
         return;
 
-    evictNursery();
-
-    AutoPrepareForTracing prep(rt, WithAtoms);
-
     if (!IsIncrementalGCSafe(rt))
         return;
-
-    for (auto chunk = allNonEmptyChunks(); !chunk.done(); chunk.next())
-        chunk->bitmap.clear();
 
     number++;
 
     VerifyPreTracer* trc = js_new<VerifyPreTracer>(rt);
     if (!trc)
         return;
+
+    AutoPrepareForTracing prep(rt, WithAtoms);
+
+    for (auto chunk = allNonEmptyChunks(); !chunk.done(); chunk.next())
+        chunk->bitmap.clear();
 
     gcstats::AutoPhase ap(stats, gcstats::PHASE_TRACE_HEAP);
 

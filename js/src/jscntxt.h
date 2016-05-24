@@ -187,6 +187,9 @@ class ExclusiveContext : public ContextFriendFields,
     // Accessors for immutable runtime data.
     JSAtomState& names() { return *runtime_->commonNames; }
     StaticStrings& staticStrings() { return *runtime_->staticStrings; }
+    SharedImmutableStringsCache& sharedImmutableStrings() {
+        return runtime_->sharedImmutableStrings();
+    }
     bool isPermanentAtomsInitialized() { return !!runtime_->permanentAtoms; }
     FrozenAtomSet& permanentAtoms() { return *runtime_->permanentAtoms; }
     WellKnownSymbols& wellKnownSymbols() { return *runtime_->wellKnownSymbols; }

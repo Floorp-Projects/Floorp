@@ -102,18 +102,6 @@ HTMLAnchorElement::TabIndexDefault()
   return 0;
 }
 
-void
-HTMLAnchorElement::GetItemValueText(DOMString& aValue)
-{
-  GetHref(aValue);
-}
-
-void
-HTMLAnchorElement::SetItemValueText(const nsAString& aValue)
-{
-  SetHref(aValue);
-}
-
 bool
 HTMLAnchorElement::Draggable() const
 {

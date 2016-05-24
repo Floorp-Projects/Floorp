@@ -269,16 +269,16 @@ nsPreflightCache::GetEntry(nsIURI* aURI,
     return nullptr;
   }
 
-  CacheEntry* entry;
+  CacheEntry* existingEntry = nullptr;
 
-  if (mTable.Get(key, &entry)) {
+  if (mTable.Get(key, &existingEntry)) {
     // Entry already existed so just return it. Also update the LRU list.
 
     // Move to the head of the list.
-    entry->removeFrom(mList);
-    mList.insertFront(entry);
+    existingEntry->removeFrom(mList);
+    mList.insertFront(existingEntry);
 
-    return entry;
+    return existingEntry;
   }
 
   if (!aCreate) {
@@ -287,8 +287,8 @@ nsPreflightCache::GetEntry(nsIURI* aURI,
 
   // This is a new entry, allocate and insert into the table now so that any
   // failures don't cause items to be removed from a full cache.
-  entry = new CacheEntry(key);
-  if (!entry) {
+  CacheEntry* newEntry = new CacheEntry(key);
+  if (!newEntry) {
     NS_WARNING("Failed to allocate new cache entry!");
     return nullptr;
   }
@@ -325,11 +325,11 @@ nsPreflightCache::GetEntry(nsIURI* aURI,
                    "Somehow tried to remove an entry that was never added!");
     }
   }
-  
-  mTable.Put(key, entry);
-  mList.insertFront(entry);
 
-  return entry;
+  mTable.Put(key, newEntry);
+  mList.insertFront(newEntry);
+
+  return newEntry;
 }
 
 void

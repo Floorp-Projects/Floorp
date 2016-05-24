@@ -24,6 +24,41 @@ VideoTrackList::operator[](uint32_t aIndex)
 }
 
 void
+VideoTrackList::RemoveTrack(const RefPtr<MediaTrack>& aTrack)
+{
+  // we need to find the video track before |MediaTrackList::RemoveTrack|. Or
+  // mSelectedIndex will not be valid. The check of mSelectedIndex == -1
+  // need to be done after RemoveTrack. Also the call of
+  // |MediaTrackList::RemoveTrack| is necessary even when mSelectedIndex = -1.
+  bool found;
+  VideoTrack* videoTrack = IndexedGetter(mSelectedIndex, found);
+  MediaTrackList::RemoveTrack(aTrack);
+  if (mSelectedIndex == -1) {
+    // There was no selected track and we don't select another track on removal.
+    return;
+  }
+  MOZ_ASSERT(found, "When mSelectedIndex is set it should point to a track");
+  MOZ_ASSERT(videoTrack, "The mSelectedIndex should be set to video track only");
+
+  // Let the caller of RemoveTrack deal with choosing the new selected track if
+  // it removes the currently-selected track.
+  if (aTrack == videoTrack) {
+    mSelectedIndex = -1;
+    return;
+  }
+
+  // The removed track was not the selected track and there is a
+  // currently-selected video track. We need to find the new location of the
+  // selected track.
+  for (size_t ix = 0; ix < mTracks.Length(); ix++) {
+    if (mTracks[ix] == videoTrack) {
+      mSelectedIndex = ix;
+      return;
+    }
+  }
+}
+
+void
 VideoTrackList::EmptyTracks()
 {
   mSelectedIndex = -1;

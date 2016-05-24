@@ -150,8 +150,17 @@ Push.prototype = {
   },
 
   _testPermission: function() {
-    return Services.perms.testExactPermissionFromPrincipal(
+    let permission = Services.perms.testExactPermissionFromPrincipal(
       this._principal, "desktop-notification");
+    if (permission == Ci.nsIPermissionManager.ALLOW_ACTION) {
+      return permission;
+    }
+    try {
+      if (Services.prefs.getBoolPref("dom.push.testing.ignorePermission")) {
+        permission = Ci.nsIPermissionManager.ALLOW_ACTION;
+      }
+    } catch (e) {}
+    return permission;
   },
 
   _requestPermission: function(allowCallback, cancelCallback) {

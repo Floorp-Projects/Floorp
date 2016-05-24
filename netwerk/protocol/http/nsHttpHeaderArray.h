@@ -114,8 +114,8 @@ public:
         HeaderVariety variety = eVarietyUnknown;
 
         struct MatchHeader {
-          bool Equals(const nsEntry &entry, const nsHttpAtom &header) const {
-            return entry.header == header;
+          bool Equals(const nsEntry &aEntry, const nsHttpAtom &aHeader) const {
+            return aEntry.header == aHeader;
           }
         };
 

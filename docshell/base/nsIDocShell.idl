@@ -43,6 +43,7 @@ interface nsIScrollObserver;
 interface nsITabParent;
 interface nsITabChild;
 interface nsICommandManager;
+interface nsICommandParams;
 native TabChildRef(already_AddRefed<nsITabChild>);
 
 typedef unsigned long nsLoadFlags;
@@ -647,7 +648,11 @@ interface nsIDocShell : nsIDocShellTreeItem
    * Puts the docshell in prerendering mode. noscript because we want only
    * native code to be able to put a docshell in prerendering.
    */
-  [noscript] void SetIsPrerendered(in boolean prerendered);
+  [noscript] void SetIsPrerendered();
+
+  /**
+   * Whether this docshell is in prerender mode.
+   */
   [infallible] readonly attribute boolean isPrerendered;
 
   /**
@@ -1015,6 +1020,7 @@ interface nsIDocShell : nsIDocShellTreeItem
     */
   boolean isCommandEnabled(in string command);
   void doCommand(in string command);
+  void doCommandWithParams(in string command, in nsICommandParams aParams);
 
   /**
    * Invisible DocShell are dummy construct to simulate DOM windows

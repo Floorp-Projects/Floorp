@@ -65,10 +65,8 @@ TransferHandleToProcess(HANDLE source, base::ProcessId pid)
   DWORD options = DUPLICATE_SAME_ACCESS;
   bool ok = DuplicateHandle(source, pid, &handleDup, access, options);
   if (!ok) {
-    AnnotateSystemError();
-    AnnotateProcessInformation(pid);
+    return nullptr;
   }
-  MOZ_RELEASE_ASSERT(ok);
 
   // Now close our own copy of the handle (we're supposed to be transferring,
   // not copying).

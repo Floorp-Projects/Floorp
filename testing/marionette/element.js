@@ -289,35 +289,6 @@ ElementManager.prototype = {
     return converted;
   },
 
-  /*
-   * Execute* helpers
-   */
-
-  /**
-   * Return an object with any namedArgs applied to it. Used
-   * to let clients use given names when refering to arguments
-   * in execute calls, instead of using the arguments list.
-   *
-   * @param object args
-   *        list of arguments being passed in
-   *
-   * @return object
-   *        If '__marionetteArgs' is in args, then
-   *        it will return an object with these arguments
-   *        as its members.
-   */
-  applyNamedArgs: function EM_applyNamedArgs(args) {
-    let namedArgs = {};
-    args.forEach(function(arg) {
-      if (arg && typeof(arg['__marionetteArgs']) === 'object') {
-        for (let prop in arg['__marionetteArgs']) {
-          namedArgs[prop] = arg['__marionetteArgs'][prop];
-        }
-      }
-    });
-    return namedArgs;
-  },
-
   /**
    * Find a single element or a collection of elements starting at the
    * document root or a given node.

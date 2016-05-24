@@ -28,10 +28,6 @@ UNIFIED_SOURCES += [
     'PrintTranslator.cpp',
 ]
 
-IPDL_SOURCES = [
-    'ipc/PRemotePrintJob.ipdl',
-]
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

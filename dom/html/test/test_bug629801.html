@@ -38,16 +38,6 @@ is(t1.dateTime, "", "dateTime is properly set to empty string if datetime attrib
 is(t2.dateTime, "2009-05-10", "dateTime is properly set to datetime attribute with datetime and no text content");
 is(t3.dateTime, "2009-05-10", "dateTime is properly set to datetime attribute with datetime and text content");
 
-// .itemValue getter for <time>'s microdata
-var times = document.getItems()[0];
-is(times.properties["a"][0].itemValue, "May 10th 2009", "itemValue getter with no datetime uses text content");
-is(times.properties["b"][0].itemValue, "2009-05-10", "itemValue getter with no text content uses datetime");
-is(times.properties["c"][0].itemValue, "2009-05-10", "itemValue getter with datetime and text content uses datetime");
-
-// .itemValue setter uses datetime vs. text content
-times.properties["a"][0].itemValue = "2009-05-10";
-is(times.properties["a"][0].dateTime, "2009-05-10", "setting itemValue updates datetime");
-
 // dateTime reflects datetime attribute
 reflectString({
   element: t4,

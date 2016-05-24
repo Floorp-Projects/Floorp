@@ -164,6 +164,58 @@ class MediaDecoderReaderWrapper {
     RejectFunctionType mRejectFunction;
   };
 
+  struct WaitForDataCallbackBase
+  {
+    virtual ~WaitForDataCallbackBase() {}
+    virtual void OnResolved(MediaData::Type aType) = 0;
+    virtual void OnRejected(WaitForDataRejectValue aRejection) = 0;
+  };
+
+  template<typename ThisType, typename ResolveMethodType, typename RejectMethodType>
+  struct WaitForDataMethodCallback : public WaitForDataCallbackBase
+  {
+    WaitForDataMethodCallback(ThisType* aThis, ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
+      : mThis(aThis), mResolveMethod(aResolveMethod), mRejectMethod(aRejectMethod)
+    {
+    }
+
+    void OnResolved(MediaData::Type aType) override
+    {
+      (mThis->*mResolveMethod)(aType);
+    }
+
+    void OnRejected(WaitForDataRejectValue aRejection) override
+    {
+      (mThis->*mRejectMethod)(aRejection);
+    }
+
+    RefPtr<ThisType> mThis;
+    ResolveMethodType mResolveMethod;
+    RejectMethodType mRejectMethod;
+  };
+
+  template<typename ResolveFunctionType, typename RejectFunctionType>
+  struct WaitForDataFunctionCallback : public WaitForDataCallbackBase
+  {
+    WaitForDataFunctionCallback(ResolveFunctionType&& aResolveFuntion, RejectFunctionType&& aRejectFunction)
+      : mResolveFuntion(Move(aResolveFuntion)), mRejectFunction(Move(aRejectFunction))
+    {
+    }
+
+    void OnResolved(MediaData::Type aType) override
+    {
+      mResolveFuntion(aType);
+    }
+
+    void OnRejected(WaitForDataRejectValue aRejection) override
+    {
+      mRejectFunction(aRejection);
+    }
+
+    ResolveFunctionType mResolveFuntion;
+    RejectFunctionType mRejectFunction;
+  };
+
 public:
   MediaDecoderReaderWrapper(bool aIsRealTime,
                             AbstractThread* aOwnerThread,
@@ -239,18 +291,90 @@ public:
     return mVideoCallbackID;
   }
 
+  template<typename ThisType, typename ResolveMethodType, typename RejectMethodType>
+  CallbackID
+  SetWaitAudioCallback(ThisType* aThisVal,
+                       ResolveMethodType aResolveMethod,
+                       RejectMethodType aRejectMethod)
+  {
+    MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+    MOZ_ASSERT(!mWaitAudioDataCB,
+               "Please cancel the original callback before setting a new one.");
+
+    mWaitAudioDataCB.reset(
+      new WaitForDataMethodCallback<ThisType, ResolveMethodType, RejectMethodType>(
+            aThisVal, aResolveMethod, aRejectMethod));
+
+    return mWaitAudioCallbackID;
+  }
+
+  template<typename ResolveFunction, typename RejectFunction>
+  CallbackID
+  SetWaitAudioCallback(ResolveFunction&& aResolveFunction,
+                       RejectFunction&& aRejectFunction)
+  {
+    MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+    MOZ_ASSERT(!mWaitAudioDataCB,
+               "Please cancel the original callback before setting a new one.");
+
+    mWaitAudioDataCB.reset(
+      new WaitForDataFunctionCallback<ResolveFunction, RejectFunction>(
+            Move(aResolveFunction), Move(aRejectFunction)));
+
+    return mWaitAudioCallbackID;
+  }
+
+  template<typename ThisType, typename ResolveMethodType, typename RejectMethodType>
+  CallbackID
+  SetWaitVideoCallback(ThisType* aThisVal,
+                       ResolveMethodType aResolveMethod,
+                       RejectMethodType aRejectMethod)
+  {
+    MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+    MOZ_ASSERT(!mWaitVideoDataCB,
+               "Please cancel the original callback before setting a new one.");
+
+    mWaitVideoDataCB.reset(
+      new WaitForDataMethodCallback<ThisType, ResolveMethodType, RejectMethodType>(
+            aThisVal, aResolveMethod, aRejectMethod));
+
+    return mWaitVideoCallbackID;
+  }
+
+  template<typename ResolveFunction, typename RejectFunction>
+  CallbackID
+  SetWaitVideoCallback(ResolveFunction&& aResolveFunction,
+                       RejectFunction&& aRejectFunction)
+  {
+    MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+    MOZ_ASSERT(!mWaitVideoDataCB,
+               "Please cancel the original callback before setting a new one.");
+
+    mWaitVideoDataCB.reset(
+      new WaitForDataFunctionCallback<ResolveFunction, RejectFunction>(
+            Move(aResolveFunction), Move(aRejectFunction)));
+
+    return mWaitVideoCallbackID;
+  }
+
   void CancelAudioCallback(CallbackID aID);
   void CancelVideoCallback(CallbackID aID);
+  void CancelWaitAudioCallback(CallbackID aID);
+  void CancelWaitVideoCallback(CallbackID aID);
 
   // NOTE: please set callbacks before requesting audio/video data!
   void RequestAudioData();
   void RequestVideoData(bool aSkipToNextKeyframe, media::TimeUnit aTimeThreshold);
 
+  // NOTE: please set callbacks before invoking WaitForData()!
+  void WaitForData(MediaData::Type aType);
+
   bool IsRequestingAudioData() const;
   bool IsRequestingVideoData() const;
+  bool IsWaitingAudioData() const;
+  bool IsWaitingVideoData() const;
 
   RefPtr<SeekPromise> Seek(SeekTarget aTarget, media::TimeUnit aEndTime);
-  RefPtr<WaitForDataPromise> WaitForData(MediaData::Type aType);
   RefPtr<BufferedUpdatePromise> UpdateBufferedWithPromise();
   RefPtr<ShutdownPromise> Shutdown();
 
@@ -306,6 +430,9 @@ private:
   void OnNotDecoded(CallbackBase* aCallback,
                     MediaDecoderReader::NotDecodedReason aReason);
 
+  UniquePtr<WaitForDataCallbackBase>& WaitCallbackRef(MediaData::Type aType);
+  MozPromiseRequestHolder<WaitForDataPromise>& WaitRequestRef(MediaData::Type aType);
+
   const bool mForceZeroStartTime;
   const RefPtr<AbstractThread> mOwnerThread;
   const RefPtr<MediaDecoderReader> mReader;
@@ -315,14 +442,20 @@ private:
 
   UniquePtr<CallbackBase> mRequestAudioDataCB;
   UniquePtr<CallbackBase> mRequestVideoDataCB;
+  UniquePtr<WaitForDataCallbackBase> mWaitAudioDataCB;
+  UniquePtr<WaitForDataCallbackBase> mWaitVideoDataCB;
   MozPromiseRequestHolder<MediaDataPromise> mAudioDataRequest;
   MozPromiseRequestHolder<MediaDataPromise> mVideoDataRequest;
+  MozPromiseRequestHolder<WaitForDataPromise> mAudioWaitRequest;
+  MozPromiseRequestHolder<WaitForDataPromise> mVideoWaitRequest;
 
   /*
    * These callback ids are used to prevent mis-canceling callback.
    */
   CallbackID mAudioCallbackID;
   CallbackID mVideoCallbackID;
+  CallbackID mWaitAudioCallbackID;
+  CallbackID mWaitVideoCallbackID;
 };
 
 } // namespace mozilla

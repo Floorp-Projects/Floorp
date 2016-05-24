@@ -403,6 +403,16 @@ def _logicError(msg):
     return StmtExpr(
         ExprCall(ExprVar('mozilla::ipc::LogicError'), args=[ ExprLiteral.String(msg) ]))
 
+def _arrayLengthReadError(elementname):
+    return StmtExpr(
+        ExprCall(ExprVar('mozilla::ipc::ArrayLengthReadError'),
+                 args=[ ExprLiteral.String(elementname) ]))
+
+def _unionTypeReadError(unionname):
+    return StmtExpr(
+        ExprCall(ExprVar('mozilla::ipc::UnionTypeReadError'),
+                 args=[ ExprLiteral.String(unionname) ]))
+
 def _killProcess(pid):
     return ExprCall(
         ExprVar('base::KillProcess'),
@@ -461,6 +471,12 @@ def errfnRecv(msg, errcode=_Result.ValuError):
 # used in Read() methods
 def errfnRead(msg):
     return [ _fatalError(msg), StmtReturn.FALSE ]
+
+def errfnArrayLength(elementname):
+    return [ _arrayLengthReadError(elementname), StmtReturn.FALSE ]
+
+def errfnUnionType(unionname):
+    return [ _unionTypeReadError(unionname), StmtReturn.FALSE ]
 
 def _destroyMethod():
     return ExprVar('ActorDestroy')
@@ -3826,9 +3842,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             getchannel.addstmt(StmtReturn(p.channelVar()))
 
         cloneprotocol.addstmts([
-            _fatalError('Clone() for ' +
-                        p.name +
-                        ' has not yet been implemented'),
+            _fatalError('Clone() has not yet been implemented'),
             StmtReturn(ExprLiteral.NULL)
         ])
 
@@ -4341,69 +4355,29 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         read = MethodDefn(self.readMethodDecl(outtype, var))
         read.decl.params.append(Decl(Type.BOOL, nullablevar.name))
 
-        # if (!Read(id, msg))
-        #   return false
-        # if (FREED_ID == id
-        #     || NULL_ID == id && !nullable)
-        #   return false
+        actorvar = ExprVar('actor')
         read.addstmts([
-            StmtDecl(Decl(_actorIdType(), idvar.name)),
-            self.checkedRead(None, ExprAddrOf(idvar),
-                             self.msgvar, self.itervar, errfnRead,
-                             'id\' for \'' + cxxtype.name),
+            StmtDecl(Decl(Type('Maybe', T=Type('mozilla::ipc::IProtocol', ptr=1)), actorvar.name),
+                     init=ExprCall(ExprVar('ReadActor'),
+                                   args=[ self.msgvar, self.itervar, nullablevar,
+                                          ExprLiteral.String(actortype.name()),
+                                          _protocolId(actortype) ])),
         ])
 
-        ifbadid = StmtIf(ExprBinary(
-            ExprBinary(_FREED_ACTOR_ID, '==', idvar),
-            '||',
-            ExprBinary(ExprBinary(_NULL_ACTOR_ID, '==', idvar),
-                       '&&',
-                       ExprNot(nullablevar))))
-        ifbadid.addifstmts([
-                _protocolErrorBreakpoint('bad ID for '+ self.protocol.name),
-                StmtReturn.FALSE
-        ])
-        read.addstmts([ ifbadid, Whitespace.NL ])
-
-        # if (NULL_ID == id)
-        #   *var = null
-        #   return true
-        outactor = ExprDeref(var)
-        ifnull = StmtIf(ExprBinary(_NULL_ACTOR_ID, '==', idvar))
-        ifnull.addifstmts([ StmtExpr(ExprAssn(outactor, ExprLiteral.NULL)),
-                            StmtReturn.TRUE ])
-        read.addstmts([ ifnull, Whitespace.NL ])
-
-        # Listener* listener = Lookup(id)
-        # if (!listener)
+        # if (actor.isNothing())
         #   return false
-        listenervar = ExprVar('listener')
-        read.addstmt(StmtDecl(Decl(Type('ChannelListener', ptr=1),
-                                   listenervar.name),
-                              init=_lookupListener(idvar)))
-        ifnotfound = StmtIf(ExprNot(listenervar))
-        ifnotfound.addifstmts([
-                _protocolErrorBreakpoint('could not look up '+ actortype.name()),
-                StmtReturn.FALSE
+        #
+        # Reading the actor failed in some way, and the appropriate error was raised.
+        ifnothing = StmtIf(ExprCall(ExprSelect(actorvar, '.', 'isNothing')))
+        ifnothing.addifstmts([
+            StmtReturn.FALSE,
         ])
-        read.addstmts([ ifnotfound, Whitespace.NL ])
 
-        # if listener->GetProtocolTypeId() != [expected protocol type]
-        #   return false
-        ifbadtype = StmtIf(ExprBinary(
-                _protocolId(actortype), '!=',
-                ExprCall(ExprSelect(listenervar, '->', 'GetProtocolTypeId'))))
-        ifbadtype.addifstmts([
-                _protocolErrorBreakpoint('actor that should be of type '+ actortype.name() +' has different type'),
-                StmtReturn.FALSE
-        ])
-        read.addstmts([ ifbadtype, Whitespace.NL ])
+        read.addstmts([ ifnothing, Whitespace.NL ])
 
-        # *outactor = static_cast<ExpectedType>(listener)
-        # return true
         read.addstmts([
-                StmtExpr(ExprAssn(outactor,
-                                  ExprCast(listenervar, cxxtype, static=1))),
+                StmtExpr(ExprAssn(ExprDeref(var),
+                                  ExprCast(ExprCall(ExprSelect(actorvar, '.', 'value')), cxxtype, static=1))),
                 StmtReturn.TRUE
         ])
 
@@ -4444,14 +4418,13 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         forread.addstmt(
             self.checkedRead(eltipdltype, ExprAddrOf(ExprIndex(favar, ivar)),
                              msgvar, itervar, errfnRead,
-                             eltipdltype.name() + '[i]'))
+                             '\'' + eltipdltype.name() + '[i]\''))
         read.addstmts([
             StmtDecl(Decl(_cxxArrayType(_cxxBareType(arraytype.basetype, self.side)), favar.name)),
             StmtDecl(Decl(Type.UINT32, lenvar.name)),
             self.checkedRead(None, ExprAddrOf(lenvar),
-                             msgvar, itervar, errfnRead,
-                             'length\' (' + Type.UINT32.name + ') of \'' +
-                             arraytype.name()),
+                             msgvar, itervar, errfnArrayLength,
+                             [ arraytype.name() ]),
             Whitespace.NL,
             StmtExpr(_callCxxArraySetLength(favar, lenvar)),
             forread,
@@ -4581,8 +4554,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             return ExprCall(f.getMethod(thisexpr=var, sel=sel))
 
         for f in sd.fields:
-            desc = f.getMethod().name + '\' (' + f.ipdltype.name() + \
-                   ') member of \'' + intype.name
+            desc = '\'' + f.getMethod().name + '\' (' + f.ipdltype.name() + \
+                   ') member of \'' + intype.name + '\''
             writefield = StmtExpr(self.write(f.ipdltype, get('.', f), msgvar))
             readfield = self.checkedRead(f.ipdltype,
                                          ExprAddrOf(get('->', f)),
@@ -4674,8 +4647,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             uniontdef,
             StmtDecl(Decl(Type.INT, typevar.name)),
             self.checkedRead(
-                None, ExprAddrOf(typevar), msgvar, itervar, errfnRead,
-                typevar.name + '\' (' + Type.INT.name + ') of union \'' + uniontype.name()),
+                None, ExprAddrOf(typevar), msgvar, itervar, errfnUnionType,
+                [ uniontype.name() ]),
             Whitespace.NL,
             readswitch,
         ])
@@ -5173,7 +5146,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             decls = [ StmtDecl(Decl(handletype, handlevar.name)) ]
             reads = [ self.checkedRead(None, ExprAddrOf(handlevar), msgexpr,
                                        ExprAddrOf(self.itervar),
-                                       errfn, handletype.name) ]
+                                       errfn, "'%s'" % handletype.name) ]
             start = 1
 
         stmts.extend((
@@ -5184,7 +5157,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             + [ Whitespace.NL ]
             + reads + [ self.checkedRead(p.ipdltype, ExprAddrOf(p.var()),
                                          msgexpr, ExprAddrOf(itervar),
-                                         errfn, p.bareType(side).name)
+                                         errfn, "'%s'" % p.bareType(side).name)
                         for p in md.params[start:] ]
             + [ self.endRead(msgvar, itervar) ]))
 
@@ -5206,7 +5179,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             + [ self.checkedRead(r.ipdltype, r.var(),
                                  ExprAddrOf(self.replyvar),
                                  ExprAddrOf(self.itervar),
-                                 errfn, r.bareType(side).name)
+                                 errfn, "'%s'" % r.bareType(side).name)
                 for r in md.returns ]
             + [ self.endRead(self.replyvar, itervar) ])
 
@@ -5281,7 +5254,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                          retcallsems='out',
                                          implicit=implicit))))
         failif.addifstmts([
-            _protocolErrorBreakpoint('Handler for '+ md.name +' returned error code'),
+            _protocolErrorBreakpoint('Handler returned error code!'),
             StmtReturn(_Result.ProcessingError)
         ])
         return [ failif ]
@@ -5359,7 +5332,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
     def checkedRead(self, ipdltype, expr, msgexpr, iterexpr, errfn, paramtype):
         ifbad = StmtIf(ExprNot(self.read(ipdltype, expr, msgexpr, iterexpr)))
-        ifbad.addifstmts(errfn('Error deserializing \'' + paramtype + '\''))
+        if isinstance(paramtype, list):
+            errorcall = errfn(*paramtype)
+        else:
+            errorcall = errfn('Error deserializing ' + paramtype)
+        ifbad.addifstmts(errorcall)
         return ifbad
 
     def endRead(self, msgexpr, iterexpr):

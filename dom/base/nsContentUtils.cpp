@@ -115,6 +115,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMEvent.h"
+#include "nsIDOMElement.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -203,6 +204,7 @@
 #include "nsICookieService.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/BloomFilter.h"
+#include "TabChild.h"
 
 #include "nsIBidiKeyboard.h"
 
@@ -717,7 +719,7 @@ nsContentUtils::InitializeEventTable() {
 
   static const EventNameMapping eventArray[] = {
 #define EVENT(name_,  _message, _type, _class)          \
-    { nsGkAtoms::on##name_, _type, _message, _class },
+    { nsGkAtoms::on##name_, _type, _message, _class, false },
 #define WINDOW_ONLY_EVENT EVENT
 #define NON_IDL_EVENT EVENT
 #include "mozilla/EventNameList.h"
@@ -3687,8 +3689,49 @@ nsContentUtils::GetEventMessageAndAtom(const nsAString& aName,
   mapping.mMessage = eUnidentifiedEvent;
   mapping.mType = EventNameType_None;
   mapping.mEventClassID = eBasicEventClass;
+  // This is a slow hashtable call, but at least we cache the result for the
+  // following calls. Because GetEventMessageAndAtomForListener utilizes
+  // sStringEventTable, it needs to know in which cases sStringEventTable
+  // doesn't contain the information it needs so that it can use
+  // sAtomEventTable instead.
+  mapping.mMaybeSpecialSVGorSMILEvent =
+    GetEventMessage(atom) != eUnidentifiedEvent;
   sStringEventTable->Put(aName, mapping);
   return mapping.mAtom;
+}
+
+// static
+EventMessage
+nsContentUtils::GetEventMessageAndAtomForListener(const nsAString& aName,
+                                                  nsIAtom** aOnName)
+{
+  // Because of SVG/SMIL sStringEventTable contains a subset of the event names
+  // comparing to the sAtomEventTable. However, usually sStringEventTable
+  // contains the information we need, so in order to reduce hashtable
+  // lookups, start from it.
+  EventNameMapping mapping;
+  EventMessage msg = eUnidentifiedEvent;
+  nsCOMPtr<nsIAtom> atom;
+  if (sStringEventTable->Get(aName, &mapping)) {
+    if (mapping.mMaybeSpecialSVGorSMILEvent) {
+      // Try the atom version so that we should get the right message for
+      // SVG/SMIL.
+      atom = NS_Atomize(NS_LITERAL_STRING("on") + aName);
+      msg = GetEventMessage(atom);
+    } else {
+      atom = mapping.mAtom;
+      msg = mapping.mMessage;
+    }
+    atom.forget(aOnName);
+    return msg;
+  }
+
+  // GetEventMessageAndAtom will cache the event type for the future usage...
+  GetEventMessageAndAtom(aName, eBasicEventClass, &msg);
+
+  // ...and then call this method recursively to get the message and atom from
+  // now updated sStringEventTable.
+  return GetEventMessageAndAtomForListener(aName, aOnName);
 }
 
 static
@@ -8835,4 +8878,32 @@ nsContentUtils::SetScrollbarsVisibility(nsIDocShell* aDocShell, bool aVisible)
     scroller->SetDefaultScrollbarPreferences(
                 nsIScrollable::ScrollOrientation_X, prefValue);
   }
+}
+
+/* static */ void
+nsContentUtils::GetPresentationURL(nsIDocShell* aDocShell, nsAString& aPresentationUrl)
+{
+  MOZ_ASSERT(aDocShell);
+
+  if (XRE_IsContentProcess()) {
+    nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
+    aDocShell->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
+    nsCOMPtr<nsIDocShellTreeItem> root;
+    aDocShell->GetRootTreeItem(getter_AddRefs(root));
+    if (sameTypeRoot.get() == root.get()) {
+      // presentation URL is stored in TabChild for the top most
+      // <iframe mozbrowser> in content process.
+      TabChild* tabChild = TabChild::GetFrom(aDocShell);
+      if (tabChild) {
+        aPresentationUrl = tabChild->PresentationURL();
+      }
+      return;
+    }
+  }
+
+  nsCOMPtr<nsILoadContext> loadContext(do_QueryInterface(aDocShell));
+  nsCOMPtr<nsIDOMElement> topFrameElement;
+  loadContext->GetTopFrameElement(getter_AddRefs(topFrameElement));
+
+  topFrameElement->GetAttribute(NS_LITERAL_STRING("mozpresentation"), aPresentationUrl);
 }

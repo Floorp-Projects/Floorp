@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef nsStreamTransportService_h__
+#define nsStreamTransportService_h__
+
 #include "nsIStreamTransportService.h"
 #include "nsIEventTarget.h"
 #include "nsIObserver.h"
@@ -11,6 +14,9 @@
 #include "mozilla/Mutex.h"
 
 class nsIThreadPool;
+
+namespace mozilla {
+namespace net {
 
 class nsStreamTransportService final : public nsIStreamTransportService
                                      , public nsIEventTarget
@@ -36,3 +42,7 @@ private:
     mozilla::Mutex mShutdownLock;
     bool mIsShutdown;
 };
+
+} // namespace net
+} // namespace mozilla
+#endif

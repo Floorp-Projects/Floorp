@@ -3610,17 +3610,17 @@ LIRGenerator::visitGetPropertyCache(MGetPropertyCache* ins)
 void
 LIRGenerator::visitGetPropertyPolymorphic(MGetPropertyPolymorphic* ins)
 {
-    MOZ_ASSERT(ins->obj()->type() == MIRType::Object);
+    MOZ_ASSERT(ins->object()->type() == MIRType::Object);
 
     if (ins->type() == MIRType::Value) {
         LGetPropertyPolymorphicV* lir =
-            new(alloc()) LGetPropertyPolymorphicV(useRegister(ins->obj()));
+            new(alloc()) LGetPropertyPolymorphicV(useRegister(ins->object()));
         assignSnapshot(lir, Bailout_ShapeGuard);
         defineBox(lir, ins);
     } else {
         LDefinition maybeTemp = (ins->type() == MIRType::Double) ? temp() : LDefinition::BogusTemp();
         LGetPropertyPolymorphicT* lir =
-            new(alloc()) LGetPropertyPolymorphicT(useRegister(ins->obj()), maybeTemp);
+            new(alloc()) LGetPropertyPolymorphicT(useRegister(ins->object()), maybeTemp);
         assignSnapshot(lir, Bailout_ShapeGuard);
         define(lir, ins);
     }
@@ -3629,11 +3629,11 @@ LIRGenerator::visitGetPropertyPolymorphic(MGetPropertyPolymorphic* ins)
 void
 LIRGenerator::visitSetPropertyPolymorphic(MSetPropertyPolymorphic* ins)
 {
-    MOZ_ASSERT(ins->obj()->type() == MIRType::Object);
+    MOZ_ASSERT(ins->object()->type() == MIRType::Object);
 
     if (ins->value()->type() == MIRType::Value) {
         LSetPropertyPolymorphicV* lir =
-            new(alloc()) LSetPropertyPolymorphicV(useRegister(ins->obj()),
+            new(alloc()) LSetPropertyPolymorphicV(useRegister(ins->object()),
                                                   useBox(ins->value()),
                                                   temp());
         assignSnapshot(lir, Bailout_ShapeGuard);
@@ -3641,7 +3641,7 @@ LIRGenerator::visitSetPropertyPolymorphic(MSetPropertyPolymorphic* ins)
     } else {
         LAllocation value = useRegisterOrConstant(ins->value());
         LSetPropertyPolymorphicT* lir =
-            new(alloc()) LSetPropertyPolymorphicT(useRegister(ins->obj()), value,
+            new(alloc()) LSetPropertyPolymorphicT(useRegister(ins->object()), value,
                                                   ins->value()->type(), temp());
         assignSnapshot(lir, Bailout_ShapeGuard);
         add(lir, ins);
@@ -3672,18 +3672,18 @@ LIRGenerator::visitCallBindVar(MCallBindVar* ins)
 void
 LIRGenerator::visitGuardObjectIdentity(MGuardObjectIdentity* ins)
 {
-    LGuardObjectIdentity* guard = new(alloc()) LGuardObjectIdentity(useRegister(ins->obj()),
+    LGuardObjectIdentity* guard = new(alloc()) LGuardObjectIdentity(useRegister(ins->object()),
                                                                     useRegister(ins->expected()));
     assignSnapshot(guard, Bailout_ObjectIdentityOrTypeGuard);
     add(guard, ins);
-    redefine(ins, ins->obj());
+    redefine(ins, ins->object());
 }
 
 void
 LIRGenerator::visitGuardClass(MGuardClass* ins)
 {
     LDefinition t = temp();
-    LGuardClass* guard = new(alloc()) LGuardClass(useRegister(ins->obj()), t);
+    LGuardClass* guard = new(alloc()) LGuardClass(useRegister(ins->object()), t);
     assignSnapshot(guard, Bailout_ObjectIdentityOrTypeGuard);
     add(guard, ins);
 }
@@ -3711,7 +3711,7 @@ LIRGenerator::visitGuardSharedTypedArray(MGuardSharedTypedArray* ins)
 {
     MOZ_ASSERT(ins->input()->type() == MIRType::Object);
     LGuardSharedTypedArray* guard =
-        new(alloc()) LGuardSharedTypedArray(useRegister(ins->obj()), temp());
+        new(alloc()) LGuardSharedTypedArray(useRegister(ins->object()), temp());
     assignSnapshot(guard, Bailout_NonSharedTypedArrayInput);
     add(guard, ins);
 }
@@ -3726,24 +3726,24 @@ LIRGenerator::visitPolyInlineGuard(MPolyInlineGuard* ins)
 void
 LIRGenerator::visitGuardReceiverPolymorphic(MGuardReceiverPolymorphic* ins)
 {
-    MOZ_ASSERT(ins->obj()->type() == MIRType::Object);
+    MOZ_ASSERT(ins->object()->type() == MIRType::Object);
     MOZ_ASSERT(ins->type() == MIRType::Object);
 
     LGuardReceiverPolymorphic* guard =
-        new(alloc()) LGuardReceiverPolymorphic(useRegister(ins->obj()), temp());
+        new(alloc()) LGuardReceiverPolymorphic(useRegister(ins->object()), temp());
     assignSnapshot(guard, Bailout_ShapeGuard);
     add(guard, ins);
-    redefine(ins, ins->obj());
+    redefine(ins, ins->object());
 }
 
 void
 LIRGenerator::visitGuardUnboxedExpando(MGuardUnboxedExpando* ins)
 {
     LGuardUnboxedExpando* guard =
-        new(alloc()) LGuardUnboxedExpando(useRegister(ins->obj()));
+        new(alloc()) LGuardUnboxedExpando(useRegister(ins->object()));
     assignSnapshot(guard, ins->bailoutKind());
     add(guard, ins);
-    redefine(ins, ins->obj());
+    redefine(ins, ins->object());
 }
 
 void

@@ -1,7 +1,7 @@
 diff --git a/modules/fdlibm/src/fdlibm.h b/modules/fdlibm/src/fdlibm.h
 --- a/modules/fdlibm/src/fdlibm.h
 +++ b/modules/fdlibm/src/fdlibm.h
-@@ -12,496 +12,45 @@
+@@ -12,496 +12,46 @@
  /*
   * from: @(#)fdlibm.h 5.1 93/09/24
   * $FreeBSD$
@@ -243,12 +243,13 @@ diff --git a/modules/fdlibm/src/fdlibm.h b/modules/fdlibm/src/fdlibm.h
  
  double	pow(double, double);
  double	sqrt(double);
++double	fabs(double);
  
++double	floor(double);
++double	trunc(double);
  double	ceil(double);
 -double	fabs(double) __pure2;
-+float	ceilf(float);
-+double	fabs(double);
- double	floor(double);
+-double	floor(double);
 -double	fmod(double, double);
  
 -/*
@@ -290,7 +291,6 @@ diff --git a/modules/fdlibm/src/fdlibm.h b/modules/fdlibm/src/fdlibm.h
 -double	yn(int, double);
 +double	copysign(double, double);
 +double	scalbn(double, int);
-+double	trunc(double);
  
 -#if __XSI_VISIBLE <= 500 || __BSD_VISIBLE
 -double	gamma(double);
@@ -364,9 +364,11 @@ diff --git a/modules/fdlibm/src/fdlibm.h b/modules/fdlibm/src/fdlibm.h
 -float	powf(float, float);
 -float	sqrtf(float);
 -
--float	ceilf(float);
++float	floorf(float);
++float	truncf(float);
+ float	ceilf(float);
 -float	fabsf(float) __pure2;
- float	floorf(float);
+-float	floorf(float);
 -float	fmodf(float, float);
 -float	roundf(float);
 -

@@ -54,6 +54,12 @@ public:
    */
   static nsIDocument*
   GetCurrentRealmDocument(JSContext* aCx);
+
+  /**
+   * Checks if offscreen animation throttling is enabled.
+   */
+  static bool
+  IsOffscreenThrottlingEnabled();
 };
 
 } // namespace mozilla

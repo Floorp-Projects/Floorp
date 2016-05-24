@@ -6,7 +6,7 @@
 </head>
 <body>
 <p id="display"></p>
-<div id="content" style="display: none">
+<div id="content">
 <svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px">
   <circle cx="20" cy="20" r="15" fill="blue">
     <animate attributeName="cx" attributeType="XML" from="20" to="100"
@@ -173,7 +173,7 @@ function testSetCurrentTime(anim) {
   is(anim.getStartTime(), 100);
 
   // Then we restart giving us:
-  //                           
+  //
   //                       beginElement begin="100s"
   //                            v            v
   // Doc time: 0---\/\/\/-------99----------100-------
@@ -189,7 +189,7 @@ function testSetCurrentTime(anim) {
   is(anim.getStartTime(), svg.getCurrentTime());
 
   // Then we skip to half-way, i.e.
-  // 
+  //
   //                                currentTime
   //                                    v
   //                            begin="100s"
@@ -222,7 +222,7 @@ function testSetCurrentTime(anim) {
   //
   // If, however, setCurrentTime failed to flush restarts out starting point
   // we do come to update the timegraph would be:
-  //                            
+  //
   //                              beginElementAt
   //                                    v
   //                            begin="100s"

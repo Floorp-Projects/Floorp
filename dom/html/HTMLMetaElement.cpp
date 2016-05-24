@@ -38,18 +38,6 @@ NS_IMPL_STRING_ATTR(HTMLMetaElement, HttpEquiv, httpEquiv)
 NS_IMPL_STRING_ATTR(HTMLMetaElement, Name, name)
 NS_IMPL_STRING_ATTR(HTMLMetaElement, Scheme, scheme)
 
-void
-HTMLMetaElement::GetItemValueText(DOMString& aValue)
-{
-  GetContent(aValue);
-}
-
-void
-HTMLMetaElement::SetItemValueText(const nsAString& aValue)
-{
-  SetContent(aValue);
-}
-
 nsresult
 HTMLMetaElement::SetMetaReferrer(nsIDocument* aDocument)
 {
@@ -130,18 +118,17 @@ HTMLMetaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
       nsIPrincipal* principal = aDocument->NodePrincipal();
       nsCOMPtr<nsIContentSecurityPolicy> csp;
       nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aDocument);
-      rv = principal->EnsureCSP(domDoc, getter_AddRefs(csp));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      // Multiple CSPs (delivered through either header of meta tag) need to be
-      // joined together, see:
-      // https://w3c.github.io/webappsec/specs/content-security-policy/#delivery-html-meta-element
-      rv = csp->AppendPolicy(content,
-                             false, // csp via meta tag can not be report only
-                             true); // delivered through the meta tag
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      aDocument->ApplySettingsFromCSP(false);
+      principal->EnsureCSP(domDoc, getter_AddRefs(csp));
+      if (csp) {
+        // Multiple CSPs (delivered through either header of meta tag) need to be
+        // joined together, see:
+        // https://w3c.github.io/webappsec/specs/content-security-policy/#delivery-html-meta-element
+        rv = csp->AppendPolicy(content,
+                               false, // csp via meta tag can not be report only
+                               true); // delivered through the meta tag
+        NS_ENSURE_SUCCESS(rv, rv);
+        aDocument->ApplySettingsFromCSP(false);
+      }
     }
   }
 
