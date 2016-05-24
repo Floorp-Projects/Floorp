@@ -33,6 +33,12 @@ def _get_platform():
             return 'w7_'
         elif '6.2' in platform.version():  # w8
             return 'w8_'
+        # Bug 1264325 - FIXME: with python 2.7.11: reports win8 instead of 8.1
+        elif '6.3' in platform.version():
+            return 'w8_'
+        # Bug 1264325 - FIXME: with python 2.7.11: reports win8 instead of 10
+        elif '10.0' in platform.version():
+            return 'w8_'
         else:
             raise TalosError('unsupported windows version')
     elif platform.system() == "Darwin":
