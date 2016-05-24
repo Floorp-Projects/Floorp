@@ -261,6 +261,9 @@ class VisualStudioBackend(CommonBackend):
                  format_version)
         fh.write('# Visual Studio %s\r\n' % comment_version)
 
+        # Corresponds to VS2013.
+        fh.write('MinimumVisualStudioVersion = 12.0.31101.0\r\n')
+
         binaries_id = projects['target_binaries'][0]
 
         # Write out entries for each project.
