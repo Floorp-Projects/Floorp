@@ -1221,7 +1221,7 @@ js::fun_apply(JSContext* cx, unsigned argc, Value* vp)
     // the calling frame (which we must do now).
     if (args[1].isMagic(JS_OPTIMIZED_ARGUMENTS)) {
         // Step 3-6.
-        ScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
+        ScriptFrameIter iter(cx, FrameIter::GO_THROUGH_SAVED);
         MOZ_ASSERT(iter.numActualArgs() <= ARGS_LENGTH_MAX);
         if (!args2.init(iter.numActualArgs()))
             return false;

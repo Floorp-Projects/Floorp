@@ -719,7 +719,7 @@ js::DumpPC(JSContext* cx)
     Sprinter sprinter(cx);
     if (!sprinter.init())
         return false;
-    ScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
+    ScriptFrameIter iter(cx, FrameIter::GO_THROUGH_SAVED);
     if (iter.done()) {
         fprintf(stdout, "Empty stack.\n");
         return true;
