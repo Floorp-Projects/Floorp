@@ -6040,7 +6040,7 @@ Debugger::removeFromFrameMapsAndClearBreakpointsIn(JSContext* cx, AbstractFrameP
 /* static */ bool
 Debugger::handleBaselineOsr(JSContext* cx, InterpreterFrame* from, jit::BaselineFrame* to)
 {
-    ScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
+    ScriptFrameIter iter(cx, FrameIter::GO_THROUGH_SAVED);
     MOZ_ASSERT(iter.abstractFramePtr() == to);
     return replaceFrameGuts(cx, from, to, iter);
 }
@@ -6056,7 +6056,7 @@ Debugger::handleIonBailout(JSContext* cx, jit::RematerializedFrame* from, jit::B
     // across any inlined frames younger than |to|, the baseline frame
     // reconstructed during bailout from the Ion frame corresponding to
     // |from|.
-    ScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
+    ScriptFrameIter iter(cx, FrameIter::GO_THROUGH_SAVED);
     while (iter.abstractFramePtr() != to)
         ++iter;
     return replaceFrameGuts(cx, from, to, iter);
