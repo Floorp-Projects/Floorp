@@ -348,9 +348,6 @@ class StoreBuffer
 
         bool maybeInRememberedSet(const Nursery&) const { return true; }
 
-        static bool supportsDeduplication() { return true; }
-        void* deduplicationKey() const { return (void*)edge; }
-
         void trace(TenuringTracer& mover) const;
 
         explicit operator bool() const { return edge != nullptr; }
