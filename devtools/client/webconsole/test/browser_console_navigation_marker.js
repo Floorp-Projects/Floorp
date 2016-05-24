@@ -39,7 +39,11 @@ function consoleOpened() {
   ok(hud, "Web Console opened");
 
   hud.jsterm.clearOutput();
-  content.console.log("foobarz1");
+
+  ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
+    content.console.log("foobarz1");
+  });
+
   return waitForMessages({
     webconsole: hud,
     messages: [{
@@ -51,7 +55,9 @@ function consoleOpened() {
 }
 
 function onReload() {
-  content.console.log("foobarz2");
+  ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
+    content.console.log("foobarz2");
+  });
 
   return waitForMessages({
     webconsole: hud,

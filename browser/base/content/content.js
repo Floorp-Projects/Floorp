@@ -755,13 +755,6 @@ addMessageListener("ContextMenu:MediaCommand", (message) => {
     case "showcontrols":
       media.setAttribute("controls", "true");
       break;
-    case "hidestats":
-    case "showstats":
-      let event = media.ownerDocument.createEvent("CustomEvent");
-      event.initCustomEvent("media-showStatistics", false, true,
-                            message.data.command == "showstats");
-      media.dispatchEvent(event);
-      break;
     case "fullscreen":
       if (content.document.fullscreenEnabled)
         media.requestFullscreen();

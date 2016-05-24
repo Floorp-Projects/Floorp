@@ -211,63 +211,6 @@
                 <label class="errorLabel" anonid="errorGeneric">&error.generic;</label>
             </vbox>
 
-            <vbox class="statsOverlay" hidden="true">
-                <html:div class="statsDiv" xmlns="http://www.w3.org/1999/xhtml">
-                    <table class="statsTable">
-                        <tr>
-                            <td class="statLabel">&stats.media;</td>
-                            <td class="statValue filename"><span class="statFilename"/></td>
-                        </tr>
-                        <tr>
-                            <td class="statLabel">&stats.size;</td>
-                            <td class="statValue size"><span class="statSize"/></td>
-                        </tr>
-                        <tr style="height: 1em;"/>
-
-                        <tr>
-                            <td class="statLabel">&stats.activity;</td>
-                            <td class="statValue activity">
-                              <span class="statActivity">
-                                <span class="statActivityPaused">&stats.activityPaused;</span>
-                                <span class="statActivityPlaying">&stats.activityPlaying;</span>
-                                <span class="statActivityEnded">&stats.activityEnded;</span>
-                                <span class="statActivitySeeking">&stats.activitySeeking;</span>
-                              </span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="statLabel">&stats.volume;</td> <td class="statValue"><span class="statVolume"/></td>
-                        </tr>
-                        <tr>
-                            <!-- Localization note: readyState is a HTML5 API MediaElement-specific attribute and should not be localized. -->
-                            <td class="statLabel">readyState</td> <td class="statValue"><span class="statReadyState"/></td>
-                        </tr>
-                        <tr>
-                          <!-- Localization note: networkState is a HTML5 API MediaElement-specific attribute and should not be localized. -->
-                          <td class="statLabel">networkState</td> <td class="statValue"><span class="statNetState"/></td>
-                        </tr>
-                        <tr style="height: 1em;"/>
-
-                        <tr>
-                            <td class="statLabel">&stats.framesParsed;</td>
-                            <td class="statValue"><span class="statFramesParsed"/></td>
-                        </tr>
-                        <tr>
-                            <td class="statLabel">&stats.framesDecoded;</td>
-                            <td class="statValue"><span class="statFramesDecoded"/></td>
-                        </tr>
-                        <tr>
-                            <td class="statLabel">&stats.framesPresented;</td>
-                            <td class="statValue"><span class="statFramesPresented"/></td>
-                        </tr>
-                        <tr>
-                            <td class="statLabel">&stats.framesPainted;</td>
-                            <td class="statValue"><span class="statFramesPainted"/></td>
-                        </tr>
-                    </table>
-                </html:div>
-            </vbox>
-
             <vbox class="controlsOverlay">
                 <stack flex="1">
                     <spacer class="controlsSpacer" flex="1"/>
@@ -327,7 +270,6 @@
                 statusOverlay  : null,
                 controlsSpacer : null,
                 clickToPlay    : null,
-                stats          : {},
                 controlsOverlay : null,
                 fullscreenButton : null,
 
@@ -474,13 +416,6 @@
                     // _volumeControlWidth, since the volume slider implementation
                     // depends on it.
                     this.updateVolumeControls();
-
-                    // Preserve Statistics when toggling fullscreen mode due to bug 714071.
-                    if (this.video.mozMediaStatisticsShowing)
-                        this.showStatistics(true);
-
-                    this._handleCustomEventsBound = this.handleCustomEvents.bind(this);
-                    this.video.addEventListener("media-showStatistics", this._handleCustomEventsBound, false, true);
                 },
 
                 setupNewLoadState : function() {
@@ -501,12 +436,6 @@
                     this.startFade(this.clickToPlay, shouldShow && !this.isAudioOnly &&
                                    this.video.currentTime == 0 && !this.hasError(), true);
                     this.startFade(this.controlBar, shouldShow, true);
-                },
-
-                handleCustomEvents : function (e) {
-                    if (!e.isTrusted)
-                        return;
-                    this.showStatistics(e.detail);
                 },
 
                 get dynamicControls() {
@@ -702,10 +631,6 @@
                 },
 
                 terminateEventListeners : function () {
-                    if (this.statsInterval) {
-                        clearInterval(this.statsInterval);
-                        this.statsInterval = null;
-                    }
                     for (let event of this.videoEvents)
                         this.video.removeEventListener(event, this, false);
 
@@ -713,9 +638,6 @@
                         element.item.removeEventListener(element.event, element.func, false);
 
                     delete this.controlListeners;
-
-                    this.video.removeEventListener("media-showStatistics", this._handleCustomEventsBound, false);
-                    delete this._handleCustomEventsBound;
 
                     this.log("--- videocontrols terminated ---");
                 },
@@ -1112,13 +1034,19 @@
                         return;
                     }
 
-                    // Read defaultPrevented asynchronously, since Web content
-                    // may want to consume the "click" event but will only
-                    // receive it after us.
-                    let self = this;
-                    setTimeout(function clickToPlayCallback() {
-                        if (!e.defaultPrevented)
-                            self.togglePause();
+                    // Read defaultPrevented and the playback state asynchronously,
+                    // since Web content may want to consume the "click" event
+                    // but will only receive it after us. If web content
+                    // doesn't use preventDefault but still toggles playback,
+                    // we will treat that act the same as a call to preventDefault()
+                    // so the web content-initiated toggle is not reverted.
+                    let previousState = this.video.paused;
+                    setTimeout(() => {
+                        if (e.defaultPrevented ||
+                            this.video.paused != previousState) {
+                            return;
+                        }
+                        this.togglePause();
                     }, 0);
                 },
                 hideClickToPlay : function () {
@@ -1170,91 +1098,6 @@
                 _getComputedPropertyValueAsInt : function(element, property) {
                   let value = window.getComputedStyle(element, null).getPropertyValue(property);
                   return parseInt(value, 10);
-                },
-
-                STATS_INTERVAL_MS : 500,
-                statsInterval : null,
-
-                showStatistics : function(shouldShow) {
-                    if (this.statsInterval) {
-                        clearInterval(this.statsInterval);
-                        this.statsInterval = null;
-                    }
-
-                    if (shouldShow) {
-                        this.video.mozMediaStatisticsShowing = true;
-                        this.statsOverlay.hidden = false;
-                        this.statsInterval = setInterval(this.updateStats.bind(this), this.STATS_INTERVAL_MS);
-                        this.updateStats();
-                    } else {
-                        this.video.mozMediaStatisticsShowing = false;
-                        this.statsOverlay.hidden = true;
-                    }
-                },
-
-                updateStats : function() {
-                    if (this.videocontrols.randomID != this.randomID) {
-                        this.terminateEventListeners();
-                        return;
-                    }
-
-                    let v = this.video;
-                    let s = this.stats;
-
-                    let src = v.currentSrc || v.src || "(no source found)";
-                    let srcParts = src.split('/');
-                    let srcIdx = srcParts.length - 1;
-                    if (src.lastIndexOf('/') == src.length - 1)
-                        srcIdx--;
-                    s.filename.textContent = decodeURI(srcParts[srcIdx]);
-
-                    let size = v.videoWidth + "x" + v.videoHeight;
-                    if (this._getComputedPropertyValueAsInt(this.video, "width") != v.videoWidth || this._getComputedPropertyValueAsInt(this.video, "height") != v.videoHeight)
-                        size += " scaled to " + this._getComputedPropertyValueAsInt(this.video, "width") + "x" + this._getComputedPropertyValueAsInt(this.video, "height");
-                    s.size.textContent = size;
-
-                    let activity;
-                    if (v.paused)
-                        activity = "paused";
-                    else
-                        activity = "playing";
-                    if (v.ended)
-                        activity = "ended";
-                    if (s.activity.getAttribute("activity") != activity)
-                        s.activity.setAttribute("activity", activity);
-                    if (v.seeking && !s.activity.hasAttribute("seeking"))
-                        s.activity.setAttribute("seeking", true);
-                    else if (s.activity.hasAttribute("seeking"))
-                        s.activity.removeAttribute("seeking");
-
-                    let readyState = v.readyState;
-                    switch (readyState) {
-                        case v.HAVE_NOTHING:      readyState = "HAVE_NOTHING";      break;
-                        case v.HAVE_METADATA:     readyState = "HAVE_METADATA";     break;
-                        case v.HAVE_CURRENT_DATA: readyState = "HAVE_CURRENT_DATA"; break;
-                        case v.HAVE_FUTURE_DATA:  readyState = "HAVE_FUTURE_DATA";  break;
-                        case v.HAVE_ENOUGH_DATA:  readyState = "HAVE_ENOUGH_DATA";  break;
-                    }
-                    s.readyState.textContent = readyState;
-
-                    let networkState = v.networkState;
-                    switch (networkState) {
-                        case v.NETWORK_EMPTY:     networkState = "NETWORK_EMPTY";     break;
-                        case v.NETWORK_IDLE:      networkState = "NETWORK_IDLE";      break;
-                        case v.NETWORK_LOADING:   networkState = "NETWORK_LOADING";   break;
-                        case v.NETWORK_NO_SOURCE: networkState = "NETWORK_NO_SOURCE"; break;
-                    }
-                    s.netState.textContent = networkState;
-
-                    s.framesParsed.textContent = v.mozParsedFrames;
-                    s.framesDecoded.textContent = v.mozDecodedFrames;
-                    s.framesPresented.textContent = v.mozPresentedFrames;
-                    s.framesPainted.textContent = v.mozPaintedFrames;
-
-                    let volume = Math.round(v.volume * 100) + "%";
-                    if (v.muted)
-                        volume += " (muted)";
-                    s.volume.textContent = volume;
                 },
 
                 keyHandler : function(event) {
@@ -1375,7 +1218,7 @@
 
                 log : function (msg) {
                     if (this.debug)
-                        dump("videoctl: " + msg + "\n");
+                        console.log("videoctl: " + msg + "\n");
                 },
 
                 get isTopLevelSyntheticDocument() {
@@ -1476,24 +1319,11 @@
                     this.durationLabel = document.getAnonymousElementByAttribute(binding, "class", "durationLabel");
                     this.positionLabel = document.getAnonymousElementByAttribute(binding, "class", "positionLabel");
                     this.statusOverlay = document.getAnonymousElementByAttribute(binding, "class", "statusOverlay");
-                    this.statsOverlay  = document.getAnonymousElementByAttribute(binding, "class", "statsOverlay");
                     this.controlsOverlay = document.getAnonymousElementByAttribute(binding, "class", "controlsOverlay");
                     this.controlsSpacer     = document.getAnonymousElementByAttribute(binding, "class", "controlsSpacer");
                     this.clickToPlay        = document.getAnonymousElementByAttribute(binding, "class", "clickToPlay");
                     this.fullscreenButton   = document.getAnonymousElementByAttribute(binding, "class", "fullscreenButton");
                     this.volumeForeground   = document.getAnonymousElementByAttribute(binding, "anonid", "volumeForeground");
-
-                    this.statsTable       = document.getAnonymousElementByAttribute(binding, "class", "statsTable");
-                    this.stats.filename   = document.getAnonymousElementByAttribute(binding, "class", "statFilename");
-                    this.stats.size       = document.getAnonymousElementByAttribute(binding, "class", "statSize");
-                    this.stats.activity   = document.getAnonymousElementByAttribute(binding, "class", "statActivity");
-                    this.stats.volume     = document.getAnonymousElementByAttribute(binding, "class", "statVolume");
-                    this.stats.readyState = document.getAnonymousElementByAttribute(binding, "class", "statReadyState");
-                    this.stats.netState   = document.getAnonymousElementByAttribute(binding, "class", "statNetState");
-                    this.stats.framesParsed    = document.getAnonymousElementByAttribute(binding, "class", "statFramesParsed");
-                    this.stats.framesDecoded   = document.getAnonymousElementByAttribute(binding, "class", "statFramesDecoded");
-                    this.stats.framesPresented = document.getAnonymousElementByAttribute(binding, "class", "statFramesPresented");
-                    this.stats.framesPainted   = document.getAnonymousElementByAttribute(binding, "class", "statFramesPainted");
 
                     this.isAudioOnly = (this.video instanceof HTMLAudioElement);
                     this.setupInitialState();
@@ -1517,7 +1347,7 @@
                     }
 
                     addListener(this.muteButton, "command", this.toggleMute);
-                    addListener(this.playButton, "command", this.togglePause);
+                    addListener(this.playButton, "click", this.clickToPlayClickHandler);
                     addListener(this.fullscreenButton, "command", this.toggleFullscreen);
                     addListener(this.clickToPlay, "click", this.clickToPlayClickHandler);
                     addListener(this.controlsSpacer, "click", this.clickToPlayClickHandler);

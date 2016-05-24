@@ -176,8 +176,8 @@ const EXPIRATION_QUERIES = {
   // Note: due to the REPLACE option, this should be executed before
   // QUERY_FIND_VISITS_TO_EXPIRE, that has a more complete result.
   QUERY_FIND_EXOTIC_VISITS_TO_EXPIRE: {
-    sql: `INSERT INTO expiration_notify (v_id, url, guid, visit_date)
-          SELECT v.id, h.url, h.guid, v.visit_date
+    sql: `INSERT INTO expiration_notify (v_id, url, guid, visit_date, reason)
+          SELECT v.id, h.url, h.guid, v.visit_date, "exotic"
           FROM moz_historyvisits v
           JOIN moz_places h ON h.id = v.place_id
           WHERE visit_date < strftime('%s','now','localtime','start of day','-60 days','utc') * 1000000
@@ -391,7 +391,8 @@ const EXPIRATION_QUERIES = {
                  MAX(IFNULL(MIN(p_id, 1), MIN(v_id, 0))) AS whole_entry,
                  MAX(expected_results) AS expected_results,
                  (SELECT MAX(visit_date) FROM expiration_notify
-                  WHERE url = n.url AND p_id ISNULL) AS most_recent_expired_visit
+                  WHERE reason = "expired" AND url = n.url AND p_id ISNULL
+                 ) AS most_recent_expired_visit
           FROM expiration_notify n
           GROUP BY url`,
     actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN_DIRTY |
@@ -473,6 +474,7 @@ function nsPlacesExpiration()
        , guid TEXT NOT NULL
        , visit_date INTEGER
        , expected_results INTEGER NOT NULL DEFAULT 0
+       , reason TEXT NOT NULL DEFAULT "expired"
        )`);
     stmt.executeAsync();
     stmt.finalize();
@@ -688,13 +690,12 @@ nsPlacesExpiration.prototype = {
       let observers = PlacesUtils.history.getObservers();
 
       if (mostRecentExpiredVisit) {
-        try {
-          let days = parseInt((Date.now() - (mostRecentExpiredVisit / 1000)) / MSECS_PER_DAY);
-          Services.telemetry
-                  .getHistogramById("PLACES_MOST_RECENT_EXPIRED_VISIT_DAYS")
-                  .add(days);
-        } catch (ex) {
-          Components.utils.reportError("Unable to report telemetry.");
+        let days = parseInt((Date.now() - (mostRecentExpiredVisit / 1000)) / MSECS_PER_DAY);
+        if (!this._mostRecentExpiredVisitDays) {
+          this._mostRecentExpiredVisitDays = days;
+        }
+        else if (days < this._mostRecentExpiredVisitDays) {
+          this._mostRecentExpiredVisitDays = days;
         }
       }
 
@@ -718,6 +719,19 @@ nsPlacesExpiration.prototype = {
   handleCompletion: function PEX_handleCompletion(aReason)
   {
     if (aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED) {
+
+      if (this._mostRecentExpiredVisitDays) {
+        try {
+          Services.telemetry
+                  .getHistogramById("PLACES_MOST_RECENT_EXPIRED_VISIT_DAYS")
+                  .add(this._mostRecentExpiredVisitDays);
+        } catch (ex) {
+          Components.utils.reportError("Unable to report telemetry.");
+        } finally {
+          delete this._mostRecentExpiredVisitDays;
+        }
+      }
+
       if ("_expectedResultsCount" in this) {
         // Adapt the aggressivity of steps based on the status of history.
         // A dirty history will return all the entries we are expecting bringing

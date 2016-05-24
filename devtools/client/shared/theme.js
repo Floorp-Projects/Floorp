@@ -9,7 +9,7 @@
  * https://developer.mozilla.org/en-US/docs/Tools/DevToolsColors
  */
 
-const { Ci, Cu } = require("chrome");
+const { Cu } = require("chrome");
 const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 const Services = require("Services");
 const { gDevTools } = require("devtools/client/framework/devtools");
@@ -32,7 +32,9 @@ function readURI(uri) {
   ).open();
 
   let count = stream.available();
-  let data = NetUtil.readInputStreamToString(stream, count, { charset: "UTF-8" });
+  let data = NetUtil.readInputStreamToString(stream, count, {
+    charset: "UTF-8"
+  });
   stream.close();
   return data;
 }
@@ -48,7 +50,7 @@ function getThemeFile(name) {
 
   // If there's no theme expected for this name, use `light` as default.
   let selector = THEME_SELECTOR_STRINGS[name] ||
-                 THEME_SELECTOR_STRINGS["light"];
+                 THEME_SELECTOR_STRINGS.light;
 
   // This is a pretty naive way to find the contents between:
   // selector {
@@ -67,14 +69,17 @@ function getThemeFile(name) {
  * Returns the string value of the current theme,
  * like "dark" or "light".
  */
-const getTheme = exports.getTheme = () => Services.prefs.getCharPref("devtools.theme");
+const getTheme = exports.getTheme = () => {
+  return Services.prefs.getCharPref("devtools.theme");
+};
 
 /**
- * Returns a color indicated by `type` (like "toolbar-background", or "highlight-red"),
- * with the ability to specify a theme, or use whatever the current theme is
- * if left unset. If theme not found, falls back to "light" theme. Returns null
- * if the type cannot be found for the theme given.
+ * Returns a color indicated by `type` (like "toolbar-background", or
+ * "highlight-red"), with the ability to specify a theme, or use whatever the
+ * current theme is if left unset. If theme not found, falls back to "light"
+ * theme. Returns null if the type cannot be found for the theme given.
  */
+/* eslint-disable no-unused-vars */
 const getColor = exports.getColor = (type, theme) => {
   let themeName = theme || getTheme();
   let themeFile = getThemeFile(themeName);
@@ -99,3 +104,4 @@ const setTheme = exports.setTheme = (newTheme) => {
     oldValue: oldTheme
   });
 };
+/* eslint-enable */

@@ -47,7 +47,7 @@ Structure::
                        // device when the ping was created
       "searches": <object>, // Optional, object of search use counts in the
                             // format: { "engine.source": <pos integer> }
-                            // e.g.: { "yahoo.searchbar": 3, "other.searchbar": 1 }
+                            // e.g.: { "yahoo.suggestion": 3, "other.listitem": 1 }
       "experiments": [<string>, …], // Optional, array of identifiers
                                     // for the active experiments
     }
@@ -112,6 +112,20 @@ all of the following events occur:
 The reason we don't just return the package install time even if the date could
 not be persisted to disk is to ensure the value doesn't change once we start
 sending it: we only want to send consistent values.
+
+searches
+~~~~~~~~
+In the case a search engine is added by a user, the engine identifier "other" is used, e.g. "other.<source>".
+
+Sources in Android are based on the existing UI telemetry values and are as
+follows:
+
+* actionbar: the user types in the url bar and hits enter to use the default
+  search engine
+* listitem: the user selects a search engine from the list of secondary search
+  engines at the bottom of the screen
+* suggestion: the user clicks on a search suggestion or, in the case that
+  suggestions are disabled, the row corresponding with the main engine
 
 Other parameters
 ----------------

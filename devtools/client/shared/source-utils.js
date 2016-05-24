@@ -64,21 +64,24 @@ function parseURL(location) {
     // `host`: "foo.com:8888"
     //
     // sdk/url does not match several definitions.: both `host` and `hostname`
-    // are actually the `hostname` (even though this is the `host` property on the
-    // original nsIURL, with `hostPort` representing the actual `host` name, AH!!!)
-    // So normalize all that garbage here.
+    // are actually the `hostname` (even though this is the `host` property on
+    // the original nsIURL, with `hostPort` representing the actual `host` name,
+    // AH!!!). So normalize all that garbage here.
     let isChrome = isChromeScheme(location);
     let fileName = url.fileName || "/";
-    let hostname = isChrome ? null : url.hostname;
-    let host = isChrome ? null :
-               url.port ? `${url.host}:${url.port}` :
-               url.host;
+    let hostname, host;
+    if (isChrome) {
+      hostname = null;
+      host = null;
+    } else {
+      hostname = url.hostname;
+      host = url.port ? `${url.host}:${url.port}` : url.host;
+    }
 
     let parsed = Object.assign({}, url, { host, fileName, hostname });
     gURLStore.set(location, parsed);
     return parsed;
-  }
-  catch (e) {
+  } catch (e) {
     gURLStore.set(location, null);
     return null;
   }
@@ -88,12 +91,14 @@ function parseURL(location) {
  * Parse a source into a short and long name as well as a host name.
  *
  * @param {String} source
- *        The source to parse. Can be a URI or names like "(eval)" or "self-hosted".
+ *        The source to parse. Can be a URI or names like "(eval)" or
+ *        "self-hosted".
  * @return {Object}
  *         An object with the following properties:
  *           - {String} short: A short name for the source.
  *             - "http://page.com/test.js#go?q=query" -> "test.js"
- *           - {String} long: The full, long name for the source, with hash/query stripped.
+ *           - {String} long: The full, long name for the source, with
+               hash/query stripped.
  *             - "http://page.com/test.js#go?q=query" -> "http://page.com/test.js"
  *           - {String?} host: If available, the host name for the source.
  *             - "http://page.com/test.js#go?q=query" -> "page.com"
@@ -114,7 +119,7 @@ function getSourceNames(source) {
     if (commaIndex > -1) {
       // The `short` name for a data URI becomes `data:` followed by the actual
       // encoded content, omitting the MIME type, and charset.
-      let short = `data:${sourceStr.substring(commaIndex + 1)}`.slice(0, 100);
+      short = `data:${sourceStr.substring(commaIndex + 1)}`.slice(0, 100);
       let result = { short, long: sourceStr };
       gSourceNamesStore.set(source, result);
       return result;
@@ -208,10 +213,11 @@ function isContentScheme(location, i = 0) {
   let firstChar = location.charCodeAt(i);
 
   switch (firstChar) {
-    case CHAR_CODE_H: // "http://" or "https://"
+    // "http://" or "https://"
+    case CHAR_CODE_H:
       if (location.charCodeAt(++i) === CHAR_CODE_T &&
-        location.charCodeAt(++i) === CHAR_CODE_T &&
-        location.charCodeAt(++i) === CHAR_CODE_P) {
+          location.charCodeAt(++i) === CHAR_CODE_T &&
+          location.charCodeAt(++i) === CHAR_CODE_P) {
         if (location.charCodeAt(i + 1) === CHAR_CODE_S) {
           ++i;
         }
@@ -219,17 +225,19 @@ function isContentScheme(location, i = 0) {
       }
       return false;
 
-    case CHAR_CODE_F: // "file://"
+    // "file://"
+    case CHAR_CODE_F:
       if (location.charCodeAt(++i) === CHAR_CODE_I &&
-        location.charCodeAt(++i) === CHAR_CODE_L &&
-        location.charCodeAt(++i) === CHAR_CODE_E) {
+          location.charCodeAt(++i) === CHAR_CODE_L &&
+          location.charCodeAt(++i) === CHAR_CODE_E) {
         return isColonSlashSlash(location, i);
       }
       return false;
 
-    case CHAR_CODE_A: // "app://"
+    // "app://"
+    case CHAR_CODE_A:
       if (location.charCodeAt(++i) == CHAR_CODE_P &&
-        location.charCodeAt(++i) == CHAR_CODE_P) {
+          location.charCodeAt(++i) == CHAR_CODE_P) {
         return isColonSlashSlash(location, i);
       }
       return false;
@@ -243,36 +251,39 @@ function isChromeScheme(location, i = 0) {
   let firstChar = location.charCodeAt(i);
 
   switch (firstChar) {
-    case CHAR_CODE_C: // "chrome://"
+    // "chrome://"
+    case CHAR_CODE_C:
       if (location.charCodeAt(++i) === CHAR_CODE_H &&
-        location.charCodeAt(++i) === CHAR_CODE_R &&
-        location.charCodeAt(++i) === CHAR_CODE_O &&
-        location.charCodeAt(++i) === CHAR_CODE_M &&
-        location.charCodeAt(++i) === CHAR_CODE_E) {
+          location.charCodeAt(++i) === CHAR_CODE_R &&
+          location.charCodeAt(++i) === CHAR_CODE_O &&
+          location.charCodeAt(++i) === CHAR_CODE_M &&
+          location.charCodeAt(++i) === CHAR_CODE_E) {
         return isColonSlashSlash(location, i);
       }
       return false;
 
-    case CHAR_CODE_R: // "resource://"
+    // "resource://"
+    case CHAR_CODE_R:
       if (location.charCodeAt(++i) === CHAR_CODE_E &&
-        location.charCodeAt(++i) === CHAR_CODE_S &&
-        location.charCodeAt(++i) === CHAR_CODE_O &&
-        location.charCodeAt(++i) === CHAR_CODE_U &&
-        location.charCodeAt(++i) === CHAR_CODE_R &&
-        location.charCodeAt(++i) === CHAR_CODE_C &&
-        location.charCodeAt(++i) === CHAR_CODE_E) {
+          location.charCodeAt(++i) === CHAR_CODE_S &&
+          location.charCodeAt(++i) === CHAR_CODE_O &&
+          location.charCodeAt(++i) === CHAR_CODE_U &&
+          location.charCodeAt(++i) === CHAR_CODE_R &&
+          location.charCodeAt(++i) === CHAR_CODE_C &&
+          location.charCodeAt(++i) === CHAR_CODE_E) {
         return isColonSlashSlash(location, i);
       }
       return false;
 
-    case CHAR_CODE_J: // "jar:file://"
+    // "jar:file://"
+    case CHAR_CODE_J:
       if (location.charCodeAt(++i) === CHAR_CODE_A &&
-        location.charCodeAt(++i) === CHAR_CODE_R &&
-        location.charCodeAt(++i) === CHAR_CODE_COLON &&
-        location.charCodeAt(++i) === CHAR_CODE_F &&
-        location.charCodeAt(++i) === CHAR_CODE_I &&
-        location.charCodeAt(++i) === CHAR_CODE_L &&
-        location.charCodeAt(++i) === CHAR_CODE_E) {
+          location.charCodeAt(++i) === CHAR_CODE_R &&
+          location.charCodeAt(++i) === CHAR_CODE_COLON &&
+          location.charCodeAt(++i) === CHAR_CODE_F &&
+          location.charCodeAt(++i) === CHAR_CODE_I &&
+          location.charCodeAt(++i) === CHAR_CODE_L &&
+          location.charCodeAt(++i) === CHAR_CODE_E) {
         return isColonSlashSlash(location, i);
       }
       return false;

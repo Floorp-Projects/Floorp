@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Ci, Cc } = require("chrome");
 const { getJSON } = require("devtools/client/shared/getjson");
 const Services = require("Services");
 const promise = require("promise");

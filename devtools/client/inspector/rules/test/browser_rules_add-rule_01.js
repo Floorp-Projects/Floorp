@@ -20,6 +20,9 @@ const TEST_URI = `
   <p>Empty<p>
   <h1 class="asd@@@@a!!!!:::@asd">Invalid characters in class</h1>
   <h2 id="asd@@@a!!2a">Invalid characters in id</h2>
+  <svg viewBox="0 0 10 10">
+    <circle cx="5" cy="5" r="5" fill="blue"></circle>
+  </svg>
 `;
 
 const TEST_DATA = [
@@ -29,7 +32,8 @@ const TEST_DATA = [
   { node: ".class3.class4", expected: ".class3.class4" },
   { node: "p", expected: "p" },
   { node: "h1", expected: ".asd\\@\\@\\@\\@a\\!\\!\\!\\!\\:\\:\\:\\@asd" },
-  { node: "h2", expected: "#asd\\@\\@\\@a\\!\\!2a" }
+  { node: "h2", expected: "#asd\\@\\@\\@a\\!\\!2a" },
+  { node: "circle", expected: "circle" }
 ];
 
 add_task(function* () {
