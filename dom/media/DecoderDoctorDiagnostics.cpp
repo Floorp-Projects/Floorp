@@ -26,6 +26,12 @@ static mozilla::LazyLogModule sDecoderDoctorLog("DecoderDoctor");
 
 namespace mozilla {
 
+struct NotificationAndReportStringId
+{
+  dom::DecoderDoctorNotificationType mNotificationType;
+  const char* mReportStringId;
+};
+
 // Class that collects a sequence of diagnostics from the same document over a
 // small period of time, in order to provide a synthesized analysis.
 //
@@ -67,9 +73,8 @@ private:
   static const uint32_t sAnalysisPeriod_ms = 1000;
   void EnsureTimerIsStarted();
 
-  void ReportAnalysis(dom::DecoderDoctorNotificationType aNotificationType,
+  void ReportAnalysis(const NotificationAndReportStringId& aNotification,
                       bool aIsSolved,
-                      const char* aReportStringId,
                       const nsAString& aFormats);
 
   void SynthesizeAnalysis();
@@ -350,21 +355,36 @@ StringListContains(const ListString& aList, const ItemString& aItem)
   return false;
 }
 
+static const NotificationAndReportStringId sMediaWidevineNoWMFNoSilverlight =
+  { dom::DecoderDoctorNotificationType::Platform_decoder_not_found,
+    "MediaWidevineNoWMFNoSilverlight" };
+static const NotificationAndReportStringId sMediaWMFNeeded =
+  { dom::DecoderDoctorNotificationType::Platform_decoder_not_found,
+    "MediaWMFNeeded" };
+static const NotificationAndReportStringId sMediaPlatformDecoderNotFound =
+  { dom::DecoderDoctorNotificationType::Platform_decoder_not_found,
+    "MediaPlatformDecoderNotFound" };
+static const NotificationAndReportStringId sMediaCannotPlayNoDecoders =
+  { dom::DecoderDoctorNotificationType::Cannot_play,
+    "MediaCannotPlayNoDecoders" };
+static const NotificationAndReportStringId sMediaNoDecoders =
+  { dom::DecoderDoctorNotificationType::Can_play_but_some_missing_decoders,
+    "MediaNoDecoders" };
+
 static void
 DispatchNotification(nsISupports* aSubject,
-                     dom::DecoderDoctorNotificationType aNotificationType,
+                     const NotificationAndReportStringId& aNotification,
                      bool aIsSolved,
-                     const char* aReportStringId,
                      const nsAString& aFormats)
 {
   if (!aSubject) {
     return;
   }
   dom::DecoderDoctorNotification data;
-  data.mType = aNotificationType;
+  data.mType = aNotification.mNotificationType;
   data.mIsSolved = aIsSolved;
   data.mDecoderDoctorReportId.Assign(
-    NS_ConvertUTF8toUTF16(aReportStringId));
+    NS_ConvertUTF8toUTF16(aNotification.mReportStringId));
   if (!aFormats.IsEmpty()) {
     data.mFormats.Construct(aFormats);
   }
@@ -385,9 +405,8 @@ DispatchNotification(nsISupports* aSubject,
 
 void
 DecoderDoctorDocumentWatcher::ReportAnalysis(
-  dom::DecoderDoctorNotificationType aNotificationType,
+  const NotificationAndReportStringId& aNotification,
   bool aIsSolved,
-  const char* aReportStringId,
   const nsAString& aParams)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -401,13 +420,13 @@ DecoderDoctorDocumentWatcher::ReportAnalysis(
     // 'params' will only be forwarded for non-empty strings.
     const char16_t* params[1] = { aParams.Data() };
     DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::ReportAnalysis() ReportToConsole - aMsg='%s' params[0]='%s'",
-             this, mDocument, aReportStringId,
+             this, mDocument, aNotification.mReportStringId,
              aParams.IsEmpty() ? "<no params>" : NS_ConvertUTF16toUTF8(params[0]).get());
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                     NS_LITERAL_CSTRING("Media"),
                                     mDocument,
                                     nsContentUtils::eDOM_PROPERTIES,
-                                    aReportStringId,
+                                    aNotification.mReportStringId,
                                     aParams.IsEmpty() ? nullptr : params,
                                     aParams.IsEmpty() ? 0 : 1);
   }
@@ -422,10 +441,9 @@ DecoderDoctorDocumentWatcher::ReportAnalysis(
     Preferences::GetCString("media.decoder-doctor.notifications-allowed");
   filter.StripWhitespace();
   if (filter.EqualsLiteral("*")
-      || StringListContains(filter, aReportStringId)) {
+      || StringListContains(filter, aNotification.mReportStringId)) {
     DispatchNotification(
-      mDocument->GetInnerWindow(),
-      aNotificationType, aIsSolved, aReportStringId, aParams);
+      mDocument->GetInnerWindow(), aNotification, aIsSolved, aParams);
   }
 }
 
@@ -557,8 +575,7 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
           DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unsupported key systems: %s, widevine without WMF nor Silverlight",
                    this, mDocument, NS_ConvertUTF16toUTF8(unsupportedKeySystems).get());
           ReportAnalysis(
-            dom::DecoderDoctorNotificationType::Platform_decoder_not_found,
-            false, "MediaWidevineNoWMFNoSilverlight", unsupportedKeySystems);
+            sMediaWidevineNoWMFNoSilverlight, false, unsupportedKeySystems);
           return;
         }
         break;
@@ -577,8 +594,7 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
       if (!formatsRequiringWMF.IsEmpty()) {
         DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> Cannot play media because WMF was not found",
                  this, mDocument, NS_ConvertUTF16toUTF8(formatsRequiringWMF).get());
-        ReportAnalysis(dom::DecoderDoctorNotificationType::Platform_decoder_not_found,
-                       false, "MediaWMFNeeded", formatsRequiringWMF);
+        ReportAnalysis(sMediaWMFNeeded, false, formatsRequiringWMF);
         return;
       }
 #endif
@@ -586,24 +602,21 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
       if (!formatsRequiringFFMpeg.IsEmpty()) {
         DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> Cannot play media because platform decoder was not found",
                  this, mDocument, NS_ConvertUTF16toUTF8(formatsRequiringFFMpeg).get());
-        ReportAnalysis(dom::DecoderDoctorNotificationType::Platform_decoder_not_found,
-                       "MediaPlatformDecoderNotFound", formatsRequiringFFMpeg);
+        ReportAnalysis(sMediaPlatformDecoderNotFound,
+                       false, formatsRequiringFFMpeg);
         return;
       }
 #endif
       DD_WARN("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - Cannot play media, unplayable formats: %s",
               this, mDocument, NS_ConvertUTF16toUTF8(unplayableFormats).get());
-      ReportAnalysis(dom::DecoderDoctorNotificationType::Cannot_play,
-                     false, "MediaCannotPlayNoDecoders", unplayableFormats);
+      ReportAnalysis(sMediaCannotPlayNoDecoders, false, unplayableFormats);
       return;
     }
 
     DD_INFO("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - Can play media, but no decoders for some requested formats: %s",
             this, mDocument, NS_ConvertUTF16toUTF8(unplayableFormats).get());
     if (Preferences::GetBool("media.decoder-doctor.verbose", false)) {
-      ReportAnalysis(
-        dom::DecoderDoctorNotificationType::Can_play_but_some_missing_decoders,
-        false, "MediaNoDecoders", unplayableFormats);
+      ReportAnalysis(sMediaNoDecoders, false, unplayableFormats);
     }
     return;
   }
