@@ -210,6 +210,12 @@ public:
     nsRect* aResult,
     RelativeTo aRelativeTo = RelativeTo::ScrollPort);
 
+  /**
+   * @return the critical displayport associated with @aScrollableFrame, or if
+   * it does not have a displayport, the associated scrollport.
+   */
+  static nsRect GetDisplayPortOrFallbackToScrollPort(nsIScrollableFrame* aScrollableFrame);
+
   enum class RepaintMode : uint8_t {
     Repaint,
     DoNotRepaint
@@ -911,6 +917,16 @@ public:
    */
   static TransformResult TransformRect(nsIFrame* aFromFrame, nsIFrame* aToFrame,
                                        nsRect& aRect);
+
+  /**
+   * Transforms @aFromRect from the space of @aFrom to the space of @aTo, and
+   * intersects it with @aToRect.
+   *
+   * @return The result of the intersection, or the empty rect if
+   * TransformRect would've returned something other than TRANSFORM_SUCCEEDED.
+   */
+  static nsRect TransformAndIntersectRect(nsIFrame* aFrom, const nsRect& aFromRect,
+                                          nsIFrame* aTo, const nsRect& aToRect);
 
   /**
    * Get the border-box of aElement's primary frame, transformed it to be
@@ -2713,7 +2729,24 @@ public:
   static void MaybeCreateDisplayPort(nsDisplayListBuilder& aBuilder,
                                      nsIFrame* aScrollFrame);
 
+  /**
+   * @return the nearest async scrollable ancestor frame of @aTarget, including
+   * @aTarget itself if @aTarget is async scrollable.
+   */
   static nsIScrollableFrame* GetAsyncScrollableAncestorFrame(nsIFrame* aTarget);
+
+  /**
+   * @return the nearest async scrollable ancestor frame of @aTarget, excluding
+   * @aTarget itself.
+   */
+  static nsIScrollableFrame* GetAsyncScrollableProperAncestorFrame(nsIFrame* aTarget);
+
+  /**
+   * @return the nearest async scrollable ancestor frame of @aTarget, excluding
+   * @aTarget itself. If there is no async scrollable ancestor frame, falls back
+   * to the root frame.
+   */
+  static nsIFrame* GetAsyncScrollableProperAncestorFrameOrFallback(nsIFrame* aTarget);
 
   /**
    * Sets a zero margin display port on all proper ancestors of aFrame that
