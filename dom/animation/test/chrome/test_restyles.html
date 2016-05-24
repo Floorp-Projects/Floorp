@@ -207,6 +207,10 @@ waitForAllPaints(function() {
   });
 
   add_task_if_omta_enabled(function* no_restyling_compositor_animations_out_of_view_element() {
+    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+      return;
+    }
+
     var div = addDiv(null,
       { style: 'animation: opacity 100s; transform: translateY(-400px);' });
     var animation = div.getAnimations()[0];
@@ -223,6 +227,10 @@ waitForAllPaints(function() {
   });
 
   add_task(function* no_restyling_main_thread_animations_out_of_view_element() {
+    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+      return;
+    }
+
     var div = addDiv(null,
       { style: 'animation: background-color 100s; transform: translateY(-400px);' });
     var animation = div.getAnimations()[0];
@@ -237,6 +245,10 @@ waitForAllPaints(function() {
   });
 
   add_task_if_omta_enabled(function* no_restyling_compositor_animations_in_scrolled_out_element() {
+    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+      return;
+    }
+
     /*
      On Android the opacity animation runs on the compositor even if it is
      scrolled out of view.  We will fix this in bug 1247800.
@@ -263,6 +275,10 @@ waitForAllPaints(function() {
   });
 
   add_task(function* no_restyling_main_thread_animations_in_scrolled_out_element() {
+    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+      return;
+    }
+
     /*
      On Android throttled animations are left behind on the main thread in some
      frames, We will fix this in bug 1247800.
@@ -289,6 +305,10 @@ waitForAllPaints(function() {
   });
 
   add_task(function* no_restyling_main_thread_animations_in_nested_scrolled_out_element() {
+    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+      return;
+    }
+
     /*
      On Android throttled animations are left behind on the main thread in some
      frames, We will fix this in bug 1247800.
@@ -334,6 +354,10 @@ waitForAllPaints(function() {
   });
 
   add_task(function* restyling_main_thread_animations_moved_in_view_by_scrolling() {
+    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+      return;
+    }
+
     /*
      On Android throttled animations are left behind on the main thread in some
      frames, We will fix this in bug 1247800.
@@ -372,6 +396,10 @@ waitForAllPaints(function() {
   });
 
   add_task(function* restyling_main_thread_animations_moved_in_view_by_scrolling() {
+    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+      return;
+    }
+
     var grandParent = addDiv(null,
       { style: 'overflow-y: scroll; height: 20px;' });
     var parentElement = addDiv(null,
@@ -406,6 +434,10 @@ waitForAllPaints(function() {
   });
 
   add_task(function* restyling_main_thread_animations_move_out_of_view_by_scrolling() {
+    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+      return;
+    }
+
     /*
      On Android throttled animations are left behind on the main thread in some
      frames, We will fix this in bug 1247800.
@@ -447,6 +479,10 @@ waitForAllPaints(function() {
   });
 
   add_task(function* restyling_main_thread_animations_moved_in_view_by_resizing() {
+    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+      return;
+    }
+
     var parentElement = addDiv(null,
       { style: 'overflow-y: scroll; height: 20px;' });
     var div = addDiv(null,

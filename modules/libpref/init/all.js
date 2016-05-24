@@ -2596,6 +2596,9 @@ pref("dom.animations-api.core.enabled", true);
 // ignored.
 pref("dom.animations-api.element-animate.enabled", true);
 
+// Pref to throttle offsreen animations
+pref("dom.animations.offscreen-throttling", true);
+
 // pref to permit users to make verified SOAP calls by default
 pref("capability.policy.default.SOAPCall.invokeVerifySourceHeader", "allAccess");
 
