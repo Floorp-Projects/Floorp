@@ -483,11 +483,12 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
     if (subdocRootFrame) {
       nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
+      nsIContent* content = ignoreViewportScrolling && rootScrollFrame
+                          ? rootScrollFrame->GetContent()
+                          : nullptr;
+
       nsDisplayListBuilder::AutoCurrentScrollParentIdSetter idSetter(
-          aBuilder,
-          ignoreViewportScrolling && rootScrollFrame && rootScrollFrame->GetContent()
-              ? nsLayoutUtils::FindOrCreateIDFor(rootScrollFrame->GetContent())
-              : aBuilder->GetCurrentScrollParentId());
+          aBuilder, content ? rootScrollFrame : aBuilder->GetCurrentScrollParent());
 
       aBuilder->SetAncestorHasApzAwareEventHandler(false);
       subdocRootFrame->
