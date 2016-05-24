@@ -240,12 +240,6 @@ partial interface Document {
   void exitFullscreen();
   [BinaryName="exitFullscreen", Deprecated="PrefixedFullscreenAPI"]
   void mozCancelFullScreen();
-
-  // Events handlers
-  [Func="nsDocument::IsUnprefixedFullscreenEnabled"]
-  attribute EventHandler onfullscreenchange;
-  [Func="nsDocument::IsUnprefixedFullscreenEnabled"]
-  attribute EventHandler onfullscreenerror;
 };
 
 // http://dvcs.w3.org/hg/pointerlock/raw-file/default/index.html#extensions-to-the-document-interface
