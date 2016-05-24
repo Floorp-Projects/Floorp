@@ -71,8 +71,8 @@ add_task(function* test_delete() {
   is(yield PlacesTestUtils.isPageInDB(testUrl), false, "expected url not found in history database");
 
   let filter = {
-    startTime: PlacesUtils.toDate(visits[1].visitDate).valueOf(),
-    endTime: PlacesUtils.toDate(visits[3].visitDate).valueOf(),
+    startTime: PlacesUtils.toDate(visits[1].visitDate),
+    endTime: PlacesUtils.toDate(visits[3].visitDate),
   };
 
   extension.sendMessage("delete-range", filter);
@@ -83,8 +83,8 @@ add_task(function* test_delete() {
   ok(yield PlacesTestUtils.isPageInDB(visits[5].uri), "expected uri found in history database");
   is(yield PlacesTestUtils.visitsInDB(visits[5].uri), 1, "1 visit for uri found in history database");
 
-  filter.startTime = PlacesUtils.toDate(visits[0].visitDate).valueOf();
-  filter.endTime = PlacesUtils.toDate(visits[5].visitDate).valueOf();
+  filter.startTime = PlacesUtils.toDate(visits[0].visitDate);
+  filter.endTime = PlacesUtils.toDate(visits[5].visitDate);
 
   extension.sendMessage("delete-range", filter);
   yield extension.awaitMessage("range-deleted");
