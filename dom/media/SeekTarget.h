@@ -25,6 +25,7 @@ struct SeekTarget {
     PrevSyncPoint,
     Accurate,
     AccurateVideoOnly,
+    NextFrame,
   };
   SeekTarget()
     : mEventVisibility(MediaDecoderEventVisibility::Observable)
@@ -82,6 +83,9 @@ struct SeekTarget {
   }
   bool IsVideoOnly() const {
     return mType == SeekTarget::Type::AccurateVideoOnly;
+  }
+  bool IsNextFrame() const {
+    return mType == SeekTarget::Type::NextFrame;
   }
 
   MediaDecoderEventVisibility mEventVisibility;
