@@ -577,8 +577,8 @@ struct SourceCompressionTask
         Aborted,
         Success
     } result;
-    mozilla::UniquePtr<char[], JS::FreePolicy> compressed;
-    size_t compressedBytes;
+
+    mozilla::Maybe<SharedImmutableString> resultString;
 
   public:
     explicit SourceCompressionTask(ExclusiveContext* cx)
@@ -587,8 +587,6 @@ struct SourceCompressionTask
       , ss(nullptr)
       , abort_(false)
       , result(OOM)
-      , compressed(nullptr)
-      , compressedBytes(0)
     {}
 
     ~SourceCompressionTask()
