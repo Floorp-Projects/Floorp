@@ -37,6 +37,7 @@ class nsCSSPropertySet;
 class nsIContent;
 class nsIDocument;
 class nsIFrame;
+class nsIPresShell;
 class nsPresContext;
 
 namespace mozilla {
@@ -332,6 +333,7 @@ public:
 
   nsIDocument* GetRenderedDocument() const;
   nsPresContext* GetPresContext() const;
+  nsIPresShell* GetPresShell() const;
 
   // Associates a warning with the animated property on the specified frame
   // indicating why, for example, the property could not be animated on the
