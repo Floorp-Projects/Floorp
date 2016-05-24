@@ -1668,6 +1668,9 @@ nsSSLIOLayerHelpers::loadVersionFallbackLimit()
                                SSL_LIBRARY_VERSION_TLS_1_2 };
   SSLVersionRange filledInRange;
   nsNSSComponent::FillTLSVersionRange(filledInRange, limit, limit, defaults);
+  if (filledInRange.max < SSL_LIBRARY_VERSION_TLS_1_2) {
+    filledInRange.max = SSL_LIBRARY_VERSION_TLS_1_2;
+  }
 
   mVersionFallbackLimit = filledInRange.max;
 }
