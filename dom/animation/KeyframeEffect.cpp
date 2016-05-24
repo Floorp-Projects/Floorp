@@ -91,6 +91,7 @@ KeyframeEffectReadOnly::KeyframeEffectReadOnly(
   , mTarget(aTarget)
   , mTiming(aTiming)
   , mInEffectOnLastAnimationTimingUpdate(false)
+  , mCumulativeChangeHint(nsChangeHint(0))
 {
   MOZ_ASSERT(aTiming);
 }
@@ -542,6 +543,8 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
     property.mIsRunningOnCompositor =
       runningOnCompositorProperties.HasProperty(property.mProperty);
   }
+
+  CalculateCumulativeChangeHint();
 
   if (mTarget) {
     EffectSet* effectSet = EffectSet::GetEffectSet(mTarget->mElement,
@@ -1310,6 +1313,18 @@ KeyframeEffectReadOnly::SetPerformanceWarning(
         AnimationUtils::LogAsyncAnimationFailure(logMessage, mTarget->mElement);
       }
       return;
+    }
+  }
+}
+
+void
+KeyframeEffectReadOnly::CalculateCumulativeChangeHint()
+{
+  mCumulativeChangeHint = nsChangeHint(0);
+
+  for (const AnimationProperty& property : mProperties) {
+    for (const AnimationPropertySegment& segment : property.mSegments) {
+      mCumulativeChangeHint |= segment.mChangeHint;
     }
   }
 }
