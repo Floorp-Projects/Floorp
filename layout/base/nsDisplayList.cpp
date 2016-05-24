@@ -389,6 +389,29 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
     aLayer->AddAnimation();
 
   const TimingParams& timing = aAnimation->GetEffect()->SpecifiedTiming();
+
+  // If we are starting a new transition that replaces an existing transition
+  // running on the compositor, it is possible that the animation on the
+  // compositor will have advanced ahead of the main thread. If we use as
+  // the starting point of the new transition, the current value of the
+  // replaced transition as calculated on the main thread using the refresh
+  // driver time, the new transition will jump when it starts. Instead, we
+  // re-calculate the starting point of the new transition by applying the
+  // current TimeStamp to the parameters of the replaced transition.
+  //
+  // We need to do this here, rather than when we generate the new transition,
+  // since after generating the new transition other requestAnimationFrame
+  // callbacks may run that introduce further lag between the main thread and
+  // the compositor.
+  if (aAnimation->AsCSSTransition() &&
+      aAnimation->GetEffect()) {
+    MOZ_ASSERT(aAnimation->GetEffect()->AsTransition(),
+               "CSSTransition' effect should be an ElementPropertyTransition "
+               "until we fix bug 1049975");
+    aAnimation->GetEffect()->AsTransition()->
+      UpdateStartValueFromReplacedTransition();
+  }
+
   const ComputedTiming computedTiming =
     aAnimation->GetEffect()->GetComputedTiming();
   Nullable<TimeDuration> startTime = aAnimation->GetCurrentOrPendingStartTime();
