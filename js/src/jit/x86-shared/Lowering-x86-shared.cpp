@@ -36,23 +36,23 @@ LIRGeneratorX86Shared::newLTableSwitchV(MTableSwitch* tableswitch)
 void
 LIRGeneratorX86Shared::visitGuardShape(MGuardShape* ins)
 {
-    MOZ_ASSERT(ins->obj()->type() == MIRType::Object);
+    MOZ_ASSERT(ins->object()->type() == MIRType::Object);
 
-    LGuardShape* guard = new(alloc()) LGuardShape(useRegisterAtStart(ins->obj()));
+    LGuardShape* guard = new(alloc()) LGuardShape(useRegisterAtStart(ins->object()));
     assignSnapshot(guard, ins->bailoutKind());
     add(guard, ins);
-    redefine(ins, ins->obj());
+    redefine(ins, ins->object());
 }
 
 void
 LIRGeneratorX86Shared::visitGuardObjectGroup(MGuardObjectGroup* ins)
 {
-    MOZ_ASSERT(ins->obj()->type() == MIRType::Object);
+    MOZ_ASSERT(ins->object()->type() == MIRType::Object);
 
-    LGuardObjectGroup* guard = new(alloc()) LGuardObjectGroup(useRegisterAtStart(ins->obj()));
+    LGuardObjectGroup* guard = new(alloc()) LGuardObjectGroup(useRegisterAtStart(ins->object()));
     assignSnapshot(guard, ins->bailoutKind());
     add(guard, ins);
-    redefine(ins, ins->obj());
+    redefine(ins, ins->object());
 }
 
 void
