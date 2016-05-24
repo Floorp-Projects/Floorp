@@ -77,8 +77,12 @@ add_task(function* () {
   ok(!targetElement.querySelector(".start-button"), "No start button");
 
   // Finally, unregister the service worker itself.
-  yield unregisterServiceWorker(swTab);
-  ok(true, "Service worker registration unregistered");
+  try {
+    yield unregisterServiceWorker(swTab);
+    ok(true, "Service worker registration unregistered");
+  } catch (e) {
+    ok(false, "SW not unregistered; " + e);
+  }
 
   yield removeTab(swTab);
   yield closeAboutDebugging(tab);
