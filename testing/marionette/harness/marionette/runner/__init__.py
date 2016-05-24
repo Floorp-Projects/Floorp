@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from .base import (
-    B2GTestResultMixin,
     BaseMarionetteArguments,
     BaseMarionetteTestRunner,
     Marionette,
@@ -16,8 +15,6 @@ from .base import (
 )
 
 from .mixins import (
-    B2GTestCaseMixin,
-    B2GTestResultMixin,
     EnduranceArguments,
     EnduranceTestCaseMixin,
     HTMLReportingArguments,
