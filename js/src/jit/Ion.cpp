@@ -2842,7 +2842,7 @@ jit::SetEnterJitData(JSContext* cx, EnterJitData& data, RunState& state,
             if (!vals.reserve(1))
                 return false;
 
-            ScriptFrameIter iter(cx);
+            ScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
             data.maxArgc = 1;
             data.maxArgv = vals.begin();
             if (state.asExecute()->newTarget().isNull())

@@ -47,7 +47,7 @@ InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractF
             if (newTarget.isNull() && evalInFramePrev.script()->functionOrCallerFunction())
                 newTarget = evalInFramePrev.newTarget();
         } else {
-            FrameIter iter(cx);
+            FrameIter iter(cx, FrameIter::STOP_AT_SAVED);
             MOZ_ASSERT(!iter.isWasm());
             if (newTarget.isNull() && iter.script()->functionOrCallerFunction())
                 newTarget = iter.newTarget();

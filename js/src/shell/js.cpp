@@ -2003,7 +2003,7 @@ ValueToScript(JSContext* cx, Value vArg, JSFunction** funp = nullptr)
 static JSScript*
 GetTopScript(JSContext* cx)
 {
-    NonBuiltinScriptFrameIter iter(cx);
+    NonBuiltinScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
     return iter.done() ? nullptr : iter.script();
 }
 
@@ -4250,7 +4250,7 @@ DecompileThisScript(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    NonBuiltinScriptFrameIter iter(cx);
+    NonBuiltinScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
     if (iter.done()) {
         args.rval().setString(cx->runtime()->emptyString);
         return true;
