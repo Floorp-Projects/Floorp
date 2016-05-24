@@ -359,6 +359,13 @@ inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint)
 #define NS_STYLE_HINT_FRAMECHANGE \
   nsChangeHint(NS_STYLE_HINT_REFLOW | nsChangeHint_ReconstructFrame)
 
+#define nsChangeHint_Hints_CanIgnoreIfNotVisible   \
+  nsChangeHint(NS_STYLE_HINT_VISUAL |              \
+               nsChangeHint_NeutralChange |        \
+               nsChangeHint_UpdateOpacityLayer |   \
+               nsChangeHint_UpdateTransformLayer | \
+               nsChangeHint_UpdateUsesOpacity)
+
 /**
  * |nsRestyleHint| is a bitfield for the result of
  * |HasStateDependentStyle| and |HasAttributeDependentStyle|.  When no
