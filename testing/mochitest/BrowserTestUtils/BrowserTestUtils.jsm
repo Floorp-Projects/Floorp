@@ -256,6 +256,7 @@ this.BrowserTestUtils = {
   waitForNewTab(tabbrowser, url) {
     return new Promise((resolve, reject) => {
       tabbrowser.tabContainer.addEventListener("TabOpen", function onTabOpen(openEvent) {
+        tabbrowser.tabContainer.removeEventListener("TabOpen", onTabOpen);
 
         let progressListener = {
           onLocationChange(aBrowser) {
@@ -265,7 +266,6 @@ this.BrowserTestUtils = {
               return;
             }
 
-            tabbrowser.tabContainer.removeEventListener("TabOpen", onTabOpen);
             tabbrowser.removeTabsProgressListener(progressListener);
             resolve(openEvent.target);
           },
