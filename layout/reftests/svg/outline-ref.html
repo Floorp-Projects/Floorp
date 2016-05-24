@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" overflow="visible">
+  <g>
+    <rect id="rect" width="100" height="100" style="fill: yellow"/>
+    <text id="text" x="0" y="140" font-family="Verdana" font-size="20">
+      Hello world
+    </text>
+     <foreignObject id="foreignObject" x="0" y="160" width="200" height="60">
+      <div xmlns="http://www.w3.org/1999/xhtml">
+        Here is a paragraph that requires word wrap
+      </div>
+    </foreignObject>
+    <circle id="circle" cx="40" cy="275" r="40" style="fill: green"/>
+    <ellipse id="ellipse" cx="70" cy="380" rx="70" ry="50" style="fill: yellow"/>
+    <image id="image" x="0" y="450" height="100" width="100"/>
+    <line id="line" x1="0" y1="580" x2="100" y2="580" style="stroke: red; stroke-width: 2"/>
+    <path id="path" d="M50 600 L10 650 L90 650 Z"/>
+    <polygon id="polygon" points="300,50 350,0 400,50" style="fill: lime"/>
+    <polyline id="polyline" points="300,80 350,70 400,80" style="fill: none;stroke: black; stroke-width: 3"/>
+    <g transform="translate(300, 70)">
+      <circle id="gCircle" cx="50" cy="50" r="20" style="fill: blue"/>
+    </g>
+    <g transform="translate(300, 150)">
+      <circle id="ggCircle" cx="50" cy="50" r="20" style="fill: green"/>
+      <g>
+        <rect id="ggRect" x="15" y ="15" width="30" height="10" style="fill: blue"/>
+      </g>
+    </g>
+    <svg x="300" y="250">
+      <rect id="innerRect" x="30" y="10" height="50" width="50" style="fill: red"/>
+    </svg>
+  </g>
+</svg>
+<script>
+
+function createOutline(boundingRect) {
+  // Outline starts from a top-left shift pixel of the bounding rect
+  var left = boundingRect.left - 1;
+  var top  = boundingRect.top - 1;
+  var right = boundingRect.right;
+  var bottom = boundingRect.bottom;
+  var width = boundingRect.width;
+  var height = boundingRect.height;
+
+  var lines = document.createElement("div");
+  var styles = 'border: 1px solid;'
+               + 'width: ' + width + 'px;'
+               + 'height: ' + height + 'px;'
+               + 'position: absolute;'
+               + 'top: ' + top + 'px;'
+               + 'left: ' + left + 'px;';
+
+  lines.setAttribute('style', styles);
+  document.body.appendChild(lines);
+}
+
+window.onload = function drawOutline() {
+  var elements = ['rect', 'foreignObject', 'circle',
+                  'ellipse', 'image', 'line', 'path',
+                  'polygon', 'polyline', 'text','gCircle',
+                  'innerRect'];
+  elements.forEach(id => {
+    var element = document.getElementById(id);
+    createOutline(element.getBoundingClientRect());
+  });
+
+  var ggRect = document.getElementById('ggRect');
+  var ggRectbbox = ggRect.getBoundingClientRect();
+  createOutline(ggRectbbox);
+
+  var ggCircle = document.getElementById('ggCircle');
+  var ggCirclebbox = ggCircle.getBoundingClientRect();
+
+  var ggbbox = {
+    left: ggRectbbox.left,
+    top: ggRectbbox.top,
+    right: ggCirclebbox.right,
+    bottom: ggCirclebbox.bottom
+  };
+  ggbbox.width = ggbbox.right - ggbbox.left;
+  ggbbox.height = ggbbox.bottom - ggbbox.top;
+  createOutline(ggbbox);
+}
+</script>
+</body>
+</html>
