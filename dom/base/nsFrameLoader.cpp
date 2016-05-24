@@ -343,6 +343,32 @@ nsFrameLoader::SetIsPrerendered()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFrameLoader::MakePrerenderedLoaderActive()
+{
+  MOZ_ASSERT(mIsPrerendered, "This frameloader was not in prerendered mode.");
+
+  mIsPrerendered = false;
+  if (IsRemoteFrame()) {
+    if (!mRemoteBrowser) {
+      NS_WARNING("Missing remote browser.");
+      return NS_ERROR_FAILURE;
+    }
+
+    mRemoteBrowser->SetDocShellIsActive(true);
+  } else {
+    if (!mDocShell) {
+      NS_WARNING("Missing docshell.");
+      return NS_ERROR_FAILURE;
+    }
+
+    nsresult rv = mDocShell->SetIsActive(true);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
+
 nsresult
 nsFrameLoader::ReallyStartLoading()
 {
@@ -936,25 +962,8 @@ nsFrameLoader::SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  // When we swap docShells, maybe we have to deal with a new page created just
-  // for this operation. In this case, the browser code should already have set
-  // the correct userContextId attribute value in the owning XULElement, but our
-  // docShell, that has been created way before) doesn't know that that
-  // happened.
-  // This is the reason why now we must retrieve the correct value from the
-  // usercontextid attribute before comparing our originAttributes with the
-  // other one.
-  DocShellOriginAttributes ourOriginAttributes =
-    mRemoteBrowser->OriginAttributesRef();
-  rv = PopulateUserContextIdFromAttribute(ourOriginAttributes);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  DocShellOriginAttributes otherOriginAttributes =
-    aOther->mRemoteBrowser->OriginAttributesRef();
-  rv = aOther->PopulateUserContextIdFromAttribute(otherOriginAttributes);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  if (ourOriginAttributes != otherOriginAttributes) {
+  if (mRemoteBrowser->OriginAttributesRef() !=
+      aOther->mRemoteBrowser->OriginAttributesRef()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
@@ -1334,25 +1343,8 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  // When we swap docShells, maybe we have to deal with a new page created just
-  // for this operation. In this case, the browser code should already have set
-  // the correct userContextId attribute value in the owning XULElement, but our
-  // docShell, that has been created way before) doesn't know that that
-  // happened.
-  // This is the reason why now we must retrieve the correct value from the
-  // usercontextid attribute before comparing our originAttributes with the
-  // other one.
-  DocShellOriginAttributes ourOriginAttributes =
-    ourDocshell->GetOriginAttributes();
-  rv = PopulateUserContextIdFromAttribute(ourOriginAttributes);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  DocShellOriginAttributes otherOriginAttributes =
-    otherDocshell->GetOriginAttributes();
-  rv = aOther->PopulateUserContextIdFromAttribute(otherOriginAttributes);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  if (ourOriginAttributes != otherOriginAttributes) {
+  if (ourDocshell->GetOriginAttributes() !=
+      otherDocshell->GetOriginAttributes()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
@@ -1966,7 +1958,7 @@ nsFrameLoader::MaybeCreateDocShell()
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 
   if (mIsPrerendered) {
-    nsresult rv = mDocShell->SetIsPrerendered(true);
+    nsresult rv = mDocShell->SetIsPrerendered();
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -2115,9 +2107,13 @@ nsFrameLoader::MaybeCreateDocShell()
   }
 
   // Grab the userContextId from owner if XUL
-  nsresult rv = PopulateUserContextIdFromAttribute(attrs);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  nsAutoString userContextIdStr;
+  if ((namespaceID == kNameSpaceID_XUL) &&
+      mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::usercontextid, userContextIdStr) &&
+      !userContextIdStr.IsEmpty()) {
+    nsresult rv;
+    attrs.mUserContextId = userContextIdStr.ToInteger(&rv);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   nsDocShell::Cast(mDocShell)->SetOriginAttributes(attrs);
@@ -3361,34 +3357,20 @@ nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
     attrs.mUserContextId = userContextId;
   }
 
+  nsAutoString presentationURLStr;
+  mOwnerContent->GetAttr(kNameSpaceID_None,
+                         nsGkAtoms::mozpresentation,
+                         presentationURLStr);
+
   bool tabContextUpdated =
     aTabContext->SetTabContext(OwnerIsMozBrowserFrame(),
+                               mIsPrerendered,
                                ownApp,
                                containingApp,
                                attrs,
-                               signedPkgOrigin);
+                               signedPkgOrigin,
+                               presentationURLStr);
   NS_ENSURE_STATE(tabContextUpdated);
-
-  return NS_OK;
-}
-
-nsresult
-nsFrameLoader::PopulateUserContextIdFromAttribute(DocShellOriginAttributes& aAttr)
-{
-  if (aAttr.mUserContextId ==
-        nsIScriptSecurityManager::DEFAULT_USER_CONTEXT_ID)  {
-    // Grab the userContextId from owner if XUL
-    nsAutoString userContextIdStr;
-    int32_t namespaceID = mOwnerContent->GetNameSpaceID();
-    if ((namespaceID == kNameSpaceID_XUL) &&
-        mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::usercontextid,
-                               userContextIdStr) &&
-        !userContextIdStr.IsEmpty()) {
-      nsresult rv;
-      aAttr.mUserContextId = userContextIdStr.ToInteger(&rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  }
 
   return NS_OK;
 }

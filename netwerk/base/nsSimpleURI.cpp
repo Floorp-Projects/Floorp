@@ -24,6 +24,9 @@
 
 using namespace mozilla::ipc;
 
+namespace mozilla {
+namespace net {
+
 static NS_DEFINE_CID(kThisSimpleURIImplementationCID,
                      NS_THIS_SIMPLEURI_IMPLEMENTATION_CID);
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
@@ -214,7 +217,7 @@ nsSimpleURI::SetSpec(const nsACString &aSpec)
         return NS_ERROR_MALFORMED_URI;
 
     mScheme.Truncate();
-    mozilla::DebugOnly<int32_t> n = spec.Left(mScheme, colonPos);
+    DebugOnly<int32_t> n = spec.Left(mScheme, colonPos);
     NS_ASSERTION(n == colonPos, "Left failed");
     ToLowerCase(mScheme);
 
@@ -633,7 +636,7 @@ nsSimpleURI::SetMutable(bool value)
 //----------------------------------------------------------------------------
 
 size_t 
-nsSimpleURI::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+nsSimpleURI::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
   return mScheme.SizeOfExcludingThisIfUnshared(aMallocSizeOf) +
          mPath.SizeOfExcludingThisIfUnshared(aMallocSizeOf) +
@@ -641,7 +644,9 @@ nsSimpleURI::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 }
 
 size_t
-nsSimpleURI::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+nsSimpleURI::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
+} // namespace net
+} // namespace mozilla

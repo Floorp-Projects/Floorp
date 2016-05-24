@@ -979,10 +979,10 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
 
             cp = PL_strcasestr(val, "max=");
             if (cp) {
-                int val = atoi(cp + 4);
-                if (val > 0) {
+                int maxUses = atoi(cp + 4);
+                if (maxUses > 0) {
                     foundKeepAliveMax = true;
-                    mRemainingConnectionUses = static_cast<uint32_t>(val);
+                    mRemainingConnectionUses = static_cast<uint32_t>(maxUses);
                 }
             }
         }

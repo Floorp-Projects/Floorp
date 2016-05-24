@@ -194,9 +194,13 @@ public:
   void* GetImplData() { return mImplData; }
 
   virtual gfx::IntSize GetSize() = 0;
+  virtual gfx::IntPoint GetOrigin()
+  {
+    return gfx::IntPoint(0, 0);
+  }
   virtual gfx::IntRect GetPictureRect()
   {
-    return gfx::IntRect(0, 0, GetSize().width, GetSize().height);
+    return gfx::IntRect(GetOrigin().x, GetOrigin().y, GetSize().width, GetSize().height);
   }
 
   ImageBackendData* GetBackendData(LayersBackend aBackend)
@@ -764,6 +768,8 @@ public:
 
   virtual gfx::IntSize GetSize() { return mSize; }
 
+  virtual gfx::IntPoint GetOrigin() { return mOrigin; }
+
   explicit PlanarYCbCrImage();
 
   virtual SharedPlanarYCbCrImage *AsSharedPlanarYCbCrImage() { return nullptr; }
@@ -783,6 +789,7 @@ protected:
   gfxImageFormat GetOffscreenFormat();
 
   Data mData;
+  gfx::IntPoint mOrigin;
   gfx::IntSize mSize;
   gfxImageFormat mOffscreenFormat;
   nsCountedRef<nsMainThreadSourceSurfaceRef> mSourceSurface;

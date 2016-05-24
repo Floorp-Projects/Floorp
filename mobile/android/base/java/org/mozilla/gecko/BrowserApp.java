@@ -200,8 +200,6 @@ public class BrowserApp extends GeckoApp
 
     private static final int TABS_ANIMATION_DURATION = 450;
 
-    public static final String GUEST_BROWSING_ARG = "--guest";
-
     // Intent String extras used to specify custom Switchboard configurations.
     private static final String INTENT_KEY_SWITCHBOARD_HOST = "switchboard-host";
 
@@ -549,20 +547,6 @@ public class BrowserApp extends GeckoApp
         }
 
         final Intent intent = getIntent();
-
-        // Note that we're calling GeckoProfile.get *before GeckoApp.onCreate*.
-        // This means we're reliant on the logic in GeckoProfile to correctly
-        // look up our launch intent (via BrowserApp's Activity-ness) and pull
-        // out the arguments. Be careful if you change that!
-        final GeckoProfile p = GeckoProfile.get(this);
-
-        if (p != null && !p.inGuestMode()) {
-            // This is *only* valid because we never want to use the guest mode
-            // profile concurrently with a normal profile -- no syncing to it,
-            // no dual-profile usage, nothing. BrowserApp startup with a conventional
-            // GeckoProfile will cause the guest profile to be deleted.
-            GeckoProfile.maybeCleanupGuestProfile(this);
-        }
 
         // This has to be prepared prior to calling GeckoApp.onCreate, because
         // widget code and BrowserToolbar need it, and they're created by the
@@ -3635,23 +3619,27 @@ public class BrowserApp extends GeckoApp
     }
 
     public void showGuestModeDialog(final GuestModeDialog type) {
+        if ((type == GuestModeDialog.ENTERING) == getProfile().inGuestMode()) {
+            // Don't show enter dialog if we are already in guest mode; same with leaving.
+            return;
+        }
+
         final Prompt ps = new Prompt(this, new Prompt.PromptCallback() {
             @Override
             public void onPromptFinished(String result) {
                 try {
                     int itemId = new JSONObject(result).getInt("button");
                     if (itemId == 0) {
-                        String args = "";
+                        final Context context = GeckoAppShell.getApplicationContext();
                         if (type == GuestModeDialog.ENTERING) {
-                            args = GUEST_BROWSING_ARG;
+                            GuestSession.enter(context);
                         } else {
-                            GeckoProfile.leaveGuestSession(BrowserApp.this);
-
-                            // Now's a good time to make sure we're not displaying the Guest Browsing notification.
-                            GuestSession.hideNotification(BrowserApp.this);
+                            GuestSession.leave(context);
+                            // Now's a good time to make sure we're not displaying the
+                            // Guest Browsing notification.
+                            GuestSession.hideNotification(context);
                         }
-
-                        doRestart(args);
+                        doRestart();
                     }
                 } catch (JSONException ex) {
                     Log.e(LOGTAG, "Exception reading guest mode prompt result", ex);

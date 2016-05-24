@@ -719,7 +719,7 @@ js::DumpPC(JSContext* cx)
     Sprinter sprinter(cx);
     if (!sprinter.init())
         return false;
-    ScriptFrameIter iter(cx);
+    ScriptFrameIter iter(cx, FrameIter::GO_THROUGH_SAVED);
     if (iter.done()) {
         fprintf(stdout, "Empty stack.\n");
         return true;
@@ -1415,7 +1415,7 @@ DecompileExpressionFromStack(JSContext* cx, int spindex, int skipStackHits, Hand
     return true;
 #endif
 
-    FrameIter frameIter(cx);
+    FrameIter frameIter(cx, FrameIter::STOP_AT_SAVED);
 
     if (frameIter.done() || !frameIter.hasScript())
         return true;
@@ -1486,7 +1486,7 @@ DecompileArgumentFromStack(JSContext* cx, int formalIndex, char** res)
      * Settle on the nearest script frame, which should be the builtin that
      * called the intrinsic.
      */
-    FrameIter frameIter(cx);
+    FrameIter frameIter(cx, FrameIter::STOP_AT_SAVED);
     MOZ_ASSERT(!frameIter.done());
 
     /*

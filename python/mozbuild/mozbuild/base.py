@@ -449,8 +449,15 @@ class MozbuildObject(ProcessExecutionMixin):
                 FLASHW_CAPTION = 0x01
                 FLASHW_TRAY = 0x02
                 FLASHW_TIMERNOFG = 0x0C
+
+                # GetConsoleWindows returns NULL if no console is attached. We
+                # can't flash nothing.
+                console = windll.kernel32.GetConsoleWindow()
+                if not console:
+                    return
+
                 params = FLASHWINDOW(sizeof(FLASHWINDOW),
-                                    windll.kernel32.GetConsoleWindow(),
+                                    console,
                                     FLASHW_CAPTION | FLASHW_TRAY | FLASHW_TIMERNOFG, 3, 0)
                 FlashWindowEx(params)
         except Exception as e:

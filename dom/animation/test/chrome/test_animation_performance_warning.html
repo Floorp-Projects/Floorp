@@ -197,7 +197,7 @@ var gAnimationWithGeometricKeyframeTests = [
         {
           property: 'transform',
           runningOnCompositor: false,
-          warning: 'AnimationWarningTransformWithGeometricProperties'
+          warning: 'CompositorAnimationWarningTransformWithGeometricProperties'
         }
       ]
     }
@@ -231,7 +231,7 @@ var gAnimationWithGeometricKeyframeTests = [
         {
           property: 'transform',
           runningOnCompositor: false,
-          warning: 'AnimationWarningTransformWithGeometricProperties'
+          warning: 'CompositorAnimationWarningTransformWithGeometricProperties'
         }
       ]
     }
@@ -249,7 +249,7 @@ var gPerformanceWarningTests = [
       {
         property: 'transform',
         runningOnCompositor: false,
-        warning: 'AnimationWarningTransformPreserve3D'
+        warning: 'CompositorAnimationWarningTransformPreserve3D'
       }
     ]
   },
@@ -263,7 +263,7 @@ var gPerformanceWarningTests = [
       {
         property: 'transform',
         runningOnCompositor: false,
-        warning: 'AnimationWarningTransformBackfaceVisibilityHidden'
+        warning: 'CompositorAnimationWarningTransformBackfaceVisibilityHidden'
       }
     ]
   },
@@ -282,7 +282,7 @@ var gPerformanceWarningTests = [
       {
         property: 'transform',
         runningOnCompositor: false,
-        warning: 'AnimationWarningTransformPreserve3D'
+        warning: 'CompositorAnimationWarningTransformPreserve3D'
       }
     ]
   },
@@ -301,7 +301,7 @@ var gPerformanceWarningTests = [
       {
         property: 'transform',
         runningOnCompositor: false,
-        warning: 'AnimationWarningTransformBackfaceVisibilityHidden'
+        warning: 'CompositorAnimationWarningTransformBackfaceVisibilityHidden'
       }
     ]
   },
@@ -320,7 +320,7 @@ var gMultipleAsyncAnimationsTests = [
           {
             property: 'transform',
             runningOnCompositor: false,
-            warning: 'AnimationWarningTransformPreserve3D'
+            warning: 'CompositorAnimationWarningTransformPreserve3D'
           }
         ]
       },
@@ -349,7 +349,7 @@ var gMultipleAsyncAnimationsTests = [
           {
             property: 'transform',
             runningOnCompositor: false,
-            warning: 'AnimationWarningTransformBackfaceVisibilityHidden'
+            warning: 'CompositorAnimationWarningTransformBackfaceVisibilityHidden'
           }
         ]
       },
@@ -391,7 +391,7 @@ var gMultipleAsyncAnimationsWithGeometricKeyframeTests = [
             {
               property: 'transform',
               runningOnCompositor: false,
-              warning: 'AnimationWarningTransformWithGeometricProperties'
+              warning: 'CompositorAnimationWarningTransformWithGeometricProperties'
             }
           ]
         }
@@ -462,7 +462,7 @@ var gMultipleAsyncAnimationsWithGeometricKeyframeTests = [
             {
               property: 'transform',
               runningOnCompositor: false,
-              warning: 'AnimationWarningTransformWithGeometricProperties'
+              warning: 'CompositorAnimationWarningTransformWithGeometricProperties'
             }
           ]
         }
@@ -485,7 +485,7 @@ var gMultipleAsyncAnimationsWithGeometricAnimationTests = [
           {
             property: 'transform',
             runningOnCompositor: false,
-            warning: 'AnimationWarningTransformWithGeometricProperties'
+            warning: 'CompositorAnimationWarningTransformWithGeometricProperties'
           }
         ]
       },
@@ -518,7 +518,7 @@ var gMultipleAsyncAnimationsWithGeometricAnimationTests = [
           {
             property: 'transform',
             runningOnCompositor: false,
-            warning: 'AnimationWarningTransformWithGeometricProperties'
+            warning: 'CompositorAnimationWarningTransformWithGeometricProperties'
           }
         ]
       },
@@ -874,7 +874,7 @@ function start() {
         [ {
           property: 'transform',
           runningOnCompositor: false,
-          warning: 'AnimationWarningTransformSVG'
+          warning: 'CompositorAnimationWarningTransformSVG'
         } ]);
       svg.removeAttribute('transform');
       return waitForFrame();

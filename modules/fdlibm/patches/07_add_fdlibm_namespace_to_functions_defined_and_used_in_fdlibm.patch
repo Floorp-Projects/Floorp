@@ -1,7 +1,7 @@
 diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private.h
 --- a/modules/fdlibm/src/math_private.h
 +++ b/modules/fdlibm/src/math_private.h
-@@ -724,16 +724,46 @@ irintl(long double x)
+@@ -724,16 +724,47 @@ irintl(long double x)
  #define	__ieee754_j1f	j1f
  #define	__ieee754_y0f	y0f
  #define	__ieee754_y1f	y1f
@@ -38,6 +38,7 @@ diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private
 +#define copysign fdlibm::copysign
 +#define scalbn fdlibm::scalbn
 +#define trunc fdlibm::trunc
++#define truncf fdlibm::truncf
 +#define floorf fdlibm::floorf
 +
  /* fdlibm kernel function */

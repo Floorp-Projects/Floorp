@@ -146,6 +146,8 @@ MediaDecoderReaderWrapper::MediaDecoderReaderWrapper(bool aIsRealTime,
   , mReader(aReader)
   , mAudioCallbackID("AudioCallbackID")
   , mVideoCallbackID("VideoCallbackID")
+  , mWaitAudioCallbackID("WaitAudioCallbackID")
+  , mWaitVideoCallbackID("WaitVideoCallbackID")
 {}
 
 MediaDecoderReaderWrapper::~MediaDecoderReaderWrapper()
@@ -196,6 +198,24 @@ MediaDecoderReaderWrapper::CancelVideoCallback(CallbackID aID)
   MOZ_ASSERT(aID == mVideoCallbackID);
   ++mVideoCallbackID;
   mRequestVideoDataCB = nullptr;
+}
+
+void
+MediaDecoderReaderWrapper::CancelWaitAudioCallback(CallbackID aID)
+{
+  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+  MOZ_ASSERT(aID == mWaitAudioCallbackID);
+  ++mWaitAudioCallbackID;
+  mWaitAudioDataCB = nullptr;
+}
+
+void
+MediaDecoderReaderWrapper::CancelWaitVideoCallback(CallbackID aID)
+{
+  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+  MOZ_ASSERT(aID == mWaitVideoCallbackID);
+  ++mWaitVideoCallbackID;
+  mWaitVideoDataCB = nullptr;
 }
 
 void
@@ -285,6 +305,20 @@ MediaDecoderReaderWrapper::IsRequestingVideoData() const
   return mVideoDataRequest.Exists();
 }
 
+bool
+MediaDecoderReaderWrapper::IsWaitingAudioData() const
+{
+  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+  return mAudioWaitRequest.Exists();
+}
+
+bool
+MediaDecoderReaderWrapper::IsWaitingVideoData() const
+{
+  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+  return mVideoWaitRequest.Exists();
+}
+
 RefPtr<MediaDecoderReader::SeekPromise>
 MediaDecoderReaderWrapper::Seek(SeekTarget aTarget, media::TimeUnit aEndTime)
 {
@@ -295,12 +329,41 @@ MediaDecoderReaderWrapper::Seek(SeekTarget aTarget, media::TimeUnit aEndTime)
                      aEndTime.ToMicroseconds());
 }
 
-RefPtr<MediaDecoderReaderWrapper::WaitForDataPromise>
+void
 MediaDecoderReaderWrapper::WaitForData(MediaData::Type aType)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  return InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
-                     &MediaDecoderReader::WaitForData, aType);
+  MOZ_ASSERT(WaitCallbackRef(aType));
+
+  auto p = InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
+                       &MediaDecoderReader::WaitForData, aType);
+
+  RefPtr<MediaDecoderReaderWrapper> self = this;
+  WaitRequestRef(aType).Begin(p->Then(mOwnerThread, __func__,
+    [self] (MediaData::Type aType) {
+      MOZ_ASSERT(self->WaitCallbackRef(aType));
+      self->WaitRequestRef(aType).Complete();
+      self->WaitCallbackRef(aType)->OnResolved(aType);
+    },
+    [self, aType] (WaitForDataRejectValue aRejection) {
+      MOZ_ASSERT(self->WaitCallbackRef(aType));
+      self->WaitRequestRef(aType).Complete();
+      self->WaitCallbackRef(aType)->OnRejected(aRejection);
+    }));
+}
+
+UniquePtr<MediaDecoderReaderWrapper::WaitForDataCallbackBase>&
+MediaDecoderReaderWrapper::WaitCallbackRef(MediaData::Type aType)
+{
+  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+  return aType == MediaData::AUDIO_DATA ? mWaitAudioDataCB : mWaitVideoDataCB;
+}
+
+MozPromiseRequestHolder<MediaDecoderReader::WaitForDataPromise>&
+MediaDecoderReaderWrapper::WaitRequestRef(MediaData::Type aType)
+{
+  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+  return aType == MediaData::AUDIO_DATA ? mAudioWaitRequest : mVideoWaitRequest;
 }
 
 RefPtr<MediaDecoderReaderWrapper::BufferedUpdatePromise>
@@ -336,6 +399,8 @@ MediaDecoderReaderWrapper::ResetDecode(TargetQueues aQueues)
 
   mAudioDataRequest.DisconnectIfExists();
   mVideoDataRequest.DisconnectIfExists();
+  mAudioWaitRequest.DisconnectIfExists();
+  mVideoWaitRequest.DisconnectIfExists();
 
   nsCOMPtr<nsIRunnable> r =
     NewRunnableMethod<TargetQueues>(mReader,

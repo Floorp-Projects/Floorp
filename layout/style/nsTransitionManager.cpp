@@ -310,8 +310,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     return;
   }
 
-  NS_WARN_IF_FALSE(!nsLayoutUtils::AreAsyncAnimationsEnabled() ||
-                   !mPresContext->EffectCompositor()->
+  NS_WARN_IF_FALSE(!mPresContext->EffectCompositor()->
                      HasThrottledStyleUpdates(),
                    "throttled animations not up to date");
 

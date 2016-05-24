@@ -1961,6 +1961,22 @@ public:
                        const mozilla::NativeEventData& aKeyEventData,
                        nsIKeyEventInPluginCallback* aCallback);
 
+
+    /**
+     * LookUpDictionary shows the dictionary for the word around current point.
+     *
+     * @param aText            the word to look up dictiorary.
+     * @param aFontRangeArray  text decoration of aText
+     * @param aIsVertical      true if the word is vertical layout
+     * @param aPoint           top-left point of aText
+     */
+    virtual void LookUpDictionary(
+                   const nsAString& aText,
+                   const nsTArray<mozilla::FontRange>& aFontRangeArray,
+                   const bool aIsVertical,
+                   const LayoutDeviceIntPoint& aPoint)
+    { }
+
 protected:
     /**
      * Like GetDefaultScale, but taking into account only the system settings

@@ -38,6 +38,7 @@ class SharedImmutableTwoByteString;
 class SharedImmutableStringsCache
 {
     friend class SharedImmutableString;
+    friend class SharedImmutableTwoByteString;
     struct Hasher;
 
   public:
@@ -141,9 +142,12 @@ class SharedImmutableStringsCache
         // Size of the table.
         n += locked->set.sizeOfExcludingThis(mallocSizeOf);
 
-        // Sizes of the strings.
-        for (auto r = locked->set.all(); !r.empty(); r.popFront())
-            n += mallocSizeOf(r.front().chars());
+        // Sizes of the strings and their boxes.
+        for (auto r = locked->set.all(); !r.empty(); r.popFront()) {
+            n += mallocSizeOf(r.front().get());
+            if (const char* chars = r.front()->chars())
+                n += mallocSizeOf(chars);
+        }
 
         return n;
     }
@@ -157,12 +161,8 @@ class SharedImmutableStringsCache
         if (!inner)
             return mozilla::Nothing();
 
-        auto ret = mozilla::Some(SharedImmutableStringsCache(inner));
-#ifdef DEBUG
-        auto locked = ret->inner_->lock();
-        MOZ_ASSERT(locked->refcount == 1);
-#endif
-        return ret;
+        auto locked = inner->lock();
+        return mozilla::Some(SharedImmutableStringsCache(locked));
     }
 
     SharedImmutableStringsCache(SharedImmutableStringsCache&& rhs)
@@ -178,18 +178,13 @@ class SharedImmutableStringsCache
         return *this;
     }
 
-    /**
-     * Create a new reference to the inner cache.
-     */
+    SharedImmutableStringsCache& operator=(const SharedImmutableStringsCache&) = delete;
+
     SharedImmutableStringsCache clone() {
         MOZ_ASSERT(inner_);
         auto locked = inner_->lock();
-        locked->refcount++;
-        return SharedImmutableStringsCache(inner_);
+        return SharedImmutableStringsCache(locked);
     }
-
-    // If you want a copy, do it explicitly with `clone`.
-    SharedImmutableStringsCache& operator=(const SharedImmutableStringsCache&) = delete;
 
     ~SharedImmutableStringsCache() {
         if (!inner_)
@@ -209,14 +204,40 @@ class SharedImmutableStringsCache
             js_delete(inner_);
     }
 
+    /**
+     * Purge the cache of all refcount == 0 entries.
+     */
+    void purge() {
+        auto locked = inner_->lock();
+        MOZ_ASSERT(locked->refcount > 0);
+
+        if (!locked->set.initialized())
+            return;
+
+        for (Inner::Set::Enum e(locked->set); !e.empty(); e.popFront()) {
+            if (e.front()->refcount == 0) {
+                // The chars should be eagerly freed when refcount reaches zero.
+                MOZ_ASSERT(!e.front()->chars());
+                e.removeFront();
+            } else {
+                // The chars should exist as long as the refcount is non-zero.
+                MOZ_ASSERT(e.front()->chars());
+            }
+        }
+    }
+
   private:
     class StringBox
     {
+        friend class SharedImmutableString;
+
         OwnedChars chars_;
         size_t length_;
 
       public:
         mutable size_t refcount;
+
+        using Ptr = mozilla::UniquePtr<StringBox, JS::DeletePolicy<StringBox>>;
 
         StringBox(OwnedChars&& chars, size_t length)
           : chars_(mozilla::Move(chars))
@@ -226,13 +247,8 @@ class SharedImmutableStringsCache
             MOZ_ASSERT(chars_);
         }
 
-        StringBox(StringBox&& rhs)
-          : chars_(mozilla::Move(rhs.chars_))
-          , length_(rhs.length_)
-          , refcount(rhs.refcount)
-        {
-            MOZ_ASSERT(this != &rhs, "self move not allowed");
-            rhs.refcount = 0;
+        static Ptr Create(OwnedChars&& chars, size_t length) {
+            return Ptr(js_new<StringBox>(mozilla::Move(chars), length));
         }
 
         StringBox(const StringBox&) = delete;
@@ -258,46 +274,56 @@ class SharedImmutableStringsCache
         {
             friend struct Hasher;
 
+            HashNumber hash_;
             const char* chars_;
             size_t length_;
 
           public:
-            Lookup(const char* chars, size_t length)
-              : chars_(chars)
+            Lookup(HashNumber hash, const char* chars, size_t length)
+              : hash_(hash)
+              , chars_(chars)
               , length_(length)
             {
                 MOZ_ASSERT(chars_);
+                MOZ_ASSERT(hash == Hasher::hashLongString(chars, length));
             }
 
-            explicit Lookup(const char* chars)
-              : Lookup(chars, strlen(chars))
-            { }
-
-            Lookup(const char16_t* chars, size_t length)
-              : Lookup(reinterpret_cast<const char*>(chars), length * sizeof(char16_t))
-            { }
-
-            explicit Lookup(const char16_t* chars)
-              : Lookup(chars, js_strlen(chars))
+            Lookup(HashNumber hash, const char16_t* chars, size_t length)
+              : Lookup(hash, reinterpret_cast<const char*>(chars), length * sizeof(char16_t))
             { }
         };
 
-        static HashNumber hash(const Lookup& lookup) {
-            MOZ_ASSERT(lookup.chars_);
-            return mozilla::HashString(lookup.chars_, lookup.length_);
+        static const size_t SHORT_STRING_MAX_LENGTH = 8192;
+        static const size_t HASH_CHUNK_LENGTH = SHORT_STRING_MAX_LENGTH / 2;
+
+        // For strings longer than SHORT_STRING_MAX_LENGTH, we only hash the
+        // first HASH_CHUNK_LENGTH and last HASH_CHUNK_LENGTH characters in the
+        // string. This increases the risk of collisions, but in practice it
+        // should be rare, and it yields a large speedup for hashing long
+        // strings.
+        static HashNumber hashLongString(const char* chars, size_t length) {
+            MOZ_ASSERT(chars);
+            return length <= SHORT_STRING_MAX_LENGTH
+                ? mozilla::HashString(chars, length)
+                : mozilla::AddToHash(mozilla::HashString(chars, HASH_CHUNK_LENGTH),
+                                     mozilla::HashString(chars + length - HASH_CHUNK_LENGTH,
+                                                         HASH_CHUNK_LENGTH));
         }
 
-        static bool match(const StringBox& key, const Lookup& lookup) {
-            MOZ_ASSERT(lookup.chars_);
-            MOZ_ASSERT(key.chars());
+        static HashNumber hash(const Lookup& lookup) {
+            return lookup.hash_;
+        }
 
-            if (key.length() != lookup.length_)
+        static bool match(const StringBox::Ptr& key, const Lookup& lookup) {
+            MOZ_ASSERT(lookup.chars_);
+
+            if (!key->chars() || key->length() != lookup.length_)
                 return false;
 
-            if (key.chars() == lookup.chars_)
+            if (key->chars() == lookup.chars_)
                 return true;
 
-            return memcmp(key.chars(), lookup.chars_, key.length()) == 0;
+            return memcmp(key->chars(), lookup.chars_, key->length()) == 0;
         }
     };
 
@@ -306,13 +332,13 @@ class SharedImmutableStringsCache
     // `SharedImmutable[TwoByte]String` holders.
     struct Inner
     {
-        using Set = HashSet<StringBox, Hasher, SystemAllocPolicy>;
+        using Set = HashSet<StringBox::Ptr, Hasher, SystemAllocPolicy>;
 
         size_t refcount;
         Set set;
 
         Inner()
-          : refcount(1)
+          : refcount(0)
           , set()
         { }
 
@@ -325,15 +351,12 @@ class SharedImmutableStringsCache
         }
     };
 
-    ExclusiveData<Inner>* inner_;
+    const ExclusiveData<Inner>* inner_;
 
-    // The refcount++ on inner must have already been performed by the
-    // caller. The matching refcount-- is performed in the
-    // ~SharedImmutableStringsCache destructor.
-    explicit SharedImmutableStringsCache(ExclusiveData<Inner>* inner)
-      : inner_(inner)
+    explicit SharedImmutableStringsCache(ExclusiveData<Inner>::Guard& locked)
+      : inner_(locked.parent())
     {
-        MOZ_ASSERT(inner_);
+        locked->refcount++;
     }
 };
 
@@ -348,13 +371,10 @@ class SharedImmutableString
     friend class SharedImmutableTwoByteString;
 
     mutable SharedImmutableStringsCache cache_;
-    const char* chars_;
-    size_t length_;
-#ifdef DEBUG
-    HashNumber hash_;
-#endif
+    mutable SharedImmutableStringsCache::StringBox* box_;
 
-    SharedImmutableString(SharedImmutableStringsCache&& cache, const char* chars, size_t length);
+    SharedImmutableString(ExclusiveData<SharedImmutableStringsCache::Inner>::Guard& locked,
+                          SharedImmutableStringsCache::StringBox* box);
 
   public:
     /**
@@ -379,16 +399,20 @@ class SharedImmutableString
      * resulting pointer while this `SharedImmutableString` exists.
      */
     const char* chars() const {
-        MOZ_ASSERT(chars_);
-        return chars_;
+        MOZ_ASSERT(box_);
+        MOZ_ASSERT(box_->refcount > 0);
+        MOZ_ASSERT(box_->chars());
+        return box_->chars();
     }
 
     /**
      * Get the length of the underlying string.
      */
     size_t length() const {
-        MOZ_ASSERT(chars_);
-        return length_;
+        MOZ_ASSERT(box_);
+        MOZ_ASSERT(box_->refcount > 0);
+        MOZ_ASSERT(box_->chars());
+        return box_->length();
     }
 };
 
@@ -406,8 +430,8 @@ class SharedImmutableTwoByteString
     SharedImmutableString string_;
 
     explicit SharedImmutableTwoByteString(SharedImmutableString&& string);
-    SharedImmutableTwoByteString(SharedImmutableStringsCache&& cache, const char* chars,
-                                 size_t length);
+    SharedImmutableTwoByteString(ExclusiveData<SharedImmutableStringsCache::Inner>::Guard& locked,
+                                 SharedImmutableStringsCache::StringBox* box);
 
   public:
     /**

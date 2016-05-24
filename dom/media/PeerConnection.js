@@ -1045,10 +1045,6 @@ RTCPeerConnection.prototype = {
     if (stream.currentTime === undefined) {
       throw new this._win.DOMException("invalid stream.", "InvalidParameterError");
     }
-    if (stream.getTracks().indexOf(track) < 0) {
-      throw new this._win.DOMException("track is not in stream.",
-                                       "InvalidParameterError");
-    }
     this._checkClosed();
     this._senders.forEach(sender => {
       if (sender.track == track) {
@@ -1056,13 +1052,7 @@ RTCPeerConnection.prototype = {
                                          "InvalidParameterError");
       }
     });
-    try {
-      this._impl.addTrack(track, stream);
-    } catch (e if (e.result == Cr.NS_ERROR_NOT_IMPLEMENTED)) {
-      throw new this._win.DOMException(
-          "track in constructed stream not yet supported (see Bug 1259236).",
-          "NotSupportedError");
-    }
+    this._impl.addTrack(track, stream);
     let sender = this._win.RTCRtpSender._create(this._win,
                                                 new RTCRtpSender(this, track,
                                                                  stream));

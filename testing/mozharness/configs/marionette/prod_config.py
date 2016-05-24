@@ -5,7 +5,6 @@ HG_SHARE_BASE_DIR = "/builds/hg-shared"
 
 config = {
     # marionette options
-    "test_type": "browser",
     "marionette_address": "localhost:2828",
     "test_manifest": "unit-tests.ini",
 
@@ -44,7 +43,6 @@ config = {
             "options": [
                 "--restart",
                 "--timeout=%(timeout)s",
-                "--type=%(type)s",
                 "--testvars=%(testvars)s",
                 "--profile=%(profile)s",
                 "--symbols-path=%(symbols_path)s",
@@ -65,7 +63,6 @@ config = {
             "options": [
                 "--restart",
                 "--timeout=%(timeout)s",
-                "--type=%(type)s",
                 "--testvars=%(testvars)s",
                 "--profile=%(profile)s",
                 "--symbols-path=%(symbols_path)s",
@@ -82,7 +79,6 @@ config = {
         },
         "marionette_desktop": {
             "options": [
-                "--type=%(type)s",
                 "--log-raw=%(raw_log_file)s",
                 "--log-errorsummary=%(error_summary_file)s",
                 "--binary=%(binary)s",
@@ -94,7 +90,6 @@ config = {
         },
         "marionette_emulator": {
             "options": [
-                "--type=%(type)s",
                 "--log-raw=%(raw_log_file)s",
                 "--log-errorsummary=%(error_summary_file)s",
                 "--logcat-dir=%(logcat_dir)s",
@@ -112,7 +107,6 @@ config = {
         },
         "webapi_emulator": {
             "options": [
-                "--type=%(type)s",
                 "--log-raw=%(raw_log_file)s",
                 "--log-errorsummary=%(error_summary_file)s",
                 "--symbols-path=%(symbols_path)s",

@@ -356,6 +356,7 @@ var snapshotFormatters = {
     delete data.windowLayerManagerType;
     delete data.numTotalWindows;
     delete data.numAcceleratedWindows;
+    delete data.numAcceleratedWindowsMessage;
 
     addRow("features", "asyncPanZoom",
            apzInfo.length
@@ -506,7 +507,11 @@ var snapshotFormatters = {
     // Now that we're done, grab any remaining keys in data and drop them into
     // the diagnostics section.
     for (let key in data) {
-      addRow("diagnostics", key, data[key]);
+      let value = data[key];
+      if (Array.isArray(value)) {
+        value = localizedMsg(value);
+      }
+      addRow("diagnostics", key, value);
     }
   },
 

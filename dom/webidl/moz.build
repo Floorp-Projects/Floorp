@@ -230,7 +230,6 @@ WEBIDL_FILES = [
     'HTMLPictureElement.webidl',
     'HTMLPreElement.webidl',
     'HTMLProgressElement.webidl',
-    'HTMLPropertiesCollection.webidl',
     'HTMLQuoteElement.webidl',
     'HTMLScriptElement.webidl',
     'HTMLSelectElement.webidl',

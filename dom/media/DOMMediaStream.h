@@ -352,6 +352,7 @@ public:
   void GetAudioTracks(nsTArray<RefPtr<AudioStreamTrack> >& aTracks) const;
   void GetVideoTracks(nsTArray<RefPtr<VideoStreamTrack> >& aTracks) const;
   void GetTracks(nsTArray<RefPtr<MediaStreamTrack> >& aTracks) const;
+  MediaStreamTrack* GetTrackById(const nsAString& aId) const;
   void AddTrack(MediaStreamTrack& aTrack);
   void RemoveTrack(MediaStreamTrack& aTrack);
 
@@ -374,9 +375,7 @@ public:
   };
   already_AddRefed<DOMMediaStream> CloneInternal(TrackForwardingOption aForwarding);
 
-  MediaStreamTrack* GetTrackById(const nsString& aId);
-
-  MediaStreamTrack* GetOwnedTrackById(const nsString& aId);
+  MediaStreamTrack* GetOwnedTrackById(const nsAString& aId);
 
   /**
    * Returns true if this DOMMediaStream has aTrack in its mPlaybackStream.

@@ -10,8 +10,6 @@ Cu.import("resource://gre/modules/Task.jsm");
 const userAgentID = 'aaabf1f8-2f68-44f1-a920-b88e9e7d7559';
 const nsIPushQuotaManager = Components.interfaces.nsIPushQuotaManager;
 
-const MS_IN_ONE_DAY = 1 * 24 * 60 * 60 * 1000;
-
 function run_test() {
   do_get_profile();
   setPrefs({
@@ -43,16 +41,6 @@ add_task(function* test_expiration_origin_threshold() {
     originAttributes: '',
     quota: 16,
   });
-  yield db.put({
-    channelID: 'last-visit-future',
-    pushEndpoint: 'https://example.org/push/2',
-    scope: 'https://example.info/~marty',
-    pushCount: 0,
-    lastPush: 0,
-    version: null,
-    originAttributes: '',
-    quota: 8,
-  });
 
   // A visit one day ago should provide a quota of 8 messages.
   yield PlacesTestUtils.addVisits({
@@ -61,16 +49,8 @@ add_task(function* test_expiration_origin_threshold() {
     visitDate: (Date.now() - MS_IN_ONE_DAY) * 1000,
     transition: Ci.nsINavHistoryService.TRANSITION_LINK
   });
-  // Make sure we calculate the quota correctly for visit dates in the
-  // future (bug 1206424).
-  yield PlacesTestUtils.addVisits({
-    uri: 'https://example.info/~marty/flux-capacitor.pdf',
-    title: 'Flux Capacitor Design',
-    visitDate: (Date.now() + MS_IN_ONE_DAY) * 1000,
-    transition: Ci.nsINavHistoryService.TRANSITION_TYPED
-  });
 
-  let numMessages = 11;
+  let numMessages = 10;
 
   let updates = 0;
   let notifyPromise = promiseObserverNotification(PushServiceComponent.pushTopic, (subject, data) => {
@@ -119,13 +99,6 @@ add_task(function* test_expiration_origin_threshold() {
               }],
             }));
           }
-          this.serverSendMsg(JSON.stringify({
-            messageType: 'notification',
-            updates: [{
-              channelID: 'last-visit-future',
-              version: 1,
-            }],
-          }));
         },
         onUnregister(request) {
           ok(false, "Channel should not be unregistered.");
@@ -144,8 +117,4 @@ add_task(function* test_expiration_origin_threshold() {
 
   let expiredRecord = yield db.getByKeyID('f56645a9-1f32-4655-92ad-ddc37f6d54fb');
   notStrictEqual(expiredRecord.quota, 0, 'Expired record not updated');
-
-  let futureRecord = yield db.getByKeyID('last-visit-future');
-  equal(futureRecord.quota, 15,
-    'Should reset and reduce the quota for visits in the future');
 });

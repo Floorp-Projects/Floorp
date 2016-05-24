@@ -88,7 +88,7 @@ nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, nsChange
 
   int32_t last = mCount - 1;
   if ((0 < mCount) && aFrame && (aFrame == mArray[last].mFrame)) { // same as last frame
-    NS_UpdateHint(mArray[last].mHint, aHint);
+    mArray[last].mHint |= aHint;
   }
   else {
     if (mCount == mArraySize) {

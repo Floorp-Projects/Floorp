@@ -130,10 +130,16 @@ public class GeckoThread extends Thread {
         return false;
     }
 
-    private static boolean canUseProfile(final GeckoProfile profile, final String profileName,
-                                         final File profileDir) {
+    private static boolean canUseProfile(final Context context, final GeckoProfile profile,
+                                         final String profileName, final File profileDir) {
+        if (profileDir != null && !profileDir.isDirectory()) {
+            return false;
+        }
+
         if (profile == null) {
-            return true;
+            // We haven't initialized; any profile is okay as long as we follow the guest mode setting.
+            return GuestSession.shouldUse(context) ==
+                    GeckoProfile.isGuestProfile(context, profileName, profileDir);
         }
 
         // We already initialized and have a profile; see if it matches ours.
@@ -150,7 +156,8 @@ public class GeckoThread extends Thread {
         if (profileName == null) {
             throw new IllegalArgumentException("Null profile name");
         }
-        return canUseProfile(getActiveProfile(), profileName, profileDir);
+        return canUseProfile(GeckoAppShell.getApplicationContext(), getActiveProfile(),
+                             profileName, profileDir);
     }
 
     public static boolean initWithProfile(final String profileName, final File profileDir) {
@@ -158,13 +165,20 @@ public class GeckoThread extends Thread {
             throw new IllegalArgumentException("Null profile name");
         }
 
+        final Context context = GeckoAppShell.getApplicationContext();
         final GeckoProfile profile = getActiveProfile();
+
+        if (!canUseProfile(context, profile, profileName, profileDir)) {
+            // Profile is incompatible with current profile.
+            return false;
+        }
+
         if (profile != null) {
-            return canUseProfile(profile, profileName, profileDir);
+            // We already have a compatible profile.
+            return true;
         }
 
         // We haven't initialized yet; okay to initialize now.
-        final Context context = GeckoAppShell.getApplicationContext();
         return init(GeckoProfile.get(context, profileName, profileDir),
                     /* args */ null, /* action */ null, /* debugging */ false);
     }
@@ -383,25 +397,16 @@ public class GeckoThread extends Thread {
     private String addCustomProfileArg(String args) {
         String profileArg = "";
 
-        if (mProfile != null && mProfile.inGuestMode()) {
-            profileArg = " -profile " + mProfile.getDir().getAbsolutePath();
+        // Make sure a profile exists.
+        final GeckoProfile profile = getProfile();
+        profile.getDir(); // call the lazy initializer
 
-            if (args == null || !args.contains(BrowserApp.GUEST_BROWSING_ARG)) {
-                profileArg += " " + BrowserApp.GUEST_BROWSING_ARG;
-            }
-
-        } else {
-            // Make sure a profile exists.
-            final GeckoProfile profile = getProfile();
-            profile.getDir(); // call the lazy initializer
-
-            // If args don't include the profile, make sure it's included.
-            if (args == null || !args.matches(".*\\B-(P|profile)\\s+\\S+.*")) {
-                if (profile.isCustomProfile()) {
-                    profileArg = " -profile " + profile.getDir().getAbsolutePath();
-                } else {
-                    profileArg = " -P " + profile.getName();
-                }
+        // If args don't include the profile, make sure it's included.
+        if (args == null || !args.matches(".*\\B-(P|profile)\\s+\\S+.*")) {
+            if (profile.isCustomProfile()) {
+                profileArg = " -profile " + profile.getDir().getAbsolutePath();
+            } else {
+                profileArg = " -P " + profile.getName();
             }
         }
 
@@ -451,12 +456,7 @@ public class GeckoThread extends Thread {
     public synchronized GeckoProfile getProfile() {
         if (mProfile == null) {
             final Context context = GeckoAppShell.getApplicationContext();
-            mProfile = GeckoProfile.getFromArgs(context, mArgs);
-
-            // fall back to default profile if we didn't load a specific one
-            if (mProfile == null) {
-                mProfile = GeckoProfile.getDefaultProfile(context);
-            }
+            mProfile = GeckoProfile.initFromArgs(context, mArgs);
         }
         return mProfile;
     }

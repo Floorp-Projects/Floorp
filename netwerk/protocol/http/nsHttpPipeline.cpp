@@ -706,7 +706,7 @@ nsHttpPipeline::WriteSegments(nsAHttpSegmentWriter *writer,
     }
 
     if (mPushBackLen) {
-        nsHttpPushBackWriter writer(mPushBackBuf, mPushBackLen);
+        nsHttpPushBackWriter pushBackWriter(mPushBackBuf, mPushBackLen);
         uint32_t len = mPushBackLen, n;
         mPushBackLen = 0;
 
@@ -721,7 +721,7 @@ nsHttpPipeline::WriteSegments(nsAHttpSegmentWriter *writer,
         // the push back buffer is never larger than NS_HTTP_SEGMENT_SIZE,
         // so we are guaranteed that the next response will eat the entire
         // push back buffer (even though it might again call PushBack).
-        rv = WriteSegments(&writer, len, &n);
+        rv = WriteSegments(&pushBackWriter, len, &n);
     }
 
     return rv;

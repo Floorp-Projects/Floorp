@@ -165,7 +165,7 @@ fuzzy-if(Android,4,1) == anim-svg-viewBox-01.svg lime.svg
 == anim-paintserver-1.svg anim-paintserver-1-ref.svg
 
 # animate attributes on text content children
-== anim-text-attr-01.svg anim-text-attr-01-ref.svg 
+== anim-text-attr-01.svg anim-text-attr-01-ref.svg
 
 # animate where the base value is non-interpolatable but will be replaced anyway
 == anim-fill-overpaintserver-1.svg lime.svg
@@ -269,3 +269,13 @@ fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,2) == anim-gradient-attr-presence-0
 
 # Test filtering of excessive times
 == filtered-instance-time-1.svg anim-standard-ref.svg
+
+# Test animation using defs element
+== anim-defs-gradient-property.svg lime.svg
+== anim-defs-gradient-attribute.svg lime.svg
+== anim-defs-fill.svg lime.svg
+== anim-defs-width.svg lime.svg
+
+# Test animation that changes 'display' attribute
+== anim-display.svg lime.svg
+== anim-display-in-g-element.svg lime.svg

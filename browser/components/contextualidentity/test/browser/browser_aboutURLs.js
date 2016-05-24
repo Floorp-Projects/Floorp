@@ -1,3 +1,9 @@
+"use strict";
+
+// For some about: URLs, they will take more time to load and cause timeout.
+// See Bug 1270998.
+requestLongerTimeout(2);
+
 add_task(function* () {
   let aboutURLs = [];
 

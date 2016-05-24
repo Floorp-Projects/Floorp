@@ -1040,8 +1040,30 @@ class DebuggerObject : public NativeObject
     static bool isExtensible(JSContext* cx, Handle<DebuggerObject*> object, bool& result);
     static bool isSealed(JSContext* cx, Handle<DebuggerObject*> object, bool& result);
     static bool isFrozen(JSContext* cx, Handle<DebuggerObject*> object, bool& result);
+    static bool getOwnPropertyNames(JSContext* cx, Handle<DebuggerObject*> object,
+                                    MutableHandle<IdVector> result);
+    static bool getOwnPropertySymbols(JSContext* cx, Handle<DebuggerObject*> object,
+                                      MutableHandle<IdVector> result);
+    static bool getOwnPropertyDescriptor(JSContext* cx, Handle<DebuggerObject*> object,
+                                         HandleId id, MutableHandle<PropertyDescriptor> desc);
+    static bool preventExtensions(JSContext* cx, Handle<DebuggerObject*> object);
+    static bool seal(JSContext* cx, Handle<DebuggerObject*> object);
+    static bool freeze(JSContext* cx, Handle<DebuggerObject*> object);
+    static bool defineProperty(JSContext* cx, Handle<DebuggerObject*> object, HandleId id,
+                               Handle<PropertyDescriptor> desc);
+    static bool defineProperties(JSContext* cx, Handle<DebuggerObject*> object,
+                                 Handle<IdVector> ids,
+                                 Handle<PropertyDescriptorVector> descs);
+    static bool deleteProperty(JSContext* cx, Handle<DebuggerObject*> object, HandleId id,
+                               ObjectOpResult& result);
+    static bool call(JSContext* cx, Handle<DebuggerObject*> object, HandleValue thisv,
+                     Handle<ValueVector> args, MutableHandleValue result);
 
   private:
+    enum {
+        OWNER_SLOT
+    };
+
     static const unsigned RESERVED_SLOTS = 1;
 
     static const JSPropertySpec properties_[];
@@ -1055,6 +1077,8 @@ class DebuggerObject : public NativeObject
         MOZ_ASSERT(obj);
         return obj;
     }
+
+    Debugger* owner() const;
 };
 
 class BreakpointSite {

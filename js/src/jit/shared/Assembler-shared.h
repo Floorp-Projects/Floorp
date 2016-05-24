@@ -702,20 +702,6 @@ struct AsmJSAbsoluteAddress
     wasm::SymbolicAddress target;
 };
 
-// Represents a call from an asm.js function to another asm.js function,
-// represented by the index of the callee in the Module Validator
-struct AsmJSInternalCallee
-{
-    uint32_t index;
-
-    // Provide a default constructor for embedding it in unions
-    AsmJSInternalCallee() = default;
-
-    explicit AsmJSInternalCallee(uint32_t calleeIndex)
-      : index(calleeIndex)
-    {}
-};
-
 // The base class of all Assemblers for all archs.
 class AssemblerShared
 {

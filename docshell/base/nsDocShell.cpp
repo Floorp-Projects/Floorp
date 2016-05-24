@@ -3307,11 +3307,12 @@ nsDocShell::SetDocLoaderParent(nsDocLoader* aParent)
     }
     SetAllowContentRetargeting(mAllowContentRetargeting &&
       parentAsDocShell->GetAllowContentRetargetingOnChildren());
-    if (NS_SUCCEEDED(parentAsDocShell->GetIsActive(&value))) {
-      SetIsActive(value);
-    }
     if (parentAsDocShell->GetIsPrerendered()) {
-      SetIsPrerendered(true);
+      SetIsPrerendered();
+    }
+    if (NS_SUCCEEDED(parentAsDocShell->GetIsActive(&value))) {
+      // a prerendered docshell is not active yet
+      SetIsActive(value && !mIsPrerendered);
     }
     if (NS_SUCCEEDED(parentAsDocShell->GetCustomUserAgent(customUserAgent)) &&
         !customUserAgent.IsEmpty()) {
@@ -6092,6 +6093,9 @@ nsDocShell::SetIsActiveInternal(bool aIsActive, bool aIsHidden)
   // Keep track ourselves.
   mIsActive = aIsActive;
 
+  // Clear prerender flag if necessary.
+  mIsPrerendered &= !aIsActive;
+
   // Tell the PresShell about it.
   nsCOMPtr<nsIPresShell> pshell = GetPresShell();
   if (pshell) {
@@ -6157,11 +6161,12 @@ nsDocShell::GetIsActive(bool* aIsActive)
 }
 
 NS_IMETHODIMP
-nsDocShell::SetIsPrerendered(bool aPrerendered)
+nsDocShell::SetIsPrerendered()
 {
-  MOZ_ASSERT(!aPrerendered || !mIsPrerendered,
-             "SetIsPrerendered(true) called on already prerendered docshell");
-  mIsPrerendered = aPrerendered;
+  MOZ_ASSERT(!mIsPrerendered,
+             "SetIsPrerendered() called on already prerendered docshell");
+  SetIsActive(false);
+  mIsPrerendered = true;
   return NS_OK;
 }
 
@@ -7758,6 +7763,16 @@ nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
             if (!sameURI) {
               // Keyword lookup made a new URI so no need to try
               // an alternate one.
+              doCreateAlternate = false;
+            }
+          }
+
+          if (doCreateAlternate) {
+            // Skip doing this if our channel was redirected, because we
+            // shouldn't be guessing things about the post-redirect URI.
+            nsLoadFlags loadFlags = 0;
+            if (NS_FAILED(aChannel->GetLoadFlags(&loadFlags)) ||
+                (loadFlags & nsIChannel::LOAD_REPLACE)) {
               doCreateAlternate = false;
             }
           }
@@ -13429,6 +13444,24 @@ nsDocShell::DoCommand(const char* aCommand)
   }
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsDocShell::DoCommandWithParams(const char* aCommand, nsICommandParams* aParams)
+{
+  nsCOMPtr<nsIController> controller;
+  nsresult rv = GetControllerForCommand(aCommand, getter_AddRefs(controller));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<nsICommandController> commandController =
+    do_QueryInterface(controller, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return commandController->DoCommandWithParams(aCommand, aParams);
 }
 
 nsresult

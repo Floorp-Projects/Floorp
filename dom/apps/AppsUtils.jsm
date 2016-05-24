@@ -618,20 +618,20 @@ this.AppsUtils = {
   isFirstRun: function isFirstRun(aPrefBranch) {
     let savedmstone = null;
     try {
-      savedmstone = aPrefBranch.getCharPref("gecko.mstone");
+      savedmstone = aPrefBranch.getCharPref("dom.apps.lastUpdate.mstone");
     } catch (e) {}
 
     let mstone = Services.appinfo.platformVersion;
 
     let savedBuildID = null;
     try {
-      savedBuildID = aPrefBranch.getCharPref("gecko.buildID");
+      savedBuildID = aPrefBranch.getCharPref("dom.apps.lastUpdate.buildID");
     } catch (e) {}
 
     let buildID = Services.appinfo.platformBuildID;
 
-    aPrefBranch.setCharPref("gecko.mstone", mstone);
-    aPrefBranch.setCharPref("gecko.buildID", buildID);
+    aPrefBranch.setCharPref("dom.apps.lastUpdate.mstone", mstone);
+    aPrefBranch.setCharPref("dom.apps.lastUpdate.buildID", buildID);
 
     if ((mstone != savedmstone) || (buildID != savedBuildID)) {
       aPrefBranch.setBoolPref("dom.apps.reset-permissions", false);

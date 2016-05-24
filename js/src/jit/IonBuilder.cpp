@@ -8476,28 +8476,7 @@ IonBuilder::getStaticName(JSObject* staticObject, PropertyName* name, bool* psuc
 
     *psucceeded = true;
 
-    if (staticObject->is<GlobalObject>()) {
-        // Known values on the global definitely don't need TDZ checks.
-        if (lexicalCheck)
-            lexicalCheck->setNotGuardUnchecked();
-
-        // Optimize undefined, NaN, and Infinity.
-        if (name == names().undefined) {
-            pushConstant(UndefinedValue());
-            return true;
-        }
-        if (name == names().NaN) {
-            pushConstant(compartment->runtime()->NaNValue());
-            return true;
-        }
-        if (name == names().Infinity) {
-            pushConstant(compartment->runtime()->positiveInfinityValue());
-            return true;
-        }
-    }
-
-    // When not loading a known value on the global with a lexical check,
-    // always emit the lexical check. This could be optimized, but is
+    // Always emit the lexical check. This could be optimized, but is
     // currently not for simplicity's sake.
     if (lexicalCheck) {
         *psucceeded = false;
@@ -8705,6 +8684,23 @@ IonBuilder::testGlobalLexicalBinding(PropertyName* name)
 bool
 IonBuilder::jsop_getgname(PropertyName* name)
 {
+    // Optimize undefined/NaN/Infinity first. We must ensure we handle these
+    // cases *exactly* like Baseline, because it's invalid to add an Ion IC or
+    // VM call (that might trigger invalidation) if there's no Baseline IC for
+    // this op.
+    if (name == names().undefined) {
+        pushConstant(UndefinedValue());
+        return true;
+    }
+    if (name == names().NaN) {
+        pushConstant(compartment->runtime()->NaNValue());
+        return true;
+    }
+    if (name == names().Infinity) {
+        pushConstant(compartment->runtime()->positiveInfinityValue());
+        return true;
+    }
+
     if (JSObject* obj = testGlobalLexicalBinding(name)) {
         bool emitted = false;
         if (!getStaticName(obj, name, &emitted) || emitted)

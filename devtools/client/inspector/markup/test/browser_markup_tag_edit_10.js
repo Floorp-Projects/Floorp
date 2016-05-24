@@ -11,10 +11,9 @@ const TEST_URL = "data:text/html;charset=utf-8,<div></div>";
 add_task(function* () {
   let {inspector} = yield openInspectorForURL(TEST_URL);
   yield inspector.markup.expandAll();
-  yield selectNode("div", inspector);
 
   info("Updating the DIV tagname to an invalid value");
-  let container = yield getContainerForSelector("div", inspector);
+  let container = yield focusNode("div", inspector);
   let onCancelReselect = inspector.markup.once("canceledreselectonremoved");
   let tagEditor = container.editor.tag;
   setEditableFieldValue(tagEditor, "<<<", inspector);

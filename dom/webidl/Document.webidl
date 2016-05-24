@@ -116,7 +116,6 @@ partial interface Document {
   //(HTML only)readonly attribute HTMLCollection forms;
   //(HTML only)readonly attribute HTMLCollection scripts;
   //(HTML only)NodeList getElementsByName(DOMString elementName);
-  //(HTML only)NodeList getItems(optional DOMString typeNames); // microdata
   //(Not implemented)readonly attribute DOMElementMap cssElementMap;
 
   // dynamic markup insertion
@@ -241,6 +240,12 @@ partial interface Document {
   void exitFullscreen();
   [BinaryName="exitFullscreen", Deprecated="PrefixedFullscreenAPI"]
   void mozCancelFullScreen();
+
+  // Events handlers
+  [Func="nsDocument::IsUnprefixedFullscreenEnabled"]
+  attribute EventHandler onfullscreenchange;
+  [Func="nsDocument::IsUnprefixedFullscreenEnabled"]
+  attribute EventHandler onfullscreenerror;
 };
 
 // http://dvcs.w3.org/hg/pointerlock/raw-file/default/index.html#extensions-to-the-document-interface

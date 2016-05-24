@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Test for B2G PresentationReceiver at receiver side</title>
+  <title>Test for B2G PresentationReceiver at receiver side (OOP)</title>
 </head>
 <body>
 <div id="content"></div>
@@ -11,31 +11,31 @@
 "use strict";
 
 function is(a, b, msg) {
-  window.parent.postMessage((a === b ? 'OK ' : 'KO ') + msg, '*');
+  alert((a === b ? 'OK ' : 'KO ') + msg);
 }
 
 function ok(a, msg) {
-  window.parent.postMessage((a ? 'OK ' : 'KO ') + msg, '*');
+  alert((a ? 'OK ' : 'KO ') + msg);
 }
 
 function info(msg) {
-  window.parent.postMessage('INFO ' + msg, '*');
+  alert('INFO ' + msg);
 }
 
 function command(msg) {
-  window.parent.postMessage('COMMAND ' + JSON.stringify(msg), '*');
+  alert('COMMAND ' + JSON.stringify(msg));
 }
 
 function finish() {
-  window.parent.postMessage('DONE', '*');
+  alert('DONE');
 }
 
 var connection;
 
 function testConnectionAvailable() {
   return new Promise(function(aResolve, aReject) {
-    ok(navigator.presentation, "navigator.presentation should be available.");
-    ok(navigator.presentation.receiver, "navigator.presentation.receiver should be available.");
+    ok(navigator.presentation, "navigator.presentation should be available in OOP receiving pages.");
+    ok(navigator.presentation.receiver, "navigator.presentation.receiver should be available in OOP receiving pages.");
 
     navigator.presentation.receiver.getConnection().then(
       function(aConnection) {
@@ -51,6 +51,26 @@ function testConnectionAvailable() {
         aReject();
       }
     );
+  });
+}
+
+function testConnectionAvailableSameOriginInnerIframe() {
+  return new Promise(function(aResolve, aReject) {
+    var iframe = document.createElement('iframe');
+    iframe.setAttribute('src', './file_presentation_receiver_inner_iframe.html');
+    document.body.appendChild(iframe);
+
+    aResolve();
+  });
+}
+
+function testConnectionUnavailableDiffOriginInnerIframe() {
+  return new Promise(function(aResolve, aReject) {
+    var iframe = document.createElement('iframe');
+    iframe.setAttribute('src', 'http://example.com/tests/dom/presentation/tests/mochitest/file_presentation_non_receiver_inner_iframe.html');
+    document.body.appendChild(iframe);
+
+    aResolve();
   });
 }
 
@@ -77,7 +97,7 @@ function testIncomingMessage() {
     });
 
     command({ name: 'trigger-incoming-message',
-    	        data: incomingMessage });
+              data: incomingMessage });
   });
 }
 
@@ -94,6 +114,8 @@ function testTerminateConnection() {
 }
 
 testConnectionAvailable().
+then(testConnectionAvailableSameOriginInnerIframe).
+then(testConnectionUnavailableDiffOriginInnerIframe).
 then(testConnectionReady).
 then(testIncomingMessage).
 then(testTerminateConnection).

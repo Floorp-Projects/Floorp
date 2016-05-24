@@ -59,7 +59,7 @@ SVGTransformableElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
       aAttribute == nsGkAtoms::mozAnimateMotionDummyAttr) {
     nsIFrame* frame =
       const_cast<SVGTransformableElement*>(this)->GetPrimaryFrame();
-    NS_UpdateHint(retval, nsChangeHint_InvalidateRenderingObservers);
+    retval |= nsChangeHint_InvalidateRenderingObservers;
     if (!frame || (frame->GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
       return retval;
     }
@@ -81,11 +81,11 @@ SVGTransformableElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 
     if (isAdditionOrRemoval) {
       // Reconstruct the frame tree to handle stacking context changes:
-      NS_UpdateHint(retval, nsChangeHint_ReconstructFrame);
+      retval |= nsChangeHint_ReconstructFrame;
     } else {
       // We just assume the old and new transforms are different.
-      NS_UpdateHint(retval, NS_CombineHint(nsChangeHint_UpdatePostTransformOverflow,
-                                           nsChangeHint_UpdateTransformLayer));
+      retval |= nsChangeHint_UpdatePostTransformOverflow |
+                nsChangeHint_UpdateTransformLayer;
     }
   }
   return retval;

@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1271240
+-->
+<window title="Mozilla Bug 1271240"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="run();">
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  function ok(cond, msg) {
+    opener.wrappedJSObject.ok(cond, msg);
+  }
+
+  function is(actual, expected, msg) {
+    opener.wrappedJSObject.is(actual, expected, msg);
+  }
+
+  /** Test for Bug 1271240 **/
+  function run() {
+    // test non-remote, non-prerendered browser
+    createBrowser(false, false)
+    .then(browser => verifyBrowser(browser, false, false))
+
+    // test non-remote, prerendered browser
+    .then(() => createBrowser(true, false))
+    .then(browser => verifyBrowser(browser, true, false))
+    .then(browser => makePrerenderedBrowserActive(browser))
+    .then(browser => verifyBrowser(browser, false, false))
+
+    // finish test
+    .then(() => {
+      opener.postMessage('finish', '*');
+      window.close();
+    });
+  }
+
+  function createBrowser(prerendered, remote) {
+    return new Promise(resolve => {
+      var browser = document.createElement('browser');
+      browser.setAttribute('type', 'content');
+      browser.setAttribute('prerendered', prerendered);
+      browser.setAttribute('remote', remote);
+      document.documentElement.appendChild(browser);
+      browser.loadURI('example.com');
+      resolve(browser);
+    });
+  }
+
+  function verifyBrowser(browser, prerendered, remote) {
+    var docShellOrTabParent = remote ?
+      browser.frameLoader.tabParent : browser.frameLoader.docShell;
+    ok(docShellOrTabParent, 'docShellOrTabParent should not be null');
+    is(docShellOrTabParent.isPrerendered, prerendered,
+      'isPrerendered should be ' + prerendered);
+    return browser;
+  }
+
+  function makePrerenderedBrowserActive(browser) {
+    browser.makePrerenderedBrowserActive();
+    return browser;
+  }
+
+  ]]>
+  </script>
+  <!-- <browser type="content-primary" flex="1" id="content" />
+  <browser type="content-primary" flex="1" id="content-remote" remote="true" /> -->
+</window>

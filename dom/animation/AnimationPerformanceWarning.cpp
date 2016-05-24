@@ -38,32 +38,32 @@ AnimationPerformanceWarning::ToLocalizedString(
                  "Parameter's length should be 2 for ContentTooSmall");
 
       return NS_SUCCEEDED(
-        ToLocalizedStringWithIntParams<2>("AnimationWarningContentTooSmall",
-                                          aLocalizedString));
+        ToLocalizedStringWithIntParams<2>(
+          "CompositorAnimationWarningContentTooSmall", aLocalizedString));
     case Type::ContentTooLarge:
       MOZ_ASSERT(mParams && mParams->Length() == 7,
                  "Parameter's length should be 7 for ContentTooLarge");
 
       return NS_SUCCEEDED(
-        ToLocalizedStringWithIntParams<7>("AnimationWarningContentTooLarge",
-                                          aLocalizedString));
+        ToLocalizedStringWithIntParams<7>(
+          "CompositorAnimationWarningContentTooLarge", aLocalizedString));
     case Type::TransformBackfaceVisibilityHidden:
-      key = "AnimationWarningTransformBackfaceVisibilityHidden";
+      key = "CompositorAnimationWarningTransformBackfaceVisibilityHidden";
       break;
     case Type::TransformPreserve3D:
-      key = "AnimationWarningTransformPreserve3D";
+      key = "CompositorAnimationWarningTransformPreserve3D";
       break;
     case Type::TransformSVG:
-      key = "AnimationWarningTransformSVG";
+      key = "CompositorAnimationWarningTransformSVG";
       break;
     case Type::TransformWithGeometricProperties:
-      key = "AnimationWarningTransformWithGeometricProperties";
+      key = "CompositorAnimationWarningTransformWithGeometricProperties";
       break;
     case Type::TransformFrameInactive:
-      key = "AnimationWarningTransformFrameInactive";
+      key = "CompositorAnimationWarningTransformFrameInactive";
       break;
     case Type::OpacityFrameInactive:
-      key = "AnimationWarningOpacityFrameInactive";
+      key = "CompositorAnimationWarningOpacityFrameInactive";
       break;
   }
 

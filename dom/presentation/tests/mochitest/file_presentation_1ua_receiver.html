@@ -13,26 +13,26 @@
 
 function is(a, b, msg) {
   if (a === b) {
-    window.parent.postMessage('OK ' + msg, '*');
+    alert('OK ' + msg);
   } else {
-    window.parent.postMessage('KO ' + msg + ' | reason: ' + a + ' != ' + b, '*');
+    alert('KO ' + msg + ' | reason: ' + a + ' != ' + b);
   }
 }
 
 function ok(a, msg) {
-  window.parent.postMessage((a ? 'OK ' : 'KO ') + msg, '*');
+  alert((a ? 'OK ' : 'KO ') + msg);
 }
 
 function info(msg) {
-  window.parent.postMessage('INFO ' + msg, '*');
+  alert('INFO ' + msg);
 }
 
 function command(name, data) {
-  window.parent.postMessage('COMMAND ' + JSON.stringify({name: name, data: data}), '*');
+  alert('COMMAND ' + JSON.stringify({name: name, data: data}));
 }
 
 function finish() {
-  window.parent.postMessage('DONE', '*');
+  alert('DONE');
 }
 
 var connection;
@@ -41,12 +41,6 @@ function testConnectionAvailable() {
   return new Promise(function(aResolve, aReject) {
     info('Receiver: --- testConnectionAvailable ---');
     ok(navigator.presentation, "Receiver: navigator.presentation should be available.");
-    // FIXME Sometimes navigator.presentation.receiver is initialized lately.
-    // See bug 1234128 - navigator.presentation.receiver is null in 1-UA use case.
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1234128
-    while (!navigator.presentation.receiver) {
-      info('Receiver: navigator.presentation.receiver is null, see Bug 1234128');
-    }
     ok(navigator.presentation.receiver, "Receiver: navigator.presentation.receiver should be available.");
     navigator.presentation.receiver.getConnection()
     .then((aConnection) => {
@@ -95,14 +89,14 @@ function testIncomingMessage() {
 
 function testSendMessage() {
   return new Promise(function(aResolve, aReject) {
-    window.addEventListener('message', function messageHandler(evt) {
-      var message = evt.data;
+    window.addEventListener('hashchange', function hashchangeHandler(evt) {
+      var message = JSON.parse(decodeURIComponent(window.location.hash.substring(1)));
       if (message.type === 'trigger-message-from-receiver') {
         info('Receiver: --- testSendMessage ---');
         connection.send('msg-receiver-to-sender');
       }
       if (message.type === 'message-from-receiver-received') {
-        window.removeEventListener('message', messageHandler);
+        window.removeEventListener('hashchange', hashchangeHandler);
         aResolve();
       }
     });

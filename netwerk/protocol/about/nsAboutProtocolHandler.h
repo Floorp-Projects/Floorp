@@ -13,6 +13,9 @@
 
 class nsIURI;
 
+namespace mozilla {
+namespace net {
+
 class nsAboutProtocolHandler : public nsIProtocolHandlerWithDynamicFlags
                              , public nsIProtocolHandler
                              , public nsSupportsWeakReference
@@ -79,5 +82,8 @@ public:
 protected:
     nsCOMPtr<nsIURI> mBaseURI;
 };
+
+} // namespace net
+} // namespace mozilla
 
 #endif /* nsAboutProtocolHandler_h___ */

@@ -9,6 +9,7 @@
 #include "XiphExtradata.h"
 
 #include "mozilla/PodOperations.h"
+#include "mozilla/SyncRunnable.h"
 #include "nsAutoPtr.h"
 
 #undef LOG
@@ -32,13 +33,14 @@ ogg_packet InitVorbisPacket(const unsigned char* aData, size_t aLength,
 }
 
 VorbisDataDecoder::VorbisDataDecoder(const AudioInfo& aConfig,
-                                     FlushableTaskQueue* aTaskQueue,
+                                     TaskQueue* aTaskQueue,
                                      MediaDataDecoderCallback* aCallback)
   : mInfo(aConfig)
   , mTaskQueue(aTaskQueue)
   , mCallback(aCallback)
   , mPacketCount(0)
   , mFrames(0)
+  , mIsFlushing(false)
 {
   // Zero these member vars to avoid crashes in Vorbis clear functions when
   // destructor is called before |Init|.
@@ -129,16 +131,20 @@ VorbisDataDecoder::DecodeHeader(const unsigned char* aData, size_t aLength)
 nsresult
 VorbisDataDecoder::Input(MediaRawData* aSample)
 {
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
-                         this, &VorbisDataDecoder::Decode,
-                         RefPtr<MediaRawData>(aSample)));
+                       this, &VorbisDataDecoder::ProcessDecode, aSample));
 
   return NS_OK;
 }
 
 void
-VorbisDataDecoder::Decode(MediaRawData* aSample)
+VorbisDataDecoder::ProcessDecode(MediaRawData* aSample)
 {
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  if (mIsFlushing) {
+    return;
+  }
   if (DoDecode(aSample) == -1) {
     mCallback->Error();
   } else if (mTaskQueue->IsEmpty()) {
@@ -149,6 +155,8 @@ VorbisDataDecoder::Decode(MediaRawData* aSample)
 int
 VorbisDataDecoder::DoDecode(MediaRawData* aSample)
 {
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+
   const unsigned char* aData = aSample->Data();
   size_t aLength = aSample->Size();
   int64_t aOffset = aSample->mOffset;
@@ -255,27 +263,34 @@ VorbisDataDecoder::DoDecode(MediaRawData* aSample)
 }
 
 void
-VorbisDataDecoder::DoDrain()
+VorbisDataDecoder::ProcessDrain()
 {
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   mCallback->DrainComplete();
 }
 
 nsresult
 VorbisDataDecoder::Drain()
 {
-  mTaskQueue->Dispatch(NewRunnableMethod(this, &VorbisDataDecoder::DoDrain));
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
+  mTaskQueue->Dispatch(NewRunnableMethod(this, &VorbisDataDecoder::ProcessDrain));
   return NS_OK;
 }
 
 nsresult
 VorbisDataDecoder::Flush()
 {
-  mTaskQueue->Flush();
-  // Ignore failed results from vorbis_synthesis_restart. They
-  // aren't fatal and it fails when ResetDecode is called at a
-  // time when no vorbis data has been read.
-  vorbis_synthesis_restart(&mVorbisDsp);
-  mLastFrameTime.reset();
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
+  mIsFlushing = true;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([this] () {
+    // Ignore failed results from vorbis_synthesis_restart. They
+    // aren't fatal and it fails when ResetDecode is called at a
+    // time when no vorbis data has been read.
+    vorbis_synthesis_restart(&mVorbisDsp);
+    mLastFrameTime.reset();
+  });
+  SyncRunnable::DispatchToThread(mTaskQueue, r);
+  mIsFlushing = false;
   return NS_OK;
 }
 

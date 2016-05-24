@@ -112,6 +112,7 @@ static const char *kPrefBlockURIs = "browser.safebrowsing.blockedURIs.enabled";
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::net;
 
 static LogModule*
 GetObjectLog()
@@ -3120,7 +3121,8 @@ nsObjectLoadingContent::LoadFallback(FallbackType aType, bool aNotify) {
        thisContent->IsHTMLElement(nsGkAtoms::applet)) &&
       (aType == eFallbackUnsupported ||
        aType == eFallbackDisabled ||
-       aType == eFallbackBlocklisted))
+       aType == eFallbackBlocklisted ||
+       aType == eFallbackAlternate))
   {
     for (nsIContent* child = thisContent->GetFirstChild(); child;
          child = child->GetNextNode(thisContent)) {
@@ -3129,7 +3131,8 @@ nsObjectLoadingContent::LoadFallback(FallbackType aType, bool aNotify) {
           nsStyleUtil::IsSignificantChild(child, true, false)) {
         aType = eFallbackAlternate;
       }
-      if (child->IsHTMLElement(nsGkAtoms::embed)) {
+      if (child->IsHTMLElement(nsGkAtoms::embed) &&
+          thisContent->IsHTMLElement(nsGkAtoms::object)) {
         HTMLSharedObjectElement* object = static_cast<HTMLSharedObjectElement*>(child);
         if (object) {
           object->StartObjectLoad(true, true);

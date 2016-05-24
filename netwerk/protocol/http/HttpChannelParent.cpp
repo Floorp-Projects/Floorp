@@ -392,12 +392,11 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
       NS_DeserializeObject(aSecurityInfoSerialization, getter_AddRefs(secInfo));
       mChannel->OverrideSecurityInfo(secInfo);
     }
-
   } else {
-    nsLoadFlags loadFlags;
-    mChannel->GetLoadFlags(&loadFlags);
-    loadFlags |= nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
-    mChannel->SetLoadFlags(loadFlags);
+    nsLoadFlags newLoadFlags;
+    mChannel->GetLoadFlags(&newLoadFlags);
+    newLoadFlags |= nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
+    mChannel->SetLoadFlags(newLoadFlags);
   }
 
   nsCOMPtr<nsISupportsPRUint32> cacheKey =

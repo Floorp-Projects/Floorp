@@ -14,7 +14,7 @@ add_task(function* () {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   info("Selecting the test node");
-  yield selectNode("#test-div", inspector);
+  yield focusNode("#test-div", inspector);
 
   info("Verify attributes, only ID should be there for now");
   yield assertAttributes("#test-div", {
