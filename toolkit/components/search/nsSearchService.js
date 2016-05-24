@@ -1209,7 +1209,7 @@ EngineURL.prototype = {
         this._addMozParam(param);
       }
       else
-        this.addParam(param.name, param.value, param.purpose);
+        this.addParam(param.name, param.value, param.purpose || undefined);
     }
   },
 
@@ -2069,7 +2069,7 @@ Engine.prototype = {
       let url = aJson._urls[i];
       let engineURL = new EngineURL(url.type || URLTYPE_SEARCH_HTML,
                                     url.method || "GET", url.template,
-                                    url.resultDomain);
+                                    url.resultDomain || undefined);
       engineURL._initWithJSON(url, this);
       this._urls.push(engineURL);
     }
@@ -3384,7 +3384,7 @@ SearchService.prototype = {
 
     let skippedEngines = 0;
     for (let engine of cache.engines) {
-      if (skipReadOnly && engine._readOnly !== false) {
+      if (skipReadOnly && engine._readOnly == undefined) {
         ++skippedEngines;
         continue;
       }
@@ -3399,7 +3399,7 @@ SearchService.prototype = {
 
   _loadEngineFromCache: function SRCH_SVC__loadEngineFromCache(json) {
     try {
-      let engine = new Engine(json._shortName, json._readOnly);
+      let engine = new Engine(json._shortName, json._readOnly == undefined);
       engine._initWithJSON(json);
       this._addEngineToStore(engine);
     } catch (ex) {
