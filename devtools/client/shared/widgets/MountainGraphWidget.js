@@ -1,21 +1,19 @@
 "use strict";
 
-const { Cc, Ci, Cu, Cr } = require("chrome");
-
 const { Heritage } = require("devtools/client/shared/widgets/view-helpers");
-const { AbstractCanvasGraph, CanvasGraphUtils } = require("devtools/client/shared/widgets/Graphs");
-
-const HTML_NS = "http://www.w3.org/1999/xhtml";
+const { AbstractCanvasGraph } = require("devtools/client/shared/widgets/Graphs");
 
 // Bar graph constants.
 
 const GRAPH_DAMPEN_VALUES_FACTOR = 0.9;
 
 const GRAPH_BACKGROUND_COLOR = "#ddd";
-const GRAPH_STROKE_WIDTH = 1; // px
+// px
+const GRAPH_STROKE_WIDTH = 1;
 const GRAPH_STROKE_COLOR = "rgba(255,255,255,0.9)";
-const GRAPH_HELPER_LINES_DASH = [5]; // px
-const GRAPH_HELPER_LINES_WIDTH = 1; // px
+// px
+const GRAPH_HELPER_LINES_DASH = [5];
+const GRAPH_HELPER_LINES_WIDTH = 1;
 
 const GRAPH_CLIPHEAD_LINE_COLOR = "#fff";
 const GRAPH_SELECTION_LINE_COLOR = "#fff";
@@ -117,7 +115,8 @@ MountainGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
    */
   buildGraphImage: function () {
     if (!this.format || !this.format.length) {
-      throw "The graph format traits are mandatory to style the data source.";
+      throw new Error("The graph format traits are mandatory to style " +
+                      "the data source.");
     }
     let { canvas, ctx } = this._getNamedCanvas("mountain-graph-data");
     let width = this._width;

@@ -3,8 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Ci, ChromeWorker } = require("chrome");
-const Services = require("Services");
+const { ChromeWorker } = require("chrome");
 
 function watchFiles(path, onFileChanged) {
   const watchWorker = new ChromeWorker(
@@ -16,8 +15,8 @@ function watchFiles(path, onFileChanged) {
     // chrome). This means that this system will only work when built
     // files are symlinked, so that these URIs actually read from
     // local sources. There might be a better way to do this.
-    const { path } = event.data;
-    onFileChanged(path);
+    const { newPath } = event.data;
+    onFileChanged(newPath);
   };
 
   watchWorker.postMessage({

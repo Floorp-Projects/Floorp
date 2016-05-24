@@ -522,6 +522,7 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png");
 }
 
+#menu_unsortedBookmarks,
 #BMB_unsortedBookmarks,
 #panelMenu_unsortedBookmarks {
   list-style-image: url("chrome://browser/skin/places/unsortedBookmarks.png");
@@ -1154,6 +1155,12 @@ html|span.ac-tag {
 .ac-tags-text[selected] > html|span.ac-tag {
   background-color: HighlightText;
   color: Highlight;
+}
+
+html|span.ac-emphasize-text-title,
+html|span.ac-emphasize-text-tag,
+html|span.ac-emphasize-text-url {
+  font-weight: 600;
 }
 
 .ac-type-icon[type=bookmark] {
