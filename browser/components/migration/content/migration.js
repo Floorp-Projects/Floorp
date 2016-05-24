@@ -34,6 +34,7 @@ var MigrationWizard = {
     let args = window.arguments;
     let entryPointId = args[0] || MigrationUtils.MIGRATION_ENTRYPOINT_UNKNOWN;
     Services.telemetry.getHistogramById("FX_MIGRATION_ENTRY_POINT").add(entryPointId);
+    this.isInitialMigration = entryPointId == MigrationUtils.MIGRATION_ENTRYPOINT_FIRSTRUN;
 
     if (args.length > 1) {
       this._source = args[1];
@@ -85,6 +86,7 @@ var MigrationWizard = {
 
     // Figure out what source apps are are available to import from:
     var group = document.getElementById("importSourceGroup");
+    var availableMigratorCount = 0;
     for (var i = 0; i < group.childNodes.length; ++i) {
       var migratorKey = group.childNodes[i].id;
       if (migratorKey != "nothing") {
@@ -94,11 +96,21 @@ var MigrationWizard = {
           // one, or if it is the migrator that was passed to us.
           if (!selectedMigrator || this._source == migratorKey)
             selectedMigrator = group.childNodes[i];
+          availableMigratorCount++;
         } else {
           // Hide this option
           group.childNodes[i].hidden = true;
         }
       }
+    }
+    if (this.isInitialMigration) {
+      Services.telemetry.getHistogramById("FX_STARTUP_MIGRATION_BROWSER_COUNT")
+        .add(availableMigratorCount);
+      let defaultBrowser = MigrationUtils.getMigratorKeyForDefaultBrowser();
+      // This will record 0 for unknown default browser IDs.
+      defaultBrowser = MigrationUtils.getSourceIdForTelemetry(defaultBrowser);
+      Services.telemetry.getHistogramById("FX_STARTUP_MIGRATION_EXISTING_DEFAULT_BROWSER")
+        .add(defaultBrowser);
     }
 
     group.addEventListener("command", toggleCloseBrowserWarning);
