@@ -21,7 +21,6 @@ import mozprofile
 from manifestparser import TestManifest
 from manifestparser.filters import tags
 from marionette_driver.marionette import Marionette
-from mixins.b2g import B2GTestResultMixin, get_b2g_pid, get_dm
 from mozlog import get_default_logger
 from moztest.adapters.unit import StructuredTestRunner, StructuredTestResult
 from moztest.results import TestResultCollection, TestResult, relevant_line
@@ -67,13 +66,6 @@ class MarionetteTestResult(StructuredTestResult, TestResultCollection):
         self.passed = 0
         self.testsRun = 0
         self.result_modifiers = [] # used by mixins to modify the result
-        pid = kwargs.pop('b2g_pid')
-        if pid:
-            if B2GTestResultMixin not in self.__class__.__bases__:
-                bases = [b for b in self.__class__.__bases__]
-                bases.append(B2GTestResultMixin)
-                self.__class__.__bases__ = tuple(bases)
-            B2GTestResultMixin.__init__(self, b2g_pid=pid)
         StructuredTestResult.__init__(self, *args, **kwargs)
 
     @property
@@ -227,33 +219,18 @@ class MarionetteTextTestRunner(StructuredTestRunner):
     def __init__(self, **kwargs):
         self.marionette = kwargs.pop('marionette')
         self.capabilities = kwargs.pop('capabilities')
-        self.pre_run_functions = []
-        self.b2g_pid = None
-
-        if self.capabilities["device"] != "desktop" and self.capabilities["browserName"] == "B2G":
-            def b2g_pre_run():
-                dm_type = os.environ.get('DM_TRANS', 'adb')
-                if dm_type == 'adb':
-                    self.b2g_pid = get_b2g_pid(get_dm(self.marionette))
-            self.pre_run_functions.append(b2g_pre_run)
 
         StructuredTestRunner.__init__(self, **kwargs)
-
 
     def _makeResult(self):
         return self.resultclass(self.stream,
                                 self.descriptions,
                                 self.verbosity,
                                 marionette=self.marionette,
-                                b2g_pid=self.b2g_pid,
                                 logger=self.logger,
                                 result_callbacks=self.result_callbacks)
 
     def run(self, test):
-        "Run the given test case or test suite."
-        for pre_run_func in self.pre_run_functions:
-            pre_run_func()
-
         result = super(MarionetteTextTestRunner, self).run(test)
         result.printLogs(test)
         return result
@@ -319,9 +296,6 @@ class BaseMarionetteArguments(ArgumentParser):
         self.add_argument('--testvars',
                         action='append',
                         help='path to a json file with any test data required')
-        self.add_argument('--tree',
-                        default='b2g',
-                        help='the tree that the revision parameter refers to')
         self.add_argument('--symbols-path',
                         help='absolute path to directory containing breakpad symbols, or the url of a zip file containing symbols')
         self.add_argument('--timeout',
@@ -481,7 +455,7 @@ class BaseMarionetteTestRunner(object):
     def __init__(self, address=None,
                  app=None, app_args=None, binary=None, profile=None,
                  logger=None, logdir=None,
-                 repeat=0, testvars=None, tree=None,
+                 repeat=0, testvars=None,
                  symbols_path=None, timeout=None,
                  shuffle=False, shuffle_seed=random.randint(0, sys.maxint),
                  sdcard=None, this_chunk=1, total_chunks=1, sources=None,
@@ -502,7 +476,6 @@ class BaseMarionetteTestRunner(object):
         self.logdir = logdir
         self.repeat = repeat
         self.test_kwargs = kwargs
-        self.tree = tree
         self.symbols_path = symbols_path
         self.timeout = timeout
         self.socket_timeout = socket_timeout
@@ -805,15 +778,6 @@ setReq.onerror = function() {
                 self.logger.info("using remote content from %s" % self.marionette.baseurl)
 
         device_info = None
-        if self.capabilities['device'] != 'desktop' and self.capabilities['browserName'] == 'B2G':
-            dm = get_dm(self.marionette)
-            device_info = dm.getInfo()
-            # Add Android version (SDK level) to mozinfo so that manifest entries
-            # can be conditional on android_version.
-            androidVersion = dm.shellCheckOutput(['getprop', 'ro.build.version.sdk'])
-            self.logger.info(
-                "Android sdk version '%s'; will use this to filter manifests" % androidVersion)
-            mozinfo.info['android_version'] = androidVersion
 
         for test in tests:
             self.add_test(test)
@@ -930,7 +894,6 @@ setReq.onerror = function() {
                         self.add_test(filepath)
             return
 
-        testarg_b2g = mozinfo.info.get('appname') == 'b2g'
 
         file_ext = os.path.splitext(os.path.split(filepath)[-1])[1]
 
@@ -968,11 +931,6 @@ setReq.onerror = function() {
 
                 file_ext = os.path.splitext(os.path.split(i['path'])[-1])[-1]
                 test_container = None
-                if i.get('test_container') and testarg_b2g:
-                    if i.get('test_container') == "true":
-                        test_container = True
-                    elif i.get('test_container') == "false":
-                        test_container = False
 
                 self.add_test(i["path"], i["expected"], test_container)
             return
