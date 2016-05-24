@@ -374,8 +374,6 @@ MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution)
     UpdateDisplayPortMargins();
   }
 
-  CSSSize oldSize = mMobileViewportSize;
-
   // Update internal state.
   mIsFirstPaint = false;
   mMobileViewportSize = viewport;
@@ -383,7 +381,5 @@ MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution)
   // Kick off a reflow.
   mPresShell->ResizeReflowIgnoreOverride(
     nsPresContext::CSSPixelsToAppUnits(viewport.width),
-    nsPresContext::CSSPixelsToAppUnits(viewport.height),
-    nsPresContext::CSSPixelsToAppUnits(oldSize.width),
-    nsPresContext::CSSPixelsToAppUnits(oldSize.height));
+    nsPresContext::CSSPixelsToAppUnits(viewport.height));
 }

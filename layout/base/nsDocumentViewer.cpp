@@ -1905,7 +1905,7 @@ nsDocumentViewer::SetPreviousViewer(nsIContentViewer* aViewer)
 }
 
 NS_IMETHODIMP
-nsDocumentViewer::SetBoundsWithFlags(const nsIntRect& aBounds, uint32_t aFlags)
+nsDocumentViewer::SetBounds(const nsIntRect& aBounds)
 {
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
 
@@ -1920,8 +1920,7 @@ nsDocumentViewer::SetBoundsWithFlags(const nsIntRect& aBounds, uint32_t aFlags)
   } else if (mPresContext && mViewManager) {
     int32_t p2a = mPresContext->AppUnitsPerDevPixel();
     mViewManager->SetWindowDimensions(NSIntPixelsToAppUnits(mBounds.width, p2a),
-                                      NSIntPixelsToAppUnits(mBounds.height, p2a),
-                                      !!(aFlags & nsIContentViewer::eDelayResize));
+                                      NSIntPixelsToAppUnits(mBounds.height, p2a));
   }
 
   // If there's a previous viewer, it's the one that's actually showing,
@@ -1937,12 +1936,6 @@ nsDocumentViewer::SetBoundsWithFlags(const nsIntRect& aBounds, uint32_t aFlags)
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentViewer::SetBounds(const nsIntRect& aBounds)
-{
-  return SetBoundsWithFlags(aBounds, 0);
 }
 
 NS_IMETHODIMP
