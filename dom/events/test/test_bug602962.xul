@@ -37,10 +37,8 @@ function doTest() {
   win.addEventListener("resize", function() {
     win.removeEventListener("resize", arguments.callee, false);
 
-    setTimeout(function(){
-      sbo.scrollBy(200, 0);
-      resize();
-    },0);
+    sbo.scrollBy(200, 0);
+    setTimeout(function() { resize(); }, 0);
   }, false);
 
   oldWidth = win.outerWidth;
