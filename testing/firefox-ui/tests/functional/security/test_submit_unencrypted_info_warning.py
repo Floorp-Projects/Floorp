@@ -57,4 +57,4 @@ class TestSubmitUnencryptedInfoWarning(FirefoxTestCase):
 
             # Check that search_term contains the test string.
             search_term = self.marionette.find_element(By.ID, 'search-term')
-            self.assertEqual(search_term.get_attribute('textContent'), self.test_string)
+            self.assertEqual(search_term.get_property('textContent'), self.test_string)
