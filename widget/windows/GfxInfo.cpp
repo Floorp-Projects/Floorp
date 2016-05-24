@@ -961,7 +961,7 @@ GfxInfo::GetGfxDriverInfo()
       const_cast<nsAString&>(GfxDriverInfo::GetDeviceVendor(VendorIntel)),
       const_cast<GfxDeviceFamily*>(GfxDriverInfo::GetDeviceFamily(IntelGMAX4500HD)),
       GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
-      DRIVER_BETWEEN_EXCLUSIVE, V(6,14,10,5076), V(6,14,10,5218), "6.14.10.5218", "FEATURE_FAILURE_INTEL_8");
+      DRIVER_BETWEEN_EXCLUSIVE, V(6,14,10,5076), V(6,14,10,5218), "FEATURE_FAILURE_INTEL_8", "6.14.10.5218");
 
     IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_VISTA, IntelGMA500,   V(3,0,20,3200), "FEATURE_FAILURE_INTEL_9");
     IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_VISTA, IntelGMA900,   GfxDriverInfo::allDriverVersions, "FEATURE_FAILURE_INTEL_10");
@@ -984,12 +984,12 @@ GfxInfo::GetGfxDriverInfo()
       (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorIntel),
       (GfxDeviceFamily*) GfxDriverInfo::GetDeviceFamily(IntelGMAX4500HD),
       GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
-      DRIVER_EQUAL, V(8,15,10,1749), "8.15.10.2342", "FEATURE_FAILURE_BUG_1074378_1");
+      DRIVER_EQUAL, V(8,15,10,1749), "FEATURE_FAILURE_BUG_1074378_1", "8.15.10.2342");
     APPEND_TO_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_7,
       (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorIntel),
       (GfxDeviceFamily*) GfxDriverInfo::GetDeviceFamily(IntelHDGraphicsToSandyBridge),
       GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
-      DRIVER_EQUAL, V(8,15,10,1749), "8.15.10.2342", "FEATURE_FAILURE_BUG_1074378_2");
+      DRIVER_EQUAL, V(8,15,10,1749), "FEATURE_FAILURE_BUG_1074378_2", "8.15.10.2342");
 
     /* OpenGL on any Intel hardware is discouraged */
     APPEND_TO_DRIVER_BLOCKLIST2( DRIVER_OS_ALL,
@@ -1008,7 +1008,7 @@ GfxInfo::GetGfxDriverInfo()
     APPEND_TO_DRIVER_BLOCKLIST( DRIVER_OS_ALL,
         (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorIntel), (GfxDeviceFamily*) GfxDriverInfo::GetDeviceFamily(IntelHD3000),
       GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
-      DRIVER_LESS_THAN_OR_EQUAL, V(8,15,10,2321), "8.15.10.2342", "FEATURE_FAILURE_BUG_1018278" );
+      DRIVER_LESS_THAN_OR_EQUAL, V(8,15,10,2321), "FEATURE_FAILURE_BUG_1018278", "8.15.10.2342");
 
     /* Disable D2D on Win7 on Intel HD Graphics on driver <= 8.15.10.2302
      * See bug 806786
