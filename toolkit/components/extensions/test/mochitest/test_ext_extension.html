@@ -36,7 +36,7 @@ add_task(function* test_is_allowed_incognito_access() {
 add_task(function* test_is_allowed_file_scheme_access() {
   function backgroundScript() {
     browser.extension.isAllowedFileSchemeAccess().then(isAllowedFileSchemeAccess => {
-      browser.test.assertEq(true, isAllowedFileSchemeAccess, "isAllowedFileSchemeAccess is true");
+      browser.test.assertEq(false, isAllowedFileSchemeAccess, "isAllowedFileSchemeAccess is false");
       browser.test.notifyPass("isAllowedFileSchemeAccess");
     });
   }
