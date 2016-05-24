@@ -4426,6 +4426,24 @@
     "releaseChannelCollection": "opt-out",
     "description": "Whether the homepage was imported during browser migration. Only available on release builds during firstrun."
   },
+  "FX_STARTUP_MIGRATION_BROWSER_COUNT": {
+    "bug_numbers": [1275114],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "53",
+    "kind": "enumerated",
+    "n_values": 15,
+    "releaseChannelCollection": "opt-out",
+    "description": "Number of browsers from which the user could migrate on initial profile migration. Only available on release builds during firstrun."
+  },
+  "FX_STARTUP_MIGRATION_EXISTING_DEFAULT_BROWSER": {
+    "bug_numbers": [1275114],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "53",
+    "kind": "enumerated",
+    "n_values": 15,
+    "releaseChannelCollection": "opt-out",
+    "description": "The browser that was the default on the initial profile migration. The values correspond to the internal browser ID (see MigrationUtils.jsm)"
+  },
   "INPUT_EVENT_RESPONSE_MS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "bug_numbers": [1235908],
