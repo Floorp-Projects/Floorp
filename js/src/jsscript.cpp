@@ -2055,6 +2055,19 @@ ScriptSource::setSourceCopy(ExclusiveContext* cx, SourceBufferHolder& srcBuf,
     return true;
 }
 
+static MOZ_MUST_USE bool
+reallocUniquePtr(UniquePtr<char[], JS::FreePolicy>& unique, size_t size)
+{
+    auto newPtr = static_cast<char*>(js_realloc(unique.get(), size));
+    if (!newPtr)
+        return false;
+
+    // Since the realloc succeeded, unique is now holding a freed pointer.
+    mozilla::Unused << unique.release();
+    unique.reset(newPtr);
+    return true;
+}
+
 SourceCompressionTask::ResultType
 SourceCompressionTask::work()
 {
@@ -2091,8 +2104,7 @@ SourceCompressionTask::work()
 
             // The compressed output is greater than half the size of the
             // original string. Reallocate to the full size.
-            compressed.reset(static_cast<char*>(js_realloc(compressed.release(), inputBytes)));
-            if (!compressed)
+            if (!reallocUniquePtr(compressed, inputBytes))
                 return OOM;
 
             comp.setOutput(reinterpret_cast<unsigned char*>(compressed.get()), inputBytes);
@@ -2108,11 +2120,7 @@ SourceCompressionTask::work()
     compressedBytes = comp.outWritten();
 
     // Shrink the buffer to the size of the compressed data.
-    if (auto newCompressed = static_cast<char*>(js_realloc(compressed.get(), compressedBytes))) {
-        // If the realloc succeeded, compressed is now a freed pointer.
-        mozilla::Unused << compressed.release();
-        compressed.reset(newCompressed);
-    }
+    mozilla::Unused << reallocUniquePtr(compressed, compressedBytes);
 
     return Success;
 }
