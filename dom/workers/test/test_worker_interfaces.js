@@ -163,10 +163,6 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "PerformanceMeasure",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "PerformanceObserver", nightly: true },
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "PerformanceObserverEntryList", nightly: true },
-// IMPORTANT: Do not change this list without review from a DOM peer!
     "Promise",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     { name: "PushManager", b2g: false, nightlyAndroid: true, android: false },
