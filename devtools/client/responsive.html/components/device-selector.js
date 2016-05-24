@@ -64,6 +64,10 @@ module.exports = createClass({
       }
     }
 
+    options.sort(function (a, b) {
+      return a.name.localeCompare(b.name);
+    });
+
     let selectClass = "viewport-device-selector";
     if (selectedDevice) {
       selectClass += " selected";
