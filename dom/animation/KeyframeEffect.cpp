@@ -19,6 +19,7 @@
 #include "nsCSSProps.h" // For nsCSSProps::PropHasFlags
 #include "nsCSSPseudoElements.h" // For CSSPseudoElementType
 #include "nsDOMMutationObserver.h" // For nsAutoAnimationMutationBatch
+#include "nsIPresShell.h" // For nsIPresShell
 
 namespace mozilla {
 
@@ -1066,9 +1067,13 @@ KeyframeEffectReadOnly::CanThrottle() const
   }
 
   // We can throttle the animation if the animation is paint only and
-  // the target frame is out of view.
-  if (CanIgnoreIfNotVisible() && frame->IsScrolledOutOfView()) {
-    return true;
+  // the target frame is out of view or the document is in background tabs.
+  if (CanIgnoreIfNotVisible()) {
+    nsIPresShell* presShell = GetPresShell();
+    if ((presShell && !presShell->IsActive()) ||
+        frame->IsScrolledOutOfView()) {
+      return true;
+    }
   }
 
   // First we need to check layer generation and transform overflow
@@ -1201,14 +1206,20 @@ KeyframeEffectReadOnly::GetRenderedDocument() const
   return mTarget->mElement->GetComposedDoc();
 }
 
-nsPresContext*
-KeyframeEffectReadOnly::GetPresContext() const
+nsIPresShell*
+KeyframeEffectReadOnly::GetPresShell() const
 {
   nsIDocument* doc = GetRenderedDocument();
   if (!doc) {
     return nullptr;
   }
-  nsIPresShell* shell = doc->GetShell();
+  return doc->GetShell();
+}
+
+nsPresContext*
+KeyframeEffectReadOnly::GetPresContext() const
+{
+  nsIPresShell* shell = GetPresShell();
   if (!shell) {
     return nullptr;
   }
