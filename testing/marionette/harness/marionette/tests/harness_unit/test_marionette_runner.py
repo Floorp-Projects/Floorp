@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import pytest
-from mock import patch, Mock, DEFAULT
+from mock import patch, Mock, DEFAULT, mock_open
 
 from marionette.runtests import (
     MarionetteTestRunner,
@@ -233,6 +233,20 @@ def test_parsing_testvars(mach_parsed_kwargs):
         runner = MarionetteTestRunner(**mach_parsed_kwargs)
         assert runner.testvars == expected_dict
         assert load.call_count == 1
+
+
+def test_load_testvars_throws_expected_errors(mach_parsed_kwargs):
+    mach_parsed_kwargs['testvars'] = ['some_bad_path.json']
+    runner = MarionetteTestRunner(**mach_parsed_kwargs)
+    with pytest.raises(IOError) as io_exc:
+        runner._load_testvars()
+    assert 'does not exist' in io_exc.value.message
+    with patch('os.path.exists') as exists:
+        exists.return_value = True
+        with patch('__builtin__.open', mock_open(read_data='[not {valid JSON]')):
+            with pytest.raises(Exception) as json_exc:
+                runner._load_testvars()
+    assert 'not properly formatted' in json_exc.value.message
 
 
 @pytest.mark.parametrize("has_crashed", [True, False])
