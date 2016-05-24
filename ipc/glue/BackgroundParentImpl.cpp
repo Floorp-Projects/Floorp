@@ -471,22 +471,7 @@ BackgroundParentImpl::AllocPBroadcastChannelParent(
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 
-  nsString originChannelKey;
-
-  // The format of originChannelKey is:
-  //  <channelName>|pb={true,false}|<origin+OriginAttributes>
-
-  originChannelKey.Assign(aChannel);
-
-  if (aPrivateBrowsing) {
-    originChannelKey.AppendLiteral("|pb=true|");
-  } else {
-    originChannelKey.AppendLiteral("|pb=false|");
-  }
-
-  originChannelKey.Append(NS_ConvertUTF8toUTF16(aOrigin));
-
-  return new BroadcastChannelParent(originChannelKey);
+  return new BroadcastChannelParent(aOrigin, aChannel, aPrivateBrowsing);
 }
 
 namespace {
