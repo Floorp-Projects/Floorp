@@ -339,12 +339,9 @@ DOMParser::Init(nsIPrincipal* principal, nsIURI* documentURI,
   mPrincipal = principal;
   nsresult rv;
   if (!mPrincipal) {
-    nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-    NS_ENSURE_TRUE(secMan, NS_ERROR_NOT_AVAILABLE);
-    rv =
-      secMan->GetSimpleCodebasePrincipal(mDocumentURI,
-                                         getter_AddRefs(mPrincipal));
-    NS_ENSURE_SUCCESS(rv, rv);
+    PrincipalOriginAttributes attrs;
+    mPrincipal = BasePrincipal::CreateCodebasePrincipal(mDocumentURI, attrs);
+    NS_ENSURE_TRUE(mPrincipal, NS_ERROR_FAILURE);
     mOriginalPrincipal = mPrincipal;
   } else {
     mOriginalPrincipal = mPrincipal;
