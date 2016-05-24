@@ -252,6 +252,20 @@ class VisualStudioBackend(CommonBackend):
         return projects
 
     def _write_solution(self, fh, projects):
+        # Visual Studio appears to write out its current version in the
+        # solution file. Instead of trying to figure out what version it will
+        # write, try to parse the version out of the existing file and use it
+        # verbatim.
+        vs_version = None
+        try:
+            with open(fh.name, 'rb') as sfh:
+                for line in sfh:
+                    if line.startswith(b'VisualStudioVersion = '):
+                        vs_version = line.split(b' = ', 1)[1].strip()
+        except IOError as e:
+            if e.errno != errno.ENOENT:
+                raise
+
         format_version, comment_version = visual_studio_product_to_solution_version(self._version)
         # This is a Visual C++ Project type.
         project_type = '8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942'
@@ -260,6 +274,9 @@ class VisualStudioBackend(CommonBackend):
         fh.write('Microsoft Visual Studio Solution File, Format Version %s\r\n' %
                  format_version)
         fh.write('# Visual Studio %s\r\n' % comment_version)
+
+        if vs_version:
+            fh.write('VisualStudioVersion = %s\r\n' % vs_version)
 
         # Corresponds to VS2013.
         fh.write('MinimumVisualStudioVersion = 12.0.31101.0\r\n')
