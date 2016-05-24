@@ -421,7 +421,7 @@ nsPartChannel::VisitResponseHeaders(nsIHttpHeaderVisitor *visitor)
 {
     if (!mResponseHead)
         return NS_ERROR_NOT_AVAILABLE;
-    return mResponseHead->Headers().VisitHeaders(visitor,
+    return mResponseHead->VisitHeaders(visitor,
         mozilla::net::nsHttpHeaderArray::eFilterResponse);
 }
 

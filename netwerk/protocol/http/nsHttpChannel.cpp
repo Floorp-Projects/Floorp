@@ -171,10 +171,10 @@ Hash(const char *buf, nsACString &hash)
 // We only treat 3xx responses as redirects if they have a Location header and
 // the status code is in a whitelist.
 bool
-WillRedirect(const nsHttpResponseHead * response)
+WillRedirect(nsHttpResponseHead * response)
 {
     return nsHttpChannel::IsRedirectStatus(response->Status()) &&
-           response->PeekHeader(nsHttp::Location);
+           response->HasHeader(nsHttp::Location);
 }
 
 nsresult
@@ -966,7 +966,7 @@ nsHttpChannel::CallOnStartRequest()
     }
 
     bool unknownDecoderStarted = false;
-    if (mResponseHead && mResponseHead->ContentType().IsEmpty()) {
+    if (mResponseHead && !mResponseHead->HasContentType()) {
         MOZ_ASSERT(mConnectionInfo, "Should have connection info here");
         if (!mContentTypeHint.IsEmpty())
             mResponseHead->SetContentType(mContentTypeHint);
@@ -994,7 +994,7 @@ nsHttpChannel::CallOnStartRequest()
         }
     }
 
-    if (mResponseHead && mResponseHead->ContentCharset().IsEmpty())
+    if (mResponseHead && !mResponseHead->HasContentCharset())
         mResponseHead->SetContentCharset(mContentCharsetHint);
 
     if (mResponseHead && mCacheEntry) {
@@ -1398,7 +1398,7 @@ nsHttpChannel::ProcessContentSignatureHeader(nsHttpResponseHead *aResponseHead)
     // we ensure a content type here to avoid running into problems with
     // content sniffing, which might sniff parts of the content before we can
     // verify the signature
-    if (aResponseHead->ContentType().IsEmpty()) {
+    if (!aResponseHead->HasContentType()) {
         NS_WARNING("Empty content type can get us in trouble when verifying "
                    "content signatures");
         return NS_ERROR_INVALID_SIGNATURE;
@@ -1556,13 +1556,13 @@ nsHttpChannel::ProcessAltService()
         return;
     }
 
-    const char *altSvc;
-    if (!(altSvc = mResponseHead->PeekHeader(nsHttp::Alternate_Service))) {
+    nsAutoCString altSvc;
+    mResponseHead->GetHeader(nsHttp::Alternate_Service, altSvc);
+    if (altSvc.IsEmpty()) {
         return;
     }
 
-    nsCString buf(altSvc);
-    if (!nsHttp::IsReasonableHeaderValue(buf)) {
+    if (!nsHttp::IsReasonableHeaderValue(altSvc)) {
         LOG(("Alt-Svc Response Header seems unreasonable - skipping\n"));
         return;
     }
@@ -1582,7 +1582,7 @@ nsHttpChannel::ProcessAltService()
         proxyInfo = do_QueryInterface(mProxyInfo);
     }
 
-    AltSvcMapping::ProcessHeader(buf, scheme, originHost, originPort,
+    AltSvcMapping::ProcessHeader(altSvc, scheme, originHost, originPort,
                                  mUsername, mPrivateBrowsing, callbacks, proxyInfo,
                                  mCaps & NS_HTTP_DISALLOW_SPDY);
 }
@@ -1608,8 +1608,10 @@ nsHttpChannel::ProcessResponse()
         }
 
         // how often do we see something like Alternate-Protocol: "443:quic,p=1"
-        const char *alt_protocol = mResponseHead->PeekHeader(nsHttp::Alternate_Protocol);
-        bool saw_quic = (alt_protocol && PL_strstr(alt_protocol, "quic")) ? 1 : 0;
+        nsAutoCString alt_protocol;
+        mResponseHead->GetHeader(nsHttp::Alternate_Protocol, alt_protocol);
+        bool saw_quic = (!alt_protocol.IsEmpty() &&
+                         PL_strstr(alt_protocol.get(), "quic")) ? 1 : 0;
         Telemetry::Accumulate(Telemetry::HTTP_SAW_QUIC_ALT_PROTOCOL, saw_quic);
 
         // Gather data on how many URLS get redirected
@@ -1696,7 +1698,10 @@ nsHttpChannel::ProcessResponse()
     // This would be consolidated with ProcessSecurityHeaders but it should
     // happen after OnExamineResponse.
     if (!mTransaction->ProxyConnectFailed() && (httpStatus != 407)) {
-        SetCookie(mResponseHead->PeekHeader(nsHttp::Set_Cookie));
+        nsAutoCString cookie;
+        if (NS_SUCCEEDED(mResponseHead->GetHeader(nsHttp::Set_Cookie, cookie))) {
+            SetCookie(cookie.get());
+        }
         if ((httpStatus < 500) && (httpStatus != 421)) {
             ProcessAltService();
         }
@@ -2480,9 +2485,10 @@ nsHttpChannel::EnsureAssocReq()
     if (!mResponseHead)
         return NS_OK;
 
-    const char *assoc_val = mResponseHead->PeekHeader(nsHttp::Assoc_Req);
-    if (!assoc_val)
+    nsAutoCString assoc_val;
+    if (NS_FAILED(mResponseHead->GetHeader(nsHttp::Assoc_Req, assoc_val))) {
         return NS_OK;
+    }
 
     if (!mTransaction || !mURI)
         return NS_OK;
@@ -2491,25 +2497,26 @@ nsHttpChannel::EnsureAssocReq()
         // "Pragma: X-Verify-Assoc-Req" can be used to verify even non pipelined
         // transactions. It is used by test harness.
 
-        const char *pragma_val = mResponseHead->PeekHeader(nsHttp::Pragma);
-        if (!pragma_val ||
-            !nsHttp::FindToken(pragma_val, "X-Verify-Assoc-Req",
+        nsAutoCString pragma_val;
+        mResponseHead->GetHeader(nsHttp::Pragma, pragma_val);
+        if (pragma_val.IsEmpty() ||
+            !nsHttp::FindToken(pragma_val.get(), "X-Verify-Assoc-Req",
                                HTTP_HEADER_VALUE_SEPS))
             return NS_OK;
     }
 
-    char *method = net_FindCharNotInSet(assoc_val, HTTP_LWS);
+    char *method = net_FindCharNotInSet(assoc_val.get(), HTTP_LWS);
     if (!method)
         return NS_OK;
 
     bool equals;
     char *endofmethod;
 
-    assoc_val = nullptr;
+    char * assoc_valChar = nullptr;
     endofmethod = net_FindCharInSet(method, HTTP_LWS);
     if (endofmethod)
-        assoc_val = net_FindCharNotInSet(endofmethod, HTTP_LWS);
-    if (!assoc_val)
+        assoc_valChar = net_FindCharNotInSet(endofmethod, HTTP_LWS);
+    if (!assoc_valChar)
         return NS_OK;
 
     // check the method
@@ -2531,9 +2538,9 @@ nsHttpChannel::EnsureAssocReq()
         if (consoleService) {
             nsAutoString message
                 (NS_LITERAL_STRING("Failed Assoc-Req. Received "));
-            AppendASCIItoUTF16(
-                mResponseHead->PeekHeader(nsHttp::Assoc_Req),
-                message);
+            nsAutoCString assoc_req;
+            mResponseHead->GetHeader(nsHttp::Assoc_Req, assoc_req);
+            AppendASCIItoUTF16(assoc_req, message);
             message += NS_LITERAL_STRING(" expected method ");
             AppendASCIItoUTF16(methodHead, message);
             consoleService->LogStringMessage(message.get());
@@ -2546,13 +2553,13 @@ nsHttpChannel::EnsureAssocReq()
 
     // check the URL
     nsCOMPtr<nsIURI> assoc_url;
-    if (NS_FAILED(NS_NewURI(getter_AddRefs(assoc_url), assoc_val)) ||
+    if (NS_FAILED(NS_NewURI(getter_AddRefs(assoc_url), assoc_valChar)) ||
         !assoc_url)
         return NS_OK;
 
     mURI->Equals(assoc_url, &equals);
     if (!equals) {
-        LOG(("  Assoc-Req failure URL %s", assoc_val));
+        LOG(("  Assoc-Req failure URL %s", assoc_valChar));
         if (mConnectionInfo)
             gHttpHandler->ConnMgr()->
                 PipelineFeedbackInfo(mConnectionInfo,
@@ -2564,9 +2571,9 @@ nsHttpChannel::EnsureAssocReq()
         if (consoleService) {
             nsAutoString message
                 (NS_LITERAL_STRING("Failed Assoc-Req. Received "));
-            AppendASCIItoUTF16(
-                mResponseHead->PeekHeader(nsHttp::Assoc_Req),
-                message);
+            nsAutoCString assoc_req;
+            mResponseHead->GetHeader(nsHttp::Assoc_Req, assoc_req);
+            AppendASCIItoUTF16(assoc_req, message);
             message += NS_LITERAL_STRING(" expected URL ");
             AppendASCIItoUTF16(mSpec.get(), message);
             consoleService->LogStringMessage(message.get());
@@ -2587,9 +2594,12 @@ nsHttpChannel::IsResumable(int64_t partialLen, int64_t contentLength,
                            bool ignoreMissingPartialLen) const
 {
     bool hasContentEncoding =
-        (mCachedResponseHead->PeekHeader(nsHttp::Content_Encoding) != nullptr);
-    const char *etag = mCachedResponseHead->PeekHeader(nsHttp::ETag);
-    bool hasWeakEtag = etag && !strncmp(etag, "W/", 2);
+        mCachedResponseHead->HasHeader(nsHttp::Content_Encoding);
+
+    nsAutoCString etag; 
+    mCachedResponseHead->GetHeader(nsHttp::ETag, etag);
+    bool hasWeakEtag = !etag.IsEmpty() &&
+                       StringBeginsWith(etag, NS_LITERAL_CSTRING("W/"));
 
     return (partialLen < contentLength) &&
            (partialLen > 0 || ignoreMissingPartialLen) &&
@@ -2627,10 +2637,11 @@ nsHttpChannel::SetupByteRangeRequest(int64_t partialLen)
     // headers to complete cache entry.
 
     // use strongest validator available...
-    const char *val = mCachedResponseHead->PeekHeader(nsHttp::ETag);
-    if (!val)
-        val = mCachedResponseHead->PeekHeader(nsHttp::Last_Modified);
-    if (!val) {
+    nsAutoCString val;
+    mCachedResponseHead->GetHeader(nsHttp::ETag, val);
+    if (val.IsEmpty())
+        mCachedResponseHead->GetHeader(nsHttp::Last_Modified, val);
+    if (val.IsEmpty()) {
         // if we hit this code it means mCachedResponseHead->IsResumable() is
         // either broken or not being called.
         NS_NOTREACHED("no cache validator");
@@ -2642,7 +2653,7 @@ nsHttpChannel::SetupByteRangeRequest(int64_t partialLen)
     PR_snprintf(buf, sizeof(buf), "bytes=%lld-", partialLen);
 
     mRequestHead.SetHeader(nsHttp::Range, nsDependentCString(buf));
-    mRequestHead.SetHeader(nsHttp::If_Range, nsDependentCString(val));
+    mRequestHead.SetHeader(nsHttp::If_Range, val);
     mIsPartialRequest = true;
 
     return NS_OK;
@@ -2673,9 +2684,12 @@ nsHttpChannel::ProcessPartialContent()
 
     // Check if the content-encoding we now got is different from the one we
     // got before
-    if (PL_strcasecmp(mResponseHead->PeekHeader(nsHttp::Content_Encoding),
-                      mCachedResponseHead->PeekHeader(nsHttp::Content_Encoding))
-                      != 0) {
+    nsAutoCString contentEncoding, cachedContentEncoding;
+    mResponseHead->GetHeader(nsHttp::Content_Encoding, contentEncoding);
+    mCachedResponseHead->GetHeader(nsHttp::Content_Encoding,
+                                   cachedContentEncoding);
+    if (PL_strcasecmp(contentEncoding.get(), cachedContentEncoding.get())
+        != 0) {
         Cancel(NS_ERROR_INVALID_CONTENT_ENCODING);
         return CallOnStartRequest();
     }
@@ -2685,10 +2699,12 @@ nsHttpChannel::ProcessPartialContent()
     int64_t cachedContentLength = mCachedResponseHead->ContentLength();
     int64_t entitySize = mResponseHead->TotalEntitySize();
 
+    nsAutoCString contentRange;
+    mResponseHead->GetHeader(nsHttp::Content_Range, contentRange);
     LOG(("nsHttpChannel::ProcessPartialContent [this=%p trans=%p] "
          "original content-length %lld, entity-size %lld, content-range %s\n",
          this, mTransaction.get(), cachedContentLength, entitySize,
-         mResponseHead->PeekHeader(nsHttp::Content_Range)));
+         contentRange.get()));
 
     if ((entitySize >= 0) && (cachedContentLength >= 0) &&
         (entitySize != cachedContentLength)) {
@@ -2721,7 +2737,7 @@ nsHttpChannel::ProcessPartialContent()
     }
 
     // merge any new headers with the cached response headers
-    rv = mCachedResponseHead->UpdateHeaders(mResponseHead->Headers());
+    rv = mCachedResponseHead->UpdateHeaders(mResponseHead);
     if (NS_FAILED(rv)) return rv;
 
     // update the cached response head
@@ -2857,7 +2873,7 @@ nsHttpChannel::ProcessNotModified()
     }
 
     // merge any new headers with the cached response headers
-    rv = mCachedResponseHead->UpdateHeaders(mResponseHead->Headers());
+    rv = mCachedResponseHead->UpdateHeaders(mResponseHead);
     if (NS_FAILED(rv)) return rv;
 
     // update the cached response head
@@ -3548,9 +3564,11 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
     if (!doValidation &&
         NS_SUCCEEDED(mRequestHead.GetHeader(nsHttp::If_Match, requestedETag)) &&
         (methodWasGet || methodWasHead)) {
-        const char *cachedETag = mCachedResponseHead->PeekHeader(nsHttp::ETag);
-        if (cachedETag && (!strncmp(cachedETag, "W/", 2) ||
-            !requestedETag.Equals(cachedETag))) {
+        nsAutoCString cachedETag;
+        mCachedResponseHead->GetHeader(nsHttp::ETag, cachedETag);
+        if (!cachedETag.IsEmpty() &&
+            (StringBeginsWith(cachedETag, NS_LITERAL_CSTRING("W/")) ||
+             !requestedETag.Equals(cachedETag))) {
             // User has defined If-Match header, if the cached entry is not
             // matching the provided header value or the cached ETag is weak,
             // force validation.
@@ -3639,20 +3657,18 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
                 // entry after the writer is done.
                 wantCompleteEntry = true;
             } else {
-                const char *val;
+                nsAutoCString val;
                 // Add If-Modified-Since header if a Last-Modified was given
                 // and we are allowed to do this (see bugs 510359 and 269303)
                 if (canAddImsHeader) {
-                    val = mCachedResponseHead->PeekHeader(nsHttp::Last_Modified);
-                    if (val)
-                        mRequestHead.SetHeader(nsHttp::If_Modified_Since,
-                                               nsDependentCString(val));
+                    mCachedResponseHead->GetHeader(nsHttp::Last_Modified, val);
+                    if (!val.IsEmpty())
+                        mRequestHead.SetHeader(nsHttp::If_Modified_Since, val);
                 }
                 // Add If-None-Match header if an ETag was given in the response
-                val = mCachedResponseHead->PeekHeader(nsHttp::ETag);
-                if (val)
-                    mRequestHead.SetHeader(nsHttp::If_None_Match,
-                                           nsDependentCString(val));
+                mCachedResponseHead->GetHeader(nsHttp::ETag, val);
+                if (!val.IsEmpty())
+                    mRequestHead.SetHeader(nsHttp::If_None_Match, val);
                 mDidReval = true;
             }
         }
@@ -4640,19 +4656,22 @@ nsHttpChannel::InstallCacheListener(int64_t offset)
     MOZ_ASSERT(mCacheEntryIsWriteOnly || mCachedContentIsPartial);
     MOZ_ASSERT(mListener);
 
+    nsAutoCString contentEncoding, contentType;
+    mResponseHead->GetHeader(nsHttp::Content_Encoding, contentEncoding);
+    mResponseHead->ContentType(contentType);
     // If the content is compressible and the server has not compressed it,
     // mark the cache entry for compression.
-    if ((mResponseHead->PeekHeader(nsHttp::Content_Encoding) == nullptr) && (
-         mResponseHead->ContentType().EqualsLiteral(TEXT_HTML) ||
-         mResponseHead->ContentType().EqualsLiteral(TEXT_PLAIN) ||
-         mResponseHead->ContentType().EqualsLiteral(TEXT_CSS) ||
-         mResponseHead->ContentType().EqualsLiteral(TEXT_JAVASCRIPT) ||
-         mResponseHead->ContentType().EqualsLiteral(TEXT_ECMASCRIPT) ||
-         mResponseHead->ContentType().EqualsLiteral(TEXT_XML) ||
-         mResponseHead->ContentType().EqualsLiteral(APPLICATION_JAVASCRIPT) ||
-         mResponseHead->ContentType().EqualsLiteral(APPLICATION_ECMASCRIPT) ||
-         mResponseHead->ContentType().EqualsLiteral(APPLICATION_XJAVASCRIPT) ||
-         mResponseHead->ContentType().EqualsLiteral(APPLICATION_XHTML_XML))) {
+    if (contentEncoding.IsEmpty() &&
+        (contentType.EqualsLiteral(TEXT_HTML) ||
+         contentType.EqualsLiteral(TEXT_PLAIN) ||
+         contentType.EqualsLiteral(TEXT_CSS) ||
+         contentType.EqualsLiteral(TEXT_JAVASCRIPT) ||
+         contentType.EqualsLiteral(TEXT_ECMASCRIPT) ||
+         contentType.EqualsLiteral(TEXT_XML) ||
+         contentType.EqualsLiteral(APPLICATION_JAVASCRIPT) ||
+         contentType.EqualsLiteral(APPLICATION_ECMASCRIPT) ||
+         contentType.EqualsLiteral(APPLICATION_XJAVASCRIPT) ||
+         contentType.EqualsLiteral(APPLICATION_XHTML_XML))) {
         rv = mCacheEntry->SetMetaDataElement("uncompressed-len", "0");
         if (NS_FAILED(rv)) {
             LOG(("unable to mark cache entry for compression"));
@@ -4757,16 +4776,18 @@ nsHttpChannel::ClearBogusContentEncodingIfNeeded()
     // must do this early on so as to prevent it from being seen up stream.
     // The same problem exists for Content-Encoding: compress in default
     // Apache installs.
+    nsAutoCString contentType;
+    mResponseHead->ContentType(contentType);
     if (mResponseHead->HasHeaderValue(nsHttp::Content_Encoding, "gzip") && (
-        mResponseHead->ContentType().EqualsLiteral(APPLICATION_GZIP) ||
-        mResponseHead->ContentType().EqualsLiteral(APPLICATION_GZIP2) ||
-        mResponseHead->ContentType().EqualsLiteral(APPLICATION_GZIP3))) {
+        contentType.EqualsLiteral(APPLICATION_GZIP) ||
+        contentType.EqualsLiteral(APPLICATION_GZIP2) ||
+        contentType.EqualsLiteral(APPLICATION_GZIP3))) {
         // clear the Content-Encoding header
         mResponseHead->ClearHeader(nsHttp::Content_Encoding);
     }
     else if (mResponseHead->HasHeaderValue(nsHttp::Content_Encoding, "compress") && (
-             mResponseHead->ContentType().EqualsLiteral(APPLICATION_COMPRESS) ||
-             mResponseHead->ContentType().EqualsLiteral(APPLICATION_COMPRESS2))) {
+             contentType.EqualsLiteral(APPLICATION_COMPRESS) ||
+             contentType.EqualsLiteral(APPLICATION_COMPRESS2))) {
         // clear the Content-Encoding header
         mResponseHead->ClearHeader(nsHttp::Content_Encoding);
     }
@@ -4837,17 +4858,17 @@ nsHttpChannel::AsyncProcessRedirection(uint32_t redirectType)
     LOG(("nsHttpChannel::AsyncProcessRedirection [this=%p type=%u]\n",
         this, redirectType));
 
-    const char *location = mResponseHead->PeekHeader(nsHttp::Location);
+    nsAutoCString location;
 
     // if a location header was not given, then we can't perform the redirect,
     // so just carry on as though this were a normal response.
-    if (!location)
+    if (NS_FAILED(mResponseHead->GetHeader(nsHttp::Location, location)))
         return NS_ERROR_FAILURE;
 
     // make sure non-ASCII characters in the location header are escaped.
     nsAutoCString locationBuf;
-    if (NS_EscapeURL(location, -1, esc_OnlyNonASCII, locationBuf))
-        location = locationBuf.get();
+    if (NS_EscapeURL(location.get(), -1, esc_OnlyNonASCII, locationBuf))
+        location = locationBuf;
 
     if (mRedirectionLimit == 0) {
         LOG(("redirection limit reached!\n"));
@@ -4857,12 +4878,12 @@ nsHttpChannel::AsyncProcessRedirection(uint32_t redirectType)
     mRedirectType = redirectType;
 
     LOG(("redirecting to: %s [redirection-limit=%u]\n",
-        location, uint32_t(mRedirectionLimit)));
+        location.get(), uint32_t(mRedirectionLimit)));
 
-    nsresult rv = CreateNewURI(location, getter_AddRefs(mRedirectURI));
+    nsresult rv = CreateNewURI(location.get(), getter_AddRefs(mRedirectURI));
 
     if (NS_FAILED(rv)) {
-        LOG(("Invalid URI for redirect: Location: %s\n", location));
+        LOG(("Invalid URI for redirect: Location: %s\n", location.get()));
         return NS_ERROR_CORRUPTED_CONTENT;
     }
 
@@ -7174,17 +7195,18 @@ nsHttpChannel::MaybeInvalidateCacheEntryForSubsequentGet()
     DoInvalidateCacheEntry(mURI);
 
     // Invalidate Location-header if set
-    const char *location = mResponseHead->PeekHeader(nsHttp::Location);
-    if (location) {
-        LOG(("  Location-header=%s\n", location));
-        InvalidateCacheEntryForLocation(location);
+    nsAutoCString location;
+    mResponseHead->GetHeader(nsHttp::Location, location);
+    if (!location.IsEmpty()) {
+        LOG(("  Location-header=%s\n", location.get()));
+        InvalidateCacheEntryForLocation(location.get());
     }
 
     // Invalidate Content-Location-header if set
-    location = mResponseHead->PeekHeader(nsHttp::Content_Location);
-    if (location) {
-        LOG(("  Content-Location-header=%s\n", location));
-        InvalidateCacheEntryForLocation(location);
+    mResponseHead->GetHeader(nsHttp::Content_Location, location);
+    if (!location.IsEmpty()) {
+        LOG(("  Content-Location-header=%s\n", location.get()));
+        InvalidateCacheEntryForLocation(location.get());
     }
 }
 
