@@ -2739,7 +2739,8 @@ class OrphanReporter : public JS::ObjectPrivateVisitor
             // sub-tree that this node belongs to, measure the sub-tree's size
             // and then record its root so we don't measure it again.
             nsCOMPtr<nsINode> orphanTree = node->SubtreeRoot();
-            if (!mAlreadyMeasuredOrphanTrees.Contains(orphanTree)) {
+            if (orphanTree &&
+                !mAlreadyMeasuredOrphanTrees.Contains(orphanTree)) {
                 // If PutEntry() fails we don't measure this tree, which could
                 // lead to under-measurement. But that's better than the
                 // alternatives, which are over-measurement or an OOM abort.
