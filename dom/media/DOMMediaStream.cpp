@@ -142,7 +142,7 @@ public:
     }
 
     MediaStreamTrack* track =
-      mStream->FindOwnedDOMTrack(aInputStream, aInputTrackID);
+      mStream->FindOwnedDOMTrack(aInputStream, aInputTrackID, aTrackID);
     if (!track) {
       // Track had not been created on main thread before, create it now.
       NS_WARN_IF_FALSE(!mStream->mTracks.IsEmpty(),
@@ -165,7 +165,8 @@ public:
     }
   }
 
-  void DoNotifyTrackEnded(MediaStream* aInputStream, TrackID aInputTrackID)
+  void DoNotifyTrackEnded(MediaStream* aInputStream, TrackID aInputTrackID,
+                          TrackID aTrackID)
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -174,7 +175,7 @@ public:
     }
 
     RefPtr<MediaStreamTrack> track =
-      mStream->FindOwnedDOMTrack(aInputStream, aInputTrackID);
+      mStream->FindOwnedDOMTrack(aInputStream, aInputTrackID, aTrackID);
     NS_ASSERTION(track, "Owned MediaStreamTracks must be known by the DOMMediaStream");
     if (track) {
       LOG(LogLevel::Debug, ("DOMMediaStream %p MediaStreamTrack %p ended at the source. Marking it ended.",
@@ -197,9 +198,9 @@ public:
       aGraph->DispatchToMainThreadAfterStreamStateUpdate(runnable.forget());
     } else if (aTrackEvents & TRACK_EVENT_ENDED) {
       nsCOMPtr<nsIRunnable> runnable =
-        NewRunnableMethod<MediaStream*, TrackID>(
+        NewRunnableMethod<MediaStream*, TrackID, TrackID>(
           this, &OwnedStreamListener::DoNotifyTrackEnded,
-          aInputStream, aInputTrackID);
+          aInputStream, aInputTrackID, aID);
       aGraph->DispatchToMainThreadAfterStreamStateUpdate(runnable.forget());
     }
   }
@@ -1064,14 +1065,16 @@ FindTrackPortAmongTracks(const MediaStreamTrack& aTrack,
 
 MediaStreamTrack*
 DOMMediaStream::FindOwnedDOMTrack(MediaStream* aInputStream,
-                                  TrackID aInputTrackID) const
+                                  TrackID aInputTrackID,
+                                  TrackID aTrackID) const
 {
   MOZ_RELEASE_ASSERT(mOwnedStream);
 
   for (const RefPtr<TrackPort>& info : mOwnedTracks) {
     if (info->GetInputPort() &&
         info->GetInputPort()->GetSource() == aInputStream &&
-        info->GetTrack()->mInputTrackID == aInputTrackID) {
+        info->GetTrack()->mInputTrackID == aInputTrackID &&
+        (aTrackID == TRACK_ANY || info->GetTrack()->mTrackID == aTrackID)) {
       // This track is owned externally but in our playback stream.
       return info->GetTrack();
     }
