@@ -11,13 +11,12 @@
 #include "OmxDataDecoder.h"
 #include "OmxPlatformLayer.h"
 
-extern mozilla::LogModule* GetPDMLog();
 
 #ifdef LOG
 #undef LOG
 #endif
 
-#define LOG(arg, ...) MOZ_LOG(GetPDMLog(), mozilla::LogLevel::Debug, ("OmxPromiseLayer(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#define LOG(arg, ...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, ("OmxPromiseLayer(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 
 namespace mozilla {
 

@@ -27,8 +27,7 @@
 #include <android/log.h>
 #define GADM_LOG(...) __android_log_print(ANDROID_LOG_DEBUG, "GonkAudioDecoderManager", __VA_ARGS__)
 
-extern mozilla::LogModule* GetPDMLog();
-#define LOG(...) MOZ_LOG(GetPDMLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
+#define LOG(...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 using namespace android;
 typedef android::MediaCodecProxy MediaCodecProxy;
