@@ -1243,10 +1243,7 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
 
   // clear existing referrer, if any
   mReferrer = nullptr;
-  nsresult rv = mRequestHead.ClearHeader(nsHttp::Referer);
-  if(NS_FAILED(rv)) {
-    return rv;
-  }
+  mRequestHead.ClearHeader(nsHttp::Referer);
   mReferrerPolicy = REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE;
 
   if (!referrer) {
