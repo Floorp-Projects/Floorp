@@ -19,7 +19,7 @@ var { Task } = require("devtools/shared/task");
 
 loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
-loader.lazyRequireGetter(this, "AnimationsFront", "devtools/shared/fronts/animation", true);
+loader.lazyRequireGetter(this, "AnimationsFront", "devtools/server/actors/animation", true);
 
 const { LocalizationHelper } = require("devtools/client/shared/l10n");
 
