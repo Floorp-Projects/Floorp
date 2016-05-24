@@ -37,11 +37,11 @@ MSBUILD_NAMESPACE = 'http://schemas.microsoft.com/developer/msbuild/2003'
 def get_id(name):
     return str(uuid.uuid5(uuid.NAMESPACE_URL, name)).upper()
 
-def visual_studio_product_to_internal_version(version, solution=False):
+def visual_studio_product_to_solution_version(version):
     if version == '2013':
-        return '12.00'
+        return '12.00', '12'
     elif version == '2015':
-        return '14.00'
+        return '12.00', '14'
     else:
         raise Exception('Unknown version seen: %s' % version)
 
@@ -252,14 +252,14 @@ class VisualStudioBackend(CommonBackend):
         return projects
 
     def _write_solution(self, fh, projects):
-        version = visual_studio_product_to_internal_version(self._version, True)
+        format_version, comment_version = visual_studio_product_to_solution_version(self._version)
         # This is a Visual C++ Project type.
         project_type = '8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942'
 
         # Visual Studio seems to require this header.
         fh.write('Microsoft Visual Studio Solution File, Format Version %s\r\n' %
-            version)
-        fh.write('# Visual Studio %s\r\n' % self._version)
+                 format_version)
+        fh.write('# Visual Studio %s\r\n' % comment_version)
 
         binaries_id = projects['target_binaries'][0]
 
