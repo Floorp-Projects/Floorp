@@ -2380,6 +2380,31 @@ MediaStream::AddListenerImpl(already_AddRefed<MediaStreamListener> aListener)
   MediaStreamListener* listener = *mListeners.AppendElement() = aListener;
   listener->NotifyBlockingChanged(GraphImpl(),
     mNotifiedBlocked ? MediaStreamListener::BLOCKED : MediaStreamListener::UNBLOCKED);
+
+  for (StreamTracks::TrackIter it(mTracks); !it.IsEnded(); it.Next()) {
+    MediaStream* inputStream = nullptr;
+    TrackID inputTrackID = TRACK_INVALID;
+    if (ProcessedMediaStream* ps = AsProcessedStream()) {
+      // The only ProcessedMediaStream where we should have listeners is
+      // TrackUnionStream - it's what's used as owned stream in DOMMediaStream,
+      // the only main-thread exposed stream type.
+      // TrackUnionStream guarantees that each of its tracks has an input track.
+      // Other types do not implement GetInputStreamFor() and will return null.
+      inputStream = ps->GetInputStreamFor(it->GetID());
+      MOZ_ASSERT(inputStream);
+      inputTrackID = ps->GetInputTrackIDFor(it->GetID());
+      MOZ_ASSERT(IsTrackIDExplicit(inputTrackID));
+    }
+
+    uint32_t flags = MediaStreamListener::TRACK_EVENT_CREATED;
+    if (it->IsEnded()) {
+      flags |= MediaStreamListener::TRACK_EVENT_ENDED;
+    }
+    nsAutoPtr<MediaSegment> segment(it->GetSegment()->CreateEmptyClone());
+    listener->NotifyQueuedTrackChanges(Graph(), it->GetID(), it->GetEnd(),
+                                       flags, *segment,
+                                       inputStream, inputTrackID);
+  }
   if (mNotifiedFinished) {
     listener->NotifyEvent(GraphImpl(), MediaStreamListener::EVENT_FINISHED);
   }
