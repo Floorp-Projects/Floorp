@@ -6304,7 +6304,7 @@ function convertFromUnicode(charset, str)
  * @returns a reference to the reopened tab.
  */
 function undoCloseTab(aIndex) {
-  // wallpaper patch to prevent an unnecessary blank tab (bug 343895)
+  // Prevent an unnecessary blank tab left behind
   var blankTabToRemove = null;
   if (gBrowser.tabs.length == 1 && isTabEmpty(gBrowser.selectedTab))
     blankTabToRemove = gBrowser.selectedTab;
@@ -6343,6 +6343,11 @@ function isTabEmpty(aTab) {
     return false;
 
   if (aTab.hasAttribute("customizemode"))
+    return false;
+
+  // Tab may be in the early stages of being restored - so even though it's
+  // currently blank, we don't want to treat it as such.
+  if (SessionStore.isTabRestoring(aTab))
     return false;
 
   let browser = aTab.linkedBrowser;
