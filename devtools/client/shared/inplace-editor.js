@@ -1050,7 +1050,7 @@ InplaceEditor.prototype = {
       increment = this._getIncrement(event);
     }
 
-    if (isKeyIn(key, "HOME", "END", "PAGE_UP", "PAGE_DOWN")) {
+    if (isKeyIn(key, "PAGE_UP", "PAGE_DOWN")) {
       this._preventSuggestions = true;
     }
 
@@ -1068,7 +1068,7 @@ InplaceEditor.prototype = {
       this._doValidation();
     }
 
-    if (isKeyIn(key, "BACK_SPACE", "DELETE", "LEFT", "RIGHT")) {
+    if (isKeyIn(key, "BACK_SPACE", "DELETE", "LEFT", "RIGHT", "HOME", "END")) {
       if (isPopupOpen) {
         this._hideAutocompletePopup();
       }
