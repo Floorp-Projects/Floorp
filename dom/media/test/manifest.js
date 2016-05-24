@@ -276,6 +276,53 @@ var gPlayTests = [
   { name:"bogus.duh", type:"bogus/duh", duration:Number.NaN },
 ];
 
+var gSeekToNextFrameTests = [
+  // Test playback of a WebM file with vp9 video
+  { name:"vp9.webm", type:"video/webm", duration:4 },
+  { name:"vp9cake.webm", type:"video/webm", duration:7.966 },
+  // oggz-chop stream
+  { name:"bug482461.ogv", type:"video/ogg", duration:4.34 },
+  // Theora only oggz-chop stream
+  { name:"bug482461-theora.ogv", type:"video/ogg", duration:4.138 },
+  // With first frame a "duplicate" (empty) frame.
+  { name:"bug500311.ogv", type:"video/ogg", duration:1.96 },
+
+  // More audio in file than video.
+  { name:"short-video.ogv", type:"video/ogg", duration:1.081 },
+  // First Theora data packet is zero bytes.
+  { name:"bug504613.ogv", type:"video/ogg", duration:Number.NaN },
+  // Multiple audio streams.
+  { name:"bug516323.ogv", type:"video/ogg", duration:4.208 },
+  // oggz-chop with non-keyframe as first frame
+  { name:"bug556821.ogv", type:"video/ogg", duration:2.551 },
+  // Various weirdly formed Ogg files
+  { name:"bug498855-1.ogv", type:"video/ogg", duration:0.24 },
+  { name:"bug498855-2.ogv", type:"video/ogg", duration:0.24 },
+  { name:"bug498855-3.ogv", type:"video/ogg", duration:0.24 },
+  { name:"bug504644.ogv", type:"video/ogg", duration:1.6 },
+
+  { name:"bug523816.ogv", type:"video/ogg", duration:0.533 },
+
+  { name:"bug498380.ogv", type:"video/ogg", duration:0.533 },
+  { name:"bug557094.ogv", type:"video/ogg", duration:0.24 },
+  { name:"multiple-bos.ogg", type:"video/ogg", duration:0.431 },
+  // Test playback/metadata work after a redirect
+  { name:"redirect.sjs?domain=mochi.test:8888&file=320x240.ogv",
+    type:"video/ogg", duration:0.266 },
+  // Test playback of a webm file
+  { name:"seek.webm", type:"video/webm", duration:3.966 },
+  // Test playback of a WebM file with non-zero start time.
+  { name:"split.webm", type:"video/webm", duration:1.967 },
+  // Test playback of a raw file
+  { name:"seek.yuv", type:"video/x-raw-yuv", duration:1.833 },
+
+  { name:"gizmo.mp4", type:"video/mp4", duration:5.56 },
+
+  // Test playback of a MP4 file with a non-zero start time (and audio starting
+  // a second later).
+  { name:"bipbop-lateaudio.mp4", type:"video/mp4" },
+];
+
 // A file for each type we can support.
 var gSnifferTests = [
   { name:"big.wav", type:"audio/x-wav", duration:9.278982, size:102444 },
