@@ -2736,11 +2736,20 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     return;
 
   // Since we're now sure that we're adding this frame to the display list
-  // (which means we're painting it, modulo occlusion), mark it as visible
-  // within the displayport.
+  // (which means we're painting it, modulo occlusion), it may be visible.
   if (aBuilder->IsPaintingToWindow() && child->TrackingVisibility()) {
-    nsIPresShell* shell = child->PresContext()->PresShell();
-    shell->MarkFrameVisible(child, VisibilityCounter::IN_DISPLAYPORT);
+    // Check if the frame is visible in the critical displayport, taking into
+    // account the critical displayport of all ancestor scrollframes.
+    nsRect displayPortIntersection =
+      nsLayoutUtils::TransformAndIntersectRect(child,
+                                               child->GetVisualOverflowRect(),
+                                               aBuilder->GetCurrentScrollParent(),
+                                               aBuilder->GetDisplayPortConsideringAncestors());
+
+    if (!displayPortIntersection.IsEmpty()) {
+      nsIPresShell* shell = child->PresContext()->PresShell();
+      shell->MarkFrameVisible(child, VisibilityCounter::IN_DISPLAYPORT);
+    }
   }
 
   // Child is composited if it's transformed, partially transparent, or has
