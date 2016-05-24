@@ -90,10 +90,20 @@ DownloadLegacyTransfer.prototype = {
     if ((aStateFlags & Ci.nsIWebProgressListener.STATE_START) &&
         (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK)) {
 
-      // If the request's response has been blocked by Windows Parental Controls
-      // with an HTTP 450 error code, we must cancel the request synchronously.
-      let blockedByParentalControls = aRequest instanceof Ci.nsIHttpChannel &&
+      let blockedByParentalControls = false;
+      // If it is a failed download, aRequest.responseStatus doesn't exist.
+      // (missing file on the server, network failure to download)
+      try {
+        // If the request's response has been blocked by Windows Parental Controls
+        // with an HTTP 450 error code, we must cancel the request synchronously.
+        blockedByParentalControls = aRequest instanceof Ci.nsIHttpChannel &&
                                       aRequest.responseStatus == 450;
+      } catch (e) {
+        if (e.result == Cr.NS_ERROR_NOT_AVAILABLE) {
+          aRequest.cancel(Cr.NS_BINDING_ABORTED);
+        }
+      }
+
       if (blockedByParentalControls) {
         aRequest.cancel(Cr.NS_BINDING_ABORTED);
       }
