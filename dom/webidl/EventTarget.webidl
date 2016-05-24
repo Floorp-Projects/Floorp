@@ -13,6 +13,9 @@
 
 dictionary EventListenerOptions {
   boolean capture = false;
+  /* This is a Mozilla extension only available in Chrome and XBL.
+     Setting to true make the listener be added to the system group. */
+  boolean mozSystemGroup = false;
 };
 
 dictionary AddEventListenerOptions : EventListenerOptions {
