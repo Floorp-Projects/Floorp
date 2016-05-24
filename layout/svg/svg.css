@@ -76,6 +76,11 @@ foreignObject {
   opacity: inherit;
 }
 
+*:-moz-focusring {
+  /* Don't specify the outline-color, we should always use initial value. */
+  outline: 1px dotted;
+}
+
 /* nsDocumentViewer::CreateStyleSet doesn't load ua.css.
  * A few styles are common to html and SVG though
  * so we copy the rules below from that file.
