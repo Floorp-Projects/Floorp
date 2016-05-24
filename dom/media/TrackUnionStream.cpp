@@ -374,6 +374,30 @@ TrackUnionStream::SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled) {
   MediaStream::SetTrackEnabledImpl(aTrackID, aEnabled);
 }
 
+MediaStream*
+TrackUnionStream::GetInputStreamFor(TrackID aTrackID)
+{
+  for (TrackMapEntry& entry : mTrackMap) {
+    if (entry.mOutputTrackID == aTrackID && entry.mInputPort) {
+      return entry.mInputPort->GetSource();
+    }
+  }
+
+  return nullptr;
+}
+
+TrackID
+TrackUnionStream::GetInputTrackIDFor(TrackID aTrackID)
+{
+  for (TrackMapEntry& entry : mTrackMap) {
+    if (entry.mOutputTrackID == aTrackID) {
+      return entry.mInputTrackID;
+    }
+  }
+
+  return TRACK_NONE;
+}
+
 void
 TrackUnionStream::AddDirectTrackListenerImpl(already_AddRefed<MediaStreamTrackDirectListener> aListener,
                                              TrackID aTrackID)

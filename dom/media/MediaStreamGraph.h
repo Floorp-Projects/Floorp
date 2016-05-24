@@ -1439,6 +1439,8 @@ public:
   {
     return mInputs.Length();
   }
+  virtual MediaStream* GetInputStreamFor(TrackID aTrackID) { return nullptr; }
+  virtual TrackID GetInputTrackIDFor(TrackID aTrackID) { return TRACK_NONE; }
   void DestroyImpl() override;
   /**
    * This gets called after we've computed the blocking states for all
