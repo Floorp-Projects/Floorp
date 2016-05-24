@@ -762,9 +762,9 @@ var gViewController = {
     if (!viewObj.node)
       throw Components.Exception("Root node doesn't exist for '" + view.type + "' view");
 
-    this.headerEl.hidden = Boolean(viewObj.hideHeader);
-
     if (this.currentViewObj && aViewId != aPreviousView) {
+      this.headerEl.hidden = Boolean(viewObj.hideHeader);
+
       try {
         let canHide = this.currentViewObj.hide();
         if (canHide === false)
