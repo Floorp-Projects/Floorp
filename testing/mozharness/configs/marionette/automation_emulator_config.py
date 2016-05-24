@@ -33,7 +33,7 @@ config = {
         'download-and-extract',
         'create-virtualenv',
         'install',
-        'run-marionette',
+        'run-tests',
     ],
     "download_symbols": "ondemand",
     "download_minidump_stackwalk": True,
