@@ -9441,6 +9441,44 @@ nsIFrame::GetPseudoElement(CSSPseudoElementType aType)
   return nullptr;
 }
 
+static bool
+IsFrameScrolledOutOfView(nsIFrame *aFrame)
+{
+  nsIScrollableFrame* scrollableFrame =
+    nsLayoutUtils::GetNearestScrollableFrame(aFrame,
+      nsLayoutUtils::SCROLLABLE_SAME_DOC |
+      nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
+  if (!scrollableFrame) {
+    return false;
+  }
+
+  nsIFrame *scrollableParent = do_QueryFrame(scrollableFrame);
+  nsRect rect = aFrame->GetVisualOverflowRect();
+
+  nsRect transformedRect =
+    nsLayoutUtils::TransformFrameRectToAncestor(aFrame,
+                                                rect,
+                                                scrollableParent);
+
+  nsRect scrollableRect = scrollableParent->GetVisualOverflowRect();
+  if (!transformedRect.Intersects(scrollableRect)) {
+    return true;
+  }
+
+  nsIFrame* parent = scrollableParent->GetParent();
+  if (!parent) {
+    return false;
+  }
+
+  return IsFrameScrolledOutOfView(parent);
+}
+
+bool
+nsIFrame::IsScrolledOutOfView()
+{
+  return IsFrameScrolledOutOfView(this);
+}
+
 nsIFrame::CaretPosition::CaretPosition()
   : mContentOffset(0)
 {
