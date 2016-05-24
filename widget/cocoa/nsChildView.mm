@@ -1948,6 +1948,8 @@ nsChildView::RectContainingTitlebarControls()
 void
 nsChildView::PrepareWindowEffects()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   MutexAutoLock lock(mEffectsLock);
   mShowsResizeIndicator = ShowsResizeIndicator(&mResizeIndicatorRect);
   mHasRoundedBottomCorners = [(ChildView*)mView hasRoundedBottomCorners];
@@ -1960,6 +1962,8 @@ nsChildView::PrepareWindowEffects()
     mTitlebarRect = RectContainingTitlebarControls();
     UpdateTitlebarCGContext();
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 void
