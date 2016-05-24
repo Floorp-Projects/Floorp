@@ -14,8 +14,6 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:windowContentOverlay">@null</item>
-        <item name="android:actionBarStyle">@style/GeckoActionBar</item>
-        <!-- TODO (bug 1220863): Once we extend AppCompatActivity, set actionBarStyle. -->
         <item name="android:alertDialogTheme">@style/GeckoAlertDialog</item>
     </style>
 

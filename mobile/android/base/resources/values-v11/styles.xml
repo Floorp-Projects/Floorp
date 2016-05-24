@@ -77,10 +77,6 @@
         <item name="android:textColor">#FF000000</item>
     </style>
 
-    <style name="GeckoActionBar" parent="@android:style/Widget.Holo.Light.ActionMode">
-        <item name="android:background">@drawable/ab_background</item>
-    </style>
-
     <style name="TextAppearance.Widget.ActionBar.Title" parent="@android:style/TextAppearance.Medium"/>
 
     <style name="GeckoActionBar.Title" parent="TextAppearance.Widget.ActionBar.Title">
