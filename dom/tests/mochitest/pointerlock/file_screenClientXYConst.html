@@ -82,11 +82,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
           clientY: e.clientY
         };
 
-        addFullscreenChangeContinuation("exit", function() {
-          info("Got fullscreenchange for exiting");
-          runTests();
-          SimpleTest.finish();
-        });
         document.exitFullscreen();
       }
 
@@ -103,17 +98,35 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         }
       }, false);
 
-      function start() {
-        div = document.getElementById("div");
-        info("Requesting fullscreen on parent");
-        addFullscreenChangeContinuation("enter", function() {
+      function fullscreenchange() {
+        var screenX = window.screenX;
+        var screenY = window.screenY;
+        if (document.fullscreenElement === div) {
           info("Got fullscreenchange for entering");
+          if (screenX != 0 || screenY != 0) {
+            todo(screenX == 0 && screenY == 0,
+              "We should only receive fullscreenchange once we've finished fullscreen transition " +
+              "window.screenX=" + screenX + " window.screenY=" + screenY);
+            setTimeout(fullscreenchange, 250);
+            return;
+          }
+          info("Finish waiting for fullscreenchange");
           synthesizeNativeMouseMove(div, 0, 0, () => {
             div.addEventListener("mousemove", moveUnlocked, false);
             divRect = div.getBoundingClientRect();
             synthesizeNativeMouseMove(div, divRect.width / 2, divRect.height / 2);
           });
-        });
+        } else {
+          info("Got fullscreenchange for exiting");
+          runTests();
+          SimpleTest.finish();
+        }
+      }
+      document.addEventListener("fullscreenchange", fullscreenchange, false);
+
+      function start() {
+        div = document.getElementById("div");
+        info("Requesting fullscreen on parent");
         div.requestFullscreen();
       }
   </script>
