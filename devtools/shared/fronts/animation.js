@@ -9,7 +9,10 @@ const {
   custom,
   preEvent
 } = require("devtools/shared/protocol");
-const { animationPlayerSpec } = require("devtools/shared/specs/animation");
+const {
+  animationPlayerSpec,
+  animationsSpec
+} = require("devtools/shared/specs/animation");
 const { Task } = require("devtools/shared/task");
 
 const AnimationPlayerFront = FrontClassWithSpec(animationPlayerSpec, {
@@ -119,3 +122,16 @@ const AnimationPlayerFront = FrontClassWithSpec(animationPlayerSpec, {
 });
 
 exports.AnimationPlayerFront = AnimationPlayerFront;
+
+const AnimationsFront = FrontClassWithSpec(animationsSpec, {
+  initialize: function (client, {animationsActor}) {
+    Front.prototype.initialize.call(this, client, {actor: animationsActor});
+    this.manage(this);
+  },
+
+  destroy: function () {
+    Front.prototype.destroy.call(this);
+  }
+});
+
+exports.AnimationsFront = AnimationsFront;
