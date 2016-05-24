@@ -274,33 +274,44 @@ class SharedImmutableStringsCache
         {
             friend struct Hasher;
 
+            HashNumber hash_;
             const char* chars_;
             size_t length_;
 
           public:
-            Lookup(const char* chars, size_t length)
-              : chars_(chars)
+            Lookup(HashNumber hash, const char* chars, size_t length)
+              : hash_(hash)
+              , chars_(chars)
               , length_(length)
             {
                 MOZ_ASSERT(chars_);
+                MOZ_ASSERT(hash == Hasher::hashLongString(chars, length));
             }
 
-            explicit Lookup(const char* chars)
-              : Lookup(chars, strlen(chars))
-            { }
-
-            Lookup(const char16_t* chars, size_t length)
-              : Lookup(reinterpret_cast<const char*>(chars), length * sizeof(char16_t))
-            { }
-
-            explicit Lookup(const char16_t* chars)
-              : Lookup(chars, js_strlen(chars))
+            Lookup(HashNumber hash, const char16_t* chars, size_t length)
+              : Lookup(hash, reinterpret_cast<const char*>(chars), length * sizeof(char16_t))
             { }
         };
 
+        static const size_t SHORT_STRING_MAX_LENGTH = 8192;
+        static const size_t HASH_CHUNK_LENGTH = SHORT_STRING_MAX_LENGTH / 2;
+
+        // For strings longer than SHORT_STRING_MAX_LENGTH, we only hash the
+        // first HASH_CHUNK_LENGTH and last HASH_CHUNK_LENGTH characters in the
+        // string. This increases the risk of collisions, but in practice it
+        // should be rare, and it yields a large speedup for hashing long
+        // strings.
+        static HashNumber hashLongString(const char* chars, size_t length) {
+            MOZ_ASSERT(chars);
+            return length <= SHORT_STRING_MAX_LENGTH
+                ? mozilla::HashString(chars, length)
+                : mozilla::AddToHash(mozilla::HashString(chars, HASH_CHUNK_LENGTH),
+                                     mozilla::HashString(chars + length - HASH_CHUNK_LENGTH,
+                                                         HASH_CHUNK_LENGTH));
+        }
+
         static HashNumber hash(const Lookup& lookup) {
-            MOZ_ASSERT(lookup.chars_);
-            return mozilla::HashString(lookup.chars_, lookup.length_);
+            return lookup.hash_;
         }
 
         static bool match(const StringBox::Ptr& key, const Lookup& lookup) {
