@@ -2290,6 +2290,11 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mIsAudioTrackAudible(false),
     mAudible(IsAudible())
 {
+  ErrorResult rv;
+
+  double defaultVolume = Preferences::GetFloat("media.default_volume", 1.0);
+  SetVolume(defaultVolume, rv);
+
   mAudioChannel = AudioChannelService::GetDefaultAudioChannel();
 
   mPaused.SetOuter(this);

@@ -5426,6 +5426,9 @@ pref("dom.node.rootNode.enabled", false);
 pref("dom.node.rootNode.enabled", true);
 #endif
 
+// Default media volume
+pref("media.default_volume", "1.0");
+
 // Once bug 1276272 is resolved, we will trun this preference to default ON in
 // non-release channels.
 #ifdef RELEASE_BUILD
