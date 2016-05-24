@@ -6,6 +6,8 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
+const { AppConstants } =
+  Cu.import("resource://gre/modules/AppConstants.jsm", {});
 const { ctypes } = Cu.import("resource://gre/modules/ctypes.jsm", {});
 const { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 const { HttpServer } = Cu.import("resource://testing-common/httpd.js", {});

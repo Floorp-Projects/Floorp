@@ -1,0 +1,109 @@
+<!doctype html>
+<head>
+<meta charset=utf-8>
+<title>Tests restyles in smil animation</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/SpawnTask.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+
+<script>
+"use strict";
+
+function waitForAnimationFrames(frameCount) {
+  return new Promise(function(resolve, reject) {
+    function handleFrame() {
+      if (--frameCount <= 0) {
+        resolve();
+      } else {
+        window.requestAnimationFrame(handleFrame); // wait another frame
+      }
+    }
+    window.requestAnimationFrame(handleFrame);
+  });
+}
+
+function observeStyling(frameCount) {
+  var Ci = SpecialPowers.Ci;
+  var docShell =
+    SpecialPowers.wrap(window).QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIWebNavigation)
+                              .QueryInterface(Ci.nsIDocShell);
+
+  docShell.recordProfileTimelineMarkers = true;
+  docShell.popProfileTimelineMarkers();
+
+  return new Promise(function(resolve) {
+    return waitForAnimationFrames(frameCount).then(function() {
+      var markers = docShell.popProfileTimelineMarkers();
+      docShell.recordProfileTimelineMarkers = false;
+      var stylingMarkers = markers.filter(function(marker, index) {
+        return marker.restyleHint == "eRestyle_SVGAttrAnimations";
+      });
+      resolve(stylingMarkers);
+    });
+  });
+}
+
+function ensureElementRemoval(aElement) {
+  return new Promise(function(resolve) {
+    aElement.remove();
+    waitForAllPaintsFlushed(resolve);
+  });
+}
+
+function waitForPaintFlushed() {
+  return new Promise(function(resolve) {
+    waitForAllPaintsFlushed(resolve);
+  });
+}
+
+function addTestElement() {
+  var div = document.createElement("div");
+  var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  div.appendChild(svg);
+
+  var rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  rect.setAttribute("width", "100%");
+  rect.setAttribute("height", "100%");
+  rect.setAttribute("fill", "lime");
+  svg.appendChild(rect);
+
+  var animate =
+    document.createElementNS("http://www.w3.org/2000/svg", "animate");
+  animate.setAttribute("attributeType", "XML");
+  animate.setAttribute("attributeName", "fill");
+  animate.setAttribute("values", "red;lime");
+  animate.setAttribute("dur", "1s");
+  animate.setAttribute("repeatCount", "indefinite");
+  rect.appendChild(animate);
+
+  document.body.appendChild(div);
+  return div;
+}
+
+SimpleTest.waitForExplicitFinish();
+
+add_task(function* smil_is_in_display_none_subtree() {
+  var div = addTestElement();
+  yield waitForPaintFlushed();
+
+  var displayMarkers = yield observeStyling(5);
+  is(displayMarkers.length, 5, "should restyle in every frame");
+
+  div.style.display = "none";
+  getComputedStyle(div).display;
+  var displayNoneMarkers = yield observeStyling(5);
+  is(displayNoneMarkers.length, 0, "should never restyle if display:none");
+
+  div.style.display = "";
+  getComputedStyle(div).display;
+  var displayAgainMarkers = yield observeStyling(5);
+  is(displayAgainMarkers.length, 5, "should restyle again");
+
+  yield ensureElementRemoval(div);
+});
+</script>
+</body>

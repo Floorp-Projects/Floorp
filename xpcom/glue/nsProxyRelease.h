@@ -170,6 +170,13 @@ public:
     MOZ_ASSERT(!mStrict || NS_IsMainThread());
     NS_IF_ADDREF(mRawPtr = aPtr);
   }
+  explicit nsMainThreadPtrHolder(already_AddRefed<T> aPtr, bool aString = true)
+    : mRawPtr(aPtr.take())
+    , mStrict(aString)
+  {
+    // Since we don't need to AddRef the pointer, this constructor is safe to
+    // call on any thread.
+  }
 
 private:
   // We can be released on any thread.
@@ -229,6 +236,11 @@ public:
     : mPtr(aHolder)
   {
   }
+  explicit nsMainThreadPtrHandle(
+      already_AddRefed<nsMainThreadPtrHolder<T>> aHolder)
+    : mPtr(aHolder)
+  {
+  }
   nsMainThreadPtrHandle(const nsMainThreadPtrHandle& aOther)
     : mPtr(aOther.mPtr)
   {
@@ -283,5 +295,15 @@ public:
     return !mPtr || !*mPtr;
   }
 };
+
+namespace mozilla {
+
+template<typename T>
+using PtrHolder = nsMainThreadPtrHolder<T>;
+
+template<typename T>
+using PtrHandle = nsMainThreadPtrHandle<T>;
+
+} // namespace mozilla
 
 #endif

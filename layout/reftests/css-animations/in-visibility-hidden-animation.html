@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<title>in visibility hidden color animation</title>
+<style>
+
+@keyframes color {
+  0% { color: black }
+  1% { color: blue }
+  100% { color: blue }
+}
+
+p {
+  visibility: visible;
+}
+
+div {
+  color: black;
+  animation: color 0.1s 1 forwards;
+  visibility: hidden;
+}
+
+</style>
+<div id="parent"><p>color animation on visible element in invisible parent element</p></div>
+<script>
+
+document.getElementById("parent").addEventListener("animationend", AnimationEndListener, false);
+
+function AnimationEndListener(event) {
+  setTimeout(RemoveReftestWait, 0);
+}
+
+function RemoveReftestWait() {
+  document.documentElement.classList.remove("reftest-wait");
+}
+
+</script>

@@ -2,9 +2,9 @@
 <html>
 <head>
   <title>Video controls test</title>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <p id="display"></p>
@@ -29,8 +29,8 @@ const playButtonHeight = 28;
 const muteButtonWidth = 33;
 const muteButtonHeight = 28;
 const durationWidth = 34;
-const fullscreenButtonWidth = document.fullscreenEnabled ? 28 : 0;
-const fullscreenButtonHeight = document.fullscreenEnabled ? 28 : 0;
+const fullscreenButtonWidth = 28;
+const fullscreenButtonHeight = 28;
 const volumeSliderWidth = 32;
 const scrubberWidth = videoWidth - playButtonWidth - durationWidth - muteButtonWidth - volumeSliderWidth - fullscreenButtonWidth;
 const scrubberHeight = 28;
@@ -52,12 +52,14 @@ const scrubberCenterY = videoHeight - Math.round(scrubberHeight / 2);
 var testnum = 1;
 var video = document.getElementById("video");
 
+const domUtil = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
+                             .getService(SpecialPowers.Ci.inIDOMUtils);
+
 function getButtonByAttribute(aName, aValue) {
-  var domUtil = Components.classes["@mozilla.org/inspector/dom-utils;1"]
-                          .getService(Components.interfaces.inIDOMUtils);
   var kids = domUtil.getChildrenForNode(video, true);
   var videocontrols = kids[1];
-  return document.getAnonymousElementByAttribute(videocontrols, aName, aValue);
+  return SpecialPowers.wrap(document)
+    .getAnonymousElementByAttribute(videocontrols, aName, aValue);
 }
 
 function isMuteButtonMuted() {

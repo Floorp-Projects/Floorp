@@ -34,11 +34,11 @@ double	log10(double);
 
 double	pow(double, double);
 double	sqrt(double);
-
-double	ceil(double);
-float	ceilf(float);
 double	fabs(double);
+
 double	floor(double);
+double	trunc(double);
+double	ceil(double);
 
 double	acosh(double);
 double	asinh(double);
@@ -51,9 +51,10 @@ double	log2(double);
 
 double	copysign(double, double);
 double	scalbn(double, int);
-double	trunc(double);
 
 float	floorf(float);
+float	truncf(float);
+float	ceilf(float);
 
 } /* namespace fdlibm */
 

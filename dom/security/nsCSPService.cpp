@@ -246,7 +246,7 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
                                    uint32_t flags,
                                    nsIAsyncVerifyRedirectCallback *callback)
 {
-  nsAsyncRedirectAutoCallback autoCallback(callback);
+  net::nsAsyncRedirectAutoCallback autoCallback(callback);
 
   nsCOMPtr<nsIURI> newUri;
   nsresult rv = newChannel->GetURI(getter_AddRefs(newUri));

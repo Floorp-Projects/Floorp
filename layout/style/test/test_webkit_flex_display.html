@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1274096
+-->
+<head>
+  <title>Test for Bug 1274096</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1274096">Mozilla Bug 1274096</a>
+<div id="content" style="display: none">
+  <div id="testElem"></div>
+</div>
+<script type="text/javascript">
+</script>
+<pre id="test">
+<script class="testbody" type="application/javascript">
+
+/** Test for Bug 1274096 **/
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  {"set": [["layout.css.prefixes.webkit", true]]}
+).then(runTest);
+
+function runTest() {
+  testValue("display", "-webkit-flex", "flex");
+  testValue("display", "-webkit-inline-flex", "inline-flex");
+
+  SimpleTest.finish();
+}
+
+function testValue(propName, specifiedVal, serializedVal) {
+  var testElem = document.getElementById("testElem");
+  testElem.style[propName] = specifiedVal;
+
+  is(testElem.style[propName], serializedVal,
+     `CSS '${propName}:${specifiedVal} should serialize as '${serializedVal}'`);
+  is(window.getComputedStyle(testElem, "")[propName], serializedVal,
+     `CSS 'display:${specifiedVal} should compute to '${serializedVal}'`);
+}
+
+</script>
+</pre>
+</body>
+</html>

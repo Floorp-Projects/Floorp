@@ -30,7 +30,6 @@ interface HTMLDocument : Document {
   [Pure]
   readonly attribute HTMLCollection scripts;
   NodeList getElementsByName(DOMString elementName);
-  NodeList getItems(optional DOMString typeNames = ""); // microdata
 
   // dynamic markup insertion
   [Throws]

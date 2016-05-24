@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/PushManager.h"
 
+#include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
 #include "mozilla/dom/PushManagerBinding.h"
@@ -54,7 +55,8 @@ GetPermissionState(nsIPrincipal* aPrincipal,
     return rv;
   }
 
-  if (permission == nsIPermissionManager::ALLOW_ACTION) {
+  if (permission == nsIPermissionManager::ALLOW_ACTION ||
+      Preferences::GetBool("dom.push.testing.ignorePermission", false)) {
     aState = PushPermissionState::Granted;
   } else if (permission == nsIPermissionManager::DENY_ACTION) {
     aState = PushPermissionState::Denied;

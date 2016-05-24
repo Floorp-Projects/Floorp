@@ -195,18 +195,6 @@ HTMLImageElement::GetCurrentSrc(nsAString& aValue)
   return NS_OK;
 }
 
-void
-HTMLImageElement::GetItemValueText(DOMString& aValue)
-{
-  GetSrc(aValue);
-}
-
-void
-HTMLImageElement::SetItemValueText(const nsAString& aValue)
-{
-  SetSrc(aValue);
-}
-
 bool
 HTMLImageElement::Draggable() const
 {
@@ -355,11 +343,11 @@ HTMLImageElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
     nsGenericHTMLElement::GetAttributeChangeHint(aAttribute, aModType);
   if (aAttribute == nsGkAtoms::usemap ||
       aAttribute == nsGkAtoms::ismap) {
-    NS_UpdateHint(retval, NS_STYLE_HINT_FRAMECHANGE);
+    retval |= NS_STYLE_HINT_FRAMECHANGE;
   } else if (aAttribute == nsGkAtoms::alt) {
     if (aModType == nsIDOMMutationEvent::ADDITION ||
         aModType == nsIDOMMutationEvent::REMOVAL) {
-      NS_UpdateHint(retval, NS_STYLE_HINT_FRAMECHANGE);
+      retval |= NS_STYLE_HINT_FRAMECHANGE;
     }
   }
   return retval;

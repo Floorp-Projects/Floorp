@@ -1,0 +1,103 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIPresentationControlChannel;
+
+%{C++
+#define PRESENTATION_CONTROL_SERVICE_CONTACT_ID \
+  "@mozilla.org/presentation/control-service;1"
+%}
+
+/*
+ * The device information required for establishing control channel.
+ */
+[scriptable, uuid(296fd171-e4d0-4de0-99ff-ad8ed52ddef3)]
+interface nsITCPDeviceInfo: nsISupports
+{
+  readonly attribute AUTF8String id;
+  readonly attribute AUTF8String address;
+  readonly attribute uint16_t port;
+};
+
+[scriptable, uuid(09bddfaf-fcc2-4dc9-b33e-a509a1c2fb6d)]
+interface nsIPresentationControlServerListener: nsISupports
+{
+  /**
+   * Callback while the server socket changes port.
+   * This event won't be cached so you should get current port after setting
+   * this listener to make sure the value is updated.
+   * @param   aPort
+   *          The port of the server socket.
+   */
+  void onPortChange(in uint16_t aPort);
+
+  /**
+   * Callback while the remote host is requesting to start a presentation session.
+   * @param aDeviceInfo The device information related to the remote host.
+   * @param aUrl The URL requested to open by remote device.
+   * @param aPresentationId The Id for representing this session.
+   * @param aControlChannel The control channel for this session.
+   */
+  void onSessionRequest(in nsITCPDeviceInfo aDeviceInfo,
+                        in DOMString aUrl,
+                        in DOMString aPresentationId,
+                        in nsIPresentationControlChannel aControlChannel);
+};
+
+/**
+ * Presentation control service which can be used for both presentation
+ * control client and server.
+ */
+[scriptable, uuid(55d6b605-2389-4aae-a8fe-60d4440540ea)]
+interface nsIPresentationControlService: nsISupports
+{
+  /**
+   * This method initialize server socket.
+   * @param   aPort
+   *          The port of the server socket.  Pass 0 or opt-out to indicate no
+   *          preference, and a port will be selected automatically.
+   * @throws  NS_ERROR_FAILURE if the server socket has been inited or the
+   *          server socket can not be inited.
+   */
+  void startServer([optional] in uint16_t aPort);
+
+  /**
+   * Request session to designated remote presentation control receiver.
+   * @param   aDeviceInfo
+   *          The remtoe device info for establish connection.
+   * @param   aUrl
+   *          The URL requested to open by remote device.
+   * @param   aPresentationId
+   *          The Id for representing this session.
+   * @returns The control channel for this session.
+   * @throws  NS_ERROR_FAILURE if the Id hasn't been inited.
+   */
+  nsIPresentationControlChannel requestSession(in nsITCPDeviceInfo aDeviceInfo,
+                                               in DOMString aUrl,
+                                               in DOMString aPresentationId);
+
+  /**
+   * Close server socket and call |listener.onClose(NS_OK)|
+   */
+  void close();
+
+  /**
+   * Get the listen port of the TCP socket, valid after |init|. 0 indicates
+   * the server socket is not inited or closed.
+   */
+  readonly attribute uint16_t port;
+
+  /**
+   * The id of the TCP presentation server. |requestSession| won't
+   * work until the |id| is set.
+   */
+  attribute AUTF8String id;
+
+  /**
+   * the listener for handling events of this presentation control server
+   */
+  attribute nsIPresentationControlServerListener listener;
+};

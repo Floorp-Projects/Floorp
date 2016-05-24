@@ -21,6 +21,9 @@ class nsIRequestContext;
 class nsIRequestContextService;
 class nsITimedChannel;
 
+namespace mozilla {
+namespace net {
+
 class nsLoadGroup : public nsILoadGroup,
                     public nsILoadGroupChild,
                     public nsISupportsPriority,
@@ -95,5 +98,8 @@ protected:
 
     nsCString                       mUserAgentOverrideCache;
 };
+
+} // namespace net
+} // namespace mozilla
 
 #endif // nsLoadGroup_h__

@@ -45,7 +45,9 @@ public:
 
   void AddTrack(MediaTrack* aTrack);
 
-  void RemoveTrack(const RefPtr<MediaTrack>& aTrack);
+  // In remove track case, the VideoTrackList::mSelectedIndex should be updated
+  // due to mTracks changed. No need to take care this in add track case.
+  virtual void RemoveTrack(const RefPtr<MediaTrack>& aTrack);
 
   void RemoveTracks();
 

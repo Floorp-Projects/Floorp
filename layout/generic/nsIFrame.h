@@ -3251,6 +3251,11 @@ public:
     return StyleDisplay()->BackfaceIsHidden();
   }
 
+  /**
+   * Returns true if the frame is scrolled out of view.
+   */
+  bool IsScrolledOutOfView();
+
 protected:
   // Members
   nsRect           mRect;

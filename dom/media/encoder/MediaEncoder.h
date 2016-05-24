@@ -130,7 +130,17 @@ public :
                                 TrackID aInputTrackID) override;
 
   /**
-   * Notified the stream is being removed.
+   * Notifed by the control loop of MediaStreamGraph; aQueueMedia is the audio
+   * data in the form of an AudioSegment.
+   */
+  void NotifyQueuedAudioData(MediaStreamGraph* aGraph, TrackID aID,
+                             StreamTime aTrackOffset,
+                             const AudioSegment& aQueuedMedia,
+                             MediaStream* aInputStream,
+                             TrackID aInputTrackID) override;
+
+  /**
+   * * Notified the stream is being removed.
    */
   void NotifyEvent(MediaStreamGraph* aGraph,
                    MediaStreamListener::MediaStreamGraphEvent event) override;

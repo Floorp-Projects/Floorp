@@ -251,9 +251,8 @@ public:
     void TestDeviceReset(DeviceResetReason aReason);
 
     virtual already_AddRefed<mozilla::gfx::VsyncSource> CreateHardwareVsyncSource() override;
-    static mozilla::Atomic<size_t> sD3D11MemoryUsed;
-    static mozilla::Atomic<size_t> sD3D9MemoryUsed;
-    static mozilla::Atomic<size_t> sD3D9SharedTextureUsed;
+    static mozilla::Atomic<size_t> sD3D11SharedTextures;
+    static mozilla::Atomic<size_t> sD3D9SharedTextures;
 
     void GetDeviceInitData(mozilla::gfx::DeviceInitData* aOut) override;
 

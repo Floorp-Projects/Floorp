@@ -696,21 +696,7 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
   if (aReason == MediaDecoderReader::WAITING_FOR_DATA) {
     MOZ_ASSERT(mReader->IsWaitForDataSupported(),
                "Readers that send WAITING_FOR_DATA need to implement WaitForData");
-    RefPtr<MediaDecoderStateMachine> self = this;
-    WaitRequestRef(aType).Begin(
-      mReader->WaitForData(aType)
-      ->Then(OwnerThread(), __func__,
-             [self] (MediaData::Type aType) -> void {
-               self->WaitRequestRef(aType).Complete();
-               if (aType == MediaData::AUDIO_DATA) {
-                 self->EnsureAudioDecodeTaskQueued();
-               } else {
-                 self->EnsureVideoDecodeTaskQueued();
-               }
-             },
-             [self] (WaitForDataRejectValue aRejection) -> void {
-               self->WaitRequestRef(aRejection.mType).Complete();
-             }));
+    mReader->WaitForData(aType);
 
     // We are out of data to decode and will enter buffering mode soon.
     // We want to play the frames we have already decoded, so we stop pre-rolling
@@ -939,8 +925,25 @@ MediaDecoderStateMachine::SetMediaDecoderReaderWrapperCallback()
                               &MediaDecoderStateMachine::OnVideoDecoded,
                               &MediaDecoderStateMachine::OnVideoNotDecoded);
 
+  RefPtr<MediaDecoderStateMachine> self = this;
+  mWaitAudioCallbackID =
+    mReader->SetWaitAudioCallback(
+      [self] (MediaData::Type aType) -> void {
+        self->EnsureAudioDecodeTaskQueued();
+      },
+      [self] (WaitForDataRejectValue aRejection) -> void {});
+
+  mWaitVideoCallbackID =
+    mReader->SetWaitVideoCallback(
+      [self] (MediaData::Type aType) -> void {
+        self->EnsureVideoDecodeTaskQueued();
+      },
+      [self] (WaitForDataRejectValue aRejection) -> void {});
+
   DECODER_LOG("MDSM set audio callbacks: mAudioCallbackID = %d\n", (int)mAudioCallbackID);
   DECODER_LOG("MDSM set video callbacks: mVideoCallbackID = %d\n", (int)mVideoCallbackID);
+  DECODER_LOG("MDSM set wait audio callbacks: mWaitAudioCallbackID = %d\n", (int)mWaitAudioCallbackID);
+  DECODER_LOG("MDSM set wait video callbacks: mWaitVideoCallbackID = %d\n", (int)mWaitVideoCallbackID);
 }
 
 void
@@ -951,6 +954,12 @@ MediaDecoderStateMachine::CancelMediaDecoderReaderWrapperCallback()
 
     DECODER_LOG("MDSM cancel video callbacks: mVideoCallbackID = %d\n", (int)mVideoCallbackID);
     mReader->CancelVideoCallback(mVideoCallbackID);
+
+    DECODER_LOG("MDSM cancel wait audio callbacks: mWaitAudioCallbackID = %d\n", (int)mWaitAudioCallbackID);
+    mReader->CancelWaitAudioCallback(mWaitAudioCallbackID);
+
+    DECODER_LOG("MDSM cancel wait video callbacks: mWaitVideoCallbackID = %d\n", (int)mWaitVideoCallbackID);
+    mReader->CancelWaitVideoCallback(mWaitVideoCallbackID);
 }
 
 void MediaDecoderStateMachine::StopPlayback()
@@ -1016,8 +1025,8 @@ MediaDecoderStateMachine::MaybeStartBuffering()
                      (JustExitedQuickBuffering() || HasLowUndecodedData());
     } else {
       MOZ_ASSERT(mReader->IsWaitForDataSupported());
-      shouldBuffer = (OutOfDecodedAudio() && mAudioWaitRequest.Exists()) ||
-                     (OutOfDecodedVideo() && mVideoWaitRequest.Exists());
+      shouldBuffer = (OutOfDecodedAudio() && mReader->IsWaitingAudioData()) ||
+                     (OutOfDecodedVideo() && mReader->IsWaitingVideoData());
     }
     if (shouldBuffer) {
       StartBuffering();
@@ -1277,8 +1286,8 @@ void MediaDecoderStateMachine::StartDecoding()
   }
 
   // Reset other state to pristine values before starting decode.
-  mIsAudioPrerolling = !DonePrerollingAudio() && !mAudioWaitRequest.Exists();
-  mIsVideoPrerolling = !DonePrerollingVideo() && !mVideoWaitRequest.Exists();
+  mIsAudioPrerolling = !DonePrerollingAudio() && !mReader->IsWaitingAudioData();
+  mIsVideoPrerolling = !DonePrerollingVideo() && !mReader->IsWaitingVideoData();
 
   // Ensure that we've got tasks enqueued to decode data if we need to.
   DispatchDecodeTasksIfNeeded();
@@ -1707,7 +1716,7 @@ MediaDecoderStateMachine::EnsureAudioDecodeTaskQueued()
   }
 
   if (!IsAudioDecoding() || mReader->IsRequestingAudioData() ||
-      mAudioWaitRequest.Exists()) {
+      mReader->IsWaitingAudioData()) {
     return NS_OK;
   }
 
@@ -1765,7 +1774,7 @@ MediaDecoderStateMachine::EnsureVideoDecodeTaskQueued()
   }
 
   if (!IsVideoDecoding() || mReader->IsRequestingVideoData() ||
-      mVideoWaitRequest.Exists()) {
+      mReader->IsWaitingVideoData()) {
     return NS_OK;
   }
 
@@ -2036,7 +2045,7 @@ MediaDecoderStateMachine::FinishDecodeFirstFrame()
   DECODER_LOG("FinishDecodeFirstFrame");
 
   if (!IsRealTime() && !mSentFirstFrameLoadedEvent) {
-    mMediaSink->Redraw();
+    mMediaSink->Redraw(mInfo.mVideo);
   }
 
   // If we don't know the duration by this point, we assume infinity, per spec.
@@ -2148,7 +2157,7 @@ MediaDecoderStateMachine::SeekCompleted()
   ScheduleStateMachine();
 
   if (video) {
-    mMediaSink->Redraw();
+    mMediaSink->Redraw(mInfo.mVideo);
     mOnPlaybackEvent.Notify(MediaEventType::Invalidate);
   }
 }
@@ -2276,8 +2285,8 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
         MOZ_ASSERT(mReader->IsWaitForDataSupported(),
                    "Don't yet have a strategy for non-heuristic + non-WaitForData");
         DispatchDecodeTasksIfNeeded();
-        MOZ_ASSERT_IF(!mMinimizePreroll && OutOfDecodedAudio(), mReader->IsRequestingAudioData() || mAudioWaitRequest.Exists());
-        MOZ_ASSERT_IF(!mMinimizePreroll && OutOfDecodedVideo(), mReader->IsRequestingVideoData() || mVideoWaitRequest.Exists());
+        MOZ_ASSERT_IF(!mMinimizePreroll && OutOfDecodedAudio(), mReader->IsRequestingAudioData() || mReader->IsWaitingAudioData());
+        MOZ_ASSERT_IF(!mMinimizePreroll && OutOfDecodedVideo(), mReader->IsRequestingVideoData() || mReader->IsWaitingVideoData());
         DECODER_LOG("In buffering mode, waiting to be notified: outOfAudio: %d, "
                     "mAudioStatus: %s, outOfVideo: %d, mVideoStatus: %s",
                     OutOfDecodedAudio(), AudioRequestStatus(),
@@ -2362,7 +2371,6 @@ MediaDecoderStateMachine::Reset(MediaDecoderReader::TargetQueues aQueues /*= AUD
   mDecodedVideoEndTime = 0;
   mVideoCompleted = false;
   VideoQueue().Reset();
-  mVideoWaitRequest.DisconnectIfExists();
 
   if (aQueues == MediaDecoderReader::AUDIO_VIDEO) {
     // Stop the audio thread. Otherwise, MediaSink might be accessing AudioQueue
@@ -2372,7 +2380,6 @@ MediaDecoderStateMachine::Reset(MediaDecoderReader::TargetQueues aQueues /*= AUD
     mDecodedAudioEndTime = 0;
     mAudioCompleted = false;
     AudioQueue().Reset();
-    mAudioWaitRequest.DisconnectIfExists();
   }
 
   mMetadataRequest.DisconnectIfExists();
@@ -2848,9 +2855,9 @@ MediaDecoderStateMachine::AudioRequestStatus() const
 {
   MOZ_ASSERT(OnTaskQueue());
   if (mReader->IsRequestingAudioData()) {
-    MOZ_DIAGNOSTIC_ASSERT(!mAudioWaitRequest.Exists());
+    MOZ_DIAGNOSTIC_ASSERT(!mReader->IsWaitingAudioData());
     return "pending";
-  } else if (mAudioWaitRequest.Exists()) {
+  } else if (mReader->IsWaitingAudioData()) {
     return "waiting";
   }
   return "idle";
@@ -2861,9 +2868,9 @@ MediaDecoderStateMachine::VideoRequestStatus() const
 {
   MOZ_ASSERT(OnTaskQueue());
   if (mReader->IsRequestingVideoData()) {
-    MOZ_DIAGNOSTIC_ASSERT(!mVideoWaitRequest.Exists());
+    MOZ_DIAGNOSTIC_ASSERT(!mReader->IsWaitingVideoData());
     return "pending";
-  } else if (mVideoWaitRequest.Exists()) {
+  } else if (mReader->IsWaitingVideoData()) {
     return "waiting";
   }
   return "idle";

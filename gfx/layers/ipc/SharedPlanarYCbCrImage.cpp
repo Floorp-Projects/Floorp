@@ -151,6 +151,7 @@ SharedPlanarYCbCrImage::AdoptData(const Data &aData)
   }
   mData = aData;
   mSize = aData.mPicSize;
+  mOrigin = gfx::IntPoint(aData.mPicX, aData.mPicY);
 
   uint8_t *base = GetBuffer();
   uint32_t yOffset = aData.mYChannel - base;
@@ -221,6 +222,7 @@ SharedPlanarYCbCrImage::Allocate(PlanarYCbCrData& aData)
   // shmem.
   mBufferSize = ImageDataSerializer::ComputeYCbCrBufferSize(mData.mYSize, mData.mCbCrSize);
   mSize = mData.mPicSize;
+  mOrigin = gfx::IntPoint(aData.mPicX, aData.mPicY);
 
   mTextureClient->Unlock();
 

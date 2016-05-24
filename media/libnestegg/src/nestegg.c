@@ -2412,6 +2412,9 @@ nestegg_read_packet(nestegg * ctx, nestegg_packet ** pkt)
           break;
         }
         case ID_BLOCK_ADDITIONS: {
+          /* There should only be one BlockAdditions; treat multiple as an error. */
+          if (block_additional)
+            return -1;
           r = ne_read_block_additions(ctx, size, &block_additional);
           if (r != 1)
             return r;

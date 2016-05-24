@@ -191,6 +191,9 @@ function editableItem(options, callback) {
   // Save the trigger type so we can dispatch this later
   element._trigger = trigger;
 
+  // Add button semantics to the element, to indicate that it can be activated.
+  element.setAttribute("role", "button");
+
   return function turnOnEditMode() {
     callback(element);
   };

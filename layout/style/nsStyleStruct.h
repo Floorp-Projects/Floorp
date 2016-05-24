@@ -120,8 +120,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont
 
   nsChangeHint CalcDifference(const nsStyleFont& aOther) const;
   static nsChangeHint MaxDifference() {
-    return NS_CombineHint(NS_STYLE_HINT_REFLOW,
-                          nsChangeHint_NeutralChange);
+    return NS_STYLE_HINT_REFLOW |
+           nsChangeHint_NeutralChange;
   }
   static nsChangeHint DifferenceAlwaysHandledForDescendants() {
     // CalcDifference never returns the reflow hints that are sometimes
@@ -824,20 +824,14 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleMargin
 
   bool GetMargin(nsMargin& aMargin) const
   {
-    if (mMargin.ConvertsToLength()) {
-      GetMarginNoPercentage(aMargin);
-      return true;
+    if (!mMargin.ConvertsToLength()) {
+      return false;
     }
 
-    return false;
-  }
-
-  void GetMarginNoPercentage(nsMargin& aMargin) const
-  {
-    MOZ_ASSERT(mMargin.ConvertsToLength());
     NS_FOR_CSS_SIDES(side) {
       aMargin.Side(side) = mMargin.ToLength(side);
     }
+    return true;
   }
 
   // Return true if either the start or end side in the axis is 'auto'.
@@ -865,8 +859,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePadding
 
   nsChangeHint CalcDifference(const nsStylePadding& aOther) const;
   static nsChangeHint MaxDifference() {
-    return NS_SubtractHint(NS_STYLE_HINT_REFLOW,
-                           nsChangeHint_ClearDescendantIntrinsics);
+    return NS_STYLE_HINT_REFLOW & ~nsChangeHint_ClearDescendantIntrinsics;
   }
   static nsChangeHint DifferenceAlwaysHandledForDescendants() {
     // CalcDifference can return nsChangeHint_ClearAncestorIntrinsics as
@@ -888,21 +881,15 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePadding
 
   bool GetPadding(nsMargin& aPadding) const
   {
-    if (mPadding.ConvertsToLength()) {
-      GetPaddingNoPercentage(aPadding);
-      return true;
+    if (!mPadding.ConvertsToLength()) {
+      return false;
     }
 
-    return false;
-  }
-
-  void GetPaddingNoPercentage(nsMargin& aPadding) const
-  {
-    MOZ_ASSERT(mPadding.ConvertsToLength());
     NS_FOR_CSS_SIDES(side) {
       // Clamp negative calc() to 0.
       aPadding.Side(side) = std::max(mPadding.ToLength(side), 0);
     }
+    return true;
   }
 };
 
@@ -1308,10 +1295,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleOutline
   void RecalcData();
   nsChangeHint CalcDifference(const nsStyleOutline& aOther) const;
   static nsChangeHint MaxDifference() {
-    return NS_CombineHint(NS_CombineHint(nsChangeHint_UpdateOverflow,
-                                         nsChangeHint_SchedulePaint),
-                          NS_CombineHint(nsChangeHint_RepaintFrame,
-                                         nsChangeHint_NeutralChange));
+    return nsChangeHint_UpdateOverflow |
+           nsChangeHint_SchedulePaint |
+           nsChangeHint_RepaintFrame |
+           nsChangeHint_NeutralChange;
   }
   static nsChangeHint DifferenceAlwaysHandledForDescendants() {
     // CalcDifference never returns the reflow hints that are sometimes
@@ -1420,8 +1407,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList
 
   nsChangeHint CalcDifference(const nsStyleList& aOther) const;
   static nsChangeHint MaxDifference() {
-    return NS_CombineHint(NS_STYLE_HINT_FRAMECHANGE,
-                          nsChangeHint_NeutralChange);
+    return NS_STYLE_HINT_FRAMECHANGE |
+           nsChangeHint_NeutralChange;
   }
   static nsChangeHint DifferenceAlwaysHandledForDescendants() {
     // CalcDifference never returns the reflow hints that are sometimes
@@ -1646,11 +1633,11 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition
   nsChangeHint CalcDifference(const nsStylePosition& aOther,
                               const nsStyleVisibility* aOldStyleVisibility) const;
   static nsChangeHint MaxDifference() {
-    return NS_CombineHint(NS_STYLE_HINT_REFLOW,
-                          nsChangeHint(nsChangeHint_NeutralChange |
-                                       nsChangeHint_RecomputePosition |
-                                       nsChangeHint_UpdateParentOverflow |
-                                       nsChangeHint_UpdateComputedBSize));
+    return NS_STYLE_HINT_REFLOW |
+           nsChangeHint_NeutralChange |
+           nsChangeHint_RecomputePosition |
+           nsChangeHint_UpdateParentOverflow |
+           nsChangeHint_UpdateComputedBSize;
   }
   static nsChangeHint DifferenceAlwaysHandledForDescendants() {
     // CalcDifference can return all of the reflow hints that are
@@ -3063,9 +3050,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUserInterface
 
   nsChangeHint CalcDifference(const nsStyleUserInterface& aOther) const;
   static nsChangeHint MaxDifference() {
-    return NS_CombineHint(NS_STYLE_HINT_FRAMECHANGE,
-                          NS_CombineHint(nsChangeHint_UpdateCursor,
-                                         nsChangeHint_NeutralChange));
+    return NS_STYLE_HINT_FRAMECHANGE |
+           nsChangeHint_UpdateCursor |
+           nsChangeHint_NeutralChange;
   }
   static nsChangeHint DifferenceAlwaysHandledForDescendants() {
     // CalcDifference never returns the reflow hints that are sometimes
@@ -3152,8 +3139,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColumn
 
   nsChangeHint CalcDifference(const nsStyleColumn& aOther) const;
   static nsChangeHint MaxDifference() {
-    return NS_CombineHint(NS_STYLE_HINT_FRAMECHANGE,
-                          nsChangeHint_NeutralChange);
+    return NS_STYLE_HINT_FRAMECHANGE |
+           nsChangeHint_NeutralChange;
   }
   static nsChangeHint DifferenceAlwaysHandledForDescendants() {
     // CalcDifference never returns the reflow hints that are sometimes
@@ -3249,9 +3236,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG
 
   nsChangeHint CalcDifference(const nsStyleSVG& aOther) const;
   static nsChangeHint MaxDifference() {
-    return NS_CombineHint(NS_CombineHint(nsChangeHint_UpdateEffects,
-             NS_CombineHint(nsChangeHint_NeedReflow, nsChangeHint_NeedDirtyReflow)), // XXX remove nsChangeHint_NeedDirtyReflow: bug 876085
-                                         nsChangeHint_RepaintFrame);
+    return nsChangeHint_UpdateEffects |
+           nsChangeHint_NeedReflow |
+           nsChangeHint_NeedDirtyReflow | // XXX remove me: bug 876085
+           nsChangeHint_RepaintFrame;
   }
   static nsChangeHint DifferenceAlwaysHandledForDescendants() {
     // CalcDifference never returns nsChangeHint_NeedReflow as a hint

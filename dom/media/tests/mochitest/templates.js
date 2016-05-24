@@ -473,10 +473,10 @@ var commandsPeerConnectionOfferAnswer = [
     return test.pcRemote.checkMsids();
   },
 
-  function PC_LOCAL_CHECK_STATS(test) {
+  function PC_LOCAL_CHECK_TRACK_STATS(test) {
     return checkAllTrackStats(test.pcLocal);
   },
-  function PC_REMOTE_CHECK_STATS(test) {
+  function PC_REMOTE_CHECK_TRACK_STATS(test) {
     return checkAllTrackStats(test.pcRemote);
   },
   function PC_LOCAL_VERIFY_SDP_AFTER_END_OF_TRICKLE(test) {

@@ -29,9 +29,6 @@
 #include "nsRegion.h"
 #include "nsTArray.h"
 #include "PotentialCheckerboardDurationTracker.h"
-#if defined(MOZ_ANDROID_APZ)
-#include "OverScroller.h"
-#endif // defined(MOZ_ANDROID_APZ)
 
 #include "base/message_loop.h"
 
@@ -52,17 +49,25 @@ class GestureEventListener;
 class PCompositorBridgeParent;
 struct AsyncTransform;
 class AsyncPanZoomAnimation;
-#if defined(MOZ_ANDROID_APZ)
-class FlingOverScrollerAnimation;
-#else
-class FlingAnimation;
-#endif
+class AndroidFlingAnimation;
+class GenericFlingAnimation;
 class InputBlockState;
 class TouchBlockState;
 class PanGestureBlockState;
 class OverscrollHandoffChain;
 class StateChangeNotificationBlocker;
 class CheckerboardEvent;
+class OverscrollEffectBase;
+class WidgetOverscrollEffect;
+class GenericOverscrollEffect;
+class AndroidSpecificState;
+
+// Base class for grouping platform-specific APZC state variables.
+class PlatformSpecificStateBase {
+public:
+  virtual ~PlatformSpecificStateBase() {}
+  virtual AndroidSpecificState* AsAndroidSpecificState() { return nullptr; }
+};
 
 /**
  * Controller for all panning and zooming logic. Any time a user input is
@@ -651,6 +656,8 @@ protected:
      This function is only callable from the compositor thread. */
   PCompositorBridgeParent* GetSharedFrameMetricsCompositor();
 
+  PlatformSpecificStateBase* GetPlatformSpecificState();
+
 protected:
   // Both |mFrameMetrics| and |mLastContentPaintMetrics| are protected by the
   // monitor. Do not read from or modify either of them without locking.
@@ -706,6 +713,12 @@ private:
   ParentLayerPoint mLastZoomFocus;
 
   RefPtr<AsyncPanZoomAnimation> mAnimation;
+
+  UniquePtr<OverscrollEffectBase> mOverscrollEffect;
+
+  // Groups state variables that are specific to a platform.
+  // Initialized on first use.
+  UniquePtr<PlatformSpecificStateBase> mPlatformSpecificState;
 
   friend class Axis;
 
@@ -872,14 +885,14 @@ public:
   bool AttemptFling(FlingHandoffState& aHandoffState);
 
 private:
-#if defined(MOZ_ANDROID_APZ)
-  friend class FlingOverScrollerAnimation;
-#else
-  friend class FlingAnimation;
-#endif
+  friend class AndroidFlingAnimation;
+  friend class GenericFlingAnimation;
   friend class OverscrollAnimation;
   friend class SmoothScrollAnimation;
   friend class WheelScrollAnimation;
+
+  friend class GenericOverscrollEffect;
+  friend class WidgetOverscrollEffect;
 
   // The initial velocity of the most recent fling.
   ParentLayerPoint mLastFlingVelocity;
@@ -1184,9 +1197,6 @@ private:
   // type of event that's triggering the scroll.
   Maybe<CSSPoint> FindSnapPointNear(const CSSPoint& aDestination,
                                     nsIScrollableFrame::ScrollUnit aUnit);
-#if defined(MOZ_ANDROID_APZ)
-  widget::sdk::OverScroller::GlobalRef mOverScroller;
-#endif // defined(MOZ_ANDROID_APZ)
 };
 
 } // namespace layers

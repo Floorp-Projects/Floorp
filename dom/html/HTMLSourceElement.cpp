@@ -146,18 +146,6 @@ HTMLSourceElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                             aValue, aNotify);
 }
 
-void
-HTMLSourceElement::GetItemValueText(DOMString& aValue)
-{
-  GetSrc(aValue);
-}
-
-void
-HTMLSourceElement::SetItemValueText(const nsAString& aValue)
-{
-  SetSrc(aValue);
-}
-
 nsresult
 HTMLSourceElement::BindToTree(nsIDocument *aDocument,
                               nsIContent *aParent,

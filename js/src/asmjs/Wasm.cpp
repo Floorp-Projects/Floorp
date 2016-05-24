@@ -289,21 +289,17 @@ DecodeExpr(FunctionDecoder& f)
       case Expr::F32Ceil:
       case Expr::F32Floor:
       case Expr::F32Sqrt:
-        return f.iter().readUnary(ValType::F32, nullptr);
       case Expr::F32Trunc:
-        return f.iter().notYetImplemented("trunc");
       case Expr::F32Nearest:
-        return f.iter().notYetImplemented("nearest");
+        return f.iter().readUnary(ValType::F32, nullptr);
       case Expr::F64Abs:
       case Expr::F64Neg:
       case Expr::F64Ceil:
       case Expr::F64Floor:
       case Expr::F64Sqrt:
-        return f.iter().readUnary(ValType::F64, nullptr);
       case Expr::F64Trunc:
-        return f.iter().notYetImplemented("trunc");
       case Expr::F64Nearest:
-        return f.iter().notYetImplemented("nearest");
+        return f.iter().readUnary(ValType::F64, nullptr);
       case Expr::I32Add:
       case Expr::I32Sub:
       case Expr::I32Mul:
@@ -343,18 +339,16 @@ DecodeExpr(FunctionDecoder& f)
       case Expr::F32Div:
       case Expr::F32Min:
       case Expr::F32Max:
-        return f.iter().readBinary(ValType::F32, nullptr, nullptr);
       case Expr::F32CopySign:
-        return f.iter().notYetImplemented("copysign");
+        return f.iter().readBinary(ValType::F32, nullptr, nullptr);
       case Expr::F64Add:
       case Expr::F64Sub:
       case Expr::F64Mul:
       case Expr::F64Div:
       case Expr::F64Min:
       case Expr::F64Max:
-        return f.iter().readBinary(ValType::F64, nullptr, nullptr);
       case Expr::F64CopySign:
-        return f.iter().notYetImplemented("copysign");
+        return f.iter().readBinary(ValType::F64, nullptr, nullptr);
       case Expr::I32Eq:
       case Expr::I32Ne:
       case Expr::I32LtS:

@@ -5,6 +5,9 @@
 
 #include "nsSimpleStreamListener.h"
 
+namespace mozilla {
+namespace net {
+
 //
 //----------------------------------------------------------------------------
 // nsISupports implementation...
@@ -75,3 +78,6 @@ nsSimpleStreamListener::Init(nsIOutputStream *aSink,
 
     return NS_OK;
 }
+
+} // namespace net
+} // namespace mozilla

@@ -48,6 +48,7 @@ class CancelableRunnable;
 
 namespace gfx {
 class DrawTarget;
+class GPUProcessManager;
 } // namespace gfx
 
 namespace ipc {
@@ -66,6 +67,7 @@ class LayerTransactionParent;
 class PAPZParent;
 class CrossProcessCompositorBridgeParent;
 class CompositorThreadHolder;
+class InProcessCompositorSession;
 
 struct ScopedLayerTreeRegistration
 {
@@ -208,6 +210,8 @@ class CompositorBridgeParent final : public PCompositorBridgeParent,
 {
   friend class CompositorVsyncScheduler;
   friend class CompositorThreadHolder;
+  friend class InProcessCompositorSession;
+  friend class gfx::GPUProcessManager;
 
 public:
   explicit CompositorBridgeParent(widget::CompositorWidgetProxy* aWidget,
@@ -266,7 +270,8 @@ public:
                                    bool aScheduleComposite,
                                    uint32_t aPaintSequenceNumber,
                                    bool aIsRepeatTransaction,
-                                   int32_t aPaintSyncId) override;
+                                   int32_t aPaintSyncId,
+                                   bool aHitTestUpdate) override;
   virtual void ForceComposite(LayerTransactionParent* aLayerTree) override;
   virtual bool SetTestSampleTime(LayerTransactionParent* aLayerTree,
                                  const TimeStamp& aTime) override;
@@ -348,7 +353,7 @@ public:
   virtual void ScheduleComposition();
   void NotifyShadowTreeTransaction(uint64_t aId, bool aIsFirstPaint,
       bool aScheduleComposite, uint32_t aPaintSequenceNumber,
-      bool aIsRepeatTransaction);
+      bool aIsRepeatTransaction, bool aHitTestUpdate);
 
   /**
    * Check rotation info and schedule a rendering task if needed.
@@ -377,20 +382,6 @@ public:
   static CompositorBridgeParent* GetCompositor(uint64_t id);
 
   /**
-   * Allocate an ID that can be used to refer to a layer tree and
-   * associated resources that live only on the compositor thread.
-   *
-   * Must run on the content main thread.
-   */
-  static uint64_t AllocateLayerTreeId();
-  /**
-   * Release compositor-thread resources referred to by |aID|.
-   *
-   * Must run on the content main thread.
-   */
-  static void DeallocateLayerTreeId(uint64_t aId);
-
-  /**
    * Set aController as the pan/zoom callback for the subtree referred
    * to by aLayersId.
    *
@@ -398,12 +389,6 @@ public:
    */
   static void SetControllerForLayerTree(uint64_t aLayersId,
                                         GeckoContentController* aController);
-
-  /**
-   * This returns a reference to the APZCTreeManager to which
-   * pan/zoom-related events can be sent.
-   */
-  static APZCTreeManager* GetAPZCTreeManager(uint64_t aLayersId);
 
   /**
    * A new child process has been configured to push transactions
@@ -473,15 +458,40 @@ public:
    */
   static void PostInsertVsyncProfilerMarker(mozilla::TimeStamp aVsyncTimestamp);
 
-  static void RequestNotifyLayerTreeReady(uint64_t aLayersId, CompositorUpdateObserver* aObserver);
-  static void RequestNotifyLayerTreeCleared(uint64_t aLayersId, CompositorUpdateObserver* aObserver);
-  static void SwapLayerTreeObservers(uint64_t aLayer, uint64_t aOtherLayer);
-
   float ComputeRenderIntegrity();
 
   widget::CompositorWidgetProxy* GetWidgetProxy() { return mWidgetProxy; }
 
   void ForceComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr);
+
+  bool AsyncPanZoomEnabled() const {
+    return !!mApzcTreeManager;
+  }
+
+private:
+  /**
+   * This returns a reference to the APZCTreeManager to which
+   * pan/zoom-related events can be sent.
+   */
+  static already_AddRefed<APZCTreeManager> GetAPZCTreeManager(uint64_t aLayersId);
+
+  /**
+   * Allocate an ID that can be used to refer to a layer tree and
+   * associated resources that live only on the compositor thread.
+   *
+   * Must run on the content main thread.
+   */
+  static uint64_t AllocateLayerTreeId();
+  /**
+   * Release compositor-thread resources referred to by |aID|.
+   *
+   * Must run on the content main thread.
+   */
+  static void DeallocateLayerTreeId(uint64_t aId);
+
+  static void RequestNotifyLayerTreeReady(uint64_t aLayersId, CompositorUpdateObserver* aObserver);
+  static void RequestNotifyLayerTreeCleared(uint64_t aLayersId, CompositorUpdateObserver* aObserver);
+  static void SwapLayerTreeObservers(uint64_t aLayer, uint64_t aOtherLayer);
 
   /**
    * Creates a new RemoteContentController for aTabId. Should only be called on
@@ -496,9 +506,6 @@ public:
                                             dom::ContentParent* aContentParent,
                                             const dom::TabId& aTabId,
                                             dom::TabParent* aBrowserParent);
-  bool AsyncPanZoomEnabled() const {
-    return !!mApzcTreeManager;
-  }
 
 protected:
   // Protected destructor, to discourage deletion outside of Release():

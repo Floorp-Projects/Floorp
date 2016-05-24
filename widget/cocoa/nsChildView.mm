@@ -2866,6 +2866,35 @@ nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTriggerSwipe
   }
 }
 
+void
+nsChildView::LookUpDictionary(
+               const nsAString& aText,
+               const nsTArray<mozilla::FontRange>& aFontRangeArray,
+               const bool aIsVertical,
+               const LayoutDeviceIntPoint& aPoint)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  NSMutableAttributedString* attrStr =
+    nsCocoaUtils::GetNSMutableAttributedString(aText, aFontRangeArray,
+                                               aIsVertical,
+                                               BackingScaleFactor());
+  NSPoint pt =
+    nsCocoaUtils::DevPixelsToCocoaPoints(aPoint, BackingScaleFactor());
+  NSDictionary* attributes = [attrStr attributesAtIndex:0 effectiveRange:nil];
+  NSFont* font = [attributes objectForKey:NSFontAttributeName];
+  if (font) {
+    if (aIsVertical) {
+      pt.x -= [font descender];
+    } else {
+      pt.y += [font ascender];
+    }
+  }
+  [mView showDefinitionForAttributedString:attrStr atPoint:pt];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
 #ifdef ACCESSIBILITY
 already_AddRefed<a11y::Accessible>
 nsChildView::GetDocumentAccessible()
@@ -5422,6 +5451,17 @@ PanGestureTypeForEvent(NSEvent* aEvent)
 {
   NS_ENSURE_TRUE(mTextInputHandler, NSMakeRect(0.0, 0.0, 0.0, 0.0));
   return mTextInputHandler->FirstRectForCharacterRange(aRange, actualRange);
+}
+
+- (void)quickLookWithEvent:(NSEvent*)event
+{
+  // Show dictionary by current point
+  WidgetContentCommandEvent
+    contentCommandEvent(true, eContentCommandLookUpDictionary, mGeckoChild);
+  NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
+  contentCommandEvent.mRefPoint = mGeckoChild->CocoaPointsToDevPixels(point);
+  mGeckoChild->DispatchWindowEvent(contentCommandEvent);
+  // The widget might have been destroyed.
 }
 
 - (NSInteger)windowLevel

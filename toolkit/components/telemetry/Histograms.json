@@ -1053,10 +1053,13 @@
     "kind": "boolean",
     "description": "2D canvas used"
   },
-  "CANVAS_WEBGL_USED": {
+  "CANVAS_WEBGL_FAILURE_ID": {
+    "alert_emails": ["bgirard@mozilla.com"],
     "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "WebGL canvas used"
+    "kind": "count",
+    "keyed": true,
+    "description": "WebGL runtime and dynamic failure IDs. This will record a count for each context creation success or failure. Each failure id is a unique identifier that can be traced back to a particular failure branch or blocklist rule.",
+    "bug_numbers": [1272808]
   },
   "CANVAS_WEBGL_SUCCESS": {
     "alert_emails": ["jmuizelaar@mozilla.com"],
@@ -1064,6 +1067,11 @@
     "kind": "boolean",
     "description": "WebGL1 creation success",
     "bug_numbers": [1247327]
+  },
+  "CANVAS_WEBGL_USED": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "WebGL canvas used"
   },
   "CANVAS_WEBGL2_SUCCESS": {
     "alert_emails": ["jmuizelaar@mozilla.com"],
@@ -8395,13 +8403,6 @@
     "kind": "enumerated",
     "n_values": 24,
     "description": "RSA signature key size for TLS_*_RSA_* in full handshake"
-  },
-  "SSL_AUTH_DSA_KEY_SIZE_FULL": {
-    "alert_emails": ["seceng-telemetry@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 24,
-    "description": "DSA signature key size for TLS_*_DSS_* in full handshake"
   },
   "SSL_AUTH_ECDSA_CURVE_FULL": {
     "alert_emails": ["seceng-telemetry@mozilla.com"],

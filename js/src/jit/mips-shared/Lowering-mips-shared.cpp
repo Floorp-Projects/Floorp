@@ -226,25 +226,25 @@ LIRGeneratorMIPSShared::newLTableSwitchV(MTableSwitch* tableswitch)
 void
 LIRGeneratorMIPSShared::visitGuardShape(MGuardShape* ins)
 {
-    MOZ_ASSERT(ins->obj()->type() == MIRType::Object);
+    MOZ_ASSERT(ins->object()->type() == MIRType::Object);
 
     LDefinition tempObj = temp(LDefinition::OBJECT);
-    LGuardShape* guard = new(alloc()) LGuardShape(useRegister(ins->obj()), tempObj);
+    LGuardShape* guard = new(alloc()) LGuardShape(useRegister(ins->object()), tempObj);
     assignSnapshot(guard, ins->bailoutKind());
     add(guard, ins);
-    redefine(ins, ins->obj());
+    redefine(ins, ins->object());
 }
 
 void
 LIRGeneratorMIPSShared::visitGuardObjectGroup(MGuardObjectGroup* ins)
 {
-    MOZ_ASSERT(ins->obj()->type() == MIRType::Object);
+    MOZ_ASSERT(ins->object()->type() == MIRType::Object);
 
     LDefinition tempObj = temp(LDefinition::OBJECT);
-    LGuardObjectGroup* guard = new(alloc()) LGuardObjectGroup(useRegister(ins->obj()), tempObj);
+    LGuardObjectGroup* guard = new(alloc()) LGuardObjectGroup(useRegister(ins->object()), tempObj);
     assignSnapshot(guard, ins->bailoutKind());
     add(guard, ins);
-    redefine(ins, ins->obj());
+    redefine(ins, ins->object());
 }
 
 void

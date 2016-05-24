@@ -15,6 +15,7 @@
 
 #include "mozilla/GuardObjects.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/Variant.h"
 
 #include "jscntxt.h"
@@ -132,7 +133,7 @@ class GlobalHelperThreadState
         PAUSE
     };
 
-    void wait(CondVar which, uint32_t timeoutMillis = 0);
+    void wait(CondVar which, mozilla::TimeDuration timeout = mozilla::TimeDuration::Forever());
     void notifyAll(CondVar which);
     void notifyOne(CondVar which);
 
@@ -577,14 +578,16 @@ struct SourceCompressionTask
         Aborted,
         Success
     } result;
-    void* compressed;
-    size_t compressedBytes;
-    HashNumber compressedHash;
+
+    mozilla::Maybe<SharedImmutableString> resultString;
 
   public:
     explicit SourceCompressionTask(ExclusiveContext* cx)
-      : helperThread(nullptr), cx(cx), ss(nullptr), abort_(false),
-        result(OOM), compressed(nullptr), compressedBytes(0), compressedHash(0)
+      : helperThread(nullptr)
+      , cx(cx)
+      , ss(nullptr)
+      , abort_(false)
+      , result(OOM)
     {}
 
     ~SourceCompressionTask()

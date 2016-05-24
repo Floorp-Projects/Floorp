@@ -73,11 +73,15 @@ wasm::Classify(Expr expr)
       case Expr::F32Neg:
       case Expr::F32Ceil:
       case Expr::F32Floor:
+      case Expr::F32Trunc:
+      case Expr::F32Nearest:
       case Expr::F32Sqrt:
       case Expr::F64Abs:
       case Expr::F64Neg:
       case Expr::F64Ceil:
       case Expr::F64Floor:
+      case Expr::F64Trunc:
+      case Expr::F64Nearest:
       case Expr::F64Sqrt:
       case Expr::I32BitNot:
       case Expr::I32Abs:
@@ -459,10 +463,6 @@ wasm::Classify(Expr expr)
         return ExprKind::SimdComparison;
       case Expr::CurrentMemory:
       case Expr::GrowMemory:
-      case Expr::F32Trunc:
-      case Expr::F32Nearest:
-      case Expr::F64Trunc:
-      case Expr::F64Nearest:
         break;
     }
     MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unimplemented opcode");

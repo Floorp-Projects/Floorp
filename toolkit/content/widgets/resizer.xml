@@ -27,7 +27,9 @@
             this.setAttribute("rtl", "true");
           }
         } else {
-          if (cs.writingMode == "vertical-rl") {
+          // writing-modes 'vertical-rl' and 'sideways-rl' want rtl resizers,
+          // as they will appear at the bottom left of the element
+          if (cs.writingMode.endsWith("-rl")) {
             this.setAttribute("rtl", "true");
           }
         }

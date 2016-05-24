@@ -293,6 +293,30 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
   background-color: var(--tab-selection-background-color);
 }
 
+.tab-icon-sound[visuallyselected=true][soundplaying] {
+  list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio.svg#tab-audio-white");
+}
+
+.tab-icon-sound[visuallyselected=true][soundplaying]:hover {
+  list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio.svg#tab-audio-white-hover");
+}
+
+.tab-icon-sound[visuallyselected=true][soundplaying]:hover:active {
+  list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio.svg#tab-audio-white-pressed");
+}
+
+.tab-icon-sound[visuallyselected=true][muted] {
+  list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio.svg#tab-audio-muted-white");
+}
+
+.tab-icon-sound[visuallyselected=true][muted]:hover {
+  list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio.svg#tab-audio-muted-white-hover");
+}
+
+.tab-icon-sound[visuallyselected=true][muted]:hover:active {
+  list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio.svg#tab-audio-muted-white-pressed");
+}
+
 /* Don't need space for the tab curves (66px - 30px) */
 .tabs-newtab-button {
   width: 36px;
