@@ -97,11 +97,11 @@ public:
     // Public textrun API for general use
 
     bool IsClusterStart(uint32_t aPos) const {
-        NS_ASSERTION(aPos < GetLength(), "aPos out of range");
+        MOZ_ASSERT(aPos < GetLength());
         return mCharacterGlyphs[aPos].IsClusterStart();
     }
     bool IsLigatureGroupStart(uint32_t aPos) const {
-        NS_ASSERTION(aPos < GetLength(), "aPos out of range");
+        MOZ_ASSERT(aPos < GetLength());
         return mCharacterGlyphs[aPos].IsLigatureGroupStart();
     }
     bool CanBreakLineBefore(uint32_t aPos) const {
@@ -114,24 +114,24 @@ public:
     // Returns a gfxShapedText::CompressedGlyph::FLAG_BREAK_TYPE_* value
     // as defined in gfxFont.h (may be NONE, NORMAL or HYPHEN).
     uint8_t CanBreakBefore(uint32_t aPos) const {
-        NS_ASSERTION(aPos < GetLength(), "aPos out of range");
+        MOZ_ASSERT(aPos < GetLength());
         return mCharacterGlyphs[aPos].CanBreakBefore();
     }
 
     bool CharIsSpace(uint32_t aPos) const {
-        NS_ASSERTION(aPos < GetLength(), "aPos out of range");
+        MOZ_ASSERT(aPos < GetLength());
         return mCharacterGlyphs[aPos].CharIsSpace();
     }
     bool CharIsTab(uint32_t aPos) const {
-        NS_ASSERTION(aPos < GetLength(), "aPos out of range");
+        MOZ_ASSERT(aPos < GetLength());
         return mCharacterGlyphs[aPos].CharIsTab();
     }
     bool CharIsNewline(uint32_t aPos) const {
-        NS_ASSERTION(aPos < GetLength(), "aPos out of range");
+        MOZ_ASSERT(aPos < GetLength());
         return mCharacterGlyphs[aPos].CharIsNewline();
     }
     bool CharMayHaveEmphasisMark(uint32_t aPos) const {
-        NS_ASSERTION(aPos < GetLength(), "aPos out of range");
+        MOZ_ASSERT(aPos < GetLength());
         return mCharacterGlyphs[aPos].CharMayHaveEmphasisMark();
     }
 
@@ -513,7 +513,7 @@ public:
     void SanitizeGlyphRuns();
 
     CompressedGlyph* GetCharacterGlyphs() final {
-        NS_ASSERTION(mCharacterGlyphs, "failed to initialize mCharacterGlyphs");
+        MOZ_ASSERT(mCharacterGlyphs, "failed to initialize mCharacterGlyphs");
         return mCharacterGlyphs;
     }
 
