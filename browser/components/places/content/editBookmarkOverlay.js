@@ -761,6 +761,11 @@ var gEditItemOverlay = {
         this._markFolderAsRecentlyUsed(containerId)
             .catch(Components.utils.reportError);
       }
+
+      // Auto-show the bookmarks toolbar when adding / moving an item there.
+      if (containerId == PlacesUtils.toolbarFolderId) {
+        Services.obs.notifyObservers(null, "autoshow-bookmarks-toolbar", null);
+      }
     }
 
     // Update folder-tree selection
