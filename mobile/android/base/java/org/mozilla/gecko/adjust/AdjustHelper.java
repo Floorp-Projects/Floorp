@@ -13,21 +13,24 @@ import com.adjust.sdk.AdjustConfig;
 import com.adjust.sdk.AdjustReferrerReceiver;
 import com.adjust.sdk.LogLevel;
 
+import org.mozilla.gecko.AppConstants;
+
 public class AdjustHelper implements AdjustHelperInterface {
     public void onCreate(final Context context, final String maybeAppToken) {
         final String environment;
-        final String appToken;
         final LogLevel logLevel;
-        if (maybeAppToken != null) {
+        if (AppConstants.MOZILLA_OFFICIAL) {
             environment = AdjustConfig.ENVIRONMENT_PRODUCTION;
-            appToken = maybeAppToken;
             logLevel = LogLevel.WARN;
         } else {
             environment = AdjustConfig.ENVIRONMENT_SANDBOX;
-            appToken = "ABCDEFGHIJKL";
             logLevel = LogLevel.VERBOSE;
         }
-        AdjustConfig config = new AdjustConfig(context, appToken, environment);
+        if (maybeAppToken == null) {
+            // We've got install tracking turned on -- we better have a token!
+            throw new IllegalArgumentException("maybeAppToken must not be null");
+        }
+        AdjustConfig config = new AdjustConfig(context, maybeAppToken, environment);
         config.setLogLevel(logLevel);
         Adjust.onCreate(config);
     }

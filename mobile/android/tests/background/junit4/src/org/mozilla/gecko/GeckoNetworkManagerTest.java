@@ -30,9 +30,9 @@ public class GeckoNetworkManagerTest {
         testingState = ManagerState.OnNoListeners;
         assertNull(GeckoNetworkManager.getNextState(testingState, ManagerEvent.start));
         assertNull(GeckoNetworkManager.getNextState(testingState, ManagerEvent.disableNotifications));
-        assertNull(GeckoNetworkManager.getNextState(testingState, ManagerEvent.receivedUpdate));
         assertEquals(ManagerState.OnWithListeners, GeckoNetworkManager.getNextState(testingState, ManagerEvent.enableNotifications));
         assertEquals(ManagerState.OffNoListeners, GeckoNetworkManager.getNextState(testingState, ManagerEvent.stop));
+        assertEquals(ManagerState.OnNoListeners, GeckoNetworkManager.getNextState(testingState, ManagerEvent.receivedUpdate));
 
         testingState = ManagerState.OnWithListeners;
         assertNull(GeckoNetworkManager.getNextState(testingState, ManagerEvent.start));

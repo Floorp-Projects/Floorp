@@ -996,9 +996,12 @@ JSHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
   MOZ_ASSERT(h);
   Histogram::ClassType type = h->histogram_type();
 
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+
+  // If we don't have an argument for the count histogram, assume an increment of 1.
+  // Otherwise, make sure to run some sanity checks on the argument.
   int32_t value = 1;
-  if (type != base::CountHistogram::COUNT_HISTOGRAM) {
-    JS::CallArgs args = CallArgsFromVp(argc, vp);
+  if ((type != base::CountHistogram::COUNT_HISTOGRAM) || args.length()) {
     if (!args.length()) {
       JS_ReportError(cx, "Expected one argument");
       return false;
@@ -1222,9 +1225,11 @@ JSKeyedHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
   }
 
   const uint32_t type = keyed->GetHistogramType();
-  int32_t value = 1;
 
-  if (type != base::CountHistogram::COUNT_HISTOGRAM) {
+  // If we don't have an argument for the count histogram, assume an increment of 1.
+  // Otherwise, make sure to run some sanity checks on the argument.
+  int32_t value = 1;
+  if ((type != base::CountHistogram::COUNT_HISTOGRAM) || (args.length() == 2)) {
     if (args.length() < 2) {
       JS_ReportError(cx, "Expected two arguments for this histogram type");
       return false;

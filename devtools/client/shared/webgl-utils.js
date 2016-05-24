@@ -8,13 +8,11 @@ const Services = require("Services");
 
 const WEBGL_CONTEXT_NAME = "experimental-webgl";
 
-function isWebGLForceEnabled()
-{
+function isWebGLForceEnabled() {
   return Services.prefs.getBoolPref("webgl.force-enabled");
 }
 
-function isWebGLSupportedByGFX()
-{
+function isWebGLSupportedByGFX() {
   let supported = false;
 
   try {
@@ -31,12 +29,11 @@ function isWebGLSupportedByGFX()
   return supported;
 }
 
-function create3DContext(aCanvas)
-{
+function create3DContext(canvas) {
   // try to get a valid context from an existing canvas
   let context = null;
   try {
-    context = aCanvas.getContext(WEBGL_CONTEXT_NAME, aFlags);
+    context = canvas.getContext(WEBGL_CONTEXT_NAME, {});
   } catch (e) {
     return null;
   }
