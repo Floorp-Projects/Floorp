@@ -31,6 +31,8 @@ class MediaDataDecoderCallback;
 class FlushableTaskQueue;
 class CDMProxy;
 
+static LazyLogModule sPDMLog("PlatformDecoderModule");
+
 // The PlatformDecoderModule interface is used by the MediaFormatReader to
 // abstract access to decoders provided by various
 // platforms.
