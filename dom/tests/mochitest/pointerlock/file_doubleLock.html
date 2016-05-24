@@ -40,10 +40,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
       document.addEventListener("mozpointerlockchange", function (e) {
         if (document.mozPointerLockElement === div) {
           if (numberOfLocks === 2) {
-            addFullscreenChangeContinuation("exit", function() {
-              runTests();
-              SimpleTest.finish();
-            });
             document.exitFullscreen();
           }
           else {
@@ -53,11 +49,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         }
       }, false);
 
+      document.addEventListener("fullscreenchange", function (e) {
+        if (document.fullscreenElement === div) {
+          div.mozRequestPointerLock();
+        }
+        else {
+          runTests();
+          SimpleTest.finish();
+        }
+      }, false);
+
       function start() {
         console.log('started');
-        addFullscreenChangeContinuation("enter", function() {
-          div.mozRequestPointerLock();
-        });
         div.requestFullscreen();
       }
     </script>

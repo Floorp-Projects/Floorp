@@ -79,23 +79,25 @@
         } else {
           info("Got mozpointerlockchange for exiting");
           pointerUnlocked = true;
-          addFullscreenChangeContinuation("exit", function() {
-            info("Got fullscreenchange for exiting");
-            runTests();
-            SimpleTest.finish();
-          });
           document.exitFullscreen();
+        }
+      }, false);
+
+      document.addEventListener("fullscreenchange", function(e) {
+        if (document.fullscreenElement === div) {
+          info("Got fullscreenchange for entering");
+          hasRequestPointerLock = "mozRequestPointerLock" in div;
+          div.mozRequestPointerLock();
+        } else {
+          info("Got fullscreenchange for exiting");
+          runTests();
+          SimpleTest.finish();
         }
       }, false);
 
       function start() {
         div = document.getElementById("div");
         info("Requesting fullscreen on parent");
-        addFullscreenChangeContinuation("enter", function() {
-          info("Got fullscreenchange for entering");
-          hasRequestPointerLock = "mozRequestPointerLock" in div;
-          div.mozRequestPointerLock();
-        });
         div.requestFullscreen();
       }
     </script>

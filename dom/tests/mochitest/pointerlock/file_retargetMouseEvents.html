@@ -171,11 +171,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         child.removeEventListener("mousemove", childMoveTest);
         SimpleTest.executeSoon(function () {
           info("Exit fullscreen");
-          addFullscreenChangeContinuation("exit", function() {
-            info("Got fullscreenchange for exiting");
-            runTests();
-            SimpleTest.finish();
-          });
           document.exitFullscreen();
         });
       }
@@ -193,12 +188,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         }
       }, false);
 
-      function start() {
-        info("Requesting fullscreen on parent");
-        addFullscreenChangeContinuation("enter", function() {
+      document.addEventListener("fullscreenchange", function (e)  {
+        if (document.fullscreenElement === parent) {
           info("Got fullscreenchange for entering");
           parent.mozRequestPointerLock();
-        });
+        } else {
+          info("Got fullscreenchange for exiting");
+          runTests();
+          SimpleTest.finish();
+        }
+      }, false);
+
+      function start() {
+        info("Requesting fullscreen on parent");
         parent.requestFullscreen();
       }
     </script>
