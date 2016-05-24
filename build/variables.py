@@ -36,10 +36,13 @@ def get_hg_info(workdir):
             repo = 'https://' + repo[6:]
         repo = repo.rstrip('/')
 
-    changeset = get_program_output(
-        'hg', '-R', workdir, 'parent', '--template={node}')
+    changeset = get_hg_changeset(workdir)
 
     return repo, changeset
+
+
+def get_hg_changeset(path):
+    return get_program_output('hg', '-R', path, 'parent', '--template={node}')
 
 
 def source_repo_header(output):
@@ -50,13 +53,14 @@ def source_repo_header(output):
     changeset = buildconfig.substs.get('MOZ_SOURCE_CHANGESET')
     source = ''
 
-    if bool(repo) != bool(changeset):
-        raise Exception('MOZ_SOURCE_REPO and MOZ_SOURCE_CHANGESET both must '
-                        'be set (or not set).')
-
     if not repo:
         if os.path.exists(os.path.join(buildconfig.topsrcdir, '.hg')):
             repo, changeset = get_hg_info(buildconfig.topsrcdir)
+    elif not changeset:
+        changeset = get_hg_changeset(buildconfig.topsrcdir)
+        if not changeset:
+            raise Exception('could not resolve changeset; '
+                            'try setting MOZ_SOURCE_CHANGESET')
 
     if changeset:
         output.write('#define MOZ_SOURCE_STAMP %s\n' % changeset)
