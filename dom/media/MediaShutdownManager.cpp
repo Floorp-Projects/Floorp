@@ -79,7 +79,7 @@ MediaShutdownManager::EnsureCorrectShutdownObserverState()
       // Clear our singleton reference. This will probably delete
       // this instance, so don't deref |this| clearing sInstance.
       sInstance = nullptr;
-      DECODER_LOG(LogLevel::Debug, ("MediaShutdownManager::Shutdown() end."));
+      DECODER_LOG(LogLevel::Debug, ("MediaShutdownManager::BlockShutdown() end."));
     }
   }
 }
@@ -126,7 +126,7 @@ MediaShutdownManager::BlockShutdown(nsIAsyncShutdownClient*)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sInstance);
 
-  DECODER_LOG(LogLevel::Debug, ("MediaShutdownManager::Shutdown() start..."));
+  DECODER_LOG(LogLevel::Debug, ("MediaShutdownManager::BlockShutdown() start..."));
 
   // Set this flag to ensure no Register() is allowed when Shutdown() begins.
   mIsDoingXPCOMShutDown = true;
