@@ -591,8 +591,11 @@ InvokeInterruptCallback(JSContext* cx)
         // Debugger treats invoking the interrupt callback as a "step", so
         // invoke the onStep handler.
         if (cx->compartment()->isDebuggee()) {
-            ScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
-            if (!iter.done() && iter.script()->stepModeEnabled()) {
+            ScriptFrameIter iter(cx, FrameIter::GO_THROUGH_SAVED);
+            if (!iter.done() &&
+                cx->compartment() == iter.compartment() &&
+                iter.script()->stepModeEnabled())
+            {
                 RootedValue rval(cx);
                 switch (Debugger::onSingleStep(cx, &rval)) {
                   case JSTRAP_ERROR:
