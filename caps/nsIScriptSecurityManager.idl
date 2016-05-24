@@ -134,13 +134,6 @@ interface nsIScriptSecurityManager : nsISupports
     nsIPrincipal getSystemPrincipal();
 
     /**
-     * Return a principal that has the same origin as aURI.
-     * This principals should not be used for any data/permission check, it will
-     * have appId = UNKNOWN_APP_ID.
-     */
-    nsIPrincipal getSimpleCodebasePrincipal(in nsIURI aURI);
-
-    /**
      * Returns a principal that has the given information.
      * @param appId is the app id of the principal. It can't be UNKNOWN_APP_ID.
      * @param inMozBrowser is true if the principal has to be considered as
