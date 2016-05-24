@@ -647,7 +647,7 @@ nsDocShellTreeOwner::GetSize(int32_t* aCX, int32_t* aCY)
 
 NS_IMETHODIMP
 nsDocShellTreeOwner::SetPositionAndSize(int32_t aX, int32_t aY, int32_t aCX,
-                                        int32_t aCY, uint32_t aFlags)
+                                        int32_t aCY, bool aRepaint)
 {
   nsCOMPtr<nsIEmbeddingSiteWindow> ownerWin = GetOwnerWin();
   if (ownerWin) {
