@@ -634,8 +634,10 @@
                     for (let event of this.videoEvents)
                         this.video.removeEventListener(event, this, false);
 
-                    for (let element of this.controlListeners)
-                        element.item.removeEventListener(element.event, element.func, false);
+                    for (let element of this.controlListeners) {
+                        element.item.removeEventListener(element.event, element.func,
+                                                         { mozSystemGroup: true });
+                    }
 
                     delete this.controlListeners;
 
@@ -1343,7 +1345,7 @@
                     function addListener(elem, eventName, func) {
                       let boundFunc = func.bind(self);
                       self.controlListeners.push({ item: elem, event: eventName, func: boundFunc });
-                      elem.addEventListener(eventName, boundFunc, false);
+                      elem.addEventListener(eventName, boundFunc, { mozSystemGroup: true });
                     }
 
                     addListener(this.muteButton, "command", this.toggleMute);
@@ -1355,7 +1357,7 @@
 
                     addListener(this.videocontrols, "resizevideocontrols", this.adjustControlSize);
                     addListener(this.videocontrols, "transitionend", this.onTransitionEnd);
-                    addListener(this.video.ownerDocument, "mozfullscreenchange", this.onFullscreenChange);
+                    addListener(this.video.ownerDocument, "fullscreenchange", this.onFullscreenChange);
                     addListener(this.video, "keypress", this.keyHandler);
 
                     addListener(this.videocontrols, "dragstart", function(event) {
@@ -1671,8 +1673,10 @@
               for (let event of this.videoEvents)
                 this.video.removeEventListener(event, this, false);
 
-              for (let element of this.controlListeners)
-                element.item.removeEventListener(element.event, element.func, false);
+              for (let element of this.controlListeners) {
+                element.item.removeEventListener(element.event, element.func,
+                                                 { mozSystemGroup: true });
+              }
 
               delete this.controlListeners;
             },
@@ -1736,7 +1740,7 @@
               function addListener(elem, eventName, func) {
                 let boundFunc = func.bind(self);
                 self.controlListeners.push({ item: elem, event: eventName, func: boundFunc });
-                elem.addEventListener(eventName, boundFunc, false);
+                elem.addEventListener(eventName, boundFunc, { mozSystemGroup: true });
               }
               addListener(this.clickToPlay, "click", this.clickToPlayClickHandler);
               addListener(this.video, "MozNoControlsBlockedVideo", this.blockedVideoHandler);
