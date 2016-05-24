@@ -8534,7 +8534,6 @@ class MElements
     AliasSet getAliasSet() const override {
         return AliasSet::Load(AliasSet::ObjectFields);
     }
-    AliasType mightAlias(const MDefinition* store) const override;
 
     ALLOW_CLONE(MElements)
 };
@@ -8728,7 +8727,6 @@ class MInitializedLength
     AliasSet getAliasSet() const override {
         return AliasSet::Load(AliasSet::ObjectFields);
     }
-    AliasType mightAlias(const MDefinition* store) const override;
 
     void computeRange(TempAllocator& alloc) override;
 
@@ -8826,7 +8824,6 @@ class MUnboxedArrayInitializedLength
     AliasSet getAliasSet() const override {
         return AliasSet::Load(AliasSet::ObjectFields);
     }
-    AliasType mightAlias(const MDefinition* store) const override;
 
     ALLOW_CLONE(MUnboxedArrayInitializedLength)
 };
@@ -9458,7 +9455,6 @@ class MLoadElement
     AliasSet getAliasSet() const override {
         return AliasSet::Load(AliasSet::Element);
     }
-    AliasType mightAlias(const MDefinition* store) const override;
 
     ALLOW_CLONE(MLoadElement)
 };
@@ -9615,7 +9611,6 @@ class MLoadUnboxedObjectOrNull
         return AliasSet::Load(AliasSet::UnboxedElement);
     }
     MDefinition* foldsTo(TempAllocator& alloc) override;
-    AliasType mightAlias(const MDefinition* store) const override;
 
     ALLOW_CLONE(MLoadUnboxedObjectOrNull)
 };
@@ -9665,7 +9660,6 @@ class MLoadUnboxedString
     AliasSet getAliasSet() const override {
         return AliasSet::Load(AliasSet::UnboxedElement);
     }
-    AliasType mightAlias(const MDefinition* store) const override;
 
     ALLOW_CLONE(MLoadUnboxedString)
 };
@@ -10273,7 +10267,6 @@ class MLoadUnboxedScalar
             return AliasSet::Store(AliasSet::UnboxedElement);
         return AliasSet::Load(AliasSet::UnboxedElement);
     }
-    AliasType mightAlias(const MDefinition* store) const override;
 
     bool congruentTo(const MDefinition* ins) const override {
         if (requiresBarrier_)
@@ -11150,7 +11143,7 @@ class MGetPropertyPolymorphic
     PropertyName* name() const {
         return name_;
     }
-    MDefinition* obj() const {
+    MDefinition* object() const {
         return getOperand(0);
     }
     AliasSet getAliasSet() const override {
@@ -11223,7 +11216,7 @@ class MSetPropertyPolymorphic
     PropertyName* name() const {
         return name_;
     }
-    MDefinition* obj() const {
+    MDefinition* object() const {
         return getOperand(0);
     }
     MDefinition* value() const {
@@ -11509,7 +11502,7 @@ class MGuardShape
         return new(alloc) MGuardShape(obj, shape, bailoutKind);
     }
 
-    MDefinition* obj() const {
+    MDefinition* object() const {
         return getOperand(0);
     }
     const Shape* shape() const {
@@ -11556,7 +11549,7 @@ class MGuardReceiverPolymorphic
         return new(alloc) MGuardReceiverPolymorphic(alloc, obj);
     }
 
-    MDefinition* obj() const {
+    MDefinition* object() const {
         return getOperand(0);
     }
 
@@ -11611,7 +11604,7 @@ class MGuardObjectGroup
         return new(alloc) MGuardObjectGroup(obj, group, bailOnEquality, bailoutKind);
     }
 
-    MDefinition* obj() const {
+    MDefinition* object() const {
         return getOperand(0);
     }
     const ObjectGroup* group() const {
@@ -11663,7 +11656,7 @@ class MGuardObjectIdentity
         return new(alloc) MGuardObjectIdentity(obj, expected, bailOnEquality);
     }
 
-    MDefinition* obj() const {
+    MDefinition* object() const {
         return getOperand(0);
     }
     MDefinition* expected() const {
@@ -11706,7 +11699,7 @@ class MGuardClass
         return new(alloc) MGuardClass(obj, clasp);
     }
 
-    MDefinition* obj() const {
+    MDefinition* object() const {
         return getOperand(0);
     }
     const Class* getClass() const {
@@ -11752,7 +11745,7 @@ class MGuardUnboxedExpando
         return new(alloc) MGuardUnboxedExpando(obj, requireExpando, bailoutKind);
     }
 
-    MDefinition* obj() const {
+    MDefinition* object() const {
         return getOperand(0);
     }
     bool requireExpando() const {
@@ -12363,7 +12356,7 @@ class MSetDOMProperty
         return func_;
     }
 
-    MDefinition* object() {
+    MDefinition* object() const {
         return getOperand(0);
     }
 
@@ -12465,7 +12458,7 @@ class MGetDOMProperty
     bool valueMayBeInSlot() const {
         return info_->isLazilyCachedInSlot;
     }
-    MDefinition* object() {
+    MDefinition* object() const {
         return getOperand(0);
     }
 
@@ -13910,7 +13903,7 @@ public:
     static MGuardSharedTypedArray* New(TempAllocator& alloc, MDefinition* obj) {
         return new(alloc) MGuardSharedTypedArray(obj);
     }
-    MDefinition* obj() const {
+    MDefinition* object() const {
         return getOperand(0);
     }
     AliasSet getAliasSet() const override {
