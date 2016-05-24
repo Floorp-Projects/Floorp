@@ -68,6 +68,8 @@ const OMTAPrefKey = 'layers.offmainthreadcomposition.async-animations';
 var omtaEnabled = SpecialPowers.DOMWindowUtils.layerManagerRemote &&
                   SpecialPowers.getBoolPref(OMTAPrefKey);
 
+var isAndroid = !!navigator.userAgent.includes("Android");
+
 function add_task_if_omta_enabled(test) {
   if (!omtaEnabled) {
     info(test.name + " is skipped because OMTA is disabled");
@@ -200,9 +202,9 @@ waitForAllPaints(function() {
 
     var markers = yield observeStyling(5);
 
-    todo_is(markers.length, 0,
-            'Bug 1166500: Animations running on the compositor in out of ' +
-            'view element should never cause restyles');
+    is(markers.length, 0,
+       'Animations running on the compositor in an out-of-view element ' +
+       'should never cause restyles');
     yield ensureElementRemoval(div);
   });
 
@@ -214,17 +216,20 @@ waitForAllPaints(function() {
     yield animation.ready;
     var markers = yield observeStyling(5);
 
-    todo_is(markers.length, 0,
-            'Bug 1166500: Animations running on the main-thread in out of ' +
-            'view element should never cause restyles');
+    is(markers.length, 0,
+       'Animations running on the main-thread in an out-of-view element ' +
+       'should never cause restyles');
     yield ensureElementRemoval(div);
   });
 
-  /*
-   Disabled for now since, on Android, the opacity animation runs on the
-   compositor even if it is scrolled out of view.
-   We will fix this in bug 1166500 or a follow-up bug
   add_task_if_omta_enabled(function* no_restyling_compositor_animations_in_scrolled_out_element() {
+    /*
+     On Android the opacity animation runs on the compositor even if it is
+     scrolled out of view.  We will fix this in bug 1247800.
+     */
+    if (isAndroid) {
+      return;
+    }
     var parentElement = addDiv(null,
       { style: 'overflow-y: scroll; height: 20px;' });
     var div = addDiv(null,
@@ -237,14 +242,22 @@ waitForAllPaints(function() {
 
     var markers = yield observeStyling(5);
 
-    todo_is(markers.length, 0,
-            'Bug 1166500: Animations running on the compositor in elements ' +
-            'which are scrolled out should never cause restyles');
+    is(markers.length, 0,
+       'Animations running on the compositor for elements ' +
+       'which are scrolled out should never cause restyles');
+
     yield ensureElementRemoval(parentElement);
   });
-  */
 
   add_task(function* no_restyling_main_thread_animations_in_scrolled_out_element() {
+    /*
+     On Android throttled animations are left behind on the main thread in some
+     frames, We will fix this in bug 1247800.
+     */
+    if (isAndroid) {
+      return;
+    }
+
     var parentElement = addDiv(null,
       { style: 'overflow-y: scroll; height: 20px;' });
     var div = addDiv(null,
@@ -255,9 +268,10 @@ waitForAllPaints(function() {
     yield animation.ready;
     var markers = yield observeStyling(5);
 
-    todo_is(markers.length, 0,
-            'Bug 1166500: Animations running on the main-thread in elements ' +
-            'which are scrolled out should never cause restyles');
+    is(markers.length, 0,
+       'Animations running on the main-thread for elements ' +
+       'which are scrolled out should never cause restyles');
+
     yield ensureElementRemoval(parentElement);
   });
 
