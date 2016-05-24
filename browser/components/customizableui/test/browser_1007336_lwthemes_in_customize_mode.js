@@ -63,6 +63,22 @@ add_task(function* () {
   defaultTheme.doCommand();
   is(Services.prefs.getCharPref("lightweightThemes.selectedThemeID"), "", "No lwtheme should be selected");
 
+  // ensure current theme isn't set to "Default"
+  popupShownPromise = popupShown(popup);
+  EventUtils.synthesizeMouseAtCenter(themesButton, {});
+  info("Clicked on themes button a second time");
+  yield popupShownPromise;
+
+  firstLWTheme = recommendedHeader.nextSibling;
+  themeChangedPromise = promiseObserverNotified("lightweight-theme-changed");
+  firstLWTheme.doCommand();
+  info("Clicked on first theme again");
+  yield themeChangedPromise;
+
+  // check that "Restore Defaults" button resets theme
+  yield gCustomizeMode.reset();
+  is(LightweightThemeManager.currentTheme, null, "Current theme reset to default");
+
   yield endCustomizing();
   Services.prefs.setCharPref("lightweightThemes.usedThemes", "[]");
   Services.prefs.setCharPref("lightweightThemes.recommendedThemes", "[]");
