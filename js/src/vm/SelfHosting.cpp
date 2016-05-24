@@ -806,7 +806,7 @@ intrinsic_ActiveFunction(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 0);
 
-    ScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
+    ScriptFrameIter iter(cx, FrameIter::GO_THROUGH_SAVED);
     MOZ_ASSERT(iter.isFunctionFrame());
     args.rval().setObject(*iter.callee(cx));
     return true;
@@ -1880,7 +1880,7 @@ intrinsic_IsConstructing(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 0);
 
-    ScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
+    ScriptFrameIter iter(cx, FrameIter::GO_THROUGH_SAVED);
     bool isConstructing = iter.isConstructing();
     args.rval().setBoolean(isConstructing);
     return true;
