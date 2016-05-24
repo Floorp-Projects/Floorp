@@ -38,7 +38,7 @@ add_task(function* () {
   hud.jsterm.clearOutput();
 
   let loaded = loadBrowser(browser);
-  content.location = TEST_VIOLATION;
+  BrowserTestUtils.loadURI(browser, TEST_VIOLATION);
   yield loaded;
 
   yield waitForSuccess({
