@@ -2782,11 +2782,17 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   DisplayListClipState::AutoClipMultiple clipState(aBuilder);
   CheckForApzAwareEventHandlers(aBuilder, child);
 
+  Maybe<nsDisplayListBuilder::AutoCurrentScrollParentIdSetter> idSetter;
   if (savedOutOfFlowData) {
     clipState.SetClipForContainingBlockDescendants(
       &savedOutOfFlowData->mContainingBlockClip);
     clipState.SetScrollClipForContainingBlockDescendants(
       savedOutOfFlowData->mContainingBlockScrollClip);
+
+    // For out-of-flow frames, the current scroll parent is wrong, because it's
+    // the scroll parent for the placeholder frame rather than the actual
+    // out-of-flow frame, so we need to update the current scroll parent.
+    idSetter.emplace(aBuilder, savedOutOfFlowData);
   } else if (GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO &&
              isPlaceholder) {
     // If we have nested out-of-flow frames and the outer one isn't visible
