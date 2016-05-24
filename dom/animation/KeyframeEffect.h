@@ -341,6 +341,10 @@ public:
     nsCSSProperty aProperty,
     const AnimationPerformanceWarning& aWarning);
 
+  // Cumulative change hint on each segment for each property.
+  // This is used for deciding the animation is paint-only.
+  void CalculateCumulativeChangeHint();
+
 protected:
   KeyframeEffectReadOnly(nsIDocument* aDocument,
                          const Maybe<OwningAnimationTarget>& aTarget,
@@ -395,6 +399,8 @@ protected:
   bool mInEffectOnLastAnimationTimingUpdate;
 
 private:
+  nsChangeHint mCumulativeChangeHint;
+
   nsIFrame* GetAnimationFrame() const;
 
   bool CanThrottle() const;
