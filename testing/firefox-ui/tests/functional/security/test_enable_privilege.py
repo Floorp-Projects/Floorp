@@ -19,4 +19,4 @@ class TestEnablePrivilege(FirefoxTestCase):
             self.marionette.navigate(self.url)
 
             result = self.marionette.find_element(By.ID, 'result')
-            self.assertEqual(result.get_attribute('textContent'), 'PASS')
+            self.assertEqual(result.get_property('textContent'), 'PASS')
