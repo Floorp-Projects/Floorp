@@ -245,12 +245,12 @@
             "type": "object",
             "properties": {
               "startTime": {
-                "type": "number",
-                "description": "Items added to history after this date, represented in milliseconds since the epoch."
+                "$ref": "HistoryTime",
+                "description": "Items added to history after this date."
               },
               "endTime": {
-                "type": "number",
-                "description": "Items added to history before this date, represented in milliseconds since the epoch."
+                "$ref": "HistoryTime",
+                "description": "Items added to history before this date."
               }
             }
           },
