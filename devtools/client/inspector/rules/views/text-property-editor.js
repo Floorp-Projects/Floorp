@@ -343,6 +343,8 @@ TextPropertyEditor.prototype = {
           onRevert: this._onSwatchRevert
         });
         span.on("unit-change", this._onSwatchCommit);
+        let title = CssLogic.l10n("rule.colorSwatch.tooltip");
+        span.setAttribute("title", title);
       }
     }
 
@@ -359,6 +361,8 @@ TextPropertyEditor.prototype = {
           onCommit: this._onSwatchCommit,
           onRevert: this._onSwatchRevert
         });
+        let title = CssLogic.l10n("rule.bezierSwatch.tooltip");
+        span.setAttribute("title", title);
       }
     }
 
@@ -374,6 +378,8 @@ TextPropertyEditor.prototype = {
           onCommit: this._onSwatchCommit,
           onRevert: this._onSwatchRevert
         }, outputParser, parserOptions);
+        let title = CssLogic.l10n("rule.filterSwatch.tooltip");
+        span.setAttribute("title", title);
       }
     }
 
@@ -382,6 +388,8 @@ TextPropertyEditor.prototype = {
     if (this.ruleEditor.isEditable) {
       for (let angleSpan of this.angleSwatchSpans) {
         angleSpan.on("unit-change", this._onSwatchCommit);
+        let title = CssLogic.l10n("rule.angleSwatch.tooltip");
+        angleSpan.setAttribute("title", title);
       }
     }
 
