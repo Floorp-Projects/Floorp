@@ -437,6 +437,8 @@ You can set this by:
             'robocop': 'mochitest',
             'mochitest-chrome': 'mochitest',
             'mochitest-media': 'mochitest',
+            'mochitest-plain-clipboard': 'mochitest',
+            'mochitest-plain-gpu': 'mochitest',
             'mochitest-gl': 'mochitest',
             'jsreftest': 'reftest',
             'crashtest': 'reftest',
