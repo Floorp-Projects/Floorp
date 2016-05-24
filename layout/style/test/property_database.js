@@ -4021,8 +4021,8 @@ var gCSSProperties = {
     invalid_values: [],
     quirks_values: { "5": "5px" },
   },
-  "word-wrap": {
-    domProp: "wordWrap",
+  "overflow-wrap": {
+    domProp: "overflowWrap",
     inherited: true,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "normal" ],
@@ -4579,6 +4579,13 @@ var gCSSProperties = {
   },
 
   // Aliases
+  "word-wrap": {
+    domProp: "wordWrap",
+    inherited: true,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "overflow-wrap",
+    subproperties: [ "overflow-wrap" ],
+  },
   "-moz-transform": {
     domProp: "MozTransform",
     inherited: false,
