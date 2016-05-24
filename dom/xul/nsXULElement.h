@@ -341,6 +341,8 @@ class nsXULElement final : public nsStyledElement,
                            public nsIDOMXULElement
 {
 public:
+    using Element::Blur;
+    using Element::Focus;
     explicit nsXULElement(already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo);
 
     static nsresult
@@ -561,8 +563,6 @@ public:
     already_AddRefed<nsIRDFResource> GetResource(mozilla::ErrorResult& rv);
     nsIControllers* GetControllers(mozilla::ErrorResult& rv);
     already_AddRefed<mozilla::dom::BoxObject> GetBoxObject(mozilla::ErrorResult& rv);
-    void Focus(mozilla::ErrorResult& rv);
-    void Blur(mozilla::ErrorResult& rv);
     void Click(mozilla::ErrorResult& rv);
     // The XPCOM DoCommand never fails, so it's OK for us.
     already_AddRefed<nsINodeList>
