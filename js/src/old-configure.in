@@ -237,11 +237,13 @@ case "$target" in
         case "$CC_VERSION" in
         18*)
             _CC_SUITE=12
+            MSVS_VERSION=2013
             MSVC_C_RUNTIME_DLL=msvcr120.dll
             MSVC_CXX_RUNTIME_DLL=msvcp120.dll
             ;;
         19*)
             _CC_SUITE=14
+            MSVS_VERSION=2015
             MSVC_C_RUNTIME_DLL=vcruntime140.dll
             MSVC_CXX_RUNTIME_DLL=msvcp140.dll
 
@@ -259,6 +261,7 @@ case "$target" in
             CXXFLAGS="$CXXFLAGS -Zc:threadSafeInit-"
             ;;
         esac
+        AC_SUBST(MSVS_VERSION)
         AC_SUBST(MSVC_C_RUNTIME_DLL)
         AC_SUBST(MSVC_CXX_RUNTIME_DLL)
 
