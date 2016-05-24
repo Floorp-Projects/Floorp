@@ -319,12 +319,6 @@ class BaseMarionetteArguments(ArgumentParser):
                         help='host to use for adb connection')
         self.add_argument('--adb-port',
                         help='port to use for adb connection')
-        self.add_argument('--type',
-                        help="the type of test to run, can be a combination of values defined in the manifest file; "
-                             "individual values are combined with '+' or '-' characters. for example: 'browser+b2g' "
-                             "means the set of tests which are compatible with both browser and b2g; 'b2g-qemu' means "
-                             "the set of tests which are compatible with b2g but do not require an emulator. this "
-                             "argument is only used when loading tests from manifest files")
         self.add_argument('--homedir',
                         help='home directory of emulator files')
         self.add_argument('--app',
@@ -540,7 +534,7 @@ class BaseMarionetteTestRunner(object):
                  emulator_img=None, emulator_res='480x800', homedir=None,
                  app=None, app_args=None, binary=None, profile=None,
                  logger=None, no_window=False, logdir=None, logcat_stdout=False,
-                 repeat=0, testvars=None, tree=None, type=None,
+                 repeat=0, testvars=None, tree=None,
                  device_serial=None, symbols_path=None, timeout=None,
                  shuffle=False, shuffle_seed=random.randint(0, sys.maxint),
                  sdcard=None, this_chunk=1, total_chunks=1, sources=None,
@@ -569,7 +563,6 @@ class BaseMarionetteTestRunner(object):
         self.repeat = repeat
         self.test_kwargs = kwargs
         self.tree = tree
-        self.type = type
         self.device_serial = device_serial
         self.symbols_path = symbols_path
         self.timeout = timeout
@@ -1027,18 +1020,7 @@ setReq.onerror = function() {
                         self.add_test(filepath)
             return
 
-        testargs = {}
-        if self.type is not None:
-            testtypes = self.type.replace('+', ' +').replace('-', ' -').split()
-            for atype in testtypes:
-                if atype.startswith('+'):
-                    testargs.update({ atype[1:]: 'true' })
-                elif atype.startswith('-'):
-                    testargs.update({ atype[1:]: 'false' })
-                else:
-                    testargs.update({ atype: 'true' })
-
-        testarg_b2g = bool(testargs.get('b2g'))
+        testarg_b2g = mozinfo.info.get('appname') == 'b2g'
 
         file_ext = os.path.splitext(os.path.split(filepath)[-1])[1]
 
@@ -1063,18 +1045,12 @@ setReq.onerror = function() {
                                   "combination of filters: {}".format(
                                        manifest.fmt_filters()))
 
-            unfiltered_tests = []
+            target_tests = []
             for test in manifest_tests:
                 if test.get('disabled'):
                     self.manifest_skipped_tests.append(test)
                 else:
-                    unfiltered_tests.append(test)
-
-            target_tests = manifest.get(tests=unfiltered_tests, **testargs)
-            for test in unfiltered_tests:
-                if test['path'] not in [x['path'] for x in target_tests]:
-                    test.setdefault('disabled', 'filtered by type (%s)' % self.type)
-                    self.manifest_skipped_tests.append(test)
+                    target_tests.append(test)
 
             for i in target_tests:
                 if not os.path.exists(i["path"]):

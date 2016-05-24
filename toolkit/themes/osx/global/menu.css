@@ -86,15 +86,6 @@ menuitem[src] > .menu-iconic-left > .menu-iconic-icon {
   -moz-box-pack: end;
 }
 
-/* The native menuarrow we use is 9px wide on 10.7+ and 8px wide on 10.6,
- * so it needs to be 'pulled in' one pixel more by the negative margin in
- * order to align properly: */
-@media not all and (-moz-mac-lion-theme) {
-  .menu-right {
-    margin-inline-end: -10px;
-  }
-}
-
 .menu-right {
   list-style-image: none;
   -moz-appearance: menuarrow;

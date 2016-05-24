@@ -195,7 +195,7 @@ class BuildBackend(LoggingMixin):
         """Called when consume() has completed handling all objects."""
 
     @contextmanager
-    def _write_file(self, path=None, fh=None):
+    def _write_file(self, path=None, fh=None, mode='rU'):
         """Context manager to write a file.
 
         This is a glorified wrapper around FileAvoidWrite with integration to
@@ -209,7 +209,8 @@ class BuildBackend(LoggingMixin):
 
         if path is not None:
             assert fh is None
-            fh = FileAvoidWrite(path, capture_diff=True, dry_run=self.dry_run)
+            fh = FileAvoidWrite(path, capture_diff=True, dry_run=self.dry_run,
+                                mode=mode)
         else:
             assert fh is not None
 

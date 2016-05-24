@@ -681,3 +681,48 @@ TEST(Tokenizer, ReadUntil)
   EXPECT_TRUE(p.ReadUntil(Tokenizer::Token::Char(','), f));
   EXPECT_TRUE(f == " 4");
 }
+
+TEST(Tokenizer, SkipUntil)
+{
+  {
+    Tokenizer p("test1,test2,,,test3");
+
+    p.SkipUntil(Tokenizer::Token::Char(','));
+    EXPECT_TRUE(p.CheckChar(','));
+    EXPECT_TRUE(p.CheckWord("test2"));
+
+    p.SkipUntil(Tokenizer::Token::Char(',')); // must not move
+    EXPECT_TRUE(p.CheckChar(',')); // check the first comma of the ',,,' string
+
+    p.Rollback(); // moves cursor back to the first comma of the ',,,' string
+
+    p.SkipUntil(Tokenizer::Token::Char(',')); // must not move, we are on the ',' char
+    EXPECT_TRUE(p.CheckChar(','));
+    EXPECT_TRUE(p.CheckChar(','));
+    EXPECT_TRUE(p.CheckChar(','));
+    EXPECT_TRUE(p.CheckWord("test3"));
+    p.Rollback();
+
+    p.SkipUntil(Tokenizer::Token::Char(','));
+    EXPECT_TRUE(p.CheckEOF());
+  }
+
+  {
+    Tokenizer p("test0,test1,test2");
+
+    p.SkipUntil(Tokenizer::Token::Char(','));
+    EXPECT_TRUE(p.CheckChar(','));
+
+    p.SkipUntil(Tokenizer::Token::Char(','));
+    p.Rollback();
+
+    EXPECT_TRUE(p.CheckWord("test1"));
+    EXPECT_TRUE(p.CheckChar(','));
+
+    p.SkipUntil(Tokenizer::Token::Char(','));
+    p.Rollback();
+
+    EXPECT_TRUE(p.CheckWord("test2"));
+    EXPECT_TRUE(p.CheckEOF());
+  }
+}

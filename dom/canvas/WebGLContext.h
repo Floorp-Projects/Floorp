@@ -1201,24 +1201,26 @@ public:
     virtual bool IsWebGL2() const = 0;
 
 protected:
-    bool InitWebGL2(nsACString* const out_failReason);
+    bool InitWebGL2(nsACString* const out_failReason, nsACString* const out_failureId);
 
-    bool CreateAndInitGL(bool forceEnabled, nsACString* const out_failReason);
+    bool CreateAndInitGL(bool forceEnabled, nsACString* const out_failReason, nsACString* const out_failureId);
     bool ResizeBackbuffer(uint32_t width, uint32_t height);
 
     typedef already_AddRefed<gl::GLContext> FnCreateGL_T(const gl::SurfaceCaps& caps,
                                                          gl::CreateContextFlags flags,
                                                          WebGLContext* webgl,
-                                                         nsACString* const out_failReason);
+                                                         nsACString* const out_failReason,
+                                                         nsACString* const out_failureId);
 
     bool CreateAndInitGLWith(FnCreateGL_T fnCreateGL, const gl::SurfaceCaps& baseCaps,
                              gl::CreateContextFlags flags,
-                             nsACString* const out_failReason);
+                             nsACString* const out_failReason,
+                             nsACString* const out_failureId);
     void ThrowEvent_WebGLContextCreationError(const nsACString& text);
 
     // -------------------------------------------------------------------------
     // Validation functions (implemented in WebGLContextValidate.cpp)
-    bool InitAndValidateGL(nsACString* const out_failReason);
+    bool InitAndValidateGL(nsACString* const out_failReason, nsACString* const out_failureId);
     bool ValidateBlendEquationEnum(GLenum cap, const char* info);
     bool ValidateBlendFuncDstEnum(GLenum mode, const char* info);
     bool ValidateBlendFuncSrcEnum(GLenum mode, const char* info);

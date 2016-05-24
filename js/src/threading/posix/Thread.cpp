@@ -86,9 +86,19 @@ js::Thread::operator=(Thread&& aOther)
 bool
 js::Thread::create(void* (*aMain)(void*), void* aArg)
 {
-  int r = pthread_create(&id_.platformData()->ptThread, nullptr, aMain, aArg);
-  if (r)
+  pthread_attr_t attrs;
+  int r = pthread_attr_init(&attrs);
+  MOZ_RELEASE_ASSERT(!r);
+  if (options_.stackSize()) {
+    r = pthread_attr_setstacksize(&attrs, options_.stackSize());
+    MOZ_RELEASE_ASSERT(!r);
+  }
+  r = pthread_create(&id_.platformData()->ptThread, &attrs, aMain, aArg);
+  if (r) {
+    // |pthread_create| may leave id_ in an undefined state.
+    id_ = Id();
     return false;
+  }
   id_.platformData()->hasThread = true;
   return true;
 }

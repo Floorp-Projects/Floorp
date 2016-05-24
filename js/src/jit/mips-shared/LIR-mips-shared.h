@@ -269,6 +269,12 @@ class LUDivOrMod : public LBinaryMath<0>
             return mir_->toMod()->canBeDivideByZero();
         return mir_->toDiv()->canBeDivideByZero();
     }
+
+    bool trapOnError() const {
+        if (mir_->isMod())
+            return mir_->toMod()->trapOnError();
+        return mir_->toDiv()->trapOnError();
+    }
 };
 
 class LAsmJSLoadFuncPtr : public LInstructionHelper<1, 1, 0>

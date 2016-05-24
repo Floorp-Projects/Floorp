@@ -18,6 +18,7 @@
 class nsIIOService;
 
 namespace mozilla {
+namespace net {
 
 //
 // Base class for resource://-like substitution protocols.
@@ -97,6 +98,7 @@ public:
   NS_IMETHOD GetClassIDNoAlloc(nsCID *aCID);
 };
 
+} // namespace net
 } // namespace mozilla
 
 #endif /* SubstitutingProtocolHandler_h___ */

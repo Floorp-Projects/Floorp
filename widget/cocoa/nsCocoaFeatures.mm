@@ -180,12 +180,6 @@ nsCocoaFeatures::OnElCapitanOrLater()
 }
 
 /* static */ bool
-nsCocoaFeatures::AccelerateByDefault()
-{
-    return IsAtLeastVersion(10, 6, 3);
-}
-
-/* static */ bool
 nsCocoaFeatures::IsAtLeastVersion(int32_t aMajor, int32_t aMinor, int32_t aBugFix)
 {
     return OSXVersion() >= GetVersion(aMajor, aMinor, aBugFix);

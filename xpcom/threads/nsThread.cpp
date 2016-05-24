@@ -966,11 +966,6 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
   LOG(("THRD(%p) ProcessNextEvent [%u %u]\n", this, aMayWait,
        mNestedEventLoopDepth));
 
-  // If we're on the main thread, we shouldn't be dispatching CPOWs.
-  if (mIsMainThread == MAIN_THREAD) {
-    ipc::CancelCPOWs();
-  }
-
   if (NS_WARN_IF(PR_GetCurrentThread() != mThread)) {
     return NS_ERROR_NOT_SAME_THREAD;
   }
@@ -985,52 +980,9 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
   // and repeat the nested event loop since its state change hasn't happened yet.
   bool reallyWait = aMayWait && (mNestedEventLoopDepth > 0 || !ShuttingDown());
 
-  if (MAIN_THREAD == mIsMainThread && reallyWait) {
-    HangMonitor::Suspend();
+  if (mIsMainThread == MAIN_THREAD) {
+    DoMainThreadSpecificProcessing(reallyWait);
   }
-
-  // Fire a memory pressure notification, if we're the main thread and one is
-  // pending.
-  if (MAIN_THREAD == mIsMainThread && !ShuttingDown()) {
-    MemoryPressureState mpPending = NS_GetPendingMemoryPressure();
-    if (mpPending != MemPressure_None) {
-      nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-
-      // Use no-forward to prevent the notifications from being transferred to
-      // the children of this process.
-      NS_NAMED_LITERAL_STRING(lowMem, "low-memory-no-forward");
-      NS_NAMED_LITERAL_STRING(lowMemOngoing, "low-memory-ongoing-no-forward");
-
-      if (os) {
-        os->NotifyObservers(nullptr, "memory-pressure",
-                            mpPending == MemPressure_New ? lowMem.get() :
-                            lowMemOngoing.get());
-      } else {
-        NS_WARNING("Can't get observer service!");
-      }
-    }
-  }
-
-#ifdef MOZ_CRASHREPORTER
-  if (MAIN_THREAD == mIsMainThread && !ShuttingDown()) {
-    // Keep an eye on memory usage (cheap, ~7ms) somewhat frequently,
-    // but save memory reports (expensive, ~75ms) less frequently.
-    const size_t LOW_MEMORY_CHECK_SECONDS = 30;
-    const size_t LOW_MEMORY_SAVE_SECONDS = 3 * 60;
-
-    static TimeStamp nextCheck = TimeStamp::NowLoRes()
-      + TimeDuration::FromSeconds(LOW_MEMORY_CHECK_SECONDS);
-
-    TimeStamp now = TimeStamp::NowLoRes();
-    if (now >= nextCheck) {
-      if (SaveMemoryReportNearOOM()) {
-        nextCheck = now + TimeDuration::FromSeconds(LOW_MEMORY_SAVE_SECONDS);
-      } else {
-        nextCheck = now + TimeDuration::FromSeconds(LOW_MEMORY_CHECK_SECONDS);
-      }
-    }
-  }
-#endif
 
   ++mNestedEventLoopDepth;
 
@@ -1279,6 +1231,60 @@ nsThread::SetScriptObserver(mozilla::CycleCollectedJSRuntime* aScriptObserver)
 
   MOZ_ASSERT(!mScriptObserver);
   mScriptObserver = aScriptObserver;
+}
+
+void
+nsThread::DoMainThreadSpecificProcessing(bool aReallyWait)
+{
+  MOZ_ASSERT(mIsMainThread == MAIN_THREAD);
+
+  ipc::CancelCPOWs();
+
+  if (aReallyWait) {
+    HangMonitor::Suspend();
+  }
+
+  // Fire a memory pressure notification, if one is pending.
+  if (!ShuttingDown()) {
+    MemoryPressureState mpPending = NS_GetPendingMemoryPressure();
+    if (mpPending != MemPressure_None) {
+      nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+
+      // Use no-forward to prevent the notifications from being transferred to
+      // the children of this process.
+      NS_NAMED_LITERAL_STRING(lowMem, "low-memory-no-forward");
+      NS_NAMED_LITERAL_STRING(lowMemOngoing, "low-memory-ongoing-no-forward");
+
+      if (os) {
+        os->NotifyObservers(nullptr, "memory-pressure",
+                            mpPending == MemPressure_New ? lowMem.get() :
+                            lowMemOngoing.get());
+      } else {
+        NS_WARNING("Can't get observer service!");
+      }
+    }
+  }
+
+#ifdef MOZ_CRASHREPORTER
+  if (!ShuttingDown()) {
+    // Keep an eye on memory usage (cheap, ~7ms) somewhat frequently,
+    // but save memory reports (expensive, ~75ms) less frequently.
+    const size_t LOW_MEMORY_CHECK_SECONDS = 30;
+    const size_t LOW_MEMORY_SAVE_SECONDS = 3 * 60;
+
+    static TimeStamp nextCheck = TimeStamp::NowLoRes()
+      + TimeDuration::FromSeconds(LOW_MEMORY_CHECK_SECONDS);
+
+    TimeStamp now = TimeStamp::NowLoRes();
+    if (now >= nextCheck) {
+      if (SaveMemoryReportNearOOM()) {
+        nextCheck = now + TimeDuration::FromSeconds(LOW_MEMORY_SAVE_SECONDS);
+      } else {
+        nextCheck = now + TimeDuration::FromSeconds(LOW_MEMORY_CHECK_SECONDS);
+      }
+    }
+  }
+#endif
 }
 
 //-----------------------------------------------------------------------------

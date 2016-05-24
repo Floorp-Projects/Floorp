@@ -426,7 +426,7 @@ bool
 js::DirectEval(JSContext* cx, HandleValue v, MutableHandleValue vp)
 {
     // Direct eval can assume it was called from an interpreted or baseline frame.
-    ScriptFrameIter iter(cx);
+    ScriptFrameIter iter(cx, FrameIter::GO_THROUGH_SAVED);
     AbstractFramePtr caller = iter.abstractFramePtr();
 
     MOZ_ASSERT(JSOp(*iter.pc()) == JSOP_EVAL ||

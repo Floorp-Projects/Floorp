@@ -32,7 +32,7 @@ def setup_argument_parser():
     from marionette.runner.base import BaseMarionetteArguments
     return BaseMarionetteArguments()
 
-def run_marionette(tests, b2g_path=None, emulator=None, testtype=None,
+def run_marionette(tests, b2g_path=None, emulator=None,
     address=None, binary=None, topsrcdir=None, **kwargs):
     from mozlog.structured import commandline
 
@@ -83,9 +83,6 @@ class B2GCommands(MachCommandBase):
     @Command('marionette-webapi', category='testing',
         description='Run a Marionette webapi test (test WebAPIs using marionette).',
         conditions=[conditions.is_b2g])
-    @CommandArgument('--type',
-        default='b2g',
-        help='Test type, usually one of: browser, b2g, b2g-qemu.')
     @CommandArgument('--tag', action='append', dest='test_tags',
         help='Filter out tests that don\'t have the given tag. Can be used '
              'multiple times in which case the test must contain at least one '

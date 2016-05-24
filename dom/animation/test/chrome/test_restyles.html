@@ -68,6 +68,8 @@ const OMTAPrefKey = 'layers.offmainthreadcomposition.async-animations';
 var omtaEnabled = SpecialPowers.DOMWindowUtils.layerManagerRemote &&
                   SpecialPowers.getBoolPref(OMTAPrefKey);
 
+var isAndroid = !!navigator.userAgent.includes("Android");
+
 function add_task_if_omta_enabled(test) {
   if (!omtaEnabled) {
     info(test.name + " is skipped because OMTA is disabled");
@@ -79,6 +81,20 @@ function add_task_if_omta_enabled(test) {
 // We need to wait for all paints before running tests to avoid contaminations
 // from styling of this document itself.
 waitForAllPaints(function() {
+  add_task(function* restyling_for_main_thread_animations() {
+    var div = addDiv(null, { style: 'animation: background-color 100s' });
+    var animation = div.getAnimations()[0];
+
+    yield animation.ready;
+    ok(!animation.isRunningOnCompositor);
+
+    var markers = yield observeStyling(5);
+    is(markers.length, 5,
+       'CSS animations running on the main-thread should update style ' +
+       'on the main thread');
+    yield ensureElementRemoval(div);
+  });
+
   add_task_if_omta_enabled(function* no_restyling_for_compositor_animations() {
     var div = addDiv(null, { style: 'animation: opacity 100s' });
     var animation = div.getAnimations()[0];
@@ -191,6 +207,10 @@ waitForAllPaints(function() {
   });
 
   add_task_if_omta_enabled(function* no_restyling_compositor_animations_out_of_view_element() {
+    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+      return;
+    }
+
     var div = addDiv(null,
       { style: 'animation: opacity 100s; transform: translateY(-400px);' });
     var animation = div.getAnimations()[0];
@@ -200,13 +220,17 @@ waitForAllPaints(function() {
 
     var markers = yield observeStyling(5);
 
-    todo_is(markers.length, 0,
-            'Bug 1166500: Animations running on the compositor in out of ' +
-            'view element should never cause restyles');
+    is(markers.length, 0,
+       'Animations running on the compositor in an out-of-view element ' +
+       'should never cause restyles');
     yield ensureElementRemoval(div);
   });
 
   add_task(function* no_restyling_main_thread_animations_out_of_view_element() {
+    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+      return;
+    }
+
     var div = addDiv(null,
       { style: 'animation: background-color 100s; transform: translateY(-400px);' });
     var animation = div.getAnimations()[0];
@@ -214,17 +238,24 @@ waitForAllPaints(function() {
     yield animation.ready;
     var markers = yield observeStyling(5);
 
-    todo_is(markers.length, 0,
-            'Bug 1166500: Animations running on the main-thread in out of ' +
-            'view element should never cause restyles');
+    is(markers.length, 0,
+       'Animations running on the main-thread in an out-of-view element ' +
+       'should never cause restyles');
     yield ensureElementRemoval(div);
   });
 
-  /*
-   Disabled for now since, on Android, the opacity animation runs on the
-   compositor even if it is scrolled out of view.
-   We will fix this in bug 1166500 or a follow-up bug
   add_task_if_omta_enabled(function* no_restyling_compositor_animations_in_scrolled_out_element() {
+    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+      return;
+    }
+
+    /*
+     On Android the opacity animation runs on the compositor even if it is
+     scrolled out of view.  We will fix this in bug 1247800.
+     */
+    if (isAndroid) {
+      return;
+    }
     var parentElement = addDiv(null,
       { style: 'overflow-y: scroll; height: 20px;' });
     var div = addDiv(null,
@@ -233,18 +264,29 @@ waitForAllPaints(function() {
     var animation = div.getAnimations()[0];
 
     yield animation.ready;
-    ok(!animation.isRunningOnCompositor);
 
     var markers = yield observeStyling(5);
 
-    todo_is(markers.length, 0,
-            'Bug 1166500: Animations running on the compositor in elements ' +
-            'which are scrolled out should never cause restyles');
+    is(markers.length, 0,
+       'Animations running on the compositor for elements ' +
+       'which are scrolled out should never cause restyles');
+
     yield ensureElementRemoval(parentElement);
   });
-  */
 
   add_task(function* no_restyling_main_thread_animations_in_scrolled_out_element() {
+    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+      return;
+    }
+
+    /*
+     On Android throttled animations are left behind on the main thread in some
+     frames, We will fix this in bug 1247800.
+     */
+    if (isAndroid) {
+      return;
+    }
+
     var parentElement = addDiv(null,
       { style: 'overflow-y: scroll; height: 20px;' });
     var div = addDiv(null,
@@ -255,16 +297,46 @@ waitForAllPaints(function() {
     yield animation.ready;
     var markers = yield observeStyling(5);
 
-    todo_is(markers.length, 0,
-            'Bug 1166500: Animations running on the main-thread in elements ' +
-            'which are scrolled out should never cause restyles');
+    is(markers.length, 0,
+       'Animations running on the main-thread for elements ' +
+       'which are scrolled out should never cause restyles');
+
     yield ensureElementRemoval(parentElement);
   });
 
-  /*
-   Disabled for now since, on Android and B2G, the opacity animation runs on the
-   compositor even if the associated element has visibility:hidden.
-   We will fix this in bug 1237454 or a follow-up bug.
+  add_task(function* no_restyling_main_thread_animations_in_nested_scrolled_out_element() {
+    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+      return;
+    }
+
+    /*
+     On Android throttled animations are left behind on the main thread in some
+     frames, We will fix this in bug 1247800.
+     */
+    if (isAndroid) {
+      return;
+    }
+
+    var grandParent = addDiv(null,
+      { style: 'overflow-y: scroll; height: 20px;' });
+    var parentElement = addDiv(null,
+      { style: 'overflow-y: scroll; height: 100px;' });
+    var div = addDiv(null,
+      { style: 'animation: background-color 100s; position: relative; top: 100px;' });
+    grandParent.appendChild(parentElement);
+    parentElement.appendChild(div);
+    var animation = div.getAnimations()[0];
+
+    yield animation.ready;
+    var markers = yield observeStyling(5);
+
+    is(markers.length, 0,
+       'Animations running on the main-thread which are in nested elements ' +
+       'which are scrolled out should never cause restyles');
+
+    yield ensureElementRemoval(grandParent);
+  });
+
   add_task_if_omta_enabled(function* no_restyling_compositor_animations_in_visiblily_hidden_element() {
     var div = addDiv(null,
      { style: 'animation: opacity 100s; visibility: hidden' });
@@ -280,7 +352,157 @@ waitForAllPaints(function() {
             'visibility hidden element should never cause restyles');
     yield ensureElementRemoval(div);
   });
-  */
+
+  add_task(function* restyling_main_thread_animations_moved_in_view_by_scrolling() {
+    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+      return;
+    }
+
+    /*
+     On Android throttled animations are left behind on the main thread in some
+     frames, We will fix this in bug 1247800.
+     */
+    if (isAndroid) {
+      return;
+    }
+
+    var parentElement = addDiv(null,
+      { style: 'overflow-y: scroll; height: 20px;' });
+    var div = addDiv(null,
+      { style: 'animation: background-color 100s; position: relative; top: 100px;' });
+    parentElement.appendChild(div);
+    var animation = div.getAnimations()[0];
+
+    var parentRect = parentElement.getBoundingClientRect();
+    var centerX = parentRect.left + parentRect.width / 2;
+    var centerY = parentRect.top + parentRect.height / 2;
+
+    yield animation.ready;
+
+    var markers = yield observeStyling(1, function() {
+      // We can't use synthesizeWheel here since synthesizeWheel causes
+      // layout flush.
+      synthesizeWheelAtPoint(centerX, centerY,
+                             { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+                               deltaY: 100 });
+    });
+
+    is(markers.length, 1,
+       'Animations running on the main-thread which were in scrolled out ' +
+       'elements should update restyling soon after the element moved in ' +
+       'view by scrolling');
+
+    yield ensureElementRemoval(parentElement);
+  });
+
+  add_task(function* restyling_main_thread_animations_moved_in_view_by_scrolling() {
+    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+      return;
+    }
+
+    var grandParent = addDiv(null,
+      { style: 'overflow-y: scroll; height: 20px;' });
+    var parentElement = addDiv(null,
+      { style: 'overflow-y: scroll; height: 200px;' });
+    var div = addDiv(null,
+      { style: 'animation: background-color 100s; position: relative; top: 100px;' });
+    grandParent.appendChild(parentElement);
+    parentElement.appendChild(div);
+    var animation = div.getAnimations()[0];
+
+    var parentRect = grandParent.getBoundingClientRect();
+    var centerX = parentRect.left + parentRect.width / 2;
+    var centerY = parentRect.top + parentRect.height / 2;
+
+    yield animation.ready;
+
+    var markers = yield observeStyling(1, function() {
+      // We can't use synthesizeWheel here since synthesizeWheel causes
+      // layout flush.
+      synthesizeWheelAtPoint(centerX, centerY,
+                             { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+                               deltaY: 100 });
+    });
+
+    // FIXME: We should reduce a redundant restyle here.
+    ok(markers.length >= 1,
+       'Animations running on the main-thread which were in nested scrolled ' +
+       'out elements should update restyle soon after the element moved ' +
+       'in view by scrolling');
+
+    yield ensureElementRemoval(grandParent);
+  });
+
+  add_task(function* restyling_main_thread_animations_move_out_of_view_by_scrolling() {
+    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+      return;
+    }
+
+    /*
+     On Android throttled animations are left behind on the main thread in some
+     frames, We will fix this in bug 1247800.
+     */
+    if (isAndroid) {
+      return;
+    }
+
+    var parentElement = addDiv(null,
+      { style: 'overflow-y: scroll; height: 200px;' });
+    var div = addDiv(null,
+      { style: 'animation: background-color 100s;' });
+    var pad = addDiv(null,
+      { style: 'height: 400px;' });
+    parentElement.appendChild(div);
+    parentElement.appendChild(pad);
+    var animation = div.getAnimations()[0];
+
+    var parentRect = parentElement.getBoundingClientRect();
+    var centerX = parentRect.left + parentRect.width / 2;
+    var centerY = parentRect.top + parentRect.height / 2;
+
+    yield animation.ready;
+
+    // We can't use synthesizeWheel here since synthesizeWheel causes
+    // layout flush.
+    synthesizeWheelAtPoint(centerX, centerY,
+                           { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+                             deltaY: 200 });
+
+    var markers = yield observeStyling(5);
+
+    // FIXME: We should reduce a redundant restyle here.
+    ok(markers.length >= 0,
+       'Animations running on the main-thread which are in scrolled out ' +
+       'elements should throttle restyling');
+
+    yield ensureElementRemoval(parentElement);
+  });
+
+  add_task(function* restyling_main_thread_animations_moved_in_view_by_resizing() {
+    if (!SpecialPowers.getBoolPref('dom.animations.offscreen-throttling')) {
+      return;
+    }
+
+    var parentElement = addDiv(null,
+      { style: 'overflow-y: scroll; height: 20px;' });
+    var div = addDiv(null,
+      { style: 'animation: background-color 100s; position: relative; top: 100px;' });
+    parentElement.appendChild(div);
+    var animation = div.getAnimations()[0];
+
+    yield animation.ready;
+
+    var markers = yield observeStyling(1, function() {
+      parentElement.style.height = '100px';
+    });
+
+    is(markers.length, 1,
+       'Animations running on the main-thread which was in scrolled out ' +
+       'elements should update restyling soon after the element moved in ' +
+       'view by resizing');
+
+    yield ensureElementRemoval(parentElement);
+  });
 
   add_task(function* no_restyling_main_thread_animations_in_visiblily_hidden_element() {
     var div = addDiv(null,

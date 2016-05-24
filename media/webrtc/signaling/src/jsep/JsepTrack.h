@@ -74,7 +74,8 @@ public:
       : mType(type),
         mStreamId(streamid),
         mTrackId(trackid),
-        mDirection(direction)
+        mDirection(direction),
+        mActive(false)
   {}
 
   virtual mozilla::SdpMediaSection::MediaType
@@ -135,6 +136,18 @@ public:
   AddSsrc(uint32_t ssrc)
   {
     mSsrcs.push_back(ssrc);
+  }
+
+  bool
+  GetActive() const
+  {
+    return mActive;
+  }
+
+  void
+  SetActive(bool active)
+  {
+    mActive = active;
   }
 
   virtual void PopulateCodecs(
@@ -259,6 +272,7 @@ private:
   std::vector<JsConstraints> mJsEncodeConstraints;
   UniquePtr<JsepTrackNegotiatedDetails> mNegotiatedDetails;
   std::vector<uint32_t> mSsrcs;
+  bool mActive;
 };
 
 // Need a better name for this.

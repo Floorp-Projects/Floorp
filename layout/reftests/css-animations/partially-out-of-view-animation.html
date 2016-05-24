@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<title>Animation on element which is partially out of the view</title>
+<style>
+
+@keyframes background-color {
+  0% { background-color: black }
+  1% { background-color: blue }
+  100% { background-color: blue }
+}
+
+div {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  background-color: black;
+  animation: background-color 0.1s 1 forwards;
+  top: -100px;
+}
+
+</style>
+<div id="target"></div>
+<script>
+
+document.getElementById("target").addEventListener("animationend", AnimationEndListener, false);
+
+function AnimationEndListener(event) {
+  setTimeout(RemoveReftestWait, 0);
+}
+
+function RemoveReftestWait() {
+  document.documentElement.classList.remove("reftest-wait");
+}
+
+</script>

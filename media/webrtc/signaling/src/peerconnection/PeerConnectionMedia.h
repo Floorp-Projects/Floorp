@@ -115,9 +115,6 @@ public:
   void DetachTransport_s();
   void DetachMedia_m();
   bool AnyCodecHasPluginID(uint64_t aPluginID);
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  RefPtr<mozilla::dom::VideoStreamTrack> GetVideoTrackByTrackId(const std::string& trackId);
-#endif
 protected:
   RefPtr<DOMMediaStream> mMediaStream;
   PeerConnectionMedia *mParent;
@@ -392,8 +389,8 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   void UpdateSinkIdentity_m(dom::MediaStreamTrack* aTrack,
                             nsIPrincipal* aPrincipal,
                             const PeerIdentity* aSinkIdentity);
-  // this determines if any stream is peerIdentity constrained
-  bool AnyLocalStreamHasPeerIdentity() const;
+  // this determines if any track is peerIdentity constrained
+  bool AnyLocalTrackHasPeerIdentity() const;
   // When we finally learn who is on the other end, we need to change the ownership
   // on streams
   void UpdateRemoteStreamPrincipals_m(nsIPrincipal* aPrincipal);

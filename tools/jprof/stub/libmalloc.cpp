@@ -57,10 +57,13 @@ extern r_debug _r_debug;
 
 #define USE_GLIBC_BACKTRACE 1
 // To debug, use #define JPROF_STATIC
-#define JPROF_STATIC //static
+#define JPROF_STATIC static
 
 static int gLogFD = -1;
 static pthread_t main_thread;
+
+static bool gIsSlave = false;
+static int gFilenamePID;
 
 static void startSignalCounter(unsigned long millisec);
 static int enableRTCSignals(bool enable);
@@ -166,7 +169,13 @@ static void DumpAddressMap()
     startSignalCounter(0);
   }
 
-  int mfd = open(M_MAPFILE, O_CREAT|O_WRONLY|O_TRUNC, 0666);
+  char filename[2048];
+  if (gIsSlave)
+    snprintf(filename, sizeof(filename), "%s-%d", M_MAPFILE, gFilenamePID);
+  else
+    snprintf(filename, sizeof(filename), "%s", M_MAPFILE);
+
+  int mfd = open(filename, O_CREAT|O_WRONLY|O_TRUNC, 0666);
   if (mfd >= 0) {
     malloc_map_entry mme;
     link_map* map = _r_debug.r_map;
@@ -676,10 +685,11 @@ NS_EXPORT_(void) setupProfilingStuff(void)
             char *is_slave = getenv("JPROF_SLAVE");
             if (!is_slave)
                 setenv("JPROF_SLAVE","", 0);
+            gIsSlave = !!is_slave;
 
-            int pid = syscall(SYS_gettid); //gettid();
+            gFilenamePID = syscall(SYS_gettid); //gettid();
             if (is_slave)
-                snprintf(filename,sizeof(filename),"%s-%d",f,pid);
+                snprintf(filename,sizeof(filename),"%s-%d",f,gFilenamePID);
             else
                 snprintf(filename,sizeof(filename),"%s",f);
 

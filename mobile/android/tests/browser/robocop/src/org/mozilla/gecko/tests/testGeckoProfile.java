@@ -82,31 +82,7 @@ public class testGeckoProfile extends PixelTest {
     // Test get(Context, String, String) methods
     private void checkNameAndPathGetter(String name, String path, boolean createBefore) {
         mAsserter.info("Test using a named profile and path", name + ", " + path);
-
-        File f = null;
-        if (!TextUtils.isEmpty(path)) {
-            f = new File(mozDir, path);
-            // GeckoProfile will ignore dirs passed in if they don't exist. For some tests we create explicitly beforehand
-            if (createBefore) {
-                f.mkdir();
-            }
-            path = f.getAbsolutePath();
-        }
-
-        try {
-            GeckoProfile profile = GeckoProfile.get(getActivity(), name, path);
-            if (name != null) {
-                verifyProfile(profile, name, f, createBefore);
-                removeProfile(profile, !createBefore);
-            } else {
-                mAsserter.ok(TextUtils.isEmpty(path) || createBefore, "Passing a null name and nonexistent path should throw", name + ", " + path);
-                // Passing in null for a profile name and path, should get you the default
-                File defaultProfile = createBefore ? f : ((GeckoApp) getActivity()).getProfile().getDir();
-                verifyProfile(profile, GeckoProfile.CUSTOM_PROFILE, defaultProfile, true);
-            }
-        } catch(Exception ex) {
-            mAsserter.ok(name == null && !TextUtils.isEmpty(path) && !createBefore, "Only a null name and nonexistent path should throw", name + ", " + path);
-        }
+        checkNameAndDirGetter(name, /* useFile */ false, path, /* file */ null, createBefore);
     }
 
     private void checkNameAndFileGetter(String name, boolean createBefore) {
@@ -118,24 +94,54 @@ public class testGeckoProfile extends PixelTest {
     }
 
     private void checkNameAndFileGetter(String name, File f, boolean createBefore) {
-        mAsserter.info("Test using a named profile and path", name + ", " + f);
+        mAsserter.info("Test using a named profile and File", name + ", " + f);
+        checkNameAndDirGetter(name, /* useFile */ true, /* path */ null, f, createBefore);
+    }
+
+    private void checkNameAndDirGetter(final String name, final boolean useFile,
+                                       String path, final File file,
+                                       final boolean createBefore) {
+        final File f;
+        if (useFile) {
+            f = file;
+        } else if (!TextUtils.isEmpty(path)) {
+            f = new File(mozDir, path);
+            path = f.getAbsolutePath();
+        } else {
+            f = null;
+        }
+
         if (f != null && createBefore) {
+            // For some tests we create explicitly beforehand
             f.mkdir();
         }
 
-        try {
-            GeckoProfile profile = GeckoProfile.get(getActivity(), name, f);
-            if (name != null) {
-                verifyProfile(profile, name, f, createBefore);
-                removeProfile(profile, !createBefore);
-            } else {
-                mAsserter.ok(f == null || createBefore, "Passing a null name and nonexistent file should throw", name + ", " + f);
-                // Passing in null for a profile name and path, should get you the default
-                File defaultProfile = createBefore ? f : ((GeckoApp) getActivity()).getProfile().getDir();
-                verifyProfile(profile, GeckoProfile.CUSTOM_PROFILE, defaultProfile, true);
+        final File testProfileDir = ((GeckoApp) getActivity()).getProfile().getDir();
+        final String expectedName = name != null ? name : GeckoProfile.CUSTOM_PROFILE;
+
+        final GeckoProfile profile;
+        if (useFile) {
+            profile = GeckoProfile.get(getActivity(), name, file);
+        } else {
+            profile = GeckoProfile.get(getActivity(), name, path);
+        }
+
+        if (name != null || f != null) {
+            // GeckoProfile will create a directory and add an ini section if f is null
+            // here. Therefore, when f is null, shouldHaveFound is false for the
+            // verifyProfile call, and inProfileIni is true for the removeProfile call.
+            verifyProfile(profile, expectedName, f, f != null);
+            removeProfile(profile, f == null);
+            if (name == null) {
+                // A side effect of calling GeckoProfile.get with null name is it changes
+                // the test profile's directory to the new directory. Restore it back.
+                GeckoProfile.get(getActivity(), null, testProfileDir);
+                mAsserter.is(GeckoProfile.get(getActivity()).getDir(), testProfileDir,
+                             "Test profile should be restored");
             }
-        } catch(Exception ex) {
-            mAsserter.ok(name == null && f != null && !createBefore, "Only a null name and nonexistent file should throw", name + ", " + f);
+        } else {
+            // Passing in null for a profile name and path, should get you the default
+            verifyProfile(profile, expectedName, testProfileDir, true);
         }
     }
 
@@ -149,6 +155,7 @@ public class testGeckoProfile extends PixelTest {
 
         // name and path
         checkNameAndPathGetter(TEST_PROFILE_NAME + (index++), true);
+        checkNameAndPathGetter(TEST_PROFILE_NAME + (index++), false);
         checkNameAndPathGetter(null, false);
         // null name and path
         checkNameAndPathGetter(null, TEST_PROFILE_NAME + (index++) + "_FORCED_DIR", true);
@@ -162,6 +169,7 @@ public class testGeckoProfile extends PixelTest {
 
         // name and path
         checkNameAndFileGetter(TEST_PROFILE_NAME + (index++), true);
+        checkNameAndFileGetter(TEST_PROFILE_NAME + (index++), false);
         checkNameAndFileGetter(null, false);
         // null name and path
         checkNameAndFileGetter(null, new File(mozDir, TEST_PROFILE_NAME + (index++) + "_FORCED_DIR"), true);
@@ -174,18 +182,22 @@ public class testGeckoProfile extends PixelTest {
 
     // Tests of Guest profile methods
     private void checkGuestProfile() {
-        mAsserter.info("Test getting a guest profile", "");
-        GeckoProfile profile = GeckoProfile.createGuestProfile(getActivity());
-        verifyProfile(profile, GeckoProfile.GUEST_PROFILE, getActivity().getFileStreamPath("guest"), true);
-        File dir = profile.getDir();
+        final File testProfileDir = ((GeckoApp) getActivity()).getProfile().getDir();
 
+        mAsserter.info("Test getting a guest profile", "");
+        GeckoProfile profile = GeckoProfile.getGuestProfile(getActivity());
+        verifyProfile(profile, GeckoProfile.CUSTOM_PROFILE, getActivity().getFileStreamPath("guest"), true);
         mAsserter.ok(profile.inGuestMode(), "Profile is in guest mode", profile.getName());
 
+        final File dir = profile.getDir();
         mAsserter.info("Test deleting a guest profile", "");
-        mAsserter.ok(!GeckoProfile.maybeCleanupGuestProfile(getActivity()), "Can't clean up locked guest profile", profile.getName());
-        GeckoProfile.leaveGuestSession(getActivity());
-        mAsserter.ok(GeckoProfile.maybeCleanupGuestProfile(getActivity()), "Cleaned up unlocked guest profile", profile.getName());
+        mAsserter.ok(GeckoProfile.removeProfile(getActivity(), profile), "Cleaned up unlocked guest profile", profile.getName());
         mAsserter.ok(!dir.exists(), "Guest dir was deleted", dir.toString());
+
+        // Restore test profile directory, which was changed in the last GeckoProfile.get call.
+        GeckoProfile.get(getActivity(), null, testProfileDir);
+        mAsserter.is(GeckoProfile.get(getActivity()).getDir(), testProfileDir,
+                     "Test profile should be restored");
     }
 
     // Runs generic tests on a profile to make sure it looks correct
@@ -210,7 +222,7 @@ public class testGeckoProfile extends PixelTest {
     }
 
     // Tries to find a profile in profiles.ini. Makes sure its name and path match what is expected
-    private void findInProfilesIni(GeckoProfile profile, boolean shouldFind) {
+    private void findInProfilesIni(final String name, final File dir, final boolean shouldFind) {
         final File mozDir;
         try {
             mozDir = GeckoProfileDirectories.getMozillaDirectory(getActivity());
@@ -218,9 +230,6 @@ public class testGeckoProfile extends PixelTest {
             mAsserter.ok(false, "Couldn't get moz dir", ex.toString());
             return;
         }
-
-        final String name = profile.getName();
-        final File dir = profile.getDir();
 
         final INIParser parser = GeckoProfileDirectories.getProfilesINI(mozDir);
         final Hashtable<String, INISection> sections = parser.getSections();
@@ -247,12 +256,13 @@ public class testGeckoProfile extends PixelTest {
     // TODO: Reconsider profile removal. Firefox would not normally remove a
     // profile. Outstanding tasks may still try to access files in the profile.
     private void removeProfile(GeckoProfile profile, boolean inProfilesIni) {
-        findInProfilesIni(profile, inProfilesIni);
-        File dir = profile.getDir();
+        final String name = profile.getName();
+        final File dir = profile.getDir();
+        findInProfilesIni(name, dir, inProfilesIni);
         mAsserter.ok(dir.exists(), "Profile dir exists before removing", dir.toString());
-        mAsserter.is(inProfilesIni, GeckoProfile.removeProfile(getActivity(), profile.getName()), "Remove was successful");
+        mAsserter.ok(GeckoProfile.removeProfile(getActivity(), profile), "Remove was successful", name);
         mAsserter.ok(!dir.exists(), "Profile dir was deleted when it was removed", dir.toString());
-        findInProfilesIni(profile, false);
+        findInProfilesIni(name, dir, false);
     }
 
     // Looks for a dir whose name ends with the passed-in string.

@@ -28,7 +28,7 @@ GonkDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
 {
   RefPtr<MediaDataDecoder> decoder =
   new GonkMediaDataDecoder(new GonkVideoDecoderManager(aImageContainer, aConfig),
-                           aVideoTaskQueue, aCallback);
+                           aCallback);
   return decoder.forget();
 }
 
@@ -40,7 +40,7 @@ GonkDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
 {
   RefPtr<MediaDataDecoder> decoder =
   new GonkMediaDataDecoder(new GonkAudioDecoderManager(aConfig),
-                           aAudioTaskQueue, aCallback);
+                           aCallback);
   return decoder.forget();
 }
 

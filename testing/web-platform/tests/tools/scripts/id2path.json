@@ -815,8 +815,6 @@
     "values": "microdata/encoding-microdata/values",
     "associating-names-with-items": "microdata/encoding-microdata/associating-names-with-items",
     "microdata-and-other-namespaces": "microdata/encoding-microdata/microdata-and-other-namespaces",
-    "microdata-dom-api": "microdata/microdata-dom-api",
-    "htmlpropertiescollection": "microdata/microdata-dom-api/htmlpropertiescollection",
     "converting-html-to-other-formats": "microdata/converting-html-to-other-formats",
     "json": "microdata/converting-html-to-other-formats/json"
 }

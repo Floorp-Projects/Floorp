@@ -95,6 +95,10 @@ using mozilla::_ipdltest::IPDLUnitTestProcessChild;
 #include "nsXREAppData.h"
 #endif
 
+#ifdef MOZ_JPROF
+#include "jprof.h"
+#endif
+
 using namespace mozilla;
 
 using mozilla::ipc::BrowserProcessSubThread;
@@ -306,6 +310,11 @@ XRE_InitChildProcess(int aArgc,
 
 #ifdef HAS_DLL_BLOCKLIST
   DllBlocklist_Initialize();
+#endif
+
+#ifdef MOZ_JPROF
+  // Call the code to install our handler
+  setupProfilingStuff();
 #endif
 
   // This is needed by Telemetry to initialize histogram collection.

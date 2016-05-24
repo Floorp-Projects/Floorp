@@ -8,11 +8,17 @@
 # Chromium IPC's headers used in the moz.build of the parent file.
 
 Library('rlz')
-FORCE_STATIC_LIB = True
 
 UNIFIED_SOURCES += [
-    'lib/string_utils.cc',
+    'GMPDeviceBinding.cpp',
 ]
+
+if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_TARGET'] in ['WINNT', 'Darwin']:
+    DEFINES['HASH_NODE_ID_WITH_DEVICE_ID'] = 1;
+    UNIFIED_SOURCES += [
+        'lib/string_utils.cc',
+        'sha256.c',
+    ]
 
 if CONFIG['OS_TARGET'] == 'WINNT':
     UNIFIED_SOURCES += [
@@ -29,4 +35,8 @@ if CONFIG['OS_TARGET'] == 'Darwin':
 
 LOCAL_INCLUDES += [
     '..',
+]
+
+EXPORTS += [
+    'GMPDeviceBinding.h',
 ]

@@ -342,8 +342,24 @@ public:
   }
 
   /**
-   * Add/remove blocker. Blockers will stop scripts from executing, but not
-   * from loading.
+   * Add/remove a blocker for parser-blocking scripts (and XSLT
+   * scripts). Blockers will stop such scripts from executing, but not from
+   * loading.
+   */
+  void AddParserBlockingScriptExecutionBlocker()
+  {
+    ++mParserBlockingBlockerCount;
+  }
+  void RemoveParserBlockingScriptExecutionBlocker()
+  {
+    if (!--mParserBlockingBlockerCount && ReadyToExecuteScripts()) {
+      ProcessPendingRequestsAsync();
+    }
+  }
+
+  /**
+   * Add/remove a blocker for execution of all scripts.  Blockers will stop
+   * scripts from executing, but not from loading.
    */
   void AddExecuteBlocker()
   {
@@ -351,6 +367,7 @@ public:
   }
   void RemoveExecuteBlocker()
   {
+    MOZ_ASSERT(mBlockerCount);
     if (!--mBlockerCount) {
       ProcessPendingRequestsAsync();
     }
@@ -499,17 +516,26 @@ private:
   virtual void ProcessPendingRequestsAsync();
 
   /**
-   * If true, the loader is ready to execute scripts, and so are all its
-   * ancestors.  If the loader itself is ready but some ancestor is not, this
-   * function will add an execute blocker and ask the ancestor to remove it
+   * If true, the loader is ready to execute parser-blocking scripts, and so are
+   * all its ancestors.  If the loader itself is ready but some ancestor is not,
+   * this function will add an execute blocker and ask the ancestor to remove it
    * once it becomes ready.
    */
-  bool ReadyToExecuteScripts();
+  bool ReadyToExecuteParserBlockingScripts();
 
   /**
-   * Return whether just this loader is ready to execute scripts.
+   * Return whether just this loader is ready to execute parser-blocking
+   * scripts.
    */
-  bool SelfReadyToExecuteScripts()
+  bool SelfReadyToExecuteParserBlockingScripts()
+  {
+    return ReadyToExecuteScripts() && !mParserBlockingBlockerCount;
+  }
+
+  /**
+   * Return whether this loader is ready to execute scripts in general.
+   */
+  bool ReadyToExecuteScripts()
   {
     return mEnabled && !mBlockerCount;
   }
@@ -601,6 +627,7 @@ private:
   nsCOMPtr<nsIScriptElement> mCurrentScript;
   nsCOMPtr<nsIScriptElement> mCurrentParserInsertedScript;
   nsTArray< RefPtr<nsScriptLoader> > mPendingChildLoaders;
+  uint32_t mParserBlockingBlockerCount;
   uint32_t mBlockerCount;
   uint32_t mNumberOfProcessors;
   bool mEnabled;

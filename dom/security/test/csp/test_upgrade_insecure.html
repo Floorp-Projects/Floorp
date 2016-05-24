@@ -30,6 +30,7 @@
 
 const UPGRADE_POLICY =
   "upgrade-insecure-requests;" +               // upgrade all http requests to https
+  "block-all-mixed-content;" +                 // upgrade should be enforced before block-all.
   "default-src https: wss: 'unsafe-inline';" + // only allow https: and wss:
   "form-action https:;";                       // explicit, no fallback to default-src
 

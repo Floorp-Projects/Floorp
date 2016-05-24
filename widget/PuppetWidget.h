@@ -270,6 +270,12 @@ public:
                      const NativeEventData& aKeyEventData,
                      nsIKeyEventInPluginCallback* aCallback) override;
 
+  virtual void LookUpDictionary(
+                 const nsAString& aText,
+                 const nsTArray<mozilla::FontRange>& aFontRangeArray,
+                 const bool aIsVertical,
+                 const LayoutDeviceIntPoint& aPoint) override;
+
 protected:
   virtual nsresult NotifyIMEInternal(
                      const IMENotification& aIMENotification) override;

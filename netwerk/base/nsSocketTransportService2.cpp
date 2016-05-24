@@ -31,8 +31,8 @@
 #include "mozilla/WindowsVersion.h"
 #endif
 
-using namespace mozilla;
-using namespace mozilla::net;
+namespace mozilla {
+namespace net {
 
 LazyLogModule gSocketTransportLog("nsSocketTransport");
 LazyLogModule gUDPSocketLog("UDPSocket");
@@ -644,7 +644,7 @@ nsSocketTransportService::Shutdown()
         mAfterWakeUpTimer = nullptr;
     }
 
-    mozilla::net::NetworkActivityMonitor::Shutdown();
+    NetworkActivityMonitor::Shutdown();
 
     mInitialized = false;
     mShuttingDown = false;
@@ -1196,7 +1196,7 @@ nsSocketTransportService::UpdateSendBufferPref(nsIPrefBranch *pref)
 
 #if defined(XP_WIN)
     // If the pref is not set but this is windows set it depending on windows version
-    if (!mozilla::IsWin2003OrLater()) { // windows xp
+    if (!IsWin2003OrLater()) { // windows xp
         mSendBufferSize = 131072;
     } else { // vista or later
         mSendBufferSize = 131072 * 4;
@@ -1376,7 +1376,7 @@ nsSocketTransportService::ClosePrivateConnections()
         }
     }
 
-    mozilla::ClearPrivateSSLState();
+    ClearPrivateSSLState();
 }
 
 NS_IMETHODIMP
@@ -1553,3 +1553,6 @@ nsSocketTransportService::GetSocketConnections(nsTArray<SocketInfo> *data)
     for (uint32_t i = 0; i < mIdleCount; i++)
         AnalyzeConnection(data, &mIdleList[i], false);
 }
+
+} // namespace net
+} // namespace mozilla

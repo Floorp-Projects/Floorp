@@ -214,6 +214,8 @@ ft-no-subpixel-if-surface-disables.patch: bug 929451, don't use subpixel aa for 
 
 win32-printing-axis-swap.patch: bug 1205854, workaround for Windows printer drivers that can't handle swapped X and Y axes
 
+no-pixman-image-reuse-across-threads.patch: bug 1273701, picked from 71e8a4c23019b01aa43b334fcb2784c70daae9b5
+
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.

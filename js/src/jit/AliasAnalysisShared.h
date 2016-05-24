@@ -31,6 +31,10 @@ class AliasAnalysisShared
         return true;
     }
 
+    static MDefinition::AliasType genericMightAlias(const MDefinition* load,
+                                                    const MDefinition* store);
+
+
   protected:
     void spewDependencyList();
 

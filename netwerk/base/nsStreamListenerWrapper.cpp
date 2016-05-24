@@ -7,6 +7,9 @@
 #include "MainThreadUtils.h"
 #endif
 
+namespace mozilla {
+namespace net {
+
 NS_IMPL_ISUPPORTS(nsStreamListenerWrapper,
                   nsIStreamListener,
                   nsIRequestObserver,
@@ -24,3 +27,6 @@ nsStreamListenerWrapper::CheckListenerChain()
     }
     return rv;
 }
+
+} // namespace net
+} // namespace mozilla

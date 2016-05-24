@@ -131,12 +131,12 @@ function waitForFrame() {
 function waitForAnimationFrames(frameCount, onFrame) {
   return new Promise(function(resolve, reject) {
     function handleFrame() {
+      if (onFrame && typeof onFrame === 'function') {
+        onFrame();
+      }
       if (--frameCount <= 0) {
         resolve();
       } else {
-        if (onFrame && typeof onFrame === 'function') {
-          onFrame();
-        }
         window.requestAnimationFrame(handleFrame); // wait another frame
       }
     }

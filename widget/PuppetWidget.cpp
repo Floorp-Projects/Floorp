@@ -1429,6 +1429,20 @@ PuppetWidget::ZoomToRect(const uint32_t& aPresShellId,
   mTabChild->ZoomToRect(aPresShellId, aViewId, aRect, aFlags);
 }
 
+void
+PuppetWidget::LookUpDictionary(
+                const nsAString& aText,
+                const nsTArray<mozilla::FontRange>& aFontRangeArray,
+                const bool aIsVertical,
+                const LayoutDeviceIntPoint& aPoint)
+{
+  if (!mTabChild) {
+    return;
+  }
+
+  mTabChild->SendLookUpDictionary(nsString(aText), aFontRangeArray, aIsVertical, aPoint);
+}
+
 bool
 PuppetWidget::HasPendingInputEvent()
 {

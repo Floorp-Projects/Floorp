@@ -10,32 +10,25 @@
 
 namespace js {
 
-SharedImmutableString::SharedImmutableString(SharedImmutableStringsCache&& cache,
-                                             const char* chars,
-                                             size_t length)
-  : cache_(mozilla::Move(cache))
-  , chars_(chars)
-  , length_(length)
-#ifdef DEBUG
-  , hash_(mozilla::HashString(chars, length))
-#endif
+SharedImmutableString::SharedImmutableString(
+    ExclusiveData<SharedImmutableStringsCache::Inner>::Guard& locked,
+    SharedImmutableStringsCache::StringBox* box)
+  : cache_(locked)
+  , box_(box)
 {
-    MOZ_ASSERT(chars);
+    MOZ_ASSERT(box);
+    box->refcount++;
 }
 
 SharedImmutableString::SharedImmutableString(SharedImmutableString&& rhs)
   : cache_(mozilla::Move(rhs.cache_))
-  , chars_(rhs.chars_)
-  , length_(rhs.length_)
-#ifdef DEBUG
-  , hash_(mozilla::HashString(rhs.chars_, rhs.length_))
-#endif
+  , box_(rhs.box_)
 {
     MOZ_ASSERT(this != &rhs, "self move not allowed");
-    MOZ_ASSERT(rhs.chars_);
-    MOZ_ASSERT(rhs.hash_ == hash_);
+    MOZ_ASSERT(rhs.box_);
+    MOZ_ASSERT(rhs.box_->refcount > 0);
 
-    rhs.chars_ = nullptr;
+    rhs.box_ = nullptr;
 }
 
 SharedImmutableString&
@@ -49,12 +42,12 @@ SharedImmutableTwoByteString::SharedImmutableTwoByteString(SharedImmutableString
   : string_(mozilla::Move(string))
 { }
 
-SharedImmutableTwoByteString::SharedImmutableTwoByteString(SharedImmutableStringsCache&& cache,
-                                                           const char* chars,
-                                                           size_t length)
-  : string_(mozilla::Move(cache), chars, length)
+SharedImmutableTwoByteString::SharedImmutableTwoByteString(
+    ExclusiveData<SharedImmutableStringsCache::Inner>::Guard& locked,
+    SharedImmutableStringsCache::StringBox* box)
+  : string_(locked, box)
 {
-    MOZ_ASSERT(length % sizeof(char16_t) == 0);
+    MOZ_ASSERT(box->length() % sizeof(char16_t) == 0);
 }
 
 SharedImmutableTwoByteString::SharedImmutableTwoByteString(SharedImmutableTwoByteString&& rhs)
@@ -72,33 +65,25 @@ SharedImmutableTwoByteString::operator=(SharedImmutableTwoByteString&& rhs)
 }
 
 SharedImmutableString::~SharedImmutableString() {
-    if (!chars_)
+    if (!box_)
         return;
 
-    MOZ_ASSERT(mozilla::HashString(chars(), length()) == hash_);
-    SharedImmutableStringsCache::Hasher::Lookup lookup(chars(), length());
-
     auto locked = cache_.inner_->lock();
-    auto entry = locked->set.lookup(lookup);
 
-    MOZ_ASSERT(entry);
-    MOZ_ASSERT(entry->refcount > 0);
+    MOZ_ASSERT(box_->refcount > 0);
 
-    entry->refcount--;
-    if (entry->refcount == 0)
-        locked->set.remove(entry);
+    box_->refcount--;
+    if (box_->refcount == 0)
+        box_->chars_.reset(nullptr);
 }
 
 SharedImmutableString
 SharedImmutableString::clone() const
 {
-    auto clone = cache_.getOrCreate(chars(), length(), [&]() {
-        MOZ_CRASH("Should not need to create an owned version, as this string is already in "
-                  "the cache");
-        return nullptr;
-    });
-    MOZ_ASSERT(clone.isSome());
-    return SharedImmutableString(mozilla::Move(*clone));
+    auto locked = cache_.inner_->lock();
+    MOZ_ASSERT(box_);
+    MOZ_ASSERT(box_->refcount > 0);
+    return SharedImmutableString(locked, box_);
 }
 
 SharedImmutableTwoByteString

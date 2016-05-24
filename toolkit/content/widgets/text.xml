@@ -357,17 +357,6 @@
                                       .createInstance(Components.interfaces.nsISupportsPRBool);
           linkHandled.data = false;
           let {shiftKey, ctrlKey, metaKey, altKey, button} = aEvent;
-          if (!shiftKey && !altKey) {
-            // Preserve legacy behavior of non-modifier left-clicks
-            // opening in a new selected tab.
-            let {AppConstants} =
-              Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
-            if (AppConstants.platform == "macosx") {
-              metaKey = true;
-            } else {
-              ctrlKey = true;
-            }
-          }
           let data = {shiftKey, ctrlKey, metaKey, altKey, button, href};
           Components.classes["@mozilla.org/observer-service;1"]
                     .getService(Components.interfaces.nsIObserverService)

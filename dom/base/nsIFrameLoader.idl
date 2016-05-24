@@ -67,6 +67,11 @@ interface nsIFrameLoader : nsISupports
   void setIsPrerendered();
 
   /**
+   * Make the prerendered frameloader being active (and clear isPrerendered flag).
+   */
+  void makePrerenderedLoaderActive();
+
+  /**
    * Destroy the frame loader and everything inside it. This will
    * clear the weak owner content reference.
    */

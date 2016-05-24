@@ -269,14 +269,19 @@
       ["dom.serviceWorkers.idle_extended_timeout", 2999999]
     ],
     steps: function(ctx) {
-      // Non push workers are terminated when they stop controlling documents.
+      // Older versions used to terminate workers when the last controlled
+      // window was closed.  This should no longer happen, though.  Verify
+      // the new behavior.
       return createIframe(ctx)
         .then(setShutdownObserver(true))
         .then(checkStateAndUpdate(fetchEvent, "from_scope", "wait"))
         .then(closeIframe)
+        .then(setShutdownObserver(true))
+        .then(checkStateAndUpdate(messageEvent, "wait", "release"))
         .then(waitOnShutdownObserver)
 
-      // Push workers are exempt from this rule.
+      // Push workers were exempt from the old rule and should continue to
+      // survive past the closing of the last controlled window.
         .then(createIframe)
         .then(setShutdownObserver(false))
         .then(checkStateAndUpdate(pushEvent, "from_scope", "wait"))

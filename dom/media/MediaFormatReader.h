@@ -133,14 +133,21 @@ private:
                             MediaRawData* aSample);
 
   struct InternalSeekTarget {
-    InternalSeekTarget(const media::TimeUnit& aTime, bool aDropTarget)
+    InternalSeekTarget(const media::TimeInterval& aTime, bool aDropTarget)
       : mTime(aTime)
       , mDropTarget(aDropTarget)
       , mWaiting(false)
       , mHasSeeked(false)
     {}
 
-    media::TimeUnit mTime;
+    media::TimeUnit Time() const { return mTime.mStart; }
+    media::TimeUnit EndTime() const { return mTime.mEnd; }
+    bool Contains(const media::TimeUnit& aTime) const
+    {
+      return mTime.Contains(aTime);
+    }
+
+    media::TimeInterval mTime;
     bool mDropTarget;
     bool mWaiting;
     bool mHasSeeked;
@@ -308,7 +315,7 @@ private:
     // encountering data discontinuity.
     Maybe<InternalSeekTarget> mTimeThreshold;
     // Time of last sample returned.
-    Maybe<media::TimeUnit> mLastSampleTime;
+    Maybe<media::TimeInterval> mLastSampleTime;
 
     // Decoded samples returned my mDecoder awaiting being returned to
     // state machine upon request.
@@ -367,7 +374,6 @@ private:
       MOZ_ASSERT(mOwner->OnTaskQueue());
       mDemuxEOS = false;
       mWaitingForData = false;
-      mReceivedNewData = false;
       mDiscontinuity = true;
       mQueuedSamples.Clear();
       mDecodingRequested = false;
@@ -479,6 +485,7 @@ private:
 
   void SkipVideoDemuxToNextKeyFrame(media::TimeUnit aTimeThreshold);
   MozPromiseRequestHolder<MediaTrackDemuxer::SkipAccessPointPromise> mSkipRequest;
+  void VideoSkipReset(uint32_t aSkipped);
   void OnVideoSkipCompleted(uint32_t aSkipped);
   void OnVideoSkipFailed(MediaTrackDemuxer::SkipFailureHolder aFailure);
 

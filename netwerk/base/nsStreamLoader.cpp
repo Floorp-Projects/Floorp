@@ -11,6 +11,9 @@
 
 #include <limits>
 
+namespace mozilla {
+namespace net {
+
 nsStreamLoader::nsStreamLoader()
   : mData()
 {
@@ -161,3 +164,6 @@ nsStreamLoader::CheckListenerChain()
 {
   return NS_OK;
 }
+
+} // namespace net
+} // namespace mozilla

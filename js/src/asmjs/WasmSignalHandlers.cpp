@@ -958,9 +958,8 @@ static const mach_msg_id_t sExceptionId = 2405;
 static const mach_msg_id_t sQuitId = 42;
 
 static void
-MachExceptionHandlerThread(void* threadArg)
+MachExceptionHandlerThread(JSRuntime* rt)
 {
-    JSRuntime* rt = reinterpret_cast<JSRuntime*>(threadArg);
     mach_port_t port = rt->wasmMachExceptionHandler.port();
     kern_return_t kret;
 
@@ -1012,7 +1011,6 @@ MachExceptionHandlerThread(void* threadArg)
 
 MachExceptionHandler::MachExceptionHandler()
   : installed_(false),
-    thread_(nullptr),
     port_(MACH_PORT_NULL)
 {}
 
@@ -1031,7 +1029,7 @@ MachExceptionHandler::uninstall()
             MOZ_CRASH();
         installed_ = false;
     }
-    if (thread_ != nullptr) {
+    if (thread_.joinable()) {
         // Break the handler thread out of the mach_msg loop.
         mach_msg_header_t msg;
         msg.msgh_bits = MACH_MSGH_BITS(MACH_MSG_TYPE_COPY_SEND, 0);
@@ -1048,8 +1046,7 @@ MachExceptionHandler::uninstall()
         }
 
         // Wait for the handler thread to complete before deallocating the port.
-        PR_JoinThread(thread_);
-        thread_ = nullptr;
+        thread_.join();
     }
     if (port_ != MACH_PORT_NULL) {
         DebugOnly<kern_return_t> kret = mach_port_destroy(mach_task_self(), port_);
@@ -1074,9 +1071,7 @@ MachExceptionHandler::install(JSRuntime* rt)
         goto error;
 
     // Create a thread to block on reading port_.
-    thread_ = PR_CreateThread(PR_USER_THREAD, MachExceptionHandlerThread, rt,
-                              PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
-    if (!thread_)
+    if (!thread_.init(MachExceptionHandlerThread, rt))
         goto error;
 
     // Direct exceptions on this thread to port_ (and thus our handler thread).
