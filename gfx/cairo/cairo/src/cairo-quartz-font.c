@@ -570,7 +570,7 @@ _cairo_quartz_init_glyph_path (cairo_quartz_scaled_font_t *font,
 					-font->base.scale.yy,
 					0, 0);
 
-    ctFont = CTFontCreateWithGraphicsFont (font_face->cgFont, 0.0, NULL, NULL);
+    ctFont = CTFontCreateWithGraphicsFont (font_face->cgFont, 1.0, NULL, NULL);
     glyphPath = CTFontCreatePathForGlyph (ctFont, glyph, &textMatrix);
     CFRelease (ctFont);
     if (!glyphPath)
