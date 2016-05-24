@@ -14,6 +14,7 @@
 #include "secerr.h"
 #include "WebCryptoCommon.h"
 
+using namespace mozilla;
 using mozilla::dom::CreateECParamsForCurve;
 
 NS_IMPL_ISUPPORTS(nsNSSU2FToken, nsINSSU2FToken)
@@ -83,11 +84,16 @@ nsNSSU2FToken::destructorSafeDestroyNSSReference()
   mWrappingKey = nullptr;
 }
 
-static PK11SymKey*
+static UniquePK11SymKey
 GetSymKeyByNickname(const UniquePK11SlotInfo& aSlot,
                     nsCString aNickname,
                     const nsNSSShutDownPreventionLock&)
 {
+  MOZ_ASSERT(aSlot);
+  if (!aSlot) {
+    return nullptr;
+  }
+
   MOZ_LOG(gNSSTokenLog, LogLevel::Debug,
           ("Searching for a symmetric key named %s", aNickname.get()));
 
@@ -96,13 +102,13 @@ GetSymKeyByNickname(const UniquePK11SlotInfo& aSlot,
                                      const_cast<char*>(aNickname.get()),
                                      /* wincx */ nullptr);
   while (keyList) {
-    ScopedPK11SymKey freeKey(keyList);
+    UniquePK11SymKey freeKey(keyList);
 
     UniquePORTString freeKeyName(PK11_GetSymKeyNickname(freeKey.get()));
 
     if (aNickname == freeKeyName.get()) {
       MOZ_LOG(gNSSTokenLog, LogLevel::Debug, ("Symmetric key found!"));
-      return freeKey.forget();
+      return freeKey;
     }
 
     keyList = PK11_GetNextSymKey(keyList);
@@ -113,9 +119,16 @@ GetSymKeyByNickname(const UniquePK11SlotInfo& aSlot,
 }
 
 static nsresult
-GenEcKeypair(const UniquePK11SlotInfo& aSlot, ScopedSECKEYPrivateKey& aPrivKey,
-             ScopedSECKEYPublicKey& aPubKey, const nsNSSShutDownPreventionLock&)
+GenEcKeypair(const UniquePK11SlotInfo& aSlot,
+     /*out*/ UniqueSECKEYPrivateKey& aPrivKey,
+     /*out*/ UniqueSECKEYPublicKey& aPubKey,
+             const nsNSSShutDownPreventionLock&)
 {
+  MOZ_ASSERT(aSlot);
+  if (!aSlot) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   UniquePLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
   if (!arena) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -131,10 +144,12 @@ GenEcKeypair(const UniquePK11SlotInfo& aSlot, ScopedSECKEYPrivateKey& aPrivKey,
   CK_MECHANISM_TYPE mechanism = CKM_EC_KEY_PAIR_GEN;
 
   SECKEYPublicKey* pubKeyRaw;
-  aPrivKey = PK11_GenerateKeyPair(aSlot.get(), mechanism, keyParams, &pubKeyRaw,
-                                  /* ephemeral */ PR_FALSE, PR_FALSE,
-                                  /* wincx */ nullptr);
-  aPubKey = pubKeyRaw;
+  aPrivKey = UniqueSECKEYPrivateKey(
+    PK11_GenerateKeyPair(aSlot.get(), mechanism, keyParams, &pubKeyRaw,
+                         /* ephemeral */ false, false,
+                         /* wincx */ nullptr));
+  aPubKey = UniqueSECKEYPublicKey(pubKeyRaw);
+  pubKeyRaw = nullptr;
   if (!aPrivKey.get() || !aPubKey.get()) {
     return NS_ERROR_FAILURE;
   }
@@ -151,6 +166,11 @@ nsresult
 nsNSSU2FToken::GetOrCreateWrappingKey(const UniquePK11SlotInfo& aSlot,
                                       const nsNSSShutDownPreventionLock& locker)
 {
+  MOZ_ASSERT(aSlot);
+  if (!aSlot) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   // Search for an existing wrapping key. If we find it,
   // store it for later and mark ourselves initialized.
   mWrappingKey = GetSymKeyByNickname(aSlot, mSecretNickname, locker);
@@ -165,14 +185,15 @@ nsNSSU2FToken::GetOrCreateWrappingKey(const UniquePK11SlotInfo& aSlot,
 
   // We did not find an existing wrapping key, so we generate one in the
   // persistent database (e.g, Token).
-  mWrappingKey = PK11_TokenKeyGenWithFlags(aSlot.get(), CKM_AES_KEY_GEN,
-                                           /* default params */ nullptr,
-                                           kWrappingKeyByteLen,
-                                           /* empty keyid */ nullptr,
-                                           /* flags */ CKF_WRAP | CKF_UNWRAP,
-                                           /* attributes */ PK11_ATTR_TOKEN |
-                                                            PK11_ATTR_PRIVATE,
-                                           /* wincx */ nullptr);
+  mWrappingKey = UniquePK11SymKey(
+    PK11_TokenKeyGenWithFlags(aSlot.get(), CKM_AES_KEY_GEN,
+                              /* default params */ nullptr,
+                              kWrappingKeyByteLen,
+                              /* empty keyid */ nullptr,
+                              /* flags */ CKF_WRAP | CKF_UNWRAP,
+                              /* attributes */ PK11_ATTR_TOKEN |
+                                               PK11_ATTR_PRIVATE,
+                              /* wincx */ nullptr));
 
   if (!mWrappingKey) {
       MOZ_LOG(gNSSTokenLog, LogLevel::Warning,
@@ -180,7 +201,8 @@ nsNSSU2FToken::GetOrCreateWrappingKey(const UniquePK11SlotInfo& aSlot,
     return NS_ERROR_FAILURE;
   }
 
-  SECStatus srv = PK11_SetSymKeyNickname(mWrappingKey, mSecretNickname.get());
+  SECStatus srv = PK11_SetSymKeyNickname(mWrappingKey.get(),
+                                         mSecretNickname.get());
   if (srv != SECSuccess) {
       MOZ_LOG(gNSSTokenLog, LogLevel::Warning,
               ("Failed to set nickname, NSS error #%d", PORT_GetError()));
@@ -196,11 +218,16 @@ nsNSSU2FToken::GetOrCreateWrappingKey(const UniquePK11SlotInfo& aSlot,
 
 static nsresult
 GetAttestationCertificate(const UniquePK11SlotInfo& aSlot,
-                          ScopedSECKEYPrivateKey& aAttestPrivKey,
-                          ScopedCERTCertificate& aAttestCert,
+                  /*out*/ UniqueSECKEYPrivateKey& aAttestPrivKey,
+                  /*out*/ UniqueCERTCertificate& aAttestCert,
                           const nsNSSShutDownPreventionLock& locker)
 {
-  ScopedSECKEYPublicKey pubKey;
+  MOZ_ASSERT(aSlot);
+  if (!aSlot) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  UniqueSECKEYPublicKey pubKey;
 
   // Construct an ephemeral keypair for this Attestation Certificate
   nsresult rv = GenEcKeypair(aSlot, aAttestPrivKey, pubKey, locker);
@@ -211,23 +238,23 @@ GetAttestationCertificate(const UniquePK11SlotInfo& aSlot,
   }
 
   // Construct the Attestation Certificate itself
-  ScopedCERTName subjectName(CERT_AsciiToName(kAttestCertSubjectName.get()));
+  UniqueCERTName subjectName(CERT_AsciiToName(kAttestCertSubjectName.get()));
   if (!subjectName) {
     MOZ_LOG(gNSSTokenLog, LogLevel::Warning,
             ("Failed to set subject name, NSS error #%d", PORT_GetError()));
       return NS_ERROR_FAILURE;
   }
 
-  ScopedCERTSubjectPublicKeyInfo spki(
-      SECKEY_CreateSubjectPublicKeyInfo(pubKey));
+  UniqueCERTSubjectPublicKeyInfo spki(
+    SECKEY_CreateSubjectPublicKeyInfo(pubKey.get()));
   if (!spki) {
     MOZ_LOG(gNSSTokenLog, LogLevel::Warning,
             ("Failed to set SPKI, NSS error #%d", PORT_GetError()));
     return NS_ERROR_FAILURE;
   }
 
-  ScopedCERTCertificateRequest certreq(
-      CERT_CreateCertificateRequest(subjectName, spki, nullptr));
+  UniqueCERTCertificateRequest certreq(
+    CERT_CreateCertificateRequest(subjectName.get(), spki.get(), nullptr));
   if (!certreq) {
     MOZ_LOG(gNSSTokenLog, LogLevel::Warning,
             ("Failed to gen CSR, NSS error #%d", PORT_GetError()));
@@ -238,7 +265,7 @@ GetAttestationCertificate(const UniquePK11SlotInfo& aSlot,
   PRTime notBefore = now - kExpirationSlack;
   PRTime notAfter = now + kExpirationLife;
 
-  ScopedCERTValidity validity(CERT_CreateValidity(notBefore, notAfter));
+  UniqueCERTValidity validity(CERT_CreateValidity(notBefore, notAfter));
   if (!validity) {
     MOZ_LOG(gNSSTokenLog, LogLevel::Warning,
             ("Failed to gen validity, NSS error #%d", PORT_GetError()));
@@ -264,14 +291,16 @@ GetAttestationCertificate(const UniquePK11SlotInfo& aSlot,
   // which also wouldn't be valid).
   serialBytes[0] |= 0x01;
 
-  aAttestCert = CERT_CreateCertificate(serial, subjectName, validity, certreq);
+  aAttestCert = UniqueCERTCertificate(
+    CERT_CreateCertificate(serial, subjectName.get(), validity.get(),
+                           certreq.get()));
   if (!aAttestCert) {
     MOZ_LOG(gNSSTokenLog, LogLevel::Warning,
             ("Failed to gen certificate, NSS error #%d", PORT_GetError()));
     return NS_ERROR_FAILURE;
   }
 
-  PLArenaPool *arena = aAttestCert->arena;
+  PLArenaPool* arena = aAttestCert->arena;
 
   srv = SECOID_SetAlgorithmID(arena, &aAttestCert->signature,
                               SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE,
@@ -285,18 +314,19 @@ GetAttestationCertificate(const UniquePK11SlotInfo& aSlot,
   aAttestCert->version.len = 1;
 
   SECItem innerDER = { siBuffer, nullptr, 0 };
-  if (!SEC_ASN1EncodeItem(arena, &innerDER, aAttestCert,
+  if (!SEC_ASN1EncodeItem(arena, &innerDER, aAttestCert.get(),
                           SEC_ASN1_GET(CERT_CertificateTemplate))) {
     return NS_ERROR_FAILURE;
   }
 
-  SECItem *signedCert = PORT_ArenaZNew(arena, SECItem);
+  SECItem* signedCert = PORT_ArenaZNew(arena, SECItem);
   if (!signedCert) {
     return NS_ERROR_FAILURE;
   }
 
   srv = SEC_DerSignData(arena, signedCert, innerDER.data, innerDER.len,
-                        aAttestPrivKey, SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE);
+                        aAttestPrivKey.get(),
+                        SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE);
   if (srv != SECSuccess) {
     return NS_ERROR_FAILURE;
   }
@@ -339,13 +369,20 @@ nsNSSU2FToken::Init()
 
 // Convert a Private Key object into an opaque key handle, using AES Key Wrap
 // and aWrappingKey to convert aPrivKey.
-static SECItem*
+static UniqueSECItem
 KeyHandleFromPrivateKey(const UniquePK11SlotInfo& aSlot,
-                        PK11SymKey* aWrappingKey,
-                        SECKEYPrivateKey* aPrivKey,
+                        const UniquePK11SymKey& aWrappingKey,
+                        const UniqueSECKEYPrivateKey& aPrivKey,
                         const nsNSSShutDownPreventionLock&)
 {
-  ScopedSECItem wrappedKey(SECITEM_AllocItem(/* default arena */ nullptr,
+  MOZ_ASSERT(aSlot);
+  MOZ_ASSERT(aWrappingKey);
+  MOZ_ASSERT(aPrivKey);
+  if (!aSlot || !aWrappingKey || !aPrivKey) {
+    return nullptr;
+  }
+
+  UniqueSECItem wrappedKey(SECITEM_AllocItem(/* default arena */ nullptr,
                                              /* no buffer */ nullptr,
                                              kWrappedKeyBufLen));
   if (!wrappedKey) {
@@ -354,50 +391,57 @@ KeyHandleFromPrivateKey(const UniquePK11SlotInfo& aSlot,
     return nullptr;
   }
 
-  ScopedSECItem param(PK11_ParamFromIV(CKM_NSS_AES_KEY_WRAP_PAD,
+  UniqueSECItem param(PK11_ParamFromIV(CKM_NSS_AES_KEY_WRAP_PAD,
                                        /* default IV */ nullptr ));
 
-  SECStatus srv = PK11_WrapPrivKey(aSlot.get(), aWrappingKey, aPrivKey,
-                                   CKM_NSS_AES_KEY_WRAP_PAD, param,
-                                   wrappedKey.get(), /* wincx */ nullptr);
+  SECStatus srv = PK11_WrapPrivKey(aSlot.get(), aWrappingKey.get(),
+                                   aPrivKey.get(), CKM_NSS_AES_KEY_WRAP_PAD,
+                                   param.get(), wrappedKey.get(),
+                                   /* wincx */ nullptr);
   if (srv != SECSuccess) {
       MOZ_LOG(gNSSTokenLog, LogLevel::Warning,
               ("Failed to wrap U2F key, NSS error #%d", PORT_GetError()));
     return nullptr;
   }
 
-  return wrappedKey.forget();
+  return wrappedKey;
 }
 
 // Convert an opaque key handle aKeyHandle back into a Private Key object, using
 // aWrappingKey and the AES Key Wrap algorithm.
-static SECKEYPrivateKey*
+static UniqueSECKEYPrivateKey
 PrivateKeyFromKeyHandle(const UniquePK11SlotInfo& aSlot,
-                        PK11SymKey* aWrappingKey,
+                        const UniquePK11SymKey& aWrappingKey,
                         uint8_t* aKeyHandle, uint32_t aKeyHandleLen,
                         const nsNSSShutDownPreventionLock&)
 {
+  MOZ_ASSERT(aSlot);
+  MOZ_ASSERT(aWrappingKey);
+  MOZ_ASSERT(aKeyHandle);
+  if (!aSlot || !aWrappingKey || !aKeyHandle) {
+    return nullptr;
+  }
+
   ScopedAutoSECItem pubKey(kPublicKeyLen);
 
   ScopedAutoSECItem keyHandleItem(aKeyHandleLen);
   memcpy(keyHandleItem.data, aKeyHandle, keyHandleItem.len);
 
-  ScopedSECItem param(PK11_ParamFromIV(CKM_NSS_AES_KEY_WRAP_PAD,
+  UniqueSECItem param(PK11_ParamFromIV(CKM_NSS_AES_KEY_WRAP_PAD,
                                        /* default IV */ nullptr ));
 
   CK_ATTRIBUTE_TYPE usages[] = { CKA_SIGN };
   int usageCount = 1;
 
-  SECKEYPrivateKey* unwrappedKey;
-  unwrappedKey = PK11_UnwrapPrivKey(aSlot.get(), aWrappingKey,
-                                    CKM_NSS_AES_KEY_WRAP_PAD,
-                                    param, &keyHandleItem,
-                                    /* no nickname */ nullptr,
-                                    /* discard pubkey */ &pubKey,
-                                    /* not permanent */ PR_FALSE,
-                                    /* non-exportable */ PR_TRUE,
-                                    CKK_EC, usages, usageCount,
-                                    /* wincx */ nullptr);
+  UniqueSECKEYPrivateKey unwrappedKey(
+    PK11_UnwrapPrivKey(aSlot.get(), aWrappingKey.get(), CKM_NSS_AES_KEY_WRAP_PAD,
+                       param.get(), &keyHandleItem,
+                       /* no nickname */ nullptr,
+                       /* discard pubkey */ &pubKey,
+                       /* not permanent */ false,
+                       /* non-exportable */ true,
+                       CKK_EC, usages, usageCount,
+                       /* wincx */ nullptr));
   if (!unwrappedKey) {
     // Not our key.
     MOZ_LOG(gNSSTokenLog, LogLevel::Debug,
@@ -445,11 +489,10 @@ nsNSSU2FToken::IsRegistered(uint8_t* aKeyHandle, uint32_t aKeyHandleLen,
   MOZ_ASSERT(slot.get());
 
   // Decode the key handle
-  UniqueSECKEYPrivateKey privKey(PrivateKeyFromKeyHandle(slot,
-                                                         mWrappingKey.get(),
-                                                         aKeyHandle,
-                                                         aKeyHandleLen,
-                                                         locker));
+  UniqueSECKEYPrivateKey privKey = PrivateKeyFromKeyHandle(slot, mWrappingKey,
+                                                           aKeyHandle,
+                                                           aKeyHandleLen,
+                                                           locker);
   *aResult = (privKey.get() != nullptr);
   return NS_OK;
 }
@@ -508,8 +551,8 @@ nsNSSU2FToken::Register(uint8_t* aApplication,
   MOZ_ASSERT(slot.get());
 
   // Construct a one-time-use Attestation Certificate
-  ScopedSECKEYPrivateKey attestPrivKey;
-  ScopedCERTCertificate attestCert;
+  UniqueSECKEYPrivateKey attestPrivKey;
+  UniqueCERTCertificate attestCert;
   nsresult rv = GetAttestationCertificate(slot, attestPrivKey, attestCert,
                                           locker);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -519,17 +562,16 @@ nsNSSU2FToken::Register(uint8_t* aApplication,
   MOZ_ASSERT(attestPrivKey);
 
   // Generate a new keypair; the private will be wrapped into a Key Handle
-  ScopedSECKEYPrivateKey privKey;
-  ScopedSECKEYPublicKey pubKey;
+  UniqueSECKEYPrivateKey privKey;
+  UniqueSECKEYPublicKey pubKey;
   rv = GenEcKeypair(slot, privKey, pubKey, locker);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_FAILURE;
   }
 
   // The key handle will be the result of keywrap(privKey, key=mWrappingKey)
-  UniqueSECItem keyHandleItem(KeyHandleFromPrivateKey(slot, mWrappingKey.get(),
-                                                      privKey.get(),
-                                                      locker));
+  UniqueSECItem keyHandleItem = KeyHandleFromPrivateKey(slot, mWrappingKey,
+                                                        privKey, locker);
   if (!keyHandleItem.get()) {
     return NS_ERROR_FAILURE;
   }
@@ -550,7 +592,7 @@ nsNSSU2FToken::Register(uint8_t* aApplication,
   signedDataBuf.AppendSECItem(keyHandleItem.get());
   signedDataBuf.AppendSECItem(pubKey->u.ec.publicValue);
 
-  ScopedSECItem signatureItem(::SECITEM_AllocItem(/* default arena */ nullptr,
+  UniqueSECItem signatureItem(::SECITEM_AllocItem(/* default arena */ nullptr,
                                                   /* no buffer */ nullptr, 0));
   if (!signatureItem) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -643,11 +685,10 @@ nsNSSU2FToken::Sign(uint8_t* aApplication, uint32_t aApplicationLen,
   }
 
   // Decode the key handle
-  UniqueSECKEYPrivateKey privKey(PrivateKeyFromKeyHandle(slot,
-                                                         mWrappingKey.get(),
-                                                         aKeyHandle,
-                                                         aKeyHandleLen,
-                                                         locker));
+  UniqueSECKEYPrivateKey privKey = PrivateKeyFromKeyHandle(slot, mWrappingKey,
+                                                           aKeyHandle,
+                                                           aKeyHandleLen,
+                                                           locker);
   if (!privKey.get()) {
     MOZ_LOG(gNSSTokenLog, LogLevel::Warning, ("Couldn't get the priv key!"));
     return NS_ERROR_FAILURE;
@@ -675,7 +716,7 @@ nsNSSU2FToken::Sign(uint8_t* aApplication, uint32_t aApplicationLen,
   signedDataBuf.AppendSECItem(counterItem);
   signedDataBuf.AppendElements(aChallenge, aChallengeLen, mozilla::fallible);
 
-  ScopedSECItem signatureItem(::SECITEM_AllocItem(/* default arena */ nullptr,
+  UniqueSECItem signatureItem(::SECITEM_AllocItem(/* default arena */ nullptr,
                                                   /* no buffer */ nullptr, 0));
   if (!signatureItem) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -690,7 +731,7 @@ nsNSSU2FToken::Sign(uint8_t* aApplication, uint32_t aApplicationLen,
     return NS_ERROR_FAILURE;
   }
 
-  // Assmeble the signature data into a buffer for return
+  // Assemble the signature data into a buffer for return
   mozilla::dom::CryptoBuffer signatureBuf;
   if (!signatureBuf.SetCapacity(1 + counterItem.len + signatureItem->len,
                                 mozilla::fallible)) {
@@ -701,7 +742,7 @@ nsNSSU2FToken::Sign(uint8_t* aApplication, uint32_t aApplicationLen,
   // pre-allocated space
   signatureBuf.AppendElement(0x01, mozilla::fallible);
   signatureBuf.AppendSECItem(counterItem);
-  signatureBuf.AppendSECItem(signatureItem);
+  signatureBuf.AppendSECItem(signatureItem.get());
 
   if (!signatureBuf.ToNewUnsignedBuffer(aSignature, aSignatureLen)) {
     return NS_ERROR_FAILURE;
