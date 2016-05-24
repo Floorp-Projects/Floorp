@@ -139,18 +139,6 @@ class TestProto2Command(MessageTestCase):
         self.assertEqual("name", cmd.name)
         self.assertEqual("params", cmd.params)
 
-    def test_from_data_emulator_cmd(self):
-        data = {"emulator_cmd": "emulator_cmd"}
-        cmd = Proto2Command.from_data(data)
-        self.assertEqual("runEmulatorCmd", cmd.name)
-        self.assertEqual(data, cmd.params)
-
-    def test_from_data_emulator_shell(self):
-        data = {"emulator_shell": "emulator_shell"}
-        cmd = Proto2Command.from_data(data)
-        self.assertEqual("runEmulatorShell", cmd.name)
-        self.assertEqual(data, cmd.params)
-
     def test_from_data_unknown(self):
         with self.assertRaises(ValueError):
             cmd = Proto2Command.from_data({})
