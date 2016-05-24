@@ -1428,8 +1428,9 @@
             return;
 
           var tree = this.parentNode.parentNode;
-          var column = tree.columns.getColumnFor(this);
-          tree.view.cycleHeader(column);
+          if (tree.columns) {
+            tree.view.cycleHeader(tree.columns.getColumnFor(this));
+          }
         ]]>
       </handler>
     </handlers>

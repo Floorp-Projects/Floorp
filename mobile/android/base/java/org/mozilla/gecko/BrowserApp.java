@@ -319,7 +319,7 @@ public class BrowserApp extends GeckoApp
     @NonNull
     private SearchEngineManager mSearchEngineManager; // Contains reference to Context - DO NOT LEAK!
 
-    private TelemetryDispatcher mTelemetryDispatcher;
+    private TelemetryDispatcher mTelemetryDispatcher; // lazy.
     private final SessionMeasurements mSessionMeasurements = new SessionMeasurements();
 
     private boolean mHasResumed;
@@ -703,7 +703,6 @@ public class BrowserApp extends GeckoApp
         distribution.addOnDistributionReadyCallback(new DistributionStoreCallback(this, profile.getName()));
 
         mSearchEngineManager = new SearchEngineManager(this, distribution);
-        mTelemetryDispatcher = new TelemetryDispatcher(profile.getDir().getAbsolutePath());
 
         // Init suggested sites engine in BrowserDB.
         final SuggestedSites suggestedSites = new SuggestedSites(appContext, distribution);
@@ -2440,7 +2439,7 @@ public class BrowserApp extends GeckoApp
         // We could include the engine identifier as an extra but we'll
         // just capture that with core ping telemetry (bug 1253319).
         Telemetry.sendUIEvent(TelemetryContract.Event.SEARCH, where);
-        SearchCountMeasurements.incrementSearch(prefs, engineIdentifier, where.name());
+        SearchCountMeasurements.incrementSearch(prefs, engineIdentifier, where.toString());
     }
 
     /**
@@ -3920,7 +3919,11 @@ public class BrowserApp extends GeckoApp
     @Override
     public int getLayout() { return R.layout.gecko_app; }
 
+    @WorkerThread // via constructor
     public TelemetryDispatcher getTelemetryDispatcher() {
+        if (mTelemetryDispatcher == null) {
+            mTelemetryDispatcher = new TelemetryDispatcher(getProfile().getDir().getAbsolutePath());
+        }
         return mTelemetryDispatcher;
     }
 
