@@ -100,14 +100,14 @@ MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedCERTValidity,
                                           CERT_DestroyValidity)
 // Deprecated: use the equivalent UniquePtr templates instead.
 
-namespace psm {
+namespace internal {
 
 inline void
 PK11_DestroyContext_true(PK11Context * ctx) {
   PK11_DestroyContext(ctx, true);
 }
 
-} // namespace mozilla::psm
+} // namespace internal
 
 // Deprecated: use the equivalent UniquePtr templates instead.
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSGNDigestInfo,
@@ -124,7 +124,7 @@ typedef UniquePtr<Type, name##DeletePolicy> name;
 
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniquePK11Context,
                                       PK11Context,
-                                      mozilla::psm::PK11_DestroyContext_true)
+                                      internal::PK11_DestroyContext_true)
 
 /** A more convenient way of dealing with digests calculated into
  *  stack-allocated buffers. NSS must be initialized on the main thread before
@@ -337,12 +337,18 @@ MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTCertificateList,
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTCertificatePolicies,
                                       CERTCertificatePolicies,
                                       CERT_DestroyCertificatePoliciesExtension)
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTCertificateRequest,
+                                      CERTCertificateRequest,
+                                      CERT_DestroyCertificateRequest)
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTCertList,
                                       CERTCertList,
                                       CERT_DestroyCertList)
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTCertNicknames,
                                       CERTCertNicknames,
                                       CERT_FreeNicknames)
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTName,
+                                      CERTName,
+                                      CERT_DestroyName)
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTOidSequence,
                                       CERTOidSequence,
                                       CERT_DestroyOidSequence)
@@ -352,6 +358,9 @@ MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTSubjectPublicKeyInfo,
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTUserNotice,
                                       CERTUserNotice,
                                       CERT_DestroyUserNotice)
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTValidity,
+                                      CERTValidity,
+                                      CERT_DestroyValidity)
 
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueNSSCMSMessage,
                                       NSSCMSMessage,

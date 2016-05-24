@@ -7,7 +7,6 @@
 #include <stdio.h>
 
 #include "pkixtestutil.h"
-#include "ScopedNSSTypes.h"
 #include "TLSServer.h"
 #include "secder.h"
 #include "secerr.h"
@@ -33,11 +32,11 @@ CreateTestKeyPairFromCert(const UniqueCERTCertificate& cert)
   if (!privateKey) {
     return nullptr;
   }
-  ScopedSECKEYPublicKey publicKey(CERT_ExtractPublicKey(cert.get()));
+  UniqueSECKEYPublicKey publicKey(CERT_ExtractPublicKey(cert.get()));
   if (!publicKey) {
     return nullptr;
   }
-  return CreateTestKeyPair(RSA_PKCS1(), *publicKey, privateKey.release());
+  return CreateTestKeyPair(RSA_PKCS1(), *publicKey.get(), privateKey.release());
 }
 
 SECItemArray*
