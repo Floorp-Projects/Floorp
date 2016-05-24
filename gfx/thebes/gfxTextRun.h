@@ -394,7 +394,7 @@ public:
      * SetLineBreaks(aStart, N, aLineBreakBefore, N < aMaxLength, aProvider)
      *
      * @param aCanWordWrap true if we can break between any two grapheme
-     * clusters. This is set by word-wrap: break-word
+     * clusters. This is set by overflow-wrap|word-wrap: break-word
      *
      * @param aBreakPriority in/out the priority of the break opportunity
      * saved in the line. If we are prioritizing break opportunities, we will
