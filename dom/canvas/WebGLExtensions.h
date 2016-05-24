@@ -49,6 +49,8 @@ public:
 protected:
     virtual ~WebGLExtensionBase();
 
+    virtual void OnMarkLost() { }
+
     bool mIsLost;
 };
 
@@ -387,6 +389,8 @@ public:
     DECL_WEBGL_EXTENSION_GOOP
 
 private:
+    virtual void OnMarkLost() override;
+
     /**
      * An active TIME_ELAPSED query participating in a begin/end block.
      */

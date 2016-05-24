@@ -249,6 +249,12 @@ WebGLExtensionDisjointTimerQuery::IsSupported(const WebGLContext* webgl)
   // 'sync', we just piggy-back off of 'sync'.
 }
 
+void
+WebGLExtensionDisjointTimerQuery::OnMarkLost()
+{
+  mActiveQuery = nullptr;
+}
+
 IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionDisjointTimerQuery, EXT_disjoint_timer_query)
 
 } // namespace mozilla
