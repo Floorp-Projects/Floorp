@@ -97,8 +97,13 @@ public final class GeckoProfile {
     private Boolean mInGuestMode;
 
     public static GeckoProfile initFromArgs(final Context context, final String args) {
-        if (args != null && args.contains(GuestSession.GUEST_BROWSING_ARG)) {
-            return getGuestProfile(context);
+        if (GuestSession.shouldUse(context)) {
+            final GeckoProfile guestProfile = getGuestProfile(context);
+            if (guestProfile != null) {
+                return guestProfile;
+            }
+            // Failed to create guest profile; leave guest mode.
+            GuestSession.leave(context);
         }
 
         // We never want to use the guest mode profile concurrently with a normal profile
@@ -305,6 +310,20 @@ public final class GeckoProfile {
         return get(context, CUSTOM_PROFILE, getGuestDir(context));
     }
 
+    public static boolean isGuestProfile(final Context context, final String profileName,
+                                         final File profileDir) {
+        // Guest profile is just a custom profile with a special path.
+        if (profileDir == null || !CUSTOM_PROFILE.equals(profileName)) {
+            return false;
+        }
+
+        try {
+            return profileDir.getCanonicalPath().equals(getGuestDir(context).getCanonicalPath());
+        } catch (final IOException e) {
+            return false;
+        }
+    }
+
     private GeckoProfile(Context context, String profileName, File profileDir, BrowserDB.Factory dbFactory) throws NoMozillaDirectoryException {
         if (profileName == null) {
             throw new IllegalArgumentException("Unable to create GeckoProfile for empty profile name.");
@@ -350,22 +369,9 @@ public final class GeckoProfile {
 
     @RobocopTarget
     public boolean inGuestMode() {
-        if (mInGuestMode != null) {
-            return mInGuestMode;
-        }
-
-        // Guest profile is just a custom profile with a special path.
-        if (!isCustomProfile()) {
-            mInGuestMode = false;
-
-        } else {
-            final Context context = GeckoAppShell.getApplicationContext();
-            try {
-                mInGuestMode = getDir().getCanonicalPath().equals(
-                        getGuestDir(context).getCanonicalPath());
-            } catch (final IOException e) {
-                mInGuestMode = false;
-            }
+        if (mInGuestMode == null) {
+            mInGuestMode = isGuestProfile(GeckoAppShell.getApplicationContext(),
+                                          mName, mProfileDir);
         }
         return mInGuestMode;
     }
