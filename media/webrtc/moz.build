@@ -37,8 +37,6 @@ webrtc_non_unified_sources = [
     'trunk/webrtc/modules/audio_processing/noise_suppression_impl.cc',           # Because of name clash in the Handle typedef
     'trunk/webrtc/modules/remote_bitrate_estimator/mimd_rate_control.cc',        # Because of duplicate definitions of static consts against aimd_rate_control.cc
     'trunk/webrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_single_stream.cc', # Because of duplicate definitions of static consts against remote_bitrate_estimator_abs_send_time.cc
-    'trunk/webrtc/modules/video_capture/mac/qtkit/video_capture_qtkit.mm',       # Because of name clash in the nsAutoreleasePool class
-    'trunk/webrtc/modules/video_capture/mac/qtkit/video_capture_qtkit_info.mm',  # Because of name clash in the nsAutoreleasePool class
     'trunk/webrtc/modules/video_capture/windows/device_info_ds.cc',              # Because of the MEDIASUBTYPE_HDYC variable
     'trunk/webrtc/modules/video_capture/windows/help_functions_ds.cc',           # Because of initguid.h
     'trunk/webrtc/modules/video_capture/windows/sink_filter_ds.cc',              # Because of the MEDIASUBTYPE_HDYC variable and initguid.h
