@@ -6,7 +6,7 @@
 
 requestLongerTimeout(2);
 
-// Restoring default should show an "undo" option which undoes the restoring operation.
+// Restoring default should reset theme and show an "undo" option which undoes the restoring operation.
 add_task(function*() {
   let homeButtonId = "home-button";
   CustomizableUI.removeWidgetFromArea(homeButtonId);
@@ -16,13 +16,32 @@ add_task(function*() {
   let undoResetButton = document.getElementById("customization-undo-reset-button");
   is(undoResetButton.hidden, true, "The undo button is hidden before reset");
 
+  let themesButton = document.getElementById("customization-lwtheme-button");
+  let popup = document.getElementById("customization-lwtheme-menu");
+  let popupShownPromise = popupShown(popup);
+  EventUtils.synthesizeMouseAtCenter(themesButton, {});
+  info("Clicked on themes button");
+  yield popupShownPromise;
+
+  let recommendedHeader = document.getElementById("customization-lwtheme-menu-recommended");
+  let firstLWTheme = recommendedHeader.nextSibling;
+  let firstLWThemeId = firstLWTheme.theme.id;
+  let themeChangedPromise = promiseObserverNotified("lightweight-theme-changed");
+  firstLWTheme.doCommand();
+  info("Clicked on first theme");
+  yield themeChangedPromise;
+
+  is(LightweightThemeManager.currentTheme.id, firstLWThemeId, "Theme changed to first option");
+
   yield gCustomizeMode.reset();
 
   ok(CustomizableUI.inDefaultState, "In default state after reset");
   is(undoResetButton.hidden, false, "The undo button is visible after reset");
+  is(LightweightThemeManager.currentTheme, null, "Theme reset to default");
 
   yield gCustomizeMode.undoReset()
 
+  is(LightweightThemeManager.currentTheme.id, firstLWThemeId, "Theme has been reset from default to original choice");
   ok(!CustomizableUI.inDefaultState, "Not in default state after undo-reset");
   is(undoResetButton.hidden, true, "The undo button is hidden after clicking on the undo button");
   is(CustomizableUI.getPlacementOfWidget(homeButtonId), null, "Home button is in palette");
