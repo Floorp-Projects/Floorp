@@ -58,35 +58,52 @@ BroadcastChannelService::GetOrCreate()
 }
 
 void
-BroadcastChannelService::RegisterActor(BroadcastChannelParent* aParent)
+BroadcastChannelService::RegisterActor(BroadcastChannelParent* aParent,
+                                       const nsAString& aOriginChannelKey)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParent);
-  MOZ_ASSERT(!mAgents.Contains(aParent));
 
-  mAgents.PutEntry(aParent);
+  nsTArray<BroadcastChannelParent*>* parents;
+  if (!mAgents.Get(aOriginChannelKey, &parents)) {
+    parents = new nsTArray<BroadcastChannelParent*>();
+    mAgents.Put(aOriginChannelKey, parents);
+  }
+
+  MOZ_ASSERT(!parents->Contains(aParent));
+  parents->AppendElement(aParent);
 }
 
 void
-BroadcastChannelService::UnregisterActor(BroadcastChannelParent* aParent)
+BroadcastChannelService::UnregisterActor(BroadcastChannelParent* aParent,
+                                         const nsAString& aOriginChannelKey)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParent);
-  MOZ_ASSERT(mAgents.Contains(aParent));
 
-  mAgents.RemoveEntry(aParent);
+  nsTArray<BroadcastChannelParent*>* parents;
+  if (!mAgents.Get(aOriginChannelKey, &parents)) {
+    MOZ_CRASH("Invalid state");
+  }
+
+  parents->RemoveElement(aParent);
+  if (parents->IsEmpty()) {
+    mAgents.Remove(aOriginChannelKey);
+  }
 }
 
 void
 BroadcastChannelService::PostMessage(BroadcastChannelParent* aParent,
                                      const ClonedMessageData& aData,
-                                     const nsACString& aOrigin,
-                                     const nsAString& aChannel,
-                                     bool aPrivateBrowsing)
+                                     const nsAString& aOriginChannelKey)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParent);
-  MOZ_ASSERT(mAgents.Contains(aParent));
+
+  nsTArray<BroadcastChannelParent*>* parents;
+  if (!mAgents.Get(aOriginChannelKey, &parents)) {
+    MOZ_CRASH("Invalid state");
+  }
 
   // We need to keep the array alive for the life-time of this operation.
   nsTArray<RefPtr<BlobImpl>> blobs;
@@ -101,13 +118,12 @@ BroadcastChannelService::PostMessage(BroadcastChannelParent* aParent,
     }
   }
 
-  for (auto iter = mAgents.Iter(); !iter.Done(); iter.Next()) {
-    BroadcastChannelParent* parent = iter.Get()->GetKey();
+  for (uint32_t i = 0; i < parents->Length(); ++i) {
+    BroadcastChannelParent* parent = parents->ElementAt(i);
     MOZ_ASSERT(parent);
 
     if (parent != aParent) {
-      parent->CheckAndDeliver(aData, PromiseFlatCString(aOrigin),
-                              PromiseFlatString(aChannel), aPrivateBrowsing);
+      parent->Deliver(aData);
     }
   }
 }
