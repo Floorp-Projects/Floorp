@@ -216,11 +216,6 @@ var EXPECTED_ENGINE = {
             },
             {
               "name": "channel",
-              "value": "none",
-              "purpose": "",
-            },
-            {
-              "name": "channel",
               "value": "fflb",
               "purpose": "keyword",
             },
