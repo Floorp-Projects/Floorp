@@ -1996,12 +1996,13 @@ ScriptSource::setCompressedSource(ExclusiveContext* cx,
 }
 
 void
-ScriptSource::setCompressedSource(SharedImmutableString&& raw, size_t length)
+ScriptSource::setCompressedSource(SharedImmutableString&& raw, size_t uncompressedLength)
 {
     MOZ_ASSERT(data.is<Missing>() || data.is<Uncompressed>());
-    MOZ_ASSERT_IF(data.is<Uncompressed>(), data.as<Uncompressed>().string.length() == length);
+    MOZ_ASSERT_IF(data.is<Uncompressed>(),
+                  data.as<Uncompressed>().string.length() == uncompressedLength);
 
-    data = SourceType(Compressed(mozilla::Move(raw), length));
+    data = SourceType(Compressed(mozilla::Move(raw), uncompressedLength));
 }
 
 bool
@@ -2077,7 +2078,7 @@ SourceCompressionTask::work()
     // size of the string, first.
     size_t inputBytes = ss->length() * sizeof(char16_t);
     size_t firstSize = inputBytes / 2;
-    compressed.reset(js_pod_malloc<char>(firstSize));
+    mozilla::UniquePtr<char[], JS::FreePolicy> compressed(js_pod_malloc<char>(firstSize));
     if (!compressed)
         return OOM;
 
@@ -2117,10 +2118,15 @@ SourceCompressionTask::work()
             return OOM;
         }
     }
-    compressedBytes = comp.outWritten();
+    size_t compressedBytes = comp.outWritten();
 
     // Shrink the buffer to the size of the compressed data.
     mozilla::Unused << reallocUniquePtr(compressed, compressedBytes);
+
+    auto& strings = cx->sharedImmutableStrings();
+    resultString = strings.getOrCreate(mozilla::Move(compressed), compressedBytes);
+    if (!resultString)
+        return OOM;
 
     return Success;
 }
