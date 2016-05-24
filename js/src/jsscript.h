@@ -778,7 +778,7 @@ class ScriptSource
         mozilla::UniquePtr<char[], JS::FreePolicy>&& raw,
         size_t rawLength,
         size_t sourceLength);
-    void setCompressedSource(SharedImmutableString&& raw, size_t length);
+    void setCompressedSource(SharedImmutableString&& raw, size_t sourceLength);
 
     // XDR handling
     template <XDRMode mode>

@@ -27,7 +27,7 @@ void
 my_ErrorReporter(JSContext* cx, const char* message, JSErrorReport* report);
 
 bool
-GenerateInterfaceHelp(JSContext* cx, HandleObject obj, const char* name);
+GenerateInterfaceHelp(JSContext* cx, JS::HandleObject obj, const char* name);
 
 JSString*
 FileAsString(JSContext* cx, const char* pathname);

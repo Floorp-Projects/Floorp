@@ -1104,55 +1104,49 @@ ParseDate(const CharT* s, size_t length, ClippedTime* result)
      * Case 1. The input string contains an English month name.
      *         The form of the string can be month f l, or f month l, or
      *         f l month which each evaluate to the same date.
-     *         If f and l are both greater than or equal to 70, or
-     *         both less than 70, the date is invalid.
-     *         The year is taken to be the greater of the values f, l.
-     *         If the year is greater than or equal to 70 and less than 100,
-     *         it is considered to be the number of years after 1900.
+     *         If f and l are both greater than or equal to 100 the date
+     *         is invalid.
+     *
+     *         The year is taken to be either the greater of the values f, l or
+     *         whichever is set to zero. If the year is greater than or equal to
+     *         50 and less than 100, it is considered to be the number of years
+     *         after 1900. If the year is less than 50 it is considered to be the
+     *         number of years after 2000, otherwise it is considered to be the
+     *         number of years after 0.
+     *
      * Case 2. The input string is of the form "f/m/l" where f, m and l are
-     *         integers, e.g. 7/16/45.
-     *         Adjust the mon, mday and year values to achieve 100% MSIE
-     *         compatibility.
-     *         a. If 0 <= f < 70, f/m/l is interpreted as month/day/year.
-     *            i.  If year < 100, it is the number of years after 1900
-     *            ii. If year >= 100, it is the number of years after 0.
-     *         b. If 70 <= f < 100
-     *            i.  If m < 70, f/m/l is interpreted as
-     *                year/month/day where year is the number of years after
-     *                1900.
-     *            ii. If m >= 70, the date is invalid.
-     *         c. If f >= 100
-     *            i.  If m < 70, f/m/l is interpreted as
-     *                year/month/day where year is the number of years after 0.
-     *            ii. If m >= 70, the date is invalid.
+     *         integers, e.g. 7/16/45. mon, mday and year values are adjusted
+     *         to achieve Chrome compatibility.
+     *
+     *         a. If 0 < f <= 12 and 0 < l <= 31, f/m/l is interpreted as
+     *         month/day/year.
+     *            i.  If year < 50, it is the number of years after 2000
+     *            ii. If year >= 50, it is the number of years after 1900.
+     *           iii. If year >= 100, it is the number of years after 0.
+     *         b. If 31 < f and 0 < m <= 12 and 0 < l <= 31 f/m/l is
+     *         interpreted as year/month/day
+     *            i.  If year < 50, it is the number of years after 2000
+     *            ii. If year >= 50, it is the number of years after 1900.
+     *           iii. If year >= 100, it is the number of years after 0.
      */
     if (seenMonthName) {
-        if ((mday >= 70 && year >= 70) || (mday < 70 && year < 70))
+        if (mday >= 100 && mon >= 100)
             return false;
 
-        if (mday > year) {
+        if (year > 0 && (mday == 0 || mday > year)) {
             int temp = year;
             year = mday;
             mday = temp;
         }
-        if (year >= 70 && year < 100) {
-            year += 1900;
-        }
-    } else if (mon < 70) { /* (a) month/day/year */
-        if (year < 100) {
-            year += 1900;
-        }
-    } else if (mon < 100) { /* (b) year/month/day */
-        if (mday < 70) {
-            int temp = year;
-            year = mon + 1900;
-            mon = mday;
-            mday = temp;
-        } else {
+
+        if (mday <= 0 || mday > 31)
             return false;
-        }
-    } else { /* (c) year/month/day */
-        if (mday < 70) {
+
+    } else if (0 < mon && mon <= 12 && 0 < mday && mday <= 31) {
+        /* (a) month/day/year */
+    } else {
+        /* (b) year/month/day */
+        if (mon > 31 && mday <= 12 && year <= 31) {
             int temp = year;
             year = mon;
             mon = mday;
@@ -1161,6 +1155,11 @@ ParseDate(const CharT* s, size_t length, ClippedTime* result)
             return false;
         }
     }
+
+    if (year < 50)
+        year += 2000;
+    else if (year >= 50 && year < 100)
+        year += 1900;
 
     mon -= 1; /* convert month to 0-based */
     if (sec < 0)

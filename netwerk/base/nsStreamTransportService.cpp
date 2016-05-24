@@ -19,6 +19,9 @@
 #include "nsIThreadPool.h"
 #include "mozilla/Services.h"
 
+namespace mozilla {
+namespace net {
+
 //-----------------------------------------------------------------------------
 // nsInputStreamTransport
 //
@@ -594,3 +597,6 @@ nsStreamTransportService::Observe(nsISupports *subject, const char *topic,
   }
   return NS_OK;
 }
+
+} // namespace net
+} // namespace mozilla

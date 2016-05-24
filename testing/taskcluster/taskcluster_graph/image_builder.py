@@ -22,6 +22,12 @@ DEFINE_TASK = 'queue:define-task:aws-provisioner-v1/{}'
 def is_docker_registry_image(registry_path):
     return os.path.isfile(registry_path)
 
+# make a task label; in old decision tasks, this is a regular slugid, but when called
+# from the taskgraph generator's legacy kind, this is monkey-patched to return a label
+# (`TaskLabel==..`)
+def mklabel():
+    return slugid()
+
 def docker_image(name):
     ''' Determine the docker tag/revision from an in tree docker file '''
     repository_path = os.path.join(DOCKER_ROOT, name, 'REGISTRY')
@@ -49,7 +55,7 @@ def task_id_for_image(seen_images, project, name, create=True):
     if not create:
         return None
 
-    task_id = slugid()
+    task_id = mklabel()
     seen_images[name] = {
         'taskId': task_id,
         'path': context_path,

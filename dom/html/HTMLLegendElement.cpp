@@ -65,7 +65,7 @@ HTMLLegendElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
   nsChangeHint retval =
       nsGenericHTMLElement::GetAttributeChangeHint(aAttribute, aModType);
   if (aAttribute == nsGkAtoms::align) {
-    NS_UpdateHint(retval, NS_STYLE_HINT_REFLOW);
+    retval |= NS_STYLE_HINT_REFLOW;
   }
   return retval;
 }

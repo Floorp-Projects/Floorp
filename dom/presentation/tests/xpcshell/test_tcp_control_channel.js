@@ -56,10 +56,10 @@ const ANSWER_ADDRESS = '192.168.321.321';
 const ANSWER_PORT = 321;
 
 function loopOfferAnser() {
-  tps = Cc["@mozilla.org/presentation-device/tcp-presentation-server;1"]
-        .createInstance(Ci.nsITCPPresentationServer);
+  tps = Cc["@mozilla.org/presentation/control-service;1"]
+        .createInstance(Ci.nsIPresentationControlService);
   tps.id = 'controllerID';
-  tps.startService(PRESENTER_CONTROL_CHANNEL_PORT);
+  tps.startServer(PRESENTER_CONTROL_CHANNEL_PORT);
 
   testPresentationServer();
 }
@@ -125,7 +125,7 @@ function testPresentationServer() {
       };
     },
 
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsITCPPresentationServerListener]),
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlServerListener]),
   };
 
   let presenterDeviceInfo = {
@@ -198,7 +198,7 @@ function setOffline() {
 
 function oneMoreLoop() {
   try {
-    tps.startService(PRESENTER_CONTROL_CHANNEL_PORT);
+    tps.startServer(PRESENTER_CONTROL_CHANNEL_PORT);
     testPresentationServer();
   } catch (e) {
     Assert.ok(false, 'TCP presentation init fail:' + e);

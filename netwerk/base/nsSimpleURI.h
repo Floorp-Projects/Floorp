@@ -15,6 +15,9 @@
 #include "nsISizeOf.h"
 #include "nsIIPCSerializableURI.h"
 
+namespace mozilla {
+namespace net {
+
 #define NS_THIS_SIMPLEURI_IMPLEMENTATION_CID         \
 { /* 0b9bb0c2-fee6-470b-b9b9-9fd9462b5e19 */         \
     0x0b9bb0c2,                                      \
@@ -52,8 +55,8 @@ public:
     // - nsJSURI: mBaseURI
     // - nsSimpleNestedURI: mInnerURI
     // - nsBlobURI: mPrincipal
-    virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
-    virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
+    virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
+    virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 
 protected:
     // enum used in a few places to specify how .ref attribute should be handled
@@ -87,5 +90,8 @@ protected:
     bool mMutable;
     bool mIsRefValid; // To distinguish between empty-ref and no-ref.
 };
+
+} // namespace net
+} // namespace mozilla
 
 #endif // nsSimpleURI_h__

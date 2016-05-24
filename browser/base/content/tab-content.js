@@ -874,21 +874,21 @@ RefreshBlocker.init();
 
 var UserContextIdNotifier = {
   init() {
-    addEventListener("DOMContentLoaded", this);
+    addEventListener("DOMWindowCreated", this);
   },
 
   uninit() {
-    removeEventListener("DOMContentLoaded", this);
+    removeEventListener("DOMWindowCreated", this);
   },
 
   handleEvent(aEvent) {
-    // When the first content is loaded, we want to inform the tabbrowser about
+    // When the window is created, we want to inform the tabbrowser about
     // the userContextId in use in order to update the UI correctly.
     // Just because we cannot change the userContextId from an active docShell,
     // we don't need to check DOMContentLoaded again.
     this.uninit();
     let userContextId = content.document.nodePrincipal.originAttributes.userContextId;
-    sendAsyncMessage("Browser:FirstContentLoaded", { userContextId });
+    sendAsyncMessage("Browser:WindowCreated", { userContextId });
   }
 };
 

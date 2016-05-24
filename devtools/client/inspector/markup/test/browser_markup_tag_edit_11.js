@@ -20,8 +20,7 @@ add_task(function* () {
     isEditTagNameCalled = true;
   };
 
-  yield selectNode("div", inspector);
-  let container = yield getContainerForSelector("div", inspector);
+  let container = yield focusNode("div", inspector);
   let tagEditor = container.editor.tag;
 
   info("Blurring the tagname field");
@@ -29,6 +28,7 @@ add_task(function* () {
   is(isEditTagNameCalled, false, "The editTagName method wasn't called");
 
   info("Updating the tagname to uppercase");
+  yield focusNode("div", inspector);
   setEditableFieldValue(tagEditor, "DIV", inspector);
   is(isEditTagNameCalled, false, "The editTagName method wasn't called");
 

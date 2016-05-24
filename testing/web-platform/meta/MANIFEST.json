@@ -35939,46 +35939,58 @@
   },
   "local_changes": {
     "deleted": [
-      "web-animations/animatable/animate.html",
+      "web-animations/animation/onfinish.html",
+      "web-animations/animation-effect-timing/getComputedStyle.html",
+      "web-animations/animation-model/animation-types/not-animatable.html",
+      "web-animations/animation/ready.html",
+      "web-animations/keyframe-effect/setFrames.html",
+      "web-animations/animation-model/keyframes/effect-value-context.html",
       "web-animations/keyframe-effect/getComputedTiming.html",
+      "web-animations/keyframe-effect/effect-easing.html",
+      "web-animations/animation/pause.html",
+      "web-animations/animation-effect-timing/delay.html",
+      "web-animations/animation-effect-timing/direction.html",
+      "web-animations/animation-effect-timing/duration.html",
+      "web-animations/animatable/animate.html",
+      "web-animations/document/getAnimations.html",
+      "web-animations/animation/id.html",
       "web-animations/animation/cancel.html",
       "web-animations/animation/reverse.html",
-      "web-animations/animation-model/animation-types/not-animatable.html",
-      "web-animations/animation/playbackRate.html",
-      "web-animations/keyframe-effect/keyframe-handling.html",
-      "web-animations/animation/finish.html",
+      "web-animations/keyframe-effect/setTarget.html",
+      "web-animations/animation-effect-timing/getAnimations.html",
+      "web-animations/animation/playState.html",
+      "web-animations/animation/constructor.html",
+      "web-animations/animation/play.html",
+      "web-animations/animation-effect-timing/iterationStart.html",
       "web-animations/animation/startTime.html",
       "web-animations/animation-timeline/document-timeline.html",
-      "web-animations/animation-model/keyframes/effect-value-context.html",
-      "web-animations/animation-effect-timing/delay.html",
-      "web-animations/animation-effect-timing/fill.html",
-      "web-animations/animation-effect-timing/getComputedStyle.html",
-      "web-animations/animation-effect-timing/endDelay.html",
       "web-animations/animation/finished.html",
-      "web-animations/animation-effect-timing/iterationStart.html",
-      "web-animations/animation/id.html",
-      "web-animations/keyframe-effect/setTarget.html",
-      "web-animations/animation/oncancel.html",
-      "web-animations/animation-effect-timing/direction.html",
-      "web-animations/animation-effect-timing/easing.html",
-      "web-animations/animation-effect-timing/getAnimations.html",
-      "web-animations/animation/play.html",
-      "web-animations/keyframe-effect/setFrames.html",
-      "web-animations/animation-effect-timing/duration.html",
-      "web-animations/animation/ready.html",
-      "web-animations/animation/pause.html",
-      "web-animations/animation/onfinish.html",
-      "web-animations/keyframe-effect/effect-easing.html",
+      "web-animations/animation-effect-timing/endDelay.html",
       "web-animations/animation-effect-timing/iterations.html",
+      "web-animations/animation-effect-timing/fill.html",
+      "web-animations/animation-effect-timing/easing.html",
+      "web-animations/animation/oncancel.html",
+      "web-animations/animation/finish.html",
+      "web-animations/keyframe-effect/constructor.html",
       "web-animations/animation-timeline/idlharness.html",
-      "web-animations/animation/playState.html",
-      "web-animations/document/getAnimations.html",
-      "web-animations/animation/constructor.html",
-      "web-animations/keyframe-effect/constructor.html"
+      "web-animations/animation/playbackRate.html",
+      "web-animations/keyframe-effect/keyframe-handling.html"
     ],
     "deleted_reftests": {},
     "items": {
       "testharness": {
+        "XMLHttpRequest/xmlhttprequest-sync-block-defer-scripts.html": [
+          {
+            "path": "XMLHttpRequest/xmlhttprequest-sync-block-defer-scripts.html",
+            "url": "/XMLHttpRequest/xmlhttprequest-sync-block-defer-scripts.html"
+          }
+        ],
+        "XMLHttpRequest/xmlhttprequest-sync-block-scripts.html": [
+          {
+            "path": "XMLHttpRequest/xmlhttprequest-sync-block-scripts.html",
+            "url": "/XMLHttpRequest/xmlhttprequest-sync-block-scripts.html"
+          }
+        ],
         "dom/events/EventListener-incumbent-global-1.sub.html": [
           {
             "path": "dom/events/EventListener-incumbent-global-1.sub.html",
@@ -36001,6 +36013,12 @@
           {
             "path": "html/browsers/browsing-the-web/navigating-across-documents/javascript-url-return-value-handling.html",
             "url": "/html/browsers/browsing-the-web/navigating-across-documents/javascript-url-return-value-handling.html"
+          }
+        ],
+        "html/semantics/embedded-content/the-embed-element/embed-in-object-fallback.html": [
+          {
+            "path": "html/semantics/embedded-content/the-embed-element/embed-in-object-fallback.html",
+            "url": "/html/semantics/embedded-content/the-embed-element/embed-in-object-fallback.html"
           }
         ],
         "html/semantics/embedded-content/the-iframe-element/iframe-allowfullscreen.html": [
@@ -36235,6 +36253,12 @@
           {
             "path": "web-animations/interfaces/KeyframeEffect/setTarget.html",
             "url": "/web-animations/interfaces/KeyframeEffect/setTarget.html"
+          }
+        ],
+        "web-animations/timing-model/animations/current-time.html": [
+          {
+            "path": "web-animations/timing-model/animations/current-time.html",
+            "url": "/web-animations/timing-model/animations/current-time.html"
           }
         ]
       }

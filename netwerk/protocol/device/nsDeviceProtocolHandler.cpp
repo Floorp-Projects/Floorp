@@ -8,8 +8,10 @@
 #include "nsAutoPtr.h"
 #include "nsSimpleURI.h"
 
-//-----------------------------------------------------------------------------
+namespace mozilla {
+namespace net {
 
+//-----------------------------------------------------------------------------
 NS_IMPL_ISUPPORTS(nsDeviceProtocolHandler,
                   nsIProtocolHandler)
 
@@ -86,3 +88,6 @@ nsDeviceProtocolHandler::AllowPort(int32_t port,
   *aResult = false;
   return NS_OK;
 }
+
+} // namespace net
+} // namespace mozilla

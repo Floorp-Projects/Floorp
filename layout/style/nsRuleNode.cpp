@@ -9522,6 +9522,155 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
   COMPUTE_END_INHERITED(SVG, svg)
 }
 
+already_AddRefed<nsStyleBasicShape>
+nsRuleNode::GetStyleBasicShapeFromCSSValue(const nsCSSValue& aValue,
+                                           nsStyleContext* aStyleContext,
+                                           nsPresContext* aPresContext,
+                                           RuleNodeCacheConditions& aConditions)
+{
+  RefPtr<nsStyleBasicShape> basicShape;
+
+  nsCSSValue::Array* shapeFunction = aValue.GetArrayValue();
+  nsCSSKeyword functionName =
+    (nsCSSKeyword)shapeFunction->Item(0).GetIntValue();
+
+  if (functionName == eCSSKeyword_polygon) {
+    MOZ_ASSERT(!basicShape, "did not expect value");
+    basicShape = new nsStyleBasicShape(nsStyleBasicShape::ePolygon);
+    MOZ_ASSERT(shapeFunction->Count() > 1,
+               "polygon has wrong number of arguments");
+    size_t j = 1;
+    if (shapeFunction->Item(j).GetUnit() == eCSSUnit_Enumerated) {
+      basicShape->SetFillRule(shapeFunction->Item(j).GetIntValue());
+      ++j;
+    }
+    const int32_t mask = SETCOORD_PERCENT | SETCOORD_LENGTH |
+      SETCOORD_STORE_CALC;
+    const nsCSSValuePairList* curPair =
+      shapeFunction->Item(j).GetPairListValue();
+    nsTArray<nsStyleCoord>& coordinates = basicShape->Coordinates();
+    while (curPair) {
+      nsStyleCoord xCoord, yCoord;
+      DebugOnly<bool> didSetCoordX = SetCoord(curPair->mXValue, xCoord,
+                                              nsStyleCoord(), mask,
+                                              aStyleContext, aPresContext,
+                                              aConditions);
+      coordinates.AppendElement(xCoord);
+      MOZ_ASSERT(didSetCoordX, "unexpected x coordinate unit");
+      DebugOnly<bool> didSetCoordY = SetCoord(curPair->mYValue, yCoord,
+                                              nsStyleCoord(), mask,
+                                              aStyleContext, aPresContext,
+                                              aConditions);
+      coordinates.AppendElement(yCoord);
+      MOZ_ASSERT(didSetCoordY, "unexpected y coordinate unit");
+      curPair = curPair->mNext;
+    }
+  } else if (functionName == eCSSKeyword_circle ||
+             functionName == eCSSKeyword_ellipse) {
+    nsStyleBasicShape::Type type = functionName == eCSSKeyword_circle ?
+      nsStyleBasicShape::eCircle :
+      nsStyleBasicShape::eEllipse;
+    MOZ_ASSERT(!basicShape, "did not expect value");
+    basicShape = new nsStyleBasicShape(type);
+    const int32_t mask = SETCOORD_PERCENT | SETCOORD_LENGTH |
+      SETCOORD_STORE_CALC | SETCOORD_ENUMERATED;
+    size_t count = type == nsStyleBasicShape::eCircle ? 2 : 3;
+    MOZ_ASSERT(shapeFunction->Count() == count + 1,
+               "unexpected arguments count");
+    MOZ_ASSERT(type == nsStyleBasicShape::eCircle ||
+               (shapeFunction->Item(1).GetUnit() == eCSSUnit_Null) ==
+               (shapeFunction->Item(2).GetUnit() == eCSSUnit_Null),
+               "ellipse should have two radii or none");
+    for (size_t j = 1; j < count; ++j) {
+      const nsCSSValue& val = shapeFunction->Item(j);
+      nsStyleCoord radius;
+      if (val.GetUnit() != eCSSUnit_Null) {
+        DebugOnly<bool> didSetRadius = SetCoord(val, radius,
+                                                nsStyleCoord(), mask,
+                                                aStyleContext,
+                                                aPresContext,
+                                                aConditions);
+        MOZ_ASSERT(didSetRadius, "unexpected radius unit");
+      } else {
+        radius.SetIntValue(NS_RADIUS_CLOSEST_SIDE, eStyleUnit_Enumerated);
+      }
+      basicShape->Coordinates().AppendElement(radius);
+    }
+    const nsCSSValue& positionVal = shapeFunction->Item(count);
+    if (positionVal.GetUnit() == eCSSUnit_Array) {
+      ComputePositionValue(aStyleContext, positionVal,
+                           basicShape->GetPosition(),
+                           aConditions);
+    } else {
+      MOZ_ASSERT(positionVal.GetUnit() == eCSSUnit_Null,
+                 "expected no value");
+    }
+  } else if (functionName == eCSSKeyword_inset) {
+    MOZ_ASSERT(!basicShape, "did not expect value");
+    basicShape = new nsStyleBasicShape(nsStyleBasicShape::eInset);
+    MOZ_ASSERT(shapeFunction->Count() == 6,
+               "inset function has wrong number of arguments");
+    MOZ_ASSERT(shapeFunction->Item(1).GetUnit() != eCSSUnit_Null,
+               "no shape arguments defined");
+    const int32_t mask = SETCOORD_PERCENT | SETCOORD_LENGTH |
+      SETCOORD_STORE_CALC;
+    nsTArray<nsStyleCoord>& coords = basicShape->Coordinates();
+    for (size_t j = 1; j <= 4; ++j) {
+      const nsCSSValue& val = shapeFunction->Item(j);
+      nsStyleCoord inset;
+      // Fill missing values to get 4 at the end.
+      if (val.GetUnit() == eCSSUnit_Null) {
+        if (j == 4) {
+          inset = coords[1];
+        } else {
+          MOZ_ASSERT(j != 1, "first argument not specified");
+          inset = coords[0];
+        }
+      } else {
+        DebugOnly<bool> didSetInset = SetCoord(val, inset,
+                                               nsStyleCoord(), mask,
+                                               aStyleContext, aPresContext,
+                                               aConditions);
+        MOZ_ASSERT(didSetInset, "unexpected inset unit");
+      }
+      coords.AppendElement(inset);
+    }
+
+    nsStyleCorners& insetRadius = basicShape->GetRadius();
+    if (shapeFunction->Item(5).GetUnit() == eCSSUnit_Array) {
+      nsCSSValue::Array* radiiArray = shapeFunction->Item(5).GetArrayValue();
+      NS_FOR_CSS_FULL_CORNERS(corner) {
+        int cx = NS_FULL_TO_HALF_CORNER(corner, false);
+        int cy = NS_FULL_TO_HALF_CORNER(corner, true);
+        const nsCSSValue& radius = radiiArray->Item(corner);
+        nsStyleCoord coordX, coordY;
+        DebugOnly<bool> didSetRadii = SetPairCoords(radius, coordX, coordY,
+                                                    nsStyleCoord(),
+                                                    nsStyleCoord(), mask,
+                                                    aStyleContext,
+                                                    aPresContext,
+                                                    aConditions);
+        MOZ_ASSERT(didSetRadii, "unexpected radius unit");
+        insetRadius.Set(cx, coordX);
+        insetRadius.Set(cy, coordY);
+      }
+    } else {
+      MOZ_ASSERT(shapeFunction->Item(5).GetUnit() == eCSSUnit_Null,
+                 "unexpected value");
+      // Initialize border-radius
+      nsStyleCoord zero;
+      zero.SetCoordValue(0);
+      NS_FOR_CSS_HALF_CORNERS(j) {
+        insetRadius.Set(j, zero);
+      }
+    }
+  } else {
+    NS_NOTREACHED("unexpected basic shape function");
+  }
+
+  return basicShape.forget();
+}
+
 void
 nsRuleNode::SetStyleClipPathToCSSValue(nsStyleClipPath* aStyleClipPath,
                                        const nsCSSValue* aValue,
@@ -9548,143 +9697,8 @@ nsRuleNode::SetStyleClipPathToCSSValue(nsStyleClipPath* aStyleClipPath,
       }
       sizingBox = (uint8_t)type;
     } else if (array->Item(i).GetUnit() == eCSSUnit_Function) {
-      nsCSSValue::Array* shapeFunction = array->Item(i).GetArrayValue();
-      nsCSSKeyword functionName =
-        (nsCSSKeyword)shapeFunction->Item(0).GetIntValue();
-      if (functionName == eCSSKeyword_polygon) {
-        MOZ_ASSERT(!basicShape, "did not expect value");
-        basicShape = new nsStyleBasicShape(nsStyleBasicShape::ePolygon);
-        MOZ_ASSERT(shapeFunction->Count() > 1,
-                   "polygon has wrong number of arguments");
-        size_t j = 1;
-        if (shapeFunction->Item(j).GetUnit() == eCSSUnit_Enumerated) {
-          basicShape->SetFillRule(shapeFunction->Item(j).GetIntValue());
-          ++j;
-        }
-        const int32_t mask = SETCOORD_PERCENT | SETCOORD_LENGTH |
-                             SETCOORD_STORE_CALC;
-        const nsCSSValuePairList* curPair =
-          shapeFunction->Item(j).GetPairListValue();
-        nsTArray<nsStyleCoord>& coordinates = basicShape->Coordinates();
-        while (curPair) {
-          nsStyleCoord xCoord, yCoord;
-          DebugOnly<bool> didSetCoordX = SetCoord(curPair->mXValue, xCoord,
-                                                  nsStyleCoord(), mask,
-                                                  aStyleContext, aPresContext,
-                                                  aConditions);
-          coordinates.AppendElement(xCoord);
-          MOZ_ASSERT(didSetCoordX, "unexpected x coordinate unit");
-          DebugOnly<bool> didSetCoordY = SetCoord(curPair->mYValue, yCoord,
-                                                  nsStyleCoord(), mask,
-                                                  aStyleContext, aPresContext,
-                                                  aConditions);
-          coordinates.AppendElement(yCoord);
-          MOZ_ASSERT(didSetCoordY, "unexpected y coordinate unit");
-          curPair = curPair->mNext;
-        }
-      } else if (functionName == eCSSKeyword_circle ||
-                 functionName == eCSSKeyword_ellipse) {
-        nsStyleBasicShape::Type type = functionName == eCSSKeyword_circle ?
-                                       nsStyleBasicShape::eCircle :
-                                       nsStyleBasicShape::eEllipse;
-        MOZ_ASSERT(!basicShape, "did not expect value");
-        basicShape = new nsStyleBasicShape(type);
-        const int32_t mask = SETCOORD_PERCENT | SETCOORD_LENGTH |
-                             SETCOORD_STORE_CALC | SETCOORD_ENUMERATED;
-        size_t count = type == nsStyleBasicShape::eCircle ? 2 : 3;
-        MOZ_ASSERT(shapeFunction->Count() == count + 1,
-                   "unexpected arguments count");
-        MOZ_ASSERT(type == nsStyleBasicShape::eCircle ||
-                   (shapeFunction->Item(1).GetUnit() == eCSSUnit_Null) ==
-                   (shapeFunction->Item(2).GetUnit() == eCSSUnit_Null),
-                   "ellipse should have two radii or none");
-        for (size_t j = 1; j < count; ++j) {
-          const nsCSSValue& val = shapeFunction->Item(j);
-          nsStyleCoord radius;
-          if (val.GetUnit() != eCSSUnit_Null) {
-            DebugOnly<bool> didSetRadius = SetCoord(val, radius,
-                                                    nsStyleCoord(), mask,
-                                                    aStyleContext,
-                                                    aPresContext,
-                                                    aConditions);
-            MOZ_ASSERT(didSetRadius, "unexpected radius unit");
-          } else {
-            radius.SetIntValue(NS_RADIUS_CLOSEST_SIDE, eStyleUnit_Enumerated);
-          }
-          basicShape->Coordinates().AppendElement(radius);
-        }
-        const nsCSSValue& positionVal = shapeFunction->Item(count);
-        if (positionVal.GetUnit() == eCSSUnit_Array) {
-          ComputePositionValue(aStyleContext, positionVal,
-                               basicShape->GetPosition(),
-                               aConditions);
-        } else {
-            MOZ_ASSERT(positionVal.GetUnit() == eCSSUnit_Null,
-                       "expected no value");
-        }
-      } else if (functionName == eCSSKeyword_inset) {
-        MOZ_ASSERT(!basicShape, "did not expect value");
-        basicShape = new nsStyleBasicShape(nsStyleBasicShape::eInset);
-        MOZ_ASSERT(shapeFunction->Count() == 6,
-                   "inset function has wrong number of arguments");
-        MOZ_ASSERT(shapeFunction->Item(1).GetUnit() != eCSSUnit_Null,
-                   "no shape arguments defined");
-        const int32_t mask = SETCOORD_PERCENT | SETCOORD_LENGTH |
-                             SETCOORD_STORE_CALC;
-        nsTArray<nsStyleCoord>& coords = basicShape->Coordinates();
-        for (size_t j = 1; j <= 4; ++j) {
-          const nsCSSValue& val = shapeFunction->Item(j);
-          nsStyleCoord inset;
-          // Fill missing values to get 4 at the end.
-          if (val.GetUnit() == eCSSUnit_Null) {
-            if (j == 4) {
-              inset = coords[1];
-            } else {
-              MOZ_ASSERT(j != 1, "first argument not specified");
-              inset = coords[0];
-            }
-          } else {
-            DebugOnly<bool> didSetInset = SetCoord(val, inset,
-                                                   nsStyleCoord(), mask,
-                                                   aStyleContext, aPresContext,
-                                                   aConditions);
-            MOZ_ASSERT(didSetInset, "unexpected inset unit");
-          }
-          coords.AppendElement(inset);
-        }
-
-        nsStyleCorners& insetRadius = basicShape->GetRadius();
-        if (shapeFunction->Item(5).GetUnit() == eCSSUnit_Array) {
-          nsCSSValue::Array* radiiArray = shapeFunction->Item(5).GetArrayValue();
-          NS_FOR_CSS_FULL_CORNERS(corner) {
-            int cx = NS_FULL_TO_HALF_CORNER(corner, false);
-            int cy = NS_FULL_TO_HALF_CORNER(corner, true);
-            const nsCSSValue& radius = radiiArray->Item(corner);
-            nsStyleCoord coordX, coordY;
-            DebugOnly<bool> didSetRadii = SetPairCoords(radius, coordX, coordY,
-                                                        nsStyleCoord(),
-                                                        nsStyleCoord(), mask,
-                                                        aStyleContext,
-                                                        aPresContext,
-                                                        aConditions);
-            MOZ_ASSERT(didSetRadii, "unexpected radius unit");
-            insetRadius.Set(cx, coordX);
-            insetRadius.Set(cy, coordY);
-          }
-        } else {
-          MOZ_ASSERT(shapeFunction->Item(5).GetUnit() == eCSSUnit_Null,
-                     "unexpected value");
-          // Initialize border-radius
-          nsStyleCoord zero;
-          zero.SetCoordValue(0);
-          NS_FOR_CSS_HALF_CORNERS(j) {
-            insetRadius.Set(j, zero);
-          }
-        }
-      } else {
-        NS_NOTREACHED("unexpected basic shape function");
-        return;
-      }
+      basicShape = GetStyleBasicShapeFromCSSValue(array->Item(i), aStyleContext,
+                                                  aPresContext, aConditions);
     } else {
       NS_NOTREACHED("unexpected value");
       return;

@@ -193,11 +193,6 @@ private:
 
   nsCOMPtr<nsITimer> mIdleWorkerTimer;
 
-  // We keep track if this worker received any push events since it was last
-  // woken up. The flag is reset to false every time a new WorkerPrivate
-  // is created.
-  bool mIsPushWorker;
-
   // We keep a token for |dom.serviceWorkers.idle_timeout| seconds to give the
   // worker a grace period after each event.
   RefPtr<KeepAliveToken> mKeepAliveToken;

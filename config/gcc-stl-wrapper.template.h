@@ -17,21 +17,34 @@
 // Silence "warning: #include_next is a GCC extension"
 #pragma GCC system_header
 
+#if defined(DEBUG) && !defined(_GLIBCXX_DEBUG)
+// Enable checked iterators and other goodies
+//
+// FIXME/bug 551254: gcc's debug STL implementation requires -frtti.
+// Figure out how to resolve this with -fno-rtti.  Maybe build with
+// -frtti in DEBUG builds?
+//
+//  # define _GLIBCXX_DEBUG 1
+#endif
+
 // Don't include mozalloc for cstdlib. See bug 1245076.
 #ifndef moz_dont_include_mozalloc_for_cstdlib
 #  define moz_dont_include_mozalloc_for_cstdlib
 #endif
-#ifndef moz_dont_include_mozalloc_for_${HEADER}
-// mozalloc.h wants <new>; break the cycle by always explicitly
-// including <new> here.  NB: this is a tad sneaky.  Sez the gcc docs:
-//
-//    `#include_next' does not distinguish between <file> and "file"
-//    inclusion, nor does it check that the file you specify has the
-//    same name as the current file. It simply looks for the file
-//    named, starting with the directory in the search path after the
-//    one where the current file was found.
-#  include_next <new>
 
+// Include mozalloc after the STL header and all other headers it includes
+// have been preprocessed.
+#if !defined(MOZ_INCLUDE_MOZALLOC_H) && \
+    !defined(moz_dont_include_mozalloc_for_${HEADER})
+#  define MOZ_INCLUDE_MOZALLOC_H
+#  define MOZ_INCLUDE_MOZALLOC_H_FROM_${HEADER}
+#endif
+
+#pragma GCC visibility push(default)
+#include_next <${HEADER}>
+#pragma GCC visibility pop
+
+#ifdef MOZ_INCLUDE_MOZALLOC_H_FROM_${HEADER}
 // See if we're in code that can use mozalloc.  NB: this duplicates
 // code in nscore.h because nscore.h pulls in prtypes.h, and chromium
 // can't build with that being included before base/basictypes.h.
@@ -40,20 +53,7 @@
 #  else
 #    error "STL code can only be used with infallible ::operator new()"
 #  endif
-
 #endif
-
-// Don't enable debug mode with the clang plugin; clang doesn't recognize
-// the debug/ versions of the stdlib headers as being system headers, leading
-// to complaints about code that's out of our control.
-#if defined(DEBUG) && !defined(_GLIBCXX_DEBUG) && !defined(MOZ_CLANG_PLUGIN)
-// Enable checked iterators and other goodies
-  # define _GLIBCXX_DEBUG 1
-#endif
-
-#pragma GCC visibility push(default)
-#include_next <${HEADER}>
-#pragma GCC visibility pop
 
 // gcc calls a __throw_*() function from bits/functexcept.h when it
 // wants to "throw an exception".  functexcept exists nominally to

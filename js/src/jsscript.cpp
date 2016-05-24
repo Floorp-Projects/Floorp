@@ -15,6 +15,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/unused.h"
 #include "mozilla/Vector.h"
 
 #include <algorithm>
@@ -53,6 +54,7 @@
 #include "jsfuninlines.h"
 #include "jsobjinlines.h"
 
+#include "vm/NativeObject-inl.h"
 #include "vm/ScopeObject-inl.h"
 #include "vm/SharedImmutableStringsCache-inl.h"
 #include "vm/Stack-inl.h"
@@ -1994,12 +1996,13 @@ ScriptSource::setCompressedSource(ExclusiveContext* cx,
 }
 
 void
-ScriptSource::setCompressedSource(SharedImmutableString&& raw, size_t length)
+ScriptSource::setCompressedSource(SharedImmutableString&& raw, size_t uncompressedLength)
 {
     MOZ_ASSERT(data.is<Missing>() || data.is<Uncompressed>());
-    MOZ_ASSERT_IF(data.is<Uncompressed>(), data.as<Uncompressed>().string.length() == length);
+    MOZ_ASSERT_IF(data.is<Uncompressed>(),
+                  data.as<Uncompressed>().string.length() == uncompressedLength);
 
-    data = SourceType(Compressed(mozilla::Move(raw), length));
+    data = SourceType(Compressed(mozilla::Move(raw), uncompressedLength));
 }
 
 bool
@@ -2053,6 +2056,19 @@ ScriptSource::setSourceCopy(ExclusiveContext* cx, SourceBufferHolder& srcBuf,
     return true;
 }
 
+static MOZ_MUST_USE bool
+reallocUniquePtr(UniquePtr<char[], JS::FreePolicy>& unique, size_t size)
+{
+    auto newPtr = static_cast<char*>(js_realloc(unique.get(), size));
+    if (!newPtr)
+        return false;
+
+    // Since the realloc succeeded, unique is now holding a freed pointer.
+    mozilla::Unused << unique.release();
+    unique.reset(newPtr);
+    return true;
+}
+
 SourceCompressionTask::ResultType
 SourceCompressionTask::work()
 {
@@ -2062,7 +2078,7 @@ SourceCompressionTask::work()
     // size of the string, first.
     size_t inputBytes = ss->length() * sizeof(char16_t);
     size_t firstSize = inputBytes / 2;
-    compressed = js_malloc(firstSize);
+    mozilla::UniquePtr<char[], JS::FreePolicy> compressed(js_pod_malloc<char>(firstSize));
     if (!compressed)
         return OOM;
 
@@ -2072,7 +2088,7 @@ SourceCompressionTask::work()
     if (!comp.init())
         return OOM;
 
-    comp.setOutput((unsigned char*) compressed, firstSize);
+    comp.setOutput(reinterpret_cast<unsigned char*>(compressed.get()), firstSize);
     bool cont = true;
     while (cont) {
         if (abort_)
@@ -2089,11 +2105,10 @@ SourceCompressionTask::work()
 
             // The compressed output is greater than half the size of the
             // original string. Reallocate to the full size.
-            compressed = js_realloc(compressed, inputBytes);
-            if (!compressed)
+            if (!reallocUniquePtr(compressed, inputBytes))
                 return OOM;
 
-            comp.setOutput((unsigned char*) compressed, inputBytes);
+            comp.setOutput(reinterpret_cast<unsigned char*>(compressed.get()), inputBytes);
             break;
           }
           case Compressor::DONE:
@@ -2103,12 +2118,15 @@ SourceCompressionTask::work()
             return OOM;
         }
     }
-    compressedBytes = comp.outWritten();
-    compressedHash = mozilla::HashBytes(compressed, compressedBytes);
+    size_t compressedBytes = comp.outWritten();
 
     // Shrink the buffer to the size of the compressed data.
-    if (void* newCompressed = js_realloc(compressed, compressedBytes))
-        compressed = newCompressed;
+    mozilla::Unused << reallocUniquePtr(compressed, compressedBytes);
+
+    auto& strings = cx->sharedImmutableStrings();
+    resultString = strings.getOrCreate(mozilla::Move(compressed), compressedBytes);
+    if (!resultString)
+        return OOM;
 
     return Success;
 }
@@ -3352,7 +3370,7 @@ js::DescribeScriptedCallerForCompilation(JSContext* cx, MutableHandleScript mayb
         return;
     }
 
-    NonBuiltinFrameIter iter(cx);
+    NonBuiltinFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
 
     if (iter.done()) {
         maybeScript.set(nullptr);

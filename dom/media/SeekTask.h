@@ -164,8 +164,8 @@ protected:
   MozPromiseRequestHolder<MediaDecoderReader::SeekPromise> mSeekRequest;
   CallbackID mAudioCallbackID;
   CallbackID mVideoCallbackID;
-  MozPromiseRequestHolder<MediaDecoderReader::WaitForDataPromise> mAudioWaitRequest;
-  MozPromiseRequestHolder<MediaDecoderReader::WaitForDataPromise> mVideoWaitRequest;
+  CallbackID mWaitAudioCallbackID;
+  CallbackID mWaitVideoCallbackID;
 
   /*
    * Information which are going to be returned to MDSM.

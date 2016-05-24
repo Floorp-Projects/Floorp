@@ -31,7 +31,7 @@ public:
   TextureMemoryMeasurer(size_t aMemoryUsed)
   {
     mMemoryUsed = aMemoryUsed;
-    gfxWindowsPlatform::sD3D11MemoryUsed += mMemoryUsed;
+    gfxWindowsPlatform::sD3D11SharedTextures += mMemoryUsed;
     mRefCnt = 0;
   }
   STDMETHODIMP_(ULONG) AddRef() {
@@ -57,7 +57,7 @@ public:
   STDMETHODIMP_(ULONG) Release() {
     int refCnt = --mRefCnt;
     if (refCnt == 0) {
-      gfxWindowsPlatform::sD3D11MemoryUsed -= mMemoryUsed;
+      gfxWindowsPlatform::sD3D11SharedTextures -= mMemoryUsed;
       delete this;
     }
     return refCnt;

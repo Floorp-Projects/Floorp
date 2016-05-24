@@ -25,11 +25,13 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/OwningNonNull.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsWrapperCache.h"
 #include "nsJSEnvironment.h"
 #include "xpcpublic.h"
 #include "jsapi.h"
+#include "js/TracingAPI.h"
 
 namespace mozilla {
 namespace dom {
@@ -54,7 +56,7 @@ public:
   // is invoked.  aCx can be nullptr, in which case no stack is
   // captured.
   explicit CallbackObject(JSContext* aCx, JS::Handle<JSObject*> aCallback,
-                          nsIGlobalObject *aIncumbentGlobal)
+                          nsIGlobalObject* aIncumbentGlobal)
   {
     if (aCx && JS::RuntimeOptionsRef(aCx).asyncStack()) {
       JS::RootedObject stack(aCx);
@@ -72,7 +74,7 @@ public:
   // for that purpose.
   explicit CallbackObject(JS::Handle<JSObject*> aCallback,
                           JS::Handle<JSObject*> aAsyncStack,
-                          nsIGlobalObject *aIncumbentGlobal)
+                          nsIGlobalObject* aIncumbentGlobal)
   {
     Init(aCallback, aAsyncStack, aIncumbentGlobal);
   }
@@ -163,8 +165,8 @@ protected:
   }
 
 private:
-  inline void Init(JSObject* aCallback, JSObject* aCreationStack,
-                   nsIGlobalObject* aIncumbentGlobal)
+  inline void InitNoHold(JSObject* aCallback, JSObject* aCreationStack,
+                         nsIGlobalObject* aIncumbentGlobal)
   {
     MOZ_ASSERT(aCallback && !mCallback);
     // Set script objects before we hold, on the off chance that a GC could
@@ -175,7 +177,20 @@ private:
       mIncumbentGlobal = aIncumbentGlobal;
       mIncumbentJSGlobal = aIncumbentGlobal->GetGlobalJSObject();
     }
+  }
+
+  inline void Init(JSObject* aCallback, JSObject* aCreationStack,
+                   nsIGlobalObject* aIncumbentGlobal)
+  {
+    InitNoHold(aCallback, aCreationStack, aIncumbentGlobal);
     mozilla::HoldJSObjects(this);
+  }
+
+  inline void ClearJSReferences()
+  {
+    mCallback = nullptr;
+    mCreationStack = nullptr;
+    mIncumbentJSGlobal = nullptr;
   }
 
   CallbackObject(const CallbackObject&) = delete;
@@ -186,10 +201,43 @@ protected:
   {
     MOZ_ASSERT_IF(mIncumbentJSGlobal, mCallback);
     if (mCallback) {
-      mCallback = nullptr;
-      mCreationStack = nullptr;
-      mIncumbentJSGlobal = nullptr;
+      ClearJSReferences();
       mozilla::DropJSObjects(this);
+    }
+  }
+
+  // For use from subclasses that want to be usable with Rooted.
+  void Trace(JSTracer* aTracer);
+
+  // For use from subclasses that want to be traced for a bit then possibly
+  // switch to HoldJSObjects.  If we have more than one owner, this will
+  // HoldJSObjects; otherwise it will just forget all our JS references.
+  void HoldJSObjectsIfMoreThanOneOwner();
+
+  // Struct used as a way to force a CallbackObject constructor to not call
+  // HoldJSObjects. We're putting it here so that CallbackObject subclasses will
+  // have access to it, but outside code will not.
+  //
+  // Places that use this need to ensure that the callback is traced (e.g. via a
+  // Rooted) until the HoldJSObjects call happens.
+  struct FastCallbackConstructor {
+  };
+
+  // Just like the public version without the FastCallbackConstructor argument,
+  // except for not calling HoldJSObjects.  If you use this, you MUST ensure
+  // that the object is traced until the HoldJSObjects happens!
+  CallbackObject(JSContext* aCx, JS::Handle<JSObject*> aCallback,
+                 nsIGlobalObject* aIncumbentGlobal,
+                 const FastCallbackConstructor&)
+  {
+    if (aCx && JS::RuntimeOptionsRef(aCx).asyncStack()) {
+      JS::RootedObject stack(aCx);
+      if (!JS::CaptureCurrentStack(aCx, &stack)) {
+        JS_ClearPendingException(aCx);
+      }
+      InitNoHold(aCallback, stack, aIncumbentGlobal);
+    } else {
+      InitNoHold(aCallback, nullptr, aIncumbentGlobal);
     }
   }
 
@@ -472,6 +520,67 @@ ImplCycleCollectionUnlink(CallbackObjectHolder<T, U>& aField)
 {
   aField.UnlinkSelf();
 }
+
+// T is expected to be a RefPtr or OwningNonNull around a CallbackObject
+// subclass.  This class is used in bindings to safely handle Fast* callbacks;
+// it ensures that the callback is traced, and that if something is holding onto
+// the callback when we're done with it HoldJSObjects is called.
+template<typename T>
+class RootedCallback : public JS::Rooted<T>
+{
+public:
+  explicit RootedCallback(JSContext* cx)
+    : JS::Rooted<T>(cx)
+  {}
+
+  // We need a way to make assignment from pointers (how we're normally used)
+  // work.
+  template<typename S>
+  void operator=(S* arg)
+  {
+    this->get().operator=(arg);
+  }
+
+  // But nullptr can't use the above template, because it doesn't know which S
+  // to select.  So we need a special overload for nullptr.
+  void operator=(decltype(nullptr) arg)
+  {
+    this->get().operator=(arg);
+  }
+
+  // Codegen relies on being able to do Callback() on us.
+  JS::Handle<JSObject*> Callback() const
+  {
+    return this->get()->Callback();
+  }
+
+  ~RootedCallback()
+  {
+    // Ensure that our callback starts holding on to its own JS objects as
+    // needed.  Having to null-check here when T is OwningNonNull is a bit
+    // silly, but it's simpler than creating two separate RootedCallback
+    // instantiations for OwningNonNull and RefPtr.
+    if (IsInitialized(this->get())) {
+      this->get()->HoldJSObjectsIfMoreThanOneOwner();
+    }
+  }
+
+private:
+  template<typename U>
+  static bool IsInitialized(U& aArg); // Not implemented
+
+  template<typename U>
+  static bool IsInitialized(RefPtr<U>& aRefPtr)
+  {
+    return aRefPtr;
+  }
+
+  template<typename U>
+  static bool IsInitialized(OwningNonNull<U>& aOwningNonNull)
+  {
+    return aOwningNonNull.isInitialized();
+  }
+};
 
 } // namespace dom
 } // namespace mozilla

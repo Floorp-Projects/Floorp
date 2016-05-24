@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for BroadcastChannel.postMessage invalid State</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<div id="content"></div>
+
+<script type="application/javascript">
+
+var c = new BroadcastChannel("foo");
+c.close();
+
+try  {
+  c.postMessage("bar");
+  ok(false, "This should throw!");
+} catch(e) {
+  ok(true, "This should throw!");
+  is(e.name, "InvalidStateError", "Correct invalid-state exception thrown");
+}
+
+</script>
+</body>
+</html>
+

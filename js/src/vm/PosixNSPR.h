@@ -21,6 +21,7 @@ class CondVar;
 typedef nspr::Thread PRThread;
 typedef nspr::Lock PRLock;
 typedef nspr::CondVar PRCondVar;
+using PRIntervalTime = uint32_t;
 
 enum PRThreadType {
    PR_USER_THREAD,
@@ -135,7 +136,7 @@ uint32_t
 PR_TicksPerSecond();
 
 PRStatus
-PR_WaitCondVar(PRCondVar* cvar, uint32_t timeout);
+PR_WaitCondVar(PRCondVar* cvar, PRIntervalTime timeout);
 
 #endif /* JS_POSIX_NSPR */
 

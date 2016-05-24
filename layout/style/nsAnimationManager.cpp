@@ -563,9 +563,8 @@ private:
   void AppendProperty(nsPresContext* aPresContext,
                       nsCSSProperty aProperty,
                       nsTArray<PropertyValuePair>& aPropertyValues);
-  void GetComputedValue(nsPresContext* aPresContext,
-                        nsCSSProperty aProperty,
-                        nsCSSValue& aResult);
+  nsCSSValue GetComputedValue(nsPresContext* aPresContext,
+                              nsCSSProperty aProperty);
 
   static TimingParams TimingParamsFrom(
     const StyleAnimation& aStyleAnimation)
@@ -573,7 +572,7 @@ private:
     TimingParams timing;
 
     timing.mDuration.emplace(StickyTimeDuration::FromMilliseconds(
-			       aStyleAnimation.GetDuration()));
+                               aStyleAnimation.GetDuration()));
     timing.mDelay = TimeDuration::FromMilliseconds(aStyleAnimation.GetDelay());
     timing.mIterations = aStyleAnimation.GetIterationCount();
     MOZ_ASSERT(timing.mIterations >= 0.0 && !IsNaN(timing.mIterations),
@@ -1023,16 +1022,16 @@ CSSAnimationBuilder::AppendProperty(
 {
   PropertyValuePair propertyValue;
   propertyValue.mProperty = aProperty;
-  GetComputedValue(aPresContext, aProperty, propertyValue.mValue);
+  propertyValue.mValue = GetComputedValue(aPresContext, aProperty);
 
   aPropertyValues.AppendElement(Move(propertyValue));
 }
 
-void
+nsCSSValue
 CSSAnimationBuilder::GetComputedValue(nsPresContext* aPresContext,
-                                      nsCSSProperty aProperty,
-                                      nsCSSValue& aResult)
+                                      nsCSSProperty aProperty)
 {
+  nsCSSValue result;
   StyleAnimationValue computedValue;
 
   if (!mStyleWithoutAnimation) {
@@ -1046,19 +1045,16 @@ CSSAnimationBuilder::GetComputedValue(nsPresContext* aPresContext,
 
   if (StyleAnimationValue::ExtractComputedValue(aProperty,
                                                 mStyleWithoutAnimation,
-                                                computedValue) &&
-      StyleAnimationValue::UncomputeValue(
-        aProperty, Move(computedValue), aResult)) {
-    // If we hit this assertion or the MOZ_ASSERT_UNREACHABLE below, it
-    // probably means we are fetching a value from the computed style that
-    // we don't know how to represent as a StyleAnimationValue.
-    MOZ_ASSERT(aResult.GetUnit() != eCSSUnit_Null,
-               "Got null computed value");
-    return;
+                                                computedValue)) {
+    StyleAnimationValue::UncomputeValue(aProperty, Move(computedValue), result);
   }
 
-  MOZ_ASSERT_UNREACHABLE("Failed to get computed value");
-  aResult.Reset();
+  // If we hit this assertion, it probably means we are fetching a value from
+  // the computed style that we don't know how to represent as
+  // a StyleAnimationValue.
+  MOZ_ASSERT(result.GetUnit() != eCSSUnit_Null, "Got null computed value");
+
+  return result;
 }
 
 void

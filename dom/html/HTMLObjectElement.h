@@ -254,9 +254,6 @@ private:
     return nsIContentPolicy::TYPE_INTERNAL_OBJECT;
   }
 
-  virtual void GetItemValueText(DOMString& text) override;
-  virtual void SetItemValueText(const nsAString& text) override;
-
   virtual ~HTMLObjectElement();
 
   virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;

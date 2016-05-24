@@ -1,0 +1,70 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+createHTML({
+  bug: "1271669",
+  title: "Test that pc.addTrack() accepts any MediaStream",
+  visible: true
+});
+
+runNetworkTest(() => {
+  var test = new PeerConnectionTest();
+  var constructedStream;
+  var dummyStream = new MediaStream();
+  var dummyStreamTracks = [];
+
+  test.setMediaConstraints([ {audio: true, video: true}
+                           , {audio: true}
+                           , {video: true}
+                           ], []);
+  test.chain.replace("PC_LOCAL_GUM", [
+    function PC_LOCAL_GUM_CONSTRUCTED_STREAM(test) {
+      return getUserMedia(test.pcLocal.constraints[0]).then(stream => {
+        constructedStream = new MediaStream(stream.getTracks());
+        test.pcLocal.attachLocalStream(constructedStream);
+      });
+    },
+    function PC_LOCAL_GUM_DUMMY_STREAM(test) {
+      return getUserMedia(test.pcLocal.constraints[1])
+        .then(stream => dummyStreamTracks.push(...stream.getTracks()))
+        .then(() => getUserMedia(test.pcLocal.constraints[2]))
+        .then(stream => dummyStreamTracks.push(...stream.getTracks()))
+        .then(() => dummyStreamTracks.forEach(t =>
+          test.pcLocal.attachLocalTrack(t, dummyStream)));
+    },
+  ]);
+
+  let checkSentTracksReceived = (sentStreamId, sentTracks) => {
+    let receivedStream =
+      test.pcRemote._pc.getRemoteStreams().find(s => s.id == sentStreamId);
+    ok(receivedStream, "We should receive a stream with with the sent stream's id (" + sentStreamId + ")");
+    if (!receivedStream) {
+      return;
+    }
+
+    is(receivedStream.getTracks().length, sentTracks.length,
+       "Should receive same number of tracks as were sent");
+    sentTracks.forEach(t =>
+      ok(receivedStream.getTracks().find(t2 => t.id == t2.id),
+         "The sent track (" + t.id + ") should exist on the receive side"));
+  };
+
+  test.chain.append([
+    function PC_REMOTE_CHECK_RECEIVED_CONSTRUCTED_STREAM() {
+      checkSentTracksReceived(constructedStream.id, constructedStream.getTracks());
+    },
+    function PC_REMOTE_CHECK_RECEIVED_DUMMY_STREAM() {
+      checkSentTracksReceived(dummyStream.id, dummyStreamTracks);
+    },
+  ]);
+  test.run();
+});
+</script>
+</pre>
+</body>
+</html>

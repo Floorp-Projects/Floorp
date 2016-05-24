@@ -1319,16 +1319,20 @@ nsPlainTextSerializer::AddToLine(const char16_t * aLineFragment,
       }
       // fallback if the line breaker is unavailable or failed
       if (!mLineBreaker) {
-        goodSpace = mWrapColumn-prefixwidth;
-        while (goodSpace >= 0 &&
-               !nsCRT::IsAsciiSpace(mCurrentLine.CharAt(goodSpace))) {
-          goodSpace--;
+        if (mCurrentLine.IsEmpty() || mWrapColumn < prefixwidth) {
+          goodSpace = NS_LINEBREAKER_NEED_MORE_TEXT;
+        } else {
+          goodSpace = std::min(mWrapColumn - prefixwidth, mCurrentLine.Length() - 1);
+          while (goodSpace >= 0 &&
+                 !nsCRT::IsAsciiSpace(mCurrentLine.CharAt(goodSpace))) {
+            goodSpace--;
+          }
         }
       }
       
       nsAutoString restOfLine;
       if (goodSpace == NS_LINEBREAKER_NEED_MORE_TEXT) {
-        // If we don't found a good place to break, accept long line and
+        // If we didn't find a good place to break, accept long line and
         // try to find another place to break
         goodSpace=(prefixwidth>mWrapColumn+1)?1:mWrapColumn-prefixwidth+1;
         if (mLineBreaker) {
