@@ -5299,6 +5299,7 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
 {
   // We always expect to open a new window here. If we don't, it's an error.
   *aWindowIsNew = true;
+  *aResult = NS_OK;
 
   // The content process should never be in charge of computing whether or
   // not a window should be private or remote - the parent will do that.
