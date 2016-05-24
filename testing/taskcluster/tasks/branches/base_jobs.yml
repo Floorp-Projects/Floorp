@@ -83,12 +83,6 @@ builds:
     types:
       opt:
         task: tasks/builds/opt_macosx64_st-an.yml
-  linux64-mulet-haz:
-    platforms:
-      - Mulet Linux
-    types:
-      debug:
-        task: tasks/builds/mulet_haz_linux.yml
   sm-plain:
     platforms:
       - Linux64
