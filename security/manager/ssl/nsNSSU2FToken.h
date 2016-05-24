@@ -30,7 +30,7 @@ public:
 
 private:
   bool mInitialized;
-  mozilla::ScopedPK11SymKey mWrappingKey;
+  mozilla::UniquePK11SymKey mWrappingKey;
 
   static const nsCString mSecretNickname;
   static const nsString mVersion;

@@ -134,7 +134,7 @@ AddKeyFromFile(const char* basePath, const char* filename)
     PrintPRError("ATOB_AsciiToData failed");
     return SECFailure;
   }
-  ScopedSECItem secitem(::SECITEM_AllocItem(nullptr, nullptr, binLength));
+  UniqueSECItem secitem(::SECITEM_AllocItem(nullptr, nullptr, binLength));
   if (!secitem) {
     PrintPRError("SECITEM_AllocItem failed");
     return SECFailure;
