@@ -51,6 +51,12 @@ builds:
     types:
       opt:
         task: tasks/builds/opt_linux64_pgo.yml
+  linux64-mulet-haz:
+    platforms:
+      - Mulet Linux
+    types:
+      debug:
+        task: tasks/builds/mulet_haz_linux.yml
   macosx64:
     platforms:
       - MacOSX64
@@ -74,4 +80,3 @@ post-build:
       - tasks/builds/dbg_linux64.yml
       - tasks/builds/android_api_15.yml
     task: tasks/post-builds/upload_symbols.yml
-
