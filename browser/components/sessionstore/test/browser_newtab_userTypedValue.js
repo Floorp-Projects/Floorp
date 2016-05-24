@@ -1,6 +1,6 @@
 "use strict";
 
-requestLongerTimeout(2);
+requestLongerTimeout(4);
 
 /**
  * Test that when restoring an 'initial page' with session restore, it
