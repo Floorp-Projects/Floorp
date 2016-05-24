@@ -9,6 +9,7 @@ package org.mozilla.gecko.telemetry.stores;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.VisibleForTesting;
+import android.support.annotation.WorkerThread;
 import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -74,6 +75,7 @@ public class TelemetryJSONFilePingStore implements TelemetryPingStore {
     private final FilenameFilter uuidFilenameFilter;
     private final FileLastModifiedComparator fileLastModifiedComparator = new FileLastModifiedComparator();
 
+    @WorkerThread // Writes to disk
     public TelemetryJSONFilePingStore(final File storeDir) {
         this.storeDir = storeDir;
         this.storeDir.mkdirs();

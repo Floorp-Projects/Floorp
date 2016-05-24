@@ -7,6 +7,7 @@
 package org.mozilla.gecko.telemetry;
 
 import android.content.Context;
+import android.support.annotation.WorkerThread;
 import android.util.Log;
 import org.mozilla.gecko.telemetry.pingbuilders.TelemetryCorePingBuilder;
 import org.mozilla.gecko.telemetry.schedulers.TelemetryUploadScheduler;
@@ -56,6 +57,7 @@ public class TelemetryDispatcher {
 
     private final TelemetryUploadAllPingsImmediatelyScheduler uploadAllPingsImmediatelyScheduler;
 
+    @WorkerThread // via TelemetryJSONFilePingStore
     public TelemetryDispatcher(final String profilePath) {
         final String storePath = profilePath + File.separator + STORE_CONTAINER_DIR_NAME;
 
