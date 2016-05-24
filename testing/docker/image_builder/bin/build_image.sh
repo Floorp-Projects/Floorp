@@ -21,7 +21,7 @@ mkdir /artifacts
 
 if [ ! -z "$CONTEXT_URL" ]; then
     mkdir /context
-    if ! curl -L --retry 5 --connect-timeout 30 "$CONTEXT_URL" | tar -xz --strip-components 1 -C /context; then
+    if ! curl -L --retry 5 --connect-timeout 30 --fail "$CONTEXT_URL" | tar -xz --strip-components 1 -C /context; then
         raise_error "Error downloading image context from decision task."
     fi
     CONTEXT_PATH=/context
