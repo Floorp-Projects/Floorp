@@ -884,12 +884,13 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     let sheet = style.sheet;
     let cssRules = sheet.cssRules;
     let rawNode = node.rawNode;
+    let classes = [...rawNode.classList];
 
     let selector;
     if (rawNode.id) {
       selector = "#" + CSS.escape(rawNode.id);
-    } else if (rawNode.className) {
-      selector = "." + [...rawNode.classList].map(c => CSS.escape(c)).join(".");
+    } else if (classes.length > 0) {
+      selector = "." + classes.map(c => CSS.escape(c)).join(".");
     } else {
       selector = rawNode.localName;
     }

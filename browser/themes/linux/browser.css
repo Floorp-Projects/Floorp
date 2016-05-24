@@ -1156,6 +1156,12 @@ html|span.ac-tag {
   color: Highlight;
 }
 
+html|span.ac-emphasize-text-title,
+html|span.ac-emphasize-text-tag,
+html|span.ac-emphasize-text-url {
+  font-weight: 600;
+}
+
 .ac-type-icon[type=bookmark] {
   list-style-image: url("chrome://browser/skin/urlbar-star.svg#star");
 }

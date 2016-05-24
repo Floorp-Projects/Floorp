@@ -1750,10 +1750,6 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   color: hsl(0, 0%, 0%);
 }
 
-html|span.ac-emphasize-text-title {
-  color: hsl(0, 0%, 50%);
-}
-
 .ac-tags {
   font-size: 12px;
 }
@@ -1764,10 +1760,6 @@ html|span.ac-tag {
   border-radius: 2px;
   border: 1px solid transparent;
   padding: 0 1px;
-}
-
-html|span.ac-emphasize-text-tag {
-  color: hsl(0, 0%, 50%);
 }
 
 .ac-separator,
@@ -1784,10 +1776,6 @@ html|span.ac-emphasize-text-tag {
   color: hsl(210, 77%, 47%);
 }
 
-html|span.ac-emphasize-text-url {
-  color: hsl(210, 86%, 64%);
-}
-
 .ac-action {
   color: hsl(178, 100%, 28%);
 }
@@ -1795,10 +1783,7 @@ html|span.ac-emphasize-text-url {
 .ac-title[selected],
 .ac-separator[selected],
 .ac-url[selected],
-.ac-action[selected],
-.ac-title-text[selected] > html|span.ac-emphasize-text,
-.ac-url-text[selected] > html|span.ac-emphasize-text,
-.ac-action-text[selected] > html|span.ac-emphasize-text {
+.ac-action[selected] {
   color: hsl(0, 0%, 100%);
 }
 
@@ -1807,8 +1792,10 @@ html|span.ac-emphasize-text-url {
   color: hsl(210, 80%, 40%);
 }
 
-.ac-tags-text[selected] > html|span.ac-tag > html|span.ac-emphasize-text-tag {
-  color: hsl(210, 80%, 52%);
+html|span.ac-emphasize-text-title,
+html|span.ac-emphasize-text-tag,
+html|span.ac-emphasize-text-url {
+  font-weight: 600;
 }
 
 .ac-type-icon[type=bookmark] {

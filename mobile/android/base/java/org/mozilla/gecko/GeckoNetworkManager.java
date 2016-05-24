@@ -179,6 +179,8 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
                         return ManagerState.OffNoListeners;
                     case enableNotifications:
                         return ManagerState.OnWithListeners;
+                    case receivedUpdate:
+                        return ManagerState.OnNoListeners;
                     default:
                         return null;
                 }
@@ -224,15 +226,23 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
             case OffNoListeners:
                 if (event == ManagerEvent.start) {
                     updateNetworkStateAndConnectionType();
+                    registerBroadcastReceiver();
                 }
                 if (event == ManagerEvent.enableNotifications) {
                     updateNetworkStateAndConnectionType();
                 }
                 break;
             case OnNoListeners:
+                if (event == ManagerEvent.receivedUpdate) {
+                    updateNetworkStateAndConnectionType();
+                    sendNetworkStateToListeners();
+                }
                 if (event == ManagerEvent.enableNotifications) {
                     updateNetworkStateAndConnectionType();
                     registerBroadcastReceiver();
+                }
+                if (event == ManagerEvent.stop) {
+                    unregisterBroadcastReceiver();
                 }
                 break;
             case OnWithListeners:
@@ -243,14 +253,13 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
                 if (event == ManagerEvent.stop) {
                     unregisterBroadcastReceiver();
                 }
-                if (event == ManagerEvent.disableNotifications) {
-                    unregisterBroadcastReceiver();
-                }
+                /* no-op event: ManagerEvent.disableNotifications */
                 break;
             case OffWithListeners:
                 if (event == ManagerEvent.start) {
                     registerBroadcastReceiver();
                 }
+                /* no-op event: ManagerEvent.disableNotifications */
                 break;
             default:
                 throw new IllegalStateException("Unknown current state: " + currentState.name());

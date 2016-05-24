@@ -4,21 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 /**
  * A simple undo stack manager.
  *
  * Actions are added along with the necessary code to
  * reverse the action.
  *
- * @param function aChange Called whenever the size or position
- *   of the undo stack changes, to use for updating undo-related
- *   UI.
- * @param integer aMaxUndo Maximum number of undo steps.
+ * @param integer maxUndo Maximum number of undo steps.
  *   defaults to 50.
  */
-function UndoStack(aMaxUndo)
-{
-  this.maxUndo = aMaxUndo || 50;
+function UndoStack(maxUndo) {
+  this.maxUndo = maxUndo || 50;
   this._stack = [];
 }
 
@@ -32,8 +30,7 @@ UndoStack.prototype = {
   // The current batch depth (see startBatch() for details)
   _batchDepth: 0,
 
-  destroy: function Undo_destroy()
-  {
+  destroy: function () {
     this.uninstallController();
     delete this._stack;
   },
@@ -47,8 +44,7 @@ UndoStack.prototype = {
    * actions made up of a collection of smaller actions to be
    * undone as a single action.
    */
-  startBatch: function Undo_startBatch()
-  {
+  startBatch: function () {
     if (this._batchDepth++ === 0) {
       this._batch = [];
     }
@@ -58,8 +54,7 @@ UndoStack.prototype = {
    * End a batch of related changes, performing its action and adding
    * it to the undo stack.
    */
-  endBatch: function Undo_endBatch()
-  {
+  endBatch: function () {
     if (--this._batchDepth > 0) {
       return;
     }
@@ -92,20 +87,19 @@ UndoStack.prototype = {
   /**
    * Perform an action, adding it to the undo stack.
    *
-   * @param function aDo Called to perform the action.
-   * @param function aUndo Called to reverse the action.
+   * @param function toDo Called to perform the action.
+   * @param function undo Called to reverse the action.
    */
-  do: function Undo_do(aDo, aUndo) {
+  do: function (toDo, undo) {
     this.startBatch();
-    this._batch.push({ do: aDo, undo: aUndo });
+    this._batch.push({ do: toDo, undo });
     this.endBatch();
   },
 
   /*
    * Returns true if undo() will do anything.
    */
-  canUndo: function Undo_canUndo()
-  {
+  canUndo: function () {
     return this._index > 0;
   },
 
@@ -114,8 +108,7 @@ UndoStack.prototype = {
    *
    * @return true if an action was undone.
    */
-  undo: function Undo_canUndo()
-  {
+  undo: function () {
     if (!this.canUndo()) {
       return false;
     }
@@ -127,8 +120,7 @@ UndoStack.prototype = {
   /**
    * Returns true if redo() will do anything.
    */
-  canRedo: function Undo_canRedo()
-  {
+  canRedo: function () {
     return this._stack.length > this._index;
   },
 
@@ -137,8 +129,7 @@ UndoStack.prototype = {
    *
    * @return true if an action was redone.
    */
-  redo: function Undo_canRedo()
-  {
+  redo: function () {
     if (!this.canRedo()) {
       return false;
     }
@@ -147,8 +138,7 @@ UndoStack.prototype = {
     return true;
   },
 
-  _change: function Undo__change()
-  {
+  _change: function () {
     if (this._controllerWindow) {
       this._controllerWindow.goUpdateCommand("cmd_undo");
       this._controllerWindow.goUpdateCommand("cmd_redo");
@@ -162,45 +152,41 @@ UndoStack.prototype = {
   /**
    * Install this object as a command controller.
    */
-  installController: function Undo_installController(aControllerWindow)
-  {
-    this._controllerWindow = aControllerWindow;
-    aControllerWindow.controllers.appendController(this);
+  installController: function (controllerWindow) {
+    this._controllerWindow = controllerWindow;
+    controllerWindow.controllers.appendController(this);
   },
 
   /**
    * Uninstall this object from the command controller.
    */
-  uninstallController: function Undo_uninstallController()
-  {
+  uninstallController: function () {
     if (!this._controllerWindow) {
       return;
     }
     this._controllerWindow.controllers.removeController(this);
   },
 
-  supportsCommand: function Undo_supportsCommand(aCommand)
-  {
-    return (aCommand == "cmd_undo" ||
-            aCommand == "cmd_redo");
+  supportsCommand: function (command) {
+    return (command == "cmd_undo" ||
+            command == "cmd_redo");
   },
 
-  isCommandEnabled: function Undo_isCommandEnabled(aCommand)
-  {
-    switch (aCommand) {
+  isCommandEnabled: function (command) {
+    switch (command) {
       case "cmd_undo": return this.canUndo();
       case "cmd_redo": return this.canRedo();
     }
     return false;
   },
 
-  doCommand: function Undo_doCommand(aCommand)
-  {
-    switch (aCommand) {
+  doCommand: function (command) {
+    switch (command) {
       case "cmd_undo": return this.undo();
       case "cmd_redo": return this.redo();
+      default: return null;
     }
   },
 
-  onEvent: function Undo_onEvent(aEvent) {},
+  onEvent: function (event) {},
 };

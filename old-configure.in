@@ -3481,7 +3481,9 @@ dnl ========================================================
 dnl = Include install tracking on Android
 dnl ========================================================
 if test -n "$MOZ_INSTALL_TRACKING"; then
-    AC_DEFINE(MOZ_INSTALL_TRACKING)
+    if test -z "$MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN"; then
+        AC_MSG_ERROR([Must specify --with-adjust-sdk-keyfile when MOZ_INSTALL_TRACKING is defined!])
+    fi
 fi
 
 dnl ========================================================

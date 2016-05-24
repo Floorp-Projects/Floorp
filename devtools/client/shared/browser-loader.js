@@ -147,8 +147,7 @@ function BrowserLoaderBuilder({ baseURI, window, useOnlyShared }) {
           const proxy = createProxy(exports);
           componentProxies.set(uri, proxy);
           module.exports = proxy.get();
-        }
-        else {
+        } else {
           const proxy = componentProxies.get(uri);
           const instances = proxy.update(exports);
           instances.forEach(getForceUpdate(React));

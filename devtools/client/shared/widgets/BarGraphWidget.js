@@ -1,7 +1,5 @@
 "use strict";
 
-const { Cc, Ci, Cu, Cr } = require("chrome");
-
 const { Heritage, setNamedTimeout, clearNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
 const { AbstractCanvasGraph, CanvasGraphUtils } = require("devtools/client/shared/widgets/Graphs");
 
@@ -10,10 +8,12 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
 // Bar graph constants.
 
 const GRAPH_DAMPEN_VALUES_FACTOR = 0.75;
-const GRAPH_BARS_MARGIN_TOP = 1; // px
-const GRAPH_BARS_MARGIN_END = 1; // px
-const GRAPH_MIN_BARS_WIDTH = 5; // px
-const GRAPH_MIN_BLOCKS_HEIGHT = 1; // px
+
+// The following are in pixels
+const GRAPH_BARS_MARGIN_TOP = 1;
+const GRAPH_BARS_MARGIN_END = 1;
+const GRAPH_MIN_BARS_WIDTH = 5;
+const GRAPH_MIN_BLOCKS_HEIGHT = 1;
 
 const GRAPH_BACKGROUND_GRADIENT_START = "rgba(0,136,204,0.0)";
 const GRAPH_BACKGROUND_GRADIENT_END = "rgba(255,255,255,0.25)";
@@ -28,7 +28,8 @@ const GRAPH_REGION_STRIPES_COLOR = "rgba(237,38,85,0.2)";
 const GRAPH_HIGHLIGHTS_MASK_BACKGROUND = "rgba(255,255,255,0.75)";
 const GRAPH_HIGHLIGHTS_MASK_STRIPES = "rgba(255,255,255,0.5)";
 
-const GRAPH_LEGEND_MOUSEOVER_DEBOUNCE = 50; // ms
+// in ms
+const GRAPH_LEGEND_MOUSEOVER_DEBOUNCE = 50;
 
 /**
  * A bar graph, plotting tuples of values as rectangles.
@@ -144,7 +145,8 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
    */
   buildGraphImage: function () {
     if (!this.format || !this.format.length) {
-      throw "The graph format traits are mandatory to style the data source.";
+      throw new Error("The graph format traits are mandatory to style " +
+                      "the data source.");
     }
     let { canvas, ctx } = this._getNamedCanvas("bar-graph-data");
     let width = this._width;
@@ -260,7 +262,8 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
    * @param function unpack [optional]
    *        @see AbstractCanvasGraph.prototype.getMappedSelection
    */
-  buildMaskImage: function (highlights, inPixels = false, unpack = e => e.delta) {
+  buildMaskImage: function (highlights, inPixels = false,
+                            unpack = e => e.delta) {
     // A null `highlights` array is used to clear the mask. An empty array
     // will mask the entire graph.
     if (!highlights) {
@@ -295,11 +298,19 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
         start = CanvasGraphUtils.map(start, firstTick, lastTick, 0, width);
         end = CanvasGraphUtils.map(end, firstTick, lastTick, 0, width);
       }
-      let firstSnap = findFirst(this._blocksBoundingRects, e => e.start >= start);
-      let lastSnap = findLast(this._blocksBoundingRects, e => e.start >= start && e.end <= end);
+      let firstSnap = findFirst(this._blocksBoundingRects,
+                                e => e.start >= start);
+      let lastSnap = findLast(this._blocksBoundingRects,
+                              e => e.start >= start && e.end <= end);
 
       let x1 = firstSnap ? firstSnap.start : start;
-      let x2 = lastSnap ? lastSnap.end : firstSnap ? firstSnap.end : end;
+      let x2;
+      if (lastSnap) {
+        x2 = lastSnap.end;
+      } else {
+        x2 = firstSnap ? firstSnap.end : end;
+      }
+
       let y1 = top || 0;
       let y2 = bottom || height;
       ctx.clearRect(x1, y1, x2 - x1, y2 - y1);
@@ -357,7 +368,8 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
    * Creates the legend container when constructing this graph.
    */
   _createLegend: function () {
-    let legendNode = this._legendNode = this._document.createElementNS(HTML_NS, "div");
+    let legendNode = this._legendNode = this._document.createElementNS(HTML_NS,
+                                                                       "div");
     legendNode.className = "bar-graph-widget-legend";
     this._container.appendChild(legendNode);
   },
@@ -390,17 +402,21 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   /**
    * Invoked whenever a color node in the legend is hovered.
    */
-  _onLegendMouseOver: function (e) {
-    setNamedTimeout("bar-graph-debounce", GRAPH_LEGEND_MOUSEOVER_DEBOUNCE, () => {
-      let type = e.target.dataset.index;
-      let rects = this._blocksBoundingRects.filter(e => e.type == type);
+  _onLegendMouseOver: function (ev) {
+    setNamedTimeout(
+      "bar-graph-debounce",
+      GRAPH_LEGEND_MOUSEOVER_DEBOUNCE,
+      () => {
+        let type = ev.target.dataset.index;
+        let rects = this._blocksBoundingRects.filter(e => e.type == type);
 
-      this._originalHighlights = this._mask;
-      this._hasCustomHighlights = true;
-      this.setMask(rects, true);
+        this._originalHighlights = this._mask;
+        this._hasCustomHighlights = true;
+        this.setMask(rects, true);
 
-      this.emit("legend-hover", [type, rects]);
-    });
+        this.emit("legend-hover", [type, rects]);
+      }
+    );
   },
 
   /**
@@ -421,11 +437,11 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   /**
    * Invoked whenever a color node in the legend is pressed.
    */
-  _onLegendMouseDown: function (e) {
-    e.preventDefault();
-    e.stopPropagation();
+  _onLegendMouseDown: function (ev) {
+    ev.preventDefault();
+    ev.stopPropagation();
 
-    let type = e.target.dataset.index;
+    let type = ev.target.dataset.index;
     let rects = this._blocksBoundingRects.filter(e => e.type == type);
     let leftmost = rects[0];
     let rightmost = rects[rects.length - 1];
@@ -456,8 +472,11 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
 function findFirst(array, predicate) {
   for (let i = 0, len = array.length; i < len; i++) {
     let element = array[i];
-    if (predicate(element)) return element;
+    if (predicate(element)) {
+      return element;
+    }
   }
+  return null;
 }
 
 /**
@@ -469,8 +488,11 @@ function findFirst(array, predicate) {
 function findLast(array, predicate) {
   for (let i = array.length - 1; i >= 0; i--) {
     let element = array[i];
-    if (predicate(element)) return element;
+    if (predicate(element)) {
+      return element;
+    }
   }
+  return null;
 }
 
 module.exports = BarGraphWidget;
