@@ -195,7 +195,8 @@ AliasAnalysis::analyze()
                     MInstructionVector& aliasedStores = stores[*iter];
                     for (int i = aliasedStores.length() - 1; i >= 0; i--) {
                         MInstruction* store = aliasedStores[i];
-                        if (def->mightAlias(store) != MDefinition::AliasType::NoAlias &&
+                        if (genericMightAlias(*def, store) != MDefinition::AliasType::NoAlias &&
+                            def->mightAlias(store) != MDefinition::AliasType::NoAlias &&
                             BlockMightReach(store->block(), *block))
                         {
                             if (lastStore->id() < store->id())
@@ -242,7 +243,9 @@ AliasAnalysis::analyze()
                         MInstruction* store = aliasedStores[i];
                         if (store->id() < firstLoopIns->id())
                             break;
-                        if (ins->mightAlias(store) != MDefinition::AliasType::NoAlias) {
+                        if (genericMightAlias(ins, store) != MDefinition::AliasType::NoAlias &&
+                            ins->mightAlias(store) != MDefinition::AliasType::NoAlias)
+                        {
                             hasAlias = true;
                             IonSpewDependency(ins, store, "aliases", "store in loop body");
                             break;

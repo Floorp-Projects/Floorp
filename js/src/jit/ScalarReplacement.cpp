@@ -565,7 +565,7 @@ ObjectMemoryView::visitStoreSlot(MStoreSlot* ins)
     MSlots* slots = ins->slots()->toSlots();
     if (slots->object() != obj_) {
         // Guard objects are replaced when they are visited.
-        MOZ_ASSERT(!slots->object()->isGuardShape() || slots->object()->toGuardShape()->obj() != obj_);
+        MOZ_ASSERT(!slots->object()->isGuardShape() || slots->object()->toGuardShape()->object() != obj_);
         return;
     }
 
@@ -597,7 +597,7 @@ ObjectMemoryView::visitLoadSlot(MLoadSlot* ins)
     MSlots* slots = ins->slots()->toSlots();
     if (slots->object() != obj_) {
         // Guard objects are replaced when they are visited.
-        MOZ_ASSERT(!slots->object()->isGuardShape() || slots->object()->toGuardShape()->obj() != obj_);
+        MOZ_ASSERT(!slots->object()->isGuardShape() || slots->object()->toGuardShape()->object() != obj_);
         return;
     }
 
@@ -620,7 +620,7 @@ void
 ObjectMemoryView::visitGuardShape(MGuardShape* ins)
 {
     // Skip loads made on other objects.
-    if (ins->obj() != obj_)
+    if (ins->object() != obj_)
         return;
 
     // Replace the shape guard by its object.
