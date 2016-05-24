@@ -18,7 +18,6 @@ Cu.import("chrome://marionette/content/atom.js");
 Cu.import("chrome://marionette/content/capture.js");
 Cu.import("chrome://marionette/content/cookies.js");
 Cu.import("chrome://marionette/content/element.js");
-Cu.import("chrome://marionette/content/emulator.js");
 Cu.import("chrome://marionette/content/error.js");
 Cu.import("chrome://marionette/content/evaluate.js");
 Cu.import("chrome://marionette/content/event.js");
@@ -528,8 +527,6 @@ function* executeInSandbox(script, args, timeout, opts) {
   if (opts.sandboxName) {
     sb = sandbox.augment(sb, {global: sb});
     sb = sandbox.augment(sb, new logging.Adapter(contentLog));
-    let emulatorClient = new emulator.EmulatorServiceClient(asyncChrome);
-    sb = sandbox.augment(sb, new emulator.Adapter(emulatorClient));
   }
 
   let wargs = elementManager.convertWrappedArguments(args, curContainer);

@@ -216,8 +216,6 @@ frame.Manager = class {
     mm.addWeakMessageListener("Marionette:error", this.driver);
     mm.addWeakMessageListener("Marionette:emitTouchEvent", this.driver);
     mm.addWeakMessageListener("Marionette:log", this.driver);
-    mm.addWeakMessageListener("Marionette:runEmulatorCmd", this.driver.emulator);
-    mm.addWeakMessageListener("Marionette:runEmulatorShell", this.driver.emulator);
     mm.addWeakMessageListener("Marionette:shareData", this.driver);
     mm.addWeakMessageListener("Marionette:switchToModalOrigin", this.driver);
     mm.addWeakMessageListener("Marionette:switchedToFrame", this.driver);
@@ -249,8 +247,6 @@ frame.Manager = class {
     mm.removeWeakMessageListener("Marionette:error", this.driver);
     mm.removeWeakMessageListener("Marionette:log", this.driver);
     mm.removeWeakMessageListener("Marionette:shareData", this.driver);
-    mm.removeWeakMessageListener("Marionette:runEmulatorCmd", this.driver.emulator);
-    mm.removeWeakMessageListener("Marionette:runEmulatorShell", this.driver.emulator);
     mm.removeWeakMessageListener("Marionette:switchedToFrame", this.driver);
     mm.removeWeakMessageListener("Marionette:getVisibleCookies", this.driver);
     mm.removeWeakMessageListener("Marionette:getImportedScripts", this.driver.importedScripts);

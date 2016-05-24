@@ -18,7 +18,6 @@ marionette.jar:
   content/error.js (error.js)
   content/message.js (message.js)
   content/dispatcher.js (dispatcher.js)
-  content/emulator.js (emulator.js)
   content/modal.js (modal.js)
   content/proxy.js (proxy.js)
   content/capture.js (capture.js)
