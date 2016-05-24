@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette_driver import By, Wait
-from marionette.marionette_test import skip_if_e10s
 
 from firefox_ui_harness.testcases import FirefoxTestCase
 
@@ -21,7 +20,6 @@ class TestAboutPrivateBrowsing(FirefoxTestCase):
 
         self.pb_url = support_url + 'private-browsing'
 
-    @skip_if_e10s
     def testCheckAboutPrivateBrowsing(self):
         self.assertFalse(self.browser.is_private)
 

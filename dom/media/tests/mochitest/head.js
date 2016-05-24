@@ -403,7 +403,7 @@ function checkMediaStreamTracks(constraints, mediaStream) {
  */
 function checkMediaStreamContains(mediaStream, tracks, message) {
   message = message ? (message + ": ") : "";
-  tracks.forEach(t => ok(mediaStream.getTracks().includes(t),
+  tracks.forEach(t => ok(mediaStream.getTrackById(t.id),
                          message + "MediaStream " + mediaStream.id +
                          " contains track " + t.id));
   is(mediaStream.getTracks().length, tracks.length,
@@ -421,7 +421,7 @@ function checkMediaStreamCloneAgainstOriginal(clone, original) {
   is(clone.getVideoTracks().length, original.getVideoTracks().length,
      "All video tracks should get cloned");
   original.getTracks()
-          .forEach(t => ok(!clone.getTracks().includes(t),
+          .forEach(t => ok(!clone.getTrackById(t.id),
                            "The clone's tracks should be originals"));
 }
 
@@ -460,6 +460,24 @@ function waitUntil(func, time) {
 /** Time out while waiting for a promise to get resolved or rejected. */
 var timeout = (promise, time, msg) =>
   Promise.race([promise, wait(time).then(() => Promise.reject(new Error(msg)))]);
+
+/** Adds a |finally| function to a promise whose argument is invoked whether the
+ * promise is resolved or rejected, and that does not interfere with chaining.*/
+var addFinallyToPromise = promise => {
+  promise.finally = func => {
+    return promise.then(
+      result => {
+        func();
+        return Promise.resolve(result);
+      },
+      error => {
+        func();
+        return Promise.reject(error);
+      }
+    );
+  }
+  return promise;
+}
 
 /** Use event listener to call passed-in function on fire until it returns true */
 var listenUntil = (target, eventName, onFire) => {
@@ -620,23 +638,29 @@ CommandChain.prototype = {
 
   /**
    * Returns the index of the specified command in the chain.
-   * @param {start} Optional param specifying the index at which the search will
-   * start. If not specified, the search starts at index 0.
+   * @param {occurrence} Optional param specifying which occurrence to match,
+   * with 0 representing the first occurrence.
    */
-  indexOf: function(functionOrName, start) {
-    start = start || 0;
-    if (typeof functionOrName === 'string') {
-      var index = this.commands.slice(start).findIndex(f => f.name === functionOrName);
-      if (index !== -1) {
-        index += start;
+  indexOf: function(functionOrName, occurrence) {
+    occurrence = occurrence || 0;
+    return this.commands.findIndex(func => {
+      if (typeof functionOrName === 'string') {
+        if (func.name !== functionOrName) {
+          return false;
+        }
+      } else if (func !== functionOrName) {
+        return false;
       }
-      return index;
-    }
-    return this.commands.indexOf(functionOrName, start);
+      if (occurrence) {
+        --occurrence;
+        return false;
+      }
+      return true;
+    });
   },
 
-  mustHaveIndexOf: function(functionOrName, start) {
-    var index = this.indexOf(functionOrName, start);
+  mustHaveIndexOf: function(functionOrName, occurrence) {
+    var index = this.indexOf(functionOrName, occurrence);
     if (index == -1) {
       throw new Error("Unknown test: " + functionOrName);
     }
@@ -646,8 +670,8 @@ CommandChain.prototype = {
   /**
    * Inserts the new commands after the specified command.
    */
-  insertAfter: function(functionOrName, commands, all, start) {
-    this._insertHelper(functionOrName, commands, 1, all, start);
+  insertAfter: function(functionOrName, commands, all, occurrence) {
+    this._insertHelper(functionOrName, commands, 1, all, occurrence);
   },
 
   /**
@@ -660,48 +684,44 @@ CommandChain.prototype = {
   /**
    * Inserts the new commands before the specified command.
    */
-  insertBefore: function(functionOrName, commands, all, start) {
-    this._insertHelper(functionOrName, commands, 0, all, start);
+  insertBefore: function(functionOrName, commands, all, occurrence) {
+    this._insertHelper(functionOrName, commands, 0, all, occurrence);
   },
 
-  _insertHelper: function(functionOrName, commands, delta, all, start) {
-    var index = this.mustHaveIndexOf(functionOrName);
-    start = start || 0;
-    for (; index !== -1; index = this.indexOf(functionOrName, index)) {
-      if (!start) {
-        this.commands = [].concat(
-          this.commands.slice(0, index + delta),
-          commands,
-          this.commands.slice(index + delta));
-        if (!all) {
-          break;
-        }
-      } else {
-        start -= 1;
+  _insertHelper: function(functionOrName, commands, delta, all, occurrence) {
+    occurrence = occurrence || 0;
+    for (var index = this.mustHaveIndexOf(functionOrName, occurrence);
+         index !== -1;
+         index = this.indexOf(functionOrName, ++occurrence)) {
+      this.commands = [].concat(
+        this.commands.slice(0, index + delta),
+        commands,
+        this.commands.slice(index + delta));
+      if (!all) {
+        break;
       }
-      index += (commands.length + 1);
     }
   },
 
   /**
    * Removes the specified command, returns what was removed.
    */
-  remove: function(functionOrName) {
-    return this.commands.splice(this.mustHaveIndexOf(functionOrName), 1);
+  remove: function(functionOrName, occurrence) {
+    return this.commands.splice(this.mustHaveIndexOf(functionOrName, occurrence), 1);
   },
 
   /**
    * Removes all commands after the specified one, returns what was removed.
    */
-  removeAfter: function(functionOrName, start) {
-    return this.commands.splice(this.mustHaveIndexOf(functionOrName, start) + 1);
+  removeAfter: function(functionOrName, occurrence) {
+    return this.commands.splice(this.mustHaveIndexOf(functionOrName, occurrence) + 1);
   },
 
   /**
    * Removes all commands before the specified one, returns what was removed.
    */
-  removeBefore: function(functionOrName) {
-    return this.commands.splice(0, this.mustHaveIndexOf(functionOrName));
+  removeBefore: function(functionOrName, occurrence) {
+    return this.commands.splice(0, this.mustHaveIndexOf(functionOrName, occurrence));
   },
 
   /**
@@ -715,8 +735,8 @@ CommandChain.prototype = {
   /**
    * Replaces all commands after the specified one, returns what was removed.
    */
-  replaceAfter: function(functionOrName, commands, start) {
-    var oldCommands = this.removeAfter(functionOrName, start);
+  replaceAfter: function(functionOrName, commands, occurrence) {
+    var oldCommands = this.removeAfter(functionOrName, occurrence);
     this.append(commands);
     return oldCommands;
   },
@@ -737,6 +757,81 @@ CommandChain.prototype = {
     this.commands = this.commands.filter(c => !id_match.test(c.name));
   },
 };
+
+function AudioStreamHelper() {
+  this._context = new AudioContext();
+}
+
+AudioStreamHelper.prototype = {
+  checkAudio: function(stream, analyser, fun) {
+    analyser.enableDebugCanvas();
+    return analyser.waitForAnalysisSuccess(fun)
+      .then(() => analyser.disableDebugCanvas());
+  },
+
+  checkAudioFlowing: function(stream) {
+    var analyser = new AudioStreamAnalyser(this._context, stream);
+    var freq = analyser.binIndexForFrequency(TEST_AUDIO_FREQ);
+    return this.checkAudio(stream, analyser, array => array[freq] > 200);
+  },
+
+  checkAudioNotFlowing: function(stream) {
+    var analyser = new AudioStreamAnalyser(this._context, stream);
+    var freq = analyser.binIndexForFrequency(TEST_AUDIO_FREQ);
+    return this.checkAudio(stream, analyser, array => array[freq] < 50);
+  }
+}
+
+function VideoStreamHelper() {
+  this._helper = new CaptureStreamTestHelper2D(50,50);
+  this._canvas = this._helper.createAndAppendElement('canvas', 'source_canvas');
+  // Make sure this is initted
+  this._helper.drawColor(this._canvas, this._helper.green);
+  this._stream = this._canvas.captureStream(10);
+}
+
+VideoStreamHelper.prototype = {
+  stream: function() {
+    return this._stream;
+  },
+
+  startCapturingFrames: function() {
+    var i = 0;
+    var helper = this;
+    return setInterval(function() {
+      try {
+        helper._helper.drawColor(helper._canvas,
+                                 i ? helper._helper.green : helper._helper.red);
+        i = 1 - i;
+        helper._stream.requestFrame();
+      } catch (e) {
+        // ignore; stream might have shut down, and we don't bother clearing
+        // the setInterval.
+      }
+    }, 100);
+  },
+
+  waitForFrames: function(canvas, timeout_value) {
+    var intervalId = this.startCapturingFrames();
+
+    return addFinallyToPromise(timeout(
+      Promise.all([
+        this._helper.waitForPixelColor(canvas, this._helper.green, 128,
+                                       canvas.id + " should become green"),
+        this._helper.waitForPixelColor(canvas, this._helper.red, 128,
+                                       canvas.id + " should become red")
+      ]),
+      2000,
+      "Timed out waiting for frames")).finally(() => clearInterval(intervalId));
+  },
+
+  verifyNoFrames: function(canvas) {
+    return this.waitForFrames(canvas).then(
+      () => ok(false, "Color should not change"),
+      () => ok(true, "Color should not change")
+    );
+  }
+}
 
 
 function IsMacOSX10_6orOlder() {

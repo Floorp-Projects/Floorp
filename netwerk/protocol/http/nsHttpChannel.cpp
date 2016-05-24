@@ -764,9 +764,9 @@ nsHttpChannel::SetupTransaction()
     }
 
     // trim off the #ref portion if any...
-    int32_t ref = requestURI->FindChar('#');
-    if (ref != kNotFound) {
-        requestURI->SetLength(ref);
+    int32_t ref1 = requestURI->FindChar('#');
+    if (ref1 != kNotFound) {
+        requestURI->SetLength(ref1);
     }
 
     if (mConnectionInfo->UsingConnect() || !mConnectionInfo->UsingHttpProxy()) {
@@ -794,9 +794,9 @@ nsHttpChannel::SetupTransaction()
         }
 
         // trim off the #ref portion if any...
-        int32_t ref = requestURI->FindChar('#');
-        if (ref != kNotFound) {
-            requestURI->SetLength(ref);
+        int32_t ref2 = requestURI->FindChar('#');
+        if (ref2 != kNotFound) {
+            requestURI->SetLength(ref2);
         }
 
         mRequestHead.SetVersion(gHttpHandler->ProxyHttpVersion());
@@ -4517,8 +4517,8 @@ DoAddCacheEntryHeaders(nsHttpChannel *self,
         if (!buf.IsEmpty()) {
             NS_NAMED_LITERAL_CSTRING(prefix, "request-");
 
-            char *val = buf.BeginWriting(); // going to munge buf
-            char *token = nsCRT::strtok(val, NS_HTTP_HEADER_SEPS, &val);
+            char *bufData = buf.BeginWriting(); // going to munge buf
+            char *token = nsCRT::strtok(bufData, NS_HTTP_HEADER_SEPS, &bufData);
             while (token) {
                 LOG(("nsHttpChannel::AddCacheEntryHeaders [this=%p] " \
                         "processing %s", self, token));
@@ -4553,11 +4553,10 @@ DoAddCacheEntryHeaders(nsHttpChannel *self,
                         entry->SetMetaDataElement(metaKey.get(), nullptr);
                     }
                 }
-                token = nsCRT::strtok(val, NS_HTTP_HEADER_SEPS, &val);
+                token = nsCRT::strtok(bufData, NS_HTTP_HEADER_SEPS, &bufData);
             }
         }
     }
-
 
     // Store the received HTTP head with the cache entry as an element of
     // the meta data.
@@ -5971,7 +5970,7 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     if (mCacheEntry && mCachePump && RECOVER_FROM_CACHE_FILE_ERROR(mStatus)) {
         LOG(("  cache file error, reloading from server"));
         mCacheEntry->AsyncDoom(nullptr);
-        nsresult rv = StartRedirectChannelToURI(mURI, nsIChannelEventSink::REDIRECT_INTERNAL);
+        rv = StartRedirectChannelToURI(mURI, nsIChannelEventSink::REDIRECT_INTERNAL);
         if (NS_SUCCEEDED(rv))
             return NS_OK;
     }

@@ -528,7 +528,9 @@ CodeGeneratorMIPSShared::visitDivI(LDivI* ins)
 
     // Handle divide by zero.
     if (mir->canBeDivideByZero()) {
-        if (mir->canTruncateInfinities()) {
+        if (mir->trapOnError()) {
+            masm.ma_b(rhs, rhs, wasm::JumpTarget::IntegerDivideByZero, Assembler::Zero);
+        } else if (mir->canTruncateInfinities()) {
             // Truncated division by zero is zero (Infinity|0 == 0)
             Label notzero;
             masm.ma_b(rhs, rhs, &notzero, Assembler::NonZero, ShortJump);
@@ -548,7 +550,9 @@ CodeGeneratorMIPSShared::visitDivI(LDivI* ins)
         masm.ma_b(lhs, temp, &notMinInt, Assembler::NotEqual, ShortJump);
 
         masm.move32(Imm32(-1), temp);
-        if (mir->canTruncateOverflow()) {
+        if (mir->trapOnError()) {
+            masm.ma_b(rhs, temp, wasm::JumpTarget::IntegerOverflow, Assembler::Equal);
+        } else if (mir->canTruncateOverflow()) {
             // (-INT32_MIN)|0 == INT32_MIN
             Label skip;
             masm.ma_b(rhs, temp, &skip, Assembler::NotEqual, ShortJump);
@@ -674,11 +678,15 @@ CodeGeneratorMIPSShared::visitModI(LModI* ins)
 
     if (mir->canBeDivideByZero()) {
         if (mir->isTruncated()) {
-            Label skip;
-            masm.ma_b(rhs, Imm32(0), &skip, Assembler::NotEqual, ShortJump);
-            masm.move32(Imm32(0), dest);
-            masm.ma_b(&done, ShortJump);
-            masm.bind(&skip);
+            if (mir->trapOnError()) {
+                masm.ma_b(rhs, rhs, wasm::JumpTarget::IntegerDivideByZero, Assembler::Zero);
+            } else {
+                Label skip;
+                masm.ma_b(rhs, Imm32(0), &skip, Assembler::NotEqual, ShortJump);
+                masm.move32(Imm32(0), dest);
+                masm.ma_b(&done, ShortJump);
+                masm.bind(&skip);
+            }
         } else {
             MOZ_ASSERT(mir->fallible());
             bailoutCmp32(Assembler::Equal, rhs, Imm32(0), ins->snapshot());
@@ -1300,6 +1308,102 @@ CodeGeneratorMIPSShared::visitTruncateFToInt32(LTruncateFToInt32* ins)
 {
     emitTruncateFloat32(ToFloatRegister(ins->input()), ToRegister(ins->output()),
                         ins->mir());
+}
+
+void
+CodeGeneratorMIPSShared::visitWasmTruncateToInt32(LWasmTruncateToInt32* lir)
+{
+    auto input = ToFloatRegister(lir->input());
+    auto output = ToRegister(lir->output());
+
+    MWasmTruncateToInt32* mir = lir->mir();
+    MIRType fromType = mir->input()->type();
+
+    auto* ool = new (alloc()) OutOfLineWasmTruncateCheck(mir, input);
+    addOutOfLineCode(ool, mir);
+
+    if (mir->isUnsigned()) {
+        // When the input value is Infinity, NaN, or rounds to an integer outside the
+        // range [INT64_MIN; INT64_MAX + 1[, the Invalid Operation flag is set in the FCSR.
+        if (fromType == MIRType::Double)
+            masm.as_truncld(ScratchDoubleReg, input);
+        else if (fromType == MIRType::Float32)
+            masm.as_truncls(ScratchDoubleReg, input);
+        else
+            MOZ_CRASH("unexpected type in visitWasmTruncateToInt32");
+
+        // Check that the result is in the uint32_t range.
+        masm.moveFromDoubleHi(ScratchDoubleReg, output);
+        masm.as_cfc1(ScratchRegister, Assembler::FCSR);
+        masm.as_ext(ScratchRegister, ScratchRegister, 16, 1);
+        masm.ma_or(output, ScratchRegister);
+        masm.ma_b(output, Imm32(0), ool->entry(), Assembler::NotEqual);
+
+        masm.moveFromFloat32(ScratchDoubleReg, output);
+        return;
+    }
+
+    // When the input value is Infinity, NaN, or rounds to an integer outside the
+    // range [INT32_MIN; INT32_MAX + 1[, the Invalid Operation flag is set in the FCSR.
+    if (fromType == MIRType::Double)
+        masm.as_truncwd(ScratchFloat32Reg, input);
+    else if (fromType == MIRType::Float32)
+        masm.as_truncws(ScratchFloat32Reg, input);
+    else
+        MOZ_CRASH("unexpected type in visitWasmTruncateToInt32");
+
+    // Check that the result is in the int32_t range.
+    masm.as_cfc1(output, Assembler::FCSR);
+    masm.as_ext(output, output, 16, 1);
+    masm.ma_b(output, Imm32(0), ool->entry(), Assembler::NotEqual);
+
+    masm.bind(ool->rejoin());
+    masm.moveFromFloat32(ScratchFloat32Reg, output);
+}
+
+void
+CodeGeneratorMIPSShared::visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* ool)
+{
+    FloatRegister input = ool->input();
+    MIRType fromType = ool->fromType();
+    MIRType toType = ool->toType();
+
+    // Eagerly take care of NaNs.
+    Label inputIsNaN;
+    if (fromType == MIRType::Double)
+        masm.branchDouble(Assembler::DoubleUnordered, input, input, &inputIsNaN);
+    else if (fromType == MIRType::Float32)
+        masm.branchFloat(Assembler::DoubleUnordered, input, input, &inputIsNaN);
+    else
+        MOZ_CRASH("unexpected type in visitOutOfLineWasmTruncateCheck");
+
+    Label fail;
+
+    // Handle special values (not needed for unsigned values).
+    if (!ool->isUnsigned()) {
+        if (toType == MIRType::Int32) {
+            // MWasmTruncateToInt32
+            if (fromType == MIRType::Double) {
+                // we've used truncwd. the only valid double values that can
+                // truncate to INT32_MIN are in ]INT32_MIN - 1; INT32_MIN].
+                masm.loadConstantDouble(double(INT32_MIN) - 1.0, ScratchDoubleReg);
+                masm.branchDouble(Assembler::DoubleLessThanOrEqual, input, ScratchDoubleReg, &fail);
+
+                masm.loadConstantDouble(double(INT32_MIN), ScratchDoubleReg);
+                masm.branchDouble(Assembler::DoubleGreaterThan, input, ScratchDoubleReg, &fail);
+
+                masm.as_truncwd(ScratchFloat32Reg, ScratchDoubleReg);
+                masm.jump(ool->rejoin());
+            }
+        }
+    }
+
+    // Handle errors.
+    masm.bind(&fail);
+    masm.jump(wasm::JumpTarget::IntegerOverflow);
+
+    masm.bind(&inputIsNaN);
+    masm.jump(wasm::JumpTarget::InvalidConversionToInteger);
 }
 
 void
@@ -1986,12 +2090,16 @@ CodeGeneratorMIPSShared::visitUDivOrMod(LUDivOrMod* ins)
     // Prevent divide by zero.
     if (ins->canBeDivideByZero()) {
         if (ins->mir()->isTruncated()) {
-            // Infinity|0 == 0
-            Label notzero;
-            masm.ma_b(rhs, rhs, &notzero, Assembler::NonZero, ShortJump);
-            masm.move32(Imm32(0), output);
-            masm.ma_b(&done, ShortJump);
-            masm.bind(&notzero);
+            if (ins->trapOnError()) {
+                masm.ma_b(rhs, rhs, wasm::JumpTarget::IntegerDivideByZero, Assembler::Zero);
+            } else {
+                // Infinity|0 == 0
+                Label notzero;
+                masm.ma_b(rhs, rhs, &notzero, Assembler::NonZero, ShortJump);
+                masm.move32(Imm32(0), output);
+                masm.ma_b(&done, ShortJump);
+                masm.bind(&notzero);
+            }
         } else {
             bailoutCmp32(Assembler::Equal, rhs, Imm32(0), ins->snapshot());
         }

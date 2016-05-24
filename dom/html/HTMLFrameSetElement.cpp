@@ -195,7 +195,7 @@ HTMLFrameSetElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
     nsGenericHTMLElement::GetAttributeChangeHint(aAttribute, aModType);
   if (aAttribute == nsGkAtoms::rows ||
       aAttribute == nsGkAtoms::cols) {
-    NS_UpdateHint(retval, mCurrentRowColHint);
+    retval |= mCurrentRowColHint;
   }
   return retval;
 }

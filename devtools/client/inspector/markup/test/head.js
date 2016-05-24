@@ -160,7 +160,7 @@ function setEditableFieldValue(field, value, inspector) {
 var addNewAttributes = Task.async(function* (selector, text, inspector) {
   info(`Entering text "${text}" in new attribute field for node ${selector}`);
 
-  let container = yield getContainerForSelector(selector, inspector);
+  let container = yield focusNode(selector, inspector);
   ok(container, "The container for '" + selector + "' was found");
 
   info("Listening for the markupmutation event");

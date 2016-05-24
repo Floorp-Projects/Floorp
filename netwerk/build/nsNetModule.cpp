@@ -54,6 +54,7 @@ ContentSnifferCache* gDataSniffers = nullptr;
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "nsIOService.h"
+typedef mozilla::net::nsIOService nsIOService;
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIOService, nsIOService::GetInstance)
 
 #include "nsDNSService2.h"
@@ -61,17 +62,21 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIDNSService,
   nsDNSService::GetXPCOMSingleton)
 
 #include "nsProtocolProxyService.h"
+typedef mozilla::net::nsProtocolProxyService nsProtocolProxyService;
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsProtocolProxyService, Init)
 
 #include "nsStreamTransportService.h"
+typedef mozilla::net::nsStreamTransportService nsStreamTransportService;
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStreamTransportService, Init)
 
 #include "nsSocketTransportService2.h"
+typedef mozilla::net::nsSocketTransportService nsSocketTransportService;
 #undef LOG
 #undef LOG_ENABLED
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSocketTransportService, Init)
 
 #include "nsServerSocket.h"
+typedef mozilla::net::nsServerSocket nsServerSocket;
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsServerSocket)
 
 #include "TLSServerSocket.h"
@@ -79,6 +84,7 @@ typedef mozilla::net::TLSServerSocket TLSServerSocket;
 NS_GENERIC_FACTORY_CONSTRUCTOR(TLSServerSocket)
 
 #include "nsUDPSocket.h"
+typedef mozilla::net::nsUDPSocket nsUDPSocket;
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUDPSocket)
 
 #include "nsUDPSocketProvider.h"
@@ -91,6 +97,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAsyncStreamCopier)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsInputStreamPump)
 
 #include "nsInputStreamChannel.h"
+typedef mozilla::net::nsInputStreamChannel nsInputStreamChannel;
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsInputStreamChannel, Init)
 
 #include "nsDownloader.h"
@@ -113,6 +120,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSafeFileOutputStream)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileStream)
 
+typedef mozilla::net::nsLoadGroup nsLoadGroup;
 NS_GENERIC_AGGREGATED_CONSTRUCTOR_INIT(nsLoadGroup, Init)
 
 #include "ArrayBufferInputStream.h"
@@ -174,7 +182,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMIMEHeaderParamImpl)
 #include "nsDirIndexParser.h"
 #include "nsDirIndex.h"
 
+typedef mozilla::net::nsRequestObserverProxy nsRequestObserverProxy;
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsRequestObserverProxy)
+typedef mozilla::net::nsSimpleStreamListener nsSimpleStreamListener;
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSimpleStreamListener)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDirIndexParser, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDirIndex)
@@ -182,6 +192,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDirIndex)
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "nsStreamListenerTee.h"
+typedef mozilla::net::nsStreamListenerTee nsStreamListenerTee;
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsStreamListenerTee)
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -209,6 +220,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsWifiMonitor)
 // about:blank is mandatory
 #include "nsAboutProtocolHandler.h"
 #include "nsAboutBlank.h"
+typedef mozilla::net::nsAboutProtocolHandler nsAboutProtocolHandler;
+typedef mozilla::net::nsSafeAboutProtocolHandler nsSafeAboutProtocolHandler;
+typedef mozilla::net::nsNestedAboutURI nsNestedAboutURI;
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAboutProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSafeAboutProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNestedAboutURI)
@@ -294,11 +308,13 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(SubstitutingURL)
 
 #ifdef NECKO_PROTOCOL_device
 #include "nsDeviceProtocolHandler.h"
+typedef mozilla::net::nsDeviceProtocolHandler nsDeviceProtocolHandler;
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceProtocolHandler)
 #endif
 
 #ifdef NECKO_PROTOCOL_viewsource
 #include "nsViewSourceHandler.h"
+typedef mozilla::net::nsViewSourceHandler nsViewSourceHandler;
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsViewSourceHandler)
 #endif
 
@@ -375,10 +391,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAuthURLParser)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsStdURLParser)
 
 #include "nsStandardURL.h"
+typedef mozilla::net::nsStandardURL nsStandardURL;
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsStandardURL)
-
+typedef mozilla::net::nsSimpleURI nsSimpleURI;
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSimpleURI)
 
+typedef mozilla::net::nsSimpleNestedURI nsSimpleNestedURI;
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSimpleNestedURI)
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -476,6 +494,7 @@ static const mozilla::Module::CategoryEntry kNeckoCategories[] = {
 };
 
 #ifdef BUILD_BINHEX_DECODER
+typedef mozilla::net::nsBinHexDecoder nsBinHexDecoder;
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBinHexDecoder)
 #endif
 
@@ -855,7 +874,7 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_ASYNCSTREAMCOPIER_CID, false, nullptr, nsAsyncStreamCopierConstructor },
     { &kNS_INPUTSTREAMPUMP_CID, false, nullptr, nsInputStreamPumpConstructor },
     { &kNS_INPUTSTREAMCHANNEL_CID, false, nullptr, nsInputStreamChannelConstructor },
-    { &kNS_STREAMLOADER_CID, false, nullptr, nsStreamLoader::Create },
+    { &kNS_STREAMLOADER_CID, false, nullptr, mozilla::net::nsStreamLoader::Create },
     { &kNS_INCREMENTALSTREAMLOADER_CID, false, nullptr, nsIncrementalStreamLoader::Create },
     { &kNS_UNICHARSTREAMLOADER_CID, false, nullptr, nsUnicharStreamLoader::Create },
     { &kNS_DOWNLOADER_CID, false, nullptr, nsDownloaderConstructor },

@@ -113,6 +113,7 @@
 #include "mozilla/RuleNodeCacheConditions.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
+#include "RegionBuilder.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -238,13 +239,15 @@ WebkitPrefixEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
 
   static int32_t sIndexOfWebkitBoxInDisplayTable;
   static int32_t sIndexOfWebkitInlineBoxInDisplayTable;
-  static bool sAreWebkitBoxKeywordIndicesInitialized; // initialized to false
+  static int32_t sIndexOfWebkitFlexInDisplayTable;
+  static int32_t sIndexOfWebkitInlineFlexInDisplayTable;
+
+  static bool sAreKeywordIndicesInitialized; // initialized to false
 
   bool isWebkitPrefixSupportEnabled =
     Preferences::GetBool(WEBKIT_PREFIXES_ENABLED_PREF_NAME, false);
-  if (!sAreWebkitBoxKeywordIndicesInitialized) {
-    // First run: find the position of "-webkit-box" and "-webkit-inline-box"
-    // in kDisplayKTable.
+  if (!sAreKeywordIndicesInitialized) {
+    // First run: find the position of the keywords in kDisplayKTable.
     sIndexOfWebkitBoxInDisplayTable =
       nsCSSProps::FindIndexOfKeyword(eCSSKeyword__webkit_box,
                                      nsCSSProps::kDisplayKTable);
@@ -255,11 +258,23 @@ WebkitPrefixEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
                                      nsCSSProps::kDisplayKTable);
     MOZ_ASSERT(sIndexOfWebkitInlineBoxInDisplayTable >= 0,
                "Couldn't find -webkit-inline-box in kDisplayKTable");
-    sAreWebkitBoxKeywordIndicesInitialized = true;
+
+    sIndexOfWebkitFlexInDisplayTable =
+      nsCSSProps::FindIndexOfKeyword(eCSSKeyword__webkit_flex,
+                                     nsCSSProps::kDisplayKTable);
+    MOZ_ASSERT(sIndexOfWebkitFlexInDisplayTable >= 0,
+               "Couldn't find -webkit-flex in kDisplayKTable");
+    sIndexOfWebkitInlineFlexInDisplayTable =
+      nsCSSProps::FindIndexOfKeyword(eCSSKeyword__webkit_inline_flex,
+                                     nsCSSProps::kDisplayKTable);
+    MOZ_ASSERT(sIndexOfWebkitInlineFlexInDisplayTable >= 0,
+               "Couldn't find -webkit-inline-flex in kDisplayKTable");
+    sAreKeywordIndicesInitialized = true;
   }
 
-  // OK -- now, stomp on or restore the "-webkit-box" entries in kDisplayKTable,
-  // depending on whether the webkit prefix pref is enabled vs. disabled.
+  // OK -- now, stomp on or restore the "-webkit-{box|flex}" entries in
+  // kDisplayKTable, depending on whether the webkit prefix pref is enabled
+  // vs. disabled.
   if (sIndexOfWebkitBoxInDisplayTable >= 0) {
     nsCSSProps::kDisplayKTable[sIndexOfWebkitBoxInDisplayTable].mKeyword =
       isWebkitPrefixSupportEnabled ?
@@ -269,6 +284,16 @@ WebkitPrefixEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
     nsCSSProps::kDisplayKTable[sIndexOfWebkitInlineBoxInDisplayTable].mKeyword =
       isWebkitPrefixSupportEnabled ?
       eCSSKeyword__webkit_inline_box : eCSSKeyword_UNKNOWN;
+  }
+  if (sIndexOfWebkitFlexInDisplayTable >= 0) {
+    nsCSSProps::kDisplayKTable[sIndexOfWebkitFlexInDisplayTable].mKeyword =
+      isWebkitPrefixSupportEnabled ?
+      eCSSKeyword__webkit_flex : eCSSKeyword_UNKNOWN;
+  }
+  if (sIndexOfWebkitInlineFlexInDisplayTable >= 0) {
+    nsCSSProps::kDisplayKTable[sIndexOfWebkitInlineFlexInDisplayTable].mKeyword =
+      isWebkitPrefixSupportEnabled ?
+      eCSSKeyword__webkit_inline_flex : eCSSKeyword_UNKNOWN;
   }
 }
 
@@ -9064,14 +9089,14 @@ nsLayoutUtils::TransformToAncestorAndCombineRegions(
     return;
   }
   bool isPrecise;
-  nsRegion transformedRegion;
+  RegionBuilder<nsRegion> transformedRegion;
   for (nsRegion::RectIterator it = aRegion.RectIter(); !it.Done(); it.Next()) {
     nsRect transformed = TransformFrameRectToAncestor(
       aFrame, it.Get(), aAncestorFrame, &isPrecise, aMatrixCache);
     transformedRegion.OrWith(transformed);
   }
   nsRegion* dest = isPrecise ? aPreciseTargetDest : aImpreciseTargetDest;
-  dest->OrWith(transformedRegion);
+  dest->OrWith(transformedRegion.ToRegion());
 }
 
 /* static */ bool

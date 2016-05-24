@@ -31,8 +31,7 @@ function* runStyleAttributeAutocompleteTests(inspector, testData) {
   yield inspector.markup.expandAll();
 
   info("Select #node14");
-  let nodeFront = yield getNodeFront("#node14", inspector);
-  let container = getContainerForNodeFront(nodeFront, inspector);
+  let container = yield focusNode("#node14", inspector);
 
   info("Focus and open the new attribute inplace-editor");
   let attr = container.editor.newAttr;

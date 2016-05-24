@@ -19,6 +19,7 @@
 #include "nsCSSProps.h" // For nsCSSProps::PropHasFlags
 #include "nsCSSPseudoElements.h" // For CSSPseudoElementType
 #include "nsDOMMutationObserver.h" // For nsAutoAnimationMutationBatch
+#include "nsIPresShell.h" // For nsIPresShell
 
 namespace mozilla {
 
@@ -91,6 +92,7 @@ KeyframeEffectReadOnly::KeyframeEffectReadOnly(
   , mTarget(aTarget)
   , mTiming(aTiming)
   , mInEffectOnLastAnimationTimingUpdate(false)
+  , mCumulativeChangeHint(nsChangeHint(0))
 {
   MOZ_ASSERT(aTiming);
 }
@@ -542,6 +544,8 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
     property.mIsRunningOnCompositor =
       runningOnCompositorProperties.HasProperty(property.mProperty);
   }
+
+  CalculateCumulativeChangeHint();
 
   if (mTarget) {
     EffectSet* effectSet = EffectSet::GetEffectSet(mTarget->mElement,
@@ -1062,6 +1066,16 @@ KeyframeEffectReadOnly::CanThrottle() const
     return true;
   }
 
+  // We can throttle the animation if the animation is paint only and
+  // the target frame is out of view or the document is in background tabs.
+  if (CanIgnoreIfNotVisible()) {
+    nsIPresShell* presShell = GetPresShell();
+    if ((presShell && !presShell->IsActive()) ||
+        frame->IsScrolledOutOfView()) {
+      return true;
+    }
+  }
+
   // First we need to check layer generation and transform overflow
   // prior to the property.mIsRunningOnCompositor check because we should
   // occasionally unthrottle these animations even if the animations are
@@ -1192,14 +1206,20 @@ KeyframeEffectReadOnly::GetRenderedDocument() const
   return mTarget->mElement->GetComposedDoc();
 }
 
-nsPresContext*
-KeyframeEffectReadOnly::GetPresContext() const
+nsIPresShell*
+KeyframeEffectReadOnly::GetPresShell() const
 {
   nsIDocument* doc = GetRenderedDocument();
   if (!doc) {
     return nullptr;
   }
-  nsIPresShell* shell = doc->GetShell();
+  return doc->GetShell();
+}
+
+nsPresContext*
+KeyframeEffectReadOnly::GetPresContext() const
+{
+  nsIPresShell* shell = GetPresShell();
   if (!shell) {
     return nullptr;
   }
@@ -1312,6 +1332,31 @@ KeyframeEffectReadOnly::SetPerformanceWarning(
       return;
     }
   }
+}
+
+void
+KeyframeEffectReadOnly::CalculateCumulativeChangeHint()
+{
+  mCumulativeChangeHint = nsChangeHint(0);
+
+  for (const AnimationProperty& property : mProperties) {
+    for (const AnimationPropertySegment& segment : property.mSegments) {
+      mCumulativeChangeHint |= segment.mChangeHint;
+    }
+  }
+}
+
+bool
+KeyframeEffectReadOnly::CanIgnoreIfNotVisible() const
+{
+  if (!AnimationUtils::IsOffscreenThrottlingEnabled()) {
+    return false;
+  }
+
+  // FIXME: For further sophisticated optimization we need to check
+  // change hint on the segment corresponding to computedTiming.progress.
+  return NS_IsHintSubset(
+    mCumulativeChangeHint, nsChangeHint_Hints_CanIgnoreIfNotVisible);
 }
 
 //---------------------------------------------------------------------

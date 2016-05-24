@@ -77,9 +77,15 @@ ServoStyleSheet::ParseSheet(const nsAString& aInput,
 {
   DropSheet();
 
+  RefPtr<ThreadSafeURIHolder> base = new ThreadSafeURIHolder(aBaseURI);
+  RefPtr<ThreadSafeURIHolder> referrer = new ThreadSafeURIHolder(aSheetURI);
+  RefPtr<ThreadSafePrincipalHolder> principal =
+    new ThreadSafePrincipalHolder(aSheetPrincipal);
+
   NS_ConvertUTF16toUTF8 input(aInput);
   mSheet = already_AddRefed<RawServoStyleSheet>(Servo_StylesheetFromUTF8Bytes(
-      reinterpret_cast<const uint8_t*>(input.get()), input.Length(), aParsingMode));
+      reinterpret_cast<const uint8_t*>(input.get()), input.Length(), aParsingMode,
+      base, referrer, principal));
 }
 
 void

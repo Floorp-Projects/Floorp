@@ -668,6 +668,22 @@ struct JSRuntime : public JS::shadow::Runtime,
     // Information about the heap allocated backtrack stack used by RegExp JIT code.
     js::irregexp::RegExpStack regexpStack;
 
+#ifdef DEBUG
+  private:
+    // The number of possible bailing places encounters before forcefully bailing
+    // in that place. Zero means inactive.
+    uint32_t ionBailAfter_;
+
+  public:
+    void* addressOfIonBailAfter() { return &ionBailAfter_; }
+
+    // Set after how many bailing places we should forcefully bail.
+    // Zero disables this feature.
+    void setIonBailAfter(uint32_t after) {
+        ionBailAfter_ = after;
+    }
+#endif
+
   private:
     friend class js::Activation;
     friend class js::ActivationIterator;
@@ -1288,6 +1304,15 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::MathCache* maybeGetMathCache() {
         return mathCache_;
     }
+
+    // If this particular JSRuntime has a SharedImmutableStringsCache, return a
+    // pointer to it, otherwise return nullptr.
+    js::SharedImmutableStringsCache* maybeThisRuntimeSharedImmutableStrings() {
+        return sharedImmutableStrings_.isSome() ? &*sharedImmutableStrings_ : nullptr;
+    }
+
+    // Get a reference to this JSRuntime's or its parent's
+    // SharedImmutableStringsCache.
     js::SharedImmutableStringsCache& sharedImmutableStrings() {
         MOZ_ASSERT_IF(parentRuntime, !sharedImmutableStrings_);
         MOZ_ASSERT_IF(!parentRuntime, sharedImmutableStrings_);

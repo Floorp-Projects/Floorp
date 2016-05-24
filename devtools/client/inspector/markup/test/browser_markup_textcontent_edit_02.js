@@ -22,8 +22,7 @@ add_task(function* () {
   is(nodeValue, expectedValue, "The test node's text content is correct");
 
   info("Open editable field for .node6");
-  let nodeFront = yield getNodeFront(SELECTOR, inspector);
-  let container = getContainerForNodeFront(nodeFront, inspector);
+  let container = yield focusNode(SELECTOR, inspector);
   let field = container.elt.querySelector("pre");
   field.focus();
   EventUtils.sendKey("return", inspector.panelWin);

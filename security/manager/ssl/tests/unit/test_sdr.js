@@ -5,9 +5,6 @@
 
 // Tests various aspects of the nsISecretDecoderRing implementation.
 
-const { AppConstants } =
-  Cu.import("resource://gre/modules/AppConstants.jsm", {});
-
 do_get_profile();
 
 let gSetPasswordShownCount = 0;

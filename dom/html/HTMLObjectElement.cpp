@@ -244,18 +244,6 @@ HTMLObjectElement::GetForm(nsIDOMHTMLFormElement **aForm)
   return nsGenericHTMLFormElement::GetForm(aForm);
 }
 
-void
-HTMLObjectElement::GetItemValueText(DOMString& aValue)
-{
-  GetData(aValue);
-}
-
-void
-HTMLObjectElement::SetItemValueText(const nsAString& aValue)
-{
-  SetData(aValue);
-}
-
 nsresult
 HTMLObjectElement::BindToTree(nsIDocument *aDocument,
                               nsIContent *aParent,

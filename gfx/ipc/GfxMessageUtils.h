@@ -387,7 +387,7 @@ struct RegionParamTraits
         *result = builder.ToRegion();
         return true;
       }
-      builder.Or(rect);
+      builder.OrWith(rect);
     }
 
     return false;

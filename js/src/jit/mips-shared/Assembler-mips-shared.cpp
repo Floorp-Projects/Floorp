@@ -1210,6 +1210,18 @@ AssemblerMIPSShared::as_movd(FloatRegister fd, FloatRegister fs)
 }
 
 BufferOffset
+AssemblerMIPSShared::as_ctc1(Register rt, FPControl fc)
+{
+    return writeInst(InstReg(op_cop1, rs_ctc1, rt, FloatRegister(fc)).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_cfc1(Register rt, FPControl fc)
+{
+    return writeInst(InstReg(op_cop1, rs_cfc1, rt, FloatRegister(fc)).encode());
+}
+
+BufferOffset
 AssemblerMIPSShared::as_mtc1(Register rt, FloatRegister fs)
 {
     return writeInst(InstReg(op_cop1, rs_mtc1, rt, fs).encode());
@@ -1271,6 +1283,12 @@ AssemblerMIPSShared::as_truncws(FloatRegister fd, FloatRegister fs)
 }
 
 BufferOffset
+AssemblerMIPSShared::as_truncls(FloatRegister fd, FloatRegister fs)
+{
+    return writeInst(InstReg(op_cop1, rs_s, zero, fs, fd, ff_trunc_l_fmt).encode());
+}
+
+BufferOffset
 AssemblerMIPSShared::as_ceilwd(FloatRegister fd, FloatRegister fs)
 {
     return writeInst(InstReg(op_cop1, rs_d, zero, fs, fd, ff_ceil_w_fmt).encode());
@@ -1292,6 +1310,12 @@ BufferOffset
 AssemblerMIPSShared::as_truncwd(FloatRegister fd, FloatRegister fs)
 {
     return writeInst(InstReg(op_cop1, rs_d, zero, fs, fd, ff_trunc_w_fmt).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_truncld(FloatRegister fd, FloatRegister fs)
+{
+    return writeInst(InstReg(op_cop1, rs_d, zero, fs, fd, ff_trunc_l_fmt).encode());
 }
 
 BufferOffset

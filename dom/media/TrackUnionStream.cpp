@@ -324,10 +324,17 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
       ApplyTrackDisabling(outputTrack->GetID(), segment);
       for (uint32_t j = 0; j < mListeners.Length(); ++j) {
         MediaStreamListener* l = mListeners[j];
-        l->NotifyQueuedTrackChanges(Graph(), outputTrack->GetID(),
-                                    outputStart, 0, *segment,
-                                    map->mInputPort->GetSource(),
-                                    map->mInputTrackID);
+        // Separate Audio and Video.
+        if (segment->GetType() == MediaSegment::AUDIO) {
+          l->NotifyQueuedAudioData(Graph(), outputTrack->GetID(),
+                                   outputStart, *static_cast<AudioSegment*>(segment));
+        } else {
+          // This part will be removed in bug 1201363.
+          l->NotifyQueuedTrackChanges(Graph(), outputTrack->GetID(),
+                                      outputStart, 0, *segment,
+                                      map->mInputPort->GetSource(),
+                                      map->mInputTrackID);
+        }
       }
       for (TrackBound<MediaStreamTrackListener>& b : mTrackListeners) {
         if (b.mTrackID != outputTrack->GetID()) {

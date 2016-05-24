@@ -6,6 +6,7 @@
 
 XPIDL_SOURCES += [
     'nsIPresentationControlChannel.idl',
+    'nsIPresentationControlService.idl',
     'nsIPresentationDevice.idl',
     'nsIPresentationDeviceManager.idl',
     'nsIPresentationDevicePrompt.idl',
@@ -17,7 +18,6 @@ XPIDL_SOURCES += [
     'nsIPresentationSessionRequest.idl',
     'nsIPresentationSessionTransport.idl',
     'nsIPresentationSessionTransportBuilder.idl',
-    'nsITCPPresentationServer.idl',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':

@@ -23,13 +23,6 @@
 #include "mozilla/ipc/PBackgroundParent.h"
 #include "mtransport/runnable_utils.h"
 
-//
-// set NSPR_LOG_MODULES=UDPSocket:5
-//
-extern mozilla::LazyLogModule gUDPSocketLog;
-#define UDPSOCKET_LOG(args)     MOZ_LOG(gUDPSocketLog, mozilla::LogLevel::Debug, args)
-#define UDPSOCKET_LOG_ENABLED() MOZ_LOG_TEST(gUDPSocketLog, mozilla::LogLevel::Debug)
-
 namespace mozilla {
 namespace dom {
 

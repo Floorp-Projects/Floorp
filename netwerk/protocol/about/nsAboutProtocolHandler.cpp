@@ -21,6 +21,9 @@
 #include "nsIChannel.h"
 #include "nsIScriptError.h"
 
+namespace mozilla {
+namespace net {
+
 static NS_DEFINE_CID(kSimpleURICID,     NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kNestedAboutURICID, NS_NESTEDABOUTURI_CID);
 
@@ -418,3 +421,6 @@ nsNestedAboutURI::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
     *aClassIDNoAlloc = kNestedAboutURICID;
     return NS_OK;
 }
+
+} // namespace net
+} // namespace mozilla

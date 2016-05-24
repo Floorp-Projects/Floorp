@@ -2475,10 +2475,7 @@ GeckoDriver.prototype.maximizeWindow = function(cmd, resp) {
  * no modal is displayed.
  */
 GeckoDriver.prototype.dismissDialog = function(cmd, resp) {
-  if (!this.dialog) {
-    throw new NoAlertOpenError(
-        "No tab modal was open when attempting to dismiss the dialog");
-  }
+  this._checkIfAlertIsPresent();
 
   let {button0, button1} = this.dialog.ui;
   (button1 ? button1 : button0).click();
@@ -2490,10 +2487,7 @@ GeckoDriver.prototype.dismissDialog = function(cmd, resp) {
  * no modal is displayed.
  */
 GeckoDriver.prototype.acceptDialog = function(cmd, resp) {
-  if (!this.dialog) {
-    throw new NoAlertOpenError(
-        "No tab modal was open when attempting to accept the dialog");
-  }
+  this._checkIfAlertIsPresent();
 
   let {button0} = this.dialog.ui;
   button0.click();
@@ -2505,10 +2499,7 @@ GeckoDriver.prototype.acceptDialog = function(cmd, resp) {
  * alert error if no modal is currently displayed.
  */
 GeckoDriver.prototype.getTextFromDialog = function(cmd, resp) {
-  if (!this.dialog) {
-    throw new NoAlertOpenError(
-        "No tab modal was open when attempting to get the dialog text");
-  }
+  this._checkIfAlertIsPresent();
 
   let {infoBody} = this.dialog.ui;
   resp.body.value = infoBody.textContent;
@@ -2521,10 +2512,7 @@ GeckoDriver.prototype.getTextFromDialog = function(cmd, resp) {
  * an element not visible error is returned.
  */
 GeckoDriver.prototype.sendKeysToDialog = function(cmd, resp) {
-  if (!this.dialog) {
-    throw new NoAlertOpenError(
-        "No tab modal was open when attempting to send keys to a dialog");
-  }
+  this._checkIfAlertIsPresent();
 
   // see toolkit/components/prompts/content/commonDialog.js
   let {loginContainer, loginTextbox} = this.dialog.ui;
@@ -2538,6 +2526,13 @@ GeckoDriver.prototype.sendKeysToDialog = function(cmd, resp) {
       loginTextbox,
       {ignoreVisibility: true},
       win);
+};
+
+GeckoDriver.prototype._checkIfAlertIsPresent = function() {
+  if (!this.dialog || !this.dialog.ui) {
+    throw new NoAlertOpenError(
+        "No tab modal was open when attempting to get the dialog text");
+  }
 };
 
 /**

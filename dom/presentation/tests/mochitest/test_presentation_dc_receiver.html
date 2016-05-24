@@ -29,23 +29,24 @@ function setup() {
 
     var iframe = document.createElement('iframe');
     iframe.setAttribute('src', receiverUrl);
+    iframe.setAttribute("mozbrowser", "true");
+    iframe.setAttribute("mozpresentation", receiverUrl);
 
-    // This event is triggered when the iframe calls "postMessage".
-    window.addEventListener('message', function listener(aEvent) {
-      var message = aEvent.data;
+    // This event is triggered when the iframe calls "alert".
+    iframe.addEventListener("mozbrowsershowmodalprompt", function receiverListener(evt) {
+      var message = evt.detail.message;
       if (/^OK /.exec(message)) {
-        ok(true, "Message from iframe: " + message);
+        ok(true, message.replace(/^OK /, ""));
       } else if (/^KO /.exec(message)) {
-        ok(false, "Message from iframe: " + message);
+        ok(false, message.replace(/^KO /, ""));
       } else if (/^INFO /.exec(message)) {
-        info("Message from iframe: " + message);
+        info(message.replace(/^INFO /, ""));
       } else if (/^COMMAND /.exec(message)) {
-        var command = JSON.parse(message.replace(/^COMMAND /, ''));
+        var command = JSON.parse(message.replace(/^COMMAND /, ""));
         gScript.sendAsyncMessage(command.name, command.data);
       } else if (/^DONE$/.exec(message)) {
-        ok(true, "Messaging from iframe complete.");
-        window.removeEventListener('message', listener);
-
+        iframe.removeEventListener("mozbrowsershowmodalprompt",
+                                   receiverListener);
         teardown();
       }
     }, false);
@@ -125,9 +126,11 @@ SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPermissions([
   {type: 'presentation-device-manage', allow: false, context: document},
   {type: 'presentation', allow: true, context: document},
+  {type: "browser", allow: true, context: document},
 ], function() {
   SpecialPowers.pushPrefEnv({ 'set': [["dom.presentation.enabled", true],
-                                      ["dom.presentation.session_transport.data_channel.enable", true]]},
+                                      ["dom.presentation.session_transport.data_channel.enable", true],
+                                      ["dom.mozBrowserFramesEnabled", true]]},
                             runTests);
 });
 
