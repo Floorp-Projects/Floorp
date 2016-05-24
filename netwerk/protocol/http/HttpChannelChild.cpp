@@ -50,7 +50,7 @@ namespace mozilla {
 namespace net {
 
 extern bool
-WillRedirect(const nsHttpResponseHead * response);
+WillRedirect(nsHttpResponseHead * response);
 
 namespace {
 

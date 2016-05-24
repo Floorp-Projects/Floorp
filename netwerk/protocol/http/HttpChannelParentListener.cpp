@@ -303,10 +303,12 @@ HttpChannelParentListener::ChannelIntercepted(nsIInterceptedChannel* aChannel)
     return NS_OK;
   }
 
-  aChannel->SynthesizeStatus(mSynthesizedResponseHead->Status(),
-                             mSynthesizedResponseHead->StatusText());
+  nsAutoCString statusText;
+  mSynthesizedResponseHead->StatusText(statusText);
+  aChannel->SynthesizeStatus(mSynthesizedResponseHead->Status(), statusText);
   nsCOMPtr<nsIHttpHeaderVisitor> visitor = new HeaderVisitor(aChannel);
-  mSynthesizedResponseHead->Headers().VisitHeaders(visitor);
+  mSynthesizedResponseHead->VisitHeaders(visitor,
+                                         nsHttpHeaderArray::eFilterResponse);
 
   nsCOMPtr<nsIRunnable> event = new FinishSynthesizedResponse(aChannel);
   NS_DispatchToCurrentThread(event);
