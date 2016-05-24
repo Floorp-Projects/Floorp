@@ -345,6 +345,12 @@ public:
   // This is used for deciding the animation is paint-only.
   void CalculateCumulativeChangeHint();
 
+  // Returns true if all of animation properties' change hints
+  // can ignore painting if the animation is not visible.
+  // See nsChangeHint_Hints_CanIgnoreIfNotVisible in nsChangeHint.h
+  // in detail which change hint can be ignored.
+  bool CanIgnoreIfNotVisible() const;
+
 protected:
   KeyframeEffectReadOnly(nsIDocument* aDocument,
                          const Maybe<OwningAnimationTarget>& aTarget,
