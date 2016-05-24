@@ -28,7 +28,7 @@ struct TestNode : public GraphNodeBase<TestNode>
 
 struct TestComponentFinder : public ComponentFinder<TestNode, TestComponentFinder>
 {
-    TestComponentFinder(uintptr_t sl)
+    explicit TestComponentFinder(uintptr_t sl)
       : ComponentFinder<TestNode, TestComponentFinder>(sl)
     {}
 };
@@ -223,7 +223,7 @@ struct TestNode2 : public GraphNodeBase<TestNode2>
 
 struct TestComponentFinder2 : public ComponentFinder<TestNode2, TestComponentFinder2>
 {
-    TestComponentFinder2(uintptr_t sl)
+    explicit TestComponentFinder2(uintptr_t sl)
       : ComponentFinder<TestNode2, TestComponentFinder2>(sl)
     {}
 };
