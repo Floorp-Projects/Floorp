@@ -58,7 +58,6 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/PendingAnimationTracker.h"
-#include "mozilla/Poison.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/unused.h"
@@ -2193,14 +2192,6 @@ static bool IsContentLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
 
 static bool IsZOrderLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
                         void* aClosure) {
-  {
-    // TEMPORARY debugging code for bug 1265280
-    nsIFrame* f2 = aItem2->Frame();
-    if (uintptr_t(f2->StyleContext()) == mozPoisonValue()) {
-      NS_RUNTIMEABORT(nsPrintfCString("bad display item %p type %s frame %p",
-                                      aItem2, aItem2->Name(), f2).get());
-    }
-  }
   // Note that we can't just take the difference of the two
   // z-indices here, because that might overflow a 32-bit int.
   return aItem1->ZIndex() <= aItem2->ZIndex();
