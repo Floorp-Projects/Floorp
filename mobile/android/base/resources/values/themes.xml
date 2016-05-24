@@ -66,6 +66,8 @@
         <item name="android:textAppearanceSmallInverse">@style/TextAppearance.Small.Inverse</item>
 
         <item name="colorAccent">@color/action_orange</item>
+
+        <item name="actionBarTheme">@style/GeckoActionBar</item>
     </style>
 
     <style name="Gecko.Dialog" parent="GeckoDialogBase"/>
