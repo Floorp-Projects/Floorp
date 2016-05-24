@@ -492,10 +492,15 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
   }
 }
 
-static void
+static bool
 GenerateAndPushTextMask(nsIFrame* aFrame, nsRenderingContext* aContext,
-                        const nsRect& aFillRect)
+                        const nsRect& aFillRect, nsDisplayListBuilder* aBuilder)
 {
+  if (aBuilder->IsForGenerateGlyphMask() ||
+      aBuilder->IsForPaintingSelectionBG()) {
+    return false;
+  }
+
   // The main function of enabling background-clip:text property value.
   // When a nsDisplayBackgroundImage detects "text" bg-clip style, it will call
   // this function to
@@ -562,6 +567,8 @@ GenerateAndPushTextMask(nsIFrame* aFrame, nsRenderingContext* aContext,
 
   RefPtr<SourceSurface> maskSurface = maskDT->Snapshot();
   sourceCtx->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, 1.0, maskSurface, maskTransform);
+
+  return true;
 }
 
 /* static */ void
@@ -2472,11 +2479,6 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
                                                      nsDisplayList* aList,
                                                      bool aAllowWillPaintBorderOptimization)
 {
-  if (aBuilder->IsForGenerateGlyphMask() ||
-      aBuilder->IsForPaintingSelectionBG()) {
-    return true;
-  }
-
   nsStyleContext* bgSC = nullptr;
   const nsStyleBackground* bg = nullptr;
   nsRect bgRect = aBackgroundRect + aBuilder->ToReferenceFrame(aFrame);
@@ -2978,7 +2980,9 @@ nsDisplayBackgroundImage::PaintInternal(nsDisplayListBuilder* aBuilder,
   uint8_t clip = mBackgroundStyle->mImage.mLayers[mLayer].mClip;
 
   if (clip == NS_STYLE_IMAGELAYER_CLIP_TEXT) {
-    GenerateAndPushTextMask(mFrame, aCtx, mBackgroundRect);
+    if (!GenerateAndPushTextMask(mFrame, aCtx, mBackgroundRect, aBuilder)) {
+      return;
+    }
   }
 
   nsCSSRendering::PaintBGParams params =
@@ -3410,7 +3414,10 @@ nsDisplayBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
 
   uint8_t clip = mBackgroundStyle->mImage.mLayers[0].mClip;
   if (clip == NS_STYLE_IMAGELAYER_CLIP_TEXT) {
-    GenerateAndPushTextMask(mFrame, aCtx, mBackgroundRect);
+    if (!GenerateAndPushTextMask(mFrame, aCtx, mBackgroundRect, aBuilder)) {
+      return;
+    }
+
     ctx->SetColor(mColor);
     ctx->Rectangle(bounds, true);
     ctx->Fill();
