@@ -24,7 +24,6 @@ UNIFIED_SOURCES += [
     'agnostic/VPXDecoder.cpp',
     'agnostic/WAVDecoder.cpp',
     'PDMFactory.cpp',
-    'PlatformDecoderModule.cpp',
     'wrappers/FuzzingWrapper.cpp',
     'wrappers/H264Converter.cpp'
 ]
