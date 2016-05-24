@@ -15,8 +15,6 @@ from .marionette_test import (
     skip_unless_protocol,
 )
 from .runner import (
-    B2GTestCaseMixin,
-    B2GTestResultMixin,
     BaseMarionetteArguments,
     BaseMarionetteTestRunner,
     BrowserMobProxyTestCaseMixin,
