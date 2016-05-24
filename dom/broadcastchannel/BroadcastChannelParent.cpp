@@ -18,12 +18,16 @@ using namespace ipc;
 
 namespace dom {
 
-BroadcastChannelParent::BroadcastChannelParent(const nsAString& aOriginChannelKey)
+BroadcastChannelParent::BroadcastChannelParent(const nsACString& aOrigin,
+                                               const nsAString& aChannel,
+                                               bool aPrivateBrowsing)
   : mService(BroadcastChannelService::GetOrCreate())
-  , mOriginChannelKey(aOriginChannelKey)
+  , mOrigin(aOrigin)
+  , mChannel(aChannel)
+  , mPrivateBrowsing(aPrivateBrowsing)
 {
   AssertIsOnBackgroundThread();
-  mService->RegisterActor(this, mOriginChannelKey);
+  mService->RegisterActor(this);
 }
 
 BroadcastChannelParent::~BroadcastChannelParent()
@@ -40,7 +44,7 @@ BroadcastChannelParent::RecvPostMessage(const ClonedMessageData& aData)
     return false;
   }
 
-  mService->PostMessage(this, aData, mOriginChannelKey);
+  mService->PostMessage(this, aData, mOrigin, mChannel, mPrivateBrowsing);
   return true;
 }
 
@@ -53,7 +57,7 @@ BroadcastChannelParent::RecvClose()
     return false;
   }
 
-  mService->UnregisterActor(this, mOriginChannelKey);
+  mService->UnregisterActor(this);
   mService = nullptr;
 
   Unused << Send__delete__(this);
@@ -69,33 +73,40 @@ BroadcastChannelParent::ActorDestroy(ActorDestroyReason aWhy)
   if (mService) {
     // This object is about to be released and with it, also mService will be
     // released too.
-    mService->UnregisterActor(this, mOriginChannelKey);
+    mService->UnregisterActor(this);
   }
 }
 
 void
-BroadcastChannelParent::Deliver(const ClonedMessageData& aData)
+BroadcastChannelParent::CheckAndDeliver(const ClonedMessageData& aData,
+                                        const nsCString& aOrigin,
+                                        const nsString& aChannel,
+                                        bool aPrivateBrowsing)
 {
   AssertIsOnBackgroundThread();
 
-  // Duplicate the data for this parent.
-  ClonedMessageData newData(aData);
+  if (aOrigin == mOrigin &&
+      aChannel == mChannel &&
+      aPrivateBrowsing == mPrivateBrowsing) {
+    // Duplicate the data for this parent.
+    ClonedMessageData newData(aData);
 
-  // Create new BlobParent objects for this message.
-  for (uint32_t i = 0, len = newData.blobsParent().Length(); i < len; ++i) {
-    RefPtr<BlobImpl> impl =
-      static_cast<BlobParent*>(newData.blobsParent()[i])->GetBlobImpl();
+    // Ricreate the BlobParent for this new message.
+    for (uint32_t i = 0, len = newData.blobsParent().Length(); i < len; ++i) {
+      RefPtr<BlobImpl> impl =
+        static_cast<BlobParent*>(newData.blobsParent()[i])->GetBlobImpl();
 
-    PBlobParent* blobParent =
-      BackgroundParent::GetOrCreateActorForBlobImpl(Manager(), impl);
-    if (!blobParent) {
-      return;
+      PBlobParent* blobParent =
+        BackgroundParent::GetOrCreateActorForBlobImpl(Manager(), impl);
+      if (!blobParent) {
+        return;
+      }
+
+      newData.blobsParent()[i] = blobParent;
     }
 
-    newData.blobsParent()[i] = blobParent;
+    Unused << SendNotify(newData);
   }
-
-  Unused << SendNotify(newData);
 }
 
 } // namespace dom

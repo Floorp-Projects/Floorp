@@ -9,7 +9,7 @@
 
 #include "nsISupportsImpl.h"
 #include "nsHashKeys.h"
-#include "nsDataHashtable.h"
+#include "nsTHashtable.h"
 
 #ifdef XP_WIN
 #undef PostMessage
@@ -28,22 +28,20 @@ public:
 
   static already_AddRefed<BroadcastChannelService> GetOrCreate();
 
-  void RegisterActor(BroadcastChannelParent* aParent,
-                     const nsAString& aOriginChannelKey);
-  void UnregisterActor(BroadcastChannelParent* aParent,
-                       const nsAString& aOriginChannelKey);
+  void RegisterActor(BroadcastChannelParent* aParent);
+  void UnregisterActor(BroadcastChannelParent* aParent);
 
   void PostMessage(BroadcastChannelParent* aParent,
                    const ClonedMessageData& aData,
-                   const nsAString& aOriginChannelKey);
+                   const nsACString& aOrigin,
+                   const nsAString& aChannel,
+                   bool aPrivateBrowsing);
 
 private:
   BroadcastChannelService();
   ~BroadcastChannelService();
 
-  // Raw Pointers because the actors keep alive this service.
-  nsDataHashtable<nsStringHashKey,
-                  nsTArray<BroadcastChannelParent*>*> mAgents;
+  nsTHashtable<nsPtrHashKey<BroadcastChannelParent>> mAgents;
 };
 
 } // namespace dom
