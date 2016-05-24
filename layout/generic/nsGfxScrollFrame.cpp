@@ -3299,11 +3299,11 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // parent. This is intentional because that is what happens for positioned children
     // of scroll layers, and we want to maintain consistent behaviour between scroll layers
     // and scroll info layers.
+    nsIContent* content = couldBuildLayer ? mScrolledFrame->GetContent()
+                                          : nullptr;
+
     nsDisplayListBuilder::AutoCurrentScrollParentIdSetter idSetter(
-        aBuilder,
-        couldBuildLayer && mScrolledFrame->GetContent()
-            ? nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent())
-            : aBuilder->GetCurrentScrollParentId());
+        aBuilder, content ? mOuter : aBuilder->GetCurrentScrollParent());
 
     nsRect clipRect = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
     // Our override of GetBorderRadii ensures we never have a radius at
