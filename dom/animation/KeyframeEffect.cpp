@@ -1329,6 +1329,15 @@ KeyframeEffectReadOnly::CalculateCumulativeChangeHint()
   }
 }
 
+bool
+KeyframeEffectReadOnly::CanIgnoreIfNotVisible() const
+{
+  // FIXME: For further sophisticated optimization we need to check
+  // change hint on the segment corresponding to computedTiming.progress.
+  return NS_IsHintSubset(
+    mCumulativeChangeHint, nsChangeHint_Hints_CanIgnoreIfNotVisible);
+}
+
 //---------------------------------------------------------------------
 //
 // KeyframeEffect
