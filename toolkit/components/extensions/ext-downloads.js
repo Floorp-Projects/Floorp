@@ -246,7 +246,7 @@ function downloadQuery(query) {
     if (arg == null) {
       return before ? Number.MAX_VALUE : 0;
     } else {
-      return normalizeTime(arg);
+      return normalizeTime(arg).getTime();
     }
   }
 

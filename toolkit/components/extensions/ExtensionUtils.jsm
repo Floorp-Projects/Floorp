@@ -1188,22 +1188,21 @@ class ChildAPIManager {
 }
 
 /**
- * Returns a number which represents the number of milliseconds since the epoch
- * for either a startDate or an endDate. Accepts several formats:
+ * Convert any of several different representations of a date/time to a Date object.
+ * Accepts several formats:
  * a Date object, an ISO8601 string, or a number of milliseconds since the epoch as
  * either a number or a string.
  *
  * @param date: (Date) or (String) or (Number)
  *      The date to convert.
- * @returns (Number)
- *      The number of milliseconds since the epoch for the date
+ * @returns (Date)
+ *      A Date object
  */
 function normalizeTime(date) {
   // Of all the formats we accept the "number of milliseconds since the epoch as a string"
   // is an outlier, everything else can just be passed directly to the Date constructor.
-  const result = new Date((typeof date == "string" && /^\d+$/.test(date))
+  return new Date((typeof date == "string" && /^\d+$/.test(date))
                         ? parseInt(date, 10) : date);
-  return result.valueOf();
 }
 
 this.ExtensionUtils = {
