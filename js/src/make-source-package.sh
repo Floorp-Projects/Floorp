@@ -5,12 +5,14 @@
 # broken.
 set -e
 
-: ${MAKE:=make}
 : ${MKDIR:=mkdir}
 : ${TAR:=tar}
 : ${SRCDIR:=$(cd $(dirname $0); pwd 2>/dev/null)}
 : ${MOZJS_NAME:=mozjs}
-: ${DIST:=/tmp/mozjs-src-pkg}
+# The place to gather files to be added to the tarball.
+: ${STAGING:=/tmp/mozjs-src-pkg}
+# The place to put the resulting tarball.
+: ${DIST:=/tmp}
 
 if [[ -f "$SRCDIR/../../config/milestone.txt" ]]; then
 	MILESTONE="$(tail -1 $SRCDIR/../../config/milestone.txt)"
@@ -21,9 +23,10 @@ if [[ -f "$SRCDIR/../../config/milestone.txt" ]]; then
 fi
 
 cmd=${1:-build}
-pkg="${MOZJS_NAME}-${MOZJS_MAJOR_VERSION}.${MOZJS_MINOR_VERSION}.${MOZJS_PATCH_VERSION:-${MOZJS_ALPHA:-0}}.tar.bz2"
-pkgpath=${pkg%.tar*}
-tgtpath=${DIST}/${pkgpath}
+version="${MOZJS_NAME}-${MOZJS_MAJOR_VERSION}.${MOZJS_MINOR_VERSION}.${MOZJS_PATCH_VERSION:-${MOZJS_ALPHA:-0}}"
+tgtpath=${STAGING}/${version}
+pkg="${version}.tar.bz2"
+pkgpath="${DIST}/${pkg}"
 taropts="-jcf"
 
 # need these environment vars:
@@ -31,6 +34,7 @@ echo "Environment:"
 echo "    MAKE = $MAKE"
 echo "    MKDIR = $MKDIR"
 echo "    TAR = $TAR"
+echo "    STAGING = $STAGING"
 echo "    DIST = $DIST"
 echo "    SRCDIR = $SRCDIR"
 echo "    MOZJS_NAME = $MOZJS_NAME"
@@ -44,24 +48,33 @@ TOPSRCDIR=${SRCDIR}/../..
 
 case $cmd in
 "clean")
-	echo "Cleaning ${pkg} and ${tgtpath} ..."
-	rm -rf ${pkg} ${tgtpath}
+	echo "Cleaning ${pkgpath} and ${tgtpath} ..."
+	rm -rf ${pkgpath} ${tgtpath}
 	;;
 "build")
-	echo -n "Press enter to build $pkg> "
-	read
+	# Make sure that everything copied here is kept in sync with
+	# `testing/taskcluster/tasks/branches/base_jobs.yml`!
 
-	# Ensure that the configure script is newer than the configure.in script.
-	if [ ${SRCDIR}/configure.in -nt ${SRCDIR}/configure ]; then
-		echo "error: js/src/configure is out of date. Please regenerate before packaging." >&2
+	if [ -e ${tgtpath}/js/src/Makefile ]; then
+		echo "error: found js/src/Makefile. Please clean before packaging." >&2
 		exit 1
 	fi
 
-	echo "Packaging source tarball ${pkg}..."
+	echo "Staging source tarball in ${tgtpath}..."
 	if [ -d ${tgtpath} ]; then
 		echo "WARNING - dist tree ${tgtpath} already exists!"
 	fi
 	${MKDIR} -p ${tgtpath}/js/src
+
+	cp -pPR ${TOPSRCDIR}/configure.py \
+	   ${TOPSRCDIR}/moz.configure \
+       ${TOPSRCDIR}/test.mozbuild \
+	   ${tgtpath}
+
+	cp -pPR ${TOPSRCDIR}/js/moz.configure ${tgtpath}/js
+
+	mkdir -p ${tgtpath}/taskcluster
+	cp -pPR ${TOPSRCDIR}/taskcluster/moz.build ${tgtpath}/taskcluster/
 
 	# copy the embedded icu
 	${MKDIR} -p ${tgtpath}/intl
@@ -80,13 +93,8 @@ case $cmd in
 	cp -pPR ${TOPSRCDIR}/mfbt ${tgtpath}
 	cp -pPR ${SRCDIR}/../public ${tgtpath}/js
 	cp -pPR ${SRCDIR}/../examples ${tgtpath}/js
-	find ${SRCDIR} -mindepth 1 -maxdepth 1 -not -path ${DIST} -a -not -name ${pkg} \
+	find ${SRCDIR} -mindepth 1 -maxdepth 1 -not -path ${STAGING} -a -not -name ${pkg} \
 		-exec cp -pPR {} ${tgtpath}/js/src \;
-
-	# distclean if necessary
-	if [ -e ${tgtpath}/js/src/Makefile ]; then
-		${MAKE} -C ${tgtpath}/js/src distclean
-	fi
 
 	cp -pPR \
 		${TOPSRCDIR}/python \
@@ -104,6 +112,9 @@ case $cmd in
 		${TOPSRCDIR}/testing/mozbase \
 		${tgtpath}/testing
 	${MKDIR} -p ${tgtpath}/modules
+	cp -pPR \
+	   ${TOPSRCDIR}/modules/fdlibm \
+	   ${tgtpath}/modules/fdlibm
 	cp -pPR \
 		${TOPSRCDIR}/modules/zlib/src/ \
 		${tgtpath}/modules/zlib
@@ -137,8 +148,8 @@ case $cmd in
 	find ${tgtpath} -type f -name "*.pyc" -o -name "*.pyo" |xargs rm -f
 
 	# copy or create INSTALL
-	if [ -e ${DIST}/INSTALL ]; then
-		cp ${DIST}/INSTALL ${tgtpath}
+	if [ -e ${STAGING}/INSTALL ]; then
+		cp ${STAGING}/INSTALL ${tgtpath}
 	else
 		cat <<INSTALL_EOF >${tgtpath}/INSTALL
 Full build documentation for SpiderMonkey is hosted on MDN:
@@ -158,8 +169,8 @@ INSTALL_EOF
 	fi
 
 	# copy or create README
-	if [ -e ${DIST}/README ]; then
-		cp ${DIST}/README ${tgtpath}
+	if [ -e ${STAGING}/README ]; then
+		cp ${STAGING}/README ${tgtpath}
 	else
 		cat <<README_EOF >${tgtpath}/README
 This directory contains SpiderMonkey ${MOZJS_MAJOR_VERSION}.
@@ -180,16 +191,16 @@ README_EOF
 		cp ${TOPSRCDIR}/LICENSE ${tgtpath}/
 	fi
 
-	# copy patches dir, if it currently exists in DIST
-	if [ -d ${DIST}/patches ]; then
-		cp -pPR ${DIST}/patches ${tgtpath}
+	# copy patches dir, if it currently exists in STAGING
+	if [ -d ${STAGING}/patches ]; then
+		cp -pPR ${STAGING}/patches ${tgtpath}
 	elif [ -d ${TOPSRCDIR}/patches ]; then
 		cp -pPR ${TOPSRCDIR}/patches ${tgtpath}
 	fi
 
 	# Roll the tarball
-	${TAR} $taropts ${DIST}/../${pkg} -C ${DIST} ${pkgpath}
-	echo "Wrote $(cd ${DIST}/..; echo $PWD)/${pkg}"
+	echo "Packaging source tarball at ${pkgpath}..."
+	${TAR} $taropts ${pkgpath} -C ${STAGING} ${version}
 	;;
 *)
 	echo "Unrecognized command: $cmd"

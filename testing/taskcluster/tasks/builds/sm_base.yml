@@ -23,8 +23,6 @@ task:
 
     maxRunTime: 36000
 
-    command: ["/bin/bash", "-c", "cd /home/worker/ && ./bin/checkout-sources.sh && ./workspace/build/src/testing/taskcluster/scripts/builder/build-sm.sh" ]
-
   extra:
     treeherderEnv:
       - staging

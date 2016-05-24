@@ -182,7 +182,8 @@ fi
 RUN_JSTESTS=true
 RUN_JITTEST=true
 RUN_JSAPITESTS=true
-RUN_CHECK_STYLE_ONLY=false
+: ${RUN_CHECK_STYLE_ONLY:=false}
+: ${RUN_MAKE_CHECKS:=true}
 
 PARENT=$$
 
@@ -233,10 +234,12 @@ elif [[ "$VARIANT" = arm64* ]]; then
     export JITTEST_EXTRA_ARGS="--jitflags=none --args=--baseline-eager -x ion/ -x asm.js/"
 fi
 
-if $RUN_CHECK_STYLE_ONLY; then
-    $COMMAND_PREFIX $MAKE check-style || exit 1
-else
-    $COMMAND_PREFIX $MAKE check || exit 1
+if $RUN_MAKE_CHECKS; then
+    if $RUN_CHECK_STYLE_ONLY; then
+        $COMMAND_PREFIX $MAKE check-style || exit 1
+    else
+        $COMMAND_PREFIX $MAKE check || exit 1
+    fi
 fi
 
 RESULT=0
