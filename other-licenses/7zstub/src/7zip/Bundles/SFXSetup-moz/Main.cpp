@@ -35,6 +35,101 @@ static LPCTSTR kTempDirPrefix = TEXT("7zS");
 
 #define _SHELL_EXECUTE
 
+/* BEGIN Mozilla customizations */
+
+static char const *
+FindStrInBuf(char const * buf, size_t bufLen, char const * str)
+{
+  size_t index = 0;
+  while (index < bufLen) {
+    char const * result = strstr(buf + index, str);
+    if (result) {
+      return result;
+    }
+    while ((buf[index] != '\0') && (index < bufLen)) {
+      index++;
+    }
+    index++;
+  }
+  return NULL;
+}
+
+static bool
+ReadPostSigningDataFromView(char const * view, DWORD size, AString& data)
+{
+  // Find the offset and length of the certificate table,
+  // so we know the valid range to look for the token.
+  if (size < (0x3c + sizeof(UInt32))) {
+    return false;
+  }
+  UInt32 PEHeaderOffset = *(UInt32*)(view + 0x3c);
+  UInt32 optionalHeaderOffset = PEHeaderOffset + 24;
+  UInt32 certDirEntryOffset = 0;
+  if (size < (optionalHeaderOffset + sizeof(UInt16))) {
+    return false;
+  }
+  UInt16 magic = *(UInt16*)(view + optionalHeaderOffset);
+  if (magic == 0x010b) {
+    // 32-bit executable
+    certDirEntryOffset = optionalHeaderOffset + 128;
+  } else if (magic == 0x020b) {
+    // 64-bit executable; certain header fields are wider
+    certDirEntryOffset = optionalHeaderOffset + 144;
+  } else {
+    // Unknown executable
+    return false;
+  }
+  if (size < certDirEntryOffset + 8) {
+    return false;
+  }
+  UInt32 certTableOffset = *(UInt32*)(view + certDirEntryOffset);
+  UInt32 certTableLen = *(UInt32*)(view + certDirEntryOffset + sizeof(UInt32));
+  if (certTableOffset == 0 || certTableLen == 0 ||
+      size < (certTableOffset + certTableLen)) {
+    return false;  
+  }
+
+  char const token[] = "__MOZCUSTOM__:";
+  // We're searching for a string inside a binary blob,
+  // so a normal strstr that bails on the first NUL won't work.
+  char const * tokenPos = FindStrInBuf(view + certTableOffset,
+                                       certTableLen, token);
+  if (tokenPos) {
+    size_t tokenLen = (sizeof(token) / sizeof(token[0])) - 1;
+    data = AString(tokenPos + tokenLen);
+    return true;
+  }
+  return false;
+}
+
+static bool
+ReadPostSigningData(UString exePath, AString& data)
+{
+  bool retval = false;
+  HANDLE exeFile = CreateFileW(exePath, GENERIC_READ, FILE_SHARE_READ, NULL,
+                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+  if (exeFile != INVALID_HANDLE_VALUE) {
+    HANDLE mapping = CreateFileMapping(exeFile, NULL, PAGE_READONLY, 0, 0, NULL);
+    if (mapping != INVALID_HANDLE_VALUE) {
+      // MSDN claims the return value on failure is NULL,
+      // but I've also seen it returned on success, so double-check.
+      if (mapping || GetLastError() == ERROR_SUCCESS) {
+        char * view = (char*)MapViewOfFile(mapping, FILE_MAP_READ, 0, 0, 0);
+        if (view) {
+          DWORD fileSize = GetFileSize(exeFile, NULL);
+          retval = ReadPostSigningDataFromView(view, fileSize, data);
+        }
+        CloseHandle(mapping);
+      }
+    }
+    CloseHandle(exeFile);
+  }
+  return retval;
+}
+
+/* END Mozilla customizations */
+
+
 static bool ReadDataString(LPCWSTR fileName, LPCSTR startID, 
     LPCSTR endID, AString &stringResult)
 {
@@ -331,7 +426,22 @@ int APIENTRY WinMain(
   }
 
   /* BEGIN Mozilla customizations */
-  // The code immediately above handles the error case for extraction.
+  // Retrieve and store any data added to this file after signing.
+  {
+    AString postSigningData;
+    if (ReadPostSigningData(fullPath, postSigningData)) {
+      NFile::NName::CParsedPath postSigningDataFilePath;
+      postSigningDataFilePath.ParsePath(tempDirPath);
+      postSigningDataFilePath.PathParts.Add(L"postSigningData");
+
+      NFile::NIO::COutFile postSigningDataFile;
+      postSigningDataFile.Create(postSigningDataFilePath.MergePath(), true);
+
+      UInt32 written = 0;
+      postSigningDataFile.Write(postSigningData, postSigningData.Length(), written);
+    }
+  }
+
   if (extractOnly) {
     return 0;
   }

@@ -42,7 +42,7 @@ function test_histogram(histogram_type, name, min, max, bucket_count) {
     do_check_eq(i, 1);
   }
   var hgrams = Telemetry.histogramSnapshots
-  gh = hgrams[name]
+  let gh = hgrams[name]
   do_check_eq(gh.histogram_type, histogram_type);
 
   do_check_eq(gh.min, min)
@@ -602,6 +602,11 @@ function test_histogram_recording_enabled() {
   Assert.equal(orig.sum + 2, h.snapshot().sum,
                "When recording is re-enabled add should record.");
 
+  // Check that we're correctly accumulating values other than 1.
+  h.clear();
+  h.add(3);
+  Assert.equal(3, h.snapshot().sum, "Recording counts greater than 1 should work.");
+
   // Check that a histogram with recording disabled by default behaves correctly
   h = Telemetry.getHistogramById("TELEMETRY_TEST_COUNT_INIT_NO_RECORD");
   orig = h.snapshot();
@@ -629,7 +634,7 @@ function test_keyed_histogram_recording_enabled() {
 
   // Check RecordingEnabled for keyed histograms which are recording by default
   const TEST_KEY = "record_foo";
-  h = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_RELEASE_OPTOUT");
+  let h = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_RELEASE_OPTOUT");
 
   h.clear();
   h.add(TEST_KEY, 1);

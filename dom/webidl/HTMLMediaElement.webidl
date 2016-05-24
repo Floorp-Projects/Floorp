@@ -118,7 +118,6 @@ partial interface HTMLMediaElement {
   readonly attribute boolean mozAutoplayEnabled;
 
   // NB: for internal use with the video controls:
-  [Func="IsChromeOrXBL"] attribute boolean mozMediaStatisticsShowing;
   [Func="IsChromeOrXBL"] attribute boolean mozAllowCasting;
   [Func="IsChromeOrXBL"] attribute boolean mozIsCasting;
 

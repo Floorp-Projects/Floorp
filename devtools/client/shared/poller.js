@@ -81,7 +81,8 @@ Poller.prototype.off = function pollerOff() {
 
 /**
  * Turns off polling and removes the reference to the poller function.
- * Resolves when the last outstanding `fn` call finishes if it's an async function.
+ * Resolves when the last outstanding `fn` call finishes if it's an async
+ * function.
  */
 Poller.prototype.destroy = function pollerDestroy() {
   return this.off().then(() => {
