@@ -371,6 +371,16 @@ static const NotificationAndReportStringId sMediaNoDecoders =
   { dom::DecoderDoctorNotificationType::Can_play_but_some_missing_decoders,
     "MediaNoDecoders" };
 
+static const NotificationAndReportStringId*
+sAllNotificationsAndReportStringIds[] =
+{
+  &sMediaWidevineNoWMFNoSilverlight,
+  &sMediaWMFNeeded,
+  &sMediaPlatformDecoderNotFound,
+  &sMediaCannotPlayNoDecoders,
+  &sMediaNoDecoders
+};
+
 static void
 DispatchNotification(nsISupports* aSubject,
                      const NotificationAndReportStringId& aNotification,
@@ -566,14 +576,66 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
     }
   }
 
+  // Check if issues have been solved, by finding if some now-playable
+  // key systems or formats were previously recorded as having issues.
+  if (!supportedKeySystems.IsEmpty() || !playableFormats.IsEmpty()) {
+    DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - supported key systems '%s', playable formats '%s'; See if they show issues have been solved...",
+             this, mDocument,
+             NS_ConvertUTF16toUTF8(supportedKeySystems).Data(),
+             NS_ConvertUTF16toUTF8(playableFormats).get());
+    const nsAString* workingFormatsArray[] =
+      { &supportedKeySystems, &playableFormats };
+    // For each type of notification, retrieve the pref that contains formats/
+    // key systems with issues.
+    for (const NotificationAndReportStringId* id :
+           sAllNotificationsAndReportStringIds) {
+      nsAutoCString formatsPref("media.decoder-doctor.");
+      formatsPref += id->mReportStringId;
+      formatsPref += ".formats";
+      nsAdoptingString formatsWithIssues =
+        Preferences::GetString(formatsPref.Data());
+      if (formatsWithIssues.IsEmpty()) {
+        continue;
+      }
+      // See if that list of formats-with-issues contains any formats that are
+      // now playable/supported.
+      bool solved = false;
+      for (const nsAString* workingFormats : workingFormatsArray) {
+        for (const auto& workingFormat : MakeStringListRange(*workingFormats)) {
+          if (FormatsListContains(formatsWithIssues, workingFormat)) {
+            // This now-working format used not to work -> Report solved issue.
+            DD_INFO("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - %s solved ('%s' now works, it was in pref(%s)='%s')",
+                    this, mDocument, id->mReportStringId,
+                    NS_ConvertUTF16toUTF8(workingFormat).get(),
+                    formatsPref.Data(),
+                    NS_ConvertUTF16toUTF8(formatsWithIssues).get());
+            ReportAnalysis(*id, true, workingFormat);
+            // This particular Notification&ReportId has been solved, no need
+            // to keep looking at other keysys/formats that might solve it too.
+            solved = true;
+            break;
+          }
+        }
+        if (solved) {
+          break;
+        }
+      }
+      if (!solved) {
+        DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - %s not solved (pref(%s)='%s')",
+                 this, mDocument, id->mReportStringId, formatsPref.Data(),
+                 NS_ConvertUTF16toUTF8(formatsWithIssues).get());
+      }
+    }
+  }
+
   // Look at Key System issues first, as they take precedence over format checks.
   if (!unsupportedKeySystems.IsEmpty() && supportedKeySystems.IsEmpty()) {
     // No supported key systems!
     switch (lastKeySystemIssue) {
       case DecoderDoctorDiagnostics::eWidevineWithNoWMF:
         if (CheckSilverlight() != eSilverlightEnabled) {
-          DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unsupported key systems: %s, widevine without WMF nor Silverlight",
-                   this, mDocument, NS_ConvertUTF16toUTF8(unsupportedKeySystems).get());
+          DD_INFO("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unsupported key systems: %s, widevine without WMF nor Silverlight",
+                  this, mDocument, NS_ConvertUTF16toUTF8(unsupportedKeySystems).get());
           ReportAnalysis(
             sMediaWidevineNoWMFNoSilverlight, false, unsupportedKeySystems);
           return;
@@ -592,22 +654,22 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
       // going through expected decoders from most to least desirable.
 #if defined(XP_WIN)
       if (!formatsRequiringWMF.IsEmpty()) {
-        DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> Cannot play media because WMF was not found",
-                 this, mDocument, NS_ConvertUTF16toUTF8(formatsRequiringWMF).get());
+        DD_INFO("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> Cannot play media because WMF was not found",
+                this, mDocument, NS_ConvertUTF16toUTF8(formatsRequiringWMF).get());
         ReportAnalysis(sMediaWMFNeeded, false, formatsRequiringWMF);
         return;
       }
 #endif
 #if defined(MOZ_FFMPEG)
       if (!formatsRequiringFFMpeg.IsEmpty()) {
-        DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> Cannot play media because platform decoder was not found",
-                 this, mDocument, NS_ConvertUTF16toUTF8(formatsRequiringFFMpeg).get());
+        DD_INFO("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> Cannot play media because platform decoder was not found",
+                this, mDocument, NS_ConvertUTF16toUTF8(formatsRequiringFFMpeg).get());
         ReportAnalysis(sMediaPlatformDecoderNotFound,
                        false, formatsRequiringFFMpeg);
         return;
       }
 #endif
-      DD_WARN("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - Cannot play media, unplayable formats: %s",
+      DD_INFO("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - Cannot play media, unplayable formats: %s",
               this, mDocument, NS_ConvertUTF16toUTF8(unplayableFormats).get());
       ReportAnalysis(sMediaCannotPlayNoDecoders, false, unplayableFormats);
       return;
