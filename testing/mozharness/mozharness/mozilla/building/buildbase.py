@@ -853,6 +853,10 @@ or run without that action (ie: --no-{action})"
         # the default is to query `hg paths` which isn't reliable with pooled
         # storage
         env['MOZ_SOURCE_REPO'] = self.repo_path
+        # Some older versions of Python 2.7 don't like unicode in environment
+        # variables. Ensure a str is used.
+        if isinstance(self.repo_path, unicode):
+            env['MOZ_SOURCE_REPO'] = self.repo_path.encode('latin1')
 
         if self.query_is_nightly() or self.query_is_nightly_promotion():
             if self.query_is_nightly():
