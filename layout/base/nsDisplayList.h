@@ -369,30 +369,6 @@ public:
    */
   nsIFrame* GetIgnoreScrollFrame() { return mIgnoreScrollFrame; }
   /**
-   * Get the nearest ancestor scrollframe, or the root frame if there is no
-   * ancestor scrollframe, or null if neither exists.
-   */
-  nsIFrame* GetCurrentScrollParent() { return mCurrentScrollParent; }
-  /**
-   * Get the critical displayport of the nearest ancestor scrollframe, in the
-   * coordinate system of the frame returned by GetCurrentScrollParent(). If
-   * the ancestor scrollframe's critical displayport does not intersect the
-   * critical displayport of the scrollframe that encloses it, and so on
-   * transitively up the frame tree, returns the empty rect. The idea is that
-   * this method considers a displayport visible if its nearest ancestor is
-   * visible and some part of it intersects its nearest ancestor, which means
-   * that we capture everything that APZ could asynchronously scroll into
-   * view. Used for visibility tracking during painting.
-   */
-  nsRect GetDisplayPortConsideringAncestors() { return mDisplayPortConsideringAncestors; }
-  /**
-   * Get the intersection of all ancestor scrollframes' scrollports. Used for
-   * visibility tracking during painting. Unlike the displayport case, for
-   * scrollports we use strict intersection, because we only want to detect
-   * frames that are actually visible in the viewport.
-   */
-  nsRect GetScrollPortConsideringAncestors() { return mScrollPortConsideringAncestors; }
-  /**
    * Get the ViewID of the nearest scrolling ancestor frame.
    */
   ViewID GetCurrentScrollParentId() const { return mCurrentScrollParentId; }
@@ -850,64 +826,49 @@ public:
     uint32_t mCachedItemIndex;
   };
 
-  struct OutOfFlowDisplayData;
-
   /**
-   * A helper class to temporarily set the value of mCurrentScrollParentId and
-   * cache information about the effective displayport and scrollport,
-   * considering all ancestor scrollframes. See
-   * GetDisplayPortConsideringAncestors() and
-   * GetScrollPortConsideringAncestors() for the details.
+   * A helper class to temporarily set the value of mCurrentScrollParentId.
    */
   class AutoCurrentScrollParentIdSetter;
   friend class AutoCurrentScrollParentIdSetter;
   class AutoCurrentScrollParentIdSetter {
   public:
-    /**
-     * Temporarily update the cached scroll parent information on @aBuilder
-     * from frame @aFrame. @aFrame should be a a scrollframe that is a
-     * descendant of @aBuilder's current scroll parent. (The exception is if
-     * there's no current scroll parent, in which case @aFrame does not have to
-     * be a scrollframe; this is fallback behavior for XUL documents, which
-     * may not have a root scrollframe.)
-     *
-     * If @aNewScrollParentFrom is SCROLLFRAMES_ON_PATH_TO_ROOT, @aFrame is
-     * interpreted as a scrollframe in a different subtree. In this case we
-     * have to walk up the frame tree all the way to the root to gather
-     * information about the effective displayport and scrollport.
-     */
-    AutoCurrentScrollParentIdSetter(nsDisplayListBuilder* aBuilder,
-                                    nsIFrame* aScrollParent);
-
-    /**
-     * Temporarily updated the cached scroll parent information on @aBuilder
-     * from saved information on @aOutOfFlowData. This is necessary when
-     * traversing out-of-flow frames via their placeholder frames, since their
-     * scroll parent may not be the same as the scroll parent of the
-     * placeholder frame.
-     */
-    AutoCurrentScrollParentIdSetter(nsDisplayListBuilder* aBuilder,
-                                    const OutOfFlowDisplayData* aOutOfFlowData);
-
-    ~AutoCurrentScrollParentIdSetter();
-
+    AutoCurrentScrollParentIdSetter(nsDisplayListBuilder* aBuilder, ViewID aScrollId)
+      : mBuilder(aBuilder)
+      , mOldValue(aBuilder->mCurrentScrollParentId)
+      , mOldForceLayer(aBuilder->mForceLayerForScrollParent) {
+      // If this AutoCurrentScrollParentIdSetter has the same scrollId as the
+      // previous one on the stack, then that means the scrollframe that
+      // created this isn't actually scrollable and cannot participate in
+      // scroll handoff. We set mCanBeScrollParent to false to indicate this.
+      mCanBeScrollParent = (mOldValue != aScrollId);
+      aBuilder->mCurrentScrollParentId = aScrollId;
+      aBuilder->mForceLayerForScrollParent = false;
+    }
     bool ShouldForceLayerForScrollParent() const {
       // Only scrollframes participating in scroll handoff can be forced to
       // layerize
       return mCanBeScrollParent && mBuilder->mForceLayerForScrollParent;
+    };
+    ~AutoCurrentScrollParentIdSetter() {
+      mBuilder->mCurrentScrollParentId = mOldValue;
+      if (mCanBeScrollParent) {
+        // If this flag is set, caller code is responsible for having dealt
+        // with the current value of mBuilder->mForceLayerForScrollParent, so
+        // we can just restore the old value.
+        mBuilder->mForceLayerForScrollParent = mOldForceLayer;
+      } else {
+        // Otherwise we need to keep propagating the force-layerization flag
+        // upwards to the next ancestor scrollframe that does participate in
+        // scroll handoff.
+        mBuilder->mForceLayerForScrollParent |= mOldForceLayer;
+      }
     }
-
   private:
-    void Init();
-
     nsDisplayListBuilder* mBuilder;
-    nsIFrame*             mOldScrollParent;
-    nsRect                mOldDisplayPortConsideringAncestors;
-    nsRect                mOldScrollPortConsideringAncestors;
-    ViewID                mOldScrollParentId;
-    bool                  mOldForceLayer : 1;
-    bool                  mCanBeScrollParent : 1;
-    bool                  mChangedSubtrees : 1;
+    ViewID                mOldValue;
+    bool                  mOldForceLayer;
+    bool                  mCanBeScrollParent;
   };
 
   /**
@@ -1028,26 +989,14 @@ public:
   struct OutOfFlowDisplayData {
     OutOfFlowDisplayData(const DisplayItemClip* aContainingBlockClip,
                          const DisplayItemScrollClip* aContainingBlockScrollClip,
-                         const nsRect& aDirtyRect,
-                         nsIFrame* aCurrentScrollParent,
-                         ViewID aCurrentScrollParentId,
-                         const nsRect& aDisplayPortConsideringAncestors,
-                         const nsRect& aScrollPortConsideringAncestors)
+                         const nsRect &aDirtyRect)
       : mContainingBlockClip(aContainingBlockClip ? *aContainingBlockClip : DisplayItemClip())
       , mContainingBlockScrollClip(aContainingBlockScrollClip)
       , mDirtyRect(aDirtyRect)
-      , mCurrentScrollParent(aCurrentScrollParent)
-      , mCurrentScrollParentId(aCurrentScrollParentId)
-      , mDisplayPortConsideringAncestors(aDisplayPortConsideringAncestors)
-      , mScrollPortConsideringAncestors(aScrollPortConsideringAncestors)
     {}
     DisplayItemClip mContainingBlockClip;
     const DisplayItemScrollClip* mContainingBlockScrollClip;
     nsRect mDirtyRect;
-    nsIFrame* mCurrentScrollParent;
-    ViewID mCurrentScrollParentId;
-    nsRect mDisplayPortConsideringAncestors;
-    nsRect mScrollPortConsideringAncestors;
   };
 
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(OutOfFlowDisplayDataProperty,
@@ -1204,23 +1153,6 @@ private:
    */
   nsIFrame* FindAnimatedGeometryRootFrameFor(nsIFrame* aFrame);
 
-  /**
-   * Updates cached information about the nearest ancestor scrollable frame.
-   * @aScrollParent should be a descendant of the previous nearest ancestor
-   * scrollable frame. @aScrollParent may be null, indicating that there is
-   * no ancestor scrollable frame.
-   */
-  void UpdateCurrentScrollParent(nsIFrame* aScrollParent);
-
-  /**
-   * Updates cached information about the nearest ancestor scrollable frame.
-   * The new information is read from @aOutOfFlowData, and unconditionally
-   * replaces the cached information without reference to the current scroll
-   * parent, since we're descending into an out-of-flow frame that does not
-   * necessarily have the same scroll parent chain.
-   */
-  void UpdateCurrentScrollParentForOutOfFlow(const OutOfFlowDisplayData* aOutOfFlowData);
-
   friend class nsDisplayCanvasBackgroundImage;
   friend class nsDisplayBackgroundImage;
   friend class nsDisplayFixedPosition;
@@ -1318,10 +1250,7 @@ private:
   nsTArray<DisplayItemScrollClip*> mScrollClipsToDestroy;
   nsTArray<DisplayItemClip*>     mDisplayItemClipsToDestroy;
   nsDisplayListBuilderMode       mMode;
-  nsIFrame*                      mCurrentScrollParent;
   ViewID                         mCurrentScrollParentId;
-  nsRect                         mDisplayPortConsideringAncestors;
-  nsRect                         mScrollPortConsideringAncestors;
   ViewID                         mCurrentScrollbarTarget;
   uint32_t                       mCurrentScrollbarFlags;
   Preserves3DContext             mPreserves3DCtx;
