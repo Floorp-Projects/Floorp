@@ -345,6 +345,8 @@ tests:
     allowed_build_tasks:
       tasks/builds/opt_linux64.yml:
         task: tasks/tests/fx_linux64_mochitest_dt_e10s_opt.yml
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_mochitest_dt_e10s_dbg.yml
       tasks/builds/opt_linux64_pgo.yml:
         task: tasks/tests/fx_linux64_mochitest_dt_e10s_opt.yml
   mochitest-jetpack:
@@ -409,8 +411,18 @@ tests:
     allowed_build_tasks:
       tasks/builds/opt_linux64.yml:
         task: tasks/tests/fx_linux64_reftest_not_accelerated_opt.yml
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_reftest_not_accelerated_dbg.yml
       tasks/builds/opt_linux64_pgo.yml:
         task: tasks/tests/fx_linux64_reftest_not_accelerated_opt.yml
+  reftest-no-accel-e10s:
+    allowed_build_tasks:
+      tasks/builds/opt_linux64.yml:
+        task: tasks/tests/fx_linux64_reftest_not_accelerated_e10s_opt.yml
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_reftest_not_accelerated_e10s_dbg.yml
+      tasks/builds/opt_linux64_pgo.yml:
+        task: tasks/tests/fx_linux64_reftest_not_accelerated_e10s_opt.yml
   web-platform-tests:
     allowed_build_tasks:
       tasks/builds/opt_linux64.yml:
