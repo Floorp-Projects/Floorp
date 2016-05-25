@@ -1,22 +1,24 @@
 /* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+/* import-globals-from helper_inplace_editor.js */
 
 "use strict";
 
-var {editableField, getInplaceEditorForSpan: inplaceEditor} = require("devtools/client/shared/inplace-editor");
+loadHelperScript("helper_inplace_editor.js");
 
 // Test the inplace-editor behavior.
 
 add_task(function* () {
   yield addTab("data:text/html;charset=utf-8,inline editor tests");
-  let [host, win, doc] = yield createHost();
+  let [host, , doc] = yield createHost();
 
   yield testMultipleInitialization(doc);
   yield testReturnCommit(doc);
   yield testBlurCommit(doc);
   yield testAdvanceCharCommit(doc);
   yield testAdvanceCharsFunction(doc);
+  yield testEscapeCancel(doc);
 
   host.destroy();
   gBrowser.removeCurrentTab();
@@ -36,8 +38,10 @@ function testMultipleInitialization(doc) {
 
   is(span.style.display, "none", "The original <span> is hidden");
   is(doc.querySelectorAll("input").length, 1, "Only one <input>");
-  is(doc.querySelectorAll("span").length, 2, "Correct number of <span> elements");
-  is(doc.querySelectorAll("span.autosizer").length, 1, "There is an autosizer element");
+  is(doc.querySelectorAll("span").length, 2,
+    "Correct number of <span> elements");
+  is(doc.querySelectorAll("span.autosizer").length, 1,
+    "There is an autosizer element");
 }
 
 function testReturnCommit(doc) {
@@ -47,7 +51,8 @@ function testReturnCommit(doc) {
   createInplaceEditorAndClick({
     initial: "explicit initial",
     start: function (editor) {
-      is(editor.input.value, "explicit initial", "Explicit initial value should be used.");
+      is(editor.input.value, "explicit initial",
+        "Explicit initial value should be used.");
       editor.input.value = "Test Value";
       EventUtils.sendKey("return");
     },
@@ -68,7 +73,7 @@ function testBlurCommit(doc) {
       editor.input.blur();
     },
     done: onDone("Test Value", true, def)
-  }, doc);
+  }, doc, "Edit Me!");
 
   return def.promise;
 }
@@ -80,7 +85,6 @@ function testAdvanceCharCommit(doc) {
   createInplaceEditorAndClick({
     advanceChars: ":",
     start: function (editor) {
-      let input = editor.input;
       EventUtils.sendString("Test:");
     },
     done: onDone("Test", true, def)
@@ -97,8 +101,8 @@ function testAdvanceCharsFunction(doc) {
 
   createInplaceEditorAndClick({
     initial: "",
-    advanceChars: function (aCharCode, aText, aInsertionPoint) {
-      if (aCharCode !== Components.interfaces.nsIDOMKeyEvent.DOM_VK_COLON) {
+    advanceChars: function (charCode, text, insertionPoint) {
+      if (charCode !== Components.interfaces.nsIDOMKeyEvent.DOM_VK_COLON) {
         return false;
       }
       if (firstTime) {
@@ -107,7 +111,7 @@ function testAdvanceCharsFunction(doc) {
       }
 
       // Just to make sure we check it somehow.
-      return aText.length > 0;
+      return text.length > 0;
     },
     start: function (editor) {
       for (let ch of ":Test:") {
@@ -143,26 +147,4 @@ function onDone(value, isCommit, def) {
     is(actualCommit, isCommit, "The commit boolean is correct");
     def.resolve();
   };
-}
-
-function createInplaceEditorAndClick(options, doc) {
-  doc.body.innerHTML = "";
-  let span = options.element = createSpan(doc);
-
-  info("Creating an inplace-editor field");
-  editableField(options);
-  is(span.getAttribute("role"), "button",
-    "Editable element should have button semantics");
-
-  info("Clicking on the inplace-editor field to turn to edit mode");
-  span.click();
-}
-
-function createSpan(doc) {
-  info("Creating a new span element");
-  let span = doc.createElement("span");
-  span.setAttribute("tabindex", "0");
-  span.textContent = "Edit Me!";
-  doc.body.appendChild(span);
-  return span;
 }
