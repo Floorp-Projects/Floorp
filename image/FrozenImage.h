@@ -50,7 +50,7 @@ public:
                                const nsIntSize& aSize,
                                const ImageRegion& aRegion,
                                uint32_t aWhichFrame,
-                               gfx::Filter aFilter,
+                               gfx::SamplingFilter aSamplingFilter,
                                const Maybe<SVGImageContext>& aSVGContext,
                                uint32_t aFlags) override;
   NS_IMETHOD_(void) RequestRefresh(const TimeStamp& aTime) override;
