@@ -103,29 +103,55 @@ LaunchMacPostProcess(const char* aAppBundle)
   [task release];
 }
 
-void CleanupElevatedMacUpdate(bool aFailureOccurred)
+id ConnectToUpdateServer()
 {
   MacAutoreleasePool pool;
 
   id updateServer = nil;
   @try {
-    updateServer = (id)[NSConnection
-      rootProxyForConnectionWithRegisteredName:
-        @"org.mozilla.updater.server"
-      host:nil
-      usingNameServer:[NSSocketPortNameServer sharedInstance]];
-    if (aFailureOccurred &&
-        updateServer &&
-        [updateServer respondsToSelector:@selector(abort)]) {
-      [updateServer performSelector:@selector(abort)];
-    }
-    else if (updateServer &&
-             [updateServer respondsToSelector:@selector(shutdown)]) {
-      [updateServer performSelector:@selector(shutdown)];
+    BOOL isConnected = NO;
+    int currTry = 0;
+    const int numRetries = 10; // Number of IPC connection retries before
+                               // giving up.
+    while (!isConnected && currTry < numRetries) {
+      updateServer = (id)[NSConnection
+        rootProxyForConnectionWithRegisteredName:
+          @"org.mozilla.updater.server"
+        host:nil
+        usingNameServer:[NSSocketPortNameServer sharedInstance]];
+      if (!updateServer ||
+          ![updateServer respondsToSelector:@selector(abort)] ||
+          ![updateServer respondsToSelector:@selector(getArguments)] ||
+          ![updateServer respondsToSelector:@selector(shutdown)]) {
+        NSLog(@"Server doesn't exist or doesn't provide correct selectors.");
+        sleep(1); // Wait 1 second.
+        currTry++;
+      } else {
+        isConnected = YES;
+      }
     }
   } @catch (NSException* e) {
     // Ignore exceptions.
+    return nil;
   }
+  return updateServer;
+}
+
+void CleanupElevatedMacUpdate(bool aFailureOccurred)
+{
+  MacAutoreleasePool pool;
+
+  id updateServer = ConnectToUpdateServer();
+  if (updateServer) {
+    @try {
+      if (aFailureOccurred) {
+        [updateServer performSelector:@selector(abort)];
+      } else {
+        [updateServer performSelector:@selector(shutdown)];
+      }
+    } @catch (NSException* e) { }
+  }
+
   NSFileManager* manager = [NSFileManager defaultManager];
   [manager removeItemAtPath:@"/Library/PrivilegedHelperTools/org.mozilla.updater"
                       error:nil];
@@ -144,21 +170,14 @@ bool ObtainUpdaterArguments(int* argc, char*** argv)
 {
   MacAutoreleasePool pool;
 
-  id updateServer = nil;
+  id updateServer = ConnectToUpdateServer();
+  if (!updateServer) {
+    // Let's try our best and clean up.
+    CleanupElevatedMacUpdate(true);
+    return false; // Won't actually get here due to CleanupElevatedMacUpdate.
+  }
+
   @try {
-    updateServer = (id)[NSConnection
-      rootProxyForConnectionWithRegisteredName:
-        @"org.mozilla.updater.server"
-      host:nil
-      usingNameServer:[NSSocketPortNameServer sharedInstance]];
-    if (!updateServer ||
-        ![updateServer respondsToSelector:@selector(getArguments)] ||
-        ![updateServer respondsToSelector:@selector(shutdown)]) {
-      NSLog(@"Server doesn't exist or doesn't provide correct selectors.");
-      // Let's try our best and clean up.
-      CleanupElevatedMacUpdate(true);
-      return false; // Won't actually get here due to CleanupElevatedMacUpdate.
-    }
     NSArray* updaterArguments =
       [updateServer performSelector:@selector(getArguments)];
     *argc = [updaterArguments count];
