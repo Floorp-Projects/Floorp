@@ -129,11 +129,37 @@ KeyShortcuts.parseElectronKey = function (window, str) {
     // Maps the others manually to DOM API DOM_VK_*
     key = ElectronKeysMapping[key];
     shortcut.keyCode = window.KeyboardEvent[key];
+    // Used only to stringify the shortcut
+    shortcut.keyCodeString = key;
   } else {
     throw new Error("Unsupported key: " + key);
   }
 
   return shortcut;
+};
+
+KeyShortcuts.stringify = function (shortcut) {
+  let list = [];
+  if (shortcut.alt) {
+    list.push("Alt");
+  }
+  if (shortcut.ctrl) {
+    list.push("Ctrl");
+  }
+  if (shortcut.meta) {
+    list.push("Cmd");
+  }
+  if (shortcut.shift) {
+    list.push("Shift");
+  }
+  let key;
+  if (shortcut.key) {
+    key = shortcut.key.toUpperCase();
+  } else {
+    key = shortcut.keyCodeString;
+  }
+  list.push(key);
+  return list.join("+");
 };
 
 KeyShortcuts.prototype = {
