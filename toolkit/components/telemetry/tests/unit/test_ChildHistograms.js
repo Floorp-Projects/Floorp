@@ -71,6 +71,10 @@ add_task(function*() {
   loadAddonManager(APP_ID, APP_NAME, APP_VERSION, PLATFORM_VERSION);
   Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
   yield TelemetryController.testSetup();
+  if (runningInParent) {
+    // Make sure we don't generate unexpected pings due to pref changes.
+    setEmptyPrefWatchlist();
+  }
 
   // Run test in child, don't wait for it to finish.
   let childPromise = run_test_in_child("test_ChildHistograms.js");
