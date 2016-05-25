@@ -65,7 +65,7 @@ window.onload = function() {
     return;
   }
   runSubtestsSeriallyInFreshWindows(subtests)
-    .then(function() { SimpleTest.finish() });
+    .then(SimpleTest.finish);
 };
 
   </script>
