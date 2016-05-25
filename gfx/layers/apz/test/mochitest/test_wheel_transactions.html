@@ -132,20 +132,13 @@ function driveTest() {
   }
 }
 
-function startTest() {
-  waitForAllPaints(function() {
-    flushApzRepaints(driveTest);
-  });
-}
+SimpleTest.waitForExplicitFinish();
 
 // Disable smooth scrolling because it makes the test flaky (we don't have a good
 // way of detecting when the scrolling is finished).
-SpecialPowers.pushPrefEnv({"set": [["general.smoothScroll", false]]},
-                          function() {
-                            SimpleTest.waitForFocus(startTest, window);
-                          });
-
-SimpleTest.waitForExplicitFinish();
+pushPrefs([["general.smoothScroll", false]])
+.then(waitUntilApzStable)
+.then(driveTest);
 
 </script>
 </pre>

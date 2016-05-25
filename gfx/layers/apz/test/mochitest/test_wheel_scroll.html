@@ -6,7 +6,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1013412
 <head>
   <title>Test for Bug 1013412</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
   <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <style>
@@ -99,16 +101,15 @@ function continueTest() {
   }
 }
 
-function startTest() {
-  // If we allow smooth scrolling the "smooth" scrolling may cause the page to
-  // glide past the scrollbox (which is supposed to stop the scrolling) and so
-  // we might end up at the bottom of the page.
-  SpecialPowers.pushPrefEnv({"set": [["general.smoothScroll", false]]}, continueTest);
-}
-
 SimpleTest.testInChaosMode();
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(startTest, window);
+
+// If we allow smooth scrolling the "smooth" scrolling may cause the page to
+// glide past the scrollbox (which is supposed to stop the scrolling) and so
+// we might end up at the bottom of the page.
+pushPrefs([["general.smoothScroll", false]])
+.then(waitUntilApzStable)
+.then(continueTest);
 
 </script>
 </pre>

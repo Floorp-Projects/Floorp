@@ -229,9 +229,7 @@ function startTest() {
     return;
   }
 
-  waitForAllPaints(function() {
-    flushApzRepaints(driveTest);
-  })
+  driveTest();
 }
 
 SimpleTest.waitForExplicitFinish();
@@ -243,12 +241,12 @@ SimpleTest.expectAssertions(0, 8); // we get a bunch of "ASSERTION: Bounds compu
 // wheel event as corresponding to a later wheel event.
 // Also enable APZ test logging, since we use that data to determine whether
 // a scroll frame was layerized.
-SpecialPowers.pushPrefEnv({"set": [["general.smoothScroll", false],
-                                   ["apz.displayport_expiry_ms", 0],
-                                   ["apz.test.logging_enabled", true]]},
-                          function() {
-                            SimpleTest.waitForFocus(startTest, window);
-                          });
+pushPrefs([["general.smoothScroll", false],
+           ["apz.displayport_expiry_ms", 0],
+           ["apz.test.logging_enabled", true]])
+.then(waitUntilApzStable)
+.then(startTest);
+
 </script>
 </pre>
 </body>

@@ -104,23 +104,14 @@ function testScrolling(subframe) {
   });
 }
 
-function startTest() {
-  waitForAllPaints(function() {
-    flushApzRepaints(test);
-  });
-}
-
-window.onload = function() {
-  SpecialPowers.pushPrefEnv({
-    'set': [['general.smoothScroll', false],
-            ['mousewheel.transaction.timeout', 0],
-            ['mousewheel.transaction.ignoremovedelay', 0]]
-  }, function () {
-    SimpleTest.waitForFocus(startTest);
-  });
-}
-
 SimpleTest.waitForExplicitFinish();
+
+pushPrefs([['general.smoothScroll', false],
+           ['mousewheel.transaction.timeout', 0],
+           ['mousewheel.transaction.ignoremovedelay', 0]])
+.then(waitUntilApzStable)
+.then(test);
+
 </script>
 </body>
 </html>
