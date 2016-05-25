@@ -18,6 +18,7 @@ struct AnimationProperty;
 enum class CSSPseudoElementType : uint8_t;
 class ErrorResult;
 struct Keyframe;
+struct PropertyStyleAnimationValuePair;
 
 namespace dom {
 class Element;
@@ -26,6 +27,10 @@ class Element;
 
 
 namespace mozilla {
+
+// Represents the set of property-value pairs on a Keyframe converted to
+// computed values.
+using ComputedKeyframeValues = nsTArray<PropertyStyleAnimationValuePair>;
 
 /**
  * Utility methods for processing keyframes.
@@ -52,6 +57,28 @@ public:
                          ErrorResult& aRv);
 
   /**
+   * Calculate the StyleAnimationValues of properties of each keyframe.
+   * This involves expanding shorthand properties into longhand properties,
+   * removing the duplicated properties for each keyframe, and creating an
+   * array of |property:computed value| pairs for each keyframe.
+   *
+   * These computed values are used *both* when computing the final set of
+   * per-property animation values (see GetAnimationPropertiesFromKeyframes) as
+   * well when applying paced spacing. By returning these values here, we allow
+   * the result to be re-used in both operations.
+   *
+   * @param aKeyframes The input keyframes.
+   * @param aElement The context element.
+   * @param aStyleContext The style context to use when computing values.
+   * @return The set of ComputedKeyframeValues. The length will be the same as
+   *   aFrames.
+   */
+  static nsTArray<ComputedKeyframeValues>
+  GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
+                            dom::Element* aElement,
+                            nsStyleContext* aStyleContext);
+
+  /**
    * Fills in the mComputedOffset member of each keyframe in the given array
    * using the specified spacing mode.
    *
@@ -65,21 +92,25 @@ public:
 
   /**
    * Converts an array of Keyframe objects into an array of AnimationProperty
-   * objects. This involves expanding shorthand properties into longhand
-   * properties, creating an array of computed values for each longhand
-   * property and determining the offset and timing function to use for each
-   * value.
+   * objects. This involves creating an array of computed values for each
+   * longhand property and determining the offset and timing function to use
+   * for each value.
    *
-   * @param aStyleContext The style context to use when computing values.
-   * @param aFrames The input keyframes.
+   * @param aKeyframes The input keyframes.
+   * @param aComputedValues The computed keyframe values (as returned by
+   *   GetComputedKeyframeValues) used to fill in the individual
+   *   AnimationPropertySegment objects. Although these values could be
+   *   calculated from |aKeyframes|, passing them in as a separate parameter
+   *   allows the result of GetComputedKeyframeValues to be re-used both
+   *   here and in ApplySpacing.
+   * @param aStyleContext The style context to calculate the style difference.
    * @return The set of animation properties. If an error occurs, the returned
    *   array will be empty.
    */
-  static nsTArray<AnimationProperty>
-  GetAnimationPropertiesFromKeyframes(nsStyleContext* aStyleContext,
-                                      dom::Element* aElement,
-                                      CSSPseudoElementType aPseudoType,
-                                      const nsTArray<Keyframe>& aFrames);
+  static nsTArray<AnimationProperty> GetAnimationPropertiesFromKeyframes(
+    const nsTArray<Keyframe>& aKeyframes,
+    const nsTArray<ComputedKeyframeValues>& aComputedValues,
+    nsStyleContext* aStyleContext);
 
   /**
    * Check if the property or, for shorthands, one or more of
