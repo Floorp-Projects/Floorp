@@ -124,11 +124,20 @@ this.SelectContentHelper.prototype = {
           });
           this.element.dispatchEvent(changeEvent);
 
-          let dwu = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils);
-          let rect = this.element.getBoundingClientRect();
-          dwu.sendMouseEvent("mousedown", rect.left, rect.top, 0, 1, 0, true);
-          dwu.sendMouseEvent("mouseup", rect.left, rect.top, 0, 1, 0, true);
+          // Going for mostly-Blink parity here, which (at least on Windows)
+          // fires a mouseup and click event after each selection -
+          // even by keyboard. We're firing a mousedown too, since that
+          // seems to make more sense. Unfortunately, the spec on form
+          // control behaviours for these events is really not clear.
+          const MOUSE_EVENTS = ["mousedown", "mouseup", "click"];
+          for (let eventName of MOUSE_EVENTS) {
+            let mouseEvent = new win.MouseEvent(eventName, {
+              view: win,
+              bubbles: true,
+              cancelable: true,
+            });
+            this.element.dispatchEvent(mouseEvent);
+          }
         }
 
         this.uninit();
