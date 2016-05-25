@@ -149,7 +149,8 @@ public:
   virtual nsresult Stop(SourceMediaStream *aSource, TrackID aID) = 0;
 
   /* Restart with new capability */
-  virtual nsresult Restart(const dom::MediaTrackConstraints& aConstraints,
+  virtual nsresult Restart(BaseAllocationHandle* aHandle,
+                           const dom::MediaTrackConstraints& aConstraints,
                            const MediaEnginePrefs &aPrefs,
                            const nsString& aDeviceId) = 0;
 
