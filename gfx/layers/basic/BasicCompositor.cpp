@@ -226,7 +226,7 @@ DrawSurfaceWithTextureCoords(DrawTarget *aDest,
                              const gfx::Rect& aDestRect,
                              SourceSurface *aSource,
                              const gfx::Rect& aTextureCoords,
-                             gfx::Filter aFilter,
+                             gfx::SamplingFilter aSamplingFilter,
                              const DrawOptions& aOptions,
                              SourceSurface *aMask,
                              const Matrix* aMaskTransform)
@@ -257,7 +257,7 @@ DrawSurfaceWithTextureCoords(DrawTarget *aDest,
   gfx::Rect unitRect(0, 0, 1, 1);
   ExtendMode mode = unitRect.Contains(aTextureCoords) ? ExtendMode::CLAMP : ExtendMode::REPEAT;
 
-  FillRectWithMask(aDest, aDestRect, aSource, aFilter, aOptions,
+  FillRectWithMask(aDest, aDestRect, aSource, aSamplingFilter, aOptions,
                    mode, aMask, aMaskTransform, &matrix);
 }
 
@@ -442,7 +442,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
           DrawSurfaceWithTextureCoords(dest, aRect,
                                        source->GetSurface(dest),
                                        texturedEffect->mTextureCoords,
-                                       texturedEffect->mFilter,
+                                       texturedEffect->mSamplingFilter,
                                        DrawOptions(aOpacity, blendMode),
                                        sourceMask, &maskTransform);
         }
@@ -458,7 +458,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
           DrawSurfaceWithTextureCoords(dest, aRect,
                                        premultData,
                                        texturedEffect->mTextureCoords,
-                                       texturedEffect->mFilter,
+                                       texturedEffect->mSamplingFilter,
                                        DrawOptions(aOpacity, blendMode),
                                        sourceMask, &maskTransform);
         }
@@ -482,7 +482,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
       DrawSurfaceWithTextureCoords(dest, aRect,
                                    sourceSurf,
                                    effectRenderTarget->mTextureCoords,
-                                   effectRenderTarget->mFilter,
+                                   effectRenderTarget->mSamplingFilter,
                                    DrawOptions(aOpacity, blendMode),
                                    sourceMask, &maskTransform);
       break;

@@ -86,7 +86,7 @@ BasicImageLayer::Paint(DrawTarget* aDT,
 
   gfx::IntSize size = mSize = surface->GetSize();
   FillRectWithMask(aDT, aDeviceOffset, Rect(0, 0, size.width, size.height),
-                   surface, mFilter,
+                   surface, mSamplingFilter,
                    DrawOptions(GetEffectiveOpacity(), GetEffectiveOperator(this)),
                    aMaskLayer);
 

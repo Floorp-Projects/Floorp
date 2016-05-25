@@ -137,7 +137,8 @@ MacIOSurfaceTextureSourceOGL::GetFormat() const
 }
 
 void
-MacIOSurfaceTextureSourceOGL::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
+MacIOSurfaceTextureSourceOGL::BindTexture(GLenum aTextureUnit,
+                                          gfx::SamplingFilter aSamplingFilter)
 {
   gl::GLContext* gl = this->gl();
   if (!gl || !gl->MakeCurrent()) {
@@ -149,7 +150,7 @@ MacIOSurfaceTextureSourceOGL::BindTexture(GLenum aTextureUnit, gfx::Filter aFilt
   gl->fActiveTexture(aTextureUnit);
   gl->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, tex);
   mSurface->CGLTexImageIOSurface2D(gl::GLContextCGL::Cast(gl)->GetCGLContext());
-  ApplyFilterToBoundTexture(gl, aFilter, LOCAL_GL_TEXTURE_RECTANGLE_ARB);
+  ApplySamplingFilterToBoundTexture(gl, aSamplingFilter, LOCAL_GL_TEXTURE_RECTANGLE_ARB);
 }
 
 void

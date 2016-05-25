@@ -82,7 +82,7 @@ public:
                                  const gfxSize&     aImageSize,
                                  const ImageRegion& aRegion,
                                  const mozilla::gfx::SurfaceFormat aFormat,
-                                 mozilla::gfx::Filter aFilter,
+                                 mozilla::gfx::SamplingFilter aSamplingFilter,
                                  uint32_t           aImageFlags = imgIContainer::FLAG_NONE,
                                  gfxFloat           aOpacity = 1.0);
 

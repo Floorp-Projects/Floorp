@@ -53,7 +53,7 @@ BasicCanvasLayer::Paint(DrawTarget* aDT,
 
   FillRectWithMask(aDT, aDeviceOffset,
                    Rect(0, 0, mBounds.width, mBounds.height),
-                   mSurface, mFilter,
+                   mSurface, mSamplingFilter,
                    DrawOptions(GetEffectiveOpacity(), GetEffectiveOperator(this)),
                    aMaskLayer);
 
