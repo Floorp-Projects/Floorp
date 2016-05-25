@@ -147,22 +147,31 @@ BOOL InstallPrivilegedHelper()
 void AbortElevatedUpdate()
 {
   mozilla::MacAutoreleasePool pool;
+
   id updateServer = nil;
   @try {
-    updateServer = (id)[NSConnection
-      rootProxyForConnectionWithRegisteredName:
-        @"org.mozilla.updater.server"
-      host:nil
-      usingNameServer:[NSSocketPortNameServer sharedInstance]];
-    if (updateServer &&
-        [updateServer respondsToSelector:@selector(abort)]) {
-      [updateServer performSelector:@selector(abort)];
-    } else {
-      NSLog(@"Unable to clean up updater.");
+    int currTry = 0;
+    const int numRetries = 10; // Number of IPC connection retries before
+                               // giving up.
+    while (currTry < numRetries) {
+      updateServer = (id)[NSConnection
+        rootProxyForConnectionWithRegisteredName:
+          @"org.mozilla.updater.server"
+        host:nil
+        usingNameServer:[NSSocketPortNameServer sharedInstance]];
+      if (updateServer &&
+          [updateServer respondsToSelector:@selector(abort)]) {
+        [updateServer performSelector:@selector(abort)];
+        return;
+      }
+      NSLog(@"Server doesn't exist or doesn't provide correct selectors.");
+      sleep(1); // Wait 1 second.
+      currTry++;
     }
   } @catch (NSException* e) {
     // Ignore exceptions.
   }
+  NSLog(@"Unable to clean up updater.");
 }
 
 bool LaunchElevatedUpdate(int argc, char** argv, uint32_t aRestartType,
