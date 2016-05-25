@@ -10,6 +10,8 @@ const TEST_URL = "data:text/html;charset=utf-8," +
                  "<body><h1>Testing reload from devtools</h1></body></html>";
 
 var {Toolbox} = require("devtools/client/framework/toolbox");
+var strings = Services.strings.createBundle(
+  "chrome://devtools/locale/toolbox.properties");
 
 var target, toolbox, description, reloadsSent, toolIDs;
 
@@ -60,10 +62,10 @@ function testAllTheTools(docked, callback, toolNum = 0) {
     return callback();
   }
   toolbox.selectTool(toolIDs[toolNum]).then(() => {
-    testReload("toolbox-reload-key", docked, toolIDs[toolNum], () => {
-      testReload("toolbox-reload-key2", docked, toolIDs[toolNum], () => {
-        testReload("toolbox-force-reload-key", docked, toolIDs[toolNum], () => {
-          testReload("toolbox-force-reload-key2", docked, toolIDs[toolNum], () => {
+    testReload("toolbox.reload.key", docked, toolIDs[toolNum], () => {
+      testReload("toolbox.reload2.key", docked, toolIDs[toolNum], () => {
+        testReload("toolbox.forceReload.key", docked, toolIDs[toolNum], () => {
+          testReload("toolbox.forceReload2.key", docked, toolIDs[toolNum], () => {
             testAllTheTools(docked, callback, toolNum + 1);
           });
         });
@@ -72,17 +74,16 @@ function testAllTheTools(docked, callback, toolNum = 0) {
   });
 }
 
-function testReload(key, docked, toolID, callback) {
+function testReload(shortcut, docked, toolID, callback) {
   let complete = () => {
     gBrowser.selectedBrowser.messageManager.removeMessageListener("devtools:test:load", complete);
     return callback();
   };
   gBrowser.selectedBrowser.messageManager.addMessageListener("devtools:test:load", complete);
 
-  description = docked + " devtools with tool " + toolID + ", key #" + key;
+  description = docked + " devtools with tool " + toolID + ", shortcut #" + shortcut;
   info("Testing reload in " + description);
-  let el = toolbox.doc.getElementById(key);
-  synthesizeKeyElement(el);
+  synthesizeKeyShortcut(strings.GetStringFromName(shortcut), toolbox.win);
   reloadsSent++;
 }
 
