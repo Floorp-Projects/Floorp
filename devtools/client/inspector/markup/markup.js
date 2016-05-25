@@ -975,6 +975,10 @@ MarkupView.prototype = {
         // we're not viewing.
         continue;
       }
+
+      if (type === "attributes" && mutation.attributeName === "class") {
+        container.updateIsDisplayed();
+      }
       if (type === "attributes" || type === "characterData"
         || type === "events" || type === "pseudoClassLock") {
         container.update();
@@ -1013,7 +1017,7 @@ MarkupView.prototype = {
     for (let node of nodes) {
       let container = this.getContainer(node);
       if (container) {
-        container.isDisplayed = node.isDisplayed;
+        container.updateIsDisplayed();
       }
     }
   },
@@ -1891,7 +1895,7 @@ MarkupContainer.prototype = {
     }
 
     // Marking the node as shown or hidden
-    this.isDisplayed = this.node.isDisplayed;
+    this.updateIsDisplayed();
   },
 
   toString: function () {
@@ -1912,11 +1916,14 @@ MarkupContainer.prototype = {
   },
 
   /**
-   * Show the element has displayed or not.
+   * Show whether the element is displayed or not
+   * If an element has the attribute `display: none` or has been hidden with
+   * the H key, it is not displayed (faded in markup view).
+   * Otherwise, it is displayed.
    */
-  set isDisplayed(isDisplayed) {
+  updateIsDisplayed: function () {
     this.elt.classList.remove("not-displayed");
-    if (!isDisplayed) {
+    if (!this.node.isDisplayed || this.node.hidden) {
       this.elt.classList.add("not-displayed");
     }
   },
