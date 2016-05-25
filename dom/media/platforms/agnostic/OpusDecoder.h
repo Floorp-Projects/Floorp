@@ -60,6 +60,8 @@ private:
   int64_t mFrames;
   Maybe<int64_t> mLastFrameTime;
   uint8_t mMappingTable[MAX_AUDIO_CHANNELS]; // Channel mapping table.
+
+  Atomic<bool> mIsFlushing;
 };
 
 } // namespace mozilla

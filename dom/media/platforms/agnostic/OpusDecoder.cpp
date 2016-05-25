@@ -10,6 +10,7 @@
 #include "VorbisDecoder.h" // For VorbisLayout
 #include "mozilla/Endian.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/SyncRunnable.h"
 
 #include <stdint.h>
 #include <inttypes.h>  // For PRId64
@@ -31,6 +32,7 @@ OpusDataDecoder::OpusDataDecoder(const AudioInfo& aConfig,
   , mDecodedHeader(false)
   , mPaddingDiscarded(false)
   , mFrames(0)
+  , mIsFlushing(false)
 {
 }
 
@@ -141,6 +143,9 @@ OpusDataDecoder::Input(MediaRawData* aSample)
 void
 OpusDataDecoder::ProcessDecode(MediaRawData* aSample)
 {
+  if (mIsFlushing) {
+    return;
+  }
   if (DoDecode(aSample) == -1) {
     mCallback->Error();
   } else if(mTaskQueue->IsEmpty()) {
@@ -313,14 +318,20 @@ OpusDataDecoder::Drain()
 nsresult
 OpusDataDecoder::Flush()
 {
-  mTaskQueue->Flush();
-  if (mOpusDecoder) {
+  if (!mOpusDecoder) {
+    return NS_OK;
+  }
+  mIsFlushing = true;
+  nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction([this] () {
+    MOZ_ASSERT(mOpusDecoder);
     // Reset the decoder.
     opus_multistream_decoder_ctl(mOpusDecoder, OPUS_RESET_STATE);
     mSkip = mOpusParser->mPreSkip;
     mPaddingDiscarded = false;
     mLastFrameTime.reset();
-  }
+  });
+  SyncRunnable::DispatchToThread(mTaskQueue, runnable);
+  mIsFlushing = false;
   return NS_OK;
 }
 
