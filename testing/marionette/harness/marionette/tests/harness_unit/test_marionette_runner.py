@@ -243,7 +243,7 @@ def test_crash_is_recorded_as_error(empty_marionette_test,
     # collect results from the empty test
     result = MarionetteTestResult(
         marionette=empty_marionette_test._marionette_weakref(),
-        b2g_pid=0, logger=logger, verbosity=None,
+        logger=logger, verbosity=None,
         stream=None, descriptions=None,
     )
     result.startTest(empty_marionette_test)
