@@ -216,12 +216,8 @@ function driveTest() {
   }
 }
 
-SimpleTest.waitForExplicitFinish();
-var apzEnabled = SpecialPowers.getDOMWindowUtils(window).asyncPanZoomEnabled;
-if (!apzEnabled) {
-  ok(true, "APZ not enabled, skipping test");
-  SimpleTest.finish();
-} else {
+if (isApzEnabled()) {
+  SimpleTest.waitForExplicitFinish();
   SimpleTest.expectAssertions(0, 1); // this test triggers an assertion, see bug 1247050
   waitUntilApzStable().then(driveTest);
 }

@@ -220,32 +220,22 @@ function driveTest() {
   }
 }
 
-function startTest() {
-  // This test requires APZ - if it's not enabled, skip it.
-  var apzEnabled = SpecialPowers.getDOMWindowUtils(window).asyncPanZoomEnabled;
-  if (!apzEnabled) {
-    ok(true, "APZ not enabled, skipping test");
-    SimpleTest.finish();
-    return;
-  }
+if (isApzEnabled()) {
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestFlakyTimeout("we are testing code that measures an actual timeout");
+  SimpleTest.expectAssertions(0, 8); // we get a bunch of "ASSERTION: Bounds computation mismatch" sometimes (bug 1232856)
 
-  driveTest();
+  // Disable smooth scrolling, because it results in long-running scroll
+  // animations that can result in a 'scroll' event triggered by an earlier
+  // wheel event as corresponding to a later wheel event.
+  // Also enable APZ test logging, since we use that data to determine whether
+  // a scroll frame was layerized.
+  pushPrefs([["general.smoothScroll", false],
+             ["apz.displayport_expiry_ms", 0],
+             ["apz.test.logging_enabled", true]])
+  .then(waitUntilApzStable)
+  .then(driveTest);
 }
-
-SimpleTest.waitForExplicitFinish();
-SimpleTest.requestFlakyTimeout("we are testing code that measures an actual timeout");
-SimpleTest.expectAssertions(0, 8); // we get a bunch of "ASSERTION: Bounds computation mismatch" sometimes (bug 1232856)
-
-// Disable smooth scrolling, because it results in long-running scroll
-// animations that can result in a 'scroll' event triggered by an earlier
-// wheel event as corresponding to a later wheel event.
-// Also enable APZ test logging, since we use that data to determine whether
-// a scroll frame was layerized.
-pushPrefs([["general.smoothScroll", false],
-           ["apz.displayport_expiry_ms", 0],
-           ["apz.test.logging_enabled", true]])
-.then(waitUntilApzStable)
-.then(startTest);
 
 </script>
 </pre>

@@ -57,16 +57,13 @@ var subtests = [
   {'file': 'helper_tap_passive.html', 'prefs': [["apz.content_response_timeout", 24 * 60 * 60 * 1000]]},
 ];
 
-SimpleTest.waitForExplicitFinish();
-window.onload = function() {
-  if (!SpecialPowers.getDOMWindowUtils(window).asyncPanZoomEnabled) {
-    ok(true, "APZ is not enabled, this test is not relevant, sorry!\n");
-    SimpleTest.finish();
-    return;
-  }
-  runSubtestsSeriallyInFreshWindows(subtests)
+if (isApzEnabled()) {
+  SimpleTest.waitForExplicitFinish();
+  window.onload = function() {
+    runSubtestsSeriallyInFreshWindows(subtests)
     .then(SimpleTest.finish);
-};
+  };
+}
 
   </script>
 </head>
