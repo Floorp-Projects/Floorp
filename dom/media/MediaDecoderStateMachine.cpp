@@ -212,7 +212,7 @@ InitSuspendBackgroundPref()
   if (!sSetupPrefCache) {
     sSetupPrefCache = true;
     Preferences::AddBoolVarCache(&sSuspendBackgroundVideos,
-                                 "media.suspend-bkgnd-video.enabled", true);
+                                 "media.suspend-bkgnd-video.enabled", false);
   }
 }
 
