@@ -21,36 +21,39 @@ const TEST_URI = "data:text/html;charset=utf-8," +
 
 add_task(function* () {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URI);
-  let outerFrame = "iframe";
   let outerFrameDiv = ["iframe", "div"];
-  let innerFrame = ["iframe", "iframe"];
   let innerFrameDiv = ["iframe", "iframe", "div"];
 
   info("Waiting for element picker to activate.");
   yield startPicker(inspector.toolbox);
 
   info("Moving mouse over outerFrameDiv");
-  yield moveMouseOver(testActor, outerFrameDiv);
-  ok((yield testActor.assertHighlightedNode(outerFrameDiv)), "outerFrameDiv is highlighted.");
+  yield moveMouseOver(outerFrameDiv);
+  ok((yield testActor.assertHighlightedNode(outerFrameDiv)),
+     "outerFrameDiv is highlighted.");
 
   info("Moving mouse over innerFrameDiv");
-  yield moveMouseOver(testActor, innerFrameDiv);
-  ok((yield testActor.assertHighlightedNode(innerFrameDiv)), "innerFrameDiv is highlighted.");
+  yield moveMouseOver(innerFrameDiv);
+  ok((yield testActor.assertHighlightedNode(innerFrameDiv)),
+     "innerFrameDiv is highlighted.");
 
   info("Selecting root node");
   yield selectNode(inspector.walker.rootNode, inspector);
 
   info("Selecting an element from the nested iframe directly");
-  let innerFrameFront = yield getNodeFrontInFrame("iframe", "iframe", inspector);
-  let innerFrameDivFront = yield getNodeFrontInFrame("div", innerFrameFront, inspector);
+  let innerFrameFront = yield getNodeFrontInFrame("iframe", "iframe",
+                                                  inspector);
+  let innerFrameDivFront = yield getNodeFrontInFrame("div", innerFrameFront,
+                                                     inspector);
   yield selectNode(innerFrameDivFront, inspector);
 
-  is(inspector.breadcrumbs.nodeHierarchy.length, 9, "Breadcrumbs have 9 items.");
+  is(inspector.breadcrumbs.nodeHierarchy.length, 9,
+     "Breadcrumbs have 9 items.");
 
   info("Waiting for element picker to deactivate.");
   yield inspector.toolbox.highlighterUtils.stopPicker();
 
-  function moveMouseOver(testActor, selector) {
+  function moveMouseOver(selector) {
     info("Waiting for element " + selector + " to be highlighted");
     testActor.synthesizeMouse({
       selector: selector,

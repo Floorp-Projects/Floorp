@@ -231,7 +231,8 @@ add_task(function* () {
     info("Simulating context menu click on the selected node container.");
     let nodeFrontContainer = getContainerForNodeFront(front, inspector);
     let contextMenuTrigger = attributeTrigger
-      ? nodeFrontContainer.tagLine.querySelector(`[data-attr="${attributeTrigger}"]`)
+      ? nodeFrontContainer.tagLine.querySelector(
+          `[data-attr="${attributeTrigger}"]`)
       : nodeFrontContainer.tagLine;
     contextMenuClick(contextMenuTrigger);
 
@@ -254,11 +255,11 @@ function* getNodeFrontForSelector(selector, inspector) {
   if (selector) {
     info("Retrieving front for selector " + selector);
     return getNodeFront(selector, inspector);
-  } else {
-    info("Retrieving front for doctype node");
-    let {nodes} = yield inspector.walker.children(inspector.walker.rootNode);
-    return nodes[0];
   }
+
+  info("Retrieving front for doctype node");
+  let {nodes} = yield inspector.walker.children(inspector.walker.rootNode);
+  return nodes[0];
 }
 
 /**
@@ -280,7 +281,7 @@ function setupClipboard(data, type) {
  */
 function contextMenuClick(element) {
   let evt = element.ownerDocument.createEvent("MouseEvents");
-  let button = 2;  // right click
+  let button = 2;
 
   evt.initMouseEvent("contextmenu", true, true,
        element.ownerDocument.defaultView, 1, 0, 0, 0, 0, false,

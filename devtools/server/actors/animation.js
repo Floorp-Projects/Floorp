@@ -33,6 +33,8 @@ const {ActorClass, Actor, FrontClass, Front,
        Arg, method, RetVal, types} = protocol;
 // Make sure the nodeActor type is know here.
 const {NodeActor} = require("devtools/server/actors/inspector");
+const {AnimationPlayerFront} = require("devtools/shared/fronts/animation");
+const {animationPlayerSpec} = require("devtools/shared/specs/animation");
 const events = require("sdk/event/core");
 
 // Types of animations.
@@ -53,16 +55,7 @@ exports.ANIMATION_TYPES = ANIMATION_TYPES;
  *
  * This actor also allows playing, pausing and seeking the animation.
  */
-var AnimationPlayerActor = ActorClass({
-  typeName: "animationplayer",
-
-  events: {
-    "changed": {
-      type: "changed",
-      state: Arg(0, "json")
-    }
-  },
-
+var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
   /**
    * @param {AnimationsActor} The main AnimationsActor instance
    * @param {AnimationPlayer} The player object returned by getAnimationPlayers
@@ -141,7 +134,7 @@ var AnimationPlayerActor = ActorClass({
    * Release the actor, when it isn't needed anymore.
    * Protocol.js uses this release method to call the destroy method.
    */
-  release: method(function () {}, {release: true}),
+  release: function () {},
 
   form: function (detail) {
     if (detail === "actorid") {
@@ -313,7 +306,7 @@ var AnimationPlayerActor = ActorClass({
    * reconstruct those). If you want the full state, use the getState method.
    * @return {Object}
    */
-  getCurrentState: method(function () {
+  getCurrentState: function () {
     let newState = this.getState();
 
     // If we've saved a state before, compare and only send what has changed.
@@ -334,12 +327,7 @@ var AnimationPlayerActor = ActorClass({
     this.currentState = newState;
 
     return sentState;
-  }, {
-    request: {},
-    response: {
-      data: RetVal("json")
-    }
-  }),
+  },
 
   /**
    * Executed when the current animation changes, used to emit the new state
@@ -380,25 +368,19 @@ var AnimationPlayerActor = ActorClass({
   /**
    * Pause the player.
    */
-  pause: method(function () {
+  pause: function () {
     this.player.pause();
     return this.player.ready;
-  }, {
-    request: {},
-    response: {}
-  }),
+  },
 
   /**
    * Play the player.
    * This method only returns when the animation has left its pending state.
    */
-  play: method(function () {
+  play: function () {
     this.player.play();
     return this.player.ready;
-  }, {
-    request: {},
-    response: {}
-  }),
+  },
 
   /**
    * Simply exposes the player ready promise.
@@ -411,177 +393,48 @@ var AnimationPlayerActor = ActorClass({
    * might be interested to call this method.
    * This is especially important for tests.
    */
-  ready: method(function () {
+  ready: function () {
     return this.player.ready;
-  }, {
-    request: {},
-    response: {}
-  }),
+  },
 
   /**
    * Set the current time of the animation player.
    */
-  setCurrentTime: method(function (currentTime) {
+  setCurrentTime: function (currentTime) {
     this.player.currentTime = currentTime * this.player.playbackRate;
-  }, {
-    request: {
-      currentTime: Arg(0, "number")
-    },
-    response: {}
-  }),
+  },
 
   /**
    * Set the playback rate of the animation player.
    */
-  setPlaybackRate: method(function (playbackRate) {
+  setPlaybackRate: function (playbackRate) {
     this.player.playbackRate = playbackRate;
-  }, {
-    request: {
-      currentTime: Arg(0, "number")
-    },
-    response: {}
-  }),
+  },
 
   /**
    * Get data about the keyframes of this animation player.
    * @return {Object} Returns a list of frames, each frame containing the list
    * animated properties as well as the frame's offset.
    */
-  getFrames: method(function () {
+  getFrames: function () {
     return this.player.effect.getKeyframes();
-  }, {
-    request: {},
-    response: {
-      frames: RetVal("json")
-    }
-  }),
+  },
 
   /**
    * Get data about the animated properties of this animation player.
    * @return {Array} Returns a list of animated properties.
    * Each property contains a list of values and their offsets
    */
-  getProperties: method(function () {
+  getProperties: function () {
     return this.player.effect.getProperties().map(property => {
       return {name: property.property, values: property.values};
     });
-  }, {
-    request: {},
-    response: {
-      properties: RetVal("array:json")
-    }
-  })
+  }
 });
 
 exports.AnimationPlayerActor = AnimationPlayerActor;
 
-var AnimationPlayerFront = FrontClass(AnimationPlayerActor, {
-  initialize: function (conn, form, detail, ctx) {
-    Front.prototype.initialize.call(this, conn, form, detail, ctx);
-
-    this.state = {};
-  },
-
-  form: function (form, detail) {
-    if (detail === "actorid") {
-      this.actorID = form;
-      return;
-    }
-    this._form = form;
-    this.state = this.initialState;
-  },
-
-  destroy: function () {
-    Front.prototype.destroy.call(this);
-  },
-
-  /**
-   * If the AnimationsActor was given a reference to the WalkerActor previously
-   * then calling this getter will return the animation target NodeFront.
-   */
-  get animationTargetNodeFront() {
-    if (!this._form.animationTargetNodeActorID) {
-      return null;
-    }
-
-    return this.conn.getActor(this._form.animationTargetNodeActorID);
-  },
-
-  /**
-   * Getter for the initial state of the player. Up to date states can be
-   * retrieved by calling the getCurrentState method.
-   */
-  get initialState() {
-    return {
-      type: this._form.type,
-      startTime: this._form.startTime,
-      previousStartTime: this._form.previousStartTime,
-      currentTime: this._form.currentTime,
-      playState: this._form.playState,
-      playbackRate: this._form.playbackRate,
-      name: this._form.name,
-      duration: this._form.duration,
-      delay: this._form.delay,
-      endDelay: this._form.endDelay,
-      iterationCount: this._form.iterationCount,
-      iterationStart: this._form.iterationStart,
-      isRunningOnCompositor: this._form.isRunningOnCompositor,
-      propertyState: this._form.propertyState,
-      documentCurrentTime: this._form.documentCurrentTime
-    };
-  },
-
-  /**
-   * Executed when the AnimationPlayerActor emits a "changed" event. Used to
-   * update the local knowledge of the state.
-   */
-  onChanged: protocol.preEvent("changed", function (partialState) {
-    let {state} = this.reconstructState(partialState);
-    this.state = state;
-  }),
-
-  /**
-   * Refresh the current state of this animation on the client from information
-   * found on the server. Doesn't return anything, just stores the new state.
-   */
-  refreshState: Task.async(function* () {
-    let data = yield this.getCurrentState();
-    if (this.currentStateHasChanged) {
-      this.state = data;
-    }
-  }),
-
-  /**
-   * getCurrentState interceptor re-constructs incomplete states since the actor
-   * only sends the values that have changed.
-   */
-  getCurrentState: protocol.custom(function () {
-    this.currentStateHasChanged = false;
-    return this._getCurrentState().then(partialData => {
-      let {state, hasChanged} = this.reconstructState(partialData);
-      this.currentStateHasChanged = hasChanged;
-      return state;
-    });
-  }, {
-    impl: "_getCurrentState"
-  }),
-
-  reconstructState: function (data) {
-    let hasChanged = false;
-
-    for (let key in this.state) {
-      if (typeof data[key] === "undefined") {
-        data[key] = this.state[key];
-      } else if (data[key] !== this.state[key]) {
-        hasChanged = true;
-      }
-    }
-
-    return {state: data, hasChanged};
-  }
-});
-
-/**
+ /**
  * Sent with the 'mutations' event as part of an array of changes, used to
  * inform fronts of the type of change that occured.
  */

@@ -96,11 +96,8 @@ registerCleanupFunction(() => {
 });
 
 registerCleanupFunction(function* cleanup() {
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  yield gDevTools.closeToolbox(target);
-
   while (gBrowser.tabs.length > 1) {
-    gBrowser.removeCurrentTab();
+    yield closeTabAndToolbox(gBrowser.selectedTab);
   }
 });
 

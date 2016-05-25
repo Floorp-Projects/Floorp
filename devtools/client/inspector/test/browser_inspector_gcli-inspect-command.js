@@ -1,6 +1,7 @@
 /* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* eslint key-spacing: 0 */
 "use strict";
 
 // Testing that the gcli 'inspect' command works as it should.
@@ -129,6 +130,6 @@ add_task(function* () {
           status: "VALID"
         },
       },
-    ]); // helpers.audit
-  }); // helpers.addTabWithToolbar
-}); // add_task
+    ]);
+  });
+});

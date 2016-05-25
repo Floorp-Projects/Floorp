@@ -3,6 +3,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
 // Checks that the expected default node is selected after a page navigation or
 // a reload.
@@ -62,7 +63,7 @@ add_task(function* () {
     }
 
     let onNewRoot = inspector.once("new-root");
-    yield navigateToAndWaitForNewRoot(toolbox, testActor, url);
+    yield navigateToAndWaitForNewRoot(url);
 
     info("Waiting for new root.");
     yield onNewRoot;
@@ -76,7 +77,7 @@ add_task(function* () {
        selectedNode + " is selected after navigation.");
   }
 
-  function navigateToAndWaitForNewRoot(toolbox, testActor, url) {
+  function navigateToAndWaitForNewRoot(url) {
     info("Navigating and waiting for new-root event after navigation.");
 
     let newRoot = inspector.once("new-root");
@@ -87,10 +88,10 @@ add_task(function* () {
           info("Reloading page.");
           let activeTab = toolbox.target.activeTab;
           return activeTab.reload();
-        } else {
-          info("Navigating to " + url);
-          navigateTo(toolbox, url);
         }
+
+        info("Navigating to " + url);
+        navigateTo(toolbox, url);
 
         return newRoot;
       });

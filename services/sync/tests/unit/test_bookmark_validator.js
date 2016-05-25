@@ -185,7 +185,7 @@ function getDummyServerAndClient() {
 add_test(function test_cswc_valid() {
   let {server, client} = getDummyServerAndClient();
 
-  let c = new BookmarkValidator().compareServerWithClient(server, client);
+  let c = new BookmarkValidator().compareServerWithClient(server, client).problemData;
   equal(c.clientMissing.length, 0);
   equal(c.serverMissing.length, 0);
   equal(c.differences.length, 0);
@@ -198,10 +198,10 @@ add_test(function test_cswc_serverMissing() {
   server.pop();
   server[0].children.pop();
 
-  let c = new BookmarkValidator().compareServerWithClient(server, client);
+  let c = new BookmarkValidator().compareServerWithClient(server, client).problemData;
   deepEqual(c.serverMissing, ['cccccccccccc']);
   equal(c.clientMissing.length, 0);
-  deepEqual(c.differences, [{id: 'aaaaaaaaaaaa', differences: ['childGUIDs']}]);
+  deepEqual(c.structuralDifferences, [{id: 'aaaaaaaaaaaa', differences: ['childGUIDs']}]);
   run_next_test();
 });
 
@@ -209,10 +209,10 @@ add_test(function test_cswc_clientMissing() {
   let {server, client} = getDummyServerAndClient();
   client.children[0].children.pop();
 
-  let c = new BookmarkValidator().compareServerWithClient(server, client);
+  let c = new BookmarkValidator().compareServerWithClient(server, client).problemData;
   deepEqual(c.clientMissing, ['cccccccccccc']);
   equal(c.serverMissing.length, 0);
-  deepEqual(c.differences, [{id: 'aaaaaaaaaaaa', differences: ['childGUIDs']}]);
+  deepEqual(c.structuralDifferences, [{id: 'aaaaaaaaaaaa', differences: ['childGUIDs']}]);
   run_next_test();
 });
 
@@ -220,7 +220,7 @@ add_test(function test_cswc_differences() {
   {
     let {server, client} = getDummyServerAndClient();
     client.children[0].children[0].title = 'asdf';
-    let c = new BookmarkValidator().compareServerWithClient(server, client);
+    let c = new BookmarkValidator().compareServerWithClient(server, client).problemData;
     equal(c.clientMissing.length, 0);
     equal(c.serverMissing.length, 0);
     deepEqual(c.differences, [{id: 'bbbbbbbbbbbb', differences: ['title']}]);
@@ -229,7 +229,7 @@ add_test(function test_cswc_differences() {
   {
     let {server, client} = getDummyServerAndClient();
     server[2].type = 'bookmark';
-    let c = new BookmarkValidator().compareServerWithClient(server, client);
+    let c = new BookmarkValidator().compareServerWithClient(server, client).problemData;
     equal(c.clientMissing.length, 0);
     equal(c.serverMissing.length, 0);
     deepEqual(c.differences, [{id: 'cccccccccccc', differences: ['type']}]);

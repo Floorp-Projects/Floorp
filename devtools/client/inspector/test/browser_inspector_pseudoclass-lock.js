@@ -1,6 +1,7 @@
 /* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+/* globals getTestActorWithoutToolbox */
 "use strict";
 
 // Test that locking the pseudoclass displays correctly in the ruleview
@@ -49,7 +50,6 @@ add_task(function* () {
   yield assertPseudoRemovedFromNode(testActor);
 });
 
-
 function* togglePseudoClass(inspector) {
   info("Toggle the pseudoclass, wait for it to be applied");
 
@@ -72,14 +72,17 @@ function* testNavigate(inspector, testActor, ruleview) {
 
   info("Make sure the pseudoclass is still on after navigating to a parent");
 
-  ok((yield testActor.hasPseudoClassLock("#div-1", PSEUDO)), "pseudo-class lock is still applied after inspecting ancestor");
+  ok((yield testActor.hasPseudoClassLock("#div-1", PSEUDO)),
+     "pseudo-class lock is still applied after inspecting ancestor");
 
   let onPseudo = inspector.selection.once("pseudoclass");
   yield selectNode("#div-2", inspector);
   yield onPseudo;
 
-  info("Make sure the pseudoclass is removed after navigating to a non-hierarchy node");
-  ok(!(yield testActor.hasPseudoClassLock("#div-1", PSEUDO)), "pseudo-class lock is removed after inspecting sibling node");
+  info("Make sure the pseudoclass is removed after navigating to a " +
+       "non-hierarchy node");
+  ok(!(yield testActor.hasPseudoClassLock("#div-1", PSEUDO)),
+     "pseudo-class lock is removed after inspecting sibling node");
 
   yield selectNode("#div-1", inspector);
   yield togglePseudoClass(inspector);
@@ -102,21 +105,26 @@ function* assertPseudoAddedToNode(inspector, testActor, ruleview) {
   ok(hasLock, "pseudo-class lock has been applied");
 
   info("Check that the ruleview contains the pseudo-class rule");
-  let rules = ruleview.element.querySelectorAll(".ruleview-rule.theme-separator");
-  is(rules.length, 3, "rule view is showing 3 rules for pseudo-class locked div");
-  is(rules[1]._ruleEditor.rule.selectorText, "div:hover", "rule view is showing " + PSEUDO + " rule");
+  let rules = ruleview.element.querySelectorAll(
+    ".ruleview-rule.theme-separator");
+  is(rules.length, 3,
+     "rule view is showing 3 rules for pseudo-class locked div");
+  is(rules[1]._ruleEditor.rule.selectorText, "div:hover",
+     "rule view is showing " + PSEUDO + " rule");
 
   info("Show the highlighter on #div-1");
   yield showPickerOn("#div-1", inspector);
 
   info("Check that the infobar selector contains the pseudo-class");
-  let value = yield testActor.getHighlighterNodeTextContent("box-model-nodeinfobar-pseudo-classes");
+  let value = yield testActor.getHighlighterNodeTextContent(
+    "box-model-nodeinfobar-pseudo-classes");
   is(value, PSEUDO, "pseudo-class in infobar selector");
   yield inspector.toolbox.highlighter.hideBoxModel();
 }
 
 function* assertPseudoRemovedFromNode(testActor) {
-  info("Make sure the pseudoclass lock is removed from #div-1 and its ancestors");
+  info("Make sure the pseudoclass lock is removed from #div-1 and its " +
+       "ancestors");
 
   let hasLock = yield testActor.hasPseudoClassLock("#div-1", PSEUDO);
   ok(!hasLock, "pseudo-class lock has been removed");
@@ -128,12 +136,14 @@ function* assertPseudoRemovedFromNode(testActor) {
 
 function* assertPseudoRemovedFromView(inspector, testActor, ruleview) {
   info("Check that the ruleview no longer contains the pseudo-class rule");
-  let rules = ruleview.element.querySelectorAll(".ruleview-rule.theme-separator");
+  let rules = ruleview.element.querySelectorAll(
+    ".ruleview-rule.theme-separator");
   is(rules.length, 2, "rule view is showing 2 rules after removing lock");
 
   yield showPickerOn("#div-1", inspector);
 
-  let value = yield testActor.getHighlighterNodeTextContent("box-model-nodeinfobar-pseudo-classes");
+  let value = yield testActor.getHighlighterNodeTextContent(
+    "box-model-nodeinfobar-pseudo-classes");
   is(value, "", "pseudo-class removed from infobar selector");
   yield inspector.toolbox.highlighter.hideBoxModel();
 }

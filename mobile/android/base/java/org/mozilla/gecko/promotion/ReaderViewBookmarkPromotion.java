@@ -7,12 +7,10 @@ package org.mozilla.gecko.promotion;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Bundle;
 
 import com.keepsafe.switchboard.SwitchBoard;
 
 import org.mozilla.gecko.BrowserApp;
-import org.mozilla.gecko.delegates.BrowserAppDelegate;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
@@ -21,18 +19,11 @@ import org.mozilla.gecko.delegates.BrowserAppDelegateWithReference;
 import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.util.Experiments;
 
-import java.lang.ref.WeakReference;
-
 public class ReaderViewBookmarkPromotion extends BrowserAppDelegateWithReference implements Tabs.OnTabsChangedListener {
-    private int mTimesEnteredReaderMode;
-    private boolean mExperimentEnabled;
+    private static final String PREF_FIRST_RV_HINT_SHOWN = "first_reader_view_hint_shown";
+    private static final String FIRST_READERVIEW_OPEN_TELEMETRYEXTRA = "first_readerview_open_prompt";
 
-    @Override
-    public void onCreate(BrowserApp browserApp, Bundle savedInstanceState) {
-        super.onCreate(browserApp, savedInstanceState);
-
-        mExperimentEnabled = SwitchBoard.isInExperiment(browserApp, Experiments.TRIPLE_READERVIEW_BOOKMARK_PROMPT);
-    }
+    private boolean hasEnteredReaderMode = false;
 
     @Override
     public void onResume(BrowserApp browserApp) {
@@ -52,11 +43,8 @@ public class ReaderViewBookmarkPromotion extends BrowserAppDelegateWithReference
                 // new url: tab.getURL()
                 final boolean enteringReaderMode = ReaderModeUtils.isEnteringReaderMode(tab.getURL(), data);
 
-                if (mTimesEnteredReaderMode < 4 && enteringReaderMode) {
-                    mTimesEnteredReaderMode++;
-                }
-
-                if (mTimesEnteredReaderMode == 3) {
+                if (!hasEnteredReaderMode && enteringReaderMode) {
+                    hasEnteredReaderMode = true;
                     promoteBookmarking();
                 }
 
@@ -87,16 +75,17 @@ public class ReaderViewBookmarkPromotion extends BrowserAppDelegateWithReference
         }
 
         final SharedPreferences prefs = GeckoSharedPrefs.forProfile(browserApp);
+        final boolean isEnabled = SwitchBoard.isInExperiment(browserApp, Experiments.TRIPLE_READERVIEW_BOOKMARK_PROMPT);
 
         // We reuse the same preference as for the first offline reader view bookmark
         // as we only want to show one of the two UIs (they both explain the same
         // functionality).
-        if (!mExperimentEnabled || prefs.getBoolean(SimpleHelperUI.PREF_FIRST_RVBP_SHOWN, false)) {
+        if (!isEnabled || prefs.getBoolean(PREF_FIRST_RV_HINT_SHOWN, false)) {
             return;
         }
 
         SimpleHelperUI.show(browserApp,
-                SimpleHelperUI.TRIPLE_READERVIEW_OPEN_TELEMETRYEXTRA,
+                FIRST_READERVIEW_OPEN_TELEMETRYEXTRA,
                 BrowserApp.ACTIVITY_REQUEST_TRIPLE_READERVIEW,
                 R.string.helper_triple_readerview_open_title,
                 R.string.helper_triple_readerview_open_message,
@@ -105,9 +94,9 @@ public class ReaderViewBookmarkPromotion extends BrowserAppDelegateWithReference
                 BrowserApp.ACTIVITY_RESULT_TRIPLE_READERVIEW_ADD_BOOKMARK,
                 BrowserApp.ACTIVITY_RESULT_TRIPLE_READERVIEW_IGNORE);
 
-        GeckoSharedPrefs.forProfile(browserApp)
+        prefs
                 .edit()
-                .putBoolean(SimpleHelperUI.PREF_FIRST_RVBP_SHOWN, true)
+                .putBoolean(PREF_FIRST_RV_HINT_SHOWN, true)
                 .apply();
     }
 

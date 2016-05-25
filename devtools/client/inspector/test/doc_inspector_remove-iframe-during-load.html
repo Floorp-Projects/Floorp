@@ -7,6 +7,8 @@
 <body>
   <div id="yay"></div>
   <script type="text/javascript">
+    "use strict";
+
     var yay = document.querySelector("#yay");
     yay.textContent = "nothing";
 
@@ -21,18 +23,18 @@
     yay.textContent = "before events";
 
     // Create/remove an iframe on DOMContentLoaded.
-    document.addEventListener("DOMContentLoaded", function() {
-      var iframe = document.createElement("iframe");
-      document.body.appendChild(iframe);
-      iframe.remove();
+    document.addEventListener("DOMContentLoaded", function () {
+      let newIframe = document.createElement("iframe");
+      document.body.appendChild(newIframe);
+      newIframe.remove();
       yay.textContent = "DOMContentLoaded";
     });
 
     // Create/remove an iframe on window load.
-    window.addEventListener("load", function() {
-      var iframe = document.createElement("iframe");
-      document.body.appendChild(iframe);
-      iframe.remove();
+    window.addEventListener("load", function () {
+      let newIframe = document.createElement("iframe");
+      document.body.appendChild(newIframe);
+      newIframe.remove();
       yay.textContent = "load";
 
       // Dispatch the done event.

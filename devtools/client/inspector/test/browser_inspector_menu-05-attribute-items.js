@@ -8,7 +8,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 const TEST_URL = URL_ROOT + "doc_inspector_menu.html";
 
 add_task(function* () {
-  let { inspector, toolbox, testActor } = yield openInspectorForURL(TEST_URL);
+  let { inspector, testActor } = yield openInspectorForURL(TEST_URL);
   yield selectNode("#attributes", inspector);
 
   yield testAddAttribute();

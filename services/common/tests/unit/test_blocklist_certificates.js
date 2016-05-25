@@ -2,7 +2,7 @@ const { Constructor: CC } = Components;
 
 Cu.import("resource://testing-common/httpd.js");
 
-const { OneCRLBlocklistClient } = Cu.import("resource://services-common/KintoBlocklist.js");
+const { OneCRLBlocklistClient } = Cu.import("resource://services-common/blocklist-clients.js");
 const { loadKinto } = Cu.import("resource://services-common/kinto-offline-client.js");
 
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
@@ -40,7 +40,7 @@ add_task(function* test_something(){
   const configPath = "/v1/";
   const recordsPath = "/v1/buckets/blocklists/collections/certificates/records";
 
-  Services.prefs.setCharPref("services.kinto.base",
+  Services.prefs.setCharPref("services.settings.server",
                              `http://localhost:${server.identity.primaryPort}/v1`);
 
   // register a handler
@@ -93,7 +93,7 @@ add_task(function* test_something(){
   // Try to maybeSync with the current lastModified value - no connection
   // should be attempted.
   // Clear the kinto base pref so any connections will cause a test failure
-  Services.prefs.clearUserPref("services.kinto.base");
+  Services.prefs.clearUserPref("services.settings.server");
   yield OneCRLBlocklistClient.maybeSync(4000, Date.now());
 
   // Try again with a lastModified value at some point in the past
@@ -101,9 +101,9 @@ add_task(function* test_something(){
 
   // Check the OneCRL check time pref is modified, even if the collection
   // hasn't changed
-  Services.prefs.setIntPref("services.kinto.onecrl.checked", 0);
+  Services.prefs.setIntPref("services.blocklist.onecrl.checked", 0);
   yield OneCRLBlocklistClient.maybeSync(3000, Date.now());
-  let newValue = Services.prefs.getIntPref("services.kinto.onecrl.checked");
+  let newValue = Services.prefs.getIntPref("services.blocklist.onecrl.checked");
   do_check_neq(newValue, 0);
 });
 
@@ -141,7 +141,7 @@ function getSampleResponse(req, port) {
         "Server: waitress"
       ],
       "status": {status: 200, statusText: "OK"},
-      "responseBody": JSON.stringify({"settings":{"cliquet.batch_max_requests":25}, "url":`http://localhost:${port}/v1/`, "documentation":"https://kinto.readthedocs.org/", "version":"1.5.1", "commit":"cbc6f58", "hello":"kinto"})
+      "responseBody": JSON.stringify({"settings":{"batch_max_requests":25}, "url":`http://localhost:${port}/v1/`, "documentation":"https://kinto.readthedocs.org/", "version":"1.5.1", "commit":"cbc6f58", "hello":"kinto"})
     },
     "GET:/v1/buckets/blocklists/collections/certificates/records?_sort=-last_modified": {
       "sampleHeaders": [

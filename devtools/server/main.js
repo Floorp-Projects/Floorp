@@ -400,6 +400,11 @@ var DebuggerServer = {
         type: { global: true }
       });
     }
+    this.registerModule("devtools/server/actors/addons", {
+      prefix: "addons",
+      constructor: "AddonsActor",
+      type: { global: true }
+    });
     this.registerModule("devtools/server/actors/webapps", {
       prefix: "webapps",
       constructor: "WebappsActor",
