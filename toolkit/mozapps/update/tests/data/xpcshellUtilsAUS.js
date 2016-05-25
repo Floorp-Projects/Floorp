@@ -1582,7 +1582,7 @@ function runUpdate(aExpectedExitValue, aExpectedStatus, aCallback) {
     if (updateBin.leafName == "updater.app") {
       updateBin.append("Contents");
       updateBin.append("MacOS");
-      updateBin.append("updater");
+      updateBin.append("org.mozilla.updater");
     }
   }
   Assert.ok(updateBin.exists(), MSG_SHOULD_EXIST);
