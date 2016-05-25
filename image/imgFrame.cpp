@@ -238,7 +238,7 @@ nsresult
 imgFrame::InitWithDrawable(gfxDrawable* aDrawable,
                            const nsIntSize& aSize,
                            const SurfaceFormat aFormat,
-                           Filter aFilter,
+                           SamplingFilter aSamplingFilter,
                            uint32_t aImageFlags)
 {
   // Assert for properties that should be verified by decoders,
@@ -305,7 +305,7 @@ imgFrame::InitWithDrawable(gfxDrawable* aDrawable,
   MOZ_ASSERT(ctx);  // Already checked the draw target above.
   gfxUtils::DrawPixelSnapped(ctx, aDrawable, mFrameRect.Size(),
                              ImageRegion::Create(ThebesRect(mFrameRect)),
-                             mFormat, aFilter, aImageFlags);
+                             mFormat, aSamplingFilter, aImageFlags);
 
   if (canUseDataSurface && !mImageSurface) {
     NS_WARNING("Failed to create VolatileDataSourceSurface");
@@ -550,7 +550,7 @@ imgFrame::SurfaceForDrawing(bool               aDoPadding,
 }
 
 bool imgFrame::Draw(gfxContext* aContext, const ImageRegion& aRegion,
-                    Filter aFilter, uint32_t aImageFlags)
+                    SamplingFilter aSamplingFilter, uint32_t aImageFlags)
 {
   PROFILER_LABEL("imgFrame", "Draw",
     js::ProfileEntry::Category::GRAPHICS);
@@ -607,7 +607,7 @@ bool imgFrame::Draw(gfxContext* aContext, const ImageRegion& aRegion,
   if (surfaceResult.IsValid()) {
     gfxUtils::DrawPixelSnapped(aContext, surfaceResult.mDrawable,
                                imageRect.Size(), region, surfaceResult.mFormat,
-                               aFilter, aImageFlags);
+                               aSamplingFilter, aImageFlags);
   }
   return true;
 }

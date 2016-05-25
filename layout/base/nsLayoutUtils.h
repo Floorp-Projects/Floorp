@@ -133,7 +133,7 @@ class nsLayoutUtils
   typedef mozilla::gfx::Color Color;
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::ExtendMode ExtendMode;
-  typedef mozilla::gfx::Filter Filter;
+  typedef mozilla::gfx::SamplingFilter SamplingFilter;
   typedef mozilla::gfx::Float Float;
   typedef mozilla::gfx::Point Point;
   typedef mozilla::gfx::Rect Rect;
@@ -1719,9 +1719,9 @@ public:
   static nsIFrame* GetClosestLayer(nsIFrame* aFrame);
 
   /**
-   * Gets the graphics filter for the frame
+   * Gets the graphics sampling filter for the frame
    */
-  static Filter GetGraphicsFilterForFrame(nsIFrame* aFrame);
+  static SamplingFilter GetSamplingFilterForFrame(nsIFrame* aFrame);
 
   /* N.B. The only difference between variants of the Draw*Image
    * functions below is the type of the aImage argument.
@@ -1758,7 +1758,7 @@ public:
                                         nsPresContext*      aPresContext,
                                         imgIContainer*      aImage,
                                         const CSSIntSize&   aImageSize,
-                                        Filter              aGraphicsFilter,
+                                        SamplingFilter      aSamplingFilter,
                                         const nsRect&       aDest,
                                         const nsRect&       aFill,
                                         const nsSize&       aRepeatSize,
@@ -1785,7 +1785,7 @@ public:
   static DrawResult DrawImage(gfxContext&         aContext,
                               nsPresContext*      aPresContext,
                               imgIContainer*      aImage,
-                              Filter              aGraphicsFilter,
+                              const SamplingFilter aSamplingFilter,
                               const nsRect&       aDest,
                               const nsRect&       aFill,
                               const nsPoint&      aAnchor,
@@ -1839,7 +1839,7 @@ public:
   static DrawResult DrawSingleUnscaledImage(gfxContext&          aContext,
                                             nsPresContext*       aPresContext,
                                             imgIContainer*       aImage,
-                                            Filter               aGraphicsFilter,
+                                            const SamplingFilter aSamplingFilter,
                                             const nsPoint&       aDest,
                                             const nsRect*        aDirty,
                                             uint32_t             aImageFlags,
@@ -1870,7 +1870,7 @@ public:
   static DrawResult DrawSingleImage(gfxContext&         aContext,
                                     nsPresContext*      aPresContext,
                                     imgIContainer*      aImage,
-                                    Filter              aGraphicsFilter,
+                                    const SamplingFilter aSamplingFilter,
                                     const nsRect&       aDest,
                                     const nsRect&       aDirty,
                                     const mozilla::SVGImageContext* aSVGContext,
