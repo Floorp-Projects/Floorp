@@ -266,10 +266,8 @@ Gecko_SetMozBinding(nsStyleDisplay* aDisplay,
   RefPtr<nsStringBuffer> urlBuffer = nsCSSValue::BufferFromString(url);
 
   aDisplay->mBinding =
-    new css::URLValue(urlBuffer,
-                      nsMainThreadPtrHandle<nsIURI>(aBaseURI),
-                      nsMainThreadPtrHandle<nsIURI>(aReferrer),
-                      nsMainThreadPtrHandle<nsIPrincipal>(aPrincipal));
+    new css::URLValue(urlBuffer, do_AddRef(aBaseURI),
+                      do_AddRef(aReferrer), do_AddRef(aPrincipal));
 }
 
 void
