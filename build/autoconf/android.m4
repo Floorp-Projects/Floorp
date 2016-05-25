@@ -245,6 +245,8 @@ AC_DEFUN([MOZ_ANDROID_INSTALL_TRACKING],
 if test -n "$MOZ_INSTALL_TRACKING"; then
     AC_SUBST(MOZ_INSTALL_TRACKING)
     MOZ_ANDROID_AAR(play-services-ads, $ANDROID_GOOGLE_PLAY_SERVICES_VERSION, google, com/google/android/gms)
+    MOZ_ANDROID_AAR(play-services-analytics, $ANDROID_GOOGLE_PLAY_SERVICES_VERSION, google, com/google/android/gms)
+    MOZ_ANDROID_AAR(play-services-appindexing, $ANDROID_GOOGLE_PLAY_SERVICES_VERSION, google, com/google/android/gms)
     MOZ_ANDROID_AAR(play-services-basement, $ANDROID_GOOGLE_PLAY_SERVICES_VERSION, google, com/google/android/gms)
 fi
 

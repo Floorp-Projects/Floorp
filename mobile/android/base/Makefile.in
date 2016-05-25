@@ -91,6 +91,8 @@ endif
 ifdef MOZ_INSTALL_TRACKING
     JAVA_CLASSPATH += \
         $(ANDROID_PLAY_SERVICES_ADS_AAR_LIB) \
+        $(ANDROID_PLAY_SERVICES_ANALYTICS_AAR_LIB) \
+        $(ANDROID_PLAY_SERVICES_APPINDEXING_AAR_LIB) \
         $(ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB) \
         $(NULL)
 endif
@@ -130,6 +132,8 @@ endif
 ifdef MOZ_INSTALL_TRACKING
     java_bundled_libs += \
         $(ANDROID_PLAY_SERVICES_ADS_AAR_LIB) \
+        $(ANDROID_PLAY_SERVICES_ANALYTICS_AAR_LIB) \
+        $(ANDROID_PLAY_SERVICES_APPINDEXING_AAR_LIB) \
         $(ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB) \
         $(NULL)
 endif
@@ -424,6 +428,8 @@ generated/android/support/v7/mediarouter/R.java: .aapt.deps ;
 generated/android/support/v7/recyclerview/R.java: .aapt.deps ;
 generated/com/google/android/gms/R.java: .aapt.deps ;
 generated/com/google/android/gms/ads/R.java: .aapt.deps ;
+generated/com/google/android/gms/analytics/R.java: .aapt.deps ;
+generated/com/google/android/gms/appindexing/R.java: .aapt.deps ;
 generated/com/google/android/gms/base/R.java: .aapt.deps ;
 generated/com/google/android/gms/cast/R.java: .aapt.deps ;
 generated/com/google/android/gms/gcm/R.java: .aapt.deps ;
