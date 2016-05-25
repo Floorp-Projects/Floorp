@@ -34,5 +34,17 @@ class MOZ_RAII AutoSetXPCOMLoadOnMainThread
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+#define DLLNAME_MAX 128
+#ifdef NIGHTLY_BUILD
+struct DllLoadInfo
+{
+  char name[DLLNAME_MAX+1];
+  LPVOID lpBaseOfDll;
+  DWORD SizeOfImage;
+};
+typedef void (*LoadCallBackFn)(DllLoadInfo&);
+MFBT_API void RegisterDllLoadCallback(LoadCallBackFn);
+#endif // NIGHTLY_BUILD
+
 #endif // defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64))
 #endif // mozilla_windowsdllblocklist_h
