@@ -407,7 +407,21 @@ void
 TCPSocket::NotifyCopyComplete(nsresult aStatus)
 {
   mAsyncCopierActive = false;
-  mMultiplexStream->RemoveStream(0);
+  
+  uint32_t countRemaining;
+  nsresult rvRemaining = mMultiplexStream->GetCount(&countRemaining);
+  NS_ENSURE_SUCCESS_VOID(rvRemaining);
+
+  while (countRemaining--) {
+    mMultiplexStream->RemoveStream(0);
+  }
+
+  while (!mPendingDataWhileCopierActive.IsEmpty()) {
+      nsCOMPtr<nsIInputStream> stream = mPendingDataWhileCopierActive[0];
+      mMultiplexStream->AppendStream(stream);
+      mPendingDataWhileCopierActive.RemoveElementAt(0);
+  }
+  
   if (mSocketBridgeParent) {
     mozilla::Unused << mSocketBridgeParent->SendUpdateBufferedAmount(BufferedAmount(),
                                                                      mTrackingNumber);
@@ -905,6 +919,9 @@ TCPSocket::Send(nsIInputStream* aStream, uint32_t aByteLength)
     // When we are waiting for starttls, newStream is added to pendingData
     // and will be appended to multiplexStream after tls had been set up.
     mPendingDataAfterStartTLS.AppendElement(aStream);
+  } else if (mAsyncCopierActive) {
+    // While the AsyncCopier is still active..
+    mPendingDataWhileCopierActive.AppendElement(aStream);
   } else {
     mMultiplexStream->AppendStream(aStream);
   }
