@@ -79,6 +79,9 @@
 #include "shell/jsoptparse.h"
 #include "shell/jsshell.h"
 #include "shell/OSObject.h"
+#include "threading/ConditionVariable.h"
+#include "threading/LockGuard.h"
+#include "threading/Mutex.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Compression.h"
 #include "vm/Debugger.h"
@@ -167,12 +170,12 @@ struct ShellRuntime
     /*
      * Watchdog thread state.
      */
-    PRLock* watchdogLock;
-    PRCondVar* watchdogWakeup;
+    Mutex watchdogLock;
+    ConditionVariable watchdogWakeup;
     PRThread* watchdogThread;
     Maybe<TimeStamp> watchdogTimeout;
 
-    PRCondVar* sleepWakeup;
+    ConditionVariable sleepWakeup;
 
     int exitCode;
     bool quitting;
@@ -215,9 +218,6 @@ mozilla::Atomic<bool> jsCacheOpened(false);
 
 static bool
 SetTimeoutValue(JSContext* cx, double t);
-
-static bool
-InitWatchdog(JSRuntime* rt);
 
 static void
 KillWatchdog(JSRuntime *rt);
@@ -315,10 +315,7 @@ ShellRuntime::ShellRuntime(JSRuntime* rt)
 #ifdef SPIDERMONKEY_PROMISE
     promiseRejectionTrackerCallback(rt, NullValue()),
 #endif // SPIDERMONKEY_PROMISE
-    watchdogLock(nullptr),
-    watchdogWakeup(nullptr),
     watchdogThread(nullptr),
-    sleepWakeup(nullptr),
     exitCode(0),
     quitting(false),
     gotError(false)
@@ -2936,12 +2933,6 @@ WorkerMain(void* arg)
     JS_InitDestroyPrincipalsCallback(rt, ShellPrincipals::destroy);
     SetWorkerRuntimeOptions(rt);
 
-    if (!InitWatchdog(rt)) {
-        JS_DestroyRuntime(rt);
-        js_delete(input);
-        return;
-    }
-
     JSContext* cx = NewContext(rt);
     if (!cx) {
         JS_DestroyRuntime(rt);
@@ -3101,39 +3092,21 @@ Sleep_fn(JSContext* cx, unsigned argc, Value* vp)
             return false;
         }
     }
-    PR_Lock(sr->watchdogLock);
-    TimeStamp toWakeup = TimeStamp::Now() + duration;
-    for (;;) {
-        PR_WaitCondVar(sr->sleepWakeup, DurationToPRInterval(duration));
-        if (sr->serviceInterrupt)
-            break;
-        auto now = TimeStamp::Now();
-        if (now >= toWakeup)
-            break;
-        duration = toWakeup - now;
+    {
+        LockGuard<Mutex> guard(sr->watchdogLock);
+        TimeStamp toWakeup = TimeStamp::Now() + duration;
+        for (;;) {
+            sr->sleepWakeup.wait_for(guard, duration);
+            if (sr->serviceInterrupt)
+                break;
+            auto now = TimeStamp::Now();
+            if (now >= toWakeup)
+                break;
+            duration = toWakeup - now;
+        }
     }
-    PR_Unlock(sr->watchdogLock);
     args.rval().setUndefined();
     return !sr->serviceInterrupt;
-}
-
-static bool
-InitWatchdog(JSRuntime* rt)
-{
-    ShellRuntime* sr = GetShellRuntime(rt);
-    MOZ_ASSERT(!sr->watchdogThread);
-    sr->watchdogLock = PR_NewLock();
-    if (sr->watchdogLock) {
-        sr->watchdogWakeup = PR_NewCondVar(sr->watchdogLock);
-        if (sr->watchdogWakeup) {
-            sr->sleepWakeup = PR_NewCondVar(sr->watchdogLock);
-            if (sr->sleepWakeup)
-                return true;
-            PR_DestroyCondVar(sr->watchdogWakeup);
-        }
-        PR_DestroyLock(sr->watchdogLock);
-    }
-    return false;
 }
 
 static void
@@ -3142,22 +3115,20 @@ KillWatchdog(JSRuntime* rt)
     ShellRuntime* sr = GetShellRuntime(rt);
     PRThread* thread;
 
-    PR_Lock(sr->watchdogLock);
-    thread = sr->watchdogThread;
-    if (thread) {
-        /*
-         * The watchdog thread is running, tell it to terminate waking it up
-         * if necessary.
-         */
-        sr->watchdogThread = nullptr;
-        PR_NotifyCondVar(sr->watchdogWakeup);
+    {
+        LockGuard<Mutex> guard(sr->watchdogLock);
+        thread = sr->watchdogThread;
+        if (thread) {
+            /*
+             * The watchdog thread is running, tell it to terminate waking it up
+             * if necessary.
+             */
+            sr->watchdogThread = nullptr;
+            sr->watchdogWakeup.notify_one();
+        }
     }
-    PR_Unlock(sr->watchdogLock);
     if (thread)
         PR_JoinThread(thread);
-    PR_DestroyCondVar(sr->sleepWakeup);
-    PR_DestroyCondVar(sr->watchdogWakeup);
-    PR_DestroyLock(sr->watchdogLock);
 }
 
 static void
@@ -3168,7 +3139,7 @@ WatchdogMain(void* arg)
     JSRuntime* rt = (JSRuntime*) arg;
     ShellRuntime* sr = GetShellRuntime(rt);
 
-    PR_Lock(sr->watchdogLock);
+    LockGuard<Mutex> guard(sr->watchdogLock);
     while (sr->watchdogThread) {
         auto now = TimeStamp::Now();
         if (sr->watchdogTimeout.isSome() && now >= sr->watchdogTimeout.value()) {
@@ -3177,12 +3148,13 @@ WatchdogMain(void* arg)
              * outside the lock.
              */
             sr->watchdogTimeout = Nothing();
-            PR_Unlock(sr->watchdogLock);
-            CancelExecution(rt);
-            PR_Lock(sr->watchdogLock);
+            {
+                UnlockGuard<Mutex> unlock(guard);
+                CancelExecution(rt);
+            }
 
             /* Wake up any threads doing sleep. */
-            PR_NotifyAllCondVar(sr->sleepWakeup);
+            sr->sleepWakeup.notify_all();
         } else {
             if (sr->watchdogTimeout.isSome()) {
                 /*
@@ -3195,12 +3167,9 @@ WatchdogMain(void* arg)
             TimeDuration sleepDuration = sr->watchdogTimeout.isSome()
                                          ? TimeDuration::FromSeconds(0.1)
                                          : TimeDuration::Forever();
-            mozilla::DebugOnly<PRStatus> status =
-              PR_WaitCondVar(sr->watchdogWakeup, DurationToPRInterval(sleepDuration));
-            MOZ_ASSERT(status == PR_SUCCESS);
+            sr->watchdogWakeup.wait_for(guard, sleepDuration);
         }
     }
-    PR_Unlock(sr->watchdogLock);
 }
 
 static bool
@@ -3209,15 +3178,14 @@ ScheduleWatchdog(JSRuntime* rt, double t)
     ShellRuntime* sr = GetShellRuntime(rt);
 
     if (t <= 0) {
-        PR_Lock(sr->watchdogLock);
+        LockGuard<Mutex> guard(sr->watchdogLock);
         sr->watchdogTimeout = Nothing();
-        PR_Unlock(sr->watchdogLock);
         return true;
     }
 
     auto interval = TimeDuration::FromSeconds(t);
     auto timeout = TimeStamp::Now() + interval;
-    PR_Lock(sr->watchdogLock);
+    LockGuard<Mutex> guard(sr->watchdogLock);
     if (!sr->watchdogThread) {
         MOZ_ASSERT(sr->watchdogTimeout.isNothing());
         sr->watchdogThread = PR_CreateThread(PR_USER_THREAD,
@@ -3227,15 +3195,12 @@ ScheduleWatchdog(JSRuntime* rt, double t)
                                           PR_GLOBAL_THREAD,
                                           PR_JOINABLE_THREAD,
                                           0);
-        if (!sr->watchdogThread) {
-            PR_Unlock(sr->watchdogLock);
+        if (!sr->watchdogThread)
             return false;
-        }
     } else if (sr->watchdogTimeout.isNothing() || timeout < sr->watchdogTimeout.value()) {
-         PR_NotifyCondVar(sr->watchdogWakeup);
+         sr->watchdogWakeup.notify_one();
     }
     sr->watchdogTimeout = Some(timeout);
-    PR_Unlock(sr->watchdogLock);
     return true;
 }
 
@@ -7428,9 +7393,6 @@ main(int argc, char** argv, char** envp)
     JS::dbg::SetDebuggerMallocSizeOf(rt, moz_malloc_size_of);
 
     if (!offThreadState.init())
-        return 1;
-
-    if (!InitWatchdog(rt))
         return 1;
 
     cx = NewContext(rt);
