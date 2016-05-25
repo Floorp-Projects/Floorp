@@ -222,3 +222,14 @@ function waitUntilApzStable() {
     }, window);
   });
 }
+
+function isApzEnabled() {
+  var enabled = SpecialPowers.getDOMWindowUtils(window).asyncPanZoomEnabled;
+  if (!enabled) {
+    // All tests are required to have at least one assertion. Since APZ is
+    // disabled, and the main test is presumably not going to run, we stick in
+    // a dummy assertion here to keep the test passing.
+    SimpleTest.ok(true, "APZ is not enabled; this test will be skipped");
+  }
+  return enabled;
+}
