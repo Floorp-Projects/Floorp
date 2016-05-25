@@ -9,15 +9,15 @@
   <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript">
 
-function* runTest() {
+function* test(testDriver) {
   document.addEventListener('click', clicked, false);
 
   // mouse down, move it around, and release it near where it went down. this
   // should generate a click at the release point
-  yield synthesizeNativeMouseEvent(document.getElementById('b'), 5, 5, nativeMouseDownEventMsg(), driveTest);
-  yield synthesizeNativeMouseEvent(document.getElementById('b'), 100, 100, nativeMouseMoveEventMsg(), driveTest);
-  yield synthesizeNativeMouseEvent(document.getElementById('b'), 10, 10, nativeMouseMoveEventMsg(), driveTest);
-  yield synthesizeNativeMouseEvent(document.getElementById('b'), 8, 8, nativeMouseUpEventMsg(), driveTest);
+  yield synthesizeNativeMouseEvent(document.getElementById('b'), 5, 5, nativeMouseDownEventMsg(), testDriver);
+  yield synthesizeNativeMouseEvent(document.getElementById('b'), 100, 100, nativeMouseMoveEventMsg(), testDriver);
+  yield synthesizeNativeMouseEvent(document.getElementById('b'), 10, 10, nativeMouseMoveEventMsg(), testDriver);
+  yield synthesizeNativeMouseEvent(document.getElementById('b'), 8, 8, nativeMouseUpEventMsg(), testDriver);
   dump("Finished synthesizing click with a drag in the middle\n");
 }
 
@@ -30,16 +30,8 @@ function clicked(e) {
   subtestDone();
 }
 
-var gTestContinuation = null;
-
-function driveTest() {
-  if (!gTestContinuation) {
-    gTestContinuation = runTest();
-  }
-  gTestContinuation.next();
-}
-
-waitUntilApzStable().then(driveTest);
+waitUntilApzStable()
+.then(runContinuation(test));
 
   </script>
 </head>
