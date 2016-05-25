@@ -8,6 +8,7 @@
 #include "mozilla/AnimationUtils.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Move.h"
+#include "mozilla/StyleAnimationValue.h"
 #include "mozilla/TimingParams.h"
 #include "mozilla/dom/BaseKeyframeTypesBinding.h" // For FastBaseKeyframe etc.
 #include "mozilla/dom/Element.h"
@@ -500,20 +501,20 @@ KeyframeUtils::ApplySpacing(nsTArray<Keyframe>& aKeyframes,
   }
 }
 
-/* static */ nsTArray<AnimationProperty>
-KeyframeUtils::GetAnimationPropertiesFromKeyframes(
-    nsStyleContext* aStyleContext,
-    dom::Element* aElement,
-    CSSPseudoElementType aPseudoType,
-    const nsTArray<Keyframe>& aFrames)
+/* static */ nsTArray<ComputedKeyframeValues>
+KeyframeUtils::GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
+                                         dom::Element* aElement,
+                                         nsStyleContext* aStyleContext)
 {
   MOZ_ASSERT(aStyleContext);
   MOZ_ASSERT(aElement);
 
-  nsTArray<KeyframeValueEntry> entries;
+  const size_t len = aKeyframes.Length();
+  nsTArray<ComputedKeyframeValues> result(len);
 
-  for (const Keyframe& frame : aFrames) {
+  for (const Keyframe& frame : aKeyframes) {
     nsCSSPropertySet propertiesOnThisKeyframe;
+    ComputedKeyframeValues* computedValues = result.AppendElement();
     for (const PropertyValuePair& pair :
            PropertyPriorityIterator(frame.mPropertyValues)) {
       if (IsInvalidValuePair(pair)) {
@@ -551,23 +552,43 @@ KeyframeUtils::GetAnimationPropertiesFromKeyframes(
         if (propertiesOnThisKeyframe.HasProperty(value.mProperty)) {
           continue;
         }
-
-        KeyframeValueEntry* entry = entries.AppendElement();
-        MOZ_ASSERT(frame.mComputedOffset != Keyframe::kComputedOffsetNotSet,
-                   "Invalid computed offset");
-        entry->mOffset = frame.mComputedOffset;
-        entry->mProperty = value.mProperty;
-        entry->mValue = value.mValue;
-        entry->mTimingFunction = frame.mTimingFunction;
-
+        computedValues->AppendElement(value);
         propertiesOnThisKeyframe.AddProperty(value.mProperty);
       }
     }
   }
 
+  MOZ_ASSERT(result.Length() == aKeyframes.Length(), "Array length mismatch");
+  return result;
+}
+
+/* static */ nsTArray<AnimationProperty>
+KeyframeUtils::GetAnimationPropertiesFromKeyframes(
+  const nsTArray<Keyframe>& aKeyframes,
+  const nsTArray<ComputedKeyframeValues>& aComputedValues,
+  nsStyleContext* aStyleContext)
+{
+  MOZ_ASSERT(aKeyframes.Length() == aComputedValues.Length(),
+             "Array length mismatch");
+
+  nsTArray<KeyframeValueEntry> entries(aKeyframes.Length());
+
+  const size_t len = aKeyframes.Length();
+  for (size_t i = 0; i < len; ++i) {
+    const Keyframe& frame = aKeyframes[i];
+    for (auto& value : aComputedValues[i]) {
+      MOZ_ASSERT(frame.mComputedOffset != Keyframe::kComputedOffsetNotSet,
+                 "Invalid computed offset");
+      KeyframeValueEntry* entry = entries.AppendElement();
+      entry->mOffset = frame.mComputedOffset;
+      entry->mProperty = value.mProperty;
+      entry->mValue = value.mValue;
+      entry->mTimingFunction = frame.mTimingFunction;
+    }
+  }
+
   nsTArray<AnimationProperty> result;
   BuildSegmentsFromValueEntries(aStyleContext, entries, result);
-
   return result;
 }
 
