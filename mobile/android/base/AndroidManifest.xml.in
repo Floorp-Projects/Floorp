@@ -382,6 +382,14 @@
           android:name="org.mozilla.gecko.telemetry.TelemetryUploadService"
           android:exported="false"/>
 
+        <service
+            android:name="org.mozilla.gecko.customtabs.GeckoCustomTabsService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.support.customtabs.action.CustomTabsService" />
+            </intent-filter>
+        </service>
+
 #include ../services/manifests/FxAccountAndroidManifest_services.xml.in
 
         <service

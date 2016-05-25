@@ -225,6 +225,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'CrashHandler.java',
     'CustomEditText.java',
     'customtabs/CustomTabsActivity.java',
+    'customtabs/GeckoCustomTabsService.java',
     'DataReportingNotification.java',
     'db/AbstractPerProfileDatabaseProvider.java',
     'db/AbstractTransactionalProvider.java',
