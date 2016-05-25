@@ -116,7 +116,7 @@ class RegExpShared
 
     struct RegExpCompilation
     {
-        RelocatablePtrJitCode jitCode;
+        HeapPtr<jit::JitCode*> jitCode;
         uint8_t* byteCode;
 
         RegExpCompilation() : byteCode(nullptr) {}
@@ -128,7 +128,7 @@ class RegExpShared
     };
 
     /* Source to the RegExp, for lazy compilation. */
-    RelocatablePtrAtom source;
+    HeapPtr<JSAtom*>     source;
 
     RegExpFlag         flags;
     size_t             parenCount;

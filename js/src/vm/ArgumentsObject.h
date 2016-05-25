@@ -42,7 +42,7 @@ struct ArgumentsData
      * arguments.callee, or MagicValue(JS_OVERWRITTEN_CALLEE) if
      * arguments.callee has been modified.
      */
-    HeapValue   callee;
+    GCPtrValue callee;
 
     /* The script for the function containing this arguments object. */
     JSScript*   script;
@@ -61,16 +61,16 @@ struct ArgumentsData
      * canonical value so any element access to the arguments object should load
      * the value out of the CallObject (which is pointed to by MAYBE_CALL_SLOT).
      */
-    HeapValue   args[1];
+    GCPtrValue args[1];
 
     /* For jit use: */
     static ptrdiff_t offsetOfArgs() { return offsetof(ArgumentsData, args); }
 
     /* Iterate args. */
-    HeapValue* begin() { return args; }
-    const HeapValue* begin() const { return args; }
-    HeapValue* end() { return args + numArgs; }
-    const HeapValue* end() const { return args + numArgs; }
+    GCPtrValue* begin() { return args; }
+    const GCPtrValue* begin() const { return args; }
+    GCPtrValue* end() { return args + numArgs; }
+    const GCPtrValue* end() const { return args + numArgs; }
 };
 
 // Maximum supported value of arguments.length. This bounds the maximum
@@ -272,7 +272,7 @@ class ArgumentsObject : public NativeObject
 
     void setArg(unsigned i, const Value& v) {
         MOZ_ASSERT(i < data()->numArgs);
-        HeapValue& lhs = data()->args[i];
+        GCPtrValue& lhs = data()->args[i];
         MOZ_ASSERT(!lhs.isMagic());
         lhs = v;
     }

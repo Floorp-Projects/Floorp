@@ -440,7 +440,7 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
     TIME_END(traceGenericEntries);
 
     TIME_START(markRuntime);
-    rt->gc.markRuntime(&mover);
+    rt->gc.markRuntime(&mover, GCRuntime::TraceRuntime, session.lock);
     TIME_END(markRuntime);
 
     TIME_START(markDebugger);
@@ -503,7 +503,7 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
     TIME_START(checkHeap);
 #ifdef JS_GC_ZEAL
     if (rt->hasZealMode(ZealMode::CheckHeapOnMovingGC))
-        CheckHeapAfterMovingGC(rt);
+        CheckHeapAfterMovingGC(rt, session.lock);
 #endif
     TIME_END(checkHeap);
 

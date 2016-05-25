@@ -155,8 +155,9 @@ void Servo_ReleaseComputedValues(ServoComputedValues*);
 // Initialize Servo components. Should be called exactly once at startup.
 void Servo_Initialize();
 
-// Restyle the given document.
+// Restyle the given document or subtree.
 void Servo_RestyleDocument(RawGeckoDocument* doc, RawServoStyleSet* set);
+void Servo_RestyleSubtree(RawGeckoNode* node, RawServoStyleSet* set);
 
 // Style-struct management.
 #define STYLE_STRUCT(name, checkdata_cb) \

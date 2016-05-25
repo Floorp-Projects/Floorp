@@ -13,7 +13,7 @@ class TestClear(MarionetteTestCase):
         self.marionette.navigate(test_html)
         element = self.marionette.find_element(By.ID, "writableTextInput")
         element.clear()
-        self.assertEqual("", element.get_attribute("value"))
+        self.assertEqual("", element.get_property("value"))
 
     def testTextInputShouldNotClearWhenReadOnly(self):
         test_html = self.marionette.absolute_url("test_clearing.html")
@@ -30,7 +30,7 @@ class TestClear(MarionetteTestCase):
         self.marionette.navigate(test_html)
         element = self.marionette.find_element(By.ID,"writableTextArea")
         element.clear()
-        self.assertEqual("", element.get_attribute("value"))
+        self.assertEqual("", element.get_property("value"))
 
     def testTextAreaShouldNotClearWhenDisabled(self):
         test_html = self.marionette.absolute_url("test_clearing.html")

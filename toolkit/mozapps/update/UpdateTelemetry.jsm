@@ -103,6 +103,12 @@ this.AUSTLMY = {
   CHK_INVALID_USER_OVERRIDE_URL: 33,
   // Invalid url for app.update.url.override user preference (no notification)
   CHK_INVALID_DEFAULT_OVERRIDE_URL: 34,
+  // Update elevation failures or cancelations threshold reached for this
+  // version, OSX only (no notification)
+  CHK_ELEVATION_DISABLED_FOR_VERSION: 35,
+  // User opted out of elevated updates for the available update version, OSX
+  // only (no notification)
+  CHK_ELEVATION_OPTOUT_FOR_VERSION: 36,
 
   /**
    * Submit a telemetry ping for the update check result code or a telemetry

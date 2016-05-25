@@ -346,6 +346,7 @@ nscoord nsCSSValue::GetPixelLength() const
   case eCSSUnit_Inch: scaleFactor = 96.0; break;
   case eCSSUnit_Millimeter: scaleFactor = 96/25.4; break;
   case eCSSUnit_Centimeter: scaleFactor = 96/2.54; break;
+  case eCSSUnit_Quarter: scaleFactor = 96/101.6; break;
   default:
     NS_ERROR("should never get here");
     return 0;
@@ -1798,6 +1799,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
     case eCSSUnit_Centimeter:   aResult.AppendLiteral("cm");   break;
     case eCSSUnit_Point:        aResult.AppendLiteral("pt");   break;
     case eCSSUnit_Pica:         aResult.AppendLiteral("pc");   break;
+    case eCSSUnit_Quarter:      aResult.AppendLiteral("q");    break;
 
     case eCSSUnit_ViewportWidth:  aResult.AppendLiteral("vw");   break;
     case eCSSUnit_ViewportHeight: aResult.AppendLiteral("vh");   break;
@@ -1982,6 +1984,7 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     case eCSSUnit_Centimeter:
     case eCSSUnit_Pica:
     case eCSSUnit_Pixel:
+    case eCSSUnit_Quarter:
     case eCSSUnit_Degree:
     case eCSSUnit_Grad:
     case eCSSUnit_Turn:

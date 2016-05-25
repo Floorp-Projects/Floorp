@@ -4361,6 +4361,11 @@ XREMain::XRE_mainRun()
   }
 #endif /* MOZ_INSTRUMENT_EVENT_LOOP */
 
+#if defined(MOZ_SANDBOX) && defined(XP_LINUX)
+  // If we're on Linux, we now have information about the OS capabilities
+  // available to us.
+  SandboxInfo::SubmitTelemetry();
+#endif
 #if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
   SetUpSandboxEnvironment();
 #endif

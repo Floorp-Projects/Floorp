@@ -18,8 +18,6 @@
 
 #include "asmjs/WasmBinaryToText.h"
 
-#include "mozilla/CheckedInt.h"
-
 #include "jsnum.h"
 #include "jsprf.h"
 
@@ -33,7 +31,6 @@
 using namespace js;
 using namespace js::wasm;
 
-using mozilla::CheckedInt;
 using mozilla::IsInfinite;
 using mozilla::IsNaN;
 using mozilla::IsNegativeZero;
@@ -44,11 +41,6 @@ struct WasmRenderContext
     AstModule* module;
     StringBuffer& buffer;
     uint32_t indent;
-
-    DeclaredSigVector signatures;
-    Uint32Vector funcSigs;
-    Uint32Vector funcLocals;
-    Uint32Vector importSigs;
 
     uint32_t currentFuncIndex;
 
@@ -298,6 +290,10 @@ RenderCallIndirect(WasmRenderContext& c, AstCallIndirect& call)
         return false;
     if (!RenderCallArgs(c, call.args()))
         return false;
+
+    if (!c.buffer.append(")"))
+        return false;
+
     return true;
 }
 
@@ -385,9 +381,25 @@ RenderBlock(WasmRenderContext& c, AstBlock& block)
     if (block.expr() == Expr::Block) {
         if (!c.buffer.append("(block "))
             return false;
+        if (!RenderName(c, block.breakName()))
+            return false;
     } else if (block.expr() == Expr::Loop) {
         if (!c.buffer.append("(loop "))
             return false;
+        if (block.breakName().empty() && !block.continueName().empty()) {
+            // Giving auto label if continue label is present.
+            if (!c.buffer.append("$exit$"))
+                return false;
+        } else {
+            if (!RenderName(c, block.breakName()))
+                return false;
+        }
+        if (!block.continueName().empty()) {
+          if (!c.buffer.append(" "))
+              return false;
+          if (!RenderName(c, block.continueName()))
+              return false;
+        }
     } else
         return false;
 
@@ -655,6 +667,9 @@ RenderIf(WasmRenderContext& c, AstIf& if_)
     if (!c.buffer.append(" (then "))
         return false;
 
+    if (!RenderName(c, if_.thenName()))
+        return false;
+
     c.indent++;
     if (!RenderExprList(c, if_.thenExprs()))
         return false;
@@ -662,6 +677,9 @@ RenderIf(WasmRenderContext& c, AstIf& if_)
 
     if (if_.hasElse()) {
         if (!c.buffer.append(") (else "))
+            return false;
+
+        if (!RenderName(c, if_.elseName()))
             return false;
 
         c.indent++;
@@ -1045,10 +1063,10 @@ RenderTypeSection(WasmRenderContext& c, const AstModule::SigVector& sigs)
         if (!c.buffer.append("(type"))
             return false;
         if (!sig->name().empty()) {
-          if (!c.buffer.append(" "))
-              return false;
-          if (!RenderName(c, sig->name()))
-              return false;
+            if (!c.buffer.append(" "))
+                return false;
+            if (!RenderName(c, sig->name()))
+                return false;
         }
         if (!c.buffer.append(" (func"))
             return false;
@@ -1068,10 +1086,15 @@ RenderTableSection(WasmRenderContext& c, AstTable* maybeTable, const AstModule::
 
     uint32_t numTableElems = maybeTable->elems().length();
 
-    if (!c.buffer.append("(table "))
+    if (!RenderIndent(c))
+        return false;
+
+    if (!c.buffer.append("(table"))
         return false;
 
     for (uint32_t i = 0; i < numTableElems; i++) {
+        if (!c.buffer.append(" "))
+            return false;
         AstRef& elem = maybeTable->elems()[i];
         AstFunc* func = funcs[elem.index()];
         if (func->name().empty()) {
@@ -1083,7 +1106,7 @@ RenderTableSection(WasmRenderContext& c, AstTable* maybeTable, const AstModule::
         }
     }
 
-    if (!c.buffer.append(")"))
+    if (!c.buffer.append(")\n"))
         return false;
 
     return true;

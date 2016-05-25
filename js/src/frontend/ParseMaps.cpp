@@ -122,7 +122,7 @@ AtomDecls<ParseHandler>::addShadowedForAnnexB(JSAtom* atom,
 }
 
 void
-frontend::InitAtomMap(frontend::AtomIndexMap* indices, HeapPtrAtom* atoms)
+frontend::InitAtomMap(frontend::AtomIndexMap* indices, GCPtrAtom* atoms)
 {
     if (indices->isMap()) {
         typedef AtomIndexMap::WordMap WordMap;

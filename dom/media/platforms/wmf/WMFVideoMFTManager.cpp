@@ -808,17 +808,6 @@ WMFVideoMFTManager::IsHardwareAccelerated(nsACString& aFailureReason) const
   return mDecoder && mUseHwAccel;
 }
 
-const char*
-WMFVideoMFTManager::GetDescriptionName() const
-{
-  if (mDecoder && mUseHwAccel && mDXVA2Manager) {
-    return (mDXVA2Manager->IsD3D11()) ?
-      "D3D11 Hardware Decoder" : "D3D9 Hardware Decoder";
-  } else {
-    return "wmf software video decoder";
-  }
-}
-
 void
 WMFVideoMFTManager::ConfigurationChanged(const TrackInfo& aConfig)
 {

@@ -26,7 +26,7 @@ js::TraceRuntime(JSTracer* trc)
     rt->gc.evictNursery();
     AutoPrepareForTracing prep(rt, WithAtoms);
     gcstats::AutoPhase ap(rt->gc.stats, gcstats::PHASE_TRACE_HEAP);
-    rt->gc.markRuntime(trc);
+    rt->gc.markRuntime(trc, GCRuntime::TraceRuntime, prep.session().lock);
 }
 
 static void

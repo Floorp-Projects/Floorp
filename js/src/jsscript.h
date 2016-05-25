@@ -127,17 +127,17 @@ struct BlockScopeNote {
 };
 
 struct ConstArray {
-    js::HeapValue*  vector;    /* array of indexed constant values */
-    uint32_t        length;
+    js::GCPtrValue* vector;     // array of indexed constant values
+    uint32_t length;
 };
 
 struct ObjectArray {
-    js::HeapPtrObject* vector;  // Array of indexed objects.
-    uint32_t        length;     // Count of indexed objects.
+    js::GCPtrObject* vector;    // Array of indexed objects.
+    uint32_t length;            // Count of indexed objects.
 };
 
 struct TryNoteArray {
-    JSTryNote*      vector;    // Array of indexed try notes.
+    JSTryNote*      vector;     // Array of indexed try notes.
     uint32_t        length;     // Count of indexed try notes.
 };
 
@@ -151,7 +151,7 @@ class YieldOffsetArray {
     detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScript src,
                        HandleScript dst);
 
-    uint32_t*       vector_;   // Array of bytecode offsets.
+    uint32_t*       vector_;    // Array of bytecode offsets.
     uint32_t        length_;    // Count of bytecode offsets.
 
   public:
@@ -224,7 +224,7 @@ class Bindings
     template <typename Outer> friend class BindingsOperations;
     template <typename Outer> friend class MutableBindingsOperations;
 
-    RelocatablePtrShape callObjShape_;
+    HeapPtr<Shape*> callObjShape_;
     uintptr_t bindingArrayAndFlag_;
     uint16_t numArgs_;
     uint16_t numBlockScoped_;
@@ -369,7 +369,7 @@ class BindingsOperations
 
   public:
     // Direct data access to the underlying bindings.
-    const RelocatablePtrShape& callObjShape() const {
+    const HeapPtr<Shape*>& callObjShape() const {
         return bindings().callObjShape_;
     }
     uint16_t numArgs() const {
@@ -986,7 +986,7 @@ class JSScript : public js::gc::TenuredCell
     uint8_t*        data;      /* pointer to variable-length data array (see
                                    comment above Create() for details) */
 
-    js::HeapPtrAtom* atoms;     /* maps immediate index to literal struct */
+    js::GCPtrAtom* atoms;      /* maps immediate index to literal struct */
 
     JSCompartment*  compartment_;
 
@@ -998,11 +998,11 @@ class JSScript : public js::gc::TenuredCell
     //
     // (When we clone a JSScript into a new compartment, we don't clone its
     // source object. Instead, the clone refers to a wrapper.)
-    js::HeapPtrObject sourceObject_;
+    js::GCPtrObject sourceObject_;
 
-    js::HeapPtrFunction function_;
-    js::HeapPtr<js::ModuleObject*> module_;
-    js::HeapPtrObject   enclosingStaticScope_;
+    js::GCPtrFunction function_;
+    js::GCPtrModuleObject module_;
+    js::GCPtrObject enclosingStaticScope_;
 
     /*
      * Information attached by Ion. Nexto a valid IonScript this could be
@@ -1810,12 +1810,12 @@ class JSScript : public js::gc::TenuredCell
 
     size_t natoms() const { return natoms_; }
 
-    js::HeapPtrAtom& getAtom(size_t index) const {
+    js::GCPtrAtom& getAtom(size_t index) const {
         MOZ_ASSERT(index < natoms());
         return atoms[index];
     }
 
-    js::HeapPtrAtom& getAtom(jsbytecode* pc) const {
+    js::GCPtrAtom& getAtom(jsbytecode* pc) const {
         MOZ_ASSERT(containsPC(pc) && containsPC(pc + sizeof(uint32_t)));
         return getAtom(GET_UINT32_INDEX(pc));
     }
@@ -2149,15 +2149,15 @@ class LazyScript : public gc::TenuredCell
     WeakRef<JSScript*> script_;
 
     // Original function with which the lazy script is associated.
-    HeapPtrFunction function_;
+    GCPtrFunction function_;
 
     // Function or block chain in which the script is nested, or nullptr.
-    HeapPtrObject enclosingScope_;
+    GCPtrObject enclosingScope_;
 
     // ScriptSourceObject. We leave this set to nullptr until we generate
     // bytecode for our immediate parent. This is never a CCW; we don't clone
     // LazyScripts into other compartments.
-    HeapPtrObject sourceObject_;
+    GCPtrObject sourceObject_;
 
     // Heap allocated table with any free variables or inner functions.
     void* table_;
@@ -2291,8 +2291,8 @@ class LazyScript : public gc::TenuredCell
     uint32_t numInnerFunctions() const {
         return p_.numInnerFunctions;
     }
-    HeapPtrFunction* innerFunctions() {
-        return (HeapPtrFunction*)&freeVariables()[numFreeVariables()];
+    GCPtrFunction* innerFunctions() {
+        return (GCPtrFunction*)&freeVariables()[numFreeVariables()];
     }
 
     GeneratorKind generatorKind() const { return GeneratorKindFromBits(p_.generatorKindBits); }
@@ -2422,10 +2422,10 @@ struct SharedScriptData
     static SharedScriptData* new_(ExclusiveContext* cx, uint32_t codeLength,
                                   uint32_t srcnotesLength, uint32_t natoms);
 
-    HeapPtrAtom* atoms() {
+    GCPtrAtom* atoms() {
         if (!natoms)
             return nullptr;
-        return reinterpret_cast<HeapPtrAtom*>(data + length - sizeof(JSAtom*) * natoms);
+        return reinterpret_cast<GCPtrAtom*>(data + length - sizeof(JSAtom*) * natoms);
     }
 
     static SharedScriptData* fromBytecode(const jsbytecode* bytecode) {
@@ -2459,13 +2459,13 @@ typedef HashSet<SharedScriptData*,
                 SystemAllocPolicy> ScriptDataTable;
 
 extern void
-UnmarkScriptData(JSRuntime* rt);
+UnmarkScriptData(JSRuntime* rt, AutoLockForExclusiveAccess& lock);
 
 extern void
-SweepScriptData(JSRuntime* rt);
+SweepScriptData(JSRuntime* rt, AutoLockForExclusiveAccess& lock);
 
 extern void
-FreeScriptData(JSRuntime* rt);
+FreeScriptData(JSRuntime* rt, AutoLockForExclusiveAccess& lock);
 
 struct ScriptAndCounts
 {

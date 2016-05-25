@@ -152,13 +152,13 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
                          'download-and-extract',
                          'create-virtualenv',
                          'install',
-                         'run-marionette'],
+                         'run-tests'],
             default_actions=['clobber',
                              'pull',
                              'download-and-extract',
                              'create-virtualenv',
                              'install',
-                             'run-marionette'],
+                             'run-tests'],
             require_config_file=require_config_file,
             config={'require_test_zip': True})
 
@@ -305,7 +305,7 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
         else:
             super(MarionetteTest, self).install()
 
-    def run_marionette(self):
+    def run_tests(self):
         """
         Run the Marionette tests
         """

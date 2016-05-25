@@ -61,11 +61,11 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
     // If objects in this group have ever been converted to native objects,
     // these store the corresponding native group and initial shape for such
     // objects. Type information for this object is reflected in nativeGroup.
-    HeapPtrObjectGroup nativeGroup_;
-    HeapPtrShape nativeShape_;
+    GCPtrObjectGroup nativeGroup_;
+    GCPtrShape nativeShape_;
 
     // Any script/pc which the associated group is created for.
-    HeapPtrScript allocationScript_;
+    GCPtrScript allocationScript_;
     jsbytecode* allocationPc_;
 
     // If nativeGroup is set and this object originally had a TypeNewScript or
@@ -73,7 +73,7 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
     // this one. This link is only needed to keep the replacement group from
     // being GC'ed. If it were GC'ed and a new one regenerated later, that new
     // group might have a different allocation kind from this group.
-    HeapPtrObjectGroup replacementGroup_;
+    GCPtrObjectGroup replacementGroup_;
 
     // The following members are only used for unboxed plain objects.
 
@@ -93,7 +93,7 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
     // If this layout has been used to construct script or JSON constant
     // objects, this code might be filled in to more quickly fill in objects
     // from an array of values.
-    HeapPtrJitCode constructorCode_;
+    GCPtrJitCode constructorCode_;
 
     // The following members are only used for unboxed arrays.
 

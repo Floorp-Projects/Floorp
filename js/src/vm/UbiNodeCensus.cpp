@@ -32,7 +32,7 @@ CountDeleter::operator()(CountBase* ptr)
 bool
 Census::init() {
     AutoLockForExclusiveAccess lock(cx);
-    atomsZone = cx->runtime()->atomsCompartment()->zone();
+    atomsZone = cx->runtime()->atomsCompartment(lock)->zone();
     return targetZones.init();
 }
 

@@ -10,6 +10,9 @@
 #include "nsReadableUtils.h"
 #include "plbase64.h"
 #include "prprf.h"
+#include "nsPrintfCString.h"
+
+#define DEFAULT_PROTOCOL_VERSION "2.2"
 
 static char int_to_hex_digit(int32_t i)
 {
@@ -120,6 +123,25 @@ nsUrlClassifierUtils::GetKeyForURI(nsIURI * uri, nsACString & _retval)
   NS_ENSURE_SUCCESS(rv, rv);
 
   _retval.Append(temp);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUrlClassifierUtils::GetProtocolVersion(const nsACString& aProvider,
+                                         nsACString& aVersion)
+{
+  nsCOMPtr<nsIPrefBranch> prefBranch =
+    do_GetService(NS_PREFSERVICE_CONTRACTID);
+
+  nsPrintfCString prefName("browser.safebrowsing.provider.%s.pver",
+                           nsCString(aProvider).get());
+
+  nsXPIDLCString version;
+  nsresult rv = prefBranch->GetCharPref(prefName.get(), getter_Copies(version));
+
+  aVersion = NS_SUCCEEDED(rv) ? version
+                              : DEFAULT_PROTOCOL_VERSION;
 
   return NS_OK;
 }

@@ -13,10 +13,12 @@ EXPORTS += [
 UNIFIED_SOURCES += [
     'BRNameMatchingPolicy.cpp',
     'CertVerifier.cpp',
+    'CTSerialization.cpp',
     'NSSCertDBTrustDomain.cpp',
     'OCSPCache.cpp',
     'OCSPRequestor.cpp',
     'OCSPVerificationTrustDomain.cpp',
+    'SignedCertificateTimestamp.cpp',
 ]
 
 if not CONFIG['NSS_NO_EV_CERTS']:
@@ -31,6 +33,10 @@ LOCAL_INCLUDES += [
 
 DIRS += [
     '../pkix',
+]
+
+TEST_DIRS += [
+    'tests/gtest',
 ]
 
 CXXFLAGS += ['-Wall']

@@ -1078,31 +1078,35 @@ nsFind::Find(const char16_t* aPatText, nsIDOMRange* aSearchRange,
       c = ToLowerCase(c);
     }
 
-    switch (c) {
+    if (c == CH_SHY) {
       // ignore soft hyphens in the document
-      case CH_SHY:
-        continue;
-      // treat curly and straight quotes as identical
-      case CH_LEFT_SINGLE_QUOTE:
-      case CH_RIGHT_SINGLE_QUOTE:
-        c = CH_APOSTROPHE;
-        break;
-      case CH_LEFT_DOUBLE_QUOTE:
-      case CH_RIGHT_DOUBLE_QUOTE:
-        c = CH_QUOTE;
-        break;
+      continue;
     }
 
-    switch (patc) {
-      // treat curly and straight quotes as identical
-      case CH_LEFT_SINGLE_QUOTE:
-      case CH_RIGHT_SINGLE_QUOTE:
-        patc = CH_APOSTROPHE;
-        break;
-      case CH_LEFT_DOUBLE_QUOTE:
-      case CH_RIGHT_DOUBLE_QUOTE:
-        patc = CH_QUOTE;
-        break;
+    if (!mCaseSensitive) {
+      switch (c) {
+        // treat curly and straight quotes as identical
+        case CH_LEFT_SINGLE_QUOTE:
+        case CH_RIGHT_SINGLE_QUOTE:
+          c = CH_APOSTROPHE;
+          break;
+        case CH_LEFT_DOUBLE_QUOTE:
+        case CH_RIGHT_DOUBLE_QUOTE:
+          c = CH_QUOTE;
+          break;
+      }
+
+      switch (patc) {
+        // treat curly and straight quotes as identical
+        case CH_LEFT_SINGLE_QUOTE:
+        case CH_RIGHT_SINGLE_QUOTE:
+          patc = CH_APOSTROPHE;
+          break;
+        case CH_LEFT_DOUBLE_QUOTE:
+        case CH_RIGHT_DOUBLE_QUOTE:
+          patc = CH_QUOTE;
+          break;
+      }
     }
 
     // a '\n' between CJ characters is ignored

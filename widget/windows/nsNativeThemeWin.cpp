@@ -791,7 +791,7 @@ nsNativeThemeWin::GetTheme(uint8_t aWidgetType)
       return nsUXThemeData::GetTheme(eUXSpin);
     case NS_THEME_STATUSBAR:
     case NS_THEME_STATUSBARPANEL:
-    case NS_THEME_RESIZER_PANEL:
+    case NS_THEME_RESIZERPANEL:
     case NS_THEME_RESIZER:
       return nsUXThemeData::GetTheme(eUXStatus);
     case NS_THEME_MENULIST:
@@ -1230,7 +1230,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
       return NS_OK;
     }
     case NS_THEME_STATUSBARPANEL:
-    case NS_THEME_RESIZER_PANEL:
+    case NS_THEME_RESIZERPANEL:
     case NS_THEME_RESIZER: {
       aPart = (aWidgetType - NS_THEME_STATUSBARPANEL) + 1;
       aState = TS_NORMAL;
@@ -2593,7 +2593,7 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType,
       aWidgetType == NS_THEME_WIN_BROWSERTABBAR_TOOLBOX ||
       aWidgetType == NS_THEME_TOOLBAR ||
       aWidgetType == NS_THEME_STATUSBAR || aWidgetType == NS_THEME_STATUSBARPANEL ||
-      aWidgetType == NS_THEME_RESIZER_PANEL ||
+      aWidgetType == NS_THEME_RESIZERPANEL ||
       aWidgetType == NS_THEME_PROGRESSCHUNK ||
       aWidgetType == NS_THEME_PROGRESSCHUNK_VERTICAL ||
       aWidgetType == NS_THEME_PROGRESSBAR ||
@@ -2867,7 +2867,7 @@ nsNativeThemeWin::ClassicThemeSupportsWidget(nsIFrame* aFrame,
     case NS_THEME_TOOLTIP:
     case NS_THEME_STATUSBAR:
     case NS_THEME_STATUSBARPANEL:
-    case NS_THEME_RESIZER_PANEL:
+    case NS_THEME_RESIZERPANEL:
     case NS_THEME_PROGRESSBAR:
     case NS_THEME_PROGRESSBAR_VERTICAL:
     case NS_THEME_PROGRESSCHUNK:
@@ -2926,7 +2926,7 @@ nsNativeThemeWin::ClassicGetWidgetBorder(nsDeviceContext* aContext,
       (*aResult).top = (*aResult).left = (*aResult).bottom = (*aResult).right = 2;
       break;
     case NS_THEME_STATUSBARPANEL:
-    case NS_THEME_RESIZER_PANEL: {
+    case NS_THEME_RESIZERPANEL: {
       (*aResult).top = 1;      
       (*aResult).left = 1;
       (*aResult).bottom = 1;
@@ -3079,7 +3079,7 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIFrame* aFrame,
     case NS_THEME_MENULIST_TEXTFIELD:      
     case NS_THEME_STATUSBAR:
     case NS_THEME_STATUSBARPANEL:      
-    case NS_THEME_RESIZER_PANEL:
+    case NS_THEME_RESIZERPANEL:
     case NS_THEME_PROGRESSCHUNK:
     case NS_THEME_PROGRESSCHUNK_VERTICAL:
     case NS_THEME_TOOLTIP:
@@ -3330,7 +3330,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, uint8_t
     case NS_THEME_SCALETHUMB_VERTICAL:
     case NS_THEME_STATUSBAR:
     case NS_THEME_STATUSBARPANEL:
-    case NS_THEME_RESIZER_PANEL:
+    case NS_THEME_RESIZERPANEL:
     case NS_THEME_PROGRESSCHUNK:
     case NS_THEME_PROGRESSCHUNK_VERTICAL:
     case NS_THEME_TOOLTIP:
@@ -3798,7 +3798,7 @@ RENDER_AGAIN:
       // fall through
     case NS_THEME_TABPANEL:
     case NS_THEME_STATUSBAR:
-    case NS_THEME_RESIZER_PANEL: {
+    case NS_THEME_RESIZERPANEL: {
       ::FillRect(hdc, &widgetRect, (HBRUSH) (COLOR_BTNFACE+1));
 
       break;
@@ -4148,7 +4148,7 @@ nsNativeThemeWin::GetWidgetNativeDrawingFlags(uint8_t aWidgetType)
     case NS_THEME_TOOLTIP:
     case NS_THEME_STATUSBAR:
     case NS_THEME_STATUSBARPANEL:
-    case NS_THEME_RESIZER_PANEL:
+    case NS_THEME_RESIZERPANEL:
     case NS_THEME_RESIZER:
     case NS_THEME_PROGRESSBAR:
     case NS_THEME_PROGRESSBAR_VERTICAL:

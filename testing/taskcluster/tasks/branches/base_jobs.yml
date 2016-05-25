@@ -29,6 +29,7 @@ builds:
       - sm-arm-sim
       - sm-compacting
       - sm-rootanalysis
+      - sm-package
     types:
       opt:
         task: tasks/builds/opt_linux64.yml
@@ -82,12 +83,6 @@ builds:
     types:
       opt:
         task: tasks/builds/opt_macosx64_st-an.yml
-  linux64-mulet-haz:
-    platforms:
-      - Mulet Linux
-    types:
-      debug:
-        task: tasks/builds/mulet_haz_linux.yml
   sm-plain:
     platforms:
       - Linux64
@@ -150,6 +145,38 @@ builds:
       file_patterns:
        - js/public/**
        - js/src/**
+  sm-package:
+    platforms:
+      - Linux64
+    types:
+      opt:
+        task: tasks/builds/sm_package.yml
+    when:
+      # Make sure this list stays in sync with the files and directories copied
+      # by `js/src/make-source-package.sh`!
+      file_patterns:
+        - build/**
+        - configure.py
+        - dom/bindings/**
+        - intl/icu/**
+        - js/moz.configure
+        - js/public/**
+        - js/src/**
+        - layout/tools/reftest/reftest/**
+        - media/webrtc/trunk/tools/gyp/**
+        - memory/**
+        - mfbt/**
+        - modules/fdlibm/**
+        - modules/zlib/src/**
+        - mozglue/**
+        - moz.configure
+        - nsprpub/**
+        - python/**
+        - taskcluster/moz.build
+        - testing/mozbase/**
+        - test.mozbuild
+        - toolkit/mozapps/installer/package-name.mk
+        - toolkit/mozapps/installer/upload-files.mk
   sm-rootanalysis:
     platforms:
       - Linux64

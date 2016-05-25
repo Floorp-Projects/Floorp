@@ -257,7 +257,7 @@
         .then(setShutdownObserver(false))
         .then(checkStateAndUpdate(pushEvent, "from_scope", "wait"))
         .then(setShutdownObserver(true))
-        .then(checkStateAndUpdate(messageEventIframe, "wait", "update"))
+        .then(checkStateAndUpdate(messageEventIframe, "wait", "release"))
         .then(waitOnShutdownObserver)
         .then(closeIframe)
     }

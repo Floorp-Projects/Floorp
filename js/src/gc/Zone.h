@@ -62,6 +62,15 @@ class ZoneHeapThreshold
                                           const AutoLockGC& lock);
 };
 
+struct ZoneComponentFinder : public ComponentFinder<JS::Zone, ZoneComponentFinder>
+{
+    ZoneComponentFinder(uintptr_t sl, AutoLockForExclusiveAccess& lock)
+      : ComponentFinder<JS::Zone, ZoneComponentFinder>(sl), lock(lock)
+    {}
+
+    AutoLockForExclusiveAccess& lock;
+};
+
 struct UniqueIdGCPolicy {
     static bool needsSweep(Cell** cell, uint64_t* value);
 };
@@ -129,7 +138,7 @@ struct Zone : public JS::shadow::Zone,
     ~Zone();
     MOZ_MUST_USE bool init(bool isSystem);
 
-    void findOutgoingEdges(js::gc::ComponentFinder<JS::Zone>& finder);
+    void findOutgoingEdges(js::gc::ZoneComponentFinder& finder);
 
     void discardJitCode(js::FreeOp* fop);
 
@@ -330,8 +339,8 @@ struct Zone : public JS::shadow::Zone,
     // Keep track of all TypeDescr and related objects in this compartment.
     // This is used by the GC to trace them all first when compacting, since the
     // TypedObject trace hook may access these objects.
-    using TypeDescrObjectSet = js::GCHashSet<js::RelocatablePtrObject,
-                                             js::MovableCellHasher<js::RelocatablePtrObject>,
+    using TypeDescrObjectSet = js::GCHashSet<js::HeapPtr<JSObject*>,
+                                             js::MovableCellHasher<js::HeapPtr<JSObject*>>,
                                              js::SystemAllocPolicy>;
     JS::WeakCache<TypeDescrObjectSet> typeDescrObjects;
 
