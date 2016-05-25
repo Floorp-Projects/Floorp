@@ -1293,21 +1293,22 @@ nsStandardURL::SetSpec(const nsACString &input)
     ENSURE_MUTABLE();
 
     const nsPromiseFlatCString &flat = PromiseFlatCString(input);
-    const char *spec = flat.get();
-    int32_t specLength = flat.Length();
-
-    LOG(("nsStandardURL::SetSpec [spec=%s]\n", spec));
-
-    if (!spec || !*spec)
-        return NS_ERROR_MALFORMED_URI;
+    LOG(("nsStandardURL::SetSpec [spec=%s]\n", flat.get()));
 
     if (input.Length() > (uint32_t) net_GetURLMaxLength()) {
         return NS_ERROR_MALFORMED_URI;
     }
 
-    // NUL characters aren't allowed
-    // \r\n\t are stripped out instead of returning error(see below)
-    if (input.Contains('\0')) {
+    // filter out unexpected chars "\r\n\t" if necessary
+    nsAutoCString filteredURI;
+    net_FilterURIString(flat, filteredURI);
+
+    if (filteredURI.Length() == 0) {
+        return NS_ERROR_MALFORMED_URI;
+    }
+
+    // NUL characters aren't allowed in the filtered URI.
+    if (filteredURI.Contains('\0')) {
         return NS_ERROR_MALFORMED_URI;
     }
 
@@ -1315,14 +1316,6 @@ nsStandardURL::SetSpec(const nsACString &input)
     nsStandardURL prevURL(false,false);
     prevURL.CopyMembers(this, eHonorRef);
     Clear();
-
-    // filter out unexpected chars "\r\n\t" if necessary
-    nsAutoCString filteredURI;
-    if (!net_FilterURIString(spec, filteredURI)) {
-        // Copy the content into filteredURI even if no whitespace was stripped.
-        // We need a non-const buffer to perform backslash replacement.
-        filteredURI = input;
-    }
 
     if (IsSpecialProtocol(filteredURI)) {
         // Bug 652186: Replace all backslashes with slashes when parsing paths
@@ -1342,9 +1335,8 @@ nsStandardURL::SetSpec(const nsACString &input)
         }
     }
 
-    spec = filteredURI.get();
-    specLength = filteredURI.Length();
-
+    const char *spec = filteredURI.get();
+    int32_t specLength = filteredURI.Length();
 
     // parse the given URL...
     nsresult rv = ParseURL(spec, specLength);
@@ -2122,19 +2114,12 @@ NS_IMETHODIMP
 nsStandardURL::Resolve(const nsACString &in, nsACString &out)
 {
     const nsPromiseFlatCString &flat = PromiseFlatCString(in);
-    const char *relpath = flat.get();
-
     // filter out unexpected chars "\r\n\t" if necessary
     nsAutoCString buf;
-    int32_t relpathLen;
-    if (!net_FilterURIString(relpath, buf)) {
-        // Copy the content into filteredURI even if no whitespace was stripped.
-        // We need a non-const buffer to perform backslash replacement.
-        buf = in;
-    }
+    net_FilterURIString(flat, buf);
 
-    relpath = buf.get();
-    relpathLen = buf.Length();
+    const char *relpath = buf.get();
+    int32_t relpathLen = buf.Length();
 
     char *result = nullptr;
 

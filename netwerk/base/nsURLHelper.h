@@ -105,21 +105,15 @@ inline bool net_IsValidScheme(const nsAFlatCString &scheme)
 }
 
 /**
- * Filter out whitespace from a URI string.  The input is the |str|
- * pointer. |result| is written to if and only if there is whitespace that has
- * to be filtered out.  The return value is true if and only if |result| is
- * written to.
+ * This function strips out all C0 controls and space at the beginning and end
+ * of the URL and filters out \r, \n, \t from the middle of the URL.  This makes
+ * it safe to call on things like javascript: urls or data: urls, where we may
+ * in fact run into whitespace that is not properly encoded.
  *
- * This function strips out all whitespace at the beginning and end of the URL
- * and strips out \r, \n, \t from the middle of the URL.  This makes it safe to
- * call on things like javascript: urls or data: urls, where we may in fact run
- * into whitespace that is not properly encoded.
- *
- * @param str the pointer to the string to filter.  Must be non-null.
+ * @param input the URL spec we want to filter
  * @param result the out param to write to if filtering happens
- * @return whether result was written to
  */
-bool net_FilterURIString(const char *str, nsACString& result);
+void net_FilterURIString(const nsACString& input, nsACString& result);
 
 #if defined(XP_WIN)
 /**
