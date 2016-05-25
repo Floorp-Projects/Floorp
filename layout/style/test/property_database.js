@@ -6443,16 +6443,18 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "0" ],
-    other_values: [ "2px", "1em", "calc(1px + 1em)" ],
-    invalid_values: [ "-1px", "2%", "auto", "none", "1px 1px", "calc(1%)" ],
+    other_values: [ "2px", "2%", "1em", "calc(1px + 1em)", "calc(1%)",
+                    "calc(1% + 1ch)" ],
+    invalid_values: [ "-1px", "auto", "none", "1px 1px", "-1%" ],
   };
   gCSSProperties["grid-row-gap"] = {
     domProp: "gridRowGap",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "0" ],
-    other_values: [ "2px", "1em", "calc(1px + 1em)" ],
-    invalid_values: [ "-1px", "2%", "auto", "none", "1px 1px", "calc(1%)" ],
+    other_values: [ "2px", "2%", "1em", "calc(1px + 1em)", "calc(1%)",
+                    "calc(1% + 1ch)" ],
+    invalid_values: [ "-1px", "auto", "none", "1px 1px", "-1%" ],
   };
   gCSSProperties["grid-gap"] = {
     domProp: "gridGap",
@@ -6460,9 +6462,9 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
     type: CSS_TYPE_TRUE_SHORTHAND,
     subproperties: [ "grid-column-gap", "grid-row-gap" ],
     initial_values: [ "0", "0 0" ],
-    other_values: [ "1ch 0", "1em 1px", "calc(1px + 1ch)" ],
+    other_values: [ "1ch 0", "1px 1%", "1em 1px", "calc(1px) calc(1%)" ],
     invalid_values: [ "-1px", "1px -1px", "1px 1px 1px", "inherit 1px",
-                      "1px 1%", "1px auto" ]
+                      "1px auto" ]
   };
 }
 
