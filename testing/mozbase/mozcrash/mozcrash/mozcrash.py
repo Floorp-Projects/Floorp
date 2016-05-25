@@ -7,6 +7,7 @@ __all__ = [
     'check_for_java_exception',
     'kill_and_get_minidump',
     'log_crashes',
+    'cleanup_pending_crash_reports',
 ]
 
 import glob
@@ -490,6 +491,35 @@ def kill_and_get_minidump(pid, dump_directory, utility_path=None):
         needs_killing = False
     if needs_killing:
         kill_pid(pid)
+
+def cleanup_pending_crash_reports():
+    """
+    Delete any pending crash reports.
+
+    The presence of pending crash reports may be reported by the browser,
+    affecting test results; it is best to ensure that these are removed
+    before starting any browser tests.
+
+    Firefox stores pending crash reports in "<UAppData>/Crash Reports".
+    If the browser is not running, it cannot provide <UAppData>, so this
+    code tries to anticipate its value.
+
+    See dom/system/OSFileConstants.cpp for platform variations of <UAppData>.
+    """
+    if mozinfo.isWin:
+        location = os.path.expanduser("~\\AppData\\Roaming\\Mozilla\\Firefox\\Crash Reports")
+    elif mozinfo.isMac:
+        location = os.path.expanduser("~/Library/Application Support/firefox/Crash Reports")
+    else:
+        location = os.path.expanduser("~/.mozilla/firefox/Crash Reports")
+    logger = get_logger()
+    if os.path.exists(location):
+        try:
+            mozfile.remove(location)
+            logger.info("Removed pending crash reports at '%s'" % location)
+        except:
+            pass
+
 
 if __name__ == '__main__':
     import argparse
