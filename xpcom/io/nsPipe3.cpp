@@ -30,7 +30,7 @@ using namespace mozilla;
 #undef LOG
 #endif
 //
-// set NSPR_LOG_MODULES=nsPipe:5
+// set MOZ_LOG=nsPipe:5
 //
 static LazyLogModule sPipeLog("nsPipe");
 #define LOG(args) MOZ_LOG(sPipeLog, mozilla::LogLevel::Debug, args)
