@@ -74,5 +74,5 @@ function* testAddProperty(view) {
   let textProp = yield addProperty(view, 1, "text-align", "center");
 
   is(textProp.value, "center", "Text prop should have been changed.");
-  is(textProp.overridden, false, "Property should not be overridden");
+  ok(!textProp.overridden, "Property should not be overridden");
 }
