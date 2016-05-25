@@ -18,6 +18,7 @@
     "HAWK_TOKEN_LENGTH": true,
     "checkLoggedOutState": false,
     "checkFxAOAuthTokenData": false,
+    "cleanupPanel": false,
     "loadLoopPanel": false,
     "getLoopString": false,
     "gMozLoopAPI": true,
