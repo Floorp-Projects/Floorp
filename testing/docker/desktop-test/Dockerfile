@@ -63,5 +63,10 @@ ADD apport /etc/default/apport
 # Disable font antialiasing for now to match releng's setup
 ADD fonts.conf /home/worker/.fonts.conf
 
+# Set up first-run experience for interactive mode
+ADD motd /etc/taskcluster-motd
+ADD taskcluster-interactive-shell /bin/taskcluster-interactive-shell
+RUN chmod +x /bin/taskcluster-interactive-shell
+
 # Set a default command useful for debugging
 CMD ["/bin/bash", "--login"]
