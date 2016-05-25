@@ -3134,7 +3134,8 @@ nsFrameLoader::RequestNotifyLayerTreeCleared()
 }
 
 NS_IMETHODIMP
-nsFrameLoader::Print(nsIPrintSettings* aPrintSettings,
+nsFrameLoader::Print(uint64_t aOuterWindowID,
+                     nsIPrintSettings* aPrintSettings,
                      nsIWebProgressListener* aProgressListener)
 {
 #if defined(NS_PRINTING)
@@ -3149,26 +3150,23 @@ nsFrameLoader::Print(nsIPrintSettings* aPrintSettings,
       return rv;
     }
 
-    bool success = mRemoteBrowser->SendPrint(printData);
+    bool success = mRemoteBrowser->SendPrint(aOuterWindowID, printData);
     return success ? NS_OK : NS_ERROR_FAILURE;
   }
 
-  if (mDocShell) {
-    nsCOMPtr<nsIContentViewer> viewer;
-    mDocShell->GetContentViewer(getter_AddRefs(viewer));
-    if (!viewer) {
-      return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint = do_QueryInterface(viewer);
-    if (!webBrowserPrint) {
-      return NS_ERROR_FAILURE;
-    }
-
-    return webBrowserPrint->Print(aPrintSettings, aProgressListener);
+  nsGlobalWindow* outerWindow =
+    nsGlobalWindow::GetOuterWindowWithId(aOuterWindowID);
+  if (NS_WARN_IF(!outerWindow)) {
+    return NS_ERROR_FAILURE;
   }
 
-  return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint =
+    do_GetInterface(outerWindow->AsOuter());
+  if (NS_WARN_IF(!webBrowserPrint)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return webBrowserPrint->Print(aPrintSettings, aProgressListener);
 #endif
   return NS_OK;
 }
