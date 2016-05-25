@@ -146,8 +146,8 @@ this.ManifestProcessor = { // jshint ignore:line
         trim: true
       };
       const value = extractor.extractValue(spec);
-      if (this.orientationTypes.has(value)) {
-        return value;
+      if (value && typeof value === "string" && this.orientationTypes.has(value.toLowerCase())) {
+        return value.toLowerCase();
       }
       // The spec special-cases orientation to return the empty string.
       return '';
@@ -162,8 +162,8 @@ this.ManifestProcessor = { // jshint ignore:line
         trim: true
       };
       const value = extractor.extractValue(spec);
-      if (displayModes.has(value)) {
-        return value;
+      if (value && typeof value === "string" && displayModes.has(value.toLowerCase())) {
+        return value.toLowerCase();
       }
       return this.defaultDisplayMode;
     }
