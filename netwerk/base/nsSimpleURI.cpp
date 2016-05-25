@@ -197,16 +197,12 @@ nsSimpleURI::SetSpec(const nsACString &aSpec)
     NS_ENSURE_STATE(mMutable);
     
     const nsAFlatCString& flat = PromiseFlatCString(aSpec);
-    const char* specPtr = flat.get();
 
     // filter out unexpected chars "\r\n\t" if necessary
     nsAutoCString filteredSpec;
-    int32_t specLen;
-    if (net_FilterURIString(specPtr, filteredSpec)) {
-        specPtr = filteredSpec.get();
-        specLen = filteredSpec.Length();
-    } else
-        specLen = flat.Length();
+    net_FilterURIString(flat, filteredSpec);
+    const char* specPtr = filteredSpec.get();
+    int32_t specLen = filteredSpec.Length();
 
     // nsSimpleURI currently restricts the charset to US-ASCII
     nsAutoCString spec;
