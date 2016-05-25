@@ -66,7 +66,7 @@ p {
 }
 
 .list-row > ul > li {
-  float: inline-start;
+  float: left;
   width: 220px;
   line-height: 1.5em;
   -moz-margin-start: 1em;
@@ -84,10 +84,6 @@ p {
   -moz-padding-start: calc(var(--icon-margin) + 24px);
 }
 
-.title:dir(rtl) {
-  background-position: right, center;
-}
-
 .about-subheader {
   display: flex;
   align-items: center;
@@ -101,10 +97,6 @@ p {
   -moz-padding-start: 56px;
 }
 
-.about-subheader:dir(rtl) {
-  background-position: right;
-}
-
 .about-subheader.tp-off {
   background-image: url("chrome://browser/skin/privatebrowsing/tracking-protection-off.svg");
 }
@@ -114,7 +106,7 @@ p {
 }
 
 .tpTitle {
-  margin-inline-end: 12px;
+  margin-right: 12px;
 }
 
 .private strong {
@@ -161,24 +153,13 @@ a.button {
 }
 
 .toggle + .toggle-btn::before {
-  float: inline-start;
+  float: left;
   left: 9px;
   visibility: hidden;
   background-size: 16px;
   background-repeat: no-repeat;
   background-color: transparent;
   background-image: url("chrome://browser/skin/privatebrowsing/check.svg");
-}
-
-.toggle + .toggle-btn:dir(rtl)::after {
-  left: auto;
-  right: 0;
-  transition-property: right;
-}
-
-.toggle + .toggle-btn:dir(rtl)::before {
-  left: auto;
-  right: 9px;
 }
 
 .toggle:checked + .toggle-btn {
@@ -188,10 +169,6 @@ a.button {
 
 .toggle:checked + .toggle-btn::after {
   left: 35px;
-}
-
-.toggle:checked + .toggle-btn:dir(rtl)::after {
-  right: 35px;
 }
 
 .toggle:checked + .toggle-btn::before {
