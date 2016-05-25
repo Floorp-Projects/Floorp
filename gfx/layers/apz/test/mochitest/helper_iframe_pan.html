@@ -25,8 +25,8 @@ function scrollOuter() {
 
 function checkScroll() {
   var outerScroll = document.getElementById('outer').contentWindow.scrollY;
-  window.opener.is(outerScroll, 50, "check that the iframe scrolled");
-  window.opener.testDone();
+  is(outerScroll, 50, "check that the iframe scrolled");
+  subtestDone();
 }
 
 window.onload = function() {
