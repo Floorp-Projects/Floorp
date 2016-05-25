@@ -601,6 +601,15 @@ PresentationService::RegisterRespondingListener(
     return (listener == aListener) ? NS_OK : NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
+  nsTArray<nsString>* sessionIdArray;
+  if (!mRespondingSessionIds.Get(aWindowId, &sessionIdArray)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  for (const auto& id : *sessionIdArray) {
+    aListener->NotifySessionConnect(aWindowId, id);
+  }
+
   mRespondingListeners.Put(aWindowId, aListener);
   return NS_OK;
 }
@@ -632,6 +641,13 @@ PresentationService::NotifyReceiverReady(const nsAString& aSessionId,
   }
 
   AddRespondingSessionId(aWindowId, aSessionId);
+
+  nsCOMPtr<nsIPresentationRespondingListener> listener;
+  if (mRespondingListeners.Get(aWindowId, getter_AddRefs(listener))) {
+    nsresult rv = listener->NotifySessionConnect(aWindowId, aSessionId);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   return static_cast<PresentationPresentingInfo*>(info.get())->NotifyResponderReady();
