@@ -809,7 +809,7 @@ function RegExpBuiltinExec(R, S, forTest) {
     // This check is here for RegExpTest.  RegExp_prototype_Exec does same
     // thing already.
     if (!IsRegExpObject(R))
-        return callFunction(CallRegExpMethodIfWrapped, R, R, S, forTest, "RegExpBuiltinExec");
+        return UnwrapAndCallRegExpBuiltinExec(R, S, forTest);
 
     // Steps 1-2 (skipped).
 
@@ -861,6 +861,14 @@ function RegExpBuiltinExec(R, S, forTest) {
     }
 
     return result;
+}
+
+function UnwrapAndCallRegExpBuiltinExec(R, S, forTest) {
+    return callFunction(CallRegExpMethodIfWrapped, R, S, forTest, "CallRegExpBuiltinExec");
+}
+
+function CallRegExpBuiltinExec(S, forTest) {
+    return RegExpBuiltinExec(this, S, forTest);
 }
 
 // ES6 21.2.5.13.
