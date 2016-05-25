@@ -1592,6 +1592,18 @@ this.MozLoopService = {
   },
 
   /**
+   * Returns the addon version
+   *
+   * @return {String} A string containing the Addon Version
+   */
+  get addonVersion() {
+    // remove "alpha", "beta" or any non numeric appended to the version string
+    let numericAddonVersion = gAddonVersion.replace(/[^0-9\.]/g, "");
+    return numericAddonVersion;
+  },
+
+  /**
+   *
    * Returns a new GUID (UUID) in curly braces format.
    */
   generateUUID: function() {
