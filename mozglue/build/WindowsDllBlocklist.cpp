@@ -17,13 +17,10 @@
 #include <windows.h>
 #include <winternl.h>
 #include <io.h>
-#define PSAPI_VERSION 1
-#include <psapi.h>
 
 #pragma warning( push )
 #pragma warning( disable : 4275 4530 ) // See msvc-stl-wrapper.template.h
 #include <map>
-#include <vector>
 #pragma warning( pop )
 
 #include "nsAutoPtr.h"
@@ -546,15 +543,11 @@ static wchar_t* lastslash(wchar_t* s, int len)
   return nullptr;
 }
 
-#ifdef NIGHTLY_BUILD
-static std::vector<DllLoadInfo> gDllLoadInfos;
-static LoadCallBackFn gLoadInfoCallback;
-#endif
-
 static NTSTATUS NTAPI
 patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileName, PHANDLE handle)
 {
   // We have UCS2 (UTF16?), we want ASCII, but we also just want the filename portion
+#define DLLNAME_MAX 128
   char dllName[DLLNAME_MAX+1];
   wchar_t *dll_part;
   char *dot;
@@ -742,39 +735,13 @@ continue_loading:
       return STATUS_DLL_NOT_FOUND;
     }
   }
-  NTSTATUS ret = stub_LdrLoadDll(filePath, flags, moduleFileName, handle);
-#ifdef NIGHTLY_BUILD
-  if (!ret) {
-      MODULEINFO moduleInfo;
-      if (GetModuleInformation(GetCurrentProcess(), *(HMODULE*)handle, &moduleInfo, sizeof(moduleInfo))) {
-          DllLoadInfo info;
-          strcpy(info.name, dllName);
-          info.lpBaseOfDll = moduleInfo.lpBaseOfDll;
-          info.SizeOfImage = moduleInfo.SizeOfImage;
-          if (gLoadInfoCallback) {
-            gLoadInfoCallback(info);
-          } else {
-            gDllLoadInfos.push_back(info);
-          }
-      }
-  }
-#endif
-  return ret;
+
+  return stub_LdrLoadDll(filePath, flags, moduleFileName, handle);
 }
 
 WindowsDllInterceptor NtDllIntercept;
 
 } // namespace
-
-#ifdef NIGHTLY_BUILD
-MFBT_API void
-RegisterDllLoadCallback(LoadCallBackFn aCallback) {
-  gLoadInfoCallback = aCallback;
-  for (DllLoadInfo &info : gDllLoadInfos) {
-    aCallback(info);
-  }
-}
-#endif
 
 MFBT_API void
 DllBlocklist_Initialize()
