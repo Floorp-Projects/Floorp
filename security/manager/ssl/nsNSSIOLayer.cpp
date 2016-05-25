@@ -1052,6 +1052,7 @@ uint32_t tlsIntoleranceTelemetryBucket(PRErrorCode err)
     case SSL_ERROR_DECODE_ERROR_ALERT: return 14;
     case PR_CONNECT_RESET_ERROR: return 16;
     case PR_END_OF_FILE_ERROR: return 17;
+    case SSL_ERROR_INTERNAL_ERROR_ALERT: return 18;
     default: return 0;
   }
 }
@@ -2543,8 +2544,11 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
   if (range.max < maxEnabledVersion) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
            ("[%p] nsSSLIOLayerSetOptions: enabling TLS_FALLBACK_SCSV\n", fd));
-    if (SECSuccess != SSL_OptionSet(fd, SSL_ENABLE_FALLBACK_SCSV, true)) {
-      return NS_ERROR_FAILURE;
+    // Some servers will choke if we send the fallback SCSV with TLS 1.2.
+    if (range.max < SSL_LIBRARY_VERSION_TLS_1_2) {
+      if (SECSuccess != SSL_OptionSet(fd, SSL_ENABLE_FALLBACK_SCSV, true)) {
+        return NS_ERROR_FAILURE;
+      }
     }
     // tell NSS the max enabled version to make anti-downgrade effective
     if (SECSuccess != SSL_SetDowngradeCheckVersion(fd, maxEnabledVersion)) {
