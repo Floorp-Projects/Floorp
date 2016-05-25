@@ -26,6 +26,9 @@ FindPluginsForContent(uint32_t aPluginEpoch,
                       nsTArray<PluginTag>* aPlugins,
                       uint32_t* aNewPluginEpoch);
 
+base::ProcessId
+PluginProcessId(uint32_t aPluginId);
+
 void
 TerminatePlugin(uint32_t aPluginId,
                 base::ProcessId aContentProcessId,
