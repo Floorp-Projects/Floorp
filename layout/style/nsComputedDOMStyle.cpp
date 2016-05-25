@@ -2836,7 +2836,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetGridColumnGap()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetAppUnits(StylePosition()->mGridColumnGap);
+  SetValueToCoord(val, StylePosition()->mGridColumnGap, true);
   return val.forget();
 }
 
@@ -2844,7 +2844,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetGridRowGap()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetAppUnits(StylePosition()->mGridRowGap);
+  SetValueToCoord(val, StylePosition()->mGridRowGap, true);
   return val.forget();
 }
 

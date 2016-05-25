@@ -475,12 +475,19 @@ nsresult
 net_ExtractURLScheme(const nsACString &inURI,
                      nsACString& scheme)
 {
-    Tokenizer p(inURI, "\r\n\t");
+    nsACString::const_iterator start, end;
+    inURI.BeginReading(start);
+    inURI.EndReading(end);
 
-    while (p.CheckWhite() || p.CheckChar(' ')) {
-        // Skip leading whitespace
+    // Strip C0 and space from begining
+    while (start != end) {
+        if ((uint8_t) *start > 0x20) {
+            break;
+        }
+        start++;
     }
 
+    Tokenizer p(Substring(start, end), "\r\n\t");
     p.Record();
     if (!p.CheckChar(isAsciiAlpha)) {
         // First char must be alpha
@@ -523,11 +530,19 @@ net_IsValidScheme(const char *scheme, uint32_t schemeLen)
 bool
 net_IsAbsoluteURL(const nsACString& uri)
 {
-    Tokenizer p(uri, "\r\n\t");
+    nsACString::const_iterator start, end;
+    uri.BeginReading(start);
+    uri.EndReading(end);
 
-    while (p.CheckWhite() || p.CheckChar(' ')) {
-        // Skip leading whitespace
+    // Strip C0 and space from begining
+    while (start != end) {
+        if ((uint8_t) *start > 0x20) {
+            break;
+        }
+        start++;
     }
+
+    Tokenizer p(Substring(start, end), "\r\n\t");
 
     // First char must be alpha
     if (!p.CheckChar(isAsciiAlpha)) {
@@ -554,38 +569,38 @@ net_IsAbsoluteURL(const nsACString& uri)
     return false;
 }
 
-bool
-net_FilterURIString(const char *str, nsACString& result)
+void
+net_FilterURIString(const nsACString& input, nsACString& result)
 {
-    NS_PRECONDITION(str, "Must have a non-null string!");
     result.Truncate();
-    const char *p = str;
 
-    // Figure out if we need to filter anything.
-    bool writing = false;
-    while (*p) {
-        if (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n') {
-            writing = true;
+    nsACString::const_iterator start, end;
+    input.BeginReading(start);
+    input.EndReading(end);
+
+    // Strip C0 and space from begining
+    while (start != end) {
+        if ((uint8_t) *start > 0x20) {
             break;
         }
-        p++;
+        start++;
     }
 
-    if (!writing) {
-        // Nothing to strip or filter
-        return false;
+    MOZ_ASSERT(!*end, "input should null terminated");
+    // Strip C0 and space from end
+    while (end != start) {
+        end--;
+        if ((uint8_t) *end > 0x20) {
+            end++;
+            break;
+        }
     }
 
-    nsAutoCString temp;
-
-    temp.Assign(str);
-    temp.Trim("\r\n\t ");
+    nsAutoCString temp(Substring(start, end));
     temp.StripChars("\r\n\t");
-
     result.Assign(temp);
-
-    return true;
 }
+
 
 #if defined(XP_WIN)
 bool

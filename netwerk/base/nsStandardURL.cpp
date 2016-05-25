@@ -1293,21 +1293,17 @@ nsStandardURL::SetSpec(const nsACString &input)
     ENSURE_MUTABLE();
 
     const nsPromiseFlatCString &flat = PromiseFlatCString(input);
-    const char *spec = flat.get();
-    int32_t specLength = flat.Length();
-
-    LOG(("nsStandardURL::SetSpec [spec=%s]\n", spec));
-
-    if (!spec || !*spec)
-        return NS_ERROR_MALFORMED_URI;
+    LOG(("nsStandardURL::SetSpec [spec=%s]\n", flat.get()));
 
     if (input.Length() > (uint32_t) net_GetURLMaxLength()) {
         return NS_ERROR_MALFORMED_URI;
     }
 
-    // NUL characters aren't allowed
-    // \r\n\t are stripped out instead of returning error(see below)
-    if (input.Contains('\0')) {
+    // filter out unexpected chars "\r\n\t" if necessary
+    nsAutoCString filteredURI;
+    net_FilterURIString(flat, filteredURI);
+
+    if (filteredURI.Length() == 0) {
         return NS_ERROR_MALFORMED_URI;
     }
 
@@ -1315,14 +1311,6 @@ nsStandardURL::SetSpec(const nsACString &input)
     nsStandardURL prevURL(false,false);
     prevURL.CopyMembers(this, eHonorRef);
     Clear();
-
-    // filter out unexpected chars "\r\n\t" if necessary
-    nsAutoCString filteredURI;
-    if (!net_FilterURIString(spec, filteredURI)) {
-        // Copy the content into filteredURI even if no whitespace was stripped.
-        // We need a non-const buffer to perform backslash replacement.
-        filteredURI = input;
-    }
 
     if (IsSpecialProtocol(filteredURI)) {
         // Bug 652186: Replace all backslashes with slashes when parsing paths
@@ -1342,9 +1330,8 @@ nsStandardURL::SetSpec(const nsACString &input)
         }
     }
 
-    spec = filteredURI.get();
-    specLength = filteredURI.Length();
-
+    const char *spec = filteredURI.get();
+    int32_t specLength = filteredURI.Length();
 
     // parse the given URL...
     nsresult rv = ParseURL(spec, specLength);
@@ -2122,19 +2109,12 @@ NS_IMETHODIMP
 nsStandardURL::Resolve(const nsACString &in, nsACString &out)
 {
     const nsPromiseFlatCString &flat = PromiseFlatCString(in);
-    const char *relpath = flat.get();
-
     // filter out unexpected chars "\r\n\t" if necessary
     nsAutoCString buf;
-    int32_t relpathLen;
-    if (!net_FilterURIString(relpath, buf)) {
-        // Copy the content into filteredURI even if no whitespace was stripped.
-        // We need a non-const buffer to perform backslash replacement.
-        buf = in;
-    }
+    net_FilterURIString(flat, buf);
 
-    relpath = buf.get();
-    relpathLen = buf.Length();
+    const char *relpath = buf.get();
+    int32_t relpathLen = buf.Length();
 
     char *result = nullptr;
 
@@ -2540,7 +2520,7 @@ nsStandardURL::SetFilePath(const nsACString &input)
         int32_t dirLen, baseLen, extLen;
         nsresult rv;
 
-        rv = mParser->ParseFilePath(filepath, -1,
+        rv = mParser->ParseFilePath(filepath, flat.Length(),
                                     &dirPos, &dirLen,
                                     &basePos, &baseLen,
                                     &extPos, &extLen);
@@ -2629,7 +2609,7 @@ nsStandardURL::SetQuery(const nsACString &input)
         return NS_OK;
     }
 
-    int32_t queryLen = strlen(query);
+    int32_t queryLen = flat.Length();
     if (query[0] == '?') {
         query++;
         queryLen--;
@@ -2679,10 +2659,6 @@ nsStandardURL::SetRef(const nsACString &input)
 
     LOG(("nsStandardURL::SetRef [ref=%s]\n", ref));
 
-    if (input.Contains('\0')) {
-        return NS_ERROR_MALFORMED_URI;
-    }
-
     if (mPath.mLen < 0)
         return SetPath(flat);
 
@@ -2709,7 +2685,7 @@ nsStandardURL::SetRef(const nsACString &input)
         ref++;
         refLen--;
     }
-    
+
     if (mRef.mLen < 0) {
         mSpec.Append('#');
         ++mPath.mLen;  // Include the # in the path.
@@ -2780,7 +2756,7 @@ nsStandardURL::SetFileName(const nsACString &input)
         URLSegment basename, extension;
 
         // let the parser locate the basename and extension
-        rv = mParser->ParseFileName(filename, -1,
+        rv = mParser->ParseFileName(filename, flat.Length(),
                                     &basename.mPos, &basename.mLen,
                                     &extension.mPos, &extension.mLen);
         if (NS_FAILED(rv)) return rv;

@@ -38,7 +38,6 @@ static GtkWidget* gComboBoxEntryArrowWidget;
 static GtkWidget* gHandleBoxWidget;
 static GtkWidget* gToolbarWidget;
 static GtkWidget* gFrameWidget;
-static GtkWidget* gProgressWidget;
 static GtkWidget* gTabWidget;
 static GtkWidget* gTextViewWidget;
 static GtkWidget* gTooltipWidget;
@@ -476,16 +475,6 @@ ensure_tab_widget()
     if (!gTabWidget) {
         gTabWidget = gtk_notebook_new();
         setup_widget_prototype(gTabWidget);
-    }
-    return MOZ_GTK_SUCCESS;
-}
-
-static gint
-ensure_progress_widget()
-{
-    if (!gProgressWidget) {
-        gProgressWidget = gtk_progress_bar_new();
-        setup_widget_prototype(gProgressWidget);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -1900,18 +1889,11 @@ static gint
 moz_gtk_progressbar_paint(cairo_t *cr, GdkRectangle* rect,
                           GtkTextDirection direction)
 {
-    GtkStyleContext* style;
-
-    ensure_progress_widget();
-    gtk_widget_set_direction(gProgressWidget, direction);
-
-    style = gtk_widget_get_style_context(gProgressWidget);
-    gtk_style_context_save(style);
-    gtk_style_context_add_class(style, GTK_STYLE_CLASS_TROUGH);
-    
+    GtkStyleContext* style = ClaimStyleContext(MOZ_GTK_PROGRESS_TROUGH,
+                                               direction);
     gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
     gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
-    gtk_style_context_restore(style);
+    ReleaseStyleContext(style);
 
     return MOZ_GTK_SUCCESS;
 }
@@ -1923,13 +1905,15 @@ moz_gtk_progress_chunk_paint(cairo_t *cr, GdkRectangle* rect,
 {
     GtkStyleContext* style;
 
-    ensure_progress_widget();
-    gtk_widget_set_direction(gProgressWidget, direction);
-
-    style = gtk_widget_get_style_context(gProgressWidget);
-    gtk_style_context_save(style);
-    gtk_style_context_remove_class(style, GTK_STYLE_CLASS_TROUGH);
-    gtk_style_context_add_class(style, GTK_STYLE_CLASS_PROGRESSBAR);
+    if (gtk_check_version(3, 20, 0) != nullptr) {
+      /* Ask for MOZ_GTK_PROGRESS_TROUGH instead of MOZ_GTK_PROGRESSBAR
+       * because ClaimStyleContext() saves/restores that style */
+      style = ClaimStyleContext(MOZ_GTK_PROGRESS_TROUGH, direction);
+      gtk_style_context_remove_class(style, GTK_STYLE_CLASS_TROUGH);
+      gtk_style_context_add_class(style, GTK_STYLE_CLASS_PROGRESSBAR);
+    } else {
+      style = ClaimStyleContext(MOZ_GTK_PROGRESS_CHUNK, direction);
+    }
 
     if (widget == MOZ_GTK_PROGRESS_CHUNK_INDETERMINATE ||
         widget == MOZ_GTK_PROGRESS_CHUNK_VERTICAL_INDETERMINATE) {
@@ -1973,7 +1957,7 @@ moz_gtk_progress_chunk_paint(cairo_t *cr, GdkRectangle* rect,
     } else {
       gtk_render_activity(style, cr, rect->x, rect->y, rect->width, rect->height);
     }
-    gtk_style_context_restore(style);
+    ReleaseStyleContext(style);
 
     return MOZ_GTK_SUCCESS;
 }
@@ -2707,8 +2691,7 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
         w = gTabWidget;
         break;
     case MOZ_GTK_PROGRESSBAR:
-        ensure_progress_widget();
-        w = gProgressWidget;
+        w = GetWidget(MOZ_GTK_PROGRESSBAR);
         break;
     case MOZ_GTK_SPINBUTTON_ENTRY:
     case MOZ_GTK_SPINBUTTON_UP:
@@ -3345,7 +3328,6 @@ moz_gtk_shutdown()
     gHandleBoxWidget = NULL;
     gToolbarWidget = NULL;
     gFrameWidget = NULL;
-    gProgressWidget = NULL;
     gTabWidget = NULL;
     gTextViewWidget = nullptr;
     gTooltipWidget = NULL;

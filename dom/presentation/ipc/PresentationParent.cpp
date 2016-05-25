@@ -232,12 +232,13 @@ PresentationParent::NotifySessionConnect(uint64_t aWindowId,
 }
 
 bool
-PresentationParent::RecvNotifyReceiverReady(const nsString& aSessionId)
+PresentationParent::RecvNotifyReceiverReady(const nsString& aSessionId,
+                                            const uint64_t& aWindowId)
 {
   MOZ_ASSERT(mService);
 
   // Set window ID to 0 since the window is from content process.
-  NS_WARN_IF(NS_FAILED(mService->NotifyReceiverReady(aSessionId, 0)));
+  NS_WARN_IF(NS_FAILED(mService->NotifyReceiverReady(aSessionId, aWindowId)));
   return true;
 }
 
@@ -273,7 +274,8 @@ PresentationRequestParent::DoRequest(const StartSessionRequest& aRequest)
 
   // Set window ID to 0 since the window is from content process.
   return mService->StartSession(aRequest.url(), aRequest.sessionId(),
-                                aRequest.origin(), aRequest.deviceId(), 0, this);
+                                aRequest.origin(), aRequest.deviceId(),
+                                aRequest.windowId(), this);
 }
 
 nsresult

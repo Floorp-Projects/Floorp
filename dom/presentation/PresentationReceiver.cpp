@@ -67,23 +67,8 @@ PresentationReceiver::Init()
     return false;
   }
 
-  // A session may already be connecting before the web content
-  // request for access in a receiving browsing context.
-  nsAutoString sessionId;
-  nsresult rv = service->GetExistentSessionIdAtLaunch(mWindowId, sessionId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  if (!sessionId.IsEmpty()) {
-    rv = NotifySessionConnect(mWindowId, sessionId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return false;
-    }
-  }
-
   // Register listener for incoming sessions.
-  rv = service->RegisterRespondingListener(mWindowId, this);
+  nsresult rv = service->RegisterRespondingListener(mWindowId, this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }

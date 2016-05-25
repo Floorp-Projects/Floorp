@@ -64,7 +64,21 @@ DocAccessibleParent::RecvShowEvent(const ShowEventData& aData,
 
   MOZ_DIAGNOSTIC_ASSERT(CheckDocTree());
 
-  ProxyShowHideEvent(parent->ChildAt(newChildIdx), parent, true, aFromUser);
+  ProxyAccessible* target = parent->ChildAt(newChildIdx);
+  ProxyShowHideEvent(target, parent, true, aFromUser);
+
+  if (!nsCoreUtils::AccEventObserversExist()) {
+    return true;
+  }
+
+  uint32_t type = nsIAccessibleEvent::EVENT_SHOW;
+  xpcAccessibleGeneric* xpcAcc = GetXPCAccessible(target);
+  xpcAccessibleDocument* doc = GetAccService()->GetXPCDocument(this);
+  nsIDOMNode* node = nullptr;
+  RefPtr<xpcAccEvent> event = new xpcAccEvent(type, xpcAcc, doc, node,
+                                              aFromUser);
+  nsCoreUtils::DispatchAccEvent(Move(event));
+
   return true;
 }
 
@@ -141,10 +155,30 @@ DocAccessibleParent::RecvHideEvent(const uint64_t& aRootID,
 
   ProxyAccessible* parent = root->Parent();
   ProxyShowHideEvent(root, parent, false, aFromUser);
+
+  RefPtr<xpcAccHideEvent> event = nullptr;
+  if (nsCoreUtils::AccEventObserversExist()) {
+    uint32_t type = nsIAccessibleEvent::EVENT_HIDE;
+    xpcAccessibleGeneric* xpcAcc = GetXPCAccessible(root);
+    xpcAccessibleGeneric* xpcParent = GetXPCAccessible(parent);
+    ProxyAccessible* next = root->NextSibling();
+    xpcAccessibleGeneric* xpcNext = next ? GetXPCAccessible(next) : nullptr;
+    ProxyAccessible* prev = root->PrevSibling();
+    xpcAccessibleGeneric* xpcPrev = prev ? GetXPCAccessible(prev) : nullptr;
+    xpcAccessibleDocument* doc = GetAccService()->GetXPCDocument(this);
+    nsIDOMNode* node = nullptr;
+    event = new xpcAccHideEvent(type, xpcAcc, doc, node, aFromUser, xpcParent,
+                                xpcNext, xpcPrev);
+  }
+
   parent->RemoveChild(root);
   root->Shutdown();
 
   MOZ_DIAGNOSTIC_ASSERT(CheckDocTree());
+
+  if (event) {
+    nsCoreUtils::DispatchAccEvent(Move(event));
+  }
 
   return true;
 }

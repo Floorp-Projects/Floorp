@@ -50,33 +50,19 @@ this.MarionetteServer = function(port, forceLocal) {
 };
 
 /**
- * Function that takes an Emulator and produces a GeckoDriver.
+ * Function produces a GeckoDriver.
  *
  * Determines application name and device type to initialise the driver
- * with.  Also bypasses offline status if the device is a qemu or panda
- * type device.
+ * with.
  *
  * @return {GeckoDriver}
  *     A driver instance.
  */
-MarionetteServer.prototype.driverFactory = function(emulator) {
+MarionetteServer.prototype.driverFactory = function() {
   let appName = isMulet() ? "B2G" : Services.appinfo.name;
-  let qemu = "0";
   let device = null;
   let bypassOffline = false;
 
-  try {
-    Cu.import("resource://gre/modules/systemlibs.js");
-    qemu = libcutils.property_get("ro.kernel.qemu");
-    logger.debug("B2G emulator: " + (qemu == "1" ? "yes" : "no"));
-    device = libcutils.property_get("ro.product.device");
-    logger.debug("Device detected is " + device);
-    bypassOffline = (qemu == "1" || device == "panda");
-  } catch (e) {}
-
-  if (qemu == "1") {
-    device = "qemu";
-  }
   if (!device) {
     device = "desktop";
   }
@@ -84,14 +70,14 @@ MarionetteServer.prototype.driverFactory = function(emulator) {
   Preferences.set(CONTENT_LISTENER_PREF, false);
 
   if (bypassOffline) {
-    logger.debug("Bypassing offline status");
-    Preferences.set(MANAGE_OFFLINE_STATUS_PREF, false);
-    Services.io.manageOfflineStatus = false;
-    Services.io.offline = false;
+      logger.debug("Bypassing offline status");
+      Preferences.set(MANAGE_OFFLINE_STATUS_PREF, false);
+      Services.io.manageOfflineStatus = false;
+      Services.io.offline = false;
   }
 
   let stopSignal = () => this.stop();
-  return new GeckoDriver(appName, device, stopSignal, emulator);
+  return new GeckoDriver(appName, device, stopSignal);
 };
 
 MarionetteServer.prototype.start = function() {

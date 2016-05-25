@@ -155,6 +155,8 @@ typedef enum {
   MOZ_GTK_RESIZER,
   /* Paints a GtkProgressBar. */
   MOZ_GTK_PROGRESSBAR,
+  /* Paints a trough (track) of a GtkProgressBar */
+  MOZ_GTK_PROGRESS_TROUGH,
   /* Paints a progress chunk of a GtkProgressBar. */
   MOZ_GTK_PROGRESS_CHUNK,
   /* Paints a progress chunk of an indeterminated GtkProgressBar. */

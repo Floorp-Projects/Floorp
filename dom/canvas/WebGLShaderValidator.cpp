@@ -83,6 +83,9 @@ ChooseValidatorCompileOptions(const ShBuiltInResources& resources,
         if (gl->Vendor() == gl::GLVendor::NVIDIA) {
             options |= SH_UNROLL_FOR_LOOP_WITH_SAMPLER_ARRAY_INDEX;
         }
+
+        // Work around that Mac drivers handle struct scopes incorrectly.
+        options |= SH_REGENERATE_STRUCT_NAMES;
     }
 #endif
 

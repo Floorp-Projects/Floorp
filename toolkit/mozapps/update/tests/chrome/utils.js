@@ -98,7 +98,6 @@ const PAGEID_ERROR_EXTRA      = "errorextra";            // Done
 const PAGEID_ERROR_PATCHING   = "errorpatching";         // Done
 const PAGEID_FINISHED         = "finished";              // Done
 const PAGEID_FINISHED_BKGRD   = "finishedBackground";    // Done
-const PAGEID_INSTALLED        = "installed";             // Done
 
 const UPDATE_WINDOW_NAME = "Update:Wizard";
 
@@ -554,7 +553,6 @@ function getExpectedButtonStates() {
     case PAGEID_UNSUPPORTED:
     case PAGEID_ERRORS:
     case PAGEID_ERROR_EXTRA:
-    case PAGEID_INSTALLED:
       return { finish: { disabled: false, hidden: false } };
     case PAGEID_ERROR_PATCHING:
       return { next  : { disabled: false, hidden: false } };
@@ -982,10 +980,6 @@ function resetPrefs() {
 
   if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_URL_DETAILS)) {
     Services.prefs.clearUserPref(PREF_APP_UPDATE_URL_DETAILS);
-  }
-
-  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_SHOW_INSTALLED_UI)) {
-    Services.prefs.clearUserPref(PREF_APP_UPDATE_SHOW_INSTALLED_UI);
   }
 
   if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_NOTIFIEDUNSUPPORTED)) {

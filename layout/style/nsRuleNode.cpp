@@ -6520,6 +6520,10 @@ struct BackgroundItemComputer<nsCSSValuePairList, nsStyleImageLayers::Repeat>
       aComputedValue.mYRepeat = NS_STYLE_IMAGELAYER_REPEAT_REPEAT;
       break;
     default:
+      NS_ASSERTION(value == NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT ||
+                   value == NS_STYLE_IMAGELAYER_REPEAT_REPEAT ||
+                   value == NS_STYLE_IMAGELAYER_REPEAT_SPACE ||
+                   value == NS_STYLE_IMAGELAYER_REPEAT_ROUND, "Unexpected value");
       aComputedValue.mXRepeat = value;
       hasContraction = false;
       break;
@@ -6538,7 +6542,9 @@ struct BackgroundItemComputer<nsCSSValuePairList, nsStyleImageLayers::Repeat>
     case eCSSUnit_Enumerated:
       value = aSpecifiedValue->mYValue.GetIntValue();
       NS_ASSERTION(value == NS_STYLE_IMAGELAYER_REPEAT_NO_REPEAT ||
-                   value == NS_STYLE_IMAGELAYER_REPEAT_REPEAT, "Unexpected value");
+                   value == NS_STYLE_IMAGELAYER_REPEAT_REPEAT ||
+                   value == NS_STYLE_IMAGELAYER_REPEAT_SPACE ||
+                   value == NS_STYLE_IMAGELAYER_REPEAT_ROUND, "Unexpected value");
       aComputedValue.mYRepeat = value;
       break;
     default:
@@ -8583,14 +8589,11 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
               conditions);
 
   // grid-column-gap
-  nsStyleCoord tempCoord;
   if (SetCoord(*aRuleData->ValueForGridColumnGap(),
-               tempCoord, nsStyleCoord(parentPos->mGridColumnGap,
-                                       nsStyleCoord::CoordConstructor),
-               SETCOORD_LH | SETCOORD_INITIAL_ZERO | SETCOORD_CALC_LENGTH_ONLY |
+               pos->mGridColumnGap, parentPos->mGridColumnGap,
+               SETCOORD_LPH | SETCOORD_INITIAL_ZERO | SETCOORD_STORE_CALC |
                SETCOORD_CALC_CLAMP_NONNEGATIVE | SETCOORD_UNSET_INITIAL,
                aContext, mPresContext, conditions)) {
-    pos->mGridColumnGap = tempCoord.GetCoordValue();
   } else {
     MOZ_ASSERT(aRuleData->ValueForGridColumnGap()->GetUnit() == eCSSUnit_Null,
                "unexpected unit");
@@ -8598,12 +8601,10 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
 
   // grid-row-gap
   if (SetCoord(*aRuleData->ValueForGridRowGap(),
-               tempCoord, nsStyleCoord(parentPos->mGridRowGap,
-                                       nsStyleCoord::CoordConstructor),
-               SETCOORD_LH | SETCOORD_INITIAL_ZERO | SETCOORD_CALC_LENGTH_ONLY |
+               pos->mGridRowGap, parentPos->mGridRowGap,
+               SETCOORD_LPH | SETCOORD_INITIAL_ZERO | SETCOORD_STORE_CALC |
                SETCOORD_CALC_CLAMP_NONNEGATIVE | SETCOORD_UNSET_INITIAL,
                aContext, mPresContext, conditions)) {
-    pos->mGridRowGap = tempCoord.GetCoordValue();
   } else {
     MOZ_ASSERT(aRuleData->ValueForGridRowGap()->GetUnit() == eCSSUnit_Null,
                "unexpected unit");
