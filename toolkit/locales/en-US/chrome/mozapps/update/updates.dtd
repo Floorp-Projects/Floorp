@@ -80,10 +80,6 @@
                                            &brandShortName; now, continue working and restart later, or decline this
                                            update.">
 
-<!ENTITY  installed.title                 "Update Installed">
-<!ENTITY  installed.intro                 "The update was successfully installed.">
-<!ENTITY  whatsnew.label                  "Read more about what’s new…">
-
 <!ENTITY  update.details.label            "Details">
 <!ENTITY  update.installedOn.label        "Installed on:">
 <!ENTITY  update.status.label             "Status:">

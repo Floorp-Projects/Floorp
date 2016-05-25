@@ -230,17 +230,4 @@
     </vbox>
   </wizardpage>
 
-  <wizardpage id="installed" pageid="installed" object="gInstalledPage"
-              onpageshow="gInstalledPage.onPageShow();">
-    <updateheader label="&installed.title;"/>
-    <vbox class="update-content" flex="1">
-      <label>&installed.intro;</label>
-      <separator/>
-      <hbox>
-        <label id="whatsnewLink" class="text-link" hidden="true"
-               value="&whatsnew.label;" onclick="openUpdateURL(event);"/>
-      </hbox>
-    </vbox>
-  </wizardpage>
-
 </wizard>
