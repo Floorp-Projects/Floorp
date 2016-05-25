@@ -63,6 +63,11 @@
   /* Images */
   --theme-pane-collapse-image: url(chrome://devtools/skin/images/pane-collapse.svg);
   --theme-pane-expand-image: url(chrome://devtools/skin/images/pane-expand.svg);
+
+  /* Tooltips */
+  --theme-tooltip-border: #d9e1e8;
+  --theme-tooltip-background: rgba(255, 255, 255, .9);
+  --theme-tooltip-shadow: rgba(155, 155, 155, 0.26);
 }
 
 :root.theme-dark {
@@ -114,6 +119,11 @@
   /* Images */
   --theme-pane-collapse-image: url(chrome://devtools/skin/images/pane-collapse.svg);
   --theme-pane-expand-image: url(chrome://devtools/skin/images/pane-expand.svg);
+
+  /* Tooltips */
+  --theme-tooltip-border: #434850;
+  --theme-tooltip-background: rgba(19, 28, 38, .9);
+  --theme-tooltip-shadow: rgba(25, 25, 25, 0.76);
 }
 
 :root.theme-firebug {
