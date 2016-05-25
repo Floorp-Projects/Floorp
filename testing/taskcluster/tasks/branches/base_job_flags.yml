@@ -101,6 +101,7 @@ flags:
     - cppunit
     - crashtest
     - crashtest-e10s
+    - crashtest-ipc
     - external-media-tests
     - firefox-ui-functional
     - firefox-ui-functional-e10s
@@ -129,14 +130,17 @@ flags:
     - mochitest-jetpack
     - mochitest-media
     - mochitest-media-e10s
+    - mochitest-oop
     - mochitest-webgl
     - mochitest-webgl-e10s
     - mochitest-valgrind
     - mozmill
     - reftest
     - reftest-e10s
+    - reftest-ipc
     - reftest-no-accel
     - reftest-no-accel-e10s
+    - reftest-sanity-oop
     - web-platform-tests
     - web-platform-tests-e10s
     - web-platform-tests-reftests
