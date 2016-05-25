@@ -206,6 +206,11 @@ const CustomizableWidgets = [
                          .asyncExecuteLegacyQueries([query], 1, options, {
         handleResult: function (aResultSet) {
           let onItemCommand = function (aEvent) {
+            // Only handle the click event for middle clicks, we're using the command
+            // event otherwise.
+            if (aEvent.type == "click" && aEvent.button != 1) {
+              return;
+            }
             let item = aEvent.target;
             win.openUILink(item.getAttribute("targetURI"), aEvent);
             CustomizableUI.hidePanelForNode(item);
@@ -222,6 +227,7 @@ const CustomizableWidgets = [
             item.setAttribute("targetURI", uri);
             item.setAttribute("class", "subviewbutton");
             item.addEventListener("command", onItemCommand);
+            item.addEventListener("click", onItemCommand);
             if (icon) {
               let iconURL = "moz-anno:favicon:" + icon;
               item.setAttribute("image", iconURL);
