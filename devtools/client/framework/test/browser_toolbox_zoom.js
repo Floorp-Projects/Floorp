@@ -8,6 +8,8 @@ var modifiers = {
 };
 
 var toolbox;
+var strings = Services.strings.createBundle(
+  "chrome://devtools/locale/toolbox.properties");
 
 function test() {
   addTab("about:blank").then(openToolbox);
@@ -25,15 +27,15 @@ function openToolbox() {
 function testZoom() {
   info("testing zoom keys");
 
-  testZoomLevel("in", 2, 1.2);
-  testZoomLevel("out", 3, 0.9);
-  testZoomLevel("reset", 1, 1);
+  testZoomLevel("In", 2, 1.2);
+  testZoomLevel("Out", 3, 0.9);
+  testZoomLevel("Reset", 1, 1);
 
   tidyUp();
 }
 
 function testZoomLevel(type, times, expected) {
-  sendZoomKey("toolbox-zoom-" + type + "-key", times);
+  sendZoomKey("toolbox.zoom" + type + ".key", times);
 
   let zoom = getCurrentZoom(toolbox);
   is(zoom.toFixed(2), expected, "zoom level correct after zoom " + type);
@@ -42,10 +44,9 @@ function testZoomLevel(type, times, expected) {
      "saved zoom level is correct after zoom " + type);
 }
 
-function sendZoomKey(id, times) {
-  let key = toolbox.doc.getElementById(id).getAttribute("key");
+function sendZoomKey(shortcut, times) {
   for (let i = 0; i < times; i++) {
-    EventUtils.synthesizeKey(key, modifiers, toolbox.win);
+    synthesizeKeyShortcut(strings.GetStringFromName(shortcut));
   }
 }
 
