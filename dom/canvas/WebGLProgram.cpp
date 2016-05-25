@@ -786,14 +786,8 @@ WebGLProgram::GetUniformLocation(const nsAString& userName_wide) const
     const NS_LossyConvertUTF16toASCII userName(userName_wide);
 
     nsDependentCString baseUserName;
-    bool isArray = false;
-    // GLES 2.0.25, Section 2.10, p35
-    // If the the uniform location is an array, then the location of the first
-    // element of that array can be retrieved by either using the name of the
-    // uniform array, or the name of the uniform array appended with "[0]".
-    // The ParseName() can't recognize this rule. So always initialize
-    // arrayIndex with 0.
-    size_t arrayIndex = 0;
+    bool isArray;
+    size_t arrayIndex;
     if (!ParseName(userName, &baseUserName, &isArray, &arrayIndex))
         return nullptr;
 
@@ -818,8 +812,7 @@ WebGLProgram::GetUniformLocation(const nsAString& userName_wide) const
         return nullptr;
 
     RefPtr<WebGLUniformLocation> locObj = new WebGLUniformLocation(mContext, LinkInfo(),
-                                                                   loc, arrayIndex,
-                                                                   activeInfo);
+                                                                     loc, activeInfo);
     return locObj.forget();
 }
 
