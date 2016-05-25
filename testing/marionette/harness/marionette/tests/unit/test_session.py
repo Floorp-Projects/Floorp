@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette import MarionetteTestCase
+from marionette_driver.errors import SessionNotCreatedException
 
 class TestSession(MarionetteTestCase):
     def setUp(self):
@@ -41,3 +42,8 @@ class TestSession(MarionetteTestCase):
 
         self.assertEqual(self.marionette.session_id, "ILoveCheese")
         self.assertTrue(isinstance(self.marionette.session_id, unicode))
+
+    def test_we_only_support_one_active_session_at_a_time(self):
+        self.marionette.start_session()
+        self.assertTrue(isinstance(self.marionette.session_id, unicode))
+        self.assertRaises(SessionNotCreatedException, self.marionette._send_message, "newSession", {})
