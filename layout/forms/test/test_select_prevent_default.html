@@ -29,11 +29,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=291082
     document.getElementById("keypress").addEventListener("keypress", preventDefault);
 
     SimpleTest.waitForFocus(function() {
-      if (navigator.platform.indexOf("Mac") == 0) {
-        todo(false, "Make this test work on OSX");
-        SimpleTest.finish();
-        return;
-      }
       var testData = [ "one", "two", "three", "four", "keydown", "keypress" ];
 
       // The order of the keys in otherKeys is important for the test to function properly.
