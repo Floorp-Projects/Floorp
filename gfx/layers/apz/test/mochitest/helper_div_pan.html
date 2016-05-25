@@ -24,8 +24,8 @@ function scrollOuter() {
 
 function checkScroll() {
   var outerScroll = document.getElementById('outer').scrollTop;
-  window.opener.is(outerScroll, 50, "check that the div scrolled");
-  window.opener.testDone();
+  is(outerScroll, 50, "check that the div scrolled");
+  subtestDone();
 }
 
 window.onload = function() {

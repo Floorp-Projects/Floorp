@@ -23,8 +23,8 @@ function scrollPage() {
 }
 
 function checkScroll() {
-  window.opener.is(window.scrollY, 50, "check that the window scrolled");
-  window.opener.testDone();
+  is(window.scrollY, 50, "check that the window scrolled");
+  subtestDone();
 }
 
 window.onload = function() {

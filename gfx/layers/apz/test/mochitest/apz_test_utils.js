@@ -189,8 +189,8 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
         w = window.open('', "_blank");
         w.subtestDone = advanceSubtestExecution;
         w.SimpleTest = SimpleTest;
-        w.is = is;
-        w.ok = ok;
+        w.is = function(a, b, msg) { return is(a, b, aFile + " | " + msg); };
+        w.ok = function(cond, name, diag) { return ok(cond, aFile + " | " + name, diag); };
         w.location = location.href.substring(0, location.href.lastIndexOf('/') + 1) + aFile;
         return w;
       }
