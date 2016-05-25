@@ -4792,6 +4792,17 @@ MultiprocessBlockPolicy() {
   }
 #endif
 
+  /**
+   * Avoids enabling e10s for OS X 10.6 - 10.8 users (<= Lion) as these
+   * versions will be unsupported soon.
+   */
+#if defined(XP_MACOSX)
+  if (!nsCocoaFeatures::OnMountainLionOrLater()) {
+    gMultiprocessBlockPolicy = kE10sDisabledForOperatingSystem;
+    return gMultiprocessBlockPolicy;
+  }
+#endif
+
 #if defined(XP_WIN)
   /**
    * We block on Windows XP if layers acceleration is requested. This is due to
