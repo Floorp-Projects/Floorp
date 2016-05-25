@@ -208,3 +208,13 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
     advanceSubtestExecution();
   });
 }
+
+function waitUntilApzStable() {
+  return new Promise(function(resolve, reject) {
+    SimpleTest.waitForFocus(function() {
+      waitForAllPaints(function() {
+        flushApzRepaints(resolve);
+      });
+    }, window);
+  });
+}
