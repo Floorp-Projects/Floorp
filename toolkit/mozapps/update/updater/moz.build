@@ -4,7 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Program('updater')
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    Program('org.mozilla.updater')
+else:
+    Program('updater')
 
 updater_rel_path = ''
 include('updater-common.build')
@@ -13,6 +16,15 @@ if CONFIG['ENABLE_TESTS']:
 
 CXXFLAGS += CONFIG['MOZ_BZ2_CFLAGS']
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    LDFLAGS += ['-sectcreate',
+                '__TEXT',
+                '__info_plist',
+                TOPOBJDIR + '/dist/bin/Info.plist',
+                '-sectcreate',
+                '__TEXT',
+                '__launchd_plist',
+                SRCDIR + '/Launchd.plist']
 
 GENERATED_FILES = [
     'primaryCert.h',
