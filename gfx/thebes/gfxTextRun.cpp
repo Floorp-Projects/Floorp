@@ -2637,35 +2637,15 @@ gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh, uint32_t aNextCh,
                               Script aRunScript, gfxFont *aPrevMatchedFont,
                               uint8_t *aMatchType)
 {
-    // If the char is a cluster extender, we want to use the same font as the
-    // preceding character if possible. This is preferable to using the font
-    // group because it avoids breaks in shaping within a cluster.
-    if (aPrevMatchedFont && IsClusterExtender(aCh) &&
+    // If the char is a cluster extender or NNBSP, we want to use the same
+    // font as the preceding character if possible. This is preferable to using
+    // the font group because it avoids breaks in shaping within a cluster.
+    const uint32_t NARROW_NO_BREAK_SPACE = 0x202f;
+    if (aPrevMatchedFont &&
+        (IsClusterExtender(aCh) || aCh == NARROW_NO_BREAK_SPACE) &&
         aPrevMatchedFont->HasCharacter(aCh)) {
         RefPtr<gfxFont> ret = aPrevMatchedFont;
         return ret.forget();
-    }
-
-    // Special cases for NNBSP (as used in Mongolian):
-    const uint32_t NARROW_NO_BREAK_SPACE = 0x202f;
-    if (aCh == NARROW_NO_BREAK_SPACE) {
-        // If there is no preceding character, try the font that we'd use
-        // for the next char (unless it's just another NNBSP; we don't try
-        // to look ahead through a whole run of them).
-        if (!aPrevCh && aNextCh && aNextCh != NARROW_NO_BREAK_SPACE) {
-            RefPtr<gfxFont> nextFont =
-                FindFontForChar(aNextCh, 0, 0, aRunScript, aPrevMatchedFont,
-                                aMatchType);
-            if (nextFont->HasCharacter(aCh)) {
-                return nextFont.forget();
-            }
-        }
-        // Otherwise, treat NNBSP like a cluster extender (as above) and try
-        // to continue the preceding font run.
-        if (aPrevMatchedFont && aPrevMatchedFont->HasCharacter(aCh)) {
-            RefPtr<gfxFont> ret = aPrevMatchedFont;
-            return ret.forget();
-        }
     }
 
     // To optimize common cases, try the first font in the font-group
