@@ -8,10 +8,11 @@
 // by clicking on it leaves the highlighter visible for as long as the mouse is
 // over the node
 
-const TEST_URL = "data:text/html;charset=utf-8,<p>It's going to be legen....</p>";
+const TEST_URL = "data:text/html;charset=utf-8," +
+                 "<p>It's going to be legen....</p>";
 
 add_task(function* () {
-  let {toolbox, inspector, testActor} = yield openInspectorForURL(TEST_URL);
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   info("hovering over the <p> line in the markup-view");
   yield hoverContainer("p", inspector);
@@ -22,7 +23,8 @@ add_task(function* () {
   yield clickContainer("p", inspector);
 
   yield testActor.setProperty("p", "textContent", "wait for it ....");
-  info("wait and see if the highlighter stays visible even after the node was selected");
+  info("wait and see if the highlighter stays visible even after the node " +
+       "was selected");
   yield waitForTheBrieflyShowBoxModelTimeout();
 
   yield testActor.setProperty("p", "textContent", "dary!!!!");

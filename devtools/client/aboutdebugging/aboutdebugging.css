@@ -136,10 +136,15 @@ button {
   margin: 0 5px 5px 0;
 }
 
-.page-not-found {
+.error-page {
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-direction: column;
   width: 100%;
   height: 100%;
+}
+
+.error-page .error-page-details {
+  color: gray;
 }

@@ -36,5 +36,4 @@ add_task(function* () {
     });
     return inspector.toolbox.once("picker-node-hovered");
   }
-
 });

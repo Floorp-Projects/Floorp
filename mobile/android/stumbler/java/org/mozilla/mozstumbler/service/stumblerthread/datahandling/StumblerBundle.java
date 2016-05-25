@@ -6,6 +6,7 @@ package org.mozilla.mozstumbler.service.stumblerthread.datahandling;
 
 import android.location.Location;
 import android.net.wifi.ScanResult;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -152,7 +153,11 @@ public final class StumblerBundle implements Parcelable {
 
         JSONArray wifis = new JSONArray();
 
-        long gpsTimeSinceBootInMS = (mGpsPosition.getElapsedRealtimeNanos()/1000000);
+        long gpsTimeSinceBootInMS = 0;
+
+        if (Build.VERSION.SDK_INT >= 17) {
+            gpsTimeSinceBootInMS = mGpsPosition.getElapsedRealtimeNanos() / 1000000;
+        }
 
         for (ScanResult s : mWifiData.values()) {
             JSONObject wifiEntry = new JSONObject();
@@ -160,13 +165,13 @@ public final class StumblerBundle implements Parcelable {
             wifiEntry.put("frequency", s.frequency);
             wifiEntry.put("signal", s.level);
 
-            long wifiTimeSinceBootInMS = (s.timestamp / 1000);
-            long ageMS =  wifiTimeSinceBootInMS - gpsTimeSinceBootInMS;
-            wifiEntry.put("age", ageMS);
+            if (Build.VERSION.SDK_INT >= 17) {
+                long wifiTimeSinceBootInMS = (s.timestamp / 1000);
+                long ageMS =  wifiTimeSinceBootInMS - gpsTimeSinceBootInMS;
+                wifiEntry.put("age", ageMS);
+            }
 
             wifis.put(wifiEntry);
-
-
         }
         item.put(DataStorageContract.ReportsColumns.WIFI, wifis);
         item.put(DataStorageContract.ReportsColumns.WIFI_COUNT, wifis.length());

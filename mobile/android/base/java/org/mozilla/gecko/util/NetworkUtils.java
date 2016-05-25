@@ -66,22 +66,6 @@ public class NetworkUtils {
         }
     }
 
-    public static boolean isBackgroundDataEnabled(final Context context) {
-        final NetworkInfo networkInfo = getActiveNetworkInfo(context);
-        return networkInfo != null &&
-                networkInfo.isAvailable() &&
-                networkInfo.isConnectedOrConnecting();
-    }
-
-    @Nullable
-    private static NetworkInfo getActiveNetworkInfo(final Context context) {
-        final ConnectivityManager connectivity = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        if (connectivity == null) {
-            return null;
-        }
-        return connectivity.getActiveNetworkInfo(); // can return null.
-    }
-
     /**
      * Indicates whether network connectivity exists and it is possible to establish connections and pass data.
      */

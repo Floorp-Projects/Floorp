@@ -18,6 +18,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
 
 /**
  * Helper to keep track of items that are stored in the reader view cache. This is an in-memory list
@@ -203,6 +204,43 @@ public class SavedReaderViewHelper {
             return ReaderModeUtils.getAboutReaderForUrl(pageURL);
         } else {
             return pageURL;
+        }
+    }
+
+    /**
+     * Obtain the total disk space used for saved reader view items, in KB.
+     *
+     * @return Total disk space used (KB), or Integer.MAX_VALUE on overflow.
+     */
+    public synchronized int getDiskSpacedUsedKB() {
+        // JSONObject is not thread safe - we need to be synchronized to avoid issues (most likely to
+        // occur if items are removed during iteration).
+        final Iterator<String> keys = mItems.keys();
+        long bytes = 0;
+
+        while (keys.hasNext()) {
+            final String pageURL = keys.next();
+            try {
+                final JSONObject item = mItems.getJSONObject(pageURL);
+                bytes += item.getLong(SIZE);
+
+                // Overflow is highly unlikely (we will hit device storage limits before we hit integer limits),
+                // but we should still handle this for correctness.
+                // We definitely can't store our output in an int if we overflow the long here.
+                if (bytes < 0) {
+                    return Integer.MAX_VALUE;
+                }
+            } catch (JSONException e) {
+                // This shouldn't ever happen:
+                throw new IllegalStateException("Must be able to access items in saved reader view list", e);
+            }
+        }
+
+        long kb = bytes / 1024;
+        if (kb > Integer.MAX_VALUE) {
+            return Integer.MAX_VALUE;
+        } else {
+            return (int) kb;
         }
     }
 }

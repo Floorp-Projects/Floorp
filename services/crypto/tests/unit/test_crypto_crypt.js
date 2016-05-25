@@ -1,37 +1,38 @@
 Cu.import("resource://services-crypto/WeaveCrypto.js");
+Cu.importGlobalProperties(['crypto']);
 
 var cryptoSvc = new WeaveCrypto();
 
 function run_test() {
-  
+
   if ("makeSECItem" in cryptoSvc)   // Only for js-ctypes WeaveCrypto.
     test_makeSECItem();
-  
+
   if (this.gczeal) {
     _("Running crypto tests with gczeal(2).");
     gczeal(2);
   }
   test_bug_617650();
   test_encrypt_decrypt();
-  test_SECItem_byteCompressInts();
   test_key_memoization();
   if (this.gczeal)
     gczeal(0);
 }
 
 function test_key_memoization() {
-  let oldImport = cryptoSvc.nss && cryptoSvc.nss.PK11_ImportSymKey;
+  let cryptoGlobal = cryptoSvc._getCrypto();
+  let oldImport = cryptoGlobal.subtle.importKey;
   if (!oldImport) {
-    _("Couldn't swizzle PK11_ImportSymKey; returning.");
+    _("Couldn't swizzle crypto.subtle.importKey; returning.");
     return;
   }
 
   let iv  = cryptoSvc.generateRandomIV();
   let key = cryptoSvc.generateRandomKey();
   let c   = 0;
-  cryptoSvc.nss.PK11_ImportSymKey = function(slot, type, origin, operation, key, wincx) {
+  cryptoGlobal.subtle.importKey = function(format, keyData, algo, extractable, usages) {
     c++;
-    return oldImport(slot, type, origin, operation, key, wincx);
+    return oldImport.call(cryptoGlobal.subtle, format, keyData, algo, extractable, usages);
   }
 
   // Encryption should cause a single counter increment.
@@ -48,7 +49,7 @@ function test_key_memoization() {
   do_check_eq(c, 2);
 
   // Un-swizzle.
-  cryptoSvc.nss.PK11_ImportSymKey = oldImport;
+  cryptoGlobal.subtle.importKey = oldImport;
 }
 
 function multiple_decrypts(iterations) {
@@ -78,32 +79,13 @@ function test_bug_617650() {
 }
 
 // Just verify that it gets populated with the correct bytes.
-function test_makeSECItem() {
+function test_makeUint8Array() {
   Components.utils.import("resource://gre/modules/ctypes.jsm");
 
-  let item1 = cryptoSvc.makeSECItem("abcdefghi", false);
-  do_check_true(!item1.isNull());
-  let intData = ctypes.cast(item1.contents.data, ctypes.uint8_t.array(8).ptr).contents;
+  let item1 = cryptoSvc.makeUint8Array("abcdefghi", false);
+  do_check_true(item1);
   for (let i = 0; i < 8; ++i)
-    do_check_eq(intData[i], "abcdefghi".charCodeAt(i));
-}
-
-function test_SECItem_byteCompressInts() {
-  Components.utils.import("resource://gre/modules/ctypes.jsm");
-
-  let item1 = cryptoSvc.makeSECItem("abcdefghi", false);
-  do_check_true(!item1.isNull());
-  let intData = ctypes.cast(item1.contents.data, ctypes.uint8_t.array(8).ptr).contents;
-
-  // Fill it too short.
-  cryptoSvc.byteCompressInts("MMM", intData, 8);
-  for (let i = 0; i < 3; ++i)
-    do_check_eq(intData[i], [77, 77, 77][i]);
-
-  // Fill it too much. Doesn't buffer overrun.
-  cryptoSvc.byteCompressInts("NNNNNNNNNNNNNNNN", intData, 8);
-  for (let i = 0; i < 8; ++i)
-    do_check_eq(intData[i], "NNNNNNNNNNNNNNNN".charCodeAt(i));
+    do_check_eq(item1[i], "abcdefghi".charCodeAt(i));
 }
 
 function test_encrypt_decrypt() {
@@ -122,7 +104,7 @@ function test_encrypt_decrypt() {
 
   var clearText = cryptoSvc.decrypt(cipherText, key, iv);
   do_check_eq(clearText.length, 20);
-  
+
   // Did the text survive the encryption round-trip?
   do_check_eq(clearText, mySecret);
   do_check_neq(cipherText, mySecret); // just to be explicit
@@ -134,10 +116,19 @@ function test_encrypt_decrypt() {
 
   _("Testing small IV.");
   mySecret = "YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXo=";
-  shortiv  = "YWJj";           // "abc": Less than 16.
+  let shortiv  = "YWJj";
   let err;
   try {
     cryptoSvc.encrypt(mySecret, key, shortiv);
+  } catch (ex) {
+    err = ex;
+  }
+  do_check_true(!!err);
+
+  _("Testing long IV.");
+  let longiv  = "gsgLRDaxWvIfKt75RjuvFWERt83FFsY2A0TW+0b2iVk=";
+  try {
+    cryptoSvc.encrypt(mySecret, key, longiv);
   } catch (ex) {
     err = ex;
   }
@@ -203,7 +194,7 @@ function test_encrypt_decrypt() {
 
 
   key = "iz35tuIMq4/H+IYw2KTgow==";
-  iv  = "TJYrvva2KxvkM8hvOIvWp3xgjTXgq5Ss";
+  iv  = "TJYrvva2KxvkM8hvOIvWp3==";
   mySecret = "i like pie";
 
   cipherText = cryptoSvc.encrypt(mySecret, key, iv);
@@ -212,7 +203,7 @@ function test_encrypt_decrypt() {
   do_check_eq(clearText, mySecret);
 
   key = "c5hG3YG+NC61FFy8NOHQak1ZhMEWO79bwiAfar2euzI=";
-  iv  = "gsgLRDaxWvIfKt75RjuvFWERt83FFsY2A0TW+0b2iVk=";
+  iv  = "gsgLRDaxWvIfKt75RjuvFW==";
   mySecret = "i like pie";
 
   cipherText = cryptoSvc.encrypt(mySecret, key, iv);

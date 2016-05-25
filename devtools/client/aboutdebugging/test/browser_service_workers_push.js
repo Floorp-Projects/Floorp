@@ -37,16 +37,16 @@ add_task(function* () {
   let swTab = yield addTab(TAB_URL);
 
   info("Make the test page notify us when the service worker sends a message.");
-  let frameScript = function () {
+
+  yield ContentTask.spawn(swTab.linkedBrowser, {}, function () {
     let win = content.wrappedJSObject;
     win.navigator.serviceWorker.addEventListener("message", function (event) {
       sendAsyncMessage(event.data);
     }, false);
-  };
-  let mm = swTab.linkedBrowser.messageManager;
-  mm.loadFrameScript("data:,(" + encodeURIComponent(frameScript) + ")()", true);
+  });
 
   // Expect the service worker to claim the test window when activating.
+  let mm = swTab.linkedBrowser.messageManager;
   let onClaimed = new Promise(done => {
     mm.addMessageListener("sw-claimed", function listener() {
       mm.removeMessageListener("sw-claimed", listener);
@@ -90,8 +90,12 @@ add_task(function* () {
   ok(true, "Service worker received a push notification");
 
   // Finally, unregister the service worker itself.
-  yield unregisterServiceWorker(swTab);
-  ok(true, "Service worker registration unregistered");
+  try {
+    yield unregisterServiceWorker(swTab);
+    ok(true, "Service worker registration unregistered");
+  } catch (e) {
+    ok(false, "SW not unregistered; " + e);
+  }
 
   yield removeTab(swTab);
   yield closeAboutDebugging(tab);

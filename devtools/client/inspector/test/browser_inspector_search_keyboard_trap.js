@@ -40,7 +40,8 @@ const TEST_DATA = [
     ]
   },
   {
-    desc: "Open popup and then tab away (2 times) to the a next focusable element",
+    desc: "Open popup and then tab away (2 times) to the a next focusable " +
+          "element",
     focused: false,
     keys: [
       {

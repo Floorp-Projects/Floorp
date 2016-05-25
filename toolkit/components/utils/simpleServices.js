@@ -225,7 +225,10 @@ AddonLocalizationConverter.prototype = {
     this.checkTypes(aFromType, aToType);
     let addonId = this.getAddonId(aContext);
 
-    let string = NetUtil.readInputStreamToString(aStream, aStream.available());
+    let string = (
+      aStream.available() ?
+      NetUtil.readInputStreamToString(aStream, aStream.available()): ""
+    );
     return this.convertToStream(addonId, string);
   },
 

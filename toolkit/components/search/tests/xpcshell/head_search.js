@@ -328,6 +328,8 @@ function isSubObjectOf(expectedObj, actualObj) {
       do_check_eq(expectedObj[prop].length, actualObj[prop].length);
       isSubObjectOf(expectedObj[prop], actualObj[prop]);
     } else {
+      if (expectedObj[prop] != actualObj[prop])
+        do_print("comparing property " + prop);
       do_check_eq(expectedObj[prop], actualObj[prop]);
     }
   }

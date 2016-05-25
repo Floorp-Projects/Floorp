@@ -6,16 +6,31 @@
 requestLongerTimeout(2);
 
 const TEST_URI = URL_ROOT + "browser_fontinspector.html";
-const FONTS = [
-  {name: "Ostrich Sans Medium", remote: true, url: URL_ROOT + "ostrich-regular.ttf",
-   format: "truetype", cssName: "bar"},
-  {name: "Ostrich Sans Black", remote: true, url: URL_ROOT + "ostrich-black.ttf",
-   format: "", cssName: "bar"},
-  {name: "Ostrich Sans Black", remote: true, url: URL_ROOT + "ostrich-black.ttf",
-   format: "", cssName: "bar"},
-  {name: "Ostrich Sans Medium", remote: true, url: URL_ROOT + "ostrich-regular.ttf",
-   format: "", cssName: "barnormal"},
-];
+const FONTS = [{
+  name: "Ostrich Sans Medium",
+  remote: true,
+  url: URL_ROOT + "ostrich-regular.ttf",
+  format: "truetype",
+  cssName: "bar"
+}, {
+  name: "Ostrich Sans Black",
+  remote: true,
+  url: URL_ROOT + "ostrich-black.ttf",
+  format: "",
+  cssName: "bar"
+}, {
+  name: "Ostrich Sans Black",
+  remote: true,
+  url: URL_ROOT + "ostrich-black.ttf",
+  format: "",
+  cssName: "bar"
+}, {
+  name: "Ostrich Sans Medium",
+  remote: true,
+  url: URL_ROOT + "ostrich-regular.ttf",
+  format: "",
+  cssName: "barnormal"
+}];
 
 add_task(function* () {
   let { inspector, view } = yield openFontInspectorForURL(TEST_URI);
@@ -74,8 +89,9 @@ function* testDivFonts(inspector, viewDoc) {
 
   let sections1 = viewDoc.querySelectorAll("#all-fonts > section");
   is(sections1.length, 1, "Found 1 font on DIV");
-  is(sections1[0].querySelector(".font-name").textContent, "Ostrich Sans Medium",
-    "The DIV font has the right name");
+  is(sections1[0].querySelector(".font-name").textContent,
+     "Ostrich Sans Medium",
+     "The DIV font has the right name");
 }
 
 function* testShowAllFonts(inspector, viewDoc) {

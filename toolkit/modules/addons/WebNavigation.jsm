@@ -33,10 +33,12 @@ var Manager = {
     this.recentTabTransitionData = new WeakMap();
     Services.obs.addObserver(this, "autocomplete-did-enter-text", true);
 
+    Services.mm.addMessageListener("Content:Click", this);
     Services.mm.addMessageListener("Extension:DOMContentLoaded", this);
     Services.mm.addMessageListener("Extension:StateChange", this);
     Services.mm.addMessageListener("Extension:DocumentChange", this);
     Services.mm.addMessageListener("Extension:HistoryChange", this);
+
     Services.mm.loadFrameScript("resource://gre/modules/WebNavigationContent.js", true);
   },
 
@@ -45,10 +47,12 @@ var Manager = {
     Services.obs.removeObserver(this, "autocomplete-did-enter-text", true);
     this.recentTabTransitionData = new WeakMap();
 
+    Services.mm.removeMessageListener("Content:Click", this);
     Services.mm.removeMessageListener("Extension:StateChange", this);
     Services.mm.removeMessageListener("Extension:DocumentChange", this);
     Services.mm.removeMessageListener("Extension:HistoryChange", this);
     Services.mm.removeMessageListener("Extension:DOMContentLoaded", this);
+
     Services.mm.removeDelayedFrameScript("resource://gre/modules/WebNavigationContent.js");
     Services.mm.broadcastAsyncMessage("Extension:DisableWebNavigation");
   },
@@ -234,6 +238,21 @@ var Manager = {
       case "Extension:DOMContentLoaded":
         this.onLoad(target, data);
         break;
+
+      case "Content:Click":
+        this.onContentClick(target, data);
+        break;
+    }
+  },
+
+  onContentClick(target, data) {
+    // We are interested only on clicks to links which are not "add to bookmark" commands
+    if (data.href && !data.bookmark) {
+      let ownerWin = target.ownerDocument.defaultView;
+      let where = ownerWin.whereToOpenLink(data);
+      if (where == "current") {
+        this.setRecentTabTransitionData({link: true});
+      }
     }
   },
 

@@ -2,7 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /* eslint-disable mozilla/no-cpows-in-tests */
-/* global sendAsyncMessage */
 
 "use strict";
 
@@ -40,29 +39,12 @@ add_task(function* () {
   let aboutDebuggingUpdate = waitForMutation(serviceWorkersElement,
     { childList: true });
 
-  // Use message manager to work with e10s
-  let frameScript = function () {
-    // Retrieve the `sw` promise created in the html page
-    let { sw } = content.wrappedJSObject;
-    sw.then(function (registration) {
-      registration.unregister().then(function () {
-        sendAsyncMessage("sw-unregistered");
-      },
-      function (e) {
-        dump("SW not unregistered; " + e + "\n");
-      });
-    });
-  };
-  let mm = swTab.linkedBrowser.messageManager;
-  mm.loadFrameScript("data:,(" + encodeURIComponent(frameScript) + ")()", true);
-
-  yield new Promise(done => {
-    mm.addMessageListener("sw-unregistered", function listener() {
-      mm.removeMessageListener("sw-unregistered", listener);
-      done();
-    });
-  });
-  ok(true, "Service worker registration unregistered");
+  try {
+    yield unregisterServiceWorker(swTab);
+    ok(true, "Service worker registration unregistered");
+  } catch (e) {
+    ok(false, "SW not unregistered; " + e);
+  }
 
   yield aboutDebuggingUpdate;
 

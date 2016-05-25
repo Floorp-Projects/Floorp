@@ -33,7 +33,6 @@ import org.mozilla.gecko.TelemetryContract;
 public class SimpleHelperUI extends Locales.LocaleAwareActivity {
     public static final String PREF_FIRST_RVBP_SHOWN = "first_reader_view_bookmark_prompt_shown";
     public static final String FIRST_RVBP_SHOWN_TELEMETRYEXTRA = "first_readerview_bookmark_prompt";
-    public static final String TRIPLE_READERVIEW_OPEN_TELEMETRYEXTRA = "third_readerview_open_prompt";
 
     private View containerView;
 

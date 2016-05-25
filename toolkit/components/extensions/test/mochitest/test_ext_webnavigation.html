@@ -5,6 +5,7 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="text/javascript" src="head.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
@@ -12,6 +13,8 @@
 
 <script type="text/javascript">
 "use strict";
+
+/* globals sendMouseEvent */
 
 function backgroundScript() {
   const BASE = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest";
@@ -76,6 +79,9 @@ const CLIENT_REDIRECT = BASE + "/file_webNavigation_clientRedirect.html";
 const CLIENT_REDIRECT_HTTPHEADER = BASE + "/file_webNavigation_clientRedirect_httpHeaders.html";
 const FRAME_CLIENT_REDIRECT = BASE + "/file_webNavigation_frameClientRedirect.html";
 const FRAME_REDIRECT = BASE + "/file_webNavigation_frameRedirect.html";
+const FRAME_MANUAL = BASE + "/file_webNavigation_manualSubframe.html";
+const FRAME_MANUAL_PAGE1 = BASE + "/file_webNavigation_manualSubframe_page1.html";
+const FRAME_MANUAL_PAGE2 = BASE + "/file_webNavigation_manualSubframe_page2.html";
 
 const REQUIRED = [
   "onBeforeNavigate",
@@ -296,6 +302,36 @@ add_task(function* webnav_transitions_props() {
     // ok(Array.isArray(found.details.transitionQualifiers) &&
     //    found.details.transitionQualifiers.find((q) => q == "server_redirect"),
     //    "Got the expected 'server_redirect' transitionQualifiers in the OnCommitted events");
+  }
+
+  // transitionType: manual_subframe
+  received = [];
+  yield loadAndWait(win, "onCompleted", FRAME_MANUAL, () => { win.location = FRAME_MANUAL; });
+  found = received.find((data) => (data.event == "onCommitted" &&
+                                   data.url == FRAME_MANUAL_PAGE1));
+
+  ok(found, "Got the onCommitted event");
+
+  if (found) {
+    is(found.details.transitionType, "auto_subframe",
+       "Got the expected 'auto_subframe' transitionType in the OnCommitted event");
+  }
+
+  received = [];
+  yield loadAndWait(win, "onCompleted", FRAME_MANUAL_PAGE2, () => {
+    let el = win.document.querySelector("iframe")
+                .contentDocument.querySelector("a");
+    sendMouseEvent({type: "click"}, el, win);
+  });
+
+  found = received.find((data) => (data.event == "onCommitted" &&
+                                   data.url == FRAME_MANUAL_PAGE2));
+
+  ok(found, "Got the onCommitted event");
+
+  if (found) {
+    is(found.details.transitionType, "manual_subframe",
+       "Got the expected 'manual_subframe' transitionType in the OnCommitted event");
   }
 
   // cleanup phase
