@@ -39,7 +39,7 @@ namespace mozilla {
 namespace net {
 
 //
-// NSPR_LOG_MODULES=nsChannelClassifier:5
+// MOZ_LOG=nsChannelClassifier:5
 //
 static LazyLogModule gChannelClassifierLog("nsChannelClassifier");
 
