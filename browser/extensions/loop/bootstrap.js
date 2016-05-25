@@ -193,16 +193,27 @@ var WindowListener = {
        * @return {Promise}
        */
       openPanel: function(event) {
+        if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+          return Promise.reject();
+        }
+
         return new Promise((resolve) => {
           let callback = iframe => {
             let mm = iframe.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
             if (!("messageManager" in iframe)) {
               iframe.messageManager = mm;
             }
-            this.hookWindowCloseForPanelClose(iframe);
+
+            if (!this._panelInitialized) {
+              this.hookWindowCloseForPanelClose(iframe);
+              this._panelInitialized = true;
+            }
 
             mm.sendAsyncMessage("Social:WaitForDocumentVisible");
-            mm.addMessageListener("Social:DocumentVisible", () => resolve(mm));
+            mm.addMessageListener("Social:DocumentVisible", function onDocumentVisible() {
+              mm.removeMessageListener("Social:DocumentVisible", onDocumentVisible);
+              resolve(mm);
+            });
 
             let buckets = this.constants.LOOP_MAU_TYPE;
             this.LoopAPI.sendMessageToHandler({
