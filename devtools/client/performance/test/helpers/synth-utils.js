@@ -65,7 +65,7 @@ exports.synthesizeCustomTreeClass = () => {
   MyCustomTreeItem.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     _displaySelf: function (document, arrowNode) {
       let node = document.createElement("hbox");
-      node.marginInlineStart = (this.level * 10) + "px";
+      node.style.marginInlineStart = (this.level * 10) + "px";
       node.appendChild(arrowNode);
       node.appendChild(document.createTextNode(this.itemDataSrc.label));
       return node;
