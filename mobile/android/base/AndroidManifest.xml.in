@@ -294,6 +294,9 @@
 
         </activity>
 
+        <activity android:name="org.mozilla.gecko.customtabs.CustomTabsActivity"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
+
         <!-- Service to handle requests from overlays. -->
         <service android:name="org.mozilla.gecko.overlays.service.OverlayActionService" />
 
