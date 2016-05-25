@@ -212,6 +212,10 @@
   background: var(--theme-tab-toolbar-background);
 }
 
+.ruleview-rule[unmatched=true] {
+  opacity: 0.5;
+}
+
 .ruleview-rule[uneditable=true] :focus {
   outline: none;
 }
@@ -448,7 +452,8 @@
   cursor: text;
 }
 
-.ruleview-selector-separator, .ruleview-selector-unmatched {
+.ruleview-selector-separator,
+.ruleview-selector-unmatched {
   color: #888;
 }
 
