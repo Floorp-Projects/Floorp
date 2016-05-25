@@ -22,7 +22,7 @@
 static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
 
 //
-// NSPR_LOG_MODULES=nsStreamPump:5
+// MOZ_LOG=nsStreamPump:5
 //
 static mozilla::LazyLogModule gStreamPumpLog("nsStreamPump");
 #undef LOG

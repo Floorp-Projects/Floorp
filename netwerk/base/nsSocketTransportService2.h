@@ -34,14 +34,14 @@ namespace mozilla {
 namespace net {
 
 //
-// set NSPR_LOG_MODULES=nsSocketTransport:5
+// set MOZ_LOG=nsSocketTransport:5
 //
 extern LazyLogModule gSocketTransportLog;
 #define SOCKET_LOG(args)     MOZ_LOG(gSocketTransportLog, LogLevel::Debug, args)
 #define SOCKET_LOG_ENABLED() MOZ_LOG_TEST(gSocketTransportLog, LogLevel::Debug)
 
 //
-// set NSPR_LOG_MODULES=UDPSocket:5
+// set MOZ_LOG=UDPSocket:5
 //
 extern LazyLogModule gUDPSocketLog;
 #define UDPSOCKET_LOG(args)     MOZ_LOG(gUDPSocketLog, LogLevel::Debug, args)

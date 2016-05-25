@@ -41,7 +41,7 @@ bool nsStandardURL::gAlwaysEncodeInUTF8 = true;
 char nsStandardURL::gHostLimitDigits[] = { '/', '\\', '?', '#', 0 };
 
 //
-// setenv NSPR_LOG_MODULES nsStandardURL:5
+// setenv MOZ_LOG nsStandardURL:5
 //
 static LazyLogModule gStandardURLLog("nsStandardURL");
 
