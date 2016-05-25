@@ -120,7 +120,7 @@ add_test(function test_GetData() {
 });
 
 // test a GET with no init
-add_test(function test_GetData() {
+add_test(function test_GetDataNoInit() {
   do_test_pending();
 
   let testData = createTestData("/getData");
@@ -203,7 +203,7 @@ add_test(function test_get50x() {
 add_test(function test_getTestFailedConnect() {
   do_test_pending();
   // try a server that's not there
-  fetch("ftp://localhost/should/fail").then(response => {
+  fetch("http://localhost:4/should/fail").then(response => {
     do_throw("Request should not succeed");
   }).catch(err => {
     do_check_eq(true, err instanceof TypeError);
@@ -256,7 +256,7 @@ add_test(function test_PostJSONData() {
 });
 
 // test POSTing some text
-add_test(function test_PostJSONData() {
+add_test(function test_PostTextData() {
   do_test_pending();
 
   let testData = createTestData("/postTextData");
