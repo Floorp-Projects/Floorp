@@ -2153,19 +2153,16 @@ CSSParserImpl::ParseSourceSizeList(const nsAString& aBuffer,
       break;
     }
 
+    if (GetToken(true)) {
+      if (!mToken.IsSymbol(',')) {
+        REPORT_UNEXPECTED_TOKEN(PEParseSourceSizeListNotComma);
+        hitError = true;
+        break;
+      }
+    }
+
     aQueries.AppendElement(query.forget());
     aValues.AppendElement(value);
-
-    if (!GetToken(true)) {
-      // Expected EOF
-      break;
-    }
-
-    if (eCSSToken_Symbol != mToken.mType || mToken.mSymbol != ',') {
-      REPORT_UNEXPECTED_TOKEN(PEParseSourceSizeListNotComma);
-      hitError = true;
-      break;
-    }
   }
 
   if (hitError) {
@@ -2180,7 +2177,7 @@ CSSParserImpl::ParseSourceSizeList(const nsAString& aBuffer,
   ReleaseScanner();
   mHTMLMediaMode = false;
 
-  return !hitError;
+  return !aQueries.IsEmpty();
 }
 
 bool

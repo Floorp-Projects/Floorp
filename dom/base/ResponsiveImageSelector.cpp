@@ -245,12 +245,8 @@ ResponsiveImageSelector::SetSizesFromDescriptor(const nsAString & aSizes)
 
   nsCSSParser cssParser;
 
-  if (!cssParser.ParseSourceSizeList(aSizes, nullptr, 0,
-                                     mSizeQueries, mSizeValues, true)) {
-    return false;
-  }
-
-  return mSizeQueries.Length() > 0;
+  return cssParser.ParseSourceSizeList(aSizes, nullptr, 0,
+                                       mSizeQueries, mSizeValues, true);
 }
 
 void
