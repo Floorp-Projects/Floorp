@@ -9,8 +9,8 @@
 
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
-#include "nsRefPtrHashtable.h"
 #include "nsTObserverArray.h"
+#include "PresentationServiceBase.h"
 #include "PresentationSessionInfo.h"
 
 class nsIPresentationSessionRequest;
@@ -23,9 +23,10 @@ class PresentationRespondingInfo;
 
 class PresentationService final : public nsIPresentationService
                                 , public nsIObserver
+                                , public PresentationServiceBase
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIPRESENTATIONSERVICE
 
@@ -53,7 +54,7 @@ public:
                            base::ProcessId aProcessId);
 
 private:
-  ~PresentationService();
+  virtual ~PresentationService();
   void HandleShutdown();
   nsresult HandleDeviceChange();
   nsresult HandleSessionRequest(nsIPresentationSessionRequest* aRequest);
@@ -62,24 +63,8 @@ private:
 
   bool mIsAvailable;
   nsTObserverArray<nsCOMPtr<nsIPresentationAvailabilityListener>> mAvailabilityListeners;
-
-  // Store the responding listener based on the window ID of the (in-process or
-  // OOP) receiver page.
-  // TODO Bug 1195605 - Support many-to-one session.
-  // So far responding listeners are registered but |notifySessionConnect| hasn't
-  // been called in any place until many-to-one session becomes supported.
-  nsRefPtrHashtable<nsUint64HashKey, nsIPresentationRespondingListener> mRespondingListeners;
-
   nsRefPtrHashtable<nsStringHashKey, PresentationSessionInfo> mSessionInfoAtController;
   nsRefPtrHashtable<nsStringHashKey, PresentationSessionInfo> mSessionInfoAtReceiver;
-
-  // Store the mapping between the window ID of the in-process page and the ID
-  // of the responding session. It's used for an in-process receiver page to
-  // retrieve the correspondent session ID. Besides, also keep the mapping
-  // between the responding session ID and the window ID to help look up the
-  // window ID.
-  nsClassHashtable<nsUint64HashKey, nsString> mRespondingSessionIds;
-  nsDataHashtable<nsStringHashKey, uint64_t> mRespondingWindowIds;
 };
 
 } // namespace dom
