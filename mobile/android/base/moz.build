@@ -479,6 +479,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'NotificationClient.java',
     'NotificationHandler.java',
     'NotificationHelper.java',
+    'NotificationReceiver.java',
     'notifications/WhatsNewReceiver.java',
     'NotificationService.java',
     'NSSBridge.java',
