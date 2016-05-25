@@ -1043,13 +1043,17 @@ TextureClient::SetRemoveFromCompositableWaiter(AsyncTransactionWaiter* aWaiter) 
 already_AddRefed<gfx::DataSourceSurface>
 TextureClient::GetAsSurface()
 {
-  Lock(OpenMode::OPEN_READ);
+  if (!Lock(OpenMode::OPEN_READ)) {
+    return nullptr;
+  }
   RefPtr<gfx::DataSourceSurface> data;
-  RefPtr<gfx::DrawTarget> dt = BorrowDrawTarget();
-  if (dt) {
-    RefPtr<gfx::SourceSurface> surf = dt->Snapshot();
-    if (surf) {
-      data = surf->GetDataSurface();
+  {  // scope so that the DrawTarget is destroyed before Unlock()
+    RefPtr<gfx::DrawTarget> dt = BorrowDrawTarget();
+    if (dt) {
+      RefPtr<gfx::SourceSurface> surf = dt->Snapshot();
+      if (surf) {
+        data = surf->GetDataSurface();
+      }
     }
   }
   Unlock();
