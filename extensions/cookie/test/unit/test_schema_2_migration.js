@@ -88,7 +88,7 @@ function do_run_test() {
   // 3) Only one cookie remains, and it's the one with the highest expiration
   // time.
   do_check_eq(Services.cookiemgr.countCookiesFromHost("baz.com"), 1);
-  let enumerator = Services.cookiemgr.getCookiesFromHost("baz.com");
+  let enumerator = Services.cookiemgr.getCookiesFromHost("baz.com", {});
   let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
   do_check_eq(cookie.expiry, futureExpiry + 44);
 
