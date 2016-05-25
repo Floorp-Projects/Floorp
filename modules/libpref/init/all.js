@@ -367,7 +367,11 @@ pref("media.decoder-doctor.notifications-allowed", "MediaWMFNeeded,MediaWidevine
 pref("media.decoder-doctor.verbose", false);
 
 // Whether to suspend decoding of videos in background tabs.
+#ifdef NIGHTLY_BUILD
 pref("media.suspend-bkgnd-video.enabled", true);
+#else
+pref("media.suspend-bkgnd-video.enabled", false);
+#endif
 
 #ifdef MOZ_WEBRTC
 pref("media.navigator.enabled", true);
