@@ -1437,17 +1437,6 @@ ChildFilter(void* context)
   return result;
 }
 
-#ifdef NIGHTLY_BUILD
-static void DllLoadCallback(DllLoadInfo& info)
-{
-  nsAutoCString note;
-  note.AppendPrintf("%s-%p-%x\n", info.name, info.lpBaseOfDll, info.SizeOfImage);
-
-  CrashReporter::AppendAppNotesToCrashReport(note);
-}
-#endif
-
-
 nsresult SetExceptionHandler(nsIFile* aXREDirectory,
                              bool force/*=false*/)
 {
@@ -1684,10 +1673,6 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
 #endif
 
   mozalloc_set_oom_abort_handler(AnnotateOOMAllocationSize);
-
-#if defined(XP_WIN) && defined(NIGHTLY_BUILD)
-  RegisterDllLoadCallback(DllLoadCallback);
-#endif
 
   return NS_OK;
 }
