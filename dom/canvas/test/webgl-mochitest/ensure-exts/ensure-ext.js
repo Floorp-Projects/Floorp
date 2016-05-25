@@ -1,33 +1,21 @@
 'use strict';
 
-function EnsureExt(extName, shouldHave=true) {
-    EnsureExtFor('webgl', extName, shouldHave);
-    EnsureExtFor('webgl2', extName, shouldHave);
-}
-
-function EnsureExtFor(contextType, extName, shouldHave=true) {
+function EnsureExt(name, shouldBe = true) {
     var c = document.createElement('canvas');
-    var gl = c.getContext(contextType);
+    var gl = c.getContext('experimental-webgl');
 
-    if (!gl) {
-        todo(false, 'Failed to create context: ' + contextType);
-        return;
-    }
-
-    var ext = gl.getExtension(extName);
-    var haveText = ' have ' + contextType + ' extension ' + extName + '.';
-    if (shouldHave) {
-        ok(ext, 'Should' + haveText);
+    if (shouldBe) {
+        ok(gl.getExtension(name), 'Should have extension ' + name + '.');
     } else {
-        ok(!ext, 'Should not' + haveText);
+        ok(!gl.getExtension(name), 'Should not have extension ' + name + '.');
     }
 }
 
-function Lastly_WithDraftExtsEnabled(func) {
+function EnsureDraftExt(name, shouldBe = true) {
     SimpleTest.waitForExplicitFinish();
 
     var fnEnsure = function() {
-        func();
+        EnsureExt(name, shouldBe);
         SimpleTest.finish();
     };
 
