@@ -112,6 +112,8 @@ WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
     switch (ext) {
     // In alphabetical order
     // EXT_
+    case WebGLExtensionID::EXT_color_buffer_half_float:
+        return WebGLExtensionColorBufferHalfFloat::IsSupported(this);
     case WebGLExtensionID::EXT_texture_filter_anisotropic:
         return gl->IsExtensionSupported(gl::GLContext::EXT_texture_filter_anisotropic);
 
@@ -120,6 +122,8 @@ WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
         return gl->IsSupported(gl::GLFeature::texture_float_linear);
 
     // WEBGL_
+    case WebGLExtensionID::WEBGL_color_buffer_float:
+        return WebGLExtensionColorBufferFloat::IsSupported(this);
     case WebGLExtensionID::WEBGL_compressed_texture_atc:
         return gl->IsExtensionSupported(gl::GLContext::AMD_compressed_ATC_texture);
     case WebGLExtensionID::WEBGL_compressed_texture_etc1:
@@ -167,8 +171,6 @@ WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
         // EXT_
         case WebGLExtensionID::EXT_blend_minmax:
             return WebGLExtensionBlendMinMax::IsSupported(this);
-        case WebGLExtensionID::EXT_color_buffer_half_float:
-            return WebGLExtensionColorBufferHalfFloat::IsSupported(this);
         case WebGLExtensionID::EXT_frag_depth:
             return WebGLExtensionFragDepth::IsSupported(this);
         case WebGLExtensionID::EXT_shader_texture_lod:
@@ -192,8 +194,6 @@ WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
             return true;
 
         // WEBGL_
-        case WebGLExtensionID::WEBGL_color_buffer_float:
-            return WebGLExtensionColorBufferFloat::IsSupported(this);
         case WebGLExtensionID::WEBGL_depth_texture:
             // WEBGL_depth_texture supports DEPTH_STENCIL textures
             if (!gl->IsSupported(gl::GLFeature::packed_depth_stencil))
