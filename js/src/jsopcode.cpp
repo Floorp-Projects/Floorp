@@ -1415,13 +1415,12 @@ DecompileExpressionFromStack(JSContext* cx, int spindex, int skipStackHits, Hand
     return true;
 #endif
 
-    FrameIter frameIter(cx, FrameIter::STOP_AT_SAVED);
+    FrameIter frameIter(cx, FrameIter::GO_THROUGH_SAVED);
 
-    if (frameIter.done() || !frameIter.hasScript())
+    if (frameIter.done() || !frameIter.hasScript() || frameIter.compartment() != cx->compartment())
         return true;
 
     RootedScript script(cx, frameIter.script());
-    AutoCompartment ac(cx, &script->global());
     jsbytecode* valuepc = frameIter.pc();
 
     MOZ_ASSERT(script->containsPC(valuepc));
@@ -1486,19 +1485,19 @@ DecompileArgumentFromStack(JSContext* cx, int formalIndex, char** res)
      * Settle on the nearest script frame, which should be the builtin that
      * called the intrinsic.
      */
-    FrameIter frameIter(cx, FrameIter::STOP_AT_SAVED);
+    FrameIter frameIter(cx, FrameIter::GO_THROUGH_SAVED);
     MOZ_ASSERT(!frameIter.done());
+    MOZ_ASSERT(frameIter.script()->selfHosted());
 
     /*
      * Get the second-to-top frame, the caller of the builtin that called the
      * intrinsic.
      */
     ++frameIter;
-    if (frameIter.done() || !frameIter.hasScript())
+    if (frameIter.done() || !frameIter.hasScript() || frameIter.compartment() != cx->compartment())
         return true;
 
     RootedScript script(cx, frameIter.script());
-    AutoCompartment ac(cx, &script->global());
     jsbytecode* current = frameIter.pc();
 
     MOZ_ASSERT(script->containsPC(current));

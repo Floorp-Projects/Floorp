@@ -164,7 +164,7 @@ ArgumentsGetterImpl(JSContext* cx, const CallArgs& args)
         return false;
 
     // Return null if this function wasn't found on the stack.
-    NonBuiltinScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
+    NonBuiltinScriptFrameIter iter(cx, FrameIter::GO_THROUGH_SAVED);
     if (!AdvanceToActiveCallLinear(cx, iter, fun)) {
         args.rval().setNull();
         return true;
@@ -255,7 +255,7 @@ CallerGetterImpl(JSContext* cx, const CallArgs& args)
         return false;
 
     // Also return null if this function wasn't found on the stack.
-    NonBuiltinScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
+    NonBuiltinScriptFrameIter iter(cx, FrameIter::GO_THROUGH_SAVED);
     if (!AdvanceToActiveCallLinear(cx, iter, fun)) {
         args.rval().setNull();
         return true;
@@ -326,7 +326,7 @@ CallerSetterImpl(JSContext* cx, const CallArgs& args)
     // computing the caller, checking that no security boundaries are crossed,
     // and throwing a TypeError if the resulting caller is strict.
 
-    NonBuiltinScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
+    NonBuiltinScriptFrameIter iter(cx, FrameIter::GO_THROUGH_SAVED);
     if (!AdvanceToActiveCallLinear(cx, iter, fun))
         return true;
 
@@ -711,7 +711,7 @@ JSFunction::trace(JSTracer* trc)
 {
     if (isExtended()) {
         TraceRange(trc, ArrayLength(toExtended()->extendedSlots),
-                   (HeapValue*)toExtended()->extendedSlots, "nativeReserved");
+                   (GCPtrValue*)toExtended()->extendedSlots, "nativeReserved");
     }
 
     TraceNullableEdge(trc, &atom_, "atom");

@@ -690,6 +690,7 @@ SSL_SetSockPeerID
 SSL_SetSRTPCiphers
 SSL_SetStapledOCSPResponses
 SSL_SetURL
+SSL_ShutdownServerSessionIDCache
 SSL_SNISocketConfigHook
 SSL_VersionRangeGet
 SSL_VersionRangeGetDefault

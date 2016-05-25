@@ -16,7 +16,7 @@ namespace js {
 // instantiated.
 class ProxyObject : public JSObject
 {
-    HeapPtrShape shape;
+    GCPtrShape shape;
 
     // GetProxyDataLayout computes the address of this field.
     detail::ProxyDataLayout data;
@@ -39,8 +39,8 @@ class ProxyObject : public JSObject
     void setCrossCompartmentPrivate(const Value& priv);
     void setSameCompartmentPrivate(const Value& priv);
 
-    HeapValue* slotOfPrivate() {
-        return reinterpret_cast<HeapValue*>(&detail::GetProxyDataLayout(this)->values->privateSlot);
+    GCPtrValue* slotOfPrivate() {
+        return reinterpret_cast<GCPtrValue*>(&detail::GetProxyDataLayout(this)->values->privateSlot);
     }
 
     JSObject* target() const {
@@ -75,9 +75,9 @@ class ProxyObject : public JSObject
     }
 
   private:
-    HeapValue* slotOfExtra(size_t n) {
+    GCPtrValue* slotOfExtra(size_t n) {
         MOZ_ASSERT(n < detail::PROXY_EXTRA_SLOTS);
-        return reinterpret_cast<HeapValue*>(&detail::GetProxyDataLayout(this)->values->extraSlots[n]);
+        return reinterpret_cast<GCPtrValue*>(&detail::GetProxyDataLayout(this)->values->extraSlots[n]);
     }
 
     static bool isValidProxyClass(const Class* clasp) {

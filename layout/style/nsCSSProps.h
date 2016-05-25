@@ -773,6 +773,7 @@ public:
   static const KTableEntry kOverflowKTable[];
   static const KTableEntry kOverflowSubKTable[];
   static const KTableEntry kOverflowClipBoxKTable[];
+  static const KTableEntry kOverflowWrapKTable[];
   static const KTableEntry kPageBreakKTable[];
   static const KTableEntry kPageBreakInsideKTable[];
   static const KTableEntry kPageMarksKTable[];
@@ -825,7 +826,6 @@ public:
   static const KTableEntry kWindowDraggingKTable[];
   static const KTableEntry kWindowShadowKTable[];
   static const KTableEntry kWordBreakKTable[];
-  static const KTableEntry kWordWrapKTable[];
   static const KTableEntry kWritingModeKTable[];
 };
 

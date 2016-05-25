@@ -75,6 +75,10 @@
 <!-- LOCALIZATION NOTE (finishedBackground.more): This string describes the button labels defined by restartNowButton and restartLaterButton in updates.properties. -->
 <!ENTITY  finishedBackground.more         "The update will be installed the next time &brandShortName; starts. You
                                            can restart &brandShortName; now, or continue working and restart later.">
+<!ENTITY  finishedBackground.moreElevated "This update requires administrator privileges. The update will be
+                                           installed the next time &brandShortName; starts. You can restart
+                                           &brandShortName; now, continue working and restart later, or decline this
+                                           update.">
 
 <!ENTITY  installed.title                 "Update Installed">
 <!ENTITY  installed.intro                 "The update was successfully installed.">

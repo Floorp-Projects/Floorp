@@ -165,28 +165,33 @@ TouchEvent::ChangedTouches()
 bool
 TouchEvent::PrefEnabled(JSContext* aCx, JSObject* aGlobal)
 {
+  static bool sPrefCached = false;
+  static int32_t sPrefCacheValue = 0;
+
+  if (!sPrefCached) {
+    sPrefCached = true;
+    Preferences::AddIntVarCache(&sPrefCacheValue, "dom.w3c_touch_events.enabled");
+  }
+
   bool prefValue = false;
-  int32_t flag = 0;
-  if (NS_SUCCEEDED(Preferences::GetInt("dom.w3c_touch_events.enabled", &flag))) {
-    if (flag == 2) {
+  if (sPrefCacheValue == 2) {
 #if defined(MOZ_B2G) || defined(MOZ_WIDGET_ANDROID)
-      // Touch support is always enabled on B2G and android.
-      prefValue = true;
+    // Touch support is always enabled on B2G and android.
+    prefValue = true;
 #elif defined(XP_WIN) || MOZ_WIDGET_GTK == 3
-      static bool sDidCheckTouchDeviceSupport = false;
-      static bool sIsTouchDeviceSupportPresent = false;
-      // On Windows and GTK3 we auto-detect based on device support.
-      if (!sDidCheckTouchDeviceSupport) {
-        sDidCheckTouchDeviceSupport = true;
-        sIsTouchDeviceSupportPresent = WidgetUtils::IsTouchDeviceSupportPresent();
-      }
-      prefValue = sIsTouchDeviceSupportPresent;
-#else
-      prefValue = false;
-#endif
-    } else {
-      prefValue = !!flag;
+    static bool sDidCheckTouchDeviceSupport = false;
+    static bool sIsTouchDeviceSupportPresent = false;
+    // On Windows and GTK3 we auto-detect based on device support.
+    if (!sDidCheckTouchDeviceSupport) {
+      sDidCheckTouchDeviceSupport = true;
+      sIsTouchDeviceSupportPresent = WidgetUtils::IsTouchDeviceSupportPresent();
     }
+    prefValue = sIsTouchDeviceSupportPresent;
+#else
+    prefValue = false;
+#endif
+  } else {
+    prefValue = !!sPrefCacheValue;
   }
   if (prefValue) {
     nsContentUtils::InitializeTouchEventTable();

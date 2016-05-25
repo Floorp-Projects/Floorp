@@ -246,29 +246,49 @@ public:
   NS_DECL_IMGICACHE
   NS_DECL_NSIOBSERVER
 
-  static imgLoader* Singleton();
-  static imgLoader* PBSingleton();
+  /**
+   * Get the normal image loader instance that is used by gecko code, creating
+   * it if necessary.
+   */
+  static imgLoader* NormalLoader();
 
+  /**
+   * Get the Private Browsing image loader instance that is used by gecko code,
+   * creating it if necessary.
+   *
+   * The nsIChannel objects that this instance creates are created with the
+   * nsILoadInfo::SEC_FORCE_PRIVATE_BROWSING flag.
+   */
+  static imgLoader* PrivateBrowsingLoader();
+
+  /**
+   * Gecko code should use NormalLoader() or PrivateBrowsingLoader() to get the
+   * appropriate image loader.
+   *
+   * This constructor is public because the XPCOM module code that creates
+   * instances of "@mozilla.org/image/loader;1" / "@mozilla.org/image/cache;1"
+   * for nsIComponentManager.createInstance()/nsIServiceManager.getService()
+   * calls (now only made by add-ons) needs access to it.
+   *
+   * XXX We would like to get rid of the nsIServiceManager.getService (and
+   * nsIComponentManager.createInstance) method of creating imgLoader objects,
+   * but there are add-ons that are still using it.  These add-ons don't
+   * actually do anything useful with the loaders that they create since nobody
+   * who creates an imgLoader using this method actually QIs to imgILoader and
+   * loads images.  They all just QI to imgICache and either call clearCache()
+   * or findEntryProperties().  Since they're doing this on an imgLoader that
+   * has never loaded images, these calls are useless.  It seems likely that
+   * the code that is doing this is just legacy code left over from a time when
+   * there was only one imgLoader instance for the entire process.  (Nowadays
+   * the correct method to get an imgILoader/imgICache is to call
+   * imgITools::getImgCacheForDocument/imgITools::getImgLoaderForDocument.)
+   * All the same, even though what these add-ons are doing is a no-op,
+   * removing the nsIServiceManager.getService method of creating/getting an
+   * imgLoader objects would cause an exception in these add-ons that could
+   * break things.
+   */
   imgLoader();
-
   nsresult Init();
-
-  static already_AddRefed<imgLoader>
-  Create()
-  {
-      // Unfortunately, we rely on XPCOM module init happening
-      // before imgLoader creation. For now, it's easier
-      // to just call CallCreateInstance() which will init
-      // the image module instead of calling new imgLoader
-      // directly.
-      nsCOMPtr<imgILoader> loader = do_CreateInstance("@mozilla.org/image/loader;1");
-      // There's only one imgLoader implementation so we
-      // can safely cast to it.
-      return loader.forget().downcast<imgLoader>();
-  }
-
-  static already_AddRefed<imgLoader>
-  GetInstance();
 
   nsresult LoadImage(nsIURI* aURI,
                      nsIURI* aInitialDocumentURI,
@@ -372,6 +392,8 @@ public:
   bool SetHasProxies(imgRequest* aRequest);
 
 private: // methods
+
+  static already_AddRefed<imgLoader> CreateImageLoader();
 
   bool ValidateEntry(imgCacheEntry* aEntry, nsIURI* aKey,
                      nsIURI* aInitialDocumentURI, nsIURI* aReferrerURI,

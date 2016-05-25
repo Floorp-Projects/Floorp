@@ -21,4 +21,13 @@ interface nsIUrlClassifierUtils : nsISupports
    * @returns String containing the canonicalized URI.
    */
   ACString getKeyForURI(in nsIURI uri);
+
+  /**
+   * Get the protocol version for the given provider.
+   *
+   * @param provider String the provider name. e.g. "google"
+   *
+   * @returns String to indicate the protocol version. e.g. "2.2"
+   */
+  ACString getProtocolVersion(in ACString provider);
 };

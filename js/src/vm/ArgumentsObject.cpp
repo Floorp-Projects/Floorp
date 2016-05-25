@@ -21,7 +21,7 @@ using namespace js;
 using namespace js::gc;
 
 static void
-CopyStackFrameArguments(const AbstractFramePtr frame, HeapValue* dst, unsigned totalArgs)
+CopyStackFrameArguments(const AbstractFramePtr frame, GCPtrValue* dst, unsigned totalArgs)
 {
     MOZ_ASSERT_IF(frame.isInterpreterFrame(), !frame.asInterpreterFrame()->runningInJit());
 
@@ -68,7 +68,7 @@ struct CopyFrameArgs
       : frame_(frame)
     { }
 
-    void copyArgs(JSContext*, HeapValue* dst, unsigned totalArgs) const {
+    void copyArgs(JSContext*, GCPtrValue* dst, unsigned totalArgs) const {
         CopyStackFrameArguments(frame_, dst, totalArgs);
     }
 
@@ -90,7 +90,7 @@ struct CopyJitFrameArgs
       : frame_(frame), callObj_(callObj)
     { }
 
-    void copyArgs(JSContext*, HeapValue* dstBase, unsigned totalArgs) const {
+    void copyArgs(JSContext*, GCPtrValue* dstBase, unsigned totalArgs) const {
         unsigned numActuals = frame_->numActualArgs();
         unsigned numFormals = jit::CalleeTokenToFunction(frame_->calleeToken())->nargs();
         MOZ_ASSERT(numActuals <= totalArgs);
@@ -100,12 +100,12 @@ struct CopyJitFrameArgs
         /* Copy all arguments. */
         Value* src = frame_->argv() + 1;  /* +1 to skip this. */
         Value* end = src + numActuals;
-        HeapValue* dst = dstBase;
+        GCPtrValue* dst = dstBase;
         while (src != end)
             (dst++)->init(*src++);
 
         if (numActuals < numFormals) {
-            HeapValue* dstEnd = dstBase + totalArgs;
+            GCPtrValue* dstEnd = dstBase + totalArgs;
             while (dst != dstEnd)
                 (dst++)->init(UndefinedValue());
         }
@@ -128,7 +128,7 @@ struct CopyScriptFrameIterArgs
       : iter_(iter)
     { }
 
-    void copyArgs(JSContext* cx, HeapValue* dstBase, unsigned totalArgs) const {
+    void copyArgs(JSContext* cx, GCPtrValue* dstBase, unsigned totalArgs) const {
         /* Copy actual arguments. */
         iter_.unaliasedForEachActual(cx, CopyToHeap(dstBase));
 
@@ -140,8 +140,8 @@ struct CopyScriptFrameIterArgs
         MOZ_ASSERT(Max(numActuals, numFormals) == totalArgs);
 
         if (numActuals < numFormals) {
-            HeapValue* dst = dstBase + numActuals;
-            HeapValue* dstEnd = dstBase + totalArgs;
+            GCPtrValue* dst = dstBase + numActuals;
+            GCPtrValue* dstEnd = dstBase + totalArgs;
             while (dst != dstEnd)
                 (dst++)->init(UndefinedValue());
         }

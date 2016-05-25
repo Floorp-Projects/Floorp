@@ -150,3 +150,24 @@ runTest(`
   (func $dpromote_f32 (param $x f32) (result f64) (f64.promote/f32 (get_local $x)))
   (func $fdemote_f64 (param $x f64) (result f32) (f32.demote/f64 (get_local $x)))
 (memory 0))`);
+
+// function calls
+runTest(`
+(module
+  (type $type1 (func (param i32) (result i32)))
+  (import $import1 "mod" "test" (param f32) (result f32))
+  (table $func1 $func2)
+  (func $func1 (param i32) (param f32) (nop))
+  (func $func2 (param i32) (result i32) (get_local 0))
+  (func $test
+    (call $func1
+      (call_indirect $type1 (i32.const 1) (i32.const 2))
+      (call_import $import1 (f32.const 1.0))
+    )
+  )
+  (export "test" $test)
+  (memory 1)
+)`);
+
+// default memory export from binaryen
+runTest(`(module (func (nop)) (memory 0 65535))`);

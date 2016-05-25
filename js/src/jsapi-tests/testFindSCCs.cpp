@@ -16,18 +16,27 @@ static const unsigned MaxVertices = 10;
 using js::gc::GraphNodeBase;
 using js::gc::ComponentFinder;
 
+struct TestComponentFinder;
+
 struct TestNode : public GraphNodeBase<TestNode>
 {
     unsigned   index;
     bool       hasEdge[MaxVertices];
 
-    void findOutgoingEdges(ComponentFinder<TestNode>& finder);
+    void findOutgoingEdges(TestComponentFinder& finder);
+};
+
+struct TestComponentFinder : public ComponentFinder<TestNode, TestComponentFinder>
+{
+    explicit TestComponentFinder(uintptr_t sl)
+      : ComponentFinder<TestNode, TestComponentFinder>(sl)
+    {}
 };
 
 static TestNode Vertex[MaxVertices];
 
 void
-TestNode::findOutgoingEdges(ComponentFinder<TestNode>& finder)
+TestNode::findOutgoingEdges(TestComponentFinder& finder)
 {
     for (unsigned i = 0; i < MaxVertices; ++i) {
         if (hasEdge[i])
@@ -127,7 +136,7 @@ BEGIN_TEST(testFindSCCs)
 }
 
 unsigned vertex_count;
-ComponentFinder<TestNode>* finder;
+TestComponentFinder* finder;
 TestNode* resultsList;
 
 void setup(unsigned count)
@@ -148,7 +157,7 @@ void edge(unsigned src_index, unsigned dest_index)
 
 void run()
 {
-    finder = new ComponentFinder<TestNode>(rt->mainThread.nativeStackLimit[js::StackForSystemCode]);
+    finder = new TestComponentFinder(rt->mainThread.nativeStackLimit[js::StackForSystemCode]);
     for (unsigned i = 0; i < vertex_count; ++i)
         finder->addNode(&Vertex[i]);
     resultsList = finder->getResultsList();
@@ -202,21 +211,29 @@ bool end()
 }
 END_TEST(testFindSCCs)
 
+struct TestComponentFinder2;
+
 struct TestNode2 : public GraphNodeBase<TestNode2>
 {
     TestNode2* edge;
 
-    TestNode2() :
-        edge(nullptr)
-    {
-    }
-
-    void
-    findOutgoingEdges(ComponentFinder<TestNode2>& finder) {
-        if (edge)
-            finder.addEdgeTo(edge);
-    }
+    TestNode2() : edge(nullptr) {}
+    void findOutgoingEdges(TestComponentFinder2& finder);
 };
+
+struct TestComponentFinder2 : public ComponentFinder<TestNode2, TestComponentFinder2>
+{
+    explicit TestComponentFinder2(uintptr_t sl)
+      : ComponentFinder<TestNode2, TestComponentFinder2>(sl)
+    {}
+};
+
+void
+TestNode2::findOutgoingEdges(TestComponentFinder2& finder)
+{
+    if (edge)
+        finder.addEdgeTo(edge);
+}
 
 BEGIN_TEST(testFindSCCsStackLimit)
 {
@@ -239,7 +256,7 @@ BEGIN_TEST(testFindSCCsStackLimit)
     for (unsigned i = initial; i < (max - 10); ++i)
         vertices[i].edge = &vertices[i + 1];
 
-    ComponentFinder<TestNode2> finder(rt->mainThread.nativeStackLimit[js::StackForSystemCode]);
+    TestComponentFinder2 finder(rt->mainThread.nativeStackLimit[js::StackForSystemCode]);
     for (unsigned i = 0; i < max; ++i)
         finder.addNode(&vertices[i]);
 

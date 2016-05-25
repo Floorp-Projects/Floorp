@@ -67,7 +67,7 @@ void DisableSwitchNotifications(hal::SwitchDevice aDevice);
 /**
  * Enable alarm notifications from the backend.
  */
-bool EnableAlarm();
+MOZ_MUST_USE bool EnableAlarm();
 
 /**
  * Disable alarm notifications from the backend.

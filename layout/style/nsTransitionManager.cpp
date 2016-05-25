@@ -70,6 +70,47 @@ ElementPropertyTransition::CurrentValuePortion() const
                                             computedTiming.mBeforeFlag);
 }
 
+void
+ElementPropertyTransition::UpdateStartValueFromReplacedTransition()
+{
+  if (!mReplacedTransition) {
+    return;
+  }
+  MOZ_ASSERT(nsCSSProps::PropHasFlags(TransitionProperty(),
+                                      CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR),
+             "The transition property should be able to be run on the "
+             "compositor");
+  MOZ_ASSERT(mTarget && mTarget->mElement->OwnerDoc(),
+             "We should have a valid document at this moment");
+
+  dom::DocumentTimeline* timeline = mTarget->mElement->OwnerDoc()->Timeline();
+  ComputedTiming computedTiming = GetComputedTimingAt(
+    dom::CSSTransition::GetCurrentTimeAt(*timeline,
+                                         TimeStamp::Now(),
+                                         mReplacedTransition->mStartTime,
+                                         mReplacedTransition->mPlaybackRate),
+    mReplacedTransition->mTiming);
+
+  if (!computedTiming.mProgress.IsNull()) {
+    double valuePosition =
+      ComputedTimingFunction::GetPortion(mReplacedTransition->mTimingFunction,
+                                         computedTiming.mProgress.Value(),
+                                         computedTiming.mBeforeFlag);
+    StyleAnimationValue startValue;
+    if (StyleAnimationValue::Interpolate(mProperties[0].mProperty,
+                                         mReplacedTransition->mFromValue,
+                                         mReplacedTransition->mToValue,
+                                         valuePosition, startValue)) {
+      MOZ_ASSERT(mProperties.Length() == 1 &&
+                 mProperties[0].mSegments.Length() == 1,
+                 "The transition should have one property and one segment");
+      mProperties[0].mSegments[0].mFromValue = Move(startValue);
+    }
+  }
+
+  mReplacedTransition.reset();
+}
+
 ////////////////////////// CSSTransition ////////////////////////////
 
 JSObject*
@@ -202,6 +243,23 @@ CSSTransition::HasLowerCompositeOrderThan(const CSSTransition& aOther) const
   // 3. (Same transition generation): Sort by transition property
   return nsCSSProps::GetStringValue(TransitionProperty()) <
          nsCSSProps::GetStringValue(aOther.TransitionProperty());
+}
+
+/* static */ Nullable<TimeDuration>
+CSSTransition::GetCurrentTimeAt(const DocumentTimeline& aTimeline,
+                                const TimeStamp& aBaseTime,
+                                const TimeDuration& aStartTime,
+                                double aPlaybackRate)
+{
+  Nullable<TimeDuration> result;
+
+  Nullable<TimeDuration> timelineTime = aTimeline.ToTimelineTime(aBaseTime);
+  if (!timelineTime.IsNull()) {
+    result.SetValue((timelineTime.Value() - aStartTime)
+                      .MultDouble(aPlaybackRate));
+  }
+
+  return result;
 }
 
 ////////////////////////// nsTransitionManager ////////////////////////////
@@ -746,6 +804,29 @@ nsTransitionManager::ConsiderStartingTransition(
   }
 #endif
   if (haveCurrentTransition) {
+    // If this new transition is replacing an existing transition that is running
+    // on the compositor, we store select parameters from the replaced transition
+    // so that later, once all scripts have run, we can update the start value
+    // of the transition using TimeStamp::Now(). This allows us to avoid a
+    // large jump when starting a new transition when the main thread lags behind
+    // the compositor.
+    if (oldPT->IsCurrent() &&
+        oldPT->IsRunningOnCompositor() &&
+        !oldPT->GetAnimation()->GetStartTime().IsNull() &&
+        timeline == oldPT->GetAnimation()->GetTimeline()) {
+      const AnimationPropertySegment& segment =
+        oldPT->Properties()[0].mSegments[0];
+      pt->mReplacedTransition.emplace(
+        ElementPropertyTransition::ReplacedTransitionProperties({
+          oldPT->GetAnimation()->GetStartTime().Value(),
+          oldPT->GetAnimation()->PlaybackRate(),
+          oldPT->SpecifiedTiming(),
+          segment.mTimingFunction,
+          segment.mFromValue,
+          segment.mToValue
+        })
+      );
+    }
     animations[currentIndex]->CancelFromStyle();
     oldPT = nullptr; // Clear pointer so it doesn't dangle
     animations[currentIndex] = animation;

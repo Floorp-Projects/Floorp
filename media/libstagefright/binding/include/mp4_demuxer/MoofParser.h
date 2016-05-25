@@ -140,7 +140,7 @@ struct Sample
   bool mSync;
 };
 
-class Saiz : public Atom
+class Saiz final : public Atom
 {
 public:
   Saiz(Box& aBox, AtomType aDefaultType);
@@ -150,7 +150,7 @@ public:
   nsTArray<uint8_t> mSampleInfoSize;
 };
 
-class Saio : public Atom
+class Saio final : public Atom
 {
 public:
   Saio(Box& aBox, AtomType aDefaultType);
@@ -170,7 +170,7 @@ private:
   Saio& mSaio;
 };
 
-class Moof : public Atom
+class Moof final : public Atom
 {
 public:
   Moof(Box& aBox, Trex& aTrex, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, Sinf& aSinf, uint64_t* aDecoderTime, bool aIsAudio);

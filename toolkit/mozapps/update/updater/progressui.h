@@ -24,6 +24,9 @@ int InitProgressUI(int *argc, NS_tchar ***argv);
   // Called on the main thread at startup
   int ShowProgressUI(bool indeterminate = false, bool initUIStrings = true);
   int InitProgressUIStrings();
+#elif defined(XP_MACOSX)
+  // Called on the main thread at startup
+  int ShowProgressUI(bool indeterminate = false);
 #else
   // Called on the main thread at startup
   int ShowProgressUI();

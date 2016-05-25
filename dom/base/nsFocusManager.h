@@ -114,7 +114,7 @@ public:
   /**
    * Returns the content node that focus will be redirected to if aContent was
    * focused. This is used for the special case of certain XUL elements such
-   * as textboxes which redirect focus to an anonymous child.
+   * as textboxes or input number which redirect focus to an anonymous child.
    *
    * aContent must be non-null.
    *

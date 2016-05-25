@@ -29,11 +29,13 @@ DEFINE_KEYNAME_WITH_SAME_NAME(Unidentified)
  * Our Internal Key Values (must have "Moz" prefix)
  *****************************************************************************/
 DEFINE_KEYNAME_INTERNAL(PrintableKey, "MozPrintableKey")
-DEFINE_KEYNAME_INTERNAL(HomeScreen, "MozHomeScreen")
-DEFINE_KEYNAME_INTERNAL(CameraFocusAdjust, "MozCameraFocusAdjust")
-DEFINE_KEYNAME_INTERNAL(PhoneCall, "MozPhoneCall")
 DEFINE_KEYNAME_INTERNAL(SoftLeft, "MozSoftLeft")
 DEFINE_KEYNAME_INTERNAL(SoftRight, "MozSoftRight")
+
+#ifdef MOZ_B2G
+DEFINE_KEYNAME_INTERNAL(HomeScreen, "MozHomeScreen")
+DEFINE_KEYNAME_INTERNAL(CameraFocusAdjust, "MozCameraFocusAdjust")
+#endif // #ifdef MOZ_B2G
 
 /******************************************************************************
  * Modifier Keys
@@ -248,9 +250,16 @@ DEFINE_KEYNAME_WITH_SAME_NAME(AudioFaderRear)
 DEFINE_KEYNAME_WITH_SAME_NAME(AudioSurroundModeNext)
 DEFINE_KEYNAME_WITH_SAME_NAME(AudioTrebleDown)
 DEFINE_KEYNAME_WITH_SAME_NAME(AudioTrebleUp)
+#ifndef MOZ_B2G
+DEFINE_KEYNAME_WITH_SAME_NAME(AudioVolumeDown)
+DEFINE_KEYNAME_WITH_SAME_NAME(AudioVolumeUp)
+DEFINE_KEYNAME_WITH_SAME_NAME(AudioVolumeMute)
+#else
+// Temporarily, remaining for B2G
 DEFINE_KEYNAME_WITH_SAME_NAME(VolumeDown)
 DEFINE_KEYNAME_WITH_SAME_NAME(VolumeUp)
 DEFINE_KEYNAME_WITH_SAME_NAME(VolumeMute)
+#endif
 DEFINE_KEYNAME_WITH_SAME_NAME(MicrophoneToggle)
 DEFINE_KEYNAME_WITH_SAME_NAME(MicrophoneVolumeDown)
 DEFINE_KEYNAME_WITH_SAME_NAME(MicrophoneVolumeUp)

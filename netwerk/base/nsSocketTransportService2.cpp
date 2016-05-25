@@ -105,8 +105,6 @@ nsSocketTransportService::nsSocketTransportService()
     , mIdleCount(0)
     , mSentBytesCount(0)
     , mReceivedBytesCount(0)
-    , mEventQueueLock("nsSocketTransportService::mEventQueueLock")
-    , mPendingSocketQ(mEventQueueLock)
     , mSendBufferSize(0)
     , mKeepaliveIdleTimeS(600)
     , mKeepaliveRetryIntervalS(1)
@@ -207,10 +205,8 @@ nsSocketTransportService::NotifyWhenCanAttachSocket(nsIRunnable *event)
         return Dispatch(event, NS_DISPATCH_NORMAL);
     }
 
-    {
-      MutexAutoLock lock(mEventQueueLock);
-      mPendingSocketQ.PutEvent(event, lock);
-    }
+    LinkedRunnableEvent *runnable = new LinkedRunnableEvent(event);
+    mPendingSocketQueue.insertBack(runnable);
     return NS_OK;
 }
 
@@ -246,20 +242,14 @@ bool
 nsSocketTransportService::CanAttachSocket()
 {
     static bool reported900FDLimit = false;
-    static bool reported256FDLimit = false;
 
     uint32_t total = mActiveCount + mIdleCount;
     bool rv = total < gMaxCount;
 
-    if (mTelemetryEnabledPref) {
-        if (((total >= 900) || !rv) && !reported900FDLimit) {
-            reported900FDLimit = true;
-            Telemetry::Accumulate(Telemetry::NETWORK_SESSION_AT_900FD, true);
-        }
-        if ((total >= 256) && !reported256FDLimit) {
-            reported256FDLimit = true;
-            Telemetry::Accumulate(Telemetry::NETWORK_SESSION_AT_256FD, true);
-        }
+    if (mTelemetryEnabledPref &&
+        (((total >= 900) || !rv) && !reported900FDLimit)) {
+        reported900FDLimit = true;
+        Telemetry::Accumulate(Telemetry::NETWORK_SESSION_AT_900FD, true);
     }
 
     return rv;
@@ -292,9 +282,11 @@ nsSocketTransportService::DetachSocket(SocketContext *listHead, SocketContext *s
     // notify the first element on the pending socket queue...
     //
     nsCOMPtr<nsIRunnable> event;
-    {
-      MutexAutoLock lock(mEventQueueLock);
-      mPendingSocketQ.GetPendingEvent(getter_AddRefs(event), lock);
+    LinkedRunnableEvent *runnable = mPendingSocketQueue.getFirst();
+    if (runnable) {
+        event = runnable->TakeEvent();
+        runnable->remove();
+        delete runnable;
     }
     if (event) {
         // move event from pending queue to dispatch queue

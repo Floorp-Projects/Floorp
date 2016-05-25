@@ -3888,7 +3888,7 @@ TypeNewScript::rollbackPartiallyInitializedObjects(JSContext* cx, ObjectGroup* g
 
     RootedFunction function(cx, this->function());
     Vector<uint32_t, 32> pcOffsets(cx);
-    for (ScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED); !iter.done(); ++iter) {
+    for (ScriptFrameIter iter(cx, FrameIter::GO_THROUGH_SAVED); !iter.done(); ++iter) {
         {
             AutoEnterOOMUnsafeRegion oomUnsafe;
             if (!pcOffsets.append(iter.script()->pcToOffset(iter.pc())))

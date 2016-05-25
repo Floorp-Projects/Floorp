@@ -1251,7 +1251,8 @@ MediaDecoder::OnSeekResolved(SeekResolveValue aVal)
     mLogicallySeeking = false;
   }
 
-  UpdateLogicalPosition(aVal.mEventVisibility);
+  // Ensure logical position is updated after seek.
+  UpdateLogicalPositionInternal(aVal.mEventVisibility);
 
   if (aVal.mEventVisibility != MediaDecoderEventVisibility::Suppressed) {
     mOwner->SeekCompleted();
@@ -1302,14 +1303,10 @@ MediaDecoder::ChangeState(PlayState aState)
 }
 
 void
-MediaDecoder::UpdateLogicalPosition(MediaDecoderEventVisibility aEventVisibility)
+MediaDecoder::UpdateLogicalPositionInternal(MediaDecoderEventVisibility aEventVisibility)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (mShuttingDown)
-    return;
-
-  // Per spec, offical position remains stable during pause and seek.
-  if (mPlayState == PLAY_STATE_PAUSED || IsSeeking()) {
+  if (mShuttingDown) {
     return;
   }
 
