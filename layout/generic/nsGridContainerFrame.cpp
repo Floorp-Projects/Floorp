@@ -827,8 +827,8 @@ struct nsGridContainerFrame::TrackSizingFunctions
    * Initialize the number of auto-fill/fit tracks to use and return that.
    * (zero if no auto-fill/fit track was specified)
    */
-  uint32_t InitRepeatTracks(nscoord aGridGap, nscoord aMinSize, nscoord aSize,
-                            nscoord aMaxSize)
+  uint32_t InitRepeatTracks(const nsStyleCoord& aGridGap, nscoord aMinSize,
+                            nscoord aSize, nscoord aMaxSize)
   {
     uint32_t repeatTracks =
       CalculateRepeatFillCount(aGridGap, aMinSize, aSize, aMaxSize);
@@ -836,7 +836,7 @@ struct nsGridContainerFrame::TrackSizingFunctions
     return repeatTracks;
   }
 
-  uint32_t CalculateRepeatFillCount(nscoord aGridGap,
+  uint32_t CalculateRepeatFillCount(const nsStyleCoord& aGridGap,
                                     nscoord aMinSize,
                                     nscoord aSize,
                                     nscoord aMaxSize) const
@@ -877,9 +877,11 @@ struct nsGridContainerFrame::TrackSizingFunctions
       }
       sum += trackSize;
     }
+    nscoord gridGap =
+      std::max(nscoord(0), nsRuleNode::ComputeCoordPercentCalc(aGridGap, aSize));
     if (numTracks > 1) {
       // Add grid-gaps for all the tracks including the repeat() track.
-      sum += aGridGap * (numTracks - 1);
+      sum += gridGap * (numTracks - 1);
     }
     nscoord available = maxFill != NS_UNCONSTRAINEDSIZE ? maxFill : aMinSize;
     nscoord spaceToFill = available - sum;
@@ -888,7 +890,7 @@ struct nsGridContainerFrame::TrackSizingFunctions
       return 1;
     }
     // Calculate the max number of tracks that fits without overflow.
-    uint32_t numRepeatTracks = (spaceToFill / (repeatTrackSize + aGridGap)) + 1;
+    uint32_t numRepeatTracks = (spaceToFill / (repeatTrackSize + gridGap)) + 1;
     if (maxFill == NS_UNCONSTRAINEDSIZE) {
       // "Otherwise, if the grid container has a definite min size in
       // the relevant axis, the number of repetitions is the largest possible
@@ -985,7 +987,7 @@ struct nsGridContainerFrame::Tracks
   explicit Tracks(LogicalAxis aAxis) : mAxis(aAxis) {}
 
   void Initialize(const TrackSizingFunctions& aFunctions,
-                  nscoord                     aGridGap,
+                  const nsStyleCoord&         aGridGap,
                   uint32_t                    aNumTracks,
                   nscoord                     aContentBoxSize);
 
@@ -3160,7 +3162,7 @@ nsGridContainerFrame::Grid::PlaceGridItems(GridReflowState& aState,
 void
 nsGridContainerFrame::Tracks::Initialize(
   const TrackSizingFunctions& aFunctions,
-  nscoord                     aGridGap,
+  const nsStyleCoord&         aGridGap,
   uint32_t                    aNumTracks,
   nscoord                     aContentBoxSize)
 {
@@ -3173,9 +3175,9 @@ nsGridContainerFrame::Tracks::Initialize(
                          aFunctions.MinSizingFor(i),
                          aFunctions.MaxSizingFor(i));
   }
-  mGridGap = aGridGap;
+  auto gap = nsRuleNode::ComputeCoordPercentCalc(aGridGap, aContentBoxSize);
+  mGridGap = std::max(nscoord(0), gap);
   mContentBoxSize = aContentBoxSize;
-  MOZ_ASSERT(mGridGap >= nscoord(0), "negative grid gap");
 }
 
 /**

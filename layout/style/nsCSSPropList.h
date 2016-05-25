@@ -2143,10 +2143,10 @@ CSS_PROP_POSITION(
         CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_ENABLED_IN_UA_SHEETS,
     "layout.css.grid.enabled",
-    VARIANT_HL | VARIANT_CALC,
+    VARIANT_HLP | VARIANT_CALC,
     nullptr,
     offsetof(nsStylePosition, mGridColumnGap),
-    eStyleAnimType_nscoord)
+    eStyleAnimType_Coord)
 CSS_PROP_POSITION(
     grid-column-start,
     grid_column_start,
@@ -2187,10 +2187,10 @@ CSS_PROP_POSITION(
         CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_ENABLED_IN_UA_SHEETS,
     "layout.css.grid.enabled",
-    VARIANT_HL | VARIANT_CALC,
+    VARIANT_HLP | VARIANT_CALC,
     nullptr,
     offsetof(nsStylePosition, mGridRowGap),
-    eStyleAnimType_nscoord)
+    eStyleAnimType_Coord)
 CSS_PROP_POSITION(
     grid-row-start,
     grid_row_start,
