@@ -246,10 +246,88 @@
   background: transparent;
 }
 
-.devtools-htmltooltip-container {
+.tooltip-container {
   display: none;
   position: fixed;
   z-index: 9999;
+  display: none;
+  background: transparent;
+}
+
+.tooltip-panel{
+  background-color: var(--theme-tooltip-background);
+}
+
+.tooltip-visible {
+  display: block;
+}
+
+.tooltip-container[type="normal"] > .tooltip-panel {
+  height: 100%;
+  width: 100%;
+}
+
+/* Tooltip : arrow style */
+
+.tooltip-container[type="arrow"] {
+  filter: drop-shadow(0 3px 4px var(--theme-tooltip-shadow));
+}
+
+.tooltip-container[type="arrow"] > .tooltip-panel {
+  position: absolute;
+  box-sizing: border-box;
+  height: calc(100% - 13px);
+  width: 100%;
+
+  border: 3px solid var(--theme-tooltip-border);
+  border-radius: 5px;
+}
+
+.tooltip-top[type="arrow"] .tooltip-panel {
+  top: 0;
+}
+
+.tooltip-bottom[type="arrow"] .tooltip-panel {
+  bottom: 0;
+}
+
+.tooltip-arrow {
+  position: absolute;
+  height: 16px;
+  width: 32px;
+  overflow: hidden;
+}
+
+.tooltip-top .tooltip-arrow {
+  bottom: 0;
+}
+
+.tooltip-bottom .tooltip-arrow {
+  top: 0;
+}
+
+.tooltip-arrow:before {
+  content: "";
+  position: absolute;
+  width: 21px;
+  height: 21px;
+  margin-left: 4px;
+  background: linear-gradient(-45deg,
+    var(--theme-tooltip-background) 50%, transparent 50%);
+  border-color: var(--theme-tooltip-border);
+  border-style: solid;
+  border-width: 0px 3px 3px 0px;
+  border-radius: 3px;
+}
+
+.tooltip-bottom .tooltip-arrow:before {
+  margin-top: 4px;
+  transform: rotate(225deg);
+}
+
+.tooltip-top .tooltip-arrow:before {
+  margin-top: -12px;
+  transform: rotate(45deg);
 }
 
 /* links to source code, like displaying `myfile.js:45` */
