@@ -32,13 +32,12 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     EXPORTS += ['MacQuirks.h']
     UNIFIED_SOURCES += [
-        'nsCommandLineServiceMac.cpp',
-    ]
-    UNIFIED_SOURCES += [
         'MacApplicationDelegate.mm',
         'MacAutoreleasePool.mm',
         'MacLaunchHelper.mm',
+        'nsCommandLineServiceMac.cpp',
         'nsNativeAppSupportCocoa.mm',
+        'updaterfileutils_osx.mm',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'uikit':
     UNIFIED_SOURCES += [
