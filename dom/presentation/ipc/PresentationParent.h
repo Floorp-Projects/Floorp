@@ -58,7 +58,8 @@ public:
 
   virtual bool RecvUnregisterRespondingHandler(const uint64_t& aWindowId) override;
 
-  virtual bool RecvNotifyReceiverReady(const nsString& aSessionId) override;
+  virtual bool RecvNotifyReceiverReady(const nsString& aSessionId,
+                                       const uint64_t& aWindowId) override;
 
 private:
   virtual ~PresentationParent();
