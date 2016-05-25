@@ -6,7 +6,6 @@
 let { LoopThrottler } = window;
 const THROTTLE_HOSTNAME = "throttle.example.invalid";
 
-LoopUI.removeCopyPanel();
 let origChannel = Services.prefs.getCharPref("app.update.channel");
 Services.prefs.setCharPref("test.throttler", THROTTLE_HOSTNAME);
 let origDNS = LoopThrottler._dns;
@@ -33,7 +32,16 @@ LoopThrottler._dns = {
     gNumResolved++;
     Assert.strictEqual(host, THROTTLE_HOSTNAME, "should be using test host");
     Assert.strictEqual(flags, this.RESOLVE_DISABLE_IPV6, "should set disable ipv6 flag");
-    callback(null, { getNextAddrAsString() { return gTestIP; } }, 0);
+    if (gTestIP === null) {
+      callback({}, null, 1);
+    }
+    else {
+      callback(null, {
+        getNextAddrAsString() {
+          return gTestIP;
+        }
+      }, 0);
+    }
   }
 };
 
@@ -41,8 +49,8 @@ function testThrottler() {
   return LoopThrottler.check("test").then(() => true, () => false);
 }
 
-// With a 0 threshold, copy panel shouldn't be created.
-add_task(function* test_init_copy_panel_not_exist() {
+// With a 0 threshold, no ticket will pass.
+add_task(function* test_0_percent() {
   resetResolved();
   setThreshold(0);
   Services.prefs.setIntPref("test.ticket", -1);
@@ -52,8 +60,8 @@ add_task(function* test_init_copy_panel_not_exist() {
   Assert.equal(gNumResolved, 1, "dns resolved once");
 });
 
-// Even with 0 threshold, special ticket skips DNS and creates panel.
-add_task(function* test_init_copy_panel_short_circuit() {
+// Even with 0 threshold, special ticket skips DNS.
+add_task(function* test_short_circuit() {
   resetResolved();
   setThreshold(0);
   Services.prefs.setIntPref("test.ticket", 255);
@@ -63,8 +71,30 @@ add_task(function* test_init_copy_panel_short_circuit() {
   Assert.equal(gNumResolved, 0, "dns not used");
 });
 
+// No ticket will pass for failed dns.
+add_task(function* test_failed_dns() {
+  resetResolved();
+  gTestIP = null;
+  Services.prefs.setIntPref("test.ticket", -1);
+
+  Assert.ok(!(yield testThrottler()), "don't trigger for failed dns");
+  Assert.notEqual(Services.prefs.getIntPref("test.ticket"), -1, "ticket should be updated");
+  Assert.equal(gNumResolved, 1, "dns resolved once");
+});
+
+// Even with max threshold, no ticket will pass for non-loopback entry.
+add_task(function* test_non_loopback() {
+  resetResolved();
+  gTestIP = "192.255.255.255";
+  Services.prefs.setIntPref("test.ticket", -1);
+
+  Assert.ok(!(yield testThrottler()), "don't trigger for invalid loopback");
+  Assert.notEqual(Services.prefs.getIntPref("test.ticket"), -1, "ticket should be updated");
+  Assert.equal(gNumResolved, 1, "dns resolved once");
+});
+
 // With max threshold, any ticket will pass.
-add_task(function* test_init_copy_panel_100_percent() {
+add_task(function* test_100_percent() {
   resetResolved();
   setThreshold(255);
   Services.prefs.setIntPref("test.ticket", -1);
@@ -75,7 +105,7 @@ add_task(function* test_init_copy_panel_100_percent() {
 });
 
 // Check with tickets just over/match/under the threshold.
-add_task(function* test_init_copy_panel_1_threshold() {
+add_task(function* test_1_threshold() {
   setThreshold(1);
 
   resetResolved();
@@ -92,7 +122,7 @@ add_task(function* test_init_copy_panel_1_threshold() {
 });
 
 // Check that only nightly channel is activated.
-add_task(function* test_init_copy_panel_nightly() {
+add_task(function* test_nightly() {
   setThreshold("0", "0", "1");
 
   resetResolved();
@@ -117,7 +147,7 @@ add_task(function* test_init_copy_panel_nightly() {
 });
 
 // Check that only beta channel is activated.
-add_task(function* test_init_copy_panel_beta() {
+add_task(function* test_beta() {
   setThreshold("0", "1", "0");
 
   resetResolved();
@@ -142,7 +172,7 @@ add_task(function* test_init_copy_panel_beta() {
 });
 
 // Check that only release channel is activated.
-add_task(function* test_init_copy_panel_release() {
+add_task(function* test_release() {
   setThreshold("1", "0", "0");
 
   resetResolved();

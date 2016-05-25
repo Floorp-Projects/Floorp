@@ -9,7 +9,7 @@
   <Description about="urn:mozilla:install-manifest">
     <em:id>loop@mozilla.org</em:id>
     <em:bootstrap>true</em:bootstrap>
-    <em:version>1.3.1</em:version>
+    <em:version>1.3.2</em:version>
     <em:type>2</em:type>
 
     <!-- Target Application this extension can install into,
