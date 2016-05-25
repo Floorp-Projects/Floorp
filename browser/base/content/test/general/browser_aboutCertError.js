@@ -105,7 +105,7 @@ add_task(function* checkBadStsCert() {
   yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
-const PREF_KINTO_CLOCK_SKEW_SECONDS = "services.kinto.clock_skew_seconds";
+const PREF_BLOCKLIST_CLOCK_SKEW_SECONDS = "services.blocklist.clock_skew_seconds";
 
 add_task(function* checkWrongSystemTimeWarning() {
   function* setUpPage() {
@@ -144,7 +144,7 @@ add_task(function* checkWrongSystemTimeWarning() {
 
   let skew = Math.floor((Date.now() - serverDate.getTime()) / 1000);
   yield new Promise(r => SpecialPowers.pushPrefEnv({set:
-    [[PREF_KINTO_CLOCK_SKEW_SECONDS, skew]]}, r));
+    [[PREF_BLOCKLIST_CLOCK_SKEW_SECONDS, skew]]}, r));
 
   info("Loading a bad cert page with a skewed clock");
   let message = yield Task.spawn(setUpPage);
@@ -165,7 +165,7 @@ add_task(function* checkWrongSystemTimeWarning() {
 
   skew = Math.floor((Date.now() - serverDate.getTime()) / 1000);
   yield new Promise(r => SpecialPowers.pushPrefEnv({set:
-    [[PREF_KINTO_CLOCK_SKEW_SECONDS, skew]]}, r));
+    [[PREF_BLOCKLIST_CLOCK_SKEW_SECONDS, skew]]}, r));
 
   info("Loading a bad cert page with a skewed clock");
   message = yield Task.spawn(setUpPage);
@@ -182,7 +182,7 @@ add_task(function* checkWrongSystemTimeWarning() {
   // pretend we only have a slightly skewed system time, four hours
   skew = 60 * 60 * 4;
   yield new Promise(r => SpecialPowers.pushPrefEnv({set:
-    [[PREF_KINTO_CLOCK_SKEW_SECONDS, skew]]}, r));
+    [[PREF_BLOCKLIST_CLOCK_SKEW_SECONDS, skew]]}, r));
 
   info("Loading a bad cert page with an only slightly skewed clock");
   message = yield Task.spawn(setUpPage);
@@ -194,7 +194,7 @@ add_task(function* checkWrongSystemTimeWarning() {
   // now pretend we have no skewed system time
   skew = 0;
   yield new Promise(r => SpecialPowers.pushPrefEnv({set:
-    [[PREF_KINTO_CLOCK_SKEW_SECONDS, skew]]}, r));
+    [[PREF_BLOCKLIST_CLOCK_SKEW_SECONDS, skew]]}, r));
 
   info("Loading a bad cert page with no skewed clock");
   message = yield Task.spawn(setUpPage);

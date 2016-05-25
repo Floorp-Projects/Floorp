@@ -11,7 +11,7 @@ const TEST_URI = "data:text/html;charset=utf-8," +
   "<iframe src='data:text/html;charset=utf-8,hello world'></iframe>";
 
 add_task(function* () {
-  let { inspector, toolbox, testActor } = yield openInspectorForURL(TEST_URI);
+  let { toolbox, testActor } = yield openInspectorForURL(TEST_URI);
 
   info("Starting element picker.");
   yield startPicker(toolbox);

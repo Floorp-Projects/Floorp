@@ -229,7 +229,8 @@ add_task(function* () {
     info("Waiting for search query to complete");
     yield inspector.searchSuggestions._lastQuery;
 
-    info("Query completed. Performing checks for input '" + searchBox.value + "'");
+    info("Query completed. Performing checks for input '" +
+         searchBox.value + "'");
     let actualSuggestions = popup.getItems().reverse();
 
     is(popup.isOpen ? actualSuggestions.length : 0, suggestions.length,

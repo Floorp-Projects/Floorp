@@ -83,10 +83,12 @@ module.exports = createClass({
       panel = selectedPanel.component({ client, id: selectedPanel.id });
     } else {
       panel = (
-        dom.div({ className: "page-not-found" },
+        dom.div({ className: "error-page" },
           dom.h1({ className: "header-name" },
             Strings.GetStringFromName("pageNotFound")
-          )
+          ),
+          dom.h4({ className: "error-page-details" },
+            Strings.formatStringFromName("doesNotExist", [selectedPanelId], 1))
         )
       );
     }

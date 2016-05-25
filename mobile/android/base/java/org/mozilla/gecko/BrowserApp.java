@@ -33,7 +33,6 @@ import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.favicons.decoders.IconDirectoryEntry;
 import org.mozilla.gecko.feeds.ContentNotificationsDelegate;
 import org.mozilla.gecko.feeds.FeedService;
-import org.mozilla.gecko.feeds.action.CheckForUpdatesAction;
 import org.mozilla.gecko.firstrun.FirstrunAnimationContainer;
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator.PinReason;
@@ -180,7 +179,6 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.UUID;
 import java.util.Vector;
 import java.util.regex.Pattern;
 
@@ -1732,6 +1730,8 @@ public class BrowserApp extends GeckoApp
             final SharedPreferences prefs = GeckoSharedPrefs.forProfile(getContext());
             final boolean hasCustomHomepanels = prefs.contains(HomeConfigPrefsBackend.PREFS_CONFIG_KEY) || prefs.contains(HomeConfigPrefsBackend.PREFS_CONFIG_KEY_OLD);
             Telemetry.addToHistogram("FENNEC_HOMEPANELS_CUSTOM", hasCustomHomepanels ? 1 : 0);
+
+            Telemetry.addToHistogram("FENNEC_READER_VIEW_CACHE_SIZE", SavedReaderViewHelper.getSavedReaderViewHelper(getContext()).getDiskSpacedUsedKB());
 
             if (Versions.feature16Plus) {
                 Telemetry.addToHistogram("BROWSER_IS_ASSIST_DEFAULT", (isDefaultBrowser(Intent.ACTION_ASSIST) ? 1 : 0));

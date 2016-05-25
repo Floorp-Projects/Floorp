@@ -25,7 +25,7 @@ ping”, not total for the whole application lifetime.
 Structure::
 
     {
-      "v": 6, // ping format version
+      "v": 7, // ping format version
       "clientId": <string>, // client id, e.g.
                             // "c641eacf-c30c-4171-b403-f077724e848a"
       "seq": <positive integer>, // running ping counter, e.g. 3
@@ -45,6 +45,9 @@ Structure::
                            // in local time, "yyyy-mm-dd"
       "tz": <integer>, // timezone offset (in minutes) of the
                        // device when the ping was created
+      "sessions": <integer>, // number of sessions since last upload
+      "durations": <integer>, // combined duration, in seconds, of all
+                                    // sessions since last upload
       "searches": <object>, // Optional, object of search use counts in the
                             // format: { "engine.source": <pos integer> }
                             // e.g.: { "yahoo.suggestion": 3, "other.listitem": 1 }
@@ -96,6 +99,18 @@ If the plugins fail to create a search engine instance, this field is also
 This field can also be ``null`` when a custom search engine is set as the
 default.
 
+sessions & durations
+~~~~~~~~~~~~~~~~~~~~
+On Android, a session is the time when Firefox is focused in the foreground.
+`sessions` tracks the number of sessions since the last upload and
+`durations` is the accumulated duration in seconds of all of these
+sessions. Note that showing a dialog (including a Firefox dialog) will
+take Firefox out of focus & end the current session.
+
+An implementation that records a session when Firefox is completely hidden is
+preferrable (e.g. to avoid the dialog issue above), however, it's more complex
+to implement and so we chose not to, at least for the initial implementation.
+
 profileDate
 ~~~~~~~~~~~
 On Android, this value is created at profile creation time and retrieved or,
@@ -140,6 +155,7 @@ et al (e.g. "Tue, 01 Feb 2011 14:00:00 GMT").
 
 Version history
 ---------------
+* v7: added ``sessionCount`` & ``sessionDuration``
 * v6: added ``searches``
 * v5: added ``created`` & ``tz``
 * v4: ``profileDate`` will return package install time when times.json is not available

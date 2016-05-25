@@ -10,8 +10,105 @@ Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/bookmark_utils.js");
 
-this.EXPORTED_SYMBOLS = ["BookmarkValidator"];
+this.EXPORTED_SYMBOLS = ["BookmarkValidator", "BookmarkProblemData"];
 
+/**
+ * Result of bookmark validation. Contains the following fields which describe
+ * server-side problems unless otherwise specified.
+ *
+ * - missingIDs (number): # of objects with missing ids
+ * - duplicates (array of ids): ids seen more than once
+ * - parentChildMismatches (array of {parent: parentid, child: childid}):
+ *   instances where the child's parentid and the parent's children array
+ *   do not match
+ * - cycles (array of array of ids). List of cycles found in the "tree".
+ * - orphans (array of {id: string, parent: string}): List of nodes with
+ *   either no parentid, or where the parent could not be found.
+ * - missingChildren (array of {parent: id, child: id}):
+ *   List of parent/children where the child id couldn't be found
+ * - multipleParents (array of {child: id, parents: array of ids}):
+ *   List of children that were part of multiple parent arrays
+ * - deletedParents (array of ids) : List of records that aren't deleted but
+ *   had deleted parents
+ * - childrenOnNonFolder (array of ids): list of non-folders that still have
+ *   children arrays
+ * - duplicateChildren (array of ids): list of records who have the same
+ *   child listed multiple times in their children array
+ * - parentNotFolder (array of ids): list of records that have parents that
+ *   aren't folders
+ * - wrongParentName (array of ids): list of records whose parentName does
+ *   not match the parent's actual title
+ * - rootOnServer (boolean): true if the root came from the server
+ *
+ * - clientMissing: Array of ids on the server missing from the client
+ * - serverMissing: Array of ids on the client missing from the server
+ * - serverDeleted: Array of ids on the client that the server had marked as deleted.
+ * - serverUnexpected: Array of ids that appear on the server but shouldn't
+ *   because the client attempts to never upload them.
+ * - differences: Array of {id: string, differences: string array} recording
+ *   the non-structural properties that are differente between the client and server
+ * - structuralDifferences: As above, but contains the items where the differences were
+ *   structural, that is, they contained childGUIDs or parentid
+ */
+class BookmarkProblemData {
+  constructor() {
+    this.rootOnServer = false;
+    this.missingIDs = 0;
+
+    this.duplicates = [];
+    this.parentChildMismatches = [];
+    this.cycles = [];
+    this.orphans = [];
+    this.missingChildren = [];
+    this.multipleParents = [];
+    this.deletedParents = [];
+    this.childrenOnNonFolder = [];
+    this.duplicateChildren = [];
+    this.parentNotFolder = [];
+    this.wrongParentName = [];
+
+    this.clientMissing = [];
+    this.serverMissing = [];
+    this.serverDeleted = [];
+    this.serverUnexpected = [];
+    this.differences = [];
+    this.structuralDifferences = [];
+  }
+
+  /**
+   * Produce a list summarizing problems found. Each entry contains {name, count},
+   * where name is the field name for the problem, and count is the number of times
+   * the problem was encountered.
+   *
+   * Validation has failed if all counts are not 0.
+   */
+  getSummary() {
+    return [
+      { name: "clientMissing", count: this.clientMissing.length },
+      { name: "serverMissing", count: this.serverMissing.length },
+      { name: "serverDeleted", count: this.serverDeleted.length },
+      { name: "serverUnexpected", count: this.serverUnexpected.length },
+
+      { name: "structuralDifferences", count: this.structuralDifferences.length },
+      { name: "differences", count: this.differences.length },
+
+      { name: "missingIDs", count: this.missingIDs },
+      { name: "rootOnServer", count: this.rootOnServer ? 1 : 0 },
+
+      { name: "duplicates", count: this.duplicates.length },
+      { name: "parentChildMismatches", count: this.parentChildMismatches.length },
+      { name: "cycles", count: this.cycles.length },
+      { name: "orphans", count: this.orphans.length },
+      { name: "missingChildren", count: this.missingChildren.length },
+      { name: "multipleParents", count: this.multipleParents.length },
+      { name: "deletedParents", count: this.deletedParents.length },
+      { name: "childrenOnNonFolder", count: this.childrenOnNonFolder.length },
+      { name: "duplicateChildren", count: this.duplicateChildren.length },
+      { name: "parentNotFolder", count: this.parentNotFolder.length },
+      { name: "wrongParentName", count: this.wrongParentName.length },
+    ];
+  }
+}
 
 class BookmarkValidator {
 
@@ -22,6 +119,7 @@ class BookmarkValidator {
     function traverse(treeNode) {
       let guid = BookmarkSpecialIds.specialGUIDForId(treeNode.id) || treeNode.guid;
       let itemType = 'item';
+      treeNode.ignored = PlacesUtils.annotations.itemHasAnnotation(treeNode.id, BookmarkAnnos.EXCLUDEBACKUP_ANNO);
       treeNode.id = guid;
       switch (treeNode.type) {
         case PlacesUtils.TYPE_X_MOZ_PLACE:
@@ -37,13 +135,30 @@ class BookmarkValidator {
           }
           break;
         case PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER:
-          itemType = 'folder';
+          let isLivemark = false;
+          if (treeNode.annos) {
+            for (let anno of treeNode.annos) {
+              if (anno.name === PlacesUtils.LMANNO_FEEDURI) {
+                isLivemark = true;
+                treeNode.feedUri = anno.value;
+              } else if (anno.name === PlacesUtils.LMANNO_SITEURI) {
+                isLivemark = true;
+                treeNode.siteUri = anno.value;
+              }
+            }
+          }
+          itemType = isLivemark ? "livemark" : "folder";
           break;
         case PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR:
           itemType = 'separator';
           break;
       }
 
+      if (treeNode.tags) {
+        treeNode.tags = treeNode.tags.split(",");
+      } else {
+        treeNode.tags = [];
+      }
       treeNode.type = itemType;
       treeNode.pos = treeNode.index;
       treeNode.bmkUri = treeNode.uri;
@@ -88,30 +203,9 @@ class BookmarkValidator {
    *   above.
    * - deletedRecords: As above, but only contains items that the server sent
    *   where it also sent indication that the item should be deleted.
-   * - problemData: Object containing info about problems recorded.
-   *     - missingIDs (number): # of objects with missing ids
-   *     - duplicates (array of ids): ids seen more than once
-   *     - parentChildMismatches (array of {parent: parentid, child: childid}):
-   *       instances where the child's parentid and the parent's children array
-   *       do not match
-   *     - cycles (array of array of ids). List of cycles found in the "tree".
-   *     - orphans (array of {id: string, parent: string}): List of nodes with
-   *       either no parentid, or where the parent could not be found.
-   *     - missingChildren (array of {parent: id, child: id}):
-   *       List of parent/children where the child id couldn't be found
-   *     - multipleParents (array of {child: id, parents: array of ids}):
-   *       List of children that were part of multiple parent arrays
-   *     - deletedParents (array of ids) : List of records that aren't deleted but
-   *       had deleted parents
-   *     - childrenOnNonFolder (array of ids): list of non-folders that still have
-   *       children arrays
-   *     - duplicateChildren (array of ids): list of records who have the same
-   *       child listed multiple times in their children array
-   *     - parentNotFolder (array of ids): list of records that have parents that
-   *       aren't folders
-   *     - wrongParentName (array of ids): list of records whose parentName does
-   *       not match the parent's actual title
-   *     - rootOnServer (boolean): true if the root came from the server
+   * - problemData: a BookmarkProblemData object, with the caveat that
+   *   the fields describing client/server relationship will not have been filled
+   *   out yet.
    */
   inspectServerRecords(serverRecords) {
     let deletedItemIds = new Set();
@@ -121,21 +215,7 @@ class BookmarkValidator {
     let folders = [];
     let problems = [];
 
-    let problemData = {
-      missingIDs: 0,
-      duplicates: [],
-      parentChildMismatches: [],
-      cycles: [],
-      orphans: [],
-      missingChildren: [],
-      multipleParents: [],
-      deletedParents: [],
-      childrenOnNonFolder: [],
-      duplicateChildren: [],
-      parentNotFolder: [],
-      wrongParentName: [],
-      rootOnServer: false
-    };
+    let problemData = new BookmarkProblemData();
 
     let resultRecords = [];
 
@@ -153,7 +233,7 @@ class BookmarkValidator {
         }
         idToRecord.set(record.id, record);
       }
-      if (record.children) {
+      if (record.children && record.type !== "livemark") {
         if (record.type !== 'folder') {
           problemData.childrenOnNonFolder.push(record.id);
         }
@@ -345,30 +425,27 @@ class BookmarkValidator {
   /**
    * Compare the list of server records with the client tree.
    *
-   * Returns the problemData described in the inspectServerRecords comment,
+   * Returns the same data as described in the inspectServerRecords comment,
    * with the following additional fields.
-   * - clientMissing: Array of ids on the server missing from the client
-   * - serverMissing: Array of ids on the client missing from the server
-   * - differences: Array of {id: string, differences: string array} recording
-   *   the properties that are differente between the client and server
+   * - clientRecords: an array of client records in a similar format to
+   *   the .records (ie, server records) entry.
+   * - problemData is the same as for inspectServerRecords, except all properties
+   *   will be filled out.
    */
   compareServerWithClient(serverRecords, clientTree) {
 
     let clientRecords = this.createClientRecordsFromTree(clientTree);
     let inspectionInfo = this.inspectServerRecords(serverRecords);
+    inspectionInfo.clientRecords = clientRecords;
 
     // Mainly do this to remove deleted items and normalize child guids.
     serverRecords = inspectionInfo.records;
     let problemData = inspectionInfo.problemData;
 
-    problemData.clientMissing = [];
-    problemData.serverMissing = [];
-    problemData.differences = [];
-    problemData.good = [];
-
     let matches = [];
 
     let allRecords = new Map();
+    let serverDeletedLookup = new Set(inspectionInfo.deletedRecords.map(r => r.id));
 
     for (let sr of serverRecords) {
       allRecords.set(sr.id, {client: null, server: sr});
@@ -390,17 +467,26 @@ class BookmarkValidator {
         continue;
       }
       if (!server && client) {
-        problemData.serverMissing.push(id);
+        if (serverDeletedLookup.has(id)) {
+          problemData.serverDeleted.push(id);
+        } else if (!client.ignored && client.id != "places") {
+          problemData.serverMissing.push(id);
+        }
         continue;
       }
+      if (server && client && client.ignored) {
+        problemData.serverUnexpected.push(id);
+      }
       let differences = [];
-      if (client.title !== server.title) {
+      let structuralDifferences = [];
+      // We want to treat undefined, null and an empty string as identical
+      if ((client.title || "") !== (server.title || "")) {
         differences.push('title');
       }
 
       if (client.parentid || server.parentid) {
         if (client.parentid !== server.parentid) {
-          differences.push('parentid');
+          structuralDifferences.push('parentid');
         }
         // Need to special case 'unfiled' due to it's recent name change
         // ("Other Bookmarks" vs "Unsorted Bookmarks"), otherwise this has a lot
@@ -418,7 +504,15 @@ class BookmarkValidator {
         }
       }
 
-      if (client.type !== server.type) {
+      let sameType = client.type === server.type;
+      if (!sameType) {
+        if (server.type === "query" && client.type === "bookmark" && client.bmkUri.startsWith("place:")) {
+          sameType = true;
+        }
+      }
+
+
+      if (!sameType) {
         differences.push('type');
       } else {
         switch (server.type) {
@@ -433,6 +527,14 @@ class BookmarkValidator {
               differences.push('pos');
             }
             break;
+          case "livemark":
+            if (server.feedUri != client.feedUri) {
+              differences.push("feedUri");
+            }
+            if (server.siteUri != client.siteUri) {
+              differences.push("siteUri");
+            }
+            break;
           case 'folder':
             if (server.id === 'places' && !problemData.rootOnServer) {
               // It's the fabricated places root. It won't have the GUIDs, but
@@ -443,7 +545,7 @@ class BookmarkValidator {
               let cl = client.childGUIDs || [];
               let sl = server.childGUIDs || [];
               if (cl.length !== sl.length || !cl.every((id, i) => sl[i] === id)) {
-                differences.push('childGUIDs');
+                structuralDifferences.push('childGUIDs');
               }
             }
             break;
@@ -453,8 +555,11 @@ class BookmarkValidator {
       if (differences.length) {
         problemData.differences.push({id, differences});
       }
+      if (structuralDifferences.length) {
+        problemData.structuralDifferences.push({ id, differences: structuralDifferences });
+      }
     }
-    return problemData;
+    return inspectionInfo;
   }
 };
 

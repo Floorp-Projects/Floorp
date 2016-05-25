@@ -6,10 +6,12 @@
 
 // Check that the box-model highlighter supports configuration options
 
-const TEST_URL = "data:text/html;charset=utf-8," +
-                 "<body style='padding:2em;'>" +
-                 "<div style='width:100px;height:100px;padding:2em;border:.5em solid black;margin:1em;'>test</div>" +
-                 "</body>";
+const TEST_URL = `
+  <body style="padding:2em;">
+    <div style="width:100px;height:100px;padding:2em;
+                border:.5em solid black;margin:1em;">test</div>
+  </body>
+`;
 
 // Test data format:
 // - desc: a string that will be output to the console.
@@ -21,14 +23,17 @@ const TEST_DATA = [
     desc: "Guides and infobar should be shown by default",
     options: {},
     checkHighlighter: function* (testActor) {
-      let hidden = yield testActor.getHighlighterNodeAttribute("box-model-nodeinfobar-container", "hidden");
+      let hidden = yield testActor.getHighlighterNodeAttribute(
+        "box-model-nodeinfobar-container", "hidden");
       ok(!hidden, "Node infobar is visible");
 
-      hidden = yield testActor.getHighlighterNodeAttribute("box-model-elements", "hidden");
+      hidden = yield testActor.getHighlighterNodeAttribute(
+        "box-model-elements", "hidden");
       ok(!hidden, "SVG container is visible");
 
       for (let side of ["top", "right", "bottom", "left"]) {
-        hidden = yield testActor.getHighlighterNodeAttribute("box-model-guide-" + side, "hidden");
+        hidden = yield testActor.getHighlighterNodeAttribute(
+          "box-model-guide-" + side, "hidden");
         ok(!hidden, side + " guide is visible");
       }
     }
@@ -48,7 +53,8 @@ const TEST_DATA = [
     options: {hideGuides: true},
     checkHighlighter: function* (testActor) {
       for (let side of ["top", "right", "bottom", "left"]) {
-        let hidden = yield testActor.getHighlighterNodeAttribute("box-model-guide-" + side, "hidden");
+        let hidden = yield testActor.getHighlighterNodeAttribute(
+          "box-model-guide-" + side, "hidden");
         is(hidden, "true", side + " guide has been hidden");
       }
     }
@@ -57,7 +63,8 @@ const TEST_DATA = [
     desc: "Infobar can be hidden",
     options: {hideInfoBar: true},
     checkHighlighter: function* (testActor) {
-      let hidden = yield testActor.getHighlighterNodeAttribute("box-model-nodeinfobar-container", "hidden");
+      let hidden = yield testActor.getHighlighterNodeAttribute(
+        "box-model-nodeinfobar-container", "hidden");
       is(hidden, "true", "nodeinfobar has been hidden");
     }
   },
@@ -99,10 +106,14 @@ const TEST_DATA = [
     desc: "Guides can be drawn around a given region (1)",
     options: {region: "padding"},
     checkHighlighter: function* (testActor) {
-      let topY1 = yield testActor.getHighlighterNodeAttribute("box-model-guide-top", "y1");
-      let rightX1 = yield testActor.getHighlighterNodeAttribute("box-model-guide-right", "x1");
-      let bottomY1 = yield testActor.getHighlighterNodeAttribute("box-model-guide-bottom", "y1");
-      let leftX1 = yield testActor.getHighlighterNodeAttribute("box-model-guide-left", "x1");
+      let topY1 = yield testActor.getHighlighterNodeAttribute(
+        "box-model-guide-top", "y1");
+      let rightX1 = yield testActor.getHighlighterNodeAttribute(
+        "box-model-guide-right", "x1");
+      let bottomY1 = yield testActor.getHighlighterNodeAttribute(
+        "box-model-guide-bottom", "y1");
+      let leftX1 = yield testActor.getHighlighterNodeAttribute(
+        "box-model-guide-left", "x1");
 
       let {points} = yield testActor.getHighlighterRegionPath("padding");
       points = points[0];
@@ -117,10 +128,14 @@ const TEST_DATA = [
     desc: "Guides can be drawn around a given region (2)",
     options: {region: "margin"},
     checkHighlighter: function* (testActor) {
-      let topY1 = yield testActor.getHighlighterNodeAttribute("box-model-guide-top", "y1");
-      let rightX1 = yield testActor.getHighlighterNodeAttribute("box-model-guide-right", "x1");
-      let bottomY1 = yield testActor.getHighlighterNodeAttribute("box-model-guide-bottom", "y1");
-      let leftX1 = yield testActor.getHighlighterNodeAttribute("box-model-guide-left", "x1");
+      let topY1 = yield testActor.getHighlighterNodeAttribute(
+        "box-model-guide-top", "y1");
+      let rightX1 = yield testActor.getHighlighterNodeAttribute(
+        "box-model-guide-right", "x1");
+      let bottomY1 = yield testActor.getHighlighterNodeAttribute(
+        "box-model-guide-bottom", "y1");
+      let leftX1 = yield testActor.getHighlighterNodeAttribute(
+        "box-model-guide-left", "x1");
 
       let {points} = yield testActor.getHighlighterRegionPath("margin");
       points = points[0];
@@ -170,7 +185,8 @@ const TEST_DATA = [
 ];
 
 add_task(function* () {
-  let {inspector, toolbox, testActor} = yield openInspectorForURL(TEST_URL);
+  let {inspector, toolbox, testActor} = yield openInspectorForURL(
+    "data:text/html;charset=utf-8," + encodeURI(TEST_URL));
 
   let divFront = yield getNodeFront("div", inspector);
 

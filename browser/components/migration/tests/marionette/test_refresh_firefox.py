@@ -230,17 +230,24 @@ class TestFirefoxRefresh(MarionetteTestCase):
             let cookieEnum = Services.cookies.getCookiesFromHost(arguments[0]);
             let cookie = null;
             while (cookieEnum.hasMoreElements()) {
+              let hostCookie = cookieEnum.getNext();
+              hostCookie.QueryInterface(Ci.nsICookie2);
+              // getCookiesFromHost returns any cookie from the BASE host.
+              if (hostCookie.rawHost != arguments[0])
+                continue;
               if (cookie != null) {
                 return "more than 1 cookie! That shouldn't happen!";
               }
-              cookie = cookieEnum.getNext();
-              cookie.QueryInterface(Ci.nsICookie2);
+              cookie = hostCookie;
             }
             return {path: cookie.path, name: cookie.name, value: cookie.value};
           } catch (ex) {
             return "got exception trying to fetch cookie: " + ex;
           }
         """, script_args=[self._cookieHost])
+        if not isinstance(cookieInfo, dict):
+            self.fail(cookieInfo)
+            return
         self.assertEqual(cookieInfo['path'], self._cookiePath)
         self.assertEqual(cookieInfo['value'], self._cookieValue)
         self.assertEqual(cookieInfo['name'], self._cookieName)

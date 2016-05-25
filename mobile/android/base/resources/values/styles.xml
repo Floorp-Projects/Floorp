@@ -662,8 +662,10 @@
         <item name="android:textStyle">bold</item>
     </style>
 
-    <style name="GeckoActionBar">
-        <item name="android:background">@drawable/ab_background</item>
+    <style name="GeckoActionBar" parent="ThemeOverlay.AppCompat.ActionBar">
+        <item name="android:colorBackground">@color/toolbar_grey</item>
+        <item name="colorAccent">@color/fennec_ui_orange</item>
+        <item name="colorControlNormal">@color/toolbar_icon_grey</item>
     </style>
 
     <style name="GeckoActionBar.Title">

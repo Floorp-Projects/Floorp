@@ -369,7 +369,7 @@ function getSampleResponse(req, port) {
         "Server: waitress"
       ],
       "status": {status: 200, statusText: "OK"},
-      "responseBody": JSON.stringify({"settings":{"cliquet.batch_max_requests":25}, "url":`http://localhost:${port}/v1/`, "documentation":"https://kinto.readthedocs.org/", "version":"1.5.1", "commit":"cbc6f58", "hello":"kinto"})
+      "responseBody": JSON.stringify({"settings":{"batch_max_requests":25}, "url":`http://localhost:${port}/v1/`, "documentation":"https://kinto.readthedocs.org/", "version":"1.5.1", "commit":"cbc6f58", "hello":"kinto"})
     },
     "GET:/v1/buckets/default/collections/test_collection/records?_sort=-last_modified": {
       "sampleHeaders": [

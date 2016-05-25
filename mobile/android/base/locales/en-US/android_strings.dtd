@@ -445,12 +445,12 @@ size. -->
 <!ENTITY share_image_failed "Unable to share this image">
 <!ENTITY save_as_pdf "Save as PDF">
 <!ENTITY print "Print">
-<!ENTITY find_in_page "Find in Page">
-<!ENTITY desktop_mode "Request Desktop Site">
+<!ENTITY find_in_page "Find in page">
+<!ENTITY desktop_mode "Request desktop site">
 <!ENTITY page "Page">
 <!ENTITY tools "Tools">
-<!ENTITY new_tab "New Tab">
-<!ENTITY new_private_tab "New Private Tab">
+<!ENTITY new_tab "New tab">
+<!ENTITY new_private_tab "New private tab">
 <!ENTITY close_all_tabs "Close All Tabs">
 <!ENTITY close_private_tabs "Close Private Tabs">
 <!ENTITY tabs_normal "Tabs">
