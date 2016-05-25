@@ -26,8 +26,6 @@ EXPORTS += [
 UNIFIED_SOURCES += [
     'AndroidBridge.cpp',
     'AndroidContentController.cpp',
-    'AndroidDirectTexture.cpp',
-    'AndroidGraphicBuffer.cpp',
     'AndroidJavaWrappers.cpp',
     'AndroidJNI.cpp',
     'AndroidJNIWrapper.cpp',
@@ -62,4 +60,7 @@ LOCAL_INCLUDES += [
 
 CXXFLAGS += ['-Wno-error=shadow']
 
+OS_LIBS += ['android']
+
 #DEFINES['DEBUG_WIDGETS'] = True
+
