@@ -65,7 +65,7 @@ var snapshotFormatters = {
         break;
 
       case 10:
-        statusText = "Windows XP";
+        statusText = (Services.appinfo.OS == "Darwin" ? "OS X 10.6 - 10.8" : "Windows XP");
         break;
     }
 
