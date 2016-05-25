@@ -41,10 +41,11 @@ public:
 
     const WeakPtr<const webgl::LinkedProgramInfo> mLinkInfo;
     const GLuint mLoc;
+    const size_t mArrayIndex;
     const WebGLActiveInfo* const mActiveInfo;
 
     WebGLUniformLocation(WebGLContext* webgl, const webgl::LinkedProgramInfo* linkInfo,
-                         GLuint loc, const WebGLActiveInfo* activeInfo);
+                         GLuint loc, size_t arrayIndex, const WebGLActiveInfo* activeInfo);
 
     bool ValidateForProgram(WebGLProgram* prog, WebGLContext* webgl,
                             const char* funcName) const;
