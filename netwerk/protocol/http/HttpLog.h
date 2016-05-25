@@ -28,11 +28,11 @@
 //
 // To enable logging (see prlog.h for full details):
 //
-//    set NSPR_LOG_MODULES=nsHttp:5
-//    set NSPR_LOG_FILE=http.log
+//    set MOZ_LOG=nsHttp:5
+//    set MOZ_LOG_FILE=http.log
 //
-// this enables LogLevel::Debug level information and places all output in
-// the file http.log
+// This enables LogLevel::Debug level information and places all output in
+// the file http.log.
 //
 namespace mozilla {
 namespace net {

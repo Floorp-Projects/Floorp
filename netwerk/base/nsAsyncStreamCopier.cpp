@@ -17,7 +17,7 @@ using namespace mozilla;
 
 #undef LOG
 //
-// NSPR_LOG_MODULES=nsStreamCopier:5
+// MOZ_LOG=nsStreamCopier:5
 //
 static LazyLogModule gStreamCopierLog("nsStreamCopier");
 #define LOG(args) MOZ_LOG(gStreamCopierLog, mozilla::LogLevel::Debug, args)
