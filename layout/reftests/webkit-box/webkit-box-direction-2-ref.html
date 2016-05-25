@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>
+    CSS Reference
+  </title>
+  <style>
+    .box {
+      display: flex;
+      border: 1px solid black;
+      margin: 5px 20px;
+      float: left; /* For testing in "rows" */
+      font: 10px serif;
+    }
+    .box > *:nth-child(1) {
+      background: turquoise;
+      margin: 2px 4px 6px 8px;
+      border: 1px solid blue;
+      padding: 4px 3px 2px 1px;
+    }
+    .box > *:nth-child(2) {
+      background: salmon;
+      margin: 9px 3px 7px 5px;
+      border: 2px solid purple;
+      padding: 6px 7px 8px 9px;
+    }
+
+    .rtl { direction: rtl; }
+
+    .horizNormal {
+      flex-direction: row;
+    }
+    .horizReverse {
+      flex-direction: row-reverse;
+    }
+    .vertNormal {
+      flex-direction: column;
+    }
+    .vertReverse {
+      flex-direction: column-reverse;
+    }
+    br { clear: both; }
+  </style>
+</head>
+<body>
+  <!-- FIRST ROW: '-webkit-box-orient: horizontal', default 'direction' -->
+  <div class="box horizNormal">
+    <div>a</div><div>b</div>
+  </div>
+  <div class="box horizReverse">
+    <div>a</div><div>b</div>
+  </div>
+
+  <br>
+
+  <!-- SECOND ROW: '-webkit-box-orient: horizontal', 'direction: rtl' -->
+  <div class="box horizNormal rtl">
+    <div>a</div><div>b</div>
+  </div>
+  <div class="box horizReverse rtl">
+    <div>a</div><div>b</div>
+  </div>
+
+  <br>
+
+  <!-- THIRD ROW: '-webkit-box-orient: vertical', default 'direction' -->
+  <div class="box vertNormal">
+    <div>a</div><div>b</div>
+  </div>
+  <div class="box vertReverse">
+    <div>a</div><div>b</div>
+  </div>
+
+  <br>
+
+  <!-- FOURTH ROW: '-webkit-box-orient: vertical', 'direction: rtl' -->
+  <div class="box vertNormal rtl">
+    <div>a</div><div>b</div>
+  </div>
+  <div class="box vertReverse rtl">
+    <div>a</div><div>b</div>
+  </div>
+</body>
+</html>
