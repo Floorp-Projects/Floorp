@@ -34,7 +34,6 @@ const ElectronKeysMapping = {
   "F22": "DOM_VK_F22",
   "F23": "DOM_VK_F23",
   "F24": "DOM_VK_F24",
-  "Plus": "DOM_VK_PLUS",
   "Space": "DOM_VK_SPACE",
   "Backspace": "DOM_VK_BACK_SPACE",
   "Delete": "DOM_VK_DELETE",
@@ -122,18 +121,50 @@ KeyShortcuts.parseElectronKey = function (window, str) {
     }
   }
 
-  if (typeof (key) === "string" && key.length === 1) {
+  // Plus is a special case. It's a character key and shouldn't be matched
+  // against a keycode as it is only accessible via Shift/Capslock
+  if (key === "Plus") {
+    key = "+";
+  }
+
+  if (typeof key === "string" && key.length === 1) {
     // Match any single character
     shortcut.key = key.toLowerCase();
   } else if (key in ElectronKeysMapping) {
     // Maps the others manually to DOM API DOM_VK_*
     key = ElectronKeysMapping[key];
     shortcut.keyCode = window.KeyboardEvent[key];
+    // Used only to stringify the shortcut
+    shortcut.keyCodeString = key;
   } else {
     throw new Error("Unsupported key: " + key);
   }
 
   return shortcut;
+};
+
+KeyShortcuts.stringify = function (shortcut) {
+  let list = [];
+  if (shortcut.alt) {
+    list.push("Alt");
+  }
+  if (shortcut.ctrl) {
+    list.push("Ctrl");
+  }
+  if (shortcut.meta) {
+    list.push("Cmd");
+  }
+  if (shortcut.shift) {
+    list.push("Shift");
+  }
+  let key;
+  if (shortcut.key) {
+    key = shortcut.key.toUpperCase();
+  } else {
+    key = shortcut.keyCodeString;
+  }
+  list.push(key);
+  return list.join("+");
 };
 
 KeyShortcuts.prototype = {
@@ -161,7 +192,12 @@ KeyShortcuts.prototype = {
     if (shortcut.keyCode) {
       return event.keyCode == shortcut.keyCode;
     }
-    return event.key.toLowerCase() == shortcut.key;
+    // For character keys, we match if the final character is the expected one.
+    // But for digits we also accept indirect match to please azerty keyboard,
+    // which requires Shift to be pressed to get digits.
+    return event.key.toLowerCase() == shortcut.key ||
+      (shortcut.key.match(/[0-9]/) &&
+       event.keyCode == shortcut.key.charCodeAt(0));
   },
 
   handleEvent(event) {

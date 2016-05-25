@@ -4,7 +4,7 @@ apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.1"
+    buildToolsVersion mozconfig.substs.ANDROID_BUILD_TOOLS_VERSION
 
     defaultConfig {
         targetSdkVersion 23
@@ -38,7 +38,7 @@ android {
 }
 
 dependencies {
-    compile 'com.android.support:support-v4:23.0.1'
+    compile "com.android.support:support-v4:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
 }
 
 apply plugin: 'idea'

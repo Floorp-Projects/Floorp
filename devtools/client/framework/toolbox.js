@@ -68,6 +68,9 @@ loader.lazyRequireGetter(this, "system",
   "devtools/shared/system");
 loader.lazyRequireGetter(this, "getPreferenceFront",
   "devtools/server/actors/preference", true);
+loader.lazyRequireGetter(this, "KeyShortcuts",
+  "devtools/client/shared/key-shortcuts", true);
+
 loader.lazyGetter(this, "osString", () => {
   return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
 });
@@ -417,19 +420,20 @@ Toolbox.prototype = {
       this.textboxContextMenuPopup.addEventListener("popupshowing",
         this._updateTextboxMenuItems, true);
 
+      var shortcuts = new KeyShortcuts({
+        window: this.doc.defaultView
+      });
       this._buildDockButtons();
-      this._buildOptions();
+      this._buildOptions(shortcuts);
       this._buildTabs();
       this._applyCacheSettings();
       this._applyServiceWorkersTestingSettings();
       this._addKeysToWindow();
-      this._addReloadKeys();
-      this._addHostListeners();
+      this._addReloadKeys(shortcuts);
+      this._addHostListeners(shortcuts);
       this._registerOverlays();
-      if (this._hostOptions && this._hostOptions.zoom === false) {
-        this._disableZoomKeys();
-      } else {
-        this._addZoomKeys();
+      if (!this._hostOptions || this._hostOptions.zoom === true) {
+        this._addZoomKeys(shortcuts);
         this._loadInitialZoom();
       }
       this._setToolbarKeyboardNavigation();
@@ -523,8 +527,8 @@ Toolbox.prototype = {
     }
   },
 
-  _buildOptions: function () {
-    let selectOptions = () => {
+  _buildOptions: function (shortcuts) {
+    let selectOptions = (name, event) => {
       // Flip back to the last used panel if we are already
       // on the options panel.
       if (this.currentToolId === "options" &&
@@ -533,11 +537,11 @@ Toolbox.prototype = {
       } else {
         this.selectTool("options");
       }
+      // Prevent the opening of bookmarks window on toolbox.options.key
+      event.preventDefault();
     };
-    let key = this.doc.getElementById("toolbox-options-key");
-    key.addEventListener("command", selectOptions, true);
-    let key2 = this.doc.getElementById("toolbox-options-key2");
-    key2.addEventListener("command", selectOptions, true);
+    shortcuts.on(toolboxStrings("toolbox.options.key"), selectOptions);
+    shortcuts.on(toolboxStrings("toolbox.help.key"), selectOptions);
   },
 
   _splitConsoleOnKeypress: function (e) {
@@ -551,6 +555,7 @@ Toolbox.prototype = {
       }
     }
   },
+
   /**
    * Add a shortcut key that should work when a split console
    * has focus to the toolbox.
@@ -574,34 +579,31 @@ Toolbox.prototype = {
     this.doc.getElementById("toolbox-keyset").appendChild(cloned);
   },
 
-  _addReloadKeys: function () {
+  _addReloadKeys: function (shortcuts) {
     [
-      ["toolbox-reload-key", false],
-      ["toolbox-reload-key2", false],
-      ["toolbox-force-reload-key", true],
-      ["toolbox-force-reload-key2", true]
+      ["reload", false],
+      ["reload2", false],
+      ["forceReload", true],
+      ["forceReload2", true]
     ].forEach(([id, force]) => {
-      this.doc.getElementById(id).addEventListener("command", () => {
-        this.reloadTarget(force);
-      }, true);
+      let key = toolboxStrings("toolbox." + id + ".key");
+      shortcuts.on(key, this.reloadTarget.bind(this, force));
     });
   },
 
-  _addHostListeners: function () {
-    let nextKey = this.doc.getElementById("toolbox-next-tool-key");
-    nextKey.addEventListener("command", this.selectNextTool.bind(this), true);
+  _addHostListeners: function (shortcuts) {
+    shortcuts.on(toolboxStrings("toolbox.nextTool.key"),
+                 this.selectNextTool.bind(this));
+    shortcuts.on(toolboxStrings("toolbox.previousTool.key"),
+                 this.selectPreviousTool.bind(this));
+    shortcuts.on(toolboxStrings("toolbox.minimize.key"),
+                 this._toggleMinimizeMode.bind(this));
+    shortcuts.on(toolboxStrings("toolbox.toggleHost.key"),
+                 (name, event) => {
+                   this.switchToPreviousHost();
+                   event.preventDefault();
+                 });
 
-    let prevKey = this.doc.getElementById("toolbox-previous-tool-key");
-    prevKey.addEventListener("command", this.selectPreviousTool.bind(this), true);
-
-    let minimizeKey = this.doc.getElementById("toolbox-minimize-key");
-    minimizeKey.addEventListener("command", this._toggleMinimizeMode, true);
-
-    let toggleKey = this.doc.getElementById("toolbox-toggle-host-key");
-    toggleKey.addEventListener("command", this.switchToPreviousHost.bind(this), true);
-
-    // Split console uses keypress instead of command so the event can be
-    // cancelled with stopPropagation on the keypress, and not preventDefault.
     this.doc.addEventListener("keypress", this._splitConsoleOnKeypress, false);
 
     this.doc.addEventListener("focus", this._onFocus, true);
@@ -653,50 +655,31 @@ Toolbox.prototype = {
   /**
    * Wire up the listeners for the zoom keys.
    */
-  _addZoomKeys: function () {
-    let inKey = this.doc.getElementById("toolbox-zoom-in-key");
-    inKey.addEventListener("command", this.zoomIn.bind(this), true);
+  _addZoomKeys: function (shortcuts) {
+    shortcuts.on(toolboxStrings("toolbox.zoomIn.key"),
+                 this.zoomIn.bind(this));
+    let zoomIn2 = toolboxStrings("toolbox.zoomIn2.key");
+    if (zoomIn2) {
+      shortcuts.on(zoomIn2, this.zoomIn.bind(this));
+    }
+    let zoomIn3 = toolboxStrings("toolbox.zoomIn2.key");
+    if (zoomIn3) {
+      shortcuts.on(zoomIn3, this.zoomIn.bind(this));
+    }
 
-    let inKey2 = this.doc.getElementById("toolbox-zoom-in-key2");
-    inKey2.addEventListener("command", this.zoomIn.bind(this), true);
+    shortcuts.on(toolboxStrings("toolbox.zoomOut.key"),
+                 this.zoomOut.bind(this));
+    let zoomOut2 = toolboxStrings("toolbox.zoomOut2.key");
+    if (zoomOut2) {
+      shortcuts.on(zoomOut2, this.zoomOut.bind(this));
+    }
 
-    let inKey3 = this.doc.getElementById("toolbox-zoom-in-key3");
-    inKey3.addEventListener("command", this.zoomIn.bind(this), true);
-
-    let outKey = this.doc.getElementById("toolbox-zoom-out-key");
-    outKey.addEventListener("command", this.zoomOut.bind(this), true);
-
-    let outKey2 = this.doc.getElementById("toolbox-zoom-out-key2");
-    outKey2.addEventListener("command", this.zoomOut.bind(this), true);
-
-    let resetKey = this.doc.getElementById("toolbox-zoom-reset-key");
-    resetKey.addEventListener("command", this.zoomReset.bind(this), true);
-
-    let resetKey2 = this.doc.getElementById("toolbox-zoom-reset-key2");
-    resetKey2.addEventListener("command", this.zoomReset.bind(this), true);
-  },
-
-  _disableZoomKeys: function () {
-    let inKey = this.doc.getElementById("toolbox-zoom-in-key");
-    inKey.setAttribute("disabled", "true");
-
-    let inKey2 = this.doc.getElementById("toolbox-zoom-in-key2");
-    inKey2.setAttribute("disabled", "true");
-
-    let inKey3 = this.doc.getElementById("toolbox-zoom-in-key3");
-    inKey3.setAttribute("disabled", "true");
-
-    let outKey = this.doc.getElementById("toolbox-zoom-out-key");
-    outKey.setAttribute("disabled", "true");
-
-    let outKey2 = this.doc.getElementById("toolbox-zoom-out-key2");
-    outKey2.setAttribute("disabled", "true");
-
-    let resetKey = this.doc.getElementById("toolbox-zoom-reset-key");
-    resetKey.setAttribute("disabled", "true");
-
-    let resetKey2 = this.doc.getElementById("toolbox-zoom-reset-key2");
-    resetKey2.setAttribute("disabled", "true");
+    shortcuts.on(toolboxStrings("toolbox.zoomReset.key"),
+                 this.zoomReset.bind(this));
+    let zoomReset2 = toolboxStrings("toolbox.zoomReset2.key");
+    if (zoomReset2) {
+      shortcuts.on(zoomReset2, this.zoomReset.bind(this));
+    }
   },
 
   /**
@@ -709,22 +692,25 @@ Toolbox.prototype = {
   /**
    * Increase zoom level of toolbox window - make things bigger.
    */
-  zoomIn: function () {
+  zoomIn: function (name, event) {
     this.setZoom(this.zoomValue + 0.1);
+    event.preventDefault();
   },
 
   /**
    * Decrease zoom level of toolbox window - make things smaller.
    */
-  zoomOut: function () {
+  zoomOut: function (name, event) {
     this.setZoom(this.zoomValue - 0.1);
+    event.preventDefault();
   },
 
   /**
    * Reset zoom level of the toolbox window.
    */
-  zoomReset: function () {
+  zoomReset: function (name, event) {
     this.setZoom(1);
+    event.preventDefault();
   },
 
   /**
@@ -900,10 +886,9 @@ Toolbox.prototype = {
   },
 
   _getMinimizeButtonShortcutTooltip: function () {
-    let key = this.doc.getElementById("toolbox-minimize-key")
-                      .getAttribute("key");
-    return "(" + (osString == "Darwin" ? "Cmd+Shift+" : "Ctrl+Shift+") +
-           key.toUpperCase() + ")";
+    let str = toolboxStrings("toolbox.minimize.key");
+    let key = KeyShortcuts.parseElectronKey(this.win, str);
+    return "(" + KeyShortcuts.stringify(key) + ")";
   },
 
   _onBottomHostMinimized: function () {
