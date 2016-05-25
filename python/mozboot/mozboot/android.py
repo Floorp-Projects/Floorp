@@ -15,7 +15,7 @@ import sys
 # mobile/android, respectively. Try to keep these in synch with the
 # build system and Mozilla's automation.
 ANDROID_TARGET_SDK = '23'
-ANDROID_BUILD_TOOLS_VERSION = '23.0.3'
+ANDROID_BUILD_TOOLS_VERSION = '23.0.1'
 
 # These are the "Android packages" needed for building Firefox for Android.
 # Use |android list sdk --extended| to see these identifiers.
