@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1167519
+-->
+<head>
+  <title>Test for bug 1167519</title>
+  <script type="application/javascript"
+    src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank"
+  href="https://bugzilla.mozilla.org/show_bug.cgi?id=1167519">Mozilla Bug
+  1167519</a>
+<pre id="test">
+<script>
+'use strict';
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv(
+  { 'set': [[ 'dom.animations-api.core.enabled', true ]] },
+  function() {
+    window.open('file_transitions_replacement_on_busy_frame.html');
+  });
+</script>
+</pre>
+</body>
+</html>
