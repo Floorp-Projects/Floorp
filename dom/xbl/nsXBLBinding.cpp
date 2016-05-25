@@ -58,6 +58,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ShadowRoot.h"
+#include "mozilla/ServoStyleSet.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -203,6 +204,10 @@ nsXBLBinding::InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElem
   // (2) The children's parent back pointer should not be to this synthetic root
   // but should instead point to the enclosing parent element.
   nsIDocument* doc = aElement->GetUncomposedDoc();
+  ServoStyleSet* servoStyleSet = nullptr;
+  if (nsIPresShell* presShell = aElement->OwnerDoc()->GetShell()) {
+    servoStyleSet = presShell->StyleSet()->GetAsServo();
+  }
   bool allowScripts = AllowScripts();
 
   nsAutoScriptBlocker scriptBlocker;
@@ -233,6 +238,10 @@ nsXBLBinding::InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElem
     if (xuldoc)
       xuldoc->AddSubtreeToDocument(child);
 #endif
+
+    if (servoStyleSet) {
+      servoStyleSet->RestyleSubtree(child);
+    }
   }
 }
 
