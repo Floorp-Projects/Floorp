@@ -52,6 +52,7 @@ if not CONFIG['JS_STANDALONE']:
         ]
         DISABLE_STL_WRAPPING = True
         OS_LIBS += [
+            'psapi',
             'version',
         ]
 
