@@ -18,6 +18,7 @@ struct StartSessionRequest
   nsString sessionId;
   nsString origin;
   nsString deviceId;
+  uint64_t windowId;
 };
 
 struct SendSessionMessageRequest
@@ -72,7 +73,7 @@ parent:
 
   async PPresentationRequest(PresentationIPCRequest aRequest);
 
-  async NotifyReceiverReady(nsString aSessionId);
+  async NotifyReceiverReady(nsString aSessionId, uint64_t aWindowId);
 };
 
 } // namespace dom
