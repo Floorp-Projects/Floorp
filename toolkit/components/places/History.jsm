@@ -651,27 +651,6 @@ var clear = Task.async(function* (db) {
 });
 
 /**
- * Remove a list of pages from `moz_places` by their id.
- *
- * @param db: (Sqlite connection)
- *      The database.
- * @param idList: (Array of integers)
- *      The `moz_places` identifiers for the places to remove.
- * @return (Promise)
- */
-var removePagesById = Task.async(function*(db, idList) {
-  if (idList.length == 0) {
-    return;
-  }
-  // Note, we are already in a transaction, since callers create it.
-  yield db.execute(`DELETE FROM moz_places
-                    WHERE id IN ( ${ sqlList(idList) } )`);
-  // Hosts accumulated during the places delete are updated through a trigger
-  // (see nsPlacesTriggers.h).
-  yield db.execute(`DELETE FROM moz_updatehosts_temp`);
-});
-
-/**
  * Clean up pages whose history has been modified, by either
  * removing them entirely (if they are marked for removal,
  * typically because all visits have been removed and there
@@ -694,7 +673,25 @@ var removePagesById = Task.async(function*(db, idList) {
  */
 var cleanupPages = Task.async(function*(db, pages) {
   yield invalidateFrecencies(db, pages.filter(p => p.hasForeign || p.hasVisits).map(p => p.id));
-  yield removePagesById(db, pages.filter(p => !p.hasForeign && !p.hasVisits).map(p => p.id));
+
+  let pageIdsToRemove = pages.filter(p => !p.hasForeign && !p.hasVisits).map(p => p.id);
+  if (pageIdsToRemove.length > 0) {
+    let idsList = sqlList(pageIdsToRemove);
+    // Note, we are already in a transaction, since callers create it.
+    yield db.execute(`DELETE FROM moz_places WHERE id IN ( ${ idsList } )`);
+    // Hosts accumulated during the places delete are updated through a trigger
+    // (see nsPlacesTriggers.h).
+    yield db.executeCached(`DELETE FROM moz_updatehosts_temp`);
+
+    // Expire orphans.
+    yield db.executeCached(`
+      DELETE FROM moz_favicons WHERE NOT EXISTS
+        (SELECT 1 FROM moz_places WHERE favicon_id = moz_favicons.id)`);
+    yield db.execute(`DELETE FROM moz_annos
+                      WHERE place_id IN ( ${ idsList } )`);
+    yield db.execute(`DELETE FROM moz_inputhistory
+                      WHERE place_id IN ( ${ idsList } )`);
+  }
 });
 
 /**
