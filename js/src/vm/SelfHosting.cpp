@@ -3069,8 +3069,13 @@ js::SelfHostedFunction(JSContext* cx, HandlePropertyName propName)
 bool
 js::IsSelfHostedFunctionWithName(JSFunction* fun, JSAtom* name)
 {
-    return fun->isSelfHostedBuiltin() &&
-           fun->getExtendedSlot(LAZY_FUNCTION_NAME_SLOT).toString() == name;
+    return fun->isSelfHostedBuiltin() && GetSelfHostedFunctionName(fun) == name;
+}
+
+JSAtom*
+js::GetSelfHostedFunctionName(JSFunction* fun)
+{
+    return &fun->getExtendedSlot(LAZY_FUNCTION_NAME_SLOT).toString()->asAtom();
 }
 
 static_assert(JSString::MAX_LENGTH <= INT32_MAX,
