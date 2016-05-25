@@ -2108,25 +2108,10 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
   MOZ_ASSERT(keyEvent,
     "DOM event must have WidgetKeyboardEvent for its internal event");
 
-  bool dropDownMenuOnUpDown;
-  bool dropDownMenuOnSpace;
-#ifdef XP_MACOSX
-  dropDownMenuOnUpDown = IsInDropDownMode() && !mComboboxFrame->IsDroppedDown();
-  dropDownMenuOnSpace = !keyEvent->IsAlt() && !keyEvent->IsControl() &&
-    !keyEvent->IsMeta();
-#else
-  dropDownMenuOnUpDown = keyEvent->IsAlt();
-  dropDownMenuOnSpace = IsInDropDownMode() && !mComboboxFrame->IsDroppedDown();
-#endif
-  if ((dropDownMenuOnUpDown &&
-       (keyEvent->mKeyCode == NS_VK_UP || keyEvent->mKeyCode == NS_VK_DOWN)) ||
-      (dropDownMenuOnSpace && keyEvent->mKeyCode == NS_VK_SPACE)) {
-    DropDownToggleKey(aKeyEvent);
-    if (keyEvent->DefaultPrevented()) {
-      return NS_OK;
-    }
-  }
   if (keyEvent->IsAlt()) {
+    if (keyEvent->mKeyCode == NS_VK_UP || keyEvent->mKeyCode == NS_VK_DOWN) {
+      DropDownToggleKey(aKeyEvent);
+    }
     return NS_OK;
   }
 
