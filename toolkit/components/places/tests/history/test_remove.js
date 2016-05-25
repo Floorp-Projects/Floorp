@@ -342,6 +342,20 @@ add_task(function* test_error_cases() {
   }
 });
 
-function run_test() {
-  run_next_test();
-}
+add_task(function* test_orphans() {
+  let uri = NetUtil.newURI("http://moz.org/");
+  yield PlacesTestUtils.addVisits({ uri });
+
+  PlacesUtils.favicons.setAndFetchFaviconForPage(
+    uri, SMALLPNG_DATA_URI, true,  PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+    null, Services.scriptSecurityManager.getSystemPrincipal());
+  PlacesUtils.annotations.setPageAnnotation(uri, "test", "restval", 0,
+                                            PlacesUtils.annotations.EXPIRE_NEVER);
+
+  yield PlacesUtils.history.remove(uri);
+  Assert.ok(!(yield PlacesTestUtils.isPageInDB(uri)), "Page should have been removed");
+  let db = yield PlacesUtils.promiseDBConnection();
+  let rows = yield db.execute(`SELECT (SELECT count(*) FROM moz_annos) +
+                                      (SELECT count(*) FROM moz_favicons) AS count`);
+  Assert.equal(rows[0].getResultByName("count"), 0, "Should not find orphans");
+});
