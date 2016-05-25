@@ -293,7 +293,7 @@ class MacArtifactJob(ArtifactJob):
                 # 'libreplace_malloc.dylib',
                 'libsoftokn3.dylib',
                 'plugin-container.app/Contents/MacOS/plugin-container',
-                'updater.app/Contents/MacOS/updater',
+                'updater.app/Contents/MacOS/org.mozilla.updater',
                 # 'xpcshell',
                 'XUL',
             ])
