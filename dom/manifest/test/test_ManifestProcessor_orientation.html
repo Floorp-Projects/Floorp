@@ -22,7 +22,7 @@ typeTests.forEach((type) => {
     orientation: type
   });
   var result = processor.process(data);
-  is(result.orientation, '', expected);
+  is(result.orientation, undefined, expected);
 });
 
 var validOrientations = [
@@ -69,7 +69,7 @@ invalidOrientations.forEach((orientation) => {
   var expected = `Expect orientation to be empty string: ${orientation}.`;
   data.jsonText = JSON.stringify({ orientation });
   var result = processor.process(data);
-  is(result.orientation, "", expected);
+  is(result.orientation, undefined, expected);
 });
 
 //Trim tests

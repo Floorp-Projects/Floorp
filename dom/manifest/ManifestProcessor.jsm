@@ -149,8 +149,7 @@ this.ManifestProcessor = { // jshint ignore:line
       if (value && typeof value === "string" && this.orientationTypes.has(value.toLowerCase())) {
         return value.toLowerCase();
       }
-      // The spec special-cases orientation to return the empty string.
-      return '';
+      return undefined;
     }
 
     function processDisplayMember() {
