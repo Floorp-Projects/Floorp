@@ -36,7 +36,7 @@ gfxSurfaceDrawable::DrawWithSamplingRect(DrawTarget* aDrawTarget,
                                          const gfxRect& aFillRect,
                                          const gfxRect& aSamplingRect,
                                          ExtendMode aExtendMode,
-                                         const Filter& aFilter,
+                                         const SamplingFilter aSamplingFilter,
                                          gfxFloat aOpacity)
 {
   if (!mSourceSurface) {
@@ -55,7 +55,7 @@ gfxSurfaceDrawable::DrawWithSamplingRect(DrawTarget* aDrawTarget,
   }
 
   DrawInternal(aDrawTarget, aOp, aAntialiasMode, aFillRect, intRect,
-               ExtendMode::CLAMP, aFilter, aOpacity, gfxMatrix());
+               ExtendMode::CLAMP, aSamplingFilter, aOpacity, gfxMatrix());
   return true;
 }
 
@@ -63,7 +63,7 @@ bool
 gfxSurfaceDrawable::Draw(gfxContext* aContext,
                          const gfxRect& aFillRect,
                          ExtendMode aExtendMode,
-                         const Filter& aFilter,
+                         const SamplingFilter aSamplingFilter,
                          gfxFloat aOpacity,
                          const gfxMatrix& aTransform)
 
@@ -74,7 +74,7 @@ gfxSurfaceDrawable::Draw(gfxContext* aContext,
 
   DrawInternal(aContext->GetDrawTarget(), aContext->CurrentOp(),
                aContext->CurrentAntialiasMode(), aFillRect, IntRect(),
-               aExtendMode, aFilter, aOpacity, aTransform);
+               aExtendMode, aSamplingFilter, aOpacity, aTransform);
   return true;
 }
 
@@ -85,7 +85,7 @@ gfxSurfaceDrawable::DrawInternal(DrawTarget* aDrawTarget,
                                  const gfxRect& aFillRect,
                                  const IntRect& aSamplingRect,
                                  ExtendMode aExtendMode,
-                                 const Filter& aFilter,
+                                 const SamplingFilter aSamplingFilter,
                                  gfxFloat aOpacity,
                                  const gfxMatrix& aTransform)
 {
@@ -93,7 +93,7 @@ gfxSurfaceDrawable::DrawInternal(DrawTarget* aDrawTarget,
     patternTransform.Invert();
 
     SurfacePattern pattern(mSourceSurface, aExtendMode,
-                           patternTransform, aFilter, aSamplingRect);
+                           patternTransform, aSamplingFilter, aSamplingRect);
 
     Rect fillRect = ToRect(aFillRect);
 
@@ -115,7 +115,7 @@ gfxCallbackDrawable::gfxCallbackDrawable(gfxDrawingCallback* aCallback,
 }
 
 already_AddRefed<gfxSurfaceDrawable>
-gfxCallbackDrawable::MakeSurfaceDrawable(const Filter aFilter)
+gfxCallbackDrawable::MakeSurfaceDrawable(const SamplingFilter aSamplingFilter)
 {
     SurfaceFormat format =
         gfxPlatform::GetPlatform()->Optimal2DFormatForContent(gfxContentType::COLOR_ALPHA);
@@ -127,7 +127,8 @@ gfxCallbackDrawable::MakeSurfaceDrawable(const Filter aFilter)
 
     RefPtr<gfxContext> ctx = gfxContext::ForDrawTarget(dt);
     MOZ_ASSERT(ctx); // already checked for target above
-    Draw(ctx, gfxRect(0, 0, mSize.width, mSize.height), ExtendMode::CLAMP, aFilter);
+    Draw(ctx, gfxRect(0, 0, mSize.width, mSize.height), ExtendMode::CLAMP,
+         aSamplingFilter);
 
     RefPtr<SourceSurface> surface = dt->Snapshot();
     if (surface) {
@@ -154,20 +155,21 @@ bool
 gfxCallbackDrawable::Draw(gfxContext* aContext,
                           const gfxRect& aFillRect,
                           ExtendMode aExtendMode,
-                          const Filter& aFilter,
+                          const SamplingFilter aSamplingFilter,
                           gfxFloat aOpacity,
                           const gfxMatrix& aTransform)
 {
     if ((IsRepeatingExtendMode(aExtendMode) || aOpacity != 1.0) && !mSurfaceDrawable) {
-        mSurfaceDrawable = MakeSurfaceDrawable(aFilter);
+        mSurfaceDrawable = MakeSurfaceDrawable(aSamplingFilter);
     }
 
     if (mSurfaceDrawable)
-        return mSurfaceDrawable->Draw(aContext, aFillRect, aExtendMode, aFilter,
+        return mSurfaceDrawable->Draw(aContext, aFillRect, aExtendMode,
+                                      aSamplingFilter,
                                       aOpacity, aTransform);
 
     if (mCallback)
-        return (*mCallback)(aContext, aFillRect, aFilter, aTransform);
+        return (*mCallback)(aContext, aFillRect, aSamplingFilter, aTransform);
 
     return false;
 }
@@ -194,10 +196,11 @@ public:
 
     virtual bool operator()(gfxContext* aContext,
                               const gfxRect& aFillRect,
-                              const Filter& aFilter,
+                              const SamplingFilter aSamplingFilter,
                               const gfxMatrix& aTransform = gfxMatrix())
     {
-        return mDrawable->Draw(aContext, aFillRect, ExtendMode::CLAMP, aFilter, 1.0,
+        return mDrawable->Draw(aContext, aFillRect, ExtendMode::CLAMP,
+                               aSamplingFilter, 1.0,
                                aTransform);
     }
 private:
@@ -218,7 +221,7 @@ bool
 gfxPatternDrawable::Draw(gfxContext* aContext,
                          const gfxRect& aFillRect,
                          ExtendMode aExtendMode,
-                         const Filter& aFilter,
+                         const SamplingFilter aSamplingFilter,
                          gfxFloat aOpacity,
                          const gfxMatrix& aTransform)
 {
@@ -236,7 +239,8 @@ gfxPatternDrawable::Draw(gfxContext* aContext,
         // those things, so we use them here. Drawing mPattern into the surface
         // will happen through this Draw() method with aRepeat = false.
         RefPtr<gfxCallbackDrawable> callbackDrawable = MakeCallbackDrawable();
-        return callbackDrawable->Draw(aContext, aFillRect, aExtendMode, aFilter,
+        return callbackDrawable->Draw(aContext, aFillRect, aExtendMode,
+                                      aSamplingFilter,
                                       aOpacity, aTransform);
     }
 

@@ -98,7 +98,7 @@ TiledContentHost::~TiledContentHost()
 }
 
 already_AddRefed<TexturedEffect>
-TiledContentHost::GenEffect(const gfx::Filter& aFilter)
+TiledContentHost::GenEffect(const gfx::SamplingFilter aSamplingFilter)
 {
   // If we can use hwc for this TiledContentHost, it implies that we have exactly
   // one high precision tile. Please check TiledContentHost::GetRenderState() for
@@ -113,7 +113,7 @@ TiledContentHost::GenEffect(const gfx::Filter& aFilter)
 
   return CreateTexturedEffect(tile.mTextureSource,
                               nullptr,
-                              aFilter,
+                              aSamplingFilter,
                               true,
                               tile.mTextureHost->GetRenderState());
 }
@@ -398,7 +398,7 @@ TiledContentHost::Composite(LayerComposite* aLayer,
                             EffectChain& aEffectChain,
                             float aOpacity,
                             const gfx::Matrix4x4& aTransform,
-                            const gfx::Filter& aFilter,
+                            const gfx::SamplingFilter aSamplingFilter,
                             const gfx::IntRect& aClipRect,
                             const nsIntRegion* aVisibleRegion /* = nullptr */)
 {
@@ -445,8 +445,8 @@ TiledContentHost::Composite(LayerComposite* aLayer,
   RenderLayerBuffer(mLowPrecisionTiledBuffer,
                     lowPrecisionOpacityReduction < 1.0f ? &backgroundColor : nullptr,
                     aEffectChain, lowPrecisionOpacityReduction * aOpacity,
-                    aFilter, aClipRect, *renderRegion, aTransform);
-  RenderLayerBuffer(mTiledBuffer, nullptr, aEffectChain, aOpacity, aFilter,
+                    aSamplingFilter, aClipRect, *renderRegion, aTransform);
+  RenderLayerBuffer(mTiledBuffer, nullptr, aEffectChain, aOpacity, aSamplingFilter,
                     aClipRect, *renderRegion, aTransform);
 }
 
@@ -456,7 +456,7 @@ TiledContentHost::RenderTile(TileHost& aTile,
                              EffectChain& aEffectChain,
                              float aOpacity,
                              const gfx::Matrix4x4& aTransform,
-                             const gfx::Filter& aFilter,
+                             const gfx::SamplingFilter aSamplingFilter,
                              const gfx::IntRect& aClipRect,
                              const nsIntRegion& aScreenRegion,
                              const IntPoint& aTextureOffset,
@@ -484,7 +484,7 @@ TiledContentHost::RenderTile(TileHost& aTile,
   RefPtr<TexturedEffect> effect =
     CreateTexturedEffect(aTile.mTextureSource,
                          aTile.mTextureSourceOnWhite,
-                         aFilter,
+                         aSamplingFilter,
                          true,
                          aTile.mTextureHost->GetRenderState());
   if (!effect) {
@@ -519,7 +519,7 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
                                     const Color* aBackgroundColor,
                                     EffectChain& aEffectChain,
                                     float aOpacity,
-                                    const gfx::Filter& aFilter,
+                                    const gfx::SamplingFilter aSamplingFilter,
                                     const gfx::IntRect& aClipRect,
                                     nsIntRegion aVisibleRegion,
                                     gfx::Matrix4x4 aTransform)
@@ -602,7 +602,7 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
 
     tileDrawRegion.ScaleRoundOut(resolution, resolution);
     RenderTile(tile, aEffectChain, aOpacity,
-               aTransform, aFilter, aClipRect, tileDrawRegion,
+               aTransform, aSamplingFilter, aClipRect, tileDrawRegion,
                tileOffset * resolution, aLayerBuffer.GetTileSize(),
                gfx::Rect(visibleRect.x, visibleRect.y,
                          visibleRect.width, visibleRect.height));
