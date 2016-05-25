@@ -150,17 +150,10 @@ struct FlattenedConstraints : public NormalizedConstraintSet
 class MediaConstraintsHelper
 {
 protected:
-  template<class ValueType, class ConstrainRange>
-  static uint32_t FitnessDistance(ValueType aN, const ConstrainRange& aRange);
-  static uint32_t FitnessDistance(int32_t aN,
-      const dom::OwningLongOrConstrainLongRange& aConstraint, bool aAdvanced);
-  static uint32_t FitnessDistance(double aN,
-      const dom::OwningDoubleOrConstrainDoubleRange& aConstraint, bool aAdvanced);
+  template<class ValueType, class NormalizedRange>
+  static uint32_t FitnessDistance(ValueType aN, const NormalizedRange& aRange);
   static uint32_t FitnessDistance(nsString aN,
-    const dom::OwningStringOrStringSequenceOrConstrainDOMStringParameters& aConstraint,
-    bool aAdvanced);
-  static uint32_t FitnessDistance(nsString aN,
-      const dom::ConstrainDOMStringParameters& aParams);
+      const NormalizedConstraintSet::StringRange& aConstraint);
 
   static uint32_t
   GetMinimumFitnessDistance(const dom::MediaTrackConstraintSet &aConstraints,
