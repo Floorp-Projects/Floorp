@@ -6,7 +6,7 @@ apply plugin: 'checkstyle'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.1"
+    buildToolsVersion mozconfig.substs.ANDROID_BUILD_TOOLS_VERSION
 
     defaultConfig {
         targetSdkVersion 23
@@ -171,30 +171,30 @@ android {
 }
 
 dependencies {
-    compile 'com.android.support:support-v4:23.0.1'
-    compile 'com.android.support:appcompat-v7:23.0.1'
-    compile 'com.android.support:cardview-v7:23.0.1'
-    compile 'com.android.support:recyclerview-v7:23.0.1'
-    compile 'com.android.support:design:23.0.1'
+    compile "com.android.support:support-v4:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
+    compile "com.android.support:appcompat-v7:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
+    compile "com.android.support:cardview-v7:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
+    compile "com.android.support:recyclerview-v7:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
+    compile "com.android.support:design:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
 
     if (mozconfig.substs.MOZ_NATIVE_DEVICES) {
-        compile 'com.android.support:mediarouter-v7:23.0.1'
-        compile 'com.google.android.gms:play-services-basement:8.1.0'
-        compile 'com.google.android.gms:play-services-base:8.1.0'
-        compile 'com.google.android.gms:play-services-cast:8.1.0'
+        compile "com.android.support:mediarouter-v7:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
+        compile "com.google.android.gms:play-services-basement:${mozconfig.substs.ANDROID_GOOGLE_PLAY_SERVICES_VERSION}"
+        compile "com.google.android.gms:play-services-base:${mozconfig.substs.ANDROID_GOOGLE_PLAY_SERVICES_VERSION}"
+        compile "com.google.android.gms:play-services-cast:${mozconfig.substs.ANDROID_GOOGLE_PLAY_SERVICES_VERSION}"
     }
 
     if (mozconfig.substs.MOZ_INSTALL_TRACKING) {
-        compile 'com.google.android.gms:play-services-ads:8.1.0'
-        compile 'com.google.android.gms:play-services-analytics:8.1.0'
-        compile 'com.google.android.gms:play-services-appindexing:8.1.0'
-        compile 'com.google.android.gms:play-services-basement:8.1.0'
+        compile "com.google.android.gms:play-services-ads:${mozconfig.substs.ANDROID_GOOGLE_PLAY_SERVICES_VERSION}"
+        compile "com.google.android.gms:play-services-analytics:${mozconfig.substs.ANDROID_GOOGLE_PLAY_SERVICES_VERSION}"
+        compile "com.google.android.gms:play-services-appindexing:${mozconfig.substs.ANDROID_GOOGLE_PLAY_SERVICES_VERSION}"
+        compile "com.google.android.gms:play-services-basement:${mozconfig.substs.ANDROID_GOOGLE_PLAY_SERVICES_VERSION}"
     }
 
     if (mozconfig.substs.MOZ_ANDROID_GCM) {
-        compile 'com.google.android.gms:play-services-basement:8.1.0'
-        compile 'com.google.android.gms:play-services-base:8.1.0'
-        compile 'com.google.android.gms:play-services-gcm:8.1.0'
+        compile "com.google.android.gms:play-services-basement:${mozconfig.substs.ANDROID_GOOGLE_PLAY_SERVICES_VERSION}"
+        compile "com.google.android.gms:play-services-base:${mozconfig.substs.ANDROID_GOOGLE_PLAY_SERVICES_VERSION}"
+        compile "com.google.android.gms:play-services-gcm:${mozconfig.substs.ANDROID_GOOGLE_PLAY_SERVICES_VERSION}"
     }
 
     // Gradle based builds include LeakCanary.  Gradle based tests include the no-op version.  Mach
