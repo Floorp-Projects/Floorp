@@ -106,22 +106,37 @@ def build_backends_choices(help):
     return tuple(backends)
 
 
-option('--enable-build-backend', nargs='+', choices=build_backends_choices,
-       help='Enable additional build backends')
+@deprecated_option('--enable-build-backend', nargs='+',
+                   choices=build_backends_choices)
+def build_backend(backends):
+    if backends:
+        return tuple('+%s' % b for b in backends)
 
-@depends('--enable-build-backend', '--enable-artifact-builds', target,
-         compile_environment)
-def build_backend(backends, artifact_builds, target, compile_environment):
+imply_option('--build-backends', build_backend)
+
+
+@depends('--enable-artifact-builds', '--disable-compile-environment', '--help')
+@imports('sys')
+def build_backend_defaults(artifact_builds, compile_environment, _):
     if artifact_builds:
         all_backends = ['FasterMake+RecursiveMake']
     else:
         all_backends = ['RecursiveMake', 'FasterMake']
-    if target.os == 'WINNT' and compile_environment:
+    # Normally, we'd use target.os == 'WINNT', but a dependency on target
+    # would require target to depend on --help, as well as host and shell,
+    # and this is not a can of worms we can open at the moment.
+    if sys.platform == 'win32' and compile_environment:
         all_backends.append('VisualStudio')
-    all_backends.extend(backends)
-    return unique_list(all_backends)
+    return tuple(all_backends)
 
-set_config('BUILD_BACKENDS', build_backend)
+option('--build-backends', nargs='+', default=build_backend_defaults,
+       choices=build_backends_choices, help='Build backends to generate')
+
+@depends('--build-backends')
+def build_backends(backends):
+    return backends
+
+set_config('BUILD_BACKENDS', build_backends)
 
 
 # Awk detection
