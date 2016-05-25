@@ -83,6 +83,22 @@ bool Gecko_IsUnvisitedLink(RawGeckoElement* element);
 bool Gecko_IsRootElement(RawGeckoElement* element);
 nsIAtom* Gecko_LocalName(RawGeckoElement* element);
 nsIAtom* Gecko_Namespace(RawGeckoElement* element);
+nsIAtom* Gecko_GetElementId(RawGeckoElement* element);
+
+// Gets the class or class list (if any) of the Element.
+//
+// The calling convention here is rather hairy, and is optimized for getting
+// Servo the information it needs for hot calls.
+//
+// The return value indicates the number of classes. If zero, neither outparam
+// is valid. If one, the class_ outparam is filled with the atom of the class.
+// If two or more, the classList outparam is set to point to an array of atoms
+// representing the class list.
+//
+// The array is borrowed and the atoms are not addrefed. These values can be
+// invalidated by any DOM mutation. Use them in a tight scope.
+uint32_t Gecko_ClassOrClassList(RawGeckoElement* element,
+                                nsIAtom** class_, nsIAtom*** classList);
 
 // Node data.
 ServoNodeData* Gecko_GetNodeData(RawGeckoNode* node);
