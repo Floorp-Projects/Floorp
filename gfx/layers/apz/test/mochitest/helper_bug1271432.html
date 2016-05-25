@@ -43,11 +43,8 @@ function driveTest() {
   }
 }
 
-window.onload = function() {
-  waitForAllPaints(function() {
-    flushApzRepaints(driveTest);
-  });
-}
+waitUntilApzStable().then(driveTest);
+
 </script>
 <style>
 a#with_after_content {

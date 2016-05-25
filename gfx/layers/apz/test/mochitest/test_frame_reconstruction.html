@@ -223,7 +223,7 @@ if (!apzEnabled) {
   SimpleTest.finish();
 } else {
   SimpleTest.expectAssertions(0, 1); // this test triggers an assertion, see bug 1247050
-  SimpleTest.waitForFocus(driveTest, window);
+  waitUntilApzStable().then(driveTest);
 }
 
 </script>

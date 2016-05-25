@@ -39,11 +39,7 @@ function driveTest() {
   gTestContinuation.next();
 }
 
-window.onload = function() {
-  waitForAllPaints(function() {
-    flushApzRepaints(driveTest);
-  });
-}
+waitUntilApzStable().then(driveTest);
 
   </script>
 </head>

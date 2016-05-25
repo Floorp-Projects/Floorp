@@ -72,11 +72,8 @@ function driveTest() {
   }
 }
 
-window.onload = function() {
-  waitForAllPaints(function() {
-    flushApzRepaints(driveTest);
-  });
-}
+waitUntilApzStable().then(driveTest);
+
   </script>
 </head>
 <body style="height:5000px; margin:0">
