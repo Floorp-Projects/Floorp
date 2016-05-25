@@ -1559,7 +1559,9 @@ nsPrintEngine::FirePrintingErrorEvent(nsresult aPrintError)
   asyncDispatcher->RunDOMEventWhenSafe();
 
   // Inform any progress listeners of the Error.
-  mPrt->DoOnStatusChange(aPrintError);
+  if (mPrt) {
+    mPrt->DoOnStatusChange(aPrintError);
+  }
 }
 
 //-----------------------------------------------------------------

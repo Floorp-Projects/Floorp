@@ -98,6 +98,14 @@ CreateMenuItemWidget(WidgetNodeType aShellType)
 }
 
 static GtkWidget*
+CreateProgressWidget()
+{
+  GtkWidget* widget = gtk_progress_bar_new();
+  AddToWindowContainer(widget);
+  return widget;
+}
+
+static GtkWidget*
 CreateWidget(WidgetNodeType aWidgetType)
 {
   switch (aWidgetType) {
@@ -105,16 +113,18 @@ CreateWidget(WidgetNodeType aWidgetType)
       return CreateWindowWidget();
     case MOZ_GTK_WINDOW_CONTAINER:
       return CreateWindowContainerWidget();
+    case MOZ_GTK_CHECKBUTTON_CONTAINER:
+      return CreateCheckboxWidget();
+    case MOZ_GTK_PROGRESSBAR:
+      return CreateProgressWidget();
+    case MOZ_GTK_RADIOBUTTON_CONTAINER:
+      return CreateRadiobuttonWidget();
     case MOZ_GTK_SCROLLBAR_HORIZONTAL:
       return CreateScrollbarWidget(aWidgetType,
                                    GTK_ORIENTATION_HORIZONTAL);
     case MOZ_GTK_SCROLLBAR_VERTICAL:
       return CreateScrollbarWidget(aWidgetType,
                                    GTK_ORIENTATION_VERTICAL);
-    case MOZ_GTK_CHECKBUTTON_CONTAINER:
-      return CreateCheckboxWidget();
-    case MOZ_GTK_RADIOBUTTON_CONTAINER:
-      return CreateRadiobuttonWidget();
     case MOZ_GTK_MENUBAR:
       return CreateMenuBarWidget();
     case MOZ_GTK_MENUPOPUP:
@@ -241,6 +251,22 @@ GetStyleInternal(WidgetNodeType aNodeType)
                                MOZ_GTK_CHECKBUTTON_CONTAINER,
                                GTK_STYLE_CLASS_CHECK,
                                MOZ_GTK_CHECKBUTTON_CONTAINER);
+
+    case MOZ_GTK_PROGRESSBAR:
+      /* Root CSS node / widget for progress bars */
+      break;
+    case MOZ_GTK_PROGRESS_TROUGH:
+      /* Progress bar background (trough) */
+      return GetChildNodeStyle(aNodeType,
+                               MOZ_GTK_PROGRESSBAR,
+                               GTK_STYLE_CLASS_TROUGH,
+                               MOZ_GTK_PROGRESSBAR);
+    case MOZ_GTK_PROGRESS_CHUNK:
+      /* Actual progress bar indicator for Gtk3.20+ only. */
+      return GetChildNodeStyle(MOZ_GTK_PROGRESS_CHUNK,
+                               MOZ_GTK_PROGRESSBAR,
+                               "progress",
+                               MOZ_GTK_PROGRESS_TROUGH);
     default:
       break;
   }

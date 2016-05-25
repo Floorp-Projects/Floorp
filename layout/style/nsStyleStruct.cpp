@@ -1422,6 +1422,8 @@ nsStylePosition::nsStylePosition(StyleStructContext aContext)
   , mFlexGrow(0.0f)
   , mFlexShrink(1.0f)
   , mZIndex(eStyleUnit_Auto)
+  , mGridColumnGap(nscoord(0), nsStyleCoord::CoordConstructor)
+  , mGridRowGap(nscoord(0), nsStyleCoord::CoordConstructor)
 {
   MOZ_COUNT_CTOR(nsStylePosition);
 

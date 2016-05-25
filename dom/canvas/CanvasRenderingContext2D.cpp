@@ -3582,6 +3582,22 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
       // throughout the text layout process
     }
 
+    mCtx->EnsureTarget();
+
+    // If the operation is 'fill' with a simple color, we defer to gfxTextRun
+    // which will handle color/svg-in-ot fonts appropriately. Such fonts will
+    // not render well via the code below.
+    if (mOp == CanvasRenderingContext2D::TextDrawOperation::FILL &&
+        mState->StyleIsColor(CanvasRenderingContext2D::Style::FILL)) {
+      RefPtr<gfxContext> thebes =
+        gfxContext::ForDrawTargetWithTransform(mCtx->mTarget);
+      nscolor fill = mState->colorStyles[CanvasRenderingContext2D::Style::FILL];
+      thebes->SetColor(Color::FromABGR(fill));
+      gfxTextRun::DrawParams params(thebes);
+      mTextRun->Draw(gfxTextRun::Range(mTextRun.get()), point, params);
+      return;
+    }
+
     uint32_t numRuns;
     const gfxTextRun::GlyphRun *runs = mTextRun->GetGlyphRuns(&numRuns);
     const int32_t appUnitsPerDevUnit = mAppUnitsPerDevPixel;
@@ -3591,7 +3607,6 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
 
     float advanceSum = 0;
 
-    mCtx->EnsureTarget();
     for (uint32_t c = 0; c < numRuns; c++) {
       gfxFont *font = runs[c].mFont;
 

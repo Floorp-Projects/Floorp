@@ -165,41 +165,6 @@ this.ContentLinkHandler = {
   getLinkIconURI: function(aLink) {
     let targetDoc = aLink.ownerDocument;
     var uri = BrowserUtils.makeURI(aLink.href, targetDoc.characterSet);
-
-    // Verify that the load of this icon is legal.
-    // Some error or special pages can load their favicon.
-    // To be on the safe side, only allow chrome:// favicons.
-    var isAllowedPage = [
-      /^about:neterror\?/,
-      /^about:blocked\?/,
-      /^about:certerror\?/,
-      /^about:home$/,
-    ].some(re => re.test(targetDoc.documentURI));
-
-    if (!isAllowedPage || !uri.schemeIs("chrome")) {
-      var ssm = Services.scriptSecurityManager;
-      try {
-        ssm.checkLoadURIWithPrincipal(targetDoc.nodePrincipal, uri,
-                                      Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
-      } catch(e) {
-        return null;
-      }
-    }
-
-    try {
-      var contentPolicy = Cc["@mozilla.org/layout/content-policy;1"].
-                          getService(Ci.nsIContentPolicy);
-    } catch(e) {
-      return null; // Refuse to load if we can't do a security check.
-    }
-
-    // Security says okay, now ask content policy
-    if (contentPolicy.shouldLoad(Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE,
-                                 uri, targetDoc.documentURIObject,
-                                 aLink, aLink.type, null)
-                                 != Ci.nsIContentPolicy.ACCEPT)
-      return null;
-
     try {
       uri.userPass = "";
     } catch(e) {

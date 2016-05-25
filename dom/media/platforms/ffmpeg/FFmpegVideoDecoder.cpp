@@ -101,7 +101,7 @@ FFmpegVideoDecoder<LIBAV_VER>::PtsCorrectionContext::Reset()
 }
 
 FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(FFmpegLibWrapper* aLib,
-  FlushableTaskQueue* aTaskQueue, MediaDataDecoderCallback* aCallback,
+  TaskQueue* aTaskQueue, MediaDataDecoderCallback* aCallback,
   const VideoInfo& aConfig,
   ImageContainer* aImageContainer)
   : FFmpegDataDecoder(aLib, aTaskQueue, aCallback, GetCodecId(aConfig.mMimeType))

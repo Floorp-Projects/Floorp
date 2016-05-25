@@ -31,7 +31,7 @@ public:
   // This is called on the decode task queue.
   already_AddRefed<MediaDataDecoder>
   CreateDecoder(const TrackInfo& aConfig,
-                FlushableTaskQueue* aTaskQueue,
+                TaskQueue* aTaskQueue,
                 MediaDataDecoderCallback* aCallback,
                 DecoderDoctorDiagnostics* aDiagnostics,
                 layers::LayersBackend aLayersBackend = layers::LayersBackend::LAYERS_NONE,
@@ -62,7 +62,7 @@ private:
   already_AddRefed<MediaDataDecoder>
   CreateDecoderWithPDM(PlatformDecoderModule* aPDM,
                        const TrackInfo& aConfig,
-                       FlushableTaskQueue* aTaskQueue,
+                       TaskQueue* aTaskQueue,
                        MediaDataDecoderCallback* aCallback,
                        DecoderDoctorDiagnostics* aDiagnostics,
                        layers::LayersBackend aLayersBackend,

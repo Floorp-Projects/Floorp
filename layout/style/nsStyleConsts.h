@@ -300,6 +300,8 @@ enum class FillMode : uint32_t;
 #define NS_STYLE_IMAGELAYER_REPEAT_REPEAT_X          0x01
 #define NS_STYLE_IMAGELAYER_REPEAT_REPEAT_Y          0x02
 #define NS_STYLE_IMAGELAYER_REPEAT_REPEAT            0x03
+#define NS_STYLE_IMAGELAYER_REPEAT_SPACE             0x04
+#define NS_STYLE_IMAGELAYER_REPEAT_ROUND             0x05
 
 // See nsStyleImageLayers
 #define NS_STYLE_IMAGELAYER_SIZE_CONTAIN             0

@@ -41,7 +41,6 @@ const PREF_APP_UPDATE_NEVER_BRANCH         = "app.update.never.";
 const PREF_APP_UPDATE_NOTIFIEDUNSUPPORTED  = "app.update.notifiedUnsupported";
 const PREF_APP_UPDATE_POSTUPDATE           = "app.update.postupdate";
 const PREF_APP_UPDATE_PROMPTWAITTIME       = "app.update.promptWaitTime";
-const PREF_APP_UPDATE_SHOW_INSTALLED_UI    = "app.update.showInstalledUI";
 const PREF_APP_UPDATE_SILENT               = "app.update.silent";
 const PREF_APP_UPDATE_STAGING_ENABLED      = "app.update.staging.enabled";
 const PREF_APP_UPDATE_URL                  = "app.update.url";
@@ -1804,9 +1803,8 @@ Update.prototype = {
    * See nsIUpdateService.idl
    */
   serialize: function Update_serialize(updates) {
-    // If appVersion isn't defined just return null. This happens when a
-    // temporary nsIUpdate is passed to the UI when the
-    // app.update.showInstalledUI prefence is set to true.
+    // If appVersion isn't defined just return null. This happens when cleaning
+    // up invalid updates (e.g. incorrect channel).
     if (!this.appVersion) {
       return null;
     }
@@ -2182,7 +2180,6 @@ UpdateService.prototype = {
       // Update the patch's metadata.
       um.activeUpdate = update;
       Services.prefs.setBoolPref(PREF_APP_UPDATE_POSTUPDATE, true);
-      prompter.showUpdateInstalled();
 
       // Done with this update. Clean it up.
       cleanupActiveUpdate();
@@ -3190,9 +3187,8 @@ UpdateManager.prototype = {
       var doc = parser.parseFromString(EMPTY_UPDATES_DOCUMENT, "text/xml");
 
       for (var i = 0; i < updates.length; ++i) {
-        // If appVersion isn't defined don't add the update. This happens when a
-        // temporary nsIUpdate is passed to the UI when the
-        // app.update.showInstalledUI prefence is set to true.
+        // If appVersion isn't defined don't add the update. This happens when
+        // cleaning up invalid updates (e.g. incorrect channel).
         if (updates[i] && updates[i].appVersion) {
           doc.documentElement.appendChild(updates[i].serialize(doc));
         }
@@ -4489,23 +4485,6 @@ UpdatePrompt.prototype = {
       this._showUI(null, URI_UPDATE_PROMPT_DIALOG, null,
                    UPDATE_WINDOW_NAME, "finishedBackground", update);
     }
-  },
-
-  /**
-   * See nsIUpdateService.idl
-   */
-  showUpdateInstalled: function UP_showUpdateInstalled() {
-    if (getPref("getBoolPref", PREF_APP_UPDATE_SILENT, false) ||
-        !getPref("getBoolPref", PREF_APP_UPDATE_SHOW_INSTALLED_UI, false) ||
-        this._getUpdateWindow()) {
-      return;
-    }
-
-    let openFeatures = "chrome,centerscreen,dialog=no,resizable=no,titlebar,toolbar=no";
-    let arg = Cc["@mozilla.org/supports-string;1"].
-              createInstance(Ci.nsISupportsString);
-    arg.data = "installed";
-    Services.ww.openWindow(null, URI_UPDATE_PROMPT_DIALOG, null, openFeatures, arg);
   },
 
   /**

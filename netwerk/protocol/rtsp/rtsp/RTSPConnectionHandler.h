@@ -998,7 +998,7 @@ struct RtspConnectionHandler : public AHandler {
                 }
 
                 if (track->mNumAccessUnitsReceiveds == 0) {
-                    if (gIOService->IsOffline()) {
+                    if (mozilla::net::gIOService->IsOffline()) {
                         LOGI("stream ended? aborting.");
                         disconnect();
                         break;

@@ -117,19 +117,18 @@
   }
 
   function addMalewareUrlToDB() {
-    return new Promise(function(resolve, reject) {
-      var testData = [
-        { url: "malware.example.com/",
-          db: "test-malware-simple"
-        }
-      ];
+    var testData = [
+      { url: "malware.example.com/",
+        db: "test-malware-simple"
+      }
+    ];
 
-      classifierHelper.addUrlToDB(testData, resolve, function() {
-        ok(false, "Couldn't update classifier. Error code: " + errorCode);
+    return classifierHelper.addUrlToDB(testData)
+      .catch(function(err) {
+        ok(false, "Couldn't update classifier. Error code: " + err);
         // Abort test.
         SimpleTest.finish();
       });
-    });
   }
 
   function runTest() {

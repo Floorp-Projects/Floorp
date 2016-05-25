@@ -465,6 +465,15 @@ LoadInfo::GetAllowChrome(bool* aResult)
 }
 
 NS_IMETHODIMP
+LoadInfo::GetDisallowScript(bool* aResult)
+{
+  *aResult =
+    (mSecurityFlags & nsILoadInfo::SEC_DISALLOW_SCRIPT);
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
 LoadInfo::GetDontFollowRedirects(bool* aResult)
 {
   *aResult =

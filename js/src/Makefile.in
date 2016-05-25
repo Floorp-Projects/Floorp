@@ -16,10 +16,6 @@ DASH_R		= -r
 
 # Define keyword generator before rules.mk, see bug 323979 comment 50
 
-GARBAGE += jsautokw.h host_jskwgen$(HOST_BIN_SUFFIX)
-
-GARBAGE += selfhosted.out.h
-
 USE_HOST_CXX = 1
 
 ifdef HAVE_DTRACE
@@ -219,14 +215,6 @@ ifneq (,$(IMPORT_LIBRARY))
 	$(SYSINSTALL) $(IMPORT_LIBRARY) $(DESTDIR)$(libdir)
 endif
 	$(MAKE) -C shell install
-
-# Use CURDIR to avoid finding a jsautokw.h in the source tree (from a
-# previous build?) via VPATH when we're building in a separate tree.
-$(CURDIR)/jsautokw.h: host_jskwgen$(HOST_BIN_SUFFIX)
-	./host_jskwgen$(HOST_BIN_SUFFIX) $@
-
-# Force auto-header generation before compiling any source that may use them
-$(OBJS): $(CURDIR)/jsautokw.h
 
 ifdef HAVE_DTRACE
 javascript-trace.h: $(srcdir)/devtools/javascript-trace.d

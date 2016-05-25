@@ -793,11 +793,12 @@ nsHttpConnection::SupportsPipelining(nsHttpResponseHead *responseHead)
     }
 
     // check for bad origin servers
-    const char *val = responseHead->PeekHeader(nsHttp::Server);
+    nsAutoCString val;
+    responseHead->GetHeader(nsHttp::Server, val);
 
     // If there is no server header we will assume it should not be banned
     // as facebook and some other prominent sites do this
-    if (!val)
+    if (val.IsEmpty())
         return true;
 
     // The blacklist is indexed by the first character. All of these servers are
@@ -819,11 +820,11 @@ nsHttpConnection::SupportsPipelining(nsHttpResponseHead *responseHead)
         { nullptr }, { nullptr }, { nullptr }                              // x - z
     };
 
-    int index = val[0] - 'A'; // the whole table begins with capital letters
+    int index = val.get()[0] - 'A'; // the whole table begins with capital letters
     if ((index >= 0) && (index <= 25))
     {
         for (int i = 0; bad_servers[index][i] != nullptr; i++) {
-            if (!PL_strncmp (val, bad_servers[index][i], strlen (bad_servers[index][i]))) {
+            if (val.Equals(bad_servers[index][i])) {
                 LOG(("looks like this server does not support pipelining"));
                 gHttpHandler->ConnMgr()->PipelineFeedbackInfo(
                     mConnInfo, nsHttpConnectionMgr::RedBannedServer, this , 0);
@@ -968,16 +969,17 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
     // specified then we use our advertized timeout value.
     bool foundKeepAliveMax = false;
     if (mKeepAlive) {
-        const char *val = responseHead->PeekHeader(nsHttp::Keep_Alive);
+        nsAutoCString keepAlive;
+        responseHead->GetHeader(nsHttp::Keep_Alive, keepAlive);
 
         if (!mUsingSpdyVersion) {
-            const char *cp = PL_strcasestr(val, "timeout=");
+            const char *cp = PL_strcasestr(keepAlive.get(), "timeout=");
             if (cp)
                 mIdleTimeout = PR_SecondsToInterval((uint32_t) atoi(cp + 8));
             else
                 mIdleTimeout = gHttpHandler->IdleTimeout();
 
-            cp = PL_strcasestr(val, "max=");
+            cp = PL_strcasestr(keepAlive.get(), "max=");
             if (cp) {
                 int maxUses = atoi(cp + 4);
                 if (maxUses > 0) {
@@ -1046,18 +1048,21 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
     }
 
     if (responseStatus == 101) {
-        const char *upgradeResp = responseHead->PeekHeader(nsHttp::Upgrade);
-        if (!hasUpgradeReq || !upgradeResp ||
-            !nsHttp::FindToken(upgradeResp, upgradeReq.get(),
+        nsAutoCString upgradeResp;
+        bool hasUpgradeResp = NS_SUCCEEDED(responseHead->GetHeader(
+                                                nsHttp::Upgrade,
+                                                upgradeResp));
+        if (!hasUpgradeReq || !hasUpgradeResp ||
+            !nsHttp::FindToken(upgradeResp.get(), upgradeReq.get(),
                                HTTP_HEADER_VALUE_SEPS)) {
             LOG(("HTTP 101 Upgrade header mismatch req = %s, resp = %s\n",
                  upgradeReq.get(),
-                 upgradeResp ? upgradeResp :
-                               "RESPONSE's nsHttp::Upgrade is empty"));
+                 !upgradeResp.IsEmpty() ? upgradeResp.get() :
+                     "RESPONSE's nsHttp::Upgrade is empty"));
             Close(NS_ERROR_ABORT);
         }
         else {
-            LOG(("HTTP Upgrade Response to %s\n", upgradeResp));
+            LOG(("HTTP Upgrade Response to %s\n", upgradeResp.get()));
         }
     }
 

@@ -504,7 +504,7 @@ class RefTest(object):
         # TODO: bug 913975 : _processOutput should call self.processOutputLine
         # one more time one timeout (I think)
         self.log.error("%s | application timed out after %d seconds with no output" % (self.lastTestSeen, int(timeout)))
-        self.log.warning("Force-terminating active process(es).");
+        self.log.error("Force-terminating active process(es).");
         self.killAndGetStack(
             proc, utilityPath, debuggerInfo, dump_screen=not debuggerInfo)
 

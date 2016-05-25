@@ -428,25 +428,6 @@ class CommonTestCase(unittest.TestCase):
         # consistency.
         return self.test_name
 
-    def set_up_test_page(self, emulator, url="test.html", permissions=None):
-        emulator.set_context("content")
-        url = emulator.absolute_url(url)
-        emulator.navigate(url)
-
-        if not permissions:
-            return
-
-        emulator.set_context("chrome")
-        emulator.execute_script("""
-Components.utils.import("resource://gre/modules/Services.jsm");
-let [url, permissions] = arguments;
-let uri = Services.io.newURI(url, null, null);
-permissions.forEach(function (perm) {
-    Services.perms.add(uri, "sms", Components.interfaces.nsIPermissionManager.ALLOW_ACTION);
-});
-        """, [url, permissions])
-        emulator.set_context("content")
-
     def setUp(self):
         # Convert the marionette weakref to an object, just for the
         # duration of the test; this is deleted in tearDown() to prevent
@@ -462,13 +443,6 @@ permissions.forEach(function (perm) {
             self.marionette.timeouts(self.marionette.TIMEOUT_PAGE, self.marionette.timeout)
         else:
             self.marionette.timeouts(self.marionette.TIMEOUT_PAGE, 30000)
-
-        if hasattr(self, 'test_container') and self.test_container:
-            self.switch_into_test_container()
-        elif hasattr(self, 'test_container') and self.test_container is False:
-            if self.marionette.session_capabilities.has_key('b2g') \
-            and self.marionette.session_capabilities['b2g'] == True:
-                self.close_test_container()
 
     def tearDown(self):
         pass
@@ -495,58 +469,6 @@ permissions.forEach(function (perm) {
                     except socket.error:
                         pass
         self.marionette = None
-
-    def switch_into_test_container(self):
-        self.marionette.set_context(self.marionette.CONTEXT_CONTENT)
-
-        frame = Wait(self.marionette, timeout=10, interval=0.2).until(element_present(
-            'css selector',
-            'iframe[src*="app://test-container.gaiamobile.org/index.html"]'
-        ))
-
-        self.marionette.switch_to_frame(frame)
-
-    def close_test_container(self):
-        self.marionette.set_context(self.marionette.CONTEXT_CONTENT)
-
-        result = self.marionette.execute_async_script("""
-if((navigator.mozSettings == undefined) || (navigator.mozSettings == null) || (navigator.mozApps == undefined) || (navigator.mozApps == null)) {
-    marionetteScriptFinished(false);
-    return;
-}
-let setReq = navigator.mozSettings.createLock().set({'lockscreen.enabled': false});
-setReq.onsuccess = function() {
-    let appsReq = navigator.mozApps.mgmt.getAll();
-    appsReq.onsuccess = function() {
-        let apps = appsReq.result;
-        for (let i = 0; i < apps.length; i++) {
-            let app = apps[i];
-            if (app.manifest.name === 'Test Container') {
-                window.wrappedJSObject.Service.request('AppWindowManager:kill', app.origin).then(function() {
-                    marionetteScriptFinished(true);
-                }).catch(function() {
-                    marionetteScriptFinished(false);
-                });
-                return;
-            }
-        }
-        marionetteScriptFinished(false);
-    }
-    appsReq.onerror = function() {
-        marionetteScriptFinished(false);
-    }
-}
-setReq.onerror = function() {
-    marionetteScriptFinished(false);
-}""", script_timeout=60000)
-
-        if not result:
-            raise Exception('Failed to close Test Container app')
-
-        Wait(self.marionette, timeout=10, interval=0.2).until(element_not_present(
-            'css selector',
-            'iframe[src*="app://test-container.gaiamobile.org/index.html"]'
-        ))
 
     def setup_SpecialPowers_observer(self):
         self.marionette.set_context("chrome")
@@ -693,7 +615,6 @@ class MarionetteTestCase(CommonTestCase):
                  filepath='', **kwargs):
         self._marionette_weakref = marionette_weakref
         self.marionette = None
-        self.extra_emulator_index = -1
         self.methodName = methodName
         self.filepath = filepath
         self.testvars = kwargs.pop('testvars', None)
@@ -752,21 +673,6 @@ class MarionetteTestCase(CommonTestCase):
                 pass
 
         CommonTestCase.tearDown(self)
-
-    def get_new_emulator(self):
-        self.extra_emulator_index += 1
-        if len(self.marionette.extra_emulators) == self.extra_emulator_index:
-            qemu  = Marionette(emulator=self.marionette.emulator.arch,
-                               emulatorBinary=self.marionette.emulator.binary,
-                               homedir=self.marionette.homedir,
-                               baseurl=self.marionette.baseurl,
-                               noWindow=self.marionette.noWindow,
-                               gecko_path=self.marionette.gecko_path)
-            qemu.start_session()
-            self.marionette.extra_emulators.append(qemu)
-        else:
-            qemu = self.marionette.extra_emulators[self.extra_emulator_index]
-        return qemu
 
     def wait_for_condition(self, method, timeout=30):
         timeout = float(timeout) + time.time()
