@@ -151,6 +151,37 @@
       }
     }
 
+    function removeLastChild(aContainer)
+    {
+      this.ht = getAccessible(aContainer, [ nsIAccessibleHyperText ]);
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, aContainer)
+      ];
+
+      this.invoke = function removeLastChild_invoke()
+      {
+        is(this.ht.linkCount, 1, "Wrong embedded objects count before removal");
+
+        getNode(aContainer).removeChild(getNode(aContainer).lastElementChild);
+      }
+
+      this.finalCheck = function removeLastChild_finalCheck()
+      {
+        is(this.ht.linkCount, 0, "Wrong embedded objects count after removal");
+
+        var link = null;
+        try {
+          link = this.ht.getLinkAt(0);
+        } catch (e) { }
+        ok(!link, "No embedded object is expected");
+      }
+
+      this.getID = function removeLastChild_getID()
+      {
+        return "Remove last child and try its embedded object";
+      }
+    }
+
     //gA11yEventDumpToConsole = true; // debug stuff
 
     var gQueue = null;
@@ -162,6 +193,7 @@
       gQueue.push(new removeChild("div1","div2",
                                   "hello my good friend", "hello friend"));
       gQueue.push(new removeFirstChild("c4"));
+      gQueue.push(new removeLastChild("c5"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -199,5 +231,6 @@
     <label for="c4_input">label</label>
     <input id="c4_input">
   </form>
+  <div id="c5">TextLeaf<input id="c5_input"></div>
 </body>
 </html>
