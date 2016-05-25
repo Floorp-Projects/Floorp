@@ -73,20 +73,18 @@ protected:
                              StreamTime delta,
                              const PrincipalHandle& aPrincipalHandle);
   uint32_t GetFitnessDistance(const webrtc::CaptureCapability& aCandidate,
-                              const dom::MediaTrackConstraintSet &aConstraints,
-                              bool aAdvanced,
+                              const NormalizedConstraintSet &aConstraints,
                               const nsString& aDeviceId);
   static void TrimLessFitCandidates(CapabilitySet& set);
-  static void LogConstraints(const dom::MediaTrackConstraintSet& aConstraints,
-                             bool aAdvanced);
+  static void LogConstraints(const NormalizedConstraintSet& aConstraints);
   static void LogCapability(const char* aHeader,
                             const webrtc::CaptureCapability &aCapability,
                             uint32_t aDistance);
   virtual size_t NumCapabilities();
   virtual void GetCapability(size_t aIndex, webrtc::CaptureCapability& aOut);
-  virtual bool ChooseCapability(const dom::MediaTrackConstraints &aConstraints,
-                        const MediaEnginePrefs &aPrefs,
-                        const nsString& aDeviceId);
+  virtual bool ChooseCapability(const NormalizedConstraints &aConstraints,
+                                const MediaEnginePrefs &aPrefs,
+                                const nsString& aDeviceId);
   void SetName(nsString aName);
   void SetUUID(const char* aUUID);
   const nsCString& GetUUID(); // protected access

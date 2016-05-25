@@ -52,7 +52,8 @@ public:
   nsresult Deallocate(BaseAllocationHandle* aHandle) override;
   nsresult Start(SourceMediaStream*, TrackID, const PrincipalHandle&) override;
   nsresult Stop(SourceMediaStream*, TrackID) override;
-  nsresult Restart(const dom::MediaTrackConstraints& aConstraints,
+  nsresult Restart(BaseAllocationHandle* aHandle,
+                   const dom::MediaTrackConstraints& aConstraints,
                    const MediaEnginePrefs &aPrefs,
                    const nsString& aDeviceId) override;
   void SetDirectListeners(bool aHasDirectListeners) override {};
@@ -124,7 +125,8 @@ public:
   nsresult Deallocate(BaseAllocationHandle* aHandle) override;
   nsresult Start(SourceMediaStream*, TrackID, const PrincipalHandle&) override;
   nsresult Stop(SourceMediaStream*, TrackID) override;
-  nsresult Restart(const dom::MediaTrackConstraints& aConstraints,
+  nsresult Restart(BaseAllocationHandle* aHandle,
+                   const dom::MediaTrackConstraints& aConstraints,
                    const MediaEnginePrefs &aPrefs,
                    const nsString& aDeviceId) override;
   void SetDirectListeners(bool aHasDirectListeners) override {};

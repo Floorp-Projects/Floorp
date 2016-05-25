@@ -98,7 +98,8 @@ public:
                  TrackID aId,
                  const PrincipalHandle& aPrincipalHandle) override;
   nsresult Stop(SourceMediaStream* aMediaStream, TrackID aId) override;
-  nsresult Restart(const dom::MediaTrackConstraints& aConstraints,
+  nsresult Restart(BaseAllocationHandle* aHandle,
+                   const dom::MediaTrackConstraints& aConstraints,
                    const MediaEnginePrefs &aPrefs,
                    const nsString& aDeviceId) override;
   void SetDirectListeners(bool aDirect) override
@@ -461,7 +462,8 @@ public:
                  TrackID aID,
                  const PrincipalHandle& aPrincipalHandle) override;
   nsresult Stop(SourceMediaStream* aSource, TrackID aID) override;
-  nsresult Restart(const dom::MediaTrackConstraints& aConstraints,
+  nsresult Restart(BaseAllocationHandle* aHandle,
+                   const dom::MediaTrackConstraints& aConstraints,
                    const MediaEnginePrefs &aPrefs,
                    const nsString& aDeviceId) override;
   void SetDirectListeners(bool aHasDirectListeners) override {};
