@@ -12,7 +12,7 @@ interface URI;
 interface nsIDocShell;
 interface nsILoadGroup;
 
-enum VisibilityState { "hidden", "visible" };
+enum VisibilityState { "hidden", "visible", "prerender" };
 
 /* http://dom.spec.whatwg.org/#interface-document */
 [Constructor]
