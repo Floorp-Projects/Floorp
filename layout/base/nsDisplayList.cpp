@@ -4876,8 +4876,6 @@ nsDisplayFixedPosition::nsDisplayFixedPosition(nsDisplayListBuilder* aBuilder,
 void
 nsDisplayFixedPosition::Init(nsDisplayListBuilder* aBuilder)
 {
-  bool snap;
-  mVisibleRect = GetBounds(aBuilder, &snap);
   mAnimatedGeometryRootForScrollMetadata = mAnimatedGeometryRoot;
   if (ShouldFixToViewport(aBuilder)) {
     mAnimatedGeometryRoot = aBuilder->FindAnimatedGeometryRootFor(this);
