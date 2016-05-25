@@ -2165,7 +2165,7 @@ var SessionStoreInternal = {
 
     // create a new tab
     let tabbrowser = aWindow.gBrowser;
-    let tab = tabbrowser.selectedTab = tabbrowser.addTab();
+    let tab = tabbrowser.selectedTab = tabbrowser.addTab(null, state);
 
     // restore tab content
     this.restoreTab(tab, state);
