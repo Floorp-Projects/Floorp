@@ -41,6 +41,9 @@ function run_test() {
   // Make profile available for |TelemetryController.testShutdown()|.
   do_get_profile();
 
+  // Make sure we don't generate unexpected pings due to pref changes.
+  setEmptyPrefWatchlist();
+
   do_test_pending();
   const Telemetry = Services.telemetry;
   Telemetry.asyncFetchTelemetryData(run_next_test);
