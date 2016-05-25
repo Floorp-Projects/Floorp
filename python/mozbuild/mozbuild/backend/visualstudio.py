@@ -37,11 +37,11 @@ MSBUILD_NAMESPACE = 'http://schemas.microsoft.com/developer/msbuild/2003'
 def get_id(name):
     return str(uuid.uuid5(uuid.NAMESPACE_URL, name)).upper()
 
-def visual_studio_product_to_internal_version(version, solution=False):
+def visual_studio_product_to_solution_version(version):
     if version == '2013':
-        return '12.00'
+        return '12.00', '12'
     elif version == '2015':
-        return '14.00'
+        return '12.00', '14'
     else:
         raise Exception('Unknown version seen: %s' % version)
 
@@ -70,9 +70,7 @@ class VisualStudioBackend(CommonBackend):
         self._out_dir = os.path.join(self.environment.topobjdir, 'msvc')
         self._projsubdir = 'projects'
 
-        self._version = self.environment.substs.get('MSVS_VERSION', None)
-        if not self._version:
-            raise Exception('MSVS_VERSION not defined; this should never happen')
+        self._version = self.environment.substs.get('MSVS_VERSION', '2015')
 
         self._paths_to_sources = {}
         self._paths_to_includes = {}
@@ -252,14 +250,34 @@ class VisualStudioBackend(CommonBackend):
         return projects
 
     def _write_solution(self, fh, projects):
-        version = visual_studio_product_to_internal_version(self._version, True)
+        # Visual Studio appears to write out its current version in the
+        # solution file. Instead of trying to figure out what version it will
+        # write, try to parse the version out of the existing file and use it
+        # verbatim.
+        vs_version = None
+        try:
+            with open(fh.name, 'rb') as sfh:
+                for line in sfh:
+                    if line.startswith(b'VisualStudioVersion = '):
+                        vs_version = line.split(b' = ', 1)[1].strip()
+        except IOError as e:
+            if e.errno != errno.ENOENT:
+                raise
+
+        format_version, comment_version = visual_studio_product_to_solution_version(self._version)
         # This is a Visual C++ Project type.
         project_type = '8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942'
 
         # Visual Studio seems to require this header.
         fh.write('Microsoft Visual Studio Solution File, Format Version %s\r\n' %
-            version)
-        fh.write('# Visual Studio %s\r\n' % self._version)
+                 format_version)
+        fh.write('# Visual Studio %s\r\n' % comment_version)
+
+        if vs_version:
+            fh.write('VisualStudioVersion = %s\r\n' % vs_version)
+
+        # Corresponds to VS2013.
+        fh.write('MinimumVisualStudioVersion = 12.0.31101.0\r\n')
 
         binaries_id = projects['target_binaries'][0]
 

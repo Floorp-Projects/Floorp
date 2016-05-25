@@ -53,6 +53,38 @@ def compile_environment(compile_env):
 set_config('COMPILE_ENVIRONMENT', compile_environment)
 add_old_configure_assignment('COMPILE_ENVIRONMENT', compile_environment)
 
+js_option('--disable-tests',
+          help='Do not build test libraries & programs')
+
+@depends('--disable-tests')
+def enable_tests(value):
+    if value:
+        return True
+
+set_config('ENABLE_TESTS', enable_tests)
+set_define('ENABLE_TESTS', enable_tests)
+
+@depends(enable_tests)
+def gtest_has_rtti(value):
+    if value:
+        return '0'
+
+set_define('GTEST_HAS_RTTI', gtest_has_rtti)
+
+@depends(target, enable_tests)
+def linux_gtest_defines(target, enable_tests):
+    if enable_tests and target.os == 'Android':
+        return namespace(os_linux_android=True,
+                         use_own_tr1_tuple=True,
+                         has_clone='0')
+
+set_define('GTEST_OS_LINUX_ANDROID',
+           delayed_getattr(linux_gtest_defines, 'os_linux_android'))
+set_define('GTEST_USE_OWN_TR1_TUPLE',
+           delayed_getattr(linux_gtest_defines, 'use_own_tr1_tuple'))
+set_define('GTEST_HAS_CLONE',
+           delayed_getattr(linux_gtest_defines, 'has_clone'))
+
 @depends('--disable-compile-environment', '--help')
 def toolchain_include(compile_env, help):
     if compile_env:
@@ -77,12 +109,15 @@ def build_backends_choices(help):
 option('--enable-build-backend', nargs='+', choices=build_backends_choices,
        help='Enable additional build backends')
 
-@depends('--enable-build-backend', '--enable-artifact-builds')
-def build_backend(backends, artifact_builds):
+@depends('--enable-build-backend', '--enable-artifact-builds', target,
+         compile_environment)
+def build_backend(backends, artifact_builds, target, compile_environment):
     if artifact_builds:
         all_backends = ['FasterMake+RecursiveMake']
     else:
         all_backends = ['RecursiveMake', 'FasterMake']
+    if target.os == 'WINNT' and compile_environment:
+        all_backends.append('VisualStudio')
     all_backends.extend(backends)
     return unique_list(all_backends)
 

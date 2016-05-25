@@ -1,0 +1,159 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1203140
+-->
+<head>
+  <title>Test for Bug 1203140</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1203140">Mozilla Bug 1203140</a>
+<p id="display"></p>
+<div id="content" style="overflow-y:scroll; height: 400px">
+  <p>The box below has a touch listener and a passive wheel listener. With touch events disabled, APZ shouldn't wait for any listeners.</p>
+  <div id="box" style="width: 200px; height: 200px; background-color: blue"></div>
+  <div style="height: 1000px; width: 10px">Div to make 'content' scrollable</div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+const kResponseTimeoutMs = 2 * 60 * 1000; // 2 minutes
+
+function parentProcessSnapshot() {
+  addMessageListener('snapshot', function(rect) {
+    Components.utils.import('resource://gre/modules/Services.jsm');
+    var topWin = Services.wm.getMostRecentWindow('navigator:browser');
+
+    // reposition the rect relative to the top-level browser window
+    rect = JSON.parse(rect);
+    rect.x -= topWin.mozInnerScreenX;
+    rect.y -= topWin.mozInnerScreenY;
+
+    // take the snapshot
+    var canvas = topWin.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+    canvas.width = rect.w;
+    canvas.height = rect.h;
+    var ctx = canvas.getContext("2d");
+    ctx.drawWindow(topWin, rect.x, rect.y, rect.w, rect.h, 'rgb(255,255,255)', ctx.DRAWWINDOW_DRAW_VIEW | ctx.DRAWWINDOW_USE_WIDGET_LAYERS | ctx.DRAWWINDOW_DRAW_CARET);
+    return canvas.toDataURL();
+  });
+}
+
+function takeSnapshots(e) {
+  // Grab some snapshots, and make sure some of them are different (i.e. check
+  // the page is scrolling in the compositor, concurrently with this wheel
+  // listener running).
+  // Note that we want this function to take less time than the content response
+  // timeout, otherwise the scrolling will start even if we haven't returned,
+  // and that would invalidate purpose of the test.
+  var start = Date.now();
+  var lastSnapshot = null;
+  var success = false;
+
+  var chromeHelper = SpecialPowers.loadChromeScript(parentProcessSnapshot);
+  SimpleTest.registerCleanupFunction(function() { chromeHelper.destroy() });
+
+  // Get the position of the 'content' div relative to the screen
+  var contentDiv = document.getElementById('content');
+  var rect = coordinatesRelativeToWindow(0, 0, contentDiv);
+  rect.w = contentDiv.getBoundingClientRect().width * window.devicePixelRatio;
+  rect.h = contentDiv.getBoundingClientRect().height * window.devicePixelRatio;
+
+  for (var i = 0; i < 10; i++) {
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(16);
+    var snapshot = chromeHelper.sendSyncMessage('snapshot', JSON.stringify(rect)).toString();
+    //dump("Took snapshot " + snapshot + "\n"); // this might help with debugging
+
+    if (lastSnapshot && lastSnapshot != snapshot) {
+      ok(true, "Found some different pixels in snapshot " + i + " compared to previous");
+      success = true;
+    }
+    lastSnapshot = snapshot;
+  }
+  ok(success, "Found some snapshots that were different");
+  ok((Date.now() - start) < kResponseTimeoutMs, "Snapshotting ran quickly enough");
+
+  // Until now, no scroll events will have been dispatched to content. That's
+  // because scroll events are dispatched on the main thread, which we've been
+  // hogging with the code above. At this point we restore the normal refresh
+  // behaviour and let the main thread go back to C++ code, so the scroll events
+  // fire and we unwind from the main test continuation.
+  SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
+}
+
+function* runTest() {
+  var box = document.getElementById('box');
+  box.addEventListener('touchstart', function(e) {
+    ok(false, "This should never be run");
+  }, false);
+  box.addEventListener('wheel', takeSnapshots, { capture: false, passive: true });
+
+  // Let the event regions propagate to the APZ
+  yield waitForAllPaints(function() {
+    flushApzRepaints(driveTest);
+  });
+
+  // Take over control of the refresh driver and compositor
+  var utils = SpecialPowers.DOMWindowUtils;
+  utils.advanceTimeAndRefresh(0);
+
+  // Trigger an APZ scroll using a wheel event. If APZ is waiting for a
+  // content response, it will wait for takeSnapshots to finish running before
+  // it starts scrolling, which will cause the checks in takeSnapshots to fail.
+  yield synthesizeNativeMouseMoveAndWaitForMoveEvent(box, 10, 10, driveTest);
+  yield synthesizeNativeWheelAndWaitForScrollEvent(box, 10, 10, 0, -50, driveTest);
+}
+
+var gTestContinuation = null;
+function driveTest() {
+  if (!gTestContinuation) {
+    gTestContinuation = runTest();
+  }
+  var ret = gTestContinuation.next();
+  if (ret.done) {
+    SimpleTest.finish();
+  }
+}
+
+function startTest() {
+  // This test requires APZ - if it's not enabled, skip it.
+  var apzEnabled = SpecialPowers.getDOMWindowUtils(window).asyncPanZoomEnabled;
+  if (!apzEnabled) {
+    ok(true, "APZ not enabled, skipping test");
+    SimpleTest.finish();
+    return;
+  }
+
+  waitForAllPaints(function() {
+    flushApzRepaints(driveTest);
+  })
+}
+
+SimpleTest.waitForExplicitFinish();
+
+// Disable touch events, so that APZ knows not to wait for touch listeners.
+// Also explicitly set the content response timeout, so we know how long it
+// is (see comment in takeSnapshots).
+// Finally, enable smooth scrolling, so that the wheel-scroll we do as part
+// of the test triggers an APZ animation rather than doing an instant scroll.
+// Note that this pref doesn't work for the synthesized wheel events on OS X,
+// those are hard-coded to be instant scrolls.
+SpecialPowers.pushPrefEnv({"set": [["dom.w3c_touch_events.enabled", 0],
+                                   ["apz.content_response_timeout", kResponseTimeoutMs],
+                                   ["general.smoothscroll", true]]},
+                          function() {
+                            SimpleTest.waitForFocus(startTest, window);
+                          });
+</script>
+</pre>
+
+</body>
+</html>

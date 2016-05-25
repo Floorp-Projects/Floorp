@@ -53,7 +53,7 @@ Debug_SetValueRangeToCrashOnTouch(Value* vec, size_t len)
 }
 
 static MOZ_ALWAYS_INLINE void
-Debug_SetValueRangeToCrashOnTouch(HeapValue* vec, size_t len)
+Debug_SetValueRangeToCrashOnTouch(GCPtrValue* vec, size_t len)
 {
 #ifdef DEBUG
     Debug_SetValueRangeToCrashOnTouch((Value*) vec, len);
@@ -286,9 +286,9 @@ class ObjectElements
         return flags & SHARED_MEMORY;
     }
 
-    HeapPtrNativeObject& ownerObject() const {
+    GCPtrNativeObject& ownerObject() const {
         MOZ_ASSERT(isCopyOnWrite());
-        return *(HeapPtrNativeObject*)(&elements()[initializedLength]);
+        return *(GCPtrNativeObject*)(&elements()[initializedLength]);
     }
 
     static int offsetOfFlags() {
@@ -379,7 +379,7 @@ class NativeObject : public JSObject
 {
   protected:
     // Property layout description and other state.
-    HeapPtrShape shape_;
+    GCPtrShape shape_;
 
     /* Slots for object properties. */
     js::HeapSlot* slots_;

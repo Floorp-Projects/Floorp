@@ -46,7 +46,8 @@ public:
 
 #ifdef USE_SKIA
   virtual SkTypeface* GetSkTypeface();
-  void GetFontDataFromSystemFonts(IDWriteFactory* aFactory);
+  bool GetFontDataFromSystemFonts(IDWriteFactory* aFactory);
+  bool DefaultToArialFont(IDWriteFontCollection* aSystemFonts);
 #endif
 
   // The font and font family are only used with Skia

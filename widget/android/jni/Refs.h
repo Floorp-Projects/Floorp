@@ -491,7 +491,7 @@ public:
 
     // Copy constructor
     GlobalRef(const GlobalRef& ref)
-        : Ref(NewGlobalRef(Ref::FindEnv(), ref.mInstance))
+        : Ref(NewGlobalRef(GetEnvForThread(), ref.mInstance))
     {}
 
     // Move constructor
@@ -502,7 +502,7 @@ public:
     }
 
     MOZ_IMPLICIT GlobalRef(const Ref& ref)
-        : Ref(NewGlobalRef(Ref::FindEnv(), ref.Get()))
+        : Ref(NewGlobalRef(GetEnvForThread(), ref.Get()))
     {}
 
     GlobalRef(JNIEnv* env, const Ref& ref)
@@ -521,7 +521,7 @@ public:
     ~GlobalRef()
     {
         if (Ref::mInstance) {
-            Clear(Ref::FindEnv());
+            Clear(GetEnvForThread());
         }
     }
 

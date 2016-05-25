@@ -168,7 +168,7 @@ Zone::sweepBreakpoints(FreeOp* fop)
             Breakpoint* nextbp;
             for (Breakpoint* bp = site->firstBreakpoint(); bp; bp = nextbp) {
                 nextbp = bp->nextInSite();
-                HeapPtrNativeObject& dbgobj = bp->debugger->toJSObjectRef();
+                GCPtrNativeObject& dbgobj = bp->debugger->toJSObjectRef();
 
                 // If we are sweeping, then we expect the script and the
                 // debugger object to be swept in the same zone group, except if

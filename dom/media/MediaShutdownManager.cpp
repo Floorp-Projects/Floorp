@@ -4,18 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "MediaShutdownManager.h"
-#include "nsContentUtils.h"
-#include "mozilla/StaticPtr.h"
-#include "MediaDecoder.h"
 #include "mozilla/Logging.h"
+#include "mozilla/StaticPtr.h"
+#include "nsContentUtils.h"
+
+#include "MediaDecoder.h"
+#include "MediaShutdownManager.h"
 
 namespace mozilla {
 
 extern LazyLogModule gMediaDecoderLog;
 #define DECODER_LOG(type, msg) MOZ_LOG(gMediaDecoderLog, type, msg)
 
-NS_IMPL_ISUPPORTS(MediaShutdownManager, nsIObserver)
+NS_IMPL_ISUPPORTS(MediaShutdownManager, nsIAsyncShutdownBlocker)
 
 MediaShutdownManager::MediaShutdownManager()
   : mIsObservingShutdown(false)
@@ -45,6 +46,23 @@ MediaShutdownManager::Instance()
   return *sInstance;
 }
 
+static nsCOMPtr<nsIAsyncShutdownClient>
+GetShutdownBarrier()
+{
+  nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdown();
+  MOZ_RELEASE_ASSERT(svc);
+
+  nsCOMPtr<nsIAsyncShutdownClient> barrier;
+  nsresult rv = svc->GetProfileBeforeChange(getter_AddRefs(barrier));
+  if (!barrier) {
+    // We are probably in a content process.
+    rv = svc->GetContentChildShutdown(getter_AddRefs(barrier));
+  }
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+  MOZ_RELEASE_ASSERT(barrier);
+  return barrier.forget();
+}
+
 void
 MediaShutdownManager::EnsureCorrectShutdownObserverState()
 {
@@ -52,12 +70,16 @@ MediaShutdownManager::EnsureCorrectShutdownObserverState()
   if (needShutdownObserver != mIsObservingShutdown) {
     mIsObservingShutdown = needShutdownObserver;
     if (mIsObservingShutdown) {
-      nsContentUtils::RegisterShutdownObserver(this);
+      nsresult rv = GetShutdownBarrier()->AddBlocker(
+        this, NS_LITERAL_STRING(__FILE__), __LINE__,
+        NS_LITERAL_STRING("MediaShutdownManager shutdown"));
+      MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
     } else {
-      nsContentUtils::UnregisterShutdownObserver(this);
+      GetShutdownBarrier()->RemoveBlocker(this);
       // Clear our singleton reference. This will probably delete
       // this instance, so don't deref |this| clearing sInstance.
       sInstance = nullptr;
+      DECODER_LOG(LogLevel::Debug, ("MediaShutdownManager::BlockShutdown() end."));
     }
   }
 }
@@ -86,24 +108,25 @@ MediaShutdownManager::Unregister(MediaDecoder* aDecoder)
 }
 
 NS_IMETHODIMP
-MediaShutdownManager::Observe(nsISupports *aSubjet,
-                              const char *aTopic,
-                              const char16_t *someData)
+MediaShutdownManager::GetName(nsAString& aName)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
-    Shutdown();
-  }
+  aName = NS_LITERAL_STRING("MediaShutdownManager: shutdown");
   return NS_OK;
 }
 
-void
-MediaShutdownManager::Shutdown()
+NS_IMETHODIMP
+MediaShutdownManager::GetState(nsIPropertyBag**)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MediaShutdownManager::BlockShutdown(nsIAsyncShutdownClient*)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sInstance);
 
-  DECODER_LOG(LogLevel::Debug, ("MediaShutdownManager::Shutdown() start..."));
+  DECODER_LOG(LogLevel::Debug, ("MediaShutdownManager::BlockShutdown() start..."));
 
   // Set this flag to ensure no Register() is allowed when Shutdown() begins.
   mIsDoingXPCOMShutDown = true;
@@ -119,15 +142,7 @@ MediaShutdownManager::Shutdown()
     MOZ_ASSERT(mDecoders.Count() == oldCount);
   }
 
-  // Spin the loop until all decoders are unregistered
-  // which will then clear |sInstance|.
-  while (sInstance) {
-    NS_ProcessNextEvent(NS_GetCurrentThread(), true);
-  }
-
-  // Note: Don't access |this| which might be deleted after clearing sInstance.
-
-  DECODER_LOG(LogLevel::Debug, ("MediaShutdownManager::Shutdown() end."));
+  return NS_OK;
 }
 
 } // namespace mozilla

@@ -87,5 +87,8 @@ tools repackage:: $(DIST)/bin/$(MOZ_APP_NAME)
 	rsync -aL $(DIST)/bin/$(MOZ_APP_NAME) $(dist_dest)/Contents/MacOS
 	cp -RL $(DIST)/branding/firefox.icns $(dist_dest)/Contents/Resources/firefox.icns
 	cp -RL $(DIST)/branding/document.icns $(dist_dest)/Contents/Resources/document.icns
+	$(MKDIR) -p $(dist_dest)/Contents/Library/LaunchServices
+	mv -f $(dist_dest)/Contents/MacOS/updater.app/Contents/MacOS/org.mozilla.updater $(dist_dest)/Contents/Library/LaunchServices
+	ln -s ../../../../Library/LaunchServices/org.mozilla.updater $(dist_dest)/Contents/MacOS/updater.app/Contents/MacOS/org.mozilla.updater
 	printf APPLMOZB > $(dist_dest)/Contents/PkgInfo
 endif

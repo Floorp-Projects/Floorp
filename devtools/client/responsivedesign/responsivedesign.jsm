@@ -602,19 +602,19 @@ ResponsiveUI.prototype = {
     let volumeUp = this.chromeDoc.createElement("button");
     volumeUp.className = "devtools-responsiveui-volume-up-button";
     volumeUp.addEventListener("mousedown", () => {
-      SystemAppProxy.dispatchKeyboardEvent("keydown", {key: "VolumeUp"});
+      SystemAppProxy.dispatchKeyboardEvent("keydown", {key: "AudioVolumeUp"});
     });
     volumeUp.addEventListener("mouseup", () => {
-      SystemAppProxy.dispatchKeyboardEvent("keyup", {key: "VolumeUp"});
+      SystemAppProxy.dispatchKeyboardEvent("keyup", {key: "AudioVolumeUp"});
     });
 
     let volumeDown = this.chromeDoc.createElement("button");
     volumeDown.className = "devtools-responsiveui-volume-down-button";
     volumeDown.addEventListener("mousedown", () => {
-      SystemAppProxy.dispatchKeyboardEvent("keydown", {key: "VolumeDown"});
+      SystemAppProxy.dispatchKeyboardEvent("keydown", {key: "AudioVolumeDown"});
     });
     volumeDown.addEventListener("mouseup", () => {
-      SystemAppProxy.dispatchKeyboardEvent("keyup", {key: "VolumeDown"});
+      SystemAppProxy.dispatchKeyboardEvent("keyup", {key: "AudioVolumeDown"});
     });
 
     volumeButtons.appendChild(volumeUp);

@@ -1,5 +1,5 @@
 $inherits:
-  from: 'tasks/builds/sm_base.yml'
+  from: 'tasks/builds/sm_variant_base.yml'
   variables:
     build_name: 'sm-plaindebug'
     build_type: 'debug'

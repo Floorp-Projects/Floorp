@@ -1851,10 +1851,11 @@ class ValueOperations
     JSObject* toObjectOrNull() const { return value().toObjectOrNull(); }
     gc::Cell* toGCThing() const { return value().toGCThing(); }
     JS::TraceKind traceKind() const { return value().traceKind(); }
-    uint64_t asRawBits() const { return value().asRawBits(); }
-
-    JSValueType extractNonDoubleType() const { return value().extractNonDoubleType(); }
+    void* toPrivate() const { return value().toPrivate(); }
     uint32_t toPrivateUint32() const { return value().toPrivateUint32(); }
+
+    uint64_t asRawBits() const { return value().asRawBits(); }
+    JSValueType extractNonDoubleType() const { return value().extractNonDoubleType(); }
 
     JSWhyMagic whyMagic() const { return value().whyMagic(); }
     uint32_t magicUint32() const { return value().magicUint32(); }
@@ -1885,6 +1886,8 @@ class MutableValueOperations : public ValueOperations<Outer>
     void setSymbol(JS::Symbol* sym) { this->value().setSymbol(sym); }
     void setObject(JSObject& obj) { this->value().setObject(obj); }
     void setObjectOrNull(JSObject* arg) { this->value().setObjectOrNull(arg); }
+    void setPrivate(void* ptr) { this->value().setPrivate(ptr); }
+    void setPrivateUint32(uint32_t ui) { this->value().setPrivateUint32(ui); }
     void setPrivateGCThing(js::gc::Cell* cell) { this->value().setPrivateGCThing(cell); }
 };
 

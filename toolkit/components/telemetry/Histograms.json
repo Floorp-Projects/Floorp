@@ -2882,13 +2882,6 @@
     "kind": "boolean",
     "description": "The URL path contains !//"
   },
-  "NETWORK_SESSION_AT_256FD": {
-    "expires_in_version": "49",
-    "kind": "boolean",
-    "description": "session exceeded old 256 limit",
-    "bug_numbers": [1260218],
-    "alert_emails": ["necko@mozilla.com"]
-  },
   "NETWORK_SESSION_AT_900FD": {
     "expires_in_version": "never",
     "kind": "boolean",
@@ -10676,16 +10669,6 @@
     "bug_numbers": [1238433],
     "description": "Percentage of frames decoded frames dropped in an HTMLVideoElement"
   },
-  "VIDEO_DETAILED_DROPPED_FRAMES_PROPORTION" : {
-    "alert_emails": ["lchristie@mozilla.com", "cpearce@mozilla.com"],
-    "expires_in_version": "55",
-    "kind": "linear",
-    "high": 100,
-    "n_buckets": 50,
-    "keyed": true,
-    "bug_numbers": [1238433],
-    "description": "Percentage of frames decoded frames dropped in an HTMLVideoElement, keyed by MimeType, Resolution and Hardware Accelerated Decoding"
-  },
   "TAB_SWITCH_CACHE_POSITION": {
     "expires_in_version": "55",
     "bug_numbers": [1242013],
@@ -10759,6 +10742,54 @@
     "expires_in_version": "55",
     "kind": "boolean",
     "description": "Result of call to SandboxBroker::Initialize"
+  },
+  "SANDBOX_CAPABILITIES_SECCOMP_BPF": {
+    "alert_emails": ["gcp@mozilla.com"],
+    "bug_numbers": [1098428],
+    "expires_in_version": "55",
+    "kind": "flag",
+    "cpp_guard": "XP_LINUX",
+    "description": "Whether the system has seccomp-bpf capability"
+  },
+  "SANDBOX_CAPABILITIES_SECCOMP_TSYNC": {
+    "alert_emails": ["gcp@mozilla.com"],
+    "bug_numbers": [1098428],
+    "expires_in_version": "55",
+    "kind": "flag",
+    "cpp_guard": "XP_LINUX",
+    "description": "Whether the system has seccomp-bpf thread-sync capability"
+  },
+  "SANDBOX_CAPABILITIES_USER_NAMESPACES": {
+    "alert_emails": ["gcp@mozilla.com"],
+    "bug_numbers": [1098428],
+    "expires_in_version": "55",
+    "kind": "flag",
+    "cpp_guard": "XP_LINUX",
+    "description": "Whether our process succedeed in creating a user namespace"
+  },
+  "SANDBOX_CAPABILITIES_USER_NAMESPACES_PRIVILEGED": {
+    "alert_emails": ["gcp@mozilla.com"],
+    "bug_numbers": [1098428],
+    "expires_in_version": "55",
+    "kind": "flag",
+    "cpp_guard": "XP_LINUX",
+    "description": "Whether the system has the capability to create privileged user namespaces"
+  },
+ "SANDBOX_CAPABILITIES_ENABLED_MEDIA": {
+    "alert_emails": ["gcp@mozilla.com"],
+    "bug_numbers": [1098428],
+    "expires_in_version": "55",
+    "kind": "flag",
+    "cpp_guard": "XP_LINUX",
+    "description": "Whether the sandbox is enabled for media/GMP plugins"
+  },
+ "SANDBOX_CAPABILITIES_ENABLED_CONTENT": {
+    "alert_emails": ["gcp@mozilla.com"],
+    "bug_numbers": [1098428],
+    "expires_in_version": "55",
+    "kind": "flag",
+    "cpp_guard": "XP_LINUX",
+    "description": "Whether the sandbox is enabled for the content process"
   },
   "SYNC_WORKER_OPERATION": {
     "alert_emails": ["amarchesini@mozilla.com", "khuey@mozilla.com" ],

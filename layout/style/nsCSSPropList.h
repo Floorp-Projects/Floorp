@@ -4470,13 +4470,13 @@ CSS_PROP_TEXT(
     offsetof(nsStyleText, mWordSpacing),
     eStyleAnimType_Coord)
 CSS_PROP_TEXT(
-    word-wrap,
-    word_wrap,
-    WordWrap,
+    overflow-wrap,
+    overflow_wrap,
+    OverflowWrap,
     CSS_PROPERTY_PARSE_VALUE,
     "",
     VARIANT_HK,
-    kWordWrapKTable,
+    kOverflowWrapKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_VISIBILITY(

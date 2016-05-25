@@ -898,12 +898,21 @@ WidgetKeyboardEvent::ComputeKeyCodeFromKeyNameIndex(KeyNameIndex aKeyNameIndex)
       return nsIDOMKeyEvent::DOM_VK_NUM_LOCK;
     case KEY_NAME_INDEX_ScrollLock:
       return nsIDOMKeyEvent::DOM_VK_SCROLL_LOCK;
+#ifndef MOZ_B2G
+    case KEY_NAME_INDEX_AudioVolumeMute:
+      return nsIDOMKeyEvent::DOM_VK_VOLUME_MUTE;
+    case KEY_NAME_INDEX_AudioVolumeDown:
+      return nsIDOMKeyEvent::DOM_VK_VOLUME_DOWN;
+    case KEY_NAME_INDEX_AudioVolumeUp:
+      return nsIDOMKeyEvent::DOM_VK_VOLUME_UP;
+#else // #ifndef MOZ_B2G
     case KEY_NAME_INDEX_VolumeMute:
       return nsIDOMKeyEvent::DOM_VK_VOLUME_MUTE;
     case KEY_NAME_INDEX_VolumeDown:
       return nsIDOMKeyEvent::DOM_VK_VOLUME_DOWN;
     case KEY_NAME_INDEX_VolumeUp:
       return nsIDOMKeyEvent::DOM_VK_VOLUME_UP;
+#endif // #ifndef MOZ_B2G #else
     case KEY_NAME_INDEX_Meta:
       return nsIDOMKeyEvent::DOM_VK_META;
     case KEY_NAME_INDEX_AltGraph:
