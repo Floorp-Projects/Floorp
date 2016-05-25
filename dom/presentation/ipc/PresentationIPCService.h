@@ -7,8 +7,8 @@
 #ifndef mozilla_dom_PresentationIPCService_h
 #define mozilla_dom_PresentationIPCService_h
 
+#include "mozilla/dom/PresentationServiceBase.h"
 #include "nsIPresentationService.h"
-#include "nsRefPtrHashtable.h"
 #include "nsTObserverArray.h"
 
 class nsIDocShell;
@@ -20,9 +20,10 @@ class PresentationIPCRequest;
 class PresentationResponderLoadingCallback;
 
 class PresentationIPCService final : public nsIPresentationService
+                                   , public PresentationServiceBase
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIPRESENTATIONSERVICE
 
   PresentationIPCService();
@@ -50,16 +51,7 @@ private:
 
   nsTObserverArray<nsCOMPtr<nsIPresentationAvailabilityListener> > mAvailabilityListeners;
   nsRefPtrHashtable<nsStringHashKey, nsIPresentationSessionListener> mSessionListeners;
-  nsRefPtrHashtable<nsUint64HashKey, nsIPresentationRespondingListener> mRespondingListeners;
   RefPtr<PresentationResponderLoadingCallback> mCallback;
-
-  // Store the mapping between the window ID of the OOP page (in this process)
-  // and the ID of the responding session. It's used for an OOP receiver page
-  // to retrieve the correspondent session ID. Besides, also keep the mapping
-  // between the responding session ID and the window ID to help look up the
-  // window ID.
-  nsClassHashtable<nsUint64HashKey, nsString> mRespondingSessionIds;
-  nsDataHashtable<nsStringHashKey, uint64_t> mRespondingWindowIds;
 };
 
 } // namespace dom

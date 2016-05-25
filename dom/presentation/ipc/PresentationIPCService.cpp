@@ -23,7 +23,9 @@ PresentationChild* sPresentationChild;
 
 } // anonymous
 
-NS_IMPL_ISUPPORTS(PresentationIPCService, nsIPresentationService)
+NS_IMPL_ISUPPORTS_INHERITED(PresentationIPCService,
+                            PresentationServiceBase,
+                            nsIPresentationService)
 
 PresentationIPCService::PresentationIPCService()
 {
@@ -38,10 +40,10 @@ PresentationIPCService::PresentationIPCService()
 /* virtual */
 PresentationIPCService::~PresentationIPCService()
 {
+  Shutdown();
+
   mAvailabilityListeners.Clear();
   mSessionListeners.Clear();
-  mRespondingSessionIds.Clear();
-  mRespondingWindowIds.Clear();
   sPresentationChild = nullptr;
 }
 
@@ -54,8 +56,7 @@ PresentationIPCService::StartSession(const nsAString& aUrl,
                                      nsIPresentationServiceCallback* aCallback)
 {
   if (aWindowId != 0) {
-    mRespondingSessionIds.Put(aWindowId, new nsString(aSessionId));
-    mRespondingWindowIds.Put(aSessionId, aWindowId);
+    AddRespondingSessionId(aWindowId, aSessionId);
   }
 
   return SendRequest(aCallback, StartSessionRequest(nsString(aUrl),
@@ -191,10 +192,7 @@ NS_IMETHODIMP
 PresentationIPCService::GetWindowIdBySessionId(const nsAString& aSessionId,
                                                uint64_t* aWindowId)
 {
-  if (mRespondingWindowIds.Get(aSessionId, aWindowId)) {
-    return NS_OK;
-  }
-  return NS_ERROR_NOT_AVAILABLE;
+  return GetWindowIdBySessionIdInternal(aSessionId, aWindowId);
 }
 
 nsresult
@@ -249,15 +247,7 @@ NS_IMETHODIMP
 PresentationIPCService::GetExistentSessionIdAtLaunch(uint64_t aWindowId,
                                                      nsAString& aSessionId)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsString* sessionId = mRespondingSessionIds.Get(aWindowId);
-  if (sessionId) {
-    aSessionId.Assign(*sessionId);
-  } else {
-    aSessionId.Truncate();
-  }
-  return NS_OK;
+  return GetExistentSessionIdAtLaunchInternal(aWindowId, aSessionId);;
 }
 
 NS_IMETHODIMP
@@ -272,8 +262,7 @@ PresentationIPCService::NotifyReceiverReady(const nsAString& aSessionId,
   }
 
   // Track the responding info for an OOP receiver page.
-  mRespondingSessionIds.Put(aWindowId, new nsString(aSessionId));
-  mRespondingWindowIds.Put(aSessionId, aWindowId);
+  AddRespondingSessionId(aWindowId, aSessionId);
 
   NS_WARN_IF(!sPresentationChild->SendNotifyReceiverReady(nsString(aSessionId)));
 
@@ -288,12 +277,7 @@ PresentationIPCService::UntrackSessionInfo(const nsAString& aSessionId,
                                            uint8_t aRole)
 {
   // Remove the OOP responding info (if it has never been used).
-  uint64_t windowId = 0;
-  if (mRespondingWindowIds.Get(aSessionId, &windowId)) {
-    mRespondingWindowIds.Remove(aSessionId);
-    mRespondingSessionIds.Remove(windowId);
-  }
-
+  RemoveRespondingSessionId(aSessionId);
   return NS_OK;
 }
 
