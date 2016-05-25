@@ -49,7 +49,11 @@ SpecialPowers.pushPrefEnv(
   {"set" : [["urlclassifier.malwareTable", "test-malware-simple,test-unwanted-simple"],
             ["urlclassifier.phishTable", "test-phish-simple"]]},
   function() {
-    classifierHelper.addUrlToDB(testData, updateSuccess, updateError);
+    classifierHelper.addUrlToDB(testData)
+      .then(updateSuccess)
+      .catch(err => {
+        updateError(err);
+      });
   });
 
 </script>

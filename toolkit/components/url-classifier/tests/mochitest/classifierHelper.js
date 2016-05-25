@@ -3,7 +3,7 @@ if (typeof(classifierHelper) == "undefined") {
 }
 
 const CLASSIFIER_COMMON_URL = SimpleTest.getTestFileURL("classifierCommon.js");
-var classifierCommonScript = SpecialPowers.loadChromeScript(CLASSIFIER_COMMON_URL);
+var gScript = SpecialPowers.loadChromeScript(CLASSIFIER_COMMON_URL);
 
 const ADD_CHUNKNUM = 524;
 const SUB_CHUNKNUM = 523;
@@ -19,47 +19,71 @@ classifierHelper._updatesToCleanup = [];
 
 // Pass { url: ..., db: ... } to add url to database,
 // onsuccess/onerror will be called when update complete.
-classifierHelper.addUrlToDB = function(updateData, onsuccess, onerror) {
-  var testUpdate = "";
-  for (var update of updateData) {
-    var LISTNAME = update.db;
-    var CHUNKDATA = update.url;
-    var CHUNKLEN = CHUNKDATA.length;
+classifierHelper.addUrlToDB = function(updateData) {
+  return new Promise(function(resolve, reject) {
+    var testUpdate = "";
+    for (var update of updateData) {
+      var LISTNAME = update.db;
+      var CHUNKDATA = update.url;
+      var CHUNKLEN = CHUNKDATA.length;
 
-    classifierHelper._updatesToCleanup.push(update);
-    testUpdate +=
-      "n:1000\n" +
-      "i:" + LISTNAME + "\n" +
-      "ad:1\n" +
-      "a:" + ADD_CHUNKNUM + ":" + HASHLEN + ":" + CHUNKLEN + "\n" +
-      CHUNKDATA;
-  }
+      classifierHelper._updatesToCleanup.push(update);
+      testUpdate +=
+        "n:1000\n" +
+        "i:" + LISTNAME + "\n" +
+        "ad:1\n" +
+        "a:" + ADD_CHUNKNUM + ":" + HASHLEN + ":" + CHUNKLEN + "\n" +
+        CHUNKDATA;
+    }
 
-  classifierHelper._update(testUpdate, onsuccess, onerror);
+    classifierHelper._update(testUpdate, resolve, reject);
+  });
 }
 
 // Pass { url: ..., db: ... } to remove url from database,
 // onsuccess/onerror will be called when update complete.
-classifierHelper.removeUrlFromDB = function(updateData, onsuccess, onerror) {
-  var testUpdate = "";
-  for (var update of updateData) {
-    var LISTNAME = update.db;
-    var CHUNKDATA = ADD_CHUNKNUM + ":" + update.url;
-    var CHUNKLEN = CHUNKDATA.length;
+classifierHelper.removeUrlFromDB = function(updateData) {
+  return new Promise(function(resolve, reject) {
+    var testUpdate = "";
+    for (var update of updateData) {
+      var LISTNAME = update.db;
+      var CHUNKDATA = ADD_CHUNKNUM + ":" + update.url;
+      var CHUNKLEN = CHUNKDATA.length;
 
-    testUpdate +=
-      "n:1000\n" +
-      "i:" + LISTNAME + "\n" +
-      "s:" + SUB_CHUNKNUM + ":" + HASHLEN + ":" + CHUNKLEN + "\n" +
-      CHUNKDATA;
-  }
+      testUpdate +=
+        "n:1000\n" +
+        "i:" + LISTNAME + "\n" +
+        "s:" + SUB_CHUNKNUM + ":" + HASHLEN + ":" + CHUNKLEN + "\n" +
+        CHUNKDATA;
+    }
 
-  classifierHelper._updatesToCleanup =
-    classifierHelper._updatesToCleanup.filter((v) => {
-      return updateData.indexOf(v) == -1;
-    });
+    classifierHelper._updatesToCleanup =
+      classifierHelper._updatesToCleanup.filter((v) => {
+        return updateData.indexOf(v) == -1;
+      });
 
-  classifierHelper._update(testUpdate, onsuccess, onerror);
+    classifierHelper._update(testUpdate, resolve, reject);
+  });
+};
+
+// This API is used to expire all add/sub chunks we have updated
+// by using addUrlToDB and removeUrlFromDB.
+classifierHelper.resetDB = function() {
+  return new Promise(function(resolve, reject) {
+    var testUpdate = "";
+    for (var update of classifierHelper._updatesToCleanup) {
+      if (testUpdate.includes(update.db))
+        continue;
+
+      testUpdate +=
+        "n:1000\n" +
+        "i:" + update.db + "\n" +
+        "ad:" + ADD_CHUNKNUM + "\n" +
+        "sd:" + SUB_CHUNKNUM + "\n"
+    }
+
+    classifierHelper._update(testUpdate, resolve, reject);
+  });
 };
 
 classifierHelper._update = function(testUpdate, onsuccess, onerror) {
@@ -71,7 +95,7 @@ classifierHelper._update = function(testUpdate, onsuccess, onerror) {
     return;
   }
 
-  classifierCommonScript.sendAsyncMessage("doUpdate", { testUpdate });
+  gScript.sendAsyncMessage("doUpdate", { testUpdate });
 };
 
 classifierHelper._updateSuccess = function() {
@@ -80,7 +104,7 @@ classifierHelper._updateSuccess = function() {
 
   if (classifierHelper._updates.length) {
     var testUpdate = classifierHelper._updates[0].data;
-    classifierCommonScript.sendAsyncMessage("doUpdate", { testUpdate });
+    gScript.sendAsyncMessage("doUpdate", { testUpdate });
   }
 };
 
@@ -90,13 +114,13 @@ classifierHelper._updateError = function(errorCode) {
 
   if (classifierHelper._updates.length) {
     var testUpdate = classifierHelper._updates[0].data;
-    classifierCommonScript.sendAsyncMessage("doUpdate", { testUpdate });
+    gScript.sendAsyncMessage("doUpdate", { testUpdate });
   }
 };
 
 classifierHelper._setup = function() {
-  classifierCommonScript.addMessageListener("updateSuccess", classifierHelper._updateSuccess);
-  classifierCommonScript.addMessageListener("updateError", classifierHelper._updateError);
+  gScript.addMessageListener("updateSuccess", classifierHelper._updateSuccess);
+  gScript.addMessageListener("updateError", classifierHelper._updateError);
 
   // cleanup will be called at end of each testcase to remove all the urls added to database.
   SimpleTest.registerCleanupFunction(classifierHelper._cleanup);
@@ -107,9 +131,7 @@ classifierHelper._cleanup = function() {
     return Promise.resolve();
   }
 
-  return new Promise(function(resolve, reject) {
-    classifierHelper.removeUrlFromDB(classifierHelper._updatesToCleanup, resolve, reject);
-  });
+  return classifierHelper.resetDB();
 };
 
 classifierHelper._setup();
