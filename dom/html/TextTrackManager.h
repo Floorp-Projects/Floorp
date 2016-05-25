@@ -22,9 +22,9 @@ class HTMLMediaElement;
 class CompareTextTracks {
 private:
   HTMLMediaElement* mMediaElement;
+  int32_t TrackChildPosition(TextTrack* aTrack) const;
 public:
   explicit CompareTextTracks(HTMLMediaElement* aMediaElement);
-  int32_t TrackChildPosition(TextTrack* aTrack) const;
   bool Equals(TextTrack* aOne, TextTrack* aTwo) const;
   bool LessThan(TextTrack* aOne, TextTrack* aTwo) const;
 };
@@ -94,13 +94,30 @@ public:
 
   // The HTMLMediaElement that this TextTrackManager manages the TextTracks of.
   RefPtr<HTMLMediaElement> mMediaElement;
+
+  void DispatchTimeMarchesOn();
+
 private:
+  void TimeMarchesOn();
+
   // List of the TextTrackManager's owning HTMLMediaElement's TextTracks.
   RefPtr<TextTrackList> mTextTracks;
   // List of text track objects awaiting loading.
   RefPtr<TextTrackList> mPendingTextTracks;
   // List of newly introduced Text Track cues.
+
+  // Contain all cues for a MediaElement.
   RefPtr<TextTrackCueList> mNewCues;
+  // The active cues for the last TimeMarchesOn iteration.
+  RefPtr<TextTrackCueList> mLastActiveCues;
+
+  // True if the media player playback changed due to seeking prior to and
+  // during running the "Time Marches On" algorithm.
+  bool mHasSeeked;
+  // Playback position at the time of last "Time Marches On" call
+  double mLastTimeMarchesOnCalled;
+
+  bool mTimeMarchesOnDispatched;
 
   static StaticRefPtr<nsIWebVTTParserWrapper> sParserWrapper;
 
