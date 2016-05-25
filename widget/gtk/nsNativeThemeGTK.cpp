@@ -610,7 +610,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
     aGtkWidgetType = MOZ_GTK_TOOLTIP;
     break;
   case NS_THEME_STATUSBARPANEL:
-  case NS_THEME_RESIZER_PANEL:
+  case NS_THEME_RESIZERPANEL:
     aGtkWidgetType = MOZ_GTK_FRAME;
     break;
   case NS_THEME_PROGRESSBAR:
@@ -1677,7 +1677,7 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType,
       aWidgetType == NS_THEME_TOOLBAR ||
       aWidgetType == NS_THEME_STATUSBAR ||
       aWidgetType == NS_THEME_STATUSBARPANEL ||
-      aWidgetType == NS_THEME_RESIZER_PANEL ||
+      aWidgetType == NS_THEME_RESIZERPANEL ||
       aWidgetType == NS_THEME_PROGRESSCHUNK ||
       aWidgetType == NS_THEME_PROGRESSCHUNK_VERTICAL ||
       aWidgetType == NS_THEME_PROGRESSBAR ||
@@ -1796,7 +1796,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_TOOLBARGRIPPER:
   case NS_THEME_STATUSBAR:
   case NS_THEME_STATUSBARPANEL:
-  case NS_THEME_RESIZER_PANEL:
+  case NS_THEME_RESIZERPANEL:
   case NS_THEME_RESIZER:
   case NS_THEME_LISTBOX:
     // case NS_THEME_LISTITEM:

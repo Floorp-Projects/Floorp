@@ -369,7 +369,7 @@ class IonCache
 // the CacheLocations only have the lifespan of the jitcode, there is no need
 // to trace or mark any of the scripts. Since JSScripts are always allocated
 // tenured, and never moved, we can keep raw pointers, and there is no need
-// for HeapPtrScripts here.
+// for GCPtrScripts here.
 struct CacheLocation {
     jsbytecode* pc;
     JSScript* script;

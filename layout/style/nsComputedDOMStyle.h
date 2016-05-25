@@ -427,7 +427,7 @@ private:
   already_AddRefed<CSSValue> DoGetWordSpacing();
   already_AddRefed<CSSValue> DoGetWhiteSpace();
   already_AddRefed<CSSValue> DoGetWordBreak();
-  already_AddRefed<CSSValue> DoGetWordWrap();
+  already_AddRefed<CSSValue> DoGetOverflowWrap();
   already_AddRefed<CSSValue> DoGetHyphens();
   already_AddRefed<CSSValue> DoGetTabSize();
   already_AddRefed<CSSValue> DoGetTextSizeAdjust();

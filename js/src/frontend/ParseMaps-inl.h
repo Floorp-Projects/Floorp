@@ -22,7 +22,7 @@ AtomThingMapPtr<Map>::ensureMap(ExclusiveContext* cx)
         return true;
 
     AutoLockForExclusiveAccess lock(cx);
-    map_ = cx->parseMapPool().acquire<Map>();
+    map_ = cx->parseMapPool(lock).acquire<Map>();
     if (!map_)
         ReportOutOfMemory(cx);
     return !!map_;
@@ -36,7 +36,7 @@ AtomThingMapPtr<Map>::releaseMap(ExclusiveContext* cx)
         return;
 
     AutoLockForExclusiveAccess lock(cx);
-    cx->parseMapPool().release(map_);
+    cx->parseMapPool(lock).release(map_);
     map_ = nullptr;
 }
 
@@ -45,7 +45,7 @@ inline bool
 AtomDecls<ParseHandler>::init()
 {
     AutoLockForExclusiveAccess lock(cx);
-    map = cx->parseMapPool().acquire<AtomDefnListMap>();
+    map = cx->parseMapPool(lock).acquire<AtomDefnListMap>();
     return map;
 }
 
@@ -55,7 +55,7 @@ AtomDecls<ParseHandler>::~AtomDecls()
 {
     if (map) {
         AutoLockForExclusiveAccess lock(cx);
-        cx->parseMapPool().release(map);
+        cx->parseMapPool(lock).release(map);
     }
 }
 

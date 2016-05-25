@@ -116,6 +116,8 @@ public:
                                        dom::Element* aPseudoElement,
                                        EventStates aStateMask);
 
+  void RestyleSubtree(nsINode* aNode);
+
 private:
   already_AddRefed<nsStyleContext> GetContext(already_AddRefed<ServoComputedValues>,
                                               nsStyleContext* aParentContext,

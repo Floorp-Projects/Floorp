@@ -473,6 +473,7 @@ nsMathMLElement::ParseNumericValue(const nsString& aString,
   else if (unit.EqualsLiteral("mm")) cssUnit = eCSSUnit_Millimeter;
   else if (unit.EqualsLiteral("pt")) cssUnit = eCSSUnit_Point;
   else if (unit.EqualsLiteral("pc")) cssUnit = eCSSUnit_Pica;
+  else if (unit.EqualsLiteral("q")) cssUnit = eCSSUnit_Quarter;
   else { // unexpected unit
     if (!(aFlags & PARSE_SUPPRESS_WARNINGS)) {
       ReportLengthParseError(aString, aDocument);

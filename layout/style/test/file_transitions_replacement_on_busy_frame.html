@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1167519
+-->
+<head>
+  <meta charset=utf-8>
+  <script type="application/javascript"
+    src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="animation_utils.js"></script>
+  <style>
+    #target {
+      height: 100px;
+      width: 100px;
+      background: green;
+      transition: transform 100s linear;
+    }
+  </style>
+</head>
+<body>
+<div id="target"></div>
+<script>
+'use strict';
+
+var ok = opener.ok.bind(opener);
+var info = opener.info.bind(opener);
+
+function finish() {
+  var o = opener;
+  self.close();
+  o.SimpleTest.finish();
+}
+
+var OMTAPrefKey = "layers.offmainthreadcomposition.async-animations";
+var omtaEnabled = SpecialPowers.DOMWindowUtils.layerManagerRemote &&
+                  opener.SpecialPowers.getBoolPref(OMTAPrefKey);
+window.addEventListener("load", function() {
+  if (!omtaEnabled) {
+    info("Skipping the test since OMTA is disabled");
+    finish();
+    return;
+  }
+
+  var div = document.getElementById("target");
+  // Start first transition
+  div.style.transform = "translateX(300px)";
+  getComputedStyle(div);
+
+  // Wait for a paint to ensure that the first transition has started.
+  waitForAllPaints(function() {
+    var previousMatrix;
+    requestAnimationFrame(function() {
+      // Start second transition
+      div.style.transform = "translateX(0px)";
+      previousMatrix =
+        convertTo3dMatrix(getComputedStyle(div).transform);
+    });
+
+    requestAnimationFrame(function() {
+      // Tie up main thread for 300ms. In the meantime, the first transition
+      // will continue running on the compositor. If we don't update the start
+      // point of the second transition, it will appear to jump when it starts.
+      var startTime = performance.now();
+      while (performance.now() - startTime < 300);
+
+      // Ensure that our paint process has been done.
+      // Note that requestAnimationFrame is not suitable here since on Android
+      // there is a case where the paint process has not completed even when the
+      // requestAnimationFrame callback is run (and it is during the paint
+      // process that we update the transition start point).
+      waitForAllPaints(function() {
+        var anim = div.getAnimations()[0];
+        anim.pause();
+
+        // Wait for being animated style updated by animation.pause().
+        anim.ready.then(function() {
+          var currentMatrix =
+            convertTo3dMatrix(getComputedStyle(div).transform);
+          // Now the position on x-axis should be at least 300ms ahead.
+          var difference = 0.9; // 300px / (100s / 300ms)
+          ok(currentMatrix[3][0] - previousMatrix[3][0] >= difference,
+             currentMatrix + " should be advanced ahead of " + previousMatrix);
+          finish();
+        });
+      });
+    });
+  });
+});
+
+</script>
+</body>
+</html>

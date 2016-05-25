@@ -61,6 +61,73 @@ var TabStateCacheInternal = {
   },
 
   /**
+   * Helper function used by update (see below). For message size
+   * optimization sometimes we don't update the whole session storage
+   * only the values those have been changed.
+   *
+   * @param data (object)
+   *        The cached data where we want to update the changes.
+   * @param change (object)
+   *        The actual changed values per domain.
+   */
+  updatePartialStorageChange: function (data, change) {
+    if (!data.storage) {
+      data.storage = {};
+    }
+
+    let storage = data.storage;
+    for (let domain of Object.keys(change)) {
+      for (let key of Object.keys(change[domain])) {
+        let value = change[domain][key];
+        if (value === null) {
+          if (storage[domain] && storage[domain][key]) {
+            delete storage[domain][key];
+          }
+        } else {
+          if (!storage[domain]) {
+            storage[domain] = {};
+          }
+          storage[domain][key] = value;
+        }
+      }
+    }
+  },
+
+  /**
+   * Helper function used by update (see below). For message size
+   * optimization sometimes we don't update the whole browser history
+   * only the current index and the tail of the history from a certain
+   * index (specified by change.fromIdx)
+   *
+   * @param data (object)
+   *        The cached data where we want to update the changes.
+   * @param change (object)
+   *        Object containing the tail of the history array, and
+   *        some additional metadata.
+   */
+  updatePartialHistoryChange: function (data, change) {
+    const kLastIndex = Number.MAX_SAFE_INTEGER - 1;
+
+    if (!data.history) {
+      data.history = { entries: [] };
+    }
+
+    let history = data.history;
+    for (let key of Object.keys(change)) {
+      if (key == "entries") {
+        if (change.fromIdx != kLastIndex) {
+          history.entries.splice(change.fromIdx + 1);
+          while (change.entries.length) {
+            history.entries.push(change.entries.shift());
+          }
+        }
+      } else if (key != "fromIndex") {
+        history[key] = change[key];
+      }
+    }
+  },
+
+  /**
    * Updates cached data for a given |tab| or associated |browser|.
    *
    * @param browserOrTab (xul:tab or xul:browser)
@@ -73,6 +140,16 @@ var TabStateCacheInternal = {
     let data = this._data.get(browserOrTab.permanentKey) || {};
 
     for (let key of Object.keys(newData)) {
+      if (key == "storagechange") {
+        this.updatePartialStorageChange(data, newData.storagechange);
+        continue;
+      }
+
+      if (key == "historychange") {
+        this.updatePartialHistoryChange(data, newData.historychange);
+        continue;
+      }
+
       let value = newData[key];
       if (value === null) {
         delete data[key];

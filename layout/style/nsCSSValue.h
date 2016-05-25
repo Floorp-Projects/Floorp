@@ -396,7 +396,8 @@ enum nsCSSUnit {
   eCSSUnit_Millimeter   = 902,    // (float) 96/25.4 CSS pixels
   eCSSUnit_Centimeter   = 903,    // (float) 96/2.54 CSS pixels
   eCSSUnit_Pica         = 904,    // (float) 12 points == 16 CSS pixls
-  eCSSUnit_Pixel        = 905,    // (float) CSS pixel unit
+  eCSSUnit_Quarter      = 905,    // (float) 96/101.6 CSS pixels
+  eCSSUnit_Pixel        = 906,    // (float) CSS pixel unit
 
   // Angular units
   eCSSUnit_Degree       = 1000,    // (float) 360 per circle

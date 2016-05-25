@@ -530,6 +530,7 @@ var PrintUtils = {
         "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
       printPreviewTB = document.createElementNS(XUL_NS, "toolbar");
       printPreviewTB.setAttribute("printpreview", true);
+      printPreviewTB.setAttribute("fullscreentoolbar", true);
       printPreviewTB.id = "print-preview-toolbar";
 
       let navToolbox = this._listener.getNavToolbox();

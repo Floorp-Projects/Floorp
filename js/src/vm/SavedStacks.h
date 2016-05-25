@@ -229,7 +229,7 @@ class SavedStacks {
     struct PCKey {
         PCKey(JSScript* script, jsbytecode* pc) : script(script), pc(pc) { }
 
-        RelocatablePtrScript script;
+        HeapPtr<JSScript*> script;
         jsbytecode* pc;
 
         void trace(JSTracer* trc) { /* PCKey is weak. */ }
@@ -256,7 +256,7 @@ class SavedStacks {
             return true;
         }
 
-        RelocatablePtrAtom source;
+        HeapPtr<JSAtom*> source;
         size_t line;
         uint32_t column;
     };

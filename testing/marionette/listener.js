@@ -213,6 +213,7 @@ var getActiveElementFn = dispatch(getActiveElement);
 var clickElementFn = dispatch(clickElement);
 var goBackFn = dispatch(goBack);
 var getElementAttributeFn = dispatch(getElementAttribute);
+var getElementPropertyFn = dispatch(getElementProperty);
 var getElementTextFn = dispatch(getElementText);
 var getElementTagNameFn = dispatch(getElementTagName);
 var getElementRectFn = dispatch(getElementRect);
@@ -264,6 +265,7 @@ function startListeners() {
   addMessageListenerId("Marionette:getActiveElement", getActiveElementFn);
   addMessageListenerId("Marionette:clickElement", clickElementFn);
   addMessageListenerId("Marionette:getElementAttribute", getElementAttributeFn);
+  addMessageListenerId("Marionette:getElementProperty", getElementPropertyFn);
   addMessageListenerId("Marionette:getElementText", getElementTextFn);
   addMessageListenerId("Marionette:getElementTagName", getElementTagNameFn);
   addMessageListenerId("Marionette:isElementDisplayed", isElementDisplayedFn);
@@ -368,6 +370,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:getActiveElement", getActiveElementFn);
   removeMessageListenerId("Marionette:clickElement", clickElementFn);
   removeMessageListenerId("Marionette:getElementAttribute", getElementAttributeFn);
+  removeMessageListenerId("Marionette:getElementProperty", getElementPropertyFn);
   removeMessageListenerId("Marionette:getElementText", getElementTextFn);
   removeMessageListenerId("Marionette:getElementTagName", getElementTagNameFn);
   removeMessageListenerId("Marionette:isElementDisplayed", isElementDisplayedFn);
@@ -1056,20 +1059,22 @@ function clickElement(id) {
       capabilities.specificationLevel >= 1);
 }
 
-/**
- * Get a given attribute of an element.
- *
- * @param {WebElement} id
- *     Reference to the web element to get the attribute of.
- * @param {string} name
- *     Name of the attribute.
- *
- * @return {string}
- *     The value of the attribute.
- */
 function getElementAttribute(id, name) {
   let el = elementManager.getKnownElement(id, curContainer);
-  return atom.getElementAttribute(el, name, curContainer.frame);
+  if (element.isBooleanAttribute(el, name)) {
+    if (el.hasAttribute(name)) {
+      return "true";
+    } else {
+      return null;
+    }
+  } else {
+    return el.getAttribute(name);
+  }
+}
+
+function getElementProperty(id, name) {
+  let el = elementManager.getKnownElement(id, curContainer);
+  return el[name];
 }
 
 /**

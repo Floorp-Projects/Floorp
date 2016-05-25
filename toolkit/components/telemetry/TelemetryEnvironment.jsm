@@ -1213,8 +1213,8 @@ EnvironmentCache.prototype = {
     };
 
     const CPU_EXTENSIONS = ["hasMMX", "hasSSE", "hasSSE2", "hasSSE3", "hasSSSE3",
-                            "hasSSE4A", "hasSSE4_1", "hasSSE4_2", "hasEDSP", "hasARMv6",
-                            "hasARMv7", "hasNEON"];
+                            "hasSSE4A", "hasSSE4_1", "hasSSE4_2", "hasAVX", "hasAVX2",
+                            "hasEDSP", "hasARMv6", "hasARMv7", "hasNEON"];
 
     // Enumerate the available CPU extensions.
     let availableExts = [];

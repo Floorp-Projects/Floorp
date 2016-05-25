@@ -789,9 +789,6 @@ PresShell::PresShell()
 #endif
   mPresShellId = sNextPresShellId++;
   mFrozen = false;
-#ifdef DEBUG
-  mPresArenaAllocCount = 0;
-#endif
   mRenderFlags = 0;
 
   mScrollPositionClampingScrollPortSizeSet = false;
@@ -840,10 +837,7 @@ PresShell::~PresShell()
     mPresContext->RefreshDriver()->Thaw();
   }
 
-#ifdef DEBUG
-  MOZ_ASSERT(mPresArenaAllocCount == 0,
-             "Some pres arena objects were not freed");
-#endif
+  MOZ_ASSERT(mAllocatedPointers.IsEmpty(), "Some pres arena objects were not freed");
 
   mStyleSet->Delete();
   delete mFrameConstructor;
@@ -1245,7 +1239,7 @@ PresShell::Destroy()
   // pointing to objects in the arena now.  This is done:
   //
   //   (a) before mFrameArena's destructor runs so that our
-  //       mPresArenaAllocCount gets down to 0 and doesn't trip the assertion
+  //       mAllocatedPointers becomes empty and doesn't trip the assertion
   //       in ~PresShell,
   //   (b) before the mPresContext->SetShell(nullptr) below, so
   //       that when we clear the ArenaRefPtrs they'll still be able to

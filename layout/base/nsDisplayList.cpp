@@ -58,7 +58,6 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/PendingAnimationTracker.h"
-#include "mozilla/Poison.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/unused.h"
@@ -390,6 +389,29 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
     aLayer->AddAnimation();
 
   const TimingParams& timing = aAnimation->GetEffect()->SpecifiedTiming();
+
+  // If we are starting a new transition that replaces an existing transition
+  // running on the compositor, it is possible that the animation on the
+  // compositor will have advanced ahead of the main thread. If we use as
+  // the starting point of the new transition, the current value of the
+  // replaced transition as calculated on the main thread using the refresh
+  // driver time, the new transition will jump when it starts. Instead, we
+  // re-calculate the starting point of the new transition by applying the
+  // current TimeStamp to the parameters of the replaced transition.
+  //
+  // We need to do this here, rather than when we generate the new transition,
+  // since after generating the new transition other requestAnimationFrame
+  // callbacks may run that introduce further lag between the main thread and
+  // the compositor.
+  if (aAnimation->AsCSSTransition() &&
+      aAnimation->GetEffect()) {
+    MOZ_ASSERT(aAnimation->GetEffect()->AsTransition(),
+               "CSSTransition' effect should be an ElementPropertyTransition "
+               "until we fix bug 1049975");
+    aAnimation->GetEffect()->AsTransition()->
+      UpdateStartValueFromReplacedTransition();
+  }
+
   const ComputedTiming computedTiming =
     aAnimation->GetEffect()->GetComputedTiming();
   Nullable<TimeDuration> startTime = aAnimation->GetCurrentOrPendingStartTime();
@@ -492,10 +514,15 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
   }
 }
 
-static void
+static bool
 GenerateAndPushTextMask(nsIFrame* aFrame, nsRenderingContext* aContext,
-                        const nsRect& aFillRect)
+                        const nsRect& aFillRect, nsDisplayListBuilder* aBuilder)
 {
+  if (aBuilder->IsForGenerateGlyphMask() ||
+      aBuilder->IsForPaintingSelectionBG()) {
+    return false;
+  }
+
   // The main function of enabling background-clip:text property value.
   // When a nsDisplayBackgroundImage detects "text" bg-clip style, it will call
   // this function to
@@ -562,6 +589,8 @@ GenerateAndPushTextMask(nsIFrame* aFrame, nsRenderingContext* aContext,
 
   RefPtr<SourceSurface> maskSurface = maskDT->Snapshot();
   sourceCtx->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, 1.0, maskSurface, maskTransform);
+
+  return true;
 }
 
 /* static */ void
@@ -2186,14 +2215,6 @@ static bool IsContentLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
 
 static bool IsZOrderLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
                         void* aClosure) {
-  {
-    // TEMPORARY debugging code for bug 1265280
-    nsIFrame* f2 = aItem2->Frame();
-    if (uintptr_t(f2->StyleContext()) == mozPoisonValue()) {
-      NS_RUNTIMEABORT(nsPrintfCString("bad display item %p type %s frame %p",
-                                      aItem2, aItem2->Name(), f2).get());
-    }
-  }
   // Note that we can't just take the difference of the two
   // z-indices here, because that might overflow a 32-bit int.
   return aItem1->ZIndex() <= aItem2->ZIndex();
@@ -2472,11 +2493,6 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
                                                      nsDisplayList* aList,
                                                      bool aAllowWillPaintBorderOptimization)
 {
-  if (aBuilder->IsForGenerateGlyphMask() ||
-      aBuilder->IsForPaintingSelectionBG()) {
-    return true;
-  }
-
   nsStyleContext* bgSC = nullptr;
   const nsStyleBackground* bg = nullptr;
   nsRect bgRect = aBackgroundRect + aBuilder->ToReferenceFrame(aFrame);
@@ -2978,7 +2994,9 @@ nsDisplayBackgroundImage::PaintInternal(nsDisplayListBuilder* aBuilder,
   uint8_t clip = mBackgroundStyle->mImage.mLayers[mLayer].mClip;
 
   if (clip == NS_STYLE_IMAGELAYER_CLIP_TEXT) {
-    GenerateAndPushTextMask(mFrame, aCtx, mBackgroundRect);
+    if (!GenerateAndPushTextMask(mFrame, aCtx, mBackgroundRect, aBuilder)) {
+      return;
+    }
   }
 
   nsCSSRendering::PaintBGParams params =
@@ -3410,7 +3428,10 @@ nsDisplayBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
 
   uint8_t clip = mBackgroundStyle->mImage.mLayers[0].mClip;
   if (clip == NS_STYLE_IMAGELAYER_CLIP_TEXT) {
-    GenerateAndPushTextMask(mFrame, aCtx, mBackgroundRect);
+    if (!GenerateAndPushTextMask(mFrame, aCtx, mBackgroundRect, aBuilder)) {
+      return;
+    }
+
     ctx->SetColor(mColor);
     ctx->Rectangle(bounds, true);
     ctx->Fill();

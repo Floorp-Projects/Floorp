@@ -1,0 +1,5 @@
+$inherits:
+  from: 'tasks/builds/sm_base.yml'
+task:
+  payload:
+    command: ["/bin/bash", "-c", "cd /home/worker/ && ./bin/checkout-sources.sh && ./workspace/build/src/testing/taskcluster/scripts/builder/build-sm.sh" ]

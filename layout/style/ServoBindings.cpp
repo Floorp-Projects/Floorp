@@ -447,6 +447,12 @@ Servo_RestyleDocument(RawGeckoDocument* doc, RawServoStyleSet* set)
             "non-MOZ_STYLO build");
 }
 
+void Servo_RestyleSubtree(RawGeckoNode* node, RawServoStyleSet* set)
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_RestyleSubtree in a "
+            "non-MOZ_STYLO build");
+}
+
 #define STYLE_STRUCT(name_, checkdata_cb_)                                     \
 const nsStyle##name_*                                                          \
 Servo_GetStyle##name_(ServoComputedValues*)                                    \

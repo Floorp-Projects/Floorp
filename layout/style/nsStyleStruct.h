@@ -1990,7 +1990,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText
   uint8_t mTextTransform;               // [inherited] see nsStyleConsts.h
   uint8_t mWhiteSpace;                  // [inherited] see nsStyleConsts.h
   uint8_t mWordBreak;                   // [inherited] see nsStyleConsts.h
-  uint8_t mWordWrap;                    // [inherited] see nsStyleConsts.h
+  uint8_t mOverflowWrap;                // [inherited] see nsStyleConsts.h
   uint8_t mHyphens;                     // [inherited] see nsStyleConsts.h
   uint8_t mRubyAlign;                   // [inherited] see nsStyleConsts.h
   uint8_t mRubyPosition;                // [inherited] see nsStyleConsts.h
@@ -2047,7 +2047,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText
 
   bool WordCanWrapStyle() const {
     return WhiteSpaceCanWrapStyle() &&
-           mWordWrap == NS_STYLE_WORDWRAP_BREAK_WORD;
+           mOverflowWrap == NS_STYLE_OVERFLOWWRAP_BREAK_WORD;
   }
 
   bool HasTextEmphasis() const {

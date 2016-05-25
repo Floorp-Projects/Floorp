@@ -4559,11 +4559,11 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
              aContext, mPresContext, conditions);
   }
 
-  // word-wrap: enum, inherit, initial
-  SetDiscrete(*aRuleData->ValueForWordWrap(), text->mWordWrap, conditions,
+  // overflow-wrap: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForOverflowWrap(), text->mOverflowWrap, conditions,
               SETDSC_ENUMERATED | SETDSC_UNSET_INHERIT,
-              parentText->mWordWrap,
-              NS_STYLE_WORDWRAP_NORMAL, 0, 0, 0, 0);
+              parentText->mOverflowWrap,
+              NS_STYLE_OVERFLOWWRAP_NORMAL, 0, 0, 0, 0);
 
   // hyphens: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForHyphens(), text->mHyphens, conditions,

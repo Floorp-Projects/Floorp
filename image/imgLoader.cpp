@@ -11,6 +11,7 @@
  #include "mozilla/ChaosMode.h"
 
 #include "ImageLogging.h"
+#include "nsImageModule.h"
 #include "nsPrintfCString.h"
 #include "imgLoader.h"
 #include "imgRequestProxy.h"
@@ -1133,26 +1134,40 @@ imgMemoryReporter* imgLoader::sMemReporter;
 NS_IMPL_ISUPPORTS(imgLoader, imgILoader, nsIContentSniffer, imgICache,
                   nsISupportsWeakReference, nsIObserver)
 
-static imgLoader* gSingleton = nullptr;
-static imgLoader* gPBSingleton = nullptr;
+static imgLoader* gNormalLoader = nullptr;
+static imgLoader* gPrivateBrowsingLoader = nullptr;
 
-imgLoader*
-imgLoader::Singleton()
+/* static */ already_AddRefed<imgLoader>
+imgLoader::CreateImageLoader()
 {
-  if (!gSingleton) {
-    gSingleton = imgLoader::Create().take();
-  }
-  return gSingleton;
+  // In some cases, such as xpctests, XPCOM modules are not automatically
+  // initialized.  We need to make sure that our module is initialized before
+  // we hand out imgLoader instances and code starts using them.
+  mozilla::image::EnsureModuleInitialized();
+
+  RefPtr<imgLoader> loader = new imgLoader();
+  loader->Init();
+
+  return loader.forget();
 }
 
 imgLoader*
-imgLoader::PBSingleton()
+imgLoader::NormalLoader()
 {
-  if (!gPBSingleton) {
-    gPBSingleton = imgLoader::Create().take();
-    gPBSingleton->RespectPrivacyNotifications();
+  if (!gNormalLoader) {
+    gNormalLoader = CreateImageLoader().take();
   }
-  return gPBSingleton;
+  return gNormalLoader;
+}
+
+imgLoader*
+imgLoader::PrivateBrowsingLoader()
+{
+  if (!gPrivateBrowsingLoader) {
+    gPrivateBrowsingLoader = CreateImageLoader().take();
+    gPrivateBrowsingLoader->RespectPrivacyNotifications();
+  }
+  return gPrivateBrowsingLoader;
 }
 
 imgLoader::imgLoader()
@@ -1160,21 +1175,6 @@ imgLoader::imgLoader()
 {
   sMemReporter->AddRef();
   sMemReporter->RegisterLoader(this);
-}
-
-already_AddRefed<imgLoader>
-imgLoader::GetInstance()
-{
-  static RefPtr<imgLoader> singleton;
-  if (!singleton) {
-    singleton = imgLoader::Create();
-    if (!singleton) {
-        return nullptr;
-    }
-    ClearOnShutdown(&singleton);
-  }
-  RefPtr<imgLoader> loader = singleton.get();
-  return loader.forget();
 }
 
 imgLoader::~imgLoader()
@@ -1400,8 +1400,10 @@ imgLoader::ClearCacheForControlledDocument(nsIDocument* aDoc)
 void
 imgLoader::Shutdown()
 {
-  NS_IF_RELEASE(gSingleton);
-  NS_IF_RELEASE(gPBSingleton);
+  NS_IF_RELEASE(gNormalLoader);
+  gNormalLoader = nullptr;
+  NS_IF_RELEASE(gPrivateBrowsingLoader);
+  gPrivateBrowsingLoader = nullptr;
 }
 
 nsresult

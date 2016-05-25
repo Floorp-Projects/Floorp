@@ -32,7 +32,7 @@ config = {
         'download-and-extract',
         'create-virtualenv',
         'install',
-        'run-marionette',
+        'run-tests',
     ],
     "default_blob_upload_servers": [
          "https://blobupload.elasticbeanstalk.com",

@@ -15,6 +15,7 @@
 #include "mozilla/Logging.h"
 #include "prinit.h"
 #include "nsIObserver.h"
+#include "mozilla/LinkedList.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/net/DashboardTypes.h"
 #include "mozilla/Atomics.h"
@@ -64,6 +65,20 @@ static const int32_t kDefaultTCPKeepCount =
 #else
                                               4;  // Specifiable in Linux.
 #endif
+
+class LinkedRunnableEvent final : public LinkedListElement<LinkedRunnableEvent>
+{
+public:
+  explicit LinkedRunnableEvent(nsIRunnable *event) : mEvent(event) {}
+  ~LinkedRunnableEvent() {}
+
+  already_AddRefed<nsIRunnable> TakeEvent()
+  {
+    return mEvent.forget();
+  }
+private:
+    nsCOMPtr<nsIRunnable> mEvent;
+};
 
 //-----------------------------------------------------------------------------
 
@@ -202,9 +217,7 @@ private:
     //-------------------------------------------------------------------------
     // pending socket queue - see NotifyWhenCanAttachSocket
     //-------------------------------------------------------------------------
-
-    Mutex        mEventQueueLock;
-    nsEventQueue mPendingSocketQ; // queue of nsIRunnable objects
+    AutoCleanLinkedList<LinkedRunnableEvent> mPendingSocketQueue;
 
     // Preference Monitor for SendBufferSize and Keepalive prefs.
     nsresult    UpdatePrefs();

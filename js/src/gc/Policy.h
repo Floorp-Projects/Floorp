@@ -145,12 +145,12 @@ FOR_EACH_INTERNAL_GC_POINTER_TYPE(DEFINE_INTERNAL_GC_POLICY)
 #undef DEFINE_INTERNAL_GC_POLICY
 
 template <typename T>
-struct GCPolicy<js::RelocatablePtr<T>>
+struct GCPolicy<js::HeapPtr<T>>
 {
-    static void trace(JSTracer* trc, js::RelocatablePtr<T>* thingp, const char* name) {
+    static void trace(JSTracer* trc, js::HeapPtr<T>* thingp, const char* name) {
         js::TraceEdge(trc, thingp, name);
     }
-    static bool needsSweep(js::RelocatablePtr<T>* thingp) {
+    static bool needsSweep(js::HeapPtr<T>* thingp) {
         return js::gc::IsAboutToBeFinalized(thingp);
     }
 };

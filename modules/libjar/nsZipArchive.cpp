@@ -720,8 +720,9 @@ MOZ_WIN_MEM_TRY_BEGIN
 
   //-- Read the central directory headers
   uint32_t sig = 0;
-  while (buf + int32_t(sizeof(uint32_t)) <= endp &&
-         (sig = xtolong(buf)) == CENTRALSIG) {
+  while ((buf + int32_t(sizeof(uint32_t)) > buf) &&
+         (buf + int32_t(sizeof(uint32_t)) <= endp) &&
+         ((sig = xtolong(buf)) == CENTRALSIG)) {
     // Make sure there is enough data available.
     if ((buf > endp) || (endp - buf < ZIPCENTRAL_SIZE)) {
       nsZipArchive::sFileCorruptedReason = "nsZipArchive: central directory too small";

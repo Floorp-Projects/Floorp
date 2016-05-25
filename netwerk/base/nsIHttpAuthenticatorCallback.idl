@@ -1,0 +1,31 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(d989cb03-e446-4086-b9e6-46842cb97bd5)]
+interface nsIHttpAuthenticatorCallback : nsISupports
+{
+  /**
+   * Authentication data for a header is available.
+   *
+   * @param aCreds
+   *        Credentials which were obtained asynchonously.
+   * @param aFlags
+   *        Flags set by asynchronous call.
+   * @param aResult
+   *        Result status of credentials generation
+   * @param aSessionState
+   *        Modified session state to be passed to caller
+   * @param aContinuationState
+   *        Modified continuation state to be passed to caller
+   */
+  void onCredsGenerated(in string aCreds,
+                        in unsigned long aFlags,
+                        in nsresult aResult,
+                        in nsISupports aSessionsState,
+                        in nsISupports aContinuationState);
+
+};
+

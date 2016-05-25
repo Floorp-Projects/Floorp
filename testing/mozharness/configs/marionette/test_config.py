@@ -10,7 +10,7 @@ config = {
         'download-and-extract',
         'create-virtualenv',
         'install',
-        'run-marionette',
+        'run-tests',
     ],
     "suite_definitions": {
         "gaiatest_desktop": {
