@@ -186,11 +186,11 @@ public:
 
   static nscoord ToLength(nsStyleUnit aUnit, nsStyleUnion aValue) {
     MOZ_ASSERT(ConvertsToLength(aUnit, aValue));
-    if (aUnit == eStyleUnit_Coord) {
-      return aValue.mInt;
+    if (IsCalcUnit(aUnit)) {
+      return AsCalcValue(aValue)->ToLength(); // Note: This asserts !mHasPercent
     }
-    MOZ_ASSERT(IsCalcUnit(aUnit) && !AsCalcValue(aValue)->mHasPercent);
-    return AsCalcValue(aValue)->ToLength();
+    MOZ_ASSERT(aUnit == eStyleUnit_Coord);
+    return aValue.mInt;
   }
 
   nscoord ToLength() const {
