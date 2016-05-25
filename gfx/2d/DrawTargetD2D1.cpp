@@ -170,7 +170,8 @@ DrawTargetD2D1::DrawSurface(SourceSurface *aSurface,
   }
 
   if (bitmap && aSurfOptions.mSamplingBounds == SamplingBounds::UNBOUNDED) {
-    mDC->DrawBitmap(bitmap, D2DRect(aDest), aOptions.mAlpha, D2DFilter(aSurfOptions.mFilter), D2DRect(aSource));
+    mDC->DrawBitmap(bitmap, D2DRect(aDest), aOptions.mAlpha,
+                    D2DFilter(aSurfOptions.mSamplingFilter), D2DRect(aSource));
   } else {
     // This has issues ignoring the alpha channel on windows 7 with images marked opaque.
     MOZ_ASSERT(aSurface->GetFormat() != SurfaceFormat::B8G8R8X8);
@@ -178,7 +179,7 @@ DrawTargetD2D1::DrawSurface(SourceSurface *aSurface,
                           D2D1::ImageBrushProperties(samplingBounds,
                                                      D2D1_EXTEND_MODE_CLAMP,
                                                      D2D1_EXTEND_MODE_CLAMP,
-                                                     D2DInterpolationMode(aSurfOptions.mFilter)),
+                                                     D2DInterpolationMode(aSurfOptions.mSamplingFilter)),
                           D2D1::BrushProperties(aOptions.mAlpha, D2DMatrix(transform)),
                           getter_AddRefs(brush));
     mDC->FillRectangle(D2DRect(aDest), brush);
@@ -1704,7 +1705,7 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
 
         mDC->CreateBitmapBrush(bitmap,
                                D2D1::BitmapBrushProperties(xRepeat, yRepeat,
-                                                           D2DFilter(pat->mFilter)),
+                                                           D2DFilter(pat->mSamplingFilter)),
                                D2D1::BrushProperties(aAlpha, D2DMatrix(mat)),
                                getter_AddRefs(bitmapBrush));
         if (!bitmapBrush) {
@@ -1735,7 +1736,7 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
                           D2D1::ImageBrushProperties(samplingBounds,
                                                      xRepeat,
                                                      yRepeat,
-                                                     D2DInterpolationMode(pat->mFilter)),
+                                                     D2DInterpolationMode(pat->mSamplingFilter)),
                           D2D1::BrushProperties(aAlpha, D2DMatrix(mat)),
                           getter_AddRefs(imageBrush));
 

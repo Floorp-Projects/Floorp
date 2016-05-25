@@ -97,11 +97,11 @@ public:
   SurfacePattern* InitSurfacePattern(SourceSurface *aSourceSurface,
                                      ExtendMode aExtendMode,
                                      const Matrix &aMatrix = Matrix(),
-                                     Filter aFilter = Filter::GOOD,
+                                     SamplingFilter aSamplingFilter = SamplingFilter::GOOD,
                                      const IntRect &aSamplingRect = IntRect()) {
     MOZ_ASSERT(!mPattern);
     mPattern = new (mSurfacePattern.addr())
-      SurfacePattern(aSourceSurface, aExtendMode, aMatrix, aFilter, aSamplingRect);
+      SurfacePattern(aSourceSurface, aExtendMode, aMatrix, aSamplingFilter, aSamplingRect);
     return mSurfacePattern.addr();
   }
 

@@ -1042,7 +1042,7 @@ FilterNodeBlendSoftware::GetOutputRectInRect(const IntRect& aRect)
 }
 
 FilterNodeTransformSoftware::FilterNodeTransformSoftware()
- : mFilter(Filter::GOOD)
+  : mSamplingFilter(SamplingFilter::GOOD)
 {}
 
 int32_t
@@ -1058,7 +1058,7 @@ void
 FilterNodeTransformSoftware::SetAttribute(uint32_t aIndex, uint32_t aFilter)
 {
   MOZ_ASSERT(aIndex == ATT_TRANSFORM_FILTER);
-  mFilter = static_cast<Filter>(aFilter);
+  mSamplingFilter = static_cast<SamplingFilter>(aFilter);
   Invalidate();
 }
 
@@ -1135,7 +1135,7 @@ FilterNodeTransformSoftware::Render(const IntRect& aRect)
 
   Rect r(0, 0, srcRect.width, srcRect.height);
   dt->SetTransform(transform);
-  dt->DrawSurface(input, r, r, DrawSurfaceOptions(mFilter));
+  dt->DrawSurface(input, r, r, DrawSurfaceOptions(mSamplingFilter));
 
   dt->Flush();
   surf->Unmap();
