@@ -769,7 +769,7 @@ const KTableEntry nsCSSProps::kAppearanceKTable[] = {
   { eCSSKeyword_splitter,               NS_THEME_SPLITTER },
   { eCSSKeyword_statusbar,              NS_THEME_STATUSBAR },
   { eCSSKeyword_statusbarpanel,         NS_THEME_STATUSBARPANEL },
-  { eCSSKeyword_resizerpanel,           NS_THEME_RESIZER_PANEL },
+  { eCSSKeyword_resizerpanel,           NS_THEME_RESIZERPANEL },
   { eCSSKeyword_resizer,                NS_THEME_RESIZER },
   { eCSSKeyword_listbox,                NS_THEME_LISTBOX },
   { eCSSKeyword_listitem,               NS_THEME_LISTITEM },
@@ -809,7 +809,7 @@ const KTableEntry nsCSSProps::kAppearanceKTable[] = {
   { eCSSKeyword_scrollbarthumb_vertical,      NS_THEME_SCROLLBARTHUMB_VERTICAL },
   { eCSSKeyword_textfield,              NS_THEME_TEXTFIELD },
   { eCSSKeyword_textfield_multiline,    NS_THEME_TEXTFIELD_MULTILINE },
-  { eCSSKeyword_caret,                  NS_THEME_TEXTFIELD_CARET },
+  { eCSSKeyword_caret,                  NS_THEME_CARET },
   { eCSSKeyword_searchfield,            NS_THEME_SEARCHFIELD },
   { eCSSKeyword_menulist,               NS_THEME_MENULIST },
   { eCSSKeyword_menulist_button,        NS_THEME_MENULIST_BUTTON },
@@ -2216,9 +2216,9 @@ const KTableEntry nsCSSProps::kWordBreakKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-const KTableEntry nsCSSProps::kWordWrapKTable[] = {
-  { eCSSKeyword_normal, NS_STYLE_WORDWRAP_NORMAL },
-  { eCSSKeyword_break_word, NS_STYLE_WORDWRAP_BREAK_WORD },
+const KTableEntry nsCSSProps::kOverflowWrapKTable[] = {
+  { eCSSKeyword_normal, NS_STYLE_OVERFLOWWRAP_NORMAL },
+  { eCSSKeyword_break_word, NS_STYLE_OVERFLOWWRAP_BREAK_WORD },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 

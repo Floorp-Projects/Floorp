@@ -18,7 +18,7 @@ class OpusDataDecoder : public MediaDataDecoder
 {
 public:
   OpusDataDecoder(const AudioInfo& aConfig,
-                  FlushableTaskQueue* aTaskQueue,
+                  TaskQueue* aTaskQueue,
                   MediaDataDecoderCallback* aCallback);
   ~OpusDataDecoder();
 
@@ -38,12 +38,12 @@ public:
 private:
   nsresult DecodeHeader(const unsigned char* aData, size_t aLength);
 
-  void Decode (MediaRawData* aSample);
-  int DoDecode (MediaRawData* aSample);
-  void DoDrain ();
+  void ProcessDecode(MediaRawData* aSample);
+  int DoDecode(MediaRawData* aSample);
+  void ProcessDrain();
 
   const AudioInfo& mInfo;
-  RefPtr<FlushableTaskQueue> mTaskQueue;
+  const RefPtr<TaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
 
   // Opus decoder state
@@ -60,6 +60,8 @@ private:
   int64_t mFrames;
   Maybe<int64_t> mLastFrameTime;
   uint8_t mMappingTable[MAX_AUDIO_CHANNELS]; // Channel mapping table.
+
+  Atomic<bool> mIsFlushing;
 };
 
 } // namespace mozilla

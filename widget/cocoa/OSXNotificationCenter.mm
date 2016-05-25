@@ -391,7 +391,8 @@ OSXNotificationCenter::ShowAlertWithIconData(nsIAlertNotification* aAlert,
   } else {
     mPendingAlerts.AppendElement(osxni);
     osxni->mPendingNotifiction = notification;
-    RefPtr<imgLoader> il = imgLoader::GetInstance();
+    imgLoader* il = inPrivateBrowsing ? imgLoader::PrivateBrowsingLoader()
+                                      : imgLoader::NormalLoader();
     if (il) {
       nsCOMPtr<nsIURI> imageUri;
       NS_NewURI(getter_AddRefs(imageUri), imageUrl);

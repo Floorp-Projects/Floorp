@@ -7,43 +7,35 @@
 #if !defined(MediaShutdownManager_h_)
 #define MediaShutdownManager_h_
 
-#include "nsIObserver.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
-#include "nsIThread.h"
 #include "nsCOMPtr.h"
-#include "nsTHashtable.h"
+#include "nsIAsyncShutdown.h"
+#include "nsIThread.h"
 #include "nsHashKeys.h"
+#include "nsTHashtable.h"
 
 namespace mozilla {
 
 class MediaDecoder;
 
 // The MediaShutdownManager manages shutting down the MediaDecoder
-// infrastructure in response to an xpcom-shutdown notification. This happens
-// when Gecko is shutting down in the middle of operation. This is tricky, as
-// there are a number of moving parts that must be shutdown in a particular
-// order. Additionally the xpcom-shutdown observer *must* block until all
-// threads are shutdown, which is tricky since we have a number of threads
-// here and their shutdown is asynchronous. We can't have each element of
-// our pipeline listening for xpcom-shutdown, as if each observer blocks
-// waiting for its threads to shutdown it will block other xpcom-shutdown
-// notifications from firing, and shutdown of one part of the media pipeline
-// (say the State Machine thread) may depend another part to be shutdown
-// first (the MediaDecoder threads). The MediaShutdownManager encapsulates
-// all these dependencies, and provides a single xpcom-shutdown listener
-// for the MediaDecoder infrastructure, to ensure that no shutdown order
-// dependencies leak out of the MediaDecoder stack. The MediaShutdownManager
-// is a singleton.
+// infrastructure in response to an xpcom-shutdown notification.
+// This happens when Gecko is shutting down in the middle of operation.
+// This is tricky, as there are a number of moving parts that must
+// be shutdown in a particular order. The MediaShutdownManager
+// encapsulates all these dependencies to ensure that no shutdown
+// order dependencies leak out of the MediaDecoder stack.
+// The MediaShutdownManager is a singleton.
 //
-// The MediaShutdownManager ensures that the MediaDecoder stack is shutdown
-// before returning from its xpcom-shutdown observer by keeping track of all
-// the active MediaDecoders, and upon xpcom-shutdown calling Shutdown() on
-// every MediaDecoder and then spinning the main thread event loop until all
-// SharedThreadPools have shutdown. Once the SharedThreadPools are shutdown,
-// all the state machines and their threads have been shutdown, the
-// xpcom-shutdown observer returns.
+// The MediaShutdownManager ensures that the MediaDecoder stack
+// is shutdown before exiting xpcom-shutdown stage by registering
+// itself with nsIAsyncShutdownService to receive notification
+// when the stage of shutdown has started and then calls Shutdown()
+// on every MediaDecoder. Shutdown will not proceed until all
+// MediaDecoders finish shutdown and MediaShutdownManager unregisters
+// itself from the async shutdown service.
 //
 // Note that calling the Unregister() functions may result in the singleton
 // being deleted, so don't store references to the singleton, always use the
@@ -57,10 +49,10 @@ class MediaDecoder;
 //  MediaShutdownManager& instance = MediaShutdownManager::Instance();
 //  instance.Unregister(someDecoder); // Warning! May delete instance!
 //  instance.Register(someOtherDecoder); // BAD! instance may be dangling!
-class MediaShutdownManager : public nsIObserver {
+class MediaShutdownManager : public nsIAsyncShutdownBlocker {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
+  NS_DECL_NSIASYNCSHUTDOWNBLOCKER
 
   // The MediaShutdownManager is a singleton, access its instance with
   // this accessor.
@@ -79,8 +71,6 @@ private:
 
   MediaShutdownManager();
   virtual ~MediaShutdownManager();
-
-  void Shutdown();
 
   // Ensures we have a shutdown listener if we need one, and removes the
   // listener and destroys the singleton if we don't.

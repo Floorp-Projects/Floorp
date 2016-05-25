@@ -160,7 +160,10 @@ nsStyleContext::FinishConstruction(bool aSkipParentDisplayBasedStyleFixup)
     mParent->AddChild(this);
   }
 
-  ApplyStyleFixups(aSkipParentDisplayBasedStyleFixup);
+  SetStyleBits();
+  if (!mSource.IsServoComputedValues()) {
+    ApplyStyleFixups(aSkipParentDisplayBasedStyleFixup);
+  }
 
   #define eStyleStruct_LastItem (nsStyleStructID_Length - 1)
   NS_ASSERTION(NS_STYLE_INHERIT_MASK & NS_STYLE_INHERIT_BIT(LastItem),
@@ -442,13 +445,28 @@ const void* nsStyleContext::StyleData(nsStyleStructID aSID)
   if (cachedData)
     return cachedData; // We have computed data stored on this node in the context tree.
   // Our style source will take care of it for us.
-  const void* newData = mSource.IsGeckoRuleNode()
-                          ? mSource.AsGeckoRuleNode()->GetStyleData(aSID, this, true)
-                          : StyleStructFromServoComputedValues(aSID);
-  if (!nsCachedStyleData::IsReset(aSID)) {
-    // always cache inherited data on the style context; the rule
-    // node set the bit in mBits for us if needed.
-    mCachedInheritedData.mStyleStructs[aSID] = const_cast<void*>(newData);
+  const void* newData;
+  if (mSource.IsGeckoRuleNode()) {
+    newData = mSource.AsGeckoRuleNode()->GetStyleData(aSID, this, true);
+    if (!nsCachedStyleData::IsReset(aSID)) {
+      // always cache inherited data on the style context; the rule
+      // node set the bit in mBits for us if needed.
+      mCachedInheritedData.mStyleStructs[aSID] = const_cast<void*>(newData);
+    }
+  } else {
+    // The Servo-backed StyleContextSource owns the struct.
+    newData = StyleStructFromServoComputedValues(aSID);
+    AddStyleBit(nsCachedStyleData::GetBitForSID(aSID));
+
+    // XXXbholley: Unconditionally caching reset structs here defeats the memory
+    // optimization where we lazily allocate mCachedResetData, so that we can avoid
+    // performing an FFI call each time we want to get the style structs. We should
+    // measure the tradeoffs at some point. If the FFI overhead is low and the memory
+    // win significant, we should consider _always_ grabbing the struct over FFI, and
+    // potentially giving mCachedInheritedData the same treatment.
+    //
+    // Note that there is a similar comment in the struct getters in nsStyleContext.h.
+    SetStyle(aSID, const_cast<void*>(newData));
   }
   return newData;
 }
@@ -459,6 +477,9 @@ const void* nsStyleContext::StyleData(nsStyleStructID aSID)
 void* 
 nsStyleContext::GetUniqueStyleData(const nsStyleStructID& aSID)
 {
+  MOZ_ASSERT(!mSource.IsServoComputedValues(),
+             "Can't COW-mutate servo values from Gecko!");
+
   // If we already own the struct and no kids could depend on it, then
   // just return it.  (We leak in this case if there are kids -- and this
   // function really shouldn't be called for style contexts that could
@@ -637,8 +658,45 @@ ShouldBlockifyChildren(const nsStyleDisplay* aStyleDisp)
 }
 
 void
+nsStyleContext::SetStyleBits()
+{
+  // XXXbholley: We should get this information directly from the
+  // ServoComputedValues rather than computing it here. This setup for
+  // ServoComputedValues-backed nsStyleContexts is probably not something
+  // we should ship.
+  //
+  // For example, NS_STYLE_IS_TEXT_COMBINED is still set in ApplyStyleFixups,
+  // which isn't called for ServoComputedValues.
+
+  // See if we have any text decorations.
+  // First see if our parent has text decorations.  If our parent does, then we inherit the bit.
+  if (mParent && mParent->HasTextDecorationLines()) {
+    mBits |= NS_STYLE_HAS_TEXT_DECORATION_LINES;
+  } else {
+    // We might have defined a decoration.
+    if (StyleTextReset()->HasTextDecorationLines()) {
+      mBits |= NS_STYLE_HAS_TEXT_DECORATION_LINES;
+    }
+  }
+
+  if ((mParent && mParent->HasPseudoElementData()) || mPseudoTag) {
+    mBits |= NS_STYLE_HAS_PSEUDO_ELEMENT_DATA;
+  }
+
+  // Set the NS_STYLE_IN_DISPLAY_NONE_SUBTREE bit
+  const nsStyleDisplay* disp = StyleDisplay();
+  if ((mParent && mParent->IsInDisplayNoneSubtree()) ||
+      disp->mDisplay == NS_STYLE_DISPLAY_NONE) {
+    mBits |= NS_STYLE_IN_DISPLAY_NONE_SUBTREE;
+  }
+}
+
+void
 nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
 {
+  MOZ_ASSERT(!mSource.IsServoComputedValues(),
+             "Can't do Gecko style fixups on Servo values");
+
 #define GET_UNIQUE_STYLE_DATA(name_) \
   static_cast<nsStyle##name_*>(GetUniqueStyleData(eStyleStruct_##name_))
 
@@ -658,21 +716,6 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
     nsStyleVisibility* mutableVis = GET_UNIQUE_STYLE_DATA(Visibility);
     mutableVis->mWritingMode = NS_STYLE_WRITING_MODE_HORIZONTAL_TB;
     AddStyleBit(NS_STYLE_IS_TEXT_COMBINED);
-  }
-
-  // See if we have any text decorations.
-  // First see if our parent has text decorations.  If our parent does, then we inherit the bit.
-  if (mParent && mParent->HasTextDecorationLines()) {
-    mBits |= NS_STYLE_HAS_TEXT_DECORATION_LINES;
-  } else {
-    // We might have defined a decoration.
-    if (StyleTextReset()->HasTextDecorationLines()) {
-      mBits |= NS_STYLE_HAS_TEXT_DECORATION_LINES;
-    }
-  }
-
-  if ((mParent && mParent->HasPseudoElementData()) || mPseudoTag) {
-    mBits |= NS_STYLE_HAS_PSEUDO_ELEMENT_DATA;
   }
 
   // CSS 2.1 10.1: Propagate the root element's 'direction' to the ICB.
@@ -783,12 +826,8 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
     }
   }
 
-  // Set the NS_STYLE_IN_DISPLAY_NONE_SUBTREE bit
-  if ((mParent && mParent->IsInDisplayNoneSubtree()) ||
-      disp->mDisplay == NS_STYLE_DISPLAY_NONE) {
-    mBits |= NS_STYLE_IN_DISPLAY_NONE_SUBTREE;
-  }
-
+  // Note: This must come after the blockification above, otherwise we fail
+  // the grid-item-blockifying-001.html reftest.
   if (mParent && ::ShouldSuppressLineBreak(this, disp, mParent,
                                            mParent->StyleDisplay())) {
     mBits |= NS_STYLE_SUPPRESS_LINEBREAK;

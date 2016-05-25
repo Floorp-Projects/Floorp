@@ -2376,119 +2376,6 @@ class GeckoThread::State : public mozilla::jni::ObjectBase<State, jobject>
 public:
     explicit State(const Context& ctx) : ObjectBase<State, jobject>(ctx) {}
 
-    struct New_t {
-        typedef State Owner;
-        typedef State::LocalRef ReturnType;
-        typedef State::Param SetterType;
-        typedef mozilla::jni::Args<
-                mozilla::jni::String::Param,
-                int32_t> Args;
-        static constexpr char name[] = "<init>";
-        static constexpr char signature[] =
-                "(Ljava/lang/String;I)V";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    static auto New(mozilla::jni::String::Param, int32_t) -> State::LocalRef;
-
-    struct Is_t {
-        typedef State Owner;
-        typedef bool ReturnType;
-        typedef bool SetterType;
-        typedef mozilla::jni::Args<
-                State::Param> Args;
-        static constexpr char name[] = "is";
-        static constexpr char signature[] =
-                "(Lorg/mozilla/gecko/GeckoThread$State;)Z";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    auto Is(State::Param) const -> bool;
-
-    struct IsAtLeast_t {
-        typedef State Owner;
-        typedef bool ReturnType;
-        typedef bool SetterType;
-        typedef mozilla::jni::Args<
-                State::Param> Args;
-        static constexpr char name[] = "isAtLeast";
-        static constexpr char signature[] =
-                "(Lorg/mozilla/gecko/GeckoThread$State;)Z";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    auto IsAtLeast(State::Param) const -> bool;
-
-    struct IsAtMost_t {
-        typedef State Owner;
-        typedef bool ReturnType;
-        typedef bool SetterType;
-        typedef mozilla::jni::Args<
-                State::Param> Args;
-        static constexpr char name[] = "isAtMost";
-        static constexpr char signature[] =
-                "(Lorg/mozilla/gecko/GeckoThread$State;)Z";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    auto IsAtMost(State::Param) const -> bool;
-
-    struct IsBetween_t {
-        typedef State Owner;
-        typedef bool ReturnType;
-        typedef bool SetterType;
-        typedef mozilla::jni::Args<
-                State::Param,
-                State::Param> Args;
-        static constexpr char name[] = "isBetween";
-        static constexpr char signature[] =
-                "(Lorg/mozilla/gecko/GeckoThread$State;Lorg/mozilla/gecko/GeckoThread$State;)Z";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    auto IsBetween(State::Param, State::Param) const -> bool;
-
-    struct ValueOf_t {
-        typedef State Owner;
-        typedef State::LocalRef ReturnType;
-        typedef State::Param SetterType;
-        typedef mozilla::jni::Args<
-                mozilla::jni::String::Param> Args;
-        static constexpr char name[] = "valueOf";
-        static constexpr char signature[] =
-                "(Ljava/lang/String;)Lorg/mozilla/gecko/GeckoThread$State;";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    static auto ValueOf(mozilla::jni::String::Param) -> State::LocalRef;
-
-    struct Values_t {
-        typedef State Owner;
-        typedef mozilla::jni::ObjectArray::LocalRef ReturnType;
-        typedef mozilla::jni::ObjectArray::Param SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "values";
-        static constexpr char signature[] =
-                "()[Lorg/mozilla/gecko/GeckoThread$State;";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    static auto Values() -> mozilla::jni::ObjectArray::LocalRef;
-
     struct EXITED_t {
         typedef State Owner;
         typedef State::LocalRef ReturnType;
@@ -2624,7 +2511,7 @@ public:
 
     static auto RUNNING() -> State::LocalRef;
 
-    static const bool isMultithreaded = true;
+    static const bool isMultithreaded = false;
 
 };
 

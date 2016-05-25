@@ -18,36 +18,40 @@ Cu.import("resource://gre/modules/AppConstants.jsm", this);
 const UPDATESERVICE_CID = Components.ID("{B3C290A6-3943-4B89-8BBE-C01EB7B3B311}");
 const UPDATESERVICE_CONTRACTID = "@mozilla.org/updates/update-service;1";
 
-const PREF_APP_UPDATE_ALTWINDOWTYPE       = "app.update.altwindowtype";
-const PREF_APP_UPDATE_AUTO                = "app.update.auto";
-const PREF_APP_UPDATE_BACKGROUND_INTERVAL = "app.update.download.backgroundInterval";
-const PREF_APP_UPDATE_BACKGROUNDERRORS    = "app.update.backgroundErrors";
-const PREF_APP_UPDATE_BACKGROUNDMAXERRORS = "app.update.backgroundMaxErrors";
-const PREF_APP_UPDATE_CANCELATIONS        = "app.update.cancelations";
-const PREF_APP_UPDATE_CERTS_BRANCH        = "app.update.certs.";
-const PREF_APP_UPDATE_CERT_CHECKATTRS     = "app.update.cert.checkAttributes";
-const PREF_APP_UPDATE_CERT_ERRORS         = "app.update.cert.errors";
-const PREF_APP_UPDATE_CERT_MAXERRORS      = "app.update.cert.maxErrors";
-const PREF_APP_UPDATE_CERT_REQUIREBUILTIN = "app.update.cert.requireBuiltIn";
-const PREF_APP_UPDATE_ENABLED             = "app.update.enabled";
-const PREF_APP_UPDATE_IDLETIME            = "app.update.idletime";
-const PREF_APP_UPDATE_INTERVAL            = "app.update.interval";
-const PREF_APP_UPDATE_LOG                 = "app.update.log";
-const PREF_APP_UPDATE_NEVER_BRANCH        = "app.update.never.";
-const PREF_APP_UPDATE_NOTIFIEDUNSUPPORTED = "app.update.notifiedUnsupported";
-const PREF_APP_UPDATE_POSTUPDATE          = "app.update.postupdate";
-const PREF_APP_UPDATE_PROMPTWAITTIME      = "app.update.promptWaitTime";
-const PREF_APP_UPDATE_SHOW_INSTALLED_UI   = "app.update.showInstalledUI";
-const PREF_APP_UPDATE_SILENT              = "app.update.silent";
-const PREF_APP_UPDATE_STAGING_ENABLED     = "app.update.staging.enabled";
-const PREF_APP_UPDATE_URL                 = "app.update.url";
-const PREF_APP_UPDATE_URL_DETAILS         = "app.update.url.details";
-const PREF_APP_UPDATE_URL_OVERRIDE        = "app.update.url.override";
-const PREF_APP_UPDATE_SERVICE_ENABLED     = "app.update.service.enabled";
-const PREF_APP_UPDATE_SERVICE_ERRORS      = "app.update.service.errors";
-const PREF_APP_UPDATE_SERVICE_MAX_ERRORS  = "app.update.service.maxErrors";
-const PREF_APP_UPDATE_SOCKET_ERRORS       = "app.update.socket.maxErrors";
-const PREF_APP_UPDATE_RETRY_TIMEOUT       = "app.update.socket.retryTimeout";
+const PREF_APP_UPDATE_ALTWINDOWTYPE        = "app.update.altwindowtype";
+const PREF_APP_UPDATE_AUTO                 = "app.update.auto";
+const PREF_APP_UPDATE_BACKGROUND_INTERVAL  = "app.update.download.backgroundInterval";
+const PREF_APP_UPDATE_BACKGROUNDERRORS     = "app.update.backgroundErrors";
+const PREF_APP_UPDATE_BACKGROUNDMAXERRORS  = "app.update.backgroundMaxErrors";
+const PREF_APP_UPDATE_CANCELATIONS         = "app.update.cancelations";
+const PREF_APP_UPDATE_CANCELATIONS_OSX     = "app.update.cancelations.osx";
+const PREF_APP_UPDATE_CERTS_BRANCH         = "app.update.certs.";
+const PREF_APP_UPDATE_CERT_CHECKATTRS      = "app.update.cert.checkAttributes";
+const PREF_APP_UPDATE_CERT_ERRORS          = "app.update.cert.errors";
+const PREF_APP_UPDATE_CERT_MAXERRORS       = "app.update.cert.maxErrors";
+const PREF_APP_UPDATE_CERT_REQUIREBUILTIN  = "app.update.cert.requireBuiltIn";
+const PREF_APP_UPDATE_ELEVATE_NEVER        = "app.update.elevate.never";
+const PREF_APP_UPDATE_ELEVATE_VERSION      = "app.update.elevate.version";
+const PREF_APP_UPDATE_ENABLED              = "app.update.enabled";
+const PREF_APP_UPDATE_IDLETIME             = "app.update.idletime";
+const PREF_APP_UPDATE_INTERVAL             = "app.update.interval";
+const PREF_APP_UPDATE_LOG                  = "app.update.log";
+const PREF_APP_UPDATE_MAX_OSX_CANCELATIONS = "app.update.cancelations.osx.max";
+const PREF_APP_UPDATE_NEVER_BRANCH         = "app.update.never.";
+const PREF_APP_UPDATE_NOTIFIEDUNSUPPORTED  = "app.update.notifiedUnsupported";
+const PREF_APP_UPDATE_POSTUPDATE           = "app.update.postupdate";
+const PREF_APP_UPDATE_PROMPTWAITTIME       = "app.update.promptWaitTime";
+const PREF_APP_UPDATE_SHOW_INSTALLED_UI    = "app.update.showInstalledUI";
+const PREF_APP_UPDATE_SILENT               = "app.update.silent";
+const PREF_APP_UPDATE_STAGING_ENABLED      = "app.update.staging.enabled";
+const PREF_APP_UPDATE_URL                  = "app.update.url";
+const PREF_APP_UPDATE_URL_DETAILS          = "app.update.url.details";
+const PREF_APP_UPDATE_URL_OVERRIDE         = "app.update.url.override";
+const PREF_APP_UPDATE_SERVICE_ENABLED      = "app.update.service.enabled";
+const PREF_APP_UPDATE_SERVICE_ERRORS       = "app.update.service.errors";
+const PREF_APP_UPDATE_SERVICE_MAX_ERRORS   = "app.update.service.maxErrors";
+const PREF_APP_UPDATE_SOCKET_ERRORS        = "app.update.socket.maxErrors";
+const PREF_APP_UPDATE_RETRY_TIMEOUT        = "app.update.socket.retryTimeout";
 
 const URI_UPDATE_PROMPT_DIALOG  = "chrome://mozapps/content/update/updates.xul";
 const URI_UPDATE_HISTORY_DIALOG = "chrome://mozapps/content/update/history.xul";
@@ -79,11 +83,12 @@ const FILE_BACKUP_LOG     = "backup-update.log";
 const STATE_NONE            = "null";
 const STATE_DOWNLOADING     = "downloading";
 const STATE_PENDING         = "pending";
-const STATE_PENDING_SVC     = "pending-service";
+const STATE_PENDING_SERVICE = "pending-service";
+const STATE_PENDING_ELEVATE = "pending-elevate";
 const STATE_APPLYING        = "applying";
 const STATE_APPLIED         = "applied";
 const STATE_APPLIED_OS      = "applied-os";
-const STATE_APPLIED_SVC     = "applied-service";
+const STATE_APPLIED_SERVICE = "applied-service";
 const STATE_SUCCEEDED       = "succeeded";
 const STATE_DOWNLOAD_FAILED = "download-failed";
 const STATE_FAILED          = "failed";
@@ -182,6 +187,10 @@ const DEFAULT_SOCKET_MAX_ERRORS = 10;
 
 // The number of milliseconds to wait before retrying a connection error.
 const DEFAULT_UPDATE_RETRY_TIMEOUT = 2000;
+
+// Default maximum number of elevation cancelations per update version before
+// giving up.
+const DEFAULT_MAX_OSX_CANCELATIONS = 3;
 
 // This maps app IDs to their respective notification topic which signals when
 // the application's user interface has been displayed.
@@ -347,6 +356,66 @@ function hasUpdateMutex() {
   return !!gUpdateMutexHandle;
 }
 
+/**
+ * Determines whether or not all descendants of a directory are writeable.
+ * Note: Does not check the root directory itself for writeability.
+ *
+ * @return true if all descendants are writeable, false otherwise
+ */
+function areDirectoryEntriesWriteable(aDir) {
+  let items = aDir.directoryEntries;
+  while (items.hasMoreElements()) {
+    let item = items.getNext().QueryInterface(Ci.nsIFile);
+    if (!item.isWritable()) {
+      LOG("areDirectoryEntriesWriteable - unable to write to " + item.path);
+      return false;
+    }
+    if (item.isDirectory() && !areDirectoryEntriesWriteable(item)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * OSX only function to determine if the user requires elevation to be able to
+ * write to the application bundle.
+ *
+ * @return true if elevation is required, false otherwise
+ */
+function getElevationRequired() {
+  if (AppConstants.platform != "macosx") {
+    return false;
+  }
+
+  try {
+    // Recursively check that the application bundle (and its descendants) can
+    // be written to.
+    LOG("getElevationRequired - recursively testing write access on " +
+        getInstallDirRoot().path);
+    if (!getInstallDirRoot().isWritable() ||
+        !areDirectoryEntriesWriteable(getInstallDirRoot())) {
+      LOG("getElevationRequired - unable to write to application bundle, " +
+          "elevation required");
+      return true;
+    }
+  } catch (ex) {
+    LOG("getElevationRequired - unable to write to application bundle, " +
+        "elevation required. Exception: " + ex);
+    return true;
+  }
+  LOG("getElevationRequired - able to write to application bundle, elevation " +
+      "not required");
+  return false;
+}
+
+/**
+ * Determines whether or not an update can be applied. This is always true on
+ * Windows when the service is used. Also, this is always true on OSX because we
+ * offer users the option to perform an elevated update when necessary.
+ *
+ * @return true if an update can be applied, false otherwise
+ */
 function getCanApplyUpdates() {
   let useService = false;
   if (shouldUseService()) {
@@ -356,37 +425,27 @@ function getCanApplyUpdates() {
     useService = true;
   }
 
-  if (!useService) {
+  if (!useService && AppConstants.platform != "macosx") {
     try {
       let updateTestFile = getUpdateFile([FILE_PERMS_TEST]);
       LOG("getCanApplyUpdates - testing write access " + updateTestFile.path);
       testWriteAccess(updateTestFile, false);
-      if (AppConstants.platform == "macosx") {
-        // Check that the application bundle can be written to.
-        let appDirTestFile = getAppBaseDir();
-        appDirTestFile.append(FILE_PERMS_TEST);
-        LOG("getCanApplyUpdates - testing write access " + appDirTestFile.path);
-        if (appDirTestFile.exists()) {
-          appDirTestFile.remove(false);
-        }
-        appDirTestFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
-        appDirTestFile.remove(false);
-      } else if (AppConstants.platform == "win") {
+      if (AppConstants.platform == "win") {
         // Example windowsVersion:  Windows XP == 5.1
         let windowsVersion = Services.sysinfo.getProperty("version");
         LOG("getCanApplyUpdates - windowsVersion = " + windowsVersion);
 
-      /**
-       * For Vista, updates can be performed to a location requiring admin
-       * privileges by requesting elevation via the UAC prompt when launching
-       * updater.exe if the appDir is under the Program Files directory
-       * (e.g. C:\Program Files\) and UAC is turned on and  we can elevate
-       * (e.g. user has a split token).
-       *
-       * Note: this does note attempt to handle the case where UAC is turned on
-       * and the installation directory is in a restricted location that
-       * requires admin privileges to update other than Program Files.
-       */
+        /**
+         * For Vista, updates can be performed to a location requiring admin
+         * privileges by requesting elevation via the UAC prompt when launching
+         * updater.exe if the appDir is under the Program Files directory
+         * (e.g. C:\Program Files\) and UAC is turned on and  we can elevate
+         * (e.g. user has a split token).
+         *
+         * Note: this does note attempt to handle the case where UAC is turned on
+         * and the installation directory is in a restricted location that
+         * requires admin privileges to update other than Program Files.
+         */
         let userCanElevate = false;
 
         if (parseFloat(windowsVersion) >= 6) {
@@ -458,9 +517,20 @@ function getCanApplyUpdates() {
  */
 XPCOMUtils.defineLazyGetter(this, "gCanStageUpdatesSession",
                             function aus_gCanStageUpdatesSession() {
+  if (getElevationRequired()) {
+    LOG("gCanStageUpdatesSession - unable to stage updates because elevation " +
+        "is required.");
+    return false;
+  }
+
   try {
-    let updateTestFile = getInstallDirRoot();
-    updateTestFile.append(FILE_PERMS_TEST);
+    let updateTestFile;
+    if (AppConstants.platform == "macosx") {
+      updateTestFile = getUpdateFile([FILE_PERMS_TEST]);
+    } else {
+      updateTestFile = getInstallDirRoot();
+      updateTestFile.append(FILE_PERMS_TEST);
+    }
     LOG("gCanStageUpdatesSession - testing write access " +
         updateTestFile.path);
     testWriteAccess(updateTestFile, true);
@@ -1223,15 +1293,43 @@ function handleUpdateFailure(update, errorCode) {
   }
 
   if (update.errorCode == ELEVATION_CANCELED) {
-    writeStatusFile(getUpdatesDir(), update.state = STATE_PENDING);
     let cancelations = getPref("getIntPref", PREF_APP_UPDATE_CANCELATIONS, 0);
     cancelations++;
     Services.prefs.setIntPref(PREF_APP_UPDATE_CANCELATIONS, cancelations);
+    if (AppConstants.platform == "macosx") {
+      let osxCancelations = getPref("getIntPref",
+                                  PREF_APP_UPDATE_CANCELATIONS_OSX, 0);
+      osxCancelations++;
+      Services.prefs.setIntPref(PREF_APP_UPDATE_CANCELATIONS_OSX,
+                                osxCancelations);
+      let maxCancels = getPref("getIntPref",
+                               PREF_APP_UPDATE_MAX_OSX_CANCELATIONS,
+                               DEFAULT_MAX_OSX_CANCELATIONS);
+      if (osxCancelations >= DEFAULT_MAX_OSX_CANCELATIONS) {
+        cleanupActiveUpdate();
+      } else {
+        writeStatusFile(getUpdatesDir(),
+                        update.state = STATE_PENDING_ELEVATE);
+      }
+      update.statusText = gUpdateBundle.GetStringFromName("elevationFailure");
+      let oldType = update.selectedPatch ? update.selectedPatch.type
+                                         : "complete";
+      update.QueryInterface(Ci.nsIWritablePropertyBag);
+      update.setProperty("patchingFailed", oldType);
+      let prompter = Cc["@mozilla.org/updates/update-prompt;1"].
+                 createInstance(Ci.nsIUpdatePrompt);
+      prompter.showUpdateError(update);
+    } else {
+      writeStatusFile(getUpdatesDir(), update.state = STATE_PENDING);
+    }
     return true;
   }
 
   if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CANCELATIONS)) {
     Services.prefs.clearUserPref(PREF_APP_UPDATE_CANCELATIONS);
+  }
+  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CANCELATIONS_OSX)) {
+    Services.prefs.clearUserPref(PREF_APP_UPDATE_CANCELATIONS_OSX);
   }
 
   // Replace with Array.prototype.includes when it has stabilized.
@@ -1320,7 +1418,7 @@ function pingStateAndStatusCodes(aUpdate, aStartup, aStatus) {
       case STATE_PENDING:
         stateCode = 4;
         break;
-      case STATE_PENDING_SVC:
+      case STATE_PENDING_SERVICE:
         stateCode = 5;
         break;
       case STATE_APPLYING:
@@ -1332,7 +1430,7 @@ function pingStateAndStatusCodes(aUpdate, aStartup, aStatus) {
       case STATE_APPLIED_OS:
         stateCode = 8;
         break;
-      case STATE_APPLIED_SVC:
+      case STATE_APPLIED_SERVICE:
         stateCode = 9;
         break;
       case STATE_SUCCEEDED:
@@ -1343,6 +1441,9 @@ function pingStateAndStatusCodes(aUpdate, aStartup, aStatus) {
         break;
       case STATE_FAILED:
         stateCode = 12;
+        break;
+      case STATE_PENDING_ELEVATE:
+        stateCode = 13;
         break;
       default:
         stateCode = 1;
@@ -2018,7 +2119,8 @@ UpdateService.prototype = {
       // If it's "applying", we know that we've already been here once, so
       // we really want to start from a clean state.
       if (update &&
-          (update.state == STATE_PENDING || update.state == STATE_PENDING_SVC)) {
+          (update.state == STATE_PENDING ||
+           update.state == STATE_PENDING_SERVICE)) {
         LOG("UpdateService:_postUpdateProcessing - patch found in applying " +
             "state for the first time");
         update.state = STATE_APPLYING;
@@ -2084,8 +2186,10 @@ UpdateService.prototype = {
 
       // Done with this update. Clean it up.
       cleanupActiveUpdate();
-    }
-    else {
+    } else if (status == STATE_PENDING_ELEVATE) {
+      prompter.showUpdateElevationRequired();
+      return;
+    } else {
       // If we hit an error, then the error code will be included in the status
       // string following a colon and a space. If we had an I/O error, then we
       // assume that the patch is not invalid, and we re-stage the patch so that
@@ -2308,12 +2412,20 @@ UpdateService.prototype = {
     AUSTLMY.pingBoolPref("UPDATE_NOT_PREF_UPDATE_STAGING_ENABLED_" +
                          this._pingSuffix,
                          PREF_APP_UPDATE_STAGING_ENABLED, true, true);
-    if (AppConstants.platform == "win") {
+    if (AppConstants.platform == "win" || AppConstants.platform == "macosx") {
       // Histogram IDs:
       // UPDATE_PREF_UPDATE_CANCELATIONS_EXTERNAL
       // UPDATE_PREF_UPDATE_CANCELATIONS_NOTIFY
       AUSTLMY.pingIntPref("UPDATE_PREF_UPDATE_CANCELATIONS_" + this._pingSuffix,
                           PREF_APP_UPDATE_CANCELATIONS, 0, 0);
+    }
+    if (AppConstants.platform == "macosx") {
+      // Histogram IDs:
+      // UPDATE_PREF_UPDATE_CANCELATIONS_OSX_EXTERNAL
+      // UPDATE_PREF_UPDATE_CANCELATIONS_OSX_NOTIFY
+      AUSTLMY.pingIntPref("UPDATE_PREF_UPDATE_CANCELATIONS_OSX_" +
+                          this._pingSuffix,
+                          PREF_APP_UPDATE_CANCELATIONS_OSX, 0, 0);
     }
     if (AppConstants.MOZ_MAINTENANCE_SERVICE) {
       // Histogram IDs:
@@ -2353,7 +2465,8 @@ UpdateService.prototype = {
 
     if (this._downloader && this._downloader.patchIsStaged) {
       let readState = readStatusFile(getUpdatesDir());
-      if (readState == STATE_PENDING || readState == STATE_PENDING_SVC) {
+      if (readState == STATE_PENDING || readState == STATE_PENDING_SVC ||
+          readState == STATE_PENDING_ELEVATE) {
         AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_IS_DOWNLOADED);
       } else {
         AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_IS_STAGED);
@@ -2470,8 +2583,66 @@ UpdateService.prototype = {
       }
     });
 
-    var update = minorUpdate || majorUpdate;
-    if (!update) {
+    let update = minorUpdate || majorUpdate;
+    if (AppConstants.platform == "macosx" && update) {
+      if (getElevationRequired()) {
+        let installAttemptVersion = getPref("getCharPref",
+                                            PREF_APP_UPDATE_ELEVATE_VERSION,
+                                            null);
+        if (vc.compare(installAttemptVersion, update.appVersion) != 0) {
+          Services.prefs.setCharPref(PREF_APP_UPDATE_ELEVATE_VERSION,
+                                     update.appVersion);
+          if (Services.prefs.prefHasUserValue(
+                PREF_APP_UPDATE_CANCELATIONS_OSX)) {
+            Services.prefs.clearUserPref(PREF_APP_UPDATE_CANCELATIONS_OSX);
+          }
+          if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_ELEVATE_NEVER)) {
+            Services.prefs.clearUserPref(PREF_APP_UPDATE_ELEVATE_NEVER);
+          }
+        } else {
+          let numCancels = getPref("getIntPref",
+                                   PREF_APP_UPDATE_CANCELATIONS_OSX,
+                                   0);
+          let rejectedVersion = getPref("getCharPref",
+                                        PREF_APP_UPDATE_ELEVATE_NEVER, "");
+          let maxCancels = getPref("getIntPref",
+                                   PREF_APP_UPDATE_MAX_OSX_CANCELATIONS,
+                                   DEFAULT_MAX_OSX_CANCELATIONS);
+          if (numCancels >= maxCancels) {
+            LOG("UpdateService:selectUpdate - the user requires elevation to " +
+                "install this update, but the user has exceeded the max " +
+                "number of elevation attempts.");
+            update.elevationFailure = true;
+            AUSTLMY.pingCheckCode(
+              this._pingSuffix,
+              AUSTLMY.CHK_ELEVATION_DISABLED_FOR_VERSION);
+          } else if (vc.compare(rejectedVersion, update.appVersion) == 0) {
+            LOG("UpdateService:selectUpdate - the user requires elevation to " +
+                "install this update, but elevation is disabled for this " +
+                "version.");
+            update.elevationFailure = true;
+            AUSTLMY.pingCheckCode(this._pingSuffix,
+                                  AUSTLMY.CHK_ELEVATION_OPTOUT_FOR_VERSION);
+          } else {
+            LOG("UpdateService:selectUpdate - the user requires elevation to " +
+                "install the update.");
+          }
+        }
+      } else {
+        // Clear elevation-related prefs since they no longer apply (the user
+        // may have gained write access to the Firefox directory or an update
+        // was executed with a different profile).
+        if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_ELEVATE_VERSION)) {
+          Services.prefs.clearUserPref(PREF_APP_UPDATE_ELEVATE_VERSION);
+        }
+        if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CANCELATIONS_OSX)) {
+          Services.prefs.clearUserPref(PREF_APP_UPDATE_CANCELATIONS_OSX);
+        }
+        if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_ELEVATE_NEVER)) {
+          Services.prefs.clearUserPref(PREF_APP_UPDATE_ELEVATE_NEVER);
+        }
+      }
+    } else if (!update) {
       AUSTLMY.pingCheckCode(this._pingSuffix, lastCheckCode);
     }
 
@@ -2508,7 +2679,7 @@ UpdateService.prototype = {
     }
 
     var update = this.selectUpdate(updates, updates.length);
-    if (!update) {
+    if (!update || update.elevationFailure) {
       return;
     }
 
@@ -2597,6 +2768,13 @@ UpdateService.prototype = {
    */
   get canCheckForUpdates() {
     return gCanCheckForUpdates && hasUpdateMutex();
+  },
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  get elevationRequired() {
+    return getElevationRequired();
   },
 
   /**
@@ -3045,8 +3223,9 @@ UpdateManager.prototype = {
       for (let i = updates.length - 1; i >= 0; --i) {
         let state = updates[i].state;
         if (state == STATE_NONE || state == STATE_DOWNLOADING ||
-            state == STATE_APPLIED || state == STATE_APPLIED_SVC ||
-            state == STATE_PENDING || state == STATE_PENDING_SVC) {
+            state == STATE_APPLIED || state == STATE_APPLIED_SERVICE ||
+            state == STATE_PENDING || state == STATE_PENDING_SERVICE ||
+            state == STATE_PENDING_ELEVATE) {
           updates.splice(i, 1);
         }
       }
@@ -3077,13 +3256,15 @@ UpdateManager.prototype = {
       }
     }
     if (update.state == STATE_APPLIED && shouldUseService()) {
-      writeStatusFile(getUpdatesDir(), update.state = STATE_APPLIED_SVC);
+      writeStatusFile(getUpdatesDir(), update.state = STATE_APPLIED_SERVICE);
     }
     var um = Cc["@mozilla.org/updates/update-manager;1"].
              getService(Ci.nsIUpdateManager);
     um.saveUpdates();
 
-    if (update.state != STATE_PENDING && update.state != STATE_PENDING_SVC) {
+    if (update.state != STATE_PENDING &&
+        update.state != STATE_PENDING_SERVICE &&
+        update.state != STATE_PENDING_ELEVATE) {
       // Destroy the updates directory, since we're done with it.
       // Make sure to not do this when the updater has fallen back to
       // non-staged updates.
@@ -3118,14 +3299,50 @@ UpdateManager.prototype = {
       return;
     }
 
-    if (update.state == STATE_APPLIED || update.state == STATE_APPLIED_SVC ||
-        update.state == STATE_PENDING || update.state == STATE_PENDING_SVC) {
-        // Notify the user that an update has been staged and is ready for
-        // installation (i.e. that they should restart the application).
+    if (update.state == STATE_APPLIED ||
+        update.state == STATE_APPLIED_SERVICE ||
+        update.state == STATE_PENDING ||
+        update.state == STATE_PENDING_SERVICE ||
+        update.state == STATE_PENDING_ELEVATE) {
+      // Notify the user that an update has been staged and is ready for
+      // installation (i.e. that they should restart the application).
       let prompter = Cc["@mozilla.org/updates/update-prompt;1"].
                      createInstance(Ci.nsIUpdatePrompt);
       prompter.showUpdateDownloaded(update, true);
     }
+  },
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  elevationOptedIn: function UM_elevationOptedIn() {
+    // The user has been been made aware that the update requires elevation.
+    let update = this._activeUpdate;
+    if (!update) {
+      return;
+    }
+    let status = readStatusFile(getUpdatesDir());
+    let parts = status.split(":");
+    update.state = parts[0];
+    if (update.state == STATE_PENDING_ELEVATE) {
+      // Proceed with the pending update.
+      // Note: STATE_PENDING_ELEVATE stands for "pending user's approval to
+      // proceed with an elevated update". As long as we see this state, we will
+      // notify the user of the availability of an update that requires
+      // elevation. |elevationOptedIn| (this function) is called when the user
+      // gives us approval to proceed, so we want to switch to STATE_PENDING.
+      // The updater then detects whether or not elevation is required and
+      // displays the elevation prompt if necessary. This last step does not
+      // depend on the state in the status file.
+      writeStatusFile(getUpdatesDir(), STATE_PENDING);
+    }
+  },
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  cleanupActiveUpdate: function UM_cleanupActiveUpdate() {
+    cleanupActiveUpdate();
   },
 
   classID: Components.ID("{093C2356-4843-4C65-8709-D7DBCBBE7DFB}"),
@@ -3473,8 +3690,9 @@ Downloader.prototype = {
     // Note that if we decide to download and apply new updates after another
     // update has been successfully applied in the background, we need to stop
     // checking for the APPLIED state here.
-    return readState == STATE_PENDING || readState == STATE_PENDING_SVC ||
-           readState == STATE_APPLIED || readState == STATE_APPLIED_SVC;
+    return readState == STATE_PENDING || readState == STATE_PENDING_SERVICE ||
+           readState == STATE_PENDING_ELEVATE ||
+           readState == STATE_APPLIED || readState == STATE_APPLIED_SERVICE;
   },
 
   /**
@@ -3600,7 +3818,8 @@ Downloader.prototype = {
           LOG("Downloader:_selectPatch - already downloaded and staged");
           return null;
         }
-      } else if (state == STATE_PENDING || state == STATE_PENDING_SVC) {
+      } else if (state == STATE_PENDING || state == STATE_PENDING_SERVICE ||
+                 state == STATE_PENDING_ELEVATE) {
         LOG("Downloader:_selectPatch - already downloaded and staged");
         return null;
       }
@@ -3725,7 +3944,11 @@ Downloader.prototype = {
           if (patchFile.fileSize == this._patch.size) {
             LOG("Downloader:downloadUpdate - patchFile appears to be fully downloaded");
             // Bump the status along so that we don't try to redownload again.
-            status = STATE_PENDING;
+            if (getElevationRequired()) {
+              status = STATE_PENDING_ELEVATE;
+            } else {
+              status = STATE_PENDING;
+            }
           }
         } else {
           LOG("Downloader:downloadUpdate - patchFile " + patchFile.path +
@@ -3738,7 +3961,11 @@ Downloader.prototype = {
           // It looks like the patch was downloaded, but got interrupted while it
           // was being verified or applied. So we'll fake the downloading portion.
 
-          writeStatusFile(updateDir, STATE_PENDING);
+          if (getElevationRequired()) {
+            writeStatusFile(updateDir, STATE_PENDING_ELEVATE);
+          } else {
+            writeStatusFile(updateDir, STATE_PENDING);
+          }
 
           // Since the code expects the onStopRequest callback to happen
           // asynchronously (And you have to call AUS_addDownloadListener
@@ -3967,7 +4194,13 @@ Downloader.prototype = {
         "max fail: " + maxFail + ", " + "retryTimeout: " + retryTimeout);
     if (Components.isSuccessCode(status)) {
       if (this._verifyDownload()) {
-        state = shouldUseService() ? STATE_PENDING_SVC : STATE_PENDING;
+        if (shouldUseService()) {
+          state = STATE_PENDING_SERVICE;
+        } else if (getElevationRequired()) {
+          state = STATE_PENDING_ELEVATE;
+        } else {
+          state = STATE_PENDING;
+        }
         if (this.background) {
           shouldShowPrompt = !getCanStageUpdates();
         }
@@ -4130,7 +4363,8 @@ Downloader.prototype = {
       return;
     }
 
-    if (state == STATE_PENDING || state == STATE_PENDING_SVC) {
+    if (state == STATE_PENDING || state == STATE_PENDING_SERVICE ||
+        state == STATE_PENDING_ELEVATE) {
       if (getCanStageUpdates()) {
         LOG("Downloader:onStopRequest - attempting to stage update: " +
             this._update.name);
@@ -4227,8 +4461,9 @@ UpdatePrompt.prototype = {
    */
   showUpdateAvailable: function UP_showUpdateAvailable(update) {
     if (getPref("getBoolPref", PREF_APP_UPDATE_SILENT, false) ||
-        this._getUpdateWindow() || this._getAltUpdateWindow())
+        this._getUpdateWindow() || this._getAltUpdateWindow()) {
       return;
+    }
 
     this._showUnobtrusiveUI(null, URI_UPDATE_PROMPT_DIALOG, null,
                            UPDATE_WINDOW_NAME, "updatesavailable", update);
@@ -4262,23 +4497,15 @@ UpdatePrompt.prototype = {
   showUpdateInstalled: function UP_showUpdateInstalled() {
     if (getPref("getBoolPref", PREF_APP_UPDATE_SILENT, false) ||
         !getPref("getBoolPref", PREF_APP_UPDATE_SHOW_INSTALLED_UI, false) ||
-        this._getUpdateWindow())
+        this._getUpdateWindow()) {
       return;
+    }
 
-    var page = "installed";
-    var win = this._getUpdateWindow();
-    if (win) {
-      if (page && "setCurrentPage" in win)
-        win.setCurrentPage(page);
-      win.focus();
-    }
-    else {
-      var openFeatures = "chrome,centerscreen,dialog=no,resizable=no,titlebar,toolbar=no";
-      var arg = Cc["@mozilla.org/supports-string;1"].
-                createInstance(Ci.nsISupportsString);
-      arg.data = page;
-      Services.ww.openWindow(null, URI_UPDATE_PROMPT_DIALOG, null, openFeatures, arg);
-    }
+    let openFeatures = "chrome,centerscreen,dialog=no,resizable=no,titlebar,toolbar=no";
+    let arg = Cc["@mozilla.org/supports-string;1"].
+              createInstance(Ci.nsISupportsString);
+    arg.data = "installed";
+    Services.ww.openWindow(null, URI_UPDATE_PROMPT_DIALOG, null, openFeatures, arg);
   },
 
   /**
@@ -4324,6 +4551,21 @@ UpdatePrompt.prototype = {
   showUpdateHistory: function UP_showUpdateHistory(parent) {
     this._showUI(parent, URI_UPDATE_HISTORY_DIALOG, "modal,dialog=yes",
                  "Update:History", null, null);
+  },
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  showUpdateElevationRequired: function UP_showUpdateElevationRequired() {
+    if (getPref("getBoolPref", PREF_APP_UPDATE_SILENT, false) ||
+        this._getAltUpdateWindow()) {
+      return;
+    }
+
+    let um = Cc["@mozilla.org/updates/update-manager;1"].
+             getService(Ci.nsIUpdateManager);
+    this._showUI(null, URI_UPDATE_PROMPT_DIALOG, null,
+                 UPDATE_WINDOW_NAME, "finishedBackground", um.activeUpdate);
   },
 
   /**

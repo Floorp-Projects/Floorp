@@ -64,7 +64,7 @@ class StoreBuffer
 
         /*
          * A one element cache in front of the canonical set to speed up
-         * temporary instances of RelocatablePtr.
+         * temporary instances of HeapPtr.
          */
         T last_;
 
@@ -347,9 +347,6 @@ class StoreBuffer
         bool operator!=(const WholeCellEdges& other) const { return edge != other.edge; }
 
         bool maybeInRememberedSet(const Nursery&) const { return true; }
-
-        static bool supportsDeduplication() { return true; }
-        void* deduplicationKey() const { return (void*)edge; }
 
         void trace(TenuringTracer& mover) const;
 

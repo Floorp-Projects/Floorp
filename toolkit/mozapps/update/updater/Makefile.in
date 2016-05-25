@@ -16,11 +16,14 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+export::
+	sed -e 's/%MOZ_MACBUNDLE_ID%/$(MOZ_MACBUNDLE_ID)/' $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/bin/Info.plist
 libs::
 	$(NSINSTALL) -D $(DIST)/bin/updater.app
-	rsync -a -C --exclude '*.in' $(srcdir)/macbuild/Contents $(DIST)/bin/updater.app 
+	rsync -a -C --exclude '*.in' $(srcdir)/macbuild/Contents $(DIST)/bin/updater.app
+	rsync -a -C $(DIST)/bin/Info.plist $(DIST)/bin/updater.app/Contents
 	sed -e 's/%APP_NAME%/$(MOZ_APP_DISPLAYNAME)/' $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | \
 	  iconv -f UTF-8 -t UTF-16 > $(DIST)/bin/updater.app/Contents/Resources/English.lproj/InfoPlist.strings
 	$(NSINSTALL) -D $(DIST)/bin/updater.app/Contents/MacOS
-	$(NSINSTALL) $(DIST)/bin/updater $(DIST)/bin/updater.app/Contents/MacOS
+	$(NSINSTALL) $(DIST)/bin/org.mozilla.updater $(DIST)/bin/updater.app/Contents/MacOS
 endif

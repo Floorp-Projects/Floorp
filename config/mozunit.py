@@ -73,14 +73,14 @@ class _MozTestResult(_TestResult):
 
     def printFail(self, test, err):
         exctype, value, tb = err
+        message = value.message.splitlines()[0]
         # Skip test runner traceback levels
         while tb and self._is_relevant_tb_level(tb):
             tb = tb.tb_next
-        if not tb:
-            self.stream.writeln("TEST-UNEXPECTED-FAIL | NO TRACEBACK |")
-        _f, _ln, _t = inspect.getframeinfo(tb)[:3]
-        self.printStatus('TEST-UNEXPECTED-FAIL', test,
-                         'line {0}: {1}'.format(_ln, value.message))
+        if tb:
+            _, ln, _ = inspect.getframeinfo(tb)[:3]
+            message = 'line {0}: {1}'.format(ln, message)
+        self.printStatus("TEST-UNEXPECTED-FAIL", test, message)
 
 
 class MozTestRunner(_TestRunner):

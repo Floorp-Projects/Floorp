@@ -26,6 +26,9 @@ extern "C" char* PrintJSStack();
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
 #include "nsDebug.h"
+#ifdef MOZ_CRASHREPORTER
+#include "nsExceptionHandler.h"
+#endif
 #include "nsISupportsImpl.h"
 #include "nsXULAppAPI.h"
 
@@ -158,7 +161,14 @@ ProcessLink::EchoMessage(Message *msg)
 void
 ProcessLink::SendMessage(Message *msg)
 {
-    MOZ_RELEASE_ASSERT(msg->size() < IPC::Channel::kMaximumMessageSize);
+    if (msg->size() > IPC::Channel::kMaximumMessageSize) {
+#ifdef MOZ_CRASHREPORTER
+      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IPCMessageName"), nsDependentCString(msg->name()));
+      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IPCMessageSize"), nsPrintfCString("%d", msg->size()));
+#endif
+      MOZ_CRASH("IPC message size is too large");
+    }
+
     mChan->AssertWorkerThread();
     mChan->mMonitor->AssertCurrentThreadOwns();
 

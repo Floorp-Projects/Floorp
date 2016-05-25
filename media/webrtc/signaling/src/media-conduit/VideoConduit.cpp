@@ -790,6 +790,7 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
   webrtc::ViEKeyFrameRequestMethod kf_request = webrtc::kViEKeyFrameRequestNone;
   bool use_nack_basic = false;
   bool use_tmmbr = false;
+  bool use_remb = false;
 
   //Try Applying the codecs in the list
   // we treat as success if atleast one codec was applied and reception was
@@ -822,6 +823,11 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
     // Check whether TMMBR is requested
     if (codecConfigList[i]->RtcpFbCcmIsSet("tmmbr")) {
       use_tmmbr = true;
+    }
+
+    // Check whether REMB is requested
+    if (codecConfigList[i]->RtcpFbRembIsSet()) {
+      use_remb = true;
     }
 
     webrtc::VideoCodec  video_codec;
@@ -972,7 +978,9 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
   }
 
   // by now we should be successfully started the reception
-  mPtrRTP->SetRembStatus(mChannel, false, true);
+  CSFLogDebug(logTag, "REMB enabled for video stream %s",
+              (use_remb ? "yes" : "no"));
+  mPtrRTP->SetRembStatus(mChannel, use_remb, true);
   DumpCodecDB();
   return kMediaConduitNoError;
 }

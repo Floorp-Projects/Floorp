@@ -5,8 +5,8 @@
 
 #include "nsAlertsIconListener.h"
 #include "imgIContainer.h"
-#include "imgILoader.h"
 #include "imgIRequest.h"
+#include "imgLoader.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "nsSystemAlertsService.h"
@@ -248,7 +248,8 @@ nsAlertsIconListener::StartRequest(const nsAString & aImageUrl, bool aInPrivateB
   if (!imageUri)
     return ShowAlert(nullptr);
 
-  nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1"));
+  imgLoader* il = aInPrivateBrowsing ? imgLoader::PrivateBrowsingLoader()
+                                     : imgLoader::NormalLoader();
   if (!il)
     return ShowAlert(nullptr);
 

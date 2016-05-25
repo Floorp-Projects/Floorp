@@ -1498,12 +1498,12 @@ class ICTypeMonitor_SingleObject : public ICStub
 {
     friend class ICStubSpace;
 
-    HeapPtrObject obj_;
+    GCPtrObject obj_;
 
     ICTypeMonitor_SingleObject(JitCode* stubCode, JSObject* obj);
 
   public:
-    HeapPtrObject& object() {
+    GCPtrObject& object() {
         return obj_;
     }
 
@@ -1532,12 +1532,12 @@ class ICTypeMonitor_ObjectGroup : public ICStub
 {
     friend class ICStubSpace;
 
-    HeapPtrObjectGroup group_;
+    GCPtrObjectGroup group_;
 
     ICTypeMonitor_ObjectGroup(JitCode* stubCode, ObjectGroup* group);
 
   public:
-    HeapPtrObjectGroup& group() {
+    GCPtrObjectGroup& group() {
         return group_;
     }
 
@@ -2380,7 +2380,7 @@ class ICGetProp_Primitive : public ICMonitoredStub
 
   protected: // Protected to silence Clang warning.
     // Shape of String.prototype/Number.prototype to check for.
-    HeapPtrShape protoShape_;
+    GCPtrShape protoShape_;
 
     // Fixed or dynamic slot offset.
     uint32_t offset_;
@@ -2389,7 +2389,7 @@ class ICGetProp_Primitive : public ICMonitoredStub
                         Shape* protoShape, uint32_t offset);
 
   public:
-    HeapPtrShape& protoShape() {
+    GCPtrShape& protoShape() {
         return protoShape_;
     }
     JSValueType primitiveType() const {
@@ -2504,8 +2504,8 @@ class ICGetPropNativeStub : public ICMonitoredStub
 class ICGetPropNativePrototypeStub : public ICGetPropNativeStub
 {
     // Holder and its shape.
-    HeapPtrObject holder_;
-    HeapPtrShape holderShape_;
+    GCPtrObject holder_;
+    GCPtrShape holderShape_;
 
   protected:
     ICGetPropNativePrototypeStub(ICStub::Kind kind, JitCode* stubCode, ICStub* firstMonitorStub,
@@ -2513,10 +2513,10 @@ class ICGetPropNativePrototypeStub : public ICGetPropNativeStub
                                  Shape* holderShape);
 
   public:
-    HeapPtrObject& holder() {
+    GCPtrObject& holder() {
         return holder_;
     }
-    HeapPtrShape& holderShape() {
+    GCPtrShape& holderShape() {
         return holderShape_;
     }
     static size_t offsetOfHolder() {
@@ -2538,7 +2538,7 @@ class ICGetName_Global : public ICGetPropNativePrototypeStub
     friend class ICStubSpace;
 
   protected:
-    HeapPtrShape globalShape_;
+    GCPtrShape globalShape_;
 
     ICGetName_Global(JitCode* stubCode, ICStub* firstMonitorStub, ReceiverGuard guard,
                      uint32_t slot, JSObject* holder, Shape* holderShape, Shape* globalShape);
@@ -2547,7 +2547,7 @@ class ICGetName_Global : public ICGetPropNativePrototypeStub
     static ICGetName_Global* Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
                                    ICGetName_Global& other);
 
-    HeapPtrShape& globalShape() {
+    GCPtrShape& globalShape() {
         return globalShape_;
     }
     static size_t offsetOfGlobalShape() {
@@ -2637,12 +2637,12 @@ class ICGetPropCallGetter : public ICMonitoredStub
     // sufficient, although Ion may use holder_ and holderShape_ even for own
     // getters. In this case holderShape_ == receiverGuard_.shape_ (isOwnGetter
     // below relies on this).
-    HeapPtrObject holder_;
+    GCPtrObject holder_;
 
-    HeapPtrShape holderShape_;
+    GCPtrShape holderShape_;
 
     // Function to call.
-    HeapPtrFunction getter_;
+    GCPtrFunction getter_;
 
     // PC offset of call
     uint32_t pcOffset_;
@@ -2652,13 +2652,13 @@ class ICGetPropCallGetter : public ICMonitoredStub
                         Shape* holderShape, JSFunction* getter, uint32_t pcOffset);
 
   public:
-    HeapPtrObject& holder() {
+    GCPtrObject& holder() {
         return holder_;
     }
-    HeapPtrShape& holderShape() {
+    GCPtrShape& holderShape() {
         return holderShape_;
     }
-    HeapPtrFunction& getter() {
+    GCPtrFunction& getter() {
         return getter_;
     }
     HeapReceiverGuard& receiverGuard() {
@@ -2793,7 +2793,7 @@ class ICGetProp_CallNativeGlobal : public ICGetPropCallGetter
     friend class ICStubSpace;
 
   protected:
-    HeapPtrShape globalShape_;
+    GCPtrShape globalShape_;
 
     ICGetProp_CallNativeGlobal(JitCode* stubCode, ICStub* firstMonitorStub,
                                ReceiverGuard receiverGuard,
@@ -2809,7 +2809,7 @@ class ICGetProp_CallNativeGlobal : public ICGetPropCallGetter
                                              ICStub* firstMonitorStub,
                                              ICGetProp_CallNativeGlobal& other);
 
-    HeapPtrShape& globalShape() {
+    GCPtrShape& globalShape() {
         return globalShape_;
     }
     static size_t offsetOfGlobalShape() {
@@ -2847,7 +2847,7 @@ class ICGetPropCallDOMProxyNativeStub : public ICGetPropCallGetter
   friend class ICStubSpace;
   protected:
     // Object shape of expected expando object. (nullptr if no expando object should be there)
-    HeapPtrShape expandoShape_;
+    GCPtrShape expandoShape_;
 
     ICGetPropCallDOMProxyNativeStub(ICStub::Kind kind, JitCode* stubCode,
                                     ICStub* firstMonitorStub, Shape* shape,
@@ -2856,7 +2856,7 @@ class ICGetPropCallDOMProxyNativeStub : public ICGetPropCallGetter
                                     JSFunction* getter, uint32_t pcOffset);
 
   public:
-    HeapPtrShape& expandoShape() {
+    GCPtrShape& expandoShape() {
         return expandoShape_;
     }
     static size_t offsetOfExpandoShape() {
@@ -2952,9 +2952,9 @@ class ICGetProp_DOMProxyShadowed : public ICMonitoredStub
 {
   friend class ICStubSpace;
   protected:
-    HeapPtrShape shape_;
+    GCPtrShape shape_;
     const BaseProxyHandler* proxyHandler_;
-    HeapPtrPropertyName name_;
+    GCPtrPropertyName name_;
     uint32_t pcOffset_;
 
     ICGetProp_DOMProxyShadowed(JitCode* stubCode, ICStub* firstMonitorStub, Shape* shape,
@@ -2966,10 +2966,10 @@ class ICGetProp_DOMProxyShadowed : public ICMonitoredStub
                                              ICStub* firstMonitorStub,
                                              ICGetProp_DOMProxyShadowed& other);
 
-    HeapPtrShape& shape() {
+    GCPtrShape& shape() {
         return shape_;
     }
-    HeapPtrPropertyName& name() {
+    GCPtrPropertyName& name() {
         return name_;
     }
 
@@ -3076,11 +3076,11 @@ class ICNewArray_Fallback : public ICFallbackStub
 {
     friend class ICStubSpace;
 
-    HeapPtrObject templateObject_;
+    GCPtrObject templateObject_;
 
     // The group used for objects created here is always available, even if the
     // template object itself is not.
-    HeapPtrObjectGroup templateGroup_;
+    GCPtrObjectGroup templateGroup_;
 
     ICNewArray_Fallback(JitCode* stubCode, ObjectGroup* templateGroup)
       : ICFallbackStub(ICStub::NewArray_Fallback, stubCode),
@@ -3103,7 +3103,7 @@ class ICNewArray_Fallback : public ICFallbackStub
         }
     };
 
-    HeapPtrObject& templateObject() {
+    GCPtrObject& templateObject() {
         return templateObject_;
     }
 
@@ -3112,7 +3112,7 @@ class ICNewArray_Fallback : public ICFallbackStub
         templateObject_ = obj;
     }
 
-    HeapPtrObjectGroup& templateGroup() {
+    GCPtrObjectGroup& templateGroup() {
         return templateGroup_;
     }
 
@@ -3128,7 +3128,7 @@ class ICNewObject_Fallback : public ICFallbackStub
 {
     friend class ICStubSpace;
 
-    HeapPtrObject templateObject_;
+    GCPtrObject templateObject_;
 
     explicit ICNewObject_Fallback(JitCode* stubCode)
       : ICFallbackStub(ICStub::NewObject_Fallback, stubCode), templateObject_(nullptr)
@@ -3148,7 +3148,7 @@ class ICNewObject_Fallback : public ICFallbackStub
         }
     };
 
-    HeapPtrObject& templateObject() {
+    GCPtrObject& templateObject() {
         return templateObject_;
     }
 

@@ -14,7 +14,8 @@
 #define TIMER_INTERVAL 0.2
 
 static float sProgressVal;  // between 0 and 100
-static BOOL sQuit = FALSE;
+static BOOL sQuit = NO;
+static BOOL sIndeterminate = NO;
 static StringTable sLabels;
 static const char *sUpdatePath;
 
@@ -30,7 +31,7 @@ static const char *sUpdatePath;
 -(void)awakeFromNib
 {
   NSWindow *w = [progressBar window];
-  
+
   [w setTitle:[NSString stringWithUTF8String:sLabels.title]];
   [progressTextField setStringValue:[NSString stringWithUTF8String:sLabels.info]];
 
@@ -48,7 +49,7 @@ static const char *sUpdatePath;
 
   [w center];
 
-  [progressBar setIndeterminate:NO];
+  [progressBar setIndeterminate:sIndeterminate];
   [progressBar setDoubleValue:0.0];
 
   [[NSTimer scheduledTimerWithTimeInterval:TIMER_INTERVAL target:self
@@ -98,13 +99,13 @@ InitProgressUI(int *pargc, char ***pargv)
 }
 
 int
-ShowProgressUI()
+ShowProgressUI(bool indeterminate)
 {
   // Only show the Progress UI if the process is taking a significant amount of
   // time where a significant amount of time is defined as .5 seconds after
   // ShowProgressUI is called sProgress is less than 70.
   usleep(500000);
-  
+
   if (sQuit || sProgressVal > 70.0f)
     return 0;
 
@@ -118,7 +119,8 @@ ShowProgressUI()
   if (!(strlen(sLabels.title) < MAX_TEXT_LEN - 1 &&
         strlen(sLabels.info) < MAX_TEXT_LEN - 1))
     return -1;
-  
+
+  sIndeterminate = indeterminate;
   [NSApplication sharedApplication];
   [NSBundle loadNibNamed:@"MainMenu" owner:NSApp];
   [NSApp run];
@@ -130,7 +132,7 @@ ShowProgressUI()
 void
 QuitProgressUI()
 {
-  sQuit = TRUE;
+  sQuit = YES;
 }
 
 // Called on a background thread

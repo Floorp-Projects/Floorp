@@ -36,43 +36,54 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class GeckoThread extends Thread {
     private static final String LOGTAG = "GeckoThread";
 
-    @WrapForJNI
     public enum State {
         // After being loaded by class loader.
-        INITIAL,
+        @WrapForJNI INITIAL(0),
         // After launching Gecko thread
-        LAUNCHED,
+        @WrapForJNI LAUNCHED(1),
         // After loading the mozglue library.
-        MOZGLUE_READY,
+        @WrapForJNI MOZGLUE_READY(2),
         // After loading the libxul library.
-        LIBS_READY,
+        @WrapForJNI LIBS_READY(3),
         // After initializing nsAppShell and JNI calls.
-        JNI_READY,
+        @WrapForJNI JNI_READY(4),
         // After initializing profile and prefs.
-        PROFILE_READY,
+        @WrapForJNI PROFILE_READY(5),
         // After initializing frontend JS
-        RUNNING,
+        @WrapForJNI RUNNING(6),
         // After leaving Gecko event loop
-        EXITING,
+        @WrapForJNI EXITING(3),
         // After exiting GeckoThread (corresponding to "Gecko:Exited" event)
-        EXITED;
+        @WrapForJNI EXITED(0);
+
+        /* The rank is an arbitrary value reflecting the amount of components or features
+         * that are available for use. During startup and up to the RUNNING state, the
+         * rank value increases because more components are initialized and available for
+         * use. During shutdown and up to the EXITED state, the rank value decreases as
+         * components are shut down and become unavailable. EXITING has the same rank as
+         * LIBS_READY because both states have a similar amount of components available.
+         */
+        private final int rank;
+
+        private State(int rank) {
+            this.rank = rank;
+        }
 
         public boolean is(final State other) {
             return this == other;
         }
 
         public boolean isAtLeast(final State other) {
-            return ordinal() >= other.ordinal();
+            return this.rank >= other.rank;
         }
 
         public boolean isAtMost(final State other) {
-            return ordinal() <= other.ordinal();
+            return this.rank <= other.rank;
         }
 
         // Inclusive
         public boolean isBetween(final State min, final State max) {
-            final int ord = ordinal();
-            return ord >= min.ordinal() && ord <= max.ordinal();
+            return this.rank >= min.rank && this.rank <= max.rank;
         }
     }
 

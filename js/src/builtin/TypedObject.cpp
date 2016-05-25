@@ -2614,7 +2614,7 @@ js::StoreScalar##T::Func(JSContext*, unsigned argc, Value* vp)         \
 
 #define JS_STORE_REFERENCE_CLASS_IMPL(_constant, T, _name)                      \
 bool                                                                            \
-js::StoreReference##T::Func(JSContext* cx, unsigned argc, Value* vp)    \
+js::StoreReference##_name::Func(JSContext* cx, unsigned argc, Value* vp)        \
 {                                                                               \
     CallArgs args = CallArgsFromVp(argc, vp);                                   \
     MOZ_ASSERT(args.length() == 4);                                             \
@@ -2641,7 +2641,7 @@ js::StoreReference##T::Func(JSContext* cx, unsigned argc, Value* vp)    \
 
 #define JS_LOAD_SCALAR_CLASS_IMPL(_constant, T, _name)                                  \
 bool                                                                                    \
-js::LoadScalar##T::Func(JSContext*, unsigned argc, Value* vp)                  \
+js::LoadScalar##T::Func(JSContext*, unsigned argc, Value* vp)                           \
 {                                                                                       \
     CallArgs args = CallArgsFromVp(argc, vp);                                           \
     MOZ_ASSERT(args.length() == 2);                                                     \
@@ -2661,7 +2661,7 @@ js::LoadScalar##T::Func(JSContext*, unsigned argc, Value* vp)                  \
 
 #define JS_LOAD_REFERENCE_CLASS_IMPL(_constant, T, _name)                       \
 bool                                                                            \
-js::LoadReference##T::Func(JSContext*, unsigned argc, Value* vp)       \
+js::LoadReference##_name::Func(JSContext*, unsigned argc, Value* vp)            \
 {                                                                               \
     CallArgs args = CallArgsFromVp(argc, vp);                                   \
     MOZ_ASSERT(args.length() == 2);                                             \
@@ -2684,8 +2684,8 @@ js::LoadReference##T::Func(JSContext*, unsigned argc, Value* vp)       \
 // private methods `store()` and `load()`.
 
 bool
-StoreReferenceHeapValue::store(JSContext* cx, HeapValue* heap, const Value& v,
-                               TypedObject* obj, jsid id)
+StoreReferenceAny::store(JSContext* cx, GCPtrValue* heap, const Value& v,
+                         TypedObject* obj, jsid id)
 {
     // Undefined values are not included in type inference information for
     // value properties of typed objects, as these properties are always
@@ -2702,8 +2702,8 @@ StoreReferenceHeapValue::store(JSContext* cx, HeapValue* heap, const Value& v,
 }
 
 bool
-StoreReferenceHeapPtrObject::store(JSContext* cx, HeapPtrObject* heap, const Value& v,
-                                   TypedObject* obj, jsid id)
+StoreReferenceObject::store(JSContext* cx, GCPtrObject* heap, const Value& v,
+                            TypedObject* obj, jsid id)
 {
     MOZ_ASSERT(v.isObjectOrNull()); // or else Store_object is being misused
 
@@ -2722,8 +2722,8 @@ StoreReferenceHeapPtrObject::store(JSContext* cx, HeapPtrObject* heap, const Val
 }
 
 bool
-StoreReferenceHeapPtrString::store(JSContext* cx, HeapPtrString* heap, const Value& v,
-                                   TypedObject* obj, jsid id)
+StoreReferencestring::store(JSContext* cx, GCPtrString* heap, const Value& v,
+                            TypedObject* obj, jsid id)
 {
     MOZ_ASSERT(v.isString()); // or else Store_string is being misused
 
@@ -2734,15 +2734,13 @@ StoreReferenceHeapPtrString::store(JSContext* cx, HeapPtrString* heap, const Val
 }
 
 void
-LoadReferenceHeapValue::load(HeapValue* heap,
-                             MutableHandleValue v)
+LoadReferenceAny::load(GCPtrValue* heap, MutableHandleValue v)
 {
     v.set(*heap);
 }
 
 void
-LoadReferenceHeapPtrObject::load(HeapPtrObject* heap,
-                                 MutableHandleValue v)
+LoadReferenceObject::load(GCPtrObject* heap, MutableHandleValue v)
 {
     if (*heap)
         v.setObject(**heap);
@@ -2751,8 +2749,7 @@ LoadReferenceHeapPtrObject::load(HeapPtrObject* heap,
 }
 
 void
-LoadReferenceHeapPtrString::load(HeapPtrString* heap,
-                                 MutableHandleValue v)
+LoadReferencestring::load(GCPtrString* heap, MutableHandleValue v)
 {
     v.setString(*heap);
 }
@@ -2835,23 +2832,23 @@ MemoryInitVisitor::visitReference(ReferenceTypeDescr& descr, uint8_t* mem)
     switch (descr.type()) {
       case ReferenceTypeDescr::TYPE_ANY:
       {
-        js::HeapValue* heapValue = reinterpret_cast<js::HeapValue*>(mem);
+        js::GCPtrValue* heapValue = reinterpret_cast<js::GCPtrValue*>(mem);
         heapValue->init(UndefinedValue());
         return;
       }
 
       case ReferenceTypeDescr::TYPE_OBJECT:
       {
-        js::HeapPtrObject* objectPtr =
-            reinterpret_cast<js::HeapPtrObject*>(mem);
+        js::GCPtrObject* objectPtr =
+            reinterpret_cast<js::GCPtrObject*>(mem);
         objectPtr->init(nullptr);
         return;
       }
 
       case ReferenceTypeDescr::TYPE_STRING:
       {
-        js::HeapPtrString* stringPtr =
-            reinterpret_cast<js::HeapPtrString*>(mem);
+        js::GCPtrString* stringPtr =
+            reinterpret_cast<js::GCPtrString*>(mem);
         stringPtr->init(rt_->emptyString);
         return;
       }
@@ -2905,21 +2902,21 @@ MemoryTracingVisitor::visitReference(ReferenceTypeDescr& descr, uint8_t* mem)
     switch (descr.type()) {
       case ReferenceTypeDescr::TYPE_ANY:
       {
-        HeapValue* heapValue = reinterpret_cast<js::HeapValue*>(mem);
+        GCPtrValue* heapValue = reinterpret_cast<js::GCPtrValue*>(mem);
         TraceEdge(trace_, heapValue, "reference-val");
         return;
       }
 
       case ReferenceTypeDescr::TYPE_OBJECT:
       {
-        HeapPtrObject* objectPtr = reinterpret_cast<js::HeapPtrObject*>(mem);
+        GCPtrObject* objectPtr = reinterpret_cast<js::GCPtrObject*>(mem);
         TraceNullableEdge(trace_, objectPtr, "reference-obj");
         return;
       }
 
       case ReferenceTypeDescr::TYPE_STRING:
       {
-        HeapPtrString* stringPtr = reinterpret_cast<js::HeapPtrString*>(mem);
+        GCPtrString* stringPtr = reinterpret_cast<js::GCPtrString*>(mem);
         TraceNullableEdge(trace_, stringPtr, "reference-str");
         return;
       }

@@ -27,8 +27,12 @@
 #define KEY_MAP_GTK(aCPPKeyName, aNativeKey)
 // Qt
 #define KEY_MAP_QT(aCPPKeyName, aNativeKey)
-// Android and Gonk
+// Android and B2G
 #define KEY_MAP_ANDROID(aCPPKeyName, aNativeKey)
+// Only for Android
+#define KEY_MAP_ANDROID_EXCEPT_B2G(aCPPKeyName, aNativeKey)
+// Only for B2G
+#define KEY_MAP_B2G(aCPPKeyName, aNativeKey)
 
 #if defined(XP_WIN)
 #if defined(NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX)
@@ -82,6 +86,15 @@
 #undef KEY_MAP_ANDROID
 #define KEY_MAP_ANDROID(aCPPKeyName, aNativeKey) \
   NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, KEY_NAME_INDEX_##aCPPKeyName)
+#ifndef MOZ_B2G
+#undef KEY_MAP_ANDROID_EXCEPT_B2G
+#define KEY_MAP_ANDROID_EXCEPT_B2G(aCPPKeyName, aNativeKey) \
+  NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, KEY_NAME_INDEX_##aCPPKeyName)
+#else // #ifndef MOZ_B2G
+#undef KEY_MAP_B2G
+#define KEY_MAP_B2G(aCPPKeyName, aNativeKey) \
+  NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, KEY_NAME_INDEX_##aCPPKeyName)
+#endif  // #ifndef MOZ_B2G #else
 #endif
 
 /******************************************************************************
@@ -995,29 +1008,32 @@ KEY_MAP_QT      (AudioBassBoostDown, Qt::Key_BassDown)
 KEY_MAP_WIN_CMD (AudioBassBoostUp, APPCOMMAND_BASS_UP)
 KEY_MAP_QT      (AudioBassBoostUp, Qt::Key_BassUp)
 
-// VolumeDown (should be renamed to AudioVolumeDown)
-KEY_MAP_WIN     (VolumeDown, VK_VOLUME_DOWN)
-KEY_MAP_WIN_CMD (VolumeDown, APPCOMMAND_VOLUME_DOWN)
-KEY_MAP_COCOA   (VolumeDown, kVK_VolumeDown)
-KEY_MAP_GTK     (VolumeDown, GDK_AudioLowerVolume)
-KEY_MAP_QT      (VolumeDown, Qt::Key_VolumeDown)
-KEY_MAP_ANDROID (VolumeDown, AKEYCODE_VOLUME_DOWN)
+// AudioVolumeDown
+KEY_MAP_WIN               (AudioVolumeDown, VK_VOLUME_DOWN)
+KEY_MAP_WIN_CMD           (AudioVolumeDown, APPCOMMAND_VOLUME_DOWN)
+KEY_MAP_COCOA             (AudioVolumeDown, kVK_VolumeDown)
+KEY_MAP_GTK               (AudioVolumeDown, GDK_AudioLowerVolume)
+KEY_MAP_QT                (AudioVolumeDown, Qt::Key_VolumeDown)
+KEY_MAP_ANDROID_EXCEPT_B2G(AudioVolumeDown, AKEYCODE_VOLUME_DOWN)
+KEY_MAP_B2G               (VolumeDown,      AKEYCODE_VOLUME_DOWN)
 
-// VolumeUp (should be renamed to AudioVolumeUp)
-KEY_MAP_WIN     (VolumeUp, VK_VOLUME_UP)
-KEY_MAP_WIN_CMD (VolumeUp, APPCOMMAND_VOLUME_UP)
-KEY_MAP_COCOA   (VolumeUp, kVK_VolumeUp)
-KEY_MAP_GTK     (VolumeUp, GDK_AudioRaiseVolume)
-KEY_MAP_QT      (VolumeUp, Qt::Key_VolumeUp)
-KEY_MAP_ANDROID (VolumeUp, AKEYCODE_VOLUME_UP)
+// AudioVolumeUp
+KEY_MAP_WIN               (AudioVolumeUp, VK_VOLUME_UP)
+KEY_MAP_WIN_CMD           (AudioVolumeUp, APPCOMMAND_VOLUME_UP)
+KEY_MAP_COCOA             (AudioVolumeUp, kVK_VolumeUp)
+KEY_MAP_GTK               (AudioVolumeUp, GDK_AudioRaiseVolume)
+KEY_MAP_QT                (AudioVolumeUp, Qt::Key_VolumeUp)
+KEY_MAP_ANDROID_EXCEPT_B2G(AudioVolumeUp, AKEYCODE_VOLUME_UP)
+KEY_MAP_B2G               (VolumeUp,      AKEYCODE_VOLUME_UP)
 
-// VolumeMute (should be renamed to AudioVolumeMute)
-KEY_MAP_WIN     (VolumeMute, VK_VOLUME_MUTE)
-KEY_MAP_WIN_CMD (VolumeMute, APPCOMMAND_VOLUME_MUTE)
-KEY_MAP_COCOA   (VolumeMute, kVK_Mute)
-KEY_MAP_GTK     (VolumeMute, GDK_AudioMute)
-KEY_MAP_QT      (VolumeMute, Qt::Key_VolumeMute)
-KEY_MAP_ANDROID (VolumeMute, AKEYCODE_VOLUME_MUTE)
+// AudioVolumeMute
+KEY_MAP_WIN               (AudioVolumeMute, VK_VOLUME_MUTE)
+KEY_MAP_WIN_CMD           (AudioVolumeMute, APPCOMMAND_VOLUME_MUTE)
+KEY_MAP_COCOA             (AudioVolumeMute, kVK_Mute)
+KEY_MAP_GTK               (AudioVolumeMute, GDK_AudioMute)
+KEY_MAP_QT                (AudioVolumeMute, Qt::Key_VolumeMute)
+KEY_MAP_ANDROID_EXCEPT_B2G(AudioVolumeMute, AKEYCODE_VOLUME_MUTE)
+KEY_MAP_B2G               (VolumeMute,      AKEYCODE_VOLUME_MUTE)
 
 /******************************************************************************
  * Application Keys
@@ -1209,19 +1225,21 @@ KEY_MAP_QT      (BrowserStop, Qt::Key_Stop)
 /******************************************************************************
  * Mobile Phone Keys
  ******************************************************************************/
-// PhoneCall (should be renamed to Call)
-KEY_MAP_ANDROID (PhoneCall, AKEYCODE_CALL)
+// Call
+KEY_MAP_ANDROID (Call, AKEYCODE_CALL)
 
 // Camera
 KEY_MAP_QT      (Camera, Qt::Key_Camera)
 KEY_MAP_ANDROID (Camera, AKEYCODE_CAMERA)
 
-// CameraFocusAdjust (should be renamed to CameraFocus)
-KEY_MAP_QT      (CameraFocusAdjust, Qt::Key_CameraFocus)
-KEY_MAP_ANDROID (CameraFocusAdjust, AKEYCODE_FOCUS)
+// CameraFocus
+KEY_MAP_QT                (CameraFocus,       Qt::Key_CameraFocus)
+KEY_MAP_ANDROID_EXCEPT_B2G(CameraFocus,       AKEYCODE_FOCUS)
+KEY_MAP_B2G               (CameraFocusAdjust, AKEYCODE_FOCUS)
 
-// HomeScreen (should be renamed to GoHome)
-KEY_MAP_ANDROID (HomeScreen, AKEYCODE_HOME)
+// GoHome
+KEY_MAP_ANDROID_EXCEPT_B2G(GoHome,     AKEYCODE_HOME)
+KEY_MAP_B2G               (HomeScreen, AKEYCODE_HOME)
 
 /******************************************************************************
  * TV Keys
@@ -1329,3 +1347,5 @@ KEY_MAP_ANDROID (SoftRight, AKEYCODE_SOFT_RIGHT)
 #undef KEY_MAP_GTK
 #undef KEY_MAP_QT
 #undef KEY_MAP_ANDROID
+#undef KEY_MAP_ANDROID_EXCEPT_B2G
+#undef KEY_MAP_B2G
