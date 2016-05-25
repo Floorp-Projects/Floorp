@@ -522,11 +522,14 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
 
   nsTArray<AnimationProperty> properties;
   if (mTarget) {
+    nsTArray<ComputedKeyframeValues> computedValues =
+      KeyframeUtils::GetComputedKeyframeValues(mKeyframes, mTarget->mElement,
+                                               aStyleContext);
+
     properties =
-      KeyframeUtils::GetAnimationPropertiesFromKeyframes(aStyleContext,
-                                                         mTarget->mElement,
-                                                         mTarget->mPseudoType,
-                                                         mKeyframes);
+      KeyframeUtils::GetAnimationPropertiesFromKeyframes(mKeyframes,
+                                                         computedValues,
+                                                         aStyleContext);
   }
 
   if (mProperties == properties) {
