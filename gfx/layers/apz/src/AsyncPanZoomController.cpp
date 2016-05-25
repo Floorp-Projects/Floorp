@@ -3356,7 +3356,7 @@ AsyncPanZoomController::ReportCheckerboard(const TimeStamp& aSampleTime)
 bool AsyncPanZoomController::IsCurrentlyCheckerboarding() const {
   ReentrantMonitorAutoEnter lock(mMonitor);
 
-  if (!gfxPrefs::APZAllowCheckerboarding()) {
+  if (!gfxPrefs::APZAllowCheckerboarding() || mFrameMetrics.IsApzForceDisabled()) {
     return false;
   }
 
