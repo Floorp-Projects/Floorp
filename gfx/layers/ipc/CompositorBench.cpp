@@ -226,7 +226,8 @@ public:
   }
 
   already_AddRefed<Effect> CreateEffect(size_t i) {
-    return CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture, Filter::POINT, true);
+    return CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture,
+                                SamplingFilter::POINT, true);
   }
 };
 
@@ -269,7 +270,8 @@ public:
   }
 
   virtual already_AddRefed<Effect> CreateEffect(size_t i) {
-    return CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture, Filter::POINT, true);
+    return CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture,
+                                SamplingFilter::POINT, true);
   }
 };
 
@@ -311,7 +313,8 @@ public:
   }
 
   virtual already_AddRefed<Effect> CreateEffect(size_t i) {
-    return CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture, Filter::POINT);
+    return CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture,
+                                SamplingFilter::POINT);
   }
 };
 
@@ -352,7 +355,8 @@ public:
   }
 
   virtual already_AddRefed<Effect> CreateEffect(size_t i) {
-    return CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture, Filter::POINT);
+    return CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture,
+                                SamplingFilter::POINT);
   }
 };
 #endif

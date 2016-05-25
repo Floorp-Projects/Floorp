@@ -15,7 +15,7 @@
 #include "mozilla/gfx/MatrixFwd.h"      // for Matrix4x4
 #include "mozilla/gfx/Point.h"          // for Point
 #include "mozilla/gfx/Rect.h"           // for Rect
-#include "mozilla/gfx/Types.h"          // for Filter
+#include "mozilla/gfx/Types.h"          // for SamplingFilter
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/CompositorTypes.h"  // for TextureInfo, etc
@@ -81,7 +81,7 @@ public:
                          EffectChain& aEffectChain,
                          float aOpacity,
                          const gfx::Matrix4x4& aTransform,
-                         const gfx::Filter& aFilter,
+                         const gfx::SamplingFilter aSamplingFilter,
                          const gfx::IntRect& aClipRect,
                          const nsIntRegion* aVisibleRegion = nullptr) = 0;
 
@@ -231,7 +231,7 @@ public:
 
   virtual void Unlock() { }
 
-  virtual already_AddRefed<TexturedEffect> GenEffect(const gfx::Filter& aFilter) {
+  virtual already_AddRefed<TexturedEffect> GenEffect(const gfx::SamplingFilter aSamplingFilter) {
     return nullptr;
   }
 

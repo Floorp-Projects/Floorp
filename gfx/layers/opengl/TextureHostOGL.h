@@ -48,12 +48,12 @@ class CompositorOGL;
 class TextureImageTextureSourceOGL;
 class GLTextureSource;
 
-inline void ApplyFilterToBoundTexture(gl::GLContext* aGL,
-                                      gfx::Filter aFilter,
-                                      GLuint aTarget = LOCAL_GL_TEXTURE_2D)
+inline void ApplySamplingFilterToBoundTexture(gl::GLContext* aGL,
+                                              gfx::SamplingFilter aSamplingFilter,
+                                              GLuint aTarget = LOCAL_GL_TEXTURE_2D)
 {
   GLenum filter =
-    (aFilter == gfx::Filter::POINT ? LOCAL_GL_NEAREST : LOCAL_GL_LINEAR);
+    (aSamplingFilter == gfx::SamplingFilter::POINT ? LOCAL_GL_NEAREST : LOCAL_GL_LINEAR);
 
   aGL->fTexParameteri(aTarget, LOCAL_GL_TEXTURE_MIN_FILTER, filter);
   aGL->fTexParameteri(aTarget, LOCAL_GL_TEXTURE_MAG_FILTER, filter);
@@ -82,12 +82,13 @@ class TextureSourceOGL
 {
 public:
   TextureSourceOGL()
-    : mHasCachedFilter(false)
+    : mHasCachedSamplingFilter(false)
   {}
 
   virtual bool IsValid() const = 0;
 
-  virtual void BindTexture(GLenum aTextureUnit, gfx::Filter aFilter) = 0;
+  virtual void BindTexture(GLenum aTextureUnit,
+                           gfx::SamplingFilter aSamplingFilter) = 0;
 
   virtual gfx::IntSize GetSize() const = 0;
 
@@ -103,22 +104,22 @@ public:
 
   virtual GLTextureSource* AsGLTextureSource() { return nullptr; }
 
-  void SetFilter(gl::GLContext* aGL, gfx::Filter aFilter)
+  void SetSamplingFilter(gl::GLContext* aGL, gfx::SamplingFilter aSamplingFilter)
   {
-    if (mHasCachedFilter &&
-        mCachedFilter == aFilter) {
+    if (mHasCachedSamplingFilter &&
+        mCachedSamplingFilter == aSamplingFilter) {
       return;
     }
-    mHasCachedFilter = true;
-    mCachedFilter = aFilter;
-    ApplyFilterToBoundTexture(aGL, aFilter, GetTextureTarget());
+    mHasCachedSamplingFilter = true;
+    mCachedSamplingFilter = aSamplingFilter;
+    ApplySamplingFilterToBoundTexture(aGL, aSamplingFilter, GetTextureTarget());
   }
 
-  void ClearCachedFilter() { mHasCachedFilter = false; }
+  void ClearCachedFilter() { mHasCachedSamplingFilter = false; }
 
 private:
-  gfx::Filter mCachedFilter;
-  bool mHasCachedFilter;
+  gfx::SamplingFilter mCachedSamplingFilter;
+  bool mHasCachedSamplingFilter;
 };
 
 /**
@@ -168,7 +169,8 @@ public:
 
   virtual TextureSourceOGL* AsSourceOGL() override { return this; }
 
-  virtual void BindTexture(GLenum aTextureUnit, gfx::Filter aFilter) override;
+  virtual void BindTexture(GLenum aTextureUnit,
+                           gfx::SamplingFilter aSamplingFilter) override;
 
   virtual gfx::IntSize GetSize() const override;
 
@@ -244,7 +246,8 @@ public:
 
   virtual TextureSourceOGL* AsSourceOGL() override { return this; }
 
-  virtual void BindTexture(GLenum activetex, gfx::Filter aFilter) override;
+  virtual void BindTexture(GLenum activetex,
+                           gfx::SamplingFilter aSamplingFilter) override;
 
   virtual bool IsValid() const override;
 
@@ -353,7 +356,8 @@ public:
 
   virtual TextureSourceOGL* AsSourceOGL() override { return this; }
 
-  virtual void BindTexture(GLenum activetex, gfx::Filter aFilter) override;
+  virtual void BindTexture(GLenum activetex,
+                           gfx::SamplingFilter aSamplingFilter) override;
 
   virtual bool IsValid() const override;
 
@@ -447,7 +451,8 @@ public:
 
   virtual TextureSourceOGL* AsSourceOGL() override { return this; }
 
-  virtual void BindTexture(GLenum activetex, gfx::Filter aFilter) override;
+  virtual void BindTexture(GLenum activetex,
+                           gfx::SamplingFilter aSamplingFilter) override;
 
   virtual bool IsValid() const override;
 
