@@ -7,7 +7,7 @@
   <script type="application/javascript">
 
 // Scroll the mouse wheel at (dx, dy) relative to |element|.
-function scrollWheelOver(element, dx, dy) {
+function scrollWheelOver(element, dx, dy, testDriver) {
   // Move the mouse to the desired wheel location.
   // Not doing so can result in the wheel events from two consecutive
   // scrollWheelOver() calls on different elements being incorrectly considered
@@ -16,63 +16,54 @@ function scrollWheelOver(element, dx, dy) {
   // wheel event, otherwise there is a chance they might get reordered, and
   // we have the transaction problem again.
   return synthesizeNativeMouseMoveAndWaitForMoveEvent(element, dx, dy, function() {
-    synthesizeNativeWheelAndWaitForScrollEvent(element, dx, dy, 0, -10, driveTest);
+    synthesizeNativeWheelAndWaitForScrollEvent(element, dx, dy, 0, -10, testDriver);
   });
 }
 
-function* runTest() {
+function* test(testDriver) {
   var iframeWin = document.getElementById('iframe').contentWindow;
 
   // scroll over the middle of the iframe's position:sticky element, check
   // that it scrolls the iframe
   var scrollPos = iframeWin.scrollY;
-  yield scrollWheelOver(iframeWin.document.body, 50, 150);
+  yield scrollWheelOver(iframeWin.document.body, 50, 150, testDriver);
   ok(iframeWin.scrollY > scrollPos, "iframe scrolled after wheeling over the position:sticky element");
 
   // same, but using the iframe's position:fixed element
   scrollPos = iframeWin.scrollY;
-  yield scrollWheelOver(iframeWin.document.body, 250, 150);
+  yield scrollWheelOver(iframeWin.document.body, 250, 150, testDriver);
   ok(iframeWin.scrollY > scrollPos, "iframe scrolled after wheeling over the position:fixed element");
 
   // same, but scrolling the scrollable frame *inside* the position:fixed item
   var fpos = document.getElementById('fpos_scrollable');
   scrollPos = fpos.scrollTop;
-  yield scrollWheelOver(fpos, 50, 150);
+  yield scrollWheelOver(fpos, 50, 150, testDriver);
   ok(fpos.scrollTop > scrollPos, "scrollable item inside fixed-pos element scrolled");
   // wait for it to layerize fully and then try again
   yield waitForAllPaints(function() {
-    flushApzRepaints(driveTest);
+    flushApzRepaints(testDriver);
   });
   scrollPos = fpos.scrollTop;
   // The mouse is already at the right position. If we call scrollWheelOver it
   // hangs on windows waiting for the mouse-move, so instead we just synthesize
   // the wheel directly.
-  yield synthesizeNativeWheelAndWaitForScrollEvent(fpos, 50, 150, 0, -10, driveTest);
+  yield synthesizeNativeWheelAndWaitForScrollEvent(fpos, 50, 150, 0, -10, testDriver);
   ok(fpos.scrollTop > scrollPos, "scrollable item inside fixed-pos element scrolled after layerization");
 
   // same, but using the top-level window's position:sticky element
   scrollPos = window.scrollY;
-  yield scrollWheelOver(document.body, 50, 150);
+  yield scrollWheelOver(document.body, 50, 150, testDriver);
   ok(window.scrollY > scrollPos, "top-level document scrolled after wheeling over the position:sticky element");
 
   // same, but using the top-level window's position:fixed element
   scrollPos = window.scrollY;
-  yield scrollWheelOver(document.body, 250, 150);
+  yield scrollWheelOver(document.body, 250, 150, testDriver);
   ok(window.scrollY > scrollPos, "top-level document scrolled after wheeling over the position:fixed element");
 }
 
-var gTestContinuation = null;
-function driveTest() {
-  if (!gTestContinuation) {
-    gTestContinuation = runTest();
-  }
-  var ret = gTestContinuation.next();
-  if (ret.done) {
-    subtestDone();
-  }
-}
-
-waitUntilApzStable().then(driveTest);
+waitUntilApzStable()
+.then(runContinuation(test))
+.then(subtestDone);
 
   </script>
 </head>

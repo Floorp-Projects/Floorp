@@ -4,7 +4,7 @@
   <script type="application/javascript" src="apz_test_utils.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
 <script type="application/javascript">
-function* runTest() {
+function* test(testDriver) {
   var scroller = document.getElementById('scroller');
   var scrollerPos = scroller.scrollTop;
   var dx = 100, dy = 50;
@@ -12,38 +12,29 @@ function* runTest() {
   is(window.scrollY, 0, "Initial page scroll position should be 0");
   is(scrollerPos, 0, "Initial scroller position should be 0");
 
-  yield synthesizeNativeMouseMoveAndWaitForMoveEvent(scroller, dx, dy, driveTest);
-  yield synthesizeNativeWheelAndWaitForScrollEvent(scroller, dx, dy, 0, -10, driveTest);
+  yield synthesizeNativeMouseMoveAndWaitForMoveEvent(scroller, dx, dy, testDriver);
+  yield synthesizeNativeWheelAndWaitForScrollEvent(scroller, dx, dy, 0, -10, testDriver);
 
   is(window.scrollY, 0, "Page scroll position should still be 0");
   ok(scroller.scrollTop > scrollerPos, "Scroller should have scrolled");
 
   // wait for it to layerize fully and then try again
   yield waitForAllPaints(function() {
-    flushApzRepaints(driveTest);
+    flushApzRepaints(testDriver);
   });
   scrollerPos = scroller.scrollTop;
 
   // The mouse is already at the right position. If we call scrollWheelOver it
   // hangs on windows waiting for the mouse-move, so instead we just synthesize
   // the wheel directly.
-  yield synthesizeNativeWheelAndWaitForScrollEvent(scroller, dx, dy, 0, -10, driveTest);
+  yield synthesizeNativeWheelAndWaitForScrollEvent(scroller, dx, dy, 0, -10, testDriver);
   is(window.scrollY, 0, "Page scroll position should still be 0 after layerization");
   ok(scroller.scrollTop > scrollerPos, "Scroller should have continued scrolling");
 }
 
-var gTestContinuation = null;
-function driveTest() {
-  if (!gTestContinuation) {
-    gTestContinuation = runTest();
-  }
-  var ret = gTestContinuation.next();
-  if (ret.done) {
-    subtestDone();
-  }
-}
-
-waitUntilApzStable().then(driveTest);
+waitUntilApzStable()
+.then(runContinuation(test))
+.then(subtestDone);
 
 </script>
 <style>
