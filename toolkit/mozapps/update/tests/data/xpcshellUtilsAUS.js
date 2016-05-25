@@ -1015,9 +1015,6 @@ function doTestFinish() {
  */
 function setDefaultPrefs() {
   Services.prefs.setBoolPref(PREF_APP_UPDATE_ENABLED, true);
-  // Don't display UI for a successful installation. Some apps may not set this
-  // pref to false like Firefox does.
-  Services.prefs.setBoolPref(PREF_APP_UPDATE_SHOW_INSTALLED_UI, false);
   if (DEBUG_AUS_TEST) {
     // Enable Update logging
     Services.prefs.setBoolPref(PREF_APP_UPDATE_LOG, true);
