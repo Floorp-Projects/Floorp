@@ -1228,14 +1228,17 @@ mozTXTToHTMLConv::ScanHTML(nsString& aInString, uint32_t whattodo, nsString &aOu
   // Skip all tags ("<[...]>") and content in an a link tag ("<a [...]</a>"),
   // comment tag ("<!--[...]-->"), style tag, script tag or head tag.
   // Unescape the rest (text between tags) and pass it to ScanTXT.
+  nsAutoCString canFollow(" \f\n\r\t>");
   for (int32_t i = 0; i < lengthOfInString;)
   {
     if (aInString[i] == '<')  // html tag
     {
       int32_t start = i;
-      if (Substring(aInString, i + 1, 2).LowerCaseEqualsASCII("a "))
+      if (i + 2 < lengthOfInString &&
+          nsCRT::ToLower(aInString[i + 1]) == 'a' &&
+          canFollow.FindChar(aInString[i + 2]) != kNotFound)
            // if a tag, skip until </a>.
-           // Make sure there's a space after, not to match "abbr".
+           // Make sure there's a white-space character after, not to match "abbr".
       {
         i = aInString.Find("</a>", true, i);
         if (i == kNotFound)
@@ -1252,8 +1255,9 @@ mozTXTToHTMLConv::ScanHTML(nsString& aInString, uint32_t whattodo, nsString &aOu
         else
           i += 3;
       }
-      else if (Substring(aInString, i + 1, 5).LowerCaseEqualsASCII("style") &&
-               (aInString.CharAt(i + 6) == ' ' || aInString.CharAt(i + 6) == '>'))
+      else if (i + 6 < lengthOfInString &&
+      Substring(aInString, i + 1, 5).LowerCaseEqualsASCII("style") &&
+               canFollow.FindChar(aInString[i + 6]) != kNotFound)
            // if style tag, skip until </style>
       {
         i = aInString.Find("</style>", true, i);
@@ -1262,8 +1266,9 @@ mozTXTToHTMLConv::ScanHTML(nsString& aInString, uint32_t whattodo, nsString &aOu
         else
           i += 8;
       }
-      else if (Substring(aInString, i + 1, 6).LowerCaseEqualsASCII("script") &&
-               (aInString.CharAt(i + 7) == ' ' || aInString.CharAt(i + 7) == '>'))
+      else if (i + 7 < lengthOfInString &&
+               Substring(aInString, i + 1, 6).LowerCaseEqualsASCII("script") &&
+               canFollow.FindChar(aInString[i + 7]) != kNotFound)
            // if script tag, skip until </script>
       {
         i = aInString.Find("</script>", true, i);
@@ -1272,8 +1277,9 @@ mozTXTToHTMLConv::ScanHTML(nsString& aInString, uint32_t whattodo, nsString &aOu
         else
           i += 9;
       }
-      else if (Substring(aInString, i + 1, 4).LowerCaseEqualsASCII("head") &&
-               (aInString.CharAt(i + 5) == ' ' || aInString.CharAt(i + 5) == '>'))
+      else if (i + 5 < lengthOfInString &&
+               Substring(aInString, i + 1, 4).LowerCaseEqualsASCII("head") &&
+               canFollow.FindChar(aInString[i + 5]) != kNotFound)
            // if head tag, skip until </head>
            // Make sure not to match <header>.
       {
