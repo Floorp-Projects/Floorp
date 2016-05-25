@@ -21,6 +21,7 @@ fails == webkit-box-anon-flex-items-3.html webkit-box-anon-flex-items-3-ref.html
 
 # Tests for "-webkit-box-direction":
 == webkit-box-direction-1.html webkit-box-direction-1-ref.html
+== webkit-box-direction-2.html webkit-box-direction-2-ref.html
 
 # Tests for "-webkit-box-flex" (flexibility of items)
 == webkit-box-flex-1.html webkit-box-flex-1-ref.html
