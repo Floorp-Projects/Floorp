@@ -46,7 +46,7 @@ FRAGMENT(Root, barriers) {
   JS::Value val = JS::ObjectValue(*obj);
   js::PreBarrieredValue prebarrieredValue(JS::ObjectValue(*obj));
   js::GCPtrValue heapValue(JS::ObjectValue(*obj));
-  js::HeapPtr<Value> relocatableValue(JS::ObjectValue(*obj));
+  js::HeapPtr<JS::Value> relocatableValue(JS::ObjectValue(*obj));
 
   breakpoint();
 
