@@ -133,6 +133,10 @@ TextTrack::RemoveCue(TextTrackCue& aCue, ErrorResult& aRv)
   aCue.SetActive(false);
 
   mCueList->RemoveCue(aCue, aRv);
+  HTMLMediaElement* mediaElement = mTextTrackList->GetMediaElement();
+  if (mediaElement) {
+    mediaElement->NotifyCueRemoved(aCue);
+  }
   SetDirty();
 }
 
