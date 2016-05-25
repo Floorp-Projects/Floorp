@@ -52,6 +52,7 @@ DevToolsModules(
     'Loader.jsm',
     'Parser.jsm',
     'path.js',
+    'promise_defer.js',
     'protocol.js',
     'system.js',
     'task.js',
