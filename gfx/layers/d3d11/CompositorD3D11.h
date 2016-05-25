@@ -189,8 +189,6 @@ private:
   RefPtr<CompositingRenderTargetD3D11> mDefaultRT;
   RefPtr<CompositingRenderTargetD3D11> mCurrentRT;
 
-  RefPtr<ID3D11Query> mQuery;
-
   DeviceAttachmentsD3D11* mAttachments;
 
   nsIWidget* mWidget;
