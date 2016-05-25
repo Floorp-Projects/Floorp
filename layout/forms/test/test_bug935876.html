@@ -271,20 +271,16 @@ function runTests()
 
   [ false, true ].forEach(function (consume) {
     doPreventDefault = consume;
-    if (!kIsMac) {
-      for (var i = 0; i < combobox.options.length + 1; i++) {
-        reset()
-        synthesizeKey("VK_DOWN", {});
-        check(true, "DownArrow key on combobox #" + i);
-      }
+    for (var i = 0; i < combobox.options.length + 1; i++) {
+      reset()
+      synthesizeKey("VK_DOWN", {});
+      check(true, "DownArrow key on combobox #" + i);
+    }
 
-      for (var i = 0; i < combobox.options.length + 1; i++) {
-        reset()
-        synthesizeKey("VK_UP", {});
-        check(true, "UpArrow key on combobox #" + i);
-      }
-    } else {
-      todo(false, "Make this test work on OSX");
+    for (var i = 0; i < combobox.options.length + 1; i++) {
+      reset()
+      synthesizeKey("VK_UP", {});
+      check(true, "UpArrow key on combobox #" + i);
     }
 
     for (var i = 0; i < combobox.options.length + 1; i++) {
