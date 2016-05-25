@@ -42,19 +42,13 @@ function recordEvent(e) {
   }
 }
 
-function registerListeners() {
-  window.addEventListener('touchstart', recordEvent, { passive: true, capture: true });
-  window.addEventListener('touchend', recordEvent, { passive: true, capture: true });
-  window.addEventListener('touchcancel', recordEvent, true);
-  window.addEventListener('contextmenu', recordEvent, true);
-}
+window.addEventListener('touchstart', recordEvent, { passive: true, capture: true });
+window.addEventListener('touchend', recordEvent, { passive: true, capture: true });
+window.addEventListener('touchcancel', recordEvent, true);
+window.addEventListener('contextmenu', recordEvent, true);
 
-window.onload = function() {
-  registerListeners();
-  waitForAllPaints(function() {
-    flushApzRepaints(longPressLink);
-  });
-}
+waitUntilApzStable()
+.then(longPressLink);
 
   </script>
 </head>
