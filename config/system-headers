@@ -716,6 +716,8 @@ Math64.h
 math.h
 mbstring.h
 #ifdef ANDROID
+android/native_window.h
+android/native_window_jni.h
 media/AudioEffect.h
 media/AudioSystem.h
 media/ICrypto.h
