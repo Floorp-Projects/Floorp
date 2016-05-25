@@ -147,7 +147,8 @@ window.onload = Task.async(function* () {
         onClick: () => {},
       }), window.document.body);
       yield forceRender(frame);
-      checkFrameString(Object.assign({ frame }, expected));
+      let source = input.source;
+      checkFrameString(Object.assign({ frame, source }, expected));
     }
 
   } catch (e) {
