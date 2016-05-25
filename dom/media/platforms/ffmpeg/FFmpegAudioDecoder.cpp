@@ -15,7 +15,7 @@ namespace mozilla
 {
 
 FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(FFmpegLibWrapper* aLib,
-  FlushableTaskQueue* aTaskQueue, MediaDataDecoderCallback* aCallback,
+  TaskQueue* aTaskQueue, MediaDataDecoderCallback* aCallback,
   const AudioInfo& aConfig)
   : FFmpegDataDecoder(aLib, aTaskQueue, aCallback, GetCodecId(aConfig.mMimeType))
 {

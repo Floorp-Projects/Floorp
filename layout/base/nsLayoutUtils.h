@@ -1735,8 +1735,13 @@ public:
    *                            the image is a vector image being rendered at
    *                            that size.)
    *   @param aDest             The position and scaled area where one copy of
-   *                            the image should be drawn.
+   *                            the image should be drawn. This area represents
+   *                            the image itself in its correct position as defined
+   *                            with the background-position css property.
    *   @param aFill             The area to be filled with copies of the image.
+   *   @param aRepeatSize       The distance between the positions of two subsequent
+   *                            repeats of the image. Sizes larger than aDest.Size()
+   *                            create gaps between the images.
    *   @param aAnchor           A point in aFill which we will ensure is
    *                            pixel-aligned in the output.
    *   @param aDirty            Pixels outside this area may be skipped.
@@ -1750,6 +1755,7 @@ public:
                                         Filter              aGraphicsFilter,
                                         const nsRect&       aDest,
                                         const nsRect&       aFill,
+                                        const nsSize&       aRepeatSize,
                                         const nsPoint&      aAnchor,
                                         const nsRect&       aDirty,
                                         uint32_t            aImageFlags,

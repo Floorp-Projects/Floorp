@@ -495,9 +495,10 @@ WebGLContext::ValidateUniformArraySetter(WebGLUniformLocation* loc,
     if (!loc->ValidateArrayLength(setterElemSize, setterArraySize, this, funcName))
         return false;
 
+    MOZ_ASSERT((size_t)loc->mActiveInfo->mElemCount > loc->mArrayIndex);
+    size_t uniformElemCount = loc->mActiveInfo->mElemCount - loc->mArrayIndex;
     *out_rawLoc = loc->mLoc;
-    *out_numElementsToUpload = std::min((size_t)loc->mActiveInfo->mElemCount,
-                                        setterArraySize / setterElemSize);
+    *out_numElementsToUpload = std::min(uniformElemCount, setterArraySize / setterElemSize);
     return true;
 }
 
@@ -529,9 +530,11 @@ WebGLContext::ValidateUniformMatrixArraySetter(WebGLUniformLocation* loc,
     if (!ValidateUniformMatrixTranspose(setterTranspose, funcName))
         return false;
 
+    MOZ_ASSERT((size_t)loc->mActiveInfo->mElemCount > loc->mArrayIndex);
+    size_t uniformElemCount = loc->mActiveInfo->mElemCount - loc->mArrayIndex;
     *out_rawLoc = loc->mLoc;
-    *out_numElementsToUpload = std::min((size_t)loc->mActiveInfo->mElemCount,
-                                        setterArraySize / setterElemSize);
+    *out_numElementsToUpload = std::min(uniformElemCount, setterArraySize / setterElemSize);
+
     return true;
 }
 

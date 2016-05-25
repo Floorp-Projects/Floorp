@@ -11,7 +11,6 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
 Cu.import("chrome://marionette/content/driver.js");
-Cu.import("chrome://marionette/content/emulator.js");
 Cu.import("chrome://marionette/content/error.js");
 Cu.import("chrome://marionette/content/message.js");
 
@@ -29,9 +28,8 @@ const logger = Log.repository.getLogger("Marionette");
  *     Unique identifier of the connection this dispatcher should handle.
  * @param {DebuggerTransport} transport
  *     Debugger transport connection to the client.
- * @param {function(EmulatorService): GeckoDriver} driverFactory
- *     A factory function that takes an EmulatorService and produces
- *     a GeckoDriver.
+ * @param {function(): GeckoDriver} driverFactory
+ *     A factory function that produces a GeckoDriver.
  */
 this.Dispatcher = function(connId, transport, driverFactory) {
   this.connId = connId;
@@ -47,8 +45,7 @@ this.Dispatcher = function(connId, transport, driverFactory) {
   // last received/sent message ID
   this.lastId = 0;
 
-  this.emulator = new emulator.EmulatorService(this.sendEmulator.bind(this));
-  this.driver = driverFactory(this.emulator);
+  this.driver = driverFactory();
 
   // lookup of commands sent by server to client by message ID
   this.commands_ = new Map();
@@ -159,23 +156,16 @@ Dispatcher.prototype.sayHello = function() {
   this.sendRaw(whatHo);
 };
 
-Dispatcher.prototype.sendEmulator = function(name, params, resCb, errCb) {
-  let cmd = new Command(++this.lastId, name, params);
-  cmd.onresult = resCb;
-  cmd.onerror = errCb;
-  this.send(cmd);
-};
 
 /**
- * Delegates message to client or emulator based on the provided
- * {@code cmdId}.  The message is sent over the debugger transport socket.
+ * Delegates message to client based on the provided  {@code cmdId}.
+ * The message is sent over the debugger transport socket.
  *
  * The command ID is a unique identifier assigned to the client's request
  * that is used to distinguish the asynchronous responses.
  *
  * Whilst responses to commands are synchronous and must be sent in the
- * correct order, emulator callbacks are more transparent and can be sent
- * at any time.  These callbacks won't change the current command state.
+ * correct order.
  *
  * @param {Command,Response} msg
  *     The command or response to send.
@@ -191,16 +181,6 @@ Dispatcher.prototype.send = function(msg) {
 };
 
 // Low-level methods:
-
-/**
- * Send command to emulator over the debugger transport socket.
- *
- * @param {Command} cmd
- *     The command to issue to the emulator.
- */
-Dispatcher.prototype.sendToEmulator = function(cmd) {
-  this.sendMessage(cmd);
-};
 
 /**
  * Send given response to the client over the debugger transport socket.

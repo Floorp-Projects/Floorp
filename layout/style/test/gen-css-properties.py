@@ -12,7 +12,10 @@ def main(output, css_properties, exe):
     # moz.build passes in the exe name without any path, so to run it we need to
     # prepend the './'
     run_exe = exe if os.path.isabs(exe) else './%s' % exe
-    data = subprocess.check_output([run_exe])
+
+    # Use universal_newlines so everything is '\n', which gets converted to
+    # '\r\n' when writing out the file in Windows.
+    data = subprocess.check_output([run_exe], universal_newlines=True)
     with open(css_properties) as f:
         data += f.read()
     output.write(data)

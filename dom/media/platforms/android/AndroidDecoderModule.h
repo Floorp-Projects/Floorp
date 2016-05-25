@@ -25,13 +25,13 @@ public:
   CreateVideoDecoder(const VideoInfo& aConfig,
                      layers::LayersBackend aLayersBackend,
                      layers::ImageContainer* aImageContainer,
-                     FlushableTaskQueue* aVideoTaskQueue,
+                     TaskQueue* aTaskQueue,
                      MediaDataDecoderCallback* aCallback,
                      DecoderDoctorDiagnostics* aDiagnostics) override;
 
   already_AddRefed<MediaDataDecoder>
   CreateAudioDecoder(const AudioInfo& aConfig,
-                     FlushableTaskQueue* aAudioTaskQueue,
+                     TaskQueue* aTaskQueue,
                      MediaDataDecoderCallback* aCallback,
                      DecoderDoctorDiagnostics* aDiagnostics) override;
 

@@ -1518,7 +1518,7 @@ pref("network.http.signed-packages.enabled", false);
 
 // If it is set to false, headers with empty value will not appear in the header
 // array - behavior as it used to be. If it is true: empty headers coming from
-// the network will exits in header array as empty string. Call SetHeader with
+// the network will exist in header array as empty string. Call SetHeader with
 // an empty value will still delete the header.(Bug 6699259)
 pref("network.http.keep_empty_response_headers_as_empty_string", false);
 

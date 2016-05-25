@@ -403,7 +403,7 @@ js::RunningWithTrustedPrincipals(JSContext* cx)
 JS_FRIEND_API(JSFunction*)
 js::GetOutermostEnclosingFunctionOfScriptedCaller(JSContext* cx)
 {
-    ScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
+    ScriptFrameIter iter(cx, FrameIter::GO_THROUGH_SAVED);
 
     // Skip eval frames.
     while (!iter.done() && iter.isEvalFrame())
@@ -415,11 +415,16 @@ js::GetOutermostEnclosingFunctionOfScriptedCaller(JSContext* cx)
     if (!iter.isFunctionFrame())
         return nullptr;
 
+    if (iter.compartment() != cx->compartment())
+        return nullptr;
+
     RootedFunction curr(cx, iter.callee(cx));
     for (StaticScopeIter<NoGC> i(curr); !i.done(); i++) {
         if (i.type() == StaticScopeIter<NoGC>::Function)
             curr = &i.fun();
     }
+
+    assertSameCompartment(cx, curr);
     return curr;
 }
 

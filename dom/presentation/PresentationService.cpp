@@ -148,7 +148,10 @@ PresentationDeviceRequest::Cancel()
  * Implementation of PresentationService
  */
 
-NS_IMPL_ISUPPORTS(PresentationService, nsIPresentationService, nsIObserver)
+NS_IMPL_ISUPPORTS_INHERITED(PresentationService,
+                            PresentationServiceBase,
+                            nsIPresentationService,
+                            nsIObserver)
 
 PresentationService::PresentationService()
   : mIsAvailable(false)
@@ -225,11 +228,11 @@ PresentationService::HandleShutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  Shutdown();
+
   mAvailabilityListeners.Clear();
-  mRespondingListeners.Clear();
   mSessionInfoAtController.Clear();
   mSessionInfoAtReceiver.Clear();
-  mRespondingSessionIds.Clear();
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (obs) {
@@ -406,12 +409,7 @@ PresentationService::StartSession(const nsAString& aUrl,
     new PresentationControllingInfo(aUrl, aSessionId, aCallback);
   mSessionInfoAtController.Put(aSessionId, info);
 
-  // Only track the info when an actual window ID, which would never be 0, is
-  // provided (for an in-process sender page).
-  if (aWindowId != 0) {
-    mRespondingSessionIds.Put(aWindowId, new nsString(aSessionId));
-    mRespondingWindowIds.Put(aSessionId, aWindowId);
-  }
+  AddRespondingSessionId(aWindowId, aSessionId);
 
   nsCOMPtr<nsIPresentationDeviceRequest> request =
     new PresentationDeviceRequest(aUrl, aSessionId, aOrigin);
@@ -591,8 +589,9 @@ PresentationService::UnregisterSessionListener(const nsAString& aSessionId,
 }
 
 NS_IMETHODIMP
-PresentationService::RegisterRespondingListener(uint64_t aWindowId,
-                                                nsIPresentationRespondingListener* aListener)
+PresentationService::RegisterRespondingListener(
+  uint64_t aWindowId,
+  nsIPresentationRespondingListener* aListener)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aListener);
@@ -600,6 +599,15 @@ PresentationService::RegisterRespondingListener(uint64_t aWindowId,
   nsCOMPtr<nsIPresentationRespondingListener> listener;
   if (mRespondingListeners.Get(aWindowId, getter_AddRefs(listener))) {
     return (listener == aListener) ? NS_OK : NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  nsTArray<nsString>* sessionIdArray;
+  if (!mRespondingSessionIds.Get(aWindowId, &sessionIdArray)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  for (const auto& id : *sessionIdArray) {
+    aListener->NotifySessionConnect(aWindowId, id);
   }
 
   mRespondingListeners.Put(aWindowId, aListener);
@@ -619,15 +627,7 @@ NS_IMETHODIMP
 PresentationService::GetExistentSessionIdAtLaunch(uint64_t aWindowId,
                                                   nsAString& aSessionId)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsString* sessionId = mRespondingSessionIds.Get(aWindowId);
-  if (sessionId) {
-    aSessionId.Assign(*sessionId);
-  } else {
-    aSessionId.Truncate();
-  }
-  return NS_OK;
+  return GetExistentSessionIdAtLaunchInternal(aWindowId, aSessionId);
 }
 
 NS_IMETHODIMP
@@ -640,11 +640,14 @@ PresentationService::NotifyReceiverReady(const nsAString& aSessionId,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  // Only track the responding info when an actual window ID, which would never
-  // be 0, is provided (for an in-process receiver page).
-  if (aWindowId != 0) {
-    mRespondingSessionIds.Put(aWindowId, new nsString(aSessionId));
-    mRespondingWindowIds.Put(aSessionId, aWindowId);
+  AddRespondingSessionId(aWindowId, aSessionId);
+
+  nsCOMPtr<nsIPresentationRespondingListener> listener;
+  if (mRespondingListeners.Get(aWindowId, getter_AddRefs(listener))) {
+    nsresult rv = listener->NotifySessionConnect(aWindowId, aSessionId);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   return static_cast<PresentationPresentingInfo*>(info.get())->NotifyResponderReady();
@@ -664,11 +667,7 @@ PresentationService::UntrackSessionInfo(const nsAString& aSessionId,
   }
 
   // Remove the in-process responding info if there's still any.
-  uint64_t windowId = 0;
-  if (mRespondingWindowIds.Get(aSessionId, &windowId)) {
-    mRespondingWindowIds.Remove(aSessionId);
-    mRespondingSessionIds.Remove(windowId);
-  }
+  RemoveRespondingSessionId(aSessionId);
 
   return NS_OK;
 }
@@ -677,10 +676,7 @@ NS_IMETHODIMP
 PresentationService::GetWindowIdBySessionId(const nsAString& aSessionId,
                                             uint64_t* aWindowId)
 {
-  if (mRespondingWindowIds.Get(aSessionId, aWindowId)) {
-    return NS_OK;
-  }
-  return NS_ERROR_NOT_AVAILABLE;
+  return GetWindowIdBySessionIdInternal(aSessionId, aWindowId);
 }
 
 bool

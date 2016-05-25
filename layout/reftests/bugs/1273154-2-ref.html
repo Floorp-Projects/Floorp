@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      body {
+        /* Force a large line-height so that we don't get a positioning
+           discrepancy on the test span depending on which font's metrics
+           are used in line-height computation. */
+        font: 64px/2 serif;
+      }
+      span {
+        font-family: "Mongolian Baiti", "Times New Roman", serif;
+        font-size: 32px;
+      }
+    </style>
+  </head>
+  <body>
+    <span>&#x202F;&#x1824;&#x1828;</span>
+  </body>
+</html>

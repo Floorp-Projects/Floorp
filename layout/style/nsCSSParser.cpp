@@ -2153,19 +2153,16 @@ CSSParserImpl::ParseSourceSizeList(const nsAString& aBuffer,
       break;
     }
 
+    if (GetToken(true)) {
+      if (!mToken.IsSymbol(',')) {
+        REPORT_UNEXPECTED_TOKEN(PEParseSourceSizeListNotComma);
+        hitError = true;
+        break;
+      }
+    }
+
     aQueries.AppendElement(query.forget());
     aValues.AppendElement(value);
-
-    if (!GetToken(true)) {
-      // Expected EOF
-      break;
-    }
-
-    if (eCSSToken_Symbol != mToken.mType || mToken.mSymbol != ',') {
-      REPORT_UNEXPECTED_TOKEN(PEParseSourceSizeListNotComma);
-      hitError = true;
-      break;
-    }
   }
 
   if (hitError) {
@@ -2180,7 +2177,7 @@ CSSParserImpl::ParseSourceSizeList(const nsAString& aBuffer,
   ReleaseScanner();
   mHTMLMediaMode = false;
 
-  return !hitError;
+  return !aQueries.IsEmpty();
 }
 
 bool
@@ -9755,12 +9752,12 @@ CSSParserImpl::ParseGridGap()
     AppendValue(eCSSProperty_grid_column_gap, first);
     return true;
   }
-  if (ParseNonNegativeVariant(first, VARIANT_LCALC, nullptr) !=
+  if (ParseNonNegativeVariant(first, VARIANT_LPCALC, nullptr) !=
         CSSParseResult::Ok) {
     return false;
   }
   nsCSSValue second;
-  auto result = ParseNonNegativeVariant(second, VARIANT_LCALC, nullptr);
+  auto result = ParseNonNegativeVariant(second, VARIANT_LPCALC, nullptr);
   if (result == CSSParseResult::Error) {
     return false;
   }

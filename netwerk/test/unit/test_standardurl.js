@@ -346,3 +346,49 @@ add_test(function test_backslashReplacement()
 
   run_next_test();
 });
+
+add_test(function test_trim_C0_and_space()
+{
+  var url = stringToURL("\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f http://example.com/ \x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f ");
+  do_check_eq(url.spec, "http://example.com/");
+  url.spec = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f http://test.com/ \x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f ";
+  do_check_eq(url.spec, "http://test.com/");
+  Assert.throws(() => { url.spec = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19 "; }, "set empty spec");
+  run_next_test();
+});
+
+// This tests that C0-and-space characters in the path, query and ref are
+// percent encoded.
+add_test(function test_encode_C0_and_space()
+{
+  function toHex(d) {
+    var hex = d.toString(16);
+    if (hex.length == 1)
+      hex = "0"+hex;
+    return hex.toUpperCase();
+  }
+
+  for (var i=0x0; i<=0x20; i++) {
+    // These characters get filtered - they are not encoded.
+    if (String.fromCharCode(i) == '\r' ||
+        String.fromCharCode(i) == '\n' ||
+        String.fromCharCode(i) == '\t') {
+      continue;
+    }
+    var url = stringToURL("http://example.com/pa" + String.fromCharCode(i) + "th?qu" + String.fromCharCode(i) +"ery#ha" + String.fromCharCode(i) + "sh");
+    do_check_eq(url.spec, "http://example.com/pa%" + toHex(i) + "th?qu%" + toHex(i) + "ery#ha%" + toHex(i) + "sh");
+  }
+
+  // Additionally, we need to check the setters.
+  var url = stringToURL("http://example.com/path?query#hash");
+  url.filePath = "pa\0th";
+  do_check_eq(url.spec, "http://example.com/pa%00th?query#hash");
+  url.query = "qu\0ery";
+  do_check_eq(url.spec, "http://example.com/pa%00th?qu%00ery#hash");
+  url.ref = "ha\0sh";
+  do_check_eq(url.spec, "http://example.com/pa%00th?qu%00ery#ha%00sh");
+  url.fileName = "fi\0le.name";
+  do_check_eq(url.spec, "http://example.com/fi%00le.name?qu%00ery#ha%00sh");
+
+  run_next_test();
+});

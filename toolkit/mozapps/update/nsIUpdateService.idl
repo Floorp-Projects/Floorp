@@ -560,14 +560,6 @@ interface nsIUpdatePrompt : nsISupports
                             [optional] in boolean background);
 
   /**
-   * Shows the application update installed user interface advising that an
-   * update was installed successfully. If the app.update.silent preference is
-   * true, the app.update.showInstalledUI preference is false, or the user
-   * interface is already displayed the call will be a no-op.
-   */
-  void showUpdateInstalled();
-
-  /**
    * Shows the application update error user interface advising that an error
    * occurred while checking for or applying an update. If the app.update.silent
    * preference is true the call will be a no-op.

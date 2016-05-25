@@ -1865,7 +1865,7 @@ nsHttpTransaction::ProcessData(char *buf, uint32_t count, uint32_t *countRead)
 
         if (!mContentDecodingCheck && mResponseHead) {
             mContentDecoding =
-                !!mResponseHead->PeekHeader(nsHttp::Content_Encoding);
+                mResponseHead->HasHeader(nsHttp::Content_Encoding);
             mContentDecodingCheck = true;
         }
     }
@@ -2227,14 +2227,14 @@ static bool
 matchOld(nsHttpResponseHead *newHead, nsCString &old,
          nsHttpAtom headerAtom)
 {
-    const char *val;
+    nsAutoCString val;
 
-    val = newHead->PeekHeader(headerAtom);
-    if (val && old.IsEmpty())
+    newHead->GetHeader(headerAtom, val);
+    if (!val.IsEmpty() && old.IsEmpty())
         return false;
-    if (!val && !old.IsEmpty())
+    if (val.IsEmpty() && !old.IsEmpty())
         return false;
-    if (val && !old.Equals(val))
+    if (!val.IsEmpty() && !old.Equals(val))
         return false;
     return true;
 }
@@ -2284,26 +2284,21 @@ nsHttpTransaction::RestartVerifier::Set(int64_t contentLength,
 
     mContentLength = contentLength;
 
-    const char *val;
-    val = head->PeekHeader(nsHttp::ETag);
-    if (val) {
-        mETag.Assign(val);
+    nsAutoCString val;
+    if (NS_SUCCEEDED(head->GetHeader(nsHttp::ETag, val))) {
+        mETag = val;
     }
-    val = head->PeekHeader(nsHttp::Last_Modified);
-    if (val) {
-        mLastModified.Assign(val);
+    if (NS_SUCCEEDED(head->GetHeader(nsHttp::Last_Modified, val))) {
+        mLastModified = val;
     }
-    val = head->PeekHeader(nsHttp::Content_Range);
-    if (val) {
-        mContentRange.Assign(val);
+    if (NS_SUCCEEDED(head->GetHeader(nsHttp::Content_Range, val))) {
+        mContentRange = val;
     }
-    val = head->PeekHeader(nsHttp::Content_Encoding);
-    if (val) {
-        mContentEncoding.Assign(val);
+    if (NS_SUCCEEDED(head->GetHeader(nsHttp::Content_Encoding, val))) {
+        mContentEncoding = val;
     }
-    val = head->PeekHeader(nsHttp::Transfer_Encoding);
-    if (val) {
-        mTransferEncoding.Assign(val);
+    if (NS_SUCCEEDED(head->GetHeader(nsHttp::Transfer_Encoding, val))) {
+        mTransferEncoding = val;
     }
 
     // We can only restart with any confidence if we have a stored etag or

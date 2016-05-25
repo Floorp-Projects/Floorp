@@ -369,7 +369,6 @@ var gUpdates = {
    * Prompt Method:       Arg0:         Update State: Src Event:  Failed:   Result:
    * showUpdateAvailable  nsIUpdate obj --            background  --        see Note below
    * showUpdateDownloaded nsIUpdate obj pending       background  --        finishedBackground
-   * showUpdateInstalled  "installed"   --            --          --        installed
    * showUpdateError      nsIUpdate obj failed        either      partial   errorpatching
    * showUpdateError      nsIUpdate obj failed        either      complete  errors
    * checkForUpdates      null          --            foreground  --        checking
@@ -455,10 +454,6 @@ var gUpdates = {
         }
 
         aCallback(this.updatesFoundPageId);
-        return;
-      }
-      else if (arg0 == "installed") {
-        aCallback("installed");
         return;
       }
     }
@@ -1568,30 +1563,6 @@ var gFinishedPage = {
     gUpdates.never();
     gUpdates.wiz.cancel();
   }),
-};
-
-/**
- * The "Update was Installed Successfully" page.
- */
-var gInstalledPage = {
-  /**
-   * Initialize
-   */
-  onPageShow: function() {
-    var branding = document.getElementById("brandStrings");
-    try {
-      // whatsNewURL should just be a pref (bug 546609).
-      var url = branding.getFormattedString("whatsNewURL", [Services.appinfo.version]);
-      var whatsnewLink = document.getElementById("whatsnewLink");
-      whatsnewLink.setAttribute("url", url);
-      whatsnewLink.hidden = false;
-    }
-    catch (e) {
-    }
-
-    gUpdates.setButtons(null, null, "okButton", true);
-    gUpdates.wiz.getButton("finish").focus();
-  }
 };
 
 /**

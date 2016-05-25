@@ -77,7 +77,7 @@ already_AddRefed<MediaDataDecoder>
 AppleDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
                                        layers::LayersBackend aLayersBackend,
                                        layers::ImageContainer* aImageContainer,
-                                       FlushableTaskQueue* aVideoTaskQueue,
+                                       TaskQueue* aTaskQueue,
                                        MediaDataDecoderCallback* aCallback,
                                        DecoderDoctorDiagnostics* aDiagnostics)
 {
@@ -86,7 +86,7 @@ AppleDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
   if (sIsVDAAvailable && (!sIsVTHWAvailable || MediaPrefs::AppleForceVDA())) {
     decoder =
       AppleVDADecoder::CreateVDADecoder(aConfig,
-                                        aVideoTaskQueue,
+                                        aTaskQueue,
                                         aCallback,
                                         aImageContainer);
     if (decoder) {
@@ -97,19 +97,19 @@ AppleDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
   // supported by the current platform.
   if (sIsVTAvailable) {
     decoder =
-      new AppleVTDecoder(aConfig, aVideoTaskQueue, aCallback, aImageContainer);
+      new AppleVTDecoder(aConfig, aTaskQueue, aCallback, aImageContainer);
   }
   return decoder.forget();
 }
 
 already_AddRefed<MediaDataDecoder>
 AppleDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
-                                       FlushableTaskQueue* aAudioTaskQueue,
+                                       TaskQueue* aTaskQueue,
                                        MediaDataDecoderCallback* aCallback,
                                        DecoderDoctorDiagnostics* aDiagnostics)
 {
   RefPtr<MediaDataDecoder> decoder =
-    new AppleATDecoder(aConfig, aAudioTaskQueue, aCallback);
+    new AppleATDecoder(aConfig, aTaskQueue, aCallback);
   return decoder.forget();
 }
 

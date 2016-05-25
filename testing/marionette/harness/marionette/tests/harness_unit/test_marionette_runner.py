@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import pytest
-from mock import patch, Mock, DEFAULT
+from mock import patch, Mock, DEFAULT, mock_open
 
 from marionette.runtests import (
     MarionetteTestRunner,
@@ -67,8 +67,6 @@ def mach_parsed_kwargs(logger):
     call to mach marionette-test
     """
     return {
-         'adb_host': None,
-         'adb_port': None,
          'addon': None,
          'address': None,
          'app': None,
@@ -76,10 +74,6 @@ def mach_parsed_kwargs(logger):
          'binary': u'/path/to/firefox',
          'device_serial': None,
          'e10s': False,
-         'emulator': None,
-         'emulator_binary': None,
-         'emulator_img': None,
-         'emulator_res': None,
          'gecko_log': None,
          'homedir': None,
          'jsdebugger': False,
@@ -96,7 +90,6 @@ def mach_parsed_kwargs(logger):
          'log_tbpl_level': None,
          'log_unittest': None,
          'log_xunit': None,
-         'logcat_stdout': False,
          'logdir': None,
          'logger_name': 'Marionette-based Tests',
          'no_window': False,
@@ -242,6 +235,20 @@ def test_parsing_testvars(mach_parsed_kwargs):
         assert load.call_count == 1
 
 
+def test_load_testvars_throws_expected_errors(mach_parsed_kwargs):
+    mach_parsed_kwargs['testvars'] = ['some_bad_path.json']
+    runner = MarionetteTestRunner(**mach_parsed_kwargs)
+    with pytest.raises(IOError) as io_exc:
+        runner._load_testvars()
+    assert 'does not exist' in io_exc.value.message
+    with patch('os.path.exists') as exists:
+        exists.return_value = True
+        with patch('__builtin__.open', mock_open(read_data='[not {valid JSON]')):
+            with pytest.raises(Exception) as json_exc:
+                runner._load_testvars()
+    assert 'not properly formatted' in json_exc.value.message
+
+
 @pytest.mark.parametrize("has_crashed", [True, False])
 def test_crash_is_recorded_as_error(empty_marionette_test,
                                     logger,
@@ -250,7 +257,7 @@ def test_crash_is_recorded_as_error(empty_marionette_test,
     # collect results from the empty test
     result = MarionetteTestResult(
         marionette=empty_marionette_test._marionette_weakref(),
-        b2g_pid=0, logcat_stdout=False, logger=logger, verbosity=None,
+        logger=logger, verbosity=None,
         stream=None, descriptions=None,
     )
     result.startTest(empty_marionette_test)

@@ -15,7 +15,7 @@ already_AddRefed<MediaDataDecoder>
 OmxDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
                                      mozilla::layers::LayersBackend aLayersBackend,
                                      mozilla::layers::ImageContainer* aImageContainer,
-                                     FlushableTaskQueue* aVideoTaskQueue,
+                                     TaskQueue* aTaskQueue,
                                      MediaDataDecoderCallback* aCallback,
                                      DecoderDoctorDiagnostics* aDiagnostics)
 {
@@ -25,7 +25,7 @@ OmxDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
 
 already_AddRefed<MediaDataDecoder>
 OmxDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
-                                     FlushableTaskQueue* aAudioTaskQueue,
+                                     TaskQueue* aTaskQueue,
                                      MediaDataDecoderCallback* aCallback,
                                      DecoderDoctorDiagnostics* aDiagnostics)
 {
