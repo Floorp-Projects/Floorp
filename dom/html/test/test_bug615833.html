@@ -73,13 +73,21 @@ select.addEventListener("change", function(aEvent) {
 
 select.addEventListener("keyup", function() {
   select.removeEventListener("keyup", arguments.callee, false);
-  select.blur();
+  if (navigator.platform.indexOf("Mac") == -1) {
+    select.blur(); // trigger the change
+  }
 }, false);
 
 select.addEventListener("focus", function() {
   select.removeEventListener("focus", arguments.callee, false);
   SimpleTest.executeSoon(function () {
-    synthesizeKey("VK_DOWN", {});
+    if (navigator.platform.indexOf("Mac") == 0) {
+      synthesizeKey("VK_DOWN", {}); // open the dropdown menu
+      synthesizeKey("VK_DOWN", {}); // select next option
+      synthesizeKey("VK_RETURN", {}); // trigger the change, close the menu
+    } else {
+      synthesizeKey("VK_DOWN", {}); // select next option (w. closed menu)
+    }
   });
 }, false);
 
