@@ -8,8 +8,9 @@ package org.mozilla.gecko;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.TextUtils;
+import android.support.customtabs.CustomTabsIntent;
 
+import org.mozilla.gecko.customtabs.CustomTabsActivity;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.tabqueue.TabQueueHelper;
 import org.mozilla.gecko.tabqueue.TabQueueService;
@@ -24,7 +25,9 @@ public class LauncherActivity extends Activity {
 
         GeckoAppShell.ensureCrashHandling();
 
-        if (isViewIntent()) {
+        if (isCustomTabsIntent()) {
+            dispatchCustomTabsIntent();
+        } else if (isViewIntentWithURL()) {
             dispatchViewIntent();
         } else {
             dispatchNormalIntent();
@@ -64,8 +67,21 @@ public class LauncherActivity extends Activity {
         startActivity(intent);
     }
 
-    private boolean isViewIntent() {
-        final String action = getIntent().getAction();
-        return Intent.ACTION_VIEW.equals(action);
+    private void dispatchCustomTabsIntent() {
+        Intent intent = new Intent(getIntent());
+        intent.setClassName(getApplicationContext(), CustomTabsActivity.class.getName());
+        startActivity(intent);
+    }
+
+    private boolean isViewIntentWithURL() {
+        final Intent intent = getIntent();
+
+        return Intent.ACTION_VIEW.equals(intent.getAction())
+                && intent.getDataString() != null;
+    }
+
+    private boolean isCustomTabsIntent() {
+        return isViewIntentWithURL()
+                && getIntent().hasExtra(CustomTabsIntent.EXTRA_SESSION);
     }
 }
