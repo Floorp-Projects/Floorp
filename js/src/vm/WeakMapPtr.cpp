@@ -25,7 +25,7 @@ struct DataType
 template<>
 struct DataType<JSObject*>
 {
-    using BarrieredType = RelocatablePtrObject;
+    using BarrieredType = HeapPtr<JSObject*>;
     using HasherType = MovableCellHasher<BarrieredType>;
     static JSObject* NullValue() { return nullptr; }
 };
@@ -33,7 +33,7 @@ struct DataType<JSObject*>
 template<>
 struct DataType<JS::Value>
 {
-    using BarrieredType = RelocatablePtr<Value>;
+    using BarrieredType = HeapPtr<Value>;
     static JS::Value NullValue() { return JS::UndefinedValue(); }
 };
 

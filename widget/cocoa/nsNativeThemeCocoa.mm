@@ -3627,7 +3627,7 @@ nsNativeThemeCocoa::WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType,
     case NS_THEME_TOOLBAR:
     case NS_THEME_STATUSBAR:
     case NS_THEME_STATUSBARPANEL:
-    case NS_THEME_RESIZER_PANEL:
+    case NS_THEME_RESIZERPANEL:
     case NS_THEME_TOOLTIP:
     case NS_THEME_TABPANELS:
     case NS_THEME_TABPANEL:

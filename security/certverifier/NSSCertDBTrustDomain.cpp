@@ -101,9 +101,9 @@ FindIssuerInner(const UniqueCERTCertList& candidates, bool useRoots,
       const_cast<unsigned char*>(encodedIssuerName.UnsafeGetData()),
       encodedIssuerName.GetLength()
     };
-    ScopedSECItem nameConstraints(::SECITEM_AllocItem(nullptr, nullptr, 0));
+    ScopedAutoSECItem nameConstraints;
     SECStatus srv = CERT_GetImposedNameConstraints(&encodedIssuerNameItem,
-                                                   nameConstraints.get());
+                                                   &nameConstraints);
     if (srv != SECSuccess) {
       if (PR_GetError() != SEC_ERROR_EXTENSION_NOT_FOUND) {
         return Result::FATAL_ERROR_LIBRARY_FAILURE;
@@ -114,9 +114,8 @@ FindIssuerInner(const UniqueCERTCertList& candidates, bool useRoots,
     } else {
       // Otherwise apply the constraints
       Input nameConstraintsInput;
-      if (nameConstraintsInput.Init(
-              nameConstraints->data,
-              nameConstraints->len) != Success) {
+      if (nameConstraintsInput.Init(nameConstraints.data, nameConstraints.len)
+            != Success) {
         return Result::FATAL_ERROR_LIBRARY_FAILURE;
       }
       rv = checker.Check(certDER, &nameConstraintsInput, keepGoing);

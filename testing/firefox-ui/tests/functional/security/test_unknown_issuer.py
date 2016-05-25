@@ -27,7 +27,7 @@ class TestUnknownIssuer(FirefoxTestCase):
 
             # Check for the correct error code
             error = self.marionette.find_element(By.ID, 'errorCode')
-            self.assertEquals(error.get_attribute('textContent'),
+            self.assertEquals(error.get_property('textContent'),
                               'SEC_ERROR_UNKNOWN_ISSUER')
 
             # Verify the "Go Back" and "Advanced" buttons appear

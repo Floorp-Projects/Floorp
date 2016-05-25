@@ -25,7 +25,6 @@ DEFAULTS = dict(
     # base data for all tests
     basetest=dict(
         cycles=1,
-        test_name_extension='',
         profile_path='${talos}/base_profile',
         responsiveness=False,
         e10s=False,
@@ -350,10 +349,6 @@ def build_manifest(config, manifestName):
 def get_test(config, global_overrides, counters, test_instance):
     mozAfterPaint = getattr(test_instance, 'tpmozafterpaint', None)
 
-    # add test_name_extension to config
-    if mozAfterPaint:
-        test_instance.test_name_extension = '_paint'
-
     test_instance.update(**global_overrides)
 
     # update original value of mozAfterPaint, this could be 'false',
@@ -416,7 +411,6 @@ def get_browser_config(config):
                 'repository': None,
                 'sourcestamp': None,
                 'symbols_path': None,
-                'test_name_extension': '',
                 'test_timeout': 1200,
                 'xperf_path': None,
                 'error_filename': None,

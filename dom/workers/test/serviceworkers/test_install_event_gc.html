@@ -1,0 +1,121 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test install event being GC'd before waitUntil fulfills</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+var script = 'blocking_install_event_worker.js';
+var scope = 'sw_clients/simple.html?install-event-gc';
+var registration;
+
+function register() {
+  return navigator.serviceWorker.register(script, { scope: scope })
+    .then(swr => registration = swr);
+}
+
+function unregister() {
+  if (!registration) {
+    return;
+  }
+  return registration.unregister();
+}
+
+function waitForInstallEvent() {
+  return new Promise((resolve, reject) => {
+    navigator.serviceWorker.addEventListener('message', evt => {
+      if (evt.data.type === 'INSTALL_EVENT') {
+        resolve();
+      }
+    });
+  });
+}
+
+function gcWorker() {
+  return new Promise(function(resolve, reject) {
+    // We are able to trigger asynchronous garbage collection and cycle
+    // collection by emitting "child-cc-request" and "child-gc-request"
+    // observer notifications.  The worker RuntimeService will translate
+    // these notifications into the appropriate operation on all known
+    // worker threads.
+    //
+    // In the failure case where GC/CC causes us to abort the installation,
+    // we will know something happened from the statechange event.
+    const statechangeHandler = evt => {
+      // Reject rather than resolving to avoid the possibility of us seeing
+      // an unrelated racing statechange somehow.  Since in the success case we
+      // will still see a state change on termination, we do explicitly need to
+      // be removed on the success path.
+      ok(registration.installing, 'service worker is still installing?');
+      reject();
+    };
+    registration.installing.addEventListener('statechange', statechangeHandler);
+    // In the success case since the service worker installation is effectively
+    // hung, we instead depend on sending a 'ping' message to the service worker
+    // and hearing it 'pong' back.  Since we issue our postMessage after we
+    // trigger the GC/CC, our 'ping' will only be processed after the GC/CC and
+    // therefore the pong will also strictly occur after the cycle collection.
+    navigator.serviceWorker.addEventListener('message', evt => {
+      if (evt.data.type === 'pong') {
+        registration.installing.removeEventListener(
+          'statechange', statechangeHandler);
+        resolve();
+      }
+    });
+    // At the current time, the service worker will exist in our same process
+    // and notifyObservers is synchronous.  However, in the future, service
+    // workers may end up in a separate process and in that case it will be
+    // appropriate to use notifyObserversInParentProcess or something like it.
+    // (notifyObserversInParentProcess is a synchronous IPC call to the parent
+    // process's main thread.  IPDL PContent::CycleCollect is an async message.
+    // Ordering will be maintained if the postMessage goes via PContent as well,
+    // but that seems unlikely.)
+    SpecialPowers.notifyObservers(null, 'child-gc-request', null);
+    SpecialPowers.notifyObservers(null, 'child-cc-request', null);
+    SpecialPowers.notifyObservers(null, 'child-gc-request', null);
+    // (Only send the ping after we set the gc/cc/gc in motion.)
+    registration.installing.postMessage({ type: 'ping' });
+  });
+}
+
+function terminateWorker() {
+  return SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.serviceWorkers.idle_timeout", 0],
+      ["dom.serviceWorkers.idle_extended_timeout", 0]
+    ]
+  }).then(_ => {
+    registration.installing.postMessage({ type: 'RESET_TIMER' });
+  });
+}
+
+function runTest() {
+  Promise.all([
+    waitForInstallEvent(),
+    register()
+  ]).then(_ => ok(registration.installing, 'service worker is installing'))
+    .then(gcWorker)
+    .then(_ => ok(registration.installing, 'service worker is still installing'))
+    .then(terminateWorker)
+    .catch(e => ok(false, e))
+    .then(unregister)
+    .then(SimpleTest.finish);
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [
+  ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+  ["dom.serviceWorkers.enabled", true],
+  ["dom.serviceWorkers.testing.enabled", true],
+  ["dom.caches.enabled", true],
+]}, runTest);
+</script>
+</pre>
+</body>
+</html>

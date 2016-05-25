@@ -4,166 +4,179 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Get bookmark service
-try {
-  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Ci.nsINavBookmarksService);
-} catch(ex) {
-  do_throw("Could not get nav-bookmarks-service\n");
-}
-
-// Get history service
-try {
-  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].getService(Ci.nsINavHistoryService);
-} catch(ex) {
-  do_throw("Could not get history service\n");
-}
-
-// get bookmarks root id
-var root = bmsvc.bookmarksMenuFolder;
-
-// main
-function run_test() {
+add_task(function* search_bookmark_by_lastModified_dateDated() {
   // test search on folder with various sorts and max results
   // see bug #385829 for more details
-  var folder = bmsvc.createFolder(root, "bug 385829 test", bmsvc.DEFAULT_INDEX);
-  var b1 = bmsvc.insertBookmark(folder, uri("http://a1.com/"),
-                                bmsvc.DEFAULT_INDEX, "1 title");
+  let folder = yield PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    title: "bug 385829 test"
+  });
 
-  var b2 = bmsvc.insertBookmark(folder, uri("http://a2.com/"),
-                                bmsvc.DEFAULT_INDEX, "2 title");
-
-  var b3 = bmsvc.insertBookmark(folder, uri("http://a3.com/"),
-                                bmsvc.DEFAULT_INDEX, "3 title");
-
-  var b4 = bmsvc.insertBookmark(folder, uri("http://a4.com/"),
-                                bmsvc.DEFAULT_INDEX, "4 title");
-
+  let now = new Date();
   // ensure some unique values for date added and last modified
   // for date added:    b1 < b2 < b3 < b4
   // for last modified: b1 > b2 > b3 > b4
-  bmsvc.setItemDateAdded(b1, 1000);
-  bmsvc.setItemDateAdded(b2, 2000);
-  bmsvc.setItemDateAdded(b3, 3000);
-  bmsvc.setItemDateAdded(b4, 4000);
+  let b1 = yield PlacesUtils.bookmarks.insert({
+    parentGuid: folder.guid,
+    url: "http://a1.com/",
+    title: "1 title",
+    dateAdded: new Date(now.getTime() + 1000)
+  });
+  let b2 = yield PlacesUtils.bookmarks.insert({
+    parentGuid: folder.guid,
+    url: "http://a2.com/",
+    title: "2 title",
+    dateAdded: new Date(now.getTime() + 2000)
+  });
+  let b3 = yield PlacesUtils.bookmarks.insert({
+    parentGuid: folder.guid,
+    url: "http://a3.com/",
+    title: "3 title",
+    dateAdded: new Date(now.getTime() + 3000)
+  });
+  let b4 = yield PlacesUtils.bookmarks.insert({
+    parentGuid: folder.guid,
+    url: "http://a4.com/",
+    title: "4 title",
+    dateAdded: new Date(now.getTime() + 4000)
+  });
 
-  bmsvc.setItemLastModified(b1, 4000);
-  bmsvc.setItemLastModified(b2, 3000);
-  bmsvc.setItemLastModified(b3, 2000);
-  bmsvc.setItemLastModified(b4, 1000);
+  // make sure lastModified is larger than dateAdded
+  let modifiedTime = new Date(now.getTime() + 5000);
+  yield PlacesUtils.bookmarks.update({
+    guid: b1.guid,
+    lastModified: new Date(modifiedTime.getTime() + 4000)
+  });
+  yield PlacesUtils.bookmarks.update({
+    guid: b2.guid,
+    lastModified: new Date(modifiedTime.getTime() + 3000)
+  });
+  yield PlacesUtils.bookmarks.update({
+    guid: b3.guid,
+    lastModified: new Date(modifiedTime.getTime() + 2000)
+  });
+  yield PlacesUtils.bookmarks.update({
+    guid: b4.guid,
+    lastModified: new Date(modifiedTime.getTime() + 1000)
+  });
 
-  var options = histsvc.getNewQueryOptions();
-  var query = histsvc.getNewQuery();
-  options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
+  let hs = PlacesUtils.history;
+  let options = hs.getNewQueryOptions();
+  let query = hs.getNewQuery();
+  options.queryType = options.QUERY_TYPE_BOOKMARKS;
   options.maxResults = 3;
-  query.setFolders([folder], 1);
+  let folderIds = [];
+  folderIds.push(yield PlacesUtils.promiseItemId(folder.guid));
+  query.setFolders(folderIds, 1);
 
-  var result = histsvc.executeQuery(query, options);
-  var rootNode = result.root;
+  let result = hs.executeQuery(query, options);
+  let rootNode = result.root;
   rootNode.containerOpen = true;
 
   // test SORT_BY_DATEADDED_ASCENDING (live update)
   result.sortingMode = options.SORT_BY_DATEADDED_ASCENDING;
-  do_check_eq(rootNode.childCount, 3);
-  do_check_eq(rootNode.getChild(0).itemId, b1);
-  do_check_eq(rootNode.getChild(1).itemId, b2);
-  do_check_eq(rootNode.getChild(2).itemId, b3);
-  do_check_true(rootNode.getChild(0).dateAdded <
+  Assert.equal(rootNode.childCount, 3);
+  Assert.equal(rootNode.getChild(0).bookmarkGuid, b1.guid);
+  Assert.equal(rootNode.getChild(1).bookmarkGuid, b2.guid);
+  Assert.equal(rootNode.getChild(2).bookmarkGuid, b3.guid);
+  Assert.ok(rootNode.getChild(0).dateAdded <
                 rootNode.getChild(1).dateAdded);
-  do_check_true(rootNode.getChild(1).dateAdded <
+  Assert.ok(rootNode.getChild(1).dateAdded <
                 rootNode.getChild(2).dateAdded);
 
   // test SORT_BY_DATEADDED_DESCENDING (live update)
   result.sortingMode = options.SORT_BY_DATEADDED_DESCENDING;
-  do_check_eq(rootNode.childCount, 3);
-  do_check_eq(rootNode.getChild(0).itemId, b3);
-  do_check_eq(rootNode.getChild(1).itemId, b2);
-  do_check_eq(rootNode.getChild(2).itemId, b1);
-  do_check_true(rootNode.getChild(0).dateAdded >
+  Assert.equal(rootNode.childCount, 3);
+  Assert.equal(rootNode.getChild(0).bookmarkGuid, b3.guid);
+  Assert.equal(rootNode.getChild(1).bookmarkGuid, b2.guid);
+  Assert.equal(rootNode.getChild(2).bookmarkGuid, b1.guid);
+  Assert.ok(rootNode.getChild(0).dateAdded >
                 rootNode.getChild(1).dateAdded);
-  do_check_true(rootNode.getChild(1).dateAdded >
+  Assert.ok(rootNode.getChild(1).dateAdded >
                 rootNode.getChild(2).dateAdded);
 
   // test SORT_BY_LASTMODIFIED_ASCENDING (live update)
   result.sortingMode = options.SORT_BY_LASTMODIFIED_ASCENDING;
-  do_check_eq(rootNode.childCount, 3);
-  do_check_eq(rootNode.getChild(0).itemId, b3);
-  do_check_eq(rootNode.getChild(1).itemId, b2);
-  do_check_eq(rootNode.getChild(2).itemId, b1);
-  do_check_true(rootNode.getChild(0).lastModified <
+  Assert.equal(rootNode.childCount, 3);
+  Assert.equal(rootNode.getChild(0).bookmarkGuid, b3.guid);
+  Assert.equal(rootNode.getChild(1).bookmarkGuid, b2.guid);
+  Assert.equal(rootNode.getChild(2).bookmarkGuid, b1.guid);
+  Assert.ok(rootNode.getChild(0).lastModified <
                 rootNode.getChild(1).lastModified);
-  do_check_true(rootNode.getChild(1).lastModified <
+  Assert.ok(rootNode.getChild(1).lastModified <
                 rootNode.getChild(2).lastModified);
 
   // test SORT_BY_LASTMODIFIED_DESCENDING (live update)
   result.sortingMode = options.SORT_BY_LASTMODIFIED_DESCENDING;
 
-  do_check_eq(rootNode.childCount, 3);
-  do_check_eq(rootNode.getChild(0).itemId, b1);
-  do_check_eq(rootNode.getChild(1).itemId, b2);
-  do_check_eq(rootNode.getChild(2).itemId, b3);
-  do_check_true(rootNode.getChild(0).lastModified >
+  Assert.equal(rootNode.childCount, 3);
+  Assert.equal(rootNode.getChild(0).bookmarkGuid, b1.guid);
+  Assert.equal(rootNode.getChild(1).bookmarkGuid, b2.guid);
+  Assert.equal(rootNode.getChild(2).bookmarkGuid, b3.guid);
+  Assert.ok(rootNode.getChild(0).lastModified >
                 rootNode.getChild(1).lastModified);
-  do_check_true(rootNode.getChild(1).lastModified >
+  Assert.ok(rootNode.getChild(1).lastModified >
                 rootNode.getChild(2).lastModified);
   rootNode.containerOpen = false;
 
   // test SORT_BY_DATEADDED_ASCENDING
   options.sortingMode = options.SORT_BY_DATEADDED_ASCENDING;
-  result = histsvc.executeQuery(query, options);
+  result = hs.executeQuery(query, options);
   rootNode = result.root;
   rootNode.containerOpen = true;
-  do_check_eq(rootNode.childCount, 3);
-  do_check_eq(rootNode.getChild(0).itemId, b1);
-  do_check_eq(rootNode.getChild(1).itemId, b2);
-  do_check_eq(rootNode.getChild(2).itemId, b3);
-  do_check_true(rootNode.getChild(0).dateAdded <
+  Assert.equal(rootNode.childCount, 3);
+  Assert.equal(rootNode.getChild(0).bookmarkGuid, b1.guid);
+  Assert.equal(rootNode.getChild(1).bookmarkGuid, b2.guid);
+  Assert.equal(rootNode.getChild(2).bookmarkGuid, b3.guid);
+  Assert.ok(rootNode.getChild(0).dateAdded <
                 rootNode.getChild(1).dateAdded);
-  do_check_true(rootNode.getChild(1).dateAdded <
+  Assert.ok(rootNode.getChild(1).dateAdded <
                 rootNode.getChild(2).dateAdded);
   rootNode.containerOpen = false;
 
   // test SORT_BY_DATEADDED_DESCENDING
   options.sortingMode = options.SORT_BY_DATEADDED_DESCENDING;
-  result = histsvc.executeQuery(query, options);
+  result = hs.executeQuery(query, options);
   rootNode = result.root;
   rootNode.containerOpen = true;
-  do_check_eq(rootNode.childCount, 3);
-  do_check_eq(rootNode.getChild(0).itemId, b4);
-  do_check_eq(rootNode.getChild(1).itemId, b3);
-  do_check_eq(rootNode.getChild(2).itemId, b2);
-  do_check_true(rootNode.getChild(0).dateAdded >
+  Assert.equal(rootNode.childCount, 3);
+  Assert.equal(rootNode.getChild(0).bookmarkGuid, b4.guid);
+  Assert.equal(rootNode.getChild(1).bookmarkGuid, b3.guid);
+  Assert.equal(rootNode.getChild(2).bookmarkGuid, b2.guid);
+  Assert.ok(rootNode.getChild(0).dateAdded >
                 rootNode.getChild(1).dateAdded);
-  do_check_true(rootNode.getChild(1).dateAdded >
+  Assert.ok(rootNode.getChild(1).dateAdded >
                 rootNode.getChild(2).dateAdded);
   rootNode.containerOpen = false;
 
   // test SORT_BY_LASTMODIFIED_ASCENDING
   options.sortingMode = options.SORT_BY_LASTMODIFIED_ASCENDING;
-  result = histsvc.executeQuery(query, options);
+  result = hs.executeQuery(query, options);
   rootNode = result.root;
   rootNode.containerOpen = true;
-  do_check_eq(rootNode.childCount, 3);
-  do_check_eq(rootNode.getChild(0).itemId, b4);
-  do_check_eq(rootNode.getChild(1).itemId, b3);
-  do_check_eq(rootNode.getChild(2).itemId, b2);
-  do_check_true(rootNode.getChild(0).lastModified <
+  Assert.equal(rootNode.childCount, 3);
+  Assert.equal(rootNode.getChild(0).bookmarkGuid, b4.guid);
+  Assert.equal(rootNode.getChild(1).bookmarkGuid, b3.guid);
+  Assert.equal(rootNode.getChild(2).bookmarkGuid, b2.guid);
+  Assert.ok(rootNode.getChild(0).lastModified <
                 rootNode.getChild(1).lastModified);
-  do_check_true(rootNode.getChild(1).lastModified <
+  Assert.ok(rootNode.getChild(1).lastModified <
                 rootNode.getChild(2).lastModified);
   rootNode.containerOpen = false;
 
   // test SORT_BY_LASTMODIFIED_DESCENDING
   options.sortingMode = options.SORT_BY_LASTMODIFIED_DESCENDING;
-  result = histsvc.executeQuery(query, options);
+  result = hs.executeQuery(query, options);
   rootNode = result.root;
   rootNode.containerOpen = true;
-  do_check_eq(rootNode.childCount, 3);
-  do_check_eq(rootNode.getChild(0).itemId, b1);
-  do_check_eq(rootNode.getChild(1).itemId, b2);
-  do_check_eq(rootNode.getChild(2).itemId, b3);
-  do_check_true(rootNode.getChild(0).lastModified >
+  Assert.equal(rootNode.childCount, 3);
+  Assert.equal(rootNode.getChild(0).bookmarkGuid, b1.guid);
+  Assert.equal(rootNode.getChild(1).bookmarkGuid, b2.guid);
+  Assert.equal(rootNode.getChild(2).bookmarkGuid, b3.guid);
+  Assert.ok(rootNode.getChild(0).lastModified >
                 rootNode.getChild(1).lastModified);
-  do_check_true(rootNode.getChild(1).lastModified >
+  Assert.ok(rootNode.getChild(1).lastModified >
                 rootNode.getChild(2).lastModified);
   rootNode.containerOpen = false;
-}
+});

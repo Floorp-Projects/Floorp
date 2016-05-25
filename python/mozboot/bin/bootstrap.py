@@ -12,12 +12,23 @@
 
 # If we add unicode_literals, optparse breaks on Python 2.6.1 (which is needed
 # to support OS X 10.6).
+
 from __future__ import print_function
+
+WRONG_PYTHON_VERSION_MESSAGE = '''
+Bootstrap currently only runs on Python 2.7 or Python 2.6. Please try re-running with python2.7 or python2.6.
+
+If these aren't available on your system, you may need to install them. Look for a "python2" or "python27" package in your package manager.
+'''
+
+import sys
+if sys.version_info[:2] not in [(2, 6), (2, 7)]:
+    print(WRONG_PYTHON_VERSION_MESSAGE)
+    sys.exit(1)
 
 import os
 import shutil
 from StringIO import StringIO
-import sys
 import tempfile
 try:
     from urllib2 import urlopen

@@ -40,6 +40,10 @@
 #include "mozilla/Snprintf.h"
 #include "nsIChannel.h"
 #include "nsNetUtil.h"
+#include "nsThreadUtils.h"
+#include "nsIHttpAuthenticatorCallback.h"
+#include "mozilla/Mutex.h"
+#include "nsICancelable.h"
 
 //-----------------------------------------------------------------------------
 
@@ -51,6 +55,7 @@ static const char kNegotiateAuthAllowNonFqdn[] = "network.negotiate-auth.allow-n
 static const char kNegotiateAuthSSPI[] = "network.auth.use-sspi";
 
 #define kNegotiateLen  (sizeof(kNegotiate)-1)
+#define DEFAULT_THREAD_TIMEOUT_MS 30000
 
 //-----------------------------------------------------------------------------
 
@@ -184,7 +189,237 @@ nsHttpNegotiateAuth::ChallengeReceived(nsIHttpAuthenticableChannel *authChannel,
 }
 
 NS_IMPL_ISUPPORTS(nsHttpNegotiateAuth, nsIHttpAuthenticator)
-   
+
+namespace {
+
+//
+// GetNextTokenCompleteEvent
+//
+// This event is fired on main thread when async call of
+// nsHttpNegotiateAuth::GenerateCredentials is finished. During the Run()
+// method the nsIHttpAuthenticatorCallback::OnCredsAvailable is called with
+// obtained credentials, flags and NS_OK when successful, otherwise 
+// NS_ERROR_FAILURE is returned as a result of failed operation.
+//
+class GetNextTokenCompleteEvent final : public nsIRunnable,
+                                        public nsICancelable
+{
+    virtual ~GetNextTokenCompleteEvent()
+    {
+        if (mCreds) {
+            free(mCreds);
+        }
+    };
+
+public:
+    NS_DECL_THREADSAFE_ISUPPORTS
+
+    explicit GetNextTokenCompleteEvent(nsIHttpAuthenticatorCallback* aCallback)
+        : mCallback(aCallback)
+        , mCreds(nullptr)
+        , mCancelled(false)
+    {
+    }
+
+    NS_IMETHODIMP DispatchSuccess(char *aCreds,
+                                  uint32_t aFlags,
+                                  nsISupports *aSessionState,
+                                  nsISupports *aContinuationState)
+    {
+        // Called from worker thread
+        MOZ_ASSERT(!NS_IsMainThread());
+
+        mCreds = aCreds;
+        mFlags = aFlags;
+        mResult = NS_OK;
+        mSessionState = aSessionState;
+        mContinuationState = aContinuationState;
+        return NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL);
+    }
+
+    NS_IMETHODIMP DispatchError()
+    {
+        // Called from worker thread
+        MOZ_ASSERT(!NS_IsMainThread());
+
+        mResult = NS_ERROR_FAILURE;
+        return NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL);
+    }
+
+    NS_IMETHODIMP Run() override
+    {
+        // Runs on main thread
+        MOZ_ASSERT(NS_IsMainThread());
+
+        if (!mCancelled) {
+            nsCOMPtr<nsIHttpAuthenticatorCallback> callback;
+            callback.swap(mCallback);
+            callback->OnCredsGenerated(mCreds, mFlags, mResult, mSessionState, mContinuationState);
+        }
+        return NS_OK;
+    }
+
+    NS_IMETHODIMP Cancel(nsresult aReason) override
+    {
+        // Supposed to be called from main thread
+        MOZ_ASSERT(NS_IsMainThread());
+
+        mCancelled = true;
+        return NS_OK;
+    }
+
+private:
+    nsCOMPtr<nsIHttpAuthenticatorCallback> mCallback;
+    char *mCreds; // This class owns it, freed in destructor
+    uint32_t mFlags;
+    nsresult mResult;
+    bool mCancelled;
+    nsCOMPtr<nsISupports> mSessionState;
+    nsCOMPtr<nsISupports> mContinuationState;
+};
+
+NS_IMPL_ISUPPORTS(GetNextTokenCompleteEvent, nsIRunnable, nsICancelable)
+
+//
+// GetNextTokenRunnable
+//
+// This runnable is created by GenerateCredentialsAsync and it runs
+// in nsHttpNegotiateAuth::mNegotiateThread and calling GenerateCredentials.
+//
+class GetNextTokenRunnable final : public mozilla::Runnable
+{
+    virtual ~GetNextTokenRunnable() {}
+    public:
+        GetNextTokenRunnable(nsIHttpAuthenticableChannel *authChannel,
+                             const char *challenge,
+                             bool isProxyAuth,
+                             const char16_t *domain,
+                             const char16_t *username,
+                             const char16_t *password,
+                             nsISupports *sessionState,
+                             nsISupports *continuationState,
+                             GetNextTokenCompleteEvent *aCompleteEvent
+                             )
+            : mAuthChannel(authChannel)
+            , mChallenge(challenge)
+            , mIsProxyAuth(isProxyAuth)
+            , mDomain(domain)
+            , mUsername(username)
+            , mPassword(password)
+            , mSessionState(sessionState)
+            , mContinuationState(continuationState)
+            , mCompleteEvent(aCompleteEvent)
+        {
+        }
+
+        NS_IMETHODIMP Run() override
+        {
+           // Runs on worker thread
+           MOZ_ASSERT(!NS_IsMainThread());
+
+           char *creds;
+           uint32_t flags;
+           nsresult rv = ObtainCredentialsAndFlags(&creds, &flags);
+           if (NS_FAILED(rv)) {
+               return mCompleteEvent->DispatchError();
+           }
+
+           return mCompleteEvent->DispatchSuccess(creds, flags,  mSessionState, mContinuationState);
+        }
+
+        NS_IMETHODIMP ObtainCredentialsAndFlags(char **aCreds, uint32_t *aFlags)
+        {
+           // Use negotiate service to call GenerateCredentials outside of main thread
+           nsAutoCString contractId;
+           contractId.Assign(NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX);
+           contractId.Append("negotiate");
+           nsresult rv;
+           nsCOMPtr<nsIHttpAuthenticator> authenticator = do_GetService(contractId.get(), &rv);
+           NS_ENSURE_SUCCESS(rv, rv);
+           nsISupports *sessionState = mSessionState;
+           nsISupports *continuationState = mContinuationState;
+           // The continuationState is for the sake of completeness propagated
+           // to the caller (despite it is not changed in any GenerateCredentials
+           // implementation).
+           //
+           // The only implementation that use sessionState is the
+           // nsHttpDigestAuth::GenerateCredentials. Since there's no reason
+           // to implement nsHttpDigestAuth::GenerateCredentialsAsync
+           // because digest auth does not block the main thread, we won't
+           // propagate changes to sessionState to the caller because of
+           // the change is too complicated on the caller side.
+           rv = authenticator->GenerateCredentials(mAuthChannel,
+                                                   mChallenge.get(),
+                                                   mIsProxyAuth,
+                                                   mDomain.get(),
+                                                   mUsername.get(),
+                                                   mPassword.get(),
+                                                   &sessionState,
+                                                   &continuationState,
+                                                   aFlags,
+                                                   aCreds);
+           mSessionState = sessionState;
+           mContinuationState = continuationState;
+           return rv;
+        }
+    private:
+        nsCOMPtr<nsIHttpAuthenticableChannel> mAuthChannel;
+        nsCString mChallenge;
+        bool mIsProxyAuth;
+        nsString mDomain;
+        nsString mUsername;
+        nsString mPassword;
+        nsCOMPtr<nsISupports> mSessionState;
+        nsCOMPtr<nsISupports> mContinuationState;
+        RefPtr<GetNextTokenCompleteEvent> mCompleteEvent;
+};
+
+} // anonymous namespace
+
+NS_IMETHODIMP
+nsHttpNegotiateAuth::GenerateCredentialsAsync(nsIHttpAuthenticableChannel *authChannel,
+                                              nsIHttpAuthenticatorCallback* aCallback,
+                                              const char *challenge,
+                                              bool isProxyAuth,
+                                              const char16_t *domain,
+                                              const char16_t *username,
+                                              const char16_t *password,
+                                              nsISupports *sessionState,
+                                              nsISupports *continuationState,
+                                              nsICancelable **aCancelable)
+{
+   NS_ENSURE_ARG(aCallback);
+   NS_ENSURE_ARG_POINTER(aCancelable);
+
+   RefPtr<GetNextTokenCompleteEvent> cancelEvent =
+       new GetNextTokenCompleteEvent(aCallback);
+
+
+   nsCOMPtr<nsIRunnable> getNextTokenRunnable =
+       new GetNextTokenRunnable(authChannel,
+                                challenge,
+                                isProxyAuth,
+                                domain,
+                                username,
+                                password,
+                                sessionState,
+                                continuationState,
+                                cancelEvent);
+   cancelEvent.forget(aCancelable);
+
+   nsresult rv;
+   if (!mNegotiateThread) {
+       mNegotiateThread =
+           new mozilla::LazyIdleThread(DEFAULT_THREAD_TIMEOUT_MS,
+                                       NS_LITERAL_CSTRING("NegotiateAuth"));
+       NS_ENSURE_TRUE(mNegotiateThread, NS_ERROR_OUT_OF_MEMORY);
+   }
+   rv = mNegotiateThread->Dispatch(getNextTokenRunnable, NS_DISPATCH_NORMAL);
+   NS_ENSURE_SUCCESS(rv, rv);
+
+   return NS_OK;
+}
+
 //
 // GenerateCredentials
 //

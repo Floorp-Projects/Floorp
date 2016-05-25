@@ -87,10 +87,6 @@ MediaFormatReader::Shutdown()
 {
   MOZ_ASSERT(OnTaskQueue());
 
-  if (HasVideo()) {
-    ReportDroppedFramesTelemetry();
-  }
-
   mDemuxerInitRequest.DisconnectIfExists();
   mMetadataPromise.RejectIfExists(ReadMetadataFailureReason::METADATA_ERROR, __func__);
   mSeekPromise.RejectIfExists(NS_ERROR_FAILURE, __func__);
@@ -959,9 +955,6 @@ MediaFormatReader::HandleDemuxedSamples(TrackType aTrack,
         LOG("%s stream id has changed from:%d to:%d, draining decoder.",
             TrackTypeToStr(aTrack), decoder.mLastStreamSourceID,
             info->GetID());
-        if (aTrack == TrackType::kVideoTrack) {
-          ReportDroppedFramesTelemetry();
-        }
         decoder.mNeedDraining = true;
         decoder.mNextStreamSourceID = Some(info->GetID());
         ScheduleUpdate(aTrack);
@@ -1160,7 +1153,6 @@ MediaFormatReader::Update(TrackType aTrack)
         Some(TimeInterval(TimeUnit::FromMicroseconds(output->mTime),
                           TimeUnit::FromMicroseconds(output->GetEndTime())));
       decoder.mNumSamplesOutputTotal++;
-      decoder.mNumSamplesOutputTotalSinceTelemetry++;
       ReturnOutput(output, aTrack);
       // We have a decoded sample ready to be returned.
       if (aTrack == TrackType::kVideoTrack) {
@@ -1205,6 +1197,15 @@ MediaFormatReader::Update(TrackType aTrack)
         LOGV("Nothing more to do");
         return;
       }
+    } else if (decoder.mDemuxEOS && !decoder.mNeedDraining &&
+               !decoder.mDraining && !decoder.mDrainComplete &&
+               decoder.mQueuedSamples.IsEmpty()) {
+      // It is possible to transition from WAITING_FOR_DATA directly to EOS
+      // state during the internal seek; in which case no draining would occur.
+      // There is no more samples left to be decoded and we are already in
+      // EOS state. We can immediately reject the data promise.
+      LOG("Rejecting %s promise: EOS", TrackTypeToStr(aTrack));
+      decoder.RejectPromise(END_OF_STREAM, __func__);
     }
   }
 
@@ -1452,7 +1453,6 @@ MediaFormatReader::VideoSkipReset(uint32_t aSkipped)
   }
 
   mVideo.mNumSamplesSkippedTotal += aSkipped;
-  mVideo.mNumSamplesSkippedTotalSinceTelemetry += aSkipped;
 }
 
 void
@@ -1892,53 +1892,6 @@ MediaFormatReader::GetMozDebugReaderData(nsAString& aString)
                               mVideo.mWaitingForData, mVideo.mLastStreamSourceID);
   }
   aString += NS_ConvertUTF8toUTF16(result);
-}
-
-void
-MediaFormatReader::ReportDroppedFramesTelemetry()
-{
-  MOZ_ASSERT(OnTaskQueue());
-
-  const VideoInfo* info =
-    mVideo.mInfo ? mVideo.mInfo->GetAsVideoInfo() : &mInfo.mVideo;
-
-  if (!info || !mVideo.mDecoder) {
-    return;
-  }
-
-  nsCString keyPhrase = nsCString("MimeType=");
-  keyPhrase.Append(info->mMimeType);
-  keyPhrase.Append("; ");
-
-  keyPhrase.Append("Resolution=");
-  keyPhrase.AppendInt(info->mDisplay.width);
-  keyPhrase.Append('x');
-  keyPhrase.AppendInt(info->mDisplay.height);
-  keyPhrase.Append("; ");
-
-  keyPhrase.Append("HardwareAcceleration=");
-  if (VideoIsHardwareAccelerated()) {
-    keyPhrase.Append(mVideo.mDecoder->GetDescriptionName());
-    keyPhrase.Append("enabled");
-  } else {
-    keyPhrase.Append("disabled");
-  }
-
-  if (mVideo.mNumSamplesOutputTotalSinceTelemetry) {
-    uint32_t percentage =
-      100 * mVideo.mNumSamplesSkippedTotalSinceTelemetry /
-            mVideo.mNumSamplesOutputTotalSinceTelemetry;
-    nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction([=]() -> void {
-      LOG("Reporting telemetry DROPPED_FRAMES_IN_VIDEO_PLAYBACK");
-      Telemetry::Accumulate(Telemetry::VIDEO_DETAILED_DROPPED_FRAMES_PROPORTION,
-                            keyPhrase,
-                            percentage);
-    });
-    AbstractThread::MainThread()->Dispatch(task.forget());
-  }
-
-  mVideo.mNumSamplesSkippedTotalSinceTelemetry = 0;
-  mVideo.mNumSamplesOutputTotalSinceTelemetry = 0;
 }
 
 } // namespace mozilla

@@ -1761,7 +1761,7 @@ js::ReportIncompatibleSelfHostedMethod(JSContext* cx, const CallArgs& args)
     // self-hosted things until we find a non-self-hosted one because of cases
     // like array.sort(somethingSelfHosted), where we want to report the error
     // in the somethingSelfHosted, not in the sort() call.
-    ScriptFrameIter iter(cx, FrameIter::STOP_AT_SAVED);
+    ScriptFrameIter iter(cx, FrameIter::GO_THROUGH_SAVED);
     MOZ_ASSERT(iter.isFunctionFrame());
 
     while (!iter.done()) {
@@ -2487,8 +2487,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
 #undef LOAD_AND_STORE_SCALAR_FN_DECLS
 
 #define LOAD_AND_STORE_REFERENCE_FN_DECLS(_constant, _type, _name)      \
-    JS_FN("Store_" #_name, js::StoreReference##_type::Func, 3, 0),      \
-    JS_FN("Load_" #_name,  js::LoadReference##_type::Func, 3, 0),
+    JS_FN("Store_" #_name, js::StoreReference##_name::Func, 3, 0),      \
+    JS_FN("Load_" #_name,  js::LoadReference##_name::Func, 3, 0),
     JS_FOR_EACH_REFERENCE_TYPE_REPR(LOAD_AND_STORE_REFERENCE_FN_DECLS)
 #undef LOAD_AND_STORE_REFERENCE_FN_DECLS
 

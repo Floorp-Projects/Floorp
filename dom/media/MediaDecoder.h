@@ -411,11 +411,15 @@ private:
   // thread.
   void SeekingStarted(MediaDecoderEventVisibility aEventVisibility = MediaDecoderEventVisibility::Observable);
 
-  void UpdateLogicalPosition(MediaDecoderEventVisibility aEventVisibility);
+  void UpdateLogicalPositionInternal(MediaDecoderEventVisibility aEventVisibility);
   void UpdateLogicalPosition()
   {
     MOZ_ASSERT(NS_IsMainThread());
-    UpdateLogicalPosition(MediaDecoderEventVisibility::Observable);
+    // Per spec, offical position remains stable during pause and seek.
+    if (mPlayState == PLAY_STATE_PAUSED || IsSeeking()) {
+      return;
+    }
+    UpdateLogicalPositionInternal(MediaDecoderEventVisibility::Observable);
   }
 
   // Find the end of the cached data starting at the current decoder

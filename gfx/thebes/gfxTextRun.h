@@ -97,11 +97,11 @@ public:
     // Public textrun API for general use
 
     bool IsClusterStart(uint32_t aPos) const {
-        NS_ASSERTION(aPos < GetLength(), "aPos out of range");
+        MOZ_ASSERT(aPos < GetLength());
         return mCharacterGlyphs[aPos].IsClusterStart();
     }
     bool IsLigatureGroupStart(uint32_t aPos) const {
-        NS_ASSERTION(aPos < GetLength(), "aPos out of range");
+        MOZ_ASSERT(aPos < GetLength());
         return mCharacterGlyphs[aPos].IsLigatureGroupStart();
     }
     bool CanBreakLineBefore(uint32_t aPos) const {
@@ -114,24 +114,24 @@ public:
     // Returns a gfxShapedText::CompressedGlyph::FLAG_BREAK_TYPE_* value
     // as defined in gfxFont.h (may be NONE, NORMAL or HYPHEN).
     uint8_t CanBreakBefore(uint32_t aPos) const {
-        NS_ASSERTION(aPos < GetLength(), "aPos out of range");
+        MOZ_ASSERT(aPos < GetLength());
         return mCharacterGlyphs[aPos].CanBreakBefore();
     }
 
     bool CharIsSpace(uint32_t aPos) const {
-        NS_ASSERTION(aPos < GetLength(), "aPos out of range");
+        MOZ_ASSERT(aPos < GetLength());
         return mCharacterGlyphs[aPos].CharIsSpace();
     }
     bool CharIsTab(uint32_t aPos) const {
-        NS_ASSERTION(aPos < GetLength(), "aPos out of range");
+        MOZ_ASSERT(aPos < GetLength());
         return mCharacterGlyphs[aPos].CharIsTab();
     }
     bool CharIsNewline(uint32_t aPos) const {
-        NS_ASSERTION(aPos < GetLength(), "aPos out of range");
+        MOZ_ASSERT(aPos < GetLength());
         return mCharacterGlyphs[aPos].CharIsNewline();
     }
     bool CharMayHaveEmphasisMark(uint32_t aPos) const {
-        NS_ASSERTION(aPos < GetLength(), "aPos out of range");
+        MOZ_ASSERT(aPos < GetLength());
         return mCharacterGlyphs[aPos].CharMayHaveEmphasisMark();
     }
 
@@ -394,7 +394,7 @@ public:
      * SetLineBreaks(aStart, N, aLineBreakBefore, N < aMaxLength, aProvider)
      *
      * @param aCanWordWrap true if we can break between any two grapheme
-     * clusters. This is set by word-wrap: break-word
+     * clusters. This is set by overflow-wrap|word-wrap: break-word
      *
      * @param aBreakPriority in/out the priority of the break opportunity
      * saved in the line. If we are prioritizing break opportunities, we will
@@ -513,7 +513,7 @@ public:
     void SanitizeGlyphRuns();
 
     CompressedGlyph* GetCharacterGlyphs() final {
-        NS_ASSERTION(mCharacterGlyphs, "failed to initialize mCharacterGlyphs");
+        MOZ_ASSERT(mCharacterGlyphs, "failed to initialize mCharacterGlyphs");
         return mCharacterGlyphs;
     }
 

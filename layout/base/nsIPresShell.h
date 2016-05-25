@@ -227,19 +227,15 @@ public:
    */
   void* AllocateFrame(nsQueryFrame::FrameIID aID, size_t aSize)
   {
-#ifdef DEBUG
-    mPresArenaAllocCount++;
-#endif
     void* result = mFrameArena.AllocateByFrameID(aID, aSize);
+    RecordAlloc(result);
     memset(result, 0, aSize);
     return result;
   }
 
   void FreeFrame(nsQueryFrame::FrameIID aID, void* aPtr)
   {
-#ifdef DEBUG
-    mPresArenaAllocCount--;
-#endif
+    RecordFree(aPtr);
     if (!mIsDestroying)
       mFrameArena.FreeByFrameID(aID, aPtr);
   }
@@ -252,19 +248,15 @@ public:
    */
   void* AllocateByObjectID(mozilla::ArenaObjectID aID, size_t aSize)
   {
-#ifdef DEBUG
-    mPresArenaAllocCount++;
-#endif
     void* result = mFrameArena.AllocateByObjectID(aID, aSize);
+    RecordAlloc(result);
     memset(result, 0, aSize);
     return result;
   }
 
   void FreeByObjectID(mozilla::ArenaObjectID aID, void* aPtr)
   {
-#ifdef DEBUG
-    mPresArenaAllocCount--;
-#endif
+    RecordFree(aPtr);
     if (!mIsDestroying)
       mFrameArena.FreeByObjectID(aID, aPtr);
   }
@@ -280,17 +272,14 @@ public:
    */
   void* AllocateMisc(size_t aSize)
   {
-#ifdef DEBUG
-    mPresArenaAllocCount++;
-#endif
-    return mFrameArena.AllocateBySize(aSize);
+    void* result = mFrameArena.AllocateBySize(aSize);
+    RecordAlloc(result);
+    return result;
   }
 
   void FreeMisc(size_t aSize, void* aPtr)
   {
-#ifdef DEBUG
-    mPresArenaAllocCount--;
-#endif
+    RecordFree(aPtr);
     if (!mIsDestroying)
       mFrameArena.FreeBySize(aSize, aPtr);
   }
@@ -1641,6 +1630,20 @@ protected:
    */
   void RecomputeFontSizeInflationEnabled();
 
+  void RecordAlloc(void* aPtr) {
+#ifdef DEBUG
+    MOZ_ASSERT(!mAllocatedPointers.Contains(aPtr));
+    mAllocatedPointers.PutEntry(aPtr);
+#endif
+  }
+
+  void RecordFree(void* aPtr) {
+#ifdef DEBUG
+    MOZ_ASSERT(mAllocatedPointers.Contains(aPtr));
+    mAllocatedPointers.RemoveEntry(aPtr);
+#endif
+  }
+
 public:
   bool AddRefreshObserver(nsARefreshObserver* aObserver,
                           mozFlushType aFlushType) {
@@ -1748,9 +1751,12 @@ protected:
 
 #ifdef DEBUG
   nsIFrame*                 mDrawEventTargetFrame;
-  // Ensure that every allocation from the PresArena is eventually freed.
-  uint32_t                  mPresArenaAllocCount;
+
+  // We track allocated pointers in a debug-only hashtable to assert against
+  // missing/double frees.
+  nsTHashtable<nsPtrHashKey<void>> mAllocatedPointers;
 #endif
+
 
   // Count of the number of times this presshell has been painted to a window.
   uint64_t                  mPaintCount;

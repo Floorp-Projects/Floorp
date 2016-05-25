@@ -579,8 +579,8 @@ class PerThreadData : public PerThreadDataFriendFields
     inline JSRuntime* runtimeIfOnOwnerThread();
 
     inline bool exclusiveThreadsPresent();
-    inline void addActiveCompilation();
-    inline void removeActiveCompilation();
+    inline void addActiveCompilation(AutoLockForExclusiveAccess& lock);
+    inline void removeActiveCompilation(AutoLockForExclusiveAccess& lock);
 
     // For threads which may be associated with different runtimes, depending
     // on the work they are doing.
@@ -1334,18 +1334,18 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::frontend::ParseMapPool parseMapPool_;
     unsigned activeCompilations_;
   public:
-    js::frontend::ParseMapPool& parseMapPool() {
+    js::frontend::ParseMapPool& parseMapPool(js::AutoLockForExclusiveAccess& lock) {
         MOZ_ASSERT(currentThreadHasExclusiveAccess());
         return parseMapPool_;
     }
     bool hasActiveCompilations() {
         return activeCompilations_ != 0;
     }
-    void addActiveCompilation() {
+    void addActiveCompilation(js::AutoLockForExclusiveAccess& lock) {
         MOZ_ASSERT(currentThreadHasExclusiveAccess());
         activeCompilations_++;
     }
-    void removeActiveCompilation() {
+    void removeActiveCompilation(js::AutoLockForExclusiveAccess& lock) {
         MOZ_ASSERT(currentThreadHasExclusiveAccess());
         activeCompilations_--;
     }
@@ -1405,11 +1405,11 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     void sweepAtoms();
 
-    js::AtomSet& atoms() {
+    js::AtomSet& atoms(js::AutoLockForExclusiveAccess& lock) {
         MOZ_ASSERT(currentThreadHasExclusiveAccess());
         return *atoms_;
     }
-    JSCompartment* atomsCompartment() {
+    JSCompartment* atomsCompartment(js::AutoLockForExclusiveAccess& lock) {
         MOZ_ASSERT(currentThreadHasExclusiveAccess());
         return atomsCompartment_;
     }
@@ -1423,7 +1423,7 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     bool activeGCInAtomsZone();
 
-    js::SymbolRegistry& symbolRegistry() {
+    js::SymbolRegistry& symbolRegistry(js::AutoLockForExclusiveAccess& lock) {
         MOZ_ASSERT(currentThreadHasExclusiveAccess());
         return symbolRegistry_;
     }
@@ -1459,7 +1459,7 @@ struct JSRuntime : public JS::shadow::Runtime,
   private:
     js::ScriptDataTable scriptDataTable_;
   public:
-    js::ScriptDataTable& scriptDataTable() {
+    js::ScriptDataTable& scriptDataTable(js::AutoLockForExclusiveAccess& lock) {
         MOZ_ASSERT(currentThreadHasExclusiveAccess());
         return scriptDataTable_;
     }
@@ -1833,18 +1833,18 @@ PerThreadData::exclusiveThreadsPresent()
 }
 
 inline void
-PerThreadData::addActiveCompilation()
+PerThreadData::addActiveCompilation(AutoLockForExclusiveAccess& lock)
 {
     activeCompilations++;
-    runtime_->addActiveCompilation();
+    runtime_->addActiveCompilation(lock);
 }
 
 inline void
-PerThreadData::removeActiveCompilation()
+PerThreadData::removeActiveCompilation(AutoLockForExclusiveAccess& lock)
 {
     MOZ_ASSERT(activeCompilations);
     activeCompilations--;
-    runtime_->removeActiveCompilation();
+    runtime_->removeActiveCompilation(lock);
 }
 
 /************************************************************************/

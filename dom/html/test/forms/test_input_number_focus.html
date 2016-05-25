@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1268556
+-->
+<head>
+  <title>Test focus behaviour for &lt;input type='number'&gt;</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1268556">Mozilla Bug 1268556</a>
+<p id="display"></p>
+<div id="content">
+  <input id="input" type="number">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/**
+ * Test for Bug 1268556.
+ * This test checks that when focusing on an input type=number, the focus is
+ * redirected to the anonymous text control, but the document.activeElement
+ * still returns the <input type=number>.
+ **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  test();
+  SimpleTest.finish();
+});
+
+function test() {
+  var number = document.getElementById("input");
+  number.focus();
+
+  // The active element returns the input type=number.
+  var activeElement = document.activeElement;
+  is (activeElement, number, "activeElement should be the number element");
+  is (activeElement.localName, "input", "activeElement should be an input element");
+  is (activeElement.getAttribute("type"), "number", "activeElement should of type number");
+
+  // Use FocusManager to check that the actual focus is on the anonymous
+  // text control.
+  var fm = SpecialPowers.Cc["@mozilla.org/focus-manager;1"]
+                        .getService(SpecialPowers.Ci.nsIFocusManager);
+  var focusedElement = fm.focusedElement;
+  is (focusedElement.localName, "input", "focusedElement should be an input element");
+  is (focusedElement.getAttribute("type"), "text", "focusedElement should of type text");
+}
+
+</script>
+</pre>
+</body>
+</html>
