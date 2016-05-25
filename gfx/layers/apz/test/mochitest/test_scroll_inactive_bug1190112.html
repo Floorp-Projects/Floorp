@@ -2,9 +2,10 @@
 <html>
 <head>
   <title>Test scrolling flattened inactive frames</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 <style>
 p {
@@ -526,18 +527,15 @@ function doInnerScrollAgain(subframe, oldpos) {
   });
 }
 
-window.onload = function() {
-  SpecialPowers.pushPrefEnv({
-    'set': [['general.smoothScroll', false],
-            ['mousewheel.transaction.timeout', 0],
-            ['mousewheel.transaction.ignoremovedelay', 0]]
-  }, function () {
-    SimpleTest.waitForFocus(test);
-  });
-}
-
 SimpleTest.testInChaosMode();
 SimpleTest.waitForExplicitFinish();
+
+pushPrefs([['general.smoothScroll', false],
+           ['mousewheel.transaction.timeout', 0],
+           ['mousewheel.transaction.ignoremovedelay', 0]])
+.then(waitUntilApzStable)
+.then(test);
+
 </script>
 </body>
 </html>
