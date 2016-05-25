@@ -8,17 +8,48 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
+var basic_pan_prefs = [
+  // Dropping the touch slop to 0 makes the tests easier to write because
+  // we can just do a one-pixel drag to get over the pan threshold rather
+  // than having to hard-code some larger value.
+  ["apz.touch_start_tolerance", "0.0"],
+  // The touchstart from the drag can turn into a long-tap if the touch-move
+  // events get held up. Try to prevent that by making long-taps require
+  // a 10 second hold. Note that we also cannot enable chaos mode on this
+  // test for this reason, since chaos mode can cause the long-press timer
+  // to fire sooner than the pref dictates.
+  ["ui.click_hold_context_menus.delay", 10000],
+  // The subtests in this test do touch-drags to pan the page, but we don't
+  // want those pans to turn into fling animations, so we increase the
+  // fling-stop threshold velocity to absurdly high.
+  ["apz.fling_stopped_threshold", "10000"],
+  // The helper_div_pan's div gets a displayport on scroll, but if the
+  // test takes too long the displayport can expire before the new scroll
+  // position is synced back to the main thread. So we disable displayport
+  // expiry for these tests.
+  ["apz.displayport_expiry_ms", 0],
+];
+
 var subtests = [
+  // Simple tests to exercise basic panning behaviour
+  {'file': 'helper_basic_pan.html', 'prefs': basic_pan_prefs},
+  {'file': 'helper_div_pan.html', 'prefs': basic_pan_prefs},
+  {'file': 'helper_iframe_pan.html', 'prefs': basic_pan_prefs},
+
+  // Simple test to exercise touch-tapping behaviour
   {'file': 'helper_tap.html'},
+
   // For the following two tests, disable displayport suppression to make sure it
   // doesn't interfere with the test by scheduling paints non-deterministically.
   {'file': 'helper_scrollto_tap.html?true', 'prefs': [["apz.paint_skipping.enabled", true]], 'dp_suppression': false},
   {'file': 'helper_scrollto_tap.html?false', 'prefs': [["apz.paint_skipping.enabled", false]], 'dp_suppression': false},
+
   // For the long-tap test, reduce the content response timeout because the touchstart
   // event doesn't get processed (because of the event listener) until this expires.
   // Once we support passive event listeners, we can use that instead and stop mucking
   // with the timeout.
   {'file': 'helper_long_tap.html'},
+
   // For the following test, we want to make sure APZ doesn't wait for a content
   // response that is never going to arrive. To detect this we set the content response
   // timeout to a day, so that the entire test times out and fails if APZ does
