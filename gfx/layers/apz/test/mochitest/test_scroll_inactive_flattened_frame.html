@@ -36,23 +36,14 @@ function test() {
   });
 }
 
-function startTest() {
-  waitForAllPaints(function() {
-    flushApzRepaints(test);
-  });
-}
-
-window.onload = function() {
-  SpecialPowers.pushPrefEnv({
-    'set': [['general.smoothScroll', false],
-            ['mousewheel.transaction.timeout', 1000000]],
-  }, function () {
-    SimpleTest.waitForFocus(startTest);
-  });
-}
-
 SimpleTest.testInChaosMode();
 SimpleTest.waitForExplicitFinish();
+
+pushPrefs([['general.smoothScroll', false],
+           ['mousewheel.transaction.timeout', 1000000]])
+.then(waitUntilApzStable)
+.then(test);
+
 </script>
 </body>
 </html>
