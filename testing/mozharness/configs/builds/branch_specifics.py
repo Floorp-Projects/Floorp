@@ -296,8 +296,8 @@ config = {
         'repo_path': 'integration/mozilla-inbound',
         'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
     },
-    'services-central': {
-        'repo_path': 'services/services-central',
+    'autoland': {
+        'repo_path': 'integration/autoland',
         'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
     },
     'ux': {
