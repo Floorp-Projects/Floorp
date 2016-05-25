@@ -1460,9 +1460,11 @@ void RemoteSourceStreamInfo::UpdatePrincipal_m(nsIPrincipal* aPrincipal)
     source.SetPrincipal(aPrincipal);
 
     RefPtr<MediaPipeline> pipeline = GetPipelineByTrackId_m(trackPair.first);
-    MOZ_ASSERT(pipeline->direction() == MediaPipeline::RECEIVE);
-    static_cast<MediaPipelineReceive*>(pipeline.get())
-      ->SetPrincipalHandle_m(MakePrincipalHandle(aPrincipal));
+    if (pipeline) {
+      MOZ_ASSERT(pipeline->direction() == MediaPipeline::RECEIVE);
+      static_cast<MediaPipelineReceive*>(pipeline.get())
+        ->SetPrincipalHandle_m(MakePrincipalHandle(aPrincipal));
+    }
   }
 }
 #endif // MOZILLA_INTERNAL_API
