@@ -15,20 +15,18 @@ add_task(function*() {
     yield BrowserTestUtils.loadURI(tab.linkedBrowser, uri);
 
     let win = gBrowser.replaceTabWithWindow(tab);
-    yield BrowserTestUtils.waitForEvent(win, "load");
-
+    yield TestUtils.topicObserved("browser-delayed-startup-finished",
+                                  subject => subject == win);
     tab = win.gBrowser.selectedTab;
 
-    // By default, we'll wait for MozAfterPaint to come up through the
-    // browser element. We'll handle the e10s case in the next block.
-    let contentPainted = BrowserTestUtils.waitForEvent(tab.linkedBrowser,
-                                                       "MozAfterPaint");
-
-    let delayedStartup =
-      TestUtils.topicObserved("browser-delayed-startup-finished",
-                              subject => subject == win);
-
-    yield Promise.all([delayedStartup, contentPainted]);
+    // BrowserTestUtils doesn't get the add-on shims, which means that
+    // MozAfterPaint won't get shimmed over if we add an event handler
+    // for it in the parent.
+    if (tab.linkedBrowser.isRemoteBrowser) {
+      yield BrowserTestUtils.waitForContentEvent(tab.linkedBrowser, "MozAfterPaint");
+    } else {
+      yield BrowserTestUtils.waitForEvent(tab.linkedBrowser, "MozAfterPaint");
+    }
 
     Assert.equal(win.gBrowser.currentURI.spec, uri, uri + ": uri loaded in detached tab");
     Assert.equal(win.document.activeElement, win.gBrowser.selectedBrowser, uri + ": browser is focused");
