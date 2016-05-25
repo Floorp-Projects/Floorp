@@ -74,27 +74,6 @@ def _find_marionette_in_args(*args, **kwargs):
         raise
     return m
 
-def uses_marionette(func):
-    """Decorator which creates a marionette session and deletes it
-    afterwards if one doesn't already exist.
-    """
-    @wraps(func)
-    def _(*args, **kwargs):
-        m = _find_marionette_in_args(*args, **kwargs)
-        delete_session = False
-        if not m.session:
-            delete_session = True
-            m.start_session()
-
-        m.set_context(m.CONTEXT_CHROME)
-        ret = func(*args, **kwargs)
-
-        if delete_session:
-            m.delete_session()
-
-        return ret
-    return _
-
 
 def _raw_log():
     import logging
