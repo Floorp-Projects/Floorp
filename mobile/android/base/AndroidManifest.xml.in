@@ -117,13 +117,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
 
-            <!-- Notification API V2 -->
-            <intent-filter>
-                <action android:name="@ANDROID_PACKAGE_NAME@.helperBroadcastAction" />
-                <data android:scheme="moz-notification" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-
             <intent-filter>
                 <action android:name="org.mozilla.gecko.UPDATE"/>
                 <category android:name="android.intent.category.DEFAULT" />
@@ -244,6 +237,17 @@
             <intent-filter>
                 <action android:name="android.intent.action.PACKAGE_REPLACED" />
                 <data android:scheme="package" android:path="org.mozilla.gecko" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name="org.mozilla.gecko.NotificationReceiver"
+            android:exported="false">
+            <!-- Notification API V2 -->
+            <intent-filter>
+                <action android:name="@ANDROID_PACKAGE_NAME@.helperBroadcastAction" />
+                <data android:scheme="moz-notification" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>
 

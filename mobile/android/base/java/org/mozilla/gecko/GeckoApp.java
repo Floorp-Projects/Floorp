@@ -1630,8 +1630,6 @@ public abstract class GeckoApp
 
         if (ACTION_ALERT_CALLBACK.equals(action)) {
             processAlertCallback(intent);
-        } else if (NotificationHelper.HELPER_BROADCAST_ACTION.equals(action)) {
-            NotificationHelper.getInstance(getApplicationContext()).handleNotificationIntent(intent);
         }
     }
 
