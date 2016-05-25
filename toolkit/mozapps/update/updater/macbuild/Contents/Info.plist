@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>updater</string>
+	<string>org.mozilla.updater</string>
 	<key>CFBundleIconFile</key>
 	<string>updater.icns</string>
 	<key>CFBundleIdentifier</key>

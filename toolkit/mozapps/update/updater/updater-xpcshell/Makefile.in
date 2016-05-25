@@ -30,7 +30,7 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	$(NSINSTALL) updater-xpcshell $(XPCSHELLTESTROOT)/data/updater-xpcshell.app/Contents/MacOS
 	rm -Rf $(XPCSHELLTESTROOT)/data/updater.app
 	mv $(XPCSHELLTESTROOT)/data/updater-xpcshell.app $(XPCSHELLTESTROOT)/data/updater.app
-	mv $(XPCSHELLTESTROOT)/data/updater.app/Contents/MacOS/updater-xpcshell $(XPCSHELLTESTROOT)/data/updater.app/Contents/MacOS/updater
+	mv $(XPCSHELLTESTROOT)/data/updater.app/Contents/MacOS/updater-xpcshell $(XPCSHELLTESTROOT)/data/updater.app/Contents/MacOS/org.mozilla.updater
 
 	# Copy for mochitest chrome tests
 	rsync -a -C $(XPCSHELLTESTROOT)/data/updater.app $(MOCHITESTROOT)/data/
