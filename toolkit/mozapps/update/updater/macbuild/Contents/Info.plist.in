@@ -31,5 +31,9 @@
 		<key>x86_64</key>
 		<string>10.6.0</string>
 	</dict>
+	<key>SMAuthorizedClients</key>
+	<array>
+		<string>identifier "%MOZ_MACBUNDLE_ID%" and ((anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.9]) or (anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] and certificate leaf[field.1.2.840.113635.100.6.1.13] and certificate leaf[subject.OU] = "43AQ936H96"))</string>
+	</array>
 </dict>
 </plist>
