@@ -20,7 +20,7 @@ add_task(function* () {
   yield testWarningNotPresent(hud);
 
   let loaded = loadBrowser(browser);
-  content.location = TEST_REPLACED_API_URI;
+  BrowserTestUtils.loadURI(browser, TEST_REPLACED_API_URI);
   yield loaded;
 
   let hud2 = yield openConsole();
@@ -38,7 +38,10 @@ function testWarningNotPresent(hud) {
 
   // Bug 862024: make sure the warning doesn't show after page reload.
   info("reload " + TEST_URI);
-  executeSoon(() => content.location.reload());
+  executeSoon(function () {
+    let browser = gBrowser.selectedBrowser;
+    ContentTask.spawn(browser, null, "() => content.location.reload()");
+  });
 
   waitForMessages({
     webconsole: hud,
@@ -74,7 +77,8 @@ function testWarningPresent(hud) {
     executeSoon(() => {
       info("reload the test page and wait for the warning to show");
       waitForMessages(warning).then(deferred.resolve);
-      content.location.reload();
+      let browser = gBrowser.selectedBrowser;
+      ContentTask.spawn(browser, null, "() => content.location.reload()");
     });
   });
 
