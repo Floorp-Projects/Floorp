@@ -509,6 +509,7 @@ tasks:
         - 'testing/eslint/eslint-plugin-mozilla/**'
         # Other misc lint related files.
         - 'tools/lint/**'
+        - 'testing/docker/lint/**'
   android-api-15-gradle-dependencies:
     task: tasks/builds/android_api_15_gradle_dependencies.yml
     root: true
