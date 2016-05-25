@@ -10,6 +10,7 @@ add_task(function* () {
   yield testSimple(shortcuts);
   yield testNonLetterCharacter(shortcuts);
   yield testMixup(shortcuts);
+  yield testLooseDigits(shortcuts);
   yield testExactModifiers(shortcuts);
   yield testLooseShiftModifier(shortcuts);
   yield testStrictLetterShiftModifier(shortcuts);
@@ -93,6 +94,40 @@ function testMixup(shortcuts) {
   EventUtils.synthesizeKey("a", { altKey: true }, window);
   yield onSecondKey;
   ok(hitSecond, "Got the second shortcut notified once it is actually fired");
+}
+
+// On azerty keyboard, digits are only available by pressing Shift/Capslock,
+// but we accept them even if we omit doing that.
+function testLooseDigits(shortcuts) {
+  info("Test Loose digits");
+  let onKey = once(shortcuts, "0", (key, event) => {
+    is(event.key, "à");
+    ok(!event.altKey);
+    ok(!event.ctrlKey);
+    ok(!event.metaKey);
+    ok(!event.shiftKey);
+  });
+  // Simulate a press on the "0" key, without shift pressed on a french
+  // keyboard
+  EventUtils.synthesizeKey(
+    "à",
+    { keyCode: 48 },
+    window);
+  yield onKey;
+
+  onKey = once(shortcuts, "0", (key, event) => {
+    is(event.key, "0");
+    ok(!event.altKey);
+    ok(!event.ctrlKey);
+    ok(!event.metaKey);
+    ok(event.shiftKey);
+  });
+  // Simulate the same press with shift pressed
+  EventUtils.synthesizeKey(
+    "0",
+    { keyCode: 48, shiftKey: true },
+    window);
+  yield onKey;
 }
 
 // Test that shortcuts is notified only when the modifiers match exactly
