@@ -52,10 +52,10 @@ function* hideTooltip(tooltip) {
  *         have been executed.
  */
 function waitForReflow(tooltip) {
-  let {document} = tooltip;
+  let {doc} = tooltip;
   return new Promise(resolve => {
-    document.documentElement.offsetWidth;
-    document.defaultView.requestAnimationFrame(resolve);
+    doc.documentElement.offsetWidth;
+    doc.defaultView.requestAnimationFrame(resolve);
   });
 }
 
