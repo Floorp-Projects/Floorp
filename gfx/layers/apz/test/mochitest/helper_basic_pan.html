@@ -27,11 +27,7 @@ function checkScroll() {
   subtestDone();
 }
 
-window.onload = function() {
-  waitForAllPaints(function() {
-    flushApzRepaints(scrollPage);
-  });
-}
+waitUntilApzStable().then(scrollPage);
 
   </script>
 </head>
