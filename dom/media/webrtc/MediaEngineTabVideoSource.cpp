@@ -148,14 +148,17 @@ MediaEngineTabVideoSource::Allocate(const dom::MediaTrackConstraints& aConstrain
   mWindowId = aConstraints.mBrowserWindow.WasPassed() ?
               aConstraints.mBrowserWindow.Value() : -1;
   aOutHandle = nullptr;
-  return Restart(aConstraints, aPrefs, aDeviceId);
+  return Restart(nullptr, aConstraints, aPrefs, aDeviceId);
 }
 
 nsresult
-MediaEngineTabVideoSource::Restart(const dom::MediaTrackConstraints& aConstraints,
+MediaEngineTabVideoSource::Restart(BaseAllocationHandle* aHandle,
+                                   const dom::MediaTrackConstraints& aConstraints,
                                    const mozilla::MediaEnginePrefs& aPrefs,
                                    const nsString& aDeviceId)
 {
+  MOZ_ASSERT(!aHandle);
+
   // scrollWithPage is not proper a constraint, so just read it.
   // It has no well-defined behavior in advanced, so ignore it there.
 
