@@ -897,11 +897,11 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
         return NS_ERROR_FAILURE;
     }
 
-    bool failIfPerfCaveat = mOptions.failIfMajorPerformanceCaveat;
-    if (gfxPrefs::WebGLDisableFailIfMajorPerformanceCaveat())
-        failIfPerfCaveat = false;
+    if (gfxPrefs::WebGLDisableFailIfMajorPerformanceCaveat()) {
+        mOptions.failIfMajorPerformanceCaveat = false;
+    }
 
-    if (failIfPerfCaveat) {
+    if (mOptions.failIfMajorPerformanceCaveat) {
         nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
         if (!HasAcceleratedLayers(gfxInfo)) {
             Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_FAILURE_ID,
@@ -928,8 +928,16 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
         return NS_ERROR_FAILURE;
     }
     MOZ_ASSERT(gl);
-
     MOZ_ASSERT_IF(mOptions.alpha, gl->Caps().alpha);
+
+    if (mOptions.failIfMajorPerformanceCaveat) {
+        if (gl->IsWARP()) {
+            const nsLiteralCString text("failIfMajorPerformanceCaveat: Driver is not"
+                                        " hardware-accelerated.");
+            ThrowEvent_WebGLContextCreationError(text);
+            return NS_ERROR_FAILURE;
+        }
+    }
 
     if (!ResizeBackbuffer(width, height)) {
         Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_FAILURE_ID,
