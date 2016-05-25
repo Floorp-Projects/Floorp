@@ -129,6 +129,7 @@ config = {
                 "--log-errorsummary=%(error_summary_file)s",
                 "--use-test-media-devices",
                 "--screenshot-on-fail",
+                "--cleanup-crashes",
             ],
             "run_filename": "runtests.py",
             "testsdir": "mochitest"
@@ -159,6 +160,7 @@ config = {
                 "--symbols-path=%(symbols_path)s",
                 "--log-raw=%(raw_log_file)s",
                 "--log-errorsummary=%(error_summary_file)s",
+                "--cleanup-crashes",
             ],
             "run_filename": "runreftest.py",
             "testsdir": "reftest"

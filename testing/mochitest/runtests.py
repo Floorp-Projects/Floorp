@@ -2206,6 +2206,9 @@ class MochitestDesktop(MochitestBase):
         self.killNamedOrphans('ssltunnel')
         self.killNamedOrphans('xpcshell')
 
+        if options.cleanupCrashes:
+            mozcrash.cleanup_pending_crash_reports()
+
         # Until we have all green, this only runs on bc*/dt*/mochitest-chrome
         # jobs, not jetpack*, a11yr (for perf reasons), or plain
 
