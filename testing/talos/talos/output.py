@@ -94,10 +94,6 @@ class Output(object):
         return bool([i for i in memory_metric if i in resultName])
 
     @classmethod
-    def responsiveness_Metric(cls, val_list):
-        return sum([float(x)*float(x) / 1000000.0 for x in val_list])
-
-    @classmethod
     def v8_Metric(cls, val_list):
         results = [i for i, j in val_list]
         score = 100 * filter.geometric_mean(results)
@@ -145,7 +141,7 @@ class PerfherderOutput(Output):
 
     def construct_results(self, vals, testname):
         if 'responsiveness' in testname:
-            return self.responsiveness_Metric([val for (val, page) in vals])
+            return filter.responsiveness_Metric([val for (val, page) in vals])
         elif testname.startswith('v8_7'):
             return self.v8_Metric(vals)
         elif testname.startswith('kraken'):
@@ -258,7 +254,7 @@ class PerfherderOutput(Output):
                     if 'responsiveness' is name:
                         subtest = {
                             'name': name,
-                            'value': self.responsiveness_Metric(vals)
+                            'value': filter.responsiveness_Metric(vals)
                         }
                         counter_subtests.append(subtest)
                         continue
