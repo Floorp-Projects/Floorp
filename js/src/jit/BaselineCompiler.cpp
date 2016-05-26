@@ -208,7 +208,8 @@ BaselineCompiler::compile()
                             pcMappingIndexEntries.length(),
                             pcEntries.length(),
                             bytecodeTypeMapEntries,
-                            yieldOffsets_.length()));
+                            yieldOffsets_.length()),
+        JS::DeletePolicy<BaselineScript>(cx->runtime()));
     if (!baselineScript) {
         ReportOutOfMemory(cx);
         return Method_Error;

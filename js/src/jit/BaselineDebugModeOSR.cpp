@@ -871,9 +871,6 @@ jit::RecompileOnStackBaselineScriptsForDebugMode(JSContext* cx,
     if (entries.empty())
         return true;
 
-    // Scripts can entrain nursery things. See note in js::ReleaseAllJITCode.
-    cx->runtime()->gc.evictNursery();
-
     // When the profiler is enabled, we need to have suppressed sampling,
     // since the basline jit scripts are in a state of flux.
     MOZ_ASSERT(!cx->runtime()->isProfilerSamplingEnabled());

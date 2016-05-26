@@ -1140,7 +1140,8 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
     lastMarkSlice(false),
     sweepOnBackgroundThread(false),
     foundBlackGrayEdges(false),
-    freeLifoAlloc(JSRuntime::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
+    blocksToFreeAfterSweeping(JSRuntime::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
+    blocksToFreeAfterMinorGC(JSRuntime::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     zoneGroupIndex(0),
     zoneGroups(nullptr),
     currentZoneGroup(nullptr),
@@ -2830,7 +2831,7 @@ GCRuntime::updatePointersToRelocatedCells(Zone* zone)
     rt->gc.sweepZoneAfterCompacting(zone);
 
     // Type inference may put more blocks here to free.
-    freeLifoAlloc.freeAll();
+    blocksToFreeAfterSweeping.freeAll();
 
     // Call callbacks to get the rest of the system to fixup other untraced pointers.
     callWeakPointerZoneGroupCallbacks();
@@ -3497,7 +3498,7 @@ GCRuntime::assertBackgroundSweepingFinished()
             MOZ_ASSERT(zone->arenas.doneBackgroundFinalize(i));
         }
     }
-    MOZ_ASSERT(freeLifoAlloc.computedSizeOfExcludingThis() == 0);
+    MOZ_ASSERT(blocksToFreeAfterSweeping.computedSizeOfExcludingThis() == 0);
 #endif
 }
 
@@ -3658,7 +3659,7 @@ GCRuntime::freeUnusedLifoBlocksAfterSweeping(LifoAlloc* lifo)
 {
     MOZ_ASSERT(rt->isHeapBusy());
     AutoLockGC lock(rt);
-    freeLifoAlloc.transferUnusedFrom(lifo);
+    blocksToFreeAfterSweeping.transferUnusedFrom(lifo);
 }
 
 void
@@ -3666,7 +3667,14 @@ GCRuntime::freeAllLifoBlocksAfterSweeping(LifoAlloc* lifo)
 {
     MOZ_ASSERT(rt->isHeapBusy());
     AutoLockGC lock(rt);
-    freeLifoAlloc.transferFrom(lifo);
+    blocksToFreeAfterSweeping.transferFrom(lifo);
+}
+
+void
+GCRuntime::freeAllLifoBlocksAfterMinorGC(LifoAlloc* lifo)
+{
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
+    blocksToFreeAfterMinorGC.transferFrom(lifo);
 }
 
 void
@@ -3719,7 +3727,7 @@ GCHelperState::doSweep(AutoLockGC& lock)
             ZoneList zones;
             zones.transferFrom(rt->gc.backgroundSweepZones);
             LifoAlloc freeLifoAlloc(JSRuntime::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
-            freeLifoAlloc.transferFrom(&rt->gc.freeLifoAlloc);
+            freeLifoAlloc.transferFrom(&rt->gc.blocksToFreeAfterSweeping);
 
             AutoUnlockGC unlock(lock);
             rt->gc.sweepBackgroundThings(zones, freeLifoAlloc, BackgroundThread);
@@ -5388,7 +5396,7 @@ GCRuntime::endSweepingZoneGroup()
     if (sweepOnBackgroundThread)
         queueZonesForBackgroundSweep(zones);
     else
-        sweepBackgroundThings(zones, freeLifoAlloc, MainThread);
+        sweepBackgroundThings(zones, blocksToFreeAfterSweeping, MainThread);
 
     /* Reset the list of arenas marked as being allocated during sweep phase. */
     while (Arena* arena = arenasAllocatedDuringSweep) {
@@ -5906,7 +5914,7 @@ GCRuntime::resetIncrementalGC(const char* reason)
             zone->setGCState(Zone::NoGC);
         }
 
-        freeLifoAlloc.freeAll();
+        blocksToFreeAfterSweeping.freeAll();
 
         incrementalState = NO_INCREMENTAL;
 
@@ -6742,6 +6750,9 @@ GCRuntime::minorGCImpl(JS::gcreason::Reason reason, Nursery::ObjectGroupList* pr
     AutoTraceLog logMinorGC(logger, TraceLogger_MinorGC);
     nursery.collect(rt, reason, pretenureGroups);
     MOZ_ASSERT_IF(!rt->mainThread.suppressGC, nursery.isEmpty());
+
+    if (!rt->mainThread.suppressGC)
+        blocksToFreeAfterMinorGC.freeAll();
 }
 
 // Alternate to the runtime-taking form that allows marking object groups as
@@ -7100,12 +7111,6 @@ void PreventGCDuringInteractiveDebug()
 void
 js::ReleaseAllJITCode(FreeOp* fop)
 {
-    /*
-     * Scripts can entrain nursery things, inserting references to the script
-     * into the store buffer. Clear the store buffer before discarding scripts.
-     */
-    fop->runtime()->gc.evictNursery();
-
     for (ZonesIter zone(fop->runtime(), SkipAtoms); !zone.done(); zone.next()) {
         if (!zone->jitZone())
             continue;
@@ -7134,7 +7139,15 @@ js::ReleaseAllJITCode(FreeOp* fop)
             jit::FinishDiscardBaselineScript(fop, script);
         }
 
-        zone->jitZone()->optimizedStubSpace()->free();
+        /*
+         * When scripts contains pointers to nursery things, the store buffer
+         * can contain entries that point into the optimized stub space. Since
+         * this method can be called outside the context of a GC, this situation
+         * could result in us trying to mark invalid store buffer entries.
+         *
+         * Defer freeing any allocated blocks until after the next minor GC.
+         */
+        zone->jitZone()->optimizedStubSpace()->freeAllAfterMinorGC(fop->runtime());
     }
 }
 
