@@ -309,7 +309,7 @@ public class FxAccountClient20 implements FxAccountClient {
     }
   }
 
-  protected <T> void post(BaseResource resource, final ExtendedJSONObject requestBody, final RequestDelegate<T> delegate) {
+  protected <T> void post(BaseResource resource, final ExtendedJSONObject requestBody) {
     if (requestBody == null) {
       resource.post((HttpEntity) null);
     } else {
@@ -577,7 +577,7 @@ public class FxAccountClient20 implements FxAccountClient {
         delegate.handleSuccess(cert);
       }
     };
-    post(resource, body, delegate);
+    post(resource, body);
   }
 
   protected static final String[] LOGIN_RESPONSE_REQUIRED_STRING_FIELDS = new String[] { JSON_KEY_UID, JSON_KEY_SESSIONTOKEN };
@@ -651,7 +651,7 @@ public class FxAccountClient20 implements FxAccountClient {
       }
     };
 
-    post(resource, body, delegate);
+    post(resource, body);
   }
 
   public void createAccount(final byte[] emailUTF8, final byte[] quickStretchedPW,
@@ -701,7 +701,7 @@ public class FxAccountClient20 implements FxAccountClient {
       }
     };
 
-    post(resource, body, delegate);
+    post(resource, body);
   }
 
   /**
@@ -816,7 +816,7 @@ public class FxAccountClient20 implements FxAccountClient {
       }
     };
 
-    post(resource, body, delegate);
+    post(resource, body);
   }
 
   @Override
