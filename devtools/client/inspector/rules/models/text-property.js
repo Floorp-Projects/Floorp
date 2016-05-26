@@ -8,6 +8,7 @@
 
 const {Cc, Ci, Cu} = require("chrome");
 const {escapeCSSComment} = require("devtools/shared/css-parsing-utils");
+const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -49,6 +50,9 @@ function TextProperty(rule, name, value, priority, enabled = true,
   this.enabled = !!enabled;
   this.invisible = invisible;
   this.updateComputed();
+
+  const toolbox = this.rule.elementStyle.ruleView.inspector.toolbox;
+  this.cssProperties = getCssProperties(toolbox);
 }
 
 TextProperty.prototype = {
@@ -186,15 +190,7 @@ TextProperty.prototype = {
    * @return {Boolean} true if the property name is known, false otherwise.
    */
   isKnownProperty: function () {
-    try {
-      // If the property name is invalid, the cssPropertyIsShorthand
-      // will throw an exception.  But if it is valid, no exception will
-      // be thrown; so we just ignore the return value.
-      domUtils.cssPropertyIsShorthand(this.name);
-      return true;
-    } catch (e) {
-      return false;
-    }
+    return this.cssProperties.isKnown(this.name);
   },
 
   /**

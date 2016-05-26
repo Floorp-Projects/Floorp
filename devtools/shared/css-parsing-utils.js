@@ -14,14 +14,10 @@
 
 "use strict";
 
-const {Cc, Ci} = require("chrome");
 loader.lazyRequireGetter(this, "CSS", "CSS");
 const promise = require("promise");
 const {getCSSLexer} = require("devtools/shared/css-lexer");
 const {Task} = require("devtools/shared/task");
-loader.lazyGetter(this, "DOMUtils", () => {
-  return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
-});
 
 const SELECTOR_ATTRIBUTE = exports.SELECTOR_ATTRIBUTE = 1;
 const SELECTOR_ELEMENT = exports.SELECTOR_ELEMENT = 2;
@@ -151,32 +147,14 @@ function unescapeCSSComment(inputString) {
 }
 
 /**
- * A helper function for parseDeclarations that implements a heuristic
- * to decide whether a given bit of comment text should be parsed as a
- * declaration.
- *
- * @param {String} name the property name that has been parsed
- * @return {Boolean} true if the property should be parsed, false if
- *                        the remainder of the comment should be skipped
- */
-function shouldParsePropertyInComment(name) {
-  try {
-    // If the property name is invalid, the cssPropertyIsShorthand
-    // will throw an exception.  But if it is valid, no exception will
-    // be thrown; so we just ignore the return value.
-    DOMUtils.cssPropertyIsShorthand(name);
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
-/**
  * A helper function for @see parseDeclarations that handles parsing
  * of comment text.  This wraps a recursive call to parseDeclarations
  * with the processing needed to ensure that offsets in the result
  * refer back to the original, unescaped, input string.
  *
+ * @param {Function} isCssPropertyKnown
+ *        A function to check if the CSS property is known. This is either an
+ *        internal server function or from the CssPropertiesFront.
  * @param {String} commentText The text of the comment, without the
  *                             delimiters.
  * @param {Number} startOffset The offset of the comment opener
@@ -186,7 +164,8 @@ function shouldParsePropertyInComment(name) {
  * @return {array} Array of declarations of the same form as returned
  *                 by parseDeclarations.
  */
-function parseCommentDeclarations(commentText, startOffset, endOffset) {
+function parseCommentDeclarations(isCssPropertyKnown, commentText, startOffset,
+                                  endOffset) {
   let commentOverride = false;
   if (commentText === "") {
     return [];
@@ -242,8 +221,8 @@ function parseCommentDeclarations(commentText, startOffset, endOffset) {
   // seem worthwhile to support declarations in comments-in-comments
   // here, as there's no way to generate those using the tools, and
   // users would be crazy to write such things.
-  let newDecls = parseDeclarationsInternal(rewrittenText, false,
-                                           true, commentOverride);
+  let newDecls = parseDeclarationsInternal(isCssPropertyKnown, rewrittenText,
+                                           false, true, commentOverride);
   for (let decl of newDecls) {
     decl.offsets[0] = rewrites[decl.offsets[0]];
     decl.offsets[1] = rewrites[decl.offsets[1]];
@@ -276,6 +255,8 @@ function getEmptyDeclaration() {
  * The return value and arguments are like parseDeclarations, with
  * these additional arguments.
  *
+ * @param {Function} isCssPropertyKnown
+ *        Function to check if the CSS property is known.
  * @param {Boolean} inComment
  *        If true, assume that this call is parsing some text
  *        which came from a comment in another declaration.
@@ -287,8 +268,8 @@ function getEmptyDeclaration() {
  *        rewriteDeclarations, and skip the usual name-checking
  *        heuristic.
  */
-function parseDeclarationsInternal(inputString, parseComments,
-                                   inComment, commentOverride) {
+function parseDeclarationsInternal(isCssPropertyKnown, inputString,
+                                   parseComments, inComment, commentOverride) {
   if (inputString === null || inputString === undefined) {
     throw new Error("empty input string");
   }
@@ -335,7 +316,7 @@ function parseDeclarationsInternal(inputString, parseComments,
         // When parsing a comment body, if the left-hand-side is not a
         // valid property name, then drop it and stop parsing.
         if (inComment && !commentOverride &&
-            !shouldParsePropertyInComment(lastProp.name)) {
+            !isCssPropertyKnown(lastProp.name)) {
           lastProp.name = null;
           break;
         }
@@ -378,7 +359,8 @@ function parseDeclarationsInternal(inputString, parseComments,
       if (parseComments && !lastProp.name && !lastProp.value) {
         let commentText = inputString.substring(token.startOffset + 2,
                                                 token.endOffset - 2);
-        let newDecls = parseCommentDeclarations(commentText, token.startOffset,
+        let newDecls = parseCommentDeclarations(isCssPropertyKnown, commentText,
+                                                token.startOffset,
                                                 token.endOffset);
 
         // Insert the new declarations just before the final element.
@@ -420,13 +402,18 @@ function parseDeclarationsInternal(inputString, parseComments,
 
 /**
  * Returns an array of CSS declarations given a string.
- * For example, parseDeclarations("width: 1px; height: 1px") would return
+ * For example, parseDeclarations(isCssPropertyKnown, "width: 1px; height: 1px")
+ * would return:
  * [{name:"width", value: "1px"}, {name: "height", "value": "1px"}]
  *
  * The input string is assumed to only contain declarations so { and }
  * characters will be treated as part of either the property or value,
  * depending where it's found.
  *
+ * @param {Function} isCssPropertyKnown
+ *        A function to check if the CSS property is known. This is either an
+ *        internal server function or from the CssPropertiesFront.
+ *        that are supported by the server.
  * @param {String} inputString
  *        An input string of CSS
  * @param {Boolean} parseComments
@@ -450,8 +437,10 @@ function parseDeclarationsInternal(inputString, parseComments,
  *         on the object, which will hold the offsets of the start
  *         and end of the enclosing comment.
  */
-function parseDeclarations(inputString, parseComments = false) {
-  return parseDeclarationsInternal(inputString, parseComments, false, false);
+function parseDeclarations(isCssPropertyKnown, inputString,
+                           parseComments = false) {
+  return parseDeclarationsInternal(isCssPropertyKnown, inputString,
+                                   parseComments, false, false);
 }
 
 /**
@@ -464,7 +453,8 @@ function parseDeclarations(inputString, parseComments = false) {
  *
  * An example showing how to disable the 3rd property in a rule:
  *
- *    let rewriter = new RuleRewriter(ruleActor, ruleActor.authoredText);
+ *    let rewriter = new RuleRewriter(isCssPropertyKnown, ruleActor,
+ *                                    ruleActor.authoredText);
  *    rewriter.setPropertyEnabled(3, "color", false);
  *    rewriter.apply().then(() => { ... the change is made ... });
  *
@@ -478,13 +468,20 @@ function parseDeclarations(inputString, parseComments = false) {
  * on this object.  This property has the same form as the |changed|
  * property of the object returned by |getResult|.
  *
+ * @param {Function} isCssPropertyKnown
+ *        A function to check if the CSS property is known. This is either an
+ *        internal server function or from the CssPropertiesFront.
+ *        that are supported by the server. Note that if Bug 1222047
+ *        is completed then isCssPropertyKnown will not need to be passed in.
+ *        The CssProperty front will be able to obtained directly from the
+ *        RuleRewriter.
  * @param {StyleRuleFront} rule The style rule to use.  Note that this
  *        is only needed by the |apply| and |getDefaultIndentation| methods;
  *        and in particular for testing it can be |null|.
  * @param {String} inputString The CSS source text to parse and modify.
  * @return {Object} an object that can be used to rewrite the input text.
  */
-function RuleRewriter(rule, inputString) {
+function RuleRewriter(isCssPropertyKnown, rule, inputString) {
   this.rule = rule;
   this.inputString = inputString;
   // Whether there are any newlines in the input text.
@@ -493,7 +490,8 @@ function RuleRewriter(rule, inputString) {
   // performing the requested action.
   this.changedDeclarations = {};
   // The declarations.
-  this.declarations = parseDeclarations(this.inputString, true);
+  this.declarations = parseDeclarations(isCssPropertyKnown, this.inputString,
+                                        true);
 
   this.decl = null;
   this.result = null;
@@ -1082,12 +1080,17 @@ function parsePseudoClassesAndAttributes(value) {
  * Expects a single CSS value to be passed as the input and parses the value
  * and priority.
  *
+ * @param {Function} isCssPropertyKnown
+ *        A function to check if the CSS property is known. This is either an
+ *        internal server function or from the CssPropertiesFront.
+ *        that are supported by the server.
  * @param {String} value
  *        The value from the text editor.
  * @return {Object} an object with 'value' and 'priority' properties.
  */
-function parseSingleValue(value) {
-  let declaration = parseDeclarations("a: " + value + ";")[0];
+function parseSingleValue(isCssPropertyKnown, value) {
+  let declaration = parseDeclarations(isCssPropertyKnown,
+                                      "a: " + value + ";")[0];
   return {
     value: declaration ? declaration.value : "",
     priority: declaration ? declaration.priority : ""
