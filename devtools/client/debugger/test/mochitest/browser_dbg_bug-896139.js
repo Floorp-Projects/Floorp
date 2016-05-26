@@ -24,16 +24,27 @@ function test() {
     let Sources = win.DebuggerView.Sources;
 
     // Load the debugger against a blank document and load the test url only
-    // here. That to allow catching SOURCE_SHOWN event for SCRIPT_URL.
-    // Here the load of TAB_URL is going to dispatch two SOURCE_SHOWN.
-    // One for the HTML page and another for the JS file which is dynamically
-    // inserted on load event.
-    let onSource = waitForSourceAndCaret(panel, SCRIPT_URL, 1);
+    // here and not via initDebugger. That, because this test load SCRIPT_URL
+    // dynamically, on load, and the debugger may be on TAB_URL or SCRIPT_URL
+    // depending on cpu speed. initDebugger expect to assert one precise
+    // source.
     yield navigateActiveTabTo(panel,
                               TAB_URL,
                               win.EVENTS.SOURCE_SHOWN);
-    yield onSource;
 
+    if (Sources.selectedItem.attachment.source.url.indexOf(SCRIPT_URL) === -1) {
+      // If there is only the html file, wait for the js file to be listed.
+      if (Sources.itemCount == 1) {
+        yield waitForDebuggerEvents(panel, win.EVENTS.NEW_SOURCE);
+        // Wait for it to be added to the UI
+        yield waitForTick();
+      }
+      // Select the js file.
+      let onSource = waitForSourceAndCaret(panel, SCRIPT_URL, 1);
+      Sources.selectedValue = getSourceActor(win.DebuggerView.Sources,
+                                             EXAMPLE_URL + SCRIPT_URL);
+      yield onSource;
+    }
 
     yield panel.addBreakpoint({
       actor: getSourceActor(win.DebuggerView.Sources, EXAMPLE_URL + SCRIPT_URL),
