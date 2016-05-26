@@ -45,11 +45,8 @@ if test "$COMPILE_ENVIRONMENT"; then
 MOZ_ENABLE_SZIP=1
 fi
 
-# Enable second screen using native Android libraries, provided we're
-# not resource constrained.
-if test -z "$MOZ_ANDROID_RESOURCE_CONSTRAINED"; then
-  MOZ_NATIVE_DEVICES=1
-fi
+# Enable second screen using native Android libraries.
+MOZ_NATIVE_DEVICES=1
 
 # Enable install tracking SDK if we have Google Play support; MOZ_NATIVE_DEVICES
 # is a proxy flag for that support.
