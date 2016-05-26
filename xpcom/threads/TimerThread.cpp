@@ -188,6 +188,10 @@ public:
   }
 
 private:
+  nsTimerEvent(const nsTimerEvent&) = delete;
+  nsTimerEvent& operator=(const nsTimerEvent&) = delete;
+  nsTimerEvent& operator=(const nsTimerEvent&&) = delete;
+
   ~nsTimerEvent()
   {
     MOZ_COUNT_DTOR(nsTimerEvent);
