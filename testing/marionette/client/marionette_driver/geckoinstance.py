@@ -205,7 +205,6 @@ class DesktopInstance(GeckoInstance):
         'browser.tabs.warnOnClose': False,
         'browser.tabs.warnOnOpen': False,
         'browser.uitour.enabled': False,
-        'dom.report_all_js_exceptions': True,
         'extensions.getAddons.cache.enabled': False,
         'extensions.installDistroAddons': False,
         'extensions.showMismatchUI': False,

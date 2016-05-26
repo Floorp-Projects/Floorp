@@ -266,7 +266,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[noscript, uuid(f339ea52-10ce-4103-b1f2-fd9659040e3c)]
+[noscript, uuid(768507b5-b981-40c7-8276-f6a1da502a24)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -498,14 +498,6 @@ interface nsIXPConnect : nsISupports
                                          in JSContextPtr cx,
                                          in JSObjectPtr sandbox,
                                          in int32_t version);
-
-    /**
-     * Whether or not XPConnect should report all JS exceptions when returning
-     * from JS into C++. False by default, although any value set in the
-     * MOZ_REPORT_ALL_JS_EXCEPTIONS environment variable will override the value
-     * passed here.
-     */
-    void setReportAllJSExceptions(in boolean reportAllJSExceptions);
 
     /**
      * Trigger a JS garbage collection.
