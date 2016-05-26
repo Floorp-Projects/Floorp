@@ -72,7 +72,6 @@ template <typename Next>
 class DownscalingFilter final : public SurfaceFilter
 {
 public:
-  uint8_t* AdvanceRow() override { MOZ_CRASH(); return nullptr; }
   Maybe<SurfaceInvalidRect> TakeInvalidRect() override { return Nothing(); }
 
   template <typename... Rest>
@@ -83,6 +82,7 @@ public:
 
 protected:
   uint8_t* DoResetToFirstRow() override { MOZ_CRASH(); return nullptr; }
+  uint8_t* DoAdvanceRow() override { MOZ_CRASH(); return nullptr; }
 };
 
 #else
@@ -215,7 +215,19 @@ public:
     return invalidRect;
   }
 
-  uint8_t* AdvanceRow() override
+protected:
+  uint8_t* DoResetToFirstRow() override
+  {
+    mNext.ResetToFirstRow();
+
+    mInputRow = 0;
+    mOutputRow = 0;
+    mRowsInWindow = 0;
+
+    return GetRowPointer();
+  }
+
+  uint8_t* DoAdvanceRow() override
   {
     if (mInputRow >= mInputSize.height) {
       NS_WARNING("Advancing DownscalingFilter past the end of the input");
@@ -258,18 +270,6 @@ public:
 
     return mInputRow < mInputSize.height ? GetRowPointer()
                                          : nullptr;
-  }
-
-protected:
-  uint8_t* DoResetToFirstRow() override
-  {
-    mNext.ResetToFirstRow();
-
-    mInputRow = 0;
-    mOutputRow = 0;
-    mRowsInWindow = 0;
-
-    return GetRowPointer();
   }
 
 private:
