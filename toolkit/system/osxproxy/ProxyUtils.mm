@@ -49,8 +49,9 @@ MaskIPv4Addr(PRUint32 aAddr, uint16_t aMaskLen)
 static void
 MaskIPv6Addr(PRIPv6Addr& aAddr, uint16_t aMaskLen)
 {
-  if (aMaskLen == 128)
+  if (aMaskLen == 128) {
     return;
+  }
 
   if (aMaskLen > 96) {
     aAddr.pr_s6_addr32[3] = PR_htonl(
@@ -144,15 +145,23 @@ IsMatchWildcard(const nsACString& aHost, const nsACString& aOverride)
       tokenStart++;
       // If the character following the '*' is a '.' character then skip
       // it so that "*.foo.com" allows "foo.com".
-      if (override.FindChar('.', tokenStart) == tokenStart)
-        tokenStart++;
+      if (override.FindChar('.', tokenStart) == tokenStart) {
+        nsAutoCString token(Substring(override,
+                                      tokenStart + 1,
+                                      overrideLength - tokenStart - 1));
+        if (host.Equals(token)) {
+          return true;
+        }
+      }
     } else {
-      if (tokenEnd == -1)
+      if (tokenEnd == -1) {
         tokenEnd = overrideLength; // no '*' char, match rest of string
+      }
       nsAutoCString token(Substring(override, tokenStart, tokenEnd - tokenStart));
       offset = host.Find(token, offset);
-      if (offset == -1 || (!star && offset))
+      if (offset == -1 || (!star && offset)) {
         return false;
+      }
       star = false;
       tokenStart = tokenEnd;
       offset += token.Length();
