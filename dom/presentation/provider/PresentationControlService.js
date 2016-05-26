@@ -166,10 +166,30 @@ PresentationControlService.prototype = {
   onSessionRequest: function(aDeviceInfo, aUrl, aPresentationId, aControlChannel) {
     DEBUG && log("PresentationControlService - onSessionRequest: " +
                  aDeviceInfo.address + ":" + aDeviceInfo.port); // jshint ignore:line
+    if (!this.listener) {
+      this.releaseControlChannel(aControlChannel);
+      return;
+    }
+
     this.listener.onSessionRequest(aDeviceInfo,
                                    aUrl,
                                    aPresentationId,
                                    aControlChannel);
+    this.releaseControlChannel(aControlChannel);
+  },
+
+  onSessionTerminate: function(aDeviceInfo, aPresentationId, aControlChannel, aIsFromReceiver) {
+    DEBUG && log("TCPPresentationServer - onSessionTerminate: " +
+                 aDeviceInfo.address + ":" + aDeviceInfo.port); // jshint ignore:line
+    if (!this.listener) {
+      this.releaseControlChannel(aControlChannel);
+      return;
+    }
+
+    this.listener.onTerminateRequest(aDeviceInfo,
+                                     aPresentationId,
+                                     aControlChannel,
+                                     aIsFromReceiver);
     this.releaseControlChannel(aControlChannel);
   },
 
@@ -388,6 +408,16 @@ TCPControlChannel.prototype = {
 
   launch: function(aPresentationId, aUrl) {
     this._stateMachine.launch(aPresentationId, aUrl);
+  },
+
+  terminate: function(aPresentationId) {
+    if (!this._terminatingId) {
+      this._terminatingId = aPresentationId;
+      this._stateMachine.terminate(aPresentationId);
+    } else {
+      this._stateMachine.terminateAck(aPresentationId);
+      delete this._terminatingId;
+    }
   },
 
   // may throw an exception
@@ -648,6 +678,26 @@ TCPControlChannel.prototype = {
                                                    this);
       break;
     }
+  },
+
+  notifyTerminate: function(presentationId) {
+    if (!this._terminatingId) {
+      this._terminatingId = presentationId;
+      this._presentationService.onSessionTerminate(this._deviceInfo,
+                                                  presentationId,
+                                                  this,
+                                                  this._direction === "sender");
+      return;
+    }
+
+    if (this._terminatingId !== presentationId) {
+      // Requested presentation Id doesn't matched with the one in ACK.
+      // Disconnect the control channel with error.
+      DEBUG && log("TCPControlChannel - unmatched terminatingId: " + presentationId); // jshint ignore:line
+      this.disconnect(Cr.NS_ERROR_FAILURE);
+    }
+
+    delete this._terminatingId;
   },
 
   notifyOffer: function(offer) {

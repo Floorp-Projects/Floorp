@@ -50,6 +50,12 @@ var handlers = [
       case CommandType.LAUNCH_ACK:
         stateMachine._notifyLaunch(command.presentationId);
         break;
+      case CommandType.TERMINATE:
+        stateMachine._notifyTerminate(command.presentationId);
+        break;
+      case CommandType.TERMINATE_ACK:
+        stateMachine._notifyTerminate(command.presentationId);
+        break;
       case CommandType.ANSWER:
       case CommandType.ICE_CANDIDATE:
         stateMachine._notifyChannelDescriptor(command);
@@ -83,6 +89,24 @@ ControllerStateMachine.prototype = {
         type: CommandType.LAUNCH,
         presentationId: presentationId,
         url: url,
+      });
+    }
+  },
+
+  terminate: function _terminate(presentationId) {
+    if (this.state === State.CONNECTED) {
+      this._sendCommand({
+        type: CommandType.TERMINATE,
+        presentationId: presentationId,
+      });
+    }
+  },
+
+  terminateAck: function _terminateAck(presentationId) {
+    if (this.state === State.CONNECTED) {
+      this._sendCommand({
+        type: CommandType.TERMINATE_ACK,
+        presentationId: presentationId,
       });
     }
   },
@@ -170,6 +194,10 @@ ControllerStateMachine.prototype = {
 
   _notifyLaunch: function _notifyLaunch(presentationId) {
     this._channel.notifyLaunch(presentationId);
+  },
+
+  _notifyTerminate: function _notifyTerminate(presentationId) {
+    this._channel.notifyTerminate(presentationId);
   },
 
   _notifyChannelDescriptor: function _notifyChannelDescriptor(command) {

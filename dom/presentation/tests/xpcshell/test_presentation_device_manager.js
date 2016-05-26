@@ -23,6 +23,7 @@ TestPresentationControlChannel.prototype = {
   sendAnswer: function(answer) {},
   disconnect: function() {},
   launch: function() {},
+  terminate: function() {},
   set listener(listener) {},
   get listener() {},
 };
@@ -139,6 +140,27 @@ function sessionRequest() {
          .onSessionRequest(testDevice, testUrl, testPresentationId, testControlChannel);
 }
 
+function terminateRequest() {
+  let testUrl = 'http://www.example.org/';
+  let testPresentationId = 'test-presentation-id';
+  let testControlChannel = new TestPresentationControlChannel();
+  let testIsFromReceiver = true;
+  Services.obs.addObserver(function observer(subject, topic, data) {
+    Services.obs.removeObserver(observer, topic);
+
+    let request = subject.QueryInterface(Ci.nsIPresentationTerminateRequest);
+
+    Assert.equal(request.device.id, testDevice.id, 'expected device');
+    Assert.equal(request.presentationId, testPresentationId, 'expected presentation Id');
+    Assert.equal(request.isFromReceiver, testIsFromReceiver, 'expected isFromReceiver');
+
+    run_next_test();
+  }, 'presentation-terminate-request', false);
+  manager.QueryInterface(Ci.nsIPresentationDeviceListener)
+         .onTerminateRequest(testDevice, testPresentationId,
+                             testControlChannel, testIsFromReceiver);
+}
+
 function removeDevice() {
   Services.obs.addObserver(function observer(subject, topic, data) {
     Services.obs.removeObserver(observer, topic);
@@ -176,6 +198,7 @@ add_test(forceDiscovery);
 add_test(addDevice);
 add_test(updateDevice);
 add_test(sessionRequest);
+add_test(terminateRequest);
 add_test(removeDevice);
 add_test(removeProvider);
 
