@@ -906,6 +906,11 @@ public:
   bool IsPaintingSuppressed() const { return mPaintingSuppressed; }
 
   /**
+   * Update the painting suppression status and do unsuppress painting if needs.
+   */
+  virtual void CheckIfTimeToUnsuppressPainting() = 0;
+
+  /**
    * Pause painting by freezing the refresh driver of this and all parent
    * presentations. This may not have the desired effect if this pres shell
    * has its own refresh driver.
