@@ -857,26 +857,12 @@ MarkupView.prototype = {
       this.undo.do(() => {
         this.walker.removeNode(node).then(siblings => {
           nextSibling = siblings.nextSibling;
-          let prevSibling = siblings.previousSibling;
-          let focusNode = moveBackward ? prevSibling : nextSibling;
+          let focusNode = moveBackward ? siblings.previousSibling : nextSibling;
 
           // If we can't move as the user wants, we move to the other direction.
           // If there is no sibling elements anymore, move to the parent node.
           if (!focusNode) {
-            focusNode = nextSibling || prevSibling || parent;
-          }
-
-          let isNextSiblingText = nextSibling ?
-            nextSibling.nodeType === Ci.nsIDOMNode.TEXT_NODE : false;
-          let isPrevSiblingText = prevSibling ?
-            prevSibling.nodeType === Ci.nsIDOMNode.TEXT_NODE : false;
-
-          // If the parent had two children and the next or previous sibling
-          // is a text node, then it now has only a single text node, is about
-          // to be in-lined; and focus should move to the parent.
-          if (parent.numChildren === 2
-              && (isNextSiblingText || isPrevSiblingText)) {
-            focusNode = parent;
+            focusNode = nextSibling || siblings.previousSibling || parent;
           }
 
           if (container.selected) {
