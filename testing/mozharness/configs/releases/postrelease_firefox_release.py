@@ -7,7 +7,7 @@ config = {
     ],
     "repo": {
         "repo": "https://hg.mozilla.org/releases/mozilla-release",
-        "revision": "default",
+        "branch": "default",
         "dest": "mozilla-release",
         "vcs": "hg",
     },
