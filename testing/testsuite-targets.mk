@@ -300,8 +300,10 @@ stage-jetpack: make-stage-dir
 CPP_UNIT_TEST_BINS=$(wildcard $(DIST)/cppunittests/*)
 
 ifdef OBJCOPY
+ifneq ($(OBJCOPY), :) # see build/autoconf/toolchain.m4:102 for why this is necessary
 ifndef PKG_SKIP_STRIP
 STRIP_CPP_TESTS := 1
+endif
 endif
 endif
 
