@@ -179,6 +179,7 @@ private:
   void Error(TrackType aTrack);
   void Reset(TrackType aTrack);
   void DrainComplete(TrackType aTrack);
+  void DropDecodedSamples(TrackType aTrack);
 
   bool ShouldSkip(bool aSkipToNextKeyframe, media::TimeUnit aTimeThreshold);
 
