@@ -77,7 +77,7 @@ using safe_browsing::ClientDownloadRequest_SignatureInfo;
 #define PREF_BLOCK_POTENTIALLY_UNWANTED "browser.safebrowsing.downloads.remote.block_potentially_unwanted"
 #define PREF_BLOCK_UNCOMMON             "browser.safebrowsing.downloads.remote.block_uncommon"
 
-// NSPR_LOG_MODULES=ApplicationReputation:5
+// MOZ_LOG=ApplicationReputation:5
 mozilla::LazyLogModule ApplicationReputationService::prlog("ApplicationReputation");
 #define LOG(args) MOZ_LOG(ApplicationReputationService::prlog, mozilla::LogLevel::Debug, args)
 #define LOG_ENABLED() MOZ_LOG_TEST(ApplicationReputationService::prlog, mozilla::LogLevel::Debug)
