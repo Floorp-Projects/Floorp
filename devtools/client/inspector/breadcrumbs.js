@@ -584,22 +584,6 @@ HTMLBreadcrumbs.prototype = {
       return;
     }
 
-    // If this was an interesting deletion; then trim the breadcrumb trail
-    if (reason === "markupmutation") {
-      for (let {type, removed} of mutations) {
-        if (type !== "childList") {
-          continue;
-        }
-
-        for (let node of removed) {
-          let removedIndex = this.indexOf(node);
-          if (removedIndex > -1) {
-            this.cutAfter(removedIndex - 1);
-          }
-        }
-      }
-    }
-
     if (!this.selection.isElementNode()) {
       // no selection
       this.setCursor(-1);
