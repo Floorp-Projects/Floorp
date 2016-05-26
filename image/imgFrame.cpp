@@ -974,20 +974,6 @@ imgFrame::GetAnimationData() const
                        mBlendMethod, mDisposalMethod, hasAlpha);
 }
 
-ScalingData
-imgFrame::GetScalingData() const
-{
-  MonitorAutoLock lock(mMonitor);
-  MOZ_ASSERT(mLockCount > 0, "Image data should be locked");
-  MOZ_ASSERT(!GetIsPaletted(), "GetScalingData can't handle paletted images");
-
-  uint8_t* data;
-  uint32_t length;
-  GetImageDataInternal(&data, &length);
-
-  return ScalingData(data, mSize, GetImageBytesPerRow(), mFormat);
-}
-
 void
 imgFrame::Abort()
 {
