@@ -3,6 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import sys
+import subprocess
 
 from mozboot.base import BaseBootstrapper
 
@@ -16,3 +18,22 @@ class WindowsBootstrapper(BaseBootstrapper):
         BaseBootstrapper.__init__(self, **kwargs)
         raise NotImplementedError('Bootstrap support is not yet available for Windows. '
                                   'For now, use MozillaBuild to set up a build environment on Windows.')
+
+    def run(self, command):
+        subprocess.check_call(command, stdin=sys.stdin)
+
+    def pacman_update(self):
+        command = ['pacman', '--sync', '--refresh']
+        self.run(command)
+
+    def pacman_upgrade(self):
+        command = ['pacman', '--sync', '--refresh', '--sysupgrade']
+        self.run(command)
+
+    def pacman_install(self, *packages):
+        command = ['pacman', '--sync', '--needed']
+        if self.no_interactive:
+            command.append('--noconfirm')
+
+        command.extend(packages)
+        self.run(command)
