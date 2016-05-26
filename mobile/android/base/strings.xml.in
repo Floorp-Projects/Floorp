@@ -457,6 +457,7 @@
   <string name="home_last_tabs_title">&home_last_tabs_title;</string>
   <string name="home_last_tabs_empty">&home_last_tabs_empty;</string>
   <string name="home_open_all">&home_open_all;</string>
+  <string name="home_restore_all">&home_restore_all;</string>
   <string name="home_closed_tabs_number">&home_closed_tabs_number;</string>
   <string name="home_closed_tabs_one">&home_closed_tabs_one;</string>
   <string name="home_most_recent_empty">&home_most_recent_empty;</string>

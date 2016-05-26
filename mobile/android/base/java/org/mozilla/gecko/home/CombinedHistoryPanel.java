@@ -142,7 +142,8 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
         mRecentTabsEmptyView = view.findViewById(R.id.home_recent_tabs_empty_view);
         setUpEmptyViews();
 
-        mPanelFooterButton = (Button) view.findViewById(R.id.clear_history_button);
+        mPanelFooterButton = (Button) view.findViewById(R.id.history_panel_footer_button);
+        mPanelFooterButton.setText(R.string.home_clear_history_button);
         mPanelFooterButton.setOnClickListener(new OnFooterButtonClickListener());
 
         mRecentTabsAdapter.startListeningForClosedTabs();
@@ -368,11 +369,19 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
                 if (historyRestricted || mHistoryAdapter.getItemCount() == NUM_SMART_FOLDERS) {
                     mPanelFooterButton.setVisibility(View.GONE);
                 } else {
+                    mPanelFooterButton.setText(R.string.home_clear_history_button);
                     mPanelFooterButton.setVisibility(View.VISIBLE);
                 }
                 break;
-            case CHILD_SYNC:
             case CHILD_RECENT_TABS:
+                if (mRecentTabsAdapter.getClosedTabsCount() > 1) {
+                    mPanelFooterButton.setText(R.string.home_restore_all);
+                    mPanelFooterButton.setVisibility(View.VISIBLE);
+                } else {
+                    mPanelFooterButton.setVisibility(View.GONE);
+                }
+                break;
+            case CHILD_SYNC:
                 mPanelFooterButton.setVisibility(View.GONE);
                 break;
         }
@@ -381,35 +390,41 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
     private class OnFooterButtonClickListener implements View.OnClickListener {
         @Override
         public void onClick(View view) {
+            switch (mPanelLevel) {
+                case PARENT:
+                    final AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity());
+                    dialogBuilder.setMessage(R.string.home_clear_history_confirm);
+                    dialogBuilder.setNegativeButton(R.string.button_cancel, new AlertDialog.OnClickListener() {
+                        @Override
+                        public void onClick(final DialogInterface dialog, final int which) {
+                            dialog.dismiss();
+                        }
+                    });
 
-            final AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity());
-            dialogBuilder.setMessage(R.string.home_clear_history_confirm);
-            dialogBuilder.setNegativeButton(R.string.button_cancel, new AlertDialog.OnClickListener() {
-                @Override
-                public void onClick(final DialogInterface dialog, final int which) {
-                    dialog.dismiss();
-                }
-            });
+                    dialogBuilder.setPositiveButton(R.string.button_ok, new AlertDialog.OnClickListener() {
+                        @Override
+                        public void onClick(final DialogInterface dialog, final int which) {
+                            dialog.dismiss();
 
-            dialogBuilder.setPositiveButton(R.string.button_ok, new AlertDialog.OnClickListener() {
-                @Override
-                public void onClick(final DialogInterface dialog, final int which) {
-                    dialog.dismiss();
+                            // Send message to Java to clear history.
+                            final JSONObject json = new JSONObject();
+                            try {
+                                json.put("history", true);
+                            } catch (JSONException e) {
+                                Log.e(LOGTAG, "JSON error", e);
+                            }
 
-                    // Send message to Java to clear history.
-                    final JSONObject json = new JSONObject();
-                    try {
-                        json.put("history", true);
-                    } catch (JSONException e) {
-                        Log.e(LOGTAG, "JSON error", e);
-                    }
+                            GeckoAppShell.notifyObservers("Sanitize:ClearData", json.toString());
+                            Telemetry.sendUIEvent(TelemetryContract.Event.SANITIZE, TelemetryContract.Method.BUTTON, "history");
+                        }
+                    });
 
-                    GeckoAppShell.notifyObservers("Sanitize:ClearData", json.toString());
-                    Telemetry.sendUIEvent(TelemetryContract.Event.SANITIZE, TelemetryContract.Method.BUTTON, "history");
-                }
-            });
-
-            dialogBuilder.show();
+                    dialogBuilder.show();
+                    break;
+                case CHILD_RECENT_TABS:
+                    mRecentTabsAdapter.restoreAllTabs();
+                    break;
+            }
         }
     }
 

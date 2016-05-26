@@ -43,9 +43,8 @@
               android:layout_weight="3"
               android:visibility="gone"/>
 
-    <Button android:id="@+id/clear_history_button"
+    <Button android:id="@+id/history_panel_footer_button"
             style="@style/Widget.Home.ActionButton"
-            android:text="@string/home_clear_history_button"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:visibility="gone" />

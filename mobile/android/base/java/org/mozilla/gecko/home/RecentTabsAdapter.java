@@ -211,6 +211,24 @@ public class RecentTabsAdapter extends RecyclerView.Adapter<CombinedHistoryItem>
         restoreSessionWithHistory(dataList);
     }
 
+    public void restoreAllTabs() {
+        if (recentlyClosedTabs.length == 0 && lastSessionTabs.length == 0) {
+            return;
+        }
+
+        final List<String> dataList = new ArrayList<>(getClosedTabsCount());
+        addTabDataToList(dataList, recentlyClosedTabs);
+        addTabDataToList(dataList, lastSessionTabs);
+
+        restoreSessionWithHistory(dataList);
+    }
+
+    private void addTabDataToList(List<String> dataList, ClosedTab[] closedTabs) {
+        for (ClosedTab closedTab : closedTabs) {
+            dataList.add(closedTab.data);
+        }
+    }
+
     private static void restoreSessionWithHistory(List<String> dataList) {
         final JSONObject json = new JSONObject();
         try {
