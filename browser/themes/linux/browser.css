@@ -1987,3 +1987,7 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton:not(:h
   padding: 0;
   overflow: hidden;
 }
+
+.menuitem-iconic[command="Browser:NewUserContextTab"] > .menu-iconic-left > .menu-iconic-icon {
+  visibility: visible;
+}
