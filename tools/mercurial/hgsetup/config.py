@@ -153,43 +153,6 @@ class MercurialConfig(object):
         d['showfunc'] = 1
         d['unified'] = 8
 
-    def have_mqext_autocommit_mq(self):
-        if 'mqext' not in self._c:
-            return False
-        v = self._c['mqext'].get('mqcommit')
-        return v == 'auto' or v == 'yes'
-
-    def ensure_mqext_autocommit_mq(self):
-        if self.have_mqext_autocommit_mq():
-            return
-        if 'mqext' not in self._c:
-            self._c['mqext'] = {}
-        self._c['mqext']['mqcommit'] = 'auto'
-
-    def have_qnew_currentuser_default(self):
-        if 'defaults' not in self._c:
-            return False
-        d = self._c['defaults']
-        if 'qnew' not in d:
-            return False
-        argv = d['qnew'].split(' ')
-        for arg in argv:
-            if arg == '--currentuser' or re.match("-[^-]*U.*", arg):
-                return True
-        return False
-
-    def ensure_qnew_currentuser_default(self):
-        if self.have_qnew_currentuser_default():
-            return
-        if 'defaults' not in self._c:
-            self._c['defaults'] = {}
-
-        d = self._c['defaults']
-        if 'qnew' not in d:
-            d['qnew'] = '-U'
-        else:
-            d['qnew'] = '-U ' + d['qnew']
-
     def get_bugzilla_credentials(self):
         if 'bugzilla' not in self._c:
             return None, None, None, None, None

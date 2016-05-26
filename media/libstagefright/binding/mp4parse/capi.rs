@@ -118,7 +118,14 @@ pub unsafe extern "C" fn mp4parse_read(context: *mut MediaContext, buffer: *cons
     let mut c = Cursor::new(b);
 
     // Parse in a subthread to catch any panics.
-    let task = std::thread::spawn(move || read_mp4(&mut c, &mut context));
+    // We must use the thread::Builder API to avoid spawn itself
+    // panicking if thread creation fails. See bug 1266309.
+    let task = match std::thread::Builder::new()
+        .name("mp4parse_read isolation".to_string())
+        .spawn(move || read_mp4(&mut c, &mut context)) {
+            Ok(task) => task,
+            Err(_) => return MP4PARSE_ASSERT,
+    };
     // The task's JoinHandle will return an error result if the
     // thread panicked, and will wrap the closure's return'd
     // result in an Ok(..) otherwise, meaning we could see

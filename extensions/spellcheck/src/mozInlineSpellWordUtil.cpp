@@ -783,7 +783,7 @@ mozInlineSpellWordUtil::FindRealWordContaining(int32_t aSoftTextOffset,
   // point is the start of. I'm not 100% sure this is OK...
   const RealWord& word = mRealWords[index];
   int32_t offset = aSoftTextOffset - word.mSoftTextOffset;
-  if (offset >= 0 && offset <= word.mLength)
+  if (offset >= 0 && offset <= static_cast<int32_t>(word.mLength))
     return index;
 
   if (aSearchForward) {

@@ -122,9 +122,20 @@ public:
     bool shouldAppend = false;
     bool addTimestamp = false;
     bool isSync = false;
-    const char* modules = PR_GetEnv("MOZ_LOG_MODULES");
+    const char* modules = PR_GetEnv("MOZ_LOG");
+    if (!modules || !modules[0]) {
+      modules = PR_GetEnv("MOZ_LOG_MODULES");
+      if (modules) {
+        NS_WARNING("MOZ_LOG_MODULES is deprecated."
+            "\nPlease use MOZ_LOG instead.");
+      }
+    }
     if (!modules || !modules[0]) {
       modules = PR_GetEnv("NSPR_LOG_MODULES");
+      if (modules) {
+        NS_WARNING("NSPR_LOG_MODULES is deprecated."
+            "\nPlease use MOZ_LOG instead.");
+      }
     }
 
     NSPRLogModulesParser(modules,

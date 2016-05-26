@@ -412,6 +412,9 @@ class RefTest(object):
         self.killNamedOrphans('ssltunnel')
         self.killNamedOrphans('xpcshell')
 
+        if options.cleanupCrashes:
+            mozcrash.cleanup_pending_crash_reports()
+
         manifests = self.resolver.resolveManifests(options, tests)
         if options.filter:
             manifests[""] = options.filter

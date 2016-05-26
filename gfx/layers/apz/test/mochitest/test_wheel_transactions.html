@@ -41,11 +41,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1175585
 <pre id="test">
 <script type="application/javascript;version=1.7">
 
-function scrollWheelOver(element, deltaY) {
-  synthesizeNativeWheelAndWaitForScrollEvent(element, 10, 10, 0, deltaY, driveTest);
+function scrollWheelOver(element, deltaY, testDriver) {
+  synthesizeNativeWheelAndWaitForScrollEvent(element, 10, 10, 0, deltaY, testDriver);
 }
 
-function* runTest() {
+function* test(testDriver) {
   var outer = document.getElementById('outer-frame');
   var inner = document.getElementById('inner-frame');
   var innerContent = document.getElementById('inner-content');
@@ -58,7 +58,7 @@ function* runTest() {
 
   // Scroll |outer| to the bottom.
   while (outer.scrollTop < outer.scrollTopMax) {
-    yield scrollWheelOver(outer, -10);
+    yield scrollWheelOver(outer, -10, testDriver);
   }
 
   // Verify that this has brought |inner| under the wheel.
@@ -66,7 +66,7 @@ function* runTest() {
   window.removeEventListener("wheel", wheelTargetRecorder);
 
   // Immediately after, scroll it back up a bit.
-  yield scrollWheelOver(outer, 10);
+  yield scrollWheelOver(outer, 10, testDriver);
 
   // Check that it was |outer| that scrolled back, and |inner| didn't
   // scroll at all, as all the above scrolls should be in the same
@@ -78,21 +78,21 @@ function* runTest() {
   // Turn it down a bit so waiting for the timeout to elapse doesn't
   // slow down the test harness too much.
   var timeout = 5;
-  yield SpecialPowers.pushPrefEnv({"set": [["mousewheel.transaction.timeout", timeout]]}, driveTest);
+  yield SpecialPowers.pushPrefEnv({"set": [["mousewheel.transaction.timeout", timeout]]}, testDriver);
   SimpleTest.requestFlakyTimeout("we are testing code that measures actual elapsed time between two events");
 
   // Scroll up a bit more. It's still |outer| scrolling because
   // |inner| is still scrolled all the way to the top.
-  yield scrollWheelOver(outer, 10);
+  yield scrollWheelOver(outer, 10, testDriver);
 
   // Wait for the transaction timeout to elapse.
   // timeout * 5 is used to make it less likely that the timeout is less than
   // the system timestamp resolution
-  yield window.setTimeout(driveTest, timeout * 5);
+  yield window.setTimeout(testDriver, timeout * 5);
 
   // Now scroll down. The transaction having timed out, the event
   // should pick up a new target, and that should be |inner|.
-  yield scrollWheelOver(outer, -10);
+  yield scrollWheelOver(outer, -10, testDriver);
   ok(inner.scrollTop > 0, "'inner' should have been scrolled");
 
   // Finally, test scroll handoff after a timeout.
@@ -100,7 +100,7 @@ function* runTest() {
   // Continue scrolling |inner| down to the bottom.
   var prevScrollTop = inner.scrollTop;
   while (inner.scrollTop < inner.scrollTopMax) {
-    yield scrollWheelOver(outer, -10);
+    yield scrollWheelOver(outer, -10, testDriver);
     // Avoid a failure getting us into an infinite loop.
     ok(inner.scrollTop > prevScrollTop, "scrolling down should increase scrollTop");
     prevScrollTop = inner.scrollTop;
@@ -109,43 +109,26 @@ function* runTest() {
   // Wait for the transaction timeout to elapse.
   // timeout * 5 is used to make it less likely that the timeout is less than
   // the system timestamp resolution
-  yield window.setTimeout(driveTest, timeout * 5);
+  yield window.setTimeout(testDriver, timeout * 5);
 
   // Continued downward scrolling should scroll |outer| to the bottom.
   prevScrollTop = outer.scrollTop;
   while (outer.scrollTop < outer.scrollTopMax) {
-    yield scrollWheelOver(outer, -10);
+    yield scrollWheelOver(outer, -10, testDriver);
     // Avoid a failure getting us into an infinite loop.
     ok(outer.scrollTop > prevScrollTop, "scrolling down should increase scrollTop");
     prevScrollTop = outer.scrollTop;
   }
 }
 
-var gTestContinuation = null;
-function driveTest() {
-  if (!gTestContinuation) {
-    gTestContinuation = runTest();
-  }
-  var ret = gTestContinuation.next();
-  if (ret.done) {
-    SimpleTest.finish();
-  }
-}
-
-function startTest() {
-  waitForAllPaints(function() {
-    flushApzRepaints(driveTest);
-  });
-}
+SimpleTest.waitForExplicitFinish();
 
 // Disable smooth scrolling because it makes the test flaky (we don't have a good
 // way of detecting when the scrolling is finished).
-SpecialPowers.pushPrefEnv({"set": [["general.smoothScroll", false]]},
-                          function() {
-                            SimpleTest.waitForFocus(startTest, window);
-                          });
-
-SimpleTest.waitForExplicitFinish();
+pushPrefs([["general.smoothScroll", false]])
+.then(waitUntilApzStable)
+.then(runContinuation(test))
+.then(SimpleTest.finish);
 
 </script>
 </pre>

@@ -189,8 +189,8 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
         w = window.open('', "_blank");
         w.subtestDone = advanceSubtestExecution;
         w.SimpleTest = SimpleTest;
-        w.is = is;
-        w.ok = ok;
+        w.is = function(a, b, msg) { return is(a, b, aFile + " | " + msg); };
+        w.ok = function(cond, name, diag) { return ok(cond, aFile + " | " + name, diag); };
         w.location = location.href.substring(0, location.href.lastIndexOf('/') + 1) + aFile;
         return w;
       }
@@ -207,4 +207,63 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
 
     advanceSubtestExecution();
   });
+}
+
+function pushPrefs(prefs) {
+  return SpecialPowers.pushPrefEnv({'set': prefs});
+}
+
+function waitUntilApzStable() {
+  return new Promise(function(resolve, reject) {
+    SimpleTest.waitForFocus(function() {
+      waitForAllPaints(function() {
+        flushApzRepaints(resolve);
+      });
+    }, window);
+  });
+}
+
+function isApzEnabled() {
+  var enabled = SpecialPowers.getDOMWindowUtils(window).asyncPanZoomEnabled;
+  if (!enabled) {
+    // All tests are required to have at least one assertion. Since APZ is
+    // disabled, and the main test is presumably not going to run, we stick in
+    // a dummy assertion here to keep the test passing.
+    SimpleTest.ok(true, "APZ is not enabled; this test will be skipped");
+  }
+  return enabled;
+}
+
+// Despite what this function name says, this does not *directly* run the
+// provided continuation testFunction. Instead, it returns a function that
+// can be used to run the continuation. The extra level of indirection allows
+// it to be more easily added to a promise chain, like so:
+//   waitUntilApzStable().then(runContinuation(myTest));
+//
+// If you want to run the continuation directly, outside of a promise chain,
+// you can invoke the return value of this function, like so:
+//   runContinuation(myTest)();
+function runContinuation(testFunction) {
+  // We need to wrap this in an extra function, so that the call site can
+  // be more readable without running the promise too early. In other words,
+  // if we didn't have this extra function, the promise would start running
+  // during construction of the promise chain, concurrently with the first
+  // promise in the chain.
+  return function() {
+    return new Promise(function(resolve, reject) {
+      var testContinuation = null;
+
+      function driveTest() {
+        if (!testContinuation) {
+          testContinuation = testFunction(driveTest);
+        }
+        var ret = testContinuation.next();
+        if (ret.done) {
+          resolve();
+        }
+      }
+
+      driveTest();
+    });
+  };
 }

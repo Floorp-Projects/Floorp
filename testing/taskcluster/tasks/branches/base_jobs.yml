@@ -27,6 +27,7 @@ builds:
       - sm-plain
       - sm-nonunified
       - sm-arm-sim
+      - sm-arm64-sim
       - sm-compacting
       - sm-rootanalysis
       - sm-package
