@@ -8,6 +8,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/unused.h"
 
@@ -34,6 +35,9 @@
 //   nsStringBuffer. |gAtomTable| effectively owns StaticAtoms, because such
 //   atoms ignore all AddRef/Release calls, which ensures they stay alive until
 //   |gAtomTable| itself is destroyed whereupon they are explicitly deleted.
+//
+//   Note that gAtomTable is used on multiple threads, and callers must
+//   acquire gAtomTableLock before touching it.
 
 using namespace mozilla;
 
@@ -259,11 +263,10 @@ DynamicAtom::TransmuteToStatic(nsStringBuffer* aStringBuffer)
 /**
  * The shared hash table for atom lookups.
  *
- * XXX This should be manipulated in a threadsafe way or we should make
- * sure it's only manipulated from the main thread.  Probably the latter
- * is better, since the former would hurt performance.
+ * Callers must hold gAtomTableLock before manipulating the table.
  */
 static PLDHashTable* gAtomTable;
+static Mutex* gAtomTableLock;
 
 struct AtomTableKey
 {
@@ -387,6 +390,7 @@ static const PLDHashTableOps AtomTableOps = {
 DynamicAtom::~DynamicAtom()
 {
   MOZ_ASSERT(gAtomTable, "uninitialized atom hashtable");
+  MutexAutoLock lock(*gAtomTableLock);
 
   // DynamicAtoms must be removed from gAtomTable when their refcount reaches
   // zero and they are released.
@@ -461,6 +465,7 @@ NS_InitAtomTable()
   MOZ_ASSERT(!gAtomTable);
   gAtomTable = new PLDHashTable(&AtomTableOps, sizeof(AtomTableEntry),
                                 ATOM_HASHTABLE_INITIAL_LENGTH);
+  gAtomTableLock = new Mutex("Atom Table Lock");
 }
 
 void
@@ -474,12 +479,15 @@ NS_ShutdownAtomTable()
   // to be fixed up.
   delete gAtomTable;
   gAtomTable = nullptr;
+  delete gAtomTableLock;
+  gAtomTableLock = nullptr;
 }
 
 void
 NS_SizeOfAtomTablesIncludingThis(MallocSizeOf aMallocSizeOf,
                                  size_t* aMain, size_t* aStatic)
 {
+  MutexAutoLock lock(*gAtomTableLock);
   *aMain = gAtomTable->ShallowSizeOfIncludingThis(aMallocSizeOf);
   for (auto iter = gAtomTable->Iter(); !iter.Done(); iter.Next()) {
     auto entry = static_cast<AtomTableEntry*>(iter.Get());
@@ -496,7 +504,7 @@ NS_SizeOfAtomTablesIncludingThis(MallocSizeOf aMallocSizeOf,
 static inline AtomTableEntry*
 GetAtomHashEntry(const char* aString, uint32_t aLength, uint32_t* aHashOut)
 {
-  MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
+  gAtomTableLock->AssertCurrentThreadOwns();
   AtomTableKey key(aString, aLength, aHashOut);
   // This is an infallible add.
   return static_cast<AtomTableEntry*>(gAtomTable->Add(&key));
@@ -505,7 +513,7 @@ GetAtomHashEntry(const char* aString, uint32_t aLength, uint32_t* aHashOut)
 static inline AtomTableEntry*
 GetAtomHashEntry(const char16_t* aString, uint32_t aLength, uint32_t* aHashOut)
 {
-  MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
+  gAtomTableLock->AssertCurrentThreadOwns();
   AtomTableKey key(aString, aLength, aHashOut);
   // This is an infallible add.
   return static_cast<AtomTableEntry*>(gAtomTable->Add(&key));
@@ -514,6 +522,7 @@ GetAtomHashEntry(const char16_t* aString, uint32_t aLength, uint32_t* aHashOut)
 void
 RegisterStaticAtoms(const nsStaticAtom* aAtoms, uint32_t aAtomCount)
 {
+  MutexAutoLock lock(*gAtomTableLock);
   if (!gStaticAtomTable && !gStaticAtomTableSealed) {
     gStaticAtomTable = new StaticAtomTable();
   }
@@ -563,6 +572,7 @@ NS_Atomize(const char* aUTF8String)
 already_AddRefed<nsIAtom>
 NS_Atomize(const nsACString& aUTF8String)
 {
+  MutexAutoLock lock(*gAtomTableLock);
   uint32_t hash;
   AtomTableEntry* he = GetAtomHashEntry(aUTF8String.Data(),
                                         aUTF8String.Length(),
@@ -595,6 +605,7 @@ NS_Atomize(const char16_t* aUTF16String)
 already_AddRefed<nsIAtom>
 NS_Atomize(const nsAString& aUTF16String)
 {
+  MutexAutoLock lock(*gAtomTableLock);
   uint32_t hash;
   AtomTableEntry* he = GetAtomHashEntry(aUTF16String.Data(),
                                         aUTF16String.Length(),
@@ -615,7 +626,7 @@ NS_Atomize(const nsAString& aUTF16String)
 nsrefcnt
 NS_GetNumberOfAtoms(void)
 {
-  MOZ_ASSERT(gAtomTable);
+  MutexAutoLock lock(*gAtomTableLock);
   return gAtomTable->EntryCount();
 }
 
