@@ -412,6 +412,8 @@ public:
         return mPermRedirectVisitBonus;
       case nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY:
         return mTempRedirectVisitBonus;
+      case nsINavHistoryService::TRANSITION_RELOAD:
+        return mReloadVisitBonus;
       default:
         // 0 == undefined (see bug #375777 for details)
         NS_WARN_IF_FALSE(!aTransitionType, "new transition but no bonus for frecency");
@@ -484,9 +486,6 @@ protected:
    * Decays frecency and inputhistory values.  Runs on idle-daily.
    */
   nsresult DecayFrecency();
-
-  nsresult CalculateFrecency(int64_t aPageID, int32_t aTyped, int32_t aVisitCount, nsAutoCString &aURL, int32_t *aFrecency);
-  nsresult CalculateFrecencyInternal(int64_t aPageID, int32_t aTyped, int32_t aVisitCount, bool aIsBookmarked, int32_t *aFrecency);
 
   nsresult RemovePagesInternal(const nsCString& aPlaceIdsQueryString);
   nsresult CleanupPlacesOnVisitsDelete(const nsCString& aPlaceIdsQueryString);
@@ -610,6 +609,7 @@ protected:
   int32_t mDefaultVisitBonus;
   int32_t mUnvisitedBookmarkBonus;
   int32_t mUnvisitedTypedBonus;
+  int32_t mReloadVisitBonus;
 
   // in nsNavHistoryQuery.cpp
   nsresult TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,

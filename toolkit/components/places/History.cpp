@@ -1210,8 +1210,8 @@ private:
                                _place.visitTime);
     NS_ENSURE_SUCCESS(rv, rv);
     uint32_t transitionType = _place.transitionType;
-    NS_ASSERTION(transitionType >= nsINavHistoryService::TRANSITION_LINK &&
-                 transitionType <= nsINavHistoryService::TRANSITION_FRAMED_LINK,
+    MOZ_ASSERT(transitionType >= nsINavHistoryService::TRANSITION_LINK &&
+               transitionType <= nsINavHistoryService::TRANSITION_RELOAD,
                  "Invalid transition type!");
     rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("visit_type"),
                                transitionType);
@@ -1970,7 +1970,7 @@ History::History()
   : mShuttingDown(false)
   , mShutdownMutex("History::mShutdownMutex")
   , mObservers(VISIT_OBSERVERS_INITIAL_CACHE_LENGTH)
-  , mRecentlyVisitedURIsNextIndex(0)
+  , mRecentlyVisitedURIs(RECENTLY_VISITED_URIS_SIZE)
 {
   NS_ASSERTION(!gService, "Ruh-roh!  This service has already been created!");
   gService = this;
@@ -2406,25 +2406,29 @@ History::Shutdown()
 
 void
 History::AppendToRecentlyVisitedURIs(nsIURI* aURI) {
-  if (mRecentlyVisitedURIs.Length() < RECENTLY_VISITED_URI_SIZE) {
-    // Append a new element while the array is not full.
-    mRecentlyVisitedURIs.AppendElement(aURI);
-  } else {
-    // Otherwise, replace the oldest member.
-    mRecentlyVisitedURIsNextIndex %= RECENTLY_VISITED_URI_SIZE;
-    mRecentlyVisitedURIs.ElementAt(mRecentlyVisitedURIsNextIndex) = aURI;
-    mRecentlyVisitedURIsNextIndex++;
+  // Add a new entry, if necessary.
+  RecentURIKey* entry = mRecentlyVisitedURIs.GetEntry(aURI);
+  if (!entry) {
+    entry = mRecentlyVisitedURIs.PutEntry(aURI);
+  }
+  if (entry) {
+    entry->time = PR_Now();
+  }
+
+  // Remove entries older than RECENTLY_VISITED_URIS_MAX_AGE.
+  for (auto iter = mRecentlyVisitedURIs.Iter(); !iter.Done(); iter.Next()) {
+    RecentURIKey* entry = iter.Get();
+    if ((PR_Now() - entry->time) > RECENTLY_VISITED_URIS_MAX_AGE) {
+      iter.Remove();
+    }
   }
 }
 
 inline bool
 History::IsRecentlyVisitedURI(nsIURI* aURI) {
-  bool equals = false;
-  RecentlyVisitedArray::index_type i;
-  for (i = 0; i < mRecentlyVisitedURIs.Length() && !equals; ++i) {
-    aURI->Equals(mRecentlyVisitedURIs.ElementAt(i), &equals);
-  }
-  return equals;
+  RecentURIKey* entry = mRecentlyVisitedURIs.GetEntry(aURI);
+  // Check if the entry exists and is younger than RECENTLY_VISITED_URIS_MAX_AGE.
+  return entry && (PR_Now() - entry->time) < RECENTLY_VISITED_URIS_MAX_AGE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2466,12 +2470,14 @@ History::VisitURI(nsIURI* aURI,
     return NS_OK;
   }
 
+  // Do not save a reloaded uri if we have visited the same URI recently.
+  bool reload = false;
   if (aLastVisitedURI) {
-    bool same;
-    rv = aURI->Equals(aLastVisitedURI, &same);
+    rv = aURI->Equals(aLastVisitedURI, &reload);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (same && IsRecentlyVisitedURI(aURI)) {
-      // Do not save refresh visits if we have visited this URI recently.
+    if (reload && IsRecentlyVisitedURI(aURI)) {
+      // Regardless we must update the stored visit time.
+      AppendToRecentlyVisitedURIs(aURI);
       return NS_OK;
     }
   }
@@ -2506,6 +2512,9 @@ History::VisitURI(nsIURI* aURI,
   }
   else if (aFlags & IHistory::REDIRECT_PERMANENT) {
     transitionType = nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT;
+  }
+  else if (reload) {
+    transitionType = nsINavHistoryService::TRANSITION_RELOAD;
   }
   else if ((recentFlags & nsNavHistory::RECENT_TYPED) &&
            !(aFlags & IHistory::UNRECOVERABLE_ERROR)) {
@@ -2948,7 +2957,7 @@ History::UpdatePlaces(JS::Handle<JS::Value> aPlaceInfos,
       NS_ENSURE_SUCCESS(rv, rv);
       NS_ENSURE_ARG_RANGE(transitionType,
                           nsINavHistoryService::TRANSITION_LINK,
-                          nsINavHistoryService::TRANSITION_FRAMED_LINK);
+                          nsINavHistoryService::TRANSITION_RELOAD);
       data.SetTransitionType(transitionType);
       data.hidden = GetHiddenState(false, transitionType);
 

@@ -79,7 +79,7 @@ add_task(function* test_history_clear()
                                             PlacesUtils.annotations.EXPIRE_NEVER);
 
   // Add a bookmark
-  // Bookmarked page should have history cleared and frecency = -old_visit_count
+  // Bookmarked page should have history cleared and frecency = -1
   PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
                                        uri("http://typed.mozilla.org/"),
                                        PlacesUtils.bookmarks.DEFAULT_INDEX,
@@ -105,8 +105,7 @@ add_task(function* test_history_clear()
   yield PlacesTestUtils.promiseAsyncUpdates();
 
   // Check that frecency for not cleared items (bookmarks) has been converted
-  // to -MAX(visit_count, 1), so we will be able to recalculate frecency
-  // starting from most frecent bookmarks.
+  // to -1.
   stmt = mDBConn.createStatement(
     "SELECT h.id FROM moz_places h WHERE h.frecency > 0 ");
   do_check_false(stmt.executeStep());
