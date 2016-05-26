@@ -17,6 +17,7 @@ import re
 import shutil
 import signal
 import sys
+import tempfile
 import time
 import traceback
 
@@ -132,6 +133,7 @@ class XPCShellTestThread(Thread):
         self.xpcsRunArgs = kwargs.get('xpcsRunArgs')
         self.failureManifest = kwargs.get('failureManifest')
         self.stack_fixer_function = kwargs.get('stack_fixer_function')
+        self._rootTempDir = kwargs.get('tempDir')
 
         self.app_dir_key = app_dir_key
         self.interactive = interactive
@@ -321,7 +323,7 @@ class XPCShellTestThread(Thread):
                   name.replace('\\', '/')]
 
     def setupTempDir(self):
-        tempDir = mkdtemp(prefix='xpc-other-')
+        tempDir = mkdtemp(prefix='xpc-other-', dir=self._rootTempDir)
         self.env["XPCSHELL_TEST_TEMP_DIR"] = tempDir
         if self.interactive:
             self.log.info("temp dir is %s" % tempDir)
@@ -331,7 +333,7 @@ class XPCShellTestThread(Thread):
         if not os.path.isdir(self.pluginsPath):
             return None
 
-        pluginsDir = mkdtemp(prefix='xpc-plugins-')
+        pluginsDir = mkdtemp(prefix='xpc-plugins-', dir=self._rootTempDir)
         # shutil.copytree requires dst to not exist. Deleting the tempdir
         # would make a race condition possible in a concurrent environment,
         # so we are using dir_utils.copy_tree which accepts an existing dst
@@ -357,7 +359,7 @@ class XPCShellTestThread(Thread):
                 pass
             os.makedirs(profileDir)
         else:
-            profileDir = mkdtemp(prefix='xpc-profile-')
+            profileDir = mkdtemp(prefix='xpc-profile-', dir=self._rootTempDir)
         self.env["XPCSHELL_TEST_PROFILE_DIR"] = profileDir
         if self.interactive or self.singleFile:
             self.log.info("profile dir is %s" % profileDir)
@@ -1070,7 +1072,7 @@ class XPCShellTests(object):
         return path
 
     def runTests(self, xpcshell=None, xrePath=None, appPath=None, symbolsPath=None,
-                 manifest=None, testPaths=None, mobileArgs=None,
+                 manifest=None, testPaths=None, mobileArgs=None, tempDir=None,
                  interactive=False, verbose=False, keepGoing=False, logfiles=True,
                  thisChunk=1, totalChunks=1, debugger=None,
                  debuggerArgs=None, debuggerInteractive=False,
@@ -1110,6 +1112,7 @@ class XPCShellTests(object):
         |shuffle|, if True, execute tests in random order.
         |testingModulesDir|, if provided, specifies where JS modules reside.
           xpcshell will register a resource handler mapping this path.
+        |tempDir|, if provided, specifies a temporary directory to use.
         |otherOptions| may be present for the convenience of subclasses
         """
 
@@ -1163,6 +1166,7 @@ class XPCShellTests(object):
         self.xrePath = xrePath
         self.appPath = appPath
         self.symbolsPath = symbolsPath
+        self.tempDir = os.path.normpath(tempDir or tempfile.gettempdir())
         self.manifest = manifest
         self.dump_tests = dump_tests
         self.interactive = interactive
@@ -1249,6 +1253,7 @@ class XPCShellTests(object):
             'httpdManifest': self.httpdManifest,
             'httpdJSPath': self.httpdJSPath,
             'headJSPath': self.headJSPath,
+            'tempDir': self.tempDir,
             'testharnessdir': self.testharnessdir,
             'profileName': self.profileName,
             'singleFile': self.singleFile,
