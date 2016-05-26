@@ -1031,18 +1031,23 @@ static bool
 ProtoGetter(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    HandleValue thisv = args.thisv();
-    if (thisv.isNullOrUndefined()) {
-        ReportIncompatible(cx, args);
-        return false;
-    }
-    if (thisv.isPrimitive() && !BoxNonStrictThis(cx, args))
-        return false;
 
-    RootedObject obj(cx, &args.thisv().toObject());
+    RootedValue thisv(cx, args.thisv());
+    if (thisv.isPrimitive()) {
+        if (thisv.isNullOrUndefined()) {
+            ReportIncompatible(cx, args);
+            return false;
+        }
+
+        if (!BoxNonStrictThis(cx, thisv, &thisv))
+            return false;
+    }
+
+    RootedObject obj(cx, &thisv.toObject());
     RootedObject proto(cx);
     if (!GetPrototype(cx, obj, &proto))
         return false;
+
     args.rval().setObjectOrNull(proto);
     return true;
 }
