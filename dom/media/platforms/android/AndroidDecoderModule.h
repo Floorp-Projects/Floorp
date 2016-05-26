@@ -11,7 +11,6 @@
 #include "SurfaceTexture.h"
 #include "TimeUnits.h"
 #include "mozilla/Monitor.h"
-#include "mozilla/Maybe.h"
 
 #include <queue>
 
@@ -103,7 +102,7 @@ protected:
   nsresult QueueSample(const MediaRawData* aSample);
   nsresult QueueEOS();
   void HandleEOS(int32_t aOutputStatus);
-  Maybe<media::TimeUnit> GetOutputDuration();
+  media::TimeUnit GetOutputDuration();
   nsresult ProcessOutput(widget::sdk::BufferInfo::Param aInfo,
                          widget::sdk::MediaFormat::Param aFormat,
                          int32_t aStatus);
