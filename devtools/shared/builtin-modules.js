@@ -222,13 +222,6 @@ defineLazyGetter(exports.modules, "CSS", () => {
   return sandbox.CSS;
 });
 
-defineLazyGetter(exports.modules, "URL", () => {
-  let sandbox
-    = Cu.Sandbox(CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")(),
-                 {wantGlobalProperties: ["URL"]});
-  return sandbox.URL;
-});
-
 // List of all custom globals exposed to devtools modules.
 // Changes here should be mirrored to devtools/.eslintrc.
 const globals = exports.globals = {
@@ -286,4 +279,10 @@ defineLazyGetter(globals, "clearInterval", () => {
 });
 defineLazyGetter(globals, "setInterval", () => {
   return Cu.import("resource://gre/modules/Timer.jsm", {}).setInterval;
+});
+defineLazyGetter(globals, "URL", () => {
+  let sandbox
+    = Cu.Sandbox(CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")(),
+                 {wantGlobalProperties: ["URL"]});
+  return sandbox.URL;
 });

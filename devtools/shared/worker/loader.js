@@ -490,14 +490,14 @@ this.worker = new WorkerDebuggerLoader({
     "loader": loader,
     "reportError": reportError,
     "rpc": rpc,
-    "setImmediate": setImmediate
+    "setImmediate": setImmediate,
+    "URL": URL,
   },
   loadSubScript: loadSubScript,
   modules: {
     "Debugger": Debugger,
     "PromiseDebugging": PromiseDebugging,
     "Services": Object.create(null),
-    "URL": URL,
     "chrome": chrome,
     "xpcInspector": xpcInspector
   },

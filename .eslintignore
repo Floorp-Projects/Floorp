@@ -111,6 +111,7 @@ devtools/server/**
 !devtools/server/actors/styles.js
 devtools/shared/*.js
 !devtools/shared/css-lexer.js
+!devtools/shared/promise_defer.js
 !devtools/shared/task.js
 devtools/shared/*.jsm
 devtools/shared/apps/**

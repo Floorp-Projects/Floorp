@@ -5,8 +5,7 @@
 "use strict";
 
 const { Cc, Ci } = require("chrome");
-const {cssTokenizer, cssTokenizerWithLineColumn} =
-      require("devtools/client/shared/css-parsing-utils");
+const {cssTokenizer, cssTokenizerWithLineColumn} = require("devtools/shared/css-parsing-utils");
 
 /**
  * Here is what this file (+ css-parsing-utils.js) do.

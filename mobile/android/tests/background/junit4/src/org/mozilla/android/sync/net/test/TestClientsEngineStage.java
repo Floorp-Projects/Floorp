@@ -56,6 +56,15 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+/**
+ * Some tests in this class run client/server multi-threaded code but JUnit assertions triggered
+ * from background threads do not fail the test. If you see unexplained connection-related test failures,
+ * an assertion on the server may have been thrown. Unfortunately, it is non-trivial to get the background
+ * threads to transfer failures back to the test thread so we leave the tests in this state for now.
+ *
+ * One reason the server might throw an assertion is if you have not installed the crypto policies. See
+ * https://wiki.mozilla.org/Mobile/Fennec/Android/Testing#JUnit4_tests for more information.
+ */
 @RunWith(TestRunner.class)
 public class TestClientsEngineStage extends MockSyncClientsEngineStage {
   public final static String LOG_TAG = "TestClientsEngSta";
@@ -601,7 +610,7 @@ public class TestClientsEngineStage extends MockSyncClientsEngineStage {
     assertEquals(uploadHeaderTimestamp, session.config.getPersistedServerClientsTimestamp());
   }
 
-  @Test
+  @Test // client/server multi-threaded
   public void testDownloadHasOurRecord() {
     // Make sure no upload occurs after a download so we can
     // test download in isolation.

@@ -7,6 +7,8 @@
 "use strict";
 
 const EventEmitter = require("devtools/shared/event-emitter");
+const {TooltipToggle} = require("devtools/client/shared/widgets/tooltip/TooltipToggle");
+
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -70,6 +72,10 @@ function HTMLTooltip(toolbox,
   this.topWindow = this.doc.defaultView.top;
 
   this._onClick = this._onClick.bind(this);
+
+  this._toggle = new TooltipToggle(this);
+  this.startTogglingOnHover = this._toggle.start.bind(this._toggle);
+  this.stopTogglingOnHover = this._toggle.stop.bind(this._toggle);
 
   this.container = this._createContainer();
 
@@ -234,7 +240,7 @@ HTMLTooltip.prototype = {
     if (this._isXUL()) {
       html = '<iframe class="devtools-tooltip-iframe tooltip-panel"></iframe>';
     } else {
-      html = '<div class="tooltip-panel theme-body"></div>';
+      html = '<div class="tooltip-panel"></div>';
     }
 
     if (this.type === TYPE.ARROW) {

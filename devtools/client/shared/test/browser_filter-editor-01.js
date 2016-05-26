@@ -6,9 +6,7 @@
 // Tests that the Filter Editor Widget parses filter values correctly (setCssValue)
 
 const TEST_URI = "chrome://devtools/content/shared/widgets/filter-frame.xhtml";
-const {CSSFilterEditorWidget} =
-      require("devtools/client/shared/widgets/FilterWidget");
-const {cssTokenizer} = require("devtools/client/shared/css-parsing-utils");
+const {CSSFilterEditorWidget} = require("devtools/client/shared/widgets/FilterWidget");
 const DOMUtils =
       Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 

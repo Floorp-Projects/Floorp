@@ -35,7 +35,7 @@ add_task(function* () {
 
   let markupContainer = yield getContainerForSelector("#events", inspector);
   let evHolder = markupContainer.elt.querySelector(".markupview-events");
-  let tooltip = inspector.markup.tooltip;
+  let tooltip = inspector.markup.eventDetailsTooltip;
 
   info("Clicking to open event tooltip.");
   EventUtils.synthesizeMouseAtCenter(evHolder, {},

@@ -17,6 +17,8 @@ const protocol = require("devtools/shared/protocol");
 const {Arg, Option, method, RetVal, types} = protocol;
 const {LongStringActor, ShortLongString} = require("devtools/server/actors/string");
 const {fetch} = require("devtools/shared/DevToolsUtils");
+const {OldStyleSheetFront} = require("devtools/shared/fronts/styleeditor");
+const {oldStyleSheetSpec} = require("devtools/shared/specs/styleeditor");
 
 loader.lazyGetter(this, "CssLogic", () => require("devtools/shared/inspector/css-logic").CssLogic);
 
@@ -32,28 +34,8 @@ transition-property: all !important;\
 
 var LOAD_ERROR = "error-load";
 
-/**
- * A StyleSheetActor represents a stylesheet on the server.
- */
-var OldStyleSheetActor = protocol.ActorClass({
-  typeName: "old-stylesheet",
-
-  events: {
-    "property-change" : {
-      type: "propertyChange",
-      property: Arg(0, "string"),
-      value: Arg(1, "json")
-    },
-    "source-load" : {
-      type: "sourceLoad",
-      source: Arg(0, "string")
-    },
-    "style-applied" : {
-      type: "styleApplied"
-    }
-  },
-
-  toString: function () {
+var OldStyleSheetActor = protocol.ActorClassWithSpec(oldStyleSheetSpec, {
+  toString: function() {
     return "[OldStyleSheetActor " + this.actorID + "]";
   },
 
@@ -170,14 +152,12 @@ var OldStyleSheetActor = protocol.ActorClass({
    * @return {object}
    *         'disabled' - the disabled state after toggling.
    */
-  toggleDisabled: method(function () {
+  toggleDisabled: function () {
     this.rawSheet.disabled = !this.rawSheet.disabled;
     this._notifyPropertyChanged("disabled");
 
     return this.rawSheet.disabled;
-  }, {
-    response: { disabled: RetVal("boolean")}
-  }),
+  },
 
   /**
    * Send an event notifying that a property of the stylesheet
@@ -194,11 +174,11 @@ var OldStyleSheetActor = protocol.ActorClass({
     * Fetch the source of the style sheet from its URL. Send a "sourceLoad"
     * event when it's been fetched.
     */
-  fetchSource: method(function () {
+  fetchSource: function () {
     this._getText().then((content) => {
       events.emit(this, "source-load", this.text);
     });
-  }),
+  },
 
   /**
    * Fetch the text for this stylesheet from the cache or network. Return
@@ -290,7 +270,7 @@ var OldStyleSheetActor = protocol.ActorClass({
    *         'text' - new text
    *         'transition' - whether to do CSS transition for change.
    */
-  update: method(function (text, transition) {
+  update: function (text, transition) {
     DOMUtils.parseStyleSheet(this.rawSheet, text);
 
     this.text = text;
@@ -303,12 +283,7 @@ var OldStyleSheetActor = protocol.ActorClass({
     else {
       this._notifyStyleApplied();
     }
-  }, {
-    request: {
-      text: Arg(0, "string"),
-      transition: Arg(1, "boolean")
-    }
-  }),
+  },
 
   /**
    * Insert a catch-all transition rule into the document. Set a timeout
@@ -343,75 +318,6 @@ var OldStyleSheetActor = protocol.ActorClass({
     }
 
     events.emit(this, "style-applied");
-  }
-});
-
-/**
- * StyleSheetFront is the client-side counterpart to a StyleSheetActor.
- */
-var OldStyleSheetFront = protocol.FrontClass(OldStyleSheetActor, {
-  initialize: function (conn, form, ctx, detail) {
-    protocol.Front.prototype.initialize.call(this, conn, form, ctx, detail);
-
-    this._onPropertyChange = this._onPropertyChange.bind(this);
-    events.on(this, "property-change", this._onPropertyChange);
-  },
-
-  destroy: function () {
-    events.off(this, "property-change", this._onPropertyChange);
-
-    protocol.Front.prototype.destroy.call(this);
-  },
-
-  _onPropertyChange: function (property, value) {
-    this._form[property] = value;
-  },
-
-  form: function (form, detail) {
-    if (detail === "actorid") {
-      this.actorID = form;
-      return;
-    }
-    this.actorID = form.actor;
-    this._form = form;
-  },
-
-  getText: function () {
-    let deferred = promise.defer();
-
-    events.once(this, "source-load", (source) => {
-      let longStr = new ShortLongString(source);
-      deferred.resolve(longStr);
-    });
-    this.fetchSource();
-
-    return deferred.promise;
-  },
-
-  getOriginalSources: function () {
-    return promise.resolve([]);
-  },
-
-  get href() {
-    return this._form.href;
-  },
-  get nodeHref() {
-    return this._form.nodeHref;
-  },
-  get disabled() {
-    return !!this._form.disabled;
-  },
-  get title() {
-    return this._form.title;
-  },
-  get isSystem() {
-    return this._form.system;
-  },
-  get styleSheetIndex() {
-    return this._form.styleSheetIndex;
-  },
-  get ruleCount() {
-    return this._form.ruleCount;
   }
 });
 
