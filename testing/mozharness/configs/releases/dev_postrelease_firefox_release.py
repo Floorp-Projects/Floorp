@@ -8,7 +8,7 @@ config = {
     "repo": {
         # jamun is used for staging mozilla-release
         "repo": "https://hg.mozilla.org/projects/jamun",
-        "revision": "default",
+        "branch": "default",
         "dest": "jamun",
         "vcs": "hg",
     },
