@@ -1066,19 +1066,10 @@ function* findElementsContent(strategy, selector, opts = {}) {
   return webEls;
 }
 
-/**
- * Find and return the active element on the page.
- *
- * @return {WebElement}
- *     Reference to web element.
- */
+/** Find and return the active element on the page. */
 function getActiveElement() {
   let el = curContainer.frame.document.activeElement;
-  let elRef = seenEls.add(el);
-  // TODO(ato): This incorrectly returns
-  // the element's associated UUID as a string
-  // instead of a web element.
-  return elRef;
+  return element.toJson(el, seenEls);
 }
 
 /**
