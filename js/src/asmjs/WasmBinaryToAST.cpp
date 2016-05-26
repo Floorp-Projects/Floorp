@@ -140,6 +140,8 @@ AstDecodeGenerateName(AstDecodeContext& c, const AstName& prefix, uint32_t index
     }
 
     AstVector<char16_t> result(c.lifo);
+    if (!result.append(MOZ_UTF16('$')))
+        return false;
     if (!result.append(prefix.begin(), prefix.length()))
         return false;
 
@@ -232,7 +234,7 @@ AstDecodeCall(AstDecodeContext& c)
     const AstSig* sig = c.module().sigs()[sigIndex];
 
     AstRef funcRef;
-    if (!AstDecodeGenerateRef(c, AstName(MOZ_UTF16("$func$"), 6), calleeIndex, &funcRef))
+    if (!AstDecodeGenerateRef(c, AstName(MOZ_UTF16("func")), calleeIndex, &funcRef))
         return false;
 
     AstExprVector args(c.lifo);
@@ -260,7 +262,7 @@ AstDecodeCallIndirect(AstDecodeContext& c)
         return false;
 
     AstRef sigRef;
-    if (!AstDecodeGenerateRef(c, AstName(MOZ_UTF16("$type$"), 6), sigIndex, &sigRef))
+    if (!AstDecodeGenerateRef(c, AstName(MOZ_UTF16("type")), sigIndex, &sigRef))
         return false;
 
     if (sigIndex >= c.module().sigs().length())
@@ -302,7 +304,7 @@ AstDecodeCallImport(AstDecodeContext& c)
     AstImport* import = c.module().imports()[importIndex];
     AstSig* sig = c.module().sigs()[import->sig().index()];
     AstRef funcRef;
-    if (!AstDecodeGenerateRef(c, AstName(MOZ_UTF16("$import$"), 8), importIndex, &funcRef))
+    if (!AstDecodeGenerateRef(c, AstName(MOZ_UTF16("import")), importIndex, &funcRef))
         return false;
 
     AstExprVector args(c.lifo);
@@ -332,7 +334,7 @@ AstDecodeGetBlockRef(AstDecodeContext& c, uint32_t depth, AstRef* ref)
 
     uint32_t index = c.blockLabels().length() - depth - 1;
     if (c.blockLabels()[index].empty()) {
-        if (!AstDecodeGenerateName(c, AstName(MOZ_UTF16("$label$"), 7), c.nextLabelIndex(), &c.blockLabels()[index]))
+        if (!AstDecodeGenerateName(c, AstName(MOZ_UTF16("label")), c.nextLabelIndex(), &c.blockLabels()[index]))
             return false;
     }
     *ref = AstRef(c.blockLabels()[index], AstNoIndex);
@@ -661,7 +663,7 @@ AstDecodeGetLocal(AstDecodeContext& c)
         return false;
 
     AstRef localRef;
-    if (!AstDecodeGenerateRef(c, AstName(MOZ_UTF16("$var$"), 5), getLocalId, &localRef))
+    if (!AstDecodeGenerateRef(c, AstName(MOZ_UTF16("var")), getLocalId, &localRef))
         return false;
 
     AstGetLocal* getLocal = new(c.lifo) AstGetLocal(localRef);
@@ -681,7 +683,7 @@ AstDecodeSetLocal(AstDecodeContext& c)
         return false;
 
     AstRef localRef;
-    if (!AstDecodeGenerateRef(c, AstName(MOZ_UTF16("$var$"), 5), setLocalId, &localRef))
+    if (!AstDecodeGenerateRef(c, AstName(MOZ_UTF16("var")), setLocalId, &localRef))
         return false;
 
     AstSetLocal* setLocal = new(c.lifo) AstSetLocal(localRef, *setLocalValue.expr);
@@ -1052,7 +1054,7 @@ AstDecodeTypeSection(AstDecodeContext& c)
 
         AstSig sigNoName(Move(args), result);
         AstName sigName;
-        if (!AstDecodeGenerateName(c, AstName(MOZ_UTF16("$type$"), 6), sigIndex, &sigName))
+        if (!AstDecodeGenerateName(c, AstName(MOZ_UTF16("type")), sigIndex, &sigName))
             return false;
 
         AstSig* sig = new(c.lifo) AstSig(sigName, Move(sigNoName));
@@ -1173,7 +1175,7 @@ AstDecodeImport(AstDecodeContext& c, uint32_t importIndex, AstImport** import)
         return false;
 
     AstRef sigRef;
-    if (!AstDecodeGenerateRef(c, AstName(MOZ_UTF16("$type$"), 6), sigIndex, &sigRef))
+    if (!AstDecodeGenerateRef(c, AstName(MOZ_UTF16("type")), sigIndex, &sigRef))
         return false;
 
     AstName moduleName;
@@ -1188,7 +1190,7 @@ AstDecodeImport(AstDecodeContext& c, uint32_t importIndex, AstImport** import)
         return AstDecodeFail(c, "expected import func name");
 
     AstName importName;
-    if (!AstDecodeGenerateName(c, AstName(MOZ_UTF16("$import$"), 8), importIndex, &importName))
+    if (!AstDecodeGenerateName(c, AstName(MOZ_UTF16("import")), importIndex, &importName))
         return false;
 
     *import = new(c.lifo) AstImport(importName, moduleName, funcName, sigRef);
@@ -1265,7 +1267,7 @@ AstDecodeMemorySection(AstDecodeContext& c)
     }
 
     if (exported) {
-        AstExport* export_ = new(c.lifo) AstExport(AstName(MOZ_UTF16("memory"), 6));
+        AstExport* export_ = new(c.lifo) AstExport(AstName(MOZ_UTF16("memory")));
         if (!export_ || !c.module().append(export_))
             return false;
     }
@@ -1359,7 +1361,7 @@ AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcIndex, AstFunc** func)
     c.startFunction(&iter, &locals);
 
     AstName funcName;
-    if (!AstDecodeGenerateName(c, AstName(MOZ_UTF16("$func$"), 6), funcIndex, &funcName))
+    if (!AstDecodeGenerateName(c, AstName(MOZ_UTF16("func")), funcIndex, &funcName))
         return false;
 
     uint32_t numParams = sig->args().length();
@@ -1370,7 +1372,7 @@ AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcIndex, AstFunc** func)
     }
     for (uint32_t i = 0; i < numLocals; i++) {
         AstName varName;
-        if (!AstDecodeGenerateName(c, AstName(MOZ_UTF16("$var$"), 5), i, &varName))
+        if (!AstDecodeGenerateName(c, AstName(MOZ_UTF16("var")), i, &varName))
             return false;
         if (!localsNames.append(varName))
             return false;
@@ -1398,7 +1400,7 @@ AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcIndex, AstFunc** func)
         return AstDecodeFail(c, "function body length mismatch");
 
     AstRef sigRef;
-    if (!AstDecodeGenerateRef(c, AstName(MOZ_UTF16("$type$"), 6), sigIndex, &sigRef))
+    if (!AstDecodeGenerateRef(c, AstName(MOZ_UTF16("type")), sigIndex, &sigRef))
         return false;
 
     *func = new(c.lifo) AstFunc(funcName, sigRef, Move(vars), Move(localsNames), Move(body));
