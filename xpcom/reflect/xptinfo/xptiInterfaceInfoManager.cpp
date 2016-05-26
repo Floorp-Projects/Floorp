@@ -102,13 +102,14 @@ XPTInterfaceInfoManager::RegisterBuffer(char *buf, uint32_t length)
     XPTState state;
     XPT_InitXDRState(&state, buf, length);
 
-    XPTCursor cursor;
-    if (!XPT_MakeCursor(&state, XPT_HEADER, 0, &cursor)) {
+    XPTCursor curs;
+    NotNull<XPTCursor*> cursor = WrapNotNull(&curs);
+    if (!XPT_MakeCursor(&state, XPT_HEADER, 0, cursor)) {
         return;
     }
 
     XPTHeader *header = nullptr;
-    if (XPT_DoHeader(gXPTIStructArena, &cursor, &header)) {
+    if (XPT_DoHeader(gXPTIStructArena, cursor, &header)) {
         RegisterXPTHeader(header);
     }
 }
