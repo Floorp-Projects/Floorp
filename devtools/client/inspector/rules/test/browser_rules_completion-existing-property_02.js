@@ -12,27 +12,29 @@
 //    what key to press,
 //    modifers,
 //    expected input box value after keypress,
-//    selectedIndex of the popup,
-//    total items in the popup,
-//    expect ruleview-changed
+//    is the popup open,
+//    is a suggestion selected in the popup,
+//    expect ruleview-changed,
 //  ]
+
+const OPEN = true, SELECTED = true, CHANGE = true;
 var testData = [
-  ["b", {}, "beige", 0, 8, true],
-  ["l", {}, "black", 0, 4, true],
-  ["VK_DOWN", {}, "blanchedalmond", 1, 4, true],
-  ["VK_DOWN", {}, "blue", 2, 4, true],
-  ["VK_RIGHT", {}, "blue", -1, 0, false],
-  [" ", {}, "blue aliceblue", 0, 158, true],
-  ["!", {}, "blue !important", 0, 0, true],
-  ["VK_BACK_SPACE", {}, "blue !", -1, 0, true],
-  ["VK_BACK_SPACE", {}, "blue ", -1, 0, true],
-  ["VK_BACK_SPACE", {}, "blue", -1, 0, true],
-  ["VK_TAB", {shiftKey: true}, "color", -1, 0, true],
-  ["VK_BACK_SPACE", {}, "", -1, 0, false],
-  ["d", {}, "display", 1, 3, false],
-  ["VK_TAB", {}, "blue", -1, 0, true],
-  ["n", {}, "none", -1, 0, true],
-  ["VK_RETURN", {}, null, -1, 0, true]
+  ["b", {}, "beige", OPEN, SELECTED, CHANGE],
+  ["l", {}, "black", OPEN, SELECTED, CHANGE],
+  ["VK_DOWN", {}, "blanchedalmond", OPEN, SELECTED, CHANGE],
+  ["VK_DOWN", {}, "blue", OPEN, SELECTED, CHANGE],
+  ["VK_RIGHT", {}, "blue", !OPEN, !SELECTED, !CHANGE],
+  [" ", {}, "blue aliceblue", OPEN, SELECTED, CHANGE],
+  ["!", {}, "blue !important", !OPEN, !SELECTED, CHANGE],
+  ["VK_BACK_SPACE", {}, "blue !", !OPEN, !SELECTED, CHANGE],
+  ["VK_BACK_SPACE", {}, "blue ", !OPEN, !SELECTED, CHANGE],
+  ["VK_BACK_SPACE", {}, "blue", !OPEN, !SELECTED, CHANGE],
+  ["VK_TAB", {shiftKey: true}, "color", !OPEN, !SELECTED, CHANGE],
+  ["VK_BACK_SPACE", {}, "", !OPEN, !SELECTED, !CHANGE],
+  ["d", {}, "display", OPEN, SELECTED, !CHANGE],
+  ["VK_TAB", {}, "blue", !OPEN, !SELECTED, CHANGE],
+  ["n", {}, "none", !OPEN, !SELECTED, CHANGE],
+  ["VK_RETURN", {}, null, !OPEN, !SELECTED, CHANGE]
 ];
 
 const TEST_URI = "<h1 style='color: red'>Header</h1>";
@@ -68,13 +70,15 @@ function* runAutocompletionTest(toolbox, inspector, view) {
   }
 }
 
-function* testCompletion([key, modifiers, completion, index, total, willChange],
+function* testCompletion([key, modifiers, completion, open, selected, change],
                          editor, view) {
   info("Pressing key " + key);
-  info("Expecting " + completion + ", " + index + ", " + total);
+  info("Expecting " + completion);
+  info("Is popup opened: " + open);
+  info("Is item selected: " + selected);
 
   let onDone;
-  if (willChange) {
+  if (change) {
     // If the key triggers a ruleview-changed, wait for that event, it will
     // always be the last to be triggered and tells us when the preview has
     // been done.
@@ -99,12 +103,12 @@ function* testCompletion([key, modifiers, completion, index, total, willChange],
   if (completion != null) {
     is(editor.input.value, completion, "Correct value is autocompleted");
   }
-  if (total == 0) {
+
+  if (!open) {
     ok(!(editor.popup && editor.popup.isOpen), "Popup is closed");
   } else {
     ok(editor.popup._panel.state == "open" ||
        editor.popup._panel.state == "showing", "Popup is open");
-    is(editor.popup.getItems().length, total, "Number of suggestions match");
-    is(editor.popup.selectedIndex, index, "Correct item is selected");
+    is(editor.popup.selectedIndex != -1, selected, "An item is selected");
   }
 }
