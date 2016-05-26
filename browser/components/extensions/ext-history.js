@@ -24,7 +24,7 @@ function convertNavHistoryResultNode(node) {
     id: node.pageGuid,
     url: node.uri,
     title: node.title,
-    lastVisitTime: PlacesUtils.toDate(node.time).getTime(),
+    lastVisitTime: PlacesUtils.toTime(node.time),
     visitCount: node.accessCount,
   };
 }
