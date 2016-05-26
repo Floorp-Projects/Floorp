@@ -303,12 +303,6 @@ public:
                                     bool showLocals,
                                     bool showThisProps) override;
 
-
-    static bool ReportAllJSExceptions()
-    {
-      return gReportAllJSExceptions > 0;
-    }
-
 protected:
     virtual ~nsXPConnect();
 
@@ -321,8 +315,6 @@ private:
 
     XPCJSRuntime*                   mRuntime;
     bool                            mShuttingDown;
-
-    static uint32_t gReportAllJSExceptions;
 
 public:
     static nsIScriptSecurityManager* gScriptSecurityManager;
