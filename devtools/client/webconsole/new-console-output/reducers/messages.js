@@ -5,22 +5,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const Immutable = require("devtools/client/shared/vendor/immutable");
 const constants = require("devtools/client/webconsole/new-console-output/constants");
 
-function messages(state = [], action) {
+function messages(state = Immutable.List(), action) {
   switch (action.type) {
     case constants.MESSAGE_ADD:
       let newMessage = action.message;
-      if (newMessage.allowRepeating && state.length > 0) {
-        let lastMessage = state[state.length - 1];
+      if (newMessage.allowRepeating && state.size > 0) {
+        let lastMessage = state.last();
         if (lastMessage.repeatId === newMessage.repeatId) {
           newMessage.repeat = lastMessage.repeat + 1;
-          return state.slice(0, state.length - 1).concat(newMessage);
+          return state.pop().push(newMessage);
         }
       }
-      return state.concat([ newMessage ]);
+      return state.push(newMessage);
     case constants.MESSAGES_CLEAR:
-      return [];
+      return Immutable.List();
   }
 
   return state;
