@@ -682,7 +682,7 @@ struct LengthPercentPairCalcOps : public css::NumbersAlreadyNormalizedOps
 };
 
 static void
-SpecifiedCalcToComputedCalc(const nsCSSValue& aValue, nsStyleCoord& aCoord, 
+SpecifiedCalcToComputedCalc(const nsCSSValue& aValue, nsStyleCoord& aCoord,
                             nsStyleContext* aStyleContext,
                             RuleNodeCacheConditions& aConditions)
 {
@@ -966,7 +966,7 @@ SetPairCoords(const nsCSSValue& aValue,
 
   bool cX = SetCoord(valX, aCoordX, aParentX, aMask, aStyleContext,
                        aPresContext, aConditions);
-  mozilla::DebugOnly<bool> cY = SetCoord(valY, aCoordY, aParentY, aMask, 
+  mozilla::DebugOnly<bool> cY = SetCoord(valY, aCoordY, aParentY, aMask,
                        aStyleContext, aPresContext, aConditions);
   MOZ_ASSERT(cX == cY, "changed one but not the other");
   return cX;
@@ -1245,11 +1245,9 @@ static void SetStyleImage(nsStyleContext* aStyleContext,
     case eCSSUnit_Gradient:
     {
       nsStyleGradient* gradient = new nsStyleGradient();
-      if (gradient) {
-        SetGradient(aValue, aStyleContext->PresContext(), aStyleContext,
-                    *gradient, aConditions);
-        aResult.SetGradientData(gradient);
-      }
+      SetGradient(aValue, aStyleContext->PresContext(), aStyleContext,
+                  *gradient, aConditions);
+      aResult.SetGradientData(gradient);
       break;
     }
     case eCSSUnit_Element:
@@ -2870,8 +2868,8 @@ nsRuleNode::CalcFontPointSize(int32_t aHTMLSize, int32_t aBasePointSize,
                               nsPresContext* aPresContext,
                               nsFontSizeType aFontSizeType)
 {
-#define sFontSizeTableMin  9 
-#define sFontSizeTableMax 16 
+#define sFontSizeTableMin  9
+#define sFontSizeTableMax 16
 
 // This table seems to be the one used by MacIE5. We hope its adoption in Mozilla
 // and eventually in WinIE5.5 will help to establish a standard rendering across
@@ -2999,7 +2997,7 @@ nsRuleNode::CalcFontPointSize(int32_t aHTMLSize, int32_t aBasePointSize,
 //------------------------------------------------------------------------------
 
 /* static */ nscoord
-nsRuleNode::FindNextSmallerFontSize(nscoord aFontSize, int32_t aBasePointSize, 
+nsRuleNode::FindNextSmallerFontSize(nscoord aFontSize, int32_t aBasePointSize,
                                     nsPresContext* aPresContext,
                                     nsFontSizeType aFontSizeType)
 {
@@ -3023,9 +3021,9 @@ nsRuleNode::FindNextSmallerFontSize(nscoord aFontSize, int32_t aBasePointSize,
     indexMin = 0;
     indexMax = 6;
   }
-  
+
   smallestIndexFontSize = CalcFontPointSize(indexMin, aBasePointSize, aPresContext, aFontSizeType);
-  largestIndexFontSize = CalcFontPointSize(indexMax, aBasePointSize, aPresContext, aFontSizeType); 
+  largestIndexFontSize = CalcFontPointSize(indexMax, aBasePointSize, aPresContext, aFontSizeType);
   if (aFontSize > smallestIndexFontSize) {
     if (aFontSize < NSToCoordRound(float(largestIndexFontSize) * 1.5)) { // smaller will be in HTML table
       // find largest index smaller than current
@@ -3033,7 +3031,7 @@ nsRuleNode::FindNextSmallerFontSize(nscoord aFontSize, int32_t aBasePointSize,
         indexFontSize = CalcFontPointSize(index, aBasePointSize, aPresContext, aFontSizeType);
         if (indexFontSize < aFontSize)
           break;
-      } 
+      }
       // set up points beyond table for interpolation purposes
       if (indexFontSize == smallestIndexFontSize) {
         smallerIndexFontSize = indexFontSize - onePx;
@@ -3046,9 +3044,9 @@ nsRuleNode::FindNextSmallerFontSize(nscoord aFontSize, int32_t aBasePointSize,
         largerIndexFontSize = CalcFontPointSize(index+1, aBasePointSize, aPresContext, aFontSizeType);
       }
       // compute the relative position of the parent size between the two closest indexed sizes
-      relativePosition = float(aFontSize - indexFontSize) / float(largerIndexFontSize - indexFontSize);            
+      relativePosition = float(aFontSize - indexFontSize) / float(largerIndexFontSize - indexFontSize);
       // set the new size to have the same relative position between the next smallest two indexed sizes
-      smallerSize = smallerIndexFontSize + NSToCoordRound(relativePosition * (indexFontSize - smallerIndexFontSize));      
+      smallerSize = smallerIndexFontSize + NSToCoordRound(relativePosition * (indexFontSize - smallerIndexFontSize));
     }
     else {  // larger than HTML table, drop by 33%
       smallerSize = NSToCoordRound(float(aFontSize) / 1.5);
@@ -3065,7 +3063,7 @@ nsRuleNode::FindNextSmallerFontSize(nscoord aFontSize, int32_t aBasePointSize,
 //------------------------------------------------------------------------------
 
 /* static */ nscoord
-nsRuleNode::FindNextLargerFontSize(nscoord aFontSize, int32_t aBasePointSize, 
+nsRuleNode::FindNextLargerFontSize(nscoord aFontSize, int32_t aBasePointSize,
                                    nsPresContext* aPresContext,
                                    nsFontSizeType aFontSizeType)
 {
@@ -3090,13 +3088,13 @@ nsRuleNode::FindNextLargerFontSize(nscoord aFontSize, int32_t aBasePointSize,
     indexMin = 0;
     indexMax = 6;
   }
-  
+
   smallestIndexFontSize = CalcFontPointSize(indexMin, aBasePointSize, aPresContext, aFontSizeType);
-  largestIndexFontSize = CalcFontPointSize(indexMax, aBasePointSize, aPresContext, aFontSizeType); 
+  largestIndexFontSize = CalcFontPointSize(indexMax, aBasePointSize, aPresContext, aFontSizeType);
   if (aFontSize > (smallestIndexFontSize - onePx)) {
     if (aFontSize < largestIndexFontSize) { // larger will be in HTML table
       // find smallest index larger than current
-      for (index = indexMin; index <= indexMax; index++) { 
+      for (index = indexMin; index <= indexMax; index++) {
         indexFontSize = CalcFontPointSize(index, aBasePointSize, aPresContext, aFontSizeType);
         if (indexFontSize > aFontSize)
           break;
@@ -6323,7 +6321,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     NS_ASSERTION(result, "Malformed -moz-perspective-origin parse!");
   }
 
-  SetCoord(*aRuleData->ValueForPerspective(), 
+  SetCoord(*aRuleData->ValueForPerspective(),
            display->mChildPerspective, parentDisplay->mChildPerspective,
            SETCOORD_LAH | SETCOORD_INITIAL_NONE | SETCOORD_NONE |
              SETCOORD_UNSET_INITIAL,
@@ -6433,7 +6431,7 @@ nsRuleNode::ComputeVisibilityData(void* aStartStruct,
     double angle = array->Item(0).GetAngleValueInRadians();
     visibility->mImageOrientation =
       nsStyleImageOrientation::CreateAsAngleAndFlip(angle, true);
-    
+
   } else if (orientation->GetUnit() == eCSSUnit_Enumerated) {
     switch (orientation->GetIntValue()) {
       case NS_STYLE_IMAGE_ORIENTATION_FLIP:
