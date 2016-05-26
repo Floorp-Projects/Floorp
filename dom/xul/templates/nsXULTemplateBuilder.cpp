@@ -13,7 +13,7 @@
 
   To turn on logging for this module, set:
 
-    NSPR_LOG_MODULES nsXULTemplateBuilder:5
+    MOZ_LOG=nsXULTemplateBuilder:5
 
  */
 

@@ -21,7 +21,7 @@
 NS_IMPL_ISUPPORTS(ThirdPartyUtil, mozIThirdPartyUtil)
 
 //
-// NSPR_LOG_MODULES=thirdPartyUtil:5
+// MOZ_LOG=thirdPartyUtil:5
 //
 static mozilla::LazyLogModule gThirdPartyLog("thirdPartyUtil");
 #undef LOG
