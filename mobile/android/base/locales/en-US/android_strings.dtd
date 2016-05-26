@@ -44,7 +44,6 @@
      They are automatically converted to all caps by the Android platform. -->
 <!ENTITY  bookmarks_title "Bookmarks">
 <!ENTITY  history_title "History">
-<!ENTITY  recent_tabs_title "Recent Tabs">
 
 <!ENTITY  switch_to_tab "Switch to tab">
 
@@ -570,11 +569,8 @@ size. -->
 <!ENTITY home_clear_history_button "Clear browsing history">
 <!ENTITY home_clear_history_confirm "Are you sure you want to clear your history?">
 <!ENTITY home_bookmarks_empty "Bookmarks you save show up here.">
-<!ENTITY home_closed_tabs_title "Recently closed tabs">
 <!ENTITY home_closed_tabs_title2 "Recently closed">
-<!ENTITY home_last_tabs_title "Tabs from last time">
 <!ENTITY home_last_tabs_empty "Your recent tabs show up here.">
-<!ENTITY home_open_all "Open all">
 <!ENTITY home_restore_all "Restore all">
 <!ENTITY home_closed_tabs_number "&formatD; tabs">
 <!-- Localization note (home_closed_tabs_one): This is the singular version of home_closed_tabs_number, referring to the number of recently closed tabs available. -->
