@@ -3773,15 +3773,10 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
 
         case eCSSProperty_stroke_dasharray: {
           const nsStyleSVG *svg = static_cast<const nsStyleSVG*>(styleStruct);
-          MOZ_ASSERT((svg->mStrokeDasharray != nullptr) ==
-                     (svg->mStrokeDasharrayLength != 0),
-                     "pointer/length mismatch");
           nsAutoPtr<nsCSSValueList> result;
-          if (svg->mStrokeDasharray) {
-            MOZ_ASSERT(svg->mStrokeDasharrayLength > 0,
-                       "non-null list should have positive length");
+          if (!svg->mStrokeDasharray.IsEmpty()) {
             nsCSSValueList **resultTail = getter_Transfers(result);
-            for (uint32_t i = 0, i_end = svg->mStrokeDasharrayLength;
+            for (uint32_t i = 0, i_end = svg->mStrokeDasharray.Length();
                  i != i_end; ++i) {
               nsCSSValueList *item = new nsCSSValueList;
               *resultTail = item;

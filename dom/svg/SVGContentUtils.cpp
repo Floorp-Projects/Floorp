@@ -97,8 +97,8 @@ GetStrokeDashData(SVGContentUtils::AutoStrokeOptions* aStrokeOptions,
       (i % 2 ? totalLengthOfGaps : totalLengthOfDashes) += dashSrc[i];
     }
   } else {
-    const nsStyleCoord *dasharray = aStyleSVG->mStrokeDasharray;
-    dashArrayLength = aStyleSVG->mStrokeDasharrayLength;
+    const nsTArray<nsStyleCoord>& dasharray = aStyleSVG->mStrokeDasharray;
+    dashArrayLength = aStyleSVG->mStrokeDasharray.Length();
     if (dashArrayLength <= 0) {
       return eContinuousStroke;
     }
