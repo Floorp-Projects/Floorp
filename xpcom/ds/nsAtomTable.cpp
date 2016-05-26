@@ -190,14 +190,12 @@ NS_IMPL_QUERY_INTERFACE(StaticAtom, nsIAtom)
 NS_IMETHODIMP_(MozExternalRefCountType)
 StaticAtom::AddRef()
 {
-  MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   return 2;
 }
 
 NS_IMETHODIMP_(MozExternalRefCountType)
 StaticAtom::Release()
 {
-  MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   return 1;
 }
 
