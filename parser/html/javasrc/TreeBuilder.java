@@ -189,7 +189,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     final static int FIELDSET = 61;
 
-    final static int OUTPUT_OR_LABEL = 62;
+    final static int OUTPUT = 62;
 
     final static int OBJECT = 63;
 
@@ -2553,7 +2553,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                             case HEAD:
                                 errStrayStartTag(name);
                                 break starttagloop;
-                            case OUTPUT_OR_LABEL:
+                            case OUTPUT:
                                 reconstructTheActiveFormattingElements();
                                 appendToCurrentNodeAndPushElementMayFoster(
                                         elementName,

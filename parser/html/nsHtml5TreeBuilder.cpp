@@ -1412,7 +1412,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               errStrayStartTag(name);
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_OUTPUT_OR_LABEL: {
+            case NS_HTML5TREE_BUILDER_OUTPUT: {
               reconstructTheActiveFormattingElements();
               appendToCurrentNodeAndPushElementMayFoster(elementName, attributes, formPointer);
               attributes = nullptr;
