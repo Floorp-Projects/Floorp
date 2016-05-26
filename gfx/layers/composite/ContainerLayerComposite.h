@@ -68,6 +68,7 @@ public:
   {
     LayerComposite::SetLayerManager(aManager);
     mManager = aManager;
+    mLastIntermediateSurface = nullptr;
 
     for (Layer* l = GetFirstChild(); l; l = l->GetNextSibling()) {
       LayerComposite* child = l->AsLayerComposite();
