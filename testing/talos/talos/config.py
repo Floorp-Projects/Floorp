@@ -311,9 +311,11 @@ def get_global_overrides(config):
     global_overrides = {}
     for key in GLOBAL_OVERRIDES:
         # get global overrides for all tests
-        value = config.pop(key)
+        value = config[key]
         if value is not None:
             global_overrides[key] = value
+        if key != 'sps_profile':
+            config.pop(key)
 
     # add noChrome to global overrides (HACK)
     noChrome = config.pop('noChrome')
