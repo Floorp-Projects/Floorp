@@ -17,6 +17,7 @@
 #include "nsITimer.h"
 #include "nsIWeakReference.h"
 #include "nsPluginHost.h"
+#include "VideoUtils.h"
 
 static mozilla::LazyLogModule sDecoderDoctorLog("DecoderDoctor");
 #define DD_LOG(level, arg, ...) MOZ_LOG(sDecoderDoctorLog, level, (arg, ##__VA_ARGS__))
@@ -240,119 +241,6 @@ DecoderDoctorDocumentWatcher::EnsureTimerIsStarted()
       mTimer = nullptr;
     }
   }
-}
-
-template <typename String>
-class StringListRange
-{
-  typedef typename String::char_type CharType;
-  typedef const CharType* Pointer;
-
-public:
-  // Iterator into range, trims items and skips empty items.
-  class Iterator
-  {
-  public:
-    bool operator!=(const Iterator& a) const
-    {
-      return mStart != a.mStart || mEnd != a.mEnd;
-    }
-    Iterator& operator++()
-    {
-      SearchItemAt(mComma + 1);
-      return *this;
-    }
-    typedef decltype(Substring(Pointer(), Pointer())) DereferencedType;
-    DereferencedType operator*()
-    {
-      return Substring(mStart, mEnd);
-    }
-  private:
-    friend class StringListRange;
-    Iterator(const CharType* aRangeStart, uint32_t aLength)
-      : mRangeEnd(aRangeStart + aLength)
-    {
-      SearchItemAt(aRangeStart);
-    }
-    void SearchItemAt(Pointer start)
-    {
-      // First, skip leading whitespace.
-      for (Pointer p = start; ; ++p) {
-        if (p >= mRangeEnd) {
-          mStart = mEnd = mComma = mRangeEnd;
-          return;
-        }
-        auto c = *p;
-        if (c == CharType(',')) {
-          // Comma -> Empty item -> Skip.
-        } else if (c != CharType(' ')) {
-          mStart = p;
-          break;
-        }
-      }
-      // Find comma, recording start of trailing space.
-      Pointer trailingWhitespace = nullptr;
-      for (Pointer p = mStart + 1; ; ++p) {
-        if (p >= mRangeEnd) {
-          mEnd = trailingWhitespace ? trailingWhitespace : p;
-          mComma = p;
-          return;
-        }
-        auto c = *p;
-        if (c == CharType(',')) {
-          mEnd = trailingWhitespace ? trailingWhitespace : p;
-          mComma = p;
-          return;
-        }
-        if (c == CharType(' ')) {
-          // Found a whitespace -> Record as trailing if not first one.
-          if (!trailingWhitespace) {
-            trailingWhitespace = p;
-          }
-        } else {
-          // Found a non-whitespace -> Reset trailing whitespace if needed.
-          if (trailingWhitespace) {
-            trailingWhitespace = nullptr;
-          }
-        }
-      }
-    }
-    const Pointer mRangeEnd;
-    Pointer mStart;
-    Pointer mEnd;
-    Pointer mComma;
-  };
-
-  explicit StringListRange(const String& aList) : mList(aList) {}
-  Iterator begin()
-  {
-    return Iterator(mList.Data(), mList.Length());
-  }
-  Iterator end()
-  {
-    return Iterator(mList.Data() + mList.Length(), 0);
-  }
-private:
-  const String& mList;
-};
-
-template <typename String>
-StringListRange<String>
-MakeStringListRange(const String& aList)
-{
-  return StringListRange<String>(aList);
-}
-
-template <typename ListString, typename ItemString>
-static bool
-StringListContains(const ListString& aList, const ItemString& aItem)
-{
-  for (const auto& listItem : MakeStringListRange(aList)) {
-    if (listItem.Equals(aItem)) {
-      return true;
-    }
-  }
-  return false;
 }
 
 static const NotificationAndReportStringId sMediaWidevineNoWMFNoSilverlight =
