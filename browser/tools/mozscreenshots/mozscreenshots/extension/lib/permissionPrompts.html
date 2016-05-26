@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Permission Prompts</title>
+</head>
+<body>
+  <button id="geo" onclick="navigator.geolocation.getCurrentPosition(() => {})">Geolocation</button>
+  <button id="webRTC-shareDevices" onclick="shareDevice({video: true, fake: true});">Video</button>
+  <button id="webRTC-shareMicrophone" onclick="shareDevice({audio: true, fake: true});">Audio</button>
+  <button id="webRTC-shareDevices2" onclick="shareDevice({audio: true, video: true, fake: true});">Audio and Video</button>
+  <button id="webRTC-shareScreen" onclick="shareDevice({video: {mediaSource: 'screen'}});">Screen</button>
+  <button id="web-notifications" onclick="Notification.requestPermission()">web-notifications</button>
+  <a id="addons" href="borderify.xpi">Install Add-On</a>
+  <form>
+    <input type="email" id="email" value="email@example.com" />
+    <input type="password" id="password" value="123456" />
+    <button type="submit" id="login-capture">Login</button>
+  </form>
+
+  <script type="application/javascript">
+    function shareDevice(config) {
+      navigator.mediaDevices.getUserMedia(config);
+    }
+  </script>
+
+</body>
+</html>
