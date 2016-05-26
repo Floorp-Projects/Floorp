@@ -76,11 +76,11 @@ nsIconDecoder::ReadHeader(const char* aData)
 
   MOZ_ASSERT(!mImageData, "Already have a buffer allocated?");
   IntSize targetSize = mDownscaler ? mDownscaler->TargetSize() : GetSize();
-  IntRect targetFrameRect(IntPoint(0, 0), targetSize);
+  IntRect frameRect(IntPoint(0, 0), GetSize());
 
   Maybe<SurfacePipe> pipe =
     SurfacePipeFactory::CreateSurfacePipe(this, 0, GetSize(), targetSize,
-                                          targetFrameRect, SurfaceFormat::B8G8R8A8,
+                                          frameRect, SurfaceFormat::B8G8R8A8,
                                           SurfacePipeFlags());
   if (!pipe) {
     return Transition::TerminateFailure();
