@@ -492,6 +492,8 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
 
   NS_LogInit();
 
+  NS_InitAtomTable();
+
   mozilla::LogModule::Init();
 
   JS_SetCurrentEmbedderTimeFunction(TimeSinceProcessCreation);
@@ -1026,7 +1028,7 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
   nsComponentManagerImpl::gComponentManager = nullptr;
   nsCategoryManager::Destroy();
 
-  NS_PurgeAtomTable();
+  NS_ShutdownAtomTable();
 
   NS_IF_RELEASE(gDebug);
 
