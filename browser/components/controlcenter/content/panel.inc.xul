@@ -113,7 +113,7 @@
       <vbox id="identity-popup-securityView-body" flex="1">
         <!-- (EV) Certificate Information -->
         <description id="identity-popup-content-verified-by"
-                     when-connection="secure-ev">&identity.connectionVerified1;</description>
+                     when-connection="secure-ev">&identity.connectionVerified2;</description>
         <description id="identity-popup-content-owner"
                      when-connection="secure-ev"
                      class="header"/>
