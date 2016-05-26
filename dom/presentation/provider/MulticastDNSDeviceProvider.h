@@ -144,6 +144,7 @@ private:
                           const nsAString& aUrl,
                           const nsAString& aPresentationId,
                           nsIPresentationControlChannel** aRetVal);
+  bool IsCompatibleServer(nsIDNSServiceInfo* aServiceInfo);
 
   // device manipulation
   nsresult AddDevice(const nsACString& aId,

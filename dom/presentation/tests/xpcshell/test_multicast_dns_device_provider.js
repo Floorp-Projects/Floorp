@@ -20,6 +20,12 @@ const PREF_DISCOVERY = "dom.presentation.discovery.enabled";
 const PREF_DISCOVERABLE = "dom.presentation.discoverable";
 const PREF_DEVICENAME= "dom.presentation.device.name";
 
+const LATEST_VERSION = 1;
+const SERVICE_TYPE = "_presentation-ctrl._tcp";
+const versionAttr = Cc["@mozilla.org/hash-property-bag;1"]
+                      .createInstance(Ci.nsIWritablePropertyBag2);
+versionAttr.setPropertyAsUint32("version", LATEST_VERSION);
+
 var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
 
 function MockFactory(aClass) {
@@ -200,7 +206,7 @@ function createDevice(host, port, serviceName, serviceType, domainName, attribut
   device.serviceName = serviceName || "";
   device.serviceType = serviceType || "";
   device.domainName = domainName || "";
-  device.attributes = attributes || null;
+  device.attributes = attributes || versionAttr;
   return device;
 }
 
@@ -336,7 +342,7 @@ function addDevice() {
   let mockDevice = createDevice("device.local",
                                 12345,
                                 "service.name",
-                                "_mozilla_papi._tcp");
+                                SERVICE_TYPE);
   let mockObj = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
     startDiscovery: function(serviceType, listener) {
@@ -393,10 +399,11 @@ function handleSessionRequest() {
   let mockDevice = createDevice("device.local",
                                 12345,
                                 "service.name",
-                                "_mozilla_papi._tcp");
+                                SERVICE_TYPE);
   let mockSDObj = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
     startDiscovery: function(serviceType, listener) {
+      do_print('xxx start discovery');
       listener.onDiscoveryStarted(serviceType);
       listener.onServiceFound(createDevice("",
                                            0,
@@ -429,6 +436,10 @@ function handleSessionRequest() {
       };
     },
     id: "",
+    version: LATEST_VERSION,
+    isCompatibleServer: function(version) {
+      return this.version === version;
+    }
   };
 
   let contractHookSD = new ContractHook(SD_CONTRACT_ID, mockSDObj);
@@ -465,7 +476,7 @@ function handleOnSessionRequest() {
   let mockDevice = createDevice("device.local",
                                 12345,
                                 "service.name",
-                                "_mozilla_papi._tcp");
+                                SERVICE_TYPE);
   let mockSDObj = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
     startDiscovery: function(serviceType, listener) {
@@ -494,6 +505,7 @@ function handleOnSessionRequest() {
     sessionRequest: function() {},
     close: function() {},
     id: '',
+    version: LATEST_VERSION,
     port: 0,
     listener: null,
   };
@@ -560,6 +572,7 @@ function handleOnSessionRequestFromUnknownDevice() {
     sessionRequest: function() {},
     close: function() {},
     id: '',
+    version: LATEST_VERSION,
     port: 0,
     listener: null,
   };
@@ -618,7 +631,7 @@ function handleOnSessionRequestFromUnknownDevice() {
 function noAddDevice() {
   Services.prefs.setBoolPref(PREF_DISCOVERY, false);
 
-  let mockDevice = createDevice("device.local", 12345, "service.name", "_mozilla_papi._tcp");
+  let mockDevice = createDevice("device.local", 12345, "service.name", SERVICE_TYPE);
   let mockObj = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
     startDiscovery: function(serviceType, listener) {
@@ -645,14 +658,14 @@ function noAddDevice() {
   run_next_test();
 }
 
-function ignoreSelfDevice() {
+function ignoreIncompatibleDevice() {
   Services.prefs.setBoolPref(PREF_DISCOVERY, false);
   Services.prefs.setBoolPref(PREF_DISCOVERABLE, true);
 
   let mockDevice = createDevice("device.local",
                                 12345,
                                 "service.name",
-                                "_mozilla_papi._tcp");
+                                SERVICE_TYPE);
   let mockSDObj = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
     startDiscovery: function(serviceType, listener) {
@@ -692,6 +705,10 @@ function ignoreSelfDevice() {
     sessionRequest: function() {},
     close: function() {},
     id: '',
+    version: LATEST_VERSION,
+    isCompatibleServer: function(version) {
+      return false;
+    },
     port: 0,
     listener: null,
   };
@@ -713,13 +730,87 @@ function ignoreSelfDevice() {
 
   run_next_test();
 }
+
+function ignoreSelfDevice() {
+  Services.prefs.setBoolPref(PREF_DISCOVERY, false);
+  Services.prefs.setBoolPref(PREF_DISCOVERABLE, true);
+
+  let mockDevice = createDevice("device.local",
+                                12345,
+                                "service.name",
+                                SERVICE_TYPE);
+  let mockSDObj = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
+    startDiscovery: function(serviceType, listener) {
+      listener.onDiscoveryStarted(serviceType);
+      listener.onServiceFound(createDevice("",
+                                           0,
+                                           mockDevice.serviceName,
+                                           mockDevice.serviceType));
+      return {
+        QueryInterface: XPCOMUtils.generateQI([Ci.nsICancelable]),
+        cancel: function() {}
+      };
+    },
+    registerService: function(serviceInfo, listener) {
+      listener.onServiceRegistered(createDevice("",
+                                                0,
+                                                mockDevice.serviceName,
+                                                mockDevice.serviceType));
+      return {
+        QueryInterface: XPCOMUtils.generateQI([Ci.nsICancelable]),
+        cancel: function() {}
+      };
+    },
+    resolveService: function(serviceInfo, listener) {
+      Assert.equal(serviceInfo.serviceName, mockDevice.serviceName);
+      Assert.equal(serviceInfo.serviceType, mockDevice.serviceType);
+      listener.onServiceResolved(createDevice(mockDevice.host,
+                                              mockDevice.port,
+                                              mockDevice.serviceName,
+                                              mockDevice.serviceType));
+    }
+  };
+
+  let mockServerObj = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlService]),
+    startServer: function() {},
+    sessionRequest: function() {},
+    close: function() {},
+    id: '',
+    version: LATEST_VERSION,
+    isCompatibleServer: function(version) {
+      return this.version === version;
+    },
+    port: 0,
+    listener: null,
+  };
+
+  let contractHookSD = new ContractHook(SD_CONTRACT_ID, mockSDObj);
+  let contractHookServer = new ContractHook(SERVER_CONTRACT_ID, mockServerObj);
+  let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
+  let listener = new TestPresentationDeviceListener();
+
+  // Register service
+  provider.listener = listener;
+  Assert.equal(mockServerObj.id, mockDevice.host);
+
+  // Start discovery
+  Services.prefs.setBoolPref(PREF_DISCOVERY, true);
+  Assert.equal(listener.count(), 0);
+
+  provider.listener = null;
+
+  run_next_test();
+}
+
 function addDeviceDynamically() {
   Services.prefs.setBoolPref(PREF_DISCOVERY, false);
 
   let mockDevice = createDevice("device.local",
                                 12345,
                                 "service.name",
-                                "_mozilla_papi._tcp");
+                                SERVICE_TYPE);
   let mockObj = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
     startDiscovery: function(serviceType, listener) {
@@ -772,8 +863,8 @@ function addDeviceDynamically() {
 function updateDevice() {
   Services.prefs.setBoolPref(PREF_DISCOVERY, true);
 
-  let mockDevice1 = createDevice("A.local", 12345, "N1", "_mozilla_papi._tcp");
-  let mockDevice2 = createDevice("A.local", 23456, "N2", "_mozilla_papi._tcp");
+  let mockDevice1 = createDevice("A.local", 12345, "N1", SERVICE_TYPE);
+  let mockDevice2 = createDevice("A.local", 23456, "N2", SERVICE_TYPE);
 
   let mockObj = {
     discovered: false,
@@ -798,7 +889,7 @@ function updateDevice() {
     },
     registerService: function(serviceInfo, listener) {},
     resolveService: function(serviceInfo, listener) {
-      Assert.equal(serviceInfo.serviceType, "_mozilla_papi._tcp");
+      Assert.equal(serviceInfo.serviceType, SERVICE_TYPE);
       if (serviceInfo.serviceName == "N1") {
         listener.onServiceResolved(mockDevice1);
       } else if (serviceInfo.serviceName == "N2") {
@@ -858,9 +949,9 @@ function updateDevice() {
 function diffDiscovery() {
   Services.prefs.setBoolPref(PREF_DISCOVERY, true);
 
-  let mockDevice1 = createDevice("A.local", 12345, "N1", "_mozilla_papi._tcp");
-  let mockDevice2 = createDevice("B.local", 23456, "N2", "_mozilla_papi._tcp");
-  let mockDevice3 = createDevice("C.local", 45678, "N3", "_mozilla_papi._tcp");
+  let mockDevice1 = createDevice("A.local", 12345, "N1", SERVICE_TYPE);
+  let mockDevice2 = createDevice("B.local", 23456, "N2", SERVICE_TYPE);
+  let mockDevice3 = createDevice("C.local", 45678, "N3", SERVICE_TYPE);
 
   let mockObj = {
     discovered: false,
@@ -887,7 +978,7 @@ function diffDiscovery() {
     },
     registerService: function(serviceInfo, listener) {},
     resolveService: function(serviceInfo, listener) {
-      Assert.equal(serviceInfo.serviceType, "_mozilla_papi._tcp");
+      Assert.equal(serviceInfo.serviceType, SERVICE_TYPE);
       if (serviceInfo.serviceName == "N1") {
         listener.onServiceResolved(mockDevice1);
       } else if (serviceInfo.serviceName == "N2") {
@@ -944,7 +1035,7 @@ function serverClosed() {
   let mockDevice = createDevice("device.local",
                                 12345,
                                 "service.name",
-                                "_mozilla_papi._tcp");
+                                SERVICE_TYPE);
 
   let mockObj = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
@@ -1034,6 +1125,7 @@ function run_test() {
   add_test(handleOnSessionRequest);
   add_test(handleOnSessionRequestFromUnknownDevice);
   add_test(noAddDevice);
+  add_test(ignoreIncompatibleDevice);
   add_test(ignoreSelfDevice);
   add_test(addDeviceDynamically);
   add_test(updateDevice);
