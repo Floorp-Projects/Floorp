@@ -2300,8 +2300,7 @@ private:
     static nsresult CheckForException(XPCCallContext & ccx,
                                       mozilla::dom::AutoEntryScript& aes,
                                       const char * aPropertyName,
-                                      const char * anInterfaceName,
-                                      bool aForceReport);
+                                      const char * anInterfaceName);
     virtual ~nsXPCWrappedJSClass();
 
     nsXPCWrappedJSClass();   // not implemented

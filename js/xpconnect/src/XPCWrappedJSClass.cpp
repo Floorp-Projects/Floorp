@@ -774,8 +774,7 @@ nsresult
 nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                                        AutoEntryScript& aes,
                                        const char * aPropertyName,
-                                       const char * anInterfaceName,
-                                       bool aForceReport)
+                                       const char * anInterfaceName)
 {
     XPCContext * xpcc = ccx.GetXPCContext();
     JSContext * cx = ccx.GetJSContext();
@@ -981,7 +980,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
         // Throw and warn for good measure.
         JS_ReportError(cx, str);
         NS_WARNING(str);
-        return CheckForException(ccx, aes, name, GetInterfaceName(), false);
+        return CheckForException(ccx, aes, name, GetInterfaceName());
     }
 
     RootedValue fval(cx);
@@ -1243,17 +1242,8 @@ pre_call_clean_up:
         }
     }
 
-    if (!success) {
-        bool forceReport;
-        if (NS_FAILED(mInfo->IsFunction(&forceReport)))
-            forceReport = false;
-
-        // May also want to check if we're moving from content->chrome and force
-        // a report in that case.
-
-        return CheckForException(ccx, aes, name, GetInterfaceName(),
-                                 forceReport);
-    }
+    if (!success)
+        return CheckForException(ccx, aes, name, GetInterfaceName());
 
     XPCJSRuntime::Get()->SetPendingException(nullptr); // XXX necessary?
 
