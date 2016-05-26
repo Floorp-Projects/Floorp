@@ -78,7 +78,7 @@ struct NotificationStrings
   const nsString mIcon;
   const nsString mData;
   const nsString mBehavior;
-  const nsString mServiceWorkerRegistrationID;
+  const nsString mServiceWorkerRegistrationScope;
 };
 
 class ScopeCheckingGetCallback : public nsINotificationStorageCallback
@@ -98,13 +98,13 @@ public:
                     const nsAString& aIcon,
                     const nsAString& aData,
                     const nsAString& aBehavior,
-                    const nsAString& aServiceWorkerRegistrationID) final
+                    const nsAString& aServiceWorkerRegistrationScope) final
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(!aID.IsEmpty());
 
     // Skip scopes that don't match when called from getNotifications().
-    if (!mScope.IsEmpty() && !mScope.Equals(aServiceWorkerRegistrationID)) {
+    if (!mScope.IsEmpty() && !mScope.Equals(aServiceWorkerRegistrationScope)) {
       return NS_OK;
     }
 
@@ -118,7 +118,7 @@ public:
       nsString(aIcon),
       nsString(aData),
       nsString(aBehavior),
-      nsString(aServiceWorkerRegistrationID),
+      nsString(aServiceWorkerRegistrationScope),
     };
 
     mStrings.AppendElement(Move(strings));
@@ -169,7 +169,7 @@ public:
                                           mStrings[i].mData,
                                           /* mStrings[i].mBehavior, not
                                            * supported */
-                                          mStrings[i].mServiceWorkerRegistrationID,
+                                          mStrings[i].mServiceWorkerRegistrationScope,
                                           result);
 
       n->SetStoredState(true);
@@ -1083,7 +1083,7 @@ Notification::ConstructFromFields(
     const nsAString& aTag,
     const nsAString& aIcon,
     const nsAString& aData,
-    const nsAString& aServiceWorkerRegistrationID,
+    const nsAString& aServiceWorkerRegistrationScope,
     ErrorResult& aRv)
 {
   MOZ_ASSERT(aGlobal);
@@ -1102,7 +1102,7 @@ Notification::ConstructFromFields(
     return nullptr;
   }
 
-  notification->SetScope(aServiceWorkerRegistrationID);
+  notification->SetScope(aServiceWorkerRegistrationScope);
 
   return notification.forget();
 }
@@ -2113,7 +2113,7 @@ public:
                                           mStrings[i].mData,
                                           /* mStrings[i].mBehavior, not
                                            * supported */
-                                          mStrings[i].mServiceWorkerRegistrationID,
+                                          mStrings[i].mServiceWorkerRegistrationScope,
                                           result);
 
       n->SetStoredState(true);
