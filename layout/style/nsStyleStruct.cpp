@@ -819,14 +819,12 @@ nsChangeHint nsStyleColumn::CalcDifference(const nsStyleColumn& aOther) const
 nsStyleSVG::nsStyleSVG(StyleStructContext aContext)
   : mFill(eStyleSVGPaintType_Color) // Will be initialized to NS_RGB(0, 0, 0)
   , mStroke(eStyleSVGPaintType_None)
-  , mStrokeDasharray(nullptr)
   , mStrokeDashoffset(0, nsStyleCoord::CoordConstructor)
   , mStrokeWidth(nsPresContext::CSSPixelsToAppUnits(1),
                  nsStyleCoord::CoordConstructor)
   , mFillOpacity(1.0f)
   , mStrokeMiterlimit(4.0f)
   , mStrokeOpacity(1.0f)
-  , mStrokeDasharrayLength(0)
   , mClipRule(NS_STYLE_FILL_RULE_NONZERO)
   , mColorInterpolation(NS_STYLE_COLOR_INTERPOLATION_SRGB)
   , mColorInterpolationFilters(NS_STYLE_COLOR_INTERPOLATION_LINEARRGB)
@@ -848,7 +846,6 @@ nsStyleSVG::nsStyleSVG(StyleStructContext aContext)
 nsStyleSVG::~nsStyleSVG()
 {
   MOZ_COUNT_DTOR(nsStyleSVG);
-  delete [] mStrokeDasharray;
 }
 
 nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
@@ -857,13 +854,12 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
   , mMarkerEnd(aSource.mMarkerEnd)
   , mMarkerMid(aSource.mMarkerMid)
   , mMarkerStart(aSource.mMarkerStart)
-  , mStrokeDasharray(nullptr)
+  , mStrokeDasharray(aSource.mStrokeDasharray)
   , mStrokeDashoffset(aSource.mStrokeDashoffset)
   , mStrokeWidth(aSource.mStrokeWidth)
   , mFillOpacity(aSource.mFillOpacity)
   , mStrokeMiterlimit(aSource.mStrokeMiterlimit)
   , mStrokeOpacity(aSource.mStrokeOpacity)
-  , mStrokeDasharrayLength(0)
   , mClipRule(aSource.mClipRule)
   , mColorInterpolation(aSource.mColorInterpolation)
   , mColorInterpolationFilters(aSource.mColorInterpolationFilters)
@@ -880,19 +876,6 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
   , mStrokeWidthFromObject(aSource.mStrokeWidthFromObject)
 {
   MOZ_COUNT_CTOR(nsStyleSVG);
-
-  MOZ_ASSERT(bool(aSource.mStrokeDasharray) ==
-             bool(aSource.mStrokeDasharrayLength),
-             "aSource.mStrokeDasharray has an inconsistent length!");
-  if (aSource.mStrokeDasharray) {
-    mStrokeDasharrayLength = aSource.mStrokeDasharrayLength;
-    mStrokeDasharray = new nsStyleCoord[mStrokeDasharrayLength];
-    if (mStrokeDasharray) {
-      for (size_t i = 0; i < mStrokeDasharrayLength; i++) {
-        mStrokeDasharray[i] = aSource.mStrokeDasharray[i];
-      }
-    }
-  }
 }
 
 static bool PaintURIChanged(const nsStyleSVGPaint& aPaint1,
@@ -971,20 +954,13 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
        mFillRule              != aOther.mFillRule              ||
        mPaintOrder            != aOther.mPaintOrder            ||
        mShapeRendering        != aOther.mShapeRendering        ||
-       mStrokeDasharrayLength != aOther.mStrokeDasharrayLength ||
+       mStrokeDasharray       != aOther.mStrokeDasharray       ||
        mFillOpacitySource     != aOther.mFillOpacitySource     ||
        mStrokeOpacitySource   != aOther.mStrokeOpacitySource   ||
        mStrokeDasharrayFromObject != aOther.mStrokeDasharrayFromObject ||
        mStrokeDashoffsetFromObject != aOther.mStrokeDashoffsetFromObject ||
        mStrokeWidthFromObject != aOther.mStrokeWidthFromObject) {
     return hint | nsChangeHint_RepaintFrame;
-  }
-
-  // length of stroke dasharrays are the same (tested above) - check entries
-  for (uint32_t i=0; i<mStrokeDasharrayLength; i++) {
-    if (mStrokeDasharray[i] != aOther.mStrokeDasharray[i]) {
-      return hint | nsChangeHint_RepaintFrame;
-    }
   }
 
   return hint;
