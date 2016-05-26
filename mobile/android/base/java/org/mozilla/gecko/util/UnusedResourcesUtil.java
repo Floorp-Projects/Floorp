@@ -102,7 +102,6 @@ final class UnusedResourcesUtil {
 
             R.drawable.remote_tabs_setup_button_background,
 
-            R.style.ActionBarThemeGeckoPreferences,
             R.style.TabsPanelSectionBase,
             R.style.TabsPanelSection,
             R.style.TabsPanelItemBase,

@@ -668,6 +668,10 @@
         <item name="colorControlNormal">@color/toolbar_icon_grey</item>
     </style>
 
+    <style name="PreferencesActionBar" parent="Widget.AppCompat.ActionBar.Solid">
+        <item name="displayOptions">showHome|homeAsUp|showTitle</item>
+    </style>
+
     <style name="GeckoActionBar.Title">
         <item name="android:gravity">center_vertical</item>
         <item name="android:minWidth">0dp</item>
