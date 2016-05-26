@@ -77,6 +77,8 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
     private RecentTabsAdapter mRecentTabsAdapter;
     private CursorLoaderCallbacks mCursorLoaderCallbacks;
 
+    private Bundle mSavedRestoreBundle;
+
     private PanelLevel mPanelLevel;
     private Button mPanelFooterButton;
 
@@ -147,6 +149,11 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
         mPanelFooterButton.setOnClickListener(new OnFooterButtonClickListener());
 
         mRecentTabsAdapter.startListeningForClosedTabs();
+
+        if (mSavedRestoreBundle != null) {
+            setPanelStateFromBundle(mSavedRestoreBundle);
+            mSavedRestoreBundle = null;
+        }
     }
 
     private void setUpRecyclerView() {
@@ -228,6 +235,24 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
 
         final TextView recentTabsText = (TextView) mRecentTabsEmptyView.findViewById(R.id.home_empty_text);
         recentTabsText.setText(R.string.home_last_tabs_empty);
+    }
+
+    @Override
+    public void restoreData(Bundle data) {
+        if (mRecyclerView != null) {
+            setPanelStateFromBundle(data);
+        } else {
+            mSavedRestoreBundle = data;
+        }
+    }
+
+    private void setPanelStateFromBundle(Bundle data) {
+        if (data != null && data.getBoolean("goToRecentTabs", false) && mPanelLevel != PanelLevel.CHILD_RECENT_TABS) {
+            mPanelLevel = PanelLevel.CHILD_RECENT_TABS;
+            mRecyclerView.swapAdapter(mRecentTabsAdapter, true);
+            updateEmptyView();
+            updateButtonFromLevel();
+        }
     }
 
     @Override
