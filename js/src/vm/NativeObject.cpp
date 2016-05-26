@@ -1824,6 +1824,14 @@ Detecting(JSContext* cx, JSScript* script, jsbytecode* pc)
 {
     MOZ_ASSERT(script->containsPC(pc));
 
+    // Skip jump target opcodes.
+    while (pc < script->codeEnd() && BytecodeIsJumpTarget(JSOp(*pc)))
+        pc = GetNextPc(pc);
+
+    MOZ_ASSERT(script->containsPC(pc));
+    if (pc >= script->codeEnd())
+        return false;
+
     // General case: a branch or equality op follows the access.
     JSOp op = JSOp(*pc);
     if (CodeSpec[op].format & JOF_DETECTING)
