@@ -34,11 +34,11 @@ runTest(`
   (export "test" 0)
   (memory 1 10)
 )`,
-"type $type$0 of function (i32) : (f64) " +
-"export $func$0 as \"test\" " +
-"function $func$0($var$0:i32) : (f64) {" +
-" var $var$1:f32 { $var$1 = 0.0f loop { br_if $var$0,$label$0 br $label$1 $label$0: }" +
-" if (1) { f64.min -1.0 0.0 } else { 0.5 + f64.load [0] } $label$1: }" +
+"type $type0 of function (i32) : (f64) " +
+"export $func0 as \"test\" " +
+"function $func0($var0:i32) : (f64) {" +
+" var $var1:f32 { $var1 = 0.0f loop { br_if $var0,$label0 br $label1 $label0: }" +
+" if (1) { f64.min -1.0 0.0 } else { 0.5 + f64.load [0] } $label1: }" +
 " i32.store16 [8],128 return 0.0 "+
 "} memory 1,10 {} ");
 
@@ -59,14 +59,14 @@ runTest(`
   (export "test" $test)
   (memory 1 65535)
 )`,
-"type $type$0 of function (i32) : (i32) " +
-"type $type$1 of function (f32) : (f32) " +
-"type $type$2 of function (i32,f32) : () " +
-"type $type$3 of function () : () " +
-"import \"test\" as $import$0 from \"mod\" typeof function (f32) : (f32) " +
-"table [$func$0,$func$1] export $func$2 as \"test\" " +
-"function $func$0($var$0:i32,$var$1:f32) : () { nop } " +
-"function $func$1($var$0:i32) : (i32) { $var$0 } " +
-"function $func$2() : () {" +
-" call $func$0 (call_indirect $type$0 [1] (2),call_import $import$0 (1.0f)) " +
+"type $type0 of function (i32) : (i32) " +
+"type $type1 of function (f32) : (f32) " +
+"type $type2 of function (i32,f32) : () " +
+"type $type3 of function () : () " +
+"import \"test\" as $import0 from \"mod\" typeof function (f32) : (f32) " +
+"table [$func0,$func1] export $func2 as \"test\" " +
+"function $func0($var0:i32,$var1:f32) : () { nop } " +
+"function $func1($var0:i32) : (i32) { $var0 } " +
+"function $func2() : () {" +
+" call $func0 (call_indirect $type0 [1] (2),call_import $import0 (1.0f)) " +
 "} memory 1,65535 {} ");
