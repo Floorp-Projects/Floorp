@@ -42,13 +42,16 @@ add_task(function* () {
  * @return {Promise}
  */
 function* switchToFrameContext(frameIndex, toolbox, inspector) {
-  // Verify that the frame list button is visible and populated
-  let frameListBtn = toolbox.doc.getElementById("command-button-frames");
-  let frameBtns = frameListBtn.firstChild.querySelectorAll("[data-window-id]");
+  // Open frame menu and wait till it's available on the screen.
+  let btn = toolbox.doc.getElementById("command-button-frames");
+  let menu = toolbox.showFramesMenu({target: btn});
+  yield once(menu, "open");
 
   info("Select the iframe in the frame list.");
   let newRoot = inspector.once("new-root");
-  frameBtns[frameIndex].click();
+
+  menu.menuitems[frameIndex].click();
+
   yield newRoot;
   yield inspector.once("inspector-updated");
 

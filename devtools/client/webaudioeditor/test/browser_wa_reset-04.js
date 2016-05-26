@@ -26,12 +26,17 @@ add_task(function* () {
     "The tool's content should initially be hidden.");
 
   let btn = toolbox.doc.getElementById("command-button-frames");
-  ok(!btn.firstChild.getAttribute("hidden"), "The frame list button is visible");
-  let frameBtns = btn.firstChild.querySelectorAll("[data-window-id]");
-  is(frameBtns.length, 2, "We have both frames in the list");
+  ok(!btn.firstChild, "The frame list button has no children");
+
+  // Open frame menu and wait till it's available on the screen.
+  let menu = toolbox.showFramesMenu({target: btn});
+  yield once(menu, "open");
+
+  let frames = menu.menuitems;
+  is(frames.length, 2, "We have both frames in the list");
 
   // Select the iframe
-  frameBtns[1].click();
+  frames[1].click();
 
   let navigating = once(target, "will-navigate");
 
