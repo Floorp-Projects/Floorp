@@ -128,10 +128,14 @@ const StyleRuleFront = FrontClassWithSpec(styleRuleSpec, {
    * A RuleRewriter will be returned when the rule's canSetRuleText
    * trait is true; otherwise a RuleModificationList will be
    * returned.
+   *
+   * @param {CssPropertiesFront} cssProperties
+   *                             This is needed by the RuleRewriter.
+   * @return {RuleModificationList}
    */
-  startModifyingProperties: function () {
+  startModifyingProperties: function (cssProperties) {
     if (this.canSetRuleText) {
-      return new RuleRewriter(this, this.authoredText);
+      return new RuleRewriter(cssProperties.isKnown, this, this.authoredText);
     }
     return new RuleModificationList(this);
   },
@@ -416,4 +420,3 @@ var RuleModificationList = Class({
     // Nothing.
   },
 });
-

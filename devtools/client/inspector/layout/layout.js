@@ -12,6 +12,7 @@ const {InplaceEditor, editableItem} =
       require("devtools/client/shared/inplace-editor");
 const {ReflowFront} = require("devtools/server/actors/layout");
 const {LocalizationHelper} = require("devtools/client/shared/l10n");
+const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 
 const STRINGS_URI = "chrome://devtools/locale/shared.properties";
 const SHARED_L10N = new LocalizationHelper(STRINGS_URI);
@@ -21,16 +22,19 @@ const LONG_TEXT_ROTATE_LIMIT = 3;
 /**
  * An instance of EditingSession tracks changes that have been made during the
  * modification of box model values. All of these changes can be reverted by
- * calling revert.
+ * calling revert. The main parameter is the LayoutView that created it.
  *
- * @param doc    A DOM document that can be used to test style rules.
- * @param rules  An array of the style rules defined for the node being edited.
- *               These should be in order of priority, least important first.
+ * @param inspector The inspector panel.
+ * @param doc       A DOM document that can be used to test style rules.
+ * @param rules     An array of the style rules defined for the node being
+ *                  edited. These should be in order of priority, least
+ *                  important first.
  */
-function EditingSession(doc, rules) {
+function EditingSession({inspector, doc, elementRules}) {
   this._doc = doc;
-  this._rules = rules;
+  this._rules = elementRules;
   this._modifications = new Map();
+  this._cssProperties = getCssProperties(inspector.toolbox);
 }
 
 EditingSession.prototype = {
@@ -110,7 +114,8 @@ EditingSession.prototype = {
       // StyleRuleActor to make changes to CSS properties.
       // Note that RuleRewriter doesn't support modifying several properties at
       // once, so we do this in a sequence here.
-      let modifications = this._rules[0].startModifyingProperties();
+      let modifications = this._rules[0].startModifyingProperties(
+        this._cssProperties);
 
       // Remember the property so it can be reverted.
       if (!this._modifications.has(property.name)) {
@@ -143,7 +148,8 @@ EditingSession.prototype = {
     // Revert each property that we modified previously, one by one. See
     // setProperties for information about why.
     for (let [property, value] of this._modifications) {
-      let modifications = this._rules[0].startModifyingProperties();
+      let modifications = this._rules[0].startModifyingProperties(
+        this._cssProperties);
 
       // Find the index of the property to be reverted.
       let index = this.getPropertyIndex(property);
@@ -358,7 +364,7 @@ LayoutView.prototype = {
    */
   initEditor: function (element, event, dimension) {
     let { property } = dimension;
-    let session = new EditingSession(this.doc, this.elementRules);
+    let session = new EditingSession(this);
     let initialValue = session.getProperty(property);
 
     let editor = new InplaceEditor({

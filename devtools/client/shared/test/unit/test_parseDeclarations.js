@@ -8,6 +8,7 @@
 var Cu = Components.utils;
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const {parseDeclarations, _parseCommentDeclarations} = require("devtools/shared/css-parsing-utils");
+const {isCssPropertyKnown} = require("devtools/server/actors/css-properties");
 
 const TEST_DATA = [
   // Simple test
@@ -359,7 +360,8 @@ function run_basic_tests() {
     do_print("Test input string " + test.input);
     let output;
     try {
-      output = parseDeclarations(test.input, test.parseComments);
+      output = parseDeclarations(isCssPropertyKnown, test.input,
+                                 test.parseComments);
     } catch (e) {
       do_print("parseDeclarations threw an exception with the given input " +
         "string");
@@ -394,7 +396,7 @@ const COMMENT_DATA = [
 function run_comment_tests() {
   for (let test of COMMENT_DATA) {
     do_print("Test input string " + test.input);
-    let output = _parseCommentDeclarations(test.input, 0,
+    let output = _parseCommentDeclarations(isCssPropertyKnown, test.input, 0,
                                            test.input.length + 4);
     deepEqual(output, test.expected);
   }
