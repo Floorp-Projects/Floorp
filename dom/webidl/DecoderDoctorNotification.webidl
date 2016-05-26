@@ -12,5 +12,10 @@ enum DecoderDoctorNotificationType {
 
 dictionary DecoderDoctorNotification {
   required DecoderDoctorNotificationType type;
+  // True when the issue has been solved.
+  required boolean isSolved;
+  // Key from dom.properties, used for telemetry and prefs.
+  required DOMString decoderDoctorReportId;
+  // If provided, formats (or key systems) at issue.
   DOMString formats;
 };
