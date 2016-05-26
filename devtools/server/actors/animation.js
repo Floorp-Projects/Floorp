@@ -31,10 +31,7 @@ const {Task} = require("devtools/shared/task");
 const protocol = require("devtools/shared/protocol");
 const {ActorClass, Actor, FrontClass, Front,
        Arg, method, RetVal, types} = protocol;
-// Make sure the nodeActor type is know here.
-const {NodeActor} = require("devtools/server/actors/inspector");
-const {AnimationPlayerFront} = require("devtools/shared/fronts/animation");
-const {animationPlayerSpec} = require("devtools/shared/specs/animation");
+const {animationPlayerSpec, animationsSpec} = require("devtools/shared/specs/animation");
 const events = require("sdk/event/core");
 
 // Types of animations.
@@ -434,31 +431,11 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
 
 exports.AnimationPlayerActor = AnimationPlayerActor;
 
- /**
- * Sent with the 'mutations' event as part of an array of changes, used to
- * inform fronts of the type of change that occured.
- */
-types.addDictType("animationMutationChange", {
-  // The type of change ("added" or "removed").
-  type: "string",
-  // The changed AnimationPlayerActor.
-  player: "animationplayer"
-});
-
 /**
  * The Animations actor lists animation players for a given node.
  */
-var AnimationsActor = exports.AnimationsActor = ActorClass({
-  typeName: "animations",
-
-  events: {
-    "mutations": {
-      type: "mutations",
-      changes: Arg(0, "array:animationMutationChange")
-    }
-  },
-
-  initialize: function (conn, tabActor) {
+var AnimationsActor = exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
+  initialize: function(conn, tabActor) {
     Actor.prototype.initialize.call(this, conn);
     this.tabActor = tabActor;
 
@@ -496,14 +473,9 @@ var AnimationsActor = exports.AnimationsActor = ActorClass({
    * to the server to get a NodeActor for a particular animation.
    * @param {WalkerActor} walker
    */
-  setWalkerActor: method(function (walker) {
+  setWalkerActor: function (walker) {
     this.walker = walker;
-  }, {
-    request: {
-      walker: Arg(0, "domwalker")
-    },
-    response: {}
-  }),
+  },
 
   /**
    * Retrieve the list of AnimationPlayerActor actors for currently running
@@ -515,7 +487,7 @@ var AnimationsActor = exports.AnimationsActor = ActorClass({
    * @param {NodeActor} nodeActor The NodeActor as defined in
    * /devtools/server/actors/inspector
    */
-  getAnimationPlayersForNode: method(function (nodeActor) {
+  getAnimationPlayersForNode: function (nodeActor) {
     let animations = nodeActor.rawNode.getAnimations({subtree: true});
 
     // Destroy previously stored actors
@@ -542,14 +514,7 @@ var AnimationsActor = exports.AnimationsActor = ActorClass({
     });
 
     return this.actors;
-  }, {
-    request: {
-      actorID: Arg(0, "domnode")
-    },
-    response: {
-      players: RetVal("array:animationplayer")
-    }
-  }),
+  },
 
   onAnimationMutation: function (mutations) {
     let eventData = [];
@@ -629,14 +594,11 @@ var AnimationsActor = exports.AnimationsActor = ActorClass({
    * node, the actor starts sending animation mutations for this node. If the
    * client doesn't want this to happen anymore, it should call this method.
    */
-  stopAnimationPlayerUpdates: method(function () {
+  stopAnimationPlayerUpdates: function () {
     if (this.observer && !Cu.isDeadWrapper(this.observer)) {
       this.observer.disconnect();
     }
-  }, {
-    request: {},
-    response: {}
-  }),
+  },
 
   /**
    * Iterates through all nodes below a given rootNode (optionally also in
@@ -674,7 +636,7 @@ var AnimationsActor = exports.AnimationsActor = ActorClass({
   /**
    * Pause all animations in the current tabActor's frames.
    */
-  pauseAll: method(function () {
+  pauseAll: function () {
     let readyPromises = [];
     // Until the WebAnimations API provides a way to play/pause via the document
     // timeline, we have to iterate through the whole DOM to find all players.
@@ -685,16 +647,13 @@ var AnimationsActor = exports.AnimationsActor = ActorClass({
     }
     this.allAnimationsPaused = true;
     return promise.all(readyPromises);
-  }, {
-    request: {},
-    response: {}
-  }),
+  },
 
   /**
    * Play all animations in the current tabActor's frames.
    * This method only returns when animations have left their pending states.
    */
-  playAll: method(function () {
+  playAll: function () {
     let readyPromises = [];
     // Until the WebAnimations API provides a way to play/pause via the document
     // timeline, we have to iterate through the whole DOM to find all players.
@@ -705,20 +664,14 @@ var AnimationsActor = exports.AnimationsActor = ActorClass({
     }
     this.allAnimationsPaused = false;
     return promise.all(readyPromises);
-  }, {
-    request: {},
-    response: {}
-  }),
+  },
 
-  toggleAll: method(function () {
+  toggleAll: function () {
     if (this.allAnimationsPaused) {
       return this.playAll();
     }
     return this.pauseAll();
-  }, {
-    request: {},
-    response: {}
-  }),
+  },
 
   /**
    * Toggle (play/pause) several animations at the same time.
@@ -726,17 +679,11 @@ var AnimationsActor = exports.AnimationsActor = ActorClass({
    * @param {Boolean} shouldPause If set to true, the players will be paused,
    * otherwise they will be played.
    */
-  toggleSeveral: method(function (players, shouldPause) {
+  toggleSeveral: function (players, shouldPause) {
     return promise.all(players.map(player => {
       return shouldPause ? player.pause() : player.play();
     }));
-  }, {
-    request: {
-      players: Arg(0, "array:animationplayer"),
-      shouldPause: Arg(1, "boolean")
-    },
-    response: {}
-  }),
+  },
 
   /**
    * Set the current time of several animations at the same time.
@@ -744,45 +691,21 @@ var AnimationsActor = exports.AnimationsActor = ActorClass({
    * @param {Number} time The new currentTime.
    * @param {Boolean} shouldPause Should the players be paused too.
    */
-  setCurrentTimes: method(function (players, time, shouldPause) {
+  setCurrentTimes: function (players, time, shouldPause) {
     return promise.all(players.map(player => {
       let pause = shouldPause ? player.pause() : promise.resolve();
       return pause.then(() => player.setCurrentTime(time));
     }));
-  }, {
-    request: {
-      players: Arg(0, "array:animationplayer"),
-      time: Arg(1, "number"),
-      shouldPause: Arg(2, "boolean")
-    },
-    response: {}
-  }),
+  },
 
   /**
    * Set the playback rate of several animations at the same time.
    * @param {Array} players A list of AnimationPlayerActor.
    * @param {Number} rate The new rate.
    */
-  setPlaybackRates: method(function (players, rate) {
+  setPlaybackRates: function (players, rate) {
     for (let player of players) {
       player.setPlaybackRate(rate);
     }
-  }, {
-    request: {
-      players: Arg(0, "array:animationplayer"),
-      rate: Arg(1, "number")
-    },
-    response: {}
-  })
-});
-
-var AnimationsFront = exports.AnimationsFront = FrontClass(AnimationsActor, {
-  initialize: function (client, {animationsActor}) {
-    Front.prototype.initialize.call(this, client, {actor: animationsActor});
-    this.manage(this);
-  },
-
-  destroy: function () {
-    Front.prototype.destroy.call(this);
   }
 });
