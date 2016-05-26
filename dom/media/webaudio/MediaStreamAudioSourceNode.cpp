@@ -117,11 +117,14 @@ MediaStreamAudioSourceNode::AttachToFirstTrack(const RefPtr<DOMMediaStream>& aMe
   nsTArray<RefPtr<AudioStreamTrack>> tracks;
   aMediaStream->GetAudioTracks(tracks);
 
-  if (tracks.IsEmpty()) {
+  for (const RefPtr<AudioStreamTrack>& track : tracks) {
+    if (track->Ended()) {
+      continue;
+    }
+
+    AttachToTrack(track);
     return;
   }
-
-  AttachToTrack(tracks[0]);
 }
 
 void
