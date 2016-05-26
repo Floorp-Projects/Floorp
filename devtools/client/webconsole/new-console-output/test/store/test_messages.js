@@ -24,7 +24,8 @@ add_task(function* () {
 
   const expectedMessage = prepareMessage(packet);
 
-  deepEqual(getAllMessages(getState()), [expectedMessage],
+  let messages = getAllMessages(getState());
+  deepEqual(messages.toArray(), [expectedMessage],
     "MESSAGE_ADD action adds a message");
 });
 
@@ -41,8 +42,9 @@ add_task(function* () {
   const expectedMessage = prepareMessage(packet);
   expectedMessage.repeat = 3;
 
-  deepEqual(getAllMessages(getState()), [expectedMessage],
-    "Adding same message to the store twice results in repeated message");
+  let messages = getAllMessages(getState());
+  deepEqual(messages.toArray(), [expectedMessage],
+    "Adding same message to the store three times results in repeated message");
 });
 
 /**
