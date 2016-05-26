@@ -515,11 +515,12 @@ protected:
 
     // We've finished the region specified by the frame rect. Advance to the end
     // of the next pipeline stage's buffer, outputting blank rows.
-    mNext.template WriteRows<uint32_t>([&](uint32_t* aRow, uint32_t aLength) {
-      memset(rowPtr, 0, aLength * sizeof(uint32_t));
+    mNext.template WriteRows<uint32_t>([](uint32_t* aRow, uint32_t aLength) {
+      memset(aRow, 0, aLength * sizeof(uint32_t));
       return Nothing();
     });
 
+    mRow = InputSize().height;
     return nullptr;  // We're done.
   }
 
