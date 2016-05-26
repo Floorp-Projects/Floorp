@@ -22,106 +22,6 @@
 extern "C" int sandbox_init(const char *profile, uint64_t flags, char **errorbuf);
 extern "C" void sandbox_free_error(char *errorbuf);
 
-#define MAC_OS_X_VERSION_10_0_HEX  0x00001000
-#define MAC_OS_X_VERSION_10_6_HEX  0x00001060
-#define MAC_OS_X_VERSION_10_7_HEX  0x00001070
-#define MAC_OS_X_VERSION_10_8_HEX  0x00001080
-#define MAC_OS_X_VERSION_10_9_HEX  0x00001090
-#define MAC_OS_X_VERSION_10_10_HEX 0x000010A0
-
-// Note about "major", "minor" and "bugfix" in the following code:
-//
-// The code decomposes an OS X version number into these components, and in
-// doing so follows Apple's terminology in Gestalt.h.  But this is very
-// misleading, because in other contexts Apple uses the "minor" component of
-// an OS X version number to indicate a "major" release (for example the "9"
-// in OS X 10.9.5), and the "bugfix" component to indicate a "minor" release
-// (for example the "5" in OS X 10.9.5).
-
-class OSXVersion {
-public:
-  static bool OnLionOrLater();
-  static int32_t OSXVersionMinor();
-
-private:
-  static void GetSystemVersion(int32_t& aMajor, int32_t& aMinor, int32_t& aBugFix);
-  static int32_t GetVersionNumber();
-  static int32_t mOSXVersion;
-};
-
-int32_t OSXVersion::mOSXVersion = -1;
-
-bool OSXVersion::OnLionOrLater()
-{
-  return (GetVersionNumber() >= MAC_OS_X_VERSION_10_7_HEX);
-}
-
-int32_t OSXVersion::OSXVersionMinor()
-{
-  return (GetVersionNumber() & 0xF0) >> 4;
-}
-
-void
-OSXVersion::GetSystemVersion(int32_t& aMajor, int32_t& aMinor, int32_t& aBugFix)
-{
-  SInt32 major = 0, minor = 0, bugfix = 0;
-
-  CFURLRef url =
-    CFURLCreateWithString(kCFAllocatorDefault,
-                          CFSTR("file:///System/Library/CoreServices/SystemVersion.plist"),
-                          NULL);
-  CFReadStreamRef stream =
-    CFReadStreamCreateWithFile(kCFAllocatorDefault, url);
-  CFReadStreamOpen(stream);
-  CFDictionaryRef sysVersionPlist = (CFDictionaryRef)
-    CFPropertyListCreateWithStream(kCFAllocatorDefault,
-                                   stream, 0, kCFPropertyListImmutable,
-                                   NULL, NULL);
-  CFReadStreamClose(stream);
-  CFRelease(stream);
-  CFRelease(url);
-
-  CFStringRef versionString = (CFStringRef)
-    CFDictionaryGetValue(sysVersionPlist, CFSTR("ProductVersion"));
-  CFArrayRef versions =
-    CFStringCreateArrayBySeparatingStrings(kCFAllocatorDefault,
-                                           versionString, CFSTR("."));
-  CFIndex count = CFArrayGetCount(versions);
-  if (count > 0) {
-    CFStringRef component = (CFStringRef) CFArrayGetValueAtIndex(versions, 0);
-    major = CFStringGetIntValue(component);
-    if (count > 1) {
-      component = (CFStringRef) CFArrayGetValueAtIndex(versions, 1);
-      minor = CFStringGetIntValue(component);
-      if (count > 2) {
-        component = (CFStringRef) CFArrayGetValueAtIndex(versions, 2);
-        bugfix = CFStringGetIntValue(component);
-      }
-    }
-  }
-  CFRelease(sysVersionPlist);
-  CFRelease(versions);
-
-  // If 'major' isn't what we expect, assume the oldest version of OS X we
-  // currently support (OS X 10.6).
-  if (major != 10) {
-    aMajor = 10; aMinor = 6; aBugFix = 0;
-  } else {
-    aMajor = major; aMinor = minor; aBugFix = bugfix;
-  }
-}
-
-int32_t
-OSXVersion::GetVersionNumber()
-{
-  if (mOSXVersion == -1) {
-    int32_t major, minor, bugfix;
-    GetSystemVersion(major, minor, bugfix);
-    mOSXVersion = MAC_OS_X_VERSION_10_0_HEX + (minor << 4) + bugfix;
-  }
-  return mOSXVersion;
-}
-
 namespace mozilla {
 
 static const char pluginSandboxRules[] =
@@ -129,10 +29,7 @@ static const char pluginSandboxRules[] =
   "(deny default)\n"
   "(allow signal (target self))\n"
   "(allow sysctl-read)\n"
-  // Illegal syntax on OS X 10.6, needed on 10.7 and up.
-  "%s(allow iokit-open (iokit-user-client-class \"IOHIDParamUserClient\"))\n"
-  // Needed only on OS X 10.6
-  "%s(allow file-read-data (literal \"%s\"))\n"
+  "(allow iokit-open (iokit-user-client-class \"IOHIDParamUserClient\"))\n"
   "(allow mach-lookup\n"
   "    (global-name \"com.apple.cfprefsd.agent\")\n"
   "    (global-name \"com.apple.cfprefsd.daemon\")\n"
@@ -157,7 +54,6 @@ static const char contentSandboxRules[] =
   "(version 1)\n"
   "\n"
   "(define sandbox-level %d)\n"
-  "(define macosMinorVersion %d)\n"
   "(define appPath \"%s\")\n"
   "(define appBinaryPath \"%s\")\n"
   "(define appDir \"%s\")\n"
@@ -166,11 +62,6 @@ static const char contentSandboxRules[] =
   "\n"
   "(import \"/System/Library/Sandbox/Profiles/system.sb\")\n"
   "\n"
-  "(if \n"
-  "  (or\n"
-  "    (< macosMinorVersion 9)\n"
-  "    (< sandbox-level 1))\n"
-  "  (allow default)\n"
   "  (begin\n"
   "    (deny default)\n"
   "    (debug deny)\n"
@@ -376,8 +267,7 @@ static const char contentSandboxRules[] =
   "        (literal \"/private/var/run/mDNSResponder\"))\n"
   "\n"
   "; print preview\n"
-  "    (if (> macosMinorVersion 9)\n"
-  "        (allow lsopen))\n"
+  "    (allow lsopen)\n"
   "    (allow file-write* file-issue-extension (var-folders2-regex \"/\"))\n"
   "    (allow file-read-xattr (literal \"/Applications/Preview.app\"))\n"
   "    (allow mach-task-name)\n"
@@ -431,26 +321,16 @@ static const char contentSandboxRules[] =
   "        (subpath appTempDir))\n"
   "    (allow file-write*\n"
   "        (subpath appTempDir))\n"
-  "  )\n"
-  ")\n";
+  "  )\n";
 
 bool StartMacSandbox(MacSandboxInfo aInfo, std::string &aErrorMessage)
 {
   char *profile = NULL;
   if (aInfo.type == MacSandboxType_Plugin) {
-    if (OSXVersion::OnLionOrLater()) {
-      asprintf(&profile, pluginSandboxRules, "", ";",
-               aInfo.pluginInfo.pluginPath.c_str(),
-               aInfo.pluginInfo.pluginBinaryPath.c_str(),
-               aInfo.appPath.c_str(),
-               aInfo.appBinaryPath.c_str());
-    } else {
-      asprintf(&profile, pluginSandboxRules, ";", "",
-               aInfo.pluginInfo.pluginPath.c_str(),
-               aInfo.pluginInfo.pluginBinaryPath.c_str(),
-               aInfo.appPath.c_str(),
-               aInfo.appBinaryPath.c_str());
-    }
+    asprintf(&profile, pluginSandboxRules,
+             aInfo.pluginInfo.pluginBinaryPath.c_str(),
+             aInfo.appPath.c_str(),
+             aInfo.appBinaryPath.c_str());
 
     if (profile &&
       aInfo.pluginInfo.type == MacSandboxPluginType_GMPlugin_EME_Widevine) {
@@ -462,13 +342,18 @@ bool StartMacSandbox(MacSandboxInfo aInfo, std::string &aErrorMessage)
     }
   }
   else if (aInfo.type == MacSandboxType_Content) {
-    asprintf(&profile, contentSandboxRules, aInfo.level,
-             OSXVersion::OSXVersionMinor(),
-             aInfo.appPath.c_str(),
-             aInfo.appBinaryPath.c_str(),
-             aInfo.appDir.c_str(),
-             aInfo.appTempDir.c_str(),
-             getenv("HOME"));
+    if (aInfo.level >= 1) {
+      asprintf(&profile, contentSandboxRules, aInfo.level,
+               aInfo.appPath.c_str(),
+               aInfo.appBinaryPath.c_str(),
+               aInfo.appDir.c_str(),
+               aInfo.appTempDir.c_str(),
+               getenv("HOME"));
+    } else {
+      fprintf(stderr,
+        "Content sandbox disabled due to sandbox level setting\n");
+      return (true);
+    }
   }
   else {
     char *msg = NULL;
