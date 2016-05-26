@@ -11,7 +11,11 @@ const TAB_URL = EXAMPLE_URL + "doc_random-javascript.html";
 const JS_URL = EXAMPLE_URL + "sjs_random-javascript.sjs";
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: JS_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     const gPanel = aPanel;
     const gDebugger = aPanel.panelWin;
     const gEditor = gDebugger.DebuggerView.editor;
@@ -22,7 +26,6 @@ function test() {
     const getState = gDebugger.DebuggerController.getState;
 
     Task.spawn(function* () {
-      yield waitForSourceShown(gPanel, JS_URL);
       let source = queries.getSelectedSource(getState());
 
       is(queries.getSourceCount(getState()), 1,

@@ -13,12 +13,16 @@ const TAB_URL = EXAMPLE_URL + "doc_recursion-stack.html";
 var gTab, gPanel, gDebugger;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: TAB_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
 
-    waitForSourceAndCaretAndScopes(gPanel, ".html", 14).then(performTest);
+    waitForCaretAndScopes(gPanel, 14).then(performTest);
     callInTab(gTab, "simpleCall");
   });
 }

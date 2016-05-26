@@ -21,7 +21,11 @@ var gOriginalPref = Services.prefs.getBoolPref("devtools.debugger.auto-pretty-pr
 Services.prefs.setBoolPref("devtools.debugger.auto-pretty-print", true);
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  let options = {
+    source: gFirstSourceLabel,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab, aDebuggee, aPanel]) => {
     const gTab = aTab;
     const gDebuggee = aDebuggee;
     const gPanel = aPanel;
@@ -37,7 +41,6 @@ function test() {
 
     Task.spawn(function* () {
 
-      yield waitForSourceShown(gPanel, gFirstSourceLabel);
       testSourceIsUgly();
 
       yield waitForSourceShown(gPanel, gFirstSourceLabel);

@@ -15,7 +15,11 @@ var gTab, gPanel, gDebugger;
 var gEditor, gSources;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: COFFEE_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
@@ -24,9 +28,8 @@ function test() {
 
     checkSourceMapsEnabled();
 
-    waitForSourceShown(gPanel, ".coffee")
-      .then(checkInitialSource)
-      .then(testSetBreakpoint)
+    checkInitialSource();
+    testSetBreakpoint()
       .then(testSetBreakpointBlankLine)
       .then(testHitBreakpoint)
       .then(testStepping)

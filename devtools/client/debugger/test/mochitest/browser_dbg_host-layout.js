@@ -35,7 +35,7 @@ function testHosts(aHostTypes, aLayoutTypes) {
   Services.prefs.setCharPref("devtools.toolbox.host", getHost(firstHost));
 
   return Task.spawn(function*() {
-    let [tab, debuggee, panel] = yield initDebugger("about:blank");
+    let [tab, debuggee, panel] = yield initDebugger();
     if (getHost(firstHost) === "window") {
       yield resizeToolboxWindow(panel, firstHost);
     }

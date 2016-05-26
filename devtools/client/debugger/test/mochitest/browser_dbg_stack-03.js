@@ -11,7 +11,11 @@ const TAB_URL = EXAMPLE_URL + "doc_recursion-stack.html";
 let framesScrollingInterval;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  let options = {
+    source: TAB_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab, aDebuggee, aPanel]) => {
     const tab = aTab;
     const debuggee = aDebuggee;
     const panel = aPanel;

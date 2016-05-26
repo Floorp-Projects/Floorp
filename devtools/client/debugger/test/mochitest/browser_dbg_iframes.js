@@ -13,7 +13,11 @@ function test() {
   let gTab, gDebuggee, gPanel, gDebugger;
   let gIframe, gEditor, gSources, gFrames;
 
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  let options = {
+    source: "inline-debugger-statement.html",
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab, aDebuggee, aPanel]) => {
     gTab = aTab;
     gDebuggee = aDebuggee;
     gPanel = aPanel;
@@ -23,9 +27,8 @@ function test() {
     gSources = gDebugger.DebuggerView.Sources;
     gFrames = gDebugger.DebuggerView.StackFrames;
 
-    waitForSourceShown(gPanel, "inline-debugger-statement.html")
-      .then(checkIframeSource)
-      .then(checkIframePause)
+    checkIframeSource();
+    checkIframePause()
       .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
       .then(null, aError => {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);

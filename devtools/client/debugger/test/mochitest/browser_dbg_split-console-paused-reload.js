@@ -14,13 +14,16 @@ function test() {
 
 function* runTests() {
   let TAB_URL = EXAMPLE_URL + "doc_split-console-paused-reload.html";
-  let [,, panel] = yield initDebugger(TAB_URL);
+  let options = {
+    source: TAB_URL,
+    line: 1
+  };
+  let [,, panel] = yield initDebugger(TAB_URL, options);
   let dbgWin = panel.panelWin;
   let sources = dbgWin.DebuggerView.Sources;
   let frames = dbgWin.DebuggerView.StackFrames;
   let toolbox = gDevTools.getToolbox(panel.target);
 
-  yield waitForSourceShown(panel, ".html");
   yield panel.addBreakpoint({ actor: getSourceActor(sources, TAB_URL), line: 16 });
   info("Breakpoint was set.");
   dbgWin.DebuggerController._target.activeTab.reload();

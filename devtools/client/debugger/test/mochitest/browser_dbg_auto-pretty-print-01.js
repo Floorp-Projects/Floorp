@@ -16,7 +16,11 @@ var gSecondSourceLabel = "code_ugly-6.js";
 var gOriginalPref = Services.prefs.getBoolPref("devtools.debugger.auto-pretty-print");
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: gFirstSourceLabel,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
@@ -27,7 +31,6 @@ function test() {
     gView = gDebugger.DebuggerView;
 
     Task.spawn(function* () {
-      yield waitForSourceShown(gPanel, gFirstSourceLabel);
       testSourceIsUgly();
 
       enableAutoPrettyPrint();

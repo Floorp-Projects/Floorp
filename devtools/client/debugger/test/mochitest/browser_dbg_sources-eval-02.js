@@ -14,7 +14,11 @@ function test() {
   let gTab, gPanel, gDebugger;
   let gSources, gBreakpoints, gEditor;
 
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: "-eval.js",
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
@@ -27,7 +31,6 @@ function test() {
     const getState = gDebugger.DebuggerController.getState;
 
     return Task.spawn(function* () {
-      yield waitForSourceShown(gPanel, "-eval.js");
       is(queries.getSourceCount(getState()), 1, "Should have 1 source");
 
       const newSource = waitForDispatch(gPanel, constants.ADD_SOURCE);

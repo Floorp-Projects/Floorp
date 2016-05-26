@@ -10,13 +10,18 @@
 const TAB_URL = EXAMPLE_URL + "doc_pretty-print.html";
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  // Wait for debugger panel to be fully set and break on debugger statement
+  let options = {
+    source: "code_ugly.js",
+    line: 2
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     const gTab = aTab;
     const gPanel = aPanel;
     const gDebugger = gPanel.panelWin;
 
     Task.spawn(function* () {
-      yield waitForSourceShown(gPanel, "code_ugly.js");
+      yield doResume(gPanel);
 
       const paused = waitForPause(gDebugger.gThreadClient);
       callInTab(gTab, "foo");
