@@ -22,7 +22,6 @@ config = {
     "python": "python",
 
     "exes": {
-        'hgtool.py': '%(abs_tools_dir)s/buildfarm/utils/hgtool.py',
         'gittool.py': '%(abs_tools_dir)s/buildfarm/utils/gittool.py',
         'tooltool.py': '/tools/tooltool.py',
         "virtualenv": [PYTHON_DIR + "/bin/python", "/tools/misc-python/virtualenv.py"],
@@ -33,7 +32,7 @@ config = {
 
     "repos": [{
         "repo": "https://hg.mozilla.org/build/tools",
-        "revision": "default",
+        "branch": "default",
         "dest": "tools"
     }],
 
