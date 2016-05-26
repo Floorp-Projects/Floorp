@@ -167,7 +167,6 @@ interface nsIGfxInfo : nsISupports
   //       "name": <string>,
   //       "description": <string>,
   //       "status": <string>,
-  //       "failureId": <string>,    // optional, only covers static failure currently.
   //       "log": [
   //          // One or more log entries, the first denotes the default value.
   //          {
