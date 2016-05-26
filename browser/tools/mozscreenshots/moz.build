@@ -9,6 +9,7 @@ BROWSER_CHROME_MANIFESTS += [
     # run-by-dir.
     'browser.ini',
     'devtools/browser.ini',
+    'permissionPrompts/browser.ini',
     'preferences/browser.ini',
     'primaryUI/browser.ini',
 ]
