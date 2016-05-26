@@ -418,7 +418,7 @@ protected:
   {
     uint8_t* rowPtr = mNext.ResetToFirstRow();
     if (rowPtr == nullptr) {
-      mRow = InputSize().height;
+      mRow = mFrameRect.YMost();
       return nullptr;
     }
 
@@ -455,7 +455,7 @@ protected:
       return Nothing();
     });
 
-    mRow = InputSize().height;
+    mRow = mFrameRect.YMost();
     return nullptr;  // We're done.
   }
 
@@ -520,7 +520,7 @@ protected:
       return Nothing();
     });
 
-    mRow = InputSize().height;
+    mRow = mFrameRect.YMost();
     return nullptr;  // We're done.
   }
 
