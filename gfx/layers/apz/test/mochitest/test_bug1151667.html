@@ -57,11 +57,7 @@ function continueTest() {
 }
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(function() {
-  waitForAllPaints(function() {
-    flushApzRepaints(startTest);
-  })
-}, window);
+waitUntilApzStable().then(startTest);
 
 </script>
 </pre>

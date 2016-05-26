@@ -217,6 +217,12 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
                           default=None,
                           help=argparse.SUPPRESS)
 
+        self.add_argument("--cleanup-crashes",
+                          action = "store_true",
+                          dest = "cleanupCrashes",
+                          default = False,
+                          help = "Delete pending crash reports before running tests.")
+
         self.add_argument("tests",
                           metavar="TEST_PATH",
                           nargs="*",

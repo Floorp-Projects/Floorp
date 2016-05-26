@@ -296,7 +296,7 @@ MSG_DEF(JSMSG_PAREN_IN_PAREN,          0, JSEXN_SYNTAXERR, "missing ) in parenth
 MSG_DEF(JSMSG_RC_AFTER_EXPORT_SPEC_LIST, 0, JSEXN_SYNTAXERR, "missing '}' after export specifier list")
 MSG_DEF(JSMSG_RC_AFTER_IMPORT_SPEC_LIST, 0, JSEXN_SYNTAXERR, "missing '}' after module specifier list")
 MSG_DEF(JSMSG_REDECLARED_CATCH_IDENTIFIER, 1, JSEXN_SYNTAXERR, "redeclaration of identifier '{0}' in catch")
-MSG_DEF(JSMSG_REDECLARED_PARAM,        1, JSEXN_TYPEERR, "redeclaration of formal parameter {0}")
+MSG_DEF(JSMSG_REDECLARED_PARAM,        1, JSEXN_SYNTAXERR, "redeclaration of formal parameter {0}")
 MSG_DEF(JSMSG_RESERVED_ID,             1, JSEXN_SYNTAXERR, "{0} is a reserved identifier")
 MSG_DEF(JSMSG_REST_WITH_DEFAULT,       0, JSEXN_SYNTAXERR, "rest parameter may not have a default")
 MSG_DEF(JSMSG_SELFHOSTED_TOP_LEVEL_LEXICAL, 1, JSEXN_SYNTAXERR, "self-hosted code cannot contain top-level {0} declarations")

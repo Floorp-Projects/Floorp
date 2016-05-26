@@ -56,11 +56,8 @@ function clicked(e) {
   subtestDone();
 }
 
-window.onload = function() {
-  waitForAllPaints(function() {
-    flushApzRepaints(startTest);
-  });
-}
+waitUntilApzStable().then(startTest);
+
   </script>
 </head>
 <body style="height: 5000px">

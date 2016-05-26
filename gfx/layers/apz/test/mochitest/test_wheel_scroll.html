@@ -6,7 +6,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1013412
 <head>
   <title>Test for Bug 1013412</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
   <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <style>
@@ -75,10 +77,10 @@ document.getElementById("scrollbox").addEventListener("wheel", function (e) {
   e.preventDefault();
 });
 
-function* runTest() {
+function* test(testDriver) {
   var content = document.getElementById('content');
   for (i = 0; i < 300; i++) { // enough iterations that we would scroll to the bottom of 'content'
-    yield synthesizeNativeWheelAndWaitForWheelEvent(content, 100, 150, 0, -5, continueTest);
+    yield synthesizeNativeWheelAndWaitForWheelEvent(content, 100, 150, 0, -5, testDriver);
   }
   var scrollbox = document.getElementById('scrollbox');
   is(content.scrollTop > 0, true, "We should have scrolled down somewhat");
@@ -86,29 +88,16 @@ function* runTest() {
   is(rotationAdjusted, true, "The rotation should have been adjusted");
 }
 
-var gTestContinuation = null;
-function continueTest() {
-  if (!gTestContinuation) {
-    gTestContinuation = runTest();
-  }
-  var ret = gTestContinuation.next();
-  if (ret.done) {
-    SimpleTest.finish();
-  } else {
-    is(ret.value, true, "Wheel event successfully synthesized");
-  }
-}
-
-function startTest() {
-  // If we allow smooth scrolling the "smooth" scrolling may cause the page to
-  // glide past the scrollbox (which is supposed to stop the scrolling) and so
-  // we might end up at the bottom of the page.
-  SpecialPowers.pushPrefEnv({"set": [["general.smoothScroll", false]]}, continueTest);
-}
-
 SimpleTest.testInChaosMode();
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(startTest, window);
+
+// If we allow smooth scrolling the "smooth" scrolling may cause the page to
+// glide past the scrollbox (which is supposed to stop the scrolling) and so
+// we might end up at the bottom of the page.
+pushPrefs([["general.smoothScroll", false]])
+.then(waitUntilApzStable)
+.then(runContinuation(test))
+.then(SimpleTest.finish);
 
 </script>
 </pre>

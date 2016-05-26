@@ -89,7 +89,7 @@ function takeSnapshots(e) {
   SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
 }
 
-function* runTest() {
+function* test(testDriver) {
   var box = document.getElementById('box');
   box.addEventListener('touchstart', function(e) {
     ok(false, "This should never be run");
@@ -98,7 +98,7 @@ function* runTest() {
 
   // Let the event regions propagate to the APZ
   yield waitForAllPaints(function() {
-    flushApzRepaints(driveTest);
+    flushApzRepaints(testDriver);
   });
 
   // Take over control of the refresh driver and compositor
@@ -108,50 +108,27 @@ function* runTest() {
   // Trigger an APZ scroll using a wheel event. If APZ is waiting for a
   // content response, it will wait for takeSnapshots to finish running before
   // it starts scrolling, which will cause the checks in takeSnapshots to fail.
-  yield synthesizeNativeMouseMoveAndWaitForMoveEvent(box, 10, 10, driveTest);
-  yield synthesizeNativeWheelAndWaitForScrollEvent(box, 10, 10, 0, -50, driveTest);
+  yield synthesizeNativeMouseMoveAndWaitForMoveEvent(box, 10, 10, testDriver);
+  yield synthesizeNativeWheelAndWaitForScrollEvent(box, 10, 10, 0, -50, testDriver);
 }
 
-var gTestContinuation = null;
-function driveTest() {
-  if (!gTestContinuation) {
-    gTestContinuation = runTest();
-  }
-  var ret = gTestContinuation.next();
-  if (ret.done) {
-    SimpleTest.finish();
-  }
+if (isApzEnabled()) {
+  SimpleTest.waitForExplicitFinish();
+  // Disable touch events, so that APZ knows not to wait for touch listeners.
+  // Also explicitly set the content response timeout, so we know how long it
+  // is (see comment in takeSnapshots).
+  // Finally, enable smooth scrolling, so that the wheel-scroll we do as part
+  // of the test triggers an APZ animation rather than doing an instant scroll.
+  // Note that this pref doesn't work for the synthesized wheel events on OS X,
+  // those are hard-coded to be instant scrolls.
+  pushPrefs([["dom.w3c_touch_events.enabled", 0],
+             ["apz.content_response_timeout", kResponseTimeoutMs],
+             ["general.smoothscroll", true]])
+  .then(waitUntilApzStable)
+  .then(runContinuation(test))
+  .then(SimpleTest.finish);
 }
 
-function startTest() {
-  // This test requires APZ - if it's not enabled, skip it.
-  var apzEnabled = SpecialPowers.getDOMWindowUtils(window).asyncPanZoomEnabled;
-  if (!apzEnabled) {
-    ok(true, "APZ not enabled, skipping test");
-    SimpleTest.finish();
-    return;
-  }
-
-  waitForAllPaints(function() {
-    flushApzRepaints(driveTest);
-  })
-}
-
-SimpleTest.waitForExplicitFinish();
-
-// Disable touch events, so that APZ knows not to wait for touch listeners.
-// Also explicitly set the content response timeout, so we know how long it
-// is (see comment in takeSnapshots).
-// Finally, enable smooth scrolling, so that the wheel-scroll we do as part
-// of the test triggers an APZ animation rather than doing an instant scroll.
-// Note that this pref doesn't work for the synthesized wheel events on OS X,
-// those are hard-coded to be instant scrolls.
-SpecialPowers.pushPrefEnv({"set": [["dom.w3c_touch_events.enabled", 0],
-                                   ["apz.content_response_timeout", kResponseTimeoutMs],
-                                   ["general.smoothscroll", true]]},
-                          function() {
-                            SimpleTest.waitForFocus(startTest, window);
-                          });
 </script>
 </pre>
 

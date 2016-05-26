@@ -277,52 +277,24 @@ MediaEngineWebRTCMicrophoneSource::Restart(const dom::MediaTrackConstraints& aCo
        noise_on ? aPrefs.mNoise : -1,
        aPrefs.mPlayoutDelay));
 
-  bool update_echo = (mEchoOn != aec_on);
-  bool update_agc = (mAgcOn != agc_on);
-  bool update_noise = (mNoiseOn != noise_on);
-  mEchoOn = aec_on;
-  mAgcOn = agc_on;
-  mNoiseOn = noise_on;
-
   mPlayoutDelay = aPrefs.mPlayoutDelay;
-  if ((webrtc::EcModes) aPrefs.mAec != webrtc::kEcUnchanged) {
-    if (mEchoCancel != (webrtc::EcModes) aPrefs.mAec) {
-      update_echo = true;
-      mEchoCancel = (webrtc::EcModes) aPrefs.mAec;
-    }
-  }
-  if ((webrtc::AgcModes) aPrefs.mAgc != webrtc::kAgcUnchanged) {
-    if (mAGC != (webrtc::AgcModes) aPrefs.mAgc) {
-      update_agc = true;
-      mAGC = (webrtc::AgcModes) aPrefs.mAgc;
-    }
-  }
-  if ((webrtc::NsModes) aPrefs.mNoise != webrtc::kNsUnchanged) {
-    if (mNoiseSuppress != (webrtc::NsModes) aPrefs.mNoise) {
-      update_noise = true;
-      mNoiseSuppress = (webrtc::NsModes) aPrefs.mNoise;
-    }
-  }
 
   if (sChannelsOpen > 0) {
     int error;
 
-    if (update_echo &&
-      0 != (error = mVoEProcessing->SetEcStatus(mEchoOn, (webrtc::EcModes) aPrefs.mAec))) {
+    if (0 != (error = mVoEProcessing->SetEcStatus(aec_on, (webrtc::EcModes) aPrefs.mAec))) {
       LOG(("%s Error setting Echo Status: %d ",__FUNCTION__, error));
       // Overhead of capturing all the time is very low (<0.1% of an audio only call)
-      if (mEchoOn) {
+      if (aec_on) {
         if (0 != (error = mVoEProcessing->SetEcMetricsStatus(true))) {
           LOG(("%s Error setting Echo Metrics: %d ",__FUNCTION__, error));
         }
       }
     }
-    if (update_agc &&
-      0 != (error = mVoEProcessing->SetAgcStatus(mAgcOn, (webrtc::AgcModes) aPrefs.mAgc))) {
+    if (0 != (error = mVoEProcessing->SetAgcStatus(agc_on, (webrtc::AgcModes) aPrefs.mAgc))) {
       LOG(("%s Error setting AGC Status: %d ",__FUNCTION__, error));
     }
-    if (update_noise &&
-      0 != (error = mVoEProcessing->SetNsStatus(mNoiseOn, (webrtc::NsModes) aPrefs.mNoise))) {
+    if (0 != (error = mVoEProcessing->SetNsStatus(noise_on, (webrtc::NsModes) aPrefs.mNoise))) {
       LOG(("%s Error setting NoiseSuppression Status: %d ",__FUNCTION__, error));
     }
   }

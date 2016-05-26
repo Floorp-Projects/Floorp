@@ -1361,8 +1361,10 @@ SavedStacks::getOrCreateSavedFrame(JSContext* cx, SavedFrame::HandleLookup looku
 {
     const SavedFrame::Lookup& lookupInstance = lookup.get();
     DependentAddPtr<SavedFrame::Set> p(cx, frames, lookupInstance);
-    if (p)
+    if (p) {
+        MOZ_ASSERT(*p);
         return *p;
+    }
 
     RootedSavedFrame frame(cx, createFrameFromLookup(cx, lookup));
     if (!frame)

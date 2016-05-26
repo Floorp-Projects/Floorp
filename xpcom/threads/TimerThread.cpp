@@ -153,8 +153,6 @@ public:
     : mTimer()
     , mGeneration(0)
   {
-    MOZ_COUNT_CTOR(nsTimerEvent);
-
     // Note: We override operator new for this class, and the override is
     // fallible!
     sAllocatorUsers++;
@@ -188,10 +186,12 @@ public:
   }
 
 private:
+  nsTimerEvent(const nsTimerEvent&) = delete;
+  nsTimerEvent& operator=(const nsTimerEvent&) = delete;
+  nsTimerEvent& operator=(const nsTimerEvent&&) = delete;
+
   ~nsTimerEvent()
   {
-    MOZ_COUNT_DTOR(nsTimerEvent);
-
     MOZ_ASSERT(!sCanDeleteAllocator || sAllocatorUsers > 0,
                "This will result in us attempting to deallocate the nsTimerEvent allocator twice");
     sAllocatorUsers--;

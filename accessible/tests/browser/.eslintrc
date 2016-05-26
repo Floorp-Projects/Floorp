@@ -12,6 +12,7 @@
     "statesToString": true,
     "eventTypeToString": true,
     "testName": true,
+    "testDescr": true,
     "testStates": true,
     "testAccessibleTree": true,
     "isAccessible": true,
