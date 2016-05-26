@@ -68,6 +68,7 @@ private:
   void EnsureTimerIsStarted();
 
   void ReportAnalysis(dom::DecoderDoctorNotificationType aNotificationType,
+                      bool aIsSolved,
                       const char* aReportStringId,
                       const nsAString& aFormats);
 
@@ -239,6 +240,8 @@ DecoderDoctorDocumentWatcher::EnsureTimerIsStarted()
 static void
 DispatchNotification(nsISupports* aSubject,
                      dom::DecoderDoctorNotificationType aNotificationType,
+                     bool aIsSolved,
+                     const char* aReportStringId,
                      const nsAString& aFormats)
 {
   if (!aSubject) {
@@ -246,6 +249,9 @@ DispatchNotification(nsISupports* aSubject,
   }
   dom::DecoderDoctorNotification data;
   data.mType = aNotificationType;
+  data.mIsSolved = aIsSolved;
+  data.mDecoderDoctorReportId.Assign(
+    NS_ConvertUTF8toUTF16(aReportStringId));
   if (!aFormats.IsEmpty()) {
     data.mFormats.Construct(aFormats);
   }
@@ -267,6 +273,7 @@ DispatchNotification(nsISupports* aSubject,
 void
 DecoderDoctorDocumentWatcher::ReportAnalysis(
   dom::DecoderDoctorNotificationType aNotificationType,
+  bool aIsSolved,
   const char* aReportStringId,
   const nsAString& aParams)
 {
@@ -276,18 +283,21 @@ DecoderDoctorDocumentWatcher::ReportAnalysis(
     return;
   }
 
-  // 'params' will only be forwarded for non-empty strings.
-  const char16_t* params[1] = { aParams.Data() };
-  DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::ReportAnalysis() ReportToConsole - aMsg='%s' params[0]='%s'",
-           this, mDocument, aReportStringId,
-           aParams.IsEmpty() ? "<no params>" : NS_ConvertUTF16toUTF8(params[0]).get());
-  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  NS_LITERAL_CSTRING("Media"),
-                                  mDocument,
-                                  nsContentUtils::eDOM_PROPERTIES,
-                                  aReportStringId,
-                                  aParams.IsEmpty() ? nullptr : params,
-                                  aParams.IsEmpty() ? 0 : 1);
+  // Report non-solved issues to console.
+  if (!aIsSolved) {
+    // 'params' will only be forwarded for non-empty strings.
+    const char16_t* params[1] = { aParams.Data() };
+    DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::ReportAnalysis() ReportToConsole - aMsg='%s' params[0]='%s'",
+             this, mDocument, aReportStringId,
+             aParams.IsEmpty() ? "<no params>" : NS_ConvertUTF16toUTF8(params[0]).get());
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                    NS_LITERAL_CSTRING("Media"),
+                                    mDocument,
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    aReportStringId,
+                                    aParams.IsEmpty() ? nullptr : params,
+                                    aParams.IsEmpty() ? 0 : 1);
+  }
 
   // "media.decoder-doctor.notifications-allowed" controls which notifications
   // may be dispatched to the front-end. It either contains:
@@ -315,7 +325,8 @@ DecoderDoctorDocumentWatcher::ReportAnalysis(
   }
   if (allowed) {
     DispatchNotification(
-      mDocument->GetInnerWindow(), aNotificationType, aParams);
+      mDocument->GetInnerWindow(),
+      aNotificationType, aIsSolved, aReportStringId, aParams);
   }
 }
 
@@ -427,8 +438,9 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
         if (CheckSilverlight() != eSilverlightEnabled) {
           DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unsupported key systems: %s, widevine without WMF nor Silverlight",
                    this, mDocument, NS_ConvertUTF16toUTF8(unsupportedKeySystems).get());
-          ReportAnalysis(dom::DecoderDoctorNotificationType::Platform_decoder_not_found,
-                         "MediaWidevineNoWMFNoSilverlight", NS_LITERAL_STRING(""));
+          ReportAnalysis(
+            dom::DecoderDoctorNotificationType::Platform_decoder_not_found,
+            false, "MediaWidevineNoWMFNoSilverlight", unsupportedKeySystems);
           return;
         }
         break;
@@ -448,7 +460,7 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
         DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> Cannot play media because WMF was not found",
                  this, mDocument, NS_ConvertUTF16toUTF8(formatsRequiringWMF).get());
         ReportAnalysis(dom::DecoderDoctorNotificationType::Platform_decoder_not_found,
-                       "MediaWMFNeeded", formatsRequiringWMF);
+                       false, "MediaWMFNeeded", formatsRequiringWMF);
         return;
       }
 #endif
@@ -464,7 +476,7 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
       DD_WARN("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - Cannot play media, unplayable formats: %s",
               this, mDocument, NS_ConvertUTF16toUTF8(unplayableFormats).get());
       ReportAnalysis(dom::DecoderDoctorNotificationType::Cannot_play,
-                     "MediaCannotPlayNoDecoders", unplayableFormats);
+                     false, "MediaCannotPlayNoDecoders", unplayableFormats);
       return;
     }
 
@@ -473,7 +485,7 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
     if (Preferences::GetBool("media.decoder-doctor.verbose", false)) {
       ReportAnalysis(
         dom::DecoderDoctorNotificationType::Can_play_but_some_missing_decoders,
-        "MediaNoDecoders", unplayableFormats);
+        false, "MediaNoDecoders", unplayableFormats);
     }
     return;
   }
