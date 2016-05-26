@@ -253,7 +253,7 @@ static const sock_fprog* gSetSandboxFilter;
 static int
 FindFreeSignalNumber()
 {
-  for (int signum = SIGRTMIN; signum <= SIGRTMAX; ++signum) {
+  for (int signum = SIGRTMAX; signum >= SIGRTMIN; --signum) {
     struct sigaction sa;
 
     if (sigaction(signum, nullptr, &sa) == 0 &&
