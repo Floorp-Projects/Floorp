@@ -80,6 +80,13 @@ interface nsIPresentationControlService: nsISupports
                                                in DOMString aPresentationId);
 
   /**
+   * Check the compatibility to remote presentation control server.
+   * @param  aVersion
+   *         The version of remote server.
+   */
+  boolean isCompatibleServer(in uint32_t aVersion);
+
+  /**
    * Close server socket and call |listener.onClose(NS_OK)|
    */
   void close();
@@ -89,6 +96,11 @@ interface nsIPresentationControlService: nsISupports
    * the server socket is not inited or closed.
    */
   readonly attribute uint16_t port;
+
+  /**
+   * The protocol version implemented by this server.
+   */
+  readonly attribute uint32_t version;
 
   /**
    * The id of the TCP presentation server. |requestSession| won't
