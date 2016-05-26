@@ -104,6 +104,12 @@ TextTrackCueList::RemoveCue(TextTrackCue& aCue, ErrorResult& aRv)
 }
 
 void
+TextTrackCueList::RemoveCue(TextTrackCue& aCue)
+{
+  mList.RemoveElement(&aCue);
+}
+
+void
 TextTrackCueList::RemoveCueAt(uint32_t aIndex)
 {
   if (aIndex < mList.Length()) {
