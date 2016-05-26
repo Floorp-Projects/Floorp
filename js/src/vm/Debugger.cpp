@@ -8803,6 +8803,9 @@ DebuggerObject::initClass(JSContext* cx, HandleObject obj, HandleObject debugCto
                                                  DebuggerObject_construct, 0, properties_,
                                                  methods_, nullptr, nullptr));
 
+    if (!objectProto)
+        return nullptr;
+
 #ifdef SPIDERMONKEY_PROMISE
     if (!DefinePropertiesAndFunctions(cx, objectProto, promiseProperties_, nullptr))
         return nullptr;
