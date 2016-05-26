@@ -37,7 +37,7 @@ private:
    */
   static ApplicationReputationService* gApplicationReputationService;
   /**
-   * NSPR_LOG_MODULES=ApplicationReputation:5
+   * MOZ_LOG=ApplicationReputation:5
    */
   static mozilla::LazyLogModule prlog;
   /**

@@ -28,7 +28,7 @@
 
 using namespace mozilla;
 
-// NSPR_LOG_MODULES=UrlClassifierPrefixSet:5
+// MOZ_LOG=UrlClassifierPrefixSet:5
 static LazyLogModule gUrlClassifierPrefixSetLog("UrlClassifierPrefixSet");
 #define LOG(args) MOZ_LOG(gUrlClassifierPrefixSetLog, mozilla::LogLevel::Debug, args)
 #define LOG_ENABLED() MOZ_LOG_TEST(gUrlClassifierPrefixSetLog, mozilla::LogLevel::Debug)
