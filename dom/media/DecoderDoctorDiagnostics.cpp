@@ -421,22 +421,8 @@ DecoderDoctorDocumentWatcher::ReportAnalysis(
   nsAdoptingCString filter =
     Preferences::GetCString("media.decoder-doctor.notifications-allowed");
   filter.StripWhitespace();
-  bool allowed = false;
-  if (!filter || filter.IsEmpty()) {
-    // Allow nothing.
-  } else if (filter.EqualsLiteral("*")) {
-    allowed = true;
-  } else for (uint32_t start = 0; start < filter.Length(); ) {
-    int32_t comma = filter.FindChar(',', start);
-    uint32_t end = (comma >= 0) ? uint32_t(comma) : filter.Length();
-    if (strncmp(aReportStringId, filter.Data() + start, end - start) == 0) {
-      allowed = true;
-      break;
-    }
-    // Skip comma. End of line will be caught in for 'while' clause.
-    start = end + 1;
-  }
-  if (allowed) {
+  if (filter.EqualsLiteral("*")
+      || StringListContains(filter, aReportStringId)) {
     DispatchNotification(
       mDocument->GetInnerWindow(),
       aNotificationType, aIsSolved, aReportStringId, aParams);
