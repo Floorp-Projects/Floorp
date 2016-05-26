@@ -21,7 +21,6 @@ DevToolsModules(
     'css-angle.js',
     'css-color-db.js',
     'css-color.js',
-    'css-parsing-utils.js',
     'css-reload.js',
     'Curl.jsm',
     'demangle.js',

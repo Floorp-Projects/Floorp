@@ -22,6 +22,7 @@ const DRAG_DROP_MIN_INITIAL_DISTANCE = 10;
 const AUTOCOMPLETE_POPUP_PANEL_ID = "markupview_autoCompletePopup";
 const ATTR_COLLAPSE_ENABLED_PREF = "devtools.markup.collapseAttributes";
 const ATTR_COLLAPSE_LENGTH_PREF = "devtools.markup.collapseAttributeLength";
+const PREVIEW_MAX_DIM_PREF = "devtools.inspector.imagePreviewTooltipSize";
 
 // Contains only void (without end tag) HTML elements
 const HTML_VOID_ELEMENTS = [ "area", "base", "br", "col", "command", "embed",
@@ -35,6 +36,10 @@ const {HTMLEditor} = require("devtools/client/inspector/markup/html-editor");
 const promise = require("promise");
 const Services = require("Services");
 const {Tooltip} = require("devtools/client/shared/widgets/Tooltip");
+const {HTMLTooltip} = require("devtools/client/shared/widgets/HTMLTooltip");
+const {setImageTooltip, setBrokenImageTooltip} =
+      require("devtools/client/shared/widgets/tooltip/ImageTooltipHelper");
+
 const EventEmitter = require("devtools/shared/event-emitter");
 const Heritage = require("sdk/core/heritage");
 const {parseAttribute} =
@@ -131,6 +136,7 @@ function MarkupView(inspector, frame, controllerWindow) {
   this._onToolboxPickerHover = this._onToolboxPickerHover.bind(this);
   this._onCollapseAttributesPrefChange =
     this._onCollapseAttributesPrefChange.bind(this);
+  this._isImagePreviewTarget = this._isImagePreviewTarget.bind(this);
   this._onBlur = this._onBlur.bind(this);
 
   EventEmitter.decorate(this);
@@ -169,17 +175,19 @@ MarkupView.prototype = {
   _selectedContainer: null,
 
   _initTooltips: function () {
-    this.tooltip = new Tooltip(this._inspector.panelDoc);
-    this._makeTooltipPersistent(false);
+    this.eventDetailsTooltip = new Tooltip(this._inspector.panelDoc);
+    this.imagePreviewTooltip = new HTMLTooltip(this._inspector.toolbox,
+      {type: "arrow"});
+    this._enableImagePreviewTooltip();
   },
 
-  _makeTooltipPersistent: function (state) {
-    if (state) {
-      this.tooltip.stopTogglingOnHover();
-    } else {
-      this.tooltip.startTogglingOnHover(this._elt,
-        this._isImagePreviewTarget.bind(this));
-    }
+  _enableImagePreviewTooltip: function () {
+    this.imagePreviewTooltip.startTogglingOnHover(this._elt,
+      this._isImagePreviewTarget);
+  },
+
+  _disableImagePreviewTooltip: function () {
+    this.imagePreviewTooltip.stopTogglingOnHover();
   },
 
   _onToolboxPickerHover: function (event, nodeFront) {
@@ -298,7 +306,8 @@ MarkupView.prototype = {
     if (container instanceof MarkupElementContainer) {
       // With the newly found container, delegate the tooltip content creation
       // and decision to show or not the tooltip
-      container._buildEventTooltipContent(event.target, this.tooltip);
+      container._buildEventTooltipContent(event.target,
+        this.eventDetailsTooltip);
     }
   },
 
@@ -475,11 +484,11 @@ MarkupView.prototype = {
    * @return {Promise} the promise returned by
    *         MarkupElementContainer._isImagePreviewTarget
    */
-  _isImagePreviewTarget: function (target) {
+  _isImagePreviewTarget: Task.async(function* (target) {
     // From the target passed here, let's find the parent MarkupContainer
     // and ask it if the tooltip should be shown
     if (this.isDragging) {
-      return promise.reject(false);
+      return false;
     }
 
     let parent = target, container;
@@ -494,11 +503,11 @@ MarkupView.prototype = {
     if (container instanceof MarkupElementContainer) {
       // With the newly found container, delegate the tooltip content creation
       // and decision to show or not the tooltip
-      return container.isImagePreviewTarget(target, this.tooltip);
+      return container.isImagePreviewTarget(target, this.imagePreviewTooltip);
     }
 
-    return undefined;
-  },
+    return false;
+  }),
 
   /**
    * Given the known reason, should the current selection be briefly highlighted
@@ -966,6 +975,10 @@ MarkupView.prototype = {
         // we're not viewing.
         continue;
       }
+
+      if (type === "attributes" && mutation.attributeName === "class") {
+        container.updateIsDisplayed();
+      }
       if (type === "attributes" || type === "characterData"
         || type === "events" || type === "pseudoClassLock") {
         container.update();
@@ -1004,7 +1017,7 @@ MarkupView.prototype = {
     for (let node of nodes) {
       let container = this.getContainer(node);
       if (container) {
-        container.isDisplayed = node.isDisplayed;
+        container.updateIsDisplayed();
       }
     }
   },
@@ -1714,8 +1727,11 @@ MarkupView.prototype = {
     }
     this._containers = null;
 
-    this.tooltip.destroy();
-    this.tooltip = null;
+    this.eventDetailsTooltip.destroy();
+    this.eventDetailsTooltip = null;
+
+    this.imagePreviewTooltip.destroy();
+    this.imagePreviewTooltip = null;
 
     this.win = null;
     this.doc = null;
@@ -1879,7 +1895,7 @@ MarkupContainer.prototype = {
     }
 
     // Marking the node as shown or hidden
-    this.isDisplayed = this.node.isDisplayed;
+    this.updateIsDisplayed();
   },
 
   toString: function () {
@@ -1900,11 +1916,14 @@ MarkupContainer.prototype = {
   },
 
   /**
-   * Show the element has displayed or not.
+   * Show whether the element is displayed or not
+   * If an element has the attribute `display: none` or has been hidden with
+   * the H key, it is not displayed (faded in markup view).
+   * Otherwise, it is displayed.
    */
-  set isDisplayed(isDisplayed) {
+  updateIsDisplayed: function () {
     this.elt.classList.remove("not-displayed");
-    if (!isDisplayed) {
+    if (!this.node.isDisplayed || this.node.hidden) {
       this.elt.classList.add("not-displayed");
     }
   },
@@ -2596,9 +2615,11 @@ MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
           toolbox: this.markup._inspector.toolbox
         });
 
-        this.markup._makeTooltipPersistent(true);
+        // Disable the image preview tooltip while we display the event details
+        this.markup._disableImagePreviewTooltip();
         tooltip.once("hidden", () => {
-          this.markup._makeTooltipPersistent(false);
+          // Enable the image preview tooltip after closing the event details
+          this.markup._enableImagePreviewTooltip();
         });
         tooltip.show(target);
       });
@@ -2630,18 +2651,15 @@ MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
       return this.tooltipDataPromise;
     }
 
-    let maxDim =
-      Services.prefs.getIntPref("devtools.inspector.imagePreviewTooltipSize");
-
     // Fetch the preview from the server.
     this.tooltipDataPromise = Task.spawn(function* () {
+      let maxDim = Services.prefs.getIntPref(PREVIEW_MAX_DIM_PREF);
       let preview = yield this.node.getImageData(maxDim);
       let data = yield preview.data.string();
 
       // Clear the pending preview request. We can't reuse the results later as
       // the preview contents might have changed.
       this.tooltipDataPromise = null;
-
       return { data, size: preview.size };
     }.bind(this));
 
@@ -2654,9 +2672,8 @@ MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
    * Checks if the target is indeed something we want to have an image tooltip
    * preview over and, if so, inserts content into the tooltip.
    *
-   * @return {Promise} that resolves when the content has been inserted or
-   *         rejects if no preview is required. This promise is then used by
-   *         Tooltip.js to decide if/when to show the tooltip
+   * @return {Promise} that resolves when the tooltip content is ready. Resolves
+   * true if the tooltip should be displayed, false otherwise.
    */
   isImagePreviewTarget: Task.async(function* (target, tooltip) {
     // Is this Element previewable.
@@ -2674,14 +2691,19 @@ MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
     }
 
     try {
-      let {data, size} = yield this._getPreview();
+      let { data, size } = yield this._getPreview();
       // The preview is ready.
-      tooltip.setImageContent(data, size);
+      let options = {
+        naturalWidth: size.naturalWidth,
+        naturalHeight: size.naturalHeight,
+        maxDim: Services.prefs.getIntPref(PREVIEW_MAX_DIM_PREF)
+      };
+
+      yield setImageTooltip(tooltip, this.markup.doc, data, options);
     } catch (e) {
       // Indicate the failure but show the tooltip anyway.
-      tooltip.setBrokenImageContent();
+      yield setBrokenImageTooltip(tooltip, this.markup.doc);
     }
-
     return true;
   }),
 

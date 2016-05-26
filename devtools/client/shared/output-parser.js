@@ -8,7 +8,6 @@ const {Cc, Ci} = require("chrome");
 const {angleUtils} = require("devtools/client/shared/css-angle");
 const {colorUtils} = require("devtools/client/shared/css-color");
 const {getCSSLexer} = require("devtools/shared/css-lexer");
-const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
@@ -530,7 +529,7 @@ OutputParser.prototype = {
 
       let href = url;
       if (options.baseURI) {
-        href = options.baseURI.resolve(url);
+        href = new URL(url, options.baseURI).href;
       }
 
       this._appendNode("a", {
@@ -648,7 +647,7 @@ OutputParser.prototype = {
    *                                    // that follows the swatch.
    *           - supportsColor: false   // Does the CSS property support colors?
    *           - urlClass: ""           // The class to be used for url() links.
-   *           - baseURI: ""            // A string or nsIURI used to resolve
+   *           - baseURI: undefined     // A string used to resolve
    *                                    // relative links.
    *           - filterSwatch: false    // A special case for parsing a
    *                                    // "filter" property, causing the
@@ -669,13 +668,9 @@ OutputParser.prototype = {
       angleClass: "",
       supportsColor: false,
       urlClass: "",
-      baseURI: "",
+      baseURI: undefined,
       filterSwatch: false
     };
-
-    if (typeof overrides.baseURI === "string") {
-      overrides.baseURI = Services.io.newURI(overrides.baseURI, null, null);
-    }
 
     for (let item in overrides) {
       defaults[item] = overrides[item];

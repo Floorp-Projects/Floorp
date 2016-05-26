@@ -103,7 +103,11 @@ module.exports = createClass({
     // it an anchor link, as we can't link to it.
     if (isLinkable) {
       sourceEl = dom.a({
-        onClick,
+        onClick: e => {
+          e.preventDefault();
+          onClick(e);
+        },
+        href: source,
         className: "frame-link-source",
         title: l10n.getFormatStr("frame.viewsourceindebugger", tooltip)
       }, sourceElements);
