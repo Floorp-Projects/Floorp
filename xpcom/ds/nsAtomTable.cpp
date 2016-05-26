@@ -473,26 +473,9 @@ NS_PurgeAtomTable()
   gStaticAtomTable = nullptr;
 
   if (gAtomTable) {
-#ifdef DEBUG
-    const char* dumpAtomLeaks = PR_GetEnv("MOZ_DUMP_ATOM_LEAKS");
-    if (dumpAtomLeaks && *dumpAtomLeaks) {
-      uint32_t leaked = 0;
-      printf("*** %d atoms still exist (including static):\n",
-             gAtomTable->EntryCount());
-      for (auto iter = gAtomTable->Iter(); !iter.Done(); iter.Next()) {
-        auto entry = static_cast<AtomTableEntry*>(iter.Get());
-        nsIAtom* atom = entry->mAtom;
-        if (!atom->IsStaticAtom()) {
-          leaked++;
-          nsAutoCString str;
-          atom->ToUTF8String(str);
-          fputs(str.get(), stdout);
-          fputs("\n", stdout);
-        }
-      }
-      printf("*** %u dynamic atoms leaked\n", leaked);
-    }
-#endif
+    // XXXbholley: it would be good to assert gAtomTable->EntryCount() == 0
+    // here, but that currently fails. Probably just a few things that need
+    // to be fixed up.
     delete gAtomTable;
     gAtomTable = nullptr;
   }
