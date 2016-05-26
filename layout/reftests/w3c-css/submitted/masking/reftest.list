@@ -5,8 +5,10 @@
 # mask-composite test cases
 fails == mask-composite-1a.html mask-composite-1-ref.html
 fails == mask-composite-1b.html mask-composite-1-ref.html
+fails == mask-composite-1c.html mask-composite-1-ref.html
 fails == mask-composite-2a.html mask-composite-2-ref.html
 fails == mask-composite-2b.html mask-composite-2-ref.html
+fails == mask-composite-2c.html mask-composite-2-ref.html
 
 # mask-mode test cases
 fails == mask-mode-a.html mask-mode-ref.html
