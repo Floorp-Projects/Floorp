@@ -1527,10 +1527,7 @@ HTMLInputElement::SetWidth(uint32_t aWidth)
 NS_IMETHODIMP
 HTMLInputElement::GetValue(nsAString& aValue)
 {
-  nsresult rv = GetValueInternal(aValue);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  GetValueInternal(aValue);
 
   // Don't return non-sanitized value for types that are experimental on mobile.
   if (IsExperimentalMobileType(mType)) {
@@ -1547,8 +1544,8 @@ HTMLInputElement::GetValueInternal(nsAString& aValue) const
     case VALUE_MODE_VALUE:
       if (IsSingleLineTextControl(false)) {
         mInputData.mState->GetValue(aValue, true);
-      } else if (!aValue.Assign(mInputData.mValue, fallible)) {
-        return NS_ERROR_OUT_OF_MEMORY;
+      } else {
+        aValue.Assign(mInputData.mValue);
       }
       return NS_OK;
 
@@ -1682,15 +1679,6 @@ HTMLInputElement::GetValueAsDecimal() const
 
   return !ConvertStringToNumber(stringValue, decimalValue) ? Decimal::nan()
                                                            : decimalValue;
-}
-
-void
-HTMLInputElement::GetValue(nsAString& aValue, ErrorResult& aRv)
-{
-  nsresult rv = GetValue(aValue);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-  }
 }
 
 void
@@ -5775,23 +5763,14 @@ HTMLInputElement::SaveState()
 
       inputState = new HTMLInputElementState();
       nsAutoString value;
-      nsresult rv = GetValue(value);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-
-      if (!IsSingleLineTextControl(false)) {
-        rv = nsLinebreakConverter::ConvertStringLineBreaks(
-               value,
-               nsLinebreakConverter::eLinebreakPlatform,
-               nsLinebreakConverter::eLinebreakContent);
-
-        if (NS_FAILED(rv)) {
-          NS_ERROR("Converting linebreaks failed!");
-          return rv;
-        }
-      }
-
+      GetValue(value);
+      DebugOnly<nsresult> rv =
+        nsLinebreakConverter::ConvertStringLineBreaks(
+             value,
+             nsLinebreakConverter::eLinebreakPlatform,
+             nsLinebreakConverter::eLinebreakContent);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "Converting linebreaks failed!");
+      inputState->SetValue(value);
       break;
   }
 

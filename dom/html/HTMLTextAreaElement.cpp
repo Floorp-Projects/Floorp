@@ -1085,11 +1085,7 @@ HTMLTextAreaElement::SaveState()
                value,
                nsLinebreakConverter::eLinebreakPlatform,
                nsLinebreakConverter::eLinebreakContent);
-
-      if (NS_FAILED(rv)) {
-        NS_ERROR("Converting linebreaks failed!");
-        return rv;
-      }
+      NS_ASSERTION(NS_SUCCEEDED(rv), "Converting linebreaks failed!");
 
       nsCOMPtr<nsISupportsString> pState =
         do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);

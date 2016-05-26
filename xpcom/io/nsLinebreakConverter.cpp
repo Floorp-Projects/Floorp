@@ -464,9 +464,7 @@ nsLinebreakConverter::ConvertStringLineBreaks(nsString& aIoString,
   // remember the old buffer in case
   // we blow it away later
   nsString::char_iterator stringBuf;
-  if (!aIoString.BeginWriting(stringBuf, fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  aIoString.BeginWriting(stringBuf);
 
   int32_t    newLen;
 
@@ -478,7 +476,7 @@ nsLinebreakConverter::ConvertStringLineBreaks(nsString& aIoString,
   }
 
   if (stringBuf != aIoString.get()) {
-    aIoString.Adopt(stringBuf, newLen - 1);
+    aIoString.Adopt(stringBuf);
   }
 
   return NS_OK;
