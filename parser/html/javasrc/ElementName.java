@@ -328,8 +328,8 @@ public final class ElementName
 //                return "H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6";
 //            case TreeBuilder.OBJECT:
 //                return "OBJECT";
-//            case TreeBuilder.OUTPUT_OR_LABEL:
-//                return "OUTPUT_OR_LABEL";
+//            case TreeBuilder.OUTPUT:
+//                return "OUTPUT";
 //            case TreeBuilder.MARQUEE_OR_APPLET:
 //                return "MARQUEE_OR_APPLET";
 //            case TreeBuilder.PRE_OR_LISTING:
@@ -572,7 +572,7 @@ public final class ElementName
     public static final ElementName IMAGE = new ElementName("image", "image", TreeBuilder.IMAGE);
     public static final ElementName IDENT = new ElementName("ident", "ident", TreeBuilder.OTHER);
     public static final ElementName INPUT = new ElementName("input", "input", TreeBuilder.INPUT | SPECIAL);
-    public static final ElementName LABEL = new ElementName("label", "label", TreeBuilder.OUTPUT_OR_LABEL);
+    public static final ElementName LABEL = new ElementName("label", "label", TreeBuilder.OTHER);
     public static final ElementName LIMIT = new ElementName("limit", "limit", TreeBuilder.OTHER);
     public static final ElementName MFRAC = new ElementName("mfrac", "mfrac", TreeBuilder.OTHER);
     public static final ElementName MPATH = new ElementName("mpath", "mpath", TreeBuilder.OTHER);
@@ -640,7 +640,7 @@ public final class ElementName
     public static final ElementName MATRIX = new ElementName("matrix", "matrix", TreeBuilder.OTHER);
     public static final ElementName OPTION = new ElementName("option", "option", TreeBuilder.OPTION | OPTIONAL_END_TAG);
     public static final ElementName OBJECT = new ElementName("object", "object", TreeBuilder.OBJECT | SPECIAL | SCOPING);
-    public static final ElementName OUTPUT = new ElementName("output", "output", TreeBuilder.OUTPUT_OR_LABEL);
+    public static final ElementName OUTPUT = new ElementName("output", "output", TreeBuilder.OUTPUT);
     public static final ElementName PRIMES = new ElementName("primes", "primes", TreeBuilder.OTHER);
     public static final ElementName SOURCE = new ElementName("source", "source", TreeBuilder.PARAM_OR_SOURCE_OR_TRACK);
     public static final ElementName STRIKE = new ElementName("strike", "strike", TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
