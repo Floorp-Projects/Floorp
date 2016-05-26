@@ -241,7 +241,6 @@ public:
   bool IsSinglePixel() const;
 
   already_AddRefed<SourceSurface> GetSurface();
-  already_AddRefed<DrawTarget> GetDrawTarget();
 
   void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf, size_t& aHeapSizeOut,
                               size_t& aNonHeapSizeOut) const;
@@ -261,7 +260,6 @@ private: // methods
   void GetImageDataInternal(uint8_t** aData, uint32_t* length) const;
   uint32_t GetImageBytesPerRow() const;
   uint32_t GetImageDataLength() const;
-  int32_t GetStride() const;
   already_AddRefed<SourceSurface> GetSurfaceInternal();
 
   uint32_t PaletteDataLength() const
@@ -419,10 +417,10 @@ private:
 /**
  * A reference to an imgFrame that holds the imgFrame's surface in memory in a
  * format appropriate for access as raw data. If you have a RawAccessFrameRef
- * |ref| and |if (ref)| is true, then calls to GetImageData(), GetPaletteData(),
- * and GetDrawTarget() are guaranteed to succeed. This guarantee is stronger
- * than DrawableFrameRef, so everything that a valid DrawableFrameRef guarantees
- * is also guaranteed by a valid RawAccessFrameRef.
+ * |ref| and |if (ref)| is true, then calls to GetImageData() and
+ * GetPaletteData() are guaranteed to succeed. This guarantee is stronger than
+ * DrawableFrameRef, so everything that a valid DrawableFrameRef guarantees is
+ * also guaranteed by a valid RawAccessFrameRef.
  *
  * This may be considerably more expensive than is necessary just for drawing,
  * so only use this when you need to read or write the raw underlying image data
