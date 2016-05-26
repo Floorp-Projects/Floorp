@@ -7,7 +7,7 @@
 "use strict";
 
 const {Cc, Ci, Cu} = require("chrome");
-const {escapeCSSComment} = require("devtools/client/shared/css-parsing-utils");
+const {escapeCSSComment} = require("devtools/shared/css-parsing-utils");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 

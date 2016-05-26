@@ -7,8 +7,7 @@
 
 var Cu = Components.utils;
 Cu.import("resource://devtools/shared/Loader.jsm");
-const {parseDeclarations, RuleRewriter} =
-      devtools.require("devtools/client/shared/css-parsing-utils");
+const {RuleRewriter} = devtools.require("devtools/shared/css-parsing-utils");
 
 const TEST_DATA = [
   {
