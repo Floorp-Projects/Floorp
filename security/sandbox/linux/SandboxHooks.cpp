@@ -12,6 +12,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// Signal number used to enable seccomp on each thread.
+extern int gSeccompTsyncBroadcastSignum;
+
 // This file defines a hook for sigprocmask() and pthread_sigmask().
 // Bug 1176099: some threads block SIGSYS signal which breaks our seccomp-bpf
 // sandbox. To avoid this, we intercept the call and remove SIGSYS.
@@ -31,11 +34,14 @@ static int HandleSigset(int (*aRealFunc)(int, const sigset_t*, sigset_t*),
   }
 
   // Avoid unnecessary work
-  if (aSet == NULL || aHow == SIG_UNBLOCK || !sigismember(aSet, SIGSYS))
+  if (aSet == NULL || aHow == SIG_UNBLOCK) {
     return aRealFunc(aHow, aSet, aOldSet);
+  }
 
   sigset_t newSet = *aSet;
-  if (sigdelset(&newSet, SIGSYS) != 0) {
+  if (sigdelset(&newSet, SIGSYS) != 0 ||
+     (gSeccompTsyncBroadcastSignum &&
+      sigdelset(&newSet, gSeccompTsyncBroadcastSignum) != 0)) {
     if (aUseErrno) {
       errno = ENOSYS;
       return -1;
