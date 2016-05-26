@@ -58,7 +58,7 @@ function* checkEventsForNode(test, inspector, testActor) {
     return;
   }
 
-  let tooltip = inspector.markup.tooltip;
+  let tooltip = inspector.markup.eventDetailsTooltip;
 
   yield selectNode(selector, inspector);
 

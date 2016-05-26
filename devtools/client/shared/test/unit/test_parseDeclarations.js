@@ -7,8 +7,7 @@
 
 var Cu = Components.utils;
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-const {parseDeclarations, _parseCommentDeclarations} =
-  require("devtools/client/shared/css-parsing-utils");
+const {parseDeclarations, _parseCommentDeclarations} = require("devtools/shared/css-parsing-utils");
 
 const TEST_DATA = [
   // Simple test
