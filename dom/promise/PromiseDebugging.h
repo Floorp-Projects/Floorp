@@ -32,10 +32,12 @@ public:
   static void Init();
   static void Shutdown();
 
-#ifndef SPIDERMONKEY_PROMISE
   static void GetState(GlobalObject&, JS::Handle<JSObject*> aPromise,
                        PromiseDebuggingStateHolder& aState,
                        ErrorResult& aRv);
+
+  static void GetPromiseID(GlobalObject&, JS::Handle<JSObject*>, nsString&,
+                           ErrorResult&);
 
   static void GetAllocationStack(GlobalObject&, JS::Handle<JSObject*> aPromise,
                                  JS::MutableHandle<JSObject*> aStack,
@@ -47,6 +49,8 @@ public:
                                    JS::Handle<JSObject*> aPromise,
                                    JS::MutableHandle<JSObject*> aStack,
                                    ErrorResult& aRv);
+
+#ifndef SPIDERMONKEY_PROMISE
   static void GetDependentPromises(GlobalObject&,
                                    JS::Handle<JSObject*> aPromise,
                                    nsTArray<RefPtr<Promise>>& aPromises,
@@ -56,9 +60,6 @@ public:
                                    ErrorResult& aRv);
   static double GetTimeToSettle(GlobalObject&, JS::Handle<JSObject*> aPromise,
                                 ErrorResult& aRv);
-
-  static void GetPromiseID(GlobalObject&, JS::Handle<JSObject*>, nsString&,
-                           ErrorResult&);
 #endif // SPIDERMONKEY_PROMISE
 
   // Mechanism for watching uncaught instances of Promise.
