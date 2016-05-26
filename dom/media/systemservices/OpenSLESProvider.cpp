@@ -11,7 +11,7 @@
 #include <SLES/OpenSLES_Android.h>
 #include <SLES/OpenSLES_AndroidConfiguration.h>
 
-// NSPR_LOG_MODULES=OpenSLESProvider:5
+// MOZ_LOG=OpenSLESProvider:5
 #undef LOG
 #undef LOG_ENABLED
 mozilla::LazyLogModule gOpenSLESProviderLog("OpenSLESProvider");

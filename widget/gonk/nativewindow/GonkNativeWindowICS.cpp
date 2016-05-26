@@ -26,7 +26,7 @@
 
 /**
  * DOM_CAMERA_LOGI() is enabled in debug builds, and turned on by setting
- * NSPR_LOG_MODULES=Camera:N environment variable, where N >= 3.
+ * MOZ_LOG=Camera:N environment variable, where N >= 3.
  *
  * CNW_LOGE() is always enabled.
  */
