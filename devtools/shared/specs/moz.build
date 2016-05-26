@@ -10,6 +10,7 @@ DevToolsModules(
     'highlighters.js',
     'inspector.js',
     'storage.js',
+    'styleeditor.js',
     'styles.js',
     'stylesheets.js'
 )

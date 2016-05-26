@@ -6,7 +6,7 @@
 
 "use strict";
 
-const {Cc, Ci, Cu} = require("chrome");
+const {Ci, Cu} = require("chrome");
 
 const Services = require("Services");
 
@@ -20,7 +20,6 @@ loader.lazyRequireGetter(this, "TableWidget", "devtools/client/shared/widgets/Ta
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/main", true);
 
 const { extend } = require("sdk/core/heritage");
-const URI = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const STRINGS_URI = "chrome://devtools/locale/webconsole.properties";
@@ -2297,9 +2296,9 @@ Widgets.URLString.prototype = extend(Widgets.BaseWidget.prototype, {
    */
   _isURL: function (token) {
     try {
-      let uri = URI.newURI(token, null, null);
-      let url = uri.QueryInterface(Ci.nsIURL);
-      return true;
+      let url = new URL(token);
+      return ["http:", "https:", "ftp:", "data:", "javascript:",
+              "resource:", "chrome:"].includes(url.protocol);
     } catch (e) {
       return false;
     }

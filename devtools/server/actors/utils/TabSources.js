@@ -11,7 +11,6 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const { OriginalLocation, GeneratedLocation } = require("devtools/server/actors/common");
 const { resolve } = require("promise");
 const { joinURI } = require("devtools/shared/path");
-const URL = require("URL");
 
 loader.lazyRequireGetter(this, "SourceActor", "devtools/server/actors/source", true);
 loader.lazyRequireGetter(this, "isEvalSource", "devtools/server/actors/source", true);
