@@ -9,9 +9,4 @@
       <item name="android:textColor">#fff</item>
    </style>
 
-   <style name="ActionBarThemeGeckoPreferences">
-       <!-- Icon color -->
-       <item name="colorControlNormal">#fff</item>
-   </style>
-
 </resources>
