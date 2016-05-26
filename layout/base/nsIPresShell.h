@@ -974,9 +974,8 @@ public:
 
   /**
    * See if reflow verification is enabled. To enable reflow verification add
-   * "verifyreflow:1" to your NSPR_LOG_MODULES environment variable
-   * (any non-zero debug level will work). Or, call SetVerifyReflowEnable
-   * with true.
+   * "verifyreflow:1" to your MOZ_LOG environment variable (any non-zero
+   * debug level will work). Or, call SetVerifyReflowEnable with true.
    */
   static bool GetVerifyReflowEnable();
 
