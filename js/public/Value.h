@@ -51,12 +51,8 @@ namespace JS { class Value; }
 # define JSVAL_TAG_SHIFT 47
 #endif
 
-/*
- * We try to use enums so that printing a jsval_layout in the debugger shows
- * nice symbolic type tags, however we can only do this when we can force the
- * underlying type of the enum to be the desired size.
- */
-#if !defined(__SUNPRO_CC) && !defined(__xlC__)
+// Use enums so that printing a jsval_layout in the debugger shows nice
+// symbolic type tags.
 
 #if defined(_MSC_VER)
 # define JS_ENUM_HEADER(id, type)              enum id : type
@@ -156,64 +152,6 @@ static_assert(sizeof(JSValueShiftedTag) == sizeof(uint64_t),
  */
 #undef JS_ENUM_HEADER
 #undef JS_ENUM_FOOTER
-
-#else  /* !defined(__SUNPRO_CC) && !defined(__xlC__) */
-
-typedef uint8_t JSValueType;
-#define JSVAL_TYPE_DOUBLE            ((uint8_t)0x00)
-#define JSVAL_TYPE_INT32             ((uint8_t)0x01)
-#define JSVAL_TYPE_UNDEFINED         ((uint8_t)0x02)
-#define JSVAL_TYPE_BOOLEAN           ((uint8_t)0x03)
-#define JSVAL_TYPE_MAGIC             ((uint8_t)0x04)
-#define JSVAL_TYPE_STRING            ((uint8_t)0x05)
-#define JSVAL_TYPE_SYMBOL            ((uint8_t)0x06)
-#define JSVAL_TYPE_PRIVATE_GCTHING   ((uint8_t)0x07)
-#define JSVAL_TYPE_NULL              ((uint8_t)0x08)
-#define JSVAL_TYPE_OBJECT            ((uint8_t)0x0c)
-#define JSVAL_TYPE_UNKNOWN           ((uint8_t)0x20)
-
-#if defined(JS_NUNBOX32)
-
-typedef uint32_t JSValueTag;
-#define JSVAL_TAG_CLEAR              ((uint32_t)(0xFFFFFF80))
-#define JSVAL_TAG_INT32              ((uint32_t)(JSVAL_TAG_CLEAR | JSVAL_TYPE_INT32))
-#define JSVAL_TAG_UNDEFINED          ((uint32_t)(JSVAL_TAG_CLEAR | JSVAL_TYPE_UNDEFINED))
-#define JSVAL_TAG_STRING             ((uint32_t)(JSVAL_TAG_CLEAR | JSVAL_TYPE_STRING))
-#define JSVAL_TAG_SYMBOL             ((uint32_t)(JSVAL_TAG_CLEAR | JSVAL_TYPE_SYMBOL))
-#define JSVAL_TAG_BOOLEAN            ((uint32_t)(JSVAL_TAG_CLEAR | JSVAL_TYPE_BOOLEAN))
-#define JSVAL_TAG_MAGIC              ((uint32_t)(JSVAL_TAG_CLEAR | JSVAL_TYPE_MAGIC))
-#define JSVAL_TAG_NULL               ((uint32_t)(JSVAL_TAG_CLEAR | JSVAL_TYPE_NULL))
-#define JSVAL_TAG_OBJECT             ((uint32_t)(JSVAL_TAG_CLEAR | JSVAL_TYPE_OBJECT))
-#define JSVAL_TAG_PRIVATE_GCTHING    ((uint32_t)(JSVAL_TAG_CLEAR | JSVAL_TYPE_PRIVATE_GCTHING))
-
-#elif defined(JS_PUNBOX64)
-
-typedef uint32_t JSValueTag;
-#define JSVAL_TAG_MAX_DOUBLE         ((uint32_t)(0x1FFF0))
-#define JSVAL_TAG_INT32              (uint32_t)(JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_INT32)
-#define JSVAL_TAG_UNDEFINED          (uint32_t)(JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_UNDEFINED)
-#define JSVAL_TAG_STRING             (uint32_t)(JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_STRING)
-#define JSVAL_TAG_SYMBOL             (uint32_t)(JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_SYMBOL)
-#define JSVAL_TAG_BOOLEAN            (uint32_t)(JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_BOOLEAN)
-#define JSVAL_TAG_MAGIC              (uint32_t)(JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_MAGIC)
-#define JSVAL_TAG_NULL               (uint32_t)(JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_NULL)
-#define JSVAL_TAG_OBJECT             (uint32_t)(JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_OBJECT)
-#define JSVAL_TAG_PRIVATE_GCTHING    (uint32_t)(JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_PRIVATE_GCTHING)
-
-typedef uint64_t JSValueShiftedTag;
-#define JSVAL_SHIFTED_TAG_MAX_DOUBLE      ((((uint64_t)JSVAL_TAG_MAX_DOUBLE)     << JSVAL_TAG_SHIFT) | 0xFFFFFFFF)
-#define JSVAL_SHIFTED_TAG_INT32           (((uint64_t)JSVAL_TAG_INT32)           << JSVAL_TAG_SHIFT)
-#define JSVAL_SHIFTED_TAG_UNDEFINED       (((uint64_t)JSVAL_TAG_UNDEFINED)       << JSVAL_TAG_SHIFT)
-#define JSVAL_SHIFTED_TAG_STRING          (((uint64_t)JSVAL_TAG_STRING)          << JSVAL_TAG_SHIFT)
-#define JSVAL_SHIFTED_TAG_SYMBOL          (((uint64_t)JSVAL_TAG_SYMBOL)          << JSVAL_TAG_SHIFT)
-#define JSVAL_SHIFTED_TAG_BOOLEAN         (((uint64_t)JSVAL_TAG_BOOLEAN)         << JSVAL_TAG_SHIFT)
-#define JSVAL_SHIFTED_TAG_MAGIC           (((uint64_t)JSVAL_TAG_MAGIC)           << JSVAL_TAG_SHIFT)
-#define JSVAL_SHIFTED_TAG_NULL            (((uint64_t)JSVAL_TAG_NULL)            << JSVAL_TAG_SHIFT)
-#define JSVAL_SHIFTED_TAG_OBJECT          (((uint64_t)JSVAL_TAG_OBJECT)          << JSVAL_TAG_SHIFT)
-#define JSVAL_SHIFTED_TAG_PRIVATE_GCTHING (((uint64_t)JSVAL_TAG_PRIVATE_GCTHING) << JSVAL_TAG_SHIFT)
-
-#endif  /* JS_PUNBOX64 */
-#endif  /* !defined(__SUNPRO_CC) && !defined(__xlC__) */
 
 #if defined(JS_NUNBOX32)
 
