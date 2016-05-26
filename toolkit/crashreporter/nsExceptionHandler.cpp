@@ -14,6 +14,7 @@
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
 #include "mozilla/unused.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Snprintf.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/TimeStamp.h"
@@ -1437,9 +1438,30 @@ ChildFilter(void* context)
   return result;
 }
 
+#if defined(XP_WIN) && defined(NIGHTLY_BUILD)
+static void DllLoadCallback(DllLoadInfo& info)
+{
+  nsAutoCString note;
+  note.AppendPrintf("%s-%p-%x\n", info.name, info.lpBaseOfDll, info.SizeOfImage);
+
+  CrashReporter::AppendAppNotesToCrashReport(note);
+}
+
+static void EmptyDllLoadCallback(DllLoadInfo& info)
+{
+}
+
+#endif
+
+
 nsresult SetExceptionHandler(nsIFile* aXREDirectory,
                              bool force/*=false*/)
 {
+#if defined(XP_WIN) && defined(NIGHTLY_BUILD)
+  auto dllCallbackGuard = MakeScopeExit([] {
+                                        RegisterDllLoadCallback(EmptyDllLoadCallback);
+                                        });
+#endif
   if (gExceptionHandler)
     return NS_ERROR_ALREADY_INITIALIZED;
 
@@ -1673,6 +1695,11 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
 #endif
 
   mozalloc_set_oom_abort_handler(AnnotateOOMAllocationSize);
+
+#if defined(XP_WIN) && defined(NIGHTLY_BUILD)
+  dllCallbackGuard.release();
+  RegisterDllLoadCallback(DllLoadCallback);
+#endif
 
   return NS_OK;
 }
