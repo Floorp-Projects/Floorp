@@ -11,6 +11,7 @@
 #include "mozilla/unused.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIObserverService.h"
+#include "nsIWritablePropertyBag2.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTCPDeviceInfo.h"
 #include "nsThreadUtils.h"
@@ -24,7 +25,8 @@
 #define PREF_PRESENTATION_DISCOVERABLE "dom.presentation.discoverable"
 #define PREF_PRESENTATION_DEVICE_NAME "dom.presentation.device.name"
 
-#define SERVICE_TYPE "_mozilla_papi._tcp."
+#define SERVICE_TYPE "_presentation-ctrl._tcp"
+#define PROTOCOL_VERSION_TAG "version"
 
 static mozilla::LazyLogModule sMulticastDNSProviderLogModule("MulticastDNSDeviceProvider");
 
@@ -255,6 +257,21 @@ MulticastDNSDeviceProvider::RegisterService()
     return rv;
   }
 
+  nsCOMPtr<nsIWritablePropertyBag2> propBag =
+    do_CreateInstance("@mozilla.org/hash-property-bag;1");
+  MOZ_ASSERT(propBag);
+
+  uint32_t version;
+  rv = mPresentationService->GetVersion(&version);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  rv = propBag->SetPropertyAsUint32(NS_LITERAL_STRING(PROTOCOL_VERSION_TAG),
+                                    version);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  if (NS_WARN_IF(NS_FAILED(rv = serviceInfo->SetAttributes(propBag)))) {
+    return rv;
+  }
+
   return mMulticastDNS->RegisterService(serviceInfo,
                                         mWrappedListener,
                                         getter_AddRefs(mRegisterRequest));
@@ -310,6 +327,32 @@ MulticastDNSDeviceProvider::RequestSession(Device* aDevice,
                                                        aDevice->Port());
 
   return mPresentationService->RequestSession(deviceInfo, aUrl, aPresentationId, aRetVal);
+}
+
+bool
+MulticastDNSDeviceProvider::IsCompatibleServer(nsIDNSServiceInfo* aServiceInfo)
+{
+  MOZ_ASSERT(aServiceInfo);
+
+  nsCOMPtr<nsIPropertyBag2> propBag;
+  if (NS_WARN_IF(NS_FAILED(
+          aServiceInfo->GetAttributes(getter_AddRefs(propBag)))) || !propBag) {
+    return false;
+  }
+
+  uint32_t remoteVersion;
+  if (NS_WARN_IF(NS_FAILED(
+          propBag->GetPropertyAsUint32(NS_LITERAL_STRING(PROTOCOL_VERSION_TAG),
+                                       &remoteVersion)))) {
+    return false;
+  }
+
+  bool isCompatible = false;
+  Unused << NS_WARN_IF(NS_FAILED(
+                mPresentationService->IsCompatibleServer(remoteVersion,
+                                                         &isCompatible)));
+
+  return isCompatible;
 }
 
 nsresult
@@ -767,6 +810,11 @@ MulticastDNSDeviceProvider::OnServiceResolved(nsIDNSServiceInfo* aServiceInfo)
       return rv;
     }
 
+    return NS_OK;
+  }
+
+  if (!IsCompatibleServer(aServiceInfo)) {
+    LOG_I("ignore incompatible service: %s", serviceName.get());
     return NS_OK;
   }
 
