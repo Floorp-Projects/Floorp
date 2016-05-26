@@ -42,18 +42,6 @@
 typedef bool
 (* JSNative)(JSContext* cx, unsigned argc, JS::Value* vp);
 
-/*
- * Compute |this| for the |vp| inside a JSNative, either boxing primitives or
- * replacing with the global object as necessary.
- *
- * This method will go away at some point: instead use |args.thisv()|.  If the
- * value is an object, no further work is required.  If that value is |null| or
- * |undefined|, use |JS_GetGlobalForObject| to compute the global object.  If
- * the value is some other primitive, use |JS_ValueToObject| to box it.
- */
-extern JS_PUBLIC_API(JS::Value)
-JS_ComputeThis(JSContext* cx, JS::Value* vp);
-
 namespace JS {
 
 extern JS_PUBLIC_DATA(const HandleValue) UndefinedHandleValue;
@@ -83,10 +71,12 @@ extern JS_PUBLIC_DATA(const HandleValue) UndefinedHandleValue;
  *       return true;
  *   }
  *
- * A note on JS_ComputeThis and JS_THIS_OBJECT: these methods currently aren't
- * part of the CallReceiver interface.  We will likely add them at some point.
- * Until then, you should probably continue using |vp| directly for these two
- * cases.
+ * A note on JS_THIS_OBJECT: no equivalent method is part of the CallReceiver
+ * interface, and we're unlikely to add one (because this style of function is
+ * disfavored -- functions shouldn't be implicitly exposing the global object
+ * to arbitrary callers).  JS_THIS_OBJECT will eventually be removed, and
+ * callers should switch to |args.thisv()| supplemented with |JS::ToObject| and
+ * |JS::CurrentGlobalObjectOrNull|.
  *
  * CallReceiver is exposed publicly and used internally.  Not all parts of its
  * public interface are meant to be used by embedders!  See inline comments to
@@ -94,6 +84,13 @@ extern JS_PUBLIC_DATA(const HandleValue) UndefinedHandleValue;
  */
 
 namespace detail {
+
+/*
+ * Compute |this| for the |vp| inside a JSNative, either boxing primitives or
+ * replacing with the global object as necessary.
+ */
+extern JS_PUBLIC_API(Value)
+ComputeThis(JSContext* cx, JS::Value* vp);
 
 #ifdef JS_DEBUG
 extern JS_PUBLIC_API(void)
@@ -170,7 +167,7 @@ class MOZ_STACK_CLASS CallReceiverBase : public UsedRvalBase<
         if (thisv().isObject())
             return thisv();
 
-        return JS_ComputeThis(cx, base());
+        return ComputeThis(cx, base());
     }
 
     bool isConstructing() const {
@@ -388,7 +385,7 @@ CallArgsFromSp(unsigned stackSlots, Value* sp, bool constructing = false)
 MOZ_ALWAYS_INLINE JS::Value
 JS_THIS(JSContext* cx, JS::Value* vp)
 {
-    return vp[1].isPrimitive() ? JS_ComputeThis(cx, vp) : vp[1];
+    return vp[1].isPrimitive() ? JS::detail::ComputeThis(cx, vp) : vp[1];
 }
 
 /*
