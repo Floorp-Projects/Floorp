@@ -13,7 +13,7 @@ hyper = {version = "0.9", default-features = false}
 lazy_static = "0.1"
 log = "0.3"
 mozprofile = "0.2"
-mozrunner = "0.2"
+mozrunner = "0.3"
 regex = "0.1.47"
 rustc-serialize = "0.3.16"
 uuid = "0.1.18"
