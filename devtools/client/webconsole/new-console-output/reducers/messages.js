@@ -12,6 +12,11 @@ function messages(state = Immutable.List(), action) {
   switch (action.type) {
     case constants.MESSAGE_ADD:
       let newMessage = action.message;
+
+      if (newMessage.data.level === "clear") {
+        return Immutable.List([newMessage]);
+      }
+
       if (newMessage.allowRepeating && state.size > 0) {
         let lastMessage = state.last();
         if (lastMessage.repeatId === newMessage.repeatId) {
