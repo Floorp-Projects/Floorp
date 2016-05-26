@@ -55,7 +55,8 @@ nsDragServiceProxy::InvokeDragSessionImpl(nsISupportsArray* aArrayTransferables,
         size_t length;
         int32_t stride;
         mozilla::UniquePtr<char[]> surfaceData =
-          nsContentUtils::GetSurfaceData(dataSurface, &length, &stride);
+          nsContentUtils::GetSurfaceData(WrapNotNull(dataSurface), &length,
+                                         &stride);
         nsDependentCString dragImage(surfaceData.get(), length);
 
         mozilla::Unused <<

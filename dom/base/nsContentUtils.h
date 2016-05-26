@@ -32,6 +32,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/net/ReferrerPolicy.h"
 #include "mozilla/Logging.h"
+#include "mozilla/NotNull.h"
 #include "nsIContentPolicy.h"
 
 #if defined(XP_WIN)
@@ -2432,8 +2433,9 @@ public:
    * Get the pixel data from the given source surface and return it as a buffer.
    * The length and stride will be assigned from the surface.
    */
-  static mozilla::UniquePtr<char[]> GetSurfaceData(mozilla::gfx::DataSourceSurface* aSurface,
-                                                   size_t* aLength, int32_t* aStride);
+  static mozilla::UniquePtr<char[]> GetSurfaceData(
+    mozilla::NotNull<mozilla::gfx::DataSourceSurface*> aSurface,
+    size_t* aLength, int32_t* aStride);
 
   // Helpers shared by the implementations of nsContentUtils methods and
   // nsIDOMWindowUtils methods.
