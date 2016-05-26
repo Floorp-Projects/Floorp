@@ -154,10 +154,10 @@
 
 <pre id="test">
 <script type="application/javascript;version=1.7">
-function* runTest() {
+function* test(testDriver) {
   var elm = document.getElementsByClassName('inner')[0];
   elm.scrollTop = 0;
-  yield flushApzRepaints(driveTest);
+  yield flushApzRepaints(testDriver);
 
   // Take over control of the refresh driver and compositor
   var utils = SpecialPowers.DOMWindowUtils;
@@ -165,12 +165,12 @@ function* runTest() {
 
   // Kick off an APZ smooth-scroll to 0,200
   elm.scrollTo(0, 200);
-  yield waitForAllPaints(function() { setTimeout(driveTest, 0); });
+  yield waitForAllPaints(function() { setTimeout(testDriver, 0); });
 
   // Let's do a couple of frames of the animation, and make sure it's going
   utils.advanceTimeAndRefresh(16);
   utils.advanceTimeAndRefresh(16);
-  yield flushApzRepaints(driveTest);
+  yield flushApzRepaints(testDriver);
   ok(elm.scrollTop > 0, "APZ animation in progress", "scrollTop is now " + elm.scrollTop);
   ok(elm.scrollTop < 200, "APZ animation not yet completed", "scrollTop is now " + elm.scrollTop);
 
@@ -190,7 +190,7 @@ function* runTest() {
   // and the frame reconstruction
   utils.advanceTimeAndRefresh(16);
   utils.advanceTimeAndRefresh(16);
-  yield flushApzRepaints(driveTest);
+  yield flushApzRepaints(testDriver);
   ok(elm.scrollTop < 200, "APZ animation not yet completed", "scrollTop is now " + elm.scrollTop);
   ok(frameReconstructionTriggered > 0, "Frame reconstruction triggered", "reconstruction triggered " + frameReconstructionTriggered + " times");
 
@@ -199,31 +199,18 @@ function* runTest() {
     utils.advanceTimeAndRefresh(16);
   }
   utils.restoreNormalRefresh();
-  yield waitForAllPaints(function() { setTimeout(driveTest, 0); });
-  yield flushApzRepaints(driveTest);
+  yield waitForAllPaints(function() { setTimeout(testDriver, 0); });
+  yield flushApzRepaints(testDriver);
 
   is(elm.scrollTop, 200, "Element should have scrolled by 200px");
 }
 
-var gTestContinuation = null;
-function driveTest() {
-  if (!gTestContinuation) {
-    gTestContinuation = runTest();
-  }
-  var ret = gTestContinuation.next();
-  if (ret.done) {
-    SimpleTest.finish();
-  }
-}
-
-SimpleTest.waitForExplicitFinish();
-var apzEnabled = SpecialPowers.getDOMWindowUtils(window).asyncPanZoomEnabled;
-if (!apzEnabled) {
-  ok(true, "APZ not enabled, skipping test");
-  SimpleTest.finish();
-} else {
+if (isApzEnabled()) {
+  SimpleTest.waitForExplicitFinish();
   SimpleTest.expectAssertions(0, 1); // this test triggers an assertion, see bug 1247050
-  SimpleTest.waitForFocus(driveTest, window);
+  waitUntilApzStable()
+  .then(runContinuation(test))
+  .then(SimpleTest.finish);
 }
 
 </script>

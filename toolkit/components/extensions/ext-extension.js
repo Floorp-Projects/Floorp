@@ -40,7 +40,7 @@ extensions.registerSchemaAPI("extension", null, (extension, context) => {
       },
 
       isAllowedFileSchemeAccess() {
-        return Promise.resolve(true);
+        return Promise.resolve(false);
       },
     },
   };

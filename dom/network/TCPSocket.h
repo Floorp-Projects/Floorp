@@ -239,6 +239,9 @@ private:
   // The buffered data awaiting the TLS upgrade to finish.
   nsTArray<nsCOMPtr<nsIInputStream>> mPendingDataAfterStartTLS;
 
+  // The data to be sent while AsyncCopier is still active.
+  nsTArray<nsCOMPtr<nsIInputStream>> mPendingDataWhileCopierActive;
+
   bool mObserversActive;
 
 #ifdef MOZ_WIDGET_GONK

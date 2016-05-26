@@ -22,7 +22,7 @@ function test()
 
 // ------- Comment #92 From Jesse Ruderman
 
-  expect = 'TypeError: redeclaration of formal parameter e';
+  expect = 'SyntaxError: redeclaration of formal parameter e';
   try
   {
     eval('(function (e) { var e; const e = undefined; });');
@@ -31,8 +31,8 @@ function test()
   {
     actual = ex + '';
   }
-// Without patch: "TypeError: redeclaration of var e"
-// expected new behavior // With patch:    "TypeError: redeclaration of formal parameter e:"
+// Without patch: "SyntaxError: redeclaration of var e"
+// expected new behavior // With patch:    "SyntaxError: redeclaration of formal parameter e:"
 
   reportCompare(expect, actual, summary);
 

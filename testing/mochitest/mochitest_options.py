@@ -559,6 +559,13 @@ class MochitestArguments(ArgumentContainer):
           "help": "Timeout while waiting to receive a message from the marionette server.",
           "suppress": True,
           }],
+        [["--cleanup-crashes"],
+         {"action": "store_true",
+          "dest": "cleanupCrashes",
+          "default": False,
+          "help": "Delete pending crash reports before running tests.",
+          "suppress": True,
+          }],
     ]
 
     defaults = {

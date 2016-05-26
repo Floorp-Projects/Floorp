@@ -41,8 +41,6 @@ task:
       MH_BRANCH: {{project}}
       MH_BUILD_POOL: taskcluster
 
-    maxRunTime: 36000
-
     command: ["/bin/bash", "bin/build.sh"]
 
   extra:
@@ -57,5 +55,6 @@ task:
     # tasks provide the "build" extra field to specify where the build and tests
     # files are located.
     locations:
-      build: 'public/build/target.linux-x86_64.tar.bz2'
-      tests: 'public/build/target.tests.zip'
+      build: 'public/build/target.apk'
+      mozharness: 'public/build/mozharness.zip'
+      test_packages: 'public/build/target.test_packages.json'

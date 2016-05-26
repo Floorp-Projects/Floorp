@@ -227,7 +227,7 @@ class LocalesMixin(ChunkingMixin):
                 tag = self.l10n_revisions[locale]
             locale_repos.append({
                 'repo': "%s/%s" % (hg_l10n_base, locale),
-                'revision': tag,
+                'branch': tag,
                 'vcs': vcs
             })
         revs = self.vcs_checkout_repos(repo_list=locale_repos,

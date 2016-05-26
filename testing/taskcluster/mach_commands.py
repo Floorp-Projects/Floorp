@@ -311,6 +311,8 @@ class Graph(object):
             # of the changed files.
             file_patterns = when.get('file_patterns', None)
             if file_patterns and changed_files:
+                # Always consider changes to the task definition itself
+                file_patterns.append('testing/taskcluster/{task}'.format(task=task['task']))
                 for pattern in file_patterns:
                     for path in changed_files:
                         if mozpackmatch(path, pattern):

@@ -50,7 +50,7 @@ this.EXPORTED_SYMBOLS = ["AbstractTreeItem"];
  *     ...
  *     // Use `this.itemDataSrc` to customize the tree item and
  *     // `this.level` to calculate the indentation.
- *     node.marginInlineStart = (this.level * 10) + "px";
+ *     node.style.marginInlineStart = (this.level * 10) + "px";
  *     node.appendChild(document.createTextNode(this.itemDataSrc.label));
  *     ...
  *     return node;

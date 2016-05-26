@@ -156,10 +156,7 @@ TreeMutation::Done()
     mParent->mChildren[idx]->mStateFlags |= Accessible::eGroupInfoDirty;
   }
 
-  if (mStartIdx < mParent->mChildren.Length() - 1) {
-    mParent->mEmbeddedObjCollector = nullptr;
-  }
-
+  mParent->mEmbeddedObjCollector = nullptr;
   mParent->mStateFlags |= mStateFlagsCopy & Accessible::eKidsMutating;
 
 #ifdef DEBUG

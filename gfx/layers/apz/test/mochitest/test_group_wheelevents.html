@@ -25,16 +25,13 @@ var subtests = [
         ['mousewheel.transaction.timeout', 0]]}
 ];
 
-SimpleTest.waitForExplicitFinish();
-window.onload = function() {
-  if (!SpecialPowers.getDOMWindowUtils(window).asyncPanZoomEnabled) {
-    ok(true, "APZ is not enabled, this test is not relevant, sorry!\n");
-    SimpleTest.finish();
-    return;
-  }
-  runSubtestsSeriallyInFreshWindows(subtests)
-    .then(function() { SimpleTest.finish() });
-};
+if (isApzEnabled()) {
+  SimpleTest.waitForExplicitFinish();
+  window.onload = function() {
+    runSubtestsSeriallyInFreshWindows(subtests)
+    .then(SimpleTest.finish);
+  };
+}
 
   </script>
 </head>

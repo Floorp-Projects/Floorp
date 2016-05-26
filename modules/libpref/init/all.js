@@ -367,7 +367,11 @@ pref("media.decoder-doctor.notifications-allowed", "MediaWMFNeeded,MediaWidevine
 pref("media.decoder-doctor.verbose", false);
 
 // Whether to suspend decoding of videos in background tabs.
+#ifdef NIGHTLY_BUILD
 pref("media.suspend-bkgnd-video.enabled", true);
+#else
+pref("media.suspend-bkgnd-video.enabled", false);
+#endif
 
 #ifdef MOZ_WEBRTC
 pref("media.navigator.enabled", true);
@@ -2648,6 +2652,9 @@ pref("editor.positioning.offset",            0);
 pref("dom.use_watchdog", true);
 pref("dom.max_chrome_script_run_time", 20);
 pref("dom.max_script_run_time", 10);
+
+// Stop all scripts in a compartment when the "stop script" dialog is used.
+pref("dom.global_stop_script", true);
 
 // If true, ArchiveReader will be enabled
 pref("dom.archivereader.enabled", false);

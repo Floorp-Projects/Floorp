@@ -22,11 +22,7 @@ function clicked(e) {
   subtestDone();
 }
 
-window.onload = function() {
-  waitForAllPaints(function() {
-    flushApzRepaints(clickButton);
-  });
-}
+waitUntilApzStable().then(clickButton);
 
   </script>
 </head>
