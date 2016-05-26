@@ -20,7 +20,7 @@ config = {
     "platforms": ["android"],
     "repos": [{
         "repo": "https://hg.mozilla.org/build/buildbot-configs",
-        "revision": "default",
+        "branch": "default",
     }],
     'vcs_share_base': HG_SHARE_BASE_DIR,
     "ftp_upload_base_dir": FTP_UPLOAD_BASE_DIR,
