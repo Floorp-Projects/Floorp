@@ -9,7 +9,7 @@
  */
 
 function test() {
-  initDebugger("data:text/html,hi").then(([aTab,, aPanel]) => {
+  initDebugger('data:text/html,hi', { source: null }).then(([aTab,, aPanel]) => {
     const gPanel = aPanel;
     const gDebugger = gPanel.panelWin;
 

@@ -13,14 +13,19 @@ var gTab, gPanel, gDebugger;
 var gSources, gSearchBox;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: "-01.js",
+    line: 1,
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gSources = gDebugger.DebuggerView.Sources;
     gSearchBox = gDebugger.DebuggerView.Filtering._searchbox;
 
-    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 1)
+    // Calling `firstCall` is going to break into the other script
+    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 6)
       .then(performSimpleSearch)
       .then(() => verifySourceAndCaret("-01.js", 1, 1, [1, 1]))
       .then(combineWithLineSearch)

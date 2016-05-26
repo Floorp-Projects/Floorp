@@ -19,14 +19,18 @@ function test() {
   // this test does a lot of work on large objects, default 45s is not enough
   requestLongerTimeout(4);
 
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: TAB_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gVariables = gDebugger.DebuggerView.Variables;
     gEllipsis = Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString).data;
 
-    waitForSourceAndCaretAndScopes(gPanel, ".html", 28)
+    waitForCaretAndScopes(gPanel, 28, 1)
       .then(() => performTests())
       .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
       .then(null, error => {

@@ -14,7 +14,11 @@ function test() {
   let gTab, gPanel, gDebugger;
   let gSources, gBreakpoints, gTarget, gResumeButton, gResumeKey, gThreadClient;
 
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  const options = {
+    source: "-eval.js",
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
@@ -24,8 +28,7 @@ function test() {
     gResumeButton = gDebugger.document.getElementById("resume");
     gResumeKey = gDebugger.document.getElementById("resumeKey");
 
-    waitForSourceShown(gPanel, "-eval.js")
-      .then(testInterval)
+    testInterval()
       .then(testEvent)
       .then(() => closeDebuggerAndFinish(gPanel));
   });

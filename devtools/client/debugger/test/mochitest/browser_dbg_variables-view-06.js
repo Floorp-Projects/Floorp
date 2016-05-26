@@ -10,8 +10,11 @@
 const TAB_URL = EXAMPLE_URL + "doc_promise.html";
 
 var test = Task.async(function* () {
-  const [tab,, panel] = yield initDebugger(TAB_URL);
-  yield ensureSourceIs(panel, "doc_promise.html", true);
+  let options = {
+    source: TAB_URL,
+    line: 1
+  };
+  const [tab,, panel] = yield initDebugger(TAB_URL, options);
 
   const scopes = waitForCaretAndScopes(panel, 21);
   callInTab(tab, "doPause");

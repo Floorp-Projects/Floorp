@@ -12,7 +12,11 @@ const TAB_URL = EXAMPLE_URL + "doc_watch-expression-button.html";
 
 function test() {
   Task.spawn(function* () {
-    let [tab,, panel] = yield initDebugger(TAB_URL);
+    let options = {
+      source: TAB_URL,
+      line: 1
+    };
+    let [tab,, panel] = yield initDebugger(TAB_URL, options);
     let win = panel.panelWin;
     let events = win.EVENTS;
     let watch = win.DebuggerView.WatchExpressions;
@@ -29,8 +33,9 @@ function test() {
         "The expression count is correct.");
     }
 
+    let onCaretAndScopes = waitForCaretAndScopes(panel, 19);
     callInTab(tab, "start");
-    yield waitForSourceAndCaretAndScopes(panel, ".html", 19);
+    yield onCaretAndScopes;
 
     // Inspect primitive value variable.
     yield openVarPopup(panel, { line: 15, ch: 12 });

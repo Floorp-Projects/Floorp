@@ -11,7 +11,11 @@ const TAB_URL = EXAMPLE_URL + "doc_scope-variable.html";
 
 function test() {
   Task.spawn(function* () {
-    let [tab,, panel] = yield initDebugger(TAB_URL);
+    let options = {
+      source: TAB_URL,
+      line: 1
+    };
+    let [tab,, panel] = yield initDebugger(TAB_URL, options);
     let win = panel.panelWin;
     let events = win.EVENTS;
     let editor = win.DebuggerView.editor;
@@ -42,8 +46,10 @@ function test() {
         "Editor caret location is correct.");
     }
 
+    let onCaretAndScopes = waitForCaretAndScopes(panel, 20);
     callInTab(tab, "test");
-    yield waitForSourceAndCaretAndScopes(panel, ".html", 20);
+    yield onCaretAndScopes;
+
     checkView(0, 20);
 
     // Inspect variable in topmost frame.

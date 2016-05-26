@@ -16,7 +16,11 @@ function test() {
   // Debug test slaves are a bit slow at this test.
   requestLongerTimeout(2);
 
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: TAB_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
@@ -28,7 +32,7 @@ function test() {
     gVars.switch = function () {};
     gVars.delete = function () {};
 
-    waitForSourceAndCaretAndScopes(gPanel, ".html", 24)
+    waitForCaretAndScopes(gPanel, 24)
       .then(() => addWatchExpressions())
       .then(() => testEdit("set", "this._prop = value + ' BEER CAN'", {
         "myVar.prop": "xlerb BEER CAN",

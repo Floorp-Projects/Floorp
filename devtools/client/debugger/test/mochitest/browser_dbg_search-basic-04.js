@@ -14,7 +14,11 @@ var gTab, gPanel, gDebugger;
 var gEditor, gSources, gSearchBox;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: "-01.js",
+    line: 1,
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
@@ -22,13 +26,9 @@ function test() {
     gSources = gDebugger.DebuggerView.Sources;
     gSearchBox = gDebugger.DebuggerView.Filtering._searchbox;
 
-    waitForSourceShown(gPanel, "-01.js")
-      .then(testLineSearch)
-      .then(testTokenSearch)
-      .then(() => closeDebuggerAndFinish(gPanel))
-      .then(null, aError => {
-        ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
-      });
+    testLineSearch();
+    testTokenSearch();
+    closeDebuggerAndFinish(gPanel);
   });
 }
 

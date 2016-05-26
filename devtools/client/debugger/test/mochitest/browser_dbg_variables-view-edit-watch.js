@@ -13,7 +13,11 @@ var gTab, gPanel, gDebugger;
 var gL10N, gEditor, gVars, gWatch;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: TAB_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
@@ -22,7 +26,9 @@ function test() {
     gVars = gDebugger.DebuggerView.Variables;
     gWatch = gDebugger.DebuggerView.WatchExpressions;
 
-    waitForDebuggerEvents(gPanel, gDebugger.EVENTS.FETCHED_WATCH_EXPRESSIONS)
+    promise.all([
+      waitForDebuggerEvents(gPanel, gDebugger.EVENTS.FETCHED_WATCH_EXPRESSIONS),
+      waitForCaretAndScopes(gPanel, 18)])
       .then(() => testInitialVariablesInScope())
       .then(() => testInitialExpressionsInScope())
       .then(() => testModification("document.title = 42", "document.title = 43", "43", "undefined"))

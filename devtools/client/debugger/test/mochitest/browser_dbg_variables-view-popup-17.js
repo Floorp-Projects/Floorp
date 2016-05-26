@@ -12,7 +12,11 @@ let gTab, gPanel, gDebugger;
 let actions, gSources, gVariables;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: TAB_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
@@ -38,7 +42,7 @@ function test() {
       checkVariablePopupClosed(bubble);
       yield resumeDebuggerThenCloseAndFinish(gPanel);
     });
-    waitForSourceShown(gPanel, ".html").then(testPopupHiding);
+    testPopupHiding();
   });
 }
 

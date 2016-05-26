@@ -14,13 +14,17 @@ var gTab, gPanel, gDebugger;
 var gSources;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: "code_blackboxing_blackboxme.js",
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gSources = gDebugger.DebuggerView.Sources;
 
-    waitForSourceAndCaretAndScopes(gPanel, ".html", 21)
+    waitForCaretAndScopes(gPanel, 21)
       .then(testBlackBox)
       .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
       .then(null, aError => {

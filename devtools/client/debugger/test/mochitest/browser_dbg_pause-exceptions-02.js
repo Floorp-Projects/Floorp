@@ -13,7 +13,11 @@ var gTab, gPanel, gDebugger;
 var gFrames, gVariables, gPrefs, gOptions;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: TAB_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
@@ -27,8 +31,7 @@ function test() {
     isnot(gOptions._pauseOnExceptionsItem.getAttribute("checked"), "true",
       "The pause-on-exceptions menu item should not be checked.");
 
-    waitForSourceShown(aPanel, ".html")
-      .then(enablePauseOnExceptions)
+    enablePauseOnExceptions()
       .then(disableIgnoreCaughtExceptions)
       .then(() => reloadActiveTab(gPanel, gDebugger.EVENTS.SOURCE_SHOWN))
       .then(() => {

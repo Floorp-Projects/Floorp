@@ -14,7 +14,7 @@ function test() {
 
 function* runTests() {
   let TAB_URL = EXAMPLE_URL + "doc_empty-tab-01.html";
-  let [,, panel] = yield initDebugger(TAB_URL);
+  let [,, panel] = yield initDebugger(TAB_URL, { source: null });
   let dbgWin = panel.panelWin;
   let sources = dbgWin.DebuggerView.Sources;
   let frames = dbgWin.DebuggerView.StackFrames;

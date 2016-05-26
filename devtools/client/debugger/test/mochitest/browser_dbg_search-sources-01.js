@@ -13,7 +13,11 @@ function test() {
   // Debug test slaves are a bit slow at this test.
   requestLongerTimeout(3);
 
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: "-01.js",
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     const gTab = aTab;
     const gPanel = aPanel;
     const gDebugger = gPanel.panelWin;
@@ -24,8 +28,6 @@ function test() {
     Task.spawn(function* () {
       // move searches to yields
       // not sure what to do with the error...
-
-      yield waitForSourceShown(gPanel, "-01.js");
       yield bogusSearch();
       yield firstSearch();
       yield secondSearch();
