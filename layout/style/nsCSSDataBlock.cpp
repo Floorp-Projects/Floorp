@@ -60,6 +60,23 @@ TryToStartImageLoadOnValue(const nsCSSValue& aValue, nsIDocument* aDocument,
   MOZ_ASSERT(aDocument);
 
   if (aValue.GetUnit() == eCSSUnit_URL) {
+#ifdef MOZ_ENABLE_MASK_AS_SHORTHAND
+    // The 'mask-image' property accepts local reference URIs.
+    // For example,
+    //   mask-image: url(#mask_id); // refer to a SVG mask element, whose id is
+    //                              // "mask_id", in the current document.
+    // For such 'mask-image' values (pointing to an in-document element),
+    // there is no need to trigger image download.
+    if (aProperty == eCSSProperty_mask_image) {
+      nsIURI* docURI = aDocument->GetDocumentURI();
+      nsIURI* imageURI = aValue.GetURLValue();
+      bool isEqualExceptRef = false;
+      nsresult  rv = imageURI->EqualsExceptRef(docURI, &isEqualExceptRef);
+      if (NS_SUCCEEDED(rv) && isEqualExceptRef) {
+        return;
+      }
+    }
+#endif
     aValue.StartImageLoad(aDocument);
     if (aForTokenStream && aContext) {
       CSSVariableImageTable::Add(aContext, aProperty,
