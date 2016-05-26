@@ -259,7 +259,6 @@ VariablesViewController.prototype = {
       // First enumerate array items, e.g. properties from `0` to `array.length`.
       let options = {
         ignoreNonIndexedProperties: true,
-        ignoreSafeGetters: true,
         query: aQuery
       };
       objectClient.enumProperties(options, ({ iterator }) => {
