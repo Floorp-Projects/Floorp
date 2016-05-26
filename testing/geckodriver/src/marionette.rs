@@ -268,7 +268,8 @@ impl MarionetteHandler {
     fn create_connection(&mut self, session_id: &Option<String>,
                          capabilities: &NewSessionParameters) -> WebDriverResult<()> {
         let profile = try!(self.load_profile(capabilities));
-        match self.start_browser(profile) {
+        let args = try!(self.load_browser_args(capabilities));
+        match self.start_browser(profile, args) {
             Err(e) => {
                 return Err(WebDriverError::new(ErrorStatus::UnknownError,
                                                e.description().to_owned()));
@@ -284,12 +285,15 @@ impl MarionetteHandler {
         Ok(())
     }
 
-    fn start_browser(&mut self, profile: Option<Profile>) -> Result<(), RunnerError> {
+    fn start_browser(&mut self, profile: Option<Profile>, args: Option<Vec<String>>) -> Result<(), RunnerError> {
         let custom_profile = profile.is_some();
 
         match self.launcher {
             BrowserLauncher::BinaryLauncher(ref binary) => {
                 let mut runner = try!(FirefoxRunner::new(&binary, profile));
+                if let Some(cmd_args) = args {
+                    runner.args().extend(cmd_args);
+                };
                 try!(self.set_prefs(&mut runner.profile, custom_profile));
                 try!(runner.start());
 
@@ -340,6 +344,24 @@ impl MarionetteHandler {
                           profile.temp_dir.as_ref().expect("Profile doesn't have a path").path()));
         // TODO - Stop mozprofile erroring if user.js already exists
         Ok(Some(profile))
+    }
+
+    pub fn load_browser_args(&self, capabilities: &NewSessionParameters) -> WebDriverResult<Option<Vec<String>>> {
+        if let Some(args_json) = capabilities.get("firefox_args") {
+            let args_array = try!(args_json.as_array()
+                                  .ok_or(WebDriverError::new(ErrorStatus::UnknownError,
+                                                             "Arguments was not an array")));
+            let args = try!(args_array
+                            .iter()
+                            .map(|x| x.as_string().map(|x| x.to_owned()))
+                            .collect::<Option<Vec<String>>>()
+                            .ok_or(WebDriverError::new(
+                                ErrorStatus::UnknownError,
+                                "Arguments entries were not all strings")));
+            Ok(Some(args))
+        } else {
+            Ok(None)
+        }
     }
 }
 

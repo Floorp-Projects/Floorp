@@ -8,7 +8,7 @@ dependencies = [
  "lazy_static 0.1.16 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "mozprofile 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "mozrunner 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mozrunner 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "regex 0.1.71 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-serialize 0.3.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "uuid 0.1.18 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -193,7 +193,7 @@ dependencies = [
 
 [[package]]
 name = "mozrunner"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "log 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
