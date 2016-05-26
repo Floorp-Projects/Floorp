@@ -3401,6 +3401,16 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
   return mBackgroundColor;
 }
 
+- (void)setTemporaryBackgroundColor
+{
+  [super setBackgroundColor:[NSColor whiteColor]];
+}
+
+- (void)restoreBackgroundColor
+{
+  [super setBackgroundColor:mBackgroundColor];
+}
+
 - (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect
 {
   [self setTitlebarNeedsDisplayInRect:aRect sync:NO];
