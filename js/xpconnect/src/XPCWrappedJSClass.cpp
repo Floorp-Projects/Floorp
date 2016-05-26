@@ -818,28 +818,12 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
             // Figure out whether or not we should report this exception.
             bool reportable = xpc_IsReportableErrorCode(e_result);
             if (reportable) {
-                // Always want to report forced exceptions and XPConnect's own
-                // errors.
-                reportable = aForceReport ||
-                    NS_ERROR_GET_MODULE(e_result) == NS_ERROR_MODULE_XPCONNECT;
-
-                // See if an environment variable was set or someone has told us
-                // that a user pref was set indicating that we should report all
-                // exceptions.
-                if (!reportable)
-                    reportable = nsXPConnect::ReportAllJSExceptions();
-
-                // Finally, check to see if this is the last JS frame on the
-                // stack. If so then we always want to report it.
-                if (!reportable)
-                    reportable = !JS::DescribeScriptedCaller(cx);
-
                 // Ugly special case for GetInterface. It's "special" in the
                 // same way as QueryInterface in that a failure is not
                 // exceptional and shouldn't be reported. We have to do this
                 // check here instead of in xpcwrappedjs (like we do for QI) to
                 // avoid adding extra code to all xpcwrappedjs objects.
-                if (reportable && e_result == NS_ERROR_NO_INTERFACE &&
+                if (e_result == NS_ERROR_NO_INTERFACE &&
                     !strcmp(anInterfaceName, "nsIInterfaceRequestor") &&
                     !strcmp(aPropertyName, "getInterface")) {
                     reportable = false;
