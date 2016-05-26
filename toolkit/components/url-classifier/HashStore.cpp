@@ -92,7 +92,7 @@
 // Name of the SafeBrowsing store
 #define STORE_SUFFIX ".sbstore"
 
-// NSPR_LOG_MODULES=UrlClassifierDbService:5
+// MOZ_LOG=UrlClassifierDbService:5
 extern mozilla::LazyLogModule gUrlClassifierDbServiceLog;
 #define LOG(args) MOZ_LOG(gUrlClassifierDbServiceLog, mozilla::LogLevel::Debug, args)
 #define LOG_ENABLED() MOZ_LOG_TEST(gUrlClassifierDbServiceLog, mozilla::LogLevel::Debug)
