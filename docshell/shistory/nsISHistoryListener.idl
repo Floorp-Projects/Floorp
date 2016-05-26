@@ -30,8 +30,9 @@ interface nsISHistoryListener : nsISupports
    * or content area, for example via nsIWebNavigation::loadURI()
    *
    * @param aNewURI     The URI of the document to be added to session history.
+   * @param aOldIndex   The index of the current history item before the operation.
    */
-   void OnHistoryNewEntry(in nsIURI aNewURI);
+   void OnHistoryNewEntry(in nsIURI aNewURI, in long aOldIndex);
 
   /**
    * Called when navigating to a previous session history entry, for example
