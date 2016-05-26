@@ -18,7 +18,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/ArrayUtils.h"
 
-// NSPR_LOG_MODULES=LoadManager:5
+// MOZ_LOG=LoadManager:5
 mozilla::LazyLogModule gLoadManagerLog("LoadManager");
 #undef LOG
 #undef LOG_ENABLED

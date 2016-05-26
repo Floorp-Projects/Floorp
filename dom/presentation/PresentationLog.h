@@ -8,7 +8,7 @@
 #define mozilla_dom_PresentationLog_h
 
 /*
- * NSPR_LOG_MODULES=Presentation:5
+ * MOZ_LOG=Presentation:5
  * For detail, see PresentationService.cpp
  */
 namespace mozilla {

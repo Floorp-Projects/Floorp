@@ -39,8 +39,8 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMCameraManager)
 /**
  * Global camera logging object
  *
- * Set the NSPR_LOG_MODULES environment variable to enable logging
- * in a debug build, e.g. NSPR_LOG_MODULES=Camera:5
+ * Set the MOZ_LOG environment variable to enable logging
+ * in a debug build, e.g. MOZ_LOG=Camera:5
  */
 LogModule*
 GetCameraLog()
