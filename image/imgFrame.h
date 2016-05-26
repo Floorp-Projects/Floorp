@@ -223,13 +223,6 @@ public:
   uint32_t* GetPaletteData() const;
   uint8_t GetPaletteDepth() const { return mPaletteDepth; }
 
-  /**
-   * Get the SurfaceFormat for this imgFrame.
-   *
-   * This should only be used for assertions.
-   */
-  SurfaceFormat GetFormat() const;
-
   AnimationData GetAnimationData() const;
 
   bool GetCompositingFailed() const;

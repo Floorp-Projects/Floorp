@@ -667,13 +667,6 @@ imgFrame::GetRect() const
   return gfx::IntRect(mOffset, mSize);
 }
 
-SurfaceFormat
-imgFrame::GetFormat() const
-{
-  MonitorAutoLock lock(mMonitor);
-  return mFormat;
-}
-
 uint32_t
 imgFrame::GetImageBytesPerRow() const
 {
