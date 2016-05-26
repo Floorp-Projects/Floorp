@@ -1637,6 +1637,9 @@ CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
     if (sIndirectLayerTrees[child].mLayerTree) {
       sIndirectLayerTrees[child].mLayerTree->mLayerManager = mLayerManager;
     }
+    if (sIndirectLayerTrees[child].mRoot) {
+      sIndirectLayerTrees[child].mRoot->AsLayerComposite()->SetLayerManager(mLayerManager);
+    }
     controller = sIndirectLayerTrees[child].mController;
   }
 
