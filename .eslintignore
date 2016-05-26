@@ -94,6 +94,7 @@ devtools/client/responsivedesign/**
 devtools/client/scratchpad/**
 devtools/client/shadereditor/**
 devtools/client/shared/*.jsm
+devtools/client/shared/webgl-utils.js
 devtools/client/shared/developer-toolbar.js
 devtools/client/shared/components/test/**
 devtools/client/shared/redux/middleware/test/**
