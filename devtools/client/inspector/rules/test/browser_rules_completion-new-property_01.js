@@ -11,27 +11,28 @@
 //  [
 //    what key to press,
 //    expected input box value after keypress,
-//    selectedIndex of the popup,
-//    total items in the popup
+//    is the popup open,
+//    is a suggestion selected in the popup,
 //  ]
+const OPEN = true, SELECTED = true;
 var testData = [
-  ["d", "display", 1, 3],
-  ["VK_DOWN", "dominant-baseline", 2, 3],
-  ["VK_DOWN", "direction", 0, 3],
-  ["VK_DOWN", "display", 1, 3],
-  ["VK_UP", "direction", 0, 3],
-  ["VK_UP", "dominant-baseline", 2, 3],
-  ["VK_UP", "display", 1, 3],
-  ["VK_BACK_SPACE", "d", -1, 0],
-  ["i", "display", 1, 2],
-  ["s", "display", -1, 0],
-  ["VK_BACK_SPACE", "dis", -1, 0],
-  ["VK_BACK_SPACE", "di", -1, 0],
-  ["VK_BACK_SPACE", "d", -1, 0],
-  ["VK_BACK_SPACE", "", -1, 0],
-  ["f", "font-size", 19, 32],
-  ["i", "filter", 3, 4],
-  ["VK_ESCAPE", null, -1, 0],
+  ["d", "display", OPEN, SELECTED],
+  ["VK_DOWN", "dominant-baseline", OPEN, SELECTED],
+  ["VK_DOWN", "direction", OPEN, SELECTED],
+  ["VK_DOWN", "display", OPEN, SELECTED],
+  ["VK_UP", "direction", OPEN, SELECTED],
+  ["VK_UP", "dominant-baseline", OPEN, SELECTED],
+  ["VK_UP", "display", OPEN, SELECTED],
+  ["VK_BACK_SPACE", "d", !OPEN, !SELECTED],
+  ["i", "display", OPEN, SELECTED],
+  ["s", "display", !OPEN, !SELECTED],
+  ["VK_BACK_SPACE", "dis", !OPEN, !SELECTED],
+  ["VK_BACK_SPACE", "di", !OPEN, !SELECTED],
+  ["VK_BACK_SPACE", "d", !OPEN, !SELECTED],
+  ["VK_BACK_SPACE", "", !OPEN, !SELECTED],
+  ["f", "font-size", OPEN, SELECTED],
+  ["i", "filter", OPEN, SELECTED],
+  ["VK_ESCAPE", null, !OPEN, !SELECTED],
 ];
 
 const TEST_URI = "<h1 style='border: 1px solid red'>Header</h1>";
@@ -62,9 +63,11 @@ function* runAutocompletionTest(toolbox, inspector, view) {
   }
 }
 
-function* testCompletion([key, completion, index, total], editor, view) {
+function* testCompletion([key, completion, isOpen, isSelected], editor, view) {
   info("Pressing key " + key);
-  info("Expecting " + completion + ", " + index + ", " + total);
+  info("Expecting " + completion);
+  info("Is popup opened: " + isOpen);
+  info("Is item selected: " + isSelected);
 
   let onSuggest;
 
@@ -86,12 +89,11 @@ function* testCompletion([key, completion, index, total], editor, view) {
   if (completion != null) {
     is(editor.input.value, completion, "Correct value is autocompleted");
   }
-  if (total == 0) {
+  if (!isOpen) {
     ok(!(editor.popup && editor.popup.isOpen), "Popup is closed");
   } else {
     ok(editor.popup._panel.state == "open" ||
        editor.popup._panel.state == "showing", "Popup is open");
-    is(editor.popup.getItems().length, total, "Number of suggestions match");
-    is(editor.popup.selectedIndex, index, "Correct item is selected");
+    is(editor.popup.selectedIndex != -1, isSelected, "An item is selected");
   }
 }
