@@ -14,14 +14,17 @@ function test() {
   let gTab, gPanel, gDebugger;
   let gSources;
 
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: SCRIPT_URI,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gSources = gDebugger.DebuggerView.Sources;
 
-    waitForSourceShown(gPanel, "-01.js")
-      .then(openContextMenu)
+    openContextMenu()
       .then(testNewTabMenuItem)
       .then(testNewTabURI)
       .then(() => closeDebuggerAndFinish(gPanel))

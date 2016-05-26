@@ -16,15 +16,18 @@ var gTab, gPanel, gDebugger;
 var gSources;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: FIRST_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gSources = gDebugger.DebuggerView.Sources;
 
-    waitForSourceShown(gPanel, FIRST_URL)
-      .then(() => testSource(undefined, FIRST_URL))
-      .then(() => switchToSource(SECOND_URL))
+    testSource(undefined, FIRST_URL);
+    switchToSource(SECOND_URL)
       .then(() => testSource(SECOND_URL))
       .then(() => switchToSource(FIRST_URL))
       .then(() => testSource(FIRST_URL))

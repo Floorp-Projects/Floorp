@@ -13,7 +13,11 @@ const TAB_URL = EXAMPLE_URL + "doc_frame-parameters.html";
 
 function test() {
   Task.spawn(function* () {
-    let [tab,, panel] = yield initDebugger(TAB_URL);
+    let options = {
+      source: TAB_URL,
+      line: 1
+    };
+    let [tab,, panel] = yield initDebugger(TAB_URL, options);
     let win = panel.panelWin;
     let events = win.EVENTS;
     let editor = win.DebuggerView.editor;
@@ -22,8 +26,9 @@ function test() {
     let expressions = win.DebuggerView.WatchExpressions;
     let tooltip = bubble._tooltip.panel;
 
+    let onCaretAndScopes = waitForCaretAndScopes(panel, 24);
     callInTab(tab, "start");
-    yield waitForSourceAndCaretAndScopes(panel, ".html", 24);
+    yield onCaretAndScopes;
 
     let expressionsEvaluated = waitForDebuggerEvents(panel, events.FETCHED_WATCH_EXPRESSIONS);
     expressions.addExpression("this");

@@ -102,6 +102,7 @@ this.removeTab = function removeTab(aTab, aWindow) {
 
   tabContainer.addEventListener("TabClose", function onClose(aEvent) {
     tabContainer.removeEventListener("TabClose", onClose, false);
+
     info("Tab removed and finished closing.");
     deferred.resolve();
   }, false);
@@ -512,29 +513,77 @@ function getSources(aClient) {
   return deferred.promise;
 }
 
-function initDebugger(aTarget, aWindow) {
+/**
+ * Optionaly open a new tab and then open the debugger panel.
+ * The returned promise resolves only one the panel is fully set.
+
+ * @param {String|xul:tab} urlOrTab
+ *   If a string, consider it as the url of the tab to open before opening the
+ *   debugger panel.
+ *   Otherwise, if a <xul:tab>, do nothing, but open the debugger panel against
+ *   the given tab.
+ * @param {Object} options
+ *   Set of optional arguments:
+ *   - {String} source
+ *     If given, assert the default loaded source once the debugger is loaded.
+ *     This string can be partial to only match a part of the source name.
+ *     If null, do not expect any source and skip SOURCE_SHOWN wait.
+ *   - {Number} line
+ *     If given, wait for the caret to be set on a precise line
+ *
+ * @return {Promise}
+ *   Resolves once debugger panel is fully set according to the given options.
+ */
+let initDebugger = Task.async(function*(urlOrTab, options) {
+  let { window, source, line } = options || {};
   info("Initializing a debugger panel.");
 
-  return getTab(aTarget, aWindow).then(aTab => {
-    info("Debugee tab added successfully: " + aTarget);
+  let tab, url;
+  if (urlOrTab instanceof XULElement) {
+    // `urlOrTab` Is a Tab.
+    tab = urlOrTab;
+  } else {
+    // `urlOrTab` is an url. Open an empty tab first in order to load the page
+    // only once the panel is ready. That to be able to safely catch the
+    // SOURCE_SHOWN event.
+    tab = yield addTab("about:blank", window);
+    url = urlOrTab;
+  }
+  info("Debugee tab added successfully: " + urlOrTab);
 
-    let deferred = promise.defer();
-    let debuggee = aTab.linkedBrowser.contentWindow.wrappedJSObject;
-    let target = TargetFactory.forTab(aTab);
+  let debuggee = tab.linkedBrowser.contentWindow.wrappedJSObject;
+  let target = TargetFactory.forTab(tab);
 
-    gDevTools.showToolbox(target, "jsdebugger").then(aToolbox => {
-      info("Debugger panel shown successfully.");
+  let toolbox = yield gDevTools.showToolbox(target, "jsdebugger");
+  info("Debugger panel shown successfully.");
 
-      let debuggerPanel = aToolbox.getCurrentPanel();
-      let panelWin = debuggerPanel.panelWin;
+  let debuggerPanel = toolbox.getCurrentPanel();
+  let panelWin = debuggerPanel.panelWin;
 
-      prepareDebugger(debuggerPanel);
-      deferred.resolve([aTab, debuggee, debuggerPanel, aWindow]);
-    });
+  prepareDebugger(debuggerPanel);
 
-    return deferred.promise;
-  });
-}
+  if (url && url != "about:blank") {
+    let onCaretUpdated;
+    if (line) {
+      onCaretUpdated = waitForCaretUpdated(debuggerPanel, line);
+    }
+    if (source === null) {
+      // When there is no source in the document, we shouldn't wait for
+      // SOURCE_SHOWN event
+      yield reload(debuggerPanel, url);
+    } else {
+      yield navigateActiveTabTo(debuggerPanel,
+                                url,
+                                panelWin.EVENTS.SOURCE_SHOWN);
+    }
+    if (source) {
+      ensureSourceIs(debuggerPanel, source);
+    }
+    yield onCaretUpdated;
+  }
+
+  return [tab, debuggee, debuggerPanel, window];
+});
 
 // Creates an add-on debugger for a given add-on. The returned AddonDebugger
 // object must be destroyed before finishing the test

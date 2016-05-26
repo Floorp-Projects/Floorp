@@ -12,7 +12,7 @@ var gTab, gPanel, gDebugger;
 var gVariablesView, gScope, gVariable;
 
 function test() {
-  initDebugger("about:blank").then(([aTab,, aPanel]) => {
+  initDebugger().then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
