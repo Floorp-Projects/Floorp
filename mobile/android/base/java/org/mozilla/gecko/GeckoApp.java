@@ -1453,13 +1453,16 @@ public abstract class GeckoApp
     /**
      * Loads the initial tab at Fennec startup. If we don't restore tabs, this
      * tab will be about:home, or the homepage if the user has set one.
-     * If we've temporarily disabled restoring to break out of a crash loop, we'll
-     * show the recent tabs panel so the user can manually restore tabs as needed.
+     * If we've temporarily disabled restoring to break out of a crash loop, we'll show
+     * the Recent Tabs folder of the Combined History panel, so the user can manually
+     * restore tabs as needed.
      * If we restore tabs, we don't need to create a new tab.
      */
     protected void loadStartupTab(final int flags) {
         if (!mShouldRestore) {
             if (mLastSessionCrashed) {
+                // The Recent Tabs panel no longer exists, but BrowserApp will redirect us
+                // to the Recent Tabs folder of the Combined History panel.
                 Tabs.getInstance().loadUrl(AboutPages.getURLForBuiltinPanelType(PanelType.RECENT_TABS), flags);
             } else {
                 final String homepage = getHomepage();
