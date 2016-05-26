@@ -24,7 +24,7 @@
   ((cursor)->state->pool_data[CURS_POOL_OFFSET(cursor)])
 
 static PRBool
-CHECK_COUNT(XPTCursor* cursor, uint32_t space)
+CHECK_COUNT(NotNull<XPTCursor*> cursor, uint32_t space)
 {
     // Fail if we're in the data area and about to exceed the allocation.
     // XXX Also fail if we're in the data area and !state->data_offset
@@ -54,7 +54,8 @@ XPT_SetDataOffset(XPTState *state, uint32_t data_offset)
 }
 
 XPT_PUBLIC_API(PRBool)
-XPT_MakeCursor(XPTState *state, XPTPool pool, uint32_t len, XPTCursor *cursor)
+XPT_MakeCursor(XPTState *state, XPTPool pool, uint32_t len,
+               NotNull<XPTCursor*> cursor)
 {
     cursor->state = state;
     cursor->pool = pool;
@@ -76,7 +77,7 @@ XPT_MakeCursor(XPTState *state, XPTPool pool, uint32_t len, XPTCursor *cursor)
 }
 
 XPT_PUBLIC_API(PRBool)
-XPT_SeekTo(XPTCursor *cursor, uint32_t offset)
+XPT_SeekTo(NotNull<XPTCursor*> cursor, uint32_t offset)
 {
     /* XXX do some real checking and update len and stuff */
     cursor->offset = offset;
@@ -84,7 +85,7 @@ XPT_SeekTo(XPTCursor *cursor, uint32_t offset)
 }
 
 XPT_PUBLIC_API(PRBool)
-XPT_SkipStringInline(XPTCursor *cursor)
+XPT_SkipStringInline(NotNull<XPTCursor*> cursor)
 {
     uint16_t length;
     if (!XPT_Do16(cursor, &length))
@@ -99,7 +100,8 @@ XPT_SkipStringInline(XPTCursor *cursor)
 }
 
 XPT_PUBLIC_API(PRBool)
-XPT_DoCString(XPTArena *arena, XPTCursor *cursor, char **identp, bool ignore)
+XPT_DoCString(XPTArena *arena, NotNull<XPTCursor*> cursor, char **identp,
+              bool ignore)
 {
     uint32_t offset = 0;
     if (!XPT_Do32(cursor, &offset))
@@ -151,7 +153,7 @@ XPT_DoCString(XPTArena *arena, XPTCursor *cursor, char **identp, bool ignore)
  * (http://www.mozilla.org/scriptable/typelib_file.html#iid)
  */
 XPT_PUBLIC_API(PRBool)
-XPT_DoIID(XPTCursor *cursor, nsID *iidp)
+XPT_DoIID(NotNull<XPTCursor*> cursor, nsID *iidp)
 {
     int i;
 
@@ -168,7 +170,7 @@ XPT_DoIID(XPTCursor *cursor, nsID *iidp)
 }
 
 XPT_PUBLIC_API(PRBool)
-XPT_Do64(XPTCursor *cursor, int64_t *u64p)
+XPT_Do64(NotNull<XPTCursor*> cursor, int64_t *u64p)
 {
     return XPT_Do32(cursor, (uint32_t *)u64p) &&
         XPT_Do32(cursor, ((uint32_t *)u64p) + 1);
@@ -181,7 +183,7 @@ XPT_Do64(XPTCursor *cursor, int64_t *u64p)
  * later.
  */
 XPT_PUBLIC_API(PRBool)
-XPT_Do32(XPTCursor *cursor, uint32_t *u32p)
+XPT_Do32(NotNull<XPTCursor*> cursor, uint32_t *u32p)
 {
     union {
         uint8_t b8[4];
@@ -205,7 +207,7 @@ XPT_Do32(XPTCursor *cursor, uint32_t *u32p)
 }
 
 XPT_PUBLIC_API(PRBool)
-XPT_Do16(XPTCursor *cursor, uint16_t *u16p)
+XPT_Do16(NotNull<XPTCursor*> cursor, uint16_t *u16p)
 {
     union {
         uint8_t b8[2];
@@ -226,7 +228,7 @@ XPT_Do16(XPTCursor *cursor, uint16_t *u16p)
 }
 
 XPT_PUBLIC_API(PRBool)
-XPT_Do8(XPTCursor *cursor, uint8_t *u8p)
+XPT_Do8(NotNull<XPTCursor*> cursor, uint8_t *u8p)
 {
     if (!CHECK_COUNT(cursor, 1))
         return PR_FALSE;

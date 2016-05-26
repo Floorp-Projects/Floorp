@@ -11,6 +11,9 @@
 #define __xpt_xdr_h__
 
 #include "xpt_struct.h"
+#include "mozilla/NotNull.h"
+
+using mozilla::NotNull;
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,29 +23,29 @@ typedef struct XPTState         XPTState;
 typedef struct XPTCursor        XPTCursor;
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_SkipStringInline(XPTCursor *cursor);
+XPT_SkipStringInline(NotNull<XPTCursor*> cursor);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_DoCString(XPTArena *arena, XPTCursor *cursor, char **strp,
+XPT_DoCString(XPTArena *arena, NotNull<XPTCursor*> cursor, char **strp,
               bool ignore = false);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_DoIID(XPTCursor *cursor, nsID *iidp);
+XPT_DoIID(NotNull<XPTCursor*> cursor, nsID *iidp);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_Do64(XPTCursor *cursor, int64_t *u64p);
+XPT_Do64(NotNull<XPTCursor*> cursor, int64_t *u64p);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_Do32(XPTCursor *cursor, uint32_t *u32p);
+XPT_Do32(NotNull<XPTCursor*> cursor, uint32_t *u32p);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_Do16(XPTCursor *cursor, uint16_t *u16p);
+XPT_Do16(NotNull<XPTCursor*> cursor, uint16_t *u16p);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_Do8(XPTCursor *cursor, uint8_t *u8p);
+XPT_Do8(NotNull<XPTCursor*> cursor, uint8_t *u8p);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_DoHeader(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp);
+XPT_DoHeader(XPTArena *arena, NotNull<XPTCursor*> cursor, XPTHeader **headerp);
 
 typedef enum {
     XPT_HEADER = 0,
@@ -67,10 +70,11 @@ extern XPT_PUBLIC_API(void)
 XPT_InitXDRState(XPTState* state, char* data, uint32_t len);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_MakeCursor(XPTState *state, XPTPool pool, uint32_t len, XPTCursor *cursor);
+XPT_MakeCursor(XPTState *state, XPTPool pool, uint32_t len,
+               NotNull<XPTCursor*> cursor);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_SeekTo(XPTCursor *cursor, uint32_t offset);
+XPT_SeekTo(NotNull<XPTCursor*> cursor, uint32_t offset);
 
 extern XPT_PUBLIC_API(void)
 XPT_SetDataOffset(XPTState *state, uint32_t data_offset);
