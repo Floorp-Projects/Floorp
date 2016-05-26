@@ -667,18 +667,6 @@ imgFrame::GetRect() const
   return gfx::IntRect(mOffset, mSize);
 }
 
-int32_t
-imgFrame::GetStride() const
-{
-  mMonitor.AssertCurrentThreadOwns();
-
-  if (mImageSurface) {
-    return mImageSurface->Stride();
-  }
-
-  return VolatileSurfaceStride(mSize, mFormat);
-}
-
 SurfaceFormat
 imgFrame::GetFormat() const
 {
@@ -935,23 +923,6 @@ imgFrame::GetSurfaceInternal()
   }
 
   return CreateLockedSurface(mVBuf, mSize, mFormat);
-}
-
-already_AddRefed<DrawTarget>
-imgFrame::GetDrawTarget()
-{
-  MonitorAutoLock lock(mMonitor);
-
-  uint8_t* data;
-  uint32_t length;
-  GetImageDataInternal(&data, &length);
-  if (!data) {
-    return nullptr;
-  }
-
-  int32_t stride = GetStride();
-  return gfxPlatform::GetPlatform()->
-    CreateDrawTargetForData(data, mSize, stride, mFormat);
 }
 
 AnimationData
