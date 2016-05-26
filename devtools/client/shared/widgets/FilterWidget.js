@@ -16,7 +16,7 @@ const { LocalizationHelper } = require("devtools/client/shared/l10n");
 const STRINGS_URI = "chrome://devtools/locale/filterwidget.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
 
-const {cssTokenizer} = require("devtools/client/shared/css-parsing-utils");
+const {cssTokenizer} = require("devtools/shared/css-parsing-utils");
 
 loader.lazyGetter(this, "asyncStorage",
                   () => require("devtools/shared/async-storage"));

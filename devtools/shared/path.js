@@ -4,8 +4,6 @@
 
 "use strict";
 
-const URL = require("URL");
-
 /*
  * Join all the arguments together and normalize the resulting URI.
  * The initial path must be an full URI with a protocol (i.e. http://).

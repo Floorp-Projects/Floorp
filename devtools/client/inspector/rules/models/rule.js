@@ -13,7 +13,7 @@ const {ELEMENT_STYLE} = require("devtools/server/actors/styles");
 const {TextProperty} =
       require("devtools/client/inspector/rules/models/text-property");
 const {promiseWarn} = require("devtools/client/inspector/shared/utils");
-const {parseDeclarations} = require("devtools/client/shared/css-parsing-utils");
+const {parseDeclarations} = require("devtools/shared/css-parsing-utils");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
