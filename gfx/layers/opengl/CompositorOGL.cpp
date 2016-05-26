@@ -1005,8 +1005,6 @@ CompositorOGL::DrawQuad(const Rect& aRect,
     return;
   }
 
-  MakeCurrent();
-
   IntPoint offset = mCurrentRenderTarget->GetOrigin();
   IntSize size = mCurrentRenderTarget->GetSize();
 
