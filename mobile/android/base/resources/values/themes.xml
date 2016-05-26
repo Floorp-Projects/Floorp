@@ -22,10 +22,10 @@
     <style name="GeckoTitleDialogBase" parent="@android:style/Theme.Dialog" />
 
     <style name="Gecko.Preferences">
-        <item name="android:windowContentOverlay">@null</item>
         <item name="windowActionBar">true</item>
         <item name="windowNoTitle">false</item>
-        <item name="actionBarStyle">@style/ActionBar.GeckoPreferences</item>
+        <item name="actionBarTheme">@style/ThemeOverlay.AppCompat.Dark.ActionBar</item>
+        <item name="actionBarStyle">@style/PreferencesActionBar</item>
     </style>
 
     <!--
