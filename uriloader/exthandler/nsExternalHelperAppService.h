@@ -142,9 +142,9 @@ protected:
                                        nsACString& aMIMEType);
 
   /**
-   * NSPR Logging Module. Usage: set NSPR_LOG_MODULES=HelperAppService:level,
-   * where level should be 2 for errors, 3 for debug messages from the cross-
-   * platform nsExternalHelperAppService, and 4 for os-specific debug messages.
+   * Logging Module. Usage: set MOZ_LOG=HelperAppService:level, where level
+   * should be 2 for errors, 3 for debug messages from the cross- platform
+   * nsExternalHelperAppService, and 4 for os-specific debug messages.
    */
   static mozilla::LazyLogModule mLog;
 
