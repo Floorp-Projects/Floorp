@@ -1,5 +1,18 @@
 load(libdir + "wasm.js");
-load(scriptdir + "spec/list.js");
+
+// This is meant to be a small and dumb interpreter for wast files. Either it
+// is imported by another script, which needs to define an array of arguments
+// called importedArgs, or args need to be passed to the command line.
+//
+// Possible arguments include:
+// -d           enable debug verbose mode
+// -c           computes line numbers in wast files (disabled by default as it
+//              slows down the parser a lot)
+// -s           soft fail mode: if a test fails, don't abort but continue to
+//              the next one.
+// *            anything else is considered a relative path to the wast file to
+//              load and run. The path is relative to to the runner script,
+//              i.e. this file..
 
 if (typeof assert === 'undefined') {
     var assert = function(c, msg) {
@@ -295,7 +308,7 @@ function exec(e) {
     }
 }
 
-var args = scriptArgs;
+var args = typeof importedArgs !== 'undefined' ? importedArgs : scriptArgs;
 
 // Whether we should keep on executing tests if one of them failed or throw.
 var softFail = false;
@@ -331,16 +344,13 @@ for (let arg of args) {
     }
 }
 
-if (targets.length)
-    specTests = targets;
-
 top_loop:
-for (var test of specTests) {
+for (var test of targets) {
     module = null;
 
     debug(`Running test ${test}...`);
 
-    let source = read(scriptdir + "spec/" + test);
+    let source = read(scriptdir + test);
 
     let root = new parseSExpression(source);
 
