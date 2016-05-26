@@ -22,12 +22,6 @@ struct mp4parse_state;
 #define MP4PARSE_TRACK_TYPE_H264 0 // "video/avc"
 #define MP4PARSE_TRACK_TYPE_AAC  1 // "audio/mp4a-latm"
 
-#define MP4PARSE_TRACK_CODEC_UNKNOWN 0
-#define MP4PARSE_TRACK_CODEC_AAC 1
-#define MP4PARSE_TRACK_CODEC_OPUS 2
-#define MP4PARSE_TRACK_CODEC_H264 3
-#define MP4PARSE_TRACK_CODEC_VP9 4
-
 struct mp4parse_track_audio_info {
   uint16_t channels;
   uint16_t bit_depth;
