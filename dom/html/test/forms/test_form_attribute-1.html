@@ -452,8 +452,10 @@ for (var name of elementNames) {
           is(formsList[i].elements[j], elementsList[j],
              "The form should contain " + elementsList[j]);
         }
-        is(elementsList[j].form, formsList[i],
-           "The form owner should be the form associated to the list");
+        if (name != 'label') {
+          is(elementsList[j].form, formsList[i],
+             "The form owner should be the form associated to the list");
+        }
       }
     }
   }

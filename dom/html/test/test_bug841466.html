@@ -10,7 +10,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=841466
   <link rel="stylesheet" href="/tests/SimpleTest/test.css">
   <script>
   /** Test for Bug 841466 **/
-var els = ['button', 'fieldset', 'input', 'keygen', 'label', 'object', 'output', 'select', 'textarea'];
+var els = ['button', 'fieldset', 'input', 'keygen', 'object', 'output', 'select', 'textarea'];
 var code = "try { is(foo, 'bar', 'expected value bar from expando on element ' + localName); } catch (e) { ok(false, String(e)); }";
 els.forEach(function(el) {
   var f = document.createElement("form");

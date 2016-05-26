@@ -22,7 +22,6 @@ class HTMLFieldSetElement;
 
 enum FormControlsTypes {
   NS_FORM_FIELDSET = 1,
-  NS_FORM_LABEL,
   NS_FORM_OUTPUT,
   NS_FORM_SELECT,
   NS_FORM_TEXTAREA,
@@ -287,7 +286,6 @@ nsIFormControl::AllowDraggableChildren() const
 {
   uint32_t type = GetType();
   return type == NS_FORM_OBJECT ||
-         type == NS_FORM_LABEL ||
          type == NS_FORM_FIELDSET ||
          type == NS_FORM_OUTPUT;
 }

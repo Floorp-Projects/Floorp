@@ -700,7 +700,7 @@ nsHtml5ElementName::initializeStatics()
   ELT_IMAGE = new nsHtml5ElementName(nsHtml5Atoms::image, nsHtml5Atoms::image, NS_HTML5TREE_BUILDER_IMAGE);
   ELT_IDENT = new nsHtml5ElementName(nsHtml5Atoms::ident, nsHtml5Atoms::ident, NS_HTML5TREE_BUILDER_OTHER);
   ELT_INPUT = new nsHtml5ElementName(nsHtml5Atoms::input, nsHtml5Atoms::input, NS_HTML5TREE_BUILDER_INPUT | NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_LABEL = new nsHtml5ElementName(nsHtml5Atoms::label, nsHtml5Atoms::label, NS_HTML5TREE_BUILDER_OUTPUT_OR_LABEL);
+  ELT_LABEL = new nsHtml5ElementName(nsHtml5Atoms::label, nsHtml5Atoms::label, NS_HTML5TREE_BUILDER_OTHER);
   ELT_LIMIT = new nsHtml5ElementName(nsHtml5Atoms::limit, nsHtml5Atoms::limit, NS_HTML5TREE_BUILDER_OTHER);
   ELT_MFRAC = new nsHtml5ElementName(nsHtml5Atoms::mfrac, nsHtml5Atoms::mfrac, NS_HTML5TREE_BUILDER_OTHER);
   ELT_MPATH = new nsHtml5ElementName(nsHtml5Atoms::mpath, nsHtml5Atoms::mpath, NS_HTML5TREE_BUILDER_OTHER);
@@ -768,7 +768,7 @@ nsHtml5ElementName::initializeStatics()
   ELT_MATRIX = new nsHtml5ElementName(nsHtml5Atoms::matrix, nsHtml5Atoms::matrix, NS_HTML5TREE_BUILDER_OTHER);
   ELT_OPTION = new nsHtml5ElementName(nsHtml5Atoms::option, nsHtml5Atoms::option, NS_HTML5TREE_BUILDER_OPTION | NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
   ELT_OBJECT = new nsHtml5ElementName(nsHtml5Atoms::object, nsHtml5Atoms::object, NS_HTML5TREE_BUILDER_OBJECT | NS_HTML5ELEMENT_NAME_SPECIAL | NS_HTML5ELEMENT_NAME_SCOPING);
-  ELT_OUTPUT = new nsHtml5ElementName(nsHtml5Atoms::output, nsHtml5Atoms::output, NS_HTML5TREE_BUILDER_OUTPUT_OR_LABEL);
+  ELT_OUTPUT = new nsHtml5ElementName(nsHtml5Atoms::output, nsHtml5Atoms::output, NS_HTML5TREE_BUILDER_OUTPUT);
   ELT_PRIMES = new nsHtml5ElementName(nsHtml5Atoms::primes, nsHtml5Atoms::primes, NS_HTML5TREE_BUILDER_OTHER);
   ELT_SOURCE = new nsHtml5ElementName(nsHtml5Atoms::source, nsHtml5Atoms::source, NS_HTML5TREE_BUILDER_PARAM_OR_SOURCE_OR_TRACK);
   ELT_STRIKE = new nsHtml5ElementName(nsHtml5Atoms::strike, nsHtml5Atoms::strike, NS_HTML5TREE_BUILDER_B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
