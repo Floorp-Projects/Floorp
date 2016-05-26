@@ -362,7 +362,7 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
                 case 1:
                     // Add "Recent Tabs" panel.
                     addBuiltinPanelConfig(context, jsonPanels,
-                            PanelType.RECENT_TABS, Position.FRONT, Position.BACK);
+                            PanelType.DEPRECATED_RECENT_TABS, Position.FRONT, Position.BACK);
 
                     // Remove the old pref key.
                     prefsEditor.remove(PREFS_CONFIG_KEY_OLD);
@@ -406,7 +406,7 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
 
                 case 7:
                     jsonPanels = removePanel(context, jsonPanels,
-                            PanelType.RECENT_TABS, PanelType.COMBINED_HISTORY, true);
+                            PanelType.DEPRECATED_RECENT_TABS, PanelType.COMBINED_HISTORY, true);
                     break;
             }
         }
