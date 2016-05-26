@@ -195,6 +195,12 @@ XPCOMUtils.defineLazyGetter(gEMEHandler, "_brandShortName", function() {
   return document.getElementById("bundle_brand").getString("brandShortName");
 });
 
+const TELEMETRY_DDSTAT_SHOWN = 0;
+const TELEMETRY_DDSTAT_SHOWN_FIRST = 1;
+const TELEMETRY_DDSTAT_CLICKED = 2;
+const TELEMETRY_DDSTAT_CLICKED_FIRST = 3;
+const TELEMETRY_DDSTAT_SOLVED = 4;
+
 let gDecoderDoctorHandler = {
   shouldShowLearnMoreButton() {
     return AppConstants.platform == "win";
@@ -241,32 +247,93 @@ let gDecoderDoctorHandler = {
       Cu.reportError("Malformed Decoder Doctor message with data: " + data);
       return;
     }
-    let {type} = parsedData;
+    // parsedData (the result of parsing the incoming 'data' json string)
+    // contains analysis information from Decoder Doctor:
+    // - 'type' is the type of issue, it determines which text to show in the
+    //   infobar.
+    // - 'decoderDoctorReportId' is the Decoder Doctor issue identifier, to be
+    //   used here as key for the telemetry (counting infobar displays,
+    //   "Learn how" buttons clicks, and resolutions) and for the prefs used
+    //   to store at-issue formats.
+    // - 'formats' contains a comma-separated list of formats (or key systems)
+    //   that suffer the issue. These are kept in a pref, which the backend
+    //   uses to later find when an issue is resolved.
+    // - 'isSolved' is true when the notification actually indicates the
+    //   resolution of that issue, to be reported as telemetry.
+    let {type, isSolved, decoderDoctorReportId, formats} = parsedData;
     type = type.toLowerCase();
     let title = gDecoderDoctorHandler.getLabelForNotificationBox(type);
     if (!title) {
       return;
     }
 
-    let buttons = [];
-    if (gDecoderDoctorHandler.shouldShowLearnMoreButton()) {
-      buttons.push({
-        label: gNavigatorBundle.getString("decoder.noCodecs.button"),
-        accessKey: gNavigatorBundle.getString("decoder.noCodecs.accesskey"),
-        callback() {
-          let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
-          openUILinkIn(baseURL + "fix-video-audio-problems-firefox-windows", "tab");
-        }
-      });
-    }
+    // We keep the list of formats in prefs for the sake of the decoder itself,
+    // which reads it to determine when issues get solved for these formats.
+    // (Writing prefs from e10s content is now allowed.)
+    let formatsPref = "media.decoder-doctor." + decoderDoctorReportId + ".formats";
+    let buttonClickedPref = "media.decoder-doctor." + decoderDoctorReportId + ".button-clicked";
+    let histogram =
+      Services.telemetry.getKeyedHistogramById("DECODER_DOCTOR_INFOBAR_STATS");
 
-    box.appendNotification(
-      title,
-      notificationId,
-      "", // This uses the info icon as specified below.
-      box.PRIORITY_INFO_LOW,
-      buttons
-    );
+    let formatsInPref = Services.prefs.getPrefType(formatsPref) &&
+                        Services.prefs.getCharPref(formatsPref);
+
+    if (!isSolved) {
+      if (!formats) {
+        Cu.reportError("Malformed Decoder Doctor unsolved message with no formats");
+        return;
+      }
+      if (!formatsInPref) {
+        Services.prefs.setCharPref(formatsPref, formats);
+        histogram.add(decoderDoctorReportId, TELEMETRY_DDSTAT_SHOWN_FIRST);
+      } else {
+        // Split existing formats into an array of strings.
+        let existing = formatsInPref.split(",").map(String.trim);
+        // Keep given formats that were not already recorded.
+        let newbies = formats.split(",").map(String.trim)
+                      .filter(x => existing.includes(x));
+        // And rewrite pref with the added new formats (if any).
+        if (newbies.length) {
+          Services.prefs.setCharPref(formatsPref,
+                                     existing.concat(newbies).join(", "));
+        }
+      }
+      histogram.add(decoderDoctorReportId, TELEMETRY_DDSTAT_SHOWN);
+
+      let buttons = [];
+      if (gDecoderDoctorHandler.shouldShowLearnMoreButton()) {
+        buttons.push({
+          label: gNavigatorBundle.getString("decoder.noCodecs.button"),
+          accessKey: gNavigatorBundle.getString("decoder.noCodecs.accesskey"),
+          callback() {
+            let clickedInPref = Services.prefs.getPrefType(buttonClickedPref) &&
+                                Services.prefs.getBoolPref(buttonClickedPref);
+            if (!clickedInPref) {
+              Services.prefs.setBoolPref(buttonClickedPref, true);
+              histogram.add(decoderDoctorReportId, TELEMETRY_DDSTAT_CLICKED_FIRST);
+            }
+            histogram.add(decoderDoctorReportId, TELEMETRY_DDSTAT_CLICKED);
+
+            let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
+            openUILinkIn(baseURL + "fix-video-audio-problems-firefox-windows", "tab");
+          }
+        });
+      }
+
+      box.appendNotification(
+          title,
+          notificationId,
+          "", // This uses the info icon as specified below.
+          box.PRIORITY_INFO_LOW,
+          buttons
+      );
+    } else if (formatsInPref) {
+      // Issue is solved, and prefs haven't been cleared yet, meaning it's the
+      // first time we get this resolution -> Clear prefs and report telemetry.
+      Services.prefs.clearUserPref(formatsPref);
+      Services.prefs.clearUserPref(buttonClickedPref);
+      histogram.add(decoderDoctorReportId, TELEMETRY_DDSTAT_SOLVED);
+    }
   },
 }
 
