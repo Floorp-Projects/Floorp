@@ -9,7 +9,7 @@
 
 using namespace mozilla::toolkit::system;
 
-TEST(OSXProxy, TestProxyBypassRules)
+TEST(WindowsProxy, TestProxyBypassRules)
 {
   EXPECT_TRUE(IsHostProxyEntry(NS_LITERAL_CSTRING("mozilla.org"), NS_LITERAL_CSTRING("mozilla.org")));
   EXPECT_TRUE(IsHostProxyEntry(NS_LITERAL_CSTRING("mozilla.org"),NS_LITERAL_CSTRING("*mozilla.org")));
@@ -20,7 +20,7 @@ TEST(OSXProxy, TestProxyBypassRules)
   EXPECT_TRUE(IsHostProxyEntry(NS_LITERAL_CSTRING("www.mozilla.com"), NS_LITERAL_CSTRING("*.mozilla.*")));
 }
 
-TEST(OSXProxy, TestProxyBypassRulesIPv4)
+TEST(WindowsProxy, TestProxyBypassRulesIPv4)
 {
   EXPECT_TRUE(IsHostProxyEntry(NS_LITERAL_CSTRING("192.168.1.1"), NS_LITERAL_CSTRING("192.168.1.*")));
   EXPECT_FALSE(IsHostProxyEntry(NS_LITERAL_CSTRING("192.168.1.1"), NS_LITERAL_CSTRING("192.168.2.*")));
@@ -32,7 +32,7 @@ TEST(OSXProxy, TestProxyBypassRulesIPv4)
   EXPECT_TRUE(IsHostProxyEntry(NS_LITERAL_CSTRING("192.168.1.1"), NS_LITERAL_CSTRING("192.168.1.1/32")));
 }
 
-TEST(OSXProxy, TestProxyBypassRulesIPv6)
+TEST(WindowsProxy, TestProxyBypassRulesIPv6)
 {
   EXPECT_TRUE(IsHostProxyEntry(NS_LITERAL_CSTRING("2001:0DB8:ABCD:0012:0123:4567:89AB:CDEF"), NS_LITERAL_CSTRING("2001:db8:abcd:0012::0/64")));
   EXPECT_TRUE(IsHostProxyEntry(NS_LITERAL_CSTRING("2001:0DB8:ABCD:0012:0000:4567:89AB:CDEF"), NS_LITERAL_CSTRING("2001:db8:abcd:0012::0/80")));
