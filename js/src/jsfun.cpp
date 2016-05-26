@@ -2341,9 +2341,9 @@ js::DefineFunction(JSContext* cx, HandleObject obj, HandleId id, Native native,
 }
 
 void
-js::ReportIncompatibleMethod(JSContext* cx, CallReceiver call, const Class* clasp)
+js::ReportIncompatibleMethod(JSContext* cx, const CallArgs& args, const Class* clasp)
 {
-    RootedValue thisv(cx, call.thisv());
+    RootedValue thisv(cx, args.thisv());
 
 #ifdef DEBUG
     if (thisv.isObject()) {
@@ -2364,7 +2364,7 @@ js::ReportIncompatibleMethod(JSContext* cx, CallReceiver call, const Class* clas
     }
 #endif
 
-    if (JSFunction* fun = ReportIfNotFunction(cx, call.calleev())) {
+    if (JSFunction* fun = ReportIfNotFunction(cx, args.calleev())) {
         JSAutoByteString funNameBytes;
         if (const char* funName = GetFunctionNameBytes(cx, fun, &funNameBytes)) {
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
@@ -2374,13 +2374,13 @@ js::ReportIncompatibleMethod(JSContext* cx, CallReceiver call, const Class* clas
 }
 
 void
-js::ReportIncompatible(JSContext* cx, CallReceiver call)
+js::ReportIncompatible(JSContext* cx, const CallArgs& args)
 {
-    if (JSFunction* fun = ReportIfNotFunction(cx, call.calleev())) {
+    if (JSFunction* fun = ReportIfNotFunction(cx, args.calleev())) {
         JSAutoByteString funNameBytes;
         if (const char* funName = GetFunctionNameBytes(cx, fun, &funNameBytes)) {
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_METHOD,
-                                 funName, "method", InformalValueTypeName(call.thisv()));
+                                 funName, "method", InformalValueTypeName(args.thisv()));
         }
     }
 }
