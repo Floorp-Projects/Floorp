@@ -112,6 +112,7 @@ SessionStore.prototype = {
         observerService.addObserver(this, "domwindowclosed", true);
         observerService.addObserver(this, "browser:purge-session-history", true);
         observerService.addObserver(this, "Session:Restore", true);
+        observerService.addObserver(this, "Session:NotifyLocationChange", true);
         observerService.addObserver(this, "application-background", true);
         observerService.addObserver(this, "ClosedTabs:StartNotifications", true);
         observerService.addObserver(this, "ClosedTabs:StopNotifications", true);
@@ -185,6 +186,14 @@ SessionStore.prototype = {
         } else {
           // Not doing a restore; just send restore message
           Services.obs.notifyObservers(null, "sessionstore-windows-restored", "");
+        }
+        break;
+      }
+      case "Session:NotifyLocationChange": {
+        let browser = aSubject;
+        if (browser.__SS_restoreDataOnLocationChange) {
+          delete browser.__SS_restoreDataOnLocationChange;
+          this._restoreZoom(browser.__SS_data.scrolldata, browser);
         }
         break;
       }
@@ -284,16 +293,35 @@ SessionStore.prototype = {
           return;
         }
 
-        // Handle restoring the scroll position and text data into the content
-        // and frames. We wait until the main content and all frames are loaded
+        // Handle restoring the text data into the content and frames.
+        // We wait until the main content and all frames are loaded
         // before trying to restore this data.
         log("load for tab " + window.BrowserApp.getTabForBrowser(browser).id);
         if (browser.__SS_restoreDataOnLoad) {
           delete browser.__SS_restoreDataOnLoad;
           this._restoreTextData(browser.__SS_data.formdata, browser);
+        }
+        break;
+      }
+      case "pageshow": {
+        let browser = aEvent.currentTarget;
+
+        // Skip subframe pageshows.
+        if (browser.contentDocument !== aEvent.originalTarget) {
+          return;
+        }
+
+        // Restoring the scroll position needs to happen after the zoom level has been
+        // restored, which is done by the MobileViewportManager either on first paint
+        // or on load, whichever comes first.
+        // In the latter case, our load handler runs before the MVM's one, which is the
+        // wrong way around, so we have to use a later event instead.
+        log("pageshow for tab " + window.BrowserApp.getTabForBrowser(browser).id);
+        if (browser.__SS_restoreDataOnPageshow) {
+          delete browser.__SS_restoreDataOnPageshow;
           this._restoreScrollPosition(browser.__SS_data.scrolldata, browser);
         } else {
-          // We're not restoring, capture the initial scroll position on load.
+          // We're not restoring, capture the initial scroll position on pageshow.
           this.onTabScroll(window, browser);
         }
         break;
@@ -306,11 +334,12 @@ SessionStore.prototype = {
         this.onTabInput(window, browser);
         break;
       }
+      case "resize":
       case "scroll": {
         let browser = aEvent.currentTarget;
         // Duplicated logging check to avoid calling getTabForBrowser on each scroll event.
         if (loggingEnabled) {
-          log("scroll for tab " + window.BrowserApp.getTabForBrowser(browser).id);
+          log(aEvent.type + " for tab " + window.BrowserApp.getTabForBrowser(browser).id);
         }
         if (!this._scrollSavePending) {
           this._scrollSavePending =
@@ -397,13 +426,18 @@ SessionStore.prototype = {
     // Use load to restore text data
     aBrowser.addEventListener("load", this, true);
 
+    // Gecko might set the initial zoom level after the JS "load" event,
+    // so we have to restore zoom and scroll position after that.
+    aBrowser.addEventListener("pageshow", this, true);
+
     // Use a combination of events to watch for text data changes
     aBrowser.addEventListener("change", this, true);
     aBrowser.addEventListener("input", this, true);
     aBrowser.addEventListener("DOMAutoComplete", this, true);
 
-    // Record the current scroll position
+    // Record the current scroll position and zoom level.
     aBrowser.addEventListener("scroll", this, true);
+    aBrowser.addEventListener("resize", this, true);
 
     log("onTabAdd() ran for tab " + aWindow.BrowserApp.getTabForBrowser(aBrowser).id +
         ", aNoNotification = " + aNoNotification);
@@ -417,10 +451,12 @@ SessionStore.prototype = {
     // Cleanup event listeners
     aBrowser.removeEventListener("DOMTitleChanged", this, true);
     aBrowser.removeEventListener("load", this, true);
+    aBrowser.removeEventListener("pageshow", this, true);
     aBrowser.removeEventListener("change", this, true);
     aBrowser.removeEventListener("input", this, true);
     aBrowser.removeEventListener("DOMAutoComplete", this, true);
     aBrowser.removeEventListener("scroll", this, true);
+    aBrowser.removeEventListener("resize", this, true);
 
     let tabId = aWindow.BrowserApp.getTabForBrowser(aBrowser).id;
 
@@ -507,9 +543,9 @@ SessionStore.prototype = {
     delete aBrowser.__SS_data;
 
     this._collectTabData(aWindow, aBrowser, data);
-    if (aBrowser.__SS_restoreDataOnLoad) {
-      // If the tab has been freshly restored and the "load" event
-      // hasn't yet fired, we need to restore any form data and
+    if (aBrowser.__SS_restoreDataOnLoad || aBrowser.__SS_restoreDataOnPageshow) {
+      // If the tab has been freshly restored and the "load" or "pageshow"
+      // events haven't yet fired, we need to preserve any form data and
       // scroll positions that might have been present.
       aBrowser.__SS_data.formdata = formdata;
       aBrowser.__SS_data.scrolldata = scrolldata;
@@ -634,7 +670,7 @@ SessionStore.prototype = {
     }
 
     // Neither bother if we're yet to restore the previous scroll position.
-    if (aBrowser.__SS_restoreDataOnLoad) {
+    if (aBrowser.__SS_restoreDataOnLoad || aBrowser.__SS_restoreDataOnPageshow) {
       return;
     }
 
@@ -660,12 +696,18 @@ SessionStore.prototype = {
       scrolldata.children = children;
     }
 
-    // If we found any scroll positions, main content or frames, let's save them.
-    if (Object.keys(scrolldata).length) {
-      data.scrolldata = scrolldata;
-      log("onTabScroll() ran for tab " + aWindow.BrowserApp.getTabForBrowser(aBrowser).id);
-      this.saveStateDelayed();
-    }
+    // Save the current document resolution.
+    let zoom = { value: 1 };
+    content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(
+      Ci.nsIDOMWindowUtils).getResolution(zoom);
+    scrolldata.zoom = {};
+    scrolldata.zoom.resolution = zoom.value;
+    log("onTabScroll() zoom level: " + zoom.value);
+
+    // Save zoom and scroll data.
+    data.scrolldata = scrolldata;
+    log("onTabScroll() ran for tab " + aWindow.BrowserApp.getTabForBrowser(aBrowser).id);
+    this.saveStateDelayed();
   },
 
   saveStateDelayed: function ss_saveStateDelayed() {
@@ -1209,9 +1251,17 @@ SessionStore.prototype = {
     }
     this._restoreHistory(aTabData, aBrowser.sessionHistory);
 
-    // Restoring text data and scroll position requires waiting for the content
-    // to load. So we set a flag and delay this until the appropriate event.
+    // Various bits of state can only be restored if page loading has progressed far enough:
+    // The MobileViewportManager needs to be told as early as possible about
+    // our desired zoom level so it can take it into account during the
+    // initial document resolution calculation.
+    aBrowser.__SS_restoreDataOnLocationChange = true;
+    // Restoring saved form data requires the input fields to be available,
+    // so we have to wait for the content to load.
     aBrowser.__SS_restoreDataOnLoad = true;
+    // Restoring the scroll position depends on the document resolution having been set,
+    // which is only guaranteed to have happened *after* we receive the load event.
+    aBrowser.__SS_restoreDataOnPageshow = true;
   },
 
   /**
@@ -1255,6 +1305,20 @@ SessionStore.prototype = {
     if (aFormData) {
       log("_restoreTextData()");
       FormData.restoreTree(aBrowser.contentWindow, aFormData);
+    }
+  },
+
+  /**
+  * Restores the zoom level of the window. This needs to be called before
+  * first paint/load (whichever comes first) to take any effect.
+  */
+  _restoreZoom: function ss_restoreZoom(aScrollData, aBrowser) {
+    if (aScrollData && aScrollData.zoom) {
+      log("_restoreZoom(), resolution: " + aScrollData.zoom.resolution);
+      let utils = aBrowser.contentWindow.QueryInterface(
+        Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      // Restore zoom level.
+      utils.setRestoreResolution(aScrollData.zoom.resolution);
     }
   },
 
