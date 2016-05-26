@@ -125,7 +125,7 @@ protected:
     mNext.ResetToFirstRow();
     mPass = 0;
     mInputRow = 0;
-    mOutputRow = InterlaceOffset(mPass);;
+    mOutputRow = InterlaceOffset(mPass);
     return GetRowPointer(mOutputRow);
   }
 
