@@ -30,7 +30,7 @@ define(function (require, exports, module) {
     },
 
     getTitle: function () {
-      return "";
+      return this.props.object.class || "Object";
     },
 
     longPropIterator: function (object) {
@@ -146,8 +146,7 @@ define(function (require, exports, module) {
       if (this.props.mode == "tiny" || !props.length) {
         return (
           ObjectBox({className: "object"},
-            span({className: "objectTitle"}, this.getTitle(object)),
-            span({className: "objectLeftBrace", role: "presentation"}, "{}")
+            span({className: "objectTitle"}, this.getTitle(object))
           )
         );
       }
@@ -155,7 +154,7 @@ define(function (require, exports, module) {
       return (
         ObjectBox({className: "object"},
           span({className: "objectTitle"}, this.getTitle(object)),
-          span({className: "objectLeftBrace", role: "presentation"}, "{"),
+          span({className: "objectLeftBrace", role: "presentation"}, " {"),
           props,
           span({className: "objectRightBrace"}, "}")
         )
