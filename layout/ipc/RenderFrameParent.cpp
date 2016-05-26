@@ -212,6 +212,7 @@ RenderFrameParent::OwnerContentChanged(nsIContent* aContent)
   // Perhaps the document containing this frame currently has no presentation?
   if (lm && lm->AsClientLayerManager()) {
     lm->AsClientLayerManager()->GetRemoteRenderer()->SendAdoptChild(mLayersId);
+    FrameLayerBuilder::InvalidateAllLayers(lm);
   }
 }
 
