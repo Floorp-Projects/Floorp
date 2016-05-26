@@ -135,7 +135,7 @@ function wait(ms = 0) {
     return p;
   } catch (e) {
     dump("WARNING: wait aborted because of an invalid Window state in aboutPerformance.js.\n");
-    return;
+    return undefined;
   }
 }
 
