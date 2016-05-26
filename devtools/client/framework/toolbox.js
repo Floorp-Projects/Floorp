@@ -1736,6 +1736,8 @@ Toolbox.prototype = {
     let screenX = event.target.ownerDocument.defaultView.mozInnerScreenX;
     let screenY = event.target.ownerDocument.defaultView.mozInnerScreenY;
     menu.popup(rect.left + screenX, rect.bottom + screenY, this);
+
+    return menu;
   },
 
   /**
