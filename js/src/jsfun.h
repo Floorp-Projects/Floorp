@@ -801,14 +801,14 @@ XDRInterpretedFunction(XDRState<mode>* xdr, HandleObject enclosingScope,
  * is what was called.
  */
 extern void
-ReportIncompatibleMethod(JSContext* cx, CallReceiver call, const Class* clasp);
+ReportIncompatibleMethod(JSContext* cx, const CallArgs& args, const Class* clasp);
 
 /*
  * Report an error that call.thisv is not an acceptable this for the callee
  * function.
  */
 extern void
-ReportIncompatible(JSContext* cx, CallReceiver call);
+ReportIncompatible(JSContext* cx, const CallArgs& args);
 
 extern const JSFunctionSpec function_methods[];
 extern const JSFunctionSpec function_selfhosted_methods[];
