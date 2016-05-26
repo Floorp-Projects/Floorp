@@ -1676,10 +1676,11 @@ class Marionette(object):
         return self._send_message(
             "findElements", body, key="value" if self.protocol == 1 else None)
 
-
     def get_active_element(self):
-        el = self._send_message("getActiveElement", key="value")
-        return HTMLElement(self, el)
+        el_or_ref = self._send_message("getActiveElement", key="value")
+        if self.protocol < 3:
+            return HTMLElement(self, el_or_ref)
+        return el_or_ref
 
     def log(self, msg, level="INFO"):
         """Stores a timestamped log message in the Marionette server
