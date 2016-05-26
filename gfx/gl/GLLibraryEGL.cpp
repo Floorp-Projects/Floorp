@@ -9,6 +9,7 @@
 #include "gfxUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/unused.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
@@ -144,11 +145,13 @@ static bool
 IsAccelAngleSupported(const nsCOMPtr<nsIGfxInfo>& gfxInfo)
 {
     int32_t angleSupport;
-    nsCString discardFailureId;
+    nsCString failureId;
     gfxUtils::ThreadSafeGetFeatureStatus(gfxInfo,
                                          nsIGfxInfo::FEATURE_WEBGL_ANGLE,
-                                         discardFailureId,
+                                         failureId,
                                          &angleSupport);
+    Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_ACCL_FAILURE_ID,
+                          failureId);
     return (angleSupport == nsIGfxInfo::FEATURE_STATUS_OK);
 }
 
