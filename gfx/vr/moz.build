@@ -29,10 +29,6 @@ UNIFIED_SOURCES += [
     'VRManager.cpp',
 ]
 
-SOURCES += [
-    'gfxVROculus050.cpp',
-]
-
 IPDL_SOURCES = [
     'ipc/PVRManager.ipdl',
 ]
