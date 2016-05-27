@@ -129,11 +129,6 @@ js::CVStatus
 js::ConditionVariable::wait_for(UniqueLock<Mutex>& lock,
                                 const TimeDuration& a_rel_time)
 {
-  if (a_rel_time == TimeDuration::Forever()) {
-    wait(lock);
-    return CVStatus::NoTimeout;
-  }
-
   pthread_cond_t* ptCond = &platformData()->ptCond;
   pthread_mutex_t* ptMutex = &lock.lock.platformData()->ptMutex;
   int r;
