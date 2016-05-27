@@ -3,7 +3,7 @@ config = {
     "log_name": "updates_esr45",
     "repo": {
         "repo": "https://hg.mozilla.org/build/tools",
-        "revision": "default",
+        "branch": "default",
         "dest": "tools",
         "vcs": "hg",
     },

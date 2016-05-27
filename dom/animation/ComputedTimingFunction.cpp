@@ -30,8 +30,8 @@ StepTiming(uint32_t aSteps,
            nsTimingFunction::Type aType)
 {
   MOZ_ASSERT(0.0 <= aPortion && aPortion <= 1.0, "out of range");
-  MOZ_ASSERT(aType != nsTimingFunction::Type::StepStart ||
-             aType != nsTimingFunction::Type::StepEnd, "invalid type");
+  MOZ_ASSERT(aType == nsTimingFunction::Type::StepStart ||
+             aType == nsTimingFunction::Type::StepEnd, "invalid type");
 
   if (aPortion == 1.0) {
     return 1.0;
