@@ -193,7 +193,6 @@ public:
     gfx::IntRect mPictureRect;
     int32_t mFrameID;
     int32_t mProducerID;
-    int32_t mInputFrameID;
   };
   virtual void UseTextureHost(const nsTArray<TimedTexture>& aTextures);
   virtual void UseComponentAlphaTextures(TextureHost* aTextureOnBlack,
@@ -234,8 +233,6 @@ public:
   virtual already_AddRefed<TexturedEffect> GenEffect(const gfx::SamplingFilter aSamplingFilter) {
     return nullptr;
   }
-
-  virtual int32_t GetLastInputFrameID() const { return -1; }
 
   /// Called when shutting down the layer tree.
   /// This is a good place to clear all potential gpu resources before the widget
