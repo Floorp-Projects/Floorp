@@ -177,7 +177,9 @@ public class GeckoApplication extends Application
         GeckoService.register();
 
         super.onCreate();
+    }
 
+    public void onDelayedStartup() {
         if (AppConstants.MOZ_ANDROID_GCM) {
             // TODO: only run in main process.
             ThreadUtils.postToBackgroundThread(new Runnable() {
