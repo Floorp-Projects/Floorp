@@ -33,6 +33,7 @@
 #include <stdarg.h>
 #include <string.h>
 
+#include "ds/PageProtectingVector.h"
 #include "jit/ExecutableAllocator.h"
 #include "jit/JitSpewer.h"
 
@@ -138,6 +139,16 @@ namespace jit {
             return m_buffer.begin();
         }
 
+        void enableBufferProtection() { m_buffer.enableProtection(); }
+        void disableBufferProtection() { m_buffer.disableProtection(); }
+
+        void unprotectDataRegion(size_t firstByteOffset, size_t lastByteOffset) {
+            m_buffer.unprotectRegion(firstByteOffset, lastByteOffset);
+        }
+        void reprotectDataRegion(size_t firstByteOffset, size_t lastByteOffset) {
+            m_buffer.reprotectRegion(firstByteOffset, lastByteOffset);
+        }
+
     protected:
         /*
          * OOM handling: This class can OOM in the ensureSpace() method trying
@@ -158,7 +169,7 @@ namespace jit {
             m_buffer.clear();
         }
 
-        mozilla::Vector<unsigned char, 256, SystemAllocPolicy> m_buffer;
+        PageProtectingVector<unsigned char, 256, SystemAllocPolicy> m_buffer;
         bool m_oom;
     };
 
