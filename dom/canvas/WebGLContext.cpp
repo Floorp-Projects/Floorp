@@ -1882,6 +1882,14 @@ WebGLContext::ValidateCurFBForRead(const char* funcName,
                                    GLenum* const out_mode)
 {
     if (!mBoundReadFramebuffer) {
+        const GLenum readBufferMode = gl->Screen()->GetReadBufferMode();
+        if (readBufferMode == LOCAL_GL_NONE) {
+            ErrorInvalidOperation("%s: Can't read from backbuffer when readBuffer mode is"
+                                  " NONE.",
+                                  funcName);
+            return false;
+        }
+
         ClearBackbufferIfNeeded();
 
         // FIXME - here we're assuming that the default framebuffer is backed by
