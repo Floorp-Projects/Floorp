@@ -27,14 +27,12 @@ XPCJSContextStack::~XPCJSContextStack()
     }
 }
 
-JSContext*
+void
 XPCJSContextStack::Pop()
 {
     MOZ_ASSERT(!mStack.IsEmpty());
 
     uint32_t idx = mStack.Length() - 1; // The thing we're popping
-
-    JSContext* cx = mStack[idx];
 
     mStack.RemoveElementAt(idx);
     JSContext* newTop;
@@ -45,7 +43,6 @@ XPCJSContextStack::Pop()
         newTop = mStack[idx-1];
     }
     js::Debug_SetActiveJSContext(mRuntime->Runtime(), newTop);
-    return cx;
 }
 
 void
