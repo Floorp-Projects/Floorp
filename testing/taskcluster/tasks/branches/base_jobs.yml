@@ -382,6 +382,38 @@ tests:
         task: tasks/tests/fx_linux64_mochitest_gl_e10s_dbg.yml
       tasks/builds/opt_linux64_pgo.yml:
         task: tasks/tests/fx_linux64_mochitest_gl_e10s_opt.yml
+  mochitest-gpu:
+    allowed_build_tasks:
+      tasks/builds/opt_linux64.yml:
+        task: tasks/tests/fx_linux64_mochitest_gpu_opt.yml
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_mochitest_gpu_dbg.yml
+      tasks/builds/opt_linux64_pgo.yml:
+        task: tasks/tests/fx_linux64_mochitest_gpu_opt.yml
+  mochitest-gpu-e10s:
+    allowed_build_tasks:
+      tasks/builds/opt_linux64.yml:
+        task: tasks/tests/fx_linux64_mochitest_gpu_e10s_opt.yml
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_mochitest_gpu_e10s_dbg.yml
+      tasks/builds/opt_linux64_pgo.yml:
+        task: tasks/tests/fx_linux64_mochitest_gpu_e10s_opt.yml
+  mochitest-clipboard:
+    allowed_build_tasks:
+      tasks/builds/opt_linux64.yml:
+        task: tasks/tests/fx_linux64_mochitest_clipboard_opt.yml
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_mochitest_clipboard_dbg.yml
+      tasks/builds/opt_linux64_pgo.yml:
+        task: tasks/tests/fx_linux64_mochitest_clipboard_opt.yml
+  mochitest-clipboard-e10s:
+    allowed_build_tasks:
+      tasks/builds/opt_linux64.yml:
+        task: tasks/tests/fx_linux64_mochitest_clipboard_e10s_opt.yml
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_mochitest_clipboard_e10s_dbg.yml
+      tasks/builds/opt_linux64_pgo.yml:
+        task: tasks/tests/fx_linux64_mochitest_clipboard_e10s_opt.yml
   reftest:
     allowed_build_tasks:
       tasks/builds/mulet_linux.yml:

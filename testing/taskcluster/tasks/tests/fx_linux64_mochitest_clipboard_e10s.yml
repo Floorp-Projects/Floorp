@@ -1,0 +1,35 @@
+---
+$inherits:
+  from: 'tasks/tests/fx_desktop_generic.yml'
+task:
+  payload:
+    capabilities:
+      devices:
+        loopbackVideo: true
+    command:
+      - --no-read-buildbot-config
+      - --installer-url={{build_url}}
+      - --test-packages-url={{test_packages_url}}
+      - --{{suite}}-suite={{flavor}}
+      - --total-chunk={{total_chunks}}
+      - --this-chunk={{chunk}}
+      - --e10s
+    env:
+        MOZHARNESS_SCRIPT: 'mozharness/scripts/desktop_unittest.py'
+        # TODO move linux_unittest.py to a platform specific config
+        MOZHARNESS_CONFIG: >
+          mozharness/configs/unittests/linux_unittest.py
+          mozharness/configs/remove_executables.py
+  scopes:
+    - 'docker-worker:capability:device:loopbackVideo'
+  metadata:
+    name: '[TC] Linux64 mochitest-clipboard-e10s'
+    description: Mochitest clipboard e10s run
+  extra:
+    suite:
+      name: mochitest
+      flavor: plain-clipboard,chrome-clipboard,browser-chrome-clipboard,jetpack-package-clipboard
+    treeherder:
+      groupName: Desktop mochitests
+      groupSymbol: tc-M-e10s
+      symbol: cl

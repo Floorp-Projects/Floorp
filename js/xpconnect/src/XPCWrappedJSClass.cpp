@@ -774,8 +774,7 @@ nsresult
 nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                                        AutoEntryScript& aes,
                                        const char * aPropertyName,
-                                       const char * anInterfaceName,
-                                       bool aForceReport)
+                                       const char * anInterfaceName)
 {
     XPCContext * xpcc = ccx.GetXPCContext();
     JSContext * cx = ccx.GetJSContext();
@@ -818,28 +817,12 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
             // Figure out whether or not we should report this exception.
             bool reportable = xpc_IsReportableErrorCode(e_result);
             if (reportable) {
-                // Always want to report forced exceptions and XPConnect's own
-                // errors.
-                reportable = aForceReport ||
-                    NS_ERROR_GET_MODULE(e_result) == NS_ERROR_MODULE_XPCONNECT;
-
-                // See if an environment variable was set or someone has told us
-                // that a user pref was set indicating that we should report all
-                // exceptions.
-                if (!reportable)
-                    reportable = nsXPConnect::ReportAllJSExceptions();
-
-                // Finally, check to see if this is the last JS frame on the
-                // stack. If so then we always want to report it.
-                if (!reportable)
-                    reportable = !JS::DescribeScriptedCaller(cx);
-
                 // Ugly special case for GetInterface. It's "special" in the
                 // same way as QueryInterface in that a failure is not
                 // exceptional and shouldn't be reported. We have to do this
                 // check here instead of in xpcwrappedjs (like we do for QI) to
                 // avoid adding extra code to all xpcwrappedjs objects.
-                if (reportable && e_result == NS_ERROR_NO_INTERFACE &&
+                if (e_result == NS_ERROR_NO_INTERFACE &&
                     !strcmp(anInterfaceName, "nsIInterfaceRequestor") &&
                     !strcmp(aPropertyName, "getInterface")) {
                     reportable = false;
@@ -997,7 +980,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
         // Throw and warn for good measure.
         JS_ReportError(cx, str);
         NS_WARNING(str);
-        return CheckForException(ccx, aes, name, GetInterfaceName(), false);
+        return CheckForException(ccx, aes, name, GetInterfaceName());
     }
 
     RootedValue fval(cx);
@@ -1259,17 +1242,8 @@ pre_call_clean_up:
         }
     }
 
-    if (!success) {
-        bool forceReport;
-        if (NS_FAILED(mInfo->IsFunction(&forceReport)))
-            forceReport = false;
-
-        // May also want to check if we're moving from content->chrome and force
-        // a report in that case.
-
-        return CheckForException(ccx, aes, name, GetInterfaceName(),
-                                 forceReport);
-    }
+    if (!success)
+        return CheckForException(ccx, aes, name, GetInterfaceName());
 
     XPCJSRuntime::Get()->SetPendingException(nullptr); // XXX necessary?
 
