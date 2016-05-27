@@ -1732,7 +1732,10 @@ nsBlockFrame::ComputeOverflowAreas(const nsRect&         aBounds,
 
 #ifdef NOISY_COMBINED_AREA
   ListTag(stdout);
-  printf(": ca=%d,%d,%d,%d\n", area.x, area.y, area.width, area.height);
+  const nsRect& vis = areas.VisualOverflow();
+  printf(": VisualOverflowArea CA=%d,%d,%d,%d\n", vis.x, vis.y, vis.width, vis.height);
+  const nsRect& scr = areas.ScrollableOverflow();
+  printf(": ScrollableOverflowArea CA=%d,%d,%d,%d\n", scr.x, scr.y, scr.width, scr.height);
 #endif
 
   aOverflowAreas = areas;
