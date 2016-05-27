@@ -475,7 +475,7 @@ KeyframeEffectReadOnly::SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
   // the specified spacing mode when we generate computed animation property
   // values from the keyframes since both operations require a style context
   // and need to be performed whenever the style context changes.
-  KeyframeUtils::ApplySpacing(mKeyframes, SpacingMode::distribute);
+  KeyframeUtils::ApplyDistributeSpacing(mKeyframes);
 
   if (mAnimation && mAnimation->IsRelevant()) {
     nsNodeUtils::AnimationChanged(mAnimation);
@@ -525,6 +525,12 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
     nsTArray<ComputedKeyframeValues> computedValues =
       KeyframeUtils::GetComputedKeyframeValues(mKeyframes, mTarget->mElement,
                                                aStyleContext);
+
+    if (mEffectOptions.mSpacingMode == SpacingMode::paced) {
+      KeyframeUtils::ApplySpacing(mKeyframes, SpacingMode::paced,
+                                  mEffectOptions.mPacedProperty,
+                                  computedValues);
+    }
 
     properties =
       KeyframeUtils::GetAnimationPropertiesFromKeyframes(mKeyframes,

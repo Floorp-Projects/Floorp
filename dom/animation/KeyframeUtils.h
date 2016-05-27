@@ -86,9 +86,25 @@ public:
    *
    * @param aKeyframes The set of keyframes to adjust.
    * @param aSpacingMode The spacing mode to apply.
+   * @param aProperty The paced property. Only used when |aSpacingMode| is
+   *   SpacingMode::paced. In all other cases it is ignored and hence may be
+   *   any value, e.g. eCSSProperty_UNKNOWN.
+   * @param aComputedValues The set of computed keyframe values as returned by
+   *   GetComputedKeyframeValues. Only used when |aSpacingMode| is
+   *   SpacingMode::paced. In all other cases this parameter is unused and may
+   *   be any value including an empty array.
    */
   static void ApplySpacing(nsTArray<Keyframe>& aKeyframes,
-                           SpacingMode aSpacingMode);
+                           SpacingMode aSpacingMode,
+                           nsCSSProperty aProperty,
+                           nsTArray<ComputedKeyframeValues>& aComputedValues);
+
+  /**
+   * Wrapper for ApplySpacing to simplify using distribute spacing.
+   *
+   * @param aKeyframes The set of keyframes to adjust.
+   */
+  static void ApplyDistributeSpacing(nsTArray<Keyframe>& aKeyframes);
 
   /**
    * Converts an array of Keyframe objects into an array of AnimationProperty
