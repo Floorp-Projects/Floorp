@@ -194,7 +194,7 @@ ImageBridgeChild::UseTextures(CompositableClient* aCompositable,
                                         readLock,
                                         fence.IsValid() ? MaybeFence(fence) : MaybeFence(null_t()),
                                         t.mTimeStamp, t.mPictureRect,
-                                        t.mFrameID, t.mProducerID, t.mInputFrameID));
+                                        t.mFrameID, t.mProducerID));
 
     // Wait end of usage on host side if TextureFlags::RECYCLE is set or GrallocTextureData case
     HoldUntilCompositableRefReleasedIfNecessary(t.mTextureClient);

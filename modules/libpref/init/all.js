@@ -4937,9 +4937,6 @@ pref("dom.vr.add-test-devices", 0);
 // Oculus Rift on SDK 0.8 or greater.  It is disabled by default for now due to
 // frame uniformity issues with e10s.
 pref("dom.vr.poseprediction.enabled", false);
-// true = show the VR textures in our compositing output; false = don't.
-// true might have performance impact
-pref("gfx.vr.mirror-textures", false);
 // path to OSVR DLLs
 pref("gfx.vr.osvr.utilLibPath", "");
 pref("gfx.vr.osvr.commonLibPath", "");

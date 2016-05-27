@@ -136,7 +136,6 @@ enum class EffectTypes : uint8_t {
   COMPONENT_ALPHA,
   SOLID_COLOR,
   RENDER_TARGET,
-  VR_DISTORTION,
   MAX  //sentinel for the count of all effect types
 };
 
