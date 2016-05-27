@@ -34,7 +34,7 @@ HTMLLabelElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 
 // nsISupports
 
-NS_IMPL_ISUPPORTS_INHERITED(HTMLLabelElement, nsGenericHTMLFormElement,
+NS_IMPL_ISUPPORTS_INHERITED(HTMLLabelElement, nsGenericHTMLElement,
                             nsIDOMHTMLLabelElement)
 
 // nsIDOMHTMLLabelElement
@@ -44,7 +44,9 @@ NS_IMPL_ELEMENT_CLONE(HTMLLabelElement)
 NS_IMETHODIMP
 HTMLLabelElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
-  return nsGenericHTMLFormElement::GetForm(aForm);
+  RefPtr<nsIDOMHTMLFormElement> form = GetForm();
+  form.forget(aForm);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -70,6 +72,23 @@ HTMLLabelElement::GetHtmlFor(nsAString& aHtmlFor)
   GetHtmlFor(htmlFor);
   aHtmlFor = htmlFor;
   return NS_OK;
+}
+
+HTMLFormElement*
+HTMLLabelElement::GetForm() const
+{
+  nsGenericHTMLElement* control = GetControl();
+  if (!control) {
+    return nullptr;
+  }
+
+  // Not all labeled things have a form association.  Stick to the ones that do.
+  nsCOMPtr<nsIFormControl> formControl = do_QueryObject(control);
+  if (!formControl) {
+    return nullptr;
+  }
+
+  return static_cast<HTMLFormElement*>(formControl->GetFormElement());
 }
 
 void
@@ -205,18 +224,6 @@ HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
     }
     mHandlingEvent = false;
   }
-  return NS_OK;
-}
-
-nsresult
-HTMLLabelElement::Reset()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLLabelElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
-{
   return NS_OK;
 }
 

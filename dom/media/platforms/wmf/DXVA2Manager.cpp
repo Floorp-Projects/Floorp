@@ -19,6 +19,7 @@
 #include "MFTDecoder.h"
 #include "DriverCrashGuard.h"
 #include "nsPrintfCString.h"
+#include "gfxCrashReporterUtils.h"
 
 const CLSID CLSID_VideoProcessorMFT =
 {
@@ -257,6 +258,8 @@ D3D9DXVA2Manager::Init(nsACString& aFailureReason)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  ScopedGfxFeatureReporter reporter("DXVA2D3D9");
+
   gfx::D3D9VideoCrashGuard crashGuard;
   if (crashGuard.Crashed()) {
     NS_WARNING("DXVA2D3D9 crash detected");
@@ -419,6 +422,9 @@ D3D9DXVA2Manager::Init(nsACString& aFailureReason)
 
   Telemetry::Accumulate(Telemetry::MEDIA_DECODER_BACKEND_USED,
                         uint32_t(media::MediaDecoderBackend::WMFDXVA2D3D9));
+
+  reporter.SetSuccessful();
+
   return S_OK;
 }
 
@@ -603,6 +609,8 @@ D3D11DXVA2Manager::Init(nsACString& aFailureReason)
 {
   HRESULT hr;
 
+  ScopedGfxFeatureReporter reporter("DXVA2D3D11");
+
   gfx::D3D11VideoCrashGuard crashGuard;
   if (crashGuard.Crashed()) {
     NS_WARNING("DXVA2D3D11 crash detected");
@@ -733,6 +741,9 @@ D3D11DXVA2Manager::Init(nsACString& aFailureReason)
 
   Telemetry::Accumulate(Telemetry::MEDIA_DECODER_BACKEND_USED,
                         uint32_t(media::MediaDecoderBackend::WMFDXVA2D3D11));
+
+  reporter.SetSuccessful();
+
   return S_OK;
 }
 

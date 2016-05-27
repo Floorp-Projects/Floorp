@@ -63,7 +63,9 @@ HTMLFormControlsCollection::ShouldBeInElements(nsIFormControl* aFormControl)
   // form.elements array
   //
   // NS_FORM_INPUT_IMAGE
-  // NS_FORM_LABEL
+  //
+  // XXXbz maybe we should just check for that type here instead of the big
+  // switch?
 
   return false;
 }

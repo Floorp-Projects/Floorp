@@ -390,4 +390,10 @@ interface nsIX509CertDB : nsISupports {
    * Get all the known certs in the database
    */
   nsIX509CertList getCerts();
+
+  /*
+   * Get a list of imported enterprise root certificates (currently only
+   * implemented on Windows).
+   */
+  nsIX509CertList getEnterpriseRoots();
 };
