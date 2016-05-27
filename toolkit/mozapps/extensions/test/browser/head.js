@@ -531,6 +531,12 @@ function is_element_hidden(aElement, aMsg) {
   ok(is_hidden(aElement), aMsg || (aElement + " should be hidden"));
 }
 
+function promiseAddonByID(aId) {
+  return new Promise(resolve => {
+    AddonManager.getAddonByID(aId, resolve);
+  });
+}
+
 function promiseAddonsByIDs(aIDs) {
   return new Promise(resolve => {
     AddonManager.getAddonsByIDs(aIDs, resolve);
