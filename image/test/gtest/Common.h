@@ -44,12 +44,26 @@ struct ImageTestCase
     : mPath(aPath)
     , mMimeType(aMimeType)
     , mSize(aSize)
+    , mOutputSize(aSize)
+    , mFlags(aFlags)
+  { }
+
+  ImageTestCase(const char* aPath,
+                const char* aMimeType,
+                gfx::IntSize aSize,
+                gfx::IntSize aOutputSize,
+                uint32_t aFlags = TEST_CASE_DEFAULT_FLAGS)
+    : mPath(aPath)
+    , mMimeType(aMimeType)
+    , mSize(aSize)
+    , mOutputSize(aOutputSize)
     , mFlags(aFlags)
   { }
 
   const char* mPath;
   const char* mMimeType;
   gfx::IntSize mSize;
+  gfx::IntSize mOutputSize;
   uint32_t mFlags;
 };
 
@@ -311,6 +325,13 @@ ImageTestCase NoFrameDelayGIFTestCase();
 ImageTestCase TransparentBMPWhenBMPAlphaEnabledTestCase();
 ImageTestCase RLE4BMPTestCase();
 ImageTestCase RLE8BMPTestCase();
+
+ImageTestCase DownscaledPNGTestCase();
+ImageTestCase DownscaledGIFTestCase();
+ImageTestCase DownscaledJPGTestCase();
+ImageTestCase DownscaledBMPTestCase();
+ImageTestCase DownscaledICOTestCase();
+ImageTestCase DownscaledIconTestCase();
 
 } // namespace image
 } // namespace mozilla
