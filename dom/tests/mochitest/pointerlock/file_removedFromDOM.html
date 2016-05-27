@@ -51,7 +51,7 @@ function checkPointerLockElement(elem) {
 }
 
 function start() {
-  listenOneDocEvent("fullscreenchange", enteredFullscreen);
+  addFullscreenChangeContinuation("enter", enteredFullscreen);
   document.documentElement.requestFullscreen();
 }
 
@@ -82,7 +82,7 @@ function lockedPointerOnInner() {
 
 function unlockedPointerFromInner() {
   checkPointerLockElement(null);
-  listenOneDocEvent("fullscreenchange", exitedFullscreen);
+  addFullscreenChangeContinuation("exit", exitedFullscreen);
   document.exitFullscreen();
 }
 
