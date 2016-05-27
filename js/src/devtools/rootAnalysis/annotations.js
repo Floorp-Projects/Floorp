@@ -85,6 +85,7 @@ var ignoreCallees = {
     "std::strstreambuf._M_alloc_fun" : true,
     "std::strstreambuf._M_free_fun" : true,
     "struct js::gc::Callback<void (*)(JSRuntime*, void*)>.op" : true,
+    "mozilla::ThreadSharedFloatArrayBufferList::Storage.mFree" : true,
 };
 
 function fieldCallCannotGC(csu, fullfield)
@@ -160,6 +161,7 @@ function isSuppressedVirtualMethod(csu, method)
 var ignoreFunctions = {
     "ptio.c:pt_MapError" : true,
     "je_malloc_printf" : true,
+    "vprintf_stderr" : true,
     "PR_ExplodeTime" : true,
     "PR_ErrorInstallTable" : true,
     "PR_SetThreadPrivate" : true,
@@ -223,6 +225,13 @@ var ignoreFunctions = {
     "uint64 js::TenuringTracer::moveObjectToTenured(JSObject*, JSObject*, int32)" : true,
     "uint32 js::TenuringTracer::moveObjectToTenured(JSObject*, JSObject*, int32)" : true,
     "void js::Nursery::freeMallocedBuffers()" : true,
+
+    // It would be cool to somehow annotate that nsTHashtable<T> will use
+    // nsTHashtable<T>::s_MatchEntry for its matchEntry function pointer, but
+    // there is no mechanism for that. So we will just annotate a particularly
+    // troublesome logging-related usage.
+    "EntryType* nsTHashtable<EntryType>::PutEntry(nsTHashtable<EntryType>::KeyType) [with EntryType = nsBaseHashtableET<nsCharPtrHashKey, nsAutoPtr<mozilla::LogModule> >; nsTHashtable<EntryType>::KeyType = const char*]" : true,
+    "EntryType* nsTHashtable<EntryType>::GetEntry(nsTHashtable<EntryType>::KeyType) const [with EntryType = nsBaseHashtableET<nsCharPtrHashKey, nsAutoPtr<mozilla::LogModule> >; nsTHashtable<EntryType>::KeyType = const char*]" : true,
 };
 
 function isProtobuf(name)
