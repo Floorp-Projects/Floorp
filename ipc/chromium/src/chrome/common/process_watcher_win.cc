@@ -16,25 +16,44 @@ static const int kWaitInterval = 2000;
 
 namespace {
 
-class TimerExpiredTask : public mozilla::Runnable,
-                         public base::ObjectWatcher::Delegate {
+class ChildReaper : public mozilla::Runnable,
+                    public base::ObjectWatcher::Delegate,
+                    public MessageLoop::DestructionObserver {
  public:
-  explicit TimerExpiredTask(base::ProcessHandle process) : process_(process) {
+  explicit ChildReaper(base::ProcessHandle process, bool force)
+   : process_(process), force_(force) {
     watcher_.StartWatching(process_, this);
   }
 
-  virtual ~TimerExpiredTask() {
+  virtual ~ChildReaper() {
     if (process_) {
       KillProcess();
       DCHECK(!process_) << "Make sure to close the handle.";
     }
   }
 
+  // MessageLoop::DestructionObserver -----------------------------------------
+
+  virtual void WillDestroyCurrentMessageLoop()
+  {
+    MOZ_ASSERT(!force_);
+    if (process_) {
+      WaitForSingleObject(process_, INFINITE);
+      base::CloseProcessHandle(process_);
+      process_ = 0;
+
+      MessageLoop::current()->RemoveDestructionObserver(this);
+      delete this;
+    }
+  }
+
   // Task ---------------------------------------------------------------------
 
   NS_IMETHOD Run() override {
-    if (process_)
+    MOZ_ASSERT(force_);
+    if (process_) {
       KillProcess();
+    }
     return NS_OK;
   }
 
@@ -46,11 +65,18 @@ class TimerExpiredTask : public mozilla::Runnable,
     watcher_.StopWatching();
 
     base::CloseProcessHandle(process_);
-    process_ = NULL;
+    process_ = 0;
+
+    if (!force_) {
+      MessageLoop::current()->RemoveDestructionObserver(this);
+      delete this;
+    }
   }
 
  private:
   void KillProcess() {
+    MOZ_ASSERT(force_);
+
     // OK, time to get frisky.  We don't actually care when the process
     // terminates.  We just care that it eventually terminates, and that's what
     // TerminateProcess should do for us. Don't check for the result code since
@@ -66,22 +92,16 @@ class TimerExpiredTask : public mozilla::Runnable,
 
   base::ObjectWatcher watcher_;
 
-  DISALLOW_EVIL_CONSTRUCTORS(TimerExpiredTask);
+  bool force_;
+
+  DISALLOW_EVIL_CONSTRUCTORS(ChildReaper);
 };
 
 }  // namespace
 
 // static
-void ProcessWatcher::EnsureProcessTerminated(base::ProcessHandle process
-                                             , bool force
-) {
+void ProcessWatcher::EnsureProcessTerminated(base::ProcessHandle process, bool force) {
   DCHECK(process != GetCurrentProcess());
-
-  if (!force) {
-    WaitForSingleObject(process, INFINITE);
-    base::CloseProcessHandle(process);
-    return;
-  }
 
   // If already signaled, then we are done!
   if (WaitForSingleObject(process, 0) == WAIT_OBJECT_0) {
@@ -89,8 +109,11 @@ void ProcessWatcher::EnsureProcessTerminated(base::ProcessHandle process
     return;
   }
 
-  RefPtr<mozilla::Runnable> task = new TimerExpiredTask(process);
-
-  MessageLoop::current()->PostDelayedTask(task.forget(),
-                                          kWaitInterval);
+  if (force) {
+    RefPtr<mozilla::Runnable> task = new ChildReaper(process, force);
+    MessageLoop::current()->PostDelayedTask(task.forget(),
+                                            kWaitInterval);
+  } else {
+    loop->AddDestructionObserver(new ChildReaper(process, force));
+  }
 }
