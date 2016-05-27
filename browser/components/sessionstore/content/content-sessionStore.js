@@ -142,7 +142,7 @@ var MessageListener = {
     }
   },
 
-  restoreHistory({epoch, tabData, loadArguments}) {
+  restoreHistory({epoch, tabData, loadArguments, isRemotenessUpdate}) {
     gContentRestore.restoreHistory(tabData, loadArguments, {
       // Note: The callbacks passed here will only be used when a load starts
       // that was not initiated by sessionstore itself. This can happen when
@@ -167,7 +167,7 @@ var MessageListener = {
     // sync about the state of the restore (particularly regarding
     // docShell.currentURI). Using a synchronous message is the easiest way
     // to temporarily synchronize them.
-    sendSyncMessage("SessionStore:restoreHistoryComplete", {epoch});
+    sendSyncMessage("SessionStore:restoreHistoryComplete", {epoch, isRemotenessUpdate});
   },
 
   restoreTabContent({loadArguments, isRemotenessUpdate}) {
