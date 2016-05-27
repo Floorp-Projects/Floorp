@@ -6,7 +6,6 @@
 #include "gfxPlatformMac.h"
 
 #include "gfxQuartzSurface.h"
-#include "gfxQuartzImageSurface.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/MacIOSurface.h"
 
