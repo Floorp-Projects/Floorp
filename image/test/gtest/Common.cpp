@@ -550,15 +550,5 @@ ImageTestCase DownscaledIconTestCase()
                        IntSize(20, 20), TEST_CASE_IS_TRANSPARENT);
 }
 
-ImageTestCase DownscaledTransparentICOWithANDMaskTestCase()
-{
-  // This test case is an ICO with AND mask transparency. We want to ensure that
-  // we can downscale it without crashing or triggering ASAN failures, but its
-  // content isn't simple to verify, so for now we don't check the output.
-  return ImageTestCase("transparent-ico-with-and-mask.ico", "image/x-icon",
-                       IntSize(32, 32), IntSize(20, 20),
-                       TEST_CASE_IS_TRANSPARENT | TEST_CASE_IGNORE_OUTPUT);
-}
-
 } // namespace image
 } // namespace mozilla
