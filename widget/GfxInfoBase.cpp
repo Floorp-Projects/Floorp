@@ -276,8 +276,11 @@ BlacklistOSToOperatingSystem(const nsAString& os)
     return DRIVER_OS_OS_X_10_11;
   else if (os.EqualsLiteral("Android"))
     return DRIVER_OS_ANDROID;
+#if defined (XP_WIN)
+  // For historical reasons, "All" in blocklist means "All Windows"
   else if (os.EqualsLiteral("All"))
     return DRIVER_OS_ALL;
+#endif
 
   return DRIVER_OS_UNKNOWN;
 }
