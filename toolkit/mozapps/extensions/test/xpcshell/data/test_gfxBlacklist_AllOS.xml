@@ -197,5 +197,587 @@
       <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
     </gfxBlacklistEntry>
 
+    <gfxBlacklistEntry blockID="g1">
+      <os>Darwin 13</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="15.0" maxVersion="15.0"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> DIRECT2D </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry blockID="g2">
+      <os>Darwin 13</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="15.0" maxVersion="22.0a1"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> DIRECT3D_9_LAYERS </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Darwin 13</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="16.0a1"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> DIRECT3D_10_LAYERS</feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Darwin 13</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="16.0a1" maxVersion="22.0"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> DIRECT3D_10_1_LAYERS </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Darwin 13</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="12.0" maxVersion="16.0"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> OPENGL_LAYERS </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry blockID="g11">
+      <os>Darwin 13</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="14.0b2" maxVersion="15.0"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> WEBGL_OPENGL </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Darwin 13</os>
+      <vendor>0xabcd</vendor>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> WEBGL_ANGLE </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Darwin 13</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="12.0" maxVersion="16.0"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> WEBGL_MSAA </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Darwin 13</os>
+      <vendor>0xabcd</vendor>
+      <versionRange maxVersion="13.0"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> STAGEFRIGHT </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Darwin 13</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="42.0" maxVersion="13.0b2"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> WEBRTC_HW_ACCELERATION </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Darwin 13</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="42.0" maxVersion="13.0b2"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> WEBRTC_HW_ACCELERATION_ENCODE </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Darwin 13</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="42.0" maxVersion="13.0b2"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> WEBRTC_HW_ACCELERATION_DECODE </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Darwin 13</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="17.2a2" maxVersion="15.0"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> DIRECT3D_11_LAYERS </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Darwin 13</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="15.0" maxVersion="13.2"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> HARDWARE_VIDEO_DECODING </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Darwin 13</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="10.5" maxVersion="13.0"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> DIRECT3D_11_ANGLE </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry blockID="g1">
+      <os>Linux</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="15.0" maxVersion="15.0"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> DIRECT2D </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry blockID="g2">
+      <os>Linux</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="15.0" maxVersion="22.0a1"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> DIRECT3D_9_LAYERS </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Linux</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="16.0a1"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> DIRECT3D_10_LAYERS</feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Linux</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="16.0a1" maxVersion="22.0"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> DIRECT3D_10_1_LAYERS </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Linux</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="12.0" maxVersion="16.0"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> OPENGL_LAYERS </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry blockID="g11">
+      <os>Linux</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="14.0b2" maxVersion="15.0"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> WEBGL_OPENGL </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Linux</os>
+      <vendor>0xabcd</vendor>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> WEBGL_ANGLE </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Linux</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="12.0" maxVersion="16.0"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> WEBGL_MSAA </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Linux</os>
+      <vendor>0xabcd</vendor>
+      <versionRange maxVersion="13.0"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> STAGEFRIGHT </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Linux</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="42.0" maxVersion="13.0b2"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> WEBRTC_HW_ACCELERATION </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Linux</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="42.0" maxVersion="13.0b2"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> WEBRTC_HW_ACCELERATION_ENCODE </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Linux</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="42.0" maxVersion="13.0b2"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> WEBRTC_HW_ACCELERATION_DECODE </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Linux</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="17.2a2" maxVersion="15.0"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> DIRECT3D_11_LAYERS </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Linux</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="15.0" maxVersion="13.2"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> HARDWARE_VIDEO_DECODING </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Linux</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="10.5" maxVersion="13.0"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> DIRECT3D_11_ANGLE </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry blockID="g1">
+      <os>Android</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="15.0" maxVersion="15.0"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> DIRECT2D </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry blockID="g2">
+      <os>Android</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="15.0" maxVersion="22.0a1"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> DIRECT3D_9_LAYERS </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Android</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="16.0a1"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> DIRECT3D_10_LAYERS</feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Android</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="16.0a1" maxVersion="22.0"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> DIRECT3D_10_1_LAYERS </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Android</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="12.0" maxVersion="16.0"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> OPENGL_LAYERS </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry blockID="g11">
+      <os>Android</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="14.0b2" maxVersion="15.0"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> WEBGL_OPENGL </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Android</os>
+      <vendor>0xabcd</vendor>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> WEBGL_ANGLE </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Android</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="12.0" maxVersion="16.0"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> WEBGL_MSAA </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Android</os>
+      <vendor>0xabcd</vendor>
+      <versionRange maxVersion="13.0"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> STAGEFRIGHT </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Android</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="42.0" maxVersion="13.0b2"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> WEBRTC_HW_ACCELERATION </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Android</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="42.0" maxVersion="13.0b2"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> WEBRTC_HW_ACCELERATION_ENCODE </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Android</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="42.0" maxVersion="13.0b2"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> WEBRTC_HW_ACCELERATION_DECODE </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Android</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="17.2a2" maxVersion="15.0"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> DIRECT3D_11_LAYERS </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Android</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="15.0" maxVersion="13.2"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> HARDWARE_VIDEO_DECODING </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>Android</os>
+      <vendor>0xabcd</vendor>
+      <versionRange minVersion="10.5" maxVersion="13.0"/>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> DIRECT3D_11_ANGLE </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+
   </gfxItems>
 </blocklist>
