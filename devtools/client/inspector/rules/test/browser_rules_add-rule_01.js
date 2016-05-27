@@ -4,8 +4,7 @@
 
 "use strict";
 
-// Tests the behaviour of adding a new rule using the add rule button and the
-// various inplace-editor behaviours in the new rule editor.
+// Tests adding a new rule using the add rule button.
 
 const TEST_URI = `
   <style type="text/css">
@@ -38,39 +37,24 @@ const TEST_DATA = [
 
 add_task(function* () {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view, testActor} = yield openRuleView();
+  let {inspector, view} = yield openRuleView();
 
   for (let data of TEST_DATA) {
     let {node, expected} = data;
     yield selectNode(node, inspector);
     yield addNewRule(inspector, view);
-    yield testNewRule(view, expected, 1);
-
-    info("Resetting page content");
-    yield testActor.eval(
-      "content.document.body.innerHTML = `" + TEST_URI + "`;");
+    yield testNewRule(view, expected);
   }
 });
 
-function* testNewRule(view, expected, index) {
-  let idRuleEditor = getRuleViewRuleEditor(view, index);
-  let editor = idRuleEditor.selectorText.ownerDocument.activeElement;
-  is(editor.value, expected,
-      "Selector editor value is as expected: " + expected);
+function* testNewRule(view, expected) {
+  let ruleEditor = getRuleViewRuleEditor(view, 1);
+  let editor = ruleEditor.selectorText.ownerDocument.activeElement;
+  is(editor.value, expected, "Selector editor value is as expected: " + expected);
 
-  info("Entering the escape key");
+  info("Escaping from the selector inplace editor");
   EventUtils.synthesizeKey("VK_ESCAPE", {});
 
-  is(idRuleEditor.selectorText.textContent, expected,
-      "Selector text value is as expected: " + expected);
-
-  info("Adding new properties to new rule: " + expected);
-  let onRuleViewChanged = view.once("ruleview-changed");
-  idRuleEditor.addProperty("font-weight", "bold", "");
-  yield onRuleViewChanged;
-
-  let textProps = idRuleEditor.rule.textProps;
-  let lastRule = textProps[textProps.length - 1];
-  is(lastRule.name, "font-weight", "Last rule name is font-weight");
-  is(lastRule.value, "bold", "Last rule value is bold");
+  is(ruleEditor.selectorText.textContent, expected,
+     "Selector text value is as expected: " + expected);
 }
