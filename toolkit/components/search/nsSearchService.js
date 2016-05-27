@@ -2408,6 +2408,21 @@ Engine.prototype = {
   },
 #endif
 
+  get _isWhiteListed() {
+    let url = this._getURLOfType(URLTYPE_SEARCH_HTML).template;
+    let hostname = makeURI(url).host;
+    let whitelist = Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF)
+                            .getCharPref("reset.whitelist")
+                            .split(",");
+    if (whitelist.includes(hostname)) {
+      LOG("The hostname " + hostname + " is white listed, " +
+          "we won't show the search reset prompt");
+      return true;
+    }
+
+    return false;
+  },
+
   // from nsISearchEngine
   getSubmission: function SRCH_ENG_getSubmission(aData, aResponseType, aPurpose) {
 #ifdef ANDROID
@@ -2419,6 +2434,24 @@ Engine.prototype = {
       aResponseType = URLTYPE_SEARCH_HTML;
     }
 
+    if (aResponseType == URLTYPE_SEARCH_HTML &&
+        Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF).getBoolPref("reset.enabled") &&
+        this.name == Services.search.currentEngine.name &&
+        !this._isDefault &&
+        (!this.getAttr("loadPathHash") ||
+         this.getAttr("loadPathHash") != getVerificationHash(this._loadPath)) &&
+        !this._isWhiteListed) {
+      let url = "about:searchreset";
+      let data = [];
+      if (aData)
+        data.push("data=" + encodeURIComponent(aData));
+      if (aPurpose)
+        data.push("purpose=" + aPurpose);
+      if (data.length)
+        url += "?" + data.join("&");
+      return new Submission(makeURI(url));
+    }
+
     var url = this._getURLOfType(aResponseType);
 
     if (!url)
@@ -2426,7 +2459,7 @@ Engine.prototype = {
 
     if (!aData) {
       // Return a dummy submission object with our searchForm attribute
-      return new Submission(makeURI(this._getSearchFormWithPurpose(aPurpose)), null);
+      return new Submission(makeURI(this._getSearchFormWithPurpose(aPurpose)));
     }
 
     LOG("getSubmission: In data: \"" + aData + "\"; Purpose: \"" + aPurpose + "\"");
@@ -2822,7 +2855,7 @@ SearchService.prototype = {
 
   // Get the original Engine object that is the default for this region,
   // ignoring changes the user may have subsequently made.
-  get _originalDefaultEngine() {
+  get originalDefaultEngine() {
     let defaultEngine = this.getVerifiedGlobalAttr("searchDefault");
     if (!defaultEngine) {
       let defaultPrefB = Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF);
@@ -2841,7 +2874,7 @@ SearchService.prototype = {
   },
 
   resetToOriginalDefaultEngine: function SRCH_SVC__resetToOriginalDefaultEngine() {
-    this.currentEngine = this._originalDefaultEngine;
+    this.currentEngine = this.originalDefaultEngine;
   },
 
   _buildCache: function SRCH_SVC__buildCache() {
@@ -3948,6 +3981,7 @@ SearchService.prototype = {
     var engine = new Engine(sanitizeName(aName), false);
     engine._initFromMetadata(aName, aIconURL, aAlias, aDescription,
                              aMethod, aTemplate, aExtensionID);
+    engine._loadPath = "[other]addEngineWithDetails";
     this._addEngineToStore(engine);
   },
 
@@ -4111,13 +4145,13 @@ SearchService.prototype = {
         this._currentEngine = engine;
       }
       if (!name)
-        this._currentEngine = this._originalDefaultEngine;
+        this._currentEngine = this.originalDefaultEngine;
     }
 
     // If the current engine is not set or hidden, we fallback...
     if (!this._currentEngine || this._currentEngine.hidden) {
       // first to the original default engine
-      let originalDefault = this._originalDefaultEngine;
+      let originalDefault = this.originalDefaultEngine;
       if (!originalDefault || originalDefault.hidden) {
         // then to the first visible engine
         let firstVisible = this._getSortedEngines(false)[0];
@@ -4154,9 +4188,11 @@ SearchService.prototype = {
     if (!newCurrentEngine)
       FAIL("Can't find engine in store!", Cr.NS_ERROR_UNEXPECTED);
 
-    if (!newCurrentEngine._isDefault && newCurrentEngine._loadPath) {
+    if (!newCurrentEngine._isDefault) {
       // If a non default engine is being set as the current engine, ensure
       // its loadPath has a verification hash.
+      if (!newCurrentEngine._loadPath)
+        newCurrentEngine._loadPath = "[other]unknown";
       let loadPathHash = getVerificationHash(newCurrentEngine._loadPath);
       let currentHash = newCurrentEngine.getAttr("loadPathHash");
       if (!currentHash || currentHash != loadPathHash) {
@@ -4176,7 +4212,7 @@ SearchService.prototype = {
     // build's default engine, so that the currentEngine getter falls back to
     // whatever the default is.
     let newName = this._currentEngine.name;
-    if (this._currentEngine == this._originalDefaultEngine) {
+    if (this._currentEngine == this.originalDefaultEngine) {
       newName = "";
     }
 

@@ -10,6 +10,7 @@ const protocol = require("devtools/shared/protocol");
 const {LongStringActor} = require("devtools/server/actors/string");
 const {getDefinedGeometryProperties} = require("devtools/server/actors/highlighters/geometry-editor");
 const {parseDeclarations} = require("devtools/shared/css-parsing-utils");
+const {isCssPropertyKnown} = require("devtools/server/actors/css-properties");
 const {Task} = require("devtools/shared/task");
 const events = require("sdk/event/core");
 
@@ -1093,8 +1094,9 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     // and so that we can safely determine if a declaration is valid rather than
     // have the client guess it.
     if (form.authoredText || form.cssText) {
-      let declarations = parseDeclarations(form.authoredText ||
-                                           form.cssText, true);
+      let declarations = parseDeclarations(isCssPropertyKnown,
+                                           form.authoredText || form.cssText,
+                                           true);
       form.declarations = declarations.map(decl => {
         decl.isValid = DOMUtils.cssPropertyIsValid(decl.name, decl.value);
         return decl;

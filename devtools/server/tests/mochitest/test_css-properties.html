@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1265798 - Replace inIDOMUtils.cssPropertyIsShorthand
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test CSS Properties Actor</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript;version=1.8" src="inspector-helpers.js"></script>
+  <script type="application/javascript;version=1.8">
+window.onload = function() {
+  const { initCssProperties, getCssProperties } =
+    require("devtools/shared/fronts/css-properties");
+
+  function promiseAttachUrl (url) {
+    return new Promise((resolve, reject) => {
+      attachURL(url, function(err, client, tab, doc) {
+        if (err) {
+          return reject(err);
+        }
+        resolve({client, tab, doc});
+      });
+    })
+  }
+
+  const runCssPropertiesTests = Task.async(function* (url, useActor) {
+    info("Opening two tabs.");
+
+    let attachmentA = yield promiseAttachUrl(url);
+    let attachmentB = yield promiseAttachUrl(url);
+
+    const toolboxMockA = {
+      target: {
+        hasActor: () => useActor,
+        client: attachmentA.client,
+        form: attachmentA.tab
+      }
+    };
+    const toolboxMockB = {
+      target: {
+        hasActor: () => useActor,
+        client: attachmentB.client,
+        form: attachmentB.tab
+      }
+    };
+
+    yield initCssProperties(toolboxMockA);
+    yield initCssProperties(toolboxMockB);
+
+    const cssProperties = getCssProperties(toolboxMockA);
+    const cssPropertiesA = getCssProperties(toolboxMockA);
+    const cssPropertiesB = getCssProperties(toolboxMockB);
+
+    is(cssProperties, cssPropertiesA,
+       "Multiple calls with the same toolbox returns the same object.");
+    isnot(cssProperties, cssPropertiesB,
+       "Multiple calls with the different toolboxes return different "+
+       " objects.");
+
+    ok(cssProperties.isKnown("border"),
+      "The `border` shorthand property is known.");
+    ok(cssProperties.isKnown("display"),
+      "The `display` property is known.");
+    ok(!cssProperties.isKnown("foobar"),
+      "A fake property is not known.");
+    ok(cssProperties.isKnown("--foobar"),
+      "A CSS variable properly evaluates.");
+    ok(cssProperties.isKnown("--foob\\{ar"),
+      "A CSS variable with escaped character properly evaluates.");
+    ok(cssProperties.isKnown("--fübar"),
+      "A CSS variable unicode properly evaluates.");
+    ok(!cssProperties.isKnown("--foo bar"),
+      "A CSS variable with spaces fails");
+  });
+
+  addAsyncTest(function* setup() {
+    let url = document.getElementById("cssProperties").href;
+    yield runCssPropertiesTests(url, true);
+    yield runCssPropertiesTests(url, false);
+
+    runNextTest();
+  });
+
+  SimpleTest.waitForExplicitFinish();
+  runNextTest();
+}
+  </script>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1265798">Mozilla Bug 1265798</a>
+  <a id="cssProperties" target="_blank" href="inspector_css-properties.html">Test Document</a>
+</body>
+</html>
