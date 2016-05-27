@@ -13,7 +13,11 @@ var gTab, gPanel, gDebugger;
 var gEditor, gSources, gSearchBox, gFilteredFunctions;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: "-01.js",
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
@@ -22,8 +26,7 @@ function test() {
     gSearchBox = gDebugger.DebuggerView.Filtering._searchbox;
     gFilteredFunctions = gDebugger.DebuggerView.Filtering.FilteredFunctions;
 
-    waitForSourceShown(gPanel, "-01.js")
-      .then(() => showSource("doc_function-search.html"))
+   showSource("doc_function-search.html")
       .then(htmlSearch)
       .then(() => showSource("code_function-search-01.js"))
       .then(firstJsSearch)

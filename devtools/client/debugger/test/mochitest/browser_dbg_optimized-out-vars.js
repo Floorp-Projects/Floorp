@@ -10,11 +10,14 @@ function test() {
     const TAB_URL = EXAMPLE_URL + "doc_closure-optimized-out.html";
     let gDebugger, sources;
 
-    let [tab,, panel] = yield initDebugger(TAB_URL);
+    let options = {
+      source: TAB_URL,
+      line: 1
+    };
+    let [tab,, panel] = yield initDebugger(TAB_URL, options);
     gDebugger = panel.panelWin;
     sources = gDebugger.DebuggerView.Sources;
 
-    yield waitForSourceShown(panel, ".html");
     yield panel.addBreakpoint({ actor: sources.values[0],
                                 line: 18 });
     yield ensureThreadClientState(panel, "resumed");

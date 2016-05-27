@@ -10,7 +10,11 @@
 const TAB_URL = EXAMPLE_URL + "doc_event-listeners-02.html";
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: TAB_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     let gTab = aTab;
     let gDebugger = aPanel.panelWin;
     let gView = gDebugger.DebuggerView;
@@ -19,7 +23,6 @@ function test() {
     let constants = gDebugger.require("./content/constants");
 
     Task.spawn(function* () {
-      yield waitForSourceShown(aPanel, ".html");
       yield callInTab(gTab, "addBodyClickEventListener");
 
       let fetched = waitForDispatch(aPanel, constants.FETCH_EVENT_LISTENERS);

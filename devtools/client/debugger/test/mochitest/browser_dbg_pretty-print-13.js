@@ -12,7 +12,12 @@
 const TAB_URL = EXAMPLE_URL + "doc_pretty-print-3.html";
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  // Wait for debugger panel to be fully set and break on debugger statement
+  let options = {
+    source: "code_ugly-8",
+    line: 2
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     const gTab = aTab;
     const gPanel = aPanel;
     const gDebugger = gPanel.panelWin;
@@ -24,7 +29,6 @@ function test() {
     const getState = gDebugger.DebuggerController.getState;
 
     Task.spawn(function* () {
-      yield waitForSourceShown(gPanel, "code_ugly-8");
       ok(!gEditor.getText().includes("\n  "),
          "The source shouldn't be pretty printed yet.");
 
@@ -43,7 +47,7 @@ function test() {
       ok(text.includes("\n  "),
          "Subsequent calls to getText return the pretty printed source.");
 
-      closeDebuggerAndFinish(gPanel);
-    });
+      resumeDebuggerThenCloseAndFinish(gPanel);
+    })
   });
 }

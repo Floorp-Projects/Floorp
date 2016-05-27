@@ -36,7 +36,11 @@ function test() {
     DebuggerServer.init();
     DebuggerServer.addBrowserActors();
 
-    const [ tab,, panel ] = yield initDebugger(TAB_URL);
+    let options = {
+      source: TAB_URL,
+      line: 1
+    };
+    const [ tab,, panel ] = yield initDebugger(TAB_URL, options);
 
     let client = new DebuggerClient(DebuggerServer.connectPipe());
     yield connect(client);

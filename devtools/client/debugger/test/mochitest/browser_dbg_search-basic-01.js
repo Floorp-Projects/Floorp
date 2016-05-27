@@ -13,7 +13,11 @@ var gTab, gPanel, gDebugger;
 var gEditor, gSources, gFiltering, gSearchBox;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: TAB_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
@@ -22,7 +26,7 @@ function test() {
     gFiltering = gDebugger.DebuggerView.Filtering;
     gSearchBox = gDebugger.DebuggerView.Filtering._searchbox;
 
-    waitForSourceShown(gPanel, ".html").then(performTest);
+    performTest();
   });
 }
 

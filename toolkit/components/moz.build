@@ -34,7 +34,6 @@ DIRS += [
     'gfx',
     'jsdownloads',
     'lz4',
-    'narrate',
     'mediasniffer',
     'microformats',
     'osfile',
@@ -68,7 +67,7 @@ DIRS += [
 ]
 
 if CONFIG['MOZ_BUILD_APP'] != 'mobile/android':
-    DIRS += ['viewsource'];
+    DIRS += ['narrate', 'viewsource'];
 
     if CONFIG['NS_PRINTING']:
         DIRS += ['printing']

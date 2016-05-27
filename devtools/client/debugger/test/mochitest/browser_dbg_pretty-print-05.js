@@ -8,9 +8,14 @@
  */
 
 const TAB_URL = EXAMPLE_URL + "doc_included-script.html";
+const SCRIPT_URL = EXAMPLE_URL + "code_location-changes.js";
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: SCRIPT_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     const gTab = aTab;
     const gPanel = aPanel;
     const gDebugger = gPanel.panelWin;
@@ -22,7 +27,10 @@ function test() {
     const getState = gDebugger.DebuggerController.getState;
 
     Task.spawn(function* () {
-      yield waitForSourceShown(gPanel, TAB_URL);
+      // Now, select the html page
+      const sourceShown = waitForSourceShown(gPanel, TAB_URL);
+      gSources.selectedValue = getSourceActor(gSources, TAB_URL);
+      yield sourceShown;
 
       // From this point onward, the source editor's text should never change.
       gEditor.once("change", () => {
@@ -56,11 +64,3 @@ function test() {
     });
   });
 }
-
-function prepareDebugger(aPanel) {
-  aPanel._view.Sources.preferredSource = getSourceActor(
-    aPanel.panelWin.DebuggerView.Sources,
-    TAB_URL
-  );
-}
-

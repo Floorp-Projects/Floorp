@@ -16,7 +16,11 @@ const TAB_URL = EXAMPLE_URL + "doc_inline-script.html";
 function test() {
   installListener();
 
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: TAB_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
@@ -29,14 +33,14 @@ function test() {
 }
 
 function testPause() {
-  waitForSourceAndCaretAndScopes(gPanel, ".html", 16).then(() => {
+  let onCaretUpdated = waitForCaretUpdated(gPanel, 16);
+  callInTab(gTab, "runDebuggerStatement");
+  onCaretUpdated.then(() => {
     is(gDebugger.gThreadClient.state, "paused",
       "The debugger statement was reached.");
 
     resumeDebuggerThenCloseAndFinish(gPanel);
   });
-
-  callInTab(gTab, "runDebuggerStatement");
 }
 
 // This is taken almost verbatim from bug 771655.

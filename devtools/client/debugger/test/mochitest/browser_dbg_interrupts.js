@@ -13,7 +13,11 @@ function test() {
   let gTab, gPanel, gDebugger;
   let gSources, gBreakpoints, gTarget, gResumeButton, gResumeKey, gThreadClient;
 
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: "-01.js",
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
@@ -24,9 +28,8 @@ function test() {
     gResumeButton = gDebugger.document.getElementById("resume");
     gResumeKey = gDebugger.document.getElementById("resumeKey");
 
-    waitForSourceShown(gPanel, "-01.js")
-      .then(() => { gTarget.on("thread-paused", failOnPause); })
-      .then(addBreakpoints)
+    gTarget.on("thread-paused", failOnPause);
+    addBreakpoints()
       .then(() => { gTarget.off("thread-paused", failOnPause); })
       .then(testResumeButton)
       .then(testResumeKeyboard)

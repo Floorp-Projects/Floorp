@@ -58,6 +58,7 @@ const levels = {
     warn: severities.SEVERITY_WARNING,
     info: severities.SEVERITY_INFO,
     log: severities.SEVERITY_LOG,
+    clear: severities.SEVERITY_LOG,
     trace: severities.SEVERITY_LOG,
     table: severities.SEVERITY_LOG,
     debug: severities.SEVERITY_LOG,

@@ -13,7 +13,11 @@ function test() {
   // Linux debug test slaves are a bit slow at this test sometimes.
   requestLongerTimeout(2);
 
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: TAB_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     const gTab = aTab;
     const gPanel = aPanel;
     const gDebugger = gPanel.panelWin;
@@ -166,7 +170,10 @@ function test() {
     });
 
     Task.spawn(function* () {
-      yield waitForSourceAndCaretAndScopes(gPanel, ".html", 17);
+      let onCaretUpdated = waitForCaretAndScopes(gPanel, 17);
+      callInTab(gTab, "ermahgerd");
+      yield onCaretUpdated;
+
       yield addBreakpoints();
 
       is(gDebugger.gThreadClient.state, "paused",
@@ -207,7 +214,5 @@ function test() {
 
       closeDebuggerAndFinish(gPanel);
     });
-
-    callInTab(gTab, "ermahgerd");
   });
 }

@@ -11,13 +11,18 @@ const TAB_URL = EXAMPLE_URL + "doc_scope-variable-3.html";
 
 function test() {
   Task.spawn(function* () {
-    let [tab,, panel] = yield initDebugger(TAB_URL);
+    let options = {
+      source: TAB_URL,
+      line: 1
+    };
+    let [tab,, panel] = yield initDebugger(TAB_URL, options);
     let win = panel.panelWin;
     let bubble = win.DebuggerView.VariableBubble;
     let tooltip = bubble._tooltip.panel;
 
+    let onCaretAndScopes = waitForCaretAndScopes(panel, 15);
     callInTab(tab, "test");
-    yield waitForSourceAndCaretAndScopes(panel, ".html", 15);
+    yield onCaretAndScopes;
 
     yield openVarPopup(panel, { line: 12, ch: 10 });
     ok(true, "The variable inspection popup was shown for the real variable.");

@@ -1,10 +1,11 @@
 /* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+/* import-globals-from helper_inplace_editor.js */
 
 "use strict";
 
-var { editableField } = require("devtools/client/shared/inplace-editor");
+loadHelperScript("helper_inplace_editor.js");
 
 const MAX_WIDTH = 300;
 const START_TEXT = "Start text";
@@ -25,7 +26,7 @@ add_task(function* () {
       maxWidth: MAX_WIDTH,
       start: testMaxWidth,
       done: resolve
-    }, doc);
+    }, doc, START_TEXT);
   });
 
   host.destroy();
@@ -110,26 +111,4 @@ function checkScrollbars(textarea) {
     "Textarea should never have vertical scrollbars");
   is(textarea.scrollWidth, textarea.clientWidth,
     "Textarea should never have horizontal scrollbars");
-}
-
-function createInplaceEditorAndClick(options, doc) {
-  doc.body.innerHTML = "";
-  let span = options.element = createSpan(doc);
-
-  info("Creating an inplace-editor field");
-  editableField(options);
-
-  info("Clicking on the inplace-editor field to turn to edit mode");
-  span.click();
-}
-
-function createSpan(doc) {
-  info("Creating a new span element");
-  let span = doc.createElement("span");
-  span.setAttribute("tabindex", "0");
-  span.style.fontSize = "11px";
-  span.style.fontFamily = "monospace";
-  span.textContent = START_TEXT;
-  doc.body.appendChild(span);
-  return span;
 }

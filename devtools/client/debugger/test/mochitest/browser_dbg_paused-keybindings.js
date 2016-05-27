@@ -11,22 +11,25 @@ function test() {
     const TAB_URL = EXAMPLE_URL + "doc_inline-script.html";
     let gDebugger, searchBox;
 
-    let [, debuggee, panel] = yield initDebugger(TAB_URL);
+    let options = {
+      source: TAB_URL,
+      line: 1
+    };
+    let [tab, debuggee, panel] = yield initDebugger(TAB_URL, options);
     gDebugger = panel.panelWin;
     searchBox = gDebugger.DebuggerView.Filtering._searchbox;
 
-    // Spin the event loop before causing the debuggee to pause, to allow
-    // this function to return first.
-    executeSoon(() => {
-      EventUtils.sendMouseEvent({ type: "click" },
-        debuggee.document.querySelector("button"),
-        debuggee);
+    let onCaretUpdated = ensureCaretAt(panel, 20, 1, true);
+    let onThreadPaused = ensureThreadClientState(panel, "paused");
+    ContentTask.spawn(tab.linkedBrowser, {}, function* () {
+      content.document.querySelector("button").click();
     });
-    yield waitForSourceAndCaretAndScopes(panel, ".html", 20);
-    yield ensureThreadClientState(panel, "paused");
+    yield onCaretUpdated;
+    yield onThreadPaused
 
     // Now open a tab and close it.
     let tab2 = yield addTab(TAB_URL);
+    yield waitForTick();
     yield removeTab(tab2);
     yield ensureCaretAt(panel, 20);
 

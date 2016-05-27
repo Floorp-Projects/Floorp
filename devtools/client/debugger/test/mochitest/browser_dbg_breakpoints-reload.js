@@ -13,10 +13,12 @@ const TAB_URL = EXAMPLE_URL + "doc_breakpoints-reload.html";
 var test = Task.async(function* () {
   requestLongerTimeout(4);
 
-  const [tab,, panel] = yield initDebugger(TAB_URL);
+  const options = {
+    source: TAB_URL,
+    line: 1
+  };
+  const [tab,, panel] = yield initDebugger(TAB_URL, options);
   const actions = bindActionCreators(panel);
-
-  yield ensureSourceIs(panel, "doc_breakpoints-reload.html", true);
 
   const sources = panel.panelWin.DebuggerView.Sources;
   yield actions.addBreakpoint({

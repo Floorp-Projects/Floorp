@@ -10,7 +10,7 @@
 const TAB_URL = EXAMPLE_URL + "doc_conditional-breakpoints.html";
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  initDebugger().then(([aTab,, aPanel]) => {
     const gTab = aTab;
     const gPanel = aPanel;
     const gDebugger = gPanel.panelWin;
@@ -33,7 +33,13 @@ function test() {
     }
 
     Task.spawn(function* () {
-      yield waitForSourceAndCaretAndScopes(gPanel, ".html", 17);
+      let onCaretUpdated = waitForCaretUpdated(gPanel, 17);
+      yield navigateActiveTabTo(gPanel,
+                                TAB_URL,
+                                gDebugger.EVENTS.SOURCE_SHOWN);
+      callInTab(gTab, "ermahgerd");
+      yield onCaretUpdated;
+
       const location = { actor: gSources.selectedValue, line: 18 };
 
       yield actions.addBreakpoint(location, "hello");
@@ -68,7 +74,5 @@ function test() {
       client.mainRoot.traits.conditionalBreakpoints = true;
       resumeDebuggerThenCloseAndFinish(gPanel);
     });
-
-    callInTab(gTab, "ermahgerd");
   });
 }

@@ -16,7 +16,11 @@ function test() {
   // Debug test slaves are a bit slow at this test.
   requestLongerTimeout(3);
 
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: "-01.js",
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
@@ -25,8 +29,7 @@ function test() {
     gSearchView = gDebugger.DebuggerView.Filtering.FilteredSources;
     gSearchBox = gDebugger.DebuggerView.Filtering._searchbox;
 
-    waitForSourceShown(gPanel, "-01.js")
-      .then(firstSearch)
+    firstSearch()
       .then(secondSearch)
       .then(thirdSearch)
       .then(fourthSearch)

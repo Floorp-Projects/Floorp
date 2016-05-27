@@ -13,7 +13,11 @@ var gTab, gPanel, gDebugger;
 var gVariables;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: TAB_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
@@ -22,8 +26,7 @@ function test() {
     // The first 'with' scope should be expanded by default, but the
     // variables haven't been fetched yet. This is how 'with' scopes work.
     promise.all([
-      waitForSourceAndCaret(gPanel, ".html", 22),
-      waitForDebuggerEvents(gPanel, gDebugger.EVENTS.FETCHED_SCOPES),
+      waitForCaretAndScopes(gPanel, 22),
       waitForDebuggerEvents(gPanel, gDebugger.EVENTS.FETCHED_VARIABLES)
     ]).then(testFirstWithScope)
       .then(expandSecondWithScope)

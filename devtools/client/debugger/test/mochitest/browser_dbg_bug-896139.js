@@ -7,7 +7,7 @@
  * Bug 896139 - Breakpoints not triggering when reloading script.
  */
 
-const TAB_URL = "doc_bug-896139.html";
+const TAB_URL = EXAMPLE_URL + "doc_bug-896139.html";
 const SCRIPT_URL = "code_bug-896139.js";
 
 function test() {
@@ -18,13 +18,32 @@ function test() {
       return promise.then(() => doResume(panel));
     }
 
-    let [tab,, panel] = yield initDebugger(EXAMPLE_URL + TAB_URL);
+    let [tab,, panel] = yield initDebugger();
     let win = panel.panelWin;
 
     let Sources = win.DebuggerView.Sources;
-    yield waitForDebuggerEvents(panel, win.EVENTS.SOURCE_SHOWN);
+
+    // Load the debugger against a blank document and load the test url only
+    // here and not via initDebugger. That, because this test load SCRIPT_URL
+    // dynamically, on load, and the debugger may be on TAB_URL or SCRIPT_URL
+    // depending on cpu speed. initDebugger expect to assert one precise
+    // source.
+    yield navigateActiveTabTo(panel,
+                              TAB_URL,
+                              win.EVENTS.SOURCE_SHOWN);
+
     if (Sources.selectedItem.attachment.source.url.indexOf(SCRIPT_URL) === -1) {
-      Sources.selectedValue = getSourceActor(win.DebuggerView.Sources, EXAMPLE_URL + SCRIPT_URL);
+      // If there is only the html file, wait for the js file to be listed.
+      if (Sources.itemCount == 1) {
+        yield waitForDebuggerEvents(panel, win.EVENTS.NEW_SOURCE);
+        // Wait for it to be added to the UI
+        yield waitForTick();
+      }
+      // Select the js file.
+      let onSource = waitForSourceAndCaret(panel, SCRIPT_URL, 1);
+      Sources.selectedValue = getSourceActor(win.DebuggerView.Sources,
+                                             EXAMPLE_URL + SCRIPT_URL);
+      yield onSource;
     }
 
     yield panel.addBreakpoint({

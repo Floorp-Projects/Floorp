@@ -68,7 +68,9 @@
     "description": "Application reputation remote status (0=OK, 1=FAIL, 2=INVALID)"
   },
   "APPLICATION_REPUTATION_SERVER_VERDICT": {
-    "expires_in_version": "never",
+    "expires_in_version": "52",
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1272788],
     "kind": "enumerated",
     "n_values": 8,
     "description": "Application reputation remote response (0=SAFE, 1=DANGEROUS, 2=UNCOMMON, 3=POTENTIALLY_UNWANTED, 4=DANGEROUS_HOST)"

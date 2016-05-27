@@ -9,9 +9,14 @@
  */
 
 const TAB_URL = EXAMPLE_URL + "doc_blackboxing.html";
+const SCRIPT_URL = EXAMPLE_URL + "code_blackboxing_blackboxme.js";
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: SCRIPT_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     const gTab = aTab;
     const gPanel = aPanel;
     const gDebugger = gPanel.panelWin;
@@ -23,7 +28,6 @@ function test() {
     const getState = gDebugger.DebuggerController.getState;
 
     Task.spawn(function* () {
-      yield waitForSourceShown(gPanel, "");
       const source = getSourceForm(gSources, TAB_URL);
       let shown = ensureSourceIs(gPanel, TAB_URL, true);
       actions.selectSource(source);

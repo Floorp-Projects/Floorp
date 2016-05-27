@@ -13,22 +13,27 @@ var gTab, gPanel, gDebugger;
 var gEditor, gSources;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  // Wait for debugger panel to be fully set and break on debugger statement
+  let options = {
+    source: "code_ugly.js",
+    line: 2
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gEditor = gDebugger.DebuggerView.editor;
     gSources = gDebugger.DebuggerView.Sources;
 
-    waitForSourceShown(gPanel, "code_ugly.js")
-      .then(testSourceIsUgly)
+    testSourceIsUgly();
+    const finished = waitForCaretUpdated(gPanel, 7);
+    clickPrettyPrintButton();
+    finished.then(testSourceIsPretty)
       .then(() => {
-        const finished = waitForSourceShown(gPanel, "code_ugly.js");
-        clickPrettyPrintButton();
+        const finished = waitForCaretUpdated(gPanel, 7);
+        reloadActiveTab(gPanel);
         return finished;
       })
-      .then(testSourceIsPretty)
-      .then(reloadActiveTab.bind(null, gPanel, gDebugger.EVENTS.SOURCE_SHOWN))
       .then(testSourceIsPretty)
       .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
       .then(null, aError => {

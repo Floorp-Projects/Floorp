@@ -10,13 +10,16 @@ const TAB_URL = EXAMPLE_URL + "doc_closures.html";
 function test() {
   let gPanel, gTab, gDebugger;
 
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: TAB_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
 
-    waitForSourceShown(gPanel, ".html")
-      .then(testClosure)
+    testClosure()
       .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
       .then(null, aError => {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
