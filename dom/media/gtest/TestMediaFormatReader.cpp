@@ -14,6 +14,7 @@
 #include "MP4Decoder.h"
 #include "MockMediaDecoderOwner.h"
 #include "MockMediaResource.h"
+#include "VideoFrameContainer.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
