@@ -2906,7 +2906,6 @@ nsPluginInstanceOwner::Destroy()
   content->RemoveEventListener(NS_LITERAL_STRING("keydown"), this, true);
   content->RemoveEventListener(NS_LITERAL_STRING("keyup"), this, true);
   content->RemoveEventListener(NS_LITERAL_STRING("drop"), this, true);
-  content->RemoveEventListener(NS_LITERAL_STRING("dragdrop"), this, true);
   content->RemoveEventListener(NS_LITERAL_STRING("drag"), this, true);
   content->RemoveEventListener(NS_LITERAL_STRING("dragenter"), this, true);
   content->RemoveEventListener(NS_LITERAL_STRING("dragover"), this, true);
@@ -3305,7 +3304,6 @@ nsresult nsPluginInstanceOwner::Init(nsIContent* aContent)
   aContent->AddEventListener(NS_LITERAL_STRING("keydown"), this, true);
   aContent->AddEventListener(NS_LITERAL_STRING("keyup"), this, true);
   aContent->AddEventListener(NS_LITERAL_STRING("drop"), this, true);
-  aContent->AddEventListener(NS_LITERAL_STRING("dragdrop"), this, true);
   aContent->AddEventListener(NS_LITERAL_STRING("drag"), this, true);
   aContent->AddEventListener(NS_LITERAL_STRING("dragenter"), this, true);
   aContent->AddEventListener(NS_LITERAL_STRING("dragover"), this, true);
