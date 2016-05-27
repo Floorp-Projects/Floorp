@@ -382,6 +382,10 @@ WebMDemuxer::ReadMetadata()
       if (!r) {
         mInfo.mVideo.mDuration = media::TimeUnit::FromNanoseconds(duration).ToMicroseconds();
       }
+      mInfo.mVideo.mCrypto = GetTrackCrypto(TrackInfo::kVideoTrack, track);
+      if (mInfo.mVideo.mCrypto.mValid) {
+        mCrypto.AddInitData(NS_LITERAL_STRING("webm"), mInfo.mVideo.mCrypto.mKeyId);
+      }
     } else if (type == NESTEGG_TRACK_AUDIO && !mHasAudio) {
       nestegg_audio_params params;
       r = nestegg_track_audio_params(context, track, &params);
@@ -443,6 +447,10 @@ WebMDemuxer::ReadMetadata()
       r = nestegg_duration(context, &duration);
       if (!r) {
         mInfo.mAudio.mDuration = media::TimeUnit::FromNanoseconds(duration).ToMicroseconds();
+      }
+      mInfo.mAudio.mCrypto = GetTrackCrypto(TrackInfo::kAudioTrack, track);
+      if (mInfo.mAudio.mCrypto.mValid) {
+        mCrypto.AddInitData(NS_LITERAL_STRING("webm"), mInfo.mAudio.mCrypto.mKeyId);
       }
     }
   }
@@ -507,7 +515,38 @@ WebMDemuxer::NotifyDataRemoved()
 UniquePtr<EncryptionInfo>
 WebMDemuxer::GetCrypto()
 {
-  return nullptr;
+  return mCrypto.IsEncrypted() ? MakeUnique<EncryptionInfo>(mCrypto) : nullptr;
+}
+
+CryptoTrack
+WebMDemuxer::GetTrackCrypto(TrackInfo::TrackType aType, size_t aTrackNumber) {
+  const int WEBM_IV_SIZE = 16;
+  const unsigned char * contentEncKeyId;
+  size_t contentEncKeyIdLength;
+  CryptoTrack crypto;
+  nestegg* context = Context(aType);
+
+  int r = nestegg_track_content_enc_key_id(context, aTrackNumber, &contentEncKeyId, &contentEncKeyIdLength);
+
+  if (r == -1) {
+    WEBM_DEBUG("nestegg_track_content_enc_key_id failed r=%d", r);
+    return crypto;
+  }
+
+  uint32_t i;
+  nsTArray<uint8_t> initData;
+  for (i = 0; i < contentEncKeyIdLength; i++) {
+    initData.AppendElement(contentEncKeyId[i]);
+  }
+
+  if (!initData.IsEmpty()) {
+    crypto.mValid = true;
+    // crypto.mMode is not used for WebMs
+    crypto.mIVSize = WEBM_IV_SIZE;
+    crypto.mKeyId = Move(initData);
+  }
+
+  return crypto;
 }
 
 bool
@@ -577,6 +616,8 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSampl
   int64_t discardPadding = 0;
   (void) nestegg_packet_discard_padding(holder->Packet(), &discardPadding);
 
+  int packetEncryption = nestegg_packet_encryption(holder->Packet());
+
   for (uint32_t i = 0; i < count; ++i) {
     unsigned char* data;
     size_t length;
@@ -589,29 +630,34 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSampl
     if (aType == TrackInfo::kAudioTrack) {
       isKeyframe = true;
     } else if (aType == TrackInfo::kVideoTrack) {
-      vpx_codec_stream_info_t si;
-      PodZero(&si);
-      si.sz = sizeof(si);
-      switch (mVideoCodec) {
+      if (packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_ENCRYPTED) {
+        // Packet is encrypted, can't peek, use packet info
+        isKeyframe = nestegg_packet_has_keyframe(holder->Packet()) == NESTEGG_PACKET_HAS_KEYFRAME_TRUE;
+      } else {
+        vpx_codec_stream_info_t si;
+        PodZero(&si);
+        si.sz = sizeof(si);
+        switch (mVideoCodec) {
         case NESTEGG_CODEC_VP8:
           vpx_codec_peek_stream_info(vpx_codec_vp8_dx(), data, length, &si);
           break;
         case NESTEGG_CODEC_VP9:
           vpx_codec_peek_stream_info(vpx_codec_vp9_dx(), data, length, &si);
           break;
-      }
-      isKeyframe = si.is_kf;
-      if (isKeyframe) {
-        // We only look for resolution changes on keyframes for both VP8 and
-        // VP9. Other resolution changes are invalid.
-        if (mLastSeenFrameWidth.isSome() && mLastSeenFrameHeight.isSome() &&
-            (si.w != mLastSeenFrameWidth.value() ||
-             si.h != mLastSeenFrameHeight.value())) {
-          mInfo.mVideo.mDisplay = nsIntSize(si.w, si.h);
-          mSharedVideoTrackInfo = new SharedTrackInfo(mInfo.mVideo, ++sStreamSourceID);
         }
-        mLastSeenFrameWidth = Some(si.w);
-        mLastSeenFrameHeight = Some(si.h);
+        isKeyframe = si.is_kf;
+        if (isKeyframe) {
+          // We only look for resolution changes on keyframes for both VP8 and
+          // VP9. Other resolution changes are invalid.
+          if (mLastSeenFrameWidth.isSome() && mLastSeenFrameHeight.isSome() &&
+            (si.w != mLastSeenFrameWidth.value() ||
+              si.h != mLastSeenFrameHeight.value())) {
+            mInfo.mVideo.mDisplay = nsIntSize(si.w, si.h);
+            mSharedVideoTrackInfo = new SharedTrackInfo(mInfo.mVideo, ++sStreamSourceID);
+          }
+          mLastSeenFrameWidth = Some(si.w);
+          mLastSeenFrameHeight = Some(si.h);
+        }
       }
     }
 
@@ -628,6 +674,31 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSampl
       BigEndian::writeInt64(&c[0], discardPadding);
       sample->mExtraData = new MediaByteBuffer;
       sample->mExtraData->AppendElements(&c[0], 8);
+    }
+
+    if (packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_UNENCRYPTED ||
+        packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_ENCRYPTED) {
+      nsAutoPtr<MediaRawDataWriter> writer(sample->CreateWriter());
+      unsigned char const* iv;
+      size_t ivLength;
+      nestegg_packet_iv(holder->Packet(), &iv, &ivLength);
+      writer->mCrypto.mValid = true;
+      writer->mCrypto.mIVSize = ivLength;
+      if (ivLength == 0) {
+        // Frame is not encrypted
+        writer->mCrypto.mPlainSizes.AppendElement(length);
+        writer->mCrypto.mEncryptedSizes.AppendElement(0);
+      } else {
+        // Frame is encrypted
+        writer->mCrypto.mIV.AppendElements(iv, 8);
+        // Iv from a sample is 64 bits, must be padded with 64 bits more 0s
+        // in compliance with spec
+        for (uint32_t i = 0; i < 8; i++) {
+          writer->mCrypto.mIV.AppendElement(0);
+        }
+        writer->mCrypto.mPlainSizes.AppendElement(0);
+        writer->mCrypto.mEncryptedSizes.AppendElement(length);
+      }
     }
     if (aType == TrackInfo::kVideoTrack) {
       sample->mTrackInfo = mSharedVideoTrackInfo;
@@ -986,6 +1057,14 @@ WebMTrackDemuxer::Reset()
 void
 WebMTrackDemuxer::UpdateSamples(nsTArray<RefPtr<MediaRawData>>& aSamples)
 {
+  for (const auto& sample : aSamples) {
+    if (sample->mCrypto.mValid) {
+      nsAutoPtr<MediaRawDataWriter> writer(sample->CreateWriter());
+      writer->mCrypto.mMode = mInfo->mCrypto.mMode;
+      writer->mCrypto.mIVSize = mInfo->mCrypto.mIVSize;
+      writer->mCrypto.mKeyId.AppendElements(mInfo->mCrypto.mKeyId);
+    }
+  }
   if (mNextKeyframeTime.isNothing() ||
       aSamples.LastElement()->mTime >= mNextKeyframeTime.value().ToMicroseconds()) {
     SetNextKeyFrameTime();

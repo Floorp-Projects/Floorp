@@ -33,6 +33,8 @@ public:
   static bool CanHandleMediaType(const nsACString& aMIMETypeExcludingCodecs,
                                  const nsAString& aCodecs);
 
+  static bool CanHandleMediaType(const nsAString& aContentType);
+
   void GetMozDebugReaderData(nsAString& aString) override;
 
 private:
