@@ -1019,7 +1019,7 @@ nsDocShellTreeOwner::HandleEvent(nsIDOMEvent* aEvent)
     nsAutoString eventType;
     aEvent->GetType(eventType);
     if (eventType.EqualsLiteral("dragover")) {
-      bool canDropLink;
+      bool canDropLink = false;
       handler->CanDropLink(dragEvent, false, &canDropLink);
       if (canDropLink) {
         aEvent->PreventDefault();

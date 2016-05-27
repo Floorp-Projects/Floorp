@@ -119,6 +119,20 @@ public:
     return mRowPointer;
   }
 
+  /**
+   * Called by WritePixels() and WriteRows() to advance this filter to the next
+   * row.
+   *
+   * @return a pointer to the buffer for the next row, or nullptr to indicate
+   *         that we've finished the entire surface.
+   */
+  uint8_t* AdvanceRow()
+  {
+    mCol = 0;
+    mRowPointer = DoAdvanceRow();
+    return mRowPointer;
+  }
+
   /// @return a pointer to the buffer for the current row.
   uint8_t* CurrentRowPointer() const { return mRowPointer; }
 
@@ -191,9 +205,7 @@ public:
         }
       }
 
-      // We've finished the row.
-      mRowPointer = AdvanceRow();
-      mCol = 0;
+      AdvanceRow();  // We've finished the row.
     }
 
     // We've finished the entire surface.
@@ -244,8 +256,7 @@ public:
 
       Maybe<WriteState> result = aFunc(rowPtr, mInputSize.width);
       if (result != Some(WriteState::FAILURE)) {
-        mCol = 0;
-        mRowPointer = AdvanceRow();  // We've finished the row.
+        AdvanceRow();  // We've finished the row.
       }
 
       if (IsSurfaceFinished()) {
@@ -276,15 +287,6 @@ public:
   virtual bool IsValidPalettedPipe() const { return false; }
 
   /**
-   * Called by WritePixels() and WriteRows() to advance this filter to the next
-   * row.
-   *
-   * @return a pointer to the buffer for the next row, or nullptr to indicate
-   *         that we've finished the entire surface.
-   */
-  virtual uint8_t* AdvanceRow() = 0;
-
-  /**
    * @return a SurfaceInvalidRect representing the region of the surface that
    *         has been written to since the last time TakeInvalidRect() was
    *         called, or Nothing() if the region is empty (i.e. nothing has been
@@ -300,6 +302,14 @@ protected:
    * written to on every pass.
    */
   virtual uint8_t* DoResetToFirstRow() = 0;
+
+  /**
+   * Called by AdvanceRow() to actually advance this filter to the next row.
+   *
+   * @return a pointer to the buffer for the next row, or nullptr to indicate
+   *         that we've finished the entire surface.
+   */
+  virtual uint8_t* DoAdvanceRow() = 0;
 
 
   //////////////////////////////////////////////////////////////////////////////
@@ -360,10 +370,10 @@ public:
   nsresult Configure(const NullSurfaceConfig& aConfig);
 
   Maybe<SurfaceInvalidRect> TakeInvalidRect() override { return Nothing(); }
-  uint8_t* AdvanceRow() override { return nullptr; }
 
 protected:
   uint8_t* DoResetToFirstRow() override { return nullptr; }
+  uint8_t* DoAdvanceRow() override { return nullptr; }
 
 private:
   static UniquePtr<NullSurfaceSink> sSingleton;  /// The singleton instance.
@@ -478,10 +488,10 @@ public:
   { }
 
   Maybe<SurfaceInvalidRect> TakeInvalidRect() override final;
-  uint8_t* AdvanceRow() override final;
 
 protected:
   uint8_t* DoResetToFirstRow() override final;
+  uint8_t* DoAdvanceRow() override final;
   virtual uint8_t* GetRowPointer() const = 0;
 
   gfx::IntRect mInvalidRect;  /// The region of the surface that has been written

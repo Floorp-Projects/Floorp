@@ -148,6 +148,7 @@ class TryOptionSyntax(object):
         self.build_types = []
         self.platforms = []
         self.unittests = []
+        self.talos = []
         self.trigger_tests = 0
         self.interactive = False
 
@@ -167,6 +168,7 @@ class TryOptionSyntax(object):
         parser.add_argument('-b', '--build', dest='build_types')
         parser.add_argument('-p', '--platform', nargs='?', dest='platforms', const='all', default='all')
         parser.add_argument('-u', '--unittests', nargs='?', dest='unittests', const='all', default='all')
+        parser.add_argument('-t', '--talos', nargs='?', dest='talos', const='all', default='all')
         parser.add_argument('-i', '--interactive', dest='interactive', action='store_true', default=False)
         parser.add_argument('-j', '--job', dest='jobs', action='append')
         # In order to run test jobs multiple times
@@ -176,7 +178,8 @@ class TryOptionSyntax(object):
         self.jobs = self.parse_jobs(args.jobs)
         self.build_types = self.parse_build_types(args.build_types)
         self.platforms = self.parse_platforms(args.platforms)
-        self.unittests = self.parse_unittests(args.unittests, full_task_graph)
+        self.unittests = self.parse_test_option("unittest_try_name", args.unittests, full_task_graph)
+        self.talos = self.parse_test_option("talos_try_name", args.talos, full_task_graph)
         self.trigger_tests = args.trigger_tests
         self.interactive = args.interactive
 
@@ -207,32 +210,34 @@ class TryOptionSyntax(object):
 
         return results
 
-    def parse_unittests(self, unittest_arg, full_task_graph):
+    def parse_test_option(self, attr_name, test_arg, full_task_graph):
         '''
-        Parse a unittest (-u) option, in the context of a full task graph containing
-        available `unittest_try_name` attributes.  There are three cases:
 
-            - unittest_arg is == 'none' (meaning an empty list)
-            - unittest_arg is == 'all' (meaning use the list of jobs for that job type)
-            - unittest_arg is comma string which needs to be parsed
+        Parse a unittest (-u) or talos (-t) option, in the context of a full
+        task graph containing available `unittest_try_name` or `talos_try_name`
+        attributes.  There are three cases:
+
+            - test_arg is == 'none' (meaning an empty list)
+            - test_arg is == 'all' (meaning use the list of jobs for that job type)
+            - test_arg is comma string which needs to be parsed
         '''
 
         # Empty job list case...
-        if unittest_arg is None or unittest_arg == 'none':
+        if test_arg is None or test_arg == 'none':
             return []
 
         all_platforms = set(t.attributes['test_platform']
                             for t in full_task_graph.tasks.itervalues()
                             if 'test_platform' in t.attributes)
 
-        tests = self.parse_test_opts(unittest_arg, all_platforms)
+        tests = self.parse_test_opts(test_arg, all_platforms)
 
         if not tests:
             return []
 
-        all_tests = set(t.attributes['unittest_try_name']
+        all_tests = set(t.attributes[attr_name]
                         for t in full_task_graph.tasks.itervalues()
-                        if 'unittest_try_name' in t.attributes)
+                        if attr_name in t.attributes)
 
         # Special case where tests is 'all' and must be expanded
         if tests[0]['test'] == 'all':
@@ -429,6 +434,27 @@ class TryOptionSyntax(object):
 
     def task_matches(self, attributes):
         attr = attributes.get
+
+        def match_test(try_spec, attr_name):
+            if attr('build_type') not in self.build_types:
+                return False
+            if self.platforms is not None:
+                if attr('build_platform') not in self.platforms:
+                    return False
+            if try_spec is not None:
+                # TODO: optimize this search a bit
+                for test in try_spec:
+                    if attr(attr_name) == test['test']:
+                        break
+                else:
+                    return False
+                if 'platforms' in test and attr('test_platform') not in test['platforms']:
+                    return False
+                if 'only_chunks' in test and attr('test_chunk') not in test['only_chunks']:
+                    return False
+                return True
+            return True
+
         if attr('kind') == 'legacy':
             if attr('legacy_kind') in ('build', 'post_build'):
                 if attr('build_type') not in self.build_types:
@@ -443,24 +469,9 @@ class TryOptionSyntax(object):
                         return False
                 return True
             elif attr('legacy_kind') == 'unittest':
-                if attr('build_type') not in self.build_types:
-                    return False
-                if self.platforms is not None:
-                    if attr('build_platform') not in self.platforms:
-                        return False
-                if self.unittests is not None:
-                    # TODO: optimize this search a bit
-                    for ut in self.unittests:
-                        if attr('unittest_try_name') == ut['test']:
-                            break
-                    else:
-                        return False
-                    if 'platforms' in ut and attr('test_platform') not in ut['platforms']:
-                        return False
-                    if 'only_chunks' in ut and attr('test_chunk') not in ut['only_chunks']:
-                        return False
-                    return True
-                return True
+                return match_test(self.unittests, 'unittest_try_name')
+            elif attr('legacy_kind') == 'talos':
+                return match_test(self.talos, 'talos_try_name')
             return False
         else:
             # TODO: match other kinds

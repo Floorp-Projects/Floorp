@@ -388,7 +388,8 @@ function GetCookiesResource(aProfileFolder) {
                                    row.getResultByName("secure"),
                                    row.getResultByName("httponly"),
                                    false,
-                                   parseInt(expiresUtc));
+                                   parseInt(expiresUtc),
+                                   {});
             } catch (e) {
               Cu.reportError(e);
             }

@@ -427,10 +427,10 @@ struct JSCompartment
      * For generational GC, record whether a write barrier has added this
      * compartment's global to the store buffer since the last minor GC.
      *
-     * This is used to avoid calling into the VM every time a nursery object is
-     * written to a property of the global.
+     * This is used to avoid adding it to the store buffer on every write, which
+     * can quickly fill the buffer and also cause performance problems.
      */
-    uint32_t                     globalWriteBarriered;
+    bool                         globalWriteBarriered;
 
     // Non-zero if the storage underlying any typed object in this compartment
     // might be detached.
