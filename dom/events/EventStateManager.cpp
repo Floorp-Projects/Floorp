@@ -3432,32 +3432,6 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
   case eDrop:
     {
-      // now fire the dragdrop event, for compatibility with XUL
-      if (mCurrentTarget && nsEventStatus_eConsumeNoDefault != *aStatus) {
-        nsCOMPtr<nsIContent> targetContent;
-        mCurrentTarget->GetContentForEvent(aEvent,
-                                           getter_AddRefs(targetContent));
-
-        nsCOMPtr<nsIWidget> widget = mCurrentTarget->GetNearestWidget();
-        WidgetDragEvent event(aEvent->IsTrusted(), eLegacyDragDrop, widget);
-
-        WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
-        event.mRefPoint = mouseEvent->mRefPoint;
-        if (mouseEvent->mWidget) {
-          event.mRefPoint += mouseEvent->mWidget->WidgetToScreenOffset();
-        }
-        event.mRefPoint -= widget->WidgetToScreenOffset();
-        event.mModifiers = mouseEvent->mModifiers;
-        event.buttons = mouseEvent->buttons;
-        event.inputSource = mouseEvent->inputSource;
-
-        nsEventStatus status = nsEventStatus_eIgnore;
-        nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
-        if (presShell) {
-          presShell->HandleEventWithTarget(&event, mCurrentTarget,
-                                           targetContent, &status);
-        }
-      }
       sLastDragOverFrame = nullptr;
       ClearGlobalActiveContent(this);
       break;
