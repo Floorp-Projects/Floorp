@@ -101,7 +101,6 @@ using JS::GCHashSet;
 
 using JS::CallArgs;
 using JS::CallNonGenericMethod;
-using JS::CallReceiver;
 using JS::CompileOptions;
 using JS::IsAcceptableThis;
 using JS::NativeImpl;
