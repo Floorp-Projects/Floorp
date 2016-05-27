@@ -175,6 +175,7 @@ html|button {
 /* xul buttons and menulists */
 
 *|button,
+html|select,
 xul|colorpicker[type="button"],
 xul|menulist {
   -moz-appearance: none;
@@ -190,6 +191,7 @@ xul|menulist {
 }
 
 html|button:enabled:hover,
+html|select:enabled:hover,
 xul|button:not([disabled="true"]):hover,
 xul|colorpicker[type="button"]:not([disabled="true"]):hover,
 xul|menulist:not([disabled="true"]):hover {
@@ -197,6 +199,7 @@ xul|menulist:not([disabled="true"]):hover {
 }
 
 html|button:enabled:hover:active,
+html|select:enabled:hover:active,
 xul|button:not([disabled="true"]):hover:active,
 xul|colorpicker[type="button"]:not([disabled="true"]):hover:active,
 xul|menulist[open="true"]:not([disabled="true"]) {
@@ -204,6 +207,7 @@ xul|menulist[open="true"]:not([disabled="true"]) {
 }
 
 html|button:disabled,
+html|select:disabled,
 xul|button[disabled="true"],
 xul|colorpicker[type="button"][disabled="true"],
 xul|menulist[disabled="true"] {
