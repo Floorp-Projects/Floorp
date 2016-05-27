@@ -60,7 +60,6 @@ class TestClickScrolling(MarionetteTestCase):
         y_offset = self.marionette.execute_script("return arguments[0].scrollTop;", script_args=[list_el])
         self.assertEqual(0, y_offset)
 
-    @skip("Bug 1003688")
     def test_should_not_scroll_if_already_scrolled_and_element_is_in_view(self):
         test_html = self.marionette.absolute_url("scroll3.html")
         self.marionette.navigate(test_html)
