@@ -343,6 +343,15 @@ Tooltip.prototype = {
   },
 
   /**
+   * Returns the outer container node (that includes the arrow etc.). Happens
+   * to be identical to this.panel here, can be different element in other
+   * Tooltip implementations.
+   */
+  get container() {
+    return this.panel;
+  },
+
+  /**
    * Set the content of this tooltip. Will first empty the tooltip and then
    * append the new content element.
    * Consider using one of the set<type>Content() functions instead.
