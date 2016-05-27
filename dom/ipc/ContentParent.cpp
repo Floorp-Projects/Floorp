@@ -4922,9 +4922,9 @@ ContentParent::RecvBackUpXResources(const FileDescriptor& aXSocketFd)
 #else
   MOZ_ASSERT(0 > mChildXSocketFdDup.get(),
              "Already backed up X resources??");
-  mChildXSocketFdDup.forget();
   if (aXSocketFd.IsValid()) {
-    mChildXSocketFdDup.reset(aXSocketFd.PlatformHandle());
+    auto rawFD = aXSocketFd.ClonePlatformHandle();
+    mChildXSocketFdDup.reset(rawFD.release());
   }
 #endif
   return true;
