@@ -81,7 +81,7 @@ MessagePump::Run(MessagePump::Delegate* aDelegate)
 {
   MOZ_ASSERT(keep_running_);
   MOZ_RELEASE_ASSERT(NS_IsMainThread(),
-		     "Use mozilla::ipc::MessagePumpForNonMainThreads instead!");
+                     "Use mozilla::ipc::MessagePumpForNonMainThreads instead!");
   MOZ_RELEASE_ASSERT(!mThread);
 
   nsIThread* thisThread = NS_GetCurrentThread();
@@ -172,7 +172,7 @@ MessagePump::ScheduleDelayedWork(const base::TimeTicks& aDelayedTime)
   // To avoid racing on mDelayedWorkTimer, we need to be on the same thread as
   // ::Run().
   MOZ_RELEASE_ASSERT(NS_GetCurrentThread() == mThread ||
-		     (!mThread && NS_IsMainThread()));
+                     (!mThread && NS_IsMainThread()));
 
   if (!mDelayedWorkTimer) {
     mDelayedWorkTimer = do_CreateInstance(kNS_TIMER_CID);
@@ -222,7 +222,7 @@ MessagePump::DoDelayedWork(base::MessagePump::Delegate* aDelegate)
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(DoWorkRunnable, CancelableRunnable,
-			    nsITimerCallback)
+                            nsITimerCallback)
 
 NS_IMETHODIMP
 DoWorkRunnable::Run()

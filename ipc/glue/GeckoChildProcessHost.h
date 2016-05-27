@@ -196,7 +196,7 @@ private:
                                   base::ProcessArchitecture arch);
 
   bool RunPerformAsyncLaunch(StringVector aExtraOpts=StringVector(),
-			     base::ProcessArchitecture aArch=base::GetCurrentProcessArchitecture());
+                             base::ProcessArchitecture aArch=base::GetCurrentProcessArchitecture());
 
   static void GetPathToBinary(FilePath& exePath);
 
