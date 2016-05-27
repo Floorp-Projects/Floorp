@@ -49,6 +49,7 @@ TEST_HARNESS_FILES.gtest += [
     'no-frame-delay.gif',
     'rle4.bmp',
     'rle8.bmp',
+    'transparent-ico-with-and-mask.ico',
     'transparent-if-within-ico.bmp',
     'transparent.gif',
     'transparent.png',
