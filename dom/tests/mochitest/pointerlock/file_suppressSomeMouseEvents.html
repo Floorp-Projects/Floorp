@@ -137,23 +137,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
           synthesizeMouseAtCenter(child, { type: "mousemove" }, window);
         }
         else {
+          addFullscreenChangeContinuation("exit", function() {
+            runTests();
+            SimpleTest.finish();
+          });
           document.exitFullscreen();
-        }
-      }, false);
-
-      document.addEventListener("fullscreenchange", function() {
-        if (document.fullscreenElement === parent) {
-          parent.mozRequestPointerLock();
-        }
-        else {
-          runTests();
-          SimpleTest.finish();
         }
       }, false);
 
       function start() {
         parent = document.getElementById("parent");
         child = document.getElementById("child");
+        addFullscreenChangeContinuation("enter", function() {
+          parent.mozRequestPointerLock();
+        });
         parent.requestFullscreen();
       }
   </script>
