@@ -28,8 +28,8 @@ factory((root.pdfjsDistBuildPdfWorker = {}));
   // Use strict in our context only - users might not want it
   'use strict';
 
-var pdfjsVersion = '1.5.256';
-var pdfjsBuild = '1c04335';
+var pdfjsVersion = '1.5.276';
+var pdfjsBuild = '41f978c';
 
   var pdfjsFilePath =
     typeof document !== 'undefined' && document.currentScript ?
@@ -4457,6 +4457,11 @@ var CFFDict = (function CFFDictClosure() {
       // remove the array wrapping these types of values
       if (type === 'num' || type === 'sid' || type === 'offset') {
         value = value[0];
+        // Ignore invalid values (fixes bug 1068432).
+        if (isNaN(value)) {
+          warn('Invalid CFFDict value: ' + value + ', for key: ' + key + '.');
+          return true;
+        }
       }
       this.values[key] = value;
       return true;
@@ -37199,7 +37204,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
           textState = stateManager.state;
           var fn = operation.fn;
           args = operation.args;
-          var advance;
+          var advance, diff;
 
           switch (fn | 0) {
             case OPS.setFont:
@@ -37232,8 +37237,8 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                   (args[0] - textContentItem.lastAdvanceWidth);
                 textContentItem.height +=
                   (args[1] - textContentItem.lastAdvanceHeight);
-                var diff = (args[0] - textContentItem.lastAdvanceWidth) -
-                           (args[1] - textContentItem.lastAdvanceHeight);
+                diff = (args[0] - textContentItem.lastAdvanceWidth) -
+                       (args[1] - textContentItem.lastAdvanceHeight);
                 addFakeSpaces(diff, textContentItem.str);
                 break;
               }
@@ -37253,6 +37258,24 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
               textState.carriageReturn();
               break;
             case OPS.setTextMatrix:
+              // Optimization to treat same line movement as advance.
+              advance = textState.calcTextLineMatrixAdvance(
+                args[0], args[1], args[2], args[3], args[4], args[5]);
+              if (advance !== null && textContentItem.initialized &&
+                  advance.value > 0 &&
+                  advance.value <= textContentItem.fakeMultiSpaceMax) {
+                textState.translateTextLineMatrix(advance.width,
+                                                  advance.height);
+                textContentItem.width +=
+                  (advance.width - textContentItem.lastAdvanceWidth);
+                textContentItem.height +=
+                  (advance.height - textContentItem.lastAdvanceHeight);
+                diff = (advance.width - textContentItem.lastAdvanceWidth) -
+                       (advance.height - textContentItem.lastAdvanceHeight);
+                addFakeSpaces(diff, textContentItem.str);
+                break;
+              }
+
               flushTextContentItem();
               textState.setTextMatrix(args[0], args[1], args[2], args[3],
                 args[4], args[5]);
@@ -38350,6 +38373,30 @@ var TextState = (function TextStateClosure() {
       m[4] = m[0] * x + m[2] * y + m[4];
       m[5] = m[1] * x + m[3] * y + m[5];
     },
+    calcTextLineMatrixAdvance:
+        function TextState_calcTextLineMatrixAdvance(a, b, c, d, e, f) {
+      var font = this.font;
+      if (!font) {
+        return null;
+      }
+      var m = this.textLineMatrix;
+      if (!(a === m[0] && b === m[1] && c === m[2] && d === m[3])) {
+        return null;
+      }
+      var txDiff = e - m[4], tyDiff = f - m[5];
+      if ((font.vertical && txDiff !== 0) || (!font.vertical && tyDiff !== 0)) {
+        return null;
+      }
+      var tx, ty, denominator = a * d - b * c;
+      if (font.vertical) {
+        tx = -tyDiff * c / denominator;
+        ty = tyDiff * a / denominator;
+      } else {
+        tx = txDiff * d / denominator;
+        ty = -txDiff * b / denominator;
+      }
+      return { width: tx, height: ty, value: (font.vertical ? ty : tx), };
+    },
     calcRenderMatrix: function TextState_calcRendeMatrix(ctm) {
       // 9.4.4 Text Space Details
       var tsm = [this.fontSize * this.textHScale, 0,
@@ -39203,27 +39250,48 @@ var Annotation = (function AnnotationClosure() {
 
   Annotation.prototype = {
     /**
+     * @private
+     */
+    _hasFlag: function Annotation_hasFlag(flags, flag) {
+      return !!(flags & flag);
+    },
+
+    /**
+     * @private
+     */
+    _isViewable: function Annotation_isViewable(flags) {
+      return !this._hasFlag(flags, AnnotationFlag.INVISIBLE) &&
+             !this._hasFlag(flags, AnnotationFlag.HIDDEN) &&
+             !this._hasFlag(flags, AnnotationFlag.NOVIEW);
+    },
+
+    /**
+     * @private
+     */
+    _isPrintable: function AnnotationFlag_isPrintable(flags) {
+      return this._hasFlag(flags, AnnotationFlag.PRINT) &&
+             !this._hasFlag(flags, AnnotationFlag.INVISIBLE) &&
+             !this._hasFlag(flags, AnnotationFlag.HIDDEN);
+    },
+
+    /**
      * @return {boolean}
      */
     get viewable() {
-      if (this.flags) {
-        return !this.hasFlag(AnnotationFlag.INVISIBLE) &&
-               !this.hasFlag(AnnotationFlag.HIDDEN) &&
-               !this.hasFlag(AnnotationFlag.NOVIEW);
+      if (this.flags === 0) {
+        return true;
       }
-      return true;
+      return this._isViewable(this.flags);
     },
 
     /**
      * @return {boolean}
      */
     get printable() {
-      if (this.flags) {
-        return this.hasFlag(AnnotationFlag.PRINT) &&
-               !this.hasFlag(AnnotationFlag.INVISIBLE) &&
-               !this.hasFlag(AnnotationFlag.HIDDEN);
+      if (this.flags === 0) {
+        return false;
       }
-      return false;
+      return this._isPrintable(this.flags);
     },
 
     /**
@@ -39236,11 +39304,7 @@ var Annotation = (function AnnotationClosure() {
      * @see {@link shared/util.js}
      */
     setFlags: function Annotation_setFlags(flags) {
-      if (isInt(flags)) {
-        this.flags = flags;
-      } else {
-        this.flags = 0;
-      }
+      this.flags = (isInt(flags) && flags > 0) ? flags : 0;
     },
 
     /**
@@ -39254,10 +39318,7 @@ var Annotation = (function AnnotationClosure() {
      * @see {@link shared/util.js}
      */
     hasFlag: function Annotation_hasFlag(flag) {
-      if (this.flags) {
-        return (this.flags & flag) > 0;
-      }
-      return false;
+      return this._hasFlag(this.flags, flag);
     },
 
     /**
@@ -39834,6 +39895,16 @@ var PopupAnnotation = (function PopupAnnotationClosure() {
     } else {
       this.setColor(parentItem.getArray('C'));
       this.data.color = this.color;
+    }
+
+    // If the Popup annotation is not viewable, but the parent annotation is,
+    // that is most likely a bug. Fallback to inherit the flags from the parent
+    // annotation (this is consistent with the behaviour in Adobe Reader).
+    if (!this.viewable) {
+      var parentFlags = parentItem.get('F');
+      if (this._isViewable(parentFlags)) {
+        this.setFlags(parentFlags);
+      }
     }
   }
 

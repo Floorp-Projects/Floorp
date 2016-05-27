@@ -7,7 +7,6 @@
 this.EXPORTED_SYMBOLS = ["TestRunner"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-const defaultSetNames = ["TabsInTitlebar", "Tabs", "WindowSize", "Toolbars", "LightweightThemes"];
 const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
 const HOME_PAGE = "chrome://mozscreenshots/content/lib/mozscreenshots.html";
 
@@ -51,9 +50,7 @@ this.TestRunner = {
   /**
    * Load specified sets, execute all combinations of them, and capture screenshots.
    */
-  start: Task.async(function*(setNames = null) {
-    setNames = setNames || defaultSetNames;
-
+  start: Task.async(function*(setNames, jobName = null) {
     let subDirs = ["mozscreenshots",
                    (new Date()).toISOString().replace(/:/g, "-") + "_" + Services.appinfo.OS];
     let screenshotPath = FileUtils.getFile("TmpD", subDirs).path;
@@ -65,7 +62,11 @@ this.TestRunner = {
 
     log.info("Saving screenshots to:", screenshotPath);
 
-    let screenshotPrefix = Services.appinfo.appBuildID + "_";
+    let screenshotPrefix = Services.appinfo.appBuildID;
+    if (jobName) {
+      screenshotPrefix += "-" + jobName;
+    }
+    screenshotPrefix += "_";
     Screenshot.init(screenshotPath, this._extensionPath, screenshotPrefix);
     this._libDir = this._extensionPath.QueryInterface(Ci.nsIFileURL).file.clone();
     this._libDir.append("chrome");

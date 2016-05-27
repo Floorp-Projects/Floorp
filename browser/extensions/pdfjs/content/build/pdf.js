@@ -28,8 +28,8 @@ factory((root.pdfjsDistBuildPdf = {}));
   // Use strict in our context only - users might not want it
   'use strict';
 
-var pdfjsVersion = '1.5.256';
-var pdfjsBuild = '1c04335';
+var pdfjsVersion = '1.5.276';
+var pdfjsBuild = '41f978c';
 
   var pdfjsFilePath =
     typeof document !== 'undefined' && document.currentScript ?
@@ -2812,7 +2812,6 @@ var Util = sharedUtil.Util;
 var createPromiseCapability = sharedUtil.createPromiseCapability;
 var CustomStyle = displayDOMUtils.CustomStyle;
 var getDefaultSetting = displayDOMUtils.getDefaultSetting;
-var PageViewport = sharedUtil.PageViewport;
 
 /**
  * Text layer render parameters.
