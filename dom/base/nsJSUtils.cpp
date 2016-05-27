@@ -381,15 +381,6 @@ nsJSUtils::ResetTimeZone()
 // nsDOMJSUtils.h
 //
 
-JSObject* GetDefaultScopeFromJSContext(JSContext *cx)
-{
-  // DOM JSContexts don't store their default compartment object on
-  // the cx, so in those cases we need to fetch it via the scx
-  // instead.
-  nsIScriptContext *scx = GetScriptContextFromJSContext(cx);
-  return  scx ? scx->GetWindowProxy() : nullptr;
-}
-
 bool nsAutoJSString::init(const JS::Value &v)
 {
   JSContext* cx = nsContentUtils::RootingCxForThread();
