@@ -28,6 +28,8 @@ const MSG_PROMISE_REQUEST  = "WebAPIPromiseRequest";
 const MSG_PROMISE_RESULT   = "WebAPIPromiseResult";
 const MSG_INSTALL_EVENT    = "WebAPIInstallEvent";
 const MSG_INSTALL_CLEANUP  = "WebAPICleanup";
+const MSG_ADDON_EVENT_REQ  = "WebAPIAddonEventRequest";
+const MSG_ADDON_EVENT      = "WebAPIAddonEvent";
 
 const CHILD_SCRIPT = "resource://gre/modules/addons/Content.js";
 
@@ -51,6 +53,7 @@ function amManager() {
   gParentMM.addMessageListener(MSG_INSTALL_ENABLED, this);
   gParentMM.addMessageListener(MSG_PROMISE_REQUEST, this);
   gParentMM.addMessageListener(MSG_INSTALL_CLEANUP, this);
+  gParentMM.addMessageListener(MSG_ADDON_EVENT_REQ, this);
 
   Services.obs.addObserver(this, "message-manager-close", false);
   Services.obs.addObserver(this, "message-manager-disconnect", false);
@@ -161,6 +164,8 @@ amManager.prototype = {
     AddonManagerPrivate.backgroundUpdateTimerHandler();
   },
 
+  addonListener: null,
+
   /**
    * messageManager callback function.
    *
@@ -220,6 +225,30 @@ amManager.prototype = {
       case MSG_INSTALL_CLEANUP: {
         AddonManager.webAPI.clearInstalls(payload.ids);
         break;
+      }
+
+      case MSG_ADDON_EVENT_REQ: {
+        if (payload.enabled) {
+          if (!this.addonListener) {
+            let target = aMessage.target;
+            let handler = (event, id, needsRestart) => {
+              target.sendAsyncMessage(MSG_ADDON_EVENT, {event, id, needsRestart});
+            };
+            this.addonListener = {
+              onEnabling: (addon, needsRestart) => handler("onEnabling", addon.id, needsRestart),
+              onEnabled: (addon) => handler("onEnabled", addon.id, false),
+              onDisabling: (addon, needsRestart) => handler("onDisabling", addon.id, needsRestart),
+              onDisabled: (addon) => handler("onDisabled", addon.id, false),
+              onInstalling: (addon, needsRestart) => handler("onInstalling", addon.id, needsRestart),
+              onInstalled: (addon) => handler("onInstalled", addon.id, false),
+              onUninstalling: (addon, needsRestart) => handler("onUninstalling", addon.id, needsRestart),
+              onUninstalled: (addon) => handler("onUninstalled", addon.id, false),
+            };
+          }
+          AddonManager.addAddonListener(this.addonListener);
+        } else {
+          AddonManager.removeAddonListener(this.addonListener);
+        }
       }
     }
     return undefined;
