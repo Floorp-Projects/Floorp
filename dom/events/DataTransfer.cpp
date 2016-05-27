@@ -616,8 +616,7 @@ DataTransfer::GetDataAtInternal(const nsAString& aFormat, uint32_t aIndex,
   // we only allow access to data of the same principal. During other events,
   // only allow access to the data with the same principal.
   bool checkFormatItemPrincipal = mIsCrossDomainSubFrameDrop ||
-      (mEventMessage != eDrop && mEventMessage != eLegacyDragDrop &&
-       mEventMessage != ePaste);
+      (mEventMessage != eDrop && mEventMessage != ePaste);
   MOZ_ASSERT(aSubjectPrincipal);
 
   RefPtr<DataTransferItem> item = mItems->MozItemByTypeAt(format, aIndex);
