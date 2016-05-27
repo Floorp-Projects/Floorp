@@ -17,7 +17,6 @@
 #include "gfxVROculus.h"
 #endif
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
-#include "gfxVROculus050.h"
 #include "gfxVROSVR.h"
 #endif
 #include "gfxVRCardboard.h"
@@ -47,27 +46,14 @@ VRManager::VRManager()
 
   RefPtr<VRHMDManager> mgr;
 
-  // we'll only load the 0.5.0 oculus runtime if
-  // the >= 0.6.0 one failed to load; otherwise
-  // we might initialize oculus twice
-  bool useOculus050 = true;
-  Unused << useOculus050;
-
 #if defined(XP_WIN)
   mgr = VRHMDManagerOculus::Create();
   if (mgr) {
-    useOculus050 = false;
     mManagers.AppendElement(mgr);
   }
 #endif
 
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
-  if (useOculus050) {
-    mgr = VRHMDManagerOculus050::Create();
-    if (mgr) {
-      mManagers.AppendElement(mgr);
-    }
-  }
   // OSVR is cross platform compatible
   mgr = VRHMDManagerOSVR::Create();
   if (mgr){
