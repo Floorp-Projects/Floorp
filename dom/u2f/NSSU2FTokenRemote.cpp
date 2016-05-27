@@ -10,7 +10,7 @@
 
 using mozilla::dom::ContentChild;
 
-NS_IMPL_ISUPPORTS(NSSU2FTokenRemote, nsINSSU2FToken)
+NS_IMPL_ISUPPORTS(NSSU2FTokenRemote, nsIU2FToken)
 
 static mozilla::LazyLogModule gWebauthLog("webauth_u2f");
 
@@ -19,12 +19,6 @@ NSSU2FTokenRemote::NSSU2FTokenRemote()
 
 NSSU2FTokenRemote::~NSSU2FTokenRemote()
 {}
-
-NS_IMETHODIMP
-NSSU2FTokenRemote::Init()
-{
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 NSSU2FTokenRemote::IsCompatibleVersion(const nsAString& aVersionString,

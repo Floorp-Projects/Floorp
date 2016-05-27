@@ -12,6 +12,7 @@
 #include "mozilla/dom/U2FBinding.h"
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
+#include "nsINSSU2FToken.h"
 #include "nsNetCID.h"
 #include "nsNSSComponent.h"
 #include "nsURLParsers.h"
@@ -590,6 +591,9 @@ U2F::Init(nsPIDOMWindowInner* aParent, ErrorResult& aRv)
     return;
   }
 
+  // Monolithically insert compatible nsIU2FToken objects into mAuthenticators.
+  // In future functionality expansions, this is where we could add a dynamic
+  // add/remove interface.
   if (Preferences::GetBool(PREF_U2F_SOFTTOKEN_ENABLED)) {
     if (!XRE_IsParentProcess()) {
       MOZ_LOG(gWebauthLog, LogLevel::Debug,
