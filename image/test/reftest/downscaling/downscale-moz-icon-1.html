@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Testcase for downscaling moz-icon images (bug 1261964)</title>
+  <style>
+    body { margin: 0; }
+    .downscale {
+      transform-origin: 0 0;
+      transform: scale(0.9);
+    }
+  </style>
+</head>
+<body>
+  <img class="downscale" src="moz-icon://bogus-unrecognized-icon?size=100">
+</body>
+</html>
