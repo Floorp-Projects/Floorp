@@ -90,6 +90,10 @@ CheckDecoderResults(const ImageTestCase& aTestCase, Decoder* aDecoder)
     return;
   }
 
+  if (aTestCase.mFlags & TEST_CASE_IGNORE_OUTPUT) {
+    return;
+  }
+
   // Check the output.
   EXPECT_TRUE(IsSolidColor(surface, BGRAColor::Green(),
                            aTestCase.mFlags & TEST_CASE_IS_FUZZY ? 1 : 0));
@@ -206,6 +210,10 @@ CheckDownscaleDuringDecode(const ImageTestCase& aTestCase)
     // set, so we expect to always get a surface here.
     EXPECT_TRUE(surface != nullptr);
 
+    if (aTestCase.mFlags & TEST_CASE_IGNORE_OUTPUT) {
+      return;
+    }
+
     // Check that the downscaled image is correct. Note that we skip rows near
     // the transitions between colors, since the downscaler does not produce a
     // sharp boundary at these points. Even some of the rows we test need a
@@ -290,6 +298,11 @@ TEST(ImageDecoders, ICOMultiChunk)
 TEST(ImageDecoders, ICODownscaleDuringDecode)
 {
   CheckDownscaleDuringDecode(DownscaledICOTestCase());
+}
+
+TEST(ImageDecoders, ICOWithANDMaskDownscaleDuringDecode)
+{
+  CheckDownscaleDuringDecode(DownscaledTransparentICOWithANDMaskTestCase());
 }
 
 TEST(ImageDecoders, IconSingleChunk)
