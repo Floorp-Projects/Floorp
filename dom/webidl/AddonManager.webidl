@@ -51,7 +51,7 @@ dictionary addonInstallOptions {
  Func="mozilla::AddonManagerWebAPI::IsAPIEnabled",
  NavigatorProperty="mozAddonManager",
  JSImplementation="@mozilla.org/addon-web-api/manager;1"]
-interface AddonManager {
+interface AddonManager : EventTarget {
   /**
    * Gets information about an add-on
    *
@@ -69,4 +69,10 @@ interface AddonManager {
    * @return A promise that resolves to an instance of AddonInstall.
    */
   Promise<AddonInstall> createInstall(optional addonInstallOptions options);
+
+  /* Hooks for managing event listeners */
+  [ChromeOnly]
+  void eventListenerWasAdded(DOMString type);
+  [ChromeOnly]
+  void eventListenerWasRemoved(DOMString type);
 };
