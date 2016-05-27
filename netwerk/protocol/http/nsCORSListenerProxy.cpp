@@ -999,6 +999,7 @@ class nsCORSPreflightListener final : public nsIStreamListener,
 public:
   nsCORSPreflightListener(nsIPrincipal* aReferrerPrincipal,
                           nsICorsPreflightCallback* aCallback,
+                          nsILoadContext* aLoadContext,
                           bool aWithCredentials,
                           const nsCString& aPreflightMethod,
                           const nsTArray<nsCString>& aPreflightHeaders)
@@ -1006,6 +1007,7 @@ public:
      mPreflightHeaders(aPreflightHeaders),
      mReferrerPrincipal(aReferrerPrincipal),
      mCallback(aCallback),
+     mLoadContext(aLoadContext),
      mWithCredentials(aWithCredentials)
   {
   }
@@ -1027,6 +1029,7 @@ private:
   nsTArray<nsCString> mPreflightHeaders;
   nsCOMPtr<nsIPrincipal> mReferrerPrincipal;
   nsCOMPtr<nsICorsPreflightCallback> mCallback;
+  nsCOMPtr<nsILoadContext> mLoadContext;
   bool mWithCredentials;
 };
 
@@ -1295,6 +1298,12 @@ nsCORSPreflightListener::CheckPreflightRequestApproved(nsIRequest* aRequest)
 NS_IMETHODIMP
 nsCORSPreflightListener::GetInterface(const nsIID & aIID, void **aResult)
 {
+  if (aIID.Equals(NS_GET_IID(nsILoadContext)) && mLoadContext) {
+    nsCOMPtr<nsILoadContext> copy = mLoadContext;
+    copy.forget(aResult);
+    return NS_OK;
+  }
+
   return QueryInterface(aIID, aResult);
 }
 
@@ -1369,6 +1378,15 @@ nsCORSListenerProxy::StartCORSPreflight(nsIChannel* aRequestChannel,
   rv = aRequestChannel->GetLoadGroup(getter_AddRefs(loadGroup));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // We want to give the preflight channel's notification callbacks the same
+  // load context as the original channel's notification callbacks had.  We
+  // don't worry about a load context provided via the loadgroup here, since
+  // they have the same loadgroup.
+  nsCOMPtr<nsIInterfaceRequestor> callbacks;
+  rv = aRequestChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(callbacks);
+
   nsLoadFlags loadFlags;
   rv = aRequestChannel->GetLoadFlags(&loadFlags);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1426,8 +1444,8 @@ nsCORSListenerProxy::StartCORSPreflight(nsIChannel* aRequestChannel,
 
   // Set up listener which will start the original channel
   RefPtr<nsCORSPreflightListener> preflightListener =
-    new nsCORSPreflightListener(principal, aCallback, withCredentials,
-                                method, preflightHeaders);
+    new nsCORSPreflightListener(principal, aCallback, loadContext,
+                                withCredentials, method, preflightHeaders);
 
   rv = preflightChannel->SetNotificationCallbacks(preflightListener);
   NS_ENSURE_SUCCESS(rv, rv);
