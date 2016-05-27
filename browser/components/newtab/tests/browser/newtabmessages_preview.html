@@ -11,10 +11,10 @@
         if (e.detail.message && e.detail.message.type === "RECEIVE_THUMB") {
           if (e.detail.message.data.imgData && e.detail.message.data.url === thumbURL) {
             let reply = new window.CustomEvent("WebChannelMessageToChrome", {
-              detail: JSON.stringify({
+              detail: {
                 id: "newtab",
                 message: JSON.stringify({type: "responseAck"}),
-              })
+              }
             });
             window.dispatchEvent(reply);
           }
@@ -24,10 +24,10 @@
       document.onreadystatechange = function () {
         if (document.readyState === "complete") {
           let msg = new window.CustomEvent("WebChannelMessageToChrome", {
-            detail: JSON.stringify({
+            detail: {
               id: "newtab",
               message: JSON.stringify({type: "REQUEST_THUMB", data: thumbURL}),
-            })
+            }
           });
           window.dispatchEvent(msg);
         }
