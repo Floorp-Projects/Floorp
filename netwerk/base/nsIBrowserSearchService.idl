@@ -437,12 +437,6 @@ interface nsIBrowserSearchService : nsISupports
   void removeEngine(in nsISearchEngine engine);
 
   /**
-   * The original Engine object that is the default for this region,
-   * ignoring changes the user may have subsequently made.
-   */
-  readonly attribute nsISearchEngine originalDefaultEngine;
-
-  /**
    * Alias for the currentEngine attribute, kept for add-on compatibility.
    */
   attribute nsISearchEngine defaultEngine;

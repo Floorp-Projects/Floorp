@@ -17,7 +17,6 @@
 #ifdef MOZ_SERVICES_HEALTHREPORT
     locale/browser/aboutHealthReport.dtd           (%chrome/browser/aboutHealthReport.dtd)
 #endif
-    locale/browser/aboutSearchReset.dtd            (%chrome/browser/aboutSearchReset.dtd)
     locale/browser/aboutSessionRestore.dtd         (%chrome/browser/aboutSessionRestore.dtd)
     locale/browser/aboutTabCrashed.dtd             (%chrome/browser/aboutTabCrashed.dtd)
     locale/browser/syncCustomize.dtd               (%chrome/browser/syncCustomize.dtd)
