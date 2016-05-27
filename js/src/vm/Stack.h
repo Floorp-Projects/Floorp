@@ -1211,10 +1211,6 @@ class Activation
     Activation* prev_;
     Activation* prevProfiling_;
 
-    // Counter incremented by JS_SaveFrameChain on the top-most activation and
-    // decremented by JS_RestoreFrameChain.
-    size_t savedFrameChain_;
-
     // Counter incremented by JS::HideScriptedCaller and decremented by
     // JS::UnhideScriptedCaller. If > 0 for the top activation,
     // DescribeScriptedCaller will return null instead of querying that
@@ -1285,17 +1281,6 @@ class Activation
     WasmActivation* asWasm() const {
         MOZ_ASSERT(isWasm());
         return (WasmActivation*)this;
-    }
-
-    void saveFrameChain() {
-        savedFrameChain_++;
-    }
-    void restoreFrameChain() {
-        MOZ_ASSERT(savedFrameChain_ > 0);
-        savedFrameChain_--;
-    }
-    bool hasSavedFrameChain() const {
-        return savedFrameChain_ > 0;
     }
 
     void hideScriptedCaller() {
