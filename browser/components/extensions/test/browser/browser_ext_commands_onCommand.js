@@ -50,7 +50,7 @@ add_task(function* test_user_defined_commands() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "commands": commands
+      "commands": commands,
     },
 
     background: function() {
