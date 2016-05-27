@@ -227,20 +227,6 @@ private:
     bool mMustFreeName;
 };
 
-JSContext *
-nsScriptSecurityManager::GetCurrentJSContext()
-{
-    // Get JSContext from stack.
-    return nsXPConnect::XPConnect()->GetCurrentJSContext();
-}
-
-JSContext *
-nsScriptSecurityManager::GetSafeJSContext()
-{
-    // Get JSContext from stack.
-    return nsXPConnect::XPConnect()->GetSafeJSContext();
-}
-
 /* static */
 bool
 nsScriptSecurityManager::SecurityCompareURIs(nsIURI* aSourceURI,
