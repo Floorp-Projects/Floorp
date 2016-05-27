@@ -138,4 +138,6 @@
 
   <color name="private_active_text">#FFFFFF</color>
 
+  <color name="action_bar_bg_color">@color/toolbar_grey</color>
+
 </resources>
