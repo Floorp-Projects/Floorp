@@ -343,11 +343,30 @@ class Option(object):
             ))
 
         if len(values) and self.choices:
+            relative_result = None
             for val in values:
+                if self.nargs in ('+', '*'):
+                    if val.startswith(('+', '-')):
+                        if relative_result is None:
+                            relative_result = list(self.default)
+                        sign = val[0]
+                        val = val[1:]
+                        if sign == '+':
+                            if val not in relative_result:
+                                relative_result.append(val)
+                        else:
+                            try:
+                                relative_result.remove(val)
+                            except ValueError:
+                                pass
+
                 if val not in self.choices:
                     raise InvalidOptionError(
                         "'%s' is not one of %s"
                         % (val, ', '.join("'%s'" % c for c in self.choices)))
+
+            if relative_result is not None:
+                values = PositiveOptionValue(relative_result, origin=origin)
 
         return values
 

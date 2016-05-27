@@ -8,7 +8,7 @@ config = {
     ],
     "repo": {
         "repo": "https://hg.mozilla.org/releases/mozilla-esr38",
-        "revision": "default",
+        "branch": "default",
         "dest": "mozilla-esr38",
         "vcs": "hg",
     },

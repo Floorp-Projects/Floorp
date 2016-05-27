@@ -149,9 +149,8 @@ class TestElements(MarionetteTestCase):
         self.assertFalse(el.id in [found_el.id for found_el in found_els])
 
     def test_finding_active_element_returns_element(self):
-        fbody = self.marionette.find_element(By.TAG_NAME, 'body')
-        abody = self.marionette.get_active_element()
-        self.assertEqual(fbody, abody)
+        body = self.marionette.find_element(By.TAG_NAME, "body")
+        self.assertEqual(body, self.marionette.get_active_element())
 
     def test_unknown_selector(self):
         with self.assertRaises(InvalidSelectorException):

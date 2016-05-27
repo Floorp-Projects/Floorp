@@ -70,7 +70,7 @@ AbstractSurfaceSink::DoResetToFirstRow()
 }
 
 uint8_t*
-AbstractSurfaceSink::AdvanceRow()
+AbstractSurfaceSink::DoAdvanceRow()
 {
   if (mRow >= uint32_t(InputSize().height)) {
     return nullptr;

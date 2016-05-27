@@ -124,6 +124,7 @@ function FulfillUnwrappedPromise(value) {
 }
 
 // Commoned-out implementation of 25.4.1.4. and 25.4.1.7.
+// ES2016 February 12 draft.
 function ResolvePromise(promise, valueOrReason, reactionsSlot, state) {
     // Step 1.
     assert(GetPromiseState(promise) === PROMISE_STATE_PENDING,
@@ -151,12 +152,11 @@ function ResolvePromise(promise, valueOrReason, reactionsSlot, state) {
     UnsafeSetReservedSlot(promise, PROMISE_REJECT_FUNCTION_SLOT, null);
 
     // Now that everything else is done, do the things the debugger needs.
-    let site = _dbg_captureCurrentStack(0);
-    UnsafeSetReservedSlot(promise, PROMISE_RESOLUTION_SITE_SLOT, site);
-    UnsafeSetReservedSlot(promise, PROMISE_RESOLUTION_TIME_SLOT, std_Date_now());
+    // Step 7 of RejectPromise implemented in the debugger intrinsic.
     _dbg_onPromiseSettled(promise);
 
-    // Step 7.
+    // Step 7 of FulfillPromise.
+    // Step 8 of RejectPromise.
     return TriggerPromiseReactions(reactions, valueOrReason);
 }
 
@@ -209,7 +209,7 @@ function NewPromiseCapability(C) {
 
 // ES6, 25.4.1.6. is implemented as an intrinsic in SelfHosting.cpp.
 
-// ES6, 25.4.1.7.
+// ES2016, February 12 draft, 25.4.1.7.
 function RejectPromise(promise, reason) {
     return ResolvePromise(promise, reason, PROMISE_REJECT_REACTIONS_SLOT, PROMISE_STATE_REJECTED);
 }
@@ -222,66 +222,26 @@ function TriggerPromiseReactions(reactions, argument) {
     // Step 2 (implicit).
 }
 
+// ES2016, February 12 draft 25.4.1.9, implemented in SelfHosting.cpp.
+
 // ES6, 25.4.2.1.
 function EnqueuePromiseReactionJob(reaction, argument) {
-    _EnqueuePromiseJob(function PromiseReactionJob() {
-        // Step 1.
-        assert(IsPromiseReaction(reaction), "Invalid promise reaction record");
-
-        // Step 2.
-        let promiseCapability = reaction.capabilities;
-
-        // Step 3.
-        let handler = reaction.handler;
-        let handlerResult = argument;
-        let shouldReject = false;
-
-        // Steps 4-6.
-        if (handler === PROMISE_HANDLER_IDENTITY) {
-            // handlerResult = argument; (implicit)
-        } else if (handler === PROMISE_HANDLER_THROWER) {
-            // handlerResult = argument; (implicit)
-            shouldReject = true;
-        } else {
-            try {
-                handlerResult = callContentFunction(handler, undefined, argument);
-            } catch (e) {
-                handlerResult = e;
-                shouldReject = true;
-            }
-        }
-
-        // Step 7.
-        if (shouldReject) {
-            // Step 7.a.
-            callContentFunction(promiseCapability.reject, undefined, handlerResult);
-
-            // Step 7.b.
-            return;
-        }
-
-        // Steps 8-9.
-        return callContentFunction(promiseCapability.resolve, undefined, handlerResult);
-    });
+    let capabilities = reaction.capabilities;
+    _EnqueuePromiseReactionJob([reaction.handler,
+                                argument,
+                                capabilities.resolve,
+                                capabilities.reject
+                               ],
+                               capabilities.promise);
 }
 
 // ES6, 25.4.2.2.
 function EnqueuePromiseResolveThenableJob(promiseToResolve, thenable, then) {
-    _EnqueuePromiseJob(function PromiseResolveThenableJob() {
-        // Step 1.
-        let {0: resolve, 1: reject} = CreateResolvingFunctions(promiseToResolve);
-
-        // Steps 2-3.
-        try {
-            // Step 2.
-            callContentFunction(then, thenable, resolve, reject);
-        } catch (thenCallResult) {
-            // Steps 3.a-b.
-            callFunction(reject, undefined, thenCallResult);
-        }
-
-        // Step 4 (implicit, no need to return anything).
-    });
+    _EnqueuePromiseResolveThenableJob([then,
+                                       thenable,
+                                       promiseToResolve
+                                      ],
+                                      promiseToResolve);
 }
 
 // ES6, 25.4.3.1. (Implemented in C++).
@@ -901,7 +861,7 @@ function UnwrappedPerformPromiseThen(fulfilledHandler, rejectedHandler, promise,
                               resultCapability);
 }
 
-// ES6, 25.4.5.3.1.
+// ES2016, March 1, 2016 draft, 25.4.5.3.1.
 function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) {
     // Step 1.
     assert(IsPromise(promise), "Can't call PerformPromiseThen on non-Promise objects");
@@ -955,15 +915,28 @@ function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) 
     }
 
     // Step 9.
-    else if (state === PROMISE_STATE_REJECTED) {
+    else {
         // Step 9.a.
-        let reason = UnsafeGetReservedSlot(promise, PROMISE_RESULT_SLOT);
+        assert(state === PROMISE_STATE_REJECTED, "Invalid Promise state " + state);
 
         // Step 9.b.
+        let reason = UnsafeGetReservedSlot(promise, PROMISE_RESULT_SLOT);
+
+        // Step 9.c.
+        if (UnsafeGetInt32FromReservedSlot(promise, PROMISE_IS_HANDLED_SLOT) !==
+            PROMISE_IS_HANDLED_STATE_HANDLED)
+        {
+            HostPromiseRejectionTracker(promise, PROMISE_REJECTION_TRACKER_OPERATION_HANDLE);
+        }
+
+        // Step 9.d.
         EnqueuePromiseReactionJob(rejectReaction, reason);
     }
 
     // Step 10.
+    UnsafeSetReservedSlot(promise, PROMISE_IS_HANDLED_SLOT, PROMISE_IS_HANDLED_STATE_HANDLED);
+
+    // Step 11.
     return resultCapability.promise;
 }
 

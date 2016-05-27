@@ -52,7 +52,6 @@ callback interface UncaughtRejectionObserver {
 
 [ChromeOnly, Exposed=(Window,System)]
 interface PromiseDebugging {
-#ifndef SPIDERMONKEY_PROMISE
   /**
    * The various functions on this interface all expect to take promises but
    * don't want the WebIDL behavior of assimilating random passed-in objects
@@ -67,6 +66,13 @@ interface PromiseDebugging {
    */
   [Throws]
   static PromiseDebuggingStateHolder getState(object p);
+
+  /**
+   * Return an identifier for a promise. This identifier is guaranteed
+   * to be unique to the current process.
+   */
+  [Throws]
+  static DOMString getPromiseID(object p);
 
   /**
    * Return the stack to the promise's allocation point.  This can
@@ -91,13 +97,7 @@ interface PromiseDebugging {
   [Throws]
   static object? getFullfillmentStack(object p);
 
-  /**
-   * Return an identifier for a promise. This identifier is guaranteed
-   * to be unique to this instance of Firefox.
-   */
-  [Throws]
-  static DOMString getPromiseID(object p);
-
+#ifndef SPIDERMONKEY_PROMISE
   /**
    * Get the promises directly depending on a given promise.  These are:
    *

@@ -238,6 +238,44 @@ class TestOption(unittest.TestCase):
         option = Option('--with-option', choices=('a', 'b'))
         self.assertEqual(option.nargs, 1)
 
+        # Test "relative" values
+        option = Option('--with-option', nargs='*', default=('b', 'c'),
+                        choices=('a', 'b', 'c', 'd'))
+
+        value = option.get_value('--with-option=+d')
+        self.assertEquals(PositiveOptionValue(('b', 'c', 'd')), value)
+
+        value = option.get_value('--with-option=-b')
+        self.assertEquals(PositiveOptionValue(('c',)), value)
+
+        value = option.get_value('--with-option=-b,+d')
+        self.assertEquals(PositiveOptionValue(('c','d')), value)
+
+        # Adding something that is in the default is fine
+        value = option.get_value('--with-option=+b')
+        self.assertEquals(PositiveOptionValue(('b', 'c')), value)
+
+        # Removing something that is not in the default is fine, as long as it
+        # is one of the choices
+        value = option.get_value('--with-option=-a')
+        self.assertEquals(PositiveOptionValue(('b', 'c')), value)
+
+        with self.assertRaises(InvalidOptionError) as e:
+            option.get_value('--with-option=-e')
+        self.assertEquals(e.exception.message,
+                          "'e' is not one of 'a', 'b', 'c', 'd'")
+
+        # Other "not a choice" errors.
+        with self.assertRaises(InvalidOptionError) as e:
+            option.get_value('--with-option=+e')
+        self.assertEquals(e.exception.message,
+                          "'e' is not one of 'a', 'b', 'c', 'd'")
+
+        with self.assertRaises(InvalidOptionError) as e:
+            option.get_value('--with-option=e')
+        self.assertEquals(e.exception.message,
+                          "'e' is not one of 'a', 'b', 'c', 'd'")
+
     def test_option_value_format(self):
         val = PositiveOptionValue()
         self.assertEquals('--with-value', val.format('--with-value'))

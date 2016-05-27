@@ -853,9 +853,10 @@ class GCRuntime
     bool isVerifyPreBarriersEnabled() const { return false; }
 #endif
 
-    // Free certain LifoAlloc blocks from the background sweep thread.
+    // Free certain LifoAlloc blocks when it is safe to do so.
     void freeUnusedLifoBlocksAfterSweeping(LifoAlloc* lifo);
     void freeAllLifoBlocksAfterSweeping(LifoAlloc* lifo);
+    void freeAllLifoBlocksAfterMinorGC(LifoAlloc* lifo);
 
     // Public here for ReleaseArenaLists and FinalizeTypedArenas.
     void releaseArena(Arena* arena, const AutoLockGC& lock);
@@ -1169,9 +1170,15 @@ class GCRuntime
 
     /*
      * Free LIFO blocks are transferred to this allocator before being freed on
-     * the background GC thread.
+     * the background GC thread after sweeping.
      */
-    LifoAlloc freeLifoAlloc;
+    LifoAlloc blocksToFreeAfterSweeping;
+
+    /*
+     * Free LIFO blocks are transferred to this allocator before being freed
+     * after minor GC.
+     */
+    LifoAlloc blocksToFreeAfterMinorGC;
 
     /* Index of current zone group (for stats). */
     unsigned zoneGroupIndex;

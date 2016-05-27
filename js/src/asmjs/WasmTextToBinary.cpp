@@ -1730,11 +1730,12 @@ ParseFloatLiteral(WasmParseContext& c, WasmToken token, Float* result)
         // Call into JS' strtod. Tokenization has already required that the
         // string is well-behaved.
         LifoAlloc::Mark mark = c.lifo.mark();
-        char* buffer = c.lifo.newArray<char>(end - begin + 1);
+        char* buffer = c.lifo.newArray<char>(end - cur + 1);
         if (!buffer)
             return false;
         for (ptrdiff_t i = 0; i < end - cur; ++i)
             buffer[i] = char(cur[i]);
+        buffer[end - cur] = '\0';
         char* strtod_end;
         int err;
         Float d = (Float)js_strtod_harder(c.dtoaState, buffer, &strtod_end, &err);

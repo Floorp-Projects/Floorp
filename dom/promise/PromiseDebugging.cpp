@@ -77,6 +77,103 @@ UnwrapPromise(JS::Handle<JSObject*> aPromise, ErrorResult& aRv)
   }
   return promise;
 }
+#endif // SPIDERMONKEY_PROMISE
+
+#ifdef SPIDERMONKEY_PROMISE
+/* static */ void
+PromiseDebugging::GetState(GlobalObject& aGlobal, JS::Handle<JSObject*> aPromise,
+                           PromiseDebuggingStateHolder& aState,
+                           ErrorResult& aRv)
+{
+  JSContext* cx = aGlobal.Context();
+  JS::Rooted<JSObject*> obj(cx, js::CheckedUnwrap(aPromise));
+  if (!obj || !JS::IsPromiseObject(obj)) {
+    aRv.ThrowTypeError<MSG_IS_NOT_PROMISE>(NS_LITERAL_STRING(
+        "Argument of PromiseDebugging.getState"));
+    return;
+  }
+  switch (JS::GetPromiseState(obj)) {
+  case JS::PromiseState::Pending:
+    aState.mState = PromiseDebuggingState::Pending;
+    break;
+  case JS::PromiseState::Fulfilled:
+    aState.mState = PromiseDebuggingState::Fulfilled;
+    aState.mValue = JS::GetPromiseResult(obj);
+    break;
+  case JS::PromiseState::Rejected:
+    aState.mState = PromiseDebuggingState::Rejected;
+    aState.mReason = JS::GetPromiseResult(obj);
+    break;
+  }
+}
+
+/* static */ void
+PromiseDebugging::GetPromiseID(GlobalObject& aGlobal,
+                               JS::Handle<JSObject*> aPromise,
+                               nsString& aID,
+                               ErrorResult& aRv)
+{
+  JSContext* cx = aGlobal.Context();
+  JS::Rooted<JSObject*> obj(cx, js::CheckedUnwrap(aPromise));
+  if (!obj || !JS::IsPromiseObject(obj)) {
+    aRv.ThrowTypeError<MSG_IS_NOT_PROMISE>(NS_LITERAL_STRING(
+        "Argument of PromiseDebugging.getState"));
+    return;
+  }
+  uint64_t promiseID = JS::GetPromiseID(obj);
+  aID = sIDPrefix;
+  aID.AppendInt(promiseID);
+}
+
+/* static */ void
+PromiseDebugging::GetAllocationStack(GlobalObject& aGlobal,
+                                     JS::Handle<JSObject*> aPromise,
+                                     JS::MutableHandle<JSObject*> aStack,
+                                     ErrorResult& aRv)
+{
+  JSContext* cx = aGlobal.Context();
+  JS::Rooted<JSObject*> obj(cx, js::CheckedUnwrap(aPromise));
+  if (!obj || !JS::IsPromiseObject(obj)) {
+    aRv.ThrowTypeError<MSG_IS_NOT_PROMISE>(NS_LITERAL_STRING(
+        "Argument of PromiseDebugging.getAllocationStack"));
+    return;
+  }
+  aStack.set(JS::GetPromiseAllocationSite(obj));
+}
+
+/* static */ void
+PromiseDebugging::GetRejectionStack(GlobalObject& aGlobal,
+                                    JS::Handle<JSObject*> aPromise,
+                                    JS::MutableHandle<JSObject*> aStack,
+                                    ErrorResult& aRv)
+{
+  JSContext* cx = aGlobal.Context();
+  JS::Rooted<JSObject*> obj(cx, js::CheckedUnwrap(aPromise));
+  if (!obj || !JS::IsPromiseObject(obj)) {
+    aRv.ThrowTypeError<MSG_IS_NOT_PROMISE>(NS_LITERAL_STRING(
+        "Argument of PromiseDebugging.getRejectionStack"));
+    return;
+  }
+  aStack.set(JS::GetPromiseResolutionSite(obj));
+}
+
+/* static */ void
+PromiseDebugging::GetFullfillmentStack(GlobalObject& aGlobal,
+                                       JS::Handle<JSObject*> aPromise,
+                                       JS::MutableHandle<JSObject*> aStack,
+                                       ErrorResult& aRv)
+{
+  JSContext* cx = aGlobal.Context();
+  JS::Rooted<JSObject*> obj(cx, js::CheckedUnwrap(aPromise));
+  if (!obj || !JS::IsPromiseObject(obj)) {
+    aRv.ThrowTypeError<MSG_IS_NOT_PROMISE>(NS_LITERAL_STRING(
+        "Argument of PromiseDebugging.getFulfillmentStack"));
+    return;
+  }
+  aStack.set(JS::GetPromiseResolutionSite(obj));
+}
+
+#else
 
 /* static */ void
 PromiseDebugging::GetState(GlobalObject&, JS::Handle<JSObject*> aPromise,

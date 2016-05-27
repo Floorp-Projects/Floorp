@@ -319,6 +319,11 @@ public:
     nsIntRegion fillPaintNeededRegion;
     nsIntRegion strokePaintNeededRegion;
 
+    if (aCtx->CurrentState().updateFilterOnWriteOnly) {
+      aCtx->UpdateFilter();
+      aCtx->CurrentState().updateFilterOnWriteOnly = false;
+    }
+
     FilterSupport::ComputeSourceNeededRegions(
       aCtx->CurrentState().filter, mPostFilterBounds,
       sourceGraphicNeededRegion, fillPaintNeededRegion, strokePaintNeededRegion);
@@ -405,6 +410,12 @@ public:
       mCtx->CurrentState().filterAdditionalImages,
       mPostFilterBounds.TopLeft() - mOffset,
       DrawOptions(1.0f, mCompositionOp));
+
+    const gfx::FilterDescription& filter = mCtx->CurrentState().filter;
+    MOZ_ASSERT(!filter.mPrimitives.IsEmpty());
+    if (filter.mPrimitives.LastElement().IsTainted() && mCtx->mCanvasElement) {
+      mCtx->mCanvasElement->SetWriteOnly();
+    }
   }
 
   DrawTarget* DT()
@@ -2467,6 +2478,9 @@ CanvasRenderingContext2D::SetFilter(const nsAString& aFilter, ErrorResult& aErro
                                       mCanvasElement, this);
       UpdateFilter();
     }
+  }
+  if (mCanvasElement && !mCanvasElement->IsWriteOnly()) {
+    CurrentState().updateFilterOnWriteOnly = true;
   }
 }
 

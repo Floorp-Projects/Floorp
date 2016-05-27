@@ -124,8 +124,20 @@ TEST(ImageSurfacePipeIntegration, DeinterlaceDownscaleWriteRows)
                                      SurfaceFormat::B8G8R8A8, false });
 }
 
-TEST(ImageSurfacePipeIntegration, RemoveFrameRectDownscaleWritePixels)
+TEST(ImageSurfacePipeIntegration, RemoveFrameRectBottomRightDownscaleWritePixels)
 {
+  // This test case uses a frame rect that extends beyond the borders of the
+  // image to the bottom and to the right. It looks roughly like this (with the
+  // box made of '#'s representing the frame rect):
+  //
+  // +------------+
+  // +            +
+  // +      +------------+
+  // +      +############+
+  // +------+############+
+  //        +############+
+  //        +------------+
+
   RefPtr<Decoder> decoder = CreateTrivialDecoder();
   ASSERT_TRUE(decoder != nullptr);
 
@@ -168,7 +180,7 @@ TEST(ImageSurfacePipeIntegration, RemoveFrameRectDownscaleWritePixels)
                                      SurfaceFormat::B8G8R8A8, false });
 }
 
-TEST(ImageSurfacePipeIntegration, RemoveFrameRectDownscaleWriteRows)
+TEST(ImageSurfacePipeIntegration, RemoveFrameRectBottomRightDownscaleWriteRows)
 {
   RefPtr<Decoder> decoder = CreateTrivialDecoder();
   ASSERT_TRUE(decoder != nullptr);
@@ -192,6 +204,63 @@ TEST(ImageSurfacePipeIntegration, RemoveFrameRectDownscaleWriteRows)
                      SurfaceConfig { decoder, 0, IntSize(20, 20),
                                      SurfaceFormat::B8G8R8A8, false });
 }
+
+TEST(ImageSurfacePipeIntegration, RemoveFrameRectTopLeftDownscaleWritePixels)
+{
+  // This test case uses a frame rect that extends beyond the borders of the
+  // image to the top and to the left. It looks roughly like this (with the
+  // box made of '#'s representing the frame rect):
+  //
+  // +------------+
+  // +############+
+  // +############+------+
+  // +############+      +
+  // +------------+      +
+  //        +            +
+  //        +------------+
+
+  RefPtr<Decoder> decoder = CreateTrivialDecoder();
+  ASSERT_TRUE(decoder != nullptr);
+
+  auto test = [](Decoder* aDecoder, SurfaceFilter* aFilter) {
+    CheckWritePixels(aDecoder, aFilter,
+                     /* aOutputRect = */ Some(IntRect(0, 0, 20, 20)),
+                     /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
+                     /* aInputWriteRect = */ Some(IntRect(0, 0, 100, 100)),
+                     /* aOutputWriteRect = */ Some(IntRect(0, 0, 10, 10)),
+                     /* aFuzz = */ 0x21);
+  };
+
+  WithFilterPipeline(decoder, test,
+                     RemoveFrameRectConfig { IntRect(-50, -50, 100, 100) },
+                     DownscalingConfig { IntSize(100, 100),
+                                         SurfaceFormat::B8G8R8A8 },
+                     SurfaceConfig { decoder, 0, IntSize(20, 20),
+                                     SurfaceFormat::B8G8R8A8, false });
+}
+
+TEST(ImageSurfacePipeIntegration, RemoveFrameRectTopLeftDownscaleWriteRows)
+{
+  RefPtr<Decoder> decoder = CreateTrivialDecoder();
+  ASSERT_TRUE(decoder != nullptr);
+
+  auto test = [](Decoder* aDecoder, SurfaceFilter* aFilter) {
+    CheckWriteRows(aDecoder, aFilter,
+                   /* aOutputRect = */ Some(IntRect(0, 0, 20, 20)),
+                   /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
+                   /* aInputWriteRect = */ Some(IntRect(0, 0, 100, 100)),
+                   /* aOutputWriteRect = */ Some(IntRect(0, 0, 10, 10)),
+                   /* aFuzz = */ 0x21);
+  };
+
+  WithFilterPipeline(decoder, test,
+                     RemoveFrameRectConfig { IntRect(-50, -50, 100, 100) },
+                     DownscalingConfig { IntSize(100, 100),
+                                         SurfaceFormat::B8G8R8A8 },
+                     SurfaceConfig { decoder, 0, IntSize(20, 20),
+                                     SurfaceFormat::B8G8R8A8, false });
+}
+
 
 TEST(ImageSurfacePipeIntegration, DeinterlaceRemoveFrameRectWritePixels)
 {

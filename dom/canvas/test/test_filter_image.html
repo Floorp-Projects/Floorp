@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body onload="runTest()">
+<svg style="display: block; width: 0; height: 0">
+  <defs>
+    <filter id="tainted">
+      <feImage xlink:href="http://example.com/tests/dom/canvas/test/crossorigin/image.png" />
+    </filter>
+  </defs>
+</svg>
+<script>
+
+function runTest() {
+
+  SpecialPowers.pushPrefEnv({ 'set': [['canvas.filters.enabled', true]] }, function () {
+  
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+  
+    ctx.filter = 'url(#tainted)';
+    ctx.rect(0, 0, 16, 16);
+    ctx.fill();
+  
+    var expected_error = 'SecurityError';
+  
+    var data;
+    try {
+      data = ctx.getImageData(0, 0, 16, 16);
+      actual_error = "";
+    } catch (e) {
+      actual_error = e.name;
+    }
+  
+    is(actual_error, expected_error, 'Canvas should have been tainted and throw a SecurityError');
+  
+    SimpleTest.finish();
+    
+  });
+
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
