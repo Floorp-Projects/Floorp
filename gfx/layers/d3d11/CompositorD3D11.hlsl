@@ -321,7 +321,7 @@ float4 ComputeBlendSourceColor(const VS_BLEND_OUTPUT aVertex)
       return YCbCrShader(tmp);
     }
     return SolidColorShader(tmp);
-  } else if (iBlendConfig.y == PS_MASK_2D) {
+  } else if (iBlendConfig.y == PS_MASK) {
     VS_MASK_OUTPUT tmp;
     tmp.vPosition = aVertex.vPosition;
     tmp.vTexCoords = aVertex.vTexCoords;
