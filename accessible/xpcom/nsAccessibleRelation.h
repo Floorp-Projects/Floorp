@@ -9,8 +9,10 @@
 #include "nsIAccessibleRelation.h"
 
 #include "nsCOMPtr.h"
+#include "nsTArray.h"
 #include "nsIMutableArray.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/a11y/ProxyAccessible.h"
 
 namespace mozilla {
 namespace a11y {
@@ -25,6 +27,9 @@ class nsAccessibleRelation final : public nsIAccessibleRelation
 public:
   nsAccessibleRelation(uint32_t aType, Relation* aRel);
 
+  nsAccessibleRelation(uint32_t aType,
+                       const nsTArray<ProxyAccessible*>* aTargets);
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSIACCESSIBLERELATION
 
@@ -34,7 +39,7 @@ private:
 
   nsAccessibleRelation(const nsAccessibleRelation&);
   nsAccessibleRelation& operator = (const nsAccessibleRelation&);
-  
+
   uint32_t mType;
   nsCOMPtr<nsIMutableArray> mTargets;
 };
