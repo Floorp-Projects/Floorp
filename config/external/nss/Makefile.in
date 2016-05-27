@@ -245,7 +245,7 @@ ifdef MOZ_NO_WLZDEFS
 DEFAULT_GMAKE_FLAGS += ZDEFS_FLAG=
 endif
 ifdef MOZ_CFLAGS_NSS
-XCFLAGS += $(filter-out -W%,$(CFLAGS))
+NSS_XCFLAGS += $(filter-out -W%,$(CFLAGS))
 DEFAULT_GMAKE_FLAGS += DARWIN_DYLIB_VERSIONS='-compatibility_version 1 -current_version 1 $(LDFLAGS)'
 endif
 ifeq (1_1,$(CLANG_CL)_$(MOZ_ASAN))
@@ -268,18 +268,18 @@ DEFAULT_GMAKE_FLAGS += MAKE_OBJDIR='$$(INSTALL) -D $$(OBJDIR)'
 DEFAULT_GMAKE_FLAGS += TARGETS='$$(LIBRARY) $$(SHARED_LIBRARY) $$(PROGRAM)'
 
 ifdef MOZ_FOLD_LIBS_FLAGS
-XCFLAGS += $(MOZ_FOLD_LIBS_FLAGS)
+NSS_XCFLAGS += $(MOZ_FOLD_LIBS_FLAGS)
 endif
 
 # Pass on the MSVC target arch from the main build system.
 # Note this is case- and switch-character sensitive, while
 # the MSVC option is not.
 ifeq (WINNT,$(OS_TARGET))
-XCFLAGS += $(filter -arch:%,$(CFLAGS))
+NSS_XCFLAGS += $(filter -arch:%,$(CFLAGS))
 endif
 
 # Export accumulated XCFLAGS to modify nss defaults.
-DEFAULT_GMAKE_FLAGS += XCFLAGS='$(XCFLAGS)'
+DEFAULT_GMAKE_FLAGS += XCFLAGS='$(NSS_XCFLAGS)'
 
 NSS_SRCDIR = $(topsrcdir)
 
