@@ -1537,7 +1537,8 @@ EventStateManager::FireContextClick()
       }
       else if (mGestureDownContent->IsAnyOfHTMLElements(nsGkAtoms::applet,
                                                         nsGkAtoms::embed,
-                                                        nsGkAtoms::object)) {
+                                                        nsGkAtoms::object,
+                                                        nsGkAtoms::label)) {
         allowedToDispatch = false;
       }
     }
@@ -4400,6 +4401,9 @@ EventStateManager::SetPointerLock(nsIWidget* aWidget,
     // pre-pointerlock position, so that the synthetic mouse event reports
     // no movement.
     sLastRefPoint = mPreLockPoint;
+    // Reset SynthCenteringPoint to invalid so that next time we start
+    // locking pointer, it has its initial value.
+    sSynthCenteringPoint = kInvalidRefPoint;
     if (aWidget) {
       aWidget->SynthesizeNativeMouseMove(
         mPreLockPoint + aWidget->WidgetToScreenOffset(), nullptr);

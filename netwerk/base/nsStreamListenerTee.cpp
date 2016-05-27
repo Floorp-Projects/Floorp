@@ -49,10 +49,9 @@ nsStreamListenerTee::OnStopRequest(nsIRequest *request,
     }
 
     nsresult rv = mListener->OnStopRequest(request, context, status);
-    mListener = nullptr;
     if (mObserver)
         mObserver->OnStopRequest(request, context, status);
-    mObserver = nullptr;
+    mObserver = 0;
     return rv;
 }
 

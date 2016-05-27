@@ -170,17 +170,6 @@ public class AppConstants {
     false;
 //#endif
 
-    /**
-     * Whether this APK was built with constrained resources --
-     * no xhdpi+ images, for example.
-     */
-    public static final boolean MOZ_ANDROID_RESOURCE_CONSTRAINED =
-//#ifdef MOZ_ANDROID_RESOURCE_CONSTRAINED
-    true;
-//#else
-    false;
-//#endif
-
     public static final boolean MOZ_SERVICES_HEALTHREPORT =
 //#ifdef MOZ_SERVICES_HEALTHREPORT
     true;

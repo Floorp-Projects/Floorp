@@ -314,7 +314,11 @@ private:
         mFlags.mBubbles = true;
         break;
       default:
-        mFlags.mCancelable = true;
+        if (mMessage == eResize) {
+          mFlags.mCancelable = false;
+        } else {
+          mFlags.mCancelable = true;
+        }
         mFlags.mBubbles = true;
         break;
     }

@@ -108,6 +108,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         secondMove.mozMovementY = e.mozMovementY;
         parent.removeEventListener("mousemove", secondMoveChild);
 
+        addFullscreenChangeContinuation("exit", function() {
+          runTests();
+          SimpleTest.finish();
+        });
         document.exitFullscreen();
       };
 
@@ -118,21 +122,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         }
       }, false);
 
-      document.addEventListener("mozpointerlockerror", function () {
-        document.exitFullscreen();
-      }, false);
-
-      document.addEventListener("fullscreenchange", function (e)  {
-        if (document.fullscreenElement === parent) {
-          parent.mozRequestPointerLock();
-        }
-        else {
-          runTests();
-          SimpleTest.finish();
-        }
-      }, false);
-
       function start() {
+        addFullscreenChangeContinuation("enter", function() {
+          parent.mozRequestPointerLock();
+        });
         parent.requestFullscreen();
       }
     </script>
