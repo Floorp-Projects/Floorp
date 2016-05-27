@@ -710,8 +710,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     }
     break;
   case eDragOver:
-    // eDrop is fired before eLegacyDragDrop so send the enter/exit events
-    // before eDrop.
+    // Send the enter/exit events before eDrop.
     GenerateDragDropEnterExit(aPresContext, aEvent->AsDragEvent());
     break;
 
@@ -1784,9 +1783,7 @@ EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       // Set the current target to the content for the mouse down
       mCurrentTargetContent = targetContent;
 
-      // Dispatch both the dragstart and draggesture events to the DOM. For
-      // elements in an editor, only fire the draggesture event so that the
-      // editor code can handle it but content doesn't see a dragstart.
+      // Dispatch the dragstart event to the DOM.
       nsEventStatus status = nsEventStatus_eIgnore;
       EventDispatcher::Dispatch(targetContent, aPresContext, &startEvent,
                                 nullptr, &status);
@@ -1803,7 +1800,7 @@ EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       }
 
       // now that the dataTransfer has been updated in the dragstart and
-      // draggesture events, make it readonly so that the data doesn't
+      // draggesture events, make it read only so that the data doesn't
       // change during the drag.
       dataTransfer->SetReadOnly();
 
@@ -1815,10 +1812,6 @@ EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
           aEvent->StopPropagation();
         }
       }
-
-      // Note that frame event handling doesn't care about eLegacyDragGesture,
-      // which is just as well since we don't really know which frame to
-      // send it to
 
       // Reset mCurretTargetContent to what it was
       mCurrentTargetContent = targetBeforeEvent;
@@ -1924,7 +1917,7 @@ EventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
   if (!dragService)
     return false;
 
-  // Default handling for the draggesture/dragstart event.
+  // Default handling for the dragstart event.
   //
   // First, check if a drag session already exists. This means that the drag
   // service was called directly within a draggesture handler. In this case,
