@@ -231,24 +231,6 @@ const char* nsBlockFrame::kReflowCommandType[] = {
 };
 #endif
 
-#ifdef REALLY_NOISY_FIRST_LINE
-static void
-DumpStyleGeneaology(nsIFrame* aFrame, const char* gap)
-{
-  fputs(gap, stdout);
-  nsFrame::ListTag(stdout, aFrame);
-  printf(": ");
-  nsStyleContext* sc = aFrame->StyleContext();
-  while (nullptr != sc) {
-    nsStyleContext* psc;
-    printf("%p ", sc);
-    psc = sc->GetParent();
-    sc = psc;
-  }
-  printf("\n");
-}
-#endif
-
 #ifdef REFLOW_STATUS_COVERAGE
 static void
 RecordReflowStatus(bool aChildIsBlock, nsReflowStatus aFrameReflowStatus)
@@ -4109,7 +4091,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
     aLineLayout.SetDirtyNextLine();
   }
 
-#ifdef REALLY_NOISY_REFLOW_CHILD
+#ifdef REALLY_NOISY_REFLOW
   nsFrame::ListTag(stdout, aFrame);
   printf(": status=%x\n", frameReflowStatus);
 #endif
