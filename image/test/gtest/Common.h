@@ -33,7 +33,6 @@ enum TestCaseFlags
   TEST_CASE_HAS_ERROR       = 1 << 1,
   TEST_CASE_IS_TRANSPARENT  = 1 << 2,
   TEST_CASE_IS_ANIMATED     = 1 << 3,
-  TEST_CASE_IGNORE_OUTPUT   = 1 << 4,
 };
 
 struct ImageTestCase
@@ -333,7 +332,6 @@ ImageTestCase DownscaledJPGTestCase();
 ImageTestCase DownscaledBMPTestCase();
 ImageTestCase DownscaledICOTestCase();
 ImageTestCase DownscaledIconTestCase();
-ImageTestCase DownscaledTransparentICOWithANDMaskTestCase();
 
 } // namespace image
 } // namespace mozilla
