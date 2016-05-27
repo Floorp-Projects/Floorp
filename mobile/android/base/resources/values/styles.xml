@@ -662,10 +662,16 @@
         <item name="android:textStyle">bold</item>
     </style>
 
+    <!-- Ideally, we use the same style for the action bar & action mode, but unfortunately
+         some attrs that share a purpose have different names so instead we inherit. -->
     <style name="GeckoActionBar" parent="ThemeOverlay.AppCompat.ActionBar">
-        <item name="android:colorBackground">@color/toolbar_grey</item>
+        <item name="android:colorBackground">@color/action_bar_bg_color</item>
         <item name="colorAccent">@color/fennec_ui_orange</item>
         <item name="colorControlNormal">@color/toolbar_icon_grey</item>
+    </style>
+    <style name="GeckoActionBar.ActionMode">
+        <item name="android:background">@color/action_bar_bg_color</item>
+        <!-- Note: the bottom divider is drawn in code. -->
     </style>
 
     <style name="PreferencesActionBar" parent="Widget.AppCompat.ActionBar.Solid">
