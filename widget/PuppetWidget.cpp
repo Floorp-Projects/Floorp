@@ -21,6 +21,8 @@
 #include "PuppetWidget.h"
 #include "nsContentUtils.h"
 #include "nsIWidgetListener.h"
+#include "imgIContainer.h"
+#include "nsView.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
