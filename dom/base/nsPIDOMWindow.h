@@ -46,9 +46,6 @@ class Performance;
 class ServiceWorkerRegistration;
 class CustomElementsRegistry;
 } // namespace dom
-namespace gfx {
-class VRDeviceProxy;
-} // namespace gfx
 } // namespace mozilla
 
 // Popup control state enum. The values in this enum must go from most
@@ -339,14 +336,10 @@ public:
    * Moves the top-level window into fullscreen mode if aIsFullScreen is true,
    * otherwise exits fullscreen.
    *
-   * If aHMD is not null, the window is made full screen on the given VR HMD
-   * device instead of its currrent display.
-   *
    * Outer windows only.
    */
   virtual nsresult SetFullscreenInternal(
-    FullscreenReason aReason, bool aIsFullscreen,
-    mozilla::gfx::VRDeviceProxy *aHMD = nullptr) = 0;
+    FullscreenReason aReason, bool aIsFullscreen) = 0;
 
   /**
    * This function should be called when the fullscreen state is flipped.

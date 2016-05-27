@@ -114,12 +114,6 @@ using namespace mozilla::layers;
 using namespace mozilla::layout;
 typedef nsAbsoluteContainingBlock::AbsPosReflowFlags AbsPosReflowFlags;
 
-namespace mozilla {
-namespace gfx {
-class VRDeviceProxy;
-} // namespace gfx
-} // namespace mozilla
-
 // Struct containing cached metrics for box-wrapped frames.
 struct nsBoxLayoutMetrics
 {
@@ -601,10 +595,6 @@ nsFrame::Init(nsIContent*       aContent,
     NS_ASSERTION(GetParent() ||
                  (GetStateBits() & NS_FRAME_FONT_INFLATION_CONTAINER),
                  "root frame should always be a container");
-  }
-
-  if (aContent && aContent->GetProperty(nsGkAtoms::vr_state) != nullptr) {
-    AddStateBits(NS_FRAME_HAS_VR_CONTENT);
   }
 
   if (PresContext()->PresShell()->AssumeAllFramesVisible() &&
@@ -2278,11 +2268,6 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   nsDisplayListBuilder::AutoBuildingDisplayList
     buildingDisplayList(aBuilder, this, dirtyRect, true);
 
-  mozilla::gfx::VRDeviceProxy* vrHMDInfo = nullptr;
-  if ((GetStateBits() & NS_FRAME_HAS_VR_CONTENT)) {
-    vrHMDInfo = static_cast<mozilla::gfx::VRDeviceProxy*>(mContent->GetProperty(nsGkAtoms::vr_state));
-  }
-
   DisplayListClipState::AutoSaveRestore clipState(aBuilder);
 
   bool clearClip = false;
@@ -2572,13 +2557,6 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
         new (aBuilder) nsDisplayStickyPosition(aBuilder, this, &resultList));
   }
 
-  /* If we're doing VR rendering, then we need to wrap everything in a nsDisplayVR
-   */
-  if (vrHMDInfo && !resultList.IsEmpty()) {
-    resultList.AppendNewToTop(
-      new (aBuilder) nsDisplayVR(aBuilder, this, &resultList, vrHMDInfo));
-  }
-
   /* If there's blending, wrap up the list in a blend-mode item. Note
    * that opacity can be applied before blending as the blend color is
    * not affected by foreground opacity (only background alpha).
@@ -2772,8 +2750,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     // but the spec says it acts like the rest of these
     || disp->mChildPerspective.GetUnit() == eStyleUnit_Coord
     || effects->mMixBlendMode != NS_STYLE_BLEND_NORMAL
-    || nsSVGIntegrationUtils::UsingEffectsForFrame(child)
-    || (child->GetStateBits() & NS_FRAME_HAS_VR_CONTENT);
+    || nsSVGIntegrationUtils::UsingEffectsForFrame(child);
 
   bool isPositioned = disp->IsAbsPosContainingBlock(child);
   bool isStackingContext =

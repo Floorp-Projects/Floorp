@@ -187,7 +187,6 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
         t->mPictureRect = timedTexture.picture();
         t->mFrameID = timedTexture.frameID();
         t->mProducerID = timedTexture.producerID();
-        t->mInputFrameID = timedTexture.inputFrameID();
         t->mTexture->DeserializeReadLock(timedTexture.sharedLock(), this);
         MOZ_ASSERT(ValidatePictureRect(t->mTexture->GetSize(), t->mPictureRect));
 

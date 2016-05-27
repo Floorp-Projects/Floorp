@@ -6308,8 +6308,8 @@ FullscreenTransitionTask::Observer::Observe(nsISupports* aSubject,
 }
 
 static bool
-MakeWidgetFullscreen(nsGlobalWindow* aWindow, gfx::VRDeviceProxy* aHMD,
-                     FullscreenReason aReason, bool aFullscreen)
+MakeWidgetFullscreen(nsGlobalWindow* aWindow, FullscreenReason aReason,
+                     bool aFullscreen)
 {
   nsCOMPtr<nsIWidget> widget = aWindow->GetMainWidget();
   if (!widget) {
@@ -6326,13 +6326,16 @@ MakeWidgetFullscreen(nsGlobalWindow* aWindow, gfx::VRDeviceProxy* aHMD,
         PrepareForFullscreenTransition(getter_AddRefs(transitionData));
     }
   }
-  nsCOMPtr<nsIScreen> screen = aHMD ? aHMD->GetScreen() : nullptr;
+  // We pass nullptr as the screen to SetWidgetFullscreen
+  // and FullscreenTransitionTask, as we do not wish to override
+  // the default screen selection behavior.  The screen containing
+  // most of the widget will be selected.
   if (!performTransition) {
-    return aWindow->SetWidgetFullscreen(aReason, aFullscreen, widget, screen);
+    return aWindow->SetWidgetFullscreen(aReason, aFullscreen, widget, nullptr);
   } else {
     nsCOMPtr<nsIRunnable> task =
       new FullscreenTransitionTask(duration, aWindow, aFullscreen,
-                                   widget, screen, transitionData);
+                                   widget, nullptr, transitionData);
     task->Run();
     return true;
   }
@@ -6340,8 +6343,7 @@ MakeWidgetFullscreen(nsGlobalWindow* aWindow, gfx::VRDeviceProxy* aHMD,
 
 nsresult
 nsGlobalWindow::SetFullscreenInternal(FullscreenReason aReason,
-                                      bool aFullScreen,
-                                      gfx::VRDeviceProxy* aHMD)
+                                      bool aFullScreen)
 {
   MOZ_ASSERT(IsOuterWindow());
   MOZ_ASSERT(nsContentUtils::IsSafeToRunScript(),
@@ -6370,7 +6372,7 @@ nsGlobalWindow::SetFullscreenInternal(FullscreenReason aReason,
   if (!window)
     return NS_ERROR_FAILURE;
   if (rootItem != mDocShell)
-    return window->SetFullscreenInternal(aReason, aFullScreen, aHMD);
+    return window->SetFullscreenInternal(aReason, aFullScreen);
 
   // make sure we don't try to set full screen on a non-chrome window,
   // which might happen in embedding world
@@ -6421,7 +6423,7 @@ nsGlobalWindow::SetFullscreenInternal(FullscreenReason aReason,
   // dimensions to appear to increase when entering fullscreen mode; we just
   // want the content to fill the entire client area of the emulator window.
   if (!Preferences::GetBool("full-screen-api.ignore-widgets", false)) {
-    if (MakeWidgetFullscreen(this, aHMD, aReason, aFullScreen)) {
+    if (MakeWidgetFullscreen(this, aReason, aFullScreen)) {
       // The rest of code for switching fullscreen is in nsGlobalWindow::
       // FinishFullscreenChange() which will be called after sizemodechange
       // event is dispatched.

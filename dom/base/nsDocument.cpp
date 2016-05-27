@@ -243,7 +243,6 @@
 #include "nsLocation.h"
 #include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/dom/BoxObject.h"
-#include "gfxVR.h"
 #include "gfxPrefs.h"
 #include "nsISupportsPrimitives.h"
 #include "mozilla/StyleSetHandle.h"
@@ -11498,8 +11497,6 @@ UpdateViewportScrollbarOverrideForFullscreen(nsIDocument* aDoc)
 static void
 ClearFullscreenStateOnElement(Element* aElement)
 {
-  // Remove any VR state properties
-  aElement->DeleteProperty(nsGkAtoms::vr_state);
   // Remove styles from existing top element.
   EventStateManager::SetFullScreenState(aElement, false);
   // Reset iframe fullscreen flag.
@@ -11669,14 +11666,6 @@ nsDocument::IsUnprefixedFullscreenEnabled(JSContext* aCx, JSObject* aObject)
   MOZ_ASSERT(NS_IsMainThread());
   return nsContentUtils::IsCallerChrome() ||
          nsContentUtils::IsUnprefixedFullscreenApiEnabled();
-}
-
-static void
-ReleaseVRDeviceProxyRef(void *, nsIAtom*, void *aPropertyValue, void *)
-{
-  if (aPropertyValue) {
-    static_cast<gfx::VRDeviceProxy*>(aPropertyValue)->Release();
-  }
 }
 
 static bool
@@ -11959,10 +11948,7 @@ nsDocument::RequestFullScreen(UniquePtr<FullscreenRequest>&& aRequest)
       /* Bubbles */ true, /* Cancelable */ false, /* DefaultAction */ nullptr);
   } else {
     // Make the window fullscreen.
-    const FullscreenRequest*
-      lastRequest = PendingFullscreenRequestList::GetLast();
-    rootWin->SetFullscreenInternal(FullscreenReason::ForFullscreenAPI, true,
-                                   lastRequest->mVRHMDDevice);
+    rootWin->SetFullscreenInternal(FullscreenReason::ForFullscreenAPI, true);
   }
 }
 
@@ -12018,13 +12004,6 @@ nsDocument::ApplyFullscreen(const FullscreenRequest& aRequest)
   // If a document is already in fullscreen, then unlock the mouse pointer
   // before setting a new document to fullscreen
   UnlockPointer();
-
-  // Process options -- in this case, just HMD
-  if (aRequest.mVRHMDDevice) {
-    RefPtr<gfx::VRDeviceProxy> hmdRef = aRequest.mVRHMDDevice;
-    elem->SetProperty(nsGkAtoms::vr_state, hmdRef.forget().take(),
-                      ReleaseVRDeviceProxyRef, true);
-  }
 
   // Set the full-screen element. This sets the full-screen style on the
   // element, and the full-screen-ancestor styles on ancestors of the element
