@@ -740,41 +740,41 @@
               <box id="notification-popup-box" hidden="true" align="center">
                 <image id="default-notification-icon" class="notification-anchor-icon" role="button"
                        aria-label="&urlbar.defaultNotificationAnchor.label;"/>
-                <image id="geo-notification-icon" class="notification-anchor-icon" role="button"
+                <image id="geo-notification-icon" class="notification-anchor-icon geo-icon" role="button"
                        aria-label="&urlbar.geolocationNotificationAnchor.label;"/>
-                <image id="addons-notification-icon" class="notification-anchor-icon" role="button"
+                <image id="addons-notification-icon" class="notification-anchor-icon install-icon" role="button"
                        aria-label="&urlbar.addonsNotificationAnchor.label;"/>
-                <image id="indexedDB-notification-icon" class="notification-anchor-icon" role="button"
+                <image id="indexedDB-notification-icon" class="notification-anchor-icon indexedDB-icon" role="button"
                        aria-label="&urlbar.indexedDBNotificationAnchor.label;"/>
-                <image id="login-fill-notification-icon" class="notification-anchor-icon" role="button"
+                <image id="login-fill-notification-icon" class="notification-anchor-icon login-icon" role="button"
                        aria-label="&urlbar.loginFillNotificationAnchor.label;"/>
-                <image id="password-notification-icon" class="notification-anchor-icon" role="button"
+                <image id="password-notification-icon" class="notification-anchor-icon login-icon" role="button"
                        aria-label="&urlbar.passwordNotificationAnchor.label;"/>
-                <image id="plugins-notification-icon" class="notification-anchor-icon" role="button"
+                <image id="plugins-notification-icon" class="notification-anchor-icon plugin-icon" role="button"
                        aria-label="&urlbar.pluginsNotificationAnchor.label;"/>
-                <image id="web-notifications-notification-icon" class="notification-anchor-icon" role="button"
+                <image id="web-notifications-notification-icon" class="notification-anchor-icon web-notifications-icon" role="button"
                        aria-label="&urlbar.webNotsNotificationAnchor3.label;"/>
-                <image id="webRTC-shareDevices-notification-icon" class="notification-anchor-icon" role="button"
+                <image id="webRTC-shareDevices-notification-icon" class="notification-anchor-icon camera-icon" role="button"
                        aria-label="&urlbar.webRTCShareDevicesNotificationAnchor.label;"/>
-                <image id="webRTC-sharingDevices-notification-icon" class="notification-anchor-icon" role="button"
+                <image id="webRTC-sharingDevices-notification-icon" class="notification-anchor-icon camera-icon in-use" role="button"
                        aria-label="&urlbar.webRTCSharingDevicesNotificationAnchor.label;"/>
-                <image id="webRTC-shareMicrophone-notification-icon" class="notification-anchor-icon" role="button"
+                <image id="webRTC-shareMicrophone-notification-icon" class="notification-anchor-icon microphone-icon" role="button"
                        aria-label="&urlbar.webRTCShareMicrophoneNotificationAnchor.label;"/>
-                <image id="webRTC-sharingMicrophone-notification-icon" class="notification-anchor-icon" role="button"
+                <image id="webRTC-sharingMicrophone-notification-icon" class="notification-anchor-icon microphone-icon in-use" role="button"
                        aria-label="&urlbar.webRTCSharingMicrophoneNotificationAnchor.label;"/>
-                <image id="webRTC-shareScreen-notification-icon" class="notification-anchor-icon" role="button"
+                <image id="webRTC-shareScreen-notification-icon" class="notification-anchor-icon screen-icon" role="button"
                        aria-label="&urlbar.webRTCShareScreenNotificationAnchor.label;"/>
-                <image id="webRTC-sharingScreen-notification-icon" class="notification-anchor-icon" role="button"
+                <image id="webRTC-sharingScreen-notification-icon" class="notification-anchor-icon screen-icon in-use" role="button"
                        aria-label="&urlbar.webRTCSharingScreenNotificationAnchor.label;"/>
-                <image id="pointerLock-notification-icon" class="notification-anchor-icon" role="button"
+                <image id="pointerLock-notification-icon" class="notification-anchor-icon pointer-icon" role="button"
                        aria-label="&urlbar.pointerLockNotificationAnchor.label;"/>
-                <image id="servicesInstall-notification-icon" class="notification-anchor-icon" role="button"
+                <image id="servicesInstall-notification-icon" class="notification-anchor-icon service-icon" role="button"
                        aria-label="&urlbar.servicesNotificationAnchor.label;"/>
-                <image id="translate-notification-icon" class="notification-anchor-icon" role="button"
+                <image id="translate-notification-icon" class="notification-anchor-icon translation-icon" role="button"
                        aria-label="&urlbar.translateNotificationAnchor.label;"/>
-                <image id="translated-notification-icon" class="notification-anchor-icon" role="button"
+                <image id="translated-notification-icon" class="notification-anchor-icon translation-icon in-use" role="button"
                        aria-label="&urlbar.translatedNotificationAnchor.label;"/>
-                <image id="eme-notification-icon" class="notification-anchor-icon" role="button"
+                <image id="eme-notification-icon" class="notification-anchor-icon drm-icon" role="button"
                        aria-label="&urlbar.emeNotificationAnchor.label;"/>
               </box>
               <!-- Use onclick instead of normal popup= syntax since the popup
