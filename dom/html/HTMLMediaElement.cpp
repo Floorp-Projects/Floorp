@@ -75,6 +75,7 @@
 #include "VideoStreamTrack.h"
 #include "MediaTrackList.h"
 #include "MediaStreamError.h"
+#include "VideoFrameContainer.h"
 
 #include "AudioChannelService.h"
 
