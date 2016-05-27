@@ -5518,6 +5518,15 @@
     "releaseChannelCollection": "opt-out",
     "description": "Record the search counts for search engines"
   },
+  "SEARCH_RESET_RESULT": {
+    "alert_emails": ["fqueze@mozilla.com"],
+    "bug_numbers": [1203168],
+    "expires_in_version": "53",
+    "kind": "enumerated",
+    "n_values": 5,
+    "releaseChannelCollection": "opt-out",
+    "description": "Result of showing the search reset prompt to the user. 0=restored original default, 1=kept current engine, 2=changed engine, 3=closed the page"
+  },
   "SEARCH_SERVICE_INIT_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
