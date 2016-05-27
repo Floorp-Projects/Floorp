@@ -622,7 +622,17 @@ public:
     case __NR_inotify_add_watch:
     case __NR_inotify_rm_watch:
       return Allow();
+
+#ifdef __NR_rt_tgsigqueueinfo
+      // Only allow to send signals within the process.
+    case __NR_rt_tgsigqueueinfo: {
+      Arg<pid_t> tgid(0);
+      return If(tgid == getpid(), Allow())
+        .Else(InvalidSyscall());
+    }
 #endif
+
+#endif // DESKTOP
 
       // nsSystemInfo uses uname (and we cache an instance, so
       // the info remains present even if we block the syscall)
