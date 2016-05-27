@@ -10,5 +10,5 @@ add_task(function* capture() {
   }
   let sets = ["TabsInTitlebar", "Tabs", "WindowSize", "Toolbars", "LightweightThemes"];
 
-  yield TestRunner.start(sets);
+  yield TestRunner.start(sets, "primaryUI");
 });
