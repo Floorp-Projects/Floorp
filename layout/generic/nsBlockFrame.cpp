@@ -3647,7 +3647,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
             printf(": reflow incomplete, frame=");
             nsFrame::ListTag(stdout, frame);
             printf(" prevBEndMargin=%d, setting to zero\n",
-                   aState.mPrevBEndMargin);
+                   aState.mPrevBEndMargin.get());
 #endif
             aState.mPrevBEndMargin.Zero();
           }
@@ -3675,7 +3675,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
             printf(": reflow complete but overflow incomplete for ");
             nsFrame::ListTag(stdout, frame);
             printf(" prevBEndMargin=%d collapsedBEndMargin=%d\n",
-                   aState.mPrevBEndMargin, collapsedBEndMargin.get());
+                   aState.mPrevBEndMargin.get(), collapsedBEndMargin.get());
 #endif
             aState.mPrevBEndMargin = collapsedBEndMargin;
           }
@@ -3686,7 +3686,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
           printf(": reflow complete for ");
           nsFrame::ListTag(stdout, frame);
           printf(" prevBEndMargin=%d collapsedBEndMargin=%d\n",
-                 aState.mPrevBEndMargin, collapsedBEndMargin.get());
+                 aState.mPrevBEndMargin.get(), collapsedBEndMargin.get());
 #endif
           aState.mPrevBEndMargin = collapsedBEndMargin;
         }
@@ -3695,8 +3695,8 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         printf(": frame=");
         nsFrame::ListTag(stdout, frame);
         printf(" carriedOutBEndMargin=%d collapsedBEndMargin=%d => %d\n",
-               brc.GetCarriedOutBEndMargin(), collapsedBEndMargin.get(),
-               aState.mPrevBEndMargin);
+               brc.GetCarriedOutBEndMargin().get(), collapsedBEndMargin.get(),
+               aState.mPrevBEndMargin.get());
 #endif
       } else {
         if ((aLine == mLines.front() && !GetPrevInFlow()) ||
