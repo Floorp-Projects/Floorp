@@ -16,19 +16,19 @@ config = {
                 'horizon': 'ffxbld',
             }
         },
-        # Bug 1261346 - temporarily disable staging balrog submissions
-        # {
-        #     'balrog_api_root': 'https://aus4-admin-dev.allizom.org/api',
-        #     'ignore_failures': True,
-        #     'balrog_usernames': {
-        #         'b2g': 'stage-b2gbld',
-        #         'firefox': 'stage-ffxbld',
-        #         'thunderbird': 'stage-tbirdbld',
-        #         'mobile': 'stage-ffxbld',
-        #         'Fennec': 'stage-ffxbld',
-        #         'graphene': 'stage-ffxbld',
-        #         'horizon': 'stage-ffxbld',
-        #     }
-        # }
+        # Bug 1275911 - get releng automation posting to cloudops balrog stage instance
+        {
+            'balrog_api_root': 'https://balrog-admin.stage.mozaws.net/api',
+            'ignore_failures': True,
+            'balrog_usernames': {
+                'b2g': 'stage-b2gbld',
+                'firefox': 'stage-ffxbld',
+                'thunderbird': 'stage-tbirdbld',
+                'mobile': 'stage-ffxbld',
+                'Fennec': 'stage-ffxbld',
+                'graphene': 'stage-ffxbld',
+                'horizon': 'stage-ffxbld',
+            }
+        }
     ]
 }
