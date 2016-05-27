@@ -23,8 +23,7 @@ public:
     Abort,
     Reset,
     RangeRemoval,
-    EvictData,
-    Detach
+    EvictData
   };
 
   typedef Pair<bool, SourceBufferAttributes> AppendBufferResult;
@@ -97,12 +96,6 @@ public:
 
   media::TimeUnit mPlaybackTime;
   int64_t mSizeToEvict;
-};
-
-class DetachTask : public SourceBufferTask {
-public:
-  static const Type sType = Type::Detach;
-  Type GetType() const override { return Type::Detach; }
 };
 
 } // end mozilla namespace
