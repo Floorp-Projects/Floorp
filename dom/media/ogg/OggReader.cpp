@@ -25,6 +25,7 @@ extern "C" {
 #include "gfx2DGlue.h"
 #include "mozilla/Telemetry.h"
 #include "nsPrintfCString.h"
+#include "VideoFrameContainer.h"
 
 using namespace mozilla::gfx;
 using namespace mozilla::media;
