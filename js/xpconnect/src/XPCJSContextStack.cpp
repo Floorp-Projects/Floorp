@@ -48,12 +48,11 @@ XPCJSContextStack::Pop()
     return cx;
 }
 
-bool
+void
 XPCJSContextStack::Push(JSContext* cx)
 {
     js::Debug_SetActiveJSContext(mRuntime->Runtime(), cx);
     mStack.AppendElement(cx);
-    return true;
 }
 
 JSContext*

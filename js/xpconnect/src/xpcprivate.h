@@ -2768,7 +2768,7 @@ private:
 // delegated to it as an implementation detail.
 
 namespace xpc {
-bool PushNullJSContext();
+void PushNullJSContext();
 void PopNullJSContext();
 
 } /* namespace xpc */
@@ -2806,13 +2806,13 @@ public:
 
 private:
     friend class mozilla::dom::danger::AutoCxPusher;
-    friend bool xpc::PushNullJSContext();
+    friend void xpc::PushNullJSContext();
     friend void xpc::PopNullJSContext();
 
     // We make these private so that stack manipulation can only happen
     // through one of the above friends.
     JSContext* Pop();
-    bool Push(JSContext* cx);
+    void Push(JSContext* cx);
 
     AutoTArray<JSContext*, 16> mStack;
     XPCJSRuntime* mRuntime;
