@@ -120,6 +120,7 @@ ImageOps::DecodeToSurface(nsIInputStream* aInputStream,
   RefPtr<Decoder> decoder =
     DecoderFactory::CreateAnonymousDecoder(decoderType,
                                            sourceBuffer,
+                                           Nothing(),
                                            ToSurfaceFlags(aFlags));
   if (!decoder) {
     return nullptr;
