@@ -328,15 +328,17 @@ win32.createPipe = function(secAttr, readFlags = 0, writeFlags = 0, size = 0) {
     0, /* timeout */
     secAttr.address());
 
-  if (readHandle == Win.INVALID_HANDLE_VALUE) {
+  let isInvalid = handle => String(handle) == String(win32.HANDLE(Win.INVALID_HANDLE_VALUE));
+
+  if (isInvalid(readHandle)) {
     return [];
   }
 
   let writeHandle = libc.CreateFileW(
     pipeName, Win.GENERIC_WRITE, 0, secAttr.address(),
-    Win.OPEN_EXISTING, writeFlags, 0);
+    Win.OPEN_EXISTING, writeFlags, null);
 
-  if (writeHandle == Win.INVALID_HANDLE_VALUE) {
+  if (isInvalid(writeHandle)) {
     libc.CloseHandle(readHandle);
     return [];
   }
