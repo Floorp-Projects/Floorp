@@ -48,7 +48,7 @@ class AstName
     const char16_t* end_;
   public:
     template <size_t Length>
-    AstName(const char16_t (&str)[Length]) : begin_(str), end_(str + Length - 1) {
+    explicit AstName(const char16_t (&str)[Length]) : begin_(str), end_(str + Length - 1) {
       MOZ_ASSERT(str[Length - 1] == MOZ_UTF16('\0'));
     }
 
