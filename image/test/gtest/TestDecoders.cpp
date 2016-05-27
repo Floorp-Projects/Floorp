@@ -38,8 +38,8 @@ TEST(ImageDecoders, ImageModuleAvailable)
   EXPECT_TRUE(imgTools != nullptr);
 }
 
-static void
-CheckDecoderResults(const ImageTestCase& aTestCase, Decoder* aDecoder)
+static already_AddRefed<SourceSurface>
+CheckDecoderState(const ImageTestCase& aTestCase, Decoder* aDecoder)
 {
   EXPECT_TRUE(aDecoder->GetDecodeDone());
   EXPECT_EQ(bool(aTestCase.mFlags & TEST_CASE_HAS_ERROR),
@@ -52,7 +52,7 @@ CheckDecoderResults(const ImageTestCase& aTestCase, Decoder* aDecoder)
             bool(progress & FLAG_HAS_ERROR));
 
   if (aTestCase.mFlags & TEST_CASE_HAS_ERROR) {
-    return;  // That's all we can check for bad images.
+    return nullptr;  // That's all we can check for bad images.
   }
 
   EXPECT_TRUE(bool(progress & FLAG_SIZE_AVAILABLE));
@@ -77,13 +77,28 @@ CheckDecoderResults(const ImageTestCase& aTestCase, Decoder* aDecoder)
   EXPECT_EQ(SurfaceType::DATA, surface->GetType());
   EXPECT_TRUE(surface->GetFormat() == SurfaceFormat::B8G8R8X8 ||
               surface->GetFormat() == SurfaceFormat::B8G8R8A8);
-  EXPECT_EQ(aTestCase.mSize, surface->GetSize());
+  EXPECT_EQ(aTestCase.mOutputSize, surface->GetSize());
+
+  return surface.forget();
+}
+
+static void
+CheckDecoderResults(const ImageTestCase& aTestCase, Decoder* aDecoder)
+{
+  RefPtr<SourceSurface> surface = CheckDecoderState(aTestCase, aDecoder);
+  if (!surface) {
+    return;
+  }
+
+  // Check the output.
   EXPECT_TRUE(IsSolidColor(surface, BGRAColor::Green(),
                            aTestCase.mFlags & TEST_CASE_IS_FUZZY ? 1 : 0));
 }
 
-static void
-CheckDecoderSingleChunk(const ImageTestCase& aTestCase)
+template <typename Func>
+void WithSingleChunkDecode(const ImageTestCase& aTestCase,
+                           const Maybe<IntSize>& aOutputSize,
+                           Func aResultChecker)
 {
   nsCOMPtr<nsIInputStream> inputStream = LoadFile(aTestCase.mPath);
   ASSERT_TRUE(inputStream != nullptr);
@@ -104,14 +119,23 @@ CheckDecoderSingleChunk(const ImageTestCase& aTestCase)
   DecoderType decoderType =
     DecoderFactory::GetDecoderType(aTestCase.mMimeType);
   RefPtr<Decoder> decoder =
-    DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer, Nothing(),
+    DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer, aOutputSize,
                                            DefaultSurfaceFlags());
   ASSERT_TRUE(decoder != nullptr);
 
   // Run the full decoder synchronously.
   decoder->Decode();
-  
-  CheckDecoderResults(aTestCase, decoder);
+
+  // Call the lambda to verify the expected results.
+  aResultChecker(decoder);
+}
+
+static void
+CheckDecoderSingleChunk(const ImageTestCase& aTestCase)
+{
+  WithSingleChunkDecode(aTestCase, Nothing(), [&](Decoder* aDecoder) {
+    CheckDecoderResults(aTestCase, aDecoder);
+  });
 }
 
 class NoResume : public IResumable
@@ -167,6 +191,32 @@ CheckDecoderMultiChunk(const ImageTestCase& aTestCase)
   CheckDecoderResults(aTestCase, decoder);
 }
 
+static void
+CheckDownscaleDuringDecode(const ImageTestCase& aTestCase)
+{
+  // This function expects that |aTestCase| consists of 25 lines of green,
+  // followed by 25 lines of red, followed by 25 lines of green, followed by 25
+  // more lines of red. We'll downscale it from 100x100 to 20x20.
+  IntSize outputSize(20, 20);
+
+  WithSingleChunkDecode(aTestCase, Some(outputSize), [&](Decoder* aDecoder) {
+    RefPtr<SourceSurface> surface = CheckDecoderState(aTestCase, aDecoder);
+
+    // There are no downscale-during-decode tests that have TEST_CASE_HAS_ERROR
+    // set, so we expect to always get a surface here.
+    EXPECT_TRUE(surface != nullptr);
+
+    // Check that the downscaled image is correct. Note that we skip rows near
+    // the transitions between colors, since the downscaler does not produce a
+    // sharp boundary at these points. Even some of the rows we test need a
+    // small amount of fuzz; this is just the nature of Lanczos downscaling.
+    EXPECT_TRUE(RowsAreSolidColor(surface, 0, 4, BGRAColor::Green(), /* aFuzz = */ 3));
+    EXPECT_TRUE(RowsAreSolidColor(surface, 6, 3, BGRAColor::Red(), /* aFuzz = */ 4));
+    EXPECT_TRUE(RowsAreSolidColor(surface, 11, 3, BGRAColor::Green(), /* aFuzz = */ 3));
+    EXPECT_TRUE(RowsAreSolidColor(surface, 16, 4, BGRAColor::Red(), /* aFuzz = */ 3));
+  });
+}
+
 TEST(ImageDecoders, PNGSingleChunk)
 {
   CheckDecoderSingleChunk(GreenPNGTestCase());
@@ -175,6 +225,11 @@ TEST(ImageDecoders, PNGSingleChunk)
 TEST(ImageDecoders, PNGMultiChunk)
 {
   CheckDecoderMultiChunk(GreenPNGTestCase());
+}
+
+TEST(ImageDecoders, PNGDownscaleDuringDecode)
+{
+  CheckDownscaleDuringDecode(DownscaledPNGTestCase());
 }
 
 TEST(ImageDecoders, GIFSingleChunk)
@@ -187,6 +242,11 @@ TEST(ImageDecoders, GIFMultiChunk)
   CheckDecoderMultiChunk(GreenGIFTestCase());
 }
 
+TEST(ImageDecoders, GIFDownscaleDuringDecode)
+{
+  CheckDownscaleDuringDecode(DownscaledGIFTestCase());
+}
+
 TEST(ImageDecoders, JPGSingleChunk)
 {
   CheckDecoderSingleChunk(GreenJPGTestCase());
@@ -195,6 +255,11 @@ TEST(ImageDecoders, JPGSingleChunk)
 TEST(ImageDecoders, JPGMultiChunk)
 {
   CheckDecoderMultiChunk(GreenJPGTestCase());
+}
+
+TEST(ImageDecoders, JPGDownscaleDuringDecode)
+{
+  CheckDownscaleDuringDecode(DownscaledJPGTestCase());
 }
 
 TEST(ImageDecoders, BMPSingleChunk)
@@ -207,6 +272,11 @@ TEST(ImageDecoders, BMPMultiChunk)
   CheckDecoderMultiChunk(GreenBMPTestCase());
 }
 
+TEST(ImageDecoders, BMPDownscaleDuringDecode)
+{
+  CheckDownscaleDuringDecode(DownscaledBMPTestCase());
+}
+
 TEST(ImageDecoders, ICOSingleChunk)
 {
   CheckDecoderSingleChunk(GreenICOTestCase());
@@ -217,6 +287,11 @@ TEST(ImageDecoders, ICOMultiChunk)
   CheckDecoderMultiChunk(GreenICOTestCase());
 }
 
+TEST(ImageDecoders, ICODownscaleDuringDecode)
+{
+  CheckDownscaleDuringDecode(DownscaledICOTestCase());
+}
+
 TEST(ImageDecoders, IconSingleChunk)
 {
   CheckDecoderSingleChunk(GreenIconTestCase());
@@ -225,6 +300,11 @@ TEST(ImageDecoders, IconSingleChunk)
 TEST(ImageDecoders, IconMultiChunk)
 {
   CheckDecoderMultiChunk(GreenIconTestCase());
+}
+
+TEST(ImageDecoders, IconDownscaleDuringDecode)
+{
+  CheckDownscaleDuringDecode(DownscaledIconTestCase());
 }
 
 TEST(ImageDecoders, AnimatedGIFSingleChunk)
