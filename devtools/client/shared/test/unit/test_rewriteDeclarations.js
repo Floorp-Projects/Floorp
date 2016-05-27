@@ -8,6 +8,7 @@
 var Cu = Components.utils;
 Cu.import("resource://devtools/shared/Loader.jsm");
 const {RuleRewriter} = devtools.require("devtools/shared/css-parsing-utils");
+const {isCssPropertyKnown} = require("devtools/server/actors/css-properties");
 
 const TEST_DATA = [
   {
@@ -443,7 +444,7 @@ const TEST_DATA = [
 ];
 
 function rewriteDeclarations(inputString, instruction, defaultIndentation) {
-  let rewriter = new RuleRewriter(null, inputString);
+  let rewriter = new RuleRewriter(isCssPropertyKnown, null, inputString);
   rewriter.defaultIndentation = defaultIndentation;
 
   switch (instruction.type) {

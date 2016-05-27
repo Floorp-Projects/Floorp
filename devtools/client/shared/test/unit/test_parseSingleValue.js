@@ -8,6 +8,7 @@
 var Cu = Components.utils;
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const {parseSingleValue} = require("devtools/shared/css-parsing-utils");
+const {isCssPropertyKnown} = require("devtools/server/actors/css-properties");
 
 const TEST_DATA = [
   {input: null, throws: true},
@@ -69,7 +70,7 @@ function run_test() {
   for (let test of TEST_DATA) {
     do_print("Test input value " + test.input);
     try {
-      let output = parseSingleValue(test.input);
+      let output = parseSingleValue(isCssPropertyKnown, test.input);
       assertOutput(output, test.expected);
     } catch (e) {
       do_print("parseSingleValue threw an exception with the given input " +

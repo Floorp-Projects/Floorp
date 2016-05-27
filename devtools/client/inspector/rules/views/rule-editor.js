@@ -442,7 +442,7 @@ RuleEditor.prototype = {
 
     // Auto-close the input if multiple rules get pasted into new property.
     this.editor.input.addEventListener("paste",
-      blurOnMultipleProperties, false);
+      blurOnMultipleProperties(this.rule.cssProperties), false);
   },
 
   /**
@@ -462,7 +462,8 @@ RuleEditor.prototype = {
     // case, we're creating a new declaration, it doesn't make sense to accept
     // these entries
     this.multipleAddedProperties =
-      parseDeclarations(value, true).filter(d => d.name);
+      parseDeclarations(this.rule.cssProperties.isKnown, value, true)
+      .filter(d => d.name);
 
     // Blur the editor field now and deal with adding declarations later when
     // the field gets destroyed (see _newPropertyDestroy)
