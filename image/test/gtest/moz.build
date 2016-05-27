@@ -31,6 +31,12 @@ SOURCES += [
 
 TEST_HARNESS_FILES.gtest += [
     'corrupt.jpg',
+    'downscaled.bmp',
+    'downscaled.gif',
+    'downscaled.ico',
+    'downscaled.icon',
+    'downscaled.jpg',
+    'downscaled.png',
     'first-frame-green.gif',
     'first-frame-green.png',
     'first-frame-padding.gif',
