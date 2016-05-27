@@ -104,7 +104,7 @@ CheckDecoderSingleChunk(const ImageTestCase& aTestCase)
   DecoderType decoderType =
     DecoderFactory::GetDecoderType(aTestCase.mMimeType);
   RefPtr<Decoder> decoder =
-    DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer,
+    DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer, Nothing(),
                                            DefaultSurfaceFlags());
   ASSERT_TRUE(decoder != nullptr);
 
@@ -141,7 +141,7 @@ CheckDecoderMultiChunk(const ImageTestCase& aTestCase)
   DecoderType decoderType =
     DecoderFactory::GetDecoderType(aTestCase.mMimeType);
   RefPtr<Decoder> decoder =
-    DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer,
+    DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer, Nothing(),
                                            DefaultSurfaceFlags());
   ASSERT_TRUE(decoder != nullptr);
 
