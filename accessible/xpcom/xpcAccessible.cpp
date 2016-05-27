@@ -469,12 +469,21 @@ xpcAccessible::GetRelationByType(uint32_t aType,
 
   NS_ENSURE_ARG(aType <= static_cast<uint32_t>(RelationType::LAST));
 
-  if (!Intl())
+  if (IntlGeneric().IsNull())
     return NS_ERROR_FAILURE;
 
-  Relation rel = Intl()->RelationByType(static_cast<RelationType>(aType));
-  NS_ADDREF(*aRelation = new nsAccessibleRelation(aType, &rel));
-  return *aRelation ? NS_OK : NS_ERROR_FAILURE;
+  if (IntlGeneric().IsAccessible()) {
+    Relation rel = Intl()->RelationByType(static_cast<RelationType>(aType));
+    NS_ADDREF(*aRelation = new nsAccessibleRelation(aType, &rel));
+    return NS_OK;
+  }
+
+  ProxyAccessible* proxy = IntlGeneric().AsProxy();
+  nsTArray<ProxyAccessible*> targets =
+    proxy->RelationByType(static_cast<RelationType>(aType));
+  NS_ADDREF(*aRelation = new nsAccessibleRelation(aType, &targets));
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
