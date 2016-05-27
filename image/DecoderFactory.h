@@ -120,17 +120,12 @@ public:
    * @param aType Which type of decoder to create - JPEG, PNG, etc.
    * @param aSourceBuffer The SourceBuffer which the decoder will read its data
    *                      from.
-   * @param aTargetSize If not Nothing(), the target size which the image should
-   *                    be scaled to during decoding. It's an error to specify
-   *                    a target size for a decoder type which doesn't support
-   *                    downscale-during-decode.
    * @param aSurfaceFlags Flags specifying the type of output this decoder
    *                      should produce.
    */
   static already_AddRefed<Decoder>
   CreateAnonymousDecoder(DecoderType aType,
                          SourceBuffer* aSourceBuffer,
-                         const Maybe<gfx::IntSize>& aTargetSize,
                          SurfaceFlags aSurfaceFlags);
 
   /**
