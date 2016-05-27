@@ -27,8 +27,6 @@
       <handler event="keypress" keycode="VK_HOME" modifiers="shift" command="cmd_selectBeginLine" />
       <handler event="keypress" keycode="VK_END" modifiers="shift" command="cmd_selectEndLine" />
 
-      <handler event="keypress" keycode="VK_BACK" modifiers="shift" command="cmd_deleteCharForward"/>
-      <handler event="keypress" keycode="VK_BACK" modifiers="shift,alt" command="cmd_deleteToEndOfLine"/>
       <handler event="keypress" keycode="VK_BACK" modifiers="alt" command="cmd_deleteToBeginningOfLine"/>
       <handler event="keypress" keycode="VK_DELETE" modifiers="alt" command="cmd_deleteToEndOfLine"/>
     </handlers>
@@ -71,8 +69,6 @@
       <handler event="keypress" keycode="VK_HOME" modifiers="shift,control" command="cmd_selectTop" />
       <handler event="keypress" keycode="VK_END" modifiers="shift,control" command="cmd_selectBottom" />
 
-      <handler event="keypress" keycode="VK_BACK" modifiers="shift" command="cmd_deleteCharForward"/>
-      <handler event="keypress" keycode="VK_BACK" modifiers="shift,alt" command="cmd_deleteToEndOfLine"/>
       <handler event="keypress" keycode="VK_BACK" modifiers="alt" command="cmd_deleteToBeginningOfLine"/>
       <handler event="keypress" keycode="VK_DELETE" modifiers="alt" command="cmd_deleteToEndOfLine"/>
     </handlers>
@@ -117,8 +113,6 @@
       <handler event="keypress" keycode="VK_HOME" modifiers="shift,control" command="cmd_selectTop" />
       <handler event="keypress" keycode="VK_END" modifiers="shift,control" command="cmd_selectBottom" />
 
-      <handler event="keypress" keycode="VK_BACK" modifiers="shift" command="cmd_deleteCharForward"/>
-      <handler event="keypress" keycode="VK_BACK" modifiers="shift,alt" command="cmd_deleteToEndOfLine"/>
       <handler event="keypress" keycode="VK_BACK" modifiers="alt" command="cmd_deleteToBeginningOfLine"/>
       <handler event="keypress" keycode="VK_DELETE" modifiers="alt" command="cmd_deleteToEndOfLine"/>
     </handlers>
@@ -161,8 +155,6 @@
       <handler event="keypress" keycode="VK_HOME" modifiers="shift,control" command="cmd_selectTop" />
       <handler event="keypress" keycode="VK_END" modifiers="shift,control" command="cmd_selectBottom" />
 
-      <handler event="keypress" keycode="VK_BACK" modifiers="shift" command="cmd_deleteCharForward"/>
-      <handler event="keypress" keycode="VK_BACK" modifiers="shift,alt" command="cmd_deleteToEndOfLine"/>
       <handler event="keypress" keycode="VK_BACK" modifiers="alt" command="cmd_deleteToBeginningOfLine"/>
       <handler event="keypress" keycode="VK_DELETE" modifiers="alt" command="cmd_deleteToEndOfLine"/>
     </handlers>
