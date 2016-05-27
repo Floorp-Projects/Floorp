@@ -25,15 +25,24 @@ typeTests.forEach((type) => {
   is(result.display, 'browser', expected);
 });
 
-/*Test valid modes*/
-var validModes = ['fullscreen', 'standalone', 'minimal-ui', 'browser']
+/*Test valid modes - case insensitive*/
+var validModes = [
+  'fullscreen',
+  'standalone',
+  'minimal-ui',
+  'browser',
+  'FullScreen',
+  'standAlone',
+  'minimal-UI',
+  'BROWSER',
+]
 validModes.forEach((mode) => {
-  var expected = `Expect display mode to be ${mode}.`;
+  var expected = `Expect display mode to be ${mode.toLowerCase()}.`;
   data.jsonText = JSON.stringify({
     display: mode
   });
   var result = processor.process(data);
-  is(result.display, mode, expected);
+  is(result.display, mode.toLowerCase(), expected);
 });
 
 //trim tests
@@ -44,11 +53,19 @@ validModes.forEach((display) => {
     display: expandedDisplay
   });
   var result = processor.process(data);
-  is(result.display, display, expected);
+  is(result.display, display.toLowerCase(), expected);
 });
 
 //Unknown modes
-var invalidModes = ['foo', `fooo${whiteSpace}`, '', 'fullscreen,standalone', 'standalone fullscreen', 'FULLSCreEN'];
+var invalidModes = [
+  'foo',
+  `fooo${whiteSpace}`,
+  '',
+  'fullscreen,standalone',
+  'standalone fullscreen',
+  'FULLSCreENS',
+];
+
 invalidModes.forEach((invalidMode) => {
   var expected = `Expect default display mode "browser" to be returned: '${invalidMode}'`;
   data.jsonText = JSON.stringify({

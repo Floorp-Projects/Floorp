@@ -6,8 +6,10 @@
 
 #include "mozilla/ServoBindings.h"
 
+#include "nsAttrValueInlines.h"
 #include "nsCSSRuleProcessor.h"
 #include "nsContentUtils.h"
+#include "nsDOMTokenList.h"
 #include "nsIDOMNode.h"
 #include "nsIDocument.h"
 #include "nsINode.h"
@@ -153,6 +155,67 @@ Gecko_Namespace(RawGeckoElement* aElement)
   return nsContentUtils::NameSpaceManager()->NameSpaceURIAtom(id);
 }
 
+nsIAtom*
+Gecko_GetElementId(RawGeckoElement* aElement)
+{
+  const nsAttrValue* attr = aElement->GetParsedAttr(nsGkAtoms::id);
+  return attr ? attr->GetAtomValue() : nullptr;
+}
+
+uint32_t
+Gecko_ClassOrClassList(RawGeckoElement* aElement,
+                       nsIAtom** aClass, nsIAtom*** aClassList)
+{
+  const nsAttrValue* attr = aElement->GetParsedAttr(nsGkAtoms::_class);
+  if (!attr) {
+    return 0;
+  }
+
+  // For class values with only whitespace, Gecko just stores a string. For the
+  // purposes of the style system, there is no class in this case.
+  if (attr->Type() == nsAttrValue::eString) {
+    MOZ_ASSERT(nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespace>(
+                 attr->GetStringValue()).IsEmpty());
+    return 0;
+  }
+
+  // Single tokens are generally stored as an atom. Check that case.
+  if (attr->Type() == nsAttrValue::eAtom) {
+    *aClass = attr->GetAtomValue();
+    return 1;
+  }
+
+  // At this point we should have an atom array. It is likely, but not
+  // guaranteed, that we have two or more elements in the array.
+  MOZ_ASSERT(attr->Type() == nsAttrValue::eAtomArray);
+  nsTArray<nsCOMPtr<nsIAtom>>* atomArray = attr->GetAtomArrayValue();
+  uint32_t length = atomArray->Length();
+
+  // Special case: zero elements.
+  if (length == 0) {
+    return 0;
+  }
+
+  // Special case: one element.
+  if (length == 1) {
+    *aClass = atomArray->ElementAt(0);
+    return 1;
+  }
+
+  // General case: Two or more elements.
+  //
+  // Note: We could also expose this array as an array of nsCOMPtrs, since
+  // bindgen knows what those look like, and eliminate the reinterpret_cast.
+  // But it's not obvious that that would be preferable.
+  static_assert(sizeof(nsCOMPtr<nsIAtom>) == sizeof(nsIAtom*), "Bad simplification");
+  static_assert(alignof(nsCOMPtr<nsIAtom>) == alignof(nsIAtom*), "Bad simplification");
+
+  nsCOMPtr<nsIAtom>* elements = atomArray->Elements();
+  nsIAtom** rawElements = reinterpret_cast<nsIAtom**>(elements);
+  *aClassList = rawElements;
+  return atomArray->Length();
+}
+
 ServoNodeData*
 Gecko_GetNodeData(RawGeckoNode* aNode)
 {
@@ -266,10 +329,8 @@ Gecko_SetMozBinding(nsStyleDisplay* aDisplay,
   RefPtr<nsStringBuffer> urlBuffer = nsCSSValue::BufferFromString(url);
 
   aDisplay->mBinding =
-    new css::URLValue(urlBuffer,
-                      nsMainThreadPtrHandle<nsIURI>(aBaseURI),
-                      nsMainThreadPtrHandle<nsIURI>(aReferrer),
-                      nsMainThreadPtrHandle<nsIPrincipal>(aPrincipal));
+    new css::URLValue(urlBuffer, do_AddRef(aBaseURI),
+                      do_AddRef(aReferrer), do_AddRef(aPrincipal));
 }
 
 void

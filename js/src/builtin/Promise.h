@@ -19,7 +19,7 @@ class AutoSetNewObjectMetadata;
 class PromiseObject : public NativeObject
 {
   public:
-    static const unsigned RESERVED_SLOTS = 11;
+    static const unsigned RESERVED_SLOTS = 12;
     static const Class class_;
     static const Class protoClass_;
     static PromiseObject* create(JSContext* cx, HandleObject executor,
@@ -42,10 +42,16 @@ class PromiseObject : public NativeObject
     MOZ_MUST_USE bool resolve(JSContext* cx, HandleValue resolutionValue);
     MOZ_MUST_USE bool reject(JSContext* cx, HandleValue rejectionValue);
 
+    void onSettled(JSContext* cx);
+
     double allocationTime() { return getFixedSlot(PROMISE_ALLOCATION_TIME_SLOT).toNumber(); }
     double resolutionTime() { return getFixedSlot(PROMISE_RESOLUTION_TIME_SLOT).toNumber(); }
-    JSObject* allocationSite() { return &getFixedSlot(PROMISE_ALLOCATION_SITE_SLOT).toObject(); }
-    JSObject* resolutionSite() { return &getFixedSlot(PROMISE_RESOLUTION_SITE_SLOT).toObject(); }
+    JSObject* allocationSite() {
+        return getFixedSlot(PROMISE_ALLOCATION_SITE_SLOT).toObjectOrNull();
+    }
+    JSObject* resolutionSite() {
+        return getFixedSlot(PROMISE_RESOLUTION_SITE_SLOT).toObjectOrNull();
+    }
     double lifetime() {
         double now = JS::TimeClip(static_cast<double>(PRMJ_Now()) / PRMJ_USEC_PER_MSEC).toDouble();
         return now - allocationTime();
@@ -55,8 +61,22 @@ class PromiseObject : public NativeObject
         return resolutionTime() - allocationTime();
     }
     MOZ_MUST_USE bool dependentPromises(JSContext* cx, MutableHandle<GCVector<Value>> values);
-    double getID();
+    uint64_t getID();
+    bool markedAsUncaught() {
+        return getFixedSlot(PROMISE_IS_HANDLED_SLOT).toInt32() != PROMISE_IS_HANDLED_STATE_HANDLED;
+    }
+    void markAsReported() {
+        MOZ_ASSERT(getFixedSlot(PROMISE_IS_HANDLED_SLOT).toInt32() ==
+                   PROMISE_IS_HANDLED_STATE_UNHANDLED);
+        setFixedSlot(PROMISE_IS_HANDLED_SLOT, Int32Value(PROMISE_IS_HANDLED_STATE_REPORTED));
+    }
 };
+
+// ES6, 25.4.2.1.
+bool PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp);
+
+// ES6, 25.4.2.2.
+bool PromiseResolveThenableJob(JSContext* cx, unsigned argc, Value* vp);
 
 } // namespace js
 

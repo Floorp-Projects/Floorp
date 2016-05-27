@@ -482,6 +482,10 @@ GenerateMaskSurface(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
   for (int i = svgMaskFrames.Length() - 1; i >= 0 ; i--) {
     nsSVGMaskFrame *maskFrame = svgMaskFrames[i];
 
+    CompositionOp compositionOp = (i == int(svgMaskFrames.Length() - 1))
+      ? CompositionOp::OP_OVER
+      : nsCSSRendering::GetGFXCompositeMode(svgReset->mMask.mLayers[i].mComposite);
+
     // maskFrame != nullptr means we get a SVG mask.
     // maskFrame == nullptr means we get an image mask.
     if (maskFrame) {
@@ -496,14 +500,13 @@ GenerateMaskSurface(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
 
         maskContext->Multiply(ThebesMatrix(svgMaskMatrix));
         Rect drawRect = IntRectToRect(IntRect(IntPoint(0, 0), svgMask->GetSize()));
-        maskDT->DrawSurface(svgMask, drawRect, drawRect);
+        maskDT->DrawSurface(svgMask, drawRect, drawRect, DrawSurfaceOptions(),
+                            DrawOptions(1.0f, compositionOp));
       }
     } else {
       gfxContextMatrixAutoSaveRestore matRestore(maskContext);
 
       maskContext->Multiply(gfxMatrix::Translation(-aOffest));
-      CompositionOp compositionOp =
-        nsCSSRendering::GetGFXCompositeMode(svgReset->mMask.mLayers[i].mComposite);
       nsRenderingContext rc(maskContext);
       nsCSSRendering::PaintBGParams  params =
         nsCSSRendering::PaintBGParams::ForSingleLayer(*aParams.frame->PresContext(),

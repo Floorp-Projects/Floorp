@@ -3,7 +3,7 @@ config = {
     "version_files": [{"file": "browser/config/version_display.txt"}],
     "repo": {
         "repo": "https://hg.mozilla.org/releases/mozilla-beta",
-        "revision": "default",
+        "branch": "default",
         "dest": "mozilla-beta",
         "vcs": "hg",
     },

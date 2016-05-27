@@ -219,12 +219,6 @@ Zone::discardJitCode(FreeOp* fop)
         /* Only mark OSI points if code is being discarded. */
         jit::InvalidateAll(fop, this);
 
-        /* The storebuffer may contain pointers into data owned by BaselineScript. */
-        JSRuntime* rt = runtimeFromMainThread();
-        if (!rt->isHeapCollecting())
-            rt->gc.evictNursery();
-        MOZ_ASSERT(rt->gc.nursery.isEmpty());
-
         for (ZoneCellIter i(this, AllocKind::SCRIPT); !i.done(); i.next()) {
             JSScript* script = i.get<JSScript>();
             jit::FinishInvalidation(fop, script);
@@ -243,7 +237,15 @@ Zone::discardJitCode(FreeOp* fop)
             script->resetWarmUpCounter();
         }
 
-        jitZone()->optimizedStubSpace()->free();
+        /*
+         * When scripts contains pointers to nursery things, the store buffer
+         * can contain entries that point into the optimized stub space. Since
+         * this method can be called outside the context of a GC, this situation
+         * could result in us trying to mark invalid store buffer entries.
+         *
+         * Defer freeing any allocated blocks until after the next minor GC.
+         */
+        jitZone()->optimizedStubSpace()->freeAllAfterMinorGC(fop->runtime());
     }
 }
 

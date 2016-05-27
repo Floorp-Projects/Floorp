@@ -206,6 +206,7 @@ GeckoDriver.prototype.switchToGlobalMessageManager = function() {
  *     Command ID to ensure synchronisity.
  */
 GeckoDriver.prototype.sendAsync = function(name, msg, cmdId) {
+  logger.info(`sendAsync ${this.sessionId}`)
   let curRemoteFrame = this.curBrowser.frameManager.currentRemoteFrame;
   name = "Marionette:" + name;
 
@@ -310,6 +311,7 @@ GeckoDriver.prototype.addBrowser = function(win) {
  *     True if this is the first time we're talking to this browser.
  */
 GeckoDriver.prototype.startBrowser = function(win, isNewSession=false) {
+  logger.info(`startBrowser ${this.sessionId}`)
   this.mainFrame = win;
   this.curFrame = null;
   this.addBrowser(win);
@@ -468,6 +470,9 @@ GeckoDriver.prototype.listeningPromise = function() {
 
 /** Create a new session. */
 GeckoDriver.prototype.newSession = function*(cmd, resp) {
+  if (this.sessionId) {
+    throw new SessionNotCreatedError("Maximum number of active sessions.")
+  }
   this.sessionId = cmd.parameters.sessionId ||
       cmd.parameters.session_id ||
       element.generateUUID();
@@ -2095,7 +2100,8 @@ GeckoDriver.prototype.addCookie = function*(cmd, resp) {
         cookie.secure,
         cookie.httpOnly,
         cookie.session,
-        cookie.expiry);
+        cookie.expiry,
+        {}); // originAttributes
     return true;
   };
   this.mm.addMessageListener("Marionette:addCookie", cb);
@@ -2653,7 +2659,7 @@ GeckoDriver.prototype.receiveMessage = function(message) {
       let isForCurrentPath = path => currentPath.indexOf(path) != -1;
       let results = [];
 
-      let en = cookieManager.getCookiesFromHost(host);
+      let en = cookieManager.getCookiesFromHost(host, {});
       while (en.hasMoreElements()) {
         let cookie = en.getNext().QueryInterface(Ci.nsICookie2);
         // take the hostname and progressively shorten

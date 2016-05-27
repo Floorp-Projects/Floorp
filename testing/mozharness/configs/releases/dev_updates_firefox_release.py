@@ -4,7 +4,7 @@ config = {
     # TODO: use real repo
     "repo": {
         "repo": "https://hg.mozilla.org/users/raliiev_mozilla.com/tools",
-        "revision": "default",
+        "branch": "default",
         "dest": "tools",
         "vcs": "hg",
     },
