@@ -1389,8 +1389,8 @@ add_task(function* test_defaultSearchEngine() {
 
   const EXPECTED_SEARCH_ENGINE_DATA = {
     name: "telemetry_default",
-    loadPath: "[other]addEngineWithDetails",
-    origin: "verified"
+    loadPath: null,
+    origin: "unverified"
   };
   Assert.deepEqual(data.settings.defaultSearchEngineData, EXPECTED_SEARCH_ENGINE_DATA);
   TelemetryEnvironment.unregisterChangeListener("testWatch_SearchDefault");

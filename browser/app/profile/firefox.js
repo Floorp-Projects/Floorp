@@ -369,8 +369,6 @@ pref("browser.search.redirectWindowsSearch", true);
 pref("browser.search.redirectWindowsSearch", false);
 #endif
 
-pref("browser.search.reset.enabled", true);
-
 pref("browser.usedOnWindows10", false);
 pref("browser.usedOnWindows10.introURL", "https://www.mozilla.org/%LOCALE%/firefox/windows-10/welcome/?utm_source=firefox-browser&utm_medium=firefox-browser");
 
