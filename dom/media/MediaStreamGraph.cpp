@@ -1025,10 +1025,10 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
         // "Call MediaStreamVideoSink::setCurrentFrames in SourceMediaStream::AppendToTrack."
         // of this bug.
         // This is a temp workaround to pass the build and test.
-        if (!aStream->mVideoOutputs[0]->AsVideoFrameContainer()) {
+        if (!aStream->mVideoOutputs[0].mListener->AsVideoFrameContainer()) {
           return;
         }
-        blackImage = aStream->mVideoOutputs[0]->AsVideoFrameContainer()->
+        blackImage = aStream->mVideoOutputs[0].mListener->AsVideoFrameContainer()->
           GetImageContainer()->CreatePlanarYCbCrImage();
         if (blackImage) {
           // Sets the image to a single black pixel, which will be scaled to
@@ -1053,8 +1053,8 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
   AutoTArray<ImageContainer::NonOwningImage,4> images;
   bool haveMultipleImages = false;
 
-  for (MediaStreamVideoSink* sink : aStream->mVideoOutputs) {
-    VideoFrameContainer* output = sink->AsVideoFrameContainer();
+  for (const TrackBound<MediaStreamVideoSink>& sink : aStream->mVideoOutputs) {
+    VideoFrameContainer* output = sink.mListener->AsVideoFrameContainer();
     if (!output) {
       continue;
     }
@@ -2271,55 +2271,76 @@ MediaStream::RemoveAudioOutput(void* aKey)
 }
 
 void
-MediaStream::AddVideoOutputImpl(already_AddRefed<MediaStreamVideoSink> aSink)
+MediaStream::AddVideoOutputImpl(already_AddRefed<MediaStreamVideoSink> aSink,
+                                TrackID aID)
 {
   RefPtr<MediaStreamVideoSink> sink = aSink;
   STREAM_LOG(LogLevel::Info, ("MediaStream %p Adding MediaStreamVideoSink %p as output",
                               this, sink.get()));
-  *mVideoOutputs.AppendElement() = sink.forget();
+  MOZ_ASSERT(aID != TRACK_NONE);
+   for (auto entry : mVideoOutputs) {
+     if (entry.mListener == sink &&
+         (entry.mTrackID == TRACK_ANY || entry.mTrackID == aID)) {
+       return;
+     }
+   }
+   TrackBound<MediaStreamVideoSink>* l = mVideoOutputs.AppendElement();
+   l->mListener = sink;
+   l->mTrackID = aID;
 }
 
 void
-MediaStream::RemoveVideoOutputImpl(MediaStreamVideoSink* aSink)
+MediaStream::RemoveVideoOutputImpl(MediaStreamVideoSink* aSink,
+                                   TrackID aID)
 {
   STREAM_LOG(LogLevel::Info, ("MediaStream %p Removing MediaStreamVideoSink %p as output",
                               this, aSink));
+  MOZ_ASSERT(aID != TRACK_NONE);
+
   // Ensure that any frames currently queued for playback by the compositor
   // are removed.
   aSink->ClearFrames();
-  mVideoOutputs.RemoveElement(aSink);
+  for (size_t i = 0; i < mVideoOutputs.Length(); ++i) {
+    if (mVideoOutputs[i].mListener == aSink &&
+        (mVideoOutputs[i].mTrackID == TRACK_ANY ||
+         mVideoOutputs[i].mTrackID == aID)) {
+      mVideoOutputs.RemoveElementAt(i);
+    }
+  }
 }
 
 void
-MediaStream::AddVideoOutput(MediaStreamVideoSink* aSink)
+MediaStream::AddVideoOutput(MediaStreamVideoSink* aSink, TrackID aID)
 {
   class Message : public ControlMessage {
   public:
-    Message(MediaStream* aStream, MediaStreamVideoSink* aSink) :
-      ControlMessage(aStream), mSink(aSink) {}
+    Message(MediaStream* aStream, MediaStreamVideoSink* aSink, TrackID aID) :
+      ControlMessage(aStream), mSink(aSink), mID(aID) {}
     void Run() override
     {
-      mStream->AddVideoOutputImpl(mSink.forget());
+      mStream->AddVideoOutputImpl(mSink.forget(), mID);
     }
     RefPtr<MediaStreamVideoSink> mSink;
+    TrackID mID;
   };
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aSink));
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aSink, aID));
 }
 
 void
-MediaStream::RemoveVideoOutput(MediaStreamVideoSink* aSink)
+MediaStream::RemoveVideoOutput(MediaStreamVideoSink* aSink, TrackID aID)
 {
   class Message : public ControlMessage {
   public:
-    Message(MediaStream* aStream, MediaStreamVideoSink* aSink) :
-      ControlMessage(aStream), mSink(aSink) {}
+    Message(MediaStream* aStream, MediaStreamVideoSink* aSink, TrackID aID) :
+      ControlMessage(aStream), mSink(aSink), mID(aID) {}
     void Run() override
     {
-      mStream->RemoveVideoOutputImpl(mSink);
+      mStream->RemoveVideoOutputImpl(mSink, mID);
     }
     RefPtr<MediaStreamVideoSink> mSink;
+    TrackID mID;
   };
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aSink));
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aSink, aID));
 }
 
 void
