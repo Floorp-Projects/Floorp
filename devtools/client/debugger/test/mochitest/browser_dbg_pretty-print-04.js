@@ -10,15 +10,18 @@
 const TAB_URL = EXAMPLE_URL + "doc_pretty-print.html";
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  // Wait for debugger panel to be fully set and break on debugger statement
+  let options = {
+    source: "code_ugly.js",
+    line: 2
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     const gTab = aTab;
     const gPanel = aPanel;
     const gDebugger = gPanel.panelWin;
     const gSearchBox = gDebugger.DebuggerView.Filtering._searchbox;
 
     Task.spawn(function* () {
-      yield waitForSourceShown(gPanel, "code_ugly.js");
-
       let popupShown = promise.defer();
       once(gDebugger, "popupshown").then(() => {
         ok(isCaretPos(gPanel, 2, 10),
@@ -41,7 +44,7 @@ function test() {
       setText(gSearchBox, "@bar");
       yield popupShown.promise;
 
-      closeDebuggerAndFinish(gPanel);
+      resumeDebuggerThenCloseAndFinish(gPanel);
     });
   });
 }

@@ -34,6 +34,11 @@ function prepareMessage(packet) {
   switch (packet.type) {
     case "consoleAPICall":
       data = Object.assign({}, packet.message);
+
+      if (data.level === "clear") {
+        data.arguments = [l10n.getStr("consoleCleared")];
+      }
+
       allowRepeating = true;
       category = CATEGORY_CLASS_FRAGMENTS[CATEGORY_WEBDEV];
       messageType = "ConsoleApiCall";

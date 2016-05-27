@@ -14,7 +14,11 @@ function test() {
   let gTab, gPanel, gDebugger;
   let gPrefs, gSources, gInstruments;
 
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: TAB_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
@@ -22,7 +26,7 @@ function test() {
     gSources = gDebugger.document.getElementById("workers-and-sources-pane");
     gInstruments = gDebugger.document.getElementById("instruments-pane");
 
-    waitForSourceShown(gPanel, ".html").then(performTest);
+    performTest();
   });
 
   function performTest() {

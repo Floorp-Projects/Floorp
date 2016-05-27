@@ -30,15 +30,13 @@ function test() {
   return Task.spawn(function* () {
     gAddon = yield addAddon(EXAMPLE_URL + "/addon-webext-contentscript.xpi");
 
-    [,, gPanel] = yield initDebugger(TAB_URL);
+    let options = {
+      source: "webext-content-script.js",
+      line: 1
+    };
+    [,, gPanel] = yield initDebugger(TAB_URL, options);
     gDebugger = gPanel.panelWin;
     gSources = gDebugger.DebuggerView.Sources;
-
-    // Wait for a SOURCE_SHOWN event for at most 4 seconds.
-    yield Promise.race([
-      waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCE_SHOWN),
-      waitForTime(4000),
-    ]);
 
     is(gSources.values.length, 1, "Should have 1 source");
 

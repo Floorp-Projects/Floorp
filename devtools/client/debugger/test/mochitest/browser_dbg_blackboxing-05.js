@@ -14,15 +14,18 @@ var gTab, gPanel, gDebugger;
 var gDeck;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: ".coffee",
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gDeck = gDebugger.document.getElementById("editor-deck");
 
-    waitForSourceShown(gPanel, ".coffee")
-      .then(testSourceEditorShown)
-      .then(toggleBlackBoxing.bind(null, gPanel))
+    testSourceEditorShown();
+    toggleBlackBoxing(gPanel)
       .then(testBlackBoxMessageShown)
       .then(clickStopBlackBoxingButton)
       .then(testSourceEditorShownAgain)

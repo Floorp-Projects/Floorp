@@ -279,6 +279,16 @@ ObjectActor.prototype = {
     let obj = this.obj;
     let level = 0, i = 0;
 
+    // Most objects don't have any safe getters but inherit some from their
+    // prototype. Avoid calling getOwnPropertyNames on objects that may have
+    // many properties like Array, strings or js objects. That to avoid
+    // freezing firefox when doing so.
+    if (TYPED_ARRAY_CLASSES.includes(this.obj.class) ||
+        ["Array", "Object", "String"].includes(this.obj.class)) {
+      obj = obj.proto;
+      level++;
+    }
+
     while (obj) {
       let getters = this._findSafeGetters(obj);
       for (let name of getters) {
@@ -704,8 +714,6 @@ ObjectActor.prototype.requestTypes = {
  *        - enumEntries Boolean
  *          If true, enumerates the entries of a Map or Set object
  *          instead of enumerating properties.
- *        - ignoreSafeGetters Boolean
- *          If true, do not iterate over safe getters.
  *        - ignoreIndexedProperties Boolean
  *          If true, filters out Array items.
  *          e.g. properties names between `0` and `object.length`.
@@ -723,199 +731,60 @@ ObjectActor.prototype.requestTypes = {
  *          of the property value.
  */
 function PropertyIteratorActor(objectActor, options) {
-  this.objectActor = objectActor;
-
   if (options.enumEntries) {
-    this._initEntries();
+    let cls = objectActor.obj.class;
+    if (cls == "Map") {
+      this.iterator = enumMapEntries(objectActor);
+    } else if (cls == "WeakMap") {
+      this.iterator = enumWeakMapEntries(objectActor);
+    } else if (cls == "Set") {
+      this.iterator = enumSetEntries(objectActor);
+    } else if (cls == "WeakSet") {
+      this.iterator = enumWeakSetEntries(objectActor);
+    } else {
+      throw new Error("Unsupported class to enumerate entries from: " + cls);
+    }
+  } else if (options.ignoreNonIndexedProperties && !options.query) {
+    this.iterator = enumArrayProperties(objectActor, options);
   } else {
-    this._initProperties(options);
+    this.iterator = enumObjectProperties(objectActor, options);
   }
 }
 
 PropertyIteratorActor.prototype = {
   actorPrefix: "propertyIterator",
 
-  _initEntries: function () {
-    let names = [];
-    let ownProperties = Object.create(null);
-
-    switch (this.objectActor.obj.class) {
-      case "Map":
-      case "WeakMap": {
-        let idx = 0;
-        let enumFn = this.objectActor.obj.class === "Map" ?
-          enumMapEntries : enumWeakMapEntries;
-        for (let entry of enumFn(this.objectActor)) {
-          names.push(idx);
-          ownProperties[idx] = {
-            enumerable: true,
-            value: {
-              type: "mapEntry",
-              preview: {
-                key: entry[0],
-                value: entry[1]
-              }
-            }
-          };
-
-          idx++;
-        }
-        break;
-      }
-      case "Set":
-      case "WeakSet": {
-        let idx = 0;
-        let enumFn = this.objectActor.obj.class === "Set" ?
-          enumSetEntries : enumWeakSetEntries;
-        for (let item of enumFn(this.objectActor)) {
-          names.push(idx);
-          ownProperties[idx] = {
-            enumerable: true,
-            value: item
-          };
-
-          idx++;
-        }
-        break;
-      }
-      default:
-        // the ownProperties and names are left empty
-        break;
-    }
-
-    this.names = names;
-    this.ownProperties = ownProperties;
-  },
-
-  _initProperties: function (options) {
-    let names = [];
-    let ownProperties = Object.create(null);
-
-    try {
-      names = this.objectActor.obj.getOwnPropertyNames();
-    } catch (ex) {}
-
-    let safeGetterValues = {};
-    let safeGetterNames = [];
-    if (!options.ignoreSafeGetters) {
-      // Merge the safe getter values into the existing properties list.
-      safeGetterValues = this.objectActor._findSafeGetterValues(names);
-      safeGetterNames = Object.keys(safeGetterValues);
-      for (let name of safeGetterNames) {
-        if (names.indexOf(name) === -1) {
-          names.push(name);
-        }
-      }
-    }
-
-    if (options.ignoreIndexedProperties || options.ignoreNonIndexedProperties) {
-      let length = DevToolsUtils.getProperty(this.objectActor.obj, "length");
-      if (typeof (length) !== "number") {
-        // Pseudo arrays are flagged as ArrayLike if they have
-        // subsequent indexed properties without having any length attribute.
-        length = 0;
-        for (let key of names) {
-          if (isNaN(key) || key != length++) {
-            break;
-          }
-        }
-      }
-
-      if (options.ignoreIndexedProperties) {
-        names = names.filter(i => {
-          // Use parseFloat in order to reject floats...
-          // (parseInt converts floats to integer)
-          // (Number(str) converts spaces to 0)
-          i = parseFloat(i);
-          return !Number.isInteger(i) || i < 0 || i >= length;
-        });
-      }
-
-      if (options.ignoreNonIndexedProperties) {
-        names = names.filter(i => {
-          i = parseFloat(i);
-          return Number.isInteger(i) && i >= 0 && i < length;
-        });
-      }
-    }
-
-    if (options.query) {
-      let { query } = options;
-      query = query.toLowerCase();
-      names = names.filter(name => {
-        // Filter on attribute names
-        if (name.toLowerCase().includes(query)) {
-          return true;
-        }
-        // and then on attribute values
-        let desc;
-        try {
-          desc = this.obj.getOwnPropertyDescriptor(name);
-        } catch (e) {}
-        if (desc && desc.value &&
-            String(desc.value).includes(query)) {
-          return true;
-        }
-        return false;
-      });
-    }
-
-    if (options.sort) {
-      names.sort();
-    }
-
-    // Now build the descriptor list
-    for (let name of names) {
-      let desc = this.objectActor._propertyDescriptor(name);
-      if (!desc) {
-        desc = safeGetterValues[name];
-      }
-      else if (name in safeGetterValues) {
-        // Merge the safe getter values into the existing properties list.
-        let { getterValue, getterPrototypeLevel } = safeGetterValues[name];
-        desc.getterValue = getterValue;
-        desc.getterPrototypeLevel = getterPrototypeLevel;
-      }
-      ownProperties[name] = desc;
-    }
-
-    this.names = names;
-    this.ownProperties = ownProperties;
-  },
-
-  grip: function () {
+  grip() {
     return {
-      type: "propertyIterator",
+      type: this.actorPrefix,
       actor: this.actorID,
-      count: this.names.length
+      count: this.iterator.size
     };
   },
 
-  names: function ({ indexes }) {
+  names({ indexes }) {
     let list = [];
     for (let idx of indexes) {
-      list.push(this.names[idx]);
+      list.push(this.iterator.propertyName(idx));
     }
     return {
-      names: list
+      names: indexes
     };
   },
 
-  slice: function ({ start, count }) {
-    let names = this.names.slice(start, start + count);
-    let props = Object.create(null);
-    for (let name of names) {
-      props[name] = this.ownProperties[name];
+  slice({ start, count }) {
+    let ownProperties = Object.create(null);
+    for (let i = start, m = start + count; i < m; i++) {
+      let name = this.iterator.propertyName(i);
+      ownProperties[name] = this.iterator.propertyDescription(i);
     }
     return {
-      ownProperties: props
+      ownProperties
     };
   },
 
-  all: function () {
-    return {
-      ownProperties: this.ownProperties
-    };
+  all() {
+    return this.slice({ start: 0, count: this.length });
   }
 };
 
@@ -924,6 +793,124 @@ PropertyIteratorActor.prototype.requestTypes = {
   "slice": PropertyIteratorActor.prototype.slice,
   "all": PropertyIteratorActor.prototype.all,
 };
+
+function enumArrayProperties(objectActor, options) {
+  let length = DevToolsUtils.getProperty(objectActor.obj, "length");
+  if (typeof length !== "number") {
+    // Pseudo arrays are flagged as ArrayLike if they have
+    // subsequent indexed properties without having any length attribute.
+    length = 0;
+    let names = objectActor.obj.getOwnPropertyNames();
+    for (let key of names) {
+      if (isNaN(key) || key != length++) {
+        break;
+      }
+    }
+  }
+
+  return {
+    size: length,
+    propertyName(index) {
+      return index;
+    },
+    propertyDescription(index) {
+      return objectActor._propertyDescriptor(index);
+    }
+  };
+}
+
+function enumObjectProperties(objectActor, options) {
+  let names = [];
+  try {
+    names = objectActor.obj.getOwnPropertyNames();
+  } catch (ex) {
+    // Calling getOwnPropertyNames() on some wrapped native prototypes is not
+    // allowed: "cannot modify properties of a WrappedNative". See bug 952093.
+  }
+
+  if (options.ignoreNonIndexedProperties || options.ignoreIndexedProperties) {
+    let length = DevToolsUtils.getProperty(objectActor.obj, "length");
+    if (typeof length !== "number") {
+      // Pseudo arrays are flagged as ArrayLike if they have
+      // subsequent indexed properties without having any length attribute.
+      length = 0;
+      for (let key of names) {
+        if (isNaN(key) || key != length++) {
+          break;
+        }
+      }
+    }
+
+    // It appears that getOwnPropertyNames always returns indexed properties
+    // first, so we can safely slice `names` for/against indexed properties.
+    // We do such clever operation to optimize very large array inspection,
+    // like webaudio buffers.
+    if (options.ignoreIndexedProperties) {
+      // Keep items after `length` index
+      names = names.slice(length);
+    } else if (options.ignoreNonIndexedProperties) {
+      // Remove `length` first items
+      names.splice(length);
+    }
+  }
+
+  let safeGetterValues = objectActor._findSafeGetterValues(names, 0);
+  let safeGetterNames = Object.keys(safeGetterValues);
+  // Merge the safe getter values into the existing properties list.
+  for (let name of safeGetterNames) {
+    if (!names.includes(name)) {
+      names.push(name);
+    }
+  }
+
+  if (options.query) {
+    let { query } = options;
+    query = query.toLowerCase();
+    names = names.filter(name => {
+      // Filter on attribute names
+      if (name.toLowerCase().includes(query)) {
+        return true;
+      }
+      // and then on attribute values
+      let desc;
+      try {
+        desc = objectActor.obj.getOwnPropertyDescriptor(name);
+      } catch (e) {
+        // Calling getOwnPropertyDescriptor on wrapped native prototypes is not
+        // allowed (bug 560072).
+      }
+      if (desc && desc.value &&
+          String(desc.value).includes(query)) {
+        return true;
+      }
+      return false;
+    });
+  }
+
+  if (options.sort) {
+    names.sort();
+  }
+
+  return {
+    size: names.length,
+    propertyName(index) {
+      return names[index];
+    },
+    propertyDescription(index) {
+      let name = names[index];
+      let desc = objectActor._propertyDescriptor(name);
+      if (!desc) {
+        desc = safeGetterValues[name];
+      } else if (name in safeGetterValues) {
+        // Merge the safe getter values into the existing properties list.
+        let { getterValue, getterPrototypeLevel } = safeGetterValues[name];
+        desc.getterValue = getterValue;
+        desc.getterPrototypeLevel = getterPrototypeLevel;
+      }
+      return desc;
+    }
+  };
+}
 
 /**
  * Helper function to create a grip from a Map/Set entry
@@ -948,11 +935,31 @@ function enumMapEntries(objectActor) {
   // to be more confusing than beneficial in the case of Object previews.
   let raw = objectActor.obj.unsafeDereference();
 
+  let keys = [...Cu.waiveXrays(Map.prototype.keys.call(raw))];
   return {
     [Symbol.iterator]: function* () {
-      for (let keyValuePair of Cu.waiveXrays(Map.prototype.entries.call(raw))) {
-        yield keyValuePair.map(val => gripFromEntry(objectActor, val));
+      for (let key of keys) {
+        let value = Map.prototype.get.call(raw, key);
+        yield [ key, value ].map(val => gripFromEntry(objectActor, val));
       }
+    },
+    size: keys.length,
+    propertyName(index) {
+      return index;
+    },
+    propertyDescription(index) {
+      let key = keys[index];
+      let val = Map.prototype.get.call(raw, key);
+      return {
+        enumerable: true,
+        value: {
+          type: "mapEntry",
+          preview: {
+            key: gripFromEntry(objectActor, key),
+            value: gripFromEntry(objectActor, val)
+          }
+        }
+      };
     }
   };
 }
@@ -969,15 +976,33 @@ function enumWeakMapEntries(objectActor) {
   // waive Xrays on the iterable, and relying on the Debugger machinery to
   // make sure we handle the resulting objects carefully.
   let raw = objectActor.obj.unsafeDereference();
-  let keys = Cu.waiveXrays(ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys(raw));
+  let keys = Cu.waiveXrays(
+    ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys(raw));
 
   return {
-    size: keys.length,
     [Symbol.iterator]: function* () {
       for (let key of keys) {
         let value = WeakMap.prototype.get.call(raw, key);
         yield [ key, value ].map(val => gripFromEntry(objectActor, val));
       }
+    },
+    size: keys.length,
+    propertyName(index) {
+      return index;
+    },
+    propertyDescription(index) {
+      let key = keys[index];
+      let val = WeakMap.prototype.get.call(raw, key);
+      return {
+        enumerable: true,
+        value: {
+          type: "mapEntry",
+          preview: {
+            key: gripFromEntry(objectActor, key),
+            value: gripFromEntry(objectActor, val)
+          }
+        }
+      };
     }
   };
 }
@@ -994,12 +1019,24 @@ function enumSetEntries(objectActor) {
   // waive Xrays on the iterable, and relying on the Debugger machinery to
   // make sure we handle the resulting objects carefully.
   let raw = objectActor.obj.unsafeDereference();
+  let values = [...Cu.waiveXrays(Set.prototype.values.call(raw))];
 
   return {
     [Symbol.iterator]: function* () {
-      for (let item of Cu.waiveXrays(Set.prototype.values.call(raw))) {
+      for (let item of values) {
         yield gripFromEntry(objectActor, item);
       }
+    },
+    size: values.length,
+    propertyName(index) {
+      return index;
+    },
+    propertyDescription(index) {
+      let val = values[index];
+      return {
+        enumerable: true,
+        value: gripFromEntry(objectActor, val)
+      };
     }
   };
 }
@@ -1016,14 +1053,25 @@ function enumWeakSetEntries(objectActor) {
   // waive Xrays on the iterable, and relying on the Debugger machinery to
   // make sure we handle the resulting objects carefully.
   let raw = objectActor.obj.unsafeDereference();
-  let keys = Cu.waiveXrays(ThreadSafeChromeUtils.nondeterministicGetWeakSetKeys(raw));
+  let keys = Cu.waiveXrays(
+    ThreadSafeChromeUtils.nondeterministicGetWeakSetKeys(raw));
 
   return {
-    size: keys.length,
     [Symbol.iterator]: function* () {
       for (let item of keys) {
         yield gripFromEntry(objectActor, item);
       }
+    },
+    size: keys.length,
+    propertyName(index) {
+      return index;
+    },
+    propertyDescription(index) {
+      let val = keys[index];
+      return {
+        enumerable: true,
+        value: gripFromEntry(objectActor, val)
+      };
     }
   };
 }

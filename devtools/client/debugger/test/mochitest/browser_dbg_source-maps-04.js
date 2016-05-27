@@ -17,7 +17,11 @@ DevToolsUtils.reportingDisabled = true;
 var gPanel, gDebugger, gFrames, gSources, gPrefs, gOptions;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: JS_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gFrames = gDebugger.DebuggerView.StackFrames;
@@ -30,9 +34,8 @@ function test() {
     isnot(gOptions._pauseOnExceptionsItem.getAttribute("checked"), "true",
       "The pause-on-exceptions menu item should not be checked.");
 
-    waitForSourceShown(gPanel, JS_URL)
-      .then(checkInitialSource)
-      .then(enablePauseOnExceptions)
+    checkInitialSource();
+    enablePauseOnExceptions()
       .then(disableIgnoreCaughtExceptions)
       .then(testSetBreakpoint)
       .then(reloadPage)

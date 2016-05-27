@@ -12,7 +12,11 @@ const STACK_STRING = "simpleCall@" + EXAMPLE_URL + "doc_recursion-stack.html:14:
 
 function test() {
   let gTab, gPanel, gDebugger, gFrames;
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: TAB_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;

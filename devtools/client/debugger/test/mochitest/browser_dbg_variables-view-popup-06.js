@@ -13,7 +13,11 @@ const TAB_URL = EXAMPLE_URL + "doc_frame-parameters.html";
 function test() {
   requestLongerTimeout(2);
   Task.spawn(function* () {
-    let [tab,, panel] = yield initDebugger(TAB_URL);
+    let options = {
+      source: TAB_URL,
+      line: 1
+    };
+    let [tab,, panel] = yield initDebugger(TAB_URL, options);
     let win = panel.panelWin;
     let bubble = win.DebuggerView.VariableBubble;
     let tooltip = bubble._tooltip.panel;
@@ -66,8 +70,9 @@ function test() {
         "The seventh property's value is correct.");
     }
 
+    let onCaretAndScopes = waitForCaretAndScopes(panel, 24);
     callInTab(tab, "start");
-    yield waitForSourceAndCaretAndScopes(panel, ".html", 24);
+    yield onCaretAndScopes;
 
     // Inspect variable.
     yield openVarPopup(panel, { line: 17, ch: 12 }, true);

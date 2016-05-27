@@ -13,18 +13,21 @@ var gTab, gPanel, gDebugger;
 var gSources, gUtils;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: TAB_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gSources = gDebugger.DebuggerView.Sources;
     gUtils = gDebugger.SourceUtils;
 
-    waitForSourceShown(gPanel, ".html")
-      .then(addSourceAndCheckOrder.bind(null, 1))
-      .then(addSourceAndCheckOrder.bind(null, 2))
-      .then(addSourceAndCheckOrder.bind(null, 3))
-      .then(() => { closeDebuggerAndFinish(gPanel); });
+    addSourceAndCheckOrder(1);
+    addSourceAndCheckOrder(2);
+    addSourceAndCheckOrder(3);
+    closeDebuggerAndFinish(gPanel);
   });
 }
 

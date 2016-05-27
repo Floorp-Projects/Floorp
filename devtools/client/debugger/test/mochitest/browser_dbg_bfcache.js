@@ -17,7 +17,11 @@ var gSources;
 const test = Task.async(function* () {
   info("Starting browser_dbg_bfcache.js's `test`.");
 
-  ([gTab, gDebuggee, gPanel]) = yield initDebugger(TAB_URL_1);
+  let options = {
+    source: "-01.js",
+    line: 1
+  };
+  ([gTab, gDebuggee, gPanel]) = yield initDebugger(TAB_URL_1, options);
   gDebugger = gPanel.panelWin;
   gSources = gDebugger.DebuggerView.Sources;
 

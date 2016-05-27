@@ -16,7 +16,11 @@ function test() {
   RootActor.prototype.traits.noBlackBoxing = true;
   RootActor.prototype.traits.noPrettyPrinting = true;
 
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  let options = {
+    source: "code_ugly-5.js",
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab, aDebuggee, aPanel]) => {
     let document = aPanel.panelWin.document;
     let ppButton = document.querySelector("#pretty-print");
     let bbButton = document.querySelector("#black-box");

@@ -11,7 +11,11 @@ const TAB_URL = EXAMPLE_URL + "doc_included-script.html";
 const JS_URL = EXAMPLE_URL + "code_location-changes.js";
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: JS_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     const gTab = aTab;
     const gPanel = aPanel;
     const gDebugger = gPanel.panelWin;
@@ -39,8 +43,6 @@ function test() {
     }(gClient.request));
 
     Task.spawn(function* () {
-      yield waitForSourceShown(gPanel, JS_URL);
-
       // From this point onward, the source editor's text should never change.
       gEditor.once("change", () => {
         ok(false, "The source editor text shouldn't have changed.");

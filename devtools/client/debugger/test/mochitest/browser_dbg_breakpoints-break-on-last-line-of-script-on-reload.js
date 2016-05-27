@@ -17,7 +17,11 @@ function test() {
 
   let gPanel, gDebugger, gThreadClient, gEvents, gSources;
 
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  const options = {
+    source: CODE_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gThreadClient = gDebugger.gThreadClient;

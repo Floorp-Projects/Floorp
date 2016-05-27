@@ -10,7 +10,11 @@
 const TAB_URL = EXAMPLE_URL + "doc_script-switching-01.html";
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: "-01.js",
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     const gTab = aTab;
     const gPanel = aPanel;
     const gDebugger = gPanel.panelWin;
@@ -147,7 +151,6 @@ function test() {
     }
 
     Task.spawn(function* () {
-      yield waitForSourceShown(gPanel, "-01.js", 1);
       ok(gDebugger.document.title.endsWith(EXAMPLE_URL + gLabel1),
          "Title with first source is correct.");
 

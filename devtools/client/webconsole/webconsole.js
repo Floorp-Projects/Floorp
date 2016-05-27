@@ -637,7 +637,12 @@ WebConsoleFrame.prototype = {
    * using -moz-box-flex and 100% width.  See Bug 1237368.
    */
   resize: function () {
-    this.outputNode.style.width = this.outputWrapper.clientWidth + "px";
+    if (this.NEW_CONSOLE_OUTPUT_ENABLED) {
+      this.experimentalOutputNode.style.width =
+        this.outputWrapper.clientWidth + "px";
+    } else {
+      this.outputNode.style.width = this.outputWrapper.clientWidth + "px";
+    }
   },
 
   /**

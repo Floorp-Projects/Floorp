@@ -12,7 +12,11 @@ const TAB_URL = EXAMPLE_URL + "doc_domnode-variables.html";
 
 function test() {
   Task.spawn(function* () {
-    let [tab,, panel] = yield initDebugger(TAB_URL);
+    let options = {
+      source: TAB_URL,
+      line: 1
+    };
+    let [tab,, panel] = yield initDebugger(TAB_URL, options);
     let win = panel.panelWin;
     let bubble = win.DebuggerView.VariableBubble;
     let tooltip = bubble._tooltip.panel;
@@ -30,8 +34,9 @@ function test() {
       ok(false, "DOMNode " + propertyName + " wasn't found in the tooltip");
     }
 
+    let onCaretAndScopes = waitForCaretAndScopes(panel, 19);
     callInTab(tab, "start");
-    yield waitForSourceAndCaretAndScopes(panel, ".html", 19);
+    yield onCaretAndScopes;
 
     // Inspect the div DOM variable.
     yield openVarPopup(panel, { line: 17, ch: 38 }, true);

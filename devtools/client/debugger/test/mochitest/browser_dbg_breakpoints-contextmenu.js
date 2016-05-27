@@ -14,7 +14,11 @@ function test() {
   requestLongerTimeout(2);
 
   Task.spawn(function* () {
-    const [gTab,, gPanel ] = yield initDebugger(TAB_URL);
+    const options = {
+      source: "-01.js",
+      line: 1
+    };
+    const [gTab,, gPanel ] = yield initDebugger(TAB_URL, options);
     const gDebugger = gPanel.panelWin;
     const gSources = gDebugger.DebuggerView.Sources;
     const queries = gDebugger.require("./content/queries");
@@ -213,8 +217,6 @@ function test() {
     function deleteAll() {
       gSources._onDeleteAll();
     }
-
-    yield waitForSourceShown(gPanel, "-01.js");
 
     yield addBreakpoints();
     yield initialChecks();

@@ -39,3 +39,24 @@ testPackets.set("console.log", {
     "category": "webdev"
   }
 });
+
+testPackets.set("console.clear", {
+  "from": "server1.conn1.child1/consoleActor2",
+  "type": "consoleAPICall",
+  "message": {
+    "arguments": [],
+    "columnNumber": 1,
+    "counter": null,
+    "filename": "debugger eval code",
+    "functionName": "",
+    "groupName": "",
+    "level": "clear",
+    "lineNumber": 1,
+    "private": false,
+    "timeStamp": 1462571355142,
+    "timer": null,
+    "workerType": "none",
+    "styles": [],
+    "category": "webdev"
+  }
+});

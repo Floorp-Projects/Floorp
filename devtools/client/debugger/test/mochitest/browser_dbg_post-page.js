@@ -14,15 +14,15 @@ const GET_CONTENT = "<script>\"GET\";</script>" + FORM;
 const POST_CONTENT = "<script>\"POST\";</script>" + FORM;
 
 add_task(function* () {
-  let [tab,, panel] = yield initDebugger("about:blank");
+  let options = {
+    source: TAB_URL,
+    line: 1
+  };
+  let [tab,, panel] = yield initDebugger(TAB_URL, options);
   let win = panel.panelWin;
   let editor = win.DebuggerView.editor;
   let queries = win.require("./content/queries");
   let getState = win.DebuggerController.getState;
-
-  yield navigateActiveTabTo(panel,
-                            TAB_URL,
-                            win.EVENTS.SOURCE_SHOWN);
 
   let source = queries.getSelectedSource(getState());
 

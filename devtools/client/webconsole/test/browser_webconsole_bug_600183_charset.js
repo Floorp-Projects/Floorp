@@ -47,12 +47,12 @@ function waitForRequest() {
 add_task(function* () {
   let { browser } = yield loadTab(INIT_URI);
 
-  let hud = yield openConsole();
+  yield openConsole();
 
   let gotLastRequest = waitForRequest();
 
   let loaded = loadBrowser(browser);
-  content.location = TEST_URI;
+  BrowserTestUtils.loadURI(browser, TEST_URI);
   yield loaded;
 
   yield gotLastRequest;

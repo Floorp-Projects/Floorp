@@ -15,7 +15,11 @@ var gTab, gPanel, gDebugger;
 var gEditor, gSources, gFrames, gClassicFrames, gToolbar;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: "-01.js",
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;

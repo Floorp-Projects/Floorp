@@ -10,7 +10,11 @@
 const TAB_URL = EXAMPLE_URL + "doc_conditional-breakpoints.html";
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: TAB_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     const gTab = aTab;
     const gPanel = aPanel;
     const gDebugger = gPanel.panelWin;
@@ -128,7 +132,9 @@ function test() {
     }
 
     Task.spawn(function* () {
-      yield waitForSourceAndCaretAndScopes(gPanel, ".html", 17);
+      let onCaretUpdated = waitForCaretAndScopes(gPanel, 17);
+      callInTab(gTab, "ermahgerd");
+      yield onCaretUpdated;
 
       is(gDebugger.gThreadClient.state, "paused",
          "Should only be getting stack frames while paused.");
@@ -199,7 +205,5 @@ function test() {
       client.mainRoot.traits.conditionalBreakpoints = true;
       resumeDebuggerThenCloseAndFinish(gPanel);
     });
-
-    callInTab(gTab, "ermahgerd");
   });
 }

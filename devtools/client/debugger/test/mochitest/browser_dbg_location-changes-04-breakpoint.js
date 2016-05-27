@@ -12,7 +12,11 @@ const TAB_URL = EXAMPLE_URL + "doc_included-script.html";
 const SOURCE_URL = EXAMPLE_URL + "code_location-changes.js";
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  const options = {
+    source: SOURCE_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab, aDebuggee, aPanel]) => {
     const gTab = aTab;
     const gDebuggee = aDebuggee;
     const gPanel = aPanel;
@@ -30,7 +34,9 @@ function test() {
     }
 
     Task.spawn(function* () {
-      yield waitForSourceAndCaretAndScopes(gPanel, ".html", 17);
+      let onCaretUpdated = waitForCaretUpdated(gPanel, 17);
+      callInTab(gTab, "runDebuggerStatement");
+      yield onCaretUpdated;
 
       const location = { actor: getSourceActor(gSources, SOURCE_URL), line: 5 };
       yield actions.addBreakpoint(location);
@@ -155,7 +161,5 @@ function test() {
       yield ensureCaretAt(gPanel, 6, 1, true);
       resumeDebuggerThenCloseAndFinish(gPanel);
     });
-
-    callInTab(gTab, "runDebuggerStatement");
   });
 }

@@ -14,7 +14,11 @@ var gTab, gPanel, gDebugger, gEditor;
 var gSources, gFrames, gPrefs, gOptions;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: ".coffee",
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
@@ -24,8 +28,7 @@ function test() {
     gPrefs = gDebugger.Prefs;
     gOptions = gDebugger.DebuggerView.Options;
 
-    waitForSourceShown(gPanel, ".coffee")
-      .then(testToggleGeneratedSource)
+    testToggleGeneratedSource()
       .then(testSetBreakpoint)
       .then(testToggleOnPause)
       .then(testResume)
