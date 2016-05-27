@@ -500,7 +500,9 @@ static const dom::ConstantSpec gLibcProperties[] =
   INT_CONSTANT(POLLOUT),
 
   // wait
+#if defined(WNOHANG)
   INT_CONSTANT(WNOHANG),
+#endif // defined(WNOHANG)
 
   // fcntl command values
   INT_CONSTANT(F_GETLK),
