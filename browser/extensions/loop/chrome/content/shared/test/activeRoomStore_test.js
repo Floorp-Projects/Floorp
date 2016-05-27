@@ -928,11 +928,11 @@ describe("loop.store.ActiveRoomStore", function () {
         sinon.assert.calledOnce(window.dispatchEvent);
         sinon.assert.calledWithExactly(window.dispatchEvent, new window.CustomEvent(
         "WebChannelMessageToChrome", { 
-          detail: JSON.stringify({ 
+          detail: { 
             id: "loop-link-clicker", 
             message: { 
               command: "openRoom", 
-              roomToken: "fakeToken" } }) }));});
+              roomToken: "fakeToken" } } }));});
 
 
 

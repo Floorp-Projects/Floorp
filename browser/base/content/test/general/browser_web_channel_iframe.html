@@ -28,23 +28,23 @@
 
   function test_iframe() {
     var firstMessage = new window.CustomEvent("WebChannelMessageToChrome", {
-      detail: JSON.stringify({
+      detail: {
         id: "twoway",
         message: {
           command: "one",
         },
-      })
+      }
     });
 
     window.addEventListener("WebChannelMessageToContent", function(e) {
       var secondMessage = new window.CustomEvent("WebChannelMessageToChrome", {
-        detail: JSON.stringify({
+        detail: {
           id: "twoway",
           message: {
             command: "two",
             detail: e.detail.message,
           },
-        }),
+        },
       });
 
       if (!e.detail.message.error) {
@@ -58,12 +58,12 @@
 
   function test_iframe_pre_redirect() {
     var firstMessage = new window.CustomEvent("WebChannelMessageToChrome", {
-      detail: JSON.stringify({
+      detail: {
         id: "pre_redirect",
         message: {
           command: "redirecting",
         },
-      }),
+      },
     });
     window.dispatchEvent(firstMessage);
     document.location = REDIRECTED_IFRAME_SRC_ROOT + "?iframe_post_redirect";
@@ -72,10 +72,10 @@
   function test_iframe_post_redirect() {
     window.addEventListener("WebChannelMessageToContent", function(e) {
       var echoMessage = new window.CustomEvent("WebChannelMessageToChrome", {
-        detail: JSON.stringify({
+        detail: {
           id: "post_redirect",
           message: e.detail.message,
-        }),
+        },
       });
 
       window.dispatchEvent(echoMessage);
@@ -83,12 +83,12 @@
 
     // Let the test parent know the page has loaded and is ready to echo events
     var loadedMessage = new window.CustomEvent("WebChannelMessageToChrome", {
-      detail: JSON.stringify({
+      detail: {
         id: "post_redirect",
         message: {
           command: "loaded",
         },
-      }),
+      },
     });
     window.dispatchEvent(loadedMessage);
   }

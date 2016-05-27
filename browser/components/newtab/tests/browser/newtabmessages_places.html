@@ -11,20 +11,20 @@
           switch (e.detail.message.type) {
             case "RECEIVE_FRECENT":
               reply = new window.CustomEvent("WebChannelMessageToChrome", {
-                detail: JSON.stringify({
+                detail: {
                   id: "newtab",
                   message: JSON.stringify({type: "numItemsAck", data: e.detail.message.data.length}),
-                })
+                }
               });
               window.dispatchEvent(reply);
               break;
             case "RECEIVE_PLACES_CHANGE":
               if (e.detail.message.data.type === "clearHistory") {
                 reply = new window.CustomEvent("WebChannelMessageToChrome", {
-                  detail: JSON.stringify({
+                  detail: {
                     id: "newtab",
                     message: JSON.stringify({type: "clearHistoryAck", data: e.detail.message.data.type}),
-                  })
+                  }
                 });
                 window.dispatchEvent(reply);
               }
@@ -36,10 +36,10 @@
       document.onreadystatechange = function () {
         if (document.readyState === "complete") {
           let msg = new window.CustomEvent("WebChannelMessageToChrome", {
-            detail: JSON.stringify({
+            detail: {
               id: "newtab",
               message: JSON.stringify({type: "REQUEST_FRECENT"}),
-            })
+            }
           });
           window.dispatchEvent(msg);
         }
