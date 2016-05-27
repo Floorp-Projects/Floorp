@@ -52,12 +52,20 @@ Presentation::WrapObject(JSContext* aCx,
 void
 Presentation::SetDefaultRequest(PresentationRequest* aRequest)
 {
+  if (IsInPresentedContent()) {
+    return;
+  }
+
   mDefaultRequest = aRequest;
 }
 
 already_AddRefed<PresentationRequest>
 Presentation::GetDefaultRequest() const
 {
+  if (IsInPresentedContent()) {
+    return nullptr;
+  }
+
   RefPtr<PresentationRequest> request = mDefaultRequest;
   return request.forget();
 }

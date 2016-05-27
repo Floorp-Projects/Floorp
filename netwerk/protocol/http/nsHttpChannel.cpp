@@ -6234,7 +6234,6 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
             mResponseHead && mResponseHead->Status() == 101) {
             gHttpHandler->ConnMgr()->CompleteUpgrade(stickyConn,
                                                      mUpgradeProtocolCallback);
-            mUpgradeProtocolCallback = nullptr;
         }
     }
 

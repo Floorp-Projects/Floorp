@@ -418,12 +418,12 @@ public:
    * Reflow the frame model into a new width and height.  The
    * coordinates for aWidth and aHeight must be in standard nscoord's.
    */
-  virtual nsresult ResizeReflow(nscoord aWidth, nscoord aHeight) = 0;
+  virtual nsresult ResizeReflow(nscoord aWidth, nscoord aHeight, nscoord aOldWidth = 0, nscoord aOldHeight = 0) = 0;
   /**
    * Do the same thing as ResizeReflow but even if ResizeReflowOverride was
    * called previously.
    */
-  virtual nsresult ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight) = 0;
+  virtual nsresult ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight, nscoord aOldWidth, nscoord aOldHeight) = 0;
 
   /**
    * Returns true if ResizeReflowOverride has been called.

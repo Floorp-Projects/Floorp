@@ -54,6 +54,20 @@ function testConnectionAvailable() {
   });
 }
 
+function testDefauleRequestIsNull() {
+  return new Promise(function(aResolve, aReject) {
+    navigator.presentation.defaultRequest = new PresentationRequest("http://example.com");
+    if (navigator.presentation.defaultRequest === null) {
+      ok(true, "defaultRequest should be null.");
+      aResolve();
+    }
+    else {
+      ok(false, "defaultRequest should be null.");
+      aReject();
+    }
+  });
+}
+
 function testConnectionAvailableSameOriginInnerIframe() {
   return new Promise(function(aResolve, aReject) {
     var iframe = document.createElement('iframe');
@@ -114,6 +128,7 @@ function testTerminateConnection() {
 }
 
 testConnectionAvailable().
+then(testDefauleRequestIsNull).
 then(testConnectionAvailableSameOriginInnerIframe).
 then(testConnectionUnavailableDiffOriginInnerIframe).
 then(testConnectionReady).
