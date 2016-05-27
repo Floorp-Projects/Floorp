@@ -15,8 +15,9 @@
 #include "AudioStream.h"
 #include "nsTArray.h"
 #include "nsIRunnable.h"
-#include "VideoFrameContainer.h"
 #include "VideoSegment.h"
+#include "StreamTracks.h"
+#include "MediaStreamVideoSink.h"
 #include "MainThreadUtils.h"
 #include "StreamTracks.h"
 #include "nsAutoPtr.h"
@@ -209,7 +210,7 @@ struct TrackBound
  *
  * Any stream can have its audio and video playing when requested. The media
  * stream graph plays audio by constructing audio output streams as necessary.
- * Video is played by setting video frames into an VideoFrameContainer at the right
+ * Video is played by setting video frames into an MediaStreamVideoSink at the right
  * time. To ensure video plays in sync with audio, make sure that the same
  * stream is playing both the audio and video.
  *
@@ -291,10 +292,10 @@ public:
   virtual void SetAudioOutputVolume(void* aKey, float aVolume);
   virtual void RemoveAudioOutput(void* aKey);
   // Since a stream can be played multiple ways, we need to be able to
-  // play to multiple VideoFrameContainers.
+  // play to multiple MediaStreamVideoSinks.
   // Only the first enabled video track is played.
-  virtual void AddVideoOutput(VideoFrameContainer* aContainer);
-  virtual void RemoveVideoOutput(VideoFrameContainer* aContainer);
+  virtual void AddVideoOutput(MediaStreamVideoSink* aSink);
+  virtual void RemoveVideoOutput(MediaStreamVideoSink* aSink);
   // Explicitly suspend. Useful for example if a media element is pausing
   // and we need to stop its stream emitting its buffered data. As soon as the
   // Suspend message reaches the graph, the stream stops processing. It
@@ -423,8 +424,8 @@ public:
     return !mAudioOutputs.IsEmpty();
   }
   void RemoveAudioOutputImpl(void* aKey);
-  void AddVideoOutputImpl(already_AddRefed<VideoFrameContainer> aContainer);
-  void RemoveVideoOutputImpl(VideoFrameContainer* aContainer);
+  void AddVideoOutputImpl(already_AddRefed<MediaStreamVideoSink> aSink);
+  void RemoveVideoOutputImpl(MediaStreamVideoSink* aSink);
   void AddListenerImpl(already_AddRefed<MediaStreamListener> aListener);
   void RemoveListenerImpl(MediaStreamListener* aListener);
   void RemoveAllListenersImpl();
@@ -583,7 +584,7 @@ protected:
     float mVolume;
   };
   nsTArray<AudioOutput> mAudioOutputs;
-  nsTArray<RefPtr<VideoFrameContainer>> mVideoOutputs;
+  nsTArray<RefPtr<MediaStreamVideoSink>> mVideoOutputs;
   // We record the last played video frame to avoid playing the frame again
   // with a different frame id.
   VideoFrame mLastPlayedVideoFrame;

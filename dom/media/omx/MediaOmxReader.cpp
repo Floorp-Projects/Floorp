@@ -17,6 +17,7 @@
 #include "MPAPI.h"
 #include "gfx2DGlue.h"
 #include "MediaStreamSource.h"
+#include "VideoFrameContainer.h"
 
 #define MAX_DROPPED_FRAMES 25
 // Try not to spend more than this much time in a single call to DecodeVideoFrame.
