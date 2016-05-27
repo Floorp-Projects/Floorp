@@ -9270,12 +9270,6 @@
     "n_buckets" : 10,
     "description": "The number of sites for which the user has explicitly rejected saving logins"
   },
-  "PWMGR_FORM_ACTION_EFFECT": {
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values" : 5,
-    "description": "The effect of the form action on signon autofill. (0=No effect, 1=Fewer logins after considering the form action, 2=No logins match form origin and action."
-  },
   "PWMGR_FORM_AUTOFILL_RESULT": {
     "expires_in_version": "never",
     "kind": "enumerated",
