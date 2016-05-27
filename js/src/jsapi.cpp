@@ -6505,7 +6505,7 @@ GetScriptedCallerGlobal(JSContext* cx)
         if (!activation)
             return nullptr;
     } else {
-        NonBuiltinFrameIter i(cx, FrameIter::GO_THROUGH_SAVED);
+        NonBuiltinFrameIter i(cx);
         if (i.done())
             return nullptr;
         activation = i.activation();
