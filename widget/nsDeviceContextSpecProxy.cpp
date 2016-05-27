@@ -79,7 +79,7 @@ nsDeviceContextSpecProxy::GetSurfaceForPrinter(gfxASurface** aSurface)
 
   RefPtr<gfxASurface> surface = gfxPlatform::GetPlatform()->
     CreateOffscreenSurface(mozilla::gfx::IntSize(width, height),
-                           SurfaceFormat::A8R8G8B8_UINT32);
+                           mozilla::gfx::SurfaceFormat::A8R8G8B8_UINT32);
 
   surface.forget(aSurface);
   return NS_OK;
@@ -115,7 +115,7 @@ nsDeviceContextSpecProxy::BeginDocument(const nsAString& aTitle,
                                         const nsAString& aPrintToFileName,
                                         int32_t aStartPage, int32_t aEndPage)
 {
-  mRecorder = new DrawEventRecorderMemory();
+  mRecorder = new mozilla::gfx::DrawEventRecorderMemory();
   return mRemotePrintJob->InitializePrint(nsString(aTitle),
                                           nsString(aPrintToFileName),
                                           aStartPage, aEndPage);

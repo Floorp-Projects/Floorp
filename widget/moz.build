@@ -88,7 +88,6 @@ XPIDL_MODULE = 'widget'
 
 EXPORTS += [
     'CompositorWidgetProxy.h',
-    'ContentHelper.h',
     'GfxDriverInfo.h',
     'GfxInfoBase.h',
     'GfxInfoCollector.h',
@@ -137,14 +136,12 @@ EXPORTS.mozilla.widget += [
 UNIFIED_SOURCES += [
     'CompositorWidgetProxy.cpp',
     'ContentCache.cpp',
-    'ContentHelper.cpp',
     'GfxDriverInfo.cpp',
     'GfxInfoBase.cpp',
     'GfxInfoCollector.cpp',
     'GfxInfoWebGL.cpp',
     'InputData.cpp',
     'nsBaseAppShell.cpp',
-    'nsBaseDragService.cpp',
     'nsBaseScreen.cpp',
     'nsClipboardHelper.cpp',
     'nsClipboardProxy.cpp',
@@ -183,8 +180,10 @@ if CONFIG['MOZ_XUL'] and CONFIG['NS_PRINTING']:
     ]
 
 # nsBaseWidget.cpp needs to be built separately because of name clashes in the OS X headers
+# nsBaseDragService.cpp moved out of UNIFIED to fix xgill crash (bug 1259850) after moving widget/ContentHelper -> apz/util/TouchActionHelper
 SOURCES += [
-    'nsBaseWidget.cpp',
+    'nsBaseDragService.cpp',
+    'nsBaseWidget.cpp'
 ]
 
 if CONFIG['MOZ_INSTRUMENT_EVENT_LOOP']:
