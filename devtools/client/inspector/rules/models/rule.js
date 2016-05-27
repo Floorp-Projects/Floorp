@@ -14,6 +14,7 @@ const {TextProperty} =
       require("devtools/client/inspector/rules/models/text-property");
 const {promiseWarn} = require("devtools/client/inspector/shared/utils");
 const {parseDeclarations} = require("devtools/shared/css-parsing-utils");
+const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -58,6 +59,9 @@ function Rule(elementStyle, options) {
   if (this.domRule && this.domRule.mediaText) {
     this.mediaText = this.domRule.mediaText;
   }
+
+  const toolbox = this.elementStyle.ruleView.inspector.toolbox;
+  this.cssProperties = getCssProperties(toolbox);
 
   // Populate the text properties with the style's current authoredText
   // value, and add in any disabled properties from the store.
@@ -248,7 +252,8 @@ Rule.prototype = {
       // Note that even though StyleRuleActors normally provide parsed
       // declarations already, _applyPropertiesNoAuthored is only used when
       // connected to older backend that do not provide them. So parse here.
-      for (let cssProp of parseDeclarations(this.style.authoredText)) {
+      for (let cssProp of parseDeclarations(this.cssProperties.isKnown,
+                                            this.style.authoredText)) {
         cssProps[cssProp.name] = cssProp;
       }
 
@@ -312,7 +317,8 @@ Rule.prototype = {
     // until it settles before applying the next modification.
     let resultPromise =
         promise.resolve(this._applyingModifications).then(() => {
-          let modifications = this.style.startModifyingProperties();
+          let modifications = this.style.startModifyingProperties(
+            this.cssProperties);
           modifier(modifications);
           if (this.style.canSetRuleText) {
             return this._applyPropertiesAuthored(modifications);
@@ -388,7 +394,7 @@ Rule.prototype = {
    *        The property's priority (either "important" or an empty string).
    */
   previewPropertyValue: function (property, value, priority) {
-    let modifications = this.style.startModifyingProperties();
+    let modifications = this.style.startModifyingProperties(this.cssProperties);
     modifications.setProperty(this.textProps.indexOf(property),
                               property.name, value, priority);
     modifications.apply().then(() => {
@@ -444,7 +450,8 @@ Rule.prototype = {
     // Starting with FF49, StyleRuleActors provide parsed declarations.
     let props = this.style.declarations;
     if (!props) {
-      props = parseDeclarations(this.style.authoredText, true);
+      props = parseDeclarations(this.cssProperties.isKnown,
+                                this.style.authoredText, true);
     }
 
     for (let prop of props) {

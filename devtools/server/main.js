@@ -525,6 +525,11 @@ var DebuggerServer = {
       constructor: "ReflowActor",
       type: { tab: true }
     });
+    this.registerModule("devtools/server/actors/css-properties", {
+      prefix: "cssProperties",
+      constructor: "CssPropertiesActor",
+      type: { tab: true }
+    });
     this.registerModule("devtools/server/actors/csscoverage", {
       prefix: "cssUsage",
       constructor: "CSSUsageActor",

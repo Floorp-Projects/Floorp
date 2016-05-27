@@ -31,6 +31,7 @@ this.DevTools = {
       this.configurations[panel] = {};
       this.configurations[panel].applyConfig = Task.async(function* () {
         yield gDevTools.showToolbox(getTargetForSelectedTab(), panel, "bottom");
+        yield new Promise(resolve => setTimeout(resolve, 500));
       });
     });
   },
@@ -39,7 +40,7 @@ this.DevTools = {
     bottomToolbox: {
       applyConfig: Task.async(function* () {
         yield gDevTools.showToolbox(getTargetForSelectedTab(), "inspector", "bottom");
-        yield new Promise(resolve => setTimeout(resolve, 500));
+        yield new Promise(resolve => setTimeout(resolve, 1000));
       }),
     },
     sideToolbox: {

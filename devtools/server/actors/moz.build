@@ -21,6 +21,7 @@ DevToolsModules(
     'childtab.js',
     'chrome.js',
     'common.js',
+    'css-properties.js',
     'csscoverage.js',
     'device.js',
     'director-manager.js',

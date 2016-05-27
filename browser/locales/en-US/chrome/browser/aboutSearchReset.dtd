@@ -1,0 +1,28 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!ENTITY searchreset.tabtitle       "Restore Search Settings">
+
+<!ENTITY searchreset.pageTitle      "Restore your search settings?">
+
+<!ENTITY searchreset.pageInfo1      "Your search settings might be out-of-date. Firefox can help you restore the default search settings.">
+
+<!ENTITY searchreset.selector.label "This will set your default search engine to">
+
+<!-- LOCALIZATION NOTE (searchreset.beforelink.pageInfo,
+searchreset.afterlink.pageInfo): these two string are used respectively
+before and after the the "Settings page" link (searchreset.link.pageInfo).
+Localizers can use one of them, or both, to better adapt this sentence to
+their language.
+-->
+<!ENTITY searchreset.beforelink.pageInfo2 "You can change these settings at any time from the ">
+<!ENTITY searchreset.afterlink.pageInfo2  ".">
+
+<!ENTITY searchreset.link.pageInfo2       "Settings page">
+
+<!ENTITY searchreset.noChangeButton        "Don’t Change">
+<!ENTITY searchreset.noChangeButton.access "D">
+
+<!ENTITY searchreset.changeEngineButton        "Change Search Engine">
+<!ENTITY searchreset.changeEngineButton.access "C">
