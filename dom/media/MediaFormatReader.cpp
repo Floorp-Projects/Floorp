@@ -17,6 +17,7 @@
 #include "MediaResource.h"
 #include "mozilla/SharedThreadPool.h"
 #include "VideoUtils.h"
+#include "VideoFrameContainer.h"
 
 #include <algorithm>
 
