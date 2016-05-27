@@ -434,7 +434,7 @@ add_task(function* test_subprocess_pathSearch() {
     },
   });
 
-  Assert.rejects(
+  yield Assert.rejects(
     promise,
     function(error) {
       return error.errorCode == Subprocess.ERROR_BAD_EXECUTABLE;
@@ -641,9 +641,12 @@ add_task(function* test_bad_executable() {
     arguments: [],
   });
 
-  Assert.rejects(
+  yield Assert.rejects(
     promise,
     function(error) {
+      if (AppConstants.platform == "win") {
+        return /Failed to create process/.test(error.message);
+      }
       return error.errorCode == Subprocess.ERROR_BAD_EXECUTABLE;
     },
     "Subprocess.call should fail for a bad executable");
@@ -654,7 +657,7 @@ add_task(function* test_bad_executable() {
     arguments: [],
   });
 
-  Assert.rejects(
+  yield Assert.rejects(
     promise,
     function(error) {
       return error.errorCode == Subprocess.ERROR_BAD_EXECUTABLE;
