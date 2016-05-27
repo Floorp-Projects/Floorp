@@ -1671,8 +1671,6 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     return;
   }
 
-  presShell->CheckIfTimeToUnsuppressPainting();
-
   mResizeSuppressed = false;
 
   AutoRestore<bool> restoreInRefresh(mInRefresh);
