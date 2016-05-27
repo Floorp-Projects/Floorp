@@ -2182,7 +2182,7 @@ InterfaceHasInstance(JSContext* cx, JS::Handle<JSObject*> obj,
 
   if (jsipc::IsWrappedCPOW(instance)) {
     bool boolp = false;
-    if (!jsipc::DOMInstanceOf(cx, js::CheckedUnwrap(instance), clasp->mPrototypeID,
+    if (!jsipc::DOMInstanceOf(cx, js::UncheckedUnwrap(instance), clasp->mPrototypeID,
                               clasp->mDepth, &boolp)) {
       return false;
     }
