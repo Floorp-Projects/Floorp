@@ -146,7 +146,7 @@
                 <org.mozilla.gecko.ActionModeCompatView android:id="@+id/actionbar"
                                                         android:layout_height="match_parent"
                                                         android:layout_width="match_parent"
-                                                        style="@style/GeckoActionBar"/>
+                                                        style="@style/GeckoActionBar.ActionMode"/>
 
             </ViewFlipper>
 
