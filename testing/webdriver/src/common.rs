@@ -90,7 +90,7 @@ impl<T: ToJson> Into<Option<T>> for Nullable<T> {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct WebElement {
     pub id: String
 }
@@ -123,6 +123,13 @@ impl ToJson for WebElement {
         let mut data = BTreeMap::new();
         data.insert(ELEMENT_KEY.to_string(), self.id.to_json());
         Json::Object(data)
+    }
+}
+
+impl <T> From<T> for WebElement
+    where T: Into<String> {
+    fn from(data: T) -> WebElement {
+        WebElement::new(data.into())
     }
 }
 
