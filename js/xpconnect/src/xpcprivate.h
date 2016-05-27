@@ -782,8 +782,6 @@ public:
 
     enum {NO_ARGS = (unsigned) -1};
 
-    static JSContext* GetDefaultJSContext();
-
     XPCCallContext(XPCContext::LangType callerLanguage,
                    JSContext* cx,
                    JS::HandleObject obj    = nullptr,
