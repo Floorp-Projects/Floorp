@@ -204,6 +204,7 @@ DecoderFactory::CreateMetadataDecoder(DecoderType aType,
 /* static */ already_AddRefed<Decoder>
 DecoderFactory::CreateAnonymousDecoder(DecoderType aType,
                                        SourceBuffer* aSourceBuffer,
+                                       const Maybe<IntSize>& aTargetSize,
                                        SurfaceFlags aSurfaceFlags)
 {
   if (aType == DecoderType::UNKNOWN) {
@@ -231,6 +232,12 @@ DecoderFactory::CreateAnonymousDecoder(DecoderType aType,
 
   decoder->SetDecoderFlags(decoderFlags);
   decoder->SetSurfaceFlags(aSurfaceFlags);
+
+  // Set a target size for downscale-during-decode if applicable.
+  if (aTargetSize) {
+    DebugOnly<nsresult> rv = decoder->SetTargetSize(*aTargetSize);
+    MOZ_ASSERT(NS_SUCCEEDED(rv), "Bad downscale-during-decode target size?");
+  }
 
   decoder->Init();
   if (NS_FAILED(decoder->GetDecoderError())) {
