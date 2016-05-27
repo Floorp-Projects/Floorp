@@ -4923,8 +4923,6 @@ pref("dom.vr.enabled", false);
 pref("dom.vr.enabled", true);
 #endif
 pref("dom.vr.oculus.enabled", true);
-// Cardboard VR device is disabled by default
-pref("dom.vr.cardboard.enabled", false);
 // OSVR device
 pref("dom.vr.osvr.enabled", false);
 // Pose prediction reduces latency effects by returning future predicted HMD

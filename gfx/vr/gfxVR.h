@@ -27,7 +27,6 @@ namespace gfx {
 
 enum class VRHMDType : uint16_t {
   Oculus,
-  Cardboard,
   OSVR,
   NumHMDTypes
 };
@@ -102,7 +101,6 @@ struct VRDeviceInfo
   const Point3D& GetEyeTranslation(uint32_t whichEye) const { return mEyeTranslation[whichEye]; }
   const Matrix4x4& GetEyeProjectionMatrix(uint32_t whichEye) const { return mEyeProjectionMatrix[whichEye]; }
   const VRFieldOfView& GetEyeFOV(uint32_t whichEye) const { return mEyeFOV[whichEye]; }
-  bool GetUseMainThreadOrientation() const { return mUseMainThreadOrientation; }
 
   enum Eye {
     Eye_Left,
@@ -127,7 +125,6 @@ struct VRDeviceInfo
   IntRect mScreenRect;
 
   bool mIsFakeScreen;
-  bool mUseMainThreadOrientation;
 
 
 
@@ -139,7 +136,6 @@ struct VRDeviceInfo
            mEyeResolution == other.mEyeResolution &&
            mScreenRect == other.mScreenRect &&
            mIsFakeScreen == other.mIsFakeScreen &&
-           mUseMainThreadOrientation == other.mUseMainThreadOrientation &&
            mMaximumEyeFOV[0] == other.mMaximumEyeFOV[0] &&
            mMaximumEyeFOV[1] == other.mMaximumEyeFOV[1] &&
            mRecommendedEyeFOV[0] == other.mRecommendedEyeFOV[0] &&
@@ -281,7 +277,7 @@ public:
 
   const VRDistortionMesh& GetDistortionMesh(uint32_t whichEye) const { return mDistortionMesh[whichEye]; }
 protected:
-  explicit VRHMDInfo(VRHMDType aType, bool aUseMainThreadOrientation);
+  explicit VRHMDInfo(VRHMDType aType);
   virtual ~VRHMDInfo();
 
   VRHMDConfiguration mConfiguration;

@@ -19,13 +19,11 @@ LOCAL_INCLUDES += [
 
 UNIFIED_SOURCES += [
     'gfxVR.cpp',
-    'gfxVRCardboard.cpp',
     'gfxVROculus.cpp',
     'gfxVROSVR.cpp',
     'ipc/VRManagerChild.cpp',
     'ipc/VRManagerParent.cpp',
     'VRDeviceProxy.cpp',
-    'VRDeviceProxyOrientationFallBack.cpp',
     'VRManager.cpp',
 ]
 

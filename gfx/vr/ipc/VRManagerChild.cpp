@@ -8,7 +8,6 @@
 #include "VRManagerChild.h"
 #include "VRManagerParent.h"
 #include "VRDeviceProxy.h"
-#include "VRDeviceProxyOrientationFallBack.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/layers/CompositorThread.h" // for CompositorThread
 #include "mozilla/dom/Navigator.h"
@@ -138,11 +137,7 @@ VRManagerChild::RecvUpdateDeviceInfo(nsTArray<VRDeviceUpdate>&& aDeviceUpdates)
       }
     }
     if (isNewDevice) {
-      if (deviceUpdate.mDeviceInfo.GetUseMainThreadOrientation()) {
-        devices.AppendElement(new VRDeviceProxyOrientationFallBack(deviceUpdate));
-      } else {
-        devices.AppendElement(new VRDeviceProxy(deviceUpdate));
-      }
+      devices.AppendElement(new VRDeviceProxy(deviceUpdate));
     }
   }
 
