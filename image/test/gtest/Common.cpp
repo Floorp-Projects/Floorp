@@ -161,7 +161,7 @@ CreateTrivialDecoder()
   DecoderType decoderType = DecoderFactory::GetDecoderType("image/gif");
   RefPtr<SourceBuffer> sourceBuffer = new SourceBuffer();
   RefPtr<Decoder> decoder =
-    DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer, Nothing(),
+    DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer,
                                            DefaultSurfaceFlags());
   return decoder.forget();
 }
