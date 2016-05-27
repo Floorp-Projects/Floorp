@@ -9,8 +9,7 @@
 
 #include "base/basictypes.h"
 #include "base/process.h"
-#include "mozilla/DebugOnly.h"
-#include "nscore.h"
+#include "mozilla/UniquePtr.h"
 
 #ifdef XP_WIN
 // Need the HANDLE typedef.
@@ -47,49 +46,52 @@ public:
   typedef base::FileDescriptor PickleType;
 #endif
 
+  struct PlatformHandleHelper
+  {
+    MOZ_IMPLICIT PlatformHandleHelper(PlatformHandleType aHandle);
+    MOZ_IMPLICIT PlatformHandleHelper(std::nullptr_t);
+    bool operator != (std::nullptr_t) const;
+    operator PlatformHandleType () const;
+#ifdef XP_WIN
+    operator std::intptr_t () const;
+#endif
+  private:
+    PlatformHandleType mHandle;
+  };
+  struct PlatformHandleDeleter
+  {
+    typedef PlatformHandleHelper pointer;
+    void operator () (PlatformHandleHelper aHelper);
+  };
+  typedef UniquePtr<PlatformHandleType, PlatformHandleDeleter> UniquePlatformHandle;
+
   // This should only ever be created by IPDL.
   struct IPDLPrivate
   {};
 
+  // Represents an invalid handle.
   FileDescriptor();
 
-  FileDescriptor(const FileDescriptor& aOther)
-    : mHandleCreatedByOtherProcess(false)
-#ifdef DEBUG
-    , mHandleCreatedByOtherProcessWasUsed(false)
-#endif
-  {
-    // Don't use operator= here because that will call
-    // CloseCurrentProcessHandle() on this (uninitialized) object.
-    Assign(aOther);
-  }
+  // Copy constructor will duplicate a new handle.
+  FileDescriptor(const FileDescriptor& aOther);
 
+  FileDescriptor(FileDescriptor&& aOther);
+
+  // This constructor will duplicate a new handle.
+  // The caller still have to close aHandle.
   explicit FileDescriptor(PlatformHandleType aHandle);
 
-  FileDescriptor(const IPDLPrivate&, const PickleType& aPickle)
-#ifdef XP_WIN
-  : mHandle(aPickle)
-#else
-  : mHandle(aPickle.fd)
-#endif
-  , mHandleCreatedByOtherProcess(true)
-#ifdef DEBUG
-  , mHandleCreatedByOtherProcessWasUsed(false)
-#endif
-  { }
+  // This constructor WILL NOT duplicate the handle.
+  // FileDescriptor takes the ownership from IPC message.
+  FileDescriptor(const IPDLPrivate&, const PickleType& aPickle);
 
-  ~FileDescriptor()
-  {
-    CloseCurrentProcessHandle();
-  }
+  ~FileDescriptor();
 
   FileDescriptor&
-  operator=(const FileDescriptor& aOther)
-  {
-    CloseCurrentProcessHandle();
-    Assign(aOther);
-    return *this;
-  }
+  operator=(const FileDescriptor& aOther);
+
+  FileDescriptor&
+  operator=(FileDescriptor&& aOther);
 
   // Performs platform-specific actions to duplicate mHandle in the other
   // process (e.g. dup() on POSIX, DuplicateHandle() on Windows). Returns a
@@ -100,70 +102,36 @@ public:
   // Tests mHandle against a well-known invalid platform-specific file handle
   // (e.g. -1 on POSIX, INVALID_HANDLE_VALUE on Windows).
   bool
-  IsValid() const
-  {
-    return IsValid(mHandle);
-  }
+  IsValid() const;
 
-  PlatformHandleType
-  PlatformHandle() const
-  {
-#ifdef DEBUG
-    if (mHandleCreatedByOtherProcess) {
-      mHandleCreatedByOtherProcessWasUsed = true;
-    }
-#endif
-    return mHandle;
-  }
+  // Returns a duplicated handle, it is caller's responsibility to close the
+  // handle.
+  UniquePlatformHandle
+  ClonePlatformHandle() const;
 
+  // Only used in nsTArray.
   bool
-  operator==(const FileDescriptor& aOther) const
-  {
-    return mHandle == aOther.mHandle;
-  }
+  operator==(const FileDescriptor& aOther) const;
 
 private:
+  friend struct PlatformHandleTrait;
+
   void
-  Assign(const FileDescriptor& aOther)
-  {
-    if (aOther.mHandleCreatedByOtherProcess) {
-      mHandleCreatedByOtherProcess = true;
-#ifdef DEBUG
-      mHandleCreatedByOtherProcessWasUsed =
-        aOther.mHandleCreatedByOtherProcessWasUsed;
-#endif
-      mHandle = aOther.PlatformHandle();
-    } else {
-      DuplicateInCurrentProcess(aOther.PlatformHandle());
-      mHandleCreatedByOtherProcess = false;
-#ifdef DEBUG
-      mHandleCreatedByOtherProcessWasUsed = false;
-#endif
-    }
-  }
+  Assign(const FileDescriptor& aOther);
+
+  void
+  Close();
 
   static bool
   IsValid(PlatformHandleType aHandle);
 
-  void
-  DuplicateInCurrentProcess(PlatformHandleType aHandle);
+  static PlatformHandleType
+  Clone(PlatformHandleType aHandle);
 
-  void
-  CloseCurrentProcessHandle();
+  static void
+  Close(PlatformHandleType aHandle);
 
   PlatformHandleType mHandle;
-
-  // If this is true then this instance is created by IPDL to ferry a handle to
-  // its eventual consumer and we never close the handle. If this is false then
-  // we are a RAII wrapper around the handle and we close the handle on
-  // destruction.
-  bool mHandleCreatedByOtherProcess;
-
-#ifdef DEBUG
-  // This is to ensure that we don't leak the handle (which is only possible
-  // when we're in the receiving process).
-  mutable bool mHandleCreatedByOtherProcessWasUsed;
-#endif
 };
 
 } // namespace ipc
