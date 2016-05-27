@@ -133,8 +133,10 @@ var gContentPane = {
     gSubDialog.open("chrome://browser/content/preferences/permissions.xul",
                     "resizable=yes", params);
 
-    Services.telemetry
-            .getHistogramById("WEB_NOTIFICATION_EXCEPTIONS_OPENED").add();
+    try {
+      Services.telemetry
+              .getHistogramById("WEB_NOTIFICATION_EXCEPTIONS_OPENED").add();
+    } catch (e) {}
   },
 
 
