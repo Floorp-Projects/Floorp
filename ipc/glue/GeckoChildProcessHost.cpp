@@ -492,22 +492,24 @@ GeckoChildProcessHost::DissociateActor()
 int32_t GeckoChildProcessHost::mChildCounter = 0;
 
 void
-GeckoChildProcessHost::SetChildLogName(const char* varName, const char* origLogName)
+GeckoChildProcessHost::SetChildLogName(const char* varName, const char* origLogName,
+                                       nsACString &buffer)
 {
   // We currently have no portable way to launch child with environment
   // different than parent.  So temporarily change NSPR_LOG_FILE so child
   // inherits value we want it to have. (NSPR only looks at NSPR_LOG_FILE at
   // startup, so it's 'safe' to play with the parent's environment this way.)
-  nsAutoCString setChildLogName(varName);
-  setChildLogName.Append(origLogName);
+  buffer.Assign(varName);
+  buffer.Append(origLogName);
 
   // Append child-specific postfix to name
-  setChildLogName.AppendLiteral(".child-");
-  setChildLogName.AppendInt(mChildCounter);
+  buffer.AppendLiteral(".child-");
+  buffer.AppendInt(mChildCounter);
 
-  // Passing temporary to PR_SetEnv is ok here because env gets copied
-  // by exec, etc., to permanent storage in child when process launched.
-  PR_SetEnv(setChildLogName.get());
+  // Passing temporary to PR_SetEnv is ok here if we keep the temporary
+  // for the time we launch the sub-process.  It's copied to the new
+  // environment.
+  PR_SetEnv(buffer.BeginReading());
 }
 
 bool
@@ -528,19 +530,24 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts, b
   static nsAutoCString restoreOrigNSPRLogName;
   static nsAutoCString restoreOrigMozLogName;
 
+  // Must keep these on the same stack where from we call PerformAsyncLaunchInternal
+  // so that PR_DuplicateEnvironment() still sees a valid memory.
+  nsAutoCString nsprLogName;
+  nsAutoCString mozLogName;
+
   if (origNSPRLogName) {
     if (restoreOrigNSPRLogName.IsEmpty()) {
       restoreOrigNSPRLogName.AssignLiteral("NSPR_LOG_FILE=");
       restoreOrigNSPRLogName.Append(origNSPRLogName);
     }
-    SetChildLogName("NSPR_LOG_FILE=", origNSPRLogName);
+    SetChildLogName("NSPR_LOG_FILE=", origNSPRLogName, nsprLogName);
   }
   if (origMozLogName) {
     if (restoreOrigMozLogName.IsEmpty()) {
       restoreOrigMozLogName.AssignLiteral("MOZ_LOG_FILE=");
       restoreOrigMozLogName.Append(origMozLogName);
     }
-    SetChildLogName("MOZ_LOG_FILE=", origMozLogName);
+    SetChildLogName("MOZ_LOG_FILE=", origMozLogName, mozLogName);
   }
 
   bool retval = PerformAsyncLaunchInternal(aExtraOpts, arch);

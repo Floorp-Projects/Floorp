@@ -155,6 +155,7 @@ private:
    */
   void GetInputsAreTainted(const nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs,
                            const nsTArray<int32_t>& aInputIndices,
+                           bool aFilterInputIsTainted,
                            nsTArray<bool>& aOutInputsAreTainted);
 
   /**

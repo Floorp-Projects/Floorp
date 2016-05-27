@@ -66,11 +66,15 @@ p {
 }
 
 .list-row > ul > li {
-  float: inline-start;
+  float: left;
   width: 220px;
   line-height: 1.5em;
   margin-inline-start: 1em;
   margin-bottom: 0;
+}
+
+.list-row > ul > li:dir(rtl) {
+  float: right;
 }
 
 .title {
@@ -161,7 +165,7 @@ a.button {
 }
 
 .toggle + .toggle-btn::before {
-  float: inline-start;
+  float: left;
   left: 9px;
   visibility: hidden;
   background-size: 16px;
@@ -177,6 +181,7 @@ a.button {
 }
 
 .toggle + .toggle-btn:dir(rtl)::before {
+  float: right;
   left: auto;
   right: 9px;
 }

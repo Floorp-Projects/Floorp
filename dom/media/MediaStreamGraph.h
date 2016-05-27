@@ -520,6 +520,13 @@ struct TrackBound
  * for those objects in arbitrary order and the MediaStreamGraph has to be able
  * to handle this.
  */
+
+// GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
+// GetTickCount() and conflicts with MediaStream::GetCurrentTime.
+#ifdef GetCurrentTime
+#undef GetCurrentTime
+#endif
+
 class MediaStream : public mozilla::LinkedListElement<MediaStream>
 {
 public:

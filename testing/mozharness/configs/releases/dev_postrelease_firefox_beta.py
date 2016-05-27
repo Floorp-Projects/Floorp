@@ -5,7 +5,7 @@ config = {
     "repo": {
         # date is used for staging mozilla-beta
         "repo": "https://hg.mozilla.org/projects/date",
-        "revision": "default",
+        "branch": "default",
         "dest": "date",
         "vcs": "hg",
     },

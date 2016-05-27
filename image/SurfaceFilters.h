@@ -119,7 +119,17 @@ public:
     return mNext.TakeInvalidRect();
   }
 
-  uint8_t* AdvanceRow() override
+protected:
+  uint8_t* DoResetToFirstRow() override
+  {
+    mNext.ResetToFirstRow();
+    mPass = 0;
+    mInputRow = 0;
+    mOutputRow = InterlaceOffset(mPass);
+    return GetRowPointer(mOutputRow);
+  }
+
+  uint8_t* DoAdvanceRow() override
   {
     if (mPass >= 4) {
       return nullptr;  // We already finished all passes.
@@ -147,9 +157,6 @@ public:
     while (nextOutputRow >= InputSize().height) {
       // Copy any remaining rows from the buffer.
       if (!advancedPass) {
-        DuplicateRows(HaeberliOutputUntilRow(mPass, mProgressiveDisplay,
-                                             InputSize(), mOutputRow),
-                      InputSize().height);
         OutputRows(HaeberliOutputUntilRow(mPass, mProgressiveDisplay,
                                           InputSize(), mOutputRow),
                    InputSize().height);
@@ -209,16 +216,6 @@ public:
     // we reach the last Haeberli output row. The assertions above make sure
     // this always includes mOutputRow.
     return GetRowPointer(nextHaeberliOutputRow);
-  }
-
-protected:
-  uint8_t* DoResetToFirstRow() override
-  {
-    mNext.ResetToFirstRow();
-    mPass = 0;
-    mInputRow = 0;
-    mOutputRow = InterlaceOffset(mPass);;
-    return GetRowPointer(mOutputRow);
   }
 
 private:
@@ -413,7 +410,53 @@ public:
     return mNext.TakeInvalidRect();
   }
 
-  uint8_t* AdvanceRow() override
+protected:
+  uint8_t* DoResetToFirstRow() override
+  {
+    uint8_t* rowPtr = mNext.ResetToFirstRow();
+    if (rowPtr == nullptr) {
+      mRow = mFrameRect.YMost();
+      return nullptr;
+    }
+
+    mRow = mUnclampedFrameRect.y;
+
+    // Advance the next pipeline stage to the beginning of the frame rect,
+    // outputting blank rows.
+    if (mFrameRect.y > 0) {
+      int32_t rowsToWrite = mFrameRect.y;
+      mNext.template WriteRows<uint32_t>([&](uint32_t* aRow, uint32_t aLength)
+                                           -> Maybe<WriteState> {
+        memset(aRow, 0, aLength * sizeof(uint32_t));
+        rowsToWrite--;
+        return rowsToWrite > 0 ? Nothing()
+                               : Some(WriteState::NEED_MORE_DATA);
+      });
+    }
+
+    // We're at the beginning of the frame rect now, so return if we're either
+    // ready for input or we're already done.
+    rowPtr = mBuffer ? mBuffer.get() : mNext.CurrentRowPointer();
+    if (!mFrameRect.IsEmpty() || rowPtr == nullptr) {
+      // Note that the pointer we're returning is for the next row we're
+      // actually going to write to, but we may discard writes before that point
+      // if mRow < mFrameRect.y.
+      return AdjustRowPointer(rowPtr);
+    }
+
+    // We've finished the region specified by the frame rect, but the frame rect
+    // is empty, so we need to output the rest of the image immediately. Advance
+    // to the end of the next pipeline stage's buffer, outputting blank rows.
+    mNext.template WriteRows<uint32_t>([](uint32_t* aRow, uint32_t aLength) {
+      memset(aRow, 0, aLength * sizeof(uint32_t));
+      return Nothing();
+    });
+
+    mRow = mFrameRect.YMost();
+    return nullptr;  // We're done.
+  }
+
+  uint8_t* DoAdvanceRow() override
   {
     uint8_t* rowPtr = nullptr;
 
@@ -469,59 +512,12 @@ public:
 
     // We've finished the region specified by the frame rect. Advance to the end
     // of the next pipeline stage's buffer, outputting blank rows.
-    mNext.template WriteRows<uint32_t>([&](uint32_t* aRow, uint32_t aLength) {
-      memset(rowPtr, 0, aLength * sizeof(uint32_t));
-      return Nothing();
-    });
-
-    return nullptr;  // We're done.
-  }
-
-protected:
-  uint8_t* DoResetToFirstRow() override
-  {
-    uint8_t* rowPtr = mNext.ResetToFirstRow();
-    if (rowPtr == nullptr) {
-      mRow = InputSize().height;
-      return nullptr;
-    }
-
-    mRow = mUnclampedFrameRect.y;
-
-    // Advance the next pipeline stage to the beginning of the frame rect,
-    // outputting blank rows.
-    if (mFrameRect.y > 0) {
-      int32_t rowsToWrite = mFrameRect.y;
-      mNext.template WriteRows<uint32_t>([&](uint32_t* aRow, uint32_t aLength)
-                                           -> Maybe<WriteState> {
-        memset(aRow, 0, aLength * sizeof(uint32_t));
-        rowsToWrite--;
-        return rowsToWrite > 0 ? Nothing()
-                               : Some(WriteState::NEED_MORE_DATA);
-      });
-    }
-
-    // We're at the beginning of the frame rect now, so return if we're either
-    // ready for input or we're already done.
-    rowPtr = mBuffer ? mBuffer.get() : mNext.CurrentRowPointer();
-    if (!mFrameRect.IsEmpty() || rowPtr == nullptr) {
-      // Note that the pointer we're returning is for the next row we're
-      // actually going to write to, but we may discard writes before that point
-      // if mRow < mFrameRect.y.
-      return AdjustRowPointer(rowPtr);
-    }
-
-    // We've finished the region specified by the frame rect, but the frame rect
-    // is empty, so we need to output the rest of the image immediately. Advance
-    // to the end of the next pipeline stage's buffer, outputting blank rows.
-    int32_t rowsWritten = 0;
-    mNext.template WriteRows<uint32_t>([&](uint32_t* aRow, uint32_t aLength) {
-      rowsWritten++;
+    mNext.template WriteRows<uint32_t>([](uint32_t* aRow, uint32_t aLength) {
       memset(aRow, 0, aLength * sizeof(uint32_t));
       return Nothing();
     });
 
-    mRow = InputSize().height;
+    mRow = mFrameRect.YMost();
     return nullptr;  // We're done.
   }
 
