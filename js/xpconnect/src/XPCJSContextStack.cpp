@@ -56,15 +56,6 @@ XPCJSContextStack::Push(JSContext* cx)
     return true;
 }
 
-bool
-XPCJSContextStack::HasJSContext(JSContext* cx)
-{
-    for (uint32_t i = 0; i < mStack.Length(); i++)
-        if (cx == mStack[i])
-            return true;
-    return false;
-}
-
 JSContext*
 XPCJSContextStack::GetSafeJSContext()
 {
