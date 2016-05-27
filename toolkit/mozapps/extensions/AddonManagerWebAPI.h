@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef addonmanagerwebapi_h_
+#define addonmanagerwebapi_h_
+
 #include "nsPIDOMWindow.h"
 
 namespace mozilla {
@@ -17,3 +20,5 @@ private:
 };
 
 } // namespace mozilla
+
+#endif // addonmanagerwebapi_h_
