@@ -216,7 +216,8 @@ nsFrameManager::GetStyleContextInMap(UndisplayedMap* aMap, nsIContent* aContent)
   if (!aContent) {
     return nullptr;
   }
-  nsIContent* parent = aContent->GetParent();
+  nsIContent* parent = aContent->GetParentElementCrossingShadowRoot();
+  MOZ_ASSERT(parent || !aContent->GetParent(), "no non-elements");
   for (UndisplayedNode* node = aMap->GetFirstNode(parent);
          node; node = node->mNext) {
     if (node->mContent == aContent)
