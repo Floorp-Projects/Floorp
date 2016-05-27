@@ -82,7 +82,6 @@
 #include "threading/ConditionVariable.h"
 #include "threading/LockGuard.h"
 #include "threading/Mutex.h"
-#include "threading/Thread.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Compression.h"
 #include "vm/Debugger.h"
@@ -173,7 +172,7 @@ struct ShellRuntime
      */
     Mutex watchdogLock;
     ConditionVariable watchdogWakeup;
-    Maybe<Thread> watchdogThread;
+    PRThread* watchdogThread;
     Maybe<TimeStamp> watchdogTimeout;
 
     ConditionVariable sleepWakeup;
@@ -316,6 +315,7 @@ ShellRuntime::ShellRuntime(JSRuntime* rt)
 #ifdef SPIDERMONKEY_PROMISE
     promiseRejectionTrackerCallback(rt, NullValue()),
 #endif // SPIDERMONKEY_PROMISE
+    watchdogThread(nullptr),
     exitCode(0),
     quitting(false),
     gotError(false)
@@ -3113,33 +3113,36 @@ static void
 KillWatchdog(JSRuntime* rt)
 {
     ShellRuntime* sr = GetShellRuntime(rt);
-    Maybe<Thread> thread;
+    PRThread* thread;
 
     {
         LockGuard<Mutex> guard(sr->watchdogLock);
-        Swap(sr->watchdogThread, thread);
+        thread = sr->watchdogThread;
         if (thread) {
-            // The watchdog thread becoming Nothing is its signal to exit.
+            /*
+             * The watchdog thread is running, tell it to terminate waking it up
+             * if necessary.
+             */
+            sr->watchdogThread = nullptr;
             sr->watchdogWakeup.notify_one();
         }
     }
     if (thread)
-        thread->join();
-
-    MOZ_ASSERT(!sr->watchdogThread);
+        PR_JoinThread(thread);
 }
 
 static void
-WatchdogMain(JSRuntime* rt)
+WatchdogMain(void* arg)
 {
-    ThisThread::SetName("JS Watchdog");
+    PR_SetCurrentThreadName("JS Watchdog");
 
+    JSRuntime* rt = (JSRuntime*) arg;
     ShellRuntime* sr = GetShellRuntime(rt);
 
     LockGuard<Mutex> guard(sr->watchdogLock);
     while (sr->watchdogThread) {
         auto now = TimeStamp::Now();
-        if (sr->watchdogTimeout && now >= sr->watchdogTimeout.value()) {
+        if (sr->watchdogTimeout.isSome() && now >= sr->watchdogTimeout.value()) {
             /*
              * The timeout has just expired. Request an interrupt callback
              * outside the lock.
@@ -3153,7 +3156,7 @@ WatchdogMain(JSRuntime* rt)
             /* Wake up any threads doing sleep. */
             sr->sleepWakeup.notify_all();
         } else {
-            if (sr->watchdogTimeout) {
+            if (sr->watchdogTimeout.isSome()) {
                 /*
                  * Time hasn't expired yet. Simulate an interrupt callback
                  * which doesn't abort execution.
@@ -3161,7 +3164,7 @@ WatchdogMain(JSRuntime* rt)
                 JS_RequestInterruptCallback(rt);
             }
 
-            TimeDuration sleepDuration = sr->watchdogTimeout
+            TimeDuration sleepDuration = sr->watchdogTimeout.isSome()
                                          ? TimeDuration::FromSeconds(0.1)
                                          : TimeDuration::Forever();
             sr->watchdogWakeup.wait_for(guard, sleepDuration);
@@ -3184,9 +3187,17 @@ ScheduleWatchdog(JSRuntime* rt, double t)
     auto timeout = TimeStamp::Now() + interval;
     LockGuard<Mutex> guard(sr->watchdogLock);
     if (!sr->watchdogThread) {
-        MOZ_ASSERT(!sr->watchdogTimeout);
-        sr->watchdogThread.emplace(WatchdogMain, rt);
-    } else if (!sr->watchdogTimeout || timeout < sr->watchdogTimeout.value()) {
+        MOZ_ASSERT(sr->watchdogTimeout.isNothing());
+        sr->watchdogThread = PR_CreateThread(PR_USER_THREAD,
+                                          WatchdogMain,
+                                          rt,
+                                          PR_PRIORITY_NORMAL,
+                                          PR_GLOBAL_THREAD,
+                                          PR_JOINABLE_THREAD,
+                                          0);
+        if (!sr->watchdogThread)
+            return false;
+    } else if (sr->watchdogTimeout.isNothing() || timeout < sr->watchdogTimeout.value()) {
          sr->watchdogWakeup.notify_one();
     }
     sr->watchdogTimeout = Some(timeout);
