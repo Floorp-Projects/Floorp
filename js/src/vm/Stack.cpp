@@ -47,7 +47,7 @@ InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractF
             if (newTarget.isNull() && evalInFramePrev.script()->functionOrCallerFunction())
                 newTarget = evalInFramePrev.newTarget();
         } else {
-            FrameIter iter(cx, FrameIter::GO_THROUGH_SAVED);
+            FrameIter iter(cx);
             MOZ_ASSERT(!iter.isWasm());
             if (newTarget.isNull() && iter.script()->functionOrCallerFunction())
                 newTarget = iter.newTarget();
@@ -517,13 +517,6 @@ FrameIter::settleOnActivation()
 
         Activation* activation = data_.activations_.activation();
 
-        // If JS_SaveFrameChain was called, stop iterating here (unless
-        // GO_THROUGH_SAVED is set).
-        if (data_.savedOption_ == STOP_AT_SAVED && activation->hasSavedFrameChain()) {
-            data_.state_ = DONE;
-            return;
-        }
-
         // Skip activations from another context if needed.
         MOZ_ASSERT(activation->cx());
         MOZ_ASSERT(data_.cx_);
@@ -597,11 +590,9 @@ FrameIter::settleOnActivation()
     }
 }
 
-FrameIter::Data::Data(JSContext* cx, SavedOption savedOption,
-                      ContextOption contextOption, DebuggerEvalOption debuggerEvalOption,
-                      JSPrincipals* principals)
+FrameIter::Data::Data(JSContext* cx, ContextOption contextOption,
+                      DebuggerEvalOption debuggerEvalOption, JSPrincipals* principals)
   : cx_(cx),
-    savedOption_(savedOption),
     contextOption_(contextOption),
     debuggerEvalOption_(debuggerEvalOption),
     principals_(principals),
@@ -616,7 +607,6 @@ FrameIter::Data::Data(JSContext* cx, SavedOption savedOption,
 
 FrameIter::Data::Data(const FrameIter::Data& other)
   : cx_(other.cx_),
-    savedOption_(other.savedOption_),
     contextOption_(other.contextOption_),
     debuggerEvalOption_(other.debuggerEvalOption_),
     principals_(other.principals_),
@@ -630,8 +620,8 @@ FrameIter::Data::Data(const FrameIter::Data& other)
 {
 }
 
-FrameIter::FrameIter(JSContext* cx, SavedOption savedOption)
-  : data_(cx, savedOption, CURRENT_CONTEXT, FOLLOW_DEBUGGER_EVAL_PREV_LINK, nullptr),
+FrameIter::FrameIter(JSContext* cx)
+  : data_(cx, CURRENT_CONTEXT, FOLLOW_DEBUGGER_EVAL_PREV_LINK, nullptr),
     ionInlineFrames_(cx, (js::jit::JitFrameIterator*) nullptr)
 {
     // settleOnActivation can only GC if principals are given.
@@ -640,8 +630,8 @@ FrameIter::FrameIter(JSContext* cx, SavedOption savedOption)
 }
 
 FrameIter::FrameIter(JSContext* cx, ContextOption contextOption,
-                     SavedOption savedOption, DebuggerEvalOption debuggerEvalOption)
-  : data_(cx, savedOption, contextOption, debuggerEvalOption, nullptr),
+                     DebuggerEvalOption debuggerEvalOption)
+  : data_(cx, contextOption, debuggerEvalOption, nullptr),
     ionInlineFrames_(cx, (js::jit::JitFrameIterator*) nullptr)
 {
     // settleOnActivation can only GC if principals are given.
@@ -650,9 +640,9 @@ FrameIter::FrameIter(JSContext* cx, ContextOption contextOption,
 }
 
 FrameIter::FrameIter(JSContext* cx, ContextOption contextOption,
-                     SavedOption savedOption, DebuggerEvalOption debuggerEvalOption,
+                     DebuggerEvalOption debuggerEvalOption,
                      JSPrincipals* principals)
-  : data_(cx, savedOption, contextOption, debuggerEvalOption, principals),
+  : data_(cx, contextOption, debuggerEvalOption, principals),
     ionInlineFrames_(cx, (js::jit::JitFrameIterator*) nullptr)
 {
     settleOnActivation();
@@ -735,12 +725,9 @@ FrameIter::operator++()
         {
             AbstractFramePtr eifPrev = interpFrame()->evalInFramePrev();
 
-            // Eval-in-frame can cross contexts and works across saved frame
-            // chains.
+            // Eval-in-frame can cross contexts.
             ContextOption prevContextOption = data_.contextOption_;
-            SavedOption prevSavedOption = data_.savedOption_;
             data_.contextOption_ = ALL_CONTEXTS;
-            data_.savedOption_ = GO_THROUGH_SAVED;
 
             popInterpreterFrame();
 
@@ -752,7 +739,6 @@ FrameIter::operator++()
             }
 
             data_.contextOption_ = prevContextOption;
-            data_.savedOption_ = prevSavedOption;
             data_.cx_ = data_.activations_->cx();
             break;
         }

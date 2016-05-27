@@ -403,7 +403,7 @@ js::RunningWithTrustedPrincipals(JSContext* cx)
 JS_FRIEND_API(JSFunction*)
 js::GetOutermostEnclosingFunctionOfScriptedCaller(JSContext* cx)
 {
-    ScriptFrameIter iter(cx, FrameIter::GO_THROUGH_SAVED);
+    ScriptFrameIter iter(cx);
 
     // Skip eval frames.
     while (!iter.done() && iter.isEvalFrame())
