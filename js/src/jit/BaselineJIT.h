@@ -245,6 +245,12 @@ struct BaselineScript
                    uint32_t traceLoggerExitToggleOffset,
                    uint32_t postDebugPrologueOffset);
 
+    ~BaselineScript() {
+        // The contents of the fallback stub space are removed and freed
+        // separately after the next minor GC. See BaselineScript::Destroy.
+        MOZ_ASSERT(fallbackStubSpace_.isEmpty());
+    }
+
     static BaselineScript* New(JSScript* jsscript, uint32_t prologueOffset,
                                uint32_t epilogueOffset, uint32_t postDebugPrologueOffset,
                                uint32_t profilerEnterToggleOffset,
@@ -598,5 +604,19 @@ BaselineCompile(JSContext* cx, JSScript* script, bool forceDebugInstrumentation 
 
 } // namespace jit
 } // namespace js
+
+namespace JS {
+
+template <>
+struct DeletePolicy<js::jit::BaselineScript>
+{
+    explicit DeletePolicy(JSRuntime* rt) : rt_(rt) {}
+    void operator()(const js::jit::BaselineScript* script);
+
+  private:
+    JSRuntime* rt_;
+};
+
+} // namespace JS
 
 #endif /* jit_BaselineJIT_h */

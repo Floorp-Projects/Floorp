@@ -63,7 +63,7 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     allocationMetadataBuilder(nullptr),
     lastAnimationTime(0),
     regExps(runtime_),
-    globalWriteBarriered(0),
+    globalWriteBarriered(false),
     detachedTypedObjects(0),
     objectMetadataState(ImmediateMetadata()),
     propertyTree(thisForCtor()),
@@ -680,7 +680,7 @@ JSCompartment::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime t
 void
 JSCompartment::sweepAfterMinorGC()
 {
-    globalWriteBarriered = 0;
+    globalWriteBarriered = false;
 
     if (innerViews.needsSweepAfterMinorGC())
         innerViews.sweepAfterMinorGC();

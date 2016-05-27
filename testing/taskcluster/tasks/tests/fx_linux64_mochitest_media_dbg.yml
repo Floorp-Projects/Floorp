@@ -4,4 +4,4 @@ task:
   payload:
     command:
       - --download-symbols=true
-    timeout: 5400
+    maxRunTime: 5400

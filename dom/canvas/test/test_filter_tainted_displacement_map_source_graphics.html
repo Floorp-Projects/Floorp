@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body onload="runTest()" style="margin: 0; padding: 0">
+<svg style="display: block; width: 0; height: 0">
+  <defs>
+    <filter id="tainted1">
+      <feImage xlink:href='image_red-16x16.png' result='img'/>
+      <feDisplacementMap in="img" in2="SourceGraphic" scale="20"/>
+    </filter>
+    <filter id="tainted2">
+      <feImage xlink:href='http://example.com/tests/dom/canvas/test/image_red-16x16.png' result='img'/>
+      <feDisplacementMap in="SourceGraphic" in2="img" scale="20"/>
+    </filter>
+  </defs>
+</svg>
+<canvas id="c" width="16" height="16"></canvas>
+<img id="i" src="http://example.com/tests/dom/canvas/test/image_green-16x16.png"/>
+<script>
+
+function isPixel(ctx, x,y, r,g,b,a, pos, color, d) {
+  var pixel = ctx.getImageData(x, y, 1, 1);
+  var pr = pixel.data[0],
+      pg = pixel.data[1],
+      pb = pixel.data[2],
+      pa = pixel.data[3];
+  ok(r - d <= pr && pr <= r + d &&
+     g - d <= pg && pg <= g + d &&
+     b - d <= pb && pb <= b + d &&
+     a - d <= pa && pa <= a + d,
+     'pixel ' + pos + ' is ' + pr + ',' + pg + ',' + pb + ',' + pa + '; expected ' + color + ' +/- ' + d);
+}
+
+function runTest() {
+
+  SpecialPowers.pushPrefEnv({ 'set': [['canvas.filters.enabled', true]] }, function () {
+  
+    var canvas = document.getElementById('c');
+    var ctx = canvas.getContext('2d');
+    var img = document.getElementById('i');
+    ctx.filter = 'url(#tainted1)';
+    ctx.drawImage(img, 0, 0);
+  
+    var canvas2 = document.createElement('canvas');
+    var ctx2 = SpecialPowers.wrap(canvas2.getContext('2d'));
+    ctx2.drawWindow(window, 0, 0, 16, 16, 'rgb(255, 255, 255)', 0);
+    isPixel(ctx2, 8,8, 255,0,0,255, '8,8', "255,0,0,255", 5);
+
+    ctx.filter = 'url(#tainted2)';
+    ctx.drawImage(img, 0, 0);
+
+    ctx2.drawWindow(window, 0, 0, 16, 16, 'rgb(255, 255, 255)', 0);
+    isPixel(ctx2, 8,8, 0,255,0,255, '8,8', "0,255,0,255", 5);
+
+    var expected_error = 'SecurityError';
+    var data;
+    try {
+      data = ctx.getImageData(0, 0, 16, 16);
+      actual_error = "";
+    } catch (e) {
+      actual_error = e.name;
+    }
+    is(actual_error, expected_error, 'canvas should have been tainted and throw a SecurityError');
+  
+    SimpleTest.finish();
+    
+  });
+
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>

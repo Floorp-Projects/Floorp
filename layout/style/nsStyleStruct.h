@@ -1381,7 +1381,7 @@ class nsStyleQuoteValues
 {
 public:
   typedef nsTArray<std::pair<nsString, nsString>> QuotePairArray;
-  NS_INLINE_DECL_REFCOUNTING(nsStyleQuoteValues);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsStyleQuoteValues);
   QuotePairArray mQuotePairs;
 
 private:
@@ -1442,7 +1442,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList
   {
     // NB: This function is called off-main-thread during parallel restyle, but
     // only with builtin styles that use dummy refcounting.
-    MOZ_ASSERT(NS_IsMainThread() || aStyle->IsDependentStyle());
+    MOZ_ASSERT(NS_IsMainThread() || !aStyle->IsDependentStyle());
     mCounterStyle = aStyle;
   }
   void SetListStyleType(const nsSubstring& aType,

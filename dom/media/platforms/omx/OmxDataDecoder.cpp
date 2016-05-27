@@ -12,19 +12,18 @@
 
 #include "OmxPlatformLayer.h"
 
-extern mozilla::LogModule* GetPDMLog();
 
 #ifdef LOG
 #undef LOG
 #undef LOGL
 #endif
 
-#define LOG(arg, ...) MOZ_LOG(GetPDMLog(), mozilla::LogLevel::Debug, ("OmxDataDecoder(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#define LOG(arg, ...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, ("OmxDataDecoder(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 
 #define LOGL(arg, ...)                                                     \
   {                                                                        \
     void* p = self;                                              \
-    MOZ_LOG(GetPDMLog(), mozilla::LogLevel::Debug,                         \
+    MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug,                         \
             ("OmxDataDecoder(%p)::%s: " arg, p, __func__, ##__VA_ARGS__)); \
   }
 

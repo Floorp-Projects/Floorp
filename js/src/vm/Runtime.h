@@ -937,6 +937,9 @@ struct JSRuntime : public JS::shadow::Runtime,
     JSEnqueuePromiseJobCallback enqueuePromiseJobCallback;
     void* enqueuePromiseJobCallbackData;
 
+    JSPromiseRejectionTrackerCallback promiseRejectionTrackerCallback;
+    void* promiseRejectionTrackerCallbackData;
+
 #ifdef DEBUG
     void assertCanLock(js::RuntimeLock which);
 #else
@@ -1045,7 +1048,9 @@ struct JSRuntime : public JS::shadow::Runtime,
         return interpreterStack_;
     }
 
-    bool enqueuePromiseJob(JSContext* cx, js::HandleFunction job);
+    bool enqueuePromiseJob(JSContext* cx, js::HandleFunction job, js::HandleObject promise);
+    void addUnhandledRejectedPromise(JSContext* cx, js::HandleObject promise);
+    void removeUnhandledRejectedPromise(JSContext* cx, js::HandleObject promise);
 
     //-------------------------------------------------------------------------
     // Self-hosting support

@@ -7,7 +7,7 @@ config = {
     ],
     "repo": {
         "repo": "https://hg.mozilla.org/releases/mozilla-esr45",
-        "revision": "default",
+        "branch": "default",
         "dest": "mozilla-esr45",
         "vcs": "hg",
     },
