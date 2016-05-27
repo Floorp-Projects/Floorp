@@ -83,6 +83,8 @@ class imgFrame
   typedef gfx::DataSourceSurface DataSourceSurface;
   typedef gfx::DrawTarget DrawTarget;
   typedef gfx::Filter Filter;
+  typedef gfx::IntPoint IntPoint;
+  typedef gfx::IntRect IntRect;
   typedef gfx::IntSize IntSize;
   typedef gfx::SourceSurface SourceSurface;
   typedef gfx::SurfaceFormat SurfaceFormat;
@@ -212,9 +214,9 @@ public:
   uint32_t GetBytesPerPixel() const { return GetIsPaletted() ? 1 : 4; }
 
   IntSize GetImageSize() const { return mImageSize; }
-  nsIntRect GetRect() const;
-  IntSize GetSize() const { return mSize; }
-  bool NeedsPadding() const { return mOffset != nsIntPoint(0, 0); }
+  IntRect GetRect() const { return mFrameRect; }
+  IntSize GetSize() const { return mFrameRect.Size(); }
+  bool NeedsPadding() const { return mFrameRect.TopLeft() != IntPoint(0, 0); }
   void GetImageData(uint8_t** aData, uint32_t* length) const;
   uint8_t* GetImageData() const;
 
@@ -320,8 +322,7 @@ private: // data
   //////////////////////////////////////////////////////////////////////////////
 
   IntSize      mImageSize;
-  IntSize      mSize;
-  nsIntPoint   mOffset;
+  IntRect      mFrameRect;
 
   // The palette and image data for images that are paletted, since Cairo
   // doesn't support these images.
