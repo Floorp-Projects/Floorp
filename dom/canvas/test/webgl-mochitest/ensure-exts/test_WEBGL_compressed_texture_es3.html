@@ -10,7 +10,9 @@
     <script>
 
 'use strict';
-EnsureDraftExt('WEBGL_compressed_texture_es3');
+Lastly_WithDraftExtsEnabled(function() {
+    EnsureExt('WEBGL_compressed_texture_es3');
+});
 
     </script>
   </body>

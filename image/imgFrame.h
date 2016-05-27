@@ -77,38 +77,14 @@ struct AnimationData
   bool mHasAlpha;
 };
 
-/**
- * ScalingData contains all of the information necessary for performing
- * high-quality (CPU-based) scaling an imgFrame.
- *
- * It includes pointers to the raw image data of the underlying imgFrame, but
- * does not own that data. A RawAccessFrameRef for the underlying imgFrame must
- * outlive the ScalingData for it to remain valid.
- */
-struct ScalingData
-{
-  ScalingData(uint8_t* aRawData,
-              gfx::IntSize aSize,
-              uint32_t aBytesPerRow,
-              gfx::SurfaceFormat aFormat)
-    : mRawData(aRawData)
-    , mSize(aSize)
-    , mBytesPerRow(aBytesPerRow)
-    , mFormat(aFormat)
-  { }
-
-  uint8_t* mRawData;
-  gfx::IntSize mSize;
-  uint32_t mBytesPerRow;
-  gfx::SurfaceFormat mFormat;
-};
-
 class imgFrame
 {
   typedef gfx::Color Color;
   typedef gfx::DataSourceSurface DataSourceSurface;
   typedef gfx::DrawTarget DrawTarget;
   typedef gfx::Filter Filter;
+  typedef gfx::IntPoint IntPoint;
+  typedef gfx::IntRect IntRect;
   typedef gfx::IntSize IntSize;
   typedef gfx::SourceSurface SourceSurface;
   typedef gfx::SurfaceFormat SurfaceFormat;
@@ -238,9 +214,9 @@ public:
   uint32_t GetBytesPerPixel() const { return GetIsPaletted() ? 1 : 4; }
 
   IntSize GetImageSize() const { return mImageSize; }
-  nsIntRect GetRect() const;
-  IntSize GetSize() const { return mSize; }
-  bool NeedsPadding() const { return mOffset != nsIntPoint(0, 0); }
+  IntRect GetRect() const { return mFrameRect; }
+  IntSize GetSize() const { return mFrameRect.Size(); }
+  bool NeedsPadding() const { return mFrameRect.TopLeft() != IntPoint(0, 0); }
   void GetImageData(uint8_t** aData, uint32_t* length) const;
   uint8_t* GetImageData() const;
 
@@ -249,15 +225,7 @@ public:
   uint32_t* GetPaletteData() const;
   uint8_t GetPaletteDepth() const { return mPaletteDepth; }
 
-  /**
-   * Get the SurfaceFormat for this imgFrame.
-   *
-   * This should only be used for assertions.
-   */
-  SurfaceFormat GetFormat() const;
-
   AnimationData GetAnimationData() const;
-  ScalingData GetScalingData() const;
 
   bool GetCompositingFailed() const;
   void SetCompositingFailed(bool val);
@@ -268,7 +236,6 @@ public:
   bool IsSinglePixel() const;
 
   already_AddRefed<SourceSurface> GetSurface();
-  already_AddRefed<DrawTarget> GetDrawTarget();
 
   void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf, size_t& aHeapSizeOut,
                               size_t& aNonHeapSizeOut) const;
@@ -288,7 +255,6 @@ private: // methods
   void GetImageDataInternal(uint8_t** aData, uint32_t* length) const;
   uint32_t GetImageBytesPerRow() const;
   uint32_t GetImageDataLength() const;
-  int32_t GetStride() const;
   already_AddRefed<SourceSurface> GetSurfaceInternal();
 
   uint32_t PaletteDataLength() const
@@ -356,8 +322,7 @@ private: // data
   //////////////////////////////////////////////////////////////////////////////
 
   IntSize      mImageSize;
-  IntSize      mSize;
-  nsIntPoint   mOffset;
+  IntRect      mFrameRect;
 
   // The palette and image data for images that are paletted, since Cairo
   // doesn't support these images.
@@ -446,10 +411,10 @@ private:
 /**
  * A reference to an imgFrame that holds the imgFrame's surface in memory in a
  * format appropriate for access as raw data. If you have a RawAccessFrameRef
- * |ref| and |if (ref)| is true, then calls to GetImageData(), GetPaletteData(),
- * and GetDrawTarget() are guaranteed to succeed. This guarantee is stronger
- * than DrawableFrameRef, so everything that a valid DrawableFrameRef guarantees
- * is also guaranteed by a valid RawAccessFrameRef.
+ * |ref| and |if (ref)| is true, then calls to GetImageData() and
+ * GetPaletteData() are guaranteed to succeed. This guarantee is stronger than
+ * DrawableFrameRef, so everything that a valid DrawableFrameRef guarantees is
+ * also guaranteed by a valid RawAccessFrameRef.
  *
  * This may be considerably more expensive than is necessary just for drawing,
  * so only use this when you need to read or write the raw underlying image data

@@ -4,71 +4,106 @@
     <meta charset='utf-8'/>
     <script src='/tests/SimpleTest/SimpleTest.js'></script>
     <link rel='stylesheet' href='/tests/SimpleTest/test.css'>
+    <script src='ensure-ext.js'></script>
   </head>
   <body>
     <script>
 
 'use strict';
 
-var c = document.createElement('canvas');
-var gl = c.getContext('experimental-webgl');
+var ENSURE = 'ENSURE'; // Works on all test machines.
+var FORBID = 'FORBID'; // Should not work on any test machine.
+var MACHINE_SPECIFIC = 'MACHINE_SPECIFIC';
 
-function ensureExt(name) {
-  ok(gl.getExtension(name), 'Should have extension ' + name + '.');
+var defaultExts = [
+    // Ratified
+    ['ANGLE_instanced_arrays'        , [MACHINE_SPECIFIC, FORBID          ]],
+    ['EXT_blend_minmax'              , [MACHINE_SPECIFIC, FORBID          ]],
+    ['EXT_frag_depth'                , [MACHINE_SPECIFIC, FORBID          ]],
+    ['EXT_shader_texture_lod'        , [MACHINE_SPECIFIC, FORBID          ]],
+    ['EXT_texture_filter_anisotropic', [MACHINE_SPECIFIC, MACHINE_SPECIFIC]],
+    ['OES_element_index_uint'        , [ENSURE          , FORBID          ]],
+    ['OES_standard_derivatives'      , [MACHINE_SPECIFIC, FORBID          ]],
+    ['OES_texture_float'             , [ENSURE          , FORBID          ]],
+    ['OES_texture_float_linear'      , [ENSURE          , ENSURE          ]],
+    ['OES_texture_half_float'        , [ENSURE          , FORBID          ]],
+    ['OES_texture_half_float_linear' , [ENSURE          , FORBID          ]],
+    ['OES_vertex_array_object'       , [ENSURE          , FORBID          ]],
+    ['WEBGL_compressed_texture_s3tc' , [MACHINE_SPECIFIC, MACHINE_SPECIFIC]],
+//  ['WEBGL_debug_renderer_info'     , [FORBID          , FORBID          ]], // Complicated!
+    ['WEBGL_debug_shaders'           , [FORBID          , FORBID          ]],
+    ['WEBGL_depth_texture'           , [MACHINE_SPECIFIC, FORBID          ]],
+    ['WEBGL_draw_buffers'            , [MACHINE_SPECIFIC, FORBID          ]],
+    ['WEBGL_lose_context'            , [ENSURE          , ENSURE          ]],
+
+    // Community Approved
+    ['EXT_color_buffer_float'        , [FORBID          , ENSURE          ]],
+    ['EXT_color_buffer_half_float'   , [MACHINE_SPECIFIC, FORBID          ]],
+    ['EXT_sRGB'                      , [MACHINE_SPECIFIC, FORBID          ]],
+    ['WEBGL_color_buffer_float'      , [MACHINE_SPECIFIC, FORBID          ]],
+    ['WEBGL_compressed_texture_atc'  , [MACHINE_SPECIFIC, MACHINE_SPECIFIC]],
+    ['WEBGL_compressed_texture_etc1' , [MACHINE_SPECIFIC, MACHINE_SPECIFIC]],
+    ['WEBGL_compressed_texture_pvrtc', [MACHINE_SPECIFIC, MACHINE_SPECIFIC]],
+];
+
+var draftExts = [
+    ['EXT_disjoint_timer_query'    , [MACHINE_SPECIFIC, MACHINE_SPECIFIC]], // TODO: Actually Community Approved now.
+    ['WEBGL_compressed_texture_es3', [MACHINE_SPECIFIC, MACHINE_SPECIFIC]],
+];
+
+var nonImplementedExts = [
+    'OES_fbo_render_mipmap',
+    'WEBGL_compressed_texture_astc',
+    'WEBGL_security_sensitive_resources',
+    'WEBGL_shared_resources',
+];
+
+////////////////////
+
+function TestExtFor(contextType, extName, status) {
+    switch (status) {
+    case ENSURE:
+        EnsureExtFor(contextType, extName);
+        break;
+
+    case FORBID:
+        EnsureExtFor(contextType, extName, false);
+        break;
+
+    case MACHINE_SPECIFIC:
+        break;
+    }
 }
 
-function ensureNoExt(name) {
-  ok(!gl.getExtension(name), 'Should not have extension ' + name + '.');
+function TestExt(extName, statusArr) {
+    TestExtFor('webgl', extName, statusArr[0]);
+    TestExtFor('webgl2', extName, statusArr[1]);
 }
 
-do {
-  if (!gl)
-    break;
+////////////////////
 
-  // These aren't all guaranteed, but they're common to all our test slaves.
-  // If you're adding a slave config that is missing one of these, comment the line out
-  // and split it into its own test.
+defaultExts.forEach(function(x) {
+    var extName = x[0];
+    var statusArr = x[1];
+    TestExt(extName, statusArr);
+});
 
-  // Implemented. (commented out if not test-slave-universal)
-  //ensureExt('ANGLE_instanced_arrays');
-  //ensureExt('EXT_blend_minmax');
-  //ensureExt('EXT_color_buffer_half_float');
-  //ensureExt('EXT_frag_depth');
-  //ensureExt('EXT_shader_texture_lod');
-  //ensureExt('EXT_sRGB');
-  //ensureExt('EXT_texture_filter_anisotropic');
-  ensureExt('OES_element_index_uint');
-  //ensureExt('OES_standard_derivatives');
-  ensureExt('OES_texture_float');
-  ensureExt('OES_texture_float_linear');
-  ensureExt('OES_texture_half_float');
-  ensureExt('OES_texture_half_float_linear');
-  ensureExt('OES_vertex_array_object');
-  //ensureExt('WEBGL_color_buffer_float');
-  //ensureExt('WEBGL_compressed_texture_atc');
-  //ensureExt('WEBGL_compressed_texture_es3');
-  //ensureExt('WEBGL_compressed_texture_etc1');
-  //ensureExt('WEBGL_compressed_texture_pvrtc');
-  //ensureExt('WEBGL_compressed_texture_s3tc');
-  //ensureExt('WEBGL_depth_texture');
-  //ensureExt('WEBGL_draw_buffers');
-  ensureExt('WEBGL_lose_context');
+nonImplementedExts.forEach(function(extName) {
+    EnsureExt(extName, false);
+});
 
-  // Draft extensions, which should not be exposed by default.
-  ensureNoExt('EXT_disjoint_timer_query');
-  ensureNoExt('WEBGL_compressed_texture_es3');
+draftExts.forEach(function(x) {
+    var extName = x[0];
+    EnsureExt(extName, false);
+});
 
-  // Not implemented.
-  ensureNoExt('EXT_color_buffer_float');
-  ensureNoExt('OES_fbo_render_mipmap');
-  ensureNoExt('WEBGL_compressed_texture_astc');
-  ensureNoExt('WEBGL_security_sensitive_resources');
-  ensureNoExt('WEBGL_shared_resources');
-
-  // Privileged
-  //ensureExt('WEBGL_debug_renderer_info');
-  //ensureExt('WEBGL_debug_shaders');
-} while (false);
+Lastly_WithDraftExtsEnabled(function() {
+    draftExts.forEach(function(x) {
+        var extName = x[0];
+        var statusArr = x[1];
+        TestExt(extName, statusArr);
+    });
+});
 
     </script>
   </body>
