@@ -1285,6 +1285,27 @@ MediaStreamGraphImpl::PrepareUpdatesToMainThreadState(bool aFinalUpdate)
   // We don't want to frequently update the main thread about timing update
   // when we are not running in realtime.
   if (aFinalUpdate || ShouldUpdateMainThread()) {
+    // Strip updates that will be obsoleted below, so as to keep the length of
+    // mStreamUpdates sane.
+    size_t keptUpdateCount = 0;
+    for (size_t i = 0; i < mStreamUpdates.Length(); ++i) {
+      MediaStream* stream = mStreamUpdates[i].mStream;
+      // RemoveStreamGraphThread() clears mStream in updates for
+      // streams that are removed from the graph.
+      MOZ_ASSERT(!stream || stream->GraphImpl() == this);
+      if (!stream || stream->MainThreadNeedsUpdates()) {
+        // Discard this update as it has either been cleared when the stream
+        // was destroyed or there will be a newer update below.
+        continue;
+      }
+      if (keptUpdateCount != i) {
+        mStreamUpdates[keptUpdateCount] = Move(mStreamUpdates[i]);
+        MOZ_ASSERT(!mStreamUpdates[i].mStream);
+      }
+      ++keptUpdateCount;
+    }
+    mStreamUpdates.TruncateLength(keptUpdateCount);
+
     mStreamUpdates.SetCapacity(mStreamUpdates.Length() + mStreams.Length() +
         mSuspendedStreams.Length());
     for (MediaStream* stream : AllStreams()) {

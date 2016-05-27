@@ -462,8 +462,6 @@ ANDROID_AAPT_IGNORE := !.svn:!.git:.*:<dir>_*:!CVS:!thumbs.db:!picasa.ini:!*.scc
 # thinking aapt's outputs are stale.  This is safe because Make
 # removes the target file if any recipe command fails.
 
-CONSTRAINED_AAPT_CONFIGURATIONS := hdpi
-
 define aapt_command
 $(1): $$(call mkdir_deps,$(filter-out ./,$(dir $(3) $(4) $(5)))) $(2)
 	@$$(TOUCH) $$@
@@ -481,7 +479,6 @@ $(1): $$(call mkdir_deps,$(filter-out ./,$(dir $(3) $(4) $(5)))) $(2)
 		-F $(3) \
 		-J $(4) \
 		--output-text-symbols $(5) \
-		$(if $(MOZ_ANDROID_RESOURCE_CONSTRAINED),-c $(CONSTRAINED_AAPT_CONFIGURATIONS),) \
 		--ignore-assets "$$(ANDROID_AAPT_IGNORE)"
 endef
 
