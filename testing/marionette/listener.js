@@ -30,6 +30,8 @@ Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+Cu.importGlobalProperties(["URL"]);
+
 var contentLog = new logging.ContentLogger();
 
 var isB2G = false;
@@ -927,13 +929,19 @@ function pollForReadyState(msg, start, callback) {
  */
 function get(msg) {
   let start = new Date().getTime();
+  let requestedURL = new URL(msg.json.url).toString();
 
   // Prevent DOMContentLoaded events from frames from invoking this
   // code, unless the event is coming from the frame associated with
   // the current window (i.e. someone has used switch_to_frame).
   onDOMContentLoaded = function onDOMContentLoaded(event) {
-    if (!event.originalTarget.defaultView.frameElement ||
-        event.originalTarget.defaultView.frameElement == curContainer.frame.frameElement) {
+    let correctFrame =
+      !event.originalTarget.defaultView.frameElement ||
+      event.originalTarget.defaultView.frameElement == curContainer.frame.frameElement;
+
+    let correctURL = curContainer.frame.location == requestedURL;
+
+    if (correctFrame && correctURL) {
       pollForReadyState(msg, start, () => {
         removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
       });
@@ -949,12 +957,12 @@ function get(msg) {
   }
   addEventListener("DOMContentLoaded", onDOMContentLoaded, false);
   if (isB2G) {
-    curContainer.frame.location = msg.json.url;
+    curContainer.frame.location = requestedURL;
   } else {
     // We need to move to the top frame before navigating
     sendSyncMessage("Marionette:switchedToFrame", { frameValue: null });
     curContainer.frame = content;
-    curContainer.frame.location = msg.json.url;
+    curContainer.frame.location = requestedURL;
   }
 }
 
