@@ -510,45 +510,5 @@ ImageTestCase NoFrameDelayGIFTestCase()
   return ImageTestCase("no-frame-delay.gif", "image/gif", IntSize(100, 100));
 }
 
-ImageTestCase DownscaledPNGTestCase()
-{
-  // This testcase (and all the other "downscaled") testcases) consists of 25
-  // lines of green, followed by 25 lines of red, followed by 25 lines of green,
-  // followed by 25 more lines of red. It's intended that tests downscale it
-  // from 100x100 to 20x20, so we specify a 20x20 output size.
-  return ImageTestCase("downscaled.png", "image/png", IntSize(100, 100),
-                       IntSize(20, 20));
-}
-
-ImageTestCase DownscaledGIFTestCase()
-{
-  return ImageTestCase("downscaled.gif", "image/gif", IntSize(100, 100),
-                       IntSize(20, 20));
-}
-
-ImageTestCase DownscaledJPGTestCase()
-{
-  return ImageTestCase("downscaled.jpg", "image/jpeg", IntSize(100, 100),
-                       IntSize(20, 20));
-}
-
-ImageTestCase DownscaledBMPTestCase()
-{
-  return ImageTestCase("downscaled.bmp", "image/bmp", IntSize(100, 100),
-                       IntSize(20, 20));
-}
-
-ImageTestCase DownscaledICOTestCase()
-{
-  return ImageTestCase("downscaled.ico", "image/x-icon", IntSize(100, 100),
-                       IntSize(20, 20), TEST_CASE_IS_TRANSPARENT);
-}
-
-ImageTestCase DownscaledIconTestCase()
-{
-  return ImageTestCase("downscaled.icon", "image/icon", IntSize(100, 100),
-                       IntSize(20, 20), TEST_CASE_IS_TRANSPARENT);
-}
-
 } // namespace image
 } // namespace mozilla
