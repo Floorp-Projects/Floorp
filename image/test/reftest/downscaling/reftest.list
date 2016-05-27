@@ -87,6 +87,8 @@ fuzzy(20,999) != downscale-2c.html?205,53,bottom about:blank
 fuzzy(20,999) != downscale-2d.html?205,53,bottom about:blank
 fuzzy(20,999) fails-if(OSX>=1008&&!skiaContent) != downscale-2e.html?205,53,bottom about:blank
 
+fuzzy(28,3386) == downscale-moz-icon-1.html downscale-moz-icon-1-ref.html
+
 == downscale-png.html?16,16,interlaced downscale-png.html?16,16,normal
 == downscale-png.html?24,24,interlaced downscale-png.html?24,24,normal
 
@@ -167,6 +169,8 @@ fuzzy(20,999) != downscale-2c.html?205,53,bottom about:blank
 fuzzy(20,999) != downscale-2d.html?205,53,bottom about:blank
 fuzzy(20,999) != downscale-2e.html?205,53,bottom about:blank
 fuzzy(20,999) != downscale-2f.html?205,53,bottom about:blank
+
+fuzzy(36,4439) == downscale-moz-icon-1.html downscale-moz-icon-1-ref.html
 
 == downscale-png.html?16,16,interlaced downscale-png.html?16,16,normal
 == downscale-png.html?24,24,interlaced downscale-png.html?24,24,normal
