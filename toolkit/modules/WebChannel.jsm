@@ -71,15 +71,6 @@ var WebChannelBroker = Object.create({
       eventTarget: event.objects.eventTarget,
       principal: event.principal,
     };
-    // data must be a string except for a few legacy origins allowed by browser-content.js.
-    if (typeof data == "string") {
-      try {
-        data = JSON.parse(data);
-      } catch (e) {
-        Cu.reportError("Failed to parse WebChannel data as a JSON object");
-        return;
-      }
-    }
 
     if (data && data.id) {
       if (!event.principal) {

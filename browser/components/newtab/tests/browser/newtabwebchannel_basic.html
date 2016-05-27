@@ -7,25 +7,21 @@
         <script>
             document.onreadystatechange = function () {
                 let msg = new window.CustomEvent("WebChannelMessageToChrome", {
-                    detail: JSON.stringify({
+                    detail: {
                         id: "newtab",
                         message: JSON.stringify({type: "foo", data: "bar"}),
-                    })
+                    }
                 });
                 window.dispatchEvent(msg);
             };
 
             window.addEventListener("WebChannelMessageToContent", function(e) {
-                if (e.detail.message && e.detail.message.type.startsWith("respond")) {
-                    var detail = {
-                        id: "newtab",
-                        message: JSON.stringify({type: "reply", data: "quuz"}),
-                    };
-                    if (e.detail.message.type !== "respond_object") {
-                        detail = JSON.stringify(detail);
-                    }
+                if (e.detail.message && e.detail.message.type === "respond") {
                     let reply = new window.CustomEvent("WebChannelMessageToChrome", {
-                        detail: detail
+                        detail: {
+                            id: "newtab",
+                            message: JSON.stringify({type: "reply", data: "quuz"}),
+                        }
                     });
                     window.dispatchEvent(reply);
                 }

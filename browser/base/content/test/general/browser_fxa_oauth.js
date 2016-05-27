@@ -309,17 +309,9 @@ function test() {
   waitForExplicitFinish();
 
   Task.spawn(function () {
-    const webchannelWhitelistPref = "webchannel.allowObject.urlWhitelist";
-    let origWhitelist = Services.prefs.getCharPref(webchannelWhitelistPref);
-    let newWhitelist = origWhitelist + " http://example.com";
-    Services.prefs.setCharPref(webchannelWhitelistPref, newWhitelist);
-    try {
-      for (let test of gTests) {
-        info("Running: " + test.desc);
-        yield test.run();
-      }
-    } finally {
-      Services.prefs.clearUserPref(webchannelWhitelistPref);
+    for (let test of gTests) {
+      info("Running: " + test.desc);
+      yield test.run();
     }
   }).then(finish, ex => {
     Assert.ok(false, "Unexpected Exception: " + ex);

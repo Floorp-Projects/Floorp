@@ -24,14 +24,14 @@
 
   function test_generic() {
     var event = new window.CustomEvent("WebChannelMessageToChrome", {
-      detail: JSON.stringify({
+      detail: {
         id: "generic",
         message: {
           something: {
             nested: "hello",
           },
         }
-      })
+      }
     });
 
     window.dispatchEvent(event);
@@ -39,23 +39,23 @@
 
   function test_twoWay() {
     var firstMessage = new window.CustomEvent("WebChannelMessageToChrome", {
-      detail: JSON.stringify({
+      detail: {
         id: "twoway",
         message: {
           command: "one",
         },
-      })
+      }
     });
 
     window.addEventListener("WebChannelMessageToContent", function(e) {
       var secondMessage = new window.CustomEvent("WebChannelMessageToChrome", {
-        detail: JSON.stringify({
+        detail: {
           id: "twoway",
           message: {
             command: "two",
             detail: e.detail.message,
           },
-        }),
+        },
       });
 
       if (!e.detail.message.error) {
@@ -68,17 +68,17 @@
 
   function test_multichannel() {
     var event1 = new window.CustomEvent("WebChannelMessageToChrome", {
-      detail: JSON.stringify({
+      detail: {
         id: "wrongchannel",
         message: {},
-      })
+      }
     });
 
     var event2 = new window.CustomEvent("WebChannelMessageToChrome", {
-      detail: JSON.stringify({
+      detail: {
         id: "multichannel",
         message: {},
-      })
+      }
     });
 
     window.dispatchEvent(event1);

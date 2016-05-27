@@ -670,60 +670,17 @@ var FindBar = {
 };
 FindBar.init();
 
-let WebChannelMessageToChromeListener = {
-  // Preference containing the list (space separated) of origins that are
-  // allowed to send non-string values through a WebChannel, mainly for
-  // backwards compatability. See bug 1238128 for more information.
-  URL_WHITELIST_PREF: "webchannel.allowObject.urlWhitelist",
+// An event listener for custom "WebChannelMessageToChrome" events on pages.
+addEventListener("WebChannelMessageToChrome", function (e) {
+  // If target is window then we want the document principal, otherwise fallback to target itself.
+  let principal = e.target.nodePrincipal ? e.target.nodePrincipal : e.target.document.nodePrincipal;
 
-  // To avoid needing to reconstruct a list of principals for every event,
-  // we construct it the first time we need it, and store the result here.
-  // When the preference changes, we clear this out again, so that it will be
-  // reconstructed next time we get a WebChannelMessageToChrome event.
-  _principalWhitelist: null,
-
-  init() {
-    Services.prefs.addObserver(this.URL_WHITELIST_PREF, () => {
-      this._principalWhitelist = null;
-    }, false);
-    addEventListener("WebChannelMessageToChrome", e => {
-      this._onMessageToChrome(e);
-    }, true, true);
-  },
-
-  _getWhitelistedPrincipals() {
-    if (!this._principalWhitelist) {
-      let prefValue = Services.prefs.getCharPref(this.URL_WHITELIST_PREF);
-      let urls = prefValue.split(/\s+/);
-      this._principalWhitelist = urls.map(origin =>
-        Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin));
-    }
-    return this._principalWhitelist;
-  },
-
-  _onMessageToChrome(e) {
-    // If target is window then we want the document principal, otherwise fallback to target itself.
-    let principal = e.target.nodePrincipal ? e.target.nodePrincipal : e.target.document.nodePrincipal;
-
-    if (e.detail) {
-      if (typeof e.detail != 'string') {
-        // Check if the principal is one of the ones that's allowed to send
-        // non-string values for e.detail.
-        let objectsAllowed = this._getWhitelistedPrincipals().some(whitelisted =>
-          principal.originNoSuffix == whitelisted.originNoSuffix);
-        if (!objectsAllowed) {
-          Cu.reportError("WebChannelMessageToChrome sent with an object from a non-whitelisted principal");
-          return;
-        }
-      }
-      sendAsyncMessage("WebChannelMessageToChrome", e.detail, { eventTarget: e.target }, principal);
-    } else  {
-      Cu.reportError("WebChannel message failed. No message detail.");
-    }
+  if (e.detail) {
+    sendAsyncMessage("WebChannelMessageToChrome", e.detail, { eventTarget: e.target }, principal);
+  } else  {
+    Cu.reportError("WebChannel message failed. No message detail.");
   }
-};
-
-WebChannelMessageToChromeListener.init();
+}, true, true);
 
 // This should be kept in sync with /browser/base/content.js.
 // Add message listener for "WebChannelMessageToContent" messages from chrome scripts.
