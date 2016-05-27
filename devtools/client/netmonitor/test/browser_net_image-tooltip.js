@@ -1,78 +1,70 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Tests if image responses show a popup in the requests menu when hovered.
  */
+add_task(function* test() {
+  let [, debuggee, monitor] = yield initNetMonitor(CONTENT_TYPE_WITHOUT_CACHE_URL);
+  info("Starting test... ");
 
-function test() {
-  initNetMonitor(CONTENT_TYPE_WITHOUT_CACHE_URL).then(([aTab, aDebuggee, aMonitor]) => {
-    info("Starting test... ");
+  let { $, EVENTS, ACTIVITY_TYPE, NetMonitorView, NetMonitorController } =
+    monitor.panelWin;
+  let { RequestsMenu } = NetMonitorView;
+  RequestsMenu.lazyUpdate = true;
 
-    let { $, EVENTS, ACTIVITY_TYPE, NetMonitorView, NetMonitorController } = aMonitor.panelWin;
-    let { RequestsMenu } = NetMonitorView;
+  let onEvents = waitForNetworkEvents(monitor, 7);
+  let onThumbnail = waitFor(monitor.panelWin, EVENTS.RESPONSE_IMAGE_THUMBNAIL_DISPLAYED);
 
-    promise.all([
-      waitForNetworkEvents(aMonitor, 7),
-      waitFor(aMonitor.panelWin, EVENTS.RESPONSE_IMAGE_THUMBNAIL_DISPLAYED)
-    ]).then(() => {
-      info("Checking the image thumbnail after a few requests were made...");
-      let requestItem = RequestsMenu.items[5];
-      let requestTooltip = requestItem.attachment.tooltip;
-      ok(requestTooltip, "There should be a tooltip instance for the image request.");
+  debuggee.performRequests();
+  yield onEvents;
+  yield onThumbnail;
 
-      let anchor = $(".requests-menu-file", requestItem.target);
-      return showTooltipOn(requestTooltip, anchor);
-    }).then(aTooltip => {
-      ok(true,
-        "An tooltip was successfully opened for the image request.");
-      is(aTooltip.content.querySelector("image").src, TEST_IMAGE_DATA_URI,
-        "The tooltip's image content is displayed correctly.");
+  info("Checking the image thumbnail after a few requests were made...");
+  yield showTooltipAndVerify(RequestsMenu.items[5]);
 
-      info("Reloading the debuggee and performing all requests again...");
-      reloadAndPerformRequests();
+  // 7 XHRs as before + 1 extra document reload
+  onEvents = waitForNetworkEvents(monitor, 8);
+  onThumbnail = waitFor(monitor.panelWin, EVENTS.RESPONSE_IMAGE_THUMBNAIL_DISPLAYED);
 
-      return promise.all([
-        waitForNetworkEvents(aMonitor, 7), // 6 + 1
-        waitFor(aMonitor.panelWin, EVENTS.RESPONSE_IMAGE_THUMBNAIL_DISPLAYED)
-      ]);
-    }).then(() => {
-      info("Checking the image thumbnail after a reload.");
-      let requestItem = RequestsMenu.items[6];
-      let requestTooltip = requestItem.attachment.tooltip;
-      ok(requestTooltip, "There should be a tooltip instance for the image request.");
+  info("Reloading the debuggee and performing all requests again...");
+  yield NetMonitorController.triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_ENABLED);
+  debuggee.performRequests();
+  yield onEvents;
+  yield onThumbnail;
 
-      let anchor = $(".requests-menu-file", requestItem.target);
-      return showTooltipOn(requestTooltip, anchor);
-    }).then(aTooltip => {
-      ok(true,
-        "An tooltip was successfully opened for the image request.");
-      is(aTooltip.content.querySelector("image").src, TEST_IMAGE_DATA_URI,
-        "The tooltip's image content is displayed correctly.");
+  info("Checking the image thumbnail after a reload.");
+  yield showTooltipAndVerify(RequestsMenu.items[6]);
 
-      teardown(aMonitor).then(finish);
-    });
+  yield teardown(monitor);
+  finish();
 
-    function reloadAndPerformRequests() {
-      NetMonitorController.triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_ENABLED).then(() => {
-        aDebuggee.performRequests();
-      });
-    }
+  /**
+   * Show a tooltip on the {requestItem} and verify that it was displayed
+   * with the expected content.
+   */
+  function* showTooltipAndVerify(requestItem) {
+    let { tooltip } = requestItem.attachment;
+    ok(tooltip, "There should be a tooltip instance for the image request.");
 
-    /**
-     * @return a promise that resolves when the tooltip is shown
-     */
-    function showTooltipOn(tooltip, element) {
-      return Task.spawn(function* () {
-        let isValidTarget = yield tooltip._toggle.isValidHoverTarget(element);
-        ok(isValidTarget, "Element is a valid tooltip target");
-        let onShown = tooltip.once("shown");
-        tooltip.show();
-        yield onShown;
-        return tooltip;
-      });
-    }
+    let anchor = $(".requests-menu-file", requestItem.target);
+    yield showTooltipOn(tooltip, anchor);
 
-    aDebuggee.performRequests();
-  });
-}
+    info("Tooltip was successfully opened for the image request.");
+    is(tooltip.content.querySelector("image").src, TEST_IMAGE_DATA_URI,
+      "The tooltip's image content is displayed correctly.");
+  }
+
+  /**
+   * Trigger a tooltip over an element by sending mousemove event.
+   * @return a promise that resolves when the tooltip is shown
+   */
+  function showTooltipOn(tooltip, element) {
+    let onShown = tooltip.once("shown");
+    let win = element.ownerDocument.defaultView;
+    EventUtils.synthesizeMouseAtCenter(element, {type: "mousemove"}, win);
+    return onShown;
+  }
+});
