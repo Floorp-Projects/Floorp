@@ -12,6 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
   <script type="application/javascript;version=1.8" src="inspector-helpers.js"></script>
   <script type="application/javascript;version=1.8">
 const inspector = require("devtools/server/actors/inspector");
+const {isCssPropertyKnown} = require("devtools/server/actors/css-properties");
 
 window.onload = function() {
   SimpleTest.waitForExplicitFinish();
@@ -82,13 +83,13 @@ addAsyncTest(function* modifyProperties() {
 });
 
 function* setProperty(rule, index, name, value) {
-  let changes = rule.startModifyingProperties();
+  let changes = rule.startModifyingProperties(isCssPropertyKnown);
   changes.setProperty(index, name, value);
   yield changes.apply();
 }
 
 function* removeProperty(rule, index, name) {
-  let changes = rule.startModifyingProperties();
+  let changes = rule.startModifyingProperties(isCssPropertyKnown);
   changes.removeProperty(index, name);
   yield changes.apply();
 }

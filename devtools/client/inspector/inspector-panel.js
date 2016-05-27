@@ -17,6 +17,7 @@ var clipboard = require("sdk/clipboard");
 const {executeSoon} = require("devtools/shared/DevToolsUtils");
 var {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
 var {Task} = require("devtools/shared/task");
+const {initCssProperties} = require("devtools/shared/fronts/css-properties");
 
 loader.lazyRequireGetter(this, "CSS", "CSS");
 
@@ -108,15 +109,14 @@ InspectorPanel.prototype = {
   /**
    * open is effectively an asynchronous constructor
    */
-  open: function () {
-    return this.target.makeRemote().then(() => {
-      return this._getPageStyle();
-    }).then(() => {
-      return this._getDefaultNodeForSelection();
-    }).then(defaultSelection => {
-      return this._deferredOpen(defaultSelection);
-    }).then(null, console.error);
-  },
+  open: Task.async(function* () {
+    this._cssPropertiesLoaded = initCssProperties(this.toolbox);
+    yield this._cssPropertiesLoaded;
+    yield this.target.makeRemote();
+    yield this._getPageStyle();
+    let defaultSelection = yield this._getDefaultNodeForSelection();
+    return yield this._deferredOpen(defaultSelection);
+  }),
 
   get toolbox() {
     return this._toolbox;
@@ -649,6 +649,12 @@ InspectorPanel.prototype = {
       this.layoutview.destroy();
     }
 
+    let cssPropertiesDestroyer = this._cssPropertiesLoaded.then(({front}) => {
+      if (front) {
+        front.destroy();
+      }
+    });
+
     this.sidebar.off("select", this._setDefaultSidebar);
     let sidebarDestroyer = this.sidebar.destroy();
     this.sidebar = null;
@@ -678,7 +684,8 @@ InspectorPanel.prototype = {
 
     this._panelDestroyer = promise.all([
       sidebarDestroyer,
-      markupDestroyer
+      markupDestroyer,
+      cssPropertiesDestroyer
     ]);
 
     return this._panelDestroyer;

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <circle cx="8" cy="8" r="8" fill="#58bf43"/>
+  <circle cx="8" cy="8" r="7.5" stroke="#41a833" stroke-width="1" fill="none"/>
+  <path d="M12.879,12L12,12.879,9.015,9.9A4.276,4.276,0,1,1,9.9,9.015ZM6.5,3.536A2.964,2.964,0,1,0,9.464,6.5,2.964,2.964,0,0,0,6.5,3.536Z" stroke="#41a833" stroke-width="2" fill="none"/>
+  <path d="M12.879,12L12,12.879,9.015,9.9A4.276,4.276,0,1,1,9.9,9.015ZM6.5,3.536A2.964,2.964,0,1,0,9.464,6.5,2.964,2.964,0,0,0,6.5,3.536Z" fill="#fff"/>
+</svg>

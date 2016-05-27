@@ -1018,8 +1018,7 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   outline: 1px dotted -moz-DialogText;
 }
 
-.indexedDB-notification-icon,
-#indexedDB-notification-icon {
+.indexedDB-icon {
   list-style-image: url(moz-icon://stock/gtk-dialog-question?size=16);
 }
 

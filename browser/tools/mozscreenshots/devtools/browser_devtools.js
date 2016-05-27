@@ -10,5 +10,5 @@ add_task(function* capture() {
   }
   let sets = ["DevTools"];
 
-  yield TestRunner.start(sets);
+  yield TestRunner.start(sets, "devtools");
 });
