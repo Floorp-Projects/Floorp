@@ -34,18 +34,17 @@ XPCJSContextStack::Pop()
 
     uint32_t idx = mStack.Length() - 1; // The thing we're popping
 
-    JSContext* cx = mStack[idx].cx;
+    JSContext* cx = mStack[idx];
 
     mStack.RemoveElementAt(idx);
+    JSContext* newTop;
+    // We _could_ probably use mStack.SafeElementAt(idx-1, nullptr) here....
     if (idx == 0) {
-        js::Debug_SetActiveJSContext(mRuntime->Runtime(), nullptr);
-        return cx;
+        newTop = nullptr;
+    } else {
+        newTop = mStack[idx-1];
     }
-
-    --idx; // Advance to new top of the stack
-
-    XPCJSContextInfo& e = mStack[idx];
-    js::Debug_SetActiveJSContext(mRuntime->Runtime(), e.cx);
+    js::Debug_SetActiveJSContext(mRuntime->Runtime(), newTop);
     return cx;
 }
 
@@ -61,7 +60,7 @@ bool
 XPCJSContextStack::HasJSContext(JSContext* cx)
 {
     for (uint32_t i = 0; i < mStack.Length(); i++)
-        if (cx == mStack[i].cx)
+        if (cx == mStack[i])
             return true;
     return false;
 }
