@@ -12,8 +12,6 @@
 function* test(testDriver) {
   document.addEventListener('click', clicked, false);
 
-  // Ensure the pointer is inside the window
-  yield synthesizeNativeMouseEvent(document.getElementById('b'), 5, 5, nativeMouseMoveEventMsg(), driveTest);
   // mouse down, move it around, and release it near where it went down. this
   // should generate a click at the release point
   yield synthesizeNativeMouseEvent(document.getElementById('b'), 5, 5, nativeMouseDownEventMsg(), testDriver);

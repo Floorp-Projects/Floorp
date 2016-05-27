@@ -49,26 +49,30 @@
       document.addEventListener("mozpointerlockchange", function (e) {
         if (document.mozPointerLockElement === parentDiv) {
           parentDivLocked = true;
-          addFullscreenChangeContinuation("enter", function() {
-            pointerLocked = !!document.mozPointerLockElement;
-            addFullscreenChangeContinuation("exit", function() {
-              addFullscreenChangeContinuation("exit", function() {
-                runTests();
-                SimpleTest.finish();
-              });
-              document.exitFullscreen();
-            });
-            document.exitFullscreen();
-          });
           childDiv.requestFullscreen();
         }
       }, false);
 
+      document.addEventListener("fullscreenchange", function() {
+        if (document.fullscreenElement === parentDiv) {
+          if (parentDivFullScreen === true) {
+            document.exitFullscreen();
+          } else {
+            parentDivFullScreen = true;
+            parentDiv.mozRequestPointerLock();
+          }
+        }
+        else if (document.fullscreenElement === childDiv) {
+          pointerLocked = !!document.mozPointerLockElement;
+          document.exitFullscreen();
+        }
+        else {
+          runTests();
+          SimpleTest.finish();
+        }
+      }, false);
+
       function start() {
-        addFullscreenChangeContinuation("enter", function() {
-          parentDivFullScreen = true;
-          parentDiv.mozRequestPointerLock();
-        });
         parentDiv.requestFullscreen();
       }
     </script>
