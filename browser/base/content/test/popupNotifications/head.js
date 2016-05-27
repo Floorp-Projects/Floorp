@@ -196,7 +196,7 @@ function checkPopup(popup, notifyObj) {
                                                      "popup-notification-icon");
   if (notifyObj.id == "geolocation") {
     isnot(icon.boxObject.width, 0, "icon for geo displayed");
-    is(popup.anchorNode.className, "notification-anchor-icon",
+    ok(popup.anchorNode.classList.contains("notification-anchor-icon"),
        "notification anchored to icon");
   }
   is(notification.getAttribute("label"), notifyObj.message, "message matches");
