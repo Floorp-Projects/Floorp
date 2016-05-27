@@ -72,7 +72,7 @@ private:
 inline void AssertIOThread()
 {
   NS_ASSERTION(MessageLoop::TYPE_IO == MessageLoop::current()->type(),
-	       "should be on the IO thread!");
+               "should be on the IO thread!");
 }
 
 } // namespace ipc
