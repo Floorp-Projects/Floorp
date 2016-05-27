@@ -96,11 +96,11 @@ elif system == "Linux":
     version = "%s %s" % (distro, os_version)
 
     # Bug in Python 2's `platform` library:
-    # It will return a triple of empty strings on Arch.
+    # It will return a triple of empty strings if the distribution is not supported.
     # It works on Python 3. If we don't have an OS version,
     # the unit tests fail to run.
-    if not os_version and "ARCH" in release:
-        distro = 'arch'
+    if not distro and not os_version and not codename:
+        distro = 'lfs'
         version = release
         os_version = release
 
