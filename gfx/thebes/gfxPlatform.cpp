@@ -946,8 +946,6 @@ gfxPlatform::~gfxPlatform()
 #endif
 }
 
-cairo_user_data_key_t kDrawTarget;
-
 already_AddRefed<DrawTarget>
 gfxPlatform::CreateDrawTargetForSurface(gfxASurface *aSurface, const IntSize& aSize)
 {
@@ -957,7 +955,6 @@ gfxPlatform::CreateDrawTargetForSurface(gfxASurface *aSurface, const IntSize& aS
     gfxWarning() << "gfxPlatform::CreateDrawTargetForSurface failed in CreateDrawTargetForCairoSurface";
     return nullptr;
   }
-  aSurface->SetData(&kDrawTarget, drawTarget, nullptr);
   return drawTarget.forget();
 }
 
