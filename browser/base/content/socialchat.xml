@@ -13,10 +13,10 @@
           <xul:label class="chat-title" flex="1" xbl:inherits="crop=titlecrop,value=label" crop="end"/>
         </xul:hbox>
         <xul:toolbarbutton anonid="webRTC-shareScreen-icon"
-                           class="notification-anchor-icon chat-toolbarbutton"
+                           class="notification-anchor-icon chat-toolbarbutton screen-icon"
                            oncommand="document.getBindingParent(this).showNotifications(this); event.stopPropagation();"/>
         <xul:toolbarbutton anonid="webRTC-sharingScreen-icon"
-                           class="notification-anchor-icon chat-toolbarbutton"
+                           class="notification-anchor-icon chat-toolbarbutton screen-icon in-use"
                            oncommand="document.getBindingParent(this).showNotifications(this); event.stopPropagation();"/>
         <xul:toolbarbutton anonid="notification-icon" class="notification-anchor-icon chat-toolbarbutton"
                            oncommand="document.getBindingParent(this).showNotifications(this); event.stopPropagation();"/>
