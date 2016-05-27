@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ContentHelper.h"
+#include "TouchActionHelper.h"
 
 #include "nsContainerFrame.h"
 #include "nsIContent.h"
@@ -16,7 +16,7 @@ namespace mozilla {
 namespace widget {
 
 void
-ContentHelper::UpdateAllowedBehavior(uint32_t aTouchActionValue, bool aConsiderPanning, TouchBehaviorFlags& aOutBehavior)
+TouchActionHelper::UpdateAllowedBehavior(uint32_t aTouchActionValue, bool aConsiderPanning, mozilla::layers::TouchBehaviorFlags& aOutBehavior)
 {
   if (aTouchActionValue != NS_STYLE_TOUCH_ACTION_AUTO) {
     // Double-tap-zooming need property value AUTO
@@ -43,8 +43,8 @@ ContentHelper::UpdateAllowedBehavior(uint32_t aTouchActionValue, bool aConsiderP
   }
 }
 
-ContentHelper::TouchBehaviorFlags
-ContentHelper::GetAllowedTouchBehavior(nsIWidget* aWidget, const LayoutDeviceIntPoint& aPoint)
+mozilla::layers::TouchBehaviorFlags
+TouchActionHelper::GetAllowedTouchBehavior(nsIWidget* aWidget, const LayoutDeviceIntPoint& aPoint)
 {
   nsView *view = nsView::GetViewFor(aWidget);
   nsIFrame *viewFrame = view->GetFrame();
