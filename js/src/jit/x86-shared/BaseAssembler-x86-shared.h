@@ -43,6 +43,19 @@ namespace jit {
 
 namespace X86Encoding {
 
+class BaseAssembler;
+
+class AutoUnprotectAssemblerBufferRegion
+{
+    BaseAssembler* assembler;
+    size_t firstByteOffset;
+    size_t lastByteOffset;
+
+  public:
+    AutoUnprotectAssemblerBufferRegion(BaseAssembler& holder, int32_t offset, size_t size);
+    ~AutoUnprotectAssemblerBufferRegion();
+};
+
 class BaseAssembler : public GenericAssembler {
 public:
     BaseAssembler()
@@ -3472,6 +3485,7 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
         MOZ_RELEASE_ASSERT(to.offset() == -1 || size_t(to.offset()) <= size());
 
         unsigned char* code = m_formatter.data();
+        AutoUnprotectAssemblerBufferRegion unprotect(*this, from.offset() - 4, 4);
         SetInt32(code + from.offset(), to.offset());
     }
 
@@ -3490,6 +3504,7 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
 
         spew(".set .Lfrom%d, .Llabel%d", from.offset(), to.offset());
         unsigned char* code = m_formatter.data();
+        AutoUnprotectAssemblerBufferRegion unprotect(*this, from.offset() - 4, 4);
         SetRel32(code + from.offset(), code + to.offset());
     }
 
@@ -3500,6 +3515,16 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
     MOZ_MUST_USE bool appendBuffer(const BaseAssembler& other)
     {
         return m_formatter.append(other.m_formatter.buffer(), other.size());
+    }
+
+    void enableBufferProtection() { m_formatter.enableBufferProtection(); }
+    void disableBufferProtection() { m_formatter.disableBufferProtection(); }
+
+    void unprotectDataRegion(size_t firstByteOffset, size_t lastByteOffset) {
+        m_formatter.unprotectDataRegion(firstByteOffset, lastByteOffset);
+    }
+    void reprotectDataRegion(size_t firstByteOffset, size_t lastByteOffset) {
+        m_formatter.reprotectDataRegion(firstByteOffset, lastByteOffset);
     }
 
   protected:
@@ -4642,14 +4667,14 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
         // above will have ensured space.
 
         // A signed 8-bit immediate.
-        void immediate8s(int32_t imm)
+        MOZ_ALWAYS_INLINE void immediate8s(int32_t imm)
         {
             MOZ_ASSERT(CAN_SIGN_EXTEND_8_32(imm));
             m_buffer.putByteUnchecked(imm);
         }
 
         // An unsigned 8-bit immediate.
-        void immediate8u(uint32_t imm)
+        MOZ_ALWAYS_INLINE void immediate8u(uint32_t imm)
         {
             MOZ_ASSERT(CAN_ZERO_EXTEND_8_32(imm));
             m_buffer.putByteUnchecked(int32_t(imm));
@@ -4657,20 +4682,20 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
 
         // An 8-bit immediate with is either signed or unsigned, for use in
         // instructions which actually only operate on 8 bits.
-        void immediate8(int32_t imm)
+        MOZ_ALWAYS_INLINE void immediate8(int32_t imm)
         {
             m_buffer.putByteUnchecked(imm);
         }
 
         // A signed 16-bit immediate.
-        void immediate16s(int32_t imm)
+        MOZ_ALWAYS_INLINE void immediate16s(int32_t imm)
         {
             MOZ_ASSERT(CAN_SIGN_EXTEND_16_32(imm));
             m_buffer.putShortUnchecked(imm);
         }
 
         // An unsigned 16-bit immediate.
-        void immediate16u(int32_t imm)
+        MOZ_ALWAYS_INLINE void immediate16u(int32_t imm)
         {
             MOZ_ASSERT(CAN_ZERO_EXTEND_16_32(imm));
             m_buffer.putShortUnchecked(imm);
@@ -4678,22 +4703,22 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
 
         // A 16-bit immediate with is either signed or unsigned, for use in
         // instructions which actually only operate on 16 bits.
-        void immediate16(int32_t imm)
+        MOZ_ALWAYS_INLINE void immediate16(int32_t imm)
         {
             m_buffer.putShortUnchecked(imm);
         }
 
-        void immediate32(int32_t imm)
+        MOZ_ALWAYS_INLINE void immediate32(int32_t imm)
         {
             m_buffer.putIntUnchecked(imm);
         }
 
-        void immediate64(int64_t imm)
+        MOZ_ALWAYS_INLINE void immediate64(int64_t imm)
         {
             m_buffer.putInt64Unchecked(imm);
         }
 
-        MOZ_MUST_USE JmpSrc
+        MOZ_ALWAYS_INLINE MOZ_MUST_USE JmpSrc
         immediateRel32()
         {
             m_buffer.putIntUnchecked(0);
@@ -4755,6 +4780,16 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
         MOZ_MUST_USE bool append(const unsigned char* values, size_t size)
         {
             return m_buffer.append(values, size);
+        }
+
+        void enableBufferProtection() { m_buffer.enableBufferProtection(); }
+        void disableBufferProtection() { m_buffer.disableBufferProtection(); }
+
+        void unprotectDataRegion(size_t firstByteOffset, size_t lastByteOffset) {
+            m_buffer.unprotectDataRegion(firstByteOffset, lastByteOffset);
+        }
+        void reprotectDataRegion(size_t firstByteOffset, size_t lastByteOffset) {
+            m_buffer.reprotectDataRegion(firstByteOffset, lastByteOffset);
         }
 
     private:
@@ -4988,6 +5023,23 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
 
     bool useVEX_;
 };
+
+MOZ_ALWAYS_INLINE
+AutoUnprotectAssemblerBufferRegion::AutoUnprotectAssemblerBufferRegion(BaseAssembler& holder,
+                                                                       int32_t offset, size_t size)
+{
+    assembler = &holder;
+    MOZ_ASSERT(offset >= 0);
+    firstByteOffset = size_t(offset);
+    lastByteOffset = firstByteOffset + (size - 1);
+    assembler->unprotectDataRegion(firstByteOffset, lastByteOffset);
+}
+
+MOZ_ALWAYS_INLINE
+AutoUnprotectAssemblerBufferRegion::~AutoUnprotectAssemblerBufferRegion()
+{
+    assembler->reprotectDataRegion(firstByteOffset, lastByteOffset);
+}
 
 } // namespace X86Encoding
 

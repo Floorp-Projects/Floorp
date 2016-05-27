@@ -1055,6 +1055,7 @@ class AssemblerX86Shared : public AssemblerShared
     }
     void patchCall(uint32_t callerOffset, uint32_t calleeOffset) {
         unsigned char* code = masm.data();
+        X86Encoding::AutoUnprotectAssemblerBufferRegion unprotect(masm, callerOffset - 4, 4);
         X86Encoding::SetRel32(code + callerOffset, code + calleeOffset);
     }
     CodeOffset thunkWithPatch() {
@@ -1062,6 +1063,7 @@ class AssemblerX86Shared : public AssemblerShared
     }
     void patchThunk(uint32_t thunkOffset, uint32_t targetOffset) {
         unsigned char* code = masm.data();
+        X86Encoding::AutoUnprotectAssemblerBufferRegion unprotect(masm, thunkOffset - 4, 4);
         X86Encoding::SetRel32(code + thunkOffset, code + targetOffset);
     }
     static void repatchThunk(uint8_t* code, uint32_t thunkOffset, uint32_t targetOffset) {
