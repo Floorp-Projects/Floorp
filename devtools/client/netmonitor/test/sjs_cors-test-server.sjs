@@ -9,6 +9,7 @@ function handleRequest(request, response) {
   response.setHeader("Expires", "0");
 
   response.setHeader("Access-Control-Allow-Origin", "*", false);
+  response.setHeader("Access-Control-Allow-Headers", "content-type", false);
 
   response.setHeader("Content-Type", "text/plain; charset=utf-8", false);
 
