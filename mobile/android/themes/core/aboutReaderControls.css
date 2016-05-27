@@ -129,7 +129,9 @@
 /* Only used on desktop */
 .dropdown-popup > hr,
 .dropdown-arrow,
-#font-type-buttons > button > .name {
+#font-type-buttons > button > .name,
+#content-width-buttons,
+#line-height-buttons {
   display: none;
 }
 
