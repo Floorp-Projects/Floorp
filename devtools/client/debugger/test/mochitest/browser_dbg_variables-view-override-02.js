@@ -11,7 +11,11 @@ const TAB_URL = EXAMPLE_URL + "doc_scope-variable-2.html";
 
 function test() {
   Task.spawn(function* () {
-    let [tab,, panel] = yield initDebugger(TAB_URL);
+    let options = {
+      source: TAB_URL,
+      line: 1
+    };
+    let [tab,, panel] = yield initDebugger(TAB_URL, options);
     let win = panel.panelWin;
     let events = win.EVENTS;
     let variables = win.DebuggerView.Variables;
@@ -20,8 +24,10 @@ function test() {
     let committedLocalScopeHierarchy = promise.defer();
     variables.oncommit = committedLocalScopeHierarchy.resolve;
 
+
+    let onCaretAndScopes = waitForCaretAndScopes(panel, 23);
     callInTab(tab, "test");
-    yield waitForSourceAndCaretAndScopes(panel, ".html", 23);
+    yield onCaretAndScopes;
     yield committedLocalScopeHierarchy.promise;
 
     let firstScope = variables.getScopeAtIndex(0);

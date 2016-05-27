@@ -11,7 +11,11 @@
 const TAB_URL = EXAMPLE_URL + "doc_script-switching-01.html";
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: "-01.js",
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     const gTab = aTab;
     const gPanel = aPanel;
     const gDebugger = gPanel.panelWin;
@@ -43,7 +47,7 @@ function test() {
     }
 
     function testOldestFrame() {
-      const shown = waitForSourceAndCaret(gPanel, "-01.js", 1).then(() => {
+      const shown = waitForSourceAndCaret(gPanel, "-01.js", 5).then(() => {
         is(gFrames.selectedIndex, 0,
            "Second frame should be selected after click.");
         is(gClassicFrames.selectedIndex, 1,
@@ -85,7 +89,7 @@ function test() {
     }
 
     Task.spawn(function* () {
-      yield waitForSourceAndCaretAndScopes(gPanel, "-02.js", 1);
+      yield waitForSourceAndCaretAndScopes(gPanel, "-02.js", 6);
       yield initialChecks();
       yield testNewestFrame();
       yield testOldestFrame();

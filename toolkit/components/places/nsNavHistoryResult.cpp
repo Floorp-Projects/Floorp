@@ -100,6 +100,8 @@ nsNavHistoryResultNode::nsNavHistoryResultNode(
   mBookmarkIndex(-1),
   mItemId(-1),
   mFolderId(-1),
+  mVisitId(-1),
+  mFromVisitId(-1),
   mDateAdded(0),
   mLastModified(0),
   mIndentLevel(-1),
@@ -236,6 +238,27 @@ nsNavHistoryResultNode::GetPageGuid(nsACString& aPageGuid) {
 NS_IMETHODIMP
 nsNavHistoryResultNode::GetBookmarkGuid(nsACString& aBookmarkGuid) {
   aBookmarkGuid = mBookmarkGuid;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsNavHistoryResultNode::GetVisitId(int64_t* aVisitId) {
+  *aVisitId = mVisitId;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsNavHistoryResultNode::GetFromVisitId(int64_t* aFromVisitId) {
+  *aFromVisitId = mFromVisitId;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsNavHistoryResultNode::GetVisitType(uint32_t* aVisitType) {
+  *aVisitType = mTransitionType;
   return NS_OK;
 }
 

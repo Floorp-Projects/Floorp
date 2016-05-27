@@ -14,7 +14,11 @@ var gTab, gPanel, gDebugger;
 var gEditor, gSources, gFrames;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: JS_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
@@ -22,9 +26,8 @@ function test() {
     gSources = gDebugger.DebuggerView.Sources;
     gFrames = gDebugger.DebuggerView.StackFrames;
 
-    waitForSourceShown(gPanel, JS_URL)
-      .then(checkInitialSource)
-      .then(testSetBreakpoint)
+    checkInitialSource()
+    testSetBreakpoint()
       .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
       .then(null, aError => {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);

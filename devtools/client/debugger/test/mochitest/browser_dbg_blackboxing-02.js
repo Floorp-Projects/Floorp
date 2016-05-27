@@ -15,14 +15,17 @@ var gTab, gPanel, gDebugger;
 var gFrames;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: BLACKBOXME_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gFrames = gDebugger.DebuggerView.StackFrames;
 
-    waitForSourceShown(gPanel, BLACKBOXME_URL)
-      .then(testBlackBoxSource)
+    testBlackBoxSource()
       .then(testBlackBoxStack)
       .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
       .then(null, aError => {

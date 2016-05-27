@@ -11,14 +11,17 @@
 const TAB_URL = EXAMPLE_URL + "doc_script-eval.html";
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  const options = {
+    source: "-eval.js",
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     const gTab = aTab;
     const gPanel = aPanel;
     const gDebugger = gPanel.panelWin;
     const gSources = gDebugger.DebuggerView.Sources;
 
     return Task.spawn(function* () {
-      yield waitForSourceShown(gPanel, "-eval.js");
       is(gSources.values.length, 1, "Should have 1 source");
 
       callInTab(gTab, "evalSourceWithDebugger");

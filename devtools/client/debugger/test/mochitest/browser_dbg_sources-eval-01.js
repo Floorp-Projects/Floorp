@@ -13,7 +13,11 @@ function test() {
   let gTab, gPanel, gDebugger;
   let gSources, gBreakpoints;
 
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: "-eval.js",
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
@@ -21,7 +25,6 @@ function test() {
     gBreakpoints = gDebugger.DebuggerController.Breakpoints;
 
     return Task.spawn(function* () {
-      yield waitForSourceShown(gPanel, "-eval.js");
       is(gSources.values.length, 1, "Should have 1 source");
 
       let newSource = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.NEW_SOURCE);

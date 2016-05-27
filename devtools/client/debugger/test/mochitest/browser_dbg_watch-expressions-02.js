@@ -16,7 +16,11 @@ function test() {
   let gTab, gPanel, gDebugger;
   let gWatch, gVariables;
 
-  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+  let options = {
+    source: TAB_URL,
+    line: 1
+  };
+  initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
@@ -25,9 +29,8 @@ function test() {
 
     gDebugger.DebuggerView.toggleInstrumentsPane({ visible: true, animated: false });
 
-    waitForSourceShown(gPanel, ".html", 1)
-      .then(addExpressions)
-      .then(performTest)
+    addExpressions();
+    performTest()
       .then(finishTest)
       .then(() => closeDebuggerAndFinish(gPanel))
       .then(null, aError => {
