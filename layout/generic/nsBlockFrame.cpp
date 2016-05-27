@@ -6139,8 +6139,8 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
 #ifdef NOISY_FLOAT
   printf("Reflow Float %p in parent %p, availSpace(%d,%d,%d,%d)\n",
          aFloat, this,
-         aFloatAvailableSpace.IStart(wm), aFloatAvailableSpace.BStart(wm),
-         aFloatAvailableSpace.ISize(wm), aFloatAvailableSpace.BSize(wm)
+         aAdjustedAvailableSpace.IStart(wm), aAdjustedAvailableSpace.BStart(wm),
+         aAdjustedAvailableSpace.ISize(wm), aAdjustedAvailableSpace.BSize(wm)
   );
 #endif
 
