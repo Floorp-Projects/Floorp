@@ -2,72 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsISupports.idl"
+#include "nsIU2FToken.idl"
 
-interface nsIArray;
 /**
  * Interface used to interact with the NSS-backed software U2F Token
  */
 [scriptable, uuid(d9104a00-140b-4f86-a4b0-4998878ef4e6 )]
-interface nsINSSU2FToken : nsISupports {
+interface nsINSSU2FToken : nsIU2FToken {
   /**
    * Initializes the token and constructs and persists keys, if needed. Asserts
    * that it is only called by the main thread.
    */
   void init();
-
-  /**
-   * Is this token compatible with the provided version?
-   *
-   * @param version The offered version to test
-   * @return True if the offered version is compatible
-   */
-  void isCompatibleVersion(in AString version, [retval] out boolean result);
-
-  /**
-   * Return whether the provided KeyHandle belongs to this Token
-   *
-   * @param keyHandle Key Handle to evaluate.
-   * @return True if the Key Handle is ours.
-   */
-  void isRegistered([array, size_is(keyHandleLen)] in octet keyHandle,
-                    in uint32_t keyHandleLen,
-                    [retval] out boolean result);
-
-  /**
-   * Generates a public/private keypair for the provided application
-   * and challenge, returning the pubkey, challenge response, and
-   * key handle in the registration data.
-   *
-   * @param application The FIDO Application data to associate with the key.
-   * @param challenge The Challenge to satisfy in the response.
-   * @param registration An array containing the pubkey, challenge response,
-   *                     and key handle.
-   */
-  void register([array, size_is(applicationLen)] in octet application,
-                in uint32_t applicationLen,
-                [array, size_is(challengeLen)] in octet challenge,
-                in uint32_t challengeLen,
-                [array, size_is(registrationLen)] out octet registration,
-                out uint32_t registrationLen);
-
-  /**
-   * Creates a signature over the "param" arguments using the private key
-   * provided in the key handle argument.
-   *
-   * @param application The FIDO Application data to associate with the key.
-   * @param challenge The Challenge to satisfy in the response.
-   * @param keyHandle The Key Handle opaque object to use.
-   * @param signature The resulting signature.
-   */
-  void sign([array, size_is(applicationLen)] in octet application,
-            in uint32_t applicationLen,
-            [array, size_is(challengeLen)] in octet challenge,
-            in uint32_t challengeLen,
-            [array, size_is(keyHandleLen)] in octet keyHandle,
-            in uint32_t keyHandleLen,
-            [array, size_is(signatureLen)] out octet signature,
-            out uint32_t signatureLen);
 };
 
 %{C++

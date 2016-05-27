@@ -7,13 +7,13 @@
 #ifndef NSSU2FTokenRemote_h
 #define NSSU2FTokenRemote_h
 
-#include "nsINSSU2FToken.h"
+#include "nsIU2FToken.h"
 
-class NSSU2FTokenRemote : public nsINSSU2FToken
+class NSSU2FTokenRemote : public nsIU2FToken
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSINSSU2FTOKEN
+  NS_DECL_NSIU2FTOKEN
 
   NSSU2FTokenRemote();
 

@@ -13,7 +13,7 @@
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/ErrorResult.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsINSSU2FToken.h"
+#include "nsIU2FToken.h"
 #include "nsNSSShutDown.h"
 #include "nsPIDOMWindow.h"
 #include "nsWrapperCache.h"
@@ -40,7 +40,7 @@ enum class ErrorCode {
   TIMEOUT = 5
 };
 
-typedef nsCOMPtr<nsINSSU2FToken> Authenticator;
+typedef nsCOMPtr<nsIU2FToken> Authenticator;
 
 class U2FTask : public Runnable
 {
