@@ -82,7 +82,6 @@ struct ParamTraits<mozilla::gfx::VRDeviceInfo>
     WriteParam(aMsg, aParam.mEyeResolution);
     WriteParam(aMsg, aParam.mScreenRect);
     WriteParam(aMsg, aParam.mIsFakeScreen);
-    WriteParam(aMsg, aParam.mUseMainThreadOrientation);
     for (int i = 0; i < mozilla::gfx::VRDeviceInfo::NumEyes; i++) {
       WriteParam(aMsg, aParam.mMaximumEyeFOV[i]);
       WriteParam(aMsg, aParam.mRecommendedEyeFOV[i]);
@@ -100,9 +99,7 @@ struct ParamTraits<mozilla::gfx::VRDeviceInfo>
         !ReadParam(aMsg, aIter, &(aResult->mSupportedSensorBits)) ||
         !ReadParam(aMsg, aIter, &(aResult->mEyeResolution)) ||
         !ReadParam(aMsg, aIter, &(aResult->mScreenRect)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mIsFakeScreen)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mUseMainThreadOrientation))
-        ) {
+        !ReadParam(aMsg, aIter, &(aResult->mIsFakeScreen))) {
       return false;
     }
     for (int i = 0; i < mozilla::gfx::VRDeviceInfo::NumEyes; i++) {

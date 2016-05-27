@@ -18,7 +18,6 @@
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
 #include "gfxVROSVR.h"
 #endif
-#include "gfxVRCardboard.h"
 
 #include "mozilla/unused.h"
 #include "mozilla/layers/Compositor.h"
@@ -33,12 +32,11 @@ using namespace mozilla::gfx;
 
 Atomic<uint32_t> VRHMDManager::sDeviceBase(0);
 
-VRHMDInfo::VRHMDInfo(VRHMDType aType, bool aUseMainThreadOrientation)
+VRHMDInfo::VRHMDInfo(VRHMDType aType)
 {
   MOZ_COUNT_CTOR(VRHMDInfo);
   mDeviceInfo.mType = aType;
   mDeviceInfo.mDeviceID = VRHMDManager::AllocateDeviceID();
-  mDeviceInfo.mUseMainThreadOrientation = aUseMainThreadOrientation;
 }
 
 VRHMDInfo::~VRHMDInfo()

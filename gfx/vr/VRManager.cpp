@@ -19,8 +19,6 @@
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
 #include "gfxVROSVR.h"
 #endif
-#include "gfxVRCardboard.h"
-
 
 namespace mozilla {
 namespace gfx {
@@ -61,11 +59,6 @@ VRManager::VRManager()
   }
 
 #endif
-
-  mgr = VRHMDManagerCardboard::Create();
-  if (mgr) {
-    mManagers.AppendElement(mgr);
-  }
 }
 
 VRManager::~VRManager()
@@ -189,10 +182,8 @@ VRManager::DispatchVRDeviceSensorUpdate()
 
   for (auto iter = mVRDevices.Iter(); !iter.Done(); iter.Next()) {
     gfx::VRHMDInfo* device = iter.UserData();
-    if (!device->GetDeviceInfo().GetUseMainThreadOrientation()) {
-      update.AppendElement(VRSensorUpdate(device->GetDeviceInfo().GetDeviceID(),
-                                          device->GetSensorState()));
-    }
+    update.AppendElement(VRSensorUpdate(device->GetDeviceInfo().GetDeviceID(),
+                                        device->GetSensorState()));
   }
   if (update.Length() > 0) {
     for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
