@@ -2002,7 +2002,7 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest)
     }
 
     if (aRequest->IsModuleRequest()) {
-      rv = EnsureModuleResolveHook(context->GetNativeContext());
+      rv = EnsureModuleResolveHook(aes.cx());
       NS_ENSURE_SUCCESS(rv, rv);
 
       nsModuleLoadRequest* request = aRequest->AsModuleRequest();
