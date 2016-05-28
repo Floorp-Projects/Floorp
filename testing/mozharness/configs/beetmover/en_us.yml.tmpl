@@ -40,9 +40,11 @@ mapping:
     full_installer:
       artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.installer.exe
       s3_key: {{ s3_prefix }}{{ platform }}/{{ locale }}/Firefox Setup {{ version }}.exe
+    {% if "esr" not in version %}
     stub_installer:
       artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.installer-stub.exe
       s3_key: {{ s3_prefix }}{{ platform }}/{{ locale }}/Firefox Setup Stub {{ version }}.exe
+    {% endif %}
     package:
       artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.zip
       s3_key: {{ s3_prefix }}{{ platform }}/{{ locale }}/firefox-{{ version }}.zip
