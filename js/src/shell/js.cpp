@@ -176,7 +176,6 @@ struct ShellRuntime
 
     int exitCode;
     bool quitting;
-    bool gotError;
 };
 
 // Shell state set once at startup.
@@ -322,8 +321,7 @@ ShellRuntime::ShellRuntime(JSRuntime* rt)
     watchdogTimeout(0),
     sleepWakeup(nullptr),
     exitCode(0),
-    quitting(false),
-    gotError(false)
+    quitting(false)
 {}
 
 static ShellRuntime*
@@ -527,9 +525,7 @@ RunFile(JSContext* cx, const char* filename, FILE* file, bool compileOnly)
                .setIsRunOnce(true)
                .setNoScriptRval(true);
 
-        sr->gotError = false;
         (void) JS::Compile(cx, options, file, &script);
-        MOZ_ASSERT_IF(!script, sr->gotError);
     }
 
     #ifdef DEBUG
@@ -5990,7 +5986,7 @@ js::shell::my_ErrorReporter(JSContext* cx, const char* message, JSErrorReport* r
     if (JS_IsExceptionPending(cx))
         (void) JS_GetPendingException(cx, &exn);
 
-    sr->gotError = PrintError(cx, fp, message, report, reportWarnings);
+    (void) PrintError(cx, fp, message, report, reportWarnings);
     if (!exn.isUndefined()) {
         JS::AutoSaveExceptionState savedExc(cx);
         if (!PrintStackTrace(cx, exn))
@@ -6004,16 +6000,6 @@ js::shell::my_ErrorReporter(JSContext* cx, const char* message, JSErrorReport* r
         else
             sr->exitCode = EXITCODE_RUNTIME_ERROR;
     }
-}
-
-static void
-my_OOMCallback(JSContext* cx, void* data)
-{
-    // If a script is running, the engine is about to throw the string "out of
-    // memory", which may or may not be caught. Otherwise the engine will just
-    // unwind and return null/false, with no exception set.
-    if (!JS_IsRunning(cx))
-        GetShellRuntime(cx)->gotError = true;
 }
 
 static bool
@@ -7419,7 +7405,6 @@ main(int argc, char** argv, char** envp)
     // Waiting is allowed on the shell's main thread, for now.
     JS_SetFutexCanWait(rt);
     JS_SetErrorReporter(rt, my_ErrorReporter);
-    JS::SetOutOfMemoryCallback(rt, my_OOMCallback, nullptr);
     if (!SetRuntimeOptions(rt, op))
         return 1;
 
