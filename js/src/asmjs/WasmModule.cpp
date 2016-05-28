@@ -359,54 +359,52 @@ Import::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 }
 
 CodeRange::CodeRange(Kind kind, Offsets offsets)
-  : funcIndex_(0),
-    funcLineOrBytecode_(0),
-    begin_(offsets.begin),
+  : begin_(offsets.begin),
     profilingReturn_(0),
-    end_(offsets.end)
+    end_(offsets.end),
+    funcIndex_(0),
+    funcLineOrBytecode_(0),
+    funcBeginToNonProfilingEntry_(0),
+    funcProfilingJumpToProfilingReturn_(0),
+    funcProfilingEpilogueToProfilingReturn_(0),
+    kind_(kind)
 {
-    PodZero(&u);  // zero padding for Valgrind
-    u.kind_ = kind;
-
     MOZ_ASSERT(begin_ <= end_);
-    MOZ_ASSERT(u.kind_ == Entry || u.kind_ == Inline || u.kind_ == CallThunk);
+    MOZ_ASSERT(kind_ == Entry || kind_ == Inline || kind_ == CallThunk);
 }
 
 CodeRange::CodeRange(Kind kind, ProfilingOffsets offsets)
-  : funcIndex_(0),
-    funcLineOrBytecode_(0),
-    begin_(offsets.begin),
+  : begin_(offsets.begin),
     profilingReturn_(offsets.profilingReturn),
-    end_(offsets.end)
+    end_(offsets.end),
+    funcIndex_(0),
+    funcLineOrBytecode_(0),
+    funcBeginToNonProfilingEntry_(0),
+    funcProfilingJumpToProfilingReturn_(0),
+    funcProfilingEpilogueToProfilingReturn_(0),
+    kind_(kind)
 {
-    PodZero(&u);  // zero padding for Valgrind
-    u.kind_ = kind;
-
     MOZ_ASSERT(begin_ < profilingReturn_);
     MOZ_ASSERT(profilingReturn_ < end_);
-    MOZ_ASSERT(u.kind_ == ImportJitExit || u.kind_ == ImportInterpExit);
+    MOZ_ASSERT(kind_ == ImportJitExit || kind_ == ImportInterpExit);
 }
 
 CodeRange::CodeRange(uint32_t funcIndex, uint32_t funcLineOrBytecode, FuncOffsets offsets)
-  : funcIndex_(funcIndex),
-    funcLineOrBytecode_(funcLineOrBytecode)
+  : begin_(offsets.begin),
+    profilingReturn_(offsets.profilingReturn),
+    end_(offsets.end),
+    funcIndex_(funcIndex),
+    funcLineOrBytecode_(funcLineOrBytecode),
+    funcBeginToNonProfilingEntry_(offsets.nonProfilingEntry - begin_),
+    funcProfilingJumpToProfilingReturn_(profilingReturn_ - offsets.profilingJump),
+    funcProfilingEpilogueToProfilingReturn_(profilingReturn_ - offsets.profilingEpilogue),
+    kind_(Function)
 {
-    PodZero(&u);  // zero padding for Valgrind
-    u.kind_ = Function;
-
-    MOZ_ASSERT(offsets.nonProfilingEntry - offsets.begin <= UINT8_MAX);
-    begin_ = offsets.begin;
-    u.func.beginToEntry_ = offsets.nonProfilingEntry - begin_;
-
-    MOZ_ASSERT(offsets.nonProfilingEntry < offsets.profilingReturn);
-    MOZ_ASSERT(offsets.profilingReturn - offsets.profilingJump <= UINT8_MAX);
-    MOZ_ASSERT(offsets.profilingReturn - offsets.profilingEpilogue <= UINT8_MAX);
-    profilingReturn_ = offsets.profilingReturn;
-    u.func.profilingJumpToProfilingReturn_ = profilingReturn_ - offsets.profilingJump;
-    u.func.profilingEpilogueToProfilingReturn_ = profilingReturn_ - offsets.profilingEpilogue;
-
-    MOZ_ASSERT(offsets.nonProfilingEntry < offsets.end);
-    end_ = offsets.end;
+    MOZ_ASSERT(begin_ < profilingReturn_);
+    MOZ_ASSERT(profilingReturn_ < end_);
+    MOZ_ASSERT(funcBeginToNonProfilingEntry_ == offsets.nonProfilingEntry - begin_);
+    MOZ_ASSERT(funcProfilingJumpToProfilingReturn_ == profilingReturn_ - offsets.profilingJump);
+    MOZ_ASSERT(funcProfilingEpilogueToProfilingReturn_ == profilingReturn_ - offsets.profilingEpilogue);
 }
 
 static size_t

@@ -769,7 +769,7 @@ wasm::EnableProfilingEpilogue(const Module& module, const CodeRange& codeRange, 
     if (!codeRange.isFunction())
         return;
 
-    uint8_t* jump = module.code() + codeRange.functionProfilingJump();
+    uint8_t* jump = module.code() + codeRange.funcProfilingJump();
     uint8_t* profilingEpilogue = module.code() + codeRange.funcProfilingEpilogue();
 
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
