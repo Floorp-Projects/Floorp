@@ -676,7 +676,7 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
         return false;
       }
       if (!mFirstSource) {
-        mFirstSource = mCompositor->CreateDataTextureSource(mFlags);
+        mFirstSource = mCompositor->CreateDataTextureSource(mFlags|TextureFlags::RGB_FROM_YCBCR);
         mFirstSource->SetOwner(this);
       }
       mFirstSource->Update(surf, aRegion);
