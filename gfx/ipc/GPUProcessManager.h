@@ -70,8 +70,7 @@ public:
 
   layers::PCompositorBridgeParent* CreateTabCompositorBridge(
     ipc::Transport* aTransport,
-    base::ProcessId aOtherProcess,
-    ipc::GeckoChildProcessHost* aSubprocess);
+    base::ProcessId aOtherProcess);
 
   // This returns a reference to the APZCTreeManager to which
   // pan/zoom-related events can be sent.
