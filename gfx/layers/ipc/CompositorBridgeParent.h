@@ -51,7 +51,6 @@ class GPUProcessManager;
 } // namespace gfx
 
 namespace ipc {
-class GeckoChildProcessHost;
 class Shmem;
 } // namespace ipc
 
@@ -400,7 +399,7 @@ public:
    * directly to us.  Transport is to its thread context.
    */
   static PCompositorBridgeParent*
-  Create(Transport* aTransport, ProcessId aOtherProcess, mozilla::ipc::GeckoChildProcessHost* aProcessHost);
+  Create(Transport* aTransport, ProcessId aOtherProcess);
 
   struct LayerTreeState {
     LayerTreeState();

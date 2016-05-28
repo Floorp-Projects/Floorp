@@ -107,7 +107,6 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
 #if defined(MOZ_WIDGET_COCOA)
   , mChildTask(MACH_PORT_NULL)
 #endif
-  , mAssociatedActors(1)
 {
     MOZ_COUNT_CTOR(GeckoChildProcessHost);
 }
@@ -485,26 +484,6 @@ GeckoChildProcessHost::SetAlreadyDead()
   }
 
   mChildProcessHandle = 0;
-}
-
-namespace {
-
-void
-DelayedDeleteSubprocess(GeckoChildProcessHost* aSubprocess)
-{
-  XRE_GetIOMessageLoop()
-    ->PostTask(mozilla::MakeAndAddRef<DeleteTask<GeckoChildProcessHost>>(aSubprocess));
-}
-
-}
-
-void
-GeckoChildProcessHost::DissociateActor()
-{
-  if (!--mAssociatedActors) {
-    MessageLoop::current()->
-      PostTask(NewRunnableFunction(DelayedDeleteSubprocess, this));
-  }
 }
 
 int32_t GeckoChildProcessHost::mChildCounter = 0;
