@@ -517,14 +517,6 @@ FrameIter::settleOnActivation()
 
         Activation* activation = data_.activations_.activation();
 
-        // Skip activations from another context if needed.
-        MOZ_ASSERT(activation->cx());
-        MOZ_ASSERT(data_.cx_);
-        if (data_.contextOption_ == CURRENT_CONTEXT && activation->cx() != data_.cx_) {
-            ++data_.activations_;
-            continue;
-        }
-
         // If the caller supplied principals, only show activations which are subsumed (of the same
         // origin or of an origin accessible) by these principals.
         if (data_.principals_) {
@@ -590,10 +582,9 @@ FrameIter::settleOnActivation()
     }
 }
 
-FrameIter::Data::Data(JSContext* cx, ContextOption contextOption,
-                      DebuggerEvalOption debuggerEvalOption, JSPrincipals* principals)
+FrameIter::Data::Data(JSContext* cx, DebuggerEvalOption debuggerEvalOption,
+                      JSPrincipals* principals)
   : cx_(cx),
-    contextOption_(contextOption),
     debuggerEvalOption_(debuggerEvalOption),
     principals_(principals),
     pc_(nullptr),
@@ -607,7 +598,6 @@ FrameIter::Data::Data(JSContext* cx, ContextOption contextOption,
 
 FrameIter::Data::Data(const FrameIter::Data& other)
   : cx_(other.cx_),
-    contextOption_(other.contextOption_),
     debuggerEvalOption_(other.debuggerEvalOption_),
     principals_(other.principals_),
     state_(other.state_),
@@ -620,8 +610,8 @@ FrameIter::Data::Data(const FrameIter::Data& other)
 {
 }
 
-FrameIter::FrameIter(JSContext* cx)
-  : data_(cx, CURRENT_CONTEXT, FOLLOW_DEBUGGER_EVAL_PREV_LINK, nullptr),
+FrameIter::FrameIter(JSContext* cx, DebuggerEvalOption debuggerEvalOption)
+  : data_(cx, debuggerEvalOption, nullptr),
     ionInlineFrames_(cx, (js::jit::JitFrameIterator*) nullptr)
 {
     // settleOnActivation can only GC if principals are given.
@@ -629,20 +619,9 @@ FrameIter::FrameIter(JSContext* cx)
     settleOnActivation();
 }
 
-FrameIter::FrameIter(JSContext* cx, ContextOption contextOption,
-                     DebuggerEvalOption debuggerEvalOption)
-  : data_(cx, contextOption, debuggerEvalOption, nullptr),
-    ionInlineFrames_(cx, (js::jit::JitFrameIterator*) nullptr)
-{
-    // settleOnActivation can only GC if principals are given.
-    JS::AutoSuppressGCAnalysis nogc;
-    settleOnActivation();
-}
-
-FrameIter::FrameIter(JSContext* cx, ContextOption contextOption,
-                     DebuggerEvalOption debuggerEvalOption,
+FrameIter::FrameIter(JSContext* cx, DebuggerEvalOption debuggerEvalOption,
                      JSPrincipals* principals)
-  : data_(cx, contextOption, debuggerEvalOption, principals),
+  : data_(cx, debuggerEvalOption, principals),
     ionInlineFrames_(cx, (js::jit::JitFrameIterator*) nullptr)
 {
     settleOnActivation();
@@ -725,10 +704,6 @@ FrameIter::operator++()
         {
             AbstractFramePtr eifPrev = interpFrame()->evalInFramePrev();
 
-            // Eval-in-frame can cross contexts.
-            ContextOption prevContextOption = data_.contextOption_;
-            data_.contextOption_ = ALL_CONTEXTS;
-
             popInterpreterFrame();
 
             while (!hasUsableAbstractFramePtr() || abstractFramePtr() != eifPrev) {
@@ -738,7 +713,6 @@ FrameIter::operator++()
                     popInterpreterFrame();
             }
 
-            data_.contextOption_ = prevContextOption;
             data_.cx_ = data_.activations_->cx();
             break;
         }
