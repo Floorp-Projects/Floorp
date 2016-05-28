@@ -11821,13 +11821,18 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
   if (checkForPopup) {
     abuseLevel = RevisePopupAbuseLevel(abuseLevel);
     if (abuseLevel >= openAbused) {
-      if (aJSCallerContext) {
+      if (!aCalledNoScript) {
         // If script in some other window is doing a window.open on us and
         // it's being blocked, then it's OK to close us afterwards, probably.
         // But if we're doing a window.open on ourselves and block the popup,
         // prevent this window from closing until after this script terminates
         // so that whatever popup blocker UI the app has will be visible.
-        if (mContext == GetScriptContextFromJSContext(aJSCallerContext)) {
+        nsCOMPtr<nsPIDOMWindowInner> entryWindow =
+          do_QueryInterface(GetEntryGlobal());
+        // Note that entryWindow can be null here if some JS component was the
+        // place where script was entered for this JS execution.
+        if (entryWindow &&
+            entryWindow->GetOuterWindow() == this->AsOuter()) {
           mBlockScriptedClosingFlag = true;
           closeUnblocker.emplace(this);
         }
