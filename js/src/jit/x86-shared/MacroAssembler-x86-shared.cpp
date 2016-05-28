@@ -570,6 +570,24 @@ MacroAssembler::repatchThunk(uint8_t* code, uint32_t thunkOffset, uint32_t targe
     Assembler::repatchThunk(code, thunkOffset, targetOffset);
 }
 
+CodeOffset
+MacroAssembler::nopPatchableToNearJump()
+{
+    return Assembler::twoByteNop();
+}
+
+void
+MacroAssembler::patchNopToNearJump(uint8_t* jump, uint8_t* target)
+{
+    Assembler::patchTwoByteNopToJump(jump, target);
+}
+
+void
+MacroAssembler::patchNearJumpToNop(uint8_t* jump)
+{
+    Assembler::patchJumpToTwoByteNop(jump);
+}
+
 void
 MacroAssembler::callAndPushReturnAddress(Register reg)
 {
