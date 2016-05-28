@@ -135,8 +135,8 @@ wasm::GenerateEntry(MacroAssembler& masm, unsigned target, const Sig& sig, bool 
     // can use 'argv' while we fill in the arguments for the asm.js callee.
     // Also, save 'argv' on the stack so that we can recover it after the call.
     // Use a second non-argument/return register as temporary scratch.
-    Register argv = ABIArgGenerator::NonArgReturnReg0;
-    Register scratch = ABIArgGenerator::NonArgReturnReg1;
+    Register argv = ABINonArgReturnReg0;
+    Register scratch = ABINonArgReturnReg1;
     Register64 scratch64(scratch);
 
 #if defined(JS_CODEGEN_X86)
@@ -424,7 +424,7 @@ wasm::GenerateInterpExit(MacroAssembler& masm, const Import& import, uint32_t im
 
     // Fill the argument array.
     unsigned offsetToCallerStackArgs = sizeof(AsmJSFrame) + masm.framePushed();
-    Register scratch = ABIArgGenerator::NonArgReturnReg0;
+    Register scratch = ABINonArgReturnReg0;
     FillArgumentArray(masm, sig.args(), argOffset, offsetToCallerStackArgs, scratch, ToValue(false));
 
     // Prepare the arguments for the call to InvokeImport_*.
@@ -543,8 +543,8 @@ wasm::GenerateJitExit(MacroAssembler& masm, const Import& import, bool usesHeap)
     argOffset += sizeof(size_t);
 
     // 2. Callee
-    Register callee = ABIArgGenerator::NonArgReturnReg0;   // live until call
-    Register scratch = ABIArgGenerator::NonArgReturnReg1;  // repeatedly clobbered
+    Register callee = ABINonArgReturnReg0;   // live until call
+    Register scratch = ABINonArgReturnReg1;  // repeatedly clobbered
 
     // 2.1. Get ExitDatum
     uint32_t globalDataOffset = import.exitGlobalDataOffset();
@@ -839,7 +839,7 @@ GenerateStackOverflow(MacroAssembler& masm)
     // value again. Do not update AsmJSFrame::callerFP as it is not necessary in
     // the non-profiling case (there is no return path from this point) and, in
     // the profiling case, it is already correct.
-    Register activation = ABIArgGenerator::NonArgReturnReg0;
+    Register activation = ABINonArgReturnReg0;
     masm.loadWasmActivation(activation);
     masm.storePtr(masm.getStackPointer(), Address(activation, WasmActivation::offsetOfFP()));
 
@@ -909,7 +909,7 @@ GenerateThrow(MacroAssembler& masm)
     // We are about to pop all frames in this WasmActivation. Set fp to null to
     // maintain the invariant that fp is either null or pointing to a valid
     // frame.
-    Register scratch = ABIArgGenerator::NonArgReturnReg0;
+    Register scratch = ABINonArgReturnReg0;
     masm.loadWasmActivation(scratch);
     masm.storePtr(ImmWord(0), Address(scratch, WasmActivation::offsetOfFP()));
 
@@ -978,7 +978,7 @@ wasm::GenerateInterruptStub(MacroAssembler& masm)
     masm.setFramePushed(0);         // set to zero so we can use masm.framePushed() below
     masm.PushRegsInMask(AllRegsExceptSP); // save all GP/FP registers (except SP)
 
-    Register scratch = ABIArgGenerator::NonArgReturnReg0;
+    Register scratch = ABINonArgReturnReg0;
 
     // Store resumePC into the reserved space.
     masm.loadWasmActivation(scratch);
@@ -987,7 +987,7 @@ wasm::GenerateInterruptStub(MacroAssembler& masm)
 
     // We know that StackPointer is word-aligned, but not necessarily
     // stack-aligned, so we need to align it dynamically.
-    masm.moveStackPtrTo(ABIArgGenerator::NonVolatileReg);
+    masm.moveStackPtrTo(ABINonVolatileReg);
     masm.andToStackPtr(Imm32(~(ABIStackAlignment - 1)));
     if (ShadowStackSpace)
         masm.subFromStackPtr(Imm32(ShadowStackSpace));
@@ -998,7 +998,7 @@ wasm::GenerateInterruptStub(MacroAssembler& masm)
     masm.branchIfFalseBool(ReturnReg, JumpTarget::Throw);
 
     // Restore the StackPointer to its position before the call.
-    masm.moveToStackPtr(ABIArgGenerator::NonVolatileReg);
+    masm.moveToStackPtr(ABINonVolatileReg);
 
     // Restore the machine state to before the interrupt.
     masm.PopRegsInMask(AllRegsExceptSP); // restore all GP/FP registers (except SP)
