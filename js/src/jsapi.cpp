@@ -6455,9 +6455,6 @@ GetScriptedCallerActivationFast(JSContext* cx, Activation** activation)
 {
     ActivationIterator activationIter(cx->runtime());
 
-    while (!activationIter.done() && activationIter->cx() != cx)
-        ++activationIter;
-
     if (activationIter.done()) {
         *activation = nullptr;
         return true;
