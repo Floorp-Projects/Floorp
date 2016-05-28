@@ -22,11 +22,6 @@ def echo_loop():
         output(line)
 
 
-if sys.platform == "win32":
-    import msvcrt
-    msvcrt.setmode(sys.stderr.fileno(), os.O_BINARY)
-
-
 cmd = sys.argv[1]
 if cmd == 'echo':
     echo_loop()
@@ -45,11 +40,7 @@ elif cmd == 'ignore_sigterm':
 
     output('Ready')
     while True:
-        try:
-            signal.pause()
-        except AttributeError:
-            import time
-            time.sleep(3600)
+        signal.pause()
 elif cmd == 'print':
     sys.stdout.write(sys.argv[2])
     sys.stderr.write(sys.argv[3])

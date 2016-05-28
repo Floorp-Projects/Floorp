@@ -88,7 +88,7 @@ class Pipe extends BasePipe {
       this.handle.dispose();
       this._event.dispose();
 
-      io.pipes.delete(this.id);
+      io.pipes.delete(this.handle);
 
       this.handle = null;
       this.closed = true;
