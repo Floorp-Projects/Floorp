@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1205027
+-->
+<head>
+  <title>Test for images intrinsic size while load is pending</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    body { margin: 0; }
+    img { display: block; }
+  </style>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+    var initialOffsetTop;
+    var finalOffsetTop;
+
+    function report() {
+      finalOffsetTop = marker.offsetTop;
+      is(initialOffsetTop, 0, "initial offsetTop: " + initialOffsetTop);
+      is(finalOffsetTop, 8, "final offsetTop: " + finalOffsetTop);
+      ok(initialOffsetTop < finalOffsetTop, "offsetTop should get larger.");
+      SimpleTest.finish();
+    }
+
+    function fail() {
+      ok(false, "image loading should not fail.");
+    }
+  </script>
+</head>
+<body onload="report();">
+  <!-- Bunch of tiny images: -->
+  <img src="file_SlowImage.sjs" onerror="fail();">
+  <img src="file_SlowImage.sjs" onerror="fail();">
+  <img src="file_SlowImage.sjs" onerror="fail();">
+  <img src="file_SlowImage.sjs" onerror="fail();">
+  <img src="file_SlowImage.sjs" onerror="fail();">
+  <img src="file_SlowImage.sjs" onerror="fail();">
+  <img src="file_SlowImage.sjs" onerror="fail();">
+  <img src="file_SlowImage.sjs" onerror="fail();">
+
+  <div id="marker">Marker div</div>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1205027">Mozilla Bug 1205027</a>
+  <script>
+    initialOffsetTop = marker.offsetTop;
+    // prompt the sjs "server" to proceed to serve data to our <img> elements
+    var img = new Image();
+    img.onerror = fail;
+    img.src = "file_SlowImage.sjs?continue";
+  </script>
+</body>
+</html>
