@@ -199,7 +199,10 @@ BasicCompositor::CreateRenderTargetForWindow(const LayoutDeviceIntRect& aRect, c
 already_AddRefed<DataTextureSource>
 BasicCompositor::CreateDataTextureSource(TextureFlags aFlags)
 {
-  RefPtr<DataTextureSource> result = new DataTextureSourceBasic(nullptr);
+  RefPtr<DataTextureSourceBasic> result = new DataTextureSourceBasic(nullptr);
+  if (aFlags & TextureFlags::RGB_FROM_YCBCR) {
+      result->mFromYCBCR = true;
+  }
   return result.forget();
 }
 

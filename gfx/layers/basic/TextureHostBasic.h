@@ -21,8 +21,10 @@ namespace layers {
 class TextureSourceBasic
 {
 public:
+  TextureSourceBasic() : mFromYCBCR(false) {}
   virtual ~TextureSourceBasic() {}
   virtual gfx::SourceSurface* GetSurface(gfx::DrawTarget* aTarget) = 0;
+  bool mFromYCBCR; // we to track sources from YCBCR so we can use a less accurate fast path for video
 };
 
 } // namespace layers
