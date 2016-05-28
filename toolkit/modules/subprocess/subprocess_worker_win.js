@@ -425,13 +425,28 @@ class Process extends BaseProcess {
     let processFlags = win32.CREATE_NO_WINDOW
                      | win32.CREATE_UNICODE_ENVIRONMENT;
 
-    let startupInfo = new win32.STARTUPINFOW();
+    let startupInfoEx = new win32.STARTUPINFOEXW();
+    let startupInfo = startupInfoEx.StartupInfo;
+
     startupInfo.cb = win32.STARTUPINFOW.size;
     startupInfo.dwFlags = win32.STARTF_USESTDHANDLES;
 
     startupInfo.hStdInput = handles[0];
     startupInfo.hStdOutput = handles[1];
     startupInfo.hStdError = handles[2];
+
+    // Note: This needs to be kept alive until we destroy the attribute list.
+    let handleArray = win32.HANDLE.array()(handles);
+
+    let threadAttrs = win32.createThreadAttributeList(handleArray);
+    if (threadAttrs) {
+      // If have thread attributes to pass, pass the size of the full extended
+      // startup info struct.
+      processFlags |= win32.EXTENDED_STARTUPINFO_PRESENT;
+      startupInfo.cb = win32.STARTUPINFOEXW.size;
+
+      startupInfoEx.lpAttributeList = threadAttrs;
+    }
 
     let procInfo = new win32.PROCESS_INFORMATION();
 
@@ -446,6 +461,10 @@ class Process extends BaseProcess {
 
     for (let handle of new Set(handles)) {
       handle.dispose();
+    }
+
+    if (threadAttrs) {
+      libc.DeleteProcThreadAttributeList(threadAttrs);
     }
 
     if (!ok) {
