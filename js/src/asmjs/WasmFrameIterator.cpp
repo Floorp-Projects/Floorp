@@ -334,18 +334,7 @@ wasm::GenerateFunctionEpilogue(MacroAssembler& masm, unsigned framePushed, FuncO
         // the nop since we need the location of the actual nop to patch it.
         AutoForbidPools afp(&masm, 1);
 #endif
-
-        // The exact form of this instruction must be kept consistent with the
-        // patching in Module::setProfilingEnabled.
-        offsets->profilingJump = masm.currentOffset();
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-        masm.twoByteNop();
-#elif defined(JS_CODEGEN_ARM)
-        masm.nop();
-#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-        masm.nop();
-        masm.nop();
-#endif
+        offsets->profilingJump = masm.nopPatchableToNearJump().offset();
     }
 
     // Normal epilogue:
@@ -769,47 +758,11 @@ wasm::EnableProfilingEpilogue(const Module& module, const CodeRange& codeRange, 
     if (!codeRange.isFunction())
         return;
 
-    uint8_t* jump = module.code() + codeRange.funcProfilingJump();
+    uint8_t* profilingJump = module.code() + codeRange.funcProfilingJump();
     uint8_t* profilingEpilogue = module.code() + codeRange.funcProfilingEpilogue();
 
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-    // An unconditional jump with a 1 byte offset immediate has the opcode
-    // 0x90. The offset is relative to the address of the instruction after
-    // the jump. 0x66 0x90 is the canonical two-byte nop.
-    ptrdiff_t jumpImmediate = profilingEpilogue - jump - 2;
-    MOZ_ASSERT(jumpImmediate > 0 && jumpImmediate <= 127);
-    if (enabled) {
-        MOZ_ASSERT(jump[0] == 0x66);
-        MOZ_ASSERT(jump[1] == 0x90);
-        jump[0] = 0xeb;
-        jump[1] = jumpImmediate;
-    } else {
-        MOZ_ASSERT(jump[0] == 0xeb);
-        MOZ_ASSERT(jump[1] == jumpImmediate);
-        jump[0] = 0x66;
-        jump[1] = 0x90;
-    }
-#elif defined(JS_CODEGEN_ARM)
-    if (enabled) {
-        MOZ_ASSERT(reinterpret_cast<Instruction*>(jump)->is<InstNOP>());
-        new (jump) InstBImm(BOffImm(profilingEpilogue - jump), Assembler::Always);
-    } else {
-        MOZ_ASSERT(reinterpret_cast<Instruction*>(jump)->is<InstBImm>());
-        new (jump) InstNOP();
-    }
-#elif defined(JS_CODEGEN_ARM64)
-    (void)jump;
-    (void)profilingEpilogue;
-    MOZ_CRASH();
-#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-    InstImm* instr = (InstImm*)jump;
     if (enabled)
-        instr->setBOffImm16(BOffImm16(profilingEpilogue - jump));
+        MacroAssembler::patchNopToNearJump(profilingJump, profilingEpilogue);
     else
-        instr->makeNop();
-#elif defined(JS_CODEGEN_NONE)
-    MOZ_CRASH();
-#else
-# error "Missing architecture"
-#endif
+        MacroAssembler::patchNearJumpToNop(profilingJump);
 }

@@ -911,7 +911,6 @@ class AssemblerX86Shared : public AssemblerShared
 
   public:
     void nop() { masm.nop(); }
-    void twoByteNop() { masm.twoByteNop(); }
     void j(Condition cond, Label* label) { jSrc(cond, label); }
     void jmp(Label* label) { jmpSrc(label); }
     void j(Condition cond, RepatchLabel* label) { jSrc(cond, label); }
@@ -1068,6 +1067,16 @@ class AssemblerX86Shared : public AssemblerShared
     }
     static void repatchThunk(uint8_t* code, uint32_t thunkOffset, uint32_t targetOffset) {
         X86Encoding::SetRel32(code + thunkOffset, code + targetOffset);
+    }
+
+    CodeOffset twoByteNop() {
+        return CodeOffset(masm.twoByteNop().offset());
+    }
+    static void patchTwoByteNopToJump(uint8_t* jump, uint8_t* target) {
+        X86Encoding::BaseAssembler::patchTwoByteNopToJump(jump, target);
+    }
+    static void patchJumpToTwoByteNop(uint8_t* jump) {
+        X86Encoding::BaseAssembler::patchJumpToTwoByteNop(jump);
     }
 
     void breakpoint() {

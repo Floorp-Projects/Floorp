@@ -1235,6 +1235,27 @@ MacroAssembler::repatchThunk(uint8_t* code, uint32_t u32Offset, uint32_t targetO
     *u32 = targetOffset - u32Offset;
 }
 
+CodeOffset
+MacroAssembler::nopPatchableToNearJump()
+{
+    CodeOffset offset(currentOffset());
+    masm.nop();
+    masm.nop();
+    return offset;
+}
+
+void
+MacroAssembler::patchNopToNearJump(uint8_t* jump, uint8_t* target)
+{
+    ((InstImm*)jump)->setBOffImm16(BOffImm16(target - jump));
+}
+
+void
+MacroAssembler::patchNearJumpToNop(uint8_t* jump)
+{
+    ((InstImm*)jump)->makeNop();
+}
+
 void
 MacroAssembler::call(wasm::SymbolicAddress target)
 {

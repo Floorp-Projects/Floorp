@@ -557,6 +557,24 @@ MacroAssembler::repatchThunk(uint8_t* code, uint32_t thunkOffset, uint32_t targe
     MOZ_CRASH("NYI");
 }
 
+CodeOffset
+MacroAssembler::nopPatchableToNearJump()
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::patchNopToNearJump(uint8_t* jump, uint8_t* target)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::patchNearJumpToNop(uint8_t* jump)
+{
+    MOZ_CRASH("NYI");
+}
+
 void
 MacroAssembler::pushReturnAddress()
 {

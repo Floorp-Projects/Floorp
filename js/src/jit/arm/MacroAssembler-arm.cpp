@@ -4834,6 +4834,28 @@ MacroAssembler::repatchThunk(uint8_t* code, uint32_t u32Offset, uint32_t targetO
     *u32 = (targetOffset - addOffset) - 8;
 }
 
+CodeOffset
+MacroAssembler::nopPatchableToNearJump()
+{
+    CodeOffset offset(currentOffset());
+    ma_nop();
+    return offset;
+}
+
+void
+MacroAssembler::patchNopToNearJump(uint8_t* jump, uint8_t* target)
+{
+    MOZ_ASSERT(reinterpret_cast<Instruction*>(jump)->is<InstNOP>());
+    new (jump) InstBImm(BOffImm(target - jump), Assembler::Always);
+}
+
+void
+MacroAssembler::patchNearJumpToNop(uint8_t* jump)
+{
+    MOZ_ASSERT(reinterpret_cast<Instruction*>(jump)->is<InstBImm>());
+    new (jump) InstNOP();
+}
+
 void
 MacroAssembler::pushReturnAddress()
 {
