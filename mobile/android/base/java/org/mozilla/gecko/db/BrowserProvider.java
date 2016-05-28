@@ -181,7 +181,11 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         map.put(History.FAVICON_ID, History.FAVICON_ID);
         map.put(History.FAVICON_URL, History.FAVICON_URL);
         map.put(History.VISITS, History.VISITS);
+        map.put(History.LOCAL_VISITS, History.LOCAL_VISITS);
+        map.put(History.REMOTE_VISITS, History.REMOTE_VISITS);
         map.put(History.DATE_LAST_VISITED, History.DATE_LAST_VISITED);
+        map.put(History.LOCAL_DATE_LAST_VISITED, History.LOCAL_DATE_LAST_VISITED);
+        map.put(History.REMOTE_DATE_LAST_VISITED, History.REMOTE_DATE_LAST_VISITED);
         map.put(History.DATE_CREATED, History.DATE_CREATED);
         map.put(History.DATE_MODIFIED, History.DATE_MODIFIED);
         map.put(History.GUID, History.GUID);
@@ -1387,9 +1391,15 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             return updated;
         }
 
-        // Insert a new entry if necessary
+        // Insert a new entry if necessary, setting visit and date aggregate values.
         if (!values.containsKey(History.VISITS)) {
             values.put(History.VISITS, 1);
+            values.put(History.LOCAL_VISITS, 1);
+        } else {
+            values.put(History.LOCAL_VISITS, values.getAsInteger(History.VISITS));
+        }
+        if (values.containsKey(History.DATE_LAST_VISITED)) {
+            values.put(History.LOCAL_DATE_LAST_VISITED, values.getAsLong(History.DATE_LAST_VISITED));
         }
         if (!values.containsKey(History.TITLE)) {
             values.put(History.TITLE, values.getAsString(History.URL));
@@ -1420,12 +1430,17 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         trace("Updating history meta data and incrementing visits");
 
+        if (values.containsKey(History.DATE_LAST_VISITED)) {
+            values.put(History.LOCAL_DATE_LAST_VISITED, values.getAsLong(History.DATE_LAST_VISITED));
+        }
+
         // Update data and increment visits by 1.
         final long incVisits = 1;
 
         // Create a separate set of values that will be updated as an expression.
         final ContentValues visits = new ContentValues();
         visits.put(History.VISITS, History.VISITS + " + " + incVisits);
+        visits.put(History.LOCAL_VISITS, History.LOCAL_VISITS + " + " + incVisits);
 
         final ContentValues[] valuesAndVisits = { values,  visits };
         final UpdateOperation[] ops = { UpdateOperation.ASSIGN, UpdateOperation.EXPRESSION };
