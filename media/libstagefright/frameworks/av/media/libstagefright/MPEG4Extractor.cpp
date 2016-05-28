@@ -1171,9 +1171,8 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
                 }
             }
 
-            if (*offset != stop_offset) {
-                return ERROR_MALFORMED;
-            }
+            // Some muxers add some padding after the stsd content. Skip it.
+            *offset = stop_offset;
             break;
         }
 
