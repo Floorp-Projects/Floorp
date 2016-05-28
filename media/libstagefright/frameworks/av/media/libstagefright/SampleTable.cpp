@@ -395,7 +395,7 @@ status_t SampleTable::setCompositionTimeToSampleParams(
         return ERROR_MALFORMED;
     }
 
-    if (data_size != ((uint64_t)numEntries + 1) * 8) {
+    if (data_size < ((uint64_t)numEntries + 1) * 8) {
         return ERROR_MALFORMED;
     }
 
