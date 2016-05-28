@@ -105,6 +105,7 @@ using namespace js::shell;
 using mozilla::ArrayLength;
 using mozilla::Atomic;
 using mozilla::Maybe;
+using mozilla::Nothing;
 using mozilla::NumberEqualsInt32;
 using mozilla::PodCopy;
 using mozilla::PodEqual;
@@ -169,8 +170,7 @@ struct ShellRuntime
     PRLock* watchdogLock;
     PRCondVar* watchdogWakeup;
     PRThread* watchdogThread;
-    bool watchdogHasTimeout;
-    int64_t watchdogTimeout;
+    Maybe<TimeStamp> watchdogTimeout;
 
     PRCondVar* sleepWakeup;
 
@@ -327,8 +327,6 @@ ShellRuntime::ShellRuntime(JSRuntime* rt)
     watchdogLock(nullptr),
     watchdogWakeup(nullptr),
     watchdogThread(nullptr),
-    watchdogHasTimeout(false),
-    watchdogTimeout(0),
     sleepWakeup(nullptr),
     exitCode(0),
     quitting(false)
@@ -3104,17 +3102,6 @@ ShapeOf(JSContext* cx, unsigned argc, JS::Value* vp)
     return true;
 }
 
-/*
- * Check that t1 comes strictly before t2. The function correctly deals with
- * wrap-around between t2 and t1 assuming that t2 and t1 stays within INT32_MAX
- * from each other. We use MAX_TIMEOUT_INTERVAL to enforce this restriction.
- */
-static bool
-IsBefore(int64_t t1, int64_t t2)
-{
-    return int32_t(t1 - t2) < 0;
-}
-
 static bool
 Sleep_fn(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -3203,13 +3190,13 @@ WatchdogMain(void* arg)
 
     PR_Lock(sr->watchdogLock);
     while (sr->watchdogThread) {
-        int64_t now = PRMJ_Now();
-        if (sr->watchdogHasTimeout && !IsBefore(now, sr->watchdogTimeout)) {
+        auto now = TimeStamp::Now();
+        if (sr->watchdogTimeout.isSome() && now >= sr->watchdogTimeout.value()) {
             /*
              * The timeout has just expired. Request an interrupt callback
              * outside the lock.
              */
-            sr->watchdogHasTimeout = false;
+            sr->watchdogTimeout = Nothing();
             PR_Unlock(sr->watchdogLock);
             CancelExecution(rt);
             PR_Lock(sr->watchdogLock);
@@ -3217,7 +3204,7 @@ WatchdogMain(void* arg)
             /* Wake up any threads doing sleep. */
             PR_NotifyAllCondVar(sr->sleepWakeup);
         } else {
-            if (sr->watchdogHasTimeout) {
+            if (sr->watchdogTimeout.isSome()) {
                 /*
                  * Time hasn't expired yet. Simulate an interrupt callback
                  * which doesn't abort execution.
@@ -3225,7 +3212,7 @@ WatchdogMain(void* arg)
                 JS_RequestInterruptCallback(rt);
             }
 
-            TimeDuration sleepDuration = sr->watchdogHasTimeout
+            TimeDuration sleepDuration = sr->watchdogTimeout.isSome()
                                          ? TimeDuration::FromSeconds(0.1)
                                          : TimeDuration::Forever();
             mozilla::DebugOnly<PRStatus> status =
@@ -3243,16 +3230,16 @@ ScheduleWatchdog(JSRuntime* rt, double t)
 
     if (t <= 0) {
         PR_Lock(sr->watchdogLock);
-        sr->watchdogHasTimeout = false;
+        sr->watchdogTimeout = Nothing();
         PR_Unlock(sr->watchdogLock);
         return true;
     }
 
-    int64_t interval = int64_t(ceil(t * PRMJ_USEC_PER_SEC));
-    int64_t timeout = PRMJ_Now() + interval;
+    auto interval = TimeDuration::FromSeconds(t);
+    auto timeout = TimeStamp::Now() + interval;
     PR_Lock(sr->watchdogLock);
     if (!sr->watchdogThread) {
-        MOZ_ASSERT(!sr->watchdogHasTimeout);
+        MOZ_ASSERT(sr->watchdogTimeout.isNothing());
         sr->watchdogThread = PR_CreateThread(PR_USER_THREAD,
                                           WatchdogMain,
                                           rt,
@@ -3264,11 +3251,10 @@ ScheduleWatchdog(JSRuntime* rt, double t)
             PR_Unlock(sr->watchdogLock);
             return false;
         }
-    } else if (!sr->watchdogHasTimeout || IsBefore(timeout, sr->watchdogTimeout)) {
+    } else if (sr->watchdogTimeout.isNothing() || timeout < sr->watchdogTimeout.value()) {
          PR_NotifyCondVar(sr->watchdogWakeup);
     }
-    sr->watchdogHasTimeout = true;
-    sr->watchdogTimeout = timeout;
+    sr->watchdogTimeout = Some(timeout);
     PR_Unlock(sr->watchdogLock);
     return true;
 }
