@@ -18,15 +18,15 @@ task:
           mozharness/configs/unittests/linux_unittest.py
           mozharness/configs/remove_executables.py
   metadata:
-    name: '[TC] Linux64 reftest-e10s-{{chunk}}'
-    description: Reftest e10s run {{chunk}}
+    name: '[TC] Linux64 reftest-noaccel-e10s-{{chunk}}'
+    description: Reftest not accelerated e10s run {{chunk}}
   extra:
     chunks:
       total: 8
     suite:
       name: reftest
-      flavor: reftest
+      flavor: reftest-no-accel
     treeherder:
-      groupName: Desktop reftest
+      groupName: Desktop reftest not accelerated
       groupSymbol: tc-R-e10s
-      symbol: R-e10s{{chunk}}
+      symbol: Ru{{chunk}}
