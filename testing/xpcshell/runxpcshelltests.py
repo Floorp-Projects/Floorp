@@ -650,9 +650,6 @@ class XPCShellTestThread(Thread):
             self.env['DMD_PRELOAD_VAR'] = preloadEnvVar
             self.env['DMD_PRELOAD_VALUE'] = libdmd
 
-        if self.test_object.get('subprocess') == 'true':
-            self.env['PYTHON'] = sys.executable
-
         testTimeoutInterval = self.harness_timeout
         # Allow a test to request a multiple of the timeout if it is expected to take long
         if 'requesttimeoutfactor' in self.test_object:

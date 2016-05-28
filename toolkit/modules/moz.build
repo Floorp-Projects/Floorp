@@ -106,10 +106,6 @@ if 'Android' != CONFIG['OS_TARGET']:
     EXTRA_JS_MODULES += [
         'LightweightThemeConsumer.jsm',
     ]
-
-    DIRS += [
-        'subprocess',
-    ]
 else:
     DEFINES['ANDROID'] = True
 
