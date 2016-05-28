@@ -72,7 +72,8 @@ WebGLContext::ClearColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
 
     MakeContextCurrent();
 
-    const bool supportsFloatColorBuffers = (IsExtensionEnabled(WebGLExtensionID::EXT_color_buffer_half_float) ||
+    const bool supportsFloatColorBuffers = (IsExtensionEnabled(WebGLExtensionID::EXT_color_buffer_float) ||
+                                            IsExtensionEnabled(WebGLExtensionID::EXT_color_buffer_half_float) ||
                                             IsExtensionEnabled(WebGLExtensionID::WEBGL_color_buffer_float));
     if (!supportsFloatColorBuffers) {
         r = GLClampFloat(r);
