@@ -62,13 +62,6 @@ ABIArgGenerator::next(MIRType type)
     return current_;
 }
 
-const Register ABIArgGenerator::NonArgReturnReg0 = r8;
-const Register ABIArgGenerator::NonArgReturnReg1 = r9;
-const Register ABIArgGenerator::NonVolatileReg = r1;
-const Register ABIArgGenerator::NonArg_VolatileReg = r13;
-const Register ABIArgGenerator::NonReturn_VolatileReg0 = r2;
-const Register ABIArgGenerator::NonReturn_VolatileReg1 = r3;
-
 namespace js {
 namespace jit {
 

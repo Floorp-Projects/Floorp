@@ -2224,15 +2224,6 @@ MacroAssemblerARMCompat::store32(Register src, const BaseIndex& dest)
     ma_str(src, DTRAddr(base, DtrRegImmShift(dest.index, LSL, scale)));
 }
 
-void
-MacroAssemblerARMCompat::store32_NoSecondScratch(Imm32 src, const Address& address)
-{
-    // move32() needs to use the ScratchRegister internally, but there is no additional
-    // scratch register available since this function forbids use of the second one.
-    move32(src, ScratchRegister);
-    storePtr(ScratchRegister, address);
-}
-
 template <typename T>
 void
 MacroAssemblerARMCompat::storePtr(ImmWord imm, T address)

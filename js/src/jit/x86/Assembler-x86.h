@@ -79,13 +79,15 @@ class ABIArgGenerator
     ABIArg& current() { return current_; }
     uint32_t stackBytesConsumedSoFar() const { return stackOffset_; }
 
-    // Note: these registers are all guaranteed to be different
-    static const Register NonArgReturnReg0;
-    static const Register NonArgReturnReg1;
-    static const Register NonVolatileReg;
-    static const Register NonArg_VolatileReg;
-    static const Register NonReturn_VolatileReg0;
 };
+
+static MOZ_CONSTEXPR_VAR Register ABINonArgReg0 = eax;
+static MOZ_CONSTEXPR_VAR Register ABINonArgReg1 = ecx;
+
+// Note: these three registers are all guaranteed to be different
+static MOZ_CONSTEXPR_VAR Register ABINonArgReturnReg0 = ecx;
+static MOZ_CONSTEXPR_VAR Register ABINonArgReturnReg1 = edx;
+static MOZ_CONSTEXPR_VAR Register ABINonVolatileReg = ebx;
 
 static MOZ_CONSTEXPR_VAR Register OsrFrameReg = edx;
 static MOZ_CONSTEXPR_VAR Register PreBarrierReg = edx;

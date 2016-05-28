@@ -32,12 +32,6 @@ FrameSizeClass FrameSizeClass::FromDepth(uint32_t) { MOZ_CRASH(); }
 FrameSizeClass FrameSizeClass::ClassLimit() { MOZ_CRASH(); }
 uint32_t FrameSizeClass::frameSize() const { MOZ_CRASH(); }
 
-const Register ABIArgGenerator::NonArgReturnReg0 = { Registers::invalid_reg };
-const Register ABIArgGenerator::NonArgReturnReg1 = {  Registers::invalid_reg };
-const Register ABIArgGenerator::NonArg_VolatileReg = {  Registers::invalid_reg };
-const Register ABIArgGenerator::NonReturn_VolatileReg0 = {  Registers::invalid_reg };
-const Register ABIArgGenerator::NonReturn_VolatileReg1 = {  Registers::invalid_reg };
-
 BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator& iter, BailoutStack* bailout)
 {
     MOZ_CRASH();
