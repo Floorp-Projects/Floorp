@@ -381,9 +381,11 @@ function getPopup({ ed }) {
  * implementation of completer supports it.
  */
 function getInfoAt({ ed }, caret) {
-  let completer = autocompleteMap.get(ed).completer;
-  if (completer && completer.getInfoAt) {
-    return completer.getInfoAt(ed.getText(), caret);
+  if (autocompleteMap.has(ed)) {
+    let completer = autocompleteMap.get(ed).completer;
+    if (completer && completer.getInfoAt) {
+      return completer.getInfoAt(ed.getText(), caret);
+    }
   }
 
   return null;
