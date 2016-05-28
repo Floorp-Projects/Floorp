@@ -160,6 +160,14 @@ tests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_reftest_e10s_dbg.yml
+  reftest-no-accel:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_reftest_not_accelerated_dbg.yml
+  reftest-no-accel-e10s:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_reftest_not_accelerated_e10s_dbg.yml
   web-platform-tests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:

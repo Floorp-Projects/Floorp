@@ -21,7 +21,7 @@ task:
     description: Reftest not accelerated run {{chunk}}
   extra:
     chunks:
-      total: 2
+      total: 8
     suite:
       name: reftest
       flavor: reftest-no-accel
