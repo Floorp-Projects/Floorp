@@ -178,6 +178,16 @@ struct ShellRuntime
     bool quitting;
 };
 
+struct MOZ_STACK_CLASS EnvironmentPreparer : public js::ScriptEnvironmentPreparer {
+    JSContext* cx;
+    explicit EnvironmentPreparer(JSContext* cx)
+      : cx(cx)
+    {
+        js::SetScriptEnvironmentPreparer(JS_GetRuntime(cx), this);
+    }
+    void invoke(JS::HandleObject scope, Closure& closure) override;
+};
+
 // Shell state set once at startup.
 static bool enableCodeCoverage = false;
 static bool enableDisassemblyDumps = false;
@@ -494,6 +504,18 @@ SkipUTF8BOM(FILE* file)
         ungetc(ch2, file);
     if (ch1 != EOF)
         ungetc(ch1, file);
+}
+
+void
+EnvironmentPreparer::invoke(HandleObject scope, Closure& closure)
+{
+    MOZ_ASSERT(!JS_IsExceptionPending(cx));
+
+    AutoCompartment ac(cx, scope);
+    if (!closure(cx))
+        JS_ReportPendingException(cx);
+
+    MOZ_ASSERT(!JS_IsExceptionPending(cx));
 }
 
 static void
@@ -2951,6 +2973,8 @@ WorkerMain(void* arg)
     sr->jobQueue.init(cx, JobQueue(SystemAllocPolicy()));
     JS::SetEnqueuePromiseJobCallback(rt, ShellEnqueuePromiseJobCallback);
 #endif // SPIDERMONKEY_PROMISE
+
+    EnvironmentPreparer environmentPreparer(cx);
 
     JS::SetLargeAllocationFailureCallback(rt, my_LargeAllocFailCallback, (void*)cx);
 
@@ -7440,6 +7464,8 @@ main(int argc, char** argv, char** envp)
     sr->jobQueue.init(cx, JobQueue(SystemAllocPolicy()));
     JS::SetEnqueuePromiseJobCallback(rt, ShellEnqueuePromiseJobCallback);
 #endif // SPIDERMONKEY_PROMISE
+
+    EnvironmentPreparer environmentPreparer(cx);
 
     JS_SetGCParameter(rt, JSGC_MODE, JSGC_MODE_INCREMENTAL);
 
