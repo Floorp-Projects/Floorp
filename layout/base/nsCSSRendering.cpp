@@ -3327,15 +3327,19 @@ ComputeDrawnSizeForBackground(const CSSSizeOrRatio& aIntrinsicSize,
  * aImageDimension: the image width/height
  * aAvailableSpace: the background positioning area width/height
  * aRepeatSize: the image size plus gap size of app units for use as spacing
+ * aRepeat: determine whether the image is repeated
  */
 static nscoord
 ComputeSpacedRepeatSize(nscoord aImageDimension,
-                        nscoord aAvailableSpace) {
+                        nscoord aAvailableSpace,
+                        bool& aRepeat) {
   float ratio = aAvailableSpace / aImageDimension;
 
   if (ratio < 2.0f) { // If you can't repeat at least twice, then don't repeat.
+    aRepeat = false;
     return aImageDimension;
   } else {
+    aRepeat = true;
     return (aAvailableSpace - aImageDimension) / (NSToIntFloor(ratio) - 1);
   }
 }
@@ -3489,9 +3493,11 @@ nsCSSRendering::PrepareImageLayer(nsPresContext* aPresContext,
                                             &imageTopLeft, &state.mAnchor);
   state.mRepeatSize = imageSize;
   if (repeatX == NS_STYLE_IMAGELAYER_REPEAT_SPACE) {
+    bool isRepeat;
     state.mRepeatSize.width = ComputeSpacedRepeatSize(imageSize.width,
-                                                      bgPositionSize.width);
-    if (state.mRepeatSize.width > imageSize.width) {
+                                                      bgPositionSize.width,
+                                                      isRepeat);
+    if (isRepeat) {
       imageTopLeft.x = 0;
       state.mAnchor.x = 0;
     } else {
@@ -3500,9 +3506,11 @@ nsCSSRendering::PrepareImageLayer(nsPresContext* aPresContext,
   }
 
   if (repeatY == NS_STYLE_IMAGELAYER_REPEAT_SPACE) {
+    bool isRepeat;
     state.mRepeatSize.height = ComputeSpacedRepeatSize(imageSize.height,
-                                                       bgPositionSize.height);
-    if (state.mRepeatSize.height > imageSize.height) {
+                                                       bgPositionSize.height,
+                                                       isRepeat);
+    if (isRepeat) {
       imageTopLeft.y = 0;
       state.mAnchor.y = 0;
     } else {
