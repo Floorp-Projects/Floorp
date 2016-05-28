@@ -12,6 +12,8 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
 #include "mozilla/gfx/Tools.h"
+#include "mozilla/gfx/ssse3-scaler.h"
+#include "mozilla/SSE.h"
 #include "gfxUtils.h"
 #include "YCbCrUtils.h"
 #include <algorithm>
@@ -278,6 +280,69 @@ SetupMask(const EffectChain& aEffectChain,
   }
 }
 
+static bool
+AttemptVideoScale(TextureSourceBasic* aSource, const SourceSurface* aSourceMask,
+                       gfx::Float aOpacity, CompositionOp aBlendMode,
+                       const TexturedEffect* aTexturedEffect,
+                       const Matrix& aNewTransform, const gfx::Rect& aRect,
+                       const gfx::IntRect& aClipRect,
+                       DrawTarget* aDest, const DrawTarget* aBuffer)
+{
+  if (!mozilla::supports_ssse3())
+      return false;
+  if (aNewTransform.IsTranslation()) // unscaled painting should take the regular path
+      return false;
+  if (aNewTransform.HasNonAxisAlignedTransform() || aNewTransform.HasNegativeScaling())
+      return false;
+  if (aSourceMask || aOpacity != 1.0f)
+      return false;
+  if (aBlendMode != CompositionOp::OP_OVER && aBlendMode != CompositionOp::OP_SOURCE)
+      return false;
+
+  IntRect dstRect;
+  // the compiler should know a lot about aNewTransform at this point
+  // maybe it can do some sophisticated optimization of the following
+  if (!aNewTransform.TransformBounds(aRect).ToIntRect(&dstRect))
+      return false;
+
+  if (!(aTexturedEffect->mTextureCoords == Rect(0.0f, 0.0f, 1.0f, 1.0f)))
+      return false;
+  if (aDest->GetFormat() == SurfaceFormat::R5G6B5_UINT16)
+      return false;
+
+  uint8_t* dstData;
+  IntSize dstSize;
+  int32_t dstStride;
+  SurfaceFormat dstFormat;
+  if (aDest->LockBits(&dstData, &dstSize, &dstStride, &dstFormat)) {
+    // If we're not painting to aBuffer the clip will
+    // be applied later
+    IntRect fillRect = dstRect;
+    if (aDest == aBuffer) {
+      // we need to clip fillRect because LockBits ignores the clip on the aDest
+      fillRect = fillRect.Intersect(aClipRect);
+    }
+
+    fillRect = fillRect.Intersect(IntRect(IntPoint(0, 0), aDest->GetSize()));
+    IntPoint offset = fillRect.TopLeft() - dstRect.TopLeft();
+
+    RefPtr<DataSourceSurface> srcSource = aSource->GetSurface(aDest)->GetDataSurface();
+    DataSourceSurface::ScopedMap mapSrc(srcSource, DataSourceSurface::READ);
+
+    ssse3_scale_data((uint32_t*)mapSrc.GetData(), srcSource->GetSize().width, srcSource->GetSize().height,
+                     mapSrc.GetStride()/4,
+                     ((uint32_t*)dstData) + fillRect.x + (dstStride / 4) * fillRect.y, dstRect.width, dstRect.height,
+                     dstStride / 4,
+                     offset.x, offset.y,
+                     fillRect.width, fillRect.height);
+
+    aDest->ReleaseBits(dstData);
+    return true;
+  } else {
+    return false;
+  }
+}
+
 void
 BasicCompositor::DrawQuad(const gfx::Rect& aRect,
                           const gfx::IntRect& aClipRect,
@@ -366,12 +431,21 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
       TextureSourceBasic* source = texturedEffect->mTexture->AsSourceBasic();
 
       if (source && texturedEffect->mPremultiplied) {
+        // we have a fast path for video here
+        if (source->mFromYCBCR &&
+            AttemptVideoScale(source, sourceMask, aOpacity, blendMode,
+                              texturedEffect,
+                              newTransform, aRect, aClipRect - offset,
+                              dest, buffer)) {
+          // we succeeded in scaling
+        } else {
           DrawSurfaceWithTextureCoords(dest, aRect,
                                        source->GetSurface(dest),
                                        texturedEffect->mTextureCoords,
                                        texturedEffect->mFilter,
                                        DrawOptions(aOpacity, blendMode),
                                        sourceMask, &maskTransform);
+        }
       } else if (source) {
         SourceSurface* srcSurf = source->GetSurface(dest);
         if (srcSurf) {
