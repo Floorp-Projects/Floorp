@@ -37,13 +37,12 @@ class ABIArgGenerator
 
         return (usedArgSlots_ - 8) * sizeof(int64_t);
     }
-
-    static const Register NonArgReturnReg0;
-    static const Register NonArgReturnReg1;
-    static const Register NonArg_VolatileReg;
-    static const Register NonReturn_VolatileReg0;
-    static const Register NonReturn_VolatileReg1;
 };
+
+static MOZ_CONSTEXPR_VAR Register ABINonArgReg0 = t0;
+static MOZ_CONSTEXPR_VAR Register ABINonArgReg1 = t1;
+static MOZ_CONSTEXPR_VAR Register ABINonArgReturnReg0 = t0;
+static MOZ_CONSTEXPR_VAR Register ABINonArgReturnReg1 = t1;
 
 static MOZ_CONSTEXPR_VAR Register JSReturnReg = v1;
 static MOZ_CONSTEXPR_VAR Register JSReturnReg_Type = JSReturnReg;

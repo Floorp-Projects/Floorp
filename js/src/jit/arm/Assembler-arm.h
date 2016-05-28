@@ -101,12 +101,12 @@ class ABIArgGenerator
     ABIArg next(MIRType argType);
     ABIArg& current() { return current_; }
     uint32_t stackBytesConsumedSoFar() const { return stackOffset_; }
-
-    static const Register NonArgReturnReg0;
-    static const Register NonArgReturnReg1;
-    static const Register NonReturn_VolatileReg0;
-    static const Register NonReturn_VolatileReg1;
 };
+
+static MOZ_CONSTEXPR_VAR Register ABINonArgReg0 = r4;
+static MOZ_CONSTEXPR_VAR Register ABINonArgReg1 = r5;
+static MOZ_CONSTEXPR_VAR Register ABINonArgReturnReg0 = r4;
+static MOZ_CONSTEXPR_VAR Register ABINonArgReturnReg1 = r5;
 
 static MOZ_CONSTEXPR_VAR Register PreBarrierReg = r1;
 
