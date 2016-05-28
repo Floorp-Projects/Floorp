@@ -109,10 +109,10 @@ void ProcessWatcher::EnsureProcessTerminated(base::ProcessHandle process, bool f
     return;
   }
 
+  MessageLoopForIO* loop = MessageLoopForIO::current();
   if (force) {
     RefPtr<mozilla::Runnable> task = new ChildReaper(process, force);
-    MessageLoop::current()->PostDelayedTask(task.forget(),
-                                            kWaitInterval);
+    loop->PostDelayedTask(task.forget(), kWaitInterval);
   } else {
     loop->AddDestructionObserver(new ChildReaper(process, force));
   }

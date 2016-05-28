@@ -170,10 +170,9 @@ GPUProcessManager::CreateTopLevelCompositor(widget::CompositorWidgetProxy* aProx
 
 PCompositorBridgeParent*
 GPUProcessManager::CreateTabCompositorBridge(ipc::Transport* aTransport,
-                                             base::ProcessId aOtherProcess,
-                                             ipc::GeckoChildProcessHost* aSubprocess)
+                                             base::ProcessId aOtherProcess)
 {
-  return CompositorBridgeParent::Create(aTransport, aOtherProcess, aSubprocess);
+  return CompositorBridgeParent::Create(aTransport, aOtherProcess);
 }
 
 already_AddRefed<APZCTreeManager>
