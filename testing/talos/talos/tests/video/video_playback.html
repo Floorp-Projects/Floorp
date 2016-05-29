@@ -3,6 +3,7 @@
    - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
 <html>
 <head>
+<script src="chrome://talos-powers-content/content/TalosPowersContent.js"></script>
 <script language="javascript" type="text/javascript">
 const MEASUREMENT1_MS = 3000;
 const MEASUREMENT2_MS = 2000;
@@ -23,6 +24,10 @@ var viewMode = ['fullscreen', 1, 1.1, 2];
 var testResult = {names: [], values: []};
 
 function init() {
+  TalosPowersContent.focus(content_focused)
+}
+
+function content_focused() {
   vdo = document.getElementById('vdo');
   vdo.addEventListener('loadeddata', prepare, false);
   document.addEventListener('fullscreenchange', fullscreen);
