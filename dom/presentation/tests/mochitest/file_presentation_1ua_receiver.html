@@ -42,11 +42,13 @@ function testConnectionAvailable() {
     info('Receiver: --- testConnectionAvailable ---');
     ok(navigator.presentation, "Receiver: navigator.presentation should be available.");
     ok(navigator.presentation.receiver, "Receiver: navigator.presentation.receiver should be available.");
-    navigator.presentation.receiver.getConnection()
-    .then((aConnection) => {
-      connection = aConnection;
-      ok(connection.id, "Receiver: Connection ID should be set: " + connection.id);
-      is(connection.state, "closed", "Connection state at receiver side should be closed by default.");
+
+    navigator.presentation.receiver.connectionList
+    .then((aList) => {
+      is(aList.connections.length, 1, "Should get one conncetion.");
+      connection = aList.connections[0];
+      ok(connection.id, "Connection ID should be set: " + connection.id);
+      is(connection.state, "connected", "Connection state at receiver side should be connected.");
       aResolve();
     })
     .catch((aError) => {
@@ -62,8 +64,8 @@ function testConnectionReady() {
     info('Receiver: --- testConnectionReady ---');
     connection.onstatechange = function() {
       connection.onstatechange = null;
-      is(connection.state, "connected", "Receiver: Connection state should become connected.");
-      aResolve();
+      ok(false, "Should not get |onstatechange| event.")
+      aReject();
     };
     if (connection.state === "connected") {
       connection.onstatechange = null;
