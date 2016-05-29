@@ -128,8 +128,12 @@ function testStartConnection() {
       connection = aConnection;
       ok(connection, "Sender: Connection should be available.");
       ok(connection.id, "Sender: Connection ID should be set.");
-      is(connection.state, "connected", "Sender: Connection state at sender side should be connected by default.");
-      aResolve();
+      is(connection.state, "connecting", "The initial state should be connecting.");
+      connection.onstatechange = function() {
+        connection.onstatechange = null;
+        is(connection.state, "connected", "Connection should be connected.");
+        aResolve();
+      };
     }).catch((aError) => {
       ok(false, "Sender: Error occurred when establishing a connection: " + aError);
       teardown();
