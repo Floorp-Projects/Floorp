@@ -14,6 +14,8 @@
 namespace mozilla {
 namespace dom {
 
+class PresentationConnectionList;
+
 class PresentationConnection final : public DOMEventTargetHelper
                                    , public nsIPresentationSessionListener
 {
@@ -23,10 +25,11 @@ public:
                                            DOMEventTargetHelper)
   NS_DECL_NSIPRESENTATIONSESSIONLISTENER
 
-  static already_AddRefed<PresentationConnection> Create(nsPIDOMWindowInner* aWindow,
-                                                         const nsAString& aId,
-                                                         const uint8_t aRole,
-                                                         PresentationConnectionState aState);
+  static already_AddRefed<PresentationConnection>
+  Create(nsPIDOMWindowInner* aWindow,
+         const nsAString& aId,
+         const uint8_t aRole,
+         PresentationConnectionList* aList = nullptr);
 
   virtual void DisconnectFromOwner() override;
 
@@ -52,7 +55,7 @@ private:
   PresentationConnection(nsPIDOMWindowInner* aWindow,
                          const nsAString& aId,
                          const uint8_t aRole,
-                         PresentationConnectionState aState);
+                         PresentationConnectionList* aList);
 
   ~PresentationConnection();
 
@@ -67,6 +70,7 @@ private:
   nsString mId;
   uint8_t mRole;
   PresentationConnectionState mState;
+  RefPtr<PresentationConnectionList> mOwningConnectionList;
 };
 
 } // namespace dom

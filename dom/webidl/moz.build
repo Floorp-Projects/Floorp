@@ -378,6 +378,7 @@ WEBIDL_FILES = [
     'Presentation.webidl',
     'PresentationAvailability.webidl',
     'PresentationConnection.webidl',
+    'PresentationConnectionList.webidl',
     'PresentationDeviceInfoManager.webidl',
     'PresentationReceiver.webidl',
     'PresentationRequest.webidl',

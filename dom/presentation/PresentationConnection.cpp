@@ -13,6 +13,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsStringStream.h"
 #include "PresentationConnection.h"
+#include "PresentationConnectionList.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -20,10 +21,12 @@ using namespace mozilla::dom;
 NS_IMPL_CYCLE_COLLECTION_CLASS(PresentationConnection)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PresentationConnection, DOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwningConnectionList)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PresentationConnection, DOMEventTargetHelper)
   tmp->Shutdown();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwningConnectionList)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ADDREF_INHERITED(PresentationConnection, DOMEventTargetHelper)
@@ -36,10 +39,11 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 PresentationConnection::PresentationConnection(nsPIDOMWindowInner* aWindow,
                                                const nsAString& aId,
                                                const uint8_t aRole,
-                                               PresentationConnectionState aState)
+                                               PresentationConnectionList* aList)
   : DOMEventTargetHelper(aWindow)
   , mId(aId)
-  , mState(aState)
+  , mState(PresentationConnectionState::Connecting)
+  , mOwningConnectionList(aList)
 {
   MOZ_ASSERT(aRole == nsIPresentationService::ROLE_CONTROLLER ||
              aRole == nsIPresentationService::ROLE_RECEIVER);
@@ -54,12 +58,12 @@ PresentationConnection::PresentationConnection(nsPIDOMWindowInner* aWindow,
 PresentationConnection::Create(nsPIDOMWindowInner* aWindow,
                                const nsAString& aId,
                                const uint8_t aRole,
-                               PresentationConnectionState aState)
+                               PresentationConnectionList* aList)
 {
   MOZ_ASSERT(aRole == nsIPresentationService::ROLE_CONTROLLER ||
              aRole == nsIPresentationService::ROLE_RECEIVER);
   RefPtr<PresentationConnection> connection =
-    new PresentationConnection(aWindow, aId, aRole, aState);
+    new PresentationConnection(aWindow, aId, aRole, aList);
   return NS_WARN_IF(!connection->Init()) ? nullptr : connection.forget();
 }
 
@@ -186,6 +190,9 @@ PresentationConnection::NotifyStateChange(const nsAString& aSessionId,
 
   PresentationConnectionState state;
   switch (aState) {
+    case nsIPresentationSessionListener::STATE_CONNECTING:
+      state = PresentationConnectionState::Connecting;
+      break;
     case nsIPresentationSessionListener::STATE_CONNECTED:
       state = PresentationConnectionState::Connected;
       break;
@@ -220,7 +227,16 @@ PresentationConnection::NotifyStateChange(const nsAString& aSessionId,
     }
   }
 
-  return DispatchStateChangeEvent();
+  nsresult rv = DispatchStateChangeEvent();
+  if(NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+  }
+
+  if (mOwningConnectionList) {
+    mOwningConnectionList->NotifyStateChange(aSessionId, this);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
