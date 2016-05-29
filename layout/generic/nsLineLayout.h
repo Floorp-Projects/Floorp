@@ -475,6 +475,7 @@ protected:
 
     // Other state we use
     uint8_t mBlockDirAlign;
+    mozilla::WritingMode mWritingMode;
 
     PerFrameData* Last() {
       PerFrameData* pfd = this;
