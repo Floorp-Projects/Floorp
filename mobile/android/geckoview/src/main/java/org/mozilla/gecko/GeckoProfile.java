@@ -75,7 +75,8 @@ public final class GeckoProfile {
     // Session store
     private static final String SESSION_FILE = "sessionstore.js";
     private static final String SESSION_FILE_BACKUP = "sessionstore.bak";
-    private static final long MAX_BACKUP_FILE_AGE = 1000 * 3600 * 24; // 24 hours
+    private static final String SESSION_FILE_PREVIOUS = "sessionstore.old";
+    private static final long MAX_PREVIOUS_FILE_AGE = 1000 * 3600 * 24; // 24 hours
     private static final int SESSION_STORE_EMPTY_JSON_LENGTH = 14; // length of {"windows":[]}
 
     private boolean mOldSessionDataProcessed = false;
@@ -589,26 +590,26 @@ public final class GeckoProfile {
     /**
      * Updates the state of the old session data file.
      *
-     * sessionstore.js should hold the current session, and sessionstore.bak should
+     * sessionstore.js should hold the current session, and sessionstore.old should
      * hold the previous session (where it is used to read the "tabs from last time").
      * If we're not restoring tabs automatically, sessionstore.js needs to be moved to
-     * sessionstore.bak, so we can display the correct "tabs from last time".
-     * If we *are* restoring tabs, we need to delete outdated copies of sessionstore.bak,
+     * sessionstore.old, so we can display the correct "tabs from last time".
+     * If we *are* restoring tabs, we need to delete outdated copies of sessionstore.old,
      * so we don't continue showing stale "tabs from last time" indefinitely.
      *
      * @param shouldRestore Pass true if we are automatically restoring last session's tabs.
      */
     public void updateSessionFile(boolean shouldRestore) {
-        File sessionFileBackup = getFile(SESSION_FILE_BACKUP);
+        File sessionFilePrevious = getFile(SESSION_FILE_PREVIOUS);
         if (!shouldRestore) {
             File sessionFile = getFile(SESSION_FILE);
             if (sessionFile != null && sessionFile.exists()) {
-                sessionFile.renameTo(sessionFileBackup);
+                sessionFile.renameTo(sessionFilePrevious);
             }
         } else {
-            if (sessionFileBackup != null && sessionFileBackup.exists() &&
-                    System.currentTimeMillis() - sessionFileBackup.lastModified() > MAX_BACKUP_FILE_AGE) {
-                sessionFileBackup.delete();
+            if (sessionFilePrevious != null && sessionFilePrevious.exists() &&
+                    System.currentTimeMillis() - sessionFilePrevious.lastModified() > MAX_PREVIOUS_FILE_AGE) {
+                sessionFilePrevious.delete();
             }
         }
         synchronized (this) {
@@ -634,7 +635,7 @@ public final class GeckoProfile {
      *
      * The session can either be read from sessionstore.js or sessionstore.bak.
      * In general, sessionstore.js holds the current session, and
-     * sessionstore.bak holds the previous session.
+     * sessionstore.bak holds a backup copy in case of interrupted writes.
      *
      * @param readBackup if true, the session is read from sessionstore.bak;
      *                   otherwise, the session is read from sessionstore.js
@@ -642,7 +643,23 @@ public final class GeckoProfile {
      * @return the session string
      */
     public String readSessionFile(boolean readBackup) {
-        File sessionFile = getFile(readBackup ? SESSION_FILE_BACKUP : SESSION_FILE);
+        return readSessionFile(readBackup ? SESSION_FILE_BACKUP : SESSION_FILE);
+    }
+
+    /**
+     * Get the string from last session's session file.
+     *
+     * If we are not restoring tabs automatically, sessionstore.old will contain
+     * the previous session.
+     *
+     * @return the session string
+     */
+    public String readPreviousSessionFile() {
+        return readSessionFile(SESSION_FILE_PREVIOUS);
+    }
+
+    private String readSessionFile(String fileName) {
+        File sessionFile = getFile(fileName);
 
         try {
             if (sessionFile != null && sessionFile.exists()) {
