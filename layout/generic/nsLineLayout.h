@@ -423,13 +423,6 @@ protected:
   friend struct PerFrameData;
   struct PerFrameData
   {
-    explicit PerFrameData(mozilla::WritingMode aWritingMode)
-      : mBounds(aWritingMode)
-      , mMargin(aWritingMode)
-      , mBorderPadding(aWritingMode)
-      , mOffsets(aWritingMode)
-    {}
-
     // link to next/prev frame in same span
     PerFrameData* mNext;
     PerFrameData* mPrev;
