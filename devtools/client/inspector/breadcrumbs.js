@@ -753,8 +753,10 @@ HTMLBreadcrumbs.prototype = {
    */
   scroll: function () {
     // FIXME bug 684352: make sure its immediate neighbors are visible too.
-    let element = this.nodeHierarchy[this.currentIndex].button;
-    element.scrollIntoView({ block: "end", behavior: "smooth" });
+    if (!this.isDestroyed) {
+      let element = this.nodeHierarchy[this.currentIndex].button;
+      element.scrollIntoView({ block: "end", behavior: "smooth" });
+    }
   },
 
   /**
