@@ -85,10 +85,12 @@ SessionStore.prototype = {
     // Get file references
     this._sessionFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
     this._sessionFileBackup = this._sessionFile.clone();
+    this._sessionFilePrevious = this._sessionFile.clone();
     this._sessionFileTemp = this._sessionFile.clone();
-    this._sessionFile.append("sessionstore.js");
-    this._sessionFileBackup.append("sessionstore.bak");
-    this._sessionFileTemp.append(this._sessionFile.leafName + ".tmp");
+    this._sessionFile.append("sessionstore.js"); // The main session store save file.
+    this._sessionFileBackup.append("sessionstore.bak"); // A backup copy to guard against interrupted writes.
+    this._sessionFilePrevious.append("sessionstore.old"); // The previous session's file, used for what used to be the "Tabs from last time".
+    this._sessionFileTemp.append(this._sessionFile.leafName + ".tmp"); // Temporary file for writing changes to disk.
 
     this._loadState = STATE_STOPPED;
     this._startupRestoreFinished = false;
@@ -111,6 +113,7 @@ SessionStore.prototype = {
   _clearDisk: function ss_clearDisk() {
     OS.File.remove(this._sessionFile.path);
     OS.File.remove(this._sessionFileBackup.path);
+    OS.File.remove(this._sessionFilePrevious.path);
     OS.File.remove(this._sessionFileTemp.path);
   },
 

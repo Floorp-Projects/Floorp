@@ -1414,7 +1414,7 @@ public abstract class GeckoApp
                     GeckoAppShell.notifyObservers("Session:Restore", restoreMessage);
                 }
 
-                // Make sure sessionstore.bak is either updated or deleted as necessary.
+                // Make sure sessionstore.old is either updated or deleted as necessary.
                 getProfile().updateSessionFile(mShouldRestore);
             }
         });
