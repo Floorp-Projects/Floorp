@@ -1310,8 +1310,8 @@ JS::detail::ComputeThis(JSContext* cx, Value* vp)
     AssertHeapIsIdle(cx);
     assertSameCompartment(cx, JSValueArray(vp, 2));
 
-    RootedValue thisv(cx, vp[1]);
-    if (!BoxNonStrictThis(cx, thisv, &thisv))
+    MutableHandleValue thisv = MutableHandleValue::fromMarkedLocation(&vp[1]);
+    if (!BoxNonStrictThis(cx, thisv, thisv))
         return NullValue();
 
     return thisv;
