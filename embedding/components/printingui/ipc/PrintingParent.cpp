@@ -98,9 +98,18 @@ PrintingParent::ShowPrintDialog(PBrowserParent* aParent,
   // nsIWebBrowserPrint to keep the dialogs happy.
   nsCOMPtr<nsIWebBrowserPrint> wbp = new MockWebBrowserPrint(aData);
 
+  // Use the existing RemotePrintJob and its settings, if we have one, to make
+  // sure they stay current.
+  RemotePrintJobParent* remotePrintJob =
+    static_cast<RemotePrintJobParent*>(aData.remotePrintJobParent());
   nsCOMPtr<nsIPrintSettings> settings;
-  nsresult rv = mPrintSettingsSvc->GetNewPrintSettings(getter_AddRefs(settings));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv;
+  if (remotePrintJob) {
+    settings = remotePrintJob->GetPrintSettings();
+  } else {
+    rv = mPrintSettingsSvc->GetNewPrintSettings(getter_AddRefs(settings));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   rv = mPrintSettingsSvc->DeserializeToPrintSettings(aData, settings);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -108,10 +117,6 @@ PrintingParent::ShowPrintDialog(PBrowserParent* aParent,
   rv = pps->ShowPrintDialog(parentWin, wbp, settings);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Serialize back to aResult. Use the existing RemotePrintJob if we have one
-  // otherwise SerializeAndEnsureRemotePrintJob() will create a new one.
-  RemotePrintJobParent* remotePrintJob =
-    static_cast<RemotePrintJobParent*>(aData.remotePrintJobParent());
   rv = SerializeAndEnsureRemotePrintJob(settings, nullptr, remotePrintJob,
                                         aResult);
 
