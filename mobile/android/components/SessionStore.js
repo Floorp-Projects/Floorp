@@ -793,8 +793,9 @@ SessionStore.prototype = {
         log("saveStateDelayed() no delay");
         this.saveState();
       }
+    } else {
+      log("saveStateDelayed() timer already running, taking no action");
     }
-    log("saveStateDelayed() timer already running, taking no action");
   },
 
   saveState: function ss_saveState() {
