@@ -34,40 +34,39 @@ function finish() {
   alert('DONE');
 }
 
-var connection;
-
 function testConnectionAvailable() {
   return new Promise(function(aResolve, aReject) {
     ok(navigator.presentation, "navigator.presentation should be available.");
     ok(navigator.presentation.receiver, "navigator.presentation.receiver should be available.");
-
-    navigator.presentation.receiver.getConnection().then(
-      function(aConnection) {
-        connection = aConnection;
-
-        ok(connection.id, "Connection ID should be set: " + connection.id);
-        is(connection.state, "closed", "Connection state at receiver side should be closed by default.");
-        aResolve();
-      },
-      function(aError) {
-        ok(false, "Error occurred when getting the connection: " + aError);
-        finish();
-        aReject();
-      }
-    );
+    aResolve();
   });
 }
 
 function testUnexpectedControlChannelClose() {
-  return new Promise(function(aResolve, aReject) {
-    connection.onstatechange = function() {
-      connection.onstatechange = null;
-      is(connection.state, "terminated", "Connection state should become terminated.");
-      aResolve();
-    };
+  // Trigger the control channel to be closed with error code.
+  command({ name: 'trigger-control-channel-close', data: 0x80004004 /* NS_ERROR_ABORT */ });
 
-    // Trigger the control channel to be closed with error code.
-    command('trigger-control-channel-close', 0x80004004 /* NS_ERROR_ABORT */);
+  return new Promise(function(aResolve, aReject) {
+    return Promise.race([
+      navigator.presentation.receiver.connectionList.then(
+        (aList) => {
+          ok(false, "Should not get a connection list.")
+          aReject();
+        },
+        (aError) => {
+          ok(false, "Error occurred when getting the connection list: " + aError);
+          aReject();
+        }
+      ),
+      new Promise(
+        () => {
+          setTimeout(() => {
+            ok(true, "Not getting a conenction list.");
+            aResolve();
+          }, 3000);
+        }
+      ),
+    ]);
   });
 }
 
