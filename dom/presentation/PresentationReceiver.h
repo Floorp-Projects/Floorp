@@ -7,55 +7,55 @@
 #ifndef mozilla_dom_PresentationReceiver_h
 #define mozilla_dom_PresentationReceiver_h
 
-#include "mozilla/DOMEventTargetHelper.h"
+#include "nsCycleCollectionParticipant.h"
 #include "nsIPresentationListener.h"
 
 namespace mozilla {
 namespace dom {
 
-class Promise;
 class PresentationConnection;
+class PresentationConnectionList;
+class Promise;
 
-class PresentationReceiver final : public DOMEventTargetHelper
-                                 , public nsIPresentationRespondingListener
+class PresentationReceiver final : public nsIPresentationRespondingListener
+                                 , public nsWrapperCache
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PresentationReceiver,
-                                           DOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PresentationReceiver)
   NS_DECL_NSIPRESENTATIONRESPONDINGLISTENER
 
   static already_AddRefed<PresentationReceiver> Create(nsPIDOMWindowInner* aWindow);
 
-  virtual void DisconnectFromOwner() override;
-
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
+  nsISupports* GetParentObject() const
+  {
+    return mOwner;
+  }
+
   // WebIDL (public APIs)
-  already_AddRefed<Promise> GetConnection(ErrorResult& aRv);
-
-  already_AddRefed<Promise> GetConnections(ErrorResult& aRv) const;
-
-  IMPL_EVENT_HANDLER(connectionavailable);
+  already_AddRefed<Promise> GetConnectionList(ErrorResult& aRv);
 
 private:
   explicit PresentationReceiver(nsPIDOMWindowInner* aWindow);
 
-  ~PresentationReceiver();
+  virtual ~PresentationReceiver();
 
   bool Init();
 
   void Shutdown();
 
-  nsresult DispatchConnectionAvailableEvent();
+  void CreateConnectionList();
 
   // Store the inner window ID for |UnregisterRespondingListener| call in
   // |Shutdown| since the inner window may not exist at that moment.
   uint64_t mWindowId;
 
-  nsTArray<RefPtr<PresentationConnection>> mConnections;
-  nsTArray<RefPtr<Promise>> mPendingGetConnectionPromises;
+  nsCOMPtr<nsPIDOMWindowInner> mOwner;
+  RefPtr<Promise> mGetConnectionListPromise;
+  RefPtr<PresentationConnectionList> mConnectionList;
 };
 
 } // namespace dom

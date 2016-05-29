@@ -4,37 +4,31 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/AsyncEventDispatcher.h"
+#include "PresentationReceiver.h"
+
 #include "mozilla/dom/PresentationReceiverBinding.h"
 #include "mozilla/dom/Promise.h"
-#include "nsCycleCollectionParticipant.h"
 #include "nsIPresentationService.h"
 #include "nsServiceManagerUtils.h"
-#include "PresentationReceiver.h"
+#include "nsThreadUtils.h"
 #include "PresentationConnection.h"
+#include "PresentationConnectionList.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
+namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(PresentationReceiver)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PresentationReceiver,
+                                      mOwner,
+                                      mGetConnectionListPromise,
+                                      mConnectionList)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PresentationReceiver, DOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConnections)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingGetConnectionPromises)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTING_ADDREF(PresentationReceiver)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(PresentationReceiver)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PresentationReceiver, DOMEventTargetHelper)
-  tmp->Shutdown();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mConnections)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingGetConnectionPromises)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_ADDREF_INHERITED(PresentationReceiver, DOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(PresentationReceiver, DOMEventTargetHelper)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(PresentationReceiver)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PresentationReceiver)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIPresentationRespondingListener)
-NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
+NS_INTERFACE_MAP_END
 
 /* static */ already_AddRefed<PresentationReceiver>
 PresentationReceiver::Create(nsPIDOMWindowInner* aWindow)
@@ -44,8 +38,9 @@ PresentationReceiver::Create(nsPIDOMWindowInner* aWindow)
 }
 
 PresentationReceiver::PresentationReceiver(nsPIDOMWindowInner* aWindow)
-  : DOMEventTargetHelper(aWindow)
+  : mOwner(aWindow)
 {
+  MOZ_ASSERT(aWindow);
 }
 
 PresentationReceiver::~PresentationReceiver()
@@ -56,31 +51,16 @@ PresentationReceiver::~PresentationReceiver()
 bool
 PresentationReceiver::Init()
 {
-  if (NS_WARN_IF(!GetOwner())) {
+  if (NS_WARN_IF(!mOwner)) {
     return false;
   }
-  mWindowId = GetOwner()->WindowID();
-
-  nsCOMPtr<nsIPresentationService> service =
-    do_GetService(PRESENTATION_SERVICE_CONTRACTID);
-  if (NS_WARN_IF(!service)) {
-    return false;
-  }
-
-  // Register listener for incoming sessions.
-  nsresult rv = service->RegisterRespondingListener(mWindowId, this);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
+  mWindowId = mOwner->WindowID();
 
   return true;
 }
 
 void PresentationReceiver::Shutdown()
 {
-  mConnections.Clear();
-  mPendingGetConnectionPromises.Clear();
-
   // Unregister listener for incoming sessions.
   nsCOMPtr<nsIPresentationService> service =
     do_GetService(PRESENTATION_SERVICE_CONTRACTID);
@@ -92,13 +72,6 @@ void PresentationReceiver::Shutdown()
   NS_WARN_IF(NS_FAILED(rv));
 }
 
-/* virtual */ void
-PresentationReceiver::DisconnectFromOwner()
-{
-  Shutdown();
-  DOMEventTargetHelper::DisconnectFromOwner();
-}
-
 /* virtual */ JSObject*
 PresentationReceiver::WrapObject(JSContext* aCx,
                                  JS::Handle<JSObject*> aGivenProto)
@@ -106,86 +79,88 @@ PresentationReceiver::WrapObject(JSContext* aCx,
   return PresentationReceiverBinding::Wrap(aCx, this, aGivenProto);
 }
 
-already_AddRefed<Promise>
-PresentationReceiver::GetConnection(ErrorResult& aRv)
-{
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
-  if (NS_WARN_IF(!global)) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
-
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  // If there's no existing connection, leave the promise pending until a
-  // connecting request arrives from the controlling browsing context (sender).
-  // http://w3c.github.io/presentation-api/#dom-presentation-getconnection
-  if (!mConnections.IsEmpty()) {
-    promise->MaybeResolve(mConnections[0]);
-  } else {
-    mPendingGetConnectionPromises.AppendElement(promise);
-  }
-
-  return promise.forget();
-}
-
-already_AddRefed<Promise>
-PresentationReceiver::GetConnections(ErrorResult& aRv) const
-{
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
-  if (NS_WARN_IF(!global)) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
-
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  promise->MaybeResolve(mConnections);
-  return promise.forget();
-}
-
 NS_IMETHODIMP
 PresentationReceiver::NotifySessionConnect(uint64_t aWindowId,
                                            const nsAString& aSessionId)
 {
-  if (NS_WARN_IF(!GetOwner())) {
+  if (NS_WARN_IF(!mOwner)) {
     return NS_ERROR_FAILURE;
   }
 
-  if (NS_WARN_IF(aWindowId != GetOwner()->WindowID())) {
+  if (NS_WARN_IF(aWindowId != mWindowId)) {
     return NS_ERROR_INVALID_ARG;
   }
 
+  if (NS_WARN_IF(!mConnectionList)) {
+    return NS_ERROR_FAILURE;
+  }
+
   RefPtr<PresentationConnection> connection =
-    PresentationConnection::Create(GetOwner(), aSessionId,
+    PresentationConnection::Create(mOwner, aSessionId,
                                    nsIPresentationService::ROLE_RECEIVER,
-                                   PresentationConnectionState::Closed);
+                                   mConnectionList);
   if (NS_WARN_IF(!connection)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  mConnections.AppendElement(connection);
 
-  // Resolve pending |GetConnection| promises if any.
-  if (!mPendingGetConnectionPromises.IsEmpty()) {
-    for(uint32_t i = 0; i < mPendingGetConnectionPromises.Length(); i++) {
-      mPendingGetConnectionPromises[i]->MaybeResolve(connection);
-    }
-    mPendingGetConnectionPromises.Clear();
+  return NS_OK;
+}
+
+already_AddRefed<Promise>
+PresentationReceiver::GetConnectionList(ErrorResult& aRv)
+{
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mOwner);
+  if (NS_WARN_IF(!global)) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
   }
 
-  return DispatchConnectionAvailableEvent();
+  if (!mGetConnectionListPromise) {
+    mGetConnectionListPromise = Promise::Create(global, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
+
+    RefPtr<PresentationReceiver> self = this;
+    nsresult rv =
+      NS_DispatchToMainThread(NS_NewRunnableFunction([self] () -> void {
+        self->CreateConnectionList();
+      }));
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+      return nullptr;
+    }
+  }
+
+  RefPtr<Promise> promise = mGetConnectionListPromise;
+  return promise.forget();
 }
 
-nsresult
-PresentationReceiver::DispatchConnectionAvailableEvent()
+void
+PresentationReceiver::CreateConnectionList()
 {
-  RefPtr<AsyncEventDispatcher> asyncDispatcher =
-    new AsyncEventDispatcher(this, NS_LITERAL_STRING("connectionavailable"), false);
-  return asyncDispatcher->PostDOMEvent();
+  MOZ_ASSERT(mGetConnectionListPromise);
+
+  if (mConnectionList) {
+    return;
+  }
+
+  mConnectionList = new PresentationConnectionList(mOwner,
+                                                   mGetConnectionListPromise);
+
+  // Register listener for incoming sessions.
+  nsCOMPtr<nsIPresentationService> service =
+    do_GetService(PRESENTATION_SERVICE_CONTRACTID);
+  if (NS_WARN_IF(!service)) {
+    mGetConnectionListPromise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
+    return;
+  }
+
+  nsresult rv = service->RegisterRespondingListener(mWindowId, this);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    mGetConnectionListPromise->MaybeReject(rv);
+  }
 }
+
+} // namespace dom
+} // namespace mozilla

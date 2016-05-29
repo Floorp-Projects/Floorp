@@ -44,7 +44,7 @@ public:
     , mSessionId(aSessionId)
     , mIsResponderReady(false)
     , mIsTransportReady(false)
-    , mState(nsIPresentationSessionListener::STATE_CLOSED)
+    , mState(nsIPresentationSessionListener::STATE_CONNECTING)
     , mCallback(aCallback)
   {
     MOZ_ASSERT(!mUrl.IsEmpty());
