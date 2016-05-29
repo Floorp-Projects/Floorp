@@ -263,7 +263,7 @@ PrintingParent::SerializeAndEnsureRemotePrintJob(
     }
   }
 
-  rv = mPrintSettingsSvc->SerializeToPrintData(aPrintSettings, nullptr,
+  rv = mPrintSettingsSvc->SerializeToPrintData(printSettings, nullptr,
                                                aPrintData);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
