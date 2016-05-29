@@ -1377,6 +1377,7 @@ public abstract class GeckoApp
                 // If we are doing a restore, read the session data so we can send it to Gecko later.
                 String restoreMessage = null;
                 if (!mIsRestoringActivity && mShouldRestore) {
+                    final boolean isExternalURL = invokedWithExternalURL(getIntentURI(new SafeIntent(getIntent())));
                     try {
                         // restoreSessionTabs() will create simple tab stubs with the
                         // URL and title for each page, but we also need to restore
@@ -1384,23 +1385,31 @@ public abstract class GeckoApp
                         // of the tab stubs into the JSON data (which holds the session
                         // history). This JSON data is then sent to Gecko so session
                         // history can be restored for each tab.
-                        final SafeIntent intent = new SafeIntent(getIntent());
-                        restoreMessage = restoreSessionTabs(invokedWithExternalURL(getIntentURI(intent)));
+                        restoreMessage = restoreSessionTabs(isExternalURL, false);
                     } catch (SessionRestoreException e) {
-                        // If restore failed, do a normal startup
-                        Log.e(LOGTAG, "An error occurred during restore", e);
-                        // If mShouldRestore was already set to false in restoreSessionTabs(),
-                        // this means that we intentionally skipped all tabs read from the
-                        // session file, so we don't have to report this exception in telemetry
-                        // and can ignore the following bit.
-                        if (mShouldRestore && getProfile().sessionFileExistsAndNotEmptyWindow()) {
-                            // If we got a SessionRestoreException even though the file exists and its
-                            // length doesn't match the known length of an intentionally empty file,
-                            // it's very likely we've encountered a damaged/corrupt session store file.
-                            Log.d(LOGTAG, "Suspecting a damaged session store file.");
-                            Telemetry.addToHistogram("FENNEC_SESSIONSTORE_DAMAGED_SESSION_FILE", 1);
+                        // If mShouldRestore was set to false in restoreSessionTabs(), this means
+                        // either that we intentionally skipped all tabs read from the session file,
+                        // or else that the file was syntactically valid, but didn't contain any
+                        // tabs (e.g. because the user cleared history), therefore we don't need
+                        // to switch to the backup copy.
+                        if (mShouldRestore) {
+                            Log.e(LOGTAG, "An error occurred during restore, switching to backup file", e);
+                            // To be on the safe side, we will always attempt to restore from the backup
+                            // copy if we end up here.
+                            // Since we will also hit this situation regularly during first run though,
+                            // we'll only report it in telemetry if we failed to restore despite the
+                            // file existing, which means it's very probably damaged.
+                            if (getProfile().sessionFileExists()) {
+                                Telemetry.addToHistogram("FENNEC_SESSIONSTORE_DAMAGED_SESSION_FILE", 1);
+                            }
+                            try {
+                                restoreMessage = restoreSessionTabs(isExternalURL, true);
+                            } catch (SessionRestoreException ex) {
+                                // If this fails, too, do a normal startup.
+                                Log.e(LOGTAG, "An error occurred during restore", ex);
+                                mShouldRestore = false;
+                            }
                         }
-                        mShouldRestore = false;
                     }
                 }
 
@@ -1779,9 +1788,9 @@ public abstract class GeckoApp
     }
 
     @WorkerThread
-    private String restoreSessionTabs(final boolean isExternalURL) throws SessionRestoreException {
+    private String restoreSessionTabs(final boolean isExternalURL, boolean useBackup) throws SessionRestoreException {
         try {
-            String sessionString = getProfile().readSessionFile(false);
+            String sessionString = getProfile().readSessionFile(useBackup);
             if (sessionString == null) {
                 throw new SessionRestoreException("Could not read from session file");
             }
@@ -1792,23 +1801,26 @@ public abstract class GeckoApp
             if (mShouldRestore) {
                 final JSONArray tabs = new JSONArray();
                 final JSONObject windowObject = new JSONObject();
+                final boolean sessionDataValid;
 
                 LastSessionParser parser = new LastSessionParser(tabs, windowObject, isExternalURL);
 
                 if (mPrivateBrowsingSession == null) {
-                    parser.parse(sessionString);
+                    sessionDataValid = parser.parse(sessionString);
                 } else {
-                    parser.parse(sessionString, mPrivateBrowsingSession);
+                    sessionDataValid = parser.parse(sessionString, mPrivateBrowsingSession);
                 }
 
                 if (tabs.length() > 0) {
                     windowObject.put("tabs", tabs);
                     sessionString = new JSONObject().put("windows", new JSONArray().put(windowObject)).toString();
                 } else {
-                    if (parser.allTabsSkipped()) {
+                    if (parser.allTabsSkipped() || sessionDataValid) {
                         // If we intentionally skipped all tabs we've read from the session file, we
                         // set mShouldRestore back to false at this point already, so the calling code
                         // can infer that the exception wasn't due to a damaged session store file.
+                        // The same applies if the session file was syntactically valid and
+                        // simply didn't contain any tabs.
                         mShouldRestore = false;
                     }
                     throw new SessionRestoreException("No tabs could be read from session file");
