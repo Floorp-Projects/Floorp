@@ -49,7 +49,7 @@ add_task(function* () {
     is(labelTag.textContent, node.nodeName,
       "Node " + node.selector + " has the expected tag name");
 
-    is(checkedButton.getAttribute("tooltiptext"), node.title,
+    is(checkedButton.getAttribute("title"), node.title,
       "Node " + node.selector + " has the expected tooltip");
   }
 });
