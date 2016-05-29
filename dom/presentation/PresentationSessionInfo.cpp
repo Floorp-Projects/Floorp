@@ -294,12 +294,6 @@ nsresult
 PresentationSessionInfo::ReplySuccess()
 {
   SetState(nsIPresentationSessionListener::STATE_CONNECTED);
-
-  if (mCallback) {
-    NS_WARN_IF(NS_FAILED(mCallback->NotifySuccess()));
-    SetCallback(nullptr);
-  }
-
   return NS_OK;
 }
 
@@ -307,11 +301,6 @@ nsresult
 PresentationSessionInfo::ReplyError(nsresult aError)
 {
   Shutdown(aError);
-
-  if (mCallback) {
-    NS_WARN_IF(NS_FAILED(mCallback->NotifyError(aError)));
-    SetCallback(nullptr);
-  }
 
   // Remove itself since it never succeeds.
   return UntrackFromService();
