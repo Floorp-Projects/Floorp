@@ -6,6 +6,9 @@
 
 enum PresentationConnectionState
 {
+  // The initial state when a PresentationConnection is ceated.
+  "connecting",
+
   // Existing presentation, and the communication channel is active.
   "connected",
 
