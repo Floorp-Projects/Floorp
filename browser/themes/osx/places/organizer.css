@@ -156,10 +156,6 @@
   -moz-appearance: toolbarbutton;
 }
 
-#placesToolbar > toolbarbutton[disabled="true"] > .toolbarbutton-icon {
-  opacity: 0.5;
-}
-
 #placesToolbar > toolbarbutton > .toolbarbutton-icon {
   margin: 1px 4px;
 }
@@ -185,18 +181,16 @@
   }
 }
 
-@media (-moz-mac-lion-theme) {
-  #placesToolbar > toolbarbutton[disabled="true"] > .toolbarbutton-icon,
-  #placesToolbar > toolbarbutton:not(:hover):-moz-window-inactive > .toolbarbutton-icon,
-  #placesToolbar > toolbarbutton[type="menu"][disabled="true"] > .toolbarbutton-menu-dropmarker,
-  #placesToolbar > toolbarbutton:not(:hover):-moz-window-inactive[type="menu"] > .toolbarbutton-menu-dropmarker {
-    opacity: .5;
-  }
+#placesToolbar > toolbarbutton[disabled="true"] > .toolbarbutton-icon,
+#placesToolbar > toolbarbutton:not(:hover):-moz-window-inactive > .toolbarbutton-icon,
+#placesToolbar > toolbarbutton[type="menu"][disabled="true"] > .toolbarbutton-menu-dropmarker,
+#placesToolbar > toolbarbutton:not(:hover):-moz-window-inactive[type="menu"] > .toolbarbutton-menu-dropmarker {
+  opacity: .5;
+}
 
-  #placesToolbar > toolbarbutton:-moz-window-inactive[disabled="true"] > .toolbarbutton-icon,
-  #placesToolbar > toolbarbutton:-moz-window-inactive[type="menu"][disabled="true"] > .toolbarbutton-menu-dropmarker {
-    opacity: .25;
-  }
+#placesToolbar > toolbarbutton:-moz-window-inactive[disabled="true"] > .toolbarbutton-icon,
+#placesToolbar > toolbarbutton:-moz-window-inactive[type="menu"][disabled="true"] > .toolbarbutton-menu-dropmarker {
+  opacity: .25;
 }
 
 #placesToolbar > toolbarbutton > menupopup {
