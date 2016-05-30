@@ -242,6 +242,7 @@ private:
   uint32_t                     mLoadFailureCount;
 
   bool                         mInProgress;
+  bool                         mIncludePath;
 };
 
 extern LazyLogModule gProxyLog;
